@@ -539,6 +539,16 @@ void NonlinearPeregrine::SetBoundaryConditions(
 
     int nvariables = m_fields.num_elements();
     int cnt = 0;
+    int nTracePts  = GetTraceTotPoints();
+
+    // Extract trace for boundaries. Needs to be done on all processors to avoid
+    // deadlock.
+    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+    for (int i = 0; i < nvariables; ++i)
+    {
+        Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+        m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
+    }
 
     // loop over Boundary Regions
     for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
@@ -547,7 +557,7 @@ void NonlinearPeregrine::SetBoundaryConditions(
         // Wall Boundary Condition
         if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
         {
-            WallBoundary2D(n, cnt, inarray);
+            WallBoundary2D(n, cnt, Fwd, inarray);
         }
 
         // Time Dependent Boundary Condition (specified in meshfile)
@@ -567,19 +577,11 @@ void NonlinearPeregrine::SetBoundaryConditions(
  * @brief Wall boundary condition.
  */
 void NonlinearPeregrine::WallBoundary(int bcRegion, int cnt,
+        Array<OneD, Array<OneD, NekDouble> > &Fwd,
         Array<OneD, Array<OneD, NekDouble> > &physarray)
 {
     int i;
-    int nTracePts = GetTraceTotPoints();
     int nvariables = physarray.num_elements();
-
-    // get physical values of the forward trace
-    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-    for (i = 0; i < nvariables; ++i)
-    {
-        Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-        m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-    }
 
     // Adjust the physical values of the trace to take
     // user defined boundaries into account
@@ -626,20 +628,12 @@ void NonlinearPeregrine::WallBoundary(int bcRegion, int cnt,
 void NonlinearPeregrine::WallBoundary2D(
         int bcRegion,
         int cnt,
+        Array<OneD, Array<OneD, NekDouble> > &Fwd,
         Array<OneD, Array<OneD, NekDouble> > &physarray)
 {
 
     int i;
-    int nTraceNumPoints = GetTraceTotPoints();
     int nvariables = 3;
-
-    // get physical values of the forward trace
-    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-    for (i = 0; i < nvariables; ++i)
-    {
-        Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-        m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-    }
 
     // Adjust the physical values of the trace to take
     // user defined boundaries into account

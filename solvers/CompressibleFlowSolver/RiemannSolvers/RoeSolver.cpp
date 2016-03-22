@@ -163,12 +163,13 @@ namespace Nektar
         // Finally perform summation (11.29).
         for (int i = 0; i < 5; ++i)
         {
-            NekDouble ahat = 0.5*alpha[i]*lambda[i];
-            rhof  -= ahat*k[i][0];
-            rhouf -= ahat*k[i][1];
-            rhovf -= ahat*k[i][2];
-            rhowf -= ahat*k[i][3];
-            Ef    -= ahat*k[i][4];
+            uRoeAbs = 0.5*alpha[i]*lambda[i];
+			
+            rhof  -= uRoeAbs*k[i][0];
+            rhouf -= uRoeAbs*k[i][1];
+            rhovf -= uRoeAbs*k[i][2];
+            rhowf -= uRoeAbs*k[i][3];
+            Ef    -= uRoeAbs*k[i][4];
         }
     }
 }

@@ -114,54 +114,113 @@ namespace Nektar
 
             while (segment)
             {
-                int indx;
-                int err = segment->QueryIntAttribute("ID", &indx);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
-
-                TiXmlNode* elementChild = segment->FirstChild();
-                while(elementChild && elementChild->Type() != TiXmlNode::TINYXML_TEXT)
+                string IsCompressed;
+                segment->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+                
+                if(IsCompressed.size()) 
                 {
-                    elementChild = elementChild->NextSibling();
-                }
+                    ASSERTL0(boost::iequals(IsCompressed,
+                               LibUtilities::CompressData::GetCompressString()),
+                             "Compressed formats do not match. Expected :"
+                             + LibUtilities::CompressData::GetCompressString()
+                             + " but got " + std::string(IsCompressed));
 
-                ASSERTL0(elementChild, "Unable to read element description body.");
-                std::string elementStr = elementChild->ToText()->ValueStr();
+                    // Extract the face body
+                    TiXmlNode* child = segment->FirstChild();
+                    ASSERTL0(child, "Unable to extract the data from "
+                             "the compressed face tag.");
 
-                /// Parse out the element components corresponding to type of element.
-                /// Read two vertex numbers
-                int vertex1, vertex2;
-                std::istringstream elementDataStrm(elementStr.c_str());
-
-                try
-                {
-                    elementDataStrm >> vertex1;
-                    elementDataStrm >> vertex2;
-
-                    ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for SEGMENT: ") + elementStr).c_str());
-
-                    PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
-                    SegGeomSharedPtr seg;
-                    it = m_curvedEdges.find(indx);
-
-                    if (it == m_curvedEdges.end())
+                    std::string str;
+                    if (child->Type() == TiXmlNode::TINYXML_TEXT)
                     {
-                        seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
-                        seg->SetGlobalID(indx); // Set global mesh id
+                        str += child->ToText()->ValueStr();
                     }
-                    else
-                    {
-                        seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
-                        seg->SetGlobalID(indx); //Set global mesh id
-                    }
-                    seg->SetGlobalID(indx);
-                    m_segGeoms[indx] = seg;
-                }
-                catch(...)
-                {
-                    NEKERROR(ErrorUtil::efatal,
-                        (std::string("Unable to read element data for segment: ") + elementStr).c_str());
-                }
 
+                    int indx;
+
+                    std::vector<LibUtilities::MeshEdge> data;
+                    LibUtilities::CompressData::ZlibDecodeFromBase64Str(str,
+                                                                        data);
+
+                    for(int i = 0; i < data.size(); ++i)
+                    {
+                        indx = data[i].id;
+
+                        /// See if this face has curves.
+                        it = m_curvedFaces.find(indx);
+
+                        PointGeomSharedPtr vertices[2] = {
+                                GetVertex(data[i].v0), GetVertex(data[i].v1)};
+                        SegGeomSharedPtr seg;
+
+                        if (it == m_curvedEdges.end())
+                        {
+                            seg = MemoryManager<SegGeom>::AllocateSharedPtr(
+                                            indx, m_spaceDimension, vertices);
+                            seg->SetGlobalID(indx); // Set global mesh id
+                        }
+                        else
+                        {
+                            seg = MemoryManager<SegGeom>::AllocateSharedPtr(
+                                            indx, m_spaceDimension,
+                                            vertices, it->second);
+                            seg->SetGlobalID(indx); //Set global mesh id
+                        }
+                        seg->SetGlobalID(indx);
+                        m_segGeoms[indx] = seg;
+                    }
+                }
+                else
+                {
+                    
+                    int indx;
+                    int err = segment->QueryIntAttribute("ID", &indx);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
+                    
+                    TiXmlNode* elementChild = segment->FirstChild();
+                    while(elementChild && elementChild->Type() != TiXmlNode::TINYXML_TEXT)
+                    {
+                        elementChild = elementChild->NextSibling();
+                    }
+                    
+                    ASSERTL0(elementChild, "Unable to read element description body.");
+                    std::string elementStr = elementChild->ToText()->ValueStr();
+                    
+                    /// Parse out the element components corresponding to type of element.
+                    /// Read two vertex numbers
+                    int vertex1, vertex2;
+                    std::istringstream elementDataStrm(elementStr.c_str());
+                    
+                    try
+                    {
+                        elementDataStrm >> vertex1;
+                        elementDataStrm >> vertex2;
+                        
+                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for SEGMENT: ") + elementStr).c_str());
+                        
+                        PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
+                        SegGeomSharedPtr seg;
+                        it = m_curvedEdges.find(indx);
+                        
+                        if (it == m_curvedEdges.end())
+                        {
+                            seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
+                            seg->SetGlobalID(indx); // Set global mesh id
+                        }
+                        else
+                        {
+                            seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
+                            seg->SetGlobalID(indx); //Set global mesh id
+                        }
+                        seg->SetGlobalID(indx);
+                        m_segGeoms[indx] = seg;
+                    }
+                    catch(...)
+                    {
+                        NEKERROR(ErrorUtil::efatal,
+                                 (std::string("Unable to read element data for segment: ") + elementStr).c_str());
+                    }
+                }
                 /// Keep looking for additional segments
                 segment = segment->NextSiblingElement("S");
             }

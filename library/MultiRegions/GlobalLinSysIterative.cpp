@@ -53,6 +53,7 @@ namespace Nektar
                 &pLocToGloMap)
                 : GlobalLinSys(pKey, pExpList, pLocToGloMap),
                   m_rhs_magnitude(NekConstants::kNekUnsetDouble),
+                  m_rhs_mag_sm(0.9),
                   m_precon(NullPreconditionerSharedPtr),
                   m_totalIterations(0),
                   m_useProjection(false),
@@ -62,6 +63,7 @@ namespace Nektar
                                             = pExpList.lock()->GetSession();
 
             m_tolerance = pLocToGloMap->GetIterativeTolerance();
+            m_maxiter   = pLocToGloMap->GetMaxIterations();
 
             LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm()->GetRowComm();
             m_root    = (vComm->GetRank())? false : true;
@@ -361,13 +363,8 @@ namespace Nektar
         {
             if (!m_precon)
             {
-                MultiRegions::PreconditionerType pType
-                    = plocToGloMap->GetPreconType();
-                std::string PreconType
-                    = MultiRegions::PreconditionerTypeMap[pType];
                 v_UniqueMap();
-                m_precon = GetPreconFactory().CreateInstance(
-                    PreconType,GetSharedThisPtr(),plocToGloMap);
+                m_precon = CreatePrecon(plocToGloMap);
                 m_precon->BuildPreconditioner();
             }
 
@@ -419,7 +416,8 @@ namespace Nektar
 
             if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
             {
-                m_rhs_magnitude = 1.0/vExchange[2];
+                NekVector<NekDouble> inGlob (nGlobal, pInput, eWrapper);
+                Set_Rhs_Magnitude(inGlob);
             }
 
             // If input residual is less than tolerance skip solve.
@@ -429,9 +427,10 @@ namespace Nektar
                 {
                     cout << "CG iterations made = " << m_totalIterations 
                          << " using tolerance of "  << m_tolerance 
-                         << " (error = " << sqrt(eps/m_rhs_magnitude) << ")" << endl;
+                         << " (error = " << sqrt(eps/m_rhs_magnitude) 
+                         << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")" 
+                         << endl;
                 }
-                m_rhs_magnitude = NekConstants::kNekUnsetDouble;
                 return;
             }
 
@@ -463,8 +462,19 @@ namespace Nektar
             // Continue until convergence
             while (true)
             {
-                ASSERTL0(k < 5000,
-                         "Exceeded maximum number of iterations (5000)");
+                if(k >= m_maxiter)
+                {
+                    if (m_root)
+                    {
+                        cout << "CG iterations made = " << m_totalIterations 
+                             << " using tolerance of "  << m_tolerance 
+                             << " (error = " << sqrt(eps/m_rhs_magnitude)
+                             << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
+                             << endl;
+                        ASSERTL0(false,
+                                 "Exceeded maximum number of iterations");
+                    }
+                }
 
                 // Compute new search direction p_k, q_k
                 Vmath::Svtvp(nNonDir, beta, &p_A[0], 1, &w_A[nDir], 1, &p_A[0], 1);
@@ -514,11 +524,10 @@ namespace Nektar
                     {
                         cout << "CG iterations made = " << m_totalIterations 
                              << " using tolerance of "  << m_tolerance 
-                             << " (error = " << sqrt(eps/m_rhs_magnitude) << ")" 
-                            //<< " (bb_inv = " << sqrt(1.0/m_rhs_magnitude) << ")" 
+                             << " (error = " << sqrt(eps/m_rhs_magnitude)
+                             << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
                              << endl;
                     }
-                    m_rhs_magnitude = NekConstants::kNekUnsetDouble;
                     break;
                 }
                 min_resid = min(min_resid, eps);
@@ -531,14 +540,30 @@ namespace Nektar
             }
         }
 
-        void GlobalLinSysIterative::Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn)
+        void GlobalLinSysIterative::Set_Rhs_Magnitude(
+            const NekVector<NekDouble> &pIn)
         {
-
             Array<OneD, NekDouble> vExchange(1);
             vExchange[0] = Vmath::Dot(pIn.GetDimension(),&pIn[0],&pIn[0]);
 
-            m_expList.lock()->GetComm()->GetRowComm()->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
-            m_rhs_magnitude = (vExchange[0] > 1e-6)? vExchange[0]:1.0;
+            m_expList.lock()->GetComm()->GetRowComm()->AllReduce(
+                vExchange, Nektar::LibUtilities::ReduceSum);
+
+            // To ensure that very different rhs values are not being
+            // used in subsequent solvers such as the velocit solve in
+            // INC NS. If this works we then need to work out a better
+            // way to control this.
+            NekDouble new_rhs_mag = (vExchange[0] > 1e-6)? vExchange[0] : 1.0;
+
+            if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
+            {
+                m_rhs_magnitude = new_rhs_mag;
+            }
+            else
+            {
+                m_rhs_magnitude = (m_rhs_mag_sm*(m_rhs_magnitude) + 
+                                   (1.0-m_rhs_mag_sm)*new_rhs_mag); 
+            }
         }
 
     }

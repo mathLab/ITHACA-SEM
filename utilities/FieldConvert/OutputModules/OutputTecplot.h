@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: OutputVtk.h
+//  File: OutputTecplot.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -81,6 +81,7 @@ class OutputTecplot : public OutputModule
                                std::ofstream &outfile);
 
         void WriteTecplotConnectivity(std::ofstream &outfile);
+        
 };
 
 }

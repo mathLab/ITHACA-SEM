@@ -71,32 +71,29 @@ public:
 protected:
     LibUtilities::SessionReaderSharedPtr m_session;
 
-    MultiRegions::ProjectionType m_projectionType;
     int m_spacedim;
     int m_expdim;
 
     /// Storage for base flow
     Array<OneD, Array<OneD, NekDouble> >            m_baseflow;
 
-    //number of slices
+    /// number of slices
     int                                             m_slices;
-    //period length
+    /// period length
     NekDouble                                       m_period;
-    //interpolation vector
+    /// interpolation vector
     Array<OneD, Array<OneD, NekDouble> >            m_interp;
-    //auxiliary variables
+    /// auxiliary variables
     LibUtilities::NektarFFTSharedPtr                m_FFT;
     Array<OneD,NekDouble>                           m_tmpIN;
     Array<OneD,NekDouble>                           m_tmpOUT;
     bool                                            m_useFFTW;
     /// flag to determine if use single mode or not
-    bool                                            m_SingleMode;
+    bool                                            m_singleMode;
     /// flag to determine if use half mode or not
-    bool                                            m_HalfMode;
+    bool                                            m_halfMode;
     /// flag to determine if use multiple mode or not
-    bool                                            m_MultipleModes;
-    bool                                            m_homogen_dealiasing;
-    MultiRegions::CoeffState                        m_CoeffState;
+    bool                                            m_multipleModes;
 
     DNekBlkMatSharedPtr GetFloquetBlockMatrix(
             FloquetMatType mattype,

@@ -137,6 +137,12 @@ namespace Nektar
 
             SOLVER_UTILS_EXPORT void CheckForRestartTime(NekDouble &time);
 
+            /// \brief Evaluate the SVV diffusion coefficient
+            /// according to Moura's paper where it should
+            /// proportional to h time velocity
+            SOLVER_UTILS_EXPORT void SVVVarDiffCoeff(const Array<OneD, Array<OneD, NekDouble> > vel, 
+                                                     StdRegions::VarCoeffMap &varCoeffMap);
+        
 
         private:
             ///
@@ -155,6 +161,7 @@ namespace Nektar
                 NekDouble C11,
                 NekDouble time=0.0);
         };
+        
     }
 }
 

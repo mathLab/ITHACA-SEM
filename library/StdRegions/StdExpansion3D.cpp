@@ -341,6 +341,11 @@ namespace Nektar
             }
         }
 
+        bool StdExpansion3D::v_FaceNormalNegated(const int face)
+        {
+            return m_negatedNormals[face];
+        }
+
         LibUtilities::BasisKey EvaluateQuadFaceBasisKey(
             const int                     facedir,
             const LibUtilities::BasisType faceDirBasisType,
@@ -428,14 +433,18 @@ namespace Nektar
                         }
                         case 1:
                         {
+//                            const LibUtilities::PointsKey pkey(
+//                                numpoints+1,
+//                                LibUtilities::eGaussLobattoLegendre);
                             const LibUtilities::PointsKey pkey(
-                                numpoints+1,
-                                LibUtilities::eGaussLobattoLegendre);
+	 			numpoints, 	
+				LibUtilities::eGaussRadauMAlpha1Beta0);
                             return LibUtilities::BasisKey(
                                 LibUtilities::eModified_B, nummodes, pkey);
                         }
                         default:
                         {
+
                             ASSERTL0(false,"invalid value to flag");
                             break;
                         }

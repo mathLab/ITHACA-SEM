@@ -97,6 +97,15 @@ namespace Nektar
             
             inline SpatialDomains::Geometry3DSharedPtr GetGeom3D() const;
 
+            LOCAL_REGIONS_EXPORT void ReOrientFacePhysMap(const int nvert,
+                                                          const StdRegions::Orientation orient,
+                                                          const int nq0,
+                                                          const int nq1,
+                                                          Array<OneD, int> &idmap);
+            void v_NormVectorIProductWRTBase(
+                const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                      Array<OneD,       NekDouble>               &outarray);
+
         protected:
             virtual void v_DGDeriv(
                 const int                            dir,
@@ -117,7 +126,20 @@ namespace Nektar
                 DNekMatSharedPtr                   &inoutmat);
             virtual StdRegions::Orientation v_GetForient(int face);
 
-            
+            virtual void v_GetTracePhysVals(
+                const int                                face,
+                const StdRegions::StdExpansionSharedPtr &FaceExp,
+                const Array<OneD, const NekDouble>      &inarray,
+                      Array<OneD,       NekDouble>      &outarray,
+                StdRegions::Orientation                  orient);
+
+            virtual void v_GetFacePhysVals(
+                const int                                face,
+                const StdRegions::StdExpansionSharedPtr &FaceExp,
+                const Array<OneD, const NekDouble>      &inarray,
+                      Array<OneD,       NekDouble>      &outarray,
+                StdRegions::Orientation                  orient);
+
             //-----------------------------
             // Low Energy Basis functions
             //-----------------------------
@@ -138,6 +160,15 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildVertexMatrix(
                 const DNekScalMatSharedPtr &r_bnd); 
 
+            LOCAL_REGIONS_EXPORT void ReOrientTriFacePhysMap(const StdRegions::Orientation orient,
+                                                             const int nq0,
+                                                             const int nq1,
+                                                             Array<OneD, int> &idmap);
+
+            LOCAL_REGIONS_EXPORT void ReOrientQuadFacePhysMap(const StdRegions::Orientation orient,
+                                                              const int nq0,
+                                                              const int nq1,
+                                                              Array<OneD, int> &idmap);
         private:
             // Do not add members here since it may lead to conflicts.
             // Only use this class for member functions

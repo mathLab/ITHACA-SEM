@@ -462,7 +462,7 @@ For the non-smooth artificial viscosity model the added artificial viscosity is 
 \end{figure}
 \subsubsection{Smooth artificial viscosity model}
 For the smooth artificial viscosity model an extra PDE for the artificial viscosity is appended to the Euler system
-\begin{equation}\label{eq:euler}\begin{split}
+\begin{equation}\label{eq:eulerplusvis}\begin{split}
 \frac{\partial \epsilon}{\partial t} &= \nabla\cdot \left(\nabla \epsilon\right) + \frac{1}{\tau}\left(\frac{h}{p}\lambda_{max}S_\kappa - \epsilon\right)\	\	\	\	\	\	\textrm{on}\	\	\	\	\	\	\	\Omega\\
 \frac{\partial \epsilon}{\partial n} &= 0\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\	\textrm{on}\	\	\	\	\	\	\	\Gamma
 \end{split}

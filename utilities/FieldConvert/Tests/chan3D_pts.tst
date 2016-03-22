@@ -2,9 +2,10 @@
 <test>
     <description> Convert a .pts file to .fld </description>
     <executable>FieldConvert</executable>
-    <parameters>-e -m interppointdatatofld chan3D.xml chan3D_pts.pts chan3D_pts.fld</parameters>
+    <parameters>-e -m interppoints:fromfld=chan3D.xml:fromfld=chan3D.fld chan3D_pts.pts out.pts</parameters>
     <files>
         <file description="Session File">chan3D.xml</file>
+        <file description="Session File">chan3D.fld</file>
 	<file description="Session File">chan3D_pts.pts</file>
     </files>
     <metrics>

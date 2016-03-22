@@ -60,21 +60,49 @@ namespace SolverUtils
         m_NumVariable = pNumForcingFields;
         int nq         = pFields[0]->GetTotPoints();
 
-        const TiXmlElement* funcNameElmt = pForce->FirstChildElement("WHITENOISE");
-        ASSERTL0(funcNameElmt, "Requires WHITENOISE tag specifying function "
-                               "name which prescribes magnitude of whilte noise force.");
+        const TiXmlElement* noiseElmt = pForce->FirstChildElement("WHITENOISE");
+        ASSERTL0(noiseElmt, "Requires WHITENOISE tag specifying "
+                               "magnitude of white noise force.");
         
-        string noiseValue = funcNameElmt->GetText();
+        string noiseValue = noiseElmt->GetText();
 
-        NekDouble noise = boost::lexical_cast<NekDouble>(noiseValue);
+        m_noise = boost::lexical_cast<NekDouble>(noiseValue);
+
+        // Load optional parameters
+        const TiXmlElement* freqElmt = pForce->FirstChildElement("UPDATEFREQ");
+        if (freqElmt)
+        {
+            string freqValue = freqElmt->GetText();
+            m_updateFreq = boost::lexical_cast<int>(freqValue);
+        }
+        else
+        {
+            // Default is 0 (never update forcing)
+            m_updateFreq = 0;
+        }
+
+        const TiXmlElement* stepsElmt = pForce->FirstChildElement("NSTEPS");
+        if (stepsElmt)
+        {
+            string stepsValue = stepsElmt->GetText();
+            m_numSteps = boost::lexical_cast<int>(stepsValue);
+        }
+        else
+        {
+            // Default is 0 (use noise in the entire simulation)
+            m_numSteps = 0;
+        }
 
         m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
 
+        // Fill forcing: use -i as seed to avoid repeated results
         for (int i = 0; i < m_NumVariable; ++i)
         {
             m_Forcing[i] = Array<OneD, NekDouble> (nq, 0.0);
-            Vmath::FillWhiteNoise(nq,noise,&m_Forcing[i][0],1);
+            Vmath::FillWhiteNoise(nq,m_noise,&m_Forcing[i][0],1,-i);
         }
+
+        m_index = 0;
     }
 
     void ForcingNoise::v_Apply(
@@ -83,11 +111,31 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
+        // Do not apply forcing if exceeded m_numSteps
+        if( m_numSteps && (m_index >= m_numSteps) )
+        {
+            return;
+        }
+
+        // Update forcing (change seed to avoid getting same result)
+        if(m_updateFreq && m_index && !((m_index)%m_updateFreq))
+        {
+            for (int i = 0; i < m_NumVariable; ++i)
+            {
+                Vmath::FillWhiteNoise(outarray[i].num_elements(),
+                                      m_noise,&m_Forcing[i][0],1,
+                                     -m_index*m_NumVariable-i);
+            }
+        }
+
+        // Apply forcing
         for (int i = 0; i < m_NumVariable; i++)
         {
             Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
                         m_Forcing[i], 1, outarray[i], 1);
         }
+
+        ++m_index;
     }
 
 }

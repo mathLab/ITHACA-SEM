@@ -52,15 +52,14 @@
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 
-
 using namespace std;
 namespace Nektar
 {
 namespace LibUtilities
 {
 
-typedef std::map<std::string, std::string>  PtsMetaDataMap;
-static  PtsMetaDataMap  NullPtsMetaDataMap;
+typedef std::map<std::string, std::string> PtsMetaDataMap;
+static PtsMetaDataMap NullPtsMetaDataMap;
 
 LIB_UTILITIES_EXPORT void Import(const string &inFile,
                                  PtsFieldSharedPtr &ptsField);
@@ -68,59 +67,33 @@ LIB_UTILITIES_EXPORT void Import(const string &inFile,
 LIB_UTILITIES_EXPORT void Write(const string &outFile,
                                 const PtsFieldSharedPtr &ptsField);
 
-class PtsIO
+class PtsIO : protected FieldIO
 {
-    public:
+public:
+    LIB_UTILITIES_EXPORT PtsIO(LibUtilities::CommSharedPtr pComm,
+                               bool sharedFilesystem = false);
 
-        LIB_UTILITIES_EXPORT PtsIO(LibUtilities::CommSharedPtr pComm):
-            m_comm(pComm)
-        {
+    LIB_UTILITIES_EXPORT void Import(
+        const string &inFile,
+        PtsFieldSharedPtr &ptsField,
+        FieldMetaDataMap &fieldmetadatamap = NullFieldMetaDataMap);
 
-        };
+    LIB_UTILITIES_EXPORT void Write(const string &outFile,
+                                    const PtsFieldSharedPtr &ptsField);
 
+    LIB_UTILITIES_EXPORT void ImportFieldData(TiXmlDocument docInput,
+                                              PtsFieldSharedPtr &ptsField);
 
-        LIB_UTILITIES_EXPORT void Import(const string &inFile, Nektar::LibUtilities::PtsFieldSharedPtr &ptsField, Nektar::LibUtilities::FieldMetaDataMap &fieldmetadatamap = NullFieldMetaDataMap);
+protected:
+    LIB_UTILITIES_EXPORT void SetUpFieldMetaData(const std::string outname);
 
-        LIB_UTILITIES_EXPORT void Write(const string &outFile,
-                                        const Nektar::LibUtilities::PtsFieldSharedPtr &ptsField);
-
-        LIB_UTILITIES_EXPORT void WriteMultiFldFileIDs(
-            const std::string &outfile,
-            const std::vector<std::string> fileNames,
-            const PtsMetaDataMap &fieldinfomap  = NullPtsMetaDataMap);
-
-        /// Imports the definition of the meta data
-        LIB_UTILITIES_EXPORT void ImportFieldMetaData(
-                std::string filename,
-                FieldMetaDataMap &fieldmetadatamap);
-
-        /// Imports the definition of the meta data
-        LIB_UTILITIES_EXPORT void ImportFieldMetaData(
-                TiXmlDocument &doc,
-                FieldMetaDataMap &fieldmetadatamap);
-
-        LIB_UTILITIES_EXPORT void ImportFieldData(
-            TiXmlDocument docInput, Nektar::LibUtilities::PtsFieldSharedPtr &ptsField);
-
-    private:
-
-        LibUtilities::CommSharedPtr    m_comm;
-
-        LIB_UTILITIES_EXPORT std::string SetUpOutput(const string outname);
-
-        LIB_UTILITIES_EXPORT void AddInfoTag(
-            TiXmlElement *root,
-            const PtsMetaDataMap &fieldmetadatamap);
-
-        LIB_UTILITIES_EXPORT void ImportMultiFldFileIDs(
-            const std::string &inFile,
-            std::vector<std::string> &fileNames,
-            FieldMetaDataMap &fieldmetadatamap);
-
+    LIB_UTILITIES_EXPORT virtual std::string GetFileEnding() const
+    {
+        return "pts";
+    };
 };
 
 typedef boost::shared_ptr<PtsIO> PtsIOSharedPtr;
-
 }
 }
 #endif

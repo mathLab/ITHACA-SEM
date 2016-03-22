@@ -38,6 +38,7 @@
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/MatrixKey.h>
+#include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
 {
@@ -963,7 +964,7 @@ namespace Nektar
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
                 face, GetForient(face));
             StdRegions::IndexMapValuesSharedPtr map =
-            StdExpansion::GetIndexMap(ikey);
+                StdExpansion::GetIndexMap(ikey);
 
             int order_e  = (*map).num_elements(); // Order of the element
             int n_coeffs = FaceExp->GetNcoeffs();
@@ -984,10 +985,10 @@ namespace Nektar
                                            faceCoeffs,
                                            faceCoeffs);
 
-                StdRegions::StdMatrixKey masskey(
-                    StdRegions::eMass, FaceExp->DetShapeType(), *FaceExp);
-                FaceExp->MassMatrixOp(
-                                      faceCoeffs,faceCoeffs,masskey);
+                StdRegions::StdMatrixKey masskey(StdRegions::eMass,
+                                                 FaceExp->DetShapeType(),
+                                                 *FaceExp);
+                FaceExp->MassMatrixOp(faceCoeffs, faceCoeffs, masskey);
 
                 // Reorder coefficients for the lower degree face.
                 int offset1 = 0, offset2 = 0;
@@ -999,7 +1000,7 @@ namespace Nektar
                         for (j = 0; j < NumModesElementMin; ++j)
                         {
                             faceCoeffs[offset1+j] =
-                            faceCoeffs[offset2+j];
+                                faceCoeffs[offset2+j];
                         }
                         offset1 += NumModesElementMin;
                         offset2 += NumModesElementMax;
@@ -1026,7 +1027,7 @@ namespace Nektar
                         for (j = 0; j < NumModesElementMin-i; ++j)
                         {
                             faceCoeffs[offset1+j] =
-                            faceCoeffs[offset2+j];
+                                faceCoeffs[offset2+j];
                         }
                         offset1 += NumModesElementMin-i;
                         offset2 += NumModesElementMax-i;
@@ -1092,9 +1093,9 @@ namespace Nektar
         }
 
         void Expansion3D::v_AddRobinMassMatrix(
-            const int face, 
-            const Array<OneD, const NekDouble > &primCoeffs, 
-            DNekMatSharedPtr &inoutmat)
+            const int                            face,
+            const Array<OneD, const NekDouble > &primCoeffs,
+                  DNekMatSharedPtr              &inoutmat)
         {
             ASSERTL1(IsBoundaryInteriorExpansion(),
                      "Not set up for non boundary-interior expansions");
@@ -1115,12 +1116,11 @@ namespace Nektar
             LibUtilities::ShapeType shapeType = 
                 faceExp->DetShapeType();
 
-            LocalRegions::MatrixKey mkey(
-                StdRegions::eMass,
-                shapeType, 
-                *faceExp, 
-                StdRegions::NullConstFactorMap, 
-                varcoeffs);
+            LocalRegions::MatrixKey mkey(StdRegions::eMass,
+                                         shapeType,
+                                         *faceExp,
+                                         StdRegions::NullConstFactorMap,
+                                         varcoeffs);
 
             DNekScalMat &facemat = *faceExp->GetLocMatrix(mkey);
 
@@ -1177,9 +1177,13 @@ namespace Nektar
                 StdRegions::IndexMapValuesSharedPtr map1 = 
                     StdExpansion::GetIndexMap(ikey1);
                 StdRegions::IndexMapKey ikey2(
-                    StdRegions::eFaceToElement, DetShapeType(), 
-                    GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                    face, StdRegions::eDir1FwdDir1_Dir2FwdDir2);
+                    StdRegions::eFaceToElement,
+                    DetShapeType(),
+                    GetBasisNumModes(0),
+                    GetBasisNumModes(1),
+                    GetBasisNumModes(2),
+                    face,
+                    StdRegions::eDir1FwdDir1_Dir2FwdDir2);
                 StdRegions::IndexMapValuesSharedPtr map2 = 
                     StdExpansion::GetIndexMap(ikey2);
                 
@@ -1257,7 +1261,7 @@ namespace Nektar
         }
 
         DNekMatSharedPtr Expansion3D::v_BuildTransformationMatrix(
-            const DNekScalMatSharedPtr &r_bnd, 
+            const DNekScalMatSharedPtr  &r_bnd,
             const StdRegions::MatrixType matrixType)
         {
             int nVerts, nEdges;
@@ -1350,7 +1354,7 @@ namespace Nektar
                 for (eid = 0; eid < nConnectedEdges; ++eid)
                 {
                     MatEdgeLocation[eid] = GetEdgeInverseBoundaryMap(
-                        geom->GetVertexEdgeMap(vid, eid));
+                                            geom->GetVertexEdgeMap(vid, eid));
                     nmodes = MatEdgeLocation[eid].num_elements();
 
                     if (nmodes)
@@ -1368,7 +1372,7 @@ namespace Nektar
                 for (fid = 0; fid < nConnectedFaces; ++fid)
                 {
                     MatFaceLocation[fid] = GetFaceInverseBoundaryMap(
-                        geom->GetVertexFaceMap(vid, fid));
+                                            geom->GetVertexFaceMap(vid, fid));
                     nmodes = MatFaceLocation[fid].num_elements();
 
                     if (nmodes)
@@ -1464,12 +1468,14 @@ namespace Nektar
                                                  facemodearray[m]);
 
                         // Set the value in the vertex edge/face matrix
-                        Sefef.SetValue(
-                            n, nedgemodesconnected + m, FaceFaceValue);
+                        Sefef.SetValue(n,
+                                       nedgemodesconnected + m,
+                                       FaceFaceValue);
 
                         // and transpose
-                        Sefef.SetValue(
-                            nedgemodesconnected + m, n, FaceFaceValue);
+                        Sefef.SetValue(nedgemodesconnected + m,
+                                       n,
+                                       FaceFaceValue);
                     }
                 }
 
@@ -1584,7 +1590,7 @@ namespace Nektar
                 for (fid = 0; fid < nConnectedFaces; ++fid)
                 {
                     MatFaceLocation[fid] = GetFaceInverseBoundaryMap(
-                        geom->GetEdgeFaceMap(eid, fid));
+                                            geom->GetEdgeFaceMap(eid, fid));
                     nmodes = MatFaceLocation[fid].num_elements();
 
                     if (nmodes)
@@ -1666,20 +1672,20 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "unkown matrix type" );
                 return NullDNekMatSharedPtr;
             }
-	}
+        }
 
         /**
-	 * \brief Build inverse and inverse transposed transformation matrix:
-	 * \f$\mathbf{R^{-1}}\f$ and \f$\mathbf{R^{-T}}\f$
-	 *
-	 * \f\mathbf{R^{-T}}=[\left[\begin{array}{ccc} \mathbf{I} &
-	 * -\mathbf{R}_{ef} & -\mathbf{R}_{ve}+\mathbf{R}_{ve}\mathbf{R}_{vf} \\
-	 *  0 & \mathbf{I} & \mathbf{R}_{ef} \\
-	 *  0 & 0 & \mathbf{I}} \end{array}\right]\f]
-	 */
+         * \brief Build inverse and inverse transposed transformation matrix:
+         * \f$\mathbf{R^{-1}}\f$ and \f$\mathbf{R^{-T}}\f$
+         *
+         * \f\mathbf{R^{-T}}=[\left[\begin{array}{ccc} \mathbf{I} &
+         * -\mathbf{R}_{ef} & -\mathbf{R}_{ve}+\mathbf{R}_{ve}\mathbf{R}_{vf} \\
+         *  0 & \mathbf{I} & \mathbf{R}_{ef} \\
+         *  0 & 0 & \mathbf{I}} \end{array}\right]\f]
+         */
         DNekMatSharedPtr Expansion3D::v_BuildInverseTransformationMatrix(
             const DNekScalMatSharedPtr & m_transformationmatrix)
-	{
+        {
             int i, j, n, eid = 0, fid = 0;
             int nCoeffs = NumBndryCoeffs();
             NekDouble MatrixValue;
@@ -1764,22 +1770,23 @@ namespace Nektar
                 for (j = 0; j < nedgemodestotal; ++j)
                 {
                     InvR.SetValue(
-                        GetVertexMap(i), edgemodearray[j],
-                        -R(GetVertexMap(i), edgemodearray[j]));
+                                  GetVertexMap(i), edgemodearray[j],
+                                  -R(GetVertexMap(i), edgemodearray[j]));
                 }
                 for (j = 0; j < nfacemodestotal; ++j)
                 {
                     InvR.SetValue(
-                        GetVertexMap(i), facemodearray[j],
-                        -R(GetVertexMap(i), facemodearray[j]));
+                                  GetVertexMap(i), facemodearray[j],
+                                  -R(GetVertexMap(i), facemodearray[j]));
                     for (n = 0; n < nedgemodestotal; ++n)
                     {
-                        MatrixValue = InvR.GetValue(
-                            GetVertexMap(i), facemodearray[j])
+                        MatrixValue = InvR.GetValue(GetVertexMap(i),
+                                                    facemodearray[j])
                             + R(GetVertexMap(i), edgemodearray[n])
                             * R(edgemodearray[n], facemodearray[j]);
-                        InvR.SetValue(
-                            GetVertexMap(i), facemodearray[j], MatrixValue);
+                        InvR.SetValue(GetVertexMap(i),
+                                      facemodearray[j],
+                                      MatrixValue);
                     }
                 }
             }
@@ -1790,8 +1797,8 @@ namespace Nektar
                 for (j = 0; j < nfacemodestotal; ++j)
                 {
                     InvR.SetValue(
-                        edgemodearray[i], facemodearray[j],
-                        -R(edgemodearray[i], facemodearray[j]));
+                                  edgemodearray[i], facemodearray[j],
+                                  -R(edgemodearray[i], facemodearray[j]));
                 }
             }
 
@@ -1801,7 +1808,7 @@ namespace Nektar
             }
 
             return m_inversetransformationmatrix;
-	}
+        }
 
         Array<OneD, unsigned int> Expansion3D::v_GetEdgeInverseBoundaryMap(
             int eid)
@@ -1846,7 +1853,9 @@ namespace Nektar
         }
 
         Array<OneD, unsigned int>
-        Expansion3D::v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient)
+        Expansion3D::v_GetFaceInverseBoundaryMap(
+            int fid,
+            StdRegions::Orientation faceOrient)
         {
             int n, j;
             int nFaceCoeffs;
@@ -1897,6 +1906,240 @@ namespace Nektar
         StdRegions::Orientation Expansion3D::v_GetForient(int face)
         {
             return m_geom->GetForient(face);
+        }
+
+        /**
+         * \brief Returns the physical values at the quadrature points of a face
+         * Wrapper function to v_GetFacePhysVals
+         */
+        void Expansion3D::v_GetTracePhysVals(
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
+        {
+            v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
+        }
+
+        void Expansion3D::v_GetFacePhysVals(
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
+        {
+            
+            if (orient == StdRegions::eNoOrientation)
+            {
+                orient = GetForient(face);
+            }
+            
+            int nq0 = FaceExp->GetNumPoints(0);
+            int nq1 = FaceExp->GetNumPoints(1);
+
+            int nfacepts = GetFaceNumPoints(face);
+            int dir0 = GetGeom3D()->GetDir(face,0);
+            int dir1 = GetGeom3D()->GetDir(face,1);
+
+            Array<OneD,NekDouble> o_tmp (nfacepts);
+            Array<OneD,NekDouble> o_tmp2(FaceExp->GetTotPoints());
+            Array<OneD, int> faceids;
+            
+            // Get local face pts and put into o_tmp
+            GetFacePhysMap(face,faceids);
+            Vmath::Gathr(faceids.num_elements(),inarray,faceids,o_tmp);
+            
+
+            int to_id0,to_id1;
+
+            if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+            {
+                to_id0 = 0; 
+                to_id1 = 1;
+            }
+            else // transpose points key evaluation 
+            {
+                to_id0 = 1;
+                to_id1 = 0;
+            }
+
+            // interpolate to points distrbution given in FaceExp
+            LibUtilities::Interp2D(m_base[dir0]->GetPointsKey(), 
+                                   m_base[dir1]->GetPointsKey(), 
+                                   o_tmp.get(),
+                                   FaceExp->GetBasis(to_id0)->GetPointsKey(),
+                                   FaceExp->GetBasis(to_id1)->GetPointsKey(),
+                                   o_tmp2.get());
+            
+            // Reshuffule points as required and put into outarray. 
+            ReOrientFacePhysMap(FaceExp->GetNverts(),orient,nq0,nq1,faceids);
+            Vmath::Scatr(nq0*nq1,o_tmp2,faceids,outarray);
+        }
+        
+        void Expansion3D::ReOrientFacePhysMap(const int nvert, 
+                                              const StdRegions::Orientation orient,
+                                              const int nq0, const int nq1,
+                                              Array<OneD, int> &idmap)
+        {
+            if(nvert == 3)
+            {
+                ReOrientTriFacePhysMap(orient,nq0,nq1,idmap);
+            }
+            else
+            {
+                ReOrientQuadFacePhysMap(orient,nq0,nq1,idmap);
+            }
+        }
+
+        void Expansion3D::ReOrientTriFacePhysMap(const StdRegions::Orientation orient,
+                                                 const int nq0, 
+                                                 const int nq1,
+                                                 Array<OneD, int> &idmap)
+        {
+            if(idmap.num_elements() != nq0*nq1)
+            {
+                idmap = Array<OneD,int>(nq0*nq1);
+            }
+
+            switch(orient)
+            {
+            case StdRegions::eDir1FwdDir1_Dir2FwdDir2:
+                // eseentially straight copy 
+                for(int i = 0; i < nq0*nq1; ++i)
+                {
+                    idmap[i] = i;
+                }
+                break;
+            case StdRegions::eDir1BwdDir1_Dir2FwdDir2:
+                // reverse 
+                for (int j = 0; j < nq1; ++j)
+                {
+                    for(int i = 0; i < nq0; ++i)
+                    {
+                        idmap[j*nq0+i] = nq0-1-i +j*nq0;
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false,"Case not supposed to be used in this function"); 
+            }
+        }
+
+
+        void Expansion3D::ReOrientQuadFacePhysMap(const StdRegions::Orientation orient,
+                                                  const int nq0, 
+                                                  const int nq1,
+                                                  Array<OneD, int> &idmap)
+        {
+            if(idmap.num_elements() != nq0*nq1)
+            {
+                idmap = Array<OneD,int>(nq0*nq1);
+            }
+
+
+            switch(orient)
+            {
+            case StdRegions::eDir1FwdDir1_Dir2FwdDir2:
+                // eseentially straight copy 
+                for(int i = 0; i < nq0*nq1; ++i)
+                {
+                    idmap[i] = i;
+                }
+                break;
+            case StdRegions::eDir1BwdDir1_Dir2FwdDir2:
+                {
+                    //Direction A negative and B positive
+                    for (int j = 0; j < nq1; j++)
+                    {
+                        for (int i =0; i < nq0; ++i)
+                        {
+                            idmap[j*nq0+i] = nq0-1-i + j*nq0;
+                        }
+                    }
+                }
+                break;
+            case StdRegions::eDir1FwdDir1_Dir2BwdDir2:
+                {
+                    //Direction A positive and B negative
+                    for (int j = 0; j < nq1; j++)
+                    {
+                        for (int i =0; i < nq0; ++i)
+                        {
+                            idmap[j*nq0+i] = nq0*(nq1-1-j)+i;
+                        }
+                    }
+                } 
+            case StdRegions::eDir1BwdDir1_Dir2BwdDir2:
+                {
+                    //Direction A negative and B negative
+                    for (int j = 0; j < nq1; j++)
+                    {
+                        for (int i =0; i < nq0; ++i)
+                        {
+                            idmap[j*nq0+i] = nq0*nq1-1-j*nq0 -i;
+                        }
+                    }
+                }
+            case StdRegions::eDir1FwdDir2_Dir2FwdDir1:
+                {
+                    //Transposed, Direction A and B positive
+                    for (int i =0; i < nq0; ++i)
+                    {   
+                        for (int j = 0; j < nq1; ++j)
+                        {
+                            idmap[i*nq1+j] = i + j*nq0;
+                        }
+                    }
+                }
+                break;
+            case StdRegions::eDir1FwdDir2_Dir2BwdDir1:
+                {
+                    //Transposed, Direction A positive and B negative
+                    for (int i =0; i < nq0; ++i)
+                    {   
+                        for (int j = 0; j < nq1; ++j)
+                        {
+                            idmap[i*nq1+j] = nq0-1-i + j*nq0;
+                        }
+                    }
+                } 
+                break;
+            case StdRegions::eDir1BwdDir2_Dir2FwdDir1:
+                {
+                    //Transposed, Direction A negative and B positive
+                    for (int i =0; i < nq0; ++i)
+                    {   
+                        for (int j = 0; j < nq1; ++j)
+                        {
+                            idmap[i*nq1+j] = i+nq0*(nq1-1)-j*nq0;
+                        }
+                    }
+                    break;
+                } 
+            case StdRegions::eDir1BwdDir2_Dir2BwdDir1:
+                {
+                    //Transposed, Direction A and B negative
+                    for (int i =0; i < nq0; ++i)
+                    {   
+                        for (int j = 0; j < nq1; ++j)
+                        {
+                            idmap[i*nq1+j] = nq0*nq1-1-i-j*nq0;
+                        }
+                    }
+                } 
+                break;
+            default:
+                ASSERTL0(false,"Unknow orientation");
+                break;
+            }
+        }
+
+        void Expansion3D::v_NormVectorIProductWRTBase(
+            const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                  Array<OneD,       NekDouble>               &outarray)
+        {
+            NormVectorIProductWRTBase(Fvec[0], Fvec[1], Fvec[2], outarray);
         }
     } //end of namespace
 } //end of namespace

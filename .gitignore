@@ -1,5 +1,6 @@
 .*
 !.gitignore
+!.clang-format
 # Ignore builds and ThirdParty directories
 build
 builds

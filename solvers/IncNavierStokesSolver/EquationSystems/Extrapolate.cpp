@@ -538,161 +538,94 @@ namespace Nektar
     {
         // Checking if the problem is 2D
         ASSERTL0(m_curl_dim >= 2, "Method not implemented for 1D");
-        
+
         int n_points_0      = m_fields[0]->GetExp(0)->GetTotPoints();
-        int n_element       = m_fields[0]->GetExpSize();       
+        int n_element       = m_fields[0]->GetExpSize();
         int nvel            = inarray.num_elements();
-        int cnt; 
-        
+        int cnt;
+
         NekDouble pntVelocity;
-        
-        // Getting the standard velocity vector on the 2D normal space
+
+        // Getting the standard velocity vector
         Array<OneD, Array<OneD, NekDouble> > stdVelocity(nvel);
+        Array<OneD, NekDouble> tmp;
         Array<OneD, NekDouble> maxV(n_element, 0.0);
         LibUtilities::PointsKeyVector ptsKeys;
-        
+
         for (int i = 0; i < nvel; ++i)
         {
             stdVelocity[i] = Array<OneD, NekDouble>(n_points_0);
         }
-        
-        if (nvel == 2)
-        {
-            cnt = 0.0;
-            for (int el = 0; el < n_element; ++el)
-            { 
-                int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
-                ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
-                
-                // reset local space if necessary
-                if(n_points != n_points_0)
-                {
-                    for (int j = 0; j < nvel; ++j)
-                    {
-                        stdVelocity[j] = Array<OneD, NekDouble>(n_points);
-                    }
-                    n_points_0 = n_points;
-                }        
-                
-                Array<TwoD, const NekDouble> gmat = 
-                    m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetDerivFactors(ptsKeys);
-                
-                if (m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGtype()
-                    == SpatialDomains::eDeformed)
-                {
-                    for (int i = 0; i < n_points; i++)
-                    {
-                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i+cnt] 
-                            + gmat[2][i]*inarray[1][i+cnt];
-                        
-                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i+cnt] 
-                            + gmat[3][i]*inarray[1][i+cnt];
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < n_points; i++)
-                    {
-                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i+cnt] 
-                            + gmat[2][0]*inarray[1][i+cnt];
-                        
-                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i+cnt] 
-                            + gmat[3][0]*inarray[1][i+cnt];
-                    }
-                }
-                
-                cnt += n_points;
-                
-                
-                for (int i = 0; i < n_points; i++)
-                {
-                    pntVelocity = stdVelocity[0][i]*stdVelocity[0][i] 
-                        + stdVelocity[1][i]*stdVelocity[1][i];
-                    
-                    if (pntVelocity>maxV[el])
-                    {
-                        maxV[el] = pntVelocity;
-                    }
-                }
-                maxV[el] = sqrt(maxV[el]);
-            }
-        }
-        else
-        {
-            cnt = 0;
-            for (int el = 0; el < n_element; ++el)
-            { 
-                
-                int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
-                ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
-                
-                // reset local space if necessary
-                if(n_points != n_points_0)
-                {
-                    for (int j = 0; j < nvel; ++j)
-                    {
-                        stdVelocity[j] = Array<OneD, NekDouble>(n_points);
-                    }
-                    n_points_0 = n_points;
-                }        
-                
-                Array<TwoD, const NekDouble> gmat =
-                    m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetDerivFactors(ptsKeys);
-                
-                if (m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGtype()
-                    == SpatialDomains::eDeformed)
-                {
-                    for (int i = 0; i < n_points; i++)
-                    {
-                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i+cnt] 
-                            + gmat[3][i]*inarray[1][i+cnt] 
-                            + gmat[6][i]*inarray[2][i+cnt];
-                        
-                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i+cnt] 
-                            + gmat[4][i]*inarray[1][i+cnt] 
-                            + gmat[7][i]*inarray[2][i+cnt];
-                        
-                        stdVelocity[2][i] = gmat[2][i]*inarray[0][i+cnt] 
-                            + gmat[5][i]*inarray[1][i+cnt] 
-                            + gmat[8][i]*inarray[2][i+cnt];
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < n_points; i++)
-                    {
-                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i+cnt] 
-                            + gmat[3][0]*inarray[1][i+cnt] 
-                            + gmat[6][0]*inarray[2][i+cnt];
-                        
-                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i+cnt] 
-                            + gmat[4][0]*inarray[1][i+cnt] 
-                            + gmat[7][0]*inarray[2][i+cnt];
-                        
-                        stdVelocity[2][i] = gmat[2][0]*inarray[0][i+cnt] 
-                            + gmat[5][0]*inarray[1][i+cnt] 
-                            + gmat[8][0]*inarray[2][i+cnt];
-                    }
-                }
-                
-                cnt += n_points;
-                
-                for (int i = 0; i < n_points; i++)
-                {
-                    pntVelocity = stdVelocity[0][i]*stdVelocity[0][i] 
-                        + stdVelocity[1][i]*stdVelocity[1][i] 
-                        + stdVelocity[2][i]*stdVelocity[2][i];
-                    
-                    if (pntVelocity > maxV[el])
-                    {
-                        maxV[el] = pntVelocity;
-                    }
-                }
 
-                maxV[el] = sqrt(maxV[el]);
+        cnt = 0.0;
+        for (int el = 0; el < n_element; ++el)
+        {
+            int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
+            ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
+
+            // reset local space
+            if(n_points != n_points_0)
+            {
+                for (int j = 0; j < nvel; ++j)
+                {
+                    stdVelocity[j] = Array<OneD, NekDouble>(n_points);
+                }
+                n_points_0 = n_points;
             }
+            else
+            {
+                for (int j = 0; j < nvel; ++j)
+                {
+                    Vmath::Zero( n_points, stdVelocity[j], 1);
+                }
+            }
+
+            Array<TwoD, const NekDouble> gmat =
+                m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetDerivFactors(ptsKeys);
+
+            if (m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGtype()
+                == SpatialDomains::eDeformed)
+            {
+                for(int j = 0; j < nvel; ++j)
+                {
+                    for(int k = 0; k < nvel; ++k)
+                    {
+                        Vmath::Vvtvp( n_points,  gmat[k*nvel + j], 1,
+                                                 tmp = inarray[k] + cnt, 1,
+                                                 stdVelocity[j], 1,
+                                                 stdVelocity[j], 1);
+                    }
+                }
+            }
+            else
+            {
+                for(int j = 0; j < nvel; ++j)
+                {
+                    for(int k = 0; k < nvel; ++k)
+                    {
+                        Vmath::Svtvp( n_points,  gmat[k*nvel + j][0],
+                                                 tmp = inarray[k] + cnt, 1,
+                                                 stdVelocity[j], 1,
+                                                 stdVelocity[j], 1);
+                    }
+                }
+            }
+            cnt += n_points;
+
+            // Calculate total velocity in stdVelocity[0]
+            Vmath::Vmul( n_points, stdVelocity[0], 1, stdVelocity[0], 1,
+                                                      stdVelocity[0], 1);
+            for(int k = 1; k < nvel; ++k)
+            {
+                Vmath::Vvtvp( n_points,  stdVelocity[k], 1,
+                                         stdVelocity[k], 1,
+                                         stdVelocity[0], 1,
+                                         stdVelocity[0], 1);
+            }
+            pntVelocity = Vmath::Vmax( n_points, stdVelocity[0], 1);
+            maxV[el] = sqrt(pntVelocity);
         }
-        
+
         return maxV;
     }
 

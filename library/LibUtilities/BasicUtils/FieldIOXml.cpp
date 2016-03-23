@@ -108,7 +108,16 @@ namespace Nektar
                 std::vector<std::vector<NekDouble> > &fielddata,
                 const FieldMetaDataMap &fieldmetadatamap)
         {
-            // Check everything seems sensible
+            std::stringstream prfx;
+            prfx << m_comm->GetRank() << ": FieldIOXml::v_Write(): ";
+	    double tm0 = 0.0, tm1 = 0.0;
+            if (0 == m_comm->GetRank())
+	    {
+	        cout << prfx.str() << "entering..." << endl;
+	        tm0 = m_comm->Wtime();
+	    }
+	
+	    // Check everything seems sensible
             ASSERTL1(fielddefs.size() == fielddata.size(),
                     "Length of fielddefs and fielddata incompatible");
             for (int f = 0; f < fielddefs.size(); ++f)
@@ -342,6 +351,15 @@ namespace Nektar
 
             }
             doc.SaveFile(filename);
+
+	    m_comm->Block();
+	    // all data has been written
+	    
+            if (0 == m_comm->GetRank())
+	    {
+	        tm1 = m_comm->Wtime();
+	        cout << prfx.str() << "leaving after " << tm1-tm0 << " secs..." << endl;
+            }
         }
 
         /**

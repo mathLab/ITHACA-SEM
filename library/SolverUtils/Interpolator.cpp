@@ -266,9 +266,88 @@ void Interpolator::Interpolate(
     }
 }
 
-void Interpolator::Interpolate(const vector< MultiRegions::ExpListSharedPtr > expInField, vector< MultiRegions::ExpListSharedPtr > &expOutField)
+
+void Interpolator::Interpolate(
+    const vector<MultiRegions::ExpListSharedPtr> expInField,
+    vector<MultiRegions::ExpListSharedPtr> &expOutField)
 {
-    ASSERTL0(false, "not implemented yet");
+    ASSERTL0(expInField.size() == expOutField.size(),
+             "number of fields does not match");
+    ASSERTL0(expInField[0]->GetCoordim(0) <= m_dim,
+             "too many dimesions in inField");
+    ASSERTL0(expOutField[0]->GetCoordim(0) <= m_dim,
+             "too many dimesions in outField")
+
+    m_expInField = expInField;
+    m_expOutField = expOutField;
+
+    int nInDim = expInField[0]->GetCoordim(0);
+    int nOutPts = m_expOutField[0]->GetTotPoints();
+    int nOutDim = m_expOutField[0]->GetCoordim(0);
+    int lastProg = 0;
+
+    m_weights = Array<OneD, Array<OneD, float> >(nOutPts);
+    m_neighInds = Array<OneD, Array<OneD, unsigned int> >(nOutPts);
+
+    Array<OneD, NekDouble> Lcoords(nInDim, 0.0);
+    Array<OneD, NekDouble> Scoords(nOutDim, 0.0);
+    Array<OneD, Array<OneD, NekDouble> > coords(nOutDim);
+    for (int i = 0; i < nOutDim; ++i)
+    {
+        coords[i] = Array<OneD, NekDouble>(nOutPts);
+    }
+    if (nOutDim == 1)
+    {
+        m_expOutField[0]->GetCoords(coords[0]);
+    }
+    else if (nOutDim == 2)
+    {
+        m_expOutField[0]->GetCoords(coords[0], coords[1]);
+    }
+    else if (nOutDim == 3)
+    {
+        m_expOutField[0]->GetCoords(coords[0], coords[1], coords[2]);
+    }
+
+    for (int i = 0; i < nOutPts; ++i)
+    {
+        for (int j = 0; j < nOutDim; ++j)
+        {
+            Scoords[j] = coords[j][i];
+        }
+
+        // Obtain Element and LocalCoordinate to interpolate
+        int elmtid = m_expInField[0]->GetExpIndex(Scoords, Lcoords, 1e-3);
+
+        if (elmtid >= 0)
+        {
+            int offset = m_expInField[0]->GetPhys_Offset(
+                m_expInField[0]->GetOffset_Elmt_Id(elmtid));
+
+            for (int f = 0; f < m_expInField.size(); ++f)
+            {
+                NekDouble value =
+                    m_expInField[f]->GetExp(elmtid)->StdPhysEvaluate(
+                        Lcoords, m_expInField[f]->GetPhys() + offset);
+
+                if ((boost::math::isnan)(value))
+                {
+                    ASSERTL0(false, "new value is not a number");
+                }
+                else
+                {
+                    m_expOutField[f]->UpdatePhys()[i] = value;
+                }
+            }
+        }
+
+        int progress = int(100 * i / nOutPts);
+        if (m_progressCallback && progress > lastProg)
+        {
+            m_progressCallback(i, nOutPts);
+            lastProg = progress;
+        }
+    }
 }
 
 

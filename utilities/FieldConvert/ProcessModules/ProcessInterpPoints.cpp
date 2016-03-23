@@ -563,6 +563,17 @@ void ProcessInterpPoints::InterpolateFieldToPts(
             }
         }
     }
+
+    // copy the pts values to m_data
+    m_f->m_data.resize(nfields);
+    for (int f = 0; f < nfields; ++f)
+    {
+        m_f->m_data[f].resize(pts->GetNpoints());
+        for (int i = 0; i < pts->GetNpoints(); i++)
+        {
+            m_f->m_data[f][i] = pts->GetPointVal(pts->GetDim() + f, i);
+        }
+    }
 }
 
 

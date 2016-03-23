@@ -95,13 +95,32 @@ void ProcessCurvedEdges::Process()
                 continue;
             }
 
-            ASSERTL0(j == 1 || j == 3, "rofl");
-
-            // Check all edge interior points.
-            for (int k = 0; k < 3; ++k)
+            switch (dim)
             {
-                EdgeSharedPtr edge = el->GetEdge(prismedge[(j - 1) / 2][k]);
-                GenerateEdgeNodes(edge);
+                case 2:
+                {
+                    EdgeSharedPtr edge = el->GetEdge(j);
+                    GenerateEdgeNodes(edge);
+                }
+                break;
+
+                case 3:
+                {
+                    ASSERTL0(j == 1 || j == 3,
+                            "Curved edge needs to be on prism triangular face");
+                    // Check all edge interior points.
+                    for (int k = 0; k < 3; ++k)
+                    {
+                        EdgeSharedPtr edge =
+                                el->GetEdge(prismedge[(j - 1) / 2][k]);
+                        GenerateEdgeNodes(edge);
+                    }
+                }
+                break;
+
+                default:
+                    ASSERTL0(0,"Dimension not supported");
+                break;
             }
         }
     }

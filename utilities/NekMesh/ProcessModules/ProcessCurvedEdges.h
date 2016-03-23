@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessCyl.cpp
+//  File: ProcessCurvedEdges.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,78 +29,37 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: create cylinder curved edges
+//  Description: Abstract base class for creating curved edges on boundaries.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LocalRegions/SegExp.h>
-#include <LocalRegions/QuadExp.h>
-#include <LocalRegions/TriExp.h>
-#include <LocalRegions/NodalTriExp.h>
+#ifndef UTILITIES_NEKMESH_PROCESSCURVEDEDGES
+#define UTILITIES_NEKMESH_PROCESSCURVEDEDGES
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-
-#include <NekMeshUtils/MeshElements/Element.h>
-
-#include "ProcessCyl.h"
-
-using namespace std;
-using namespace Nektar::NekMeshUtils;
+#include "../Module.h"
 
 namespace Nektar
 {
 namespace Utilities
 {
 
-ModuleKey ProcessCyl::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "cyl"), ProcessCyl::create);
-
-/**
- * @brief Default constructor.
- */
-ProcessCyl::ProcessCyl(MeshSharedPtr m) : ProcessCurvedEdges(m)
+class ProcessCurvedEdges : public ProcessModule
 {
-    m_config["r"] = ConfigOption(false, "0.0", "Radius of cylinder.");
-}
+public:
+    ProcessCurvedEdges(MeshSharedPtr m);
+    virtual ~ProcessCurvedEdges();
 
-/**
- * @brief Destructor.
- */
-ProcessCyl::~ProcessCyl()
-{
-}
-
-void ProcessCyl::v_GenerateEdgeNodes(EdgeSharedPtr edge)
-{
-    NodeSharedPtr n1 = edge->m_n1;
-    NodeSharedPtr n2 = edge->m_n2;
-
-    int nq    = m_config["N"].as<int>();
-    double r  = m_config["r"].as<double>();
-    double t1 = atan2(n1->m_y, n1->m_x);
-    double t2 = atan2(n2->m_y, n2->m_x);
-    double dt;
-    double dz;
-
-    if (t1 < -M_PI / 2.0 && t2 > 0.0)
+    /// Write mesh to output file.
+    virtual void Process();
+    void GenerateEdgeNodes(EdgeSharedPtr edge)
     {
-        t1 += 2 * M_PI;
-    }
-    if (t2 < -M_PI / 2.0 && t1 > 0.0)
-    {
-        t2 += 2 * M_PI;
+        v_GenerateEdgeNodes( edge);
     }
 
-    dt = (t2 - t1) / (nq - 1);
-    dz = (n2->m_z - n1->m_z) / (nq - 1);
+protected:
+    virtual void v_GenerateEdgeNodes(EdgeSharedPtr edge) = 0;
+};
+}
+}
 
-    edge->m_edgeNodes.resize(nq - 2);
-    for (int i = 1; i < nq - 1; ++i)
-    {
-        edge->m_edgeNodes[i - 1] = NodeSharedPtr(new Node(
-            0, r * cos(t1 + i * dt), r * sin(t1 + i * dt), n1->m_z + i * dz));
-    }
-    edge->m_curveType = LibUtilities::ePolyEvenlySpaced;
-}
-}
-}
+#endif

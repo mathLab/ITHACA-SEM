@@ -105,18 +105,19 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     ASSERTL0(coord_id <= m_f->m_fieldPts->GetDim() - 1,
         "interpcoord is bigger than the Pts files dimension");
 
-    // interpolate points and transform
-    if (m_f->m_session->GetComm()->GetRank() == 0)
+    SolverUtils::Interpolator interp(SolverUtils::eNoMethod, coord_id);
+
+    if (m_f->m_comm->GetRank() == 0)
     {
-        m_f->m_fieldPts->setProgressCallback(
+        interp.SetProgressCallback(
             &ProcessInterpPointDataToFld::PrintProgressbar, this);
-        cout << "Interpolating:       ";
+    }
+    interp.Interpolate(m_f->m_fieldPts, outPts);
+    if (m_f->m_comm->GetRank() == 0)
+    {
+        cout << endl;
     }
 
-    SolverUtils::Interpolator Interp(SolverUtils::eNoMethod, coord_id);
-    Interp.Interpolate(m_f->m_fieldPts, outPts);
-
-    cout << " done" << endl;
 
     for(i = 0; i < totpoints; ++i)
     {
@@ -124,11 +125,6 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         {
             m_f->m_exp[j]->SetPhys(i, outPts->GetPointVal(j,i));
         }
-    }
-
-    if(m_f->m_session->GetComm()->GetRank() == 0)
-    {
-        cout << endl;
     }
 
     // forward transform fields

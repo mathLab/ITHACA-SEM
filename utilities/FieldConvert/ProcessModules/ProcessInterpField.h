@@ -61,6 +61,8 @@ class ProcessInterpField : public ProcessModule
         /// Write mesh to output file.
         virtual void Process(po::variables_map &vm);
 
+        void PrintProgressbar(const int position, const int goal) const;
+
     private:
         FieldSharedPtr m_fromField;
 

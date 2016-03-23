@@ -63,6 +63,8 @@ class ProcessInterpPoints : public ProcessModule
         /// Write mesh to output file.
         virtual void Process(po::variables_map &vm);
 
+        void PrintProgressbar(const int position, const int goal) const;
+
     private:
 
         void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,

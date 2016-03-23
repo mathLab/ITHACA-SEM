@@ -40,6 +40,7 @@ using namespace std;
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <SolverUtils/Interpolator.h>
 #include <boost/math/special_functions/fpclassify.hpp>
 namespace Nektar
@@ -229,7 +230,16 @@ void ProcessInterpField::Process(po::variables_map &vm)
     }
 
     SolverUtils::Interpolator interp;
+    if (m_f->m_comm->GetRank() == 0)
+    {
+        interp.SetProgressCallback(&ProcessInterpField::PrintProgressbar,
+                                   this);
+    }
     interp.Interpolate(m_fromField->m_exp, m_f->m_exp);
+    if (m_f->m_comm->GetRank() == 0)
+    {
+        cout << endl;
+    }
 
     for (int i = 0; i < nfields; ++i)
     {
@@ -264,6 +274,12 @@ void ProcessInterpField::Process(po::variables_map &vm)
 
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;
+}
+
+void ProcessInterpField::PrintProgressbar(const int position,
+                                          const int goal) const
+{
+    LibUtilities::PrintProgressbar(position, goal, "Interpolating");
 }
 
 

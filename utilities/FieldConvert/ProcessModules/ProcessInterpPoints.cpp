@@ -40,6 +40,7 @@ using namespace std;
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <SolverUtils/Interpolator.h>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/lexical_cast.hpp>
@@ -505,22 +506,12 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         m_f->m_fieldPts->AddField(newPts, fromField->m_fielddef[0]->m_fields[j]);
     }
 
-    if(rank == 0)
-    {
-        cout << "Interpolating on proc 0 [" << flush;
-    }
-
     NekDouble clamp_low = m_config["clamptolowervalue"].as<NekDouble>();
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
 
     InterpolateFieldToPts(fromField->m_exp, m_f->m_fieldPts,
                           clamp_low, clamp_up, def_value);
-
-    if(rank == 0)
-    {
-        cout << "]" << endl;
-    }
 
     if(!boost::iequals(m_config["cp"].as<string>(),"NotSet"))
     {
@@ -547,7 +538,16 @@ void ProcessInterpPoints::InterpolateFieldToPts(
     }
     
     SolverUtils::Interpolator interp;
+    if (m_f->m_comm->GetRank() == 0)
+    {
+        interp.SetProgressCallback(&ProcessInterpPoints::PrintProgressbar,
+                                   this);
+    }
     interp.Interpolate(field0, pts);
+    if (m_f->m_comm->GetRank() == 0)
+    {
+        cout << endl;
+    }
 
     for (int f = 0; f < nfields; ++f)
     {
@@ -663,6 +663,12 @@ void ProcessInterpPoints::calcCp0()
             }
         }
     }
+}
+
+void ProcessInterpPoints::PrintProgressbar(const int position,
+                                           const int goal) const
+{
+    LibUtilities::PrintProgressbar(position, goal, "Interpolating");
 }
 
 }

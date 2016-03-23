@@ -87,6 +87,9 @@ namespace Nektar
 
                 /// Block execution until all processes reach this point
                 LIB_UTILITIES_EXPORT inline void Block();
+		
+		/// Return the time in seconds
+		LIB_UTILITIES_EXPORT inline double Wtime();
 
                 template<class T>
                 void Send(int pProc, const T& pData);
@@ -143,6 +146,7 @@ namespace Nektar
                 virtual void v_Finalise() = 0;
                 virtual int  v_GetRank() = 0;
                 virtual void v_Block() = 0;
+		virtual double v_Wtime() = 0;
                 virtual void v_Send(const void* buf, int count, CommDataType dt, int dest) = 0;
                 virtual void v_Recv(void* buf, int count, CommDataType dt, int source) = 0;
                 virtual void v_Sendrecv(const void *sendbuf, int sendcount, CommDataType sendtype, int dest,
@@ -208,6 +212,14 @@ namespace Nektar
         inline void Comm::Block()
         {
             v_Block();
+        }
+
+	/**
+         *
+         */
+        inline double Comm::Wtime()
+        {
+            return v_Wtime();
         }
 
         template<class T>

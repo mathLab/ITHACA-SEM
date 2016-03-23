@@ -73,6 +73,7 @@ namespace Nektar
             LIB_UTILITIES_EXPORT virtual bool v_TreatAsRankZero(void);
 
             LIB_UTILITIES_EXPORT virtual void v_Block();
+	    LIB_UTILITIES_EXPORT virtual double v_Wtime();
             LIB_UTILITIES_EXPORT virtual void v_Send(const void* buf, int count, CommDataType dt, int dest);
             LIB_UTILITIES_EXPORT virtual void v_Recv(void* buf, int count, CommDataType dt, int source);
             LIB_UTILITIES_EXPORT virtual void v_Sendrecv(const void *sendbuf, int sendcount, CommDataType sendtype, int dest,

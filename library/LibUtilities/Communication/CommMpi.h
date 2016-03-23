@@ -79,6 +79,7 @@ namespace Nektar
             virtual void v_Finalise();
             virtual int  v_GetRank();
             virtual void v_Block();
+	    virtual double v_Wtime();
             virtual bool v_TreatAsRankZero(void);
             virtual void v_Send(const void* buf, int count, CommDataType dt, int dest);
             virtual void v_Recv(void* buf, int count, CommDataType dt, int source);

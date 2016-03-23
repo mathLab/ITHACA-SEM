@@ -90,6 +90,13 @@ namespace Nektar
         {
         }
 
+        /**
+         *
+         */
+        double CommSerial::v_Wtime()
+        {
+	    return 0;
+        }
 
         /**
          *

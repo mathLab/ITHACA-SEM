@@ -154,6 +154,13 @@ namespace Nektar
             MPI_Barrier(m_comm);
         }
 
+        /**
+         *
+         */
+        double CommMpi::v_Wtime()
+        {
+            return MPI_Wtime();
+        }
 
         /**
          *

@@ -617,10 +617,14 @@ void ProcessInterpPoints::calcCp0()
 
     if(pfield != -1)
     {
+        Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
+        m_f->m_fieldPts->AddField(newPts, "Cp");
         nfields += 1;
 
         if(velid.size())
         {
+            Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
+            m_f->m_fieldPts->AddField(newPts, "Cp0");
             nfields += 1;
         }
         else

@@ -40,7 +40,7 @@ ENDIF (NEKTAR_USE_MESHGEN)
 # LocalRegions.
 ADD_UTILITIES_EXECUTABLE(NekMesh COMPONENT nekmesh
     SOURCES ${NekMeshSources}
-    DEPENDS NekMeshUtils LocalUtils)
+    DEPENDS NekMeshUtils LocalRegions)
 
 IF (NEKTAR_USE_CCM)
    TARGET_LINK_LIBRARIES(NekMesh ccmio adf)

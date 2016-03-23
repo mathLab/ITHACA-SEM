@@ -395,7 +395,7 @@ void Interpolator::Interpolate(const vector< MultiRegions::ExpListSharedPtr > ex
                 }
                 else
                 {
-                    m_ptsOutField->SetPointVal(f, i, value);
+                    m_ptsOutField->SetPointVal(m_ptsOutField->GetDim() + f, i, value);
                 }
             }
         }

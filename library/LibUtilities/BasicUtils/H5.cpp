@@ -480,6 +480,11 @@ namespace Nektar
                         (m_Id, H5S_SELECT_SET, &start, NULL, &count, NULL));
             }
 
+	    hsize_t DataSpace::GetSize()
+	    {
+	        return H5Sget_simple_extent_npoints(m_Id);
+	    }
+
             DataType::DataType(hid_t id) :
                     Object(id)
             {
@@ -534,6 +539,10 @@ namespace Nektar
             const hid_t DataTypeTraits<unsigned int>::NativeType =
                     H5T_NATIVE_UINT;
 
+	    template<>
+            const hid_t DataTypeTraits<unsigned long>::NativeType =
+                    H5T_NATIVE_ULONG;
+	  
             template<>
             const hid_t DataTypeTraits<unsigned long long>::NativeType =
                     H5T_NATIVE_ULLONG;

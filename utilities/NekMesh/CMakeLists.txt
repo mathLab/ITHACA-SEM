@@ -10,6 +10,7 @@ SET(NekMeshHeaders
     OutputModules/OutputGmsh.h
     OutputModules/OutputNekpp.h
     ProcessModules/ProcessBL.h
+    ProcessModules/ProcessCurve.h
     ProcessModules/ProcessCurvedEdges.h
     ProcessModules/ProcessCyl.h
     ProcessModules/ProcessDetectSurf.h
@@ -37,6 +38,7 @@ SET(NekMeshSources
     OutputModules/OutputGmsh.cpp
     OutputModules/OutputNekpp.cpp
     ProcessModules/ProcessBL.cpp
+    ProcessModules/ProcessCurve.cpp
     ProcessModules/ProcessCurvedEdges.cpp
     ProcessModules/ProcessCyl.cpp
     ProcessModules/ProcessDetectSurf.cpp

@@ -64,6 +64,17 @@ namespace Nektar
         class FieldIOHdf5 : public FieldIO
         {
             public:
+	        static const unsigned int ELEM_DCMP_IDX;
+	        static const unsigned int VAL_DCMP_IDX;
+	        static const unsigned int HASH_DCMP_IDX;
+                static const unsigned int MAX_DCMPS;
+	        static const unsigned int ELEM_CNT_IDX;
+                static const unsigned int VAL_CNT_IDX;
+                static const unsigned int MAX_CNTS;
+	        static const unsigned int IDS_IDX_IDX;
+	        static const unsigned int DATA_IDX_IDX;
+                static const unsigned int MAX_IDXS;
+	
                 /// Creates an instance of this class
                 LIB_UTILITIES_EXPORT
                 static FieldIOSharedPtr create(
@@ -80,8 +91,7 @@ namespace Nektar
 
                 LIB_UTILITIES_EXPORT
                 virtual void ImportFieldDefs(DataSourceSharedPtr dataSource,
-                        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        bool expChild);
+					     std::vector<FieldDefinitionsSharedPtr> &fielddefs, bool expChild) {}
 
                 inline virtual const std::string& GetClassName() const {
                     return className;
@@ -110,9 +120,23 @@ namespace Nektar
                         FieldMetaDataMap &fieldmetadatamap);
 
 
+		/// Imports the field definitions.
+		LIB_UTILITIES_EXPORT
+		void ImportFieldDefsHdf5(H5::PListSharedPtr readPL,
+		  	H5::GroupSharedPtr root,
+			H5::DataSetSharedPtr ids_dset,
+			H5::DataSpaceSharedPtr ids_fspace,
+			size_t ids_i,
+			std::vector<std::size_t> &decomps,
+			std::vector<FieldDefinitionsSharedPtr> &fielddefs);
+		  
                 /// Imports the data fields.
                 LIB_UTILITIES_EXPORT
-                void ImportFieldData(DataSourceSharedPtr dataSource,
+                void ImportFieldData(H5::PListSharedPtr readPL,
+			H5::DataSetSharedPtr data_dset,
+			H5::DataSpaceSharedPtr data_fspace,
+			size_t data_i,
+			std::vector<std::size_t> &decomps,
                         const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                         std::vector<std::vector<NekDouble> > &fielddata);
         };

@@ -61,6 +61,8 @@ ModuleKey ProcessCyl::className = GetModuleFactory().RegisterCreatorFunction(
 ProcessCyl::ProcessCyl(MeshSharedPtr m) : ProcessCurvedEdges(m)
 {
     m_config["r"] = ConfigOption(false, "0.0", "Radius of cylinder.");
+    m_config["xc"] = ConfigOption(false, "0.0", "Radius of cylinder.");
+    m_config["yc"] = ConfigOption(false, "0.0", "Radius of cylinder.");
 }
 
 /**
@@ -77,8 +79,10 @@ void ProcessCyl::v_GenerateEdgeNodes(EdgeSharedPtr edge)
 
     int nq    = m_config["N"].as<int>();
     double r  = m_config["r"].as<double>();
-    double t1 = atan2(n1->m_y, n1->m_x);
-    double t2 = atan2(n2->m_y, n2->m_x);
+    double xc  = m_config["xc"].as<double>();
+    double yc  = m_config["yc"].as<double>();
+    double t1 = atan2(n1->m_y - yc, n1->m_x - xc);
+    double t2 = atan2(n2->m_y - yc, n2->m_x - xc);
     double dt;
     double dz;
 
@@ -98,7 +102,8 @@ void ProcessCyl::v_GenerateEdgeNodes(EdgeSharedPtr edge)
     for (int i = 1; i < nq - 1; ++i)
     {
         edge->m_edgeNodes[i - 1] = NodeSharedPtr(new Node(
-            0, r * cos(t1 + i * dt), r * sin(t1 + i * dt), n1->m_z + i * dz));
+            0, xc + r * cos(t1 + i * dt),
+               yc + r * sin(t1 + i * dt), n1->m_z + i * dz));
     }
     edge->m_curveType = LibUtilities::ePolyEvenlySpaced;
 }

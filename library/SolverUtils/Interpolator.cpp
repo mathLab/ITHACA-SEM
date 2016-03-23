@@ -344,9 +344,9 @@ void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
     int nOutPts = m_expOutField[0]->GetTotPoints();
     int outDim = m_expOutField[0]->GetCoordim(0);
 
-    // create intermediate Ptsfield that matches the expOutField
-    Array<OneD, Array<OneD, NekDouble> > pts(outDim + nFields);
-    for (int i = 0; i < outDim + nFields; ++i)
+    // create intermediate Ptsfield that wraps the expOutField
+    Array<OneD, Array<OneD, NekDouble> > pts(outDim);
+    for (int i = 0; i < outDim; ++i)
     {
         pts[i] = Array<OneD,  NekDouble>(nOutPts);
     }
@@ -362,15 +362,16 @@ void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
     {
         m_expOutField[0]->GetCoords(pts[0], pts[1], pts[2]);
     }
+
     LibUtilities::PtsFieldSharedPtr tmpPts =
             MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(outDim, pts);
-    //TODO: no interpolation needed here, we might as well just take the physical values of the expansion
-    Interpolator interp1;
-    interp1.Interpolate(m_expOutField, tmpPts);
+    for (int f = 0; f < expOutField.size(); ++f)
+    {
+        tmpPts->AddField(m_expOutField[f]->GetCoeffs(), m_ptsInField->GetFieldName(f));
+    }
 
     // interpolate m_ptsInField to this intermediate field
-    Interpolator interp2;
-    interp2.Interpolate(m_ptsInField, tmpPts);
+    Interpolate(m_ptsInField, tmpPts);
 
     // write the intermediate fields data into our expOutField
     for (int i = 0; i < nFields; i++)
@@ -380,8 +381,6 @@ void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
             m_expOutField[i]->UpdatePhys()[j] = tmpPts->GetPointVal(i, j);
         }
     }
-
-    //TODO: figure out a way to show a reasonable progreesbar
 }
 
 

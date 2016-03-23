@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2015 Kilian Lackhove
+// Copyright (c) 2016 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -42,16 +42,16 @@ namespace SolverUtils
 {
 
 /**
- * @brief Compute the weights for an interpolation of the field values to physical points
+ * @brief Compute interpolation weights without doing any interpolation
  *
- * @param physCoords    coordinates of the physical points
- * @param coord_id      id of the coordinate to use for interpolation.
+ * @param ptsInField    input field
+ * @param ptsOutField   output field
  *
- * Set coord_id to -1 to use n-D interpolation for an n-dimensional field.
- * The most suitable algorithm is chosen automatically.
+ * In and output fields must have the same dimension.  The most suitable
+ * algorithm is chosen automatically if it wasnt set explicitly.
  */
-void Interpolator::CalcWeights(
-            const LibUtilities::PtsFieldSharedPtr ptsInField, LibUtilities::PtsFieldSharedPtr &ptsOutField)
+void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
+                               LibUtilities::PtsFieldSharedPtr &ptsOutField)
 {
     ASSERTL0(ptsInField->GetDim() <= m_dim, "too many dimesions in inField");
     ASSERTL0(ptsOutField->GetDim() <= m_dim, "too many dimesions in outField");
@@ -71,15 +71,16 @@ void Interpolator::CalcWeights(
         Array<OneD, NekDouble> coords(3, 0.0);
         for (int j = 0; j < m_ptsInField->GetDim(); ++j)
         {
-            coords[j] = m_ptsInField->GetPointVal(j,i);
+            coords[j] = m_ptsInField->GetPointVal(j, i);
         }
-        inPoints.push_back(PtsPointPair(BPoint(coords[0], coords[1], coords[2]), i));
+        inPoints.push_back(
+            PtsPointPair(BPoint(coords[0], coords[1], coords[2]), i));
     }
     m_rtree = MemoryManager<PtsRtree>::AllocateSharedPtr();
     m_rtree->insert(inPoints.begin(), inPoints.end());
 
     // set a default method
-    if(m_method == eNoMethod)
+    if (m_method == eNoMethod)
     {
         if (m_ptsInField->GetDim() == 1 || m_coordId >= 0)
         {
@@ -100,7 +101,7 @@ void Interpolator::CalcWeights(
                 Array<OneD, NekDouble> tmp(m_dim, 0.0);
                 for (int j = 0; j < m_ptsOutField->GetDim(); ++j)
                 {
-                    tmp[j] = m_ptsOutField->GetPointVal(j,i);
+                    tmp[j] = m_ptsOutField->GetPointVal(j, i);
                 }
                 PtsPoint searchPt(i, tmp, 1E30);
 
@@ -119,7 +120,8 @@ void Interpolator::CalcWeights(
 
         case eQuadratic:
         {
-            ASSERTL0(m_ptsInField->GetDim() == 1 || m_coordId >= 0, "not implemented");
+            ASSERTL0(m_ptsInField->GetDim() == 1 || m_coordId >= 0,
+                     "not implemented");
 
             if (m_ptsInField->GetDim() == 1)
             {
@@ -131,10 +133,9 @@ void Interpolator::CalcWeights(
                 Array<OneD, NekDouble> tmp(m_dim, 0.0);
                 for (int j = 0; j < m_ptsOutField->GetDim(); ++j)
                 {
-                    tmp[j] = m_ptsOutField->GetPointVal(j,i);
+                    tmp[j] = m_ptsOutField->GetPointVal(j, i);
                 }
                 PtsPoint searchPt(i, tmp, 1E30);
-
 
                 if (m_ptsInField->GetNpoints() <= 2)
                 {
@@ -163,7 +164,7 @@ void Interpolator::CalcWeights(
                 Array<OneD, NekDouble> tmp(m_dim, 0.0);
                 for (int j = 0; j < m_ptsOutField->GetDim(); ++j)
                 {
-                    tmp[j] = m_ptsOutField->GetPointVal(j,i);
+                    tmp[j] = m_ptsOutField->GetPointVal(j, i);
                 }
                 PtsPoint searchPt(i, tmp, 1E30);
 
@@ -182,7 +183,8 @@ void Interpolator::CalcWeights(
 
         case eGauss:
         {
-            ASSERTL0(m_filtWidth > NekConstants::kNekZeroTol, "No filter width set");
+            ASSERTL0(m_filtWidth > NekConstants::kNekZeroTol,
+                     "No filter width set");
             // use m_filtWidth as FWHM
             NekDouble sigma = m_filtWidth * 0.4246609001;
 
@@ -191,7 +193,7 @@ void Interpolator::CalcWeights(
                 Array<OneD, NekDouble> tmp(m_dim, 0.0);
                 for (int j = 0; j < m_ptsOutField->GetDim(); ++j)
                 {
-                    tmp[j] = m_ptsOutField->GetPointVal(j,i);
+                    tmp[j] = m_ptsOutField->GetPointVal(j, i);
                 }
                 PtsPoint searchPt(i, tmp, 1E30);
 
@@ -214,31 +216,34 @@ void Interpolator::CalcWeights(
     }
 }
 
-
 /**
- * @brief Perform the interpolate of field values to physical points
+ * @brief Interpolate from a pts field to a pts field
  *
- * @param intFields     interpolated field at the physical points
+ * @param ptsInField    input field
+ * @param ptsOutField   output field
  *
- * The weights must have already been computed by @CalcWeights or set by
- * @SetWeights.
+ * In and output fields must have the same dimension and number of fields.
+ * The most suitable algorithm is chosen automatically if it wasnt set
+ * explicitly.
  */
-void Interpolator::Interpolate(
-            const LibUtilities::PtsFieldSharedPtr ptsInField, LibUtilities::PtsFieldSharedPtr &ptsOutField)
+void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
+                               LibUtilities::PtsFieldSharedPtr &ptsOutField)
 {
-    ASSERTL0(ptsInField->GetNFields() == ptsOutField->GetNFields(), "number of fields does not match");
+    ASSERTL0(ptsInField->GetNFields() == ptsOutField->GetNFields(),
+             "number of fields does not match");
     ASSERTL0(ptsInField->GetDim() <= m_dim, "too many dimesions in inField");
     ASSERTL0(ptsOutField->GetDim() <= m_dim, "too many dimesions in outField");
 
     m_ptsInField = ptsInField;
     m_ptsOutField = ptsOutField;
 
-    if ( m_weights.num_elements() == 0)
+    if (m_weights.num_elements() == 0)
     {
         CalcWeights(m_ptsInField, m_ptsOutField);
     }
 
-    ASSERTL0(m_weights.num_elements() == m_ptsOutField->GetNpoints(), "weights dimension mismatch");
+    ASSERTL0(m_weights.num_elements() == m_ptsOutField->GetNpoints(),
+             "weights dimension mismatch");
 
     int nFields = m_ptsOutField->GetNFields();
     int nOutPts = m_ptsOutField->GetNpoints();
@@ -259,14 +264,26 @@ void Interpolator::Interpolate(
             for (int k = 0; k < nPts; ++k)
             {
                 unsigned int nIdx = m_neighInds[j][k];
-                val += m_weights[j][k] * m_ptsInField->GetPointVal(inDim + i, nIdx);
+                val += m_weights[j][k] *
+                       m_ptsInField->GetPointVal(inDim + i, nIdx);
             }
-            m_ptsOutField->SetPointVal(i,j, val);
+            m_ptsOutField->SetPointVal(i, j, val);
         }
     }
 }
 
-
+/**
+ * @brief Interpolate from one expansion to an other
+ *
+ * @param expInField    input field
+ * @param expOutField   output field
+ *
+ *
+ * In and output fields must have the same dimension and number of fields.
+ * Weights are currently not stored for later use.
+ * If both expansions use the same mesh, use LibUtilities/Foundations/Interp.h
+ * instead.
+ */
 void Interpolator::Interpolate(
     const vector<MultiRegions::ExpListSharedPtr> expInField,
     vector<MultiRegions::ExpListSharedPtr> &expOutField)
@@ -350,11 +367,24 @@ void Interpolator::Interpolate(
     }
 }
 
-
-void Interpolator::Interpolate(const vector< MultiRegions::ExpListSharedPtr > expInField, LibUtilities::PtsFieldSharedPtr &ptsOutField)
+/**
+ * @brief Interpolate from an expansion to a pts field
+ *
+ * @param expInField    input field
+ * @param ptsOutField   output field
+ *
+ *
+ * In and output fields must have the same dimension and number of fields.
+ * Weights are currently not stored for later use.
+ */
+void Interpolator::Interpolate(
+    const vector<MultiRegions::ExpListSharedPtr> expInField,
+    LibUtilities::PtsFieldSharedPtr &ptsOutField)
 {
-    ASSERTL0(expInField.size() == ptsOutField->GetNFields(), "number of fields does not match");
-    ASSERTL0(expInField[0]->GetCoordim(0) <= m_dim, "too many dimesions in inField");
+    ASSERTL0(expInField.size() == ptsOutField->GetNFields(),
+             "number of fields does not match");
+    ASSERTL0(expInField[0]->GetCoordim(0) <= m_dim,
+             "too many dimesions in inField");
     ASSERTL0(ptsOutField->GetDim() <= m_dim, "too many dimesions in outField");
 
     m_expInField = expInField;
@@ -373,21 +403,22 @@ void Interpolator::Interpolate(const vector< MultiRegions::ExpListSharedPtr > ex
         Array<OneD, NekDouble> coords(nInDim, 0.0);
         for (int j = 0; j < m_ptsOutField->GetDim(); ++j)
         {
-            coords[j] = m_ptsOutField->GetPointVal(j,i);
+            coords[j] = m_ptsOutField->GetPointVal(j, i);
         }
 
         // Obtain Element and LocalCoordinate to interpolate
         int elmtid = m_expInField[0]->GetExpIndex(coords, Lcoords, 1e-3);
 
-        if(elmtid >= 0)
+        if (elmtid >= 0)
         {
-            int offset = m_expInField[0]->GetPhys_Offset(m_expInField[0]->
-                                               GetOffset_Elmt_Id(elmtid));
+            int offset = m_expInField[0]->GetPhys_Offset(
+                m_expInField[0]->GetOffset_Elmt_Id(elmtid));
 
             for (int f = 0; f < m_expInField.size(); ++f)
             {
-                NekDouble value = m_expInField[f]->GetExp(elmtid)->
-                    StdPhysEvaluate(Lcoords, m_expInField[f]->GetPhys() +offset);
+                NekDouble value =
+                    m_expInField[f]->GetExp(elmtid)->StdPhysEvaluate(
+                        Lcoords, m_expInField[f]->GetPhys() + offset);
 
                 if ((boost::math::isnan)(value))
                 {
@@ -395,7 +426,8 @@ void Interpolator::Interpolate(const vector< MultiRegions::ExpListSharedPtr > ex
                 }
                 else
                 {
-                    m_ptsOutField->SetPointVal(m_ptsOutField->GetDim() + f, i, value);
+                    m_ptsOutField->SetPointVal(
+                        m_ptsOutField->GetDim() + f, i, value);
                 }
             }
         }
@@ -409,17 +441,28 @@ void Interpolator::Interpolate(const vector< MultiRegions::ExpListSharedPtr > ex
     }
 }
 
-
-void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField, vector< MultiRegions::ExpListSharedPtr > &expOutField)
+/**
+ * @brief Interpolate from a pts field to an expansion
+ *
+ * @param ptsInField    input field
+ * @param expOutField   output field
+ *
+ * In and output fields must have the same dimension and number of fields.
+ */
+void Interpolator::Interpolate(
+    const LibUtilities::PtsFieldSharedPtr ptsInField,
+    vector<MultiRegions::ExpListSharedPtr> &expOutField)
 {
-    ASSERTL0(expOutField.size() == ptsInField->GetNFields(), "number of fields does not match");
+    ASSERTL0(expOutField.size() == ptsInField->GetNFields(),
+             "number of fields does not match");
     ASSERTL0(ptsInField->GetDim() <= m_dim, "too many dimesions in inField");
-    ASSERTL0(expOutField[0]->GetCoordim(0) <= m_dim, "too many dimesions in outField");
+    ASSERTL0(expOutField[0]->GetCoordim(0) <= m_dim,
+             "too many dimesions in outField");
 
     m_ptsInField = ptsInField;
     m_expOutField = expOutField;
 
-    int nFields = max( (int) ptsInField->GetNFields(), (int) m_expOutField.size());
+    int nFields = max((int)ptsInField->GetNFields(), (int)m_expOutField.size());
     int nOutPts = m_expOutField[0]->GetTotPoints();
     int outDim = m_expOutField[0]->GetCoordim(0);
 
@@ -427,7 +470,7 @@ void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
     Array<OneD, Array<OneD, NekDouble> > pts(outDim);
     for (int i = 0; i < outDim; ++i)
     {
-        pts[i] = Array<OneD,  NekDouble>(nOutPts);
+        pts[i] = Array<OneD, NekDouble>(nOutPts);
     }
     if (outDim == 1)
     {
@@ -443,10 +486,11 @@ void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
     }
 
     LibUtilities::PtsFieldSharedPtr tmpPts =
-            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(outDim, pts);
+        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(outDim, pts);
     for (int f = 0; f < expOutField.size(); ++f)
     {
-        tmpPts->AddField(m_expOutField[f]->GetCoeffs(), m_ptsInField->GetFieldName(f));
+        tmpPts->AddField(m_expOutField[f]->GetCoeffs(),
+                         m_ptsInField->GetFieldName(f));
     }
 
     // interpolate m_ptsInField to this intermediate field
@@ -462,7 +506,6 @@ void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
     }
 }
 
-
 int Interpolator::GetDim() const
 {
     return m_dim;
@@ -473,30 +516,25 @@ int Interpolator::GetCoordId() const
     return m_coordId;
 }
 
-
 NekDouble Interpolator::GetFiltWidth() const
 {
     return m_filtWidth;
 }
-
 
 InterpMethod Interpolator::GetInterpMethod() const
 {
     return m_method;
 }
 
-
 LibUtilities::PtsFieldSharedPtr Interpolator::GetInField() const
 {
     return m_ptsInField;
 }
 
-
 LibUtilities::PtsFieldSharedPtr Interpolator::GetOutField() const
 {
     return m_ptsOutField;
 }
-
 
 void Interpolator::PrintStatistics()
 {
@@ -507,16 +545,19 @@ void Interpolator::PrintStatistics()
     }
 
     cout << "Number of points: " << m_neighInds.num_elements() << endl;
-    cout << "mean Number of Neighbours per point: " << meanN /  m_neighInds.num_elements() << endl;
+    cout << "mean Number of Neighbours per point: "
+         << meanN / m_neighInds.num_elements() << endl;
 }
 
-
 /**
- * @brief Compute interpolation weights for a physical point using Gauss filtering
+ * @brief Computes interpolation weights using gaussian interpolation
  *
- * @param physPtIdx         The index of the physical point in its storage array
- * @param physPt            The coordinates of the physical point
+ * @param searchPt    point for which the weights are computed
+ * @param sigma       standard deviation of the gauss function
  *
+ * Performs an interpolation using gauss weighting. Ideal for filtering fields.
+ * The filter width should be half the FWHM (= 1.1774 sigma) and must be set in
+ * the constructor of the Interpolator class.
  */
 void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
 {
@@ -524,31 +565,32 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
 
     // find nearest neighbours
     int maxPts = 500;
-    vector<PtsPoint > neighbourPts;
+    vector<PtsPoint> neighbourPts;
     FindNeighbours(searchPt, neighbourPts, 4 * sigma);
     int numPts = neighbourPts.size();
 
-    // handle the case that there was no point within 1.96 * sigma
+    // handle the case that there was no point within 4 * sigma
     if (numPts == 0)
     {
-        m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (0);
-        m_weights[searchPt.idx] = Array<OneD, float> (0);
+        m_neighInds[searchPt.idx] = Array<OneD, unsigned int>(0);
+        m_weights[searchPt.idx] = Array<OneD, float>(0);
 
         return;
     }
 
-    m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
+    m_neighInds[searchPt.idx] = Array<OneD, unsigned int>(numPts);
     for (int i = 0; i < numPts; i++)
     {
         m_neighInds[searchPt.idx][i] = neighbourPts.at(i).idx;
     }
 
-    m_weights[searchPt.idx] = Array<OneD, float> (numPts, 0.0);
+    m_weights[searchPt.idx] = Array<OneD, float>(numPts, 0.0);
 
     NekDouble wSum = 0.0;
     for (int i = 0; i < numPts; ++i)
     {
-        m_weights[searchPt.idx][i] = exp(-1 * pow(neighbourPts[i].dist, 2.0f) / ts2);
+        m_weights[searchPt.idx][i] =
+            exp(-1 * pow(neighbourPts[i].dist, 2.0f) / ts2);
         wSum += m_weights[searchPt.idx][i];
     }
 
@@ -557,18 +599,19 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
         m_weights[searchPt.idx][i] = m_weights[searchPt.idx][i] / wSum;
     }
 
-    ASSERTL0(Vmath::Nnan(numPts, m_weights[searchPt.idx], 1) == 0, "NaN found in weights");
+    ASSERTL0(Vmath::Nnan(numPts, m_weights[searchPt.idx], 1) == 0,
+             "NaN found in weights");
 }
 
-
 /**
- * @brief Compute interpolation weights for a 1D physical point using linear
- * interpolation.
+ * @brief Computes interpolation weights using linear interpolation
  *
- * @param physPtIdx         The index of the physical point in its storage array
- * @param coord             The coordinate of the physical point
+ * @param searchPt    point for which the weights are computed
+ * @param m_coordId   coordinate id along which the interpolation should be
+ * performed
+ *
+ * Currently, only implemented for 1D
  */
-
 void Interpolator::CalcW_Linear(const PtsPoint &searchPt, int m_coordId)
 {
     int npts = m_ptsInField->GetNpoints();
@@ -577,72 +620,82 @@ void Interpolator::CalcW_Linear(const PtsPoint &searchPt, int m_coordId)
     NekDouble coord = searchPt.coords[m_coordId];
 
     int numPts = 2;
-    m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
-    m_weights[searchPt.idx] = Array<OneD, float> (numPts, 0.0);
+    m_neighInds[searchPt.idx] = Array<OneD, unsigned int>(numPts);
+    m_weights[searchPt.idx] = Array<OneD, float>(numPts, 0.0);
 
     for (i = 0; i < npts - 1; ++i)
     {
-        if ((m_ptsInField->GetPointVal(0,i) <= coord) && (coord <= m_ptsInField->GetPointVal(0,i + 1)))
+        if ((m_ptsInField->GetPointVal(0, i) <= coord) &&
+            (coord <= m_ptsInField->GetPointVal(0, i + 1)))
         {
-            NekDouble pdiff = m_ptsInField->GetPointVal(0,i+1) - m_ptsInField->GetPointVal(0,i);
+            NekDouble pdiff = m_ptsInField->GetPointVal(0, i + 1) -
+                              m_ptsInField->GetPointVal(0, i);
 
             m_neighInds[searchPt.idx][0] = i;
             m_neighInds[searchPt.idx][1] = i + 1;
 
-            m_weights[searchPt.idx][0] = (m_ptsInField->GetPointVal(0,i+1) - coord) / pdiff;
-            m_weights[searchPt.idx][1] = (coord - m_ptsInField->GetPointVal(0,i)) / pdiff;
+            m_weights[searchPt.idx][0] =
+                (m_ptsInField->GetPointVal(0, i + 1) - coord) / pdiff;
+            m_weights[searchPt.idx][1] =
+                (coord - m_ptsInField->GetPointVal(0, i)) / pdiff;
 
             break;
         }
     }
-    ASSERTL0(i != npts - 1, "Failed to find coordinate " +
-             boost::lexical_cast<string>(coord) +
-             " within provided input points");
+    ASSERTL0(i != npts - 1,
+             "Failed to find coordinate " + boost::lexical_cast<string>(coord) +
+                 " within provided input points");
 };
 
-
+/**
+ * @brief Computes interpolation weights using nearest neighbour interpolation
+ *
+ * @param searchPt    point for which the weights are computed
+ * @param m_coordId   coordinate id along which the interpolation should be
+ * performed
+ *
+ */
 void Interpolator::CalcW_NNeighbour(const PtsPoint &searchPt)
 {
     // find nearest neighbours
-    vector<PtsPoint > neighbourPts;
+    vector<PtsPoint> neighbourPts;
     FindNNeighbours(searchPt, neighbourPts, 1);
 
-    m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (1, neighbourPts.at(0).idx);
-    m_weights[searchPt.idx] = Array<OneD, float> (1, 1.0);
+    m_neighInds[searchPt.idx] =
+        Array<OneD, unsigned int>(1, neighbourPts.at(0).idx);
+    m_weights[searchPt.idx] = Array<OneD, float>(1, 1.0);
 }
 
-
 /**
- * @brief Compute interpolation weights for a physical point using a modified
- * Shepard algorithm.
- *
- * @param physPtIdx         The index of the physical point in its storage array
- * @param physPt            The coordinates of the physical point
- *
- * The algorithm is based on Shepard, D. (1968). A two-dimensional interpolation
- * function for irregularly-spaced data. Proceedings of the 1968 23rd ACM
- * National Conference. pp. 517–524.
- *
- * In order to save memory, for n dimesnions, only 2^n points are considered.
- * Contrary to Shepard, we use a fixed number of points with fixed weighting
- * factors 1/d^n.
- */
-
+* @brief Computes interpolation weights using linear interpolation
+*
+* @param searchPt    point for which the weights are computed
+* @param m_coordId   coordinate id along which the interpolation should be
+* performed
+*
+* The algorithm is based on Shepard, D. (1968). A two-dimensional interpolation
+* function for irregularly-spaced data. Proceedings of the 1968 23rd ACM
+* National Conference. pp. 517–524.
+*
+* In order to save memory, for n dimesnions, only 2^n points are considered.
+* Contrary to Shepard, we use a fixed number of points with fixed weighting
+* factors 1/d^n.
+*/
 void Interpolator::CalcW_Shepard(const PtsPoint &searchPt)
 {
     // find nearest neighbours
-    vector<PtsPoint > neighbourPts;
+    vector<PtsPoint> neighbourPts;
     int numPts = pow(float(2), m_ptsInField->GetDim());
     numPts = min(numPts, int(m_ptsInField->GetNpoints() / 2));
     FindNNeighbours(searchPt, neighbourPts, numPts);
 
-    m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
+    m_neighInds[searchPt.idx] = Array<OneD, unsigned int>(numPts);
     for (int i = 0; i < numPts; i++)
     {
         m_neighInds[searchPt.idx][i] = neighbourPts.at(i).idx;
     }
 
-    m_weights[searchPt.idx] = Array<OneD, float> (numPts, 0.0);
+    m_weights[searchPt.idx] = Array<OneD, float>(numPts, 0.0);
 
     // In case d < kVertexTheSameDouble ( d^2 < kNekSqrtTol), use the exact
     // point and return
@@ -659,7 +712,7 @@ void Interpolator::CalcW_Shepard(const PtsPoint &searchPt)
     for (int i = 0; i < numPts; ++i)
     {
         m_weights[searchPt.idx][i] = 1 / pow(double(neighbourPts[i].dist),
-                                          double(m_ptsInField->GetDim()));
+                                             double(m_ptsInField->GetDim()));
         wSum += m_weights[searchPt.idx][i];
     }
 
@@ -668,18 +721,21 @@ void Interpolator::CalcW_Shepard(const PtsPoint &searchPt)
         m_weights[searchPt.idx][i] = m_weights[searchPt.idx][i] / wSum;
     }
 
-    ASSERTL0(Vmath::Nnan(numPts, m_weights[searchPt.idx], 1) == 0, "NaN found in weights");
-
+    ASSERTL0(Vmath::Nnan(numPts, m_weights[searchPt.idx], 1) == 0,
+             "NaN found in weights");
 }
 
 /**
-* @brief Compute interpolation weights for a 1D physical point using quadratic
-* interpolation.
-*
-* @param physPtIdx         The index of the physical point in its storage array
-* @param coord             The coordinate of the physical point
-*/
-
+ * @brief Computes interpolation weights using quadratic interpolation
+ *
+ * @param searchPt    point for which the weights are computed
+ * @param m_coordId   coordinate id along which the interpolation should be
+ * performed
+ *
+ * Currently, only implemented for 1D. Falls back to linear interpolation if
+ * only 2
+ * values are available.
+ */
 void Interpolator::CalcW_Quadratic(const PtsPoint &searchPt, int m_coordId)
 {
     int npts = m_ptsInField->GetNpoints();
@@ -688,30 +744,33 @@ void Interpolator::CalcW_Quadratic(const PtsPoint &searchPt, int m_coordId)
     NekDouble coord = searchPt.coords[m_coordId];
 
     int numPts = 3;
-    m_neighInds[searchPt.idx] = Array<OneD, unsigned int> (numPts);
-    m_weights[searchPt.idx] = Array<OneD, float> (numPts, 0.0);
+    m_neighInds[searchPt.idx] = Array<OneD, unsigned int>(numPts);
+    m_weights[searchPt.idx] = Array<OneD, float>(numPts, 0.0);
 
     for (i = 0; i < npts - 1; ++i)
     {
-        if ((m_ptsInField->GetPointVal(0,i) <= coord) && (coord <= m_ptsInField->GetPointVal(0,i+1)))
+        if ((m_ptsInField->GetPointVal(0, i) <= coord) &&
+            (coord <= m_ptsInField->GetPointVal(0, i + 1)))
         {
-            NekDouble pdiff = m_ptsInField->GetPointVal(0,i+1) - m_ptsInField->GetPointVal(0,i);
+            NekDouble pdiff = m_ptsInField->GetPointVal(0, i + 1) -
+                              m_ptsInField->GetPointVal(0, i);
             NekDouble h1, h2, h3;
 
             if (i < npts - 2)
             {
                 // forwards stencil
-                NekDouble pdiff2 = m_ptsInField->GetPointVal(0,i+2) - m_ptsInField->GetPointVal(0,i+1);
+                NekDouble pdiff2 = m_ptsInField->GetPointVal(0, i + 2) -
+                                   m_ptsInField->GetPointVal(0, i + 1);
 
-                h1 = (m_ptsInField->GetPointVal(0,i+1) - coord)
-                     * (m_ptsInField->GetPointVal(0,i+2) - coord)
-                     / (pdiff * (pdiff + pdiff2));
-                h2 = (coord - m_ptsInField->GetPointVal(0,i))
-                     * (m_ptsInField->GetPointVal(0,i+2) - coord)
-                     / (pdiff * pdiff2);
-                h3 = (coord - m_ptsInField->GetPointVal(0,i))
-                     * (coord - m_ptsInField->GetPointVal(0,i+1))
-                     / ((pdiff + pdiff2) * pdiff2);
+                h1 = (m_ptsInField->GetPointVal(0, i + 1) - coord) *
+                     (m_ptsInField->GetPointVal(0, i + 2) - coord) /
+                     (pdiff * (pdiff + pdiff2));
+                h2 = (coord - m_ptsInField->GetPointVal(0, i)) *
+                     (m_ptsInField->GetPointVal(0, i + 2) - coord) /
+                     (pdiff * pdiff2);
+                h3 = (coord - m_ptsInField->GetPointVal(0, i)) *
+                     (coord - m_ptsInField->GetPointVal(0, i + 1)) /
+                     ((pdiff + pdiff2) * pdiff2);
 
                 m_neighInds[searchPt.idx][0] = i;
                 m_neighInds[searchPt.idx][1] = i + 1;
@@ -720,23 +779,23 @@ void Interpolator::CalcW_Quadratic(const PtsPoint &searchPt, int m_coordId)
             else
             {
                 // backwards stencil
-                NekDouble pdiff2 = m_ptsInField->GetPointVal(0,i) - m_ptsInField->GetPointVal(0,i-1);
+                NekDouble pdiff2 = m_ptsInField->GetPointVal(0, i) -
+                                   m_ptsInField->GetPointVal(0, i - 1);
 
-                h1 = (m_ptsInField->GetPointVal(0,i+1) - coord)
-                     * (coord - m_ptsInField->GetPointVal(0,i-1))
-                     / (pdiff * pdiff2);
-                h2 = (coord - m_ptsInField->GetPointVal(0,i))
-                     * (coord - m_ptsInField->GetPointVal(0,i-1))
-                     / (pdiff * (pdiff + pdiff2));
-                h3 = (m_ptsInField->GetPointVal(0,i) - coord)
-                     * (m_ptsInField->GetPointVal(0,i+1) - coord)
-                     / ((pdiff + pdiff2) * pdiff);
+                h1 = (m_ptsInField->GetPointVal(0, i + 1) - coord) *
+                     (coord - m_ptsInField->GetPointVal(0, i - 1)) /
+                     (pdiff * pdiff2);
+                h2 = (coord - m_ptsInField->GetPointVal(0, i)) *
+                     (coord - m_ptsInField->GetPointVal(0, i - 1)) /
+                     (pdiff * (pdiff + pdiff2));
+                h3 = (m_ptsInField->GetPointVal(0, i) - coord) *
+                     (m_ptsInField->GetPointVal(0, i + 1) - coord) /
+                     ((pdiff + pdiff2) * pdiff);
 
                 m_neighInds[searchPt.idx][0] = i;
                 m_neighInds[searchPt.idx][1] = i + 1;
                 m_neighInds[searchPt.idx][2] = i - 1;
             }
-
 
             m_weights[searchPt.idx][0] = h1;
             m_weights[searchPt.idx][1] = h2;
@@ -745,32 +804,29 @@ void Interpolator::CalcW_Quadratic(const PtsPoint &searchPt, int m_coordId)
             break;
         }
     }
-    ASSERTL0(i != npts - 1, "Failed to find coordinate " +
-             boost::lexical_cast<string>(coord) +
-             " within provided input points");
+    ASSERTL0(i != npts - 1,
+             "Failed to find coordinate " + boost::lexical_cast<string>(coord) +
+                 " within provided input points");
 };
 
-
 /**
- * @brief Find nearest neighbours using a brute-force "algorithm".
+ * @brief Finds the neares neighbours of a point
  *
- * @param physPt              Coordinates of the physical point its neighbours
- * we are looking for
- * @param neighbourPts        The points we found
- * @param numPts              The number of points to find
+ * @param searchPt     point for which the neighbours are searched
+ * @param neighbourPts possible neighbour points
+ * @param numPts       limits the number of neighbours found to the numPts
+ * nearest ones
  *
- * This iterates over all points, computes the (squared) euclidean distance
- * and chooses the numPts closest points. Thus, its very expensive and
- * inefficient.
  */
-
 void Interpolator::FindNNeighbours(const PtsPoint &searchPt,
-                               vector< PtsPoint > &neighbourPts,
-                               const unsigned int numPts)
+                                   vector<PtsPoint> &neighbourPts,
+                                   const unsigned int numPts)
 {
     std::vector<PtsPointPair> result;
-    BPoint searchBPoint(searchPt.coords[0], searchPt.coords[1], searchPt.coords[2]);
-    m_rtree->query(bgi::nearest(searchBPoint, numPts), std::back_inserter(result));
+    BPoint searchBPoint(
+        searchPt.coords[0], searchPt.coords[1], searchPt.coords[2]);
+    m_rtree->query(bgi::nearest(searchBPoint, numPts),
+                   std::back_inserter(result));
 
     // massage into or own format
     for (int i = 0; i < result.size(); ++i)
@@ -788,27 +844,26 @@ void Interpolator::FindNNeighbours(const PtsPoint &searchPt,
     sort(neighbourPts.begin(), neighbourPts.end());
 }
 
-
 /**
- * @brief Find nearest neighbours using a brute-force "algorithm".
+ * @brief Finds the neares neighbours of a point
  *
- * @param physPt              Coordinates of the physical point its neighbours
- * we are looking for
- * @param neighbourPts        The points we found
- * @param dist                The max distance of a neighbour point
+ * @param searchPt     point for which the neighbours are searched
+ * @param neighbourPts possible neighbour points
+ * @param dist         limits the distance of the neighbours
  *
- * This iterates over all points, computes the (squared) euclidean distance
- * and chooses the points within the defined distance. Thus, its very expensive
- * and inefficient.
  */
-
 void Interpolator::FindNeighbours(const PtsPoint &searchPt,
-                              vector<PtsPoint > &neighbourPts,
-                              const NekDouble dist)
+                                  vector<PtsPoint> &neighbourPts,
+                                  const NekDouble dist)
 {
-    BPoint searchBPoint(searchPt.coords[0], searchPt.coords[1], searchPt.coords[2]);
-    BPoint bbMin(searchPt.coords[0] - dist, searchPt.coords[1] - dist, searchPt.coords[2] - dist);
-    BPoint bbMax(searchPt.coords[0] + dist, searchPt.coords[1] + dist, searchPt.coords[2] + dist);
+    BPoint searchBPoint(
+        searchPt.coords[0], searchPt.coords[1], searchPt.coords[2]);
+    BPoint bbMin(searchPt.coords[0] - dist,
+                 searchPt.coords[1] - dist,
+                 searchPt.coords[2] - dist);
+    BPoint bbMax(searchPt.coords[0] + dist,
+                 searchPt.coords[1] + dist,
+                 searchPt.coords[2] + dist);
     bg::model::box<BPoint> bbox(bbMin, bbMax);
 
     // find points within the distance box
@@ -835,7 +890,5 @@ void Interpolator::FindNeighbours(const PtsPoint &searchPt,
 
     sort(neighbourPts.begin(), neighbourPts.end());
 }
-
-
 }
 }

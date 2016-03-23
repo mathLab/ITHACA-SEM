@@ -6,7 +6,7 @@
 //
 // The MIT License
 //
-// Copyright (c) 2015 Kilian Lackhove
+// Copyright (c) 2016 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -72,10 +72,27 @@ enum InterpMethod{
     eGauss,
 };
 
+/// A class that contains algorithms for interpolation between pts fields,
+/// expansions and different meshes
 class Interpolator
 {
     public:
 
+
+        /**
+        * @brief Constructor of the Interpolator class
+        *
+        * @param method    interpolation method, defaults to a sensible value if not set
+        * @param coordId   coordinate id along which the interpolation should be performed
+        * @param filtWidth filter width, required by some algorithms such as eGauss
+        *
+        * if method is not specified, the best algorithm is chosen autpomatically.
+        *
+        * If coordId is not specified, a full 1D/2D/3D interpolation is performed without
+        * collapsing any coordinate.
+        *
+        * filtWidth must be specified for the eGauss algorithm only.
+        */
         LIB_UTILITIES_EXPORT Interpolator(
             InterpMethod method = eNoMethod,
             short int coordId = -1,
@@ -86,41 +103,54 @@ class Interpolator
         {
         };
 
+        /// Compute interpolation weights without doing any interpolation
         LIB_UTILITIES_EXPORT void CalcWeights(
             const LibUtilities::PtsFieldSharedPtr ptsInField,
             LibUtilities::PtsFieldSharedPtr &ptsOutField);
 
+        /// Interpolate from a pts field to a pts field
         LIB_UTILITIES_EXPORT void Interpolate(
             const LibUtilities::PtsFieldSharedPtr ptsInField,
             LibUtilities::PtsFieldSharedPtr &ptsOutField);
 
+        /// Interpolate from an expansion to an expansion
         LIB_UTILITIES_EXPORT void Interpolate(
             const vector<MultiRegions::ExpListSharedPtr> expInField,
             vector<MultiRegions::ExpListSharedPtr> &expOutField);
 
+        /// Interpolate from an expansion to a pts field
         LIB_UTILITIES_EXPORT void Interpolate(
             const vector<MultiRegions::ExpListSharedPtr> expInField,
             LibUtilities::PtsFieldSharedPtr &ptsOutField);
 
+        /// Interpolate from a pts field to an expansion
         LIB_UTILITIES_EXPORT void Interpolate(
             const LibUtilities::PtsFieldSharedPtr ptsInField,
             vector<MultiRegions::ExpListSharedPtr> &expOutField);
 
+        /// returns the dimension of the Interpolator.
+        /// Should be higher than the dimensions of the interpolated fields
         LIB_UTILITIES_EXPORT int GetDim() const;
 
+        /// Returns the filter width
         LIB_UTILITIES_EXPORT NekDouble GetFiltWidth() const;
 
+        /// Returns the coordinate id along which the interpolation should be performed
         LIB_UTILITIES_EXPORT int GetCoordId() const;
 
+        /// Returns the interpolation method used by this interpolator
         LIB_UTILITIES_EXPORT InterpMethod GetInterpMethod() const;
 
+        /// Returns the input field
         LIB_UTILITIES_EXPORT LibUtilities::PtsFieldSharedPtr GetInField() const;
 
+        /// Returns the output field
         LIB_UTILITIES_EXPORT LibUtilities::PtsFieldSharedPtr GetOutField() const;
 
+        /// Print statics of the interpolation weights
         LIB_UTILITIES_EXPORT void PrintStatistics();
 
-
+        /// sets a callback funtion which gets called every time the interpolation progresses
         template<typename FuncPointerT, typename ObjectPointerT>
         void SetProgressCallback(FuncPointerT func,
                 ObjectPointerT obj)
@@ -159,14 +189,19 @@ class Interpolator
                 };
         };
 
-        static const int                            m_dim = 3;
-        typedef bg::model::point<NekDouble, m_dim, bg::cs::cartesian> BPoint;
-        typedef std::pair<BPoint, unsigned int>                       PtsPointPair;
-        typedef bgi::rtree< PtsPointPair, bgi::rstar<16> >            PtsRtree;
+        /// dimension of this interpolator. Hardcoded to 3
+        static const int                                                m_dim = 3;
+        typedef bg::model::point<NekDouble, m_dim, bg::cs::cartesian>   BPoint;
+        typedef std::pair<BPoint, unsigned int>                         PtsPointPair;
+        typedef bgi::rtree< PtsPointPair, bgi::rstar<16> >              PtsRtree;
 
+        /// input field
         LibUtilities::PtsFieldSharedPtr             m_ptsInField;
+        /// output field
         LibUtilities::PtsFieldSharedPtr             m_ptsOutField;
+        /// input field
         vector<MultiRegions::ExpListSharedPtr>      m_expInField;
+        /// output field
         vector<MultiRegions::ExpListSharedPtr>      m_expOutField;
 
         /// Interpolation Method
@@ -181,7 +216,9 @@ class Interpolator
         /// Indices of the relevant neighbours for each physical point.
         /// Structure: m_neighInds[ptIdx][neighbourIdx]
         Array<OneD, Array<OneD, unsigned int> >     m_neighInds;
+        /// Filter width used for some interpolation algorithms
         NekDouble                                   m_filtWidth;
+        /// coordinate id along which the interpolation should be performed
         short int                                   m_coordId;
 
         boost::function<void (const int position, const int goal)> m_progressCallback;

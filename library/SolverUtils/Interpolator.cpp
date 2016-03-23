@@ -573,7 +573,6 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
     NekDouble ts2 = 2 * sigma * sigma;
 
     // find nearest neighbours
-    int maxPts = 500;
     vector<PtsPoint> neighbourPts;
     FindNeighbours(searchPt, neighbourPts, 4 * sigma);
     int numPts = neighbourPts.size();
@@ -599,7 +598,7 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
     for (int i = 0; i < numPts; ++i)
     {
         m_weights[searchPt.idx][i] =
-            exp(-1 * pow(neighbourPts[i].dist, 2.0f) / ts2);
+            exp(-1 * pow(neighbourPts[i].dist, double(2.0)) / ts2);
         wSum += m_weights[searchPt.idx][i];
     }
 
@@ -696,7 +695,7 @@ void Interpolator::CalcW_Shepard(const PtsPoint &searchPt)
 {
     // find nearest neighbours
     vector<PtsPoint> neighbourPts;
-    int numPts = pow(float(2), m_ptsInField->GetDim());
+    int numPts = pow(double(2), m_ptsInField->GetDim());
     numPts = min(numPts, int(m_ptsInField->GetNpoints() / 2));
     FindNNeighbours(searchPt, neighbourPts, numPts);
 

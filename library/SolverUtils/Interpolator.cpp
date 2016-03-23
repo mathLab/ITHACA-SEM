@@ -281,6 +281,8 @@ void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
  *
  * In and output fields must have the same dimension and number of fields.
  * Weights are currently not stored for later use.
+ * The interpolation is performed by evaluating the expInField at the quadrature
+ * points of expOutField, so only eNoMethod is supported.
  * If both expansions use the same mesh, use LibUtilities/Foundations/Interp.h
  * instead.
  */
@@ -294,6 +296,8 @@ void Interpolator::Interpolate(
              "too many dimesions in inField");
     ASSERTL0(expOutField[0]->GetCoordim(0) <= m_dim,
              "too many dimesions in outField")
+    ASSERTL0(m_method == eNoMethod,
+             "only direct evaluation supported for this interpolation");
 
     m_expInField = expInField;
     m_expOutField = expOutField;
@@ -373,9 +377,10 @@ void Interpolator::Interpolate(
  * @param expInField    input field
  * @param ptsOutField   output field
  *
- *
  * In and output fields must have the same dimension and number of fields.
  * Weights are currently not stored for later use.
+ * The interpolation is performed by evaluating the expInField at the points
+ * of ptsOutField, so only eNoMethod is supported.
  */
 void Interpolator::Interpolate(
     const vector<MultiRegions::ExpListSharedPtr> expInField,
@@ -386,6 +391,8 @@ void Interpolator::Interpolate(
     ASSERTL0(expInField[0]->GetCoordim(0) <= m_dim,
              "too many dimesions in inField");
     ASSERTL0(ptsOutField->GetDim() <= m_dim, "too many dimesions in outField");
+    ASSERTL0(m_method == eNoMethod,
+             "only direct evaluation supported for this interpolation");
 
     m_expInField = expInField;
     m_ptsOutField = ptsOutField;

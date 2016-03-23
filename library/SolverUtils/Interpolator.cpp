@@ -255,6 +255,8 @@ void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
         for (int j = 0; j < nOutPts; ++j)
         {
             int nPts = m_weights[j].num_elements();
+
+            // skip if there were no neighbours found for this point
             if (nPts == 0)
             {
                 continue;
@@ -267,7 +269,7 @@ void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
                 val += m_weights[j][k] *
                        m_ptsInField->GetPointVal(inDim + i, nIdx);
             }
-            m_ptsOutField->SetPointVal(i, j, val);
+            m_ptsOutField->SetPointVal(m_ptsOutField->GetDim() + i, j, val);
         }
     }
 }
@@ -666,6 +668,8 @@ void Interpolator::CalcW_NNeighbour(const PtsPoint &searchPt)
 {
     // find nearest neighbours
     vector<PtsPoint> neighbourPts;
+    // TODO: we currently dont handle the case when there are more than one
+    // most distant points (of same distance)
     FindNNeighbours(searchPt, neighbourPts, 1);
 
     m_neighInds[searchPt.idx] =

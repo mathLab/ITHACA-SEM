@@ -891,16 +891,26 @@ namespace Nektar
                     LibUtilities::PtsIO ptsIO(m_session->GetComm());
                     ptsIO.Import(filename, ptsField);
 
-                    Array<OneD, Array<OneD, NekDouble> > pts(3 + ptsField->GetNFields());
-                    for (int i = 0; i < 3 + ptsField->GetNFields(); ++i)
+                    Array<OneD, Array<OneD, NekDouble> > pts(ptsField->GetDim() + ptsField->GetNFields());
+                    for (int i = 0; i < ptsField->GetDim() + ptsField->GetNFields(); ++i)
                     {
                         pts[i] = Array<OneD,  NekDouble>(nq);
                     }
-                    m_fields[0]->GetCoords(pts[0], pts[1], pts[2]);
+                    if (ptsField->GetDim() == 1)
+                    {
+                        m_fields[0]->GetCoords(pts[0]);
+                    }
+                    else if (ptsField->GetDim() == 2)
+                    {
+                        m_fields[0]->GetCoords(pts[0], pts[1]);
+                    }
+                    else if (ptsField->GetDim() == 3)
+                    {
+                        m_fields[0]->GetCoords(pts[0], pts[1], pts[2]);
+                    }
                     LibUtilities::PtsFieldSharedPtr outPts =
                             MemoryManager<LibUtilities::PtsField>::
-                            AllocateSharedPtr(3, pts);
-
+                            AllocateSharedPtr(ptsField->GetDim(), ptsField->GetFieldNames(), pts);
 
                     //  check if we already computed this funcKey combination
                     std::string interpKey = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
@@ -924,7 +934,7 @@ namespace Nektar
                     }
                     ASSERTL0(fieldInd != fieldNames.size(),  "field not found");
 
-                    pArray = pts[fieldInd];
+                    pArray = pts[ptsField->GetDim() + fieldInd];
                 }
             }
         }

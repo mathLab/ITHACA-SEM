@@ -427,6 +427,9 @@ void ProcessBL::BoundaryLayer2D()
                             case 3:
                                 pos = nq*nl - k*nq;
                                 break;
+                            default:
+                                ASSERTL0(0,"Quad edge should be < 4.");
+                            break;
                         }
                         edgeNodes[j][k] = NodeSharedPtr(
                             new Node(nodeId++, x[pos], y[pos], z[pos]));
@@ -525,6 +528,9 @@ void ProcessBL::BoundaryLayer2D()
                             break;
                         case 3:
                             pos = (nl+1)*(nq-1) + j - k*(nl+1);
+                            break;
+                        default:
+                            ASSERTL0(0,"Quad edge should be < 4.");
                             break;
                     }
                     HOedge->m_edgeNodes.push_back(

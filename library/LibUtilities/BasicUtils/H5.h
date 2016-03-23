@@ -42,6 +42,7 @@
 #include <hdf5.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/functional/hash.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Communication/Comm.h>
@@ -296,6 +297,7 @@ namespace Nektar
                     void Close();
                     void SelectRange(const hsize_t start, const hsize_t count);
 
+		    hsize_t GetSize();
                 private:
                     DataSpace(hid_t id);
                     friend class Attribute;
@@ -472,6 +474,25 @@ namespace Nektar
 
                         H5_CALL(H5Dread,
                                 (m_Id, mem_t->GetId(), H5S_ALL, H5S_ALL,H5P_DEFAULT, &data[0]));
+                    }
+		    template<class T>
+                    void Read(std::vector<T>& data,
+                            DataSpaceSharedPtr filespace, PListSharedPtr dxpl = PList::Default())
+                    {
+                        DataTypeSharedPtr mem_t = DataTypeTraits<T>::GetType();
+                        DataSpaceSharedPtr space = GetSpace();
+                        ASSERTL0(
+                                H5Sget_simple_extent_ndims(space->GetId()) == 1,
+                                "vector data not 1D");
+			hsize_t len, maxdim;
+                        H5Sget_simple_extent_dims(space->GetId(), &len,
+                                &maxdim);
+
+			data.resize(len);
+			
+                        H5Dread(m_Id, mem_t->GetId(), space->GetId(),
+                                filespace->GetId(), dxpl->GetId(),
+                                &data[0]);
                     }
                 private:
                     DataSet(hid_t id);

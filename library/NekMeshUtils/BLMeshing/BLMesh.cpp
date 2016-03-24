@@ -54,6 +54,17 @@ void BLMesh::Mesh()
     // surface upon which it needs to mesh (top of the bl and the rest of the
     // surface).
 
+    //need a map from vertex idx to surface elements
+    map<int, vector<ElementSharedPtr> > nIdxToTri;
+    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+    {
+        vector<NodeSharedPtr> ns = m_mesh->m_element[2][i]->GetVertexList();
+        for(int j = 0; j < ns.size(); j++)
+        {
+            nIdxToTri[ns[j]->m_id].push_back(m_mesh->m_element[2][i]);
+        }
+    }
+
     set<int> symSurfs;
 
     NodeSet::iterator it;
@@ -80,9 +91,77 @@ void BLMesh::Mesh()
         {
             //initialise a new bl boudnary node
             blInfo bln;
-            bln.surfs = inter;
             bln.bl = m_bl;
             bln.symsurf = 0;
+
+            bln.N = Array<OneD, NekDouble> (3,0.0);
+            for(int j = 0; j < inter.size(); j++)
+            {
+                Array<OneD, NekDouble> uv = (*it)->GetCADSurfInfo(inter[j]);
+                Array<OneD, NekDouble> N = m_cad->GetSurf(inter[j])->N(uv);
+                for(int k = 0; k < 3; k++)
+                {
+                    bln.N[k] += N[k];
+                }
+            }
+            NekDouble mag = 0.0;
+            for(int k = 0; k < 3; k++)
+            {
+                mag += bln.N[k]*bln.N[k];
+            }
+            mag = sqrt(mag);
+            for(int k = 0; k < 3; k++)
+            {
+                bln.N[k] /= mag;
+            }
+            Array<OneD, NekDouble> loc = (*it)->GetLoc();
+            for(int k = 0; k < 3; k++)
+            {
+                loc[k] += bln.N[k] * bln.bl;
+            }
+            bln.pNode = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
+                                            loc[0], loc[1], loc[2]));
+
+            //calculate mesh normal
+            Array<OneD, NekDouble> mNorm(3,0.0);
+            map<int, vector<ElementSharedPtr> >::iterator g = nIdxToTri.find((*it)->m_id);
+            for(int i = 0; i < g->second.size(); i++)
+            {
+                vector<NodeSharedPtr> ns = g->second[i]->GetVertexList();
+                if(m_cad->GetSurf(g->second[i]->CADSurfId)->IsReversedNormal())
+                {
+                    swap(ns[0],ns[1]);
+                }
+                mNorm[0] += ((ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
+                             (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y));
+                mNorm[1] -= ((ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z) -
+                             (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x));
+                mNorm[2] += ((ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
+                             (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x));
+            }
+            mag = 0.0;
+            for(int k = 0; k < 3; k++)
+            {
+                mag += mNorm[k]*mNorm[k];
+            }
+            mag = sqrt(mag);
+            for(int k = 0; k < 3; k++)
+            {
+                mNorm[k] /= mag;
+            }
+
+            if(mNorm[0] * bln.N[0] + mNorm[1] * bln.N[1] + mNorm[2] * bln.N[2] < 0.9)
+            {
+                cout << "Norm irregularity ";
+                cout << mNorm[0] * bln.N[0] + mNorm[1] * bln.N[1] + mNorm[2] * bln.N[2];
+                if(inter.size() ==3)
+                {
+                    cout << " with 3 normal";
+                }
+                cout << " " << (*it)->m_id << endl;
+            }
+
+            //bln.N = mNorm;
 
             //if the diff size is greater than 1 there is a curve that needs remeshing
             if(diff.size() > 1)
@@ -99,39 +178,8 @@ void BLMesh::Mesh()
         }
     }
 
-    map<NodeSharedPtr, blInfo>::iterator bit;
-    //compile normals and make new nodes
-    for(bit = blData.begin(); bit != blData.end(); bit++)
-    {
-        bit->second.N = Array<OneD, NekDouble> (3,0.0);
-        for(int j = 0; j < bit->second.surfs.size(); j++)
-        {
-            Array<OneD, NekDouble> uv = bit->first->GetCADSurfInfo(bit->second.surfs[j]);
-            Array<OneD, NekDouble> N = m_cad->GetSurf(bit->second.surfs[j])->N(uv);
-            for(int k = 0; k < 3; k++)
-            {
-                bit->second.N[k] += N[k];
-            }
-        }
-        NekDouble mag = 0.0;
-        for(int k = 0; k < 3; k++)
-        {
-            mag += bit->second.N[k]*bit->second.N[k];
-        }
-        mag = sqrt(mag);
-        for(int k = 0; k < 3; k++)
-        {
-            bit->second.N[k] /= mag;
-        }
 
-        Array<OneD, NekDouble> loc = bit->first->GetLoc();
-        for(int k = 0; k < 3; k++)
-        {
-            loc[k] += bit->second.N[k] * bit->second.bl;
-        }
-        bit->second.pNode = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
-                                        loc[0], loc[1], loc[2]));
-    }
+    map<NodeSharedPtr, blInfo>::iterator bit;
 
     //make prisms
 
@@ -209,7 +257,7 @@ void BLMesh::Mesh()
 
     //loop over all prisms, if invalid shrink until it is
     //being careful to act on nodes which have already been shrunk
-    for(int i = 0; i < m_mesh->m_element[3].size(); i++)
+/*    for(int i = 0; i < m_mesh->m_element[3].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[3][i];
         SpatialDomains::GeometrySharedPtr geom =
@@ -228,7 +276,10 @@ void BLMesh::Mesh()
 
             if(maxbl < 1E-6)
             {
-                ASSERTL0(false ,"shrunk element too far, invalid mesh");
+                cout << "shrunk element too far, invalid mesh" << endl;
+                cout << ns[0]->m_id << endl;
+                cout << ns[1]->m_id << endl;
+                cout << ns[2]->m_id << endl;
                 break;
             }
 
@@ -256,7 +307,7 @@ void BLMesh::Mesh()
             gfac = geom->GetGeomFactors();
         }
     }
-
+*/
     //this is where it should do some clever collision dectecting and reduce the bl parameter
 
     //all nodes in the vertex set are unique ordered and in surface elements
@@ -274,17 +325,6 @@ void BLMesh::Mesh()
         dataPts[(*it)->m_id][0] = (*it)->m_x;
         dataPts[(*it)->m_id][1] = (*it)->m_y;
         dataPts[(*it)->m_id][2] = (*it)->m_z;
-    }
-
-    //need a map from vertex idx to surface elements
-    map<int, vector<ElementSharedPtr> > nIdxToTri;
-    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
-    {
-        vector<NodeSharedPtr> ns = m_mesh->m_element[2][i]->GetVertexList();
-        for(int j = 0; j < ns.size(); j++)
-        {
-            nIdxToTri[ns[j]->m_id].push_back(m_mesh->m_element[2][i]);
-        }
     }
 
     kdTree = new ANNkd_tree(dataPts, m_mesh->m_vertexSet.size(), 3);
@@ -426,31 +466,12 @@ void BLMesh::Mesh()
         }
         if(mind < bit->second.bl * 1.1)
         {
-            cout << mind << endl;
             bit->second.bl = mind * 0.25;
             bit->second.pNode->m_x = bit->first->m_x + bit->second.N[0] * bit->second.bl;
             bit->second.pNode->m_y = bit->first->m_y + bit->second.N[1] * bit->second.bl;
             bit->second.pNode->m_z = bit->first->m_z + bit->second.N[2] * bit->second.bl;
         }
     }
-
-    //vector<ElementSharedPtr> els = m_mesh->m_element[3];
-    //m_mesh->m_element[3].clear();
-
-
-    //for(int i = 0; i < els.size(); i++)
-    //{
-    //    map<ElementSharedPtr, ElementSharedPtr>::iterator j = priToTri.find(els[i]);
-
-    //    if(j->second->CADSurfId == 9 || j->second->CADSurfId == 2)
-    //    {
-    //        m_mesh->m_element[3].push_back(els[i]);
-    //    }
-    //}
-
-
-
-
 
     //smoothing
     //need to build a list of nodes to neigbours

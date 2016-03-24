@@ -261,8 +261,6 @@ void OutputPYFR::Process()
     CompositeMap::iterator it;
     for(it = cm.begin(); it != cm.end(); it++)
     {
-        cout << it->first << " " << it->second->m_tag;
-
         if(it->second->m_tag == "F" || it->second->m_tag == "E")
         {
             //not interested in boundary faces or edges here
@@ -272,7 +270,6 @@ void OutputPYFR::Process()
         string dsname = GetDSName(it->second->m_tag);
 
         int np = GetNump(it->second->m_tag, m_mesh->m_nummode);
-        cout << " points: " << np << endl;
 
         hsize_t dimsf[] = {np, it->second->m_items.size(), m_mesh->m_expDim};
 
@@ -352,80 +349,7 @@ void OutputPYFR::Process()
     linkmap["pri"] = lm;
 
     { //con
-        if(m_mesh->m_expDim == 2)
-        {
-            EdgeSet::iterator eit;
-            EdgeSet interiorcons;
-            for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
-            {
-                ASSERTL0((*eit)->m_elLink.size() == 2 || (*eit)->m_elLink.size() == 1, "not enough element links");
-
-                if((*eit)->m_elLink.size() == 2)
-                {
-                    interiorcons.insert(*eit);
-                }
-            }
-
-            hsize_t dimsf[] = {2, interiorcons.size()};
-
-            DataSpace dataspace( 2, dimsf );
-
-            CompType cn( sizeof(conec) );
-            cn.insertMember( "f0", HOFFSET(conec, el), strdatatype);
-            cn.insertMember( "f1", HOFFSET(conec, id), PredType::NATIVE_INT32);
-            cn.insertMember( "f2", HOFFSET(conec, fc), PredType::NATIVE_INT8);
-            cn.insertMember( "f3", HOFFSET(conec, bl), PredType::NATIVE_INT8);
-
-            DataSet* dataset = new DataSet(file->createDataSet("con_p0", cn, dataspace));
-
-            conec* cons = new conec[2*interiorcons.size()];
-
-            int ct = 0;
-            for(eit = interiorcons.begin(); eit != interiorcons.end(); eit++)
-            {
-                conec c1,c2;
-                ElementSharedPtr e1 = (*eit)->m_elLink[0].first;
-                ElementSharedPtr e2 = (*eit)->m_elLink[1].first;
-
-                string str1, str2;
-
-                if(e1->GetConf().m_e == LibUtilities::eTriangle)
-                {
-                    str1 = "tri";
-                }
-                else if(e1->GetConf().m_e == LibUtilities::eQuadrilateral)
-                {
-                    str1 = "quad";
-                }
-
-                if(e2->GetConf().m_e == LibUtilities::eTriangle)
-                {
-                    str2 = "tri";
-                }
-                else if(e2->GetConf().m_e == LibUtilities::eQuadrilateral)
-                {
-                    str2 = "quad";
-                }
-
-                strcpy(c1.el, str1.c_str());
-                strcpy(c2.el, str2.c_str());
-
-                c1.id = nekidtopyid[e1->GetId()];
-                c2.id = nekidtopyid[e2->GetId()];
-
-                c1.fc = (*eit)->m_elLink[0].second;
-                c2.fc = (*eit)->m_elLink[1].second;
-
-                c1.bl = 0; c2.bl = 0;
-
-                cons[ct] = c1;
-                cons[ct + interiorcons.size()] = c2;
-                ct++;
-            }
-
-            dataset->write( cons, cn );
-        }
-        else if(m_mesh->m_expDim == 3)
+        if(m_mesh->m_expDim == 3)
         {
             FaceSet::iterator fit;
             FaceSet interiorcons;
@@ -501,6 +425,11 @@ void OutputPYFR::Process()
             }
 
             dataset->write( cons, cn );
+        }
+        else
+        {
+            cout << "unkown dim" << endl;
+            exit(-1);
         }
 
     }

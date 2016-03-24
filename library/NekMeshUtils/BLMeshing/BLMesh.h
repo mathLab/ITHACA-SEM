@@ -51,7 +51,6 @@ struct blInfo
     NodeSharedPtr pNode;
     NekDouble bl;
     Array<OneD, NekDouble> N;
-    vector<unsigned int> surfs;
     int symsurf;
 };
 

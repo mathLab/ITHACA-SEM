@@ -8,7 +8,7 @@
 
 #If the user has not set BOOST_ROOT, look in a couple common places first.
 MESSAGE(STATUS "Searching for Boost:")
-SET(MIN_VER "1.52.0")
+SET(MIN_VER "1.54.0")
 SET(NEEDED_BOOST_LIBS thread iostreams date_time filesystem system
     program_options regex timer)
 SET(Boost_DEBUG 0)

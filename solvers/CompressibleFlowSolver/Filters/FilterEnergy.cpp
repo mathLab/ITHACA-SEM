@@ -37,37 +37,36 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-        std::string FilterEnergy::className = GetFilterFactory().
-            RegisterCreatorFunction("Energy", FilterEnergy::create);
 
-        FilterEnergy::FilterEnergy(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams)
-            : FilterEnergyBase(pSession, pParams, false)
-        {
-            
-        }
+std::string FilterEnergy::className = SolverUtils::GetFilterFactory().
+    RegisterCreatorFunction("Energy", FilterEnergy::create);
 
-        FilterEnergy::~FilterEnergy()
-        {
+FilterEnergy::FilterEnergy(
+    const LibUtilities::SessionReaderSharedPtr &pSession,
+    const ParamMap &pParams)
+    : FilterEnergyBase(pSession, pParams, false)
+{
 
-        }
+}
 
-        void FilterEnergy::v_GetVelocity(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const int i,
-            Array<OneD, NekDouble> &velocity)
-        {
-            Vmath::Vdiv(pFields[0]->GetNpoints(), pFields[i+1]->GetPhys(), 1,
-                        pFields[0]->GetPhys(), 1, velocity, 1);
-        }
+FilterEnergy::~FilterEnergy()
+{
 
-        Array<OneD, NekDouble> FilterEnergy::v_GetDensity(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
-        {
-            return pFields[0]->GetPhys();
-        }
-    }
+}
+
+void FilterEnergy::v_GetVelocity(
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const int i,
+    Array<OneD, NekDouble> &velocity)
+{
+    Vmath::Vdiv(pFields[0]->GetNpoints(), pFields[i+1]->GetPhys(), 1,
+                pFields[0]->GetPhys(), 1, velocity, 1);
+}
+
+Array<OneD, NekDouble> FilterEnergy::v_GetDensity(
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
+{
+    return pFields[0]->GetPhys();
+}
+
 }

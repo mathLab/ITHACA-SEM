@@ -54,6 +54,10 @@ namespace Nektar
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpList3D(const ExpList3D &In);
+            
+            /// Constructor copying only elements defined in eIds.
+            MULTI_REGIONS_EXPORT ExpList3D(  const ExpList3D &In,
+                const std::vector<unsigned int> &eIDs);
 
             MULTI_REGIONS_EXPORT ExpList3D(  
                         const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -98,7 +102,7 @@ namespace Nektar
 
             virtual void v_ReadGlobalOptimizationParameters();
 
-            virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion);
+            virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip);
 
             virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
 

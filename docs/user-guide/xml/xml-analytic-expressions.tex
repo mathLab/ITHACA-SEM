@@ -68,7 +68,7 @@ problem space. For example, \begin{lstlisting}[style=XMLStyle]
   <GEOMETRY DIM="1" SPACE="2"> ...
   </GEOMETRY>
 \end{lstlisting}
-specifies 1D flow within 2D problem space. The number of spacial variables
+specifies 1D flow within 2D problem space. The number of spatial variables
 presented in expression declaration should match space dimension declared via
 \inltt{<GEOMETRY>} section tag.
 
@@ -192,15 +192,15 @@ SQRT1\_2    & $\frac{1}{\sqrt{2}}$  & 0.70710678118654752440 \\
 \end{tabular}
 \end{center}
 
-\item parameters: alphanumeric names with underscores, e.g. \inltt{GAMMA\_123,
-GaM123\_45a\_, \_gamma123} are perfectly acceptable parameter names. However
-parameter name cannot start with a numeral. Parameters must be defined with
-\inltt{<PARAMETERS>...</PARAMETERS>}. Parameters play the role of constants
-that may change their values in between of expression evaluations.
+\item parameters: alphanumeric names with underscores, e.g. \inltt{GAMMA\_123},
+\inltt{GaM123\_45a\_}, \inltt{\_gamma123} are perfectly acceptable parameter
+names. However parameter name cannot start with a numeral. Parameters must be
+defined with \inltt{<PARAMETERS>...</PARAMETERS>}. Parameters play the role of
+constants that may change their values in between of expression evaluations.
 
 \item variables (i.e., \inlsh{x, y, z} and \inlsh{t})
-\item unary minus operator (e.g. \inltt{-x}
-\item binary arithmetic operators \inltt{+, -, *, /, \^}
+\item unary minus operator (e.g. \inltt{-x})
+\item binary arithmetic operators \inltt{+, -, *, /, \^{}}
    Powering operator allows using real exponents (it is implemented with
    \inlsh{std::pow()} function)
 \item boolean comparison operations \inlsh{<, <=, >, >=, ==} evaluate their
@@ -239,7 +239,7 @@ These functions are implemented by means of the cmath library:
 \url{http://www.cplusplus.com/reference/clibrary/cmath/}. Underlying data type
 is \inltt{double} at each stage of expression evaluation. As consequence,
 complex-valued expressions (e.g. $(-2)^0.123$) get value \inlsh{nan} (not a
-number). The operator \inlsh{\^} is implemented via call to \inlsh{std::pow()}
+number). The operator \inlsh{\^{}} is implemented via call to \inlsh{std::pow()}
 function and accepts arbitrary real exponents.
 
 \item random noise generation functions. Currently implemented is
@@ -247,6 +247,20 @@ function and accepts arbitrary real exponents.
 of normal distribution with zero mean. Implemented using the
 \texttt{boost::mt19937} random number generator with boost variate generators
 (see \url{http://www.boost.org/libs/random})
+\end{itemize}
+
+
+\subsubsection{Examples}
+Some straightforward examples include
+\begin{itemize}
+\item Basic arithmetic operators: \inltt{0.5*0.3164/(3000\^{}0.25)}
+\item Simple polynomial functions: \inltt{y*(1-y)}
+\item Use of values defined in \inltt{PARAMETERS} section:
+\inltt{-2*Kinvis*(x-1)}
+\item More complex expressions involving trigonometric functions, parameters and
+constants: \inltt{(LAMBDA/2/PI)*exp(LAMBDA*x)*sin(2*PI*y)}
+\item Boolean operators for multi-domain functions:
+\inltt{(y<0)*sin(y) + (y>=0)*y}
 \end{itemize}
 
 \subsection{Performance considerations}
@@ -265,9 +279,9 @@ costs.
 \subsubsection{Pre-evaluation details}
 Partial evaluation of all constant sub-expressions makes no sense in using
 derived constants from table above. This means, either make use of pre-defined
-constant \inlsh{LN10\^2} or straightforward expression \inlsh{log10(2)\^2}
-results in constant \inlsh{5.3018981104783980105} being stored internally
-after pre-processing. The rules of pre-evaluation are as follows:
+constant \inlsh{LN10\^{}2} or straightforward expression \inlsh{log10(2)\^{}2}
+results in constant \inlsh{5.3018981104783980105} being stored internally after
+pre-processing. The rules of pre-evaluation are as follows:
 \begin{itemize}
 \item constants, numbers and their combinations with arithmetic, analytic and
  comparison operators are pre-evaluated,
@@ -304,21 +318,21 @@ increasing complexity:
 \begin{itemize}
 \item \inlsh{+, -, <, >, <=, >=, ==, }
 \item \inlsh{*, /, abs, fabs, ceil, floor,}
-\item \inlsh{\^, sqrt, exp, log, log10, sin, cos, tan, sinh, cosh, tanh, asin,
+\item \inlsh{\^{}, sqrt, exp, log, log10, sin, cos, tan, sinh, cosh, tanh, asin,
 acos, atan}.
 \end{itemize}
 
 For example,
 \begin{itemize}
-\item \inlsh{x*x} is faster than \inlsh{x\^2} --- it is one double
+\item \inlsh{x*x} is faster than \inlsh{x\^{}2} --- it is one double
 multiplication vs generic calculation of arbitrary power with real exponents.
-\item \inlsh{(x+sin(y))\^2} is faster than \inlsh{(x+sin(y))*(x+sin(y))} -
+\item \inlsh{(x+sin(y))\^{}2} is faster than \inlsh{(x+sin(y))*(x+sin(y))} -
 sine is an expensive operation. It is cheaper to square complicated expression rather than
  compute it twice and add one multiplication.
 \item An expression
-\inltt{exp(-41*( (x+(0.3*cos(2*PI*t)))\^2 + (0.3*sin(2*PI*t))\^2 ))}
+\inltt{exp(-41*( (x+(0.3*cos(2*PI*t)))\^{}2 + (0.3*sin(2*PI*t))\^{}2 ))}
  makes use of 5 expensive operations (\inlsh{exp}, \inlsh{sin}, \inlsh{cos}
- and power \inlsh{\^} twice) while an equivalent expression
+ and power \inlsh{\^{}} twice) while an equivalent expression
 \inltt{exp(-41*( x*x+0.6*x*cos(2*PI*t) + 0.09 ))}
  uses only 2 expensive operations.
 \end{itemize}

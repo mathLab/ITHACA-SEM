@@ -549,18 +549,31 @@ namespace Nektar
 
         void StdPyrExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
+                  Array<OneD,       NekDouble>& outarray,
+            bool                                multiplybyweights)
         {
-            Array<OneD, NekDouble> tmp(inarray.num_elements());
             Array<OneD, NekDouble> wsp;
 
-            v_MultiplyByStdQuadratureMetric(inarray, tmp);
+            if(multiplybyweights)
+            {
+                Array<OneD, NekDouble> tmp(inarray.num_elements());
 
-            v_IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                           m_base[1]->GetBdata(),
-                                           m_base[2]->GetBdata(),
-                                           tmp,outarray,wsp,
-                                           true,true,true);
+                v_MultiplyByStdQuadratureMetric(inarray, tmp);
+
+                v_IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                               m_base[1]->GetBdata(),
+                                               m_base[2]->GetBdata(),
+                                               tmp,outarray,wsp,
+                                               true,true,true);
+            }
+            else
+            {
+                v_IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                               m_base[1]->GetBdata(),
+                                               m_base[2]->GetBdata(),
+                                               inarray,outarray,wsp,
+                                               true,true,true);
+            }
         }
 
         void StdPyrExp::v_IProductWRTBase_SumFacKernel(
@@ -1058,8 +1071,8 @@ namespace Nektar
             const Orientation          faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
-            int                        nummodesA, 
-            int                        nummodesB)
+            int                        P, 
+            int                        Q)
         {
             ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1),
                      "Method only implemented if BasisType is identical"
@@ -1070,40 +1083,48 @@ namespace Nektar
                      "(x and y direction) and Modified_C BasisType (z "
                      "direction)");
 
-            int i, j, p, q, r, nFaceCoeffs;
-
+            int i, j, k, p, q, r, nFaceCoeffs;
+            int nummodesA, nummodesB;
+            
             int order0 = m_base[0]->GetNumModes();
             int order1 = m_base[1]->GetNumModes();
             int order2 = m_base[2]->GetNumModes();
 
-            if (nummodesA == -1)
+            switch (fid)
             {
-                switch (fid)
-                {
-                    case 0:
-                        nummodesA = m_base[0]->GetNumModes();
-                        nummodesB = m_base[1]->GetNumModes();
-                        break;
-                    case 1:
-                    case 3:
-                        nummodesA = m_base[0]->GetNumModes();
-                        nummodesB = m_base[2]->GetNumModes();
-                        break;
-                    case 2:
-                    case 4:
-                        nummodesA = m_base[1]->GetNumModes();
-                        nummodesB = m_base[2]->GetNumModes();
-                        break;
-                }
+            case 0:
+                nummodesA = order0;
+                nummodesB = order1;
+                break;
+            case 1:
+            case 3:
+                nummodesA = order0;
+                nummodesB = order2;
+                break;
+            case 2:
+            case 4:
+                nummodesA = order1;
+                nummodesB = order2;
+                break;
+            }
+            
+            bool CheckForZeroedModes = false;
+
+            if (P == -1)
+            {
+                P = nummodesA;
+                Q = nummodesB;
                 nFaceCoeffs = GetFaceNcoeffs(fid);
             }
             else if (fid > 0)
             {
-                nFaceCoeffs = nummodesB + (nummodesA-1)*(1+2*(nummodesB-1)-(nummodesA-1))/2;
+                nFaceCoeffs = P*(2*Q-P+1)/2;
+                CheckForZeroedModes = true;
             }
             else
             {
-                nFaceCoeffs = nummodesA*nummodesB;
+                nFaceCoeffs = P*Q;
+                CheckForZeroedModes = true;
             }
 
             // Allocate the map array and sign array; set sign array to ones (+)
@@ -1127,17 +1148,17 @@ namespace Nektar
 
             if (fid == 0)
             {
-                for (i = 0; i < nummodesB; i++)
+                for (i = 0; i < Q; i++)
                 {
-                    for (j = 0; j < nummodesA; j++)
+                    for (j = 0; j < P; j++)
                     {
                         if (faceOrient < 9)
                         {
-                            arrayindx[i*nummodesA+j] = i*nummodesA+j;
+                            arrayindx[i*P+j] = i*P+j;
                         }
                         else
                         {
-                            arrayindx[i*nummodesA+j] = j*nummodesB+i;
+                            arrayindx[i*P+j] = j*Q+i;
                         }
                     }
                 }
@@ -1153,58 +1174,60 @@ namespace Nektar
                     // Fill in vertices
                     maparray[arrayindx[0]]           = 0;
                     maparray[arrayindx[1]]           = 1;
-                    maparray[arrayindx[nummodesA+1]] = 2;
-                    maparray[arrayindx[nummodesA]]   = 3;
+                    maparray[arrayindx[P+1]] = 2;
+                    maparray[arrayindx[P]]   = 3;
 
                     // Edge 0
                     cnt = 5;
-                    for (p = 2; p < nummodesA; ++p)
+                    for (p = 2; p < P; ++p)
                     {
                         maparray[arrayindx[p]] = p-2 + cnt;
                     }
 
                     // Edge 1
-                    cnt += nummodesA-2;
-                    for (q = 2; q < nummodesB; ++q)
+                    cnt += P-2;
+                    for (q = 2; q < Q; ++q)
                     {
-                        maparray[arrayindx[q*nummodesA+1]] = q-2 + cnt;
+                        maparray[arrayindx[q*P+1]] = q-2 + cnt;
                     }
 
                     // Edge 2
-                    cnt += nummodesB-2;
-                    for (p = 2; p < nummodesA; ++p)
+                    cnt += Q-2;
+                    for (p = 2; p < P; ++p)
                     {
-                        maparray[arrayindx[nummodesA+p]] = p-2 + cnt;
+                        maparray[arrayindx[P+p]] = p-2 + cnt;
                     }
 
                     // Edge 3
-                    cnt += nummodesA-2;
-                    for (q = 2; q < nummodesB; ++q)
+                    cnt += P-2;
+                    for (q = 2; q < Q; ++q)
                     {
-                        maparray[arrayindx[q*nummodesA]] = q-2 + cnt;
+                        maparray[arrayindx[q*P]] = q-2 + cnt;
                     }
 
                     // Interior
-                    cnt += nummodesB-2 + 4*(nummodesA-2);
-                    for (q = 2; q < nummodesB; ++q)
+                    cnt += Q-2 + 4*(P-2);
+                    for (q = 2; q < Q; ++q)
                     {
-                        for (p = 2; p < nummodesA; ++p)
+                        for (p = 2; p < P; ++p)
                         {
-                            maparray[arrayindx[q*nummodesA+p]] = cnt + (q-2)*nummodesA+(p-2);
+                            maparray[arrayindx[q*P+p]] = cnt + (q-2)*P+(p-2);
                         }
                     }
+
+
                     break;
 
                 case 1: // Left triangle
                     // Vertices
                     maparray[0]         = 0;
                     maparray[1]         = 4;
-                    maparray[nummodesB] = 1;
+                    maparray[Q] = 1;
 
                     // Edge 0 (pyramid edge 0)
                     cnt = 5;
-                    q   = 2*nummodesB-1;
-                    for (p = 2; p < nummodesA; q += nummodesB-p, ++p)
+                    q   = 2*Q-1;
+                    for (p = 2; p < P; q += Q-p, ++p)
                     {
                         maparray[q] = cnt++;
                         if ((int)faceOrient == 7)
@@ -1215,7 +1238,7 @@ namespace Nektar
 
                     // Edge 1 (pyramid edge 5)
                     cnt = 5 + 2*(order0-2) + 2*(order1-2) + (order2-2);
-                    for (q = 2; q < nummodesB; ++q)
+                    for (q = 2; q < Q; ++q)
                     {
                         maparray[q] = cnt++;
                         if ((int)faceOrient == 7)
@@ -1226,22 +1249,22 @@ namespace Nektar
                     
                     // Edge 2 (pyramid edge 4)
                     cnt = 5 + 2*(order0-2) + 2*(order1-2);
-                    for (q = 2; q < nummodesB; ++q)
+                    for (q = 2; q < Q; ++q)
                     {
-                        maparray[nummodesB+q-1] = cnt++;
+                        maparray[Q+q-1] = cnt++;
                         if ((int)faceOrient == 7)
                         {
-                            signarray[nummodesB+q-1] = q % 2 ? -1 : 1;
+                            signarray[Q+q-1] = q % 2 ? -1 : 1;
                         }
                     }
 
                     // Interior
                     cnt  = 5 + 2*(order0-2) + 2*(order1-2) + 4*(order2-2)
                         + v_GetFaceIntNcoeffs(0);
-                    cnt2 = 2*nummodesB + 1;
-                    for (p = 2; p < nummodesA; ++p)
+                    cnt2 = 2*Q + 1;
+                    for (p = 2; p < P; ++p)
                     {
-                        for (r = 2; r < nummodesB-p; ++r)
+                        for (r = 2; r < Q-p; ++r)
                         {
                             maparray[cnt2] = cnt++;
                             if ((int)faceOrient == 7 && p > 1)
@@ -1257,12 +1280,12 @@ namespace Nektar
                     // Vertices
                     maparray[0]         = 1;
                     maparray[1]         = 4;
-                    maparray[nummodesB] = 2;
+                    maparray[Q] = 2;
 
                     // Edge 0 (pyramid edge 1)
                     cnt = 5 + (order0-2);
-                    q   = 2*nummodesB-1;
-                    for (p = 2; p < nummodesA; q += nummodesB-p, ++p)
+                    q   = 2*Q-1;
+                    for (p = 2; p < P; q += Q-p, ++p)
                     {
                         maparray[q] = cnt++;
                         if ((int)faceOrient == 7)
@@ -1273,7 +1296,7 @@ namespace Nektar
 
                     // Edge 1 (pyramid edge 6)
                     cnt = 5 + 2*(order0-2) + 2*(order1-2) + 2*(order2-2);
-                    for (q = 2; q < nummodesB; ++q)
+                    for (q = 2; q < Q; ++q)
                     {
                         maparray[q] = cnt++;
                         if ((int)faceOrient == 7)
@@ -1284,22 +1307,22 @@ namespace Nektar
                     
                     // Edge 2 (pyramid edge 5)
                     cnt = 5 + 2*(order0-2) + 2*(order1-2) + (order2-2);
-                    for (q = 2; q < nummodesB; ++q)
+                    for (q = 2; q < Q; ++q)
                     {
-                        maparray[nummodesB+q-1] = cnt++;
+                        maparray[Q+q-1] = cnt++;
                         if ((int)faceOrient == 7)
                         {
-                            signarray[nummodesB+q-1] = q % 2 ? -1 : 1;
+                            signarray[Q+q-1] = q % 2 ? -1 : 1;
                         }
                     }
 
                     // Interior
                     cnt  = 5 + 2*(order0-2) + 2*(order1-2) + 4*(order2-2)
                         + v_GetFaceIntNcoeffs(0) + v_GetFaceIntNcoeffs(1);
-                    cnt2 = 2*nummodesB + 1;
-                    for (p = 2; p < nummodesA; ++p)
+                    cnt2 = 2*Q + 1;
+                    for (p = 2; p < P; ++p)
                     {
-                        for (r = 2; r < nummodesB-p; ++r)
+                        for (r = 2; r < Q-p; ++r)
                         {
                             maparray[cnt2] = cnt++;
                             if ((int)faceOrient == 7 && p > 1)
@@ -1315,12 +1338,12 @@ namespace Nektar
                     // Vertices
                     maparray[0]         = 3;
                     maparray[1]         = 4;
-                    maparray[nummodesB] = 2;
+                    maparray[Q] = 2;
 
                     // Edge 0 (pyramid edge 2)
                     cnt = 5 + (order0-2) + (order1-2);
-                    q   = 2*nummodesB-1;
-                    for (p = 2; p < nummodesA; q += nummodesB-p, ++p)
+                    q   = 2*Q-1;
+                    for (p = 2; p < P; q += Q-p, ++p)
                     {
                         maparray[q] = cnt++;
                         if ((int)faceOrient == 7)
@@ -1331,7 +1354,7 @@ namespace Nektar
 
                     // Edge 1 (pyramid edge 6)
                     cnt = 5 + 2*(order0-2) + 2*(order1-2) + 2*(order2-2);
-                    for (q = 2; q < nummodesB; ++q)
+                    for (q = 2; q < Q; ++q)
                     {
                         maparray[q] = cnt++;
                         if ((int)faceOrient == 7)
@@ -1342,12 +1365,12 @@ namespace Nektar
                     
                     // Edge 2 (pyramid edge 7)
                     cnt = 5 + 2*(order0-2) + 2*(order1-2) + 3*(order2-2);
-                    for (q = 2; q < nummodesB; ++q)
+                    for (q = 2; q < Q; ++q)
                     {
-                        maparray[nummodesB+q-1] = cnt++;
+                        maparray[Q+q-1] = cnt++;
                         if ((int)faceOrient == 7)
                         {
-                            signarray[nummodesB+q-1] = q % 2 ? -1 : 1;
+                            signarray[Q+q-1] = q % 2 ? -1 : 1;
                         }
                     }
 
@@ -1355,10 +1378,10 @@ namespace Nektar
                     cnt  = 5 + 2*(order0-2) + 2*(order1-2) + 4*(order2-2)
                         + v_GetFaceIntNcoeffs(0) + v_GetFaceIntNcoeffs(1)
                         + v_GetFaceIntNcoeffs(2);
-                    cnt2 = 2*nummodesB + 1;
-                    for (p = 2; p < nummodesA; ++p)
+                    cnt2 = 2*Q + 1;
+                    for (p = 2; p < P; ++p)
                     {
-                        for (r = 2; r < nummodesB-p; ++r)
+                        for (r = 2; r < Q-p; ++r)
                         {
                             maparray[cnt2] = cnt++;
                             if ((int)faceOrient == 7 && p > 1)
@@ -1370,16 +1393,16 @@ namespace Nektar
                     }
                     break;
 
-                case 4: // Rear quad
+                case 4: // Rear tri
                     // Vertices
                     maparray[0]         = 0;
                     maparray[1]         = 4;
-                    maparray[nummodesB] = 3;
+                    maparray[Q] = 3;
 
                     // Edge 0 (pyramid edge 3)
                     cnt = 5 + 2*(order0-2) + (order1-2);
-                    q   = 2*nummodesB-1;
-                    for (p = 2; p < nummodesA; q += nummodesB-p, ++p)
+                    q   = 2*Q-1;
+                    for (p = 2; p < P; q += Q-p, ++p)
                     {
                         maparray[q] = cnt++;
                         if ((int)faceOrient == 7)
@@ -1390,7 +1413,7 @@ namespace Nektar
 
                     // Edge 1 (pyramid edge 7)
                     cnt = 5 + 2*(order0-2) + 2*(order1-2) + 3*(order2-2);
-                    for (q = 2; q < nummodesB; ++q)
+                    for (q = 2; q < Q; ++q)
                     {
                         maparray[q] = cnt++;
                         if ((int)faceOrient == 7)
@@ -1401,12 +1424,12 @@ namespace Nektar
                     
                     // Edge 2 (pyramid edge 4)
                     cnt = 5 + 2*(order0-2) + 2*(order1-2);
-                    for (q = 2; q < nummodesB; ++q)
+                    for (q = 2; q < Q; ++q)
                     {
-                        maparray[nummodesB+q-1] = cnt++;
+                        maparray[Q+q-1] = cnt++;
                         if ((int)faceOrient == 7)
                         {
-                            signarray[nummodesB+q-1] = q % 2 ? -1 : 1;
+                            signarray[Q+q-1] = q % 2 ? -1 : 1;
                         }
                     }
 
@@ -1414,10 +1437,10 @@ namespace Nektar
                     cnt  = 5 + 2*(order0-2) + 2*(order1-2) + 4*(order2-2)
                         + v_GetFaceIntNcoeffs(0) + v_GetFaceIntNcoeffs(1)
                         + v_GetFaceIntNcoeffs(2) + v_GetFaceIntNcoeffs(3);
-                    cnt2 = 2*nummodesB + 1;
-                    for (p = 2; p < nummodesA; ++p)
+                    cnt2 = 2*Q + 1;
+                    for (p = 2; p < P; ++p)
                     {
-                        for (r = 2; r < nummodesB-p; ++r)
+                        for (r = 2; r < Q-p; ++r)
                         {
                             maparray[cnt2] = cnt++;
                             if ((int)faceOrient == 7 && p > 1)
@@ -1435,19 +1458,68 @@ namespace Nektar
 
             if (fid > 0)
             {
+
+               if(CheckForZeroedModes)
+                {
+                    // zero signmap and set maparray to zero if elemental
+                    // modes are not as large as face modesl
+                    int idx = 0; 
+                    for (j = 0; j < P; ++j)
+                    {
+                        idx += Q-j;
+                        for (k = Q-j; k < Q-j; ++k)
+                        {
+                            signarray[idx]  = 0.0;
+                            maparray[idx++] = maparray[0];
+                        }
+                    }
+                    
+                    for (j = P; j < P; ++j)
+                    {
+                        for (k = 0; k < Q-j; ++k)
+                        {
+                            signarray[idx]  = 0.0;
+                            maparray[idx++] = maparray[0];
+                        }
+                    }
+                }
+                
                 // Triangles only have one possible orientation (base
                 // direction reversed); swap edge modes.
                 if ((int)faceOrient == 7)
                 {
-                    swap(maparray[0], maparray[nummodesA]);
-                    for (i = 1; i < nummodesA-1; ++i)
+                    swap(maparray[0], maparray[P]);
+                    for (i = 1; i < P-1; ++i)
                     {
-                        swap(maparray[i+1], maparray[nummodesA+i]);
+                        swap(maparray[i+1], maparray[P+i]);
                     }
                 }
             }
             else
             {
+                if(CheckForZeroedModes)
+                {
+                    // zero signmap and set maparray to zero if elemental
+                    // modes are not as large as face modesl
+                    for (j = 0; j < P; ++j)
+                    {
+                        for (k = Q; k < Q; ++k)
+                        {
+                            signarray[arrayindx[j+k*P]] = 0.0;
+                            maparray[arrayindx[j+k*P]]  = maparray[0];
+                        }
+                    }
+
+                    for (j = P; j < P; ++j)
+                    {
+                        for (k = 0; k < Q; ++k)
+                        {
+                            signarray[arrayindx[j+k*P]] = 0.0;
+                            maparray[arrayindx[j+k*P]]  = maparray[0];
+                        }
+                    }                    
+                }
+
                 // The code below is exactly the same as that taken from
                 // StdHexExp and reverses the 'b' and 'a' directions as
                 // appropriate (1st and 2nd if statements respectively) in
@@ -1457,34 +1529,34 @@ namespace Nektar
                 {
                     if (faceOrient < 9)
                     {
-                        for (i = 3; i < nummodesB; i += 2)
+                        for (i = 3; i < Q; i += 2)
                         {
-                            for (j = 0; j < nummodesA; j++)
+                            for (j = 0; j < P; j++)
                             {
-                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                                signarray[arrayindx[i*P+j]] *= -1;
                             }
                         }
                         
-                        for (i = 0; i < nummodesA; i++)
+                        for (i = 0; i < P; i++)
                         {
-                            swap(maparray [i], maparray [i+nummodesA]);
-                            swap(signarray[i], signarray[i+nummodesA]);
+                            swap(maparray [i], maparray [i+P]);
+                            swap(signarray[i], signarray[i+P]);
                         }
                     }
                     else
                     {
-                        for (i = 0; i < nummodesB; i++)
+                        for (i = 0; i < Q; i++)
                         {
-                            for (j = 3; j < nummodesA; j += 2)
+                            for (j = 3; j < P; j += 2)
                             {
-                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                                signarray[arrayindx[i*P+j]] *= -1;
                             }
                         }
 
-                        for (i = 0; i < nummodesB; i++)
+                        for (i = 0; i < Q; i++)
                         {
-                            swap (maparray [i], maparray [i+nummodesB]);
-                            swap (signarray[i], signarray[i+nummodesB]);
+                            swap (maparray [i], maparray [i+Q]);
+                            swap (signarray[i], signarray[i+Q]);
                         }
                     }
                 }
@@ -1494,34 +1566,34 @@ namespace Nektar
                 {
                     if (faceOrient < 9)
                     {
-                        for (i = 0; i < nummodesB; i++)
+                        for (i = 0; i < Q; i++)
                         {
-                            for (j = 3; j < nummodesA; j += 2)
+                            for (j = 3; j < P; j += 2)
                             {
-                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                                signarray[arrayindx[i*P+j]] *= -1;
                             }
                         }
 
-                        for(i = 0; i < nummodesB; i++)
+                        for(i = 0; i < Q; i++)
                         {
-                            swap(maparray [i*nummodesA], maparray [i*nummodesA+1]);
-                            swap(signarray[i*nummodesA], signarray[i*nummodesA+1]);
+                            swap(maparray [i*P], maparray [i*P+1]);
+                            swap(signarray[i*P], signarray[i*P+1]);
                         }
                     }
                     else
                     {
-                        for (i = 3; i < nummodesB; i += 2)
+                        for (i = 3; i < Q; i += 2)
                         {
-                            for (j = 0; j < nummodesA; j++)
+                            for (j = 0; j < P; j++)
                             {
-                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                                signarray[arrayindx[i*P+j]] *= -1;
                             }
                         }
 
-                        for (i = 0; i < nummodesA; i++)
+                        for (i = 0; i < P; i++)
                         {
-                            swap(maparray [i*nummodesB], maparray [i*nummodesB+1]);
-                            swap(signarray[i*nummodesB], signarray[i*nummodesB+1]);
+                            swap(maparray [i*Q], maparray [i*Q+1]);
+                            swap(signarray[i*Q], signarray[i*Q+1]);
                         }
                     }
                 }

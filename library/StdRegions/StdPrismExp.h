@@ -126,7 +126,8 @@ namespace Nektar
                       Array<OneD,       NekDouble>& outarray);
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                 const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD,       NekDouble>& outarray);
+                      Array<OneD,       NekDouble>& outarray,
+                bool                                multiplybyweights = true);
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFacKernel(
                 const Array<OneD, const NekDouble>& base0,
                 const Array<OneD, const NekDouble>& base1,
@@ -199,8 +200,8 @@ namespace Nektar
                 const Orientation      faceOrient,
                 Array<OneD, unsigned int> &maparray,
                 Array<OneD,          int> &signarray,
-                int                        nummodesA = -1,
-                int                        nummodesB = -1);
+                int                        P = -1,
+                int                        Q = -1);
             STD_REGIONS_EXPORT virtual int  v_GetVertexMap(
                 int localVertexId,
                 bool useCoeffPacking = false);

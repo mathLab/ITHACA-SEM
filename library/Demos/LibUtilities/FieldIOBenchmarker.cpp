@@ -304,6 +304,7 @@ void FilterDataForThisRank(const DefVec& inFieldDefs, const DatVec& inFieldData,
                             inDef->m_uniOrder, inDef->m_numModes,
                             inDef->m_fields, inDef->m_numHomogeneousDir,
                             inDef->m_homogeneousLengths,
+                            inDef->m_homoStrips, inDef->m_homogeneousSIDs,
                             inDef->m_homogeneousZIDs, inDef->m_homogeneousYIDs,
                             inDef->m_points, inDef->m_pointsDef,
                             inDef->m_numPoints, inDef->m_numPointsDef));
@@ -324,7 +325,7 @@ void ReadWholeFilesForThisRank(Experiment& exp, DefVec& outFieldDefs,
         DatVec& outFieldData)
 {
     std::string ft = FieldIO::GetFileType(exp.dataSource, exp.comm);
-    FieldIOSharedPtr fio = GetFieldIOFactory().CreateInstance(ft, exp.comm);
+    FieldIOSharedPtr fio = GetFieldIOFactory().CreateInstance(ft, exp.comm, true);
 
     if (fs::is_directory(exp.dataSource))  {
         Array<OneD, int> ElementIDs = ReadIDsForThisRank(exp, fio);
@@ -346,7 +347,7 @@ void ReadWholeFilesForThisRank(Experiment& exp, DefVec& outFieldDefs,
 void ReadDecomposed(Experiment& exp, DefVec& outFieldDefs, DatVec& outFieldData)
 {
     std::string ft = FieldIO::GetFileType(exp.dataSource, exp.comm);
-    FieldIOSharedPtr fio = GetFieldIOFactory().CreateInstance(ft, exp.comm);
+    FieldIOSharedPtr fio = GetFieldIOFactory().CreateInstance(ft, exp.comm, true);
 
     Array<OneD, int> ElementIDs = ReadIDsForThisRank(exp, fio);
     DefVec fileFieldDefs;
@@ -448,8 +449,8 @@ Results TestWrite(Experiment& exp)
 
         double t0 = MPI_Wtime();
 
-        FieldIOSharedPtr fio = GetFieldIOFactory().CreateInstance(outtype,
-                exp.comm);
+        FieldIOSharedPtr fio = GetFieldIOFactory().CreateInstance(
+            outtype, exp.comm, true);
 
         fio->Write(exp.dataDest, fielddefs, fielddata);
 

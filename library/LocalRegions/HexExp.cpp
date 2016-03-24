@@ -81,8 +81,6 @@ namespace Nektar
          * @param   T           HexExp to copy.
          */
         HexExp::HexExp(const HexExp &T):
-            StdExpansion(T),
-            StdExpansion3D(T),
             StdRegions::StdHexExp(T),
             Expansion(T),
             Expansion3D(T),
@@ -364,7 +362,8 @@ namespace Nektar
          */
         void HexExp::v_IProductWRTBase_SumFac(
                 const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,       NekDouble> &outarray)
+                Array<OneD,       NekDouble> &outarray,
+                bool multiplybyweights)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -372,16 +371,29 @@ namespace Nektar
             int    order0 = m_base[0]->GetNumModes();
             int    order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> tmp(inarray.num_elements());
             Array<OneD, NekDouble> wsp(nquad0*nquad1*(nquad2+order0) +
                                        order0*order1*nquad2);
 
-            MultiplyByQuadratureMetric(inarray, tmp);
-            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                         m_base[1]->GetBdata(),
-                                         m_base[2]->GetBdata(),
-                                         tmp,outarray,wsp,
-                                         true,true,true);
+            if(multiplybyweights)
+            {
+                Array<OneD, NekDouble> tmp(inarray.num_elements());
+
+                MultiplyByQuadratureMetric(inarray, tmp);
+               IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetBdata(),
+                                             m_base[2]->GetBdata(),
+                                             tmp,outarray,wsp,
+                                             true,true,true);
+            }
+            else
+            {
+               IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                            m_base[1]->GetBdata(),
+                                            m_base[2]->GetBdata(),
+                                            inarray,outarray,wsp,
+                                            true,true,true);
+
+            }
         }
 
         void HexExp::v_IProductWRTDerivBase(
@@ -544,6 +556,15 @@ namespace Nektar
             return StdHexExp::v_PhysEvaluate(Lcoord, physvals);
         }
 
+        StdRegions::StdExpansionSharedPtr HexExp::v_GetStdExp(void) const
+        {
+            return MemoryManager<StdRegions::StdHexExp>
+                ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                    m_base[1]->GetBasisKey(),
+                                    m_base[2]->GetBasisKey());
+        }
+
+
         /**
 	 * \brief Retrieves the physical coordinates of a given set of 
          * reference coordinates.
@@ -659,572 +680,122 @@ namespace Nektar
                    fo == StdRegions::eDir1FwdDir2_Dir2BwdDir1;
         }
 
-
-        void HexExp::v_GetTracePhysVals(
-                const int                                face,
-                const StdRegions::StdExpansionSharedPtr &FaceExp,
-                const Array<OneD, const NekDouble>      &inarray,
-                      Array<OneD,       NekDouble>      &outarray,
-                StdRegions::Orientation                  orient)
-        {
-            v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
-        }
-
-
-        ///Returns the physical values at the quadrature points of a face
-        void HexExp::v_GetFacePhysVals(
-            const int                                face,
-            const StdRegions::StdExpansionSharedPtr &FaceExp,
-            const Array<OneD, const NekDouble>      &inarray,
-                  Array<OneD,       NekDouble>      &outarray,
-            StdRegions::Orientation                  orient)
+        void HexExp::v_GetFacePhysMap(const int               face,
+                                      Array<OneD, int>        &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
-            Array<OneD, NekDouble> o_tmp(GetFaceNumPoints(face));
-
-            if (orient == StdRegions::eNoOrientation)
-            {
-                orient = GetForient(face);
-            }
+                        
+            int nq0 = 0; 
+            int nq1 = 0; 
 
             switch(face)
             {
-            case 0:
-                if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
-                {
-                    //Directions A and B positive
-                    Vmath::Vcopy(nquad0*nquad1,&(inarray[0]),1,&(o_tmp[0]),1);
-                }
-                else if(orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
-                {
-                    //Direction A negative and B positive
-                    for (int j=0; j<nquad1; j++)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0-1)+j*nquad0,-1,&(o_tmp[0])+(j*nquad0),1);
-                    }
-                }
-                else if(orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
-                {
-                    //Direction A positive and B negative
-                    for (int j=0; j<nquad1; j++)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*(nquad1-1-j),1,&(o_tmp[0])+(j*nquad0),1);
-                    }
-                } 
-                else if(orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
-                {
-                    //Direction A negative and B negative
-                    for(int j=0; j<nquad1; j++)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1-1-j*nquad0),-1,&(o_tmp[0])+(j*nquad0),1);
-                    }
-                }
-		else if(orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
-		{
-		    //Transposed, Direction A and B positive
-		    for (int i=0; i<nquad0; i++)
-                    {
-                        Vmath::Vcopy(nquad1,&(inarray[0])+i,nquad0,&(o_tmp[0])+(i*nquad1),1);
-                    }
-		}
-		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
-		{
-		    //Transposed, Direction A negative and B positive
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad1,&(inarray[0])+i+nquad0*(nquad1-1),-nquad0,&(o_tmp[0])+(i*nquad1),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
-		{
-		    //Transposed, Direction A positive and B negative
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1-i),nquad0,&(o_tmp[0])+(i*nquad1),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
-		{
-		    //Transposed, Direction A and B negative
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0*nquad1-1-i),-nquad0,&(o_tmp[0])+(i*nquad1),1);
-                    }
-		} 
+                case 0:
+                    nq0 = nquad0;
+                    nq1 = nquad1;
 
-                //interpolate
-                if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
-                {
-                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(),
-                                           m_base[1]->GetPointsKey(), o_tmp,
-                                           FaceExp->GetBasis(0)->GetPointsKey(),
-                                           FaceExp->GetBasis(1)->GetPointsKey(),
-                                           outarray);
-                }
-                else
-                {
-                    LibUtilities::Interp2D(m_base[1]->GetPointsKey(),
-                                           m_base[0]->GetPointsKey(), o_tmp,
-                                           FaceExp->GetBasis(0)->GetPointsKey(),
-                                           FaceExp->GetBasis(1)->GetPointsKey(),
-                                           outarray);
-                }
-                break;
-            case 1:
-                if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
-                {
+                    //Directions A and B positive
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+
+                    for (int i = 0; i < nquad0*nquad1; ++i)
+                    {
+                        outarray[i] = i;
+                    }
+
+                    break;
+                case 1:
+                    nq0 = nquad0;
+                    nq1 = nquad2;
                     //Direction A and B positive
-                    for (int k=0; k<nquad2; k++)
+                    if(outarray.num_elements()!=nq0*nq1)
                     {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1*k),
-				     1,&(o_tmp[0])+(k*nquad0),1);
+                        outarray = Array<OneD, int>(nq0*nq1);
                     }
-                }
-                else if(orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
-                {
-                    //Direction A negative and B positive
-                    for (int k=0; k<nquad2; k++)
+                    
+                    //Direction A and B positive
+                    for (int k = 0; k < nquad2; k++)
                     {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0-1)+(nquad0*nquad1*k),
-                                     -1,&(o_tmp[0])+(k*nquad0),1);
-                    }
-                }
-                else if(orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
-                {
-                    //Direction A positive and B negative
-                    for (int k=0; k<nquad2; k++)
+                        for(int i = 0; i < nquad0; ++i)
+                        {
+                            outarray[k*nquad0 + i] = nquad0*nquad1*k + i;
+                        }
+                    }                    
+                    break;
+                case 2:
+                    nq0 = nquad1;
+                    nq1 = nquad2;
+                    
+                    //Direction A and B positive
+                    if(outarray.num_elements()!=nq0*nq1)
                     {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1*(nquad2-1-k)),
-                                     1,&(o_tmp[0])+(k*nquad0),1);
+                        outarray = Array<OneD, int>(nq0*nq1);
                     }
-                }
-                else if(orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
-                {
-                    //Direction A negative and B negative
-                    for(int k=0; k<nquad2; k++)
+                    
+                    for (int i = 0; i < nquad1*nquad2; i++)
                     {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0-1)+(nquad0*nquad1*(nquad2-1-k)),
-                                     -1,&(o_tmp[0])+(k*nquad0),1);
+                        outarray[i] = nquad0-1 + i*nquad0;
                     }
-                }
-		else if(orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
-		{
-		    //Transposed, Direction A and B positive
-		    for (int i=0; i<nquad0; i++)
+                    break;
+                case 3:
+                    nq0 = nquad0;
+                    nq1 = nquad2;
+                    
+                    //Direction A and B positive
+                    if(outarray.num_elements()!=nq0*nq1)
                     {
-                        Vmath::Vcopy(nquad2,&(inarray[0])+i,nquad0*nquad1,
-                                     &(o_tmp[0])+(i*nquad2),1);
+                        outarray = Array<OneD, int>(nq0*nq1);
                     }
-		}
-		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
-		{
-		    //Transposed, Direction A negative and B positive
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+nquad0*nquad1*(nquad2-1)+i,
-                                     -nquad0*nquad1,&(o_tmp[0])+(i*nquad2),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
-		{
-		    //Transposed, Direction A positive and B negative
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0-1-i),nquad0*nquad1,
-                                     &(o_tmp[0])+(i*nquad2),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
-		{
-		    //Transposed, Direction A and B negative
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+nquad0*nquad1*nquad2+(nquad0-1-i),
-                                     -nquad0*nquad1,&(o_tmp[0])+(i*nquad2),1);
-                    }
-		} 
 
-                //interpolate
-                if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
-                {
-                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(),
-                                           m_base[2]->GetPointsKey(), o_tmp,
-                                           FaceExp->GetBasis(0)->GetPointsKey(),
-                                           FaceExp->GetBasis(1)->GetPointsKey(),
-                                           outarray);
-                }
-                else
-                {
-                    LibUtilities::Interp2D(m_base[2]->GetPointsKey(),
-                                           m_base[0]->GetPointsKey(), o_tmp,
-                                           FaceExp->GetBasis(0)->GetPointsKey(),
-                                           FaceExp->GetBasis(1)->GetPointsKey(),
-                                           outarray);
-                }
-                break;
-            case 2:
-	        if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
-                {
+                    for (int k = 0; k < nquad2; k++)
+                    {
+                        for (int i = 0; i < nquad0; i++)
+                        {
+                            outarray[k*nquad0 + i] = (nquad0*(nquad1-1))+(k*nquad0*nquad1) + i;
+                        }
+                    }                        
+                    break;
+                case 4:
+                    nq0 = nquad1;
+                    nq1 = nquad2;
+                    
+                    //Direction A and B positive
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+                    
+                    for (int i = 0; i < nquad1*nquad2; i++)
+                    {
+                        outarray[i] = i*nquad0;
+                    }                    
+                    break;
+                case 5:
+                    nq0 = nquad0;
+                    nq1 = nquad1;
                     //Directions A and B positive
-                    Vmath::Vcopy(nquad0*nquad1,&(inarray[0])+(nquad0-1),
-                                 nquad0,&(o_tmp[0]),1);
-                }
-                else if(orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
-                {
-                    //Direction A negative and B positive
-                    for (int k=0; k<nquad2; k++)
+                    if(outarray.num_elements()!=nq0*nq1)
                     {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1-1)+(k*nquad0*nquad1),
-                                     -nquad0,&(o_tmp[0])+(k*nquad0),1);
+                        outarray = Array<OneD, int>(nq0*nq1);
                     }
-                }
-                else if(orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
-                {
-                    //Direction A positive and B negative
-                    for (int k=0; k<nquad2; k++)
+
+                    for (int i = 0; i < nquad0*nquad1; i++)
                     {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0-1)+(nquad0*nquad1*(nquad2-1-k)),
-                                     nquad0,&(o_tmp[0])+(k*nquad0),1);
+                        outarray[i] = nquad0*nquad1*(nquad2-1) + i;
                     }
-                }
-                else if(orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
-                {
-                    //Direction A negative and B negative
-                    for (int k=0; k<nquad2; k++)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1-1)+(nquad0*nquad1*(nquad2-1-k)),
-                                     -nquad0,&(o_tmp[0])+(k*nquad0),1);
-                    }
-                }
-		else if(orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
-		{
-		    //Transposed, Direction A and B positive
-		    for (int j=0; j<nquad1; j++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0-1)+(j*nquad0),
-                                     nquad0*nquad1,&(o_tmp[0])+(j*nquad2),1);
-                    }
-		}
-		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
-		{
-		    //Transposed, Direction A negative and B positive
-		    for (int j=0; j<nquad0; j++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+nquad0*nquad1*(nquad2-1)+nquad0+j*nquad0,
-                                     -nquad0*nquad1,&(o_tmp[0])+(j*nquad2),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
-		{
-		    //Transposed, Direction A positive and B negative
-		    for (int j=0; j<nquad0; j++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0*nquad1-1-j*nquad0),
-                                     nquad0*nquad1,&(o_tmp[0])+(j*nquad2),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
-		{
-		    //Transposed, Direction A and B negative
-		    for (int j=0; j<nquad0; j++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0*nquad1*nquad2-1-j*nquad0),
-                                     -nquad0*nquad1,&(o_tmp[0])+(j*nquad2),1);
-                    }
-		} 
-                //interpolate
-                if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
-                {
-                    LibUtilities::Interp2D(m_base[1]->GetPointsKey(),
-                                           m_base[2]->GetPointsKey(), o_tmp,
-                                           FaceExp->GetBasis(0)->GetPointsKey(),
-                                           FaceExp->GetBasis(1)->GetPointsKey(),
-                                           outarray);
-                }
-                else
-                {
-                    LibUtilities::Interp2D(m_base[2]->GetPointsKey(),
-                                           m_base[1]->GetPointsKey(), o_tmp,
-                                           FaceExp->GetBasis(0)->GetPointsKey(),
-                                           FaceExp->GetBasis(1)->GetPointsKey(),
-                                           outarray);
-                }
-                
-                break;
-            case 3:
-	        if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
-                {
-                    //Directions A and B positive
-                    for (int k=0; k<nquad2; k++)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*(nquad1-1))+(k*nquad0*nquad1),
-                                     1,&(o_tmp[0])+(k*nquad0),1);
-                    }
-                }
-                else if(orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
-                {
-                    //Direction A negative and B positive
-                    for (int k=0; k<nquad2; k++)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1-1)+(k*nquad0*nquad1),
-                                     -1,&(o_tmp[0])+(k*nquad0),1);
-                    }
-                }
-                else if(orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
-                {
-                    //Direction A positive and B negative
-                    for (int k=0; k<nquad2; k++)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*(nquad1-1))+(nquad0*nquad1*(nquad2-1-k)),
-                                     1,&(o_tmp[0])+(k*nquad0),1);
-                    }
-                }
-                else if(orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
-                {
-                    //Direction A negative and B negative
-                    for (int k=0; k<nquad2; k++)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1-1)+(nquad0*nquad1*(nquad2-1-k)),
-                                     -1,&(o_tmp[0])+(k*nquad0),1);
-                    }
-                }
-		else if(orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
-		{
-		    //Transposed, Direction A and B positive
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+nquad0*(nquad1-1)+i,nquad0*nquad1,
-                                     &(o_tmp[0])+(i*nquad2),1);
-                    }
-		}
-		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
-		{
-		    //Transposed, Direction A negative and B positive
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+nquad0*(nquad1*nquad2-1)+i,-nquad0*nquad1,
-                                     &(o_tmp[0])+(i*nquad2),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
-		{
-		    //Transposed, Direction A positive and B negative
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0*nquad1-1-i),nquad0*nquad1,
-                                     &(o_tmp[0])+(i*nquad2),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
-		{
-		    //Transposed, Direction A and B negative
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0*nquad1*nquad2-1-i),-nquad0*nquad1,
-                                     &(o_tmp[0])+(i*nquad2),1);
-                    }
-		} 
-                //interpolate
-                if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
-                {
-                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(),
-                                           m_base[2]->GetPointsKey(), o_tmp,
-                                           FaceExp->GetBasis(0)->GetPointsKey(),
-                                           FaceExp->GetBasis(1)->GetPointsKey(),
-                                           outarray);
-                }
-                else
-                {
-                    LibUtilities::Interp2D(m_base[2]->GetPointsKey(),
-                                           m_base[0]->GetPointsKey(), o_tmp,
-                                           FaceExp->GetBasis(0)->GetPointsKey(),
-                                           FaceExp->GetBasis(1)->GetPointsKey(),
-                                           outarray);
-                }
-                break;
-            case 4:
-                if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
-                {
-                    //Directions A and B positive
-                    Vmath::Vcopy(nquad0*nquad1,&(inarray[0]),nquad0,&(o_tmp[0]),1);
-                }
-                else if(orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
-                {
-                    //Direction A negative and B positive
-                    for (int k=0; k<nquad2; k++)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*(nquad1-1)+(k*nquad0*nquad1),
-                                     -nquad0,&(o_tmp[0])+(k*nquad0),1);
-                    }
-                }
-                else if(orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
-                {
-                    //Direction A positive and B negative
-                    for (int k=0; k<nquad2; k++)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1*(nquad2-1-k)),
-                                     nquad0,&(o_tmp[0])+(k*nquad0),1);
-                    }
-                }
-                else if(orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
-                {
-                    //Direction A negative and B negative
-                    for (int k=0; k<nquad2; k++)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*(nquad1-1)+(nquad0*nquad1*(nquad2-1-k)),
-                                     -nquad0,&(o_tmp[0])+(k*nquad0),1);
-                    }
-                }
-		else if(orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
-		{
-		    //Transposed, Direction A and B positive
-		    for (int j=0; j<nquad0; j++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+j*nquad0,nquad0*nquad1,
-                                     &(o_tmp[0])+(j*nquad2),1);
-                    }
-		}
-		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
-		{
-		    //Transposed, Direction A negative and B positive
-		    for (int j=0; j<nquad0; j++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+nquad0*nquad1*(nquad2-1)+j*nquad0,
-                                     -nquad0*nquad1,&(o_tmp[0])+(j*nquad2),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
-		{
-		    //Transposed, Direction A positive and B negative
-		    for (int j=0; j<nquad0; j++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0*(nquad1-1)-j*nquad0),
-                                     nquad0*nquad1,&(o_tmp[0])+(j*nquad2),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
-		{
-		    //Transposed, Direction A and B negative
-		    for (int j=0; j<nquad0; j++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0*(nquad1*nquad2-1)-j*nquad0),
-                                     -nquad0*nquad1,&(o_tmp[0])+(j*nquad2),1);
-                    }
-		} 
-                //interpolate
-                if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
-                {
-                    LibUtilities::Interp2D(m_base[1]->GetPointsKey(),
-                                           m_base[2]->GetPointsKey(), o_tmp,
-                                           FaceExp->GetBasis(0)->GetPointsKey(),
-                                           FaceExp->GetBasis(1)->GetPointsKey(),
-                                           outarray);
-                }
-                else
-                {
-                    LibUtilities::Interp2D(m_base[2]->GetPointsKey(),
-                                           m_base[1]->GetPointsKey(), o_tmp,
-                                           FaceExp->GetBasis(0)->GetPointsKey(),
-                                           FaceExp->GetBasis(1)->GetPointsKey(),
-                                           outarray);
-                }
-                break;
-            case 5:
-                if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
-                {
-                    //Directions A and B positive
-                    Vmath::Vcopy(nquad0*nquad1,&(inarray[0])+nquad0*nquad1*(nquad2-1),1,&(o_tmp[0]),1);
-                }
-                else if(orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
-                {
-                    //Direction A negative and B positive
-                    for (int j=0; j<nquad1; j++)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*nquad1*(nquad2-1)+(nquad0-1+j*nquad0),
-                                     -1,&(o_tmp[0])+(j*nquad0),1);
-                    }
-                }
-                else if(orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
-                {
-                    //Direction A positive and B negative
-                    for (int j=0; j<nquad1; j++)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+((nquad0*nquad1*nquad2-1)-(nquad0-1)-j*nquad0),
-                                     1,&(o_tmp[0])+(j*nquad0),1);
-                    }
-                }
-                else if(orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
-                {
-                    //Direction A negative and B negative
-                    for (int j=0; j<nquad1; j++)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1*nquad2-1-j*nquad0),
-                                     -1,&(o_tmp[0])+(j*nquad0),1);
-                    }
-                }
-		else if(orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
-		{
-		    //Transposed, Direction A and B positive
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad1,&(inarray[0])+nquad0*nquad1*(nquad2-1)+i,nquad0,
-                                     &(o_tmp[0])+(i*nquad1),1);
-                    }
-		}
-		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
-		{
-		    //Transposed, Direction A negative and B positive
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad1,&(inarray[0])+nquad0*(nquad1*nquad2-1)+i,-nquad0,
-                                     &(o_tmp[0])+(i*nquad1),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
-		{
-                    //Transposed, Direction A positive and B negative
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad1,&(inarray[0])+nquad0*nquad1*(nquad2-1)+(nquad0-1-i),
-                                     nquad0,&(o_tmp[0])+(i*nquad1),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
-		{
-		    //Transposed, Direction A and B negative
-		    for (int i=0; i<nquad0; i++)
-                    {
-		      Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0*nquad1*nquad2-1-i),-nquad0,
-                                   &(o_tmp[0])+(i*nquad1),1);
-                    }
-		} 
-                //interpolate
-                if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
-                {
-                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(),
-                                           m_base[1]->GetPointsKey(), o_tmp,
-                                           FaceExp->GetBasis(0)->GetPointsKey(),
-                                           FaceExp->GetBasis(1)->GetPointsKey(),
-                                           outarray);
-                }
-                else
-                {
-                    LibUtilities::Interp2D(m_base[1]->GetPointsKey(),
-                                           m_base[0]->GetPointsKey(), o_tmp,
-                                           FaceExp->GetBasis(0)->GetPointsKey(),
-                                           FaceExp->GetBasis(1)->GetPointsKey(),
-                                           outarray);
-                }
-                break;
-            default:
-                ASSERTL0(false,"face value (> 5) is out of range");
-                break;
+
+                    break;
+                default:
+                    ASSERTL0(false,"face value (> 5) is out of range");
+                    break;
             }
+
         }
 
-        
         void HexExp::v_ComputeFaceNormal(const int face)
         {
             int i;
@@ -1662,6 +1233,35 @@ namespace Nektar
             LibUtilities::InterpCoeff3D(
                 bortho0, bortho1, bortho2, coeff_tmp2,
                 b0,      b1,      b2,      outarray);
+        }
+        
+        void HexExp::v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdRegions::StdMatrixKey &mkey)
+        {
+            int nq = GetTotPoints();
+            
+            // Calculate sqrt of the Jacobian
+            Array<OneD, const NekDouble> jac = 
+                                    m_metricinfo->GetJac(GetPointsKeys());
+            Array<OneD, NekDouble> sqrt_jac(nq);
+            if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vsqrt(nq,jac,1,sqrt_jac,1);
+            }
+            else
+            {
+                Vmath::Fill(nq,sqrt(jac[0]),sqrt_jac,1);
+            }
+            
+            // Multiply array by sqrt(Jac)
+            Vmath::Vmul(nq,sqrt_jac,1,array,1,array,1);
+            
+            // Apply std region filter
+            StdHexExp::v_SVVLaplacianFilter( array, mkey);
+            
+            // Divide by sqrt(Jac)
+            Vmath::Vdiv(nq,array,1,sqrt_jac,1,array,1);
         }
 
         //-----------------------------
@@ -2168,7 +1768,7 @@ namespace Nektar
         {
             // This implementation is only valid when there are no
             // coefficients associated to the Laplacian operator
-            if (m_metrics.count(MetricLaplacian00) == 0)
+            if (m_metrics.count(eMetricLaplacian00) == 0)
             {
                 ComputeLaplacianMetric();
             }
@@ -2187,12 +1787,12 @@ namespace Nektar
             const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
             const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
             const Array<OneD, const NekDouble>& dbase2 = m_base[2]->GetDbdata();
-            const Array<OneD, const NekDouble>& metric00 = m_metrics[MetricLaplacian00];
-            const Array<OneD, const NekDouble>& metric01 = m_metrics[MetricLaplacian01];
-            const Array<OneD, const NekDouble>& metric02 = m_metrics[MetricLaplacian02];
-            const Array<OneD, const NekDouble>& metric11 = m_metrics[MetricLaplacian11];
-            const Array<OneD, const NekDouble>& metric12 = m_metrics[MetricLaplacian12];
-            const Array<OneD, const NekDouble>& metric22 = m_metrics[MetricLaplacian22];
+            const Array<OneD, const NekDouble>& metric00 = m_metrics[eMetricLaplacian00];
+            const Array<OneD, const NekDouble>& metric01 = m_metrics[eMetricLaplacian01];
+            const Array<OneD, const NekDouble>& metric02 = m_metrics[eMetricLaplacian02];
+            const Array<OneD, const NekDouble>& metric11 = m_metrics[eMetricLaplacian11];
+            const Array<OneD, const NekDouble>& metric12 = m_metrics[eMetricLaplacian12];
+            const Array<OneD, const NekDouble>& metric22 = m_metrics[eMetricLaplacian22];
 
             // Allocate temporary storage
             Array<OneD,NekDouble> wsp0(wsp);
@@ -2227,7 +1827,7 @@ namespace Nektar
 
         void HexExp::v_ComputeLaplacianMetric()
         {
-            if (m_metrics.count(MetricQuadrature) == 0)
+            if (m_metrics.count(eMetricQuadrature) == 0)
             {
                 ComputeQuadratureMetric();
             }
@@ -2235,9 +1835,9 @@ namespace Nektar
             const SpatialDomains::GeomType type = m_metricinfo->GetGtype();
             const unsigned int nqtot = GetTotPoints();
             const unsigned int dim = 3;
-            const MetricType m[3][3] = { {MetricLaplacian00, MetricLaplacian01, MetricLaplacian02},
-                                       {MetricLaplacian01, MetricLaplacian11, MetricLaplacian12},
-                                       {MetricLaplacian02, MetricLaplacian12, MetricLaplacian22}
+            const MetricType m[3][3] = { {eMetricLaplacian00, eMetricLaplacian01, eMetricLaplacian02},
+                                       {eMetricLaplacian01, eMetricLaplacian11, eMetricLaplacian12},
+                                       {eMetricLaplacian02, eMetricLaplacian12, eMetricLaplacian22}
             };
 
             for (unsigned int i = 0; i < dim; ++i)

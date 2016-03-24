@@ -67,16 +67,19 @@ namespace Nektar
                 /// Creates an instance of this class
                 LIB_UTILITIES_EXPORT
                 static FieldIOSharedPtr create(
-                        LibUtilities::CommSharedPtr pComm)
+                    LibUtilities::CommSharedPtr pComm,
+                    bool sharedFilesystem)
                 {
-                    return MemoryManager<FieldIOXml>::AllocateSharedPtr(pComm);
+                    return MemoryManager<FieldIOXml>::AllocateSharedPtr(
+                        pComm, sharedFilesystem);
                 }
 
                 /// Name of class
                 LIB_UTILITIES_EXPORT
                 static std::string className;
 
-                FieldIOXml(LibUtilities::CommSharedPtr pComm);
+                FieldIOXml(LibUtilities::CommSharedPtr pComm,
+                           bool sharedFilesystem);
 
                 /// Imports the definition of the fields.
                 LIB_UTILITIES_EXPORT

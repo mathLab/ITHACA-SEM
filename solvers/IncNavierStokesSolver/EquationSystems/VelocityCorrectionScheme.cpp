@@ -55,16 +55,18 @@ namespace Nektar
     VelocityCorrectionScheme::VelocityCorrectionScheme(
             const LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pSession),
-          IncNavierStokes(pSession)
+          IncNavierStokes(pSession),
+          m_varCoeffLap(StdRegions::NullVarCoeffMap)
     {
-
+        
     }
 
     void VelocityCorrectionScheme::v_InitObject()
     {
         int n;
-
+        
         IncNavierStokes::v_InitObject();
+        m_explicitDiffusion = false;
 
         // Set m_pressure to point to last field of m_fields;
         if (boost::iequals(m_session->GetVariable(m_fields.num_elements()-1), "p"))
@@ -102,18 +104,26 @@ namespace Nektar
             m_intVariables.push_back(n);
         }
         
-        // Load parameters for Spectral Vanishing Viscosity
-        m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
-        m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
-        m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
-        m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",m_specHP_dealiasing,false);
+        m_saved_aii_Dt = Array<OneD, NekDouble>(m_nConvectiveFields,
+                                                NekConstants::kNekUnsetDouble);
 
+        // Load parameters for Spectral Vanishing Viscosity
+        m_session->MatchSolverInfo("SpectralVanishingViscosity","True",
+                                   m_useSpecVanVisc,false);
+        m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
+        m_session->LoadParameter("SVVDiffCoeff",  m_sVVDiffCoeff,  0.1);
         // Needs to be set outside of next if so that it is turned off by default
-        m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",m_useHomo1DSpecVanVisc,false);
+        m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",
+                                   m_useHomo1DSpecVanVisc,false);
+
+        
+        m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",
+                                   m_specHP_dealiasing,false);
+
 
         if(m_HomogeneousType == eHomogeneous1D)
         {
-            ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
+            ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velocity fields with homogenous expansion");
 
             if(m_useHomo1DSpecVanVisc == false)
             {
@@ -153,17 +163,9 @@ namespace Nektar
 
         m_session->MatchSolverInfo("SmoothAdvection", "True", m_SmoothAdvection, false);
 
-        if(m_subSteppingScheme) // Substepping
-        {
-            ASSERTL0(m_projectionType == MultiRegions::eMixed_CG_Discontinuous,
-                     "Projection must be set to Mixed_CG_Discontinuous for "
-                     "substepping");
-        }
-        else // Standard velocity correction scheme
-        {
-            // set explicit time-intregration class operators
-            m_ode.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
-        }
+        // set explicit time-intregration class operators
+        m_ode.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
+
         m_extrapolation->SubSteppingTimeIntegration(m_intScheme->GetIntegrationMethod(), m_intScheme);
         m_extrapolation->GenerateHOPBCMap();
         
@@ -185,11 +187,12 @@ namespace Nektar
     {
         UnsteadySystem::v_GenerateSummary(s);
 
-        if (m_subSteppingScheme)
+        if (m_extrapolation->GetSubStepIntegrationMethod() !=
+            LibUtilities::eNoTimeIntegrationMethod)
         {
-            SolverUtils::AddSummaryItem(
-                s, "Substepping", LibUtilities::TimeIntegrationMethodMap[
-                    m_subStepIntegrationScheme->GetIntegrationMethod()]);
+            SolverUtils::AddSummaryItem(s, "Substepping", 
+                             LibUtilities::TimeIntegrationMethodMap[
+                              m_extrapolation->GetSubStepIntegrationMethod()]);
         }
 
         string dealias = m_homogen_dealiasing ? "Homogeneous1D" : "";
@@ -228,6 +231,11 @@ namespace Nektar
         // Set up Field Meta Data for output files
         m_fieldMetaDataMap["Kinvis"]   = boost::lexical_cast<std::string>(m_kinvis);
         m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
+
+        // set boundary conditions here so that any normal component
+        // correction are imposed before they are imposed on intiial
+        // field below
+        SetBoundaryConditions(m_time);
 
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
@@ -290,7 +298,7 @@ namespace Nektar
     /**
      * Explicit part of the method - Advection, Forcing + HOPBCs
      */
-    void VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs(
+    void VelocityCorrectionScheme::v_EvaluateAdvection_SetPressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
         Array<OneD, Array<OneD, NekDouble> > &outarray, 
         const NekDouble time)
@@ -312,7 +320,7 @@ namespace Nektar
         {
             (*x)->Apply(m_fields, inarray, outarray, time);
         }
-        
+
         // Calculate High-Order pressure boundary conditions
         m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis);
     }
@@ -329,8 +337,6 @@ namespace Nektar
         int i;
         int phystot = m_fields[0]->GetTotPoints();
 
-        StdRegions::ConstFactorMap factors;
-
         Array<OneD, Array< OneD, NekDouble> > F(m_nConvectiveFields);
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
@@ -340,39 +346,26 @@ namespace Nektar
         // Enforcing boundary conditions on all fields
         SetBoundaryConditions(time);
         
-        // Substep the pressure boundary condition
+        // Substep the pressure boundary condition if using substepping
         m_extrapolation->SubStepSetPressureBCs(inarray,aii_Dt,m_kinvis);
     
-        // Set up forcing term and coefficients for pressure Poisson equation
+        // Set up forcing term for pressure Poisson equation
         SetUpPressureForcing(inarray, F, aii_Dt);
-        factors[StdRegions::eFactorLambda] = 0.0;
 
-        // Solver Pressure Poisson Equation
-        m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(), NullFlagList,
-                              factors);
+        // Solve Pressure System
+        SolvePressure (F[0]);
 
-        // Set up forcing term and coefficients for Helmholtz problems
+        // Set up forcing term for Helmholtz problems
         SetUpViscousForcing(inarray, F, aii_Dt);
-        factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_kinvis;
-        if(m_useSpecVanVisc)
-        {
-            factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
-            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_kinvis;
-        }
-
-        // Solve Helmholtz system and put in Physical space
-        for(i = 0; i < m_nConvectiveFields; ++i)
-        {
-            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(),
-                                   NullFlagList, factors);
-            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
-        }
+        
+        // Solve velocity system
+        SolveViscous( F, outarray, aii_Dt);
     }
         
     /**
      * Forcing term for Poisson solver solver
      */ 
-    void   VelocityCorrectionScheme::SetUpPressureForcing(
+    void   VelocityCorrectionScheme::v_SetUpPressureForcing(
         const Array<OneD, const Array<OneD, NekDouble> > &fields, 
         Array<OneD, Array<OneD, NekDouble> > &Forcing, 
         const NekDouble aii_Dt)
@@ -396,7 +389,7 @@ namespace Nektar
     /**
      * Forcing term for Helmholtz solver
      */
-    void   VelocityCorrectionScheme::SetUpViscousForcing(
+    void   VelocityCorrectionScheme::v_SetUpViscousForcing(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
         Array<OneD, Array<OneD, NekDouble> > &Forcing, 
         const NekDouble aii_Dt)
@@ -414,8 +407,8 @@ namespace Nektar
         }
         else
         {
-            m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[0], Forcing[1],
-                                  Forcing[2]);
+            m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[0], 
+                                  Forcing[1], Forcing[2]);
         }
         
         // Subtract inarray/(aii_dt) and divide by kinvis. Kinvis will
@@ -424,6 +417,48 @@ namespace Nektar
         {
             Blas::Daxpy(phystot,-aii_dtinv,inarray[i],1,Forcing[i],1);
             Blas::Dscal(phystot,1.0/m_kinvis,&(Forcing[i])[0],1);
+        }
+    }
+
+    
+    /**
+     * Solve pressure system
+     */
+    void   VelocityCorrectionScheme::v_SolvePressure(
+        const Array<OneD, NekDouble>  &Forcing)
+    {
+        StdRegions::ConstFactorMap factors;
+        // Setup coefficient for equation
+        factors[StdRegions::eFactorLambda] = 0.0;
+
+        // Solver Pressure Poisson Equation
+        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(), NullFlagList,
+                              factors);
+    }
+    
+    /**
+     * Solve velocity system
+     */
+    void   VelocityCorrectionScheme::v_SolveViscous(
+        const Array<OneD, const Array<OneD, NekDouble> > &Forcing,
+        Array<OneD, Array<OneD, NekDouble> > &outarray,
+        const NekDouble aii_Dt)
+    {
+        StdRegions::ConstFactorMap factors;
+        // Setup coefficients for equation
+        factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_kinvis;
+        if(m_useSpecVanVisc)
+        {
+            factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
+            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_kinvis;
+        }
+
+        // Solve Helmholtz system and put in Physical space
+        for(int i = 0; i < m_nConvectiveFields; ++i)
+        {
+            m_fields[i]->HelmSolve(Forcing[i], m_fields[i]->UpdateCoeffs(),
+                                   NullFlagList, factors);
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
         }
     }
     

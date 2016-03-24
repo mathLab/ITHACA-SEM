@@ -106,8 +106,9 @@ namespace Nektar
     const unsigned int FieldIOHdf5::DATA_IDX_IDX = 1;
     const unsigned int FieldIOHdf5::MAX_IDXS = FieldIOHdf5::DATA_IDX_IDX+1;
     
-    FieldIOHdf5::FieldIOHdf5(LibUtilities::CommSharedPtr pComm) :
-      FieldIO(pComm)
+      FieldIOHdf5::FieldIOHdf5(LibUtilities::CommSharedPtr pComm,
+                               bool sharedFilesystem) :
+          FieldIO(pComm, sharedFilesystem)
     {
     }
 
@@ -171,7 +172,7 @@ namespace Nektar
         std::vector<std::string> fieldNames(nFields);
         std::vector<std::string> shapeStrings(nFields);
         std::vector< std::vector<NekDouble> > homoLengths(nFields);
-        std::vector< std::vector<unsigned int> > homoYIDs(nFields), homoZIDs(nFields);
+        std::vector< std::vector<unsigned int> > homoSIDs(nFields), homoYIDs(nFields), homoZIDs(nFields);
         std::vector<std::string> numModesPerDirs(nFields);
         
         
@@ -217,6 +218,10 @@ namespace Nektar
             {
                 shapeStringStream << "-HomogenousExp2D";
             }
+            if (fielddefs[f]->m_homoStrips)
+            {
+                shapeStringStream << "-Strips";
+            }
             shapeStrings[f] = shapeStringStream.str();
 	    hashStream << shapeStringStream.str();
 	    /////////////////////////////////////////////////////////////////////////////////////////
@@ -257,6 +262,18 @@ namespace Nektar
 		        homoZIDs[f][sf] = zid;
 		    }
 		}
+
+                nSubFields = fielddefs[f]->m_homogeneousSIDs.size();
+                if (nSubFields > 0)
+                {
+                    homoSIDs[f].resize(nSubFields);
+                    for (int sf = 0; sf < nSubFields; ++sf)
+                    {
+                        unsigned int sid = fielddefs[f]->m_homogeneousSIDs[sf];
+                        hashStream << sid;
+                        homoSIDs[f][sf] = sid;
+                    }
+                }
             }
 	    /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -373,6 +390,7 @@ namespace Nektar
                 if (homoLengths[f].size() > 0) field_group->SetAttribute("HOMOGENEOUSLENGTHS", homoLengths[f]);
 	        if (homoYIDs[f].size() > 0) field_group->SetAttribute("HOMOGENEOUSYIDS", homoYIDs[f]);
 	        if (homoZIDs[f].size() > 0) field_group->SetAttribute("HOMOGENEOUSZIDS", homoZIDs[f]);
+	        if (homoSIDs[f].size() > 0) field_group->SetAttribute("HOMOGENEOUSSIDS", homoSIDs[f]);
                 field_group->SetAttribute("NUMMODESPERDIR", numModesPerDirs[f]);
             }
 	    // RAII => field group is closed automatically
@@ -467,6 +485,7 @@ namespace Nektar
                 if (homoLengths[f].size() > 0) field_group->SetAttribute("HOMOGENEOUSLENGTHS", homoLengths[f]);
 	        if (homoYIDs[f].size() > 0) field_group->SetAttribute("HOMOGENEOUSYIDS", homoYIDs[f]);
 	        if (homoZIDs[f].size() > 0) field_group->SetAttribute("HOMOGENEOUSZIDS", homoZIDs[f]);
+	        if (homoSIDs[f].size() > 0) field_group->SetAttribute("HOMOGENEOUSSIDS", homoSIDs[f]);
                 field_group->SetAttribute("NUMMODESPERDIR", numModesPerDirs[f]);
 	    }
 	}
@@ -679,6 +698,7 @@ namespace Nektar
 	    std::vector<NekDouble> homoLengths;
 	    std::vector<unsigned int> homoZIDs;
 	    std::vector<unsigned int> homoYIDs;
+	    std::vector<unsigned int> homoSIDs;
 	    std::string numModesPerDir;
 	    std::string numPointsPerDir;
 	    std::string pointsString;
@@ -695,7 +715,7 @@ namespace Nektar
 	    std::vector<unsigned int> numModes;
 	    std::vector<unsigned int> elementIds;
 	    
-	    
+	    bool strips;
 	    H5::Group::AttrIterator attrIt = field->attr_begin();
 	    H5::Group::AttrIterator attrEnd = field->attr_end();
 	    for (; attrIt != attrEnd; ++attrIt)
@@ -713,6 +733,11 @@ namespace Nektar
 	            // strip down the shapeString definition
 	            size_t loc;
 	            //---> this finds the first location of 'n'!
+                    if(shapeString.find("Strips")!=string::npos)
+                    {
+                        strips = true;
+                    }
+
 	            if ((loc = shapeString.find_first_of("-")) != string::npos)
 	            {
 	                if (shapeString.find("Exp1D") != string::npos)
@@ -756,6 +781,10 @@ namespace Nektar
 	        else if (attrName == "HOMOGENEOUSLENGTHS")
 		{
 		    field->GetAttribute(attrName, homoLengths);
+		}
+	        else if (attrName == "HOMOGENEOUSSIDS")
+		{
+		    field->GetAttribute(attrName, homoSIDs);
 		}
 	        else if (attrName == "HOMOGENEOUSZIDS")
 		{
@@ -826,7 +855,7 @@ namespace Nektar
 	    FieldDefinitionsSharedPtr fielddef =
 	      MemoryManager<FieldDefinitions>::AllocateSharedPtr(shape, elementIds,
 	        basis, UniOrder, numModes, fieldName, numHomoDir,
-	        homoLengths, homoZIDs, homoYIDs, points, pointDef,
+	        homoLengths, strips, homoSIDs, homoZIDs, homoYIDs, points, pointDef,
 	        numPoints, numPointDef);
 
 	    fielddefs.push_back(fielddef);

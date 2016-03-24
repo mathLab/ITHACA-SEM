@@ -14,6 +14,7 @@ IF( NEKTAR_SOLVER_ADR )
        ./EquationSystems/UnsteadyDiffusion.cpp
        ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
        ./EquationSystems/UnsteadyInviscidBurger.cpp
+       ./EquationSystems/UnsteadyViscousBurgers.cpp
       #./EquationSystems/CFLtester.cpp
        ./EquationSystems/EigenValuesAdvection.cpp)
 
@@ -64,6 +65,10 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST_LENGTHY(Advection2D_periodic_deformed_GLL_LAGRANGE_SEM_10x10)
     ADD_NEKTAR_TEST_LENGTHY(Advection2D_periodic_deformed_MODIFIED_10x10)
     ADD_NEKTAR_TEST        (Advection_m12_DG_periodic)
+    ADD_NEKTAR_TEST        (Advection2D_m12_DG_quad_VarP)
+    ADD_NEKTAR_TEST        (Advection2D_m12_DG_tri_VarP)	
+    ADD_NEKTAR_TEST        (Advection2D_ISO_regular_SSPRK2)
+    ADD_NEKTAR_TEST        (Advection2D_ISO_regular_SSPRK3)
 
     # 2D continuous advection (non-conservative)
     ADD_NEKTAR_TEST        (Advection_m12_Order1)
@@ -161,6 +166,7 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST(Helmholtz3D_CubePeriodic)
     ADD_NEKTAR_TEST(Helmholtz3D_Cube_BndFile)
     ADD_NEKTAR_TEST(Helmholtz3D_CubePeriodic_RotateFace)
+    ADD_NEKTAR_TEST(CubeAllElements)
     ADD_NEKTAR_TEST(ImDiffusion_m12)
     ADD_NEKTAR_TEST(ImDiffusion_m6)
     ADD_NEKTAR_TEST(ImDiffusion_VarCoeff)
@@ -203,6 +209,8 @@ IF( NEKTAR_SOLVER_ADR )
         ADD_NEKTAR_TEST(ImDiffusion_Hex_Periodic_m5_par)
         ADD_NEKTAR_TEST(Helmholtz3D_CubePeriodic_par)
         ADD_NEKTAR_TEST(Helmholtz3D_CubeDirichlet_par)
-        ADD_NEKTAR_TEST(Helmholtz3D_CubePeriodic_RotateFace_par)
+        ADD_NEKTAR_TEST(Helmholtz3D_CubePeriodic_RotateFace_par)	
+	ADD_NEKTAR_TEST(Advection2D_m12_DG_quad_VarP_par)
+	ADD_NEKTAR_TEST(Advection2D_m12_DG_tri_VarP_par)
     ENDIF (NEKTAR_USE_MPI)
 ENDIF( NEKTAR_SOLVER_ADR )

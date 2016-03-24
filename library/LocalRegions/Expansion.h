@@ -55,13 +55,13 @@ namespace Nektar
 
         enum MetricType
         {
-            MetricLaplacian00,
-            MetricLaplacian01,
-            MetricLaplacian02,
-            MetricLaplacian11,
-            MetricLaplacian12,
-            MetricLaplacian22,
-            MetricQuadrature
+            eMetricLaplacian00,
+            eMetricLaplacian01,
+            eMetricLaplacian02,
+            eMetricLaplacian11,
+            eMetricLaplacian12,
+            eMetricLaplacian22,
+            eMetricQuadrature
         };
 
         // type defines for use of PrismExp in a boost vector
@@ -85,6 +85,8 @@ namespace Nektar
                             const StdRegions::VarCoeffMap &varcoeffs = StdRegions::NullVarCoeffMap);
 
                 LOCAL_REGIONS_EXPORT SpatialDomains::GeometrySharedPtr GetGeom() const;
+
+                LOCAL_REGIONS_EXPORT void Reset();
 
                 LOCAL_REGIONS_EXPORT virtual const
                     SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;

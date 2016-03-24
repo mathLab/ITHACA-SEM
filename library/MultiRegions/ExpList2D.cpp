@@ -90,6 +90,30 @@ namespace Nektar
         {
             SetExpType(e2D);
         }
+        
+        /**
+         * @param   In   ExpList2D object to copy.
+         * @param   eIDs Id of elements that should be copied.
+         */
+        ExpList2D::ExpList2D(
+            const ExpList2D &In, 
+            const std::vector<unsigned int> &eIDs,
+            const bool DeclareCoeffPhysArrays):
+            ExpList(In,eIDs,DeclareCoeffPhysArrays)
+        {
+            SetExpType(e2D);
+            
+            // Setup Default optimisation information.
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
+            // set up offset arrays.
+            SetCoeffPhysOffsets();
+
+            ReadGlobalOptimizationParameters();
+            CreateCollections();
+        }
 
 
         /**
@@ -189,6 +213,12 @@ namespace Nektar
 
             }
 
+            // set up element numbering
+            for(int i = 0; i < (*m_exp).size(); ++i)
+            {
+                (*m_exp)[i]->SetElmtId(i);
+            }
+
             // Setup Default optimisation information.
             int nel = GetExpSize();
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
@@ -206,6 +236,7 @@ namespace Nektar
              }
 
             ReadGlobalOptimizationParameters();
+            CreateCollections();
          }
 
 
@@ -320,6 +351,7 @@ namespace Nektar
              }
 
             ReadGlobalOptimizationParameters();
+            CreateCollections();
         }
 
 
@@ -432,6 +464,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters();
+            CreateCollections();
         }
 
         /**
@@ -459,7 +492,7 @@ namespace Nektar
             const PeriodicMap &periodicFaces,
             const bool DeclareCoeffPhysArrays, 
             const std::string variable):
-            ExpList()
+            ExpList(pSession, graph3D)
         {
             SetExpType(e2D);
 
@@ -751,6 +784,8 @@ namespace Nektar
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
+
+            CreateCollections();
         }
 
          /**
@@ -883,6 +918,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters(); 
+            CreateCollections();
         }
         
         /**
@@ -1156,9 +1192,10 @@ namespace Nektar
         }
 
         void ExpList2D::v_WriteVtkPieceHeader(
-            std::ostream &outfile, 
-            int expansion)
-		{
+            std::ostream &outfile,
+            int expansion,
+            int istrip)
+        {
             int i,j;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);

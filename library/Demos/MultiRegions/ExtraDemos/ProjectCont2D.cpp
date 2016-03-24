@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
     
-    if(argc != 2)
+    if(argc < 2)
     {
         fprintf(stderr,"Usage: ProjectCont2D  meshfile \n");
         exit(1);
@@ -105,10 +105,21 @@ int main(int argc, char *argv[])
     Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //-------------------------------------------  
 
+    //-------------------------------------------
+    // Calculate error
+    Array<OneD,NekDouble> error(nq,0.0);
+    Vmath::Vsub(nq, Exp->GetPhys(), 1, Fce->GetPhys(), 1, error, 1);
+    //-------------------------------------------  
+
     //--------------------------------------------
-    // Calculate L_inf error 
-    cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
-    cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+    // Calculate L_inf and L_2 of error
+    NekDouble vL2Error   = Exp->L2  (error);
+    NekDouble vLinfError = Exp->Linf(error);
+    if (vSession->GetComm()->GetRank() == 0)
+    {
+        cout << "L infinity error: " << vLinfError << endl;
+        cout << "L 2 error       : " << vL2Error << endl;
+    }  
     //--------------------------------------------
 
     vSession->Finalise();

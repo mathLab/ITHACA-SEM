@@ -2,6 +2,7 @@ SET(MULTI_REGIONS_SOURCES
 ./AssemblyMap/AssemblyMap.cpp
 ./AssemblyMap/AssemblyMapCG.cpp
 ./AssemblyMap/AssemblyMapDG.cpp
+./AssemblyMap/LocTraceToTraceMap.cpp
 ContField1D.cpp
 ContField2D.cpp
 ContField3D.cpp
@@ -89,6 +90,7 @@ SET(ASSEMBLY_MAP_HEADERS
 ./AssemblyMap/AssemblyMap.h
 ./AssemblyMap/AssemblyMapCG.h
 ./AssemblyMap/AssemblyMapDG.h
+./AssemblyMap/LocTraceToTraceMap.h
 )
 
 IF(NEKTAR_USE_MPI)
@@ -130,7 +132,7 @@ ADD_DEFINITIONS(-DMULTI_REGIONS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(MultiRegions lib ${NEKTAR_LIBRARY_TYPE} ${MULTI_REGIONS_SOURCES} ${MULTI_REGIONS_HEADERS} ${ASSEMBLY_MAP_HEADERS})
 
-TARGET_LINK_LIBRARIES(MultiRegions LINK_PUBLIC LocalRegions)
+TARGET_LINK_LIBRARIES(MultiRegions LINK_PUBLIC Collections)
 
 # MultiRegions uses additional routines from Metis
 TARGET_LINK_LIBRARIES(MultiRegions LINK_PRIVATE ${METIS_LIB})

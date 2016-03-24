@@ -37,6 +37,7 @@
 
 #include <CardiacEPSolver/EquationSystems/Monodomain.h>
 #include <CardiacEPSolver/Filters/FilterCheckpointCellModel.h>
+#include <CardiacEPSolver/Filters/FilterCellHistoryPoints.h>
 
 namespace Nektar
 {
@@ -288,6 +289,13 @@ namespace Nektar
                                                                 m_filters[k]);
                 c->SetCellModel(m_cell);
             }
+            if (x->first == "CellHistoryPoints")
+            {
+                boost::shared_ptr<FilterCellHistoryPoints> c
+                    = boost::dynamic_pointer_cast<FilterCellHistoryPoints>(
+                                                                m_filters[k]);
+                c->SetCellModel(m_cell);
+            }
         }
 
         // Load stimuli
@@ -367,7 +375,7 @@ namespace Nektar
 
         // Compute I_stim
         for (unsigned int i = 0; i < m_stimulus.size(); ++i)
-        {   
+        {
             m_stimulus[i]->Update(outarray, time);
         }
     }
@@ -394,21 +402,21 @@ namespace Nektar
     {
         UnsteadySystem::v_GenerateSummary(s);
         if (m_session->DefinesFunction("d00") &&
-            m_session->GetFunctionType("d00", "intensity") 
+            m_session->GetFunctionType("d00", "intensity")
                     == LibUtilities::eFunctionTypeExpression)
         {
             AddSummaryItem(s, "Diffusivity-x",
                 m_session->GetFunction("d00", "intensity")->GetExpression());
         }
         if (m_session->DefinesFunction("d11") &&
-            m_session->GetFunctionType("d11", "intensity") 
+            m_session->GetFunctionType("d11", "intensity")
                     == LibUtilities::eFunctionTypeExpression)
         {
             AddSummaryItem(s, "Diffusivity-y",
                 m_session->GetFunction("d11", "intensity")->GetExpression());
         }
         if (m_session->DefinesFunction("d22") &&
-            m_session->GetFunctionType("d22", "intensity") 
+            m_session->GetFunctionType("d22", "intensity")
                     == LibUtilities::eFunctionTypeExpression)
         {
             AddSummaryItem(s, "Diffusivity-z",

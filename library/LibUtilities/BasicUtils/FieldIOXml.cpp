@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/FieldIOXml.h>
+#include <LibUtilities/BasicUtils/CompressData.h>
 
 #include "zlib.h"
 
@@ -95,8 +96,9 @@ namespace Nektar
                 GetFieldIOFactory().RegisterCreatorFunction("Xml",
                         FieldIOXml::create, "XML-based output of field data.");
 
-        FieldIOXml::FieldIOXml(LibUtilities::CommSharedPtr pComm) :
-                FieldIO(pComm)
+        FieldIOXml::FieldIOXml(LibUtilities::CommSharedPtr pComm,
+                               bool sharedFilesystem) :
+            FieldIO(pComm, sharedFilesystem)
         {
         }
 
@@ -134,8 +136,8 @@ namespace Nektar
             // Prepare to write out data. In parallel, we must create directory
             // and determine the full pathname to the file to write out.
             // Any existing file/directory which is in the way is removed.
-            std::string filename = SetUpOutput(outFile, fielddefs,
-                    fieldmetadatamap);
+            std::string filename = SetUpOutput(outFile);
+            SetUpFieldMetaData(outFile, fielddefs, fieldmetadatamap);
 
             // Create the file (partition)
             TiXmlDocument doc;
@@ -184,6 +186,11 @@ namespace Nektar
                     else if (fielddefs[f]->m_numHomogeneousDir == 2)
                     {
                         shapeStringStream << "-HomogenousExp2D";
+                    }
+
+                    if (fielddefs[f]->m_homoStrips)
+                    {
+                        shapeStringStream << "-Strips";
                     }
 
                     shapeString = shapeStringStream.str();
@@ -275,6 +282,26 @@ namespace Nektar
                         elemTag->SetAttribute("HOMOGENEOUSZIDS",
                                 homoZIDsString);
                     }
+
+                    if(fielddefs[f]->m_homogeneousSIDs.size() > 0)
+                    {
+                        std::string homoSIDsString;
+                        {
+                            std::stringstream homoSIDsStringStream;
+                            bool first = true;
+                            for(int i = 0; i < fielddefs[f]->m_homogeneousSIDs.size(); i++)
+                            {
+                                if (!first)
+                                {
+                                    homoSIDsStringStream << ",";
+                                }
+                                homoSIDsStringStream << fielddefs[f]->m_homogeneousSIDs[i];
+                                first = false;
+                            }
+                            homoSIDsString = homoSIDsStringStream.str();
+                        }
+                        elemTag->SetAttribute("HOMOGENEOUSSIDS", homoSIDsString);
+                    }
                 }
 
                 // Write NUMMODESPERDIR
@@ -323,30 +350,19 @@ namespace Nektar
                     GenerateSeqString(fielddefs[f]->m_elementIDs, idString);
                 }
                 elemTag->SetAttribute("ID", idString);
+                elemTag->SetAttribute("COMPRESSED",
+                              LibUtilities::CompressData::GetCompressString());
 
-                std::string compressedDataString;
-                ASSERTL0(Z_OK == Deflate(fielddata[f], compressedDataString),
-                        "Failed to compress field data.");
+                // Add this information for future compatibility
+                // issues, for exmaple in case we end up using a 128
+                // bit machine.
+                elemTag->SetAttribute("BITSIZE",
+                              LibUtilities::CompressData::GetBitSizeStr());
+                std::string base64string;
+                ASSERTL0(Z_OK == CompressData::ZlibEncodeToBase64Str(
+                                                fielddata[f], base64string),
+                         "Failed to compress field data.");
 
-                // If the string length is not divisible by 3,
-                // pad it. There is a bug in transform_width
-                // that will make it reference past the end
-                // and crash.
-                switch (compressedDataString.length() % 3)
-                {
-                    case 1:
-                        compressedDataString += '\0';
-                    case 2:
-                        compressedDataString += '\0';
-                        break;
-                }
-
-                // Convert from binary to base64.
-                typedef boost::archive::iterators::base64_from_binary<
-                        boost::archive::iterators::transform_width<
-                                std::string::const_iterator, 6, 8> > base64_t;
-                std::string base64string(base64_t(compressedDataString.begin()),
-                        base64_t(compressedDataString.end()));
                 elemTag->LinkEndChild(new TiXmlText(base64string));
 
             }
@@ -359,121 +375,6 @@ namespace Nektar
 	    {
 	        tm1 = m_comm->Wtime();
 	        cout << prfx.str() << "leaving after " << tm1-tm0 << " secs..." << endl;
-            }
-        }
-
-        /**
-         * Compress a vector of NekDouble values into a string using zlib.
-         */
-        int FieldIOXml::Deflate(std::vector<NekDouble>& in, string& out)
-        {
-            int ret;
-            unsigned have;
-            z_stream strm;
-            unsigned char* input = (unsigned char*) (&in[0]);
-            string buffer;
-            buffer.resize(CHUNK);
-
-            /* allocate deflate state */
-            strm.zalloc = Z_NULL;
-            strm.zfree = Z_NULL;
-            strm.opaque = Z_NULL;
-            ret = deflateInit(&strm, Z_DEFAULT_COMPRESSION);
-
-            ASSERTL0(ret == Z_OK, "Error initializing Zlib.");
-
-            strm.avail_in = in.size() * sizeof(NekDouble) / sizeof(char);
-            strm.next_in = input;
-
-            // Deflate input until output buffer is no longer full.
-            do
-            {
-                strm.avail_out = CHUNK;
-                strm.next_out = (unsigned char*) (&buffer[0]);
-
-                ret = deflate(&strm, Z_FINISH);
-
-                // Deflate can return Z_OK, Z_STREAM_ERROR, Z_BUF_ERROR or
-                // Z_STREAM_END. All, except Z_STREAM_ERROR are ok.
-                ASSERTL0(ret != Z_STREAM_ERROR, "Zlib stream error");
-
-                have = CHUNK - strm.avail_out;
-                out += buffer.substr(0, have);
-
-            } while (strm.avail_out == 0);
-
-            // Check all input was processed.
-            ASSERTL0(strm.avail_in == 0, "Not all input was used.");
-
-            // Check stream is complete.
-            ASSERTL0(ret == Z_STREAM_END, "Stream not finished");
-
-            // Clean-up and return
-            (void) deflateEnd(&strm);
-            return Z_OK;
-        }
-
-        /**
-         * Decompress a zlib-compressed string into a vector of NekDouble
-         * values.
-         */
-        int FieldIOXml::Inflate(std::string& in, std::vector<NekDouble>& out)
-        {
-            int ret;
-            unsigned have;
-            z_stream strm;
-            string buffer;
-            buffer.resize(CHUNK);
-            string output;
-
-            strm.zalloc = Z_NULL;
-            strm.zfree = Z_NULL;
-            strm.opaque = Z_NULL;
-            strm.avail_in = 0;
-            strm.next_in = Z_NULL;
-            ret = inflateInit(&strm);
-            ASSERTL0(ret == Z_OK, "Error initializing zlib decompression.");
-
-            strm.avail_in = in.size();
-            strm.next_in = (unsigned char*) (&in[0]);
-
-            do
-            {
-                strm.avail_out = CHUNK;
-                strm.next_out = (unsigned char*) (&buffer[0]);
-
-                ret = inflate(&strm, Z_NO_FLUSH);
-
-                ASSERTL0(ret != Z_STREAM_ERROR, "Stream error occured.");
-
-                switch (ret)
-                {
-                    case Z_NEED_DICT:
-                        ret = Z_DATA_ERROR; /* and fall through */
-                    case Z_DATA_ERROR:
-                    case Z_MEM_ERROR:
-                        (void) inflateEnd(&strm);
-                        return ret;
-                }
-
-                have = CHUNK - strm.avail_out;
-                output += buffer.substr(0, have);
-
-            } while (strm.avail_out == 0);
-
-            (void) inflateEnd(&strm);
-
-            if (ret == Z_STREAM_END)
-            {
-                NekDouble* readFieldData = (NekDouble*) output.c_str();
-                unsigned int len = output.size() * sizeof(*output.c_str())
-                        / sizeof(NekDouble);
-                out.assign(readFieldData, readFieldData + len);
-                return Z_OK;
-            }
-            else
-            {
-                return Z_DATA_ERROR;
             }
         }
 
@@ -613,6 +514,7 @@ namespace Nektar
                     std::string shapeString;
                     std::string basisString;
                     std::string homoLengthsString;
+                    std::string homoSIDsString;
                     std::string homoZIDsString;
                     std::string homoYIDsString;
                     std::string numModesString;
@@ -641,6 +543,10 @@ namespace Nektar
                         {
                             homoLengthsString.insert(0, attr->Value());
                         }
+                        else if (attrName == "HOMOGENEOUSSIDS")
+                        {
+                            homoSIDsString.insert(0,attr->Value());
+                        }
                         else if (attrName == "HOMOGENEOUSZIDS")
                         {
                             homoZIDsString.insert(0, attr->Value());
@@ -667,6 +573,23 @@ namespace Nektar
                             numPointsString.insert(0, attr->Value());
                             numPointDef = true;
                         }
+                        else if (attrName == "COMPRESSED")
+                        {
+                            if(!boost::iequals(attr->Value(),
+                                               CompressData::GetCompressString()))
+                            {
+                                WARNINGL0(false, "Compressed formats do not "
+                                          "match. Expected: "
+                                          + CompressData::GetCompressString()
+                                          + " but got "+ string(attr->Value()));
+                            }
+                        }
+                        else if (attrName =="BITSIZE")
+                        {
+                            // This information is for future compatibility
+                            // issues, for example in case we end up using a 128
+                            // bit machine. Currently just do nothing.
+                        }
                         else
                         {
                             std::string errstr("Unknown attribute: ");
@@ -676,6 +599,13 @@ namespace Nektar
 
                         // Get the next attribute.
                         attr = attr->Next();
+                    }
+
+                    // Check to see if using strips formulation
+                    bool strips = false;
+                    if(shapeString.find("Strips")!=string::npos)
+                    {
+                        strips = true;
                     }
 
                     // Check to see if homogeneous expansion and if so
@@ -758,6 +688,14 @@ namespace Nektar
                                 homoLengthsString.c_str(), homoLengths);
                         ASSERTL0(valid,
                                 "Unable to correctly parse the number of homogeneous lengths.");
+                    }
+
+                    // Get Homogeneous strips IDs
+                    std::vector<unsigned int> homoSIDs;
+                    if(strips)
+                    {
+                        valid = ParseUtils::GenerateSeqVector(homoSIDsString.c_str(), homoSIDs);
+                        ASSERTL0(valid, "Unable to correctly parse homogeneous strips IDs.");
                     }
 
                     // Get Homogeneous points IDs
@@ -847,10 +785,11 @@ namespace Nektar
                             "Unable to correctly parse the number of fields.");
 
                     FieldDefinitionsSharedPtr fielddef = MemoryManager<
-                            FieldDefinitions>::AllocateSharedPtr(shape,
-                            elementIds, basis, UniOrder, numModes, Fields,
-                            numHomoDir, homoLengths, homoZIDs, homoYIDs, points,
-                            pointDef, numPoints, numPointDef);
+                        FieldDefinitions>::AllocateSharedPtr(
+                            shape, elementIds, basis, UniOrder, numModes,
+                            Fields, numHomoDir, homoLengths, strips, homoSIDs,
+                            homoZIDs, homoYIDs, points, pointDef, numPoints,
+                            numPointDef);
 
                     fielddefs.push_back(fielddef);
 
@@ -898,17 +837,26 @@ namespace Nektar
                         elementChild = elementChild->NextSibling();
                     }
 
-                    // Convert from base64 to binary.
-                    typedef boost::archive::iterators::transform_width<
-                            boost::archive::iterators::binary_from_base64<
-                                    std::string::const_iterator>, 8, 6> binary_t;
-                    std::string vCompressed(binary_t(elementStr.begin()),
-                            binary_t(elementStr.end()));
-
                     std::vector<NekDouble> elementFieldData;
-                    ASSERTL0(Z_OK == Inflate(vCompressed, elementFieldData),
-                            "Failed to decompress field data.");
 
+                    // Convert from base64 to binary.
+                    const char *CompressStr = element->Attribute("COMPRESSED");
+                    if(CompressStr)
+                    {
+                        if(!boost::iequals(CompressStr,
+                                           CompressData::GetCompressString()))
+                        {
+                            WARNINGL0(false, "Compressed formats do not match. "
+                                      "Expected: "
+                                      + CompressData::GetCompressString()
+                                      + " but got "+ string(CompressStr));
+                        }
+                    }
+
+                    ASSERTL0(Z_OK == CompressData::ZlibDecodeFromBase64Str(
+                                                        elementStr,
+                                                        elementFieldData),
+                             "Failed to decompress field data.");
                     fielddata.push_back(elementFieldData);
 
                     int datasize = CheckFieldDefinition(fielddefs[cntdumps]);

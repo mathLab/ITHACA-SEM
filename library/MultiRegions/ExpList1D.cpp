@@ -87,6 +87,28 @@ namespace Nektar
         {
             SetExpType(e1D);
         }
+        
+        /**
+         * 
+         */
+        ExpList1D::ExpList1D(const ExpList1D &In,
+                             const std::vector<unsigned int> &eIDs,
+                             const bool DeclareCoeffPhysArrays):
+            ExpList(In, eIDs, DeclareCoeffPhysArrays)
+        {
+            SetExpType(e1D);
+            
+            // Setup Default optimisation information.
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
+            // Allocate storage for data and populate element offset lists.
+            SetCoeffPhysOffsets();
+
+            ReadGlobalOptimizationParameters();
+            CreateCollections();
+        }
 
 
         /**
@@ -150,6 +172,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters();
+            CreateCollections();
         }
 
 
@@ -230,6 +253,7 @@ namespace Nektar
             }
 
             ReadGlobalOptimizationParameters();
+            CreateCollections();
         }
 
 
@@ -342,6 +366,7 @@ namespace Nektar
             }
 
             ReadGlobalOptimizationParameters();
+            CreateCollections();
         }
 
 
@@ -358,13 +383,16 @@ namespace Nektar
          * @param   UseGenSegExp If true, create general segment expansions
          *                      instead of just normal segment expansions.
          */
-        ExpList1D::ExpList1D(const SpatialDomains::CompositeMap &domain,
+        ExpList1D::ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                             const SpatialDomains::CompositeMap &domain,
                              const SpatialDomains::MeshGraphSharedPtr &graph2D,
                              const bool DeclareCoeffPhysArrays,
                              const std::string variable):
-            ExpList()
+            ExpList(pSession,graph2D)
         {
             SetExpType(e1D);
+
+            m_graph = graph2D;
 
             int j, id=0;
             SpatialDomains::Composite comp;
@@ -416,6 +444,8 @@ namespace Nektar
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
+
+            CreateCollections();
         }
 
         /**
@@ -443,7 +473,7 @@ namespace Nektar
             const PeriodicMap &periodicEdges,
             const bool DeclareCoeffPhysArrays,
             const std::string variable):
-            ExpList()
+            ExpList(pSession,graph2D)
         {
             int i, j, id, elmtid = 0;
             set<int> edgesDone;
@@ -660,6 +690,8 @@ namespace Nektar
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
+
+            CreateCollections();
         }
 
         /**
@@ -1166,7 +1198,7 @@ namespace Nektar
          *
          * @param   outfile     Output stream to write data to.
          */
-        void ExpList1D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
+        void ExpList1D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int)
         {
             int i,j;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
@@ -1174,9 +1206,9 @@ namespace Nektar
             int ntotminus = (nquad0-1);
 
             Array<OneD,NekDouble> coords[3];
-            coords[0] = Array<OneD,NekDouble>(ntot);
-            coords[1] = Array<OneD,NekDouble>(ntot);
-            coords[2] = Array<OneD,NekDouble>(ntot);
+            coords[0] = Array<OneD,NekDouble>(ntot, 0.0);
+            coords[1] = Array<OneD,NekDouble>(ntot, 0.0);
+            coords[2] = Array<OneD,NekDouble>(ntot, 0.0);
             (*m_exp)[expansion]->GetCoords(coords[0],coords[1],coords[2]);
 
             outfile << "    <Piece NumberOfPoints=\""

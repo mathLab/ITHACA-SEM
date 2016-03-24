@@ -38,61 +38,98 @@
 
 #include <SolverUtils/Filters/Filter.h>
 #include <LocalRegions/Expansion3D.h>
+#include <GlobalMapping/Mapping.h>
 
 namespace Nektar
 {
-    namespace SolverUtils
+namespace SolverUtils
+{
+class FilterAeroForces : public Filter
+{
+public:
+    friend class MemoryManager<FilterAeroForces>;
+
+    /// Creates an instance of this class
+    static FilterSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::map<std::string, std::string> &pParams)
     {
-        class FilterAeroForces : public Filter
-        {
-        public:
-            friend class MemoryManager<FilterAeroForces>;
-
-            /// Creates an instance of this class
-            static FilterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams)
-            {
-                FilterSharedPtr p = MemoryManager<FilterAeroForces>::
-                                        AllocateSharedPtr(pSession, pParams);
-                //p->InitObject();
-                return p;
-            }
-
-            ///Name of the class
-            static std::string className;
-
-            SOLVER_UTILS_EXPORT FilterAeroForces(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
-            SOLVER_UTILS_EXPORT ~FilterAeroForces();
-
-        protected:
-            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual bool v_IsTimeDependent();
-
-        private:
-            /// ID's of boundary regions where we want the forces
-            vector<unsigned int>            m_boundaryRegionsIdList;
-            /// Determines if a given Boundary Region is in
-            /// m_boundaryRegionsIdList
-            vector<bool>                    m_boundaryRegionIsInList;
-            unsigned int                    m_index;
-            unsigned int                    m_outputFrequency;
-            /// plane to take history point from if using a homogeneous1D
-            /// expansion
-            unsigned int                    m_outputPlane;
-            bool                            m_isHomogeneous1D;
-            std::string                     m_outputFile;
-            std::ofstream                   m_outputStream;
-            LibUtilities::BasisSharedPtr    m_homogeneousBasis;
-            std::string                     m_BoundaryString;
-            /// number of planes for homogeneous1D expansion
-            int                             m_nplanes;
-        };
+        FilterSharedPtr p = MemoryManager<FilterAeroForces>::
+                                AllocateSharedPtr(pSession, pParams);
+        //p->InitObject();
+        return p;
     }
+
+    ///Name of the class
+    static std::string className;
+
+    SOLVER_UTILS_EXPORT FilterAeroForces(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::map<std::string, std::string> &pParams);
+
+    SOLVER_UTILS_EXPORT virtual ~FilterAeroForces();
+
+    SOLVER_UTILS_EXPORT void GetForces(
+                    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+                    Array<OneD, NekDouble> &Aeroforces,
+                    const NekDouble &time);
+
+protected:
+    virtual void v_Initialise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+    virtual void v_Update(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+    virtual void v_Finalise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+    virtual bool v_IsTimeDependent();
+
+private:
+    /// ID's of boundary regions where we want the forces
+    vector<unsigned int>            m_boundaryRegionsIdList;
+    /// Determines if a given Boundary Region is in
+    /// m_boundaryRegionsIdList
+    vector<bool>                    m_boundaryRegionIsInList;
+    unsigned int                    m_index;
+    unsigned int                    m_outputFrequency;
+    /// if using a homogeneous1D expansion, determine if should output
+    ///     all planes or just the average
+    bool                            m_outputAllPlanes;
+    bool                            m_isHomogeneous1D;
+    std::string                     m_outputFile;
+    std::ofstream                   m_outputStream;
+    LibUtilities::BasisSharedPtr    m_homogeneousBasis;
+    std::string                     m_BoundaryString;
+    Array<OneD, int>                m_BCtoElmtID;
+    Array<OneD, int>                m_BCtoTraceID;
+    /// number of planes for homogeneous1D expansion
+    int                             m_nPlanes;
+    Array<OneD, int>                m_planesID;
+    // Time when we start calculating the forces
+    NekDouble                       m_startTime;
+    // Directions on which the forces will be projected
+    Array<OneD, Array<OneD, NekDouble> >    m_directions;
+    // Arrays storing the last forces that were calculated
+    Array<OneD, Array<OneD, NekDouble> >    m_Fpplane;
+    Array<OneD, Array<OneD, NekDouble> >    m_Fvplane;
+    Array<OneD, Array<OneD, NekDouble> >    m_Ftplane;
+
+    NekDouble                       m_lastTime;
+    GlobalMapping::MappingSharedPtr               m_mapping;
+
+    void CalculateForces(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
+
+    void CalculateForcesMapping(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
+};
+
+typedef boost::shared_ptr<FilterAeroForces>  FilterAeroForcesSharedPtr;
+}
 }
 
 #endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */

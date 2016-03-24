@@ -84,9 +84,6 @@ class APE : public UnsteadySystem
 
         virtual void v_InitObject();
 
-        /// Sets up initial conditions.
-        virtual void v_DoInitialise();
-
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                             Array<OneD,  Array<OneD, NekDouble> > &outarray,
                       const NekDouble time);
@@ -119,7 +116,7 @@ class APE : public UnsteadySystem
 
         void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
 
-        void WallBC(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
+        void WallBC(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &Fwd, Array<OneD, Array<OneD, NekDouble> > &physarray);
 };
 }
 

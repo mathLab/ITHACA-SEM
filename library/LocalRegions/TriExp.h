@@ -113,7 +113,8 @@ namespace Nektar
                                   Array<OneD, NekDouble> & outarray);
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                             const Array<OneD, const NekDouble>& inarray,
-                                  Array<OneD, NekDouble> &outarray);
+                            Array<OneD, NekDouble> &outarray,
+                            bool multiplybyweights = true);
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase_MatOp(
                             const Array<OneD, const NekDouble>& inarray,
                                   Array<OneD, NekDouble> &outarray);
@@ -121,6 +122,7 @@ namespace Nektar
                             const int dir,
                             const Array<OneD, const NekDouble>& inarray,
                                   Array<OneD, NekDouble> & outarray);
+
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTDerivBase_MatOp(
                             const int dir,
                             const Array<OneD, const NekDouble>& inarray,
@@ -132,9 +134,16 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &Fz, 
                     Array< OneD, NekDouble> &outarray);
 
+            LOCAL_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(
+                    const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                          Array<OneD,       NekDouble> &outarray);
+
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
+            LOCAL_REGIONS_EXPORT virtual
+                StdRegions::StdExpansionSharedPtr v_GetStdExp(void) const;
+
             LOCAL_REGIONS_EXPORT virtual void v_GetCoord(
                             const Array<OneD, const NekDouble>& Lcoords,
                                   Array<OneD,NekDouble> &coords);
@@ -148,6 +157,10 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                             const Array<OneD, const NekDouble> &coord,
                             const Array<OneD, const NekDouble> & physvals);
+            LOCAL_REGIONS_EXPORT virtual void v_GetEdgePhysVals(
+                            const int edge,
+                            const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,       NekDouble> &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_GetEdgePhysVals(
                             const int edge,
                             const StdRegions::StdExpansionSharedPtr &EdgeExp,
@@ -185,7 +198,10 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual const
                 LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const;
             LOCAL_REGIONS_EXPORT virtual int v_GetNumPoints(
-                            const int dir) const;
+                const int dir) const;
+            LOCAL_REGIONS_EXPORT virtual void v_GetEdgePhysMap(
+                const int                edge,
+                Array<OneD, int>        &outarray);
 
 
             //---------------------------------------
@@ -259,6 +275,10 @@ namespace Nektar
                                   Array<OneD,NekDouble> &outarray);
 
             LOCAL_REGIONS_EXPORT virtual void v_ComputeLaplacianMetric();
+            
+            LOCAL_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdRegions::StdMatrixKey &mkey);
 
         private:
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;

@@ -80,6 +80,22 @@ namespace Nektar
                     break;
             }
         }
+        
+        void PointExp::v_NormVectorIProductWRTBase(
+            const Array<OneD, const NekDouble> &Fx,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int nq = m_base[0]->GetNumPoints();
+            Array<OneD, NekDouble > Fn(nq);
+
+            const Array<OneD, const Array<OneD, NekDouble> >
+                 &normals =
+                    GetLeftAdjacentElementExp()->
+                        GetVertexNormal(GetLeftAdjacentElementVertex());
+            Vmath::Vmul (nq, &Fx[0], 1, &normals[0][0], 1, &Fn[0], 1);
+
+            v_IProductWRTBase(Fn,outarray);
+        }
 
     }
 }

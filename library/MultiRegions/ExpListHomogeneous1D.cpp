@@ -70,7 +70,7 @@ namespace Nektar
                            m_comm->GetColumnComm();
 
             m_transposition = MemoryManager<LibUtilities::Transposition>
-                                ::AllocateSharedPtr(HomoBasis, m_StripZcomm);
+                                ::AllocateSharedPtr(HomoBasis, m_comm, m_StripZcomm);
 
             m_planes = Array<OneD,ExpListSharedPtr>(
                                 m_homogeneousBasis->GetNumPoints() /
@@ -106,6 +106,7 @@ namespace Nektar
         ExpListHomogeneous1D::ExpListHomogeneous1D(const ExpListHomogeneous1D &In):
             ExpList(In,false),
             m_transposition(In.m_transposition),
+            m_StripZcomm(In.m_StripZcomm),
             m_useFFT(In.m_useFFT),
             m_FFT(In.m_FFT),
             m_tmpIN(In.m_tmpIN),
@@ -113,6 +114,23 @@ namespace Nektar
             m_homogeneousBasis(In.m_homogeneousBasis),
             m_lhom(In.m_lhom), 
             m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
+            m_dealiasing(In.m_dealiasing),
+            m_padsize(In.m_padsize)
+        {
+            m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.num_elements());
+        }
+        
+        ExpListHomogeneous1D::ExpListHomogeneous1D(const ExpListHomogeneous1D &In,
+                                            const std::vector<unsigned int> &eIDs):
+            ExpList(In,eIDs,false),
+            m_transposition(In.m_transposition),
+            m_useFFT(In.m_useFFT),
+            m_FFT(In.m_FFT),
+            m_tmpIN(In.m_tmpIN),
+            m_tmpOUT(In.m_tmpOUT),
+            m_homogeneousBasis(In.m_homogeneousBasis),
+            m_lhom(In.m_lhom), 
+            m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr()),
             m_dealiasing(In.m_dealiasing),
             m_padsize(In.m_padsize)
         {
@@ -605,15 +623,32 @@ namespace Nektar
             std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
             
-            std::vector<unsigned int> PlanesIDs;
-            
-            for(int i = 0; i < m_planes.num_elements(); i++)
+            std::vector<unsigned int> StripsIDs;
+
+            bool strips;
+            m_session->MatchSolverInfo("HomoStrip","True",strips,false);
+            if (strips)
             {
-                PlanesIDs.push_back(m_transposition->GetPlaneID(i));
+                StripsIDs.push_back(m_transposition->GetStripID());
             }
             
-            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, HomoLen, PlanesIDs);
+            std::vector<unsigned int> PlanesIDs;
+            int IDoffset = 0;
+
+            // introduce a 2 plane offset for single mode case so can
+            // be post-processed or used in MultiMode expansion.
+            if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+            {
+                IDoffset  = 2;
+            }
+
+            for(int i = 0; i < m_planes.num_elements(); i++)
+            {
+                PlanesIDs.push_back(m_transposition->GetPlaneID(i)+IDoffset);
+            }
             
+            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, 
+                    HomoLen, strips, StripsIDs, PlanesIDs);
             return returnval;
         }
 
@@ -625,15 +660,31 @@ namespace Nektar
             std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
             
-            std::vector<unsigned int> PlanesIDs;
+            std::vector<unsigned int> StripsIDs;
+
+            bool strips;
+            m_session->MatchSolverInfo("HomoStrip","True",strips,false);
+            if (strips)
+            {
+                StripsIDs.push_back(m_transposition->GetStripID());
+            }
             
+            std::vector<unsigned int> PlanesIDs;
+            int IDoffset = 0;
+
+            if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+            {
+                IDoffset = 2;
+            }
+
             for(int i = 0; i < m_planes.num_elements(); i++)
             {
-                PlanesIDs.push_back(m_transposition->GetPlaneID(i));
+                PlanesIDs.push_back(m_transposition->GetPlaneID(i)+IDoffset);
             }
             
             // enforce NumHomoDir == 1 by direct call
-            m_planes[0]->GeneralGetFieldDefinitions(fielddef,1, HomoBasis,HomoLen,PlanesIDs);
+            m_planes[0]->GeneralGetFieldDefinitions(fielddef, 1, HomoBasis,
+                    HomoLen, strips, StripsIDs, PlanesIDs);
         }
 
 
@@ -708,27 +759,25 @@ namespace Nektar
                 int planes_offset = 0;
                 Array<OneD, NekDouble> coeff_tmp;
                 std::map<int,int>::iterator it;
+                int IDoffset = 0;
 
-
+                // introduce a 2 plane offset for single mode case so can
+                // be post-processed or used in MultiMode expansion. 
+                if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+                {
+                    IDoffset  = 2;
+                }
+                
                 // Build map of plane IDs lying on this processor.
                 std::map<int,int> homoZids;
                 for (i = 0; i < m_planes.num_elements(); ++i)
                 {
-                    homoZids[m_transposition->GetPlaneID(i)] = i;
+                    homoZids[m_transposition->GetPlaneID(i)+IDoffset] = i;
                 }
                 
                 if(fielddef->m_numHomogeneousDir)
                 {
-                    for(i = 0; i < fielddef->m_basis.size(); ++i)
-                    {
-                        if(fielddef->m_basis[i] == m_homogeneousBasis->GetBasisType())
-                        {
-                            nzmodes = fielddef->m_homogeneousZIDs.size();
-                            break;
-                        }
-                    }
-                    ASSERTL1(i != fielddef->m_basis.size(),"Failed to determine number of Homogeneous modes");
-                    
+                    nzmodes = fielddef->m_homogeneousZIDs.size();
                     fieldDefHomoZids = fielddef->m_homogeneousZIDs;
                 }
                 else // input file is 2D and so set nzmodes to 1
@@ -766,6 +815,8 @@ namespace Nektar
                     {
                         // increase offset for correct FieldData access
                         offset += datalen*nzmodes;
+                        modes_offset += (*m_exp)[0]->GetNumBases() +
+                                        fielddef->m_numHomogeneousDir;
                         continue;
                     }
                     
@@ -793,7 +844,7 @@ namespace Nektar
                             (*m_exp)[eid]->ExtractDataToCoeffs(&fielddata[offset], fielddef->m_numModes,modes_offset,&coeffs[m_coeff_offset[eid] + planes_offset*ncoeffs_per_plane]);
                         }
                     }
-                    modes_offset += (*m_exp)[0]->GetNumBases();
+                    modes_offset += (*m_exp)[0]->GetNumBases() + fielddef->m_numHomogeneousDir;
                 }
             }
         }
@@ -804,17 +855,25 @@ namespace Nektar
         {
             int i;
             int fromNcoeffs_per_plane = fromExpList->GetPlane(0)->GetNcoeffs();
+            int toNcoeffs_per_plane = m_planes[0]->GetNcoeffs();
             Array<OneD, NekDouble> tocoeffs_tmp, fromcoeffs_tmp; 
             
             for(i = 0; i < m_planes.num_elements(); ++i)
             {
-                m_planes[i]->ExtractCoeffsToCoeffs(fromExpList->GetPlane(i),fromcoeffs_tmp =  fromCoeffs + fromNcoeffs_per_plane*i, tocoeffs_tmp = toCoeffs + m_ncoeffs*i);
+                m_planes[i]->ExtractCoeffsToCoeffs(fromExpList->GetPlane(i),fromcoeffs_tmp =  fromCoeffs + fromNcoeffs_per_plane*i, tocoeffs_tmp = toCoeffs + toNcoeffs_per_plane*i);
             }
         }
 
         void ExpListHomogeneous1D::v_WriteVtkPieceData(std::ostream &outfile, int expansion,
                                         std::string var)
         {
+            // If there is only one plane (e.g. HalfMode), we write a 2D plane.
+            if (m_planes.num_elements() == 1)
+            {
+                m_planes[0]->WriteVtkPieceData(outfile, expansion, var);
+                return;
+            }
+
             int i;
             int nq = (*m_exp)[expansion]->GetTotPoints();
             int npoints_per_plane = m_planes[0]->GetTotPoints();
@@ -1024,13 +1083,13 @@ namespace Nektar
                     //HalfMode
                     if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe)
                     {
-                        beta = 2*M_PI*(m_transposition->GetK(0))/m_lhom;
+                        beta = 2*sign*M_PI*(m_transposition->GetK(0))/m_lhom;
             
                         Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
                     }
                     else if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
                     {
-                        beta = -2*M_PI*(m_transposition->GetK(0))/m_lhom;
+                        beta = -2*sign*M_PI*(m_transposition->GetK(0))/m_lhom;
             
                         Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
                     }

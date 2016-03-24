@@ -272,12 +272,11 @@ namespace Nektar
 
             Array<OneD, NekDouble> physEdge[3];
             Array<OneD, NekDouble> coeffEdge[3];
-            StdRegions::Orientation orient[3];
             for(i = 0; i < 3; i++)
             {
-                physEdge[i]  = Array<OneD, NekDouble>(npoints[i!=0]);
+                // define physEdge and add 1 so can interpolate grl10 points if necessary
+                physEdge[i]  = Array<OneD, NekDouble>(max(npoints[i!=0],npoints[0])); 
                 coeffEdge[i] = Array<OneD, NekDouble>(nmodes[i!=0]);
-                orient[i]    = GetEorient(i);
             }
 
             for(i = 0; i < npoints[0]; i++)
@@ -285,34 +284,49 @@ namespace Nektar
                 physEdge[0][i] = inarray[i];
             }
 
+            // extract data in cartesian directions
             for(i = 0; i < npoints[1]; i++)
             {
                 physEdge[1][i] = inarray[npoints[0]-1+i*npoints[0]];
-                physEdge[2][i] = inarray[(npoints[1]-1)*npoints[0]-i*npoints[0]];
-            }
-
-            for(i = 0; i < 3; i++)
-            {
-                if( orient[i] == StdRegions::eBackwards )
-                {
-                    reverse( (physEdge[i]).get() , (physEdge[i]).get() + npoints[i!=0] );
-                }
+                physEdge[2][i] = inarray[i*npoints[0]];
             }
 
             SegExpSharedPtr segexp[3];
-            for(i = 0; i < 3; i++)
+            segexp[0] = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(m_base[0]->GetBasisKey(),GetGeom2D()->GetEdge(0));
+            
+            if(m_base[1]->GetPointsType() == LibUtilities::eGaussLobattoLegendre)
             {
-                segexp[i] = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(m_base[i!=0]->GetBasisKey(),GetGeom2D()->GetEdge(i));
+                for(i = 1; i < 3; i++)
+                {
+                    segexp[i] = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(m_base[i!=0]->GetBasisKey(),GetGeom2D()->GetEdge(i));
+                }
             }
+            else // interploate using edge 0 GLL distribution
+            {
+                for(i = 1; i < 3; i++)
+                {
+                    segexp[i] = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(m_base[0]->GetBasisKey(),GetGeom2D()->GetEdge(i));
+
+                    LibUtilities::Interp1D(m_base[1]->GetPointsKey(),physEdge[i],
+                                           m_base[0]->GetPointsKey(),physEdge[i]);
+                }
+                npoints[1] = npoints[0];
+            }
+            
 
             Array<OneD, unsigned int> mapArray;
             Array<OneD, int>          signArray;
             NekDouble sign;
+            // define an orientation to get EdgeToElmtMapping from Cartesian data 
+            StdRegions::Orientation orient[3] = {StdRegions::eForwards,StdRegions::eForwards,
+                                                 StdRegions::eBackwards};
 
             for(i = 0; i < 3; i++)
             {
-                segexp[i!=0]->FwdTrans_BndConstrained(physEdge[i],coeffEdge[i]);
+                segexp[i]->FwdTrans_BndConstrained(physEdge[i],coeffEdge[i]);
 
+                // this orient goes with the one above and so could
+                // probably set both to eForwards
                 GetEdgeToElementMap(i,orient[i],mapArray,signArray);
                 for(j=0; j < nmodes[i!=0]; j++)
                 {
@@ -377,17 +391,28 @@ namespace Nektar
 
 
         void TriExp::v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
-                                            Array<OneD, NekDouble> &outarray)
+                                              Array<OneD, NekDouble> &outarray,
+                                              bool multiplybyweights)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    order0 = m_base[0]->GetNumModes();
 
-            Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
-            Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
-
-            MultiplyByQuadratureMetric(inarray,tmp);
-            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),tmp,outarray,wsp);
+            if(multiplybyweights)
+            {
+                Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
+                Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
+                
+                MultiplyByQuadratureMetric(inarray,tmp);
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),tmp,outarray,wsp);
+            }
+            else
+            {
+                Array<OneD,NekDouble> wsp(+nquad1*order0);
+                
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
+                                             inarray,outarray,wsp);
+            }
         }
 
 
@@ -405,8 +430,8 @@ namespace Nektar
 
 
         void TriExp::v_IProductWRTDerivBase_SumFac(const int dir,
-                                                 const Array<OneD, const NekDouble>& inarray,
-                                                 Array<OneD, NekDouble> & outarray)
+                                                   const Array<OneD, const NekDouble>& inarray,
+                                                   Array<OneD, NekDouble> & outarray)
         {
             ASSERTL1((dir==0)||(dir==1)||(dir==2),"Invalid direction.");
             ASSERTL1((dir==2)?(m_geom->GetCoordim()==3):true,"Invalid direction.");
@@ -542,6 +567,21 @@ namespace Nektar
             IProductWRTBase(Fn,outarray);
         }
 
+        void TriExp::v_NormVectorIProductWRTBase(
+            const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                  Array<OneD,       NekDouble>               &outarray)
+        {
+            NormVectorIProductWRTBase(Fvec[0], Fvec[1], Fvec[2], outarray);
+        }
+
+        StdRegions::StdExpansionSharedPtr TriExp::v_GetStdExp(void) const
+        {
+            
+            return MemoryManager<StdRegions::StdTriExp>
+                ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                    m_base[1]->GetBasisKey());
+        }
+
         void TriExp::v_GetCoord(const Array<OneD, const NekDouble> &Lcoords,
                               Array<OneD,NekDouble> &coords)
         {
@@ -602,6 +642,58 @@ namespace Nektar
             v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
         }
 
+        void TriExp::v_GetEdgePhysVals(
+            const int edge,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,NekDouble> &outarray)
+        {
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+
+            StdRegions::Orientation edgedir = GetEorient(edge);
+            switch(edge)
+            {
+                case 0:
+                    if (edgedir == StdRegions::eForwards)
+                    {
+                        Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outarray[0]),1);
+                    }
+                    else
+                    {
+                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0-1),-1,
+                                     &(outarray[0]),1);
+                    }
+                    break;
+                case 1:
+                    if (edgedir == StdRegions::eForwards)
+                    {
+                        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,
+                                     &(outarray[0]),1);
+                    }
+                    else
+                    {
+                        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0*nquad1-1),
+                                     -nquad0, &(outarray[0]),1);
+                    }
+                    break;
+                case 2:
+                    if (edgedir == StdRegions::eForwards)
+                    {
+                        Vmath::Vcopy(nquad1,&(inarray[0]) + nquad0*(nquad1-1),
+                                     -nquad0,&(outarray[0]),1);
+                    }
+                    else
+                    {
+                        Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,
+                                     &(outarray[0]),1);
+                    }
+                break;
+            default:
+                ASSERTL0(false,"edge value (< 3) is out of range");
+                break;
+            }
+        }
+
         void TriExp::v_GetEdgePhysVals(const int edge, const StdRegions::StdExpansionSharedPtr &EdgeExp,
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD,NekDouble> &outarray)
@@ -613,13 +705,14 @@ namespace Nektar
             switch(edge)
             {
             case 0:
-                Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outarray[0]),1);
+                Vmath::Vcopy(nquad0, &(inarray[0]), 1, &(outarray[0]), 1);
                 break;
             case 1:
-                Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,&(outarray[0]),1);
+                Vmath::Vcopy(nquad1, &(inarray[0])+(nquad0-1),
+                             nquad0, &(outarray[0]), 1);
                 break;
             case 2:
-                Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,&(outarray[0]),1);
+                Vmath::Vcopy(nquad1, &(inarray[0]), nquad0, &(outarray[0]), 1);
                 break;
             default:
                 ASSERTL0(false,"edge value (< 3) is out of range");
@@ -627,16 +720,18 @@ namespace Nektar
             }
 
             // Interpolate if required
-			if(m_base[edge?1:0]->GetPointsKey() != EdgeExp->GetBasis(0)->GetPointsKey())
-			{
-				Array<OneD,NekDouble> outtmp(max(nquad0,nquad1));
-				
-				outtmp = outarray;
-				
-				LibUtilities::Interp1D(m_base[edge?1:0]->GetPointsKey(),outtmp,
-                     EdgeExp->GetBasis(0)->GetPointsKey(),outarray);
-			}
-
+            if(m_base[edge?1:0]->GetPointsKey() != EdgeExp->GetBasis(0)->GetPointsKey())
+            {
+                Array<OneD,NekDouble> outtmp(max(nquad0,nquad1));
+		
+                outtmp = outarray;
+                
+                LibUtilities::Interp1D(m_base[edge?1:0]->GetPointsKey(),
+                                       outtmp,
+                                       EdgeExp->GetBasis(0)->GetPointsKey(),
+                                       outarray);
+            }
+            
             //Reverse data if necessary
             if(GetCartesianEorient(edge) == StdRegions::eBackwards)
             {
@@ -661,6 +756,46 @@ namespace Nektar
         {
             ASSERTL0(false, 
                      "Routine not implemented for triangular elements");
+        }
+        
+        
+        
+        void TriExp::v_GetEdgePhysMap(
+            const int                edge,
+            Array<OneD, int>        &outarray)
+        {
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            
+            // Get points in Cartesian orientation
+            switch (edge)
+            {
+                case 0:
+                    outarray = Array<OneD, int>(nquad0);
+                    for (int i = 0; i < nquad0; ++i)
+                    {
+                        outarray[i] = i;
+                    }
+                    break;
+                case 1:
+                    outarray = Array<OneD, int>(nquad1);
+                    for (int i = 0; i < nquad1; ++i)
+                    {
+                        outarray[i] = (nquad0-1) + i * nquad0;
+                    }
+                    break;
+                case 2:
+                    outarray = Array<OneD, int>(nquad1);
+                    for (int i = 0; i < nquad1; ++i)
+                    {
+                        outarray[i] =  i*nquad0;
+                    }
+                    break;
+                default:
+                    ASSERTL0(false, "edge value (< 3) is out of range");
+                    break;
+            }
+            
         }
 
 
@@ -1414,7 +1549,7 @@ namespace Nektar
                           Array<OneD,       NekDouble> &outarray,
                           Array<OneD,       NekDouble> &wsp)
         {
-            if (m_metrics.count(MetricLaplacian00) == 0)
+            if (m_metrics.count(eMetricLaplacian00) == 0)
             {
                 ComputeLaplacianMetric();
             }
@@ -1433,9 +1568,9 @@ namespace Nektar
             const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
             const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
             const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-            const Array<OneD, const NekDouble>& metric00 = m_metrics[MetricLaplacian00];
-            const Array<OneD, const NekDouble>& metric01 = m_metrics[MetricLaplacian01];
-            const Array<OneD, const NekDouble>& metric11 = m_metrics[MetricLaplacian11];
+            const Array<OneD, const NekDouble>& metric00 = m_metrics[eMetricLaplacian00];
+            const Array<OneD, const NekDouble>& metric01 = m_metrics[eMetricLaplacian01];
+            const Array<OneD, const NekDouble>& metric11 = m_metrics[eMetricLaplacian11];
 
             // Allocate temporary storage
             Array<OneD,NekDouble> wsp0(wsp);
@@ -1464,7 +1599,7 @@ namespace Nektar
 
         void TriExp::v_ComputeLaplacianMetric()
         {
-            if (m_metrics.count(MetricQuadrature) == 0)
+            if (m_metrics.count(eMetricQuadrature) == 0)
             {
                 ComputeQuadratureMetric();
             }
@@ -1473,9 +1608,9 @@ namespace Nektar
             const SpatialDomains::GeomType type = m_metricinfo->GetGtype();
             const unsigned int nqtot = GetTotPoints();
             const unsigned int dim = 2;
-            const MetricType m[3][3] = { {MetricLaplacian00, MetricLaplacian01, MetricLaplacian02},
-                                       {MetricLaplacian01, MetricLaplacian11, MetricLaplacian12},
-                                       {MetricLaplacian02, MetricLaplacian12, MetricLaplacian22}
+            const MetricType m[3][3] = { {eMetricLaplacian00, eMetricLaplacian01, eMetricLaplacian02},
+                                       {eMetricLaplacian01, eMetricLaplacian11, eMetricLaplacian12},
+                                       {eMetricLaplacian02, eMetricLaplacian12, eMetricLaplacian22}
             };
 
             Array<OneD, NekDouble> dEta_dXi[2] = {Array<OneD, NekDouble>(nqtot,1.0),
@@ -1513,23 +1648,23 @@ namespace Nektar
                 Vmath::Smul (nqtot,df[0][0],&dEta_dXi[0][0],1,&tmp[0],1);
                 Vmath::Svtvp(nqtot,df[1][0],&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);
 
-                Vmath::Vmul (nqtot,&tmp[0],1,   &tmp[0],1,&m_metrics[MetricLaplacian00][0],1);
-                Vmath::Smul (nqtot,df[1][0],&tmp[0],1,&m_metrics[MetricLaplacian01][0],1);
+                Vmath::Vmul (nqtot,&tmp[0],1,   &tmp[0],1,&m_metrics[eMetricLaplacian00][0],1);
+                Vmath::Smul (nqtot,df[1][0],&tmp[0],1,&m_metrics[eMetricLaplacian01][0],1);
 
 
                 Vmath::Smul (nqtot,df[2][0],&dEta_dXi[0][0],1,&tmp[0],1);
                 Vmath::Svtvp(nqtot,df[3][0],&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);
 
-                Vmath::Vvtvp(nqtot,&tmp[0],1,   &tmp[0],1,&m_metrics[MetricLaplacian00][0],1,&m_metrics[MetricLaplacian00][0],1);
-                Vmath::Svtvp(nqtot,df[3][0],&tmp[0],1,&m_metrics[MetricLaplacian01][0],1,&m_metrics[MetricLaplacian01][0],1);
+                Vmath::Vvtvp(nqtot,&tmp[0],1,   &tmp[0],1,&m_metrics[eMetricLaplacian00][0],1,&m_metrics[eMetricLaplacian00][0],1);
+                Vmath::Svtvp(nqtot,df[3][0],&tmp[0],1,&m_metrics[eMetricLaplacian01][0],1,&m_metrics[eMetricLaplacian01][0],1);
 
                 if(GetCoordim() == 3)
                 {
                     Vmath::Smul (nqtot,df[4][0],&dEta_dXi[0][0],1,&tmp[0],1);
                     Vmath::Svtvp(nqtot,df[5][0],&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);
 
-                    Vmath::Vvtvp(nqtot,&tmp[0],1,   &tmp[0],1,&m_metrics[MetricLaplacian00][0],1,&m_metrics[MetricLaplacian00][0],1);
-                    Vmath::Svtvp(nqtot,df[5][0],&tmp[0],1,&m_metrics[MetricLaplacian01][0],1,&m_metrics[MetricLaplacian01][0],1);
+                    Vmath::Vvtvp(nqtot,&tmp[0],1,   &tmp[0],1,&m_metrics[eMetricLaplacian00][0],1,&m_metrics[eMetricLaplacian00][0],1);
+                    Vmath::Svtvp(nqtot,df[5][0],&tmp[0],1,&m_metrics[eMetricLaplacian01][0],1,&m_metrics[eMetricLaplacian01][0],1);
                 }
 
                 NekDouble g2 = df[1][0]*df[1][0] + df[3][0]*df[3][0];
@@ -1537,7 +1672,7 @@ namespace Nektar
                 {
                     g2 += df[5][0]*df[5][0];
                 }
-                Vmath::Fill(nqtot,g2,&m_metrics[MetricLaplacian11][0],1);
+                Vmath::Fill(nqtot,g2,&m_metrics[eMetricLaplacian11][0],1);
             }
             else
             {
@@ -1545,26 +1680,26 @@ namespace Nektar
                 Vmath::Vmul (nqtot,&df[0][0],1,&dEta_dXi[0][0],1,&tmp[0],1);
                 Vmath::Vvtvp(nqtot,&df[1][0],1,&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);
 
-                Vmath::Vmul (nqtot,&tmp[0],  1,&tmp[0],  1,&m_metrics[MetricLaplacian00][0],1);
-                Vmath::Vmul (nqtot,&df[1][0],1,&tmp[0],  1,&m_metrics[MetricLaplacian01][0],1);
-                Vmath::Vmul (nqtot,&df[1][0],1,&df[1][0],1,&m_metrics[MetricLaplacian11][0],1);
+                Vmath::Vmul (nqtot,&tmp[0],  1,&tmp[0],  1,&m_metrics[eMetricLaplacian00][0],1);
+                Vmath::Vmul (nqtot,&df[1][0],1,&tmp[0],  1,&m_metrics[eMetricLaplacian01][0],1);
+                Vmath::Vmul (nqtot,&df[1][0],1,&df[1][0],1,&m_metrics[eMetricLaplacian11][0],1);
 
 
                 Vmath::Vmul (nqtot,&df[2][0],1,&dEta_dXi[0][0],1,&tmp[0],1);
                 Vmath::Vvtvp(nqtot,&df[3][0],1,&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);
 
-                Vmath::Vvtvp(nqtot,&tmp[0],  1,&tmp[0],  1,&m_metrics[MetricLaplacian00][0],1,&m_metrics[MetricLaplacian00][0],1);
-                Vmath::Vvtvp(nqtot,&df[3][0],1,&tmp[0],  1,&m_metrics[MetricLaplacian01][0],1,&m_metrics[MetricLaplacian01][0],1);
-                Vmath::Vvtvp(nqtot,&df[3][0],1,&df[3][0],1,&m_metrics[MetricLaplacian11][0],1,&m_metrics[MetricLaplacian11][0],1);
+                Vmath::Vvtvp(nqtot,&tmp[0],  1,&tmp[0],  1,&m_metrics[eMetricLaplacian00][0],1,&m_metrics[eMetricLaplacian00][0],1);
+                Vmath::Vvtvp(nqtot,&df[3][0],1,&tmp[0],  1,&m_metrics[eMetricLaplacian01][0],1,&m_metrics[eMetricLaplacian01][0],1);
+                Vmath::Vvtvp(nqtot,&df[3][0],1,&df[3][0],1,&m_metrics[eMetricLaplacian11][0],1,&m_metrics[eMetricLaplacian11][0],1);
 
                 if(GetCoordim() == 3)
                 {
                     Vmath::Vmul (nqtot,&df[4][0],1,&dEta_dXi[0][0],1,&tmp[0],1);
                     Vmath::Vvtvp(nqtot,&df[5][0],1,&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);
 
-                    Vmath::Vvtvp(nqtot,&tmp[0],  1,&tmp[0],  1,&m_metrics[MetricLaplacian00][0],1,&m_metrics[MetricLaplacian00][0],1);
-                    Vmath::Vvtvp(nqtot,&df[5][0],1,&tmp[0],  1,&m_metrics[MetricLaplacian01][0],1,&m_metrics[MetricLaplacian01][0],1);
-                    Vmath::Vvtvp(nqtot,&df[5][0],1,&df[5][0],1,&m_metrics[MetricLaplacian11][0],1,&m_metrics[MetricLaplacian11][0],1);
+                    Vmath::Vvtvp(nqtot,&tmp[0],  1,&tmp[0],  1,&m_metrics[eMetricLaplacian00][0],1,&m_metrics[eMetricLaplacian00][0],1);
+                    Vmath::Vvtvp(nqtot,&df[5][0],1,&tmp[0],  1,&m_metrics[eMetricLaplacian01][0],1,&m_metrics[eMetricLaplacian01][0],1);
+                    Vmath::Vvtvp(nqtot,&df[5][0],1,&df[5][0],1,&m_metrics[eMetricLaplacian11][0],1,&m_metrics[eMetricLaplacian11][0],1);
                 }
             }
 
@@ -1652,6 +1787,36 @@ namespace Nektar
             m_OrthoTriExp->BwdTrans(coeff,phys_tmp);
             m_TriExp     ->FwdTrans(phys_tmp, outarray);
         }
+        
+        void TriExp::v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdRegions::StdMatrixKey &mkey)
+        {
+            int nq = GetTotPoints();
+            
+            // Calculate sqrt of the Jacobian
+            Array<OneD, const NekDouble> jac = 
+                                    m_metricinfo->GetJac(GetPointsKeys());
+            Array<OneD, NekDouble> sqrt_jac(nq);
+            if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vsqrt(nq,jac,1,sqrt_jac,1);
+            }
+            else
+            {
+                Vmath::Fill(nq,sqrt(jac[0]),sqrt_jac,1);
+            }
+            
+            // Multiply array by sqrt(Jac)
+            Vmath::Vmul(nq,sqrt_jac,1,array,1,array,1);
+            
+            // Apply std region filter
+            StdTriExp::v_SVVLaplacianFilter( array, mkey);
+            
+            // Divide by sqrt(Jac)
+            Vmath::Vdiv(nq,array,1,sqrt_jac,1,array,1);
+        }
+        
     }
 }
 

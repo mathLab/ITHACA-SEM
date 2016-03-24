@@ -59,22 +59,6 @@ namespace Nektar
         /**
          *
          */
-        QuadGeom::QuadGeom(int id, const int coordim):
-            Geometry2D(coordim)
-        {
-
-            const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-            LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
-
-            m_globalID = m_fid = id;
-
-            m_xmap = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B,B);
-            SetUpCoeffs(m_xmap->GetNcoeffs());
-        }
-
-        /**
-         *
-         */
         QuadGeom::QuadGeom(const int id,
                            const PointGeomSharedPtr verts[],
                            const SegGeomSharedPtr edges[],
@@ -101,21 +85,7 @@ namespace Nektar
             ASSERTL0(m_coordim > 1,
                      "Cannot call function with dim == 1");
 
-            int order0  = max(edges[0]->GetBasis(0)->GetNumModes(),
-                              edges[2]->GetBasis(0)->GetNumModes());
-            int points0 = max(edges[0]->GetBasis(0)->GetNumPoints(),
-                              edges[2]->GetBasis(0)->GetNumPoints());
-            int order1  = max(edges[1]->GetBasis(0)->GetNumModes(),
-                              edges[3]->GetBasis(0)->GetNumModes());
-            int points1 = max(edges[1]->GetBasis(0)->GetNumPoints(),
-                              edges[3]->GetBasis(0)->GetNumPoints());
-
-            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
-                  LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B1(LibUtilities::eModified_A, order1,
-                  LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
-
-            m_xmap = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);
+            SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
@@ -128,7 +98,8 @@ namespace Nektar
                            const StdRegions::Orientation eorient[],
                            const CurveSharedPtr &curve) :
             Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
-            m_fid(id)
+            m_fid(id),
+            m_curve(curve)
         {
             int j;
 
@@ -160,57 +131,8 @@ namespace Nektar
             ASSERTL0(m_coordim > 1,
                 "Cannot call function with dim == 1");
 
-            int order0  = max(edges[0]->GetBasis(0)->GetNumModes(),
-                              edges[2]->GetBasis(0)->GetNumModes());
-            int points0 = max(edges[0]->GetBasis(0)->GetNumPoints(),
-                              edges[2]->GetBasis(0)->GetNumPoints());
-            int order1  = max(edges[1]->GetBasis(0)->GetNumModes(),
-                              edges[3]->GetBasis(0)->GetNumModes());
-            int points1 = max(edges[1]->GetBasis(0)->GetNumPoints(),
-                              edges[3]->GetBasis(0)->GetNumPoints());
-
-            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
-                  LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B1(LibUtilities::eModified_A, order1,
-                  LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
-
-            m_xmap = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);
+            SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
-
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                int npts = curve->m_points.size();
-                int nEdgePts = (int)sqrt(static_cast<NekDouble>(npts));
-                Array<OneD,NekDouble> tmp(npts);
-                LibUtilities::PointsKey curveKey(nEdgePts, curve->m_ptype);
-
-                // Sanity checks:
-                // - Curved faces should have square number of points;
-                // - Each edge should have sqrt(npts) points.
-                ASSERTL0(nEdgePts*nEdgePts == npts,
-                         "NUMPOINTS should be a square number");
-                
-                for (j = 0; j < kNedges; ++j)
-                {
-                    ASSERTL0(edges[j]->GetXmap()->GetNcoeffs() == nEdgePts,
-                             "Number of edge points does not correspond "
-                             "to number of face points.");
-                }
-                
-                for (j = 0; j < npts; ++j)
-                {
-                    tmp[j] = (curve->m_points[j]->GetPtr())[i];
-                }
-                
-                // Interpolate curve points to GLL points
-                Array<OneD, NekDouble> tmp2(points0*points1);
-                LibUtilities::Interp2D(curveKey,curveKey,tmp,
-                                       B0.GetPointsKey(),B1.GetPointsKey(),
-                                       tmp2);
-                
-                // Forwards transform to get coefficient space.
-                m_xmap->FwdTrans(tmp2, m_coeffs[i]);
-            }
         }
 
 
@@ -252,21 +174,7 @@ namespace Nektar
             ASSERTL0(m_coordim > 1,
                 "Cannot call function with dim == 1");
 
-            int order0  = max(edges[0]->GetBasis(0)->GetNumModes(),
-                              edges[2]->GetBasis(0)->GetNumModes());
-            int points0 = max(edges[0]->GetBasis(0)->GetNumPoints(),
-                              edges[2]->GetBasis(0)->GetNumPoints());
-            int order1  = max(edges[1]->GetBasis(0)->GetNumModes(),
-                              edges[3]->GetBasis(0)->GetNumModes());
-            int points1 = max(edges[1]->GetBasis(0)->GetNumPoints(),
-                              edges[3]->GetBasis(0)->GetNumPoints());
-
-            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
-                  LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B1(LibUtilities::eModified_A, order1,
-                  LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
-
-            m_xmap = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);
+            SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
@@ -289,9 +197,9 @@ namespace Nektar
                 m_elmtMap.push_back(*def);
             }
 
-			// From QuadGeom
-			m_verts = in.m_verts;
-			m_edges = in.m_edges;
+            // From QuadGeom
+            m_verts = in.m_verts;
+            m_edges = in.m_edges;
             for (int i = 0; i < kNedges; i++)
             {
                 m_eorient[i] = in.m_eorient[i];
@@ -307,6 +215,25 @@ namespace Nektar
         {
         }
 
+        void QuadGeom::SetUpXmap()
+        {
+            int order0  = max(m_edges[0]->GetBasis(0)->GetNumModes(),
+                              m_edges[2]->GetBasis(0)->GetNumModes());
+            int order1  = max(m_edges[1]->GetBasis(0)->GetNumModes(),
+                              m_edges[3]->GetBasis(0)->GetNumModes());
+
+            const LibUtilities::BasisKey B0(
+                LibUtilities::eModified_A, order0,
+                LibUtilities::PointsKey(
+                    order0+1, LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B1(
+                LibUtilities::eModified_A, order1,
+                LibUtilities::PointsKey(
+                    order1+1,LibUtilities::eGaussLobattoLegendre));
+
+            m_xmap = MemoryManager<StdRegions::StdQuadExp>
+                ::AllocateSharedPtr(B0,B1);
+        }
 
         /**
          *
@@ -330,17 +257,17 @@ namespace Nektar
             return GetFaceOrientation(face1.m_verts, face2.m_verts);
         }
 
-        /** 
+        /**
          * Calculate the orientation of face2 to face1 (note this is
-         * not face1 to face2!). 
-         */ 
+         * not face1 to face2!).
+         */
         StdRegions::Orientation QuadGeom::GetFaceOrientation(
             const PointGeomVector &face1,
             const PointGeomVector &face2)
         {
             int i, j, vmap[4] = {-1,-1,-1,-1};
             NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
-           
+
             // For periodic faces, we calculate the vector between the centre
             // points of the two faces. (For connected faces this will be
             // zero). We can then use this to determine alignment later in the
@@ -605,6 +532,52 @@ namespace Nektar
                 int i,j,k;
                 int nEdgeCoeffs;
 
+                if (m_curve)
+                {
+                    int npts = m_curve->m_points.size();
+                    int nEdgePts = (int)sqrt(static_cast<NekDouble>(npts));
+                    Array<OneD, NekDouble> tmp(npts);
+                    Array<OneD, NekDouble> tmp2(m_xmap->GetTotPoints());
+                    LibUtilities::PointsKey curveKey(
+                        nEdgePts, m_curve->m_ptype);
+
+                    // Sanity checks:
+                    // - Curved faces should have square number of points;
+                    // - Each edge should have sqrt(npts) points.
+                    ASSERTL0(nEdgePts * nEdgePts == npts,
+                             "NUMPOINTS should be a square number in"
+                             " quadrilteral "
+                             + boost::lexical_cast<string>(m_globalID));
+
+                    for (i = 0; i < kNedges; ++i)
+                    {
+                        ASSERTL0(
+                            m_edges[i]->GetXmap()->GetNcoeffs() == nEdgePts,
+                            "Number of edge points does not correspond to "
+                            "number of face points in quadrilateral "
+                            + boost::lexical_cast<string>(m_globalID));
+                    }
+
+                    for (i = 0; i < m_coordim; ++i)
+                    {
+                        for (j = 0; j < npts; ++j)
+                        {
+                            tmp[j] = (m_curve->m_points[j]->GetPtr())[i];
+                        }
+
+                        // Interpolate m_curve points to GLL points
+                        LibUtilities::Interp2D(
+                            curveKey, curveKey, tmp,
+                            m_xmap->GetBasis(0)->GetPointsKey(),
+                            m_xmap->GetBasis(1)->GetPointsKey(),
+                            tmp2);
+
+                        // Forwards transform to get coefficient space.
+                        m_xmap->FwdTrans(tmp2, m_coeffs[i]);
+                    }
+                }
+
+                // Now fill in edges.
                 Array<OneD, unsigned int> mapArray;
                 Array<OneD, int>          signArray;
 
@@ -629,36 +602,36 @@ namespace Nektar
                 m_state = ePtsFilled;
             }
         }
-        
+
         /**
          *
          */
-        NekDouble QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords, 
+        NekDouble QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
                                       Array<OneD,NekDouble> &Lcoords)
         {
             NekDouble resid = 0.0;
             if(GetMetricInfo()->GetGtype() == eRegular)
-            { 
-                NekDouble coords2 = (m_coordim == 3)? coords[2]: 0.0; 
+            {
+                NekDouble coords2 = (m_coordim == 3)? coords[2]: 0.0;
                 PointGeom dv1, dv2, norm, orth1, orth2;
                 PointGeom xin(m_coordim,0,coords[0],coords[1],coords2);
 
-                // Calculate edge vectors from 0-1 and 0-3 edges. 
+                // Calculate edge vectors from 0-1 and 0-3 edges.
                 dv1.Sub(*m_verts[1],*m_verts[0]);
                 dv2.Sub(*m_verts[3],*m_verts[0]);
 
                 // Obtain normal to plane in which dv1 and dv2 lie
                 norm.Mult(dv1,dv2);
-                
-                // Obtain vector which are normal to dv1 and dv2. 
+
+                // Obtain vector which are normal to dv1 and dv2.
                 orth1.Mult(norm,dv1);
                 orth2.Mult(norm,dv2);
-                
+
                 // Start with vector of desired points minus vertex_0
                 xin -= *m_verts[0];
 
                 // Calculate length using L/|dv1| = (x-v0).n1/(dv1.n1) for coordiante 1
-                // Then rescale to [-1,1]. 
+                // Then rescale to [-1,1].
                 Lcoords[0] = xin.dot(orth2)/dv1.dot(orth2);
                 Lcoords[0] = 2*Lcoords[0]-1;
                 Lcoords[1] = xin.dot(orth1)/dv2.dot(orth1);
@@ -666,8 +639,8 @@ namespace Nektar
             }
             else
             {
-                QuadGeom::v_FillGeom();                       
-                
+                QuadGeom::v_FillGeom();
+
                 // Determine nearest point of coords  to values in m_xmap
                 int npts = m_xmap->GetTotPoints();
                 Array<OneD, NekDouble> ptsx(npts), ptsy(npts);
@@ -675,7 +648,7 @@ namespace Nektar
 
                 m_xmap->BwdTrans(m_coeffs[0], ptsx);
                 m_xmap->BwdTrans(m_coeffs[1], ptsy);
-                
+
                 const Array<OneD, const NekDouble> za = m_xmap->GetPoints(0);
                 const Array<OneD, const NekDouble> zb = m_xmap->GetPoints(1);
 
@@ -684,19 +657,19 @@ namespace Nektar
                 Vmath::Sadd(npts, -coords[1], ptsy,1,tmpy,1);
                 Vmath::Vmul (npts, tmpx,1,tmpx,1,tmpx,1);
                 Vmath::Vvtvp(npts, tmpy,1,tmpy,1,tmpx,1,tmpx,1);
-                          
+
                 int min_i = Vmath::Imin(npts,tmpx,1);
-                
+
                 Lcoords[0] = za[min_i%za.num_elements()];
                 Lcoords[1] = zb[min_i/za.num_elements()];
 
-                // Perform newton iteration to find local coordinates 
+                // Perform newton iteration to find local coordinates
                 NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords,resid);
             }
             return resid;
         }
-            
-            
+
+
         /**
          *
          */
@@ -771,7 +744,7 @@ namespace Nektar
         }
 
 
-        /** 
+        /**
          *
          */
         int QuadGeom::v_WhichEdge(SegGeomSharedPtr edge)
@@ -810,7 +783,7 @@ namespace Nektar
         {
             return kNedges;
         }
- 
+
 
         bool QuadGeom::v_ContainsPoint(
             const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
@@ -837,7 +810,7 @@ namespace Nektar
         {
             ASSERTL1(gloCoord.num_elements() >= 2,
                      "Two dimensional geometry expects at least two coordinates.");
-            
+
             resid = GetLocCoords(gloCoord, stdCoord);
             if (stdCoord[0] >= -(1+tol) && stdCoord[1] >= -(1+tol)
                 && stdCoord[0] <= (1+tol) && stdCoord[1] <= (1+tol))
@@ -845,6 +818,26 @@ namespace Nektar
                 return true;
             }
             return false;
+        }
+
+        void QuadGeom::v_Reset(CurveMap &curvedEdges,
+                               CurveMap &curvedFaces)
+        {
+            Geometry::v_Reset(curvedEdges, curvedFaces);
+            CurveMap::iterator it = curvedFaces.find(m_globalID);
+
+            if (it != curvedFaces.end())
+            {
+                m_curve = it->second;
+            }
+
+            for (int i = 0; i < 4; ++i)
+            {
+                m_edges[i]->Reset(curvedEdges, curvedFaces);
+            }
+
+            SetUpXmap();
+            SetUpCoeffs(m_xmap->GetNcoeffs());
         }
     }; //end of namespace
 }; //end of namespace

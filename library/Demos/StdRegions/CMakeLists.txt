@@ -20,6 +20,10 @@ SET(StdProject_Diff2DSource  StdProject_Diff2D.cpp)
 ADD_NEKTAR_EXECUTABLE(StdProject_Diff2D demos StdProject_Diff2DSource)
 TARGET_LINK_LIBRARIES(StdProject_Diff2D ${LinkLibraries})
 
+SET(StdEquiToCoeff2DSource  StdEquiToCoeff2D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdEquiToCoeff2D demos StdEquiToCoeff2DSource)
+TARGET_LINK_LIBRARIES(StdEquiToCoeff2D ${LinkLibraries})
+
 SET(StdProject3DSource  StdProject3D.cpp)
 ADD_NEKTAR_EXECUTABLE(StdProject3D demos StdProject3DSource)
 TARGET_LINK_LIBRARIES(StdProject3D ${LinkLibraries})

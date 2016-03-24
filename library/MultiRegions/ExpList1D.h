@@ -68,6 +68,11 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList1D(
                 const ExpList1D &In,
                 const bool DeclareCoeffPhysArrays = true);
+            
+            /// Constructor copying only elements defined in eIds.
+            MULTI_REGIONS_EXPORT ExpList1D(  const ExpList1D &In,
+                const std::vector<unsigned int> &eIDs,
+                const bool DeclareCoeffPhysArrays = true);
 
             /// Construct an ExpList1D from a given graph.
             MULTI_REGIONS_EXPORT ExpList1D(
@@ -97,6 +102,7 @@ namespace Nektar
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField2D and ContField2D.
             MULTI_REGIONS_EXPORT ExpList1D(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::CompositeMap &domain,
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const bool DeclareCoeffPhysArrays = true,
@@ -179,7 +185,7 @@ namespace Nektar
             virtual void v_SetUpPhysNormals();
             /// const StdRegions::StdExpansionVector &locexp);
 
-            virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion);
+            virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip);
 
             int m_firstIntEl;
             

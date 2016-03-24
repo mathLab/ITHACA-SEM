@@ -52,60 +52,58 @@ std::string FilterMovingBody::className = SolverUtils::GetFilterFactory().
  */
 FilterMovingBody::FilterMovingBody(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const std::map<std::string, std::string> &pParams)
+        const ParamMap &pParams)
     : Filter(pSession),
       m_session(pSession)
 {
-    if (pParams.find("OutputFile") == pParams.end())
+    ParamMap::const_iterator it;
+
+    // OutputFile
+    it = pParams.find("OutputFile");
+    if (it == pParams.end())
     {
         m_outputFile_fce = pSession->GetSessionName();
         m_outputFile_mot = pSession->GetSessionName();
     }
     else
     {
-        ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
-                 "Missing parameter 'OutputFile'.");
+        ASSERTL0(it->second.length() > 0, "Missing parameter 'OutputFile'.");
 
-        m_outputFile_fce = pParams.find("OutputFile")->second;
-        m_outputFile_mot = pParams.find("OutputFile")->second;
+        m_outputFile_fce = it->second;
+        m_outputFile_mot = it->second;
     }
     if (!(m_outputFile_fce.length() >= 4 &&
           m_outputFile_fce.substr(m_outputFile_fce.length() - 4) == ".fce"))
     {
         m_outputFile_fce += ".fce";
     }
-
     if (!(m_outputFile_mot.length() >= 4 &&
           m_outputFile_mot.substr(m_outputFile_mot.length() - 4) == ".mot"))
     {
         m_outputFile_mot += ".mot";
     }
-    if (pParams.find("OutputFrequency") == pParams.end())
+
+    // OutputFrequency
+    it = pParams.find("OutputFrequency");
+    if (it == pParams.end())
     {
         m_outputFrequency = 1;
     }
     else
     {
-        m_outputFrequency = atoi(
-                        pParams.find("OutputFrequency")->second.c_str());
+        LibUtilities::Equation equ(m_session, it->second);
+        m_outputFrequency = floor(equ.Evaluate());
     }
 
     pSession->MatchSolverInfo("Homogeneous", "1D", m_isHomogeneous1D, false);
-
     ASSERTL0(m_isHomogeneous1D, "Moving Body implemented just for 3D "
                                 "Homogeneous 1D discetisations.");
 
-    //specify the boundary to calculate the forces
-    if (pParams.find("Boundary") == pParams.end())
-    {
-        ASSERTL0(false, "Missing parameter 'Boundary'.");
-    }
-    else
-    {
-        ASSERTL0(!(pParams.find("Boundary")->second.empty()),
-                 "Missing parameter 'Boundary'.");
-        m_BoundaryString = pParams.find("Boundary")->second;
-    }
+    // Boundary (to calculate the forces)
+    it = pParams.find("Boundary");
+    ASSERTL0(it != pParams.end(),     "Missing parameter 'Boundary'.");
+    ASSERTL0(it->second.length() > 0, "Missing parameter 'Boundary'.");
+    m_BoundaryString = it->second;
 }
 
 
@@ -125,7 +123,8 @@ void FilterMovingBody::v_Initialise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
-    m_index = 0;
+    m_index_f = 0;
+    m_index_m = 0;
     m_outputStream =  Array<OneD, std::ofstream>(2);
     // Parse the boundary regions into a list.
     std::string::size_type FirstInd = m_BoundaryString.find_first_of('[') + 1;
@@ -181,19 +180,19 @@ void FilterMovingBody::v_Initialise(
         m_outputStream[0] << "#";
         m_outputStream[0].width(7);
         m_outputStream[0] << "Time";
-        m_outputStream[0].width(25);
+        m_outputStream[0].width(15);
         m_outputStream[0] << "z";
-        m_outputStream[0].width(25);
+        m_outputStream[0].width(15);
         m_outputStream[0] << "Fx (press)";
-        m_outputStream[0].width(25);
+        m_outputStream[0].width(15);
         m_outputStream[0] << "Fx (visc)";
-        m_outputStream[0].width(25);
+        m_outputStream[0].width(15);
         m_outputStream[0] << "Fx (tot)";
-        m_outputStream[0].width(25);
+        m_outputStream[0].width(15);
         m_outputStream[0] << "Fy (press)";
-        m_outputStream[0].width(25);
+        m_outputStream[0].width(15);
         m_outputStream[0] << "Fy (visc)";
-        m_outputStream[0].width(25);
+        m_outputStream[0].width(15);
         m_outputStream[0] << "Fy (tot)";
         m_outputStream[0] << endl;
 
@@ -202,19 +201,19 @@ void FilterMovingBody::v_Initialise(
         m_outputStream[1] << "#";
         m_outputStream[1].width(7);
         m_outputStream[1] << "Time";
-        m_outputStream[1].width(25);
+        m_outputStream[1].width(15);
         m_outputStream[1] << "z";
-        m_outputStream[1].width(25);
+        m_outputStream[1].width(15);
         m_outputStream[1] << "Disp_x";
-        m_outputStream[1].width(25);
+        m_outputStream[1].width(15);
         m_outputStream[1] << "Vel_x";
-        m_outputStream[1].width(25);
+        m_outputStream[1].width(15);
         m_outputStream[1] << "Acel_x";
-        m_outputStream[1].width(25);
+        m_outputStream[1].width(15);
         m_outputStream[1] << "Disp_y";
-        m_outputStream[1].width(25);
+        m_outputStream[1].width(15);
         m_outputStream[1] << "Vel_y";
-        m_outputStream[1].width(25);
+        m_outputStream[1].width(15);
         m_outputStream[1] << "Acel_y";
         m_outputStream[1] << endl;
     }
@@ -516,7 +515,7 @@ void FilterMovingBody::UpdateForce(
         }
 
         // Only output every m_outputFrequency.
-        if ((m_index++) % m_outputFrequency)
+        if ((m_index_f++) % m_outputFrequency)
         {
             return;
         }
@@ -545,21 +544,21 @@ void FilterMovingBody::UpdateForce(
                 m_outputStream[0].width(8);
                 m_outputStream[0] << setprecision(6) << time;
 
-                m_outputStream[0].width(25);
+                m_outputStream[0].width(15);
                 m_outputStream[0] << setprecision(6) << z_coords[i];
 
-                m_outputStream[0].width(25);
+                m_outputStream[0].width(15);
                 m_outputStream[0] << setprecision(8) << Fxp[i];
-                m_outputStream[0].width(25);
+                m_outputStream[0].width(15);
                 m_outputStream[0] << setprecision(8) << Fxv[i];
-                m_outputStream[0].width(25);
+                m_outputStream[0].width(15);
                 m_outputStream[0] << setprecision(8) << Fx[i];
 
-                m_outputStream[0].width(25);
+                m_outputStream[0].width(15);
                 m_outputStream[0] << setprecision(8) << Fyp[i];
-                m_outputStream[0].width(25);
+                m_outputStream[0].width(15);
                 m_outputStream[0] << setprecision(8) << Fyv[i];
-                m_outputStream[0].width(25);
+                m_outputStream[0].width(15);
                 m_outputStream[0] << setprecision(8) << Fy[i];
                 m_outputStream[0] << endl;
             }
@@ -610,7 +609,7 @@ void FilterMovingBody::UpdateForce(
         }
 
         // Only output every m_outputFrequency.
-        if ((m_index) % m_outputFrequency)
+        if ((m_index_f) % m_outputFrequency)
         {
             return;
         }
@@ -634,21 +633,21 @@ void FilterMovingBody::UpdateForce(
             m_outputStream[0].width(8);
             m_outputStream[0] << setprecision(6) << time;
 
-            m_outputStream[0].width(25);
+            m_outputStream[0].width(15);
             m_outputStream[0] << setprecision(6) << z_coords[0];
 
-            m_outputStream[0].width(25);
+            m_outputStream[0].width(15);
             m_outputStream[0] << setprecision(8) << fces[2];
-            m_outputStream[0].width(25);
+            m_outputStream[0].width(15);
             m_outputStream[0] << setprecision(8) << fces[4];
-            m_outputStream[0].width(25);
+            m_outputStream[0].width(15);
             m_outputStream[0] << setprecision(8) << fces[0];
 
-            m_outputStream[0].width(25);
+            m_outputStream[0].width(15);
             m_outputStream[0] << setprecision(8) << fces[3];
-            m_outputStream[0].width(25);
+            m_outputStream[0].width(15);
             m_outputStream[0] << setprecision(8) << fces[5];
-            m_outputStream[0].width(25);
+            m_outputStream[0].width(15);
             m_outputStream[0] << setprecision(8) << fces[1];
             m_outputStream[0] << endl;
 
@@ -659,21 +658,21 @@ void FilterMovingBody::UpdateForce(
                 m_outputStream[0].width(8);
                 m_outputStream[0] << setprecision(6) << time;
 
-                m_outputStream[0].width(25);
+                m_outputStream[0].width(15);
                 m_outputStream[0] << setprecision(6) << z_coords[i];
 
-                m_outputStream[0].width(25);
+                m_outputStream[0].width(15);
                 m_outputStream[0] << setprecision(8) << fces[2];
-                m_outputStream[0].width(25);
+                m_outputStream[0].width(15);
                 m_outputStream[0] << setprecision(8) << fces[4];
-                m_outputStream[0].width(25);
+                m_outputStream[0].width(15);
                 m_outputStream[0] << setprecision(8) << fces[0];
 
-                m_outputStream[0].width(25);
+                m_outputStream[0].width(15);
                 m_outputStream[0] << setprecision(8) << fces[3];
-                m_outputStream[0].width(25);
+                m_outputStream[0].width(15);
                 m_outputStream[0] << setprecision(8) << fces[5];
-                m_outputStream[0].width(25);
+                m_outputStream[0].width(15);
                 m_outputStream[0] << setprecision(8) << fces[1];
                 m_outputStream[0] << endl;
             }
@@ -702,231 +701,47 @@ void FilterMovingBody::UpdateMotion(
         const NekDouble                                         &time)
 {
     // Only output every m_outputFrequency.
-    if ((m_index++) % m_outputFrequency)
+    if ((m_index_m++) % m_outputFrequency)
     {
         return;
     }
 
-    // Get the number of local planes on the process and their IDs
-    // to properly locate the forces in the Fx, Fy etc. vectors.
-    Array<OneD, unsigned int> ZIDs;
-    ZIDs = pFields[0]->GetZIDs();
-    int local_planes = ZIDs.num_elements();
-
-    LibUtilities::CommSharedPtr vColComm
-                            = pFields[0]->GetComm()->GetColumnComm();
-
-    //
+    int npts;
+    // Length of the cable
+    NekDouble Length;
+    
     if(!pSession->DefinesSolverInfo("HomoStrip"))
     {
-        int Num_z_pos = pFields[0]->GetHomogeneousBasis()->GetNumModes();
-        Array<OneD, NekDouble> z_coords(Num_z_pos,0.0);
-        Array<OneD, const NekDouble> pts
-                            = pFields[0]->GetHomogeneousBasis()->GetZ();
-
-        NekDouble LZ;
-        pSession->LoadParameter("LZ", LZ);
-        Vmath::Smul(Num_z_pos,LZ/2.0,pts,1,z_coords,1);
-        Vmath::Sadd(Num_z_pos,LZ/2.0,z_coords,1,z_coords,1);
-
-        //get and output moving body variables
-        int nStrVars = 3;
-        Array<OneD, Array<OneD, NekDouble> > Motion_x(nStrVars);
-        Array<OneD, Array<OneD, NekDouble> > Motion_y(nStrVars);
-
-        for(int i = 0; i < nStrVars; i++)
-        {
-            Motion_x[i] = Array<OneD, NekDouble>(local_planes,0.0);
-            Motion_y[i] = Array<OneD, NekDouble>(local_planes,0.0);
-        }
-
-        for(int plane = 0; plane < local_planes; plane++)
-        {
-            for (int var = 0; var < nStrVars; var++)
-            {
-                int xoffset = var*local_planes+plane;
-                int yoffset = nStrVars*local_planes+xoffset;
-                Motion_x[var][plane] = MotionVars[xoffset];
-                Motion_y[var][plane] = MotionVars[yoffset];
-            }
-        }
-
-        Array <OneD, NekDouble> CableAccelX;
-        Array <OneD, NekDouble> CableVelocX;
-        Array <OneD, NekDouble> CableDisplX;
-        Array <OneD, NekDouble> CableAccelY;
-        Array <OneD, NekDouble> CableVelocY;
-        Array <OneD, NekDouble> CableDisplY;
-
-        int npoints = Motion_x[0].num_elements();
-        CableAccelX = Array <OneD, NekDouble>(npoints);
-        CableVelocX = Array <OneD, NekDouble>(npoints);
-        CableDisplX = Array <OneD, NekDouble>(npoints);
-        CableAccelY = Array <OneD, NekDouble>(npoints);
-        CableVelocY = Array <OneD, NekDouble>(npoints);
-        CableDisplY = Array <OneD, NekDouble>(npoints);
-
-        Vmath::Vcopy(npoints, Motion_x[0], 1, CableDisplX, 1);
-        Vmath::Vcopy(npoints, Motion_x[1], 1, CableVelocX, 1);
-        Vmath::Vcopy(npoints, Motion_x[2], 1, CableAccelX, 1);
-        Vmath::Vcopy(npoints, Motion_y[0], 1, CableDisplY, 1);
-        Vmath::Vcopy(npoints, Motion_y[1], 1, CableVelocY, 1);
-        Vmath::Vcopy(npoints, Motion_y[2], 1, CableAccelY, 1);
-
-        int colrank = vColComm->GetRank();
-        int nproc   = vColComm->GetSize();
-        // Send to root process.
-        if (colrank == 0)
-        {
-            for (int j = 0; j <Motion_x[0].num_elements(); j++)
-            {
-                m_outputStream[1].width(8);
-                m_outputStream[1] << setprecision(6) << time;
-                m_outputStream[1].width(25);
-                m_outputStream[1] << setprecision(6) << z_coords[j];
-                m_outputStream[1].width(25);
-                m_outputStream[1] << setprecision(8) << CableDisplX[j];
-                m_outputStream[1].width(25);
-                m_outputStream[1] << setprecision(8) << CableVelocX[j];
-                m_outputStream[1].width(25);
-                m_outputStream[1] << setprecision(8) << CableAccelX[j];
-                m_outputStream[1].width(25);
-                m_outputStream[1] << setprecision(8) << CableDisplY[j];
-                m_outputStream[1].width(25);
-                m_outputStream[1] << setprecision(8) << CableVelocY[j];
-                m_outputStream[1].width(25);
-                m_outputStream[1] << setprecision(8) << CableAccelY[j];
-                m_outputStream[1] << endl;
-            }
-
-            for (int i = 1; i < nproc; ++i)
-            {
-                vColComm->Recv(i, CableAccelX);
-                vColComm->Recv(i, CableVelocX);
-                vColComm->Recv(i, CableDisplX);
-                vColComm->Recv(i, CableAccelY);
-                vColComm->Recv(i, CableVelocY);
-                vColComm->Recv(i, CableDisplY);
-
-
-                for (int j = 0; j < Motion_x[0].num_elements(); ++j)
-                {
-                    int n = Num_z_pos/nproc * i + j;
-                    m_outputStream[1].width(8);
-                    m_outputStream[1] << setprecision(6) << time;
-                    m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(6) << z_coords[n];
-                    m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(8) << CableDisplX[j];
-                    m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(8) << CableVelocX[j];
-                    m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(8) << CableAccelX[j];
-                    m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(8) << CableDisplY[j];
-                    m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(8) << CableVelocY[j];
-                    m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(8) << CableAccelY[j];
-                    m_outputStream[1] << endl;
-                }
-            }
-        }
-        else
-        {
-            vColComm->Send(0, CableAccelX);
-            vColComm->Send(0, CableVelocX);
-            vColComm->Send(0, CableDisplX);
-            vColComm->Send(0, CableAccelY);
-            vColComm->Send(0, CableVelocY);
-            vColComm->Send(0, CableDisplY);
-        }
+        pSession->LoadParameter("LZ", Length);
+        npts = m_session->GetParameter("HomModesZ");
     }
     else
     {
-        int colrank = vColComm->GetRank();
-        int nstrips;
+        pSession->LoadParameter("LC", Length);
+        npts = m_session->GetParameter("HomStructModesZ");
+    }
 
-        NekDouble DistStrip;
-
-        pSession->LoadParameter("Strip_Z", nstrips);
-        pSession->LoadParameter("DistStrip", DistStrip);
-
-        Array<OneD, NekDouble> z_coords(nstrips);
-        for(int i = 0; i < nstrips; i++)
-        {
-            z_coords[i] = i * DistStrip;
-        }
-
-        //get and output moving body variables
-        int nStrVars = 3;
-        Array<OneD, Array<OneD, NekDouble> > Motion_x(nStrVars);
-        Array<OneD, Array<OneD, NekDouble> > Motion_y(nStrVars);
-
-        for(int i = 0; i < nStrVars; i++)
-        {
-            Motion_x[i] = Array<OneD, NekDouble>(local_planes,0.0);
-            Motion_y[i] = Array<OneD, NekDouble>(local_planes,0.0);
-        }
-
-        for(int plane = 0; plane < local_planes; plane++)
-        {
-            for (int var = 0; var < nStrVars; var++)
-            {
-                int xoffset = plane*nStrVars+var;
-                int yoffset = nStrVars*local_planes+xoffset;
-                Motion_x[var][plane] = MotionVars[xoffset];
-                Motion_y[var][plane] = MotionVars[yoffset];
-            }
-        }
-
-        Array <OneD, NekDouble> CableMotions(6);
-
-        for(int var = 0; var <nStrVars; var++)
-        {
-            CableMotions[var]   = Motion_x[var][0];
-            CableMotions[3+var] = Motion_y[var][0];
-        }
-        // Send to root process.
-        if (colrank == 0)
-        {
-            m_outputStream[1].width(8);
-            m_outputStream[1] << setprecision(6) << time;
-            m_outputStream[1].width(25);
-            m_outputStream[1] << setprecision(6) << z_coords[0];
-            for(int var = 0; var < 2*nStrVars; var++)
-            {
-                m_outputStream[1].width(25);
-                m_outputStream[1] << setprecision(8) << CableMotions[var];
-            }
-            m_outputStream[1] << endl;
-
-            for (int i = 1; i < nstrips; ++i)
-            {
-                vColComm->Recv(i, CableMotions);
-
-                m_outputStream[1].width(8);
-                m_outputStream[1] << setprecision(6) << time;
-                m_outputStream[1].width(25);
-                m_outputStream[1] << setprecision(6) << z_coords[i];
-                for(int var = 0; var < 2*nStrVars; var++)
-                {
-                    m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(8) << CableMotions[var];
-                }
-                m_outputStream[1] << endl;
-            }
-        }
-        else
-        {
-            for(int i = 1; i < nstrips; i++)
-            {
-                if(colrank == i)
-                {
-                    vColComm->Send(0, CableMotions);
-                }
-            }
-        }
+    NekDouble z_coords;        
+    for(int n = 0; n < npts; n++)
+    {
+        z_coords = Length/npts*n;
+        m_outputStream[1].width(8);
+        m_outputStream[1] << setprecision(6) << time;
+        m_outputStream[1].width(15);
+        m_outputStream[1] << setprecision(6) << z_coords;
+        m_outputStream[1].width(15);
+        m_outputStream[1] << setprecision(8) << MotionVars[n];
+        m_outputStream[1].width(15);
+        m_outputStream[1] << setprecision(8) << MotionVars[npts+n];
+        m_outputStream[1].width(15);
+        m_outputStream[1] << setprecision(8) << MotionVars[2*npts+n];
+        m_outputStream[1].width(15);
+        m_outputStream[1] << setprecision(8) << MotionVars[3*npts+n];
+        m_outputStream[1].width(15);
+        m_outputStream[1] << setprecision(8) << MotionVars[4*npts+n];
+        m_outputStream[1].width(15);
+        m_outputStream[1] << setprecision(8) << MotionVars[5*npts+n];
+        m_outputStream[1] << endl;
     }
 }
 

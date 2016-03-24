@@ -42,12 +42,16 @@
 #include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
 #include <SpatialDomains/Conditions.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {        
+        class AssemblyMapDG;
+        
+
         class DisContField3D : public ExpList3D
         {
         public:
@@ -75,9 +79,16 @@ namespace Nektar
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
                 const GlobalLinSysKey &mkey);
             
+
             MULTI_REGIONS_EXPORT void EvaluateHDGPostProcessing(
                 Array<OneD, NekDouble> &outarray);
             
+            MULTI_REGIONS_EXPORT bool GetLeftAdjacentFaces(int cnt)
+            {
+                return m_leftAdjacentFaces[cnt];
+            }
+
+                        
         protected:
             /**
              * @brief An object which contains the discretised boundary
@@ -100,6 +111,9 @@ namespace Nektar
             GlobalLinSysMapShPtr        m_globalBndMat;
             ExpListSharedPtr            m_trace;
             AssemblyMapDGSharedPtr      m_traceMap;
+            /// Map of local trace (the points at the face of the
+            /// element) to the trace space discretisation
+            LocTraceToTraceMapSharedPtr m_locTraceToTraceMap; 
 
             /**
              * @brief A set storing the global IDs of any boundary faces.
@@ -154,6 +168,7 @@ namespace Nektar
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,      NekDouble> &Fwd,
                       Array<OneD,      NekDouble> &Bwd);
+            virtual const vector<bool> &v_GetLeftAdjacentFaces(void) const;
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
@@ -181,6 +196,9 @@ namespace Nektar
             virtual void v_GetBoundaryToElmtMap(
                 Array<OneD, int> &ElmtID,
                 Array<OneD, int> &FaceID);
+            virtual void v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result);
+            virtual void v_Reset();
 
             /*
              * @brief Obtain a copy of the periodic edges and vertices for this

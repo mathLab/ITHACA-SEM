@@ -91,7 +91,6 @@ namespace Nektar
             Array<OneD,NekDouble> tmp(nquad0*nquad1);
 
             // multiply inarray with Jacobian
-
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 Vmath::Vmul(nquad0*nquad1, jac, 1, inarray, 1, tmp, 1);
@@ -259,7 +258,7 @@ namespace Nektar
 
         void QuadExp::v_FwdTrans(
             const Array<OneD, const NekDouble> & inarray,
-                  Array<OneD,NekDouble> &outarray)
+            Array<OneD,NekDouble> &outarray)
         {
             if ((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
             {
@@ -432,20 +431,31 @@ namespace Nektar
 
         void QuadExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD, NekDouble> &outarray)
+            Array<OneD, NekDouble> &outarray,
+                                               bool multiplybyweights)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    order0 = m_base[0]->GetNumModes();
 
-            Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
-            Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
-
-            MultiplyByQuadratureMetric(inarray,tmp);
-            StdQuadExp::IProductWRTBase_SumFacKernel(
-                m_base[0]->GetBdata(),
-                m_base[1]->GetBdata(),
-                tmp,outarray,wsp,true,true);
+            if(multiplybyweights)
+            {
+                Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
+                Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
+                
+                MultiplyByQuadratureMetric(inarray,tmp);
+                StdQuadExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                         m_base[1]->GetBdata(),
+                                                         tmp,outarray,wsp,true,true);
+            }
+            else
+            {
+                Array<OneD,NekDouble> wsp(nquad1*order0);
+                
+                StdQuadExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                         m_base[1]->GetBdata(),
+                                                         inarray,outarray,wsp,true,true);
+            }
         }
 
 
@@ -591,6 +601,19 @@ namespace Nektar
             IProductWRTBase(Fn,outarray);
         }
 
+        void QuadExp::v_NormVectorIProductWRTBase(
+            const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                  Array<OneD,       NekDouble>               &outarray)
+        {
+            NormVectorIProductWRTBase(Fvec[0], Fvec[1], Fvec[2], outarray);
+        }
+
+        StdRegions::StdExpansionSharedPtr QuadExp::v_GetStdExp(void) const
+        {
+            return MemoryManager<StdRegions::StdQuadExp>
+                ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                    m_base[1]->GetBasisKey());
+        }
 
         void QuadExp::v_GetCoords(
             Array<OneD, NekDouble> &coords_0,
@@ -659,60 +682,60 @@ namespace Nektar
             StdRegions::Orientation edgedir = GetEorient(edge);
             switch(edge)
             {
-                case 0:
-                    if (edgedir == StdRegions::eForwards)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outarray[0]),1);
-                    }
-                    else
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0-1),-1,
-                                     &(outarray[0]),1);
-                    }
-                    break;
-                case 1:
-                    if (edgedir == StdRegions::eForwards)
-                    {
-                        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,
-                                     &(outarray[0]),1);
-                    }
-                    else
-                    {
-                        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0*nquad1-1),
-                                     -nquad0, &(outarray[0]),1);
-                    }
-                    break;
-                case 2:
-                    if (edgedir == StdRegions::eForwards)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1-1),-1,
-                                     &(outarray[0]),1);
-                    }
-                    else
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*(nquad1-1),1,
-                                     &(outarray[0]),1);
-                    }
-                    break;
-                case 3:
-                    if (edgedir == StdRegions::eForwards)
-                    {
-                        Vmath::Vcopy(nquad1,&(inarray[0]) + nquad0*(nquad1-1),
-                                     -nquad0,&(outarray[0]),1);
-                    }
-                    else
-                    {
-                        Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,
-                                     &(outarray[0]),1);
-                    }
+            case 0:
+                if (edgedir == StdRegions::eForwards)
+                {
+                    Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outarray[0]),1);
+                }
+                else
+                {
+                    Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0-1),-1,
+                                 &(outarray[0]),1);
+                }
+                break;
+            case 1:
+                if (edgedir == StdRegions::eForwards)
+                {
+                    Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,
+                                 &(outarray[0]),1);
+                }
+                else
+                {
+                    Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0*nquad1-1),
+                                 -nquad0, &(outarray[0]),1);
+                }
+                break;
+            case 2:
+                if (edgedir == StdRegions::eForwards)
+                {
+                    Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1-1),-1,
+                                 &(outarray[0]),1);
+                }
+                else
+                {
+                    Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*(nquad1-1),1,
+                                 &(outarray[0]),1);
+                }
+                break;
+            case 3:
+                if (edgedir == StdRegions::eForwards)
+                {
+                    Vmath::Vcopy(nquad1,&(inarray[0]) + nquad0*(nquad1-1),
+                                 -nquad0,&(outarray[0]),1);
+                }
+                else
+                {
+                    Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,
+                                 &(outarray[0]),1);
+                }
                 break;
             default:
                 ASSERTL0(false,"edge value (< 3) is out of range");
                 break;
             }
         }
-
-
+        
+        
         void QuadExp::v_GetTracePhysVals(
              const int edge,
              const StdRegions::StdExpansionSharedPtr &EdgeExp,
@@ -776,15 +799,15 @@ namespace Nektar
                 outtmp = outarray;
 				
                 LibUtilities::Interp1D(
-                    m_base[edge%2]->GetPointsKey(),outtmp,
-                    EdgeExp->GetBasis(0)->GetPointsKey(),outarray);
+                    m_base[edge%2]->GetPointsKey(), outtmp,
+                    EdgeExp->GetBasis(0)->GetPointsKey(), outarray);
             }
             
             //Reverse data if necessary
             if(GetCartesianEorient(edge) == StdRegions::eBackwards)
             {
-                Vmath::Reverse(EdgeExp->GetNumPoints(0),&outarray[0],1,
-                               &outarray[0],1);
+                Vmath::Reverse(EdgeExp->GetNumPoints(0),&outarray[0], 1,
+                               &outarray[0], 1);
             }
         }
         
@@ -848,11 +871,60 @@ namespace Nektar
                      break;
                  }
                  default:
-                     ASSERTL0(false,"edge value (< 3) is out of range");
+                     ASSERTL0(false, "edge value (< 3) is out of range");
                      break;
              }
         }
+        
+        
+        void QuadExp::v_GetEdgePhysMap(
+            const int                edge,
+            Array<OneD, int>        &outarray)
+        {
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            
+            // Get points in Cartesian orientation
+            switch (edge)
+            {
+                case 0:
+                    outarray = Array<OneD, int>(nquad0);
+                    for (int i = 0; i < nquad0; ++i)
+                    {
+                        outarray[i] = i;
+                    }
+                    break;
+                case 1:
+                    outarray = Array<OneD, int>(nquad1);
+                    for (int i = 0; i < nquad1; ++i)
+                    {
+                        outarray[i] = (nquad0-1) + i*nquad1;
+                    }
+                    break;
+                case 2:
+                    outarray = Array<OneD, int>(nquad0);
+                    for (int i = 0; i < nquad0; ++i)
+                    {
+                        outarray[i] = i + nquad0*(nquad1-1);
+                    }
+                    break;
+                case 3:
+                    outarray = Array<OneD, int>(nquad1);
+                    for (int i = 0; i < nquad1; ++i)
+                    {
+                        outarray[i] = i + i*(nquad0-1);
+                    }
+                    break;
+                default:
+                    ASSERTL0(false, "edge value (< 3) is out of range");
+                    break;
+            }
+            
+        }
     
+        
+        
+        
         void QuadExp::v_GetEdgeQFactors(
                 const int edge,
                 Array<OneD, NekDouble> &outarray)
@@ -2141,7 +2213,7 @@ namespace Nektar
                           Array<OneD,       NekDouble> &outarray,
                           Array<OneD,       NekDouble> &wsp)
         {
-            if (m_metrics.count(MetricLaplacian00) == 0)
+            if (m_metrics.count(eMetricLaplacian00) == 0)
             {
                 ComputeLaplacianMetric();
             }
@@ -2160,9 +2232,9 @@ namespace Nektar
             const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
             const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
             const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-            const Array<OneD, const NekDouble>& metric00 = m_metrics[MetricLaplacian00];
-            const Array<OneD, const NekDouble>& metric01 = m_metrics[MetricLaplacian01];
-            const Array<OneD, const NekDouble>& metric11 = m_metrics[MetricLaplacian11];
+            const Array<OneD, const NekDouble>& metric00 = m_metrics[eMetricLaplacian00];
+            const Array<OneD, const NekDouble>& metric01 = m_metrics[eMetricLaplacian01];
+            const Array<OneD, const NekDouble>& metric11 = m_metrics[eMetricLaplacian11];
 
             // Allocate temporary storage
             Array<OneD,NekDouble> wsp0(wsp);
@@ -2190,7 +2262,7 @@ namespace Nektar
 
         void QuadExp::v_ComputeLaplacianMetric()
         {
-            if (m_metrics.count(MetricQuadrature) == 0)
+            if (m_metrics.count(eMetricQuadrature) == 0)
             {
                 ComputeQuadratureMetric();
             }
@@ -2198,9 +2270,9 @@ namespace Nektar
             const SpatialDomains::GeomType type = m_metricinfo->GetGtype();
             const unsigned int nqtot = GetTotPoints();
             const unsigned int dim = 2;
-            const MetricType m[3][3] = { {MetricLaplacian00, MetricLaplacian01, MetricLaplacian02},
-                                       {MetricLaplacian01, MetricLaplacian11, MetricLaplacian12},
-                                       {MetricLaplacian02, MetricLaplacian12, MetricLaplacian22}
+            const MetricType m[3][3] = { {eMetricLaplacian00, eMetricLaplacian01, eMetricLaplacian02},
+                                       {eMetricLaplacian01, eMetricLaplacian11, eMetricLaplacian12},
+                                       {eMetricLaplacian02, eMetricLaplacian12, eMetricLaplacian22}
             };
 
             const Array<TwoD, const NekDouble> gmat =
@@ -2226,6 +2298,35 @@ namespace Nektar
                 }
             }
         }
+        
+        void QuadExp::v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdRegions::StdMatrixKey &mkey)
+        {
+            int nq = GetTotPoints();
+            
+            // Calculate sqrt of the Jacobian
+            Array<OneD, const NekDouble> jac = 
+                                    m_metricinfo->GetJac(GetPointsKeys());
+            Array<OneD, NekDouble> sqrt_jac(nq);
+            if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vsqrt(nq,jac,1,sqrt_jac,1);
+            }
+            else
+            {
+                Vmath::Fill(nq,sqrt(jac[0]),sqrt_jac,1);
+            }
+            
+            // Multiply array by sqrt(Jac)
+            Vmath::Vmul(nq,sqrt_jac,1,array,1,array,1);
+            
+            // Apply std region filter
+            StdQuadExp::v_SVVLaplacianFilter( array, mkey);
+            
+            // Divide by sqrt(Jac)
+            Vmath::Vdiv(nq,array,1,sqrt_jac,1,array,1);
+        }        
 
     }//end of namespace
 }//end of namespace

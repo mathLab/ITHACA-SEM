@@ -292,11 +292,6 @@
                 <P VAR="p" VALUE="[1]" />
             </REGION>
         </BOUNDARYCONDITIONS>
-        <FUNCTION NAME="Forcing">
-            <E VAR="u" VALUE="0" />
-            <E VAR="v" VALUE="0" />
-            <E VAR="p" VALUE="0" />
-        </FUNCTION>
 
         <FUNCTION NAME="InitialConditions">
             <E VAR="u" VALUE="1" />

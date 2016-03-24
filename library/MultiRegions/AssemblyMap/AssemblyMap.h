@@ -142,9 +142,9 @@ namespace Nektar
             MULTI_REGIONS_EXPORT bool GetSignChange();
 
             /// Retrieve the sign change of a given local boundary mode.
-            NekDouble GetLocalToGlobalBndSign(const int i) const;
+            MULTI_REGIONS_EXPORT NekDouble GetLocalToGlobalBndSign(const int i) const;
             /// Retrieve the sign change for all local boundary modes.
-            Array<OneD, const NekDouble> GetLocalToGlobalBndSign() const;
+            MULTI_REGIONS_EXPORT Array<OneD, const NekDouble> GetLocalToGlobalBndSign() const;
             /// Retrieves the global index corresponding to a boundary expansion
             /// mode.
             MULTI_REGIONS_EXPORT int GetBndCondCoeffsToGlobalCoeffsMap(const int i);
@@ -290,6 +290,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT GlobalSysSolnType GetGlobalSysSolnType() const;
             MULTI_REGIONS_EXPORT PreconditionerType GetPreconType() const;
             MULTI_REGIONS_EXPORT NekDouble GetIterativeTolerance() const;
+            MULTI_REGIONS_EXPORT int GetMaxIterations() const;
             MULTI_REGIONS_EXPORT int GetSuccessiveRHS() const;
 
             MULTI_REGIONS_EXPORT int GetLowestStaticCondLevel() const
@@ -365,6 +366,9 @@ namespace Nektar
 
             /// Type type of preconditioner to use in iterative solver.
             PreconditionerType m_preconType;
+
+            /// Maximum iterations for iterative solver
+            int m_maxIterations;
 
             /// Tolerance for iterative solver
             NekDouble  m_iterativeTolerance;

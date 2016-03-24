@@ -25,11 +25,14 @@ openany, % A chapter may start on either a recto or verso page.
 % \usepackage{kpfonts} %Font
 
 \usepackage{amsmath,amssymb,mathtools} % Math
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
 
-% \usepackage{tikz} % Figures
 \usepackage{graphicx} % Include figures
 \usepackage{makeidx}
 \usepackage{import}
+
 
 %%% PAGE LAYOUT 
 %%%-----------------------------------------------------------------------------
@@ -47,8 +50,8 @@ openany, % A chapter may start on either a recto or verso page.
 %%% SECTIONAL DIVISIONS
 %%%------------------------------------------------------------------------------
 
-\maxsecnumdepth{subsection} % Subsections (and higher) are numbered
-\setsecnumdepth{subsection}
+\maxsecnumdepth{paragraph} % Subsections (and higher) are numbered
+\setsecnumdepth{paragraph}
 
 \makeatletter %
 \makechapterstyle{standard}{
@@ -91,6 +94,7 @@ openany, % A chapter may start on either a recto or verso page.
 
 \changecaptionwidth          % Change the width of the caption
 \captionwidth{1\textwidth} %
+\usepackage{tabularx}
 
 %%% ABSTRACT
 %%%------------------------------------------------------------------------------
@@ -143,6 +147,9 @@ openany, % A chapter may start on either a recto or verso page.
 %%% NEW COMMANDS
 %%%-----------------------------------------------------------------------------
 
+% Nektar++ version
+\usepackage{xspace}
+\newcommand{\nekver} {\input{VERSION}\unskip}
 
 \newcommand{\p}{\partial} %Partial
 % Or what ever you want
@@ -153,7 +160,6 @@ openany, % A chapter may start on either a recto or verso page.
 \usepackage{xcolor}
 \usepackage{listings} % Display code / shell commands
 \usepackage{lstautogobble}
-\usepackage{xspace}
 %\newcommand{\shellcommand}[1]{\begin{lstlisting} \#1 \end{lstlisting}
 \lstdefinestyle{BashInputStyle}{
   language=bash,
@@ -207,20 +213,36 @@ openany, % A chapter may start on either a recto or verso page.
   columns=fullflexible,
   backgroundcolor=\color{black!05},
   linewidth=0.9\linewidth,
-  xleftmargin=0.1\linewidth
+  xleftmargin=0.1\linewidth,
+  showspaces=false,
+  showstringspaces=false
 }
 
 \usepackage{tikz}
+\ifdefined\HCode
+\newcommand{\inltt}[1]{\texttt{#1}}
+\newcommand{\inlsh}[1]{\texttt{#1}}
+\else
 \newcommand{\inltt}[1]{\tikz[anchor=base,baseline]\node[inner sep=3pt,
 rounded corners,outer sep=0,draw=black!30,fill=black!05]{\small\texttt{#1}};}
 \newcommand{\inlsh}[1]{\tikz[anchor=base,baseline]\node[inner sep=2pt,
 outer sep=0,fill=black!05]{\texttt{#1}};}
+\fi
 \newcommand{\nekpp}{{\em Nektar++}\xspace}
+
 
 % Highlight box
 \usepackage{environ}
 \usepackage[tikz]{bclogo}
 \usetikzlibrary{calc}
+
+% Only use fancy boxes for PDF
+\ifdefined\HCode
+\NewEnviron{notebox}{\textbf{Note:} \BODY}
+\NewEnviron{warningbox}{\textbf{Warning:} \BODY}
+\NewEnviron{tipbox}{\textbf{Tip:} \BODY}
+\NewEnviron{custombox}[3]{\textbf{#1} \BODY}
+\else
 \NewEnviron{notebox}
   {\par\medskip\noindent
   \begin{tikzpicture}
@@ -281,6 +303,7 @@ outer sep=0,fill=black!05]{\texttt{#1}};}
     };
    \end{tikzpicture}\par\medskip%
 }
+\fi
 
 %%% TABLE OF CONTENTS AND INDEX
 %%%-----------------------------------------------------------------------------
@@ -294,13 +317,13 @@ outer sep=0,fill=black!05]{\texttt{#1}};}
 
 %%% INTERNAL HYPERLINKS
 %%%-----------------------------------------------------------------------------
-\usepackage[linktoc=all]{hyperref}   % Internal hyperlinks
+\usepackage[linktoc=all,hyperfootnotes=false]{hyperref}   % Internal hyperlinks
 \hypersetup{
 colorlinks,
 citecolor=darkblue,
 filecolor=darkblue,
 linkcolor=darkblue,
-urlcolor=darkblue
+urlcolor=darkblue,
 pdfborder={0 0 0},      % No borders around internal hyperlinks
 pdfauthor={I am the Author} % author
 }
@@ -324,10 +347,11 @@ pdfauthor={I am the Author} % author
       \hspace*{0.05\textwidth}% 
       \parbox[b]{0.85\textwidth}{%
         \vbox{%
-          \vspace{\drop}
+          {\includegraphics[width=0.2\textwidth]{icon-blue.png}\par}
+          \vskip1.00\baselineskip
           {\Huge\bfseries\raggedright\@title\par}
           \vskip2.37\baselineskip
-          {\huge\bfseries Version \input{../../VERSION}\par}
+          {\huge\bfseries Version \nekver\par}
           \vskip4\baselineskip
           {\huge\bfseries \textcolor{darkblue}{Developer Guide}\par}
           \vskip1.0\baselineskip
@@ -346,7 +370,7 @@ pdfauthor={I am the Author} % author
 %%% Where all the important stuff is included!
 %%%-------------------------------------------------------------------------------
 
-\author{Department of Aeronautics, Imperial College London, UK\\
+\author{Department of Aeronautics, Imperial College London, UK\newline
 Scientific Computing and Imaging Institute, University of Utah, USA}
 \title{Nektar++: Spectral/hp Element Framework}
 \date{\today}
@@ -357,7 +381,13 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 
 % Render pretty title page if not building HTML
 \ifdefined\HCode
+\begin{center}
+    \includegraphics[width=0.1\textwidth]{img/icon-blue.png}
+\end{center}
 \maketitle
+\begin{center}
+    \huge{Developers Guide - Version \nekver}
+\end{center}
 \else
 \titlepage
 \fi
@@ -371,7 +401,45 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 \clearpage
 
 \chapter{Introduction}
-Welcome to the developer's guide for Nektar++\cite{nektar-website}.
+Nektar++ \cite{CaMoCoBoRo15} is a tensor product based finite element package
+designed to allow one to construct efficient classical low polynomial order
+$h$-type solvers (where $h$ is the size of the finite element) as well as higher
+$p$-order piecewise polynomial order solvers.  The framework currently has the
+following capabilities:
+
+\begin{itemize}
+\item Representation of one, two and three-dimensional fields as a collection of
+ piecewise continuous or discontinuous polynomial domains.
+\item Segment, plane and volume domains are permissible, as well as domains
+ representing curves and surfaces (dimensionally-embedded domains).
+\item Hybrid shaped elements, i.e triangles and quadrilaterals or tetrahedra,
+prisms and hexahedra.
+\item Both hierarchical and nodal expansion bases.
+\item Continuous or discontinuous Galerkin operators.
+\item Cross platform support for Linux, Mac OS X and Windows.
+\end{itemize}
+
+The framework comes with a number of solvers and also allows one to construct a
+variety of new solvers.
+
+Our current goals are to develop:
+\begin{itemize}
+\item Automatic auto-tuning of optimal operator implementations based upon not
+only $h$ and $p$ but also hardware considerations and mesh connectivity.
+\item Temporal and spatial adaption.
+\item Features enabling evaluation of high-order meshing techniques.
+\end{itemize}
+
+This document provides implementation details for the design of the libraries,
+Nektar++-specific data structures and algorithms and other development
+information.
+
+\begin{warningbox}
+This document is still under development and may be incomplete in parts.
+\end{warningbox}
+
+For further information and to download the software, visit the Nektar++ website
+at \url{http://www.nektar.info}.
 
 \mainmatter
 
@@ -392,7 +460,7 @@ Welcome to the developer's guide for Nektar++\cite{nektar-website}.
 %%% -------------------------------------------------------------
 
 \bibliographystyle{plain}
-\bibliography{developer-guide}
+\bibliography{../refs}
 
 \printindex
 

@@ -39,6 +39,7 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
+#include <LibUtilities/BasicUtils/MeshEntities.hpp>
 
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>
@@ -63,6 +64,7 @@ namespace Nektar
             eModified,
             eModifiedQuadPlus1,
             eModifiedQuadPlus2,
+            eModifiedGLLRadau10,
             eOrthogonal,
             eGLL_Lagrange,
             eGLL_Lagrange_SEM,
@@ -87,6 +89,7 @@ namespace Nektar
             "MODIFIED",
             "MODIFIEDQUADPLUS1",
             "MODIFIEDQUADPLUS2",
+            "MODIFIEDGLLRADAU10",
             "ORTHOGONAL",
             "GLL_LAGRANGE",
             "GLL_LAGRANGE_SEM",
@@ -241,6 +244,12 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void ReadCurves(
                         std::string &infilename);
 
+                SPATIAL_DOMAINS_EXPORT void WriteGeometry(
+                        std::string &outfilename);
+
+                SPATIAL_DOMAINS_EXPORT void WriteGeometry(
+                        TiXmlDocument &doc);
+
                 /* ---- Helper functions ---- */
                 /// Dimension of the mesh (can be a 1D curve in 3D space).
                 inline int GetMeshDimension() const;
@@ -275,6 +284,7 @@ namespace Nektar
                         CompositeMap &compositeVector) const;
 
                 inline const CompositeMap &GetComposites() const;
+                inline const map<int,string> &GetCompositesLabels() const;
 
                 inline const std::vector<CompositeMap> &GetDomain(void) const;
 
@@ -306,7 +316,15 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void SetExpansionsToEvenlySpacedPoints(
                                                         int npoints = 0);
 
-                /// This function sets the expansion #exp in map with entry #variable
+                /// Reset expansion to have specified polynomial order \a nmodes
+                SPATIAL_DOMAINS_EXPORT void SetExpansionsToPolyOrder(int nmodes);
+
+                /// Reset expansion to have specified point order \a
+                /// npts
+                SPATIAL_DOMAINS_EXPORT void SetExpansionsToPointOrder(int npts);
+                /// This function sets the expansion #exp in map with
+                /// entry #variable
+
                 inline void SetExpansions(
                         const std::string variable,
                         ExpansionMapShPtr &exp);
@@ -368,10 +386,13 @@ namespace Nektar
                     QuadGeomSharedPtr qfaces[PrismGeom::kNqfaces]);
                 SPATIAL_DOMAINS_EXPORT HexGeomSharedPtr AddHexahedron(QuadGeomSharedPtr qfaces[HexGeom::kNqfaces]);
 
-                SPATIAL_DOMAINS_EXPORT const CurveVector& GetCurvedEdges() const { return m_curvedEdges; }
+                SPATIAL_DOMAINS_EXPORT const PointGeomMap& GetVertSet() const { return m_vertSet; }
 
-                SPATIAL_DOMAINS_EXPORT const CurveVector& GetCurvedFaces() const { return m_curvedFaces; }
+                SPATIAL_DOMAINS_EXPORT CurveMap& GetCurvedEdges() { return m_curvedEdges; }
+                SPATIAL_DOMAINS_EXPORT CurveMap& GetCurvedFaces() { return m_curvedFaces; }
+
                 // void AddExpansion(ExpansionShPtr expansion) { m_expansions[expansion->m_geomShPtr->GetGlobalID()] = expansion; }
+                SPATIAL_DOMAINS_EXPORT const PointGeomMap& GetAllPointGeoms() const { return m_vertSet; }
                 SPATIAL_DOMAINS_EXPORT const SegGeomMap& GetAllSegGeoms() const { return m_segGeoms; }
                 SPATIAL_DOMAINS_EXPORT const TriGeomMap& GetAllTriGeoms() const { return m_triGeoms; }
                 SPATIAL_DOMAINS_EXPORT const QuadGeomMap& GetAllQuadGeoms() const { return m_quadGeoms; }
@@ -389,8 +410,8 @@ namespace Nektar
                 PointGeomMap                            m_vertSet;
                 InterfaceCompList                       m_iComps;
 
-                CurveVector                             m_curvedEdges;
-                CurveVector                             m_curvedFaces;
+                CurveMap                                m_curvedEdges;
+                CurveMap                                m_curvedFaces;
 
                 SegGeomMap                              m_segGeoms;
 
@@ -407,6 +428,7 @@ namespace Nektar
                 bool                                    m_meshPartitioned;
 
                 CompositeMap                            m_meshComposites;
+                map<int,string>                         m_compositesLabels;
                 std::vector<CompositeMap>               m_domain;
                 DomainRangeShPtr                        m_domainRange;
 
@@ -456,6 +478,16 @@ namespace Nektar
         inline const CompositeMap &MeshGraph::GetComposites() const
         {
             return m_meshComposites;
+        }
+
+
+        /**
+         * \brief Return a map of integers and strings containing the
+         * labels of each composite
+         */
+        inline const map<int,string>  &MeshGraph::GetCompositesLabels() const
+        {
+            return m_compositesLabels;
         }
 
 
@@ -567,6 +599,33 @@ namespace Nektar
          *
          */
         template<>
+        inline const std::map<int, boost::shared_ptr<SegGeom> >& MeshGraph::GetAllElementsOfType() const
+        {
+            return GetAllSegGeoms();
+        }
+
+        /**
+         *
+         */
+        template<>
+        inline const std::map<int, boost::shared_ptr<TriGeom> >& MeshGraph::GetAllElementsOfType() const
+        {
+            return GetAllTriGeoms();
+        }
+
+        /**
+         *
+         */
+        template<>
+        inline const std::map<int, boost::shared_ptr<QuadGeom> >& MeshGraph::GetAllElementsOfType() const
+        {
+            return GetAllQuadGeoms();
+        }
+
+        /**
+         *
+         */
+        template<>
         inline const std::map<int, boost::shared_ptr<HexGeom> >& MeshGraph::GetAllElementsOfType() const
         {
             return GetAllHexGeoms();
@@ -605,4 +664,3 @@ namespace Nektar
 };
 
 #endif
-

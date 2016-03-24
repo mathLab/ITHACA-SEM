@@ -253,6 +253,7 @@
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
             <I PROPERTY="Driver" VALUE="Arpack" />
             <I PROPERTY="ArpackProblemType" VALUE="LargestImag" />
+            <I PROPERTY="InitialVector" VALUE="Random" />
         </SOLVERINFO>
 
         <PARAMETERS>
@@ -262,8 +263,8 @@
             <P> IO_InfoSteps  = 20    </P>
             <P> Re            = 7500     </P>
             <P> Kinvis        = 1.0/Re     </P>
-            <P> kdim          = 16       </P>
-            <P> nev           =2  </P>
+            <P> kdim          = 64       </P>
+            <P> nev           = 4  </P>
         </PARAMETERS>
 
         <VARIABLES>
@@ -291,11 +292,7 @@
                 <P VAR="v" VALUE="[1]" />
             </REGION>
         </BOUNDARYCONDITIONS>
-        <FUNCTION NAME="BodyForce">
-            <E VAR="u" VALUE="cos(y)" />
-            <E VAR="v" VALUE="sin(y)" />
-        </FUNCTION>
-        
+
          <FUNCTION NAME="InitialConditions">
          <F VAR="u,v" FILE="ChanStability_Coupled.rst" />
         </FUNCTION>
@@ -310,5 +307,11 @@
         </FUNCTION>
 
     </CONDITIONS>
+
+    <FORCING>
+        <FORCE TYPE="StabilityCoupledLNS">
+        </FORCE>
+    </FORCING>
+
 
 </NEKTAR>

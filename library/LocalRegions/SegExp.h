@@ -124,6 +124,10 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &Fy,
                           Array<OneD, NekDouble> &outarray);
 
+            LOCAL_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(
+                    const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                          Array<OneD, NekDouble> &outarray);
+
             //-----------------------------
             // Evaluation functions
             //-----------------------------
@@ -148,10 +152,20 @@ namespace Nektar
                     const int vertex,
                     const Array<OneD, const NekDouble> &inarray,
                           NekDouble &outarray);
+            
+            LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysVals(
+                        const int edge,
+                        const StdRegions::StdExpansionSharedPtr &EdgeExp,
+                        const Array<OneD, const NekDouble> &inarray,
+                        Array<OneD,       NekDouble> &outarray,
+                        StdRegions::Orientation  orient);
 
             //-----------------------------
             // Helper functions
             //-----------------------------
+            LOCAL_REGIONS_EXPORT virtual
+                StdRegions::StdExpansionSharedPtr v_GetStdExp(void) const;
+
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
 
             LOCAL_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(

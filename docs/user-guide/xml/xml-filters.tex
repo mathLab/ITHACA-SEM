@@ -19,7 +19,9 @@ Here is an example \inltt{FILTER}:
 A filter has a name -- in this case, \inltt{FilterName} -- together with
 parameters which are set to user-defined values. Each filter expects different
 parameter inputs, although where functionality is similar, the same parameter
-names are shared between filter types for consistency.
+names are shared between filter types for consistency. Numerical filter
+parameters may be expressions and so may include session parameters defined in
+the \inltt{PARAMETERS} section.
 
 In the following we document the filters implemented. Note that some filters are
 solver-specific and will therefore only work for a given subset of the available
@@ -67,6 +69,72 @@ As an example, consider:
 This will create a file named \inltt{MyAverageField.fld} averaging the
 instantaneous fields every 10 time steps. The averaged field is however only
 output every 100 time steps.
+
+\subsection{Moving average of fields}
+
+This filter computes the exponential moving average (in time) of
+fields for each variable defined in the session file. The moving average 
+is defined as:
+\[
+\bar{u}_n = \alpha u_n + (1 - \alpha)\bar{u}_{n-1}
+\]
+with $0 < \alpha < 1$ and $\bar{u}_1 = u_1$.
+
+The same parameters of the time-average filter are supported, with the output file
+in the form \inltt{session\_*\_movAvg.fld}. In addition,
+either $\alpha$ or the time-constant $\tau$ must be defined. They are related by:
+\[
+\alpha = \frac{t_s}{\tau + t_s}
+\]
+where $t_s$ is the time interval between consecutive samples.
+
+As an example, consider:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="MovingAverage">
+      <PARAM NAME="OutputFile">MyMovingAverage</PARAM>
+      <PARAM NAME="OutputFrequency">100</PARAM>
+      <PARAM NAME="SampleFrequency"> 10 </PARAM>
+      <PARAM NAME="tau"> 0.1 </PARAM>
+  </FILTER>
+\end{lstlisting}
+
+This will create a file named \inltt{MyMovingAverage\_movAvg.fld} with a moving average
+sampled every 10 time steps. The averaged field is however only
+output every 100 time steps.
+
+\subsection{Reynolds stresses}
+
+\begin{notebox}
+  This filter is only supported for the incompressible Navier-Stokes solver.
+\end{notebox}
+
+This filter is an extended version of the time-average filter. It outputs
+not only the time-average of the fields, but also the Reynolds stresses.
+The same parameters supported in the time-average case can be used,
+for example:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="ReynoldsStresses">
+      <PARAM NAME="OutputFile">MyAverageField</PARAM>
+      <PARAM NAME="OutputFrequency">100</PARAM>
+      <PARAM NAME="SampleFrequency"> 10 </PARAM>
+  </FILTER>
+\end{lstlisting}
+
+By default, this filter uses a simple average. Optionally, an exponential
+time average can be used, in which case the output contain the moving
+averages and the Reynolds stresses calculated based on them. For example:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="ReynoldsStresses">
+      <PARAM NAME="OutputFile">MyAverageField</PARAM>
+      <PARAM NAME="MovingAverage">true</PARAM>
+      <PARAM NAME="OutputFrequency">100</PARAM>
+      <PARAM NAME="SampleFrequency"> 10 </PARAM>
+      <PARAM NAME="alpha"> 0.01 </PARAM>
+  </FILTER>
+\end{lstlisting}
 
 \subsection{Checkpoint fields}
  
@@ -202,6 +270,42 @@ which produces a field file \inlsh{threshold\_max.fld}.
 
 Performs the same function as the \inltt{ThresholdMax} filter but records the
 time at which the threshold variable drops below a prescribed value.
+
+\subsection{One-dimensional energy}
+
+This filter is designed to output the energy spectrum of one-dimensional
+elements. It transforms the solution field at each timestep into a orthogonal
+basis defined by the functions
+\[
+\psi_p(\xi) = L_p(\xi)
+\]
+where $L_p$ is the $p$-th Legendre polynomial. This can be used to show the
+presence of, for example, oscillations in the underlying field due to numerical
+instability. The resulting output is written into a file called
+\inltt{session.eny} by default. The following parameters are supported:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} &
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \inltt{session} &
+    Prefix of the output filename to which the energy spectrum is written.\\
+    \inltt{OutputFrequency} & \xmark   & 1 &
+    Number of timesteps after which output is written.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+An example syntax is given below:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="Energy1D">
+      <PARAM NAME="OutputFile">EnergyFile</PARAM>
+      <PARAM NAME="OutputFrequency">10</PARAM>
+  </FILTER>
+\end{lstlisting}
 
 \subsection{Modal energy}
 

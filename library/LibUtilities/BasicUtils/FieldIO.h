@@ -42,16 +42,8 @@
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/Points.h>
-#include <tinyxml.h>
-
-// These are required for the Write(...) and Import(...) functions.
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
-#include <boost/iostreams/copy.hpp>
-#include <boost/iostreams/filter/zlib.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
 #include <boost/assign/list_of.hpp>
+#include <tinyxml.h>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
@@ -100,12 +92,13 @@ namespace Nektar
                         const std::vector<unsigned int> &elementIDs, // vector[2]
                         const std::vector<LibUtilities::BasisType> &basis,
                         bool uniOrder,
-                        // UniOrder = vector[dimension] - MixOrder
-                        //          = vector[element*dimension]
                         const std::vector<unsigned int> &numModes,
                         const std::vector<std::string> &fields, int NumHomoDir =
                                 0, const std::vector<NekDouble> &HomoLengths =
                                 NullNekDoubleVector,
+                        bool homoStrips = false,
+                        const std::vector<unsigned int> &HomoSIDs =
+                                NullUnsignedIntVector,
                         const std::vector<unsigned int> &HomoZIDs =
                                 NullUnsignedIntVector,
                         const std::vector<unsigned int> &HomoYIDs =
@@ -117,7 +110,8 @@ namespace Nektar
                         bool numPointsDef = false) :
                         m_shapeType(shapeType), m_elementIDs(elementIDs), m_basis(
                                 basis), m_numHomogeneousDir(NumHomoDir), m_homogeneousLengths(
-                                HomoLengths), m_homogeneousZIDs(HomoZIDs), m_homogeneousYIDs(
+                                HomoLengths), m_homoStrips(homoStrips), m_homogeneousSIDs(HomoSIDs),
+                                m_homogeneousZIDs(HomoZIDs), m_homogeneousYIDs(
                                 HomoYIDs), m_points(points), m_pointsDef(
                                 pointsDef), m_uniOrder(uniOrder), m_numModes(
                                 numModes), m_numPoints(numPoints), m_numPointsDef(
@@ -130,6 +124,8 @@ namespace Nektar
                 std::vector<LibUtilities::BasisType> m_basis;
                 int m_numHomogeneousDir;
                 std::vector<NekDouble> m_homogeneousLengths;
+                bool m_homoStrips;
+                std::vector<unsigned int> m_homogeneousSIDs;
                 std::vector<unsigned int> m_homogeneousZIDs;
                 std::vector<unsigned int> m_homogeneousYIDs;
 
@@ -173,7 +169,7 @@ namespace Nektar
 
         /// Datatype of the NekFactory used to instantiate classes
         typedef LibUtilities::NekFactory<std::string, FieldIO,
-                LibUtilities::CommSharedPtr> FieldIOFactory;
+            LibUtilities::CommSharedPtr, bool> FieldIOFactory;
 
         LIB_UTILITIES_EXPORT FieldIOFactory& GetFieldIOFactory();
 
@@ -184,7 +180,8 @@ namespace Nektar
 
                 /// Constructor
                 LIB_UTILITIES_EXPORT
-                FieldIO(LibUtilities::CommSharedPtr pComm);
+                FieldIO(LibUtilities::CommSharedPtr pComm,
+                        bool sharedFilesystem);
 
                 /// Write data in FLD format
                 LIB_UTILITIES_EXPORT
@@ -236,6 +233,7 @@ namespace Nektar
             protected:
                 /// Communicator to use when writing parallel format
                 LibUtilities::CommSharedPtr m_comm;
+                bool m_sharedFilesystem;
 
                 LIB_UTILITIES_EXPORT
                 void AddInfoTag(TiXmlElement * root,
@@ -250,13 +248,21 @@ namespace Nektar
                         std::string &idString);
 
                 LIB_UTILITIES_EXPORT
-                std::string SetUpOutput(const std::string outname,
-                        const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        const FieldMetaDataMap &fieldmetadatamap);
+                std::string SetUpOutput(const std::string outname);
+
+                LIB_UTILITIES_EXPORT void SetUpFieldMetaData(
+                    const std::string                             outname,
+                    const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                    const FieldMetaDataMap                       &fieldmetadatamap);
 
                 LIB_UTILITIES_EXPORT
                 int CheckFieldDefinition(
                         const FieldDefinitionsSharedPtr &fielddefs);
+
+                LIB_UTILITIES_EXPORT virtual std::string GetFileEnding() const
+                {
+                    return "fld";
+                }
 
                 LIB_UTILITIES_EXPORT
                 virtual void v_Write(const std::string &outFile,
@@ -287,7 +293,9 @@ namespace Nektar
             {
                 iofmt = session->GetSolverInfo("FieldIO_Format");
             }
-            return GetFieldIOFactory().CreateInstance(iofmt, session->GetComm());
+            return GetFieldIOFactory().CreateInstance(
+                iofmt, session->GetComm(),
+                session->DefinesCmdLineArgument("shared-filesystem"));
         }
         // Collective on session's communicator
         FieldIOSharedPtr MakeFieldIOForFile(

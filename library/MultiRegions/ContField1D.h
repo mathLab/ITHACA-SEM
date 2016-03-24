@@ -231,6 +231,8 @@ namespace Nektar
                                       Array<OneD,      NekDouble> &outarray,
                                 CoeffState coeffstate);
 
+            virtual void v_ClearGlobalLinSysManager(void);
+
         };
         typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
 

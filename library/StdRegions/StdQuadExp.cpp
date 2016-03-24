@@ -61,7 +61,7 @@ namespace Nektar
         StdQuadExp::StdQuadExp(const StdQuadExp &T):
             StdExpansion(T),
             StdExpansion2D(T)
-        {
+        {            
         }
 
         /** \brief Destructor */
@@ -390,24 +390,33 @@ namespace Nektar
             }
         }
 
-
         void StdQuadExp::v_IProductWRTBase_SumFac(
-                             const Array<OneD, const NekDouble>& inarray,
-                             Array<OneD, NekDouble> &outarray)
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            bool                                multiplybyweights)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    order0 = m_base[0]->GetNumModes();
 
-            Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
-            Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
+            if(multiplybyweights)
+            {
+                Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
+                Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
 
-            // multiply by integration constants
-            MultiplyByQuadratureMetric(inarray,tmp);
-
-            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                         m_base[1]->GetBdata(),
-                                         tmp,outarray,wsp,true,true);
+                // multiply by integration constants
+                MultiplyByQuadratureMetric(inarray,tmp);
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetBdata(),
+                                             tmp,outarray,wsp,true,true);
+            }
+            else
+            {
+                Array<OneD,NekDouble> wsp(nquad1*order0);
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetBdata(),
+                                             inarray,outarray,wsp,true,true);
+            }
         }
 
         void StdQuadExp::v_IProductWRTBase_MatOp(
@@ -1145,47 +1154,71 @@ namespace Nektar
 
         }
 
-        void StdQuadExp::v_GetEdgeToElementMap(const int eid,
-                             const Orientation edgeOrient,
-                             Array<OneD, unsigned int> &maparray,
-                             Array<OneD, int> &signarray)
+        void StdQuadExp::v_GetEdgeToElementMap(
+             const int                  eid,
+             const Orientation          edgeOrient,
+             Array<OneD, unsigned int>& maparray,
+             Array<OneD, int>&          signarray,
+             int                        P)
         {
             int i;
-            const int nummodes0 = m_base[0]->GetNumModes();
-            const int nummodes1 = m_base[1]->GetNumModes();
-            const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
-            const LibUtilities::BasisType bType = GetEdgeBasisType(eid);
+            int numModes;
+            int order0 = m_base[0]->GetNumModes();
+            int order1 = m_base[1]->GetNumModes();
 
-            if(maparray.num_elements() != nEdgeCoeffs)
+            switch (eid)
             {
-                maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
+            case 0:
+            case 2:
+                numModes = order0;
+                break;
+            case 1:
+            case 3:
+                numModes = order1;
             }
 
-            if(signarray.num_elements() != nEdgeCoeffs)
+            bool checkForZeroedModes = false;
+            if (P == -1)
             {
-                signarray = Array<OneD, int>(nEdgeCoeffs,1);
+                P = numModes;
+            }
+            else if(P != numModes)
+            {
+                checkForZeroedModes = true;
+            }
+            const LibUtilities::BasisType bType = GetEdgeBasisType(eid);
+
+
+            if (maparray.num_elements() != P)
+            {
+                maparray = Array<OneD, unsigned int>(P);
+            }
+
+            if(signarray.num_elements() != P)
+            {
+                signarray = Array<OneD, int>(P, 1);
             }
             else
             {
-                fill( signarray.get() , signarray.get()+nEdgeCoeffs, 1 );
+                fill(signarray.get(), signarray.get()+P, 1);
             }
 
-            if(bType == LibUtilities::eModified_A)
+            if (bType == LibUtilities::eModified_A)
             {
-                switch(eid)
+                switch (eid)
                 {
                 case 0:
                     {
-                        for(i = 0; i < nEdgeCoeffs; i++)
+                        for (i = 0; i < P; i++)
                         {
                             maparray[i] = i;
                         }
-
-                        if(edgeOrient==eBackwards)
+                        
+                        if (edgeOrient == eBackwards)
                         {
-                            swap( maparray[0] , maparray[1] );
-
-                            for(i = 3; i < nEdgeCoeffs; i+=2)
+                            swap(maparray[0], maparray[1]);
+                            
+                            for(i = 3; i < P; i+=2)
                             {
                                 signarray[i] = -1;
                             }
@@ -1194,16 +1227,16 @@ namespace Nektar
                     break;
                 case 1:
                     {
-                        for(i = 0; i < nEdgeCoeffs; i++)
+                        for (i = 0; i < P; i++)
                         {
-                            maparray[i] = i*nummodes0 + 1;
+                            maparray[i] = i*order0 + 1;
                         }
 
-                        if(edgeOrient==eBackwards)
+                        if (edgeOrient == eBackwards)
                         {
-                            swap( maparray[0] , maparray[1] );
+                            swap(maparray[0], maparray[1]);
 
-                            for(i = 3; i < nEdgeCoeffs; i+=2)
+                            for(i = 3; i < P; i+=2)
                             {
                                 signarray[i] = -1;
                             }
@@ -1212,16 +1245,16 @@ namespace Nektar
                     break;
                 case 2:
                     {
-                        for(i = 0; i < nEdgeCoeffs; i++)
+                        for (i = 0; i < P; i++)
                         {
-                            maparray[i] = nummodes0+i;
+                            maparray[i] = order0+i;
                         }
 
-                        if(edgeOrient==eForwards)
+                        if (edgeOrient == eForwards)
                         {
-                            swap( maparray[0] , maparray[1] );
+                            swap(maparray[0], maparray[1]);
 
-                            for(i = 3; i < nEdgeCoeffs; i+=2)
+                            for (i = 3; i < P; i+=2)
                             {
                                 signarray[i] = -1;
                             }
@@ -1230,16 +1263,16 @@ namespace Nektar
                     break;
                 case 3:
                     {
-                        for(i = 0; i < nEdgeCoeffs; i++)
+                        for (i = 0; i < P; i++)
                         {
-                            maparray[i] = i*nummodes0;
+                            maparray[i] = i*order0;
                         }
 
-                        if(edgeOrient==eForwards)
+                        if (edgeOrient == eForwards)
                         {
-                            swap( maparray[0] , maparray[1] );
+                            swap(maparray[0], maparray[1]);
 
-                            for(i = 3; i < nEdgeCoeffs; i+=2)
+                            for (i = 3; i < P; i+=2)
                             {
                                 signarray[i] = -1;
                             }
@@ -1247,18 +1280,18 @@ namespace Nektar
                     }
                     break;
                 default:
-                    ASSERTL0(false,"eid must be between 0 and 3");
+                    ASSERTL0(false, "eid must be between 0 and 3");
                     break;
                 }
             }
             else if(bType == LibUtilities::eGLL_Lagrange ||
                     bType == LibUtilities::eGauss_Lagrange)
             {
-                switch(eid)
+                switch (eid)
                 {
                 case 0:
                     {
-                        for(i = 0; i < nEdgeCoeffs; i++)
+                        for (i = 0; i < P; i++)
                         {
                             maparray[i] = i;
                         }
@@ -1266,42 +1299,64 @@ namespace Nektar
                     break;
                 case 1:
                     {
-                        for(i = 0; i < nEdgeCoeffs; i++)
+                        for (i = 0; i < P; i++)
                         {
-                            maparray[i] = (i+1)*nummodes0 - 1;
+                            maparray[i] = (i+1)*order0 - 1;
                         }
                     }
                     break;
                 case 2:
                     {
-                        for(i = 0; i < nEdgeCoeffs; i++)
+                        for (i = 0; i < P; i++)
                         {
-                            maparray[i] = nummodes0*nummodes1 - 1 - i;
+                            maparray[i] = order0*order1 - 1 - i;
                         }
                     }
                     break;
                 case 3:
                     {
-                        for(i = 0; i < nEdgeCoeffs; i++)
+                        for (i = 0; i < P; i++)
                         {
-                            maparray[i] = nummodes0*(nummodes1-1-i);
+                            maparray[i] = order0*(order1-1-i);
                         }
                     }
                     break;
                 default:
-                    ASSERTL0(false,"eid must be between 0 and 3");
+                    ASSERTL0(false, "eid must be between 0 and 3");
                     break;
                 }
-                if(edgeOrient == eBackwards)
+                if (edgeOrient == eBackwards)
                 {
-                    reverse( maparray.get() , maparray.get()+nEdgeCoeffs );
+                    reverse(maparray.get(), maparray.get()+P);
                 }
             }
             else
             {
-                ASSERTL0(false,"Mapping not defined for this type of basis");
+                ASSERTL0(false, "Mapping not defined for this type of basis");
+            }
+
+            if (checkForZeroedModes)
+            {
+                if (bType == LibUtilities::eModified_A)
+                {
+                    // Zero signmap and set maparray to zero if
+                    // elemental modes are not as large as face modesl
+                    for (int j = numModes; j < P; j++)
+                    {
+                        signarray[j] = 0.0;
+                        maparray[j]  = maparray[0];
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false, "Different trace space edge dimension "
+                                    "and element edge dimension not possible "
+                                    "for GLL-Lagrange bases");
+                }
             }
         }
+
+
 
         ///////////////////////
         // Wrapper Functions //
@@ -1322,7 +1377,18 @@ namespace Nektar
                 {
                     int nq0 = m_base[0]->GetNumPoints();
                     int nq1 = m_base[1]->GetNumPoints();
-                    int nq = max(nq0,nq1);
+                    int nq;
+
+                    // take definition from key 
+                    if(mkey.ConstFactorExists(eFactorConst))
+                    {
+                        nq = (int) mkey.GetConstFactor(eFactorConst);
+                    }
+                    else
+                    {
+                        nq = max(nq0,nq1);
+                    }
+
                     int neq = LibUtilities::StdQuadData::
                                                 getNumberOfCoefficients(nq, nq);
                     Array<OneD, Array<OneD, NekDouble> > coords(neq);
@@ -1473,6 +1539,7 @@ namespace Nektar
             int qb = m_base[1]->GetNumPoints();
             int nmodes_a = m_base[0]->GetNumModes();
             int nmodes_b = m_base[1]->GetNumModes();
+            int nmodes = min(nmodes_a,nmodes_b);
             // Declare orthogonal basis.
             LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
             LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
@@ -1481,39 +1548,86 @@ namespace Nektar
             LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,nmodes_b,pb);
             StdQuadExp OrthoExp(Ba,Bb);
 
-            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
-
-            //for the "old" implementation
-            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
-
             //SVV parameters loaded from the .xml case file
             NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
 
-            // project onto modal  space.
-            OrthoExp.FwdTrans(array,orthocoeffs);
-
-            //counters for scanning through orthocoeffs array
-            int j, k, cnt = 0;
-            int nmodes = min(nmodes_a,nmodes_b);
-
-            //------"New" Version August 22nd '13--------------------
-            for(j = 0; j < nmodes_a; ++j)
+            if(mkey.HasVarCoeff(eVarCoeffLaplacian)) // Rodrigo's svv mapping
             {
-                for(k = 0; k < nmodes_b; ++k)
-                {
-                   if(j + k >= cutoff) //to filter out only the "high-modes"
-                   {
-                       orthocoeffs[j*nmodes_b+k] *=
-                           (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/
-                                                 ((NekDouble)((j+k-cutoff+1)*
-                                                     (j+k-cutoff+1)))));
-                   }
-                    cnt++;
-                }
-            }
+                Array<OneD, NekDouble> sqrt_varcoeff(qa*qb);
+                Array<OneD, NekDouble> tmp(qa*qb);
 
-            // backward transform to physical space
-            OrthoExp.BwdTrans(orthocoeffs,array);
+                Vmath::Vsqrt(qa * qb,
+                             mkey.GetVarCoeff(eVarCoeffLaplacian), 1,
+                             sqrt_varcoeff,                        1);
+
+                //Vmath::Fill(qa*qb,Vmath::Vmax(qa*qb,sqrt_varcoeff,1),
+                //sqrt_varcoeff,1);
+
+                // multiply by sqrt(Variable Coefficient) containing h v /p
+                Vmath::Vmul(qa*qb,sqrt_varcoeff,1,array,1,tmp,1);
+
+                // project onto modal  space.
+                OrthoExp.FwdTrans(tmp,orthocoeffs);
+
+                for(int j = 0; j < nmodes_a; ++j)
+                {
+                    for(int k = 0; k < nmodes_b; ++k)
+                    {
+                        // linear space but makes high modes very negative
+                        orthocoeffs[j*nmodes_b+k] *=
+                            (1.0+SvvDiffCoeff*
+                             pow(j/(nmodes_a-1)+k/(nmodes_b-1),0.5*nmodes));
+                        // bilinear blend
+                        //orthocoeffs[j*nmodes_b+k] *=
+                        //(1.0 + SvvDiffCoeff
+                        //      *pow(j/(NekDouble)(nmodes_a-1.0),0.5*nmodes)
+                        //      *pow(k/(NekDouble)(nmodes_b-1.0),0.5*nmodes));
+                    }
+                }
+
+                // backward transform to physical space
+                OrthoExp.BwdTrans(orthocoeffs,tmp);
+
+                // multiply by sqrt(Variable Coefficient) containing h v /p
+                // - split to keep symmetry
+                Vmath::Vmul(qa*qb,sqrt_varcoeff,1,tmp,1,array,1);
+            }
+            else
+            {
+                //for the "old" implementation
+                int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*
+                                                        min(nmodes_a,nmodes_b));
+
+                // project onto modal  space.
+                OrthoExp.FwdTrans(array,orthocoeffs);
+
+                //counters for scanning through orthocoeffs array
+                int j, k, cnt = 0;
+
+                //------"New" Version August 22nd '13--------------------
+                for(j = 0; j < nmodes_a; ++j)
+                {
+                    for(k = 0; k < nmodes_b; ++k)
+                    {
+                        if(j + k >= cutoff)//to filter out only the "high-modes"
+                        {
+                             orthocoeffs[j*nmodes_b+k] *=
+                                 (SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/
+                                                    ((NekDouble)((j+k-cutoff+1)*
+                                                         (j+k-cutoff+1)))));
+                         }
+                        else
+                        {
+                             orthocoeffs[j*nmodes_b+k] *= 0.0;
+                        }
+                        cnt++;
+                    }
+                }
+
+                // backward transform to physical space
+                OrthoExp.BwdTrans(orthocoeffs,array);
+            }
         }
 
         void StdQuadExp::v_ReduceOrderCoeffs(

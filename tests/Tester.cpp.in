@@ -73,31 +73,33 @@ int main(int argc, char *argv[])
     desc.add_options()
         ("help,h",                 "Produce this help message.")
         ("verbose,v",              "Turn on verbosity.")
-        ("generate-metric,g",      po::value<vector<int> >(), 
+        ("generate-metric,g",      po::value<vector<int> >(),
                                    "Generate a single metric.")
-        ("generate-all-metrics,a", "Generate all metrics.");
-    
+        ("generate-all-metrics,a", "Generate all metrics.")
+        ("executable,e",           po::value<string>(),
+                                   "Use specified executable.");
+
     po::options_description hidden("Hidden options");
     hidden.add_options()
         ("input-file",   po::value<string>(), "Input filename");
-    
+
     po::options_description cmdline_options("Command-line options");
     cmdline_options.add(hidden).add(desc);
-    
+
     po::options_description visible("Allowed options");
     visible.add(desc);
-    
+
     po::positional_options_description p;
     p.add("input-file", -1);
-    
+
     po::variables_map vm;
-    
+
     try
     {
         po::store(po::command_line_parser(argc, argv).
                   options(cmdline_options).positional(p).run(), vm);
         po::notify(vm);
-    } 
+    }
     catch (const exception& e)
     {
         cerr << e.what() << endl;
@@ -110,13 +112,12 @@ int main(int argc, char *argv[])
         cout << desc;
         return 1;
     }
-    
+
     // Set up set containing metrics to be generated.
     vector<int> metricGenVec;
     if (vm.count("generate-metric"))
     {
         metricGenVec = vm["generate-metric"].as<vector<int> >();
-        cout << "SIZE = " << metricGenVec.size() << endl;
     }
     set<int> metricGen(metricGenVec.begin(), metricGenVec.end());
 
@@ -154,15 +155,15 @@ int main(int argc, char *argv[])
         for (unsigned int i = 0; i < file.GetNumMetrics(); ++i)
         {
             set<int>::iterator it = metricGen.find(file.GetMetricId(i));
-            bool genMetric = it != metricGen.end() || 
+            bool genMetric = it != metricGen.end() ||
                              (vm.count("generate-all-metrics") > 0);
-            
+
             metrics.push_back( GetMetricFactory().CreateInstance(
                                                     file.GetMetricType(i),
                                                     file.GetMetric(i),
                                                     genMetric
                                                   ));
-            
+
             if (it != metricGen.end())
             {
                 metricGen.erase(it);
@@ -201,14 +202,14 @@ int main(int argc, char *argv[])
             fs::path source_file(file.GetDependentFile(i).m_filename);
 
             fs::path source = specPath / source_file;
-            fs::path dest   = tmpDir   / source_file;
+            fs::path dest   = tmpDir   / source_file.filename();
             fs::copy_file(source, dest);
         }
 
         // Construct test command to run. If in debug mode, append "-g"
         // Output from stdout and stderr are directed to the files output.out
         // and output.err, respectively.
-        
+
 #ifdef NEKTAR_TEST_FORCEMPIEXEC
 #else
 	if (file.GetNProcesses() > 1)
@@ -219,14 +220,22 @@ int main(int argc, char *argv[])
                     + " ";
         }
 
-        // If executable doesn't exist in path then hope that it is in the
-        // user's PATH environment variable.
-        fs::path execPath = startDir / fs::path(file.GetExecutable());
-        if (!fs::exists(execPath))
+        fs::path execPath;
+        if (vm.count("executable"))
         {
-            execPath = fs::path(file.GetExecutable());
+            execPath = vm["executable"].as<std::string>();
         }
-
+        else
+        {
+            // If executable doesn't exist in path then hope that it is in the
+            // user's PATH environment variable.
+            execPath = startDir / fs::path(file.GetExecutable());
+            if (!fs::exists(execPath))
+            {
+                execPath = fs::path(file.GetExecutable());
+            }
+        }
+        
         command += PortablePath(execPath);
         command += " ";
         command += file.GetParameters();
@@ -302,7 +311,7 @@ int main(int argc, char *argv[])
 
         // Repeatedly try deleting directory with sleep for filesystems which
         // work asynchronously. This allows time for the filesystem to register
-        // the output files are closed so they can be deleted and not cause a 
+        // the output files are closed so they can be deleted and not cause a
         // filesystem failure. Attempts made for 1 second.
         int i = 1000;
         while (i > 0)
@@ -331,14 +340,14 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        
+
         // Save any changes.
-        if (vm.count("generate-metric")      > 0 || 
+        if (vm.count("generate-metric")      > 0 ||
             vm.count("generate-all-metrics") > 0)
         {
             file.SaveFile();
         }
-        
+
         // Return status of test. 0 = PASS, 1 = FAIL
         return status;
     }

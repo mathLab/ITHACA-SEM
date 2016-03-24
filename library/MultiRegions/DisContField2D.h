@@ -42,6 +42,7 @@
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
 #include <SpatialDomains/Conditions.h>
 
 namespace Nektar
@@ -95,6 +96,34 @@ namespace Nektar
 
 
         protected:
+
+            Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
+
+            /** \brief This function gets the shared point to basis
+             *
+             *  \return returns the shared pointer to the bases
+             */
+            inline const Array<OneD, const LibUtilities::BasisSharedPtr>& GetBase() const
+            {
+                return(m_base);
+            }
+
+            /** \brief This function returns the type of basis used in the \a dir
+             *  direction
+             *
+             *  The different types of bases implemented in the code are defined
+             *  in the LibUtilities::BasisType enumeration list. As a result, the
+             *  function will return one of the types of this enumeration list.
+             *
+             *  \param dir the direction
+             *  \return returns the type of basis used in the \a dir direction
+             */
+            inline  LibUtilities::BasisType GetBasisType(const int dir) const
+            {
+                ASSERTL1(dir < m_base.num_elements(), "dir is larger than m_numbases");
+                return(m_base[dir]->GetBasisType());
+            }
+
             /**
              * @brief An object which contains the discretised boundary
              * conditions.
@@ -113,13 +142,19 @@ namespace Nektar
              */
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
 
-            GlobalLinSysMapShPtr        m_globalBndMat;
-            ExpListSharedPtr            m_trace;
-            AssemblyMapDGSharedPtr      m_traceMap;
+            GlobalLinSysMapShPtr   m_globalBndMat;
+            ExpListSharedPtr       m_trace;
+            AssemblyMapDGSharedPtr m_traceMap;
             
-            Array<OneD, Array<OneD, unsigned int> >     m_mapEdgeToElmn;
-            Array<OneD, Array<OneD, unsigned int> >     m_signEdgeToElmn;
-            Array<OneD,StdRegions::Orientation>         m_edgedir;
+            /**
+             * Map of local trace (the points at the face of
+             * the element) to the trace space discretisation
+             */
+            LocTraceToTraceMapSharedPtr m_locTraceToTraceMap;
+
+            Array<OneD, Array<OneD, unsigned int> > m_mapEdgeToElmn;
+            Array<OneD, Array<OneD, unsigned int> > m_signEdgeToElmn;
+            Array<OneD,StdRegions::Orientation>     m_edgedir;
 
             /**
              * @brief A set storing the global IDs of any boundary edges.
@@ -203,7 +238,10 @@ namespace Nektar
             virtual void v_GetBoundaryToElmtMap(
                 Array<OneD, int> &ElmtID,
                 Array<OneD, int> &EdgeID);
-            
+            virtual void v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result);
+            virtual void v_Reset();
+
             /**
              * @brief Obtain a copy of the periodic edges and vertices for this
              * field.

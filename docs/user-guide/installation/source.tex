@@ -21,8 +21,8 @@ There are two ways to obtain the source code for \nekpp:
 	\begin{itemize}
 	\item Using anonymous access. This does not require
 	credentials but any changes to the code cannot be pushed to the
-	public repository. Use this initially if you would like to try using 
-	Nektar++.
+	public repository. Use this initially if you would like to try using
+	Nektar++ or make local changes to the code.
     \begin{lstlisting}[style=BashInputStyle]
         git clone http://gitlab.nektar.info/clone/nektar/nektar.git nektar++
     \end{lstlisting}
@@ -62,7 +62,7 @@ BLAS            & \cmark & \cmark & \cmark &        & Or MKL,
 ACML, OpenBLAS
 \\
 LAPACK          & \cmark & \cmark & \cmark &        & \\
-Boost $>1.49$   & \cmark & \cmark & \cmark & \cmark & Compile
+Boost $>=1.52$   & \cmark & \cmark & \cmark & \cmark & Compile
 with iostreams
 \\
 ModMETIS        & \cmark &        &        & \cmark & \\
@@ -99,7 +99,7 @@ tar -zxvf nektar++-(*\nekver*).tar.gz
 \end{lstlisting}
 Change into the \inlsh{nektar++} source code directory
 \begin{lstlisting}[style=BashInputStyle]
-    mkdir -p build && cd build 
+    mkdir -p build && cd build
     ccmake ../
     make install
 \end{lstlisting}
@@ -111,13 +111,13 @@ From a terminal:
     \begin{lstlisting}[style=BashInputStyle]
 tar -zxvf nektar++-(*\nekver*).tar.gz
     \end{lstlisting}
-    
+
     \item Change into the source-code directory, create a \inltt{build}
-    subdirectory and enter it 
+    subdirectory and enter it
     \begin{lstlisting}[style=BashInputStyle]
     mkdir -p build && cd build
     \end{lstlisting}
-    
+
     \item Run the CMake GUI and configure the build by pressing \inltt{c}
     \begin{lstlisting}[style=BashInputStyle]
     ccmake ../
@@ -129,7 +129,7 @@ tar -zxvf nektar++-(*\nekver*).tar.gz
         \item Select the optional libraries you would like to use (prefixed with
         \inltt{NEKTAR\_USE\_}) for additional functionality.
         \item Select the libraries not already available on your system which
-        you wish to be compiled automatically (prefixed with 
+        you wish to be compiled automatically (prefixed with
         \inltt{THIRDPARTY\_BUILD\_})
     \end{itemize}
     A full list of configuration options can be found in
@@ -142,24 +142,24 @@ tar -zxvf nektar++-(*\nekver*).tar.gz
     recommended to install the libraries system-wide through your
     package-management system.
     \end{notebox}
-    
-    
+
+
     \item Press \inltt{c} to configure the build. If errors arise relating to
     missing libraries, review the \inltt{THIRDPARTY\_BUILD\_} selections in
     the configuration step above or install the missing libraries manually or
     from system packages.
-    
+
     \item When configuration completes without errors, press \inltt{c} again
     until the option \inltt{g} to generate build files appears. Press \inltt{g}
     to generate the build files and exit CMake.
-    
+
     \item Compile the code
     \begin{lstlisting}[style=BashInputStyle]
         make install
     \end{lstlisting}
     During the build, missing third-party libraries will be automatically
     downloaded, configured and built in the \nekpp \inlsh{build} directory.
-    
+
     % Hacky way to get an lstlisting to an argument of a macro
     \newsavebox\installationLinuxTip
     \begin{lrbox}{\installationLinuxTip}\begin{minipage}{0.8\linewidth}
@@ -168,17 +168,17 @@ tar -zxvf nektar++-(*\nekver*).tar.gz
     \end{lstlisting}
     \end{minipage}
     \end{lrbox}
-    
+
     \begin{tipbox}
     If you have multiple processors/cores on your system, compilation can be
     significantly increased by adding the \inlsh{-jX} option to make, where X is
     the number of simultaneous jobs to spawn. For example, use
-    
+
     \noindent\usebox\installationLinuxTip
-    
+
     on a quad-core system.
     \end{tipbox}
-    
+
     \item Test the build by running unit and regression tests.
     \begin{lstlisting}[style=BashInputStyle]
     ctest
@@ -192,7 +192,7 @@ tar -zxvf nektar++-(*\nekver*).tar.gz
 functionality. Some of these are \emph{required} and must be installed prior to
 compiling Nektar++, most of which are available on \emph{MacPorts}
 (www.macports.org) or can be installed manually by a \emph{user}. Others are
-optional and required only for specific features, or can be downloaded and 
+optional and required only for specific features, or can be downloaded and
 compiled for use with Nektar++ \emph{automatically} (but not installed
 system-wide).
 
@@ -218,7 +218,7 @@ BLAS            & \cmark &                  &        &        & Part of
 Xcode \\
 LAPACK          & \cmark &                  &        &        & Part of
 Xcode \\
-Boost $>1.49$   & \cmark & \texttt{boost}   & \cmark & \cmark & Compile
+Boost $>=1.52$   & \cmark & \texttt{boost}   & \cmark & \cmark & Compile
 with iostreams \\
 TinyXML         & \cmark & \texttt{tinyxml} & \cmark & \cmark & \\
 ModMETIS        & \cmark &                  &        & \cmark & \\
@@ -268,7 +268,7 @@ tar -zxvf nektar++-(*\nekver*).tar.gz
 \end{lstlisting}
 Change into the \inlsh{nektar++} source code directory
 \begin{lstlisting}[style=BashInputStyle]
-    mkdir -p build && cd build 
+    mkdir -p build && cd build
     ccmake ../
     make install
 \end{lstlisting}
@@ -282,11 +282,11 @@ tar -zxvf nektar++-(*\nekver*).tar.gz
     \end{lstlisting}
 
     \item Change into the source-code directory, create a \inltt{build}
-    subdirectory and enter it 
+    subdirectory and enter it
     \begin{lstlisting}[style=BashInputStyle]
     mkdir -p build && cd build
     \end{lstlisting}
-    
+
     \item Run the CMake GUI and configure the build
     \begin{lstlisting}[style=BashInputStyle]
     ccmake ../
@@ -300,9 +300,9 @@ tar -zxvf nektar++-(*\nekver*).tar.gz
         \item Select the optional libraries you would like to use (prefixed with
         \inltt{NEKTAR\_USE\_}) for additional functionality.
         \item Select the libraries not already available on your system which
-        you wish to be compiled automatically (prefixed with 
+        you wish to be compiled automatically (prefixed with
         \inltt{THIRDPARTY\_BUILD\_})
-        \item 
+        \item
     \end{itemize}
     A full list of configuration options can be found in
     Section~\ref{s:installation:source:cmake}.
@@ -313,23 +313,23 @@ tar -zxvf nektar++-(*\nekver*).tar.gz
     \nekpp directory. If you have administrative access to your machine, it is
     recommended to install the libraries system-wide through MacPorts.
     \end{notebox}
-    
+
     \item Press \inltt{c} to configure the build. If errors arise relating to
-        missing libraries (variables set to \inlsh{NOTFOUND}), review the 
+        missing libraries (variables set to \inlsh{NOTFOUND}), review the
         \inltt{THIRDPARTY\_BUILD\_} selections in the previous
-    step or install the missing libraries manually or through MacPorts. 
-    
+    step or install the missing libraries manually or through MacPorts.
+
     \item When configuration completes without errors, press \inltt{c} again
     until the option \inltt{g} to generate build files appears. Press \inltt{g}
     to generate the build files and exit CMake.
-    
+
     \item Compile the code
     \begin{lstlisting}[style=BashInputStyle]
         make install
     \end{lstlisting}
     During the build, missing third-party libraries will be automatically
     downloaded, configured and built in the \nekpp \inlsh{build} directory.
-    
+
     % Hacky way to get an lstlisting to an argument of a macro
     \newsavebox\installationMacTip
     \begin{lrbox}{\installationMacTip}\begin{minipage}{0.8\linewidth}
@@ -338,14 +338,14 @@ tar -zxvf nektar++-(*\nekver*).tar.gz
     \end{lstlisting}
     \end{minipage}
     \end{lrbox}
-    
+
     \begin{tipbox}
     If you have multiple processors/cores on your system, compilation can be
     significantly increased by adding the \inlsh{-jX} option to make, where X is
     the number of simultaneous jobs to spawn. For example,
     \noindent\usebox\installationMacTip
     \end{tipbox}
-    
+
     \item Test the build by running unit and regression tests.
     \begin{lstlisting}[style=BashInputStyle]
     ctest
@@ -470,7 +470,7 @@ options may change.
 Components of the \nekpp package can be selected using the following options:
 \begin{itemize}
     \item \inlsh{NEKTAR\_BUILD\_DEMOS} (Recommended)
-    
+
     Compiles the demonstration programs. These are primarily used by the
     regression testing suite to verify the \nekpp library, but also provide an
     example of the basic usage of the framework.
@@ -483,12 +483,12 @@ Components of the \nekpp package can be selected using the following options:
     \end{lstlisting}
 
     \item \inlsh{NEKTAR\_BUILD\_LIBRARY} (Required)
-    
+
     Compiles the Nektar++ framework libraries. This is required for all other
     options.
 
     \item \inlsh{NEKTAR\_BUILD\_SOLVERS} (Recommended)
-    
+
     Compiles the solvers distributed with the \nekpp framework.
 
     If enabling \inlsh{NEKTAR\_BUILD\_SOLVERS}, individual solvers can be
@@ -511,61 +511,95 @@ Components of the \nekpp package can be selected using the following options:
     \item \inlsh{NEKTAR\_BUILD\_UTILITIES}
 
     Compiles utilities for pre- and post-processing simulation data.
-    
+
     \item \inlsh{NEKTAR\_SOLVER\_X}
-    
+
     Enabled compilation of the 'X' solver.
 \end{itemize}
 
-A number of ThirdParty libraries are required by \nekpp. There are also
-optional libraries which provide additional functionality. These can be selected
-using the following options:
+A number of ThirdParty libraries are required by \nekpp. There are
+also optional libraries which provide additional functionality. These
+can be selected using the following options:
 \begin{itemize}
+    \item \inlsh{NEKTAR\_USE\_ACML}
+
+    Use the optimised BLAS library for AMD processors.
+
+    \item \inlsh{NEKTAR\_USE\_ACCELERATE\_FRAMEWORK}
+
+    Use the Mac Osx accelerate framework for BLAS and LAPACK
+    methods. This option should only be required under in a Mac OSX
+    environment.
+
+    \item \inlsh{NEKTAR\_USE\_ARPACK}
+
+    Build \nekpp with support for ARPACK. This provides routines used for
+    linear stability analyses. Alternative Arnoldi algorithms are also
+    implemented directly in \nekpp.
+
     \item \inlsh{NEKTAR\_USE\_BLAS\_LAPACK} (Required)
-    
+
     Enables the use of Basic Linear Algebra Subroutines libraries for linear
     algebra operations.
 
     \item \inlsh{NEKTAR\_USE\_SYSTEM\_BLAS\_LAPACK} (Recommended)
-    
+
     On Linux systems, use the default BLAS and LAPACK library on the system.
     This may not be the implementation offering the highest performance for your
     architecture, but it is the most likely to work without problem.
-    
-    \item \inlsh{NEKTAR\_USE\_OPENBLAS}
-    
-    Use OpenBLAS for the BLAS library. OpenBLAS is based on the Goto BLAS
-    implementation and generally offers better performance than a non-optimised
-    system BLAS. However, the library must be installed on the system.
-    
-    \item \inlsh{NEKTAR\_USE\_MKL}
-    
-    Use the Intel MKL library. This is typically available on cluster
-    environments and should offer performance tuned for the specific cluster
-    environment.
-    
-    \item \inlsh{NEKTAR\_USE\_MPI} (Recommended)
-    
-    Build Nektar++ with MPI parallelisation. This allows solvers to be run in
-    serial or parallel.
-    
+
+    \item \inlsh{NEKTAR\_USE\_CCM}
+
+    Use the ccmio library provided with the Star-CCM package for
+    reading ccm files. This option is required as part of NekMesh
+    if you wish to convert a Star-CCM mesh into the Nektar format. It
+    is possible to read a Tecplot plt file from Star-CCM but this
+    output currently needs to be converted to ascii format using the
+    Tecplot package.
+
     \item \inlsh{NEKTAR\_USE\_FFTW}
-    
+
     Build \nekpp with support for FFTW for performing Fast Fourier Transforms
     (FFTs). This is used only when using domains with homogeneous coordinate
     directions.
-    
-    \item \inlsh{NEKTAR\_USE\_ARPACK}
-    
-    Build \nekpp with support for ARPACK. This provides routines used for
-    linear stability analyses. Alternative Arnoldi algorithms are also
-    implemented directly in \nekpp.
-    
+
+    \item \inlsh{NEKTAR\_USE\_MKL}
+
+    Use the Intel MKL library. This is typically available on cluster
+    environments and should offer performance tuned for the specific cluster
+    environment.
+
+    \item \inlsh{NEKTAR\_USE\_MPI} (Recommended)
+
+    Build Nektar++ with MPI parallelisation. This allows solvers to be run in
+    serial or parallel.
+
+    \item \inlsh{NEKTAR\_USE\_OPENBLAS}
+
+    Use OpenBLAS for the BLAS library. OpenBLAS is based on the Goto BLAS
+    implementation and generally offers better performance than a non-optimised
+    system BLAS. However, the library must be installed on the system.
+
+    \item \inlsh{NEKTAR\_USE\_PETSC}
+
+    Build \nekpp with support for the PETSc package for solving linear systems.
+
+    \item \inlsh{NEKTAR\_USE\_SCOTCH}
+
+    Build \nekpp with support for the SCOTCH graph partitioning library. This
+    provides an alternative mesh partitioning algorithm to METIS. However, METIS
+    is still required as it is used by the multi-level static condensation
+    algorithm.
+
+    \item \inlsh{NEKTAR\_USE\_SMV}
+
+    Build \nekpp with support for optimised sparse matrix-vector operations.
+
     \item \inlsh{NEKTAR\_USE\_VTK}
-    
+
     Build \nekpp with support for VTK libraries. This is only needed for
     specialist utilities and is not needed for general use.
-    
+
     \begin{notebox}
     The VTK libraries are not needed for converting the output of simulations to
     VTK format for visualization as this is handled internally.
@@ -583,15 +617,15 @@ automatically built during the \nekpp build process. Below are the choices of X:
     automatically.
 
     \item \inlsh{GSMPI}
-    
+
     (MPI-only) Parallel communication library.
-    
+
     \item \inlsh{LOKI}
-    
+
     An implementation of a singleton.
-    
+
     \item \inlsh{METIS}
-    
+
     A graph partitioning library used for substructuring of matrices and mesh
     partitioning when \nekpp is run in parallel.
 
@@ -605,7 +639,6 @@ automatically built during the \nekpp build process. Below are the choices of X:
     \nekpp is run in parallel.
 
     \item \inlsh{TINYXML}
-    
+
     Library for reading and writing XML files.
 \end{itemize}
-

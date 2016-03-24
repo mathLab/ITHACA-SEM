@@ -3,9 +3,11 @@ CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/tests/Tester.cpp.in
 	       @ONLY)
 SET(TESTER_SOURCES
   Metric.cpp
+  MetricEigenvalue.cpp
   MetricFile.cpp
   MetricL2.cpp
   MetricLInf.cpp
+  MetricPrecon.cpp
   MetricRegex.cpp
   TestData.cpp
   ${CMAKE_BINARY_DIR}/tests/Tester.cpp
@@ -14,9 +16,11 @@ SET(TESTER_SOURCES
 
 SET(TESTER_HEADERS
   Metric.h
+  MetricEigenvalue.h
   MetricFile.h
   MetricL2.h
   MetricLInf.h
+  MetricPrecon.h
   MetricRegex.h
   TestData.h
   Tester.h
@@ -31,7 +35,7 @@ ENDIF()
 
 ADD_EXECUTABLE(Tester ${TESTER_SOURCES} ${ARGN})
 TARGET_LINK_LIBRARIES(Tester
-  ${Boost_FILESYSTEM_LIBRARY} 
+  ${Boost_FILESYSTEM_LIBRARY}
   ${Boost_SYSTEM_LIBRARY}
   ${Boost_REGEX_LIBRARY}
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
@@ -45,11 +49,11 @@ IF( ${CMAKE_SYSTEM} MATCHES "Linux.*")
 ENDIF()
 
 IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
-  SET_TARGET_PROPERTIES(Tester 
+  SET_TARGET_PROPERTIES(Tester
     PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/${LIB_DIR} -Wl,-rpath,${Boost_LIBRARY_DIRS}")
 ENDIF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
 
-INSTALL(TARGETS Tester 
+INSTALL(TARGETS Tester
   RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT test OPTIONAL
   ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} COMPONENT test OPTIONAL
   LIBRARY DESTINATION ${NEKTAR_LIB_DIR} COMPONENT test OPTIONAL)

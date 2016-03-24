@@ -157,6 +157,14 @@ namespace Nektar
             }
         }
 
+        void ContField3DHomogeneous1D::v_FillBndCondFromField(void)
+        {
+            for(int n = 0; n < m_planes.num_elements(); ++n)
+            {
+                m_planes[n]->FillBndCondFromField();
+            }
+        }
+
         /**
          * 
          */
@@ -258,5 +266,17 @@ namespace Nektar
                 cnt1 += m_planes[n]->GetNcoeffs();
             }
         }
+
+        /**
+         * Reset the GlobalLinSys Manager 
+         */
+        void ContField3DHomogeneous1D::v_ClearGlobalLinSysManager(void)
+        {
+            for(int n = 0; n < m_planes.num_elements(); ++n)
+            {
+                m_planes[n]->ClearGlobalLinSysManager();
+            }
+        }
+
     } // end of namespace
 } //end of namespace

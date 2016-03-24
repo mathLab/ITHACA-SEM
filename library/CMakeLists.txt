@@ -1,8 +1,8 @@
-SET(LibrarySubDirs LibUtilities LocalRegions MultiRegions SpatialDomains
-StdRegions SolverUtils)
+SET(LibrarySubDirs GlobalMapping LibUtilities LocalRegions Collections
+    MultiRegions SpatialDomains StdRegions SolverUtils NekMeshUtils)
 SET(UnitTestSubDirs UnitTests)
-SET(DemoSubDirs Demos)
-SET(TimingsSubDirs Timings)
+SET(DemoSubDirs     Demos)
+SET(TimingsSubDirs  Timings)
 
 SUBDIRS(${LibrarySubDirs} )
 
@@ -16,7 +16,6 @@ IF( NEKTAR_BUILD_DEMOS )
     SUBDIRS(${DemoSubDirs})
 ENDIF( NEKTAR_BUILD_DEMOS )
 
-IF( NEKTAR_BUILD_TIMINGS ) 
+IF( NEKTAR_BUILD_TIMINGS )
     SUBDIRS(${TimingsSubDirs})
-ENDIF( NEKTAR_BUILD_TIMINGS ) 
-
+ENDIF( NEKTAR_BUILD_TIMINGS )

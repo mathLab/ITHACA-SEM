@@ -175,7 +175,7 @@ class Interpolator
                 {
                 };
 
-                LIB_UTILITIES_EXPORT PtsPoint(int idx, Array<OneD, NekDouble> coords,
+                PtsPoint(int idx, Array<OneD, NekDouble> coords,
                                             NekDouble dist):
                     idx(idx),
                     coords(coords),
@@ -183,7 +183,7 @@ class Interpolator
                 {
                 };
 
-                LIB_UTILITIES_EXPORT bool operator < (const PtsPoint &comp) const
+                bool operator < (const PtsPoint &comp) const
                 {
                     return (dist < comp.dist);
                 };

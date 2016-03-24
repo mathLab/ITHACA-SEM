@@ -409,7 +409,7 @@ void Interpolator::Interpolate(
     for (int i = 0; i < nOutPts; ++i)
     {
         Array<OneD, NekDouble> Lcoords(nInDim, 0.0);
-        Array<OneD, NekDouble> coords(nInDim, 0.0);
+        Array<OneD, NekDouble> coords(m_ptsOutField->GetDim(), 0.0);
         for (int j = 0; j < m_ptsOutField->GetDim(); ++j)
         {
             coords[j] = m_ptsOutField->GetPointVal(j, i);

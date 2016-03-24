@@ -528,14 +528,10 @@ void ProcessInterpPoints::InterpolateFieldToPts(
                          NekDouble                              clamp_up,
                          NekDouble                              def_value)
 {
+    ASSERTL0(pts->GetNFields() >= field0.size(), "ptField has too few fields");
+
+
     int nfields = field0.size();
-
-    for (int f = pts->GetNFields(); f < field0.size(); ++f)
-
-    {
-        Array<OneD, NekDouble> tmp(pts->GetNpoints(), def_value);
-        pts->AddField(tmp, "f" + boost::lexical_cast<std::string>(f));
-    }
     
     SolverUtils::Interpolator interp;
     if (m_f->m_comm->GetRank() == 0)

@@ -93,7 +93,7 @@ class Interpolator
         *
         * filtWidth must be specified for the eGauss algorithm only.
         */
-        LIB_UTILITIES_EXPORT Interpolator(
+        Interpolator(
             InterpMethod method = eNoMethod,
             short int coordId = -1,
             NekDouble filtWidth = 0.0):
@@ -168,7 +168,7 @@ class Interpolator
                 Array<OneD, NekDouble>                      coords;
                 NekDouble                                   dist;
 
-                LIB_UTILITIES_EXPORT PtsPoint():
+                PtsPoint():
                     idx(-1),
                     coords(Array<OneD, NekDouble>(3)),
                     dist(1E30)

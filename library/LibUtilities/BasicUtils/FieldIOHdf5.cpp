@@ -749,7 +749,6 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
                     readPL, data_dset, data_fspace, decompsToDataOffsets[*sIt],
                     decomps, *sIt, fielddef, decompFieldData);
                 fielddata.push_back(decompFieldData);
-                cout << "PUSHING LOL" << endl;
             }
         }
     }

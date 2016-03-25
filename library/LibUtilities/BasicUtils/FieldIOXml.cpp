@@ -51,1168 +51,1174 @@ namespace berrc = boost::system::errc;
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+XmlDataSource::XmlDataSource(TiXmlDocument &doc) : m_doc(&doc)
+{
+}
+
+XmlDataSource::XmlDataSource(const std::string &fn)
+    : m_doc(new TiXmlDocument(fn))
+{
+    bool loadOkay = m_doc->LoadFile();
+
+    std::stringstream errstr;
+    errstr << "Unable to load file: " << fn << std::endl;
+    errstr << "Reason: " << m_doc->ErrorDesc() << std::endl;
+    errstr << "Position: Line " << m_doc->ErrorRow() << ", Column "
+           << m_doc->ErrorCol() << std::endl;
+    ASSERTL0(loadOkay, errstr.str());
+}
+
+XmlDataSource::~XmlDataSource()
+{
+    delete m_doc;
+}
+
+TiXmlDocument &XmlDataSource::Get()
+{
+    return *m_doc;
+}
+const TiXmlDocument &XmlDataSource::Get() const
+{
+    return *m_doc;
+}
+
+DataSourceSharedPtr XmlDataSource::create(const std::string &fn)
+{
+    return DataSourceSharedPtr(new XmlDataSource(fn));
+}
+DataSourceSharedPtr XmlDataSource::create(TiXmlDocument &doc)
+{
+    return DataSourceSharedPtr(new XmlDataSource(doc));
+}
+
+typedef boost::shared_ptr<XmlDataSource> XmlDataSourceSharedPtr;
+
+std::string FieldIOXml::className = GetFieldIOFactory().RegisterCreatorFunction(
+    "Xml", FieldIOXml::create, "XML-based output of field data.");
+
+FieldIOXml::FieldIOXml(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem)
+    : FieldIO(pComm, sharedFilesystem)
+{
+}
+
+/**
+ *
+ */
+void FieldIOXml::v_Write(const std::string &outFile,
+                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                         std::vector<std::vector<NekDouble> > &fielddata,
+                         const FieldMetaDataMap &fieldmetadatamap)
+{
+    std::stringstream prfx;
+    prfx << m_comm->GetRank() << ": FieldIOXml::v_Write(): ";
+    double tm0 = 0.0, tm1 = 0.0;
+    if (0 == m_comm->GetRank())
     {
-        XmlDataSource::XmlDataSource(TiXmlDocument& doc) :
-                m_doc(&doc)
-        {
-        }
+        cout << prfx.str() << "entering..." << endl;
+        tm0 = m_comm->Wtime();
+    }
 
-        XmlDataSource::XmlDataSource(const std::string& fn) :
-                m_doc(new TiXmlDocument(fn))
-        {
-            bool loadOkay = m_doc->LoadFile();
+    // Check everything seems sensible
+    ASSERTL1(fielddefs.size() == fielddata.size(),
+             "Length of fielddefs and fielddata incompatible");
+    for (int f = 0; f < fielddefs.size(); ++f)
+    {
+        ASSERTL1(fielddata[f].size() > 0,
+                 "Fielddata vector must contain at least one value.");
 
-            std::stringstream errstr;
-            errstr << "Unable to load file: " << fn << std::endl;
-            errstr << "Reason: " << m_doc->ErrorDesc() << std::endl;
-            errstr << "Position: Line " << m_doc->ErrorRow() << ", Column "
-                    << m_doc->ErrorCol() << std::endl;
-            ASSERTL0(loadOkay, errstr.str());
-        }
+        ASSERTL1(fielddata[f].size() ==
+                     fielddefs[f]->m_fields.size() *
+                         CheckFieldDefinition(fielddefs[f]),
+                 "Invalid size of fielddata vector.");
+    }
 
-        XmlDataSource::~XmlDataSource()
-        {
-            delete m_doc;
-        }
+    // Prepare to write out data. In parallel, we must create directory and
+    // determine the full pathname to the file to write out.  Any existing
+    // file/directory which is in the way is removed.
+    std::string filename = SetUpOutput(outFile);
+    SetUpFieldMetaData(outFile, fielddefs, fieldmetadatamap);
 
-        TiXmlDocument& XmlDataSource::Get()
-        {
-            return *m_doc;
-        }
-        const TiXmlDocument& XmlDataSource::Get() const
-        {
-            return *m_doc;
-        }
+    // Create the file (partition)
+    TiXmlDocument doc;
+    TiXmlDeclaration *decl = new TiXmlDeclaration("1.0", "utf-8", "");
+    doc.LinkEndChild(decl);
 
-        DataSourceSharedPtr XmlDataSource::create(const std::string& fn)
-        {
-            return DataSourceSharedPtr(new XmlDataSource(fn));
-        }
-        DataSourceSharedPtr XmlDataSource::create(TiXmlDocument& doc)
-        {
-            return DataSourceSharedPtr(new XmlDataSource(doc));
-        }
+    TiXmlElement *root = new TiXmlElement("NEKTAR");
+    doc.LinkEndChild(root);
 
-        typedef boost::shared_ptr<XmlDataSource> XmlDataSourceSharedPtr;
+    AddInfoTag(root, fieldmetadatamap);
 
-        std::string FieldIOXml::className =
-                GetFieldIOFactory().RegisterCreatorFunction("Xml",
-                        FieldIOXml::create, "XML-based output of field data.");
+    for (int f = 0; f < fielddefs.size(); ++f)
+    {
+        //---------------------------------------------
+        // Write ELEMENTS
+        TiXmlElement *elemTag = new TiXmlElement("ELEMENTS");
+        root->LinkEndChild(elemTag);
 
-        FieldIOXml::FieldIOXml(LibUtilities::CommSharedPtr pComm,
-                               bool sharedFilesystem) :
-            FieldIO(pComm, sharedFilesystem)
+        // Write FIELDS
+        std::string fieldsString;
         {
-        }
-
-        /**
-         *
-         */
-        void FieldIOXml::v_Write(const std::string &outFile,
-                std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                std::vector<std::vector<NekDouble> > &fielddata,
-                const FieldMetaDataMap &fieldmetadatamap)
-        {
-            std::stringstream prfx;
-            prfx << m_comm->GetRank() << ": FieldIOXml::v_Write(): ";
-            double tm0 = 0.0, tm1 = 0.0;
-            if (0 == m_comm->GetRank())
+            std::stringstream fieldsStringStream;
+            bool first = true;
+            for (std::vector<int>::size_type i = 0;
+                 i < fielddefs[f]->m_fields.size();
+                 i++)
             {
-                cout << prfx.str() << "entering..." << endl;
-                tm0 = m_comm->Wtime();
+                if (!first)
+                    fieldsStringStream << ",";
+                fieldsStringStream << fielddefs[f]->m_fields[i];
+                first = false;
+            }
+            fieldsString = fieldsStringStream.str();
+        }
+        elemTag->SetAttribute("FIELDS", fieldsString);
+
+        // Write SHAPE
+        std::string shapeString;
+        {
+            std::stringstream shapeStringStream;
+            shapeStringStream << ShapeTypeMap[fielddefs[f]->m_shapeType];
+            if (fielddefs[f]->m_numHomogeneousDir == 1)
+            {
+                shapeStringStream << "-HomogenousExp1D";
+            }
+            else if (fielddefs[f]->m_numHomogeneousDir == 2)
+            {
+                shapeStringStream << "-HomogenousExp2D";
             }
 
-            // Check everything seems sensible
-            ASSERTL1(fielddefs.size() == fielddata.size(),
-                    "Length of fielddefs and fielddata incompatible");
-            for (int f = 0; f < fielddefs.size(); ++f)
+            if (fielddefs[f]->m_homoStrips)
             {
-                ASSERTL1(fielddata[f].size() > 0,
-                        "Fielddata vector must contain at least one value.");
-
-                ASSERTL1(fielddata[f].size() ==
-                        fielddefs[f]->m_fields.size() *
-                        CheckFieldDefinition(fielddefs[f]),
-                        "Invalid size of fielddata vector.");
+                shapeStringStream << "-Strips";
             }
 
-            // Prepare to write out data. In parallel, we must create directory
-            // and determine the full pathname to the file to write out.
-            // Any existing file/directory which is in the way is removed.
-            std::string filename = SetUpOutput(outFile);
-            SetUpFieldMetaData(outFile, fielddefs, fieldmetadatamap);
+            shapeString = shapeStringStream.str();
+        }
+        elemTag->SetAttribute("SHAPE", shapeString);
 
-            // Create the file (partition)
-            TiXmlDocument doc;
-            TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
-            doc.LinkEndChild(decl);
-
-            TiXmlElement * root = new TiXmlElement("NEKTAR");
-            doc.LinkEndChild(root);
-
-            AddInfoTag(root, fieldmetadatamap);
-
-            for (int f = 0; f < fielddefs.size(); ++f)
+        // Write BASIS
+        std::string basisString;
+        {
+            std::stringstream basisStringStream;
+            bool first = true;
+            for (std::vector<BasisType>::size_type i = 0;
+                 i < fielddefs[f]->m_basis.size();
+                 i++)
             {
-                //---------------------------------------------
-                // Write ELEMENTS
-                TiXmlElement * elemTag = new TiXmlElement("ELEMENTS");
-                root->LinkEndChild(elemTag);
+                if (!first)
+                    basisStringStream << ",";
+                basisStringStream << BasisTypeMap[fielddefs[f]->m_basis[i]];
+                first = false;
+            }
+            basisString = basisStringStream.str();
+        }
+        elemTag->SetAttribute("BASIS", basisString);
 
-                // Write FIELDS
-                std::string fieldsString;
+        // Write homogeneuous length details
+        if (fielddefs[f]->m_numHomogeneousDir)
+        {
+            std::string homoLenString;
+            {
+                std::stringstream homoLenStringStream;
+                bool first = true;
+                for (int i = 0; i < fielddefs[f]->m_numHomogeneousDir; ++i)
                 {
-                    std::stringstream fieldsStringStream;
+                    if (!first)
+                        homoLenStringStream << ",";
+                    homoLenStringStream
+                        << fielddefs[f]->m_homogeneousLengths[i];
+                    first = false;
+                }
+                homoLenString = homoLenStringStream.str();
+            }
+            elemTag->SetAttribute("HOMOGENEOUSLENGTHS", homoLenString);
+        }
+
+        // Write homogeneuous planes/lines details
+        if (fielddefs[f]->m_numHomogeneousDir)
+        {
+            if (fielddefs[f]->m_homogeneousYIDs.size() > 0)
+            {
+                std::string homoYIDsString;
+                {
+                    std::stringstream homoYIDsStringStream;
                     bool first = true;
-                    for (std::vector<int>::size_type i = 0;
-                            i < fielddefs[f]->m_fields.size(); i++)
+                    for (int i = 0; i < fielddefs[f]->m_homogeneousYIDs.size();
+                         i++)
                     {
                         if (!first)
-                            fieldsStringStream << ",";
-                        fieldsStringStream << fielddefs[f]->m_fields[i];
+                            homoYIDsStringStream << ",";
+                        homoYIDsStringStream
+                            << fielddefs[f]->m_homogeneousYIDs[i];
                         first = false;
                     }
-                    fieldsString = fieldsStringStream.str();
+                    homoYIDsString = homoYIDsStringStream.str();
                 }
-                elemTag->SetAttribute("FIELDS", fieldsString);
+                elemTag->SetAttribute("HOMOGENEOUSYIDS", homoYIDsString);
+            }
 
-                // Write SHAPE
-                std::string shapeString;
+            if (fielddefs[f]->m_homogeneousZIDs.size() > 0)
+            {
+                std::string homoZIDsString;
                 {
-                    std::stringstream shapeStringStream;
-                    shapeStringStream
-                            << ShapeTypeMap[fielddefs[f]->m_shapeType];
-                    if (fielddefs[f]->m_numHomogeneousDir == 1)
-                    {
-                        shapeStringStream << "-HomogenousExp1D";
-                    }
-                    else if (fielddefs[f]->m_numHomogeneousDir == 2)
-                    {
-                        shapeStringStream << "-HomogenousExp2D";
-                    }
-
-                    if (fielddefs[f]->m_homoStrips)
-                    {
-                        shapeStringStream << "-Strips";
-                    }
-
-                    shapeString = shapeStringStream.str();
-                }
-                elemTag->SetAttribute("SHAPE", shapeString);
-
-                // Write BASIS
-                std::string basisString;
-                {
-                    std::stringstream basisStringStream;
+                    std::stringstream homoZIDsStringStream;
                     bool first = true;
-                    for (std::vector<BasisType>::size_type i = 0;
-                            i < fielddefs[f]->m_basis.size(); i++)
+                    for (int i = 0; i < fielddefs[f]->m_homogeneousZIDs.size();
+                         i++)
                     {
                         if (!first)
-                            basisStringStream << ",";
-                        basisStringStream
-                                << BasisTypeMap[fielddefs[f]->m_basis[i]];
+                            homoZIDsStringStream << ",";
+                        homoZIDsStringStream
+                            << fielddefs[f]->m_homogeneousZIDs[i];
                         first = false;
                     }
-                    basisString = basisStringStream.str();
+                    homoZIDsString = homoZIDsStringStream.str();
                 }
-                elemTag->SetAttribute("BASIS", basisString);
+                elemTag->SetAttribute("HOMOGENEOUSZIDS", homoZIDsString);
+            }
 
-                // Write homogeneuous length details
-                if (fielddefs[f]->m_numHomogeneousDir)
+            if (fielddefs[f]->m_homogeneousSIDs.size() > 0)
+            {
+                std::string homoSIDsString;
                 {
-                    std::string homoLenString;
+                    std::stringstream homoSIDsStringStream;
+                    bool first = true;
+                    for (int i = 0; i < fielddefs[f]->m_homogeneousSIDs.size();
+                         i++)
                     {
-                        std::stringstream homoLenStringStream;
-                        bool first = true;
-                        for (int i = 0; i < fielddefs[f]->m_numHomogeneousDir;
-                                ++i)
+                        if (!first)
                         {
-                            if (!first)
-                                homoLenStringStream << ",";
-                            homoLenStringStream
-                                    << fielddefs[f]->m_homogeneousLengths[i];
-                            first = false;
+                            homoSIDsStringStream << ",";
                         }
-                        homoLenString = homoLenStringStream.str();
+                        homoSIDsStringStream
+                            << fielddefs[f]->m_homogeneousSIDs[i];
+                        first = false;
                     }
-                    elemTag->SetAttribute("HOMOGENEOUSLENGTHS", homoLenString);
+                    homoSIDsString = homoSIDsStringStream.str();
                 }
+                elemTag->SetAttribute("HOMOGENEOUSSIDS", homoSIDsString);
+            }
+        }
 
-                // Write homogeneuous planes/lines details
-                if (fielddefs[f]->m_numHomogeneousDir)
+        // Write NUMMODESPERDIR
+        std::string numModesString;
+        {
+            std::stringstream numModesStringStream;
+
+            if (fielddefs[f]->m_uniOrder)
+            {
+                numModesStringStream << "UNIORDER:";
+                // Just dump single definition
+                bool first = true;
+                for (std::vector<int>::size_type i = 0;
+                     i < fielddefs[f]->m_basis.size();
+                     i++)
                 {
-                    if (fielddefs[f]->m_homogeneousYIDs.size() > 0)
-                    {
-                        std::string homoYIDsString;
-                        {
-                            std::stringstream homoYIDsStringStream;
-                            bool first = true;
-                            for (int i = 0;
-                                    i < fielddefs[f]->m_homogeneousYIDs.size();
-                                    i++)
-                            {
-                                if (!first)
-                                    homoYIDsStringStream << ",";
-                                homoYIDsStringStream
-                                        << fielddefs[f]->m_homogeneousYIDs[i];
-                                first = false;
-                            }
-                            homoYIDsString = homoYIDsStringStream.str();
-                        }
-                        elemTag->SetAttribute("HOMOGENEOUSYIDS",
-                                homoYIDsString);
-                    }
-
-                    if (fielddefs[f]->m_homogeneousZIDs.size() > 0)
-                    {
-                        std::string homoZIDsString;
-                        {
-                            std::stringstream homoZIDsStringStream;
-                            bool first = true;
-                            for (int i = 0;
-                                    i < fielddefs[f]->m_homogeneousZIDs.size();
-                                    i++)
-                            {
-                                if (!first)
-                                    homoZIDsStringStream << ",";
-                                homoZIDsStringStream
-                                        << fielddefs[f]->m_homogeneousZIDs[i];
-                                first = false;
-                            }
-                            homoZIDsString = homoZIDsStringStream.str();
-                        }
-                        elemTag->SetAttribute("HOMOGENEOUSZIDS",
-                                homoZIDsString);
-                    }
-
-                    if(fielddefs[f]->m_homogeneousSIDs.size() > 0)
-                    {
-                        std::string homoSIDsString;
-                        {
-                            std::stringstream homoSIDsStringStream;
-                            bool first = true;
-                            for(int i = 0; i < fielddefs[f]->m_homogeneousSIDs.size(); i++)
-                            {
-                                if (!first)
-                                {
-                                    homoSIDsStringStream << ",";
-                                }
-                                homoSIDsStringStream << fielddefs[f]->m_homogeneousSIDs[i];
-                                first = false;
-                            }
-                            homoSIDsString = homoSIDsStringStream.str();
-                        }
-                        elemTag->SetAttribute("HOMOGENEOUSSIDS", homoSIDsString);
-                    }
+                    if (!first)
+                        numModesStringStream << ",";
+                    numModesStringStream << fielddefs[f]->m_numModes[i];
+                    first = false;
                 }
-
-                // Write NUMMODESPERDIR
-                std::string numModesString;
+            }
+            else
+            {
+                numModesStringStream << "MIXORDER:";
+                bool first = true;
+                for (std::vector<int>::size_type i = 0;
+                     i < fielddefs[f]->m_numModes.size();
+                     i++)
                 {
-                    std::stringstream numModesStringStream;
-
-                    if (fielddefs[f]->m_uniOrder)
-                    {
-                        numModesStringStream << "UNIORDER:";
-                        // Just dump single definition
-                        bool first = true;
-                        for (std::vector<int>::size_type i = 0;
-                                i < fielddefs[f]->m_basis.size(); i++)
-                        {
-                            if (!first)
-                                numModesStringStream << ",";
-                            numModesStringStream << fielddefs[f]->m_numModes[i];
-                            first = false;
-                        }
-                    }
-                    else
-                    {
-                        numModesStringStream << "MIXORDER:";
-                        bool first = true;
-                        for (std::vector<int>::size_type i = 0;
-                                i < fielddefs[f]->m_numModes.size(); i++)
-                        {
-                            if (!first)
-                                numModesStringStream << ",";
-                            numModesStringStream << fielddefs[f]->m_numModes[i];
-                            first = false;
-                        }
-                    }
-
-                    numModesString = numModesStringStream.str();
+                    if (!first)
+                        numModesStringStream << ",";
+                    numModesStringStream << fielddefs[f]->m_numModes[i];
+                    first = false;
                 }
-                elemTag->SetAttribute("NUMMODESPERDIR", numModesString);
+            }
 
-                // Write ID
-                // Should ideally look at ways of compressing this stream
-                // if just sequential;
-                std::string idString;
-                {
-                    std::stringstream idStringStream;
-                    GenerateSeqString(fielddefs[f]->m_elementIDs, idString);
-                }
-                elemTag->SetAttribute("ID", idString);
-                elemTag->SetAttribute("COMPRESSED",
+            numModesString = numModesStringStream.str();
+        }
+        elemTag->SetAttribute("NUMMODESPERDIR", numModesString);
+
+        // Write ID
+        // Should ideally look at ways of compressing this stream
+        // if just sequential;
+        std::string idString;
+        {
+            std::stringstream idStringStream;
+            GenerateSeqString(fielddefs[f]->m_elementIDs, idString);
+        }
+        elemTag->SetAttribute("ID", idString);
+        elemTag->SetAttribute("COMPRESSED",
                               LibUtilities::CompressData::GetCompressString());
 
-                // Add this information for future compatibility
-                // issues, for exmaple in case we end up using a 128
-                // bit machine.
-                elemTag->SetAttribute("BITSIZE",
+        // Add this information for future compatibility
+        // issues, for exmaple in case we end up using a 128
+        // bit machine.
+        elemTag->SetAttribute("BITSIZE",
                               LibUtilities::CompressData::GetBitSizeStr());
-                std::string base64string;
-                ASSERTL0(Z_OK == CompressData::ZlibEncodeToBase64Str(
-                                                fielddata[f], base64string),
-                         "Failed to compress field data.");
+        std::string base64string;
+        ASSERTL0(Z_OK == CompressData::ZlibEncodeToBase64Str(fielddata[f],
+                                                             base64string),
+                 "Failed to compress field data.");
 
-                elemTag->LinkEndChild(new TiXmlText(base64string));
+        elemTag->LinkEndChild(new TiXmlText(base64string));
+    }
+    doc.SaveFile(filename);
 
-            }
-            doc.SaveFile(filename);
+    m_comm->Block();
+    // all data has been written
+    if (0 == m_comm->GetRank())
+    {
+        tm1 = m_comm->Wtime();
+        cout << prfx.str() << "leaving after " << tm1 - tm0 << " secs..."
+             << endl;
+    }
+}
 
-            m_comm->Block();
-            // all data has been written
-            if (0 == m_comm->GetRank())
-            {
-                tm1 = m_comm->Wtime();
-                cout << prfx.str() << "leaving after " << tm1-tm0 << " secs..." << endl;
-            }
-        }
+/**
+ *
+ */
+void FieldIOXml::WriteMultiFldFileIDs(
+    const std::string &outFile,
+    const std::vector<std::string> fileNames,
+    std::vector<std::vector<unsigned int> > &elementList,
+    const FieldMetaDataMap &fieldmetadatamap)
+{
+    TiXmlDocument doc;
+    TiXmlDeclaration *decl = new TiXmlDeclaration("1.0", "utf-8", "");
+    doc.LinkEndChild(decl);
 
-        /**
-         *
-         */
-        void FieldIOXml::WriteMultiFldFileIDs(const std::string &outFile,
-                const std::vector<std::string> fileNames,
-                std::vector<std::vector<unsigned int> > &elementList,
-                const FieldMetaDataMap &fieldmetadatamap)
+    ASSERTL0(fileNames.size() == elementList.size(),
+             "Outfile names and list of elements ids does not match");
+
+    TiXmlElement *root = new TiXmlElement("NEKTAR");
+    doc.LinkEndChild(root);
+
+    AddInfoTag(root, fieldmetadatamap);
+
+    for (int t = 0; t < fileNames.size(); ++t)
+    {
+        if (elementList[t].size())
         {
-            TiXmlDocument doc;
-            TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
-            doc.LinkEndChild(decl);
+            TiXmlElement *elemIDs = new TiXmlElement("Partition");
+            root->LinkEndChild(elemIDs);
 
-            ASSERTL0(fileNames.size() == elementList.size(),
-                    "Outfile names and list of elements ids does not match");
+            elemIDs->SetAttribute("FileName", fileNames[t]);
 
-            TiXmlElement * root = new TiXmlElement("NEKTAR");
-            doc.LinkEndChild(root);
+            string IDstring;
 
-            AddInfoTag(root, fieldmetadatamap);
+            GenerateSeqString(elementList[t], IDstring);
 
-            for (int t = 0; t < fileNames.size(); ++t)
-            {
-                if (elementList[t].size())
-                {
-                    TiXmlElement * elemIDs = new TiXmlElement("Partition");
-                    root->LinkEndChild(elemIDs);
-
-                    elemIDs->SetAttribute("FileName", fileNames[t]);
-
-                    string IDstring;
-
-                    GenerateSeqString(elementList[t], IDstring);
-
-                    elemIDs->LinkEndChild(new TiXmlText(IDstring));
-                }
-            }
-
-            doc.SaveFile(outFile);
+            elemIDs->LinkEndChild(new TiXmlText(IDstring));
         }
+    }
 
-        /**
-         *
-         */
-        void FieldIOXml::ImportMultiFldFileIDs(const std::string &inFile,
-                std::vector<std::string> &fileNames,
-                std::vector<std::vector<unsigned int> > &elementList,
-                FieldMetaDataMap &fieldmetadatamap)
+    doc.SaveFile(outFile);
+}
+
+/**
+ *
+ */
+void FieldIOXml::ImportMultiFldFileIDs(
+    const std::string &inFile,
+    std::vector<std::string> &fileNames,
+    std::vector<std::vector<unsigned int> > &elementList,
+    FieldMetaDataMap &fieldmetadatamap)
+{
+    TiXmlDocument doc(inFile);
+    bool loadOkay = doc.LoadFile();
+
+    std::stringstream errstr;
+    errstr << "Unable to load file: " << inFile << std::endl;
+    errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+    errstr << "Position: Line " << doc.ErrorRow() << ", Column "
+           << doc.ErrorCol() << std::endl;
+    ASSERTL0(loadOkay, errstr.str());
+
+    // Handle on XML document
+    TiXmlHandle docHandle(&doc);
+
+    // Retrieve main NEKTAR tag - XML specification states one
+    // top-level element tag per file.
+    TiXmlElement *master = doc.FirstChildElement("NEKTAR");
+    ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+
+    // Partition element tag name
+    std::string strPartition = "Partition";
+
+    // First attempt to get the first Partition element
+    TiXmlElement *fldfileIDs = master->FirstChildElement(strPartition.c_str());
+    if (!fldfileIDs)
+    {
+        // If this files try previous name
+        strPartition = "MultipleFldFiles";
+        fldfileIDs   = master->FirstChildElement("MultipleFldFiles");
+    }
+    ASSERTL0(fldfileIDs,
+             "Unable to find 'Partition' or 'MultipleFldFiles' tag "
+             "within nektar tag.");
+
+    while (fldfileIDs)
+    {
+        // Read file name of partition file
+        const char *attr = fldfileIDs->Attribute("FileName");
+        ASSERTL0(attr,
+                 "'FileName' not provided as an attribute of '" + strPartition +
+                     "' tag.");
+        fileNames.push_back(std::string(attr));
+
+        const char *elementIDs = fldfileIDs->GetText();
+        ASSERTL0(elementIDs, "Element IDs not specified.");
+
+        std::string elementIDsStr(elementIDs);
+
+        std::vector<unsigned int> idvec;
+        ParseUtils::GenerateSeqVector(elementIDsStr.c_str(), idvec);
+
+        elementList.push_back(idvec);
+
+        fldfileIDs = fldfileIDs->NextSiblingElement(strPartition.c_str());
+    }
+}
+
+void FieldIOXml::v_Import(const std::string &infilename,
+                          std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                          std::vector<std::vector<NekDouble> > &fielddata,
+                          FieldMetaDataMap &fieldinfomap,
+                          const Array<OneD, int> ElementIDs)
+{
+    std::string infile = infilename;
+
+    fs::path pinfilename(infilename);
+
+    // check to see that infile is a directory
+    if (fs::is_directory(pinfilename))
+    {
+        fs::path infofile("Info.xml");
+        fs::path fullpath = pinfilename / infofile;
+        infile            = PortablePath(fullpath);
+
+        std::vector<std::string> filenames;
+        std::vector<std::vector<unsigned int> > elementIDs_OnPartitions;
+
+        ImportMultiFldFileIDs(
+            infile, filenames, elementIDs_OnPartitions, fieldinfomap);
+
+        // Load metadata
+        ImportFieldMetaData(infile, fieldinfomap);
+
+        if (ElementIDs == NullInt1DArray) // load all elements
         {
-            TiXmlDocument doc(inFile);
-            bool loadOkay = doc.LoadFile();
-
-            std::stringstream errstr;
-            errstr << "Unable to load file: " << inFile << std::endl;
-            errstr << "Reason: " << doc.ErrorDesc() << std::endl;
-            errstr << "Position: Line " << doc.ErrorRow() << ", Column "
-                    << doc.ErrorCol() << std::endl;
-            ASSERTL0(loadOkay, errstr.str());
-
-            // Handle on XML document
-            TiXmlHandle docHandle(&doc);
-
-            // Retrieve main NEKTAR tag - XML specification states one
-            // top-level element tag per file.
-            TiXmlElement* master = doc.FirstChildElement("NEKTAR");
-            ASSERTL0(master, "Unable to find NEKTAR tag in file.");
-
-            // Partition element tag name
-            std::string strPartition = "Partition";
-
-            // First attempt to get the first Partition element
-            TiXmlElement* fldfileIDs = master->FirstChildElement(
-                    strPartition.c_str());
-            if (!fldfileIDs)
+            for (int i = 0; i < filenames.size(); ++i)
             {
-                // If this files try previous name
-                strPartition = "MultipleFldFiles";
-                fldfileIDs = master->FirstChildElement("MultipleFldFiles");
-            }
-            ASSERTL0(fldfileIDs,
-                    "Unable to find 'Partition' or 'MultipleFldFiles' tag "
-                            "within nektar tag.");
-
-            while (fldfileIDs)
-            {
-                // Read file name of partition file
-                const char *attr = fldfileIDs->Attribute("FileName");
-                ASSERTL0(attr,
-                        "'FileName' not provided as an attribute of '"
-                                + strPartition + "' tag.");
-                fileNames.push_back(std::string(attr));
-
-                const char* elementIDs = fldfileIDs->GetText();
-                ASSERTL0(elementIDs, "Element IDs not specified.");
-
-                std::string elementIDsStr(elementIDs);
-
-                std::vector<unsigned int> idvec;
-                ParseUtils::GenerateSeqVector(elementIDsStr.c_str(), idvec);
-
-                elementList.push_back(idvec);
-
-                fldfileIDs = fldfileIDs->NextSiblingElement(
-                        strPartition.c_str());
-            }
-        }
-
-        void FieldIOXml::v_Import(const std::string& infilename,
-                std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                std::vector<std::vector<NekDouble> > &fielddata,
-                FieldMetaDataMap &fieldinfomap,
-                const Array<OneD, int> ElementIDs)
-        {
-            std::string infile = infilename;
-
-            fs::path pinfilename(infilename);
-
-            if (fs::is_directory(pinfilename)) // check to see that infile is a directory
-            {
-                fs::path infofile("Info.xml");
-                fs::path fullpath = pinfilename / infofile;
-                infile = PortablePath(fullpath);
-
-                std::vector < std::string > filenames;
-                std::vector < std::vector<unsigned int>
-                        > elementIDs_OnPartitions;
-
-                ImportMultiFldFileIDs(infile, filenames,
-                        elementIDs_OnPartitions, fieldinfomap);
-
-                // Load metadata
-                ImportFieldMetaData(infile, fieldinfomap);
-
-                if (ElementIDs == NullInt1DArray) // load all elements
+                fs::path pfilename(filenames[i]);
+                fullpath                       = pinfilename / pfilename;
+                string fname                   = PortablePath(fullpath);
+                DataSourceSharedPtr dataSource = XmlDataSource::create(fname);
+                ImportFieldDefs(dataSource, fielddefs, false);
+                if (fielddata != NullVectorNekDoubleVector)
                 {
-                    for (int i = 0; i < filenames.size(); ++i)
-                    {
-                        fs::path pfilename(filenames[i]);
-                        fullpath = pinfilename / pfilename;
-                        string fname = PortablePath(fullpath);
-                        DataSourceSharedPtr dataSource = XmlDataSource::create(fname);
-                        ImportFieldDefs(dataSource, fielddefs, false);
-                        if (fielddata != NullVectorNekDoubleVector)
-                        {
-                            ImportFieldData(dataSource, fielddefs, fielddata);
-                        }
-                    }
-
-                }
-                else // only load relevant elements from partitions
-                {
-                    int i, j;
-                    map<int, vector<int> > FileIDs;
-                    map<int, vector<int> >::iterator it;
-                    set<int> LoadFile;
-
-                    for (i = 0; i < elementIDs_OnPartitions.size(); ++i)
-                    {
-                        for (j = 0; j < elementIDs_OnPartitions[i].size(); ++j)
-                        {
-                            FileIDs[elementIDs_OnPartitions[i][j]].push_back(i);
-                        }
-                    }
-
-                    for (i = 0; i < ElementIDs.num_elements(); ++i)
-                    {
-                        it = FileIDs.find(ElementIDs[i]);
-                        if (it != FileIDs.end())
-                        {
-                            for (j = 0; j < it->second.size(); ++j)
-                            {
-                                LoadFile.insert(it->second[j]);
-                            }
-                        }
-                    }
-
-                    set<int>::iterator iter;
-                    for (iter = LoadFile.begin(); iter != LoadFile.end();
-                            ++iter)
-                    {
-                        fs::path pfilename(filenames[*iter]);
-                        fullpath = pinfilename / pfilename;
-                        string fname = PortablePath(fullpath);
-                        DataSourceSharedPtr dataSource = XmlDataSource::create(fname);
-                        ImportFieldDefs(dataSource, fielddefs, false);
-                        if (fielddata != NullVectorNekDoubleVector)
-                        {
-                            ImportFieldData(dataSource, fielddefs, fielddata);
-                        }
-                    }
-                }
-            }
-            else // serial format case
-            {
-                DataSourceSharedPtr doc = ImportFieldMetaData(infilename, fieldinfomap);
-                ImportFieldDefs(doc, fielddefs, false);
-                if(fielddata != NullVectorNekDoubleVector)
-                {
-                    ImportFieldData(doc, fielddefs, fielddata);
+                    ImportFieldData(dataSource, fielddefs, fielddata);
                 }
             }
         }
-
-        DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(std::string filename,
-                FieldMetaDataMap &fieldmetadatamap)
+        else // only load relevant elements from partitions
         {
-            DataSourceSharedPtr doc = XmlDataSource::create(filename);
-            XmlDataSourceSharedPtr xml = boost::static_pointer_cast<XmlDataSource>(doc);
-            TiXmlElement* master = 0; // Master tag within which all data is contained.
-            TiXmlElement* metadata = 0;
+            int i, j;
+            map<int, vector<int> > FileIDs;
+            map<int, vector<int> >::iterator it;
+            set<int> LoadFile;
 
-            master = xml->Get().FirstChildElement("NEKTAR");
-            ASSERTL0(master, "Unable to find NEKTAR tag in file.");
-            std::string strLoop = "NEKTAR";
-
-            // Retain original metadata structure for backwards compatibility
-            // TODO: Remove old metadata format
-            metadata = master->FirstChildElement("FIELDMETADATA");
-            if (metadata)
+            for (i = 0; i < elementIDs_OnPartitions.size(); ++i)
             {
-                TiXmlElement *param = metadata->FirstChildElement("P");
-
-                while (param)
+                for (j = 0; j < elementIDs_OnPartitions[i].size(); ++j)
                 {
-                    TiXmlAttribute *paramAttr = param->FirstAttribute();
-                    std::string attrName(paramAttr->Name());
-                    std::string paramString;
-
-                    if (attrName == "PARAM")
-                    {
-                        paramString.insert(0, paramAttr->Value());
-                    }
-                    else
-                    {
-                        ASSERTL0(false,
-                                "PARAM not provided as an attribute in FIELDMETADATA section");
-                    }
-
-                    // Now read body of param
-                    std::string paramBodyStr;
-
-                    TiXmlNode *paramBody = param->FirstChild();
-
-                    paramBodyStr += paramBody->ToText()->Value();
-
-                    fieldmetadatamap[paramString] = paramBodyStr;
-                    param = param->NextSiblingElement("P");
+                    FileIDs[elementIDs_OnPartitions[i][j]].push_back(i);
                 }
             }
 
-            // New metadata format
-            metadata = master->FirstChildElement("Metadata");
-            if (metadata)
+            for (i = 0; i < ElementIDs.num_elements(); ++i)
             {
-                TiXmlElement *param = metadata->FirstChildElement();
-
-                while (param)
+                it = FileIDs.find(ElementIDs[i]);
+                if (it != FileIDs.end())
                 {
-                    std::string paramString = param->Value();
-                    if (paramString != "Provenance")
+                    for (j = 0; j < it->second.size(); ++j)
                     {
-                        // Now read body of param
-                        TiXmlNode *paramBody = param->FirstChild();
-                        std::string paramBodyStr = paramBody->ToText()->Value();
-
-                        fieldmetadatamap[paramString] = paramBodyStr;
+                        LoadFile.insert(it->second[j]);
                     }
-                    param = param->NextSiblingElement();
                 }
             }
 
-            return doc;
+            set<int>::iterator iter;
+            for (iter = LoadFile.begin(); iter != LoadFile.end(); ++iter)
+            {
+                fs::path pfilename(filenames[*iter]);
+                fullpath                       = pinfilename / pfilename;
+                string fname                   = PortablePath(fullpath);
+                DataSourceSharedPtr dataSource = XmlDataSource::create(fname);
+                ImportFieldDefs(dataSource, fielddefs, false);
+                if (fielddata != NullVectorNekDoubleVector)
+                {
+                    ImportFieldData(dataSource, fielddefs, fielddata);
+                }
+            }
         }
-
-        void FieldIOXml::SetUpFieldMetaData(
-            const string outname,
-            const vector< FieldDefinitionsSharedPtr > &fielddefs,
-            const FieldMetaDataMap &fieldmetadatamap)
+    }
+    else // serial format case
+    {
+        DataSourceSharedPtr doc = ImportFieldMetaData(infilename, fieldinfomap);
+        ImportFieldDefs(doc, fielddefs, false);
+        if (fielddata != NullVectorNekDoubleVector)
         {
-            ASSERTL0(!outname.empty(), "Empty path given to SetUpFieldMetaData()");
+            ImportFieldData(doc, fielddefs, fielddata);
+        }
+    }
+}
 
-            int nprocs = m_comm->GetSize();
-            int rank   = m_comm->GetRank();
+DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(
+    std::string filename, FieldMetaDataMap &fieldmetadatamap)
+{
+    DataSourceSharedPtr doc    = XmlDataSource::create(filename);
+    XmlDataSourceSharedPtr xml = boost::static_pointer_cast<XmlDataSource>(doc);
+    TiXmlElement *master       = 0; // Master tag within which all data is contained.
+    TiXmlElement *metadata     = 0;
 
-            fs::path specPath (outname);
+    master = xml->Get().FirstChildElement("NEKTAR");
+    ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+    std::string strLoop = "NEKTAR";
 
-            // Compute number of elements on this process and share with other
-            // processes. Also construct list of elements on this process from
-            // available vector of field definitions.
-            std::vector<unsigned int> elmtnums(nprocs, 0);
-            std::vector<unsigned int> idlist;
-            int i;
-            for (i = 0; i < fielddefs.size(); ++i)
+    // Retain original metadata structure for backwards compatibility
+    // TODO: Remove old metadata format
+    metadata = master->FirstChildElement("FIELDMETADATA");
+    if (metadata)
+    {
+        TiXmlElement *param = metadata->FirstChildElement("P");
+
+        while (param)
+        {
+            TiXmlAttribute *paramAttr = param->FirstAttribute();
+            std::string attrName(paramAttr->Name());
+            std::string paramString;
+
+            if (attrName == "PARAM")
             {
-                elmtnums[rank] += fielddefs[i]->m_elementIDs.size();
-                idlist.insert(idlist.end(), fielddefs[i]->m_elementIDs.begin(),
-                        fielddefs[i]->m_elementIDs.end());
-            }
-            m_comm->AllReduce(elmtnums, LibUtilities::ReduceMax);
-
-            // Collate per-process element lists on root process to generate
-            // the info file.
-            if (rank == 0)
-            {
-                std::vector < std::vector<unsigned int> > ElementIDs(nprocs);
-
-                // Populate the list of element ID lists from all processes
-                ElementIDs[0] = idlist;
-                for (i = 1; i < nprocs; ++i)
-                {
-                    std::vector<unsigned int> tmp(elmtnums[i]);
-                    m_comm->Recv(i, tmp);
-                    ElementIDs[i] = tmp;
-                }
-
-                // Set up output names
-                std::vector < std::string > filenames;
-                for (int i = 0; i < nprocs; ++i)
-                {
-                    boost::format pad("P%1$07d.%2$s");
-                    pad % i % GetFileEnding();
-                    filenames.push_back(pad.str());
-                }
-
-                // Write the Info.xml file
-                string infofile = LibUtilities::PortablePath(
-                        specPath / fs::path("Info.xml"));
-
-                cout << "Writing: " << specPath << endl;
-                WriteMultiFldFileIDs(infofile, filenames, ElementIDs,
-                        fieldmetadatamap);
+                paramString.insert(0, paramAttr->Value());
             }
             else
             {
-                // Send this process's ID list to the root process
-                m_comm->Send(0, idlist);
+                ASSERTL0(false, "PARAM not provided as an attribute in "
+                                "FIELDMETADATA section");
             }
+
+            // Now read body of param
+            std::string paramBodyStr;
+
+            TiXmlNode *paramBody = param->FirstChild();
+
+            paramBodyStr += paramBody->ToText()->Value();
+
+            fieldmetadatamap[paramString] = paramBodyStr;
+            param                         = param->NextSiblingElement("P");
+        }
+    }
+
+    // New metadata format
+    metadata = master->FirstChildElement("Metadata");
+    if (metadata)
+    {
+        TiXmlElement *param = metadata->FirstChildElement();
+
+        while (param)
+        {
+            std::string paramString = param->Value();
+            if (paramString != "Provenance")
+            {
+                // Now read body of param
+                TiXmlNode *paramBody     = param->FirstChild();
+                std::string paramBodyStr = paramBody->ToText()->Value();
+
+                fieldmetadatamap[paramString] = paramBodyStr;
+            }
+            param = param->NextSiblingElement();
+        }
+    }
+
+    return doc;
+}
+
+void FieldIOXml::SetUpFieldMetaData(
+    const string outname,
+    const vector<FieldDefinitionsSharedPtr> &fielddefs,
+    const FieldMetaDataMap &fieldmetadatamap)
+{
+    ASSERTL0(!outname.empty(), "Empty path given to SetUpFieldMetaData()");
+
+    int nprocs = m_comm->GetSize();
+    int rank   = m_comm->GetRank();
+
+    fs::path specPath(outname);
+
+    // Compute number of elements on this process and share with other
+    // processes. Also construct list of elements on this process from
+    // available vector of field definitions.
+    std::vector<unsigned int> elmtnums(nprocs, 0);
+    std::vector<unsigned int> idlist;
+    int i;
+    for (i = 0; i < fielddefs.size(); ++i)
+    {
+        elmtnums[rank] += fielddefs[i]->m_elementIDs.size();
+        idlist.insert(idlist.end(),
+                      fielddefs[i]->m_elementIDs.begin(),
+                      fielddefs[i]->m_elementIDs.end());
+    }
+    m_comm->AllReduce(elmtnums, LibUtilities::ReduceMax);
+
+    // Collate per-process element lists on root process to generate
+    // the info file.
+    if (rank == 0)
+    {
+        std::vector<std::vector<unsigned int> > ElementIDs(nprocs);
+
+        // Populate the list of element ID lists from all processes
+        ElementIDs[0] = idlist;
+        for (i = 1; i < nprocs; ++i)
+        {
+            std::vector<unsigned int> tmp(elmtnums[i]);
+            m_comm->Recv(i, tmp);
+            ElementIDs[i] = tmp;
         }
 
-        /**
-         *
-         */
-        std::string FieldIOXml::SetUpOutput(const std::string outname)
+        // Set up output names
+        std::vector<std::string> filenames;
+        for (int i = 0; i < nprocs; ++i)
         {
-            ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
+            boost::format pad("P%1$07d.%2$s");
+            pad % i % GetFileEnding();
+            filenames.push_back(pad.str());
+        }
 
-            int nprocs = m_comm->GetSize();
-            int rank = m_comm->GetRank();
+        // Write the Info.xml file
+        string infofile =
+            LibUtilities::PortablePath(specPath / fs::path("Info.xml"));
 
-            // Path to output: will be directory if parallel, normal file if
-            // serial.
-            fs::path specPath(outname);
-            fs::path fulloutname;
+        cout << "Writing: " << specPath << endl;
+        WriteMultiFldFileIDs(infofile, filenames, ElementIDs, fieldmetadatamap);
+    }
+    else
+    {
+        // Send this process's ID list to the root process
+        m_comm->Send(0, idlist);
+    }
+}
 
-            if (nprocs == 1)
-            {
-                fulloutname = specPath;
-            }
-            else
-            {
-                // Guess at filename that might belong to this process.
-                boost::format pad("P%1$07d.%2$s");
-                pad % m_comm->GetRank() % GetFileEnding();
+/**
+ *
+ */
+std::string FieldIOXml::SetUpOutput(const std::string outname)
+{
+    ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
 
-                // Generate full path name
-                fs::path poutfile(pad.str());
-                fulloutname = specPath / poutfile;
-            }
+    int nprocs = m_comm->GetSize();
+    int rank   = m_comm->GetRank();
 
-            // Remove any existing file which is in the way
-            if (m_comm->RemoveExistingFiles())
-            {
-                if (m_sharedFilesystem)
-                {
-                    // First, each process clears up its .fld file. This might
-                    // or might not be there (we might have changed numbers of
-                    // processors between runs, for example), but we can try
-                    // anyway.
-                    try
-                    {
-                        fs::remove_all(fulloutname);
-                    }
-                    catch (fs::filesystem_error& e)
-                    {
-                        ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                                 "Filesystem error: " + string(e.what()));
-                    }
-                }
+    // Path to output: will be directory if parallel, normal file if
+    // serial.
+    fs::path specPath(outname);
+    fs::path fulloutname;
 
-                m_comm->Block();
+    if (nprocs == 1)
+    {
+        fulloutname = specPath;
+    }
+    else
+    {
+        // Guess at filename that might belong to this process.
+        boost::format pad("P%1$07d.%2$s");
+        pad % m_comm->GetRank() % GetFileEnding();
 
-                // Now get rank 0 processor to tidy everything else up.
-                if (rank == 0 || !m_sharedFilesystem)
-                {
-                    try
-                    {
-                        fs::remove_all(specPath);
-                    }
-                    catch (fs::filesystem_error& e)
-                    {
-                        ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                                 "Filesystem error: " + string(e.what()));
-                    }
-                }
+        // Generate full path name
+        fs::path poutfile(pad.str());
+        fulloutname = specPath / poutfile;
+    }
 
-                m_comm->Block();
-            }
-
-            // serial processing just add ending.
-            if (nprocs == 1)
-            {
-                cout << "Writing: " << specPath << endl;
-                return LibUtilities::PortablePath(specPath);
-            }
-
-            // Create the destination directory
+    // Remove any existing file which is in the way
+    if (m_comm->RemoveExistingFiles())
+    {
+        if (m_sharedFilesystem)
+        {
+            // First, each process clears up its .fld file. This might
+            // or might not be there (we might have changed numbers of
+            // processors between runs, for example), but we can try
+            // anyway.
             try
             {
-                if (rank == 0 || !m_sharedFilesystem)
-                {
-                    fs::create_directory(specPath);
-                }
+                fs::remove_all(fulloutname);
             }
-            catch (fs::filesystem_error& e)
+            catch (fs::filesystem_error &e)
             {
-                ASSERTL0(false, "Filesystem error: " + string(e.what()));
+                ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                         "Filesystem error: " + string(e.what()));
             }
-
-            m_comm->Block();
-
-            // Return the full path to the partition for this process
-            return LibUtilities::PortablePath(fulloutname);
         }
 
-        /**
-         * The bool decides if the FieldDefs are in <EXPANSIONS> or in <NEKTAR>.
-         */
-        void FieldIOXml::ImportFieldDefs(DataSourceSharedPtr dataSource,
-                std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                bool expChild)
+        m_comm->Block();
+
+        // Now get rank 0 processor to tidy everything else up.
+        if (rank == 0 || !m_sharedFilesystem)
         {
-            XmlDataSourceSharedPtr xml = boost::static_pointer_cast
-                    < XmlDataSource > (dataSource);
-            TiXmlElement* master = NULL; // Master tag within which all data is contained.
-
-            master = xml->Get().FirstChildElement("NEKTAR");
-            ASSERTL0(master, "Unable to find NEKTAR tag in file.");
-            std::string strLoop = "NEKTAR";
-            TiXmlElement* loopXml = master;
-
-            TiXmlElement *expansionTypes;
-            if (expChild)
+            try
             {
-                expansionTypes = master->FirstChildElement("EXPANSIONS");
-                ASSERTL0(expansionTypes,
-                        "Unable to find EXPANSIONS tag in file.");
-                loopXml = expansionTypes;
-                strLoop = "EXPANSIONS";
+                fs::remove_all(specPath);
+            }
+            catch (fs::filesystem_error &e)
+            {
+                ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                         "Filesystem error: " + string(e.what()));
+            }
+        }
+
+        m_comm->Block();
+    }
+
+    // serial processing just add ending.
+    if (nprocs == 1)
+    {
+        cout << "Writing: " << specPath << endl;
+        return LibUtilities::PortablePath(specPath);
+    }
+
+    // Create the destination directory
+    try
+    {
+        if (rank == 0 || !m_sharedFilesystem)
+        {
+            fs::create_directory(specPath);
+        }
+    }
+    catch (fs::filesystem_error &e)
+    {
+        ASSERTL0(false, "Filesystem error: " + string(e.what()));
+    }
+
+    m_comm->Block();
+
+    // Return the full path to the partition for this process
+    return LibUtilities::PortablePath(fulloutname);
+}
+
+/**
+ * The bool decides if the FieldDefs are in <EXPANSIONS> or in <NEKTAR>.
+ */
+void FieldIOXml::ImportFieldDefs(
+    DataSourceSharedPtr dataSource,
+    std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+    bool expChild)
+{
+    XmlDataSourceSharedPtr xml =
+        boost::static_pointer_cast<XmlDataSource>(dataSource);
+    TiXmlElement *master =
+        NULL; // Master tag within which all data is contained.
+
+    master = xml->Get().FirstChildElement("NEKTAR");
+    ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+    std::string strLoop   = "NEKTAR";
+    TiXmlElement *loopXml = master;
+
+    TiXmlElement *expansionTypes;
+    if (expChild)
+    {
+        expansionTypes = master->FirstChildElement("EXPANSIONS");
+        ASSERTL0(expansionTypes, "Unable to find EXPANSIONS tag in file.");
+        loopXml = expansionTypes;
+        strLoop = "EXPANSIONS";
+    }
+
+    // Loop through all nektar tags, finding all of the element tags.
+    while (loopXml)
+    {
+        TiXmlElement *element = loopXml->FirstChildElement("ELEMENTS");
+        ASSERTL0(element, "Unable to find ELEMENTS tag within nektar tag.");
+
+        while (element)
+        {
+            // Extract the attributes.
+            std::string idString;
+            std::string shapeString;
+            std::string basisString;
+            std::string homoLengthsString;
+            std::string homoSIDsString;
+            std::string homoZIDsString;
+            std::string homoYIDsString;
+            std::string numModesString;
+            std::string numPointsString;
+            std::string fieldsString;
+            std::string pointsString;
+            bool pointDef        = false;
+            bool numPointDef     = false;
+            TiXmlAttribute *attr = element->FirstAttribute();
+            while (attr)
+            {
+                std::string attrName(attr->Name());
+                if (attrName == "FIELDS")
+                {
+                    fieldsString.insert(0, attr->Value());
+                }
+                else if (attrName == "SHAPE")
+                {
+                    shapeString.insert(0, attr->Value());
+                }
+                else if (attrName == "BASIS")
+                {
+                    basisString.insert(0, attr->Value());
+                }
+                else if (attrName == "HOMOGENEOUSLENGTHS")
+                {
+                    homoLengthsString.insert(0, attr->Value());
+                }
+                else if (attrName == "HOMOGENEOUSSIDS")
+                {
+                    homoSIDsString.insert(0, attr->Value());
+                }
+                else if (attrName == "HOMOGENEOUSZIDS")
+                {
+                    homoZIDsString.insert(0, attr->Value());
+                }
+                else if (attrName == "HOMOGENEOUSYIDS")
+                {
+                    homoYIDsString.insert(0, attr->Value());
+                }
+                else if (attrName == "NUMMODESPERDIR")
+                {
+                    numModesString.insert(0, attr->Value());
+                }
+                else if (attrName == "ID")
+                {
+                    idString.insert(0, attr->Value());
+                }
+                else if (attrName == "POINTSTYPE")
+                {
+                    pointsString.insert(0, attr->Value());
+                    pointDef = true;
+                }
+                else if (attrName == "NUMPOINTSPERDIR")
+                {
+                    numPointsString.insert(0, attr->Value());
+                    numPointDef = true;
+                }
+                else if (attrName == "COMPRESSED")
+                {
+                    if (!boost::iequals(attr->Value(),
+                                        CompressData::GetCompressString()))
+                    {
+                        WARNINGL0(false,
+                                  "Compressed formats do not "
+                                  "match. Expected: " +
+                                      CompressData::GetCompressString() +
+                                      " but got " + string(attr->Value()));
+                    }
+                }
+                else if (attrName == "BITSIZE")
+                {
+                    // This information is for future compatibility
+                    // issues, for example in case we end up using a 128
+                    // bit machine. Currently just do nothing.
+                }
+                else
+                {
+                    std::string errstr("Unknown attribute: ");
+                    errstr += attrName;
+                    ASSERTL1(false, errstr.c_str());
+                }
+
+                // Get the next attribute.
+                attr = attr->Next();
             }
 
-            // Loop through all nektar tags, finding all of the element tags.
-            while (loopXml)
+            // Check to see if using strips formulation
+            bool strips = false;
+            if (shapeString.find("Strips") != string::npos)
             {
-                TiXmlElement* element = loopXml->FirstChildElement("ELEMENTS");
-                ASSERTL0(element,
-                        "Unable to find ELEMENTS tag within nektar tag.");
+                strips = true;
+            }
 
-                while (element)
+            // Check to see if homogeneous expansion and if so
+            // strip down the shapeString definition
+            int numHomoDir = 0;
+            size_t loc;
+            //---> This finds the first location of  'n'!
+            if ((loc = shapeString.find_first_of("-")) != string::npos)
+            {
+                if (shapeString.find("Exp1D") != string::npos)
                 {
-                    // Extract the attributes.
-                    std::string idString;
-                    std::string shapeString;
-                    std::string basisString;
-                    std::string homoLengthsString;
-                    std::string homoSIDsString;
-                    std::string homoZIDsString;
-                    std::string homoYIDsString;
-                    std::string numModesString;
-                    std::string numPointsString;
-                    std::string fieldsString;
-                    std::string pointsString;
-                    bool pointDef = false;
-                    bool numPointDef = false;
-                    TiXmlAttribute *attr = element->FirstAttribute();
-                    while (attr)
-                    {
-                        std::string attrName(attr->Name());
-                        if (attrName == "FIELDS")
-                        {
-                            fieldsString.insert(0, attr->Value());
-                        }
-                        else if (attrName == "SHAPE")
-                        {
-                            shapeString.insert(0, attr->Value());
-                        }
-                        else if (attrName == "BASIS")
-                        {
-                            basisString.insert(0, attr->Value());
-                        }
-                        else if (attrName == "HOMOGENEOUSLENGTHS")
-                        {
-                            homoLengthsString.insert(0, attr->Value());
-                        }
-                        else if (attrName == "HOMOGENEOUSSIDS")
-                        {
-                            homoSIDsString.insert(0,attr->Value());
-                        }
-                        else if (attrName == "HOMOGENEOUSZIDS")
-                        {
-                            homoZIDsString.insert(0, attr->Value());
-                        }
-                        else if (attrName == "HOMOGENEOUSYIDS")
-                        {
-                            homoYIDsString.insert(0, attr->Value());
-                        }
-                        else if (attrName == "NUMMODESPERDIR")
-                        {
-                            numModesString.insert(0, attr->Value());
-                        }
-                        else if (attrName == "ID")
-                        {
-                            idString.insert(0, attr->Value());
-                        }
-                        else if (attrName == "POINTSTYPE")
-                        {
-                            pointsString.insert(0, attr->Value());
-                            pointDef = true;
-                        }
-                        else if (attrName == "NUMPOINTSPERDIR")
-                        {
-                            numPointsString.insert(0, attr->Value());
-                            numPointDef = true;
-                        }
-                        else if (attrName == "COMPRESSED")
-                        {
-                            if(!boost::iequals(attr->Value(),
-                                               CompressData::GetCompressString()))
-                            {
-                                WARNINGL0(false, "Compressed formats do not "
-                                          "match. Expected: "
-                                          + CompressData::GetCompressString()
-                                          + " but got "+ string(attr->Value()));
-                            }
-                        }
-                        else if (attrName =="BITSIZE")
-                        {
-                            // This information is for future compatibility
-                            // issues, for example in case we end up using a 128
-                            // bit machine. Currently just do nothing.
-                        }
-                        else
-                        {
-                            std::string errstr("Unknown attribute: ");
-                            errstr += attrName;
-                            ASSERTL1(false, errstr.c_str());
-                        }
+                    numHomoDir = 1;
+                }
+                else // HomogeneousExp1D
+                {
+                    numHomoDir = 2;
+                }
 
-                        // Get the next attribute.
-                        attr = attr->Next();
+                shapeString.erase(loc, shapeString.length());
+            }
+
+            // Reconstruct the fielddefs.
+            std::vector<unsigned int> elementIds;
+            {
+                bool valid =
+                    ParseUtils::GenerateSeqVector(idString.c_str(), elementIds);
+                ASSERTL0(valid, "Unable to correctly parse the element ids.");
+            }
+
+            // Get the geometrical shape
+            ShapeType shape;
+            bool valid = false;
+            for (unsigned int j = 0; j < SIZE_ShapeType; j++)
+            {
+                if (ShapeTypeMap[j] == shapeString)
+                {
+                    shape = (ShapeType)j;
+                    valid = true;
+                    break;
+                }
+            }
+
+            ASSERTL0(valid,
+                     std::string("Unable to correctly parse the shape type: ")
+                         .append(shapeString)
+                         .c_str());
+
+            // Get the basis
+            std::vector<std::string> basisStrings;
+            std::vector<BasisType> basis;
+            valid = ParseUtils::GenerateOrderedStringVector(basisString.c_str(),
+                                                            basisStrings);
+            ASSERTL0(valid, "Unable to correctly parse the basis types.");
+            for (std::vector<std::string>::size_type i = 0;
+                 i < basisStrings.size();
+                 i++)
+            {
+                valid = false;
+                for (unsigned int j = 0; j < SIZE_BasisType; j++)
+                {
+                    if (BasisTypeMap[j] == basisStrings[i])
+                    {
+                        basis.push_back((BasisType)j);
+                        valid = true;
+                        break;
                     }
+                }
+                ASSERTL0(
+                    valid,
+                    std::string("Unable to correctly parse the basis type: ")
+                        .append(basisStrings[i])
+                        .c_str());
+            }
 
-                    // Check to see if using strips formulation
-                    bool strips = false;
-                    if(shapeString.find("Strips")!=string::npos)
-                    {
-                        strips = true;
-                    }
+            // Get homoLengths
+            std::vector<NekDouble> homoLengths;
+            if (numHomoDir)
+            {
+                valid = ParseUtils::GenerateUnOrderedVector(
+                    homoLengthsString.c_str(), homoLengths);
+                ASSERTL0(valid, "Unable to correctly parse the number of "
+                                "homogeneous lengths.");
+            }
 
-                    // Check to see if homogeneous expansion and if so
-                    // strip down the shapeString definition
-                    int numHomoDir = 0;
-                    size_t loc;
-                    //---> This finds the first location of  'n'!
-                    if ((loc = shapeString.find_first_of("-")) != string::npos)
+            // Get Homogeneous strips IDs
+            std::vector<unsigned int> homoSIDs;
+            if (strips)
+            {
+                valid = ParseUtils::GenerateSeqVector(homoSIDsString.c_str(),
+                                                      homoSIDs);
+                ASSERTL0(valid,
+                         "Unable to correctly parse homogeneous strips IDs.");
+            }
+
+            // Get Homogeneous points IDs
+            std::vector<unsigned int> homoZIDs;
+            std::vector<unsigned int> homoYIDs;
+
+            if (numHomoDir == 1)
+            {
+                valid = ParseUtils::GenerateSeqVector(homoZIDsString.c_str(),
+                                                      homoZIDs);
+                ASSERTL0(valid,
+                         "Unable to correctly parse homogeneous planes IDs.");
+            }
+
+            if (numHomoDir == 2)
+            {
+                valid = ParseUtils::GenerateSeqVector(homoZIDsString.c_str(),
+                                                      homoZIDs);
+                ASSERTL0(valid, "Unable to correctly parse homogeneous lines "
+                                "IDs in z-direction.");
+                valid = ParseUtils::GenerateSeqVector(homoYIDsString.c_str(),
+                                                      homoYIDs);
+                ASSERTL0(valid, "Unable to correctly parse homogeneous lines "
+                                "IDs in y-direction.");
+            }
+
+            // Get points type
+            std::vector<PointsType> points;
+
+            if (pointDef)
+            {
+                std::vector<std::string> pointsStrings;
+                valid = ParseUtils::GenerateOrderedStringVector(
+                    pointsString.c_str(), pointsStrings);
+                ASSERTL0(valid, "Unable to correctly parse the points types.");
+                for (std::vector<std::string>::size_type i = 0;
+                     i < pointsStrings.size();
+                     i++)
+                {
+                    valid = false;
+                    for (unsigned int j = 0; j < SIZE_PointsType; j++)
                     {
-                        if (shapeString.find("Exp1D") != string::npos)
+                        if (kPointsTypeStr[j] == pointsStrings[i])
                         {
-                            numHomoDir = 1;
-                        }
-                        else // HomogeneousExp1D
-                        {
-                            numHomoDir = 2;
-                        }
-
-                        shapeString.erase(loc, shapeString.length());
-                    }
-
-                    // Reconstruct the fielddefs.
-                    std::vector<unsigned int> elementIds;
-                    {
-                        bool valid = ParseUtils::GenerateSeqVector(
-                                idString.c_str(), elementIds);
-                        ASSERTL0(valid,
-                                "Unable to correctly parse the element ids.");
-                    }
-
-                    // Get the geometrical shape
-                    ShapeType shape;
-                    bool valid = false;
-                    for (unsigned int j = 0; j < SIZE_ShapeType; j++)
-                    {
-                        if (ShapeTypeMap[j] == shapeString)
-                        {
-                            shape = (ShapeType) j;
+                            points.push_back((PointsType)j);
                             valid = true;
                             break;
                         }
                     }
 
                     ASSERTL0(valid,
-                            std::string(
-                                    "Unable to correctly parse the shape type: ").append(
-                                    shapeString).c_str());
-
-                    // Get the basis
-                    std::vector < std::string > basisStrings;
-                    std::vector<BasisType> basis;
-                    valid = ParseUtils::GenerateOrderedStringVector(
-                            basisString.c_str(), basisStrings);
-                    ASSERTL0(valid,
-                            "Unable to correctly parse the basis types.");
-                    for (std::vector<std::string>::size_type i = 0;
-                            i < basisStrings.size(); i++)
-                    {
-                        valid = false;
-                        for (unsigned int j = 0; j < SIZE_BasisType; j++)
-                        {
-                            if (BasisTypeMap[j] == basisStrings[i])
-                            {
-                                basis.push_back((BasisType) j);
-                                valid = true;
-                                break;
-                            }
-                        }
-                        ASSERTL0(valid,
-                                std::string(
-                                        "Unable to correctly parse the basis type: ").append(
-                                        basisStrings[i]).c_str());
-                    }
-
-                    // Get homoLengths
-                    std::vector<NekDouble> homoLengths;
-                    if (numHomoDir)
-                    {
-                        valid = ParseUtils::GenerateUnOrderedVector(
-                                homoLengthsString.c_str(), homoLengths);
-                        ASSERTL0(valid,
-                                "Unable to correctly parse the number of homogeneous lengths.");
-                    }
-
-                    // Get Homogeneous strips IDs
-                    std::vector<unsigned int> homoSIDs;
-                    if(strips)
-                    {
-                        valid = ParseUtils::GenerateSeqVector(homoSIDsString.c_str(), homoSIDs);
-                        ASSERTL0(valid, "Unable to correctly parse homogeneous strips IDs.");
-                    }
-
-                    // Get Homogeneous points IDs
-                    std::vector<unsigned int> homoZIDs;
-                    std::vector<unsigned int> homoYIDs;
-
-                    if (numHomoDir == 1)
-                    {
-                        valid = ParseUtils::GenerateSeqVector(
-                                homoZIDsString.c_str(), homoZIDs);
-                        ASSERTL0(valid,
-                                "Unable to correctly parse homogeneous planes IDs.");
-                    }
-
-                    if (numHomoDir == 2)
-                    {
-                        valid = ParseUtils::GenerateSeqVector(
-                                homoZIDsString.c_str(), homoZIDs);
-                        ASSERTL0(valid,
-                                "Unable to correctly parse homogeneous lines IDs in z-direction.");
-                        valid = ParseUtils::GenerateSeqVector(
-                                homoYIDsString.c_str(), homoYIDs);
-                        ASSERTL0(valid,
-                                "Unable to correctly parse homogeneous lines IDs in y-direction.");
-                    }
-
-                    // Get points type
-                    std::vector<PointsType> points;
-
-                    if (pointDef)
-                    {
-                        std::vector < std::string > pointsStrings;
-                        valid = ParseUtils::GenerateOrderedStringVector(
-                                pointsString.c_str(), pointsStrings);
-                        ASSERTL0(valid,
-                                "Unable to correctly parse the points types.");
-                        for (std::vector<std::string>::size_type i = 0;
-                                i < pointsStrings.size(); i++)
-                        {
-                            valid = false;
-                            for (unsigned int j = 0; j < SIZE_PointsType; j++)
-                            {
-                                if (kPointsTypeStr[j] == pointsStrings[i])
-                                {
-                                    points.push_back((PointsType) j);
-                                    valid = true;
-                                    break;
-                                }
-                            }
-
-                            ASSERTL0(valid,
-                                    std::string(
-                                            "Unable to correctly parse the points type: ").append(
-                                            pointsStrings[i]).c_str());
-                        }
-                    }
-
-                    // Get numModes
-                    std::vector<unsigned int> numModes;
-                    bool UniOrder = false;
-
-                    if (strstr(numModesString.c_str(), "UNIORDER:"))
-                    {
-                        UniOrder = true;
-                    }
-
-                    valid = ParseUtils::GenerateOrderedVector(
-                            numModesString.c_str() + 9, numModes);
-                    ASSERTL0(valid,
-                            "Unable to correctly parse the number of modes.");
-
-                    // Get numPoints
-                    std::vector<unsigned int> numPoints;
-                    if (numPointDef)
-                    {
-                        valid = ParseUtils::GenerateOrderedVector(
-                                numPointsString.c_str(), numPoints);
-                        ASSERTL0(valid,
-                                "Unable to correctly parse the number of points.");
-                    }
-
-                    // Get fields names
-                    std::vector < std::string > Fields;
-                    valid = ParseUtils::GenerateOrderedStringVector(
-                            fieldsString.c_str(), Fields);
-                    ASSERTL0(valid,
-                            "Unable to correctly parse the number of fields.");
-
-                    FieldDefinitionsSharedPtr fielddef = MemoryManager<
-                        FieldDefinitions>::AllocateSharedPtr(
-                            shape, elementIds, basis, UniOrder, numModes,
-                            Fields, numHomoDir, homoLengths, strips, homoSIDs,
-                            homoZIDs, homoYIDs, points, pointDef, numPoints,
-                            numPointDef);
-
-                    fielddefs.push_back(fielddef);
-
-                    element = element->NextSiblingElement("ELEMENTS");
+                             std::string(
+                                 "Unable to correctly parse the points type: ")
+                                 .append(pointsStrings[i])
+                                 .c_str());
                 }
-                loopXml = loopXml->NextSiblingElement(strLoop);
             }
-        }
 
-        /**
-         *
-         */
-        void FieldIOXml::ImportFieldData(DataSourceSharedPtr dataSource,
-                const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                std::vector<std::vector<NekDouble> > &fielddata)
-        {
-            int cntdumps = 0;
-            XmlDataSourceSharedPtr xml = boost::static_pointer_cast
-                    < XmlDataSource > (dataSource);
+            // Get numModes
+            std::vector<unsigned int> numModes;
+            bool UniOrder = false;
 
-            TiXmlElement* master = NULL; // Master tag within which all data is contained.
-
-            master = xml->Get().FirstChildElement("NEKTAR");
-            ASSERTL0(master, "Unable to find NEKTAR tag in file.");
-
-            // Loop through all nektar tags, finding all of the element tags.
-            while (master)
+            if (strstr(numModesString.c_str(), "UNIORDER:"))
             {
-                TiXmlElement* element = master->FirstChildElement("ELEMENTS");
-                ASSERTL0(element,
-                        "Unable to find ELEMENTS tag within nektar tag.");
-                while (element)
-                {
-                    // Extract the body, which the "data".
-                    TiXmlNode* elementChild = element->FirstChild();
-                    ASSERTL0(elementChild,
-                            "Unable to extract the data from the element tag.");
-                    std::string elementStr;
-                    while (elementChild)
-                    {
-                        if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
-                        {
-                            elementStr += elementChild->ToText()->ValueStr();
-                        }
-                        elementChild = elementChild->NextSibling();
-                    }
-
-                    std::vector<NekDouble> elementFieldData;
-
-                    // Convert from base64 to binary.
-                    const char *CompressStr = element->Attribute("COMPRESSED");
-                    if(CompressStr)
-                    {
-                        if(!boost::iequals(CompressStr,
-                                           CompressData::GetCompressString()))
-                        {
-                            WARNINGL0(false, "Compressed formats do not match. "
-                                      "Expected: "
-                                      + CompressData::GetCompressString()
-                                      + " but got "+ string(CompressStr));
-                        }
-                    }
-
-                    ASSERTL0(Z_OK == CompressData::ZlibDecodeFromBase64Str(
-                                                        elementStr,
-                                                        elementFieldData),
-                             "Failed to decompress field data.");
-                    fielddata.push_back(elementFieldData);
-
-                    int datasize = CheckFieldDefinition(fielddefs[cntdumps]);
-                    ASSERTL0(
-                            fielddata[cntdumps].size()
-                                    == datasize
-                                            * fielddefs[cntdumps]->m_fields.size(),
-                            "Input data is not the same length as header infoarmation");
-
-                    cntdumps++;
-
-                    element = element->NextSiblingElement("ELEMENTS");
-                }
-                master = master->NextSiblingElement("NEKTAR");
+                UniOrder = true;
             }
-        }
 
+            valid = ParseUtils::GenerateOrderedVector(
+                numModesString.c_str() + 9, numModes);
+            ASSERTL0(valid, "Unable to correctly parse the number of modes.");
+
+            // Get numPoints
+            std::vector<unsigned int> numPoints;
+            if (numPointDef)
+            {
+                valid = ParseUtils::GenerateOrderedVector(
+                    numPointsString.c_str(), numPoints);
+                ASSERTL0(valid,
+                         "Unable to correctly parse the number of points.");
+            }
+
+            // Get fields names
+            std::vector<std::string> Fields;
+            valid = ParseUtils::GenerateOrderedStringVector(
+                fieldsString.c_str(), Fields);
+            ASSERTL0(valid, "Unable to correctly parse the number of fields.");
+
+            FieldDefinitionsSharedPtr fielddef =
+                MemoryManager<FieldDefinitions>::AllocateSharedPtr(shape,
+                                                                   elementIds,
+                                                                   basis,
+                                                                   UniOrder,
+                                                                   numModes,
+                                                                   Fields,
+                                                                   numHomoDir,
+                                                                   homoLengths,
+                                                                   strips,
+                                                                   homoSIDs,
+                                                                   homoZIDs,
+                                                                   homoYIDs,
+                                                                   points,
+                                                                   pointDef,
+                                                                   numPoints,
+                                                                   numPointDef);
+
+            fielddefs.push_back(fielddef);
+
+            element = element->NextSiblingElement("ELEMENTS");
+        }
+        loopXml = loopXml->NextSiblingElement(strLoop);
     }
+}
+
+/**
+ *
+ */
+void FieldIOXml::ImportFieldData(
+    DataSourceSharedPtr dataSource,
+    const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+    std::vector<std::vector<NekDouble> > &fielddata)
+{
+    int cntdumps = 0;
+    XmlDataSourceSharedPtr xml =
+        boost::static_pointer_cast<XmlDataSource>(dataSource);
+
+    TiXmlElement *master =
+        NULL; // Master tag within which all data is contained.
+
+    master = xml->Get().FirstChildElement("NEKTAR");
+    ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+
+    // Loop through all nektar tags, finding all of the element tags.
+    while (master)
+    {
+        TiXmlElement *element = master->FirstChildElement("ELEMENTS");
+        ASSERTL0(element, "Unable to find ELEMENTS tag within nektar tag.");
+        while (element)
+        {
+            // Extract the body, which the "data".
+            TiXmlNode *elementChild = element->FirstChild();
+            ASSERTL0(elementChild,
+                     "Unable to extract the data from the element tag.");
+            std::string elementStr;
+            while (elementChild)
+            {
+                if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
+                {
+                    elementStr += elementChild->ToText()->ValueStr();
+                }
+                elementChild = elementChild->NextSibling();
+            }
+
+            std::vector<NekDouble> elementFieldData;
+
+            // Convert from base64 to binary.
+            const char *CompressStr = element->Attribute("COMPRESSED");
+            if (CompressStr)
+            {
+                if (!boost::iequals(CompressStr,
+                                    CompressData::GetCompressString()))
+                {
+                    WARNINGL0(false,
+                              "Compressed formats do not match. "
+                              "Expected: " +
+                                  CompressData::GetCompressString() +
+                                  " but got " + string(CompressStr));
+                }
+            }
+
+            ASSERTL0(Z_OK == CompressData::ZlibDecodeFromBase64Str(
+                                 elementStr, elementFieldData),
+                     "Failed to decompress field data.");
+            fielddata.push_back(elementFieldData);
+
+            int datasize = CheckFieldDefinition(fielddefs[cntdumps]);
+            ASSERTL0(
+                fielddata[cntdumps].size() ==
+                    datasize * fielddefs[cntdumps]->m_fields.size(),
+                "Input data is not the same length as header infoarmation");
+
+            cntdumps++;
+
+            element = element->NextSiblingElement("ELEMENTS");
+        }
+        master = master->NextSiblingElement("NEKTAR");
+    }
+}
+}
 }

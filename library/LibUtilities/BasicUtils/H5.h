@@ -475,22 +475,20 @@ namespace Nektar
                         H5_CALL(H5Dread,
                                 (m_Id, mem_t->GetId(), H5S_ALL, H5S_ALL,H5P_DEFAULT, &data[0]));
                     }
-		    template<class T>
+                    template<class T>
                     void Read(std::vector<T>& data,
                             DataSpaceSharedPtr filespace, PListSharedPtr dxpl = PList::Default())
                     {
                         DataTypeSharedPtr mem_t = DataTypeTraits<T>::GetType();
-                        DataSpaceSharedPtr space = GetSpace();
-                        ASSERTL0(
-                                H5Sget_simple_extent_ndims(space->GetId()) == 1,
-                                "vector data not 1D");
-			hsize_t len, maxdim;
-                        H5Sget_simple_extent_dims(space->GetId(), &len,
-                                &maxdim);
+                        hsize_t len;
+                        len = H5Sget_select_npoints(filespace->GetId());
+                        //H5Sget_simple_extent_dims(space->GetId(), &len,
+                        //        &maxdim);
 
-			data.resize(len);
-			
-                        H5Dread(m_Id, mem_t->GetId(), space->GetId(),
+                        data.resize(len);
+
+                        DataSpaceSharedPtr memspace = DataSpace::OneD(len);
+                        H5Dread(m_Id, mem_t->GetId(), memspace->GetId(),
                                 filespace->GetId(), dxpl->GetId(),
                                 &data[0]);
                     }

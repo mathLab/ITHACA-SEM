@@ -42,109 +42,111 @@
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+namespace H5
+{
+class Group;
+typedef boost::shared_ptr<Group> GroupSharedPtr;
+}
+
+class H5TagWriter : public TagWriter
+{
+public:
+    H5TagWriter(H5::GroupSharedPtr grp);
+    TagWriterSharedPtr AddChild(const std::string &name);
+    void SetAttr(const std::string &key, const std::string &val);
+
+private:
+    H5::GroupSharedPtr m_Group;
+};
+
+/// Class for operating on XML FLD files
+class FieldIOHdf5 : public FieldIO
+{
+public:
+    static const unsigned int ELEM_DCMP_IDX;
+    static const unsigned int VAL_DCMP_IDX;
+    static const unsigned int HASH_DCMP_IDX;
+    static const unsigned int MAX_DCMPS;
+    static const unsigned int ELEM_CNT_IDX;
+    static const unsigned int VAL_CNT_IDX;
+    static const unsigned int MAX_CNTS;
+    static const unsigned int IDS_IDX_IDX;
+    static const unsigned int DATA_IDX_IDX;
+    static const unsigned int MAX_IDXS;
+
+    /// Creates an instance of this class
+    LIB_UTILITIES_EXPORT
+    static FieldIOSharedPtr create(LibUtilities::CommSharedPtr pComm,
+                                   bool sharedFilesystem)
     {
-        namespace H5
-        {
-            class Group;
-            typedef boost::shared_ptr<Group> GroupSharedPtr;
-        }
-
-        class H5TagWriter : public TagWriter
-        {
-            public:
-                H5TagWriter(H5::GroupSharedPtr grp);
-                TagWriterSharedPtr AddChild(const std::string& name);
-                void SetAttr(const std::string& key, const std::string& val);
-            private:
-                H5::GroupSharedPtr m_Group;
-        };
-
-        /// Class for operating on XML FLD files
-        class FieldIOHdf5 : public FieldIO
-        {
-            public:
-	        static const unsigned int ELEM_DCMP_IDX;
-	        static const unsigned int VAL_DCMP_IDX;
-	        static const unsigned int HASH_DCMP_IDX;
-                static const unsigned int MAX_DCMPS;
-	        static const unsigned int ELEM_CNT_IDX;
-                static const unsigned int VAL_CNT_IDX;
-                static const unsigned int MAX_CNTS;
-	        static const unsigned int IDS_IDX_IDX;
-	        static const unsigned int DATA_IDX_IDX;
-                static const unsigned int MAX_IDXS;
-	
-                /// Creates an instance of this class
-                LIB_UTILITIES_EXPORT
-                static FieldIOSharedPtr create(
-                    LibUtilities::CommSharedPtr pComm,
-                    bool sharedFilesystem)
-                {
-                    return MemoryManager<FieldIOHdf5>::AllocateSharedPtr(pComm, sharedFilesystem);
-                }
-
-                /// Name of class
-                LIB_UTILITIES_EXPORT
-                static std::string className;
-
-                FieldIOHdf5(LibUtilities::CommSharedPtr pComm,
-                            bool sharedFilesystem);
-
-                LIB_UTILITIES_EXPORT
-                virtual void ImportFieldDefs(DataSourceSharedPtr dataSource,
-					     std::vector<FieldDefinitionsSharedPtr> &fielddefs, bool expChild) {}
-
-                inline virtual const std::string& GetClassName() const {
-                    return className;
-                }
-
-            private:
-                /// Write data in FLD format
-                LIB_UTILITIES_EXPORT
-                virtual void v_Write(const std::string &outFile,
-                        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata,
-                        const FieldMetaDataMap &fieldinfomap =
-                                NullFieldMetaDataMap);
-
-                LIB_UTILITIES_EXPORT
-                virtual void v_Import(const std::string& infilename,
-                        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata =
-                                NullVectorNekDoubleVector,
-                        FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
-                        const Array<OneD, int> ElementiDs = NullInt1DArray);
-
-                LIB_UTILITIES_EXPORT
-                virtual DataSourceSharedPtr v_ImportFieldMetaData(std::string filename,
-                        FieldMetaDataMap &fieldmetadatamap);
-                LIB_UTILITIES_EXPORT
-                void v_ImportFieldMetaData(DataSourceSharedPtr dataSource,
-                        FieldMetaDataMap &fieldmetadatamap);
-
-
-		/// Imports the field definitions.
-		LIB_UTILITIES_EXPORT
-		void ImportFieldDefsHdf5(H5::PListSharedPtr readPL,
-		  	H5::GroupSharedPtr root,
-			H5::DataSetSharedPtr ids_dset,
-			H5::DataSpaceSharedPtr ids_fspace,
-			size_t ids_i,
-			std::vector<std::size_t> &decomps,
-			std::vector<FieldDefinitionsSharedPtr> &fielddefs);
-		  
-                /// Imports the data fields.
-                LIB_UTILITIES_EXPORT
-                void ImportFieldData(H5::PListSharedPtr readPL,
-			H5::DataSetSharedPtr data_dset,
-			H5::DataSpaceSharedPtr data_fspace,
-			size_t data_i,
-			std::vector<std::size_t> &decomps,
-                        const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata);
-        };
-
+        return MemoryManager<FieldIOHdf5>::AllocateSharedPtr(pComm,
+                                                             sharedFilesystem);
     }
+
+    /// Name of class
+    LIB_UTILITIES_EXPORT
+    static std::string className;
+
+    FieldIOHdf5(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem);
+
+    LIB_UTILITIES_EXPORT
+    virtual void ImportFieldDefs(
+        DataSourceSharedPtr dataSource,
+        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+        bool expChild)
+    {
+    }
+
+    inline virtual const std::string &GetClassName() const
+    {
+        return className;
+    }
+
+private:
+    /// Write data in FLD format
+    LIB_UTILITIES_EXPORT
+    virtual void v_Write(
+        const std::string &outFile,
+        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+        std::vector<std::vector<NekDouble> > &fielddata,
+        const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap);
+
+    LIB_UTILITIES_EXPORT
+    virtual void v_Import(const std::string &infilename,
+                          std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                          std::vector<std::vector<NekDouble> >
+                              &fielddata                    = NullVectorNekDoubleVector,
+                          FieldMetaDataMap &fieldinfomap    = NullFieldMetaDataMap,
+                          const Array<OneD, int> ElementiDs = NullInt1DArray);
+
+    LIB_UTILITIES_EXPORT
+    virtual DataSourceSharedPtr v_ImportFieldMetaData(
+        std::string filename, FieldMetaDataMap &fieldmetadatamap);
+    LIB_UTILITIES_EXPORT
+    void v_ImportFieldMetaData(DataSourceSharedPtr dataSource,
+                               FieldMetaDataMap &fieldmetadatamap);
+
+    /// Imports the field definitions.
+    LIB_UTILITIES_EXPORT void ImportFieldDef(
+        H5::PListSharedPtr readPL,
+        H5::GroupSharedPtr root,
+        std::string group,
+        FieldDefinitionsSharedPtr def);
+
+    /// Imports the data fields.
+    LIB_UTILITIES_EXPORT
+    void ImportFieldData(
+        H5::PListSharedPtr readPL,
+        H5::DataSetSharedPtr data_dset,
+        H5::DataSpaceSharedPtr data_fspace,
+        size_t data_i,
+        std::vector<std::size_t> &decomps,
+        size_t decomp,
+        const FieldDefinitionsSharedPtr fielddef,
+        std::vector<NekDouble> &fielddata);
+};
+}
 }
 #endif

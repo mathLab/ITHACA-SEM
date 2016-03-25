@@ -193,7 +193,7 @@ namespace Nektar
 
                 /// Imports an FLD file.
                 LIB_UTILITIES_EXPORT
-                void Import(const std::string& infilename,
+                inline void Import(const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                         std::vector<std::vector<NekDouble> > &fielddata =
                                 NullVectorNekDoubleVector,
@@ -211,19 +211,6 @@ namespace Nektar
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                         bool expChild) = 0;
 
-
-                LIB_UTILITIES_EXPORT
-                void WriteMultiFldFileIDs(const std::string &outfile,
-                        const std::vector<std::string> fileNames,
-                        std::vector<std::vector<unsigned int> > &elementList,
-                        const FieldMetaDataMap &fieldinfomap =
-                                NullFieldMetaDataMap);
-
-                LIB_UTILITIES_EXPORT
-                void ImportMultiFldFileIDs(const std::string &inFile,
-                        std::vector<std::string> &fileNames,
-                        std::vector<std::vector<unsigned int> > &elementList,
-                        FieldMetaDataMap &fieldmetadatamap);
                 // Figure out what type of FLD file we have.
                 // Collective on comm.
                 static const std::string GetFileType(
@@ -248,14 +235,6 @@ namespace Nektar
                         std::string &idString);
 
                 LIB_UTILITIES_EXPORT
-                std::string SetUpOutput(const std::string outname);
-
-                LIB_UTILITIES_EXPORT void SetUpFieldMetaData(
-                    const std::string                             outname,
-                    const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                    const FieldMetaDataMap                       &fieldmetadatamap);
-
-                LIB_UTILITIES_EXPORT
                 int CheckFieldDefinition(
                         const FieldDefinitionsSharedPtr &fielddefs);
 
@@ -270,11 +249,14 @@ namespace Nektar
                         std::vector<std::vector<NekDouble> > &fielddata,
                         const FieldMetaDataMap &fieldinfomap) = 0;
 
+                /// Imports an FLD file.
                 LIB_UTILITIES_EXPORT
-                virtual void v_ImportFile(const std::string& fname,
+                virtual void v_Import(const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata,
-                        DataSourceSharedPtr dataSource) = 0;
+                        std::vector<std::vector<NekDouble> > &fielddata =
+                                NullVectorNekDoubleVector,
+                        FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
+                        const Array<OneD, int> ElementiDs = NullInt1DArray) = 0;
 
                 LIB_UTILITIES_EXPORT
                 virtual DataSourceSharedPtr v_ImportFieldMetaData(
@@ -308,6 +290,16 @@ namespace Nektar
                 const FieldMetaDataMap &fieldinfomap)
         {
             v_Write(outFile, fielddefs, fielddata, fieldinfomap);
+        }
+
+        inline void FieldIO::Import(
+            const std::string& infilename,
+            std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+            std::vector<std::vector<NekDouble> > &fielddata,
+            FieldMetaDataMap &fieldinfomap,
+            const Array<OneD, int> ElementiDs)
+        {
+            v_Import(infilename, fielddefs, fielddata, fieldinfomap, ElementiDs);
         }
 
         inline DataSourceSharedPtr FieldIO::ImportFieldMetaData(

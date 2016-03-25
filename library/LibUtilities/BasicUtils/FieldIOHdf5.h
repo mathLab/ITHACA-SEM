@@ -109,10 +109,12 @@ namespace Nektar
                                 NullFieldMetaDataMap);
 
                 LIB_UTILITIES_EXPORT
-                virtual void v_ImportFile(const std::string& infilename,
+                virtual void v_Import(const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata,
-                        DataSourceSharedPtr dataSource);
+                        std::vector<std::vector<NekDouble> > &fielddata =
+                                NullVectorNekDoubleVector,
+                        FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
+                        const Array<OneD, int> ElementiDs = NullInt1DArray);
 
                 LIB_UTILITIES_EXPORT
                 virtual DataSourceSharedPtr v_ImportFieldMetaData(std::string filename,

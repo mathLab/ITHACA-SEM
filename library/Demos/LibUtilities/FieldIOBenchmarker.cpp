@@ -201,8 +201,9 @@ Array<OneD, int> ReadIDsForThisRank(Experiment& exp, FieldIOSharedPtr fio)
 
     std::string infoFile = exp.dataSource + "/Info.xml";
 
-    fio->ImportMultiFldFileIDs(infoFile, fileNames, elementList,
-            fieldmetadatamap);
+    /// @todo unbreak this
+    //    fio->ImportMultiFldFileIDs(infoFile, fileNames, elementList,
+    //        fieldmetadatamap);
 
     unsigned totalEls = 0;
     std::vector<unsigned> elStartFile(elementList.size(), 0);

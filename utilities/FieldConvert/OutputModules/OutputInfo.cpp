@@ -145,7 +145,7 @@ void OutputInfo::Process(po::variables_map &vm)
     }
 
     // Write the output file
-    m_f->m_fld->WriteMultiFldFileIDs(filename,filenames, ElementIDs);
+    //m_f->m_fld->WriteMultiFldFileIDs(filename,filenames, ElementIDs);
 }
 
 }

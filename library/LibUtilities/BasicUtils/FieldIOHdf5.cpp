@@ -548,12 +548,13 @@ namespace Nektar
     //         root group and HDF5 file are all closed automatically
     
 
-      
-    void FieldIOHdf5::v_ImportFile(const std::string& infilename,
-				   std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-				   std::vector<std::vector<NekDouble> > &fielddata,
-				   DataSourceSharedPtr dataSource)
-    {
+  
+  void FieldIOHdf5::v_Import(const std::string& infilename,
+                        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                        std::vector<std::vector<NekDouble> > &fielddata,
+                        FieldMetaDataMap &fieldinfomap,
+                        const Array<OneD, int> ElementiDs)
+  {
         std::stringstream prfx;
         prfx << m_comm->GetRank() << ": FieldIOHdf5::v_ImportFile(): ";
 	double tm0 = 0.0, tm1 = 0.0;
@@ -567,10 +568,7 @@ namespace Nektar
 	int rank = m_comm->GetRank();
 
 	
-        if (!dataSource)
-	{
-	    dataSource = H5DataSource::create(infilename);
-        }
+        DataSourceSharedPtr dataSource = H5DataSource::create(infilename);
 
 	// set properties for parallel file access (if we're in parallel)
 	////////////////////////////////////////////////////////////////////////////////////
@@ -625,6 +623,7 @@ namespace Nektar
 	ASSERTL1(data_fspace, prfx.str() + "cannot open DATA filespace.");
 	////////////////////////////////////////////////////////////////////////////////////
 
+        cout << prfx.str() << "debug1" << endl;
 
 	// read the DECOMPOSITION dataset part for this rank
 	////////////////////////////////////////////////////////////////////////////////////
@@ -636,6 +635,7 @@ namespace Nektar
 	decomps_dset->Read(decomps, decomps_fspace, readPL);
 	////////////////////////////////////////////////////////////////////////////////////
 
+        cout << prfx.str() << "debug2" << endl;
 	// read the INDEXES dataset part for this rank
 	////////////////////////////////////////////////////////////////////////////////////
 	imin = rank*MAX_IDXS;
@@ -648,9 +648,11 @@ namespace Nektar
         ////////////////////////////////////////////////////////////////////////////////////
      
 	
+        cout << prfx.str() << "debug3" << endl;
         ImportFieldDefsHdf5(readPL, root, ids_dset, ids_fspace, ids_i, decomps, fielddefs);
         if (fielddata != NullVectorNekDoubleVector)
 	{
+            cout << prfx.str() << "debug4" << endl;
 	    ImportFieldData(readPL, data_dset, data_fspace, data_i, decomps, fielddefs, fielddata);
 	}
 

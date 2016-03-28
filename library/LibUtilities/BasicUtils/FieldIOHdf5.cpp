@@ -673,13 +673,18 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
     size_t nDecomps = decomps.size() / MAX_DCMPS;
     size_t cnt = 0, cnt2 = 0;
 
+    // Mapping from each decomposition to offsets in the data array.
     vector<size_t> decompsToDataOffsets(nDecomps);
+    // Mapping from each group's hash to a vector of element IDs. Note this has
+    // to be unsigned int, since that's what we use in FieldDefinitions.
     map<size_t, vector<unsigned int> > groupsToElmts;
     // Mapping from each group's hash to each of the decompositions.
     map<size_t, set<size_t> > groupsToDecomps;
 
+    // True if we are pulling element IDs from ElementIDs.
     bool selective = toread.size() > 0;
 
+    // Counter for data offsets
     size_t dataOffset = 0;
 
     for (size_t i = 0; i < nDecomps; ++i, cnt += MAX_DCMPS)

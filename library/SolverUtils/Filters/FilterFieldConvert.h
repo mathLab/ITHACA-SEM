@@ -85,7 +85,7 @@ protected:
     unsigned int m_index;
     unsigned int m_outputIndex;
     std::string m_outputFile;
-    LibUtilities::FieldIOSharedPtr m_fld;
+    vector<ModuleSharedPtr> m_modules;
     LibUtilities::FieldMetaDataMap m_fieldMetaData;
     std::vector<Array<OneD, NekDouble> > m_outFields;
     std::vector<std::string> m_variables;

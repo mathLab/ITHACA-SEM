@@ -35,6 +35,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/Filters/FilterFieldConvert.h>
+#include <utilities/FieldConvert/Module.h>
+
+using namespace Nektar::Utilities
 
 namespace Nektar
 {
@@ -88,8 +91,128 @@ FilterFieldConvert::FilterFieldConvert(
     m_numSamples  = 0;
     m_index       = 0;
     m_outputIndex = 0;
-    m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-        pSession->GetComm());
+
+    //
+    // FieldConvert modules
+    //
+    vector<string>          modcmds;
+    // Process modules
+    std::stringstream moduleStream;
+    it = pParams.find("Modules");
+    if (it == pParams.end())
+    {
+        moduleStream.str(it->second);
+    }
+    while (!moduleStream.fail())
+    {
+        std::string sMod;
+        moduleStream >> sMod;
+        if (!m_historyPointStream.fail())
+        {
+            modcmds.push_back(sMod);
+        }
+    }
+    // Output module
+    modcmds.push_back(m_outputFile);
+    // Create modules (bases on FieldConvert.cpp)
+    for (int i = 0; i < modcmds.size(); ++i)
+    {
+        // First split each command by the colon separator.
+        vector<string> tmp1;
+        ModuleKey module;
+        int offset = 1;
+
+        boost::split(tmp1, modcmds[i], boost::is_any_of(":"));
+
+        if (i == modcmds.size() - 1)
+        {
+            module.first = eOutputModule;
+
+            // If no colon detected, automatically detect mesh type from
+            // file extension. Otherwise override and use tmp1[1] as the
+            // module to load. This also allows us to pass options to
+            // input/output modules. So, for example, to override
+            // filename.xml to be read as vtk, you use:
+            //
+            // filename.xml:vtk:opt1=arg1:opt2=arg2
+            if (tmp1.size() == 1)
+            {
+                int    dot    = tmp1[0].find_last_of('.') + 1;
+                string ext    = tmp1[0].substr(dot, tmp1[0].length() - dot);
+
+                module.second = ext;
+                tmp1.push_back(string("outfile=") + tmp1[0]);
+            }
+            else
+            {
+                module.second = tmp1[1];
+                tmp1.push_back(string("outfile=") + tmp1[0]);
+                offset++;
+            }
+        }
+        else
+        {
+            module.first  = eProcessModule;
+            module.second = tmp1[0];
+        }
+
+        // Create module.
+        ModuleSharedPtr mod;
+        mod = GetModuleFactory().CreateInstance(module, f);
+        m_modules.push_back(mod);
+
+        // Set options for this module.
+        for (int j = offset; j < tmp1.size(); ++j)
+        {
+            vector<string> tmp2;
+            boost::split(tmp2, tmp1[j], boost::is_any_of("="));
+
+            if (tmp2.size() == 1)
+            {
+                mod->RegisterConfig(tmp2[0], "1");
+            }
+            else if (tmp2.size() == 2)
+            {
+                mod->RegisterConfig(tmp2[0], tmp2[1]);
+            }
+            else
+            {
+                cerr << "ERROR: Invalid module configuration: format is "
+                     << "either :arg or :arg=val" << endl;
+                abort();
+            }
+        }
+
+        // Ensure configuration options have been set.
+        mod->SetDefaults();
+    }
+
+    // If any output module has to reset points then set intput modules to match
+    if(vm.count("noequispaced"))
+    {
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            m_modules[i]->SetRequireEquiSpaced(false);
+        }
+    }
+    else
+    {
+        bool RequiresEquiSpaced = false;
+        for (int i = 0; i < m_modules.size(); ++i)
+        {
+            if(m_modules[i]->GetRequireEquiSpaced())
+            {
+                RequiresEquiSpaced = true;
+            }
+        }
+        if (RequiresEquiSpaced)
+        {
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                m_modules[i]->SetRequireEquiSpaced(true);
+            }
+        }
+    }
 }
 
 FilterFieldConvert::~FilterFieldConvert()

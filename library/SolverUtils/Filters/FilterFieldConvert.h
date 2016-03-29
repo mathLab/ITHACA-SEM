@@ -38,6 +38,10 @@
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERFIELDCONVERT_H
 
 #include <SolverUtils/Filters/Filter.h>
+#include <utilities/FieldConvert/Module.h>
+#include <utilities/FieldConvert/Field.hpp>
+
+using namespace Nektar::Utilities
 
 namespace Nektar
 {
@@ -57,6 +61,8 @@ protected:
     SOLVER_UTILS_EXPORT virtual void v_Initialise(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
+    SOLVER_UTILS_EXPORT virtual void v_FillVariablesName(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
     SOLVER_UTILS_EXPORT virtual void v_Update(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
@@ -65,7 +71,10 @@ protected:
         const NekDouble &time);
     SOLVER_UTILS_EXPORT virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time) = 0;
+        const NekDouble &time)
+    {
+        // Do nothing by default
+    }
     SOLVER_UTILS_EXPORT virtual void v_PrepareOutput(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
@@ -78,17 +87,18 @@ protected:
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         int dump = -1);
 
+    virtual bool v_IsTimeDependent();
+    
     NekDouble m_scale;
     unsigned int m_numSamples;
     unsigned int m_outputFrequency;
     unsigned int m_sampleFrequency;
     unsigned int m_index;
     unsigned int m_outputIndex;
-    std::string m_outputFile;
     vector<ModuleSharedPtr> m_modules;
     LibUtilities::FieldMetaDataMap m_fieldMetaData;
-    std::vector<Array<OneD, NekDouble> > m_outFields;
     std::vector<std::string> m_variables;
+    FieldSharedPtr m_f;
 };
 }
 }

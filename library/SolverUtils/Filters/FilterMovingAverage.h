@@ -68,10 +68,6 @@ public:
     SOLVER_UTILS_EXPORT virtual ~FilterMovingAverage();
 
 protected:
-    virtual void v_Initialise(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time);
-    virtual bool v_IsTimeDependent();
     virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);

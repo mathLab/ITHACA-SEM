@@ -35,9 +35,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/Filters/FilterFieldConvert.h>
-#include <utilities/FieldConvert/Module.h>
-
-using namespace Nektar::Utilities
 
 namespace Nektar
 {
@@ -52,15 +49,16 @@ FilterFieldConvert::FilterFieldConvert(
     ParamMap::const_iterator it;
 
     // OutputFile
+    std::string outputFile;
     it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
-        m_outputFile = m_session->GetSessionName();
+        outputFile = m_session->GetSessionName();
     }
     else
     {
         ASSERTL0(it->second.length() > 0, "Missing parameter 'OutputFile'.");
-        m_outputFile = it->second;
+        outputFile = it->second;
     }
 
     // SampleFrequency
@@ -113,7 +111,7 @@ FilterFieldConvert::FilterFieldConvert(
         }
     }
     // Output module
-    modcmds.push_back(m_outputFile);
+    modcmds.push_back(outputFile);
     // Create modules (bases on FieldConvert.cpp)
     for (int i = 0; i < modcmds.size(); ++i)
     {
@@ -223,16 +221,42 @@ void FilterFieldConvert::v_Initialise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
-    int ncoeff = pFields[0]->GetNcoeffs();
-    // m_variables need to be filled by a derived class
-    m_outFields.resize(m_variables.size());
+    v_FillVariablesName(pFields);
+    m_fieldMetaData["InitialTime"] = boost::lexical_cast<std::string>(time);
 
+    // Create m_f
+    FieldSharedPtr m_f = boost::shared_ptr<Field>(new Field());
+    m_f->m_session = m_session;
+    m_f->m_graph = pFields[0]->GetGraph();
+    m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
+                    ::AllocateSharedPtr(m_f->m_session->GetComm());
+    int NumHomogeneousDir = 0;
+    if (pFields[0]->GetExpType() == MultiRegions::e3DH1D)
+    {
+        NumHomogeneousDir = 1;
+    }
+    else if (pFields[0]->GetExpType() == MultiRegions::e3DH2D)
+    {
+        NumHomogeneousDir = 2;
+    }
+    m_f->m_exp.resize(m_variables.size());
+    m_f->m_exp[0] = pFields[0];
     for (int n = 0; n < m_variables.size(); ++n)
     {
-        m_outFields[n] = Array<OneD, NekDouble>(ncoeff, 0.0);
+        m_f->m_exp[n] = m_f->AppendExpList(
+                            NumHomogeneousDir, m_variables[0]);
     }
+}
 
-    m_fieldMetaData["InitialTime"] = boost::lexical_cast<std::string>(time);
+void FilterFieldConvert::v_FillVariablesName(
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
+{
+    int nfield = pFields.num_elements();
+    m_variables.resize(pFields.num_elements());
+    for (int n = 0; n < nfield; ++n)
+    {
+        m_variables[n] = pFields[n]->GetSession()->GetVariable(n);
+    }    
 }
 
 void FilterFieldConvert::v_Update(
@@ -336,5 +360,11 @@ void FilterFieldConvert::OutputField(
         }
     }
 }
+
+bool FilterFieldConvert::v_IsTimeDependent()
+{
+    return true;
+}
+
 }
 }

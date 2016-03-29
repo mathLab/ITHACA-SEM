@@ -37,13 +37,13 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERMOVINGAVERAGE_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERMOVINGAVERAGE_H
 
-#include <SolverUtils/Filters/FilterSampler.h>
+#include <SolverUtils/Filters/FilterFieldConvert.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterMovingAverage : public FilterSampler
+class FilterMovingAverage : public FilterFieldConvert
 {
 public:
     friend class MemoryManager<FilterMovingAverage>;

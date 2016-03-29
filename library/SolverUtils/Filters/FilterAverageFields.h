@@ -36,13 +36,13 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERAVERAGEFIELDS_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERAVERAGEFIELDS_H
 
-#include <SolverUtils/Filters/FilterSampler.h>
+#include <SolverUtils/Filters/FilterFieldConvert.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterAverageFields : public FilterSampler
+class FilterAverageFields : public FilterFieldConvert
 {
 public:
     friend class MemoryManager<FilterAverageFields>;

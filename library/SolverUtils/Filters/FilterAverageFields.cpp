@@ -46,7 +46,7 @@ std::string FilterAverageFields::className =
 FilterAverageFields::FilterAverageFields(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const ParamMap &pParams)
-    : FilterSampler(pSession, pParams)
+    : FilterFieldConvert(pSession, pParams)
 {
 }
 
@@ -66,7 +66,7 @@ void FilterAverageFields::v_Initialise(
         m_variables[n] = pFields[n]->GetSession()->GetVariable(n);
     }
     // Now let FilterSampler initialise the output
-    FilterSampler::v_Initialise(pFields, time);
+    FilterFieldConvert::v_Initialise(pFields, time);
 }
 
 void FilterAverageFields::v_ProcessSample(

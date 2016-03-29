@@ -47,7 +47,7 @@ std::string FilterMovingAverage::className =
 FilterMovingAverage::FilterMovingAverage(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const ParamMap &pParams)
-    : FilterSampler(pSession, pParams)
+    : FilterFieldConvert(pSession, pParams)
 {
     ParamMap::const_iterator it;
 
@@ -105,7 +105,7 @@ void FilterMovingAverage::v_Initialise(
         m_variables[n] = pFields[n]->GetSession()->GetVariable(n);
     }
     // Now let FilterSampler initialise the output
-    FilterSampler::v_Initialise(pFields, time);
+    FilterFieldConvert::v_Initialise(pFields, time);
 }
 
 void FilterMovingAverage::v_ProcessSample(

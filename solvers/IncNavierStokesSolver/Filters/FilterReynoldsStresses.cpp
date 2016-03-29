@@ -67,7 +67,7 @@ std::string FilterReynoldsStresses::className =
 FilterReynoldsStresses::FilterReynoldsStresses(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const std::map<std::string, std::string> &pParams)
-    : FilterSampler(pSession, pParams)
+    : FilterFieldConvert(pSession, pParams)
 {
     ParamMap::const_iterator it;
 
@@ -178,7 +178,7 @@ void FilterReynoldsStresses::v_Initialise(
     }
 
     // Initialise output arrays
-    FilterSampler::v_Initialise(pFields, time);
+    FilterFieldConvert::v_Initialise(pFields, time);
 }
 
 void FilterReynoldsStresses::v_ProcessSample(

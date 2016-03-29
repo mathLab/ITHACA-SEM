@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterSampler.cpp
+// File FilterFieldConvert.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -34,14 +34,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Filters/FilterSampler.h>
+#include <SolverUtils/Filters/FilterFieldConvert.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
 
-FilterSampler::FilterSampler(
+FilterFieldConvert::FilterFieldConvert(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const ParamMap &pParams)
     : Filter(pSession)
@@ -92,11 +92,11 @@ FilterSampler::FilterSampler(
         pSession->GetComm());
 }
 
-FilterSampler::~FilterSampler()
+FilterFieldConvert::~FilterFieldConvert()
 {
 }
 
-void FilterSampler::v_Initialise(
+void FilterFieldConvert::v_Initialise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
@@ -112,7 +112,7 @@ void FilterSampler::v_Initialise(
     m_fieldMetaData["InitialTime"] = boost::lexical_cast<std::string>(time);
 }
 
-void FilterSampler::v_Update(
+void FilterFieldConvert::v_Update(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
@@ -133,7 +133,7 @@ void FilterSampler::v_Update(
     }
 }
 
-void FilterSampler::v_Finalise(
+void FilterFieldConvert::v_Finalise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
@@ -142,7 +142,7 @@ void FilterSampler::v_Finalise(
     OutputField(pFields);
 }
 
-void FilterSampler::OutputField(
+void FilterFieldConvert::OutputField(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, int dump)
 {
     for (int n = 0; n < m_outFields.size(); ++n)

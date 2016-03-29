@@ -36,13 +36,13 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERREYNOLDSSTRESSES_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERREYNOLDSSTRESSES_H
 
-#include <SolverUtils/Filters/FilterSampler.h>
+#include <SolverUtils/Filters/FilterFieldConvert.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterReynoldsStresses : public FilterSampler
+class FilterReynoldsStresses : public FilterFieldConvert
 {
 public:
     friend class MemoryManager<FilterReynoldsStresses>;

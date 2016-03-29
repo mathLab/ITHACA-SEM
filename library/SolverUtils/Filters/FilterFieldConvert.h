@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterSampler.h
+// File FilterFieldConvert.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -34,8 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERSAMPLER_H
-#define NEKTAR_SOLVERUTILS_FILTERS_FILTERSAMPLER_H
+#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERFIELDCONVERT_H
+#define NEKTAR_SOLVERUTILS_FILTERS_FILTERFIELDCONVERT_H
 
 #include <SolverUtils/Filters/Filter.h>
 
@@ -43,15 +43,15 @@ namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterSampler : public Filter
+class FilterFieldConvert : public Filter
 {
 public:
-    friend class MemoryManager<FilterSampler>;
+    friend class MemoryManager<FilterFieldConvert>;
 
-    SOLVER_UTILS_EXPORT FilterSampler(
+    SOLVER_UTILS_EXPORT FilterFieldConvert(
         const LibUtilities::SessionReaderSharedPtr &pSession,
         const ParamMap &pParams);
-    SOLVER_UTILS_EXPORT virtual ~FilterSampler();
+    SOLVER_UTILS_EXPORT virtual ~FilterFieldConvert();
 
 protected:
     SOLVER_UTILS_EXPORT virtual void v_Initialise(
@@ -93,4 +93,4 @@ protected:
 }
 }
 
-#endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERSAMPLER_H */
+#endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERFIELDCONVERT_H */

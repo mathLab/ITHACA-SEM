@@ -237,8 +237,14 @@ void FilterFieldConvert::OutputField(
     }
     m_modules[m_modules.size()-1]->RegisterConfig("outfile", outname.str());
 
-    // Run field process.
+    // Prevent checking before overwritting
+    po::options_description desc("Available options");
+        desc.add_options()
+            ("forceoutput,f",
+                "Force the output to be written without any checks");
     po::variables_map vm;
+    vm.insert(std::make_pair("forceoutput", po::variable_value()));
+    // Run field process.
     for (int i = 0; i < m_modules.size(); ++i)
     {
         m_modules[i]->Process(vm);

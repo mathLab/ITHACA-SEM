@@ -101,7 +101,7 @@ FilterFieldConvert::FilterFieldConvert(
     // Process modules
     std::stringstream moduleStream;
     it = pParams.find("Modules");
-    if (it == pParams.end())
+    if (it != pParams.end())
     {
         moduleStream.str(it->second);
     }

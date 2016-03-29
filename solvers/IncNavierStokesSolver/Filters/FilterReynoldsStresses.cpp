@@ -301,9 +301,5 @@ void FilterReynoldsStresses::v_PrepareOutput(
     pFields[0]->SetWaveSpace(waveSpace);
 }
 
-bool FilterReynoldsStresses::v_IsTimeDependent()
-{
-    return true;
-}
 }
 }

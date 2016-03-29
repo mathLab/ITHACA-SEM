@@ -72,7 +72,6 @@ protected:
         const NekDouble &time);
     virtual void v_FillVariablesName(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
-    virtual bool v_IsTimeDependent();
     virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);

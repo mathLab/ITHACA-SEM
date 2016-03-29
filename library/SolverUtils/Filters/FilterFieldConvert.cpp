@@ -186,6 +186,20 @@ void FilterFieldConvert::v_Finalise(
     OutputField(pFields);
 }
 
+void FilterFieldConvert::v_PrepareOutput(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time)
+{
+    for(int n = 0; n < pFields.num_elements(); ++n)
+    {
+        Vmath::Vcopy(m_outFields[n].num_elements(),
+                    pFields[n]->GetCoeffs(),
+                    1,
+                    m_outFields[n],
+                    1);
+    }
+}
+
 void FilterFieldConvert::OutputField(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, int dump)
 {

@@ -76,13 +76,10 @@ protected:
     }
     SOLVER_UTILS_EXPORT virtual void v_PrepareOutput(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
-    {
-        // Do nothing by default
-    }
+        const NekDouble &time);
     SOLVER_UTILS_EXPORT virtual std::string v_GetFileSuffix()
     {
-        return "";
+        return "_fc";
     }
 
     void OutputField(

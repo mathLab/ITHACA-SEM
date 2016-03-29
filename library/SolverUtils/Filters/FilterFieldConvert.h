@@ -39,9 +39,8 @@
 
 #include <SolverUtils/Filters/Filter.h>
 #include <utilities/FieldConvert/Module.h>
-#include <utilities/FieldConvert/Field.hpp>
 
-using namespace Nektar::Utilities
+using namespace Nektar::Utilities;
 
 namespace Nektar
 {
@@ -101,6 +100,7 @@ protected:
     unsigned int m_numSamples;
     unsigned int m_outputFrequency;
     unsigned int m_sampleFrequency;
+    std::string  m_outputFile;
     unsigned int m_index;
     unsigned int m_outputIndex;
     vector<ModuleSharedPtr> m_modules;

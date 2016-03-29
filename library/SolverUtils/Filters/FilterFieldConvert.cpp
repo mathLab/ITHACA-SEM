@@ -50,16 +50,15 @@ FilterFieldConvert::FilterFieldConvert(
     ParamMap::const_iterator it;
 
     // OutputFile
-    std::string outputFile;
     it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
-        outputFile = m_session->GetSessionName();
+        m_outputFile = m_session->GetSessionName();
     }
     else
     {
         ASSERTL0(it->second.length() > 0, "Missing parameter 'OutputFile'.");
-        outputFile = it->second;
+        m_outputFile = it->second;
     }
 
     // SampleFrequency
@@ -107,13 +106,13 @@ FilterFieldConvert::FilterFieldConvert(
     {
         std::string sMod;
         moduleStream >> sMod;
-        if (!m_historyPointStream.fail())
+        if (!moduleStream.fail())
         {
             modcmds.push_back(sMod);
         }
     }
     // Output module
-    modcmds.push_back(outputFile);
+    modcmds.push_back(m_outputFile);
     // Create modules 
     CreateModules(modcmds);
 }
@@ -207,9 +206,9 @@ void FilterFieldConvert::OutputField(
 
     // Determine new file name
     std::stringstream outname;
-    int    dot    = m_outputFile[0].find_last_of('.') + 1;
-    string name   = m_outputFile[0].substr(0, dot-1);
-    string ext    = m_outputFile[0].substr(dot, m_outputFile[0].length() - dot);
+    int    dot    = m_outputFile.find_last_of('.') + 1;
+    string name   = m_outputFile.substr(0, dot-1);
+    string ext    = m_outputFile.substr(dot, m_outputFile.length() - dot);
     std::string suffix = v_GetFileSuffix();
     if (dump == -1) // final dump
     {
@@ -322,30 +321,19 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
         mod->SetDefaults();
     }
 
-    // If any output module has to reset points then set intput modules to match
-    if(vm.count("noequispaced"))
+    bool RequiresEquiSpaced = false;
+    for (int i = 0; i < m_modules.size(); ++i)
     {
-        for (int i = 0; i < modules.size(); ++i)
+        if(m_modules[i]->GetRequireEquiSpaced())
         {
-            m_modules[i]->SetRequireEquiSpaced(false);
+            RequiresEquiSpaced = true;
         }
     }
-    else
+    if (RequiresEquiSpaced)
     {
-        bool RequiresEquiSpaced = false;
         for (int i = 0; i < m_modules.size(); ++i)
         {
-            if(m_modules[i]->GetRequireEquiSpaced())
-            {
-                RequiresEquiSpaced = true;
-            }
-        }
-        if (RequiresEquiSpaced)
-        {
-            for (int i = 0; i < modules.size(); ++i)
-            {
-                m_modules[i]->SetRequireEquiSpaced(true);
-            }
+            m_modules[i]->SetRequireEquiSpaced(true);
         }
     }
 }
@@ -379,13 +367,12 @@ void FilterFieldConvert::CreateFields(
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
         pFields[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-    for (int j = 0; j < m_outFields.size(); ++j)
+    for (int n = 0; n < m_outFields.size(); ++n)
     {
         for (int i = 0; i < FieldDef.size(); ++i)
         {
-            FieldDef[i]->m_fields.push_back(m_variables[j]);
-            pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], 
-                                        m_f->m_exp[j]->GetCoeffs());
+            FieldDef[i]->m_fields.push_back(m_variables[n]);
+            m_f->m_exp[n]->AppendFieldData(FieldDef[i], FieldData[i]);
         }
     }
     m_f->m_fielddef = FieldDef;

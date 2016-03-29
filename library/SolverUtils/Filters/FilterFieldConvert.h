@@ -81,7 +81,10 @@ protected:
     {
         // Do nothing by default
     }
-    SOLVER_UTILS_EXPORT virtual std::string v_GetFileSuffix() = 0;
+    SOLVER_UTILS_EXPORT virtual std::string v_GetFileSuffix()
+    {
+        return "";
+    }
 
     void OutputField(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
@@ -89,6 +92,11 @@ protected:
 
     virtual bool v_IsTimeDependent();
     
+    void CreateModules( vector<string> &modcmds);
+
+    void CreateFields(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
+
     NekDouble m_scale;
     unsigned int m_numSamples;
     unsigned int m_outputFrequency;
@@ -97,6 +105,7 @@ protected:
     unsigned int m_outputIndex;
     vector<ModuleSharedPtr> m_modules;
     LibUtilities::FieldMetaDataMap m_fieldMetaData;
+    std::vector<Array<OneD, NekDouble> > m_outFields;
     std::vector<std::string> m_variables;
     FieldSharedPtr m_f;
 };

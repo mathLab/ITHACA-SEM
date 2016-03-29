@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/Filters/FilterFieldConvert.h>
+#include <boost/program_options.hpp>
 
 namespace Nektar
 {
@@ -93,6 +94,7 @@ FilterFieldConvert::FilterFieldConvert(
     //
     // FieldConvert modules
     //
+    m_f = boost::shared_ptr<Field>(new Field());
     vector<string>          modcmds;
     // Process modules
     std::stringstream moduleStream;
@@ -112,105 +114,8 @@ FilterFieldConvert::FilterFieldConvert(
     }
     // Output module
     modcmds.push_back(outputFile);
-    // Create modules (bases on FieldConvert.cpp)
-    for (int i = 0; i < modcmds.size(); ++i)
-    {
-        // First split each command by the colon separator.
-        vector<string> tmp1;
-        ModuleKey module;
-        int offset = 1;
-
-        boost::split(tmp1, modcmds[i], boost::is_any_of(":"));
-
-        if (i == modcmds.size() - 1)
-        {
-            module.first = eOutputModule;
-
-            // If no colon detected, automatically detect mesh type from
-            // file extension. Otherwise override and use tmp1[1] as the
-            // module to load. This also allows us to pass options to
-            // input/output modules. So, for example, to override
-            // filename.xml to be read as vtk, you use:
-            //
-            // filename.xml:vtk:opt1=arg1:opt2=arg2
-            if (tmp1.size() == 1)
-            {
-                int    dot    = tmp1[0].find_last_of('.') + 1;
-                string ext    = tmp1[0].substr(dot, tmp1[0].length() - dot);
-
-                module.second = ext;
-                tmp1.push_back(string("outfile=") + tmp1[0]);
-            }
-            else
-            {
-                module.second = tmp1[1];
-                tmp1.push_back(string("outfile=") + tmp1[0]);
-                offset++;
-            }
-        }
-        else
-        {
-            module.first  = eProcessModule;
-            module.second = tmp1[0];
-        }
-
-        // Create module.
-        ModuleSharedPtr mod;
-        mod = GetModuleFactory().CreateInstance(module, f);
-        m_modules.push_back(mod);
-
-        // Set options for this module.
-        for (int j = offset; j < tmp1.size(); ++j)
-        {
-            vector<string> tmp2;
-            boost::split(tmp2, tmp1[j], boost::is_any_of("="));
-
-            if (tmp2.size() == 1)
-            {
-                mod->RegisterConfig(tmp2[0], "1");
-            }
-            else if (tmp2.size() == 2)
-            {
-                mod->RegisterConfig(tmp2[0], tmp2[1]);
-            }
-            else
-            {
-                cerr << "ERROR: Invalid module configuration: format is "
-                     << "either :arg or :arg=val" << endl;
-                abort();
-            }
-        }
-
-        // Ensure configuration options have been set.
-        mod->SetDefaults();
-    }
-
-    // If any output module has to reset points then set intput modules to match
-    if(vm.count("noequispaced"))
-    {
-        for (int i = 0; i < modules.size(); ++i)
-        {
-            m_modules[i]->SetRequireEquiSpaced(false);
-        }
-    }
-    else
-    {
-        bool RequiresEquiSpaced = false;
-        for (int i = 0; i < m_modules.size(); ++i)
-        {
-            if(m_modules[i]->GetRequireEquiSpaced())
-            {
-                RequiresEquiSpaced = true;
-            }
-        }
-        if (RequiresEquiSpaced)
-        {
-            for (int i = 0; i < modules.size(); ++i)
-            {
-                m_modules[i]->SetRequireEquiSpaced(true);
-            }
-        }
-    }
+    // Create modules 
+    CreateModules(modcmds);
 }
 
 FilterFieldConvert::~FilterFieldConvert()
@@ -222,30 +127,23 @@ void FilterFieldConvert::v_Initialise(
     const NekDouble &time)
 {
     v_FillVariablesName(pFields);
+
+    int ncoeff = pFields[0]->GetNcoeffs();
+    // m_variables need to be filled by a derived class
+    m_outFields.resize(m_variables.size());
+
+    for (int n = 0; n < m_variables.size(); ++n)
+    {
+        m_outFields[n] = Array<OneD, NekDouble>(ncoeff, 0.0);
+    }
+
     m_fieldMetaData["InitialTime"] = boost::lexical_cast<std::string>(time);
 
-    // Create m_f
-    FieldSharedPtr m_f = boost::shared_ptr<Field>(new Field());
+    // Fill some parameters of m_f
     m_f->m_session = m_session;
     m_f->m_graph = pFields[0]->GetGraph();
     m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
                     ::AllocateSharedPtr(m_f->m_session->GetComm());
-    int NumHomogeneousDir = 0;
-    if (pFields[0]->GetExpType() == MultiRegions::e3DH1D)
-    {
-        NumHomogeneousDir = 1;
-    }
-    else if (pFields[0]->GetExpType() == MultiRegions::e3DH2D)
-    {
-        NumHomogeneousDir = 2;
-    }
-    m_f->m_exp.resize(m_variables.size());
-    m_f->m_exp[0] = pFields[0];
-    for (int n = 0; n < m_variables.size(); ++n)
-    {
-        m_f->m_exp[n] = m_f->AppendExpList(
-                            NumHomogeneousDir, m_variables[0]);
-    }
 }
 
 void FilterFieldConvert::v_FillVariablesName(
@@ -302,50 +200,34 @@ void FilterFieldConvert::OutputField(
                     1);
     }
 
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        pFields[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    Array<OneD, NekDouble> fieldcoeffs;
-    int ncoeffs = pFields[0]->GetNcoeffs();
-
-    // copy Data into FieldData and set variable
-    for (int j = 0; j < m_outFields.size(); ++j)
-    {
-        // check to see if field is same order a zeroth field
-        if (m_outFields[j].num_elements() == ncoeffs)
-        {
-            fieldcoeffs = m_outFields[j];
-        }
-        else
-        {
-            fieldcoeffs = Array<OneD, NekDouble>(ncoeffs);
-            pFields[0]->ExtractCoeffsToCoeffs(
-                pFields[j], m_outFields[j], fieldcoeffs);
-        }
-
-        for (int i = 0; i < FieldDef.size(); ++i)
-        {
-            FieldDef[i]->m_fields.push_back(m_variables[j]);
-            pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs);
-        }
-    }
-
     m_fieldMetaData["NumberOfFieldDumps"] =
         boost::lexical_cast<std::string>(m_numSamples);
 
+    CreateFields(pFields);
+
+    // Determine new file name
     std::stringstream outname;
+    int    dot    = m_outputFile[0].find_last_of('.') + 1;
+    string name   = m_outputFile[0].substr(0, dot-1);
+    string ext    = m_outputFile[0].substr(dot, m_outputFile[0].length() - dot);
     std::string suffix = v_GetFileSuffix();
     if (dump == -1) // final dump
     {
-        outname << m_outputFile << suffix << ".fld";
+        outname << name << suffix << ext;
     }
     else
     {
-        outname << m_outputFile << "_" << dump << suffix << ".fld";
+        outname << name << "_" << dump << suffix << ext;
     }
+    m_modules[m_modules.size()-1]->RegisterConfig("outfile", name);
 
-    m_fld->Write(outname.str(), FieldDef, FieldData, m_fieldMetaData);
+    // Run field process.
+    po::variables_map vm;
+    for (int i = 0; i < m_modules.size(); ++i)
+    {
+        m_modules[i]->Process(vm);
+        cout.flush();
+    }
 
     if (dump != -1) // not final dump so rescale
     {
@@ -364,6 +246,150 @@ void FilterFieldConvert::OutputField(
 bool FilterFieldConvert::v_IsTimeDependent()
 {
     return true;
+}
+
+void FilterFieldConvert::CreateModules( vector<string> &modcmds)
+{
+    for (int i = 0; i < modcmds.size(); ++i)
+    {
+        // First split each command by the colon separator.
+        vector<string> tmp1;
+        ModuleKey module;
+        int offset = 1;
+
+        boost::split(tmp1, modcmds[i], boost::is_any_of(":"));
+
+        if (i == modcmds.size() - 1)
+        {
+            module.first = eOutputModule;
+
+            // If no colon detected, automatically detect mesh type from
+            // file extension. Otherwise override and use tmp1[1] as the
+            // module to load. This also allows us to pass options to
+            // input/output modules. So, for example, to override
+            // filename.xml to be read as vtk, you use:
+            //
+            // filename.xml:vtk:opt1=arg1:opt2=arg2
+            if (tmp1.size() == 1)
+            {
+                int    dot    = tmp1[0].find_last_of('.') + 1;
+                string ext    = tmp1[0].substr(dot, tmp1[0].length() - dot);
+
+                module.second = ext;
+                tmp1.push_back(string("outfile=") + tmp1[0]);
+            }
+            else
+            {
+                module.second = tmp1[1];
+                tmp1.push_back(string("outfile=") + tmp1[0]);
+                offset++;
+            }
+        }
+        else
+        {
+            module.first  = eProcessModule;
+            module.second = tmp1[0];
+        }
+
+        // Create modules
+        ModuleSharedPtr mod;
+        mod = GetModuleFactory().CreateInstance(module, m_f);
+        m_modules.push_back(mod);
+
+        // Set options for this module.
+        for (int j = offset; j < tmp1.size(); ++j)
+        {
+            vector<string> tmp2;
+            boost::split(tmp2, tmp1[j], boost::is_any_of("="));
+
+            if (tmp2.size() == 1)
+            {
+                mod->RegisterConfig(tmp2[0], "1");
+            }
+            else if (tmp2.size() == 2)
+            {
+                mod->RegisterConfig(tmp2[0], tmp2[1]);
+            }
+            else
+            {
+                cerr << "ERROR: Invalid module configuration: format is "
+                     << "either :arg or :arg=val" << endl;
+                abort();
+            }
+        }
+
+        // Ensure configuration options have been set.
+        mod->SetDefaults();
+    }
+
+    // If any output module has to reset points then set intput modules to match
+    if(vm.count("noequispaced"))
+    {
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            m_modules[i]->SetRequireEquiSpaced(false);
+        }
+    }
+    else
+    {
+        bool RequiresEquiSpaced = false;
+        for (int i = 0; i < m_modules.size(); ++i)
+        {
+            if(m_modules[i]->GetRequireEquiSpaced())
+            {
+                RequiresEquiSpaced = true;
+            }
+        }
+        if (RequiresEquiSpaced)
+        {
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                m_modules[i]->SetRequireEquiSpaced(true);
+            }
+        }
+    }
+}
+
+void FilterFieldConvert::CreateFields(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
+{
+    m_f->m_fieldMetaDataMap = m_fieldMetaData;
+    // Create m_f->m_exp
+    int NumHomogeneousDir = 0;
+    if (pFields[0]->GetExpType() == MultiRegions::e3DH1D)
+    {
+        NumHomogeneousDir = 1;
+    }
+    else if (pFields[0]->GetExpType() == MultiRegions::e3DH2D)
+    {
+        NumHomogeneousDir = 2;
+    }
+    m_f->m_exp.resize(m_variables.size());
+    m_f->m_exp[0] = pFields[0];
+    m_f->m_exp[0]->SetWaveSpace(false);
+    for (int n = 0; n < m_variables.size(); ++n)
+    {
+        m_f->m_exp[n] = m_f->AppendExpList(
+                            NumHomogeneousDir, m_variables[0]);
+        m_f->m_exp[n]->UpdateCoeffs() = m_outFields[n];
+        m_f->m_exp[n]->BwdTrans( m_f->m_exp[n]->GetCoeffs(),
+                                 m_f->m_exp[n]->UpdatePhys());
+    }
+
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
+        pFields[0]->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+    for (int j = 0; j < m_outFields.size(); ++j)
+    {
+        for (int i = 0; i < FieldDef.size(); ++i)
+        {
+            FieldDef[i]->m_fields.push_back(m_variables[j]);
+            pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], 
+                                        m_f->m_exp[j]->GetCoeffs());
+        }
+    }
+    m_f->m_fielddef = FieldDef;
+    m_f->m_data     = FieldData;
 }
 
 }

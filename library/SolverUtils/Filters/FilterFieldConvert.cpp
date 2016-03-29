@@ -146,6 +146,7 @@ void FilterFieldConvert::v_Initialise(
     m_f->m_graph = pFields[0]->GetGraph();
     m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
                     ::AllocateSharedPtr(m_f->m_session->GetComm());
+    m_f->m_comm = m_f->m_session->GetComm();
 }
 
 void FilterFieldConvert::v_FillVariablesName(
@@ -375,18 +376,18 @@ void FilterFieldConvert::CreateFields(
     {
         NumHomogeneousDir = 2;
     }
+
     m_f->m_exp.resize(m_variables.size());
     m_f->m_exp[0] = pFields[0];
-    m_f->m_exp[0]->SetWaveSpace(false);
     for (int n = 0; n < m_variables.size(); ++n)
     {
         m_f->m_exp[n] = m_f->AppendExpList(
                             NumHomogeneousDir, m_variables[0]);
+        m_f->m_exp[0]->SetWaveSpace(false);
         m_f->m_exp[n]->UpdateCoeffs() = m_outFields[n];
         m_f->m_exp[n]->BwdTrans( m_f->m_exp[n]->GetCoeffs(),
                                  m_f->m_exp[n]->UpdatePhys());
     }
-
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
         pFields[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());

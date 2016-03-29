@@ -1,4 +1,4 @@
-SET(FieldConvertHeaders
+SET(LibFieldConvertHeaders
     Module.h
     Field.hpp
     InputModules/InputDat.h
@@ -42,9 +42,8 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessQualityMetric.h
 )
 
-SET(FieldConvertSources
+SET(LibFieldConvertSources
     Module.cpp
-    FieldConvert.cpp
     InputModules/InputDat.cpp
     InputModules/InputFld.cpp
     InputModules/InputXml.cpp
@@ -86,8 +85,16 @@ SET(FieldConvertSources
     ProcessModules/ProcessQualityMetric.cpp
 )
 
-ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})
-TARGET_LINK_LIBRARIES(FieldConvert SolverUtils)
+SET(FieldConvertSources
+    FieldConvert.cpp
+)
+
+ADD_NEKTAR_LIBRARY(libFieldConvert lib ${NEKTAR_LIBRARY_TYPE} ${LibFieldConvertSources} ${LibFieldConvertHeaders})
+TARGET_LINK_LIBRARIES(libFieldConvert SolverUtils)
+SET_TARGET_PROPERTIES(libFieldConvert PROPERTIES OUTPUT_NAME FieldConvert)
+
+ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources})
+TARGET_LINK_LIBRARIES(FieldConvert libFieldConvert)
 
 #ADD_NEKTAR_TEST(chan3D_tec)  # This test is covered in bfs_tec
 #ADD_NEKTAR_TEST(chan3D_vtu)  # This does not currently work -- hash metric 

@@ -41,13 +41,13 @@
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ExpList.h>
-#include <SolverUtils/SolverUtilsDeclspec.h>
+#include <GlobalMapping/GlobalMappingDeclspec.h>
 
 namespace Nektar {
-namespace SolverUtils {
+namespace GlobalMapping {
 
     /// Adds a summary item to the summary info list
-    SOLVER_UTILS_EXPORT void UpdateGeometry(
+    GLOBAL_MAPPING_EXPORT void UpdateGeometry(
         SpatialDomains::MeshGraphSharedPtr           graph,
         Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         bool modal = true);

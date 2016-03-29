@@ -40,7 +40,7 @@ using namespace std;
 #include "ProcessDeform.h"
 
 #include <MultiRegions/ExpList.h>
-#include <SolverUtils/Core/Deform.h>
+#include <GlobalMapping/Deform.h>
 
 namespace Nektar
 {
@@ -74,7 +74,7 @@ namespace Nektar
                 exp[i] = m_f->m_exp[i];
             }
 
-            SolverUtils::UpdateGeometry(m_f->m_graph, exp, false);
+            GlobalMapping::UpdateGeometry(m_f->m_graph, exp, false);
         }
     }
 }

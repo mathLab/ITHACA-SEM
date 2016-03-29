@@ -37,7 +37,7 @@
 
 #include <LibUtilities/Foundations/Interp.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <SolverUtils/Core/Deform.h>
+#include <GlobalMapping/Deform.h>
 #include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdQuadExp.h>
@@ -45,7 +45,7 @@
 #include <MultiRegions/ExpList.h>
 
 namespace Nektar {
-namespace SolverUtils {
+namespace GlobalMapping {
 
     /**
      * @brief Update geometry according to displacement that is in current

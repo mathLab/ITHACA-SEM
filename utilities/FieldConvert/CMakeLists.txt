@@ -90,7 +90,7 @@ SET(FieldConvertSources
 )
 
 ADD_NEKTAR_LIBRARY(libFieldConvert lib ${NEKTAR_LIBRARY_TYPE} ${LibFieldConvertSources} ${LibFieldConvertHeaders})
-TARGET_LINK_LIBRARIES(libFieldConvert SolverUtils)
+TARGET_LINK_LIBRARIES(libFieldConvert GlobalMapping)
 SET_TARGET_PROPERTIES(libFieldConvert PROPERTIES OUTPUT_NAME FieldConvert)
 
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources})

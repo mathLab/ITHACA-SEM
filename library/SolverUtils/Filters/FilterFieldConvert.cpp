@@ -41,6 +41,9 @@ namespace Nektar
 {
 namespace SolverUtils
 {
+std::string FilterFieldConvert::className =
+        GetFilterFactory().RegisterCreatorFunction(
+                "FieldConvert", FilterFieldConvert::create);
 
 FilterFieldConvert::FilterFieldConvert(
     const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -220,8 +223,8 @@ void FilterFieldConvert::OutputField(
 
     // Determine new file name
     std::stringstream outname;
-    int    dot    = m_outputFile.find_last_of('.') + 1;
-    string name   = m_outputFile.substr(0, dot-1);
+    int    dot    = m_outputFile.find_last_of('.');
+    string name   = m_outputFile.substr(0, dot);
     string ext    = m_outputFile.substr(dot, m_outputFile.length() - dot);
     std::string suffix = v_GetFileSuffix();
     if (dump == -1) // final dump
@@ -232,7 +235,7 @@ void FilterFieldConvert::OutputField(
     {
         outname << name << "_" << dump << suffix << ext;
     }
-    m_modules[m_modules.size()-1]->RegisterConfig("outfile", name);
+    m_modules[m_modules.size()-1]->RegisterConfig("outfile", outname.str());
 
     // Run field process.
     po::variables_map vm;

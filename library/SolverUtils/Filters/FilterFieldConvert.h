@@ -51,6 +51,19 @@ class FilterFieldConvert : public Filter
 public:
     friend class MemoryManager<FilterFieldConvert>;
 
+    /// Creates an instance of this class
+    static FilterSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::map<std::string, std::string> &pParams)
+    {
+        FilterSharedPtr p = MemoryManager<FilterFieldConvert>
+                                ::AllocateSharedPtr(pSession, pParams);
+        return p;
+    }
+
+    ///Name of the class
+    static std::string className;
+    
     SOLVER_UTILS_EXPORT FilterFieldConvert(
         const LibUtilities::SessionReaderSharedPtr &pSession,
         const ParamMap &pParams);

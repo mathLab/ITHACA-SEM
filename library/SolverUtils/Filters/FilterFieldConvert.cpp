@@ -56,12 +56,23 @@ FilterFieldConvert::FilterFieldConvert(
     it = pParams.find("OutputFile");
     if (it == pParams.end())
     {
-        m_outputFile = m_session->GetSessionName();
+        std::stringstream outname;
+        outname << m_session->GetSessionName() << ".fld";
+        m_outputFile = outname.str();
     }
     else
     {
         ASSERTL0(it->second.length() > 0, "Missing parameter 'OutputFile'.");
-        m_outputFile = it->second;
+        if ( it->second.find_last_of('.') != string::npos)
+        {
+            m_outputFile = it->second;
+        }
+        else
+        {
+            std::stringstream outname;
+            outname << it->second << ".fld";
+            m_outputFile = outname.str();
+        }
     }
 
     // SampleFrequency

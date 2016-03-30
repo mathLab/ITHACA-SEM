@@ -383,8 +383,10 @@ void FilterFieldConvert::CreateFields(
     {
         m_f->m_exp[n] = m_f->AppendExpList(
                             NumHomogeneousDir, m_variables[0]);
-        m_f->m_exp[0]->SetWaveSpace(false);
-        m_f->m_exp[n]->UpdateCoeffs() = m_outFields[n];
+        m_f->m_exp[n]->SetWaveSpace(false);
+        Vmath::Vcopy( m_outFields[n].num_elements(),
+                      m_outFields[n], 1,
+                      m_f->m_exp[n]->UpdateCoeffs(), 1);
         m_f->m_exp[n]->BwdTrans( m_f->m_exp[n]->GetCoeffs(),
                                  m_f->m_exp[n]->UpdatePhys());
     }

@@ -129,8 +129,6 @@ void OutputVtk::Process(po::variables_map &vm)
     vector<string> fieldname;
     if(fPts == LibUtilities::NullPtsField) // standard output in collapsed coordinates 
     {
-       dim =  m_f->m_exp[0]->GetExp(0)->GetCoordim();
-    
        int nstrips;
        if (m_f->m_fielddef.size() == 0)
        {
@@ -159,7 +157,11 @@ void OutputVtk::Process(po::variables_map &vm)
                m_f->m_exp[0]->WriteVtkPieceFooter(outfile, i);
            }
        }
-       
+
+       if( m_f->m_exp[0]->GetNumElmts() == 0)
+       {
+           WriteEmptyVtkPiece(outfile);
+       }
        // save field names for parallel output 
        for(i = 0; i < nfields; ++i)
        {
@@ -350,6 +352,39 @@ void OutputVtk::Process(po::variables_map &vm)
             cout << "Written file: " << filename << endl;
         }
     }
+}
+
+void OutputVtk::WriteEmptyVtkPiece(std::ofstream &outfile)
+{
+    // write out empty piece of data.
+    outfile << "    <Piece NumberOfPoints=\""
+            << 0 << "\" NumberOfCells=\""
+            << 0 << "\">" << endl;
+    outfile << "      <Points>" << endl;
+    outfile << "        <DataArray type=\"Float64\" "
+            << "NumberOfComponents=\""<<3<<"\" format=\"ascii\">" << endl;
+    outfile << "        </DataArray>" << endl;
+    outfile << "      </Points>" << endl;
+    outfile << "      <Cells>" << endl;
+    outfile << "        <DataArray type=\"Int32\" "
+            << "Name=\"connectivity\" format=\"ascii\">" << endl;
+    outfile << "        </DataArray>" << endl;
+    outfile << "        <DataArray type=\"Int32\" "
+            << "Name=\"offsets\" format=\"ascii\">" << endl;
+
+    outfile << "          ";
+    outfile << endl;
+    outfile << "        </DataArray>" << endl;
+    outfile << "        <DataArray type=\"UInt8\" "
+            << "Name=\"types\" format=\"ascii\">" << endl;
+    outfile << "          ";
+    outfile << endl;
+    outfile << "        </DataArray>" << endl;
+    outfile << "      </Cells>" << endl;
+    outfile << "      <PointData>" << endl;
+
+    outfile << "      </PointData>" << endl;
+    outfile << "    </Piece>" << endl;
 }
 
 }

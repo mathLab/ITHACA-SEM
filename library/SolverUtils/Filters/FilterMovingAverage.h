@@ -71,6 +71,9 @@ protected:
     virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
+    virtual void v_PrepareOutput(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
     virtual std::string v_GetFileSuffix()
     {
         return "_movAvg";

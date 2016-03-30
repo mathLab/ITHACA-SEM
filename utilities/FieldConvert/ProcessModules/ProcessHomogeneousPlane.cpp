@@ -88,47 +88,75 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
     int nstrips;
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
 
-    for (int s = 0; s < nstrips; ++s)
+    // Look for correct plane (because of parallel case)
+    int plane = -1;
+    for( int i = 0; i < m_f->m_fielddef[0]->m_homogeneousZIDs.size(); ++i)
     {
-        for (int i = 0; i < nfields; ++i)
+        if( m_f->m_fielddef[0]->m_homogeneousZIDs[i] == planeid)
         {
-            int n = s * nfields + i;
-            m_f->m_exp[n] = m_f->m_exp[n]->GetPlane(planeid);
-
-            if (m_config["wavespace"].m_beenSet)
-            {
-                m_f->m_exp[n]->BwdTrans(m_f->m_exp[n]->GetCoeffs(),
-                                        m_f->m_exp[n]->UpdatePhys());
-            }
-            else
-            {
-                m_f->m_exp[n]->FwdTrans(m_f->m_exp[n]->GetPhys(),
-                                        m_f->m_exp[n]->UpdateCoeffs());
-            }
-        }
-    }
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (int s = 0; s < nstrips; ++s)
-    {
-        for (int j = 0; j < nfields; ++j)
-        {
-            for (int i = 0; i < FieldDef.size() / nstrips; ++i)
-            {
-                int n = s * FieldDef.size() / nstrips + i;
-
-                FieldDef[n]->m_fields.push_back(
-                    m_f->m_fielddef[0]->m_fields[j]);
-                m_f->m_exp[s * nfields + j]->AppendFieldData(FieldDef[n],
-                                                             FieldData[n]);
-            }
+            plane = i;
         }
     }
 
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
+    if( plane != -1)
+    {
+        for (int s = 0; s < nstrips; ++s)
+        {
+            for (int i = 0; i < nfields; ++i)
+            {
+                int n = s * nfields + i;
+                m_f->m_exp[n] = m_f->m_exp[n]->GetPlane(plane);
+
+                if (m_config["wavespace"].m_beenSet)
+                {
+                    m_f->m_exp[n]->BwdTrans(m_f->m_exp[n]->GetCoeffs(),
+                                            m_f->m_exp[n]->UpdatePhys());
+                }
+                else
+                {
+                    m_f->m_exp[n]->FwdTrans(m_f->m_exp[n]->GetPhys(),
+                                            m_f->m_exp[n]->UpdateCoeffs());
+                }
+            }
+        }
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
+            m_f->m_exp[0]->GetFieldDefinitions();
+        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
+        for (int s = 0; s < nstrips; ++s)
+        {
+            for (int j = 0; j < nfields; ++j)
+            {
+                for (int i = 0; i < FieldDef.size() / nstrips; ++i)
+                {
+                    int n = s * FieldDef.size() / nstrips + i;
+
+                    FieldDef[n]->m_fields.push_back(
+                        m_f->m_fielddef[0]->m_fields[j]);
+                    m_f->m_exp[s * nfields + j]->AppendFieldData(FieldDef[n],
+                                                                 FieldData[n]);
+                }
+            }
+        }
+
+        m_f->m_fielddef = FieldDef;
+        m_f->m_data     = FieldData;
+    }
+    else
+    {
+        for (int s = 0; s < nstrips; ++s)
+        {
+            for (int i = 0; i < nfields; ++i)
+            {
+                int n = s * nfields + i;
+                m_f->m_exp[n] = MemoryManager<MultiRegions::ExpList>
+                                    ::AllocateSharedPtr();
+            }
+        }
+        m_f->m_fielddef = 
+                std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
+        m_f->m_data = std::vector<std::vector<NekDouble> > ();
+    }
 }
 }
 }

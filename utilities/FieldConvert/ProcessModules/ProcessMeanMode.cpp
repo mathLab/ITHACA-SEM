@@ -68,11 +68,6 @@ void ProcessMeanMode::Process(po::variables_map &vm)
         cout << "ProcessMeanMode: Extracting mean mode..." << endl;
     }
 
-    if (m_f->m_fielddef[0]->m_homogeneousZIDs[0] != 0)
-    {
-        ASSERTL0(false, "ProcessMeanMode: mean mode not found.");
-    }
-
     // Set parameters for mean mode
     RegisterConfig("planeid", "0");
     RegisterConfig("wavespace", "1");

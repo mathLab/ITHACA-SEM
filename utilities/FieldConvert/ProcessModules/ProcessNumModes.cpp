@@ -111,7 +111,7 @@ void ProcessNumModes::Process(po::variables_map &vm)
             int n = s * addfields + i;
             Exp[n] =
                 m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
-            Exp[n]->UpdatePhys() = outfield[i];
+            Vmath::Vcopy(npoints, outfield[i], 1, Exp[n]->UpdatePhys(), 1);
             Exp[n]->FwdTrans_IterPerExp(outfield[i], Exp[n]->UpdateCoeffs());
         }
     }

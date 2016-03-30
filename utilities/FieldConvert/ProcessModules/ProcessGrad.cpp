@@ -177,7 +177,8 @@ void ProcessGrad::Process(po::variables_map &vm)
     for (i = 0; i < addfields; ++i)
     {
         m_f->m_exp[nfields + i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
-        m_f->m_exp[nfields + i]->UpdatePhys() = grad[i];
+        Vmath::Vcopy( npoints, grad[i], 1,
+                        m_f->m_exp[nfields + i]->UpdatePhys(), 1);
         m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(grad[i],
                             m_f->m_exp[nfields + i]->UpdateCoeffs());
     }

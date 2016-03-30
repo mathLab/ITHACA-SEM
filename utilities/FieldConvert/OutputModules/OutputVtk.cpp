@@ -173,11 +173,6 @@ void OutputVtk::Process(po::variables_map &vm)
 
         dim = fPts->GetDim();
 
-        if(fPts->GetNpoints() == 0)
-        {
-            return;
-        }
-
         int nvert, vtktype; 
         switch(fPts->GetPtsType())
         {

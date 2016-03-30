@@ -366,6 +366,7 @@ void FilterFieldConvert::CreateFields(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
 {
     m_f->m_fieldMetaDataMap = m_fieldMetaData;
+    m_f->m_fieldPts = LibUtilities::NullPtsField;
     // Create m_f->m_exp
     int NumHomogeneousDir = 0;
     if (pFields[0]->GetExpType() == MultiRegions::e3DH1D)

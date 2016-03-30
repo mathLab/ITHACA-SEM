@@ -94,15 +94,30 @@ void BLMesh::Mesh()
             bln.bl = m_bl;
             bln.symsurf = 0;
 
+            //calculate mesh normal
             bln.N = Array<OneD, NekDouble> (3,0.0);
-            for(int j = 0; j < inter.size(); j++)
+            map<int, vector<ElementSharedPtr> >::iterator g = nIdxToTri.find((*it)->m_id);
+            for(int i = 0; i < g->second.size(); i++)
             {
-                Array<OneD, NekDouble> uv = (*it)->GetCADSurfInfo(inter[j]);
-                Array<OneD, NekDouble> N = m_cad->GetSurf(inter[j])->N(uv);
-                for(int k = 0; k < 3; k++)
+                vector<unsigned int>::iterator f = find(inter.begin(), inter.end(),
+                                                        g->second[i]->CADSurfId);
+                if(f == inter.end())
                 {
-                    bln.N[k] += N[k];
+                    //if this triangle is not in inter continue
+                    continue;
                 }
+
+                vector<NodeSharedPtr> ns = g->second[i]->GetVertexList();
+                if(m_cad->GetSurf(g->second[i]->CADSurfId)->IsReversedNormal())
+                {
+                    swap(ns[0],ns[1]);
+                }
+                bln.N[0] += ((ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
+                             (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y));
+                bln.N[1] -= ((ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z) -
+                             (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x));
+                bln.N[2] += ((ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
+                             (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x));
             }
             NekDouble mag = 0.0;
             for(int k = 0; k < 3; k++)
@@ -114,6 +129,7 @@ void BLMesh::Mesh()
             {
                 bln.N[k] /= mag;
             }
+
             Array<OneD, NekDouble> loc = (*it)->GetLoc();
             for(int k = 0; k < 3; k++)
             {
@@ -121,47 +137,6 @@ void BLMesh::Mesh()
             }
             bln.pNode = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
                                             loc[0], loc[1], loc[2]));
-
-            //calculate mesh normal
-            Array<OneD, NekDouble> mNorm(3,0.0);
-            map<int, vector<ElementSharedPtr> >::iterator g = nIdxToTri.find((*it)->m_id);
-            for(int i = 0; i < g->second.size(); i++)
-            {
-                vector<NodeSharedPtr> ns = g->second[i]->GetVertexList();
-                if(m_cad->GetSurf(g->second[i]->CADSurfId)->IsReversedNormal())
-                {
-                    swap(ns[0],ns[1]);
-                }
-                mNorm[0] += ((ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
-                             (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y));
-                mNorm[1] -= ((ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z) -
-                             (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x));
-                mNorm[2] += ((ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
-                             (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x));
-            }
-            mag = 0.0;
-            for(int k = 0; k < 3; k++)
-            {
-                mag += mNorm[k]*mNorm[k];
-            }
-            mag = sqrt(mag);
-            for(int k = 0; k < 3; k++)
-            {
-                mNorm[k] /= mag;
-            }
-
-            if(mNorm[0] * bln.N[0] + mNorm[1] * bln.N[1] + mNorm[2] * bln.N[2] < 0.9)
-            {
-                cout << "Norm irregularity ";
-                cout << mNorm[0] * bln.N[0] + mNorm[1] * bln.N[1] + mNorm[2] * bln.N[2];
-                if(inter.size() ==3)
-                {
-                    cout << " with 3 normal";
-                }
-                cout << " " << (*it)->m_id << endl;
-            }
-
-            //bln.N = mNorm;
 
             //if the diff size is greater than 1 there is a curve that needs remeshing
             if(diff.size() > 1)
@@ -177,7 +152,6 @@ void BLMesh::Mesh()
             blData[(*it)] = bln;
         }
     }
-
 
     map<NodeSharedPtr, blInfo>::iterator bit;
 
@@ -307,7 +281,7 @@ void BLMesh::Mesh()
             gfac = geom->GetGeomFactors();
         }
     }
-*/
+*/ 
     //this is where it should do some clever collision dectecting and reduce the bl parameter
 
     //all nodes in the vertex set are unique ordered and in surface elements
@@ -356,7 +330,7 @@ void BLMesh::Mesh()
                 break;
             }
         }
-        while(sqrt(dists[sample-1]) < bit->second.bl * 1.1);
+        while(sqrt(dists[sample-1]) < bit->second.bl * 2.5);
 
         //now need to build a set of triagnles to test against
         //use set to make sure its unique
@@ -374,97 +348,56 @@ void BLMesh::Mesh()
 
         NekDouble mind = numeric_limits<double>::max();
         set<ElementSharedPtr>::iterator s;
+
         for(s = tris.begin(); s != tris.end(); s++)
         {
             ElementSharedPtr el = (*s);
             vector<NodeSharedPtr> ns = el->GetVertexList();
-            if(m_cad->GetSurf(el->CADSurfId)->IsReversedNormal())
+
+            DNekMat A(3,3,0.0);
+            DNekMat B(3,1,0.0);
+            A(0,0) = bit->second.N[0] * -1.0;
+            A(1,0) = bit->second.N[1] * -1.0;
+            A(2,0) = bit->second.N[2] * -1.0;
+            A(0,1) = ns[1]->m_x - ns[0]->m_x;
+            A(1,1) = ns[1]->m_y - ns[0]->m_y;
+            A(2,1) = ns[1]->m_z - ns[0]->m_z;
+            A(0,2) = ns[2]->m_x - ns[0]->m_x;
+            A(1,2) = ns[2]->m_y - ns[0]->m_y;
+            A(2,2) = ns[2]->m_z - ns[0]->m_z;
+
+            NekDouble det = A(0,0) * (A(1,1)*A(2,2) - A(2,1)*A(1,2))
+                           -A(0,1) * (A(1,0)*A(2,2) - A(2,0)*A(1,2))
+                           +A(0,2) * (A(1,0)*A(2,1) - A(2,0)*A(1,1));
+            if(fabs(det) < 1e-12)
             {
-                swap(ns[0], ns[1]);
-            }
-
-            Array<OneD, NekDouble> norm(3,0.0);
-            norm[0] = (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
-                      (ns[2]->m_y - ns[0]->m_y) * (ns[1]->m_z - ns[0]->m_z);
-            norm[1] = (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z) -
-                      (ns[2]->m_x - ns[0]->m_x) * (ns[1]->m_z - ns[0]->m_z);
-            norm[2] = (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
-                      (ns[2]->m_x - ns[0]->m_x) * (ns[1]->m_y - ns[0]->m_y);
-            NekDouble mag = sqrt(norm[0]*norm[0] + norm[1]*norm[1] + norm[2]*norm[2]);
-            norm[0] /= mag;
-            norm[1] /= mag;
-            norm[2] /= mag;
-
-            NekDouble nu = norm[0] * bit->second.N[0] +
-                           norm[1] * bit->second.N[1] +
-                           norm[2] * bit->second.N[2];
-
-            if(fabs(nu) < 1E-6)
-            {
-                //no intersection
+                //no intersecton
                 continue;
             }
-            else if(nu > 0)
+            B(0,0) = bit->first->m_x - ns[0]->m_x;
+            B(1,0) = bit->first->m_y - ns[0]->m_y;
+            B(2,0) = bit->first->m_z - ns[0]->m_z;
+
+            A.Invert();
+
+            DNekMat X = A * B; //t u v
+
+            if(X(0,0) < 1e-6 || X(0,0) > bit->second.bl * 2.5)
             {
+                //no plane intersecton possible
                 continue;
             }
-
-            NekDouble d = ns[0]->m_x * norm[0] +
-                          ns[0]->m_y * norm[1] +
-                          ns[0]->m_z * norm[2];
-
-            NekDouble t =  d - bit->first->m_x*norm[0] -
-                               bit->first->m_y*norm[1] -
-                               bit->first->m_z*norm[2];
-            t /= nu;
-            if(t < 1E-6 || t > bit->second.bl * 1.1)
+            //check triangle intersecton
+            if(X(1,0) >= 0.0 && X(2,0) >= 0.0 && X(1,0) + X(2,0) <= 1.0)
             {
-                //no intersection worth worrying about
-                continue;
+                //hit
+                NekDouble tmp = X(0,0);
+                mind = min(mind, tmp);
             }
 
-            //so by this point there is an intersecton with the plane of the triangle
-            //within the range of the boudnary layer
-            //need to determine if it acutally hits the triangle
-            Array<OneD, NekDouble> x(3,0.0);
-            x[0] = bit->first->m_x + bit->second.N[0] * t;
-            x[1] = bit->first->m_y + bit->second.N[1] * t;
-            x[2] = bit->first->m_z + bit->second.N[2] * t;
-            //quick test it is on surface
-            NekDouble tst = x[0] * norm[0] + x[1] * norm[1] + x[2] * norm[2];
-            ASSERTL0(fabs(tst - d) < 1e-6,"failed planar test");
-
-            Array<OneD, NekDouble> c1(3,0.0), c2(3,0.0), c3(3,0.0);
-            c1[0] = (ns[1]->m_y - ns[0]->m_y) * (x[2] - ns[0]->m_z) -
-                    (x[1] - ns[0]->m_y) * (ns[1]->m_z - ns[0]->m_z);
-            c1[1] = (ns[1]->m_x - ns[0]->m_x) * (x[2] - ns[0]->m_z) -
-                    (x[0] - ns[0]->m_x) * (ns[1]->m_z - ns[0]->m_z);
-            c1[2] = (ns[1]->m_x - ns[0]->m_x) * (x[1] - ns[0]->m_y) -
-                    (x[0] - ns[0]->m_x) * (ns[1]->m_y - ns[0]->m_y);
-            c2[0] = (ns[2]->m_y - ns[1]->m_y) * (x[2] - ns[1]->m_z) -
-                    (x[1] - ns[1]->m_y) * (ns[2]->m_z - ns[1]->m_z);
-            c2[1] = (ns[2]->m_x - ns[1]->m_x) * (x[2] - ns[1]->m_z) -
-                    (x[0] - ns[1]->m_x) * (ns[2]->m_z - ns[1]->m_z);
-            c2[2] = (ns[2]->m_x - ns[1]->m_x) * (x[1] - ns[1]->m_y) -
-                    (x[0] - ns[1]->m_x) * (ns[2]->m_y - ns[1]->m_y);
-            c3[0] = (ns[0]->m_y - ns[2]->m_y) * (x[2] - ns[2]->m_z) -
-                    (x[1] - ns[2]->m_y) * (ns[0]->m_z - ns[2]->m_z);
-            c3[1] = (ns[0]->m_x - ns[2]->m_x) * (x[2] - ns[2]->m_z) -
-                    (x[0] - ns[2]->m_x) * (ns[0]->m_z - ns[2]->m_z);
-            c3[2] = (ns[0]->m_x - ns[2]->m_x) * (x[1] - ns[2]->m_y) -
-                    (x[0] - ns[2]->m_x) * (ns[0]->m_y - ns[2]->m_y);
-
-            bool tst1 = (c1[0]*norm[0] + c1[1]*norm[1] + c1[2]* norm[2] >= 0.0);
-            bool tst2 = (c2[0]*norm[0] + c2[1]*norm[1] + c2[2]* norm[2] >= 0.0);
-            bool tst3 = (c3[0]*norm[0] + c3[1]*norm[1] + c3[2]* norm[2] >= 0.0);
-
-            if(tst1 && tst2 && tst3)
-            {
-                //hit ?
-                mind = min(mind, t);
-            }
         }
-        if(mind < bit->second.bl * 1.1)
+
+        if(mind < bit->second.bl * 2.5 && mind * 0.25 < bit->second.bl)
         {
             bit->second.bl = mind * 0.25;
             bit->second.pNode->m_x = bit->first->m_x + bit->second.N[0] * bit->second.bl;
@@ -512,6 +445,18 @@ void BLMesh::Mesh()
         }
     }
 
+/*    vector<ElementSharedPtr> els = m_mesh->m_element[3];
+    m_mesh->m_element[3].clear();
+
+    for(int i = 0; i < els.size(); i++)
+    {
+        ElementSharedPtr tri = priToTri[els[i]];
+        if(tri->CADSurfId == 1 || tri->CADSurfId == 10)
+        {
+            m_mesh->m_element[3].push_back(els[i]);
+        }
+    }
+*/
     m_symSurfs = vector<int>(symSurfs.begin(), symSurfs.end());
     //compile a map of the nodes needed for systemetry surfs
     for(int i = 0; i < m_symSurfs.size(); i++)

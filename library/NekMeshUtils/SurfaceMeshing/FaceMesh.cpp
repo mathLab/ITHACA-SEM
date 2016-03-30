@@ -162,6 +162,17 @@ void FaceMesh::QuadRemesh(map<NodeSharedPtr, NodeSharedPtr> nmap)
         }
     }
 
+    map<NodeSharedPtr, NodeSharedPtr>::iterator it;
+    for(it = nmap.begin(); it != nmap.end(); it++)
+    {
+        NodeSharedPtr n = it->second;
+        Array<OneD, NekDouble> loc = n->GetLoc();
+        Array<OneD, NekDouble> uv(2);
+        m_cadsurf->ProjectTo(loc,uv);
+        n->SetCADSurf(m_id,m_cadsurf,uv);
+        n->Move(loc,m_id,uv);
+    }
+
     for(int i = 0; i < orderedLoops.size(); i++)
     {
         for(int j = 0; j < orderedLoops[i].size() - 1; j++)
@@ -176,12 +187,6 @@ void FaceMesh::QuadRemesh(map<NodeSharedPtr, NodeSharedPtr> nmap)
 
             NodeSharedPtr n1 = f1->second;
             NodeSharedPtr n2 = f2->second;
-
-            Array<OneD, NekDouble> loc1 = n1->GetLoc();
-            Array<OneD, NekDouble> uv1(2);
-            m_cadsurf->ProjectTo(loc1,uv1);
-            n1->SetCADSurf(m_id,m_cadsurf,uv1);
-            n1->Move(loc1,m_id,uv1);
 
             vector<NodeSharedPtr> ns;
             ns.push_back(orderedLoops[i][j]);
@@ -209,12 +214,6 @@ void FaceMesh::QuadRemesh(map<NodeSharedPtr, NodeSharedPtr> nmap)
 
             NodeSharedPtr n1 = f1->second;
             NodeSharedPtr n2 = f2->second;
-
-            Array<OneD, NekDouble> loc1 = n1->GetLoc();
-            Array<OneD, NekDouble> uv1(2);
-            m_cadsurf->ProjectTo(loc1,uv1);
-            n1->SetCADSurf(m_id,m_cadsurf,uv1);
-            n1->Move(loc1,m_id,uv1);
 
             vector<NodeSharedPtr> ns;
             ns.push_back(orderedLoops[i].back());

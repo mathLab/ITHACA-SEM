@@ -234,7 +234,9 @@ void InputCAD::Process()
 
         m_blmesh->Mesh();
 
-        m_mesh->m_nummode = 2;
+        m_surfacemesh->Remesh(m_blmesh);
+
+        /*m_mesh->m_nummode = 2;
         m_mesh->m_expDim = 3;
         m_mesh->m_element[2].clear();
         ClearElementLinks();
@@ -243,9 +245,7 @@ void InputCAD::Process()
         ProcessFaces();
         ProcessElements();
         ProcessComposites();
-        return;
-
-        m_surfacemesh->Remesh(m_blmesh);
+        return;*/
 
         //create tet mesh
         m_mesh->m_expDim = 3;

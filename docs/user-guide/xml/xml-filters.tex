@@ -27,6 +27,52 @@ In the following we document the filters implemented. Note that some filters are
 solver-specific and will therefore only work for a given subset of the available
 solvers.
 
+\subsection{FieldConvert checkpoints}
+
+\begin{notebox}
+  This filter is still at an experimental stage. Not all modules and options
+  from FieldConvert are supported.
+\end{notebox}
+
+This filter applies a sequence of FieldConvert modules to the solution, 
+writing an output file. An output is produced at the end of the simulation into
+\inltt{session\_fc.fld}, or alternatively every $M$ timesteps as defined by the
+user, into a sequence of files \inltt{session\_*\_fc.fld}, where \inltt{*} is
+replaced by a counter.
+
+The following parameters are supported:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \texttt{session.fld} &
+    Output filename. If no extension is provided, it is assumed as .fld\\
+    \inltt{OutputFrequency} & \xmark   & \texttt{NumSteps} &
+    Number of timesteps after which output is written, $M$.\\
+    \inltt{Modules} & \xmark   &  &
+    FieldConvert modules to run, separated by a white space.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+As an example, consider:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="FieldConvert">
+      <PARAM NAME="OutputFile">MyFile.vtu</PARAM>
+      <PARAM NAME="OutputFrequency">100</PARAM>
+      <PARAM NAME="Modules"> vorticity isocontour:fieldid=0:fieldvalue=0.1 </PARAM>
+  </FILTER>
+\end{lstlisting}
+
+This will create a sequence of files named \inltt{MyFile\_*\_fc.vtu} containing isocontours. 
+The result will be output every 100 time steps. Output directly to 
+\inltt{.vtu} or \inltt{.dat} is currently only supported for isocontours.
+In other cases, the output should be a \inltt{.fld} file.
+
 \subsection{Time-averaged fields}
 
 This filter computes time-averaged fields for each variable defined in the
@@ -38,7 +84,8 @@ user, into a sequence of files \inltt{session\_*\_avg.fld}, where \inltt{*} is
 replaced by a counter. This latter option can be useful to observe statistical
 convergence rates of the averaged variables.
 
-The following parameters are supported:
+This filter is derived from FieldConvert filter, and therefore support all parameters
+available in that case. The following additional parameter is supported:
 
 \begin{center}
   \begin{tabularx}{0.99\textwidth}{lllX}
@@ -46,13 +93,8 @@ The following parameters are supported:
     \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
     \textbf{Description} \\
     \midrule
-    \inltt{OutputFile}      & \xmark   & \texttt{session} &
-    Prefix of the output filename to which average fields are written.\\
     \inltt{SampleFrequency} & \xmark   & 1 &
     Number of timesteps at which the average is calculated, $N$.\\
-    \inltt{OutputFrequency} & \xmark   & \texttt{NumSteps} &
-    Number of timesteps after which output is written, $M$.\\
-    \bottomrule
   \end{tabularx}
 \end{center}
 
@@ -123,7 +165,7 @@ for example:
 \end{lstlisting}
 
 By default, this filter uses a simple average. Optionally, an exponential
-time average can be used, in which case the output contain the moving
+moving average can be used, in which case the output contains the moving
 averages and the Reynolds stresses calculated based on them. For example:
 
 \begin{lstlisting}[style=XMLStyle,gobble=2]

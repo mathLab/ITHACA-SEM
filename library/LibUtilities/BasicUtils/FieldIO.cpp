@@ -1414,8 +1414,7 @@ namespace Nektar
                     }
                     else if(fielddefs->m_numHomogeneousDir == 2)
                     {
-                        datasize += l*fielddefs->m_homogeneousYIDs.size()
-                                     *fielddefs->m_homogeneousZIDs.size();
+                        datasize += l*fielddefs->m_homogeneousYIDs.size();
                         cnt += 2;
                     }
                     else
@@ -1511,8 +1510,7 @@ namespace Nektar
                             }
                             else if(fielddefs->m_numHomogeneousDir == 2)
                             {
-                                datasize += l*fielddefs->m_homogeneousYIDs.size()
-                                             *fielddefs->m_homogeneousZIDs.size();
+                                datasize += l*fielddefs->m_homogeneousYIDs.size();
                                 cnt += 2;
                             }
                             else

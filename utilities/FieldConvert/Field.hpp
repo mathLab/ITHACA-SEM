@@ -56,6 +56,7 @@
 #include <MultiRegions/DisContField2D.h>
 #include <MultiRegions/DisContField3D.h>
 
+#include <utilities/FieldConvert/FieldConvertDeclspec.h>
 
 using namespace std;
 
@@ -65,7 +66,7 @@ namespace Utilities
 {
 
 struct Field {
-    Field() : m_verbose(false),
+    FIELD_CONVERT_EXPORT Field() : m_verbose(false),
               m_declareExpansionAsContField(false),
               m_declareExpansionAsDisContField(false),
               m_declareAsNewField(false),
@@ -75,7 +76,7 @@ struct Field {
               m_setUpEquiSpacedFields(false),
               m_fieldPts(LibUtilities::NullPtsField){}
 
-    ~Field()
+    FIELD_CONVERT_EXPORT ~Field()
     {
         if (m_comm)
         {
@@ -113,7 +114,8 @@ struct Field {
 
     LibUtilities::FieldMetaDataMap          m_fieldMetaDataMap;
 
-    MultiRegions::ExpListSharedPtr SetUpFirstExpList(int NumHomogeneousDir,
+    FIELD_CONVERT_EXPORT MultiRegions::ExpListSharedPtr SetUpFirstExpList(
+                                                     int NumHomogeneousDir,
                                                      bool fldfilegiven = false)
     {
 
@@ -400,7 +402,8 @@ struct Field {
         return exp;
     };
 
-    MultiRegions::ExpListSharedPtr AppendExpList(int NumHomogeneousDir,
+    FIELD_CONVERT_EXPORT MultiRegions::ExpListSharedPtr AppendExpList(
+                                                 int NumHomogeneousDir,
                                                  string var = "DefaultVar",
                                                  bool NewField = false)
     {

@@ -51,6 +51,8 @@
 
 #include "Field.hpp"
 
+#include <utilities/FieldConvert/FieldConvertDeclspec.h>
+
 namespace po = boost::program_options;
 
 namespace Nektar
@@ -137,24 +139,25 @@ namespace Nektar
         class Module
         {
         public:
-            Module(FieldSharedPtr p_f) : m_f(p_f), m_requireEquiSpaced(false) {}
+            FIELD_CONVERT_EXPORT Module(FieldSharedPtr p_f) :
+                m_f(p_f), m_requireEquiSpaced(false) {}
             virtual void Process(po::variables_map &vm) = 0;
 
-            void RegisterConfig(string key, string value);
-            void PrintConfig();
-            void SetDefaults();
+            FIELD_CONVERT_EXPORT void RegisterConfig(string key, string value);
+            FIELD_CONVERT_EXPORT void PrintConfig();
+            FIELD_CONVERT_EXPORT void SetDefaults();
 
-            bool GetRequireEquiSpaced(void)
+            FIELD_CONVERT_EXPORT bool GetRequireEquiSpaced(void)
             {
                 return m_requireEquiSpaced;
             }
 
-            void SetRequireEquiSpaced(bool pVal)
+            FIELD_CONVERT_EXPORT void SetRequireEquiSpaced(bool pVal)
             {
                 m_requireEquiSpaced = pVal;
             }
 
-            void EvaluateTriFieldAtEquiSpacedPts(
+            FIELD_CONVERT_EXPORT void EvaluateTriFieldAtEquiSpacedPts(
                       LocalRegions::ExpansionSharedPtr  &exp,
                 const Array<OneD, const NekDouble>      &infield,
                       Array<OneD, NekDouble>            &outfield);
@@ -229,7 +232,7 @@ namespace Nektar
         typedef LibUtilities::NekFactory<ModuleKey, Module, FieldSharedPtr>
             ModuleFactory;
 
-        ModuleFactory& GetModuleFactory();
+        FIELD_CONVERT_EXPORT ModuleFactory& GetModuleFactory();
 
         class FieldConvertComm : public  LibUtilities::CommSerial
         {

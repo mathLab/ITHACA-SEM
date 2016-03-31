@@ -96,6 +96,8 @@ SET_TARGET_PROPERTIES(libFieldConvert PROPERTIES OUTPUT_NAME FieldConvert)
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources})
 TARGET_LINK_LIBRARIES(FieldConvert libFieldConvert)
 
+ADD_DEFINITIONS(-DFIELD_CONVERT_EXPORTS)
+
 #ADD_NEKTAR_TEST(chan3D_tec)  # This test is covered in bfs_tec
 #ADD_NEKTAR_TEST(chan3D_vtu)  # This does not currently work -- hash metric 
 #ADD_NEKTAR_TEST(chan3D_vort) # This is covered by bfs_vort

@@ -186,7 +186,7 @@ namespace Nektar
         {
         public:
             InputModule(FieldSharedPtr p_m);
-            void AddFile(string fileType, string fileName);
+            FIELD_CONVERT_EXPORT void AddFile(string fileType, string fileName);
 
         protected:
             /// Print summary of elements.
@@ -218,7 +218,7 @@ namespace Nektar
         {
         public:
             OutputModule(FieldSharedPtr p_f);
-            void OpenStream();
+            FIELD_CONVERT_EXPORT void OpenStream();
 
         protected:
             /// Output stream
@@ -226,7 +226,7 @@ namespace Nektar
         };
 
         typedef pair<ModuleType,string> ModuleKey;
-        ostream& operator<<(ostream& os, const ModuleKey& rhs);
+        FIELD_CONVERT_EXPORT ostream& operator<<(ostream& os, const ModuleKey& rhs);
 
         typedef boost::shared_ptr<Module> ModuleSharedPtr;
         typedef LibUtilities::NekFactory<ModuleKey, Module, FieldSharedPtr>

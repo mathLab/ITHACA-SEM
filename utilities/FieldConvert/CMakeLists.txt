@@ -1,4 +1,4 @@
-SET(LibFieldConvertHeaders
+SET(FieldUtilsHeaders
     Module.h
     Field.hpp
     InputModules/InputDat.h
@@ -42,7 +42,7 @@ SET(LibFieldConvertHeaders
     ProcessModules/ProcessQualityMetric.h
 )
 
-SET(LibFieldConvertSources
+SET(FieldUtilsSources
     Module.cpp
     InputModules/InputDat.cpp
     InputModules/InputFld.cpp
@@ -89,12 +89,11 @@ SET(FieldConvertSources
     FieldConvert.cpp
 )
 
-ADD_NEKTAR_LIBRARY(libFieldConvert lib ${NEKTAR_LIBRARY_TYPE} ${LibFieldConvertSources} ${LibFieldConvertHeaders})
-TARGET_LINK_LIBRARIES(libFieldConvert GlobalMapping)
-SET_TARGET_PROPERTIES(libFieldConvert PROPERTIES OUTPUT_NAME FieldConvert)
+ADD_NEKTAR_LIBRARY(FieldUtils lib ${NEKTAR_LIBRARY_TYPE} ${FieldUtilsSources} ${FieldUtilsHeaders})
+TARGET_LINK_LIBRARIES(FieldUtils GlobalMapping)
 
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources})
-TARGET_LINK_LIBRARIES(FieldConvert libFieldConvert)
+TARGET_LINK_LIBRARIES(FieldConvert FieldUtils)
 
 ADD_DEFINITIONS(-DFIELD_CONVERT_EXPORTS)
 

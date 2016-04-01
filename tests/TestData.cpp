@@ -44,7 +44,8 @@ using namespace std;
 
 namespace Nektar
 {
-    TestData::TestData(const fs::path& pFilename)
+    TestData::TestData(const fs::path& pFilename, po::variables_map& pVm)
+            : m_cmdoptions(pVm)
     {
         // Process test file format.
 #if BOOST_VERSION > 104200
@@ -71,15 +72,9 @@ namespace Nektar
         return m_description;
     }
 
-    const std::string TestData::GetExecutable() const
+    const fs::path& TestData::GetExecutable() const
     {
-        std::string execname = m_executable;
-    #if defined(RELWITHDEBINFO)
-        execname += "-rg";
-    #elif !defined(NDEBUG)
-        execname += "-g";
-    #endif
-        return execname;
+        return m_executable;
     }
 
     const std::string& TestData::GetParameters() const
@@ -145,10 +140,23 @@ namespace Nektar
         ASSERTL0(tmp, "Cannot find 'description' for test.");
         m_description = string(tmp->GetText());
 
-        // Find executable tag.
-        tmp = testElement->FirstChildElement("executable");
-        ASSERTL0(tmp, "Cannot find 'executable' for test.");
-        m_executable = string(tmp->GetText());
+        // Find executable.
+        if (m_cmdoptions.count("executable"))
+        {
+            m_executable = fs::path(
+                            m_cmdoptions["executable"].as<std::string>());
+        }
+        else
+        {
+            tmp = testElement->FirstChildElement("executable");
+            ASSERTL0(tmp, "Cannot find 'executable' for test.");
+            m_executable = fs::current_path() / fs::path(tmp->GetText());
+#if defined(RELWITHDEBINFO)
+            m_executable += "-rg";
+#elif !defined(NDEBUG)
+            m_executable += "-g";
+#endif
+        }
 
         // Find parameters tag.
         tmp = testElement->FirstChildElement("parameters");

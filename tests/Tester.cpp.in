@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
     try
     {
         // Parse the test file
-        TestData file(specFile);
+        TestData file(specFile, vm);
 
         // Generate the metric objects
         vector<MetricSharedPtr> metrics;
@@ -220,22 +220,12 @@ int main(int argc, char *argv[])
                     + " ";
         }
 
-        fs::path execPath;
-        if (vm.count("executable"))
+        fs::path execPath = file.GetExecutable();
+        if (!fs::exists(execPath))
         {
-            execPath = vm["executable"].as<std::string>();
+            execPath = fs::path(file.GetExecutable());
         }
-        else
-        {
-            // If executable doesn't exist in path then hope that it is in the
-            // user's PATH environment variable.
-            execPath = startDir / fs::path(file.GetExecutable());
-            if (!fs::exists(execPath))
-            {
-                execPath = fs::path(file.GetExecutable());
-            }
-        }
-        
+
         command += PortablePath(execPath);
         command += " ";
         command += file.GetParameters();

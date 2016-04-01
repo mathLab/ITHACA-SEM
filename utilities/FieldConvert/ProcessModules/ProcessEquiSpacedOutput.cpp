@@ -86,13 +86,17 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
     {
         cout << "Interpolating fields to equispaced" << endl;
     }
+    int nel = m_f->m_exp[0]->GetExpSize();
+    if (!nel)
+    {
+        m_f->m_fieldPts = LibUtilities::NullPtsField;
+        return;
+    }
 
     int coordim  = m_f->m_exp[0]->GetCoordim(0);
     int shapedim = m_f->m_exp[0]->GetExp(0)->GetShapeDimension();
     int npts     = m_f->m_exp[0]->GetTotPoints();
     Array<OneD, Array<OneD, NekDouble> > coords(3);
-
-    int nel = m_f->m_exp[0]->GetExpSize();
 
     // Check if we have a homogeneous expansion
     bool homogeneous1D = false;

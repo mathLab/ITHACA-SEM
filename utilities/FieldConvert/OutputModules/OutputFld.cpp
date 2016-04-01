@@ -173,90 +173,10 @@ void OutputFld::Process(po::variables_map &vm)
                     int normdim = m_f->m_graph->GetMeshDimension();
                     string normstr[3] = {"Norm_x","Norm_y","Norm_z"};
 
-                    // Add normal information
-                    StdRegions::StdExpansionSharedPtr elmt;
-                    Array<OneD, int> BoundarytoElmtID, BoundarytoTraceID;
-
-                    m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID,
-                                                        BoundarytoTraceID);
-
-                    // determine offset of this Bnd Expansion Border
-                    int cnt = 0;
-                    for(int n = 0; n < Border; ++n)
-                    {
-                        cnt += BndExp[0][n]->GetExpSize();
-                    }
-
-                    Array<OneD, NekDouble> tmp_array;
-                    Array<OneD, Array<OneD, NekDouble> > NormPhys(normdim);
-
-                    for(int j = 0; j < normdim; ++j)
-                    {
-                        NormPhys[j] = Array<OneD, NekDouble>(BndExp[0][Border]->GetTotPoints(),0.0);
-                    }
-
-                    // setup phys arrays of normals
-                    for(int j=0; j < BndExp[0][Border]->GetExpSize(); ++j,++cnt)
-                    {
-                        int elmtid = BoundarytoElmtID[cnt];
-
-                        elmt = m_f->m_exp[0]->GetExp(elmtid);
-
-                        //identify boundary of element looking at.
-                        int boundary = BoundarytoTraceID[cnt];
-
-                        // Dimension specific part
-                        switch(normdim)
-                        {
-                            case 2:
-                            {
-                                // Get edge 1D expansion from element expansion
-                                StdRegions::StdExpansion1DSharedPtr bc;
-                                bc  =  boost::dynamic_pointer_cast
-                                        <StdRegions::StdExpansion1D>
-                                        (BndExp[0][Border]->GetExp(j));
-                                // Get edge normals
-                                const Array<OneD, const Array<OneD, NekDouble> >
-                                        normals = elmt->GetEdgeNormal(boundary);
-
-                                for(int k = 0; k < normdim; ++k)
-                                {
-                                    Vmath::Vcopy(bc->GetTotPoints(),
-                                            normals[k], 1,
-                                            tmp_array = NormPhys[k]+
-                                                        BndExp[0][Border]->
-                                                        GetPhys_Offset(j), 1);
-                                }
-                            }
-                            break;
-
-                            case 3:
-                            {
-                                // Get face 2D expansion from element expansion
-                                StdRegions::StdExpansion2DSharedPtr bc;
-                                bc  =  boost::dynamic_pointer_cast
-                                        <StdRegions::StdExpansion2D> 
-                                        (BndExp[0][Border]->GetExp(j));
-                                //Get face normals
-                                const Array<OneD, const Array<OneD, NekDouble> >
-                                        normals = elmt->GetFaceNormal(boundary);
-
-                                for(int k = 0; k < normdim; ++k)
-                                {
-                                    Vmath::Vcopy(bc->GetTotPoints(),
-                                            normals[k], 1,
-                                            tmp_array = NormPhys[k]+
-                                                        BndExp[0][Border]->
-                                                        GetPhys_Offset(j), 1);
-                                }
-                            }
-                            break;
-
-                            default:
-                                ASSERTL0(false, "Addnormals requires expdim >=2.");
-                            break;
-                        }
-                    }
+                    // Get normals
+                    Array<OneD, Array<OneD, NekDouble> > NormPhys;
+                    m_f->m_exp[0]->GetBoundaryNormals(Border,
+                                                      NormPhys);
 
                     // add normal coefficients to list to be dumped
                     for (int j = 0; j < normdim; ++j)

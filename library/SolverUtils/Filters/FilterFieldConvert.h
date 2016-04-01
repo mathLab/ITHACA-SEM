@@ -99,7 +99,7 @@ protected:
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         int dump = -1);
 
-    virtual bool v_IsTimeDependent();
+    SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent();
     
     void CreateModules( vector<string> &modcmds);
 

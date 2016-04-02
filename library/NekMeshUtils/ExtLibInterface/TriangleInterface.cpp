@@ -62,7 +62,7 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
     in.numberofpoints          = numPoints;
     in.numberofpointattributes = 0;
-    in.pointlist               = new REAL[in.numberofpoints * 2];
+    in.pointlist               = new double[in.numberofpoints * 2];
     in.pointmarkerlist         = new int [in.numberofpoints];
 
     int pointc = 0;
@@ -106,7 +106,7 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
     in.numberofregions = 0;
     in.numberofholes   = m_centers.size() - 1;
-    in.holelist        = new REAL[in.numberofholes * 2];
+    in.holelist        = new double[in.numberofholes * 2];
 
     for (int i = 1; i < m_centers.size(); i++)
     {
@@ -114,21 +114,13 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
         in.holelist[(i - 1) * 2 + 1] = m_centers[i][1];
     }
 
-    if (Quiet && Quality)
+    if (Quality)
     {
-        triangulate("pzenqQYY", &in, &out, NULL);
+        triangulate("penqYY", &in, &out);
     }
-    else if (Quiet && !Quality)
+    else if (!Quality)
     {
-        triangulate("pzenYYQ", &in, &out, NULL);
-    }
-    else if (!Quiet && Quality)
-    {
-        triangulate("pzenqYY", &in, &out, NULL);
-    }
-    else if (!Quiet && !Quality)
-    {
-        triangulate("pzenYY", &in, &out, NULL);
+        triangulate("penYY", &in, &out);
     }
 
     // verify the mesh a bit
@@ -143,15 +135,15 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
 void TriangleInterface::SetUp()
 {
-    in.pointlist                   = (REAL *)NULL;
-    in.pointattributelist          = (REAL *)NULL;
+    in.pointlist                   = (double *)NULL;
+    in.pointattributelist          = (double *)NULL;
     in.pointmarkerlist             = (int *)NULL;
     in.numberofpoints              = 0;
     in.numberofpointattributes     = 0;
     //
     in.trianglelist                = (int *)NULL;
-    in.triangleattributelist       = (REAL *)NULL;
-    in.trianglearealist            = (REAL *)NULL;
+    in.triangleattributelist       = (double *)NULL;
+    in.trianglearealist            = (double *)NULL;
     in.neighborlist                = (int *)NULL;
     in.numberoftriangles           = 0;
     in.numberofcorners             = 0;
@@ -161,26 +153,26 @@ void TriangleInterface::SetUp()
     in.segmentmarkerlist           = (int *)NULL;
     in.numberofsegments            = 0;
     //
-    in.holelist                    = (REAL *)NULL;
+    in.holelist                    = (double *)NULL;
     in.numberofholes               = 0;
     //
-    in.regionlist                  = (REAL *)NULL;
+    in.regionlist                  = (double *)NULL;
     in.numberofregions             = 0;
     //
     in.edgelist                    = (int *)NULL;
     in.edgemarkerlist              = (int *)NULL;
-    in.normlist                    = (REAL *)NULL;
+    in.normlist                    = (double *)NULL;
     in.numberofedges               = 0;
     //
-    out.pointlist                  = (REAL *)NULL;
-    out.pointattributelist         = (REAL *)NULL;
+    out.pointlist                  = (double *)NULL;
+    out.pointattributelist         = (double *)NULL;
     out.pointmarkerlist            = (int *)NULL;
     out.numberofpoints             = 0;
     out.numberofpointattributes    = 0;
     //
     out.trianglelist               = (int *)NULL;
-    out.triangleattributelist      = (REAL *)NULL;
-    out.trianglearealist           = (REAL *)NULL;
+    out.triangleattributelist      = (double *)NULL;
+    out.trianglearealist           = (double *)NULL;
     out.neighborlist               = (int *)NULL;
     out.numberoftriangles          = 0;
     out.numberofcorners            = 0;
@@ -190,15 +182,15 @@ void TriangleInterface::SetUp()
     out.segmentmarkerlist          = (int *)NULL;
     out.numberofsegments           = 0;
     //
-    out.holelist                   = (REAL *)NULL;
+    out.holelist                   = (double *)NULL;
     out.numberofholes              = 0;
     //
-    out.regionlist                 = (REAL *)NULL;
+    out.regionlist                 = (double *)NULL;
     out.numberofregions            = 0;
     //
     out.edgelist                   = (int *)NULL;
     out.edgemarkerlist             = (int *)NULL;
-    out.normlist                   = (REAL *)NULL;
+    out.normlist                   = (double *)NULL;
     out.numberofedges              = 0;
 }
 

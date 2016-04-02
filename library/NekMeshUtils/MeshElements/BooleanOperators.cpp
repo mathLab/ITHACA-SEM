@@ -48,6 +48,11 @@ bool operator==(ElmtConfig const &c1, ElmtConfig const &c2)
     return (c1.m_e == c2.m_e && c1.m_order == c2.m_order);
 }
 
+bool operator==(ElementSharedPtr const &e1, ElementSharedPtr const &e2)
+{
+    return e1->GetId() == e2->GetId();
+}
+
 /**
  * @brief Compares two %HOSurf objects referred to as shared pointers.
  *

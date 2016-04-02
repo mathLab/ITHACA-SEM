@@ -32,6 +32,7 @@
 //  Description: tet meshing methods
 //
 ////////////////////////////////////////////////////////////////////////////////
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 #include <NekMeshUtils/BLMeshing/BLMesh.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
@@ -68,8 +69,15 @@ void BLMesh::Mesh()
     set<int> symSurfs;
 
     NodeSet::iterator it;
-    for(it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end(); it++)
+    int ct = 0;
+    for(it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end(); it++, ct++)
     {
+        if (m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(
+                ct, m_mesh->m_vertexSet.size(), "Building BL info");
+        }
+
         vector<pair<int, CADSurfSharedPtr> > ss = (*it)->GetCADSurfs();
         vector<unsigned int> surfs;
         for(int i = 0; i < ss.size(); i++)
@@ -112,12 +120,21 @@ void BLMesh::Mesh()
                 {
                     swap(ns[0],ns[1]);
                 }
-                bln.N[0] += ((ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
-                             (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y));
-                bln.N[1] -= ((ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z) -
-                             (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x));
-                bln.N[2] += ((ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
-                             (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x));
+
+                Array<OneD, NekDouble> tmp(3,0.0);
+                tmp[0] = (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
+                         (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y);
+                tmp[1] = (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x) -
+                         (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z);
+                tmp[2] = (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
+                         (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x);
+
+                NekDouble mt = tmp[0] * tmp[0] + tmp[1] * tmp[1] + tmp[2] * tmp[2];
+                mt = sqrt(mt);
+
+                bln.N[0] += tmp[0] / mt;
+                bln.N[1] += tmp[1] / mt;
+                bln.N[2] += tmp[2] / mt;
             }
             NekDouble mag = 0.0;
             for(int k = 0; k < 3; k++)
@@ -153,6 +170,11 @@ void BLMesh::Mesh()
         }
     }
 
+    if (m_mesh->m_verbose)
+    {
+        cout << endl;
+    }
+
     map<NodeSharedPtr, blInfo>::iterator bit;
 
     //make prisms
@@ -165,6 +187,12 @@ void BLMesh::Mesh()
 
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
+        if (m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(
+                i, m_mesh->m_element[2].size(), "Building BL elements");
+        }
+
         ElementSharedPtr el = m_mesh->m_element[2][i];
         vector<unsigned int> s;
         s.push_back(el->CADSurfId);
@@ -229,10 +257,21 @@ void BLMesh::Mesh()
         priToTri[E] = el;
     }
 
+    if (m_mesh->m_verbose)
+    {
+        cout << endl;
+    }
+
     //loop over all prisms, if invalid shrink until it is
     //being careful to act on nodes which have already been shrunk
-/*    for(int i = 0; i < m_mesh->m_element[3].size(); i++)
+    for(int i = 0; i < m_mesh->m_element[3].size(); i++)
     {
+        if (m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(
+                i, m_mesh->m_element[3].size(), "Invalidity sweeping");
+        }
+
         ElementSharedPtr el = m_mesh->m_element[3][i];
         SpatialDomains::GeometrySharedPtr geom =
                                             el->GetGeom(m_mesh->m_spaceDim);
@@ -281,7 +320,12 @@ void BLMesh::Mesh()
             gfac = geom->GetGeomFactors();
         }
     }
-*/ 
+
+    if (m_mesh->m_verbose)
+    {
+        cout << endl;
+    }
+
     //this is where it should do some clever collision dectecting and reduce the bl parameter
 
     //all nodes in the vertex set are unique ordered and in surface elements
@@ -303,17 +347,24 @@ void BLMesh::Mesh()
 
     kdTree = new ANNkd_tree(dataPts, m_mesh->m_vertexSet.size(), 3);
 
-    for(bit = blData.begin(); bit != blData.end(); bit++)
+    ct = 0;
+    for(bit = blData.begin(); bit != blData.end(); bit++, ct++)
     {
+        if (m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(
+                ct, blData.size(), "Proximity sweeping");
+        }
+
         queryPt[0] = bit->first->m_x;
         queryPt[1] = bit->first->m_y;
         queryPt[2] = bit->first->m_z;
 
         //do get a decent data set must increase the sample set until the last
         //point is further away than the bl (i.e no possible intersection)
-        //set an inital sample size of 50 and keep doubling
+        //set an inital sample size of 200 and keep doubling
 
-        int sample = 50;
+        int sample = 100;
 
         do
         {
@@ -337,12 +388,28 @@ void BLMesh::Mesh()
         set<ElementSharedPtr> tris;
         for(int i = 0; i < sample; i++)
         {
-            map<int, vector<ElementSharedPtr> >::iterator s = nIdxToTri.find(nnIdx[i]);
-            ASSERTL0(s != nIdxToTri.end(),"not found");
-
-            for(int j = 0; j < s->second.size(); j++)
+            NekDouble t = (dataPts[nnIdx[i]][0] - bit->first->m_x) * bit->second.N[0] +
+                          (dataPts[nnIdx[i]][1] - bit->first->m_y) * bit->second.N[1] +
+                          (dataPts[nnIdx[i]][2] - bit->first->m_z) * bit->second.N[2];
+            t /= sqrt((dataPts[nnIdx[i]][0] - bit->first->m_x)*(dataPts[nnIdx[i]][0] - bit->first->m_x)+
+                      (dataPts[nnIdx[i]][1] - bit->first->m_y)*(dataPts[nnIdx[i]][1] - bit->first->m_y)+
+                      (dataPts[nnIdx[i]][2] - bit->first->m_z)*(dataPts[nnIdx[i]][2] - bit->first->m_z));
+            t /= sqrt(bit->second.N[0]*bit->second.N[0] + bit->second.N[1]*bit->second.N[1] +
+                      bit->second.N[2]*bit->second.N[2]);
+            if(t < 0.7)
             {
-                tris.insert(s->second[j]);
+                continue;
+            }
+
+            if(dists[i] < bit->second.bl * 2.5)
+            {
+                map<int, vector<ElementSharedPtr> >::iterator s = nIdxToTri.find(nnIdx[i]);
+                ASSERTL0(s != nIdxToTri.end(),"not found");
+
+                for(int j = 0; j < s->second.size(); j++)
+                {
+                    tris.insert(s->second[j]);
+                }
             }
         }
 
@@ -404,6 +471,11 @@ void BLMesh::Mesh()
             bit->second.pNode->m_y = bit->first->m_y + bit->second.N[1] * bit->second.bl;
             bit->second.pNode->m_z = bit->first->m_z + bit->second.N[2] * bit->second.bl;
         }
+    }
+
+    if (m_mesh->m_verbose)
+    {
+        cout << endl;
     }
 
     //smoothing

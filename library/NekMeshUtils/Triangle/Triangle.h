@@ -50,6 +50,19 @@
 /*  jrs@cs.berkeley.edu                                                      */
 /*                                                                           */
 /*****************************************************************************/
+#ifndef NEKTAR_MESHUTILS_TRIANGLE_DT_H
+#define NEKTAR_MESHUTILS_TRIANGLE_DT_H
+
+#include <boost/shared_ptr.hpp>
+
+#include <NekMeshUtils/MeshElements/Node.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+
+namespace Nektar
+{
+namespace NekMeshUtils
+{
 
 #ifndef NEKTAR_MESHUTILS_TRIANGLE_TRIANGLE_H
 #define NEKTAR_MESHUTILS_TRIANGLE_TRIANGLE_H
@@ -90,25 +103,17 @@ struct triangulateio
     int numberofedges;   /* Out only */
 };
 
-namespace Nektar
-{
-namespace NekMeshUtils
-{
-
-class Triangulate
+class DelaunayTriangle
 {
 public:
-    friend class MemoryManager<Triangulate>;
+    friend class MemoryManager<DelaunayTriangle>;
 
-    Triangulate(){};
-
-    void doTriangulate(char *);
+    void triangulate(char *);
     void trifree(void *memptr);
 
-private:
-    struct triangulateio in, out;
+    struct triangulateio in,out;
 };
-}
-}
 
+}
+}
 #endif

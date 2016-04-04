@@ -116,11 +116,11 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
     if (Quality)
     {
-        triangulate("penqYY", &in, &out);
+        triangulate("pqYY", &in, &out);
     }
     else if (!Quality)
     {
-        triangulate("penYY", &in, &out);
+        triangulate("pYY", &in, &out);
     }
 
     // verify the mesh a bit

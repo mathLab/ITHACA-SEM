@@ -51,6 +51,13 @@
 /*                                                                           */
 /*****************************************************************************/
 
+#ifndef NEKTAR_MESHUTILS_TRIANGLE_TRIANGLE_H
+#define NEKTAR_MESHUTILS_TRIANGLE_TRIANGLE_H
+
+#include <boost/shared_ptr.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <NekMeshUtils/MeshElements/MeshElements.h>
+
 struct triangulateio
 {
     double *pointlist;             /* In / out */
@@ -83,7 +90,25 @@ struct triangulateio
     int numberofedges;   /* Out only */
 };
 
-void triangulate(char *,
-                 struct triangulateio *,
-                 struct triangulateio *);
-void trifree(void *memptr);
+namespace Nektar
+{
+namespace NekMeshUtils
+{
+
+class Triangulate
+{
+public:
+    friend class MemoryManager<Triangulate>;
+
+    Triangulate(){};
+
+    void doTriangulate(char *);
+    void trifree(void *memptr);
+
+private:
+    struct triangulateio in, out;
+};
+}
+}
+
+#endif

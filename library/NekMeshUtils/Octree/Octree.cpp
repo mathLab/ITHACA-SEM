@@ -842,8 +842,9 @@ struct linesource
     }
 };
 
-void Octree::CompileCuravturePointList()
+void Octree::CompileSourcePointList()
 {
+    //first sample surfaces
     for (int i = 1; i <= m_cad->GetNumSurf(); i++)
     {
         CADSurfSharedPtr surf         = m_cad->GetSurf(i);
@@ -935,9 +936,6 @@ void Octree::CompileCuravturePointList()
                 // but still need a point for element estimation
                 if (C != 0.0)
                 {
-                    bool minlimited = false;
-                    NekDouble ideal;
-
                     NekDouble del =
                         2.0 * (1.0 / C) * sqrt(m_eps * (2.0 - m_eps));
 
@@ -947,120 +945,97 @@ void Octree::CompileCuravturePointList()
                     }
                     if (del < m_minDelta)
                     {
-                        ideal      = del;
-                        del        = m_minDelta;
-                        minlimited = true;
+                        del = m_minDelta;
                     }
 
-                    if (minlimited)
-                    {
-                        CurvaturePointSharedPtr newCPoint =
-                            MemoryManager<CurvaturePoint>::AllocateSharedPtr(
-                                surf->GetId(), uv, surf->P(uv), del, ideal);
 
-                        m_cpList.push_back(newCPoint);
-                    }
-                    else
-                    {
-                        CurvaturePointSharedPtr newCPoint =
-                            MemoryManager<CurvaturePoint>::AllocateSharedPtr(
-                                surf->GetId(), uv, surf->P(uv), del);
+                    CPoint newCPoint = MemoryManager<CPoint>::AllocateSharedPtr(
+                                        surf->GetId(), uv, surf->P(uv), del);
 
-                        m_cpList.push_back(newCPoint);
-                    }
+                    m_SPList.push_back(newCPoint);
+
                 }
                 else
                 {
-                    CurvaturePointSharedPtr newCPoint =
-                        MemoryManager<CurvaturePoint>::AllocateSharedPtr(
-                            surf->GetId(), uv, surf->P(uv));
+                    BPoint newBPoint = MemoryManager<BPoint>::AllocateSharedPtr(
+                                                surf->GetId(), uv, surf->P(uv));
 
-                    m_cpList.push_back(newCPoint);
+                    m_SPList.push_back(newBPoint);
                 }
             }
         }
     }
 
-    if (m_udsfile == "N")
+    if (m_udsfileset)
     {
-        return;
-    }
+        // now deal with the user defined spacing
+        vector<linesource> lsources;
+        fstream fle;
+        fle.open(m_udsfile.c_str());
 
-    // now deal with the user defined spacing
-    vector<linesource> lsources;
-    fstream fle;
-    fle.open(m_udsfile.c_str());
+        string fileline;
 
-    string fileline;
-
-    while (!fle.eof())
-    {
-        getline(fle, fileline);
-        stringstream s(fileline);
-        string word;
-        s >> word;
-        if (word == "#")
+        while (!fle.eof())
         {
-            continue;
-        }
-
-        Array<OneD, NekDouble> x1(3), x2(3);
-        NekDouble r, d;
-        x1[0] = stod(word);
-        s >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2] >> r >> d;
-
-        lsources.push_back(linesource(x1, x2, r, d));
-    }
-    fle.close();
-
-    for (int j = 0; j < lsources.size(); j++)
-    {
-        cout << lsources[j].x1[0] << " " << lsources[j].x1[1] << " "
-             << lsources[j].x1[2] << endl;
-        cout << lsources[j].x2[0] << " " << lsources[j].x2[1] << " "
-             << lsources[j].x2[2] << endl;
-        cout << lsources[j].Length() << endl;
-    }
-
-    int ct = 0;
-    for (int i = 0; i < m_cpList.size(); i++)
-    {
-        for (int j = 0; j < lsources.size(); j++)
-        {
-            if (lsources[j].withinRange(m_cpList[i]->GetLoc()))
+            getline(fle, fileline);
+            stringstream s(fileline);
+            string word;
+            s >> word;
+            if (word == "#")
             {
-                ct++;
-                m_cpList[i]->SetDelta(lsources[j].delta);
+                continue;
             }
+
+            Array<OneD, NekDouble> x1(3), x2(3);
+            NekDouble r, d;
+            x1[0] = stod(word);
+            s >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2] >> r >> d;
+
+            lsources.push_back(linesource(x1, x2, r, d));
         }
-    }
-    cout << ct << endl;
+        fle.close();
 
-    ///@TODO need to add curvature points with the false tag to make octree
-    ///modification work
-    // off surfaces
-
-    /*for(int i = 0; i < lsources.size(); i++)
-    {
-        int nc; //number of point to add cicularly
-        int nl; //number of point to add length
-
-        nc = ceil(2.0*3.142*lsources[i].R / lsources[i].delta)*2;
-        nl = ceil(lsources[i].Length() / lsources[i].delta)*2;
-
-        NekDouble dr = lsources[i].Length() / nl;
-        NekDouble dtheta = 2.0*3.142 / nc;
-
-        for(int j = 0; j < nl; j++)
+        **** need to flip type if a Bpoint gets assigned! ****
+        
+        int ct = 0;
+        for (int i = 0; i < m_SPList.size(); i++)
         {
-            NekDouble len =
-            for(int k = 0; k < nc; k++)
+            for (int j = 0; j < lsources.size(); j++)
             {
-
+                if (lsources[j].withinRange(m_cpList[i]->GetLoc()))
+                {
+                    ct++;
+                    m_cpList[i]->SetDelta(lsources[j].delta);
+                }
             }
         }
 
-    }*/
+        ///@TODO need to add curvature points with the false tag to make octree
+        ///modification work
+        // off surfaces
+
+        /*for(int i = 0; i < lsources.size(); i++)
+        {
+            int nc; //number of point to add cicularly
+            int nl; //number of point to add length
+
+            nc = ceil(2.0*3.142*lsources[i].R / lsources[i].delta)*2;
+            nl = ceil(lsources[i].Length() / lsources[i].delta)*2;
+
+            NekDouble dr = lsources[i].Length() / nl;
+            NekDouble dtheta = 2.0*3.142 / nc;
+
+            for(int j = 0; j < nl; j++)
+            {
+                NekDouble len =
+                for(int k = 0; k < nc; k++)
+                {
+
+                }
+            }
+
+        }*/
+    }
 }
 
 NekDouble Octree::ddx(OctantSharedPtr i, OctantSharedPtr j)

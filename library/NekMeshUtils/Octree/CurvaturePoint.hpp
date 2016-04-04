@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_OCTREE_CURAVTUREPOINT
-#define NekMeshUtils_OCTREE_CURAVTUREPOINT
+#ifndef NEKMESHUTILS_OCTREE_CURAVTUREPOINT
+#define NEKMESHUTILS_OCTREE_CURAVTUREPOINT
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -44,49 +44,59 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+enum SPType
+{
+    eCBoundary; // on a curved boundary
+    ePBoundary; // on a planar boundary (R=inf)
+    eSrcPoint;  // source point
+};
+
 /**
- * @brief class for a curvature samlping Point
+ * @brief base class of sizing point for octree construction
+ *        these carry information the octree needs and have various types
  */
-class CurvaturePoint
+class SPBase
 {
 public:
-    friend class MemoryManager<CurvaturePoint>;
+    friend class MemoryManager<SPBase>;
+
+    SPBase(){};
+
+    CPType GetType()
+    {
+        return m_type;
+    }
+
+    Array<OneD, NekDouble> GetLoc()
+    {
+        return m_loc;
+    }
+
+    virtual NekDouble GetDelta();
+
+protected:
+    /// type
+    CPType m_type;
+    /// x,y,z location
+    Array<OneD, NekDouble> m_loc;
+}
+
+/**
+ * @brief class for a curvature based samlping Point
+ */
+class CPoint : public SPBase
+{
+public:
+    friend class MemoryManager<CPoint>;
 
     /**
      * @brief constructor for a valid point (has radius of curvature)
      */
-    CurvaturePoint(int i,
-                   Array<OneD, NekDouble> uv,
-                   Array<OneD, NekDouble> l,
-                   NekDouble d,
-                   bool bnd = true)
-        : sid(i), m_uv(uv), m_loc(l), m_delta(d), m_boundary(bnd)
+    CPoint(int i, Array<OneD, NekDouble> uv, Array<OneD, NekDouble> l,
+           NekDouble d)
+        : sid(i), m_uv(uv), m_loc(l), m_delta(d)
     {
-        m_valid = true;
-    }
-
-    /**
-     * @brief constructor for a invalid point
-     */
-    CurvaturePoint(int i, Array<OneD, NekDouble> uv, Array<OneD, NekDouble> l)
-        : sid(i), m_uv(uv), m_loc(l)
-    {
-        m_delta    = -1;
-        m_valid    = false;
-        m_boundary = true;
-    }
-
-    /**
-     * @brief return bool on whether point is valid
-     */
-    bool IsValid()
-    {
-        return m_valid;
-    }
-
-    bool Isboundary()
-    {
-        return m_boundary;
+        m_type = eCBoundary;
     }
 
     /**
@@ -94,22 +104,7 @@ public:
      */
     NekDouble GetDelta()
     {
-        if (m_valid)
-        {
-            return m_delta;
-        }
-        else
-        {
-            return -1;
-        }
-    }
-
-    /**
-     * @brief get location of point
-     */
-    Array<OneD, NekDouble> GetLoc()
-    {
-        return m_loc;
+        return m_delta;
     }
 
     /**
@@ -131,17 +126,75 @@ private:
     int sid;
     /// uv coord on surf
     Array<OneD, NekDouble> m_uv;
-    /// x,y,z location
-    Array<OneD, NekDouble> m_loc;
-    /// normal vector of surface at point
+    /// delta parameter
     NekDouble m_delta;
-    /// valid point or not
-    bool m_valid;
-
-    bool m_boundary;
 };
+typedef boost::shared_ptr<CPoint> CPoint;
 
-typedef boost::shared_ptr<CurvaturePoint> CurvaturePointSharedPtr;
+/**
+ * @brief class for a planar boundary based samlping Point
+ */
+class BPoint : public SPBase
+{
+public:
+    friend class MemoryManager<BPoint>;
+
+    /**
+     * @brief constructor for a boundary point without delta
+     */
+    BPoint(int i, Array<OneD, NekDouble> uv, Array<OneD, NekDouble> l)
+        : sid(i), m_uv(uv), m_loc(l)
+    {
+        m_type = ePBoundary;
+    }
+
+    NekDouble GetDelta()
+    {
+        ASSERTL0(false,"Cannot retrieve delta from this type")
+    }
+private:
+    /// surf id
+    int sid;
+    /// uv coord on surf
+    Array<OneD, NekDouble> m_uv;
+};
+typedef boost::shared_ptr<BPoint> BPoint;
+
+/**
+ * @brief class for a planar boundary based samlping Point
+ */
+class SrcPoint : public SPBase
+{
+public:
+    friend class MemoryManager<SrcPoint>;
+
+    /**
+     * @brief constructor for a boundary point without delta
+     */
+    SrcPoint(Array<OneD, NekDouble> l, NekDouble d)
+            : m_loc(l), m_delta(d)
+    {
+        m_type = eSrcPoint;
+    }
+
+    /**
+     * @brief get mesh spacing paramter
+     */
+    NekDouble GetDelta()
+    {
+        return m_delta;
+    }
+
+    void SetDelta(NekDouble i)
+    {
+        m_delta = i;
+    }
+
+private:
+    NekDouble m_delta;
+};
+typedef boost::shared_ptr<SrcPoint> SrcPoint;
+
 }
 }
 

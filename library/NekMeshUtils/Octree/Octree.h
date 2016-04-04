@@ -72,11 +72,12 @@ public:
            const bool ver,
            const NekDouble min,
            const NekDouble max,
-           const NekDouble eps,
-           const string uds)
+           const NekDouble eps)
         : m_minDelta(min), m_maxDelta(max), m_eps(eps), m_cad(cad),
-          m_verbose(ver), m_udsfile(uds)
+          m_verbose(ver)
     {
+        m_udsfileset = false;
+        m_sourcepointsset = false;
     }
 
     /**
@@ -108,6 +109,19 @@ public:
      *        octree, used for visualisation
      */
     void GetOctreeMesh(MeshSharedPtr m);
+
+    void SetUDSFile(string n)
+    {
+        m_udsfile = n;
+        m_udsfileset = true;
+    }
+
+    void SetSourcePoints(vector<vector<NekDouble> > pts, NekDouble size)
+    {
+        m_sourcepointsset = true;
+        m_sourcePoints = pts;
+        m_sourcePointSize = size;
+    }
 
 private:
     /**
@@ -171,8 +185,8 @@ private:
     Array<OneD, NekDouble> m_centroid;
     /// physical size of the octree
     NekDouble m_dim;
-    /// list of curvature sample points
-    std::vector<CurvaturePointSharedPtr> m_cpList;
+    /// list of source points
+    std::vector<SPBase> m_SPList;
     /// list of leaf octants
     std::vector<OctantSharedPtr> m_octants;
     /// master octant for searching
@@ -180,7 +194,12 @@ private:
     /// number of octants made, used for id index
     int m_numoct;
 
+    bool m_udsfileset;
     string m_udsfile;
+
+    bool m_sourcepointsset;
+    vector<vector<NekDouble> > m_sourcePoints;
+    NekDouble m_sourcePointSize;
 };
 
 typedef boost::shared_ptr<Octree> OctreeSharedPtr;

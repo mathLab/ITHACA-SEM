@@ -36,10 +36,10 @@
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
-#include "Module.h"
+#include <FieldUtils/Module.h>
 
 using namespace std;
-using namespace Nektar::Utilities;
+using namespace Nektar::FieldUtils;
 
 int main(int argc, char* argv[])
 {

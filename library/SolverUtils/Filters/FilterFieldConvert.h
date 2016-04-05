@@ -38,9 +38,9 @@
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERFIELDCONVERT_H
 
 #include <SolverUtils/Filters/Filter.h>
-#include <utilities/FieldConvert/Module.h>
+#include <FieldUtils/Module.h>
 
-using namespace Nektar::Utilities;
+using namespace Nektar::FieldUtils;
 
 namespace Nektar
 {

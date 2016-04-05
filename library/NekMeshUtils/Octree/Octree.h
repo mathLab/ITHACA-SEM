@@ -39,7 +39,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <NekMeshUtils/CADSystem/CADSystem.h>
-#include <NekMeshUtils/Octree/CurvaturePoint.hpp>
+#include <NekMeshUtils/Octree/SourcePoint.hpp>
 #include <NekMeshUtils/Octree/Octant.h>
 #include <NekMeshUtils/MeshElements/Mesh.h>
 
@@ -133,7 +133,7 @@ private:
      * @brief gets an optimum number of curvature sampling points and
      * calculates the curavture at these points
      */
-    void CompileCuravturePointList();
+    void CompileSourcePointList();
 
     /**
      * @brief Function which initiates and controls the subdivision process
@@ -186,7 +186,7 @@ private:
     /// physical size of the octree
     NekDouble m_dim;
     /// list of source points
-    std::vector<SPBase> m_SPList;
+    std::vector<SPBaseSharedPtr> m_SPList;
     /// list of leaf octants
     std::vector<OctantSharedPtr> m_octants;
     /// master octant for searching

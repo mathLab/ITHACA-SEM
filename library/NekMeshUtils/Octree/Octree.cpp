@@ -33,9 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-//#include <algorithm>
-//#include <limits>
-
 #include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 
@@ -190,10 +187,10 @@ void Octree::Build()
         cout << endl << "Octree system" << endl;
 
     // build curvature samples
-    CompileCuravturePointList();
+    CompileSourcePointList();
 
     if (m_verbose)
-        cout << "\tCurvature samples: " << m_cpList.size() << endl;
+        cout << "\tCurvature samples: " << m_SPList.size() << endl;
 
     m_dim = max((boundingBox[1] - boundingBox[0]) / 2.0,
                 (boundingBox[3] - boundingBox[2]) / 2.0);
@@ -207,7 +204,7 @@ void Octree::Build()
 
     // make master octant based on the bounding box of the domain
     m_masteroct = MemoryManager<Octant>::AllocateSharedPtr(
-        0, m_centroid[0], m_centroid[1], m_centroid[2], m_dim, m_cpList);
+        0, m_centroid[0], m_centroid[1], m_centroid[2], m_dim, m_SPList);
 
     SubDivide();
 
@@ -578,28 +575,31 @@ void Octree::PropagateDomain()
 
                         OctantSharedPtr closest;
 
+                        bool f = false;
                         for (int j = 0; j < known.size(); j++)
                         {
                             if (oct->Distance(known[j]) < dist)
                             {
                                 closest = known[j];
                                 dist    = oct->Distance(known[j]);
+                                f = true;
                             }
                         }
+                        ASSERTL0(f,"closest never set");
 
-                        CurvaturePointSharedPtr cp = closest->GetCPPoint();
+                        SPBaseSharedPtr sp = closest->GetABoundPoint();
 
-                        Array<OneD, NekDouble> octloc, cploc, vec(3), uv, N;
+                        Array<OneD, NekDouble> octloc, sploc, vec(3), uv, N;
                         int surf;
-                        cp->GetCAD(surf, uv);
+                        sp->GetCAD(surf, uv);
                         N = m_cad->GetSurf(surf)->N(uv);
 
                         octloc = oct->GetLoc();
-                        cploc  = cp->GetLoc();
+                        sploc  = sp->GetLoc();
 
-                        vec[0] = octloc[0] - cploc[0];
-                        vec[1] = octloc[1] - cploc[1];
-                        vec[2] = octloc[2] - cploc[2];
+                        vec[0] = octloc[0] - sploc[0];
+                        vec[1] = octloc[1] - sploc[1];
+                        vec[2] = octloc[2] - sploc[2];
 
                         NekDouble dot =
                             vec[0] * N[0] + vec[1] * N[1] + vec[2] * N[2];
@@ -844,9 +844,20 @@ struct linesource
 
 void Octree::CompileSourcePointList()
 {
+    if(m_verbose)
+    {
+        cout << "\tCompiling source points" << endl;
+        cout << "\t\tSurface: ";
+    }
     //first sample surfaces
     for (int i = 1; i <= m_cad->GetNumSurf(); i++)
     {
+        if(m_verbose)
+        {
+            cout << i << " ";
+            cout.flush();
+        }
+
         CADSurfSharedPtr surf         = m_cad->GetSurf(i);
         Array<OneD, NekDouble> bounds = surf->GetBounds();
 
@@ -949,25 +960,34 @@ void Octree::CompileSourcePointList()
                     }
 
 
-                    CPoint newCPoint = MemoryManager<CPoint>::AllocateSharedPtr(
-                                        surf->GetId(), uv, surf->P(uv), del);
+                    CPointSharedPtr newCPoint = MemoryManager<CPoint>::
+                        AllocateSharedPtr(surf->GetId(), uv, surf->P(uv), del);
 
                     m_SPList.push_back(newCPoint);
 
                 }
                 else
                 {
-                    BPoint newBPoint = MemoryManager<BPoint>::AllocateSharedPtr(
-                                                surf->GetId(), uv, surf->P(uv));
+                    BPointSharedPtr newBPoint = MemoryManager<BPoint>::
+                            AllocateSharedPtr(surf->GetId(), uv, surf->P(uv));
 
                     m_SPList.push_back(newBPoint);
                 }
             }
         }
+
+    }
+    if(m_verbose)
+    {
+        cout << endl;
     }
 
     if (m_udsfileset)
     {
+        if(m_verbose)
+        {
+            cout << "\t\tModifying based on uds files" << endl;
+        }
         // now deal with the user defined spacing
         vector<linesource> lsources;
         fstream fle;
@@ -995,46 +1015,44 @@ void Octree::CompileSourcePointList()
         }
         fle.close();
 
-        **** need to flip type if a Bpoint gets assigned! ****
-        
-        int ct = 0;
         for (int i = 0; i < m_SPList.size(); i++)
         {
             for (int j = 0; j < lsources.size(); j++)
             {
-                if (lsources[j].withinRange(m_cpList[i]->GetLoc()))
+                if (lsources[j].withinRange(m_SPList[i]->GetLoc()))
                 {
-                    ct++;
-                    m_cpList[i]->SetDelta(lsources[j].delta);
+                    if(m_SPList[i]->GetType() == ePBoundary)
+                    {
+                        BPointSharedPtr bp =
+                            boost::dynamic_pointer_cast<BPoint>
+                                                            (m_SPList[i]);
+
+                        m_SPList[i] = bp->ChangeType();
+
+                    }
+                    m_SPList[i]->SetDelta(lsources[j].delta);
                 }
             }
         }
+    }
 
-        ///@TODO need to add curvature points with the false tag to make octree
-        ///modification work
-        // off surfaces
-
-        /*for(int i = 0; i < lsources.size(); i++)
+    if(m_sourcepointsset)
+    {
+        if(m_verbose)
         {
-            int nc; //number of point to add cicularly
-            int nl; //number of point to add length
+            cout << "\t\tAdding source points from flow solution" << endl;
+        }
+        for(int i = 0; i < m_sourcePoints.size(); i++)
+        {
+            Array<OneD, NekDouble> l(3);
+            l[0] = m_sourcePoints[i][0];
+            l[1] = m_sourcePoints[i][1];
+            l[2] = m_sourcePoints[i][2];
 
-            nc = ceil(2.0*3.142*lsources[i].R / lsources[i].delta)*2;
-            nl = ceil(lsources[i].Length() / lsources[i].delta)*2;
-
-            NekDouble dr = lsources[i].Length() / nl;
-            NekDouble dtheta = 2.0*3.142 / nc;
-
-            for(int j = 0; j < nl; j++)
-            {
-                NekDouble len =
-                for(int k = 0; k < nc; k++)
-                {
-
-                }
-            }
-
-        }*/
+            SrcPointSharedPtr newSpoint = MemoryManager<SrcPoint>::
+                                    AllocateSharedPtr(l, m_sourcePointSize);
+            m_SPList.push_back(newSpoint);
+        }
     }
 }
 

@@ -201,8 +201,6 @@ void InputCAD::Process()
         m_octree->SetUDSFile(udsName);
     }
 
-    exit(-1);
-
     m_octree->Build();
 
     if (m_writeoctree)

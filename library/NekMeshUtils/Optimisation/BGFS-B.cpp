@@ -218,7 +218,7 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
     Array<OneD, NekDouble> tst(xi.num_elements());
     do
     {
-        if (iterct > 20)
+        if (iterct > 100)
         {
             // cout << "failed line search" << endl;
             return false;
@@ -242,7 +242,7 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
             l += jn(i, 0) * dk[i];
         }
 
-    } while (fn > fo + c || fabs(l) > 0.9 * fabs(r));
+    } while (fn > fo + c || fabs(l) > 1.0 * fabs(r));
     // wolfe conditions
 
     // tst at this point is the new all vector

@@ -106,6 +106,8 @@ protected:
     void CreateFields(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
 
+    void ClearFields();
+
     NekDouble m_scale;
     unsigned int m_numSamples;
     unsigned int m_outputFrequency;

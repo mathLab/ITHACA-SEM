@@ -263,6 +263,9 @@ void FilterFieldConvert::OutputField(
         cout.flush();
     }
 
+    // Empty m_f to save memory
+    ClearFields();
+
     if (dump != -1) // not final dump so rescale
     {
         for (int n = 0; n < m_outFields.size(); ++n)
@@ -415,6 +418,14 @@ void FilterFieldConvert::CreateFields(
     }
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;
+}
+
+void FilterFieldConvert::ClearFields()
+{
+    m_f->m_fieldPts = LibUtilities::NullPtsField;
+    m_f->m_exp.clear();
+    m_f->m_fielddef = std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
+    m_f->m_data = std::vector<std::vector<NekDouble> > ();
 }
 
 }

@@ -55,7 +55,6 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <NekMeshUtils/MeshElements/Node.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -63,13 +62,6 @@ namespace Nektar
 {
 namespace NekMeshUtils
 {
-
-#ifndef NEKTAR_MESHUTILS_TRIANGLE_TRIANGLE_H
-#define NEKTAR_MESHUTILS_TRIANGLE_TRIANGLE_H
-
-#include <boost/shared_ptr.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <NekMeshUtils/MeshElements/MeshElements.h>
 
 struct triangulateio
 {

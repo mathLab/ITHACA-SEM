@@ -53,7 +53,7 @@ SET(NEKMESHUTILS_HEADERS
 
 IF(NEKTAR_USE_MESHGEN)
     SET(NEKMESHUTILS_HEADERS ${NEKMESHUTILS_HEADERS}
-        Octree/CurvaturePoint.hpp
+        Octree/SourcePoint.hpp
         SurfaceMeshing/CurveMesh.h
         Octree/Octant.h
         Octree/Octree.h
@@ -91,8 +91,6 @@ IF(NEKTAR_USE_MESHGEN)
     SET(OCC_DEF LIN LININTEL HAVE_WOK_CONFIG_H HAVE_CONFIG_H CSFDB)
     SET_TARGET_PROPERTIES(NekMeshUtils PROPERTIES COMPILE_DEFINITIONS "${OCC_DEF}")
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${OCC_LIBS})
-    ADD_DEPENDENCIES(NekMeshUtils opencascade-6.8 tetgen-1.5)
-ENDIF()
 
 INSTALL(DIRECTORY ./
         DESTINATION ${NEKTAR_INCLUDE_DIR}/NekMeshUtils

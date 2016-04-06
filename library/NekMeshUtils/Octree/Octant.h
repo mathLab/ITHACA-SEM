@@ -36,7 +36,7 @@
 #ifndef NEKTAR_MESHUTILS_OCTREE_OCTANT_H
 #define NEKTAR_MESHUTILS_OCTREE_OCTANT_H
 
-#include <NekMeshUtils/Octree/CurvaturePoint.hpp>
+#include <NekMeshUtils/Octree/SourcePoint.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -96,7 +96,7 @@ public:
            NekDouble y,
            NekDouble z,
            NekDouble dx,
-           const std::vector<CurvaturePointSharedPtr> &cplist);
+           const std::vector<SPBaseSharedPtr> &splist);
 
     /**
      * @brief Subdivide the octant
@@ -147,9 +147,27 @@ public:
     /**
      * @brief Get the list of curvature points that are within this octant
      */
-    std::vector<CurvaturePointSharedPtr> GetCPList()
+    std::vector<SPBaseSharedPtr> GetSPList()
     {
-        return m_localCPList;
+        return m_localSPList;
+    }
+
+    SPBaseSharedPtr GetABoundPoint()
+    {
+        SPBaseSharedPtr ret;
+        bool found = false;
+        for(int i = 0; i < m_localSPList.size(); i++)
+        {
+            if(m_localSPList[i]->GetType() == eCBoundary ||
+               m_localSPList[i]->GetType() == ePBoundary)
+            {
+                ret = m_localSPList[i];
+                found = true;
+                break;
+            }
+        }
+        ASSERTL0(found,"failed to find point");
+        return ret;
     }
 
     /**
@@ -157,7 +175,7 @@ public:
      */
     int NumCurvePoint()
     {
-        return m_localCPList.size();
+        return m_localSPList.size();
     }
 
     /**
@@ -288,16 +306,6 @@ public:
     }
 
     /**
-     * @brief Get the first cp point in the list
-     */
-    CurvaturePointSharedPtr GetCPPoint()
-    {
-        ASSERTL0(m_localCPList.size() > 0,
-                 "tried to get cp point where there is none");
-        return m_localCPList[0];
-    }
-
-    /**
      * @brief Get the location of the octant with respect to the geometry
      */
     OctantLocation GetLocation()
@@ -332,7 +340,7 @@ private:
     /// half dimension of the octant
     NekDouble m_hd;
     /// curvature sampling point list
-    std::vector<CurvaturePointSharedPtr> m_localCPList;
+    std::vector<SPBaseSharedPtr> m_localSPList;
     /// number of valid cp points
     int m_numValidPoints;
     int m_numBoundaryPoints;

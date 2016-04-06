@@ -38,6 +38,7 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessC0Projection.h
     ProcessModules/ProcessQCriterion.h
     ProcessModules/ProcessQualityMetric.h
+    ProcessModules/ProcessFilterForMeshing.h
 )
 
 SET(FieldConvertSources
@@ -80,6 +81,7 @@ SET(FieldConvertSources
     ProcessModules/ProcessC0Projection.cpp
     ProcessModules/ProcessQCriterion.cpp
     ProcessModules/ProcessQualityMetric.cpp
+    ProcessModules/ProcessFilterForMeshing.cpp
 )
 
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})

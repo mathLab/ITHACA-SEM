@@ -46,6 +46,10 @@
 #include <NekMeshUtils/BLMeshing/BLMesh.h>
 #include <NekMeshUtils/TetMeshing/TetMesh.h>
 
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/Communication/CommSerial.h>
+#include "../../FieldConvert/Field.hpp"
+
 #include "InputCAD.h"
 
 using namespace std;
@@ -122,17 +126,6 @@ void InputCAD::Process()
                  "No surfaces selected to make boundary layer on");
     }
 
-    if (pSession->DefinesSolverInfo("UserDefinedSpacing"))
-    {
-        m_udsName = pSession->GetSolverInfo("UserDefinedSpacing");
-        ASSERTL0(boost::filesystem::exists(m_udsName.c_str()),
-                 "UserDefinedSpacing file does not exist");
-    }
-    else
-    {
-        m_udsName = "N";
-    }
-
     CADSystemSharedPtr m_cad =
         MemoryManager<CADSystem>::AllocateSharedPtr(m_CADName);
 
@@ -171,7 +164,42 @@ void InputCAD::Process()
 
     // create octree
     OctreeSharedPtr m_octree = MemoryManager<Octree>::AllocateSharedPtr(
-        m_cad, m_mesh->m_verbose, m_minDelta, m_maxDelta, m_eps, m_udsName);
+        m_cad, m_mesh->m_verbose, m_minDelta, m_maxDelta, m_eps);
+
+    if(pSession->DefinesSolverInfo("SourcePoints"))
+    {
+        ASSERTL0(boost::filesystem::exists(pSession->GetSolverInfo("SourcePoints").c_str()),
+                 "sourcepoints file does not exist");
+        vector<vector<NekDouble> > points;
+        ifstream file;
+        file.open(pSession->GetSolverInfo("SourcePoints").c_str());
+        string line;
+
+        while ( getline (file,line) )
+        {
+            vector<NekDouble> point;
+            stringstream s(line);
+            NekDouble x,y,z;
+            s >> x >> y >> z;
+            point.push_back(x);
+            point.push_back(y);
+            point.push_back(z);
+            points.push_back(point);
+        }
+        NekDouble sp;
+        pSession->LoadParameter("SPSize", sp);
+        m_octree->SetSourcePoints(points, sp);
+
+    }
+
+    if (pSession->DefinesSolverInfo("UserDefinedSpacing"))
+    {
+        string udsName = pSession->GetSolverInfo("UserDefinedSpacing");
+        ASSERTL0(boost::filesystem::exists(udsName.c_str()),
+                 "UserDefinedSpacing file does not exist");
+
+        m_octree->SetUDSFile(udsName);
+    }
 
     m_octree->Build();
 

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputCAD.h
+//  File: ProcessQCriterion.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Create mesh from CAD.
+//  Description: Computes Q Criterion field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTCAD
-#define UTILITIES_NEKMESH_INPUTCAD
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSFILTERFORMESHING
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSFILTERFORMESHING
 
 #include "../Module.h"
 
@@ -43,27 +43,26 @@ namespace Nektar
 namespace Utilities
 {
 
-class InputCAD : public InputModule
+/**
+ * @brief This processing module calculates the Q Criterion and adds it
+ * as an extra-field to the output file.
+ */
+class ProcessFilterForMeshing : public ProcessModule
 {
-public:
-    InputCAD(MeshSharedPtr m);
-    virtual ~InputCAD();
-    virtual void Process();
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+            return MemoryManager<ProcessFilterForMeshing>::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
 
-    /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m)
-    {
-        return MemoryManager<InputCAD>::AllocateSharedPtr(m);
-    }
-    /// %ModuleKey for class.
-    static ModuleKey className;
+        ProcessFilterForMeshing(FieldSharedPtr f);
+        virtual ~ProcessFilterForMeshing();
 
-private:
-    NekDouble m_minDelta, m_maxDelta, m_eps, m_blthick;
-    int m_order;
-    string m_CADName;
-    bool m_makeBL, m_writeoctree;
+        /// Write mesh to output file.
+        virtual void Process(po::variables_map &vm);
 };
+
 }
 }
 

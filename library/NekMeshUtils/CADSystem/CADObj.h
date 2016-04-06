@@ -71,7 +71,7 @@ public:
     {
     }
 
-    virtual ~CADObj(){};
+    virtual ~CADObj(){}
 
     /**
      * @brief Return ID of the vertex

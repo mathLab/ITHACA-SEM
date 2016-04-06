@@ -39,6 +39,8 @@
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList2D.h>
 
+using namespace Nektar;
+
 #include "ExtractCriticalLayerFunctions.h"
 
 int main(int argc, char *argv[])

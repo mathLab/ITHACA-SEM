@@ -63,8 +63,8 @@ public:
      */
     NEKMESHUTILS_EXPORT std::string GetXmlString(bool doSort = true)
     {
-        stringstream st;
-        vector<ElementSharedPtr>::iterator it;
+        std::stringstream st;
+        std::vector<ElementSharedPtr>::iterator it;
         bool range = false;
         int vId    = m_items[0]->GetId();
         int prevId = vId;

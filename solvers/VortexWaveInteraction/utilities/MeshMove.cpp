@@ -63,6 +63,7 @@
 #include <boost/lexical_cast.hpp>
 #include <tinyxml.h>
 
+using namespace Nektar;
 
 void OrderVertices(int nedges,SpatialDomains::MeshGraphSharedPtr graphShPt,
     	    MultiRegions::ExpListSharedPtr & bndfield,

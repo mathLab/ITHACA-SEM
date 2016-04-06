@@ -43,6 +43,8 @@
 #include <MultiRegions/ExpList2D.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
+using namespace Nektar;
+
 #include "ExtractCriticalLayerFunctions.h"
 
 enum SolveType

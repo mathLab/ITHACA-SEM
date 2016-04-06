@@ -43,6 +43,7 @@
 #include <LibUtilities/Foundations/PhysGalerkinProject.h>
 #include <SpatialDomains/MeshGraph3D.h>
 
+using namespace std;
 
 namespace Nektar
 {

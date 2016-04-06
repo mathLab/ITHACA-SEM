@@ -788,7 +788,7 @@ namespace Nektar
             }
         }
     }
-}
+
 
 
 void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(vector<map<int,int> > &ReorderedGraphVertId,
@@ -994,5 +994,5 @@ void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(vector<map<int,i
 
 
 
-
+}
 

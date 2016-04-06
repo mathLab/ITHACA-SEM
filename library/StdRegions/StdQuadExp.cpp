@@ -37,6 +37,8 @@
 #include <StdRegions/StdSegExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace StdRegions

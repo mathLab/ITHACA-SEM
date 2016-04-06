@@ -87,7 +87,7 @@ namespace Nektar
         public:
             HomoRSVector(RSVecFuncType func,
                          int           nPlanes,
-                         string        desc = "")
+                         std::string   desc = "")
                 : m_func       (func),
                   m_planeNumber(0),
                   m_numPlanes  (nPlanes),
@@ -124,7 +124,7 @@ namespace Nektar
             int                                  m_numPlanes;
             Array<OneD, Array<OneD, NekDouble> > m_tmp;
             Array<OneD, Array<OneD, NekDouble> > m_tmp2;
-            string m_desc;
+            std::string                          m_desc;
         };
     }
 }

@@ -476,16 +476,9 @@ void DelaunayTriangle::parsecommandline(int argc, char **argv, struct behavior *
 
     b->poly = b->quality = 0;
     b->usertest = 0;
-    b->regionattrib = b->convex = b->weighted = b->jettison = 0;
-    b->firstnumber                                          = 1;
-    b->nobound = b->nopolywritten = 0;
-    b->incremental = b->sweepline = 0;
-    b->dwyer                      = 1;
-    b->splitseg                   = 0;
+    b->weighted = b->jettison = 0;
     b->nobisect                   = 0;
-    b->steiner                    = -1;
     b->minangle                   = 0.0;
-    b->firstnumber                = 0.0;
 
     for (i = 0; i < argc; i++)
     {
@@ -523,14 +516,6 @@ void DelaunayTriangle::parsecommandline(int argc, char **argv, struct behavior *
                 b->quality  = 1;
                 b->usertest = 1;
             }
-            if (argv[i][j] == 'A')
-            {
-                b->regionattrib = 1;
-            }
-            if (argv[i][j] == 'c')
-            {
-                b->convex = 1;
-            }
             if (argv[i][j] == 'w')
             {
                 b->weighted = 1;
@@ -543,47 +528,14 @@ void DelaunayTriangle::parsecommandline(int argc, char **argv, struct behavior *
             {
                 b->jettison = 1;
             }
-            if (argv[i][j] == 'B')
-            {
-                b->nobound = 1;
-            }
-            if (argv[i][j] == 'P')
-            {
-                b->nopolywritten = 1;
-            }
             if (argv[i][j] == 'Y')
             {
                 b->nobisect++;
             }
-            if (argv[i][j] == 'S')
-            {
-                b->steiner = 0;
-                while ((argv[i][j + 1] >= '0') && (argv[i][j + 1] <= '9'))
-                {
-                    j++;
-                    b->steiner = b->steiner * 10 + (int)(argv[i][j] - '0');
-                }
-            }
-            if (argv[i][j] == 'i')
-            {
-                b->incremental = 1;
-            }
-            if (argv[i][j] == 'F')
-            {
-                b->sweepline = 1;
-            }
-            if (argv[i][j] == 'l')
-            {
-                b->dwyer = 0;
-            }
-            if (argv[i][j] == 's')
-            {
-                b->splitseg = 1;
-            }
         }
     }
 
-    b->usesegments = b->poly || b->quality || b->convex;
+    b->usesegments = b->poly || b->quality;
     b->goodangle   = cos(b->minangle * PI / 180.0);
     if (b->goodangle == 1.0)
     {
@@ -1049,7 +1001,7 @@ void DelaunayTriangle::initializetrisubpools(struct mesh *m, struct behavior *b)
     /* The index within each triangle at which the maximum area constraint  */
     /*   is found, where the index is measured in doubles.  Note that if the  */
     /*   `regionattrib' flag is set, an additional attribute will be added. */
-    m->areaboundindex = m->elemattribindex + m->eextras + b->regionattrib;
+    m->areaboundindex = m->elemattribindex + m->eextras;
     /* If triangle attributes or an area bound are needed, increase the number
      */
     /*   of bytes occupied by a triangle. */
@@ -1245,7 +1197,7 @@ vertex DelaunayTriangle::getvertex(struct mesh *m, struct behavior *b, int numbe
     int current;
 
     getblock = m->vertices.firstblock;
-    current  = b->firstnumber;
+    current  = 0;
 
     /* Find the right block. */
     if (current + m->vertices.itemsfirstblock <= number)
@@ -5863,7 +5815,7 @@ void DelaunayTriangle::mergehulls(struct mesh *m,
     org(*innerright, innerrightorg);
     apex(*innerright, innerrightapex);
     /* Special treatment for horizontal cuts. */
-    if (b->dwyer && (axis == 1))
+    if (axis == 1)
     {
         org(*farleft, farleftpt);
         apex(*farleft, farleftapex);
@@ -5992,7 +5944,7 @@ void DelaunayTriangle::mergehulls(struct mesh *m,
             bond(nextedge, leftcand);
 
             /* Special treatment for horizontal cuts. */
-            if (b->dwyer && (axis == 1))
+            if (axis == 1)
             {
                 org(*farleft, farleftpt);
                 apex(*farleft, farleftapex);
@@ -6438,18 +6390,16 @@ long DelaunayTriangle::divconqdelaunay(struct mesh *m, struct behavior *b)
         }
     }
     i++;
-    if (b->dwyer)
+
+    /* Re-sort the array of vertices to accommodate alternating cuts. */
+    divider = i >> 1;
+    if (i - divider >= 2)
     {
-        /* Re-sort the array of vertices to accommodate alternating cuts. */
-        divider = i >> 1;
-        if (i - divider >= 2)
+        if (divider >= 2)
         {
-            if (divider >= 2)
-            {
-                alternateaxes(sortarray, divider, 1);
-            }
-            alternateaxes(&sortarray[divider], i - divider, 1);
+            alternateaxes(sortarray, divider, 1);
         }
+        alternateaxes(&sortarray[divider], i - divider, 1);
     }
 
     /* Form the Delaunay triangulation. */
@@ -7283,16 +7233,9 @@ void DelaunayTriangle::insertsegment(struct mesh *m,
     /*   vertex on the segment occurred. */
     org(searchtri2, endpoint2);
 
-    if (b->splitseg)
-    {
-        /* Insert vertices to force the segment into the triangulation. */
-        conformingedge(m, b, endpoint1, endpoint2, newmark);
-    }
-    else
-    {
-        /* Insert the segment directly into the triangulation. */
-        constrainededge(m, b, &searchtri1, endpoint2, newmark);
-    }
+
+    /* Insert the segment directly into the triangulation. */
+    constrainededge(m, b, &searchtri1, endpoint2, newmark);
 }
 
 /*****************************************************************************/
@@ -7385,13 +7328,13 @@ void DelaunayTriangle::formskeleton(struct mesh *m,
             {
                 boundmarker = segmentmarkerlist[i];
             }
-            if ((end1 < b->firstnumber) ||
-                (end1 >= b->firstnumber + m->invertices))
+            if ((end1 < 0) ||
+                (end1 >= 0 + m->invertices))
             {
 
             }
-            else if ((end2 < b->firstnumber) ||
-                     (end2 >= b->firstnumber + m->invertices))
+            else if ((end2 < 0) ||
+                     (end2 >= 0 + m->invertices))
             {
 
             }
@@ -7416,7 +7359,7 @@ void DelaunayTriangle::formskeleton(struct mesh *m,
     {
         m->insegments = 0;
     }
-    if (b->convex || !b->poly)
+    if (!b->poly)
     {
         /* Enclose the convex hull with subsegments. */
 
@@ -7766,11 +7709,6 @@ void DelaunayTriangle::regionplague(struct mesh *m,
         /*   temporarily uninfect this triangle so that we can examine its */
         /*   adjacent subsegments. */
         uninfect(testtri);
-        if (b->regionattrib)
-        {
-            /* Set an attribute. */
-            setelemattribute(testtri, m->eextras, attribute);
-        }
 
         /* Check each of the triangle's three neighbors. */
         for (testtri.orient = 0; testtri.orient < 3; testtri.orient++)
@@ -7852,19 +7790,14 @@ void DelaunayTriangle::carveholes(struct mesh *m,
         regiontris = (struct otri *)NULL;
     }
 
-    if ( (holes > 0) || !b->convex || (regions > 0))
-    {
-        /* Initialize a pool of viri to be used for holes, concavities, */
-        /*   regional attributes, and/or regional area constraints.     */
-        poolinit(&m->viri, sizeof(triangle *), VIRUSPERBLOCK, VIRUSPERBLOCK, 0);
-    }
 
-    if (!b->convex)
-    {
-        /* Mark as infected any unprotected triangles on the boundary. */
-        /*   This is one way by which concavities are created.         */
-        infecthull(m, b);
-    }
+    /* Initialize a pool of viri to be used for holes, concavities, */
+    /*   regional attributes, and/or regional area constraints.     */
+    poolinit(&m->viri, sizeof(triangle *), VIRUSPERBLOCK, VIRUSPERBLOCK, 0);
+
+    /* Mark as infected any unprotected triangles on the boundary. */
+    /*   This is one way by which concavities are created.         */
+    infecthull(m, b);
 
     if (holes > 0)
     {
@@ -7959,18 +7892,6 @@ void DelaunayTriangle::carveholes(struct mesh *m,
 
     if (regions > 0)
     {
-        if (b->regionattrib)
-        {
-            /* Assign every triangle a regional attribute of zero. */
-            traversalinit(&m->triangles);
-            triangleloop.orient = 0;
-            triangleloop.tri    = triangletraverse(m);
-            while (triangleloop.tri != (triangle *)NULL)
-            {
-                setelemattribute(triangleloop, m->eextras, 0.0);
-                triangleloop.tri = triangletraverse(m);
-            }
-        }
         for (i = 0; i < regions; i++)
         {
             if (regiontris[i].tri != m->dummytri)
@@ -7990,18 +7911,11 @@ void DelaunayTriangle::carveholes(struct mesh *m,
                 }
             }
         }
-        if (b->regionattrib)
-        {
-            /* Note the fact that each triangle has an additional attribute. */
-            m->eextras++;
-        }
     }
 
-    /* Free up memory. */
-    if (holes > 0 || !b->convex || (regions > 0))
-    {
-        pooldeinit(&m->viri);
-    }
+
+    pooldeinit(&m->viri);
+
     if (regions > 0)
     {
         trifree((void *)regiontris);
@@ -8651,7 +8565,7 @@ void DelaunayTriangle::writenodes(struct mesh *m,
             (int)(outvertices * m->nextras * sizeof(double)));
     }
     /* Allocate memory for output vertex markers if necessary. */
-    if (!b->nobound && (*pointmarkerlist == (int *)NULL))
+    if ((*pointmarkerlist == (int *)NULL))
     {
         *pointmarkerlist = (int *)trimalloc((int)(outvertices * sizeof(int)));
     }
@@ -8662,7 +8576,7 @@ void DelaunayTriangle::writenodes(struct mesh *m,
     attribindex = 0;
 
     traversalinit(&m->vertices);
-    vertexnumber = b->firstnumber;
+    vertexnumber = 0;
     vertexloop   = vertextraverse(m);
     while (vertexloop != (vertex)NULL)
     {
@@ -8676,11 +8590,9 @@ void DelaunayTriangle::writenodes(struct mesh *m,
             {
                 palist[attribindex++] = vertexloop[2 + i];
             }
-            if (!b->nobound)
-            {
-                /* Copy the boundary marker. */
-                pmlist[vertexnumber - b->firstnumber] = vertexmark(vertexloop);
-            }
+
+            /* Copy the boundary marker. */
+            pmlist[vertexnumber] = vertexmark(vertexloop);
 
             setvertexmark(vertexloop, vertexnumber);
             vertexnumber++;
@@ -8705,7 +8617,7 @@ void DelaunayTriangle::numbernodes(struct mesh *m, struct behavior *b)
     int vertexnumber;
 
     traversalinit(&m->vertices);
-    vertexnumber = b->firstnumber;
+    vertexnumber = 0;
     vertexloop   = vertextraverse(m);
     while (vertexloop != (vertex)NULL)
     {
@@ -8759,7 +8671,7 @@ void DelaunayTriangle::writeelements(struct mesh *m,
     traversalinit(&m->triangles);
     triangleloop.tri    = triangletraverse(m);
     triangleloop.orient = 0;
-    elementnumber       = b->firstnumber;
+    elementnumber       = 0;
     while (triangleloop.tri != (triangle *)NULL)
     {
         org(triangleloop, p1);
@@ -8807,7 +8719,7 @@ void DelaunayTriangle::writepoly(struct mesh *m,
             (int *)trimalloc((int)(m->subsegs.items * 2 * sizeof(int)));
     }
     /* Allocate memory for output segment markers if necessary. */
-    if (!b->nobound && (*segmentmarkerlist == (int *)NULL))
+    if ((*segmentmarkerlist == (int *)NULL))
     {
         *segmentmarkerlist =
             (int *)trimalloc((int)(m->subsegs.items * sizeof(int)));
@@ -8819,7 +8731,7 @@ void DelaunayTriangle::writepoly(struct mesh *m,
     traversalinit(&m->subsegs);
     subsegloop.ss       = subsegtraverse(m);
     subsegloop.ssorient = 0;
-    subsegnumber        = b->firstnumber;
+    subsegnumber        = 0;
     while (subsegloop.ss != (subseg *)NULL)
     {
         sorg(subsegloop, endpoint1);
@@ -8827,11 +8739,9 @@ void DelaunayTriangle::writepoly(struct mesh *m,
         /* Copy indices of the segment's two endpoints. */
         slist[index++] = vertexmark(endpoint1);
         slist[index++] = vertexmark(endpoint2);
-        if (!b->nobound)
-        {
-            /* Copy the boundary marker. */
-            smlist[subsegnumber - b->firstnumber] = mark(subsegloop);
-        }
+
+        /* Copy the boundary marker. */
+        smlist[subsegnumber] = mark(subsegloop);
 
         subsegloop.ss = subsegtraverse(m);
         subsegnumber++;
@@ -8888,7 +8798,7 @@ void DelaunayTriangle::triangulate(char *triswitches)
 
     parsecommandline(1, &triswitches, &b);
 
-    m.steinerleft = b.steiner;
+    m.steinerleft = -1;
 
     transfernodes(&m,
                   &b,
@@ -8978,7 +8888,7 @@ void DelaunayTriangle::triangulate(char *triswitches)
 
     /* The -c switch (convex switch) causes a PSLG to be written */
     /*   even if none was read.                                  */
-    if (b.poly || b.convex)
+    if (b.poly)
     {
 
         writepoly(&m, &b, &out.segmentlist, &out.segmentmarkerlist);

@@ -932,17 +932,8 @@ struct behavior
     /*     goodangle: cosine squared of minangle. */
     /*     offconstant: constant used to place off-center Steiner points. */
     /*   usertest: -u switch. */ //pretend to use this one to make triangle do its own calcs
-    /*   regionattrib: -A switch.  convex: -c switch. */
     /*   weighted: 1 for -w switch, 2 for -W switch.  jettison: -j switch */
-    /*   firstnumber: inverse of -z switch.  All items are numbered starting */
-    /*     from `firstnumber'. */
-    /*   nobound: -B switch.  nopolywritten: -P switch. */
     /*   nobisect: count of how often -Y switch is selected. */
-    /*   steiner: maximum number of Steiner points, specified after -S switch.
-     */
-    /*   incremental: -i switch.  sweepline: -F switch. */
-    /*   dwyer: inverse of -l switch. */
-    /*   splitseg: -s switch. */
     /*   usesegments: -p, -r, -q, or -c switch; determines whether segments are
      */
     /*     used at all. */
@@ -950,15 +941,9 @@ struct behavior
     /* Read the instructions to find out the meaning of these switches. */
 
     int poly, quality, usertest;
-    int regionattrib, convex, weighted, jettison;
-    int firstnumber;
-    int nobound, nopolywritten;
-    int incremental, sweepline, dwyer;
-    int splitseg;
-    int docheck;
+    int weighted, jettison;
     int usesegments;
     int nobisect;
-    int steiner;
     double minangle, goodangle, offconstant;
 
 }; /* End of `struct behavior'. */

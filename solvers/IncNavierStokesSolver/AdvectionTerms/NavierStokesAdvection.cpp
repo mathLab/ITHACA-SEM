@@ -35,6 +35,8 @@
 
 #include <IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string NavierStokesAdvection::className  = SolverUtils::GetAdvectionFactory().RegisterCreatorFunction("Convective", NavierStokesAdvection::create);

@@ -35,6 +35,8 @@
 
 #include <IncNavierStokesSolver/AdvectionTerms/AlternateSkewAdvection.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

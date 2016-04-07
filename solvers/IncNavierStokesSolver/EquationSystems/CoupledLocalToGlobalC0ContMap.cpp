@@ -41,6 +41,8 @@
 #include <LocalRegions/Expansion2D.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
+using namespace std;
+
 namespace Nektar
 {
     /**

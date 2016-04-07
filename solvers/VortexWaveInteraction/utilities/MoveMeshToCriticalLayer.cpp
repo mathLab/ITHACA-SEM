@@ -43,6 +43,7 @@
 #include <MultiRegions/ExpList2D.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
+using namespace std;
 using namespace Nektar;
 
 #include "ExtractCriticalLayerFunctions.h"

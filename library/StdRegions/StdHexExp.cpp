@@ -925,6 +925,69 @@ namespace Nektar
             }
         }
 
+        void StdHexExp::v_GetFaceNumModes(
+                    const int                  fid,
+                    const Orientation          faceOrient,
+                    int &numModes0,
+                    int &numModes1)
+        {
+            int nummodes [3] = {m_base[0]->GetNumModes(),
+                                m_base[1]->GetNumModes(),
+                                m_base[2]->GetNumModes()};
+            switch(fid)
+            {
+            case 0:
+            case 5:
+                {
+                    if( faceOrient < 9 )
+                    {
+                        numModes0 = nummodes[0];
+                        numModes1 = nummodes[1];
+                    }
+                    else
+                    {
+                        numModes0 = nummodes[1];
+                        numModes1 = nummodes[0];
+                    }
+                }
+                break;
+            case 1:
+            case 3:
+                {
+                    if( faceOrient < 9 )
+                    {
+                        numModes0 = nummodes[0];
+                        numModes1 = nummodes[2];
+                    }
+                    else
+                    {
+                        numModes0 = nummodes[2];
+                        numModes1 = nummodes[0];
+                    }
+                }
+                break;
+            case 2:
+            case 4:
+                {
+                    if( faceOrient < 9 )
+                    {
+                        numModes0 = nummodes[1];
+                        numModes1 = nummodes[2];
+                    }
+                    else
+                    {
+                        numModes0 = nummodes[2];
+                        numModes1 = nummodes[1];
+                    }
+                }
+                break;
+            default:
+                {
+                    ASSERTL0(false,"fid out of range");
+                }
+                break;
+            }
+        }
 
         /**
          * Only for basis type Modified_A or GLL_LAGRANGE in all directions.

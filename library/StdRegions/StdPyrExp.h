@@ -191,6 +191,11 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_FillMode(
                 const int mode, 
                 Array<OneD, NekDouble> &outarray);  
+            STD_REGIONS_EXPORT virtual void v_GetFaceNumModes(
+                    const int                  fid,
+                    const Orientation          faceOrient,
+                    int &numModes0,
+                    int &numModes1);
 
             //---------------------------------------
             // Helper functions

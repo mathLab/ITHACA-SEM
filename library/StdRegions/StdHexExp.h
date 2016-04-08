@@ -199,7 +199,11 @@ namespace Nektar
                     Array<OneD, NekDouble> &coords_x,
                     Array<OneD, NekDouble> &coords_y,
                     Array<OneD, NekDouble> &coords_z);
-
+            STD_REGIONS_EXPORT virtual void v_GetFaceNumModes(
+                    const int                  fid,
+                    const Orientation          faceOrient,
+                    int &numModes0,
+                    int &numModes1);
 
             //--------------------------
             // Mappings

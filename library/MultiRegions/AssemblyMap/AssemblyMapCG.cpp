@@ -1385,11 +1385,11 @@ namespace Nektar
             Array<OneD, long> faceId (faceModes[0].size());
             Array<OneD, NekDouble> faceP (faceModes[0].size());
             Array<OneD, NekDouble> faceQ (faceModes[0].size());
-            for(dofIt = faceOrder[0].begin(), i=0; dofIt != faceOrder[0].end(); dofIt++, i++)
+            for(dofIt = faceModes[0].begin(), i=0; dofIt != faceModes[0].end(); dofIt++, i++)
             {
                 faceId[i] = dofIt->first;
                 faceP[i] = (NekDouble) dofIt->second;
-                faceQ[i] = (NekDouble) faceOrder[1][dofIt->first];
+                faceQ[i] = (NekDouble) faceModes[1][dofIt->first];
             }
             Gs::gs_data *tmp2 = Gs::Init(faceId, vComm);
             Gs::Gather(faceP, Gs::gs_min, tmp2);

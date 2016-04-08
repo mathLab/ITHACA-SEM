@@ -61,8 +61,8 @@ void APE_coupled::v_InitObject()
 
     m_stOld = Array<OneD, NekDouble>(GetTotPoints());
     m_stNew = Array<OneD, NekDouble>(GetTotPoints());
-    Vmath::Vcopy(GetTotPoints(), m_st[0]->GetPhys(), 1, m_stOld, 1);
-    Vmath::Vcopy(GetTotPoints(), m_st[0]->GetPhys(), 1, m_stNew, 1);
+    Vmath::Vcopy(GetTotPoints(), m_st[0], 1, m_stOld, 1);
+    Vmath::Vcopy(GetTotPoints(), m_st[0], 1, m_stNew, 1);
 
     m_bfOld = Array<OneD, Array<OneD, NekDouble> >(m_spacedim + 2);
     m_bfNew = Array<OneD, Array<OneD, NekDouble> >(m_spacedim + 2);
@@ -70,8 +70,8 @@ void APE_coupled::v_InitObject()
     {
         m_bfOld[i] = Array<OneD, NekDouble>(GetTotPoints());
         m_bfNew[i] = Array<OneD, NekDouble>(GetTotPoints());
-        Vmath::Vcopy(GetTotPoints(), m_bf[i]->GetPhys(), 1, m_bfOld[i], 1);
-        Vmath::Vcopy(GetTotPoints(), m_bf[i]->GetPhys(), 1, m_bfNew[i], 1);
+        Vmath::Vcopy(GetTotPoints(), m_bf[i], 1, m_bfOld[i], 1);
+        Vmath::Vcopy(GetTotPoints(), m_bf[i], 1, m_bfNew[i], 1);
     }
 
     m_session->LoadParameter("EX_RecvSteps", m_recvSteps, 1);
@@ -82,7 +82,7 @@ void APE_coupled::v_InitObject()
     m_nRecvVars = 6;
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
-                        m_bf[0], "cpl1", "precise", 0, 1.0, filtWidth);
+                        m_bfField, "cpl1", "precise", 0, 1.0, filtWidth);
     m_sendExchange = MemoryManager<CwipiExchange>::AllocateSharedPtr(
                             m_coupling, "ex1", m_nRecvVars);
 
@@ -114,23 +114,25 @@ bool APE_coupled::v_PostIntegrate(int step)
 
     receiveFields();
 
-    // ensure the new fields are C0-continuous
-    // HACK: normally, we would perform a FwdTrans and BwdTrans here, but for
-    // hexas and parrallel this is currently broken. The following has the same
-    // effect and might even be faster
-    m_st[0]->IProductWRTBase(m_st[0]->GetPhys(), m_st[0]->UpdateCoeffs());
-    m_st[0]->MultiplyByElmtInvMass(m_st[0]->GetCoeffs(), m_st[0]->UpdateCoeffs());
-    m_st[0]->LocalToGlobal();
-    m_st[0]->GlobalToLocal();
-    m_st[0]->BwdTrans(m_st[0]->GetCoeffs(), m_st[0]->UpdatePhys());
-
+    Array<OneD, NekDouble> tmpC(GetNcoeffs());
     for (int i = 0; i < m_spacedim + 2; ++i)
     {
-        m_bf[i]->IProductWRTBase(m_bf[i]->GetPhys(), m_bf[i]->UpdateCoeffs());
-        m_bf[i]->MultiplyByElmtInvMass(m_bf[i]->GetCoeffs(), m_bf[i]->UpdateCoeffs());
-        m_bf[i]->LocalToGlobal();
-        m_bf[i]->GlobalToLocal();
-        m_bf[i]->BwdTrans(m_bf[i]->GetCoeffs(), m_bf[i]->UpdatePhys());
+        // ensure the field is C0-continuous
+        m_bfField->IProductWRTBase(m_bf[i], tmpC);
+        m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
+        m_bfField->LocalToGlobal(tmpC, tmpC);
+        m_bfField->GlobalToLocal(tmpC, tmpC);
+        m_bfField->BwdTrans(tmpC, m_bf[i]);
+    }
+
+    for (int i = 0; i < m_st.num_elements(); ++i)
+    {
+        // ensure the field is C0-continuous
+        m_bfField->IProductWRTBase(m_st[i], tmpC);
+        m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
+        m_bfField->LocalToGlobal(tmpC, tmpC);
+        m_bfField->GlobalToLocal(tmpC, tmpC);
+        m_bfField->BwdTrans(tmpC, m_st[i]);
     }
 
     return UnsteadySystem::v_PostIntegrate(step);
@@ -185,10 +187,10 @@ void APE_coupled::receiveFields()
     // linear interpolation in time. We cant do this iteratively because m_sourceTerms
     // and m_bf will be changed in v_PostIntegrate()
     NekDouble fact = (m_time - last_update + m_timestep) / (m_recvSteps * m_timestep);
-    Vmath::Svtsvtp(GetTotPoints(), fact, m_stNew, 1, (1 - fact), m_stOld, 1, m_st[0]->UpdatePhys(), 1);
+    Vmath::Svtsvtp(GetTotPoints(), fact, m_stNew, 1, (1 - fact), m_stOld, 1, m_st[0], 1);
     for (int i = 0; i < m_spacedim + 2; ++i)
     {
-        Vmath::Svtsvtp(GetTotPoints(), fact, m_bfNew[i], 1, (1 - fact), m_bfOld[i], 1, m_bf[i]->UpdatePhys(), 1);
+        Vmath::Svtsvtp(GetTotPoints(), fact, m_bfNew[i], 1, (1 - fact), m_bfOld[i], 1, m_bf[i], 1);
     }
 }
 

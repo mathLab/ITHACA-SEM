@@ -2071,7 +2071,7 @@ namespace Nektar
             int maxIntDof = 0;
             int dof = 0;
             int cnt;
-            int i,j,k;
+            int i,j,k,l;
             int meshVertId;
             int meshEdgeId;
             int meshFaceId;
@@ -2172,14 +2172,22 @@ namespace Nektar
                     dof = exp->GetEdgeNcoeffs(j)-2;
 
                     // Set the global DOF's for the interior modes of edge j
-                    //    run backwards because of variable P case "ghost" modes
-                    for(k = dof-1; k >= 0; --k)
+                    //    for varP, ignore modes with sign == 0
+                    for(k = 0, l = 0; k < dof; ++k)
                     {
+                        if (m_signChange)
+                        {
+                            if (m_localToGlobalSign[cnt+edgeInteriorMap[k]]==0)
+                            {
+                                continue;
+                            }
+                        }
                         vGlobalId = m_localToGlobalMap[cnt+edgeInteriorMap[k]];
                         m_globalToUniversalMap[vGlobalId]
-                           = nVert + meshEdgeId * maxEdgeDof + k + 1;
+                           = nVert + meshEdgeId * maxEdgeDof + l + 1;
                         m_globalToUniversalBndMap[vGlobalId]=m_globalToUniversalMap[vGlobalId];
                         maxBndGlobalId = (vGlobalId > maxBndGlobalId ? vGlobalId : maxBndGlobalId);
+                        l++;
                     }
                 }
 
@@ -2204,15 +2212,23 @@ namespace Nektar
                     exp->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
                     dof = exp->GetFaceIntNcoeffs(j);
 
-                    for(k = dof-1; k >= 0; --k)
+                    for(k = 0, l = 0; k < dof; ++k)
                     {
+                        if (m_signChange)
+                        {
+                            if (m_localToGlobalSign[cnt+faceInteriorMap[k]]==0)
+                            {
+                                continue;
+                            }
+                        }
                         vGlobalId = m_localToGlobalMap[cnt+faceInteriorMap[k]];
                         m_globalToUniversalMap[vGlobalId]
                            = nVert + nEdge*maxEdgeDof + meshFaceId * maxFaceDof
-                                   + k + 1;
+                                   + l + 1;
                         m_globalToUniversalBndMap[vGlobalId]=m_globalToUniversalMap[vGlobalId];
 
                         maxBndGlobalId = (vGlobalId > maxBndGlobalId ? vGlobalId : maxBndGlobalId);
+                        l++;
                     }
                 }
 

@@ -16,6 +16,7 @@ namespace po = boost::program_options;
 #include <MultiRegions/ExpList2D.h>
 #include <LocalRegions/Expansion2D.h>
 
+using namespace std;
 using namespace Nektar;
 
 /**

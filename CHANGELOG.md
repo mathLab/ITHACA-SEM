@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v4.3.1
+------
+**Library:**
+- Fixed a number of documentation issues (!586)
+
 v4.3.0
 ------
 **Library:**

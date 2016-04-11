@@ -1,6 +1,12 @@
 Changelog
 =========
 
+v4.3.1
+------
+**Library**:
+- Add `THIRDPARTY_USE_SSL` option to disable use of SSL on systems where CMake
+  is not compiled with SSL support. (!602)
+
 v4.3.0
 ------
 **Library:**

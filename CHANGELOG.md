@@ -7,6 +7,10 @@ v4.3.1
 - Add `THIRDPARTY_USE_SSL` option to disable use of SSL on systems where CMake
   is not compiled with SSL support. (!602)
 - Fixed a number of documentation issues (!593)
+- Fix Homogeneous transform when unshuffling is not used. (!599)
+
+**NekMesh**:
+- Fix incorrect link directory on CCMIO library.
 
 v4.3.0
 ------

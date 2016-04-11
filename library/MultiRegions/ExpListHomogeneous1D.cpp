@@ -499,7 +499,7 @@ namespace Nektar
                 }
                 else 
                 {
-                    Vmath::Vcopy(nrows,sortedinarray,1,outarray,1);
+                    Vmath::Vcopy(nrows,sortedoutarray,1,outarray,1);
                 }
                 
             }

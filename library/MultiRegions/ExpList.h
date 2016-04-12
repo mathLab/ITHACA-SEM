@@ -1421,7 +1421,7 @@ namespace Nektar
 
             for(i= 0; i < (*m_exp).size(); ++i)
             {
-                returnval = std::max(returnval,
+                returnval = (std::max)(returnval,
                                 (*m_exp)[i]->EvalBasisNumModesMax());
             }
 
@@ -1440,7 +1440,7 @@ namespace Nektar
             for(i= 0; i < (*m_exp).size(); ++i)
             {
                 returnval[i]
-                    = std::max(returnval[i],(*m_exp)[i]->EvalBasisNumModesMax());
+                    = (std::max)(returnval[i],(*m_exp)[i]->EvalBasisNumModesMax());
             }
 
             return returnval;

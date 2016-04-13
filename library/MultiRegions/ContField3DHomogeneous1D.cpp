@@ -71,8 +71,13 @@ namespace Nektar
                                 const std::string                        &variable):
                                 DisContField3DHomogeneous1D (In, false)
         {
-            ContField2DSharedPtr zero_plane =
+            ContField2DSharedPtr zero_plane_old =
                     boost::dynamic_pointer_cast<ContField2D> (In.m_planes[0]);
+
+            ContField2DSharedPtr zero_plane =
+                        MemoryManager<ContField2D>::
+                                    AllocateSharedPtr(*zero_plane_old,graph2D,
+                                                            variable);
 
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {

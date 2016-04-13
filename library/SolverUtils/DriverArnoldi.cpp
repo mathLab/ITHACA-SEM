@@ -100,6 +100,8 @@ void DriverArnoldi::v_InitObject(ostream &out)
     m_session->LoadParameter("nits",  m_nits,  500);
     m_session->LoadParameter("evtol", m_evtol, 1e-06);
 
+    ASSERTL0( m_kdim >= m_nvec, "nvec cannot be larger than kdim.");
+
     m_session->LoadParameter("realShift", m_realShift, 0.0);
     m_equ[0]->SetLambda(m_realShift);
 

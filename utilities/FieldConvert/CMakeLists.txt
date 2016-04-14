@@ -20,6 +20,7 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessEquiSpacedOutput.h
     ProcessModules/ProcessGrad.h
     ProcessModules/ProcessHomogeneousPlane.h
+    ProcessModules/ProcessHomogeneousStretch.h
     ProcessModules/ProcessInnerProduct.h
     ProcessModules/ProcessInterpField.h
     ProcessModules/ProcessInterpPoints.h
@@ -64,6 +65,7 @@ SET(FieldConvertSources
     ProcessModules/ProcessEquiSpacedOutput.cpp
     ProcessModules/ProcessGrad.cpp
     ProcessModules/ProcessHomogeneousPlane.cpp
+    ProcessModules/ProcessHomogeneousStretch.cpp
     ProcessModules/ProcessInnerProduct.cpp
     ProcessModules/ProcessInterpField.cpp
     ProcessModules/ProcessInterpPoints.cpp

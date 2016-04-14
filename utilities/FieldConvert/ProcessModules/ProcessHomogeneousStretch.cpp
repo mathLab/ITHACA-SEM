@@ -51,9 +51,9 @@ ModuleKey ProcessHomogeneousStretch::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "homstretch"),
         ProcessHomogeneousStretch::create,
-        "Stretched homogeneous direction of a 3DH1D expansion, requires factor to be "
+        "Stretches homogeneous direction of a 3DH1D expansion, requires factor to be "
         "defined. The number of modes in the final expansion can be defined using"
-        "the command line argument --output-points-hom-z.");
+        " --output-points-hom-z.");
 
 ProcessHomogeneousStretch::ProcessHomogeneousStretch(FieldSharedPtr f)
     : ProcessModule(f)

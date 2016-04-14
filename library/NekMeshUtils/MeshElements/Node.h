@@ -145,6 +145,11 @@ public:
         m_z /= alpha;
     }
 
+    NEKMESHUTILS_EXPORT NodeSharedPtr copy()
+    {
+        return boost::shared_ptr<Node>(new Node(m_id,m_x,m_y,m_z));
+    }
+
     NEKMESHUTILS_EXPORT NekDouble abs2() const
     {
         return m_x * m_x + m_y * m_y + m_z * m_z;

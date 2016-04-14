@@ -110,6 +110,9 @@ public:
 
 private:
 
+    NekDouble Visability(std::vector<ElementSharedPtr> tris, Array<OneD, NekDouble> N);
+    Array<OneD, NekDouble> GetNormal(vector<ElementSharedPtr> tris);
+
     ///CAD
     CADSystemSharedPtr m_cad;
     /// mesh object containing surface mesh

@@ -55,9 +55,9 @@ namespace Nektar
             const bool CheeckForSingularSys=true);
 
         void FindEdgeIdToAddMeanPressure(
-            vector<map<int,int> > &ReorderedGraphVertId,
+            std::vector<std::map<int,int> > &ReorderedGraphVertId,
             int &nel, const LocalRegions::ExpansionVector &locExpVector,
-            int &edgeId, int &vertId, int &firstNonDirGraphVertId, map<int,int> &IsDirEdgeDof,
+            int &edgeId, int &vertId, int &firstNonDirGraphVertId, std::map<int,int> &IsDirEdgeDof,
             MultiRegions::BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
             Array<OneD, int> &AddMeanPressureToEdgeId);
     };

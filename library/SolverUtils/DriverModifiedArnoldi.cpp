@@ -38,6 +38,8 @@
 
 #include <SolverUtils/DriverModifiedArnoldi.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils

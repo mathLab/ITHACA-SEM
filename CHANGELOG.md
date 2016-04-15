@@ -7,6 +7,7 @@ v4.3.1
 - Add `THIRDPARTY_USE_SSL` option to disable use of SSL on systems where CMake
   is not compiled with SSL support. (!602)
 - Fix Homogeneous transform when unshuffling is not used. (!599)
+- Fix namespace pollution in library header files. (!601)
 - Fix bug in modified Arnoldi algorithm causing convergence to be reported when
   number of vectors is less than `nvec` (!608)
 

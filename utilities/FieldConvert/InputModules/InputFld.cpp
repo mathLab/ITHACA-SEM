@@ -38,7 +38,7 @@
 using namespace std;
 
 #include "InputFld.h"
-
+using namespace Nektar;
 
 static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
                 "NumberOfPoints","n","Define number of points to dump output");

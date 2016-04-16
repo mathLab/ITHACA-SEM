@@ -81,11 +81,11 @@ public:
     void EvalEV_ScalarSFD(
             const NekDouble &X_input,
             const NekDouble &Delta_input,
-            const complex<NekDouble> &alpha,
+            const std::complex<NekDouble> &alpha,
                   NekDouble &MaxEV);
 
     void GradientDescentMethod(
-            const complex<NekDouble> &alpha,
+            const std::complex<NekDouble> &alpha,
                   NekDouble &X_output,
                   NekDouble &Delta_output);
 
@@ -110,10 +110,10 @@ protected:
     SOLVER_UTILS_EXPORT virtual ~DriverSteadyState();
 
     /// Second-stage initialisation
-    SOLVER_UTILS_EXPORT virtual void v_InitObject(ostream &out = cout);
+    SOLVER_UTILS_EXPORT virtual void v_InitObject(std::ostream &out = std::cout);
 
     /// Virtual function for solve implementation.
-    SOLVER_UTILS_EXPORT virtual void v_Execute(ostream &out = cout);
+    SOLVER_UTILS_EXPORT virtual void v_Execute(std::ostream &out = std::cout);
 
     static std::string driverLookupId;
 

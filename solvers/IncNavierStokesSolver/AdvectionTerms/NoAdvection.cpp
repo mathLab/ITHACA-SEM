@@ -35,6 +35,8 @@
 
 #include <IncNavierStokesSolver/AdvectionTerms/NoAdvection.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

@@ -35,6 +35,8 @@
 
 #include <GlobalMapping/Mapping.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace GlobalMapping

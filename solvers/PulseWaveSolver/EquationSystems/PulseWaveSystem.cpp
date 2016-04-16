@@ -40,6 +40,7 @@
 #include <PulseWaveSolver/EquationSystems/PulseWaveSystem.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
+using namespace std;
 
 namespace Nektar
 {

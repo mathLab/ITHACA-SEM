@@ -74,7 +74,7 @@ public:
 
 protected:
     // Name of the function containing the coordinates velocity
-    string                                      m_velFuncName;   
+    std::string                                 m_velFuncName;   
 
     // Constructor
     MappingTranslation(const LibUtilities::SessionReaderSharedPtr     &pSession,

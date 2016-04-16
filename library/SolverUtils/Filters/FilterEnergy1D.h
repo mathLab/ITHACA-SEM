@@ -86,7 +86,7 @@ protected:
 
 private:
     /// Output file.
-    ofstream m_out;
+    std::ofstream m_out;
     /// Output frequency.
     unsigned int m_outputFrequency;
     /// Current index counter.

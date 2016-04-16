@@ -47,12 +47,12 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <NekMeshUtils/MeshElements/Mesh.h>
 
-using namespace Nektar::NekMeshUtils;
-
 namespace Nektar
 {
     namespace Utilities
     {
+        using namespace Nektar::NekMeshUtils;
+
         /**
          * Denotes different types of mesh converter modules: so far only
          * input, output and process modules are defined.
@@ -71,7 +71,7 @@ namespace Nektar
             "Output"
         };
 
-        typedef map<int, pair<FaceSharedPtr, vector<int> > > PerMap;
+        typedef std::map<int, std::pair<FaceSharedPtr, std::vector<int> > > PerMap;
 
         /**
          * @brief Represents a command-line configuration option.
@@ -85,7 +85,7 @@ namespace Nektar
              * @param defValue  Default value of the option.
              * @param desc      Description of the option.
              */
-            ConfigOption(bool isBool, string defValue, string desc) :
+            ConfigOption(bool isBool, std::string defValue, std::string desc) :
                 isBool(isBool), beenSet(false), value(), defValue(defValue),
                 desc(desc) {}
             ConfigOption() :
@@ -137,11 +137,11 @@ namespace Nektar
             /// line. If false, the default value will be put into #value.
             bool   beenSet;
             /// The value of the configuration option.
-            string value;
+            std::string value;
             /// Default value of the configuration option.
-            string defValue;
+            std::string defValue;
             /// Description of the configuration option.
-            string desc;
+            std::string desc;
         };
 
 
@@ -156,7 +156,7 @@ namespace Nektar
         Module(MeshSharedPtr p_m) : m_mesh(p_m) {}
             virtual void Process() = 0;
 
-            void RegisterConfig(string key, string value);
+            void RegisterConfig(std::string key, std::string value);
             void PrintConfig();
             void SetDefaults();
             MeshSharedPtr GetMesh()
@@ -181,15 +181,15 @@ namespace Nektar
             /// Mesh object
             MeshSharedPtr m_mesh;
             /// List of configuration values.
-            map<string, ConfigOption> m_config;
+            std::map<std::string, ConfigOption> m_config;
 
 
 
-            void ReorderPrisms(PerMap                   &perFaces);
-            void PrismLines   (int                       prism,
-                               PerMap                   &perFaces,
-                               set<int>                 &prismsDone,
-                               vector<ElementSharedPtr> &line);
+            void ReorderPrisms(PerMap                        &perFaces);
+            void PrismLines   (int                            prism,
+                               PerMap                        &perFaces,
+                               std::set<int>                 &prismsDone,
+                               std::vector<ElementSharedPtr> &line);
         };
 
         /**

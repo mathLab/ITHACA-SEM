@@ -160,7 +160,7 @@ public:
         const ExpListSharedPtr &trace,
         const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
             &elmtToTrace,
-        const vector<bool> &LeftAdjacents);
+        const std::vector<bool> &LeftAdjacents);
 
     // Destructor
     MULTI_REGIONS_EXPORT virtual ~LocTraceToTraceMap();
@@ -170,14 +170,14 @@ public:
         const ExpListSharedPtr &trace,
         const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
             &elmtToTrace,
-        const vector<bool> &LeftAdjacents);
+        const std::vector<bool> &LeftAdjacents);
 
     MULTI_REGIONS_EXPORT void Setup3D(
         const ExpList &locExp,
         const ExpListSharedPtr &trace,
         const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
             &elmtToTrace,
-        const vector<bool> &LeftAdjacents);
+        const std::vector<bool> &LeftAdjacents);
 
     MULTI_REGIONS_EXPORT void LocTracesFromField(
         const Array<OneD, const NekDouble> &field,

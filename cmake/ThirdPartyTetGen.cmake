@@ -17,7 +17,7 @@ IF(NEKTAR_USE_MESHGEN)
         EXTERNALPROJECT_ADD(
             tetgen-1.5
             PREFIX ${TPSRC}
-            URL http://ae-nektar.ae.ic.ac.uk/~mt4313/tetgen.zip
+            URL ${TPURL}/tetgen.zip
             URL_MD5 6d62e63f9b1e7a8ce53d5bc87e6a0a09
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}

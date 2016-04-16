@@ -37,6 +37,8 @@
 
 #include <ADRSolver/EquationSystems/EigenValuesAdvection.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string EigenValuesAdvection::className = GetEquationSystemFactory().RegisterCreatorFunction("EigenValuesAdvection", EigenValuesAdvection::create, "Eigenvalues of the weak advection operator.");

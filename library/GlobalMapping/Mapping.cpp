@@ -600,7 +600,7 @@ void Mapping::CovarFromCartesian(
  * This function lowers the index of the contravariant vector \f$v^{i}\f$,
  * transforming it into its associated covariant vector \f$v_{j}\f$
  *  according to the relation
- * \f[$v_{j} = g_{ij}v^{i}\f]
+ * \f[v_{j} = g_{ij}v^{i}\f]
  * where \f$g_{ij}\f$ is the metric tensor.
  *  
  * @param inarray  Components of the contravariant vector \f$v^{i}\f$ 
@@ -631,7 +631,7 @@ void Mapping::LowerIndex(
  * This function raises the index of the covariant vector \f$v_{j}\f$,
  * transforming it into its associated contravariant vector \f$v^{i}\f$
  *  according to the relation
- * \f[$v^{i} = g^{ij}v_{j}\f]
+ * \f[v^{i} = g^{ij}v_{j}\f]
  * where \f$g^{ij}\f$ is the inverse of the metric tensor.
  *  
  * @param inarray  Components of the contravariant vector \f$v^{i}\f$ 

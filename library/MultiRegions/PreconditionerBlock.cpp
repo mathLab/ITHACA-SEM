@@ -104,8 +104,9 @@ namespace Nektar
          * The preconditioner is defined as:
          *
          * \f[\mathbf{M}^{-1}=\left[\begin{array}{ccc}
-         *  Diag[(\mathbf{S_{1}})_{vv}] & & \\ & (\mathbf{S}_{1})_{eb} & \\ & &
-         *  (\mathbf{S}_{1})_{fb} \end{array}\right] \f]
+         *  \mathrm{Diag}[(\mathbf{S_{1}})_{vv}] & & \\
+         *  & (\mathbf{S}_{1})_{eb} & \\
+         *  & & (\mathbf{S}_{1})_{fb} \end{array}\right] \f]
          *
          * where \f$\mathbf{S}_{1}\f$ is the local Schur complement matrix for
          * each element and the subscript denotes the portion of the Schur
@@ -534,7 +535,7 @@ namespace Nektar
          * found in PreconditionerBlock::BlockPreconditionerCG. In this setting
          * however, the matrix is constructed as:
          *
-         * \f[ M^{-1} = \diag[ (\mathbf{S_{1}})_{f}^{-1} ] \f]
+         * \f[ M^{-1} = \mathrm{Diag}[ (\mathbf{S_{1}})_{f}^{-1} ] \f]
          *
          * where each matrix is the Schur complement system restricted to a
          * single face of the trace system.

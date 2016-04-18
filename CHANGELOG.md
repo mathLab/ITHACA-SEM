@@ -17,6 +17,10 @@ v4.3.1
 **NekMesh**:
 - Fix incorrect link directory on CCMIO library.
 
+**FieldConvert**:
+- Fix to FLD input to update the field definitions always, not just when a range
+  is specified. (!611)
+
 v4.3.0
 ------
 **Library:**

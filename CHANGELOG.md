@@ -9,6 +9,7 @@ v4.3.1
 - Fixed a number of documentation issues (!586, !593)
 - Fix Homogeneous transform when unshuffling is not used. (!599)
 - Fix namespace pollution in library header files. (!601)
+- Fix issue with METIS compilation on clang 7.3 (!603)
 - Fix bug in modified Arnoldi algorithm causing convergence to be reported when
   number of vectors is less than `nvec` (!608)
 

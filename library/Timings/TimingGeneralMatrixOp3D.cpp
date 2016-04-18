@@ -7,6 +7,7 @@
 #include <SpatialDomains/MeshGraph3D.h>
 #include <MultiRegions/ContField3D.h>
 
+using namespace std;
 using namespace Nektar;
 
 NekDouble TimeMatrixOp(StdRegions::MatrixType &type,

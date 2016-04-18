@@ -38,11 +38,11 @@
 
 #include <LibUtilities/BasicUtils/VmathArray.hpp> 
 
-using namespace std;
-
 namespace DBUtils
 {
+    using namespace std;
     using namespace Nektar;
+
     const int StopDefault = -99;
 
     template<class T> void Output1DArray(const Array<OneD, const T> &in, const int start = 0,

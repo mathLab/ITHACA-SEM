@@ -35,6 +35,8 @@
 
 #include <SolverUtils/DriverArpack.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils

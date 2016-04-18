@@ -2470,7 +2470,7 @@ namespace Nektar
             Array<OneD, const NekDouble> local;
             if(global.data() == loc.data())
             {
-                local = Array<OneD, NekDouble>(local.num_elements(),local.data());
+                local = Array<OneD, NekDouble>(loc.num_elements(),loc.data());
             }
             else
             {

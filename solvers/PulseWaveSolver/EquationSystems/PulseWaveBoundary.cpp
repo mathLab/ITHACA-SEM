@@ -36,6 +36,8 @@
 #include <PulseWaveSolver/EquationSystems/PulseWaveBoundary.h>
 #include <loki/Singleton.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

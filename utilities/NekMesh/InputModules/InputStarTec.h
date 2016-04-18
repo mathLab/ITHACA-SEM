@@ -62,30 +62,30 @@ public:
     void ReadZone(int &nComposite);
 
 protected:
-    void GenElement3D(vector<NodeSharedPtr> &Nodes,
+    void GenElement3D(std::vector<NodeSharedPtr> &Nodes,
                       int i,
-                      vector<int> &ElementFaces,
-                      vector<vector<int> > &FaceNodes,
+                      std::vector<int> &ElementFaces,
+                      std::vector<std::vector<int> > &FaceNodes,
                       int ncomposite,
                       bool DoOrient);
 
-    void GenElement2D(vector<NodeSharedPtr> &Nodes,
+    void GenElement2D(std::vector<NodeSharedPtr> &Nodes,
                       int i,
-                      vector<int> &ElementFaces,
-                      vector<vector<int> > &FaceNodes,
+                      std::vector<int> &ElementFaces,
+                      std::vector<std::vector<int> > &FaceNodes,
                       int ncomposite);
 
-    Array<OneD, int> SortEdgeNodes(vector<NodeSharedPtr> &Nodes,
-                                   vector<int> &ElementFaces,
-                                   vector<vector<int> > &FaceNodes);
+    Array<OneD, int> SortEdgeNodes(std::vector<NodeSharedPtr> &Nodes,
+                                   std::vector<int> &ElementFaces,
+                                   std::vector<std::vector<int> > &FaceNodes);
 
-    Array<OneD, int> SortFaceNodes(vector<NodeSharedPtr> &Nodes,
-                                   vector<int> &ElementFaces,
-                                   vector<vector<int> > &FaceNodes);
+    Array<OneD, int> SortFaceNodes(std::vector<NodeSharedPtr> &Nodes,
+                                   std::vector<int> &ElementFaces,
+                                   std::vector<std::vector<int> > &FaceNodes);
 
-    void ResetNodes(vector<NodeSharedPtr> &Nodes,
-                    Array<OneD, vector<int> > &ElementFaces,
-                    vector<vector<int> > &FaceNodes);
+    void ResetNodes(std::vector<NodeSharedPtr> &Nodes,
+                    Array<OneD, std::vector<int> > &ElementFaces,
+                    std::vector<std::vector<int> > &FaceNodes);
 };
 }
 }

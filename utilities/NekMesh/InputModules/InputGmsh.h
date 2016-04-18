@@ -69,12 +69,12 @@ public:
 
 private:
     int GetNnodes(unsigned int InputGmshEntity);
-    vector<int> CreateReordering(unsigned int InputGmshEntity);
-    vector<int> TriReordering(ElmtConfig conf);
-    vector<int> QuadReordering(ElmtConfig conf);
-    vector<int> HexReordering(ElmtConfig conf);
-    vector<int> PrismReordering(ElmtConfig conf);
-    vector<int> TetReordering(ElmtConfig conf);
+    std::vector<int> CreateReordering(unsigned int InputGmshEntity);
+    std::vector<int> TriReordering(ElmtConfig conf);
+    std::vector<int> QuadReordering(ElmtConfig conf);
+    std::vector<int> HexReordering(ElmtConfig conf);
+    std::vector<int> PrismReordering(ElmtConfig conf);
+    std::vector<int> TetReordering(ElmtConfig conf);
 };
 }
 }

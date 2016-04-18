@@ -42,6 +42,7 @@
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/GeomFactors.h>
 
+using namespace std;
 
 namespace Nektar
 {

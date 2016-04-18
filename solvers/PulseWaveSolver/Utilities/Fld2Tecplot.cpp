@@ -6,6 +6,7 @@
 
 #include <PulseWaveSolver/EquationSystems/PulseWaveSystem.h>
 
+using namespace std;
 using namespace Nektar;
 using namespace Nektar::SolverUtils;
 

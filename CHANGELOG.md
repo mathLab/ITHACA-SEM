@@ -6,7 +6,7 @@ v4.3.1
 **Library**:
 - Add `THIRDPARTY_USE_SSL` option to disable use of SSL on systems where CMake
   is not compiled with SSL support. (!602)
-- Fixed a number of documentation issues (!586, !593)
+- Fixed a number of documentation issues (!586, !593, !596)
 - Fix Homogeneous transform when unshuffling is not used. (!599)
 - Fix namespace pollution in library header files. (!601)
 - Fix issue with METIS compilation on clang 7.3 (!603)

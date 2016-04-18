@@ -12,6 +12,7 @@ v4.3.1
 - Fix issue with METIS compilation on clang 7.3 (!603)
 - Fix bug in modified Arnoldi algorithm causing convergence to be reported when
   number of vectors is less than `nvec` (!608)
+- Fix uninitialised array bug in AssemblyMap (!598)
 
 **NekMesh**:
 - Fix incorrect link directory on CCMIO library.

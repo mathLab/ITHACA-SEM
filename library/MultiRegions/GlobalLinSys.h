@@ -54,7 +54,7 @@ namespace Nektar
         /// Pointer to a GlobalLinSys object.
         typedef boost::shared_ptr<GlobalLinSys> GlobalLinSysSharedPtr;
         /// Mapping between GlobalLinSys objects and their associated keys.
-        typedef map<GlobalLinSysKey,GlobalLinSysSharedPtr> GlobalLinSysMap;
+        typedef std::map<GlobalLinSysKey,GlobalLinSysSharedPtr> GlobalLinSysMap;
         /// Pointer to a GlobalLinSys/key map.
         typedef boost::shared_ptr<GlobalLinSysMap> GlobalLinSysMapShPtr;
 
@@ -128,7 +128,7 @@ namespace Nektar
             /// Local Matrix System
             const boost::weak_ptr<ExpList>       m_expList;
             /// Robin boundary info
-            const map<int, RobinBCInfoSharedPtr> m_robinBCInfo;
+            const std::map<int, RobinBCInfoSharedPtr> m_robinBCInfo;
 
             virtual int                     v_GetNumBlocks      ();
             virtual DNekScalMatSharedPtr    v_GetBlock          (unsigned int n);

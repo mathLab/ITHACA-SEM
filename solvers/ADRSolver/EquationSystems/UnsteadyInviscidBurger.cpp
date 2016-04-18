@@ -35,6 +35,8 @@
 
 #include <ADRSolver/EquationSystems/UnsteadyInviscidBurger.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string UnsteadyInviscidBurger::className

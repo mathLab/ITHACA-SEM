@@ -39,6 +39,8 @@
 #undef max
 #endif
 
+using namespace std;
+
 namespace Nektar
 {
     namespace StdRegions

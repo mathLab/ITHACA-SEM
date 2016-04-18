@@ -39,6 +39,7 @@
 #include "Module.h"
 
 using namespace std;
+using namespace Nektar;
 using namespace Nektar::Utilities;
 
 int main(int argc, char* argv[])

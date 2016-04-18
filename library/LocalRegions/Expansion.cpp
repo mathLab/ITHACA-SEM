@@ -39,6 +39,8 @@
 
 #include <SpatialDomains/MeshComponents.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace LocalRegions 

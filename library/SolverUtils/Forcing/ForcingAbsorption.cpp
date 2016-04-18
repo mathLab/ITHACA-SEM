@@ -35,6 +35,8 @@
 
 #include <SolverUtils/Forcing/ForcingAbsorption.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils

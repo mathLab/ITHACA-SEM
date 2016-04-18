@@ -16,6 +16,10 @@ v4.3.1
 **NekMesh**:
 - Fix incorrect link directory on CCMIO library.
 
+**Tester**:
+- Remove requirement for executable to be specified in .tst file if it is
+  overridden on the command-line (!595)
+
 v4.3.0
 ------
 **Library:**

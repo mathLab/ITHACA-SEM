@@ -529,7 +529,6 @@ void SurfaceMesh::HOSurf()
                                     uve[1] * (1.0 + gll[k]) / 2.0;
                             uvi[k] = uv;
                         }
-                        exit(-1);
                         break;
                     }
                     itct++;

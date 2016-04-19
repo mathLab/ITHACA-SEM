@@ -41,6 +41,8 @@
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/GeomFactors.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace SpatialDomains

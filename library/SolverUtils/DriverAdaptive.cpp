@@ -40,6 +40,8 @@
 #include <StdRegions/StdTriExp.h>
 #include <GlobalMapping/Mapping.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils

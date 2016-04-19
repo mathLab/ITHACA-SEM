@@ -46,6 +46,8 @@
 #include <boost/graph/properties.hpp>
 #include <boost/graph/bandwidth.hpp>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -2468,7 +2470,7 @@ namespace Nektar
             Array<OneD, const NekDouble> local;
             if(global.data() == loc.data())
             {
-                local = Array<OneD, NekDouble>(local.num_elements(),local.data());
+                local = Array<OneD, NekDouble>(loc.num_elements(),loc.data());
             }
             else
             {

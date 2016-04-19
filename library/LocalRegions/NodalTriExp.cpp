@@ -36,6 +36,7 @@
 #include <LocalRegions/NodalTriExp.h>
 #include <LibUtilities/Foundations/Interp.h>
 
+using namespace std;
 
 namespace Nektar
 {

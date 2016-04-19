@@ -39,6 +39,7 @@
 #include <FieldUtils/Module.h>
 
 using namespace std;
+using namespace Nektar;
 using namespace Nektar::FieldUtils;
 
 int main(int argc, char* argv[])

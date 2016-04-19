@@ -42,7 +42,7 @@ namespace Nektar
 {
 namespace Utilities
 {
-
+typedef boost::unordered_map<NodeSharedPtr, vector<ElementSharedPtr>, NodeHash> NodeElMap;
 /**
  * @brief This processing module calculates the Jacobian of elements
  * using %SpatialDomains::GeomFactors and the %Element::GetGeom
@@ -64,10 +64,16 @@ public:
 
     /// Write mesh to output file.
     virtual void Process();
+private:
     void FillQuadPoints();
     vector<NodeSharedPtr> GetFreeNodes();
-    map<NodeSharedPtr, vector<ElementSharedPtr> > GetElementMap();
+    void GetElementMap();
+    NodeElMap nodeElMap;
+    NekDouble GetFunctional(NodeSharedPtr n);
+    NekDouble GetElFunctional(ElementSharedPtr el);
+
 };
+
 }
 }
 

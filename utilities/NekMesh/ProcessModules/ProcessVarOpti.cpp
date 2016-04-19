@@ -38,6 +38,11 @@
 #include <NekMeshUtils/MeshElements/Element.h>
 #include "ProcessVarOpti.h"
 
+#include <StdRegions/StdTriExp.h>
+#include <StdRegions/StdQuadExp.h>
+#include <StdRegions/StdTetExp.h>
+#include <StdRegions/StdPrismExp.h>
+
 using namespace std;
 using namespace Nektar::NekMeshUtils;
 
@@ -76,21 +81,134 @@ void ProcessVarOpti::Process()
 
     vector<NodeSharedPtr> optiNodes = GetFreeNodes();
 
-    map<NodeSharedPtr, vector<ElementSharedPtr> > nodeElMap = GetElementMap();
+    GetElementMap();
 
     for(int i = 0; i < optiNodes.size(); i++)
     {
-        map<NodeSharedPtr, vector<ElementSharedPtr> >::iterator it;
-        it = nodeElMap.find(optiNodes[i]);
-        ASSERTL0(it != nodeElMap.end(), "not found");
-        cout << i << " " << it->second.size() << endl;
+        NekDouble w = GetFunctional(optiNodes[i]);
     }
 
 }
 
-map<NodeSharedPtr, vector<ElementSharedPtr> > ProcessVarOpti::GetElementMap()
+NekDouble ProcessVarOpti::GetFunctional(NodeSharedPtr n)
 {
-    map<NodeSharedPtr, vector<ElementSharedPtr> > ret;
+    NodeElMap::iterator it = nodeElMap.find(n);
+    ASSERTL0(it != nodeElMap.end(),"could not find");
+    vector<ElementSharedPtr> els = it->second;
+
+    NekDouble r = 0.0;
+    for(int i = 0; i < els.size(); i++)
+    {
+        r += GetElFunctional(els[i]);
+    }
+}
+
+NekDouble ProcessVarOpti::GetElFunctional(ElementSharedPtr el)
+{
+    SpatialDomains::GeometrySharedPtr    geom = el->GetGeom(m_mesh->m_spaceDim);
+    StdRegions::StdExpansionSharedPtr    chi  = geom->GetXmap();
+    LibUtilities::PointsKeyVector        p    = chi->GetPointsKeys();
+    SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
+    const int expDim = chi->GetNumBases();
+    int nElemPts = 1;
+
+    vector<LibUtilities::BasisKey> basisKeys;
+
+    for (int i = 0; i < expDim; ++i)
+    {
+        basisKeys.push_back(chi->GetBasis(i)->GetBasisKey());
+    }
+
+    for(int i = 0; i < basisKeys.size(); i++)
+    {
+        cout << basisKeys[i].GetTotNumPoints() << endl;
+    }
+    exit(-1);
+
+    StdRegions::StdExpansionSharedPtr chiMod;
+    switch(chi->DetShapeType())
+    {
+        case LibUtilities::eTriangle:
+            chiMod = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(
+                basisKeys[0], basisKeys[1]);
+            break;
+        case LibUtilities::eQuadrilateral:
+            chiMod = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(
+                basisKeys[0], basisKeys[1]);
+            break;
+        case LibUtilities::eTetrahedron:
+            chiMod = MemoryManager<StdRegions::StdTetExp>::AllocateSharedPtr(
+                basisKeys[0], basisKeys[1], basisKeys[2]);
+            break;
+        case LibUtilities::ePrism:
+            chiMod = MemoryManager<StdRegions::StdPrismExp>::AllocateSharedPtr(
+                basisKeys[0], basisKeys[1], basisKeys[2]);
+            break;
+        default:
+            ASSERTL0(false, "nope");
+    }
+
+    SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
+
+    const int pts = deriv[0][0].num_elements();
+    cout << pts << endl;
+    exit(-1);
+    /*
+    const int nq  = chiMod->GetTotPoints();
+
+    ASSERTL0(pts == nq, "what");
+
+    vector<DNekMat> i2rm = MappingIdealToRef(geom, chiMod);
+    Array<OneD, NekDouble> eta(nq);
+
+    for (int k = 0; k < pts; ++k)
+    {
+        DNekMat jac     (expDim, expDim, 0.0, eFULL);
+        DNekMat jacIdeal(expDim, expDim, 0.0, eFULL);
+
+        for (int i = 0; i < expDim; ++i)
+        {
+            for (int j = 0; j < expDim; ++j)
+            {
+                jac(j,i) = deriv[i][j][k];
+            }
+        }
+
+        jacIdeal = jac * i2rm[k];
+        NekDouble jacDet;
+
+        if(expDim == 2)
+        {
+            jacDet = jacIdeal(0,0) * jacIdeal(1,1) - jacIdeal(0,1)*jacIdeal(1,0);
+        }
+        else if(expDim == 3)
+        {
+            jacDet = jacIdeal(0,0) * (jacIdeal(1,1)*jacIdeal(2,2) - jacIdeal(2,1)*jacIdeal(1,2)) -
+                     jacIdeal(0,1) * (jacIdeal(1,0)*jacIdeal(2,2) - jacIdeal(2,0)*jacIdeal(1,2)) +
+                     jacIdeal(0,2) * (jacIdeal(1,0)*jacIdeal(2,1) - jacIdeal(2,0)*jacIdeal(1,1));
+        }
+        else
+        {
+            ASSERTL0(false,"silly exp dim");
+        }
+
+        NekDouble frob = 0.0;
+
+        for (int i = 0; i < expDim; ++i)
+        {
+            for (int j = 0; j < expDim; ++j)
+            {
+                frob += jacIdeal(i,j) * jacIdeal(i,j);
+            }
+        }
+
+        NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet));
+        eta[k] = expDim * pow(sigma, 2.0/expDim) / frob;
+    }*/
+}
+
+void ProcessVarOpti::GetElementMap()
+{
     for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
@@ -99,10 +217,9 @@ map<NodeSharedPtr, vector<ElementSharedPtr> > ProcessVarOpti::GetElementMap()
         el->GetCurvedNodes(n);
         for(int j = 0; j < 3 * (5 - 1); j++)
         {
-            ret[n[j]].push_back(el);
+            nodeElMap[n[j]].push_back(el);
         }
     }
-    return ret;
 }
 
 vector<NodeSharedPtr> ProcessVarOpti::GetFreeNodes()
@@ -113,41 +230,34 @@ vector<NodeSharedPtr> ProcessVarOpti::GetFreeNodes()
     //add it to the vector
     NodeSet boundaryNodes;
 
-    CompositeMap cm = m_mesh->m_composite;
-    CompositeMap::iterator it;
-    for(it = cm.begin(); it != cm.end(); it++)
+    EdgeSet::iterator it;
+    int ct = 0;
+    for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
     {
-        if(it->second->m_tag != "E")
+        if((*it)->m_elLink.size() == 2)
         {
             continue;
         }
 
-        for(int i = 0; i < it->second->m_items.size(); i++)
+        ct++;
+
+        vector<NodeSharedPtr> n;
+        (*it)->GetCurvedNodes(n);
+        for(int i = 0; i < n.size(); i++)
         {
-            EdgeSharedPtr e = it->second->m_items[i]->GetEdgeLink();
-            vector<NodeSharedPtr> n;
-            e->GetCurvedNodes(n);
-            for(int j = 0; j < n.size(); j++)
-            {
-                boundaryNodes.insert(n[j]);
-            }
+            boundaryNodes.insert(n[i]);
         }
     }
 
     vector<NodeSharedPtr> ret;
-    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+    for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
     {
         vector<NodeSharedPtr> n;
-        m_mesh->m_element[m_mesh->m_expDim][i]->GetCurvedNodes(n);
-        for(int j = 0; j < 3 * (5 - 1); j++)
+        (*it)->GetCurvedNodes(n);
+        for(int j = 0; j < n.size(); j++)
         {
-            if(!n[j])
-            {
-                cout << "error in node " << j << endl;
-                exit(-1);
-            }
-            NodeSet::iterator it = boundaryNodes.find(n[j]);
-            if(it == boundaryNodes.end())
+            NodeSet::iterator nit = boundaryNodes.find(n[j]);
+            if(nit == boundaryNodes.end())
             {
                 ret.push_back(n[j]);
             }

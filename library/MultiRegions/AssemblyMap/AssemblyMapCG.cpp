@@ -504,7 +504,7 @@ namespace Nektar
                         {
                             if (pIt->second[i].isLocal)
                             {
-                                graph[0][pIt->second[i].id] = gId;
+                                graph[0][pIt->second[i].id] = graph[0][meshVertId];
                             }
                         }
                     }

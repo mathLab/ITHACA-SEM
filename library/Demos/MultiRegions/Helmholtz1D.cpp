@@ -7,6 +7,7 @@
 #include <MultiRegions/ContField1D.h>
 #include <SpatialDomains/MeshGraph1D.h>
 
+using namespace std;
 using namespace Nektar;
 
 int NoCaseStringCompare(const string & s1, const string& s2);

@@ -35,6 +35,8 @@
 
 #include <SolverUtils/Filters/FilterThresholdMax.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils

@@ -40,6 +40,8 @@
 #include <StdRegions/StdNodalTriExp.h>
 //#include <LibUtilities/LinearAlgebra/Blas.hpp>
 
+using namespace std;
+
 namespace Nektar
 {
     CellModelFactory& GetCellModelFactory()

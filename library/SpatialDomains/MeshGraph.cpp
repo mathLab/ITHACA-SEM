@@ -67,6 +67,8 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/make_shared.hpp>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace SpatialDomains

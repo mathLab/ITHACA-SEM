@@ -35,6 +35,8 @@
 
 #include <SolverUtils/Filters/FilterThresholdMin.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils

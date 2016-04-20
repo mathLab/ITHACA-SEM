@@ -42,6 +42,7 @@
 #include <MultiRegions/ContField3D.h>
 #include <SpatialDomains/MeshGraph3D.h>
 
+using namespace std;
 using namespace Nektar;
 
 //#define TIMING

@@ -49,13 +49,13 @@ namespace Nektar
         /**
          * Registers the class with the Factory.
          */
-        string GlobalLinSysDirectStaticCond::className
+        std::string GlobalLinSysDirectStaticCond::className
                 = GetGlobalLinSysFactory().RegisterCreatorFunction(
                     "DirectStaticCond",
                     GlobalLinSysDirectStaticCond::create,
                     "Direct static condensation.");
 
-        string GlobalLinSysDirectStaticCond::className2
+        std::string GlobalLinSysDirectStaticCond::className2
                 = GetGlobalLinSysFactory().RegisterCreatorFunction(
                     "DirectMultiLevelStaticCond",
                     GlobalLinSysDirectStaticCond::create,

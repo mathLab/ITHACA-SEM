@@ -41,6 +41,7 @@ using namespace std;
 #include <LibUtilities/BasicUtils/Timer.h>
 
 #include "InputXml.h"
+using namespace Nektar;
 
 static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
                 "NumberOfPoints","n","Define number of points to dump output");

@@ -181,12 +181,13 @@ void OutputVtk::Process(po::variables_map &vm)
         int nvert, vtktype; 
         switch(fPts->GetPtsType())
         {
+            case LibUtilities::ePtsLine:
             case LibUtilities::ePtsFile:
             {
-                ASSERTL0(false,"VTK output needs settig up for ePtsFile");
+                ASSERTL0(false,"VTK output needs setting up for ePtsFile and ePtsLine");
                 break;
             }
-            case LibUtilities::ePtsLine:
+            case LibUtilities::ePtsSegBlock:
             {
                 nvert = 2;
                 vtktype = 3;

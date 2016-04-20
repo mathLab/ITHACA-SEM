@@ -717,7 +717,6 @@ namespace Nektar
                 for(j = 0; j < nVerts; ++j)
                 {
                     meshVertId = exp->GetGeom()->GetVid(j);
-
                     if(graph[0].count(meshVertId) == 0)
                     {
                         if(tempGraph[0].count(meshVertId) == 0)

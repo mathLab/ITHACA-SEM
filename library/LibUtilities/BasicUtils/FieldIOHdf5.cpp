@@ -466,15 +466,14 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         H5::PListSharedPtr serialProps = H5::PList::Default();
         H5::PListSharedPtr writeSR     = H5::PList::Default();
 
-        // reopen the file
+        // Reopen the file
         H5::FileSharedPtr outfile =
             H5::File::Open(outFile, H5F_ACC_RDWR, serialProps);
         ASSERTL1(outfile, prfx.str() + "cannot open HDF5 file.");
         H5::GroupSharedPtr root = outfile->OpenGroup("NEKTAR");
         ASSERTL1(root, prfx.str() + "cannot open root group.");
 
-        // write the DECOMPOSITION dataset
-        /////////////////////////////////////////////////////////////////////////////////////////
+        // Write the DECOMPOSITION dataset
         H5::DataSetSharedPtr decomps_dset = root->OpenDataSet("DECOMPOSITION");
         ASSERTL1(decomps_dset,
                  prfx.str() + "cannot open DECOMPOSITION dataset.");
@@ -485,10 +484,8 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
 
         decomps_fspace->SelectRange(0, all_decomps.size());
         decomps_dset->Write(all_decomps, decomps_fspace, writeSR);
-        /////////////////////////////////////////////////////////////////////////////////////////
 
-        // write the INDEXES dataset
-        /////////////////////////////////////////////////////////////////////////////////////////
+        // Write the INDEXES dataset
         H5::DataSetSharedPtr idxs_dset = root->OpenDataSet("INDEXES");
         ASSERTL1(idxs_dset, prfx.str() + "cannot open INDEXES dataset.");
 
@@ -497,57 +494,49 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
 
         idxs_fspace->SelectRange(0, all_idxs.size());
         idxs_dset->Write(all_idxs, idxs_fspace, writeSR);
-        /////////////////////////////////////////////////////////////////////////////////////////
+    }
 
-    } // if (amRoot)
-    // RAII => datasets (idxs_dset, decomps_dset), root group and HDF5 file are
-    // all closed automatically
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // initialise the dataset indexes for all MPI processes
+    // Initialise the dataset indexes for all MPI processes
     std::vector<std::size_t> idx = m_comm->Scatter(root_rank, all_idxs);
     std::size_t ids_i            = idx[IDS_IDX_IDX];
     std::size_t data_i           = idx[DATA_IDX_IDX];
 
-    // set properties for parallel file access (if we're in parallel)
+    // Set properties for parallel file access (if we're in parallel)
     H5::PListSharedPtr parallelProps = H5::PList::Default();
     H5::PListSharedPtr writePL = H5::PList::Default();
     if (m_comm->GetSize() > 1)
     {
-        // use MPI/O to access the file
+        // Use MPI/O to access the file
         parallelProps = H5::PList::FileAccess();
         parallelProps->SetMpio(m_comm);
-        // use collective IO
+        // Use collective IO
         writePL = H5::PList::DatasetXfer();
         writePL->SetDxMpioCollective();
-    } // end of <if (m_comm->GetSize() > 1)>
+    }
 
-    // reopen the file
+    // Reopen the file
     H5::FileSharedPtr outfile =
         H5::File::Open(outFile, H5F_ACC_RDWR, parallelProps);
     ASSERTL1(outfile, prfx.str() + "cannot open HDF5 file.");
     H5::GroupSharedPtr root = outfile->OpenGroup("NEKTAR");
     ASSERTL1(root, prfx.str() + "cannot open root group.");
 
-    // RAII => field group is closed automatically
     m_comm->Block();
-    // all hdf5 groups have now been created
-    ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // open the IDS dataset and associated data space
+    // all HDF5 groups have now been created. Open the IDS dataset and
+    // associated data space
     H5::DataSetSharedPtr ids_dset = root->OpenDataSet("IDS");
     ASSERTL1(ids_dset, prfx.str() + "cannot open IDS dataset.");
     H5::DataSpaceSharedPtr ids_fspace = ids_dset->GetSpace();
     ASSERTL1(ids_fspace, prfx.str() + "cannot open IDS filespace.");
 
-    // open the DATA dataset and associated data space
+    // Open the DATA dataset and associated data space
     H5::DataSetSharedPtr data_dset = root->OpenDataSet("DATA");
     ASSERTL1(data_dset, prfx.str() + "cannot open DATA dataset.");
     H5::DataSpaceSharedPtr data_fspace = data_dset->GetSpace();
     ASSERTL1(data_fspace, prfx.str() + "cannot open DATA filespace.");
 
-    // write the data
-    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Write the data
     for (int f = 0; f < nFields; ++f)
     {
         // write the element ids
@@ -573,20 +562,17 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
             fielddefs[nFields - 1]->m_elementIDs, ids_fspace, writePL);
         data_dset->Write(fielddata[nFields - 1], data_fspace, writePL);
     }
-    ////////////////////////////////////////////////////////////////////////////////////////////////
 
     m_comm->Block();
-    // all data has been written
 
+    // all data has been written
     if (0 == m_comm->GetRank())
     {
         tm1 = m_comm->Wtime();
         cout << prfx.str() << "leaving after " << tm1 - tm0 << " secs..."
              << endl;
     }
-} // end of <FieldIOHdf5::v_Write> method
-// RAII => filespaces (ids_fspace, data_fspace), datasets (ids_dset, data_dset),
-//         root group and HDF5 file are all closed automatically
+}
 
 void FieldIOHdf5::v_Import(const std::string &infilename,
                            std::vector<FieldDefinitionsSharedPtr> &fielddefs,
@@ -595,44 +581,30 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
                            const Array<OneD, int> ElementIDs)
 {
     std::stringstream prfx;
-    prfx << m_comm->GetRank() << ": FieldIOHdf5::v_ImportFile(): ";
-    double tm0 = 0.0, tm1 = 0.0;
-    if (0 == m_comm->GetRank())
-    {
-        cout << prfx.str() << "entering..." << endl;
-        tm0 = m_comm->Wtime();
-    }
-
     int nRanks = m_comm->GetSize();
-
     DataSourceSharedPtr dataSource = H5DataSource::create(infilename);
 
-    // set properties for parallel file access (if we're in parallel)
-    ////////////////////////////////////////////////////////////////////////////////////
+    // Set properties for parallel file access (if we're in parallel)
     H5::PListSharedPtr parallelProps = H5::PList::Default();
     H5::PListSharedPtr readPL = H5::PList::Default();
     if (nRanks > 1)
     {
-        // use MPI/O to access the file
+        // Use MPI/O to access the file
         parallelProps = H5::PList::FileAccess();
         parallelProps->SetMpio(m_comm);
-        // use collective IO
+        // Use collective IO
         readPL = H5::PList::DatasetXfer();
         readPL->SetDxMpioCollective();
     }
-    ////////////////////////////////////////////////////////////////////////////////////
 
-    // open the root group of the hdf5 file
-    ////////////////////////////////////////////////////////////////////////////////////
+    // Open the root group of the hdf5 file
     H5DataSourceSharedPtr h5 =
         boost::static_pointer_cast<H5DataSource>(dataSource);
     ASSERTL1(h5, prfx.str() + "cannot open HDF5 file.");
     H5::GroupSharedPtr root = h5->Get()->OpenGroup("NEKTAR");
     ASSERTL1(root, prfx.str() + "cannot open root group.");
-    ////////////////////////////////////////////////////////////////////////////////////
 
-    // open the datasets
-    ////////////////////////////////////////////////////////////////////////////////////
+    // Open the datasets
     H5::DataSetSharedPtr decomps_dset = root->OpenDataSet("DECOMPOSITION");
     ASSERTL1(decomps_dset, prfx.str() + "cannot open DECOMPOSITION dataset.");
 
@@ -644,10 +616,8 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 
     H5::DataSetSharedPtr data_dset = root->OpenDataSet("DATA");
     ASSERTL1(data_dset, prfx.str() + "cannot open DATA dataset.");
-    ////////////////////////////////////////////////////////////////////////////////////
 
-    // open the dataset file spaces
-    ////////////////////////////////////////////////////////////////////////////////////
+    // Open the dataset file spaces
     H5::DataSpaceSharedPtr decomps_fspace = decomps_dset->GetSpace();
     ASSERTL1(decomps_fspace,
              prfx.str() + "cannot open DECOMPOSITION filespace.");
@@ -660,7 +630,6 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 
     H5::DataSpaceSharedPtr data_fspace = data_dset->GetSpace();
     ASSERTL1(data_fspace, prfx.str() + "cannot open DATA filespace.");
-    ////////////////////////////////////////////////////////////////////////////////////
 
     // Read entire IDS data set to get list of global IDs.
     std::vector<std::size_t> ids;
@@ -684,9 +653,11 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 
     // Mapping from each decomposition to offsets in the data array.
     vector<size_t> decompsToDataOffsets(nDecomps);
+
     // Mapping from each group's hash to a vector of element IDs. Note this has
     // to be unsigned int, since that's what we use in FieldDefinitions.
     map<size_t, vector<unsigned int> > groupsToElmts;
+
     // Mapping from each group's hash to each of the decompositions.
     map<size_t, set<size_t> > groupsToDecomps;
 
@@ -768,16 +739,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
     }
 
     m_comm->Block();
-    // all data has been read
-
-    if (0 == m_comm->GetRank())
-    {
-        tm1 = m_comm->Wtime();
-    }
 }
-// RAII => filespaces (ids_fspace, data_fspace, idxs_fspace, decomps_fspace),
-//         datasets (ids_dset, data_dset, idxs_dset, decomps_dset),
-//         root group and HDF5 file are all closed automatically
 
 void FieldIOHdf5::ImportFieldDef(
     H5::PListSharedPtr readPL,

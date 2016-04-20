@@ -71,7 +71,7 @@ void OutputPts::Process(po::variables_map &vm)
     int writepts = 1;
     if (fs::exists(writefile) && (vm.count("forceoutput") == 0))
     {
-        LibUtilities::CommSharedPtr comm = m_f->m_session->GetComm();
+        LibUtilities::CommSharedPtr comm = m_f->m_comm;
         int rank = comm->GetRank();
         writepts = 0; // set to zero for reduce all to be correct.
 
@@ -96,7 +96,7 @@ void OutputPts::Process(po::variables_map &vm)
 
     if (writepts)
     {
-        LibUtilities::PtsIO ptsIO(m_f->m_session->GetComm());
+        LibUtilities::PtsIO ptsIO(m_f->m_comm);
         LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
         if(m_f->m_fieldPts == LibUtilities::NullPtsField)
         {

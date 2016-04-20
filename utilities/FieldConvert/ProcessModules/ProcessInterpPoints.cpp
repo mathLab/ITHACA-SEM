@@ -498,9 +498,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         }
         fromField->m_exp[j]->BwdTrans(fromField->m_exp[j]->GetCoeffs(),
                                       fromField->m_exp[j]->UpdatePhys());
-
-        Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
-        m_f->m_fieldPts->AddField(newPts, fromField->m_fielddef[0]->m_fields[j]);
     }
 
     if(rank == 0)
@@ -512,7 +509,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
 
-    InterpolateFieldToPts(fromField->m_exp, pts,
+    InterpolateFieldToPts(fromField, pts,
                           clamp_low, clamp_up, def_value, !rank);
     
     if(rank == 0)
@@ -523,7 +520,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 }
 
 void ProcessInterpPoints::InterpolateFieldToPts(
-                                                vector<MultiRegions::ExpListSharedPtr> &field0,
+                                                FieldSharedPtr                         &fromField,
                                                 Array<OneD, Array<OneD, NekDouble> >   &pts,
                                                 NekDouble                              clamp_low,
                                                 NekDouble                              clamp_up,
@@ -532,6 +529,7 @@ void ProcessInterpPoints::InterpolateFieldToPts(
 {
     int dim = pts.num_elements();
 
+    vector<MultiRegions::ExpListSharedPtr> field0 = fromField->m_exp;
     Array<OneD, NekDouble> coords(dim), Lcoords(dim);
     int nq1 = pts[0].num_elements();
     int elmtid, offset;
@@ -576,14 +574,10 @@ void ProcessInterpPoints::InterpolateFieldToPts(
         
         if(pfield != -1)
         {
-            Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
-            m_f->m_fieldPts->AddField(newPts, "Cp");
             nfields += 1;
 
             if(velid.size())
             {
-                Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
-                m_f->m_fieldPts->AddField(newPts, "Cp0");
                 nfields += 1;
             }
             else
@@ -598,12 +592,12 @@ void ProcessInterpPoints::InterpolateFieldToPts(
 
     }
     
-    // resize data field
-    m_f->m_data.resize(nfields);
+    // Allocate data storage
+    Array<OneD, Array< OneD, NekDouble> > data(nfields);
 
     for (f = 0; f < nfields; ++f)
     {
-        m_f->m_data[f].resize(nq1);
+        data[f] = Array< OneD, NekDouble>(nq1, def_value);
     }
 
     for (r = 0; r < nq1; r++)
@@ -639,15 +633,8 @@ void ProcessInterpPoints::InterpolateFieldToPts(
                         ((value < clamp_low)? clamp_low :
                          value);
 
-                    m_f->m_data[f][r] = value;
+                    data[f][r] = value;
                 }
-            }
-        }
-        else
-        {
-            for (f = 0; f < field0.size(); ++f)
-            {
-                m_f->m_data[f][r] = def_value;
             }
         }
 
@@ -659,20 +646,33 @@ void ProcessInterpPoints::InterpolateFieldToPts(
 
         if(pfield != -1) // calculate cp
         {
-            m_f->m_data[nfields-2][r] = qinv*(m_f->m_data[pfield][r] - p0);
+            data[nfields-2][r] = qinv*(data[pfield][r] - p0);
 
             if(velid.size()) // calculate cp0
             {
                 NekDouble q = 0; 
                 for(int i = 0; i < velid.size(); ++i)
                 {
-                    q += 0.5*m_f->m_data[velid[i]][r]*m_f->m_data[velid[i]][r];
+                    q += 0.5*data[velid[i]][r]*data[velid[i]][r];
                 }
                 
-                m_f->m_data[nfields-1][r] = qinv*(m_f->m_data[pfield][r]+q - p0);
+                data[nfields-1][r] = qinv*(data[pfield][r]+q - p0);
             }
         }
-
+    }
+    // Add fields to m_fieldPts
+    for (f = 0; f < field0.size(); ++f)
+    {
+        m_f->m_fieldPts->AddField(data[f],
+                fromField->m_fielddef[0]->m_fields[f]);
+    }
+    if(pfield != -1)
+    {
+        m_f->m_fieldPts->AddField(data[field0.size()], "Cp");
+    }
+    if(velid.size())
+    {
+        m_f->m_fieldPts->AddField(data[field0.size()+1], "Cp0");
     }
 }
 

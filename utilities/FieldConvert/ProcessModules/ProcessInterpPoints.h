@@ -63,7 +63,7 @@ class ProcessInterpPoints : public ProcessModule
 
     private:
 
-        void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
+        void InterpolateFieldToPts(FieldSharedPtr                         &fromField,
                                    Array<OneD, Array<OneD, NekDouble> >   &pts,
                                    NekDouble                               clamp_low,
                                    NekDouble                               clamp_up,

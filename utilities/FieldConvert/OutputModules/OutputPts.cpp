@@ -97,42 +97,46 @@ void OutputPts::Process(po::variables_map &vm)
     if (writepts)
     {
         LibUtilities::PtsIO ptsIO(m_f->m_session->GetComm());
-        Array<OneD, Array<OneD, NekDouble> > tmp(
-            m_f->m_exp[0]->GetCoordim(0) +
-            m_f->m_fielddef[0]->m_fields.size());
-
-        switch (m_f->m_exp[0]->GetCoordim(0))
+        LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
+        if(m_f->m_fieldPts == LibUtilities::NullPtsField)
         {
-            case 1:
-                tmp[0] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
-                m_f->m_exp[0]->GetCoords(tmp[0]);
-                break;
+            Array<OneD, Array<OneD, NekDouble> > tmp(
+                m_f->m_exp[0]->GetCoordim(0) +
+                m_f->m_fielddef[0]->m_fields.size());
 
-            case 2:
-                tmp[1] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
-                tmp[0] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
-                m_f->m_exp[0]->GetCoords(tmp[0], tmp[1]);
-                break;
+            switch (m_f->m_exp[0]->GetCoordim(0))
+            {
+                case 1:
+                    tmp[0] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
+                    m_f->m_exp[0]->GetCoords(tmp[0]);
+                    break;
 
-            case 3:
-                tmp[2] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
-                tmp[1] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
-                tmp[0] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
-                m_f->m_exp[0]->GetCoords(tmp[0], tmp[1], tmp[2]);
-                break;
+                case 2:
+                    tmp[1] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
+                    tmp[0] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
+                    m_f->m_exp[0]->GetCoords(tmp[0], tmp[1]);
+                    break;
+
+                case 3:
+                    tmp[2] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
+                    tmp[1] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
+                    tmp[0] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
+                    m_f->m_exp[0]->GetCoords(tmp[0], tmp[1], tmp[2]);
+                    break;
+            }
+
+            for (int i = 0; i < m_f->m_fielddef[0]->m_fields.size(); ++i)
+            {
+                tmp[i + m_f->m_exp[0]->GetCoordim(0)] =
+                    m_f->m_exp[i]->GetPhys();
+            }
+            fPts =
+                MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+                    m_f->m_exp[0]->GetCoordim(0),
+                    m_f->m_fielddef[0]->m_fields,
+                    tmp);
         }
-
-        for (int i = 0; i < m_f->m_fielddef[0]->m_fields.size(); ++i)
-        {
-            tmp[i + m_f->m_exp[0]->GetCoordim(0)] =
-                m_f->m_exp[i]->GetPhys();
-        }
-        LibUtilities::PtsFieldSharedPtr tmpPts =
-            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
-                m_f->m_exp[0]->GetCoordim(0),
-                m_f->m_fielddef[0]->m_fields,
-                tmp);
-        ptsIO.Write(filename, tmpPts);
+        ptsIO.Write(filename, fPts);
     }
 }
 }

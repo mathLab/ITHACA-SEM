@@ -92,11 +92,11 @@ namespace Nektar
 		LIB_UTILITIES_EXPORT inline double Wtime();
 
                 template<class T>
-                void Send(int pProc, const T& pData);
+                void Send(int pProc, T& pData);
                 template<class T>
                 void Recv(int pProc, T& pData);
                 template<class T>
-                void SendRecv(int pSendProc, const T& pSendData,
+                void SendRecv(int pSendProc, T& pSendData,
                         int pRecvProc, T& pRecvData);
                 template<class T>
                 void SendRecvReplace(int pSendProc, int pRecvProc, T& pData);
@@ -105,25 +105,25 @@ namespace Nektar
                 void AllReduce(T& pData, enum ReduceOperator pOp);
 
                 template<class T>
-                void AlltoAll(const T& pSendData, T& pRecvData);
+                void AlltoAll(T& pSendData, T& pRecvData);
                 template<class T>
-                void AlltoAllv(const Array<OneD, T>& pSendData,
-                        const Array<OneD, int>& pSendDataSizeMap,
-                        const Array<OneD, int>& pSendDataOffsetMap,
+                void AlltoAllv(Array<OneD, T>& pSendData,
+                        Array<OneD, int>& pSendDataSizeMap,
+                        Array<OneD, int>& pSendDataOffsetMap,
                         Array<OneD, T>& pRecvData,
-                        const Array<OneD, int>& pRecvDataSizeMap,
-                        const Array<OneD, int>& pRecvDataOffsetMap);
+                        Array<OneD, int>& pRecvDataSizeMap,
+                        Array<OneD, int>& pRecvDataOffsetMap);
                 
                 template<class T>
                 void Bcast(T& data, int rootProc);
 
                 template<class T>
-                void Exscan(const T& pData, const enum ReduceOperator pOp, T& ans);
+                void Exscan(T& pData, const enum ReduceOperator pOp, T& ans);
 
                 template<class T>
-                T Gather(const int rootProc, const T& val);
+                T Gather(const int rootProc, T& val);
                 template<class T>
-                T Scatter(const int rootProc, const T& pData);
+                T Scatter(const int rootProc, T& pData);
 
                 LIB_UTILITIES_EXPORT inline CommSharedPtr CommCreateIf(int flag);
 
@@ -147,24 +147,24 @@ namespace Nektar
                 virtual int  v_GetRank() = 0;
                 virtual void v_Block() = 0;
 		virtual double v_Wtime() = 0;
-                virtual void v_Send(const void* buf, int count, CommDataType dt, int dest) = 0;
+                virtual void v_Send(void* buf, int count, CommDataType dt, int dest) = 0;
                 virtual void v_Recv(void* buf, int count, CommDataType dt, int source) = 0;
-                virtual void v_Sendrecv(const void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+                virtual void v_Sendrecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
                         void *recvbuf, int recvcount, CommDataType recvtype, int source) = 0;
-				virtual void v_SendRecvReplace(void* buf, int count, CommDataType dt,
-				        int pSendProc, int pRecvProc) = 0;
-				virtual void v_AllReduce(void* buf, int count, CommDataType dt, enum ReduceOperator pOp) = 0;
-				virtual void v_AlltoAll(const void* sendbuf, int sendcount, CommDataType sendtype,
-				        void* recvbuf, int recvcount, CommDataType recvtype) = 0;
-			    virtual void v_AlltoAllv(const void *sendbuf, const int sendcounts[], const int sensdispls[], CommDataType sendtype,
-			            void *recvbuf, const int recvcounts[], const int rdispls[], CommDataType recvtype) = 0;
-				virtual void v_Bcast(void* buffer, int count, CommDataType dt, int root) = 0;
+                virtual void v_SendRecvReplace(void* buf, int count, CommDataType dt,
+                                               int pSendProc, int pRecvProc) = 0;
+                virtual void v_AllReduce(void* buf, int count, CommDataType dt, enum ReduceOperator pOp) = 0;
+                virtual void v_AlltoAll(void* sendbuf, int sendcount, CommDataType sendtype,
+                                        void* recvbuf, int recvcount, CommDataType recvtype) = 0;
+                virtual void v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[], CommDataType sendtype,
+                                         void *recvbuf, int recvcounts[], int rdispls[], CommDataType recvtype) = 0;
+                virtual void v_Bcast(void* buffer, int count, CommDataType dt, int root) = 0;
 
-                virtual void v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans) = 0;
+                virtual void v_Exscan(Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans) = 0;
 
-                virtual void v_Gather(const void* sendbuf, int sendcount, CommDataType sendtype,
+                virtual void v_Gather(void* sendbuf, int sendcount, CommDataType sendtype,
                         void *recvbuf, int recvcount, CommDataType recvtype, int root) = 0;
-                virtual void v_Scatter(const void *sendbuf, int sendcount, CommDataType sendtype,
+                virtual void v_Scatter(void *sendbuf, int sendcount, CommDataType sendtype,
                         void *recvbuf, int recvcount, CommDataType recvtype, int root) = 0;
 
                 virtual CommSharedPtr v_CommCreateIf(int flag) = 0;
@@ -223,7 +223,7 @@ namespace Nektar
         }
 
         template<class T>
-        void Comm::Send(int pProc, const T& pData)
+        void Comm::Send(int pProc, T& pData)
         {
             v_Send(CommDataTypeTraits<T>::GetPointer(pData),
                    CommDataTypeTraits<T>::GetCount(pData),
@@ -245,7 +245,7 @@ namespace Nektar
          */
         template<class T>
         void Comm::SendRecv(int pSendProc,
-                             const T& pSendData,
+                             T& pSendData,
                              int pRecvProc,
                              T& pRecvData)
         {
@@ -286,7 +286,7 @@ namespace Nektar
         }
 
         template <class T>
-        void Comm::AlltoAll(const T& pSendData, T& pRecvData)
+        void Comm::AlltoAll(T& pSendData, T& pRecvData)
         {
             BOOST_STATIC_ASSERT_MSG(CommDataTypeTraits<T>::IsVector,
                     "AlltoAll only valid with Array or vector arguments.");
@@ -311,12 +311,12 @@ namespace Nektar
          *
          */
         template<class T>
-        void Comm::AlltoAllv(const Array<OneD, T>& pSendData,
-                const Array<OneD, int>& pSendDataSizeMap,
-                const Array<OneD, int>& pSendDataOffsetMap,
+        void Comm::AlltoAllv(Array<OneD, T>& pSendData,
+                Array<OneD, int>& pSendDataSizeMap,
+                Array<OneD, int>& pSendDataOffsetMap,
                 Array<OneD, T>& pRecvData,
-                const Array<OneD, int>& pRecvDataSizeMap,
-                const Array<OneD, int>& pRecvDataOffsetMap)
+                Array<OneD, int>& pRecvDataSizeMap,
+                Array<OneD, int>& pRecvDataOffsetMap)
         {
             v_AlltoAllv(pSendData.get(),
                         pSendDataSizeMap.get(),
@@ -340,7 +340,7 @@ namespace Nektar
 		}
 
         template<class T>
-        void Comm::Exscan(const T& pData, const enum ReduceOperator pOp, T& ans)
+        void Comm::Exscan(T& pData, const enum ReduceOperator pOp, T& ans)
         {
             ASSERTL0(CommDataTypeTraits<T>::GetCount(pData) == CommDataTypeTraits<T>::GetCount(ans),
                     "Input and output array sizes don't match");
@@ -355,7 +355,7 @@ namespace Nektar
          * Concatenate all the input arrays, in rank order, onto the process with rank == rootProc
          */
         template<class T>
-        T Comm::Gather(const int rootProc, const T& val)
+        T Comm::Gather(const int rootProc, T& val)
         {
             BOOST_STATIC_ASSERT_MSG(CommDataTypeTraits<T>::IsVector,
                     "Gather only valid with Array or vector arguments.");
@@ -375,7 +375,7 @@ namespace Nektar
          * Scatter pData across ranks in chunks of len(pData)/num_ranks
          */
         template<class T>
-        T Comm::Scatter(const int rootProc, const T& pData)
+        T Comm::Scatter(const int rootProc, T& pData)
         {
             BOOST_STATIC_ASSERT_MSG(CommDataTypeTraits<T>::IsVector,
                     "Scatter only valid with Array or vector arguments.");
@@ -383,7 +383,7 @@ namespace Nektar
             bool amRoot = (GetRank() == rootProc);
             unsigned nEl = CommDataTypeTraits<T>::GetCount(pData) / GetSize();
 
-            const void* sendbuf = amRoot ? CommDataTypeTraits<T>::GetPointer(pData) : NULL;
+            void* sendbuf = amRoot ? CommDataTypeTraits<T>::GetPointer(pData) : NULL;
             T ans(nEl);
 
             v_Scatter(sendbuf, nEl, CommDataTypeTraits<T>::GetDataType(),

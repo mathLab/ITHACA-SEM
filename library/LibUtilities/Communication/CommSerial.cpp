@@ -110,7 +110,7 @@ namespace Nektar
         /**
          *
          */
-        void CommSerial::v_Send(const void* buf, int count, CommDataType dt, int dest)
+        void CommSerial::v_Send(void* buf, int count, CommDataType dt, int dest)
         {
         }
 
@@ -125,7 +125,7 @@ namespace Nektar
         /**
          *
          */
-        void CommSerial::v_Sendrecv(const void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+        void CommSerial::v_Sendrecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
                 void *recvbuf, int recvcount, CommDataType recvtype, int source)
         {
         }
@@ -150,7 +150,7 @@ namespace Nektar
         /**
          *
          */
-        void CommSerial::v_AlltoAll(const void* sendbuf, int sendcount, CommDataType sendtype,
+        void CommSerial::v_AlltoAll(void* sendbuf, int sendcount, CommDataType sendtype,
                                     void* recvbuf, int recvcount, CommDataType recvtype)
         {
 
@@ -159,8 +159,8 @@ namespace Nektar
 		/**
          *
          */
-        void CommSerial::v_AlltoAllv(const void *sendbuf, const int sendcounts[], const int sensdispls[], CommDataType sendtype,
-                void *recvbuf, const int recvcounts[], const int rdispls[], CommDataType recvtype)
+        void CommSerial::v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[], CommDataType sendtype,
+                void *recvbuf, int recvcounts[], int rdispls[], CommDataType recvtype)
         {
 
         }
@@ -170,18 +170,18 @@ namespace Nektar
 
 		}
 
-        void CommSerial::v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans)
+        void CommSerial::v_Exscan(Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans)
         {
 
         }
 
-        void CommSerial::v_Gather(const void* sendbuf, int sendcount, CommDataType sendtype,
+        void CommSerial::v_Gather(void* sendbuf, int sendcount, CommDataType sendtype,
                 void *recvbuf, int recvcount, CommDataType recvtype, int root)
         {
             std::memcpy(recvbuf, sendbuf, sendcount*CommDataTypeGetSize(sendtype));
         }
 
-        void CommSerial::v_Scatter(const void *sendbuf, int sendcount, CommDataType sendtype,
+        void CommSerial::v_Scatter(void *sendbuf, int sendcount, CommDataType sendtype,
                 void *recvbuf, int recvcount, CommDataType recvtype, int root)
         {
             std::memcpy(recvbuf, sendbuf, sendcount*CommDataTypeGetSize(sendtype));

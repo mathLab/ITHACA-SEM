@@ -154,19 +154,20 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         m_comm->CommCreateIf((nFields == nMaxFields) ? 1 : 0);
     if (max_fields_comm)
     {
-        int rank  = max_fields_comm->GetRank();
+        int rank  = m_comm->GetRank();
         root_rank = rank;
         max_fields_comm->AllReduce(root_rank, LibUtilities::ReduceMin);
         amRoot = (rank == root_rank);
         if (!amRoot)
             root_rank = -1;
     }
-    max_fields_comm->AllReduce(root_rank, LibUtilities::ReduceMax);
+    m_comm->AllReduce(root_rank, LibUtilities::ReduceMax);
     ASSERTL1(root_rank >= 0 && root_rank < m_comm->GetSize(),
              prfx.str() + "invalid root rank.");
     /////////////////////////////////////////////////////////////////////////////////////////////
 
     std::vector<std::size_t> decomps(nMaxFields * MAX_DCMPS, 0);
+    std::vector<std::size_t> all_hashes(nMaxFields * m_comm->GetSize(), 0);
     std::vector<std::size_t> cnts(MAX_CNTS, 0);
     std::vector<std::string> fieldNames(nFields);
     std::vector<std::string> shapeStrings(nFields);
@@ -316,6 +317,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         std::stringstream fieldNameStream;
         std::size_t fieldDefHash               = string_hasher(hashStream.str());
         decomps[f * MAX_DCMPS + HASH_DCMP_IDX] = fieldDefHash;
+        all_hashes[m_comm->GetRank() * nMaxFields + f] = fieldDefHash;
         fieldNameStream << fieldDefHash;
         fieldNames[f] = fieldNameStream.str();
         /////////////////////////////////////////////////////////////////////////////////////////
@@ -399,30 +401,88 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         ASSERTL1(data_dset, prfx.str() + "cannot create DATA dataset.");
         /////////////////////////////////////////////////////////////////////////////////////////
 
-        // write a hdf5 group for each field handled by the root rank
-        for (int f = 0; f < nFields; ++f)
-        {
-            H5::GroupSharedPtr field_group = root->CreateGroup(fieldNames[f]);
-            ASSERTL1(field_group, prfx.str() + "cannot create field group.");
-            field_group->SetAttribute("FIELDS", fielddefs[f]->m_fields);
-            field_group->SetAttribute("BASIS", fielddefs[f]->m_basis);
-            field_group->SetAttribute("SHAPE", shapeStrings[f]);
-            if (homoLengths[f].size() > 0)
-                field_group->SetAttribute("HOMOGENEOUSLENGTHS", homoLengths[f]);
-            if (homoYIDs[f].size() > 0)
-                field_group->SetAttribute("HOMOGENEOUSYIDS", homoYIDs[f]);
-            if (homoZIDs[f].size() > 0)
-                field_group->SetAttribute("HOMOGENEOUSZIDS", homoZIDs[f]);
-            if (homoSIDs[f].size() > 0)
-                field_group->SetAttribute("HOMOGENEOUSSIDS", homoSIDs[f]);
-            field_group->SetAttribute("NUMMODESPERDIR", numModesPerDirs[f]);
-        }
         // RAII => field group is closed automatically
 
     } // if (amRoot)
     // RAII => datasets (ids_dset, data_dset), root group and HDF5 file are all
     // closed automatically
     ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Determine which process will write the group representing the field
+    // description in the HDF5 file.
+    std::map<size_t, int> hashToProc;
+    std::map<int, std::vector<size_t> > writingProcs;
+
+    // Gather all field hashes to every processor.
+    m_comm->AllReduce(all_hashes, LibUtilities::ReduceMax);
+
+    std::cout << "RANK " << m_comm->GetRank() << " HAS: ";
+    for (int i = 0; i < all_hashes.size(); ++i)
+    {
+        std::cout << all_hashes[i] << " ";
+    }
+    std::cout << std::endl;
+
+    for (int n = 0; n < m_comm->GetSize(); ++n)
+    {
+        for (int i = 0; i < nMaxFields; ++i)
+        {
+            size_t hash = all_hashes[n*nMaxFields + i];
+            if (hashToProc.find(hash) != hashToProc.end() || hash == 0)
+            {
+                continue;
+            }
+            hashToProc[hash] = m_comm->GetRank();
+            writingProcs[n].push_back(hash);
+        }
+    }
+
+    map<int, std::vector<size_t> >::iterator sIt;
+    for (sIt = writingProcs.begin(); sIt != writingProcs.end(); sIt++)
+    {
+        int rank = sIt->first;
+        if (m_comm->GetRank() == rank)
+        {
+            H5::PListSharedPtr serialProps = H5::PList::Default();
+            H5::PListSharedPtr writeSR     = H5::PList::Default();
+
+            // reopen the file
+            H5::FileSharedPtr outfile =
+                H5::File::Open(outFile, H5F_ACC_RDWR, serialProps);
+            ASSERTL1(outfile, prfx.str() + "cannot open HDF5 file.");
+            H5::GroupSharedPtr root = outfile->OpenGroup("NEKTAR");
+            ASSERTL1(root, prfx.str() + "cannot open root group.");
+
+            // write a hdf5 group for each field
+            for (int i = 0; i < sIt->second.size(); ++i)
+            {
+                for (int f = 0; f < nFields; ++f)
+                {
+                    if (sIt->second[i] != all_hashes[m_comm->GetRank() * nMaxFields + f])
+                    {
+                        continue;
+                    }
+
+                    std::cout << "RANK " << rank << " WRITING HASH " << sIt->second[i] << std::endl;
+                    H5::GroupSharedPtr field_group = root->CreateGroup(fieldNames[f]);
+                    ASSERTL1(field_group, prfx.str() + "cannot create field group.");
+                    field_group->SetAttribute("FIELDS", fielddefs[f]->m_fields);
+                    field_group->SetAttribute("BASIS", fielddefs[f]->m_basis);
+                    field_group->SetAttribute("SHAPE", shapeStrings[f]);
+                    if (homoLengths[f].size() > 0)
+                        field_group->SetAttribute("HOMOGENEOUSLENGTHS", homoLengths[f]);
+                    if (homoYIDs[f].size() > 0)
+                        field_group->SetAttribute("HOMOGENEOUSYIDS", homoYIDs[f]);
+                    if (homoZIDs[f].size() > 0)
+                        field_group->SetAttribute("HOMOGENEOUSZIDS", homoZIDs[f]);
+                    if (homoSIDs[f].size() > 0)
+                        field_group->SetAttribute("HOMOGENEOUSSIDS", homoSIDs[f]);
+                    field_group->SetAttribute("NUMMODESPERDIR", numModesPerDirs[f]);
+                }
+            }
+        }
+        m_comm->Block();
+    }
 
     // write the DECOMPOSITION and INDEXES datasets
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -494,32 +554,6 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     H5::GroupSharedPtr root = outfile->OpenGroup("NEKTAR");
     ASSERTL1(root, prfx.str() + "cannot open root group.");
 
-    // ensure that all field groups have been created
-    // the root rank might not handle all types of field
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    for (int f = 0; f < nFields; ++f)
-    {
-        H5::GroupSharedPtr field_group = root->OpenGroup(fieldNames[f]);
-        if (!field_group)
-        {
-            cout << prfx.str() << "creating group " << fieldNames[f] << "..."
-                 << endl;
-            field_group = root->CreateGroup(fieldNames[f]);
-            ASSERTL1(field_group, prfx.str() + "cannot create field group.");
-            field_group->SetAttribute("FIELDS", fielddefs[f]->m_fields);
-            field_group->SetAttribute("BASIS", fielddefs[f]->m_basis);
-            field_group->SetAttribute("SHAPE", shapeStrings[f]);
-            if (homoLengths[f].size() > 0)
-                field_group->SetAttribute("HOMOGENEOUSLENGTHS", homoLengths[f]);
-            if (homoYIDs[f].size() > 0)
-                field_group->SetAttribute("HOMOGENEOUSYIDS", homoYIDs[f]);
-            if (homoZIDs[f].size() > 0)
-                field_group->SetAttribute("HOMOGENEOUSZIDS", homoZIDs[f]);
-            if (homoSIDs[f].size() > 0)
-                field_group->SetAttribute("HOMOGENEOUSSIDS", homoSIDs[f]);
-            field_group->SetAttribute("NUMMODESPERDIR", numModesPerDirs[f]);
-        }
-    }
     // RAII => field group is closed automatically
     m_comm->Block();
     // all hdf5 groups have now been created

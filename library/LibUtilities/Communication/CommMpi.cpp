@@ -165,7 +165,7 @@ namespace Nektar
         /**
          *
          */
-        void CommMpi::v_Send(const void* buf, int count, CommDataType dt, int dest)
+        void CommMpi::v_Send(void* buf, int count, CommDataType dt, int dest)
         {
             if (MPISYNC)
             {
@@ -191,7 +191,7 @@ namespace Nektar
         /**
          *
          */
-        void CommMpi::v_Sendrecv(const void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+        void CommMpi::v_Sendrecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
                 void *recvbuf, int recvcount, CommDataType recvtype, int source)
         {
             MPI_Status status;
@@ -252,10 +252,11 @@ namespace Nektar
             ASSERTL0(retval == MPI_SUCCESS,
                      "MPI error performing All-reduce.");
         }
+
         /**
          *
          */
-        void CommMpi::v_AlltoAll(const void* sendbuf, int sendcount, CommDataType sendtype,
+        void CommMpi::v_AlltoAll(void* sendbuf, int sendcount, CommDataType sendtype,
                                     void* recvbuf, int recvcount, CommDataType recvtype)
         {
             int retval = MPI_Alltoall(sendbuf, sendcount, sendtype,
@@ -269,8 +270,8 @@ namespace Nektar
         /**
          *
          */
-		void CommMpi::v_AlltoAllv(const void *sendbuf, const int sendcounts[], const int sdispls[], CommDataType sendtype,
-		                          void *recvbuf, const int recvcounts[], const int rdispls[], CommDataType recvtype)
+		void CommMpi::v_AlltoAllv(void *sendbuf, int sendcounts[], int sdispls[], CommDataType sendtype,
+		                          void *recvbuf, int recvcounts[], int rdispls[], CommDataType recvtype)
 		{
 			int retval = MPI_Alltoallv(sendbuf, sendcounts, sdispls, sendtype,
 			                           recvbuf, recvcounts, rdispls, recvtype,
@@ -287,7 +288,7 @@ namespace Nektar
                      "MPI error performing Bcast-v.");
 		}
 
-        void CommMpi::v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans)
+        void CommMpi::v_Exscan(Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans)
         {
             int n = pData.num_elements();
             ASSERTL0(n == ans.num_elements(),
@@ -311,7 +312,7 @@ namespace Nektar
                     "MPI error performing Exscan-v.");
         }
 
-        void CommMpi::v_Gather(const void* sendbuf, int sendcount, CommDataType sendtype,
+        void CommMpi::v_Gather(void* sendbuf, int sendcount, CommDataType sendtype,
                 void *recvbuf, int recvcount, CommDataType recvtype, int root)
         {
             int retval = MPI_Gather(sendbuf, sendcount, sendtype,
@@ -322,7 +323,7 @@ namespace Nektar
                                 "MPI error performing Gather.");
         }
 
-        void CommMpi::v_Scatter(const void* sendbuf, int sendcount, CommDataType sendtype,
+        void CommMpi::v_Scatter(void* sendbuf, int sendcount, CommDataType sendtype,
                 void *recvbuf, int recvcount, CommDataType recvtype, int root)
         {
             int retval = MPI_Scatter(sendbuf, sendcount, sendtype,

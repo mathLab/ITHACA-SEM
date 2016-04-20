@@ -81,23 +81,23 @@ namespace Nektar
             virtual void v_Block();
 	    virtual double v_Wtime();
             virtual bool v_TreatAsRankZero(void);
-            virtual void v_Send(const void* buf, int count, CommDataType dt, int dest);
+            virtual void v_Send(void* buf, int count, CommDataType dt, int dest);
             virtual void v_Recv(void* buf, int count, CommDataType dt, int source);
-            virtual void v_Sendrecv(const void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+            virtual void v_Sendrecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
                                    void *recvbuf, int recvcount, CommDataType recvtype, int source);
             virtual void v_SendRecvReplace(void* buf, int count, CommDataType dt,
                     int pSendProc, int pRecvProc);
             virtual void v_AllReduce(void* buf, int count, CommDataType dt, enum ReduceOperator pOp);
-            virtual void v_AlltoAll(const void* sendbuf, int sendcount, CommDataType sendtype,
+            virtual void v_AlltoAll(void* sendbuf, int sendcount, CommDataType sendtype,
                                     void* recvbuf, int recvcount, CommDataType recvtype);
-            virtual void v_AlltoAllv(const void *sendbuf, const int sendcounts[], const int sensdispls[], CommDataType sendtype,
-                    void *recvbuf, const int recvcounts[], const int rdispls[], CommDataType recvtype);
+            virtual void v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[], CommDataType sendtype,
+                    void *recvbuf, int recvcounts[], int rdispls[], CommDataType recvtype);
 			virtual void v_Bcast(void* buffer, int count, CommDataType dt, int root);
-			virtual void v_Exscan(const Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans);
+			virtual void v_Exscan(Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans);
 
-            virtual void v_Gather(const void* sendbuf, int sendcount, CommDataType sendtype,
+            virtual void v_Gather(void* sendbuf, int sendcount, CommDataType sendtype,
                     void *recvbuf, int recvcount, CommDataType recvtype, int root);
-            virtual void v_Scatter(const void *sendbuf, int sendcount, CommDataType sendtype,
+            virtual void v_Scatter(void *sendbuf, int sendcount, CommDataType sendtype,
                     void *recvbuf, int recvcount, CommDataType recvtype, int root);
 
             virtual void v_SplitComm(int pRows, int pColumns);

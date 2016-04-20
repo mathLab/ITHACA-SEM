@@ -182,9 +182,14 @@ void OutputVtk::Process(po::variables_map &vm)
         switch(fPts->GetPtsType())
         {
             case LibUtilities::ePtsFile:
+            {
+                ASSERTL0(false,"VTK output needs settig up for ePtsFile");
+                break;
+            }
             case LibUtilities::ePtsLine:
             {
-                ASSERTL0(false,"VTK output needs settig up for PtsFile or Pts Line");
+                nvert = 2;
+                vtktype = 3;
                 break;
             }
             case LibUtilities::ePtsPlane:

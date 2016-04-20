@@ -98,10 +98,10 @@ void OutputPts::Process(po::variables_map &vm)
     {
         LibUtilities::PtsIO ptsIO(m_f->m_session->GetComm());
         Array<OneD, Array<OneD, NekDouble> > tmp(
-            m_f->m_graph->GetMeshDimension() +
+            m_f->m_exp[0]->GetCoordim(0) +
             m_f->m_fielddef[0]->m_fields.size());
 
-        switch (m_f->m_graph->GetMeshDimension())
+        switch (m_f->m_exp[0]->GetCoordim(0))
         {
             case 1:
                 tmp[0] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
@@ -124,12 +124,12 @@ void OutputPts::Process(po::variables_map &vm)
 
         for (int i = 0; i < m_f->m_fielddef[0]->m_fields.size(); ++i)
         {
-            tmp[i + m_f->m_graph->GetMeshDimension()] =
+            tmp[i + m_f->m_exp[0]->GetCoordim(0)] =
                 m_f->m_exp[i]->GetPhys();
         }
         LibUtilities::PtsFieldSharedPtr tmpPts =
             MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
-                m_f->m_graph->GetMeshDimension(),
+                m_f->m_exp[0]->GetCoordim(0),
                 m_f->m_fielddef[0]->m_fields,
                 tmp);
         ptsIO.Write(filename, tmpPts);

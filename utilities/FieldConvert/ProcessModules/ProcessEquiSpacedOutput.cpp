@@ -438,6 +438,10 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
     }
 
     m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(coordim, fieldNames, pts);
+    if (shapedim == 1)
+    {
+        m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsLine);
+    }
     if (shapedim == 2)
     {
         m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTriBlock);

@@ -215,6 +215,12 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
                     const StdMatrixKey &mkey);
 
+            //---------------------------------------
+            // Output interpolation functions
+            //---------------------------------------
+            STD_REGIONS_EXPORT virtual void v_GetSimplexEquiSpacedConnectivity(
+                    Array<OneD, int> &conn,
+                    bool standard = true);
         private:
 
         };

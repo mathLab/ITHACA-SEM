@@ -554,19 +554,17 @@ void ProcessInterpPoints::InterpolateFieldToPts(
 
         p0  =  values[0];
         qinv = 1.0/values[1];
-        
-        LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
 
-        for(int i = 0; i < fPts->GetNFields(); ++i)
+        for(int i = 0; i < nfields; ++i)
         {
-            if(boost::iequals(fPts->GetFieldName(i),"p"))
+            if(boost::iequals(fromField->m_fielddef[0]->m_fields[i],"p"))
             {
                 pfield = i;
             }
 
-            if(boost::iequals(fPts->GetFieldName(i),"u")||
-               boost::iequals(fPts->GetFieldName(i),"v")||
-               boost::iequals(fPts->GetFieldName(i),"w"))
+            if(boost::iequals(fromField->m_fielddef[0]->m_fields[i],"u")||
+               boost::iequals(fromField->m_fielddef[0]->m_fields[i],"v")||
+               boost::iequals(fromField->m_fielddef[0]->m_fields[i],"w"))
             {
                 velid.push_back(i);
             }
@@ -669,10 +667,10 @@ void ProcessInterpPoints::InterpolateFieldToPts(
     if(pfield != -1)
     {
         m_f->m_fieldPts->AddField(data[field0.size()], "Cp");
-    }
-    if(velid.size())
-    {
-        m_f->m_fieldPts->AddField(data[field0.size()+1], "Cp0");
+        if(velid.size())
+        {
+            m_f->m_fieldPts->AddField(data[field0.size()+1], "Cp0");
+        }
     }
 }
 

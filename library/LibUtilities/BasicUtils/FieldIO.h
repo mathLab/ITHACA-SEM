@@ -233,10 +233,6 @@ protected:
                     const FieldMetaDataMap &fieldmetadatamap);
 
     LIB_UTILITIES_EXPORT
-    void GenerateSeqString(const std::vector<unsigned int> &elmtids,
-                           std::string &idString);
-
-    LIB_UTILITIES_EXPORT
     int CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs);
 
     LIB_UTILITIES_EXPORT virtual std::string GetFileEnding() const

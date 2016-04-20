@@ -124,23 +124,14 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         tm0 = m_comm->Wtime();
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////
-    // ASSUMPTION 1: all element ids have the same type, unsigned int
-    ///////////////////////////////////////////////////////////////////////////////////
+    // We make a number of assumptions in this code:
+    //
+    //   1. All element ids have the same type: unsigned int
+    //   2. All elements within a given field have the same number of values
+    //   3. All element values have the same type, NekDouble
 
-    ///////////////////////////////////////////////////////////////////////////////////
-    // ASSUMPTION 2: all elements within a given field have the same number of
-    // values
-    ///////////////////////////////////////////////////////////////////////////////////
-
-    ///////////////////////////////////////////////////////////////////////////////////
-    // ASSUMPTION 3: all element values have the same type, NekDouble (i.e.,
-    // double)
-    ///////////////////////////////////////////////////////////////////////////////////
-
-    // determine the root MPI process, i.e., the lowest ranked process handling
-    // nMaxFields fields
-    /////////////////////////////////////////////////////////////////////////////////////////////
+    // Determine the root MPI process, i.e., the lowest ranked process handling
+    // nMaxFields fields, that will be responsible for writing our file.
     ASSERTL1(fielddefs.size() == fielddata.size(),
              prfx.str() + "fielddefs and fielddata have incompatible lengths.");
 
@@ -164,7 +155,6 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     m_comm->AllReduce(root_rank, LibUtilities::ReduceMax);
     ASSERTL1(root_rank >= 0 && root_rank < m_comm->GetSize(),
              prfx.str() + "invalid root rank.");
-    /////////////////////////////////////////////////////////////////////////////////////////////
 
     std::vector<std::size_t> decomps(nMaxFields * MAX_DCMPS, 0);
     std::vector<std::size_t> all_hashes(nMaxFields * m_comm->GetSize(), 0);
@@ -176,10 +166,9 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         homoYIDs(nFields), homoZIDs(nFields);
     std::vector<std::string> numModesPerDirs(nFields);
 
-    // calculate the total number of elements handled by this MPI process
-    // and the total number of bytes required to store the elements,
-    // base the name of each field on the hash of the field definition
-    /////////////////////////////////////////////////////////////////////////////////////////
+    // calculate the total number of elements handled by this MPI process and
+    // the total number of bytes required to store the elements, base the name
+    // of each field on the hash of the field definition.
     for (int f = 0; f < nFields; ++f)
     {
         ASSERTL1(fielddata[f].size() > 0,
@@ -199,9 +188,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         cnts[ELEM_CNT_IDX] += nFieldElems;
         cnts[VAL_CNT_IDX] += nElemVals * nFieldElems;
 
-        // hash the field specification
-        /////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////
+        // Hash the field specification
         std::stringstream hashStream;
         std::size_t nSubFields = fielddefs[f]->m_fields.size();
         for (int sf = 0; sf < nSubFields; ++sf)
@@ -211,8 +198,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         for (int sf = 0; sf < nSubFields; ++sf)
             hashStream << fielddefs[f]->m_basis[sf];
 
-        // determine SHAPE attribute
-        /////////////////////////////////////////////////////////////////////////////////////////
+        // Determine SHAPE attribute
         std::stringstream shapeStringStream;
         shapeStringStream << ShapeTypeMap[fielddefs[f]->m_shapeType];
         if (fielddefs[f]->m_numHomogeneousDir == 1)
@@ -229,10 +215,8 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         }
         shapeStrings[f] = shapeStringStream.str();
         hashStream << shapeStringStream.str();
-        /////////////////////////////////////////////////////////////////////////////////////////
 
-        // determine HOMOGENEOUS attributes
-        /////////////////////////////////////////////////////////////////////////////////////////
+        // Determine HOMOGENEOUS attributes
         if (fielddefs[f]->m_numHomogeneousDir)
         {
             nSubFields = fielddefs[f]->m_homogeneousLengths.size();
@@ -280,10 +264,8 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
                 }
             }
         }
-        /////////////////////////////////////////////////////////////////////////////////////////
 
-        // determine NUMMODESPERDIR attribute
-        /////////////////////////////////////////////////////////////////////////////////////////
+        // Determine NUMMODESPERDIR attribute
         std::stringstream numModesStringStream;
         if (fielddefs[f]->m_uniOrder)
         {
@@ -311,7 +293,6 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         }
         numModesPerDirs[f] = numModesStringStream.str();
         hashStream << numModesStringStream.str();
-        /////////////////////////////////////////////////////////////////////////////////////////
 
         boost::hash<std::string> string_hasher;
         std::stringstream fieldNameStream;
@@ -320,20 +301,14 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         all_hashes[m_comm->GetRank() * nMaxFields + f] = fieldDefHash;
         fieldNameStream << fieldDefHash;
         fieldNames[f] = fieldNameStream.str();
-        /////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////
-    } // end of <for (int f = 0; f < nFields; ++f)>
-    /////////////////////////////////////////////////////////////////////////////////////////
+    }
 
-    // gather information from all MPI processes
-    /////////////////////////////////////////////////////////////////////////////////////////
+    // Gather information from all MPI processes
     std::vector<std::size_t> all_cnts = m_comm->Gather(root_rank, cnts);
     std::vector<std::size_t> all_idxs(m_comm->GetSize() * MAX_IDXS, 0);
     std::vector<std::size_t> all_decomps = m_comm->Gather(root_rank, decomps);
-    /////////////////////////////////////////////////////////////////////////////////////////
 
-    // the root rank creates the file layout from scratch
-    /////////////////////////////////////////////////////////////////////////////////////////
+    // The root rank creates the file layout from scratch
     if (amRoot)
     {
         H5::FileSharedPtr outfile = H5::File::Create(outFile, H5F_ACC_TRUNC);
@@ -343,9 +318,8 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         TagWriterSharedPtr info_writer(new H5TagWriter(root));
         AddInfoTag(info_writer, fieldmetadatamap);
 
-        // calculate the indexes to be used by each MPI process when reading the
+        // Calculate the indexes to be used by each MPI process when reading the
         // IDS and DATA datasets
-        /////////////////////////////////////////////////////////////////////////////////////////
         std::size_t nTotElems = 0, nTotVals = 0;
         int nRanks = m_comm->GetSize();
         for (int r = 0; r < nRanks; ++r)
@@ -356,10 +330,8 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
             nTotElems += all_cnts[r * MAX_CNTS + ELEM_CNT_IDX];
             nTotVals += all_cnts[r * MAX_CNTS + VAL_CNT_IDX];
         }
-        /////////////////////////////////////////////////////////////////////////////////////////
 
-        // create DECOMPOSITION dataset: basic field info for each MPI process
-        /////////////////////////////////////////////////////////////////////////////////////////
+        // Create DECOMPOSITION dataset: basic field info for each MPI process
         H5::DataTypeSharedPtr decomps_type =
             H5::DataType::OfObject(all_decomps[0]);
         H5::DataSpaceSharedPtr decomps_space =
@@ -368,124 +340,127 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
             root->CreateDataSet("DECOMPOSITION", decomps_type, decomps_space);
         ASSERTL1(decomps_dset,
                  prfx.str() + "cannot create DECOMPOSITION dataset.");
-        /////////////////////////////////////////////////////////////////////////////////////////
 
-        // create INDEXES dataset: MPI process indexes into IDS and DATA
+        // Create INDEXES dataset: MPI process indexes into IDS and DATA
         // datasets
-        /////////////////////////////////////////////////////////////////////////////////////////
         H5::DataTypeSharedPtr idxs_type = H5::DataType::OfObject(all_idxs[0]);
         H5::DataSpaceSharedPtr idxs_space =
             H5::DataSpace::OneD(all_idxs.size());
         H5::DataSetSharedPtr idxs_dset =
             root->CreateDataSet("INDEXES", idxs_type, idxs_space);
         ASSERTL1(idxs_dset, prfx.str() + "cannot create INDEXES dataset.");
-        /////////////////////////////////////////////////////////////////////////////////////////
 
-        // create IDS dataset: element ids
-        /////////////////////////////////////////////////////////////////////////////////////////
+        // Create IDS dataset: element ids
         H5::DataTypeSharedPtr ids_type =
             H5::DataType::OfObject(fielddefs[0]->m_elementIDs[0]);
         H5::DataSpaceSharedPtr ids_space = H5::DataSpace::OneD(nTotElems);
         H5::DataSetSharedPtr ids_dset =
             root->CreateDataSet("IDS", ids_type, ids_space);
         ASSERTL1(ids_dset, prfx.str() + "cannot create IDS dataset.");
-        /////////////////////////////////////////////////////////////////////////////////////////
 
-        // create DATA dataset: element data
-        /////////////////////////////////////////////////////////////////////////////////////////
+        // Create DATA dataset: element data
         H5::DataTypeSharedPtr data_type =
             H5::DataType::OfObject(fielddata[0][0]);
         H5::DataSpaceSharedPtr data_space = H5::DataSpace::OneD(nTotVals);
         H5::DataSetSharedPtr data_dset =
             root->CreateDataSet("DATA", data_type, data_space);
         ASSERTL1(data_dset, prfx.str() + "cannot create DATA dataset.");
-        /////////////////////////////////////////////////////////////////////////////////////////
 
-        // RAII => field group is closed automatically
+        // Field group is closed automatically at end of scope
+    }
 
-    } // if (amRoot)
-    // RAII => datasets (ids_dset, data_dset), root group and HDF5 file are all
-    // closed automatically
-    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Datasets, root group and HDF5 file are all closed automatically since
+    // they are now out of scope. Now we need to determine which process will
+    // write the group representing the field description in the HDF5 file. This
+    // next block of code performs this by finding all unique hashes and then
+    // determining one process that will create (possibly more than one) group
+    // for that hash. An alternative would be to communicate the field
+    // information to the root processor, but this is a bit convoluted.
 
-    // Determine which process will write the group representing the field
-    // description in the HDF5 file.
-    std::map<size_t, int> hashToProc;
+    // This set stores the unique hashes.
+    std::set<size_t> hashToProc;
+    // This map takes ranks to hashes this process will write.
     std::map<int, std::vector<size_t> > writingProcs;
 
     // Gather all field hashes to every processor.
     m_comm->AllReduce(all_hashes, LibUtilities::ReduceMax);
-
-    std::cout << "RANK " << m_comm->GetRank() << " HAS: ";
-    for (int i = 0; i < all_hashes.size(); ++i)
-    {
-        std::cout << all_hashes[i] << " ";
-    }
-    std::cout << std::endl;
 
     for (int n = 0; n < m_comm->GetSize(); ++n)
     {
         for (int i = 0; i < nMaxFields; ++i)
         {
             size_t hash = all_hashes[n*nMaxFields + i];
+
+            // Note hash can be zero if, on this process, nFields < nMaxFields.
             if (hashToProc.find(hash) != hashToProc.end() || hash == 0)
             {
                 continue;
             }
-            hashToProc[hash] = m_comm->GetRank();
+            hashToProc.insert(m_comm->GetRank());
             writingProcs[n].push_back(hash);
         }
     }
 
+    // Having constructed the map, go ahead and write things out.
     map<int, std::vector<size_t> >::iterator sIt;
     for (sIt = writingProcs.begin(); sIt != writingProcs.end(); sIt++)
     {
         int rank = sIt->first;
+
+        // Write out this rank's groups.
         if (m_comm->GetRank() == rank)
         {
             H5::PListSharedPtr serialProps = H5::PList::Default();
             H5::PListSharedPtr writeSR     = H5::PList::Default();
 
-            // reopen the file
+            // Reopen the file
             H5::FileSharedPtr outfile =
                 H5::File::Open(outFile, H5F_ACC_RDWR, serialProps);
             ASSERTL1(outfile, prfx.str() + "cannot open HDF5 file.");
             H5::GroupSharedPtr root = outfile->OpenGroup("NEKTAR");
             ASSERTL1(root, prfx.str() + "cannot open root group.");
 
-            // write a hdf5 group for each field
+            // Write a HDF5 group for each field
             for (int i = 0; i < sIt->second.size(); ++i)
             {
                 for (int f = 0; f < nFields; ++f)
                 {
-                    if (sIt->second[i] != all_hashes[m_comm->GetRank() * nMaxFields + f])
+                    if (sIt->second[i] !=
+                        all_hashes[m_comm->GetRank() * nMaxFields + f])
                     {
                         continue;
                     }
 
-                    std::cout << "RANK " << rank << " WRITING HASH " << sIt->second[i] << std::endl;
-                    H5::GroupSharedPtr field_group = root->CreateGroup(fieldNames[f]);
-                    ASSERTL1(field_group, prfx.str() + "cannot create field group.");
+                    H5::GroupSharedPtr field_group =
+                        root->CreateGroup(fieldNames[f]);
+                    ASSERTL1(field_group,
+                             prfx.str() + "cannot create field group.");
                     field_group->SetAttribute("FIELDS", fielddefs[f]->m_fields);
                     field_group->SetAttribute("BASIS", fielddefs[f]->m_basis);
                     field_group->SetAttribute("SHAPE", shapeStrings[f]);
                     if (homoLengths[f].size() > 0)
-                        field_group->SetAttribute("HOMOGENEOUSLENGTHS", homoLengths[f]);
+                        field_group->SetAttribute("HOMOGENEOUSLENGTHS",
+                                                  homoLengths[f]);
                     if (homoYIDs[f].size() > 0)
-                        field_group->SetAttribute("HOMOGENEOUSYIDS", homoYIDs[f]);
+                        field_group->SetAttribute("HOMOGENEOUSYIDS",
+                                                  homoYIDs[f]);
                     if (homoZIDs[f].size() > 0)
-                        field_group->SetAttribute("HOMOGENEOUSZIDS", homoZIDs[f]);
+                        field_group->SetAttribute("HOMOGENEOUSZIDS",
+                                                  homoZIDs[f]);
                     if (homoSIDs[f].size() > 0)
-                        field_group->SetAttribute("HOMOGENEOUSSIDS", homoSIDs[f]);
-                    field_group->SetAttribute("NUMMODESPERDIR", numModesPerDirs[f]);
+                        field_group->SetAttribute("HOMOGENEOUSSIDS",
+                                                  homoSIDs[f]);
+                    field_group->SetAttribute("NUMMODESPERDIR",
+                                              numModesPerDirs[f]);
                 }
             }
         }
+
+        // We block to avoid more than one processor opening the file at a time.
         m_comm->Block();
     }
 
-    // write the DECOMPOSITION and INDEXES datasets
-    /////////////////////////////////////////////////////////////////////////////////////////
+    // Write the DECOMPOSITION and INDEXES datasets
     if (amRoot)
     {
         H5::PListSharedPtr serialProps = H5::PList::Default();

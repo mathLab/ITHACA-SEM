@@ -77,25 +77,22 @@ public:
     static const unsigned int MAX_IDXS;
 
     /// Creates an instance of this class
-    LIB_UTILITIES_EXPORT
-    static FieldIOSharedPtr create(LibUtilities::CommSharedPtr pComm,
-                                   bool sharedFilesystem)
+    LIB_UTILITIES_EXPORT static FieldIOSharedPtr create(
+        LibUtilities::CommSharedPtr pComm, bool sharedFilesystem)
     {
         return MemoryManager<FieldIOHdf5>::AllocateSharedPtr(pComm,
                                                              sharedFilesystem);
     }
 
     /// Name of class
-    LIB_UTILITIES_EXPORT
-    static std::string className;
+    LIB_UTILITIES_EXPORT static std::string className;
 
     FieldIOHdf5(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem);
 
-    LIB_UTILITIES_EXPORT
-    virtual void ImportFieldDefs(
-        DataSourceSharedPtr dataSource,
+    LIB_UTILITIES_EXPORT virtual void ImportFieldDefs(
+        DataSourceSharedPtr                     dataSource,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-        bool expChild)
+        bool                                    expChild)
     {
     }
 
@@ -106,46 +103,40 @@ public:
 
 private:
     /// Write data in FLD format
-    LIB_UTILITIES_EXPORT
-    virtual void v_Write(
+    LIB_UTILITIES_EXPORT virtual void v_Write(
         const std::string &outFile,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         std::vector<std::vector<NekDouble> > &fielddata,
         const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap);
 
-    LIB_UTILITIES_EXPORT
-    virtual void v_Import(const std::string &infilename,
+    LIB_UTILITIES_EXPORT virtual void v_Import(const std::string &infilename,
                           std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                          std::vector<std::vector<NekDouble> >
-                              &fielddata                    = NullVectorNekDoubleVector,
-                          FieldMetaDataMap &fieldinfomap    = NullFieldMetaDataMap,
+                          std::vector<std::vector<NekDouble> > &fielddata =
+                              NullVectorNekDoubleVector,
+                          FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
                           const Array<OneD, int> ElementiDs = NullInt1DArray);
 
-    LIB_UTILITIES_EXPORT
-    virtual DataSourceSharedPtr v_ImportFieldMetaData(
+    LIB_UTILITIES_EXPORT virtual DataSourceSharedPtr v_ImportFieldMetaData(
         std::string filename, FieldMetaDataMap &fieldmetadatamap);
-    LIB_UTILITIES_EXPORT
-    void v_ImportFieldMetaData(DataSourceSharedPtr dataSource,
-                               FieldMetaDataMap &fieldmetadatamap);
+    LIB_UTILITIES_EXPORT void v_ImportFieldMetaData(
+        DataSourceSharedPtr dataSource, FieldMetaDataMap &fieldmetadatamap);
 
     /// Imports the field definitions.
-    LIB_UTILITIES_EXPORT void ImportFieldDef(
-        H5::PListSharedPtr readPL,
-        H5::GroupSharedPtr root,
-        std::string group,
-        FieldDefinitionsSharedPtr def);
+    LIB_UTILITIES_EXPORT void ImportFieldDef(H5::PListSharedPtr        readPL,
+                                             H5::GroupSharedPtr        root,
+                                             std::string               group,
+                                             FieldDefinitionsSharedPtr def);
 
     /// Imports the data fields.
-    LIB_UTILITIES_EXPORT
-    void ImportFieldData(
-        H5::PListSharedPtr readPL,
-        H5::DataSetSharedPtr data_dset,
-        H5::DataSpaceSharedPtr data_fspace,
-        size_t data_i,
-        std::vector<std::size_t> &decomps,
-        size_t decomp,
-        const FieldDefinitionsSharedPtr fielddef,
-        std::vector<NekDouble> &fielddata);
+    LIB_UTILITIES_EXPORT void ImportFieldData(
+        H5::PListSharedPtr               readPL,
+        H5::DataSetSharedPtr             data_dset,
+        H5::DataSpaceSharedPtr           data_fspace,
+        size_t                           data_i,
+        std::vector<std::size_t>        &decomps,
+        size_t                           decomp,
+        const FieldDefinitionsSharedPtr  fielddef,
+        std::vector<NekDouble>          &fielddata);
 };
 }
 }

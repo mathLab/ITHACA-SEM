@@ -33,20 +33,20 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/asio/ip/host_name.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
-#include <boost/asio/ip/host_name.hpp>
 #include <boost/make_shared.hpp>
 
+#include <LibUtilities/BasicConst/GitRevision.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
-#include <LibUtilities/BasicConst/GitRevision.h>
 
 #include <loki/Singleton.h>
 
 #include "zlib.h"
-#include <set>
 #include <fstream>
+#include <set>
 
 #ifdef NEKTAR_USE_MPI
 #include <mpi.h>
@@ -60,521 +60,462 @@
 #endif
 
 namespace ptime = boost::posix_time;
-namespace ip = boost::asio::ip;
+namespace ip    = boost::asio::ip;
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+FieldIOFactory &GetFieldIOFactory()
+{
+    typedef Loki::
+        SingletonHolder<FieldIOFactory, Loki::CreateUsingNew, Loki::NoDestroy>
+            Type;
+    return Type::Instance();
+}
+
+const std::string FieldIO::GetFileType(const std::string &filename,
+                                       CommSharedPtr comm)
+{
+    // We'll use 0 => XML
+    // and 1 => HDF5
+    int code = 0;
+
+    int size = comm->GetSize();
+    int rank = comm->GetRank();
+
+    if (size == 1 || rank == 0)
     {
-        FieldIOFactory& GetFieldIOFactory()
+        std::string datafilename;
+        if (fs::is_directory(
+                filename)) // check to see that infile is a directory
         {
-            typedef Loki::SingletonHolder<FieldIOFactory, Loki::CreateUsingNew,
-                    Loki::NoDestroy> Type;
-            return Type::Instance();
+            fs::path p0file("P0000000.fld");
+            fs::path fullpath = filename / p0file;
+            datafilename      = PortablePath(fullpath);
         }
-
-        const std::string FieldIO::GetFileType(const std::string& filename,
-                CommSharedPtr comm)
+        else
         {
-            // We'll use 0 => XML
-            // and 1 => HDF5
-            int code = 0;
+            datafilename = filename;
+        }
+        // Read first 8 bytes
+        // If they are (in hex) 89  48  44  46  0d  0a  1a  0a
+        // then it's an HDF5 file.
 
-            int size = comm->GetSize();
-            int rank = comm->GetRank();
+        // XML is potentially a nightmare with all the different encodings
+        // so we'll just assume it's OK if it's not HDF
+        const char magic[8] = {0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a};
 
-            if (size == 1 || rank == 0)
+        std::ifstream datafile(datafilename.c_str(), ios_base::binary);
+        char filedata[8];
+        datafile.read(filedata, 8);
+
+        code = 1;
+        for (unsigned i = 0; i < 8; ++i)
+        {
+            if (filedata[i] != magic[i])
             {
-                std::string datafilename;
-                if (fs::is_directory(filename)) // check to see that infile is a directory
-                {
-                    fs::path p0file("P0000000.fld");
-                    fs::path fullpath = filename / p0file;
-                    datafilename = PortablePath(fullpath);
-                }
-                else
-                {
-                    datafilename = filename;
-                }
-                // Read first 8 bytes
-                // If they are (in hex) 89  48  44  46  0d  0a  1a  0a
-                // then it's an HDF5 file.
+                code = 0;
+                break;
+            }
+        }
+    }
 
-                // XML is potentially a nightmare with all the different encodings
-                // so we'll just assume it's OK if it's not HDF
-                const char magic[8] =
-                { 0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a };
+    if (size > 1)
+        comm->Bcast(code, 0);
 
-                std::ifstream datafile(datafilename.c_str(), ios_base::binary);
-                char filedata[8];
-                datafile.read(filedata, 8);
+    std::string iofmt;
+    if (code == 0)
+        iofmt = "Xml";
+    else if (code == 1)
+        iofmt = "Hdf5";
+    else
+        // Error
+        ASSERTL0(false, "Unknown file format");
+    return iofmt;
+}
 
-                code = 1;
-                for (unsigned i = 0; i < 8; ++i)
-                {
-                    if (filedata[i] != magic[i])
-                    {
-                        code = 0;
-                        break;
-                    }
-                }
+FieldIOSharedPtr MakeFieldIOForFile(
+    const LibUtilities::SessionReaderSharedPtr session,
+    const std::string &filename)
+{
+    const std::string iofmt =
+        FieldIO::GetFileType(filename, session->GetComm());
+    return GetFieldIOFactory().CreateInstance(
+        iofmt,
+        session->GetComm(),
+        session->DefinesCmdLineArgument("shared-filesystem"));
+}
+/**
+ * This function allows for data to be written to an FLD file when a
+ * session and/or communicator is not instantiated. Typically used in
+ * utilities which do not take XML input and operate in serial only.
+ */
+void Write(const std::string &outFile,
+           std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+           std::vector<std::vector<NekDouble> > &fielddata,
+           const FieldMetaDataMap &fieldinfomap)
+{
+#ifdef NEKTAR_USE_MPI
+    int size;
+    int init;
+    MPI_Initialized(&init);
+
+    // If MPI has been initialised we can check the number of processes
+    // and, if > 1, tell the user he should not be running this
+    // function in parallel. If it is not initialised, we do not
+    // initialise it here, and assume the user knows what they are
+    // doing.
+    if (init)
+    {
+        MPI_Comm_size(MPI_COMM_WORLD, &size);
+        ASSERTL0(size == 1,
+                 "This static function is not available in parallel. Please"
+                 "instantiate a FieldIO object for parallel use.");
+    }
+#endif
+    CommSharedPtr c    = GetCommFactory().CreateInstance("Serial", 0, 0);
+    FieldIOSharedPtr f = GetFieldIOFactory().CreateInstance("Xml", c, false);
+    f->Write(outFile, fielddefs, fielddata, fieldinfomap);
+}
+
+/**
+ * This function allows for data to be imported from an FLD file when
+ * a session and/or communicator is not instantiated. Typically used in
+ * utilities which only operate in serial.
+ */
+LIB_UTILITIES_EXPORT void Import(
+    const std::string &infilename,
+    std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+    std::vector<std::vector<NekDouble> > &fielddata,
+    FieldMetaDataMap &fieldinfomap,
+    const Array<OneD, int> ElementiDs)
+{
+#ifdef NEKTAR_USE_MPI
+    int size;
+    int init;
+    MPI_Initialized(&init);
+
+    // If MPI has been initialised we can check the number of processes
+    // and, if > 1, tell the user he should not be running this
+    // function in parallel. If it is not initialised, we do not
+    // initialise it here, and assume the user knows what they are
+    // doing.
+    if (init)
+    {
+        MPI_Comm_size(MPI_COMM_WORLD, &size);
+        ASSERTL0(size == 1,
+                 "This static function is not available in parallel. Please"
+                 "instantiate a FieldIO object for parallel use.");
+    }
+#endif
+    CommSharedPtr c    = GetCommFactory().CreateInstance("Serial", 0, 0);
+    FieldIOSharedPtr f = GetFieldIOFactory().CreateInstance("Xml", c, false);
+    f->Import(infilename, fielddefs, fielddata, fieldinfomap, ElementiDs);
+}
+
+/**
+ *
+ */
+FieldIO::FieldIO(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem)
+    : m_comm(pComm), m_sharedFilesystem(sharedFilesystem)
+{
+}
+
+/**
+ * \brief add information about provenance and fieldmetadata
+ */
+void FieldIO::AddInfoTag(TiXmlElement *root,
+                         const FieldMetaDataMap &fieldmetadatamap)
+{
+    TagWriterSharedPtr w = boost::make_shared<XmlTagWriter>(root);
+    AddInfoTag(w, fieldmetadatamap);
+}
+
+TagWriter::~TagWriter()
+{
+}
+
+XmlTagWriter::XmlTagWriter(TiXmlElement *elem) : m_El(elem)
+{
+}
+TagWriterSharedPtr XmlTagWriter::AddChild(const std::string &name)
+{
+    TiXmlElement *child = new TiXmlElement(name.c_str());
+    m_El->LinkEndChild(child);
+    return TagWriterSharedPtr(new XmlTagWriter(child));
+}
+
+void XmlTagWriter::SetAttr(const std::string &key, const std::string &val)
+{
+    TiXmlElement *child = new TiXmlElement(key.c_str());
+    child->LinkEndChild(new TiXmlText(val.c_str()));
+    m_El->LinkEndChild(child);
+}
+
+void FieldIO::AddInfoTag(TagWriterSharedPtr root,
+                         const FieldMetaDataMap &fieldmetadatamap)
+{
+    FieldMetaDataMap ProvenanceMap;
+
+    // Nektar++ release version from VERSION file
+    ProvenanceMap["NektarVersion"] = string(NEKTAR_VERSION);
+
+    // Date/time stamp
+    ptime::time_facet *facet = new ptime::time_facet("%d-%b-%Y %H:%M:%S");
+    std::stringstream wss;
+    wss.imbue(locale(wss.getloc(), facet));
+    wss << ptime::second_clock::local_time();
+    ProvenanceMap["Timestamp"] = wss.str();
+
+    // Hostname
+    boost::system::error_code ec;
+    ProvenanceMap["Hostname"] = ip::host_name(ec);
+
+    // Git information
+    // If built from a distributed package, do not include this
+    if (NekConstants::kGitSha1 != "GITDIR-NOTFOUND")
+    {
+        ProvenanceMap["GitSHA1"]   = NekConstants::kGitSha1;
+        ProvenanceMap["GitBranch"] = NekConstants::kGitBranch;
+    }
+
+    TagWriterSharedPtr infoTag = root->AddChild("Metadata");
+
+    FieldMetaDataMap::const_iterator infoit;
+
+    TagWriterSharedPtr provTag = infoTag->AddChild("Provenance");
+    for (infoit = ProvenanceMap.begin(); infoit != ProvenanceMap.end();
+         ++infoit)
+    {
+        provTag->SetAttr(infoit->first, infoit->second);
+    }
+
+    //---------------------------------------------
+    // write field info section
+    if (fieldmetadatamap != NullFieldMetaDataMap)
+    {
+        for (infoit = fieldmetadatamap.begin();
+             infoit != fieldmetadatamap.end();
+             ++infoit)
+        {
+            infoTag->SetAttr(infoit->first, infoit->second);
+        }
+    }
+}
+
+/**
+ *
+ */
+int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
+{
+    int i;
+
+    if (fielddefs->m_elementIDs.size() == 0) // empty partition
+    {
+        return 0;
+    }
+    // ASSERTL0(fielddefs->m_elementIDs.size() > 0, "Fielddefs vector must
+    // contain at least one element of data .");
+
+    unsigned int numbasis = 0;
+
+    // Determine nummodes vector lists are correct length
+    switch (fielddefs->m_shapeType)
+    {
+        case eSegment:
+            numbasis = 1;
+            if (fielddefs->m_numHomogeneousDir)
+            {
+                numbasis += fielddefs->m_numHomogeneousDir;
             }
 
-            if (size > 1)
-                comm->Bcast(code, 0);
-
-            std::string iofmt;
-            if (code == 0)
-                iofmt = "Xml";
-            else if (code == 1)
-                iofmt = "Hdf5";
+            break;
+        case eTriangle:
+        case eQuadrilateral:
+            if (fielddefs->m_numHomogeneousDir)
+            {
+                numbasis = 3;
+            }
             else
-            // Error
-            ASSERTL0(false, "Unknown file format");
-            return iofmt;
-        }
-
-        FieldIOSharedPtr MakeFieldIOForFile(
-                const LibUtilities::SessionReaderSharedPtr session,
-                const std::string& filename)
-        {
-            const std::string iofmt = FieldIO::GetFileType(filename,
-                    session->GetComm());
-            return GetFieldIOFactory().CreateInstance(
-                iofmt, session->GetComm(),
-                session->DefinesCmdLineArgument("shared-filesystem"));
-        }
-        /**
-         * This function allows for data to be written to an FLD file when a
-         * session and/or communicator is not instantiated. Typically used in
-         * utilities which do not take XML input and operate in serial only.
-         */
-        void Write(const std::string &outFile,
-                std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                std::vector<std::vector<NekDouble> > &fielddata,
-                const FieldMetaDataMap &fieldinfomap)
-        {
-#ifdef NEKTAR_USE_MPI
-            int size;
-            int init;
-            MPI_Initialized(&init);
-
-            // If MPI has been initialised we can check the number of processes
-            // and, if > 1, tell the user he should not be running this
-            // function in parallel. If it is not initialised, we do not
-            // initialise it here, and assume the user knows what they are
-            // doing.
-            if (init)
             {
-                MPI_Comm_size( MPI_COMM_WORLD, &size );
-                ASSERTL0(size == 1,
-                        "This static function is not available in parallel. Please"
-                        "instantiate a FieldIO object for parallel use.");
+                numbasis = 2;
             }
-#endif
-            CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
-            FieldIOSharedPtr f = GetFieldIOFactory().CreateInstance("Xml", c, false);
-            f->Write(outFile, fielddefs, fielddata, fieldinfomap);
-        }
+            break;
+        case eTetrahedron:
+        case ePyramid:
+        case ePrism:
+        case eHexahedron:
+            numbasis = 3;
+            break;
+        default:
+            ASSERTL0(false, "Unsupported shape type.");
+            break;
+    }
 
-        /**
-         * This function allows for data to be imported from an FLD file when
-         * a session and/or communicator is not instantiated. Typically used in
-         * utilities which only operate in serial.
-         */
-        LIB_UTILITIES_EXPORT void Import(const std::string& infilename,
-                std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                std::vector<std::vector<NekDouble> > &fielddata,
-                FieldMetaDataMap &fieldinfomap,
-                const Array<OneD, int> ElementiDs)
+    unsigned int datasize = 0;
+
+    ASSERTL0(fielddefs->m_basis.size() == numbasis,
+             "Length of basis vector is incorrect");
+
+    if (fielddefs->m_uniOrder == true)
+    {
+        unsigned int cnt = 0;
+        // calculate datasize
+        switch (fielddefs->m_shapeType)
         {
-#ifdef NEKTAR_USE_MPI
-            int size;
-            int init;
-            MPI_Initialized(&init);
-
-            // If MPI has been initialised we can check the number of processes
-            // and, if > 1, tell the user he should not be running this
-            // function in parallel. If it is not initialised, we do not
-            // initialise it here, and assume the user knows what they are
-            // doing.
-            if (init)
+            case eSegment:
             {
-                MPI_Comm_size( MPI_COMM_WORLD, &size );
-                ASSERTL0(size == 1,
-                        "This static function is not available in parallel. Please"
-                        "instantiate a FieldIO object for parallel use.");
-            }
-#endif
-            CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
-            FieldIOSharedPtr f = GetFieldIOFactory().CreateInstance("Xml", c, false);
-            f->Import(infilename, fielddefs, fielddata, fieldinfomap,
-                    ElementiDs);
-        }
-
-        /**
-         *
-         */
-        FieldIO::FieldIO(LibUtilities::CommSharedPtr pComm,
-            bool sharedFilesystem) :
-            m_comm(pComm), m_sharedFilesystem(sharedFilesystem)
-        {
-        }
-
-
-
-        /**
-         * \brief add information about provenance and fieldmetadata
-         */
-        void FieldIO::AddInfoTag(TiXmlElement * root,
-                const FieldMetaDataMap &fieldmetadatamap)
-        {
-            TagWriterSharedPtr w = boost::make_shared < XmlTagWriter > (root);
-            AddInfoTag(w, fieldmetadatamap);
-        }
-
-        TagWriter::~TagWriter()
-        {
-        }
-
-        XmlTagWriter::XmlTagWriter(TiXmlElement* elem) :
-                m_El(elem)
-        {
-        }
-        TagWriterSharedPtr XmlTagWriter::AddChild(const std::string& name)
-        {
-            TiXmlElement* child = new TiXmlElement(name.c_str());
-            m_El->LinkEndChild(child);
-            return TagWriterSharedPtr(new XmlTagWriter(child));
-        }
-
-        void XmlTagWriter::SetAttr(const std::string& key,
-                const std::string& val)
-        {
-            TiXmlElement* child = new TiXmlElement(key.c_str());
-            child->LinkEndChild(new TiXmlText(val.c_str()));
-            m_El->LinkEndChild(child);
-        }
-
-        void FieldIO::AddInfoTag(TagWriterSharedPtr root,
-                const FieldMetaDataMap &fieldmetadatamap)
-        {
-            FieldMetaDataMap ProvenanceMap;
-
-            // Nektar++ release version from VERSION file
-            ProvenanceMap["NektarVersion"] = string(NEKTAR_VERSION);
-
-            // Date/time stamp
-            ptime::time_facet *facet = new ptime::time_facet(
-                    "%d-%b-%Y %H:%M:%S");
-            std::stringstream wss;
-            wss.imbue(locale(wss.getloc(), facet));
-            wss << ptime::second_clock::local_time();
-            ProvenanceMap["Timestamp"] = wss.str();
-
-            // Hostname
-            boost::system::error_code ec;
-            ProvenanceMap["Hostname"] = ip::host_name(ec);
-
-            // Git information
-            // If built from a distributed package, do not include this
-            if (NekConstants::kGitSha1 != "GITDIR-NOTFOUND")
-            {
-                ProvenanceMap["GitSHA1"] = NekConstants::kGitSha1;
-                ProvenanceMap["GitBranch"] = NekConstants::kGitBranch;
-            }
-
-            TagWriterSharedPtr infoTag = root->AddChild("Metadata");
-
-            FieldMetaDataMap::const_iterator infoit;
-
-            TagWriterSharedPtr provTag = infoTag->AddChild("Provenance");
-            for (infoit = ProvenanceMap.begin(); infoit != ProvenanceMap.end();
-                    ++infoit)
-            {
-                provTag->SetAttr(infoit->first, infoit->second);
-            }
-
-            //---------------------------------------------
-            // write field info section
-            if (fieldmetadatamap != NullFieldMetaDataMap)
-            {
-                for (infoit = fieldmetadatamap.begin();
-                        infoit != fieldmetadatamap.end(); ++infoit)
+                int l = fielddefs->m_numModes[cnt++];
+                if (fielddefs->m_numHomogeneousDir == 1)
                 {
-                    infoTag->SetAttr(infoit->first, infoit->second);
+                    datasize += l * fielddefs->m_numModes[cnt++];
                 }
-            }
-        }
-
-        /**
-         *
-         */
-        void FieldIO::GenerateSeqString(
-                const std::vector<unsigned int> &elmtids, std::string &idString)
-        {
-            std::stringstream idStringStream;
-            bool setdash = true;
-            unsigned int endval;
-
-            idStringStream << elmtids[0];
-            for (int i = 1; i < elmtids.size(); ++i)
-            {
-                if (elmtids[i] == elmtids[i - 1] + 1)
+                else if (fielddefs->m_numHomogeneousDir == 2)
                 {
-                    if (setdash)
-                    {
-                        idStringStream << "-";
-                        setdash = false;
-                    }
-
-                    if (i == elmtids.size() - 1) // last element
-                    {
-                        idStringStream << elmtids[i];
-                    }
-                    else
-                    {
-                        endval = elmtids[i];
-                    }
+                    int m = fielddefs->m_numModes[cnt++];
+                    datasize += l * m * fielddefs->m_numModes[cnt++];
                 }
                 else
                 {
-                    if (setdash == false) // finish off previous dash sequence
-                    {
-                        idStringStream << endval;
-                        setdash = true;
-                    }
-
-                    idStringStream << "," << elmtids[i];
+                    datasize += l;
                 }
             }
-            idString = idStringStream.str();
+            break;
+            case eTriangle:
+            {
+                int l = fielddefs->m_numModes[cnt++];
+                int m = fielddefs->m_numModes[cnt++];
+
+                if (fielddefs->m_numHomogeneousDir == 1)
+                {
+                    datasize += StdTriData::getNumberOfCoefficients(l, m) *
+                                fielddefs->m_homogeneousZIDs.size();
+                }
+                else
+                {
+                    datasize += StdTriData::getNumberOfCoefficients(l, m);
+                }
+            }
+            break;
+            case eQuadrilateral:
+            {
+                int l = fielddefs->m_numModes[cnt++];
+                int m = fielddefs->m_numModes[cnt++];
+                if (fielddefs->m_numHomogeneousDir == 1)
+                {
+                    datasize += l * m * fielddefs->m_homogeneousZIDs.size();
+                }
+                else
+                {
+                    datasize += l * m;
+                }
+            }
+            break;
+            case eTetrahedron:
+            {
+                int l = fielddefs->m_numModes[cnt++];
+                int m = fielddefs->m_numModes[cnt++];
+                int n = fielddefs->m_numModes[cnt++];
+                datasize += StdTetData::getNumberOfCoefficients(l, m, n);
+            }
+            break;
+            case ePyramid:
+            {
+                int l = fielddefs->m_numModes[cnt++];
+                int m = fielddefs->m_numModes[cnt++];
+                int n = fielddefs->m_numModes[cnt++];
+                datasize += StdPyrData::getNumberOfCoefficients(l, m, n);
+            }
+            break;
+            case ePrism:
+            {
+                int l = fielddefs->m_numModes[cnt++];
+                int m = fielddefs->m_numModes[cnt++];
+                int n = fielddefs->m_numModes[cnt++];
+                datasize += StdPrismData::getNumberOfCoefficients(l, m, n);
+            }
+            break;
+            case eHexahedron:
+            {
+                int l = fielddefs->m_numModes[cnt++];
+                int m = fielddefs->m_numModes[cnt++];
+                int n = fielddefs->m_numModes[cnt++];
+                datasize += l * m * n;
+            }
+            break;
+            default:
+                ASSERTL0(false, "Unsupported shape type.");
+                break;
         }
 
-        /**
-         *
-         */
-        int FieldIO::CheckFieldDefinition(
-                const FieldDefinitionsSharedPtr &fielddefs)
+        datasize *= fielddefs->m_elementIDs.size();
+    }
+    else
+    {
+        unsigned int cnt = 0;
+        // calculate data length
+        for (i = 0; i < fielddefs->m_elementIDs.size(); ++i)
         {
-            int i;
-
-            if (fielddefs->m_elementIDs.size() == 0) // empty partition
-            {
-                return 0;
-            }
-            //ASSERTL0(fielddefs->m_elementIDs.size() > 0, "Fielddefs vector must contain at least one element of data .");
-
-            unsigned int numbasis = 0;
-
-            // Determine nummodes vector lists are correct length
             switch (fielddefs->m_shapeType)
             {
                 case eSegment:
-                    numbasis = 1;
-                    if (fielddefs->m_numHomogeneousDir)
-                    {
-                        numbasis += fielddefs->m_numHomogeneousDir;
-                    }
-
+                    datasize += fielddefs->m_numModes[cnt++];
                     break;
                 case eTriangle:
+                {
+                    int l = fielddefs->m_numModes[cnt++];
+                    int m = fielddefs->m_numModes[cnt++];
+                    datasize += StdTriData::getNumberOfCoefficients(l, m);
+                }
+                break;
                 case eQuadrilateral:
-                    if (fielddefs->m_numHomogeneousDir)
-                    {
-                        numbasis = 3;
-                    }
-                    else
-                    {
-                        numbasis = 2;
-                    }
-                    break;
+                {
+                    int l = fielddefs->m_numModes[cnt++];
+                    int m = fielddefs->m_numModes[cnt++];
+                    datasize += l * m;
+                }
+                break;
                 case eTetrahedron:
+                {
+                    int l = fielddefs->m_numModes[cnt++];
+                    int m = fielddefs->m_numModes[cnt++];
+                    int n = fielddefs->m_numModes[cnt++];
+                    datasize += StdTetData::getNumberOfCoefficients(l, m, n);
+                }
+                break;
                 case ePyramid:
+                {
+                    int l = fielddefs->m_numModes[cnt++];
+                    int m = fielddefs->m_numModes[cnt++];
+                    int n = fielddefs->m_numModes[cnt++];
+                    datasize += StdPyrData::getNumberOfCoefficients(l, m, n);
+                }
+                break;
                 case ePrism:
+                {
+                    int l = fielddefs->m_numModes[cnt++];
+                    int m = fielddefs->m_numModes[cnt++];
+                    int n = fielddefs->m_numModes[cnt++];
+                    datasize += StdPrismData::getNumberOfCoefficients(l, m, n);
+                }
+                break;
                 case eHexahedron:
-                    numbasis = 3;
-                    break;
+                {
+                    int l = fielddefs->m_numModes[cnt++];
+                    int m = fielddefs->m_numModes[cnt++];
+                    int n = fielddefs->m_numModes[cnt++];
+                    datasize += l * m * n;
+                }
+                break;
                 default:
-                    ASSERTL0(false, "Unsupported shape type.")
-                    ;
+                    ASSERTL0(false, "Unsupported shape type.");
                     break;
             }
-
-            unsigned int datasize = 0;
-
-            ASSERTL0(fielddefs->m_basis.size() == numbasis,
-                    "Length of basis vector is incorrect");
-
-            if (fielddefs->m_uniOrder == true)
-            {
-                unsigned int cnt = 0;
-                // calculate datasize
-                switch (fielddefs->m_shapeType)
-                {
-                    case eSegment:
-                    {
-                        int l = fielddefs->m_numModes[cnt++];
-                        if (fielddefs->m_numHomogeneousDir == 1)
-                        {
-                            datasize += l * fielddefs->m_numModes[cnt++];
-                        }
-                        else if (fielddefs->m_numHomogeneousDir == 2)
-                        {
-                            int m = fielddefs->m_numModes[cnt++];
-                            datasize += l * m * fielddefs->m_numModes[cnt++];
-                        }
-                        else
-                        {
-                            datasize += l;
-                        }
-                    }
-                        break;
-                    case eTriangle:
-                    {
-                        int l = fielddefs->m_numModes[cnt++];
-                        int m = fielddefs->m_numModes[cnt++];
-
-                        if (fielddefs->m_numHomogeneousDir == 1)
-                        {
-                            datasize += StdTriData::getNumberOfCoefficients(l,
-                                    m) * fielddefs->m_homogeneousZIDs.size();
-                        }
-                        else
-                        {
-                            datasize += StdTriData::getNumberOfCoefficients(l,
-                                    m);
-                        }
-                    }
-                        break;
-                    case eQuadrilateral:
-                    {
-                        int l = fielddefs->m_numModes[cnt++];
-                        int m = fielddefs->m_numModes[cnt++];
-                        if (fielddefs->m_numHomogeneousDir == 1)
-                        {
-                            datasize += l * m
-                                    * fielddefs->m_homogeneousZIDs.size();
-                        }
-                        else
-                        {
-                            datasize += l * m;
-                        }
-                    }
-                        break;
-                    case eTetrahedron:
-                    {
-                        int l = fielddefs->m_numModes[cnt++];
-                        int m = fielddefs->m_numModes[cnt++];
-                        int n = fielddefs->m_numModes[cnt++];
-                        datasize += StdTetData::getNumberOfCoefficients(l, m,
-                                n);
-                    }
-                        break;
-                    case ePyramid:
-                    {
-                        int l = fielddefs->m_numModes[cnt++];
-                        int m = fielddefs->m_numModes[cnt++];
-                        int n = fielddefs->m_numModes[cnt++];
-                        datasize += StdPyrData::getNumberOfCoefficients(l, m,
-                                n);
-                    }
-                        break;
-                    case ePrism:
-                    {
-                        int l = fielddefs->m_numModes[cnt++];
-                        int m = fielddefs->m_numModes[cnt++];
-                        int n = fielddefs->m_numModes[cnt++];
-                        datasize += StdPrismData::getNumberOfCoefficients(l, m,
-                                n);
-                    }
-                        break;
-                    case eHexahedron:
-                    {
-                        int l = fielddefs->m_numModes[cnt++];
-                        int m = fielddefs->m_numModes[cnt++];
-                        int n = fielddefs->m_numModes[cnt++];
-                        datasize += l * m * n;
-                    }
-                        break;
-                    default:
-                        ASSERTL0(false, "Unsupported shape type.")
-                        ;
-                        break;
-                }
-
-                datasize *= fielddefs->m_elementIDs.size();
-            }
-            else
-            {
-                unsigned int cnt = 0;
-                // calculate data length
-                for (i = 0; i < fielddefs->m_elementIDs.size(); ++i)
-                {
-                    switch (fielddefs->m_shapeType)
-                    {
-                        case eSegment:
-                            datasize += fielddefs->m_numModes[cnt++];
-                            break;
-                        case eTriangle:
-                        {
-                            int l = fielddefs->m_numModes[cnt++];
-                            int m = fielddefs->m_numModes[cnt++];
-                            datasize += StdTriData::getNumberOfCoefficients(l,
-                                    m);
-                        }
-                            break;
-                        case eQuadrilateral:
-                        {
-                            int l = fielddefs->m_numModes[cnt++];
-                            int m = fielddefs->m_numModes[cnt++];
-                            datasize += l * m;
-                        }
-                            break;
-                        case eTetrahedron:
-                        {
-                            int l = fielddefs->m_numModes[cnt++];
-                            int m = fielddefs->m_numModes[cnt++];
-                            int n = fielddefs->m_numModes[cnt++];
-                            datasize += StdTetData::getNumberOfCoefficients(l,
-                                    m, n);
-                        }
-                            break;
-                        case ePyramid:
-                        {
-                            int l = fielddefs->m_numModes[cnt++];
-                            int m = fielddefs->m_numModes[cnt++];
-                            int n = fielddefs->m_numModes[cnt++];
-                            datasize += StdPyrData::getNumberOfCoefficients(l,
-                                    m, n);
-                        }
-                            break;
-                        case ePrism:
-                        {
-                            int l = fielddefs->m_numModes[cnt++];
-                            int m = fielddefs->m_numModes[cnt++];
-                            int n = fielddefs->m_numModes[cnt++];
-                            datasize += StdPrismData::getNumberOfCoefficients(l,
-                                    m, n);
-                        }
-                            break;
-                        case eHexahedron:
-                        {
-                            int l = fielddefs->m_numModes[cnt++];
-                            int m = fielddefs->m_numModes[cnt++];
-                            int n = fielddefs->m_numModes[cnt++];
-                            datasize += l * m * n;
-                        }
-                            break;
-                        default:
-                            ASSERTL0(false, "Unsupported shape type.")
-                            ;
-                            break;
-                    }
-                }
-            }
-
-            return datasize;
         }
     }
+
+    return datasize;
+}
+}
 }

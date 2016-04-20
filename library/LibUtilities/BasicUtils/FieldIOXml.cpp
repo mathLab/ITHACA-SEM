@@ -347,7 +347,7 @@ void FieldIOXml::v_Write(const std::string &outFile,
         std::string idString;
         {
             std::stringstream idStringStream;
-            GenerateSeqString(fielddefs[f]->m_elementIDs, idString);
+            ParseUtils::GenerateSeqString(fielddefs[f]->m_elementIDs, idString);
         }
         elemTag->SetAttribute("ID", idString);
         elemTag->SetAttribute("COMPRESSED",
@@ -409,7 +409,7 @@ void FieldIOXml::WriteMultiFldFileIDs(
 
             string IDstring;
 
-            GenerateSeqString(elementList[t], IDstring);
+            ParseUtils::GenerateSeqString(elementList[t], IDstring);
 
             elemIDs->LinkEndChild(new TiXmlText(IDstring));
         }
@@ -582,8 +582,9 @@ DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(
 {
     DataSourceSharedPtr doc    = XmlDataSource::create(filename);
     XmlDataSourceSharedPtr xml = boost::static_pointer_cast<XmlDataSource>(doc);
-    TiXmlElement *master       = 0; // Master tag within which all data is contained.
     TiXmlElement *metadata     = 0;
+    TiXmlElement *master       = 0; // Master tag within which all data is
+                                    // contained.
 
     master = xml->Get().FirstChildElement("NEKTAR");
     ASSERTL0(master, "Unable to find NEKTAR tag in file.");

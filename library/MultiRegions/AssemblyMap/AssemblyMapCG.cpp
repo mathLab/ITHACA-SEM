@@ -717,6 +717,7 @@ namespace Nektar
                 for(j = 0; j < nVerts; ++j)
                 {
                     meshVertId = exp->GetGeom()->GetVid(j);
+
                     if(graph[0].count(meshVertId) == 0)
                     {
                         if(tempGraph[0].count(meshVertId) == 0)
@@ -1056,7 +1057,7 @@ namespace Nektar
             }
 
             // Container to store vertices of the graph which correspond to
-            // degrees of freedom along the boundary.
+            // degrees of freedom along the boundary and periodic BCs.
             set<int> partVerts;
 
             if (m_solnType == eIterativeMultiLevelStaticCond ||
@@ -1172,6 +1173,7 @@ namespace Nektar
                     }
                 }
 
+                // Now fill with all vertices on periodic BCs
                 for (pIt = periodicVerts.begin(); pIt != periodicVerts.end(); ++pIt)
                 {
                     if (graph[0].count(pIt->first) == 0)
@@ -1532,6 +1534,7 @@ namespace Nektar
                 for(j = 0; j < exp->GetNverts(); ++j)
                 {
                     meshVertId = exp->GetGeom()->GetVid(j);
+
                     // Set the global DOF for vertex j of element i
                     m_localToGlobalMap[cnt+exp->GetVertexMap(j)] =
                         graphVertOffset[graph[0][meshVertId]];

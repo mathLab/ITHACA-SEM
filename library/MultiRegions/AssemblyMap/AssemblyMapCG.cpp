@@ -528,7 +528,7 @@ namespace Nektar
                             {
                                 if (pIt->second[i].isLocal)
                                 {
-                                    graph[0][pIt->second[i].id] = gId;
+                                    graph[0][pIt->second[i].id] = graph[0][pIt->first];
                                 }
                             }
                         }
@@ -1176,39 +1176,21 @@ namespace Nektar
                 {
                     if (graph[0].count(pIt->first) == 0)
                     {
-                        for (i = 0; i < pIt->second.size(); ++i)
-                        {
-                            if (!pIt->second[i].isLocal)
-                            {
-                                partVerts.insert(tempGraph[0][pIt->first]);
-                            }
-                        }
+                        partVerts.insert(tempGraph[0][pIt->first]);
                     }
                 }
                 for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
                 {
                     if (graph[1].count(pIt->first) == 0)
                     {
-                        for (i = 0; i < pIt->second.size(); ++i)
-                        {
-                            if (!pIt->second[i].isLocal)
-                            {
-                                partVerts.insert(tempGraph[1][pIt->first]);
-                            }
-                        }
+                        partVerts.insert(tempGraph[1][pIt->first]);
                     }
                 }
                 for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
                 {
                     if (graph[2].count(pIt->first) == 0)
                     {
-                        for (i = 0; i < pIt->second.size(); ++i)
-                        {
-                            if (!pIt->second[0].isLocal)
-                            {
-                                partVerts.insert(tempGraph[2][pIt->first]);
-                            }
-                        }
+                        partVerts.insert(tempGraph[2][pIt->first]);
                     }
                 }
             }
@@ -1550,7 +1532,6 @@ namespace Nektar
                 for(j = 0; j < exp->GetNverts(); ++j)
                 {
                     meshVertId = exp->GetGeom()->GetVid(j);
-
                     // Set the global DOF for vertex j of element i
                     m_localToGlobalMap[cnt+exp->GetVertexMap(j)] =
                         graphVertOffset[graph[0][meshVertId]];

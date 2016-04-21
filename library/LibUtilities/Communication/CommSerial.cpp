@@ -199,6 +199,7 @@ namespace Nektar
         CommSharedPtr CommSerial::v_CommCreateIf(int flag)
         {
             ASSERTL0(false, "Cannot split a serial process.");
+            return CommSharedPtr();
         }
 
     }

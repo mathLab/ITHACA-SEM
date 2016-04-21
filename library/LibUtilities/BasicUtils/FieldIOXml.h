@@ -43,22 +43,78 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+
 class XmlDataSource : public DataSource
 {
 public:
-    XmlDataSource(TiXmlDocument &doc);
+    XmlDataSource(TiXmlDocument &doc) : m_doc(&doc) { }
+    XmlDataSource(const std::string &fn)
+    {
+        bool loadOkay = m_doc->LoadFile();
+        std::stringstream errstr;
+        errstr << "Unable to load file: " << fn << std::endl;
+        errstr << "Reason: " << m_doc->ErrorDesc() << std::endl;
+        errstr << "Position: Line " << m_doc->ErrorRow() << ", Column "
+               << m_doc->ErrorCol() << std::endl;
+        ASSERTL0(loadOkay, errstr.str());
+    }
 
-    XmlDataSource(const std::string &fn);
-    ~XmlDataSource();
-    TiXmlDocument &Get();
-    const TiXmlDocument &Get() const;
+    ~XmlDataSource()
+    {
+        delete m_doc;
+    }
 
-    static DataSourceSharedPtr create(const std::string &fn);
-    static DataSourceSharedPtr create(TiXmlDocument &fn);
+    TiXmlDocument &Get()
+    {
+        return *m_doc;
+    }
+
+    const TiXmlDocument &Get() const
+    {
+        return *m_doc;
+    }
+
+    static DataSourceSharedPtr create(const std::string &fn)
+    {
+        return DataSourceSharedPtr(new XmlDataSource(fn));
+    }
+
+    static DataSourceSharedPtr create(TiXmlDocument &fn)
+    {
+        return DataSourceSharedPtr(new XmlDataSource(fn));
+    }
 
 private:
     TiXmlDocument *m_doc;
 };
+typedef boost::shared_ptr<XmlDataSource> XmlDataSourceSharedPtr;
+
+/**
+ * @brief Simple class for writing XML hierarchical data using TinyXML.
+ */
+class XmlTagWriter : public TagWriter
+{
+public:
+    XmlTagWriter(TiXmlElement *elem) : m_El(elem) {}
+
+    virtual TagWriterSharedPtr AddChild(const std::string &name)
+    {
+        TiXmlElement *child = new TiXmlElement(name.c_str());
+        m_El->LinkEndChild(child);
+        return TagWriterSharedPtr(new XmlTagWriter(child));
+    }
+
+    virtual void SetAttr(const std::string &key, const std::string &val)
+    {
+        TiXmlElement *child = new TiXmlElement(key.c_str());
+        child->LinkEndChild(new TiXmlText(val.c_str()));
+        m_El->LinkEndChild(child);
+    }
+
+private:
+    TiXmlElement *m_El;
+};
+typedef boost::shared_ptr<XmlTagWriter> XmlTagWriterSharedPtr;
 
 /// Class for operating on XML FLD files
 class FieldIOXml : public FieldIO
@@ -82,7 +138,7 @@ public:
     LIB_UTILITIES_EXPORT std::string SetUpOutput(const std::string outname);
 
     /// Imports the definition of the fields.
-    LIB_UTILITIES_EXPORT virtual void ImportFieldDefs(
+    LIB_UTILITIES_EXPORT void ImportFieldDefs(
         DataSourceSharedPtr dataSource,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         bool expChild);

@@ -44,50 +44,14 @@ namespace LibUtilities
 {
 namespace H5
 {
+
 template <> inline DataTypeSharedPtr DataTypeTraits<BasisType>::GetType()
 {
     return PredefinedDataType::Native<int>();
 }
+
 }
-H5TagWriter::H5TagWriter(H5::GroupSharedPtr grp) : m_Group(grp)
-{
-}
-TagWriterSharedPtr H5TagWriter::AddChild(const std::string &name)
-{
-    H5::GroupSharedPtr child = m_Group->CreateGroup(name);
-    return TagWriterSharedPtr(new H5TagWriter(child));
-};
 
-void H5TagWriter::SetAttr(const std::string &key, const std::string &val)
-{
-    m_Group->SetAttribute(key, val);
-}
-class H5DataSource : public DataSource
-{
-    H5::FileSharedPtr doc;
-
-public:
-    H5DataSource(const std::string &fn)
-        : doc(H5::File::Open(fn, H5F_ACC_RDONLY))
-    {
-    }
-
-    H5::FileSharedPtr Get()
-    {
-        return doc;
-    }
-    const H5::FileSharedPtr Get() const
-    {
-        return doc;
-    }
-
-    static DataSourceSharedPtr create(const std::string &fn)
-    {
-        return DataSourceSharedPtr(new H5DataSource(fn));
-    }
-};
-
-typedef boost::shared_ptr<H5DataSource> H5DataSourceSharedPtr;
 
 std::string FieldIOHdf5::className =
     GetFieldIOFactory().RegisterCreatorFunction(
@@ -118,7 +82,8 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     std::stringstream prfx;
     prfx << m_comm->GetRank() << ": FieldIOHdf5::v_Write(): ";
     double tm0 = 0.0, tm1 = 0.0;
-    if (0 == m_comm->GetRank())
+
+    if (m_comm->GetRank() == 0)
     {
         cout << prfx.str() << "entering..." << endl;
         tm0 = m_comm->Wtime();
@@ -365,8 +330,6 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         H5::DataSetSharedPtr data_dset =
             root->CreateDataSet("DATA", data_type, data_space);
         ASSERTL1(data_dset, prfx.str() + "cannot create DATA dataset.");
-
-        // Field group is closed automatically at end of scope
     }
 
     // Datasets, root group and HDF5 file are all closed automatically since
@@ -742,9 +705,9 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 }
 
 void FieldIOHdf5::ImportFieldDef(
-    H5::PListSharedPtr readPL,
-    H5::GroupSharedPtr root,
-    std::string group,
+    H5::PListSharedPtr        readPL,
+    H5::GroupSharedPtr        root,
+    std::string               group,
     FieldDefinitionsSharedPtr def)
 {
     std::stringstream prfx;
@@ -914,14 +877,14 @@ void FieldIOHdf5::ImportFieldDef(
 }
 
 void FieldIOHdf5::ImportFieldData(
-    H5::PListSharedPtr readPL,
-    H5::DataSetSharedPtr data_dset,
-    H5::DataSpaceSharedPtr data_fspace,
-    size_t data_i,
-    std::vector<std::size_t> &decomps,
-    size_t decomp,
-    const FieldDefinitionsSharedPtr fielddef,
-    std::vector<NekDouble> &fielddata)
+    H5::PListSharedPtr               readPL,
+    H5::DataSetSharedPtr             data_dset,
+    H5::DataSpaceSharedPtr           data_fspace,
+    size_t                           data_i,
+    std::vector<std::size_t>        &decomps,
+    size_t                           decomp,
+    const FieldDefinitionsSharedPtr  fielddef,
+    std::vector<NekDouble>          &fielddata)
 {
     std::stringstream prfx;
     prfx << m_comm->GetRank() << ": FieldIOHdf5::ImportFieldData(): ";
@@ -974,5 +937,6 @@ void FieldIOHdf5::v_ImportFieldMetaData(DataSourceSharedPtr dataSource,
         }
     }
 }
+
 }
 }

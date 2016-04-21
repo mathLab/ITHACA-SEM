@@ -61,11 +61,11 @@ SET(BasicUtilsSources
 
 # HDF5
 IF( NEKTAR_USE_HDF5 )
-	SET(BasicUtilsHeaders ${BasicUtilsHeaders}
-		./BasicUtils/H5.h
+    SET(BasicUtilsHeaders ${BasicUtilsHeaders}
+	./BasicUtils/H5.h
         ./BasicUtils/FieldIOHdf5.h)
-	SET(BasicUtilsSources ${BasicUtilsSources}
-		./BasicUtils/H5.cpp
+    SET(BasicUtilsSources ${BasicUtilsSources}
+	./BasicUtils/H5.cpp
         ./BasicUtils/FieldIOHdf5.cpp)
 ENDIF( NEKTAR_USE_HDF5 )
 

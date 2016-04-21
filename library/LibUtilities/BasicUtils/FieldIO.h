@@ -51,31 +51,22 @@ namespace Nektar
 {
 namespace LibUtilities
 {
-/// Base class for writing hierarchical data (XML or HDF5)
+
+/**
+ * @brief Base class for writing hierarchical data (XML or HDF5).
+ */
 class TagWriter
 {
 public:
-    /// Create a child node
+    /// Create a child node.
     virtual boost::shared_ptr<TagWriter> AddChild(const std::string &name) = 0;
-    /// Set an attribute on the node
+    /// Set an attribute on the node.
     virtual void SetAttr(const std::string &key, const std::string &val) = 0;
 
 protected:
-    virtual ~TagWriter();
+    virtual ~TagWriter() {}
 };
 typedef boost::shared_ptr<TagWriter> TagWriterSharedPtr;
-
-/// Simple class for writing to XML
-class XmlTagWriter : public TagWriter
-{
-public:
-    XmlTagWriter(TiXmlElement *elem);
-    TagWriterSharedPtr AddChild(const std::string &name);
-    void SetAttr(const std::string &key, const std::string &val);
-
-private:
-    TiXmlElement *m_El;
-};
 
 static std::vector<NekDouble> NullNekDoubleVector;
 static std::vector<LibUtilities::PointsType> NullPointsTypeVector;
@@ -86,10 +77,43 @@ static FieldMetaDataMap NullFieldMetaDataMap;
 static std::vector<std::vector<NekDouble> > NullVectorNekDoubleVector =
     boost::assign::list_of(NullNekDoubleVector);
 
+/**
+ * @class A simple class encapsulating a data source. This allows us to pass
+ * around native file formats in virtual functions without resorting to using
+ * the filename.
+ */
+class DataSource
+{
+};
+typedef boost::shared_ptr<DataSource> DataSourceSharedPtr;
+
+/**
+ * @brief Metadata that describes the storage properties of field output.
+ *
+ * The purpose of this struct is to describe the format of binary field data.
+ * This can then be used in the library to determine appropriate actions. For
+ * example, when restarting a simulation, the information this struct
+ * encapsulates can be used to determine whether interpolation is required to a
+ * different polynomial order depending on the order of the simulation versus
+ * the order of the restart file.
+ *
+ * We note that some of the parameters here include:
+ *
+ * - Element shape type and the basis used
+ * - Element IDs, which determines the order of data written in a field
+ * - The field names (e.g. u for x-velocity) so that multi-field storage can be
+ *   agglomerated into one data block. Each field is written in the order
+ *   specified here.
+ * - Number of modes, including support for variable polynomial order
+ * - Homogeneous information (dimension of homogeneity, IDs of planes and/or
+ *   strips if they are used)
+ */
 struct FieldDefinitions
 {
+    /// Default constructor
     FieldDefinitions() {}
 
+    /// Simple constructor to allocate all internal properties.
     FieldDefinitions(
         ShapeType shapeType,
         const std::vector<unsigned int> &elementIDs, // vector[2]
@@ -118,45 +142,49 @@ struct FieldDefinitions
     {
     }
 
-    ShapeType m_shapeType;
-    std::vector<unsigned int> m_elementIDs;
-    std::vector<LibUtilities::BasisType> m_basis;
-    int m_numHomogeneousDir;
-    std::vector<NekDouble> m_homogeneousLengths;
-    bool m_homoStrips;
-    std::vector<unsigned int> m_homogeneousSIDs;
-    std::vector<unsigned int> m_homogeneousZIDs;
-    std::vector<unsigned int> m_homogeneousYIDs;
-
+    /// Shape type of this field data.
+    ShapeType                             m_shapeType;
+    /// Element IDs of the field data.
+    std::vector<unsigned int>             m_elementIDs;
+    /// Vector of basis types for each of the coordinate directions.
+    std::vector<LibUtilities::BasisType>  m_basis;
+    /// Number of homogeneous directions, in the range \f$ 0\leq d \leq 3 \f$.
+    int                                   m_numHomogeneousDir;
+    /// Spatial lengths of each homogeneous direction.
+    std::vector<NekDouble>                m_homogeneousLengths;
+    /// Boolean determining whether homogeneous strips are used.
+    bool                                  m_homoStrips;
+    /// IDs corresponding to homogeneous strip IDs.
+    std::vector<unsigned int>             m_homogeneousSIDs;
+    /// IDs corresponding to z-direction homogeneous IDs.
+    std::vector<unsigned int>             m_homogeneousZIDs;
+    /// IDs corresponding to y-direction homogeneous IDs.
+    std::vector<unsigned int>             m_homogeneousYIDs;
     /// Define the type of points per direction.
     std::vector<LibUtilities::PointsType> m_points;
-    bool m_pointsDef;
+    /// Boolean determining whether points have been defined in output.
+    bool                                  m_pointsDef;
     /// Define order of the element group.
     /// * UniOrder: same order for each element
     /// * MixOrder: definition of a different order for each element.
-    bool m_uniOrder;
+    bool                                  m_uniOrder;
     /// Define number of modes per direction.
-    std::vector<unsigned int> m_numModes;
-    std::vector<unsigned int> m_numPoints;
-    bool m_numPointsDef;
-    std::vector<std::string> m_fields;
+    std::vector<unsigned int>             m_numModes;
+    /// Define number of points per direction.
+    std::vector<unsigned int>             m_numPoints;
+    /// Boolean determining whether number of points has been defined.
+    bool                                  m_numPointsDef;
+    /// Vector of field names that this data encapsulates.
+    std::vector<std::string>              m_fields;
 };
 
 typedef boost::shared_ptr<FieldDefinitions> FieldDefinitionsSharedPtr;
 
-class DataSource
-{
-};
-typedef boost::shared_ptr<DataSource> DataSourceSharedPtr;
-
-/// Write a field file in serial only
 LIB_UTILITIES_EXPORT void Write(
     const std::string &outFile,
     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
     std::vector<std::vector<NekDouble> > &fielddata,
     const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap);
-
-/// Imports an FLD file
 LIB_UTILITIES_EXPORT void Import(
     const std::string &infilename,
     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
@@ -179,76 +207,56 @@ LIB_UTILITIES_EXPORT FieldIOFactory &GetFieldIOFactory();
 class FieldIO : public boost::enable_shared_from_this<FieldIO>
 {
 public:
-    /// Constructor
-    LIB_UTILITIES_EXPORT
-    FieldIO(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem);
+    LIB_UTILITIES_EXPORT FieldIO(
+        LibUtilities::CommSharedPtr pComm, bool sharedFilesystem);
 
-    /// Write data in FLD format
-    LIB_UTILITIES_EXPORT
-    inline void Write(
+    LIB_UTILITIES_EXPORT inline void Write(
         const std::string &outFile,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         std::vector<std::vector<NekDouble> > &fielddata,
         const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap);
 
-    /// Imports an FLD file.
-    LIB_UTILITIES_EXPORT
-    inline void Import(const std::string &infilename,
-                       std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                       std::vector<std::vector<NekDouble> > &fielddata =
-                           NullVectorNekDoubleVector,
-                       FieldMetaDataMap &fieldinfomap    = NullFieldMetaDataMap,
-                       const Array<OneD, int> ElementiDs = NullInt1DArray);
-
-    /// Imports the definition of the meta data
-    LIB_UTILITIES_EXPORT
-    DataSourceSharedPtr ImportFieldMetaData(std::string filename,
-                                            FieldMetaDataMap &fieldmetadatamap);
-
-    /// Imports the definition of the fields.
-    LIB_UTILITIES_EXPORT
-    virtual void ImportFieldDefs(
-        DataSourceSharedPtr dataSource,
+    LIB_UTILITIES_EXPORT inline void Import(
+        const std::string &infilename,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-        bool expChild) = 0;
+        std::vector<std::vector<NekDouble> > &fielddata =
+            NullVectorNekDoubleVector,
+        FieldMetaDataMap &fieldinfomap    = NullFieldMetaDataMap,
+        const Array<OneD, int> ElementiDs = NullInt1DArray);
 
-    // Figure out what type of FLD file we have.
-    // Collective on comm.
+    LIB_UTILITIES_EXPORT DataSourceSharedPtr ImportFieldMetaData(
+        std::string       filename,
+        FieldMetaDataMap &fieldmetadatamap);
+
     static const std::string GetFileType(const std::string &filename,
                                          CommSharedPtr comm);
-
     virtual const std::string &GetClassName() const = 0;
 
 protected:
     /// Communicator to use when writing parallel format
     LibUtilities::CommSharedPtr m_comm;
-    bool m_sharedFilesystem;
+    /// Boolean dictating whether we are on a shared filesystem.
+    bool                        m_sharedFilesystem;
 
-    LIB_UTILITIES_EXPORT
-    void AddInfoTag(TiXmlElement *root,
-                    const FieldMetaDataMap &fieldmetadatamap);
+    LIB_UTILITIES_EXPORT void AddInfoTag(
+        TagWriterSharedPtr      root,
+        const FieldMetaDataMap &fieldmetadatamap);
 
-    LIB_UTILITIES_EXPORT
-    void AddInfoTag(TagWriterSharedPtr root,
-                    const FieldMetaDataMap &fieldmetadatamap);
-
-    LIB_UTILITIES_EXPORT
-    int CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs);
+    LIB_UTILITIES_EXPORT int CheckFieldDefinition(
+        const FieldDefinitionsSharedPtr &fielddefs);
 
     LIB_UTILITIES_EXPORT virtual std::string GetFileEnding() const
     {
         return "fld";
     }
 
-    LIB_UTILITIES_EXPORT
-    virtual void v_Write(const std::string &outFile,
-                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                         std::vector<std::vector<NekDouble> > &fielddata,
-                         const FieldMetaDataMap &fieldinfomap) = 0;
+    LIB_UTILITIES_EXPORT virtual void v_Write(
+        const std::string                      &outFile,
+        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+        std::vector<std::vector<NekDouble> >   &fielddata,
+        const FieldMetaDataMap                 &fieldinfomap) = 0;
 
-    /// Imports an FLD file.
-    LIB_UTILITIES_EXPORT
-    virtual void v_Import(
+    LIB_UTILITIES_EXPORT virtual void v_Import(
         const std::string &infilename,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         std::vector<std::vector<NekDouble> >
@@ -256,8 +264,7 @@ protected:
         FieldMetaDataMap &fieldinfomap    = NullFieldMetaDataMap,
         const Array<OneD, int> ElementiDs = NullInt1DArray) = 0;
 
-    LIB_UTILITIES_EXPORT
-    virtual DataSourceSharedPtr v_ImportFieldMetaData(
+    LIB_UTILITIES_EXPORT virtual DataSourceSharedPtr v_ImportFieldMetaData(
         std::string filename, FieldMetaDataMap &fieldmetadatamap) = 0;
 };
 
@@ -267,35 +274,36 @@ inline FieldIOSharedPtr MakeDefaultFieldIO(
     const LibUtilities::SessionReaderSharedPtr session)
 {
     std::string iofmt("Xml");
-    if (session->DefinesSolverInfo("FieldIO_Format"))
+    if (session->DefinesSolverInfo("FieldIOFormat"))
     {
-        iofmt = session->GetSolverInfo("FieldIO_Format");
+        iofmt = session->GetSolverInfo("FieldIOFormat");
     }
     return GetFieldIOFactory().CreateInstance(
         iofmt,
         session->GetComm(),
         session->DefinesCmdLineArgument("shared-filesystem"));
 }
+
 // Collective on session's communicator
 FieldIOSharedPtr MakeFieldIOForFile(
     const LibUtilities::SessionReaderSharedPtr session,
     const std::string &filename);
 
-inline void FieldIO::Write(const std::string &outFile,
+inline void FieldIO::Write(const std::string                      &outFile,
                            std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                            std::vector<std::vector<NekDouble> > &fielddata,
-                           const FieldMetaDataMap &fieldinfomap)
+                           const FieldMetaDataMap                 &fieldinfomap)
 {
     v_Write(outFile, fielddefs, fielddata, fieldinfomap);
 }
 
-inline void FieldIO::Import(const std::string &infilename,
+inline void FieldIO::Import(const std::string                      &infilename,
                             std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                            std::vector<std::vector<NekDouble> > &fielddata,
-                            FieldMetaDataMap &fieldinfomap,
-                            const Array<OneD, int> ElementiDs)
+                            std::vector<std::vector<NekDouble> >   &fielddata,
+                            FieldMetaDataMap                       &fieldinfo,
+                            const Array<OneD, int>                  ElementiDs)
 {
-    v_Import(infilename, fielddefs, fielddata, fieldinfomap, ElementiDs);
+    v_Import(infilename, fielddefs, fielddata, fieldinfo, ElementiDs);
 }
 
 inline DataSourceSharedPtr FieldIO::ImportFieldMetaData(
@@ -303,6 +311,7 @@ inline DataSourceSharedPtr FieldIO::ImportFieldMetaData(
 {
     return v_ImportFieldMetaData(filename, fieldmetadatamap);
 }
+
 }
 }
 #endif

@@ -38,14 +38,9 @@
 
 #include <boost/format.hpp>
 
-#include "zlib.h"
-
 #ifdef NEKTAR_USE_MPI
 #include <mpi.h>
 #endif
-
-// Buffer size for zlib compression/decompression
-#define CHUNK 16384
 
 namespace berrc = boost::system::errc;
 
@@ -53,47 +48,6 @@ namespace Nektar
 {
 namespace LibUtilities
 {
-XmlDataSource::XmlDataSource(TiXmlDocument &doc) : m_doc(&doc)
-{
-}
-
-XmlDataSource::XmlDataSource(const std::string &fn)
-    : m_doc(new TiXmlDocument(fn))
-{
-    bool loadOkay = m_doc->LoadFile();
-
-    std::stringstream errstr;
-    errstr << "Unable to load file: " << fn << std::endl;
-    errstr << "Reason: " << m_doc->ErrorDesc() << std::endl;
-    errstr << "Position: Line " << m_doc->ErrorRow() << ", Column "
-           << m_doc->ErrorCol() << std::endl;
-    ASSERTL0(loadOkay, errstr.str());
-}
-
-XmlDataSource::~XmlDataSource()
-{
-    delete m_doc;
-}
-
-TiXmlDocument &XmlDataSource::Get()
-{
-    return *m_doc;
-}
-const TiXmlDocument &XmlDataSource::Get() const
-{
-    return *m_doc;
-}
-
-DataSourceSharedPtr XmlDataSource::create(const std::string &fn)
-{
-    return DataSourceSharedPtr(new XmlDataSource(fn));
-}
-DataSourceSharedPtr XmlDataSource::create(TiXmlDocument &doc)
-{
-    return DataSourceSharedPtr(new XmlDataSource(doc));
-}
-
-typedef boost::shared_ptr<XmlDataSource> XmlDataSourceSharedPtr;
 
 std::string FieldIOXml::className = GetFieldIOFactory().RegisterCreatorFunction(
     "Xml", FieldIOXml::create, "XML-based output of field data.");
@@ -114,7 +68,7 @@ void FieldIOXml::v_Write(const std::string &outFile,
     std::stringstream prfx;
     prfx << m_comm->GetRank() << ": FieldIOXml::v_Write(): ";
     double tm0 = 0.0, tm1 = 0.0;
-    if (0 == m_comm->GetRank())
+    if (m_comm->GetRank() == 0)
     {
         cout << prfx.str() << "entering..." << endl;
         tm0 = m_comm->Wtime();
@@ -148,7 +102,7 @@ void FieldIOXml::v_Write(const std::string &outFile,
     TiXmlElement *root = new TiXmlElement("NEKTAR");
     doc.LinkEndChild(root);
 
-    AddInfoTag(root, fieldmetadatamap);
+    AddInfoTag(XmlTagWriterSharedPtr(new XmlTagWriter(root)), fieldmetadatamap);
 
     for (int f = 0; f < fielddefs.size(); ++f)
     {
@@ -347,7 +301,7 @@ void FieldIOXml::v_Write(const std::string &outFile,
         std::string idString;
         {
             std::stringstream idStringStream;
-            ParseUtils::GenerateSeqString(fielddefs[f]->m_elementIDs, idString);
+            idString = ParseUtils::GenerateSeqString(fielddefs[f]->m_elementIDs);
         }
         elemTag->SetAttribute("ID", idString);
         elemTag->SetAttribute("COMPRESSED",
@@ -396,7 +350,7 @@ void FieldIOXml::WriteMultiFldFileIDs(
     TiXmlElement *root = new TiXmlElement("NEKTAR");
     doc.LinkEndChild(root);
 
-    AddInfoTag(root, fieldmetadatamap);
+    AddInfoTag(XmlTagWriterSharedPtr(new XmlTagWriter(root)), fieldmetadatamap);
 
     for (int t = 0; t < fileNames.size(); ++t)
     {
@@ -407,9 +361,7 @@ void FieldIOXml::WriteMultiFldFileIDs(
 
             elemIDs->SetAttribute("FileName", fileNames[t]);
 
-            string IDstring;
-
-            ParseUtils::GenerateSeqString(elementList[t], IDstring);
+            string IDstring = ParseUtils::GenerateSeqString(elementList[t]);
 
             elemIDs->LinkEndChild(new TiXmlText(IDstring));
         }

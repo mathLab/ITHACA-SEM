@@ -44,16 +44,12 @@
 
 #include <loki/Singleton.h>
 
-#include "zlib.h"
 #include <fstream>
 #include <set>
 
 #ifdef NEKTAR_USE_MPI
 #include <mpi.h>
 #endif
-
-// Buffer size for zlib compression/decompression
-#define CHUNK 16384
 
 #ifndef NEKTAR_VERSION
 #define NEKTAR_VERSION "Unknown"
@@ -74,21 +70,32 @@ FieldIOFactory &GetFieldIOFactory()
     return Type::Instance();
 }
 
+/**
+ * @brief Determine file type of given input file.
+ *
+ * This method attempts to identify the file type of a given input file @p
+ * filename. It returns a string corresponding to GetFieldIOFactory() or throws
+ * an assertion if it cannot be identified.
+ *
+ * @param filename  Input filename
+ * @param comm      Communicator for parallel runs
+ *
+ * @return FieldIO format of @p filename.
+ */
 const std::string FieldIO::GetFileType(const std::string &filename,
                                        CommSharedPtr comm)
 {
-    // We'll use 0 => XML
-    // and 1 => HDF5
+    // We'll use 0 => XML and 1 => HDF5.
     int code = 0;
-
     int size = comm->GetSize();
     int rank = comm->GetRank();
 
     if (size == 1 || rank == 0)
     {
         std::string datafilename;
-        if (fs::is_directory(
-                filename)) // check to see that infile is a directory
+
+        // If input is a directory, check for root processor file.
+        if (fs::is_directory(filename))
         {
             fs::path p0file("P0000000.fld");
             fs::path fullpath = filename / p0file;
@@ -98,12 +105,10 @@ const std::string FieldIO::GetFileType(const std::string &filename,
         {
             datafilename = filename;
         }
-        // Read first 8 bytes
-        // If they are (in hex) 89  48  44  46  0d  0a  1a  0a
-        // then it's an HDF5 file.
 
-        // XML is potentially a nightmare with all the different encodings
-        // so we'll just assume it's OK if it's not HDF
+        // Read first 8 bytes. If they correspond with magic bytes below it's an
+        // HDF5 file. XML is potentially a nightmare with all the different
+        // encodings so we'll just assume it's OK if it's not HDF.
         const char magic[8] = {0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a};
 
         std::ifstream datafile(datafilename.c_str(), ios_base::binary);
@@ -122,19 +127,39 @@ const std::string FieldIO::GetFileType(const std::string &filename,
     }
 
     if (size > 1)
+    {
         comm->Bcast(code, 0);
+    }
 
     std::string iofmt;
     if (code == 0)
+    {
         iofmt = "Xml";
+    }
     else if (code == 1)
+    {
         iofmt = "Hdf5";
+    }
     else
+    {
         // Error
         ASSERTL0(false, "Unknown file format");
+    }
+
     return iofmt;
 }
 
+/**
+ * @brief Construct a FieldIO object for a given input filename.
+ *
+ * This is a convenience function that takes an input filename and constructs
+ * the appropriate FieldIO subclass, using FieldIO::GetFileType.
+ *
+ * @param session   Session reader
+ * @param filename  Input filename
+ *
+ * @return FieldIO class reader for @p filename.
+ */
 FieldIOSharedPtr MakeFieldIOForFile(
     const LibUtilities::SessionReaderSharedPtr session,
     const std::string &filename)
@@ -146,10 +171,11 @@ FieldIOSharedPtr MakeFieldIOForFile(
         session->GetComm(),
         session->DefinesCmdLineArgument("shared-filesystem"));
 }
+
 /**
- * This function allows for data to be written to an FLD file when a
- * session and/or communicator is not instantiated. Typically used in
- * utilities which do not take XML input and operate in serial only.
+ * @brief This function allows for data to be written to an FLD file when a
+ * session and/or communicator is not instantiated. Typically used in utilities
+ * which do not take XML input and operate in serial only.
  */
 void Write(const std::string &outFile,
            std::vector<FieldDefinitionsSharedPtr> &fielddefs,
@@ -180,9 +206,9 @@ void Write(const std::string &outFile,
 }
 
 /**
- * This function allows for data to be imported from an FLD file when
- * a session and/or communicator is not instantiated. Typically used in
- * utilities which only operate in serial.
+ * @brief This function allows for data to be imported from an FLD file when a
+ * session and/or communicator is not instantiated. Typically used in utilities
+ * which only operate in serial.
  */
 LIB_UTILITIES_EXPORT void Import(
     const std::string &infilename,
@@ -215,42 +241,11 @@ LIB_UTILITIES_EXPORT void Import(
 }
 
 /**
- *
+ * @brief Constructor for FieldIO base class.
  */
 FieldIO::FieldIO(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem)
     : m_comm(pComm), m_sharedFilesystem(sharedFilesystem)
 {
-}
-
-/**
- * \brief add information about provenance and fieldmetadata
- */
-void FieldIO::AddInfoTag(TiXmlElement *root,
-                         const FieldMetaDataMap &fieldmetadatamap)
-{
-    TagWriterSharedPtr w = boost::make_shared<XmlTagWriter>(root);
-    AddInfoTag(w, fieldmetadatamap);
-}
-
-TagWriter::~TagWriter()
-{
-}
-
-XmlTagWriter::XmlTagWriter(TiXmlElement *elem) : m_El(elem)
-{
-}
-TagWriterSharedPtr XmlTagWriter::AddChild(const std::string &name)
-{
-    TiXmlElement *child = new TiXmlElement(name.c_str());
-    m_El->LinkEndChild(child);
-    return TagWriterSharedPtr(new XmlTagWriter(child));
-}
-
-void XmlTagWriter::SetAttr(const std::string &key, const std::string &val)
-{
-    TiXmlElement *child = new TiXmlElement(key.c_str());
-    child->LinkEndChild(new TiXmlText(val.c_str()));
-    m_El->LinkEndChild(child);
 }
 
 void FieldIO::AddInfoTag(TagWriterSharedPtr root,

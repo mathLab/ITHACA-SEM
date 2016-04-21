@@ -44,24 +44,63 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+
 namespace H5
 {
 class Group;
 typedef boost::shared_ptr<Group> GroupSharedPtr;
 }
 
+class H5DataSource : public DataSource
+{
+    H5::FileSharedPtr doc;
+
+public:
+    H5DataSource(const std::string &fn)
+        : doc(H5::File::Open(fn, H5F_ACC_RDONLY))
+    {
+    }
+
+    H5::FileSharedPtr Get()
+    {
+        return doc;
+    }
+    const H5::FileSharedPtr Get() const
+    {
+        return doc;
+    }
+
+    static DataSourceSharedPtr create(const std::string &fn)
+    {
+        return DataSourceSharedPtr(new H5DataSource(fn));
+    }
+};
+typedef boost::shared_ptr<H5DataSource> H5DataSourceSharedPtr;
+
 class H5TagWriter : public TagWriter
 {
 public:
-    H5TagWriter(H5::GroupSharedPtr grp);
-    TagWriterSharedPtr AddChild(const std::string &name);
-    void SetAttr(const std::string &key, const std::string &val);
+    H5TagWriter(H5::GroupSharedPtr grp) : m_Group(grp) {}
+
+    TagWriterSharedPtr AddChild(const std::string &name)
+    {
+        H5::GroupSharedPtr child = m_Group->CreateGroup(name);
+        return TagWriterSharedPtr(new H5TagWriter(child));
+    }
+
+    void SetAttr(const std::string &key, const std::string &val)
+    {
+        m_Group->SetAttribute(key, val);
+    }
 
 private:
     H5::GroupSharedPtr m_Group;
 };
+typedef boost::shared_ptr<H5TagWriter> H5TagWriterSharedPtr;
 
-/// Class for operating on XML FLD files
+/**
+ * @class Class for operating on HDF5-based FLD files.
+ */
 class FieldIOHdf5 : public FieldIO
 {
 public:
@@ -88,13 +127,6 @@ public:
     LIB_UTILITIES_EXPORT static std::string className;
 
     FieldIOHdf5(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem);
-
-    LIB_UTILITIES_EXPORT virtual void ImportFieldDefs(
-        DataSourceSharedPtr                     dataSource,
-        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-        bool                                    expChild)
-    {
-    }
 
     inline virtual const std::string &GetClassName() const
     {

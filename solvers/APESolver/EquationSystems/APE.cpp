@@ -36,6 +36,9 @@
 
 #include <iostream>
 
+#include <boost/random/variate_generator.hpp>
+#include <boost/random/normal_distribution.hpp>
+
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <APESolver/EquationSystems/APE.h>
 #include <LocalRegions/TriExp.h>
@@ -190,6 +193,9 @@ void APE::v_InitObject()
     {
         ASSERTL0(false, "Implicit APE not set up.");
     }
+
+    m_whiteNoiseBC_lastUpdate = -1.0;
+    m_whiteNoiseBC_p = 0.0;
 }
 
 
@@ -426,6 +432,10 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
         {
             WallBC(n, cnt, Fwd, inarray);
         }
+        else if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"WhiteNoise"))
+        {
+            WhiteNoiseBC(n, cnt, inarray);
+        }
 
         // Time Dependent Boundary Condition (specified in meshfile)
         if (m_fields[0]->GetBndConditions()[n]->IsTimeDependent())
@@ -496,6 +506,91 @@ void APE::WallBC(int bcRegion, int cnt,
             Vmath::Vcopy(nBCEdgePts,
                          &Fwd[i][id2], 1,
                          &(m_fields[i]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1], 1);
+        }
+    }
+}
+
+
+/**
+ * @brief Wall boundary conditions for the APE equations.
+ */
+void APE::WhiteNoiseBC(int bcRegion,
+                       int cnt,
+                       Array<OneD, Array<OneD, NekDouble> > &Fwd,
+                       Array<OneD, Array<OneD, NekDouble> > &physarray)
+{
+    int id1, id2, nBCEdgePts;
+    int nVariables = physarray.num_elements();
+
+    const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
+    Array<OneD, Array<OneD, NekDouble> > bf = GetBasefield();
+
+    if (m_rng.count(bcRegion) == 0)
+    {
+        m_rng[bcRegion] = boost::mt19937(bcRegion);
+    }
+
+    ASSERTL0(
+        m_fields[0]->GetBndConditions()[bcRegion]->GetBoundaryConditionType() ==
+            SpatialDomains::eDirichlet,
+        "WhiteNoise BCs must be Dirichlet type BCs");
+
+    LibUtilities::Equation cond =
+        boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(
+            m_fields[0]->GetBndConditions()[bcRegion])
+            ->m_dirichletCondition;
+    NekDouble sigma = cond.Evaluate();
+
+    ASSERTL0(sigma > NekConstants::kNekZeroTol,
+             "sigma must be greater than zero");
+
+    // random velocity perturbation
+    if (m_whiteNoiseBC_lastUpdate < m_time)
+    {
+        m_whiteNoiseBC_lastUpdate = m_time;
+
+        boost::normal_distribution<> dist(0, sigma);
+        m_whiteNoiseBC_p = dist(m_rng[bcRegion]);
+    }
+
+    int eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+    for (int e = 0; e < eMax; ++e)
+    {
+        nBCEdgePts = m_fields[0]
+                         ->GetBndCondExpansions()[bcRegion]
+                         ->GetExp(e)
+                         ->GetTotPoints();
+        id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
+        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt + e]);
+
+        Array<OneD, Array<OneD, NekDouble> > tmp(nVariables);
+        for (int i = 0; i < nVariables; ++i)
+        {
+            tmp[i] = Array<OneD, NekDouble>(nBCEdgePts, 0.0);
+        }
+
+        // pressure perturbation
+        Vmath::Fill(nBCEdgePts, m_whiteNoiseBC_p, &tmp[0][0], 1);
+
+        // velocity perturbation
+        for (int i = 0; i < nBCEdgePts; ++i)
+        {
+            NekDouble u = m_whiteNoiseBC_p /
+                          sqrt(m_gamma * bf[0][id2 + i] * bf[1][id2 + i]);
+            for (int j = 0; j < m_spacedim; ++j)
+            {
+                tmp[1 + j][i] = -1.0 * u * m_traceNormals[j][id2 + i];
+            }
+        }
+
+        // Copy boundary adjusted values into the boundary expansion
+        for (int i = 0; i < nVariables; ++i)
+        {
+            Vmath::Vcopy(nBCEdgePts,
+                         &tmp[i][0], 1,
+                         &(m_fields[i]
+                               ->GetBndCondExpansions()[bcRegion]
+                               ->UpdatePhys())[id1], 1);
         }
     }
 }

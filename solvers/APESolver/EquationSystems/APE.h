@@ -37,6 +37,8 @@
 #ifndef NEKTAR_SOLVERS_APESOLVER_EQUATIONSYSTEMS_APE_H
 #define NEKTAR_SOLVERS_APESOLVER_EQUATIONSYSTEMS_APE_H
 
+#include <boost/random/mersenne_twister.hpp>
+
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/Advection/Advection.h>
 #include <SolverUtils/Forcing/Forcing.h>
@@ -121,9 +123,18 @@ class APE : public UnsteadySystem
 
     private:
 
+        std::map<int, boost::mt19937>  m_rng;
+
+        NekDouble                 m_whiteNoiseBC_lastUpdate;
+
+        NekDouble                 m_whiteNoiseBC_p;
+
         void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
 
         void WallBC(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &Fwd, Array<OneD, Array<OneD, NekDouble> > &physarray);
+
+        void WhiteNoiseBC(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &Fwd, Array<OneD, Array<OneD, NekDouble> > &physarray);
+
 };
 }
 

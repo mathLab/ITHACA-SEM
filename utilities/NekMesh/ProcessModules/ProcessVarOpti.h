@@ -42,7 +42,7 @@ namespace Nektar
 {
 namespace Utilities
 {
-typedef boost::unordered_map<NodeSharedPtr, vector<ElementSharedPtr>, NodeHash> NodeElMap;
+typedef map<int, vector<ElementSharedPtr> > NodeElMap;
 /**
  * @brief This processing module calculates the Jacobian of elements
  * using %SpatialDomains::GeomFactors and the %Element::GetGeom

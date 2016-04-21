@@ -360,6 +360,22 @@ struct NodeHash : std::unary_function<NodeSharedPtr, std::size_t>
     }
 };
 typedef boost::unordered_set<NodeSharedPtr, NodeHash> NodeSet;
+
+struct NodeComp : std::binary_function<NodeSharedPtr, NodeSharedPtr, bool>
+{
+    bool operator()(NodeSharedPtr const &p1, NodeSharedPtr const &p2) const
+    {
+        NekDouble dist = sqrt((p1->m_x-p2->m_x)*(p1->m_x-p2->m_x)+
+                              (p1->m_y-p2->m_y)*(p1->m_y-p2->m_y)+
+                              (p1->m_z-p2->m_z)*(p1->m_z-p2->m_z));
+        if(dist < 1e-6)
+        {
+            return false;
+        }
+
+        return p1->m_x < p2->m_x;
+    }
+};
 }
 }
 

@@ -65,6 +65,9 @@ ProcessVarOpti::~ProcessVarOpti()
 {
 }
 
+NekDouble dir[8][2] ={{1.0,1.0} , {0.0,1.0} , {-1.0,1.0}, {-1.0,0.0}, {-1.0,-1.0},
+                      {0.0,-1.0}, {1.0,-1.0}, {1.0,0.0}};
+
 void ProcessVarOpti::Process()
 {
     if (m_mesh->m_verbose)
@@ -83,17 +86,80 @@ void ProcessVarOpti::Process()
 
     GetElementMap();
 
-    for(int i = 0; i < optiNodes.size(); i++)
+    NekDouble functionalStart = 0.0;
+    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
-        NekDouble w = GetFunctional(optiNodes[i]);
-        cout << w << endl;
+        functionalStart += GetElFunctional(m_mesh->m_element[2][i]);
     }
+
+
+    int ctr = 0;
+    bool repeat = true;
+    while (repeat)
+    {
+        repeat = false;
+        for(int i = 0; i < optiNodes.size(); i++)
+        {
+            cout << i << endl;
+            NekDouble currentW = GetFunctional(optiNodes[i]);
+            NekDouble dx = 0.01;
+
+            while(dx > 1e-6)
+            {
+                bool end = false;
+                for(int j = 0; j < 8; j++)
+                {
+                    NodeSharedPtr tstNode = optiNodes[i]->copy();
+                    tstNode->m_x += dir[j][0] * dx;
+                    tstNode->m_y += dir[j][1] * dx;
+
+                    cout << currentW << " " << GetFunctional(tstNode) << endl;
+                    if(GetFunctional(tstNode) < currentW)
+                    {
+                        cout << "hit" << endl;
+                        optiNodes[i] = tstNode;
+                        end = true;
+                        break;
+                    }
+                }
+                if(end)
+                {
+                    repeat = true;
+                    break;
+                }
+                else
+                {
+                    dx /= 2.0;
+                }
+            }
+        }
+        break;
+    }
+
+
+
+
+
+
+
+
+
+    NekDouble functionalEnd = 0.0;
+
+    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+    {
+        functionalEnd += GetElFunctional(m_mesh->m_element[2][i]);
+    }
+
+
+    cout << "start: " << functionalStart << "   end: " << functionalEnd << endl;
+    exit(-1);
 
 }
 
 NekDouble ProcessVarOpti::GetFunctional(NodeSharedPtr n)
 {
-    NodeElMap::iterator it = nodeElMap.find(n);
+    NodeElMap::iterator it = nodeElMap.find(n->m_id);
     ASSERTL0(it != nodeElMap.end(),"could not find");
     vector<ElementSharedPtr> els = it->second;
 
@@ -392,7 +458,7 @@ void ProcessVarOpti::GetElementMap()
         el->GetCurvedNodes(n);
         for(int j = 0; j < 3 * (5 - 1); j++)
         {
-            nodeElMap[n[j]].push_back(el);
+            nodeElMap[n[j]->m_id].push_back(el);
         }
     }
 }
@@ -436,6 +502,18 @@ vector<NodeSharedPtr> ProcessVarOpti::GetFreeNodes()
             {
                 ret.push_back(n[j]);
             }
+        }
+    }
+
+    int id = m_mesh->m_vertexSet.size();
+    //enumerate the curved nodes for mapping purposes
+    for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+    {
+        vector<NodeSharedPtr> n;
+        (*it)->GetCurvedNodes(n);
+        for(int j = 1; j < n.size()-1; j++)
+        {
+            n[j]->m_id = id++;
         }
     }
 

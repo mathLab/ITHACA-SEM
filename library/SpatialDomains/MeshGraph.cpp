@@ -1052,6 +1052,20 @@ namespace Nektar
                     cout << "    Number of elements: " << fielddefs.size() << endl;
                     SetExpansions(fielddefs);
                 }
+                else if(expType == "F")
+                {
+                    ASSERTL0(expansion->Attribute("FILE"),
+                                "Attribute FILE expected for type F expansion");
+                    std::string filenameStr = expansion->Attribute("FILE");
+                    ASSERTL0(!filenameStr.empty(),
+                                "A filename must be specified for the FILE "
+                                "attribute of expansion");
+
+                    std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
+                    LibUtilities::FieldIO f(m_session->GetComm());
+                    f.Import(filenameStr, fielddefs);
+                    SetExpansions(fielddefs);
+                }
                 else
                 {
                     ASSERTL0(false,"Expansion type not defined");

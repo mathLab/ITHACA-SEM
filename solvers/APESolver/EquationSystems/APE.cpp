@@ -425,24 +425,42 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
     }
 
     // loop over Boundary Regions
-    for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+    for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
     {
-        // Wall Boundary Condition
-        if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
-        {
-            WallBC(n, cnt, Fwd, inarray);
-        }
-        else if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"WhiteNoise"))
-        {
-            WhiteNoiseBC(n, cnt, inarray);
-        }
-        else if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"RiemannInvariantBC"))
-        {
-            RiemannInvariantBC(n, cnt, Fwd, inarray);
-        }
+        std::string userDefStr =
+            m_fields[0]->GetBndConditions()[n]->GetUserDefined();
 
-        // Time Dependent Boundary Condition (specified in meshfile)
-        if (m_fields[0]->GetBndConditions()[n]->IsTimeDependent())
+        if (!userDefStr.empty())
+        {
+            // Wall Boundary Condition
+            if (boost::iequals(userDefStr, "Wall"))
+            {
+                WallBC(n, cnt, Fwd, inarray);
+            }
+            else if (boost::iequals(userDefStr, "WhiteNoise"))
+            {
+                WhiteNoiseBC(n, cnt, Fwd, inarray);
+            }
+            else if (boost::iequals(userDefStr, "RiemannInvariantBC"))
+            {
+                RiemannInvariantBC(n, cnt, Fwd, inarray);
+            }
+            else if (boost::iequals(userDefStr, "TimeDependent"))
+            {
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    varName = m_session->GetVariable(i);
+                    m_fields[i]->EvaluateBoundaryConditions(time, varName);
+                }
+            }
+            else
+            {
+                string errmsg = "Unrecognised boundary condition: ";
+                errmsg += userDefStr;
+                ASSERTL0(false, errmsg.c_str());
+            }
+        }
+        else
         {
             for (int i = 0; i < nvariables; ++i)
             {
@@ -450,7 +468,8 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
                 m_fields[i]->EvaluateBoundaryConditions(time, varName);
             }
         }
-        cnt +=m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
+
+        cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
     }
 }
 

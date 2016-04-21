@@ -189,9 +189,12 @@ namespace Nektar
             std::vector<unsigned int>           m_domain;
             std::map<std::string, std::string>  m_vertexAttributes;
 
-            // hierarchial mapping: composite id -> field name -> integer list
+            // hierarchial mapping: elmt id -> field name -> integer list
             // of directional nummodes described by expansion type clause.
             std::map<int, NummodesPerField>     m_expansions;
+
+            // map of each elements shape
+            std::map<int, char>                 m_shape;
 
             std::map<std::string, int>          m_fieldNameToId;
             std::map<int, MultiWeight>          m_vertWeights;

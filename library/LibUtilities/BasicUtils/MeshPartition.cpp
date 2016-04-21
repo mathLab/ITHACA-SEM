@@ -52,6 +52,7 @@
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/CompressData.h>
+#include <LibUtilities/BasicUtils/FieldIO.h>
 
 #include <LibUtilities/Foundations/Foundations.hpp>
 
@@ -195,12 +196,6 @@ namespace Nektar
             TiXmlElement *expansion = expansionTypes->FirstChildElement();
             std::string   expType   = expansion->Value();
 
-
-            if(expType != "E")
-            {
-                ASSERTL0(false,"Expansion type not defined or not supported at the moment");
-            }
-
             /// Expansiontypes will contain plenty of data,
             /// where relevant at this stage are composite
             /// ID(s) that this expansion type describes,
@@ -208,81 +203,175 @@ namespace Nektar
             /// expansion relates to. If this does not exist
             /// the variable is only set to "DefaultVar".
 
-            while (expansion)
+            if(expType == "E")
             {
-                std::vector<unsigned int> composite;
-                std::vector<unsigned int> nummodes;
-                std::vector<std::string>  fieldName;
-
-                const char *nModesStr = expansion->Attribute("NUMMODES");
-                ASSERTL0(nModesStr,"NUMMODES was not defined in EXPANSION section of input");
-                std::string numModesStr = nModesStr;
-                bool valid = ParseUtils::GenerateOrderedVector(numModesStr.c_str(), nummodes);
-                ASSERTL0(valid, "Unable to correctly parse the number of modes.");
-
-                if (nummodes.size() == 1)
+                while (expansion)
                 {
-                    for (int i = 1; i < m_dim; i++)
+                    std::vector<unsigned int> composite;
+                    std::vector<unsigned int> nummodes;
+                    std::vector<std::string>  fieldName;
+
+                    const char *nModesStr = expansion->Attribute("NUMMODES");
+                    ASSERTL0(nModesStr,"NUMMODES was not defined in EXPANSION section of input");
+                    std::string numModesStr = nModesStr;
+                    bool valid = ParseUtils::GenerateOrderedVector(numModesStr.c_str(), nummodes);
+                    ASSERTL0(valid, "Unable to correctly parse the number of modes.");
+
+                    if (nummodes.size() == 1)
                     {
-                        nummodes.push_back( nummodes[0] );
-                    }
-                }
-                ASSERTL0(nummodes.size() == m_dim,"Number of modes should match mesh dimension");
-
-
-                const char *fStr = expansion->Attribute("FIELDS");
-                if(fStr)
-                {
-                    std::string fieldStr = fStr;
-                    bool  valid = ParseUtils::GenerateOrderedStringVector(fieldStr.c_str(),fieldName);
-                    ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");
-
-                    for (int i = 0; i < fieldName.size(); ++i)
-                    {
-                        if (m_fieldNameToId.count(fieldName[i]) == 0)
+                        for (int i = 1; i < m_dim; i++)
                         {
-                            int k = m_fieldNameToId.size();
-                            m_fieldNameToId[ fieldName[i] ] = k;
+                            nummodes.push_back( nummodes[0] );
+                        }
+                    }
+                    ASSERTL0(nummodes.size() == m_dim,"Number of modes should match mesh dimension");
+
+
+                    const char *fStr = expansion->Attribute("FIELDS");
+                    if(fStr)
+                    {
+                        std::string fieldStr = fStr;
+                        bool  valid = ParseUtils::GenerateOrderedStringVector(fieldStr.c_str(),fieldName);
+                        ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");
+
+                        for (int i = 0; i < fieldName.size(); ++i)
+                        {
+                            if (m_fieldNameToId.count(fieldName[i]) == 0)
+                            {
+                                int k = m_fieldNameToId.size();
+                                m_fieldNameToId[ fieldName[i] ] = k;
+                                m_numFields++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        fieldName.push_back("DefaultVar");
+                        int k = m_fieldNameToId.size();
+
+                        if (m_fieldNameToId.count("DefaultVar") == 0)
+                        {
+                            ASSERTL0(k == 0,
+                                     "Omitting field variables and explicitly listing " \
+                                     "them in different ExpansionTypes is wrong practise");
+
+                            m_fieldNameToId[ "DefaultVar" ] = k;
                             m_numFields++;
                         }
                     }
-                }
-                else
-                {
-                    fieldName.push_back("DefaultVar");
-                    int k = m_fieldNameToId.size();
 
-                    if (m_fieldNameToId.count("DefaultVar") == 0)
+                    std::string compositeStr = expansion->Attribute("COMPOSITE");
+                    ASSERTL0(compositeStr.length() > 3, "COMPOSITE must be specified in expansion definition");
+                    int beg = compositeStr.find_first_of("[");
+                    int end = compositeStr.find_first_of("]");
+                    std::string compositeListStr = compositeStr.substr(beg+1,end-beg-1);
+                    bool parseGood = ParseUtils::GenerateSeqVector(compositeListStr.c_str(), composite);
+                    ASSERTL0(parseGood && !composite.empty(),
+                        (std::string("Unable to read composite index range: ") + compositeListStr).c_str());
+
+
+                    // construct mapping (elmt id, field name) -> nummodes
+                    for (int i = 0; i < composite.size(); ++i)
                     {
-                        ASSERTL0(k == 0,
-                                 "Omitting field variables and explicitly listing " \
-                                 "them in different ExpansionTypes is wrong practise");
-
-                        m_fieldNameToId[ "DefaultVar" ] = k;
-                        m_numFields++;
+                        for (int j = 0; j < fieldName.size(); j++)
+                        {
+                            for (unsigned int k = 0; k < m_meshComposites[i].list.size(); ++k)
+                            {
+                                int elid = m_meshComposites[composite[i]].list[k];
+                                m_expansions[elid][fieldName[j]] = nummodes;
+                                m_shape[elid] = m_meshComposites[composite[i]].type;
+                            }
+                        }
                     }
+
+                    expansion = expansion->NextSiblingElement("E");
                 }
+            }
+            else if(expType == "F")
+            {
+                    ASSERTL0(expansion->Attribute("FILE"),
+                                "Attribute FILE expected for type F expansion");
+                    std::string filenameStr = expansion->Attribute("FILE");
+                    ASSERTL0(!filenameStr.empty(),
+                                "A filename must be specified for the FILE "
+                                "attribute of expansion");
 
-                std::string compositeStr = expansion->Attribute("COMPOSITE");
-                ASSERTL0(compositeStr.length() > 3, "COMPOSITE must be specified in expansion definition");
-                int beg = compositeStr.find_first_of("[");
-                int end = compositeStr.find_first_of("]");
-                std::string compositeListStr = compositeStr.substr(beg+1,end-beg-1);
-                bool parseGood = ParseUtils::GenerateSeqVector(compositeListStr.c_str(), composite);
-                ASSERTL0(parseGood && !composite.empty(),
-                    (std::string("Unable to read composite index range: ") + compositeListStr).c_str());
+                    std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
+                    LibUtilities::FieldIO f(pSession->GetComm());
+                    f.Import(filenameStr, fielddefs);
 
-
-                // construct mapping (field name, CompositeID) -> nummodes
-                for (int i = 0; i < composite.size(); ++i)
-                {
-                    for (int j = 0; j < fieldName.size(); j++)
+                    for (int i = 0; i < fielddefs.size(); ++i)
                     {
-                        m_expansions[composite[i]][fieldName[j]] = nummodes;
+                        int numHomoDir = fielddefs[i]->m_numHomogeneousDir;
+                        int cnt = 0;
+                        for (int j = 0; j < fielddefs[i]->m_elementIDs.size(); ++j)
+                        {
+                            int elid = fielddefs[i]->m_elementIDs[j];
+                            std::vector<unsigned int> nummodes;
+                            for (int k = 0; k < m_dim; k++)
+                            {
+                                nummodes.push_back(fielddefs[i]->m_numModes[cnt++]);
+                            }
+                            if (fielddefs[i]->m_uniOrder)
+                            {
+                                cnt = 0;
+                            }
+                            else
+                            {
+                                cnt += numHomoDir;
+                            }
+                            for (int k = 0; k < fielddefs[i]->m_fields.size(); k++)
+                            {
+                                std::string fieldName = fielddefs[i]->m_fields[k];
+                                m_expansions[elid][fieldName] = nummodes;
+                            }
+                            switch (fielddefs[i]->m_shapeType)
+                            {
+                                case eSegment:
+                                {
+                                    m_shape[elid] = 'S';
+                                    break;
+                                }
+                                case eTriangle:
+                                {
+                                    m_shape[elid] = 'T';
+                                    break;
+                                }
+                                case eQuadrilateral:
+                                {
+                                    m_shape[elid] = 'Q';
+                                    break;
+                                }
+                                case eTetrahedron:
+                                {
+                                    m_shape[elid] = 'A';
+                                    break;
+                                }
+                                case ePyramid:
+                                {
+                                    m_shape[elid] = 'R';
+                                    break;
+                                }
+                                case ePrism:
+                                {
+                                    m_shape[elid] = 'P';
+                                    break;
+                                }
+                                case eHexahedron:
+                                {
+                                    m_shape[elid] = 'H';
+                                    break;
+                                }
+                                default:
+                                    ASSERTL0 (false, "Shape not recognized.");
+                                    break;
+                            }
+                        }
                     }
-                }
-
-                expansion = expansion->NextSiblingElement("E");
+            }
+            else
+            {
+                ASSERTL0(false,"Expansion type not defined or not supported at the moment");
             }
         }
 
@@ -931,17 +1020,18 @@ namespace Nektar
             std::map<int, int> elmtSizes;
             std::map<int, int> elmtBndSizes;
 
-            for (unsigned int i = 0; i < m_domain.size(); ++i)
+            for (std::map<int, NummodesPerField>::iterator expIt =
+                    m_expansions.begin(); expIt != m_expansions.end(); ++expIt)
             {
-                int cId = m_domain[i];
-                NummodesPerField npf = m_expansions[cId];
+                int elid = expIt->first;
+                NummodesPerField npf = expIt->second;
 
                 for (NummodesPerField::iterator it = npf.begin(); it != npf.end(); ++it)
                 {
                     ASSERTL0(it->second.size() == m_dim,
                         " Number of directional" \
-                        " modes in expansion spec for composite id = " + 
-                        boost::lexical_cast<std::string>(cId) +
+                        " modes in expansion spec for element id = " +
+                        boost::lexical_cast<std::string>(elid) +
                         " and field " +
                         boost::lexical_cast<std::string>(it->first) +
                         " does not correspond to mesh dimension");
@@ -954,17 +1044,10 @@ namespace Nektar
                         nc = it->second[2];
                     }
 
-                    int weight    = CalculateElementWeight(
-                        m_meshComposites[cId].type, false, na, nb, nc);
-                    int bndWeight = CalculateElementWeight(
-                        m_meshComposites[cId].type, true,  na, nb, nc);
-
-                    for (unsigned int j = 0; j < m_meshComposites[cId].list.size(); ++j)
-                    {
-                        int elid = m_meshComposites[cId].list[j];
-                        elmtSizes[elid] = weight;
-                        elmtBndSizes[elid] = bndWeight;
-                    }
+                    elmtSizes[elid]    = CalculateElementWeight(
+                        m_shape[elid], false, na, nb, nc);
+                    elmtBndSizes[elid] = CalculateElementWeight(
+                        m_shape[elid], true,  na, nb, nc);
                 }
             }
 
@@ -1061,17 +1144,18 @@ namespace Nektar
                 m_vertWeights[eIt->first] = weight;
             }
 
-            for (unsigned int i = 0; i < m_domain.size(); ++i)
+            for (std::map<int, NummodesPerField>::iterator expIt =
+                    m_expansions.begin(); expIt != m_expansions.end(); ++expIt)
             {
-                int cId = m_domain[i];
-                NummodesPerField npf = m_expansions[cId];
+                int elid = expIt->first;
+                NummodesPerField npf = expIt->second;
 
                 for (NummodesPerField::iterator it = npf.begin(); it != npf.end(); ++it)
                 {
                     ASSERTL0(it->second.size() == m_dim,
                         " Number of directional" \
-                        " modes in expansion spec for composite id = " + 
-                        boost::lexical_cast<std::string>(cId) +
+                        " modes in expansion spec for element id = " +
+                        boost::lexical_cast<std::string>(elid) +
                         " and field " +
                         boost::lexical_cast<std::string>(it->first) +
                         " does not correspond to mesh dimension");
@@ -1088,14 +1172,9 @@ namespace Nektar
                         nc = it->second[2];
                     }
 
-                    int bndWeight = CalculateElementWeight(
-                        m_meshComposites[cId].type, true, na, nb, nc);
-
-                    for (unsigned int j = 0; j < m_meshComposites[cId].list.size(); ++j)
-                    {
-                        int elmtId = m_meshComposites[cId].list[j];
-                        m_vertWeights[elmtId][m_fieldNameToId[it->first]] = bndWeight;
-                    }
+                    m_vertWeights[elid][m_fieldNameToId[it->first]] =
+                            CalculateElementWeight(m_shape[elid], true,
+                                                   na, nb, nc);
                 }
             } // for i
         }

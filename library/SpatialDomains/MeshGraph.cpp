@@ -2375,7 +2375,7 @@ namespace Nektar
                     std::string field = fielddef[i]->m_fields[j];
                     if(m_expansionMapShPtrMap.count(field) == 0)
                     {
-                        expansionMap = MemoryManager<ExpansionMap>::AllocateSharedPtr();
+                        expansionMap = SetUpExpansionMap();
                         m_expansionMapShPtrMap[field] = expansionMap;
 
                         // check to see if DefaultVar also not set and
@@ -2383,26 +2383,6 @@ namespace Nektar
                         if(m_expansionMapShPtrMap.count("DefaultVar") == 0)
                         {
                             m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
-                        }
-
-                        // loop over all elements and set expansion
-                        for(k = 0; k < fielddef.size(); ++k)
-                        {
-                            for(int h = 0; h < fielddef[k]->m_fields.size(); ++h)
-                            {
-                                if(fielddef[k]->m_fields[h] == field)
-                                {
-                                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
-                                    LibUtilities::BasisKeyVector def;
-
-                                    for(int g = 0; g < fielddef[k]->m_elementIDs.size(); ++g)
-                                    {
-                                        ExpansionShPtr tmpexp =
-                                                MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
-                                        (*expansionMap)[fielddef[k]->m_elementIDs[g]] = tmpexp;
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -2475,6 +2455,11 @@ namespace Nektar
                             if(m_triGeoms.count(fielddef[i]->m_elementIDs[j]) == 0)
                             {
                                 // skip element likely from parallel read
+                                if(!UniOrder)
+                                {
+                                    cnt += 2;
+                                    cnt += fielddef[i]->m_numHomogeneousDir;
+                                }
                                 continue;
                             }
                             geom = m_triGeoms[fielddef[i]->m_elementIDs[j]];
@@ -2530,6 +2515,11 @@ namespace Nektar
                             if(m_quadGeoms.count(fielddef[i]->m_elementIDs[j]) == 0)
                             {
                                 // skip element likely from parallel read
+                                if(!UniOrder)
+                                {
+                                    cnt += 2;
+                                    cnt += fielddef[i]->m_numHomogeneousDir;
+                                }
                                 continue;
                             }
 
@@ -2575,6 +2565,10 @@ namespace Nektar
                             // parallel runs
                             if(m_tetGeoms.count(k) == 0)
                             {
+                                if(!UniOrder)
+                                {
+                                    cnt += 3;
+                                }
                                 continue;
                             }
                             geom = m_tetGeoms[k];
@@ -2661,6 +2655,10 @@ namespace Nektar
                             k = fielddef[i]->m_elementIDs[j];
                             if(m_prismGeoms.count(k) == 0)
                             {
+                                if(!UniOrder)
+                                {
+                                    cnt += 3;
+                                }
                                 continue;
                             }
                             geom = m_prismGeoms[k];
@@ -2784,6 +2782,10 @@ namespace Nektar
                             k = fielddef[i]->m_elementIDs[j];
                             if(m_hexGeoms.count(k) == 0)
                             {
+                                if(!UniOrder)
+                                {
+                                    cnt += 3;
+                                }
                                 continue;
                             }
 

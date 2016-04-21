@@ -90,7 +90,6 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     }
 
     // We make a number of assumptions in this code:
-    //
     //   1. All element ids have the same type: unsigned int
     //   2. All elements within a given field have the same number of values
     //   3. All element values have the same type, NekDouble
@@ -131,8 +130,8 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         homoYIDs(nFields), homoZIDs(nFields);
     std::vector<std::string> numModesPerDirs(nFields);
 
-    // calculate the total number of elements handled by this MPI process and
-    // the total number of bytes required to store the elements, base the name
+    // Calculate the total number of elements handled by this MPI process and
+    // the total number of bytes required to store the elements. Base the name
     // of each field on the hash of the field definition.
     for (int f = 0; f < nFields; ++f)
     {
@@ -704,6 +703,14 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
     m_comm->Block();
 }
 
+/**
+ * @brief Import field definitions from a HDF5 document.
+ *
+ * @param readPL       Reading parameter list.
+ * @param root         Root group containing field definitions.
+ * @param group        Group name to process.
+ * @param def          On output contains field definitions.
+ */
 void FieldIOHdf5::ImportFieldDef(
     H5::PListSharedPtr        readPL,
     H5::GroupSharedPtr        root,
@@ -876,6 +883,18 @@ void FieldIOHdf5::ImportFieldDef(
     }
 }
 
+/**
+ * @brief Import the field data from the HDF5 document.
+ *
+ * @param readPL       Reading parameter list.
+ * @param data_dset    Pointer to the `DATA` dataset.
+ * @param data_fspace  Pointer to the `DATA` data space.
+ * @param data_i       ...
+ * @param decomps      Information from the `DECOMPOSITION` dataset.
+ * @param decomp       ...
+ * @param fielddef     Field definitions for this file
+ * @param fielddata    On return contains resulting field data.
+ */
 void FieldIOHdf5::ImportFieldData(
     H5::PListSharedPtr               readPL,
     H5::DataSetSharedPtr             data_dset,
@@ -901,14 +920,6 @@ void FieldIOHdf5::ImportFieldData(
         fielddata.size() == datasize * fielddef->m_fields.size(),
         prfx.str() +
         "input data is not the same length as header information.");
-}
-
-DataSourceSharedPtr FieldIOHdf5::v_ImportFieldMetaData(
-    std::string filename, FieldMetaDataMap &fieldmetadatamap)
-{
-    DataSourceSharedPtr ans = H5DataSource::create(filename);
-    v_ImportFieldMetaData(ans, fieldmetadatamap);
-    return ans;
 }
 
 void FieldIOHdf5::v_ImportFieldMetaData(DataSourceSharedPtr dataSource,

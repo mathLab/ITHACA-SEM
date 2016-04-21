@@ -44,10 +44,16 @@ namespace Nektar
 namespace LibUtilities
 {
 
+/**
+ * @class Class encapsulating simple XML data source using TinyXML.
+ */
 class XmlDataSource : public DataSource
 {
 public:
+    /// Default constructor.
     XmlDataSource(TiXmlDocument &doc) : m_doc(&doc) { }
+
+    /// Constructor based on filename.
     XmlDataSource(const std::string &fn)
     {
         bool loadOkay = m_doc->LoadFile();
@@ -59,44 +65,52 @@ public:
         ASSERTL0(loadOkay, errstr.str());
     }
 
+    /// Destructor cleans up memory usage.
     ~XmlDataSource()
     {
         delete m_doc;
     }
 
+    /// Return the TinyXML document of this source.
     TiXmlDocument &Get()
     {
         return *m_doc;
     }
 
+    /// Return the TinyXML document of this source.
     const TiXmlDocument &Get() const
     {
         return *m_doc;
     }
 
+    /// Create a new XML data source based on the filename.
     static DataSourceSharedPtr create(const std::string &fn)
     {
         return DataSourceSharedPtr(new XmlDataSource(fn));
     }
 
+    /// Create a new XML data source based on a TiXmlDocument.
     static DataSourceSharedPtr create(TiXmlDocument &fn)
     {
         return DataSourceSharedPtr(new XmlDataSource(fn));
     }
 
 private:
+    /// Internal TinyXML document storage.
     TiXmlDocument *m_doc;
 };
 typedef boost::shared_ptr<XmlDataSource> XmlDataSourceSharedPtr;
 
 /**
- * @brief Simple class for writing XML hierarchical data using TinyXML.
+ * @class Simple class for writing XML hierarchical data using TinyXML.
  */
 class XmlTagWriter : public TagWriter
 {
 public:
+    /// Default constructor.
     XmlTagWriter(TiXmlElement *elem) : m_El(elem) {}
 
+    /// Add a child node.
     virtual TagWriterSharedPtr AddChild(const std::string &name)
     {
         TiXmlElement *child = new TiXmlElement(name.c_str());
@@ -104,6 +118,7 @@ public:
         return TagWriterSharedPtr(new XmlTagWriter(child));
     }
 
+    /// Set an attribute key/value pair on this tag.
     virtual void SetAttr(const std::string &key, const std::string &val)
     {
         TiXmlElement *child = new TiXmlElement(key.c_str());
@@ -112,38 +127,68 @@ public:
     }
 
 private:
+    /// Internal TinyXML document storage.
     TiXmlElement *m_El;
 };
 typedef boost::shared_ptr<XmlTagWriter> XmlTagWriterSharedPtr;
 
-/// Class for operating on XML FLD files
+/**
+ * @class Class for operating on XML FLD files.
+ *
+ * This class is the default for Nektar++ output. It reads and writes one XML
+ * file per processor that represents the underlying field data. For serial
+ * output, the format of an XML file obeys the following structure:
+ *
+ * ```
+ * <NEKTAR>
+ *     <Metadata>
+ *         ...
+ *     </Metadata>
+ *     <ELEMENT FIELDS="..." ...> data1 </ELEMENT>
+ *     <ELEMENT FIELDS="..." ...> data2 </ELEMENT>
+ *     ...
+ * </NEKTAR>
+ * ```
+ *
+ *   - Metadata is converted as key/value pairs in the `<Metadata>` tag.
+ *   - There are one or more ELEMENT blocks, whose attributes correspond with
+ *     the FieldDefinitions class variables.
+ *   - Element data is stored as a base64-encoded zlib-compressed binary
+ *     double-precision data using the functions from CompressData.
+ *
+ * In parallel, each process writes its contributions into an XML file of the
+ * form `P0000001.fld` (where 1 is replaced by the rank of the process) inside a
+ * directory with the desired output name. These files only include the
+ * `ELEMENT` data. Metadata are instead stored in a separate `Info.xml` file,
+ * which contains the Metadata and additional tags of the form
+ *
+ * `<Partition FileName="P0000000.fld"> ID list </Partition>`
+ *
+ * The ID list enumerates all element IDs on each partition's contribution. For
+ * large parallel jobs, this is used to avoid each process reading in every
+ * single partition in order to load field data.
+ */
 class FieldIOXml : public FieldIO
 {
 public:
     /// Creates an instance of this class
-    LIB_UTILITIES_EXPORT
-    static FieldIOSharedPtr create(LibUtilities::CommSharedPtr pComm,
-                                   bool sharedFilesystem)
+    LIB_UTILITIES_EXPORT static FieldIOSharedPtr create(
+        LibUtilities::CommSharedPtr pComm, bool sharedFilesystem)
     {
         return MemoryManager<FieldIOXml>::AllocateSharedPtr(pComm,
                                                             sharedFilesystem);
     }
 
     /// Name of class
-    LIB_UTILITIES_EXPORT
-    static std::string className;
+    LIB_UTILITIES_EXPORT static std::string className;
 
     FieldIOXml(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem);
 
-    LIB_UTILITIES_EXPORT std::string SetUpOutput(const std::string outname);
-
-    /// Imports the definition of the fields.
     LIB_UTILITIES_EXPORT void ImportFieldDefs(
         DataSourceSharedPtr dataSource,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         bool expChild);
 
-    /// Imports the data fields.
     LIB_UTILITIES_EXPORT void ImportFieldData(
         DataSourceSharedPtr dataSource,
         const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
@@ -166,7 +211,6 @@ public:
         std::vector<std::vector<unsigned int> > &elementList,
         FieldMetaDataMap &fieldmetadatamap);
 
-    /// Imports an FLD file.
     LIB_UTILITIES_EXPORT void v_Import(
         const std::string &infilename,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
@@ -175,23 +219,23 @@ public:
         FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
         const Array<OneD, int> ElementiDs = NullInt1DArray);
 
+    /// Returns the class name.
     inline virtual const std::string &GetClassName() const
     {
         return className;
     }
 
 private:
-    /// Write data in FLD format
     LIB_UTILITIES_EXPORT virtual void v_Write(
         const std::string &outFile,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         std::vector<std::vector<NekDouble> > &fielddata,
         const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap);
 
-    /// Imports the definition of the meta data
-    LIB_UTILITIES_EXPORT DataSourceSharedPtr v_ImportFieldMetaData(
+    LIB_UTILITIES_EXPORT virtual DataSourceSharedPtr v_ImportFieldMetaData(
         std::string filename, FieldMetaDataMap &fieldmetadatamap);
 };
+
 }
 }
 #endif

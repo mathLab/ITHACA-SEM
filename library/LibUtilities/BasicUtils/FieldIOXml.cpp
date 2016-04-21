@@ -52,14 +52,18 @@ namespace LibUtilities
 std::string FieldIOXml::className = GetFieldIOFactory().RegisterCreatorFunction(
     "Xml", FieldIOXml::create, "XML-based output of field data.");
 
+/**
+ * @brief Default constructor.
+ *
+ * @param pComm              Communicator.
+ * @param sharedFilesystem   True if the underlying filesystem is shared by the
+ *                           compute nodes.
+ */
 FieldIOXml::FieldIOXml(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem)
     : FieldIO(pComm, sharedFilesystem)
 {
 }
 
-/**
- *
- */
 void FieldIOXml::v_Write(const std::string &outFile,
                          std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                          std::vector<std::vector<NekDouble> > &fielddata,
@@ -91,7 +95,7 @@ void FieldIOXml::v_Write(const std::string &outFile,
     // Prepare to write out data. In parallel, we must create directory and
     // determine the full pathname to the file to write out.  Any existing
     // file/directory which is in the way is removed.
-    std::string filename = SetUpOutput(outFile);
+    std::string filename = SetUpOutput(outFile, true);
     SetUpFieldMetaData(outFile, fielddefs, fieldmetadatamap);
 
     // Create the file (partition)
@@ -332,13 +336,22 @@ void FieldIOXml::v_Write(const std::string &outFile,
 }
 
 /**
+ * @brief Write out a file containing element ID to partition mapping.
  *
+ * This function writes out an XML file (usually called `Info.xml`) that
+ * contains the element IDs that are contained within each partition, as well as
+ * the field metadata map.
+ *
+ * @param outFile            Output multi-field file name.
+ * @param fileNames          List of partition filenames.
+ * @param elementList        Vector of element IDs that lie on each process.
+ * @param fieldmetadatamap   Field metadata map that is written into @p outFile.
  */
 void FieldIOXml::WriteMultiFldFileIDs(
-    const std::string &outFile,
-    const std::vector<std::string> fileNames,
+    const std::string                       &outFile,
+    const std::vector<std::string>           fileNames,
     std::vector<std::vector<unsigned int> > &elementList,
-    const FieldMetaDataMap &fieldmetadatamap)
+    const FieldMetaDataMap                  &fieldmetadatamap)
 {
     TiXmlDocument doc;
     TiXmlDeclaration *decl = new TiXmlDeclaration("1.0", "utf-8", "");
@@ -371,13 +384,22 @@ void FieldIOXml::WriteMultiFldFileIDs(
 }
 
 /**
+ * @brief Read file containing element ID to partition mapping.
  *
+ * This function reads an XML file (usually called `Info.xml`) that contains the
+ * element IDs that are contained within each partition, as well as the field
+ * metadata map.
+ *
+ * @param inFile             Input multi-field file name.
+ * @param fileNames          List of partition filenames.
+ * @param elementList        Vector of element IDs that lie on each process.
+ * @param fieldmetadatamap   Field metadata map that is read from @p inFile.
  */
 void FieldIOXml::ImportMultiFldFileIDs(
-    const std::string &inFile,
-    std::vector<std::string> &fileNames,
+    const std::string                       &inFile,
+    std::vector<std::string>                &fileNames,
     std::vector<std::vector<unsigned int> > &elementList,
-    FieldMetaDataMap &fieldmetadatamap)
+    FieldMetaDataMap                        &fieldmetadatamap)
 {
     TiXmlDocument doc(inFile);
     bool loadOkay = doc.LoadFile();
@@ -445,7 +467,8 @@ void FieldIOXml::v_Import(const std::string &infilename,
 
     fs::path pinfilename(infilename);
 
-    // check to see that infile is a directory
+    // Check to see whether infile is a directory and therefore read in parallel
+    // or serial.
     if (fs::is_directory(pinfilename))
     {
         fs::path infofile("Info.xml");
@@ -518,8 +541,9 @@ void FieldIOXml::v_Import(const std::string &infilename,
             }
         }
     }
-    else // serial format case
+    else
     {
+        // serial format case
         DataSourceSharedPtr doc = ImportFieldMetaData(infilename, fieldinfomap);
         ImportFieldDefs(doc, fielddefs, false);
         if (fielddata != NullVectorNekDoubleVector)
@@ -601,6 +625,19 @@ DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(
     return doc;
 }
 
+/**
+ * @brief Set up field meta data map.
+ *
+ * This routine sets up the necessary information for the field metadata map
+ * before calling FieldIOXml::WriteMultiFldFileIDs, which involves each process
+ * sending its element ID list to the root processor. The root processor writes
+ * the `Info.xml` file.
+ *
+ * @param outname           Output directory.
+ * @param fielddefs         Field definitions, needed to grab element IDs.
+ * @param fieldmetadatamap  Field metadata map that is also written to the
+ *                          `Info.xml` file.
+ */
 void FieldIOXml::SetUpFieldMetaData(
     const string outname,
     const vector<FieldDefinitionsSharedPtr> &fielddefs,
@@ -656,7 +693,6 @@ void FieldIOXml::SetUpFieldMetaData(
         string infofile =
             LibUtilities::PortablePath(specPath / fs::path("Info.xml"));
 
-        cout << "Writing: " << specPath << endl;
         WriteMultiFldFileIDs(infofile, filenames, ElementIDs, fieldmetadatamap);
     }
     else
@@ -667,102 +703,12 @@ void FieldIOXml::SetUpFieldMetaData(
 }
 
 /**
+ * @brief Import field definitions from the target file.
  *
- */
-std::string FieldIOXml::SetUpOutput(const std::string outname)
-{
-    ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
-
-    int nprocs = m_comm->GetSize();
-    int rank   = m_comm->GetRank();
-
-    // Path to output: will be directory if parallel, normal file if
-    // serial.
-    fs::path specPath(outname);
-    fs::path fulloutname;
-
-    if (nprocs == 1)
-    {
-        fulloutname = specPath;
-    }
-    else
-    {
-        // Guess at filename that might belong to this process.
-        boost::format pad("P%1$07d.%2$s");
-        pad % m_comm->GetRank() % GetFileEnding();
-
-        // Generate full path name
-        fs::path poutfile(pad.str());
-        fulloutname = specPath / poutfile;
-    }
-
-    // Remove any existing file which is in the way
-    if (m_comm->RemoveExistingFiles())
-    {
-        if (m_sharedFilesystem)
-        {
-            // First, each process clears up its .fld file. This might
-            // or might not be there (we might have changed numbers of
-            // processors between runs, for example), but we can try
-            // anyway.
-            try
-            {
-                fs::remove_all(fulloutname);
-            }
-            catch (fs::filesystem_error &e)
-            {
-                ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                         "Filesystem error: " + string(e.what()));
-            }
-        }
-
-        m_comm->Block();
-
-        // Now get rank 0 processor to tidy everything else up.
-        if (rank == 0 || !m_sharedFilesystem)
-        {
-            try
-            {
-                fs::remove_all(specPath);
-            }
-            catch (fs::filesystem_error &e)
-            {
-                ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                         "Filesystem error: " + string(e.what()));
-            }
-        }
-
-        m_comm->Block();
-    }
-
-    // serial processing just add ending.
-    if (nprocs == 1)
-    {
-        cout << "Writing: " << specPath << endl;
-        return LibUtilities::PortablePath(specPath);
-    }
-
-    // Create the destination directory
-    try
-    {
-        if (rank == 0 || !m_sharedFilesystem)
-        {
-            fs::create_directory(specPath);
-        }
-    }
-    catch (fs::filesystem_error &e)
-    {
-        ASSERTL0(false, "Filesystem error: " + string(e.what()));
-    }
-
-    m_comm->Block();
-
-    // Return the full path to the partition for this process
-    return LibUtilities::PortablePath(fulloutname);
-}
-
-/**
- * The bool decides if the FieldDefs are in <EXPANSIONS> or in <NEKTAR>.
+ * @param dataSource  Target XML file
+ * @param fielddefs   Output vector that will contain read field definitions.
+ * @param expChild    Determines if the field definitions are defined by
+ *                    `<EXPANSIONS>` or in `<NEKTAR>`.
  */
 void FieldIOXml::ImportFieldDefs(
     DataSourceSharedPtr dataSource,
@@ -1100,7 +1046,11 @@ void FieldIOXml::ImportFieldDefs(
 }
 
 /**
+ * @brief Import field data from a target file.
  *
+ * @param dataSource  Target XML file
+ * @param fielddefs   Field definitions for file
+ * @param fielddata   On return, contains field data for each field.
  */
 void FieldIOXml::ImportFieldData(
     DataSourceSharedPtr dataSource,

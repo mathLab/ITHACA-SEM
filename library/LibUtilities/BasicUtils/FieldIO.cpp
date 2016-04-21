@@ -62,6 +62,10 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+
+/**
+ * @brief Returns the FieldIO factory.
+ */
 FieldIOFactory &GetFieldIOFactory()
 {
     typedef Loki::
@@ -176,6 +180,12 @@ FieldIOSharedPtr MakeFieldIOForFile(
  * @brief This function allows for data to be written to an FLD file when a
  * session and/or communicator is not instantiated. Typically used in utilities
  * which do not take XML input and operate in serial only.
+ *
+ * @param outFile       Output filename
+ * @param fielddefs     Field definitions that define the output
+ * @param fielddata     Binary field data that stores the output corresponding
+ *                      to @p fielddefs.
+ * @param fieldinfomap  Associated field metadata map.
  */
 void Write(const std::string &outFile,
            std::vector<FieldDefinitionsSharedPtr> &fielddefs,
@@ -209,13 +219,23 @@ void Write(const std::string &outFile,
  * @brief This function allows for data to be imported from an FLD file when a
  * session and/or communicator is not instantiated. Typically used in utilities
  * which only operate in serial.
+ *
+ * @param infilename    Input filename (or directory if parallel format)
+ * @param fielddefs     On return contains field definitions as read from the
+ *                      input.
+ * @param fielddata     On return, contains binary field data that stores the
+ *                      input corresponding to @p fielddefs.
+ * @param fieldinfo     On returnm, contains the associated field metadata map.
+ * @param ElementIDs    Element IDs that lie on this processor, which can be
+ *                      optionally supplied to avoid reading the entire file on
+ *                      each processor.
  */
 LIB_UTILITIES_EXPORT void Import(
     const std::string &infilename,
     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
     std::vector<std::vector<NekDouble> > &fielddata,
     FieldMetaDataMap &fieldinfomap,
-    const Array<OneD, int> ElementiDs)
+    const Array<OneD, int> ElementIDs)
 {
 #ifdef NEKTAR_USE_MPI
     int size;
@@ -237,7 +257,7 @@ LIB_UTILITIES_EXPORT void Import(
 #endif
     CommSharedPtr c    = GetCommFactory().CreateInstance("Serial", 0, 0);
     FieldIOSharedPtr f = GetFieldIOFactory().CreateInstance("Xml", c, false);
-    f->Import(infilename, fielddefs, fielddata, fieldinfomap, ElementiDs);
+    f->Import(infilename, fielddefs, fielddata, fieldinfomap, ElementIDs);
 }
 
 /**
@@ -248,6 +268,22 @@ FieldIO::FieldIO(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem)
 {
 }
 
+/**
+ * @brief Add provenance information to the field metadata map.
+ *
+ * This routine adds some basic provenance information to the field metadata to
+ * enable better tracking of version information:
+ *
+ *   - Nektar++ version
+ *   - Date and time of simulation
+ *   - Hostname of the machine the simulation was performed on
+ *   - git SHA1 and branch name, if Nektar++ was compiled from git and not
+ *     e.g. a tarball.
+ *
+ * @param root              Root tag, which is encapsulated using the TagWriter
+ *                          structure to enable multi-file format support.
+ * @param fieldmetadatamap  Any existing field metadata.
+ */
 void FieldIO::AddInfoTag(TagWriterSharedPtr root,
                          const FieldMetaDataMap &fieldmetadatamap)
 {
@@ -300,7 +336,121 @@ void FieldIO::AddInfoTag(TagWriterSharedPtr root,
 }
 
 /**
+ * @brief Set up the filesystem ready for output.
  *
+ * This function sets up the output given an output filename @p outname. This
+ * will therefore remove any file or directory with the desired output filename
+ * and return the absolute path to the output.
+ *
+ * If @p perRank is set, a new directory will be created to contain one file per
+ * process rank.
+ *
+ * @param outname   Desired output filename.
+ * @param perRank   True if one file-per-rank output is required.
+ *
+ * @return Absolute path to resulting file.
+ */
+std::string FieldIOXml::SetUpOutput(const std::string outname, bool perRank)
+{
+    ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
+
+    int nprocs = m_comm->GetSize();
+    int rank   = m_comm->GetRank();
+
+    // Path to output: will be directory if parallel, normal file if
+    // serial.
+    fs::path specPath(outname), fulloutname;
+
+    if (nprocs == 1)
+    {
+        fulloutname = specPath;
+    }
+    else
+    {
+        // Guess at filename that might belong to this process.
+        boost::format pad("P%1$07d.%2$s");
+        pad % m_comm->GetRank() % GetFileEnding();
+
+        // Generate full path name
+        fs::path poutfile(pad.str());
+        fulloutname = specPath / poutfile;
+    }
+
+    // Remove any existing file which is in the way
+    if (m_comm->RemoveExistingFiles())
+    {
+        if (m_sharedFilesystem)
+        {
+            // First, each process clears up its .fld file. This might or might
+            // not be there (we might have changed numbers of processors between
+            // runs, for example), but we can try anyway.
+            try
+            {
+                fs::remove_all(fulloutname);
+            }
+            catch (fs::filesystem_error &e)
+            {
+                ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                         "Filesystem error: " + string(e.what()));
+            }
+        }
+
+        m_comm->Block();
+
+        // Now get rank 0 processor to tidy everything else up.
+        if (rank == 0 || !m_sharedFilesystem)
+        {
+            try
+            {
+                fs::remove_all(specPath);
+            }
+            catch (fs::filesystem_error &e)
+            {
+                ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                         "Filesystem error: " + string(e.what()));
+            }
+        }
+
+        m_comm->Block();
+    }
+
+    // serial processing just add ending.
+    if (nprocs == 1 || rank == 0)
+    {
+        cout << "Writing: " << specPath << endl;
+        return LibUtilities::PortablePath(specPath);
+    }
+
+    // Create the destination directory
+    if (perRank)
+    {
+        try
+        {
+            if (rank == 0 || !m_sharedFilesystem)
+            {
+                fs::create_directory(specPath);
+            }
+        }
+        catch (fs::filesystem_error &e)
+        {
+            ASSERTL0(false, "Filesystem error: " + string(e.what()));
+        }
+
+        m_comm->Block();
+    }
+    else
+    {
+        fulloutname = specPath;
+    }
+
+    // Return the full path to the partition for this process
+    return LibUtilities::PortablePath(fulloutname);
+}
+
+/**
+ * @brief Check field definitions for correctness and return storage size.
+ *
+ * @param fielddefs  Field definitions to check.
  */
 int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
 {

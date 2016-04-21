@@ -190,7 +190,7 @@ LIB_UTILITIES_EXPORT void Import(
     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
     std::vector<std::vector<NekDouble> > &fielddata = NullVectorNekDoubleVector,
     FieldMetaDataMap &fieldinfomap                  = NullFieldMetaDataMap,
-    const Array<OneD, int> ElementiDs = NullInt1DArray);
+    const Array<OneD, int> ElementIDs = NullInt1DArray);
 
 // Forward declare
 class FieldIO;
@@ -203,7 +203,23 @@ typedef LibUtilities::NekFactory<std::string,
 
 LIB_UTILITIES_EXPORT FieldIOFactory &GetFieldIOFactory();
 
-/// Class for operating on FLD files
+/**
+ * @brief Class for operating on Nektar++ input/output files.
+ *
+ * Nektar++ input/output of field data can be described as follows:
+ *
+ *   - The FieldDefinitions class defines the metadata that is associated with
+ *     one or more scalar field variables, and determines the storage length.
+ *   - Each scalar field is stored in a single contiguous vector which is
+ *     written/read by the functions defined in this class.
+ *   - Optional metadata can be read/written in a simple key/value pair map
+ *     FieldMetaDataMap. This can be used to define, e.g. the timestep of the
+ *     simulation.
+ *
+ * This base class represents the minimum functionality that subclasses need to
+ * implement in order to implement the above functionality. Each subclass is
+ * free to determine its own file structure and parallel behaviour.
+ */
 class FieldIO : public boost::enable_shared_from_this<FieldIO>
 {
 public:
@@ -222,7 +238,7 @@ public:
         std::vector<std::vector<NekDouble> > &fielddata =
             NullVectorNekDoubleVector,
         FieldMetaDataMap &fieldinfomap    = NullFieldMetaDataMap,
-        const Array<OneD, int> ElementiDs = NullInt1DArray);
+        const Array<OneD, int> ElementIDs = NullInt1DArray);
 
     LIB_UTILITIES_EXPORT DataSourceSharedPtr ImportFieldMetaData(
         std::string       filename,
@@ -245,31 +261,50 @@ protected:
     LIB_UTILITIES_EXPORT int CheckFieldDefinition(
         const FieldDefinitionsSharedPtr &fielddefs);
 
+    /**
+     * @brief Helper function that determines default file extension.
+     */
     LIB_UTILITIES_EXPORT virtual std::string GetFileEnding() const
     {
         return "fld";
     }
 
+    LIB_UTILITIES_EXPORT std::string SetUpOutput(const std::string outname);
+
+    /// @copydoc FieldIO::Write
     LIB_UTILITIES_EXPORT virtual void v_Write(
         const std::string                      &outFile,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         std::vector<std::vector<NekDouble> >   &fielddata,
         const FieldMetaDataMap                 &fieldinfomap) = 0;
 
+    /// @copydoc FieldIO::Import
     LIB_UTILITIES_EXPORT virtual void v_Import(
         const std::string &infilename,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         std::vector<std::vector<NekDouble> >
             &fielddata                    = NullVectorNekDoubleVector,
         FieldMetaDataMap &fieldinfomap    = NullFieldMetaDataMap,
-        const Array<OneD, int> ElementiDs = NullInt1DArray) = 0;
+        const Array<OneD, int> ElementIDs = NullInt1DArray) = 0;
 
+    /// @copydoc FieldIO::ImportFieldMetaData
     LIB_UTILITIES_EXPORT virtual DataSourceSharedPtr v_ImportFieldMetaData(
         std::string filename, FieldMetaDataMap &fieldmetadatamap) = 0;
 };
 
 typedef boost::shared_ptr<FieldIO> FieldIOSharedPtr;
 
+/**
+ * @brief Returns an object for the default FieldIO method.
+ *
+ * This function returns a FieldIO class as determined by the hard-coded default
+ * (XML), which can be overridden by changing the session reader SOLVERINFO
+ * variable FieldIOFormat.
+ *
+ * @param session  Session reader
+ *
+ * @return FieldIO object
+ */
 inline FieldIOSharedPtr MakeDefaultFieldIO(
     const LibUtilities::SessionReaderSharedPtr session)
 {
@@ -284,11 +319,19 @@ inline FieldIOSharedPtr MakeDefaultFieldIO(
         session->DefinesCmdLineArgument("shared-filesystem"));
 }
 
-// Collective on session's communicator
 FieldIOSharedPtr MakeFieldIOForFile(
     const LibUtilities::SessionReaderSharedPtr session,
     const std::string &filename);
 
+/**
+ * @brief Write out the field information to the file @p outFile.
+ *
+ * @param outFile       Output filename
+ * @param fielddefs     Field definitions that define the output
+ * @param fielddata     Binary field data that stores the output corresponding
+ *                      to @p fielddefs.
+ * @param fieldinfomap  Associated field metadata map.
+ */
 inline void FieldIO::Write(const std::string                      &outFile,
                            std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                            std::vector<std::vector<NekDouble> > &fielddata,
@@ -297,15 +340,35 @@ inline void FieldIO::Write(const std::string                      &outFile,
     v_Write(outFile, fielddefs, fielddata, fieldinfomap);
 }
 
+/**
+ * @brief Read field information from the file @p infilename.
+ *
+ * @param infilename    Input filename (or directory if parallel format)
+ * @param fielddefs     On return contains field definitions as read from the
+ *                      input.
+ * @param fielddata     On return, contains binary field data that stores the
+ *                      input corresponding to @p fielddefs.
+ * @param fieldinfo     On returnm, contains the associated field metadata map.
+ * @param ElementIDs    Element IDs that lie on this processor, which can be
+ *                      optionally supplied to avoid reading the entire file on
+ *                      each processor.
+ */
 inline void FieldIO::Import(const std::string                      &infilename,
                             std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                             std::vector<std::vector<NekDouble> >   &fielddata,
                             FieldMetaDataMap                       &fieldinfo,
-                            const Array<OneD, int>                  ElementiDs)
+                            const Array<OneD, int>                  ElementIDs)
 {
-    v_Import(infilename, fielddefs, fielddata, fieldinfo, ElementiDs);
+    v_Import(infilename, fielddefs, fielddata, fieldinfo, ElementIDs);
 }
 
+/**
+ * @brief Import the metadata from a field file.
+ *
+ * @param filename          Input filename.
+ * @param fieldmetadatamap  On return contains the field metadata map from @p
+ *                          filename.
+ */
 inline DataSourceSharedPtr FieldIO::ImportFieldMetaData(
     std::string filename, FieldMetaDataMap &fieldmetadatamap)
 {

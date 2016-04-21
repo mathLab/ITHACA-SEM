@@ -436,6 +436,10 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
         {
             WhiteNoiseBC(n, cnt, inarray);
         }
+        else if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"RiemannInvariantBC"))
+        {
+            RiemannInvariantBC(n, cnt, Fwd, inarray);
+        }
 
         // Time Dependent Boundary Condition (specified in meshfile)
         if (m_fields[0]->GetBndConditions()[n]->IsTimeDependent())
@@ -506,6 +510,115 @@ void APE::WallBC(int bcRegion, int cnt,
             Vmath::Vcopy(nBCEdgePts,
                          &Fwd[i][id2], 1,
                          &(m_fields[i]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1], 1);
+        }
+    }
+}
+
+
+/**
+ * @brief Outflow characteristic boundary conditions for compressible
+ * flow problems.
+ */
+void APE::RiemannInvariantBC(int bcRegion,
+                             int cnt,
+                             Array<OneD, Array<OneD, NekDouble> > &Fwd,
+                             Array<OneD, Array<OneD, NekDouble> > &physarray)
+{
+    int id1, id2, nBCEdgePts;
+    int nVariables = physarray.num_elements();
+
+    const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
+    Array<OneD, Array<OneD, NekDouble> > bf = GetBasefield();
+
+    int eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+
+    for (int e = 0; e < eMax; ++e)
+    {
+        nBCEdgePts = m_fields[0]
+                         ->GetBndCondExpansions()[bcRegion]
+                         ->GetExp(e)
+                         ->GetTotPoints();
+        id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
+        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt + e]);
+
+        // Calculate (v.n)
+        Array<OneD, NekDouble> Vn(nBCEdgePts, 0.0);
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            Vmath::Vvtvp(nBCEdgePts,
+                         &Fwd[1 + i][id2], 1,
+                         &m_traceNormals[i][id2], 1,
+                         &Vn[0], 1,
+                         &Vn[0], 1);
+        }
+
+        // Calculate (v0.n)
+        Array<OneD, NekDouble> Vn0(nBCEdgePts, 0.0);
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            Vmath::Vvtvp(nBCEdgePts,
+                         &bf[2 + i][id2], 1,
+                         &m_traceNormals[i][id2], 1,
+                         &Vn0[0], 1,
+                         &Vn0[0], 1);
+        }
+
+        for (int i = 0; i < nBCEdgePts; ++i)
+        {
+            NekDouble c = sqrt(m_gamma * bf[0][id2 + i] / bf[1][id2 + i]);
+
+            NekDouble l0 = Vn0[i] + c;
+            NekDouble l1 = Vn0[i] - c;
+
+            NekDouble h0, h1;
+
+            // outgoing
+            if (l0 > 0)
+            {
+                // p/2 + u*c*rho0/2
+                h0 = Fwd[0][id2 + i] / 2 + Vn[i] * c * bf[1][id2 + i] / 2;
+            }
+            // incoming
+            else
+            {
+                h0 = 0.0;
+            }
+
+            // outgoing
+            if (l1 > 0)
+            {
+                // p/2 - u*c*rho0/2
+                h1 = Fwd[0][id2 + i] / 2 - Vn[i] * c * bf[1][id2 + i] / 2;
+            }
+            // incoming
+            else
+            {
+                h1 = 0.0;
+            }
+
+            // compute primitive variables
+            // p = h0 + h1
+            // u = ( h0 - h1) / (c*rho0)
+            Fwd[0][id2 + i] = h0 + h1;
+            NekDouble VnNew = (h0 - h1) / (c * bf[1][id2 + i]);
+
+            // adjust velocity pert. according to new value
+            for (int j = 0; j < m_spacedim; ++j)
+            {
+                Fwd[1 + j][id2 + i] =
+                    Fwd[1 + j][id2 + i] +
+                    (VnNew - Vn[i]) * m_traceNormals[j][id2 + i];
+            }
+        }
+
+        // Copy boundary adjusted values into the boundary expansion
+        for (int i = 0; i < nVariables; ++i)
+        {
+            Vmath::Vcopy(nBCEdgePts,
+                         &Fwd[i][id2], 1,
+                         &(m_fields[i]
+                               ->GetBndCondExpansions()[bcRegion]
+                               ->UpdatePhys())[id1], 1);
         }
     }
 }

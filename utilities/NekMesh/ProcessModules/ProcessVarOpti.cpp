@@ -92,69 +92,57 @@ void ProcessVarOpti::Process()
         functionalStart += GetElFunctional(m_mesh->m_element[2][i]);
     }
 
+    cout << scientific << endl;
 
+    NekDouble functionalEnd;
     int ctr = 0;
     bool repeat = true;
     while (repeat)
     {
+        ctr++;
         repeat = false;
         for(int i = 0; i < optiNodes.size(); i++)
         {
-            cout << i << endl;
             NekDouble currentW = GetFunctional(optiNodes[i]);
             NekDouble dx = 0.01;
 
             while(dx > 1e-6)
             {
-                bool end = false;
+                NodeSharedPtr bstNode = optiNodes[i]->copy();
+                NekDouble xc = optiNodes[i]->m_x;
+                NekDouble yc = optiNodes[i]->m_y;
                 for(int j = 0; j < 8; j++)
                 {
-                    NodeSharedPtr tstNode = optiNodes[i]->copy();
-                    tstNode->m_x += dir[j][0] * dx;
-                    tstNode->m_y += dir[j][1] * dx;
-
-                    cout << currentW << " " << GetFunctional(tstNode) << endl;
-                    if(GetFunctional(tstNode) < currentW)
+                    optiNodes[i]->m_x += dir[j][0] * dx;
+                    optiNodes[i]->m_y += dir[j][1] * dx;
+                    NekDouble nW = GetFunctional(optiNodes[i]);
+                    if(nW < currentW)
                     {
-                        cout << "hit" << endl;
-                        optiNodes[i] = tstNode;
-                        end = true;
-                        break;
+                        currentW = nW;
+                        bstNode = optiNodes[i]->copy();
+                        repeat = true;
                     }
+                    optiNodes[i]->m_x = xc;
+                    optiNodes[i]->m_y = yc;
                 }
-                if(end)
-                {
-                    repeat = true;
-                    break;
-                }
-                else
-                {
-                    dx /= 2.0;
-                }
+                optiNodes[i]->m_x = bstNode->m_x;
+                optiNodes[i]->m_y = bstNode->m_y;
+                dx /= 2.0;
             }
         }
-        break;
+        if(ctr > 20)
+        {
+            break;
+        }
+        functionalEnd = 0.0;
+
+        for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+        {
+            functionalEnd += GetElFunctional(m_mesh->m_element[2][i]);
+        }
+        cout << ctr << "  start: " << functionalStart << "   end: " <<
+                functionalEnd << endl;
     }
-
-
-
-
-
-
-
-
-
-    NekDouble functionalEnd = 0.0;
-
-    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
-    {
-        functionalEnd += GetElFunctional(m_mesh->m_element[2][i]);
-    }
-
-
-    cout << "start: " << functionalStart << "   end: " << functionalEnd << endl;
-    exit(-1);
-
 }
 
 NekDouble ProcessVarOpti::GetFunctional(NodeSharedPtr n)
@@ -439,7 +427,7 @@ NekDouble ProcessVarOpti::GetElFunctional(ElementSharedPtr el)
             trEtE += EtE(i,i);
         }
 
-        NekDouble nu = 0.45;
+        NekDouble nu = 0.49;
         NekDouble lam = nu/(1.0+nu)/(1-2.0*nu);
         NekDouble mu = 1.0/2.0/(1.0+nu);
         dW[k] = 0.5*lam*trE*trE + mu*trEtE;

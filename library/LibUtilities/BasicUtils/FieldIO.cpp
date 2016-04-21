@@ -37,6 +37,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/format.hpp>
 
 #include <LibUtilities/BasicConst/GitRevision.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
@@ -55,6 +56,7 @@
 #define NEKTAR_VERSION "Unknown"
 #endif
 
+namespace berrc = boost::system::errc;
 namespace ptime = boost::posix_time;
 namespace ip    = boost::asio::ip;
 
@@ -350,7 +352,7 @@ void FieldIO::AddInfoTag(TagWriterSharedPtr root,
  *
  * @return Absolute path to resulting file.
  */
-std::string FieldIOXml::SetUpOutput(const std::string outname, bool perRank)
+std::string FieldIO::SetUpOutput(const std::string outname, bool perRank)
 {
     ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
 

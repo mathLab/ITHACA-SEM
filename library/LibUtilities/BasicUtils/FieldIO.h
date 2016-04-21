@@ -269,7 +269,8 @@ protected:
         return "fld";
     }
 
-    LIB_UTILITIES_EXPORT std::string SetUpOutput(const std::string outname);
+    LIB_UTILITIES_EXPORT std::string SetUpOutput(
+        const std::string outname, bool perRank);
 
     /// @copydoc FieldIO::Write
     LIB_UTILITIES_EXPORT virtual void v_Write(

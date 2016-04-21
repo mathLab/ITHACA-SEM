@@ -922,8 +922,17 @@ void FieldIOHdf5::ImportFieldData(
         "input data is not the same length as header information.");
 }
 
-void FieldIOHdf5::v_ImportFieldMetaData(DataSourceSharedPtr dataSource,
-                                        FieldMetaDataMap &fieldmetadatamap)
+DataSourceSharedPtr FieldIOHdf5::v_ImportFieldMetaData(
+    std::string       filename,
+    FieldMetaDataMap &fieldmetadatamap)
+{
+    DataSourceSharedPtr ans = H5DataSource::create(filename);
+    ImportHDF5FieldMetaData(ans, fieldmetadatamap);
+    return ans;
+}
+
+void FieldIOHdf5::ImportHDF5FieldMetaData(DataSourceSharedPtr dataSource,
+                                          FieldMetaDataMap &fieldmetadatamap)
 {
     H5DataSourceSharedPtr hdf =
         boost::static_pointer_cast<H5DataSource>(dataSource);

@@ -203,7 +203,10 @@ private:
                           FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
                           const Array<OneD, int> ElementiDs = NullInt1DArray);
 
-    LIB_UTILITIES_EXPORT void v_ImportFieldMetaData(
+    LIB_UTILITIES_EXPORT virtual DataSourceSharedPtr v_ImportFieldMetaData(
+        std::string filename, FieldMetaDataMap &fieldmetadatamap);
+
+    LIB_UTILITIES_EXPORT void ImportHDF5FieldMetaData(
         DataSourceSharedPtr dataSource, FieldMetaDataMap &fieldmetadatamap);
 
     LIB_UTILITIES_EXPORT void ImportFieldDef(H5::PListSharedPtr        readPL,

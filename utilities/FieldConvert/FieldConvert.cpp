@@ -211,6 +211,9 @@ int main(int argc, char* argv[])
 
             f->m_comm = boost::shared_ptr<FieldConvertComm>(
                                 new FieldConvertComm(argc, argv, nprocs,rank));
+
+            // Set forceoutput option. Otherwise only procid 0 will write file
+            vm.insert(std::make_pair("forceoutput", po::variable_value()));
         }
         else
         {

@@ -39,6 +39,8 @@
 #include <SolverUtils/Driver.h>
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

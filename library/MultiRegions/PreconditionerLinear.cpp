@@ -47,6 +47,8 @@
 #include <LocalRegions/MatrixKey.h>
 #include <math.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -97,7 +99,7 @@ namespace Nektar
         void PreconditionerLinear::v_BuildPreconditioner()
         {
             GlobalSysSolnType sType  = m_locToGloMap->GetGlobalSysSolnType();
-            ASSERTL0(sType == eIterativeStaticCond,
+            ASSERTL0(sType == eIterativeStaticCond || sType == ePETScStaticCond,
                      "This type of preconditioning is not implemented "
                      "for this solver");
 
@@ -183,6 +185,7 @@ namespace Nektar
             switch(solvertype)
             {
                 case MultiRegions::eIterativeStaticCond:
+                case MultiRegions::ePETScStaticCond:
                 {
                     int i,val;
                     int nloc = m_vertLocToGloMap->GetNumLocalCoeffs();

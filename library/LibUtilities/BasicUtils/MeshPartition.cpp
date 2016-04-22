@@ -56,7 +56,6 @@
 #include <LibUtilities/Foundations/Foundations.hpp>
 
 
-
 #include <boost/algorithm/string.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adjacency_iterator.hpp>
@@ -93,7 +92,8 @@ namespace Nektar
 
         }
 
-        void MeshPartition::PartitionMesh(int nParts, bool shared)
+        void MeshPartition::PartitionMesh(int nParts, bool shared,
+                                          bool overlapping)
         {
             ASSERTL0(m_meshElements.size() >= nParts,
                      "Too few elements for this many processes.");
@@ -104,7 +104,7 @@ namespace Nektar
                 WeightElements();
             }
             CreateGraph(m_mesh);
-            PartitionGraph(m_mesh, nParts, m_localPartition);
+            PartitionGraph(m_mesh, nParts, m_localPartition, overlapping);
         }
 
         void MeshPartition::WriteLocalPartition(LibUtilities::SessionReaderSharedPtr& pSession)
@@ -313,8 +313,10 @@ namespace Nektar
             }
 
             // check to see if compressed
-            const char *IsCompressed = vSubElement->Attribute("COMPRESSED");
-            if(IsCompressed)
+            std::string IsCompressed;
+            vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+            if(IsCompressed.size()) 
             {
                 ASSERTL0(boost::iequals(IsCompressed,
                                         CompressData::GetCompressString()),
@@ -371,8 +373,10 @@ namespace Nektar
                 ASSERTL0(vSubElement, "Cannot read edges");
 
                 // check to see if compressed
-                const char *IsCompressed = vSubElement->Attribute("COMPRESSED");
-                if(IsCompressed)
+                std::string IsCompressed;
+                vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+                if(IsCompressed.size()) 
                 {
                     ASSERTL0(boost::iequals(IsCompressed,
                                         CompressData::GetCompressString()),
@@ -440,8 +444,10 @@ namespace Nektar
                 while(x)
                 {
                     // check to see if compressed
-                    const char *IsCompressed = x->Attribute("COMPRESSED");
-                    if(IsCompressed)
+                    std::string IsCompressed;
+                    x->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+                    if(IsCompressed.size()) 
                     {
                         ASSERTL0(boost::iequals(IsCompressed,
                                         CompressData::GetCompressString()),
@@ -536,8 +542,10 @@ namespace Nektar
             while(x)
             {
                 // check to see if compressed
-                const char *IsCompressed = x->Attribute("COMPRESSED");
-                if(IsCompressed)
+                std::string IsCompressed;
+                x->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+                if(IsCompressed.size()) 
                 {
                     ASSERTL0(boost::iequals(IsCompressed,
                                         CompressData::GetCompressString()),
@@ -716,11 +724,13 @@ namespace Nektar
                 vSubElement = pSession->GetElement("Nektar/Geometry/Curved");
 
                 // check to see if compressed
-                const char *IsCompressed = vSubElement->Attribute("COMPRESSED");
+                std::string IsCompressed;
+                vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
                 x = vSubElement->FirstChildElement();
                 while(x)
                 {
-                    if(IsCompressed)
+                    if(IsCompressed.size()) 
                     {
                         ASSERTL0(boost::iequals(IsCompressed,
                                             CompressData::GetCompressString()),
@@ -775,6 +785,7 @@ namespace Nektar
                                 c.entityid   = cinfo[i].entityid;
                                 c.npoints    = cinfo[i].npoints;
                                 c.type       = kPointsTypeStr[cinfo[i].ptype];
+                                c.ptid       = cinfo[i].ptid;
                                 c.ptoffset   = cinfo[i].ptoffset;
                                 m_meshCurved[std::make_pair(c.entitytype,
                                                             c.id)] = c;
@@ -1129,9 +1140,27 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Partition the graph.
+         *
+         * This routine partitions the graph @p pGraph into @p nParts, producing
+         * subgraphs that are populated in @p pLocalPartition. If the @p
+         * overlapping option is set (which is used for post-processing
+         * purposes), the resulting partitions are extended to cover
+         * neighbouring elements by additional vertex on the dual graph, which
+         * produces overlapping partitions (i.e. the intersection of two
+         * connected partitions is non-empty).
+         *
+         * @param pGraph           Graph to be partitioned.
+         * @param nParts           Number of partitions.
+         * @param pLocalPartition  Vector of sub-graphs representing each
+         *                         partition.
+         * @param overlapping      True if resulting partitions should overlap.
+         */
         void MeshPartition::PartitionGraph(BoostSubGraph& pGraph,
                                            int nParts,
-                                           std::vector<BoostSubGraph>& pLocalPartition)
+                                           std::vector<BoostSubGraph>& pLocalPartition,
+                                           bool overlapping)
         {
             int i;
             int nGraphVerts = boost::num_vertices(pGraph);
@@ -1139,6 +1168,7 @@ namespace Nektar
 
             // Convert boost graph into CSR format
             BoostVertexIterator    vertit, vertit_end;
+            BoostAdjacencyIterator adjvertit, adjvertit_end;
             Array<OneD, int> part(nGraphVerts,0);
 
             if (m_comm->GetRowComm()->TreatAsRankZero())
@@ -1146,7 +1176,6 @@ namespace Nektar
                 int acnt = 0;
                 int vcnt = 0;
                 int nWeight = nGraphVerts;
-                BoostAdjacencyIterator adjvertit, adjvertit_end;
                 Array<OneD, int> xadj(nGraphVerts+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
                 Array<OneD, int> vwgt(nWeight, 1);
@@ -1243,6 +1272,25 @@ namespace Nektar
             {
                 pGraph[*vertit].partition = part[i];
                 boost::add_vertex(i, pLocalPartition[part[i]]);
+            }
+
+            // If the overlapping option is set (for post-processing purposes),
+            // add vertices that correspond to the neighbouring elements.
+            if (overlapping)
+            {
+                for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
+                      vertit != vertit_end;
+                      ++vertit)
+                {
+                    for (boost::tie(adjvertit, adjvertit_end) = boost::adjacent_vertices(*vertit,pGraph);
+                         adjvertit != adjvertit_end; ++adjvertit)
+                    {
+                        if(part[*adjvertit] != part[*vertit])
+                        {
+                            boost::add_vertex(*adjvertit, pLocalPartition[part[*vertit]]);
+                        }
+                    }
+                }
             }
         }
 
@@ -1819,7 +1867,7 @@ namespace Nektar
                             {
                                 // get index from full list;
                                 int idx = m_meshCurvedPts[c.ptid]
-                                                    .index[c.ptoffset+i];
+                                    .index[c.ptoffset+i];
 
                                 // if index is not already in curved
                                 // points add it or set index to location

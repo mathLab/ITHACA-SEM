@@ -64,12 +64,18 @@ namespace Nektar
             /// Global to universal unique map
             Array<OneD, int>                            m_map;
 
+            /// maximum iterations
+            int                                         m_maxiter;
+
             /// Tolerance of iterative solver.
             NekDouble                                   m_tolerance;
 
             /// dot product of rhs to normalise stopping criterion
             NekDouble                                   m_rhs_magnitude;
 
+            /// cnt to how many times rhs_magnitude is called 
+            NekDouble                                   m_rhs_mag_sm; 
+            
             PreconditionerSharedPtr                     m_precon;
 
             MultiRegions::PreconditionerType            m_precontype;

@@ -44,6 +44,8 @@
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
 
+using namespace std;
+
 namespace Nektar
 {
 
@@ -56,7 +58,6 @@ namespace Nektar
     IncNavierStokes::IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession):
         UnsteadySystem(pSession),
         AdvectionSystem(pSession),
-        m_subSteppingScheme(false),
         m_SmoothAdvection(false),
         m_steadyStateSteps(0)
     {
@@ -116,25 +117,7 @@ namespace Nektar
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
                 m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
                 m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
-                m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 1e-6);
-            
-                // check to see if any user defined boundary condition is
-                // indeed implemented
-                
-                for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-                {    
-                    std::string type =m_fields[0]->GetBndConditions()[n]->GetUserDefined();
-                    if(!type.empty())
-                        // Time Dependent Boundary Condition (if no user
-                        // defined then this is empty)
-                        ASSERTL0 (boost::iequals(type,"Wall_Forces")   ||
-                                  boost::iequals(type,"TimeDependent") ||
-                                  boost::iequals(type,"MovingBody")    ||
-                                  boost::iequals(type,"Radiation")     ||
-                                  boost::iequals(type,"I")             ||
-                                  boost::iequals(type,"HOutflow"),
-                                  "Unknown USERDEFINEDTYPE boundary condition");
-                }
+                m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 1e-6);            
             }
             break;
         case eNoEquationType:
@@ -208,6 +191,17 @@ namespace Nektar
                     }
                     radpts += BndExp[n]->GetTotPoints();
                 }
+                if(boost::iequals(BndConds[n]->GetUserDefined(),"ZeroNormalComponent"))
+                {
+                    ASSERTL0(BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet,
+                             "Zero Normal Component boundary condition option must be of type Dirichlet <D>");
+                    
+                    if(Set == false)
+                    {
+                        m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
+                        Set = true;
+                    }
+                }
             }
 
             m_fieldsRadiationFactor[i] = Array<OneD, NekDouble>(radpts);
@@ -241,7 +235,7 @@ namespace Nektar
         }
 
         // Set up Field Meta Data for output files
-        m_fieldMetaDataMap["Kinvis"] = boost::lexical_cast<std::string>(m_kinvis);
+        m_fieldMetaDataMap["Kinvis"]   = boost::lexical_cast<std::string>(m_kinvis);
         m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
     }
 
@@ -369,9 +363,7 @@ namespace Nektar
         {
             for(n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
             {    
-                if(m_fields[i]->GetBndConditions()[n]->IsTimeDependent()  ||
-                   m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
-                   "MovingBody")
+                if(m_fields[i]->GetBndConditions()[n]->IsTimeDependent())
                 {
                     varName = m_session->GetVariable(i);
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);
@@ -382,6 +374,8 @@ namespace Nektar
             // Set Radiation conditions if required
             SetRadiationBoundaryForcing(i);
         }
+        
+        SetZeroNormalVelocity();
     }
     
     /**
@@ -413,7 +407,7 @@ namespace Nektar
             {
                 for(i = 0; i < BndExp[n]->GetExpSize(); ++i,cnt++)
                 {
-                    elmtid = m_fieldsBCToElmtID[fieldid][cnt];
+                    elmtid = m_fieldsBCToElmtID[m_velocity[fieldid]][cnt];
                     elmt   = m_fields[fieldid]->GetExp(elmtid);
                     offset = m_fields[fieldid]->GetPhys_Offset(elmtid);
                     
@@ -428,7 +422,7 @@ namespace Nektar
                     elmt->GetTracePhysVals(boundary,Bc,U,ubc);
                     
                     Vmath::Vmul(nq,&m_fieldsRadiationFactor[fieldid][cnt1 + 
-                             BndExp[n]->GetPhys_Offset(i)],1,&ubc[0],1,&ubc[0],1);
+                                                                     BndExp[n]->GetPhys_Offset(i)],1,&ubc[0],1,&ubc[0],1);
 
                     Bvals = BndExp[n]->UpdateCoeffs()+BndExp[n]->GetCoeff_Offset(i);
 
@@ -439,6 +433,90 @@ namespace Nektar
             else 
             {
                 cnt += BndExp[n]->GetExpSize();
+            }
+        }
+    }
+
+    
+    void IncNavierStokes::SetZeroNormalVelocity()
+    {
+        // use static trip since cannot use UserDefinedTag for zero
+        // velocity and have time dependent conditions
+        static bool Setup  = false; 
+        
+        if(Setup == true)
+        {
+            return;
+        }
+        Setup = true;
+
+        int  i,n;
+        
+        Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr > >
+            BndConds(m_spacedim);
+        Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >  
+            BndExp(m_spacedim);
+        
+        
+        for(i = 0; i < m_spacedim; ++i)
+        { 
+            BndConds[i] = m_fields[m_velocity[i]]->GetBndConditions();
+            BndExp[i]   = m_fields[m_velocity[i]]->GetBndCondExpansions();
+        }
+        
+        StdRegions::StdExpansionSharedPtr elmt,Bc;
+        
+        int cnt;
+        int elmtid,nq, boundary;
+
+        Array<OneD, Array<OneD, NekDouble> > normals;
+        Array<OneD, NekDouble> Bphys,Bcoeffs;
+
+        int fieldid = m_velocity[0];
+
+        for(cnt = n = 0; n < BndConds[0].num_elements(); ++n)
+        {            
+            if((BndConds[0][n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)&& (boost::iequals(BndConds[0][n]->GetUserDefined(),"ZeroNormalComponent")))
+            {
+                for(i = 0; i < BndExp[0][n]->GetExpSize(); ++i,cnt++)
+                {
+                    elmtid   = m_fieldsBCToElmtID[fieldid][cnt];
+                    elmt     = m_fields[0]->GetExp(elmtid);
+                    boundary = m_fieldsBCToTraceID[fieldid][cnt];
+
+                    normals = elmt->GetSurfaceNormal(boundary);
+
+                    nq = BndExp[0][n]->GetExp(i)->GetTotPoints();
+                    Array<OneD, NekDouble> normvel(nq,0.0);
+
+                    for(int k = 0; k < m_spacedim; ++k)
+                    {
+                        Bphys  = BndExp[k][n]->UpdatePhys()+
+                            BndExp[k][n]->GetPhys_Offset(i);
+                        Bc  = BndExp[k][n]->GetExp(i);
+                        Vmath::Vvtvp(nq,normals[k],1,Bphys,1,normvel,1,
+                                     normvel,1);
+                    }
+                    
+                    // negate normvel for next step
+                    Vmath::Neg(nq,normvel,1);
+
+                    for(int k = 0; k < m_spacedim; ++k)
+                    {
+                        Bphys  = BndExp[k][n]->UpdatePhys()+
+                            BndExp[k][n]->GetPhys_Offset(i);
+                        Bcoeffs = BndExp[k][n]->UpdateCoeffs()+
+                            BndExp[k][n]->GetCoeff_Offset(i);
+                        Bc  = BndExp[k][n]->GetExp(i);
+                        Vmath::Vvtvp(nq,normvel,1,normals[k],1,Bphys,1,
+                                     Bphys,1);
+                        Bc->FwdTrans_BndConstrained(Bphys,Bcoeffs);
+                    }
+                }
+            }
+            else 
+            {
+                cnt += BndExp[0][n]->GetExpSize();
             }
         }
     }

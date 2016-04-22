@@ -128,6 +128,11 @@ namespace SolverUtils
                     const std::string&                          pFunctionName,
                     NekDouble pTime = NekDouble(0));
 
+
+            SOLVER_UTILS_EXPORT void EvaluateTimeFunction(
+                    const NekDouble                          pTime,
+                    const LibUtilities::EquationSharedPtr   &pEqn,
+                    Array<OneD, NekDouble>&                  pArray);
     };
 }
 }

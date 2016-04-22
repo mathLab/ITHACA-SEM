@@ -38,6 +38,9 @@
 #include <boost/shared_ptr.hpp>
 
 #include <iomanip>
+
+using namespace std;
+
 namespace Nektar
 {
     namespace SpatialDomains

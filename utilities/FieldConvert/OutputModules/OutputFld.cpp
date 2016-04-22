@@ -64,12 +64,36 @@ OutputFld::~OutputFld()
 
 void OutputFld::Process(po::variables_map &vm)
 {
+    Timer timer;
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 
+    if (m_f->m_verbose)
+    {
+        timer.Start();
+    }
+
     if (m_f->m_writeBndFld)
     {
-        ModuleKey      module;
+        Timer     timer; 
+        ModuleKey module;
+
+        if (m_f->m_verbose)
+        {
+            if(m_f->m_comm->GetRank() == 0)
+            {
+                cout << "OutputFld: Writing boundary file(s): ";
+                for(int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
+                {
+                    cout << m_f->m_bndRegionsToWrite[i]; 
+                    if(i < m_f->m_bndRegionsToWrite.size()-1)
+                    {
+                        cout << ",";
+                    }
+                }
+                cout << endl;
+            }
+        }
 
         // Extract data to boundaryconditions
         if (m_f->m_fldToBnd)        {
@@ -79,18 +103,6 @@ void OutputFld::Process(po::variables_map &vm)
             }
         }
 
-        if (m_f->m_verbose)
-        {
-            cout << "OutputFld: Writing boundary file(s): ";
-            for(int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
-            {
-                if(i < m_f->m_bndRegionsToWrite.size()-1)
-                {
-                    cout << ",";
-                }
-            }
-            cout << endl;
-        }
 
         int nfields = m_f->m_exp.size();
         Array<OneD, Array<OneD, const MultiRegions::ExpListSharedPtr> >
@@ -119,9 +131,6 @@ void OutputFld::Process(po::variables_map &vm)
         int    dot  = filename.find_last_of('.') + 1;
         string ext  = filename.substr(dot, filename.length() - dot);
         string name = filename.substr(0, dot-1);
-
-        LibUtilities::BndRegionOrdering BndOrder =
-                                    m_f->m_session->GetBndRegionOrdering();
 
         for(int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
         {
@@ -306,7 +315,10 @@ void OutputFld::Process(po::variables_map &vm)
     {
         if (m_f->m_verbose)
         {
-            cout << "OutputFld: Writing file..." << endl;
+            if(m_f->m_comm->GetRank() == 0)
+            {
+                cout << "OutputFld: Writing file..." << endl;
+            }
         }
 
         fs::path writefile(filename);
@@ -338,7 +350,8 @@ void OutputFld::Process(po::variables_map &vm)
 
         if(writefld)
         {
-            m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
+            m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data,
+                                                    m_f->m_fieldMetaDataMap);
         }
 
         // output error for regression checking.
@@ -373,6 +386,21 @@ void OutputFld::Process(po::variables_map &vm)
             }
         }
     }
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timer.Stop();
+            NekDouble cpuTime = timer.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "OutputFld  CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            cpuTime = 0.0;
+        }
+    }
+    
 }
 
 }

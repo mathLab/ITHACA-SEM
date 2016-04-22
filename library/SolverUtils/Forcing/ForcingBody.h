@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Body forcing
+// Description: Body or FIeld forcing
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -69,7 +69,8 @@ namespace SolverUtils
             }
 
             ///Name of the class
-            static std::string className;
+            static std::string classNameBody;
+            static std::string classNameField;
 
         protected:
             SOLVER_UTILS_EXPORT virtual void v_InitObject(
@@ -87,6 +88,8 @@ namespace SolverUtils
             ForcingBody(const LibUtilities::SessionReaderSharedPtr& pSession);
             virtual ~ForcingBody(void){};
 
+            bool m_hasTimeFcnScaling;
+            LibUtilities::EquationSharedPtr m_timeFcnEqn;
     };
 
 }

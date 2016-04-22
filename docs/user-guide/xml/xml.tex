@@ -48,14 +48,20 @@ files as illustrated below:
 
 \begin{notebox}
     When specifying multiple files, repeated XML sub-elements are not merged.
-    The sub-elements from files appearing later in the list will override those
-    elements from earlier files.
+    The sub-elements from files appearing later in the list will, in general,
+    override those elements from earlier files.
     \medskip
-
-    For example, the \inlsh{MeshConvert} utility will produce a default
+    
+    For example, the \inlsh{NekMesh} utility will produce a default
     \inltt{EXPANSIONS} element and blank \inltt{CONDITIONS} element. Specifying
     a custom-written XML file containing these sections \emph{after} the
-    file produced by \inlsh{MeshConvert} will override these defaults.
+    file produced by \inlsh{NekMesh} will override these defaults.
+
+    The exception to this rule is when an empty XML sub-element would override a
+    non-empty XML sub-element. In this case the empty XML sub-element will be
+    ignored. If the custom-written XML file containing \inltt{CONDITIONS} were
+    specified before the file produced by \inlsh{NEKMESH}, the empty
+    \inltt{CONDITIONS} tag in the latter file would be ignored.
 \end{notebox}
 
 \input{xml/xml-geometry.tex}

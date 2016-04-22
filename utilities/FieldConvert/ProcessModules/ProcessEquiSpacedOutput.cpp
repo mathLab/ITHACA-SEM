@@ -298,7 +298,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
                 int np2 = e->GetBasis(2)->GetNumPoints();
                 int np = max(np0,max(np1,np2));
 
-                newpoints = LibUtilities::StdPyrData::
+                newpoints = LibUtilities::StdHexData::
                                     getNumberOfCoefficients(np,np,np);
             }
             break;

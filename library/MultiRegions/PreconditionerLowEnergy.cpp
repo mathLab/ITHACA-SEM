@@ -41,6 +41,8 @@
 #include <LocalRegions/MatrixKey.h>
 #include <math.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -73,7 +75,8 @@ namespace Nektar
         void PreconditionerLowEnergy::v_InitObject()
         {
             GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
-            ASSERTL0(solvertype == MultiRegions::eIterativeStaticCond,"Solver type not valid");
+            ASSERTL0(solvertype == eIterativeStaticCond ||
+                     solvertype == ePETScStaticCond, "Solver type not valid");
 
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();

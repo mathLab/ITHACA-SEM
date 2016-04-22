@@ -77,9 +77,9 @@ struct Field {
 
     ~Field()
     {
-        if (m_session)
+        if (m_comm)
         {
-            m_session->Finalise();
+            m_comm->Finalise();
         }
     }
     bool                                    m_verbose;
@@ -106,6 +106,7 @@ struct Field {
     bool                                    m_addNormals;
 
     bool                                    m_setUpEquiSpacedFields;
+
     LibUtilities::PtsFieldSharedPtr         m_fieldPts;
 
     MultiRegions::AssemblyMapCGSharedPtr    m_locToGlobalMap;
@@ -289,6 +290,16 @@ struct Field {
                         nplanes =  m_fielddef[0]->m_numModes[2];
                         lz      = m_fielddef[0]->m_homogeneousLengths[0];
                         btype   = m_fielddef[0]->m_basis[2];
+
+                        if (btype == LibUtilities::eFourierSingleMode)
+                        {
+                            btype = LibUtilities::eFourier;
+                            m_fielddef[0]->m_basis[2] = LibUtilities::eFourierSingleMode;
+                            if (nplanes <= 2)
+                            {
+                                nplanes = 4;
+                            }
+                        }
                     }
                     else
                     {

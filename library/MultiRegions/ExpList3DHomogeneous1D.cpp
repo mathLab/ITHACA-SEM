@@ -37,6 +37,8 @@
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList2D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -362,6 +364,13 @@ namespace Nektar
                 int              expansion,
                 int              istrip)
         {
+            // If there is only one plane (e.g. HalfMode), we write a 2D plane.
+            if (m_planes.num_elements() == 1)
+            {
+                m_planes[0]->WriteVtkPieceHeader(outfile, expansion);
+                return;
+            }
+
             int i,j,k;
             int nq0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nq1 = (*m_exp)[expansion]->GetNumPoints(1);

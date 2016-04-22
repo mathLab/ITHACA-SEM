@@ -38,6 +38,8 @@
 #include <Collections/Collection.h>
 #include <Collections/IProduct.h>
 
+using namespace std;
+
 namespace Nektar {
 namespace Collections {
 

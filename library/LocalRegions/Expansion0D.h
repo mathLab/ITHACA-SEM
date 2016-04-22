@@ -47,14 +47,17 @@ namespace Nektar
     namespace LocalRegions 
     {
         class Expansion0D;
-        typedef boost::shared_ptr<Expansion0D> Expansion0DSharedPtr;
+        typedef boost::shared_ptr<Expansion0D>      Expansion0DSharedPtr;
         typedef std::vector< Expansion0DSharedPtr > Expansion0DVector;
-        typedef std::vector< Expansion0DSharedPtr >::iterator Expansion0DVectorIter;
+        typedef std::vector< Expansion0DSharedPtr >::iterator
+            Expansion0DVectorIter;
 
-        class Expansion0D: virtual public Expansion, virtual public StdRegions::StdExpansion0D
+        class Expansion0D: virtual public Expansion,
+            virtual public StdRegions::StdExpansion0D
         {
         public:
-            LOCAL_REGIONS_EXPORT Expansion0D(SpatialDomains::Geometry0DSharedPtr pGeom);
+            LOCAL_REGIONS_EXPORT Expansion0D(
+                SpatialDomains::Geometry0DSharedPtr pGeom);
             
             LOCAL_REGIONS_EXPORT virtual ~Expansion0D() {}
             
@@ -67,7 +70,7 @@ namespace Nektar
             inline int GetRightAdjacentElementVertex() const;
             
             inline void SetAdjacentElementExp(
-                int vertex,
+                int                   vertex,
                 Expansion1DSharedPtr &v);
             
             inline SpatialDomains::Geometry0DSharedPtr GetGeom0D() const;
@@ -77,19 +80,25 @@ namespace Nektar
         private:
             Expansion1DWeakPtr m_elementLeft;
             Expansion1DWeakPtr m_elementRight;
-            int m_elementVertexLeft;
-            int m_elementVertexRight;
+            int                m_elementVertexLeft;
+            int                m_elementVertexRight;
         };
         
-        inline Expansion1DSharedPtr Expansion0D::GetLeftAdjacentElementExp() const
+        inline Expansion1DSharedPtr Expansion0D::
+            GetLeftAdjacentElementExp() const
         {
-            ASSERTL1(m_elementLeft.lock().get(), "Left adjacent element not set.");
+            ASSERTL1(m_elementLeft.lock().get(),
+                     "Left adjacent element not set.");
+            
             return m_elementLeft.lock();
         }
 
-        inline Expansion1DSharedPtr Expansion0D::GetRightAdjacentElementExp() const
+        inline Expansion1DSharedPtr Expansion0D::
+            GetRightAdjacentElementExp() const
         {
-            ASSERTL1(m_elementLeft.lock().get(), "Right adjacent element not set.");
+            ASSERTL1(m_elementLeft.lock().get(),
+                     "Right adjacent element not set.");
+            
             return m_elementRight.lock();
         }
 
@@ -103,25 +112,29 @@ namespace Nektar
             return m_elementVertexRight;
         }
 
-        inline void Expansion0D::SetAdjacentElementExp(int vertex, Expansion1DSharedPtr &v)
+        inline void Expansion0D::SetAdjacentElementExp(
+            int                   vertex,
+            Expansion1DSharedPtr &v)
         {
             if (m_elementLeft.lock().get())
             {
                 //ASSERTL1(!m_elementRight.lock().get(),
                 //         "Both adjacent elements already set.");
-                m_elementRight = v;
+                m_elementRight       = v;
                 m_elementVertexRight = vertex;
             }
             else
             {
-                m_elementLeft = v;
+                m_elementLeft       = v;
                 m_elementVertexLeft = vertex;
             }
         }
 
-        inline SpatialDomains::Geometry0DSharedPtr Expansion0D::GetGeom0D() const
+        inline SpatialDomains::Geometry0DSharedPtr
+            Expansion0D::GetGeom0D() const
         {
-            return boost::dynamic_pointer_cast<SpatialDomains::Geometry0D>(m_geom);
+            return boost::dynamic_pointer_cast<SpatialDomains::
+                Geometry0D>(m_geom);
 			
         }
     } //end of namespace

@@ -38,6 +38,8 @@
 #include <SpatialDomains/Conditions.h>
 #include <tinyxml.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -382,6 +384,8 @@ namespace Nektar
                                 std::string attrData1;
                                 std::string equation1, equation2, userDefined;
                                 std::string filename;
+
+                                bool primcoeffset = false;
                                 
                                 while(attr){
                                     
@@ -405,12 +409,9 @@ namespace Nektar
                                         m_session->SubstituteExpressions(attrData1);
                                         
                                         equation1 = attrData1;
-                                        
-                                        attr = attr->Next();
-                                        ASSERTL0(attr, "Unable to read PRIMCOEFF attribute.");
-                                        
-                                        attrName1= attr->Name();
-                                        ASSERTL0(attrName1 == "PRIMCOEFF", (std::string("Unknown attribute: ") + attrName1).c_str());
+                                    }
+                                    else if(attrName1 == "PRIMCOEFF")
+                                    {
                                         
                                         attrData1 = attr->Value();
                                         ASSERTL0(!attrData1.empty(), "PRIMCOEFF attributes must have associated values.");
@@ -418,7 +419,8 @@ namespace Nektar
                                         m_session->SubstituteExpressions(attrData1);
                                         
                                         equation2 = attrData1;
-                                        
+
+                                        primcoeffset = true;
                                     }
                                     else if(attrName1=="FILE")
                                     {
@@ -435,6 +437,10 @@ namespace Nektar
                                         
                                     }
                                     attr = attr->Next();                                    
+                                }
+                                if(primcoeffset == false)
+                                {
+                                    ASSERTL0(false,"PRIMCOEFF must be specified in a Robin boundary condition");
                                 }
                                 
                                 BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(m_session, equation1, equation2, userDefined, filename));

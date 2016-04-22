@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.6)
 
 project("pkg-@PKG_NAME@")
 
+# Files to go in the package
+file(READ "targets/install_libs.txt" INSTALL_LIBS_FILES)
+file(READ "targets/install_bins.txt" INSTALL_BINS_FILES)
+
 # Put output in builds dir.
 set(CPACK_OUTPUT_FILE_PREFIX "../..")
 
@@ -77,10 +81,6 @@ if(NOT DEFINED CPACK_PACKAGE_FILE_NAME)
     set(CPACK_PACKAGE_FILE_NAME
         "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${ARCHITECTURE}")
 endif()
-
-# Files to go in the package
-file(READ "targets/install_libs.txt" INSTALL_LIBS_FILES)
-file(READ "targets/install_bins.txt" INSTALL_BINS_FILES)
 
 # Install any libraries in the lib directory: exclude OS X, we will copy/patch
 # up libraries as we install executables.

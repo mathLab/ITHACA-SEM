@@ -9,6 +9,7 @@ v4.3.1
 - Fix Homogeneous transform when unshuffling is not used. (!599)
 - Fix bug in modified Arnoldi algorithm causing convergence to be reported when
   number of vectors is less than `nvec` (!608)
+- Fix issue with LAPACK call in eigenvalue calculation (!610)
 
 **NekMesh**:
 - Fix incorrect link directory on CCMIO library.

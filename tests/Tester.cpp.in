@@ -220,10 +220,10 @@ int main(int argc, char *argv[])
                     + " ";
         }
 
-        fs::path execPath = file.GetExecutable();
+        fs::path execPath = startDir / file.GetExecutable();
         if (!fs::exists(execPath))
         {
-            execPath = fs::path(file.GetExecutable());
+            execPath = file.GetExecutable();
         }
 
         command += PortablePath(execPath);

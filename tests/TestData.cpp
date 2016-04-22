@@ -150,7 +150,7 @@ namespace Nektar
         {
             tmp = testElement->FirstChildElement("executable");
             ASSERTL0(tmp, "Cannot find 'executable' for test.");
-            m_executable = fs::current_path() / fs::path(tmp->GetText());
+            m_executable = fs::path(tmp->GetText());
 #if defined(RELWITHDEBINFO)
             m_executable += "-rg";
 #elif !defined(NDEBUG)

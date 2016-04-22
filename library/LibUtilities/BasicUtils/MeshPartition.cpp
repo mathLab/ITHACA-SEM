@@ -81,7 +81,9 @@ namespace Nektar
                 m_numFields(0),
                 m_fieldNameToId(),
                 m_comm(pSession->GetComm()),
-                m_weightingRequired(false)
+                m_weightingRequired(false),
+                m_weightBnd(false),
+                m_weightDofs(false)
         {
             ReadConditions(pSession);
             ReadGeometry(pSession);
@@ -1114,9 +1116,21 @@ namespace Nektar
 
                 if (solverPropertyUpper == "WEIGHTPARTITIONS") 
                 {
-                    if (propertyValueUpper != "UNIFORM")
+                    if (propertyValueUpper == "DOF")
                     {
                         m_weightingRequired = true;
+                        m_weightDofs        = true;
+                    }
+                    else if (propertyValueUpper == "BOUNDARY")
+                    {
+                        m_weightingRequired = true;
+                        m_weightBnd        = true;
+                    }
+                    else if (propertyValueUpper == "BOTH")
+                    {
+                        m_weightingRequired = true;
+                        m_weightDofs        = true;
+                        m_weightBnd        = true;
                     }
                     return;
                 }
@@ -1259,6 +1273,11 @@ namespace Nektar
             int nGraphVerts = boost::num_vertices(pGraph);
             int nGraphEdges = boost::num_edges(pGraph);
 
+            int ncon = 1;
+            if (m_weightDofs && m_weightBnd)
+            {
+                ncon = 2;
+            }
             // Convert boost graph into CSR format
             BoostVertexIterator    vertit, vertit_end;
             BoostAdjacencyIterator adjvertit, adjvertit_end;
@@ -1268,7 +1287,7 @@ namespace Nektar
             {
                 int acnt = 0;
                 int vcnt = 0;
-                int nWeight = 2*nGraphVerts;
+                int nWeight = ncon*nGraphVerts;
                 Array<OneD, int> xadj(nGraphVerts+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
                 Array<OneD, int> adjwgt(2*nGraphEdges, 1);
@@ -1294,12 +1313,16 @@ namespace Nektar
 
                     if (m_weightingRequired)
                     {
-                        vwgt[2*(vcnt-1)]   = pGraph[*vertit].weight[0];
-                        vwgt[2*(vcnt-1)+1] = pGraph[*vertit].bndWeight[0];
-                    }
-                    else
-                    {
-                        vwgt[vcnt-1] = 1;
+                        int ccnt = 0;
+                        if (m_weightDofs)
+                        {
+                            vwgt[ncon*(vcnt-1)+ccnt] = pGraph[*vertit].weight[0];
+                            ccnt++;
+                        }
+                        if (m_weightBnd)
+                        {
+                            vwgt[ncon*(vcnt-1)+ccnt] = pGraph[*vertit].bndWeight[0];
+                        }
                     }
                 }
 
@@ -1314,7 +1337,6 @@ namespace Nektar
                     if(m_comm->GetColumnComm()->GetRank() == 0)
                     {
                         // Attempt partitioning using METIS.
-                        int ncon = 2;
                         PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, adjwgt, nParts, vol, part);
 
                         // Check METIS produced a valid partition and fix if not.

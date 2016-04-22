@@ -211,6 +211,8 @@ namespace Nektar
             CommSharedPtr                       m_comm;
 
             bool                                m_weightingRequired;
+            bool                                m_weightBnd;
+            bool                                m_weightDofs;
             bool                                m_shared;
 
             void ReadExpansions(const SessionReaderSharedPtr& pSession);

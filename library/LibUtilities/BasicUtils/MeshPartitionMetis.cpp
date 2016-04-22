@@ -70,11 +70,12 @@ namespace LibUtilities
             Nektar::Array<Nektar::OneD, int>& adjcy,
             Nektar::Array<Nektar::OneD, int>& vertWgt,
             Nektar::Array<Nektar::OneD, int>& vertSize,
+            Nektar::Array<Nektar::OneD, int>& edgeWgt,
             int&                              nparts,
             int&                              volume,
             Nektar::Array<Nektar::OneD, int>& part)
     {
-        Metis::PartGraphVKway(nVerts, nVertConds, xadj, adjcy, vertWgt, vertSize, nparts, volume, part);
+        Metis::PartGraphVKway(nVerts, nVertConds, xadj, adjcy, vertWgt, vertSize, edgeWgt, nparts, volume, part);
     }
 }
 }

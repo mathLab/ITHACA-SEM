@@ -275,7 +275,7 @@ namespace Nektar
                     {
                         for (int j = 0; j < fieldName.size(); j++)
                         {
-                            for (unsigned int k = 0; k < m_meshComposites[i].list.size(); ++k)
+                            for (unsigned int k = 0; k < m_meshComposites[composite[i]].list.size(); ++k)
                             {
                                 int elid = m_meshComposites[composite[i]].list[k];
                                 m_expansions[elid][fieldName[j]] = nummodes;
@@ -1146,6 +1146,8 @@ namespace Nektar
             for (eIt = m_meshElements.begin(); eIt != m_meshElements.end(); ++eIt)
             {
                 m_vertWeights[eIt->first] = weight;
+                m_vertBndWeights[eIt->first] = weight;
+                m_edgeWeights[eIt->first] = weight;
             }
 
             for (std::map<int, NummodesPerField>::iterator expIt =
@@ -1177,7 +1179,13 @@ namespace Nektar
                     }
 
                     m_vertWeights[elid][m_fieldNameToId[it->first]] =
+                            CalculateElementWeight(m_shape[elid], false,
+                                                   na, nb, nc);
+                    m_vertBndWeights[elid][m_fieldNameToId[it->first]] =
                             CalculateElementWeight(m_shape[elid], true,
+                                                   na, nb, nc);
+                    m_edgeWeights[elid][m_fieldNameToId[it->first]] =
+                            CalculateEdgeWeight(m_shape[elid],
                                                    na, nb, nc);
                 }
             } // for i
@@ -1200,7 +1208,9 @@ namespace Nektar
 
                 if (m_weightingRequired)
                 {
-                    pGraph[v].weight = m_vertWeights[eIt->first];
+                    pGraph[v].weight     = m_vertWeights[eIt->first];
+                    pGraph[v].bndWeight  = m_vertBndWeights[eIt->first];
+                    pGraph[v].edgeWeight = m_edgeWeights[eIt->first];
                 }
 
                 // Process element entries and add graph edges
@@ -1258,9 +1268,10 @@ namespace Nektar
             {
                 int acnt = 0;
                 int vcnt = 0;
-                int nWeight = nGraphVerts;
+                int nWeight = 2*nGraphVerts;
                 Array<OneD, int> xadj(nGraphVerts+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
+                Array<OneD, int> adjwgt(2*nGraphEdges, 1);
                 Array<OneD, int> vwgt(nWeight, 1);
                 Array<OneD, int> vsize(nGraphVerts, 1);
 
@@ -1273,13 +1284,18 @@ namespace Nektar
                           ++adjvertit)
                     {
                         adjncy[acnt++] = *adjvertit;
+                        if (m_weightingRequired)
+                        {
+                            adjwgt[acnt-1] = pGraph[*vertit].edgeWeight[0];
+                        }
                     }
 
                     xadj[++vcnt] = acnt;
 
                     if (m_weightingRequired)
                     {
-                        vwgt[vcnt-1] = pGraph[*vertit].weight[0];
+                        vwgt[2*(vcnt-1)]   = pGraph[*vertit].weight[0];
+                        vwgt[2*(vcnt-1)+1] = pGraph[*vertit].bndWeight[0];
                     }
                     else
                     {
@@ -1298,8 +1314,8 @@ namespace Nektar
                     if(m_comm->GetColumnComm()->GetRank() == 0)
                     {
                         // Attempt partitioning using METIS.
-                        int ncon = 1;
-                        PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, nParts, vol, part);
+                        int ncon = 2;
+                        PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, adjwgt, nParts, vol, part);
 
                         // Check METIS produced a valid partition and fix if not.
                         CheckPartitions(nParts, part);
@@ -2298,6 +2314,52 @@ namespace Nektar
                         StdSegData  ::getNumberOfCoefficients   (na);
                     break;
                 case 'V':
+                    weight = 1;
+                    break;
+                default:
+                    break;
+            }
+
+            return weight;
+        }
+
+        /**
+         *     Calculate the number of modes needed for communication when
+         *        in partition boundary, to be used as weighting for edges.
+         *     Since we do not know exactly which face this refers to, assume
+         *        the max order and quad face (for prisms) as arbitrary choices
+         */
+        int MeshPartition::CalculateEdgeWeight(
+            char elmtType,
+            int  na,
+            int  nb,
+            int  nc)
+        {
+            int weight = 0;
+            int n = std::max ( na, std::max(nb, nc));
+            switch (elmtType)
+            {
+                case 'A':
+                    weight =
+                        StdTriData ::getNumberOfCoefficients   (n, n);
+                    break;
+                case 'R':
+                    weight =
+                        StdQuadData ::getNumberOfCoefficients   (n, n);
+                    break;
+                case 'H':
+                    weight =
+                        StdQuadData ::getNumberOfCoefficients   (n, n);
+                    break;
+                case 'P':
+                    weight =
+                        StdQuadData ::getNumberOfCoefficients   (n, n);
+                    break;
+                case 'Q':
+                case 'T':
+                    weight = n;
+                    break;
+                case 'S':
                     weight = 1;
                     break;
                 default:

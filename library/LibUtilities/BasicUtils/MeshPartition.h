@@ -131,6 +131,8 @@ namespace Nektar
                 int id;             ///< Universal ID of the vertex
                 int partition;      ///< Index of the partition to which it belongs
                 MultiWeight weight; ///< Weightings to this graph vertex
+                MultiWeight bndWeight;
+                MultiWeight edgeWeight;
             };
 
             // Face/Edge/Vertex between two adjacent elements
@@ -198,6 +200,8 @@ namespace Nektar
 
             std::map<std::string, int>          m_fieldNameToId;
             std::map<int, MultiWeight>          m_vertWeights;
+            std::map<int, MultiWeight>          m_vertBndWeights;
+            std::map<int, MultiWeight>          m_edgeWeights;
 
             BndRegionOrdering                   m_bndRegOrder;
 
@@ -226,6 +230,7 @@ namespace Nektar
                     Nektar::Array<Nektar::OneD, int>& adjcy,
                     Nektar::Array<Nektar::OneD, int>& vertWgt,
                     Nektar::Array<Nektar::OneD, int>& vertSize,
+                    Nektar::Array<Nektar::OneD, int>& edgeWgt,
                     int&                              nparts,
                     int&                              volume,
                     Nektar::Array<Nektar::OneD, int>& part) = 0;
@@ -233,6 +238,7 @@ namespace Nektar
             void OutputPartition(SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
             void CheckPartitions(int nParts, Array<OneD, int> &pPart);
             int CalculateElementWeight(char elmtType, bool bndWeight, int na, int nb, int nc);
+            int CalculateEdgeWeight(char elmtType, int na, int nb, int nc);
         };
 
         typedef boost::shared_ptr<MeshPartition> MeshPartitionSharedPtr;

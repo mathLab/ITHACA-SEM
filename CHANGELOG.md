@@ -11,6 +11,7 @@ v4.3.1
 - Fix namespace pollution in library header files. (!601)
 - Fix bug in modified Arnoldi algorithm causing convergence to be reported when
   number of vectors is less than `nvec` (!608)
+- Fix FieldConvert processing of partitions in serial (!612)
 
 **NekMesh**:
 - Fix incorrect link directory on CCMIO library.

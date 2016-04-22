@@ -261,25 +261,22 @@ void InputFld::Process(po::variables_map &vm)
             }
         }
 
-        // if range is defined reset up output field in case of
-        // reducing fld definition
-        if(vm.count("range"))
-        {
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                = m_f->m_exp[0]->GetFieldDefinitions();
-            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+        // reset output field in case Import loaded elements that are not
+        // in the expansion (because of range option of partitioning)
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+            = m_f->m_exp[0]->GetFieldDefinitions();
+        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-            for (j = 0; j < nfields; ++j)
+        for (j = 0; j < nfields; ++j)
+        {
+            for (i = 0; i < FieldDef.size(); ++i)
             {
-                for (i = 0; i < FieldDef.size(); ++i)
-                {
-                    FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
-                    m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-                }
+                FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
+                m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
             }
-            m_f->m_fielddef = FieldDef;
-            m_f->m_data     = FieldData;
         }
+        m_f->m_fielddef = FieldDef;
+        m_f->m_data     = FieldData;
     }
 
     if(m_f->m_verbose)

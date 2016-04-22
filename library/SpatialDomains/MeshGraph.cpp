@@ -2852,7 +2852,7 @@ namespace Nektar
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
                 std::vector< std::vector<LibUtilities::PointsType> > &pointstype)
         {
-            int i,j,k,g,h,cnt,id;
+            int i,j,k,cnt,id;
             GeometrySharedPtr geom;
 
             ExpansionMapShPtr expansionMap;
@@ -2866,7 +2866,7 @@ namespace Nektar
                     std::string field = fielddef[i]->m_fields[j];
                     if(m_expansionMapShPtrMap.count(field) == 0)
                     {
-                        expansionMap = MemoryManager<ExpansionMap>::AllocateSharedPtr();
+                        expansionMap = SetUpExpansionMap();
                         m_expansionMapShPtrMap[field] = expansionMap;
 
                         // check to see if DefaultVar also not set and
@@ -2874,26 +2874,6 @@ namespace Nektar
                         if(m_expansionMapShPtrMap.count("DefaultVar") == 0)
                         {
                             m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
-                        }
-
-                        // loop over all elements and set expansion
-                        for(k = 0; k < fielddef.size(); ++k)
-                        {
-                            for(h = 0; h < fielddef[k]->m_fields.size(); ++h)
-                            {
-                                if(fielddef[k]->m_fields[h] == field)
-                                {
-                                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
-                                    LibUtilities::BasisKeyVector def;
-
-                                    for(g = 0; g < fielddef[k]->m_elementIDs.size(); ++g)
-                                    {
-                                        ExpansionShPtr tmpexp =
-                                                MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
-                                        (*expansionMap)[fielddef[k]->m_elementIDs[g]] = tmpexp;
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -2929,6 +2909,7 @@ namespace Nektar
                         if(!UniOrder)
                         {
                             cnt++;
+                            cnt += fielddef[i]->m_numHomogeneousDir;
                         }
                         bkeyvec.push_back(bkey);
                     }
@@ -2949,6 +2930,7 @@ namespace Nektar
                         if(!UniOrder)
                         {
                             cnt += 2;
+                            cnt += fielddef[i]->m_numHomogeneousDir;
                         }
                     }
                     break;
@@ -2969,6 +2951,7 @@ namespace Nektar
                         if(!UniOrder)
                         {
                             cnt += 2;
+                            cnt += fielddef[i]->m_numHomogeneousDir;
                         }
                     }
                     break;
@@ -2988,7 +2971,7 @@ namespace Nektar
 
                         if(!UniOrder)
                         {
-                            cnt += 2;
+                            cnt += 3;
                         }
                     }
                     break;
@@ -3008,7 +2991,7 @@ namespace Nektar
 
                         if(!UniOrder)
                         {
-                            cnt += 2;
+                            cnt += 3;
                         }
                     }
                     break;
@@ -3028,7 +3011,7 @@ namespace Nektar
 
                         if(!UniOrder)
                         {
-                            cnt += 2;
+                            cnt += 3;
                         }
                     }
                     break;
@@ -3048,7 +3031,7 @@ namespace Nektar
 
                         if(!UniOrder)
                         {
-                            cnt += 2;
+                            cnt += 3;
                         }
                     }
                     break;

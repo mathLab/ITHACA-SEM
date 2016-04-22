@@ -1037,8 +1037,12 @@ namespace Nektar
                         " does not correspond to mesh dimension");
 
                     int na = it->second[0];
-                    int nb = it->second[1];
+                    int nb = 0;
                     int nc = 0;
+                    if (m_dim >= 2)
+                    {
+                        nb = it->second[1];
+                    }
                     if (m_dim == 3)
                     {
                         nc = it->second[2];

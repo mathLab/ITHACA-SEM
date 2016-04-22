@@ -2418,6 +2418,11 @@ namespace Nektar
                             if(m_segGeoms.count(fielddef[i]->m_elementIDs[j]) == 0)
                             {
                                 // skip element likely from parallel read
+                                if(!UniOrder)
+                                {
+                                    cnt++;
+                                    cnt += fielddef[i]->m_numHomogeneousDir;
+                                }
                                 continue;
                             }
                             geom = m_segGeoms[fielddef[i]->m_elementIDs[j]];

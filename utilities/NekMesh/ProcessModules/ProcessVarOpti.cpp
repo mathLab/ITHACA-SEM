@@ -58,21 +58,40 @@ ModuleKey ProcessVarOpti::className = GetModuleFactory().RegisterCreatorFunction
 
 ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
 {
-
+    m_config["linearelastic"] =
+        ConfigOption(true, "", "Optimise for linear elasticity");
+    m_config["winslow"] =
+        ConfigOption(true, "", "Optimise for winslow");
+    m_config["roca"] =
+        ConfigOption(true, "", "Optimise for roca method");
 }
 
 ProcessVarOpti::~ProcessVarOpti()
 {
 }
 
-NekDouble dir[8][2] ={{1.0,1.0} , {0.0,1.0} , {-1.0,1.0}, {-1.0,0.0}, {-1.0,-1.0},
-                      {0.0,-1.0}, {1.0,-1.0}, {1.0,0.0}};
-
 void ProcessVarOpti::Process()
 {
     if (m_mesh->m_verbose)
     {
         cout << "ProcessVarOpti: Optimising... " << endl;
+    }
+
+    if(m_config["linearelastic"].beenSet)
+    {
+        opti = eLinEl;
+    }
+    else if(m_config["winslow"].beenSet)
+    {
+        opti = eWins;
+    }
+    else if(m_config["roca"].beenSet)
+    {
+        opti = eRoca;
+    }
+    else
+    {
+        ASSERTL0(false,"not opti type set");
     }
 
     if(m_mesh->m_expDim == 3 || m_mesh->m_spaceDim == 3)
@@ -89,74 +108,210 @@ void ProcessVarOpti::Process()
     NekDouble functionalStart = 0.0;
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
-        functionalStart += GetElFunctional(m_mesh->m_element[2][i]);
+        functionalStart += GetElFunctional(dataSet[i]);
     }
 
     cout << scientific << endl;
 
-    NekDouble functionalEnd;
+    NekDouble functionalEnd = functionalStart;
+    NekDouble functionalLast = 0.0;
     int ctr = 0;
-    bool repeat = true;
-    while (repeat)
+    while (fabs(functionalLast - functionalEnd) > 1e-5)
     {
         ctr++;
-        repeat = false;
+        functionalLast = functionalEnd;
+        int c = 0;
         for(int i = 0; i < optiNodes.size(); i++)
         {
-            NekDouble currentW = GetFunctional(optiNodes[i]);
-            NekDouble dx = 0.01;
+            //cout << i << endl;
+            Array<OneD, NekDouble> G = GetGrad(optiNodes[i]);
 
-            while(dx > 1e-6)
+            //cout << G[0] << " " << G[1] << endl;
+
+            if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-3)
             {
-                NodeSharedPtr bstNode = optiNodes[i]->copy();
+                //needs to optimise
+                NekDouble currentW = GetFunctional(optiNodes[i]);
                 NekDouble xc = optiNodes[i]->m_x;
                 NekDouble yc = optiNodes[i]->m_y;
-                for(int j = 0; j < 8; j++)
+                NekDouble alpha = 1.0;
+                bool found = false;
+                while(alpha > 1e-6)
                 {
-                    optiNodes[i]->m_x += dir[j][0] * dx;
-                    optiNodes[i]->m_y += dir[j][1] * dx;
-                    NekDouble nW = GetFunctional(optiNodes[i]);
-                    if(nW < currentW)
+                    optiNodes[i]->m_x = xc - alpha * G[0];
+                    optiNodes[i]->m_y = yc - alpha * G[1];
+
+                    if(GetFunctional(optiNodes[i]) < currentW)
                     {
-                        currentW = nW;
-                        bstNode = optiNodes[i]->copy();
-                        repeat = true;
+                        found = true;
+                        break;
                     }
+
+                    alpha /= 2.0;
+                }
+                if(found)
+                {
+                    //found an optimal position and moved the node
+                    c++;
+                }
+                else
+                {
+                    //reset the node
                     optiNodes[i]->m_x = xc;
                     optiNodes[i]->m_y = yc;
+                    cout << "warning: had to reset node" << endl;
                 }
-                optiNodes[i]->m_x = bstNode->m_x;
-                optiNodes[i]->m_y = bstNode->m_y;
-                dx /= 2.0;
             }
         }
-        if(ctr > 20)
-        {
-            break;
-        }
         functionalEnd = 0.0;
-
         for(int i = 0; i < m_mesh->m_element[2].size(); i++)
         {
-            functionalEnd += GetElFunctional(m_mesh->m_element[2][i]);
+            functionalEnd += dataSet[i]->lastEval;
         }
-        cout << ctr << "  start: " << functionalStart << "   end: " <<
+        cout << ctr << " " << c << "  " << functionalStart << " " <<
                 functionalEnd << endl;
+        if(ctr > 1000)
+            break;
     }
+}
+
+NekDouble dir[4][2] = {{1.0,0},{0,1.0},{-1.0,0},{0,-1.0}};
+
+Array<OneD, NekDouble> ProcessVarOpti::GetGrad(NodeSharedPtr n)
+{
+    NekDouble xc = n->m_x;
+    NekDouble yc = n->m_y;
+    NekDouble dx = 1e-6;
+
+    NekDouble wi = GetFunctional(n);
+    vector<NekDouble> w;
+
+    for(int i = 0; i < 4; i++)
+    {
+        n->m_x += dir[i][0] * dx;
+        n->m_y += dir[i][1] * dx;
+        w.push_back(GetFunctional(n));
+        n->m_x = xc;
+        n->m_y = yc;
+    }
+
+    Array<OneD, NekDouble> ret(2);
+
+    ret[0] = (w[0] - w[2]) / 2.0 / dx;
+    ret[1] = (w[1] - w[3]) / 2.0 / dx;
+
+    return ret;
 }
 
 NekDouble ProcessVarOpti::GetFunctional(NodeSharedPtr n)
 {
     NodeElMap::iterator it = nodeElMap.find(n->m_id);
     ASSERTL0(it != nodeElMap.end(),"could not find");
-    vector<ElementSharedPtr> els = it->second;
 
     NekDouble r = 0.0;
-    for(int i = 0; i < els.size(); i++)
+    for(int i = 0; i < it->second.size(); i++)
     {
-        r += GetElFunctional(els[i]);
+        r += GetElFunctional(it->second[i]);
     }
     return r;
+}
+
+NekDouble ProcessVarOpti::GetElFunctional(ElDataSharedPtr d)
+{
+    SpatialDomains::GeometrySharedPtr    geom = d->el->GetGeom(m_mesh->m_spaceDim);
+    StdRegions::StdExpansionSharedPtr    chi  = geom->GetXmap();
+    LibUtilities::PointsKeyVector        p    = chi->GetPointsKeys();
+    SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
+    const int expDim = m_mesh->m_expDim;
+
+    SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
+
+    const int pts = deriv[0][0].num_elements();
+
+    ASSERTL0(pts == d->maps.size(), "what");
+
+    Array<OneD, NekDouble> dW(pts);
+
+    for (int k = 0; k < pts; ++k)
+    {
+        DNekMat jac     (expDim, expDim, 0.0, eFULL);
+        DNekMat jacIdeal(expDim, expDim, 0.0, eFULL);
+
+        for (int i = 0; i < expDim; ++i)
+        {
+            for (int j = 0; j < expDim; ++j)
+            {
+                jac(j,i) = deriv[i][j][k];
+            }
+        }
+
+        jacIdeal = jac * d->maps[k];
+
+        switch (opti)
+        {
+            case eLinEl:
+            {
+                NekDouble trEtE = 0.25*(
+                                  (jacIdeal(0,0) * jacIdeal(0,0) + jacIdeal(1,0) * jacIdeal(1,0) - 1.0)*
+                                  (jacIdeal(0,0) * jacIdeal(0,0) + jacIdeal(1,0) * jacIdeal(1,0) - 1.0) +
+                                  (jacIdeal(0,0) * jacIdeal(0,1) + jacIdeal(1,0) * jacIdeal(1,1))*
+                                  (jacIdeal(0,0) * jacIdeal(0,1) + jacIdeal(1,0) * jacIdeal(1,1)) +
+                                  (jacIdeal(0,0) * jacIdeal(0,1) + jacIdeal(1,0) * jacIdeal(1,1))*
+                                  (jacIdeal(0,0) * jacIdeal(0,1) + jacIdeal(1,0) * jacIdeal(1,1)) +
+                                  (jacIdeal(0,1) * jacIdeal(0,1) + jacIdeal(1,1) * jacIdeal(1,1) - 1.0)*
+                                  (jacIdeal(0,1) * jacIdeal(0,1) + jacIdeal(1,1) * jacIdeal(1,1) - 1.0));
+                NekDouble ljacDet = log(jacIdeal(0,0) * jacIdeal(1,1) - jacIdeal(0,1)*jacIdeal(1,0));
+
+                NekDouble nu = 0.45;
+                NekDouble mu = 1.0/2.0/(1.0+nu);
+                NekDouble K = 1.0 / 3.0 / (1.0 - 2.0 * nu);
+                dW[k] = K *0.5 * ljacDet * ljacDet + mu * trEtE;
+                break;
+            }
+
+            case eWins:
+            {
+                NekDouble jacDet = jacIdeal(0,0) * jacIdeal(1,1) - jacIdeal(0,1)*jacIdeal(1,0);
+                NekDouble frob = 0.0;
+
+                for (int i = 0; i < expDim; ++i)
+                {
+                    for (int j = 0; j < expDim; ++j)
+                    {
+                        frob += jacIdeal(i,j) * jacIdeal(i,j);
+                    }
+                }
+
+                if(jacDet < 1E-6)
+                {
+                    jacDet = 1E-6;
+                }
+                dW[k] = frob / jacDet;
+                break;
+            }
+
+            case eRoca:
+            {
+                NekDouble jacDet = jacIdeal(0,0) * jacIdeal(1,1) - jacIdeal(0,1)*jacIdeal(1,0);
+                NekDouble frob = 0.0;
+
+                for (int i = 0; i < expDim; ++i)
+                {
+                    for (int j = 0; j < expDim; ++j)
+                    {
+                        frob += jacIdeal(i,j) * jacIdeal(i,j);
+                    }
+                }
+
+                NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet));
+                dW[k] = frob / expDim * pow(sigma, 2.0/expDim);
+                break;
+            }
+        }
+    }
+
+    d->lastEval = chi->Integral(dW);
+    return d->lastEval;
 }
 
 inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
@@ -338,106 +493,53 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
     return ret;
 }
 
-NekDouble ProcessVarOpti::GetElFunctional(ElementSharedPtr el)
-{
-    SpatialDomains::GeometrySharedPtr    geom = el->GetGeom(m_mesh->m_spaceDim);
-    StdRegions::StdExpansionSharedPtr    chi  = geom->GetXmap();
-    LibUtilities::PointsKeyVector        p    = chi->GetPointsKeys();
-    SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
-    const int expDim = chi->GetNumBases();
-    int nElemPts = 1;
-
-    vector<LibUtilities::BasisKey> basisKeys;
-
-    for (int i = 0; i < expDim; ++i)
-    {
-        basisKeys.push_back(chi->GetBasis(i)->GetBasisKey());
-    }
-
-    StdRegions::StdExpansionSharedPtr chiMod;
-    switch(chi->DetShapeType())
-    {
-        case LibUtilities::eTriangle:
-            chiMod = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(
-                basisKeys[0], basisKeys[1]);
-            break;
-        case LibUtilities::eQuadrilateral:
-            chiMod = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(
-                basisKeys[0], basisKeys[1]);
-            break;
-        case LibUtilities::eTetrahedron:
-            chiMod = MemoryManager<StdRegions::StdTetExp>::AllocateSharedPtr(
-                basisKeys[0], basisKeys[1], basisKeys[2]);
-            break;
-        case LibUtilities::ePrism:
-            chiMod = MemoryManager<StdRegions::StdPrismExp>::AllocateSharedPtr(
-                basisKeys[0], basisKeys[1], basisKeys[2]);
-            break;
-        default:
-            ASSERTL0(false, "nope");
-    }
-
-    SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
-
-    const int pts = deriv[0][0].num_elements();
-    const int nq  = chiMod->GetTotPoints();
-
-    ASSERTL0(pts == nq, "what");
-
-    vector<DNekMat> i2rm = MappingIdealToRef(geom, chiMod);
-
-    Array<OneD, NekDouble> dW(nq);
-
-    for (int k = 0; k < pts; ++k)
-    {
-        DNekMat jac     (expDim, expDim, 0.0, eFULL);
-        DNekMat jacIdeal(expDim, expDim, 0.0, eFULL);
-
-        for (int i = 0; i < expDim; ++i)
-        {
-            for (int j = 0; j < expDim; ++j)
-            {
-                jac(j,i) = deriv[i][j][k];
-            }
-        }
-
-        jacIdeal = jac * i2rm[k];
-
-        DNekMat jacIdealT;
-        jacIdealT = jacIdeal;
-        jacIdealT.Transpose();
-
-        DNekMat C = jacIdealT * jacIdeal;
-
-        DNekMat I (expDim,expDim,1.0,eDIAGONAL);
-
-        DNekMat E = 0.5*(C - I);
-
-        DNekMat Et = E;
-        Et.Transpose();
-
-        DNekMat EtE = Et * E;
-
-        NekDouble trE = 0.0;
-        NekDouble trEtE = 0.0;
-
-        for(int i = 0; i < expDim; i++)
-        {
-            trE += E(i,i);
-            trEtE += EtE(i,i);
-        }
-
-        NekDouble nu = 0.49;
-        NekDouble lam = nu/(1.0+nu)/(1-2.0*nu);
-        NekDouble mu = 1.0/2.0/(1.0+nu);
-        dW[k] = 0.5*lam*trE*trE + mu*trEtE;
-    }
-
-    return chi->Integral(dW);
-}
-
 void ProcessVarOpti::GetElementMap()
 {
+    //build ideal maps and structs;
+    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+    {
+        ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+        ElDataSharedPtr d = boost::shared_ptr<ElData>(new ElData);
+        d->el = el;
+
+        SpatialDomains::GeometrySharedPtr    geom = el->GetGeom(m_mesh->m_spaceDim);
+        StdRegions::StdExpansionSharedPtr    chi  = geom->GetXmap();
+
+        vector<LibUtilities::BasisKey> basisKeys;
+
+        for (int i = 0; i < m_mesh->m_expDim; ++i)
+        {
+            basisKeys.push_back(chi->GetBasis(i)->GetBasisKey());
+        }
+
+        StdRegions::StdExpansionSharedPtr chiMod;
+        switch(chi->DetShapeType())
+        {
+            case LibUtilities::eTriangle:
+                chiMod = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(
+                    basisKeys[0], basisKeys[1]);
+                break;
+            case LibUtilities::eQuadrilateral:
+                chiMod = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(
+                    basisKeys[0], basisKeys[1]);
+                break;
+            case LibUtilities::eTetrahedron:
+                chiMod = MemoryManager<StdRegions::StdTetExp>::AllocateSharedPtr(
+                    basisKeys[0], basisKeys[1], basisKeys[2]);
+                break;
+            case LibUtilities::ePrism:
+                chiMod = MemoryManager<StdRegions::StdPrismExp>::AllocateSharedPtr(
+                    basisKeys[0], basisKeys[1], basisKeys[2]);
+                break;
+            default:
+                ASSERTL0(false, "nope");
+        }
+
+        d->maps = MappingIdealToRef(geom, chiMod);
+
+        dataSet.push_back(d);
+    }
+
     for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
@@ -446,7 +548,8 @@ void ProcessVarOpti::GetElementMap()
         el->GetCurvedNodes(n);
         for(int j = 0; j < 3 * (5 - 1); j++)
         {
-            nodeElMap[n[j]->m_id].push_back(el);
+            //data set and elements have same index in vector
+            nodeElMap[n[j]->m_id].push_back(dataSet[i]);
         }
     }
 }

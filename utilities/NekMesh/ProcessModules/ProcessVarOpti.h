@@ -42,7 +42,23 @@ namespace Nektar
 {
 namespace Utilities
 {
-typedef map<int, vector<ElementSharedPtr> > NodeElMap;
+struct ElData
+{
+    ElementSharedPtr el;
+    vector<DNekMat> maps;
+    NekDouble lastEval;
+};
+typedef boost::shared_ptr<ElData> ElDataSharedPtr;
+
+typedef map<int, vector<ElDataSharedPtr> > NodeElMap;
+
+enum optimiser
+{
+    eLinEl,
+    eWins,
+    eRoca
+};
+
 /**
  * @brief This processing module calculates the Jacobian of elements
  * using %SpatialDomains::GeomFactors and the %Element::GetGeom
@@ -70,8 +86,10 @@ private:
     void GetElementMap();
     NodeElMap nodeElMap;
     NekDouble GetFunctional(NodeSharedPtr n);
-    NekDouble GetElFunctional(ElementSharedPtr el);
-
+    NekDouble GetElFunctional(ElDataSharedPtr d);
+    Array<OneD, NekDouble> GetGrad(NodeSharedPtr n);
+    vector<ElDataSharedPtr> dataSet;
+    optimiser opti;
 };
 
 }

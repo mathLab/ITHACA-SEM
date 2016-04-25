@@ -6,15 +6,23 @@ v4.3.1
 **Library**:
 - Add `THIRDPARTY_USE_SSL` option to disable use of SSL on systems where CMake
   is not compiled with SSL support. (!602)
-- Fixed a number of documentation issues (!586, !593)
+- Fixed a number of documentation issues (!586, !593, !596)
 - Fix Homogeneous transform when unshuffling is not used. (!599)
 - Fix namespace pollution in library header files. (!601)
 - Fix issue with METIS compilation on clang 7.3 (!603)
 - Fix bug in modified Arnoldi algorithm causing convergence to be reported when
   number of vectors is less than `nvec` (!608)
+- Fix uninitialised array bug in AssemblyMap (!598)
+- Fix FieldConvert processing of partitions in serial (!612)
+- Fix use of multi-level static condensation in parallel with periodic
+  boundary conditions (!614)
 
 **NekMesh**:
 - Fix incorrect link directory on CCMIO library.
+
+**FieldConvert**:
+- Fix to FLD input to update the field definitions always, not just when a range
+  is specified. (!611)
 
 **Tester**:
 - Remove requirement for executable to be specified in .tst file if it is

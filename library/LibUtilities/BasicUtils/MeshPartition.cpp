@@ -298,12 +298,26 @@ namespace Nektar
                                 "A filename must be specified for the FILE "
                                 "attribute of expansion");
 
+                    // Load field definitions from file
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
                     LibUtilities::FieldIO f(pSession->GetComm());
                     f.Import(filenameStr, fielddefs);
 
+                    // Parse field definitions
                     for (int i = 0; i < fielddefs.size(); ++i)
                     {
+                        // Name of fields
+                        for (int j = 0; j < fielddefs[i]->m_fields.size(); ++j)
+                        {
+                            std::string fieldName = fielddefs[i]->m_fields[j];
+                            if (m_fieldNameToId.count(fieldName) == 0)
+                            {
+                                int k = m_fieldNameToId.size();
+                                m_fieldNameToId[ fieldName ] = k;
+                                m_numFields++;
+                            }
+                        }
+                        // Number of modes and shape for each element
                         int numHomoDir = fielddefs[i]->m_numHomogeneousDir;
                         int cnt = 0;
                         for (int j = 0; j < fielddefs[i]->m_elementIDs.size(); ++j)

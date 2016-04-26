@@ -15,6 +15,8 @@ IF (NEKTAR_USE_ANN)
     # First search for system ANN installs. Hint /opt/local for MacPorts.
     FIND_LIBRARY(ANN_LIBRARY    NAMES ANN PATHS /opt/local/lib)
     FIND_PATH   (ANN_INCLUDE_DIR ANN.h PATHS /opt/local/include)
+    GET_FILENAME_COMPONENT(ANN_LIBRARY_PATH ${ANN_LIBRARY} PATH)
+    ADD_DEFINITIONS(-DNEKTAR_USE_ANN)
 
     IF (ANN_LIBRARY AND ANN_INCLUDE_DIR)
         SET(BUILD_ANN OFF)
@@ -68,7 +70,7 @@ IF (NEKTAR_USE_ANN)
                                                  ${TPDIST}/include
         )
 
-        SET(ANN_LIBRARY ann CACHE FILEPATH
+        SET(ANN_LIBRARY ANN CACHE FILEPATH
             "ANN library" FORCE)
         SET(ANN_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
             "ANN include directory" FORCE)

@@ -43,6 +43,8 @@ using namespace std;
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 
+#include "ANN/ANN.h"
+
 namespace Nektar
 {
 namespace Utilities
@@ -774,7 +776,274 @@ bool same(NekDouble x1, NekDouble y1, NekDouble z1,
     return false;
 }
 
+#ifdef NEKTAR_USE_ANN // use oct-tree search based on libANN
 void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
+{
+    int    i,j,n;
+    int    nvert,nelmt;
+    int    niso=iso.size();
+    int    id1,id2;
+    Array<OneD, Array<OneD, int> > vidmap;
+
+    if(m_condensed) return;
+    m_condensed = true;
+
+    vidmap = Array<OneD, Array<OneD, int> > (niso);
+
+    m_ntris = 0;
+    for(i = 0; i < niso; ++i)
+    {
+        if(iso[i]->m_ntris)
+        {
+            m_ntris += iso[i]->m_ntris;
+        }
+    }
+
+    m_vid = Array<OneD, int>(3*m_ntris);
+
+    m_nvert = 0;
+    for(i = 0; i < niso; ++i)
+    {
+        if(iso[i]->m_ntris)
+        {
+            m_nvert += iso[i]->m_nvert;
+        }
+    }
+
+    vector< vector<int> > isocon;
+    isocon.resize(niso);
+    vector<int> global_to_unique_map;
+    global_to_unique_map.resize(m_nvert);
+    //Create kdtree
+    {
+        int n_neighbs =5;
+        id2 = 0;
+        ANNpointArray dataPts = annAllocPts(m_nvert, 3);
+        ANNidxArray nnIdx = new ANNidx[n_neighbs];
+        ANNdistArray dists = new ANNdist[n_neighbs];
+        //Fill vertex array into libAnn format
+        for(i = 0; i < niso; ++i){
+            for(id1 = 0; id1 < iso[i]->m_nvert; ++id1){
+                dataPts[id2][0] = iso[i]->m_x[0];
+                dataPts[id2][1] = iso[i]->m_x[1];
+                dataPts[id2][2] = iso[i]->m_x[2];
+                isocon[i].push_back(id2);
+                global_to_unique_map[id2]=id2;
+                id2++;
+            }
+        }
+        //Build tree
+        ANNkd_tree* kdTree;
+        kdTree = new ANNkd_tree(		// build search structure
+                dataPts,					// the data points
+                m_nvert,				// number of points
+                3);	    					// dimension of space
+        //Find neipghbours
+        ANNpoint queryPt = annAllocPt(3);
+        int unique_index = 0;
+        bool unique_index_found = false;
+        for(i = 0; i < m_nvert; ++i){
+            queryPt[0] = dataPts[i][0];
+            queryPt[1] = dataPts[i][1];
+            queryPt[2] = dataPts[i][2];
+            kdTree->annkSearch(queryPt, n_neighbs, nnIdx, dists, 0); //eps set to zero
+            id1 = 0;
+            unique_index_found = false;
+            while(id1<n_neighbs && dists[id1]<SQ_PNT_TOL){
+                id2 = nnIdx[id1];
+                if(id2>=i){
+                    global_to_unique_map[id2]=unique_index;
+                    unique_index_found = true;
+                }
+                id1++;
+            }
+            if(unique_index_found)
+                unique_index++;
+        }
+    }
+
+    // identify which iso are connected by at least one point;
+    // find min x,y,z and max x,y,z and see if overlap to select
+    // which zones should be connected
+    {
+        vector<Array<OneD, NekDouble> > sph(niso);
+        Array<OneD, NekDouble> rng(6);
+        for(i = 0; i < niso; ++i)
+        {
+            sph[i] = Array<OneD, NekDouble>(4);
+
+            // find max and min of isocontour
+            rng[0] = rng[3] = iso[i]->m_x[0];
+            rng[1] = rng[4] = iso[i]->m_x[1];
+            rng[2] = rng[5] = iso[i]->m_x[2];
+
+            for(id1 = 1; id1 < iso[i]->m_nvert;++id1)
+            {
+                rng[0] = min(rng[0],iso[i]->m_x[i]);
+                rng[1] = min(rng[1],iso[i]->m_y[i]);
+                rng[2] = min(rng[2],iso[i]->m_z[i]);
+
+                rng[3] = max(rng[3],iso[i]->m_x[i]);
+                rng[4] = max(rng[4],iso[i]->m_y[i]);
+                rng[5] = max(rng[5],iso[i]->m_z[i]);
+            }
+
+            // centroid
+            sph[i][0] = (rng[3]+rng[0])/2.0;
+            sph[i][1] = (rng[4]+rng[1])/2.0;
+            sph[i][2] = (rng[5]+rng[2])/2.0;
+
+            // radius;
+            sph[i][3] = sqrt((rng[3]-rng[0])*(rng[3]-rng[0]) +
+                             (rng[4]-rng[1])*(rng[4]-rng[1]) +
+                             (rng[5]-rng[2])*(rng[5]-rng[2]));
+        }
+
+        for(i = 0; i < niso; ++i)
+        {
+            for(j = i; j < niso; ++j)
+            {
+                NekDouble diff=sqrt((sph[i][0]-sph[j][0])*(sph[i][0]-sph[j][0])+
+                          (sph[i][1]-sph[j][1])*(sph[i][1]-sph[j][1])+
+                          (sph[i][2]-sph[j][2])*(sph[i][2]-sph[j][2]));
+
+                // if centroid is closer than added radii
+                if(diff < sph[i][3] + sph[j][3])
+                {
+                    isocon[i].push_back(j);
+                }
+            }
+        }
+
+    }
+
+
+    for(i = 0; i < niso; ++i)
+    {
+        vidmap[i] = Array<OneD, int>(iso[i]->m_nvert,-1);
+    }
+    nvert = 0;
+    int cnt = 0;
+    // count up amount of checking to be done
+    NekDouble totiso = 0; 
+    for(i = 0; i < niso; ++i)
+    {
+        totiso += isocon[i].size();
+    }
+
+
+    if(verbose)
+    {
+        cout << "Progress Bar totiso: " << totiso << endl;
+    }
+    for(i = 0; i < niso; ++i)
+    {
+        for(n = 0; n < isocon[i].size(); ++n, ++cnt)
+        {
+            
+            if(verbose && totiso >= 40)
+            {
+                LibUtilities::PrintProgressbar(cnt,totiso,"Condensing verts");
+            }
+
+            int con = isocon[i][n];
+            for(id1 = 0; id1 < iso[i]->m_nvert; ++id1)
+            {
+
+                if(verbose && totiso < 40)
+                {
+                    LibUtilities::PrintProgressbar(id1,iso[i]->m_nvert,"isocon");
+                }
+
+                int start  = 0; 
+                if(con == i)
+                {
+                    start = id1+1;
+                }
+                for(id2 = start; id2 < iso[con]->m_nvert; ++id2)
+                {
+                    
+                    if((vidmap[con][id2] == -1)||(vidmap[i][id1] == -1))
+                    {
+                        if(same(iso[i]->m_x[id1],  iso[i]->m_y[id1],
+                                iso[i]->m_z[id1],  iso[con]->m_x[id2],
+                                iso[con]->m_y[id2],iso[con]->m_z[id2]))
+                        {
+                            if((vidmap[i][id1] == -1) &&
+                               (vidmap[con][id2] != -1))
+                            {
+                                vidmap[i][id1] = vidmap[con][id2];
+                            }
+                            else if((vidmap[con][id2] == -1) &&
+                                    (vidmap[i][id1] != -1))
+                            {
+                                vidmap[con][id2] = vidmap[i][id1];
+                            }
+                            else if((vidmap[con][id2] == -1) &&
+                                    (vidmap[i][id1] == -1))
+                            {
+                                vidmap[i][id1] = vidmap[con][id2] = nvert++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        for(id1 = 0; id1 < iso[i]->m_nvert;++id1)
+        {
+            if(vidmap[i][id1] == -1)
+            {
+                vidmap[i][id1] = nvert++;
+            }
+        }
+    }
+    m_nvert = nvert;
+
+    nelmt = 0;
+    // reset m_vid;
+    for(n = 0; n < niso; ++n)
+    {
+        for(i = 0; i < iso[n]->m_ntris; ++i,nelmt++)
+        {
+            for(j=0; j < 3;++j)
+            {
+                m_vid[3*nelmt+j] = vidmap[n][iso[n]->m_vid[3*i+j]];
+            }
+        }
+    }
+
+    m_ntris = nelmt;
+
+    m_x.resize(m_nvert);
+    m_y.resize(m_nvert);
+    m_z.resize(m_nvert);
+
+    m_fields.resize(iso[0]->m_fields.size());
+    for(i = 0; i < iso[0]->m_fields.size(); ++i)
+    {
+        m_fields[i].resize(m_nvert);
+    }
+
+    // reset coordinate and fields.
+    for(n = 0; n < niso; ++n)
+    {
+        for(i = 0; i < iso[n]->m_nvert; ++i)
+        {
+            m_x[vidmap[n][i]] = iso[n]->m_x[i];
+            m_y[vidmap[n][i]] = iso[n]->m_y[i];
+            m_z[vidmap[n][i]] = iso[n]->m_z[i];
+
+            for(j = 0; j < m_fields.size(); ++j)
+            {
+                m_fields[j][vidmap[n][i]] = iso[n]->m_fields[j][i];
+            }
+        }
+    }
+    cout << endl;
+}
+#else
+    void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
 {
     int    i,j,n;
     int    nvert,nelmt;
@@ -990,7 +1259,8 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
     }
     cout << endl;
 }
-
+#endif
+    
 void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
 {
     int   iter,i,j;

@@ -86,8 +86,17 @@ SET(FieldConvertSources
     ProcessModules/ProcessQualityMetric.cpp
 )
 
+
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})
 TARGET_LINK_LIBRARIES(FieldConvert SolverUtils)
+
+IF (NEKTAR_USE_ANN)
+   TARGET_LINK_LIBRARIES(FieldConvert ANN)
+   SET_TARGET_PROPERTIES(FieldConvert PROPERTIES
+       IMPORTED_LOCATION ${ANN_LIBRARY_PATH}/libANN.a)
+   INCLUDE_DIRECTORIES(NekMesh ${ANN_INCLUDE_DIR})
+   LINK_DIRECTORIES(${ANN_LIBRARY_PATH})
+ENDIF (NEKTAR_USE_ANN)
 
 #ADD_NEKTAR_TEST(chan3D_tec)  # This test is covered in bfs_tec
 #ADD_NEKTAR_TEST(chan3D_vtu)  # This does not currently work -- hash metric 

@@ -406,7 +406,7 @@ namespace Nektar
             
             /// Perform a case-insensitive string comparison.
             SOLVER_UTILS_EXPORT int NoCaseStringCompare(
-                const string & s1, const string& s2) ;
+                const std::string & s1, const std::string& s2) ;
 
             SOLVER_UTILS_EXPORT int GetCheckpointNumber()
             {
@@ -453,8 +453,8 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        m_session;
             /// Field input/output
             LibUtilities::FieldIOSharedPtr              m_fld;
-            /// Map of the interpolation weights for a specific filename.
-            map<std::string, Interpolator > m_interpolators;
+            /// Map of interpolator objects
+            std::map<std::string, Interpolator >        m_interpolators;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.
@@ -555,7 +555,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession);
             
             // Here for consistency purposes with old version
-            int nocase_cmp(const string & s1, const string& s2)
+            int nocase_cmp(const std::string & s1, const std::string& s2)
             {
                 return NoCaseStringCompare(s1,s2);
             }
@@ -765,15 +765,15 @@ namespace Nektar
                 std::vector<std::pair<std::string, std::string> > vSummary;
                 v_GenerateSummary(vSummary);
 
-                out << "=======================================================================" << endl;
+                out << "=======================================================================" << std::endl;
                 SummaryList::const_iterator x;
                 for (x = vSummary.begin(); x != vSummary.end(); ++x)
                 {
                     out << "\t";
                     out.width(20);
-                    out << x->first << ": " << x->second << endl;
+                    out << x->first << ": " << x->second << std::endl;
                 }
-                out << "=======================================================================" << endl;
+                out << "=======================================================================" << std::endl;
             }
         }
         

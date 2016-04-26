@@ -180,7 +180,7 @@ public:
     /// Distributions of points along edge.
     LibUtilities::PointsType m_curveType;
     /// Element(s) which are linked to this edge.
-    vector<pair<ElementSharedPtr, int> > m_elLink;
+    std::vector<std::pair<ElementSharedPtr, int> > m_elLink;
 
 #ifdef NEKTAR_USE_MESHGEN
     bool onCurve;

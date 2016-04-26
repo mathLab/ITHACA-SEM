@@ -23,6 +23,8 @@
 #include <MultiRegions/ContField2D.h>
 #include <SpatialDomains/MeshGraph2D.h>
 
+//! STL namespace
+using namespace std;
 
 //! Nektar++ namespace
 using namespace Nektar;

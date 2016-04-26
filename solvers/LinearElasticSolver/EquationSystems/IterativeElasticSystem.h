@@ -39,10 +39,10 @@
 #include <SolverUtils/EquationSystem.h>
 #include <LinearElasticSolver/EquationSystems/LinearElasticSystem.h>
 
-using namespace Nektar::SolverUtils;
-
 namespace Nektar
 {
+
+using namespace SolverUtils;
 
 /**
  * @brief Class for iterative elastic system, in which linear elasticity is
@@ -75,7 +75,7 @@ protected:
     /// Storage for boundary conditions.
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_savedBCs;
     /// Vector of boundary regions to deform.
-    vector<int> m_toDeform;
+    std::vector<int> m_toDeform;
 
     IterativeElasticSystem(
         const LibUtilities::SessionReaderSharedPtr& pSession);

@@ -38,6 +38,8 @@
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <tinyxml.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace SpatialDomains

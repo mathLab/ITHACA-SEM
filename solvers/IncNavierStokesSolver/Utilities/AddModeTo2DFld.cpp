@@ -3,6 +3,7 @@
 #include <SpatialDomains/MeshGraph.h>   // for FieldDefinitions, etc
 #include <StdRegions/StdTriExp.h>
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])

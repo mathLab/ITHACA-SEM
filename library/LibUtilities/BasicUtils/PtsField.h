@@ -46,13 +46,11 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
-
-using namespace std;
-
 namespace Nektar
 {
 namespace LibUtilities
 {
+using namespace std;
 
 enum PtsType{
     ePtsFile,

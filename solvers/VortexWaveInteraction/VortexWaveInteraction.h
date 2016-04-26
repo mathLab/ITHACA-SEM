@@ -81,14 +81,14 @@ namespace Nektar
         void ExecuteWave(void);
 
         void ExecuteLoop(bool CalcWaveForce = true);
-        void SaveLoopDetails(string dir, int i);
+        void SaveLoopDetails(std::string dir, int i);
 
         void CalcNonLinearWaveForce(void);
         void CalcL2ToLinfPressure  (void);
         
-        void SaveFile(string fileend, string dir, int n);
-        void MoveFile(string fileend, string dir, int n);
-        void CopyFile(string file1end, string file2end);
+        void SaveFile(std::string fileend, std::string dir, int n);
+        void MoveFile(std::string fileend, std::string dir, int n);
+        void CopyFile(std::string file1end, std::string file2end);
 
 
         bool CheckEigIsStationary(bool reset = false);
@@ -266,7 +266,7 @@ namespace Nektar
 
         Array<OneD, MultiRegions::ExpListSharedPtr> m_rollField; 
         
-        string m_sessionName;
+        std::string m_sessionName;
         LibUtilities::SessionReaderSharedPtr m_sessionVWI; 
 
         LibUtilities::SessionReaderSharedPtr m_sessionRoll; 

@@ -199,7 +199,7 @@ public:
     {
         std::stringstream s;
         std::string str;
-        vector<NodeSharedPtr> nodeList;
+        std::vector<NodeSharedPtr> nodeList;
 
         // assemble listof nodes
         GetCurvedNodes(nodeList);
@@ -251,7 +251,7 @@ public:
                 }
                 for (int j = 0; j < nEdge; j++)
                 {
-                    vector<NodeSharedPtr> ed = m_edgeList[j]->m_edgeNodes;
+                    std::vector<NodeSharedPtr> ed = m_edgeList[j]->m_edgeNodes;
                     if (edgeo[j] == StdRegions::eBackwards)
                     {
                         for (int k = ed.size() - 1; k >= 0; k--)
@@ -286,7 +286,7 @@ public:
                          "for quadrilaterals.");
 
                 int n = (int)sqrt((NekDouble)GetNodeCount());
-                vector<NodeSharedPtr> tmp(n * n);
+                std::vector<NodeSharedPtr> tmp(n * n);
 
                 ASSERTL0(n * n == GetNodeCount(), "Wrong number of modes?");
 
@@ -370,7 +370,7 @@ public:
     /// Distribution of points in this face.
     LibUtilities::PointsType             m_curveType;
     /// Element(s) which are linked to this face.
-    vector<pair<ElementSharedPtr, int> > m_elLink;
+    std::vector<std::pair<ElementSharedPtr, int> > m_elLink;
     /// Nektar++ representation of geometry
     SpatialDomains::Geometry2DSharedPtr  m_geom;
 };

@@ -38,6 +38,8 @@
 
 #include "../Module.h"
 
+#include <LibUtilities/BasicUtils/Thread.h>
+
 namespace Nektar
 {
 namespace Utilities
@@ -49,8 +51,6 @@ struct ElData
     NekDouble lastEval;
 };
 typedef boost::shared_ptr<ElData> ElDataSharedPtr;
-
-typedef map<int, vector<ElDataSharedPtr> > NodeElMap;
 
 enum optimiser
 {
@@ -81,16 +81,35 @@ public:
     /// Write mesh to output file.
     virtual void Process();
 private:
+    typedef map<int, vector<ElDataSharedPtr> > NodeElMap;
+
     void FillQuadPoints();
-    vector<NodeSharedPtr> GetFreeNodes();
     void GetElementMap();
+    vector<vector<NodeSharedPtr> > GetColouredNodes();
+
     NodeElMap nodeElMap;
-    NekDouble GetFunctional(NodeSharedPtr n);
-    NekDouble GetElFunctional(ElDataSharedPtr d);
-    Array<OneD, NekDouble> GetGrad(NodeSharedPtr n);
-    vector<vector<NodeSharedPtr> > GetColouredNodes(vector<NodeSharedPtr> n);
     vector<ElDataSharedPtr> dataSet;
     optimiser opti;
+
+    class NodeOpti : public Thread::ThreadJob
+    {
+    public:
+        NodeOpti(NodeSharedPtr n, vector<ElDataSharedPtr> e, optimiser o)
+                : node(n), data(e), opti(o)
+        {
+        }
+
+        ~NodeOpti(){};
+
+        virtual void Run();
+    private:
+        Array<OneD, NekDouble> GetGrad();
+        NekDouble GetFunctional();
+        NodeSharedPtr node;
+        vector<ElDataSharedPtr> data;
+        optimiser opti;
+    };
+
 };
 
 }

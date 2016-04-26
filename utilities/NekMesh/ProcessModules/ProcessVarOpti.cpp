@@ -50,182 +50,13 @@ namespace Nektar
 {
 namespace Utilities
 {
-
-ModuleKey ProcessVarOpti::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "varopti"),
-    ProcessVarOpti::create,
-    "Optimise mesh locations.");
-
-ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
+inline NekDouble GetElFunctional(ElDataSharedPtr d, optimiser opti)
 {
-    m_config["linearelastic"] =
-        ConfigOption(true, "", "Optimise for linear elasticity");
-    m_config["winslow"] =
-        ConfigOption(true, "", "Optimise for winslow");
-    m_config["roca"] =
-        ConfigOption(true, "", "Optimise for roca method");
-}
-
-ProcessVarOpti::~ProcessVarOpti()
-{
-}
-
-void ProcessVarOpti::Process()
-{
-    if (m_mesh->m_verbose)
-    {
-        cout << "ProcessVarOpti: Optimising... " << endl;
-    }
-
-    if(m_config["linearelastic"].beenSet)
-    {
-        opti = eLinEl;
-    }
-    else if(m_config["winslow"].beenSet)
-    {
-        opti = eWins;
-    }
-    else if(m_config["roca"].beenSet)
-    {
-        opti = eRoca;
-    }
-    else
-    {
-        ASSERTL0(false,"not opti type set");
-    }
-
-    if(m_mesh->m_expDim == 3 || m_mesh->m_spaceDim == 3)
-    {
-        ASSERTL0(false,"wrong mesh dim");
-    }
-
-    FillQuadPoints();
-
-    GetElementMap();
-
-    vector<vector<NodeSharedPtr> > optiNodes = GetColouredNodes(GetFreeNodes());
-
-    NekDouble functionalStart = 0.0;
-    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
-    {
-        functionalStart += GetElFunctional(dataSet[i]);
-    }
-
-    cout << scientific << endl;
-
-    NekDouble functionalEnd = functionalStart;
-    NekDouble functionalLast = 0.0;
-    int ctr = 0;
-    while (fabs(functionalLast - functionalEnd) > 1e-5)
-    {
-        ctr++;
-        functionalLast = functionalEnd;
-        int c = 0;
-        for(int i = 0; i < optiNodes.size(); i++)
-        {
-            for(int j = 0; j < optiNodes[i].size(); j++)
-            {
-                //cout << i << endl;
-                Array<OneD, NekDouble> G = GetGrad(optiNodes[i][j]);
-
-                //cout << G[0] << " " << G[1] << endl;
-
-                if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-3)
-                {
-                    //needs to optimise
-                    NekDouble currentW = GetFunctional(optiNodes[i][j]);
-                    NekDouble xc = optiNodes[i][j]->m_x;
-                    NekDouble yc = optiNodes[i][j]->m_y;
-                    NekDouble alpha = 1.0;
-                    bool found = false;
-                    while(alpha > 1e-6)
-                    {
-                        optiNodes[i][j]->m_x = xc - alpha * G[0];
-                        optiNodes[i][j]->m_y = yc - alpha * G[1];
-
-                        if(GetFunctional(optiNodes[i][j]) < currentW)
-                        {
-                            found = true;
-                            break;
-                        }
-
-                        alpha /= 2.0;
-                    }
-                    if(found)
-                    {
-                        //found an optimal position and moved the node
-                        c++;
-                    }
-                    else
-                    {
-                        //reset the node
-                        optiNodes[i][j]->m_x = xc;
-                        optiNodes[i][j]->m_y = yc;
-                        cout << "warning: had to reset node" << endl;
-                    }
-                }
-            }
-        }
-        functionalEnd = 0.0;
-        for(int i = 0; i < m_mesh->m_element[2].size(); i++)
-        {
-            functionalEnd += dataSet[i]->lastEval;
-        }
-        cout << ctr << " " << c << "  " << functionalStart << " " <<
-                functionalEnd << endl;
-        if(ctr > 1000)
-            break;
-    }
-}
-
-NekDouble dir[4][2] = {{1.0,0},{0,1.0},{-1.0,0},{0,-1.0}};
-
-Array<OneD, NekDouble> ProcessVarOpti::GetGrad(NodeSharedPtr n)
-{
-    NekDouble xc = n->m_x;
-    NekDouble yc = n->m_y;
-    NekDouble dx = 1e-6;
-
-    NekDouble wi = GetFunctional(n);
-    vector<NekDouble> w;
-
-    for(int i = 0; i < 4; i++)
-    {
-        n->m_x += dir[i][0] * dx;
-        n->m_y += dir[i][1] * dx;
-        w.push_back(GetFunctional(n));
-        n->m_x = xc;
-        n->m_y = yc;
-    }
-
-    Array<OneD, NekDouble> ret(2);
-
-    ret[0] = (w[0] - w[2]) / 2.0 / dx;
-    ret[1] = (w[1] - w[3]) / 2.0 / dx;
-
-    return ret;
-}
-
-NekDouble ProcessVarOpti::GetFunctional(NodeSharedPtr n)
-{
-    NodeElMap::iterator it = nodeElMap.find(n->m_id);
-    ASSERTL0(it != nodeElMap.end(),"could not find");
-
-    NekDouble r = 0.0;
-    for(int i = 0; i < it->second.size(); i++)
-    {
-        r += GetElFunctional(it->second[i]);
-    }
-    return r;
-}
-
-NekDouble ProcessVarOpti::GetElFunctional(ElDataSharedPtr d)
-{
-    SpatialDomains::GeometrySharedPtr    geom = d->el->GetGeom(m_mesh->m_spaceDim);
+    SpatialDomains::GeometrySharedPtr    geom = d->el->GetGeom(2);
     StdRegions::StdExpansionSharedPtr    chi  = geom->GetXmap();
     LibUtilities::PointsKeyVector        p    = chi->GetPointsKeys();
     SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
-    const int expDim = m_mesh->m_expDim;
+    const int expDim = 2;
 
     SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
 
@@ -500,10 +331,241 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
     return ret;
 }
 
-vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<NodeSharedPtr> n)
+ModuleKey ProcessVarOpti::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eProcessModule, "varopti"),
+    ProcessVarOpti::create,
+    "Optimise mesh locations.");
+
+ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
 {
+    m_config["linearelastic"] =
+        ConfigOption(true, "", "Optimise for linear elasticity");
+    m_config["winslow"] =
+        ConfigOption(true, "", "Optimise for winslow");
+    m_config["roca"] =
+        ConfigOption(true, "", "Optimise for roca method");
+}
+
+ProcessVarOpti::~ProcessVarOpti()
+{
+}
+
+void ProcessVarOpti::Process()
+{
+    if (m_mesh->m_verbose)
+    {
+        cout << "ProcessVarOpti: Optimising... " << endl;
+    }
+
+    if(m_config["linearelastic"].beenSet)
+    {
+        opti = eLinEl;
+    }
+    else if(m_config["winslow"].beenSet)
+    {
+        opti = eWins;
+    }
+    else if(m_config["roca"].beenSet)
+    {
+        opti = eRoca;
+    }
+    else
+    {
+        ASSERTL0(false,"not opti type set");
+    }
+
+    if(m_mesh->m_expDim == 3 || m_mesh->m_spaceDim == 3)
+    {
+        ASSERTL0(false,"wrong mesh dim");
+    }
+
+    FillQuadPoints();
+
+    GetElementMap();
+
+    vector<vector<NodeSharedPtr> > freenodes = GetColouredNodes();
+
+    vector<vector<NodeOpti> > optiNodes;
+    for(int i = 0; i < freenodes.size(); i++)
+    {
+        vector<NodeOpti> ns;
+        for(int j = 0; j < freenodes[i].size(); j++)
+        {
+            NodeElMap::iterator it = nodeElMap.find(freenodes[i][j]->m_id);
+            ASSERTL0(it != nodeElMap.end(),"could not find");
+            ns.push_back(NodeOpti(freenodes[i][j],it->second,opti));
+        }
+        optiNodes.push_back(ns);
+    }
+
+    NekDouble functionalStart = 0.0;
+    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+    {
+        functionalStart += GetElFunctional(dataSet[i], opti);
+    }
+
+    cout << scientific << endl;
+
+    NekDouble functionalEnd = functionalStart;
+    NekDouble functionalLast = 0.0;
+    int ctr = 0;
+    Thread::ThreadMaster tms;
+    tms.SetThreadingType("ThreadManagerBoost");
+    Thread::ThreadManagerSharedPtr tm = tms.CreateInstance(Thread::ThreadMaster::SessionJob, 4);
+    while (fabs(functionalLast - functionalEnd) > 1e-5)
+    {
+        ctr++;
+        functionalLast = functionalEnd;
+        int c = 0;
+        for(int i = 0; i < optiNodes.size(); i++)
+        {
+            vector<NodeOpti> ns = optiNodes[i]; //make copy
+            vector<Thread::ThreadJob*> jobs;
+            for(int j = 0; j < ns.size(); j++)
+            {
+                jobs.push_back(&ns[j]);
+            }
+            tm->SetNumWorkers(0);
+            tm->QueueJobs(jobs);
+            cout << "here" << endl;
+            tm->SetNumWorkers(2);
+            cout << "there" << endl;
+            tm->Wait();
+            cout << "balls" << endl;
+
+            /*for(int j = 0; j < optiNodes[i].size(); j++)
+            {
+                optiNodes[i][j].Run();
+            }*/
+        }
+        functionalEnd = 0.0;
+        for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+        {
+            functionalEnd += dataSet[i]->lastEval;
+        }
+        cout << ctr << "  " << functionalStart << " " <<
+                functionalEnd << endl;
+        if(ctr > 1000)
+            break;
+    }
+}
+
+NekDouble dir[4][2] = {{1.0,0},{0,1.0},{-1.0,0},{0,-1.0}};
+
+void ProcessVarOpti::NodeOpti::Run()
+{
+    Array<OneD, NekDouble> G = GetGrad();
+
+    if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-3)
+    {
+        //needs to optimise
+        NekDouble currentW = GetFunctional();
+        NekDouble xc = node->m_x;
+        NekDouble yc = node->m_y;
+        NekDouble alpha = 1.0;
+        bool found = false;
+        while(alpha > 1e-6)
+        {
+            node->m_x = xc - alpha * G[0];
+            node->m_y = yc - alpha * G[1];
+
+            if(GetFunctional() < currentW)
+            {
+                found = true;
+                break;
+            }
+
+            alpha /= 2.0;
+        }
+        if(!found)
+        {
+            //reset the node
+            node->m_x = xc;
+            node->m_y = yc;
+            cout << "warning: had to reset node" << endl;
+        }
+    }
+}
+
+Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad()
+{
+    NekDouble xc = node->m_x;
+    NekDouble yc = node->m_y;
+    NekDouble dx = 1e-6;
+
+    vector<NekDouble> w;
+
+    for(int i = 0; i < 4; i++)
+    {
+        node->m_x += dir[i][0] * dx;
+        node->m_y += dir[i][1] * dx;
+        w.push_back(GetFunctional());
+        node->m_x = xc;
+        node->m_y = yc;
+    }
+
+    Array<OneD, NekDouble> ret(2);
+
+    ret[0] = (w[0] - w[2]) / 2.0 / dx;
+    ret[1] = (w[1] - w[3]) / 2.0 / dx;
+
+    return ret;
+}
+
+NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
+{
+    NekDouble r = 0.0;
+    for(int i = 0; i < data.size(); i++)
+    {
+        r += GetElFunctional(data[i], opti);
+    }
+    return r;
+}
+
+vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
+{
+    //loop over the composites to build a set of nodes which lie in
+    //boundary composites
+    //then iterate over all nodes, if the node is not in the set its free
+    //add it to the vector
+    NodeSet boundaryNodes;
+
+    EdgeSet::iterator it;
+    int ct = 0;
+    for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+    {
+        if((*it)->m_elLink.size() == 2)
+        {
+            continue;
+        }
+
+        ct++;
+
+        vector<NodeSharedPtr> n;
+        (*it)->GetCurvedNodes(n);
+        for(int i = 0; i < n.size(); i++)
+        {
+            boundaryNodes.insert(n[i]);
+        }
+    }
+
+    vector<NodeSharedPtr> remain;
+    for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+    {
+        vector<NodeSharedPtr> n;
+        (*it)->GetCurvedNodes(n);
+        for(int j = 0; j < n.size(); j++)
+        {
+            NodeSet::iterator nit = boundaryNodes.find(n[j]);
+            if(nit == boundaryNodes.end())
+            {
+                remain.push_back(n[j]);
+            }
+        }
+    }
+
     vector<vector<NodeSharedPtr> > ret;
-    vector<NodeSharedPtr> remain = n;
+
     while (remain.size() > 0)
     {
         vector<NodeSharedPtr> layer;
@@ -608,51 +670,6 @@ void ProcessVarOpti::GetElementMap()
             nodeElMap[n[j]->m_id].push_back(dataSet[i]);
         }
     }
-}
-
-vector<NodeSharedPtr> ProcessVarOpti::GetFreeNodes()
-{
-    //loop over the composites to build a set of nodes which lie in
-    //boundary composites
-    //then iterate over all nodes, if the node is not in the set its free
-    //add it to the vector
-    NodeSet boundaryNodes;
-
-    EdgeSet::iterator it;
-    int ct = 0;
-    for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
-    {
-        if((*it)->m_elLink.size() == 2)
-        {
-            continue;
-        }
-
-        ct++;
-
-        vector<NodeSharedPtr> n;
-        (*it)->GetCurvedNodes(n);
-        for(int i = 0; i < n.size(); i++)
-        {
-            boundaryNodes.insert(n[i]);
-        }
-    }
-
-    vector<NodeSharedPtr> ret;
-    for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
-    {
-        vector<NodeSharedPtr> n;
-        (*it)->GetCurvedNodes(n);
-        for(int j = 0; j < n.size(); j++)
-        {
-            NodeSet::iterator nit = boundaryNodes.find(n[j]);
-            if(nit == boundaryNodes.end())
-            {
-                ret.push_back(n[j]);
-            }
-        }
-    }
-
-    return ret;
 }
 
 void ProcessVarOpti::FillQuadPoints()

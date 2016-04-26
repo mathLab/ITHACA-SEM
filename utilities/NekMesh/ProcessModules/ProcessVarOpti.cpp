@@ -105,6 +105,8 @@ void ProcessVarOpti::Process()
 
     GetElementMap();
 
+    
+
     NekDouble functionalStart = 0.0;
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
@@ -234,33 +236,37 @@ NekDouble ProcessVarOpti::GetElFunctional(ElDataSharedPtr d)
 
     for (int k = 0; k < pts; ++k)
     {
-        DNekMat jac     (expDim, expDim, 0.0, eFULL);
-        DNekMat jacIdeal(expDim, expDim, 0.0, eFULL);
+        Array<TwoD, NekDouble> jacIdeal(2,2);
+        Array<TwoD, NekDouble> jac(2,2);
 
         for (int i = 0; i < expDim; ++i)
         {
             for (int j = 0; j < expDim; ++j)
             {
-                jac(j,i) = deriv[i][j][k];
+                jac[j][i] = deriv[i][j][k];
             }
         }
 
-        jacIdeal = jac * d->maps[k];
+        //jacIdeal = jac * d->maps[k];
+        jacIdeal[0][0] = jac[0][0] * d->maps[k](0,0) + jac[0][1] * d->maps[k](1,0);
+        jacIdeal[1][1] = jac[1][0] * d->maps[k](0,1) + jac[1][1] * d->maps[k](1,1);
+        jacIdeal[0][1] = jac[0][0] * d->maps[k](0,1) + jac[0][1] * d->maps[k](1,1);
+        jacIdeal[1][0] = jac[1][0] * d->maps[k](0,0) + jac[1][1] * d->maps[k](1,0);
 
         switch (opti)
         {
             case eLinEl:
             {
                 NekDouble trEtE = 0.25*(
-                                  (jacIdeal(0,0) * jacIdeal(0,0) + jacIdeal(1,0) * jacIdeal(1,0) - 1.0)*
-                                  (jacIdeal(0,0) * jacIdeal(0,0) + jacIdeal(1,0) * jacIdeal(1,0) - 1.0) +
-                                  (jacIdeal(0,0) * jacIdeal(0,1) + jacIdeal(1,0) * jacIdeal(1,1))*
-                                  (jacIdeal(0,0) * jacIdeal(0,1) + jacIdeal(1,0) * jacIdeal(1,1)) +
-                                  (jacIdeal(0,0) * jacIdeal(0,1) + jacIdeal(1,0) * jacIdeal(1,1))*
-                                  (jacIdeal(0,0) * jacIdeal(0,1) + jacIdeal(1,0) * jacIdeal(1,1)) +
-                                  (jacIdeal(0,1) * jacIdeal(0,1) + jacIdeal(1,1) * jacIdeal(1,1) - 1.0)*
-                                  (jacIdeal(0,1) * jacIdeal(0,1) + jacIdeal(1,1) * jacIdeal(1,1) - 1.0));
-                NekDouble ljacDet = log(jacIdeal(0,0) * jacIdeal(1,1) - jacIdeal(0,1)*jacIdeal(1,0));
+                                  (jacIdeal[0][0] * jacIdeal[0][0] + jacIdeal[1][0] * jacIdeal[1][0] - 1.0)*
+                                  (jacIdeal[0][0] * jacIdeal[0][0] + jacIdeal[1][0] * jacIdeal[1][0] - 1.0) +
+                                  (jacIdeal[0][0] * jacIdeal[0][1] + jacIdeal[1][0] * jacIdeal[1][1])*
+                                  (jacIdeal[0][0] * jacIdeal[0][1] + jacIdeal[1][0] * jacIdeal[1][1]) +
+                                  (jacIdeal[0][0] * jacIdeal[0][1] + jacIdeal[1][0] * jacIdeal[1][1])*
+                                  (jacIdeal[0][0] * jacIdeal[0][1] + jacIdeal[1][0] * jacIdeal[1][1]) +
+                                  (jacIdeal[0][1] * jacIdeal[0][1] + jacIdeal[1][1] * jacIdeal[1][1] - 1.0)*
+                                  (jacIdeal[0][1] * jacIdeal[0][1] + jacIdeal[1][1] * jacIdeal[1][1] - 1.0));
+                NekDouble ljacDet = log(jacIdeal[0][0] * jacIdeal[1][1] - jacIdeal[0][1]*jacIdeal[1][0]);
 
                 NekDouble nu = 0.45;
                 NekDouble mu = 1.0/2.0/(1.0+nu);
@@ -271,14 +277,14 @@ NekDouble ProcessVarOpti::GetElFunctional(ElDataSharedPtr d)
 
             case eWins:
             {
-                NekDouble jacDet = jacIdeal(0,0) * jacIdeal(1,1) - jacIdeal(0,1)*jacIdeal(1,0);
+                NekDouble jacDet = jacIdeal[0][0] * jacIdeal[1][1] - jacIdeal[0][1]*jacIdeal[1][0];
                 NekDouble frob = 0.0;
 
                 for (int i = 0; i < expDim; ++i)
                 {
                     for (int j = 0; j < expDim; ++j)
                     {
-                        frob += jacIdeal(i,j) * jacIdeal(i,j);
+                        frob += jacIdeal[i][j] * jacIdeal[i][j];
                     }
                 }
 
@@ -292,14 +298,14 @@ NekDouble ProcessVarOpti::GetElFunctional(ElDataSharedPtr d)
 
             case eRoca:
             {
-                NekDouble jacDet = jacIdeal(0,0) * jacIdeal(1,1) - jacIdeal(0,1)*jacIdeal(1,0);
+                NekDouble jacDet = jacIdeal[0][0] * jacIdeal[1][1] - jacIdeal[0][1]*jacIdeal[1][0];
                 NekDouble frob = 0.0;
 
                 for (int i = 0; i < expDim; ++i)
                 {
                     for (int j = 0; j < expDim; ++j)
                     {
-                        frob += jacIdeal(i,j) * jacIdeal(i,j);
+                        frob += jacIdeal[i][j] * jacIdeal[i][j];
                     }
                 }
 

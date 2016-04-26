@@ -38,6 +38,7 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ContField2D.h>
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])

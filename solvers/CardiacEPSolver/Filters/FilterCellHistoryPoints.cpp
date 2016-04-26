@@ -37,6 +37,8 @@
 #include <iomanip>
 #include <CardiacEPSolver/Filters/FilterCellHistoryPoints.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

@@ -39,6 +39,8 @@
 #include <StdRegions/StdQuadExp.h>
 #include <LocalRegions/Expansion.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

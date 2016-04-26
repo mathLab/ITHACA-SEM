@@ -48,12 +48,11 @@
 #define ISTTY isatty(fileno(stdout))
 #endif
 
-using namespace std;
-
 namespace Nektar
 {
 namespace LibUtilities
 {
+using namespace std;
 
 /**
  * @brief Prints a progressbar

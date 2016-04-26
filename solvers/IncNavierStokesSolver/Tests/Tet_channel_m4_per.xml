@@ -84,7 +84,6 @@
         <I PROPERTY="AdvectionForm" VALUE="Convective" />
         <I PROPERTY="Projection" VALUE="Galerkin" />
         <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
-        <I PROPERTY="GlobalSysSoln" VALUE="DirectStaticCond" />
       </SOLVERINFO>
       
       <PARAMETERS>

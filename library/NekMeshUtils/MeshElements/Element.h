@@ -213,7 +213,7 @@ public:
         }
         else
         {
-            cerr << "Not supported." << endl;
+            std::cerr << "Not supported." << std::endl;
             exit(1);
         }
         return n;
@@ -412,8 +412,9 @@ public:
         }
         else
         {
-            cerr << "GetXmlCurveString for a " << m_vertex.size()
-                 << "-vertex element is not yet implemented." << endl;
+            std::cerr << "GetXmlCurveString for a " << m_vertex.size()
+                      << "-vertex element is not yet implemented."
+                      << std::endl;
         }
     }
 
@@ -459,15 +460,16 @@ public:
         int i, j;
         for (i = 0; i < m_vertex.size(); ++i)
         {
-            cout << m_vertex[i]->m_x << " " << m_vertex[i]->m_y << " "
-                 << m_vertex[i]->m_z << endl;
+            std::cout << m_vertex[i]->m_x << " " << m_vertex[i]->m_y << " "
+                      << m_vertex[i]->m_z << std::endl;
         }
         for (i = 0; i < m_edge.size(); ++i)
         {
             for (j = 0; j < m_edge[i]->m_edgeNodes.size(); ++j)
             {
                 NodeSharedPtr n = m_edge[i]->m_edgeNodes[j];
-                cout << n->m_x << " " << n->m_y << " " << n->m_z << endl;
+                std::cout << n->m_x << " " << n->m_y << " " << n->m_z
+                          << std::endl;
             }
         }
         for (i = 0; i < m_face.size(); ++i)
@@ -475,7 +477,8 @@ public:
             for (j = 0; j < m_face[i]->m_faceNodes.size(); ++j)
             {
                 NodeSharedPtr n = m_face[i]->m_faceNodes[j];
-                cout << n->m_x << " " << n->m_y << " " << n->m_z << endl;
+                std::cout << n->m_x << " " << n->m_y << " " << n->m_z
+                          << std::endl;
             }
         }
     }

@@ -2,6 +2,9 @@
 #include <LibUtilities/Kernel/kernel.h>
 #include <SpatialDomains/MeshGraph1D.h>
 
+using namespace std;
+using namespace Nektar;
+
 int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr vSession

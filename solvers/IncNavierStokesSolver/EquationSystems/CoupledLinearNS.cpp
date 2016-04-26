@@ -41,6 +41,8 @@
 #include <LocalRegions/MatrixKey.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

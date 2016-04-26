@@ -40,6 +40,8 @@
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/Expansion2D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

@@ -26,6 +26,10 @@ v4.3.1
 - Fix to FLD input to update the field definitions always, not just when a range
   is specified. (!611)
 
+**Tester**:
+- Remove requirement for executable to be specified in .tst file if it is
+  overridden on the command-line (!595)
+
 v4.3.0
 ------
 **Library:**

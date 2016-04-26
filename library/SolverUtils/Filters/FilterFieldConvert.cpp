@@ -228,9 +228,6 @@ void FilterFieldConvert::OutputField(
                     1);
     }
 
-    m_fieldMetaData["NumberOfFieldDumps"] =
-        boost::lexical_cast<std::string>(m_numSamples);
-
     CreateFields(pFields);
 
     // Determine new file name

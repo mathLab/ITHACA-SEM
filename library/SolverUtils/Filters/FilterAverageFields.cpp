@@ -74,6 +74,8 @@ void FilterAverageFields::v_PrepareOutput(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
+    m_fieldMetaData["NumberOfFieldDumps"] =
+        boost::lexical_cast<std::string>(m_numSamples);
     m_scale = 1.0 / m_numSamples;
 }
 

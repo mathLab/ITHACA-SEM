@@ -275,6 +275,9 @@ void FilterReynoldsStresses::v_PrepareOutput(
 {
     int dim = pFields.num_elements() - 1;
 
+    m_fieldMetaData["NumberOfFieldDumps"] =
+        boost::lexical_cast<std::string>(m_numSamples);
+
     if (m_movAvg)
     {
         m_scale = 1.0;

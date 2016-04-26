@@ -13,6 +13,7 @@ v4.3.1
 - Fix bug in modified Arnoldi algorithm causing convergence to be reported when
   number of vectors is less than `nvec` (!608)
 - Fix uninitialised array bug in AssemblyMap (!598)
+- Fix issue with LAPACK call in eigenvalue calculation (!610)
 - Fix FieldConvert processing of partitions in serial (!612)
 - Fix use of multi-level static condensation in parallel with periodic
   boundary conditions (!614)

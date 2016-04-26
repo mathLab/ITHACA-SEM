@@ -819,13 +819,14 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
     global_to_iso_map.resize(m_nvert);
 
     //Create kdtree
-    int n_neighbs =5;
-    id2 = 0;
+    int n_neighbs = 5;
+    int neighbs_max = 100; 
     ANNpointArray dataPts = annAllocPts(m_nvert, 3);
-    ANNidxArray   nnIdx = new ANNidx [n_neighbs];
-    ANNdistArray  dists = new ANNdist[n_neighbs];
+    ANNidxArray   nnIdx = new ANNidx [neighbs_max];
+    ANNdistArray  dists = new ANNdist[neighbs_max];
     
     //Fill vertex array into libAnn format
+    id2 = 0;
     for(i = 0; i < niso; ++i)
     {
         for(id1 = 0; id1 < iso[i]->m_nvert; ++id1)
@@ -852,24 +853,32 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
     bool     unique_index_found = false;
     for(i = 0; i < m_nvert; ++i)
     {
+        n_neighbs  = 5; 
         queryPt[0] = dataPts[i][0];
         queryPt[1] = dataPts[i][1];
         queryPt[2] = dataPts[i][2];
         kdTree->annkSearch(queryPt, n_neighbs, nnIdx, dists, 0); //eps set to zero
-        for(int f = 0; f < n_neighbs; ++f)
+
+
+        while((dists[n_neighbs-1]<SQ_PNT_TOL) && (n_neighbs*2 < neighbs_max))
         {
-            cout << dists[f] << " ";
+            n_neighbs *=2; 
+            kdTree->annkSearch(queryPt, n_neighbs, nnIdx, dists, 0); //eps set to zero
+            cout << n_neighbs << endl;
         }
-        cout << endl;
+
+        WARNINGL0(n_neighbs*2 < neighbs_max,"Failed to find less than 100 neighbouring points");
+
         id1 = 0;
         unique_index_found = false;
-                
+
+        int nptsfound = 0; 
         for(id1 = 0; id1 < n_neighbs; ++id1)
         {
             if(dists[id1]<SQ_PNT_TOL)
             {
                 id2 = nnIdx[id1];
-                
+                nptsfound ++;
                 if(global_to_unique_map[id2] <unique_index) 
                 {
                     // point has already been defined
@@ -882,8 +891,7 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
                 }
             }
         }
-        
-        cout << " i = " << i << "  unique_index = "<< unique_index << endl;
+
         
         if(unique_index_found)
         {
@@ -1165,6 +1173,11 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
     vector< vector<int> > adj,vertcon;
     vector<int>::iterator iad;
     vector<int>::iterator ipt;
+
+    Timer timer;
+
+    cout << "Process Contour smoothing ..." << endl;
+    timer.Start();
 
     // determine elements around each vertex
     vertcon.resize(m_nvert);

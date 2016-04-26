@@ -88,6 +88,7 @@ private:
     NekDouble GetFunctional(NodeSharedPtr n);
     NekDouble GetElFunctional(ElDataSharedPtr d);
     Array<OneD, NekDouble> GetGrad(NodeSharedPtr n);
+    vector<vector<NodeSharedPtr> > GetColouredNodes(vector<NodeSharedPtr> n);
     vector<ElDataSharedPtr> dataSet;
     optimiser opti;
 };

@@ -101,11 +101,9 @@ void ProcessVarOpti::Process()
 
     FillQuadPoints();
 
-    vector<NodeSharedPtr> optiNodes = GetFreeNodes();
-
     GetElementMap();
 
-    
+    vector<vector<NodeSharedPtr> > optiNodes = GetColouredNodes(GetFreeNodes());
 
     NekDouble functionalStart = 0.0;
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
@@ -125,43 +123,46 @@ void ProcessVarOpti::Process()
         int c = 0;
         for(int i = 0; i < optiNodes.size(); i++)
         {
-            //cout << i << endl;
-            Array<OneD, NekDouble> G = GetGrad(optiNodes[i]);
-
-            //cout << G[0] << " " << G[1] << endl;
-
-            if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-3)
+            for(int j = 0; j < optiNodes[i].size(); j++)
             {
-                //needs to optimise
-                NekDouble currentW = GetFunctional(optiNodes[i]);
-                NekDouble xc = optiNodes[i]->m_x;
-                NekDouble yc = optiNodes[i]->m_y;
-                NekDouble alpha = 1.0;
-                bool found = false;
-                while(alpha > 1e-6)
-                {
-                    optiNodes[i]->m_x = xc - alpha * G[0];
-                    optiNodes[i]->m_y = yc - alpha * G[1];
+                //cout << i << endl;
+                Array<OneD, NekDouble> G = GetGrad(optiNodes[i][j]);
 
-                    if(GetFunctional(optiNodes[i]) < currentW)
+                //cout << G[0] << " " << G[1] << endl;
+
+                if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-3)
+                {
+                    //needs to optimise
+                    NekDouble currentW = GetFunctional(optiNodes[i][j]);
+                    NekDouble xc = optiNodes[i][j]->m_x;
+                    NekDouble yc = optiNodes[i][j]->m_y;
+                    NekDouble alpha = 1.0;
+                    bool found = false;
+                    while(alpha > 1e-6)
                     {
-                        found = true;
-                        break;
-                    }
+                        optiNodes[i][j]->m_x = xc - alpha * G[0];
+                        optiNodes[i][j]->m_y = yc - alpha * G[1];
 
-                    alpha /= 2.0;
-                }
-                if(found)
-                {
-                    //found an optimal position and moved the node
-                    c++;
-                }
-                else
-                {
-                    //reset the node
-                    optiNodes[i]->m_x = xc;
-                    optiNodes[i]->m_y = yc;
-                    cout << "warning: had to reset node" << endl;
+                        if(GetFunctional(optiNodes[i][j]) < currentW)
+                        {
+                            found = true;
+                            break;
+                        }
+
+                        alpha /= 2.0;
+                    }
+                    if(found)
+                    {
+                        //found an optimal position and moved the node
+                        c++;
+                    }
+                    else
+                    {
+                        //reset the node
+                        optiNodes[i][j]->m_x = xc;
+                        optiNodes[i][j]->m_y = yc;
+                        cout << "warning: had to reset node" << endl;
+                    }
                 }
             }
         }
@@ -499,6 +500,55 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
     return ret;
 }
 
+vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<NodeSharedPtr> n)
+{
+    vector<vector<NodeSharedPtr> > ret;
+    vector<NodeSharedPtr> remain = n;
+    while (remain.size() > 0)
+    {
+        vector<NodeSharedPtr> layer;
+        set<int> locked;
+        set<int> completed;
+        for(int i = 0; i < remain.size(); i++)
+        {
+            NodeElMap::iterator it = nodeElMap.find(remain[i]->m_id);
+            ASSERTL0(it != nodeElMap.end(),"could not find");
+            bool islocked = false;
+            for(int j = 0; j < it->second.size(); j++)
+            {
+                set<int>::iterator sit = locked.find(it->second[j]->el->GetId());
+                if(sit != locked.end())
+                {
+                    islocked = true;
+                    break;
+                }
+            }
+            if(!islocked)
+            {
+                layer.push_back(remain[i]);
+                completed.insert(remain[i]->m_id);
+                for(int j = 0; j < it->second.size(); j++)
+                {
+                    locked.insert(it->second[j]->el->GetId());
+                }
+            }
+        }
+
+        vector<NodeSharedPtr> tmp = remain;
+        remain.clear();
+        for(int i = 0; i < tmp.size(); i++)
+        {
+            set<int>::iterator sit = completed.find(tmp[i]->m_id);
+            if(sit == completed.end())
+            {
+                remain.push_back(tmp[i]);
+            }
+        }
+        ret.push_back(layer);
+    }
+    return ret;
+}
+
 void ProcessVarOpti::GetElementMap()
 {
     //build ideal maps and structs;
@@ -602,18 +652,6 @@ vector<NodeSharedPtr> ProcessVarOpti::GetFreeNodes()
         }
     }
 
-    int id = m_mesh->m_vertexSet.size();
-    //enumerate the curved nodes for mapping purposes
-    for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
-    {
-        vector<NodeSharedPtr> n;
-        (*it)->GetCurvedNodes(n);
-        for(int j = 1; j < n.size()-1; j++)
-        {
-            n[j]->m_id = id++;
-        }
-    }
-
     return ret;
 }
 
@@ -655,6 +693,19 @@ void ProcessVarOpti::FillQuadPoints()
         (*it)->m_edgeNodes = ns;
         (*it)->m_curveType = LibUtilities::eGaussLobattoLegendre;
     }
+
+    int id = m_mesh->m_vertexSet.size();
+    //enumerate the curved nodes for mapping purposes
+    for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+    {
+        vector<NodeSharedPtr> n;
+        (*it)->GetCurvedNodes(n);
+        for(int j = 1; j < n.size()-1; j++)
+        {
+            n[j]->m_id = id++;
+        }
+    }
+
 }
 
 }

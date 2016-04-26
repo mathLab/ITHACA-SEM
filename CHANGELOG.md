@@ -10,6 +10,7 @@ v4.3.1
 - Fix Homogeneous transform when unshuffling is not used. (!599)
 - Fix namespace pollution in library header files. (!601)
 - Fix issue with METIS compilation on clang 7.3 (!603)
+- Fix issue with heterogeneous quadrilaterals (!607)
 - Fix bug in modified Arnoldi algorithm causing convergence to be reported when
   number of vectors is less than `nvec` (!608)
 - Fix uninitialised array bug in AssemblyMap (!598)

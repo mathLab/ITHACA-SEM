@@ -96,6 +96,8 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{C0Projection}: Computes the C0 projection of a given output file;
 \item \inltt{QCriterion}: Computes the Q-Criterion for a given output file;
 \item \inltt{addFld}: Sum two .fld files;
+\item \inltt{combineAvg}: Combine two \nekpp binary output (.chk or .fld) field file containing averages of fields (and
+possibly also Reynolds stresses) into single file;
 \item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file;
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
@@ -196,6 +198,21 @@ which multiply the values of a given .fld file by a constant \inltt{value}.
 is the associated session file, \inltt{file2.fld} is the .fld file which
 is summed to \inltt{file1.fld} and finally \inltt{file3.fld} is the output
 which contain the sum of the two .fld files.
+\inltt{file3.fld} can be processed in a similar way as described 
+in section \ref{s:utilities:fieldconvert:sub:convert} to visualise 
+the result either in Tecplot, Paraview or VisIt.
+%
+%
+%
+\subsection{Combine two .fld files containing time averages: \textit{combineAvg} module}
+To combine two .fld files obtained through the AverageFields or ReynoldsStresses filters,
+use the \inltt{combineAvg} module of FieldConvert
+%
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m combineAvg:fromfld=file1.fld file1.xml file2.fld \
+  file3.fld
+\end{lstlisting}
+%
 \inltt{file3.fld} can be processed in a similar way as described 
 in section \ref{s:utilities:fieldconvert:sub:convert} to visualise 
 the result either in Tecplot, Paraview or VisIt.

@@ -50,7 +50,6 @@ namespace Nektar
 {
 namespace LibUtilities
 {
-using namespace std;
 
 enum PtsType{
     ePtsFile,
@@ -67,7 +66,7 @@ enum PtsInfo{
     ePtsPerElmtEdge
 };
 
-static map<PtsInfo,int> NullPtsInfoMap;
+static std::map<PtsInfo,int> NullPtsInfoMap;
 
 
 class PtsField
@@ -79,9 +78,9 @@ class PtsField
 
         LIB_UTILITIES_EXPORT PtsField(
             const int dim,
-            const vector<std::string> fieldnames,
+            const std::vector<std::string> fieldnames,
             const Array<OneD, Array<OneD, NekDouble> > &pts,
-            map<PtsInfo,int> ptsInfo = NullPtsInfoMap):
+            std::map<PtsInfo,int> ptsInfo = NullPtsInfoMap):
                m_ptsInfo(ptsInfo),
                  m_dim(dim),
                 m_fieldNames(fieldnames),
@@ -92,7 +91,7 @@ class PtsField
 
         LIB_UTILITIES_EXPORT PtsField(
             const int dim,
-            const vector<std::string> fieldnames,
+            const std::vector<std::string> fieldnames,
             const Array<OneD, Array<OneD, NekDouble> > &pts,
             const Array<OneD, Array<OneD, float> > &weights,
             const Array<OneD, Array<OneD, unsigned int> > &neighInds) :
@@ -106,9 +105,9 @@ class PtsField
         {
         };
 
-        LIB_UTILITIES_EXPORT void GetConnectivity(vector<Array<OneD, int> > &conn) const;
+        LIB_UTILITIES_EXPORT void GetConnectivity(std::vector<Array<OneD, int> > &conn) const;
 
-        LIB_UTILITIES_EXPORT void SetConnectivity(const vector<Array<OneD, int> > &conn);
+        LIB_UTILITIES_EXPORT void SetConnectivity(const std::vector<Array<OneD, int> > &conn);
 
         LIB_UTILITIES_EXPORT void SetDim(const int ptsDim);
 
@@ -116,12 +115,12 @@ class PtsField
 
         LIB_UTILITIES_EXPORT int GetNFields() const;
 
-        LIB_UTILITIES_EXPORT vector<std::string> GetFieldNames() const;
+        LIB_UTILITIES_EXPORT std::vector<std::string> GetFieldNames() const;
 
         LIB_UTILITIES_EXPORT std::string GetFieldName(const int i) const;
 
         LIB_UTILITIES_EXPORT void SetFieldNames(
-            const vector<std::string> fieldNames);
+            const std::vector<std::string> fieldNames);
 
         LIB_UTILITIES_EXPORT void AddField(const Array<OneD, NekDouble> &pts,
                                            const std::string fieldName);
@@ -139,19 +138,19 @@ class PtsField
 
         LIB_UTILITIES_EXPORT void SetPts(Array<OneD, Array<OneD, NekDouble> > &pts);
 
-        LIB_UTILITIES_EXPORT vector<int> GetPointsPerEdge() const;
+        LIB_UTILITIES_EXPORT std::vector<int> GetPointsPerEdge() const;
 
         LIB_UTILITIES_EXPORT int GetPointsPerEdge(const int i) const;
 
-        LIB_UTILITIES_EXPORT void SetPointsPerEdge(const vector<int> nPtsPerEdge);
+        LIB_UTILITIES_EXPORT void SetPointsPerEdge(const std::vector<int> nPtsPerEdge);
 
         LIB_UTILITIES_EXPORT PtsType GetPtsType() const;
 
         LIB_UTILITIES_EXPORT void SetPtsType(const PtsType type);
 
-        LIB_UTILITIES_EXPORT vector<NekDouble> GetBoxSize() const;
+        LIB_UTILITIES_EXPORT std::vector<NekDouble> GetBoxSize() const;
 
-        LIB_UTILITIES_EXPORT void SetBoxSize(const vector<NekDouble> boxsize);
+        LIB_UTILITIES_EXPORT void SetBoxSize(const std::vector<NekDouble> boxsize);
         template<typename FuncPointerT, typename ObjectPointerT>
         void setProgressCallback(FuncPointerT func,
                 ObjectPointerT obj)
@@ -160,25 +159,25 @@ class PtsField
         }
 
         /// map for information about points that can be added through PtsInfo enum
-        map<PtsInfo,int> m_ptsInfo; 
+        std::map<PtsInfo,int> m_ptsInfo;
 
     private:
 
         /// Dimension of the pts field
         int                                     m_dim;
         /// Names of the field variables
-        vector<std::string>                     m_fieldNames;
+        std::vector<std::string>                m_fieldNames;
         /// Point data. For a n-dimensional field, the first m_dim fields are the
         /// points spatial coordinates. Structure: m_pts[fieldIdx][ptIdx]
         Array<OneD, Array<OneD, NekDouble> >    m_pts;
         /// Number of points per edge. Empty if the point data has no
         /// specific shape (ePtsLine) or is a block (ePtsTetBlock,
         /// ePtsTriBlock), size=1 for ePtsLine and 2 for a ePtsPlane
-        vector<int>                             m_nPtsPerEdge;
+        std::vector<int>                        m_nPtsPerEdge;
         /// Connectivity data needed for ePtsTetBlock and ePtsTriBlock. For n
         /// Blocks with m elements each, m_ptsConn is a vector of n arrays with
         /// 3*m (ePtsTriBlock) or 4*m (ePtsTetBlock) entries.
-        vector<Array<OneD, int> >               m_ptsConn;
+        std::vector<Array<OneD, int> >          m_ptsConn;
         /// Type of the PtsField
         PtsType                                 m_ptsType;
         /// Interpolation weights for each neighbour.
@@ -189,7 +188,7 @@ class PtsField
         Array<OneD, Array<OneD, unsigned int> > m_neighInds;
 
         /// vector of box size xmin,xmax,ymin,ymax,zmin,zmax
-        vector<NekDouble> m_boxSize;
+        std::vector<NekDouble> m_boxSize;
         
         boost::function<void (const int position, const int goal)> m_progressCallback;
 

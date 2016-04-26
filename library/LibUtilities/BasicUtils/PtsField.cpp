@@ -36,6 +36,8 @@
 
 #include <LibUtilities/BasicUtils/PtsField.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace LibUtilities

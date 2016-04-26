@@ -36,6 +36,8 @@
 
 #include <SolverUtils/Interpolator.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils

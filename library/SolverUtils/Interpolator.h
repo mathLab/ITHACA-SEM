@@ -57,8 +57,6 @@
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
-using namespace std;
-
 namespace Nektar
 {
 namespace SolverUtils
@@ -115,18 +113,18 @@ class Interpolator
 
         /// Interpolate from an expansion to an expansion
         LIB_UTILITIES_EXPORT void Interpolate(
-            const vector<MultiRegions::ExpListSharedPtr> expInField,
-            vector<MultiRegions::ExpListSharedPtr> &expOutField);
+            const std::vector<MultiRegions::ExpListSharedPtr> expInField,
+            std::vector<MultiRegions::ExpListSharedPtr> &expOutField);
 
         /// Interpolate from an expansion to a pts field
         LIB_UTILITIES_EXPORT void Interpolate(
-            const vector<MultiRegions::ExpListSharedPtr> expInField,
+            const std::vector<MultiRegions::ExpListSharedPtr> expInField,
             LibUtilities::PtsFieldSharedPtr &ptsOutField);
 
         /// Interpolate from a pts field to an expansion
         LIB_UTILITIES_EXPORT void Interpolate(
             const LibUtilities::PtsFieldSharedPtr ptsInField,
-            vector<MultiRegions::ExpListSharedPtr> &expOutField);
+            std::vector<MultiRegions::ExpListSharedPtr> &expOutField);
 
         /// returns the dimension of the Interpolator.
         /// Should be higher than the dimensions of the interpolated fields
@@ -200,9 +198,9 @@ class Interpolator
         /// output field
         LibUtilities::PtsFieldSharedPtr             m_ptsOutField;
         /// input field
-        vector<MultiRegions::ExpListSharedPtr>      m_expInField;
+        std::vector<MultiRegions::ExpListSharedPtr> m_expInField;
         /// output field
-        vector<MultiRegions::ExpListSharedPtr>      m_expOutField;
+        std::vector<MultiRegions::ExpListSharedPtr> m_expOutField;
 
         /// Interpolation Method
         InterpMethod                                m_method;
@@ -236,11 +234,11 @@ class Interpolator
         LIB_UTILITIES_EXPORT void CalcW_Quadratic(const PtsPoint &searchPt, int coordId);
 
         LIB_UTILITIES_EXPORT void FindNeighbours(const PtsPoint &searchPt,
-                vector<PtsPoint > &neighbourPts,
+                std::vector<PtsPoint > &neighbourPts,
                 const NekDouble dist);
 
         LIB_UTILITIES_EXPORT void FindNNeighbours(const PtsPoint &searchPt,
-                vector<PtsPoint > &neighbourPts,
+                std::vector<PtsPoint > &neighbourPts,
                 const unsigned int numPts = 1);
 };
 

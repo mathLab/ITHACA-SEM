@@ -258,7 +258,9 @@ LIB_UTILITIES_EXPORT void Import(
     }
 #endif
     CommSharedPtr c    = GetCommFactory().CreateInstance("Serial", 0, 0);
-    FieldIOSharedPtr f = GetFieldIOFactory().CreateInstance("Xml", c, false);
+    const std::string iofmt = FieldIO::GetFileType(infilename, c);
+    std::cout << "LOADING " << iofmt << std::endl;
+    FieldIOSharedPtr f = GetFieldIOFactory().CreateInstance(iofmt, c, false);
     f->Import(infilename, fielddefs, fielddata, fieldinfomap, ElementIDs);
 }
 

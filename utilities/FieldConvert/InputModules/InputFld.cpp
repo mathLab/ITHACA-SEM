@@ -125,24 +125,21 @@ void InputFld::Process(po::variables_map &vm)
         ASSERTL0(false,"no input file found");
     }
 
-    if(!m_f->m_fld)
+    const std::string& filename = m_f->m_inputfiles[fldending][0];
+    if(m_f->m_session)
     {
-        const std::string& filename = m_f->m_inputfiles[fldending][0];
-        if(m_f->m_session)
-        {
-            m_f->m_fld = LibUtilities::MakeFieldIOForFile(
-                m_f->m_session, filename);
-        }
-        else // serial communicator
-        {
-            LibUtilities::CommSharedPtr c =
-                LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
-            const std::string iofmt =
-                LibUtilities::FieldIO::GetFileType(
-                    filename, m_f->m_session->GetComm());
-            m_f->m_fld = LibUtilities::GetFieldIOFactory().CreateInstance(
-                iofmt, c, false);
-        }
+        m_f->m_fld = LibUtilities::MakeFieldIOForFile(
+            m_f->m_session, filename);
+    }
+    else // serial communicator
+    {
+        LibUtilities::CommSharedPtr c =
+            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+        const std::string iofmt =
+            LibUtilities::FieldIO::GetFileType(
+                filename, m_f->m_session->GetComm());
+        m_f->m_fld = LibUtilities::GetFieldIOFactory().CreateInstance(
+            iofmt, c, false);
     }
 
 

@@ -281,9 +281,8 @@ void InputXml::Process(po::variables_map &vm)
             timerpart.Start();
         }
     }
-    
+
     m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
-    m_f->m_fld = LibUtilities::MakeDefaultFieldIO(m_f->m_session);
 
     if(m_f->m_verbose)
     {
@@ -330,8 +329,10 @@ void InputXml::Process(po::variables_map &vm)
         {
             ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
         }
-        
-        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef,
+
+        m_f->m_fld = LibUtilities::MakeFieldIOForFile(
+            m_f->m_session, m_f->m_inputfiles[fldending][0]);
+        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0], m_f->m_fielddef,
                            LibUtilities::NullVectorNekDoubleVector,
                            LibUtilities::NullFieldMetaDataMap,
                            ElementGIDs);

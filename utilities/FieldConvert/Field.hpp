@@ -56,7 +56,6 @@
 #include <MultiRegions/DisContField2D.h>
 #include <MultiRegions/DisContField3D.h>
 
-
 using namespace std;
 
 namespace Nektar
@@ -96,7 +95,6 @@ struct Field {
     LibUtilities::CommSharedPtr             m_comm;
     LibUtilities::SessionReaderSharedPtr    m_session;
     SpatialDomains::MeshGraphSharedPtr      m_graph;
-    LibUtilities::FieldIOSharedPtr          m_fld;
     LibUtilities::PtsIOSharedPtr            m_ptsIO;
     map<string, vector<string> >            m_inputfiles;
 
@@ -112,6 +110,7 @@ struct Field {
     MultiRegions::AssemblyMapCGSharedPtr    m_locToGlobalMap;
 
     LibUtilities::FieldMetaDataMap          m_fieldMetaDataMap;
+    map<string, LibUtilities::FieldIOSharedPtr> m_fld;
 
     MultiRegions::ExpListSharedPtr SetUpFirstExpList(int NumHomogeneousDir,
                                                      bool fldfilegiven = false)
@@ -399,6 +398,17 @@ struct Field {
 
         return exp;
     };
+
+    FieldIOSharedPtr FieldIOForFile(string filename)
+    {
+        string fmt = FieldIO::GetFileType(filename, session->GetComm());
+        map<string, LibUtilities::FieldIOSharedPtr>::iterator it =
+            m_fld.find(fmt);
+
+        if (it == m_fld.end())
+        {
+        }
+    }
 
     MultiRegions::ExpListSharedPtr AppendExpList(int NumHomogeneousDir,
                                                  string var = "DefaultVar",

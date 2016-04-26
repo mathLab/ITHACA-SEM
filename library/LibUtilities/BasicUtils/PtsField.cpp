@@ -43,19 +43,15 @@ namespace Nektar
 namespace LibUtilities
 {
 
-
-PtsField::PtsField(const int dim, const Array< OneD, Array< OneD, NekDouble > > &pts):
-    m_dim(dim),
-    m_pts(pts),
-    m_ptsType(ePtsFile)
+PtsField::PtsField(const int dim,
+                   const Array<OneD, Array<OneD, NekDouble> > &pts)
+    : m_dim(dim), m_pts(pts), m_ptsType(ePtsFile)
 {
     for (int i = 0; i < GetNFields(); ++i)
     {
         m_fieldNames.push_back("NA");
     }
 }
-
-
 
 /**
  * @brief Set the connectivity data for ePtsTetBlock and ePtsTriBlock
@@ -65,7 +61,7 @@ PtsField::PtsField(const int dim, const Array< OneD, Array< OneD, NekDouble > > 
  * m elements each, m_ptsConn is a vector of n arrays with 3*m (ePtsTriBlock) or
  * 4*m (ePtsTetBlock) entries.
  */
-void PtsField::GetConnectivity(vector< Array< OneD, int > > &conn) const
+void PtsField::GetConnectivity(vector<Array<OneD, int> > &conn) const
 {
     conn = m_ptsConn;
 }
@@ -78,7 +74,7 @@ void PtsField::GetConnectivity(vector< Array< OneD, int > > &conn) const
  * m elements each, m_ptsConn is a vector of n arrays with 3*m (ePtsTriBlock) or
  * 4*m (ePtsTetBlock) entries.
  */
-void PtsField::SetConnectivity(const vector< Array< OneD, int > > &conn)
+void PtsField::SetConnectivity(const vector<Array<OneD, int> > &conn)
 {
     ASSERTL1((m_ptsType == ePtsTetBlock || m_ptsType == ePtsTriBlock),
              "ptsType must be set before connectivity");
@@ -86,53 +82,47 @@ void PtsField::SetConnectivity(const vector< Array< OneD, int > > &conn)
     m_ptsConn = conn;
 }
 
-
 void PtsField::SetDim(const int ptsDim)
 {
     m_dim = ptsDim;
 }
-
 
 int PtsField::GetDim() const
 {
     return m_dim;
 }
 
-
 int PtsField::GetNFields() const
 {
     return m_pts.num_elements() - m_dim;
 }
-
 
 vector<std::string> PtsField::GetFieldNames() const
 {
     return m_fieldNames;
 }
 
-
 std::string PtsField::GetFieldName(const int i) const
 {
     return m_fieldNames[i];
 }
 
-
 void PtsField::SetFieldNames(const vector<std::string> fieldNames)
 {
     ASSERTL0(fieldNames.size() == m_pts.num_elements() - m_dim,
-             "Number of given fieldNames does not match the number of stored fields");
+             "Number of given fieldNames does not match the number of stored "
+             "fields");
 
     m_fieldNames = fieldNames;
 }
 
-
-void PtsField::AddField(const Array< OneD, NekDouble > &pts,
+void PtsField::AddField(const Array<OneD, NekDouble> &pts,
                         const string fieldName)
 {
     int nTotvars = m_pts.num_elements();
 
-    ASSERTL1(pts.num_elements() ==  m_pts[0].num_elements(), 
-            "Field size mismatch");
+    ASSERTL1(pts.num_elements() == m_pts[0].num_elements(),
+             "Field size mismatch");
 
     // redirect existing pts
     Array<OneD, Array<OneD, NekDouble> > newpts(nTotvars + 1);
@@ -147,58 +137,50 @@ void PtsField::AddField(const Array< OneD, NekDouble > &pts,
     m_fieldNames.push_back(fieldName);
 }
 
-
 int PtsField::GetNpoints() const
 {
     return m_pts[0].num_elements();
 }
-
 
 NekDouble PtsField::GetPointVal(const int fieldInd, const int ptInd) const
 {
     return m_pts[fieldInd][ptInd];
 }
 
-
-void PtsField::SetPointVal(const int fieldInd, const int ptInd, const NekDouble val)
+void PtsField::SetPointVal(const int fieldInd,
+                           const int ptInd,
+                           const NekDouble val)
 {
     m_pts[fieldInd][ptInd] = val;
 }
 
-
-
-void PtsField::GetPts(Array< OneD, Array< OneD, NekDouble > > &pts) const
+void PtsField::GetPts(Array<OneD, Array<OneD, NekDouble> > &pts) const
 {
     pts = m_pts;
 }
 
-
-Array< OneD, NekDouble > PtsField::GetPts(const int fieldInd) const
+Array<OneD, NekDouble> PtsField::GetPts(const int fieldInd) const
 {
     return m_pts[fieldInd];
 }
 
-
-void PtsField::SetPts(Array< OneD, Array< OneD, NekDouble > > &pts)
+void PtsField::SetPts(Array<OneD, Array<OneD, NekDouble> > &pts)
 {
-    ASSERTL1(pts.num_elements() ==  m_pts.num_elements(),
+    ASSERTL1(pts.num_elements() == m_pts.num_elements(),
              "Pts field count mismatch");
 
     m_pts = pts;
 }
-
 
 vector<int> PtsField::GetPointsPerEdge() const
 {
     return m_nPtsPerEdge;
 }
 
-
 int PtsField::GetPointsPerEdge(const int i) const
 {
     return m_nPtsPerEdge[i];
 }
-
 
 /**
  * @brief Set the number of points per edge
@@ -207,39 +189,33 @@ int PtsField::GetPointsPerEdge(const int i) const
  * data has no specific shape (ePtsLine) or is a block (ePtsTetBlock,
  * ePtsTriBlock), size=1 for ePtsLine, 2 for ePtsPlane and 3 for ePtsBox
  */
-void PtsField::SetPointsPerEdge(const vector< int > nPtsPerEdge)
+void PtsField::SetPointsPerEdge(const vector<int> nPtsPerEdge)
 {
-    ASSERTL0(m_ptsType == ePtsLine || m_ptsType == ePtsPlane || 
-             m_ptsType == ePtsBox,
-             "SetPointsPerEdge only supported for ePtsLine, ePtsPlane and ePtsBox.");
+    ASSERTL0(
+        m_ptsType == ePtsLine || m_ptsType == ePtsPlane || m_ptsType == ePtsBox,
+        "SetPointsPerEdge only supported for ePtsLine, ePtsPlane and ePtsBox.");
 
     m_nPtsPerEdge = nPtsPerEdge;
 }
-
 
 PtsType PtsField::GetPtsType() const
 {
     return m_ptsType;
 }
 
-
 void PtsField::SetPtsType(const PtsType type)
 {
     m_ptsType = type;
 }
-
 
 vector<NekDouble> PtsField::GetBoxSize() const
 {
     return m_boxSize;
 }
 
-
-void PtsField::SetBoxSize(const vector< NekDouble> boxSize)
+void PtsField::SetBoxSize(const vector<NekDouble> boxSize)
 {
     m_boxSize = boxSize;
 }
-
 }
 }
-

@@ -58,13 +58,13 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
     ASSERTL0(ptsInField->GetDim() <= m_dim, "too many dimesions in inField");
     ASSERTL0(ptsOutField->GetDim() <= m_dim, "too many dimesions in outField");
 
-    m_ptsInField = ptsInField;
+    m_ptsInField  = ptsInField;
     m_ptsOutField = ptsOutField;
 
-    int nOutPts = m_ptsOutField->GetNpoints();
+    int nOutPts  = m_ptsOutField->GetNpoints();
     int lastProg = 0;
 
-    m_weights = Array<OneD, Array<OneD, float> >(nOutPts);
+    m_weights   = Array<OneD, Array<OneD, float> >(nOutPts);
     m_neighInds = Array<OneD, Array<OneD, unsigned int> >(nOutPts);
 
     std::vector<PtsPointPair> inPoints;
@@ -236,7 +236,7 @@ void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
     ASSERTL0(ptsInField->GetDim() <= m_dim, "too many dimesions in inField");
     ASSERTL0(ptsOutField->GetDim() <= m_dim, "too many dimesions in outField");
 
-    m_ptsInField = ptsInField;
+    m_ptsInField  = ptsInField;
     m_ptsOutField = ptsOutField;
 
     if (m_weights.num_elements() == 0)
@@ -249,7 +249,7 @@ void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
 
     int nFields = m_ptsOutField->GetNFields();
     int nOutPts = m_ptsOutField->GetNpoints();
-    int inDim = m_ptsInField->GetDim();
+    int inDim   = m_ptsInField->GetDim();
 
     // interpolate points and transform
     for (int i = 0; i < nFields; ++i)
@@ -303,15 +303,15 @@ void Interpolator::Interpolate(
     ASSERTL0(m_method == eNoMethod,
              "only direct evaluation supported for this interpolation");
 
-    m_expInField = expInField;
+    m_expInField  = expInField;
     m_expOutField = expOutField;
 
-    int nInDim = expInField[0]->GetCoordim(0);
-    int nOutPts = m_expOutField[0]->GetTotPoints();
-    int nOutDim = m_expOutField[0]->GetCoordim(0);
+    int nInDim   = expInField[0]->GetCoordim(0);
+    int nOutPts  = m_expOutField[0]->GetTotPoints();
+    int nOutDim  = m_expOutField[0]->GetCoordim(0);
     int lastProg = 0;
 
-    m_weights = Array<OneD, Array<OneD, float> >(nOutPts);
+    m_weights   = Array<OneD, Array<OneD, float> >(nOutPts);
     m_neighInds = Array<OneD, Array<OneD, unsigned int> >(nOutPts);
 
     Array<OneD, NekDouble> Lcoords(nInDim, 0.0);
@@ -398,14 +398,14 @@ void Interpolator::Interpolate(
     ASSERTL0(m_method == eNoMethod,
              "only direct evaluation supported for this interpolation");
 
-    m_expInField = expInField;
+    m_expInField  = expInField;
     m_ptsOutField = ptsOutField;
 
-    int nInDim = expInField[0]->GetCoordim(0);
-    int nOutPts = m_ptsOutField->GetNpoints();
+    int nInDim   = expInField[0]->GetCoordim(0);
+    int nOutPts  = m_ptsOutField->GetNpoints();
     int lastProg = 0;
 
-    m_weights = Array<OneD, Array<OneD, float> >(nOutPts);
+    m_weights   = Array<OneD, Array<OneD, float> >(nOutPts);
     m_neighInds = Array<OneD, Array<OneD, unsigned int> >(nOutPts);
 
     for (int i = 0; i < nOutPts; ++i)
@@ -470,12 +470,12 @@ void Interpolator::Interpolate(
     ASSERTL0(expOutField[0]->GetCoordim(0) <= m_dim,
              "too many dimesions in outField");
 
-    m_ptsInField = ptsInField;
+    m_ptsInField  = ptsInField;
     m_expOutField = expOutField;
 
     int nFields = max((int)ptsInField->GetNFields(), (int)m_expOutField.size());
     int nOutPts = m_expOutField[0]->GetTotPoints();
-    int outDim = m_expOutField[0]->GetCoordim(0);
+    int outDim  = m_expOutField[0]->GetCoordim(0);
 
     // create intermediate Ptsfield that wraps the expOutField
     Array<OneD, Array<OneD, NekDouble> > pts(outDim);
@@ -583,7 +583,7 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
     if (numPts == 0)
     {
         m_neighInds[searchPt.idx] = Array<OneD, unsigned int>(0);
-        m_weights[searchPt.idx] = Array<OneD, float>(0);
+        m_weights[searchPt.idx]   = Array<OneD, float>(0);
 
         return;
     }
@@ -629,9 +629,9 @@ void Interpolator::CalcW_Linear(const PtsPoint &searchPt, int m_coordId)
 
     NekDouble coord = searchPt.coords[m_coordId];
 
-    int numPts = 2;
+    int numPts                = 2;
     m_neighInds[searchPt.idx] = Array<OneD, unsigned int>(numPts);
-    m_weights[searchPt.idx] = Array<OneD, float>(numPts, 0.0);
+    m_weights[searchPt.idx]   = Array<OneD, float>(numPts, 0.0);
 
     for (i = 0; i < npts - 1; ++i)
     {
@@ -755,9 +755,9 @@ void Interpolator::CalcW_Quadratic(const PtsPoint &searchPt, int m_coordId)
 
     NekDouble coord = searchPt.coords[m_coordId];
 
-    int numPts = 3;
+    int numPts                = 3;
     m_neighInds[searchPt.idx] = Array<OneD, unsigned int>(numPts);
-    m_weights[searchPt.idx] = Array<OneD, float>(numPts, 0.0);
+    m_weights[searchPt.idx]   = Array<OneD, float>(numPts, 0.0);
 
     for (i = 0; i < npts - 1; ++i)
     {

@@ -54,7 +54,7 @@
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 
-namespace bg = boost::geometry;
+namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
 
 namespace Nektar
@@ -62,7 +62,8 @@ namespace Nektar
 namespace SolverUtils
 {
 
-enum InterpMethod{
+enum InterpMethod
+{
     eNoMethod,
     eNearestNeighbour,
     eQuadratic,
@@ -74,182 +75,166 @@ enum InterpMethod{
 /// expansions and different meshes
 class Interpolator
 {
+public:
+    /**
+    * @brief Constructor of the Interpolator class
+    *
+    * @param method    interpolation method, defaults to a sensible value if not
+    * set
+    * @param coordId   coordinate id along which the interpolation should be
+    * performed
+    * @param filtWidth filter width, required by some algorithms such as eGauss
+    *
+    * if method is not specified, the best algorithm is chosen autpomatically.
+    *
+    * If coordId is not specified, a full 1D/2D/3D interpolation is performed
+    * without
+    * collapsing any coordinate.
+    *
+    * filtWidth must be specified for the eGauss algorithm only.
+    */
+    Interpolator(InterpMethod method = eNoMethod,
+                 short int coordId   = -1,
+                 NekDouble filtWidth = 0.0)
+        : m_method(method), m_filtWidth(filtWidth), m_coordId(coordId){};
+
+    /// Compute interpolation weights without doing any interpolation
+    LIB_UTILITIES_EXPORT void CalcWeights(
+        const LibUtilities::PtsFieldSharedPtr ptsInField,
+        LibUtilities::PtsFieldSharedPtr &ptsOutField);
+
+    /// Interpolate from a pts field to a pts field
+    LIB_UTILITIES_EXPORT void Interpolate(
+        const LibUtilities::PtsFieldSharedPtr ptsInField,
+        LibUtilities::PtsFieldSharedPtr &ptsOutField);
+
+    /// Interpolate from an expansion to an expansion
+    LIB_UTILITIES_EXPORT void Interpolate(
+        const std::vector<MultiRegions::ExpListSharedPtr> expInField,
+        std::vector<MultiRegions::ExpListSharedPtr> &expOutField);
+
+    /// Interpolate from an expansion to a pts field
+    LIB_UTILITIES_EXPORT void Interpolate(
+        const std::vector<MultiRegions::ExpListSharedPtr> expInField,
+        LibUtilities::PtsFieldSharedPtr &ptsOutField);
+
+    /// Interpolate from a pts field to an expansion
+    LIB_UTILITIES_EXPORT void Interpolate(
+        const LibUtilities::PtsFieldSharedPtr ptsInField,
+        std::vector<MultiRegions::ExpListSharedPtr> &expOutField);
+
+    /// returns the dimension of the Interpolator.
+    /// Should be higher than the dimensions of the interpolated fields
+    LIB_UTILITIES_EXPORT int GetDim() const;
+
+    /// Returns the filter width
+    LIB_UTILITIES_EXPORT NekDouble GetFiltWidth() const;
+
+    /// Returns the coordinate id along which the interpolation should be
+    /// performed
+    LIB_UTILITIES_EXPORT int GetCoordId() const;
+
+    /// Returns the interpolation method used by this interpolator
+    LIB_UTILITIES_EXPORT InterpMethod GetInterpMethod() const;
+
+    /// Returns the input field
+    LIB_UTILITIES_EXPORT LibUtilities::PtsFieldSharedPtr GetInField() const;
+
+    /// Returns the output field
+    LIB_UTILITIES_EXPORT LibUtilities::PtsFieldSharedPtr GetOutField() const;
+
+    /// Print statics of the interpolation weights
+    LIB_UTILITIES_EXPORT void PrintStatistics();
+
+    /// sets a callback funtion which gets called every time the interpolation
+    /// progresses
+    template <typename FuncPointerT, typename ObjectPointerT>
+    void SetProgressCallback(FuncPointerT func, ObjectPointerT obj)
+    {
+        m_progressCallback = boost::bind(func, obj, _1, _2);
+    }
+
+private:
+    class PtsPoint
+    {
     public:
+        int                     idx;
+        Array<OneD, NekDouble>  coords;
+        NekDouble               dist;
 
+        PtsPoint() : idx(-1), coords(Array<OneD, NekDouble>(3)), dist(1E30){};
 
-        /**
-        * @brief Constructor of the Interpolator class
-        *
-        * @param method    interpolation method, defaults to a sensible value if not set
-        * @param coordId   coordinate id along which the interpolation should be performed
-        * @param filtWidth filter width, required by some algorithms such as eGauss
-        *
-        * if method is not specified, the best algorithm is chosen autpomatically.
-        *
-        * If coordId is not specified, a full 1D/2D/3D interpolation is performed without
-        * collapsing any coordinate.
-        *
-        * filtWidth must be specified for the eGauss algorithm only.
-        */
-        Interpolator(
-            InterpMethod method = eNoMethod,
-            short int coordId = -1,
-            NekDouble filtWidth = 0.0):
-            m_method(method),
-            m_filtWidth(filtWidth),
-            m_coordId(coordId)
+        PtsPoint(int idx, Array<OneD, NekDouble> coords, NekDouble dist)
+            : idx(idx), coords(coords), dist(dist){};
+
+        bool operator<(const PtsPoint &comp) const
         {
+            return (dist < comp.dist);
         };
+    };
 
-        /// Compute interpolation weights without doing any interpolation
-        LIB_UTILITIES_EXPORT void CalcWeights(
-            const LibUtilities::PtsFieldSharedPtr ptsInField,
-            LibUtilities::PtsFieldSharedPtr &ptsOutField);
+    /// dimension of this interpolator. Hardcoded to 3
+    static const int m_dim = 3;
+    typedef bg::model::point<NekDouble, m_dim, bg::cs::cartesian> BPoint;
+    typedef std::pair<BPoint, unsigned int> PtsPointPair;
+    typedef bgi::rtree<PtsPointPair, bgi::rstar<16> > PtsRtree;
 
-        /// Interpolate from a pts field to a pts field
-        LIB_UTILITIES_EXPORT void Interpolate(
-            const LibUtilities::PtsFieldSharedPtr ptsInField,
-            LibUtilities::PtsFieldSharedPtr &ptsOutField);
+    /// input field
+    LibUtilities::PtsFieldSharedPtr m_ptsInField;
+    /// output field
+    LibUtilities::PtsFieldSharedPtr m_ptsOutField;
+    /// input field
+    std::vector<MultiRegions::ExpListSharedPtr> m_expInField;
+    /// output field
+    std::vector<MultiRegions::ExpListSharedPtr> m_expOutField;
 
-        /// Interpolate from an expansion to an expansion
-        LIB_UTILITIES_EXPORT void Interpolate(
-            const std::vector<MultiRegions::ExpListSharedPtr> expInField,
-            std::vector<MultiRegions::ExpListSharedPtr> &expOutField);
+    /// Interpolation Method
+    InterpMethod m_method;
+    /// A tree structure to speed up the neighbour search.
+    /// Note that we fill it with an iterator, so instead of rstar, the
+    /// packing algorithm is used.
+    boost::shared_ptr<PtsRtree> m_rtree;
+    /// Interpolation weights for each neighbour.
+    /// Structure: m_weights[physPtIdx][neighbourIdx]
+    Array<OneD, Array<OneD, float> > m_weights;
+    /// Indices of the relevant neighbours for each physical point.
+    /// Structure: m_neighInds[ptIdx][neighbourIdx]
+    Array<OneD, Array<OneD, unsigned int> > m_neighInds;
+    /// Filter width used for some interpolation algorithms
+    NekDouble m_filtWidth;
+    /// coordinate id along which the interpolation should be performed
+    short int m_coordId;
 
-        /// Interpolate from an expansion to a pts field
-        LIB_UTILITIES_EXPORT void Interpolate(
-            const std::vector<MultiRegions::ExpListSharedPtr> expInField,
-            LibUtilities::PtsFieldSharedPtr &ptsOutField);
+    boost::function<void(const int position, const int goal)>
+        m_progressCallback;
 
-        /// Interpolate from a pts field to an expansion
-        LIB_UTILITIES_EXPORT void Interpolate(
-            const LibUtilities::PtsFieldSharedPtr ptsInField,
-            std::vector<MultiRegions::ExpListSharedPtr> &expOutField);
+    LIB_UTILITIES_EXPORT void CalcW_Gauss(const PtsPoint &searchPt,
+                                          const NekDouble sigma);
 
-        /// returns the dimension of the Interpolator.
-        /// Should be higher than the dimensions of the interpolated fields
-        LIB_UTILITIES_EXPORT int GetDim() const;
+    LIB_UTILITIES_EXPORT void CalcW_Linear(const PtsPoint &searchPt,
+                                           int coordId);
 
-        /// Returns the filter width
-        LIB_UTILITIES_EXPORT NekDouble GetFiltWidth() const;
+    LIB_UTILITIES_EXPORT void CalcW_NNeighbour(const PtsPoint &searchPt);
 
-        /// Returns the coordinate id along which the interpolation should be performed
-        LIB_UTILITIES_EXPORT int GetCoordId() const;
+    LIB_UTILITIES_EXPORT void CalcW_Shepard(const PtsPoint &searchPt);
 
-        /// Returns the interpolation method used by this interpolator
-        LIB_UTILITIES_EXPORT InterpMethod GetInterpMethod() const;
+    LIB_UTILITIES_EXPORT void CalcW_Quadratic(const PtsPoint &searchPt,
+                                              int coordId);
 
-        /// Returns the input field
-        LIB_UTILITIES_EXPORT LibUtilities::PtsFieldSharedPtr GetInField() const;
+    LIB_UTILITIES_EXPORT void FindNeighbours(
+        const PtsPoint &searchPt,
+        std::vector<PtsPoint> &neighbourPts,
+        const NekDouble dist);
 
-        /// Returns the output field
-        LIB_UTILITIES_EXPORT LibUtilities::PtsFieldSharedPtr GetOutField() const;
-
-        /// Print statics of the interpolation weights
-        LIB_UTILITIES_EXPORT void PrintStatistics();
-
-        /// sets a callback funtion which gets called every time the interpolation progresses
-        template<typename FuncPointerT, typename ObjectPointerT>
-        void SetProgressCallback(FuncPointerT func,
-                ObjectPointerT obj)
-        {
-            m_progressCallback = boost::bind(func, obj, _1, _2);
-        }
-
-    private:
-
-        class PtsPoint
-        {
-            public:
-
-                int                                         idx;
-                Array<OneD, NekDouble>                      coords;
-                NekDouble                                   dist;
-
-                PtsPoint():
-                    idx(-1),
-                    coords(Array<OneD, NekDouble>(3)),
-                    dist(1E30)
-                {
-                };
-
-                PtsPoint(int idx, Array<OneD, NekDouble> coords,
-                                            NekDouble dist):
-                    idx(idx),
-                    coords(coords),
-                    dist(dist)
-                {
-                };
-
-                bool operator < (const PtsPoint &comp) const
-                {
-                    return (dist < comp.dist);
-                };
-        };
-
-        /// dimension of this interpolator. Hardcoded to 3
-        static const int                                                m_dim = 3;
-        typedef bg::model::point<NekDouble, m_dim, bg::cs::cartesian>   BPoint;
-        typedef std::pair<BPoint, unsigned int>                         PtsPointPair;
-        typedef bgi::rtree< PtsPointPair, bgi::rstar<16> >              PtsRtree;
-
-        /// input field
-        LibUtilities::PtsFieldSharedPtr             m_ptsInField;
-        /// output field
-        LibUtilities::PtsFieldSharedPtr             m_ptsOutField;
-        /// input field
-        std::vector<MultiRegions::ExpListSharedPtr> m_expInField;
-        /// output field
-        std::vector<MultiRegions::ExpListSharedPtr> m_expOutField;
-
-        /// Interpolation Method
-        InterpMethod                                m_method;
-        /// A tree structure to speed up the neighbour search.
-        /// Note that we fill it with an iterator, so instead of rstar, the
-        /// packing algorithm is used.
-        boost::shared_ptr<PtsRtree>                 m_rtree;
-        /// Interpolation weights for each neighbour.
-        /// Structure: m_weights[physPtIdx][neighbourIdx]
-        Array<OneD, Array<OneD, float> >            m_weights;
-        /// Indices of the relevant neighbours for each physical point.
-        /// Structure: m_neighInds[ptIdx][neighbourIdx]
-        Array<OneD, Array<OneD, unsigned int> >     m_neighInds;
-        /// Filter width used for some interpolation algorithms
-        NekDouble                                   m_filtWidth;
-        /// coordinate id along which the interpolation should be performed
-        short int                                   m_coordId;
-
-        boost::function<void (const int position, const int goal)> m_progressCallback;
-
-        LIB_UTILITIES_EXPORT void CalcW_Gauss(
-            const PtsPoint &searchPt,
-            const NekDouble sigma);
-
-        LIB_UTILITIES_EXPORT void CalcW_Linear(const PtsPoint &searchPt, int coordId);
-
-        LIB_UTILITIES_EXPORT void CalcW_NNeighbour(const PtsPoint &searchPt);
-
-        LIB_UTILITIES_EXPORT void CalcW_Shepard(const PtsPoint &searchPt);
-
-        LIB_UTILITIES_EXPORT void CalcW_Quadratic(const PtsPoint &searchPt, int coordId);
-
-        LIB_UTILITIES_EXPORT void FindNeighbours(const PtsPoint &searchPt,
-                std::vector<PtsPoint > &neighbourPts,
-                const NekDouble dist);
-
-        LIB_UTILITIES_EXPORT void FindNNeighbours(const PtsPoint &searchPt,
-                std::vector<PtsPoint > &neighbourPts,
-                const unsigned int numPts = 1);
+    LIB_UTILITIES_EXPORT void FindNNeighbours(
+        const PtsPoint &searchPt,
+        std::vector<PtsPoint> &neighbourPts,
+        const unsigned int numPts = 1);
 };
 
 typedef boost::shared_ptr<Interpolator> InterpolatorSharedPtr;
 static InterpolatorSharedPtr NullInterpolator;
-
-
 }
 }
-
-
 
 #endif
-

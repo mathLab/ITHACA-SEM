@@ -35,6 +35,8 @@
 
 #include <ADRSolver/EquationSystems/Laplace.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string Laplace::className = GetEquationSystemFactory().

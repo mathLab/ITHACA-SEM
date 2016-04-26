@@ -35,6 +35,8 @@
 
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -255,7 +257,7 @@ namespace Nektar
             
             // Allocate memory to store the number of local dofs associated to
             // each of elemental boundaries of these patches
-            map<int, int> numLocalBndCoeffsPerPatchNew;
+            std::map<int, int> numLocalBndCoeffsPerPatchNew;
             for(int i = 0; i < numPatchesNew; i++)
             {
                 numLocalBndCoeffsPerPatchNew[i] = 0;

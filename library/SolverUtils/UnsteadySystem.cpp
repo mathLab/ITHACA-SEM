@@ -41,6 +41,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/UnsteadySystem.h>
 
+using namespace std;
+
 namespace Nektar
 {	
     namespace SolverUtils

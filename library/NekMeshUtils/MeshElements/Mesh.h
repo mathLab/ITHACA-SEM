@@ -120,9 +120,9 @@ public:
     boost::unordered_map<int, Node> m_vertexNormals;
     /// Set of all pairs of element ID and edge/face number on which to
     /// apply spherigon surface smoothing.
-    set<pair<int, int> >            m_spherigonSurfs;
+    std::set<std::pair<int, int> >  m_spherigonSurfs;
     /// List of face labels for composite annotation
-    map<int, string>                m_faceLabels;
+    std::map<int, std::string>      m_faceLabels;
 
     /// Returns the total number of elements in the mesh with
     /// dimension expDim.

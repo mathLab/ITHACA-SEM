@@ -42,6 +42,8 @@
 
 #include <iomanip>
 
+using namespace std;
+
 namespace Nektar
 {
 

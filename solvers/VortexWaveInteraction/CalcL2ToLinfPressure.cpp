@@ -38,6 +38,7 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 
+using namespace std;
 using namespace Nektar;
 //using namespace Nektar::SolverUtils;
 

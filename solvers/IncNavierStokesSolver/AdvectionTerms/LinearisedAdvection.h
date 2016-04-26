@@ -54,7 +54,7 @@ class LinearisedAdvection: public SolverUtils::Advection
 
     /// A map between  matrix keys and their associated block
     /// matrices.
-    typedef map< FloquetMatType, DNekBlkMatSharedPtr> FloquetBlockMatrixMap;
+    typedef std::map< FloquetMatType, DNekBlkMatSharedPtr> FloquetBlockMatrixMap;
     /// A shared pointer to a BlockMatrixMap.
     typedef boost::shared_ptr<FloquetBlockMatrixMap> FloquetBlockMatrixMapShPtr;
 
@@ -131,7 +131,7 @@ protected:
         const NekDouble                                    m_period);
 
     void DFT(
-        const string                                       file,
+        const std::string                                  file,
               Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble                                    m_slices);
 

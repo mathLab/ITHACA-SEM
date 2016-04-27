@@ -336,7 +336,7 @@ void FilterHistoryPoints::v_Initialise(
 
         if(m_isHomogeneous1D)
         {
-            m_outputStream << ") at points:";
+            m_outputStream << ") at points:" << endl;
         }
         else
         {
@@ -358,7 +358,7 @@ void FilterHistoryPoints::v_Initialise(
 
         if(m_isHomogeneous1D)
         {
-            m_outputStream << "(in Wavespace)" << endl;
+            m_outputStream << "# (in Wavespace)" << endl;
         }
     }
     v_Update(pFields, time);

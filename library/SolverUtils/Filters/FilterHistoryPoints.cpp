@@ -172,8 +172,8 @@ void FilterHistoryPoints::v_Initialise(
                 int plane;
                 if (m_outputPlane == -1)
                 {
-                    // Convert to int to pick the previous plane closer to the point
-                    plane = (gloCoord[2]*nplanes)/lhom;
+                    // Pick plane immediately before the point
+                    plane = floor((gloCoord[2]*nplanes)/lhom);
                 }
                 else
                 {
@@ -185,8 +185,8 @@ void FilterHistoryPoints::v_Initialise(
                 Z = (Z+1)*lhom/2;
                 if(fabs(gloCoord[2]-Z) > NekConstants::kVertexTheSameDouble)
                 {
-                    cout << "Reseting History point from " << gloCoord[2]
-                         << " to " << Z << endl;
+                    cout << "Reseting History point from z = " << gloCoord[2]
+                         << " to z = " << Z << endl;
                 }
                 gloCoord[2] = Z;
                 planeIDs.push_back(plane);

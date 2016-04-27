@@ -189,7 +189,7 @@ void FilterHistoryPoints::v_Initialise(
 
         // Determine the expansion and local coordinates
         idList[i] = pFields[0]->GetExpIndex(gloCoord,locCoords,
-                                        NekConstants::kGeomFactorsTol);
+                                        NekConstants::kNekZeroTol);
 
         // Save Local coordinates for later
         LocCoords.push_back(locCoords);

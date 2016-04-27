@@ -61,7 +61,8 @@ class ProcessQualityMetric : public ProcessModule
         virtual void Process(po::variables_map &vm);
 
     private:
-        Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e);
+        Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e,
+                                    bool s);
 };
 
 }

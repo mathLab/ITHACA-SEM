@@ -127,9 +127,9 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d, optimiser opti)
                     }
                 }
 
-                if(jacDet < 1E-6)
+                if(jacDet < 1E-10)
                 {
-                    jacDet = 1E-6;
+                    jacDet = 1E-10;
                 }
                 dW[k] = frob / jacDet;
                 break;
@@ -148,9 +148,22 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d, optimiser opti)
                     }
                 }
 
-                NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet));
-                dW[k] = frob / expDim * pow(sigma, 2.0/expDim);
+                NekDouble i2rmDet = 1.0 / (d->maps[k](0,0)*d->maps[k](1,1) - d->maps[k](1,0)*d->maps[k](0,1));
+                NekDouble de = fabs(i2rmDet) * sqrt(1E-6 + 1E-3);
+
+                NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
+                dW[k] = frob / expDim / pow(sigma, 2.0/expDim);
                 break;
+            }
+
+            case eHypEl:
+            {
+                NekDouble jacDet = jacIdeal[0][0] * jacIdeal[1][1] - jacIdeal[0][1]*jacIdeal[1][0];
+                NekDouble ljacDet = log(jacDet);
+                NekDouble nu = 0.45;
+                NekDouble mu = 1.0/2.0/(1.0+nu);
+                NekDouble lam = nu / (1.0 - 2.0 * nu) / (1.0+nu);
+                dW[k] = 0.5 * mu * (jacDet * jacDet - 3.0) - mu * ljacDet + 0.5 * lam * ljacDet * ljacDet;
             }
         }
     }
@@ -353,6 +366,8 @@ ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(true, "", "Optimise for winslow");
     m_config["roca"] =
         ConfigOption(true, "", "Optimise for roca method");
+    m_config["hyperelastic"] =
+        ConfigOption(true, "", "Optimise for hyper elasticity");
     m_config["numthreads"] =
         ConfigOption(false, "1", "Number of threads");
 }
@@ -379,6 +394,10 @@ void ProcessVarOpti::Process()
     else if(m_config["roca"].beenSet)
     {
         opti = eRoca;
+    }
+    else if(m_config["hyperelastic"].beenSet)
+    {
+        opti = eHypEl;
     }
     else
     {
@@ -440,6 +459,7 @@ void ProcessVarOpti::Process()
             }
             cout << " -- inner loop " << i+1 << "/" << optiNodes.size()
                  << " of size: " << jobs.size() << endl;
+
             tm->SetNumWorkers(0);
             tm->QueueJobs(jobs);
             tm->SetNumWorkers(nThreads);
@@ -468,7 +488,7 @@ void ProcessVarOpti::NodeOpti::Optimise()
 {
     Array<OneD, NekDouble> G = GetGrad();
 
-    if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-3)
+    if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-6)
     {
         //needs to optimise
         NekDouble currentW = GetFunctional();

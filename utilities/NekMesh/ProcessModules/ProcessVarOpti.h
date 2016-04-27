@@ -56,7 +56,8 @@ enum optimiser
 {
     eLinEl,
     eWins,
-    eRoca
+    eRoca,
+    eHypEl
 };
 
 /**

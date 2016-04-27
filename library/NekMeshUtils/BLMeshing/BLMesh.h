@@ -111,7 +111,7 @@ public:
 private:
 
     NekDouble Visability(std::vector<ElementSharedPtr> tris, Array<OneD, NekDouble> N);
-    Array<OneD, NekDouble> GetNormal(vector<ElementSharedPtr> tris);
+    Array<OneD, NekDouble> GetNormal(std::vector<ElementSharedPtr> tris);
 
     ///CAD
     CADSystemSharedPtr m_cad;

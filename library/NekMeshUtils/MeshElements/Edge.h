@@ -38,6 +38,8 @@
 
 #include <iomanip>
 
+#include <boost/thread/mutex.hpp>
+
 #include <SpatialDomains/SegGeom.h>
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
@@ -136,6 +138,9 @@ public:
     /// Generate a SpatialDomains::SegGeom object for this edge.
     NEKMESHUTILS_EXPORT SpatialDomains::SegGeomSharedPtr GetGeom(int coordDim)
     {
+        static boost::mutex io_mutex;
+        boost::mutex::scoped_lock lock(io_mutex);
+
         // Create edge vertices.
         SpatialDomains::PointGeomSharedPtr p[2];
         SpatialDomains::SegGeomSharedPtr ret;

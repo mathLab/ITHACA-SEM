@@ -38,6 +38,8 @@
 #include <NekMeshUtils/MeshElements/Element.h>
 #include "ProcessVarOpti.h"
 
+#include <boost/thread/mutex.hpp>
+
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdTetExp.h>
@@ -50,14 +52,19 @@ namespace Nektar
 {
 namespace Utilities
 {
+
+boost::mutex tmp;
+
 inline NekDouble GetElFunctional(ElDataSharedPtr d, optimiser opti)
 {
     SpatialDomains::GeometrySharedPtr    geom = d->el->GetGeom(2);
     StdRegions::StdExpansionSharedPtr    chi  = geom->GetXmap();
     LibUtilities::PointsKeyVector        p    = chi->GetPointsKeys();
+    tmp.lock();
     SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
     const int expDim = 2;
 
+    tmp.unlock();
     SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
 
     const int pts = deriv[0][0].num_elements();
@@ -148,7 +155,9 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d, optimiser opti)
         }
     }
 
+    tmp.lock();
     d->lastEval = chi->Integral(dW);
+    tmp.unlock();
     return d->lastEval;
 }
 
@@ -344,6 +353,8 @@ ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(true, "", "Optimise for winslow");
     m_config["roca"] =
         ConfigOption(true, "", "Optimise for roca method");
+    m_config["numthreads"] =
+        ConfigOption(false, "1", "Number of threads");
 }
 
 ProcessVarOpti::~ProcessVarOpti()
@@ -406,12 +417,15 @@ void ProcessVarOpti::Process()
 
     cout << scientific << endl;
 
+    int nThreads = m_config["numthreads"].as<int>();
+
     NekDouble functionalEnd = functionalStart;
     NekDouble functionalLast = 0.0;
     int ctr = 0;
     Thread::ThreadMaster tms;
     tms.SetThreadingType("ThreadManagerBoost");
-    Thread::ThreadManagerSharedPtr tm = tms.CreateInstance(Thread::ThreadMaster::SessionJob, 4);
+    Thread::ThreadManagerSharedPtr tm = tms.CreateInstance(Thread::ThreadMaster::SessionJob, nThreads);
+
     while (fabs(functionalLast - functionalEnd) > 1e-5)
     {
         ctr++;
@@ -427,7 +441,7 @@ void ProcessVarOpti::Process()
             cout << jobs.size() << endl;
             tm->SetNumWorkers(0);
             tm->QueueJobs(jobs);
-            tm->SetNumWorkers(1);
+            tm->SetNumWorkers(nThreads);
             tm->Wait();
 
             /*for(int j = 0; j < optiNodes[i].size(); j++)

@@ -101,6 +101,18 @@ FilterHistoryPoints::FilterHistoryPoints(
             LibUtilities::Equation equ(m_session, it->second);
             m_outputPlane = floor(equ.Evaluate());
         }
+
+        it = pParams.find("WaveSpace");
+        if (it == pParams.end())
+        {
+            m_waveSpace = false;
+        }
+        else
+        {
+            std::string sOption = it->second.c_str();
+            m_waveSpace         = ( boost::iequals(sOption,"true")) ||
+                                  ( boost::iequals(sOption,"yes"));
+        }
     }
 
     // Points
@@ -388,7 +400,10 @@ void FilterHistoryPoints::v_Initialise(
 
         if(m_isHomogeneous1D)
         {
-            //m_outputStream << "# (in Wavespace)" << endl;
+            if (m_waveSpace)
+            {
+                m_outputStream << "# (in Wavespace)" << endl;
+            }
         }
     }
     v_Update(pFields, time);
@@ -430,22 +445,31 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
                 expId    = (*x).first->GetVid();
                 NekDouble value;
                 int plane = m_planeIDs[m_historyLocalPointMap[k]];
-                if (pFields[j]->GetWaveSpace() == false && plane != -1)
-                {
-                    physvals = pFields[j]->GetPlane(plane)->
-                               UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
 
-                    // transform elemental data if required.
-                    if(pFields[j]->GetPhysState() == false)
+                if (m_waveSpace)
+                {
+                    ASSERTL0( pFields[j]->GetWaveSpace() == true,
+                        "HistoryPoints in wavespace require that solution is in wavespace");
+                }
+                if ( pFields[j]->GetWaveSpace() == false || m_waveSpace)
+                {
+                    if (plane != -1)
                     {
-                        pFields[j]->GetPlane(plane)->GetExp(expId)->
-                                  BwdTrans(pFields[j]->GetPlane(plane)->
-                                  GetCoeffs() + pFields[j]->
-                                  GetCoeff_Offset(expId),physvals);
+                        physvals = pFields[j]->GetPlane(plane)->
+                                   UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
+
+                        // transform elemental data if required.
+                        if(pFields[j]->GetPhysState() == false)
+                        {
+                            pFields[j]->GetPlane(plane)->GetExp(expId)->
+                                      BwdTrans(pFields[j]->GetPlane(plane)->
+                                      GetCoeffs() + pFields[j]->
+                                      GetCoeff_Offset(expId),physvals);
+                        }
+                        // Interpolate data
+                        value = pFields[j]->GetPlane(plane)->GetExp(expId)->
+                                StdPhysEvaluate(locCoord,physvals);
                     }
-                    // Interpolate data
-                    value = pFields[j]->GetPlane(plane)->GetExp(expId)->
-                            StdPhysEvaluate(locCoord,physvals);
                 }
                 else
                 {

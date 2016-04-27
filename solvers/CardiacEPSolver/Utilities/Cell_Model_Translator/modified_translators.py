@@ -144,9 +144,9 @@ class CellMLTranslator(object):
     DOXYGEN_COMMENT_START = '//! ' # Start of a 1 line Doxygen comment
 
     # Variable types
-    TYPE_DOUBLE = 'double '
+    TYPE_DOUBLE = 'NekDouble '
     TYPE_VOID = 'void '
-    TYPE_CONST_DOUBLE = 'const double '
+    TYPE_CONST_DOUBLE = 'const NekDouble '
     TYPE_CONST_UNSIGNED = 'const unsigned '
 
     # Special constants
@@ -160,7 +160,7 @@ class CellMLTranslator(object):
     # a header file in C/C++
     USES_SUBSIDIARY_FILE = False
     # Mapping from primary file extension to subsidiary file extension
-    FILE_EXTENSIONS = {'cpp': 'hpp',
+    FILE_EXTENSIONS = {'cpp': 'h',
                        'c': 'h',
                        'cxx': 'hxx'}
 
@@ -592,20 +592,34 @@ class CellMLTranslator(object):
     def output_assignment(self, expr):
         """Output an assignment expression."""
         if isinstance(expr, cellml_variable):
+            # self.writeln('Test')
             # This may be the assignment of a mapped variable, or a constant
             t = expr.get_type()
             if t == VarTypes.Mapped:
+                # self.writeln(self.code_name(expr))
                 self.writeln(self.TYPE_CONST_DOUBLE, self.code_name(expr),
                              self.EQ_ASSIGN,
                              self.code_name(expr.get_source_variable()),
                              self.STMT_END, nl=False)
                 self.output_comment(expr.units, indent=False, pad=True)
             elif t == VarTypes.Constant:
-                self.writeln(self.TYPE_CONST_DOUBLE, self.code_name(expr),
-                             self.EQ_ASSIGN, nl=False)
-                self.output_number(expr.initial_value)
-                self.writeln(self.STMT_END, indent=False, nl=False)
-                self.output_comment(expr.units, indent=False, pad=True)
+                # self.writeln('Test')
+                # self.writeln(self.code_name(expr))
+
+
+                # setting various stim-parameters to zero, since Nektar uses its own stimulus
+                if 'stim_amplitude' in str(self.code_name(expr)):
+                    self.writeln(self.TYPE_CONST_DOUBLE, self.code_name(expr),
+                                 self.EQ_ASSIGN, nl=False)
+                    self.output_number(0)
+                    self.writeln(self.STMT_END, indent=False, nl=False)
+                    self.output_comment(expr.units, indent=False, pad=True)
+                else:
+                    self.writeln(self.TYPE_CONST_DOUBLE, self.code_name(expr),
+                                 self.EQ_ASSIGN, nl=False)
+                    self.output_number(expr.initial_value)
+                    self.writeln(self.STMT_END, indent=False, nl=False)
+                    self.output_comment(expr.units, indent=False, pad=True)
         else:
             # This is a mathematical expression
             self.writeln(self.TYPE_CONST_DOUBLE, nl=False)
@@ -884,6 +898,16 @@ class CellMLTranslator(object):
     # output in order to compute a given set of quantities.
     def calculate_extended_dependencies(self, nodes, prune=[], prune_deps=[]):
         """Method moved to cellml_model."""
+        
+        # for var in nodes:
+        #     self.writeln(var)
+        # self.writeln()        
+
+        # for var in self.model.calculate_extended_dependencies(nodes, prune, prune_deps):
+        #     self.writeln(var)
+        # self.writeln()
+
+
         return self.model.calculate_extended_dependencies(nodes, prune, prune_deps)
 
     def output_equations(self, nodeset):
@@ -2258,8 +2282,8 @@ class ConfigurationStore(object):
         """Find the variables representing currents."""
         # Find the stimulus current, if it exists for this kind of model (some are self-excitatory)
         if not self.doc.model.is_self_excitatory():
-            self.i_stim_var = self._find_var('membrane_stimulus_current', self.i_stim_definitions)
-            DEBUG('config', 'Found stimulus', self.i_stim_var)
+            # self.i_stim_var = self._find_var('membrane_stimulus_current', self.i_stim_definitions)
+            # DEBUG('config', 'Found stimulus', self.i_stim_var)
             if not self.i_stim_var:
                 # No match :(
                 msg = "No stimulus current found; you'll have trouble generating Nektar code"

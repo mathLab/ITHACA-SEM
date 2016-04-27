@@ -40,6 +40,8 @@
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/Expansion2D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -70,7 +72,7 @@ namespace Nektar
                            m_comm->GetColumnComm();
 
             m_transposition = MemoryManager<LibUtilities::Transposition>
-                                ::AllocateSharedPtr(HomoBasis, m_StripZcomm);
+                                ::AllocateSharedPtr(HomoBasis, m_comm, m_StripZcomm);
 
             m_planes = Array<OneD,ExpListSharedPtr>(
                                 m_homogeneousBasis->GetNumPoints() /
@@ -106,6 +108,7 @@ namespace Nektar
         ExpListHomogeneous1D::ExpListHomogeneous1D(const ExpListHomogeneous1D &In):
             ExpList(In,false),
             m_transposition(In.m_transposition),
+            m_StripZcomm(In.m_StripZcomm),
             m_useFFT(In.m_useFFT),
             m_FFT(In.m_FFT),
             m_tmpIN(In.m_tmpIN),
@@ -129,7 +132,7 @@ namespace Nektar
             m_tmpOUT(In.m_tmpOUT),
             m_homogeneousBasis(In.m_homogeneousBasis),
             m_lhom(In.m_lhom), 
-            m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
+            m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr()),
             m_dealiasing(In.m_dealiasing),
             m_padsize(In.m_padsize)
         {
@@ -498,7 +501,7 @@ namespace Nektar
                 }
                 else 
                 {
-                    Vmath::Vcopy(nrows,sortedinarray,1,outarray,1);
+                    Vmath::Vcopy(nrows,sortedoutarray,1,outarray,1);
                 }
                 
             }
@@ -622,6 +625,15 @@ namespace Nektar
             std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
             
+            std::vector<unsigned int> StripsIDs;
+
+            bool strips;
+            m_session->MatchSolverInfo("HomoStrip","True",strips,false);
+            if (strips)
+            {
+                StripsIDs.push_back(m_transposition->GetStripID());
+            }
+            
             std::vector<unsigned int> PlanesIDs;
             int IDoffset = 0;
 
@@ -637,11 +649,8 @@ namespace Nektar
                 PlanesIDs.push_back(m_transposition->GetPlaneID(i)+IDoffset);
             }
             
-            int NumHomoStrip;
-            m_session->LoadParameter("Strip_Z",NumHomoStrip,1);
- 
-            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, NumHomoStrip, HomoBasis, HomoLen, PlanesIDs);
-            
+            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, 
+                    HomoLen, strips, StripsIDs, PlanesIDs);
             return returnval;
         }
 
@@ -652,6 +661,15 @@ namespace Nektar
             
             std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
+            
+            std::vector<unsigned int> StripsIDs;
+
+            bool strips;
+            m_session->MatchSolverInfo("HomoStrip","True",strips,false);
+            if (strips)
+            {
+                StripsIDs.push_back(m_transposition->GetStripID());
+            }
             
             std::vector<unsigned int> PlanesIDs;
             int IDoffset = 0;
@@ -666,11 +684,9 @@ namespace Nektar
                 PlanesIDs.push_back(m_transposition->GetPlaneID(i)+IDoffset);
             }
             
-            int NumHomoStrip;
-            m_session->LoadParameter("Strip_Z",NumHomoStrip,1);
-
             // enforce NumHomoDir == 1 by direct call
-            m_planes[0]->GeneralGetFieldDefinitions(fielddef, 1, NumHomoStrip, HomoBasis,HomoLen,PlanesIDs);
+            m_planes[0]->GeneralGetFieldDefinitions(fielddef, 1, HomoBasis,
+                    HomoLen, strips, StripsIDs, PlanesIDs);
         }
 
 

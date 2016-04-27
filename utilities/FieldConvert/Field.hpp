@@ -77,9 +77,9 @@ struct Field {
 
     ~Field()
     {
-        if (m_session)
+        if (m_comm)
         {
-            m_session->Finalise();
+            m_comm->Finalise();
         }
     }
     bool                                    m_verbose;
@@ -106,6 +106,7 @@ struct Field {
     bool                                    m_addNormals;
 
     bool                                    m_setUpEquiSpacedFields;
+
     LibUtilities::PtsFieldSharedPtr         m_fieldPts;
 
     MultiRegions::AssemblyMapCGSharedPtr    m_locToGlobalMap;

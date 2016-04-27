@@ -36,14 +36,16 @@
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
-
 #include "Module.h"
 
 using namespace std;
+using namespace Nektar;
 using namespace Nektar::Utilities;
 
 int main(int argc, char* argv[])
 {
+    Timer     timer;
+    timer.Start();
     po::options_description desc("Available options");
     desc.add_options()
         ("help,h",
@@ -61,12 +63,17 @@ int main(int argc, char* argv[])
         ("range,r", po::value<string>(),
                 "Define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) "
                 "in which any vertex is contained.")
+        ("noequispaced","Do not use equispaced output. Currently stops the output-points option")
         ("nprocs", po::value<int>(),
                 "Used to define nprocs if running serial problem to mimic "
                 "parallel run.")
         ("onlyshape", po::value<string>(),
                  "Only use element with defined shape type i.e. -onlyshape "
                  " Tetrahedron")
+        ("part-only", po::value<int>(),
+                "Partition into specfiied npart partitions and exit")
+        ("part-only-overlapping", po::value<int>(),
+                "Partition into specfiied npart overlapping partitions and exit")
         ("procid", po::value<int>(),
                 "Process as single procid of a partition of size nproc "
                 "(-nproc must be specified).")
@@ -74,6 +81,7 @@ int main(int argc, char* argv[])
                 "Print options for a module.")
         ("module,m", po::value<vector<string> >(),
                 "Specify modules which are to be used.")
+        ("shared-filesystem,s", "Using shared filesystem.")
         ("useSessionVariables",
                 "Use variables defined in session for output")
         ("verbose,v",
@@ -180,13 +188,13 @@ int main(int argc, char* argv[])
 
 
     /*
-     * Process list of modules. Each element of the vector of module strings can
-     * be in the following form:
+     * Process list of modules. Each element of the vector of module
+     * strings can be in the following form:
      *
      * modname:arg1=a:arg2=b:arg3=c:arg4:arg5=asd
      *
-     * where the only required argument is 'modname', specifing the name of the
-     * module to load.
+     * where the only required argument is 'modname', specifing the
+     * name of the module to load.
      */
 
     FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
@@ -203,6 +211,9 @@ int main(int argc, char* argv[])
 
             f->m_comm = boost::shared_ptr<FieldConvertComm>(
                                 new FieldConvertComm(argc, argv, nprocs,rank));
+
+            // Set forceoutput option. Otherwise only procid 0 will write file
+            vm.insert(std::make_pair("forceoutput", po::variable_value()));
         }
         else
         {
@@ -220,6 +231,7 @@ int main(int argc, char* argv[])
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
 
+
     if (vm.count("verbose"))
     {
         f->m_verbose = true;
@@ -233,7 +245,17 @@ int main(int argc, char* argv[])
     // Add input and output modules to beginning and end of this vector.
     modcmds.insert(modcmds.begin(), inout.begin(), inout.end()-1);
     modcmds.push_back(*(inout.end()-1));
+
     int nInput = inout.size()-1;
+
+    // For special case of part-only or part-only-overlapping options
+    // only require a single input file and so reset the nInputs to be
+    // of size inout.size(). Since the code will exit before reaching
+    // any output module this seems to work as expected
+    if(vm.count("part-only")||vm.count("part-only-overlapping"))
+    {
+        nInput = inout.size();
+    }
 
     InputModuleSharedPtr inputModule;
 
@@ -325,21 +347,32 @@ int main(int argc, char* argv[])
     }
 
     // If any output module has to reset points then set intput modules to match
-    bool RequiresEquiSpaced = false;
-    for (int i = 0; i < modules.size(); ++i)
-    {
-        if(modules[i]->GetRequireEquiSpaced())
-        {
-            RequiresEquiSpaced = true;
-        }
-    }
-    if (RequiresEquiSpaced)
+   if(vm.count("noequispaced"))
     {
         for (int i = 0; i < modules.size(); ++i)
         {
-            modules[i]->SetRequireEquiSpaced(true);
+            modules[i]->SetRequireEquiSpaced(false);
         }
     }
+    else
+    {
+        bool RequiresEquiSpaced = false;
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetRequireEquiSpaced())
+            {
+                RequiresEquiSpaced = true;
+            }
+        }
+        if (RequiresEquiSpaced)
+        {
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                modules[i]->SetRequireEquiSpaced(true);
+            }
+        }
+    }
+    
     // Run field process.
     for (int i = 0; i < modules.size(); ++i)
     {
@@ -347,5 +380,20 @@ int main(int argc, char* argv[])
         cout.flush();
     }
 
+    if(f->m_verbose)
+    {
+        if(f->m_comm->GetRank() == 0)
+        {
+            timer.Stop();
+            NekDouble cpuTime = timer.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "Total CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            cpuTime = 0.0;
+        }
+        
+    }
     return 0;
 }

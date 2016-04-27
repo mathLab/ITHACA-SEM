@@ -41,6 +41,8 @@
 #include <LocalRegions/Expansion2D.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
+using namespace std;
+
 namespace Nektar
 {
     /**
@@ -788,7 +790,7 @@ namespace Nektar
             }
         }
     }
-}
+
 
 
 void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(vector<map<int,int> > &ReorderedGraphVertId,
@@ -994,5 +996,5 @@ void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(vector<map<int,i
 
 
 
-
+}
 

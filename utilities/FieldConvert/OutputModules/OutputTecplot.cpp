@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 //
 //  File: OutputTecplot.cpp
 //
@@ -55,6 +55,7 @@ ModuleKey OutputTecplot::m_className =
 
 OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
 {
+
     if(f->m_setUpEquiSpacedFields)
     {
         m_outputType = eFullBlockZoneEquiSpaced;
@@ -64,6 +65,7 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
         m_requireEquiSpaced = true;
         m_outputType = eFullBlockZone;
     }
+
 }
 
 OutputTecplot::~OutputTecplot()
@@ -76,27 +78,29 @@ void OutputTecplot::Process(po::variables_map &vm)
 
     m_doError = (vm.count("error") == 1)?  true: false;
 
-    if (m_f->m_verbose)
-    {
-        cout << "OutputTecplot: Writing file..." << endl;
-    }
     // Do nothing if no expansion defined
     if (fPts == LibUtilities::NullPtsField && !m_f->m_exp.size())
     {
         return;
     }
 
+    if (m_f->m_verbose)
+    {
+        cout << "OutputTecplot: Writing file..." << endl;
+    }
+
 
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 
+    int nprocs = m_f->m_comm->GetSize();
+    int rank  = m_f->m_comm->GetRank();
     // Amend for parallel output if required
-    if(m_f->m_comm->GetSize() != 1)
+    if(nprocs != 1)
     {
         int    dot = filename.find_last_of('.');
         string ext = filename.substr(dot,filename.length()-dot);
-        string procId = "_P" + boost::lexical_cast<std::string>(
-                                 m_f->m_comm->GetRank());
+        string procId = "_P" + boost::lexical_cast<std::string>(rank);
         string start = filename.substr(0,dot);
         filename = start + procId + ext;
     }
@@ -106,7 +110,7 @@ void OutputTecplot::Process(po::variables_map &vm)
         int i   = 0;
         int j   = 0;
         int dim = fPts->GetDim();
-
+        
         if(fPts->GetNpoints() == 0)
         {
             return;
@@ -115,46 +119,73 @@ void OutputTecplot::Process(po::variables_map &vm)
         // Write solution.
         ofstream outfile(filename.c_str());
 
-        switch(dim)
-        {
-        case 1:
-            outfile << "VARIABLES = x";
-            break;
-        case 2:
-            outfile << "VARIABLES = x,y";
-            break;
-        case 3:
-            outfile << "VARIABLES = x,y,z";
-            break;
-        }
+        // points type
+        LibUtilities::PtsType pType = fPts->GetPtsType();
 
         vector<Array<OneD, int> > ptsConn;
         fPts->GetConnectivity(ptsConn);
 
-        for(i = 0; i < fPts->GetNFields(); ++i)
-        {
-            outfile << "," << fPts->GetFieldName(i);
+        // only dump header info for all proces if ptsType is for
+        // TriBlock or TetBlock
+        if((pType > LibUtilities::ePtsBox)||(rank == 0))
+        { 
+            switch(dim)
+            {
+            case 1:
+                outfile << "VARIABLES = x";
+                break;
+            case 2:
+                outfile << "VARIABLES = x,y";
+                break;
+            case 3:
+                outfile << "VARIABLES = x,y,z";
+                break;
+            }
+            
+            for(i = 0; i < fPts->GetNFields(); ++i)
+            {
+                outfile << "," << fPts->GetFieldName(i);
+            }
+            outfile << endl;
         }
-        outfile << endl;
+        
         bool DumpAsFEPoint = true;
         switch(fPts->GetPtsType())
         {
-            case LibUtilities::ePtsFile:
-            case LibUtilities::ePtsLine:
+        case LibUtilities::ePtsFile:
+        case LibUtilities::ePtsLine:
             {
-                outfile << " ZONE I="
-                        << fPts->GetNpoints()
-                        << " F=POINT" << endl;
+                if(rank == 0)
+                {
+                    outfile << " ZONE I="
+                            << fPts->GetNpoints()
+                            << " F=POINT" << endl;
+                }
                 break;
             }
-            case LibUtilities::ePtsPlane:
+        case LibUtilities::ePtsPlane:
             {
-                outfile << " ZONE I=" << fPts->GetPointsPerEdge(0)
-                        <<      " J=" << fPts->GetPointsPerEdge(1)
-                        << " F=POINT" << endl;
+                if(rank == 0)
+                {
+                    outfile << " ZONE I=" << fPts->GetPointsPerEdge(0)
+                            <<      " J=" << fPts->GetPointsPerEdge(1)
+                            << " F=POINT" << endl;
+                }
                 break;
             }
-            case LibUtilities::ePtsTriBlock:
+        case LibUtilities::ePtsBox:
+            {
+                if(rank == 0)
+                {
+                    outfile << " ZONE I=" << fPts->GetPointsPerEdge(0)
+                            <<      " J=" << fPts->GetPointsPerEdge(1)
+                            <<      " K=" << fPts->GetPointsPerEdge(2)
+                            << " F=POINT" << endl;
+                }
+                break;
+            }
+            break;
+        case LibUtilities::ePtsTriBlock:
             {
                 int numBlocks = 0;
                 for(i = 0; i < ptsConn.size(); ++i)
@@ -207,6 +238,67 @@ void OutputTecplot::Process(po::variables_map &vm)
                 }
                 outfile << endl;
             }
+
+
+
+            if (m_doError)
+            {
+                NekDouble l2err;
+                std::string coordval[] = {"x","y","z"};
+                int rank = m_f->m_comm->GetRank();
+
+                for(int i = 0; i < dim; ++i)
+                {
+                    // calculate rms value 
+                    l2err = 0.0;
+                    for(j = 0; j < fPts->GetNpoints(); ++j)
+                    {
+                        l2err += fPts->GetPointVal(i,j)*fPts->GetPointVal(i,j);
+                    }
+                    m_f->m_comm->AllReduce(l2err, LibUtilities::ReduceSum);
+
+                    int npts = fPts->GetNpoints();
+                    m_f->m_comm->AllReduce(npts,  LibUtilities::ReduceSum);
+                    
+                    l2err /= npts; 
+                    l2err = sqrt(l2err);
+                    
+                    if(rank == 0)
+                    {
+                        cout << "L 2 error (variable "
+                             << coordval[i] << ") : " 
+                             << l2err  << endl;
+                    }
+                }
+
+                for(i = 0; i < fPts->GetNFields(); ++i)
+                {
+                    // calculate rms value 
+                    l2err = 0.0;
+                    for(j = 0; j < fPts->GetNpoints(); ++j)
+                    {
+                        l2err += m_f->m_data[i][j]*m_f->m_data[i][j];
+                    }
+                    m_f->m_comm->AllReduce(l2err,
+                                                     LibUtilities::ReduceSum);
+
+                    int npts = fPts->GetNpoints();
+                    m_f->m_comm->AllReduce(npts,
+                                                     LibUtilities::ReduceSum);
+                    
+                    l2err /= npts; 
+                    l2err = sqrt(l2err);
+
+                    if(rank == 0)
+                    {
+                        cout << "L 2 error (variable "
+                             << fPts->GetFieldName(i) << ") : " 
+                             << l2err  << endl;
+                    }
+                }                     
+            }
+
+            m_f->m_comm->Block();
         }
         else // dump in block format
         {
@@ -232,6 +324,48 @@ void OutputTecplot::Process(po::variables_map &vm)
                     if( ( !(j % 10 * dim) ) && j )
                     {
                         outfile << std::endl;
+                    }
+                }
+            }
+
+            if (m_doError)
+            {
+                NekDouble l2err;
+                std::string coordval[] = {"x","y","z"};
+                int rank = m_f->m_comm->GetRank();
+
+                for(int i = 0; i < dim + fPts->GetNFields(); ++i)
+                {
+                // calculate rms value 
+                    l2err = 0.0;
+                    for(j = 0; j < fPts->GetNpoints(); ++j)
+                    {
+                        l2err += fPts->GetPointVal(i,j)*fPts->GetPointVal(i,j);
+                    }
+                    m_f->m_comm->AllReduce(l2err,
+                                                  LibUtilities::ReduceSum);
+                    
+                    int npts = fPts->GetNpoints();
+                    m_f->m_comm->AllReduce(npts,
+                                                  LibUtilities::ReduceSum);
+                
+                    l2err /= npts; 
+                    l2err = sqrt(l2err);
+                    
+                    if(rank == 0)
+                    {
+                        if(i < dim)
+                        {
+                            cout << "L 2 error (variable "
+                                 << coordval[i] << ") : " 
+                                 << l2err  << endl;
+                        }
+                        else
+                        {
+                            cout << "L 2 error (variable "
+                                 << fPts->GetFieldName(i-dim) << ") : " 
+                                 << l2err  << endl;
+                        }
                     }
                 }
             }
@@ -524,6 +658,8 @@ void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
 
     for(i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
     {
+        cnt = m_f->m_exp[0]->GetPhys_Offset(i);
+        
         if(nbase == 1)
         {
             int np0 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
@@ -593,7 +729,6 @@ void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
                         outfile << cnt + j*np0 + k    << endl;
                     }
                 }
-                cnt += np0*np1;
             }
         }
         else if(nbase == 3)
@@ -620,7 +755,6 @@ void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
                     }
                 }
             }
-            cnt += np0*np1*np2;
         }
         else
         {

@@ -41,6 +41,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/UnsteadySystem.h>
 
+using namespace std;
+
 namespace Nektar
 {	
     namespace SolverUtils
@@ -276,12 +278,12 @@ namespace Nektar
                 }
                 
                 // Perform any solver-specific pre-integration steps
+                timer.Start();
                 if (v_PreIntegrate(step))
                 {
                     break;
                 }
 
-                timer.Start();
                 fields = m_intScheme->TimeIntegrate(
                     step, m_timestep, m_intSoln, m_ode);
                 timer.Stop();
@@ -464,10 +466,17 @@ namespace Nektar
             EquationSystem::v_GenerateSummary(s);
             AddSummaryItem(s, "Advection",
                            m_explicitAdvection ? "explicit" : "implicit");
+
+            if(m_session->DefinesSolverInfo("AdvectionType"))
+            {
+                AddSummaryItem(s, "AdvectionType",
+                               m_session->GetSolverInfo("AdvectionType"));
+            }
+
             AddSummaryItem(s, "Diffusion",
                            m_explicitDiffusion ? "explicit" : "implicit");
 
-            if (m_session->GetSolverInfo("EQTYPE") 
+            if (m_session->GetSolverInfo("EQTYPE")
                     == "SteadyAdvectionDiffusionReaction")
             {
                 AddSummaryItem(s, "Reaction",
@@ -921,6 +930,47 @@ namespace Nektar
         bool UnsteadySystem::v_SteadyStateCheck(int step)
         {
             return false;
+        }
+
+        void UnsteadySystem::SVVVarDiffCoeff(
+            const Array<OneD, Array<OneD, NekDouble> >  vel,
+                  StdRegions::VarCoeffMap              &varCoeffMap)
+        {
+            int phystot = m_fields[0]->GetTotPoints();
+            int nvel = vel.num_elements();
+
+            Array<OneD, NekDouble> varcoeff(phystot),tmp;
+
+            // calculate magnitude of v
+            Vmath::Vmul(phystot,vel[0],1,vel[0],1,varcoeff,1);
+            for(int n = 1; n < nvel; ++n)
+            {
+                Vmath::Vvtvp(phystot,vel[n],1,vel[n],1,varcoeff,1,varcoeff,1);
+            }
+            Vmath::Vsqrt(phystot,varcoeff,1,varcoeff,1);
+
+            for(int i = 0; i < m_fields[0]->GetNumElmts(); ++i)
+            {
+                int offset = m_fields[0]->GetPhys_Offset(i);
+                int nq = m_fields[0]->GetExp(i)->GetTotPoints();
+                Array<OneD, NekDouble> unit(nq,1.0);
+
+                int nmodes = 0;
+
+                for(int n = 0; n < m_fields[0]->GetExp(i)->GetNumBases(); ++n)
+                {
+                    nmodes = max(nmodes,
+                                 m_fields[0]->GetExp(i)->GetBasisNumModes(n));
+                }
+
+                NekDouble h = m_fields[0]->GetExp(i)->Integral(unit);
+                h = pow(h,(NekDouble) (1.0/nvel))/((NekDouble) nmodes);
+
+                Vmath::Smul(nq,h,varcoeff+offset,1,tmp = varcoeff+offset,1);
+            }
+
+            // set up map with eVarCoffLaplacian key
+            varCoeffMap[StdRegions::eVarCoeffLaplacian] = varcoeff;
         }
     }
 }

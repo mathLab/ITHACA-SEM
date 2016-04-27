@@ -52,13 +52,15 @@
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
+#include <GlobalMapping/Mapping.h>
+
 #include <boost/format.hpp>
 # include <boost/function.hpp>
 
 #include <iostream>
 #include <string>
 
-using std::string;
+using namespace std;
 
 namespace Nektar
 {
@@ -1554,18 +1556,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> > &F,
             Array<OneD, NekDouble> &outarray)
         {
-            // Use dimension of velocity vector to dictate dimension of operation
-            int ndim    = F.num_elements();
-            int nCoeffs = m_fields[0]->GetNcoeffs();
-
-            Array<OneD, NekDouble> iprod(nCoeffs);
-            Vmath::Zero(nCoeffs, outarray, 1);
-
-            for (int i = 0; i < ndim; ++i)
-            {
-                m_fields[0]->IProductWRTDerivBase(i, F[i], iprod);
-                Vmath::Vadd(nCoeffs, iprod, 1, outarray, 1, outarray, 1);
-            }
+            m_fields[0]->IProductWRTDerivBase(F,outarray);
         }
 
         /**
@@ -1711,7 +1702,7 @@ namespace Nektar
             int nPointsTot      = GetNpoints();
             int ncoeffs         = GetNcoeffs();
             int nTracePointsTot = GetTraceNpoints();
-        
+
             if (!nvariables)
             {
                 nvariables      = m_fields.num_elements();
@@ -2079,8 +2070,17 @@ namespace Nektar
             {
                 m_fieldMetaDataMap["Time"] = boost::lexical_cast<std::string>(m_time);
             }
+            
+            // If necessary, add mapping information to metadata
+            //      and output mapping coordinates
+            Array<OneD, MultiRegions::ExpListSharedPtr> fields(1);
+            fields[0] = field;           
+            GlobalMapping::MappingSharedPtr mapping = 
+                    GlobalMapping::Mapping::Load(m_session, fields);
+            LibUtilities::FieldMetaDataMap fieldMetaDataMap(m_fieldMetaDataMap);
+            mapping->Output( fieldMetaDataMap, outname);
 
-            m_fld->Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
+            m_fld->Write(outname, FieldDef, FieldData, fieldMetaDataMap);
         }
 
 

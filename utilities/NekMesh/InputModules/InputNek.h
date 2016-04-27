@@ -79,12 +79,12 @@ private:
     /**
      * Maps a curve tag to a filename containing surface information.
      */
-    std::map<string, pair<NekCurve, string> > curveTags;
+    std::map<std::string, std::pair<NekCurve, std::string> > curveTags;
 
     /**
      * Maps a curve tag to the high-order surface data for that tag.
      */
-    std::map<string, HOSurfSet> hoData;
+    std::map<std::string, HOSurfSet> hoData;
 
     /**
      * Maps ordering of hsf standard element to Nektar++ ordering.

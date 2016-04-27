@@ -205,6 +205,17 @@ namespace Nektar
                 }
             }
         }
+
+        /**
+         * Reset the GlobalLinSys Manager 
+         */
+        void ContField3DHomogeneous2D::v_ClearGlobalLinSysManager(void)
+        {
+            for(int n = 0; n < m_lines.num_elements(); ++n)
+            {
+                m_lines[n]->ClearGlobalLinSysManager();
+            }
+        }
         
     } // end of namespace
 } //end of namespace

@@ -13,9 +13,9 @@ on which the conversion or manipulation of the \nekpp output binary
 files will be performed.
 
 Almost all of the FieldConvert functionalities can be run in parallel if \nekpp
-is compiled using MPI (see the installation documentation for additional
-info on how to implement \nekpp using MPI). \footnote{the modules which
-does not have parallel support will be specified in the related section}
+is compiled using MPI (see the installation documentation for additional info on
+how to implement \nekpp using MPI). \footnote{Modules that do not have parallel
+  support will be specified in the appropriate section.}
 %
 %
 %
@@ -107,6 +107,8 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{isocontour}: Extract an isocontour of ``fieldid'' variable and at value ``fieldvalue''. Optionally ``fieldstr'' can be specified for a string defiition or ``smooth'' for smoothing;
 \item \inltt{jacobianenergy}: Shows high frequency energy of Jacobian;
 \item \inltt{meanmode}: Extract mean mode (plane zero) of 3DH1D expansions;
+\item \inltt{pointdatatofld}: Given discrete data at quadrature points
+  project them onto an expansion basis and output fld file; 
 \item \inltt{printfldnorms}: Print L2 and LInf norms to stdout;
 \item \inltt{scalargrad}: Computes scalar gradient field;
 \item \inltt{scaleinputfld}: Rescale input field by a constant factor;
@@ -137,6 +139,33 @@ FieldConvert -m C0Projection test.xml test.fld test-C0Proj.fld
 where the file \inltt{test-C0Proj.fld} can be processed in a similar
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise the result either in Tecplot, Paraview or VisIt.
+
+The option \inltt{localtoglobalmap} will do a global gather of the
+coefficients and then scatter them back to the local elements. This
+will replace the coefficients shared between two elements with the
+coefficients of one of the elements (most likely the one with the
+highest id). Although not a formal projection it does not require any
+matrix inverse and so is very cheap to perform.
+
+The option \inltt{usexmlbcs} will enforce the boundary conditions
+specified in the input xml file.
+
+The option \inltt{helmsmoothing=$L$} will perform a Helmholtz
+smoothing projection of the form
+\[
+\left (\nabla^2 + \left (\frac{2 \pi}{L}\right )^2 \right ) \hat{u}^{new} =
+\left (\frac{2 \pi}{L}\right )^2 \hat{u}^{orig}
+\]
+which can be interpreted in a Fourier sense as smoothing the original
+coefficients using a low pass filter of the form
+\[
+\hat{u}_k^{new} = \frac{1}{(1 + k^2/K_0^2)} \hat{u}_k^{orig} \mbox{\,  where  \,}
+K_0 = \frac{2 \pi}{L}
+\]
+and so $L$ is the length scale below which the coefficients values are
+halved or more. Since this form of the Helmholtz operator is not
+possitive definite, currently a direct solver is necessary and so this
+smoother is mainly of use in two-dimensions.
 
 \subsection{Calculate Q-Criterion: \textit{QCriterion} module}
 To perform the Q-criterion calculation and obtain an output
@@ -446,22 +475,38 @@ can be specified where \inltt{npts} is the number of equispaced points between
 $(x0,y0)$ to $(x1,y1)$ which can also be used in 3D by specifying $(x0,y0,z0)$
 to $(x1,y1,z1)$.
 
-An extraction of a plane can also be specified by
-\begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:plane=npts1,\
-	npts2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3
+An extraction of a plane of points can also be specified by
+\begin{lstlisting}[style=BashInputStyle] 
+  FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:\
+        plane=npts1,npts2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3
 \end{lstlisting}
 where \inltt{npts1,npts2} is the number of equispaced points in each
 direction and $(x0,y0,z0)$, $(x1,y1,z1)$, $(x2,y2,z2)$ and $(x3,y3,z3)$
 define the plane of points specified in a clockwise or anticlockwise direction.
+
+In addition an extraction of a box of points can also be specified by
+\begin{lstlisting}[style=BashInputStyle] 
+  FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:\
+       box=npts1,npts2,npts3,xmin,xmax,ymin,ymax,zmin,zmax
+\end{lstlisting}
+where \inltt{npts1,npts2,npts3} is the number of equispaced points in each 
+direction and $(xmin,ymin,zmin)$ and $(xmax,ymax,zmax3)$ 
+define the limits of the box of points. 
+
+For the plane and box interpolation there is an additional optional
+argument \inltt{cp=p0,q} which adds to the interpolated fields the value of
+$c_p=(p-p0)/q$ and $c_{p0}=(p-p0+0.5 u^2)/q$ where $p0$ is a reference
+pressure and $q$ is the free stream dynamics pressure. If the input
+does not contain a field ``p'' or a velocity field ``u,v,w'' then $cp$
+and $cp0$ are not evaluated accordingly
 %
-\begin{notebox}
-This module does not run in parallel.
+\begin{notebox} 
+This module  runs in parallel for the plane and box extraction of points. In this case a series of .dat files are generated that can be concatinated together. Other options do not run in parallel.
 \end{notebox}
 %
 %
 %
-\subsection{Isoncontour extraction: \textit{iscontour} module}
+\subsection{Isocontour extraction: \textit{iscontour} module}
 
 Extract an isocontour from a field file. This option automatically
 take the field to an equispaced distribution of points connected by
@@ -488,14 +533,17 @@ the .dat file, i.e.
 Optionally \inltt{smooth} can be specified to smooth the isocontour
 with default values \inltt{smoothnegdiffusion}=0.495,
 \inltt{smoothnegdiffusion}=0.5 and \inltt{smoothiter}=100. This option
-automatically calls a \inltt{globalcondense} option which remove
-multiply defined verties from the simplex definition which arise as
-isocontour are generated element by element.
+typically should be used wiht the \inltt{globalcondense} option which
+removes multiply defined verties from the simplex definition which
+arise as isocontour are generated element by element. The
+\inltt{smooth} option preivously automatically called the
+\inltt{globalcondense} option but this has been depracated since it is
+now possible to read isocontour files directly and so it is useful to
+have these as separate options.
 
 In addition to the \inltt{smooth} or \inltt{globalcondense} options
 you can specify \inltt{removesmallcontour}=100 which will remove
-separate isocontours of less than 100 triangles. This optin requires
-\inltt{smooth} or \inltt{globalcondense} to be specified.
+separate isocontours of less than 100 triangles. 
 
 \begin{notebox}
 Currently this option is only set up for triangles, quadrilaterals,
@@ -534,6 +582,72 @@ FieldConvert -m meanmode file.xml file.fld file-mean.fld
 The output file \inltt{file-mean.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise the result either in Tecplot or in Paraview or VisIt.
+%
+%
+%
+
+\subsection{ Project point data to a field: \textit{pointdatatofld} module}
+\label{s:utilities:fieldconvert:sub:pointdatatofld}
+To project a series of points given at the same quadrature distribution as the .xml file and write out a .fld file use the pointdatatofld module:
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert --noequispaced -m pointdatatofld file.pts file.xml file.fld
+\end{lstlisting}
+%
+This command will read in the points provided in the \inltt{file.pts}
+and assume these are given at the same quadrature distribution as the
+mesh and expansions defined in \inltt{file.xml} and output the field
+to \inltt{file.fld}. If the points do not match an error will be dumped. 
+
+
+The file \inltt{file.pts} which is assumed to be given by an interpolation from another source is of the form:
+%
+\begin{lstlisting}[style=XMLStyle]
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+  <POINTS DIM="3" FIELDS="p">
+  1.70415 -0.4       -0.0182028      -0.106893
+  1.70415 -0.395683  -0.0182028      -0.106794
+  1.70415 -0.3875    -0.0182028      -0.106698
+  1.70415 -0.379317  -0.0182028      -0.103815
+  </POINTS>
+</NEKTAR>
+\end{lstlisting}
+%
+where \inltt{DIM="3" FIELDS="p} specifies that the field is
+three-dimensional and contains one variable, $p$. Each line defines a
+point, the first, second, and third columns contains the
+$x,y,z$-coordinate and subsequent columns contain the field values, in
+this case the $p$-value So in the general case of $n$-dimensional
+data, the $n$ coordinates are specified in the first $n$ columns
+accordingly followed by the field data. 
+
+The default argument is to use the equipapced (but potentially
+collapsed) coordinates which can  be obtained from the command.
+
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert file.xml file.dat
+\end{lstlisting}
+
+In this case the pointdatatofld module shoudl be used without the
+\inltt{--noequispaced} option. However this can lead to problems when
+peforming an elemental forward projection/transform since the mass
+matrix in a deformed element can be singular as the equispaced points
+do not have a sufficiently accurate quadrature rule that spans the
+polynomial space. Therefore it is adviseable to use the set of points
+given by
+
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert --noequispaced file.xml file.dat
+\end{lstlisting}
+
+which produces a set of points at the gaussian collapsed
+coordinates. In this case one must also use the \inltt{--noequispaced}
+option when projecting to a field.
+
+Finally the option \inltt{setnantovalue=0} can also be used which sets
+any nan values in the interpolation to zero or any specified value in
+this option.
 
 %
 %
@@ -713,43 +827,73 @@ field files placed within the directory.
 %
 %
 %
-\section{Processing large files}
-When processing large files it is not always convenient to run in parallel
-but process each parallel partition in serial, for example when interpolating
-one field to another. To do this we can use the \inltt{--nprocs} and
-\inltt{--procid} options. For example the following option will interpolate
-partition 2 of a decomposition into 10 partitions of \inltt{fiile2.xml} from
-\inltt{file1.fld}
+\section{Processing large files in serial}
+When processing large files, it is not always convenient to run in parallel but
+process each parallel partition in serial, for example when interpolating a
+solution field from one mesh to another.
+
+\subsection{Using the \texttt{nprocs} and \texttt{procid} options}
+
+One option is to use the \inltt{--nprocs} and \inltt{--procid} command line
+options. For example, the following command will interpolate partition 2 of a
+decomposition into 10 partitions of \inltt{fiile2.xml} from \inltt{file1.fld}
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert --nprocs 10 --procid 2 \
         -m interpfield:fromxml=file1.xml:fromfld=file1.fld \
         file2.xml file2.fld
 \end{lstlisting}
-This call will only provide part of the overall partition and so to create the
-full interpolated field you need to call a loop of such commands. For example
-in a bash shell you can run
-\begin{lstlisting}[style=BashInputStyle]
-for n in `seq 0 1 9`
-do
+This call will only therefore consider the interpolation process across one
+partition (namely, partition 2). To create the full interpolated field requires
+a loop over each of the partitions, which, in a bash shell can be run as
+\begin{lstlisting}[style=BashInputStyle] 
+for n in `seq 0 9`; do
     FieldConvert --nprocs 10 --procid $n \
             -m interpfield:fromxml=file1.xml:fromfld=file1.fld \
             file2.xml file2.fld
 done
 \end{lstlisting}
-
-This will create a directory called \inltt{file2.fld} and put the different 
-parallel partitions into files with names 
-\inltt{P0000000.fld, P0000001.fld, .., P0000009.fld}. This is nearly a complete
-parallel field file but the Info.xml file which contains the information about 
-which elements are in each partitioned file \inltt{P000000X.fld}. So to generate
-this Info.xml file you need to call
-\begin{lstlisting}[style=BashInputStyle]
+The resulting output will lie in a directory called \inltt{file2.fld}, with each
+of the different parallel partitions in files with names \inltt{P0000000.fld},
+\inltt{P0000001.fld}, \dots, \inltt{P0000009.fld}. This is nearly a complete
+parallel field file. However, the \inltt{Info.xml} file, which contains the
+information about which elements lie in each partition, is missing. This can be
+generated by using the command
+\begin{lstlisting}[style=BashInputStyle] 
 FieldConvert --nprocs 10 file2.xml file2.fld/Info.xml:info
 \end{lstlisting}
-Note the final \inltt{:info} extension on the last argument is necessary to
-tell FieldConvert that you wish to generate an info file but the extension
-to this file is .xml. This syntax allows the routine not to get confused with
-the input/output xml files.
+Note the final \inltt{:info} extension on the last argument is necessary to tell
+FieldConvert that you wish to generate an info file, but with the extension
+\inltt{.xml}. This syntax allows the routine not to get confused with the
+input/output XML files.
+
+\subsection{Using the --part-only and --part-only-overlapping options}
+
+Another approach to serially proessing a large file is to initially process the
+file into multiple partitions. This can be done with the \inltt{--part-only}
+option. So the command
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert --part-only 10 file.xml file.fld
+\end{lstlisting}
+will partition the mesh into 10 paritions and write each partition into a
+directory called \inltt{file\_xml}. If you enter this directory you will find
+partitioned XML files \inltt{P0000000.xml}, \inltt{P0000001.xml}, \dots,
+\inltt{P0000009.xml} which can then be processed individually as outlined above.
+
+There is also a \inltt{--part-only-overlapping} option, which can be run in the
+same fashion.
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert --part-only-overlapping 10 file.xml file.fld
+\end{lstlisting}
+In this mode, the mesh is partitioned into 10 partitions in a similar manner,
+but the elements at the partition edges will now overlap, so that the
+intersection of each partition with its neighbours is non-empty. This is
+sometime helpful when, for example, producing a global isocontour which has been
+smoothed. Applying the smoothed isocontour extraction routine with the
+\inltt{--part-only} option will produce a series of isocontour where there will
+be a gap between partitions, as the smoother tends to shrink the isocontour
+within a partition. using the \inltt{--part-only-overlapping} option will still
+yield a shrinking isocontour, but the overlapping partitions help to overlap the
+partiiton boundaries.
 
 %%% Local Variables:
 %%% mode: latex

@@ -1,6 +1,35 @@
 Changelog
 =========
 
+v4.3.1
+------
+**Library**:
+- Add `THIRDPARTY_USE_SSL` option to disable use of SSL on systems where CMake
+  is not compiled with SSL support. (!602)
+- Fixed a number of documentation issues (!586, !593, !596)
+- Fix Homogeneous transform when unshuffling is not used. (!599)
+- Fix namespace pollution in library header files. (!601)
+- Fix issue with METIS compilation on clang 7.3 (!603)
+- Fix issue with heterogeneous quadrilaterals (!607)
+- Fix bug in modified Arnoldi algorithm causing convergence to be reported when
+  number of vectors is less than `nvec` (!608)
+- Fix uninitialised array bug in AssemblyMap (!598)
+- Fix issue with LAPACK call in eigenvalue calculation (!610)
+- Fix FieldConvert processing of partitions in serial (!612)
+- Fix use of multi-level static condensation in parallel with periodic
+  boundary conditions (!614)
+
+**NekMesh**:
+- Fix incorrect link directory on CCMIO library.
+
+**FieldConvert**:
+- Fix to FLD input to update the field definitions always, not just when a range
+  is specified. (!611)
+
+**Tester**:
+- Remove requirement for executable to be specified in .tst file if it is
+  overridden on the command-line (!595)
+
 v4.3.0
 ------
 **Library:**
@@ -22,13 +51,18 @@ v4.3.0
   (!537)
 - Fix bug with initial conditions of CG simulations using variable P (!543)
 - Fix bug in 3DH2D with non-zero Dirichlet boundary conditions (!545)
+- Added in a method to convert equispaced interpolated points back to 
+  coefficients which requires the introduction of a new StdRegions matrix.(!561)
+- Empty XML tags which would override non-empty XML tags are now ignored (!581)
 - Add contribution guide (!551)
+- Add a filter to calculate exponential moving averages (!566)
 
 **APESolver:**
 - Fix restarting from checkpoint file (!517)
 
 **IncNavierStokesSolver**
 - Fix floquet stability analysis for HalfMode case (!536)
+- Add a filter to calculate Reynolds stresses (!566)
 
 **FieldConvert:**
 - Extended surface distance module to support hexahedra and quads (!524)
@@ -40,8 +74,12 @@ v4.3.0
 - Add module to enable mean mode of 3DH1D to be extracted (!530)
 - Fix bug in C^0 projection (!541))
 - Add command line option to set number of homogeneous planes (!540)
+- Add module to project set of points to a fld file(!561)
+- Add support for interpolating to a box of points and fix ability to run
+  interppointstofld module in parallel when using a plane or box option (!561)
 - Add option to output equi-spaced points in VTU format (!550)
 - Add module innerproduct (!568)
+- Add command line option of `--part-only` and `--part-only-overlapping` (!569)
 
 **NekMesh:**
 - `MeshConvert` is now renamed to `NekMesh` to reflect new mesh generation

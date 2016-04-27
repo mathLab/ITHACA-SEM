@@ -41,6 +41,8 @@
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/SparseUtils.hpp>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -537,12 +539,17 @@ namespace Nektar
                     m_precon = CreatePrecon(m_locToGloMap);
                     m_precon->BuildPreconditioner();
                 }
-
+                
                 Set_Rhs_Magnitude(F_GlobBnd);
+
                 return m_S1Blk;
             }
             else
             {
+                // for multilevel iterative solver always use rhs
+                // vector value with no weighting
+                m_rhs_magnitude = NekConstants::kNekUnsetDouble;
+
                 return m_schurCompl;
             }
         }

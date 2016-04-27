@@ -34,6 +34,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/algorithm/string.hpp>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 
 #include <fstream>
@@ -282,6 +283,21 @@ void PtsIO::ImportFieldData(TiXmlDocument docInput, PtsFieldSharedPtr &ptsField)
                 fields);
     }
 
+    map<PtsInfo,int>  ptsInfo = NullPtsInfoMap;
+
+    const char *ptinfo = points->Attribute("PTSINFO");
+    if(ptinfo&&boost::iequals(ptinfo,"EquiSpaced"))
+    {
+        ptsInfo[eIsEquiSpacedData] = 1;
+    }
+
+    int np;
+    err = points->QueryIntAttribute("PTSPERELMTEDGE",&np);
+    if(err == TIXML_SUCCESS)
+    {
+        ptsInfo[ePtsPerElmtEdge] = np; 
+    }
+
     int nfields = fieldNames.size();
     int totvars = dim + nfields;
 
@@ -322,7 +338,7 @@ void PtsIO::ImportFieldData(TiXmlDocument docInput, PtsFieldSharedPtr &ptsField)
         }
     }
 
-    ptsField = MemoryManager<PtsField>::AllocateSharedPtr(dim, fieldNames, pts);
+    ptsField = MemoryManager<PtsField>::AllocateSharedPtr(dim, fieldNames, pts, ptsInfo);
 }
 
 void PtsIO::SetUpFieldMetaData(const string outname)

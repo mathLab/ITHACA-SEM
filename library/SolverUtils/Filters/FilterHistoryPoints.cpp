@@ -93,7 +93,7 @@ FilterHistoryPoints::FilterHistoryPoints(
         it = pParams.find("OutputPlane");
         if (it == pParams.end())
         {
-            m_outputPlane = 0;
+            m_outputPlane = -1;
         }
         else
         {
@@ -132,29 +132,53 @@ void FilterHistoryPoints::v_Initialise(
     m_index = 0;
     m_historyList.clear();
 
+    vector<unsigned int> planeIDs;
     // Read history points
     Array<OneD, NekDouble>  gloCoord(3,0.0);
     int dim = pFields[0]->GetGraph()->GetSpaceDimension();
+    if (m_isHomogeneous1D)
+    {
+        dim++;
+    }
     int i = 0;
     while (!m_historyPointStream.fail())
     {
         m_historyPointStream >> gloCoord[0]
                              >> gloCoord[1]
                              >> gloCoord[2];
-        if(m_isHomogeneous1D) // overwrite with plane z
-        {
-            NekDouble Z = (pFields[0]->GetHomogeneousBasis()
-                                        ->GetZ())[m_outputPlane];
-            if(fabs(gloCoord[2]-Z) > NekConstants::kVertexTheSameDouble)
-            {
-                cout << "Reseting History point from " << gloCoord[2]
-                     << " to " << Z << endl;
-            }
-            gloCoord[2] = Z;
-        }
 
         if (!m_historyPointStream.fail())
         {
+            // Overwrite gloCoord[2] for 3DH1D using m_outputPlane if it is
+            //       defined, or a nearby plane otherwise
+            if(m_isHomogeneous1D)
+            {
+                int nplanes     = pFields[0]->GetHomogeneousBasis()
+                                            ->GetZ().num_elements();
+                NekDouble lhom  = pFields[0]->GetHomoLen();
+                int plane;
+                if (m_outputPlane == -1)
+                {
+                    // Convert to int to pick the previous plane closer to the point
+                    plane = (gloCoord[2]*nplanes)/lhom;
+                }
+                else
+                {
+                    plane = m_outputPlane;
+                }
+
+                NekDouble Z = (pFields[0]->GetHomogeneousBasis()
+                                            ->GetZ())[plane];
+                Z = (Z+1)*lhom/2;
+                if(fabs(gloCoord[2]-Z) > NekConstants::kVertexTheSameDouble)
+                {
+                    cout << "Reseting History point from " << gloCoord[2]
+                         << " to " << Z << endl;
+                }
+                gloCoord[2] = Z;
+                planeIDs.push_back(plane);
+            }
+
             SpatialDomains::PointGeomSharedPtr vert
                 = MemoryManager<SpatialDomains::PointGeom>
                 ::AllocateSharedPtr(dim, i, gloCoord[0],
@@ -188,8 +212,16 @@ void FilterHistoryPoints::v_Initialise(
                                         gloCoord[2]);
 
         // Determine the expansion and local coordinates
-        idList[i] = pFields[0]->GetExpIndex(gloCoord,locCoords,
+        if (m_isHomogeneous1D)
+        {
+            idList[i] = pFields[0]->GetPlane(0)->GetExpIndex(gloCoord,locCoords,
                                         NekConstants::kNekZeroTol);
+        }
+        else
+        {
+            idList[i] = pFields[0]->GetExpIndex(gloCoord,locCoords,
+                                        NekConstants::kNekZeroTol);
+        }
 
         // Save Local coordinates for later
         LocCoords.push_back(locCoords);
@@ -246,7 +278,7 @@ void FilterHistoryPoints::v_Initialise(
                                             = pFields[0]->GetZIDs();
                 for(j = 0; j < IDs.num_elements(); ++j)
                 {
-                    if(IDs[j] == m_outputPlane)
+                    if(IDs[j] == planeIDs[i])
                     {
                         break;
                     }
@@ -254,7 +286,7 @@ void FilterHistoryPoints::v_Initialise(
 
                 if(j != IDs.num_elements())
                 {
-                    m_outputPlane = j;
+                    planeIDs[i] = j;
                     procList[i] = vRank;
                 }
             }
@@ -285,6 +317,10 @@ void FilterHistoryPoints::v_Initialise(
         // local list of history points.
         if (idList[i] != -1)
         {
+            if(m_isHomogeneous1D)
+            {
+                m_planeIDs.push_back(planeIDs[i]);
+            }
             m_historyLocalPointMap[m_historyList.size()] = i;
             m_historyList.push_back(
                      std::pair<SpatialDomains::PointGeomSharedPtr,
@@ -382,7 +418,6 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
     int numFields = pFields.num_elements();
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
     Array<OneD, NekDouble> data(numPoints*numFields, 0.0);
-    Array<OneD, NekDouble> gloCoord(3, 0.0);
     std::list<std::pair<SpatialDomains::PointGeomSharedPtr, Array<OneD, NekDouble> > >::iterator x;
 
     Array<OneD, NekDouble> physvals;
@@ -400,12 +435,12 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
                 locCoord = (*x).second;
                 expId    = (*x).first->GetVid();
 
-                physvals = pFields[j]->GetPlane(m_outputPlane)->UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
+                physvals = pFields[j]->GetPlane(m_planeIDs[k])->UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
 
                 // transform elemental data if required.
                 if(pFields[j]->GetPhysState() == false)
                 {
-                    pFields[j]->GetPlane(m_outputPlane)->GetExp(expId)->BwdTrans(pFields[j]->GetPlane(m_outputPlane)->GetCoeffs() + pFields[j]->GetCoeff_Offset(expId),physvals);
+                    pFields[j]->GetPlane(m_planeIDs[k])->GetExp(expId)->BwdTrans(pFields[j]->GetPlane(m_planeIDs[k])->GetCoeffs() + pFields[j]->GetCoeff_Offset(expId),physvals);
                 }
 
                 // interpolate point can do with zero plane methods

@@ -36,6 +36,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <iomanip>
 #include <SolverUtils/Filters/FilterHistoryPoints.h>
+#include <MultiRegions/ExpList3DHomogeneous1D.h>
 
 #include <boost/format.hpp>
 
@@ -193,7 +194,7 @@ void FilterHistoryPoints::v_Initialise(
     // Determine the unique process responsible for each history point
     // For points on a partition boundary, must select a single process
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
-    int vRank = vComm->GetRank();
+    int vRank = vComm->GetRowComm()->GetRank();
     int vHP   = m_historyPoints.size();
     Array<OneD, int>       procList(vHP, -1   );
     Array<OneD, int>       idList  (vHP, -1   );
@@ -254,6 +255,7 @@ void FilterHistoryPoints::v_Initialise(
     // If multiple processes find they are the nearest (e.g. point lies
     // on a partition boundary, we will choose the process of highest
     // rank.
+    m_planeIDs = Array<OneD, int> (planeIDs.size(),-1);
     for (i = 0; i < vHP; ++i)
     {
         if (dist_loc[i] == dist[i])
@@ -271,6 +273,7 @@ void FilterHistoryPoints::v_Initialise(
         // process ID
         if (idList[i] != -1)
         {
+            procList[i] = vRank;
             if(m_isHomogeneous1D)
             {
                 int j;
@@ -286,13 +289,8 @@ void FilterHistoryPoints::v_Initialise(
 
                 if(j != IDs.num_elements())
                 {
-                    planeIDs[i] = j;
-                    procList[i] = vRank;
+                    m_planeIDs[i] = j;
                 }
-            }
-            else
-            {
-                procList[i] = vRank;
             }
         }
     }
@@ -317,10 +315,6 @@ void FilterHistoryPoints::v_Initialise(
         // local list of history points.
         if (idList[i] != -1)
         {
-            if(m_isHomogeneous1D)
-            {
-                m_planeIDs.push_back(planeIDs[i]);
-            }
             m_historyLocalPointMap[m_historyList.size()] = i;
             m_historyList.push_back(
                      std::pair<SpatialDomains::PointGeomSharedPtr,
@@ -394,7 +388,7 @@ void FilterHistoryPoints::v_Initialise(
 
         if(m_isHomogeneous1D)
         {
-            m_outputStream << "# (in Wavespace)" << endl;
+            //m_outputStream << "# (in Wavespace)" << endl;
         }
     }
     v_Update(pFields, time);
@@ -434,18 +428,74 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
             {
                 locCoord = (*x).second;
                 expId    = (*x).first->GetVid();
-
-                physvals = pFields[j]->GetPlane(m_planeIDs[k])->UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
-
-                // transform elemental data if required.
-                if(pFields[j]->GetPhysState() == false)
+                NekDouble value;
+                int plane = m_planeIDs[m_historyLocalPointMap[k]];
+                if (pFields[j]->GetWaveSpace() == false && plane != -1)
                 {
-                    pFields[j]->GetPlane(m_planeIDs[k])->GetExp(expId)->BwdTrans(pFields[j]->GetPlane(m_planeIDs[k])->GetCoeffs() + pFields[j]->GetCoeff_Offset(expId),physvals);
+                    physvals = pFields[j]->GetPlane(plane)->
+                               UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
+
+                    // transform elemental data if required.
+                    if(pFields[j]->GetPhysState() == false)
+                    {
+                        pFields[j]->GetPlane(plane)->GetExp(expId)->
+                                  BwdTrans(pFields[j]->GetPlane(plane)->
+                                  GetCoeffs() + pFields[j]->
+                                  GetCoeff_Offset(expId),physvals);
+                    }
+                    // Interpolate data
+                    value = pFields[j]->GetPlane(plane)->GetExp(expId)->
+                            StdPhysEvaluate(locCoord,physvals);
+                }
+                else
+                {
+                    // Create vector with eIDs across all planes
+                    std::vector<unsigned int> eIDs;
+                    int nPlanes = pFields[j]->GetZIDs().num_elements();
+                    int elmtsPerPlane = pFields[j]->GetExpSize()/nPlanes;
+
+                    for ( int n = 0; n < nPlanes; n++)
+                    {
+                        eIDs.push_back(expId + n*elmtsPerPlane);
+                    }
+
+                    // Create new 3DH1D expansion with one element per plane
+                    MultiRegions::ExpList3DHomogeneous1DSharedPtr tmp =
+                            boost::dynamic_pointer_cast<MultiRegions::
+                            ExpList3DHomogeneous1D>(pFields[j]);
+                    ASSERTL0(tmp,"Failed to type cast expansion");
+
+                    MultiRegions::ExpList3DHomogeneous1DSharedPtr exp =
+                            MemoryManager<MultiRegions::
+                                ExpList3DHomogeneous1D>::
+                                AllocateSharedPtr(*tmp, eIDs);
+                    // Fill phys array of new expansion and apply HomoBwdTrans
+                    for ( int n = 0; n < nPlanes; n++)
+                    {
+                        int nq = exp->GetPlane(0)->GetTotPoints();
+                        Array<OneD, NekDouble> fromPhys =
+                                pFields[j]->GetPlane(n)->GetPhys() +
+                                pFields[j]->GetPhys_Offset(expId);
+                        Array<OneD, NekDouble> toPhys =
+                                exp->GetPlane(n)->UpdatePhys();
+                        Vmath::Vcopy(nq, fromPhys, 1, toPhys, 1);
+                    }
+                    exp->HomogeneousBwdTrans(exp->GetPhys(), exp->UpdatePhys());
+                    // Interpolate data
+                    if (plane != -1)
+                    {
+                        physvals = exp->GetPlane(plane)->UpdatePhys();
+
+                        value = exp->GetPlane(plane)->GetExp(0)->
+                            StdPhysEvaluate(locCoord,physvals);
+                    }
                 }
 
-                // interpolate point can do with zero plane methods
-                data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp(expId)->StdPhysEvaluate(locCoord,physvals);
-
+                // store data
+                if (plane != -1)
+                {
+                    data[m_historyLocalPointMap[k]*numFields+j] = value;
+                }
             }
         }
         else

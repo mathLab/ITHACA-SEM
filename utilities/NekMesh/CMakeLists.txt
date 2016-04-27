@@ -54,11 +54,6 @@ IF (NEKTAR_USE_CCM)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputStar.cpp)
 ENDIF (NEKTAR_USE_CCM)
 
-IF(NEKTAR_USE_HDF5)
-    SET(NekMeshHeaders ${NekMeshHeaders} InputModules/InputPYFR.h OutputModules/OutputPYFR.h)
-    SET(NekMeshSources ${NekMeshSources} InputModules/InputPYFR.cpp OutputModules/OutputPYFR.cpp)
-ENDIF (NEKTAR_USE_HDF5)
-
 IF (NEKTAR_USE_VTK)
     SET(NekMeshHeaders ${NekMeshHeaders} InputModules/InputVtk.h OutputModules/OutputVtk.h)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputVtk.cpp OutputModules/OutputVtk.cpp)
@@ -85,10 +80,6 @@ IF (NEKTAR_USE_CCM)
    INCLUDE_DIRECTORIES(NekMesh ${CCMIO_INCLUDE_DIR})
    LINK_DIRECTORIES(${CCMIO_LIBRARY_PATH})
 ENDIF (NEKTAR_USE_CCM)
-
-IF (NEKTAR_USE_HDF5)
-    TARGET_LINK_LIBRARIES(NekMesh ${HDF5_CXX_LIBRARIES})
-ENDIF()
 
 IF (NEKTAR_USE_VTK)
     IF (VTK_MAJOR_VERSION LESS 6)

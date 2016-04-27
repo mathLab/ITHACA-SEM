@@ -438,7 +438,8 @@ void ProcessVarOpti::Process()
             {
                 jobs.push_back(optiNodes[i][j].GetJob());
             }
-            cout << jobs.size() << endl;
+            cout << " -- inner loop " << i+1 << "/" << optiNodes.size()
+                 << " of size: " << jobs.size() << endl;
             tm->SetNumWorkers(0);
             tm->QueueJobs(jobs);
             tm->SetNumWorkers(nThreads);
@@ -496,7 +497,6 @@ void ProcessVarOpti::NodeOpti::Optimise()
             cout << "warning: had to reset node" << endl;
         }
     }
-    cout << "done" << endl;
 }
 
 Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad()

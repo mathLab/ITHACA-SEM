@@ -496,13 +496,24 @@ void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpList
                     // Fill phys array of new expansion and apply HomoBwdTrans
                     for ( int n = 0; n < nPlanes; n++)
                     {
-                        int nq = exp->GetPlane(0)->GetTotPoints();
-                        Array<OneD, NekDouble> fromPhys =
-                                pFields[j]->GetPlane(n)->GetPhys() +
-                                pFields[j]->GetPhys_Offset(expId);
                         Array<OneD, NekDouble> toPhys =
                                 exp->GetPlane(n)->UpdatePhys();
-                        Vmath::Vcopy(nq, fromPhys, 1, toPhys, 1);
+                        if(pFields[j]->GetPhysState())
+                        {
+                            int nq = exp->GetPlane(0)->GetTotPoints();
+                            Array<OneD, NekDouble> fromPhys =
+                                    pFields[j]->GetPlane(n)->GetPhys() +
+                                    pFields[j]->GetPhys_Offset(expId);
+                            Vmath::Vcopy(nq, fromPhys, 1, toPhys, 1);
+                        }
+                        else
+                        {
+                            Array<OneD, NekDouble> fromCoeffs =
+                                    pFields[j]->GetPlane(n)->GetCoeffs() +
+                                    pFields[j]->GetCoeff_Offset(expId);
+                            exp->GetPlane(n)->GetExp(0)->
+                                      BwdTrans(fromCoeffs, toPhys);
+                        }
                     }
                     exp->HomogeneousBwdTrans(exp->GetPhys(), exp->UpdatePhys());
                     // Interpolate data

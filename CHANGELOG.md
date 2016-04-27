@@ -21,6 +21,9 @@ v4.3.1
 - Fix to FLD input to update the field definitions always, not just when a range
   is specified. (!611)
 
+**Packaging**:
+- Fix dependency resolution on generation of DEB packages. (!616)
+
 v4.3.0
 ------
 **Library:**

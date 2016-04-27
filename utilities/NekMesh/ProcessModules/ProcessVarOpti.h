@@ -91,7 +91,9 @@ private:
     vector<ElDataSharedPtr> dataSet;
     optimiser opti;
 
-    class NodeOpti : public Thread::ThreadJob
+    class NodeOptiJob;
+
+    class NodeOpti
     {
     public:
         NodeOpti(NodeSharedPtr n, vector<ElDataSharedPtr> e, optimiser o)
@@ -101,13 +103,29 @@ private:
 
         ~NodeOpti(){};
 
-        virtual void Run();
+        void Optimise();
+        NodeOptiJob *GetJob()
+        {
+            return new NodeOptiJob(*this);
+        }
     private:
         Array<OneD, NekDouble> GetGrad();
         NekDouble GetFunctional();
         NodeSharedPtr node;
         vector<ElDataSharedPtr> data;
         optimiser opti;
+    };
+
+    class NodeOptiJob : public Thread::ThreadJob
+    {
+    public:
+        NodeOptiJob(NodeOpti no) : node(no) {}
+        void Run()
+        {
+            node.Optimise();
+        }
+    private:
+        NodeOpti node;
     };
 
 };

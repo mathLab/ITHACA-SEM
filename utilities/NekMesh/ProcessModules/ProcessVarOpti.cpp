@@ -419,19 +419,16 @@ void ProcessVarOpti::Process()
         int c = 0;
         for(int i = 0; i < optiNodes.size(); i++)
         {
-            vector<NodeOpti> ns = optiNodes[i]; //make copy
             vector<Thread::ThreadJob*> jobs;
-            for(int j = 0; j < ns.size(); j++)
+            for(int j = 0; j < optiNodes[i].size(); j++)
             {
-                jobs.push_back(&ns[j]);
+                jobs.push_back(optiNodes[i][j].GetJob());
             }
+            cout << jobs.size() << endl;
             tm->SetNumWorkers(0);
             tm->QueueJobs(jobs);
-            cout << "here" << endl;
-            tm->SetNumWorkers(2);
-            cout << "there" << endl;
+            tm->SetNumWorkers(1);
             tm->Wait();
-            cout << "balls" << endl;
 
             /*for(int j = 0; j < optiNodes[i].size(); j++)
             {
@@ -452,7 +449,7 @@ void ProcessVarOpti::Process()
 
 NekDouble dir[4][2] = {{1.0,0},{0,1.0},{-1.0,0},{0,-1.0}};
 
-void ProcessVarOpti::NodeOpti::Run()
+void ProcessVarOpti::NodeOpti::Optimise()
 {
     Array<OneD, NekDouble> G = GetGrad();
 
@@ -485,6 +482,7 @@ void ProcessVarOpti::NodeOpti::Run()
             cout << "warning: had to reset node" << endl;
         }
     }
+    cout << "done" << endl;
 }
 
 Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad()

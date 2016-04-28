@@ -88,8 +88,9 @@ namespace Nektar
             {
                 if(m_useFFT)
                 {
-                    NekDouble size = 1.5*m_homogeneousBasis->GetNumPoints();
-                    m_padsize = int(size);
+                    int size = m_homogeneousBasis->GetNumPoints() +
+                               m_homogeneousBasis->GetNumPoints() / 2;
+                    m_padsize = size + (size % 2);
                     m_FFT_deal = LibUtilities::GetNektarFFTFactory()
                                     .CreateInstance("NekFFTW", m_padsize);
                 }

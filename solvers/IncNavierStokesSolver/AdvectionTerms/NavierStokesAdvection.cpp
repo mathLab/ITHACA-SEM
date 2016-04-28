@@ -224,94 +224,51 @@ namespace Nektar
                     Vmath::Vadd(nPointsTot,grad0,1,grad1,1,Outarray,1);
                     Vmath::Vadd(nPointsTot,grad2,1,Outarray,1,Outarray,1);
                 }
-                else if(fields[0]->GetWaveSpace() == true)
-                {
-                    // take d/dx, d/dy  gradients in physical Fourier space
-                    fields[0]->PhysDeriv(velocity[n],grad0,grad1);
-
-                    // Take d/dz derivative using wave space field
-                    fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],inarray[n],
-                                          outarray[n]);
-                    fields[0]->HomogeneousBwdTrans(outarray[n],grad2);
-
-                    if(m_specHP_dealiasing) //interpolate spectral/hp gradient field
-                    {
-                        fields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
-                        Vmath::Vmul(nPointsTot,wkSp,1,AdvVel[0],1,Outarray,1);
-                    }
-                    else
-                    {
-                        Vmath::Vmul(nPointsTot,grad0,1,AdvVel[0],1,Outarray,1);
-                    }
-
-                    if(m_specHP_dealiasing) //interpolate spectral/hp gradient field
-                    {
-                        fields[0]->PhysInterp1DScaled(OneDptscale,grad1,wkSp);
-                        Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[1],1,Outarray,1,
-                                     Outarray,1);
-                    }
-                    else
-                    {
-                        Vmath::Vvtvp(nPointsTot,grad1,1,AdvVel[1],1,Outarray,1,
-                                     Outarray,1);
-                    }
-
-                    if(m_specHP_dealiasing) //interpolate spectral/hp gradient field
-                    {
-                        fields[0]->PhysInterp1DScaled(OneDptscale,grad2,wkSp);
-                        Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[2],1,Outarray,1,Outarray,1);
-                        fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,grad2);
-                        fields[0]->HomogeneousFwdTrans(grad2,outarray[n]);
-                    }
-                    else
-                    {
-                        Vmath::Vvtvp(nPointsTot,grad2,1,AdvVel[2],1,Outarray,1,grad0,1);
-                        fields[0]->HomogeneousFwdTrans(grad0,outarray[n]);
-                    }
-                }
-                else if(fields[0]->GetWaveSpace() == false)
-                {
-
-                    fields[0]->PhysDeriv(inarray[n],grad0,grad1,grad2);
-
-                    if(m_specHP_dealiasing) //interpolate spectral/hp gradient field
-                    {
-                        fields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
-                        Vmath::Vmul(nPointsTot,wkSp,1,AdvVel[0],1,Outarray,1);
-                    }
-                    else
-                    {
-                        Vmath::Vmul(nPointsTot,grad0,1,AdvVel[0],1,Outarray,1);
-                    }
-
-
-                    if(m_specHP_dealiasing) //interpolate spectral/hp gradient field
-                    {
-                        fields[0]->PhysInterp1DScaled(OneDptscale,grad1,wkSp);
-                        Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[1],1,Outarray,1,
-                                     Outarray,1);
-                    }
-                    else
-                    {
-                        Vmath::Vvtvp(nPointsTot,grad1,1,AdvVel[1],1,Outarray,1,
-                                     Outarray,1);
-                    }
-
-                    if(m_specHP_dealiasing) //interpolate spectral/hp gradient field
-                    {
-                        fields[0]->PhysInterp1DScaled(OneDptscale,grad2,wkSp);
-                        Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[2],1,Outarray,1,Outarray,1);
-                        fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,outarray[n]);
-                    }
-                    else
-                    {
-                        Vmath::Vvtvp(nPointsTot,grad2,1,AdvVel[2],1,Outarray,1,outarray[n],1);
-                    }
-                }
                 else
                 {
-                    ASSERTL0(false, "Advection term calculation not implented or "
-                                    "possible with the current problem set up");
+                    if(fields[0]->GetWaveSpace() == true)
+                    {
+                        // take d/dx, d/dy  gradients in physical Fourier space
+                        fields[0]->PhysDeriv(velocity[n],grad0,grad1);
+
+                        // Take d/dz derivative using wave space field
+                        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],inarray[n],
+                                              outarray[n]);
+                        fields[0]->HomogeneousBwdTrans(outarray[n],grad2);
+                    }
+                    else
+                    {
+                        fields[0]->PhysDeriv(inarray[n],grad0,grad1,grad2);
+                    }
+
+                    if(m_specHP_dealiasing) //interpolate spectral/hp gradient field
+                    {
+                        fields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
+                        Vmath::Vmul(nPointsTot,wkSp,1,AdvVel[0],1,Outarray,1);
+
+                        fields[0]->PhysInterp1DScaled(OneDptscale,grad1,wkSp);
+                        Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[1],1,Outarray,1,
+                                     Outarray,1);
+
+                        fields[0]->PhysInterp1DScaled(OneDptscale,grad2,wkSp);
+                        Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[2],1,Outarray,1,
+                                     Outarray,1);
+                        fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,
+                                     Outarray,outarray[n]);
+                    }
+                    else
+                    {
+                        Vmath::Vmul(nPointsTot,grad0,1,AdvVel[0],1,Outarray,1);
+                        Vmath::Vvtvp(nPointsTot,grad1,1,AdvVel[1],1,Outarray,1,
+                                     Outarray,1);
+                        Vmath::Vvtvp(nPointsTot,grad2,1,AdvVel[2],1,Outarray,1,
+                                     outarray[n],1);
+                    }
+
+                    if(fields[0]->GetWaveSpace() == true)
+                    {
+                        fields[0]->HomogeneousFwdTrans(outarray[n],outarray[n]);
+                    }
                 }
                 break;
             default:

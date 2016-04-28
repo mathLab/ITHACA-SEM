@@ -2450,8 +2450,7 @@ namespace Nektar
         void ExpList::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
                                       const Array<OneD, NekDouble> &inarray2,
                                       Array<OneD, NekDouble> &outarray,
-                                      CoeffState coeffstate,
-                                      Array<OneD, int>       waveSpace)
+                                      CoeffState coeffstate)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

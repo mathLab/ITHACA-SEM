@@ -242,8 +242,7 @@ namespace Nektar
             virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
                                          const Array<OneD, NekDouble> &inarray2,
                                          Array<OneD, NekDouble> &outarray, 
-                                         CoeffState coeffstate = eLocal,
-                                         Array<OneD, int>       waveSpace = NullInt1DArray);
+                                         CoeffState coeffstate = eLocal);
             
             virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d0,

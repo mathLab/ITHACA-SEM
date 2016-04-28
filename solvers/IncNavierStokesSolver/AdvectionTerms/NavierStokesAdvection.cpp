@@ -180,19 +180,19 @@ namespace Nektar
                 grad1 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
                 grad2 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
 
-                if(fields[0]->GetWaveSpace() == false && m_homogen_dealiasing == true )
+                if(m_homogen_dealiasing == true )
                 {
                     ASSERTL0(m_specHP_dealiasing == false,"Spectral/hp element dealaising is not set up for this option");
 
                     fields[0]->PhysDeriv(inarray[n],grad0,grad1,grad2);
 
-                    fields[0]->DealiasedProd(advVel[0],grad0,grad0,m_CoeffState);
-                    fields[0]->DealiasedProd(advVel[1],grad1,grad1,m_CoeffState);
-                    fields[0]->DealiasedProd(advVel[2],grad2,grad2,m_CoeffState);
+                    fields[0]->DealiasedProd(inarray[0],grad0,grad0,m_CoeffState);
+                    fields[0]->DealiasedProd(inarray[1],grad1,grad1,m_CoeffState);
+                    fields[0]->DealiasedProd(inarray[2],grad2,grad2,m_CoeffState);
                     Vmath::Vadd(nPointsTot,grad0,1,grad1,1,outarray[n],1);
                     Vmath::Vadd(nPointsTot,grad2,1,outarray[n],1,outarray[n],1);
                 }
-                else if(fields[0]->GetWaveSpace() == true && m_homogen_dealiasing == false)
+                else if(fields[0]->GetWaveSpace() == true)
                 {
                     // take d/dx, d/dy  gradients in physical Fourier space
                     fields[0]->PhysDeriv(advVel[n],grad0,grad1);
@@ -237,7 +237,7 @@ namespace Nektar
                         fields[0]->HomogeneousFwdTrans(grad0,outarray[n]);
                     }
                 }
-                else if(fields[0]->GetWaveSpace() == false && m_homogen_dealiasing == false)
+                else if(fields[0]->GetWaveSpace() == false)
                 {
 
                     fields[0]->PhysDeriv(inarray[n],grad0,grad1,grad2);
@@ -275,28 +275,6 @@ namespace Nektar
                     {
                         Vmath::Vvtvp(nPointsTot,grad2,1,AdvVel[2],1,Outarray,1,outarray[n],1);
                     }
-                }
-                else if(fields[0]->GetWaveSpace() == true && m_homogen_dealiasing == true)
-                {
-                    ASSERTL0(m_specHP_dealiasing == false,"Spectral/hp element dealaising is not set up for this option");
-                    Array<OneD, int> waveSpace(3, 1);
-                    waveSpace[0] = 0;
-
-                    fields[0]->PhysDeriv(inarray[n],grad0,grad1,grad2);
-
-                    fields[0]->DealiasedProd(AdvVel[0], grad0, outarray[n],
-                                              m_CoeffState, waveSpace);
-
-                    fields[0]->DealiasedProd(AdvVel[1], grad1, grad0,
-                                              m_CoeffState, waveSpace);
-
-                    fields[0]->DealiasedProd(AdvVel[2], grad2, grad1,
-                                              m_CoeffState, waveSpace);
-
-                    Vmath::Vadd(nPointsTot, outarray[n], 1, grad0, 1,
-                                            outarray[n], 1);
-                    Vmath::Vadd(nPointsTot, outarray[n], 1, grad1, 1,
-                                            outarray[n], 1);
                 }
                 else
                 {

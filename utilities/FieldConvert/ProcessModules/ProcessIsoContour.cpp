@@ -43,7 +43,9 @@ using namespace std;
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 
+#ifdef NEKTAR_USE_ANN
 #include "ANN/ANN.h"
+#endif
 
 namespace Nektar
 {
@@ -201,12 +203,38 @@ void ProcessIsoContour::Process(po::variables_map &vm)
 
     if(smoothing)
     {
+        Timer timersm;
+        
+        if(m_f->m_verbose)
+        {
+            if(rank == 0)
+            {
+                cout << "Process Contour smoothing ..." << endl;
+                timersm.Start();
+            }
+        }
+        
         int  niter = m_config["smoothiter"].as<int>();
         NekDouble lambda = m_config["smoothposdiffusion"].as<NekDouble>();
         NekDouble mu     = m_config["smoothnegdiffusion"].as<NekDouble>();
         for(int i =0 ; i < iso.size(); ++i)
         {
             iso[i]->smooth(niter,lambda,-mu);
+        }
+
+        if(m_f->m_verbose)
+        {
+            if(rank == 0)
+            {
+                timersm.Stop();
+                NekDouble cpuTime = timersm.TimePerTest(1);
+                
+                stringstream ss;
+                ss << cpuTime << "s";
+                cout << "Process smooth CPU Time: " << setw(8) << left
+                     << ss.str() << endl;
+                cpuTime = 0.0;
+            }
         }
     }
     
@@ -1174,10 +1202,6 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
     vector<int>::iterator iad;
     vector<int>::iterator ipt;
 
-    Timer timer;
-
-    cout << "Process Contour smoothing ..." << endl;
-    timer.Start();
 
     // determine elements around each vertex
     vertcon.resize(m_nvert);

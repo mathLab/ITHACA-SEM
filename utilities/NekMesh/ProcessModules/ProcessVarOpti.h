@@ -47,8 +47,7 @@ namespace Utilities
 struct ElData
 {
     ElementSharedPtr el;
-    vector<DNekMat> maps;
-    NekDouble lastEval;
+    vector<Array<OneD, NekDouble> > maps;
 };
 typedef boost::shared_ptr<ElData> ElDataSharedPtr;
 
@@ -59,6 +58,13 @@ enum optimiser
     eRoca,
     eHypEl
 };
+
+struct Residual
+{
+    NekDouble val;
+};
+
+typedef boost::shared_ptr<Residual> ResidualSharedPtr;
 
 /**
  * @brief This processing module calculates the Jacobian of elements
@@ -97,8 +103,9 @@ private:
     class NodeOpti
     {
     public:
-        NodeOpti(NodeSharedPtr n, vector<ElDataSharedPtr> e, optimiser o)
-                : node(n), data(e), opti(o)
+        NodeOpti(NodeSharedPtr n, vector<ElDataSharedPtr> e, optimiser o,
+                 ResidualSharedPtr r, int d)
+                : node(n), data(e), opti(o), res(r), dim(d)
         {
         }
 
@@ -115,6 +122,8 @@ private:
         NodeSharedPtr node;
         vector<ElDataSharedPtr> data;
         optimiser opti;
+        ResidualSharedPtr res;
+        int dim;
     };
 
     class NodeOptiJob : public Thread::ThreadJob

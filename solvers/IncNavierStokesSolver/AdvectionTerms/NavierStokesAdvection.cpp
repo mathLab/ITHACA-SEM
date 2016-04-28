@@ -91,58 +91,60 @@ namespace Nektar
         int nqtot            = fields[0]->GetTotPoints();
         ASSERTL1(nConvectiveFields == inarray.num_elements(),"Number of convective fields and Inarray are not compatible");
 
-        Array<OneD, NekDouble > Deriv(nqtot*nConvectiveFields);
+        // use dimension of Velocity vector to dictate dimension of operation
+        int ndim       = advVel.num_elements();
+        Array<OneD, Array<OneD, NekDouble> > AdvVel   (advVel.num_elements());
+        Array<OneD, NekDouble> Outarray;
+
+
+        int nPointsTot = fields[0]->GetNpoints();
+        Array<OneD, NekDouble> grad0,grad1,grad2,wkSp;
+
+        NekDouble OneDptscale = 1.5; // factor to rescale 1d points in dealiasing
+
+        if(m_specHP_dealiasing)
+        {
+            // Get number of points to dealias a quadratic non-linearity
+            nPointsTot = fields[0]->Get1DScaledTotPoints(OneDptscale);
+        }
+
+        grad0 = Array<OneD, NekDouble> (nPointsTot);
+
+        // interpolate Advection velocity
+        int nadv = advVel.num_elements();
+        if(m_specHP_dealiasing) // interpolate advection field to higher space.
+        {
+            AdvVel[0] = Array<OneD, NekDouble> (nPointsTot*(nadv+1));
+            for(int i = 0; i < nadv; ++i)
+            {
+                if(i)
+                {
+                    AdvVel[i] = AdvVel[i-1]+nPointsTot;
+                }
+                // interpolate infield to 3/2 dimension
+                fields[0]->PhysInterp1DScaled(OneDptscale,advVel[i],AdvVel[i]);
+            }
+        }
+        else
+        {
+            for(int i = 0; i < nadv; ++i)
+            {
+                AdvVel[i] = advVel[i];
+            }
+        }
+
+        wkSp = Array<OneD, NekDouble> (nPointsTot);
 
         for(int n = 0; n < nConvectiveFields; ++n)
         {
-            // use dimension of Velocity vector to dictate dimension of operation
-            int ndim       = advVel.num_elements();
-            Array<OneD, Array<OneD, NekDouble> > AdvVel   (advVel.num_elements());
-            Array<OneD, NekDouble> Outarray;
-
-
-            int nPointsTot = fields[0]->GetNpoints();
-            Array<OneD, NekDouble> grad0,grad1,grad2,wkSp;
-
-            NekDouble OneDptscale = 1.5; // factor to rescale 1d points in dealiasing
-
             if(m_specHP_dealiasing)
             {
-                // Get number of points to dealias a quadratic non-linearity
-                nPointsTot = fields[0]->Get1DScaledTotPoints(OneDptscale);
-            }
-
-            grad0 = Array<OneD, NekDouble> (nPointsTot);
-
-            // interpolate Advection velocity
-            int nadv = advVel.num_elements();
-            if(m_specHP_dealiasing) // interpolate advection field to higher space.
-            {
-                AdvVel[0] = Array<OneD, NekDouble> (nPointsTot*(nadv+1));
-                for(int i = 0; i < nadv; ++i)
-                {
-                    if(i)
-                    {
-                        AdvVel[i] = AdvVel[i-1]+nPointsTot;
-                    }
-                    // interpolate infield to 3/2 dimension
-                    fields[0]->PhysInterp1DScaled(OneDptscale,advVel[i],AdvVel[i]);
-                }
-
                 Outarray = AdvVel[nadv-1] + nPointsTot;
             }
             else
             {
-                for(int i = 0; i < nadv; ++i)
-                {
-                    AdvVel[i] = advVel[i];
-                }
-
                 Outarray = outarray[n];
             }
-
-            wkSp = Array<OneD, NekDouble> (nPointsTot);
-
 
             // Evaluate V\cdot Grad(u)
             switch(ndim)

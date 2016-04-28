@@ -96,6 +96,20 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > AdvVel   (advVel.num_elements());
         Array<OneD, NekDouble> Outarray;
 
+        Array<OneD, Array<OneD, NekDouble> > velocity(ndim);
+        for(int i = 0; i < ndim; ++i)
+        {
+            if(fields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode &&
+                !m_homogen_dealiasing)
+            {
+                velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
+                fields[i]->HomogeneousBwdTrans(advVel[i],velocity[i]);
+            }
+            else
+            {
+                velocity[i] = advVel[i];
+            }
+        }
 
         int nPointsTot = fields[0]->GetNpoints();
         Array<OneD, NekDouble> grad0,grad1,grad2,wkSp;
@@ -111,35 +125,20 @@ namespace Nektar
         grad0 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
 
         // interpolate Advection velocity
-        int nadv = advVel.num_elements();
         if(m_specHP_dealiasing) // interpolate advection field to higher space.
         {
-            for(int i = 0; i < nadv; ++i)
+            for(int i = 0; i < ndim; ++i)
             {
                 AdvVel[i] = Array<OneD, NekDouble> (nPointsTot);
                 // interpolate infield to 3/2 dimension
-                if (m_homogen_dealiasing)
-                {
-                    fields[0]->PhysInterp1DScaled(OneDptscale,inarray[i],AdvVel[i]);
-                }
-                else
-                {
-                    fields[0]->PhysInterp1DScaled(OneDptscale,advVel[i],AdvVel[i]);
-                }
+                fields[0]->PhysInterp1DScaled(OneDptscale,velocity[i],AdvVel[i]);
             }
         }
         else
         {
-            for(int i = 0; i < nadv; ++i)
+            for(int i = 0; i < ndim; ++i)
             {
-                if (m_homogen_dealiasing)
-                {
-                    AdvVel[i] = inarray[i];
-                }
-                else
-                {
-                    AdvVel[i] = advVel[i];
-                }
+                AdvVel[i] = velocity[i];
             }
         }
 
@@ -161,7 +160,17 @@ namespace Nektar
             {
             case 1:
                 fields[0]->PhysDeriv(inarray[n],grad0);
-                Vmath::Vmul(nPointsTot,grad0,1,advVel[0],1,outarray[n],1);
+                if(m_specHP_dealiasing)  // interpolate gradient field
+                {
+                    fields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
+                    Vmath::Vmul (nPointsTot,wkSp,1,AdvVel[0],1,Outarray,1);
+                    // Galerkin project solution back to origianl spac
+                    fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,outarray[n]);
+                }
+                else
+                {
+                    Vmath::Vmul(nPointsTot,grad0,1,AdvVel[0],1,outarray[n],1);
+                }
                 break;
             case 2:
                 {
@@ -171,19 +180,17 @@ namespace Nektar
                     if(m_specHP_dealiasing)  // interpolate gradient field
                     {
                         fields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
-                        Vmath::Vcopy(nPointsTot,wkSp,1,grad0,1);
+                        Vmath::Vmul (nPointsTot,wkSp,1,AdvVel[0],1,Outarray,1);
                         fields[0]->PhysInterp1DScaled(OneDptscale,grad1,wkSp);
-                        Vmath::Vcopy(nPointsTot,wkSp,1,grad1,1);
-                    }
-
-                    Vmath::Vmul (nPointsTot,grad0,1,AdvVel[0],1,Outarray,1);
-                    Vmath::Vvtvp(nPointsTot,grad1,1,AdvVel[1],1,Outarray,1,Outarray,1);
-
-                    if(m_specHP_dealiasing) // Galerkin project solution back to origianl space
-                    {
+                        Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[1],1,Outarray,1,Outarray,1);
+                        // Galerkin project solution back to origianl spac
                         fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,outarray[n]);
                     }
-
+                    else
+                    {
+                        Vmath::Vmul (nPointsTot,grad0,1,AdvVel[0],1,Outarray,1);
+                        Vmath::Vvtvp(nPointsTot,grad1,1,AdvVel[1],1,Outarray,1,Outarray,1);
+                    }
                 }
                 break;
             case 3:
@@ -220,7 +227,7 @@ namespace Nektar
                 else if(fields[0]->GetWaveSpace() == true)
                 {
                     // take d/dx, d/dy  gradients in physical Fourier space
-                    fields[0]->PhysDeriv(advVel[n],grad0,grad1);
+                    fields[0]->PhysDeriv(velocity[n],grad0,grad1);
 
                     // Take d/dz derivative using wave space field
                     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],inarray[n],

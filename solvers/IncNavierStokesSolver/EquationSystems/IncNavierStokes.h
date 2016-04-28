@@ -194,8 +194,7 @@ namespace Nektar
         }
 
         void EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-									Array<OneD, Array<OneD, NekDouble> > &outarray,
-									Array<OneD, NekDouble> &wk = NullNekDouble1DArray);
+									Array<OneD, Array<OneD, NekDouble> > &outarray);
 
         void WriteModalEnergy(void);
 

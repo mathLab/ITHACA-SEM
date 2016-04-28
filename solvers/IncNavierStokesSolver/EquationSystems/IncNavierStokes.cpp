@@ -312,38 +312,15 @@ namespace Nektar
      * Evaluation -N(V) for all fields except pressure using m_velocity
      */
     void IncNavierStokes::EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-                                                 Array<OneD, Array<OneD, NekDouble> > &outarray, 
-                                                 Array<OneD, NekDouble> &wk)
+                                                 Array<OneD, Array<OneD, NekDouble> > &outarray)
     {
         int i;
-        int nqtot      = m_fields[0]->GetTotPoints();
         int VelDim     = m_velocity.num_elements();
         Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
-        Array<OneD, NekDouble > Deriv;
 
         for(i = 0; i < VelDim; ++i)
         {
-            if(m_fields[i]->GetWaveSpace() && !m_singleMode && !m_halfMode)
-            {
-                velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
-                m_fields[i]->HomogeneousBwdTrans(inarray[m_velocity[i]],velocity[i]);
-            }
-            else
-            {
-                velocity[i] = inarray[m_velocity[i]];
-            }
-        }
-
-        // Set up Derivative work space; 
-        if(wk.num_elements())
-        {
-            ASSERTL0(wk.num_elements() >= nqtot*VelDim,
-                     "Workspace is not sufficient");
-            Deriv = wk;
-        }
-        else
-        {
-            Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
+            velocity[i] = inarray[m_velocity[i]];
         }
 
         m_advObject->Advect(m_nConvectiveFields, m_fields,

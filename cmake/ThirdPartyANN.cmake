@@ -48,7 +48,7 @@ IF (NEKTAR_USE_ANN)
             ann-1.1.2
             PREFIX ${TPSRC}
             URL ${TPURL}/ann_1.1.2.tar.gz
-            URL_MD5 "9d0faf7255dcc8acad3f4051fa29b554"
+            URL_MD5 "9f99653b76798ecb1cfadc88950c4707"
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPBUILD}/ann-1.1.2
@@ -58,7 +58,7 @@ IF (NEKTAR_USE_ANN)
             CONFIGURE_COMMAND ${CMAKE_COMMAND} -E remove -f ${ANN_DIR}/Makefile
             BUILD_COMMAND cd src
                  COMMAND $(MAKE) -C ${ANN_SRC} targets
-                "ANNLIB  = libANN.o"
+                "ANNLIB  = libANN.a"
                 "C++     = ${CMAKE_CXX_COMPILER}"
                 "CFLAGS  = ${ANN_CFLAGS}"
                 "MAKELIB = ${ANN_MAKELIB}"

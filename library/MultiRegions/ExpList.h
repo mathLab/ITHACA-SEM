@@ -347,7 +347,8 @@ namespace Nektar
                 const Array<OneD, NekDouble> &inarray1,
                 const Array<OneD, NekDouble> &inarray2,
                       Array<OneD, NekDouble> &outarray,
-                      CoeffState coeffstate = eLocal);
+                      CoeffState coeffstate = eLocal,
+                      Array<OneD, int>       waveSpace = NullInt1DArray);
             
             inline void GetBCValues(
                       Array<OneD, NekDouble> &BndVals,
@@ -1232,7 +1233,8 @@ namespace Nektar
                 const Array<OneD, NekDouble> &inarray1,
                 const Array<OneD, NekDouble> &inarray2,
                       Array<OneD, NekDouble> &outarray,
-                      CoeffState coeffstate = eLocal);
+                      CoeffState coeffstate = eLocal,
+                      Array<OneD, int>       waveSpace = NullInt1DArray);
             
             virtual void v_GetBCValues(
                       Array<OneD, NekDouble> &BndVals,
@@ -1752,9 +1754,10 @@ namespace Nektar
             const Array<OneD, NekDouble> &inarray1,
             const Array<OneD, NekDouble> &inarray2,
                   Array<OneD, NekDouble> &outarray,
-                  CoeffState coeffstate)
+                  CoeffState coeffstate,
+                  Array<OneD, int>       waveSpace)
         {
-            v_DealiasedProd(inarray1,inarray2,outarray,coeffstate);
+            v_DealiasedProd(inarray1,inarray2,outarray,coeffstate, waveSpace);
         }
         
         /**

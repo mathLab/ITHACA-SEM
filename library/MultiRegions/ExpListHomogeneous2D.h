@@ -116,12 +116,7 @@ namespace Nektar
                                             CoeffState coeffstate = eLocal,
                                             bool Shuff = true,
                                             bool UnShuff = true);
-            
-            inline void DealiasedProd(const Array<OneD, NekDouble> &inarray1,
-                                      const Array<OneD, NekDouble> &inarray2,
-                                      Array<OneD, NekDouble> &outarray, 
-                                      CoeffState coeffstate = eLocal);
-            
+
             MULTI_REGIONS_EXPORT void SetPaddingBase(void);
             
             MULTI_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
@@ -215,7 +210,8 @@ namespace Nektar
             virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
                                          const Array<OneD, NekDouble> &inarray2,
                                          Array<OneD, NekDouble> &outarray, 
-                                         CoeffState coeffstate = eLocal);
+                                         CoeffState coeffstate = eLocal,
+                                         Array<OneD, int>       waveSpace = NullInt1DArray);
             
             virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d0,
@@ -253,15 +249,7 @@ namespace Nektar
         {
             v_HomogeneousBwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
         }
-    
-        inline void ExpListHomogeneous2D::DealiasedProd(const Array<OneD, NekDouble> &inarray1,
-                                                        const Array<OneD, NekDouble> &inarray2,
-                                                        Array<OneD, NekDouble> &outarray, 
-                                                        CoeffState coeffstate)
-        {
-            v_DealiasedProd(inarray1,inarray2,outarray,coeffstate);
-        }
-        
+
     } //end of namespace
 } //end of namespace
 

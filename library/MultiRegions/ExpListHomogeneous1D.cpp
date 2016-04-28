@@ -172,11 +172,18 @@ namespace Nektar
         void ExpListHomogeneous1D::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
                                                    const Array<OneD, NekDouble> &inarray2,
                                                    Array<OneD, NekDouble> &outarray, 
-                                                   CoeffState coeffstate)
+                                                   CoeffState coeffstate,
+                                                   Array<OneD, int>       waveSpace)
         {
-            // inarray1 = first term of the product in full physical space
-            // inarray2 = second term of the product in full physical space
+            // inarray1 = first term of the product
+            // inarray2 = second term of the product
             // dealiased product stored in outarray
+            // waveSpace - defines if inputs and output are in waveSpace
+
+            if (waveSpace == NullInt1DArray)
+            {
+                waveSpace = Array<OneD, int> (3, 0);
+            }
 
             int num_dofs = inarray1.num_elements();
 
@@ -186,8 +193,22 @@ namespace Nektar
             Array<OneD, NekDouble> V2(num_dofs);
             Array<OneD, NekDouble> V1V2(num_dofs);
 
-            HomogeneousFwdTrans(inarray1,V1,coeffstate);
-            HomogeneousFwdTrans(inarray2,V2,coeffstate);
+            if(waveSpace[0])
+            {
+                V1 = inarray1;
+            }
+            else
+            {
+                HomogeneousFwdTrans(inarray1,V1,coeffstate);
+            }
+            if(waveSpace[1])
+            {
+                V2 = inarray2;
+            }
+            else
+            {
+                HomogeneousFwdTrans(inarray2,V2,coeffstate);
+            }
 
             int num_points_per_plane = num_dofs/m_planes.num_elements();
             int num_proc;
@@ -245,11 +266,18 @@ namespace Nektar
                                 &(ShufV1V2[i*N]),        1);
             }
 
-            m_transposition->Transpose(ShufV1V2, V1V2, false,
+            // Moving the results to the output
+            if (waveSpace[2])
+            {
+                m_transposition->Transpose(ShufV1V2, outarray, false,
                                        LibUtilities::eZtoXY);
-
-            // Moving the results in physical space for the output
-            HomogeneousBwdTrans(V1V2, outarray, coeffstate);
+            }
+            else
+            {
+                m_transposition->Transpose(ShufV1V2, V1V2, false,
+                                       LibUtilities::eZtoXY);
+                HomogeneousBwdTrans(V1V2, outarray, coeffstate);
+            }
         }
 
         /**

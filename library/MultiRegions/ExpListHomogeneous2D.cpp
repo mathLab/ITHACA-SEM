@@ -159,12 +159,18 @@ namespace Nektar
         void ExpListHomogeneous2D::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1, 
                                                    const Array<OneD, NekDouble> &inarray2,
                                                    Array<OneD, NekDouble> &outarray, 
-                                                   CoeffState coeffstate)
+                                                   CoeffState coeffstate,
+                                                   Array<OneD, int>       waveSpace)
         {
             int npoints = outarray.num_elements(); // number of total physical points
             int nlines  = m_lines.num_elements();  // number of lines == number of Fourier modes = number of Fourier coeff = number of points per slab
             int nslabs  = npoints/nlines;          // number of slabs = numebr of physical points per line
-            
+
+            if (waveSpace == NullInt1DArray)
+            {
+                waveSpace = Array<OneD, int> (3, 0);
+            }
+
             Array<OneD, NekDouble> V1(npoints);
             Array<OneD, NekDouble> V2(npoints);
             Array<OneD, NekDouble> V1V2(npoints);
@@ -172,14 +178,20 @@ namespace Nektar
             Array<OneD, NekDouble> ShufV2(npoints);
             Array<OneD, NekDouble> ShufV1V2(npoints);
             
-            if(m_WaveSpace)
+            if(waveSpace[0])
             {
                 V1 = inarray1;
-                V2 = inarray2;
             }
-            else 
+            else
             {
                 HomogeneousFwdTrans(inarray1,V1,coeffstate);
+            }
+            if(waveSpace[1])
+            {
+                V2 = inarray2;
+            }
+            else
+            {
                 HomogeneousFwdTrans(inarray2,V2,coeffstate);
             }
             
@@ -234,7 +246,7 @@ namespace Nektar
                 }
             }
             
-            if(m_WaveSpace)
+            if(waveSpace[2])
             {
                 m_transposition->Transpose(ShufV1V2,outarray,false,LibUtilities::eYZtoX);
             }

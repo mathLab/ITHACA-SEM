@@ -108,28 +108,38 @@ namespace Nektar
             nPointsTot = fields[0]->Get1DScaledTotPoints(OneDptscale);
         }
 
-        grad0 = Array<OneD, NekDouble> (nPointsTot);
+        grad0 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
 
         // interpolate Advection velocity
         int nadv = advVel.num_elements();
         if(m_specHP_dealiasing) // interpolate advection field to higher space.
         {
-            AdvVel[0] = Array<OneD, NekDouble> (nPointsTot*(nadv+1));
             for(int i = 0; i < nadv; ++i)
             {
-                if(i)
-                {
-                    AdvVel[i] = AdvVel[i-1]+nPointsTot;
-                }
+                AdvVel[i] = Array<OneD, NekDouble> (nPointsTot);
                 // interpolate infield to 3/2 dimension
-                fields[0]->PhysInterp1DScaled(OneDptscale,advVel[i],AdvVel[i]);
+                if (m_homogen_dealiasing)
+                {
+                    fields[0]->PhysInterp1DScaled(OneDptscale,inarray[i],AdvVel[i]);
+                }
+                else
+                {
+                    fields[0]->PhysInterp1DScaled(OneDptscale,advVel[i],AdvVel[i]);
+                }
             }
         }
         else
         {
             for(int i = 0; i < nadv; ++i)
             {
-                AdvVel[i] = advVel[i];
+                if (m_homogen_dealiasing)
+                {
+                    AdvVel[i] = inarray[i];
+                }
+                else
+                {
+                    AdvVel[i] = advVel[i];
+                }
             }
         }
 
@@ -139,7 +149,7 @@ namespace Nektar
         {
             if(m_specHP_dealiasing)
             {
-                Outarray = AdvVel[nadv-1] + nPointsTot;
+                Outarray = Array<OneD, NekDouble> (nPointsTot);
             }
             else
             {
@@ -180,17 +190,32 @@ namespace Nektar
                 grad1 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
                 grad2 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
 
-                if(m_homogen_dealiasing == true )
+                if(m_homogen_dealiasing == true && m_specHP_dealiasing == true)
                 {
-                    ASSERTL0(m_specHP_dealiasing == false,"Spectral/hp element dealaising is not set up for this option");
-
                     fields[0]->PhysDeriv(inarray[n],grad0,grad1,grad2);
 
-                    fields[0]->DealiasedProd(inarray[0],grad0,grad0,m_CoeffState);
-                    fields[0]->DealiasedProd(inarray[1],grad1,grad1,m_CoeffState);
-                    fields[0]->DealiasedProd(inarray[2],grad2,grad2,m_CoeffState);
-                    Vmath::Vadd(nPointsTot,grad0,1,grad1,1,outarray[n],1);
-                    Vmath::Vadd(nPointsTot,grad2,1,outarray[n],1,outarray[n],1);
+                    fields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
+                    fields[0]->DealiasedProd(AdvVel[0],wkSp,Outarray,m_CoeffState);
+
+                    fields[0]->PhysInterp1DScaled(OneDptscale,grad1,wkSp);
+                    fields[0]->DealiasedProd(AdvVel[1],wkSp,wkSp,m_CoeffState);
+                    Vmath::Vadd(nPointsTot,Outarray,1,wkSp,1,Outarray,1);
+
+                    fields[0]->PhysInterp1DScaled(OneDptscale,grad2,wkSp);
+                    fields[0]->DealiasedProd(AdvVel[2],wkSp,wkSp,m_CoeffState);
+                    Vmath::Vadd(nPointsTot,Outarray,1,wkSp,1,Outarray,1);
+
+                    fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,outarray[n]);
+                }
+                else if(m_homogen_dealiasing == true && m_specHP_dealiasing == false)
+                {
+                    fields[0]->PhysDeriv(inarray[n],grad0,grad1,grad2);
+
+                    fields[0]->DealiasedProd(AdvVel[0],grad0,grad0,m_CoeffState);
+                    fields[0]->DealiasedProd(AdvVel[1],grad1,grad1,m_CoeffState);
+                    fields[0]->DealiasedProd(AdvVel[2],grad2,grad2,m_CoeffState);
+                    Vmath::Vadd(nPointsTot,grad0,1,grad1,1,Outarray,1);
+                    Vmath::Vadd(nPointsTot,grad2,1,Outarray,1,Outarray,1);
                 }
                 else if(fields[0]->GetWaveSpace() == true)
                 {

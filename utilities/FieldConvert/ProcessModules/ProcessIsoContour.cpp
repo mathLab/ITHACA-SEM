@@ -881,6 +881,11 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
     bool     unique_index_found = false;
     for(i = 0; i < m_nvert; ++i)
     {
+        if(verbose)
+        {
+            LibUtilities::PrintProgressbar(i,m_nvert,"Nearest verts");
+        }
+
         n_neighbs  = 5; 
         queryPt[0] = dataPts[i][0];
         queryPt[1] = dataPts[i][1];
@@ -892,7 +897,6 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
         {
             n_neighbs *=2; 
             kdTree->annkSearch(queryPt, n_neighbs, nnIdx, dists, 0); //eps set to zero
-            cout << n_neighbs << endl;
         }
 
         WARNINGL0(n_neighbs*2 < neighbs_max,"Failed to find less than 100 neighbouring points");
@@ -926,7 +930,10 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
             unique_index++;
         }
     }
-    cout << unique_index << " out of " << m_nvert << endl;
+    if(verbose)
+    {
+        cout << endl;
+    }
 
     m_nvert = unique_index;
 
@@ -971,7 +978,6 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
                 m_fields[j][ptid];
         }
     }
-    cout << endl;
 }
 #else
     void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)

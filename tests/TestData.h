@@ -36,6 +36,7 @@
 #ifndef NEKTAR_TESTER_TESTDATA
 #define NEKTAR_TESTER_TESTDATA
 
+#include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 
 #include <string>
@@ -44,6 +45,7 @@
 #include <tinyxml.h>
 
 namespace fs = boost::filesystem;
+namespace po = boost::program_options;
 
 namespace Nektar
 {
@@ -56,11 +58,11 @@ namespace Nektar
     class TestData
     {
     public:
-        TestData(const fs::path& pFilename);
+        TestData(const fs::path& pFilename, po::variables_map& pVm);
         TestData(const TestData& pSrc);
 
         const std::string& GetDescription() const;
-        const std::string  GetExecutable() const;
+        const fs::path&    GetExecutable() const;
         const std::string& GetParameters() const;
         const unsigned int& GetNProcesses() const;
 
@@ -75,9 +77,9 @@ namespace Nektar
         void SaveFile();
 
     private:
-        std::string                     m_filename;
+        po::variables_map               m_cmdoptions;
         std::string                     m_description;
-        std::string                     m_executable;
+        fs::path                        m_executable;
         std::string                     m_parameters;
         unsigned int                    m_processes;
         TiXmlDocument*                  m_doc;

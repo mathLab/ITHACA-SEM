@@ -115,16 +115,16 @@ const std::string FieldIO::GetFileType(const std::string &filename,
         // Read first 8 bytes. If they correspond with magic bytes below it's an
         // HDF5 file. XML is potentially a nightmare with all the different
         // encodings so we'll just assume it's OK if it's not HDF.
-        const char magic[8] = {0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a};
+        const unsigned char magic[8] = {
+            0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a};
 
         std::ifstream datafile(datafilename.c_str(), ios_base::binary);
-        char filedata[8];
-        datafile.read(filedata, 8);
 
         code = 1;
-        for (unsigned i = 0; i < 8; ++i)
+        for (unsigned i = 0; i < 8 && datafile.good(); ++i)
         {
-            if (filedata[i] != magic[i])
+            unsigned char byte = datafile.get();
+            if (byte != magic[i])
             {
                 code = 0;
                 break;

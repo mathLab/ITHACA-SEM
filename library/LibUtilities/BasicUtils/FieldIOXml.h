@@ -51,10 +51,10 @@ class XmlDataSource : public DataSource
 {
 public:
     /// Default constructor.
-    XmlDataSource(TiXmlDocument &doc) : m_doc(&doc) { }
+    XmlDataSource(TiXmlDocument &doc) : m_doc(&doc), m_needsFree(false) { }
 
     /// Constructor based on filename.
-    XmlDataSource(const std::string &fn)
+    XmlDataSource(const std::string &fn) : m_needsFree(true)
     {
         m_doc = new TiXmlDocument(fn);
         bool loadOkay = m_doc->LoadFile();
@@ -69,7 +69,10 @@ public:
     /// Destructor cleans up memory usage.
     ~XmlDataSource()
     {
-        delete m_doc;
+        if (m_needsFree)
+        {
+            delete m_doc;
+        }
     }
 
     /// Return the TinyXML document of this source.
@@ -99,6 +102,8 @@ public:
 private:
     /// Internal TinyXML document storage.
     TiXmlDocument *m_doc;
+    /// Boolean dictating whether document needs to be freed or not.
+    bool m_needsFree;
 };
 typedef boost::shared_ptr<XmlDataSource> XmlDataSourceSharedPtr;
 

@@ -180,7 +180,6 @@ namespace Nektar
             // dealiased product stored in outarray
 
             int num_dofs = inarray1.num_elements();
-            bool useNumModes = m_WaveSpace;
             int N = m_homogeneousBasis->GetNumPoints();
 
             Array<OneD, NekDouble> V1(num_dofs);
@@ -223,8 +222,8 @@ namespace Nektar
             Array<OneD, NekDouble> ShufV1V2_PAD_coef(m_padsize,0.0);
             Array<OneD, NekDouble> ShufV1V2_PAD_phys(m_padsize,0.0);
 
-            m_transposition->Transpose(V1, ShufV1, useNumModes, LibUtilities::eXYtoZ);
-            m_transposition->Transpose(V2, ShufV2, useNumModes, LibUtilities::eXYtoZ);
+            m_transposition->Transpose(V1, ShufV1, false, LibUtilities::eXYtoZ);
+            m_transposition->Transpose(V2, ShufV2, false, LibUtilities::eXYtoZ);
 
             // Looping on the pencils
             for(int i = 0 ; i < num_dfts_per_proc ; i++)
@@ -257,12 +256,12 @@ namespace Nektar
             // Moving the results to the output
             if (m_WaveSpace)
             {
-                m_transposition->Transpose(ShufV1V2, outarray, useNumModes,
+                m_transposition->Transpose(ShufV1V2, outarray, false,
                                        LibUtilities::eZtoXY);
             }
             else
             {
-                m_transposition->Transpose(ShufV1V2, V1V2, useNumModes,
+                m_transposition->Transpose(ShufV1V2, V1V2, false,
                                        LibUtilities::eZtoXY);
                 HomogeneousBwdTrans(V1V2, outarray, coeffstate);
             }
@@ -285,7 +284,6 @@ namespace Nektar
             int nvec = inarray2.num_elements() / ndim;
 
             int num_dofs = inarray1[0].num_elements();
-            bool useNumModes = m_WaveSpace;
             int N = m_homogeneousBasis->GetNumPoints();
 
             int num_points_per_plane = num_dofs/m_planes.num_elements();
@@ -364,12 +362,12 @@ namespace Nektar
             // Transpose inputs
             for (int i = 0; i < ndim; i++)
             {
-                m_transposition->Transpose(V1[i], ShufV1[i], useNumModes,
+                m_transposition->Transpose(V1[i], ShufV1[i], false,
                                            LibUtilities::eXYtoZ);
             }
             for (int i = 0; i < ndim*nvec; i++)
             {
-                m_transposition->Transpose(V2[i], ShufV2[i], useNumModes,
+                m_transposition->Transpose(V2[i], ShufV2[i], false,
                                            LibUtilities::eXYtoZ);
             }
 
@@ -420,7 +418,7 @@ namespace Nektar
                 for (int j = 0; j < nvec; j++)
                 {
                     m_transposition->Transpose(ShufV1V2[j], outarray[j],
-                                           useNumModes,
+                                           false,
                                            LibUtilities::eZtoXY);
                 }
             }
@@ -429,7 +427,7 @@ namespace Nektar
                 Array<OneD, NekDouble> V1V2(num_dofs);
                 for (int j = 0; j < nvec; j++)
                 {
-                    m_transposition->Transpose(ShufV1V2[j], V1V2, useNumModes,
+                    m_transposition->Transpose(ShufV1V2[j], V1V2, false,
                                        LibUtilities::eZtoXY);
                     HomogeneousBwdTrans(V1V2, outarray[j], coeffstate);
                 }

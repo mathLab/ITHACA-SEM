@@ -110,7 +110,6 @@ struct Field {
     MultiRegions::AssemblyMapCGSharedPtr    m_locToGlobalMap;
 
     LibUtilities::FieldMetaDataMap          m_fieldMetaDataMap;
-    map<string, LibUtilities::FieldIOSharedPtr> m_fld;
 
     MultiRegions::ExpListSharedPtr SetUpFirstExpList(int NumHomogeneousDir,
                                                      bool fldfilegiven = false)
@@ -399,14 +398,24 @@ struct Field {
         return exp;
     };
 
-    FieldIOSharedPtr FieldIOForFile(string filename)
+    LibUtilities::FieldIOSharedPtr FieldIOForFile(string filename)
     {
-        string fmt = FieldIO::GetFileType(filename, session->GetComm());
+        LibUtilities::CommSharedPtr c = m_session ? m_session->GetComm() :
+            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+        string fmt = LibUtilities::FieldIO::GetFileType(filename, c);
         map<string, LibUtilities::FieldIOSharedPtr>::iterator it =
             m_fld.find(fmt);
 
         if (it == m_fld.end())
         {
+            LibUtilities::FieldIOSharedPtr fld =
+                LibUtilities::GetFieldIOFactory().CreateInstance(fmt, c, true);
+            m_fld[fmt] = fld;
+            return fld;
+        }
+        else
+        {
+            return it->second;
         }
     }
 
@@ -700,6 +709,8 @@ struct Field {
         return tmp;
     }
 
+private:
+    map<string, LibUtilities::FieldIOSharedPtr> m_fld;
 };
 
 typedef boost::shared_ptr<Field> FieldSharedPtr;

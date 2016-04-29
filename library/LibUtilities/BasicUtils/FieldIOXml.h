@@ -56,6 +56,7 @@ public:
     /// Constructor based on filename.
     XmlDataSource(const std::string &fn)
     {
+        m_doc = new TiXmlDocument(fn);
         bool loadOkay = m_doc->LoadFile();
         std::stringstream errstr;
         errstr << "Unable to load file: " << fn << std::endl;

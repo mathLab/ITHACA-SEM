@@ -56,6 +56,8 @@ ModuleKey OutputFld::m_className[2] = {
 
 OutputFld::OutputFld(FieldSharedPtr f) : OutputModule(f)
 {
+    m_config["format"] = ConfigOption(
+        false, "Xml", "Output format of field file");
 }
 
 OutputFld::~OutputFld()
@@ -72,6 +74,13 @@ void OutputFld::Process(po::variables_map &vm)
     {
         timer.Start();
     }
+
+    // Set up communicator and FieldIO object.
+    LibUtilities::CommSharedPtr c = m_f->m_session ? m_f->m_session->GetComm() :
+        LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+    LibUtilities::FieldIOSharedPtr fld =
+        LibUtilities::GetFieldIOFactory().CreateInstance(
+            m_config["format"].as<string>(), c, true);
 
     if (m_f->m_writeBndFld)
     {
@@ -96,7 +105,8 @@ void OutputFld::Process(po::variables_map &vm)
         }
 
         // Extract data to boundaryconditions
-        if (m_f->m_fldToBnd)        {
+        if (m_f->m_fldToBnd)
+        {
             for (int i = 0; i < m_f->m_exp.size(); ++i)
             {
                 m_f->m_exp[i]->FillBndCondFromField();
@@ -306,9 +316,7 @@ void OutputFld::Process(po::variables_map &vm)
                 }
             }
 
-            m_f->m_fld->Write(outname, FieldDef, FieldData,
-                                                 m_f->m_fieldMetaDataMap);
-
+            fld->Write(outname, FieldDef, FieldData, m_f->m_fieldMetaDataMap);
         }
     }
     else
@@ -350,8 +358,8 @@ void OutputFld::Process(po::variables_map &vm)
 
         if(writefld)
         {
-            m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data,
-                                                    m_f->m_fieldMetaDataMap);
+            fld->Write(filename, m_f->m_fielddef, m_f->m_data,
+                       m_f->m_fieldMetaDataMap);
         }
 
         // output error for regression checking.

@@ -418,10 +418,14 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank)
         m_comm->Block();
     }
 
-    // serial processing just add ending.
-    if (nprocs == 1 || rank == 0)
+    if (rank == 0)
     {
         cout << "Writing: " << specPath << endl;
+    }
+
+    // serial processing just add ending.
+    if (nprocs == 1)
+    {
         return LibUtilities::PortablePath(specPath);
     }
 

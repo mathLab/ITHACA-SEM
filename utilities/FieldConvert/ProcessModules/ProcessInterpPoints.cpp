@@ -457,12 +457,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
              "wihtin the domain given by the xml files?");
 
     string fromfld = m_config["fromfld"].as<string>();
-    fromField->m_fld = LibUtilities::MakeFieldIOForFile(
-        fromField->m_session, fromfld);
-    fromField->m_fld->Import(fromfld,fromField->m_fielddef,
-                             fromField->m_data,
-                             LibUtilities::NullFieldMetaDataMap,
-                             ElementGIDs);
+    m_f->FieldIOForFile(fromfld)->Import(
+        fromfld, fromField->m_fielddef, fromField->m_data,
+        LibUtilities::NullFieldMetaDataMap, ElementGIDs);
 
     int NumHomogeneousDir = fromField->m_fielddef[0]->m_numHomogeneousDir;
 

@@ -324,18 +324,16 @@ void InputXml::Process(po::variables_map &vm)
         Array<OneD,int> ElementGIDs(expansions.size());
         SpatialDomains::ExpansionMap::const_iterator expIt;
 
-        int i = 0; 
+        int i = 0;
         for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
         {
             ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
         }
 
-        m_f->m_fld = LibUtilities::MakeFieldIOForFile(
-            m_f->m_session, m_f->m_inputfiles[fldending][0]);
-        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0], m_f->m_fielddef,
-                           LibUtilities::NullVectorNekDoubleVector,
-                           LibUtilities::NullFieldMetaDataMap,
-                           ElementGIDs);
+        m_f->FieldIOForFile(m_f->m_inputfiles[fldending][0])->Import(
+            m_f->m_inputfiles[fldending][0], m_f->m_fielddef,
+            LibUtilities::NullVectorNekDoubleVector,
+            LibUtilities::NullFieldMetaDataMap, ElementGIDs);
         NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
 
         //----------------------------------------------

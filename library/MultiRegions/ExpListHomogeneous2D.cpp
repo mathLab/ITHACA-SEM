@@ -246,7 +246,32 @@ namespace Nektar
                 HomogeneousBwdTrans(V1V2,outarray,coeffstate);
             }
         }
-        
+
+        void ExpListHomogeneous2D::v_DealiasedDotProd(
+                        const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                        const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                        Array<OneD, Array<OneD, NekDouble> > &outarray,
+                        CoeffState coeffstate)
+        {
+            // TODO Proper implementation of this
+            int ndim = inarray1.num_elements();
+            ASSERTL1( inarray2.num_elements() % ndim == 0,
+                     "Wrong dimensions for DealiasedDotProd.");
+            int nvec = inarray2.num_elements() % ndim;
+            int npts = inarray1[0].num_elements();
+
+            Array<OneD, NekDouble> out(npts);
+            for (int i = 0; i < nvec; i++)
+            {
+                Vmath::Zero(npts, outarray[i], 1);
+                for (int j = 0; j < ndim; j++)
+                {
+                    DealiasedProd(inarray1[j], inarray2[i*ndim+j], out);
+                    Vmath::Vadd(npts, outarray[i], 1, out, 1, outarray[i], 1);
+                }
+            }
+        }
+
         void ExpListHomogeneous2D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, CoeffState coeffstate)
         {
             int cnt = 0, cnt1 = 0;

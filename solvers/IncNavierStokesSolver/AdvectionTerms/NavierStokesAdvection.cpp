@@ -94,7 +94,6 @@ namespace Nektar
         // use dimension of Velocity vector to dictate dimension of operation
         int ndim       = advVel.num_elements();
         Array<OneD, Array<OneD, NekDouble> > AdvVel   (advVel.num_elements());
-        Array<OneD, NekDouble> Outarray;
 
         Array<OneD, Array<OneD, NekDouble> > velocity(ndim);
         for(int i = 0; i < ndim; ++i)
@@ -122,8 +121,6 @@ namespace Nektar
             nPointsTot = fields[0]->Get1DScaledTotPoints(OneDptscale);
         }
 
-        grad0 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
-
         // interpolate Advection velocity
         if(m_specHP_dealiasing) // interpolate advection field to higher space.
         {
@@ -144,24 +141,17 @@ namespace Nektar
 
         wkSp = Array<OneD, NekDouble> (nPointsTot);
 
-        for(int n = 0; n < nConvectiveFields; ++n)
+        // Evaluate V\cdot Grad(u)
+        switch(ndim)
         {
-            if(m_specHP_dealiasing)
+        case 1:
+            grad0 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
+            for(int n = 0; n < nConvectiveFields; ++n)
             {
-                Outarray = Array<OneD, NekDouble> (nPointsTot);
-            }
-            else
-            {
-                Outarray = outarray[n];
-            }
-
-            // Evaluate V\cdot Grad(u)
-            switch(ndim)
-            {
-            case 1:
                 fields[0]->PhysDeriv(inarray[n],grad0);
                 if(m_specHP_dealiasing)  // interpolate gradient field
                 {
+                    Array<OneD, NekDouble> Outarray(nPointsTot);
                     fields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
                     Vmath::Vmul (nPointsTot,wkSp,1,AdvVel[0],1,Outarray,1);
                     // Galerkin project solution back to origianl spac
@@ -171,60 +161,97 @@ namespace Nektar
                 {
                     Vmath::Vmul(nPointsTot,grad0,1,AdvVel[0],1,outarray[n],1);
                 }
-                break;
-            case 2:
+            }
+            break;
+        case 2:
+            grad0 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
+            grad1 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
+            for(int n = 0; n < nConvectiveFields; ++n)
+            {
+                fields[0]->PhysDeriv(inarray[n],grad0,grad1);
+
+                if(m_specHP_dealiasing)  // interpolate gradient field
                 {
-                    grad1 = Array<OneD, NekDouble> (nPointsTot);
-                    fields[0]->PhysDeriv(inarray[n],grad0,grad1);
-
-                    if(m_specHP_dealiasing)  // interpolate gradient field
-                    {
-                        fields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
-                        Vmath::Vmul (nPointsTot,wkSp,1,AdvVel[0],1,Outarray,1);
-                        fields[0]->PhysInterp1DScaled(OneDptscale,grad1,wkSp);
-                        Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[1],1,Outarray,1,Outarray,1);
-                        // Galerkin project solution back to origianl spac
-                        fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,outarray[n]);
-                    }
-                    else
-                    {
-                        Vmath::Vmul (nPointsTot,grad0,1,AdvVel[0],1,Outarray,1);
-                        Vmath::Vvtvp(nPointsTot,grad1,1,AdvVel[1],1,Outarray,1,Outarray,1);
-                    }
-                }
-                break;
-            case 3:
-                grad1 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
-                grad2 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
-
-                if(m_homogen_dealiasing == true && m_specHP_dealiasing == true)
-                {
-                    fields[0]->PhysDeriv(inarray[n],grad0,grad1,grad2);
-
+                    Array<OneD, NekDouble> Outarray(nPointsTot);
                     fields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
-                    fields[0]->DealiasedProd(AdvVel[0],wkSp,Outarray,m_CoeffState);
-
+                    Vmath::Vmul (nPointsTot,wkSp,1,AdvVel[0],1,Outarray,1);
                     fields[0]->PhysInterp1DScaled(OneDptscale,grad1,wkSp);
-                    fields[0]->DealiasedProd(AdvVel[1],wkSp,wkSp,m_CoeffState);
-                    Vmath::Vadd(nPointsTot,Outarray,1,wkSp,1,Outarray,1);
-
-                    fields[0]->PhysInterp1DScaled(OneDptscale,grad2,wkSp);
-                    fields[0]->DealiasedProd(AdvVel[2],wkSp,wkSp,m_CoeffState);
-                    Vmath::Vadd(nPointsTot,Outarray,1,wkSp,1,Outarray,1);
-
+                    Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[1],1,Outarray,1,Outarray,1);
+                    // Galerkin project solution back to original space
                     fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,outarray[n]);
                 }
-                else if(m_homogen_dealiasing == true && m_specHP_dealiasing == false)
-                {
-                    fields[0]->PhysDeriv(inarray[n],grad0,grad1,grad2);
-
-                    fields[0]->DealiasedProd(AdvVel[0],grad0,grad0,m_CoeffState);
-                    fields[0]->DealiasedProd(AdvVel[1],grad1,grad1,m_CoeffState);
-                    fields[0]->DealiasedProd(AdvVel[2],grad2,grad2,m_CoeffState);
-                    Vmath::Vadd(nPointsTot,grad0,1,grad1,1,Outarray,1);
-                    Vmath::Vadd(nPointsTot,grad2,1,Outarray,1,Outarray,1);
-                }
                 else
+                {
+                    Vmath::Vmul (nPointsTot,grad0,1,AdvVel[0],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot,grad1,1,AdvVel[1],1,outarray[n],1,outarray[n],1);
+                }
+            }
+            break;
+        case 3:
+            if(m_homogen_dealiasing == true && m_specHP_dealiasing == true)
+            {
+                Array<OneD, Array<OneD, NekDouble> > grad (ndim);
+                Array<OneD, Array<OneD, NekDouble> > gradScaled (ndim*nConvectiveFields);
+                Array<OneD, Array<OneD, NekDouble> > Outarray (nConvectiveFields);
+                for (int i = 0; i < ndim; i++)
+                {
+                    grad[i] = Array<OneD, NekDouble>(fields[0]->GetNpoints());
+                }
+                for (int i = 0; i < ndim*nConvectiveFields; i++)
+                {
+                    gradScaled[i] = Array<OneD, NekDouble>(nPointsTot);
+                }
+                for (int i = 0; i < nConvectiveFields; i++)
+                {
+                    Outarray[i] = Array<OneD, NekDouble>(nPointsTot);
+                }
+
+                for (int n = 0; n < nConvectiveFields; n++)
+                {
+                    fields[0]->PhysDeriv(inarray[n],grad[0],grad[1],grad[2]);
+                    for (int i = 0; i < ndim; i++)
+                    {
+                        fields[0]->PhysInterp1DScaled(OneDptscale,grad[i],
+                                                      gradScaled[n*ndim+i]);
+                    }
+                }
+
+                fields[0]->DealiasedDotProd(AdvVel,gradScaled,Outarray,m_CoeffState);
+
+                for (int n = 0; n < nConvectiveFields; n++)
+                {
+                    fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,
+                                    Outarray[n],outarray[n]);
+                }
+            }
+            else if(m_homogen_dealiasing == true && m_specHP_dealiasing == false)
+            {
+                Array<OneD, Array<OneD, NekDouble> > grad (ndim*nConvectiveFields);
+                Array<OneD, Array<OneD, NekDouble> > Outarray (nConvectiveFields);
+                for (int i = 0; i < ndim*nConvectiveFields; i++)
+                {
+                    grad[i] = Array<OneD, NekDouble>(nPointsTot);
+                }
+                for (int i = 0; i < nConvectiveFields; i++)
+                {
+                    Outarray[i] = Array<OneD, NekDouble>(nPointsTot);
+                }
+
+                for (int n = 0; n < nConvectiveFields; n++)
+                {
+                    fields[0]->PhysDeriv(inarray[n],grad[n*ndim+0],
+                                                    grad[n*ndim+1],
+                                                    grad[n*ndim+2]);
+                }
+
+                fields[0]->DealiasedDotProd(AdvVel,grad,outarray,m_CoeffState);
+            }
+            else
+            {
+                grad0 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
+                grad1 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
+                grad2 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
+                for(int n = 0; n < nConvectiveFields; ++n)
                 {
                     if(fields[0]->GetWaveSpace() == true)
                     {
@@ -243,6 +270,7 @@ namespace Nektar
 
                     if(m_specHP_dealiasing) //interpolate spectral/hp gradient field
                     {
+                        Array<OneD, NekDouble> Outarray(nPointsTot);
                         fields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
                         Vmath::Vmul(nPointsTot,wkSp,1,AdvVel[0],1,Outarray,1);
 
@@ -258,10 +286,10 @@ namespace Nektar
                     }
                     else
                     {
-                        Vmath::Vmul(nPointsTot,grad0,1,AdvVel[0],1,Outarray,1);
-                        Vmath::Vvtvp(nPointsTot,grad1,1,AdvVel[1],1,Outarray,1,
-                                     Outarray,1);
-                        Vmath::Vvtvp(nPointsTot,grad2,1,AdvVel[2],1,Outarray,1,
+                        Vmath::Vmul(nPointsTot,grad0,1,AdvVel[0],1,outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad1,1,AdvVel[1],1,outarray[n],1,
+                                     outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad2,1,AdvVel[2],1,outarray[n],1,
                                      outarray[n],1);
                     }
 
@@ -270,11 +298,14 @@ namespace Nektar
                         fields[0]->HomogeneousFwdTrans(outarray[n],outarray[n]);
                     }
                 }
-                break;
-            default:
-                ASSERTL0(false,"dimension unknown");
             }
+            break;
+        default:
+            ASSERTL0(false,"dimension unknown");
+        }
 
+        for(int n = 0; n < nConvectiveFields; ++n)
+        {
             Vmath::Neg(nqtot,outarray[n],1);
         }
 

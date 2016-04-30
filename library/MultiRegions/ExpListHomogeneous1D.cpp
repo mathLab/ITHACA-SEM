@@ -329,7 +329,7 @@ namespace Nektar
 
             // Allocate variables for ffts
             Array<OneD, Array<OneD, NekDouble> > ShufV1(ndim);
-            Array<OneD, NekDouble>               ShufV1_PAD_coef(m_padsize);
+            Array<OneD, NekDouble>               ShufV1_PAD_coef(m_padsize,0.0);
             Array<OneD, Array<OneD, NekDouble> > ShufV1_PAD_phys(ndim);
             for (int i = 0; i < ndim; i++)
             {
@@ -340,7 +340,7 @@ namespace Nektar
             }
 
             Array<OneD, Array<OneD, NekDouble> > ShufV2(ndim*nvec);
-            Array<OneD, NekDouble>               ShufV2_PAD_coef(m_padsize);
+            Array<OneD, NekDouble>               ShufV2_PAD_coef(m_padsize,0.0);
             Array<OneD, Array<OneD, NekDouble> > ShufV2_PAD_phys(ndim*nvec);
             for (int i = 0; i < ndim*nvec; i++)
             {
@@ -351,8 +351,8 @@ namespace Nektar
             }
 
             Array<OneD, Array<OneD, NekDouble> > ShufV1V2(nvec);
-            Array<OneD, NekDouble>               ShufV1V2_PAD_coef(m_padsize);
-            Array<OneD, NekDouble>               ShufV1V2_PAD_phys(m_padsize);
+            Array<OneD, NekDouble>               ShufV1V2_PAD_coef(m_padsize,0.0);
+            Array<OneD, NekDouble>               ShufV1V2_PAD_phys(m_padsize,0.0);
             for (int i = 0; i < nvec; i++)
             {
                 ShufV1V2[i]          = Array<OneD, NekDouble>

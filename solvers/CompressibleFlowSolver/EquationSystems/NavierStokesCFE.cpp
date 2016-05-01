@@ -35,6 +35,8 @@
 
 #include <CompressibleFlowSolver/EquationSystems/NavierStokesCFE.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string NavierStokesCFE::className =

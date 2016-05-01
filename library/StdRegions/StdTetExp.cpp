@@ -38,6 +38,8 @@
 
 #include <StdRegions/StdTetExp.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace StdRegions

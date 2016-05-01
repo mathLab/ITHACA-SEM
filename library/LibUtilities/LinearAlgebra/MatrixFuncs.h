@@ -29,8 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Matrix functions that depend on storage policy.  Putting 
-// methods in these separate classes makes it easier to use them from 
+// Description: Matrix functions that depend on storage policy.  Putting
+// methods in these separate classes makes it easier to use them from
 // normal, scaled, and block matrices.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,40 +48,40 @@
 namespace Nektar
 {
     struct LIB_UTILITIES_EXPORT BandedMatrixFuncs
-    {                       
+    {
         /// \brief Calculates and returns the storage size required.
         ///
-        /// This method assumes that the matrix will be used with LU factorizationa and 
+        /// This method assumes that the matrix will be used with LU factorizationa and
         /// allocates additional storage as appropriate.
         static unsigned int GetRequiredStorageSize(unsigned int totalRows, unsigned int totalColumns,
                                                    unsigned int subDiags, unsigned int superDiags);
 
         static unsigned int CalculateNumberOfDiags(unsigned int totalRows, unsigned int diags);
-            
+
         static unsigned int CalculateNumberOfRows(unsigned int totalRows, unsigned int subDiags, unsigned int superDiags);
 
-        static unsigned int CalculateIndex(unsigned int totalRows, 
+        static unsigned int CalculateIndex(unsigned int totalRows,
                                                             unsigned int totalColumns,
                                                             unsigned int row, unsigned int column,
                                                             unsigned int sub, unsigned int super);
 
 
-        static boost::tuples::tuple<unsigned int, unsigned int> 
+        static boost::tuples::tuple<unsigned int, unsigned int>
         Advance(const unsigned int totalRows, const unsigned int totalColumns,
                 const unsigned int curRow, const unsigned int curColumn);
     };
-    
+
     struct LIB_UTILITIES_EXPORT FullMatrixFuncs
     {
-            
+
         static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns);
         static unsigned int CalculateIndex(unsigned int totalRows, unsigned int totalColumns, unsigned int curRow, unsigned int curColumn);
 
-        
-        static boost::tuples::tuple<unsigned int, unsigned int> 
+
+        static boost::tuples::tuple<unsigned int, unsigned int>
         Advance(const unsigned int totalRows, const unsigned int totalColumns,
                 const unsigned int curRow, const unsigned int curColumn);
-        
+
         template<typename DataType>
         static void Invert(unsigned int rows, unsigned int columns,
                            Array<OneD, DataType>& data,
@@ -96,9 +96,9 @@ namespace Nektar
                 int info = 0;
                 Array<OneD, int> ipivot(n);
                 Array<OneD, DataType> work(n);
-                
+
                 Lapack::Dgetrf(m, n, data.get(), m, ipivot.get(), info);
-    
+
                 if( info < 0 )
                 {
                     std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrf";
@@ -108,11 +108,11 @@ namespace Nektar
                 {
                     std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
                     ASSERTL0(false, message.c_str());
-                }   
-                
+                }
+
                 Lapack::Dgetri(n, data.get(), n, ipivot.get(),
                                work.get(), n, info);
-                
+
                 if( info < 0 )
                 {
                     std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetri";
@@ -122,8 +122,8 @@ namespace Nektar
                 {
                     std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetri";
                     ASSERTL0(false, message.c_str());
-                }   
-                
+                }
+
             #else
                 // error Full matrix inversion not supported without blas.
                 BOOST_STATIC_ASSERT(sizeof(DataType) == 0);
@@ -132,18 +132,18 @@ namespace Nektar
 
         static void EigenSolve(unsigned int n,
                                const Array<OneD, const double>& A,
-                               Array<OneD, NekDouble> &EigValReal, 
-                               Array<OneD, NekDouble> &EigValImag, 
+                               Array<OneD, NekDouble> &EigValReal,
+                               Array<OneD, NekDouble> &EigValImag,
                                Array<OneD, NekDouble> &EigVecs = NullNekDouble1DArray)
         {
             int lda = n,info = 0;
             NekDouble dum;
-            int lwork = 3*lda;
-            Array<OneD,NekDouble> work(3*lda);
             char uplo = 'N';
 
             if(EigVecs != NullNekDouble1DArray) // calculate Right Eigen Vectors
             {
+                int lwork = 4*lda;
+                Array<OneD,NekDouble> work(4*lda);
                 char lrev = 'V';
                 Lapack::Dgeev(uplo,lrev,lda, A.get(),lda,
                               EigValReal.get(),
@@ -154,8 +154,10 @@ namespace Nektar
             }
             else
             {
+                int lwork = 3*lda;
+                Array<OneD,NekDouble> work(3*lda);
                 char lrev = 'N';
-                Lapack::Dgeev(uplo,lrev,lda, 
+                Lapack::Dgeev(uplo,lrev,lda,
                               A.get(),lda,
                               EigValReal.get(),
                               EigValImag.get(),
@@ -163,7 +165,7 @@ namespace Nektar
                               &work[0],lwork,info);
             }
             ASSERTL0(info == 0,"Info is not zero");
-            
+
         }
     };
 
@@ -171,22 +173,22 @@ namespace Nektar
     {
         static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns);
     };
-    
+
     struct LIB_UTILITIES_EXPORT UpperTriangularMatrixFuncs : public TriangularMatrixFuncs
     {
         static unsigned int CalculateIndex(unsigned int curRow, unsigned int curColumn);
 
-        static boost::tuples::tuple<unsigned int, unsigned int> 
+        static boost::tuples::tuple<unsigned int, unsigned int>
         Advance(const unsigned int totalRows, const unsigned int totalColumns,
                 const unsigned int curRow, const unsigned int curColumn);
     };
-    
-    
+
+
     struct LIB_UTILITIES_EXPORT LowerTriangularMatrixFuncs : public TriangularMatrixFuncs
-    {                    
+    {
         static unsigned int CalculateIndex(unsigned int totalColumns, unsigned int curRow, unsigned int curColumn);
 
-        static boost::tuples::tuple<unsigned int, unsigned int> 
+        static boost::tuples::tuple<unsigned int, unsigned int>
         Advance(const unsigned int totalRows, const unsigned int totalColumns,
                 const unsigned int curRow, const unsigned int curColumn,
                 char transpose = 'N');
@@ -197,17 +199,17 @@ namespace Nektar
     struct LIB_UTILITIES_EXPORT SymmetricMatrixFuncs : private TriangularMatrixFuncs
     {
         using TriangularMatrixFuncs::GetRequiredStorageSize;
-        
+
         static unsigned int CalculateIndex(unsigned int curRow, unsigned int curColumn);
 
-        static boost::tuples::tuple<unsigned int, unsigned int> 
+        static boost::tuples::tuple<unsigned int, unsigned int>
         Advance(const unsigned int totalRows, const unsigned int totalColumns,
                 const unsigned int curRow, const unsigned int curColumn);
     };
 
     struct LIB_UTILITIES_EXPORT DiagonalMatrixFuncs
     {
-        static boost::tuples::tuple<unsigned int, unsigned int> 
+        static boost::tuples::tuple<unsigned int, unsigned int>
         Advance(const unsigned int totalRows, const unsigned int totalColumns,
                 const unsigned int curRow, const unsigned int curColumn);
 
@@ -221,9 +223,9 @@ namespace Nektar
                 data[i] = 1.0/data[i];
             }
         }
-        
+
         static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns);
-        
+
         static unsigned int CalculateIndex(unsigned int row, unsigned int col);
     };
 
@@ -233,13 +235,13 @@ namespace Nektar
         static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns,
                                                    unsigned int nSubSuperDiags);
     };
-    
+
     struct LIB_UTILITIES_EXPORT UpperTriangularBandedMatrixFuncs : public TriangularBandedMatrixFuncs
     {
     };
-        
+
     struct LIB_UTILITIES_EXPORT LowerTriangularBandedMatrixFuncs : public TriangularBandedMatrixFuncs
-    {                    
+    {
     };
 
     /// \internal
@@ -247,8 +249,8 @@ namespace Nektar
     struct LIB_UTILITIES_EXPORT SymmetricBandedMatrixFuncs : private TriangularBandedMatrixFuncs
     {
         using TriangularBandedMatrixFuncs::GetRequiredStorageSize;
-        
-        static unsigned int CalculateIndex(unsigned int curRow, unsigned int curColumn, 
+
+        static unsigned int CalculateIndex(unsigned int curRow, unsigned int curColumn,
                                            unsigned int nSuperDiags);
     };
 

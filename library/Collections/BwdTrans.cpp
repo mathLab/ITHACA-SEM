@@ -37,6 +37,8 @@
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 
+using namespace std;
+
 namespace Nektar {
 namespace Collections {
 

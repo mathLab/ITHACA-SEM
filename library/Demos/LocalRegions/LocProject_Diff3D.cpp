@@ -13,6 +13,7 @@
 #include <SpatialDomains/MeshComponents.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
+using namespace std;
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
 using namespace Nektar::LocalRegions;

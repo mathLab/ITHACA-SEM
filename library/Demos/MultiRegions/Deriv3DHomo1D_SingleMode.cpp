@@ -7,6 +7,7 @@
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <SpatialDomains/MeshGraph2D.h>
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])

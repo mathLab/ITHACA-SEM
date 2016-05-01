@@ -40,6 +40,8 @@
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/Expansion2D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -499,7 +501,7 @@ namespace Nektar
                 }
                 else 
                 {
-                    Vmath::Vcopy(nrows,sortedinarray,1,outarray,1);
+                    Vmath::Vcopy(nrows,sortedoutarray,1,outarray,1);
                 }
                 
             }

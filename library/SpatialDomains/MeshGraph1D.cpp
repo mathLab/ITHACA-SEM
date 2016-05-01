@@ -38,6 +38,8 @@
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <tinyxml.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -147,7 +149,7 @@ namespace Nektar
                         indx = data[i].id;
 
                         /// See if this face has curves.
-                        it = m_curvedFaces.find(indx);
+                        it = m_curvedEdges.find(indx);
 
                         PointGeomSharedPtr vertices[2] = {
                                 GetVertex(data[i].v0), GetVertex(data[i].v1)};

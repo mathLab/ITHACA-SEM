@@ -37,6 +37,8 @@
 
 #include <PulseWaveSolver/EquationSystems/PulseWavePropagation.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string PulseWavePropagation::className = GetEquationSystemFactory().RegisterCreatorFunction("PulseWavePropagation", PulseWavePropagation::create, "Pulse Wave Propagation equation.");

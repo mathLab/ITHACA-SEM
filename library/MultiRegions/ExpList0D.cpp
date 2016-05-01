@@ -35,6 +35,8 @@
 
 #include <MultiRegions/ExpList0D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

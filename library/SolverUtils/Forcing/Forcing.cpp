@@ -35,6 +35,8 @@
 
 #include <SolverUtils/Forcing/Forcing.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace SolverUtils

@@ -74,6 +74,8 @@ OpenMPI         &        & \cmark &        &        & For
 parallel execution\\
 GSMPI           &        &        &        & \cmark & For
 parallel execution\\
+HDF5            &        & \cmark & \cmark & \cmark & For
+large-scale parallel I/O\\
 PETSc           &        &        & \cmark & \cmark &
 Alternative linear solvers\\
 Scotch          &        & \cmark & \cmark & \cmark &
@@ -230,6 +232,8 @@ OpenMPI         &        & \texttt{openmpi} &        &        & For
 parallel execution\\
 GSMPI           &        &                  &        & \cmark & For
 parallel execution\\
+HDF5            &        & \cmark & \cmark & \cmark & For
+large-scale parallel I/O\\
 PETSc           &        & \texttt{petsc}   & \cmark & \cmark &
 Alternative linear solvers\\
 Scotch          &        & \texttt{scotch}  & \cmark & \cmark &
@@ -562,6 +566,14 @@ can be selected using the following options:
     Build \nekpp with support for FFTW for performing Fast Fourier Transforms
     (FFTs). This is used only when using domains with homogeneous coordinate
     directions.
+
+    \item \inlsh{NEKTAR\_USE\_HDF5}
+
+    Build \nekpp with support for HDF5. This enables input/output in the HDF5
+    parallel file format, which can be very efficient for large numbers of
+    processors. HDF5 output can be enabled by using a command-line option or
+    in the \inlsh{SOLVERINFO} section of the XML file. This option requires 
+    that \nekpp be built with MPI support with \inlsh{NEKTAR\_USE\_MPI} enabled.
 
     \item \inlsh{NEKTAR\_USE\_MKL}
 

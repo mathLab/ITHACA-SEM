@@ -53,6 +53,18 @@ in its compressed format \inltt{test.xml.gz}.
 %
 %
 %
+\section{Convert field files between XML and HDF5 format}
+%
+When \nekpp is compiled with HDF5 support, solvers can select the format used
+for output of \inltt{.fld} files. FieldConvert can be used to convert between
+these formats using an option on the \inltt{.fld} output module. For example, if
+\inltt{in.fld} is stored in the default XML format, it can be converted to HDF5
+format by issuing the command
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert in.fld out.fld:fld:format=Hdf5
+\end{lstlisting}
+% 
 \section{Range option \textit{-r}}
 The Fieldconvert range option \inltt{-r} allows the user to specify
 a sub-range of the mesh (computational domain) by using an

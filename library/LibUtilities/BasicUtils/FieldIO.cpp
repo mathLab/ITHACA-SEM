@@ -65,6 +65,9 @@ namespace Nektar
 namespace LibUtilities
 {
 
+std::string fldCmdFormat = SessionReader::RegisterCmdLineArgument(
+    "io-format", "i", "Default input/output format (e.g. Xml, Hdf5)");
+
 /**
  * @brief Returns the FieldIO factory.
  */
@@ -170,10 +173,16 @@ FieldIOSharedPtr FieldIO::CreateDefault(
     const LibUtilities::SessionReaderSharedPtr session)
 {
     std::string iofmt("Xml");
-    if (session->DefinesSolverInfo("FieldIOFormat"))
+    if (session->DefinesSolverInfo("IOFormat"))
     {
-        iofmt = session->GetSolverInfo("FieldIOFormat");
+        iofmt = session->GetSolverInfo("IOFormat");
     }
+
+    if (session->DefinesCmdLineArgument("io-format"))
+    {
+        iofmt = session->GetCmdLineArgument<std::string>("io-format");
+    }
+
     return GetFieldIOFactory().CreateInstance(
         iofmt,
         session->GetComm(),

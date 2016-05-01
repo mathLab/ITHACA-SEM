@@ -879,11 +879,12 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
     ANNpoint queryPt = annAllocPt(3);
     int      unique_index = 0;
     bool     unique_index_found = false;
+    int      prog; 
     for(i = 0; i < m_nvert; ++i)
     {
         if(verbose)
         {
-            LibUtilities::PrintProgressbar(i,m_nvert,"Nearest verts");
+            prog = LibUtilities::PrintProgressbar(i,m_nvert,"Nearest verts",prog);
         }
 
         n_neighbs  = 5; 

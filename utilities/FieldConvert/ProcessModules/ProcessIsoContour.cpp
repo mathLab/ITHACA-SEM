@@ -804,7 +804,7 @@ bool same(NekDouble x1, NekDouble y1, NekDouble z1,
     return false;
 }
 
-#ifdef NEKTAR_USE_ANN // use oct-tree search based on libANN
+#ifdef  NEKTAR_USE_ANN // use oct-tree search based on libANN
 void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
 {
     int    i,j,n;
@@ -884,7 +884,10 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
     {
         if(verbose)
         {
-            prog = LibUtilities::PrintProgressbar(i,m_nvert,"Nearest verts",prog);
+	    if(i%(m_nvert/200)==0)
+	    {
+                 prog = LibUtilities::PrintProgressbar(i,m_nvert,"Nearest verts",prog);
+	    }
         }
 
         n_neighbs  = 5; 
@@ -1091,6 +1094,8 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
     {
         cout << "Progress Bar totiso: " << totiso << endl;
     }
+
+    int progcnt = -1; 
     for(i = 0; i < niso; ++i)
     {
         for(n = 0; n < isocon[i].size(); ++n, ++cnt)
@@ -1098,7 +1103,10 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
             
             if(verbose && totiso >= 40)
             {
-                LibUtilities::PrintProgressbar(cnt,totiso,"Condensing verts");
+	        if(cnt % (int)(totiso/200) == 0)
+	        {
+                     progcnt = LibUtilities::PrintProgressbar(cnt,totiso,"Condensing verts",progcnt);
+                }
             }
 
             int con = isocon[i][n];
@@ -1107,7 +1115,10 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
 
                 if(verbose && totiso < 40)
                 {
-                    LibUtilities::PrintProgressbar(id1,iso[i]->m_nvert,"isocon");
+                     if(cnt % (int)(totiso/200) == 0)
+                     {
+                          progcnt =  LibUtilities::PrintProgressbar(id1,iso[i]->m_nvert,"isocon",progcnt);
+                     }
                 }
 
                 int start  = 0; 

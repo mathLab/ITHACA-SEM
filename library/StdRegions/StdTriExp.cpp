@@ -37,6 +37,8 @@
 #include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdSegExp.h>       // for StdSegExp, etc
 
+using namespace std;
+
 namespace Nektar
 {
     namespace StdRegions

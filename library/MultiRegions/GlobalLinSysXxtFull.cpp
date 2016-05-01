@@ -37,6 +37,8 @@
 #include <MultiRegions/GlobalLinSysXxtFull.h>
 #include <MultiRegions/ExpList.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

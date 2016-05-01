@@ -3,6 +3,7 @@
 #include <StdRegions/StdSegExp.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 
+using namespace std;
 using namespace Nektar;
 
 // This routine projects a polynomial or trigonmetric functions which 

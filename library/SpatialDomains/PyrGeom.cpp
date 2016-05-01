@@ -42,6 +42,7 @@
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/MeshComponents.h>
 
+using namespace std;
 
 namespace Nektar
 {

@@ -92,11 +92,14 @@ private:
 
     void FillQuadPoints();
     void GetElementMap();
+    vector<Array<OneD, NekDouble> > MappingIdealToRef(ElementSharedPtr el);
     vector<vector<NodeSharedPtr> > GetColouredNodes();
 
     NodeElMap nodeElMap;
     vector<ElDataSharedPtr> dataSet;
     optimiser opti;
+    NekMatrix<NekDouble> Vandermonde, VandermondeI, VdmDx, VdmDy;
+    NekVector<NekDouble> quadW;
 
     class NodeOptiJob;
 
@@ -104,8 +107,10 @@ private:
     {
     public:
         NodeOpti(NodeSharedPtr n, vector<ElDataSharedPtr> e, optimiser o,
-                 ResidualSharedPtr r, int d)
-                : node(n), data(e), opti(o), res(r), dim(d)
+                 ResidualSharedPtr r, int d,
+                 NekMatrix<NekDouble> &vx, NekMatrix<NekDouble> &vy,
+                 NekVector<NekDouble> &w)
+                : node(n), data(e), opti(o), res(r), dim(d), VdmDx(vx), VdmDy(vy), quadW(w)
         {
         }
 
@@ -124,6 +129,8 @@ private:
         optimiser opti;
         ResidualSharedPtr res;
         int dim;
+        NekMatrix<NekDouble> VdmDx, VdmDy;
+        NekVector<NekDouble> quadW;
     };
 
     class NodeOptiJob : public Thread::ThreadJob

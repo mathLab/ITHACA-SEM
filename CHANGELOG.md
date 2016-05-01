@@ -18,6 +18,7 @@ v4.3.1
 - Fix FieldConvert processing of partitions in serial (!612)
 - Fix use of multi-level static condensation in parallel with periodic
   boundary conditions (!614)
+- Fix NaN detection to work in parallel (!605)
 
 **NekMesh**:
 - Fix incorrect link directory on CCMIO library.

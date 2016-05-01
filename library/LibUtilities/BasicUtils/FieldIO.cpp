@@ -156,6 +156,31 @@ const std::string FieldIO::GetFileType(const std::string &filename,
 }
 
 /**
+ * @brief Returns an object for the default FieldIO method.
+ *
+ * This function returns a FieldIO class as determined by the hard-coded default
+ * (XML), which can be overridden by changing the session reader SOLVERINFO
+ * variable FieldIOFormat.
+ *
+ * @param session  Session reader
+ *
+ * @return FieldIO object
+ */
+FieldIOSharedPtr FieldIO::CreateDefault(
+    const LibUtilities::SessionReaderSharedPtr session)
+{
+    std::string iofmt("Xml");
+    if (session->DefinesSolverInfo("FieldIOFormat"))
+    {
+        iofmt = session->GetSolverInfo("FieldIOFormat");
+    }
+    return GetFieldIOFactory().CreateInstance(
+        iofmt,
+        session->GetComm(),
+        session->DefinesCmdLineArgument("shared-filesystem"));
+}
+
+/**
  * @brief Construct a FieldIO object for a given input filename.
  *
  * This is a convenience function that takes an input filename and constructs
@@ -166,7 +191,7 @@ const std::string FieldIO::GetFileType(const std::string &filename,
  *
  * @return FieldIO class reader for @p filename.
  */
-FieldIOSharedPtr MakeFieldIOForFile(
+FieldIOSharedPtr FieldIO::CreateForFile(
     const LibUtilities::SessionReaderSharedPtr session,
     const std::string &filename)
 {

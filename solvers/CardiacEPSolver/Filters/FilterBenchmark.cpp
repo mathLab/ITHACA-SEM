@@ -91,7 +91,7 @@ FilterBenchmark::FilterBenchmark(
         m_startTime = floor(equ.Evaluate());
     }
 
-    m_fld = LibUtilities::MakeDefaultFieldIO(pSession);
+    m_fld = LibUtilities::FieldIO::CreateDefault(pSession);
 
 }
 

@@ -248,6 +248,12 @@ public:
                                          CommSharedPtr comm);
     virtual const std::string &GetClassName() const = 0;
 
+    static boost::shared_ptr<FieldIO> CreateDefault(
+        const LibUtilities::SessionReaderSharedPtr session);
+    static boost::shared_ptr<FieldIO> CreateForFile(
+        const LibUtilities::SessionReaderSharedPtr session,
+        const std::string &filename);
+
 protected:
     /// Communicator to use when writing parallel format
     LibUtilities::CommSharedPtr m_comm;
@@ -294,35 +300,6 @@ protected:
 };
 
 typedef boost::shared_ptr<FieldIO> FieldIOSharedPtr;
-
-/**
- * @brief Returns an object for the default FieldIO method.
- *
- * This function returns a FieldIO class as determined by the hard-coded default
- * (XML), which can be overridden by changing the session reader SOLVERINFO
- * variable FieldIOFormat.
- *
- * @param session  Session reader
- *
- * @return FieldIO object
- */
-inline FieldIOSharedPtr MakeDefaultFieldIO(
-    const LibUtilities::SessionReaderSharedPtr session)
-{
-    std::string iofmt("Xml");
-    if (session->DefinesSolverInfo("FieldIOFormat"))
-    {
-        iofmt = session->GetSolverInfo("FieldIOFormat");
-    }
-    return GetFieldIOFactory().CreateInstance(
-        iofmt,
-        session->GetComm(),
-        session->DefinesCmdLineArgument("shared-filesystem"));
-}
-
-FieldIOSharedPtr MakeFieldIOForFile(
-    const LibUtilities::SessionReaderSharedPtr session,
-    const std::string &filename);
 
 /**
  * @brief Write out the field information to the file @p outFile.

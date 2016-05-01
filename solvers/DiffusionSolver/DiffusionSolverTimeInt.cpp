@@ -87,7 +87,7 @@ Diffusion::Diffusion(int argc, char* argv[])
     session     = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     // Create Field I/O object.
-    fld         = LibUtilities::MakeDefaultFieldIO(session);
+    fld         = LibUtilities::FieldIO::CreateDefault(session);
 
     // Get some information from the session
     sessionName = session->GetSessionName();

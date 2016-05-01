@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>3D channel flow, Tet elements, par(2), P=8</description>
+    <description>3D channel flow, Tet elements, HDF5 output par(3), P=8</description>
     <executable>IncNavierStokesSolver</executable>
     <parameters>--use-metis Tet_channel_m8_par.xml</parameters>
     <processes>2</processes>

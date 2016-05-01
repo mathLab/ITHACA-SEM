@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
         // Create Field I/O object.
-        fld     = LibUtilities::MakeDefaultFieldIO(session);
+        fld     = LibUtilities::FieldIO::CreateDefault(session);
 
         // Get some information about the session
         string       sessionName = session->GetSessionName();

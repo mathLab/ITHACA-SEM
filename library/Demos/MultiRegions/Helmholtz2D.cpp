@@ -44,7 +44,8 @@ int main(int argc, char *argv[])
 
     try
     {
-        LibUtilities::FieldIOSharedPtr fld = LibUtilities::MakeDefaultFieldIO(vSession);
+        LibUtilities::FieldIOSharedPtr fld =
+            LibUtilities::FieldIO::CreateDefault(vSession);
 
         //----------------------------------------------
         // Read in mesh from input file

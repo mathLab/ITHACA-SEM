@@ -85,7 +85,7 @@ Mapping::Mapping(const LibUtilities::SessionReaderSharedPtr& pSession,
         break;
     }
 
-    m_fld = LibUtilities::MakeDefaultFieldIO(pSession);
+    m_fld = LibUtilities::FieldIO::CreateDefault(pSession);
 }
 
 /**
@@ -443,7 +443,7 @@ void Mapping::EvaluateFunction(
         Vmath::Zero(vCoeffs.num_elements(), vCoeffs, 1);
 
         LibUtilities::FieldIOSharedPtr fld =
-            LibUtilities::MakeFieldIOForFile(pSession, filename);
+            LibUtilities::FieldIO::CreateForFile(pSession, filename);
         fld->Import(filename, FieldDef, FieldData);
 
         int idx = -1;

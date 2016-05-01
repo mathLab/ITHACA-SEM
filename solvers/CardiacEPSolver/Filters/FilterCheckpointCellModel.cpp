@@ -68,7 +68,7 @@ FilterCheckpointCellModel::FilterCheckpointCellModel(
 
     m_outputIndex = 0;
     m_index = 0;
-    m_fld = LibUtilities::MakeDefaultFieldIO(m_session);
+    m_fld = LibUtilities::FieldIO::CreateDefault(m_session);
 }
 
 FilterCheckpointCellModel::~FilterCheckpointCellModel()

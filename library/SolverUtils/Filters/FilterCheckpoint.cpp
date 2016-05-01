@@ -69,7 +69,7 @@ FilterCheckpoint::FilterCheckpoint(
 
     m_outputIndex = 0;
     m_index       = 0;
-    m_fld         = LibUtilities::MakeDefaultFieldIO(pSession);
+    m_fld         = LibUtilities::FieldIO::CreateDefault(pSession);
 }
 
 FilterCheckpoint::~FilterCheckpoint()

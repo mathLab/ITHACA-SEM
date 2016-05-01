@@ -97,7 +97,7 @@ FilterThresholdMax::FilterThresholdMax(
         m_thresholdVar = x - varlist.begin();
     }
 
-    m_fld = LibUtilities::MakeDefaultFieldIO(pSession);
+    m_fld = LibUtilities::FieldIO::CreateDefault(pSession);
 }
 
 FilterThresholdMax::~FilterThresholdMax()

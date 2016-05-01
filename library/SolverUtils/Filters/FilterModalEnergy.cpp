@@ -111,7 +111,7 @@ FilterModalEnergy::FilterModalEnergy(
         }
     }
 
-    m_fld = LibUtilities::MakeDefaultFieldIO(pSession);
+    m_fld = LibUtilities::FieldIO::CreateDefault(pSession);
 }
 
 /**

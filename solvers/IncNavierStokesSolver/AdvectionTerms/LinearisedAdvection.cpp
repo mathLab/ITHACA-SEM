@@ -595,7 +595,7 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
     }
 
     //Get Homogeneous
-    LibUtilities::FieldIOSharedPtr fld = LibUtilities::MakeFieldIOForFile(
+    LibUtilities::FieldIOSharedPtr fld = LibUtilities::FieldIO::CreateForFile(
         m_session, pInfile);
     fld->Import(pInfile, FieldDef, FieldData,
                 LibUtilities::NullFieldMetaDataMap,

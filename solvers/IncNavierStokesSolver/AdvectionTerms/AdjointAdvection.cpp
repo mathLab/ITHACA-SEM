@@ -505,7 +505,8 @@ void AdjointAdvection::ImportFldBase(std::string pInfile,
     Array<OneD, NekDouble> tmp_coeff(pFields[0]->GetNcoeffs(), 0.0);
 
     //Get Homogeneous
-    LibUtilities::FieldIOSharedPtr fld = LibUtilities::MakeFieldIOForFile(m_session, pInfile);
+    LibUtilities::FieldIOSharedPtr fld =
+        LibUtilities::FieldIO::CreateForFile(m_session, pInfile);
     fld->Import(pInfile, FieldDef, FieldData);
 
     int nvar = m_session->GetVariables().size();

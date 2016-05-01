@@ -190,7 +190,8 @@ namespace Nektar
                 Array<OneD, NekDouble> vCoeffs(pFields[0]->GetNcoeffs());
                 Vmath::Zero(vCoeffs.num_elements(), vCoeffs, 1);
 
-                LibUtilities::FieldIOSharedPtr fld = LibUtilities::MakeFieldIOForFile(m_session, filename);
+                LibUtilities::FieldIOSharedPtr fld =
+                    LibUtilities::FieldIO::CreateForFile(m_session, filename);
                 fld->Import(filename, FieldDef, FieldData);
 
                 int idx = -1;

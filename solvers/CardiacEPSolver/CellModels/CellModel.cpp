@@ -373,7 +373,8 @@ namespace Nektar
             }
             FieldDef[*setIt] = FDef(0);
             FieldData[*setIt] = FData(0);
-            LibUtilities::FieldIOSharedPtr fld = LibUtilities::MakeFieldIOForFile(m_session, *setIt);
+            LibUtilities::FieldIOSharedPtr fld =
+                LibUtilities::FieldIO::CreateForFile(m_session, *setIt);
             fld->Import(*setIt, FieldDef[*setIt], FieldData[*setIt],
                         fieldMetaDataMap);
         }

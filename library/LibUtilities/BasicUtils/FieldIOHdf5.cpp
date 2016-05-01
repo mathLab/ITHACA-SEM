@@ -89,6 +89,8 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         tm0 = m_comm->Wtime();
     }
 
+    SetUpOutput(outFile, false);
+
     // We make a number of assumptions in this code:
     //   1. All element ids have the same type: unsigned int
     //   2. All elements within a given field have the same number of values
@@ -105,8 +107,17 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
 
     int root_rank = -1;
     bool amRoot = false;
-    LibUtilities::CommSharedPtr max_fields_comm =
-        m_comm->CommCreateIf((nFields == nMaxFields) ? 1 : 0);
+    LibUtilities::CommSharedPtr max_fields_comm;
+
+    if (m_comm->GetSize() > 1)
+    {
+        max_fields_comm = m_comm->CommCreateIf((nFields == nMaxFields) ? 1 : 0);
+    }
+    else
+    {
+        max_fields_comm = m_comm;
+    }
+
     if (max_fields_comm)
     {
         int rank  = m_comm->GetRank();
@@ -358,7 +369,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
             {
                 continue;
             }
-            hashToProc.insert(m_comm->GetRank());
+            hashToProc.insert(hash);
             writingProcs[n].push_back(hash);
         }
     }
@@ -383,16 +394,21 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
             ASSERTL1(root, prfx.str() + "cannot open root group.");
 
             // Write a HDF5 group for each field
+            hashToProc.clear();
             for (int i = 0; i < sIt->second.size(); ++i)
             {
                 for (int f = 0; f < nFields; ++f)
                 {
                     if (sIt->second[i] !=
-                        all_hashes[m_comm->GetRank() * nMaxFields + f])
+                        all_hashes[m_comm->GetRank() * nMaxFields + f] ||
+                        hashToProc.find(sIt->second[i]) != hashToProc.end())
                     {
                         continue;
                     }
 
+                    hashToProc.insert(sIt->second[i]);
+
+                    // Just in case we've already written this
                     H5::GroupSharedPtr field_group =
                         root->CreateGroup(fieldNames[f]);
                     ASSERTL1(field_group,

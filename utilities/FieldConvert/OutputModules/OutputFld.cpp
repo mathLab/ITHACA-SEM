@@ -333,8 +333,18 @@ void OutputFld::Process(po::variables_map &vm)
         int writefld = 1;
         if(fs::exists(writefile)&&(vm.count("forceoutput") == 0))
         {
-            LibUtilities::CommSharedPtr comm = m_f->m_session->GetComm();
-            int rank = comm->GetRank();
+            int rank = 0;
+            LibUtilities::CommSharedPtr comm;
+            if (m_f->m_session)
+            {
+                comm = m_f->m_session->GetComm();
+                rank = comm->GetRank();
+            }
+            else
+            {
+                comm = LibUtilities::GetCommFactory().CreateInstance(
+                    "Serial", 0, 0);
+            }
             writefld = 0; // set to zero for reduce all to be correct. 
 
             if(rank == 0)

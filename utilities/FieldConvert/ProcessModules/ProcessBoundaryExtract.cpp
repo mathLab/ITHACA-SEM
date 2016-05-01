@@ -62,7 +62,6 @@ ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f) : ProcessModule
 
     f->m_writeBndFld = true;
     f->m_declareExpansionAsContField = true;
-    f->m_declareAsNewField = true;
 
 }
 

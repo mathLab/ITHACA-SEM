@@ -608,7 +608,7 @@ void LinearisedAdvection::ImportFldBase(
     int nFileConvVar    = nFileVar - 1; // Ignore pressure
     if (m_halfMode)
     {
-        ASSERTL0(nFileVar == 3, "For half/single mode, expect 2D2C base flow.");
+        ASSERTL0(nFileVar == 3, "For half mode, expect 2D2C base flow.");
         nFileConvVar = 2;
     }
 

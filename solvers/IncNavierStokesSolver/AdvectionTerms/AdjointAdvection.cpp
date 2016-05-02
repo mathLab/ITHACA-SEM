@@ -526,9 +526,9 @@ void AdjointAdvection::ImportFldBase(
     int nSessionConvVar = nSessionVar - 1;
     int nFileVar        = FieldDef[0]->m_fields.size();
     int nFileConvVar    = nFileVar - 1; // Ignore pressure
-    if (m_HalfMode || m_SingleMode)
+    if (m_HalfMode)
     {
-        ASSERTL0(nFileVar == 3, "For half/single mode, expect 2D2C base flow.");
+        ASSERTL0(nFileVar == 3, "For half mode, expect 2D2C base flow.");
         nFileConvVar = 2;
     }
 

@@ -33,6 +33,9 @@ v4.3.1
 - Remove requirement for executable to be specified in .tst file if it is
   overridden on the command-line (!595)
 
+**Packaging**:
+- Fix dependency resolution on generation of DEB packages. (!616)
+
 v4.3.0
 ------
 **Library:**

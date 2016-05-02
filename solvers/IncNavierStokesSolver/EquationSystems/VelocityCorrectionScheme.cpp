@@ -342,7 +342,7 @@ namespace Nektar
         Array<OneD, Array< OneD, NekDouble> > F(m_nConvectiveFields);
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
-            F[i] = Array<OneD, NekDouble> (phystot);
+            F[i] = Array<OneD, NekDouble> (phystot, 0.0);
         }
 
         // Enforcing boundary conditions on all fields
@@ -415,7 +415,7 @@ namespace Nektar
         
         // Subtract inarray/(aii_dt) and divide by kinvis. Kinvis will
         // need to be updated for the convected fields.
-        for(int i = 0; i < nvel; ++i)
+        for(int i = 0; i < m_nConvectiveFields; ++i)
         {
             Blas::Daxpy(phystot,-aii_dtinv,inarray[i],1,Forcing[i],1);
             Blas::Dscal(phystot,1.0/m_kinvis,&(Forcing[i])[0],1);

@@ -1078,7 +1078,7 @@ void ProcessVarOpti::FillQuadPoints()
             StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
 
             LibUtilities::PointsKey pkey(m_mesh->m_nummode,
-                                         LibUtilities::eNodalTriElec);
+                                         LibUtilities::eNodalTriFekete);
             Array<OneD, NekDouble> u, v;
             LibUtilities::PointsManager()[pkey]->GetPoints(u, v);
 
@@ -1104,7 +1104,7 @@ void ProcessVarOpti::FillQuadPoints()
             }
 
             el->SetVolumeNodes(hons);
-            el->SetCurveType(LibUtilities::eNodalTriElec);
+            el->SetCurveType(LibUtilities::eNodalTriFekete);
         }
     }
     else

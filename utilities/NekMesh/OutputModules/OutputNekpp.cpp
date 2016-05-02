@@ -679,7 +679,7 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
             }
         }
         // 2D elements in 3-space, output face curvature information
-        else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
+        else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim >= 2)
         {
             vector<ElementSharedPtr>::iterator it;
             for (it = m_mesh->m_element[m_mesh->m_expDim].begin();
@@ -831,7 +831,7 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
             }
         }
         // 2D elements in 3-space, output face curvature information
-        else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
+        else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim >= 2)
         {
             vector<ElementSharedPtr>::iterator it;
             for (it = m_mesh->m_element[m_mesh->m_expDim].begin();

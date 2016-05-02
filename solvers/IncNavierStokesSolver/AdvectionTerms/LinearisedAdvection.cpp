@@ -376,8 +376,6 @@ void LinearisedAdvection::v_Advect(
                 fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0,
                                      grad_base_w1,  grad_base_w2);
                 fields[0]->SetWaveSpace(oldwavespace);
-
-
             }
             else
             {
@@ -421,7 +419,7 @@ void LinearisedAdvection::v_Advect(
             Vmath::Vvtvp(nPointsTot,grad_base_u1,1,advVel[1],1,
                          outarray[0],1,outarray[0],1);
 
-            if(m_singleMode || m_multipleModes)
+            if(!m_halfMode)
             {
                 //Evaluate an add W du'/dz
                 Vmath::Vvtvp(nPointsTot, grad2, 1, m_baseflow[2],
@@ -471,7 +469,7 @@ void LinearisedAdvection::v_Advect(
             Vmath::Vvtvp(nPointsTot,grad_base_v1,1,advVel[1],1,
                          outarray[1],1,outarray[1],1);
 
-            if(m_singleMode || m_multipleModes)
+            if(!m_halfMode)
             {
                 //Evaluate  W du'/dz
                 Vmath::Vvtvp(nPointsTot, grad2,       1,  m_baseflow[2], 1,
@@ -516,7 +514,7 @@ void LinearisedAdvection::v_Advect(
             Vmath::Vvtvp(nPointsTot, grad1,      1, m_baseflow[1], 1,
                          outarray[2],  1, outarray[2],   1);
 
-            if(m_singleMode || m_multipleModes) // since if halfmode W = 0
+            if(!m_halfMode) // since if halfmode W = 0
             {
                 //Evaluate u' dW/dx
                 Vmath::Vvtvp(nPointsTot,grad_base_w0,1,advVel[0],1,

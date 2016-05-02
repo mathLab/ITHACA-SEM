@@ -93,9 +93,9 @@ ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
                                         "Postive diffusion coefficient "
                                         "(0 < lambda < 1), default = 0.5");
 
-    m_config["smoothnegdiffusion"] = ConfigOption(false,"0.495",
+    m_config["smoothnegdiffusion"] = ConfigOption(false,"0.505",
                                         "Negative diffusion coefficient "
-                                        "(0 < mu < 1), default = 0.495");
+                                        "(0 < mu < 1), default = 0.505");
 
     m_config["removesmallcontour"] = ConfigOption(false,"0",
                                         "Remove contours with less than specified number of triangles."
@@ -1273,9 +1273,9 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
                 del_v[2] =  del_v[2] + (m_z[*iad]-m_z[i])*w;
             }
 
-            xtemp[i] = m_x[i] + del_v[0] * lambda;
-            ytemp[i] = m_y[i] + del_v[1] * lambda;
-            ztemp[i] = m_z[i] + del_v[2] * lambda;
+            m_x[i] = m_x[i] + del_v[0] * lambda;
+            m_y[i] = m_y[i] + del_v[1] * lambda;
+            m_z[i] = m_z[i] + del_v[2] * lambda;
         }
 
         // compute second weighted average
@@ -1292,9 +1292,9 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
                 del_v[2] =  del_v[2] + (m_z[*iad]-m_z[i])*w;
             }
 
-            m_x[i] = xtemp[i] + del_v[0] * mu;
-            m_y[i] = ytemp[i] + del_v[1] * mu;
-            m_z[i] = ztemp[i] + del_v[2] * mu;
+            m_x[i] = m_x[i] + del_v[0] * mu;
+            m_y[i] = m_y[i] + del_v[1] * mu;
+            m_z[i] = m_z[i] + del_v[2] * mu;
         }
     }
 }

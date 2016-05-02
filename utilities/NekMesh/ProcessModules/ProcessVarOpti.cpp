@@ -374,6 +374,8 @@ ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "1", "Number of threads");
     m_config["nq"] =
         ConfigOption(false, "0", "Number of quad points");
+    m_config["stats"] =
+        ConfigOption(false, "", "Write a file with list of scaled jacobians");
 }
 
 ProcessVarOpti::~ProcessVarOpti()
@@ -548,6 +550,13 @@ void ProcessVarOpti::Process()
                                             VdmDx,VdmDy,VdmDz,quadW);
     }
     cout << "end energy: " << functionalStart << endl;
+
+    if(m_config["stats"].beenSet)
+    {
+        string file = m_config["stats"].as<string>();
+        cout << "writing stats to " << file.c_str() << endl;
+        WriteStats(file);
+    }
 }
 
 void ProcessVarOpti::NodeOpti::Optimise()
@@ -1272,6 +1281,55 @@ void ProcessVarOpti::FillQuadPoints()
             el->SetVolumeNodes(hons);
             el->SetCurveType(LibUtilities::eNodalTriFekete);*/
         }
+    }
+}
+
+void ProcessVarOpti::WriteStats(string file)
+{
+    ASSERTL0(file != "", "no file name given");
+
+    ofstream out;
+    out.open(file.c_str());
+    out << scientific;
+
+    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+    {
+        vector<NodeSharedPtr> ns;
+        m_mesh->m_element[m_mesh->m_expDim][i]->GetCurvedNodes(ns);
+        int pts = ns.size();
+        int dim = m_mesh->m_element[m_mesh->m_expDim][i]->GetDim();
+
+        NekDouble mx = -1.0 * numeric_limits<double>::max();
+        NekDouble mn = numeric_limits<double>::max();
+
+        if(dim == 2)
+        {
+            NekVector<NekDouble> X(pts),Y(pts),Z(pts),
+                                 x1(pts),y1(pts),
+                                 x2(pts),y2(pts);
+            for(int i = 0; i < pts; i++)
+            {
+                X(i) = ns[i]->m_x;
+                Y(i) = ns[i]->m_y;
+            }
+
+            x1 = VdmDx*X;
+            y1 = VdmDx*Y;
+            x2 = VdmDy*X;
+            y2 = VdmDy*Y;
+
+            for(int i = 0; i < pts; i++)
+            {
+                mx = max(mx, x1(i)*y2(i)-y1(i)*x2(i));
+                mn = min(mn, x1(i)*y2(i)-y1(i)*x2(i));
+            }
+
+        }
+        else
+        {
+            ASSERTL0(false,"not coded");
+        }
+        out << mn / mx << endl;
     }
 }
 

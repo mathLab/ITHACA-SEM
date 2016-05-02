@@ -94,6 +94,7 @@ private:
     void GetElementMap();
     vector<Array<OneD, NekDouble> > MappingIdealToRef(ElementSharedPtr el);
     vector<vector<NodeSharedPtr> > GetColouredNodes();
+    void WriteStats(string file);
 
     NodeElMap nodeElMap;
     vector<ElDataSharedPtr> dataSet;

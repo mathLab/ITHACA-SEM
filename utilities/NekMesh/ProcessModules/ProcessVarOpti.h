@@ -109,8 +109,10 @@ private:
         NodeOpti(NodeSharedPtr n, vector<ElDataSharedPtr> e, optimiser o,
                  ResidualSharedPtr r, int d,
                  NekMatrix<NekDouble> &vx, NekMatrix<NekDouble> &vy,
+                 NekMatrix<NekDouble> &vz,
                  NekVector<NekDouble> &w)
-                : node(n), data(e), opti(o), res(r), dim(d), VdmDx(vx), VdmDy(vy), quadW(w)
+                : node(n), data(e), opti(o), res(r), dim(d),
+                  VdmDx(vx), VdmDy(vy), VdmDz(vz), quadW(w)
         {
         }
 
@@ -129,7 +131,7 @@ private:
         optimiser opti;
         ResidualSharedPtr res;
         int dim;
-        NekMatrix<NekDouble> VdmDx, VdmDy;
+        NekMatrix<NekDouble> VdmDx, VdmDy, VdmDz;
         NekVector<NekDouble> quadW;
     };
 

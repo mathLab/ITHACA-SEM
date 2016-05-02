@@ -110,8 +110,13 @@ namespace Nektar
                                                 NekConstants::kNekUnsetDouble);
 
         // Load parameters for Spectral Vanishing Viscosity
-        m_session->MatchSolverInfo("SpectralVanishingViscosity","True",
+        m_session->MatchSolverInfo("SpectralVanishingViscositySpectralHP",
+                                "True", m_useSpecVanVisc,false);
+        if(m_useSpecVanVisc == false)
+        {
+            m_session->MatchSolverInfo("SpectralVanishingViscosity","True",
                                    m_useSpecVanVisc,false);
+        }
         m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
         m_session->LoadParameter("SVVDiffCoeff",  m_sVVDiffCoeff,  0.1);
         // Needs to be set outside of next if so that it is turned off by default

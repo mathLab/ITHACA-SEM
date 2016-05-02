@@ -98,7 +98,7 @@ private:
     NodeElMap nodeElMap;
     vector<ElDataSharedPtr> dataSet;
     optimiser opti;
-    NekMatrix<NekDouble> Vandermonde, VandermondeI, VdmDx, VdmDy;
+    NekMatrix<NekDouble> Vandermonde, VandermondeI, VdmDx, VdmDy, VdmDz;
     NekVector<NekDouble> quadW;
 
     class NodeOptiJob;

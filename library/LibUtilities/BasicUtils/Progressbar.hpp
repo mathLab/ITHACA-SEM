@@ -72,10 +72,6 @@ inline int PrintProgressbar(const int position, const int goal, const string mes
     std::cout.unsetf ( std::ios::floatfield );
     if (ISTTY)
     {
-        // carriage return
-        cout << "\r";
-
-        cout << message << ": ";
         float progress = position / float(goal);
         int  numeq = ceil(progress *49); 
         if(lastprogress == numeq)
@@ -84,6 +80,11 @@ inline int PrintProgressbar(const int position, const int goal, const string mes
         }
         else
         {
+            // carriage return
+            cout << "\r";
+
+            cout << message << ": ";
+
             cout << setw(3) << ceil(100 * progress) << "% [";
             for (int j = 0; j < numeq; j++)
             {

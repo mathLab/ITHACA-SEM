@@ -155,13 +155,13 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
                  prfx.str() + "fielddata vector has invalid size.");
 
         std::size_t nFieldElems = fielddefs[f]->m_elementIDs.size();
-        std::size_t nElemVals   = fielddata[f].size() / nFieldElems;
+        std::size_t nElemVals   = fielddata[f].size();
 
         decomps[f * MAX_DCMPS + ELEM_DCMP_IDX] = nFieldElems;
         decomps[f * MAX_DCMPS + VAL_DCMP_IDX]  = nElemVals;
 
         cnts[ELEM_CNT_IDX] += nFieldElems;
-        cnts[VAL_CNT_IDX] += nElemVals * nFieldElems;
+        cnts[VAL_CNT_IDX] += nElemVals;
 
         // Hash the field specification
         std::stringstream hashStream;
@@ -524,8 +524,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         ids_i += nFieldElems;
 
         // write the element values
-        std::size_t nElemVals  = fielddata[f].size() / nFieldElems;
-        std::size_t nFieldVals = nElemVals * nFieldElems;
+        std::size_t nFieldVals = fielddata[f].size();
         data_fspace->SelectRange(data_i, nFieldVals);
         data_dset->Write(fielddata[f], data_fspace, writePL);
         data_i += nFieldVals;
@@ -685,7 +684,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 
         groupsToElmts[i] = tmp2;
         decompsToDataOffsets[i] = dataOffset;
-        dataOffset += nElmt * dataSize;
+        dataOffset += dataSize;
     }
 
     map<size_t, set<size_t> >::iterator gIt;
@@ -924,9 +923,8 @@ void FieldIOHdf5::ImportFieldData(
     std::stringstream prfx;
     prfx << m_comm->GetRank() << ": FieldIOHdf5::ImportFieldData(): ";
 
-    size_t nFieldElems = decomps[decomp * MAX_DCMPS + ELEM_DCMP_IDX];
     size_t nElemVals   = decomps[decomp * MAX_DCMPS + VAL_DCMP_IDX];
-    size_t nFieldVals  = nFieldElems * nElemVals;
+    size_t nFieldVals  = nElemVals;
 
     data_fspace->SelectRange(data_i, nFieldVals);
     data_dset->Read(fielddata, data_fspace, readPL);

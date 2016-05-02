@@ -884,10 +884,7 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
     {
         if(verbose)
         {
-	    if(i%(m_nvert/200)==0)
-	    {
-                 prog = LibUtilities::PrintProgressbar(i,m_nvert,"Nearest verts",prog);
-	    }
+            prog = LibUtilities::PrintProgressbar(i,m_nvert,"Nearest verts",prog);
         }
 
         n_neighbs  = 5; 
@@ -1103,10 +1100,7 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
             
             if(verbose && totiso >= 40)
             {
-	        if(cnt % (int)(totiso/200) == 0)
-	        {
-                     progcnt = LibUtilities::PrintProgressbar(cnt,totiso,"Condensing verts",progcnt);
-                }
+                progcnt = LibUtilities::PrintProgressbar(cnt,totiso,"Condensing verts",progcnt);
             }
 
             int con = isocon[i][n];
@@ -1331,11 +1325,12 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
         
         
         // check all points are assigned to a region
+	int progcnt  = -1; 
         for(k = 0; k < m_nvert; ++k)
         {
             if(verbose)
             {
-                LibUtilities::PrintProgressbar(k,m_nvert,"Separating regions");
+                progcnt = LibUtilities::PrintProgressbar(k,m_nvert,"Separating regions",progcnt);
             }
 
             if(vidregion[k] == -1)

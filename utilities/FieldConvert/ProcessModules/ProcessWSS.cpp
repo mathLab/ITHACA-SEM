@@ -60,8 +60,6 @@ ProcessWSS::ProcessWSS(FieldSharedPtr f) : ProcessModule(f)
     f->m_writeBndFld = true;
     f->m_declareExpansionAsContField = true;
     m_f->m_fldToBnd = false;
-    
-    f->m_declareAsNewField = true;
 }
 
 ProcessWSS::~ProcessWSS()

@@ -88,7 +88,7 @@ InputXml::~InputXml()
  */
 void InputXml::Process(po::variables_map &vm)
 {
-    Timer timer, timerpart;
+    Timer timerpart;
 
     //check for multiple calls to inputXml due to split xml
     //files. If so just return
@@ -105,7 +105,6 @@ void InputXml::Process(po::variables_map &vm)
         if(m_f->m_comm->GetRank() == 0)
         {
             cout << "Processing input xml file" << endl;
-            timer.Start();
             timerpart.Start();
         }
     }
@@ -419,16 +418,6 @@ void InputXml::Process(po::variables_map &vm)
             ss1 << cpuTime << "s";
             cout << "\t InputXml set first exp CPU Time: " << setw(8) << left
                  << ss1.str() << endl;
-
-            
-            timer.Stop();
-            cpuTime = timer.TimePerTest(1);
-            
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "InputXml  CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-
         }
     }
 }

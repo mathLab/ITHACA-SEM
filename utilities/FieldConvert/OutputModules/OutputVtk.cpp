@@ -63,16 +63,6 @@ OutputVtk::~OutputVtk()
 
 void OutputVtk::Process(po::variables_map &vm)
 {
-    Timer timer;
-
-    if (m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timer.Start();
-        }
-    }
-
     LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
 
     // Do nothing if no expansion defined
@@ -361,19 +351,6 @@ void OutputVtk::Process(po::variables_map &vm)
             outfile << "</PUnstructuredGrid>"  << endl;
             outfile << "</VTKFile>" << endl;
             cout << "Written file: " << filename << endl;
-        }
-    }
-    if(m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
-
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "OutputVtk  CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
         }
     }
 }

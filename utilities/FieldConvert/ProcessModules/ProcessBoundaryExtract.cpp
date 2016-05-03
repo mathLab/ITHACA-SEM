@@ -72,15 +72,12 @@ ProcessBoundaryExtract::~ProcessBoundaryExtract()
 
 void ProcessBoundaryExtract::Process(po::variables_map &vm)
 {
-    Timer timer;
-
     if (m_f->m_verbose)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
             cout << "ProcessBoundaryExtract: Setting up boundary extraction..."
                  << endl;
-            timer.Start();
         }
     }
 
@@ -140,20 +137,6 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
 
     m_f->m_fldToBnd = m_config["fldtoboundary"].m_beenSet;
     m_f->m_addNormals = m_config["addnormals"].m_beenSet;
-
-    if(m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
-
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "ProcessBoundaryExtract CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-        }
-    }
 }
 
 }

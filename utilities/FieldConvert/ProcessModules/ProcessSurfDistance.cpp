@@ -65,15 +65,12 @@ ProcessSurfDistance::~ProcessSurfDistance()
 
 void ProcessSurfDistance::Process(po::variables_map &vm)
 {
-    Timer timer;
-
     if (m_f->m_verbose)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
             cout << "ProcessSurfDistance: Calculating distance to surface..."
                  << endl;
-            timer.Start();
         }
     }
 
@@ -242,20 +239,6 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
         }
 
         BndExp[i]->FwdTrans(BndExp[i]->GetPhys(), BndExp[i]->UpdateCoeffs());
-    }
-
-    if(m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
-
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "ProcessSurfDistance CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-        }
     }
 }
 

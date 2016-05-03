@@ -109,14 +109,11 @@ ProcessInterpPoints::~ProcessInterpPoints()
 
 void ProcessInterpPoints::Process(po::variables_map &vm)
 {
-    Timer timer;
-
     if(m_f->m_verbose)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
             cout << "ProcessInterpPoints: interpolating to points..." << endl;
-            timer.Start();
         }
     }
 
@@ -522,20 +519,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     if(rank == 0)
     {
         cout << "]" << endl;
-    }
-
-    if(m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
-
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "ProcessInterpPoints CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-        }
     }
 }
 

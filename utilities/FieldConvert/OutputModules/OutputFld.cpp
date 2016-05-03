@@ -64,17 +64,8 @@ OutputFld::~OutputFld()
 
 void OutputFld::Process(po::variables_map &vm)
 {
-    Timer timer;
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
-
-    if (m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timer.Start();
-        }
-    }
 
     if (m_f->m_writeBndFld)
     {
@@ -386,19 +377,6 @@ void OutputFld::Process(po::variables_map &vm)
                          << ") : " << linferr << endl;
                 }
             }
-        }
-    }
-    if(m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
-            
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "OutputFld  CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
         }
     }
 }

@@ -62,14 +62,11 @@ namespace Nektar
 
         void ProcessDeform::Process(po::variables_map &vm)
         {
-            Timer timer;
-
             if (m_f->m_verbose)
             {
                 if(m_f->m_comm->GetRank() == 0)
                 {
                     cout << "ProcessDeform: Deforming grid..." << endl;
-                    timer.Start();
                 }
             }
 
@@ -81,20 +78,6 @@ namespace Nektar
             }
 
             SolverUtils::UpdateGeometry(m_f->m_graph, exp, false);
-
-            if(m_f->m_verbose)
-            {
-                if(m_f->m_comm->GetRank() == 0)
-                {
-                    timer.Stop();
-                    NekDouble cpuTime = timer.TimePerTest(1);
-
-                    stringstream ss;
-                    ss << cpuTime << "s";
-                    cout << "ProcessDeform CPU Time: " << setw(8) << left
-                         << ss.str() << endl;
-                }
-            }
         }
     }
 }

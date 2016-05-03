@@ -67,14 +67,11 @@ ProcessScalGrad::~ProcessScalGrad()
 
 void ProcessScalGrad::Process(po::variables_map &vm)
 {
-    Timer timer;
-
     if (m_f->m_verbose)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
             cout << "ProcessScalGrad: Calculating scalar gradient..." << endl;
-            timer.Start();
         }
     }
 
@@ -243,20 +240,6 @@ void ProcessScalGrad::Process(po::variables_map &vm)
         for(int b = 0; b < m_f->m_bndRegionsToWrite.size(); ++b)
         {
             m_f->m_exp[j]->UpdateBndCondExpansion(m_f->m_bndRegionsToWrite[b]) = BndExp[j][m_f->m_bndRegionsToWrite[b]];
-        }
-    }
-
-    if(m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
-
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "ProcessScalGrad CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
         }
     }
 }

@@ -124,15 +124,12 @@ namespace Utilities
 
     void ProcessDisplacement::Process(po::variables_map &vm)
     {
-        Timer timer;
-
         if (m_f->m_verbose)
         {
             if(m_f->m_comm->GetRank() == 0)
             {
                 cout << "ProcessDisplacement: Calculating displacement..."
                      << endl;
-                timer.Start();
             }
         }
 
@@ -329,20 +326,6 @@ namespace Utilities
                 bndCondExpV->GetPhys(), bndCondExpV->UpdateCoeffs());
             bndCondExpW->FwdTrans_BndConstrained(
                 bndCondExpW->GetPhys(), bndCondExpW->UpdateCoeffs());
-        }
-
-        if(m_f->m_verbose)
-        {
-            if(m_f->m_comm->GetRank() == 0)
-            {
-                timer.Stop();
-                NekDouble cpuTime = timer.TimePerTest(1);
-
-                stringstream ss;
-                ss << cpuTime << "s";
-                cout << "ProcessDisplacement CPU Time: " << setw(8) << left
-                     << ss.str() << endl;
-            }
         }
     }
 }

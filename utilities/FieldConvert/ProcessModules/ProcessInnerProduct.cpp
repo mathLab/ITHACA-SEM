@@ -77,14 +77,11 @@ ProcessInnerProduct::~ProcessInnerProduct()
 
 void ProcessInnerProduct::Process(po::variables_map &vm)
 {
-    Timer timer;
-
     if (m_f->m_verbose)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
             cout << "ProcessInnerProduct: Evaluating inner product..." << endl;
-            timer.Start();
         }
     }
 
@@ -224,20 +221,6 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
                          << fromfiles[f] << " : " << totiprod << endl;
                 }
             }
-        }
-    }
-
-    if(m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
-
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "ProcessInnerProduct CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
         }
     }
 }

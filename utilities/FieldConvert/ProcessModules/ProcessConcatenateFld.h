@@ -59,6 +59,12 @@ class ProcessConcatenateFld : public ProcessModule
         virtual ~ProcessConcatenateFld();
 
         virtual void Process(po::variables_map &vm);
+
+        virtual std::string GetModuleName()
+        {
+            return "ProcessConcatenateFld";
+        }
+
 };
 }
 }

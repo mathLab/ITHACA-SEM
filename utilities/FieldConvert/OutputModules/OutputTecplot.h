@@ -81,7 +81,12 @@ class OutputTecplot : public OutputModule
                                std::ofstream &outfile);
 
         void WriteTecplotConnectivity(std::ofstream &outfile);
-        
+
+        virtual std::string GetModuleName()
+        {
+            return "OutputTecplot";
+        }
+
 };
 
 }

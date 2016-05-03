@@ -70,14 +70,11 @@ ProcessWSS::~ProcessWSS()
 
 void ProcessWSS::Process(po::variables_map &vm)
 {
-    Timer timer;
-
     if (m_f->m_verbose)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
             cout << "ProcessWSS: Calculating wall shear stress..." << endl;
-            timer.Start();
         }
     }
 
@@ -298,20 +295,6 @@ void ProcessWSS::Process(po::variables_map &vm)
         Vmath::Vsqrt(nqb, fshear[nshear-1], 1, fshear[nshear-1], 1);
         BndExp[nshear-1]->FwdTrans(fshear[nshear-1], 
                                  BndExp[nshear-1]->UpdateCoeffs());
-    }
-
-    if(m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
-
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "ProcessWSS CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-        }
     }
 }
 

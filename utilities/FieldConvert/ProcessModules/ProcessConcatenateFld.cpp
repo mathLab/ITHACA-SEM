@@ -83,12 +83,15 @@ ProcessConcatenateFld::~ProcessConcatenateFld()
 
 void ProcessConcatenateFld::Process(po::variables_map &vm)
 {
+    Timer timer;
+
     if (m_f->m_verbose)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
             cout << "ProcessConcatenateFld: Concatenating field file..."
                  << endl;
+            timer.Start();
         }
     }
 
@@ -110,6 +113,20 @@ void ProcessConcatenateFld::Process(po::variables_map &vm)
 
     m_f->m_fielddef  = FieldDef;
     m_f->m_data = FieldData;
+
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timer.Stop();
+            NekDouble cpuTime = timer.TimePerTest(1);
+
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "ProcessConcatenateFld CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+        }
+    }
 }
 
 }

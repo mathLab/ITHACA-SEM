@@ -193,9 +193,9 @@ void ProcessC0Projection::Process(po::variables_map &vm)
                 factors[StdRegions::eFactorLambda] = -lambda;
 
                 Array<OneD, Array<OneD, NekDouble> > Velocity(dim);
-                for(int i =0; i < dim; ++i)
+                for(int j =0; j < dim; ++j)
                 {
-                    Velocity[i] = Array<OneD, NekDouble> (npoints,0.0);
+                    Velocity[j] = Array<OneD, NekDouble> (npoints,0.0);
                 }
                 
                 C0ProjectExp[processFields[i]]->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
@@ -249,12 +249,11 @@ void ProcessC0Projection::Process(po::variables_map &vm)
         {
             timer.Stop();
             NekDouble cpuTime = timer.TimePerTest(1);
-            
+
             stringstream ss;
             ss << cpuTime << "s";
-            cout << "C0 Projection CPU Time: " << setw(8) << left
+            cout << "ProcessC0Projection CPU Time: " << setw(8) << left
                  << ss.str() << endl;
-            cpuTime = 0.0;
         }
     }
 }

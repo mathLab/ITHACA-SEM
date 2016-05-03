@@ -63,11 +63,14 @@ ProcessQCriterion::~ProcessQCriterion()
 
 void ProcessQCriterion::Process(po::variables_map &vm)
 {
+    Timer timer;
+
     if (m_f->m_verbose)
     {
-        if(rank == 0)
+        if(m_f->m_comm->GetRank() == 0)
         {
             cout << "ProcessQCriterion: Calculating Q Criterion..." << endl;
+            timer.Start();
         }
     }
 
@@ -298,6 +301,20 @@ void ProcessQCriterion::Process(po::variables_map &vm)
 
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;
+
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timer.Stop();
+            NekDouble cpuTime = timer.TimePerTest(1);
+
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "ProcessQCriterion CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+        }
+    }
 }
 
 }

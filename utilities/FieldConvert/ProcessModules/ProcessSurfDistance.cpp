@@ -65,18 +65,21 @@ ProcessSurfDistance::~ProcessSurfDistance()
 
 void ProcessSurfDistance::Process(po::variables_map &vm)
 {
-    int i, j, k, cnt;
-    int surf = m_config["bnd"].as<int>();
-    int expdim = m_f->m_graph->GetMeshDimension();
+    Timer timer;
 
     if (m_f->m_verbose)
     {
-        if(rank == 0)
+        if(m_f->m_comm->GetRank() == 0)
         {
             cout << "ProcessSurfDistance: Calculating distance to surface..."
                  << endl;
+            timer.Start();
         }
     }
+
+    int i, j, k, cnt;
+    int surf = m_config["bnd"].as<int>();
+    int expdim = m_f->m_graph->GetMeshDimension();
 
     ASSERTL0(surf >= 0, "Invalid surface "+boost::lexical_cast<string>(surf));
 
@@ -239,6 +242,20 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
         }
 
         BndExp[i]->FwdTrans(BndExp[i]->GetPhys(), BndExp[i]->UpdateCoeffs());
+    }
+
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timer.Stop();
+            NekDouble cpuTime = timer.TimePerTest(1);
+
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "ProcessSurfDistance CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+        }
     }
 }
 

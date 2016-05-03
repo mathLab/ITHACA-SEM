@@ -65,7 +65,7 @@ void ProcessMeanMode::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        if(rank == 0)
+        if(m_f->m_comm->GetRank() == 0)
         {
             cout << "ProcessMeanMode: Extracting mean mode..." << endl;
         }

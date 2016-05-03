@@ -240,12 +240,11 @@ void ProcessIsoContour::Process(po::variables_map &vm)
         {
             timer.Stop();
             NekDouble cpuTime = timer.TimePerTest(1);
-            
+
             stringstream ss;
             ss << cpuTime << "s";
-            cout << "Process Isocontour CPU Time: " << setw(8) << left
+            cout << "ProcessIsoContour CPU Time: " << setw(8) << left
                  << ss.str() << endl;
-            cpuTime = 0.0;
         }
     }
 }

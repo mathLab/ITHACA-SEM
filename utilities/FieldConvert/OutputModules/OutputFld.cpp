@@ -70,12 +70,14 @@ void OutputFld::Process(po::variables_map &vm)
 
     if (m_f->m_verbose)
     {
-        timer.Start();
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timer.Start();
+        }
     }
 
     if (m_f->m_writeBndFld)
     {
-        Timer     timer; 
         ModuleKey module;
 
         if (m_f->m_verbose)
@@ -397,10 +399,8 @@ void OutputFld::Process(po::variables_map &vm)
             ss << cpuTime << "s";
             cout << "OutputFld  CPU Time: " << setw(8) << left
                  << ss.str() << endl;
-            cpuTime = 0.0;
         }
     }
-    
 }
 
 }

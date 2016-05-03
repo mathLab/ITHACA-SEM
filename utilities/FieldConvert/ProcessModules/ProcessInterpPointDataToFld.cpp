@@ -71,7 +71,7 @@ ProcessInterpPointDataToFld::~ProcessInterpPointDataToFld()
 
 void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 {
-    int i,j;
+    Timer timer;
 
     if(m_f->m_verbose)
     {
@@ -79,8 +79,11 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         {
             cout << "ProcessInterpPointDataToFld: interpolating data to field..."
                  << endl;
+            timer.Start();
         }
     }
+
+    int i,j;
 
     // Check for command line point specification if no .pts file specified
     ASSERTL0(m_f->m_fieldPts != LibUtilities::NullPtsField,
@@ -159,6 +162,19 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;
 
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timer.Stop();
+            NekDouble cpuTime = timer.TimePerTest(1);
+
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "ProcessInterpPointDataToFld CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+        }
+    }
 }
 
 }

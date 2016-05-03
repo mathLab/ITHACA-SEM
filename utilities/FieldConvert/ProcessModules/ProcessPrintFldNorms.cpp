@@ -64,11 +64,14 @@ ProcessPrintFldNorms::~ProcessPrintFldNorms()
 
 void ProcessPrintFldNorms::Process(po::variables_map &vm)
 {
+    Timer timer;
+
     if (m_f->m_verbose)
     {
-        if(rank == 0)
+        if(m_f->m_comm->GetRank() == 0)
         {
             cout << "ProcessPrintFldNorms: Printing norms..." << endl;
+            timer.Start();
         }
     }
 
@@ -84,6 +87,20 @@ void ProcessPrintFldNorms::Process(po::variables_map &vm)
              << ") : " << L2 << endl;
         cout << "L inf error (variable " << m_f->m_session->GetVariable(j)
              << ") : " << LInf << endl;
+    }
+
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timer.Stop();
+            NekDouble cpuTime = timer.TimePerTest(1);
+
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "ProcessPrintFldNorms CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+        }
     }
 }
 

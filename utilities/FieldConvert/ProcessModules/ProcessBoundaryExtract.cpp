@@ -147,12 +147,11 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
         {
             timer.Stop();
             NekDouble cpuTime = timer.TimePerTest(1);
-            
+
             stringstream ss;
             ss << cpuTime << "s";
-            cout << "Process Boundary Extract CPU Time: " << setw(8) << left
+            cout << "ProcessBoundaryExtract CPU Time: " << setw(8) << left
                  << ss.str() << endl;
-            cpuTime = 0.0;
         }
     }
 }

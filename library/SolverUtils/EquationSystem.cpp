@@ -2267,8 +2267,6 @@ namespace Nektar
                 else if (m_multipleModes)
                 {
                     AddSummaryItem(s, "ModeType", "Multiple Modes");
-                    AddSummaryItem(s, "Selected Mode",
-                                      boost::lexical_cast<string>(m_NumMode));
                 }
             }
             else if(m_HomogeneousType == eHomogeneous2D)

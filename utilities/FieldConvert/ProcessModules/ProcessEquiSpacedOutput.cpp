@@ -81,14 +81,11 @@ void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
 
 void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 {
-    Timer timer;
-
     if(m_f->m_verbose)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
             cout << "Interpolating fields to equispaced..." << endl;
-            timer.Start();
         }
     }
 
@@ -455,20 +452,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
     if (homogeneous1D)
     {
         SetHomogeneousConnectivity();
-    }
-
-    if(m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
-
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "SetupEquispacedOutput CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-        }
     }
 }
 

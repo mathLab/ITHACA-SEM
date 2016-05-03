@@ -72,7 +72,10 @@ void ProcessWSS::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessWSS: Calculating wall shear stress..." << endl;
+        if(rank == 0)
+        {
+            cout << "ProcessWSS: Calculating wall shear stress..." << endl;
+        }
     }
 
     m_f->m_addNormals = m_config["addnormals"].m_beenSet;

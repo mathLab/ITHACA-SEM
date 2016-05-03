@@ -90,7 +90,16 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
     int i,j;
     bool setnantovalue = false;
     NekDouble defvalue;
-    
+
+    if (m_f->m_verbose)
+    {
+        if(rank == 0)
+        {
+            cout << "ProcessPointDataToFld: projecting data to expansion..."
+                 << endl;
+        }
+    }
+
     if(!boost::iequals(m_config["setnantovalue"].as<string>(),"NotSet"))
     {
         setnantovalue = true;

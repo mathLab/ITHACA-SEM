@@ -70,7 +70,10 @@ void ProcessScalGrad::Process(po::variables_map &vm)
     int i, j, k;
     if (m_f->m_verbose)
     {
-        cout << "ProcessScalGrad: Calculating scalar gradient..." << endl;
+        if(rank == 0)
+        {
+            cout << "ProcessScalGrad: Calculating scalar gradient..." << endl;
+        }
     }
 
     // Set up Field options to output boundary fld

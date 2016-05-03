@@ -73,6 +73,14 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 {
     int i,j;
 
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "Processing interp point data to fld" << endl;
+        }
+    }
+
     // Check for command line point specification if no .pts file specified
     ASSERTL0(m_f->m_fieldPts != LibUtilities::NullPtsField,
              "No input points found");

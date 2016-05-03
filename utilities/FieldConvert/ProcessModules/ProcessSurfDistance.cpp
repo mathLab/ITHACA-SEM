@@ -69,6 +69,15 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
     int surf = m_config["bnd"].as<int>();
     int expdim = m_f->m_graph->GetMeshDimension();
 
+    if (m_f->m_verbose)
+    {
+        if(rank == 0)
+        {
+            cout << "ProcessSurfDistance: calculating distance to surface... "
+                 << endl;
+        }
+    }
+
     ASSERTL0(surf >= 0, "Invalid surface "+boost::lexical_cast<string>(surf));
 
     // Add this boundary region to the list that we will output.

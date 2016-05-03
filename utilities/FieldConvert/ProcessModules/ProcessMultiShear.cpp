@@ -74,7 +74,11 @@ void ProcessMultiShear::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessMultiShear: Calculating shear stress metrics..." << endl;
+        if(rank == 0)
+        {
+            cout << "ProcessMultiShear: Calculating shear stress metrics..."
+                 << endl;
+        }
     }
 
     int nstart, i, j, nfields;

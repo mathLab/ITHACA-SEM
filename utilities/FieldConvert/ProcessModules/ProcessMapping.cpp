@@ -61,6 +61,13 @@ ProcessMapping::~ProcessMapping()
 
 void ProcessMapping::Process(po::variables_map &vm)
 {
+    if(m_f->m_verbose)
+    {
+        if(rank == 0)
+        {
+            cout << "Processing mapping..." << endl;
+        }
+    }
     // Determine dimensions of mesh, solution, etc...
     int npoints = m_f->m_exp[0]->GetNpoints();
     int expdim    = m_f->m_graph->GetMeshDimension();

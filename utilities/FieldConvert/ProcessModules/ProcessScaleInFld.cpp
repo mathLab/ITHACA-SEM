@@ -82,7 +82,11 @@ void ProcessScaleInFld::Process(po::variables_map &vm)
 
     if (m_f->m_verbose)
     {
-        cout << "ProcessScaleInFld: Rescaling input fld by factor " << scale << endl;
+        if(rank == 0)
+        {
+            cout << "ProcessScaleInFld: Rescaling input fld by factor "
+                 << scale << endl;
+        }
     }
 
     for(int i = 0; i < m_f->m_data.size(); ++i)

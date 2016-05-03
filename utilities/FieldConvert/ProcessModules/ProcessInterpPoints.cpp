@@ -113,9 +113,12 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     int rank   = m_f->m_comm->GetRank();
     int nprocs = m_f->m_comm->GetSize();
             
-    if((m_f->m_verbose)&&(rank == 0))
+    if(m_f->m_verbose)
     {
-        cout << "Processing point interpolation" << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "Processing point interpolation" << endl;
+        }
     }
 
 

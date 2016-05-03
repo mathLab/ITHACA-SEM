@@ -72,7 +72,10 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessQualityMetric: Process Jacobian fld" << endl;
+        if(rank == 0)
+        {
+            cout << "ProcessQualityMetric: Process Jacobian fld" << endl;
+        }
     }
 
     Array<OneD, NekDouble> &phys   = m_f->m_exp[0]->UpdatePhys();

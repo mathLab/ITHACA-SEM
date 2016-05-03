@@ -78,7 +78,8 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
-            cout << "Process Boundary Extract: Setting up boundary extraction..." << endl;
+            cout << "ProcessBoundaryExtract: Setting up boundary extraction..."
+                 << endl;
             timer.Start();
         }
     }

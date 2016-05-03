@@ -77,7 +77,8 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
-            cout << "Processing interp point data to fld" << endl;
+            cout << "ProcessInterpPointDataToFld: interpolating data to field..."
+                 << endl;
         }
     }
 

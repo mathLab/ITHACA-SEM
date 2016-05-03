@@ -113,7 +113,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     {
         if(rank == 0)
         {
-            cout << "Process Contour extraction..." << endl;
+            cout << "ProcessIsoContour: Extracting contours..." << endl;
             timer.Start();
         }
     }

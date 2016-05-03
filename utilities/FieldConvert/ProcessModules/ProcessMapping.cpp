@@ -65,7 +65,7 @@ void ProcessMapping::Process(po::variables_map &vm)
     {
         if(rank == 0)
         {
-            cout << "Processing mapping..." << endl;
+            cout << "ProcessMapping: Applying mapping to field..." << endl;
         }
     }
     // Determine dimensions of mesh, solution, etc...

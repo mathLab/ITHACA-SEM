@@ -68,7 +68,7 @@ void ProcessPrintFldNorms::Process(po::variables_map &vm)
     {
         if(rank == 0)
         {
-            cout << "ProcessPrintFldNorms: Printing norms" << endl;
+            cout << "ProcessPrintFldNorms: Printing norms..." << endl;
         }
     }
 

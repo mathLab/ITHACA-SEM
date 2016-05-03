@@ -87,7 +87,8 @@ void ProcessConcatenateFld::Process(po::variables_map &vm)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
-            cout << "ProcessConcatenateFld: Concatenating field file" << endl;
+            cout << "ProcessConcatenateFld: Concatenating field file..."
+                 << endl;
         }
     }
 

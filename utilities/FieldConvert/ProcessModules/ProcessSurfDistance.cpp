@@ -73,7 +73,7 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
     {
         if(rank == 0)
         {
-            cout << "ProcessSurfDistance: calculating distance to surface... "
+            cout << "ProcessSurfDistance: Calculating distance to surface..."
                  << endl;
         }
     }

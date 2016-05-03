@@ -81,7 +81,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
-            cout << "ProcessInnerProduct: Evaluating inner product" << endl;
+            cout << "ProcessInnerProduct: Evaluating inner product..." << endl;
         }
     }
 

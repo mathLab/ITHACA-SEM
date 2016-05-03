@@ -117,7 +117,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
-            cout << "Processing point interpolation" << endl;
+            cout << "ProcessInterpPoints: interpolating to points..." << endl;
         }
     }
 

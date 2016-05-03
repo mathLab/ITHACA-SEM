@@ -74,7 +74,7 @@ void ProcessAddFld::Process(po::variables_map &vm)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
-            cout << "ProcessAddFld: Adding new fld to input fld" << endl;
+            cout << "ProcessAddFld: Adding new fld to input fld..." << endl;
         }
     }
 

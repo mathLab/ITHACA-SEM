@@ -84,8 +84,8 @@ void ProcessScaleInFld::Process(po::variables_map &vm)
     {
         if(rank == 0)
         {
-            cout << "ProcessScaleInFld: Rescaling input fld by factor "
-                 << scale << endl;
+            cout << "ProcessScaleInFld: Rescaling input fld by factor"
+                 << scale << "..." << endl;
         }
     }
 

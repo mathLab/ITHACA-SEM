@@ -74,7 +74,8 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
     {
         if(rank == 0)
         {
-            cout << "ProcessQualityMetric: Process Jacobian fld" << endl;
+            cout << "ProcessQualityMetric: Adding quality metric to field"
+                 << endl;
         }
     }
 

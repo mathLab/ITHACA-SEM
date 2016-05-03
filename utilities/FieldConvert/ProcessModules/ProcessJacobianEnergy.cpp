@@ -70,7 +70,7 @@ void ProcessJacobianEnergy::Process(po::variables_map &vm)
     {
         if(rank == 0)
         {
-            cout << "ProcessJacobianEnergy: Process Jacobian fld" << endl;
+            cout << "ProcessJacobianEnergy: Processing Jacobian..." << endl;
         }
     }
 

@@ -382,6 +382,7 @@ int main(int argc, char* argv[])
             moduleTimer.Start();
         }
         modules[i]->Process(vm);
+        cout.flush();
         if(f->m_verbose && f->m_comm->GetRank() == 0)
         {
             moduleTimer.Stop();
@@ -393,7 +394,6 @@ int main(int argc, char* argv[])
                  << " CPU Time: " << setw(8) << left
                  << ss.str() << endl;
         }
-        cout.flush();
     }
 
     if(f->m_verbose)

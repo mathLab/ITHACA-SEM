@@ -32,6 +32,7 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterSampler.cpp
   Filters/FilterThresholdMax.cpp
   Filters/FilterThresholdMin.cpp
+  Interpolator.cpp
   RiemannSolvers/RiemannSolver.cpp
   RiemannSolvers/UpwindSolver.cpp
   RiemannSolvers/UpwindLDGSolver.cpp
@@ -77,6 +78,7 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterSampler.h
   Filters/FilterThresholdMax.h
   Filters/FilterThresholdMin.h
+  Interpolator.h
   RiemannSolvers/RiemannSolver.h
   RiemannSolvers/UpwindSolver.h
   RiemannSolvers/UpwindLDGSolver.h

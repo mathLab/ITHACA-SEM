@@ -535,7 +535,6 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
         self.writeln('*/\n')
 
         #outputting the number of variables in the state_vars list
-
         self.writeln('m_nq   = pField->GetNpoints();\n')
         self.writeln('m_nvar = ', len(self.state_vars), ';')
 
@@ -544,11 +543,13 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
 
 
         #create a list of tau and infs, if present
+        #setting up the arrays to contain the taus, infs, alphas and betas
         self.taus = []
         self.infs = []
         self.alphas = []
         self.betas = []
 
+        # creating the nodeset that contains the mathematics
         state_vars = self.doc.model.find_state_vars()
         derivs = set(map(lambda v: (v, self.free_vars[0]), state_vars))
         extra_nodes=set()
@@ -563,6 +564,7 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
         table_index_nodes_used = self.calculate_lookup_table_indices(all_nodes|extra_table_nodes, self.code_name(self.free_vars[0]))
         self.NODESET = nonv_nodeset - table_index_nodes_used
 
+        #searching through the nodeset for all the infs, taus, alphas and betas and adding them to their arrays
         for expr in (e for e in self.model.get_assignments() if e in self.NODESET):
             # self.writeln('test')
             if isinstance(expr, cellml_variable):
@@ -578,16 +580,18 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
                     if '_beta' in codename:
                         self.betas.append(codename)
 
-
+        # debugging help to print the arrays
         # self.writeln('Taus: ' + str(taus))
         # self.writeln('Infs: ' + str(infs))
         # self.writeln('Alphas: ' + str(self.alphas))
         # self.writeln('Betas: ' + str(self.betas) + '\n')
         
+        #initialising the gate_vars and concentration_vars counters
         gate_vars = 0
         concentration_vars = 0
         self.state_var_type = {}
 
+        #finding the actual variable name for each of the state variables
         for var in self.state_vars:
             # self.writeln()
             # self.writeln(var)
@@ -595,7 +599,7 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
             # self.writeln(var_actual)
 
 
-
+            #writing the gate and concentration variables
             if str(var).find('membrane__V') != -1:
                 self.state_var_type[str(var)] = 'voltage'
             elif filter(lambda element: var_actual in element,self.infs) and filter(lambda element: var_actual in element,self.taus) or filter(lambda element: var_actual in element,self.alphas) and filter(lambda element: var_actual in element,self.betas):
@@ -1154,12 +1158,7 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
                 stim_assignment = self.code_name(i_stim) + self.EQ_ASSIGN + '0.0' + self.STMT_END
             else:
                 stim_assignment = self.get_stimulus_assignment()            
-        # self.writeln('TEST')
-        # self.writeln(nodeset)
-        # self.writeln('Nodeset:')
-        # for var in nodeset:
-        #     self.writeln(var)
-        # self.writeln()
+
         for expr in (e for e in self.model.get_assignments() if e in nodeset):
             
             # Special-case the stimulus current
@@ -1172,8 +1171,8 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
             #               isinstance(expr.eq.lhs, mathml_ci) and
             #               expr.eq.lhs.variable is self.doc._cml_config.i_stim_var):
             #         self.output_assignment(expr)
-            # else:
-            # self.writeln('Test')
+            
+            
             self.output_assignment(expr)
         return
 
@@ -1366,12 +1365,6 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
         self.open_block()
         self.writeln('for (unsigned int i = 0; i < m_nq; ++i)')
 
-
-        # self.output_method_start(method_name,
-        #                          [self.TYPE_DOUBLE + self.code_name(self.free_vars[0]),
-        #                           'const ' + self.TYPE_VECTOR_REF + 'rY',
-        #                           self.TYPE_VECTOR_REF + 'rDY'],
-        #                          'void', access='public')
         self.open_block()
         if not self.state_vars:
             # This isn't an ODE model!
@@ -1380,15 +1373,8 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
         self.output_comment('Inputs:')
         self.output_comment('Time units: ', self.free_vars[0].units)
         self.output_derivative_calculations(self.state_vars)
-        # Assign to derivatives vector
 
-        # writing out all the state variables
-        # for var in self.state_vars:
-        #     self.writeln(var)
-
-
-
-
+        # debugging help by writing out the arrays of taus, infs, alphas, betas and dictionary of variable types
         # self.writeln('Taus: ' + str(self.taus))
         # self.writeln('Infs: ' + str(self.infs))
         # self.writeln('Alphas: ' + str(self.alphas))
@@ -1402,10 +1388,7 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
             var_actual = str(var)[33:str(var).rfind('__')]
             if 'gate' in str(var_name):
                 after_underscore = var_name[var_name.rfind('__')+2:]
-                # self.writeln(after_underscore)
-            # self.writeln(var)
-            # self.writeln(var_name)
-            # self.writeln(var_actual)          
+        
 
             if 'membrane__V' in var:
                 continue
@@ -1431,10 +1414,7 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
             var_actual = str(var)[33:str(var).rfind('__')]
             if 'gate' in str(var_name):
                 after_underscore = var_name[var_name.rfind('__')+2:]
-                # self.writeln(after_underscore)
-            # self.writeln(var)
-            # self.writeln(var_name)
-            # self.writeln(var_actual)          
+            
 
             if 'membrane__V' in str(var):
                 continue
@@ -1453,7 +1433,7 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
                 continue
         self.writeln()
 
-
+        #debugging help by writing out the taus, infs and dictionary of variable types
         # self.writeln('Taus: ' + str(self.taus))
         # self.writeln('Infs: ' + str(self.infs))
         # self.writeln('Var Types: ' + str(self.state_var_type)+ '\n')
@@ -1468,10 +1448,7 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
             var_actual = str(var)[33:str(var).rfind('__')]
             if 'gate' in str(var_name):
                 after_underscore = var_name[var_name.rfind('__')+2:]
-                # self.writeln(after_underscore)
-            # self.writeln(var)
-            # self.writeln(var_name)
-            # self.writeln(var_actual) 
+
 
 
             if 'membrane__V' in str(var):
@@ -1587,20 +1564,6 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
         # self.writeln('Test End')
 
         # self.close_block()
-
-
-        #write out the variables var_inf and var_tau
-        # for var in self.state_vars:
-        #     # self.writeln(var)
-        #     var_name = self.code_name(var, True)    
-        #     if var_name.find('gate') != -1:
-        #         # last_character = var_name[len(var_name)-1:]
-        #         after_underscore = var_name[var_name.rfind('__')+2:]
-        #         req_section_alpha = 'var_' + var_name[23:len(var_name)-(len(after_underscore)+2)] + '__alpha_' + after_underscore
-        #         req_section_beta = 'var_' + var_name[23:len(var_name)-(len(after_underscore)+2)] + '__beta_' + after_underscore
-        #         self.writeln(self.TYPE_CONST_DOUBLE, after_underscore, '_inf = ', req_section_alpha, '/(', req_section_alpha, ' + ', req_section_beta, ');')
-        #         self.writeln(self.TYPE_CONST_DOUBLE, after_underscore, '_tau = 1.0/(', req_section_alpha, ' + ', req_section_beta, ');')
-
         
         self.writeln()
         

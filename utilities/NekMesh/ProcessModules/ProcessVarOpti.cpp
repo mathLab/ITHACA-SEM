@@ -56,6 +56,7 @@ namespace Utilities
 {
 
 boost::mutex mtx;
+NekMatrix<NekDouble> interp;
 
 inline NekDouble GetElFunctional(ElDataSharedPtr d, optimiser opti, int dim,
                                  NekMatrix<NekDouble> &VdmDx,
@@ -67,28 +68,34 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d, optimiser opti, int dim,
     d->el->GetCurvedNodes(ns);
 
     int pts = ns.size();
+    int pts2 = VdmDx.GetRows();
 
-    ASSERTL0(pts == d->maps.size(), "what");
+    //cout << pts2 << " " << interp.GetRows() << " " << interp.GetColumns() << endl;
+    ASSERTL0(pts2 == d->maps.size(), "what");
 
-    Array<OneD, Array<OneD, NekDouble> > jac(pts);
+    Array<OneD, Array<OneD, NekDouble> > jac(pts2);
 
     if(dim == 2)
     {
-        NekVector<NekDouble> X(pts),Y(pts),Z(pts),
-                             x1(pts),y1(pts),
-                             x2(pts),y2(pts);
+        NekVector<NekDouble> X(pts),Y(pts),
+                             x1(pts2),y1(pts2),
+                             x2(pts2),y2(pts2);
         for(int i = 0; i < pts; i++)
         {
             X(i) = ns[i]->m_x;
             Y(i) = ns[i]->m_y;
         }
 
-        x1 = VdmDx*X;
-        y1 = VdmDx*Y;
-        x2 = VdmDy*X;
-        y2 = VdmDy*Y;
+        NekVector<NekDouble> Xint(pts2), Yint(pts2);
+        Xint = interp * X;
+        Yint = interp * Y;
 
-        for(int i = 0; i < pts; i++)
+        x1 = VdmDx*Xint;
+        y1 = VdmDx*Yint;
+        x2 = VdmDy*Xint;
+        y2 = VdmDy*Yint;
+
+        for(int i = 0; i < pts2; i++)
         {
             Array<OneD, NekDouble> jaci(9,0.0);
             jaci[0] = x1(i);
@@ -140,13 +147,13 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d, optimiser opti, int dim,
         }
     }
 
-    Array<OneD, NekDouble> dW(pts);
+    Array<OneD, NekDouble> dW(pts2);
 
     switch (opti)
     {
         case eLinEl:
         {
-            for(int k = 0; k < pts; k++)
+            for(int k = 0; k < pts2; k++)
             {
                 Array<OneD, NekDouble> jacIdeal(9,0.0);
                 jacIdeal[0] = jac[k][0]*d->maps[k][0] + jac[k][3]*d->maps[k][1] + jac[k][6]*d->maps[k][2];
@@ -229,7 +236,7 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d, optimiser opti, int dim,
         }
         case eHypEl:
         {
-            for(int k = 0; k < pts; k++)
+            for(int k = 0; k < pts2; k++)
             {
                 Array<OneD, NekDouble> jacIdeal(9,0.0);
                 jacIdeal[0] = jac[k][0]*d->maps[k][0] + jac[k][3]*d->maps[k][1] + jac[k][6]*d->maps[k][2];
@@ -504,25 +511,26 @@ void ProcessVarOpti::Process()
     {
         case 2:
         {
-            LibUtilities::PointsKey pkey(m_mesh->m_nummode,
-                                            LibUtilities::eNodalTriElec);
-            Array<OneD, NekDouble> u, v;
-            LibUtilities::PointsManager()[pkey]->GetPoints(u, v);
+            LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
+                                          LibUtilities::eNodalTriElec);
+            LibUtilities::PointsKey pkey2(2*m_mesh->m_nummode,
+                                          LibUtilities::eNodalTriElec);
+            Array<OneD, NekDouble> u1, v1, u2, v2;
+            LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
+            LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2);
+            NekVector<NekDouble> U1(u1), V1(v1);
+            NekVector<NekDouble> U2(u2), V2(v2);
 
-            NekVector<NekDouble> U(u.num_elements()) , V(v.num_elements());
-            for(int i = 0; i < u.num_elements(); i++)
-            {
-                U(i) = u[i];
-                V(i) = v[i];
-            }
-            Vandermonde = LibUtilities::GetVandermonde(U,V);
+            interp = LibUtilities::GetInterpolationMatrix(U1, V1, U2, V2);
+
+            Vandermonde = LibUtilities::GetVandermonde(U2,V2);
             VandermondeI = Vandermonde;
             VandermondeI.Invert();
-            VdmDx = LibUtilities::GetVandermondeForXDerivative(U,V) *
+            VdmDx = LibUtilities::GetVandermondeForXDerivative(U2,V2) *
                                                                 VandermondeI;
-            VdmDy = LibUtilities::GetVandermondeForYDerivative(U,V) *
+            VdmDy = LibUtilities::GetVandermondeForYDerivative(U2,V2) *
                                                                 VandermondeI;
-            quadW = LibUtilities::MakeQuadratureWeights(U,V);
+            quadW = LibUtilities::MakeQuadratureWeights(U2,V2);
         }
         break;
         case 3:
@@ -1027,7 +1035,7 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
     }
     else if(geom->GetShapeType() == LibUtilities::eTriangle)
     {
-        LibUtilities::PointsKey pkey(m_mesh->m_nummode,
+        LibUtilities::PointsKey pkey(2*m_mesh->m_nummode,
                                      LibUtilities::eNodalTriElec);
         Array<OneD, NekDouble> u, v;
         LibUtilities::PointsManager()[pkey]->GetPoints(u, v);

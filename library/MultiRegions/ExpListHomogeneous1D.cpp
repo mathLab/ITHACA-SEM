@@ -881,7 +881,7 @@ namespace Nektar
             int npoints_per_plane = m_planes[0]->GetTotPoints();
 
             // printing the fields of that zone
-            outfile << "        <DataArray type=\"Float32\" Name=\""
+            outfile << "        <DataArray type=\"Float64\" Name=\""
                     << var << "\">" << endl;
             outfile << "          ";
             for (int n = 0; n < m_planes.num_elements(); ++n)

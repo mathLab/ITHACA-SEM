@@ -65,8 +65,9 @@ IF (THIRDPARTY_BUILD_BOOST)
     INCLUDE(ExternalProject)
 
     # Only build the libraries we need
-    STRING(REPLACE ";" " --with-" BOOST_LIB_LIST "${NEEDED_BOOST_LIBS}")
-    SET(BOOST_LIB_LIST "--with-${BOOST_LIB_LIST}")
+    FOREACH(boostlib ${NEEDED_BOOST_LIBS})
+	LIST(APPEND BOOST_LIB_LIST --with-${boostlib})
+    ENDFOREACH()
 
     IF (NOT WIN32)
         # We need -fPIC for 64-bit builds
@@ -86,9 +87,9 @@ IF (THIRDPARTY_BUILD_BOOST)
         ELSEIF (MSVC12)
             SET(TOOLSET msvc-12.0)
         ENDIF()
-    ELSE(APPLE)
+    ELSE()
         SET(TOOLSET gcc)
-    ENDIF(APPLE)
+    ENDIF()
 
     IF (NOT WIN32)
         EXTERNALPROJECT_ADD(

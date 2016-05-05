@@ -322,22 +322,16 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d, optimiser opti, int dim,
                 jacIdeal[7] = jac[k][1]*d->maps[k][6] + jac[k][4]*d->maps[k][7] + jac[k][7]*d->maps[k][8];
                 jacIdeal[8] = jac[k][2]*d->maps[k][6] + jac[k][5]*d->maps[k][7] + jac[k][8]*d->maps[k][8];
 
-                NekDouble jacDet, i2rmDet = 0.0;
+                NekDouble jacDet = 0.0;
                 if(dim == 2)
                 {
                     jacDet = jacIdeal[0] * jacIdeal[4] - jacIdeal[3]*jacIdeal[1];
-                    i2rmDet = 1.0 / (d->maps[k][0]*d->maps[k][4] - d->maps[k][1]*d->maps[k][3]);
                 }
                 else
                 {
                     jacDet = jacIdeal[0]*(jacIdeal[4]*jacIdeal[8]-jacIdeal[5]*jacIdeal[7])
                             -jacIdeal[3]*(jacIdeal[1]*jacIdeal[8]-jacIdeal[2]*jacIdeal[7])
                             +jacIdeal[6]*(jacIdeal[1]*jacIdeal[5]-jacIdeal[2]*jacIdeal[4]);
-                    i2rmDet = d->maps[k][0]*(d->maps[k][4]*d->maps[k][8]-d->maps[k][5]*d->maps[k][7])
-                             -d->maps[k][3]*(d->maps[k][1]*d->maps[k][8]-d->maps[k][2]*d->maps[k][7])
-                             +d->maps[k][6]*(d->maps[k][1]*d->maps[k][5]-d->maps[k][2]*d->maps[k][4]);
-                    cout << endl << i2rmDet << endl;
-                    i2rmDet = 1.0 / i2rmDet;
                 }
 
                 NekDouble frob = 0.0;
@@ -358,7 +352,7 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d, optimiser opti, int dim,
                 }
                 else
                 {
-                    NekDouble de = fabs(i2rmDet) * sqrt(1E-3*1E-3 + 1E-3);
+                    NekDouble de = fabs(d->maps[k][9]) * sqrt(1E-2*1E-2 + 1E-2);
                     NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
                     dW[k] = frob / dim / pow(fabs(sigma), 2.0/dim);
                 }
@@ -429,7 +423,6 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d, optimiser opti, int dim,
     {
         integral += fabs(quadW(i)) * dW[i];
     }
-    cout << integral << endl;
     return integral;
 }
 
@@ -586,8 +579,6 @@ void ProcessVarOpti::Process()
     cout << scientific << endl;
     cout << "starting energy: " << functionalStart << endl;
 
-    exit(-1);
-
     int nThreads = m_config["numthreads"].as<int>();
 
     int ctr = 0;
@@ -655,19 +646,43 @@ void ProcessVarOpti::NodeOpti::Optimise()
         NekDouble yc = node->m_y;
         NekDouble zc = node->m_z;
         NekDouble alpha = 1.0;
-        NekDouble delX = 1.0/(G[3]*G[4]-G[6]*G[6])*(G[4]*G[0] - G[6]*G[1]);
-        NekDouble delY = 1.0/(G[3]*G[4]-G[6]*G[6])*(G[3]*G[1] - G[6]*G[0]);
-        //if(sqrt(delX*delX + delY*delY) > 1e-3)
-        //{
-        //    cout << endl;
-        //    cout << delX << " " << delY << endl;
-        //}
+        NekDouble delX=0.0;
+        NekDouble delY=0.0;
+        NekDouble delZ=0.0;
+        if(dim == 2)
+        {
+             delX = 1.0/(G[3]*G[4]-G[6]*G[6])*(G[4]*G[0] - G[6]*G[1]);
+             delY = 1.0/(G[3]*G[4]-G[6]*G[6])*(G[3]*G[1] - G[6]*G[0]);
+        }
+        else
+        {
+            DNekMat H(3,3,0.0);
+            H(0,0) = G[3];
+            H(1,1) = G[4];
+            H(2,2) = G[5];
+            H(0,1) = G[6];
+            H(1,0) = G[6];
+            H(0,2) = G[8];
+            H(2,0) = G[8];
+            H(2,1) = G[7];
+            H(1,2) = G[7];
+            H.Invert();
+            NekVector<NekDouble> g(3);
+            g[0] = G[0];
+            g[1] = G[1];
+            g[2] = G[2];
+            NekVector<NekDouble> del = H * g;
+            delX = del[0];
+            delY = del[1];
+            delZ = del[2];
+        }
+
         bool found = false;
         while(alpha > 1e-6)
         {
             node->m_x = xc - alpha * delX;
             node->m_y = yc - alpha * delY;
-            //node->m_z = zc - alpha * G[2];
+            node->m_z = zc - alpha * delZ;
             if(GetFunctional() < currentW)
             {
                 found = true;
@@ -676,10 +691,6 @@ void ProcessVarOpti::NodeOpti::Optimise()
 
             alpha /= 2.0;
         }
-        //if(sqrt(delX*delX + delY*delY) > 1e-2)
-        //{
-        //    cout << alpha << endl;
-        //}
 
         if(!found)
         {
@@ -697,15 +708,25 @@ void ProcessVarOpti::NodeOpti::Optimise()
     }
 }
 
-NekDouble dir[9][2] = {{0.0,0.0},
-                       {1.0,0.0},
-                       {1.0,1.0},
-                       {0.0,1.0},
-                       {-1.0,1.0},
-                       {-1.0,0.0},
-                       {-1.0,-1.0},
-                       {0.0,-1.0},
-                       {1.0,-1.0}};
+NekDouble dir[19][3] = {{0.0,0.0,0.0},
+                        {1.0,0.0,0.0},
+                        {1.0,1.0,0.0},
+                        {0.0,1.0,0.0},
+                        {-1.0,1.0,0.0},
+                        {-1.0,0.0,0.0},
+                        {-1.0,-1.0,0.0},
+                        {0.0,-1.0,0.0},
+                        {1.0,-1.0,0.0},
+                        {-1.0,0.0,-1.0},
+                        {0.0,0.0,-1.0},
+                        {1.0,0.0,-1.0},
+                        {-1.0,0.0,1.0},
+                        {0.0,0.0,1.0},
+                        {1.0,0.0,1.0},
+                        {0.0,1.0,-1.0},
+                        {0.0,1.0,1.0},
+                        {0.0,-1.0,-1.0},
+                        {0.0,-1.0,1.0}};
 
 Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad()
 {
@@ -714,15 +735,13 @@ Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad()
     NekDouble zc = node->m_z;
     NekDouble dx = 1e-3;
 
-    ASSERTL0(dim == 2,"dir not coded in 3d");
-
     vector<NekDouble> w;
 
-    for(int i = 0; i < 9; i++)
+    for(int i = 0; i < (dim == 2 ? 9 : 19); i++)
     {
         node->m_x = xc + dir[i][0] * dx;
         node->m_y = yc + dir[i][1] * dx;
-        //node->m_z = zc + dir[i][2] * dx;
+        node->m_z = zc + dir[i][2] * dx;
         w.push_back(GetFunctional());
     }
     node->m_x = xc;
@@ -742,6 +761,7 @@ Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad()
     //ret[7] d2/dxdz
     //ret[8] d2/dydz
 
+
     ret[0] = (w[1] - w[5]) / 2.0 / dx;
     ret[1] = (w[3] - w[7]) / 2.0 / dx;
     ret[3] = (w[1] + w[5] - 2.0*w[0]) / dx / dx;
@@ -749,7 +769,10 @@ Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad()
     ret[6] = (w[2] + w[6] - w[4] - w[8]) / 4.0 / dx /dx;
     if(dim == 3)
     {
-        ret[2] = (w[4] - w[5]) / 2.0 / dx;
+        ret[2] = (w[13] - w[10]) / 2.0 / dx;
+        ret[5] = (w[13] + w[10] - 2.0*w[0]) / dx / dx;
+        ret[7] = (w[14] + w[9] - w[11] - w[12]) / 4.0 / dx /dx;
+        ret[8] = (w[16] + w[17] - w[15] - w[18]) / 4.0 / dx /dx;
     }
 
     return ret;
@@ -1130,8 +1153,14 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
             dxdz(2,1) = z2(i);
             dxdz(2,2) = z3(i);
 
+            Array<OneD, NekDouble> r(10,0.0); //store det in 10th entry
+
+            r[9] = dxdz(0,0)*(dxdz(1,1)*dxdz(2,2)-dxdz(2,1)*dxdz(1,2))
+                   -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
+                   +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
+
             dxdz.Invert();
-            Array<OneD, NekDouble> r(9,0.0);
+
             r[0] = dxdz(0,0);
             r[1] = dxdz(1,0);
             r[2] = dxdz(2,0);

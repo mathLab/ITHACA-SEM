@@ -324,9 +324,8 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d)
                 {
                     NekDouble de = fabs(d->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
                     NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
-                    dW[k] = frob / dim / pow(fabs(sigma), 2.0/dim);
+                    dW[k] = frob / dim / pow(fabs(sigma), 2.0/dim) -1.0;
                 }
-                dW[k] = (dW[k]-1.0)*(dW[k]-1.0);
             }
             break;
         }

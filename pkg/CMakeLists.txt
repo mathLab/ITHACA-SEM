@@ -473,6 +473,7 @@ set(CPACK_SOURCE_IGNORE_FILES
     "/\\\\.gitmodules"
     "/build/"
     "/builds/"
+    "/docs/tutorial"
     "/ThirdParty/"
     "/Testing/"
     "/library/Demos/MultiRegions/ExtraDemos/"

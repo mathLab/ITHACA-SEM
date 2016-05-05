@@ -98,22 +98,15 @@ private:
 
     NodeElMap nodeElMap;
     vector<ElDataSharedPtr> dataSet;
-    optimiser opti;
-    NekMatrix<NekDouble> Vandermonde, VandermondeI, VdmDx, VdmDy, VdmDz;
-    NekVector<NekDouble> quadW;
 
     class NodeOptiJob;
 
     class NodeOpti
     {
     public:
-        NodeOpti(NodeSharedPtr n, vector<ElDataSharedPtr> e, optimiser o,
-                 ResidualSharedPtr r, int d,
-                 NekMatrix<NekDouble> &vx, NekMatrix<NekDouble> &vy,
-                 NekMatrix<NekDouble> &vz,
-                 NekVector<NekDouble> &w)
-                : node(n), data(e), opti(o), res(r), dim(d),
-                  VdmDx(vx), VdmDy(vy), VdmDz(vz), quadW(w)
+        NodeOpti(NodeSharedPtr n, vector<ElDataSharedPtr> e,
+                 ResidualSharedPtr r)
+                : node(n), data(e), res(r)
         {
         }
 
@@ -129,11 +122,7 @@ private:
         NekDouble GetFunctional();
         NodeSharedPtr node;
         vector<ElDataSharedPtr> data;
-        optimiser opti;
         ResidualSharedPtr res;
-        int dim;
-        NekMatrix<NekDouble> VdmDx, VdmDy, VdmDz;
-        NekVector<NekDouble> quadW;
     };
 
     class NodeOptiJob : public Thread::ThreadJob

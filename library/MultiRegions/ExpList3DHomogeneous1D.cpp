@@ -109,7 +109,7 @@ namespace Nektar
                 (*m_exp).push_back(m_planes[0]->GetExp(j));
             }
             
-            for(n = 1; n < m_homogeneousBasis->GetNumPoints(); ++n)
+            for(n = 1; n < m_planes.num_elements(); ++n)
             {
                 m_planes[n] = MemoryManager<ExpList2D>::AllocateSharedPtr(*plane_zero,False);
                 for(j = 0; j < nel; ++j)

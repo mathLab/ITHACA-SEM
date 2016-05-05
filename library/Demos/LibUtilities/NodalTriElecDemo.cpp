@@ -218,4 +218,15 @@ int main(int argc, char *argv[])
     cout << "\n W = \n" << ToVector(weight) << endl;
     cout << "------------------------------- End of Integral Demo ---------------------------------------" << endl;
  
+    {
+        int nPts = weight.num_elements();
+        Array<OneD, NekDouble> func(nPts);
+
+        NekDouble integral = 0;
+        for (int i = 0; i < nPts; ++i)
+        {
+            integral += weight[i]* (sin(ax[i])*cos(ay[i]));
+        }
+        cout << "integral = " << integral << endl;
+    }
 }

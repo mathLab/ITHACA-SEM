@@ -86,6 +86,11 @@ SET(FieldConvertSources
     ProcessModules/ProcessQualityMetric.cpp
 )
 
+IF (NEKTAR_USE_ANN)
+   LIST(APPEND FieldConvertSources ProcessModules/ProcessIsoGlobalCondenseANN.cpp)
+ELSE (NEKTAR_USE_ANN)
+   LIST(APPEND FieldConvertSources ProcessModules/ProcessIsoGlobalCondense.cpp)
+ENDIF (NEKTAR_USE_ANN)
 
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})
 TARGET_LINK_LIBRARIES(FieldConvert SolverUtils)
@@ -96,6 +101,7 @@ IF (NEKTAR_USE_ANN)
        IMPORTED_LOCATION ${ANN_LIBRARY_PATH}/libANN.a)
    INCLUDE_DIRECTORIES(NekMesh ${ANN_INCLUDE_DIR})
    LINK_DIRECTORIES(${ANN_LIBRARY_PATH})
+   LIST(APPEND FieldConvertSources ProcessModules/ProcessIsoGlobalCondenseANN.cpp)
 ENDIF (NEKTAR_USE_ANN)
 
 #ADD_NEKTAR_TEST(chan3D_tec)  # This test is covered in bfs_tec

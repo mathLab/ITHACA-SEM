@@ -62,6 +62,8 @@ enum optimiser
 struct Residual
 {
     NekDouble val;
+    int n;
+    int nDoF;
 };
 
 typedef boost::shared_ptr<Residual> ResidualSharedPtr;
@@ -98,6 +100,7 @@ private:
 
     NodeElMap nodeElMap;
     vector<ElDataSharedPtr> dataSet;
+    ResidualSharedPtr res;
 
     class NodeOptiJob;
 

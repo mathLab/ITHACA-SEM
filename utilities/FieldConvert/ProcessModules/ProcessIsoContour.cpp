@@ -43,10 +43,6 @@ using namespace std;
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 
-#ifdef NEKTAR_USE_ANN
-#include "ANN/ANN.h"
-#endif
-
 namespace Nektar
 {
 namespace Utilities
@@ -776,8 +772,6 @@ void Iso::condense(void)
 }
 
 
-NekDouble SQ_PNT_TOL=1e-16;
-
 // define == if point is within 1e-4
 bool operator == (const IsoVertex& x, const IsoVertex& y)
 {
@@ -792,428 +786,16 @@ bool operator != (const IsoVertex& x, const IsoVertex& y)
             (x.m_z-y.m_z)*(x.m_z-y.m_z) < SQ_PNT_TOL)? 0:1;
 }
 
-
-bool same(NekDouble x1, NekDouble y1, NekDouble z1,
-          NekDouble x2, NekDouble y2, NekDouble z2)
-{
-    if((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) < SQ_PNT_TOL)
-    {
-        return true;
-    }
-
-    return false;
-}
-
-#ifdef  NEKTAR_USE_ANN // use oct-tree search based on libANN
-void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
-{
-    int    i,j,n;
-    int    nvert,nelmt;
-    int    niso=iso.size();
-    int    id1,id2;
-    Array<OneD, Array<OneD, int> > vidmap;
-
-    if(m_condensed) return;
-    m_condensed = true;
-
-    vidmap = Array<OneD, Array<OneD, int> > (niso);
-
-    m_ntris = 0;
-    for(i = 0; i < niso; ++i)
-    {
-        if(iso[i]->m_ntris)
-        {
-            m_ntris += iso[i]->m_ntris;
-        }
-    }
-
-    m_vid = Array<OneD, int>(3*m_ntris);
-
-    m_nvert = 0;
-    for(i = 0; i < niso; ++i)
-    {
-        if(iso[i]->m_ntris)
-        {
-            m_nvert += iso[i]->m_nvert;
-        }
-    }
-
-    vector< vector<int> > isocon;
-    isocon.resize(niso);
-    vector<int> global_to_unique_map;
-    global_to_unique_map.resize(m_nvert);
-
-    vector< pair<int,int> > global_to_iso_map;
-    global_to_iso_map.resize(m_nvert);
-
-    //Create kdtree
-    int n_neighbs = 5;
-    int neighbs_max = 100; 
-    ANNpointArray dataPts = annAllocPts(m_nvert, 3);
-    ANNidxArray   nnIdx = new ANNidx [neighbs_max];
-    ANNdistArray  dists = new ANNdist[neighbs_max];
-    
-    //Fill vertex array into libAnn format
-    id2 = 0;
-    for(i = 0; i < niso; ++i)
-    {
-        for(id1 = 0; id1 < iso[i]->m_nvert; ++id1)
-        {
-            dataPts[id2][0] = iso[i]->m_x[id1];
-            dataPts[id2][1] = iso[i]->m_y[id1];
-            dataPts[id2][2] = iso[i]->m_z[id1];
-            global_to_unique_map[id2]=id2;
-            global_to_iso_map[id2] = make_pair(i,id1);
-            id2++;
-        }
-    }
-    
-    //Build tree
-    ANNkd_tree* kdTree;
-    // build search structure
-    kdTree = new ANNkd_tree( dataPts,	  // the data points
-                             m_nvert,	  // number of points
-                             3);	  // dimension of space
-    
-    //Find neipghbours
-    ANNpoint queryPt = annAllocPt(3);
-    int      unique_index = 0;
-    bool     unique_index_found = false;
-    int      prog; 
-    for(i = 0; i < m_nvert; ++i)
-    {
-        if(verbose)
-        {
-            prog = LibUtilities::PrintProgressbar(i,m_nvert,"Nearest verts",prog);
-        }
-
-        n_neighbs  = 5; 
-        queryPt[0] = dataPts[i][0];
-        queryPt[1] = dataPts[i][1];
-        queryPt[2] = dataPts[i][2];
-        kdTree->annkSearch(queryPt, n_neighbs, nnIdx, dists, 0); //eps set to zero
-
-
-        while((dists[n_neighbs-1]<SQ_PNT_TOL) && (n_neighbs*2 < neighbs_max))
-        {
-            n_neighbs *=2; 
-            kdTree->annkSearch(queryPt, n_neighbs, nnIdx, dists, 0); //eps set to zero
-        }
-
-        WARNINGL0(n_neighbs*2 < neighbs_max,"Failed to find less than 100 neighbouring points");
-
-        id1 = 0;
-        unique_index_found = false;
-
-        int nptsfound = 0; 
-        for(id1 = 0; id1 < n_neighbs; ++id1)
-        {
-            if(dists[id1]<SQ_PNT_TOL)
-            {
-                id2 = nnIdx[id1];
-                nptsfound ++;
-                if(global_to_unique_map[id2] <unique_index) 
-                {
-                    // point has already been defined
-                    continue; 
-                }
-                else
-                {
-                    global_to_unique_map[id2] = unique_index;
-                    unique_index_found = true;
-                }
-            }
-        }
-
-        
-        if(unique_index_found)
-        {
-            unique_index++;
-        }
-    }
-    if(verbose)
-    {
-        cout << endl;
-    }
-
-    m_nvert = unique_index;
-
-    nelmt = 0;
-    // reset m_vid;
-    int cnt = 0; 
-    for(n = 0; n < niso; ++n)
-    {
-        for(i = 0; i < iso[n]->m_ntris; ++i,nelmt++)
-        {
-            for(j=0; j < 3;++j)
-            {
-                m_vid[3*nelmt+j] = global_to_unique_map[iso[n]->m_vid[3*i+j]+cnt]; 
-            }
-        }
-        cnt += iso[n]->m_nvert; 
-    }
-
-    m_ntris = nelmt;
-
-    m_x.resize(m_nvert);
-    m_y.resize(m_nvert);
-    m_z.resize(m_nvert);
-
-    m_fields.resize(iso[0]->m_fields.size());
-    for(i = 0; i < iso[0]->m_fields.size(); ++i)
-    {
-        m_fields[i].resize(m_nvert);
-    }
-
-    for(n = 0; n < global_to_unique_map.size(); ++n)
-    {
-        m_x[global_to_unique_map[n]] = dataPts[n][0];
-        m_y[global_to_unique_map[n]] = dataPts[n][1];
-        m_z[global_to_unique_map[n]] = dataPts[n][2];
-        
-        int isoid = global_to_iso_map[n].first;
-        int ptid  = global_to_iso_map[n].second;
-        for(j = 0; j < m_fields.size(); ++j)
-        {
-            m_fields[j][global_to_unique_map[n]] = iso[isoid]->
-                m_fields[j][ptid];
-        }
-    }
-}
-#else
-    void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
-{
-    int    i,j,n;
-    int    nvert,nelmt;
-    int    niso=iso.size();
-    int    id1,id2;
-    Array<OneD, Array<OneD, int> > vidmap;
-
-    if(m_condensed) return;
-    m_condensed = true;
-
-    vidmap = Array<OneD, Array<OneD, int> > (niso);
-
-    m_ntris = 0;
-    for(i = 0; i < niso; ++i)
-    {
-        if(iso[i]->m_ntris)
-        {
-            m_ntris += iso[i]->m_ntris;
-        }
-    }
-
-    m_vid = Array<OneD, int>(3*m_ntris);
-
-    m_nvert = 0;
-    for(i = 0; i < niso; ++i)
-    {
-        if(iso[i]->m_ntris)
-        {
-            m_nvert += iso[i]->m_nvert;
-        }
-    }
-
-    vector< vector<int> > isocon;
-    isocon.resize(niso);
-
-    // identify which iso are connected by at least one point;
-    // find min x,y,z and max x,y,z and see if overlap to select
-    // which zones should be connected
-    {
-        vector<Array<OneD, NekDouble> > sph(niso);
-        Array<OneD, NekDouble> rng(6);
-        for(i = 0; i < niso; ++i)
-        {
-            sph[i] = Array<OneD, NekDouble>(4);
-
-            // find max and min of isocontour
-            rng[0] = rng[3] = iso[i]->m_x[0];
-            rng[1] = rng[4] = iso[i]->m_x[1];
-            rng[2] = rng[5] = iso[i]->m_x[2];
-
-            for(id1 = 1; id1 < iso[i]->m_nvert;++id1)
-            {
-                rng[0] = min(rng[0],iso[i]->m_x[i]);
-                rng[1] = min(rng[1],iso[i]->m_y[i]);
-                rng[2] = min(rng[2],iso[i]->m_z[i]);
-
-                rng[3] = max(rng[3],iso[i]->m_x[i]);
-                rng[4] = max(rng[4],iso[i]->m_y[i]);
-                rng[5] = max(rng[5],iso[i]->m_z[i]);
-            }
-
-            // centroid
-            sph[i][0] = (rng[3]+rng[0])/2.0;
-            sph[i][1] = (rng[4]+rng[1])/2.0;
-            sph[i][2] = (rng[5]+rng[2])/2.0;
-
-            // radius;
-            sph[i][3] = sqrt((rng[3]-rng[0])*(rng[3]-rng[0]) +
-                             (rng[4]-rng[1])*(rng[4]-rng[1]) +
-                             (rng[5]-rng[2])*(rng[5]-rng[2]));
-        }
-
-        for(i = 0; i < niso; ++i)
-        {
-            for(j = i; j < niso; ++j)
-            {
-                NekDouble diff=sqrt((sph[i][0]-sph[j][0])*(sph[i][0]-sph[j][0])+
-                          (sph[i][1]-sph[j][1])*(sph[i][1]-sph[j][1])+
-                          (sph[i][2]-sph[j][2])*(sph[i][2]-sph[j][2]));
-
-                // if centroid is closer than added radii
-                if(diff < sph[i][3] + sph[j][3])
-                {
-                    isocon[i].push_back(j);
-                }
-            }
-        }
-
-    }
-
-
-    for(i = 0; i < niso; ++i)
-    {
-        vidmap[i] = Array<OneD, int>(iso[i]->m_nvert,-1);
-    }
-    nvert = 0;
-    int cnt = 0;
-    // count up amount of checking to be done
-    NekDouble totiso = 0; 
-    for(i = 0; i < niso; ++i)
-    {
-        totiso += isocon[i].size();
-    }
-
-
-    if(verbose)
-    {
-        cout << "Progress Bar totiso: " << totiso << endl;
-    }
-
-    int progcnt = -1; 
-    for(i = 0; i < niso; ++i)
-    {
-        for(n = 0; n < isocon[i].size(); ++n, ++cnt)
-        {
-            
-            if(verbose && totiso >= 40)
-            {
-                progcnt = LibUtilities::PrintProgressbar(cnt,totiso,"Condensing verts",progcnt);
-            }
-
-            int con = isocon[i][n];
-            for(id1 = 0; id1 < iso[i]->m_nvert; ++id1)
-            {
-
-                if(verbose && totiso < 40)
-                {
-                     if(cnt % (int)(totiso/200) == 0)
-                     {
-                          progcnt =  LibUtilities::PrintProgressbar(id1,iso[i]->m_nvert,"isocon",progcnt);
-                     }
-                }
-
-                int start  = 0; 
-                if(con == i)
-                {
-                    start = id1+1;
-                }
-                for(id2 = start; id2 < iso[con]->m_nvert; ++id2)
-                {
-                    
-                    if((vidmap[con][id2] == -1)||(vidmap[i][id1] == -1))
-                    {
-                        if(same(iso[i]->m_x[id1],  iso[i]->m_y[id1],
-                                iso[i]->m_z[id1],  iso[con]->m_x[id2],
-                                iso[con]->m_y[id2],iso[con]->m_z[id2]))
-                        {
-                            if((vidmap[i][id1] == -1) &&
-                               (vidmap[con][id2] != -1))
-                            {
-                                vidmap[i][id1] = vidmap[con][id2];
-                            }
-                            else if((vidmap[con][id2] == -1) &&
-                                    (vidmap[i][id1] != -1))
-                            {
-                                vidmap[con][id2] = vidmap[i][id1];
-                            }
-                            else if((vidmap[con][id2] == -1) &&
-                                    (vidmap[i][id1] == -1))
-                            {
-                                vidmap[i][id1] = vidmap[con][id2] = nvert++;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        for(id1 = 0; id1 < iso[i]->m_nvert;++id1)
-        {
-            if(vidmap[i][id1] == -1)
-            {
-                vidmap[i][id1] = nvert++;
-            }
-        }
-    }
-    m_nvert = nvert;
-
-    nelmt = 0;
-    // reset m_vid;
-    for(n = 0; n < niso; ++n)
-    {
-        for(i = 0; i < iso[n]->m_ntris; ++i,nelmt++)
-        {
-            for(j=0; j < 3;++j)
-            {
-                m_vid[3*nelmt+j] = vidmap[n][iso[n]->m_vid[3*i+j]];
-            }
-        }
-    }
-
-    m_ntris = nelmt;
-
-    m_x.resize(m_nvert);
-    m_y.resize(m_nvert);
-    m_z.resize(m_nvert);
-
-    m_fields.resize(iso[0]->m_fields.size());
-    for(i = 0; i < iso[0]->m_fields.size(); ++i)
-    {
-        m_fields[i].resize(m_nvert);
-    }
-
-    // reset coordinate and fields.
-    for(n = 0; n < niso; ++n)
-    {
-        for(i = 0; i < iso[n]->m_nvert; ++i)
-        {
-            m_x[vidmap[n][i]] = iso[n]->m_x[i];
-            m_y[vidmap[n][i]] = iso[n]->m_y[i];
-            m_z[vidmap[n][i]] = iso[n]->m_z[i];
-
-            for(j = 0; j < m_fields.size(); ++j)
-            {
-                m_fields[j][vidmap[n][i]] = iso[n]->m_fields[j][i];
-            }
-        }
-    }
-    cout << endl;
-}
-#endif
-    
 void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
 {
-    int   iter,i,j;
+    int   iter,i,j,k;
     NekDouble del_v[3];
     NekDouble w;
     Array<OneD, NekDouble>  xtemp, ytemp, ztemp;
     vector< vector<int> > adj,vertcon;
+    vector< vector<NekDouble > >  wght; 
     vector<int>::iterator iad;
     vector<int>::iterator ipt;
-
 
     // determine elements around each vertex
     vertcon.resize(m_nvert);
@@ -1224,12 +806,14 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
             vertcon[m_vid[3*i+j]].push_back(i);
         }
     }
-
-    // determine vertices around each vertex
+    
+    // determine vertices and weights around each vertex
     adj.resize(m_nvert);
+    wght.resize(m_nvert);
 
     for(i =0; i < m_nvert; ++i)
     {
+        // loop over surrounding elements
         for(ipt = vertcon[i].begin(); ipt != vertcon[i].end(); ++ipt)
         {
             for(j = 0; j < 3; ++j)
@@ -1238,12 +822,15 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
                 if(m_vid[3*(*ipt)+j] != i)
                 {
                     // check to see if vertex has already been added
-                    for(iad = adj[i].begin(); iad != adj[i].end();++iad)
+                    for(k = 0; k < adj[i].size(); ++k)
                     {
-                        if(*iad == (m_vid[3*(*ipt)+j])) break;
+                        if(adj[i][k] == m_vid[3*(*ipt)+j])
+                        {
+                            break;
+                        }
                     }
-
-                    if(iad == adj[i].end())
+                    
+                    if(k == adj[i].size())
                     {
                         adj[i].push_back(m_vid[3*(*ipt)+j]);
                     }
@@ -1251,6 +838,17 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
             }
         }
     }
+    
+    // Currently set weights up as even distribution
+    for(i =0; i < m_nvert; ++i)
+    {
+        w = 1.0/((NekDouble)adj[i].size());
+        for(j = 0; j < adj[i].size(); ++j)
+        {
+            wght[i].push_back(w);
+        }
+    }
+
 
     xtemp = Array<OneD, NekDouble>(m_nvert);
     ytemp = Array<OneD, NekDouble>(m_nvert);
@@ -1262,39 +860,33 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
         // compute first weighted average
         for(i=0;i< m_nvert;++i)
         {
-            w = 1.0/(NekDouble)(adj[i].size());
-
             del_v[0] = del_v[1] = del_v[2] = 0.0;
-
-            for(iad = adj[i].begin(); iad != adj[i].end(); ++iad)
+            for(j = 0; j < adj[i].size(); ++j)
             {
-                del_v[0] =  del_v[0] + (m_x[*iad]-m_x[i])*w;
-                del_v[1] =  del_v[1] + (m_y[*iad]-m_y[i])*w;
-                del_v[2] =  del_v[2] + (m_z[*iad]-m_z[i])*w;
+                del_v[0] =  del_v[0] + (m_x[adj[i][j]]-m_x[i])*wght[i][j];
+                del_v[1] =  del_v[1] + (m_y[adj[i][j]]-m_y[i])*wght[i][j];
+                del_v[2] =  del_v[2] + (m_z[adj[i][j]]-m_z[i])*wght[i][j];
             }
 
-            m_x[i] = m_x[i] + del_v[0] * lambda;
-            m_y[i] = m_y[i] + del_v[1] * lambda;
-            m_z[i] = m_z[i] + del_v[2] * lambda;
+            xtemp[i] = m_x[i] + del_v[0] * lambda;
+            ytemp[i] = m_y[i] + del_v[1] * lambda;
+            ztemp[i] = m_z[i] + del_v[2] * lambda;
         }
 
         // compute second weighted average
         for(i=0;i< m_nvert;++i)
         {
-
-            w = 1.0/(NekDouble)(adj[i].size());
             del_v[0] = del_v[1] = del_v[2] = 0;
-
-            for(iad = adj[i].begin(); iad != adj[i].end(); ++iad)
+            for(j = 0; j < adj[i].size(); ++j)
             {
-                del_v[0] =  del_v[0] + (m_x[*iad]-m_x[i])*w;
-                del_v[1] =  del_v[1] + (m_y[*iad]-m_y[i])*w;
-                del_v[2] =  del_v[2] + (m_z[*iad]-m_z[i])*w;
+                del_v[0] =  del_v[0] + (xtemp[adj[i][j]]-xtemp[i])*wght[i][j];
+                del_v[1] =  del_v[1] + (ytemp[adj[i][j]]-ytemp[i])*wght[i][j];
+                del_v[2] =  del_v[2] + (ztemp[adj[i][j]]-ztemp[i])*wght[i][j];
             }
 
-            m_x[i] = m_x[i] + del_v[0] * mu;
-            m_y[i] = m_y[i] + del_v[1] * mu;
-            m_z[i] = m_z[i] + del_v[2] * mu;
+            m_x[i] = xtemp[i] + del_v[0] * mu;
+            m_y[i] = ytemp[i] + del_v[1] * mu;
+            m_z[i] = ztemp[i] + del_v[2] * mu;
         }
     }
 }

@@ -44,6 +44,8 @@ namespace Nektar
 namespace Utilities
 {
 
+const NekDouble SQ_PNT_TOL=1e-16;
+
 class Iso
 {
     public:

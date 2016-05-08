@@ -141,15 +141,15 @@ namespace Nektar
              * @brief A map identifying which faces are left- and right-adjacent
              * for DG.
              */
-            vector<bool> m_leftAdjacentFaces;
+            std::vector<bool> m_leftAdjacentFaces;
 
             /**
              * @brief A vector indicating degress of freedom which need to be
              * copied from forwards to backwards space in case of a periodic
              * boundary condition.
              */
-            vector<int> m_periodicFwdCopy;
-            vector<int> m_periodicBwdCopy;
+            std::vector<int> m_periodicFwdCopy;
+            std::vector<int> m_periodicBwdCopy;
             
             void SetUpDG(const std::string = "DefaultVar");
             bool SameTypeOfBoundaryConditions(const DisContField3D &In);
@@ -170,7 +170,7 @@ namespace Nektar
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,      NekDouble> &Fwd,
                       Array<OneD,      NekDouble> &Bwd);
-            virtual const vector<bool> &v_GetLeftAdjacentFaces(void) const;
+            virtual const std::vector<bool> &v_GetLeftAdjacentFaces(void) const;
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
@@ -263,7 +263,7 @@ namespace Nektar
                 const NekDouble   x2_in   = NekConstants::kNekUnsetDouble,
                 const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
 
-            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
+            virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
         };
 
         typedef boost::shared_ptr<DisContField3D> DisContField3DSharedPtr;

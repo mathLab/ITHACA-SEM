@@ -41,6 +41,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <CompressibleFlowSolver/EquationSystems/EulerCFE.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string EulerCFE::className = 

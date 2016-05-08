@@ -43,6 +43,8 @@
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string CompressibleFlowSystem::className =

@@ -92,7 +92,7 @@ namespace Nektar
     
         /// A map between global matrix keys and their associated block
         /// matrices.
-        typedef map<GlobalMatrixKey,DNekScalBlkMatSharedPtr> BlockMatrixMap;
+        typedef std::map<GlobalMatrixKey,DNekScalBlkMatSharedPtr> BlockMatrixMap;
         /// A shared pointer to a BlockMatrixMap.
         typedef boost::shared_ptr<BlockMatrixMap> BlockMatrixMapShPtr;
                    
@@ -705,7 +705,7 @@ namespace Nektar
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
 
-            inline const vector<bool> &GetLeftAdjacentFaces(void) const;
+            inline const std::vector<bool> &GetLeftAdjacentFaces(void) const;
             
             inline void ExtractTracePhys(Array<OneD,NekDouble> &outarray);
 
@@ -785,7 +785,7 @@ namespace Nektar
                 return m_globalOptParam;
             }
 
-            map<int, RobinBCInfoSharedPtr> GetRobinBCInfo()
+            std::map<int, RobinBCInfoSharedPtr> GetRobinBCInfo()
             {
                 return v_GetRobinBCInfo();
             }
@@ -1115,7 +1115,7 @@ namespace Nektar
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
 
-            virtual const vector<bool> &v_GetLeftAdjacentFaces(void) const;
+            virtual const std::vector<bool> &v_GetLeftAdjacentFaces(void) const;
 
             virtual void v_ExtractTracePhys(
                 Array<OneD,NekDouble> &outarray);
@@ -1377,7 +1377,7 @@ namespace Nektar
                 const NekDouble   x2_in   = NekConstants::kNekUnsetDouble,
                 const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
             
-            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
+            virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
             
             
             virtual void v_GetPeriodicEntities(
@@ -1438,7 +1438,7 @@ namespace Nektar
 
             for(i= 0; i < (*m_exp).size(); ++i)
             {
-                returnval = max(returnval,
+                returnval = (std::max)(returnval,
                                 (*m_exp)[i]->EvalBasisNumModesMax());
             }
 
@@ -1457,7 +1457,7 @@ namespace Nektar
             for(i= 0; i < (*m_exp).size(); ++i)
             {
                 returnval[i]
-                    = max(returnval[i],(*m_exp)[i]->EvalBasisNumModesMax());
+                    = (std::max)(returnval[i],(*m_exp)[i]->EvalBasisNumModesMax());
             }
 
             return returnval;
@@ -2081,7 +2081,7 @@ namespace Nektar
             v_GetFwdBwdTracePhys(field,Fwd,Bwd);
         }
 
-        inline const vector<bool> &ExpList::GetLeftAdjacentFaces(void) const
+        inline const std::vector<bool> &ExpList::GetLeftAdjacentFaces(void) const
         {
             return v_GetLeftAdjacentFaces();
         }

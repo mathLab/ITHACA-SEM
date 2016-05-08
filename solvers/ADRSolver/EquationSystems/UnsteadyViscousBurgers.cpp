@@ -38,6 +38,8 @@
 #include <ADRSolver/EquationSystems/UnsteadyViscousBurgers.h>
 #include <StdRegions/StdQuadExp.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string UnsteadyViscousBurgers::className

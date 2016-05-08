@@ -461,6 +461,9 @@ void ProcessVarOpti::Process()
         ASSERTL0(false,"cannot deal with manifolds");
     }
 
+    res = boost::shared_ptr<Residual>(new Residual);
+    res->val = 1.0;
+
     FillQuadPoints();
 
     //build Vandermonde information
@@ -525,9 +528,6 @@ void ProcessVarOpti::Process()
         }
     }
 
-    res = boost::shared_ptr<Residual>(new Residual);
-    res->val = 1.0;
-
     GetElementMap();
 
     vector<vector<NodeSharedPtr> > freenodes = GetColouredNodes();
@@ -545,17 +545,33 @@ void ProcessVarOpti::Process()
         optiNodes.push_back(ns);
     }
 
-    NekDouble functionalStart = 0.0;
+    res->startE = 0.0;
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
-        functionalStart += GetElFunctional(dataSet[i]);
+        res->startE += GetElFunctional(dataSet[i]);
+    }
+
+    int nset = optiNodes.size();
+    int p = 0;
+    int mn = numeric_limits<int>::max();
+    int mx = 0;
+    for(int i = 0; i < nset; i++)
+    {
+        p += optiNodes[i].size();
+        mn = min(mn, int(optiNodes[i].size()));
+        mx = max(mx, int(optiNodes[i].size()));
     }
 
     cout << scientific << endl;
-    cout << "N elements: " << m_mesh->m_element[m_mesh->m_expDim].size() << endl
-         << "N free nodes: " << res->n << endl
-         << "N Dof: " << res->nDoF << endl;
-    cout << "starting energy: " << functionalStart << endl;
+    cout << "N elements:\t\t" << m_mesh->m_element[m_mesh->m_expDim].size() << endl
+         << "N elements invalid:\t" << res->startInv << endl
+         << "N free nodes:\t\t" << res->n << endl
+         << "N Dof:\t\t\t" << res->nDoF << endl
+         << "N color sets:\t\t" << nset << endl
+         << "Avg set colors:\t\t" << p/nset << endl
+         << "Min set:\t\t" << mn << endl
+         << "Max set:\t\t" << mx << endl;
+    cout << "Starting energy:\t" << res->startE << endl;
 
     int nThreads = m_config["numthreads"].as<int>();
 
@@ -565,7 +581,7 @@ void ProcessVarOpti::Process()
     Thread::ThreadManagerSharedPtr tm =
                 tms.CreateInstance(Thread::ThreadMaster::SessionJob, nThreads);
 
-    while (res->val > 1e-6)
+    while (res->val > 1e-5)
     {
         ctr++;
         res->val = 0.0;
@@ -595,12 +611,12 @@ void ProcessVarOpti::Process()
         cout << ctr <<  "\tResidual: " << res->val << endl;
     }
 
-    functionalStart = 0.0;
+    res->endE = 0.0;
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
-        functionalStart += GetElFunctional(dataSet[i]);
+        res->endE += GetElFunctional(dataSet[i]);
     }
-    cout << "end energy: " << functionalStart << endl;
+    cout << "end energy: " << res->endE << endl;
 
     if(m_config["stats"].beenSet)
     {
@@ -1453,6 +1469,22 @@ void ProcessVarOpti::FillQuadPoints()
 
             el->SetVolumeNodes(hons);*/
             el->SetCurveType(LibUtilities::eNodalTetElec);
+        }
+    }
+
+    res->startInv =0;
+    res->worstJac = numeric_limits<double>::max();
+
+    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+    {
+        ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+
+        SpatialDomains::GeometrySharedPtr geom =
+                                        el->GetGeom(m_mesh->m_spaceDim);
+        SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
+        if(!gfac->IsValid())
+        {
+            res->startInv++;
         }
     }
 }

@@ -64,6 +64,10 @@ struct Residual
     NekDouble val;
     int n;
     int nDoF;
+    NekDouble startE;
+    NekDouble endE;
+    int startInv;
+    NekDouble worstJac;
 };
 
 typedef boost::shared_ptr<Residual> ResidualSharedPtr;

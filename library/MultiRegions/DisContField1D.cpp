@@ -705,26 +705,30 @@ namespace Nektar
             {
                 locBCond = GetBoundaryCondition(bconditions, it->first, variable);
 
-                SpatialDomains::BoundaryRegion::iterator bregionIt;
-                for (bregionIt  = it->second->begin();
-                     bregionIt != it->second->end(); bregionIt++)
+                if (locBCond->GetBoundaryConditionType() !=
+                    SpatialDomains::ePeriodic)
                 {
-                    for (k = 0; k < bregionIt->second->size(); k++)
+                    SpatialDomains::BoundaryRegion::iterator bregionIt;
+                    for (bregionIt  = it->second->begin();
+                         bregionIt != it->second->end(); bregionIt++)
                     {
-                        if((vert = boost::dynamic_pointer_cast
-                                <SpatialDomains::PointGeom>(
-                                    (*bregionIt->second)[k])))
+                        for (k = 0; k < bregionIt->second->size(); k++)
                         {
-                            locPointExp
-                                = MemoryManager<MultiRegions::ExpList0D>
-                                    ::AllocateSharedPtr(vert);
-                            bndCondExpansions[cnt]  = locPointExp;
-                            bndConditions[cnt++]    = locBCond;
-                        }
-                        else
-                        {
-                            ASSERTL0(false,
-                                "dynamic cast to a vertex failed");
+                            if((vert = boost::dynamic_pointer_cast
+                                    <SpatialDomains::PointGeom>(
+                                        (*bregionIt->second)[k])))
+                            {
+                                locPointExp
+                                    = MemoryManager<MultiRegions::ExpList0D>
+                                        ::AllocateSharedPtr(vert);
+                                bndCondExpansions[cnt]  = locPointExp;
+                                bndConditions[cnt++]    = locBCond;
+                            }
+                            else
+                            {
+                                ASSERTL0(false,
+                                    "dynamic cast to a vertex failed");
+                            }
                         }
                     }
                 }

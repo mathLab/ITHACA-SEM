@@ -120,7 +120,8 @@ namespace SolverUtils
         bool singleMode, halfMode;
         m_session->MatchSolverInfo("ModeType","SingleMode",singleMode,false);
         m_session->MatchSolverInfo("ModeType","HalfMode",  halfMode,  false);
-        bool homogeneous = pFields[0]->GetExpType() == MultiRegions::e3DH1D;
+        bool homogeneous = pFields[0]->GetExpType() == MultiRegions::e3DH1D ||
+                           pFields[0]->GetExpType() == MultiRegions::e3DH2D;
 
         // If singleMode or halfMode, transform the forcing term to be in
         // physical space in the plane, but Fourier space in the homogeneous

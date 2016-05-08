@@ -129,6 +129,31 @@ namespace Nektar
             m_lines = Array<OneD, ExpListSharedPtr>(In.m_lines.num_elements());
         }
 
+        ExpListHomogeneous2D::ExpListHomogeneous2D(const ExpListHomogeneous2D &In,
+                                            const std::vector<unsigned int> &eIDs):
+            ExpList(In,eIDs,false),
+            m_useFFT(In.m_useFFT),
+            m_FFT_y(In.m_FFT_y),
+            m_FFT_z(In.m_FFT_z),
+            m_transposition(In.m_transposition),
+            m_Ycomm(In.m_Ycomm),
+            m_Zcomm(In.m_Ycomm),
+            m_homogeneousBasis_y(In.m_homogeneousBasis_y),
+            m_homogeneousBasis_z(In.m_homogeneousBasis_z),
+            m_lhom_y(In.m_lhom_y),
+            m_lhom_z(In.m_lhom_z),
+            m_homogeneous2DBlockMat(MemoryManager<Homo2DBlockMatrixMap>::AllocateSharedPtr()),
+            m_ny(In.m_ny),
+            m_nz(In.m_nz),
+            m_dealiasing(In.m_dealiasing),
+            m_padsize_y(In.m_padsize_y),
+            m_padsize_z(In.m_padsize_z),
+            MatFwdPAD(In.MatFwdPAD),
+            MatBwdPAD(In.MatBwdPAD)
+        {
+            m_lines = Array<OneD, ExpListSharedPtr>(In.m_lines.num_elements());
+        }
+
         /**
          * Destructor
          */

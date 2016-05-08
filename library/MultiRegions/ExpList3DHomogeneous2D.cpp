@@ -140,7 +140,7 @@ namespace Nektar
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In,
                 const std::vector<unsigned int> &eIDs,
                 const bool DeclareLinesSetCoeffPhys):
-            ExpListHomogeneous2D(In)
+            ExpListHomogeneous2D(In, eIDs)
         {
             SetExpType(e3DH2D);
 

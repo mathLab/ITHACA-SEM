@@ -701,84 +701,32 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr vert;
 
             cnt = 0;
-            // list Dirichlet boundaries first
-            for (it = bregions.begin(); it != bregions.end(); ++it)
-            {
-                locBCond = GetBoundaryCondition(
-                    bconditions, it->first, variable);
-
-                if (locBCond->GetBoundaryConditionType() ==
-                    SpatialDomains::eDirichlet)
-
-                {
-                    SpatialDomains::BoundaryRegion::iterator bregionIt;
-                    for (bregionIt  = it->second->begin();
-                         bregionIt != it->second->end(); bregionIt++)
-                    {
-                        for (k = 0; k < bregionIt->second->size(); k++)
-                        {
-                            if ((vert = boost::dynamic_pointer_cast
-                                    <SpatialDomains::PointGeom>(
-                                         (*bregionIt->second)[k])))
-                            {
-                                locPointExp
-                                    = MemoryManager<MultiRegions::ExpList0D>
-                                                ::AllocateSharedPtr(vert);
-                                bndCondExpansions[cnt]  = locPointExp;
-                                bndConditions[cnt++]    = locBCond;
-                            }
-                            else
-                            {
-                                ASSERTL0(false,
-                                    "dynamic cast to a vertex failed");
-                            }
-                        }
-                    }
-                }
-            } // end if Dirichlet
-
-            // then, list the other (non-periodic) boundaries
             for (it = bregions.begin(); it != bregions.end(); ++it)
             {
                 locBCond = GetBoundaryCondition(bconditions, it->first, variable);
-                
-                switch(locBCond->GetBoundaryConditionType())
+
+                SpatialDomains::BoundaryRegion::iterator bregionIt;
+                for (bregionIt  = it->second->begin();
+                     bregionIt != it->second->end(); bregionIt++)
                 {
-                case SpatialDomains::eNeumann:
-                case SpatialDomains::eRobin:
-                case SpatialDomains::eNotDefined: // presume this will be reused as Neuman, Robin or Dirichlet later
+                    for (k = 0; k < bregionIt->second->size(); k++)
                     {
-                        SpatialDomains::BoundaryRegion::iterator bregionIt;
-                        for (bregionIt  = it->second->begin();
-                             bregionIt != it->second->end(); bregionIt++)
+                        if((vert = boost::dynamic_pointer_cast
+                                <SpatialDomains::PointGeom>(
+                                    (*bregionIt->second)[k])))
                         {
-                            for (k = 0; k < bregionIt->second->size(); k++)
-                            {
-                                if((vert = boost::dynamic_pointer_cast
-                                        <SpatialDomains::PointGeom>(
-                                            (*bregionIt->second)[k])))
-                                {
-                                    locPointExp
-                                        = MemoryManager<MultiRegions::ExpList0D>
-                                            ::AllocateSharedPtr(vert);
-                                    bndCondExpansions[cnt]  = locPointExp;
-                                    bndConditions[cnt++]    = locBCond;
-                                }
-                                else
-                                {
-                                    ASSERTL0(false,
-                                        "dynamic cast to a vertex failed");
-                                }
-                            }
+                            locPointExp
+                                = MemoryManager<MultiRegions::ExpList0D>
+                                    ::AllocateSharedPtr(vert);
+                            bndCondExpansions[cnt]  = locPointExp;
+                            bndConditions[cnt++]    = locBCond;
+                        }
+                        else
+                        {
+                            ASSERTL0(false,
+                                "dynamic cast to a vertex failed");
                         }
                     }
-                    // do nothing for these types
-                case SpatialDomains::eDirichlet:
-                case SpatialDomains::ePeriodic:
-                    break;
-                default:
-                    ASSERTL0(false,"This type of BC not implemented yet");
-                    break;
                 }
             }
         }

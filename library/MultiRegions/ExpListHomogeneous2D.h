@@ -95,6 +95,8 @@ namespace Nektar
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpListHomogeneous2D(const ExpListHomogeneous2D &In);
             
+            MULTI_REGIONS_EXPORT ExpListHomogeneous2D(const ExpListHomogeneous2D &In,
+                                                      const std::vector<unsigned int> &eIDs);
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpListHomogeneous2D();
             

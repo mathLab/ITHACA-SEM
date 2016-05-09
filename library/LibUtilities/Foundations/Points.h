@@ -346,6 +346,12 @@ namespace Nektar
                 return returnval;
             }
 
+            virtual int GetNumPointsAlt()
+            {
+                ASSERTL0(false,"Method not implemented");
+                return 0;
+            }
+
         protected:
             PointsKey             m_pointsKey;
             Array<OneD, DataType> m_points[3];

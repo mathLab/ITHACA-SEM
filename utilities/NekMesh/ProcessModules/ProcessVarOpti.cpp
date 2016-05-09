@@ -396,7 +396,7 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d)
     NekDouble integral = 0.0;
     for(int i = 0; i < ptsHigh; i++)
     {
-        integral += quadW(i) * dW[i];
+        integral += quadW[i] * dW[i];
     }
     return integral;
 }
@@ -477,10 +477,10 @@ void ProcessVarOpti::Process()
         case 2:
         {
             ptsLow  = m_mesh->m_nummode*(m_mesh->m_nummode+1)/2;
-            ptsHigh = 12;
+
             LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                           LibUtilities::eNodalTriElec);
-            LibUtilities::PointsKey pkey2(m_mesh->m_nummode,
+            LibUtilities::PointsKey pkey2(m_mesh->m_nummode+2,
                                           LibUtilities::eNodalTriSPI);
             Array<OneD, NekDouble> u1, v1, u2, v2;
 
@@ -488,6 +488,7 @@ void ProcessVarOpti::Process()
             LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2);
             NekVector<NekDouble> U1(u1), V1(v1);
             NekVector<NekDouble> U2(u2), V2(v2);
+            ptsHigh = LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
 
             interp = LibUtilities::GetInterpolationMatrix(U1, V1, U2, V2);
 
@@ -499,13 +500,9 @@ void ProcessVarOpti::Process()
             VdmDy = LibUtilities::GetVandermondeForYDerivative(U1,V1) *
                                                                 VandermondeI;
             //quadW = LibUtilities::MakeQuadratureWeights(U2,V1);
-            Array<OneD, NekDouble> q = LibUtilities::PointsManager()[pkey2]->GetW();
-            NekVector<NekDouble> quadW(q);
-            for(int i= 0; i < u2.num_elements(); i++)
-            {
-                cout << q[i] << endl;
-            }
-            exit(-1);
+            Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
+            NekVector<NekDouble> quadWi(qds);
+            quadW = quadWi;
         }
         break;
         case 3:
@@ -682,11 +679,6 @@ void ProcessVarOpti::NodeOpti::Optimise()
             delX = del[0];
             delY = del[1];
             delZ = del[2];
-        }
-
-        if(sqrt(delX*delX + delY*delY) > 1e-2)
-        {
-            return;
         }
 
         bool found = false;

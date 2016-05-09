@@ -1476,12 +1476,6 @@ void ProcessVarOpti::FillQuadPoints()
             Array<OneD, NekDouble> u, v, w;
             LibUtilities::PointsManager()[pkey]->GetPoints(u, v, w);
 
-            for(int j = 0; j < u.num_elements(); j++)
-            {
-                cout << u[j] << " " << v[j] << " " << w[j] << endl;
-            }
-            exit(-1);
-
             Array<OneD, NekDouble> coeffs0 = geom->GetCoeffs(0);
             Array<OneD, NekDouble> coeffs1 = geom->GetCoeffs(1);
             Array<OneD, NekDouble> coeffs2 = geom->GetCoeffs(2);
@@ -1504,8 +1498,6 @@ void ProcessVarOpti::FillQuadPoints()
                 xp[0] = u[j];
                 xp[1] = v[j];
                 xp[2] = w[j];
-
-                cout << u[j] << " " << v[j] << " " << w[j] << endl;
 
                 hons.push_back(boost::shared_ptr<Node>(new Node(
                         id++,xmap->PhysEvaluate(xp,xc),
@@ -1531,41 +1523,6 @@ void ProcessVarOpti::FillQuadPoints()
         if(!gfac->IsValid())
         {
             res->startInv++;
-        }
-    }
-
-
-    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
-    {
-        ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
-
-        SpatialDomains::GeometrySharedPtr    geom = el->GetGeom(el->GetDim());
-        geom->FillGeom();
-        StdRegions::StdExpansionSharedPtr    chi  = geom->GetXmap();
-
-        LibUtilities::PointsKey pkey(m_mesh->m_nummode,
-                                     LibUtilities::eNodalTetElec);
-        Array<OneD, NekDouble> u, v, w;
-        LibUtilities::PointsManager()[pkey]->GetPoints(u, v, w);
-
-        Array<OneD, NekDouble> xc(chi->GetTotPoints());
-        Array<OneD, NekDouble> yc(chi->GetTotPoints());
-        Array<OneD, NekDouble> zc(chi->GetTotPoints());
-
-        Array<OneD, NekDouble> coeffs0 = geom->GetCoeffs(0);
-        Array<OneD, NekDouble> coeffs1 = geom->GetCoeffs(1);
-        Array<OneD, NekDouble> coeffs2 = geom->GetCoeffs(2);
-
-        chi->BwdTrans(coeffs0,xc);
-        chi->BwdTrans(coeffs1,yc);
-        chi->BwdTrans(coeffs2,zc);
-
-        for(int j = 0; j < u.num_elements(); j++)
-        {
-            Array<OneD, NekDouble> xp(3);
-            xp[0] = u[j];
-            xp[1] = v[j];
-            xp[2] = w[j];
         }
     }
 }

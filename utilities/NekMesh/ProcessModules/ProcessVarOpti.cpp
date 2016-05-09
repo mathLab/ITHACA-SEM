@@ -565,7 +565,7 @@ void ProcessVarOpti::Process()
     }
 
     res->startE = 0.0;
-    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
         res->startE += GetElFunctional(dataSet[i]);
     }
@@ -631,7 +631,7 @@ void ProcessVarOpti::Process()
     }
 
     res->endE = 0.0;
-    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
         res->endE += GetElFunctional(dataSet[i]);
     }
@@ -1476,6 +1476,12 @@ void ProcessVarOpti::FillQuadPoints()
             Array<OneD, NekDouble> u, v, w;
             LibUtilities::PointsManager()[pkey]->GetPoints(u, v, w);
 
+            for(int j = 0; j < u.num_elements(); j++)
+            {
+                cout << u[j] << " " << v[j] << " " << w[j] << endl;
+            }
+            exit(-1);
+
             Array<OneD, NekDouble> coeffs0 = geom->GetCoeffs(0);
             Array<OneD, NekDouble> coeffs1 = geom->GetCoeffs(1);
             Array<OneD, NekDouble> coeffs2 = geom->GetCoeffs(2);
@@ -1490,10 +1496,7 @@ void ProcessVarOpti::FillQuadPoints()
 
             vector<NodeSharedPtr> hons;
 
-            ASSERTL0(4 + 6*(nq-2) + 4 * ((nq-2)*(nq-3) / 2) <= u.num_elements(),
-                        "volume interior nodes in tet");
-
-            /*//need to finish for tet
+            //need to finish for tet
             for(int j = 4 + 6*(nq-2) + 4 * ((nq-2)*(nq-3) / 2);
                                                     j < u.num_elements(); j++)
             {
@@ -1502,13 +1505,15 @@ void ProcessVarOpti::FillQuadPoints()
                 xp[1] = v[j];
                 xp[2] = w[j];
 
+                cout << u[j] << " " << v[j] << " " << w[j] << endl;
+
                 hons.push_back(boost::shared_ptr<Node>(new Node(
                         id++,xmap->PhysEvaluate(xp,xc),
                              xmap->PhysEvaluate(xp,yc),
                              xmap->PhysEvaluate(xp,zc))));
             }
 
-            el->SetVolumeNodes(hons);*/
+            el->SetVolumeNodes(hons);
             el->SetCurveType(LibUtilities::eNodalTetElec);
         }
     }

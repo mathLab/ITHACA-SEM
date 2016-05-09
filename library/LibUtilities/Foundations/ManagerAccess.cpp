@@ -28,8 +28,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: C functions to provide access to managers. 
+//
+// Description: C functions to provide access to managers.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -42,6 +42,7 @@
 #include <LibUtilities/Foundations/NodalTriElec.h>
 #include <LibUtilities/Foundations/NodalTetElec.h>
 #include <LibUtilities/Foundations/NodalTriFekete.h>
+#include <LibUtilities/Foundations/NodalTriSPI.h>
 #include <LibUtilities/Foundations/NodalTriEvenlySpaced.h>
 #include <LibUtilities/Foundations/NodalTetEvenlySpaced.h>
 #include <LibUtilities/Foundations/NodalPrismEvenlySpaced.h>
@@ -51,7 +52,7 @@
 
 namespace Nektar
 {
-    namespace LibUtilities 
+    namespace LibUtilities
     {
     // Register all points and basis creators.
     namespace
@@ -68,12 +69,12 @@ namespace Nektar
             const bool gaussInited10 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2), GaussPoints::Create);
             const bool gaussInited11 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0), GaussPoints::Create);
             const bool gaussInited12 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0), GaussPoints::Create);
-            
+
             const bool gaussInited13 = PointsManager().RegisterCreator(PointsKey(0, eGaussKronrodLegendre), GaussPoints::Create);
             const bool gaussInited14 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauKronrodMLegendre), GaussPoints::Create);
             const bool gaussInited15 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauKronrodMAlpha1Beta0), GaussPoints::Create);
             const bool gaussInited16 = PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoKronrodLegendre), GaussPoints::Create);
-        
+
             const bool fourierInited0 = PointsManager().RegisterCreator(PointsKey(0, eFourierEvenlySpaced), FourierPoints::Create);
             const bool fourierInitedSM0 = PointsManager().RegisterCreator(PointsKey(0, eFourierSingleModeSpaced), FourierSingleModePoints::Create);
             const bool BLInited0 = PointsManager().RegisterCreator(PointsKey(0, eBoundaryLayerPoints), BLPoints::Create);
@@ -81,6 +82,7 @@ namespace Nektar
             const bool polyeInited10 =  PointsManager().RegisterCreator(PointsKey(0, ePolyEvenlySpaced), PolyEPoints::Create);
             const bool NodalTriInited0 =  PointsManager().RegisterCreator(PointsKey(0, eNodalTriElec), NodalTriElec::Create);
             const bool NodalTriInited1 =  PointsManager().RegisterCreator(PointsKey(0, eNodalTriFekete), NodalTriFekete::Create);
+            const bool NodalTriInited2 =  PointsManager().RegisterCreator(PointsKey(0, eNodalTriSPI), NodalTriSPI::Create);
             const bool nodalTetElecInited = PointsManager().RegisterCreator(PointsKey(0, eNodalTetElec), NodalTetElec::Create);
             const bool NodalTriEveInited = PointsManager().RegisterCreator(PointsKey(0, eNodalTriEvenlySpaced), NodalTriEvenlySpaced::Create);
             const bool NodalTetEveInited = PointsManager().RegisterCreator(PointsKey(0, eNodalTetEvenlySpaced), NodalTetEvenlySpaced::Create);

@@ -37,9 +37,9 @@
 #define NEKTAR_LIB_UTILITIES_POINTS_TYPE_H
 
 namespace Nektar
-{    
+{
     namespace LibUtilities
-    {     
+    {
 
         enum PointsType
         {
@@ -67,6 +67,7 @@ namespace Nektar
             eBoundaryLayerPointsRev,        //!<  1D power law distribution for boundary layer points
             eNodalTriElec,                  //!<  2D Nodal Electrostatic Points on a Triangle
             eNodalTriFekete,                //!<  2D Nodal Fekete Points on a Triangle
+            eNodalTriSPI,                   //!<  2D Nodal Symmetric positive internal triangle (Whitherden, Vincent)
             eNodalTriEvenlySpaced,          //!<  2D Evenly-spaced points on a Triangle
             eNodalTetEvenlySpaced,          //!<  3D Evenly-spaced points on a Tetrahedron
             eNodalTetElec,                  //!<  3D Nodal Electrostatic Points on a Tetrahedron

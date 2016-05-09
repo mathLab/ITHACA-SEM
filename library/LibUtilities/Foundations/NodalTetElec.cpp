@@ -561,7 +561,7 @@ namespace Nektar
             istart = iend;
             for(int i = cnt = istart; i < nAllPoints; i++)
             {
-                if(fabs(m_points[1][i]+m_points[0][i]+m_points[2][i]+1) < NekConstants::kNekZeroTol)
+                if(fabs(m_points[1][i]+m_points[0][i]+m_points[2][i]+1.0) < 1E-9) //nek zero tol too small
                 {
                     std::swap(m_points[0][cnt], m_points[0][i]);
                     std::swap(m_points[1][cnt], m_points[1][i]);

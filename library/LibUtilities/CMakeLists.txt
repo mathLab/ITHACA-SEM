@@ -122,6 +122,8 @@ SET(FoundationHeaders
     ./Foundations/NodalTriFekete.h
     ./Foundations/NodalTriSPIData.h
     ./Foundations/NodalTriSPI.h
+    ./Foundations/NodalTetSPI.h
+    ./Foundations/NodalTetSPIData.h
     ./Foundations/NodalUtil.h
     ./Foundations/PhysGalerkinProject.h
     ./Foundations/Points.h
@@ -146,6 +148,7 @@ SET(FoundationSources
         ./Foundations/NodalTriEvenlySpaced.cpp
     ./Foundations/NodalTriFekete.cpp
     ./Foundations/NodalTriSPI.cpp
+    ./Foundations/NodalTetSPI.cpp
     ./Foundations/NodalUtil.cpp
         ./Foundations/PhysGalerkinProject.cpp
     ./Foundations/Points.cpp

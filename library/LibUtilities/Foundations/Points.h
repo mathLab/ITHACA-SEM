@@ -190,6 +190,8 @@ namespace Nektar
                 case eNodalTetEvenlySpaced:
                     totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
                     break;
+                case eNodalTetSPI: ASSERTL0(false,"this method cannot be implemented");
+                    break;
 
                 case eNodalPrismEvenlySpaced:
                     totpoints = m_numpoints*m_numpoints*(m_numpoints+1)/2;

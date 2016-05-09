@@ -124,33 +124,42 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d)
             Z(i) = ns[i]->m_z;
         }
 
-        NekVector<NekDouble> Xint(ptsHigh), Yint(ptsHigh), Zint(ptsHigh);
-        Xint = interp * X;
-        Yint = interp * Y;
-        Zint = interp * Z;
+        x1 = VdmDx*X;
+        y1 = VdmDx*Y;
+        z1 = VdmDx*Z;
+        x2 = VdmDy*X;
+        y2 = VdmDy*Y;
+        z2 = VdmDy*Z;
+        x3 = VdmDz*X;
+        y3 = VdmDz*Y;
+        z3 = VdmDz*Z;
 
-        x1 = VdmDx*Xint;
-        y1 = VdmDx*Yint;
-        z1 = VdmDx*Zint;
-        x2 = VdmDy*Xint;
-        y2 = VdmDy*Yint;
-        z2 = VdmDy*Zint;
-        x3 = VdmDz*Xint;
-        y3 = VdmDz*Yint;
-        z3 = VdmDz*Zint;
+        NekVector<NekDouble> x1i(ptsHigh),y1i(ptsHigh),z1i(ptsHigh),
+                             x2i(ptsHigh),y2i(ptsHigh),z2i(ptsHigh),
+                             x3i(ptsHigh),y3i(ptsHigh),z3i(ptsHigh);
+
+        x1i = interp * x1;
+        x2i = interp * x2;
+        x3i = interp * x3;
+        y1i = interp * y1;
+        y2i = interp * y2;
+        y3i = interp * y3;
+        z1i = interp * z1;
+        z2i = interp * z2;
+        z3i = interp * z3;
 
         for(int i = 0; i < ptsHigh; i++)
         {
             Array<OneD, NekDouble> jaci(9,0.0);
-            jaci[0] = x1(i);
-            jaci[1] = y1(i);
-            jaci[2] = z1(i);
-            jaci[3] = x2(i);
-            jaci[4] = y2(i);
-            jaci[5] = z2(i);
-            jaci[6] = x3(i);
-            jaci[7] = y3(i);
-            jaci[8] = z3(i);
+            jaci[0] = x1i(i);
+            jaci[1] = y1i(i);
+            jaci[2] = z1i(i);
+            jaci[3] = x2i(i);
+            jaci[4] = y2i(i);
+            jaci[5] = z2i(i);
+            jaci[6] = x3i(i);
+            jaci[7] = y3i(i);
+            jaci[8] = z3i(i);
             jac[i] = jaci;
 
         }
@@ -508,32 +517,33 @@ void ProcessVarOpti::Process()
         case 3:
         {
             ptsLow  = m_mesh->m_nummode*(m_mesh->m_nummode+1)*(m_mesh->m_nummode+2)/6;
-            ptsHigh = (3*m_mesh->m_nummode-4)*((3*m_mesh->m_nummode-4)+1)
-                                        *((3*m_mesh->m_nummode-4)+2)/6;
             LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                           LibUtilities::eNodalTetElec);
-            LibUtilities::PointsKey pkey2(3*m_mesh->m_nummode-4,
-                                          LibUtilities::eNodalTetElec);
+            LibUtilities::PointsKey pkey2(m_mesh->m_nummode+2,
+                                          LibUtilities::eNodalTetSPI);
             Array<OneD, NekDouble> u1, v1, u2, v2, w1, w2;
             LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
             LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
             NekVector<NekDouble> U1(u1), V1(v1), W1(w1);
             NekVector<NekDouble> U2(u2), V2(v2), W2(w2);
+            ptsHigh = LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
 
             interp = LibUtilities::GetTetInterpolationMatrix(U1, V1, W1,
                                                              U2, V2, W2);
 
             NekMatrix<NekDouble> Vandermonde =
-                                LibUtilities::GetTetVandermonde(U2,V2,W2);
+                                LibUtilities::GetTetVandermonde(U1,V1,W1);
             NekMatrix<NekDouble> VandermondeI = Vandermonde;
             VandermondeI.Invert();
-            VdmDx = LibUtilities::GetVandermondeForTetXDerivative(U2,V2,W2) *
+            VdmDx = LibUtilities::GetVandermondeForTetXDerivative(U1,V1,W1) *
                                                                 VandermondeI;
-            VdmDy = LibUtilities::GetVandermondeForTetYDerivative(U2,V2,W2) *
+            VdmDy = LibUtilities::GetVandermondeForTetYDerivative(U1,V1,W1) *
                                                                 VandermondeI;
-            VdmDz = LibUtilities::GetVandermondeForTetZDerivative(U2,V2,W2) *
+            VdmDz = LibUtilities::GetVandermondeForTetZDerivative(U1,V1,W1) *
                                                                 VandermondeI;
-            quadW = LibUtilities::MakeTetWeights(U2,V2,W2);
+            Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
+            NekVector<NekDouble> quadWi(qds);
+            quadW = quadWi;
         }
     }
 
@@ -1120,7 +1130,7 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
     }
     else if(geom->GetShapeType() == LibUtilities::eTetrahedron)
     {
-        LibUtilities::PointsKey pkey(3*m_mesh->m_nummode-4,
+        LibUtilities::PointsKey pkey(m_mesh->m_nummode,
                                      LibUtilities::eNodalTetElec);
         Array<OneD, NekDouble> u, v, w;
         LibUtilities::PointsManager()[pkey]->GetPoints(u, v, w);
@@ -1137,8 +1147,10 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
         chi->BwdTrans(coeffs1,yc);
         chi->BwdTrans(coeffs2,zc);
 
-        NekVector<NekDouble> X(u.num_elements()),Y(u.num_elements()),
-                             Z(u.num_elements());
+        NekVector<NekDouble> X(ptsLow),Y(ptsLow),Z(ptsLow),
+                             x1(ptsLow),y1(ptsLow),z1(ptsLow),
+                             x2(ptsLow),y2(ptsLow),z2(ptsLow),
+                             x3(ptsLow),y3(ptsLow),z3(ptsLow);
         for(int j = 0; j < u.num_elements(); j++)
         {
             Array<OneD, NekDouble> xp(3);
@@ -1151,28 +1163,42 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
             Z(j) = chi->PhysEvaluate(xp, zc);
         }
 
-        NekVector<NekDouble> x1 = VdmDx*X;
-        NekVector<NekDouble> y1 = VdmDx*Y;
-        NekVector<NekDouble> z1 = VdmDx*Z;
-        NekVector<NekDouble> x2 = VdmDy*X;
-        NekVector<NekDouble> y2 = VdmDy*Y;
-        NekVector<NekDouble> z2 = VdmDy*Z;
-        NekVector<NekDouble> x3 = VdmDz*X;
-        NekVector<NekDouble> y3 = VdmDz*Y;
-        NekVector<NekDouble> z3 = VdmDz*Z;
+        NekVector<NekDouble> x1i(ptsHigh),y1i(ptsHigh),z1i(ptsHigh),
+                             x2i(ptsHigh),y2i(ptsHigh),z2i(ptsHigh),
+                             x3i(ptsHigh),y3i(ptsHigh),z3i(ptsHigh);
 
-        for(int i = 0 ; i < u.num_elements(); i++)
+        x1 = VdmDx*X;
+        y1 = VdmDx*Y;
+        x2 = VdmDy*X;
+        y2 = VdmDy*Y;
+        z1 = VdmDx*Z;
+        z2 = VdmDy*Z;
+        x3 = VdmDz*X;
+        y3 = VdmDz*Y;
+        z3 = VdmDz*Z;
+
+        x1i = interp * x1;
+        x2i = interp * x2;
+        x3i = interp * x3;
+        y1i = interp * y1;
+        y2i = interp * y2;
+        y3i = interp * y3;
+        z1i = interp * z1;
+        z2i = interp * z2;
+        z3i = interp * z3;
+
+        for(int i = 0 ; i < ptsHigh; i++)
         {
             DNekMat dxdz(3,3,1.0,eFULL);
-            dxdz(0,0) = x1(i);
-            dxdz(0,1) = x2(i);
-            dxdz(0,2) = x3(i);
-            dxdz(1,0) = y1(i);
-            dxdz(1,1) = y2(i);
-            dxdz(1,2) = y3(i);
-            dxdz(2,0) = z1(i);
-            dxdz(2,1) = z2(i);
-            dxdz(2,2) = z3(i);
+            dxdz(0,0) = x1i(i);
+            dxdz(0,1) = x2i(i);
+            dxdz(0,2) = x3i(i);
+            dxdz(1,0) = y1i(i);
+            dxdz(1,1) = y2i(i);
+            dxdz(1,2) = y3i(i);
+            dxdz(2,0) = z1i(i);
+            dxdz(2,1) = z2i(i);
+            dxdz(2,2) = z3i(i);
 
             Array<OneD, NekDouble> r(10,0.0); //store det in 10th entry
 
@@ -1500,6 +1526,41 @@ void ProcessVarOpti::FillQuadPoints()
         if(!gfac->IsValid())
         {
             res->startInv++;
+        }
+    }
+
+
+    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+    {
+        ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+
+        SpatialDomains::GeometrySharedPtr    geom = el->GetGeom(el->GetDim());
+        geom->FillGeom();
+        StdRegions::StdExpansionSharedPtr    chi  = geom->GetXmap();
+
+        LibUtilities::PointsKey pkey(m_mesh->m_nummode,
+                                     LibUtilities::eNodalTetElec);
+        Array<OneD, NekDouble> u, v, w;
+        LibUtilities::PointsManager()[pkey]->GetPoints(u, v, w);
+
+        Array<OneD, NekDouble> xc(chi->GetTotPoints());
+        Array<OneD, NekDouble> yc(chi->GetTotPoints());
+        Array<OneD, NekDouble> zc(chi->GetTotPoints());
+
+        Array<OneD, NekDouble> coeffs0 = geom->GetCoeffs(0);
+        Array<OneD, NekDouble> coeffs1 = geom->GetCoeffs(1);
+        Array<OneD, NekDouble> coeffs2 = geom->GetCoeffs(2);
+
+        chi->BwdTrans(coeffs0,xc);
+        chi->BwdTrans(coeffs1,yc);
+        chi->BwdTrans(coeffs2,zc);
+
+        for(int j = 0; j < u.num_elements(); j++)
+        {
+            Array<OneD, NekDouble> xp(3);
+            xp[0] = u[j];
+            xp[1] = v[j];
+            xp[2] = w[j];
         }
     }
 }

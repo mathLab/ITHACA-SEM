@@ -728,6 +728,20 @@ vector<int> InputGmsh::TetReordering(ElmtConfig conf)
         }
     }
 
+    if (conf.m_volumeNodes == false)
+    {
+        return mapping;
+    }
+
+    const int totPoints = (order + 1) * (order + 2) * (order + 3) / 6;
+    mapping.resize(totPoints);
+
+    // TODO: Fix ordering of volume nodes.
+    for (i = 4 + 6 * n + 4 * n2; i < totPoints; ++i)
+    {
+        mapping[i] = i;
+    }
+
     return mapping;
 }
 
@@ -966,7 +980,7 @@ std::map<unsigned int, ElmtConfig> InputGmsh::GenElmMap()
     using namespace LibUtilities;
     std::map<unsigned int, ElmtConfig> tmp;
 
-    //                    Elmt type,   order,  face, volume
+    //                    Elmt type,   order, facet, volume
     tmp[  1] = ElmtConfig(eSegment,        1,  true,  true);
     tmp[  2] = ElmtConfig(eTriangle,       1,  true,  true);
     tmp[  3] = ElmtConfig(eQuadrilateral,  1,  true,  true);

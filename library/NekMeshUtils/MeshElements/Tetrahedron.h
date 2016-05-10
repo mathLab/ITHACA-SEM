@@ -78,7 +78,8 @@ public:
     NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
         int coordDim);
     NEKMESHUTILS_EXPORT virtual void Complete(int order);
-
+    NEKMESHUTILS_EXPORT virtual void GetCurvedNodes(
+        std::vector<NodeSharedPtr> &nodeList) const;
     NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
 
     int m_orientationMap[4];

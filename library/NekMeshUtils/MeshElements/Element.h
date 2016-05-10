@@ -219,19 +219,18 @@ struct ElmtConfig
 
     /// Element type (e.g. triangle, quad, etc).
     LibUtilities::ShapeType m_e;
-    /// Denotes whether the element contains face nodes. For 2D
-    /// elements, if this is true then the element contains interior
-    /// nodes.
+    /// Denotes whether the element contains face nodes. For 2D elements, if
+    /// this is true then the element contains interior nodes.
     bool m_faceNodes;
-    /// Denotes whether the element contains volume (i.e. interior)
-    /// nodes. These are not supported by either the mesh converter or
-    /// Nektar++ but are included for completeness and are required
-    /// for some output modules (e.g. Gmsh).
+    /// Denotes whether the element contains volume (i.e. interior) nodes. These
+    /// are not supported by either the mesh converter or Nektar++ but are
+    /// included for completeness and are required for some output modules
+    /// (e.g. Gmsh).
     bool m_volumeNodes;
     /// Order of the element.
     unsigned int m_order;
-    /// Denotes whether the element needs to be re-orientated for a
-    /// spectral element framework.
+    /// Denotes whether the element needs to be re-orientated for a spectral
+    /// element framework.
     bool m_reorient;
     /// Distribution of points in edges.
     LibUtilities::PointsType m_edgeCurveType;
@@ -349,8 +348,15 @@ public:
         }
         else
         {
-            cerr << "Not supported." << endl;
-            exit(1);
+            for (int i = 0; i < m_face.size(); ++i)
+            {
+                n += m_face[i]->GetNodeCount();
+            }
+            for (int i = 0; i < m_edge.size(); ++i)
+            {
+                n -= m_edge[i]->GetNodeCount();
+            }
+            n += m_vertex.size();
         }
         return n;
     }
@@ -459,178 +465,11 @@ public:
         return s.str();
     }
 
-    NEKMESHUTILS_EXPORT void GetCurvedNodes(
+    NEKMESHUTILS_EXPORT virtual void GetCurvedNodes(
         std::vector<NodeSharedPtr> &nodeList) const
     {
-        // Node orderings are different for different elements.
-        // Triangle
-        if (m_vertex.size() == 2)
-        {
-            nodeList.push_back(m_vertex[0]);
-            for (int i = 0; i < m_volumeNodes.size(); ++i)
-            {
-                nodeList.push_back(m_volumeNodes[i]);
-            }
-            nodeList.push_back(m_vertex[1]);
-        }
-        else if (m_vertex.size() == 3)
-        {
-            int n = m_edge[0]->GetNodeCount();
-            nodeList.resize(n * (n + 1) / 2);
-
-            // Populate nodelist
-            std::copy(m_vertex.begin(), m_vertex.end(), nodeList.begin());
-            for (int i = 0; i < 3; ++i)
-            {
-                std::copy(m_edge[i]->m_edgeNodes.begin(),
-                          m_edge[i]->m_edgeNodes.end(),
-                          nodeList.begin() + 3 + i * (n - 2));
-                if (m_edge[i]->m_n1 != m_vertex[i])
-                {
-                    // If edge orientation is reversed relative to node
-                    // ordering, we need to reverse order of nodes.
-                    std::reverse(nodeList.begin() + 3 + i * (n - 2),
-                                 nodeList.begin() + 3 + (i + 1) * (n - 2));
-                }
-            }
-
-            // Copy volume nodes.
-            std::copy(m_volumeNodes.begin(),
-                      m_volumeNodes.end(),
-                      nodeList.begin() + 3 * (n - 1));
-        }
-        // Quad
-        else if (m_dim == 2 && m_vertex.size() == 4)
-        {
-            int n = m_edge[0]->GetNodeCount();
-            nodeList.resize(n * n);
-
-            // Write vertices
-            nodeList[0]         = m_vertex[0];
-            nodeList[n - 1]     = m_vertex[1];
-            nodeList[n * n - 1] = m_vertex[2];
-            nodeList[n * (n - 1)] = m_vertex[3];
-
-            // Write edge-interior
-            int skips[4][2] = {
-                {0, 1}, {n - 1, n}, {n * n - 1, -1}, {n * (n - 1), -n}};
-            for (int i = 0; i < 4; ++i)
-            {
-                bool reverseEdge = m_edge[i]->m_n1 == m_vertex[i];
-
-                if (!reverseEdge)
-                {
-                    for (int j = 1; j < n - 1; ++j)
-                    {
-                        nodeList[skips[i][0] + j * skips[i][1]] =
-                            m_edge[i]->m_edgeNodes[n - 2 - j];
-                    }
-                }
-                else
-                {
-                    for (int j = 1; j < n - 1; ++j)
-                    {
-                        nodeList[skips[i][0] + j * skips[i][1]] =
-                            m_edge[i]->m_edgeNodes[j - 1];
-                    }
-                }
-            }
-
-            // Write interior
-            for (int i = 1; i < n - 1; ++i)
-            {
-                for (int j = 1; j < n - 1; ++j)
-                {
-                    nodeList[i * n + j] =
-                        m_volumeNodes[(i - 1) * (n - 2) + (j - 1)];
-                }
-            }
-        }
-        else if (m_dim == 3 && m_vertex.size() == 4)
-        {
-            int n = m_edge[0]->GetNodeCount();
-            nodeList.resize(n*(n+1)*(n+2)/6);
-
-            nodeList[0] = m_vertex[0];
-            nodeList[1] = m_vertex[1];
-            nodeList[2] = m_vertex[2];
-            nodeList[3] = m_vertex[3];
-            int k = 4;
-
-            for(int i = 0; i < 6; i++)
-            {
-                bool reverseEdge = false;
-                if(i < 3)
-                {
-                    reverseEdge = m_edge[i]->m_n1 == m_vertex[i];
-                }
-                else
-                {
-                    reverseEdge = m_edge[i]->m_n1 == m_vertex[i-3];
-                }
-
-                if (reverseEdge)
-                {
-                    for(int j = 0; j < n-2; j++)
-                    {
-                        nodeList[k++] = m_edge[i]->m_edgeNodes[j];
-                    }
-                }
-                else
-                {
-                    for(int j = n-3; j >= 0; j--)
-                    {
-                        nodeList[k++] = m_edge[i]->m_edgeNodes[j];
-                    }
-                }
-            }
-
-            vector<vector<int> > ts;
-            vector<int> t(3);
-            t[0] = m_vertex[0]->m_id;
-            t[1] = m_vertex[1]->m_id;
-            t[2] = m_vertex[2]->m_id;
-            ts.push_back(t);
-            t[0] = m_vertex[0]->m_id;
-            t[1] = m_vertex[1]->m_id;
-            t[2] = m_vertex[3]->m_id;
-            ts.push_back(t);
-            t[0] = m_vertex[1]->m_id;
-            t[1] = m_vertex[2]->m_id;
-            t[2] = m_vertex[3]->m_id;
-            ts.push_back(t);
-            t[0] = m_vertex[0]->m_id;
-            t[1] = m_vertex[2]->m_id;
-            t[2] = m_vertex[3]->m_id;
-            ts.push_back(t);
-
-            for(int i = 0; i < 4; i++)
-            {
-                vector<int> fcid;
-                fcid.push_back(m_face[i]->m_vertexList[0]->m_id);
-                fcid.push_back(m_face[i]->m_vertexList[1]->m_id);
-                fcid.push_back(m_face[i]->m_vertexList[2]->m_id);
-
-                HOTriangle<NodeSharedPtr> hot(fcid, m_face[i]->m_faceNodes);
-
-                hot.Align(ts[i]);
-
-                std::copy(hot.surfVerts.begin(),
-                          hot.surfVerts.end(),
-                          nodeList.begin() + k);
-                k+= hot.surfVerts.size();
-            }
-
-            std::copy(m_volumeNodes.begin(),
-                      m_volumeNodes.end(),
-                      nodeList.begin() + k);
-
-        }
-        else
-        {
-            cerr << "GetXmlCurveString for a " << m_vertex.size()
-                 << "-vertex element is not yet implemented." << endl;
-        }
+        cerr << "WARNING: Unsupported curvature for a " << m_vertex.size()
+             << "-vertex element is not yet implemented." << endl;
     }
 
     /// Generates a string listing the coordinates of all nodes

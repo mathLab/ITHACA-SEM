@@ -1272,6 +1272,7 @@ namespace Nektar
 
                 std::vector<LibUtilities::MeshCurvedInfo> edginfo;
                 std::vector<LibUtilities::MeshCurvedInfo> facinfo;
+                std::vector<LibUtilities::MeshCurvedInfo> volinfo;
                 LibUtilities::MeshCurvedPts cpts;
 
                 // read edge, face info and curved poitns.
@@ -1307,6 +1308,20 @@ namespace Nektar
 
                         LibUtilities::CompressData::ZlibDecodeFromBase64Str(
                                                         elmtStr,facinfo);
+                    }
+                    else if(boost::iequals(entitytype,"V"))
+                    {
+                        // read in data
+                        std::string elmtStr;
+                        TiXmlNode* child = x->FirstChild();
+
+                        if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            elmtStr += child->ToText()->ValueStr();
+                        }
+
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                        elmtStr,volinfo);
                     }
                     else if(boost::iequals(entitytype,"DATAPOINTS"))
                     {
@@ -1415,6 +1430,33 @@ namespace Nektar
                     }
 
                     m_curvedFaces[faceid] = curve;
+                }
+
+                for(int i = 0; i < volinfo.size(); ++i)
+                {
+                    int volid = volinfo[i].entityid;
+                    LibUtilities::PointsType ptype;
+
+                    CurveSharedPtr curve(
+                            MemoryManager<Curve>::AllocateSharedPtr(
+                                volid, ptype = (LibUtilities::PointsType)
+                                                    volinfo[i].ptype));
+
+                    int offset = volinfo[i].ptoffset;
+                    for(int j = 0; j < volinfo[i].npoints; ++j)
+                    {
+                        int idx = cpts.index[offset+j];
+
+                        PointGeomSharedPtr vert(MemoryManager<PointGeom>::
+                                   AllocateSharedPtr(m_meshDimension,
+                                                     volinfo[i].id,
+                                                     cpts.pts[idx].x,
+                                                     cpts.pts[idx].y,
+                                                     cpts.pts[idx].z));
+                        curve->m_points.push_back(vert);
+                    }
+
+                    m_curvedVolumes[volid] = curve;
                 }
             }
             else
@@ -1553,7 +1595,7 @@ namespace Nektar
                             elementStr += " ";
                         }
                         elementChild = elementChild->NextSibling();
-                }
+                    }
                     
                     ASSERTL0(!elementStr.empty(), "Unable to read curve description body.");
                     
@@ -1616,6 +1658,100 @@ namespace Nektar
                         
                         facelement = facelement->NextSiblingElement("F");
                         
+                    } // end if-loop
+                } // end while-loop
+
+                TiXmlElement *volelement = field->FirstChildElement("V");
+                int volindx, volid;
+
+                while(volelement)
+                {
+                    std::string vol(volelement->ValueStr());
+                    ASSERTL0(vol == "V", (std::string("Unknown 3D curve type: ") + vol).c_str());
+
+                    /// Read id attribute.
+                    err = volelement->QueryIntAttribute("ID", &volindx);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
+
+                    /// Read vol id attribute.
+                    err = volelement->QueryIntAttribute("VOLID", &volid);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute VOLID.");
+
+                    /// Read text vol element description.
+                    std::string elementStr;
+                    TiXmlNode* elementChild = volelement->FirstChild();
+
+                    while(elementChild)
+                    {
+                        // Accumulate all non-comment element data
+                        if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            elementStr += elementChild->ToText()->ValueStr();
+                            elementStr += " ";
+                        }
+                        elementChild = elementChild->NextSibling();
+                    }
+
+                    ASSERTL0(!elementStr.empty(), "Unable to read curve description body.");
+
+                    /// Parse out the element components corresponding to type of element.
+                    if(vol == "V")
+                    {
+                        std::string typeStr = volelement->Attribute("TYPE");
+                        ASSERTL0(!typeStr.empty(), "TYPE must be specified in points definition");
+                        LibUtilities::PointsType type;
+                        const std::string* begStr = LibUtilities::kPointsTypeStr;
+                        const std::string* endStr = LibUtilities::kPointsTypeStr + LibUtilities::SIZE_PointsType;
+                        const std::string* ptsStr = std::find(begStr, endStr, typeStr);
+
+                        ASSERTL0(ptsStr != endStr, "Invalid points type.");
+                        type = (LibUtilities::PointsType)(ptsStr - begStr);
+
+                        std::string numptsStr = volelement->Attribute("NUMPOINTS");
+                        ASSERTL0(!numptsStr.empty(), "NUMPOINTS must be specified in points definition");
+                        int numPts=0;
+                        std::stringstream s;
+                        s << numptsStr;
+                        s >> numPts;
+
+                        CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(volid, type));
+
+                        ASSERTL0(numPts >= 4, "NUMPOINTS for vol must be greater than 4");
+
+                        if(numPts == 3)
+                        {
+                            ASSERTL0(ptsStr != endStr, "Invalid points type.");
+                        }
+
+                        // Read points (x, y, z)
+                        NekDouble xval, yval, zval;
+                        std::istringstream elementDataStrm(elementStr.c_str());
+                        try
+                        {
+                            while(!elementDataStrm.fail())
+                            {
+                                elementDataStrm >> xval >> yval >> zval;
+
+                                // Need to check it here because we
+                                // may not be good after the read
+                                // indicating that there was nothing
+                                // to read.
+                                if (!elementDataStrm.fail())
+                                {
+                                    PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_meshDimension, volindx, xval, yval, zval));
+                                    curve->m_points.push_back(vert);
+                                }
+                            }
+                        }
+                        catch(...)
+                        {
+                            NEKERROR(ErrorUtil::efatal,
+                                     (std::string("Unable to read curve data for VOLUME: ")
+                                      + elementStr).c_str());
+                        }
+                        m_curvedVolumes[volid] = curve;
+
+                        volelement = volelement->NextSiblingElement("V");
                     } // end if-loop
                 } // end while-loop
             } // end of compressed else

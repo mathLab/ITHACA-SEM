@@ -511,6 +511,8 @@ namespace Nektar
             TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
             TiXmlElement* field = NULL;
 
+            CurveMap::iterator it;
+
             /// Look for elements in ELEMENT block.
             field = mesh->FirstChildElement("ELEMENT");
             
@@ -570,8 +572,11 @@ namespace Nektar
                                     boost::static_pointer_cast<TriGeom>(face);
                             }
 
-                            TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>
-                                                ::AllocateSharedPtr(tfaces));
+                            it = m_curvedVolumes.find(indx);
+                            TetGeomSharedPtr tetgeom(
+                                MemoryManager<TetGeom>::AllocateSharedPtr(
+                                    tfaces, it == m_curvedVolumes.end() ?
+                                    CurveSharedPtr() : it->second));
                             tetgeom->SetGlobalID(indx);
                             m_tetGeoms[indx] = tetgeom;
                             PopulateFaceToElMap(tetgeom, 4);
@@ -780,7 +785,11 @@ namespace Nektar
                             ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
                             ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
                             
-                            TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>::AllocateSharedPtr(tfaces));
+                            it = m_curvedVolumes.find(indx);
+                            TetGeomSharedPtr tetgeom(
+                                MemoryManager<TetGeom>::AllocateSharedPtr(
+                                    tfaces, it == m_curvedVolumes.end() ?
+                                    CurveSharedPtr() : it->second));
                             tetgeom->SetGlobalID(indx);
                             
                             m_tetGeoms[indx] = tetgeom;

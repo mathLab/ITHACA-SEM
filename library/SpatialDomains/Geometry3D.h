@@ -95,6 +95,7 @@ namespace Nektar
             bool                                             m_owndata;
             int                                              m_eid;
             bool                                             m_ownverts;
+            CurveSharedPtr                                   m_curve;
 
             //---------------------------------------
             // 3D Geometry Methods

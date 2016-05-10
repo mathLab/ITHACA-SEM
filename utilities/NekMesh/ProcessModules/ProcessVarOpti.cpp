@@ -56,7 +56,6 @@ namespace Utilities
 {
 
 boost::mutex mtx;
-NekMatrix<NekDouble> interp;
 int ptsLow;
 int ptsHigh;
 int dim;
@@ -77,9 +76,7 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d)
 
     if(dim == 2)
     {
-        NekVector<NekDouble> X(ptsLow),Y(ptsLow),
-                             x1(ptsLow),y1(ptsLow),
-                             x2(ptsLow),y2(ptsLow);
+        NekVector<NekDouble> X(ptsLow),Y(ptsLow);
         for(int i = 0; i < ptsLow; i++)
         {
             X(i) = ns[i]->m_x;
@@ -89,15 +86,10 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d)
         NekVector<NekDouble> x1i(ptsHigh),y1i(ptsHigh),
                              x2i(ptsHigh),y2i(ptsHigh);
 
-        x1 = VdmDx*X;
-        y1 = VdmDx*Y;
-        x2 = VdmDy*X;
-        y2 = VdmDy*Y;
-
-        x1i = interp * x1;
-        x2i = interp * x2;
-        y1i = interp * y1;
-        y2i = interp * y2;
+        x1i = VdmDx*X;
+        y1i = VdmDx*Y;
+        x2i = VdmDy*X;
+        y2i = VdmDy*Y;
 
         for(int i = 0; i < ptsHigh; i++)
         {
@@ -113,10 +105,7 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d)
     }
     else
     {
-        NekVector<NekDouble> X(ptsLow),Y(ptsLow),Z(ptsLow),
-                             x1(ptsHigh),y1(ptsHigh),z1(ptsHigh),
-                             x2(ptsHigh),y2(ptsHigh),z2(ptsHigh),
-                             x3(ptsHigh),y3(ptsHigh),z3(ptsHigh);
+        NekVector<NekDouble> X(ptsLow),Y(ptsLow),Z(ptsLow);
         for(int i = 0; i < ptsLow; i++)
         {
             X(i) = ns[i]->m_x;
@@ -124,29 +113,19 @@ inline NekDouble GetElFunctional(ElDataSharedPtr d)
             Z(i) = ns[i]->m_z;
         }
 
-        x1 = VdmDx*X;
-        y1 = VdmDx*Y;
-        z1 = VdmDx*Z;
-        x2 = VdmDy*X;
-        y2 = VdmDy*Y;
-        z2 = VdmDy*Z;
-        x3 = VdmDz*X;
-        y3 = VdmDz*Y;
-        z3 = VdmDz*Z;
-
         NekVector<NekDouble> x1i(ptsHigh),y1i(ptsHigh),z1i(ptsHigh),
                              x2i(ptsHigh),y2i(ptsHigh),z2i(ptsHigh),
                              x3i(ptsHigh),y3i(ptsHigh),z3i(ptsHigh);
 
-        x1i = interp * x1;
-        x2i = interp * x2;
-        x3i = interp * x3;
-        y1i = interp * y1;
-        y2i = interp * y2;
-        y3i = interp * y3;
-        z1i = interp * z1;
-        z2i = interp * z2;
-        z3i = interp * z3;
+        x1i = VdmDx*X;
+        y1i = VdmDx*Y;
+        z1i = VdmDx*Z;
+        x2i = VdmDy*X;
+        y2i = VdmDy*Y;
+        z2i = VdmDy*Z;
+        x3i = VdmDz*X;
+        y3i = VdmDz*Y;
+        z3i = VdmDz*Z;
 
         for(int i = 0; i < ptsHigh; i++)
         {
@@ -499,15 +478,15 @@ void ProcessVarOpti::Process()
             NekVector<NekDouble> U2(u2), V2(v2);
             ptsHigh = LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
 
-            interp = LibUtilities::GetInterpolationMatrix(U1, V1, U2, V2);
+            NekMatrix<NekDouble> interp = LibUtilities::GetInterpolationMatrix(U1, V1, U2, V2);
 
             NekMatrix<NekDouble> Vandermonde = LibUtilities::GetVandermonde(U1,V1);
             NekMatrix<NekDouble> VandermondeI = Vandermonde;
             VandermondeI.Invert();
-            VdmDx = LibUtilities::GetVandermondeForXDerivative(U1,V1) *
-                                                                VandermondeI;
-            VdmDy = LibUtilities::GetVandermondeForYDerivative(U1,V1) *
-                                                                VandermondeI;
+            VdmDx = interp * (
+              LibUtilities::GetVandermondeForXDerivative(U1,V1) * VandermondeI);
+            VdmDy = interp * (
+              LibUtilities::GetVandermondeForYDerivative(U1,V1) * VandermondeI);
             //quadW = LibUtilities::MakeQuadratureWeights(U2,V1);
             Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
             NekVector<NekDouble> quadWi(qds);
@@ -528,19 +507,20 @@ void ProcessVarOpti::Process()
             NekVector<NekDouble> U2(u2), V2(v2), W2(w2);
             ptsHigh = LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
 
-            interp = LibUtilities::GetTetInterpolationMatrix(U1, V1, W1,
-                                                             U2, V2, W2);
+            NekMatrix<NekDouble> interp =
+                        LibUtilities::GetTetInterpolationMatrix(U1, V1, W1,
+                                                                U2, V2, W2);
 
             NekMatrix<NekDouble> Vandermonde =
                                 LibUtilities::GetTetVandermonde(U1,V1,W1);
             NekMatrix<NekDouble> VandermondeI = Vandermonde;
             VandermondeI.Invert();
-            VdmDx = LibUtilities::GetVandermondeForTetXDerivative(U1,V1,W1) *
-                                                                VandermondeI;
-            VdmDy = LibUtilities::GetVandermondeForTetYDerivative(U1,V1,W1) *
-                                                                VandermondeI;
-            VdmDz = LibUtilities::GetVandermondeForTetZDerivative(U1,V1,W1) *
-                                                                VandermondeI;
+            VdmDx = interp * (
+              LibUtilities::GetVandermondeForTetXDerivative(U1,V1,W1) * VandermondeI);
+            VdmDy = interp * (
+              LibUtilities::GetVandermondeForTetYDerivative(U1,V1,W1) * VandermondeI);
+            VdmDz = interp * (
+              LibUtilities::GetVandermondeForTetZDerivative(U1,V1,W1) * VandermondeI);
             Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
             NekVector<NekDouble> quadWi(qds);
             quadW = quadWi;
@@ -600,7 +580,7 @@ void ProcessVarOpti::Process()
     Thread::ThreadManagerSharedPtr tm =
                 tms.CreateInstance(Thread::ThreadMaster::SessionJob, nThreads);
 
-    while (res->val > 1e-5)
+    while (res->val > 1e-6)
     {
         ctr++;
         res->val = 0.0;
@@ -624,8 +604,6 @@ void ProcessVarOpti::Process()
                 optiNodes[i][j].Run();
             }*/
         }
-
-        res->val = sqrt(res->val / res->n);
 
         cout << ctr <<  "\tResidual: " << res->val << endl;
     }
@@ -716,8 +694,8 @@ void ProcessVarOpti::NodeOpti::Optimise()
         //    cout << G[0] << " " << G[1] << " " << G[2] << " " << node->m_id << endl;
         }
         mtx.lock();
-        res->val += (node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
-                         (node->m_z-zc)*(node->m_z-zc);
+        res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
+                         (node->m_z-zc)*(node->m_z-zc)),res->val);
         mtx.unlock();
     }
 }
@@ -1081,9 +1059,7 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
         chi->BwdTrans(coeffs0,xc);
         chi->BwdTrans(coeffs1,yc);
 
-        NekVector<NekDouble> X(ptsLow),Y(ptsLow),
-                             x1(ptsLow),y1(ptsLow),
-                             x2(ptsLow),y2(ptsLow);
+        NekVector<NekDouble> X(ptsLow),Y(ptsLow);
         for(int j = 0; j < u.num_elements(); j++)
         {
             Array<OneD, NekDouble> xp(2);
@@ -1097,16 +1073,10 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
         NekVector<NekDouble> x1i(ptsHigh),y1i(ptsHigh),
                              x2i(ptsHigh),y2i(ptsHigh);
 
-        x1 = VdmDx*X;
-        y1 = VdmDx*Y;
-        x2 = VdmDy*X;
-        y2 = VdmDy*Y;
-
-        x1i = interp * x1;
-        x2i = interp * x2;
-        y1i = interp * y1;
-        y2i = interp * y2;
-
+        x1i = VdmDx*X;
+        y1i = VdmDx*Y;
+        x2i = VdmDy*X;
+        y2i = VdmDy*Y;
 
         for(int i = 0 ; i < ptsHigh; i++)
         {
@@ -1147,10 +1117,7 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
         chi->BwdTrans(coeffs1,yc);
         chi->BwdTrans(coeffs2,zc);
 
-        NekVector<NekDouble> X(ptsLow),Y(ptsLow),Z(ptsLow),
-                             x1(ptsLow),y1(ptsLow),z1(ptsLow),
-                             x2(ptsLow),y2(ptsLow),z2(ptsLow),
-                             x3(ptsLow),y3(ptsLow),z3(ptsLow);
+        NekVector<NekDouble> X(ptsLow),Y(ptsLow),Z(ptsLow);
         for(int j = 0; j < u.num_elements(); j++)
         {
             Array<OneD, NekDouble> xp(3);
@@ -1167,25 +1134,15 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
                              x2i(ptsHigh),y2i(ptsHigh),z2i(ptsHigh),
                              x3i(ptsHigh),y3i(ptsHigh),z3i(ptsHigh);
 
-        x1 = VdmDx*X;
-        y1 = VdmDx*Y;
-        x2 = VdmDy*X;
-        y2 = VdmDy*Y;
-        z1 = VdmDx*Z;
-        z2 = VdmDy*Z;
-        x3 = VdmDz*X;
-        y3 = VdmDz*Y;
-        z3 = VdmDz*Z;
-
-        x1i = interp * x1;
-        x2i = interp * x2;
-        x3i = interp * x3;
-        y1i = interp * y1;
-        y2i = interp * y2;
-        y3i = interp * y3;
-        z1i = interp * z1;
-        z2i = interp * z2;
-        z3i = interp * z3;
+        x1i = VdmDx*X;
+        y1i = VdmDx*Y;
+        x2i = VdmDy*X;
+        y2i = VdmDy*Y;
+        z1i = VdmDx*Z;
+        z2i = VdmDy*Z;
+        x3i = VdmDz*X;
+        y3i = VdmDz*Y;
+        z3i = VdmDz*Z;
 
         for(int i = 0 ; i < ptsHigh; i++)
         {

@@ -58,336 +58,9 @@ namespace Utilities
 boost::mutex mtx;
 int ptsLow;
 int ptsHigh;
-int dim;
-NekMatrix<NekDouble> VdmDx;
-NekMatrix<NekDouble> VdmDy;
-NekMatrix<NekDouble> VdmDz;
+NekMatrix<NekDouble> VdmD[3];
 NekVector<NekDouble> quadW;
 optimiser opti;
-
-inline NekDouble GetElFunctional(ElDataSharedPtr d)
-{
-    vector<NodeSharedPtr> ns;
-    d->el->GetCurvedNodes(ns);
-
-    ASSERTL0(ptsHigh == d->maps.size(), "what");
-
-    Array<OneD, Array<OneD, NekDouble> > jac(ptsHigh);
-
-    if(dim == 2)
-    {
-        NekVector<NekDouble> X(ptsLow),Y(ptsLow);
-        for(int i = 0; i < ptsLow; i++)
-        {
-            X(i) = ns[i]->m_x;
-            Y(i) = ns[i]->m_y;
-        }
-
-        NekVector<NekDouble> x1i(ptsHigh),y1i(ptsHigh),
-                             x2i(ptsHigh),y2i(ptsHigh);
-
-        x1i = VdmDx*X;
-        y1i = VdmDx*Y;
-        x2i = VdmDy*X;
-        y2i = VdmDy*Y;
-
-        for(int i = 0; i < ptsHigh; i++)
-        {
-            Array<OneD, NekDouble> jaci(9,0.0);
-            jaci[0] = x1i(i);
-            jaci[1] = y1i(i);
-            jaci[3] = x2i(i);
-            jaci[4] = y2i(i);
-            jac[i] = jaci;
-
-        }
-
-    }
-    else
-    {
-        NekVector<NekDouble> X(ptsLow),Y(ptsLow),Z(ptsLow);
-        for(int i = 0; i < ptsLow; i++)
-        {
-            X(i) = ns[i]->m_x;
-            Y(i) = ns[i]->m_y;
-            Z(i) = ns[i]->m_z;
-        }
-
-        NekVector<NekDouble> x1i(ptsHigh),y1i(ptsHigh),z1i(ptsHigh),
-                             x2i(ptsHigh),y2i(ptsHigh),z2i(ptsHigh),
-                             x3i(ptsHigh),y3i(ptsHigh),z3i(ptsHigh);
-
-        x1i = VdmDx*X;
-        y1i = VdmDx*Y;
-        z1i = VdmDx*Z;
-        x2i = VdmDy*X;
-        y2i = VdmDy*Y;
-        z2i = VdmDy*Z;
-        x3i = VdmDz*X;
-        y3i = VdmDz*Y;
-        z3i = VdmDz*Z;
-
-        for(int i = 0; i < ptsHigh; i++)
-        {
-            Array<OneD, NekDouble> jaci(9,0.0);
-            jaci[0] = x1i(i);
-            jaci[1] = y1i(i);
-            jaci[2] = z1i(i);
-            jaci[3] = x2i(i);
-            jaci[4] = y2i(i);
-            jaci[5] = z2i(i);
-            jaci[6] = x3i(i);
-            jaci[7] = y3i(i);
-            jaci[8] = z3i(i);
-            jac[i] = jaci;
-
-        }
-    }
-
-    Array<OneD, NekDouble> dW(ptsHigh);
-
-    switch (opti)
-    {
-        case eLinEl:
-        {
-            for(int k = 0; k < ptsHigh; k++)
-            {
-                Array<OneD, NekDouble> jacIdeal(9,0.0);
-                jacIdeal[0] = jac[k][0]*d->maps[k][0] + jac[k][3]*d->maps[k][1] + jac[k][6]*d->maps[k][2];
-                jacIdeal[1] = jac[k][1]*d->maps[k][0] + jac[k][4]*d->maps[k][1] + jac[k][7]*d->maps[k][2];
-                jacIdeal[2] = jac[k][2]*d->maps[k][0] + jac[k][5]*d->maps[k][1] + jac[k][8]*d->maps[k][2];
-
-                jacIdeal[3] = jac[k][0]*d->maps[k][3] + jac[k][3]*d->maps[k][4] + jac[k][6]*d->maps[k][5];
-                jacIdeal[4] = jac[k][1]*d->maps[k][3] + jac[k][4]*d->maps[k][4] + jac[k][7]*d->maps[k][5];
-                jacIdeal[5] = jac[k][2]*d->maps[k][3] + jac[k][5]*d->maps[k][4] + jac[k][8]*d->maps[k][5];
-
-                jacIdeal[6] = jac[k][0]*d->maps[k][6] + jac[k][3]*d->maps[k][7] + jac[k][6]*d->maps[k][8];
-                jacIdeal[7] = jac[k][1]*d->maps[k][6] + jac[k][4]*d->maps[k][7] + jac[k][7]*d->maps[k][8];
-                jacIdeal[8] = jac[k][2]*d->maps[k][6] + jac[k][5]*d->maps[k][7] + jac[k][8]*d->maps[k][8];
-
-                NekDouble a = (jacIdeal[0]*jacIdeal[0]+jacIdeal[1]*jacIdeal[1]+jacIdeal[2]*jacIdeal[2]-1.0)*
-                              (jacIdeal[0]*jacIdeal[0]+jacIdeal[1]*jacIdeal[1]+jacIdeal[2]*jacIdeal[2]-1.0);
-                NekDouble b = (jacIdeal[3]*jacIdeal[3]+jacIdeal[4]*jacIdeal[4]+jacIdeal[5]*jacIdeal[5]-1.0)*
-                              (jacIdeal[3]*jacIdeal[3]+jacIdeal[4]*jacIdeal[4]+jacIdeal[5]*jacIdeal[5]-1.0);
-                NekDouble c = (jacIdeal[6]*jacIdeal[6]+jacIdeal[7]*jacIdeal[7]+jacIdeal[8]*jacIdeal[8]-1.0)*
-                              (jacIdeal[6]*jacIdeal[6]+jacIdeal[7]*jacIdeal[7]+jacIdeal[8]*jacIdeal[8]-1.0);
-                NekDouble D = (jacIdeal[0]*jacIdeal[6]+jacIdeal[1]*jacIdeal[7]+jacIdeal[2]*jacIdeal[8])*
-                              (jacIdeal[0]*jacIdeal[6]+jacIdeal[1]*jacIdeal[7]+jacIdeal[2]*jacIdeal[8]);
-                NekDouble e = (jacIdeal[3]*jacIdeal[6]+jacIdeal[4]*jacIdeal[7]+jacIdeal[5]*jacIdeal[8])*
-                              (jacIdeal[3]*jacIdeal[6]+jacIdeal[4]*jacIdeal[7]+jacIdeal[5]*jacIdeal[8]);
-                NekDouble f = (jacIdeal[0]*jacIdeal[3]+jacIdeal[1]*jacIdeal[4]+jacIdeal[3]*jacIdeal[5])*
-                              (jacIdeal[0]*jacIdeal[3]+jacIdeal[1]*jacIdeal[4]+jacIdeal[3]*jacIdeal[5]);
-
-                NekDouble trEtE = 0.25 * (a+b+c) + 0.5 * (D+e+f);
-
-                NekDouble jacDet;
-                if(dim == 2)
-                {
-                    jacDet = jacIdeal[0] * jacIdeal[4] - jacIdeal[3]*jacIdeal[1];
-                }
-                else
-                {
-                    jacDet = jacIdeal[0]*(jacIdeal[4]*jacIdeal[8]-jacIdeal[5]*jacIdeal[7])
-                            -jacIdeal[3]*(jacIdeal[1]*jacIdeal[8]-jacIdeal[2]*jacIdeal[7])
-                            +jacIdeal[6]*(jacIdeal[1]*jacIdeal[5]-jacIdeal[2]*jacIdeal[4]);
-                }
-
-                NekDouble ljacDet = log(jacDet);
-                NekDouble nu = 0.45;
-                NekDouble mu = 1.0/2.0/(1.0+nu);
-                NekDouble K = 1.0 / 3.0 / (1.0 - 2.0 * nu);
-
-                if(jacDet > 0)
-                {
-                    dW[k] = K *0.5 * ljacDet * ljacDet + mu * trEtE;
-                }
-                else
-                {
-                    NekDouble de = fabs(d->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
-                    NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
-                    NekDouble lsigma = log(sigma);
-                    dW[k] = K *0.5 * lsigma * lsigma + mu * trEtE;
-                }
-
-            }
-            break;
-        }
-        case eHypEl:
-        {
-            for(int k = 0; k < ptsHigh; k++)
-            {
-                Array<OneD, NekDouble> jacIdeal(9,0.0);
-                jacIdeal[0] = jac[k][0]*d->maps[k][0] + jac[k][3]*d->maps[k][1] + jac[k][6]*d->maps[k][2];
-                jacIdeal[1] = jac[k][1]*d->maps[k][0] + jac[k][4]*d->maps[k][1] + jac[k][7]*d->maps[k][2];
-                jacIdeal[2] = jac[k][2]*d->maps[k][0] + jac[k][5]*d->maps[k][1] + jac[k][8]*d->maps[k][2];
-
-                jacIdeal[3] = jac[k][0]*d->maps[k][3] + jac[k][3]*d->maps[k][4] + jac[k][6]*d->maps[k][5];
-                jacIdeal[4] = jac[k][1]*d->maps[k][3] + jac[k][4]*d->maps[k][4] + jac[k][7]*d->maps[k][5];
-                jacIdeal[5] = jac[k][2]*d->maps[k][3] + jac[k][5]*d->maps[k][4] + jac[k][8]*d->maps[k][5];
-
-                jacIdeal[6] = jac[k][0]*d->maps[k][6] + jac[k][3]*d->maps[k][7] + jac[k][6]*d->maps[k][8];
-                jacIdeal[7] = jac[k][1]*d->maps[k][6] + jac[k][4]*d->maps[k][7] + jac[k][7]*d->maps[k][8];
-                jacIdeal[8] = jac[k][2]*d->maps[k][6] + jac[k][5]*d->maps[k][7] + jac[k][8]*d->maps[k][8];
-
-                NekDouble I1 = jacIdeal[0]*jacIdeal[0] +
-                               jacIdeal[1]*jacIdeal[1] +
-                               jacIdeal[2]*jacIdeal[2] +
-                               jacIdeal[3]*jacIdeal[3] +
-                               jacIdeal[4]*jacIdeal[4] +
-                               jacIdeal[5]*jacIdeal[5] +
-                               jacIdeal[6]*jacIdeal[6] +
-                               jacIdeal[7]*jacIdeal[7] +
-                               jacIdeal[8]*jacIdeal[8];
-
-                NekDouble jacDet;
-                if(dim == 2)
-                {
-                    jacDet = jacIdeal[0] * jacIdeal[4] - jacIdeal[3]*jacIdeal[1];
-                }
-                else
-                {
-                    jacDet = jacIdeal[0]*(jacIdeal[4]*jacIdeal[8]-jacIdeal[5]*jacIdeal[7])
-                            -jacIdeal[3]*(jacIdeal[1]*jacIdeal[8]-jacIdeal[2]*jacIdeal[7])
-                            +jacIdeal[6]*(jacIdeal[1]*jacIdeal[5]-jacIdeal[2]*jacIdeal[4]);
-                }
-
-                NekDouble ljacDet = log(jacDet);
-                NekDouble nu = 0.45;
-                NekDouble mu = 1.0/2.0/(1.0+nu);
-                NekDouble K = 1.0 / 3.0 / (1.0 - 2.0 * nu);
-
-                if(jacDet > 0)
-                {
-                    dW[k] = 0.5 * mu * (I1 - 3.0 - 2.0*ljacDet) + 0.5 * K * ljacDet * ljacDet;
-                }
-                else
-                {
-                    NekDouble de = fabs(d->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
-                    NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
-                    NekDouble lsigma = log(sigma);
-                    dW[k] = 0.5 * mu * (I1 - 3.0 - 2.0*lsigma) + 0.5 * K * lsigma * lsigma;
-                }
-
-            }
-            break;
-        }
-        case eRoca:
-        {
-            for(int k = 0; k < ptsHigh; k++)
-            {
-                Array<OneD, NekDouble> jacIdeal(9,0.0);
-                jacIdeal[0] = jac[k][0]*d->maps[k][0] + jac[k][3]*d->maps[k][1] + jac[k][6]*d->maps[k][2];
-                jacIdeal[1] = jac[k][1]*d->maps[k][0] + jac[k][4]*d->maps[k][1] + jac[k][7]*d->maps[k][2];
-                jacIdeal[2] = jac[k][2]*d->maps[k][0] + jac[k][5]*d->maps[k][1] + jac[k][8]*d->maps[k][2];
-
-                jacIdeal[3] = jac[k][0]*d->maps[k][3] + jac[k][3]*d->maps[k][4] + jac[k][6]*d->maps[k][5];
-                jacIdeal[4] = jac[k][1]*d->maps[k][3] + jac[k][4]*d->maps[k][4] + jac[k][7]*d->maps[k][5];
-                jacIdeal[5] = jac[k][2]*d->maps[k][3] + jac[k][5]*d->maps[k][4] + jac[k][8]*d->maps[k][5];
-
-                jacIdeal[6] = jac[k][0]*d->maps[k][6] + jac[k][3]*d->maps[k][7] + jac[k][6]*d->maps[k][8];
-                jacIdeal[7] = jac[k][1]*d->maps[k][6] + jac[k][4]*d->maps[k][7] + jac[k][7]*d->maps[k][8];
-                jacIdeal[8] = jac[k][2]*d->maps[k][6] + jac[k][5]*d->maps[k][7] + jac[k][8]*d->maps[k][8];
-
-                NekDouble jacDet;
-                if(dim == 2)
-                {
-                    jacDet = jacIdeal[0] * jacIdeal[4] - jacIdeal[3]*jacIdeal[1];
-                }
-                else
-                {
-                    jacDet = jacIdeal[0]*(jacIdeal[4]*jacIdeal[8]-jacIdeal[5]*jacIdeal[7])
-                            -jacIdeal[3]*(jacIdeal[1]*jacIdeal[8]-jacIdeal[2]*jacIdeal[7])
-                            +jacIdeal[6]*(jacIdeal[1]*jacIdeal[5]-jacIdeal[2]*jacIdeal[4]);
-                }
-
-                NekDouble frob = 0.0;
-
-                frob += jacIdeal[0] * jacIdeal[0];
-                frob += jacIdeal[1] * jacIdeal[1];
-                frob += jacIdeal[2] * jacIdeal[2];
-                frob += jacIdeal[3] * jacIdeal[3];
-                frob += jacIdeal[4] * jacIdeal[4];
-                frob += jacIdeal[5] * jacIdeal[5];
-                frob += jacIdeal[6] * jacIdeal[6];
-                frob += jacIdeal[7] * jacIdeal[7];
-                frob += jacIdeal[8] * jacIdeal[8];
-
-                if(jacDet > 0)
-                {
-                    dW[k] = frob / dim / pow(fabs(jacDet), 2.0/dim);
-                }
-                else
-                {
-                    NekDouble de = fabs(d->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
-                    NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
-                    dW[k] = frob / dim / pow(fabs(sigma), 2.0/dim) -1.0;
-                }
-            }
-            break;
-        }
-        case eWins:
-        {
-            for(int k = 0; k < ptsHigh; k++)
-            {
-                Array<OneD, NekDouble> jacIdeal(9,0.0);
-                jacIdeal[0] = jac[k][0]*d->maps[k][0] + jac[k][3]*d->maps[k][1] + jac[k][6]*d->maps[k][2];
-                jacIdeal[1] = jac[k][1]*d->maps[k][0] + jac[k][4]*d->maps[k][1] + jac[k][7]*d->maps[k][2];
-                jacIdeal[2] = jac[k][2]*d->maps[k][0] + jac[k][5]*d->maps[k][1] + jac[k][8]*d->maps[k][2];
-
-                jacIdeal[3] = jac[k][0]*d->maps[k][3] + jac[k][3]*d->maps[k][4] + jac[k][6]*d->maps[k][5];
-                jacIdeal[4] = jac[k][1]*d->maps[k][3] + jac[k][4]*d->maps[k][4] + jac[k][7]*d->maps[k][5];
-                jacIdeal[5] = jac[k][2]*d->maps[k][3] + jac[k][5]*d->maps[k][4] + jac[k][8]*d->maps[k][5];
-
-                jacIdeal[6] = jac[k][0]*d->maps[k][6] + jac[k][3]*d->maps[k][7] + jac[k][6]*d->maps[k][8];
-                jacIdeal[7] = jac[k][1]*d->maps[k][6] + jac[k][4]*d->maps[k][7] + jac[k][7]*d->maps[k][8];
-                jacIdeal[8] = jac[k][2]*d->maps[k][6] + jac[k][5]*d->maps[k][7] + jac[k][8]*d->maps[k][8];
-
-                NekDouble jacDet;
-                if(dim == 2)
-                {
-                    jacDet = jacIdeal[0] * jacIdeal[4] - jacIdeal[3]*jacIdeal[1];
-                }
-                else
-                {
-                    jacDet = jacIdeal[0]*(jacIdeal[4]*jacIdeal[8]-jacIdeal[5]*jacIdeal[7])
-                            -jacIdeal[3]*(jacIdeal[1]*jacIdeal[8]-jacIdeal[2]*jacIdeal[7])
-                            +jacIdeal[6]*(jacIdeal[1]*jacIdeal[5]-jacIdeal[2]*jacIdeal[4]);
-                }
-
-                NekDouble frob = 0.0;
-
-                frob += jacIdeal[0] * jacIdeal[0];
-                frob += jacIdeal[1] * jacIdeal[1];
-                frob += jacIdeal[2] * jacIdeal[2];
-                frob += jacIdeal[3] * jacIdeal[3];
-                frob += jacIdeal[4] * jacIdeal[4];
-                frob += jacIdeal[5] * jacIdeal[5];
-                frob += jacIdeal[6] * jacIdeal[6];
-                frob += jacIdeal[7] * jacIdeal[7];
-                frob += jacIdeal[8] * jacIdeal[8];
-
-                if(jacDet > 0)
-                {
-                    dW[k] = frob / jacDet;
-                }
-                else
-                {
-                    NekDouble de = fabs(d->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
-                    NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
-                    dW[k] = frob / sigma;
-                }
-            }
-            break;
-        }
-    }
-
-    NekDouble integral = 0.0;
-    for(int i = 0; i < ptsHigh; i++)
-    {
-        integral += quadW[i] * dW[i];
-    }
-    return integral;
-}
 
 ModuleKey ProcessVarOpti::className = GetModuleFactory().RegisterCreatorFunction(
     ModuleKey(eProcessModule, "varopti"),
@@ -459,7 +132,6 @@ void ProcessVarOpti::Process()
     FillQuadPoints();
 
     //build Vandermonde information
-    dim = m_mesh->m_spaceDim;
     switch (m_mesh->m_spaceDim)
     {
         case 2:
@@ -483,9 +155,9 @@ void ProcessVarOpti::Process()
             NekMatrix<NekDouble> Vandermonde = LibUtilities::GetVandermonde(U1,V1);
             NekMatrix<NekDouble> VandermondeI = Vandermonde;
             VandermondeI.Invert();
-            VdmDx = interp * (
+            VdmD[0] = interp * (
               LibUtilities::GetVandermondeForXDerivative(U1,V1) * VandermondeI);
-            VdmDy = interp * (
+            VdmD[1] = interp * (
               LibUtilities::GetVandermondeForYDerivative(U1,V1) * VandermondeI);
             //quadW = LibUtilities::MakeQuadratureWeights(U2,V1);
             Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
@@ -515,11 +187,11 @@ void ProcessVarOpti::Process()
                                 LibUtilities::GetTetVandermonde(U1,V1,W1);
             NekMatrix<NekDouble> VandermondeI = Vandermonde;
             VandermondeI.Invert();
-            VdmDx = interp * (
+            VdmD[0] = interp * (
               LibUtilities::GetVandermondeForTetXDerivative(U1,V1,W1) * VandermondeI);
-            VdmDy = interp * (
+            VdmD[1] = interp * (
               LibUtilities::GetVandermondeForTetYDerivative(U1,V1,W1) * VandermondeI);
-            VdmDz = interp * (
+            VdmD[2] = interp * (
               LibUtilities::GetVandermondeForTetZDerivative(U1,V1,W1) * VandermondeI);
             Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
             NekVector<NekDouble> quadWi(qds);
@@ -530,25 +202,27 @@ void ProcessVarOpti::Process()
     GetElementMap();
 
     vector<vector<NodeSharedPtr> > freenodes = GetColouredNodes();
-
     vector<vector<NodeOpti> > optiNodes;
+
     for(int i = 0; i < freenodes.size(); i++)
     {
         vector<NodeOpti> ns;
         for(int j = 0; j < freenodes[i].size(); j++)
         {
             NodeElMap::iterator it = nodeElMap.find(freenodes[i][j]->m_id);
-            ASSERTL0(it != nodeElMap.end(),"could not find");
+            ASSERTL0(it != nodeElMap.end(), "could not find");
             ns.push_back(NodeOpti(freenodes[i][j],it->second,res));
         }
         optiNodes.push_back(ns);
     }
 
+    /*
     res->startE = 0.0;
     for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
         res->startE += GetElFunctional(dataSet[i]);
     }
+    */
 
     int nset = optiNodes.size();
     int p = 0;
@@ -586,34 +260,39 @@ void ProcessVarOpti::Process()
         res->val = 0.0;
         for(int i = 0; i < optiNodes.size(); i++)
         {
-            vector<Thread::ThreadJob*> jobs;
-            for(int j = 0; j < optiNodes[i].size(); j++)
+            vector<Thread::ThreadJob*> jobs(optiNodes[i].size());
+            if (m_mesh->m_spaceDim == 2)
             {
-                jobs.push_back(optiNodes[i][j].GetJob());
+                for(int j = 0; j < optiNodes[i].size(); j++)
+                {
+                    jobs[j] = optiNodes[i][j].GetJob<2>();
+                }
             }
-            //cout << " -- inner loop " << i+1 << "/" << optiNodes.size()
-            //     << " of size: " << jobs.size() << endl;
+            else
+            {
+                for(int j = 0; j < optiNodes[i].size(); j++)
+                {
+                    jobs[j] = optiNodes[i][j].GetJob<3>();
+                }
+            }
 
             tm->SetNumWorkers(0);
             tm->QueueJobs(jobs);
             tm->SetNumWorkers(nThreads);
             tm->Wait();
-
-            /*for(int j = 0; j < optiNodes[i].size(); j++)
-            {
-                optiNodes[i][j].Run();
-            }*/
         }
 
         cout << ctr <<  "\tResidual: " << res->val << endl;
     }
 
+    /*
     res->endE = 0.0;
     for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
         res->endE += GetElFunctional(dataSet[i]);
     }
     cout << "end energy: " << res->endE << endl;
+    */
 
     if(m_config["stats"].beenSet)
     {
@@ -623,25 +302,27 @@ void ProcessVarOpti::Process()
     }
 }
 
+template<int DIM>
 void ProcessVarOpti::NodeOpti::Optimise()
 {
     //it doesnt matter at this point what the dim is so long that
     //in the 2d case z is left as zero
 
-    Array<OneD, NekDouble> G = GetGrad();
+    Array<OneD, NekDouble> G = GetGrad<DIM>();
 
     if(sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) > 1e-6)
     {
         //needs to optimise
-        NekDouble currentW = GetFunctional();
-        NekDouble xc = node->m_x;
-        NekDouble yc = node->m_y;
-        NekDouble zc = node->m_z;
-        NekDouble alpha = 1.0;
-        NekDouble delX=0.0;
-        NekDouble delY=0.0;
-        NekDouble delZ=0.0;
-        if(dim == 2)
+        NekDouble currentW = GetFunctional<DIM>();
+        NekDouble xc       = node->m_x;
+        NekDouble yc       = node->m_y;
+        NekDouble zc       = node->m_z;
+        NekDouble alpha    = 1.0;
+        NekDouble delX     = 0.0;
+        NekDouble delY     = 0.0;
+        NekDouble delZ     = 0.0;
+
+        if(DIM == 2)
         {
              delX = 1.0/(G[3]*G[4]-G[6]*G[6])*(G[4]*G[0] - G[6]*G[1]);
              delY = 1.0/(G[3]*G[4]-G[6]*G[6])*(G[3]*G[1] - G[6]*G[0]);
@@ -654,10 +335,10 @@ void ProcessVarOpti::NodeOpti::Optimise()
             H(2,2) = G[5];
             H(0,1) = G[6];
             H(1,0) = G[6];
-            H(0,2) = G[8];
-            H(2,0) = G[8];
-            H(2,1) = G[7];
-            H(1,2) = G[7];
+            H(0,2) = G[7];
+            H(2,0) = G[7];
+            H(2,1) = G[8];
+            H(1,2) = G[8];
             H.Invert();
             NekVector<NekDouble> g(3);
             g[0] = G[0];
@@ -675,7 +356,7 @@ void ProcessVarOpti::NodeOpti::Optimise()
             node->m_x = xc - alpha * delX;
             node->m_y = yc - alpha * delY;
             node->m_z = zc - alpha * delZ;
-            if(GetFunctional() < currentW)
+            if(GetFunctional<DIM>() < currentW)
             {
                 found = true;
                 break;
@@ -690,51 +371,97 @@ void ProcessVarOpti::NodeOpti::Optimise()
             node->m_x = xc;
             node->m_y = yc;
             node->m_z = zc;
-        //    cout << "warning: had to reset node" << endl;
-        //    cout << G[0] << " " << G[1] << " " << G[2] << " " << node->m_id << endl;
+            // cout << "warning: had to reset node" << endl;
+            // cout << G[0] << " " << G[1] << " " << G[2] << " " << node->m_id << endl;
         }
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
-                         (node->m_z-zc)*(node->m_z-zc)),res->val);
+                            (node->m_z-zc)*(node->m_z-zc)),res->val);
         mtx.unlock();
     }
 }
 
-NekDouble dir[19][3] = {{0.0,0.0,0.0},
-                        {1.0,0.0,0.0},
-                        {1.0,1.0,0.0},
-                        {0.0,1.0,0.0},
-                        {-1.0,1.0,0.0},
-                        {-1.0,0.0,0.0},
-                        {-1.0,-1.0,0.0},
-                        {0.0,-1.0,0.0},
-                        {1.0,-1.0,0.0},
-                        {-1.0,0.0,-1.0},
-                        {0.0,0.0,-1.0},
-                        {1.0,0.0,-1.0},
-                        {-1.0,0.0,1.0},
-                        {0.0,0.0,1.0},
-                        {1.0,0.0,1.0},
-                        {0.0,1.0,-1.0},
-                        {0.0,1.0,1.0},
-                        {0.0,-1.0,-1.0},
-                        {0.0,-1.0,1.0}};
+NekDouble dir[19][3] = {{  0.0,  0.0,  0.0 },  // 0  (x   , y   , z   )
+                        {  1.0,  0.0,  0.0 },  // 1  (x+dx, y   , z   )
+                        {  1.0,  1.0,  0.0 },  // 2  (x+dx, y+dy, z   )
+                        {  0.0,  1.0,  0.0 },  // 3  (x   , y+dy, z   )
+                        { -1.0,  1.0,  0.0 },  // 4  (x-dx, y+dy, z   )
+                        { -1.0,  0.0,  0.0 },  // 5  (x-dx, y   , z   )
+                        { -1.0, -1.0,  0.0 },  // 6  (x-dx, y-dy, z   )
+                        {  0.0, -1.0,  0.0 },  // 7  (x   , y-dy, z   )
+                        {  1.0, -1.0,  0.0 },  // 8  (x+dx, y-dy, z   )
+                        { -1.0,  0.0, -1.0 },  // 9  (x-dx, y   , z-dz)
+                        {  0.0,  0.0, -1.0 },  // 10 (x   , y   , z-dz)
+                        {  1.0,  0.0, -1.0 },  // 11 (x+dx, y   , z-dz)
+                        { -1.0,  0.0,  1.0 },  // 12 (x-dx, y   , z+dz)
+                        {  0.0,  0.0,  1.0 },  // 13 (x   , y   , z+dz)
+                        {  1.0,  0.0,  1.0 },  // 14 (x+dx, y   , z+dz)
+                        {  0.0,  1.0, -1.0 },  // 15 (x   , y+dy, z-dz)
+                        {  0.0,  1.0,  1.0 },  // 16 (x   , y+dy, z+dz)
+                        {  0.0, -1.0, -1.0 },  // 17 (x   , y-dy, z-dz)
+                        {  0.0, -1.0,  1.0 }}; // 18 (x   , y-dy, z+dz)
 
+template<int DIM>
 Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad()
+{
+    return Array<OneD, NekDouble>();
+}
+
+template<>
+Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad<2>()
+{
+    NekDouble xc = node->m_x;
+    NekDouble yc = node->m_y;
+    NekDouble dx = 1e-4;
+    vector<NekDouble> w(9);
+
+    for(int i = 0; i < 9; i++)
+    {
+        node->m_x = xc + dir[i][0] * dx;
+        node->m_y = yc + dir[i][1] * dx;
+        w[i] = GetFunctional<2>();
+    }
+    node->m_x = xc;
+    node->m_y = yc;
+
+    Array<OneD, NekDouble> ret(9,0.0);
+
+    //ret[0] d/dx
+    //ret[1] d/dy
+    //ret[2] d/dz
+
+    //ret[3] d2/dx2
+    //ret[4] d2/dy2
+    //ret[5] d2/dz2
+    //ret[6] d2/dxdy
+    //ret[7] d2/dxdz
+    //ret[8] d2/dydz
+
+    ret[0] = (w[1] - w[5]) / 2.0 / dx;
+    ret[1] = (w[3] - w[7]) / 2.0 / dx;
+    ret[3] = (w[1] + w[5] - 2.0*w[0]) / dx / dx;
+    ret[4] = (w[3] + w[7] - 2.0*w[0]) / dx / dx;
+    ret[6] = (w[2] + w[6] - w[4] - w[8]) / 4.0 / dx / dx;
+
+    return ret;
+}
+
+template<>
+Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad<3>()
 {
     NekDouble xc = node->m_x;
     NekDouble yc = node->m_y;
     NekDouble zc = node->m_z;
-    NekDouble dx = 1e-3;
+    NekDouble dx = 1e-4;
 
     vector<NekDouble> w;
 
-    for(int i = 0; i < (dim == 2 ? 9 : 19); i++)
+    for(int i = 0; i < 19; i++)
     {
         node->m_x = xc + dir[i][0] * dx;
         node->m_y = yc + dir[i][1] * dx;
         node->m_z = zc + dir[i][2] * dx;
-        w.push_back(GetFunctional());
+        w.push_back(GetFunctional<3>());
     }
     node->m_x = xc;
     node->m_y = yc;
@@ -753,31 +480,263 @@ Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad()
     //ret[7] d2/dxdz
     //ret[8] d2/dydz
 
-
     ret[0] = (w[1] - w[5]) / 2.0 / dx;
     ret[1] = (w[3] - w[7]) / 2.0 / dx;
+    ret[2] = (w[13] - w[10]) / 2.0 / dx;
+
     ret[3] = (w[1] + w[5] - 2.0*w[0]) / dx / dx;
     ret[4] = (w[3] + w[7] - 2.0*w[0]) / dx / dx;
+    ret[5] = (w[13] + w[10] - 2.0*w[0]) / dx / dx;
+
     ret[6] = (w[2] + w[6] - w[4] - w[8]) / 4.0 / dx /dx;
-    if(dim == 3)
-    {
-        ret[2] = (w[13] - w[10]) / 2.0 / dx;
-        ret[5] = (w[13] + w[10] - 2.0*w[0]) / dx / dx;
-        ret[7] = (w[14] + w[9] - w[11] - w[12]) / 4.0 / dx /dx;
-        ret[8] = (w[16] + w[17] - w[15] - w[18]) / 4.0 / dx /dx;
-    }
+    ret[7] = (w[14] + w[9] - w[11] - w[12]) / 4.0 / dx /dx;
+    ret[8] = (w[16] + w[17] - w[15] - w[18]) / 4.0 / dx /dx;
 
     return ret;
 }
 
+template<int DIM> inline NekDouble JacDet(NekDouble *jac)
+{
+    return 0.0;
+}
+
+template<> inline NekDouble JacDet<2>(NekDouble *jac)
+{
+    return jac[0] * jac[3] - jac[2] * jac[1];
+}
+
+template<> inline NekDouble JacDet<3>(NekDouble *jac)
+{
+    return jac[0]*(jac[4]*jac[8]-jac[5]*jac[7])
+          -jac[3]*(jac[1]*jac[8]-jac[2]*jac[7])
+          +jac[6]*(jac[1]*jac[5]-jac[2]*jac[4]);
+}
+
+template<int DIM> inline NekDouble LinElasTrace(NekDouble *jac)
+{
+    return 0.0;
+}
+
+template<> inline NekDouble LinElasTrace<2>(NekDouble *jac)
+{
+    return 0.25 * (
+        (jac[0]*jac[0]+jac[1]*jac[1]-1.0)*(jac[0]*jac[0]+jac[1]*jac[1]-1.0) +
+        (jac[2]*jac[2]+jac[3]*jac[3]-1.0)*(jac[2]*jac[2]+jac[3]*jac[3]-1.0));
+}
+
+template<> inline NekDouble LinElasTrace<3>(NekDouble *jac)
+{
+    return 0.25 *(
+        (jac[0]*jac[0]+jac[1]*jac[1]+jac[2]*jac[2]-1.0)*
+        (jac[0]*jac[0]+jac[1]*jac[1]+jac[2]*jac[2]-1.0) +
+        (jac[3]*jac[3]+jac[4]*jac[4]+jac[5]*jac[5]-1.0)*
+        (jac[3]*jac[3]+jac[4]*jac[4]+jac[5]*jac[5]-1.0) +
+        (jac[6]*jac[6]+jac[7]*jac[7]+jac[8]*jac[8]-1.0)*
+        (jac[6]*jac[6]+jac[7]*jac[7]+jac[8]*jac[8]-1.0))
+        + 0.5 * (
+            (jac[0]*jac[6]+jac[1]*jac[7]+jac[2]*jac[8])*
+            (jac[0]*jac[6]+jac[1]*jac[7]+jac[2]*jac[8])+
+            (jac[3]*jac[6]+jac[4]*jac[7]+jac[5]*jac[8])*
+            (jac[3]*jac[6]+jac[4]*jac[7]+jac[5]*jac[8])+
+            (jac[0]*jac[3]+jac[1]*jac[4]+jac[3]*jac[5])*
+            (jac[0]*jac[3]+jac[1]*jac[4]+jac[3]*jac[5]));
+}
+
+template<int DIM>
 NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
 {
-    NekDouble r = 0.0;
-    for(int i = 0; i < data.size(); i++)
+    const int nElmt      = data.size();
+    const int totPtsLow  = ptsLow * nElmt;
+    NekDouble X[DIM * totPtsLow];
+
+    // Store x/y components of each element sequentially in memory
+    for (int i = 0, cnt = 0; i < nElmt; ++i)
     {
-        r += GetElFunctional(data[i]);
+        for (int j = 0; j < ptsLow; ++j, ++cnt)
+        {
+            //Array<OneD, NekDouble> loc = data[i]->nodes[j]->GetLoc();
+            //for (int d = 0; d < DIM; ++d)
+            //{
+            X[cnt] = data[i]->nodes[j]->m_x;
+            X[cnt + ptsLow] = data[i]->nodes[j]->m_y;
+            X[cnt + 2*ptsLow] = data[i]->nodes[j]->m_z;
+            //}
+        }
+
+        cnt += ptsLow;
     }
-    return r;
+
+    // Storage for derivatives, ordered by:
+    //   - standard coordinate direction
+    //   - number of elements
+    //   - cartesian coordinate direction
+    //   - quadrature points
+    NekDouble deriv[DIM][nElmt][DIM][ptsHigh];
+
+    // Calculate x- and y-gradients
+    for (int d = 0; d < DIM; ++d)
+    {
+        Blas::Dgemm('N', 'N', ptsHigh, DIM * nElmt, ptsLow, 1.0,
+                    VdmD[d].GetRawPtr(), ptsHigh, X, ptsLow, 0.0,
+                    &deriv[d][0][0][0], ptsHigh);
+    }
+
+    NekDouble integral = 0.0;
+
+    switch(opti)
+    {
+        case eLinEl:
+        {
+            for (int i = 0; i < nElmt; ++i)
+            {
+                for(int k = 0; k < ptsHigh; ++k)
+                {
+                    NekDouble jacIdeal[DIM*DIM];
+                    int cnt = 0;
+                    for (int m = 0; m < DIM; ++m)
+                    {
+                        for (int n = 0; n < DIM; ++n, ++cnt)
+                        {
+                            jacIdeal[cnt] = 0.0;
+                            for (int l = 0; l < DIM; ++l)
+                            {
+                                jacIdeal[cnt] +=
+                                    deriv[l][i][n][k] * data[i]->maps[k][m * 3 + l];
+                            }
+                        }
+                    }
+
+                    NekDouble jacDet = JacDet<DIM>(jacIdeal);
+                    NekDouble trEtE = LinElasTrace<DIM>(jacIdeal);
+
+                    const NekDouble nu = 0.45;
+                    const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
+                    const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
+
+                    NekDouble de = fabs(data[i]->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
+                    NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
+                    NekDouble lsigma = log(sigma);
+                    integral += quadW[k] * (K * 0.5 * lsigma * lsigma + mu * trEtE);
+                }
+            }
+            break;
+        }
+
+        case eHypEl:
+        {
+            for (int i = 0; i < nElmt; ++i)
+            {
+                for(int k = 0; k < ptsHigh; ++k)
+                {
+                    NekDouble jacIdeal[DIM*DIM];
+                    int cnt = 0;
+                    for (int m = 0; m < DIM; ++m)
+                    {
+                        for (int n = 0; n < DIM; ++n, ++cnt)
+                        {
+                            jacIdeal[cnt] = 0.0;
+                            for (int l = 0; l < DIM; ++l)
+                            {
+                                jacIdeal[cnt] +=
+                                    deriv[l][i][n][k] * data[i]->maps[k][m * 3 + l];
+                            }
+                        }
+                    }
+
+                    NekDouble I1 = 0.0;
+                    for (int m = 0; m < DIM*DIM; ++m)
+                    {
+                        I1 += jacIdeal[m]*jacIdeal[m];
+                    }
+
+                    const NekDouble nu = 0.45;
+                    const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
+                    const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
+
+                    NekDouble jacDet = JacDet<DIM>(jacIdeal);
+                    NekDouble de = fabs(data[i]->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
+                    NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
+                    NekDouble lsigma = log(sigma);
+                    integral += quadW[k]*(0.5 * mu * (I1 - 3.0 - 2.0*lsigma) + 0.5 * K * lsigma * lsigma);
+                }
+            }
+            break;
+        }
+
+        case eRoca:
+        {
+            for (int i = 0; i < nElmt; ++i)
+            {
+                for(int k = 0; k < ptsHigh; ++k)
+                {
+                    NekDouble jacIdeal[DIM*DIM];
+                    int cnt = 0;
+                    for (int m = 0; m < DIM; ++m)
+                    {
+                        for (int n = 0; n < DIM; ++n, ++cnt)
+                        {
+                            jacIdeal[cnt] = 0.0;
+                            for (int l = 0; l < DIM; ++l)
+                            {
+                                jacIdeal[cnt] +=
+                                    deriv[l][i][n][k] * data[i]->maps[k][m * 3 + l];
+                            }
+                        }
+                    }
+
+                    NekDouble frob = 0.0;
+                    for (int m = 0; m < DIM*DIM; ++m)
+                    {
+                        frob += jacIdeal[m] * jacIdeal[m];
+                    }
+                    NekDouble jacDet = JacDet<DIM>(jacIdeal);
+
+                    NekDouble de = fabs(data[i]->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
+                    NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
+                    integral += quadW[k]*(frob / DIM / pow(fabs(sigma), 2.0/DIM) -1.0);
+                }
+            }
+            break;
+        }
+
+        case eWins:
+        {
+            for (int i = 0; i < nElmt; ++i)
+            {
+                for(int k = 0; k < ptsHigh; ++k)
+                {
+                    NekDouble jacIdeal[DIM*DIM];
+                    int cnt = 0;
+                    for (int m = 0; m < DIM; ++m)
+                    {
+                        for (int n = 0; n < DIM; ++n, ++cnt)
+                        {
+                            jacIdeal[cnt] = 0.0;
+                            for (int l = 0; l < DIM; ++l)
+                            {
+                                jacIdeal[cnt] +=
+                                    deriv[l][i][n][k] * data[i]->maps[k][m * 3 + l];
+                            }
+                        }
+                    }
+
+                    NekDouble frob = 0.0;
+                    for (int m = 0; m < DIM*DIM; ++m)
+                    {
+                        frob += jacIdeal[m] * jacIdeal[m];
+                    }
+                    NekDouble jacDet = JacDet<DIM>(jacIdeal);
+
+                    NekDouble de = fabs(data[i]->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
+                    NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
+                    integral += quadW[k]*(frob / sigma);
+                }
+            }
+            break;
+        }
+    }
+
+    return integral;
 }
 
 vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
@@ -907,7 +866,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
     }
 
     res->n = remain.size();
-    res->nDoF = res->n * dim;
+    res->nDoF = res->n * m_mesh->m_spaceDim;
 
     vector<vector<NodeSharedPtr> > ret;
 
@@ -963,9 +922,9 @@ void ProcessVarOpti::GetElementMap()
     {
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
         ElDataSharedPtr d = boost::shared_ptr<ElData>(new ElData);
-        d->el = el;
-
+        d->el   = el;
         d->maps = MappingIdealToRef(el);
+        el->GetCurvedNodes(d->nodes);
 
         dataSet.push_back(d);
     }
@@ -1073,10 +1032,10 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
         NekVector<NekDouble> x1i(ptsHigh),y1i(ptsHigh),
                              x2i(ptsHigh),y2i(ptsHigh);
 
-        x1i = VdmDx*X;
-        y1i = VdmDx*Y;
-        x2i = VdmDy*X;
-        y2i = VdmDy*Y;
+        x1i = VdmD[0]*X;
+        y1i = VdmD[0]*Y;
+        x2i = VdmD[1]*X;
+        y2i = VdmD[1]*Y;
 
         for(int i = 0 ; i < ptsHigh; i++)
         {
@@ -1134,15 +1093,15 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
                              x2i(ptsHigh),y2i(ptsHigh),z2i(ptsHigh),
                              x3i(ptsHigh),y3i(ptsHigh),z3i(ptsHigh);
 
-        x1i = VdmDx*X;
-        y1i = VdmDx*Y;
-        x2i = VdmDy*X;
-        y2i = VdmDy*Y;
-        z1i = VdmDx*Z;
-        z2i = VdmDy*Z;
-        x3i = VdmDz*X;
-        y3i = VdmDz*Y;
-        z3i = VdmDz*Z;
+        x1i = VdmD[0]*X;
+        y1i = VdmD[0]*Y;
+        x2i = VdmD[1]*X;
+        y2i = VdmD[1]*Y;
+        z1i = VdmD[0]*Z;
+        z2i = VdmD[1]*Z;
+        x3i = VdmD[2]*X;
+        y3i = VdmD[2]*Y;
+        z3i = VdmD[2]*Z;
 
         for(int i = 0 ; i < ptsHigh; i++)
         {
@@ -1513,10 +1472,10 @@ void ProcessVarOpti::WriteStats(string file)
                 Y(i) = ns[i]->m_y;
             }
 
-            x1 = VdmDx*X;
-            y1 = VdmDx*Y;
-            x2 = VdmDy*X;
-            y2 = VdmDy*Y;
+            x1 = VdmD[0]*X;
+            y1 = VdmD[0]*Y;
+            x2 = VdmD[0]*X;
+            y2 = VdmD[0]*Y;
 
             for(int i = 0; i < pts; i++)
             {

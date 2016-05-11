@@ -47,6 +47,7 @@ namespace Utilities
 struct ElData
 {
     ElementSharedPtr el;
+    vector<NodeSharedPtr> nodes;
     vector<Array<OneD, NekDouble> > maps;
 };
 typedef boost::shared_ptr<ElData> ElDataSharedPtr;
@@ -106,6 +107,7 @@ private:
     vector<ElDataSharedPtr> dataSet;
     ResidualSharedPtr res;
 
+    template<int DIM>
     class NodeOptiJob;
 
     class NodeOpti
@@ -119,26 +121,28 @@ private:
 
         ~NodeOpti(){};
 
-        void Optimise();
-        NodeOptiJob *GetJob()
+        template<int DIM> void Optimise();
+        template<int DIM> NodeOptiJob<DIM> *GetJob()
         {
-            return new NodeOptiJob(*this);
+            return new NodeOptiJob<DIM>(*this);
         }
     private:
-        Array<OneD, NekDouble> GetGrad();
-        NekDouble GetFunctional();
+        template<int DIM> Array<OneD, NekDouble> GetGrad();
+        template<int DIM> NekDouble GetFunctional();
         NodeSharedPtr node;
         vector<ElDataSharedPtr> data;
         ResidualSharedPtr res;
     };
 
+    template<int DIM>
     class NodeOptiJob : public Thread::ThreadJob
     {
     public:
         NodeOptiJob(NodeOpti no) : node(no) {}
+
         void Run()
         {
-            node.Optimise();
+            node.Optimise<DIM>();
         }
     private:
         NodeOpti node;

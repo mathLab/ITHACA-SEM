@@ -216,14 +216,6 @@ void ProcessVarOpti::Process()
         optiNodes.push_back(ns);
     }
 
-    /*
-    res->startE = 0.0;
-    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
-    {
-        res->startE += GetElFunctional(dataSet[i]);
-    }
-    */
-
     int nset = optiNodes.size();
     int p = 0;
     int mn = numeric_limits<int>::max();
@@ -238,13 +230,13 @@ void ProcessVarOpti::Process()
     cout << scientific << endl;
     cout << "N elements:\t\t" << m_mesh->m_element[m_mesh->m_expDim].size() << endl
          << "N elements invalid:\t" << res->startInv << endl
+         << "Worst jacobian:\t\t" << res->worstJac << endl
          << "N free nodes:\t\t" << res->n << endl
          << "N Dof:\t\t\t" << res->nDoF << endl
          << "N color sets:\t\t" << nset << endl
          << "Avg set colors:\t\t" << p/nset << endl
          << "Min set:\t\t" << mn << endl
          << "Max set:\t\t" << mx << endl;
-    cout << "Starting energy:\t" << res->startE << endl;
 
     int nThreads = m_config["numthreads"].as<int>();
 
@@ -283,16 +275,14 @@ void ProcessVarOpti::Process()
         }
 
         cout << ctr <<  "\tResidual: " << res->val << endl;
+        if(ctr > 5000)
+            break;
     }
 
-    /*
-    res->endE = 0.0;
-    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
-    {
-        res->endE += GetElFunctional(dataSet[i]);
-    }
-    cout << "end energy: " << res->endE << endl;
-    */
+    EvaluateMesh();
+
+    cout << "Invalid at end:\t\t" << res->startInv << endl;
+    cout << "Worst at end:\t\t" << res->worstJac << endl;
 
     if(m_config["stats"].beenSet)
     {
@@ -310,7 +300,7 @@ void ProcessVarOpti::NodeOpti::Optimise()
 
     Array<OneD, NekDouble> G = GetGrad<DIM>();
 
-    if(sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) > 1e-6)
+    if(sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) > 1e-10)
     {
         //needs to optimise
         NekDouble currentW = GetFunctional<DIM>();
@@ -351,7 +341,7 @@ void ProcessVarOpti::NodeOpti::Optimise()
         }
 
         bool found = false;
-        while(alpha > 1e-6)
+        while(alpha > 1e-10)
         {
             node->m_x = xc - alpha * delX;
             node->m_y = yc - alpha * delY;
@@ -521,7 +511,9 @@ template<> inline NekDouble LinElasTrace<2>(NekDouble *jac)
 {
     return 0.25 * (
         (jac[0]*jac[0]+jac[1]*jac[1]-1.0)*(jac[0]*jac[0]+jac[1]*jac[1]-1.0) +
-        (jac[2]*jac[2]+jac[3]*jac[3]-1.0)*(jac[2]*jac[2]+jac[3]*jac[3]-1.0));
+        (jac[2]*jac[2]+jac[3]*jac[3]-1.0)*(jac[2]*jac[2]+jac[3]*jac[3]-1.0))
+        + 0.5 * (
+            (jac[0]*jac[2]+jac[1]*jac[3])*(jac[0]*jac[2]+jac[1]*jac[3]));
 }
 
 template<> inline NekDouble LinElasTrace<3>(NekDouble *jac)
@@ -1426,19 +1418,156 @@ void ProcessVarOpti::FillQuadPoints()
         }
     }
 
+    EvaluateMesh();
+}
+
+void ProcessVarOpti::EvaluateMesh()
+{
     res->startInv =0;
     res->worstJac = numeric_limits<double>::max();
 
-    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+    if(m_mesh->m_expDim == 2)
     {
-        ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+        LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
+                                      LibUtilities::eNodalTriElec);
+        Array<OneD, NekDouble> u1, v1;
 
-        SpatialDomains::GeometrySharedPtr geom =
-                                        el->GetGeom(m_mesh->m_spaceDim);
-        SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
-        if(!gfac->IsValid())
+        LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
+
+        NekVector<NekDouble> U1(u1), V1(v1);
+
+        NekMatrix<NekDouble> Vandermonde = LibUtilities::GetVandermonde(U1,V1);
+        NekMatrix<NekDouble> VandermondeI = Vandermonde;
+        VandermondeI.Invert();
+        NekMatrix<NekDouble> VdmDxt =  (
+          LibUtilities::GetVandermondeForXDerivative(U1,V1) * VandermondeI);
+        NekMatrix<NekDouble> VdmDyt =  (
+          LibUtilities::GetVandermondeForYDerivative(U1,V1) * VandermondeI);
+
+
+
+        for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
         {
-            res->startInv++;
+            ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+
+            vector<NodeSharedPtr> ns;
+            el->GetCurvedNodes(ns);
+
+            NekDouble mx = -1.0 * numeric_limits<double>::max();
+            NekDouble mn =  numeric_limits<double>::max();
+
+
+            NekVector<NekDouble> X(u1.num_elements()),Y(u1.num_elements());
+            for(int j = 0; j < u1.num_elements(); j++)
+            {
+                X(j) = ns[j]->m_x;
+                Y(j) = ns[j]->m_y;
+            }
+
+            NekVector<NekDouble> x1i(u1.num_elements()),y1i(u1.num_elements()),
+                                 x2i(u1.num_elements()),y2i(u1.num_elements());
+
+            x1i = VdmDxt*X;
+            y1i = VdmDxt*Y;
+            x2i = VdmDyt*X;
+            y2i = VdmDyt*Y;
+
+            for(int j = 0; j < u1.num_elements(); j++)
+            {
+                NekDouble jacDet = x1i(j) * y2i(j) - x2i(j)*y1i(j);
+                mx = max(mx,jacDet);
+                mn = min(mn,jacDet);
+            }
+
+            if(mn < 0)
+            {
+                res->startInv++;
+            }
+            res->worstJac = min(res->worstJac,mn/mx);
+        }
+    }
+    else
+    {
+        LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
+                                      LibUtilities::eNodalTetElec);
+        Array<OneD, NekDouble> u1, v1,w1;
+
+        LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1,w1);
+
+        NekVector<NekDouble> U1(u1), V1(v1), W1(w1);
+
+        NekMatrix<NekDouble> Vandermonde = LibUtilities::GetTetVandermonde(U1,V1,W1);
+        NekMatrix<NekDouble> VandermondeI = Vandermonde;
+        VandermondeI.Invert();
+        NekMatrix<NekDouble> VdmDxt =  (
+          LibUtilities::GetVandermondeForTetXDerivative(U1,V1,W1) * VandermondeI);
+        NekMatrix<NekDouble> VdmDyt =  (
+          LibUtilities::GetVandermondeForTetYDerivative(U1,V1,W1) * VandermondeI);
+        NekMatrix<NekDouble> VdmDzt =  (
+          LibUtilities::GetVandermondeForTetZDerivative(U1,V1,W1) * VandermondeI);
+
+        for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+        {
+            ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+
+            vector<NodeSharedPtr> ns;
+            el->GetCurvedNodes(ns);
+
+            NekDouble mx = -1.0 * numeric_limits<double>::max();
+            NekDouble mn =  numeric_limits<double>::max();
+
+            NekVector<NekDouble> X(u1.num_elements()),Y(u1.num_elements()),Z(u1.num_elements());
+            for(int j = 0; j < u1.num_elements(); j++)
+            {
+                X(j) = ns[j]->m_x;
+                Y(j) = ns[j]->m_y;
+                Z(j) = ns[j]->m_z;
+            }
+
+            NekVector<NekDouble> x1i(u1.num_elements()),y1i(u1.num_elements()),z1i(u1.num_elements()),
+                                 x2i(u1.num_elements()),y2i(u1.num_elements()),z2i(u1.num_elements()),
+                                 x3i(u1.num_elements()),y3i(u1.num_elements()),z3i(u1.num_elements());
+
+            x1i = VdmDxt*X;
+            y1i = VdmDxt*Y;
+            z1i = VdmDxt*Z;
+            x2i = VdmDyt*X;
+            y2i = VdmDyt*Y;
+            z2i = VdmDyt*Z;
+            x3i = VdmDzt*X;
+            y3i = VdmDzt*Y;
+            z3i = VdmDzt*Z;
+
+            for(int j = 0; j < u1.num_elements(); j++)
+            {
+
+                DNekMat dxdz(3,3,1.0,eFULL);
+                dxdz(0,0) = x1i(j);
+                dxdz(0,1) = x2i(j);
+                dxdz(0,2) = x3i(j);
+                dxdz(1,0) = y1i(j);
+                dxdz(1,1) = y2i(j);
+                dxdz(1,2) = y3i(j);
+                dxdz(2,0) = z1i(j);
+                dxdz(2,1) = z2i(j);
+                dxdz(2,2) = z3i(j);
+
+                NekDouble jacDet = dxdz(0,0)*(dxdz(1,1)*dxdz(2,2)-dxdz(2,1)*dxdz(1,2))
+                       -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
+                       +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
+
+                mx = max(mx,jacDet);
+                mn = min(mn,jacDet);
+            }
+
+
+
+            if(mn < 0)
+            {
+                res->startInv++;
+            }
+
+            res->worstJac = min(res->worstJac,mn/mx);
         }
     }
 }

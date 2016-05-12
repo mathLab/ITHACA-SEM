@@ -65,8 +65,6 @@ struct Residual
     NekDouble val;
     int n;
     int nDoF;
-    NekDouble startE;
-    NekDouble endE;
     int startInv;
     NekDouble worstJac;
 };
@@ -102,6 +100,7 @@ private:
     vector<Array<OneD, NekDouble> > MappingIdealToRef(ElementSharedPtr el);
     vector<vector<NodeSharedPtr> > GetColouredNodes();
     void WriteStats(string file);
+    void EvaluateMesh();
 
     NodeElMap nodeElMap;
     vector<ElDataSharedPtr> dataSet;

@@ -171,7 +171,7 @@ void ProcessVarOpti::Process()
             LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                           LibUtilities::eNodalTetElec);
             LibUtilities::PointsKey pkey2(m_mesh->m_nummode+2,
-                                          LibUtilities::eNodalTetSPI);
+                                          LibUtilities::eNodalTetElec);
             Array<OneD, NekDouble> u1, v1, u2, v2, w1, w2;
             LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
             LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
@@ -361,7 +361,8 @@ void ProcessVarOpti::NodeOpti::Optimise()
             node->m_x = xc;
             node->m_y = yc;
             node->m_z = zc;
-            // cout << "warning: had to reset node" << endl;
+            //cout << "warning: had to reset node" << endl;
+            //cout << delX << " " << delY << " " << delZ << endl;
             // cout << G[0] << " " << G[1] << " " << G[2] << " " << node->m_id << endl;
         }
         mtx.lock();
@@ -453,6 +454,7 @@ Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad<3>()
         node->m_z = zc + dir[i][2] * dx;
         w.push_back(GetFunctional<3>());
     }
+
     node->m_x = xc;
     node->m_y = yc;
     node->m_z = zc;
@@ -544,18 +546,19 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
     // Store x/y components of each element sequentially in memory
     for (int i = 0, cnt = 0; i < nElmt; ++i)
     {
-        for (int j = 0; j < ptsLow; ++j, ++cnt)
+        for (int j = 0; j < ptsLow; ++j)
         {
-            //Array<OneD, NekDouble> loc = data[i]->nodes[j]->GetLoc();
-            //for (int d = 0; d < DIM; ++d)
-            //{
-            X[cnt] = data[i]->nodes[j]->m_x;
-            X[cnt + ptsLow] = data[i]->nodes[j]->m_y;
-            X[cnt + 2*ptsLow] = data[i]->nodes[j]->m_z;
-            //}
+            Array<OneD, NekDouble> loc = data[i]->nodes[j]->GetLoc();
+            for (int d = 0; d < DIM; ++d)
+            {
+                X[cnt + d*ptsLow + j] = loc[d];
+                //X[cnt + d*ptsLow] = data[i]->nodes[j]->m_x;
+                //X[cnt + ptsLow] = data[i]->nodes[j]->m_y;
+                //X[cnt + 2*ptsLow] = data[i]->nodes[j]->m_z;
+            }
         }
 
-        cnt += ptsLow;
+        cnt += DIM*ptsLow;
     }
 
     // Storage for derivatives, ordered by:
@@ -1087,9 +1090,9 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
 
         x1i = VdmD[0]*X;
         y1i = VdmD[0]*Y;
+        z1i = VdmD[0]*Z;
         x2i = VdmD[1]*X;
         y2i = VdmD[1]*Y;
-        z1i = VdmD[0]*Z;
         z2i = VdmD[1]*Z;
         x3i = VdmD[2]*X;
         y3i = VdmD[2]*Y;

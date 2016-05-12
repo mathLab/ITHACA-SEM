@@ -55,14 +55,8 @@ public:
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList)
     {
-        ElementSharedPtr e = boost::shared_ptr<Element>(
+        return boost::shared_ptr<Element>(
             new Tetrahedron(pConf, pNodeList, pTagList));
-        vector<FaceSharedPtr> faces = e->GetFaceList();
-        for (int i = 0; i < faces.size(); ++i)
-        {
-            faces[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e, i));
-        }
-        return e;
     }
     /// Element type
     static LibUtilities::ShapeType m_type;

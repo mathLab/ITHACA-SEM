@@ -303,11 +303,6 @@ void ProcessVarOpti::NodeOpti::Optimise()
 
     Array<OneD, NekDouble> G = GetGrad<DIM>();
 
-    for(int i = 0; i < 9; i++)
-    {
-        cout << "G[" << i << "]  " <<  G[i] << endl;
-    }
-
     if(sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) > 1e-10)
     {
         //needs to optimise
@@ -347,9 +342,6 @@ void ProcessVarOpti::NodeOpti::Optimise()
             delY = del[1];
             delZ = del[2];
         }
-
-        cout << delX << " " << delY << " " << delZ << endl;
-        exit(-1);
 
         bool found = false;
         while(alpha > 1e-10)
@@ -616,7 +608,6 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
                     integral += quadW[k] * (K * 0.5 * lsigma * lsigma + mu * trEtE);
                 }
             }
-            cout << endl << endl;
             break;
         }
 
@@ -948,6 +939,7 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
     ec.m_order  = 1;
     ec.m_faceNodes = false;
     ec.m_volumeNodes = false;
+    ec.m_reorient = false;
 
     ElementSharedPtr E = GetElementFactory().CreateInstance(
                             ec.m_e, ec, el->GetVertexList(),

@@ -64,6 +64,7 @@ struct Residual
 {
     NekDouble val;
     int n;
+    int nDirc;
     int nDoF;
     int startInv;
     NekDouble worstJac;

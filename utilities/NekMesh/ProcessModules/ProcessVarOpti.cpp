@@ -171,7 +171,7 @@ void ProcessVarOpti::Process()
             LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                           LibUtilities::eNodalTetElec);
             LibUtilities::PointsKey pkey2(m_mesh->m_nummode+2,
-                                          LibUtilities::eNodalTetElec);
+                                          LibUtilities::eNodalTetSPI);
             Array<OneD, NekDouble> u1, v1, u2, v2, w1, w2;
             LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
             LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
@@ -233,6 +233,7 @@ void ProcessVarOpti::Process()
          << "Worst jacobian:\t\t" << res->worstJac << endl
          << "N free nodes:\t\t" << res->n << endl
          << "N Dof:\t\t\t" << res->nDoF << endl
+         << "N Dirclet:\t\t" << res->nDirc << endl
          << "N color sets:\t\t" << nset << endl
          << "Avg set colors:\t\t" << p/nset << endl
          << "Min set:\t\t" << mn << endl
@@ -340,6 +341,8 @@ void ProcessVarOpti::NodeOpti::Optimise()
             delZ = del[2];
         }
 
+        cout << delX << " " << delY << " " << delZ << endl;
+
         bool found = false;
         while(alpha > 1e-10)
         {
@@ -361,8 +364,7 @@ void ProcessVarOpti::NodeOpti::Optimise()
             node->m_x = xc;
             node->m_y = yc;
             node->m_z = zc;
-            //cout << "warning: had to reset node" << endl;
-            //cout << delX << " " << delY << " " << delZ << endl;
+            // cout << "warning: had to reset node" << endl;
             // cout << G[0] << " " << G[1] << " " << G[2] << " " << node->m_id << endl;
         }
         mtx.lock();
@@ -372,25 +374,19 @@ void ProcessVarOpti::NodeOpti::Optimise()
     }
 }
 
-NekDouble dir[19][3] = {{  0.0,  0.0,  0.0 },  // 0  (x   , y   , z   )
+NekDouble dir[13][3] = {{  0.0,  0.0,  0.0 },  // 0  (x   , y   , z   )
                         {  1.0,  0.0,  0.0 },  // 1  (x+dx, y   , z   )
                         {  1.0,  1.0,  0.0 },  // 2  (x+dx, y+dy, z   )
                         {  0.0,  1.0,  0.0 },  // 3  (x   , y+dy, z   )
-                        { -1.0,  1.0,  0.0 },  // 4  (x-dx, y+dy, z   )
-                        { -1.0,  0.0,  0.0 },  // 5  (x-dx, y   , z   )
-                        { -1.0, -1.0,  0.0 },  // 6  (x-dx, y-dy, z   )
-                        {  0.0, -1.0,  0.0 },  // 7  (x   , y-dy, z   )
-                        {  1.0, -1.0,  0.0 },  // 8  (x+dx, y-dy, z   )
-                        { -1.0,  0.0, -1.0 },  // 9  (x-dx, y   , z-dz)
-                        {  0.0,  0.0, -1.0 },  // 10 (x   , y   , z-dz)
-                        {  1.0,  0.0, -1.0 },  // 11 (x+dx, y   , z-dz)
-                        { -1.0,  0.0,  1.0 },  // 12 (x-dx, y   , z+dz)
-                        {  0.0,  0.0,  1.0 },  // 13 (x   , y   , z+dz)
-                        {  1.0,  0.0,  1.0 },  // 14 (x+dx, y   , z+dz)
-                        {  0.0,  1.0, -1.0 },  // 15 (x   , y+dy, z-dz)
-                        {  0.0,  1.0,  1.0 },  // 16 (x   , y+dy, z+dz)
-                        {  0.0, -1.0, -1.0 },  // 17 (x   , y-dy, z-dz)
-                        {  0.0, -1.0,  1.0 }}; // 18 (x   , y-dy, z+dz)
+                        { -1.0,  0.0,  0.0 },  // 4  (x-dx, y   , z   )
+                        { -1.0, -1.0,  0.0 },  // 5  (x-dx, y-dy, z   )
+                        {  0.0, -1.0,  0.0 },  // 6  (x   , y-dy, z   )
+                        { -1.0,  0.0, -1.0 },  // 7  (x-dx, y   , z-dz)
+                        {  0.0,  0.0, -1.0 },  // 8 (x   , y   , z-dz)
+                        {  0.0,  0.0,  1.0 },  // 9 (x   , y   , z+dz)
+                        {  1.0,  0.0,  1.0 },  // 10 (x+dx, y   , z+dz)
+                        {  0.0,  1.0,  1.0 },  // 11 (x   , y+dy, z+dz)
+                        {  0.0, -1.0, -1.0 }}; // 12 (x   , y-dy, z-dz)
 
 template<int DIM>
 Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad()
@@ -406,7 +402,7 @@ Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad<2>()
     NekDouble dx = 1e-4;
     vector<NekDouble> w(9);
 
-    for(int i = 0; i < 9; i++)
+    for(int i = 0; i < 7; i++)
     {
         node->m_x = xc + dir[i][0] * dx;
         node->m_y = yc + dir[i][1] * dx;
@@ -428,11 +424,11 @@ Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad<2>()
     //ret[7] d2/dxdz
     //ret[8] d2/dydz
 
-    ret[0] = (w[1] - w[5]) / 2.0 / dx;
-    ret[1] = (w[3] - w[7]) / 2.0 / dx;
-    ret[3] = (w[1] + w[5] - 2.0*w[0]) / dx / dx;
-    ret[4] = (w[3] + w[7] - 2.0*w[0]) / dx / dx;
-    ret[6] = (w[2] + w[6] - w[4] - w[8]) / 4.0 / dx / dx;
+    ret[0] = (w[1] - w[4]) / 2.0 / dx;
+    ret[1] = (w[3] - w[6]) / 2.0 / dx;
+    ret[3] = (w[1] + w[4] - 2.0*w[0]) / dx / dx;
+    ret[4] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
+    ret[6] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / dx / dx;
 
     return ret;
 }
@@ -447,14 +443,13 @@ Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad<3>()
 
     vector<NekDouble> w;
 
-    for(int i = 0; i < 19; i++)
+    for(int i = 0; i < 13; i++)
     {
         node->m_x = xc + dir[i][0] * dx;
         node->m_y = yc + dir[i][1] * dx;
         node->m_z = zc + dir[i][2] * dx;
         w.push_back(GetFunctional<3>());
     }
-
     node->m_x = xc;
     node->m_y = yc;
     node->m_z = zc;
@@ -472,17 +467,17 @@ Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad<3>()
     //ret[7] d2/dxdz
     //ret[8] d2/dydz
 
-    ret[0] = (w[1] - w[5]) / 2.0 / dx;
-    ret[1] = (w[3] - w[7]) / 2.0 / dx;
-    ret[2] = (w[13] - w[10]) / 2.0 / dx;
+    ret[0] = (w[1] - w[4]) / 2.0 / dx;
+    ret[1] = (w[3] - w[6]) / 2.0 / dx;
+    ret[2] = (w[9] - w[8]) / 2.0 / dx;
 
-    ret[3] = (w[1] + w[5] - 2.0*w[0]) / dx / dx;
-    ret[4] = (w[3] + w[7] - 2.0*w[0]) / dx / dx;
-    ret[5] = (w[13] + w[10] - 2.0*w[0]) / dx / dx;
+    ret[3] = (w[1] + w[4] - 2.0*w[0]) / dx / dx;
+    ret[4] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
+    ret[5] = (w[9] + w[8] - 2.0*w[0]) / dx / dx;
 
-    ret[6] = (w[2] + w[6] - w[4] - w[8]) / 4.0 / dx /dx;
-    ret[7] = (w[14] + w[9] - w[11] - w[12]) / 4.0 / dx /dx;
-    ret[8] = (w[16] + w[17] - w[15] - w[18]) / 4.0 / dx /dx;
+    ret[6] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / dx / dx;
+    ret[7] = (w[10] - w[1] - w[9] + 2.0*w[0] - w[4] - w[8] + w[7]) / 2.0 / dx / dx;
+    ret[8] = (w[11] - w[3] - w[9] + 2.0*w[0] - w[6] - w[8] + w[12]) / 2.0 / dx / dx;
 
     return ret;
 }
@@ -546,19 +541,18 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
     // Store x/y components of each element sequentially in memory
     for (int i = 0, cnt = 0; i < nElmt; ++i)
     {
-        for (int j = 0; j < ptsLow; ++j)
+        for (int j = 0; j < ptsLow; ++j, ++cnt)
         {
-            Array<OneD, NekDouble> loc = data[i]->nodes[j]->GetLoc();
-            for (int d = 0; d < DIM; ++d)
-            {
-                X[cnt + d*ptsLow + j] = loc[d];
-                //X[cnt + d*ptsLow] = data[i]->nodes[j]->m_x;
-                //X[cnt + ptsLow] = data[i]->nodes[j]->m_y;
-                //X[cnt + 2*ptsLow] = data[i]->nodes[j]->m_z;
-            }
+            //Array<OneD, NekDouble> loc = data[i]->nodes[j]->GetLoc();
+            //for (int d = 0; d < DIM; ++d)
+            //{
+            X[cnt] = data[i]->nodes[j]->m_x;
+            X[cnt + ptsLow] = data[i]->nodes[j]->m_y;
+            X[cnt + 2*ptsLow] = data[i]->nodes[j]->m_z;
+            //}
         }
 
-        cnt += DIM*ptsLow;
+        cnt += ptsLow;
     }
 
     // Storage for derivatives, ordered by:
@@ -796,25 +790,28 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
             ASSERTL0(false,"space dim issue");
     }
 
+    res->nDirc = boundaryNodes.size();
+
     vector<NodeSharedPtr> remain;
+
+    EdgeSet::iterator eit;
+    for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+    {
+        vector<NodeSharedPtr> n = (*eit)->m_edgeNodes;
+        n.push_back((*eit)->m_n1);
+        n.push_back((*eit)->m_n2);
+        for(int j = 0; j < n.size(); j++)
+        {
+            NodeSet::iterator nit = boundaryNodes.find(n[j]);
+            if(nit == boundaryNodes.end())
+            {
+                remain.push_back(n[j]);
+            }
+        }
+    }
 
     if(m_mesh->m_expDim == 2)
     {
-        EdgeSet::iterator eit;
-        for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
-        {
-            vector<NodeSharedPtr> n = (*eit)->m_edgeNodes;
-            n.push_back((*eit)->m_n1);
-            n.push_back((*eit)->m_n2);
-            for(int j = 0; j < n.size(); j++)
-            {
-                NodeSet::iterator nit = boundaryNodes.find(n[j]);
-                if(nit == boundaryNodes.end())
-                {
-                    remain.push_back(n[j]);
-                }
-            }
-        }
 
         for(int i = 0; i < m_mesh->m_element[2].size(); i++)
         {
@@ -834,14 +831,12 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
         FaceSet::iterator fit;
         for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
         {
-            vector<NodeSharedPtr> n;
-            (*fit)->GetCurvedNodes(n);
-            for(int j = 0; j < n.size(); j++)
+            for(int j = 0; j < (*fit)->m_faceNodes.size(); j++)
             {
-                NodeSet::iterator nit = boundaryNodes.find(n[j]);
+                NodeSet::iterator nit = boundaryNodes.find((*fit)->m_faceNodes[j]);
                 if(nit == boundaryNodes.end())
                 {
-                    remain.push_back(n[j]);
+                    remain.push_back((*fit)->m_faceNodes[j]);
                 }
             }
         }
@@ -1090,9 +1085,9 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
 
         x1i = VdmD[0]*X;
         y1i = VdmD[0]*Y;
-        z1i = VdmD[0]*Z;
         x2i = VdmD[1]*X;
         y2i = VdmD[1]*Y;
+        z1i = VdmD[0]*Z;
         z2i = VdmD[1]*Z;
         x3i = VdmD[2]*X;
         y3i = VdmD[2]*Y;

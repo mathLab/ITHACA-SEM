@@ -278,6 +278,8 @@ void ProcessVarOpti::Process()
         cout << ctr <<  "\tResidual: " << res->val << endl;
         if(ctr > 5000)
             break;
+
+        break;
     }
 
     EvaluateMesh();
@@ -300,6 +302,11 @@ void ProcessVarOpti::NodeOpti::Optimise()
     //in the 2d case z is left as zero
 
     Array<OneD, NekDouble> G = GetGrad<DIM>();
+
+    for(int i = 0; i < 9; i++)
+    {
+        cout << "G[" << i << "]  " <<  G[i] << endl;
+    }
 
     if(sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) > 1e-10)
     {
@@ -342,6 +349,7 @@ void ProcessVarOpti::NodeOpti::Optimise()
         }
 
         cout << delX << " " << delY << " " << delZ << endl;
+        exit(-1);
 
         bool found = false;
         while(alpha > 1e-10)
@@ -439,7 +447,7 @@ Array<OneD, NekDouble> ProcessVarOpti::NodeOpti::GetGrad<3>()
     NekDouble xc = node->m_x;
     NekDouble yc = node->m_y;
     NekDouble zc = node->m_z;
-    NekDouble dx = 1e-4;
+    NekDouble dx = 1e-6;
 
     vector<NekDouble> w;
 
@@ -541,18 +549,19 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
     // Store x/y components of each element sequentially in memory
     for (int i = 0, cnt = 0; i < nElmt; ++i)
     {
-        for (int j = 0; j < ptsLow; ++j, ++cnt)
+        for (int j = 0; j < ptsLow; ++j)
         {
-            //Array<OneD, NekDouble> loc = data[i]->nodes[j]->GetLoc();
-            //for (int d = 0; d < DIM; ++d)
-            //{
-            X[cnt] = data[i]->nodes[j]->m_x;
-            X[cnt + ptsLow] = data[i]->nodes[j]->m_y;
-            X[cnt + 2*ptsLow] = data[i]->nodes[j]->m_z;
-            //}
+            Array<OneD, NekDouble> loc = data[i]->nodes[j]->GetLoc();
+            for (int d = 0; d < DIM; ++d)
+            {
+                X[cnt + d*ptsLow + j] = loc[d];
+                //X[cnt + d*ptsLow] = data[i]->nodes[j]->m_x;
+                //X[cnt + ptsLow] = data[i]->nodes[j]->m_y;
+                //X[cnt + 2*ptsLow] = data[i]->nodes[j]->m_z;
+            }
         }
 
-        cnt += ptsLow;
+        cnt += DIM*ptsLow;
     }
 
     // Storage for derivatives, ordered by:
@@ -594,7 +603,6 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
                             }
                         }
                     }
-
                     NekDouble jacDet = JacDet<DIM>(jacIdeal);
                     NekDouble trEtE = LinElasTrace<DIM>(jacIdeal);
 
@@ -608,6 +616,7 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
                     integral += quadW[k] * (K * 0.5 * lsigma * lsigma + mu * trEtE);
                 }
             }
+            cout << endl << endl;
             break;
         }
 

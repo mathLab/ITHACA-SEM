@@ -37,6 +37,8 @@
 #define UTILITIES_NEKMESH_PROCESSPROCESSCURVE
 
 #include "ProcessCurvedEdges.h"
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/BasicUtils/PtsField.h>
 
 namespace Nektar
 {
@@ -58,6 +60,15 @@ public:
 
 protected:
     void v_GenerateEdgeNodes(EdgeSharedPtr edge);
+
+private:
+    NekDouble EvaluateCoordinate(NekDouble xCoord);
+
+    bool                                        m_fromFile;
+    LibUtilities::AnalyticExpressionEvaluator   m_fEval;
+    int                                         m_fExprId;
+    LibUtilities::PtsFieldSharedPtr             m_fieldPts;
+
 };
 }
 }

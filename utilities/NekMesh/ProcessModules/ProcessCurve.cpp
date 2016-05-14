@@ -39,7 +39,7 @@
 #include <LocalRegions/NodalTriExp.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/BasicUtils/PtsIO.h>
 
 #include <NekMeshUtils/MeshElements/Element.h>
 
@@ -63,8 +63,10 @@ ModuleKey ProcessCurve::className = GetModuleFactory().RegisterCreatorFunction(
  */
 ProcessCurve::ProcessCurve(MeshSharedPtr m) : ProcessCurvedEdges(m)
 {
-    m_config["function"] = ConfigOption(false, "0.0",
+    m_config["function"] = ConfigOption(false, "NotSet",
         "Expression of the curve: y = f(x).");
+    m_config["file"] = ConfigOption(false, "NotSet",
+        "Pts file containing coordinates (x,y).");
     m_config["niter"] = ConfigOption(false, "50",
         "Number of iterations to perform to obtain evenly distribution of points.");
     m_config["gamma"] = ConfigOption(false, "0.1",
@@ -107,16 +109,35 @@ void ProcessCurve::v_GenerateEdgeNodes(EdgeSharedPtr edge)
     NodeSharedPtr n2 = edge->m_n2;
 
     int       nq    = m_config["N"].as<int>();
-    int       dim   = m_mesh->m_expDim;
     int       niter = m_config["niter"].as<int>();
     NekDouble gamma = m_config["gamma"].as<double>();
 
     edge->m_edgeNodes.resize(nq - 2);
 
     // Read function defining the curve
-    LibUtilities::AnalyticExpressionEvaluator fEval;
-    std::string fstr = m_config["function"].as<string>();
-    int fExprId = fEval.DefineFunction("x y z", fstr);
+    if (m_config["function"].as<string>().compare("NotSet") != 0)
+    {
+        ASSERTL0(m_config["file"].as<string>().compare("NotSet") == 0,
+             "Function and file cannot be defined at the same time.");
+
+        std::string fstr = m_config["function"].as<string>();
+        m_fExprId = m_fEval.DefineFunction("x y z", fstr);
+        m_fromFile = false;
+    }
+    else
+    {
+        ASSERTL0(m_config["file"].as<string>().compare("NotSet") != 0,
+             "Need to define either function or file.");
+        std::string inFile = m_config["file"].as<string>();
+
+        LibUtilities::CommSharedPtr  c =
+                LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+        LibUtilities::PtsIOSharedPtr ptsIO =
+                MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(c);
+        ptsIO->Import(inFile, m_fieldPts);
+
+        m_fromFile = true;
+    }
 
     // Coordinates of points
     Array<OneD, NekDouble> x(nq,0.0);
@@ -131,7 +152,7 @@ void ProcessCurve::v_GenerateEdgeNodes(EdgeSharedPtr edge)
 
     // Fix start point
     x[0] =  n1->m_x;
-    y[0] =  fEval.Evaluate(fExprId,x[0],0.0,0.0,0.0);
+    y[0] =  EvaluateCoordinate(x[0]);
     // Start with uniform distribution along x-axis
     Vmath::Sadd(nq-1, (n2->m_x - n1->m_x) / (nq-1), dx, 1, dx, 1);
 
@@ -142,7 +163,7 @@ void ProcessCurve::v_GenerateEdgeNodes(EdgeSharedPtr edge)
         for (int k = 1; k < nq; ++k)
         {
             x[k] = x[k-1] + dx[k-1] + gamma*s_deviation[k-1];
-            y[k] =  fEval.Evaluate(fExprId,x[k],0.0,0.0,0.0);
+            y[k] =  EvaluateCoordinate(x[k]);
 
             dx[k-1] = x[k] - x[k-1];
             dy[k-1] = y[k] - y[k-1];
@@ -183,5 +204,24 @@ void ProcessCurve::v_GenerateEdgeNodes(EdgeSharedPtr edge)
     }
     edge->m_curveType = LibUtilities::ePolyEvenlySpaced;
 }
+
+NekDouble ProcessCurve::EvaluateCoordinate(NekDouble xCoord)
+{
+    if (m_fromFile)
+    {
+        Array<OneD, Array<OneD, NekDouble> > physCoords(1);
+        physCoords[0] = Array<OneD, NekDouble>(1,xCoord);
+        Array<OneD, Array<OneD, NekDouble> > intFields;
+
+        m_fieldPts->Interpolate(physCoords, intFields);
+
+        return intFields[0][0];
+    }
+    else
+    {
+        return m_fEval.Evaluate(m_fExprId, xCoord, 0.0, 0.0, 0.0);
+    }
+}
+
 }
 }

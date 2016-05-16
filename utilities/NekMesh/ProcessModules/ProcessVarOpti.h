@@ -44,10 +44,31 @@ namespace Nektar
 {
 namespace Utilities
 {
+
 struct ElData
 {
+    ElData(vector<NodeSharedPtr> innodes, int spaceDim)
+    {
+        nodes.resize(innodes.size());
+        for (int i = 0; i < innodes.size(); ++i)
+        {
+            nodes[i].resize(spaceDim);
+            nodes[i][0] = &innodes[i]->m_x;
+
+            if (spaceDim >= 2)
+            {
+                nodes[i][1] = &innodes[i]->m_y;
+            }
+
+            if (spaceDim >= 3)
+            {
+                nodes[i][2] = &innodes[i]->m_z;
+            }
+        }
+    }
+
     ElementSharedPtr el;
-    vector<NodeSharedPtr> nodes;
+    vector<vector<NekDouble *> > nodes;
     vector<Array<OneD, NekDouble> > maps;
 };
 typedef boost::shared_ptr<ElData> ElDataSharedPtr;

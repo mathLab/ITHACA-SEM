@@ -83,6 +83,10 @@ ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "0", "Number of quad points");
     m_config["stats"] =
         ConfigOption(false, "", "Write a file with list of scaled jacobians");
+    m_config["restol"] =
+        ConfigOption(false, "1e-6", "Tolerance criterion");
+    m_config["maxiter"] =
+        ConfigOption(false, "500", "Maximum number of iterations");
 }
 
 ProcessVarOpti::~ProcessVarOpti()
@@ -116,6 +120,9 @@ void ProcessVarOpti::Process()
     {
         ASSERTL0(false,"not opti type set");
     }
+
+    const int maxIter = m_config["maxiter"].as<int>();
+    const NekDouble restol = m_config["restol"].as<NekDouble>();
 
     m_mesh->m_nummode = m_config["nq"].as<int>();
 
@@ -237,7 +244,8 @@ void ProcessVarOpti::Process()
          << "N color sets:\t\t" << nset << endl
          << "Avg set colors:\t\t" << p/nset << endl
          << "Min set:\t\t" << mn << endl
-         << "Max set:\t\t" << mx << endl;
+         << "Max set:\t\t" << mx << endl
+         << "Residual tolerance:\t\t" << restol << endl;
 
     int nThreads = m_config["numthreads"].as<int>();
 
@@ -247,7 +255,7 @@ void ProcessVarOpti::Process()
     Thread::ThreadManagerSharedPtr tm =
                 tms.CreateInstance(Thread::ThreadMaster::SessionJob, nThreads);
 
-    while (res->val > 1e-6)
+    while (res->val > restol)
     {
         ctr++;
         res->val = 0.0;
@@ -276,10 +284,8 @@ void ProcessVarOpti::Process()
         }
 
         cout << ctr <<  "\tResidual: " << res->val << endl;
-        if(ctr > 5000)
+        if(ctr > maxIter)
             break;
-
-        break;
     }
 
     EvaluateMesh();
@@ -543,13 +549,9 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
     {
         for (int j = 0; j < ptsLow; ++j)
         {
-            Array<OneD, NekDouble> loc = data[i]->nodes[j]->GetLoc();
             for (int d = 0; d < DIM; ++d)
             {
-                X[cnt + d*ptsLow + j] = loc[d];
-                //X[cnt + d*ptsLow] = data[i]->nodes[j]->m_x;
-                //X[cnt + ptsLow] = data[i]->nodes[j]->m_y;
-                //X[cnt + 2*ptsLow] = data[i]->nodes[j]->m_z;
+                X[cnt + d*ptsLow + j] = *(data[i]->nodes[j][d]);
             }
         }
 
@@ -911,11 +913,11 @@ void ProcessVarOpti::GetElementMap()
     for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
-        ElDataSharedPtr d = boost::shared_ptr<ElData>(new ElData);
+        vector<NodeSharedPtr> ns;
+        el->GetCurvedNodes(ns);
+        ElDataSharedPtr d = boost::shared_ptr<ElData>(new ElData(ns, m_mesh->m_spaceDim));
         d->el   = el;
         d->maps = MappingIdealToRef(el);
-        el->GetCurvedNodes(d->nodes);
-
         dataSet.push_back(d);
     }
 

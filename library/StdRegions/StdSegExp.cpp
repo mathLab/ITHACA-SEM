@@ -292,17 +292,11 @@ namespace Nektar
 
             Vmath::Zero(n_coeffs,coeff_tmp,1);
 
-            int cnt = 0;
-            for (int i = 0; i < numMin+1; ++i)
-            {
-                Vmath::Vcopy(numMin,
-                             tmp  = coeff+cnt,1,
-                             tmp2 = coeff_tmp+cnt,1);
+            Vmath::Vcopy(numMin,
+                         tmp  = coeff,1,
+                         tmp2 = coeff_tmp,1);
 
-                cnt = i*numMax;
-            }
-
-           LibUtilities::InterpCoeff1D(
+            LibUtilities::InterpCoeff1D(
                 bortho0, coeff_tmp, b0, outarray);
         }
  

@@ -287,8 +287,10 @@ void ProcessVarOpti::Process()
             tm->Wait();
         }
 
-        cout << ctr <<  "\tResidual: " << res->val << endl;
-        if(ctr > maxIter)
+        EvaluateMesh();
+
+        cout << ctr <<  "\tResidual: " << res->val << " " << res->worstJac << endl;
+        if(ctr >= maxIter)
             break;
     }
 
@@ -586,8 +588,15 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
     {
         case eLinEl:
         {
+            const NekDouble nu = 0.45;
+            const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
+            const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
+
             for (int i = 0; i < nElmt; ++i)
             {
+                bool valid = true;
+                NekDouble jacDet[ptsHigh], trEtE[ptsHigh];
+
                 for(int k = 0; k < ptsHigh; ++k)
                 {
                     NekDouble jacIdeal[DIM*DIM];
@@ -604,17 +613,28 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
                             }
                         }
                     }
-                    NekDouble jacDet = JacDet<DIM>(jacIdeal);
-                    NekDouble trEtE = LinElasTrace<DIM>(jacIdeal);
+                    jacDet[k] = JacDet<DIM>(jacIdeal);
+                    trEtE[k]  = LinElasTrace<DIM>(jacIdeal);
+                    valid = valid ? jacDet[k] > 0.0 : false;
+                }
 
-                    const NekDouble nu = 0.45;
-                    const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
-                    const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
-
-                    NekDouble de = fabs(data[i]->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
-                    NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
-                    NekDouble lsigma = log(sigma);
-                    integral += quadW[k] * (data[i]->maps[k][9]) * (K * 0.5 * lsigma * lsigma + mu * trEtE);
+                if (!valid)
+                {
+                    for(int k = 0; k < ptsHigh; ++k)
+                    {
+                        NekDouble de = 1e-2;
+                        NekDouble sigma = 0.5*(jacDet[k] + sqrt(jacDet[k]*jacDet[k] + 4.0*de*de));
+                        NekDouble lsigma = log(sigma);
+                        integral += quadW[k] * fabs(data[i]->maps[k][9]) * (K * 0.5 * lsigma * lsigma + mu * trEtE[k]);
+                    }
+                }
+                else
+                {
+                    for(int k = 0; k < ptsHigh; ++k)
+                    {
+                        NekDouble lsigma = log(jacDet[k]);
+                        integral += quadW[k] * fabs(data[i]->maps[k][9]) * (K * 0.5 * lsigma * lsigma + mu * trEtE[k]);
+                    }
                 }
             }
             break;
@@ -622,8 +642,15 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
 
         case eHypEl:
         {
+            const NekDouble nu = 0.45;
+            const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
+            const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
+
             for (int i = 0; i < nElmt; ++i)
             {
+                bool valid = true;
+                NekDouble jacDet[ptsHigh], I1[ptsHigh];
+
                 for(int k = 0; k < ptsHigh; ++k)
                 {
                     NekDouble jacIdeal[DIM*DIM];
@@ -641,22 +668,32 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
                         }
                     }
 
-                    NekDouble I1 = 0.0;
+                    jacDet[k] = JacDet<DIM>(jacIdeal);
+                    I1[k] = 0.0;
                     for (int m = 0; m < DIM*DIM; ++m)
                     {
-                        I1 += jacIdeal[m]*jacIdeal[m];
+                        I1[k] += jacIdeal[m]*jacIdeal[m];
                     }
+                    valid = valid ? jacDet[k] > 0.0 : false;
+                }
 
-                    const NekDouble nu = 0.45;
-                    const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
-                    const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
-
-                    NekDouble jacDet = JacDet<DIM>(jacIdeal);
-                    //NekDouble de = fabs(data[i]->maps[k][9]) * sqrt(1E-1*1E-1 + 1E-1);
-                    NekDouble de = 1e-1;
-                    NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
-                    NekDouble lsigma = log(sigma);
-                    integral += quadW[k]*fabs(data[i]->maps[k][9]) * (0.5 * mu * (I1 - 3.0 - 2.0*lsigma) + 0.5 * K * lsigma * lsigma);
+                if (!valid)
+                {
+                    for(int k = 0; k < ptsHigh; ++k)
+                    {
+                        NekDouble de = 1e-1;
+                        NekDouble sigma = 0.5*(jacDet[k] + sqrt(jacDet[k]*jacDet[k] + 4.0*de*de));
+                        NekDouble lsigma = log(sigma);
+                        integral += quadW[k]*fabs(data[i]->maps[k][9]) * (0.5 * mu * (I1[k] - 3.0 - 2.0*lsigma) + 0.5 * K * lsigma * lsigma);
+                    }
+                }
+                else
+                {
+                    for(int k = 0; k < ptsHigh; ++k)
+                    {
+                        NekDouble lsigma = log(jacDet[k]);
+                        integral += quadW[k]*fabs(data[i]->maps[k][9]) * (0.5 * mu * (I1[k] - 3.0 - 2.0*lsigma) + 0.5 * K * lsigma * lsigma);
+                    }
                 }
             }
             break;
@@ -666,6 +703,9 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
         {
             for (int i = 0; i < nElmt; ++i)
             {
+                bool valid = true;
+                NekDouble jacDet[ptsHigh], frob[ptsHigh];
+
                 for(int k = 0; k < ptsHigh; ++k)
                 {
                     NekDouble jacIdeal[DIM*DIM];
@@ -683,17 +723,30 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
                         }
                     }
 
-                    NekDouble frob = 0.0;
+                    frob[k] = 0.0;
                     for (int m = 0; m < DIM*DIM; ++m)
                     {
-                        frob += jacIdeal[m] * jacIdeal[m];
+                        frob[k] += jacIdeal[m] * jacIdeal[m];
                     }
-                    frob *= fabs(data[i]->maps[k][9]);
-                    NekDouble jacDet = JacDet<DIM>(jacIdeal);
+                    jacDet[k] = JacDet<DIM>(jacIdeal);
+                    valid = valid ? jacDet[k] > 0.0 : false;
+                }
 
-                    NekDouble de = fabs(data[i]->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
-                    NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
-                    integral += quadW[k]*(frob / DIM / pow(fabs(sigma), 2.0/DIM) -1.0);
+                if (!valid)
+                {
+                    for(int k = 0; k < ptsHigh; ++k)
+                    {
+                        NekDouble de = 1e-2;
+                        NekDouble sigma = 0.5*(jacDet[k] + sqrt(jacDet[k]*jacDet[k] + 4.0*de*de));
+                        integral += quadW[k] * fabs(data[i]->maps[k][9]) * (frob[k] / DIM / pow(fabs(sigma), 2.0/DIM) -1.0);
+                    }
+                }
+                else
+                {
+                    for(int k = 0; k < ptsHigh; ++k)
+                    {
+                        integral += quadW[k] * fabs(data[i]->maps[k][9]) * (frob[k] / DIM / pow(fabs(jacDet[k]), 2.0/DIM) -1.0);
+                    }
                 }
             }
             break;
@@ -703,6 +756,9 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
         {
             for (int i = 0; i < nElmt; ++i)
             {
+                bool valid = true;
+                NekDouble jacDet[ptsHigh], frob[ptsHigh];
+
                 for(int k = 0; k < ptsHigh; ++k)
                 {
                     NekDouble jacIdeal[DIM*DIM];
@@ -720,17 +776,30 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
                         }
                     }
 
-                    NekDouble frob = 0.0;
+                    frob[k] = 0.0;
                     for (int m = 0; m < DIM*DIM; ++m)
                     {
-                        frob += jacIdeal[m] * jacIdeal[m];
+                        frob[k] += jacIdeal[m] * jacIdeal[m];
                     }
-                    frob *= fabs(data[i]->maps[k][9]);
-                    NekDouble jacDet = JacDet<DIM>(jacIdeal);
-                    NekDouble de = 1e-2;
-                    //NekDouble de = fabs(data[i]->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
-                    NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
-                    integral += quadW[k]*(frob / sigma);
+                    jacDet[k] = JacDet<DIM>(jacIdeal);
+                    valid = valid ? jacDet[k] > 0.0 : false;
+                }
+
+                if (!valid)
+                {
+                    for(int k = 0; k < ptsHigh; ++k)
+                    {
+                        NekDouble de = 1e-2;
+                        NekDouble sigma = 0.5*(jacDet[k] + sqrt(jacDet[k]*jacDet[k] + 4.0*de*de));
+                        integral += quadW[k]*fabs(data[i]->maps[k][9])*(frob[k] / sigma);
+                    }
+                }
+                else
+                {
+                    for(int k = 0; k < ptsHigh; ++k)
+                    {
+                        integral += quadW[k]*fabs(data[i]->maps[k][9])*(frob[k] / jacDet[k]);
+                    }
                 }
             }
             break;

@@ -45,6 +45,7 @@
 #include <StdRegions/StdTetExp.h>
 #include <StdRegions/StdPrismExp.h>
 
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
 using namespace std;
@@ -245,7 +246,7 @@ void ProcessVarOpti::Process()
          << "Avg set colors:\t\t" << p/nset << endl
          << "Min set:\t\t" << mn << endl
          << "Max set:\t\t" << mx << endl
-         << "Residual tolerance:\t\t" << restol << endl;
+         << "Residual tolerance:\t" << restol << endl;
 
     int nThreads = m_config["numthreads"].as<int>();
 
@@ -254,6 +255,9 @@ void ProcessVarOpti::Process()
     tms.SetThreadingType("ThreadManagerBoost");
     Thread::ThreadManagerSharedPtr tm =
                 tms.CreateInstance(Thread::ThreadMaster::SessionJob, nThreads);
+
+    Timer t;
+    t.Start();
 
     while (res->val > restol)
     {
@@ -287,6 +291,9 @@ void ProcessVarOpti::Process()
         if(ctr > maxIter)
             break;
     }
+
+    t.Stop();
+    cout << "Time to compute: " << t.TimePerTest(1) << endl;
 
     EvaluateMesh();
 
@@ -607,7 +614,7 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
                     NekDouble de = fabs(data[i]->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
                     NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
                     NekDouble lsigma = log(sigma);
-                    integral += quadW[k] * (K * 0.5 * lsigma * lsigma + mu * trEtE);
+                    integral += quadW[k] * (data[i]->maps[k][9]) * (K * 0.5 * lsigma * lsigma + mu * trEtE);
                 }
             }
             break;
@@ -645,10 +652,11 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
                     const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
                     NekDouble jacDet = JacDet<DIM>(jacIdeal);
-                    NekDouble de = fabs(data[i]->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
+                    //NekDouble de = fabs(data[i]->maps[k][9]) * sqrt(1E-1*1E-1 + 1E-1);
+                    NekDouble de = 1e-1;
                     NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
                     NekDouble lsigma = log(sigma);
-                    integral += quadW[k]*(0.5 * mu * (I1 - 3.0 - 2.0*lsigma) + 0.5 * K * lsigma * lsigma);
+                    integral += quadW[k]*fabs(data[i]->maps[k][9]) * (0.5 * mu * (I1 - 3.0 - 2.0*lsigma) + 0.5 * K * lsigma * lsigma);
                 }
             }
             break;
@@ -680,6 +688,7 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
                     {
                         frob += jacIdeal[m] * jacIdeal[m];
                     }
+                    frob *= fabs(data[i]->maps[k][9]);
                     NekDouble jacDet = JacDet<DIM>(jacIdeal);
 
                     NekDouble de = fabs(data[i]->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
@@ -716,9 +725,10 @@ NekDouble ProcessVarOpti::NodeOpti::GetFunctional()
                     {
                         frob += jacIdeal[m] * jacIdeal[m];
                     }
+                    frob *= fabs(data[i]->maps[k][9]);
                     NekDouble jacDet = JacDet<DIM>(jacIdeal);
-
-                    NekDouble de = fabs(data[i]->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
+                    NekDouble de = 1e-2;
+                    //NekDouble de = fabs(data[i]->maps[k][9]) * sqrt(1E-3*1E-3 + 1E-3);
                     NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*de*de));
                     integral += quadW[k]*(frob / sigma);
                 }
@@ -796,12 +806,20 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
 
     vector<NodeSharedPtr> remain;
 
+    NodeSet::iterator nit;
+    for (nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end(); ++nit)
+    {
+        NodeSet::iterator nit2 = boundaryNodes.find(*nit);
+        if(nit2 == boundaryNodes.end())
+        {
+            remain.push_back(*nit);
+        }
+    }
+
     EdgeSet::iterator eit;
     for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
     {
         vector<NodeSharedPtr> n = (*eit)->m_edgeNodes;
-        n.push_back((*eit)->m_n1);
-        n.push_back((*eit)->m_n2);
         for(int j = 0; j < n.size(); j++)
         {
             NodeSet::iterator nit = boundaryNodes.find(n[j]);
@@ -812,47 +830,29 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
         }
     }
 
-    if(m_mesh->m_expDim == 2)
+    FaceSet::iterator fit;
+    for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
     {
-
-        for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+        for(int j = 0; j < (*fit)->m_faceNodes.size(); j++)
         {
-            vector<NodeSharedPtr> ns = m_mesh->m_element[2][i]->GetVolumeNodes();
-            for(int j = 0; j < ns.size(); j++)
+            NodeSet::iterator nit = boundaryNodes.find((*fit)->m_faceNodes[j]);
+            if(nit == boundaryNodes.end())
             {
-                NodeSet::iterator nit = boundaryNodes.find(ns[j]);
-                if(nit == boundaryNodes.end())
-                {
-                    remain.push_back(ns[j]);
-                }
+                remain.push_back((*fit)->m_faceNodes[j]);
             }
         }
     }
-    else
-    {
-        FaceSet::iterator fit;
-        for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
-        {
-            for(int j = 0; j < (*fit)->m_faceNodes.size(); j++)
-            {
-                NodeSet::iterator nit = boundaryNodes.find((*fit)->m_faceNodes[j]);
-                if(nit == boundaryNodes.end())
-                {
-                    remain.push_back((*fit)->m_faceNodes[j]);
-                }
-            }
-        }
 
-        for(int i = 0; i < m_mesh->m_element[3].size(); i++)
+    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+    {
+        vector<NodeSharedPtr> ns =
+            m_mesh->m_element[m_mesh->m_expDim][i]->GetVolumeNodes();
+        for(int j = 0; j < ns.size(); j++)
         {
-            vector<NodeSharedPtr> ns = m_mesh->m_element[3][i]->GetVolumeNodes();
-            for(int j = 0; j < ns.size(); j++)
+            NodeSet::iterator nit = boundaryNodes.find(ns[j]);
+            if(nit == boundaryNodes.end())
             {
-                NodeSet::iterator nit = boundaryNodes.find(ns[j]);
-                if(nit == boundaryNodes.end())
-                {
-                    remain.push_back(ns[j]);
-                }
+                remain.push_back(ns[j]);
             }
         }
     }
@@ -1088,9 +1088,9 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
 
         x1i = VdmD[0]*X;
         y1i = VdmD[0]*Y;
+        z1i = VdmD[0]*Z;
         x2i = VdmD[1]*X;
         y2i = VdmD[1]*Y;
-        z1i = VdmD[0]*Z;
         z2i = VdmD[1]*Z;
         x3i = VdmD[2]*X;
         y3i = VdmD[2]*Y;
@@ -1112,8 +1112,8 @@ vector<Array<OneD, NekDouble> > ProcessVarOpti::MappingIdealToRef(ElementSharedP
             Array<OneD, NekDouble> r(10,0.0); //store det in 10th entry
 
             r[9] = dxdz(0,0)*(dxdz(1,1)*dxdz(2,2)-dxdz(2,1)*dxdz(1,2))
-                   -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
-                   +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
+                  -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
+                  +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
 
             dxdz.Invert();
 
@@ -1207,12 +1207,40 @@ void ProcessVarOpti::FillQuadPoints()
     LibUtilities::PointsManager()[ekey]->GetPoints(gll);
 
     EdgeSet::iterator eit;
+    FaceSet::iterator fit;
+
+    boost::unordered_map<int, SpatialDomains::Geometry1DSharedPtr> edgeGeoms;
+    boost::unordered_map<int, SpatialDomains::Geometry2DSharedPtr> faceGeoms;
+    boost::unordered_map<int, SpatialDomains::GeometrySharedPtr> volGeoms;
 
     for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
     {
         SpatialDomains::Geometry1DSharedPtr geom =
-                                            (*eit)->GetGeom(m_mesh->m_spaceDim);
+            (*eit)->GetGeom(m_mesh->m_spaceDim);
         geom->FillGeom();
+        edgeGeoms[(*eit)->m_id] = geom;
+    }
+
+    for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
+    {
+        SpatialDomains::Geometry2DSharedPtr geom =
+            (*fit)->GetGeom(m_mesh->m_spaceDim);
+        geom->FillGeom();
+        faceGeoms[(*fit)->m_id] = geom;
+    }
+
+    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+    {
+        ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+        SpatialDomains::GeometrySharedPtr geom =
+            el->GetGeom(m_mesh->m_spaceDim);
+        geom->FillGeom();
+        volGeoms[el->GetId()] = geom;
+    }
+
+    for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+    {
+        SpatialDomains::Geometry1DSharedPtr geom = edgeGeoms[(*eit)->m_id];
         StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
 
         vector<NodeSharedPtr> hons;
@@ -1283,9 +1311,7 @@ void ProcessVarOpti::FillQuadPoints()
         {
             ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
 
-            SpatialDomains::GeometrySharedPtr geom =
-                                            el->GetGeom(m_mesh->m_spaceDim);
-            geom->FillGeom();
+            SpatialDomains::GeometrySharedPtr geom = volGeoms[el->GetId()];
             StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
 
             LibUtilities::PointsKey pkey(m_mesh->m_nummode,
@@ -1304,8 +1330,7 @@ void ProcessVarOpti::FillQuadPoints()
 
             vector<NodeSharedPtr> hons;
 
-            for(int j = nq * (nq + 1) / 2 - (nq-2)*(nq-3) / 2;
-                                                    j < u.num_elements(); j++)
+            for(int j = 3 + 3*(nq-2); j < u.num_elements(); j++)
             {
                 Array<OneD, NekDouble> xp(2);
                 xp[0] = u[j];
@@ -1325,15 +1350,7 @@ void ProcessVarOpti::FillQuadPoints()
         FaceSet::iterator it;
         for(it = m_mesh->m_faceSet.begin(); it != m_mesh->m_faceSet.end(); it++)
         {
-            //this is a hack and needs to be fixed
-            //it really should take the get geom of the whole element and
-            //then pick the correct parts
-            /////////
-            (*it)->m_faceNodes.clear();
-            ////////
-            SpatialDomains::Geometry2DSharedPtr geom =
-                                            (*it)->GetGeom(m_mesh->m_spaceDim);
-            geom->FillGeom();
+            SpatialDomains::Geometry2DSharedPtr geom = faceGeoms[(*it)->m_id];
             StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
 
             LibUtilities::PointsKey pkey(m_mesh->m_nummode,
@@ -1355,8 +1372,7 @@ void ProcessVarOpti::FillQuadPoints()
             xmap->BwdTrans(coeffs1,yc);
             xmap->BwdTrans(coeffs2,zc);
 
-            for(int j = nq * (nq + 1) / 2 - (nq-2)*(nq-3) / 2;
-                                                    j < u.num_elements(); j++)
+            for(int j = 3 + 3*(nq-2); j < u.num_elements(); j++)
             {
                 Array<OneD, NekDouble> xp(2);
                 xp[0] = u[j];
@@ -1375,9 +1391,7 @@ void ProcessVarOpti::FillQuadPoints()
         {
             ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
 
-            SpatialDomains::GeometrySharedPtr geom =
-                                            el->GetGeom(m_mesh->m_spaceDim);
-            geom->FillGeom();
+            SpatialDomains::GeometrySharedPtr geom = volGeoms[el->GetId()];
             StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
 
             LibUtilities::PointsKey pkey(m_mesh->m_nummode,

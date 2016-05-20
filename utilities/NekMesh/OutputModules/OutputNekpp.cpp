@@ -681,38 +681,37 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
                 }
             }
         }
+
         // 2D elements in 2- or 3-space, output face curvature information
-        else if (m_mesh->m_expDim >= 2 &&
-                 m_mesh->m_spaceDim >= m_mesh->m_expDim)
+        if (m_mesh->m_expDim >= 2 && m_mesh->m_spaceDim >= m_mesh->m_expDim)
         {
             vector<ElementSharedPtr>::iterator it;
-            for (int d = 2; d <= 3; ++d)
-            {
-                std::string tag  = d == 2 ? "F"      : "V";
-                std::string attr = d == 2 ? "FACEID" : "VOLID";
+            int d = m_mesh->m_expDim;
+            std::string tag  = d == 2 ? "F"      : "V";
+            std::string attr = d == 2 ? "FACEID" : "VOLID";
 
-                for (it  = m_mesh->m_element[d].begin();
-                     it != m_mesh->m_element[d].end();
-                     ++it)
+            for (it  = m_mesh->m_element[d].begin();
+                 it != m_mesh->m_element[d].end();
+                 ++it)
+            {
+                // Only generate face curve if there are volume nodes
+                if ((*it)->GetVolumeNodes().size() > 0)
                 {
-                    // Only generate face curve if there are volume nodes
-                    if ((*it)->GetVolumeNodes().size() > 0)
-                    {
-                        TiXmlElement *e = new TiXmlElement(tag);
-                        e->SetAttribute("ID", facecnt++);
-                        e->SetAttribute(attr, (*it)->GetId());
-                        e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
-                        e->SetAttribute(
-                            "TYPE",
-                            LibUtilities::kPointsTypeStr[(*it)->GetCurveType()]);
-                        TiXmlText *t0 = new TiXmlText((*it)->GetXmlCurveString());
-                        e->LinkEndChild(t0);
-                        curved->LinkEndChild(e);
-                    }
+                    TiXmlElement *e = new TiXmlElement(tag);
+                    e->SetAttribute("ID", facecnt++);
+                    e->SetAttribute(attr, (*it)->GetId());
+                    e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
+                    e->SetAttribute(
+                        "TYPE",
+                        LibUtilities::kPointsTypeStr[(*it)->GetCurveType()]);
+                    TiXmlText *t0 = new TiXmlText((*it)->GetXmlCurveString());
+                    e->LinkEndChild(t0);
+                    curved->LinkEndChild(e);
                 }
             }
         }
-        else if (m_mesh->m_expDim == 3)
+
+        if (m_mesh->m_expDim == 3)
         {
             FaceSet::iterator it2;
             for (it2 = m_mesh->m_faceSet.begin();

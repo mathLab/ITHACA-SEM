@@ -565,7 +565,7 @@ namespace Nektar
             {
                 for (int j = 0; j < nvel; ++j)
                 {
-                    stdVelocity[j] = Array<OneD, NekDouble>(n_points);
+                    stdVelocity[j] = Array<OneD, NekDouble>(n_points, 0.0);
                 }
                 n_points_0 = n_points;
             }

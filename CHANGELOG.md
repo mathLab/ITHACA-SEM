@@ -6,6 +6,9 @@ v4.3.2
 **Library**:
 - Add small optimisation for DriverAdaptive (!618)
 
+**Packaging**:
+- Fixes for DEB package dependencies (!630)
+
 v4.3.1
 ------
 **Library**:

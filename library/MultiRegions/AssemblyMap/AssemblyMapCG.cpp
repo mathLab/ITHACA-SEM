@@ -498,7 +498,8 @@ namespace Nektar
                     // we find it, set as Dirichlet with the vertex id gId.
                     if (pIt->first == meshVertId)
                     {
-                        graph[0][meshVertId] = gId < 0 ? graphVertId++ : gId;
+                        gId = gId < 0 ? graphVertId++ : gId;
+                        graph[0][meshVertId] = gId;
 
                         for (i = 0; i < pIt->second.size(); ++i)
                         {
@@ -522,7 +523,8 @@ namespace Nektar
 
                         if (found)
                         {
-                            graph[0][pIt->first] = gId < 0 ? graphVertId++ : gId;
+                            gId = gId < 0 ? graphVertId++ : gId;
+                            graph[0][pIt->first] = gId;
 
                             for (i = 0; i < pIt->second.size(); ++i)
                             {

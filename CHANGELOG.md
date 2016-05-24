@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v4.3.2
+------
+**Library**:
+- Fix numbering bug in periodic boundary conditions (!631)
+
 v4.3.1
 ------
 **Library**:

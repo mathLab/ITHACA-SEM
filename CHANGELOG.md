@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v4.3.2
+------
+**Library**:
+- Updated FFTW build to use the compiler used for building Nektar++ (!629)
+
 v4.3.1
 ------
 **Library**:

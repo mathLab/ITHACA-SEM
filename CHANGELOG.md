@@ -7,6 +7,7 @@ v4.3.2
 - Add small optimisation for DriverAdaptive (!618)
 - Updated FFTW build to use the compiler used for building Nektar++ (!629)
 - Fix numbering bug in periodic boundary conditions (!631)
+- Print error message for invalid equation also in release version (!634)
 
 **Packaging**:
 - Fixes for DEB package dependencies (!630)

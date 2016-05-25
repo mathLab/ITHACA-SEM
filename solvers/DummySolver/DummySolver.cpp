@@ -50,6 +50,7 @@ int main(int argc, char *argv[])
     {
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+        session->SetSolverInfo("EqType", "Dummy");
 
         // Create driver
         drv = GetDriverFactory().CreateInstance("Standard", session);

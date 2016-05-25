@@ -38,6 +38,7 @@
 
 #include <DummySolver/EquationSystems/Dummy.h>
 
+#include <SolverUtils/CwipiExchange.h>
 
 namespace Nektar
 {

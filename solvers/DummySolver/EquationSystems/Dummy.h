@@ -37,8 +37,9 @@
 #ifndef NEKTAR_SOLVERS_DummySOLVER_EQUATIONSYSTEMS_DUMMY_H
 #define NEKTAR_SOLVERS_DummySOLVER_EQUATIONSYSTEMS_DUMMY_H
 
-
 #include <SolverUtils/UnsteadySystem.h>
+
+#include <SolverUtils/Exchange.h>
 
 using namespace Nektar::SolverUtils;
 

@@ -466,7 +466,6 @@ namespace Nektar
 
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(
                                                         m_ncoeffs,m_ncoeffs);
-                    int cnt = 0;
                     for(int i = 0; i < m_ncoeffs; ++i)
                     {
                         // Get mode at quadrature points

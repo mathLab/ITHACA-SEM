@@ -317,9 +317,12 @@ namespace Nektar
                 for (i = 0; i < nvariables; ++i)
                 {
                     m_fields[m_intVariables[i]]->SetPhys(fields[i]);
-                    m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(
-                        fields[i],
-                        m_fields[m_intVariables[i]]->UpdateCoeffs());
+                    if( v_RequireFwdTrans() )
+                    {
+                        m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(
+                            fields[i],
+                            m_fields[m_intVariables[i]]->UpdateCoeffs());
+                    }
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
 

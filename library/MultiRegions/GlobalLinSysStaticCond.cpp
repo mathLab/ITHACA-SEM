@@ -121,7 +121,7 @@ namespace Nektar
             int nIntDofs           = pLocToGloMap->GetNumGlobalCoeffs()
                 - nGlobBndDofs;
 
-            Array<OneD, NekDouble> F = m_wsp + 2*nLocBndDofs;
+            Array<OneD, NekDouble> F = m_wsp + 2*nLocBndDofs + nGlobHomBndDofs;
             Array<OneD, NekDouble> tmp;
             if(nDirBndDofs && dirForcCalculated)
             {
@@ -135,7 +135,6 @@ namespace Nektar
             NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,tmp=F+nDirBndDofs,
                                           eWrapper);
             NekVector<NekDouble> F_GlobBnd(nGlobBndDofs,F,eWrapper);
-            NekVector<NekDouble> F_LocBnd(nLocBndDofs,0.0);
             NekVector<NekDouble> F_Int(nIntDofs,tmp=F+nGlobBndDofs,eWrapper);
             
             NekVector<NekDouble> V_GlobBnd(nGlobBndDofs,out,eWrapper);
@@ -145,7 +144,8 @@ namespace Nektar
             NekVector<NekDouble> V_Int(nIntDofs,tmp=out+nGlobBndDofs,eWrapper);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,m_wsp,eWrapper);
             
-            NekVector<NekDouble> V_GlobHomBndTmp(nGlobHomBndDofs,0.0);
+            NekVector<NekDouble> V_GlobHomBndTmp(
+                nGlobHomBndDofs,tmp = m_wsp + 2*nLocBndDofs,eWrapper);
 
             // set up normalisation factor for right hand side on first SC level
             DNekScalBlkMatSharedPtr sc = v_PreSolve(scLevel, F_GlobBnd);
@@ -269,7 +269,11 @@ namespace Nektar
         {
             int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-            m_wsp = Array<OneD, NekDouble>(2*nLocalBnd + nGlobal, 0.0);
+            int nGlobBndDofs       = pLocToGloMap->GetNumGlobalBndCoeffs();
+            int nDirBndDofs        = pLocToGloMap->GetNumGlobalDirBndCoeffs();
+            int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
+            m_wsp = Array<OneD, NekDouble>
+                    (2*nLocalBnd + nGlobal + nGlobHomBndDofs, 0.0);
 
             if (pLocToGloMap->AtLastLevel())
             {

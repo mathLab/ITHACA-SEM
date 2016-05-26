@@ -41,6 +41,10 @@
 #include <boost/optional.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
+#if defined(NEKTAR_USE_MPI)
+#include <mpi.h>
+#endif
+
 #ifndef _WIN32
 #include <execinfo.h>
 #endif
@@ -63,7 +67,7 @@ namespace ErrorUtil
     {
         efatal,
         ewarning
-    };
+    }; 
 
     class NekError : public std::runtime_error
     {
@@ -73,6 +77,7 @@ namespace ErrorUtil
         
     inline static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
     {
+        bool root = true;
         // The user of outStream is primarily for the unit tests.
         // The unit tests often generate errors on purpose to make sure
         // invalid usage is flagged appropriately.  Printing the error
@@ -86,6 +91,16 @@ namespace ErrorUtil
 #endif
             msg;
 
+#if defined(NEKTAR_USE_MPI)
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+        // turn off root if not on proc id = zero;
+        if(rank)
+        {
+            root = false;
+        }
+#endif
+        
         std::string btMessage("");
 #if defined(NEKTAR_FULLDEBUG)
 #ifndef _WIN32
@@ -103,8 +118,11 @@ namespace ErrorUtil
         free(btStrings);
 #endif
 #endif
-        switch(type)
+
+        if(root == true)
         {
+            switch(type)
+            {
             case efatal:
                 if( outStream )
                 {
@@ -116,10 +134,10 @@ namespace ErrorUtil
                     std::cerr << btMessage;
                     std::cerr << std::endl << "Fatal   : " << baseMsg << std::endl;
                 }
-
+                
                 throw NekError(baseMsg);
                 break;
-
+                
             case ewarning:
                 if( outStream )
                 {
@@ -135,6 +153,7 @@ namespace ErrorUtil
 
             default:
                 std::cerr << "Unknown warning type: " << baseMsg << std::endl;
+            }
         }
     }
 

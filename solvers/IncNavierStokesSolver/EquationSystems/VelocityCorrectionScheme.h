@@ -160,6 +160,7 @@ namespace Nektar
                     const NekDouble time);
         
     private:
+        Array<OneD, Array< OneD, NekDouble> > m_F;
         
     };
 

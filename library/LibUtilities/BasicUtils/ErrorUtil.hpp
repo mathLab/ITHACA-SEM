@@ -77,7 +77,7 @@ namespace ErrorUtil
         
     inline static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
     {
-        bool root = true;
+        int rank = 0;
         // The user of outStream is primarily for the unit tests.
         // The unit tests often generate errors on purpose to make sure
         // invalid usage is flagged appropriately.  Printing the error
@@ -92,12 +92,11 @@ namespace ErrorUtil
             msg;
 
 #if defined(NEKTAR_USE_MPI)
-        int rank;
-        MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-        // turn off root if not on proc id = zero;
-        if(rank)
+        int flag;
+        MPI_Initialized(&flag);
+        if(flag)
         {
-            root = false;
+            MPI_Comm_rank(MPI_COMM_WORLD,&rank);
         }
 #endif
         
@@ -119,11 +118,11 @@ namespace ErrorUtil
 #endif
 #endif
 
-        if(root == true)
+        switch(type)
         {
-            switch(type)
+        case efatal:
+            if(!rank)
             {
-            case efatal:
                 if( outStream )
                 {
                     (*outStream) << btMessage;
@@ -132,13 +131,16 @@ namespace ErrorUtil
                 else
                 {
                     std::cerr << btMessage;
-                    std::cerr << std::endl << "Fatal   : " << baseMsg << std::endl;
+                    std::cerr << std::endl << "Fatal   : " << baseMsg
+                              << std::endl;
                 }
+            }
                 
-                throw NekError(baseMsg);
-                break;
-                
-            case ewarning:
+            throw NekError(baseMsg);
+            break;
+        case ewarning:
+            if(!rank)
+            {
                 if( outStream )
                 {
                     (*outStream) << btMessage;
@@ -149,11 +151,11 @@ namespace ErrorUtil
                     std::cerr << btMessage;
                     std::cerr << "Warning: " << baseMsg << std::endl;
                 }
-                break;
-
-            default:
-                std::cerr << "Unknown warning type: " << baseMsg << std::endl;
             }
+            break;
+            
+        default:
+            std::cerr << "Unknown warning type: " << baseMsg << std::endl;
         }
     }
 

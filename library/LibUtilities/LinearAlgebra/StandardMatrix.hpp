@@ -311,11 +311,11 @@ namespace Nektar
                 NekMatrix(const expt::Node<L, Op, R>& rhs) :
                     BaseType(0, 0),
                     m_wrapperType(eCopy),
-                    m_storagePolicy(eFULL),
                     m_numberOfSuperDiagonals(std::numeric_limits<unsigned int>::max()),
                     m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max()),
                     m_tempSpace()
                 {
+                    this->SetStorageType(eFULL);
                     boost::tuple<unsigned int, unsigned int, unsigned int> sizes  =
                             MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
                             
@@ -331,9 +331,6 @@ namespace Nektar
                 }
 
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
-
-            
-            LIB_UTILITIES_EXPORT MatrixStorage GetType() const;
            
             LIB_UTILITIES_EXPORT ThisType& operator=(const ThisType& rhs);
 
@@ -341,7 +338,7 @@ namespace Nektar
             ThisType& operator=(const NekMatrix<InnerMatrixType, ScaledMatrixTag>& rhs)
             {
                 BaseType::operator=(rhs);
-                m_storagePolicy = rhs.GetType();
+                this->SetStorageType(rhs.GetType());
                 m_numberOfSubDiagonals = rhs.GetNumberOfSubDiagonals();
                 m_numberOfSuperDiagonals = rhs.GetNumberOfSuperDiagonals();
                 
@@ -585,14 +582,11 @@ namespace Nektar
             
             LIB_UTILITIES_EXPORT virtual unsigned int v_GetStorageSize() const ;
             
-            LIB_UTILITIES_EXPORT virtual MatrixStorage v_GetStorageType() const;
-            
             // We need to rethink class structure a little.  This shouldn't be necessary.
             LIB_UTILITIES_EXPORT virtual void v_SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d);
 
             Array<OneD, DataType> m_data;
             PointerWrapper m_wrapperType;
-            MatrixStorage m_storagePolicy;
             
             // Only used by banded matrices.
             unsigned int m_numberOfSuperDiagonals;

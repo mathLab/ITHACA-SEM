@@ -342,25 +342,21 @@ namespace Nektar
             CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >
         >::type* p=0)
     {
-        int m = lhs.GetRows();
-        int n = lhs.GetColumns();
+        const unsigned int* size = lhs.GetSize();
 
         char t = lhs.GetTransposeFlag();
-        if( t == 'T' )
-        {
-            std::swap(m, n);
-        }
+
 
         double alpha = lhs.Scale();
         const double* a = lhs.GetRawPtr();
-        int lda = m;
+        int lda = size[0];
         const double* x = rhs;
         int incx = 1;
         double beta = 0.0;
         double* y = result;
         int incy = 1;
         
-        Blas::Dgemv(t, m, n, alpha, a, lda, x, incx, beta, y, incy);
+        Blas::Dgemv(t, size[0], size[1], alpha, a, lda, x, incx, beta, y, incy);
     }
 
     template<typename InnerMatrixType, typename MatrixTag>

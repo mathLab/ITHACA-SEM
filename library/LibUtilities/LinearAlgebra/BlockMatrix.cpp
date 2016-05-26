@@ -46,9 +46,9 @@ namespace Nektar
         m_columnSizes(),
         m_storageSize(),
         m_numberOfBlockRows(0),
-        m_numberOfBlockColumns(0),
-        m_storageType(type)
+        m_numberOfBlockColumns(0)
     {
+        this->SetStorageType(type);
     }
 
     template<typename DataType, typename InnerMatrixType>
@@ -61,9 +61,9 @@ namespace Nektar
         m_columnSizes(numberOfBlockColumns),
         m_storageSize(0),
         m_numberOfBlockRows(numberOfBlockRows),
-        m_numberOfBlockColumns(numberOfBlockColumns),
-        m_storageType(type)
+        m_numberOfBlockColumns(numberOfBlockColumns)
     {
+        this->SetStorageType(type);
         m_storageSize = GetRequiredStorageSize();
         m_data = Array<OneD, boost::shared_ptr<InnerType> >(m_storageSize, boost::shared_ptr<InnerType>());
         for(unsigned int i = 1; i <= numberOfBlockRows; ++i)
@@ -88,9 +88,9 @@ namespace Nektar
         m_columnSizes(numberOfBlockColumns),
         m_storageSize(0),
         m_numberOfBlockRows(numberOfBlockRows),
-        m_numberOfBlockColumns(numberOfBlockColumns),
-        m_storageType(type)
+        m_numberOfBlockColumns(numberOfBlockColumns)
     {
+        this->SetStorageType(type);
         m_storageSize = GetRequiredStorageSize();
         m_data = Array<OneD, boost::shared_ptr<InnerType> >(m_storageSize, boost::shared_ptr<InnerType>());
         Initialize(rowsPerBlock, columnsPerBlock);
@@ -107,9 +107,9 @@ namespace Nektar
         m_columnSizes(numberOfBlockColumns),
         m_storageSize(0),
         m_numberOfBlockRows(numberOfBlockRows),
-        m_numberOfBlockColumns(numberOfBlockColumns),
-        m_storageType(type)
+        m_numberOfBlockColumns(numberOfBlockColumns)
     {
+        this->SetStorageType(type);
         m_storageSize = GetRequiredStorageSize();
         m_data = Array<OneD, boost::shared_ptr<InnerType> >(m_storageSize, boost::shared_ptr<InnerType>());
         Initialize(rowsPerBlock.data(), columnsPerBlock.data());
@@ -126,9 +126,9 @@ namespace Nektar
         m_columnSizes(columnsPerBlock.num_elements()),
         m_storageSize(0),
         m_numberOfBlockRows(rowsPerBlock.num_elements()),
-        m_numberOfBlockColumns(columnsPerBlock.num_elements()),
-        m_storageType(type)
+        m_numberOfBlockColumns(columnsPerBlock.num_elements())
     {
+        this->SetStorageType(type);
         m_storageSize = GetRequiredStorageSize();
         m_data = Array<OneD, boost::shared_ptr<InnerType> >(m_storageSize, boost::shared_ptr<InnerType>());
         Initialize(rowsPerBlock.data(), columnsPerBlock.data());
@@ -142,9 +142,9 @@ namespace Nektar
         m_columnSizes(rhs.m_columnSizes),
         m_storageSize(rhs.m_storageSize),
         m_numberOfBlockRows(rhs.m_numberOfBlockRows),
-        m_numberOfBlockColumns(rhs.m_numberOfBlockColumns),
-        m_storageType(rhs.m_storageType)
+        m_numberOfBlockColumns(rhs.m_numberOfBlockColumns)
     {
+        this->SetStorageType(rhs.GetStorageType());
         for(unsigned int i = 0; i < rhs.m_data.num_elements(); ++i)
         {
             m_data[i] = InnerType::CreateWrapper(rhs.m_data[i]);
@@ -304,12 +304,6 @@ namespace Nektar
     }
 
     template<typename DataType, typename InnerMatrixType>
-    MatrixStorage NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetType() const
-    {
-        return m_storageType;
-    }
-
-    template<typename DataType, typename InnerMatrixType>
     unsigned int NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetNumberOfBlockRows() const
     {
         if( this->GetTransposeFlag() == 'N' )
@@ -436,12 +430,6 @@ namespace Nektar
     unsigned int NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::v_GetStorageSize() const
     {
         return this->GetStorageSize();
-    }
-
-    template<typename DataType, typename InnerMatrixType>
-    MatrixStorage NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::v_GetStorageType() const
-    {
-        return this->GetType();
     }
 
     template<typename DataType, typename InnerMatrixType>

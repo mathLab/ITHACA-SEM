@@ -121,8 +121,6 @@ namespace Nektar
             LIB_UTILITIES_EXPORT ConstGetValueType operator()(unsigned int row, unsigned int col) const;
 
             LIB_UTILITIES_EXPORT unsigned int GetStorageSize() const ;
-            
-            LIB_UTILITIES_EXPORT MatrixStorage GetType() const;
                                     
             LIB_UTILITIES_EXPORT NumberType Scale() const;
             LIB_UTILITIES_EXPORT void SetScale(const NumberType&);
@@ -148,8 +146,6 @@ namespace Nektar
             v_GetValue(unsigned int row, unsigned int column) const;
             
             LIB_UTILITIES_EXPORT virtual unsigned int v_GetStorageSize() const ;
-            
-            LIB_UTILITIES_EXPORT virtual MatrixStorage v_GetStorageType() const;
             
             LIB_UTILITIES_EXPORT virtual char v_GetTransposeFlag() const;
 

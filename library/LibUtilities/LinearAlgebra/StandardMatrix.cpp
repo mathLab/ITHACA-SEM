@@ -41,11 +41,11 @@ namespace Nektar
         Matrix<DataType>(0, 0),
         m_data(),
         m_wrapperType(eCopy),
-        m_storagePolicy(eFULL),
         m_numberOfSuperDiagonals(std::numeric_limits<unsigned int>::max()),
         m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max()),
         m_tempSpace()
     {
+        this->SetStorageType(eFULL);
         m_data = Array<OneD, DataType>(GetRequiredStorageSize());
     }
 
@@ -56,11 +56,11 @@ namespace Nektar
         Matrix<DataType>(rows, columns),
         m_data(),
         m_wrapperType(eCopy),
-        m_storagePolicy(policy),
         m_numberOfSuperDiagonals(superDiagonals),
         m_numberOfSubDiagonals(subDiagonals),
         m_tempSpace()
     {
+        this->SetStorageType(policy);
         m_data = Array<OneD, DataType>(GetRequiredStorageSize());
     }
 
@@ -73,11 +73,11 @@ namespace Nektar
         Matrix<DataType>(rows, columns),
         m_data(),
         m_wrapperType(eCopy),
-        m_storagePolicy(policy),
         m_numberOfSuperDiagonals(superDiagonals),
         m_numberOfSubDiagonals(subDiagonals),
         m_tempSpace()
     {
+        this->SetStorageType(policy);
         unsigned int requiredStorage = this->GetRequiredStorageSize();
         unsigned int actualSize = std::max(requiredStorage, capacity);
         m_data = Array<OneD, DataType>(actualSize);
@@ -91,11 +91,11 @@ namespace Nektar
         Matrix<DataType>(rows, columns),
         m_data(),
         m_wrapperType(eCopy),
-        m_storagePolicy(policy),
         m_numberOfSuperDiagonals(superDiagonals),
         m_numberOfSubDiagonals(subDiagonals),
         m_tempSpace()
     {
+        this->SetStorageType(policy);
         m_data = Array<OneD, DataType>(GetRequiredStorageSize());
         std::fill(m_data.begin(), m_data.end(), initValue);
     }
@@ -108,11 +108,11 @@ namespace Nektar
         Matrix<DataType>(rows, columns),
         m_data(),
         m_wrapperType(eCopy),
-        m_storagePolicy(policy),
         m_numberOfSuperDiagonals(superDiagonals),
         m_numberOfSubDiagonals(subDiagonals),
         m_tempSpace()
     {
+        this->SetStorageType(policy);
         unsigned int size = GetRequiredStorageSize();
         m_data = Array<OneD, DataType>(size);
         std::copy(data, data + size, m_data.begin());
@@ -126,11 +126,11 @@ namespace Nektar
         Matrix<DataType>(rows, columns),
         m_data(),
         m_wrapperType(eCopy),
-        m_storagePolicy(policy),
         m_numberOfSuperDiagonals(superDiagonals),
         m_numberOfSubDiagonals(subDiagonals),
         m_tempSpace()
     {
+        this->SetStorageType(policy);
         m_data = Array<OneD, DataType>(GetRequiredStorageSize());
         CopyArrayN(d, m_data, m_data.num_elements());
     }
@@ -143,11 +143,11 @@ namespace Nektar
         Matrix<DataType>(rows, columns),
         m_data(),
         m_wrapperType(wrapperType),
-        m_storagePolicy(policy),
         m_numberOfSuperDiagonals(superDiagonals),
         m_numberOfSubDiagonals(subDiagonals),
         m_tempSpace()
     {
+        this->SetStorageType(policy);
         if( wrapperType == eWrapper )
         {
              m_data = Array<OneD, DataType>(d, eVECTOR_WRAPPER);
@@ -164,17 +164,13 @@ namespace Nektar
         Matrix<DataType>(rhs),
         m_data(),
         m_wrapperType(rhs.m_wrapperType),
-        m_storagePolicy(rhs.m_storagePolicy),
         m_numberOfSuperDiagonals(rhs.m_numberOfSuperDiagonals),
         m_numberOfSubDiagonals(rhs.m_numberOfSubDiagonals),
         m_tempSpace()
     {
+        this->SetStorageType(rhs.GetStorageType());
         PerformCopyConstruction(rhs);
     }
-
-
-    template<typename DataType>
-    MatrixStorage NekMatrix<DataType, StandardMatrixTag>::GetType() const { return m_storagePolicy; }
 
     template<typename DataType>
     NekMatrix<DataType, StandardMatrixTag>& NekMatrix<DataType, StandardMatrixTag>::operator=(const NekMatrix<DataType, StandardMatrixTag>& rhs)
@@ -185,7 +181,7 @@ namespace Nektar
         }
 
         Matrix<DataType>::operator=(rhs);
-        m_storagePolicy = rhs.m_storagePolicy;
+        this->SetStorageType(rhs.GetStorageType());
         m_numberOfSubDiagonals = rhs.m_numberOfSubDiagonals;
         m_numberOfSuperDiagonals = rhs.m_numberOfSuperDiagonals;
 
@@ -418,7 +414,7 @@ namespace Nektar
         unsigned int numRows = this->GetTransposedRows(transpose);
         unsigned int numColumns = this->GetTransposedColumns(transpose);
 
-        switch(m_storagePolicy)
+        switch(this->GetStorageType())
         {
             case eFULL:
                 return FullMatrixFuncs::Advance(
@@ -481,11 +477,11 @@ namespace Nektar
         BaseType(rhs),
         m_data(),
         m_wrapperType(wrapperType),
-        m_storagePolicy(rhs.m_storagePolicy),
         m_numberOfSuperDiagonals(rhs.m_numberOfSuperDiagonals),
         m_numberOfSubDiagonals(rhs.m_numberOfSubDiagonals)
     {
-            PerformCopyConstruction(rhs);
+        this->SetStorageType(rhs.GetStorageType());
+        PerformCopyConstruction(rhs);
     }
 
 
@@ -562,12 +558,6 @@ namespace Nektar
     unsigned int NekMatrix<DataType, StandardMatrixTag>::v_GetStorageSize() const
     {
         return NekMatrix<DataType, StandardMatrixTag>::GetStorageSize();
-    }
-
-    template<typename DataType>
-    MatrixStorage NekMatrix<DataType, StandardMatrixTag>::v_GetStorageType() const
-    {
-        return NekMatrix<DataType, StandardMatrixTag>::GetType();
     }
 
     template<typename DataType>

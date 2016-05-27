@@ -61,16 +61,21 @@ void Dummy::v_InitObject()
 {
     UnsteadySystem::v_InitObject();
 
+    m_ode.DefineOdeRhs(&Dummy::DoOdeRhs,        this);
+    m_ode.DefineProjection(&Dummy::DoOdeProjection, this);
+
     ASSERTL0(m_session->DefinesCmdLineArgument("cwipi"),
              "This EquationSystem requires the --cwipi command line switch");
 
+    NekDouble filtWidth;
     m_session->LoadParameter("EX_RecvSteps", m_recvSteps, 1);
     m_session->LoadParameter("EX_SendSteps", m_sendSteps, 1);
+    m_session->LoadParameter("EX_FiltWidth", filtWidth, 0.1);
 
     m_nRecvVars = 6;
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
-                        m_fields[0], "cpl1", "precise", 0, 1.0, 0.0);
+                        m_fields[0], "cpl1", "precise", 0, 1.0, filtWidth);
     m_sendExchange = MemoryManager<CwipiExchange>::AllocateSharedPtr(
                             m_coupling, "ex1", m_nRecvVars);
 }

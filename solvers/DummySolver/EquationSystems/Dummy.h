@@ -94,7 +94,11 @@ protected:
     virtual void v_Output(void);
 
 private:
+    Array<OneD, Array<OneD, NekDouble> > m_recFields;
+
     void receiveFields();
+
+    void DumpFields();
 };
 }
 

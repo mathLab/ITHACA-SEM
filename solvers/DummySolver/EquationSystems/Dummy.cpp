@@ -72,6 +72,12 @@ void Dummy::v_InitObject()
 
     m_nRecvVars = 6;
 
+    m_recFields = Array<OneD, Array<OneD, NekDouble> >(m_nRecvVars);
+    for (int i = 0; i < m_recFields.num_elements(); ++i)
+    {
+        m_recFields[i] = Array<OneD, NekDouble>(GetTotPoints());
+    }
+
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
         m_fields[0], "cpl1", "precise", 0, 1.0, filtWidth);
     m_sendExchange = MemoryManager<CwipiExchange>::AllocateSharedPtr(
@@ -120,19 +126,14 @@ void Dummy::DoOdeProjection(
 void Dummy::receiveFields()
 {
     static NekDouble last_update = -1E23;
-    int nq                       = GetTotPoints();
 
     if (m_time >= last_update + m_recvSteps * m_timestep)
     {
         last_update = m_time;
 
-        Array<OneD, Array<OneD, NekDouble> > recField(m_nRecvVars);
-        for (int i = 0; i < recField.num_elements(); ++i)
-        {
-            recField[i] = Array<OneD, NekDouble>(nq);
-        }
+        m_sendExchange->ReceiveFields(0, m_time, m_recFields);
 
-        m_sendExchange->ReceiveFields(0, m_time, recField);
+        DumpFields();
     }
 }
 
@@ -141,6 +142,31 @@ void Dummy::v_Output(void)
     Nektar::SolverUtils::EquationSystem::v_Output();
 
     m_coupling->FinalizeCoupling();
+}
+
+void Dummy::DumpFields()
+{
+    int nq = GetTotPoints();
+
+    Array<OneD, Array<OneD, NekDouble> > tmp(m_nRecvVars + m_spacedim);
+
+    for (int i = 0; i < m_spacedim; ++i)
+    {
+        tmp[i] = Array<OneD, NekDouble>(nq, 0.0);
+    }
+    m_fields[0]->GetCoords(tmp[0], tmp[1], tmp[2]);
+
+    for (int i = 0; i < m_nRecvVars; ++i)
+    {
+        tmp[m_spacedim + i] = m_recFields[i];
+    }
+
+    LibUtilities::PtsIO ptsIO(m_session->GetComm());
+    LibUtilities::PtsFieldSharedPtr rvPts =
+        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(m_spacedim,
+                                                                 tmp);
+    ptsIO.Write("recFields_" + boost::lexical_cast<std::string>(time) + ".pts",
+                rvPts);
 }
 
 } // end of namespace

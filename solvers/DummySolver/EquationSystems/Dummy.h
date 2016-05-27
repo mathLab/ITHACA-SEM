@@ -44,61 +44,58 @@
 using namespace Nektar::SolverUtils;
 
 namespace Nektar
-{     
+{
 
 class Dummy : public UnsteadySystem
 {
-    public:
+public:
+    friend class MemoryManager<Dummy>;
 
-        friend class MemoryManager<Dummy>;
+    /// Creates an instance of this class
+    static EquationSystemSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession)
+    {
+        EquationSystemSharedPtr p =
+            MemoryManager<Dummy>::AllocateSharedPtr(pSession);
+        p->InitObject();
+        return p;
+    }
+    /// Name of class
+    static std::string className;
 
-        /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            EquationSystemSharedPtr p = MemoryManager<Dummy>::AllocateSharedPtr(pSession);
-            p->InitObject();
-            return p;
-        }
-        /// Name of class
-        static std::string className;
+    /// Destructor
+    virtual ~Dummy();
 
-        /// Destructor
-        virtual ~Dummy();
+protected:
+    SolverUtils::CouplingSharedPointer m_coupling;
 
-    protected:
+    SolverUtils::ExchangeSharedPtr m_sendExchange;
+    int m_nSendVars;
+    int m_nRecvVars;
+    int m_recvSteps;
+    int m_sendSteps;
 
-        SolverUtils::CouplingSharedPointer              m_coupling;
+    /// Initialises UnsteadySystem class members.
+    Dummy(const LibUtilities::SessionReaderSharedPtr &pSession);
 
-        SolverUtils::ExchangeSharedPtr                  m_sendExchange;
-        int                                             m_nSendVars;
-        int                                             m_nRecvVars;
-        int                                             m_recvSteps;
-        int                                             m_sendSteps;
+    virtual void v_InitObject();
 
+    void DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD, Array<OneD, NekDouble> > &outarray,
+                  const NekDouble time);
 
-        /// Initialises UnsteadySystem class members.
-        Dummy(const LibUtilities::SessionReaderSharedPtr& pSession);
+    void DoOdeProjection(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+        Array<OneD, Array<OneD, NekDouble> > &outarray,
+        const NekDouble time);
 
-        virtual void v_InitObject();
+    virtual bool v_PostIntegrate(int step);
 
-        void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                            Array<OneD,  Array<OneD, NekDouble> > &outarray,
-                      const NekDouble time);
+    virtual void v_Output(void);
 
-        void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                                   Array<OneD,  Array<OneD, NekDouble> > &outarray,
-                             const NekDouble time);
-
-        virtual bool v_PostIntegrate(int step);
-
-        virtual void v_Output(void);
-
-    private:
-
-        void receiveFields();
+private:
+    void receiveFields();
 };
 }
 
-#endif 
-
+#endif

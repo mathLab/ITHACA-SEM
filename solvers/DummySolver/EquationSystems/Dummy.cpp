@@ -43,16 +43,14 @@
 namespace Nektar
 {
 string Dummy::className = GetEquationSystemFactory().RegisterCreatorFunction(
-            "Dummy", Dummy::create,
-            "Dummy Equation System that only sends/receives fields");
+    "Dummy",
+    Dummy::create,
+    "Dummy Equation System that only sends/receives fields");
 
-
-Dummy::Dummy(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
+Dummy::Dummy(const LibUtilities::SessionReaderSharedPtr &pSession)
     : UnsteadySystem(pSession)
 {
 }
-
 
 /**
  * @brief Initialization object for the Dummy class.
@@ -61,7 +59,7 @@ void Dummy::v_InitObject()
 {
     UnsteadySystem::v_InitObject();
 
-    m_ode.DefineOdeRhs(&Dummy::DoOdeRhs,        this);
+    m_ode.DefineOdeRhs(&Dummy::DoOdeRhs, this);
     m_ode.DefineProjection(&Dummy::DoOdeProjection, this);
 
     ASSERTL0(m_session->DefinesCmdLineArgument("cwipi"),
@@ -75,20 +73,17 @@ void Dummy::v_InitObject()
     m_nRecvVars = 6;
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
-                        m_fields[0], "cpl1", "precise", 0, 1.0, filtWidth);
+        m_fields[0], "cpl1", "precise", 0, 1.0, filtWidth);
     m_sendExchange = MemoryManager<CwipiExchange>::AllocateSharedPtr(
-                            m_coupling, "ex1", m_nRecvVars);
+        m_coupling, "ex1", m_nRecvVars);
 }
-
 
 /**
  * @brief Destructor for Dummy class.
  */
 Dummy::~Dummy()
 {
-    
 }
-
 
 /**
  * @brief v_PostIntegrate
@@ -100,34 +95,32 @@ bool Dummy::v_PostIntegrate(int step)
     return UnsteadySystem::v_PostIntegrate(step);
 }
 
-
 /**
  * @brief Compute the right-hand side.
  */
-void Dummy::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                         Array<OneD,       Array<OneD, NekDouble> >&outarray,
-                   const NekDouble time)
+void Dummy::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                     Array<OneD, Array<OneD, NekDouble> > &outarray,
+                     const NekDouble time)
 {
     // do nothing
 }
-
 
 /**
  * @brief Compute the projection and call the method for imposing the
  * boundary conditions in case of discontinuous projection.
  */
-void Dummy::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                Array<OneD,       Array<OneD, NekDouble> >&outarray,
-                          const NekDouble time)
+void Dummy::DoOdeProjection(
+    const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+    Array<OneD, Array<OneD, NekDouble> > &outarray,
+    const NekDouble time)
 {
     // do nothing
 }
 
-
 void Dummy::receiveFields()
 {
     static NekDouble last_update = -1E23;
-    int nq = GetTotPoints();
+    int nq                       = GetTotPoints();
 
     if (m_time >= last_update + m_recvSteps * m_timestep)
     {
@@ -143,7 +136,6 @@ void Dummy::receiveFields()
     }
 }
 
-
 void Dummy::v_Output(void)
 {
     Nektar::SolverUtils::EquationSystem::v_Output();
@@ -151,6 +143,4 @@ void Dummy::v_Output(void)
     m_coupling->FinalizeCoupling();
 }
 
-
-} //end of namespace
-
+} // end of namespace

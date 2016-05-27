@@ -171,9 +171,9 @@ void ProcessWSS::Process(po::variables_map &vm)
     // Loop over boundaries to Write
     for(int b = 0; b < m_f->m_bndRegionsToWrite.size(); ++b)
     {
-        if(BndRegionMap.count(m_f->m_bndRegionsToWrite[i]) == 1)
+        if(BndRegionMap.count(m_f->m_bndRegionsToWrite[b]) == 1)
         {
-            int bnd = BndRegionMap[m_f->m_bndRegionsToWrite[i]];
+            int bnd = BndRegionMap[m_f->m_bndRegionsToWrite[b]];
             // Get expansion list for boundary and for elements containing this bnd
             for(i = 0; i < newfields; i++)
             {

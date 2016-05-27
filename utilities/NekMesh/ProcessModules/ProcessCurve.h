@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessCyl.h
+//  File: ProcessCurve.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: create cylinder curved edges
+//  Description: create curved edges using a custom expression y = f(x)
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_PROCESSPROCESSCYL
-#define UTILITIES_NEKMESH_PROCESSPROCESSCYL
+#ifndef UTILITIES_NEKMESH_PROCESSPROCESSCURVE
+#define UTILITIES_NEKMESH_PROCESSPROCESSCURVE
 
 #include "ProcessCurvedEdges.h"
 
@@ -43,18 +43,18 @@ namespace Nektar
 namespace Utilities
 {
 
-class ProcessCyl : public ProcessCurvedEdges
+class ProcessCurve : public ProcessCurvedEdges
 {
 public:
     /// Creates an instance of this class
     static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
-        return MemoryManager<ProcessCyl>::AllocateSharedPtr(m);
+        return MemoryManager<ProcessCurve>::AllocateSharedPtr(m);
     }
     static ModuleKey className;
 
-    ProcessCyl(MeshSharedPtr m);
-    virtual ~ProcessCyl();
+    ProcessCurve(MeshSharedPtr m);
+    virtual ~ProcessCurve();
 
 protected:
     void v_GenerateEdgeNodes(EdgeSharedPtr edge);

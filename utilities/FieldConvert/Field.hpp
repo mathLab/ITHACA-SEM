@@ -68,7 +68,6 @@ struct Field {
     Field() : m_verbose(false),
               m_declareExpansionAsContField(false),
               m_declareExpansionAsDisContField(false),
-              m_declareAsNewField(false),
               m_writeBndFld(false),
               m_fldToBnd(false),
               m_addNormals(false),
@@ -89,7 +88,6 @@ struct Field {
 
     bool                                    m_declareExpansionAsContField;
     bool                                    m_declareExpansionAsDisContField;
-    bool                                    m_declareAsNewField;
 
     bool                                    m_useFFT;
 
@@ -404,10 +402,12 @@ struct Field {
                                                  string var = "DefaultVar",
                                                  bool NewField = false)
     {
-        if (m_declareAsNewField)
+        if(var.compare("DefaultVar") == 0 && m_declareExpansionAsContField)
         {
-            NewField = true;
-            var = m_session->GetVariables()[0];
+            if (m_session->GetVariables().size())
+            {
+                var = m_session->GetVariables()[0];
+            }
         }
         MultiRegions::ExpListSharedPtr tmp;
         switch (m_graph->GetMeshDimension())
@@ -526,7 +526,7 @@ struct Field {
                             ASSERTL0(tmp2,"Failed to type cast m_exp[0]");
                             tmp = MemoryManager<MultiRegions::
                                 ContField3DHomogeneous1D>::
-                                AllocateSharedPtr(*tmp2);
+                                AllocateSharedPtr(*tmp2, m_graph, var);
                         }
                     }
                     else  if(m_declareExpansionAsDisContField)

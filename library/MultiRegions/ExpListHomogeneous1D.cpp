@@ -761,20 +761,12 @@ namespace Nektar
                 int planes_offset = 0;
                 Array<OneD, NekDouble> coeff_tmp;
                 std::map<int,int>::iterator it;
-                int IDoffset = 0;
-
-                // introduce a 2 plane offset for single mode case so can
-                // be post-processed or used in MultiMode expansion. 
-                if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
-                {
-                    IDoffset  = 2;
-                }
                 
                 // Build map of plane IDs lying on this processor.
                 std::map<int,int> homoZids;
                 for (i = 0; i < m_planes.num_elements(); ++i)
                 {
-                    homoZids[m_transposition->GetPlaneID(i)+IDoffset] = i;
+                    homoZids[m_transposition->GetPlaneID(i)] = i;
                 }
                 
                 if(fielddef->m_numHomogeneousDir)

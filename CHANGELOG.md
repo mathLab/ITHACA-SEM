@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v4.3.2
+------
+**FieldConvert**:
+- Fix appearence of duplicate messages when running in parallel (!626)
+
 v4.3.1
 ------
 **Library**:

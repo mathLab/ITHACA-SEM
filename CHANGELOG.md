@@ -1,6 +1,12 @@
 Changelog
 =========
 
+v4.3.2
+------
+**Library**:
+- HistoryPoints filter now uses closest plane to requested z-coordinate and
+  output is produced in physical space (!621).
+
 v4.3.1
 ------
 **Library**:

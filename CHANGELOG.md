@@ -9,6 +9,9 @@ v4.3.2
 - Fix numbering bug in periodic boundary conditions (!631)
 - Print error message for invalid equation also in release version (!634)
 
+**FieldConvert**:
+- Fix appearence of duplicate messages when running in parallel (!626)
+
 **Packaging**:
 - Fixes for DEB package dependencies (!630)
 

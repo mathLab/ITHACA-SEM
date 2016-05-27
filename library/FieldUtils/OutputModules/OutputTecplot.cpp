@@ -247,7 +247,7 @@ void OutputTecplot::Process(po::variables_map &vm)
                 std::string coordval[] = {"x","y","z"};
                 int rank = m_f->m_comm->GetRank();
 
-                for(int i = 0; i < dim; ++i)
+                for(i = 0; i < dim; ++i)
                 {
                     // calculate rms value 
                     l2err = 0.0;

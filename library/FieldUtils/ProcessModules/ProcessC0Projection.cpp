@@ -68,15 +68,12 @@ ProcessC0Projection::~ProcessC0Projection()
 
 void ProcessC0Projection::Process(po::variables_map &vm)
 {
-    Timer timer;
-
     if (m_f->m_verbose)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
             cout << "ProcessC0Projection: Projecting field into C0 space..."
                  << endl;
-            timer.Start();
         }
     }
 
@@ -193,9 +190,9 @@ void ProcessC0Projection::Process(po::variables_map &vm)
                 factors[StdRegions::eFactorLambda] = -lambda;
 
                 Array<OneD, Array<OneD, NekDouble> > Velocity(dim);
-                for(int i =0; i < dim; ++i)
+                for(int j =0; j < dim; ++j)
                 {
-                    Velocity[i] = Array<OneD, NekDouble> (npoints,0.0);
+                    Velocity[j] = Array<OneD, NekDouble> (npoints,0.0);
                 }
                 
                 C0ProjectExp[processFields[i]]->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
@@ -242,21 +239,6 @@ void ProcessC0Projection::Process(po::variables_map &vm)
     
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;
-
-    if(m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
-            
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "C0 Projection CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-            cpuTime = 0.0;
-        }
-    }
 }
 }
 }

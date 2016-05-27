@@ -66,7 +66,10 @@ void ProcessPrintFldNorms::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessPrintFldNorms: Printing norms" << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessPrintFldNorms: Printing norms..." << endl;
+        }
     }
 
     // Evaluate norms and print

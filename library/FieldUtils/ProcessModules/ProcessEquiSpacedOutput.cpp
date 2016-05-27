@@ -81,10 +81,12 @@ void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
 
 void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 {
-
     if(m_f->m_verbose)
     {
-        cout << "Interpolating fields to equispaced" << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "Interpolating fields to equispaced..." << endl;
+        }
     }
     int nel = m_f->m_exp[0]->GetExpSize();
     if (!nel)

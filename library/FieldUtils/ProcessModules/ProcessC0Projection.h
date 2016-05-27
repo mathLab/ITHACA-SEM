@@ -63,6 +63,11 @@ class ProcessC0Projection : public ProcessModule
         /// Write mesh to output file.
         virtual void Process(po::variables_map &vm);
 
+        virtual std::string GetModuleName()
+        {
+            return "ProcessC0Projection";
+        }
+
     private:
 
 };

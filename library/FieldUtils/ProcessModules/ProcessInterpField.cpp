@@ -76,10 +76,12 @@ ProcessInterpField::~ProcessInterpField()
 
 void ProcessInterpField::Process(po::variables_map &vm)
 {
-
     if(m_f->m_verbose)
     {
-        cout << "Processing interpolation" << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessInterpField: Interpolating field..." << endl;
+        }
     }
 
     m_fromField =  boost::shared_ptr<Field>(new Field());

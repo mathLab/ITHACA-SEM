@@ -1,6 +1,22 @@
 Changelog
 =========
 
+v4.3.2
+------
+**Library**:
+- Add small optimisation for DriverAdaptive (!618)
+- Updated FFTW build to use the compiler used for building Nektar++ (!629)
+- Fix numbering bug in periodic boundary conditions (!631)
+- Print error message for invalid equation also in release version (!634)
+- HistoryPoints filter now uses closest plane to requested z-coordinate and
+  output is produced in physical space (!621).
+
+**FieldConvert**:
+- Fix appearence of duplicate messages when running in parallel (!626)
+
+**Packaging**:
+- Fixes for DEB package dependencies (!630)
+
 v4.3.1
 ------
 **Library**:

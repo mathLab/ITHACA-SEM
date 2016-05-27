@@ -58,6 +58,12 @@ class OutputInfo : public OutputModule
 
         /// Write fld to output file.
         virtual void Process(po::variables_map &vm);
+
+        virtual std::string GetModuleName()
+        {
+            return "OutputInfo";
+        }
+
 };
 
 }

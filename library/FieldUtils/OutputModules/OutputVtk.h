@@ -59,7 +59,14 @@ class OutputVtk : public OutputModule
 
         /// Write fld to output file.
         virtual void Process(po::variables_map &vm);
+
         void WriteEmptyVtkPiece(std::ofstream &outfile);
+
+        virtual std::string GetModuleName()
+        {
+            return "OutputVtk";
+        }
+
 };
 
 }

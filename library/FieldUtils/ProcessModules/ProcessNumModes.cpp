@@ -65,7 +65,10 @@ void ProcessNumModes::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessNumModes: Calculating number of modes..." << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessNumModes: Calculating number of modes..." << endl;
+        }
     }
 
     int i, j, s;

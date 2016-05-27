@@ -143,6 +143,8 @@ namespace FieldUtils
             m_f(p_f), m_requireEquiSpaced(false) {}
         virtual void Process(po::variables_map &vm) = 0;
 
+        virtual std::string GetModuleName() = 0;
+
         FIELD_UTILS_EXPORT void RegisterConfig(string key, string value);
         FIELD_UTILS_EXPORT void PrintConfig();
         FIELD_UTILS_EXPORT void SetDefaults();

@@ -61,6 +61,14 @@ ProcessMapping::~ProcessMapping()
 
 void ProcessMapping::Process(po::variables_map &vm)
 {
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessMapping: Applying mapping to field..." << endl;
+        }
+    }
+
     // Determine dimensions of mesh, solution, etc...
     int npoints = m_f->m_exp[0]->GetNpoints();
     int expdim    = m_f->m_graph->GetMeshDimension();
@@ -160,7 +168,6 @@ void ProcessMapping::Process(po::variables_map &vm)
 
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;
-
 }
 
 GlobalMapping::MappingSharedPtr ProcessMapping::GetMapping(FieldSharedPtr f)

@@ -68,7 +68,10 @@ void ProcessJacobianEnergy::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessJacobianEnergy: Process Jacobian fld" << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessJacobianEnergy: Processing Jacobian..." << endl;
+        }
     }
 
     Array<OneD, NekDouble> phys   = m_f->m_exp[0]->UpdatePhys();

@@ -77,7 +77,6 @@ namespace ErrorUtil
         
     inline static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
     {
-        int rank = 0;
         // The user of outStream is primarily for the unit tests.
         // The unit tests often generate errors on purpose to make sure
         // invalid usage is flagged appropriately.  Printing the error
@@ -91,6 +90,9 @@ namespace ErrorUtil
 #endif
             msg;
 
+        // Default rank is zero. If MPI used and initialised, populate with
+        // the correct rank. Messages are only printed on rank zero.
+        int rank = 0;
 #if defined(NEKTAR_USE_MPI)
         int flag;
         MPI_Initialized(&flag);
@@ -99,7 +101,7 @@ namespace ErrorUtil
             MPI_Comm_rank(MPI_COMM_WORLD,&rank);
         }
 #endif
-        
+
         std::string btMessage("");
 #if defined(NEKTAR_FULLDEBUG)
 #ifndef _WIN32
@@ -118,12 +120,12 @@ namespace ErrorUtil
 #endif
 #endif
 
-        switch(type)
+        switch (type)
         {
         case efatal:
-            if(!rank)
+            if (!rank)
             {
-                if( outStream )
+                if (outStream)
                 {
                     (*outStream) << btMessage;
                     (*outStream) << "Fatal   : " << baseMsg << std::endl;
@@ -135,13 +137,12 @@ namespace ErrorUtil
                               << std::endl;
                 }
             }
-                
             throw NekError(baseMsg);
             break;
         case ewarning:
-            if(!rank)
+            if (!rank)
             {
-                if( outStream )
+                if (outStream)
                 {
                     (*outStream) << btMessage;
                     (*outStream) << "Warning: " << baseMsg << std::endl;
@@ -153,7 +154,6 @@ namespace ErrorUtil
                 }
             }
             break;
-            
         default:
             std::cerr << "Unknown warning type: " << baseMsg << std::endl;
         }

@@ -10,6 +10,8 @@ v4.3.2
 - Print error message for invalid equation also in release version (!634)
 - HistoryPoints filter now uses closest plane to requested z-coordinate and
   output is produced in physical space (!621).
+- Fix bug in iterative solver where only root process would ASSERT when
+  exceeding the maximum number of iterations (!636)
 
 **FieldConvert**:
 - Fix appearence of duplicate messages when running in parallel (!626)

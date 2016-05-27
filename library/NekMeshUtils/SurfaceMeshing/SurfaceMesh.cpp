@@ -75,6 +75,9 @@ void SurfaceMesh::Mesh()
     // linear mesh all surfaces
     for (int i = 1; i <= m_cad->GetNumSurf(); i++)
     {
+        //if(i == 1200 || i == 2206)
+        //    continue;
+
         if (m_mesh->m_verbose)
         {
             LibUtilities::PrintProgressbar(
@@ -83,7 +86,7 @@ void SurfaceMesh::Mesh()
 
         m_facemeshes[i] =
             MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                m_cad->GetSurf(i), m_octree, m_curvemeshes);
+                m_cad->GetSurf(i), m_octree, m_curvemeshes, m_cad->GetNumSurf() > 100);
 
         m_facemeshes[i]->Mesh();
     }

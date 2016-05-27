@@ -139,8 +139,10 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
     Np[2] /= mag;
 
     NekDouble dot = 0.0;
+    int ct = 0;
     while(fabs(dot - 1) > 1e-4)
     {
+        ct++;
         vector<NekDouble> a(N.size());
         NekDouble aSum = 0.0;
         for(int i = 0; i < N.size(); i++)
@@ -180,6 +182,8 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
         Np[2] = 0.5* NpN[2] + (1.0-0.5)*Np[2];
 
         dot = Np[0] * NpN[0] + Np[1] * NpN[1] + Np[2] * NpN[2];
+
+        ASSERTL0(ct < 10000,"failed to find normal");
     }
 
     return Np;
@@ -211,6 +215,7 @@ void BLMesh::Mesh()
 
     NodeSet::iterator it;
     int ct = 0;
+    int failed = 0;
     for(it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end(); it++, ct++)
     {
         //if (m_mesh->m_verbose)
@@ -290,9 +295,6 @@ void BLMesh::Mesh()
 
             if(Visability(g->second,bln.N) < 0.342)
             {
-                cout << (*it)->m_id << "\t" << Visability(g->second,bln.N) << "\t";
-                cout << Visability(g->second,GetNormal(g->second)) << "\t";
-
                 Array<OneD, NekDouble> bestN = GetNormal(g->second);
 
                 NekDouble val = -1.0*numeric_limits<double>::max();
@@ -330,15 +332,12 @@ void BLMesh::Mesh()
                 }
 
                 bln.N = bestN;
-                cout << Visability(g->second,bln.N);
 
-                if(Visability(g->second,bln.N) > 0.342)
+                if(Visability(g->second,bln.N) < 0.0)
                 {
-                    cout << "\timproved" << endl;
-                }
-                else
-                {
-                    cout << endl;
+                    cout << "failed " << (*it)->m_x << " " << (*it)->m_y << " "
+                                      << (*it)->m_z << endl;
+                    failed++;
                 }
 
             }
@@ -365,6 +364,12 @@ void BLMesh::Mesh()
             }
             blData[(*it)] = bln;
         }
+    }
+
+    if(failed > 0)
+    {
+        cout << "some normals are not visible" << endl;
+        abort();
     }
 
     if (m_mesh->m_verbose)
@@ -452,70 +457,6 @@ void BLMesh::Mesh()
         m_psuedoSurface.push_back(T);
 
         priToTri[E] = el;
-    }
-
-    if (m_mesh->m_verbose)
-    {
-        cout << endl;
-    }
-
-    //loop over all prisms, if invalid shrink until it is
-    //being careful to act on nodes which have already been shrunk
-    for(int i = 0; i < m_mesh->m_element[3].size(); i++)
-    {
-        if (m_mesh->m_verbose)
-        {
-            LibUtilities::PrintProgressbar(
-                i, m_mesh->m_element[3].size(), "Invalidity sweeping");
-        }
-
-        ElementSharedPtr el = m_mesh->m_element[3][i];
-        SpatialDomains::GeometrySharedPtr geom =
-                                            el->GetGeom(m_mesh->m_spaceDim);
-        SpatialDomains::GeomFactorsSharedPtr gfac =
-                                            geom->GetGeomFactors();
-
-        map<ElementSharedPtr, ElementSharedPtr>::iterator j = priToTri.find(el);
-        ASSERTL0(j != priToTri.end(), "not found");
-        vector<NodeSharedPtr> ns = j->second->GetVertexList();
-
-        while(!gfac->IsValid())
-        {
-            NekDouble maxbl = max(blData[ns[0]].bl, blData[ns[1]].bl);
-            maxbl = max(maxbl, blData[ns[2]].bl);
-
-            if(maxbl < 1E-6)
-            {
-                cout << "shrunk element too far, invalid mesh" << endl;
-                cout << ns[0]->m_id << endl;
-                cout << ns[1]->m_id << endl;
-                cout << ns[2]->m_id << endl;
-                break;
-            }
-
-            int ct = 0;
-            for(int j = 0; j < 3; j++)
-            {
-                map<NodeSharedPtr, blInfo>::iterator bli = blData.find(ns[j]);
-                ASSERTL0(bli != blData.end(), "not found");
-                if(bli->second.bl <= maxbl * 0.75)
-                {
-                    ct++;
-                    continue;
-                }
-                ASSERTL0(ct < 3,"skipped all 3");
-
-                bli->second.bl *= 0.75;
-
-                bli->second.pNode->m_x = ns[j]->m_x + bli->second.N[0] * bli->second.bl;
-                bli->second.pNode->m_y = ns[j]->m_y + bli->second.N[1] * bli->second.bl;
-                bli->second.pNode->m_z = ns[j]->m_z + bli->second.N[2] * bli->second.bl;
-
-            }
-
-            geom = el->GetGeom(m_mesh->m_spaceDim);
-            gfac = geom->GetGeomFactors();
-        }
     }
 
     if (m_mesh->m_verbose)
@@ -675,6 +616,70 @@ void BLMesh::Mesh()
         cout << endl;
     }
 
+    //loop over all prisms, if invalid shrink until it is
+    //being careful to act on nodes which have already been shrunk
+    for(int i = 0; i < m_mesh->m_element[3].size(); i++)
+    {
+        if (m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(
+                i, m_mesh->m_element[3].size(), "Invalidity sweeping");
+        }
+
+        ElementSharedPtr el = m_mesh->m_element[3][i];
+        SpatialDomains::GeometrySharedPtr geom =
+                                            el->GetGeom(m_mesh->m_spaceDim);
+        SpatialDomains::GeomFactorsSharedPtr gfac =
+                                            geom->GetGeomFactors();
+
+        map<ElementSharedPtr, ElementSharedPtr>::iterator j = priToTri.find(el);
+        ASSERTL0(j != priToTri.end(), "not found");
+        vector<NodeSharedPtr> ns = j->second->GetVertexList();
+
+        while(!gfac->IsValid())
+        {
+            NekDouble maxbl = max(blData[ns[0]].bl, blData[ns[1]].bl);
+            maxbl = max(maxbl, blData[ns[2]].bl);
+
+            if(maxbl < 1E-6)
+            {
+                cout << "shrunk element too far, invalid mesh" << endl;
+                cout << ns[0]->m_id << endl;
+                cout << ns[1]->m_id << endl;
+                cout << ns[2]->m_id << endl;
+                break;
+            }
+
+            int ct = 0;
+            for(int j = 0; j < 3; j++)
+            {
+                map<NodeSharedPtr, blInfo>::iterator bli = blData.find(ns[j]);
+                ASSERTL0(bli != blData.end(), "not found");
+                if(bli->second.bl <= maxbl * 0.75)
+                {
+                    ct++;
+                    continue;
+                }
+                ASSERTL0(ct < 3,"skipped all 3");
+
+                bli->second.bl *= 0.75;
+
+                bli->second.pNode->m_x = ns[j]->m_x + bli->second.N[0] * bli->second.bl;
+                bli->second.pNode->m_y = ns[j]->m_y + bli->second.N[1] * bli->second.bl;
+                bli->second.pNode->m_z = ns[j]->m_z + bli->second.N[2] * bli->second.bl;
+
+            }
+
+            geom = el->GetGeom(m_mesh->m_spaceDim);
+            gfac = geom->GetGeomFactors();
+        }
+    }
+
+    if (m_mesh->m_verbose)
+    {
+        cout << endl;
+    }
+
     //smoothing
     //need to build a list of nodes to neigbours
     map<ElementSharedPtr, ElementSharedPtr>::iterator eit;
@@ -714,18 +719,6 @@ void BLMesh::Mesh()
         }
     }
 
-/*    vector<ElementSharedPtr> els = m_mesh->m_element[3];
-    m_mesh->m_element[3].clear();
-
-    for(int i = 0; i < els.size(); i++)
-    {
-        ElementSharedPtr tri = priToTri[els[i]];
-        if(tri->CADSurfId == 1 || tri->CADSurfId == 10)
-        {
-            m_mesh->m_element[3].push_back(els[i]);
-        }
-    }
-*/
     m_symSurfs = vector<int>(symSurfs.begin(), symSurfs.end());
     //compile a map of the nodes needed for systemetry surfs
     for(int i = 0; i < m_symSurfs.size(); i++)

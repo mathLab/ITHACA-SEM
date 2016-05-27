@@ -62,9 +62,10 @@ public:
              MeshSharedPtr                            m,
              CADSurfSharedPtr                         cad,
              OctreeSharedPtr                          oct,
-             const std::map<int, CurveMeshSharedPtr> &cmeshes)
+             const std::map<int, CurveMeshSharedPtr> &cmeshes,
+             bool ov)
         : m_mesh(m), m_cadsurf(cad), m_octree(oct), m_curvemeshes(cmeshes),
-          m_id(id)
+          m_id(id), over(ov)
 
     {
         m_edgeloops = m_cadsurf->GetEdges();
@@ -152,6 +153,8 @@ private:
     EdgeSet m_localEdges;
     /// local list of elements
     std::vector<ElementSharedPtr> m_localElements;
+
+    bool over;
 };
 
 typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;

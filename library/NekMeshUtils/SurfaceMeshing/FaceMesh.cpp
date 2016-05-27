@@ -197,7 +197,7 @@ void FaceMesh::QuadRemesh(map<NodeSharedPtr, NodeSharedPtr> nmap)
             ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
 
             vector<int> tags;
-            tags.push_back(m_id + 200);
+            tags.push_back(m_id + (over ? 2000 : 200));
             ElementSharedPtr E = GetElementFactory().CreateInstance(
                                     LibUtilities::eQuadrilateral, conf, ns, tags);
             m_localElements.push_back(E);
@@ -224,7 +224,7 @@ void FaceMesh::QuadRemesh(map<NodeSharedPtr, NodeSharedPtr> nmap)
             ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
 
             vector<int> tags;
-            tags.push_back(m_id + 200);
+            tags.push_back(m_id + (over ? 2000 : 200));
             ElementSharedPtr E = GetElementFactory().CreateInstance(
                                     LibUtilities::eQuadrilateral, conf, ns, tags);;
             m_localElements.push_back(E);
@@ -429,11 +429,12 @@ void FaceMesh::DiagonalSwap()
     NodeSet::iterator nit;
     for (nit = m_localNodes.begin(); nit != m_localNodes.end(); nit++)
     {
-        if ((*nit)->GetNumCadCurve() == 0)
-        {
+        //this routine is broken and needs looking at
+        //if ((*nit)->GetNumCadCurve() == 0)
+        //{
             // node is interior
             idealConnec[(*nit)->m_id] = 6;
-        }
+        /*}
         else
         {
             // need to identify the two other nodes on the boundary to find
@@ -456,7 +457,7 @@ void FaceMesh::DiagonalSwap()
 
             idealConnec[(*nit)->m_id] =
                 ceil((*nit)->Angle(ns[0], ns[1]) / 3.142 * 3) + 1;
-        }
+        }*/
     }
     for (nit = m_localNodes.begin(); nit != m_localNodes.end(); nit++)
     {
@@ -806,7 +807,7 @@ void FaceMesh::BuildLocalMesh()
         ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
 
         vector<int> tags;
-        tags.push_back(m_id + 100);
+        tags.push_back(m_id + (over ? 1000 : 100));
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eTriangle, conf, m_connec[i], tags);
         E->CADSurfId = m_id;
@@ -1089,8 +1090,8 @@ void FaceMesh::OrientateCurves()
         N[1] = (n2info[0] - n1info[0]) / mag;
 
         Array<OneD, NekDouble> P(2);
-        P[0] = (n1info[0] + n2info[0]) / 2.0 + 1e-6 * N[0];
-        P[1] = (n1info[1] + n2info[1]) / 2.0 + 1e-6 * N[1];
+        P[0] = (n1info[0] + n2info[0]) / 2.0 + 1e-8 * N[0];
+        P[1] = (n1info[1] + n2info[1]) / 2.0 + 1e-8 * N[1];
 
         // now test to see if p is inside or outside the shape
         // vector to the right

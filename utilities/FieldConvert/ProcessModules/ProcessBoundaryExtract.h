@@ -59,6 +59,12 @@ class ProcessBoundaryExtract : public ProcessModule
         virtual ~ProcessBoundaryExtract();
 
         virtual void Process(po::variables_map &vm);
+
+        virtual std::string GetModuleName()
+        {
+            return "ProcessBoundaryExtract";
+        }
+
 };
 
 }

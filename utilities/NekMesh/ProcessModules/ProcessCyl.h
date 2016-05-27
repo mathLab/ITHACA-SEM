@@ -29,21 +29,21 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Refine boundary layer of elements.
+//  Description: create cylinder curved edges
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_PROCESSCHECK
-#define UTILITIES_NEKMESH_PROCESSCHECK
+#ifndef UTILITIES_NEKMESH_PROCESSPROCESSCYL
+#define UTILITIES_NEKMESH_PROCESSPROCESSCYL
 
-#include "../Module.h"
+#include "ProcessCurvedEdges.h"
 
 namespace Nektar
 {
 namespace Utilities
 {
 
-class ProcessCyl : public ProcessModule
+class ProcessCyl : public ProcessCurvedEdges
 {
 public:
     /// Creates an instance of this class
@@ -56,9 +56,8 @@ public:
     ProcessCyl(MeshSharedPtr m);
     virtual ~ProcessCyl();
 
-    /// Write mesh to output file.
-    virtual void Process();
-    void GenerateEdgeNodes(EdgeSharedPtr edge);
+protected:
+    void v_GenerateEdgeNodes(EdgeSharedPtr edge);
 };
 }
 }

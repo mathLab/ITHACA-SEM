@@ -85,7 +85,11 @@ void ProcessConcatenateFld::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessConcatenateFld: Concatenating field file" << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessConcatenateFld: Concatenating field file..."
+                 << endl;
+        }
     }
 
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef

@@ -41,6 +41,7 @@ using namespace std;
 #include <LibUtilities/BasicUtils/Timer.h>
 
 #include "InputXml.h"
+using namespace Nektar;
 
 static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
                 "NumberOfPoints","n","Define number of points to dump output");
@@ -87,7 +88,7 @@ InputXml::~InputXml()
  */
 void InputXml::Process(po::variables_map &vm)
 {
-    Timer timer, timerpart;
+    Timer timerpart;
 
     //check for multiple calls to inputXml due to split xml
     //files. If so just return
@@ -104,7 +105,6 @@ void InputXml::Process(po::variables_map &vm)
         if(m_f->m_comm->GetRank() == 0)
         {
             cout << "Processing input xml file" << endl;
-            timer.Start();
             timerpart.Start();
         }
     }
@@ -397,21 +397,6 @@ void InputXml::Process(po::variables_map &vm)
         }
     }
 
-    if(m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timerpart.Stop();
-            NekDouble cpuTime = timerpart.TimePerTest(1);
-            
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "\t InputXml setexpansion CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-            timerpart.Start();
-        }
-    }
-
     // Override number of planes with value from cmd line
     if(NumHomogeneousDir == 1 && vm.count("output-points-hom-z"))
     {
@@ -433,16 +418,6 @@ void InputXml::Process(po::variables_map &vm)
             ss1 << cpuTime << "s";
             cout << "\t InputXml set first exp CPU Time: " << setw(8) << left
                  << ss1.str() << endl;
-
-            
-            timer.Stop();
-            cpuTime = timer.TimePerTest(1);
-            
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "InputXml  CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-
         }
     }
 }

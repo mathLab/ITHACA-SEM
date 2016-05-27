@@ -52,6 +52,7 @@
 #include <boost/graph/properties.hpp>
 #include <boost/graph/bandwidth.hpp>
 
+using namespace std;
 
 namespace Nektar
 {

@@ -38,6 +38,8 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <SolverUtils/Filters/FilterModalEnergy.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils

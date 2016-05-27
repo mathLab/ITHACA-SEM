@@ -76,23 +76,23 @@ namespace Nektar
 
         protected:
             /// PETSc matrix object.
-            Mat          m_matrix;
+            Mat               m_matrix;
             /// PETSc vector objects used for local storage.
-            Vec          m_x, m_b, m_locVec;
+            Vec               m_x, m_b, m_locVec;
             /// KSP object that represents solver system.
-            KSP          m_ksp;
+            KSP               m_ksp;
             /// PCShell for preconditioner.
-            PC           m_pc;
+            PC                m_pc;
             /// Enumerator to select matrix multiplication type.
-            PETScMatMult m_matMult;
+            PETScMatMult      m_matMult;
             /// Reordering that takes universal IDs to a unique row in the PETSc
             /// matrix. @see GlobalLinSysPETSc::CalculateReordering
-            vector<int>  m_reorderedMap;
+            std::vector<int>  m_reorderedMap;
             /// PETSc scatter context that takes us between Nektar++ global
             /// ordering and PETSc vector ordering.
-            VecScatter   m_ctx;
+            VecScatter        m_ctx;
             /// Number of unique degrees of freedom on this process.
-            int          m_nLocal;
+            int               m_nLocal;
 
             PreconditionerSharedPtr m_precon;
 

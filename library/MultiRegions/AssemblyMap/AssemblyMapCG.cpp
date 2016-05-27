@@ -46,6 +46,8 @@
 #include <boost/graph/properties.hpp>
 #include <boost/graph/bandwidth.hpp>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -496,13 +498,14 @@ namespace Nektar
                     // we find it, set as Dirichlet with the vertex id gId.
                     if (pIt->first == meshVertId)
                     {
-                        graph[0][meshVertId] = gId < 0 ? graphVertId++ : gId;
+                        gId = gId < 0 ? graphVertId++ : gId;
+                        graph[0][meshVertId] = gId;
 
                         for (i = 0; i < pIt->second.size(); ++i)
                         {
                             if (pIt->second[i].isLocal)
                             {
-                                graph[0][pIt->second[i].id] = gId;
+                                graph[0][pIt->second[i].id] = graph[0][meshVertId];
                             }
                         }
                     }
@@ -520,13 +523,14 @@ namespace Nektar
 
                         if (found)
                         {
-                            graph[0][pIt->first] = gId < 0 ? graphVertId++ : gId;
+                            gId = gId < 0 ? graphVertId++ : gId;
+                            graph[0][pIt->first] = gId;
 
                             for (i = 0; i < pIt->second.size(); ++i)
                             {
                                 if (pIt->second[i].isLocal)
                                 {
-                                    graph[0][pIt->second[i].id] = gId;
+                                    graph[0][pIt->second[i].id] = graph[0][pIt->first];
                                 }
                             }
                         }
@@ -690,6 +694,7 @@ namespace Nektar
 
                 if (i == pIt->second.size())
                 {
+                    boost::add_vertex(boostGraphObj);
                     tempGraph[0][meshVertId] = tempGraphVertId++;
                     m_numNonDirVertexModes++;
                 }
@@ -805,6 +810,7 @@ namespace Nektar
 
                 if (i == pIt->second.size())
                 {
+                    boost::add_vertex(boostGraphObj);
                     tempGraph[1][meshEdgeId] = tempGraphVertId++;
                     m_numNonDirEdgeModes += EdgeSize[meshEdgeId];
                     m_numNonDirEdges++;
@@ -855,6 +861,7 @@ namespace Nektar
                     meshFaceId = pIt->first;
                     ASSERTL0(graph[2].count(meshFaceId) == 0,
                              "This periodic boundary edge has been specified before");
+                    boost::add_vertex(boostGraphObj);
                     tempGraph[2][meshFaceId]  = tempGraphVertId++;
                     nFaceIntCoeffs  = FaceSize[meshFaceId];
                     m_numNonDirFaceModes+=nFaceIntCoeffs;
@@ -867,6 +874,7 @@ namespace Nektar
                     ASSERTL0(graph[2].count(pIt->second[0].id) == 0,
                              "This periodic boundary face has been specified before");
 
+                    boost::add_vertex(boostGraphObj);
                     tempGraph[2][pIt->first]        = tempGraphVertId;
                     tempGraph[2][pIt->second[0].id] = tempGraphVertId++;
                     nFaceIntCoeffs  = FaceSize[pIt->first];
@@ -1050,7 +1058,7 @@ namespace Nektar
             }
 
             // Container to store vertices of the graph which correspond to
-            // degrees of freedom along the boundary.
+            // degrees of freedom along the boundary and periodic BCs.
             set<int> partVerts;
 
             if (m_solnType == eIterativeMultiLevelStaticCond ||
@@ -1163,6 +1171,29 @@ namespace Nektar
                         {
                             partVerts.insert(tempGraph[2][procFaces[i]-1]);
                         }
+                    }
+                }
+
+                // Now fill with all vertices on periodic BCs
+                for (pIt = periodicVerts.begin(); pIt != periodicVerts.end(); ++pIt)
+                {
+                    if (graph[0].count(pIt->first) == 0)
+                    {
+                        partVerts.insert(tempGraph[0][pIt->first]);
+                    }
+                }
+                for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
+                {
+                    if (graph[1].count(pIt->first) == 0)
+                    {
+                        partVerts.insert(tempGraph[1][pIt->first]);
+                    }
+                }
+                for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
+                {
+                    if (graph[2].count(pIt->first) == 0)
+                    {
+                        partVerts.insert(tempGraph[2][pIt->first]);
                     }
                 }
             }
@@ -2468,7 +2499,7 @@ namespace Nektar
             Array<OneD, const NekDouble> local;
             if(global.data() == loc.data())
             {
-                local = Array<OneD, NekDouble>(local.num_elements(),local.data());
+                local = Array<OneD, NekDouble>(loc.num_elements(),loc.data());
             }
             else
             {

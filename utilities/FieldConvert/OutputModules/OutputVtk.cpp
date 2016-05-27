@@ -304,10 +304,8 @@ void OutputVtk::Process(po::variables_map &vm)
         outfile << "    </Piece>" << endl;
    }
 
-
    m_f->m_exp[0]->WriteVtkFooter(outfile);
    cout << "Written file: " << filename << endl;
-   
 
     // output parallel outline info if necessary
     if(m_f->m_comm->GetRank() == 0)

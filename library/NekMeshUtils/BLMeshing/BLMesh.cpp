@@ -392,7 +392,7 @@ void BLMesh::Mesh()
         if (m_mesh->m_verbose)
         {
             LibUtilities::PrintProgressbar(
-                i, m_mesh->m_element[2].size(), "Building BL elements");
+                i, m_mesh->m_element[2].size(), "Building BL elements\t");
         }
 
         ElementSharedPtr el = m_mesh->m_element[2][i];
@@ -491,7 +491,7 @@ void BLMesh::Mesh()
         if (m_mesh->m_verbose)
         {
             LibUtilities::PrintProgressbar(
-                ct, blData.size(), "Proximity sweeping");
+                ct, blData.size(), "Proximity sweeping\t");
         }
 
         queryPt[0] = bit->first->m_x;
@@ -519,7 +519,7 @@ void BLMesh::Mesh()
                 break;
             }
         }
-        while(sqrt(dists[sample-1]) < bit->second.bl * 3.0);
+        while(sqrt(dists[sample-1]) < bit->second.bl * 2.5);
 
         //now need to build a set of triagnles to test against
         //use set to make sure its unique
@@ -534,12 +534,12 @@ void BLMesh::Mesh()
                       (dataPts[nnIdx[i]][2] - bit->first->m_z)*(dataPts[nnIdx[i]][2] - bit->first->m_z));
             t /= sqrt(bit->second.N[0]*bit->second.N[0] + bit->second.N[1]*bit->second.N[1] +
                       bit->second.N[2]*bit->second.N[2]);
-            if(t < 0.3)
+            if(t < 0.5)
             {
                 continue;
             }
 
-            if(dists[i] < bit->second.bl * 3.0)
+            if(dists[i] < bit->second.bl * 2.5)
             {
                 map<int, vector<ElementSharedPtr> >::iterator s = nIdxToTri.find(nnIdx[i]);
                 ASSERTL0(s != nIdxToTri.end(),"not found");
@@ -551,7 +551,37 @@ void BLMesh::Mesh()
             }
         }
 
-        
+        //make it so that it checks a number of normals
+        //the averaged Visability and others from the triangles
+
+        vector<Array<OneD, NekDouble> > norms;
+
+        norms.push_back(bit->second.N);
+
+        map<int, vector<ElementSharedPtr> >::iterator g = nIdxToTri.find(bit->first->m_id);
+        for(int i = 0; i < g->second.size(); i++)
+        {
+            vector<NodeSharedPtr> ns = g->second[i]->GetVertexList();
+            if(m_cad->GetSurf(g->second[i]->CADSurfId)->IsReversedNormal())
+            {
+                swap(ns[0],ns[1]);
+            }
+
+            Array<OneD, NekDouble> tmp(3,0.0);
+            tmp[0] = (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
+                     (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y);
+            tmp[1] = (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x) -
+                     (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z);
+            tmp[2] = (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
+                     (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x);
+
+            NekDouble mt = tmp[0] * tmp[0] + tmp[1] * tmp[1] + tmp[2] * tmp[2];
+            mt = sqrt(mt);
+            tmp[0] /= mt;
+            tmp[1] /= mt;
+            tmp[2] /= mt;
+            norms.push_back(tmp);
+        }
 
         NekDouble mind = numeric_limits<double>::max();
         set<ElementSharedPtr>::iterator s;
@@ -561,50 +591,53 @@ void BLMesh::Mesh()
             ElementSharedPtr el = (*s);
             vector<NodeSharedPtr> ns = el->GetVertexList();
 
-            DNekMat A(3,3,0.0);
-            DNekMat B(3,1,0.0);
-            A(0,0) = bit->second.N[0] * -1.0;
-            A(1,0) = bit->second.N[1] * -1.0;
-            A(2,0) = bit->second.N[2] * -1.0;
-            A(0,1) = ns[1]->m_x - ns[0]->m_x;
-            A(1,1) = ns[1]->m_y - ns[0]->m_y;
-            A(2,1) = ns[1]->m_z - ns[0]->m_z;
-            A(0,2) = ns[2]->m_x - ns[0]->m_x;
-            A(1,2) = ns[2]->m_y - ns[0]->m_y;
-            A(2,2) = ns[2]->m_z - ns[0]->m_z;
-
-            NekDouble det = A(0,0) * (A(1,1)*A(2,2) - A(2,1)*A(1,2))
-                           -A(0,1) * (A(1,0)*A(2,2) - A(2,0)*A(1,2))
-                           +A(0,2) * (A(1,0)*A(2,1) - A(2,0)*A(1,1));
-            if(fabs(det) < 1e-12)
+            for(int i = 0 ; i < norms.size(); i++)
             {
-                //no intersecton
-                continue;
-            }
-            B(0,0) = bit->first->m_x - ns[0]->m_x;
-            B(1,0) = bit->first->m_y - ns[0]->m_y;
-            B(2,0) = bit->first->m_z - ns[0]->m_z;
+                DNekMat A(3,3,0.0);
+                DNekMat B(3,1,0.0);
+                A(0,0) = norms[i][0] * -1.0;
+                A(1,0) = norms[i][1] * -1.0;
+                A(2,0) = norms[i][2] * -1.0;
+                A(0,1) = ns[1]->m_x - ns[0]->m_x;
+                A(1,1) = ns[1]->m_y - ns[0]->m_y;
+                A(2,1) = ns[1]->m_z - ns[0]->m_z;
+                A(0,2) = ns[2]->m_x - ns[0]->m_x;
+                A(1,2) = ns[2]->m_y - ns[0]->m_y;
+                A(2,2) = ns[2]->m_z - ns[0]->m_z;
 
-            A.Invert();
+                NekDouble det = A(0,0) * (A(1,1)*A(2,2) - A(2,1)*A(1,2))
+                               -A(0,1) * (A(1,0)*A(2,2) - A(2,0)*A(1,2))
+                               +A(0,2) * (A(1,0)*A(2,1) - A(2,0)*A(1,1));
+                if(fabs(det) < 1e-12)
+                {
+                    //no intersecton
+                    continue;
+                }
+                B(0,0) = bit->first->m_x - ns[0]->m_x;
+                B(1,0) = bit->first->m_y - ns[0]->m_y;
+                B(2,0) = bit->first->m_z - ns[0]->m_z;
 
-            DNekMat X = A * B; //t u v
+                A.Invert();
 
-            if(X(0,0) < 1e-6 || X(0,0) > bit->second.bl * 3.0)
-            {
-                //no plane intersecton possible
-                continue;
-            }
-            //check triangle intersecton
-            if(X(1,0) >= 0.0 && X(2,0) >= 0.0 && X(1,0) + X(2,0) <= 1.0)
-            {
-                //hit
-                NekDouble tmp = X(0,0);
-                mind = min(mind, tmp);
+                DNekMat X = A * B; //t u v
+
+                if(X(0,0) < 1e-6 || X(0,0) > bit->second.bl * 2.5)
+                {
+                    //no plane intersecton possible
+                    continue;
+                }
+                //check triangle intersecton
+                if(X(1,0) >= 0.0 && X(2,0) >= 0.0 && X(1,0) + X(2,0) <= 1.0)
+                {
+                    //hit
+                    NekDouble tmp = X(0,0);
+                    mind = min(mind, tmp);
+                }
             }
 
         }
 
-        if(mind < bit->second.bl * 3.0 && mind * 0.25 < bit->second.bl)
+        if(mind < bit->second.bl * 2.5 && mind * 0.25 < bit->second.bl)
         {
             bit->second.bl = mind * 0.25;
             bit->second.pNode->m_x = bit->first->m_x + bit->second.N[0] * bit->second.bl;
@@ -625,7 +658,7 @@ void BLMesh::Mesh()
         if (m_mesh->m_verbose)
         {
             LibUtilities::PrintProgressbar(
-                i, m_mesh->m_element[3].size(), "Invalidity sweeping");
+                i, m_mesh->m_element[3].size(), "Invalidity sweeping\t");
         }
 
         ElementSharedPtr el = m_mesh->m_element[3][i];
@@ -855,6 +888,87 @@ void BLMesh::Mesh()
 
     exit(-1);*/
 
+    for(int i = 0; i < m_mesh->m_element[3].size(); i++)
+    {
+        if (m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(
+                i, m_mesh->m_element[3].size(), "Invalidity sweeping\t");
+        }
+
+        ElementSharedPtr el = m_mesh->m_element[3][i];
+        SpatialDomains::GeometrySharedPtr geom =
+                                            el->GetGeom(m_mesh->m_spaceDim);
+        SpatialDomains::GeomFactorsSharedPtr gfac =
+                                            geom->GetGeomFactors();
+
+        map<ElementSharedPtr, ElementSharedPtr>::iterator j = priToTri.find(el);
+        ASSERTL0(j != priToTri.end(), "not found");
+        vector<NodeSharedPtr> ns = j->second->GetVertexList();
+
+        while(!gfac->IsValid())
+        {
+            NekDouble maxbl = max(blData[ns[0]].bl, blData[ns[1]].bl);
+            maxbl = max(maxbl, blData[ns[2]].bl);
+
+            if(maxbl < 1E-6)
+            {
+                cout << "shrunk element too far, invalid mesh" << endl;
+                cout << ns[0]->m_id << endl;
+                cout << ns[1]->m_id << endl;
+                cout << ns[2]->m_id << endl;
+                break;
+            }
+
+            int ct = 0;
+            for(int j = 0; j < 3; j++)
+            {
+                map<NodeSharedPtr, blInfo>::iterator bli = blData.find(ns[j]);
+                ASSERTL0(bli != blData.end(), "not found");
+                if(bli->second.bl <= maxbl * 0.75)
+                {
+                    ct++;
+                    continue;
+                }
+                ASSERTL0(ct < 3,"skipped all 3");
+
+                bli->second.bl *= 0.75;
+
+                bli->second.pNode->m_x = ns[j]->m_x + bli->second.N[0] * bli->second.bl;
+                bli->second.pNode->m_y = ns[j]->m_y + bli->second.N[1] * bli->second.bl;
+                bli->second.pNode->m_z = ns[j]->m_z + bli->second.N[2] * bli->second.bl;
+
+            }
+
+            geom = el->GetGeom(m_mesh->m_spaceDim);
+            gfac = geom->GetGeomFactors();
+        }
+    }
+
+    repeat = true;
+    while(repeat)
+    {
+        repeat = false;
+        for(bit = blData.begin(); bit != blData.end(); bit++)
+        {
+            map<NodeSharedPtr, NodeSet>::iterator mit = nodeToNear.find(bit->first);
+            ASSERTL0(mit != nodeToNear.end(),"not found");
+            NodeSet::iterator nit;
+            for(nit = mit->second.begin(); nit != mit->second.end(); nit++)
+            {
+                map<NodeSharedPtr, blInfo>::iterator bli = blData.find((*nit));
+                ASSERTL0(bli != blData.end(),"not found");
+                if(bli->second.bl < 0.75 * bit->second.bl)
+                {
+                    bit->second.bl = bli->second.bl * 1.3;
+                    bit->second.pNode->m_x = bit->first->m_x + bit->second.N[0] * bit->second.bl;
+                    bit->second.pNode->m_y = bit->first->m_y + bit->second.N[1] * bit->second.bl;
+                    bit->second.pNode->m_z = bit->first->m_z + bit->second.N[2] * bit->second.bl;
+                    repeat = true;
+                }
+            }
+        }
+    }
 
     m_symSurfs = vector<int>(symSurfs.begin(), symSurfs.end());
     //compile a map of the nodes needed for systemetry surfs

@@ -519,7 +519,7 @@ void BLMesh::Mesh()
                 break;
             }
         }
-        while(sqrt(dists[sample-1]) < bit->second.bl * 2.5);
+        while(sqrt(dists[sample-1]) < bit->second.bl * 3.0);
 
         //now need to build a set of triagnles to test against
         //use set to make sure its unique
@@ -534,12 +534,12 @@ void BLMesh::Mesh()
                       (dataPts[nnIdx[i]][2] - bit->first->m_z)*(dataPts[nnIdx[i]][2] - bit->first->m_z));
             t /= sqrt(bit->second.N[0]*bit->second.N[0] + bit->second.N[1]*bit->second.N[1] +
                       bit->second.N[2]*bit->second.N[2]);
-            if(t < 0.7)
+            if(t < 0.3)
             {
                 continue;
             }
 
-            if(dists[i] < bit->second.bl * 2.5)
+            if(dists[i] < bit->second.bl * 3.0)
             {
                 map<int, vector<ElementSharedPtr> >::iterator s = nIdxToTri.find(nnIdx[i]);
                 ASSERTL0(s != nIdxToTri.end(),"not found");
@@ -550,6 +550,8 @@ void BLMesh::Mesh()
                 }
             }
         }
+
+        
 
         NekDouble mind = numeric_limits<double>::max();
         set<ElementSharedPtr>::iterator s;
@@ -587,7 +589,7 @@ void BLMesh::Mesh()
 
             DNekMat X = A * B; //t u v
 
-            if(X(0,0) < 1e-6 || X(0,0) > bit->second.bl * 2.5)
+            if(X(0,0) < 1e-6 || X(0,0) > bit->second.bl * 3.0)
             {
                 //no plane intersecton possible
                 continue;
@@ -602,7 +604,7 @@ void BLMesh::Mesh()
 
         }
 
-        if(mind < bit->second.bl * 2.5 && mind * 0.25 < bit->second.bl)
+        if(mind < bit->second.bl * 3.0 && mind * 0.25 < bit->second.bl)
         {
             bit->second.bl = mind * 0.25;
             bit->second.pNode->m_x = bit->first->m_x + bit->second.N[0] * bit->second.bl;
@@ -718,6 +720,141 @@ void BLMesh::Mesh()
             }
         }
     }
+
+    /*for(int i = 0; i < m_psuedoSurface.size(); i++)
+    {
+        if (m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(
+                i, m_psuedoSurface.size(), "Intersection sweeping");
+        }
+
+        for(int j = i+1; j < m_psuedoSurface.size(); j++)
+        {
+            vector<NodeSharedPtr> V1 = m_psuedoSurface[i]->GetVertexList();
+            vector<NodeSharedPtr> V2 = m_psuedoSurface[j]->GetVertexList();
+
+            Array<OneD, NekDouble> N1(3,0.0);
+            N1[0] = (V1[1]->m_y - V1[0]->m_y) * (V1[2]->m_z - V1[0]->m_z) -
+                    (V1[1]->m_z - V1[0]->m_z) * (V1[2]->m_y - V1[0]->m_y);
+            N1[1] = (V1[1]->m_z - V1[0]->m_z) * (V1[2]->m_x - V1[0]->m_x) -
+                    (V1[1]->m_x - V1[0]->m_x) * (V1[2]->m_z - V1[0]->m_z);
+            N1[2] = (V1[1]->m_x - V1[0]->m_x) * (V1[2]->m_y - V1[0]->m_y) -
+                    (V1[1]->m_y - V1[0]->m_y) * (V1[2]->m_x - V1[0]->m_x);
+
+            Array<OneD, NekDouble> N2(3,0.0);
+            N2[0] = (V2[1]->m_y - V2[0]->m_y) * (V2[2]->m_z - V2[0]->m_z) -
+                    (V2[1]->m_z - V2[0]->m_z) * (V2[2]->m_y - V2[0]->m_y);
+            N2[1] = (V2[1]->m_z - V2[0]->m_z) * (V2[2]->m_x - V2[0]->m_x) -
+                    (V2[1]->m_x - V2[0]->m_x) * (V2[2]->m_z - V2[0]->m_z);
+            N2[2] = (V2[1]->m_x - V2[0]->m_x) * (V2[2]->m_y - V2[0]->m_y) -
+                    (V2[1]->m_y - V2[0]->m_y) * (V2[2]->m_x - V2[0]->m_x);
+
+            NekDouble d2 = N2[0] * V2[0]->m_x + N2[1] * V2[0]->m_y + N2[2] * V2[0]->m_z;
+            NekDouble d1 = N1[0] * V1[0]->m_x + N1[1] * V1[0]->m_y + N1[2] * V1[0]->m_z;
+
+            NekDouble dV10 = N2[0] * V1[0]->m_x + N2[1] * V1[0]->m_y + N2[2] * V1[0]->m_z + d2;
+            NekDouble dV11 = N2[0] * V1[1]->m_x + N2[1] * V1[1]->m_y + N2[2] * V1[1]->m_z + d2;
+            NekDouble dV12 = N2[0] * V1[2]->m_x + N2[1] * V1[2]->m_y + N2[2] * V1[2]->m_z + d2;
+
+            NekDouble dV20 = N1[0] * V2[0]->m_x + N1[1] * V2[0]->m_y + N1[2] * V2[0]->m_z + d1;
+            NekDouble dV21 = N1[0] * V2[1]->m_x + N1[1] * V2[1]->m_y + N1[2] * V2[1]->m_z + d1;
+            NekDouble dV22 = N1[0] * V2[2]->m_x + N1[1] * V2[2]->m_y + N1[2] * V2[2]->m_z + d1;
+
+            if(dV10 < 0.0 && dV11 < 0.0 && dV11 < 0.0 ||
+               dV10 >= 0.0 && dV11 >= 0.0 && dV11 >= 0.0)
+            {
+                continue;
+            }
+            if(dV20 < 0.0 && dV21 < 0.0 && dV21 < 0.0 ||
+               dV20 >= 0.0 && dV21 >= 0.0 && dV21 >= 0.0)
+            {
+                continue;
+            }
+
+            Array<OneD, NekDouble> D(3,0.0);
+            D[0] = N1[1] * N2[2] -
+                   N1[2] * N2[1];
+            D[1] = N1[2] * N2[0] -
+                   N1[0] * N2[2];
+            D[2] = N1[0] * N2[1] -
+                   N1[1] * N2[0];
+
+            NekDouble pV10 = D[0] * V1[0]->m_x + D[1] * V1[0]->m_y + D[2] * V1[0]->m_z;
+            NekDouble pV11 = D[0] * V1[1]->m_x + D[1] * V1[1]->m_y + D[2] * V1[1]->m_z;
+            NekDouble pV12 = D[0] * V1[2]->m_x + D[1] * V1[2]->m_y + D[2] * V1[2]->m_z;
+
+            NekDouble pV20 = D[0] * V2[0]->m_x + D[1] * V2[0]->m_y + D[2] * V2[0]->m_z;
+            NekDouble pV21 = D[0] * V2[1]->m_x + D[1] * V2[1]->m_y + D[2] * V2[1]->m_z;
+            NekDouble pV22 = D[0] * V2[2]->m_x + D[1] * V2[2]->m_y + D[2] * V2[2]->m_z;
+
+            NekDouble t11, t22, t12, t21;
+
+            if(dV10 > 0.0 && dV11 <= 0.0 && dV12 <= 0.0 ||
+               dV10 < 0.0 && dV11 >= 0.0 && dV12 >= 0.0)
+            {
+                t11 = pV10 + (pV12 - pV10) * dV10 / (dV10 - dV12);
+                t12 = pV10 + (pV11 - pV10) * dV10 / (dV10 - dV11);
+            }
+            else if (dV11 > 0.0 && dV10 <= 0.0 && dV12 <= 0.0 ||
+                     dV11 < 0.0 && dV10 >= 0.0 && dV12 >= 0.0)
+            {
+                t11 = pV11 + (pV10 - pV11) * dV11 / (dV11 - dV10);
+                t12 = pV11 + (pV12 - pV11) * dV11 / (dV11 - dV12);
+            }
+            else if (dV12 > 0.0 && dV11 <= 0.0 && dV10 <= 0.0 ||
+                     dV12 < 0.0 && dV11 >= 0.0 && dV10 >= 0.0)
+            {
+                t11 = pV12 + (pV11 - pV12) * dV12 / (dV12 - dV11);
+                t12 = pV12 + (pV10 - pV12) * dV12 / (dV12 - dV10);
+            }
+            else
+            {
+                ASSERTL0(false,"failed to find tri orient");
+            }
+
+            if(dV20 > 0.0 && dV21 <= 0.0 && dV22 <= 0.0 ||
+               dV20 < 0.0 && dV21 >= 0.0 && dV22 >= 0.0)
+            {
+                t21 = pV20 + (pV22 - pV20) * dV20 / (dV20 - dV22);
+                t22 = pV20 + (pV21 - pV20) * dV20 / (dV20 - dV21);
+            }
+            else if (dV21 > 0.0 && dV20 <= 0.0 && dV22 <= 0.0 ||
+                     dV21 < 0.0 && dV20 >= 0.0 && dV22 >= 0.0)
+            {
+                t21 = pV21 + (pV20 - pV21) * dV21 / (dV21 - dV20);
+                t22 = pV21 + (pV22 - pV21) * dV21 / (dV21 - dV22);
+            }
+            else if (dV22 > 0.0 && dV21 <= 0.0 && dV20 <= 0.0 ||
+                     dV22 < 0.0 && dV21 >= 0.0 && dV20 >= 0.0)
+            {
+                t21 = pV22 + (pV21 - pV22) * dV22 / (dV22 - dV21);
+                t22 = pV22 + (pV20 - pV22) * dV22 / (dV22 - dV20);
+            }
+            else
+            {
+                ASSERTL0(false,"failed to find tri orient");
+            }
+
+            if(t11 > t12)
+            {
+                swap(t11,t12);
+            }
+
+            if(t21 > t22)
+            {
+                swap(t21,t22);
+            }
+
+            if(t21 < t12 && t21 > t11)
+            {
+                cout << endl << "intersection" << endl;
+            }
+        }
+    }
+
+    exit(-1);*/
+
 
     m_symSurfs = vector<int>(symSurfs.begin(), symSurfs.end());
     //compile a map of the nodes needed for systemetry surfs

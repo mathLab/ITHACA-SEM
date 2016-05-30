@@ -872,8 +872,37 @@ namespace Nektar
             int nq = (*m_exp)[expansion]->GetTotPoints();
             int npoints_per_plane = m_planes[0]->GetTotPoints();
 
+            // If we are using Fourier points, output extra plane to fill domain
+            int outputExtraPlane = 0;
+            Array<OneD, NekDouble> extraPlane;
+            if ( m_homogeneousBasis->GetBasisType()   == LibUtilities::eFourier
+               && m_homogeneousBasis->GetPointsType() ==
+                    LibUtilities::eFourierEvenlySpaced)
+            {
+                outputExtraPlane = 1;
+                // Get extra plane data
+                if (m_StripZcomm->GetSize() == 1)
+                {
+                    extraPlane = m_phys + m_phys_offset[expansion];
+                }
+                else
+                {
+                    // Determine to and from rank for communication
+                    int size     = m_StripZcomm->GetSize();
+                    int rank     = m_StripZcomm->GetRank();
+                    int fromRank = (rank+1) % size;
+                    int toRank   = (rank == 0) ? size-1 : rank-1;
+                    // Communicate using SendRecv
+                    extraPlane = Array<OneD, NekDouble>(nq);
+                    Array<OneD, NekDouble> send (nq,
+                            m_phys + m_phys_offset[expansion]);
+                    m_StripZcomm->SendRecv(toRank, send,
+                                           fromRank, extraPlane);
+                }
+            }
+
             // printing the fields of that zone
-            outfile << "        <DataArray type=\"Float32\" Name=\""
+            outfile << "        <DataArray type=\"Float64\" Name=\""
                     << var << "\">" << endl;
             outfile << "          ";
             for (int n = 0; n < m_planes.num_elements(); ++n)
@@ -882,6 +911,14 @@ namespace Nektar
                 for(i = 0; i < nq; ++i)
                 {
                     outfile << (fabs(phys[i]) < NekConstants::kNekZeroTol ? 0 : phys[i]) << " ";
+                }
+            }
+            if (outputExtraPlane)
+            {
+                for(i = 0; i < nq; ++i)
+                {
+                    outfile << (fabs(extraPlane[i]) < NekConstants::kNekZeroTol ?
+                                0 : extraPlane[i]) << " ";
                 }
             }
             outfile << endl;

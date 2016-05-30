@@ -253,6 +253,13 @@ void InputXml::Process(po::variables_map &vm)
             boost::lexical_cast<string>(vm["part-only-overlapping"].as<int>()));
     }
 
+    if(vm.count("npz"))
+    {
+        cmdArgs.push_back("--npz");
+        cmdArgs.push_back(
+            boost::lexical_cast<string>(vm["npz"].as<int>()));
+    }
+
     int argc = cmdArgs.size();
     const char **argv = new const char*[argc];
     for (int i = 0; i < argc; ++i)

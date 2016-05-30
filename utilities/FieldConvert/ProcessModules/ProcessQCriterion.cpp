@@ -65,7 +65,10 @@ void ProcessQCriterion::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessQCriterion: Calculating Q Criterion..." << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessQCriterion: Calculating Q Criterion..." << endl;
+        }
     }
 
     int i, j, s;

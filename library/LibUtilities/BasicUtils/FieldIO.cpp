@@ -180,7 +180,10 @@ namespace Nektar
             // and determine the full pathname to the file to write out.
             // Any existing file/directory which is in the way is removed.
             std::string filename = SetUpOutput(outFile);
-            SetUpFieldMetaData(outFile, fielddefs, fieldmetadatamap);
+            if (m_comm->GetSize() > 1)
+            {
+                SetUpFieldMetaData(outFile, fielddefs, fieldmetadatamap);
+            }
 
             // Create the file (partition)
             TiXmlDocument doc;

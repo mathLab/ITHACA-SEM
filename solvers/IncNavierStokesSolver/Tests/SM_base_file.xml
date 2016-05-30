@@ -3,17 +3,17 @@
 <NEKTAR>
 
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u,v,w,p"  TYPE="GLL_LAGRANGE_SEM" />
+    <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u,v,w,p"  TYPE="MODIFIED" />
   </EXPANSIONS>
 
   <CONDITIONS>
     <SOLVERINFO>
       <I PROPERTY="SolverType"        VALUE="VelocityCorrectionScheme"/>
       <I PROPERTY="EQTYPE"            VALUE="UnsteadyNavierStokes"/>
-      <I PROPERTY="EvolutionOperator" VALUE="Adjoint"/>
+      <I PROPERTY="EvolutionOperator" VALUE="Direct"/>
       <I PROPERTY="Projection"        VALUE="Galerkin"/>
       <I PROPERTY="Driver"            VALUE= "Standard" />
-      <I PROPERTY="ModeType"           VALUE= "SingleMode" />
+      <I PROPERTY="ModeType"          VALUE= "SingleMode" />
       <I PROPERTY="HOMOGENEOUS"       VALUE="1D"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />    
         </SOLVERINFO>
@@ -25,7 +25,6 @@
       <P> IO_InfoSteps  = 1    </P>
       <P> Kinvis        = 1     </P>
       <P> LZ            = 1.0       </P>
-      <P> HomModesZ            = 4       </P>
     </PARAMETERS>
 
     <VARIABLES>
@@ -42,57 +41,53 @@
     </BOUNDARYREGIONS>
 
     <BOUNDARYCONDITIONS>
-    //Walls
       <REGION REF="0">
-        <D VAR="u" VALUE="0"/>
-        <D VAR="v" VALUE="x*cos(2*PI*z)"/>
-        <D VAR="w" VALUE="0"/>
-        <N VAR="p" USERDEFINEDTYPE="H"   VALUE="0"/>
+        <D VAR="u" VALUE="-2*PI*x*y*cos(2*PI*z)"/>
+        <D VAR="v" VALUE="0"/>
+        <D VAR="w" VALUE="y*sin(2*PI*z)"/>
+        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>
      </REGION>
       
-      //Inflow and outflow 
       <REGION REF="1">
-       <D VAR="u" VALUE="0"/>
-       <D VAR="v" VALUE="x*cos(2*PI*z)"/>
-       <D VAR="w" VALUE="0"/>
-       <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>
+        <D VAR="u" VALUE="-2*PI*x*y*cos(2*PI*z)"/>
+        <D VAR="v" VALUE="0"/>
+        <D VAR="w" VALUE="y*sin(2*PI*z)"/>
+        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>
     </REGION>
        <REGION REF="2">
-       <D VAR="u" VALUE="0"/>
-       <D VAR="v" VALUE="x*cos(2*PI*z)"/>
-       <D VAR="w" VALUE="0"/>
-       <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>
+        <D VAR="u" VALUE="-2*PI*x*y*cos(2*PI*z)"/>
+        <D VAR="v" VALUE="0"/>
+        <D VAR="w" VALUE="y*sin(2*PI*z)"/>
+        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>
        </REGION>
     </BOUNDARYCONDITIONS>
 
-   <FUNCTION NAME="InitialConditions">
-     <E VAR="u" VALUE="0"/>
-     <E VAR="v" VALUE="x*cos(2*PI*z)"/>
-     <E VAR="w" VALUE="0"/>
-     <E VAR="p" VALUE="0" />
+    <FUNCTION NAME="InitialConditions">
+             <E VAR="u" VALUE="-2*PI*x*y*cos(2*PI*z)"/>
+        <E VAR="v" VALUE="0"/>
+        <E VAR="w" VALUE="y*sin(2*PI*z)"/>
+        <E VAR="p" VALUE="0" />
     </FUNCTION>
 
    <FUNCTION NAME="BodyForce">
-      <E VAR="u" VALUE="cos(x)*x*cos(2*PI*z)" />
-      <E VAR="v" VALUE="-cos(2*PI*z)*sin(y)+2*PI*x*sin(2*PI*z)*sin(x)*cos(y)+4*PI*PI*x*cos(2*PI*z)" />
-      <E VAR="w" VALUE="0"/>
+      <E VAR="u" VALUE="-2*PI*y*cos(2*PI*z)-2*PI*x*cos(2*PI*z)+4*PI*PI*x*y*sin(2*PI*z)-8*PI*PI*PI*x*y*cos(2*PI*z)" />
+      <E VAR="v" VALUE="0" />
+      <E VAR="w" VALUE="sin(2*PI*z)+2*PI*y*cos(2*PI*z)+4*PI*PI*y*sin(2*PI*z)"/>
       <E VAR="p" VALUE="0" />
 
     </FUNCTION>
 
     <FUNCTION NAME="ExactSolution">
-      <E VAR="u" VALUE="0"/>
-      <E VAR="v" VALUE="x*cos(2*PI*z)"/>
-      <E VAR="w" VALUE="0"/>
-      <E VAR="p" VALUE="0" />
+        <E VAR="u" VALUE="-2*PI*x*y*cos(2*PI*z)"/>
+        <E VAR="v" VALUE="0"/>
+        <E VAR="w" VALUE="y*sin(2*PI*z)"/>
+        <E VAR="p" VALUE="0" />
     </FUNCTION>
     
       <FUNCTION NAME="BaseFlow">
-      <E VAR="u" VALUE="sin(y)"/>
-      <E VAR="v" VALUE="sin(x)" />
-      <E VAR="w" VALUE="sin(x)*cos(y)"/>
-      <E VAR="p" VALUE="0" />
+          <F FILE="SM_base_file.bse"/>
       </FUNCTION>
+
     
   </CONDITIONS>
 
@@ -101,7 +96,7 @@
           <BODYFORCE> BodyForce </BODYFORCE>
       </FORCE>
   </FORCING>
-  
+
   <GEOMETRY DIM="2" SPACE="2">
     
     <VERTEX>

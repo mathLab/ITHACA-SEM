@@ -240,6 +240,12 @@ class ProcessIsoContour : public ProcessEquiSpacedOutput
         /// Write mesh to output file.
         virtual void Process(po::variables_map &vm);
 
+        virtual std::string GetModuleName()
+        {
+            return "ProcessIsoContour";
+        }
+
+
     protected:
         ProcessIsoContour(){};
         void ResetFieldPts(vector<IsoSharedPtr> &iso);

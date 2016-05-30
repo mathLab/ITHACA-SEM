@@ -59,6 +59,11 @@ class InputDat : public InputModule
         /// %ModuleKey for class.
         static ModuleKey m_className[];
 
+        virtual std::string GetModuleName()
+        {
+            return "InputDat";
+        }
+
     private:
         void ReadTecplotFEBlockZone(std::ifstream &datFile, string &line,
                                     Array<OneD, Array<OneD, NekDouble> > &pts,

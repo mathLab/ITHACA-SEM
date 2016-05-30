@@ -85,10 +85,6 @@ void DriverSteadyState::v_Execute(ostream &out)
     // to find the steady state of a flow above the critical Reynolds
     // number.
     m_equ[m_nequ - 1]->PrintSummary(out);
-    for( int i = 0; i < m_nequ; ++i)
-    {
-        m_equ[i]->DoInitialise();
-    }
 
     m_session->LoadParameter("IO_InfoSteps", m_infosteps, 1000);
     m_session->LoadParameter("IO_CheckSteps", m_checksteps, 100000);

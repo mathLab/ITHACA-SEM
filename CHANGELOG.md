@@ -17,6 +17,7 @@ v4.3.2
 **FieldConvert**:
 - Fix appearence of duplicate messages when running in parallel (!626)
 - Fix issue with efficiency when using large number of 3DH1D planes (!627)
+- Add module for combining average fields (!620)
 
 **Packaging**:
 - Fixes for DEB package dependencies (!630)

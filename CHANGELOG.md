@@ -10,9 +10,13 @@ v4.3.2
 - Print error message for invalid equation also in release version (!634)
 - HistoryPoints filter now uses closest plane to requested z-coordinate and
   output is produced in physical space (!621).
+- Fix minor performance issue with time integration schemes (!632)
+- Fix FilterCheckpoint filter to be consistent with `IO_CheckSteps` (!633)
+- Fix `IO_CheckSteps` to avoid missing first checkpoint (!639)
 
 **FieldConvert**:
 - Fix appearence of duplicate messages when running in parallel (!626)
+- Fix issue with efficiency when using large number of 3DH1D planes (!627)
 
 **Packaging**:
 - Fixes for DEB package dependencies (!630)

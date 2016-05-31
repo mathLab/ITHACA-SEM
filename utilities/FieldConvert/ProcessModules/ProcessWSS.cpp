@@ -60,8 +60,6 @@ ProcessWSS::ProcessWSS(FieldSharedPtr f) : ProcessModule(f)
     f->m_writeBndFld = true;
     f->m_declareExpansionAsContField = true;
     m_f->m_fldToBnd = false;
-    
-    f->m_declareAsNewField = true;
 }
 
 ProcessWSS::~ProcessWSS()
@@ -72,7 +70,10 @@ void ProcessWSS::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessWSS: Calculating wall shear stress..." << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessWSS: Calculating wall shear stress..." << endl;
+        }
     }
 
     m_f->m_addNormals = m_config["addnormals"].m_beenSet;
@@ -293,7 +294,6 @@ void ProcessWSS::Process(po::variables_map &vm)
         BndExp[nshear-1]->FwdTrans(fshear[nshear-1], 
                                  BndExp[nshear-1]->UpdateCoeffs());
     }
-
 }
 
 }

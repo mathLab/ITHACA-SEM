@@ -64,7 +64,38 @@ namespace Nektar
             
             SetCoeffPhys();
         }
-        
+
+        ContField3DHomogeneous1D::ContField3DHomogeneous1D(
+                                const ContField3DHomogeneous1D &In,
+                                const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                const std::string                        &variable):
+                                DisContField3DHomogeneous1D (In, false)
+        {
+            ContField2DSharedPtr zero_plane_old =
+                    boost::dynamic_pointer_cast<ContField2D> (In.m_planes[0]);
+
+            ContField2DSharedPtr zero_plane =
+                        MemoryManager<ContField2D>::
+                                    AllocateSharedPtr(*zero_plane_old,graph2D,
+                                                            variable);
+
+            for(int n = 0; n < m_planes.num_elements(); ++n)
+            {
+                m_planes[n] =   MemoryManager<ContField2D>::
+                                        AllocateSharedPtr(*zero_plane,graph2D,
+                                                            variable);
+            }
+
+            SetCoeffPhys();
+
+            if(variable.compare("DefaultVar") != 0)
+            {
+                SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
+                SetupBoundaryConditions(m_homogeneousBasis->GetBasisKey(),
+                                        m_lhom, bcs,variable);
+            }
+        }
+
         ContField3DHomogeneous1D::~ContField3DHomogeneous1D()
         {
         }

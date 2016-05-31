@@ -351,7 +351,7 @@ namespace Nektar
                 }
 
                 // Write out checkpoint files
-                if ((m_checksteps && step && !((step + 1) % m_checksteps)) ||
+                if ((m_checksteps && !((step + 1) % m_checksteps)) ||
                      doCheckTime)
                 {
                     if(m_HomogeneousType == eHomogeneous1D)

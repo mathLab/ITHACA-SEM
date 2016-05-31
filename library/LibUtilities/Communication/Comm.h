@@ -149,7 +149,7 @@ namespace Nektar
 		virtual double v_Wtime() = 0;
                 virtual void v_Send(void* buf, int count, CommDataType dt, int dest) = 0;
                 virtual void v_Recv(void* buf, int count, CommDataType dt, int source) = 0;
-                virtual void v_Sendrecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+                virtual void v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
                         void *recvbuf, int recvcount, CommDataType recvtype, int source) = 0;
                 virtual void v_SendRecvReplace(void* buf, int count, CommDataType dt,
                                                int pSendProc, int pRecvProc) = 0;
@@ -250,7 +250,7 @@ namespace Nektar
                              T& pRecvData)
         {
             v_SendRecv(CommDataTypeTraits<T>::GetPointer(pSendData),
-                       CommDataTypeTraits<T>::GetCount(pSendData).
+                       CommDataTypeTraits<T>::GetCount(pSendData),
                        CommDataTypeTraits<T>::GetDataType(),
                        pSendProc,
                        CommDataTypeTraits<T>::GetPointer(pRecvData),

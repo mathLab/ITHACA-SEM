@@ -83,7 +83,7 @@ namespace Nektar
             virtual bool v_TreatAsRankZero(void);
             virtual void v_Send(void* buf, int count, CommDataType dt, int dest);
             virtual void v_Recv(void* buf, int count, CommDataType dt, int source);
-            virtual void v_Sendrecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+            virtual void v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
                                    void *recvbuf, int recvcount, CommDataType recvtype, int source);
             virtual void v_SendRecvReplace(void* buf, int count, CommDataType dt,
                     int pSendProc, int pRecvProc);

@@ -125,7 +125,7 @@ namespace Nektar
         /**
          *
          */
-        void CommSerial::v_Sendrecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+        void CommSerial::v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
                 void *recvbuf, int recvcount, CommDataType recvtype, int source)
         {
         }

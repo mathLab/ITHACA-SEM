@@ -76,7 +76,7 @@ namespace Nektar
 	    LIB_UTILITIES_EXPORT virtual double v_Wtime();
             LIB_UTILITIES_EXPORT virtual void v_Send(void* buf, int count, CommDataType dt, int dest);
             LIB_UTILITIES_EXPORT virtual void v_Recv(void* buf, int count, CommDataType dt, int source);
-            LIB_UTILITIES_EXPORT virtual void v_Sendrecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+            LIB_UTILITIES_EXPORT virtual void v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
                     void *recvbuf, int recvcount, CommDataType recvtype, int source);
             LIB_UTILITIES_EXPORT virtual void v_SendRecvReplace(void* buf, int count, CommDataType dt,
                     int pSendProc, int pRecvProc);

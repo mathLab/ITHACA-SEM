@@ -191,7 +191,7 @@ namespace Nektar
         /**
          *
          */
-        void CommMpi::v_Sendrecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+        void CommMpi::v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
                 void *recvbuf, int recvcount, CommDataType recvtype, int source)
         {
             MPI_Status status;

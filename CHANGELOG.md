@@ -18,6 +18,7 @@ v4.3.2
 - Fix appearence of duplicate messages when running in parallel (!626)
 - Fix issue with efficiency when using large number of 3DH1D planes (!627)
 - Add module for combining average fields (!620)
+- Fix wall shear stress processing module for parallel execution (!635)
 
 **Packaging**:
 - Fixes for DEB package dependencies (!630)

@@ -13,6 +13,7 @@ v4.3.2
 
 **FieldConvert**:
 - Fix appearence of duplicate messages when running in parallel (!626)
+- Fix wall shear stress processing module for parallel execution (!635)
 
 **Packaging**:
 - Fixes for DEB package dependencies (!630)

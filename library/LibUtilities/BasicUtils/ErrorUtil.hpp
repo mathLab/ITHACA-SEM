@@ -137,6 +137,9 @@ namespace ErrorUtil
                               << std::endl;
                 }
             }
+#if defined(NEKTAR_USE_MPI)
+            MPI_Barrier(MPI_COMM_WORLD);
+#endif
             throw NekError(baseMsg);
             break;
         case ewarning:

@@ -138,7 +138,10 @@ namespace ErrorUtil
                 }
             }
 #if defined(NEKTAR_USE_MPI)
-            MPI_Barrier(MPI_COMM_WORLD);
+            if (flag)
+            {
+                MPI_Barrier(MPI_COMM_WORLD);
+            }
 #endif
             throw NekError(baseMsg);
             break;

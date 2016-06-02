@@ -80,6 +80,8 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
         }
     }
 
+    m_f->m_fldToBnd = m_config["fldtoboundary"].m_beenSet;
+    m_f->m_addNormals = m_config["addnormals"].m_beenSet;
 
     // check for correct input files
     if((m_f->m_inputfiles.count("xml") == 0)&&(m_f->m_inputfiles.count("xml.gz") == 0))
@@ -88,11 +90,18 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
         exit(3);
     }
 
-    if((m_f->m_inputfiles.count("fld") == 0)&&(m_f->m_inputfiles.count("chk") == 0)&&(m_f->m_inputfiles.count("rst") == 0))
+    if(m_f->m_fldToBnd)
     {
-        cout << "A fld or chk or rst input file must be specified for the boundary extraction module" << endl;
+        if((m_f->m_inputfiles.count("fld") == 0) &&
+           (m_f->m_inputfiles.count("chk") == 0) &&
+           (m_f->m_inputfiles.count("rst") == 0))
+        {
+            cout << "A fld or chk or rst input file must be specified for "
+                 << "the boundary extraction module with fldtoboundary option."
+                 << endl;
 
-        exit(3);
+            exit(3);
+        }
     }
 
     // Set up Field options to output boundary fld
@@ -133,9 +142,6 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
                                                    m_f->m_bndRegionsToWrite),
                  "Failed to interpret bnd values string");
     }
-
-    m_f->m_fldToBnd = m_config["fldtoboundary"].m_beenSet;
-    m_f->m_addNormals = m_config["addnormals"].m_beenSet;
 }
 
 }

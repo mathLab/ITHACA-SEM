@@ -592,10 +592,14 @@ the advection term using the pressure inverse mass matrix. It can be used just i
 
 
 \item \inltt{SpectralVanishingViscosity}: activates a stabilization technique
-which increases the viscosity on the highest Fourier frequencies of a Quasi-3D approach.
+which increases the viscosity on the modes with the highest frequencies.
 \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="SpectralVanishingViscosity" VALUE="True"/>
 \end{lstlisting}
+
+In a Quasi-3D simulation, this will affect both the Fourier and the spectral/hp expansions.
+To activate them independently, use \inltt{SpectralVanishingViscositySpectralHP} 
+and \inltt{SpectralVanishingViscosityHomo1D}.
 
 \item \inltt{DEALIASING}: activates the 3/2 padding rule on the advection term
 of a Quasi-3D simulation.

@@ -161,7 +161,7 @@ struct Field {
                     // Choose points to be at evenly spaced points at
                     // nplanes points
                     const LibUtilities::PointsKey
-                        Pkey(nplanes, LibUtilities::ePolyEvenlySpaced);
+                        Pkey(nplanes, LibUtilities::eFourierEvenlySpaced);
 
                     const LibUtilities::BasisKey Bkey(btype, nplanes, Pkey);
 
@@ -212,11 +212,11 @@ struct Field {
                     // Choose points to be at evenly spaced points at
                     // nplanes points
                     const LibUtilities::PointsKey
-                        PkeyY(nylines, LibUtilities::ePolyEvenlySpaced);
+                        PkeyY(nylines, LibUtilities::eFourierEvenlySpaced);
                     const LibUtilities::BasisKey BkeyY(btype1, nylines, PkeyY);
 
                     const LibUtilities::PointsKey
-                        PkeyZ(nzlines, LibUtilities::ePolyEvenlySpaced);
+                        PkeyZ(nzlines, LibUtilities::eFourierEvenlySpaced);
                     const LibUtilities::BasisKey BkeyZ(btype2, nzlines, PkeyZ);
 
                     if(m_declareExpansionAsContField)
@@ -314,7 +314,7 @@ struct Field {
                     // Choose points to be at evenly spaced points at
                     // nplanes points
                     const LibUtilities::PointsKey
-                        Pkey(nplanes, LibUtilities::ePolyEvenlySpaced);
+                        Pkey(nplanes, LibUtilities::eFourierEvenlySpaced);
 
                     const LibUtilities::BasisKey  Bkey(btype, nplanes, Pkey);
 

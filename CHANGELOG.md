@@ -13,6 +13,8 @@ v4.3.2
 - Fix minor performance issue with time integration schemes (!632)
 - Fix FilterCheckpoint filter to be consistent with `IO_CheckSteps` (!633)
 - Fix `IO_CheckSteps` to avoid missing first checkpoint (!639)
+- Fix bug in iterative solver where only root process would ASSERT when
+  exceeding the maximum number of iterations (!636)
 
 **FieldConvert**:
 - Fix appearence of duplicate messages when running in parallel (!626)

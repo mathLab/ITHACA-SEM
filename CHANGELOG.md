@@ -12,6 +12,7 @@ v4.3.2
   output is produced in physical space (!621).
 - Fix minor performance issue with time integration schemes (!632)
 - Fix FilterCheckpoint filter to be consistent with `IO_CheckSteps` (!633)
+- Fix CMake configuration for building on Windows 10 with VS 2015 (!641)
 
 **FieldConvert**:
 - Fix appearence of duplicate messages when running in parallel (!626)

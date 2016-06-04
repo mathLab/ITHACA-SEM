@@ -208,37 +208,34 @@ namespace Nektar
         double* result_ptr = result.GetRawPtr();
         const double* rhs_ptr = rhs.GetRawPtr();
         
+        Array<OneD, unsigned int> rowSizes;
+        Array<OneD, unsigned int> colSizes;
+        lhs.GetBlockSizes(rowSizes, colSizes);
+
         std::fill(result.begin(), result.end(), 0.0);
         
         unsigned int curResultRow = 0;
         unsigned int curWrapperRow = 0;
+        unsigned int rowsInBlock, columnsInBlock;
         for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)
         {
-
-            if( blockRow != 0 )
+            if ( blockRow == 0)
             {
-                curResultRow += lhs.GetNumberOfRowsInBlockRow(blockRow-1);
+                rowsInBlock    = rowSizes[blockRow] + 1;
+                columnsInBlock = colSizes[blockRow] + 1;
+            }
+            else
+            {
+                rowsInBlock    = rowSizes[blockRow] - rowSizes[blockRow-1];
+                columnsInBlock = colSizes[blockRow] - colSizes[blockRow-1];
             }
 
-            unsigned int blockColumn = blockRow;
-            if( blockColumn != 0 )
-            {
-                curWrapperRow += lhs.GetNumberOfColumnsInBlockColumn(blockColumn-1);
-            }
-
-            unsigned int rowsInBlock = lhs.GetNumberOfRowsInBlockRow(blockRow);
-            if( rowsInBlock == 0 )
+            if( rowsInBlock == 0 || columnsInBlock == 0)
             {
                 continue;
             }
 
-            unsigned int columnsInBlock = lhs.GetNumberOfColumnsInBlockColumn(blockColumn);
-            if( columnsInBlock == 0 )
-            {
-                continue;
-            }
-
-            const LhsInnerMatrixType* block = lhs.GetBlockPtr(blockRow, blockColumn);
+            const LhsInnerMatrixType* block = lhs.GetBlockPtr(blockRow, blockRow);
             if( !block )
             {
                 continue;
@@ -248,6 +245,9 @@ namespace Nektar
             const double* rhsWrapper = rhs_ptr + curWrapperRow;
             Multiply(resultWrapper, *block, rhsWrapper);
             //resultWrapper = (*block)*rhsWrapper;
+
+            curResultRow  += rowsInBlock;
+            curWrapperRow += columnsInBlock;
         }
     }
 

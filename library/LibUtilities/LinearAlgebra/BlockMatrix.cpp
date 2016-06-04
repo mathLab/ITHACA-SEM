@@ -356,6 +356,23 @@ namespace Nektar
     }
 
     template<typename DataType, typename InnerMatrixType>
+    void NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::GetBlockSizes(
+                                            Array<OneD, unsigned int>& rowSizes,
+                                            Array<OneD, unsigned int>& colSizes) const
+    {
+        if( this->GetTransposeFlag() == 'T' )
+        {
+            rowSizes = m_columnSizes;
+            colSizes = m_rowSizes;
+        }
+        else
+        {
+            rowSizes = m_rowSizes;
+            colSizes = m_columnSizes;
+        }
+    }
+
+    template<typename DataType, typename InnerMatrixType>
     typename NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::iterator NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::begin() { return iterator(*this, 0, 0); }
 
     template<typename DataType, typename InnerMatrixType>

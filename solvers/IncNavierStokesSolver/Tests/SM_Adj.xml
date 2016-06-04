@@ -87,17 +87,12 @@
       <E VAR="p" VALUE="0" />
     </FUNCTION>
     
-     <!--FUNCTION NAME="BaseFlow">
-     <F VAR="u,v" FILE="QuadMesh_n2-Base.fld"/>
-      </FUNCTION-->
-      
       <FUNCTION NAME="BaseFlow">
       <E VAR="u" VALUE="sin(y)"/>
       <E VAR="v" VALUE="sin(x)" />
       <E VAR="w" VALUE="sin(x)*cos(y)"/>
       <E VAR="p" VALUE="0" />
       </FUNCTION>
-
     
   </CONDITIONS>
 

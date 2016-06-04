@@ -65,6 +65,15 @@ ProcessSurfDistance::~ProcessSurfDistance()
 
 void ProcessSurfDistance::Process(po::variables_map &vm)
 {
+    if (m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessSurfDistance: Calculating distance to surface..."
+                 << endl;
+        }
+    }
+
     int i, j, k, cnt;
     int surf = m_config["bnd"].as<int>();
     int expdim = m_f->m_graph->GetMeshDimension();

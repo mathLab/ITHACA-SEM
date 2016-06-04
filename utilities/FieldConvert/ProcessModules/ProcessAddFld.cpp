@@ -72,7 +72,10 @@ void ProcessAddFld::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessAddFld: Adding new fld to input fld" << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessAddFld: Adding new fld to input fld..." << endl;
+        }
     }
 
     ASSERTL0(m_f->m_data.size() != 0,"No input data defined");
@@ -198,7 +201,6 @@ void ProcessAddFld::Process(po::variables_map &vm)
 
         m_f->m_fielddef = FieldDef;
         m_f->m_data     = FieldData;
-
     }
 }
 

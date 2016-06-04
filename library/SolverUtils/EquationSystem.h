@@ -549,8 +549,6 @@ namespace Nektar
             
             int m_HomoDirec;    ///< number of homogenous directions
             
-            int m_NumMode;      ///< Mode to use in case of single mode analysis
-            
             
             /// Initialises EquationSystem class members.
             SOLVER_UTILS_EXPORT EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession);

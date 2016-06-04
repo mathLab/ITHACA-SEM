@@ -473,9 +473,9 @@ namespace Nektar
                              << " (error = " << sqrt(eps/m_rhs_magnitude)
                              << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
                              << endl;
-                        ASSERTL0(false,
-                                 "Exceeded maximum number of iterations");
                     }
+                    ASSERTL0(false,
+                             "Exceeded maximum number of iterations");
                 }
 
                 // Compute new search direction p_k, q_k

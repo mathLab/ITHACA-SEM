@@ -141,6 +141,15 @@ OPTION(NEKTAR_USE_MEMORY_POOLS
     "Use memory pools to accelerate memory allocation." ON)
 MARK_AS_ADVANCED(NEKTAR_USE_MEMORY_POOLS)
 
+# Option to disable threads
+OPTION(NEKTAR_USE_THREADS
+    "Enable functionality required for using threads." ON)
+MARK_AS_ADVANCED(NEKTAR_USE_THREADS)
+
+IF (NEKTAR_USE_THREADS)
+    ADD_DEFINITIONS(-DNEKTAR_USING_THREADS)
+ENDIF()
+
 IF (MSVC)
     # Needed for M_PI to be visible in visual studio.
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)

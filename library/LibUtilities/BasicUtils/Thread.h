@@ -38,14 +38,14 @@
 
 #include <queue>
 #include <vector>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/locks.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <loki/Singleton.h>
+
+#include <LibUtilities/BasicUtils/MutexTypeDefs.h>
 
 namespace Nektar
 {
@@ -321,9 +321,6 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
         }
 };
 
-typedef boost::unique_lock<boost::shared_mutex> WriteLock;
-typedef boost::shared_lock<boost::shared_mutex> ReadLock;
-
 /**
  * A class to manage multiple ThreadManagers.  It also acts as a cut-out during
  * static initialisation, where code attempts to grab a ThreadManager before any
@@ -345,7 +342,7 @@ class ThreadMaster
 {
     private:
         std::vector<ThreadManagerSharedPtr> m_threadManagers;
-        boost::shared_mutex m_mutex;
+        LibUtilities::SharedMutex m_mutex;
         std::string m_threadingType;
 
     public:

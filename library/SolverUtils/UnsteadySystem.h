@@ -61,6 +61,8 @@ namespace Nektar
         protected:
             /// Number of time steps between outputting status information.
             int                                             m_infosteps;
+
+            int                                             m_nanSteps;
             /// Wrapper to the time integration scheme
             LibUtilities::TimeIntegrationWrapperSharedPtr   m_intScheme;
             /// The time integration scheme operators to use.

@@ -172,12 +172,12 @@ namespace Nektar
                 else
                 {
                     DNekScalBlkMat &BinvD      = *m_BinvD;
-                    V_LocBnd = BinvD*F_Int;
+                    Multiply( V_LocBnd, BinvD, F_Int);
                 }
                 
                 pLocToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndTmp,
                                           nDirBndDofs);
-                F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
+                Subtract(F_HomBnd, F_HomBnd, V_GlobHomBndTmp);
 
                 // Transform from original basis to low energy
                 v_BasisTransform(F, nDirBndDofs);
@@ -202,7 +202,7 @@ namespace Nektar
                         Vmath::Vcopy(nGlobHomBndDofs,
                                      tmp.get()+nDirBndDofs,          1,
                                      V_GlobHomBndTmp.GetPtr().get(), 1);
-                        F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
+                        Subtract( F_HomBnd, F_HomBnd, V_GlobHomBndTmp);
                     }
                 }
 
@@ -210,7 +210,6 @@ namespace Nektar
                 if(atLastLevel)
                 {
                     Array<OneD, NekDouble> pert(nGlobBndDofs,0.0);
-                    NekVector<NekDouble>   Pert(nGlobBndDofs,pert,eWrapper);
 
                     // Solve for difference from initial solution given inout;
                     SolveLinearSystem(
@@ -251,8 +250,7 @@ namespace Nektar
                     }
                     F_Int = F_Int - C*V_LocBnd;
                 }
-
-                V_Int = invD*F_Int;
+                Multiply( V_Int, invD, F_Int);
             }
         }
 

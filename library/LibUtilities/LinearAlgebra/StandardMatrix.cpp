@@ -395,12 +395,6 @@ namespace Nektar
     PointerWrapper NekMatrix<DataType, StandardMatrixTag>::GetWrapperType() const { return m_wrapperType; }
 
     template<typename DataType>
-    char NekMatrix<DataType, StandardMatrixTag>::GetTransposeFlag() const
-    {
-        return this->GetRawTransposeFlag();
-    }
-
-    template<typename DataType>
     boost::tuples::tuple<unsigned int, unsigned int>
     NekMatrix<DataType, StandardMatrixTag>::Advance(unsigned int curRow, unsigned int curColumn) const
     {

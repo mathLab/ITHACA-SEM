@@ -161,16 +161,8 @@ namespace Nektar
     template<typename DataType, typename InnerMatrixType>
     unsigned int NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::CalculateBlockIndex(unsigned int row, unsigned int column) const
     {
-        unsigned int blockRows = GetNumberOfBlockRows();
-        unsigned int blockCols = GetNumberOfBlockColumns();
-
-        if( this->GetTransposeFlag() == 'T' )
-        {
-            std::swap(blockRows, blockCols);
-        }
-
         return BaseType::CalculateIndex(this->GetStorageType(),
-            row, column, blockRows, blockCols, this->GetTransposeFlag());
+            row, column, m_numberOfBlockRows, m_numberOfBlockColumns, this->GetTransposeFlag());
     }
 
     template<typename DataType, typename InnerMatrixType>

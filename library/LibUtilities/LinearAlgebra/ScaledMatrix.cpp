@@ -31,6 +31,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/LinearAlgebra/MatrixType.h>
 #include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/StandardMatrix.hpp>
 
@@ -93,6 +94,13 @@ namespace Nektar
     NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::Scale() const
     {
         return m_scale*m_matrix->Scale();
+    }
+
+    template<>
+    typename NekMatrix<NekMatrix< NekDouble, StandardMatrixTag>, ScaledMatrixTag>::NumberType
+    NekMatrix<NekMatrix< NekDouble, StandardMatrixTag>, ScaledMatrixTag>::Scale() const
+    {
+        return m_scale;
     }
 
     template<typename DataType, typename InnerMatrixType>

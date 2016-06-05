@@ -508,10 +508,6 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT PointerWrapper GetWrapperType() const;
 
-
-            LIB_UTILITIES_EXPORT char GetTransposeFlag() const ;
-            
-            
             LIB_UTILITIES_EXPORT boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(unsigned int curRow, unsigned int curColumn) const;
             

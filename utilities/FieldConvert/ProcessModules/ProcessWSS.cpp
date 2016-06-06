@@ -60,8 +60,6 @@ ProcessWSS::ProcessWSS(FieldSharedPtr f) : ProcessModule(f)
     f->m_writeBndFld = true;
     f->m_declareExpansionAsContField = true;
     m_f->m_fldToBnd = false;
-    
-    f->m_declareAsNewField = true;
 }
 
 ProcessWSS::~ProcessWSS()
@@ -72,7 +70,10 @@ void ProcessWSS::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessWSS: Calculating wall shear stress..." << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessWSS: Calculating wall shear stress..." << endl;
+        }
     }
 
     m_f->m_addNormals = m_config["addnormals"].m_beenSet;
@@ -125,7 +126,7 @@ void ProcessWSS::Process(po::variables_map &vm)
     Array<OneD, Array<OneD, NekDouble> > fshear(nshear);
     
     Array<OneD, MultiRegions::ExpListSharedPtr> BndExp(newfields);
-    Array<OneD, MultiRegions::ExpListSharedPtr> BndElmtExp(nfields);
+    Array<OneD, MultiRegions::ExpListSharedPtr> BndElmtExp(spacedim);
     
     // Extract original fields to boundary (for output)
     for (int i = 0; i < m_f->m_exp.size(); ++i)
@@ -154,146 +155,161 @@ void ProcessWSS::Process(po::variables_map &vm)
         m_f->m_fielddef[0]->m_fields.push_back("Shear_mag");
     }
 
+    // Create map of boundary ids for partitioned domains
+    SpatialDomains::BoundaryConditions bcs(m_f->m_session,
+                                           m_f->m_exp[0]->GetGraph());
+    const SpatialDomains::BoundaryRegionCollection bregions  =
+                                                bcs.GetBoundaryRegions();
+    SpatialDomains::BoundaryRegionCollection::const_iterator breg_it;
+    map<int,int> BndRegionMap;
+    int cnt =0;
+    for(breg_it = bregions.begin(); breg_it != bregions.end();
+            ++breg_it, ++cnt)
+    {
+        BndRegionMap[breg_it->first] = cnt;
+    }
     // Loop over boundaries to Write
     for(int b = 0; b < m_f->m_bndRegionsToWrite.size(); ++b)
     {
-        int bnd = m_f->m_bndRegionsToWrite[b];
-        // Get expansion list for boundary and for elements containing this bnd
-        for(i = 0; i < newfields; i++)
+        if(BndRegionMap.count(m_f->m_bndRegionsToWrite[b]) == 1)
         {
-            BndExp[i]   = m_f->m_exp[nfields + i]->UpdateBndCondExpansion(bnd);
-        }
-        for(i = 0; i < spacedim; i++)
-        {
-            m_f->m_exp[i]->GetBndElmtExpansion(bnd, BndElmtExp[i]);
-        }
-        
-        // Get number of points in expansions
-        int nqb = BndExp[0]->GetTotPoints();
-        int nqe = BndElmtExp[0]->GetTotPoints();
-        
-        // Initialise local arrays for the velocity gradients, and stress components
-        // size of total number of quadrature points for elements in this bnd
-        for(i = 0; i < ngrad; ++i)
-        {
-            grad[i] = Array<OneD, NekDouble>(nqe);
-        }
-
-        for(i = 0; i < nstress; ++i)
-        {
-            stress[i] = Array<OneD, NekDouble>(nqe);
-        }
-
-        // initialise arrays in the boundary
-        for(i = 0; i < nstress; ++i)
-        {
-            fstress[i] = Array<OneD, NekDouble>(nqb);
-        }
-
-        for(i = 0; i < ngrad; ++i)
-        {
-            fgrad[i] = Array<OneD, NekDouble>(nqb);
-        }
-
-        for(i = 0; i < nshear; ++i)
-        {
-            fshear[i] = Array<OneD, NekDouble>(nqb, 0.0);
-        }
-
-        //Extract Velocities
-        for(i = 0; i < spacedim; ++i)
-        {
-            velocity[i] = BndElmtExp[i]->GetPhys();
-        }
-
-        //Compute gradients (velocity correction scheme method)
-        for(i = 0; i < spacedim; ++i)
-        {
-            if (spacedim == 2)
+            int bnd = BndRegionMap[m_f->m_bndRegionsToWrite[b]];
+            // Get expansion list for boundary and for elements containing this bnd
+            for(i = 0; i < newfields; i++)
             {
-                BndElmtExp[i]->PhysDeriv(velocity[i],grad[i*spacedim+0],
-                                                     grad[i*spacedim+1]);
+                BndExp[i]   = m_f->m_exp[nfields + i]->UpdateBndCondExpansion(bnd);
             }
-            else
+            for(i = 0; i < spacedim; i++)
             {
-                BndElmtExp[i]->PhysDeriv(velocity[i],grad[i*spacedim+0],
-                                                     grad[i*spacedim+1],
-                                                     grad[i*spacedim+2]);
+                m_f->m_exp[i]->GetBndElmtExpansion(bnd, BndElmtExp[i]);
             }
-        }
 
-         //Compute stress component terms  tau_ij = mu*(u_i,j + u_j,i)
-        for(i = 0; i < spacedim; ++i)
-        {
-            for(j = 0; j < spacedim; ++j)
+            // Get number of points in expansions
+            int nqb = BndExp[0]->GetTotPoints();
+            int nqe = BndElmtExp[0]->GetTotPoints();
+
+            // Initialise local arrays for the velocity gradients, and stress components
+            // size of total number of quadrature points for elements in this bnd
+            for(i = 0; i < ngrad; ++i)
             {
-                Vmath::Vadd(nqe, grad[i*spacedim+j], 1,
-                                 grad[j*spacedim+i], 1,
-                                 stress[i*spacedim+j], 1);
-                
-                Vmath::Smul(nqe, kinvis, stress[i*spacedim+j], 1,
-                                           stress[i*spacedim+j], 1);
+                grad[i] = Array<OneD, NekDouble>(nqe);
             }
-        }
 
-        // Get boundary stress values.
-        for(j = 0; j < nstress; ++j)
-        {
-            m_f->m_exp[0]->ExtractElmtToBndPhys(bnd, stress[j],fstress[j]);
-        }
-        
-        //Get normals
-        Array<OneD, Array<OneD, NekDouble> > normals; 
-        m_f->m_exp[0]->GetBoundaryNormals(bnd, normals);
-        // Reverse normals, to get correct orientation for the body
-        for(i = 0; i < spacedim; ++i)
-        {
-            Vmath::Neg(nqb, normals[i], 1);
-        }
-
-        //calculate wss, and update coeffs in the boundary expansion
-        // S = tau_ij * n_j
-        for(i = 0; i < spacedim; ++i)
-        {
-            for(j = 0; j < spacedim; ++j)
+            for(i = 0; i < nstress; ++i)
             {
-                Vmath::Vvtvp(nqb,normals[j],1,fstress[i*spacedim+j],1,
-                                              fshear[i],1,
-                                              fshear[i],1);
+                stress[i] = Array<OneD, NekDouble>(nqe);
             }
-        }
 
-        // T = S - (S.n)n
-        for(i = 0; i < spacedim; ++i)
-        {
-            Vmath::Vvtvp(nqb,normals[i],1,fshear[i],1,
-                                          fshear[nshear-1],1,
-                                          fshear[nshear-1],1);
-        }
-        Vmath::Smul(nqb, -1.0, fshear[nshear-1], 1, fshear[nshear-1], 1);
+            // initialise arrays in the boundary
+            for(i = 0; i < nstress; ++i)
+            {
+                fstress[i] = Array<OneD, NekDouble>(nqb);
+            }
 
-        for (i = 0; i < spacedim; i++)
-        {
-            Vmath::Vvtvp(nqb,normals[i], 1, fshear[nshear-1], 1,
-                                            fshear[i], 1,
-                                            fshear[i], 1);
-            BndExp[i]->FwdTrans(fshear[i], 
-                                BndExp[i]->UpdateCoeffs());
-        }
+            for(i = 0; i < ngrad; ++i)
+            {
+                fgrad[i] = Array<OneD, NekDouble>(nqb);
+            }
 
-        // Tw
-        Vmath::Zero(nqb, fshear[nshear-1], 1);
-        for(i = 0; i < spacedim; ++i)
-        {
-            Vmath::Vvtvp(nqb,fshear[i],1,fshear[i],1,
-                                         fshear[nshear-1],1,
-                                         fshear[nshear-1],1);
+            for(i = 0; i < nshear; ++i)
+            {
+                fshear[i] = Array<OneD, NekDouble>(nqb, 0.0);
+            }
+
+            //Extract Velocities
+            for(i = 0; i < spacedim; ++i)
+            {
+                velocity[i] = BndElmtExp[i]->GetPhys();
+            }
+
+            //Compute gradients (velocity correction scheme method)
+            for(i = 0; i < spacedim; ++i)
+            {
+                if (spacedim == 2)
+                {
+                    BndElmtExp[i]->PhysDeriv(velocity[i],grad[i*spacedim+0],
+                                                         grad[i*spacedim+1]);
+                }
+                else
+                {
+                    BndElmtExp[i]->PhysDeriv(velocity[i],grad[i*spacedim+0],
+                                                         grad[i*spacedim+1],
+                                                         grad[i*spacedim+2]);
+                }
+            }
+
+             //Compute stress component terms  tau_ij = mu*(u_i,j + u_j,i)
+            for(i = 0; i < spacedim; ++i)
+            {
+                for(j = 0; j < spacedim; ++j)
+                {
+                    Vmath::Vadd(nqe, grad[i*spacedim+j], 1,
+                                     grad[j*spacedim+i], 1,
+                                     stress[i*spacedim+j], 1);
+
+                    Vmath::Smul(nqe, kinvis, stress[i*spacedim+j], 1,
+                                               stress[i*spacedim+j], 1);
+                }
+            }
+
+            // Get boundary stress values.
+            for(j = 0; j < nstress; ++j)
+            {
+                m_f->m_exp[0]->ExtractElmtToBndPhys(bnd, stress[j],fstress[j]);
+            }
+
+            //Get normals
+            Array<OneD, Array<OneD, NekDouble> > normals; 
+            m_f->m_exp[0]->GetBoundaryNormals(bnd, normals);
+            // Reverse normals, to get correct orientation for the body
+            for(i = 0; i < spacedim; ++i)
+            {
+                Vmath::Neg(nqb, normals[i], 1);
+            }
+
+            //calculate wss, and update coeffs in the boundary expansion
+            // S = tau_ij * n_j
+            for(i = 0; i < spacedim; ++i)
+            {
+                for(j = 0; j < spacedim; ++j)
+                {
+                    Vmath::Vvtvp(nqb,normals[j],1,fstress[i*spacedim+j],1,
+                                                  fshear[i],1,
+                                                  fshear[i],1);
+                }
+            }
+
+            // T = S - (S.n)n
+            for(i = 0; i < spacedim; ++i)
+            {
+                Vmath::Vvtvp(nqb,normals[i],1,fshear[i],1,
+                                              fshear[nshear-1],1,
+                                              fshear[nshear-1],1);
+            }
+            Vmath::Smul(nqb, -1.0, fshear[nshear-1], 1, fshear[nshear-1], 1);
+
+            for (i = 0; i < spacedim; i++)
+            {
+                Vmath::Vvtvp(nqb,normals[i], 1, fshear[nshear-1], 1,
+                                                fshear[i], 1,
+                                                fshear[i], 1);
+                BndExp[i]->FwdTrans(fshear[i], 
+                                    BndExp[i]->UpdateCoeffs());
+            }
+
+            // Tw
+            Vmath::Zero(nqb, fshear[nshear-1], 1);
+            for(i = 0; i < spacedim; ++i)
+            {
+                Vmath::Vvtvp(nqb,fshear[i],1,fshear[i],1,
+                                             fshear[nshear-1],1,
+                                             fshear[nshear-1],1);
+            }
+            Vmath::Vsqrt(nqb, fshear[nshear-1], 1, fshear[nshear-1], 1);
+            BndExp[nshear-1]->FwdTrans(fshear[nshear-1], 
+                                     BndExp[nshear-1]->UpdateCoeffs());
         }
-        Vmath::Vsqrt(nqb, fshear[nshear-1], 1, fshear[nshear-1], 1);
-        BndExp[nshear-1]->FwdTrans(fshear[nshear-1], 
-                                 BndExp[nshear-1]->UpdateCoeffs());
     }
-
 }
 
 }

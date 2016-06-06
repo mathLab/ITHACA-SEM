@@ -63,6 +63,12 @@ class ProcessInterpPointDataToFld : public ProcessModule
         /// Write mesh to output file.
         virtual void Process(po::variables_map &vm);
 
+        virtual std::string GetModuleName()
+        {
+            return "ProcessInterpPointDataToFld";
+        }
+
+
         void PrintProgressbar(const int position, const int goal) const
         {
             LibUtilities::PrintProgressbar(position, goal, "Interpolating");

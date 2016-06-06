@@ -62,6 +62,11 @@ namespace Nektar
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ContField3DHomogeneous1D(const ContField3DHomogeneous1D &In);
 
+            MULTI_REGIONS_EXPORT ContField3DHomogeneous1D(
+                            const ContField3DHomogeneous1D &In,
+                            const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                            const std::string                        &variable);
+
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ContField3DHomogeneous1D();
 

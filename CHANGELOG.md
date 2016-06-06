@@ -1,6 +1,30 @@
 Changelog
 =========
 
+v4.3.2
+------
+**Library**:
+- Add small optimisation for DriverAdaptive (!618)
+- Updated FFTW build to use the compiler used for building Nektar++ (!629)
+- Fix numbering bug in periodic boundary conditions (!631)
+- Print error message for invalid equation also in release version (!634)
+- HistoryPoints filter now uses closest plane to requested z-coordinate and
+  output is produced in physical space (!621).
+- Fix minor performance issue with time integration schemes (!632)
+- Fix FilterCheckpoint filter to be consistent with `IO_CheckSteps` (!633)
+- Fix `IO_CheckSteps` to avoid missing first checkpoint (!639)
+- Fix bug in iterative solver where only root process would ASSERT when
+  exceeding the maximum number of iterations (!636)
+
+**FieldConvert**:
+- Fix appearence of duplicate messages when running in parallel (!626)
+- Fix issue with efficiency when using large number of 3DH1D planes (!627)
+- Add module for combining average fields (!620)
+- Fix wall shear stress processing module for parallel execution (!635)
+
+**Packaging**:
+- Fixes for DEB package dependencies (!630)
+
 v4.3.1
 ------
 **Library**:
@@ -10,9 +34,17 @@ v4.3.1
 - Fix Homogeneous transform when unshuffling is not used. (!599)
 - Fix namespace pollution in library header files. (!601)
 - Fix issue with METIS compilation on clang 7.3 (!603)
+- Fix issue with heterogeneous quadrilaterals (!607)
 - Fix bug in modified Arnoldi algorithm causing convergence to be reported when
   number of vectors is less than `nvec` (!608)
 - Fix uninitialised array bug in AssemblyMap (!598)
+- Fix issue with LAPACK call in eigenvalue calculation (!610)
+- Fix FieldConvert processing of partitions in serial (!612)
+- Fix use of multi-level static condensation in parallel with periodic
+  boundary conditions (!614)
+- Fix NaN detection to work in parallel (!605)
+- Add additional constructor to ContField3DHomogeneous1D for FieldConvert
+  extract module. (!590)
 
 **NekMesh**:
 - Fix incorrect link directory on CCMIO library.
@@ -20,6 +52,13 @@ v4.3.1
 **FieldConvert**:
 - Fix to FLD input to update the field definitions always, not just when a range
   is specified. (!611)
+
+**Tester**:
+- Remove requirement for executable to be specified in .tst file if it is
+  overridden on the command-line (!595)
+
+**Packaging**:
+- Fix dependency resolution on generation of DEB packages. (!616)
 
 v4.3.0
 ------

@@ -44,7 +44,7 @@
 
 #include <cwipi.h>
 
-#define RECV_ORDER_DIFF 0
+#define RECV_ORDER_INC 10
 
 namespace Nektar
 {
@@ -72,7 +72,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     int spacedim = graph->GetSpaceDimension();
 
     SpatialDomains::MeshGraphSharedPtr recvGraph = SpatialDomains::MeshGraph::Read(m_evalField->GetSession());
-    recvGraph->SetExpansionsToPolyOrder(RECV_ORDER_DIFF + m_evalField->GetExp(0)->GetBasisNumModes(0));
+    recvGraph->SetExpansionsToPointOrder(RECV_ORDER_INC + m_evalField->GetExp(0)->GetBasisNumModes(0));
 
     // HACK: 6
     // TODO: DeclareCoeffPhysArrays
@@ -83,8 +83,8 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
         {
             for (int i = 0; i < 6; ++i)
             {
-                m_recvFields[i] = MemoryManager<MultiRegions::ExpList1D>::
-                    AllocateSharedPtr(m_evalField->GetSession(), recvGraph);
+                m_recvFields[i] = MemoryManager<MultiRegions::ContField1D>::
+                    AllocateSharedPtr(m_evalField->GetSession(), recvGraph, "DefaultVar");
             }
             break;
         }
@@ -93,7 +93,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
         {
             for (int i = 0; i < 6; ++i)
             {
-                m_recvFields[i] = MemoryManager<MultiRegions::ExpList2D>::
+                m_recvFields[i] = MemoryManager<MultiRegions::ContField2D>::
                     AllocateSharedPtr(m_evalField->GetSession(), recvGraph);
             }
             break;
@@ -103,7 +103,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
         {
             for (int i = 0; i < 6; ++i)
             {
-                m_recvFields[i] = MemoryManager < MultiRegions::ExpList3D >::
+                m_recvFields[i] = MemoryManager < MultiRegions::ContField3D >::
                     AllocateSharedPtr(m_evalField->GetSession(), recvGraph);
             }
             break;
@@ -242,6 +242,8 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     }
 
     cwipi_set_points_to_locate(m_name.c_str(), m_nPoints, m_points);
+
+    cout << "number ov recv points = " << m_nPoints << endl;
 }
 
 
@@ -401,14 +403,17 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
             }
             else
             {
-//                 recvFields[j]->UpdatePhys()[i] = m_rValsInterl[intPos * m_nEVars + j];
-                field[j][i] = m_rValsInterl[intPos * m_nEVars + j];
+                recvFields[j]->UpdatePhys()[i] = m_rValsInterl[intPos * m_nEVars + j];
                 intPos++;
             }
         }
     }
 
-    // TODO: copy coeffs from recvFields to field
+    for (int i = 0; i < m_nEVars; ++i)
+    {
+        recvFields[i]->FwdTrans(recvFields[i]->GetPhys(), evalField->UpdateCoeffs());
+        evalField->BwdTrans(evalField->GetCoeffs(), field[i]);
+    }
 }
 
 

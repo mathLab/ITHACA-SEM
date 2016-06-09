@@ -862,7 +862,7 @@ namespace Nektar
             }
 
             /// Returns the session object
-            boost::shared_ptr<LibUtilities::SessionReader> GetSession()
+            boost::shared_ptr<LibUtilities::SessionReader> GetSession() const
             {
                 return m_session;
             }

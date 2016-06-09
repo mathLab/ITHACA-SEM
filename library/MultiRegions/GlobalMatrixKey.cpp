@@ -36,6 +36,8 @@
 
 #include <MultiRegions/GlobalMatrixKey.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

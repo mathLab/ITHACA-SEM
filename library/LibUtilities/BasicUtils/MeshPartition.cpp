@@ -56,7 +56,6 @@
 #include <LibUtilities/Foundations/Foundations.hpp>
 
 
-
 #include <boost/algorithm/string.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adjacency_iterator.hpp>
@@ -313,7 +312,6 @@ namespace Nektar
                 }
             }
 
-            // check to see if compressed
             // check to see if compressed
             std::string IsCompressed;
             vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
@@ -1178,7 +1176,6 @@ namespace Nektar
                 int acnt = 0;
                 int vcnt = 0;
                 int nWeight = nGraphVerts;
-                BoostAdjacencyIterator adjvertit, adjvertit_end;
                 Array<OneD, int> xadj(nGraphVerts+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
                 Array<OneD, int> vwgt(nWeight, 1);
@@ -1870,7 +1867,7 @@ namespace Nektar
                             {
                                 // get index from full list;
                                 int idx = m_meshCurvedPts[c.ptid]
-                                                    .index[c.ptoffset+i];
+                                    .index[c.ptoffset+i];
 
                                 // if index is not already in curved
                                 // points add it or set index to location

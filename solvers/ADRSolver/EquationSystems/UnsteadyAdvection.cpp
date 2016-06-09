@@ -36,6 +36,8 @@
 #include <iostream>
 #include <ADRSolver/EquationSystems/UnsteadyAdvection.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string UnsteadyAdvection::className = SolverUtils::GetEquationSystemFactory().

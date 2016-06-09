@@ -7,6 +7,7 @@
 #include <MultiRegions/DisContField1D.h>
 #include <SpatialDomains/MeshGraph1D.h>
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])

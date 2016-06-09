@@ -54,6 +54,8 @@ if (NEKTAR_BUILD_UTILITIES)
 endif()
 
 if (NEKTAR_BUILD_LIBRARY AND DPKG)
+    set(NEK_DEP "openmpi-bin")
+
     ### DEBIAN PACKAGES ############################################
     # Note that the formatting of the DESCRIPTION field is VERY specific. It
     # must start with a new line, each line must start with a space, and there
@@ -65,8 +67,9 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
         DESCRIPTION "
  This library provides core routines including linear algebra and integration
  with ThirdParty libraries."
+        DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-utilities_LIBS}")
-    set(NEK_DEP "libnektar++-utilities (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-utilities (= ${NEKTAR_VERSION})")
 
     add_nektar_package(
         NAME libnektar++-stdregions
@@ -295,7 +298,7 @@ if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
         DESCRIPTION
         "This library provides mesh generation and library routines for the 
          NekMesh executable."
-        INSTALL_LIBS "${libnektar++-nekmeshutols_LIBS}")
+        INSTALL_LIBS "${libnektar++-nekmeshutils_LIBS}")
     add_nektar_package(
         NAME libnektar++-collections
         TYPE rpm
@@ -311,6 +314,13 @@ if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
         DESCRIPTION
         "This library provides global expansions on multi-element domains."
         INSTALL_LIBS "${libnektar++-multiregions_LIBS}")
+    add_nektar_package(
+        NAME libnektar++-globalmapping
+        TYPE rpm
+        SUMMARY "Nektar++ GlobalMapping library"
+        DESCRIPTION 
+        "This library provides deformation routines for Nektar++ simulations."
+        INSTALL_LIBS "${libnektar++-globalmapping_LIBS}")
     add_nektar_package(
         NAME libnektar++-solverutils
         TYPE rpm
@@ -466,6 +476,7 @@ set(CPACK_SOURCE_IGNORE_FILES
     "/\\\\.gitmodules"
     "/build/"
     "/builds/"
+    "/docs/tutorial"
     "/ThirdParty/"
     "/Testing/"
     "/library/Demos/MultiRegions/ExtraDemos/"

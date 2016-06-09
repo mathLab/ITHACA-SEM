@@ -36,6 +36,8 @@
 #include <StdRegions/StdNodalTriExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 
+using namespace std;
+
 namespace Nektar
 {
     namespace StdRegions
@@ -282,11 +284,14 @@ namespace Nektar
             const int                  eid,
             const Orientation      edgeOrient,
             Array<OneD, unsigned int> &maparray,
-            Array<OneD,          int> &signarray)
+            Array<OneD,          int> &signarray,
+            int                        P)
         {
             ASSERTL0(eid >= 0 && eid <= 2,
                      "Local Edge ID must be between 0 and 2"); 
-            
+
+            ASSERTL0(P == -1, "Nodal triangle not set up to deal with variable"
+                              "polynomial order.");
             const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
             
             if (maparray.num_elements() != nEdgeCoeffs)

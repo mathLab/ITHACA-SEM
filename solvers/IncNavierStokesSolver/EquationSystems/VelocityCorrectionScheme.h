@@ -118,6 +118,12 @@ namespace Nektar
         /// Diffusion coefficient of SVV modes
         NekDouble m_sVVDiffCoeff;
 
+        /// Save aiiDt value to use as a trip to reset global matrix setup
+        Array<OneD, NekDouble> m_saved_aii_Dt;
+
+        /// Variable Coefficient map for the Laplacian which can be activated as part of SVV or otherwise
+        StdRegions::VarCoeffMap m_varCoeffLap; 
+
         // Virtual functions
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 

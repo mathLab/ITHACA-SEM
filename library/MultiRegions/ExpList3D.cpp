@@ -44,6 +44,8 @@
 #include <LibUtilities/Foundations/Interp.h>
 #include <LibUtilities/Foundations/PhysGalerkinProject.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

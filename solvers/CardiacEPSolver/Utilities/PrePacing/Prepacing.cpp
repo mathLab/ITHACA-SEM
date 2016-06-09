@@ -3,6 +3,7 @@
 #include <CardiacEPSolver/CellModels/CellModel.h>
 #include <CardiacEPSolver/Stimuli/Stimulus.h>
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])

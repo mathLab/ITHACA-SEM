@@ -46,7 +46,7 @@
     static OperatorKey m_typeArr[];                             \
     friend class MemoryManager<cname>;                          \
     static OperatorSharedPtr create(                            \
-        vector<StdRegions::StdExpansionSharedPtr> pCollExp,     \
+        std::vector<StdRegions::StdExpansionSharedPtr> pCollExp,\
         boost::shared_ptr<CoalescedGeomData> GeomData)          \
     {                                                           \
         return MemoryManager<cname>                             \
@@ -99,7 +99,7 @@ const char* const ImplementationTypeMap[] =
 
 typedef bool ExpansionIsNodal;
 
-typedef map<OperatorType, ImplementationType> OperatorImpMap;
+typedef std::map<OperatorType, ImplementationType> OperatorImpMap;
 
 /// simple Operator Implementation Map generator
 OperatorImpMap SetFixedImpType(ImplementationType defaultType);
@@ -110,7 +110,7 @@ class Operator
     public:
         /// Constructor
         Operator(
-                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                std::vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 boost::shared_ptr<CoalescedGeomData> GeomData)
             : m_stdExp(pCollExp[0]->GetStdExp()),
               m_numElmt(pCollExp.size()),
@@ -161,7 +161,7 @@ std::ostream &operator<<(std::ostream &os, OperatorKey const &p);
 typedef Nektar::LibUtilities::NekFactory<
     OperatorKey,
     Operator,
-    vector<StdRegions::StdExpansionSharedPtr>,
+    std::vector<StdRegions::StdExpansionSharedPtr>,
     CoalescedGeomDataSharedPtr> OperatorFactory;
 
 /// Returns the singleton Operator factory object

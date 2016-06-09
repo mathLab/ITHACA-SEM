@@ -164,8 +164,8 @@ namespace Nektar
             {
                 /// Casting the boundary expansion to the specific case
                 Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
-                            (m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                                ->GetExp(m_HBCdata[j].m_bndElmtOffset));
+                            (m_PBndExp[m_HBCdata[j].m_bndryID]
+                                ->GetExp(m_HBCdata[j].m_bndElmtID));
 
                 /// Picking up the element where the HOPBc is located
                 elmt = m_pressure->GetExp(m_HBCdata[j].m_globalElmtID);
@@ -241,7 +241,6 @@ namespace Nektar
             int nvel = m_fields.num_elements()-1;
             
             Array<OneD, NekDouble> Pvals;
-            Array<OneD, NekDouble> Uvals;
             StdRegions::StdExpansionSharedPtr Pbc;
             StdRegions::StdExpansionSharedPtr elmt;
 
@@ -339,8 +338,8 @@ namespace Nektar
             {
                 /// Casting the boundary expansion to the specific case
                 Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
-                            (m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                                ->GetExp(m_HBCdata[j].m_bndElmtOffset));
+                            (m_PBndExp[m_HBCdata[j].m_bndryID]
+                                ->GetExp(m_HBCdata[j].m_bndElmtID));
 
                 /// Picking up the element where the HOPBc is located
                 elmt = m_pressure->GetExp(m_HBCdata[j].m_globalElmtID);
@@ -359,10 +358,7 @@ namespace Nektar
                     MountHOPBCs(m_HBCdata[j].m_ptsInElmt,kinvis,Q[i],Advection[i]);
                 }
 
-                Pvals = m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
-                            + m_PBndExp[m_HBCdata[j].m_bndryElmtID]
-                                ->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset);
-                Uvals = (m_acceleration[0]) + m_HBCdata[j].m_coeffOffset;
+                Pvals = m_pressureHBCs[0] + m_HBCdata[j].m_coeffOffset;
 
                 // Getting values on the edge and filling the pressure boundary
                 // expansion and the acceleration term. Multiplication by the
@@ -380,33 +376,24 @@ namespace Nektar
                         // InnerProduct 
                         Pbc->NormVectorIProductWRTBase(BndValues[0], BndValues[1],
                                                        Pvals);
-
-                        elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              Velocity[0], BndValues[0]);
-                        elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              Velocity[1], BndValues[1]);
-
-                        // InnerProduct                     
-                        Pbc->NormVectorIProductWRTBase(BndValues[0], BndValues[1],
-                                                       Uvals);
                     }
                     break;
                     case MultiRegions::e3DH2D:
                     {
                         if(m_HBCdata[j].m_elmtTraceID == 0)
                         {
-                            (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
-                                + m_PBndExp[m_HBCdata[j].m_bndryElmtID]
+                            (m_PBndExp[m_HBCdata[j].m_bndryID]->UpdateCoeffs()
+                                + m_PBndExp[m_HBCdata[j].m_bndryID]
                                     ->GetCoeff_Offset(
-                                        m_HBCdata[j].m_bndElmtOffset))[0]
+                                        m_HBCdata[j].m_bndElmtID))[0]
                                                                     = -1.0*Q[0][0];
                         }
                         else if (m_HBCdata[j].m_elmtTraceID == 1)
                         {
-                            (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
-                                + m_PBndExp[m_HBCdata[j].m_bndryElmtID]
+                            (m_PBndExp[m_HBCdata[j].m_bndryID]->UpdateCoeffs()
+                                + m_PBndExp[m_HBCdata[j].m_bndryID]
                                     ->GetCoeff_Offset(
-                                        m_HBCdata[j].m_bndElmtOffset))[0] 
+                                        m_HBCdata[j].m_bndElmtID))[0] 
                                                 = Q[0][m_HBCdata[j].m_ptsInElmt-1];
                         }
                         else
@@ -427,15 +414,6 @@ namespace Nektar
                                               Q[2], BndValues[2]);
                         Pbc->NormVectorIProductWRTBase(BndValues[0], BndValues[1],
                                               BndValues[2], Pvals);
-
-                        elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              Velocity[0], BndValues[0]);
-                        elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              Velocity[1], BndValues[1]);
-                        elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID, Pbc,
-                                              Velocity[2], BndValues[2]);
-                        Pbc->NormVectorIProductWRTBase(BndValues[0], BndValues[1],
-                                              BndValues[2], Uvals);
                     }
                     break;
                 default:
@@ -448,19 +426,9 @@ namespace Nektar
         //     by the relaxation parameter, and zero the correction term
         if (m_implicitPressure)
         {
-            int n, cnt;
-
-            for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
-            {
-                if(m_PBndConds[n]->GetUserDefined() == "H")
-                {
-                    int nq = m_PBndExp[n]->GetNcoeffs();
-                    Vmath::Smul(nq, m_pressureRelaxation,
-                                    &(m_PBndExp[n]->GetCoeffs()[0]),  1, 
-                                    &(m_PBndExp[n]->UpdateCoeffs()[0]), 1);
-                    cnt += nq;
-                }
-            }    
+            Vmath::Smul(m_pressureHBCs[0].num_elements(), m_pressureRelaxation,
+                            m_pressureHBCs[0],  1,
+                            m_pressureHBCs[0], 1);
         } 
         m_bcCorrection  = Array<OneD, NekDouble> (m_pressureHBCs[0].num_elements(), 0.0);
     }

@@ -96,6 +96,8 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{C0Projection}: Computes the C0 projection of a given output file;
 \item \inltt{QCriterion}: Computes the Q-Criterion for a given output file;
 \item \inltt{addFld}: Sum two .fld files;
+\item \inltt{combineAvg}: Combine two \nekpp binary output (.chk or .fld) field file containing averages of fields (and
+possibly also Reynolds stresses) into single file;
 \item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file;
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
@@ -107,6 +109,8 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{isocontour}: Extract an isocontour of ``fieldid'' variable and at value ``fieldvalue''. Optionally ``fieldstr'' can be specified for a string defiition or ``smooth'' for smoothing;
 \item \inltt{jacobianenergy}: Shows high frequency energy of Jacobian;
 \item \inltt{meanmode}: Extract mean mode (plane zero) of 3DH1D expansions;
+\item \inltt{pointdatatofld}: Given discrete data at quadrature points
+  project them onto an expansion basis and output fld file; 
 \item \inltt{printfldnorms}: Print L2 and LInf norms to stdout;
 \item \inltt{scalargrad}: Computes scalar gradient field;
 \item \inltt{scaleinputfld}: Rescale input field by a constant factor;
@@ -138,6 +142,33 @@ where the file \inltt{test-C0Proj.fld} can be processed in a similar
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise the result either in Tecplot, Paraview or VisIt.
 
+The option \inltt{localtoglobalmap} will do a global gather of the
+coefficients and then scatter them back to the local elements. This
+will replace the coefficients shared between two elements with the
+coefficients of one of the elements (most likely the one with the
+highest id). Although not a formal projection it does not require any
+matrix inverse and so is very cheap to perform.
+
+The option \inltt{usexmlbcs} will enforce the boundary conditions
+specified in the input xml file.
+
+The option \inltt{helmsmoothing=$L$} will perform a Helmholtz
+smoothing projection of the form
+\[
+\left (\nabla^2 + \left (\frac{2 \pi}{L}\right )^2 \right ) \hat{u}^{new} =
+\left (\frac{2 \pi}{L}\right )^2 \hat{u}^{orig}
+\]
+which can be interpreted in a Fourier sense as smoothing the original
+coefficients using a low pass filter of the form
+\[
+\hat{u}_k^{new} = \frac{1}{(1 + k^2/K_0^2)} \hat{u}_k^{orig} \mbox{\,  where  \,}
+K_0 = \frac{2 \pi}{L}
+\]
+and so $L$ is the length scale below which the coefficients values are
+halved or more. Since this form of the Helmholtz operator is not
+possitive definite, currently a direct solver is necessary and so this
+smoother is mainly of use in two-dimensions.
+
 \subsection{Calculate Q-Criterion: \textit{QCriterion} module}
 To perform the Q-criterion calculation and obtain an output
 data containing the Q-criterion solution, the user can run
@@ -167,6 +198,21 @@ which multiply the values of a given .fld file by a constant \inltt{value}.
 is the associated session file, \inltt{file2.fld} is the .fld file which
 is summed to \inltt{file1.fld} and finally \inltt{file3.fld} is the output
 which contain the sum of the two .fld files.
+\inltt{file3.fld} can be processed in a similar way as described 
+in section \ref{s:utilities:fieldconvert:sub:convert} to visualise 
+the result either in Tecplot, Paraview or VisIt.
+%
+%
+%
+\subsection{Combine two .fld files containing time averages: \textit{combineAvg} module}
+To combine two .fld files obtained through the AverageFields or ReynoldsStresses filters,
+use the \inltt{combineAvg} module of FieldConvert
+%
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m combineAvg:fromfld=file1.fld file1.xml file2.fld \
+  file3.fld
+\end{lstlisting}
+%
 \inltt{file3.fld} can be processed in a similar way as described 
 in section \ref{s:utilities:fieldconvert:sub:convert} to visualise 
 the result either in Tecplot, Paraview or VisIt.
@@ -446,17 +492,33 @@ can be specified where \inltt{npts} is the number of equispaced points between
 $(x0,y0)$ to $(x1,y1)$ which can also be used in 3D by specifying $(x0,y0,z0)$
 to $(x1,y1,z1)$.
 
-An extraction of a plane can also be specified by
-\begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:plane=npts1,\
-	npts2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3
+An extraction of a plane of points can also be specified by
+\begin{lstlisting}[style=BashInputStyle] 
+  FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:\
+        plane=npts1,npts2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3
 \end{lstlisting}
 where \inltt{npts1,npts2} is the number of equispaced points in each
 direction and $(x0,y0,z0)$, $(x1,y1,z1)$, $(x2,y2,z2)$ and $(x3,y3,z3)$
 define the plane of points specified in a clockwise or anticlockwise direction.
+
+In addition an extraction of a box of points can also be specified by
+\begin{lstlisting}[style=BashInputStyle] 
+  FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:\
+       box=npts1,npts2,npts3,xmin,xmax,ymin,ymax,zmin,zmax
+\end{lstlisting}
+where \inltt{npts1,npts2,npts3} is the number of equispaced points in each 
+direction and $(xmin,ymin,zmin)$ and $(xmax,ymax,zmax3)$ 
+define the limits of the box of points. 
+
+For the plane and box interpolation there is an additional optional
+argument \inltt{cp=p0,q} which adds to the interpolated fields the value of
+$c_p=(p-p0)/q$ and $c_{p0}=(p-p0+0.5 u^2)/q$ where $p0$ is a reference
+pressure and $q$ is the free stream dynamics pressure. If the input
+does not contain a field ``p'' or a velocity field ``u,v,w'' then $cp$
+and $cp0$ are not evaluated accordingly
 %
-\begin{notebox}
-This module does not run in parallel.
+\begin{notebox} 
+This module  runs in parallel for the plane and box extraction of points. In this case a series of .dat files are generated that can be concatinated together. Other options do not run in parallel.
 \end{notebox}
 %
 %
@@ -488,14 +550,17 @@ the .dat file, i.e.
 Optionally \inltt{smooth} can be specified to smooth the isocontour
 with default values \inltt{smoothnegdiffusion}=0.495,
 \inltt{smoothnegdiffusion}=0.5 and \inltt{smoothiter}=100. This option
-automatically calls a \inltt{globalcondense} option which remove
-multiply defined verties from the simplex definition which arise as
-isocontour are generated element by element.
+typically should be used wiht the \inltt{globalcondense} option which
+removes multiply defined verties from the simplex definition which
+arise as isocontour are generated element by element. The
+\inltt{smooth} option preivously automatically called the
+\inltt{globalcondense} option but this has been depracated since it is
+now possible to read isocontour files directly and so it is useful to
+have these as separate options.
 
 In addition to the \inltt{smooth} or \inltt{globalcondense} options
 you can specify \inltt{removesmallcontour}=100 which will remove
-separate isocontours of less than 100 triangles. This optin requires
-\inltt{smooth} or \inltt{globalcondense} to be specified.
+separate isocontours of less than 100 triangles. 
 
 \begin{notebox}
 Currently this option is only set up for triangles, quadrilaterals,
@@ -534,6 +599,72 @@ FieldConvert -m meanmode file.xml file.fld file-mean.fld
 The output file \inltt{file-mean.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise the result either in Tecplot or in Paraview or VisIt.
+%
+%
+%
+
+\subsection{ Project point data to a field: \textit{pointdatatofld} module}
+\label{s:utilities:fieldconvert:sub:pointdatatofld}
+To project a series of points given at the same quadrature distribution as the .xml file and write out a .fld file use the pointdatatofld module:
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert --noequispaced -m pointdatatofld file.pts file.xml file.fld
+\end{lstlisting}
+%
+This command will read in the points provided in the \inltt{file.pts}
+and assume these are given at the same quadrature distribution as the
+mesh and expansions defined in \inltt{file.xml} and output the field
+to \inltt{file.fld}. If the points do not match an error will be dumped. 
+
+
+The file \inltt{file.pts} which is assumed to be given by an interpolation from another source is of the form:
+%
+\begin{lstlisting}[style=XMLStyle]
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+  <POINTS DIM="3" FIELDS="p">
+  1.70415 -0.4       -0.0182028      -0.106893
+  1.70415 -0.395683  -0.0182028      -0.106794
+  1.70415 -0.3875    -0.0182028      -0.106698
+  1.70415 -0.379317  -0.0182028      -0.103815
+  </POINTS>
+</NEKTAR>
+\end{lstlisting}
+%
+where \inltt{DIM="3" FIELDS="p} specifies that the field is
+three-dimensional and contains one variable, $p$. Each line defines a
+point, the first, second, and third columns contains the
+$x,y,z$-coordinate and subsequent columns contain the field values, in
+this case the $p$-value So in the general case of $n$-dimensional
+data, the $n$ coordinates are specified in the first $n$ columns
+accordingly followed by the field data. 
+
+The default argument is to use the equipapced (but potentially
+collapsed) coordinates which can  be obtained from the command.
+
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert file.xml file.dat
+\end{lstlisting}
+
+In this case the pointdatatofld module shoudl be used without the
+\inltt{--noequispaced} option. However this can lead to problems when
+peforming an elemental forward projection/transform since the mass
+matrix in a deformed element can be singular as the equispaced points
+do not have a sufficiently accurate quadrature rule that spans the
+polynomial space. Therefore it is adviseable to use the set of points
+given by
+
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert --noequispaced file.xml file.dat
+\end{lstlisting}
+
+which produces a set of points at the gaussian collapsed
+coordinates. In this case one must also use the \inltt{--noequispaced}
+option when projecting to a field.
+
+Finally the option \inltt{setnantovalue=0} can also be used which sets
+any nan values in the interpolation to zero or any specified value in
+this option.
 
 %
 %

@@ -41,6 +41,7 @@ using namespace std;
 #include <LibUtilities/BasicUtils/Timer.h>
 
 #include "InputXml.h"
+using namespace Nektar;
 
 static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
                 "NumberOfPoints","n","Define number of points to dump output");
@@ -87,7 +88,7 @@ InputXml::~InputXml()
  */
 void InputXml::Process(po::variables_map &vm)
 {
-    Timer timer, timerpart;
+    Timer timerpart;
 
     //check for multiple calls to inputXml due to split xml
     //files. If so just return
@@ -104,7 +105,6 @@ void InputXml::Process(po::variables_map &vm)
         if(m_f->m_comm->GetRank() == 0)
         {
             cout << "Processing input xml file" << endl;
-            timer.Start();
             timerpart.Start();
         }
     }
@@ -134,7 +134,6 @@ void InputXml::Process(po::variables_map &vm)
 
     string xml_ending = "xml";
     string xml_gz_ending = "xml.gz";
-
 
     std::vector<std::string> files;
     // load .xml ending
@@ -226,7 +225,6 @@ void InputXml::Process(po::variables_map &vm)
                  "argument");
     }
 
-
     // Set up command lines options that will be passed through to SessionReader
     vector<string> cmdArgs;
     cmdArgs.push_back("FieldConvert");
@@ -253,6 +251,13 @@ void InputXml::Process(po::variables_map &vm)
         cmdArgs.push_back("--part-only-overlapping");
         cmdArgs.push_back(
             boost::lexical_cast<string>(vm["part-only-overlapping"].as<int>()));
+    }
+
+    if(vm.count("npz"))
+    {
+        cmdArgs.push_back("--npz");
+        cmdArgs.push_back(
+            boost::lexical_cast<string>(vm["npz"].as<int>()));
     }
 
     int argc = cmdArgs.size();
@@ -316,7 +321,7 @@ void InputXml::Process(po::variables_map &vm)
 
     m_f->m_exp.resize(1);
 
-    // load fielddef if fld file is defined This gives
+    // load fielddef header if fld file is defined. This gives
     // precedence to Homogeneous definition in fld file
     int NumHomogeneousDir = 0;
     if(fldfilegiven)
@@ -375,6 +380,14 @@ void InputXml::Process(po::variables_map &vm)
 
         m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
     }
+    else
+    {
+        if(vm.count("output-points"))
+        {
+            int nPointsNew = vm["output-points"].as<int>();
+            m_f->m_graph->SetExpansionsToPointOrder(nPointsNew);
+        }
+    }
 
     if(m_f->m_verbose)
     {
@@ -412,16 +425,6 @@ void InputXml::Process(po::variables_map &vm)
             ss1 << cpuTime << "s";
             cout << "\t InputXml set first exp CPU Time: " << setw(8) << left
                  << ss1.str() << endl;
-
-            
-            timer.Stop();
-            cpuTime = timer.TimePerTest(1);
-            
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "InputXml  CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-
         }
     }
 }

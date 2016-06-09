@@ -62,15 +62,15 @@ public:
     virtual void Process();
 
 protected:
-    void   GenerateNormals(vector<ElementSharedPtr> &el,
+    void   GenerateNormals(std::vector<ElementSharedPtr> &el,
                            MeshSharedPtr &mesh);
     double CrossProdMag   (Node &a, Node &b);
     void   UnitCrossProd  (Node &a, Node &b, Node &c);
     double Blend          (double r);
-    void   SuperBlend     (vector<double> &r,
-                           vector<Node>   &Q,
+    void   SuperBlend     (std::vector<double> &r,
+                           std::vector<Node>   &Q,
                            Node           &P,
-                           vector<double> &blend);
+                           std::vector<double> &blend);
 };
 
 }

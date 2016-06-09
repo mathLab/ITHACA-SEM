@@ -35,6 +35,8 @@
 
 #include <ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string SteadyAdvectionDiffusionReaction::className = GetEquationSystemFactory().RegisterCreatorFunction("SteadyAdvectionDiffusionReaction", SteadyAdvectionDiffusionReaction::create);

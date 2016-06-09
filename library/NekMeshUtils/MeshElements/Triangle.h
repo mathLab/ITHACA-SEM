@@ -52,20 +52,20 @@ namespace NekMeshUtils
  */
 template <typename T> struct HOTriangle
 {
-    HOTriangle(vector<int> pVertId, vector<T> pSurfVerts)
+    HOTriangle(std::vector<int> pVertId, std::vector<T> pSurfVerts)
         : vertId(pVertId), surfVerts(pSurfVerts)
     {
     }
-    HOTriangle(vector<int> pVertId) : vertId(pVertId)
+    HOTriangle(std::vector<int> pVertId) : vertId(pVertId)
     {
     }
 
     /// The triangle vertex IDs
-    vector<int> vertId;
+    std::vector<int> vertId;
 
     /// The triangle surface vertices -- templated so that this can
     /// either be nodes or IDs.
-    vector<T> surfVerts;
+    std::vector<T> surfVerts;
 
     /**
      * @brief Rotates the triangle of data points inside #surfVerts
@@ -77,7 +77,7 @@ template <typename T> struct HOTriangle
     {
         int n, i, j, cnt;
         int np = ((int)sqrt(8.0 * surfVerts.size() + 1.0) - 1) / 2;
-        vector<T> tmp(np * np);
+        std::vector<T> tmp(np * np);
 
         for (n = 0; n < nrot; ++n)
         {
@@ -113,7 +113,7 @@ template <typename T> struct HOTriangle
     {
         int i, j, cnt;
         int np = ((int)sqrt(8.0 * surfVerts.size() + 1.0) - 1) / 2;
-        vector<T> tmp(np * np);
+        std::vector<T> tmp(np * np);
 
         for (cnt = i = 0; i < np; ++i)
         {
@@ -135,7 +135,7 @@ template <typename T> struct HOTriangle
     /**
      * @brief Align this surface to a given vertex ID.
      */
-    void Align(vector<int> vertId)
+    void Align(std::vector<int> vertId)
     {
         if (vertId[0] == this->vertId[0])
         {

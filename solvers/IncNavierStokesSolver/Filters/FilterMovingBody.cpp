@@ -40,6 +40,8 @@
 #include <LocalRegions/Expansion3D.h>
 #include <IncNavierStokesSolver/Filters/FilterMovingBody.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

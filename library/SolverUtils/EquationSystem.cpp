@@ -60,7 +60,7 @@
 #include <iostream>
 #include <string>
 
-using std::string;
+using namespace std;
 
 namespace Nektar
 {
@@ -1556,18 +1556,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> > &F,
             Array<OneD, NekDouble> &outarray)
         {
-            // Use dimension of velocity vector to dictate dimension of operation
-            int ndim    = F.num_elements();
-            int nCoeffs = m_fields[0]->GetNcoeffs();
-
-            Array<OneD, NekDouble> iprod(nCoeffs);
-            Vmath::Zero(nCoeffs, outarray, 1);
-
-            for (int i = 0; i < ndim; ++i)
-            {
-                m_fields[0]->IProductWRTDerivBase(i, F[i], iprod);
-                Vmath::Vadd(nCoeffs, iprod, 1, outarray, 1, outarray, 1);
-            }
+            m_fields[0]->IProductWRTDerivBase(F,outarray);
         }
 
         /**
@@ -1713,7 +1702,7 @@ namespace Nektar
             int nPointsTot      = GetNpoints();
             int ncoeffs         = GetNcoeffs();
             int nTracePointsTot = GetTraceNpoints();
-        
+
             if (!nvariables)
             {
                 nvariables      = m_fields.num_elements();
@@ -2278,8 +2267,6 @@ namespace Nektar
                 else if (m_multipleModes)
                 {
                     AddSummaryItem(s, "ModeType", "Multiple Modes");
-                    AddSummaryItem(s, "Selected Mode",
-                                      boost::lexical_cast<string>(m_NumMode));
                 }
             }
             else if(m_HomogeneousType == eHomogeneous2D)

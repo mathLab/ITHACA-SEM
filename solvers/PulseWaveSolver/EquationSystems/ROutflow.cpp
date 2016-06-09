@@ -35,6 +35,8 @@
 
 #include <PulseWaveSolver/EquationSystems/ROutflow.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

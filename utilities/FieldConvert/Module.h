@@ -39,6 +39,7 @@
 #include <string>
 #include <map>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <vector>
 #include <set>
@@ -46,6 +47,7 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <StdRegions/StdNodalTriExp.h>
 #include <LibUtilities/Communication/CommSerial.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 #include "Field.hpp"
 
@@ -137,6 +139,8 @@ namespace Nektar
         public:
             Module(FieldSharedPtr p_f) : m_f(p_f), m_requireEquiSpaced(false) {}
             virtual void Process(po::variables_map &vm) = 0;
+
+            virtual std::string GetModuleName() = 0;
 
             void RegisterConfig(string key, string value);
             void PrintConfig();

@@ -217,6 +217,8 @@ namespace Nektar
             if (mkey.GetNVarCoeff() == 0
                 &&!mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
             {
+                using std::max;
+
                 // This implementation is only valid when there are no
                 // coefficients associated to the Laplacian operator
                 int       nquad0  = m_base[0]->GetNumPoints();
@@ -264,6 +266,8 @@ namespace Nektar
             if (mkey.GetNVarCoeff() == 0
                 &&!mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
             {
+                using std::max;
+
                 int       nquad0  = m_base[0]->GetNumPoints();
                 int       nquad1  = m_base[1]->GetNumPoints();
                 int       nqtot   = nquad0*nquad1;

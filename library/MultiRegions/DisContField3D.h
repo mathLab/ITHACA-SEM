@@ -42,12 +42,16 @@
 #include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
 #include <SpatialDomains/Conditions.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {        
+        class AssemblyMapDG;
+        
+
         class DisContField3D : public ExpList3D
         {
         public:
@@ -75,9 +79,16 @@ namespace Nektar
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
                 const GlobalLinSysKey &mkey);
             
+
             MULTI_REGIONS_EXPORT void EvaluateHDGPostProcessing(
                 Array<OneD, NekDouble> &outarray);
             
+            MULTI_REGIONS_EXPORT bool GetLeftAdjacentFaces(int cnt)
+            {
+                return m_leftAdjacentFaces[cnt];
+            }
+
+                        
         protected:
             /**
              * @brief An object which contains the discretised boundary
@@ -100,6 +111,9 @@ namespace Nektar
             GlobalLinSysMapShPtr        m_globalBndMat;
             ExpListSharedPtr            m_trace;
             AssemblyMapDGSharedPtr      m_traceMap;
+            /// Map of local trace (the points at the face of the
+            /// element) to the trace space discretisation
+            LocTraceToTraceMapSharedPtr m_locTraceToTraceMap; 
 
             /**
              * @brief A set storing the global IDs of any boundary faces.
@@ -125,15 +139,15 @@ namespace Nektar
              * @brief A map identifying which faces are left- and right-adjacent
              * for DG.
              */
-            vector<bool> m_leftAdjacentFaces;
+            std::vector<bool> m_leftAdjacentFaces;
 
             /**
              * @brief A vector indicating degress of freedom which need to be
              * copied from forwards to backwards space in case of a periodic
              * boundary condition.
              */
-            vector<int> m_periodicFwdCopy;
-            vector<int> m_periodicBwdCopy;
+            std::vector<int> m_periodicFwdCopy;
+            std::vector<int> m_periodicBwdCopy;
             
             void SetUpDG(const std::string = "DefaultVar");
             bool SameTypeOfBoundaryConditions(const DisContField3D &In);
@@ -154,6 +168,7 @@ namespace Nektar
                 const Array<OneD,const NekDouble> &field,
                       Array<OneD,      NekDouble> &Fwd,
                       Array<OneD,      NekDouble> &Bwd);
+            virtual const std::vector<bool> &v_GetLeftAdjacentFaces(void) const;
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
@@ -245,7 +260,7 @@ namespace Nektar
                 const NekDouble   x2_in   = NekConstants::kNekUnsetDouble,
                 const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
 
-            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
+            virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
         };
 
         typedef boost::shared_ptr<DisContField3D> DisContField3DSharedPtr;

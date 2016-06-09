@@ -64,6 +64,7 @@ namespace Nektar
             eModified,
             eModifiedQuadPlus1,
             eModifiedQuadPlus2,
+            eModifiedGLLRadau10,
             eOrthogonal,
             eGLL_Lagrange,
             eGLL_Lagrange_SEM,
@@ -88,6 +89,7 @@ namespace Nektar
             "MODIFIED",
             "MODIFIEDQUADPLUS1",
             "MODIFIEDQUADPLUS2",
+            "MODIFIEDGLLRADAU10",
             "ORTHOGONAL",
             "GLL_LAGRANGE",
             "GLL_LAGRANGE_SEM",
@@ -282,7 +284,7 @@ namespace Nektar
                         CompositeMap &compositeVector) const;
 
                 inline const CompositeMap &GetComposites() const;
-                inline const map<int,string> &GetCompositesLabels() const;
+                inline const std::map<int, std::string> &GetCompositesLabels() const;
 
                 inline const std::vector<CompositeMap> &GetDomain(void) const;
 
@@ -317,7 +319,11 @@ namespace Nektar
                 /// Reset expansion to have specified polynomial order \a nmodes
                 SPATIAL_DOMAINS_EXPORT void SetExpansionsToPolyOrder(int nmodes);
 
-                /// This function sets the expansion #exp in map with entry #variable
+                /// Reset expansion to have specified point order \a
+                /// npts
+                SPATIAL_DOMAINS_EXPORT void SetExpansionsToPointOrder(int npts);
+                /// This function sets the expansion #exp in map with
+                /// entry #variable
 
                 inline void SetExpansions(
                         const std::string variable,
@@ -417,12 +423,12 @@ namespace Nektar
                 HexGeomMap                              m_hexGeoms;
 
                 int                                     m_meshDimension;
-                map<int,string>                         m_compositesLabels;
                 int                                     m_spaceDimension;
                 int                                     m_partition;
                 bool                                    m_meshPartitioned;
 
                 CompositeMap                            m_meshComposites;
+                std::map<int, std::string>              m_compositesLabels;
                 std::vector<CompositeMap>               m_domain;
                 DomainRangeShPtr                        m_domainRange;
 
@@ -479,7 +485,7 @@ namespace Nektar
          * \brief Return a map of integers and strings containing the
          * labels of each composite
          */
-        inline const map<int,string>  &MeshGraph::GetCompositesLabels() const
+        inline const std::map<int, std::string> &MeshGraph::GetCompositesLabels() const
         {
             return m_compositesLabels;
         }
@@ -583,7 +589,7 @@ namespace Nektar
             PointGeomSharedPtr returnval;
             PointGeomMap::iterator x = m_vertSet.find(id);
             ASSERTL0(x != m_vertSet.end(),
-                     "Vertex " + boost::lexical_cast<string>(id)
+                     "Vertex " + boost::lexical_cast<std::string>(id)
                      + " not found.");
             return x->second;
         }

@@ -80,7 +80,7 @@ namespace Nektar
                 {
                     m_expr_id = -1;
                     std::string msg(std::string("Equation::Equation() fails on expression [") + m_expr + std::string("]\n"));
-                    ASSERTL1(false, msg);
+                    ASSERTL0(false, msg);
                     throw e;
                     return;
                 }
@@ -88,7 +88,7 @@ namespace Nektar
                 {
                     m_expr_id = -1;
                     std::string msg(std::string("Equation::Equation() fails on expression [") + m_expr + std::string("]\n"));
-                    ASSERTL1(false, msg);
+                    ASSERTL0(false, msg);
                     throw e;
                     return;
                 }

@@ -66,7 +66,10 @@ void ProcessGrad::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessGrad: Calculating gradients..." << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessGrad: Calculating gradients..." << endl;
+        }
     }
 
     int i, j;

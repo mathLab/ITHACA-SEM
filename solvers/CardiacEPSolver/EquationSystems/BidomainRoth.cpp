@@ -38,6 +38,8 @@
 #include <CardiacEPSolver/EquationSystems/BidomainRoth.h>
 #include <CardiacEPSolver/Filters/FilterCheckpointCellModel.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

@@ -12,6 +12,8 @@ ADD_NEKTAR_EXECUTABLE(StdProject_Diff2D
     COMPONENT demos DEPENDS StdRegions SOURCES StdProject_Diff2D.cpp)
 ADD_NEKTAR_EXECUTABLE(StdProject_Diff3D
     COMPONENT demos DEPENDS StdRegions SOURCES StdProject_Diff3D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdEquiToCoeff2D
+    COMPONENT demos DEPENDS StdRegions SOURCES StdEquiToCoeff2D.cpp)
 
 ADD_NEKTAR_TEST(StdProject1D_Seg_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject1D_Seg_Mod_P6_Q7)

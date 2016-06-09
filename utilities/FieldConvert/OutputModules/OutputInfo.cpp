@@ -122,7 +122,7 @@ void OutputInfo::Process(po::variables_map &vm)
         LibUtilities::GetMeshPartitionFactory().CreateInstance(
                                                  vPartitionerName, vSession);
 
-    vMeshPartition->PartitionMesh(false);
+    vMeshPartition->PartitionMesh(nprocs, true);
 
     // get hold of local partition ids
     std::vector<std::vector<unsigned int> > ElementIDs(nprocs);

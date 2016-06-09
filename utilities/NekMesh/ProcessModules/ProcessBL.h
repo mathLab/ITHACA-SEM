@@ -62,6 +62,10 @@ public:
     ProcessBL(MeshSharedPtr m);
     virtual ~ProcessBL();
 
+    // Create the boundary layer in 2D
+    void BoundaryLayer2D();
+    // Create the boundary layer in 3D
+    void BoundaryLayer3D();
     /// Write mesh to output file.
     virtual void Process();
 };

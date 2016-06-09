@@ -52,7 +52,7 @@ public:
     };
 
     CwipiCoupling(MultiRegions::ExpListSharedPtr field,
-                     string name, string distAppname, int outputFreq, double geomTol);
+                     string name, string distAppname, int outputFreq, double geomTol, int oversamp = 0);
 
     ~CwipiCoupling();
 

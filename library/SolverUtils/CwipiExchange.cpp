@@ -44,15 +44,13 @@
 
 #include <cwipi.h>
 
-#define RECV_ORDER_INC 10
-
 namespace Nektar
 {
 namespace SolverUtils
 {
 
 CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
-                                   string name, string distAppname, int outputFreq, double geomTol) :
+                                   string name, string distAppname, int outputFreq, double geomTol, int oversamp) :
     Coupling(field, name),
     m_distAppname(distAppname),
     m_outputFormat("Ensight Gold"),
@@ -72,7 +70,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     int spacedim = graph->GetSpaceDimension();
 
     SpatialDomains::MeshGraphSharedPtr recvGraph = SpatialDomains::MeshGraph::Read(m_evalField->GetSession());
-    recvGraph->SetExpansionsToPointOrder(RECV_ORDER_INC + m_evalField->GetExp(0)->GetBasisNumModes(0));
+    recvGraph->SetExpansionsToPointOrder(oversamp + m_evalField->GetExp(0)->GetNumPoints(0));
 
     // HACK: 6
     // TODO: DeclareCoeffPhysArrays
@@ -242,8 +240,6 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     }
 
     cwipi_set_points_to_locate(m_name.c_str(), m_nPoints, m_points);
-
-    cout << "number ov recv points = " << m_nPoints << endl;
 }
 
 

@@ -65,10 +65,10 @@ void Dummy::v_InitObject()
     ASSERTL0(m_session->DefinesCmdLineArgument("cwipi"),
              "This EquationSystem requires the --cwipi command line switch");
 
-    NekDouble filtWidth;
+    int oversamp;
     m_session->LoadParameter("EX_RecvSteps", m_recvSteps, 1);
     m_session->LoadParameter("EX_SendSteps", m_sendSteps, 1);
-    m_session->LoadParameter("EX_FiltWidth", filtWidth, 0.1);
+    m_session->LoadParameter("EX_Oversample", oversamp, 0);
 
     m_nRecvVars = 6;
 
@@ -79,7 +79,7 @@ void Dummy::v_InitObject()
     }
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
-        m_fields[0], "cpl1", "precise", 0, 1.0);
+        m_fields[0], "cpl1", "precise", 0, 1.0, oversamp);
     m_sendExchange = MemoryManager<CwipiExchange>::AllocateSharedPtr(
         m_coupling, "ex1", m_nRecvVars);
 }

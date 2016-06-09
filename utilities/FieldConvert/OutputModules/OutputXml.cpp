@@ -67,7 +67,10 @@ void OutputXml::Process(po::variables_map &vm)
 
     if (m_f->m_verbose)
     {
-        cout << "OutputXml: Writing file..." << endl;
+        if(m_f->m_comm->TreatAsRankZero())
+        {
+            cout << "OutputXml: Writing file..." << endl;
+        }
     }
 
     // Extract the output filename and extension

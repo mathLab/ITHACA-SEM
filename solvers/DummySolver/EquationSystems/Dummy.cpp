@@ -79,7 +79,7 @@ void Dummy::v_InitObject()
     }
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
-        m_fields[0], "cpl1", "precise", 0, 1.0, filtWidth);
+        m_fields[0], "cpl1", "precise", 0, 1.0);
     m_sendExchange = MemoryManager<CwipiExchange>::AllocateSharedPtr(
         m_coupling, "ex1", m_nRecvVars);
 }

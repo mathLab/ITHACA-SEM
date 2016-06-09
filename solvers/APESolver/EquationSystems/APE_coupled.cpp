@@ -82,7 +82,7 @@ void APE_coupled::v_InitObject()
     m_nRecvVars = 6;
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
-                        m_bfField, "cpl1", "precise", 0, 1.0, filtWidth);
+                        m_bfField, "cpl1", "precise", 0, 1.0);
     m_sendExchange = MemoryManager<CwipiExchange>::AllocateSharedPtr(
                             m_coupling, "ex1", m_nRecvVars);
 

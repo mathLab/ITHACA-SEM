@@ -58,7 +58,7 @@ public:
     };
 
     Coupling(MultiRegions::ExpListSharedPtr field, string name) :
-        m_field(field),
+        m_evalField(field),
         m_points(NULL),
         m_name(name)
     {
@@ -68,19 +68,14 @@ public:
     {
     };
 
-    MultiRegions::ExpListSharedPtr GetField()
+    MultiRegions::ExpListSharedPtr GetEvalField()
     {
-        return m_field;
+        return m_evalField;
     };
 
-    SolverUtils::Interpolator GetInterpolator()
+    Array<OneD, MultiRegions::ExpListSharedPtr> GetRecvFields()
     {
-        return m_interpolator;
-    };
-
-    LibUtilities::PtsFieldSharedPtr GetRecvMesh()
-    {
-        return m_recvMesh;
+        return m_recvFields;
     };
 
     string GetName()
@@ -105,9 +100,8 @@ public:
 
 protected:
 
-    MultiRegions::ExpListSharedPtr  m_field;
-    LibUtilities::PtsFieldSharedPtr m_recvMesh;
-    SolverUtils::Interpolator       m_interpolator;
+    MultiRegions::ExpListSharedPtr  m_evalField;
+    Array< OneD, MultiRegions::ExpListSharedPtr > m_recvFields;
 
     int m_nPoints;
     double *m_points;

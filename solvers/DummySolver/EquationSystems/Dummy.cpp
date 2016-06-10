@@ -142,7 +142,22 @@ void Dummy::receiveFields()
 
         m_sendExchange->ReceiveFields(0, m_time, m_recFields);
 
-        DumpFields("recFields_" + boost::lexical_cast<std::string>(m_time) + ".pts");
+        DumpFields("recFields_" + boost::lexical_cast<std::string>(m_time) +
+                       ".pts",
+                   m_fields[0],
+                   m_recFields);
+
+        Array<OneD, MultiRegions::ExpListSharedPtr> recvFields =
+            m_coupling->GetRecvFields();
+        Array<OneD, Array<OneD, NekDouble> > tmp(m_nRecvVars);
+        for (int i = 0; i < m_nRecvVars; ++i)
+        {
+            tmp[i] = recvFields[i]->GetPhys();
+        }
+        DumpFields("rawFields_" + boost::lexical_cast<std::string>(m_time) +
+                       ".pts",
+                   recvFields[0],
+                   tmp);
     }
 }
 
@@ -153,9 +168,15 @@ void Dummy::v_Output(void)
     m_coupling->FinalizeCoupling();
 }
 
-void Dummy::DumpFields(const string filename)
+void Dummy::DumpFields(const string filename,
+                       MultiRegions::ExpListSharedPtr field,
+                       Array<OneD, Array<OneD, NekDouble> > data)
 {
-    int nq = GetTotPoints();
+    ASSERTL0(data.num_elements() == m_nRecvVars, "dimension mismatch");
+    ASSERTL0(data[0].num_elements() == field->GetTotPoints(),
+             "dimension mismatch");
+
+    int nq = field->GetTotPoints();
 
     Array<OneD, Array<OneD, NekDouble> > tmp(m_nRecvVars + m_spacedim);
 
@@ -163,11 +184,11 @@ void Dummy::DumpFields(const string filename)
     {
         tmp[i] = Array<OneD, NekDouble>(nq, 0.0);
     }
-    m_fields[0]->GetCoords(tmp[0], tmp[1], tmp[2]);
+    field->GetCoords(tmp[0], tmp[1], tmp[2]);
 
     for (int i = 0; i < m_nRecvVars; ++i)
     {
-        tmp[m_spacedim + i] = m_recFields[i];
+        tmp[m_spacedim + i] = data[i];
     }
 
     LibUtilities::PtsIO ptsIO(m_session->GetComm());
@@ -177,10 +198,8 @@ void Dummy::DumpFields(const string filename)
     ptsIO.Write(filename, rvPts);
 }
 
-
-void Dummy::v_ExtraFldOutput(
-    std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-    std::vector<std::string>             &variables)
+void Dummy::v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                             std::vector<std::string> &variables)
 {
     for (int i = 0; i < m_spacedim + 2; i++)
     {

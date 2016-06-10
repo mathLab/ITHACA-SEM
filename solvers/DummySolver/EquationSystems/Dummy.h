@@ -93,8 +93,9 @@ protected:
 
     virtual void v_Output(void);
 
-    virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-                                      std::vector<std::string>             &variables);
+    virtual void v_ExtraFldOutput(
+        std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+        std::vector<std::string> &variables);
 
 private:
     Array<OneD, Array<OneD, NekDouble> > m_recFields;
@@ -102,7 +103,9 @@ private:
 
     void receiveFields();
 
-    void DumpFields(const std::string filename);
+    void DumpFields(const string filename,
+                    MultiRegions::ExpListSharedPtr field,
+                    Nektar::Array<OneD, Array<OneD, NekDouble> > data);
 };
 }
 

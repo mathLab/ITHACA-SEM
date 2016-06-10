@@ -70,7 +70,16 @@ void Dummy::v_InitObject()
     m_session->LoadParameter("EX_SendSteps", m_sendSteps, 1);
     m_session->LoadParameter("EX_Oversample", oversamp, 0);
 
-    m_nRecvVars = 6;
+    m_recvFieldNames.push_back("u0");
+    m_recvFieldNames.push_back("v0");
+    m_recvFieldNames.push_back("w0");
+    m_recvFieldNames.resize(m_spacedim);
+
+    m_recvFieldNames.push_back("p0");
+    m_recvFieldNames.push_back("rho0");
+    m_recvFieldNames.push_back("S");
+
+    m_nRecvVars = m_recvFieldNames.size();
 
     m_recFields = Array<OneD, Array<OneD, NekDouble> >(m_nRecvVars);
     for (int i = 0; i < m_recFields.num_elements(); ++i)
@@ -163,8 +172,8 @@ void Dummy::DumpFields()
 
     LibUtilities::PtsIO ptsIO(m_session->GetComm());
     LibUtilities::PtsFieldSharedPtr rvPts =
-        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(m_spacedim,
-                                                                 tmp);
+        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+            m_spacedim, m_recvFieldNames, tmp);
     ptsIO.Write("recFields_" + boost::lexical_cast<std::string>(time) + ".pts",
                 rvPts);
 }

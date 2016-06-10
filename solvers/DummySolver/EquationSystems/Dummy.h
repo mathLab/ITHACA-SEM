@@ -95,6 +95,7 @@ protected:
 
 private:
     Array<OneD, Array<OneD, NekDouble> > m_recFields;
+    std::vector<std::string> m_recvFieldNames;
 
     void receiveFields();
 

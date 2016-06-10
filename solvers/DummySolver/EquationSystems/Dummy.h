@@ -93,13 +93,16 @@ protected:
 
     virtual void v_Output(void);
 
+    virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                                      std::vector<std::string>             &variables);
+
 private:
     Array<OneD, Array<OneD, NekDouble> > m_recFields;
     std::vector<std::string> m_recvFieldNames;
 
     void receiveFields();
 
-    void DumpFields();
+    void DumpFields(const std::string filename);
 };
 }
 

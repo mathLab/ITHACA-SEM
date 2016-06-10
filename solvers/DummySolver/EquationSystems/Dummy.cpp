@@ -142,7 +142,7 @@ void Dummy::receiveFields()
 
         m_sendExchange->ReceiveFields(0, m_time, m_recFields);
 
-        DumpFields();
+        DumpFields("recFields_" + boost::lexical_cast<std::string>(m_time) + ".pts");
     }
 }
 
@@ -153,7 +153,7 @@ void Dummy::v_Output(void)
     m_coupling->FinalizeCoupling();
 }
 
-void Dummy::DumpFields()
+void Dummy::DumpFields(const string filename)
 {
     int nq = GetTotPoints();
 
@@ -174,8 +174,22 @@ void Dummy::DumpFields()
     LibUtilities::PtsFieldSharedPtr rvPts =
         MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
             m_spacedim, m_recvFieldNames, tmp);
-    ptsIO.Write("recFields_" + boost::lexical_cast<std::string>(time) + ".pts",
-                rvPts);
+    ptsIO.Write(filename, rvPts);
+}
+
+
+void Dummy::v_ExtraFldOutput(
+    std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+    std::vector<std::string>             &variables)
+{
+    for (int i = 0; i < m_spacedim + 2; i++)
+    {
+        Array<OneD, NekDouble> tmpC(GetNcoeffs());
+
+        m_fields[0]->FwdTrans(m_recFields[i], tmpC);
+        variables.push_back(m_recvFieldNames[i]);
+        fieldcoeffs.push_back(tmpC);
+    }
 }
 
 } // end of namespace

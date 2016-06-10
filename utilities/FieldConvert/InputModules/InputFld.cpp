@@ -139,41 +139,45 @@ void InputFld::Process(po::variables_map &vm)
     }
 
 
-    if(m_f->m_graph)  // all for restricted expansion defintion when loading field
+    if(m_f->m_graph)
     {
-        // currently load all field (possibly could read data from expansion list
-        // but it is re-arranged in expansion)
-
-        const SpatialDomains::ExpansionMap &expansions = m_f->m_graph->GetExpansions();
-
-        // if Range has been speficied it is possible to have a
-        // partition which is empty so check this and return if
-        // no elements present.
-
-        if(!expansions.size())
+        if (m_f->m_data == LibUtilities::NullVectorNekDoubleVector)
         {
-            return;
+            // currently load all field (possibly could read data from
+            //  expansion list but it is re-arranged in expansion)
+
+            const SpatialDomains::ExpansionMap &expansions =
+                    m_f->m_graph->GetExpansions();
+
+            // if Range has been speficied it is possible to have a
+            // partition which is empty so check this and return if
+            // no elements present.
+
+            if(!expansions.size())
+            {
+                return;
+            }
+
+            m_f->m_exp.resize(1);
+
+            Array<OneD,int> ElementGIDs(expansions.size());
+            SpatialDomains::ExpansionMap::const_iterator expIt;
+
+            i = 0;
+            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            {
+                ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
+            }
+
+            m_f->m_fielddef.clear();
+            m_f->m_data.clear();
+
+            m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],
+                               m_f->m_fielddef,
+                               m_f->m_data,
+                               m_f->m_fieldMetaDataMap,
+                               ElementGIDs);
         }
-
-        m_f->m_exp.resize(1);
-
-        Array<OneD,int> ElementGIDs(expansions.size());
-        SpatialDomains::ExpansionMap::const_iterator expIt;
-
-        i = 0;
-        for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
-        {
-            ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
-        }
-
-        m_f->m_fielddef.clear();
-        m_f->m_data.clear();
-
-        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],
-                           m_f->m_fielddef,
-                           m_f->m_data,
-                           m_f->m_fieldMetaDataMap,
-                           ElementGIDs);
     }
     else // load all data.
     {

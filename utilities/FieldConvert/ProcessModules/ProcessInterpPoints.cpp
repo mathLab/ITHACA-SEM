@@ -462,7 +462,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
              "wihtin the domain given by the xml files?");
 
     string fromfld = m_config["fromfld"].as<string>();
-    fromField->m_data.clear();
     fromField->m_fld->Import(fromfld,fromField->m_fielddef,
                              fromField->m_data,
                              LibUtilities::NullFieldMetaDataMap,
@@ -600,7 +599,6 @@ void ProcessInterpPoints::InterpolateFieldToPts(
     }
     
     // resize data field
-    m_f->m_data.clear();
     m_f->m_data.resize(nfields);
 
     for (f = 0; f < nfields; ++f)

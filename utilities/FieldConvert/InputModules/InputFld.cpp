@@ -141,7 +141,7 @@ void InputFld::Process(po::variables_map &vm)
 
     if(m_f->m_graph)
     {
-        if (m_f->m_data == LibUtilities::NullVectorNekDoubleVector)
+        if (m_f->m_data.size() == 0)
         {
             // currently load all field (possibly could read data from
             //  expansion list but it is re-arranged in expansion)

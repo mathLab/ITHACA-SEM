@@ -66,7 +66,6 @@ namespace Utilities
 
 struct Field {
     Field() : m_verbose(false),
-              m_data(LibUtilities::NullVectorNekDoubleVector),
               m_declareExpansionAsContField(false),
               m_declareExpansionAsDisContField(false),
               m_writeBndFld(false),

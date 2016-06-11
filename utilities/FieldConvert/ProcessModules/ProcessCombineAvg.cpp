@@ -109,11 +109,11 @@ void ProcessCombineAvg::Process(po::variables_map &vm)
         ElementGIDs[i] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
     }
     // Import fromfld file
-    m_f->m_fld->Import(fromfld,
-                       fromField->m_fielddef,
-                       fromField->m_data,
-                       fromFieldMetaDataMap,
-                       ElementGIDs);
+    m_f->FieldIOForFile(fromfld)->Import(fromfld,
+                                         fromField->m_fielddef,
+                                         fromField->m_data,
+                                         fromFieldMetaDataMap,
+                                         ElementGIDs);
     ASSERTL0(fromField->m_fielddef[0]->m_fields.size() == nfields,
              "Mismatch in number of fields");
     // Extract data to fromPhys

@@ -160,10 +160,9 @@ void ProcessInterpField::Process(po::variables_map &vm)
     }
 
     string fromfld = m_config["fromfld"].as<string>();
-    m_f->m_fld->Import(fromfld,m_fromField->m_fielddef,
-                       m_fromField->m_data,
-                       LibUtilities::NullFieldMetaDataMap,
-                       ElementGIDs);
+    m_f->FieldIOForFile(fromfld)->Import(
+        fromfld, m_fromField->m_fielddef, m_fromField->m_data,
+        LibUtilities::NullFieldMetaDataMap, ElementGIDs);
 
     int NumHomogeneousDir = m_fromField->m_fielddef[0]->m_numHomogeneousDir;
 

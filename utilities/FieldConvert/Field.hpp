@@ -56,7 +56,6 @@
 #include <MultiRegions/DisContField2D.h>
 #include <MultiRegions/DisContField3D.h>
 
-
 using namespace std;
 
 namespace Nektar
@@ -94,7 +93,6 @@ struct Field {
     LibUtilities::CommSharedPtr             m_comm;
     LibUtilities::SessionReaderSharedPtr    m_session;
     SpatialDomains::MeshGraphSharedPtr      m_graph;
-    LibUtilities::FieldIOSharedPtr          m_fld;
     LibUtilities::PtsIOSharedPtr            m_ptsIO;
     map<string, vector<string> >            m_inputfiles;
 
@@ -398,6 +396,27 @@ struct Field {
         return exp;
     };
 
+    LibUtilities::FieldIOSharedPtr FieldIOForFile(string filename)
+    {
+        LibUtilities::CommSharedPtr c = m_session ? m_session->GetComm() :
+            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+        string fmt = LibUtilities::FieldIO::GetFileType(filename, c);
+        map<string, LibUtilities::FieldIOSharedPtr>::iterator it =
+            m_fld.find(fmt);
+
+        if (it == m_fld.end())
+        {
+            LibUtilities::FieldIOSharedPtr fld =
+                LibUtilities::GetFieldIOFactory().CreateInstance(fmt, c, true);
+            m_fld[fmt] = fld;
+            return fld;
+        }
+        else
+        {
+            return it->second;
+        }
+    }
+
     MultiRegions::ExpListSharedPtr AppendExpList(int NumHomogeneousDir,
                                                  string var = "DefaultVar",
                                                  bool NewField = false)
@@ -690,6 +709,8 @@ struct Field {
         return tmp;
     }
 
+private:
+    map<string, LibUtilities::FieldIOSharedPtr> m_fld;
 };
 
 typedef boost::shared_ptr<Field> FieldSharedPtr;

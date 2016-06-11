@@ -516,8 +516,7 @@ void AdjointAdvection::ImportFldBase(
     }
 
     LibUtilities::FieldIOSharedPtr fld =
-    MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-                                                    m_session->GetComm());
+        LibUtilities::FieldIO::CreateForFile(m_session, pInfile);
     fld->Import(pInfile, FieldDef, FieldData,
                 LibUtilities::NullFieldMetaDataMap,
                 ElementGIDs);

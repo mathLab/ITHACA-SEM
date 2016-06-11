@@ -90,14 +90,14 @@ void InputPts::Process(po::variables_map &vm)
     if(m_f->m_session)
     {
         m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>::
-        AllocateSharedPtr(m_f->m_session->GetComm());
+            AllocateSharedPtr(m_f->m_session->GetComm(), false);
 
     }
     else // serial communicator
     {
         LibUtilities::CommSharedPtr c = LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
         m_f->m_ptsIO = MemoryManager<LibUtilities::PtsIO>
-            ::AllocateSharedPtr(c);
+            ::AllocateSharedPtr(c, false);
     }
 
     m_f->m_ptsIO->Import(inFile,  m_f->m_fieldPts);

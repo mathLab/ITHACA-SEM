@@ -1584,7 +1584,7 @@ namespace Nektar
                     }
                 }
             }
-            GetComm()->AllReduce(isPartitioned, LibUtilities::ReduceMax);
+            GetComm()->Bcast(isPartitioned, 0);
 
             // If the mesh is already partitioned, we are done. Remaining
             // processes must load their partitions.
@@ -1681,11 +1681,7 @@ namespace Nektar
                         keys.resize(2);
                         keys[0] = m_compOrder.size();
                         keys[1] = m_bndRegOrder.size();
-
-                        for (i = 1; i < vComm->GetSize(); ++i)
-                        {
-                            vComm->Send(i, keys);
-                        }
+                        vComm->Bcast(keys, 0);
 
                         // Construct the keys and sizes of values for composite
                         // ordering
@@ -1701,16 +1697,12 @@ namespace Nektar
                         }
 
                         // Send across data.
-                        for (i = 1; i < vComm->GetSize(); ++i)
+                        vComm->Bcast(keys, 0);
+                        vComm->Bcast(vals, 0);
+                        for (cIt  = m_compOrder.begin();
+                                cIt != m_compOrder.end(); ++cIt)
                         {
-                            vComm->Send(i, keys);
-                            vComm->Send(i, vals);
-
-                            for (cIt  = m_compOrder.begin();
-                                 cIt != m_compOrder.end(); ++cIt)
-                            {
-                                vComm->Send(i, cIt->second);
-                            }
+                            vComm->Bcast(cIt->second, 0);
                         }
 
                         // Construct the keys and sizes of values for composite
@@ -1727,16 +1719,12 @@ namespace Nektar
                         }
 
                         // Send across data.
-                        for (i = 1; i < vComm->GetSize(); ++i)
+                        vComm->Bcast(keys, 0);
+                        vComm->Bcast(vals, 0);
+                        for (bIt  = m_bndRegOrder.begin();
+                                bIt != m_bndRegOrder.end(); ++bIt)
                         {
-                            vComm->Send(i, keys);
-                            vComm->Send(i, vals);
-
-                            for (bIt  = m_bndRegOrder.begin();
-                                 bIt != m_bndRegOrder.end(); ++bIt)
-                            {
-                                vComm->Send(i, bIt->second);
-                            }
+                            vComm->Bcast(bIt->second, 0);
                         }
 
                         if (DefinesCmdLineArgument("part-info"))
@@ -1747,32 +1735,32 @@ namespace Nektar
                     else
                     {
                         keys.resize(2);
-                        vComm->Recv(0, keys);
+                        vComm->Bcast(keys, 0);
 
                         int cmpSize = keys[0];
                         int bndSize = keys[1];
 
                         keys.resize(cmpSize);
                         vals.resize(cmpSize);
-                        vComm->Recv(0, keys);
-                        vComm->Recv(0, vals);
+                        vComm->Bcast(keys, 0);
+                        vComm->Bcast(vals, 0);
 
                         for (int i = 0; i < keys.size(); ++i)
                         {
                             vector<unsigned int> tmp(vals[i]);
-                            vComm->Recv(0, tmp);
+                            vComm->Bcast(tmp, 0);
                             m_compOrder[keys[i]] = tmp;
                         }
 
                         keys.resize(bndSize);
                         vals.resize(bndSize);
-                        vComm->Recv(0, keys);
-                        vComm->Recv(0, vals);
+                        vComm->Bcast(keys, 0);
+                        vComm->Bcast(vals, 0);
 
                         for (int i = 0; i < keys.size(); ++i)
                         {
                             vector<unsigned int> tmp(vals[i]);
-                            vComm->Recv(0, tmp);
+                            vComm->Bcast(tmp, 0);
                             m_bndRegOrder[keys[i]] = tmp;
                         }
                     }

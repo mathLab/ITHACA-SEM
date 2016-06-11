@@ -122,10 +122,7 @@ namespace Nektar
             m_sessionName = m_session->GetSessionName();
 
             // Instantiate a field reader/writer
-            m_fld = MemoryManager<LibUtilities::FieldIO>
-                ::AllocateSharedPtr(
-                    m_session->GetComm(),
-                    m_session->DefinesCmdLineArgument("shared-filesystem"));
+            m_fld = LibUtilities::FieldIO::CreateDefault(m_session);
 
             // Read the geometry and the expansion information
             m_graph = SpatialDomains::MeshGraph::Read(m_session);
@@ -852,9 +849,11 @@ namespace Nektar
 
                 if (boost::filesystem::path(filename).extension() !=  ".pts")
                 {
-                    m_fld->Import(filename, FieldDef, FieldData,
-                                LibUtilities::NullFieldMetaDataMap,
-                                ElementGIDs);
+                    LibUtilities::FieldIOSharedPtr pts_fld =
+                        LibUtilities::FieldIO::CreateForFile(m_session, filename);
+                    pts_fld->Import(filename, FieldDef, FieldData,
+                                    LibUtilities::NullFieldMetaDataMap,
+                                    ElementGIDs);
 
                     int idx = -1;
 
@@ -1441,7 +1440,9 @@ namespace Nektar
             std::vector<std::vector<NekDouble> > FieldData;
 
             //Get Homogeneous
-            m_fld->Import(pInfile,FieldDef,FieldData);
+            LibUtilities::FieldIOSharedPtr base_fld =
+                LibUtilities::FieldIO::CreateForFile(m_session, pInfile);
+            base_fld->Import(pInfile,FieldDef,FieldData);
 
             int nvar = m_session->GetVariables().size();
             if (m_session->DefinesSolverInfo("HOMOGENEOUS"))
@@ -2096,8 +2097,9 @@ namespace Nektar
         {
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
-
-            m_fld->Import(infile,FieldDef,FieldData);
+            LibUtilities::FieldIOSharedPtr field_fld =
+                LibUtilities::FieldIO::CreateForFile(m_session, infile);
+            field_fld->Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < pFields.num_elements(); ++j)
@@ -2182,7 +2184,9 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            m_fld->Import(infile,FieldDef,FieldData);
+            LibUtilities::FieldIOSharedPtr field_fld =
+                LibUtilities::FieldIO::CreateForFile(m_session, infile);
+            field_fld->Import(infile,FieldDef,FieldData);
             int idx = -1;
 
             Vmath::Zero(pField->GetNcoeffs(),pField->UpdateCoeffs(),1);
@@ -2224,8 +2228,10 @@ namespace Nektar
         
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
-        
-            m_fld->Import(infile,FieldDef,FieldData);
+
+            LibUtilities::FieldIOSharedPtr field_fld =
+                LibUtilities::FieldIO::CreateForFile(m_session, infile);
+            field_fld->Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < fieldStr.size(); ++j)

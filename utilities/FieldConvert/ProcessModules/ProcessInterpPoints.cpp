@@ -442,10 +442,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     // Read in local from field partitions
     const SpatialDomains::ExpansionMap &expansions = fromField->m_graph->GetExpansions();
 
-
-    fromField->m_fld = MemoryManager<LibUtilities::FieldIO>
-        ::AllocateSharedPtr(fromField->m_session->GetComm());
-
     Array<OneD,int> ElementGIDs(expansions.size());
     SpatialDomains::ExpansionMap::const_iterator expIt;
 
@@ -462,10 +458,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
              "wihtin the domain given by the xml files?");
 
     string fromfld = m_config["fromfld"].as<string>();
-    fromField->m_fld->Import(fromfld,fromField->m_fielddef,
-                             fromField->m_data,
-                             LibUtilities::NullFieldMetaDataMap,
-                             ElementGIDs);
+    m_f->FieldIOForFile(fromfld)->Import(
+        fromfld, fromField->m_fielddef, fromField->m_data,
+        LibUtilities::NullFieldMetaDataMap, ElementGIDs);
 
     int NumHomogeneousDir = fromField->m_fielddef[0]->m_numHomogeneousDir;
 

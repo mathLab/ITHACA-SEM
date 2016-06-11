@@ -22,8 +22,8 @@
 
     <PARAMETERS>
       <P> TimeStep       = 0.002      </P>
-      <P> NumSteps       = 2000000     </P>
-      <P> IO_CheckSteps  = 5000       </P>
+      <P> NumSteps       = 200        </P>
+      <P> IO_CheckSteps  = 10         </P>
       <P> IO_InfoSteps   = 1          </P>
       <P> IO_EnergySteps = 50         </P>
       <P> Kinvis         = 1.0/3000.0 </P>

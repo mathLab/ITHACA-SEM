@@ -286,8 +286,9 @@ int main(int argc, char* argv[])
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
 
-        LibUtilities::FieldIO vFld(vSession->GetComm());
-        vFld.Write(outfile, FieldDef, FieldData);
+        LibUtilities::FieldIOSharedPtr vFld = LibUtilities::MakeDefaultFieldIO(
+            vSession);
+        vFld->Write(outfile, FieldDef, FieldData);
         //-----------------------------------------------
     }
     catch (...) {

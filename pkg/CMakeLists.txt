@@ -243,7 +243,7 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
             DESCRIPTION "
  This package contains the mesh conversion utility and other utilities for
  converting output files into common visualisation formats"
-            DEPENDS "libnektar++-nekmeshutils (= ${NEKTAR_VERSION}), ${NEK_DEP}"
+            DEPENDS "${NEK_DEP}, libnektar++-nekmeshutils (= ${NEKTAR_VERSION})"
             INSTALL_BINS "${nektar++-utilities_BINS}")
     endif (NEKTAR_BUILD_UTILITIES)
 

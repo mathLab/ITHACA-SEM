@@ -1,4 +1,3 @@
-
 SET(UnitTestSources
     main.cpp
     ScaledMatrixUnitTests.cpp
@@ -20,26 +19,12 @@ SET(UnitTestSources
     util.cpp
 )
 
-SET(UnitTestHeaders
-    CountedObject.h
-    testLinearSystem.h
-    testNekLinAlgAlgorithms.h
-    testNekManager.h
-    testNekPoint.h
-    testNekSharedArray.h
-    Memory/TestNekMemoryManager.h
-    StdRegions/testStdSegExp.h
-    testFoundation/testFoundation.h
-    testFoundation/testInterpolation.h
-    testFoundation/testDerivation.h
-    util.h
-)
-
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS -DNEKTAR_UNIT_TESTS)
 
-ADD_NEKTAR_EXECUTABLE(UnitTests unit-test UnitTestSources UnitTestHeaders)
-
-TARGET_LINK_LIBRARIES(UnitTests LibUtilities StdRegions)
+ADD_NEKTAR_EXECUTABLE(UnitTests
+    COMPONENT unit-test DEPENDS StdRegions SOURCES ${UnitTestSources})
 
 ADD_TEST(NAME UnitTests COMMAND UnitTests --detect_memory_leaks=0)
 SUBDIRS(LibUtilities LocalRegions Collections)
+
+FINALISE_CPACK_COMPONENT(unit-test DESCRIPTION "Nektar++ unit tests")

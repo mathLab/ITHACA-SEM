@@ -23,8 +23,6 @@ set(CPACK_RPM_PACKAGE_GROUP "Development/Libraries")
 set(CPACK_RPM_PACKAGE_LICENSE "MIT")
 set(CPACK_RPM_PACKAGE_DEBUG 0)
 
-set(CPACK_PACKAGEMAKER_COMPONENT_INSTALL 0)
-
 # Set up generator-specific logic (i.e. that may change the above depending on
 # generator) using additional CPack configuration file.
 configure_file(${CMAKE_SOURCE_DIR}/cmake/NektarCPackConfig.cmake.in
@@ -63,7 +61,8 @@ if(APPLE)
         install(CODE "
     include(GetPrerequisites)
     include(BundleUtilities)
-    file(GLOB apps \${CMAKE_INSTALL_PREFIX}/bin/*)
+    file(GLOB apps \"\${CMAKE_INSTALL_PREFIX}/bin/*\")
+    message(STATUS \"APPLIST: \${CMAKE_INSTALL_PREFIX}/bin/*\")
     foreach (app \${apps})
         get_filename_component(exepath \${app} DIRECTORY)
         get_prerequisites(\"\${app}\" prereqs 1 1 \"\${exepath}\" \"\" \"\" 1)
@@ -76,17 +75,19 @@ if(APPLE)
         # at every library.
         unset(changes)
         unset(changes_lib)
+
+        # Check if thirdparty component has been set up yet
         foreach(req \${prereqs})
             message(STATUS \"asdf: \${req}\")
             get_filename_component(reqname \${req} NAME)
-            set(libdest \${CMAKE_INSTALL_PREFIX}/lib/nektar++-4.3.0/\${reqname})
-            set(changes \${changes} \"-change\" \"\${req}\" \"@executable_path/../lib/nektar++-4.3.0/\${reqname}\")
-            set(changes_lib \${changes_lib} \"-change\" \"\${req}\" \"@loader_path/../lib/nektar++-4.3.0/\${reqname}\")
+            set(libdest \${CMAKE_INSTALL_PREFIX}/lib/nektar++-${NEKTAR_VERSION}/\${reqname})
+            set(changes \${changes} \"-change\" \"\${req}\" \"@executable_path/../lib/nektar++-${NEKTAR_VERSION}/\${reqname}\")
+            set(changes_lib \${changes_lib} \"-change\" \"\${req}\" \"@loader_path/../lib/nektar++-${NEKTAR_VERSION}/\${reqname}\")
 
             # Copy this library
             if (NOT EXISTS \${libdest})
                 file(COPY \${req}
-                     DESTINATION \${CMAKE_INSTALL_PREFIX}/lib/nektar++-4.3.0
+                     DESTINATION \${CMAKE_INSTALL_PREFIX}/lib/nektar++-${NEKTAR_VERSION}
                      FILE_PERMISSIONS OWNER_WRITE OWNER_READ)
 
                 # If the library was symlinked, we follow the symlink and then 
@@ -95,13 +96,13 @@ if(APPLE)
                     # resolve symlink
                     get_filename_component(req_abs \${req} REALPATH)
                     file(COPY \${req_abs}
-                         DESTINATION \${CMAKE_INSTALL_PREFIX}/lib/nektar++-4.3.0
+                         DESTINATION \${CMAKE_INSTALL_PREFIX}/lib/nektar++-${NEKTAR_VERSION}
                          FILE_PERMISSIONS OWNER_WRITE OWNER_READ)
                 endif()
             endif()
         endforeach()
 
-        # Second pass -- fix up library to use @loader_path/../lib/nektar++-4.3.0/libName.dylib
+        # Second pass -- fix up library to use @loader_path/../lib/nektar++-${NEKTAR_VERSION}/libName.dylib
         foreach(req \${prereqs})
             set(searchname \${req})
 
@@ -111,12 +112,12 @@ if(APPLE)
             endif()
 
             get_filename_component(reqname \${req} NAME)
-            set(libdest \${CMAKE_INSTALL_PREFIX}/lib/nektar++-4.3.0/\${reqname})
+            set(libdest \${CMAKE_INSTALL_PREFIX}/lib/nektar++-${NEKTAR_VERSION}/\${reqname})
             set(cmd install_name_tool \${changes_lib} \"\${libdest}\")
             execute_process(COMMAND \${cmd} RESULT_VARIABLE install_name_tool_result)
 
             # change library install name ID
-            execute_process(COMMAND install_name_tool -id @loader_path/../lib/nektar++-4.3.0/\${reqname} \${libdest})
+            execute_process(COMMAND install_name_tool -id @loader_path/../lib/nektar++-${NEKTAR_VERSION}/\${reqname} \${libdest})
 
             # change @loader_path (used by some boost libs through homebrew)
         endforeach()
@@ -140,7 +141,6 @@ if(APPLE)
         endforeach()
         set(rpath_changes \${rpath_changes} -add_rpath @executable_path)
         execute_process(COMMAND install_name_tool \${rpath_changes} \"\${app}\")
-    endforeach()
-        " COMPONENT ${component})
+    endforeach()" COMPONENT ${component})
     endforeach()
 endif()

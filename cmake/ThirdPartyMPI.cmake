@@ -19,6 +19,7 @@ IF( NEKTAR_USE_MPI )
     CHECK_INCLUDE_FILES  (mpi.h    HAVE_MPI_H)
     CHECK_FUNCTION_EXISTS(MPI_Send HAVE_MPI_SEND)
 
+    SET(BUILD_MPI OFF)
     SET(MPI_BUILTIN OFF CACHE INTERNAL
         "Determines whether MPI is built into the compiler")
     IF (NOT "${HAVE_MPI_H}" OR NOT "${HAVE_MPI_SEND}")
@@ -27,7 +28,12 @@ IF( NEKTAR_USE_MPI )
         MARK_AS_ADVANCED(MPI_EXTRA_LIBRARY)
         MARK_AS_ADVANCED(file_cmd)
         INCLUDE_DIRECTORIES( ${MPI_INCLUDE_PATH} )
-        MESSAGE(STATUS "Found MPI: ${MPI_LIBRARY}")
+
+        IF (NOT MPI_CXX_FOUND OR NOT MPI_C_FOUND)
+            SET(BUILD_MPI ON)
+        ELSE()
+            MESSAGE(STATUS "Found MPI: ${MPI_LIBRARY}")
+        ENDIF()
     ELSE()
         SET(MPI_BUILTIN ON)
         MESSAGE(STATUS "Found MPI: built in")
@@ -48,6 +54,23 @@ IF( NEKTAR_USE_MPI )
     ENDIF()
 
     ADD_DEFINITIONS(-DNEKTAR_USE_MPI)
+
+    IF (BUILD_MPI)
+        INCLUDE(ExternalProject)
+        EXTERNALPROJECT_ADD(
+            mpich-3.2
+            PREFIX ${TPSRC}
+            URL http://ae-nektar.ae.ic.ac.uk/~dmoxey/mpich-3.2.tar.gz
+            URL_MD5 f414cfa77099cd1fa1a5ae4e22db508a
+            STAMP_DIR ${TPBUILD}/stamp
+            DOWNLOAD_DIR ${TPSRC}
+            SOURCE_DIR ${TPSRC}/mpich-3.2
+            BINARY_DIR ${TPBUILD}/mpich-3.2
+            TMP_DIR ${TPBUILD}/mpich-3.2
+            INSTALL_DIR ${TPDIST}
+            CONFIGURE_COMMAND ./configure --prefix=${TPDIST} --disable-f77 --disable-fc --disable-mpe
+            )
+    ENDIF()
 
     IF (THIRDPARTY_BUILD_GSMPI)
         EXTERNALPROJECT_ADD(

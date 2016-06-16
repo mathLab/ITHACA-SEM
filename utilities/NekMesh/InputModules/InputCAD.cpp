@@ -127,6 +127,8 @@ void InputCAD::Process()
 
     vector<int> bs = m_cad->GetBoundarySurfs();
 
+    cout << bs.size() << endl;
+
     vector<unsigned int> symsurfs;
     vector<unsigned int> blsurfs, blsurfst;
     if (m_makeBL)
@@ -294,8 +296,15 @@ void InputCAD::Process()
 
         m_blmesh->Mesh();
 
-        //m_mesh->m_element[2].clear();
-        //return;
+        m_mesh->m_element[2].clear();
+        m_mesh->m_expDim = 3;
+        ClearElementLinks();
+        ProcessVertices();
+        ProcessEdges();
+        ProcessFaces();
+        ProcessElements();
+        ProcessComposites();
+        return;
 
         m_surfacemesh->Remesh(m_blmesh);
 

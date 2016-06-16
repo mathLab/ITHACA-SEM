@@ -49,6 +49,7 @@ namespace NekMeshUtils
 struct blInfo
 {
     NodeSharedPtr pNode;
+    NodeSharedPtr oNode;
     NekDouble bl;
     Array<OneD, NekDouble> N;
     int symsurf;

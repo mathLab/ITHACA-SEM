@@ -222,6 +222,7 @@ void BLMesh::Mesh()
     //need a map from vertex idx to surface elements
     //but do not care about triangles which are not in the bl
     map<int, vector<ElementSharedPtr> > nIdxToTri;
+    map<NodeSharedPtr, blInfo> nodeToBL;
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
         //orientate the triangle
@@ -246,20 +247,20 @@ void BLMesh::Mesh()
         }
     }
 
-    int nlayers = 8;
-    NekDouble r = 1.5;
-    NekDouble a = (1.0 - r) / (1.0 - pow(r,nlayers+1));
+    int nlayers = 20;
+    NekDouble r = 1.05;
+    //NekDouble a = (1.0 - r) / (1.0 - pow(r,nlayers+1));
+    NekDouble a = 1.0/nlayers;
 
     NekDouble blprog[nlayers+1];
     blprog[0] = 0.0;
     for(int i = 1; i <= nlayers; i++)
     {
-        blprog[i] = blprog[i-1] + m_bl * a * pow(r,i);
+        blprog[i] = blprog[i-1] + m_bl * a;// * pow(r,i);
     }
 
     set<int> symSurfs;
 
-    map<NodeSharedPtr, blInfo> nodeToBL;
     NodeSet::iterator it;
     int ct = 0;
     int failed = 0;
@@ -436,32 +437,6 @@ void BLMesh::Mesh()
     //and then remove them from consideration (but keep intersection testing
     //them)
 
-    for(int i = 2; i <= nlayers; i++)
-    {
-        for(bit = nodeToBL.begin(); bit != nodeToBL.end(); bit++)
-        {
-            set<int>::iterator f = stopped.find(bit->first->m_id);
-            if(f != stopped.end())
-            {
-                continue;
-            }
-
-            bit->second.bl = blprog[i];
-
-            Array<OneD, NekDouble> loc = bit->first->GetLoc();
-            for(int k = 0; k < 3; k++)
-            {
-                loc[k] += bit->second.N[k] * bit->second.bl;
-            }
-
-            bit->second.pNode->m_x = loc[0];
-            bit->second.pNode->m_y = loc[1];
-            bit->second.pNode->m_z = loc[2];
-        }
-    }
-
-    /*
-    //collision detection and element shrinking
     //at this point the pseduo surface should be a connectivity fixed entity
     //therefore can be processed for data structures
     NodeSet pseduoNodes;
@@ -491,6 +466,119 @@ void BLMesh::Mesh()
         }
         m_psuedoSurface[i]->SetId(i);
     }
+
+    //need to build a list of nodes to neigbours
+    map<ElementSharedPtr, ElementSharedPtr>::iterator eit;
+    map<NodeSharedPtr, NodeSet> nodeToNear;
+    for(eit = priToTri.begin(); eit != priToTri.end(); eit++)
+    {
+        vector<EdgeSharedPtr> es = eit->second->GetEdgeList();
+        for(int j = 0; j < es.size(); j++)
+        {
+            nodeToNear[es[j]->m_n1].insert(es[j]->m_n2);
+            nodeToNear[es[j]->m_n2].insert(es[j]->m_n1);
+        }
+    }
+
+    for(int i = 2; i <= nlayers; i++)
+    {
+        vector<ElementSharedPtr> revert;
+        for(bit = blData.begin(); bit != blData.end(); bit++)
+        {
+            set<int>::iterator f = stopped.find(bit->first->m_id);
+            if(f != stopped.end())
+            {
+                continue;
+            }
+
+            bit->second.bl = blprog[i];
+
+            Array<OneD, NekDouble> loc = bit->first->GetLoc();
+            for(int k = 0; k < 3; k++)
+            {
+                loc[k] += bit->second.N[k] * bit->second.bl;
+            }
+
+            bit->second.pNode->m_x = loc[0];
+            bit->second.pNode->m_y = loc[1];
+            bit->second.pNode->m_z = loc[2];
+        }
+
+        set<int> toAdd;
+        for(bit = blData.begin(); bit != blData.end(); bit++)
+        {
+            set<int>::iterator f = stopped.find(bit->first->m_id);
+            if(f != stopped.end())
+            {
+                continue;
+            }
+
+            //if any of the neigbours are previously stopped we need
+            //to stop this one for smoothness
+            map<NodeSharedPtr, NodeSet>::iterator l = nodeToNear.find(bit->first);
+            ASSERTL0(l!=nodeToNear.end(),"not found");
+            NodeSet::iterator nit;
+            for(nit = l->second.begin(); nit != l->second.end(); nit++)
+            {
+                f = stopped.find((*nit)->m_id);
+                if(f != stopped.end())
+                {
+                    toAdd.insert(bit->first->m_id);
+                }
+            }
+        }
+        set<int>::iterator f;
+        for(f = toAdd.begin(); f != toAdd.end(); f++)
+        {
+            stopped.insert((*f));
+        }
+
+        for(int j = 0; j < prisms.size(); j++)
+        {
+            SpatialDomains::GeometrySharedPtr geom =
+                                        prisms[j]->GetGeom(m_mesh->m_spaceDim);
+            SpatialDomains::GeomFactorsSharedPtr gfac =
+                                                geom->GetGeomFactors();
+
+            if(!gfac->IsValid())
+            {
+                revert.push_back(prisms[j]);
+            }
+        }
+
+        //this is where proximity goes
+
+        //vector<ElementSharedPtr> tmp = prisms;
+        //prisms.clear();
+        for(int j = 0; j < revert.size(); j++)
+        {
+            map<ElementSharedPtr, ElementSharedPtr>::iterator f = priToTri.find(revert[j]);
+            ASSERTL0(f != priToTri.end(), "not found");
+            vector<NodeSharedPtr> ns = f->second->GetVertexList();
+
+            for(int k = 0; k < ns.size(); k++)
+            {
+                map<NodeSharedPtr, blInfo>::iterator bli = blData.find(ns[k]);
+                bli->second.bl = blprog[i-1];
+
+                Array<OneD, NekDouble> loc = bli->first->GetLoc();
+                for(int k = 0; k < 3; k++)
+                {
+                    loc[k] += bli->second.N[k] * bli->second.bl;
+                }
+
+                bli->second.pNode->m_x = loc[0];
+                bli->second.pNode->m_y = loc[1];
+                bli->second.pNode->m_z = loc[2];
+
+                stopped.insert(ns[k]->m_id);
+            }
+        }
+
+    }
+
+    /*
+    //collision detection and element shrinking
 
     vector<ElementSharedPtr> intersecting;
     bool repeat = true;

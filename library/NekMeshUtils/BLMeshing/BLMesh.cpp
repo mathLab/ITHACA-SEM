@@ -379,6 +379,7 @@ void BLMesh::Mesh()
 
     map<int,int> nm;
     map<ElementSharedPtr,ElementSharedPtr> priToTri;
+    map<ElementSharedPtr,ElementSharedPtr> priToPsd;
 
     ElmtConfig pconf(LibUtilities::ePrism,1,false,false);
     ElmtConfig tconf(LibUtilities::eTriangle,1,false,false);
@@ -428,6 +429,7 @@ void BLMesh::Mesh()
         m_psuedoSurface.push_back(T);
 
         priToTri[E] = el;
+        priToPsd[E] = T;
     }
 
     vector<ElementSharedPtr> prisms = m_mesh->m_element[3];
@@ -482,6 +484,14 @@ void BLMesh::Mesh()
 
     for(int i = 2; i <= nlayers; i++)
     {
+        if (m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(
+                i, nlayers, "layers\t");
+        }
+
+        cout << endl;
+
         vector<ElementSharedPtr> revert;
         for(bit = blData.begin(); bit != blData.end(); bit++)
         {
@@ -547,11 +557,122 @@ void BLMesh::Mesh()
         }
 
         //this is where proximity goes
+        //build a ANN tree from the center point of triangles
+        ANNpointArray dataPts;
+        ANNpoint queryPt;
+        ANNidxArray nnIdx;
+        ANNdistArray dists;
+        ANNkd_tree* kdTree;
+        queryPt = annAllocPt(3);
+        dataPts = annAllocPts(m_psuedoSurface.size(), 3);
 
-        //vector<ElementSharedPtr> tmp = prisms;
-        //prisms.clear();
+        for(int i = 0; i < m_psuedoSurface.size(); i++)
+        {
+            vector<NodeSharedPtr> ns = m_psuedoSurface[i]->GetVertexList();
+            dataPts[i][0] = (ns[0]->m_x + ns[1]->m_x + ns[2]->m_x ) / 3.0;
+            dataPts[i][1] = (ns[0]->m_y + ns[1]->m_y + ns[2]->m_y ) / 3.0;
+            dataPts[i][2] = (ns[0]->m_z + ns[1]->m_z + ns[2]->m_z ) / 3.0;
+        }
+
+        kdTree = new ANNkd_tree(dataPts, m_psuedoSurface.size(), 3);
+
+        for(int j = 0; j < prisms.size(); j++)
+        {
+            map<ElementSharedPtr,ElementSharedPtr>::iterator f = priToPsd.find(prisms[j]);
+            ASSERTL0(f != priToPsd.end(),"not found");
+            vector<NodeSharedPtr> ns = f->second->GetVertexList();
+
+            queryPt[0] = (ns[0]->m_x + ns[1]->m_x + ns[2]->m_x) / 3.0;
+            queryPt[1] = (ns[0]->m_y + ns[1]->m_y + ns[2]->m_y) / 3.0;
+            queryPt[2] = (ns[0]->m_z + ns[1]->m_z + ns[2]->m_z) / 3.0;
+
+            int sample = 0;
+            sample = kdTree->annkFRSearch(queryPt, 0.5*0.5, sample);
+            nnIdx = new ANNidx[sample];
+            dists = new ANNdist[sample];
+            kdTree->annkFRSearch(queryPt, 0.5*0.5, sample, nnIdx, dists);
+
+            for(int s = 0; s < sample; s++)
+            {
+                bool found = false;
+                ElementSharedPtr el = m_psuedoSurface[nnIdx[s]];
+                vector<EdgeSharedPtr> es = el->GetEdgeList();
+                for(int k = 0; k < es.size(); k++)
+                {
+                    if(ns[0] == es[k]->m_n1 ||
+                       ns[0] == es[k]->m_n2 ||
+                       ns[1] == es[k]->m_n1 ||
+                       ns[1] == es[k]->m_n2 ||
+                       ns[2] == es[k]->m_n1 ||
+                       ns[2] == es[k]->m_n2)
+                    {
+                        continue;
+                    }
+
+                    NekDouble A[3][3];
+                    NekDouble B[3];
+                    A[0][0] = (es[k]->m_n2->m_x - es[k]->m_n1->m_x) * -1.0;
+                    A[1][0] = (es[k]->m_n2->m_y - es[k]->m_n1->m_y) * -1.0;
+                    A[2][0] = (es[k]->m_n2->m_z - es[k]->m_n1->m_z) * -1.0;
+                    A[0][1] = ns[1]->m_x - ns[0]->m_x;
+                    A[1][1] = ns[1]->m_y - ns[0]->m_y;
+                    A[2][1] = ns[1]->m_z - ns[0]->m_z;
+                    A[0][2] = ns[2]->m_x - ns[0]->m_x;
+                    A[1][2] = ns[2]->m_y - ns[0]->m_y;
+                    A[2][2] = ns[2]->m_z - ns[0]->m_z;
+
+                    NekDouble det = A[0][0] * (A[1][1]*A[2][2] - A[2][1]*A[1][2])
+                                   -A[0][1] * (A[1][0]*A[2][2] - A[2][0]*A[1][2])
+                                   +A[0][2] * (A[1][0]*A[2][1] - A[2][0]*A[1][1]);
+                    if(fabs(det) < 1e-6)
+                    {
+                        //no intersecton
+                        continue;
+                    }
+                    B[0] = es[k]->m_n1->m_x - ns[0]->m_x;
+                    B[1] = es[k]->m_n1->m_y - ns[0]->m_y;
+                    B[2] = es[k]->m_n1->m_z - ns[0]->m_z;
+
+                    NekDouble X[3];
+
+                    X[0] = 1.0 / det * (B[0] * (A[1][1]*A[2][2] - A[2][1]*A[1][2]) +
+                                        B[1] * (A[2][1]*A[0][2] - A[0][1]*A[2][2]) +
+                                        B[2] * (A[0][1]*A[1][2] - A[1][1]*A[0][2]));
+                    X[1] = 1.0 / det * (B[0] * (A[2][0]*A[1][2] - A[1][0]*A[2][2]) +
+                                        B[1] * (A[0][0]*A[2][2] - A[2][0]*A[0][2]) +
+                                        B[2] * (A[1][0]*A[0][2] - A[0][0]*A[1][2]));
+                    X[2] = 1.0 / det * (B[0] * (A[1][0]*A[2][1] - A[1][1]*A[2][0]) +
+                                        B[1] * (A[2][0]*A[0][1] - A[0][0]*A[2][1]) +
+                                        B[2] * (A[0][0]*A[1][1] - A[1][0]*A[0][1]));
+
+                    if(fabs(X[0]) < 1e-6 || fabs(X[0] - 1) < 1e-6 ||
+                       fabs(X[1]) < 1e-6 || fabs(X[2]) < 1e-6 || fabs(X[1]+X[2]-1) < 1e-6)
+                    {
+                        cout << "warning possible inaccuracy " <<
+                             X[0] << " " << X[1] << " " << X[2] << endl;
+                    }
+                    //check triangle intersecton
+                    if(X[1] > -1e-6 && X[2] > 1e-6 && X[1] + X[2] < 1.000001
+                       && X[0] > -1e-6 && X[0] < 1.000001)
+                    {
+                        //hit
+                        cout << "hit" << endl;
+                        revert.push_back(prisms[j]);
+                        found = true;
+                        break;
+                    }
+                }
+                if(found)
+                    break;
+            }
+        }
+
+        vector<ElementSharedPtr> tmp = prisms;
+        prisms.clear();
+        set<int> reverted;
         for(int j = 0; j < revert.size(); j++)
         {
+            reverted.insert(revert[j]->GetId());
             map<ElementSharedPtr, ElementSharedPtr>::iterator f = priToTri.find(revert[j]);
             ASSERTL0(f != priToTri.end(), "not found");
             vector<NodeSharedPtr> ns = f->second->GetVertexList();
@@ -572,6 +693,15 @@ void BLMesh::Mesh()
                 bli->second.pNode->m_z = loc[2];
 
                 stopped.insert(ns[k]->m_id);
+            }
+        }
+
+        for(int j = 0; j < tmp.size(); j++)
+        {
+            set<int>::iterator f = reverted.find(tmp[j]->GetId());
+            if(f == reverted.end())
+            {
+                prisms.push_back(tmp[j]);
             }
         }
 

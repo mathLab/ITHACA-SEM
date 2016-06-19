@@ -224,6 +224,11 @@ namespace Nektar
         // Number of Outflow HOBcs
         int m_outHBCnumber;
 
+        // Parameters for outflow boundary condition
+        NekDouble   m_obcTheta;
+        NekDouble   m_obcAlpha1;
+        NekDouble   m_obcAlpha2;
+
         /// Maximum points used in pressure BC evaluation
         int m_intSteps;
 

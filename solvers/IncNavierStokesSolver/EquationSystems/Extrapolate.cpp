@@ -69,6 +69,9 @@ namespace Nektar
           m_advObject(advObject)
     {      
         m_session->LoadParameter("TimeStep", m_timestep,   0.01);
+        m_session->LoadParameter("OutflowBC_theta", m_obcTheta,   1.0);
+        m_session->LoadParameter("OutflowBC_alpha1", m_obcAlpha1, 0.0);
+        m_session->LoadParameter("OutflowBC_alpha2", m_obcAlpha2, 0.0);
         m_comm = m_session->GetComm();
     }
     
@@ -273,27 +276,60 @@ namespace Nektar
                     }
                 }
 
+                // Obtain u at the boundary
+                Array<OneD, Array<OneD, NekDouble> > u (m_curl_dim);
+                for( int i = 0; i < m_curl_dim; i++)
+                {
+                    u[i] = Array<OneD, NekDouble> (nqb, 0.0);
+                    m_fields[0]->ExtractElmtToBndPhys(n, Velocity[i],u[i]);
+                }
+
                 // Calculate u.n and u^2
                 Array<OneD, NekDouble> un (nqb, 0.0);
                 Array<OneD, NekDouble> u2 (nqb, 0.0);
                 for( int i = 0; i < m_curl_dim; i++)
                 {
-                    m_fields[0]->ExtractElmtToBndPhys(n, Velocity[i],bndVal);
-                    Vmath::Vvtvp(nqb, normals[i], 1, bndVal, 1,
+                    Vmath::Vvtvp(nqb, normals[i], 1, u[i], 1,
                                                  un, 1, un, 1);
-                    Vmath::Vvtvp(nqb, bndVal, 1, bndVal, 1,
+                    Vmath::Vvtvp(nqb, u[i], 1, u[i], 1,
                                                  u2, 1, u2, 1);
                 }
-                // Calculate -1/2*u^2*S_0(u.n)
+
+                // Calculate S_0(u.n) = 0.5*(1-tanh(u.n/*U0*delta))
+                Array<OneD, NekDouble> S0 (nqb, 0.0);
                 for( int i = 0; i < nqb; i++)
                 {
-                    NekDouble fac = 0.5*(1.0-tanh(un[i]/(U0*delta)));
-                    u2[i] = -0.5*u2[i]*fac;
+                    S0[i] = 0.5*(1.0-tanh(un[i]/(U0*delta)));
                 }
 
-                // Calculate pressure boundary condition
+                // Calculate E(n,u) = ((theta+alpha2)*0.5*(u^2)n +
+                //                     (1-theta+alpha1)*0.5*(n.u)u ) * S_0(u.n)
+                NekDouble k1 = 0.5*(m_obcTheta+m_obcAlpha2);
+                NekDouble k2 = 0.5*(1-m_obcTheta+m_obcAlpha1);
+                Array<OneD, Array<OneD, NekDouble> > E (m_curl_dim);
+                for( int i = 0; i < m_curl_dim; i++)
+                {
+                    E[i] = Array<OneD, NekDouble> (nqb, 0.0);
+
+                    Vmath::Smul(nqb, k1, u2, 1, E[i], 1);
+                    Vmath::Vmul(nqb, E[i], 1, normals[i], 1, E[i], 1);
+                    // Use bndVal as a temporary storage
+                    Vmath::Smul(nqb, k2, un, 1, bndVal, 1);
+                    Vmath::Vvtvp(nqb, u[i], 1, bndVal, 1, E[i], 1, E[i], 1);
+                    Vmath::Vmul(nqb, E[i], 1, S0, 1, E[i], 1);
+                }
+
+                // Calculate E(n,u).n
+                Array<OneD, NekDouble> En (nqb, 0.0);
+                for( int i = 0; i < m_curl_dim; i++)
+                {
+                    Vmath::Vvtvp(nqb, normals[i], 1, E[i], 1,
+                                                 En, 1, En, 1);
+                }
+
+                // Calculate pressure bc = kinvis*n.gradU.n - E.n
                 Array<OneD, NekDouble> pbc (nqb, 0.0);
-                Vmath::Svtvp( nqb, kinvis, nGradUn, 1, u2, 1, pbc, 1);
+                Vmath::Svtvm( nqb, kinvis, nGradUn, 1, En, 1, pbc, 1);
                 Vmath::Vadd( nqb, pbc, 1, m_PBndExp[n]->GetPhys(), 1,
                                              pbc, 1);
                 if ( m_PBndExp[n]->GetWaveSpace())
@@ -308,15 +344,16 @@ namespace Nektar
                                            m_PBndExp[n]->UpdateCoeffs());
                 }
                 // Calculate velocity boundary conditions
-                Vmath::Vsub( nqb, pbc, 1, u2, 1, bndVal, 1);
+                //    = 1/kinvis * (pbc n - kinvis divU n  + E)
                 Vmath::Smul(nqb, kinvis, divU, 1, divU, 1);
-                Vmath::Vsub( nqb, bndVal, 1, divU, 1, bndVal, 1);
+                Vmath::Vsub( nqb, pbc, 1, divU, 1, bndVal, 1);
                 for( int i = 0; i < m_curl_dim; i++)
                 {
                     if(boost::iequals(UBndConds[i][n]->GetUserDefined(),"HOutflow"))
                     {
                         // Reuse divU
-                        Vmath::Vmul( nqb, normals[i], 1, bndVal, 1, divU, 1);
+                        Vmath::Vvtvp( nqb, normals[i], 1, bndVal, 1, E[i], 1,
+                                      divU, 1);
                         Vmath::Vadd( nqb, divU, 1, UBndExp[i][n]->GetPhys(), 1,
                                              divU, 1);
                         Vmath::Smul(nqb, 1.0/kinvis, divU, 1, divU, 1);

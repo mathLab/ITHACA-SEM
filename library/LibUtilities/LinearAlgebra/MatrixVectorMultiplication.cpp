@@ -212,8 +212,6 @@ namespace Nektar
         Array<OneD, unsigned int> colSizes;
         lhs.GetBlockSizes(rowSizes, colSizes);
 
-        std::fill(result.begin(), result.end(), 0.0);
-        
         unsigned int curResultRow = 0;
         unsigned int curWrapperRow = 0;
         unsigned int rowsInBlock, columnsInBlock;
@@ -248,6 +246,10 @@ namespace Nektar
 
             curResultRow  += rowsInBlock;
             curWrapperRow += columnsInBlock;
+        }
+        if (curResultRow < result.GetRows())
+        {
+            std::fill(result.begin()+curResultRow, result.end(), 0.0);
         }
     }
 

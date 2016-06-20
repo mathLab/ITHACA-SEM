@@ -696,19 +696,29 @@ void BLMesh::Mesh()
         set<int> reverted;
         for(int j = 0; j < revert.size(); j++)
         {
+            set<int>::iterator rev = reverted.find(revert[j]->GetId());
+            if(rev != reverted.end())
+            {
+                //prism has already been reverted
+                continue;
+            }
             reverted.insert(revert[j]->GetId());
             map<ElementSharedPtr, ElementSharedPtr>::iterator f = priToTri.find(revert[j]);
             ASSERTL0(f != priToTri.end(), "not found");
             vector<NodeSharedPtr> ns = f->second->GetVertexList();
 
+            int skipped = 0;
             for(int k = 0; k < ns.size(); k++)
             {
-                map<NodeSharedPtr, blInfo>::iterator bli = blData.find(ns[k]);
-                bli->second.bl = blprog[i-2];
-                if(i == 2)
+                set<int>::iterator s = stopped.find(ns[k]->m_id);
+                if(s != stopped.end())
                 {
-                    bli->second.bl = blprog[i-1];
+                    skipped++;
+                    continue;
                 }
+
+                map<NodeSharedPtr, blInfo>::iterator bli = blData.find(ns[k]);
+                bli->second.bl = blprog[i-1];
 
                 Array<OneD, NekDouble> loc = bli->first->GetLoc();
                 for(int k = 0; k < 3; k++)
@@ -722,6 +732,7 @@ void BLMesh::Mesh()
 
                 stopped.insert(ns[k]->m_id);
             }
+            ASSERTL0(skipped < 3, "had reverted and skipped all three");
         }
 
         for(int j = 0; j < tmp.size(); j++)

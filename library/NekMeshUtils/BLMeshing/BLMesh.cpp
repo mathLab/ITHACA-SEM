@@ -566,12 +566,12 @@ void BLMesh::Mesh()
         queryPt = annAllocPt(3);
         dataPts = annAllocPts(m_psuedoSurface.size(), 3);
 
-        for(int i = 0; i < m_psuedoSurface.size(); i++)
+        for(int j = 0; j < m_psuedoSurface.size(); j++)
         {
-            vector<NodeSharedPtr> ns = m_psuedoSurface[i]->GetVertexList();
-            dataPts[i][0] = (ns[0]->m_x + ns[1]->m_x + ns[2]->m_x ) / 3.0;
-            dataPts[i][1] = (ns[0]->m_y + ns[1]->m_y + ns[2]->m_y ) / 3.0;
-            dataPts[i][2] = (ns[0]->m_z + ns[1]->m_z + ns[2]->m_z ) / 3.0;
+            vector<NodeSharedPtr> ns = m_psuedoSurface[j]->GetVertexList();
+            dataPts[j][0] = (ns[0]->m_x + ns[1]->m_x + ns[2]->m_x ) / 3.0;
+            dataPts[j][1] = (ns[0]->m_y + ns[1]->m_y + ns[2]->m_y ) / 3.0;
+            dataPts[j][2] = (ns[0]->m_z + ns[1]->m_z + ns[2]->m_z ) / 3.0;
         }
 
         kdTree = new ANNkd_tree(dataPts, m_psuedoSurface.size(), 3);
@@ -587,10 +587,10 @@ void BLMesh::Mesh()
             queryPt[2] = (ns[0]->m_z + ns[1]->m_z + ns[2]->m_z) / 3.0;
 
             int sample = 0;
-            sample = kdTree->annkFRSearch(queryPt, 0.5*0.5, sample);
+            sample = kdTree->annkFRSearch(queryPt, 0.25*0.25, sample);
             nnIdx = new ANNidx[sample];
             dists = new ANNdist[sample];
-            kdTree->annkFRSearch(queryPt, 0.5*0.5, sample, nnIdx, dists);
+            kdTree->annkFRSearch(queryPt, 0.25*0.25, sample, nnIdx, dists);
 
             for(int s = 0; s < sample; s++)
             {

@@ -749,9 +749,12 @@ namespace Nektar
                 DiagonalMatrixFuncs::Invert(this->GetRows(), this->GetColumns(),
                     this->GetData());
                 break;
+            case eSYMMETRIC:
+                SymmetricMatrixFuncs::Invert(this->GetRows(), this->GetColumns(),
+                    this->GetData());
+                break;
             case eUPPER_TRIANGULAR:
             case eLOWER_TRIANGULAR:
-            case eSYMMETRIC:
             case eBANDED:
                 NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
                 break;

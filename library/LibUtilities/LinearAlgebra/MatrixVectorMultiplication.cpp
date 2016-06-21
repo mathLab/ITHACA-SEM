@@ -338,6 +338,36 @@ namespace Nektar
     }
 
     template<typename InnerMatrixType, typename MatrixTag>
+    void NekMultiplySymmetricMatrix(NekDouble* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const NekDouble* rhs,
+        typename boost::enable_if
+        <
+            CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >
+        >::type* p=0)
+    {
+        const unsigned int* size = lhs.GetSize();
+
+        double alpha = lhs.Scale();
+        const double* a = lhs.GetRawPtr();
+        const double* x = rhs;
+        int incx = 1;
+        double beta = 0.0;
+        double* y = result;
+        int incy = 1;
+
+        Blas::Dspmv('U', size[0], alpha, a, x, incx, beta, y, incy);
+    }
+
+    template<typename InnerMatrixType, typename MatrixTag>
+    void NekMultiplySymmetricMatrix(NekDouble* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const NekDouble* rhs,
+        typename boost::enable_if
+        <
+            boost::mpl::not_<CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> > >
+        >::type* p = 0)
+    {
+        NekMultiplyUnspecializedMatrixType(result, lhs, rhs);
+    }
+
+    template<typename InnerMatrixType, typename MatrixTag>
     void NekMultiplyFullMatrix(NekDouble* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const NekDouble* rhs,
         typename boost::enable_if
         <
@@ -391,7 +421,7 @@ namespace Nektar
                 NekMultiplyLowerTriangularMatrix(result, lhs, rhs);
                 break;
             case eSYMMETRIC:
-                NekMultiplyUnspecializedMatrixType(result, lhs, rhs);
+                NekMultiplySymmetricMatrix(result, lhs, rhs);
                 break;
             case eBANDED:
                 NekMultiplyBandedMatrix(result, lhs, rhs);

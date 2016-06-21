@@ -63,18 +63,18 @@ IF (NEKTAR_USE_PETSC)
                 --with-cc=${PETSC_C_COMPILER}
                 --with-cxx=${PETSC_CXX_COMPILER}
                 --with-shared-libraries=1
+                --with-pic=1
                 --with-x=0
                 --with-ssl=0
                 --prefix=${TPDIST}
                 --with-petsc-arch=c-opt
                 --download-scalapack
-                --download-metis
-                --download-parmetis
+                --download-ptscotch
                 --download-mumps
                 ${PETSC_NO_MPI}
             BUILD_COMMAND MAKEFLAGS= make)
 
-        SET(PETSC_LIBRARIES petsc cmumps dmumps smumps zmumps mumps_common parmetis metis scalapack pord gfortran CACHE FILEPATH
+        SET(PETSC_LIBRARIES petsc CACHE FILEPATH
             "PETSc library" FORCE)
         SET(PETSC_INCLUDES ${TPDIST}/include CACHE FILEPATH
             "PETSc includes" FORCE)

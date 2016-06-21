@@ -186,6 +186,16 @@ namespace Nektar
                     const Array<OneD,const NekDouble> &inarray,
                     Array<OneD,      NekDouble> &outarray,
                     CoeffState coeffstate);
+
+            // Solve the linear advection problem assuming that m_coeffs
+            // vector contains an intial estimate for solution
+            MULTI_REGIONS_EXPORT virtual void v_LinearAdvectionDiffusionReactionSolve ( const Array<OneD, Array<OneD, NekDouble> > &velocity,
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray,
+                    const NekDouble lambda,
+                    CoeffState coeffstate = eLocal,
+                    const Array<OneD, const NekDouble>&
+                    dirForcing = NullNekDouble1DArray );
             
             virtual void v_ClearGlobalLinSysManager(void);
 

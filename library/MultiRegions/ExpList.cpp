@@ -495,9 +495,10 @@ namespace Nektar
             Array<OneD, NekDouble> e_out_d0;
             Array<OneD, NekDouble> e_out_d1;
             Array<OneD, NekDouble> e_out_d2;
+            int offset;
             for (int i = 0; i < m_collections.size(); ++i)
             {
-                int offset = m_coll_phys_offset[i];
+                offset   = m_coll_phys_offset[i];
                 e_out_d0 = out_d0  + offset;
                 e_out_d1 = out_d1  + offset;
                 e_out_d2 = out_d2  + offset;

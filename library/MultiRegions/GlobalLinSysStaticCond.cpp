@@ -415,6 +415,15 @@ namespace Nektar
                 int cntC = 0;
                 int cntD = 0;
 
+                // Use symmetric storage for invD if possible
+                MatrixStorage storageTypeD = eFULL;
+                if ( (m_linSysKey.GetMatrixType() == StdRegions::eMass)      ||
+                     (m_linSysKey.GetMatrixType() == StdRegions::eLaplacian) ||
+                     (m_linSysKey.GetMatrixType() == StdRegions::eHelmholtz))
+                {
+                    storageTypeD = eSYMMETRIC;
+                }
+
                 for(i = 0; i < nPatches; i++)
                 {
                     // Matrix A
@@ -440,7 +449,8 @@ namespace Nektar
                     substructuredMat[3][i] = MemoryManager<DNekMat>
                                     ::AllocateSharedPtr(nIntDofsPerPatch[i],
                                                         nIntDofsPerPatch[i],
-                                                        tmparray, wType);
+                                                        tmparray, wType,
+                                                        storageTypeD);
 
                     cntA += nBndDofsPerPatch[i] * nBndDofsPerPatch[i];
                     cntB += nBndDofsPerPatch[i] * nIntDofsPerPatch[i];
@@ -481,13 +491,12 @@ namespace Nektar
                             = substructuredMat[1][patchId[i]]->GetPtr();
                         Array<OneD, NekDouble> subMat2
                             = substructuredMat[2][patchId[i]]->GetPtr();
-                        Array<OneD, NekDouble> subMat3
-                            = substructuredMat[3][patchId[i]]->GetPtr();
+                        DNekMatSharedPtr subMat3
+                            = substructuredMat[3][patchId[i]];
                         int subMat0rows = substructuredMat[0][pId]->GetRows();
                         int subMat1rows = substructuredMat[1][pId]->GetRows();
                         int subMat2rows = substructuredMat[2][pId]->GetRows();
-                        int subMat3rows = substructuredMat[3][pId]->GetRows();
-                        
+
                         if(isBndDof[i])
                         {
                             for(j = 0; j < schurComplSubMatnRows; ++j)
@@ -524,9 +533,21 @@ namespace Nektar
                                 }
                                 else
                                 {
-                                    subMat3[dofId[i]+dofId[j]*subMat3rows] +=
-                                        sign[i]*sign[j]*
+                                    if (storageTypeD == eSYMMETRIC)
+                                    {
+                                        if (dofId[i] <= dofId[j])
+                                        {
+                                            (*subMat3)(dofId[i],dofId[j]) +=
+                                                sign[i]*sign[j]*
+                                                (*schurComplSubMat)(i,j);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        (*subMat3)(dofId[i],dofId[j]) +=
+                                            sign[i]*sign[j]*
                                             (*schurComplSubMat)(i,j);
+                                    }
                                 }
                             }
                         }

@@ -111,12 +111,6 @@ namespace Nektar
     }
 
     template<typename DataType>
-    char ConstMatrix<DataType>::GetTransposeFlag() const
-    {
-        return v_GetTransposeFlag();
-    }
-
-    template<typename DataType>
     unsigned int ConstMatrix<DataType>::CalculateIndex(MatrixStorage type,
         unsigned int row, unsigned int col,
         unsigned int numRows, unsigned int numColumns, const char transpose,
@@ -265,10 +259,6 @@ namespace Nektar
 
     template<typename DataType>
     void ConstMatrix<DataType>::v_Transpose() {}
-
-    template<typename DataType>
-    char ConstMatrix<DataType>::v_GetTransposeFlag() const { return m_transpose; }
-
 
     template<typename DataType>
     Matrix<DataType>::~Matrix() {}

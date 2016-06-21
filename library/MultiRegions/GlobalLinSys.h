@@ -129,6 +129,8 @@ namespace Nektar
             const boost::weak_ptr<ExpList>       m_expList;
             /// Robin boundary info
             const std::map<int, RobinBCInfoSharedPtr> m_robinBCInfo;
+            // Provide verbose output
+            bool                                 m_verbose;
 
             virtual int                     v_GetNumBlocks      ();
             virtual DNekScalMatSharedPtr    v_GetBlock          (unsigned int n);

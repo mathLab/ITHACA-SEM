@@ -26,6 +26,8 @@ IF (NEKTAR_USE_PETSC)
     IF (THIRDPARTY_BUILD_PETSC)
         INCLUDE(ExternalProject)
 
+        FIND_PACKAGE(PythonInterp 2 EXACT REQUIRED)
+
         SET(PETSC_C_COMPILER   "${CMAKE_C_COMPILER}")
         SET(PETSC_CXX_COMPILER "${CMAKE_CXX_COMPILER}")
 
@@ -52,7 +54,7 @@ IF (NEKTAR_USE_PETSC)
             CONFIGURE_COMMAND
                 OMPI_CC=${CMAKE_C_COMPILER}
                 OMPI_CXX=${CMAKE_CXX_COMPILER}
-                python2 ./configure
+                ${PYTHON_EXECUTABLE} ./configure
                 --with-cc=${PETSC_C_COMPILER}
                 --with-cxx=${PETSC_CXX_COMPILER}
                 --with-shared-libraries=0

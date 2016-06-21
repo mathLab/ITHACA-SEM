@@ -109,15 +109,16 @@ ProcessInterpPoints::~ProcessInterpPoints()
 
 void ProcessInterpPoints::Process(po::variables_map &vm)
 {
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessInterpPoints: interpolating to points..." << endl;
+        }
+    }
 
     int rank   = m_f->m_comm->GetRank();
     int nprocs = m_f->m_comm->GetSize();
-            
-    if((m_f->m_verbose)&&(rank == 0))
-    {
-        cout << "Processing point interpolation" << endl;
-    }
-
 
     // Check for command line point specification if no .pts file
     // specified
@@ -519,7 +520,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     {
         cout << "]" << endl;
     }
-
 }
 
 void ProcessInterpPoints::InterpolateFieldToPts(

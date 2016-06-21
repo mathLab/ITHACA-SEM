@@ -64,7 +64,10 @@ namespace Nektar
         {
             if (m_f->m_verbose)
             {
-                cout << "ProcessDeform: Deforming grid..." << endl;
+                if(m_f->m_comm->GetRank() == 0)
+                {
+                    cout << "ProcessDeform: Deforming grid..." << endl;
+                }
             }
 
             Array<OneD, MultiRegions::ExpListSharedPtr> exp(m_f->m_exp.size());

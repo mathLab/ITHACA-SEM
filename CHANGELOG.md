@@ -6,6 +6,9 @@ v4.3.3
 **Library**:
 - Minor fix to suppress Xxt output unless `--verbose` is specified (!642)
 
+**FieldConvert**:
+- Fix to avoid repeated import of field file (!649)
+
 **Packaging**:
 - Fix NekMesh dependencies for DEB package (!650)
 

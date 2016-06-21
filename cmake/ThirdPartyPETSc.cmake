@@ -52,9 +52,12 @@ IF (NEKTAR_USE_PETSC)
             URL http://www.nektar.info/thirdparty/petsc-lite-3.7.2.tar.gz
             URL_MD5 "26c2ff8eaaa9e49aea063f839f5daa7e"
             CONFIGURE_COMMAND
+                OMPI_FC=/usr/bin/gfortran
                 OMPI_CC=${CMAKE_C_COMPILER}
                 OMPI_CXX=${CMAKE_CXX_COMPILER}
                 ${PYTHON_EXECUTABLE} ./configure
+                ./configure
+                --with-fc=/usr/lib64/mpi/gcc/openmpi/bin/mpifort
                 --with-cc=${PETSC_C_COMPILER}
                 --with-cxx=${PETSC_CXX_COMPILER}
                 --with-shared-libraries=1
@@ -62,7 +65,10 @@ IF (NEKTAR_USE_PETSC)
                 --with-ssl=0
                 --prefix=${TPDIST}
                 --with-petsc-arch=c-opt
-                --with-fc=0
+                --download-scalapack
+                --download-metis
+                --download-parmetis
+                --download-mumps
                 ${PETSC_NO_MPI}
             BUILD_COMMAND MAKEFLAGS= make)
 

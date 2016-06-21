@@ -52,7 +52,7 @@ IF (NEKTAR_USE_PETSC)
             CONFIGURE_COMMAND
                 OMPI_CC=${CMAKE_C_COMPILER}
                 OMPI_CXX=${CMAKE_CXX_COMPILER}
-                ./configure
+                python2 ./configure
                 --with-cc=${PETSC_C_COMPILER}
                 --with-cxx=${PETSC_CXX_COMPILER}
                 --with-shared-libraries=0

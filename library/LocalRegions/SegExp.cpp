@@ -461,10 +461,10 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                         DNekScalMatSharedPtr  matsys =
                             (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
 
-                        Blas::Dgemv('N',nInteriorDofs,nInteriorDofs,
+                        Blas::Dspmv('U',nInteriorDofs,
                                     matsys->Scale(),
                                     &((matsys->GetOwnedMatrix())->GetPtr())[0],
-                                    nInteriorDofs,tmp1.get()+offset,1,0.0,
+                                    tmp1.get()+offset,1,0.0,
                                     outarray.get()+offset,1);
                     }
                 }
@@ -1496,8 +1496,19 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                         MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nint);
                     DNekMatSharedPtr C =
                         MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
-                    DNekMatSharedPtr D =
-                        MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
+                    DNekMatSharedPtr D;
+                    if ( (mkey.GetMatrixType() == StdRegions::eMass)      ||
+                         (mkey.GetMatrixType() == StdRegions::eLaplacian) ||
+                         (mkey.GetMatrixType() == StdRegions::eHelmholtz))
+                    {
+                        D = MemoryManager<DNekMat>::
+                            AllocateSharedPtr(nint,nint, eSYMMETRIC);
+                    }
+                    else
+                    {
+                        D = MemoryManager<DNekMat>::
+                            AllocateSharedPtr(nint,nint, eFULL);
+                    }
 
                     Array<OneD,unsigned int> bmap(nbdry);
                     Array<OneD,unsigned int> imap(nint);

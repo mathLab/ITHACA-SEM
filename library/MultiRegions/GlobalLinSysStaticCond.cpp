@@ -456,17 +456,12 @@ namespace Nektar
                 Array<OneD, const int>       patchId, dofId;
                 Array<OneD, const unsigned int>      isBndDof;
                 Array<OneD, const NekDouble> sign;
-                NekDouble scale;
 
                 for(n = cnt = 0; n < SchurCompl->GetNumberOfBlockRows(); ++n)
                 {
                     schurComplSubMat      = SchurCompl->GetBlock(n,n);
                     schurComplSubMatnRows = schurComplSubMat->GetRows();
-                    
-                    scale = SchurCompl->GetBlock(n,n)->Scale();
-                    Array<OneD, NekDouble> schurSubMat
-                        = SchurCompl->GetBlock(n,n)->GetOwnedMatrix()->GetPtr();
-                    
+
                     patchId  = pLocToGloMap->GetPatchMapFromPrevLevel()
                                ->GetPatchId() + cnt;
                     dofId    = pLocToGloMap->GetPatchMapFromPrevLevel()
@@ -503,16 +498,14 @@ namespace Nektar
                                 if(isBndDof[j])
                                 {
                                     subMat0[dofId[i]+dofId[j]*subMat0rows] +=
-                                        sign[i]*sign[j]*(
-                                            scale*schurSubMat[
-                                                i+j*schurComplSubMatnRows]);
+                                        sign[i]*sign[j]*
+                                            (*schurComplSubMat)(i,j);
                                 }
                                 else
                                 {
                                     subMat1[dofId[i]+dofId[j]*subMat1rows] +=
-                                        sign[i]*sign[j]*(
-                                            scale*schurSubMat[
-                                                i+j*schurComplSubMatnRows]);
+                                        sign[i]*sign[j]*
+                                            (*schurComplSubMat)(i,j);
                                 }
                             }
                         }
@@ -526,16 +519,14 @@ namespace Nektar
                                 if(isBndDof[j])
                                 {
                                     subMat2[dofId[i]+dofId[j]*subMat2rows] +=
-                                        sign[i]*sign[j]*(
-                                            scale*schurSubMat[
-                                                i+j*schurComplSubMatnRows]);
+                                        sign[i]*sign[j]*
+                                            (*schurComplSubMat)(i,j);
                                 }
                                 else
                                 {
                                     subMat3[dofId[i]+dofId[j]*subMat3rows] +=
-                                        sign[i]*sign[j]*(
-                                            scale*schurSubMat[
-                                                i+j*schurComplSubMatnRows]);
+                                        sign[i]*sign[j]*
+                                            (*schurComplSubMat)(i,j);
                                 }
                             }
                         }

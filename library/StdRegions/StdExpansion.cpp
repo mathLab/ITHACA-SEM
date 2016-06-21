@@ -200,7 +200,19 @@ namespace Nektar
             DNekMatSharedPtr A = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nbdry);
             DNekMatSharedPtr B = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nint);
             DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
-            DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
+            DNekMatSharedPtr D;
+            if ( (mkey.GetMatrixType() == eMass)      ||
+                 (mkey.GetMatrixType() == eLaplacian) ||
+                 (mkey.GetMatrixType() == eHelmholtz))
+            {
+                D = MemoryManager<DNekMat>::
+                    AllocateSharedPtr(nint,nint, eSYMMETRIC);
+            }
+            else
+            {
+                D = MemoryManager<DNekMat>::
+                    AllocateSharedPtr(nint,nint, eFULL);
+            }
 
             int i,j;
 

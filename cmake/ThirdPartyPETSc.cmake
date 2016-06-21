@@ -74,7 +74,7 @@ IF (NEKTAR_USE_PETSC)
                 ${PETSC_NO_MPI}
             BUILD_COMMAND MAKEFLAGS= make)
 
-        SET(PETSC_LIBRARIES petsc CACHE FILEPATH
+        SET(PETSC_LIBRARIES petsc cmumps dmumps smumps zmumps mumps_common parmetis metis scalapack pord gfortran CACHE FILEPATH
             "PETSc library" FORCE)
         SET(PETSC_INCLUDES ${TPDIST}/include CACHE FILEPATH
             "PETSc includes" FORCE)

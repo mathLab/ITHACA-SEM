@@ -5,6 +5,8 @@ v4.3.3
 ------
 **Library**:
 - Minor fix to suppress Xxt output unless `--verbose` is specified (!642)
+- Bump version of gsmpi to suppress autotuning output unless `--verbose` is
+  specified (!652)
 
 **Packaging**:
 - Fix NekMesh dependencies for DEB package (!650)

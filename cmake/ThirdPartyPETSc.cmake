@@ -30,11 +30,13 @@ IF (NEKTAR_USE_PETSC)
 
         SET(PETSC_C_COMPILER   "${CMAKE_C_COMPILER}")
         SET(PETSC_CXX_COMPILER "${CMAKE_CXX_COMPILER}")
+        SET(PETSC_Fortran_COMPILER "${CMAKE_Fortran_COMPILER}")
 
         IF (NEKTAR_USE_MPI)
             IF (NOT MPI_BUILTIN)
                 SET(PETSC_C_COMPILER   "${MPI_C_COMPILER}")
                 SET(PETSC_CXX_COMPILER "${MPI_CXX_COMPILER}")
+                SET(PETSC_Fortran_COMPILER "${MPI_Fortran_COMPILER}")
             ENDIF (NOT MPI_BUILTIN)
         ELSE (NEKTAR_USE_MPI)
             SET(PETSC_NO_MPI "--with-mpi=0")
@@ -52,12 +54,12 @@ IF (NEKTAR_USE_PETSC)
             URL http://www.nektar.info/thirdparty/petsc-lite-3.7.2.tar.gz
             URL_MD5 "26c2ff8eaaa9e49aea063f839f5daa7e"
             CONFIGURE_COMMAND
-                OMPI_FC=/usr/bin/gfortran
+                OMPI_FC=${CMAKE_Fortran_COMPILER}
                 OMPI_CC=${CMAKE_C_COMPILER}
                 OMPI_CXX=${CMAKE_CXX_COMPILER}
                 ${PYTHON_EXECUTABLE} ./configure
                 ./configure
-                --with-fc=/usr/lib64/mpi/gcc/openmpi/bin/mpifort
+                --with-fc=${PETSC_Fortran_COMPILER}
                 --with-cc=${PETSC_C_COMPILER}
                 --with-cxx=${PETSC_CXX_COMPILER}
                 --with-shared-libraries=1

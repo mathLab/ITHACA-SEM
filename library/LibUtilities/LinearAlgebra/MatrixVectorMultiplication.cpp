@@ -298,7 +298,8 @@ namespace Nektar
             curWrapperRow += columnsInBlock;
 
             // Multiply
-            Blas::Dgemv('N', rowsInBlock, columnsInBlock, block->Scale(), 
+            const unsigned int* size = block->GetSize();
+            Blas::Dgemv('N', size[0], size[1], block->Scale(),
                         block->GetRawPtr(), rowsInBlock, rhsWrapper, 1,
                         0.0, resultWrapper, 1);
         }
@@ -432,7 +433,6 @@ namespace Nektar
         const unsigned int* size = lhs.GetSize();
 
         char t = lhs.GetTransposeFlag();
-
 
         double alpha = lhs.Scale();
         const double* a = lhs.GetRawPtr();

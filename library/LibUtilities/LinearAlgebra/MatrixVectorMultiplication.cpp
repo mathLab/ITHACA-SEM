@@ -253,6 +253,61 @@ namespace Nektar
         }
     }
 
+    void DiagonalBlockFullScalMatrixMultiply(NekVector<double>& result,
+                     const NekMatrix<NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>& lhs,
+                     const NekVector<double>& rhs)
+    {
+        unsigned int numberOfBlockRows = lhs.GetNumberOfBlockRows();
+        double* result_ptr = result.GetRawPtr();
+        const double* rhs_ptr = rhs.GetRawPtr();
+        
+        Array<OneD, unsigned int> rowSizes;
+        Array<OneD, unsigned int> colSizes;
+        lhs.GetBlockSizes(rowSizes, colSizes);
+
+        unsigned int curResultRow = 0;
+        unsigned int curWrapperRow = 0;
+        unsigned int rowsInBlock, columnsInBlock;
+        for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)
+        {
+            if ( blockRow == 0)
+            {
+                rowsInBlock    = rowSizes[blockRow] + 1;
+                columnsInBlock = colSizes[blockRow] + 1;
+            }
+            else
+            {
+                rowsInBlock    = rowSizes[blockRow] - rowSizes[blockRow-1];
+                columnsInBlock = colSizes[blockRow] - colSizes[blockRow-1];
+            }
+
+            if( rowsInBlock == 0 || columnsInBlock == 0)
+            {
+                continue;
+            }
+
+            const DNekScalMat* block = lhs.GetBlockPtr(blockRow, blockRow);
+            if( !block )
+            {
+                continue;
+            }
+
+            double* resultWrapper = result_ptr + curResultRow;
+            const double* rhsWrapper = rhs_ptr + curWrapperRow;
+            curResultRow  += rowsInBlock;
+            curWrapperRow += columnsInBlock;
+
+            // Multiply
+            Blas::Dgemv('N', rowsInBlock, columnsInBlock, block->Scale(), 
+                        block->GetRawPtr(), rowsInBlock, rhsWrapper, 1,
+                        0.0, resultWrapper, 1);
+        }
+        if (curResultRow < result.GetRows())
+        {
+            std::fill(result.begin()+curResultRow, result.end(), 0.0);
+        }
+    }
+
     void NekMultiplyLowerTriangularMatrix(NekDouble* result,
                      const NekMatrix<NekDouble, StandardMatrixTag>& lhs,
                      const NekDouble* rhs)

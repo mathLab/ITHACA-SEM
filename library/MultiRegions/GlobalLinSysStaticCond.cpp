@@ -172,7 +172,7 @@ namespace Nektar
                 else
                 {
                     DNekScalBlkMat &BinvD      = *m_BinvD;
-                    Multiply( V_LocBnd, BinvD, F_Int);
+                    DiagonalBlockFullScalMatrixMultiply( V_LocBnd, BinvD, F_Int);
                 }
                 
                 pLocToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndTmp,

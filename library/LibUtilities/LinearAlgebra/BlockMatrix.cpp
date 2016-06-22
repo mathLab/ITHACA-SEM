@@ -40,7 +40,7 @@ namespace Nektar
 {
     template<typename DataType, typename InnerMatrixType>
     NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::NekMatrix(MatrixStorage type) :
-        BaseType(0,0),
+        BaseType(0,0,type),
         m_data(),
         m_rowSizes(),
         m_columnSizes(),
@@ -48,14 +48,13 @@ namespace Nektar
         m_numberOfBlockRows(0),
         m_numberOfBlockColumns(0)
     {
-        this->SetStorageType(type);
     }
 
     template<typename DataType, typename InnerMatrixType>
     NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::NekMatrix(unsigned int numberOfBlockRows, unsigned int numberOfBlockColumns,
               unsigned int rowsPerBlock, unsigned int columnsPerBlock,
               MatrixStorage type) :
-        BaseType(numberOfBlockRows*rowsPerBlock, numberOfBlockColumns*columnsPerBlock),
+        BaseType(numberOfBlockRows*rowsPerBlock, numberOfBlockColumns*columnsPerBlock,type),
         m_data(),
         m_rowSizes(numberOfBlockRows),
         m_columnSizes(numberOfBlockColumns),
@@ -63,7 +62,6 @@ namespace Nektar
         m_numberOfBlockRows(numberOfBlockRows),
         m_numberOfBlockColumns(numberOfBlockColumns)
     {
-        this->SetStorageType(type);
         m_storageSize = GetRequiredStorageSize();
         m_data = Array<OneD, boost::shared_ptr<InnerType> >(m_storageSize, boost::shared_ptr<InnerType>());
         for(unsigned int i = 1; i <= numberOfBlockRows; ++i)
@@ -82,7 +80,8 @@ namespace Nektar
               const unsigned int* rowsPerBlock, const unsigned int* columnsPerBlock,
               MatrixStorage type) :
         BaseType(std::accumulate(rowsPerBlock, rowsPerBlock + numberOfBlockRows, 0),
-                 std::accumulate(columnsPerBlock, columnsPerBlock + numberOfBlockColumns, 0)),
+                 std::accumulate(columnsPerBlock, columnsPerBlock + numberOfBlockColumns, 0),
+                 type),
         m_data(),
         m_rowSizes(numberOfBlockRows),
         m_columnSizes(numberOfBlockColumns),
@@ -90,7 +89,6 @@ namespace Nektar
         m_numberOfBlockRows(numberOfBlockRows),
         m_numberOfBlockColumns(numberOfBlockColumns)
     {
-        this->SetStorageType(type);
         m_storageSize = GetRequiredStorageSize();
         m_data = Array<OneD, boost::shared_ptr<InnerType> >(m_storageSize, boost::shared_ptr<InnerType>());
         Initialize(rowsPerBlock, columnsPerBlock);
@@ -101,7 +99,8 @@ namespace Nektar
               const Array<OneD, const unsigned int>& rowsPerBlock, const Array<OneD, const unsigned int>& columnsPerBlock,
               MatrixStorage type) :
         BaseType(std::accumulate(rowsPerBlock.data(), rowsPerBlock.data() + numberOfBlockRows, 0),
-                 std::accumulate(columnsPerBlock.data(), columnsPerBlock.data() + numberOfBlockColumns, 0)),
+                 std::accumulate(columnsPerBlock.data(), columnsPerBlock.data() + numberOfBlockColumns, 0),
+                 type),
         m_data(),
         m_rowSizes(numberOfBlockRows),
         m_columnSizes(numberOfBlockColumns),
@@ -109,7 +108,6 @@ namespace Nektar
         m_numberOfBlockRows(numberOfBlockRows),
         m_numberOfBlockColumns(numberOfBlockColumns)
     {
-        this->SetStorageType(type);
         m_storageSize = GetRequiredStorageSize();
         m_data = Array<OneD, boost::shared_ptr<InnerType> >(m_storageSize, boost::shared_ptr<InnerType>());
         Initialize(rowsPerBlock.data(), columnsPerBlock.data());
@@ -120,7 +118,8 @@ namespace Nektar
               const Array<OneD, const unsigned int>& columnsPerBlock,
               MatrixStorage type) :
         BaseType(std::accumulate(rowsPerBlock.begin(), rowsPerBlock.end(), 0),
-                 std::accumulate(columnsPerBlock.begin(), columnsPerBlock.end(), 0)),
+                 std::accumulate(columnsPerBlock.begin(), columnsPerBlock.end(), 0),
+                 type),
         m_data(),
         m_rowSizes(rowsPerBlock.num_elements()),
         m_columnSizes(columnsPerBlock.num_elements()),
@@ -128,7 +127,6 @@ namespace Nektar
         m_numberOfBlockRows(rowsPerBlock.num_elements()),
         m_numberOfBlockColumns(columnsPerBlock.num_elements())
     {
-        this->SetStorageType(type);
         m_storageSize = GetRequiredStorageSize();
         m_data = Array<OneD, boost::shared_ptr<InnerType> >(m_storageSize, boost::shared_ptr<InnerType>());
         Initialize(rowsPerBlock.data(), columnsPerBlock.data());
@@ -144,7 +142,6 @@ namespace Nektar
         m_numberOfBlockRows(rhs.m_numberOfBlockRows),
         m_numberOfBlockColumns(rhs.m_numberOfBlockColumns)
     {
-        this->SetStorageType(rhs.GetStorageType());
         for(unsigned int i = 0; i < rhs.m_data.num_elements(); ++i)
         {
             m_data[i] = InnerType::CreateWrapper(rhs.m_data[i]);

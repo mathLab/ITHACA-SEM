@@ -74,11 +74,6 @@ namespace Nektar
                 return m_storageType;
             }
 
-            LIB_UTILITIES_EXPORT void SetStorageType(MatrixStorage type)
-            {
-                m_storageType = type;
-            }
-
             LIB_UTILITIES_EXPORT unsigned int GetRows() const;
 
             LIB_UTILITIES_EXPORT unsigned int GetTransposedRows(char transpose) const ;
@@ -105,7 +100,8 @@ namespace Nektar
             
             // All constructors are private to enforce the abstract nature of ConstMatrix without
             // resorting to pure virtual functions.
-            LIB_UTILITIES_EXPORT ConstMatrix(unsigned int rows, unsigned int columns);
+            LIB_UTILITIES_EXPORT ConstMatrix(unsigned int rows, unsigned int columns,
+                                             MatrixStorage policy = eFULL);
             
             LIB_UTILITIES_EXPORT ConstMatrix(const ConstMatrix<DataType>& rhs);
 
@@ -143,7 +139,8 @@ namespace Nektar
         protected:            
             // All constructors are private to enforce the abstract nature of ConstMatrix without
             // resorting to pure virtual functions.
-            LIB_UTILITIES_EXPORT Matrix(unsigned int rows, unsigned int columns);
+            LIB_UTILITIES_EXPORT Matrix(unsigned int rows, unsigned int columns,
+                                        MatrixStorage policy = eFULL);
             
             LIB_UTILITIES_EXPORT Matrix(const Matrix<DataType>& rhs);
 

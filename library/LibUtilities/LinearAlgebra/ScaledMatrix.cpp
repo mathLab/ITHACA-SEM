@@ -39,21 +39,19 @@ namespace Nektar
 {
     template<typename DataType, typename InnerMatrixType>
     NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::NekMatrix() :
-        NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::BaseType(0,0),
+        NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::BaseType(0,0,m_matrix->GetStorageType()),
         m_matrix(new typename NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::InnerType()),
         m_scale(0)
     {
-        this->SetStorageType(m_matrix->GetStorageType());
     }
 
     template<typename DataType, typename InnerMatrixType>
     NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::NekMatrix(typename boost::call_traits<NumberType>::const_reference scale,
               boost::shared_ptr<const InnerType> m) :
-        NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::BaseType(m->GetRows(), m->GetColumns()),
+        NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::BaseType(m->GetRows(), m->GetColumns(),m->GetStorageType()),
         m_matrix(m),
         m_scale(scale)
     {
-        this->SetStorageType(m_matrix->GetStorageType());
     }
 
     template<typename DataType, typename InnerMatrixType>
@@ -62,7 +60,6 @@ namespace Nektar
         m_matrix(rhs.m_matrix),
         m_scale(rhs.m_scale)
     {
-        this->SetStorageType(m_matrix->GetStorageType());
     }
 
 
@@ -73,7 +70,6 @@ namespace Nektar
         m_matrix(rhs.m_matrix),
         m_scale(scale)
     {
-        this->SetStorageType(m_matrix->GetStorageType());
     }
 
     template<typename DataType, typename InnerMatrixType>

@@ -315,7 +315,6 @@ namespace Nektar
                     m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max()),
                     m_tempSpace()
                 {
-                    this->SetStorageType(eFULL);
                     boost::tuple<unsigned int, unsigned int, unsigned int> sizes  =
                             MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
                             
@@ -338,7 +337,6 @@ namespace Nektar
             ThisType& operator=(const NekMatrix<InnerMatrixType, ScaledMatrixTag>& rhs)
             {
                 BaseType::operator=(rhs);
-                this->SetStorageType(rhs.GetType());
                 m_numberOfSubDiagonals = rhs.GetNumberOfSubDiagonals();
                 m_numberOfSuperDiagonals = rhs.GetNumberOfSuperDiagonals();
                 

@@ -66,8 +66,7 @@ namespace Nektar
           m_fields(pFields),
           m_pressure(pPressure),
           m_velocity(pVel),
-          m_advObject(advObject),
-          m_noHOBC(false)
+          m_advObject(advObject)
     {      
         m_session->LoadParameter("TimeStep", m_timestep,   0.01);
         m_session->LoadParameter("OutflowBC_theta", m_obcTheta,   1.0);

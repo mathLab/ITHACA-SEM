@@ -76,45 +76,42 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
     {
-        if(m_HBCdata.num_elements()>0)
+        m_pressureCalls++;
+        if(m_HBCnumber > 0)
         {
-            int nHBCs = m_acceleration[0].num_elements();
-            
-            m_pressureCalls++;
-            int acc_order = std::min(m_pressureCalls,m_intSteps);
-            
-            // Rotate HOPBCs storage
-            RollOver(m_pressureHBCs);
-            
             // Calculate just viscous BCs at current level and put in
-            // m_pressureHBCs[0]
+            // m_pressureHBCs[nlevels-1]
             CalcNeumannPressureBCs(fields,N,kinvis);
             
             // Extrapolate to m_pressureHBCs to n+1
-            ExtrapolatePressureHBCs();
+            ExtrapolateArray(m_pressureHBCs);
+
+            // \int_bnd q x n.u^{n} ds update current normal of field
+            // add m_pressureHBCs to gamma_0/Dt * m_acceleration[0] 
+            AddVelBC();
             
             // Copy m_pressureHBCs to m_PbndExp
             CopyPressureHBCsToPbndExp();            
-
-#if 1 
-            // Add divergence terms!!
-
-            
-            // add m_pressureHBCs to gamma_0/Dt * m_acceleration[0] -> \int_bnd q x n.u^{n} ds
-            // update current normal of field on bc to m_acceleration
-            IProductNormVelocityOnHBC(fields,m_acceleration[0]);
-            
-            Vmath::Svtvp(nHBCs, -1.0*StifflyStable_Gamma0_Coeffs[acc_order-1]/m_timestep,
-                         m_acceleration[0], 1,
-                         m_pressureHBCs[0], 1,
-                         m_pressureHBCs[0], 1);
-#endif
-
-            // Evaluate High order outflow conditiosn if required. 
-            CalcOutflowBCs(fields, kinvis);
         }
+        // Evaluate High order outflow conditiosn if required. 
+        CalcOutflowBCs(fields, kinvis);
     }
 
+    void WeakPressureExtrapolate::AddVelBC(void)
+    {
+        int order = std::min(m_pressureCalls,m_intSteps);
+        
+        // Update velocity BF at n+1 (actually only needs doing if
+        // velocity is time dependent on HBCs)
+        IProductNormVelocityBCOnHBC(m_acceleration[0]);
+
+        // Subtract acceleration term off m_pressureHBCs[nlevels-1]
+        Vmath::Svtvp(m_numHBCDof,
+                     -1.0*StifflyStable_Gamma0_Coeffs[order-1]/m_timestep,
+                     m_acceleration[0],  1,
+                     m_pressureHBCs[m_intSteps-1], 1,
+                     m_pressureHBCs[m_intSteps-1], 1);
+    }
 	
     /** 
      *  vritual function which only puts in the curl operator into the bcs

@@ -89,6 +89,8 @@ namespace Nektar
                                            const Array<OneD, const Array<OneD, NekDouble> >  &N,
                                            NekDouble kinvis);
 
+        void AddVelBC(void);
+        
         virtual void v_MountHOPBCs(int HBCdata, 
                                    NekDouble kinvis, 
                                    Array<OneD, NekDouble> &Q, 

@@ -372,7 +372,7 @@ namespace Nektar
         for(i = 1; i < nvel; ++i)
         {
             // Use Forcing[1] as storage since it is not needed for the pressure
-            m_fields[i]->PhysDeriv(i,fields[i],Forcing[1]);
+            m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[i],fields[i],Forcing[1]);
             Vmath::Vadd(physTot,Forcing[1],1,Forcing[0],1,Forcing[0],1);
         }
 

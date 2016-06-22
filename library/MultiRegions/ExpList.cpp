@@ -514,18 +514,8 @@ namespace Nektar
                                   const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD, NekDouble> &out_d)
         {
-            Array<OneD, NekDouble> e_out_d;
-            int offset;
-            for (int i = 0; i < m_collections.size(); ++i)
-            {
-                offset   = m_coll_phys_offset[i];
-                e_out_d  = out_d  + offset;
-
-                m_collections[i].ApplyOperator(Collections::ePhysDeriv,
-                                               dir,
-                                               inarray + offset,
-                                               e_out_d);
-            }
+            Direction edir = DirCartesianMap[dir];
+            v_PhysDeriv(edir, inarray,out_d);
         }
 
         void ExpList::v_PhysDeriv(Direction edir, const Array<OneD, const NekDouble> &inarray,
@@ -554,7 +544,18 @@ namespace Nektar
             {
                 // convert enum into int
                 int intdir= (int)edir;
-                v_PhysDeriv(intdir, inarray, out_d);
+                Array<OneD, NekDouble> e_out_d;
+                int offset;
+                for (int i = 0; i < m_collections.size(); ++i)
+                {
+                    offset   = m_coll_phys_offset[i];
+                    e_out_d  = out_d  + offset;
+
+                    m_collections[i].ApplyOperator(Collections::ePhysDeriv,
+                                                   intdir,
+                                                   inarray + offset,
+                                                   e_out_d);
+                }
             }
         }
 

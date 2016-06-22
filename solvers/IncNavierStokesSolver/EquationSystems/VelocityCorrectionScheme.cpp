@@ -367,13 +367,12 @@ namespace Nektar
         int physTot = m_fields[0]->GetTotPoints();
         int nvel = m_velocity.num_elements();
 
-        m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],fields[0],
+        m_fields[0]->PhysDeriv(0,fields[0],
                                Forcing[0]);
         for(i = 1; i < nvel; ++i)
         {
             // Use Forcing[1] as storage since it is not needed for the pressure
-            m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[i],fields[i],
-                    Forcing[1]);
+            m_fields[i]->PhysDeriv(i,fields[i],Forcing[1]);
             Vmath::Vadd(physTot,Forcing[1],1,Forcing[0],1,Forcing[0],1);
         }
 

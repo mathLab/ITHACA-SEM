@@ -344,9 +344,6 @@ namespace Nektar
             F[i] = Array<OneD, NekDouble> (phystot);
         }
 
-        // Enforcing boundary conditions on all fields
-        SetBoundaryConditions(time);
-        
         // Substep the pressure boundary condition if using substepping
         m_extrapolation->SubStepSetPressureBCs(inarray,aii_Dt,m_kinvis);
     

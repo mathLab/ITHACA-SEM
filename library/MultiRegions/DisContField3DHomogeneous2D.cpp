@@ -287,9 +287,8 @@ namespace Nektar
 			return UpdateBndConditions();
 		}
 		
-		void DisContField3DHomogeneous2D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &EdgeID)
+        void DisContField3DHomogeneous2D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &EdgeID)
         {
-            
             if(m_BCtoElmMap.num_elements() == 0)
             {
                 Array<OneD, int> ElmtID_tmp;
@@ -301,42 +300,43 @@ namespace Nektar
 				
                 int MapSize = ElmtID_tmp.num_elements();
 				
-                ElmtID = Array<OneD, int>(nlines*MapSize);
-                EdgeID = Array<OneD, int>(nlines*MapSize);
-                for(int i = 0; i < nlines; i++)
-                {
-                    for(int j = 0; j < MapSize; j++)
-                    {
-                        ElmtID[j+i*MapSize] = ElmtID_tmp[j] + i*nel_per_lines;
-                        EdgeID[j+i*MapSize] = EdgeID_tmp[j];
-                    }
-                }
                 m_BCtoElmMap = Array<OneD, int>(nlines*MapSize);
                 m_BCtoEdgMap = Array<OneD, int>(nlines*MapSize);
-				
-                Vmath::Vcopy(nlines*MapSize,ElmtID,1,m_BCtoElmMap,1);
-                Vmath::Vcopy(nlines*MapSize,EdgeID,1,m_BCtoEdgMap,1);
+                if (MapSize > 0)
+                {
+                    int i ,j, n, cnt;
+                    int cntLine = 0;
+                    for (cnt=n=0; n < m_bndCondExpansions.num_elements(); ++n)
+                    {
+                        int lineExpSize = m_lines[0]
+                                                ->GetBndCondExpansions()[n]
+                                                ->GetExpSize();
+                        for (i = 0; i < lineExpSize ; ++i, ++cntLine)
+                        {
+                            for(j = 0; j < nlines; j++)
+                            {
+                                m_BCtoElmMap[cnt+i+j*lineExpSize] =
+                                        ElmtID_tmp[cntLine]+j*nel_per_lines;
+                                m_BCtoEdgMap[cnt+i+j*lineExpSize] =
+                                        EdgeID_tmp[cntLine];
+                            }
+                        }
+                        cnt += m_bndCondExpansions[n]->GetExpSize();
+                    }
+                }
             }
-            else 
-            {
-                int MapSize = m_BCtoElmMap.num_elements();
-				
-                ElmtID = Array<OneD, int>(MapSize);
-                EdgeID = Array<OneD, int>(MapSize);
-				
-                Vmath::Vcopy(MapSize,m_BCtoElmMap,1,ElmtID,1);
-                Vmath::Vcopy(MapSize,m_BCtoEdgMap,1,EdgeID,1);
-            }			
+            ElmtID = m_BCtoElmMap;
+            EdgeID = m_BCtoEdgMap;
         }
 
         void DisContField3DHomogeneous2D::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result)
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays)
         {
             int n, cnt, nq;
             int offsetOld, offsetNew;
-            Array<OneD, NekDouble> tmp1, tmp2;
-            std::vector<unsigned int> eIDs;
             
+            std::vector<unsigned int> eIDs;
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
             
@@ -354,23 +354,31 @@ namespace Nektar
             
             // Create expansion list
             result = 
-                MemoryManager<ExpList3DHomogeneous2D>::AllocateSharedPtr(*this, eIDs);
+                MemoryManager<ExpList3DHomogeneous2D>::AllocateSharedPtr
+                    (*this, eIDs);
             
             // Copy phys and coeffs to new explist
-            for (n = 0; n < result->GetExpSize(); ++n)
+            if ( DeclareCoeffPhysArrays)
             {
-                nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
-                offsetOld = GetPhys_Offset(ElmtID[cnt+n]);
-                offsetNew = result->GetPhys_Offset(n);
-                Vmath::Vcopy(nq, tmp1 = GetPhys()+ offsetOld, 1,
-                                 tmp2 = result->UpdatePhys()+ offsetNew, 1);
-                
-                nq = GetExp(ElmtID[cnt+n])->GetNcoeffs();
-                offsetOld = GetCoeff_Offset(ElmtID[cnt+n]);
-                offsetNew = result->GetCoeff_Offset(n);
-                Vmath::Vcopy(nq, tmp1 = GetCoeffs()+ offsetOld, 1,
-                                 tmp2 = result->UpdateCoeffs()+ offsetNew, 1);
+                Array<OneD, NekDouble> tmp1, tmp2;
+                for (n = 0; n < result->GetExpSize(); ++n)
+                {
+                    nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
+                    offsetOld = GetPhys_Offset(ElmtID[cnt+n]);
+                    offsetNew = result->GetPhys_Offset(n);
+                    Vmath::Vcopy(nq, tmp1 = GetPhys()+ offsetOld, 1,
+                                tmp2 = result->UpdatePhys()+ offsetNew, 1);
+
+                    nq = GetExp(ElmtID[cnt+n])->GetNcoeffs();
+                    offsetOld = GetCoeff_Offset(ElmtID[cnt+n]);
+                    offsetNew = result->GetCoeff_Offset(n);
+                    Vmath::Vcopy(nq, tmp1 = GetCoeffs()+ offsetOld, 1,
+                                tmp2 = result->UpdateCoeffs()+ offsetNew, 1);
+                }
             }
+
+            // Set wavespace value
+            result->SetWaveSpace(GetWaveSpace());
         }
 
     } // end of namespace

@@ -649,8 +649,11 @@ namespace Nektar
                 const int dir,
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD, NekDouble> &out_d);
-            
-            
+
+            inline void CurlCurl(
+                Array<OneD, Array<OneD, NekDouble> > &Vel,
+                Array<OneD, Array<OneD, NekDouble> > &Q);
+
             // functions associated with DisContField
             inline const Array<OneD, const  boost::shared_ptr<ExpList> >
                 &GetBndCondExpansions();
@@ -745,7 +748,8 @@ namespace Nektar
                                              Array<OneD,int> &EdgeID);
             
             inline void GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result);
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays = true);
             
             inline void ExtractElmtToBndPhys(int i,
                             Array<OneD, NekDouble> &elmt,
@@ -754,6 +758,10 @@ namespace Nektar
             inline void ExtractPhysToBndElmt(int i,
                             const Array<OneD, const NekDouble> &phys,
                             Array<OneD, NekDouble> &bndElmt);
+
+            inline void ExtractPhysToBnd(int i,
+                            const Array<OneD, const NekDouble> &phys,
+                            Array<OneD, NekDouble> &bnd);
             
             inline void GetBoundaryNormals(int i,
                             Array<OneD, Array<OneD, NekDouble> > &normals);
@@ -1216,6 +1224,10 @@ namespace Nektar
                 Direction edir,
                 const Array<OneD, const NekDouble> &inarray,
                 Array<OneD, NekDouble> &out_d);
+
+            virtual void v_CurlCurl(
+                Array<OneD, Array<OneD, NekDouble> > &Vel,
+                Array<OneD, Array<OneD, NekDouble> > &Q);
             
             virtual void v_HomogeneousFwdTrans(
                 const Array<OneD, const NekDouble> &inarray,
@@ -1258,16 +1270,21 @@ namespace Nektar
                                                 Array<OneD,int> &EdgeID);
             
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result);
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays);
             
             virtual void v_ExtractElmtToBndPhys(int i,
                             Array<OneD, NekDouble> &elmt,
                             Array<OneD, NekDouble> &boundary);
-            
+
             virtual void v_ExtractPhysToBndElmt(int i,
                             const Array<OneD, const NekDouble> &phys,
                             Array<OneD, NekDouble> &bndElmt);
-            
+
+            virtual void v_ExtractPhysToBnd(int i,
+                            const Array<OneD, const NekDouble> &phys,
+                            Array<OneD, NekDouble> &bnd);
+
             virtual void v_GetBoundaryNormals(int i,
                             Array<OneD, Array<OneD, NekDouble> > &normals);
 
@@ -1725,6 +1742,13 @@ namespace Nektar
             v_PhysDeriv(edir, inarray,out_d);
         }        
     
+        inline void ExpList::CurlCurl(
+                Array<OneD, Array<OneD, NekDouble> > &Vel,
+                Array<OneD, Array<OneD, NekDouble> > &Q)
+        {
+            v_CurlCurl(Vel, Q);
+        }
+
         /**
          *
          */
@@ -2154,9 +2178,10 @@ namespace Nektar
         }
         
         inline void ExpList::GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result)
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays)
         {
-            v_GetBndElmtExpansion(i, result);
+            v_GetBndElmtExpansion(i, result, DeclareCoeffPhysArrays);
         }
         
         inline void ExpList::ExtractElmtToBndPhys(int i,
@@ -2165,12 +2190,19 @@ namespace Nektar
         {
             v_ExtractElmtToBndPhys(i, elmt, boundary);
         }
-        
+
         inline void ExpList::ExtractPhysToBndElmt(int i,
                             const Array<OneD, const NekDouble> &phys,
                             Array<OneD, NekDouble> &bndElmt)
         {
             v_ExtractPhysToBndElmt(i, phys, bndElmt);
+        }
+
+        inline void ExpList::ExtractPhysToBnd(int i,
+                            const Array<OneD, const NekDouble> &phys,
+                            Array<OneD, NekDouble> &bnd)
+        {
+            v_ExtractPhysToBnd(i, phys, bnd);
         }
         
         inline void ExpList::GetBoundaryNormals(int i,

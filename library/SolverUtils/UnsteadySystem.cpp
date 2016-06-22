@@ -194,7 +194,7 @@ namespace Nektar
             }
 
             // Integrate in wave-space if using homogeneous1D
-            if(m_HomogeneousType == eHomogeneous1D && m_homoInitialFwd)
+            if(m_HomogeneousType != eNotHomogeneous && m_homoInitialFwd)
             {
                 for(i = 0; i < nfields; ++i)
                 {
@@ -354,7 +354,7 @@ namespace Nektar
                 if ((m_checksteps && !((step + 1) % m_checksteps)) ||
                      doCheckTime)
                 {
-                    if(m_HomogeneousType == eHomogeneous1D)
+                    if(m_HomogeneousType != eNotHomogeneous)
                     {
                         vector<bool> transformed(nfields, false);
                         for(i = 0; i < nfields; i++)
@@ -408,7 +408,7 @@ namespace Nektar
             }
             
             // If homogeneous, transform back into physical space if necessary.
-            if(m_HomogeneousType == eHomogeneous1D)
+            if(m_HomogeneousType != eNotHomogeneous)
             {
                 for(i = 0; i < nfields; i++)
                 {

@@ -46,28 +46,6 @@
 
 namespace Nektar
 {
-    struct HBCInfo
-    {
-        /// Global element ID.
-        int m_globalElmtID;
-        /// Number of physical points in the element.
-        int m_ptsInElmt;
-        /// Physical offset of the element in the global list.
-        int m_physOffset;
-        /// Physical offset of the element in the boundary expansion.
-        int m_bndElmtID;
-        /// Trace ID of the element
-        int m_elmtTraceID;
-        /// Pressure boundary condition ID.
-        int m_bndryID;
-        /// Associated element physical offset (\f$ k\f$ and \f$ k_c\f$ are the
-        /// real and complex plane).
-        int m_assPhysOffset;
-        /// Coefficient offset used to locate the acceleration term in the
-        /// general m_pressureHBC.
-        int m_coeffOffset;
-    };
-
     // Forward declaration
     class Extrapolate;
     typedef boost::shared_ptr<Extrapolate> ExtrapolateSharedPtr;
@@ -122,7 +100,8 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
             NekDouble kinvis);
 
-        void CalcExplicitDuDt(const Array<OneD, const Array<OneD, NekDouble> > &fields);
+        void AddDuDt(void);
+
         void ExtrapolatePressureHBCs(void);
         void CopyPressureHBCsToPbndExp(void);
 
@@ -138,7 +117,11 @@ namespace Nektar
         void IProductNormVelocityBCOnHBC(Array<OneD, NekDouble> &IprodVn);
         
         LibUtilities::TimeIntegrationMethod GetSubStepIntegrationMethod(void); 
-        
+
+        void ExtrapolateArray( Array<OneD, Array<OneD, NekDouble> > &array);
+
+        void AccelerationBDF( Array<OneD, Array<OneD, NekDouble> > &array);
+
         void ExtrapolateArray(
             Array<OneD, Array<OneD, NekDouble> > &oldarrays,
             Array<OneD, NekDouble>  &newarray,
@@ -198,13 +181,6 @@ namespace Nektar
         void RollOver(
             Array<OneD, Array<OneD, NekDouble> > &input);
 
-        void CurlCurl(
-            Array<OneD, Array<OneD, const NekDouble> > &Vel,
-            Array<OneD, Array<OneD, NekDouble> > &Q,
-            const int j);
-
-        
-        
         LibUtilities::SessionReaderSharedPtr m_session;
 
         LibUtilities::CommSharedPtr m_comm;
@@ -236,84 +212,39 @@ namespace Nektar
         
         /// number of times the high-order pressure BCs have been called
         int m_pressureCalls;
-        
-        /// Maximum points used in pressure BC evaluation
-        int m_pressureBCsMaxPts;
 
-        /// Maximum points used in Element adjacent to pressure BC evaluation
-        int m_pressureBCsElmtMaxPts;
+        // Number of degrees of freedom (coefficients) for HOPbc
+        int m_numHBCDof;
+
+        // Number of HOPbcs
+        int m_HBCnumber;
+
+        // Number of quadrature points for Outflow HOBC
+        int m_numOutHBCPts;
+
+        // Number of Outflow HOBcs
+        int m_outHBCnumber;
+
+        // Parameters for outflow boundary condition
+        NekDouble   m_obcTheta;
+        NekDouble   m_obcAlpha1;
+        NekDouble   m_obcAlpha2;
 
         /// Maximum points used in pressure BC evaluation
         int m_intSteps;
 
         NekDouble m_timestep;
 
-        /// Flag to determine if single homogeneous mode is used.
-        bool m_SingleMode;
-        /// Flag to determine if half homogeneous mode is used.
-        bool m_HalfMode;
-        /// Flag to determine if use multiple homogenenous modes are used.
-        bool m_MultipleModes;
-
-        NekDouble m_LhomZ;  ///< physical length in Z direction (if homogeneous)
-        
-        int m_npointsX;     ///< number of points in X direction (if homogeneous)
-        int m_npointsY;     ///< number of points in Y direction (if homogeneous)
-        int m_npointsZ;     ///< number of points in Z direction (if homogeneous)
-
-        /// Id of element to which pressure  boundary condition belongs
-        Array<OneD, int> m_pressureBCtoElmtID;
-        
-        /// Id of edge (2D) or face (3D) to which pressure boundary condition belongs
-        Array<OneD, int> m_pressureBCtoTraceID;
-        
         /// Storage for current and previous levels of high order pressure boundary conditions.
         Array<OneD, Array<OneD, NekDouble> >  m_pressureHBCs;
 
         /// Storage for current and previous levels of the acceleration term.
         Array<OneD, Array<OneD, NekDouble> >  m_acceleration;
-        
-        /// data structure to old all the information regarding High order pressure BCs
-        Array<OneD, HBCInfo > m_HBCdata;
 
-        /// wave number 2 pi k /Lz
-        Array<OneD, NekDouble>  m_wavenumber;
-        
-        /// minus Square of wavenumber
-        Array<OneD, NekDouble>  m_negWavenumberSq;
-        
-        /// Bool to identify if high order outflow conditions should be evaluated. 
-        bool m_noHOBC;
-        
-        /// Storage for current and previous velocity fields at the
-        /// otuflow for high order outflow BCs
-        Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_outflowVel;
+        /// Storage for current and previous velocity fields at the outflow for high order outflow BCs
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble > > > > m_outflowVel;
 
         Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
-
-        /// Storage for current and previous velocity fields in
-        /// physical space at the otuflow for high order outflow BCs
-        Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_PhyoutfVel; ///(if homogeneous)
-
-        /// Storage for nonlinear term in physical space at the
-        /// outflow for high order outflow BCs
-        Array<OneD, NekDouble> m_nonlinearterm_phys; ///(if homogeneous)
-
-        ///    Storage for nonlinear term in wave space at the outflow
-        ///    for high order outflow BCs
-        Array<OneD, NekDouble> m_nonlinearterm_coeffs; ///(if homogeneous)
-
-        /// expansion sizes of pressure boundary conditions in each plane 
-        /// at the outflow for high order outflow BCs
-        Array<OneD, unsigned int> m_expsize_per_plane; ///(if homogeneous)
-
-        /// Storage for Fourier Coeffs of Dirichlet pressure condition from the input file
-        Array<OneD, NekDouble> m_PBndCoeffs; ///(if homogeneous)
-
-        /// Storage for Fourier Coeffs of Neumann velocity condition from the input file
-        Array<OneD, Array<OneD, NekDouble> > m_UBndCoeffs; ///(if homogeneous)
-
-        int m_totexps_per_plane; ///total number of expansion for each plane (if homogeneous)
 
         // Velocity correction scheme coefficient required for extrapolation.
         static NekDouble StifflyStable_Betaq_Coeffs[3][3];

@@ -192,14 +192,32 @@ namespace Nektar
                 }
                 else if(fields[0]->GetWaveSpace() == true && m_homogen_dealiasing == false)
                 {
-                    // take d/dx, d/dy  gradients in physical Fourier space
-                    fields[0]->PhysDeriv(advVel[n],grad0,grad1);
-
-                    // Take d/dz derivative using wave space field
-                    fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],inarray[n],
-                                          outarray[n]);
-                    fields[0]->HomogeneousBwdTrans(outarray[n],grad2);
-
+                    if (fields[0]->GetExpType() == MultiRegions::e3DH1D)
+                    {
+                        // take d/dx, d/dy  gradients in physical Fourier space
+                        fields[0]->PhysDeriv(advVel[n],grad0,grad1);
+                        // Take d/dz derivative using wave space field
+                        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],inarray[n],
+                                              outarray[n]);
+                        fields[0]->HomogeneousBwdTrans(outarray[n],grad2);
+                    }
+                    else if (fields[0]->GetExpType() == MultiRegions::e3DH2D)
+                    {
+                        // take d/dx, gradients in physical Fourier space
+                        fields[0]->PhysDeriv(advVel[n],grad0);
+                        // Take d/dy derivative using wave space field
+                        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],inarray[n],
+                                              outarray[n]);
+                        fields[0]->HomogeneousBwdTrans(outarray[n],grad1);
+                        // Take d/dz derivative using wave space field
+                        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],inarray[n],
+                                              outarray[n]);
+                        fields[0]->HomogeneousBwdTrans(outarray[n],grad2);
+                    }
+                    else
+                    {
+                        ASSERTL0( false, "Unsupported dimension.");
+                    }
                     if(m_specHP_dealiasing) //interpolate spectral/hp gradient field
                     {
                         fields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);

@@ -81,6 +81,17 @@ namespace Nektar
             PetscInitialized(&isInitialized);
             if (!isInitialized)
             {
+#ifdef NEKTAR_USE_MPI
+                std::string commType =
+                    m_expList.lock()->GetSession()->GetComm()->GetType();
+                if (commType.find("MPI") != std::string::npos)
+                {
+                    LibUtilities::CommMpiSharedPtr comm =
+                        boost::static_pointer_cast<LibUtilities::CommMpi>(
+                            m_expList.lock()->GetSession()->GetComm());
+                    PETSC_COMM_WORLD = comm->GetComm();
+                }
+#endif
                 PetscInitializeNoArguments();
             }
 

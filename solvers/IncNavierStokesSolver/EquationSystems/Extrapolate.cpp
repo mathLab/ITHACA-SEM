@@ -83,15 +83,18 @@ namespace Nektar
         LibUtilities::SessionReader::RegisterDefaultSolverInfo(
             "StandardExtrapolate", "StandardExtrapolate");
 
-    void Extrapolate::CalcExplicitDuDt(const Array<OneD, const Array<OneD, NekDouble> > &fields)    
+    /**
+     *
+     */
+    void Extrapolate::AddDuDt(void)
     {
-        // update current normal of field on bc  to m_acceleration[0]; 
-        IProductNormVelocityOnHBC(fields,m_acceleration[m_intSteps]);
-        
+        // Update velocity BF at n+1 (actually only needs doing if velocity is time dependent on HBCs)
+        IProductNormVelocityBCOnHBC(m_acceleration[m_intSteps]);
+
         //Calculate acceleration term at level n based on previous steps
         AccelerationBDF(m_acceleration);
-        
-        // Adding acceleration term to HOPBCs
+
+        // Subtract acceleration term off m_pressureHBCs[nlevels-1]
         Vmath::Svtvp(m_numHBCDof, -1.0/m_timestep,
                      m_acceleration[m_intSteps],  1,
                      m_pressureHBCs[m_intSteps-1], 1,
@@ -415,7 +418,7 @@ namespace Nektar
                 for(i = 0; i < m_bnd_dim; ++i)
                 {
                     velbc[i] = Array<OneD, NekDouble> 
-                                (VelBndExp[i][n]->GetTotPoints());
+                                (VelBndExp[i][n]->GetTotPoints(), 0.0);
                     VelBndExp[i][n]->BwdTrans(VelBndExp[i][n]->GetCoeffs(),
                                               velbc[i]);
                 }

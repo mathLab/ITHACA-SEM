@@ -81,12 +81,11 @@ namespace Nektar
             // Calculate Neumann BCs at current level
             CalcNeumannPressureBCs(fields, N, kinvis);
 
-            // calculate (phi,du/dt) and level n which will then be
-            // extrapolated.
-            CalcExplicitDuDt(fields);
-
             // Extrapolate to n+1
             ExtrapolateArray(m_pressureHBCs);
+
+            // Add (phi,Du/Dt) term to m_presureHBC
+            AddDuDt();
 
             // Copy m_pressureHBCs to m_PbndExp
             CopyPressureHBCsToPbndExp();

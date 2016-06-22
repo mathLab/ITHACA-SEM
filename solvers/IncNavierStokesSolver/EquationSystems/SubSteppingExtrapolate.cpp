@@ -528,24 +528,6 @@ namespace Nektar
     {
         Vmath::Smul(HBCdata,-kinvis,Q,1,Q,1);
     }
-	
-    /** 
-     * 
-     */
-    void SubSteppingExtrapolate::AddDuDt(void)
-    {
-        // Update velocity BF at n+1 (actually only needs doing if velocity is time dependent on HBCs)
-        IProductNormVelocityBCOnHBC(m_acceleration[m_intSteps]);
-        
-        //Calculate acceleration term at level n based on previous steps
-        AccelerationBDF(m_acceleration);
-        
-        // Subtract acceleration term off m_pressureHBCs[nlevels-1]
-        Vmath::Svtvp(m_numHBCDof, -1.0/m_timestep,
-                     m_acceleration[m_intSteps],  1,
-                     m_pressureHBCs[m_intSteps-1], 1,
-                     m_pressureHBCs[m_intSteps-1], 1);
-    }
 
     LibUtilities::TimeIntegrationMethod SubSteppingExtrapolate::v_GetSubStepIntegrationMethod(void)
     {

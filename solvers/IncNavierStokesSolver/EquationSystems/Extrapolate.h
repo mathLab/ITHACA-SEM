@@ -100,7 +100,8 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
             NekDouble kinvis);
 
-        void CalcExplicitDuDt(const Array<OneD, const Array<OneD, NekDouble> > &fields);
+        void AddDuDt(void);
+
         void ExtrapolatePressureHBCs(void);
         void CopyPressureHBCsToPbndExp(void);
 

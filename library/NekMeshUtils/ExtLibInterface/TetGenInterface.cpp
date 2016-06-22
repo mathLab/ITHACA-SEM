@@ -64,7 +64,7 @@ void TetGenInterface::InitialMesh(map<int, NodeSharedPtr>  tgidton,
     {
         Array<OneD, NekDouble> loc = it->second->GetLoc();
 
-        if(it->first == 85838)
+        if(it->first == 2950)
         {
             cout << loc[0] << " " << loc[1] << " " << loc[2] << endl;
         }

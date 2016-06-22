@@ -296,15 +296,15 @@ void InputCAD::Process()
 
         m_blmesh->Mesh();
 
-        m_mesh->m_element[2].clear();
-        m_mesh->m_expDim = 3;
-        ClearElementLinks();
+        //m_mesh->m_element[2].clear();
+        //m_mesh->m_expDim = 3;
+        /*ClearElementLinks();
         ProcessVertices();
         ProcessEdges();
         ProcessFaces();
         ProcessElements();
         ProcessComposites();
-        return;
+        return;*/
 
         m_surfacemesh->Remesh(m_blmesh);
 

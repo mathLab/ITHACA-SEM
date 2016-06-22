@@ -50,9 +50,10 @@ struct blInfo
 {
     NodeSharedPtr pNode;
     NodeSharedPtr oNode;
-    NekDouble bl;
+    int bl;
     Array<OneD, NekDouble> N;
     int symsurf;
+    bool onSym;
 };
 
 class BLMesh

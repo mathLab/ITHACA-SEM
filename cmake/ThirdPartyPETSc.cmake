@@ -28,6 +28,8 @@ IF (NEKTAR_USE_PETSC)
 
         FIND_PACKAGE(PythonInterp 2 REQUIRED)
 
+        message(STATUS "PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE}")
+
         SET(PETSC_C_COMPILER   "${CMAKE_C_COMPILER}")
         SET(PETSC_CXX_COMPILER "${CMAKE_CXX_COMPILER}")
 
@@ -41,16 +43,16 @@ IF (NEKTAR_USE_PETSC)
         ENDIF (NEKTAR_USE_MPI)
 
         EXTERNALPROJECT_ADD(
-            petsc-3.5.2
+            petsc-3.7.2
             PREFIX ${TPSRC}
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
-            SOURCE_DIR ${TPBUILD}/petsc-3.5.2
-            TMP_DIR ${TPBUILD}/petsc-3.5.2-tmp
+            SOURCE_DIR ${TPBUILD}/petsc-3.7.2
+            TMP_DIR ${TPBUILD}/petsc-3.7.2-tmp
             INSTALL_DIR ${TPDIST}
-            BINARY_DIR ${TPBUILD}/petsc-3.5.2
-            URL http://www.nektar.info/thirdparty/petsc-lite-3.5.2.tar.gz
-            URL_MD5 "d707336a98d7cb31d843804d020edc94"
+            BINARY_DIR ${TPBUILD}/petsc-3.7.2
+            URL http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.7.2.tar.gz
+            URL_MD5 "26c2ff8eaaa9e49aea063f839f5daa7e"
             CONFIGURE_COMMAND
                 OMPI_CC=${CMAKE_C_COMPILER}
                 OMPI_CXX=${CMAKE_CXX_COMPILER}
@@ -84,7 +86,7 @@ IF (NEKTAR_USE_PETSC)
         ENDIF (NOT PETSC_FOUND)
         SET(PETSC_CONFIG_INCLUDE_DIR ${PETSC_INCLUDES})
         INCLUDE_DIRECTORIES(${PETSC_INCLUDES})
-        ADD_CUSTOM_TARGET(petsc-3.5.2 ALL)
+        ADD_CUSTOM_TARGET(petsc-3.7.2 ALL)
     ENDIF (THIRDPARTY_BUILD_PETSC)
 
     ADD_DEFINITIONS(-DNEKTAR_USING_PETSC)

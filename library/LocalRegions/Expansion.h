@@ -124,7 +124,6 @@ namespace Nektar
             protected:
                 SpatialDomains::GeometrySharedPtr  m_geom;
                 SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
-                Array<TwoD, const NekDouble>         m_df;
                 MetricMap m_metrics;
 
                 void ComputeLaplacianMetric();

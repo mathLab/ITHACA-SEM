@@ -169,6 +169,8 @@ namespace Nektar
                       Array<OneD,NekDouble> &out_d2)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
+            Array<TwoD, const NekDouble> gmat =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
             Array<OneD,NekDouble> diff(nquad0);
 
             //StdExpansion1D::PhysTensorDeriv(inarray,diff);
@@ -177,19 +179,19 @@ namespace Nektar
             {
                 if(out_d0.num_elements())
                 {
-                    Vmath::Vmul(nquad0,&m_df[0][0],1,&diff[0],1,
+                    Vmath::Vmul(nquad0,&gmat[0][0],1,&diff[0],1,
                                 &out_d0[0],1);
                 }
 
                 if(out_d1.num_elements())
                 {
-                    Vmath::Vmul(nquad0,&m_df[1][0],1,&diff[0],1,
+                    Vmath::Vmul(nquad0,&gmat[1][0],1,&diff[0],1,
                                 &out_d1[0],1);
                 }
 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Vmul(nquad0,&m_df[2][0],1,&diff[0],1,
+                    Vmath::Vmul(nquad0,&gmat[2][0],1,&diff[0],1,
                                 &out_d2[0],1);
                 }
             }
@@ -197,19 +199,19 @@ namespace Nektar
             {
                 if(out_d0.num_elements())
                 {
-                    Vmath::Smul(nquad0, m_df[0][0], diff, 1,
+                    Vmath::Smul(nquad0, gmat[0][0], diff, 1,
                                 out_d0, 1);
                 }
 
                 if(out_d1.num_elements())
                 {
-                    Vmath::Smul(nquad0, m_df[1][0], diff, 1,
+                    Vmath::Smul(nquad0, gmat[1][0], diff, 1,
                                 out_d1, 1);
                 }
 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Smul(nquad0, m_df[2][0], diff, 1,
+                    Vmath::Smul(nquad0, gmat[2][0], diff, 1,
                                 out_d2, 1);
                 }
             }
@@ -268,6 +270,8 @@ namespace Nektar
                       Array<OneD, NekDouble>& out_dn)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
+            Array<TwoD, const NekDouble> gmat =
+                            m_metricinfo->GetDerivFactors(GetPointsKeys());
             int     coordim  = m_geom->GetCoordim();
             Array<OneD, NekDouble> out_dn_tmp(nquad0,0.0);
             switch(coordim)
@@ -561,6 +565,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                       Array<OneD, NekDouble> & outarray)
         {
             int    nquad = m_base[0]->GetNumPoints();
+            const Array<TwoD, const NekDouble>& gmat =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD, NekDouble> tmp1(nquad);
 
@@ -570,11 +576,11 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
-                        Vmath::Vmul(nquad,m_df[0],1,inarray,1,tmp1,1);
+                        Vmath::Vmul(nquad,gmat[0],1,inarray,1,tmp1,1);
                     }
                     else
                     {
-                        Vmath::Smul(nquad, m_df[0][0], inarray, 1, tmp1, 1);
+                        Vmath::Smul(nquad, gmat[0][0], inarray, 1, tmp1, 1);
                     }
                 }
                 break;
@@ -582,11 +588,11 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
-                        Vmath::Vmul(nquad,m_df[1],1,inarray,1,tmp1,1);
+                        Vmath::Vmul(nquad,gmat[1],1,inarray,1,tmp1,1);
                     }
                     else
                     {
-                        Vmath::Smul(nquad, m_df[1][0], inarray, 1, tmp1, 1);
+                        Vmath::Smul(nquad, gmat[1][0], inarray, 1, tmp1, 1);
                     }
                 }
                 break;
@@ -595,11 +601,11 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     ASSERTL1(m_geom->GetCoordim() == 3,"input dir is out of range");
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
-                        Vmath::Vmul(nquad,m_df[2],1,inarray,1,tmp1,1);
+                        Vmath::Vmul(nquad,gmat[2],1,inarray,1,tmp1,1);
                     }
                     else
                     {
-                        Vmath::Smul(nquad, m_df[2][0], inarray, 1, tmp1, 1);
+                        Vmath::Smul(nquad, gmat[2][0], inarray, 1, tmp1, 1);
                     }
                 }
                 break;
@@ -882,7 +888,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
                 GetGeom()->GetMetricInfo();
             SpatialDomains::GeomType type = geomFactors->GetGtype();
-
+            const Array<TwoD, const NekDouble> &gmat =
+                                geomFactors->GetDerivFactors(GetPointsKeys());
             int nqe = 1;
             int vCoordDim = GetCoordim();
 
@@ -906,13 +913,13 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     case 0:
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nqe, -m_df[i][0], normal[i], 1);
+                            Vmath::Fill(nqe, -gmat[i][0], normal[i], 1);
                         }
                         break;
                     case 1:
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nqe, m_df[i][0], normal[i], 1);
+                            Vmath::Fill(nqe, gmat[i][0], normal[i], 1);
                         }
                         break;
                     default:
@@ -945,6 +952,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             const StdRegions::StdMatrixKey     &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
+            const Array<TwoD, const NekDouble>& gmat =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD,NekDouble> physValues(nquad);
             Array<OneD,NekDouble> dPhysValuesdx(nquad);
@@ -962,13 +971,13 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         Vmath::Vmul(nquad,
-                                    &m_df[0][0],1,dPhysValuesdx.get(),1,
+                                    &gmat[0][0],1,dPhysValuesdx.get(),1,
                                     dPhysValuesdx.get(),1);
                     }
                     else
                     {
                         Blas::Dscal(nquad,
-                                    m_df[0][0], dPhysValuesdx.get(), 1);
+                                    gmat[0][0], dPhysValuesdx.get(), 1);
                     }
                 }
                     break;
@@ -982,19 +991,19 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         Vmath::Vmul (nquad,
-                                     &m_df[0][0],1,dPhysValuesdx.get(),1,
+                                     &gmat[0][0],1,dPhysValuesdx.get(),1,
                                      dPhysValuesdx.get(),1);
                         Vmath::Vvtvp(nquad,
-                                     &m_df[1][0],1,dPhysValuesdy.get(),1,
+                                     &gmat[1][0],1,dPhysValuesdy.get(),1,
                                      dPhysValuesdx.get(),1,
                                      dPhysValuesdx.get(),1);
                     }
                     else
                     {
                         Blas::Dscal(nquad,
-                                    m_df[0][0], dPhysValuesdx.get(), 1);
+                                    gmat[0][0], dPhysValuesdx.get(), 1);
                         Blas::Daxpy(nquad,
-                                    m_df[1][0], dPhysValuesdy.get(), 1,
+                                    gmat[1][0], dPhysValuesdy.get(), 1,
                                     dPhysValuesdx.get(), 1);
                     }
                 }
@@ -1011,25 +1020,25 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         Vmath::Vmul (nquad,
-                                     &m_df[0][0], 1, dPhysValuesdx.get(), 1,
+                                     &gmat[0][0], 1, dPhysValuesdx.get(), 1,
                                      dPhysValuesdx.get(),1);
                         Vmath::Vvtvp(nquad,
-                                     &m_df[1][0], 1, dPhysValuesdy.get(), 1,
+                                     &gmat[1][0], 1, dPhysValuesdy.get(), 1,
                                      dPhysValuesdx.get(),1,
                                      dPhysValuesdx.get(),1);
                         Vmath::Vvtvp(nquad,
-                                     &m_df[2][0], 1, dPhysValuesdz.get(), 1,
+                                     &gmat[2][0], 1, dPhysValuesdz.get(), 1,
                                      dPhysValuesdx.get(),1,
                                      dPhysValuesdx.get(),1);
                     }
                     else
                     {
-                        Blas::Dscal(nquad, m_df[0][0], dPhysValuesdx.get(), 1);
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
                         Blas::Daxpy(nquad,
-                                    m_df[1][0], dPhysValuesdy.get(), 1,
+                                    gmat[1][0], dPhysValuesdy.get(), 1,
                                     dPhysValuesdx.get(), 1);
                         Blas::Daxpy(nquad,
-                                    m_df[2][0], dPhysValuesdz.get(), 1,
+                                    gmat[2][0], dPhysValuesdz.get(), 1,
                                     dPhysValuesdx.get(), 1);
                     }  
                 }
@@ -1049,6 +1058,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             const StdRegions::StdMatrixKey     &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
+            const Array<TwoD, const NekDouble>& gmat =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
             const NekDouble lambda =
                 mkey.GetConstFactor(StdRegions::eFactorLambda);
 
@@ -1072,12 +1083,12 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         Vmath::Vmul(nquad,
-                                    &m_df[0][0],1,dPhysValuesdx.get(),1,
+                                    &gmat[0][0],1,dPhysValuesdx.get(),1,
                                     dPhysValuesdx.get(),1);
                     }
                     else
                     {
-                        Blas::Dscal(nquad, m_df[0][0], dPhysValuesdx.get(), 1);
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
                     }
                 }
                     break;
@@ -1091,18 +1102,18 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         Vmath::Vmul (nquad,
-                                     &m_df[0][0], 1, dPhysValuesdx.get(), 1,
+                                     &gmat[0][0], 1, dPhysValuesdx.get(), 1,
                                      dPhysValuesdx.get(), 1);
                         Vmath::Vvtvp(nquad,
-                                     &m_df[1][0], 1, dPhysValuesdy.get(), 1,
+                                     &gmat[1][0], 1, dPhysValuesdy.get(), 1,
                                      dPhysValuesdx.get(), 1,
                                      dPhysValuesdx.get(), 1);
                     }
                     else
                     {
-                        Blas::Dscal(nquad, m_df[0][0], dPhysValuesdx.get(), 1);
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
                         Blas::Daxpy(nquad,
-                                    m_df[1][0], dPhysValuesdy.get(), 1,
+                                    gmat[1][0], dPhysValuesdy.get(), 1,
                                     dPhysValuesdx.get(), 1);
                     }
                 }
@@ -1119,25 +1130,25 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         Vmath::Vmul (nquad,
-                                     &m_df[0][0], 1, dPhysValuesdx.get(), 1,
+                                     &gmat[0][0], 1, dPhysValuesdx.get(), 1,
                                      dPhysValuesdx.get(), 1);
                         Vmath::Vvtvp(nquad,
-                                     &m_df[1][0], 1, dPhysValuesdy.get(), 1,
+                                     &gmat[1][0], 1, dPhysValuesdy.get(), 1,
                                      dPhysValuesdx.get(), 1,
                                      dPhysValuesdx.get(), 1);
                         Vmath::Vvtvp(nquad,
-                                     &m_df[2][0], 1, dPhysValuesdz.get(), 1,
+                                     &gmat[2][0], 1, dPhysValuesdz.get(), 1,
                                      dPhysValuesdx.get(), 1,
                                      dPhysValuesdx.get(), 1);
                     }
                     else
                     {
-                        Blas::Dscal(nquad, m_df[0][0], dPhysValuesdx.get(), 1);
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
                         Blas::Daxpy(nquad,
-                                    m_df[1][0], dPhysValuesdy.get(), 1,
+                                    gmat[1][0], dPhysValuesdy.get(), 1,
                                     dPhysValuesdx.get(), 1);
                         Blas::Daxpy(nquad,
-                                    m_df[2][0], dPhysValuesdz.get(),
+                                    gmat[2][0], dPhysValuesdz.get(),
                                     1, dPhysValuesdx.get(), 1);
                     }  
                 }

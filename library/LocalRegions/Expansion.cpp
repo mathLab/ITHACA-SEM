@@ -69,13 +69,11 @@ namespace Nektar
                     << "(first vertex ID = " << m_geom->GetVid(0) << ")";
                 NEKERROR(ErrorUtil::ewarning, err.str());
             }
-            m_df = m_metricinfo->GetDerivFactors(GetPointsKeys());
         }
         
         Expansion::Expansion(const Expansion &pSrc) :
                 m_geom(pSrc.m_geom),
-                m_metricinfo(pSrc.m_metricinfo),
-                m_df(pSrc.m_df)
+                m_metricinfo(pSrc.m_metricinfo)
         {
 
         }

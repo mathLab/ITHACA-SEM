@@ -141,6 +141,8 @@ namespace Nektar
         {
             int nqtot = GetTotPoints();
 
+            Array<TwoD, const NekDouble> df =
+                            m_metricinfo->GetDerivFactors(GetPointsKeys());
             Array<OneD,       NekDouble> diff0(nqtot);
             Array<OneD,       NekDouble> diff1(nqtot);
             Array<OneD,       NekDouble> diff2(nqtot);
@@ -151,46 +153,46 @@ namespace Nektar
             {
                 if(out_d0.num_elements())
                 {
-                    Vmath::Vmul  (nqtot,&m_df[0][0],1,&diff0[0],1,&out_d0[0],1);
-                    Vmath::Vvtvp (nqtot,&m_df[1][0],1,&diff1[0],1,&out_d0[0],1,&out_d0[0],1);
-                    Vmath::Vvtvp (nqtot,&m_df[2][0],1,&diff2[0],1,&out_d0[0],1,&out_d0[0],1);
+                    Vmath::Vmul  (nqtot,&df[0][0],1,&diff0[0],1,&out_d0[0],1);
+                    Vmath::Vvtvp (nqtot,&df[1][0],1,&diff1[0],1,&out_d0[0],1,&out_d0[0],1);
+                    Vmath::Vvtvp (nqtot,&df[2][0],1,&diff2[0],1,&out_d0[0],1,&out_d0[0],1);
                 }
 
                 if(out_d1.num_elements())
                 {
-                    Vmath::Vmul  (nqtot,&m_df[3][0],1,&diff0[0],1,&out_d1[0],1);
-                    Vmath::Vvtvp (nqtot,&m_df[4][0],1,&diff1[0],1,&out_d1[0],1,&out_d1[0],1);
-                    Vmath::Vvtvp (nqtot,&m_df[5][0],1,&diff2[0],1,&out_d1[0],1,&out_d1[0],1);
+                    Vmath::Vmul  (nqtot,&df[3][0],1,&diff0[0],1,&out_d1[0],1);
+                    Vmath::Vvtvp (nqtot,&df[4][0],1,&diff1[0],1,&out_d1[0],1,&out_d1[0],1);
+                    Vmath::Vvtvp (nqtot,&df[5][0],1,&diff2[0],1,&out_d1[0],1,&out_d1[0],1);
                 }
 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Vmul  (nqtot,&m_df[6][0],1,&diff0[0],1,&out_d2[0],1);
-                    Vmath::Vvtvp (nqtot,&m_df[7][0],1,&diff1[0],1,&out_d2[0],1,&out_d2[0],1);
-                    Vmath::Vvtvp (nqtot,&m_df[8][0],1,&diff2[0],1,&out_d2[0],1,&out_d2[0],1);
+                    Vmath::Vmul  (nqtot,&df[6][0],1,&diff0[0],1,&out_d2[0],1);
+                    Vmath::Vvtvp (nqtot,&df[7][0],1,&diff1[0],1,&out_d2[0],1,&out_d2[0],1);
+                    Vmath::Vvtvp (nqtot,&df[8][0],1,&diff2[0],1,&out_d2[0],1,&out_d2[0],1);
                 }
             }
             else // regular geometry
             {
                 if(out_d0.num_elements())
                 {
-                    Vmath::Smul (nqtot,m_df[0][0],&diff0[0],1,&out_d0[0],1);
-                    Blas::Daxpy (nqtot,m_df[1][0],&diff1[0],1,&out_d0[0],1);
-                    Blas::Daxpy (nqtot,m_df[2][0],&diff2[0],1,&out_d0[0],1);
+                    Vmath::Smul (nqtot,df[0][0],&diff0[0],1,&out_d0[0],1);
+                    Blas::Daxpy (nqtot,df[1][0],&diff1[0],1,&out_d0[0],1);
+                    Blas::Daxpy (nqtot,df[2][0],&diff2[0],1,&out_d0[0],1);
                 }
 
                 if(out_d1.num_elements())
                 {
-                    Vmath::Smul (nqtot,m_df[3][0],&diff0[0],1,&out_d1[0],1);
-                    Blas::Daxpy (nqtot,m_df[4][0],&diff1[0],1,&out_d1[0],1);
-                    Blas::Daxpy (nqtot,m_df[5][0],&diff2[0],1,&out_d1[0],1);
+                    Vmath::Smul (nqtot,df[3][0],&diff0[0],1,&out_d1[0],1);
+                    Blas::Daxpy (nqtot,df[4][0],&diff1[0],1,&out_d1[0],1);
+                    Blas::Daxpy (nqtot,df[5][0],&diff2[0],1,&out_d1[0],1);
                 }
 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Smul (nqtot,m_df[6][0],&diff0[0],1,&out_d2[0],1);
-                    Blas::Daxpy (nqtot,m_df[7][0],&diff1[0],1,&out_d2[0],1);
-                    Blas::Daxpy (nqtot,m_df[8][0],&diff2[0],1,&out_d2[0],1);
+                    Vmath::Smul (nqtot,df[6][0],&diff0[0],1,&out_d2[0],1);
+                    Blas::Daxpy (nqtot,df[7][0],&diff1[0],1,&out_d2[0],1);
+                    Blas::Daxpy (nqtot,df[8][0],&diff2[0],1,&out_d2[0],1);
                 }
             }
         }
@@ -373,19 +375,22 @@ namespace Nektar
             Array<OneD, NekDouble> tmp6 (m_ncoeffs);
             Array<OneD, NekDouble> wsp  (order0*nquad2*(nquad1+order1));
 
+            const Array<TwoD, const NekDouble>& df =
+                            m_metricinfo->GetDerivFactors(GetPointsKeys());
+
             MultiplyByQuadratureMetric(inarray, tmp1);
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                Vmath::Vmul(nqtot,&m_df[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
-                Vmath::Vmul(nqtot,&m_df[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
-                Vmath::Vmul(nqtot,&m_df[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
+                Vmath::Vmul(nqtot,&df[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
+                Vmath::Vmul(nqtot,&df[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
+                Vmath::Vmul(nqtot,&df[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
             }
             else
             {
-                Vmath::Smul(nqtot, m_df[3*dir][0],  tmp1.get(),1,tmp2.get(), 1);
-                Vmath::Smul(nqtot, m_df[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
-                Vmath::Smul(nqtot, m_df[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
+                Vmath::Smul(nqtot, df[3*dir][0],  tmp1.get(),1,tmp2.get(), 1);
+                Vmath::Smul(nqtot, df[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
+                Vmath::Smul(nqtot, df[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
             }
 
             // set up geometric factor: (1+z0)/2
@@ -686,6 +691,7 @@ namespace Nektar
                 GetGeom()->GetMetricInfo();
             LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
             SpatialDomains::GeomType type            = geomFactors->GetGtype();
+            const Array<TwoD, const NekDouble> &df   = geomFactors->GetDerivFactors(ptsKeys);
             const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac(ptsKeys);
 
             int nq0  = ptsKeys[0].GetNumPoints();
@@ -723,7 +729,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            normal[i][0] = -m_df[3*i+2][0];;
+                            normal[i][0] = -df[3*i+2][0];;
                         }
                         break;
                     }
@@ -731,7 +737,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            normal[i][0] = -m_df[3*i+1][0];
+                            normal[i][0] = -df[3*i+1][0];
                         }
                         break;
                     }
@@ -739,7 +745,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            normal[i][0] = m_df[3*i][0]+m_df[3*i+2][0];
+                            normal[i][0] = df[3*i][0]+df[3*i+2][0];
                         }
                         break;
                     }
@@ -747,7 +753,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            normal[i][0] = m_df[3*i+1][0];
+                            normal[i][0] = df[3*i+1][0];
                         }
                         break;
                     }
@@ -755,7 +761,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            normal[i][0] = -m_df[3*i][0];
+                            normal[i][0] = -df[3*i][0];
                         }
                         break;
                     }
@@ -809,9 +815,9 @@ namespace Nektar
                     {
                         for(j = 0; j < nq01; ++j)
                         {
-                            normals[j]         = -m_df[2][j]*jac[j];
-                            normals[nqtot+j]   = -m_df[5][j]*jac[j];
-                            normals[2*nqtot+j] = -m_df[8][j]*jac[j];
+                            normals[j]         = -df[2][j]*jac[j];
+                            normals[nqtot+j]   = -df[5][j]*jac[j];
+                            normals[2*nqtot+j] = -df[8][j]*jac[j];
                             faceJac[j]         = jac[j];
                         }
 
@@ -828,11 +834,11 @@ namespace Nektar
                             {
                                 int tmp = j+nq01*k;
                                 normals[j+k*nq0]          =
-                                    -m_df[1][tmp]*jac[tmp];
+                                    -df[1][tmp]*jac[tmp];
                                 normals[nqtot+j+k*nq0]    =
-                                    -m_df[4][tmp]*jac[tmp];
+                                    -df[4][tmp]*jac[tmp];
                                 normals[2*nqtot+j+k*nq0]  =
-                                    -m_df[7][tmp]*jac[tmp];
+                                    -df[7][tmp]*jac[tmp];
                                 faceJac[j+k*nq0] = jac[tmp];
                             }
                         }
@@ -850,11 +856,11 @@ namespace Nektar
                             {
                                 int tmp = nq0-1+nq0*j+nq01*k;
                                 normals[j+k*nq1]         =
-                                    (m_df[0][tmp]+m_df[2][tmp])*jac[tmp];
+                                    (df[0][tmp]+df[2][tmp])*jac[tmp];
                                 normals[nqtot+j+k*nq1]   =
-                                    (m_df[3][tmp]+m_df[5][tmp])*jac[tmp];
+                                    (df[3][tmp]+df[5][tmp])*jac[tmp];
                                 normals[2*nqtot+j+k*nq1] =
-                                    (m_df[6][tmp]+m_df[8][tmp])*jac[tmp];
+                                    (df[6][tmp]+df[8][tmp])*jac[tmp];
                                 faceJac[j+k*nq1] = jac[tmp];
                             }
                         }
@@ -872,11 +878,11 @@ namespace Nektar
                             {
                                 int tmp = nq0*(nq1-1) + j + nq01*k;
                                 normals[j+k*nq0]         =
-                                    m_df[1][tmp]*jac[tmp];
+                                    df[1][tmp]*jac[tmp];
                                 normals[nqtot+j+k*nq0]   =
-                                    m_df[4][tmp]*jac[tmp];
+                                    df[4][tmp]*jac[tmp];
                                 normals[2*nqtot+j+k*nq0] =
-                                    m_df[7][tmp]*jac[tmp];
+                                    df[7][tmp]*jac[tmp];
                                 faceJac[j+k*nq0] = jac[tmp];
                             }
                         }
@@ -894,11 +900,11 @@ namespace Nektar
                             {
                                 int tmp = j*nq0+nq01*k;
                                 normals[j+k*nq1]         =
-                                    -m_df[0][tmp]*jac[tmp];
+                                    -df[0][tmp]*jac[tmp];
                                 normals[nqtot+j+k*nq1]   =
-                                    -m_df[3][tmp]*jac[tmp];
+                                    -df[3][tmp]*jac[tmp];
                                 normals[2*nqtot+j+k*nq1] =
-                                    -m_df[6][tmp]*jac[tmp];
+                                    -df[6][tmp]*jac[tmp];
                                 faceJac[j+k*nq1] = jac[tmp];
                             }
                         }
@@ -1149,6 +1155,8 @@ namespace Nektar
                     else
                     {
                         NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
+                        Array<TwoD, const NekDouble> df =
+                                        m_metricinfo->GetDerivFactors(ptsKeys);
                         int dir = 0;
 
                         switch(mkey.GetMatrixType())
@@ -1183,9 +1191,9 @@ namespace Nektar
                         DNekMatSharedPtr WeakDeriv = MemoryManager<DNekMat>
                             ::AllocateSharedPtr(rows,cols);
 
-                        (*WeakDeriv) = m_df[3*dir  ][0]*deriv0
-                                     + m_df[3*dir+1][0]*deriv1
-                                     + m_df[3*dir+2][0]*deriv2;
+                        (*WeakDeriv) = df[3*dir  ][0]*deriv0
+                                     + df[3*dir+1][0]*deriv1
+                                     + df[3*dir+2][0]*deriv2;
 
                         returnval = MemoryManager<DNekScalMat>
                             ::AllocateSharedPtr(jac,WeakDeriv);
@@ -1579,6 +1587,8 @@ namespace Nektar
             // wsp3 = du_dxi3 = D_xi3 * wsp0 = D_xi3 * u
             StdExpansion3D::PhysTensorDeriv(inarray,wsp1,wsp2,wsp3);
 
+            const Array<TwoD, const NekDouble>& df =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
             const Array<OneD, const NekDouble>& z0   = m_base[0]->GetZ();
             const Array<OneD, const NekDouble>& z2   = m_base[2]->GetZ();
 
@@ -1600,67 +1610,67 @@ namespace Nektar
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 // wsp4 = d eta_1/d x_1
-                Vmath::Vvtvvtp(nqtot, &m_df[0][0], 1, &h0[0], 1, &m_df[2][0], 1, &h1[0], 1, &wsp4[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[0][0], 1, &h0[0], 1, &df[2][0], 1, &h1[0], 1, &wsp4[0], 1);
                 // wsp5 = d eta_2/d x_1
-                Vmath::Vvtvvtp(nqtot, &m_df[3][0], 1, &h0[0], 1, &m_df[5][0], 1, &h1[0], 1, &wsp5[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[3][0], 1, &h0[0], 1, &df[5][0], 1, &h1[0], 1, &wsp5[0], 1);
                 // wsp6 = d eta_3/d x_1d
-                Vmath::Vvtvvtp(nqtot, &m_df[6][0], 1, &h0[0], 1, &m_df[8][0], 1, &h1[0], 1, &wsp6[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[6][0], 1, &h0[0], 1, &df[8][0], 1, &h1[0], 1, &wsp6[0], 1);
 
                 // g0 (overwrites h0)
                 Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp4[0], 1, &wsp5[0], 1, &wsp5[0], 1, &g0[0], 1);
                 Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp6[0], 1, &g0[0],   1, &g0[0],   1);
 
                 // g3 (overwrites h1)
-                Vmath::Vvtvvtp(nqtot, &m_df[1][0], 1, &wsp4[0], 1, &m_df[4][0], 1, &wsp5[0], 1, &g3[0], 1);
-                Vmath::Vvtvp  (nqtot, &m_df[7][0], 1, &wsp6[0], 1, &g3[0], 1, &g3[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[1][0], 1, &wsp4[0], 1, &df[4][0], 1, &wsp5[0], 1, &g3[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[7][0], 1, &wsp6[0], 1, &g3[0], 1, &g3[0], 1);
 
                 // g4
-                Vmath::Vvtvvtp(nqtot, &m_df[2][0], 1, &wsp4[0], 1, &m_df[5][0], 1, &wsp5[0], 1, &g4[0], 1);
-                Vmath::Vvtvp  (nqtot, &m_df[8][0], 1, &wsp6[0], 1, &g4[0], 1, &g4[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[2][0], 1, &wsp4[0], 1, &df[5][0], 1, &wsp5[0], 1, &g4[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[8][0], 1, &wsp6[0], 1, &g4[0], 1, &g4[0], 1);
 
                 // Overwrite wsp4/5/6 with g1/2/5
                 // g1
-                Vmath::Vvtvvtp(nqtot, &m_df[1][0], 1, &m_df[1][0], 1, &m_df[4][0], 1, &m_df[4][0], 1, &g1[0], 1);
-                Vmath::Vvtvp  (nqtot, &m_df[7][0], 1, &m_df[7][0], 1, &g1[0], 1, &g1[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[1][0], 1, &df[1][0], 1, &df[4][0], 1, &df[4][0], 1, &g1[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[7][0], 1, &df[7][0], 1, &g1[0], 1, &g1[0], 1);
 
                 // g2
-                Vmath::Vvtvvtp(nqtot, &m_df[2][0], 1, &m_df[2][0], 1, &m_df[5][0], 1, &m_df[5][0], 1, &g2[0], 1);
-                Vmath::Vvtvp  (nqtot, &m_df[8][0], 1, &m_df[8][0], 1, &g2[0], 1, &g2[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[2][0], 1, &df[2][0], 1, &df[5][0], 1, &df[5][0], 1, &g2[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[8][0], 1, &df[8][0], 1, &g2[0], 1, &g2[0], 1);
 
                 // g5
-                Vmath::Vvtvvtp(nqtot, &m_df[1][0], 1, &m_df[2][0], 1, &m_df[4][0], 1, &m_df[5][0], 1, &g5[0], 1);
-                Vmath::Vvtvp  (nqtot, &m_df[7][0], 1, &m_df[8][0], 1, &g5[0], 1, &g5[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[1][0], 1, &df[2][0], 1, &df[4][0], 1, &df[5][0], 1, &g5[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[7][0], 1, &df[8][0], 1, &g5[0], 1, &g5[0], 1);
             }
             else
             {
                 // wsp4 = d eta_1/d x_1
-                Vmath::Svtsvtp(nqtot, m_df[0][0], &h0[0], 1, m_df[2][0], &h1[0], 1, &wsp4[0], 1);
+                Vmath::Svtsvtp(nqtot, df[0][0], &h0[0], 1, df[2][0], &h1[0], 1, &wsp4[0], 1);
                 // wsp5 = d eta_2/d x_1
-                Vmath::Svtsvtp(nqtot, m_df[3][0], &h0[0], 1, m_df[5][0], &h1[0], 1, &wsp5[0], 1);
+                Vmath::Svtsvtp(nqtot, df[3][0], &h0[0], 1, df[5][0], &h1[0], 1, &wsp5[0], 1);
                 // wsp6 = d eta_3/d x_1
-                Vmath::Svtsvtp(nqtot, m_df[6][0], &h0[0], 1, m_df[8][0], &h1[0], 1, &wsp6[0], 1);
+                Vmath::Svtsvtp(nqtot, df[6][0], &h0[0], 1, df[8][0], &h1[0], 1, &wsp6[0], 1);
 
                 // g0 (overwrites h0)
                 Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp4[0], 1, &wsp5[0], 1, &wsp5[0], 1, &g0[0], 1);
                 Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp6[0], 1, &g0[0],   1, &g0[0],   1);
 
                 // g3 (overwrites h1)
-                Vmath::Svtsvtp(nqtot, m_df[1][0], &wsp4[0], 1, m_df[4][0], &wsp5[0], 1, &g3[0], 1);
-                Vmath::Svtvp  (nqtot, m_df[7][0], &wsp6[0], 1, &g3[0], 1, &g3[0], 1);
+                Vmath::Svtsvtp(nqtot, df[1][0], &wsp4[0], 1, df[4][0], &wsp5[0], 1, &g3[0], 1);
+                Vmath::Svtvp  (nqtot, df[7][0], &wsp6[0], 1, &g3[0], 1, &g3[0], 1);
 
                 // g4
-                Vmath::Svtsvtp(nqtot, m_df[2][0], &wsp4[0], 1, m_df[5][0], &wsp5[0], 1, &g4[0], 1);
-                Vmath::Svtvp  (nqtot, m_df[8][0], &wsp6[0], 1, &g4[0], 1, &g4[0], 1);
+                Vmath::Svtsvtp(nqtot, df[2][0], &wsp4[0], 1, df[5][0], &wsp5[0], 1, &g4[0], 1);
+                Vmath::Svtvp  (nqtot, df[8][0], &wsp6[0], 1, &g4[0], 1, &g4[0], 1);
 
                 // Overwrite wsp4/5/6 with g1/2/5
                 // g1
-                Vmath::Fill(nqtot, m_df[1][0]*m_df[1][0] + m_df[4][0]*m_df[4][0] + m_df[7][0]*m_df[7][0], &g1[0], 1);
+                Vmath::Fill(nqtot, df[1][0]*df[1][0] + df[4][0]*df[4][0] + df[7][0]*df[7][0], &g1[0], 1);
 
                 // g2
-                Vmath::Fill(nqtot, m_df[2][0]*m_df[2][0] + m_df[5][0]*m_df[5][0] + m_df[8][0]*m_df[8][0], &g2[0], 1);
+                Vmath::Fill(nqtot, df[2][0]*df[2][0] + df[5][0]*df[5][0] + df[8][0]*df[8][0], &g2[0], 1);
 
                 // g5
-                Vmath::Fill(nqtot, m_df[1][0]*m_df[2][0] + m_df[4][0]*m_df[5][0] + m_df[7][0]*m_df[8][0], &g5[0], 1);
+                Vmath::Fill(nqtot, df[1][0]*df[2][0] + df[4][0]*df[5][0] + df[7][0]*df[8][0], &g5[0], 1);
             }
             // Compute component derivatives into wsp7, 8, 9 (wsp7 overwrites
             // g0).

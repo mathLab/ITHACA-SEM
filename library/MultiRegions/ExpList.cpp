@@ -2398,7 +2398,8 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing)
+                const Array<OneD, const NekDouble> &dirForcing,
+                const Array<OneD, const NekDouble>& weakForcing)
         {
             ASSERTL0(false, "HelmSolve not implemented.");
         }

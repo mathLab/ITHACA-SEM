@@ -244,7 +244,8 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing)
+                const Array<OneD, const NekDouble> &dirForcing,
+                const Array<OneD, const NekDouble> &weakForcing)
         {
 			
             int n;
@@ -255,7 +256,8 @@ namespace Nektar
 			
             Array<OneD, NekDouble> e_out;
             Array<OneD, NekDouble> fce(inarray.num_elements());
-
+            Array<OneD, const NekDouble> wfce;
+            
             // Fourier transform forcing function
             if(m_WaveSpace)
             {
@@ -281,6 +283,8 @@ namespace Nektar
             {
                 if(n != 1 || m_transposition->GetK(n) != 0 || smode)
                 {
+                    wfce = (weakForcing == NullNekDouble1DArray)? weakForcing:weakForcing+cnt1;
+                    
                     beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
                     new_factors = factors;
                     // add in Homogeneous Fourier direction and SVV if turned on
@@ -290,7 +294,8 @@ namespace Nektar
                     m_planes[n]->HelmSolve(fce + cnt,
                                            e_out = outarray + cnt1,
                                            flags, new_factors, varcoeff,
-                                           dirForcing);
+                                           dirForcing,
+                                           wfce);
                 }
                 
                 cnt  += m_planes[n]->GetTotPoints();

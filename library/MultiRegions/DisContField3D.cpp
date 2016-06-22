@@ -2016,7 +2016,8 @@ using namespace boost::assign;
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing)
+                const Array<OneD, const NekDouble> &dirForcing,
+                const Array<OneD, const NekDouble> &weakForcing)
         {
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
@@ -2029,8 +2030,15 @@ using namespace boost::assign;
             //----------------------------------
             //  Setup RHS Inner product
             //----------------------------------
-            IProductWRTBase(inarray,f);
-            Vmath::Neg(m_ncoeffs,f,1);
+            if(weakForcing == NullNekDouble1DArray)
+            {
+                IProductWRTBase(inarray,f);
+                Vmath::Neg(m_ncoeffs,f,1);
+            }
+            else
+            {
+                Vmath::Smul(m_ncoeffs,-1.0,weakForcing,1,f,1);
+            }
 
             //----------------------------------
             //  Solve continuous flux System

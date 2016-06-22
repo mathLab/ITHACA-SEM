@@ -140,7 +140,8 @@ namespace Nektar
             /// \brief Evaluate the SVV diffusion coefficient
             /// according to Moura's paper where it should
             /// proportional to h time velocity
-            SOLVER_UTILS_EXPORT void SVVVarDiffCoeff(const Array<OneD, Array<OneD, NekDouble> > vel, 
+            SOLVER_UTILS_EXPORT void SVVVarDiffCoeff(const Array<OneD, Array<OneD, NekDouble> >
+                                                     vel, 
                                                      StdRegions::VarCoeffMap &varCoeffMap);
         
 

@@ -27,17 +27,19 @@ MACRO(FINALISE_CPACK_COMPONENT name)
 ENDMACRO()
 
 MACRO(THIRDPARTY_SHARED_LIBNAME name)
-    SET(${name} "${TPDIST}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${${name}}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    FOREACH (lib ${${name}})
+        LIST(APPEND tmplist "${TPDIST}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${lib}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    ENDFOREACH()
+    SET(${name} ${tmplist})
+    UNSET(tmplist)
 ENDMACRO()
 
 MACRO(THIRDPARTY_STATIC_LIBNAME name)
-    SET(${name} "${TPDIST}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${${name}}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-ENDMACRO()
-
-MACRO(CHANGE_EXTENSION output var new_ext)
-    GET_FILENAME_COMPONENT(FileName ${var} NAME_WE)
-    GET_FILENAME_COMPONENT(Path ${var} PATH)
-    SET(${output} ${Path}/${FileName}.${new_ext})
+    FOREACH (lib ${${name}})
+        LIST(APPEND tmplist "${TPDIST}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    ENDFOREACH()
+    SET(${name} ${tmplist})
+    UNSET(tmplist)
 ENDMACRO()
 
 MACRO(SET_COMMON_PROPERTIES name)
@@ -64,14 +66,14 @@ MACRO(SET_COMMON_PROPERTIES name)
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
     ENDIF( MSVC )	
     
-    IF( ${CMAKE_COMPILER_IS_GNUCXX} )
+    IF (${CMAKE_COMPILER_IS_GNUCXX})
         IF(NEKTAR_ENABLE_PROFILE)
             SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
             SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -pg")
             SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -pg")
             SET(LINK_FLAGS "${LINK_FLAGS} -pg")
         ENDIF(NEKTAR_ENABLE_PROFILE)
-    ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
+    ENDIF()
 
     # Prevent including these common flags multiple times.
     IF (NOT ${CMAKE_CXX_FLAGS_DEBUG} MATCHES ".*DNEKTAR_DEBUG.*")
@@ -82,18 +84,18 @@ MACRO(SET_COMMON_PROPERTIES name)
                     "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_FULLDEBUG")
         ENDIF( NEKTAR_FULL_DEBUG)
    
-        IF( NOT MSVC )
+        IF(NOT MSVC)
             SET(CMAKE_CXX_FLAGS_DEBUG 
                 "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wno-deprecated -Wno-sign-compare")
             SET(CMAKE_CXX_FLAGS_RELEASE 
-                    "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wno-deprecated -Wno-sign-compare")
+                "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wno-deprecated -Wno-sign-compare")
             SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO
-                    "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -Wall -Wno-deprecated -Wno-sign-compare")
+                "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -Wall -Wno-deprecated -Wno-sign-compare")
             IF (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
                 SET(CMAKE_CXX_FLAGS_DEBUG 
                     "${CMAKE_CXX_FLAGS_DEBUG} -fpermissive")
             ENDIF()
-        ENDIF( NOT MSVC)
+        ENDIF (NOT MSVC)
 
         # Define version
         SET_PROPERTY(TARGET ${name}
@@ -117,23 +119,8 @@ MACRO(ADD_NEKTAR_EXECUTABLE name)
     SET_COMMON_PROPERTIES(${name})
 
     IF (${CMAKE_SYSTEM} MATCHES "Linux.*")
-        # The boost thread library needs pthread on linux.
-        GET_TARGET_PROPERTY(THE_COMPILE_FLAGS ${name} COMPILE_FLAGS)
-        GET_TARGET_PROPERTY(THE_LINK_FLAGS ${name} LINK_FLAGS)
-
-        # It is possible these flags have not been set yet.
-        IF(NOT THE_COMPILE_FLAGS)
-            SET(THE_COMPILE_FLAGS "")
-        ENDIF(NOT THE_COMPILE_FLAGS)
-
-        IF(NOT THE_LINK_FLAGS )
-            SET(THE_LINK_FLAGS "")
-        ENDIF(NOT THE_LINK_FLAGS)
-
-        SET_TARGET_PROPERTIES(${name}
-                PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} -pthread")
-        SET_TARGET_PROPERTIES(${name}
-                PROPERTIES LINK_FLAGS "${THE_LINK_FLAGS} -pthread")
+        SET_TARGET_PROPERTIES(${name} APPEND PROPERTY COMPILE_FLAGS "-pthread")
+        SET_TARGET_PROPERTIES(${name} APPEND PROPERTY LINK_FLAGS "-pthread")
     ENDIF()
 
     STRING(TOLOWER ${NEKEXE_COMPONENT} NEKEXE_COMPONENT)

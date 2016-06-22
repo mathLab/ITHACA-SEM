@@ -43,6 +43,8 @@
     #include <boost/preprocessor/arithmetic/sub.hpp>
     #include <boost/preprocessor/punctuation/comma_if.hpp>
     #include <boost/preprocessor/iteration/iterate.hpp>
+    #include <boost/thread/shared_mutex.hpp>
+    #include <boost/thread/locks.hpp>
 
     #include <boost/shared_ptr.hpp>
 
@@ -51,7 +53,6 @@
     #include <string>
 
     #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-    #include <LibUtilities/BasicUtils/MutexTypeDefs.h>
 
     #ifndef MAX_PARAM
     #define MAX_PARAM 5  // default maximum number of parameters to support
@@ -66,6 +67,8 @@ namespace Nektar
 
         // Generate parameter typenames with default type of 'none'
         #define FACTORY_print(z, n, data) BOOST_PP_CAT(data, n) = none
+        typedef boost::unique_lock<boost::shared_mutex> WriteLock;
+        typedef boost::shared_lock<boost::shared_mutex> ReadLock;
 
         /**
          * @class NekFactory
@@ -322,7 +325,7 @@ namespace Nektar
 
                 TMapFactory mMapFactory;
 
-                SharedMutex m_mutex;
+                boost::shared_mutex m_mutex;
 
         };
 
@@ -344,6 +347,11 @@ namespace Nektar
     #define n BOOST_PP_ITERATION()
     // Define macro for printing the non-required template parameters
     #define FACTORY_print(z, n, data) data
+    #include <boost/thread/shared_mutex.hpp>
+    #include <boost/thread/locks.hpp>
+
+typedef boost::unique_lock<boost::shared_mutex> WriteLock;
+typedef boost::shared_lock<boost::shared_mutex> ReadLock;
 
     template < typename tKey,
                typename tBase BOOST_PP_COMMA_IF(n)
@@ -492,7 +500,7 @@ namespace Nektar
         NekFactory& operator=(const NekFactory& rhs);
 
         TMapFactory mMapFactory;
-        SharedMutex m_mutex;
+        boost::shared_mutex m_mutex;
 
     };
     #undef n

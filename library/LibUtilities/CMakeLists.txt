@@ -18,7 +18,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/MeshEntities.hpp
     ./BasicUtils/MeshPartition.h
     ./BasicUtils/MeshPartitionMetis.h
-    ./BasicUtils/MutexTypeDefs.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
     ./BasicUtils/NekPtr.hpp

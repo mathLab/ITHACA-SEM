@@ -356,7 +356,12 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
     MultiRegions::ExpListSharedPtr evalField = m_coupling->GetEvalField();
     int spacedim                             = recvFields[0]->GetGraph()->GetSpaceDimension();
 
-    // TODO: interpolate from evalField to recvField
+    // interpolate from evalField to recvField
+    for (int i = 0; i < m_nEVars; ++i)
+    {
+        evalField->FwdTrans(field[i], recvFields[i]->UpdateCoeffs());
+        recvFields[i]->BwdTrans(recvFields[i]->GetCoeffs(), recvFields[i]->UpdatePhys());
+    }
 
     int nNotLoc = 0;
 

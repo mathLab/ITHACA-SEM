@@ -44,7 +44,6 @@ namespace Nektar
         m_scale(0)
     {
         this->SetStorageType(m_matrix->GetStorageType());
-        this->SetTransposeFlag(m_matrix->GetTransposeFlag());
     }
 
     template<typename DataType, typename InnerMatrixType>
@@ -55,7 +54,6 @@ namespace Nektar
         m_scale(scale)
     {
         this->SetStorageType(m_matrix->GetStorageType());
-        this->SetTransposeFlag(m_matrix->GetTransposeFlag());
     }
 
     template<typename DataType, typename InnerMatrixType>
@@ -65,7 +63,6 @@ namespace Nektar
         m_scale(rhs.m_scale)
     {
         this->SetStorageType(m_matrix->GetStorageType());
-        this->SetTransposeFlag(m_matrix->GetTransposeFlag());
     }
 
 
@@ -77,7 +74,6 @@ namespace Nektar
         m_scale(scale)
     {
         this->SetStorageType(m_matrix->GetStorageType());
-        this->SetTransposeFlag(m_matrix->GetTransposeFlag());
     }
 
     template<typename DataType, typename InnerMatrixType>
@@ -165,6 +161,29 @@ namespace Nektar
     {
         return ThisType::GetStorageSize();
     }
+
+    template<typename DataType, typename InnerMatrixType>
+    char NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::v_GetTransposeFlag() const
+    {
+        if( this->GetRawTransposeFlag() == 'N' )
+        {
+            return m_matrix->GetTransposeFlag();
+        }
+        else
+        {
+            if( m_matrix->GetTransposeFlag() == 'N' )
+            {
+                return 'T';
+            }
+            else
+            {
+                return 'N';
+            }
+        }
+    }
+
+
+
 
     template<typename DataType>
     NekMatrix<DataType, ScaledMatrixTag>

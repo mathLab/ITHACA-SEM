@@ -146,6 +146,8 @@ namespace Nektar
             v_GetValue(unsigned int row, unsigned int column) const;
             
             LIB_UTILITIES_EXPORT virtual unsigned int v_GetStorageSize() const ;
+            
+            LIB_UTILITIES_EXPORT virtual char v_GetTransposeFlag() const;
 
             boost::shared_ptr<const InnerType> m_matrix;
             NumberType m_scale;

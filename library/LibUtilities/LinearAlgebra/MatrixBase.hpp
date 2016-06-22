@@ -91,10 +91,7 @@ namespace Nektar
             
             LIB_UTILITIES_EXPORT void Transpose() ;
 
-            LIB_UTILITIES_EXPORT inline char GetTransposeFlag() const
-            {
-                return m_transpose;
-            }
+            LIB_UTILITIES_EXPORT char GetTransposeFlag() const;
             
             LIB_UTILITIES_EXPORT static unsigned int CalculateIndex(MatrixStorage type, 
                 unsigned int row, unsigned int col, 
@@ -129,6 +126,7 @@ namespace Nektar
             virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const = 0;            
             virtual unsigned int v_GetStorageSize() const = 0;            
             LIB_UTILITIES_EXPORT virtual void v_Transpose();
+            LIB_UTILITIES_EXPORT virtual char v_GetTransposeFlag() const;
             unsigned int m_size[2];
             char m_transpose;
             MatrixStorage m_storageType;

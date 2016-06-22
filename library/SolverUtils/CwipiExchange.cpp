@@ -34,6 +34,7 @@
 #include "CwipiExchange.h"
 
 #include <LibUtilities/BasicUtils/PtsField.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
@@ -352,6 +353,9 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
 
     cout << "receiving fields at i = " << step << ", t = " << time << endl;
 
+    Timer timer1, timer2;
+    timer1.Start();
+
     Array<OneD, MultiRegions::ExpListSharedPtr> recvFields = m_coupling->GetRecvFields();
     MultiRegions::ExpListSharedPtr evalField = m_coupling->GetEvalField();
     int spacedim                             = recvFields[0]->GetGraph()->GetSpaceDimension();
@@ -369,6 +373,7 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
     char recFN[m_recvFieldName.length() + 1];
     strcpy(recFN, m_recvFieldName.c_str());
 
+    timer2.Start();
     cwipi_exchange(m_coupling->GetName().c_str(),
                    m_name.c_str(),
                    m_nEVars,
@@ -379,6 +384,7 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
                    recFN,
                    m_rValsInterl,
                    &nNotLoc);
+    timer2.Stop();
 
     int tmp = -1;
     const int *notLoc = &tmp;
@@ -450,6 +456,14 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
                                     recvFields[i]->UpdateCoeffs());
             evalField->BwdTrans(recvFields[i]->GetCoeffs(), field[i]);
         }
+    }
+
+    timer1.Stop();
+
+    if ( recvFields[0]->GetSession()->DefinesCmdLineArgument("verbose") )
+    {
+        cout << "Receive total time: " << timer1.TimePerTest(1) << ", ";
+        cout << "CWIPI time: " << timer2.TimePerTest(1) << endl;
     }
 }
 }

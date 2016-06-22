@@ -8,11 +8,13 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
        ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ./EquationSystems/IncNavierStokes.cpp
        ./EquationSystems/VelocityCorrectionScheme.cpp
+       ./EquationSystems/VelocityCorrectionSchemeWeakPressure.cpp
        ./EquationSystems/VCSMapping.cpp
        ./EquationSystems/Extrapolate.cpp
        ./EquationSystems/StandardExtrapolate.cpp
        ./EquationSystems/MappingExtrapolate.cpp
        ./EquationSystems/SubSteppingExtrapolate.cpp
+       ./EquationSystems/WeakPressureExtrapolate.cpp
        ./AdvectionTerms/AdjointAdvection.cpp
        ./AdvectionTerms/LinearisedAdvection.cpp
        ./AdvectionTerms/NavierStokesAdvection.cpp
@@ -42,6 +44,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST_LENGTHY(ChanFlow_3DH2D_MVM)
     ADD_NEKTAR_TEST(ChanFlow_LinNS_m8)
     ADD_NEKTAR_TEST(ChanFlow_m3)
+    ADD_NEKTAR_TEST(ChanFlow_m3_VCSWeakPress)
     ADD_NEKTAR_TEST(ChanFlow_m3_SKS)
     ADD_NEKTAR_TEST(ChanFlow_m8)
     ADD_NEKTAR_TEST(ChanFlow_m8_BodyForce)
@@ -76,6 +79,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(Tet_Kovasnay_SubStep)
     ADD_NEKTAR_TEST(Tet_Kovasnay_HOBC)
     ADD_NEKTAR_TEST(Tet_channel_m3)
+    ADD_NEKTAR_TEST(Tet_channel_m3_VCSWeakPress)
     ADD_NEKTAR_TEST(Tet_channel_m3_dealiasing)
     ADD_NEKTAR_TEST(Tet_channel_robin_m3)
     ADD_NEKTAR_TEST(Tet_channel_m4_per)

@@ -66,7 +66,8 @@ namespace Nektar
           m_fields(pFields),
           m_pressure(pPressure),
           m_velocity(pVel),
-          m_advObject(advObject)
+          m_advObject(advObject),
+          m_noHOBC(false)
     {      
         m_session->LoadParameter("TimeStep", m_timestep,   0.01);
         m_comm = m_session->GetComm();
@@ -271,83 +272,26 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
         NekDouble kinvis)
     {
-        static bool init = true;
-        static bool noHOBC = false;
 
-        if(noHOBC == true)
+        if(m_noHOBC == true)
         {
            return;
         }
-        
-        if(init) // set up storage for boundary velocity at outflow
+
+        // set up storage for boundary velocity at outflow
+        if(m_outflowVel.num_elements() == 0) 
         {
-            init = false;
-            int totbndpts = 0;
-            for(int n = 0; n < m_PBndConds.num_elements(); ++n)
+            InitOutflowBCs();
+            
+            // need additional check for first step in case of no HBCs
+            if(m_noHOBC == true)
             {
-                if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
-                {
-                    totbndpts += m_PBndExp[n]->GetTotPoints();
-                }
-            }
-          
-            if(totbndpts == 0)
-            {
-                noHOBC = true;
                 return;
             }
-  
-            m_outflowVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
-            for(int i = 0; i < m_curl_dim; ++i)
-            {
-                m_outflowVel[i] = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
-                for(int j = 0; j < m_curl_dim; ++j)
-                {             
-                    // currently just set up for 2nd order extrapolation 
-                    m_outflowVel[i][j] = Array<OneD, NekDouble>(totbndpts,0.0);
-                }
-            }
-
-            if (m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
-            {
-                m_PhyoutfVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
-
-                for(int i = 0; i < m_curl_dim; ++i)
-                {
-                    m_PhyoutfVel[i] = Array<OneD, Array<OneD, NekDouble> > (m_curl_dim);
-                    for(int j = 0; j < m_curl_dim; ++j)
-                    {
-                        // currently just set up for 2nd order extrapolation
-                        m_PhyoutfVel[i][j] = Array<OneD, NekDouble> (totbndpts,0.0);
-                    }
-                }
-
-                m_nonlinearterm_phys   = Array<OneD, NekDouble> (totbndpts,0.0);
-                m_nonlinearterm_coeffs = Array<OneD, NekDouble> (totbndpts,0.0);
-
-                m_PBndCoeffs = Array<OneD, NekDouble> (totbndpts,0.0);
-                m_UBndCoeffs = Array<OneD, Array<OneD, NekDouble> > (m_curl_dim);
-                for(int i = 0; i < m_curl_dim; ++i)
-                {
-                    m_UBndCoeffs[i] = Array<OneD, NekDouble> (totbndpts);   
-                }
-                Array<OneD, unsigned int> planes;
-                planes = m_pressure->GetZIDs();
-                int num_planes = planes.num_elements();
-                m_expsize_per_plane = Array<OneD, unsigned int> (m_PBndConds.num_elements());
-                for(int n = 0; n < m_PBndConds.num_elements(); ++n)
-                {
-                    int exp_size = m_PBndExp[n]->GetExpSize();
-                    m_expsize_per_plane[n] = exp_size/num_planes;
-                }
-                m_totexps_per_plane = 0;
-                for(int n = 0; n < m_PBndConds.num_elements(); ++n)
-                {
-                    m_totexps_per_plane += m_PBndExp[n]->GetExpSize()/num_planes;
-                }
-            }
         }
-        
+
+
+        // evaluate terms from Steve Dong's first paper. 
         StdRegions::StdExpansionSharedPtr Bc,Pbc; 
         Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >
                                                         UBndConds(m_curl_dim);
@@ -390,22 +334,12 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > ubc(m_curl_dim);
         Array<OneD, Array<OneD, NekDouble> > normals;
 
-        cnt = 0;
-        for(int n = 0; n < m_PBndConds.num_elements(); ++n)
+        // temporary storage for processing. 
+        cnt = m_outflowVel[0][0].num_elements();
+        ubc[0] = Array<OneD, NekDouble> (m_curl_dim*cnt);
+        for(int i =1; i < m_curl_dim; ++i)
         {
-            // Do outflow boundary conditions if they exist
-            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
-            {
-                for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i,cnt++)
-                {
-                    cnt = max(cnt,m_PBndExp[n]->GetTotPoints());
-                }
-            }
-        }
-
-        for(int i =0; i < m_curl_dim; ++i)
-        {
-            ubc[i] = Array<OneD, NekDouble>(cnt);
+            ubc[i] = ubc[i-1] + cnt;
         }
 
         NekDouble U0,delta;
@@ -646,7 +580,6 @@ namespace Nektar
                     }
                     else
                     {
-
                         Array<OneD, NekDouble>  veltmp, utot(nbc,0.0),
                                                 normDotu(nbc,0.0);
                         // extract velocity and store
@@ -782,6 +715,75 @@ namespace Nektar
             else
             {
                 cnt += m_PBndExp[n]->GetExpSize();
+            }
+        }
+    }
+
+    // Intialise Outflow BCs identified by HOutflow user defined flag. 
+    void Extrapolate::InitOutflowBCs(void)
+    {
+        int totbndpts    = 0;
+        for(int n = 0; n < m_PBndConds.num_elements(); ++n)
+        {
+            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
+            {
+                totbndpts    += m_PBndExp[n]->GetTotPoints();
+            }
+        }
+        
+        if(totbndpts == 0)
+        {
+            m_noHOBC = true;
+            return;
+        }
+        
+        m_outflowVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
+        for(int i = 0; i < m_curl_dim; ++i)
+        {
+            m_outflowVel[i] = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
+            for(int j = 0; j < m_curl_dim; ++j)
+            {             
+                // currently just set up for 2nd order extrapolation 
+                m_outflowVel[i][j] = Array<OneD, NekDouble>(totbndpts,0.0);
+            }
+        }
+        
+        if (m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
+        {
+            m_PhyoutfVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
+
+            for(int i = 0; i < m_curl_dim; ++i)
+            {
+                m_PhyoutfVel[i] = Array<OneD, Array<OneD, NekDouble> > (m_curl_dim);
+                for(int j = 0; j < m_curl_dim; ++j)
+                {
+                    // currently just set up for 2nd order extrapolation
+                    m_PhyoutfVel[i][j] = Array<OneD, NekDouble> (totbndpts,0.0);
+                }
+            }
+            
+            m_nonlinearterm_phys   = Array<OneD, NekDouble> (totbndpts   ,0.0);
+            m_nonlinearterm_coeffs = Array<OneD, NekDouble> (totbndpts,0.0);
+            
+            m_PBndCoeffs = Array<OneD, NekDouble> (totbndpts,0.0);
+            m_UBndCoeffs = Array<OneD, Array<OneD, NekDouble> > (m_curl_dim);
+            for(int i = 0; i < m_curl_dim; ++i)
+            {
+                m_UBndCoeffs[i] = Array<OneD, NekDouble> (totbndpts);   
+            }
+            Array<OneD, unsigned int> planes;
+            planes = m_pressure->GetZIDs();
+            int num_planes = planes.num_elements();
+            m_expsize_per_plane = Array<OneD, unsigned int> (m_PBndConds.num_elements());
+            for(int n = 0; n < m_PBndConds.num_elements(); ++n)
+            {
+                int exp_size = m_PBndExp[n]->GetExpSize();
+                m_expsize_per_plane[n] = exp_size/num_planes;
+            }
+            m_totexps_per_plane = 0;
+            for(int n = 0; n < m_PBndConds.num_elements(); ++n)
+            {
+                m_totexps_per_plane += m_PBndExp[n]->GetExpSize()/num_planes;
             }
         }
     }
@@ -1065,8 +1067,10 @@ namespace Nektar
         int HBCnumber = 0;
         for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
         {
-            // High order boundary condition;
-            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
+            // High order boundary condition or Robin wiht HOutflow
+            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H")
+               || (m_PBndConds[n]->GetBoundaryConditionType() == SpatialDomains::eRobin &&
+                   boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow")))
             {
                 cnt += m_PBndExp[n]->GetNcoeffs();
                 HBCnumber += m_PBndExp[n]->GetExpSize();
@@ -1136,7 +1140,11 @@ namespace Nektar
                 {
                     exp_size = m_PBndExp[n]->GetExpSize();
 
-                    if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
+                    // High order boundary condition or Robin wiht HOutflow
+                    if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H")
+                       || (m_PBndConds[n]->GetBoundaryConditionType()
+                           == SpatialDomains::eRobin &&
+                           boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow")))
                     {
                         for(int i = 0; i < exp_size; ++i,cnt++)
                         {
@@ -1216,7 +1224,10 @@ namespace Nektar
                     exp_size = m_PBndExp[n]->GetExpSize();
                     exp_size_per_plane = exp_size/num_planes;
 
-                    if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
+                    if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H")
+                       || (m_PBndConds[n]->GetBoundaryConditionType()
+                           == SpatialDomains::eRobin &&
+                           boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow")))
                     {
                         for(k = 0; k < num_planes; k++)
                         {
@@ -1297,7 +1308,10 @@ namespace Nektar
                             
                             exp_size_per_line = exp_size/(m_npointsZ*m_npointsY);
                             
-                            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
+                            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H")
+                               || (m_PBndConds[n]->GetBoundaryConditionType()
+                                   == SpatialDomains::eRobin &&
+                              boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow")))
                             {
                                 for(int i = 0; i < exp_size_per_line; ++i,cnt++)
                                 {

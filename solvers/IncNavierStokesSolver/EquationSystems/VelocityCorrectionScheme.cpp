@@ -186,6 +186,7 @@ namespace Nektar
     void VelocityCorrectionScheme::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         UnsteadySystem::v_GenerateSummary(s);
+        SolverUtils::AddSummaryItem(s, "Splitting Scheme", "Velocity correction (strong press. form)");
 
         if (m_extrapolation->GetSubStepIntegrationMethod() !=
             LibUtilities::eNoTimeIntegrationMethod)

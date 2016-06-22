@@ -282,18 +282,25 @@ namespace Nektar
         /// minus Square of wavenumber
         Array<OneD, NekDouble>  m_negWavenumberSq;
         
-        /// Storage for current and previous velocity fields at the otuflow for high order outflow BCs
+        /// Bool to identify if high order outflow conditions should be evaluated. 
+        bool m_noHOBC;
+        
+        /// Storage for current and previous velocity fields at the
+        /// otuflow for high order outflow BCs
         Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_outflowVel;
 
         Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
 
-        /// Storage for current and previous velocity fields in physical space at the otuflow for high order outflow BCs
+        /// Storage for current and previous velocity fields in
+        /// physical space at the otuflow for high order outflow BCs
         Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_PhyoutfVel; ///(if homogeneous)
 
-        /// Storage for nonlinear term in physical space at the outflow for high order outflow BCs 
+        /// Storage for nonlinear term in physical space at the
+        /// outflow for high order outflow BCs
         Array<OneD, NekDouble> m_nonlinearterm_phys; ///(if homogeneous)
 
-        ///    Storage for nonlinear term in wave space at the outflow for high order outflow BCs
+        ///    Storage for nonlinear term in wave space at the outflow
+        ///    for high order outflow BCs
         Array<OneD, NekDouble> m_nonlinearterm_coeffs; ///(if homogeneous)
 
         /// expansion sizes of pressure boundary conditions in each plane 
@@ -315,7 +322,7 @@ namespace Nektar
 
     private:
         static std::string def;
-
+        void InitOutflowBCs(void);
     };
 
     /**

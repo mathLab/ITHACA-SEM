@@ -9,6 +9,9 @@ v4.3.3
 **FieldConvert**:
 - Fix to avoid repeated import of field file (!649)
 
+**CompressibleFlowSolver**:
+- Fix issue with residual output (!647)
+
 **Packaging**:
 - Fix NekMesh dependencies for DEB package (!650)
 

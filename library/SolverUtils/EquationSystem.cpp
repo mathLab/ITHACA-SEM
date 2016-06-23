@@ -125,7 +125,7 @@ namespace Nektar
             m_fld = MemoryManager<LibUtilities::FieldIO>
                 ::AllocateSharedPtr(
                     m_session->GetComm(),
-                    m_session->DefinesCmdLineArgument("shared-filesystem"));
+                    m_session->GetSharedFilesystem());
 
             // Read the geometry and the expansion information
             m_graph = SpatialDomains::MeshGraph::Read(m_session);

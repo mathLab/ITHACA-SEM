@@ -234,11 +234,6 @@ void InputXml::Process(po::variables_map &vm)
         cmdArgs.push_back("--verbose");
     }
 
-    if(vm.count("shared-filesystem"))
-    {
-        cmdArgs.push_back("--shared-filesystem");
-    }
-
     if(vm.count("part-only"))
     {
         cmdArgs.push_back("--part-only");

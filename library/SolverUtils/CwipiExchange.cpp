@@ -354,6 +354,7 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
 
     Array<OneD, MultiRegions::ExpListSharedPtr> recvFields = m_coupling->GetRecvFields();
     MultiRegions::ExpListSharedPtr evalField = m_coupling->GetEvalField();
+    int spacedim                             = recvFields[0]->GetGraph()->GetSpaceDimension();
 
     // TODO: interpolate from evalField to recvField
 
@@ -405,13 +406,46 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
         }
     }
 
-    for (int i = 0; i < m_nEVars; ++i)
+    NekDouble lambda = 0.5;
+
+    if (lambda > 0)
     {
-        recvFields[i]->FwdTrans(recvFields[i]->GetPhys(), evalField->UpdateCoeffs());
-        evalField->BwdTrans(evalField->GetCoeffs(), field[i]);
+        lambda = 2 * M_PI / lambda;
+        lambda = lambda * lambda;
+        for (int i = 0; i < m_nEVars; ++i)
+        {
+            Array<OneD, NekDouble> forcing(nPoints);
+
+            Array<OneD, Array<OneD, NekDouble> > Velocity(spacedim);
+            for (int j = 0; j < spacedim; ++j)
+            {
+                Velocity[j] = Array<OneD, NekDouble>(nPoints, 0.0);
+            }
+
+            Vmath::Smul(
+                nPoints, -lambda, recvFields[i]->GetPhys(), 1, forcing, 1);
+
+            // Note we are using the
+            // LinearAdvectionDiffusionReaction solver here
+            // instead of HelmSolve since lambda is negative and
+            // so matrices are not positive definite. Ideally
+            // should allow for negative lambda coefficient in
+            // HelmSolve
+            recvFields[i]->LinearAdvectionDiffusionReactionSolve(
+                Velocity, forcing, recvFields[i]->UpdateCoeffs(), -lambda);
+
+            evalField->BwdTrans(recvFields[i]->GetCoeffs(), field[i]);
+        }
+    }
+    else
+    {
+        for (int i = 0; i < m_nEVars; ++i)
+        {
+            recvFields[i]->FwdTrans(recvFields[i]->GetPhys(),
+                                    recvFields[i]->UpdateCoeffs());
+            evalField->BwdTrans(recvFields[i]->GetCoeffs(), field[i]);
+        }
     }
 }
-
-
 }
 }

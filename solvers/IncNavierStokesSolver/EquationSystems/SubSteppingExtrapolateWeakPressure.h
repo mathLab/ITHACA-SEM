@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: WeakPressureExtrapolate.h
+// File: SubSteppingExtrapolateWeakPressure.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,45 +29,38 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Abstract base class for WeakPressureExtrapolate.
+// Description: Abstract base class for SubSteppingExtrapolateWeakPressure.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_WEAKPRESSUREEXTRAPOLATE_H
-#define NEKTAR_SOLVERS_WEAKPRESSUREEXTRAPOLATE_H
+#ifndef NEKTAR_SOLVERS_SUBSTEPPINGEXTRAPOLATEWEAKPRESSURE_H
+#define NEKTAR_SOLVERS_SUBSTEPPINGEXTRAPOLATEWEAKPRESSURE_H
 
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <MultiRegions/ExpList.h>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
-#include <SolverUtils/AdvectionSystem.h>
-#include <IncNavierStokesSolver/EquationSystems/StandardExtrapolate.h>
+#include <IncNavierStokesSolver/EquationSystems/SubSteppingExtrapolate.h>
 
 namespace Nektar
 {
-    //--------
-    // Standard Extrapolate
-    // --------
+    //-------------
+    // Substepping
+    //-------------
     
-    class WeakPressureExtrapolate;
+    class SubSteppingExtrapolateWeakPressure;
     
-    typedef boost::shared_ptr<WeakPressureExtrapolate> WeakPressureExtrapolateSharedPtr;
+    typedef boost::shared_ptr<SubSteppingExtrapolateWeakPressure> SubSteppingExtrapolateWeakPressureSharedPtr;
     
-    class WeakPressureExtrapolate : public StandardExtrapolate
+    class SubSteppingExtrapolateWeakPressure : public SubSteppingExtrapolate
     {
     public:
-
         /// Creates an instance of this class
         static ExtrapolateSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr  &pSession,
+            const LibUtilities::SessionReaderSharedPtr &pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             MultiRegions::ExpListSharedPtr              &pPressure,
             const Array<OneD, int>                      &pVel,
             const SolverUtils::AdvectionSharedPtr       &advObject)
         {
-            ExtrapolateSharedPtr p = MemoryManager<WeakPressureExtrapolate>
+            ExtrapolateSharedPtr
+                p = MemoryManager<SubSteppingExtrapolateWeakPressure>
                 ::AllocateSharedPtr(pSession,pFields,pPressure,pVel,advObject);
             return p;
         }
@@ -75,28 +68,21 @@ namespace Nektar
         /// Name of class
         static std::string className;
 
-        WeakPressureExtrapolate(
+        SubSteppingExtrapolateWeakPressure(
             const LibUtilities::SessionReaderSharedPtr pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
             MultiRegions::ExpListSharedPtr              pPressure,
-            const Array<OneD, int>                      pVel,
-            const SolverUtils::AdvectionSharedPtr       advObject);
+            const Array<OneD, int> pVel,
+            const SolverUtils::AdvectionSharedPtr advObject);
 
-        virtual ~WeakPressureExtrapolate();
+        virtual ~SubSteppingExtrapolateWeakPressure();
         
     protected:
-        virtual void v_EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &fields,
-                                           const Array<OneD, const Array<OneD, NekDouble> >  &N,
-                                           NekDouble kinvis);
-
-        virtual void v_MountHOPBCs(int HBCdata, 
-                                   NekDouble kinvis, 
-                                   Array<OneD, NekDouble> &Q, 
-                                   Array<OneD, const NekDouble> &Advection);
-        
+        virtual void v_SubStepSetPressureBCs(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+            NekDouble Aii_Dt,
+            NekDouble kinvis);
     };
-    
 }
-
 #endif
 

@@ -266,6 +266,7 @@ namespace Nektar
         CalcOutflowBCs(inarray, kinvis);
     }
 
+
     /** 
      * 
      */

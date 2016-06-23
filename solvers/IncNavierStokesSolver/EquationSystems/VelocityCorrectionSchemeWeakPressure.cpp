@@ -88,6 +88,13 @@ namespace Nektar
             if (m_session->DefinesSolverInfo("Extrapolation"))
             {
                 vExtrapolation = m_session->GetSolverInfo("Extrapolation");
+
+                // if substepping is specified redefine extrapolation to SubSteppingWeakPressure
+                // so that SubStepSetPressureBCs is redfined to use AddVelBC instead of AddDuDtx
+                if(boost::iequals(vExtrapolation,"SubStepping"))
+                {
+                    vExtrapolation = "SubSteppingWeakPressure";
+                }
             }
 
             m_extrapolation = GetExtrapolateFactory().CreateInstance(

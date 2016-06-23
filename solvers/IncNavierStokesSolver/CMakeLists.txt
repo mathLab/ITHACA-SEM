@@ -14,6 +14,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
        ./EquationSystems/StandardExtrapolate.cpp
        ./EquationSystems/MappingExtrapolate.cpp
        ./EquationSystems/SubSteppingExtrapolate.cpp
+       ./EquationSystems/SubSteppingExtrapolateWeakPressure.cpp
        ./EquationSystems/WeakPressureExtrapolate.cpp
        ./AdvectionTerms/AdjointAdvection.cpp
        ./AdvectionTerms/LinearisedAdvection.cpp

@@ -102,6 +102,25 @@ namespace Nektar
     }
 
     /**
+     *
+     */
+    void Extrapolate::AddVelBC(void)
+    {
+        int order = std::min(m_pressureCalls,m_intSteps);
+        
+        // Update velocity BF at n+1 (actually only needs doing if
+        // velocity is time dependent on HBCs)
+        IProductNormVelocityBCOnHBC(m_acceleration[0]);
+
+        // Subtract acceleration term off m_pressureHBCs[nlevels-1]
+        Vmath::Svtvp(m_numHBCDof,
+                     -1.0*StifflyStable_Gamma0_Coeffs[order-1]/m_timestep,
+                     m_acceleration[0],  1,
+                     m_pressureHBCs[m_intSteps-1], 1,
+                     m_pressureHBCs[m_intSteps-1], 1);
+    }
+
+    /**
      * Unified routine for calculation high-oder terms
      */
     void Extrapolate::v_CalcNeumannPressureBCs(

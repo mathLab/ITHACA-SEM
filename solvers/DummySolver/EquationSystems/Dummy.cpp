@@ -79,7 +79,8 @@ void Dummy::v_InitObject()
     m_recvFieldNames.push_back("rho0");
     m_recvFieldNames.push_back("S");
 
-    m_nRecvVars = m_recvFieldNames.size();
+    // HACK
+    m_nRecvVars = 6; //m_recvFieldNames.size();
 
     m_recFields = Array<OneD, Array<OneD, NekDouble> >(m_nRecvVars);
     for (int i = 0; i < m_recFields.num_elements(); ++i)

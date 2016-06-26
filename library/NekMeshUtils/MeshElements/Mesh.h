@@ -123,6 +123,10 @@ public:
     set<pair<int, int> >            m_spherigonSurfs;
     /// List of face labels for composite annotation
     map<int, string>                m_faceLabels;
+    /// Whether the mesh has CAD
+    bool                            m_hasCAD;
+    /// CAD file ID
+    string                          m_CADId;
 
     /// Returns the total number of elements in the mesh with
     /// dimension expDim.

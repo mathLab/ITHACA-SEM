@@ -279,6 +279,18 @@ public:
     std::vector<std::pair<int, CADSurfSharedPtr> > GetCADSurfs()
     {
         std::vector<std::pair<int, CADSurfSharedPtr> > lst;
+        std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator c;
+        for (c = CADCurveList.begin(); c != CADCurveList.end(); s++)
+        {
+            lst.push_back(
+                std::pair<int, CADCurveSharedPtr>(c->first, c->second.first));
+        }
+        return lst;
+    }
+
+    std::vector<std::pair<int, CADCurveSharedPtr> > GetCADCurves()
+    {
+        std::vector<std::pair<int, CADCurveSharedPtr> > lst;
         std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >::
             iterator s;
         for (s = CADSurfList.begin(); s != CADSurfList.end(); s++)

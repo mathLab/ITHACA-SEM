@@ -46,6 +46,15 @@
 
 namespace Nektar
 {
+
+    enum HBCType
+    {
+        eNOHBC,
+        eHBCNeumann,    // Standard High Order BC
+        eOBC,           // High Order outflow BC (Neumann-Dirichlet) from Dong et al JCP 2014
+        eConvectiveOBC  // Convective High Order (Robin type) BC from Dong JCP 2015
+    };
+    
     // Forward declaration
     class Extrapolate;
     typedef boost::shared_ptr<Extrapolate> ExtrapolateSharedPtr;
@@ -55,6 +64,10 @@ namespace Nektar
         MultiRegions::ExpListSharedPtr& ,
         const Array<OneD, int>& ,
         const SolverUtils::AdvectionSharedPtr& > ExtrapolateFactory;
+
+    struct HighOrderOutflow;
+    typedef boost::shared_ptr<HighOrderOutflow> HighOrderOutflowSharedPtr;
+
 
     ExtrapolateFactory& GetExtrapolateFactory();
 
@@ -70,7 +83,7 @@ namespace Nektar
         
         virtual ~Extrapolate();
 
-        void GenerateHOPBCMap();
+        void GenerateHOPBCMap(const LibUtilities::SessionReaderSharedPtr& pSsession);
 
         inline void SubSteppingTimeIntegration(
             const int intMethod,
@@ -188,6 +201,10 @@ namespace Nektar
 
         LibUtilities::CommSharedPtr m_comm;
 
+        /// Array of type of high order BCs for splitting shemes
+        Array<OneD, HBCType> m_hbcType; 
+        
+        /// Velocity fields 
         Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
 
         /// Pointer to field holding pressure field
@@ -199,7 +216,7 @@ namespace Nektar
 
         SolverUtils::AdvectionSharedPtr m_advObject;
 
-        Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
+                Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
 
         /// Curl-curl dimensionality
         int m_curl_dim;
@@ -222,30 +239,16 @@ namespace Nektar
         // Number of HOPbcs
         int m_HBCnumber;
 
-        // Number of quadrature points for Outflow HOBC
-        int m_numOutHBCPts;
-
-        // Number of Outflow HOBcs
-        int m_outHBCnumber;
-
-        // Parameters for outflow boundary condition
-        NekDouble   m_obcTheta;
-        NekDouble   m_obcAlpha1;
-        NekDouble   m_obcAlpha2;
-
         /// Maximum points used in pressure BC evaluation
         int m_intSteps;
 
         NekDouble m_timestep;
 
         /// Storage for current and previous levels of high order pressure boundary conditions.
-        Array<OneD, Array<OneD, NekDouble> >  m_pressureHBCs;
+        Array<OneD, Array<OneD, NekDouble> > m_pressureHBCs;
 
-        /// Storage for current and previous levels of the acceleration term.
-        Array<OneD, Array<OneD, NekDouble> >  m_acceleration;
-
-        /// Storage for current and previous velocity fields at the outflow for high order outflow BCs
-        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble > > > > m_outflowVel;
+        /// Storage for current and previous levels of the inner product of normal velocity
+        Array<OneD, Array<OneD, NekDouble> > m_iprodnormvel;
 
         Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
 
@@ -254,9 +257,49 @@ namespace Nektar
         static NekDouble StifflyStable_Alpha_Coeffs[3][3];
         static NekDouble StifflyStable_Gamma0_Coeffs[3];
 
+        // data related to high order outflow. 
+        HighOrderOutflowSharedPtr m_houtflow; 
+        
     private:
         static std::string def;
-        void InitOutflowBCs(void);
+    };
+    
+    
+    struct HighOrderOutflow
+    {
+        HighOrderOutflow(const int numHOpts, const int outHBCnumber):
+            m_numOutHBCPts(numHOpts),
+            m_outHBCnumber(outHBCnumber)
+        {
+        }
+
+        virtual ~HighOrderOutflow()
+        {};
+        
+        /// Number of quadrature points for Outflow HOBC
+        int m_numOutHBCPts;
+
+        /// Number of Outflow HOBCs
+        int m_outHBCnumber;
+
+        /// Parameters for outflow boundary condition
+        NekDouble   m_obcTheta;
+        NekDouble   m_obcAlpha1;
+        NekDouble   m_obcAlpha2;
+        NekDouble   m_U0;
+        NekDouble   m_delta;
+        
+        /// Storage for current and previous velocity fields at the outflow for high order outflow BCs
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble > > > > m_outflowVel;
+
+        /// Velocity boundary condition expansions on high order boundaries. 
+        Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >  m_UBndExp;
+
+        /// primitive coefficient for pressure  when using convetive like OBCs
+        Array<OneD, NekDouble> m_pressurePrimCoeff; 
+
+        /// primitive coefficient for velocities when using convetive like OBCs
+        Array<OneD, Array<OneD, NekDouble> > m_velocityPrimCoeff; 
     };
 
     /**

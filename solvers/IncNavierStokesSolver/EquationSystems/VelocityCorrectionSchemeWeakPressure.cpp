@@ -171,7 +171,7 @@ namespace Nektar
         m_ode.DefineOdeRhs(&VCSWeakPressure::EvaluateAdvection_SetPressureBCs, this);
 
         m_extrapolation->SubSteppingTimeIntegration(m_intScheme->GetIntegrationMethod(), m_intScheme);
-        m_extrapolation->GenerateHOPBCMap();
+        m_extrapolation->GenerateHOPBCMap(m_session);
         
         // set implicit time-intregration class operators
         m_ode.DefineImplicitSolve(&VCSWeakPressure::SolveUnsteadyStokesSystem,this);

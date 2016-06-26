@@ -60,6 +60,11 @@ class ProcessQualityMetric : public ProcessModule
         /// Write mesh to output file.
         virtual void Process(po::variables_map &vm);
 
+        virtual std::string GetModuleName()
+        {
+            return "ProcessQualityMetric";
+        }
+
     private:
         Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e);
 };

@@ -61,6 +61,11 @@ class InputFld : public InputModule
         /// %ModuleKey for class.
         static ModuleKey m_className[];
 
+        virtual std::string GetModuleName()
+        {
+            return "InputFld";
+        }
+
     private:
 };
 

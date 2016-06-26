@@ -391,9 +391,9 @@ namespace Nektar
             }
 
             string IsCompressed;
-            element->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+            element->QueryStringAttribute("COMPRESSED",&IsCompressed);
 
-            if(IsCompressed.size()) 
+            if(IsCompressed.size())
             {
                 if(boost::iequals(IsCompressed,
                             LibUtilities::CompressData::GetCompressString()))
@@ -445,27 +445,27 @@ namespace Nektar
             else
             {
                 TiXmlElement *vertex = element->FirstChildElement("V");
-                
+
                 int indx;
                 int nextVertexNumber = -1;
-                
+
                 while (vertex)
                 {
                     nextVertexNumber++;
-                    
+
                     TiXmlAttribute *vertexAttr = vertex->FirstAttribute();
                     std::string attrName(vertexAttr->Name());
-                    
+
                     ASSERTL0(attrName == "ID", (std::string("Unknown attribute name: ") + attrName).c_str());
-                    
+
                     err = vertexAttr->QueryIntValue(&indx);
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
 
                     // Now read body of vertex
                     std::string vertexBodyStr;
-                    
+
                     TiXmlNode *vertexBody = vertex->FirstChild();
-                    
+
                     while (vertexBody)
                     {
                         // Accumulate all non-comment body data.
@@ -474,26 +474,26 @@ namespace Nektar
                             vertexBodyStr += vertexBody->ToText()->Value();
                             vertexBodyStr += " ";
                         }
-                        
+
                         vertexBody = vertexBody->NextSibling();
                     }
-                    
+
                     ASSERTL0(!vertexBodyStr.empty(), "Vertex definitions must contain vertex data.");
-                    
+
                     // Get vertex data from the data string.
                     NekDouble xval, yval, zval;
                     std::istringstream vertexDataStrm(vertexBodyStr.c_str());
-                    
+
                     try
                     {
                         while(!vertexDataStrm.fail())
                         {
                             vertexDataStrm >> xval >> yval >> zval;
-                            
+
                             xval = xval*xscale + xmove;
                             yval = yval*yscale + ymove;
                             zval = zval*zscale + zmove;
-                            
+
                             // Need to check it here because we may not be
                             // good after the read indicating that there
                             // was nothing to read.
@@ -509,7 +509,7 @@ namespace Nektar
                     {
                         ASSERTL0(false, "Unable to read VERTEX data.");
                     }
-                    
+
                     vertex = vertex->NextSiblingElement("V");
                 }
             }
@@ -1151,7 +1151,6 @@ namespace Nektar
             }
         }
 
-
         /**
          *
          */
@@ -1259,9 +1258,9 @@ namespace Nektar
             }
 
             string IsCompressed;
-            field->QueryStringAttribute("COMPRESSED",&IsCompressed); 
-            
-            if(IsCompressed.size()) 
+            field->QueryStringAttribute("COMPRESSED",&IsCompressed);
+
+            if(IsCompressed.size())
             {
                 ASSERTL0(boost::iequals(IsCompressed,
                             LibUtilities::CompressData::GetCompressString()),
@@ -1464,24 +1463,24 @@ namespace Nektar
                 /// All curves are of the form: "<? ID="#" TYPE="GLL OR other
                 /// points type" NUMPOINTS="#"> ... </?>", with ? being an
                 /// element type (either E or F).
-                
+
                 TiXmlElement *edgelement = field->FirstChildElement("E");
-                
+
                 int edgeindx, edgeid;
                 int nextEdgeNumber = -1;
-                
+
                 while(edgelement)
                 {
                     /// These should be ordered.
                     nextEdgeNumber++;
-                    
+
                     std::string edge(edgelement->ValueStr());
                     ASSERTL0(edge == "E", (std::string("Unknown 3D curve type:") + edge).c_str());
-                    
+
                     /// Read id attribute.
                     err = edgelement->QueryIntAttribute("ID", &edgeindx);
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
-                    
+
                     /// Read edge id attribute.
                     err = edgelement->QueryIntAttribute("EDGEID", &edgeid);
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute EDGEID.");
@@ -1489,7 +1488,7 @@ namespace Nektar
                     /// Read text edgelement description.
                     std::string elementStr;
                     TiXmlNode* elementChild = edgelement->FirstChild();
-                    
+
                     while(elementChild)
                     {
                         // Accumulate all non-comment element data
@@ -1500,9 +1499,9 @@ namespace Nektar
                         }
                         elementChild = elementChild->NextSibling();
                     }
-                    
+
                     ASSERTL0(!elementStr.empty(), "Unable to read curve description body.");
-                    
+
                     /// Parse out the element components corresponding to type of element.
                     if (edge == "E")
                     {
@@ -1510,20 +1509,20 @@ namespace Nektar
                         // Determine the points type
                         std::string typeStr = edgelement->Attribute("TYPE");
                         ASSERTL0(!typeStr.empty(), "TYPE must be specified in " "points definition");
-                        
+
                         LibUtilities::PointsType type;
                         const std::string* begStr = LibUtilities::kPointsTypeStr;
                         const std::string* endStr = LibUtilities::kPointsTypeStr + LibUtilities::SIZE_PointsType;
                         const std::string* ptsStr = std::find(begStr, endStr, typeStr);
-                        
+
                         ASSERTL0(ptsStr != endStr, "Invalid points type.");
                         type = (LibUtilities::PointsType)(ptsStr - begStr);
-                        
+
                         //Determine the number of points
                         err = edgelement->QueryIntAttribute("NUMPOINTS", &numPts);
                         ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute NUMPOINTS.");
                         CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(edgeid, type));
-                        
+
                         // Read points (x, y, z)
                         NekDouble xval, yval, zval;
                         std::istringstream elementDataStrm(elementStr.c_str());
@@ -1532,34 +1531,34 @@ namespace Nektar
                             while(!elementDataStrm.fail())
                             {
                                 elementDataStrm >> xval >> yval >> zval;
-                                
+
                                 xval = xval*xscale + xmove;
                                 yval = yval*yscale + ymove;
                                 zval = zval*zscale + zmove;
-                                
+
                                 // Need to check it here because we may not be
                                 // good after the read indicating that there
                                 // was nothing to read.
                                 if (!elementDataStrm.fail())
                                 {
                                     PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_meshDimension, edgeindx, xval, yval, zval));
-                                    
+
                                     curve->m_points.push_back(vert);
                                 }
-                                
+
                             }
                         }
                         catch(...)
                         {
                             NEKERROR(ErrorUtil::efatal,
                                      (std::string("Unable to read curve data for EDGE: ") + elementStr).c_str());
-                            
+
                         }
-                        
+
                         ASSERTL0(curve->m_points.size() == numPts,"Number of points specificed by attribute NUMPOINTS is different from number of points in list");
 
                         m_curvedEdges[edgeid] = curve;
-                        
+
                         edgelement = edgelement->NextSiblingElement("E");
 
                     } // end if-loop
@@ -1568,24 +1567,24 @@ namespace Nektar
 
                 TiXmlElement *facelement = field->FirstChildElement("F");
                 int faceindx, faceid;
-                
+
                 while(facelement)
                 {
                     std::string face(facelement->ValueStr());
                     ASSERTL0(face == "F", (std::string("Unknown 3D curve type: ") + face).c_str());
-                    
+
                     /// Read id attribute.
                     err = facelement->QueryIntAttribute("ID", &faceindx);
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
-                    
+
                     /// Read face id attribute.
                     err = facelement->QueryIntAttribute("FACEID", &faceid);
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute FACEID.");
-                    
+
                     /// Read text face element description.
                     std::string elementStr;
                     TiXmlNode* elementChild = facelement->FirstChild();
-                    
+
                     while(elementChild)
                     {
                         // Accumulate all non-comment element data
@@ -1596,9 +1595,9 @@ namespace Nektar
                         }
                         elementChild = elementChild->NextSibling();
                     }
-                    
+
                     ASSERTL0(!elementStr.empty(), "Unable to read curve description body.");
-                    
+
                     /// Parse out the element components corresponding to type of element.
                     if(face == "F")
                     {
@@ -1608,26 +1607,26 @@ namespace Nektar
                         const std::string* begStr = LibUtilities::kPointsTypeStr;
                         const std::string* endStr = LibUtilities::kPointsTypeStr + LibUtilities::SIZE_PointsType;
                         const std::string* ptsStr = std::find(begStr, endStr, typeStr);
-                        
+
                         ASSERTL0(ptsStr != endStr, "Invalid points type.");
                         type = (LibUtilities::PointsType)(ptsStr - begStr);
-                        
+
                         std::string numptsStr = facelement->Attribute("NUMPOINTS");
                         ASSERTL0(!numptsStr.empty(), "NUMPOINTS must be specified in points definition");
                         int numPts=0;
                         std::stringstream s;
                         s << numptsStr;
                         s >> numPts;
-                        
+
                         CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(faceid, type));
-                        
+
                         ASSERTL0(numPts >= 3, "NUMPOINTS for face must be greater than 2");
-                        
+
                         if(numPts == 3)
                         {
                             ASSERTL0(ptsStr != endStr, "Invalid points type.");
                         }
-                        
+
                         // Read points (x, y, z)
                         NekDouble xval, yval, zval;
                         std::istringstream elementDataStrm(elementStr.c_str());
@@ -1655,9 +1654,9 @@ namespace Nektar
                                       + elementStr).c_str());
                         }
                         m_curvedFaces[faceid] = curve;
-                        
+
                         facelement = facelement->NextSiblingElement("F");
-                        
+
                     } // end if-loop
                 } // end while-loop
 
@@ -3250,7 +3249,7 @@ namespace Nektar
             }
         }
 
-        /** 
+        /**
          * \brief Reset all points keys to have expansion order of \a
          *  nmodes.  we keep the point distribution the same and make
          *  the number of points the same difference from the number
@@ -3264,19 +3263,19 @@ namespace Nektar
             for(it = m_expansionMapShPtrMap.begin(); it != m_expansionMapShPtrMap.end(); ++it)
             {
                 ExpansionMapIter expIt;
-                
+
                 for(expIt = it->second->begin(); expIt != it->second->end(); ++expIt)
                 {
                     for(int i = 0; i < expIt->second->m_basisKeyVector.size(); ++i)
                     {
-                        LibUtilities::BasisKey  bkeyold = expIt->second->m_basisKeyVector[i]; 
-                        
+                        LibUtilities::BasisKey  bkeyold = expIt->second->m_basisKeyVector[i];
+
                         int npts = nmodes + (bkeyold.GetNumPoints() - bkeyold.GetNumModes());
-                        
+
                         const LibUtilities::PointsKey pkey(npts,bkeyold.GetPointsType());
                         LibUtilities::BasisKey bkeynew(bkeyold.GetBasisType(),nmodes, pkey);
-                        expIt->second->m_basisKeyVector[i] = bkeynew; 
-                        
+                        expIt->second->m_basisKeyVector[i] = bkeynew;
+
                     }
                 }
             }

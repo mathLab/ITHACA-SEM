@@ -37,6 +37,8 @@
 #include <iostream>
 using namespace std;
 
+#include <tinyxml.h>
+
 #include <SpatialDomains/MeshGraph.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 #include "InputNekpp.h"
@@ -333,6 +335,26 @@ void InputNekpp::Process()
 
     SpatialDomains::ExpansionMap em = graph->GetExpansions();
     m_mesh->m_nummode = em[0]->m_basisKeyVector[1].GetNumPoints();
+
+    if(pSession->DefinesElement("NEKTAR/GEOMETRY/CADID"))
+    {
+        m_mesh->m_hasCAD = true;
+        TiXmlElement* id = pSession->GetElement("NEKTAR/GEOMETRY/CADID");
+
+        id->QueryStringAttribute("NAME",&m_mesh->m_CADId);
+    }
+
+    if(m_mesh->m_CADId && !pSession->DefinesElement("NEKTAR/GEOMETRY/CAD"))
+    {
+        ASSERTL0(false, "CAD file but no data");
+    }
+
+    if(pSession->DefinesElement("NEKTAR/GEOMETRY/CAD"))
+    {
+        TiXmlElement* cad = pSession->GetElement("NEKTAR/GEOMETRY/CAD");
+    }
+
+    exit(-1);
 
     ProcessEdges(false);
     ProcessFaces(false);

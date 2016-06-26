@@ -1078,7 +1078,7 @@ void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
 void OutputNekpp::WriteXmlCADId(TiXmlElement *pRoot)
 {
     TiXmlElement *cadTag = new TiXmlElement("CADID");
-    cadTag->LinkEndChild(new TiXmlText(" FILE=" + m_mesh->m_CADId + " "));
+    cadTag->SetAttribute("NAME", m_mesh->m_CADId);
     pRoot->LinkEndChild(cadTag);
 }
 

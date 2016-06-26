@@ -1005,47 +1005,80 @@ void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
         for (it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end();
              ++it)
         {
-            if((*it)->GetNumCadCurve() > 0)
+            if((*it)->GetNumCadCurve() > 0 || (*it)->GetNumCADSurf() > 0)
             {
-                vector<pair<int, CADCurveSharedPtr> > cs = (*it)->GetCADCurves();
-                for(int i = 0; i < cs.size(); i++)
-                {
-                    NekDouble ti = (*it)->GetCADCurveInfo(cs[i].first);
-                    TiXmlElement *v = new TiXmlElement("V");
-                    v->SetAttribute("ID", vertcnt++);
-                    v->SetAttribute("VERTID", (*it)->m_id);
-                    v->SetAttribute("TYPE", "CADCURVE");
-                    v->SetAttribute("CURVEID", cs[i].first);
-                    TiXmlText *t = new TiXmlText(ti);
-                    v->LinkEndChild(t);
-                    curved->LinkEndChild(v);
-                }
+                TiXmlElement *v = new TiXmlElement("V");
+                v->SetAttribute("ID", vertcnt++);
+                v->SetAttribute("VERTID", (*it)->m_id);
+                TiXmlText *t = new TiXmlText((*it)->GetCADString());
+                v->LinkEndChild(t);
+                cad->LinkEndChild(v);
+            }
+        }
+    }
+
+    {
+        EdgeSet::iterator it;
+        for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end();
+             ++it)
+        {
+            if((*it)->m_edgeNodes.size() == 0)
+            {
+                continue;
             }
 
-            if((*it)->GetNumCADSurf() > 0)
+            if((*it)->m_edgeNodes[0]->GetNumCadCurve() > 0 ||
+               (*it)->m_edgeNodes[0]->GetNumCADSurf() > 0)
             {
-                vector<pair<int, CADSurfSharedPtr> > ss = (*it)->GetCADSurfs();
-                for(int i = 0; i < ss.size(); i++)
+                for(int i = 0; i < (*it)->m_edgeNodes.size(); i++)
                 {
-                    NekDouble ti = (*it)->GetCADCurveInfo(ss[i].first);
-                    TiXmlElement *v = new TiXmlElement("V");
-                    v->SetAttribute("ID", vertcnt++);
-                    v->SetAttribute("VERTID", (*it)->m_id);
-                    v->SetAttribute("TYPE", "CADCURVE");
-                    v->SetAttribute("CURVEID", ss[i].first);
-                    TiXmlText *t = new TiXmlText(ti);
+                    TiXmlElement *v = new TiXmlElement("E");
+                    v->SetAttribute("ID", edgecnt++);
+                    v->SetAttribute("EDGEID", (*it)->m_id);
+                    v->SetAttribute("NUMNODE", (*it)->m_edgeNodes.size());
+                    v->SetAttribute("NODE", i+1);
+                    TiXmlText *t = new TiXmlText((*it)->m_edgeNodes[i]->GetCADString());
                     v->LinkEndChild(t);
-                    curved->LinkEndChild(v);
+                    cad->LinkEndChild(v);
                 }
             }
         }
     }
+
+    {
+        FaceSet::iterator it;
+        for (it = m_mesh->m_faceSet.begin(); it != m_mesh->m_faceSet.end();
+             ++it)
+        {
+            if((*it)->m_faceNodes.size() == 0)
+            {
+                continue;
+            }
+
+            if((*it)->m_faceNodes[0]->GetNumCADSurf() > 0)
+            {
+                for(int i = 0; i < (*it)->m_faceNodes.size(); i++)
+                {
+                    TiXmlElement *v = new TiXmlElement("F");
+                    v->SetAttribute("ID", facecnt++);
+                    v->SetAttribute("FACEID", (*it)->m_id);
+                    v->SetAttribute("NUMNODE", (*it)->m_faceNodes.size());
+                    v->SetAttribute("NODE", i+1);
+                    TiXmlText *t = new TiXmlText((*it)->m_faceNodes[i]->GetCADString());
+                    v->LinkEndChild(t);
+                    cad->LinkEndChild(v);
+                }
+            }
+        }
+    }
+
+    pRoot->LinkEndChild(cad);
 }
 
 void OutputNekpp::WriteXmlCADId(TiXmlElement *pRoot)
 {
     TiXmlElement *cadTag = new TiXmlElement("CADID");
-    cadTag->LinkEndChild(new TiXmlText(" FILE =" + m_mesh->m_CADId + " "));
+    cadTag->LinkEndChild(new TiXmlText(" FILE=" + m_mesh->m_CADId + " "));
     pRoot->LinkEndChild(cadTag);
 }
 

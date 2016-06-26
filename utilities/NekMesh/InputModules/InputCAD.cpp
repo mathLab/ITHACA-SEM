@@ -126,6 +126,9 @@ void InputCAD::Process()
                  "No surfaces selected to make boundary layer on");
     }
 
+    m_mesh->m_hasCAD = true;
+    m_mesh->m_CADId = m_CADName;
+
     CADSystemSharedPtr m_cad =
         MemoryManager<CADSystem>::AllocateSharedPtr(m_CADName);
 

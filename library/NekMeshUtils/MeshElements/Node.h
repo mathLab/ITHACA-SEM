@@ -276,11 +276,11 @@ public:
         return search->second.second;
     }
 
-    std::vector<std::pair<int, CADSurfSharedPtr> > GetCADSurfs()
+    std::vector<std::pair<int, CADCurveSharedPtr> > GetCADCurves()
     {
-        std::vector<std::pair<int, CADSurfSharedPtr> > lst;
+        std::vector<std::pair<int, CADCurveSharedPtr> > lst;
         std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator c;
-        for (c = CADCurveList.begin(); c != CADCurveList.end(); s++)
+        for (c = CADCurveList.begin(); c != CADCurveList.end(); c++)
         {
             lst.push_back(
                 std::pair<int, CADCurveSharedPtr>(c->first, c->second.first));
@@ -288,9 +288,9 @@ public:
         return lst;
     }
 
-    std::vector<std::pair<int, CADCurveSharedPtr> > GetCADCurves()
+    std::vector<std::pair<int, CADSurfSharedPtr> > GetCADSurfs()
     {
-        std::vector<std::pair<int, CADCurveSharedPtr> > lst;
+        std::vector<std::pair<int, CADSurfSharedPtr> > lst;
         std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >::
             iterator s;
         for (s = CADSurfList.begin(); s != CADSurfList.end(); s++)
@@ -319,6 +319,36 @@ public:
         CADSurfSharedPtr su = CADSurfList[s].first;
         CADSurfList[s] =
             std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> >(su, uv);
+    }
+
+    string GetCADString()
+    {
+        int made = 0;
+        stringstream ss;
+        ss << std::scientific << std::setprecision(8);
+        std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator c;
+        for (c = CADCurveList.begin(); c != CADCurveList.end(); c++)
+        {
+            if(made > 0)
+            {
+                ss << " :";
+            }
+            ss << " C " << c->first << " " << c->second.second;
+            made++;
+        }
+        std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >::
+            iterator s;
+        for (s = CADSurfList.begin(); s != CADSurfList.end(); s++)
+        {
+            if(made > 0)
+            {
+                ss << " :";
+            }
+            ss << " S " << s->first << " " << s->second.second[0] <<
+                  " " << s->second.second[1];
+            made++;
+        }
+        return ss.str();
     }
 
 #endif

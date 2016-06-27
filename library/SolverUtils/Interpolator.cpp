@@ -574,10 +574,9 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt,
                                const NekDouble sigma,
                                const int maxPts)
 {
-    NekDouble sigmaNew = sigma;
     // find nearest neighbours
     vector<PtsPoint> neighbourPts;
-    FindNeighbours(searchPt, neighbourPts, 4 * sigmaNew);
+    FindNeighbours(searchPt, neighbourPts, 4 * sigma, maxPts);
     int numPts = neighbourPts.size();
 
     // handle the case that there was no point within 4 * sigma
@@ -589,13 +588,7 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt,
         return;
     }
 
-    // limit the number of points to maxPts and recompute sigma
-    if (numPts > maxPts)
-    {
-        neighbourPts.erase(neighbourPts.begin() + maxPts, neighbourPts.end());
-        numPts             = neighbourPts.size();
-        NekDouble sigmaNew = 0.25 * neighbourPts.back().dist;
-    }
+    NekDouble sigmaNew = 0.25 * neighbourPts.back().dist;
 
     m_neighInds[searchPt.idx] = Array<OneD, unsigned int>(numPts);
     for (int i = 0; i < numPts; i++)
@@ -876,7 +869,8 @@ void Interpolator::FindNNeighbours(const PtsPoint &searchPt,
  */
 void Interpolator::FindNeighbours(const PtsPoint &searchPt,
                                   vector<PtsPoint> &neighbourPts,
-                                  const NekDouble dist)
+                                  const NekDouble dist,
+                                  const unsigned int maxPts)
 {
     BPoint searchBPoint(
         searchPt.coords[0], searchPt.coords[1], searchPt.coords[2]);
@@ -890,7 +884,15 @@ void Interpolator::FindNeighbours(const PtsPoint &searchPt,
 
     // find points within the distance box
     std::vector<PtsPointPair> result;
-    m_rtree->query(bgi::within(bbox), std::back_inserter(result));
+    if (maxPts >= 1)
+    {
+        m_rtree->query(bgi::within(bbox) && bgi::nearest(searchBPoint, maxPts),
+                       std::back_inserter(result));
+    }
+    else
+    {
+        m_rtree->query(bgi::within(bbox), std::back_inserter(result));
+    }
 
     // massage into or own format
     for (int i = 0; i < result.size(); ++i)

@@ -41,6 +41,10 @@
 #include <boost/optional.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
+#if defined(NEKTAR_USE_MPI)
+#include <mpi.h>
+#endif
+
 #ifndef _WIN32
 #include <execinfo.h>
 #endif
@@ -63,7 +67,7 @@ namespace ErrorUtil
     {
         efatal,
         ewarning
-    };
+    }; 
 
     class NekError : public std::runtime_error
     {
@@ -86,6 +90,18 @@ namespace ErrorUtil
 #endif
             msg;
 
+        // Default rank is zero. If MPI used and initialised, populate with
+        // the correct rank. Messages are only printed on rank zero.
+        int rank = 0;
+#if defined(NEKTAR_USE_MPI)
+        int flag;
+        MPI_Initialized(&flag);
+        if(flag)
+        {
+            MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+        }
+#endif
+
         std::string btMessage("");
 #if defined(NEKTAR_FULLDEBUG)
 #ifndef _WIN32
@@ -103,10 +119,13 @@ namespace ErrorUtil
         free(btStrings);
 #endif
 #endif
-        switch(type)
+
+        switch (type)
         {
-            case efatal:
-                if( outStream )
+        case efatal:
+            if (!rank)
+            {
+                if (outStream)
                 {
                     (*outStream) << btMessage;
                     (*outStream) << "Fatal   : " << baseMsg << std::endl;
@@ -114,14 +133,22 @@ namespace ErrorUtil
                 else
                 {
                     std::cerr << btMessage;
-                    std::cerr << std::endl << "Fatal   : " << baseMsg << std::endl;
+                    std::cerr << std::endl << "Fatal   : " << baseMsg
+                              << std::endl;
                 }
-
-                throw NekError(baseMsg);
-                break;
-
-            case ewarning:
-                if( outStream )
+            }
+#if defined(NEKTAR_USE_MPI)
+            if (flag)
+            {
+                MPI_Barrier(MPI_COMM_WORLD);
+            }
+#endif
+            throw NekError(baseMsg);
+            break;
+        case ewarning:
+            if (!rank)
+            {
+                if (outStream)
                 {
                     (*outStream) << btMessage;
                     (*outStream) << "Warning: " << baseMsg << std::endl;
@@ -131,10 +158,10 @@ namespace ErrorUtil
                     std::cerr << btMessage;
                     std::cerr << "Warning: " << baseMsg << std::endl;
                 }
-                break;
-
-            default:
-                std::cerr << "Unknown warning type: " << baseMsg << std::endl;
+            }
+            break;
+        default:
+            std::cerr << "Unknown warning type: " << baseMsg << std::endl;
         }
     }
 

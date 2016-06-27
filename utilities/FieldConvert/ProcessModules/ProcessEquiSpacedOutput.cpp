@@ -81,10 +81,12 @@ void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
 
 void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 {
-
     if(m_f->m_verbose)
     {
-        cout << "Interpolating fields to equispaced" << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "Interpolating fields to equispaced..." << endl;
+        }
     }
 
     int coordim  = m_f->m_exp[0]->GetCoordim(0);
@@ -460,6 +462,76 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
     int nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
     int npts = m_f->m_fieldPts->GetNpoints();
     int nptsPerPlane = npts/nPlanes;
+
+    if ( m_f->m_exp[0]->GetHomogeneousBasis()->GetBasisType()   ==
+            LibUtilities::eFourier
+       && m_f->m_exp[0]->GetHomogeneousBasis()->GetPointsType() ==
+            LibUtilities::eFourierEvenlySpaced)
+    {
+        // Write points with extra plane
+        Array<OneD, Array<OneD, NekDouble> > pts;
+        m_f->m_fieldPts->GetPts(pts);
+        Array<OneD, Array<OneD, NekDouble> > newPts(pts.num_elements());
+        for (int i = 0; i < pts.num_elements(); i++)
+        {
+            newPts[i] = Array<OneD, NekDouble> (npts + nptsPerPlane);
+            // Copy old points
+            Vmath::Vcopy(npts, pts[i], 1, newPts[i], 1);
+            // Get new plane
+            Array<OneD, NekDouble> extraPlane (nptsPerPlane, newPts[i]+npts);
+            if (m_f->m_comm->GetColumnComm()->GetSize() == 1)
+            {
+                if ( i == 2)
+                {
+                    // z-coordinate
+                    Vmath::Sadd(nptsPerPlane, m_f->m_exp[0]->GetHomoLen(),
+                                pts[i], 1, extraPlane, 1);
+                }
+                else
+                {
+                    Vmath::Vcopy(nptsPerPlane, pts[i], 1, extraPlane, 1);
+                }
+            }
+            else
+            {
+                // Determine to and from rank for communication
+                int size     = m_f->m_comm->GetColumnComm()->GetSize();
+                int rank     = m_f->m_comm->GetColumnComm()->GetRank();
+                int fromRank = (rank+1) % size;
+                int toRank   = (rank == 0) ? size-1 : rank-1;
+                // Communicate using SendRecv
+                Array<OneD, NekDouble> send (nptsPerPlane, pts[i]);
+                m_f->m_comm->GetColumnComm()->SendRecv(toRank, send,
+                                                       fromRank, extraPlane);
+                // Adjust z-coordinate of last process
+                if (i == 2 && (rank == size - 1) )
+                {
+                    Vmath::Sadd(nptsPerPlane, m_f->m_exp[0]->GetHomoLen(),
+                                extraPlane, 1, extraPlane, 1);
+                }
+            }
+        }
+        m_f->m_fieldPts->SetPts(newPts);
+        // Now extend plane connectivity
+        vector<Array<OneD, int> > oldConn;
+        Array<OneD, int>          conn;
+        m_f->m_fieldPts->GetConnectivity(oldConn);
+        vector<Array<OneD, int> > newConn = oldConn;
+        int connPerPlane = oldConn.size()/nPlanes;
+        for (int i = 0; i < connPerPlane; i++)
+        {
+            conn = Array<OneD, int> (oldConn[i].num_elements());
+            for (int j = 0; j < conn.num_elements(); j++)
+            {
+                conn[j] = oldConn[i][j] + npts;
+            }
+            newConn.push_back(conn);
+        }
+        m_f->m_fieldPts->SetConnectivity(newConn);
+
+        nPlanes++;
+        npts += nptsPerPlane;
+    }
 
     // Get maximum number of points per direction in the mesh
     int maxN = 0;

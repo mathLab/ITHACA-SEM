@@ -126,8 +126,11 @@ namespace Utilities
     {
         if (m_f->m_verbose)
         {
-            cout << "ProcessDisplacement: Calculating displacement..."
-                 << endl;
+            if(m_f->m_comm->GetRank() == 0)
+            {
+                cout << "ProcessDisplacement: Calculating displacement..."
+                     << endl;
+            }
         }
 
         string toFile = m_config["to"].as<string>();

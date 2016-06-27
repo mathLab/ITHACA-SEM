@@ -124,26 +124,24 @@ namespace Nektar
 
         // Load parameters for Spectral Vanishing Viscosity
         m_session->MatchSolverInfo("SpectralVanishingViscosity","True",
-                                   m_useSpecVanVisc,false);
+                                   m_useSpecVanVisc, false);
+        m_useHomo1DSpecVanVisc = m_useSpecVanVisc;
+        if(m_useSpecVanVisc == false)
+        {
+            m_session->MatchSolverInfo("SpectralVanishingViscositySpectralHP",
+                                "True", m_useSpecVanVisc, false);
+            m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D",
+                                "True", m_useHomo1DSpecVanVisc, false);
+        }
         m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
         m_session->LoadParameter("SVVDiffCoeff",  m_sVVDiffCoeff,  0.1);
-        // Needs to be set outside of next if so that it is turned off by default
-        m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",
-                                   m_useHomo1DSpecVanVisc,false);
 
-        
         m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",
                                    m_specHP_dealiasing,false);
-
 
         if(m_HomogeneousType == eHomogeneous1D)
         {
             ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velocity fields with homogenous expansion");
-
-            if(m_useHomo1DSpecVanVisc == false)
-            {
-                m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useHomo1DSpecVanVisc,false);
-            }
 
             if(m_useHomo1DSpecVanVisc)
             {
@@ -221,7 +219,7 @@ namespace Nektar
         }
 
         string smoothing = m_useSpecVanVisc ? "spectral/hp" : "";
-        if (m_useHomo1DSpecVanVisc)
+        if (m_useHomo1DSpecVanVisc && (m_HomogeneousType == eHomogeneous1D))
         {
             smoothing += (smoothing == "" ? "" : " + ") + string("Homogeneous1D");
         }

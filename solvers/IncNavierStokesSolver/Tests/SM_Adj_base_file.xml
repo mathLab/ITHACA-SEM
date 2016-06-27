@@ -88,10 +88,7 @@
     </FUNCTION>
     
       <FUNCTION NAME="BaseFlow">
-      <E VAR="u" VALUE="sin(y)"/>
-      <E VAR="v" VALUE="sin(x)" />
-      <E VAR="w" VALUE="sin(x)*cos(y)"/>
-      <E VAR="p" VALUE="0" />
+          <F FILE="SM_Adj_base_file.bse" />
       </FUNCTION>
     
   </CONDITIONS>

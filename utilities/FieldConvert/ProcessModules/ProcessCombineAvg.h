@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessDeform.h
+//  File: ProcessCombineAvg.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Deforms grid
+//  Description: Combines two fld files containing average fields.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_FIELDCONVERT_PROCESSDEFORM
-#define UTILITIES_FIELDCONVERT_PROCESSDEFORM
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSCOMBINEAVG
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSCOMBINEAVG
 
 #include "../Module.h"
 
@@ -43,26 +43,32 @@ namespace Nektar
 namespace Utilities
 {
 
-class ProcessDeform : public ProcessModule
+/**
+ * @brief This processing module combines two fld files containing average fields
+ *
+ */
+class ProcessCombineAvg : public ProcessModule
 {
-public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-        return MemoryManager<ProcessDeform>::AllocateSharedPtr(f);
-    }
-    static ModuleKey className;
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f)
+        {
+            return MemoryManager<ProcessCombineAvg>::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
 
-    ProcessDeform(FieldSharedPtr f);
-    virtual ~ProcessDeform();
+        ProcessCombineAvg(FieldSharedPtr f);
+        virtual ~ProcessCombineAvg();
 
-    /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
+        /// Write mesh to output file.
+        virtual void Process(po::variables_map &vm);
 
-    virtual std::string GetModuleName()
-    {
-        return "ProcessDeform";
-    }
+        virtual std::string GetModuleName()
+        {
+            return "ProcessCombineAvg";
+        }
 
+    private:
 };
 
 }

@@ -90,6 +90,8 @@ namespace SolverUtils
                         const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                         const unsigned int& pNumForcingFields = 0);
 
+        SOLVER_UTILS_EXPORT const Array<OneD, const Array<OneD, NekDouble> >&
+                        GetForces();
 
             SOLVER_UTILS_EXPORT void Smooth(
                 const MultiRegions::ExpListSharedPtr &field);

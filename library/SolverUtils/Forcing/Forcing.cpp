@@ -131,6 +131,11 @@ namespace Nektar
             }
         }
 
+        const Nektar::Array<OneD, const Array<OneD, NekDouble> > &Forcing::GetForces()
+        {
+            return m_Forcing;
+        }
+
         void Forcing::EvaluateTimeFunction(
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 std::string                                       pFieldName,

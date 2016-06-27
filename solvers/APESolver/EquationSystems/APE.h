@@ -77,7 +77,7 @@ class APE : public UnsteadySystem
         SolverUtils::AdvectionSharedPtr                 m_advection;
         std::vector<SolverUtils::ForcingSharedPtr>      m_forcing;
         SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
-        Array<OneD, Array<OneD, NekDouble> >            m_traceBasefield;
+        Array<OneD, Array<OneD, NekDouble> >            m_bfTrace;
         Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
         /// Isentropic coefficient, Ratio of specific heats (APE)
         NekDouble                                       m_gamma;
@@ -117,7 +117,7 @@ class APE : public UnsteadySystem
 
         const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs();
 
-        const Array<OneD, const Array<OneD, NekDouble> > &GetBasefield();
+        const Array<OneD, const Array<OneD, NekDouble> > &GetBfTrace();
 
         NekDouble GetGamma();
 
@@ -129,14 +129,25 @@ class APE : public UnsteadySystem
 
         NekDouble                 m_whiteNoiseBC_p;
 
-        void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
+        void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray,
+                                   NekDouble time);
 
-        void WallBC(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &Fwd, Array<OneD, Array<OneD, NekDouble> > &physarray);
+        void WallBC(int bcRegion,
+                    int cnt,
+                    Array<OneD, Array<OneD, NekDouble> > &Fwd,
+                    Array<OneD, Array<OneD, NekDouble> > &physarray);
 
-        void RiemannInvariantBC(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &Fwd, Array<OneD, Array<OneD, NekDouble> > &physarray);
+        void RiemannInvariantBC(int bcRegion,
+                                int cnt,
+                                Array<OneD, Array<OneD, NekDouble> > &Fwd,
+                                Array<OneD, Array<OneD, NekDouble> > &BfFwd,
+                                Array<OneD, Array<OneD, NekDouble> > &physarray);
 
-        void WhiteNoiseBC(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &Fwd, Array<OneD, Array<OneD, NekDouble> > &physarray);
-
+        void WhiteNoiseBC(int bcRegion,
+                        int cnt,
+                        Array<OneD, Array<OneD, NekDouble> > &Fwd,
+                        Array<OneD, Array<OneD, NekDouble> > &BfFwd,
+                        Array<OneD, Array<OneD, NekDouble> > &physarray);
 };
 }
 

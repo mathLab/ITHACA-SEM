@@ -150,10 +150,10 @@ void APE::v_InitObject()
     // Define the normal velocity fields
     if (m_fields[0]->GetTrace())
     {
-        m_traceBasefield = Array<OneD, Array<OneD, NekDouble> > (m_spacedim + 2);
-        for (int i = 0; i < m_spacedim + 2; i++)
+        m_bfTrace = Array<OneD, Array<OneD, NekDouble> > (m_spacedim + 2);
+        for (int i = 0; i < m_spacedim + 2; ++i)
         {
-            m_traceBasefield[i] = Array<OneD, NekDouble>(GetTraceNpoints());
+            m_bfTrace[i] = Array<OneD, NekDouble>(GetTraceNpoints(), 0.0);
         }
     }
 
@@ -171,9 +171,9 @@ void APE::v_InitObject()
     m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(
                           riemName);
     m_riemannSolver->SetVector("N",         &APE::GetNormals,   this);
-    m_riemannSolver->SetVector("basefield", &APE::GetBasefield, this);
+    m_riemannSolver->SetVector("basefield", &APE::GetBfTrace,   this);
     m_riemannSolver->SetAuxVec("vecLocs",   &APE::GetVecLocs,   this);
-    m_riemannSolver->SetParam("Gamma",     &APE::GetGamma,     this);
+    m_riemannSolver->SetParam("Gamma",      &APE::GetGamma,     this);
 
     // Set up advection operator
     string advName;
@@ -423,6 +423,7 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
         Fwd[i] = Array<OneD, NekDouble>(nTracePts);
         m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
     }
+    Array<OneD, Array<OneD, NekDouble> > bfFwd = GetBfTrace();
 
     // loop over Boundary Regions
     for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
@@ -439,11 +440,11 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
             }
             else if (boost::iequals(userDefStr, "WhiteNoise"))
             {
-                WhiteNoiseBC(n, cnt, Fwd, inarray);
+                WhiteNoiseBC(n, cnt, Fwd, bfFwd, inarray);
             }
             else if (boost::iequals(userDefStr, "RiemannInvariantBC"))
             {
-                RiemannInvariantBC(n, cnt, Fwd, inarray);
+                RiemannInvariantBC(n, cnt, Fwd, bfFwd, inarray);
             }
             else if (boost::iequals(userDefStr, "TimeDependent"))
             {
@@ -541,13 +542,13 @@ void APE::WallBC(int bcRegion, int cnt,
 void APE::RiemannInvariantBC(int bcRegion,
                              int cnt,
                              Array<OneD, Array<OneD, NekDouble> > &Fwd,
+                             Array<OneD, Array<OneD, NekDouble> > &BfFwd,
                              Array<OneD, Array<OneD, NekDouble> > &physarray)
 {
     int id1, id2, nBCEdgePts;
     int nVariables = physarray.num_elements();
 
     const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
-    Array<OneD, Array<OneD, NekDouble> > bf = GetBasefield();
 
     int eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
 
@@ -576,7 +577,7 @@ void APE::RiemannInvariantBC(int bcRegion,
         for (int i = 0; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(nBCEdgePts,
-                         &bf[2 + i][id2], 1,
+                         &BfFwd[2 + i][id2], 1,
                          &m_traceNormals[i][id2], 1,
                          &Vn0[0], 1,
                          &Vn0[0], 1);
@@ -584,7 +585,7 @@ void APE::RiemannInvariantBC(int bcRegion,
 
         for (int i = 0; i < nBCEdgePts; ++i)
         {
-            NekDouble c = sqrt(m_gamma * bf[0][id2 + i] / bf[1][id2 + i]);
+            NekDouble c = sqrt(m_gamma * BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
 
             NekDouble l0 = Vn0[i] + c;
             NekDouble l1 = Vn0[i] - c;
@@ -595,7 +596,7 @@ void APE::RiemannInvariantBC(int bcRegion,
             if (l0 > 0)
             {
                 // p/2 + u*c*rho0/2
-                h0 = Fwd[0][id2 + i] / 2 + Vn[i] * c * bf[1][id2 + i] / 2;
+                h0 = Fwd[0][id2 + i] / 2 + Vn[i] * c * BfFwd[1][id2 + i] / 2;
             }
             // incoming
             else
@@ -607,7 +608,7 @@ void APE::RiemannInvariantBC(int bcRegion,
             if (l1 > 0)
             {
                 // p/2 - u*c*rho0/2
-                h1 = Fwd[0][id2 + i] / 2 - Vn[i] * c * bf[1][id2 + i] / 2;
+                h1 = Fwd[0][id2 + i] / 2 - Vn[i] * c * BfFwd[1][id2 + i] / 2;
             }
             // incoming
             else
@@ -619,7 +620,7 @@ void APE::RiemannInvariantBC(int bcRegion,
             // p = h0 + h1
             // u = ( h0 - h1) / (c*rho0)
             Fwd[0][id2 + i] = h0 + h1;
-            NekDouble VnNew = (h0 - h1) / (c * bf[1][id2 + i]);
+            NekDouble VnNew = (h0 - h1) / (c * BfFwd[1][id2 + i]);
 
             // adjust velocity pert. according to new value
             for (int j = 0; j < m_spacedim; ++j)
@@ -649,13 +650,13 @@ void APE::RiemannInvariantBC(int bcRegion,
 void APE::WhiteNoiseBC(int bcRegion,
                        int cnt,
                        Array<OneD, Array<OneD, NekDouble> > &Fwd,
+                       Array<OneD, Array<OneD, NekDouble> > &BfFwd,
                        Array<OneD, Array<OneD, NekDouble> > &physarray)
 {
     int id1, id2, nBCEdgePts;
     int nVariables = physarray.num_elements();
 
     const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
-    Array<OneD, Array<OneD, NekDouble> > bf = GetBasefield();
 
     if (m_rng.count(bcRegion) == 0)
     {
@@ -708,7 +709,7 @@ void APE::WhiteNoiseBC(int bcRegion,
         for (int i = 0; i < nBCEdgePts; ++i)
         {
             NekDouble u = m_whiteNoiseBC_p /
-                          sqrt(m_gamma * bf[0][id2 + i] * bf[1][id2 + i]);
+                          sqrt(m_gamma * BfFwd[0][id2 + i] * BfFwd[1][id2 + i]);
             for (int j = 0; j < m_spacedim; ++j)
             {
                 tmp[1 + j][i] = -1.0 * u * m_traceNormals[j][id2 + i];
@@ -885,13 +886,13 @@ const Array<OneD, const Array<OneD, NekDouble> > &APE::GetVecLocs()
 /**
  * @brief Get the baseflow field.
  */
-const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefield()
+const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBfTrace()
 {
     for (int i = 0; i < m_spacedim + 2; i++)
     {
-        m_fields[0]->ExtractTracePhys(m_bf[i], m_traceBasefield[i]);
+        m_fields[0]->ExtractTracePhys(m_bf[i], m_bfTrace[i]);
     }
-    return m_traceBasefield;
+    return m_bfTrace;
 }
 
 

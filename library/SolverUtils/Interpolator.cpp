@@ -606,11 +606,19 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt,
     FindNeighbours(searchPt, neighbourPts, 4 * sigma, maxPts);
     int numPts = neighbourPts.size();
 
-    // handle the case that there was no point within 4 * sigma
+    // handle the cases that there was no or just one point within 4 * sigma
     if (numPts == 0)
     {
         m_neighInds[searchPt.idx] = Array<OneD, unsigned int>(0);
         m_weights[searchPt.idx]   = Array<OneD, float>(0);
+
+        return;
+    }
+    if (numPts == 1)
+    {
+        m_neighInds[searchPt.idx] =
+            Array<OneD, unsigned int>(1, neighbourPts.front().idx);
+        m_weights[searchPt.idx] = Array<OneD, float>(1, 1.0);
 
         return;
     }

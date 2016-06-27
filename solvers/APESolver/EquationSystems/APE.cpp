@@ -141,7 +141,10 @@ void APE::v_InitObject()
     Array<OneD, NekDouble> tmpC(GetNcoeffs());
     for (int i = 0; i < m_spacedim + 2; ++i)
     {
-        m_bfField->FwdTrans(m_bf[i], tmpC);
+        m_bfField->IProductWRTBase(m_bf[i], tmpC);
+        m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
+        m_bfField->LocalToGlobal(tmpC, tmpC);
+        m_bfField->GlobalToLocal(tmpC, tmpC);
         m_bfField->BwdTrans(tmpC, m_bf[i]);
     }
 
@@ -312,6 +315,14 @@ void APE::GetFluxVector(
  */
 bool APE::v_PostIntegrate(int step)
 {
+    if (m_cflsteps && !((step + 1) % m_cflsteps))
+    {
+        NekDouble cfl = GetCFLEstimate();
+        if (m_comm->GetRank() == 0)
+        {
+            cout << "CFL: " << cfl << endl;
+        }
+    }
 
     EvaluateFunction("S", m_sourceTerms, "Source", m_time);
     EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
@@ -322,17 +333,12 @@ bool APE::v_PostIntegrate(int step)
 
     for (int i = 0; i < m_spacedim + 2; ++i)
     {
-        m_bfField->FwdTrans(m_bf[i], tmpC);
+        // ensure the field is C0-continuous
+        m_bfField->IProductWRTBase(m_bf[i], tmpC);
+        m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
+        m_bfField->LocalToGlobal(tmpC, tmpC);
+        m_bfField->GlobalToLocal(tmpC, tmpC);
         m_bfField->BwdTrans(tmpC, m_bf[i]);
-    }
-
-        if (m_cflsteps && !((step + 1) % m_cflsteps))
-    {
-        NekDouble cfl = GetCFLEstimate();
-        if (m_comm->GetRank() == 0)
-        {
-            cout << "CFL: " << cfl << endl;
-        }
     }
 
     return UnsteadySystem::v_PostIntegrate(step);
@@ -601,7 +607,12 @@ void APE::v_ExtraFldOutput(
     for (int i = 0; i < m_spacedim + 2; i++)
     {
         Array<OneD, NekDouble> tmpC(GetNcoeffs());
-        m_bfField->FwdTrans(m_bf[i], tmpC);
+
+        // ensure the field is C0-continuous
+        m_bfField->IProductWRTBase(m_bf[i], tmpC);
+        m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
+        m_bfField->LocalToGlobal(tmpC, tmpC);
+        m_bfField->GlobalToLocal(tmpC, tmpC);
         m_bfField->BwdTrans(tmpC, m_bf[i]);
 
         variables.push_back(m_bfNames[i]);

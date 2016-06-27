@@ -199,7 +199,7 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
                 }
                 PtsPoint searchPt(i, tmp, 1E30);
 
-                CalcW_Gauss(searchPt, sigma);
+                CalcW_Gauss(searchPt, sigma, m_maxPts);
 
                 int progress = int(100 * i / nOutPts);
                 if (m_progressCallback && progress > lastProg)
@@ -570,13 +570,14 @@ void Interpolator::PrintStatistics()
  * The filter width should be half the FWHM (= 1.1774 sigma) and must be set in
  * the constructor of the Interpolator class.
  */
-void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
+void Interpolator::CalcW_Gauss(const PtsPoint &searchPt,
+                               const NekDouble sigma,
+                               const int maxPts)
 {
-    NekDouble ts2 = 2 * sigma * sigma;
-
+    NekDouble sigmaNew = sigma;
     // find nearest neighbours
     vector<PtsPoint> neighbourPts;
-    FindNeighbours(searchPt, neighbourPts, 4 * sigma);
+    FindNeighbours(searchPt, neighbourPts, 4 * sigmaNew);
     int numPts = neighbourPts.size();
 
     // handle the case that there was no point within 4 * sigma
@@ -588,6 +589,14 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
         return;
     }
 
+    // limit the number of points to maxPts and recompute sigma
+    if (numPts > maxPts)
+    {
+        neighbourPts.erase(neighbourPts.begin() + maxPts, neighbourPts.end());
+        numPts             = neighbourPts.size();
+        NekDouble sigmaNew = 0.25 * neighbourPts.back().dist;
+    }
+
     m_neighInds[searchPt.idx] = Array<OneD, unsigned int>(numPts);
     for (int i = 0; i < numPts; i++)
     {
@@ -597,6 +606,7 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt, const NekDouble sigma)
     m_weights[searchPt.idx] = Array<OneD, float>(numPts, 0.0);
 
     NekDouble wSum = 0.0;
+    NekDouble ts2 = 2 * sigmaNew * sigmaNew;
     for (int i = 0; i < numPts; ++i)
     {
         m_weights[searchPt.idx][i] =

@@ -84,6 +84,7 @@ public:
     * @param coordId   coordinate id along which the interpolation should be
     * performed
     * @param filtWidth filter width, required by some algorithms such as eGauss
+    * @param maxPts    limit number of considered points
     *
     * if method is not specified, the best algorithm is chosen autpomatically.
     *
@@ -95,8 +96,10 @@ public:
     */
     Interpolator(InterpMethod method = eNoMethod,
                  short int coordId   = -1,
-                 NekDouble filtWidth = 0.0)
-        : m_method(method), m_filtWidth(filtWidth), m_coordId(coordId){};
+                 NekDouble filtWidth = 0.0,
+                 int maxPts = 1000)
+        : m_method(method), m_filtWidth(filtWidth), m_maxPts(maxPts),
+          m_coordId(coordId){};
 
     /// Compute interpolation weights without doing any interpolation
     LIB_UTILITIES_EXPORT void CalcWeights(
@@ -202,6 +205,8 @@ private:
     Array<OneD, Array<OneD, unsigned int> > m_neighInds;
     /// Filter width used for some interpolation algorithms
     NekDouble m_filtWidth;
+    /// Max number of interpolation points
+    int m_maxPts;
     /// coordinate id along which the interpolation should be performed
     short int m_coordId;
 
@@ -209,7 +214,8 @@ private:
         m_progressCallback;
 
     LIB_UTILITIES_EXPORT void CalcW_Gauss(const PtsPoint &searchPt,
-                                          const NekDouble sigma);
+                                          const NekDouble sigma,
+                                          const int maxPts = 250);
 
     LIB_UTILITIES_EXPORT void CalcW_Linear(const PtsPoint &searchPt,
                                            int coordId);

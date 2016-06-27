@@ -118,6 +118,19 @@ namespace Nektar
             return vForceList;
         }
 
+        void Forcing::Smooth(const MultiRegions::ExpListSharedPtr &field)
+        {
+            Array<OneD, NekDouble> tmpC(m_Forcing[0].num_elements());
+            for (int i = 0; i < m_NumVariable; ++i)
+            {
+                field->IProductWRTBase(m_Forcing[i], tmpC);
+                field->MultiplyByElmtInvMass(tmpC, tmpC);
+                field->LocalToGlobal(tmpC, tmpC);
+                field->GlobalToLocal(tmpC, tmpC);
+                field->BwdTrans(tmpC, m_Forcing[i]);
+            }
+        }
+
         void Forcing::EvaluateTimeFunction(
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 std::string                                       pFieldName,

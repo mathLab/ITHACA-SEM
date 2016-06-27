@@ -90,6 +90,10 @@ namespace SolverUtils
                         const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                         const unsigned int& pNumForcingFields = 0);
 
+
+            SOLVER_UTILS_EXPORT void Smooth(
+                const MultiRegions::ExpListSharedPtr &field);
+
         protected:
             /// Session reader
             LibUtilities::SessionReaderSharedPtr m_session;

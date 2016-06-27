@@ -239,7 +239,6 @@ void ProcessVarOpti::Process()
          << "Worst jacobian:\t\t" << res->worstJac << endl
          << "N free nodes:\t\t" << res->n << endl
          << "N Dof:\t\t\t" << res->nDoF << endl
-         << "N Dirclet:\t\t" << res->nDirc << endl
          << "N color sets:\t\t" << nset << endl
          << "Avg set colors:\t\t" << p/nset << endl
          << "Min set:\t\t" << mn << endl

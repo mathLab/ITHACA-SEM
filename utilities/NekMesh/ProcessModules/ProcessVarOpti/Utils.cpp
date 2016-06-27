@@ -53,66 +53,80 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
     //this figures out the dirclet nodes and colors the others into paralell sets
     NodeSet boundaryNodes;
 
-    switch (m_mesh->m_spaceDim)
+    if(!m_mesh->m_hasCAD)
     {
-        case 2:
+        switch (m_mesh->m_spaceDim)
         {
-            EdgeSet::iterator it;
-            for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+            case 2:
             {
-                if((*it)->m_elLink.size() == 2)
+                EdgeSet::iterator it;
+                for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
                 {
-                    continue;
-                }
-
-                boundaryNodes.insert((*it)->m_n1);
-                boundaryNodes.insert((*it)->m_n2);
-                for(int i = 0; i < (*it)->m_edgeNodes.size(); i++)
-                {
-                    boundaryNodes.insert((*it)->m_edgeNodes[i]);
-                }
-            }
-            break;
-        }
-        case 3:
-        {
-            FaceSet::iterator it;
-            for(it = m_mesh->m_faceSet.begin(); it != m_mesh->m_faceSet.end(); it++)
-            {
-                if((*it)->m_elLink.size() == 2)
-                {
-                    continue;
-                }
-
-                vector<NodeSharedPtr> vs = (*it)->m_vertexList;
-                for(int j = 0; j < vs.size(); j++)
-                {
-                    boundaryNodes.insert(vs[j]);
-                }
-
-                vector<EdgeSharedPtr> es = (*it)->m_edgeList;
-                for(int j = 0; j < es.size(); j++)
-                {
-                    for(int k = 0; k < es[j]->m_edgeNodes.size(); k++)
+                    if((*it)->m_elLink.size() == 2)
                     {
-                        boundaryNodes.insert(es[j]->m_edgeNodes[k]);
+                        continue;
+                    }
+
+                    boundaryNodes.insert((*it)->m_n1);
+                    boundaryNodes.insert((*it)->m_n2);
+                    for(int i = 0; i < (*it)->m_edgeNodes.size(); i++)
+                    {
+                        boundaryNodes.insert((*it)->m_edgeNodes[i]);
                     }
                 }
-
-                for(int i = 0; i < (*it)->m_faceNodes.size(); i++)
-                {
-                    boundaryNodes.insert((*it)->m_faceNodes[i]);
-                }
+                break;
             }
-            break;
+            case 3:
+            {
+                FaceSet::iterator it;
+                for(it = m_mesh->m_faceSet.begin(); it != m_mesh->m_faceSet.end(); it++)
+                {
+                    if((*it)->m_elLink.size() == 2)
+                    {
+                        continue;
+                    }
+
+                    vector<NodeSharedPtr> vs = (*it)->m_vertexList;
+                    for(int j = 0; j < vs.size(); j++)
+                    {
+                        boundaryNodes.insert(vs[j]);
+                    }
+
+                    vector<EdgeSharedPtr> es = (*it)->m_edgeList;
+                    for(int j = 0; j < es.size(); j++)
+                    {
+                        for(int k = 0; k < es[j]->m_edgeNodes.size(); k++)
+                        {
+                            boundaryNodes.insert(es[j]->m_edgeNodes[k]);
+                        }
+                    }
+
+                    for(int i = 0; i < (*it)->m_faceNodes.size(); i++)
+                    {
+                        boundaryNodes.insert((*it)->m_faceNodes[i]);
+                    }
+                }
+                break;
+            }
+            default:
+                ASSERTL0(false,"space dim issue");
         }
-        default:
-            ASSERTL0(false,"space dim issue");
+    }
+    else
+    {
+        //if we have CAD we are 3D and therefore the only fixed nodes exist on vertices only
+        NodeSet::iterator nit;
+        for (nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end(); ++nit)
+        {
+            if((*nit)->GetNumCadCurve() > 1)
+            {
+                boundaryNodes.insert((*nit));
+            }
+        }
     }
 
-    res->nDirc = boundaryNodes.size();
-
     vector<NodeSharedPtr> remain;
+    res->nDoF = 0;
 
     NodeSet::iterator nit;
     for (nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end(); ++nit)
@@ -121,6 +135,18 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
         if(nit2 == boundaryNodes.end())
         {
             remain.push_back(*nit);
+            if((*nit)->GetNumCadCurve() == 1)
+            {
+                res->nDoF++;
+            }
+            else if((*nit)->GetNumCADSurf() == 1)
+            {
+                res->nDoF += 2;
+            }
+            else
+            {
+                res->nDoF += 3;
+            }
         }
     }
 
@@ -134,6 +160,18 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
             if(nit == boundaryNodes.end())
             {
                 remain.push_back(n[j]);
+                if(n[j]->GetNumCadCurve() == 1)
+                {
+                    res->nDoF++;
+                }
+                else if(n[j]->GetNumCADSurf() == 1)
+                {
+                    res->nDoF += 2;
+                }
+                else
+                {
+                    res->nDoF += 3;
+                }
             }
         }
     }
@@ -147,6 +185,14 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
             if(nit == boundaryNodes.end())
             {
                 remain.push_back((*fit)->m_faceNodes[j]);
+                if((*fit)->m_faceNodes[j]->GetNumCADSurf() == 1)
+                {
+                    res->nDoF += 2;
+                }
+                else
+                {
+                    res->nDoF += 3;
+                }
             }
         }
     }
@@ -161,12 +207,12 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
             if(nit == boundaryNodes.end())
             {
                 remain.push_back(ns[j]);
+                res->nDoF += 3;
             }
         }
     }
 
     res->n = remain.size();
-    res->nDoF = res->n * m_mesh->m_spaceDim;
 
     vector<vector<NodeSharedPtr> > ret;
 
@@ -217,7 +263,6 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
 
 void ProcessVarOpti::GetElementMap()
 {
-    //build ideal maps and structs;
     for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];

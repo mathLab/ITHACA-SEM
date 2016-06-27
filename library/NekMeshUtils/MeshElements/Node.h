@@ -321,34 +321,28 @@ public:
             std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> >(su, uv);
     }
 
-    string GetCADString()
+    vector<string> GetCADString()
     {
-        int made = 0;
-        stringstream ss;
-        ss << std::scientific << std::setprecision(8);
+        vector<string> ret;
         std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator c;
         for (c = CADCurveList.begin(); c != CADCurveList.end(); c++)
         {
-            if(made > 0)
-            {
-                ss << " :";
-            }
-            ss << " C " << c->first << " " << c->second.second;
-            made++;
+            stringstream ss;
+            ss << std::scientific << std::setprecision(8);
+            ss << "C " << c->first << " " << c->second.second << " " << 0.0;
+            ret.push_back(ss.str());
         }
         std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >::
             iterator s;
         for (s = CADSurfList.begin(); s != CADSurfList.end(); s++)
         {
-            if(made > 0)
-            {
-                ss << " :";
-            }
-            ss << " S " << s->first << " " << s->second.second[0] <<
+            stringstream ss;
+            ss << std::scientific << std::setprecision(8);
+            ss << "S " << s->first << " " << s->second.second[0] <<
                   " " << s->second.second[1];
-            made++;
+            ret.push_back(ss.str());
         }
-        return ss.str();
+        return ret;
     }
 
 #endif

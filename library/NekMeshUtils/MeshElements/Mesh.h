@@ -40,6 +40,10 @@
 #include <NekMeshUtils/MeshElements/Element.h>
 #include <NekMeshUtils/MeshElements/Composite.h>
 
+#ifdef NEKTAR_USE_MESHGEN
+#include <NekMeshUtils/CADSystem/CADSystem.h>
+#endif
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -127,6 +131,9 @@ public:
     bool                            m_hasCAD;
     /// CAD file ID
     string                          m_CADId;
+#ifdef NEKTAR_USE_MESHGEN
+    CADSystemSharedPtr              m_cad;
+#endif
 
     /// Returns the total number of elements in the mesh with
     /// dimension expDim.

@@ -1010,8 +1010,17 @@ void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
                 TiXmlElement *v = new TiXmlElement("V");
                 v->SetAttribute("ID", vertcnt++);
                 v->SetAttribute("VERTID", (*it)->m_id);
-                TiXmlText *t = new TiXmlText((*it)->GetCADString());
-                v->LinkEndChild(t);
+                vector<string> str = (*it)->GetCADString();
+                for(int i = 0; i < str.size(); i++)
+                {
+                    TiXmlText *t = new TiXmlText(str[i]);
+                    v->LinkEndChild(t);
+                    if(i != str.size() - 1)
+                    {
+                        TiXmlText *t = new TiXmlText(":");
+                        v->LinkEndChild(t);
+                    }
+                }
                 cad->LinkEndChild(v);
             }
         }
@@ -1035,10 +1044,18 @@ void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
                     TiXmlElement *v = new TiXmlElement("E");
                     v->SetAttribute("ID", edgecnt++);
                     v->SetAttribute("EDGEID", (*it)->m_id);
-                    v->SetAttribute("NUMNODE", (*it)->m_edgeNodes.size());
-                    v->SetAttribute("NODE", i+1);
-                    TiXmlText *t = new TiXmlText((*it)->m_edgeNodes[i]->GetCADString());
-                    v->LinkEndChild(t);
+                    v->SetAttribute("NODE", i);
+                    vector<string> str = (*it)->m_edgeNodes[i]->GetCADString();
+                    for(int i = 0; i < str.size(); i++)
+                    {
+                        TiXmlText *t = new TiXmlText(str[i]);
+                        v->LinkEndChild(t);
+                        if(i != str.size() - 1)
+                        {
+                            TiXmlText *t = new TiXmlText(":");
+                            v->LinkEndChild(t);
+                        }
+                    }
                     cad->LinkEndChild(v);
                 }
             }
@@ -1062,10 +1079,18 @@ void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
                     TiXmlElement *v = new TiXmlElement("F");
                     v->SetAttribute("ID", facecnt++);
                     v->SetAttribute("FACEID", (*it)->m_id);
-                    v->SetAttribute("NUMNODE", (*it)->m_faceNodes.size());
-                    v->SetAttribute("NODE", i+1);
-                    TiXmlText *t = new TiXmlText((*it)->m_faceNodes[i]->GetCADString());
-                    v->LinkEndChild(t);
+                    v->SetAttribute("NODE", i);
+                    vector<string> str = (*it)->m_faceNodes[i]->GetCADString();
+                    for(int i = 0; i < str.size(); i++)
+                    {
+                        TiXmlText *t = new TiXmlText(str[i]);
+                        v->LinkEndChild(t);
+                        if(i != str.size() - 1)
+                        {
+                            TiXmlText *t = new TiXmlText(":");
+                            v->LinkEndChild(t);
+                        }
+                    }
                     cad->LinkEndChild(v);
                 }
             }

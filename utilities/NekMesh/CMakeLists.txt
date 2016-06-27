@@ -21,7 +21,9 @@ SET(NekMeshHeaders
     ProcessModules/ProcessSpherigon.h
     ProcessModules/ProcessTetSplit.h
     ProcessModules/ProcessOptiExtract.h
-    ProcessModules/ProcessVarOpti.h
+    ProcessModules/ProcessVarOpti/ProcessVarOpti.h
+    ProcessModules/ProcessVarOpti/NodeOpti.h
+    ProcessModules/ProcessVarOpti/NodeOptiJob.h
 )
 
 SET(NekMeshSources
@@ -48,7 +50,9 @@ SET(NekMeshSources
     ProcessModules/ProcessSpherigon.cpp
     ProcessModules/ProcessTetSplit.cpp
     ProcessModules/ProcessOptiExtract.cpp
-    ProcessModules/ProcessVarOpti.cpp
+    ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
+    ProcessModules/ProcessVarOpti/Utils.cpp
+    ProcessModules/ProcessVarOpti/NodeOpti.cpp
 )
 
 IF (NEKTAR_USE_CCM)

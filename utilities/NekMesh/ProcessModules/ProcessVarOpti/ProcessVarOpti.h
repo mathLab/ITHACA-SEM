@@ -36,9 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSVAROPTI
 #define UTILITIES_NEKMESH_PROCESSVAROPTI
 
-#include "../Module.h"
-
-#include <LibUtilities/BasicUtils/Thread.h>
+#include "../../Module.h"
 
 namespace Nektar
 {
@@ -72,6 +70,20 @@ struct ElData
     vector<Array<OneD, NekDouble> > maps;
 };
 typedef boost::shared_ptr<ElData> ElDataSharedPtr;
+
+struct DerivUtil
+{
+    NekMatrix<NekDouble> VdmD[3];
+    NekVector<NekDouble> quadW;
+};
+typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
+
+struct PtsHelper
+{
+    int ptsHigh;
+    int ptsLow;
+};
+typedef boost::shared_ptr<PtsHelper> PtsHelperSharedPtr;
 
 enum optimiser
 {
@@ -126,49 +138,11 @@ private:
 
     NodeElMap nodeElMap;
     vector<ElDataSharedPtr> dataSet;
+
     ResidualSharedPtr res;
-
-    template<int DIM>
-    class NodeOptiJob;
-
-    class NodeOpti
-    {
-    public:
-        NodeOpti(NodeSharedPtr n, vector<ElDataSharedPtr> e,
-                 ResidualSharedPtr r)
-                : node(n), data(e), res(r)
-        {
-        }
-
-        ~NodeOpti(){};
-
-        template<int DIM> void Optimise();
-        template<int DIM> NodeOptiJob<DIM> *GetJob()
-        {
-            return new NodeOptiJob<DIM>(*this);
-        }
-    private:
-        template<int DIM> Array<OneD, NekDouble> GetGrad();
-        template<int DIM> NekDouble GetFunctional();
-        NodeSharedPtr node;
-        vector<ElDataSharedPtr> data;
-        ResidualSharedPtr res;
-    };
-
-    template<int DIM>
-    class NodeOptiJob : public Thread::ThreadJob
-    {
-    public:
-        NodeOptiJob(NodeOpti no) : node(no) {}
-
-        void Run()
-        {
-            node.Optimise<DIM>();
-        }
-    private:
-        NodeOpti node;
-    };
-
+    DerivUtilSharedPtr derivUtil;
+    PtsHelperSharedPtr ptsHelp;
+    optimiser opti;
 };
 
 }

@@ -228,7 +228,7 @@ private:
                                               int coordId);
 
     LIB_UTILITIES_EXPORT void FindNeighbours(const PtsPoint &searchPt,
-                                             vector<PtsPoint> &neighbourPts,
+                                             std::vector<PtsPoint> &neighbourPts,
                                              const NekDouble dist,
                                              const unsigned int maxPts = 1);
 

@@ -42,6 +42,10 @@
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/HexExp.h>
 
+#include <MultiRegions/ContField1D.h>
+#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField3D.h>
+
 using namespace std;
 
 namespace Nektar
@@ -77,24 +81,68 @@ void APE::v_InitObject()
 
     m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
 
-    // Define Baseflow fields
-    m_basefield = Array<OneD, Array<OneD, NekDouble> >(m_spacedim + 2);
-    m_basefield_names.push_back("p0");
-    m_basefield_names.push_back("rho0");
-    m_basefield_names.push_back("u0");
-    m_basefield_names.push_back("v0");
-    m_basefield_names.push_back("w0");
+    // Define Baseflow and source term fields
+    switch (m_spacedim)
+    {
+        case 1:
+        {
+            for (int i = 0; i < m_spacedim + 2; ++i)
+            {
+                m_bfField = MemoryManager<MultiRegions::ContField1D>::
+                    AllocateSharedPtr(m_session, m_graph);
+            }
+            break;
+        }
+
+        case 2:
+        {
+            for (int i = 0; i < m_spacedim + 2; ++i)
+            {
+                m_bfField = MemoryManager<MultiRegions::ContField2D>::
+                    AllocateSharedPtr(m_session, m_graph);
+            }
+            break;
+        }
+
+        case 3:
+        {
+            for (int i = 0; i < m_spacedim + 2; ++i)
+            {
+                m_bfField = MemoryManager < MultiRegions::ContField3D >::
+                    AllocateSharedPtr(m_session, m_graph);
+            }
+            break;
+        }
+
+        default:
+        {
+
+            ASSERTL0(false, "Expansion dimension not recognised");
+            break;
+        }
+    }
+
+    m_bfNames.push_back("p0");
+    m_bfNames.push_back("rho0");
+    m_bfNames.push_back("u0");
+    m_bfNames.push_back("v0");
+    m_bfNames.push_back("w0");
 
     // Resize the advection velocities vector to dimension of the problem
-    m_basefield_names.resize(m_spacedim + 2);
+    m_bfNames.resize(m_spacedim + 2);
 
     // Initialize basefield
-    EvaluateFunction(m_basefield_names, m_basefield, "Baseflow", m_time);
+    m_bf = Array<OneD, Array<OneD, NekDouble> >(m_spacedim + 2);
+    for (int i = 0; i < m_bf.num_elements(); ++i)
+    {
+        m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
+    }
+    EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
     Array<OneD, NekDouble> tmpC(GetNcoeffs());
     for (int i = 0; i < m_spacedim + 2; ++i)
     {
-        m_fields[0]->FwdTrans(m_basefield[i], tmpC);
-        m_fields[0]->BwdTrans(tmpC, m_basefield[i]);
+        m_bfField->FwdTrans(m_bf[i], tmpC);
+        m_bfField->BwdTrans(tmpC, m_bf[i]);
     }
 
     //  Initialize the sourceterm
@@ -219,11 +267,11 @@ void APE::GetFluxVector(
         Vmath::Zero(nq, flux[0][j], 1);
 
         // construct \gamma p_0 u'_j term
-        Vmath::Smul(nq, m_gamma, m_basefield[0], 1, tmp1, 1);
+        Vmath::Smul(nq, m_gamma, m_bf[0], 1, tmp1, 1);
         Vmath::Vmul(nq, tmp1, 1, physfield[j+1], 1, tmp1, 1);
 
         // construct p' \bar{u}_j term
-        Vmath::Vmul(nq, physfield[0], 1, m_basefield[j+2], 1, tmp2, 1);
+        Vmath::Vmul(nq, physfield[0], 1, m_bf[j+2], 1, tmp2, 1);
 
         // add both terms
         Vmath::Vadd(nq, tmp1, 1, tmp2, 1, flux[0][j], 1);
@@ -242,13 +290,13 @@ void APE::GetFluxVector(
             if (i - 1 == j)
             {
                 // contruct p'/ \bar{rho} term
-                Vmath::Vdiv(nq, physfield[0], 1, m_basefield[1], 1, flux[i][j], 1);
+                Vmath::Vdiv(nq, physfield[0], 1, m_bf[1], 1, flux[i][j], 1);
 
                 // construct \bar{u}_k u'_k term
                 Vmath::Zero(nq, tmp1, 1);
                 for (int k = 0; k < m_spacedim; ++k)
                 {
-                    Vmath::Vvtvp(nq, physfield[k + 1], 1, m_basefield[k + 2], 1, tmp1, 1, tmp1, 1);
+                    Vmath::Vvtvp(nq, physfield[k + 1], 1, m_bf[k + 2 ], 1, tmp1, 1, tmp1, 1);
                 }
 
                 // add terms
@@ -265,18 +313,17 @@ void APE::GetFluxVector(
 bool APE::v_PostIntegrate(int step)
 {
 
-    EvaluateFunction(m_basefield_names, m_basefield, "Baseflow", m_time);
     EvaluateFunction("S", m_sourceTerms, "Source", m_time);
+    EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
 
     Array<OneD, NekDouble> tmpC(GetNcoeffs());
-
     m_fields[0]->FwdTrans(m_sourceTerms, tmpC);
     m_fields[0]->BwdTrans(tmpC, m_sourceTerms);
 
     for (int i = 0; i < m_spacedim + 2; ++i)
     {
-        m_fields[0]->FwdTrans(m_basefield[i], tmpC);
-        m_fields[0]->BwdTrans(tmpC, m_basefield[i]);
+        m_bfField->FwdTrans(m_bf[i], tmpC);
+        m_bfField->BwdTrans(tmpC, m_bf[i]);
     }
 
         if (m_cflsteps && !((step + 1) % m_cflsteps))
@@ -492,8 +539,8 @@ void APE::GetStdVelocity(Array<OneD, NekDouble> &stdV)
             {
                 // The total advection velocity is v+c, so we need to scale c by
                 // adding it before we do the transformation.
-                NekDouble c = sqrt(m_gamma * m_basefield[0][cnt+j] / m_basefield[1][cnt+j]);
-                velocity[i][j] = m_basefield[i+2][cnt+j] + c;
+                NekDouble c = sqrt(m_gamma * m_bf[0][cnt+j] / m_bf[1][cnt+j]);
+                velocity[i][j] = m_bf[i+2][cnt+j] + c;
             }
         }
 
@@ -553,11 +600,12 @@ void APE::v_ExtraFldOutput(
 
     for (int i = 0; i < m_spacedim + 2; i++)
     {
-        variables.push_back(m_basefield_names[i]);
+        Array<OneD, NekDouble> tmpC(GetNcoeffs());
+        m_bfField->FwdTrans(m_bf[i], tmpC);
+        m_bfField->BwdTrans(tmpC, m_bf[i]);
 
-        Array<OneD, NekDouble> tmpFwd(nCoeffs);
-        m_fields[0]->FwdTrans(m_basefield[i], tmpFwd);
-        fieldcoeffs.push_back(tmpFwd);
+        variables.push_back(m_bfNames[i]);
+        fieldcoeffs.push_back(tmpC);
     }
 
     variables.push_back("S");
@@ -592,7 +640,7 @@ const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefield()
 {
     for (int i = 0; i < m_spacedim + 2; i++)
     {
-        m_fields[0]->ExtractTracePhys(m_basefield[i], m_traceBasefield[i]);
+        m_fields[0]->ExtractTracePhys(m_bf[i], m_traceBasefield[i]);
     }
     return m_traceBasefield;
 }

@@ -77,9 +77,10 @@ class APE : public UnsteadySystem
         Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
         /// Isentropic coefficient, Ratio of specific heats (APE)
         NekDouble                                       m_gamma;
-        Array<OneD, Array<OneD, NekDouble> >            m_basefield;
         Array<OneD, NekDouble>                          m_sourceTerms;
-        std::vector<std::string>                        m_basefield_names;
+        Array<OneD, Array<OneD, NekDouble> >            m_bf;
+        MultiRegions::ExpListSharedPtr                  m_bfField;
+        std::vector<std::string>                        m_bfNames;
         /// dump cfl estimate
         int                                             m_cflsteps;
 

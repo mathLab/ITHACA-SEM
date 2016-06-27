@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v4.4.0
+------
+**IncNavierStokesSolver:**
+- Add ability to simulate additional scalar fields (!624)
+
 v4.3.3
 ------
 **Library**:

@@ -39,6 +39,8 @@
 #include "../../Module.h"
 #include "ProcessVarOpti.h"
 
+#include <NekMeshUtils/CADSystem/CADCurve.h>
+
 namespace Nektar
 {
 namespace Utilities
@@ -75,13 +77,13 @@ protected:
     optimiser opti;
 };
 
-/*class NodeOpti1D3D : public NodeOpti //1D optimsation in 3D space
+class NodeOpti1D3D : public NodeOpti //1D optimsation in 3D space
 {
 public:
     NodeOpti1D3D(NodeSharedPtr n, vector<ElDataSharedPtr> e,
                  ResidualSharedPtr r, DerivUtilSharedPtr d,
-                 PtsHelperSharedPtr p, optimiser o)
-                 : node(n), data(e), res(r), derivUtil(d), ptsHelp(p), opti(o)
+                 PtsHelperSharedPtr p, optimiser o, CADCurveSharedPtr c)
+                 : NodeOpti(n,e,r,d,p,o), curve(c)
     {
     }
 
@@ -90,8 +92,8 @@ public:
     void Optimise();
 
 private:
-    NekDouble GetFunctional();
     Array<OneD, NekDouble> GetGrad();
+    CADCurveSharedPtr curve;
 };
 
 class NodeOpti2D3D : public NodeOpti //1D optimsation in 3D space
@@ -99,8 +101,8 @@ class NodeOpti2D3D : public NodeOpti //1D optimsation in 3D space
 public:
     NodeOpti2D3D(NodeSharedPtr n, vector<ElDataSharedPtr> e,
                  ResidualSharedPtr r, DerivUtilSharedPtr d,
-                 PtsHelperSharedPtr p, optimiser o)
-                 : node(n), data(e), res(r), derivUtil(d), ptsHelp(p), opti(o)
+                 PtsHelperSharedPtr p, optimiser o, CADSurfSharedPtr s)
+                 : NodeOpti(n,e,r,d,p,o), surf(s)
     {
     }
 
@@ -109,9 +111,9 @@ public:
     void Optimise();
 
 private:
-    NekDouble GetFunctional();
     Array<OneD, NekDouble> GetGrad();
-};*/
+    CADSurfSharedPtr surf;
+};
 
 class NodeOpti3D3D : public NodeOpti //1D optimsation in 3D space
 {

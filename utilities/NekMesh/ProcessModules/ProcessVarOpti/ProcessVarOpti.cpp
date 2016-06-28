@@ -217,7 +217,31 @@ void ProcessVarOpti::Process()
         {
             NodeElMap::iterator it = nodeElMap.find(freenodes[i][j]->m_id);
             ASSERTL0(it != nodeElMap.end(), "could not find");
-            ns.push_back(NodeOpti(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti));
+            if(freenodes[i][j]->GetNumCadCurve() ==  0 && freenodes[i][j]->GetNumCadCurve() == 0)
+            {
+                if(m_mesh->m_spaceDim == 3)
+                {
+                    ns.push_back(NodeOpti3D3D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti));
+                }
+                else
+                {
+                    ns.push_back(NodeOpti2D2D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti));
+                }
+            }
+            else if(freenodes[i][j]->GetNumCadCurve() == 1)
+            {
+                vector<pair<int, CADCurveSharedPtr> > cs = freenodes[i][j]->GetCADCurves();
+                ns.push_back(NodeOpti1D3D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti,cs[0].second));
+            }
+            else if(freenodes[i][j]->GetNumCADSurf() == 1)
+            {
+                vector<pair<int, CADSurfSharedPtr> > ss = freenodes[i][j]->GetCADSurfs();
+                ns.push_back(NodeOpti2D3D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti,ss[0].second));
+            }
+            else
+            {
+                ASSERTL0(false,"unsure");
+            }
         }
         optiNodes.push_back(ns);
     }

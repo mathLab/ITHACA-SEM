@@ -321,6 +321,16 @@ public:
             std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> >(su, uv);
     }
 
+    void MoveCurve(Array<OneD, NekDouble> l, int s, NekDouble t)
+    {
+        m_x                 = l[0];
+        m_y                 = l[1];
+        m_z                 = l[2];
+        CADCurveSharedPtr cu = CADCurveList[s].first;
+        CADCurveList[s] =
+            std::pair<CADCurveSharedPtr, NekDouble >(cu, t);
+    }
+
     vector<string> GetCADString()
     {
         vector<string> ret;

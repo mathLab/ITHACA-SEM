@@ -104,12 +104,6 @@ struct Residual
 
 typedef boost::shared_ptr<Residual> ResidualSharedPtr;
 
-/**
- * @brief This processing module calculates the Jacobian of elements
- * using %SpatialDomains::GeomFactors and the %Element::GetGeom
- * method. For now it simply prints a list of elements which have
- * negative Jacobian.
- */
 class ProcessVarOpti : public ProcessModule
 {
 public:

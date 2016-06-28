@@ -330,7 +330,7 @@ Array<OneD, NekDouble> CADSurf::D2(Array<OneD, NekDouble> uv)
 
 void CADSurf::Test(Array<OneD, NekDouble> uv)
 {
-    /*stringstream error;
+    stringstream error;
 
     error << "Point not within parameter plane: ";
 
@@ -374,8 +374,10 @@ void CADSurf::Test(Array<OneD, NekDouble> uv)
     }
 
     error << " On Surface: " << GetId();
-
-    ASSERTL0(passed, error.str());*/
+    if (!passed)
+    {
+        cout << "Warning: " << error.str() << endl;
+    }
 }
 }
 }

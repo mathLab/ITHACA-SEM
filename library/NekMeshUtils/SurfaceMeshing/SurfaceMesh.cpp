@@ -75,9 +75,6 @@ void SurfaceMesh::Mesh()
     // linear mesh all surfaces
     for (int i = 1; i <= m_cad->GetNumSurf(); i++)
     {
-        //if(i == 1200 || i == 2206)
-        //    continue;
-
         if (m_mesh->m_verbose)
         {
             LibUtilities::PrintProgressbar(

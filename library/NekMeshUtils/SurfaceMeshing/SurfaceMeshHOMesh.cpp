@@ -623,8 +623,11 @@ void SurfaceMesh::HOSurf()
             Array<OneD, NekDouble> uv(2);
             s->ProjectTo(xyz,uv);
             uvi[ctr++] = uv;
-        }/*
+        }
 
+        /// TODO: face nodes should be optmised but will probably be done via
+        /// variational optimisation.
+        /*
         OptiFaceSharedPtr opti = MemoryManager<OptiFace>::
                                     AllocateSharedPtr(uvi, z, springs, s);
 

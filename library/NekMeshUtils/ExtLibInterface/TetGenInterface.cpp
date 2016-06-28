@@ -64,11 +64,6 @@ void TetGenInterface::InitialMesh(map<int, NodeSharedPtr>  tgidton,
     {
         Array<OneD, NekDouble> loc = it->second->GetLoc();
 
-        if(it->first == 2950)
-        {
-            cout << loc[0] << " " << loc[1] << " " << loc[2] << endl;
-        }
-
         surface.pointlist[it->first * 3 + 0] = loc[0];
         surface.pointlist[it->first * 3 + 1] = loc[1];
         surface.pointlist[it->first * 3 + 2] = loc[2];
@@ -94,7 +89,7 @@ void TetGenInterface::InitialMesh(map<int, NodeSharedPtr>  tgidton,
         surface.facetmarkerlist[i] = 0;
     }
 
-    tetrahedralize("pYz", &surface, &output);
+    tetrahedralize("pYzqQ", &surface, &output);
 }
 
 void TetGenInterface::GetNewPoints(int num,

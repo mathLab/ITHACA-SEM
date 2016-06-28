@@ -127,8 +127,6 @@ void InputCAD::Process()
 
     vector<int> bs = m_cad->GetBoundarySurfs();
 
-    cout << bs.size() << endl;
-
     vector<unsigned int> symsurfs;
     vector<unsigned int> blsurfs, blsurfst;
     if (m_makeBL)
@@ -196,15 +194,11 @@ void InputCAD::Process()
         file.open(pSession->GetSolverInfo("SourcePoints").c_str());
         string line;
 
-        while ( getline (file,line) )
+        while (getline(file, line))
         {
-            vector<NekDouble> point;
+            vector<NekDouble> point(3);
             stringstream s(line);
-            NekDouble x,y,z;
-            s >> x >> y >> z;
-            point.push_back(x);
-            point.push_back(y);
-            point.push_back(z);
+            s >> point[0] >> point[1] >> point[2];
             points.push_back(point);
         }
         NekDouble sp;
@@ -271,8 +265,6 @@ void InputCAD::Process()
 
     m_surfacemesh->Report();
 
-    //m_mesh->m_nummode = 2;
-
     EdgeSet::iterator eit;
     int count = 0;
     for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
@@ -282,7 +274,13 @@ void InputCAD::Process()
             count++;
         }
     }
-    cout << "not linked " << count << endl;
+
+    if (count > 0)
+    {
+        cerr << "Error: mesh contains unconnected edges and is not valid"
+             << endl;
+        abort();
+    }
 
     map<int, FaceSharedPtr> surftopriface;
     // map of surface element id to opposite prism

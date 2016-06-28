@@ -187,11 +187,9 @@ INCLUDE (ThirdPartyPETSc)
 INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
-# INCLUDE (ThirdPartyTriangle)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyANN)
 INCLUDE (ThirdPartyCCM)
-
 
 INCLUDE (Doxygen)
 

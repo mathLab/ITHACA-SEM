@@ -49,7 +49,7 @@ IF (NEKTAR_USE_PETSC)
             # we use a separate ptscotch here because the one compiled if
             # NEKTAR_USE_SCOTCH=true is version 6.0.0 which is incompatible
             # with MUMPS
-            SET(PETSC_MUMPS --download-scalapack --download-ptscotch --download-mumps)
+            SET(PETSC_MUMPS --download-fblaslapack --download-scalapack --download-ptscotch --download-mumps)
         ELSE()
             MESSAGE(WARNING "No Fortran support. Building PETSc without MUMPS support")
             SET(PETSC_Fortran_COMPILER "0")

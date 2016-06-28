@@ -42,6 +42,19 @@ IF (NEKTAR_USE_PETSC)
             SET(PETSC_NO_MPI "--with-mpi=0")
         ENDIF (NEKTAR_USE_MPI)
 
+        IF(CMAKE_Fortran_COMPILER)
+            IF(NEKTAR_USE_MPI AND NOT MPI_Fortran_COMPILER)
+                MESSAGE(ERROR "MPI_Fortran_COMPILER not set")
+            ENDIF()
+            # we use a separate ptscotch here because the one compiled if
+            # NEKTAR_USE_SCOTCH=true is version 6.0.0 which is incompatible
+            # with MUMPS
+            SET(PETSC_MUMPS --download-scalapack --download-ptscotch --download-mumps)
+        ELSE()
+            MESSAGE(WARNING "No Fortran support. Building PETSc without MUMPS support")
+            SET(PETSC_Fortran_COMPILER "0")
+        ENDIF()
+
         EXTERNALPROJECT_ADD(
             petsc-3.7.2
             PREFIX ${TPSRC}
@@ -68,9 +81,7 @@ IF (NEKTAR_USE_PETSC)
                 --with-ssl=0
                 --prefix=${TPDIST}
                 --with-petsc-arch=c-opt
-                --download-scalapack
-                --download-ptscotch
-                --download-mumps
+                ${PETSC_MUMPS}
                 ${PETSC_NO_MPI}
             BUILD_COMMAND MAKEFLAGS= make)
 

@@ -48,7 +48,6 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/Communication/CommSerial.h>
-#include "../../FieldConvert/Field.hpp"
 
 #include "InputCAD.h"
 

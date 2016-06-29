@@ -99,6 +99,7 @@ protected:
     MultiRegions::ExpListSharedPtr m_evalField;
     Array<OneD, MultiRegions::ExpListSharedPtr> m_recvFields;
 
+    int m_spacedim;
     int m_nPoints;
     double *m_points;
     double *m_coords;
@@ -111,6 +112,12 @@ protected:
 
 private:
     void ReadConfig(LibUtilities::SessionReaderSharedPtr session);
+
+    void SetupRecvFields();
+
+    void AnnounceMesh();
+
+    void AnnounceRecvPoints();
 
     template <typename T>
     void AddElementsToMesh(T geom,

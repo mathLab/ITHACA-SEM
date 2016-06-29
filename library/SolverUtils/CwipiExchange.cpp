@@ -60,18 +60,95 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     m_config["REMOTENAME"]  = "precise";
     m_config["OVERSAMPLE"]  = "0";
     m_config["FILTERWIDTH"] = "-1";
-
     ReadConfig(m_evalField->GetSession());
-
-    int oversamp = boost::lexical_cast<int>(m_config["OVERSAMPLE"]);
 
     cwipi_dump_application_properties();
 
+    m_spacedim = m_evalField->GetGraph()->GetSpaceDimension();
+
     //  Init Coupling
     cwipi_solver_type_t solver_type = CWIPI_SOLVER_CELL_VERTEX;
+    cwipi_create_coupling(m_couplingName.c_str(),
+                          CWIPI_COUPLING_PARALLEL_WITH_PARTITIONING,
+                          m_config["REMOTENAME"].c_str(),
+                          m_spacedim,
+                          geomTol,
+                          CWIPI_STATIC_MESH,
+                          solver_type,
+                          outputFreq,
+                          "Ensight Gold",
+                          "text");
 
-    SpatialDomains::MeshGraphSharedPtr graph = m_evalField->GetGraph();
-    int spacedim                             = graph->GetSpaceDimension();
+    SetupRecvFields();
+
+    AnnounceMesh();
+
+    AnnounceRecvPoints();
+}
+
+CwipiCoupling::~CwipiCoupling()
+{
+    free(m_coords);
+    free(m_points);
+    free(m_connec);
+    free(m_connecIdx);
+}
+
+void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
+{
+    ASSERTL0(session->DefinesElement("Nektar/Coupling"),
+             "No Coupling config found");
+
+    TiXmlElement *vCoupling = session->GetElement("Nektar/Coupling");
+    ASSERTL0(vCoupling, "Invalid Coupling config");
+
+    // TODO: set m_name here instead of in the constructor
+    string nName;
+    vCoupling->QueryStringAttribute("NAME", &nName);
+    ASSERTL0(nName.size(), "No Coupling NAME attribute set");
+    ASSERTL0(m_couplingName == nName, "Wrong Coupling name");
+    ;
+
+    TiXmlElement *element = vCoupling->FirstChildElement("I");
+    while (element)
+    {
+        std::stringstream tagcontent;
+        tagcontent << *element;
+        // read the property name
+        ASSERTL0(element->Attribute("PROPERTY"),
+                 "Missing PROPERTY attribute in Coupling section "
+                 "XML element: \n\t'" +
+                     tagcontent.str() + "'");
+        std::string property = element->Attribute("PROPERTY");
+        ASSERTL0(!property.empty(),
+                 "PROPERTY attribute must be non-empty in XML "
+                 "element: \n\t'" +
+                     tagcontent.str() + "'");
+
+        // make sure that solver property is capitalised
+        std::string propertyUpper = boost::to_upper_copy(property);
+
+        // read the value
+        ASSERTL0(element->Attribute("VALUE"),
+                 "Missing VALUE attribute in Coupling section "
+                 "XML element: \n\t'" +
+                     tagcontent.str() + "'");
+        std::string value = element->Attribute("VALUE");
+        ASSERTL0(!value.empty(),
+                 "VALUE attribute must be non-empty in XML "
+                 "element: \n\t'" +
+                     tagcontent.str() + "'");
+
+        // Set Variable
+        m_config[propertyUpper] = value;
+
+        element = element->NextSiblingElement("I");
+    }
+}
+
+void CwipiCoupling::SetupRecvFields()
+{
+    int oversamp = boost::lexical_cast<int>(m_config["OVERSAMPLE"]);
 
     SpatialDomains::MeshGraphSharedPtr recvGraph =
         SpatialDomains::MeshGraph::Read(m_evalField->GetSession());
@@ -81,7 +158,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     // HACK: 6
     // TODO: DeclareCoeffPhysArrays
     m_recvFields = Array<OneD, MultiRegions::ExpListSharedPtr>(6);
-    switch (spacedim)
+    switch (m_spacedim)
     {
         case 1:
         {
@@ -122,17 +199,11 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
             break;
         }
     }
+}
 
-    cwipi_create_coupling(m_couplingName.c_str(),
-                          CWIPI_COUPLING_PARALLEL_WITH_PARTITIONING,
-                          m_config["REMOTENAME"].c_str(),
-                          spacedim,
-                          geomTol,
-                          CWIPI_STATIC_MESH,
-                          solver_type,
-                          outputFreq,
-                          "Ensight Gold",
-                          "text");
+void CwipiCoupling::AnnounceMesh()
+{
+    SpatialDomains::MeshGraphSharedPtr graph = m_evalField->GetGraph();
 
     // get Elements
     SpatialDomains::SegGeomMap seggeom;
@@ -142,16 +213,16 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     SpatialDomains::PyrGeomMap pyrgeom;
     SpatialDomains::PrismGeomMap prismgeom;
     SpatialDomains::HexGeomMap hexgeom;
-    if (spacedim == 1)
+    if (m_spacedim == 1)
     {
         seggeom = graph->GetAllSegGeoms();
     }
-    else if (spacedim == 2)
+    else if (m_spacedim == 2)
     {
         trigeom  = graph->GetAllTriGeoms();
         quadgeom = graph->GetAllQuadGeoms();
     }
-    else if (spacedim == 3)
+    else if (m_spacedim == 3)
     {
         tetgeom   = graph->GetAllTetGeoms();
         pyrgeom   = graph->GetAllPyrGeoms();
@@ -208,7 +279,10 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
 
     cwipi_define_mesh(
         m_couplingName.c_str(), nVerts, nElts, m_coords, m_connecIdx, m_connec);
+}
 
+void CwipiCoupling::AnnounceRecvPoints()
+{
     // define the quadrature points at which we want to receive data
     m_nPoints = m_recvFields[0]->GetTotPoints();
     Array<OneD, Array<OneD, NekDouble> > coords(3);
@@ -224,7 +298,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     {
         m_points[3 * i + 0] = double(coords[0][i]);
 
-        if (spacedim > 1)
+        if (m_spacedim > 1)
         {
             m_points[3 * i + 1] = double(coords[1][i]);
         }
@@ -233,7 +307,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
             m_points[3 * i + 1] = 0.0;
         }
 
-        if (spacedim > 2)
+        if (m_spacedim > 2)
         {
             m_points[3 * i + 2] = double(coords[2][i]);
         }
@@ -244,66 +318,6 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     }
 
     cwipi_set_points_to_locate(m_couplingName.c_str(), m_nPoints, m_points);
-}
-
-void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
-{
-    ASSERTL0(session->DefinesElement("Nektar/Coupling"),
-             "No Coupling config found");
-
-    TiXmlElement *vCoupling = session->GetElement("Nektar/Coupling");
-    ASSERTL0(vCoupling, "Invalid Coupling config");
-
-    // TODO: set m_name here instead of in the constructor
-    string nName;
-    vCoupling->QueryStringAttribute("NAME", &nName);
-    ASSERTL0(nName.size(), "No Coupling NAME attribute set");
-    ASSERTL0(m_couplingName == nName, "Wrong Coupling name");
-    ;
-
-    TiXmlElement *element = vCoupling->FirstChildElement("I");
-    while (element)
-    {
-        std::stringstream tagcontent;
-        tagcontent << *element;
-        // read the property name
-        ASSERTL0(element->Attribute("PROPERTY"),
-                 "Missing PROPERTY attribute in Coupling section "
-                 "XML element: \n\t'" +
-                     tagcontent.str() + "'");
-        std::string property = element->Attribute("PROPERTY");
-        ASSERTL0(!property.empty(),
-                 "PROPERTY attribute must be non-empty in XML "
-                 "element: \n\t'" +
-                     tagcontent.str() + "'");
-
-        // make sure that solver property is capitalised
-        std::string propertyUpper = boost::to_upper_copy(property);
-
-        // read the value
-        ASSERTL0(element->Attribute("VALUE"),
-                 "Missing VALUE attribute in Coupling section "
-                 "XML element: \n\t'" +
-                     tagcontent.str() + "'");
-        std::string value = element->Attribute("VALUE");
-        ASSERTL0(!value.empty(),
-                 "VALUE attribute must be non-empty in XML "
-                 "element: \n\t'" +
-                     tagcontent.str() + "'");
-
-        // Set Variable
-        m_config[propertyUpper] = value;
-
-        element = element->NextSiblingElement("I");
-    }
-}
-
-CwipiCoupling::~CwipiCoupling()
-{
-    free(m_coords);
-    free(m_points);
-    free(m_connec);
-    free(m_connecIdx);
 }
 
 void CwipiCoupling::v_FinalizeCoupling(void)

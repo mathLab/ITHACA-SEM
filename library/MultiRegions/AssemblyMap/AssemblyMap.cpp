@@ -1325,12 +1325,6 @@ namespace Nektar
                     << minValence << " " << maxValence << " " << meanValence
                     << endl;
 
-                if (m_staticCondLevel > 0)
-                {
-                    out << "  - Number of static cond. levels          : "
-                        << m_staticCondLevel << endl;
-                }
-
                 if (n > 1)
                 {
                     NekDouble mean = m_numLocalCoeffs, mean2 = mean * mean;

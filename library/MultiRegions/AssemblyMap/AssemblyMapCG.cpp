@@ -1251,10 +1251,10 @@ namespace Nektar
 
             // For parallel multi-level static condensation determine the lowest
             // static condensation level amongst processors.
-            if (m_solnType == eDirectMultiLevelStaticCond ||
-                m_solnType == ePETScMultiLevelStaticCond ||
-                m_solnType == eIterativeMultiLevelStaticCond ||
-                m_solnType == eXxtMultiLevelStaticCond)
+            if ((m_solnType == eDirectMultiLevelStaticCond ||
+                 m_solnType == ePETScMultiLevelStaticCond ||
+                 m_solnType == eIterativeMultiLevelStaticCond ||
+                 m_solnType == eXxtMultiLevelStaticCond) && bottomUpGraph)
             {
                 m_lowestStaticCondLevel = bottomUpGraph->GetNlevels()-1;
                 vComm->AllReduce(m_lowestStaticCondLevel,

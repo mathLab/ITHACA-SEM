@@ -54,9 +54,8 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                              string name,
                              int outputFreq,
                              double geomTol)
-    : Coupling(field, name), m_outputFormat("Ensight Gold"),
-      m_outputFormatOption("text"), m_outputFreq(outputFreq),
-      m_geomTol(geomTol), m_coords(NULL), m_connecIdx(NULL), m_connec(NULL)
+    : m_coords(NULL), m_connecIdx(NULL), m_connec(NULL), m_evalField(field),
+      m_points(NULL), m_couplingName(name)
 {
     m_config["REMOTENAME"]  = "precise";
     m_config["OVERSAMPLE"]  = "0";
@@ -72,10 +71,12 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     cwipi_solver_type_t solver_type = CWIPI_SOLVER_CELL_VERTEX;
 
     SpatialDomains::MeshGraphSharedPtr graph = m_evalField->GetGraph();
-    int spacedim = graph->GetSpaceDimension();
+    int spacedim                             = graph->GetSpaceDimension();
 
-    SpatialDomains::MeshGraphSharedPtr recvGraph = SpatialDomains::MeshGraph::Read(m_evalField->GetSession());
-    recvGraph->SetExpansionsToPointOrder(oversamp + m_evalField->GetExp(0)->GetNumPoints(0));
+    SpatialDomains::MeshGraphSharedPtr recvGraph =
+        SpatialDomains::MeshGraph::Read(m_evalField->GetSession());
+    recvGraph->SetExpansionsToPointOrder(
+        oversamp + m_evalField->GetExp(0)->GetNumPoints(0));
 
     // HACK: 6
     // TODO: DeclareCoeffPhysArrays
@@ -86,8 +87,9 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
         {
             for (int i = 0; i < 6; ++i)
             {
-                m_recvFields[i] = MemoryManager<MultiRegions::ContField1D>::
-                    AllocateSharedPtr(m_evalField->GetSession(), recvGraph, "DefaultVar");
+                m_recvFields[i] =
+                    MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(
+                        m_evalField->GetSession(), recvGraph, "DefaultVar");
             }
             break;
         }
@@ -96,8 +98,9 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
         {
             for (int i = 0; i < 6; ++i)
             {
-                m_recvFields[i] = MemoryManager<MultiRegions::ContField2D>::
-                    AllocateSharedPtr(m_evalField->GetSession(), recvGraph);
+                m_recvFields[i] =
+                    MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(
+                        m_evalField->GetSession(), recvGraph);
             }
             break;
         }
@@ -106,8 +109,9 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
         {
             for (int i = 0; i < 6; ++i)
             {
-                m_recvFields[i] = MemoryManager < MultiRegions::ContField3D >::
-                    AllocateSharedPtr(m_evalField->GetSession(), recvGraph);
+                m_recvFields[i] =
+                    MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(
+                        m_evalField->GetSession(), recvGraph);
             }
             break;
         }
@@ -119,33 +123,33 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
         }
     }
 
-    cwipi_create_coupling(m_name.c_str(),
+    cwipi_create_coupling(m_couplingName.c_str(),
                           CWIPI_COUPLING_PARALLEL_WITH_PARTITIONING,
                           m_config["REMOTENAME"].c_str(),
                           spacedim,
-                          m_geomTol,
+                          geomTol,
                           CWIPI_STATIC_MESH,
                           solver_type,
-                          m_outputFreq,
-                          m_outputFormat.c_str(),
-                          m_outputFormatOption.c_str());
+                          outputFreq,
+                          "Ensight Gold",
+                          "text");
 
     // get Elements
-    SpatialDomains::SegGeomMap   seggeom;
-    SpatialDomains::TriGeomMap   trigeom;
-    SpatialDomains::QuadGeomMap  quadgeom;
-    SpatialDomains::TetGeomMap   tetgeom;
-    SpatialDomains::PyrGeomMap   pyrgeom;
+    SpatialDomains::SegGeomMap seggeom;
+    SpatialDomains::TriGeomMap trigeom;
+    SpatialDomains::QuadGeomMap quadgeom;
+    SpatialDomains::TetGeomMap tetgeom;
+    SpatialDomains::PyrGeomMap pyrgeom;
     SpatialDomains::PrismGeomMap prismgeom;
-    SpatialDomains::HexGeomMap   hexgeom;
+    SpatialDomains::HexGeomMap hexgeom;
     if (spacedim == 1)
     {
-        seggeom   = graph->GetAllSegGeoms();
+        seggeom = graph->GetAllSegGeoms();
     }
     else if (spacedim == 2)
     {
-        trigeom   = graph->GetAllTriGeoms();
-        quadgeom  = graph->GetAllQuadGeoms();
+        trigeom  = graph->GetAllTriGeoms();
+        quadgeom = graph->GetAllQuadGeoms();
     }
     else if (spacedim == 3)
     {
@@ -161,29 +165,28 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                 hexgeom.size();
 
     // allocate CWIPI arrays
-    m_coords = (double *) malloc(sizeof(double) * 3 * nVerts);
+    m_coords = (double *)malloc(sizeof(double) * 3 * nVerts);
     ASSERTL1(m_coords != NULL, "malloc failed for m_coords");
     int tmp = 2 * seggeom.size() + 3 * trigeom.size() + 4 * quadgeom.size() +
               4 * tetgeom.size() + 5 * pyrgeom.size() + 6 * prismgeom.size() +
               8 * hexgeom.size();
-    m_connec = (int *) malloc(sizeof(int) * tmp);
+    m_connec = (int *)malloc(sizeof(int) * tmp);
     ASSERTL1(m_connec != NULL, "malloc failed for m_connec");
-    m_connecIdx = (int *) malloc(sizeof(int) * (nElts + 1));
+    m_connecIdx = (int *)malloc(sizeof(int) * (nElts + 1));
     ASSERTL1(m_connecIdx != NULL, "malloc failed for m_connecIdx");
 
     m_connecIdx[0] = 0;
-    int coordsPos = 0;
-    int connecPos = 0;
-    int conidxPos = 0;
+    int coordsPos  = 0;
+    int connecPos  = 0;
+    int conidxPos  = 0;
 
-    AddElementsToMesh(seggeom,   coordsPos, connecPos, conidxPos);
-    AddElementsToMesh(trigeom,   coordsPos, connecPos, conidxPos);
-    AddElementsToMesh(quadgeom,  coordsPos, connecPos, conidxPos);
-    AddElementsToMesh(tetgeom,   coordsPos, connecPos, conidxPos);
-    AddElementsToMesh(pyrgeom,   coordsPos, connecPos, conidxPos);
+    AddElementsToMesh(seggeom, coordsPos, connecPos, conidxPos);
+    AddElementsToMesh(trigeom, coordsPos, connecPos, conidxPos);
+    AddElementsToMesh(quadgeom, coordsPos, connecPos, conidxPos);
+    AddElementsToMesh(tetgeom, coordsPos, connecPos, conidxPos);
+    AddElementsToMesh(pyrgeom, coordsPos, connecPos, conidxPos);
     AddElementsToMesh(prismgeom, coordsPos, connecPos, conidxPos);
-    AddElementsToMesh(hexgeom,   coordsPos, connecPos, conidxPos);
-
+    AddElementsToMesh(hexgeom, coordsPos, connecPos, conidxPos);
 
     // output the mesh in tecplot format. If this works, CWIPI will be able
     // to process it, too
@@ -203,22 +206,18 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     }
     */
 
-    cwipi_define_mesh(m_name.c_str(),
-                      nVerts,
-                      nElts,
-                      m_coords,
-                      m_connecIdx,
-                      m_connec);
+    cwipi_define_mesh(
+        m_couplingName.c_str(), nVerts, nElts, m_coords, m_connecIdx, m_connec);
 
     // define the quadrature points at which we want to receive data
     m_nPoints = m_recvFields[0]->GetTotPoints();
-    Array <OneD,  Array<OneD,  NekDouble> > coords(3);
+    Array<OneD, Array<OneD, NekDouble> > coords(3);
     coords[0] = Array<OneD, NekDouble>(m_nPoints);
     coords[1] = Array<OneD, NekDouble>(m_nPoints);
     coords[2] = Array<OneD, NekDouble>(m_nPoints);
     m_recvFields[0]->GetCoords(coords[0], coords[1], coords[2]);
 
-    m_points = (double *) malloc(sizeof(double) * 3 * m_nPoints);
+    m_points = (double *)malloc(sizeof(double) * 3 * m_nPoints);
     ASSERTL1(m_points != NULL, "malloc failed for m_points");
 
     for (int i = 0; i < m_nPoints; ++i)
@@ -244,7 +243,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
         }
     }
 
-    cwipi_set_points_to_locate(m_name.c_str(), m_nPoints, m_points);
+    cwipi_set_points_to_locate(m_couplingName.c_str(), m_nPoints, m_points);
 }
 
 void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
@@ -259,7 +258,7 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
     string nName;
     vCoupling->QueryStringAttribute("NAME", &nName);
     ASSERTL0(nName.size(), "No Coupling NAME attribute set");
-    ASSERTL0(m_name == nName, "Wrong Coupling name");
+    ASSERTL0(m_couplingName == nName, "Wrong Coupling name");
     ;
 
     TiXmlElement *element = vCoupling->FirstChildElement("I");
@@ -307,19 +306,19 @@ CwipiCoupling::~CwipiCoupling()
     free(m_connecIdx);
 }
 
-
 void CwipiCoupling::v_FinalizeCoupling(void)
 {
-    cwipi_delete_coupling(m_name.c_str());
+    cwipi_delete_coupling(m_couplingName.c_str());
 }
 
-
 template <typename T>
-void CwipiCoupling::AddElementsToMesh(T geom, int &coordsPos, int &connecPos,
-        int &conidxPos)
+void CwipiCoupling::AddElementsToMesh(T geom,
+                                      int &coordsPos,
+                                      int &connecPos,
+                                      int &conidxPos)
 {
     // helper variables
-    Array<OneD, NekDouble>  x(3);
+    Array<OneD, NekDouble> x(3);
     SpatialDomains::PointGeomSharedPtr vert;
     int vertID;
 
@@ -333,11 +332,11 @@ void CwipiCoupling::AddElementsToMesh(T geom, int &coordsPos, int &connecPos,
         //  iterate over the elements vertices
         for (int j = 0; j < kNverts; ++j)
         {
-            vert = it->second->GetVertex(j);
+            vert   = it->second->GetVertex(j);
             vertID = vert->GetVid();
 
             // check if we already stored the vertex
-            if (m_vertMap.count(vertID) ==  0)
+            if (m_vertMap.count(vertID) == 0)
             {
                 //  store the vertex
                 vert->GetCoords(x[0], x[1], x[2]);
@@ -359,62 +358,66 @@ void CwipiCoupling::AddElementsToMesh(T geom, int &coordsPos, int &connecPos,
     }
 }
 
-
 void CwipiCoupling::PrintProgressbar(const int position, const int goal) const
 {
     // print only every 2 percent
-    if (int(100 * position / goal) % 2 ==  0)
+    if (int(100 * position / goal) % 2 == 0)
     {
-        cout << "." <<  flush;
+        cout << "." << flush;
     }
 }
 
-
-CwipiExchange::CwipiExchange(SolverUtils::CouplingSharedPointer coupling, string name,
-                     int nEVars) :
-    Exchange(coupling,  name),
-    m_nEVars(nEVars),
-    m_rValsInterl(NULL)
+CwipiExchange::CwipiExchange(SolverUtils::CwipiCouplingSharedPointer coupling,
+                             string name,
+                             int nEVars)
+    : m_nEVars(nEVars), m_rValsInterl(NULL), m_coupling(coupling),
+      m_exchangeName(name)
 {
-    m_lambda =
+    m_filtWidth =
         boost::lexical_cast<NekDouble>(m_coupling->GetConfig()["FILTERWIDTH"]);
+    if (m_filtWidth > 0)
+    {
+        m_filtWidth = 2 * M_PI / m_filtWidth;
+        m_filtWidth = m_filtWidth * m_filtWidth;
+    }
 
     int nPoints = m_coupling->GetNPoints();
 
-    m_rValsInterl = (double *) malloc(sizeof(double) * nPoints * m_nEVars);
+    m_rValsInterl = (double *)malloc(sizeof(double) * nPoints * m_nEVars);
     ASSERTL1(m_rValsInterl != NULL, "malloc failed for m_rValsInterl");
 }
-
 
 CwipiExchange::~CwipiExchange()
 {
     free(m_rValsInterl);
 }
 
-
-void CwipiExchange::v_SendFields(const int step, const NekDouble time,
-                                    Array<OneD, Array<OneD, NekDouble> > &field)
+void CwipiExchange::v_SendFields(const int step,
+                                 const NekDouble time,
+                                 Array<OneD, Array<OneD, NekDouble> > &field)
 {
     ASSERTL0(false, "not implemented yet")
 }
 
-
-void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
-                                       Array<OneD, Array<OneD, NekDouble> > &field)
+void CwipiExchange::v_ReceiveFields(const int step,
+                                    const NekDouble time,
+                                    Array<OneD, Array<OneD, NekDouble> > &field)
 {
     static NekDouble lastUdate = -1;
-    ASSERTL0(time > lastUdate, "CwipiExchange::v_ReceiveFields called twice in this timestep")
+    ASSERTL0(time > lastUdate,
+             "CwipiExchange::v_ReceiveFields called twice in this timestep")
     lastUdate = time;
 
     int nPoints = m_coupling->GetNPoints();
-    ASSERTL1(m_nEVars ==  field.num_elements(), "field size mismatch");
+    ASSERTL1(m_nEVars == field.num_elements(), "field size mismatch");
 
     cout << "receiving fields at i = " << step << ", t = " << time << endl;
 
     Timer timer1, timer2;
     timer1.Start();
 
-    Array<OneD, MultiRegions::ExpListSharedPtr> recvFields = m_coupling->GetRecvFields();
+    Array<OneD, MultiRegions::ExpListSharedPtr> recvFields =
+        m_coupling->GetRecvFields();
     MultiRegions::ExpListSharedPtr evalField = m_coupling->GetEvalField();
     int spacedim                             = recvFields[0]->GetGraph()->GetSpaceDimension();
 
@@ -422,18 +425,20 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
     for (int i = 0; i < m_nEVars; ++i)
     {
         evalField->FwdTrans(field[i], recvFields[i]->UpdateCoeffs());
-        recvFields[i]->BwdTrans(recvFields[i]->GetCoeffs(), recvFields[i]->UpdatePhys());
+        recvFields[i]->BwdTrans(recvFields[i]->GetCoeffs(),
+                                recvFields[i]->UpdatePhys());
     }
 
     int nNotLoc = 0;
 
-    // workaround a bug in cwipi: receiving_field_name should be const char* but is char*
-    char recFN[m_recvFieldName.length() + 1];
-    strcpy(recFN, m_recvFieldName.c_str());
+    // workaround a bug in cwipi: receiving_field_name should be const char* but
+    // is char*
+    char recFN[10];
+    strcpy(recFN, "dummyName");
 
     timer2.Start();
     cwipi_exchange(m_coupling->GetName().c_str(),
-                   m_name.c_str(),
+                   m_exchangeName.c_str(),
                    m_nEVars,
                    step,
                    time,
@@ -444,11 +449,12 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
                    &nNotLoc);
     timer2.Stop();
 
-    int tmp = -1;
+    int tmp           = -1;
     const int *notLoc = &tmp;
-    if (nNotLoc !=  0)
+    if (nNotLoc != 0)
     {
-        cout << "WARNING: relocating " << nNotLoc << " of " << nPoints << " points" <<  endl;
+        cout << "WARNING: relocating " << nNotLoc << " of " << nPoints
+             << " points" << endl;
         notLoc = cwipi_get_not_located_points(m_coupling->GetName().c_str());
     }
 
@@ -469,16 +475,15 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
             }
             else
             {
-                recvFields[j]->UpdatePhys()[i] = m_rValsInterl[intPos * m_nEVars + j];
+                recvFields[j]->UpdatePhys()[i] =
+                    m_rValsInterl[intPos * m_nEVars + j];
                 intPos++;
             }
         }
     }
 
-    if (m_lambda > 0)
+    if (m_filtWidth > 0)
     {
-        m_lambda = 2 * M_PI / m_lambda;
-        m_lambda = m_lambda * m_lambda;
         for (int i = 0; i < m_nEVars; ++i)
         {
             Array<OneD, NekDouble> forcing(nPoints);
@@ -490,16 +495,16 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
             }
 
             Vmath::Smul(
-                nPoints, -m_lambda, recvFields[i]->GetPhys(), 1, forcing, 1);
+                nPoints, -m_filtWidth, recvFields[i]->GetPhys(), 1, forcing, 1);
 
             // Note we are using the
             // LinearAdvectionDiffusionReaction solver here
-            // instead of HelmSolve since m_lambda is negative and
+            // instead of HelmSolve since m_filtWidth is negative and
             // so matrices are not positive definite. Ideally
-            // should allow for negative m_lambda coefficient in
+            // should allow for negative m_filtWidth coefficient in
             // HelmSolve
             recvFields[i]->LinearAdvectionDiffusionReactionSolve(
-                Velocity, forcing, recvFields[i]->UpdateCoeffs(), -m_lambda);
+                Velocity, forcing, recvFields[i]->UpdateCoeffs(), -m_filtWidth);
 
             evalField->BwdTrans(recvFields[i]->GetCoeffs(), field[i]);
         }
@@ -516,7 +521,7 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
 
     timer1.Stop();
 
-    if ( recvFields[0]->GetSession()->DefinesCmdLineArgument("verbose") )
+    if (recvFields[0]->GetSession()->DefinesCmdLineArgument("verbose"))
     {
         cout << "Receive total time: " << timer1.TimePerTest(1) << ", ";
         cout << "CWIPI time: " << timer2.TimePerTest(1) << endl;

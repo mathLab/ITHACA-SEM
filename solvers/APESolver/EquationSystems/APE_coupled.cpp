@@ -34,8 +34,6 @@
 
 #include <APESolver/EquationSystems/APE_coupled.h>
 
-#include <SolverUtils/CwipiExchange.h>
-
 namespace Nektar
 {
 string APE_coupled::className = GetEquationSystemFactory().RegisterCreatorFunction(

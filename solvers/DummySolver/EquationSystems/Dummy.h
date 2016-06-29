@@ -39,7 +39,7 @@
 
 #include <SolverUtils/UnsteadySystem.h>
 
-#include <SolverUtils/Exchange.h>
+#include <SolverUtils/CwipiExchange.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -67,9 +67,8 @@ public:
     virtual ~Dummy();
 
 protected:
-    SolverUtils::CouplingSharedPointer m_coupling;
-
-    SolverUtils::ExchangeSharedPtr m_sendExchange;
+    SolverUtils::CwipiCouplingSharedPointer         m_coupling;
+    SolverUtils::CwipiExchangeSharedPtr             m_sendExchange;
     int m_nSendVars;
     int m_nRecvVars;
     int m_recvSteps;

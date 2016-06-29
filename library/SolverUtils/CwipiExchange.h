@@ -35,21 +35,17 @@
 #define NEKTAR_CWIPIEXCHANGE
 
 #include <SolverUtils/EquationSystem.h>
-#include <SolverUtils/Exchange.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
 
-class CwipiCoupling : public SolverUtils::Coupling
+class CwipiCoupling
 {
 
 public:
-
-    CwipiCoupling()
-    {
-    };
+    CwipiCoupling(){};
 
     CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                   string name,
@@ -58,73 +54,117 @@ public:
 
     ~CwipiCoupling();
 
+    MultiRegions::ExpListSharedPtr GetEvalField()
+    {
+        return m_evalField;
+    };
+
+    Array<OneD, MultiRegions::ExpListSharedPtr> GetRecvFields()
+    {
+        return m_recvFields;
+    };
+
+    string GetName()
+    {
+        return m_couplingName;
+    };
+
+    int GetNPoints()
+    {
+        return m_nPoints;
+    };
+
+    void GetPoints(double *points)
+    {
+        points = m_points;
+    }
+
+    const std::map<std::string, std::string> GetConfig()
+    {
+        return m_config;
+    }
+
+    inline void FinalizeCoupling()
+    {
+        v_FinalizeCoupling();
+    }
+
     void PrintProgressbar(const int position, const int goal) const;
 
 protected:
+    string m_couplingName;
 
-    string m_outputFormat;
-    string m_outputFormatOption;
-    int m_outputFreq;
-    double m_geomTol;
+    std::map<std::string, std::string> m_config;
 
+    MultiRegions::ExpListSharedPtr m_evalField;
+    Array<OneD, MultiRegions::ExpListSharedPtr> m_recvFields;
+
+    int m_nPoints;
+    double *m_points;
     double *m_coords;
     int *m_connecIdx;
     int *m_connec;
 
-    map< int, int > m_vertMap;
+    map<int, int> m_vertMap;
 
     virtual void v_FinalizeCoupling(void);
 
 private:
+    void ReadConfig(LibUtilities::SessionReaderSharedPtr session);
 
     template <typename T>
-    void AddElementsToMesh(T geom, int& coordsPos, int& connecPos, int& conidxPos);
-
-    void ReadConfig(LibUtilities::SessionReaderSharedPtr session);
+    void AddElementsToMesh(T geom,
+                           int &coordsPos,
+                           int &connecPos,
+                           int &conidxPos);
 };
-
-
 
 typedef boost::shared_ptr<CwipiCoupling> CwipiCouplingSharedPointer;
 
-
-class CwipiExchange : public SolverUtils::Exchange
+class CwipiExchange
 {
 public:
+    CwipiExchange(){};
 
-    CwipiExchange()
-    {
-    };
-
-    CwipiExchange(SolverUtils::CouplingSharedPointer coupling, string name,
-                     int nEVars);
+    CwipiExchange(SolverUtils::CwipiCouplingSharedPointer coupling,
+                  string name,
+                  int nEVars);
 
     ~CwipiExchange();
 
+    void SendFields(const int step,
+                    const NekDouble time,
+                    Array<OneD, Array<OneD, NekDouble> > &field)
+    {
+        v_SendFields(step, time, field);
+    }
+
+    void ReceiveFields(const int step,
+                       const NekDouble time,
+                       Array<OneD, Array<OneD, NekDouble> > &field)
+    {
+        v_ReceiveFields(step, time, field);
+    }
 
 protected:
+    string m_exchangeName;
 
+    CwipiCouplingSharedPointer m_coupling;
     int m_nEVars;
-    NekDouble m_lambda;
-
-    string m_sendFieldName;
-    string m_recvFieldName;
+    NekDouble m_filtWidth;
 
     double *m_rValsInterl;
 
-
-    virtual void v_SendFields(const int step, const NekDouble time,
+    virtual void v_SendFields(const int step,
+                              const NekDouble time,
                               Array<OneD, Array<OneD, NekDouble> > &field);
 
-    virtual void v_ReceiveFields(const int step, const NekDouble time,
+    virtual void v_ReceiveFields(const int step,
+                                 const NekDouble time,
                                  Array<OneD, Array<OneD, NekDouble> > &field);
-
-
 };
 
-
 typedef boost::shared_ptr<CwipiExchange> CwipiExchangeSharedPtr;
-
 }
 }
 #endif

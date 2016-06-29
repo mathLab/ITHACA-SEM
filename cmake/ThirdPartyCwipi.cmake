@@ -41,6 +41,10 @@ IF (NEKTAR_USE_CWIPI)
         get_filename_component(MPI_INC_PATH ${MPI_LIBRARY_PATH} PATH)
         set(MPI_INC_PATH "${MPI_INC_PATH}/include")
 
+        IF(NOT CMAKE_Fortran_COMPILER)
+            MESSAGE(ERROR "MPI_Fortran_COMPILER not set")
+        ENDIF()
+
         EXTERNALPROJECT_ADD(
             cwipi-0.8.2
             URL "http://sites.onera.fr/cwipi/sites/sites.onera.fr.cwipi/files/u4/cwipi-0.8.2.tgz"
@@ -51,8 +55,12 @@ IF (NEKTAR_USE_CWIPI)
             BINARY_DIR ${TPBUILD}/cwipi-0.8.2
             TMP_DIR ${TPBUILD}/cwipi-0.8.2-tmp
             INSTALL_DIR ${TPDIST}
-            CONFIGURE_COMMAND ${TPSRC}/cwipi-0.8.2/configure
-                CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
+            CONFIGURE_COMMAND
+                OMPI_FC=${CMAKE_Fortran_COMPILER}
+                OMPI_CC=${CMAKE_C_COMPILER}
+                OMPI_CXX=${CMAKE_CXX_COMPILER}
+                ${TPSRC}/cwipi-0.8.2/configure
+                CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} FC=${CMAKE_Fortran_COMPILER}
                 --with-mpi-include=${MPI_INC_PATH}
                 --with-mpi-lib=${MPI_LIBRARY_PATH}
                 --with-mpi-bin=${MPI_BIN_PATH}

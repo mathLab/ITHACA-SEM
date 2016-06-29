@@ -1393,20 +1393,71 @@ namespace Nektar
                 vRowComm->Send(0, tmp);
             }
 
-            AssemblyMapSharedPtr tmp = m_nextLevelLocalToGlobalMap, tmp1;
-
-            if (!tmp)
+            // Either we have no more levels in the static condensation, or we
+            // are not multi-level.
+            if (!m_nextLevelLocalToGlobalMap)
             {
                 return;
             }
 
+            int level = 1;
+            AssemblyMapSharedPtr tmp = m_nextLevelLocalToGlobalMap, tmp1;
             while (tmp)
             {
                 tmp1 = tmp;
                 tmp  = tmp->m_nextLevelLocalToGlobalMap;
+                ++level;
             }
 
-            out << "Stats at lowest static cond. level:" << endl;
+            // Increment by one to obtain number of levels.
+            ++level;
+
+            // Print out multi-level static condensation information.
+            if (n > 1)
+            {
+                if (isRoot)
+                {
+                    NekDouble mean = level, mean2 = mean * mean;
+                    int minval = level, maxval = level;
+
+                    Array<OneD, NekDouble> tmpRecv(1);
+                    for (i = 1; i < n; ++i)
+                    {
+                        vRowComm->Recv(i, tmpRecv);
+                        mean  += tmpRecv[0];
+                        mean2 += tmpRecv[0]*tmpRecv[0];
+
+                        if (tmpRecv[0] > maxval)
+                        {
+                            maxval = (int)(tmpRecv[0] + 0.5);
+                        }
+                        if (tmpRecv[0] < minval)
+                        {
+                            minval = (int)(tmpRecv[0] + 0.5);
+                        }
+                    }
+
+                    out << "  - M-level sc. dist. (min/max/mean/dev)   : "
+                        << minval << " " << maxval << " " << (mean / n) << " "
+                        << sqrt(mean2/n - mean*mean/n/n) << endl;
+                }
+                else
+                {
+                    Array<OneD, NekDouble> tmpSend(1);
+                    tmpSend[0] = level;
+                    vRowComm->Send(0, tmpSend);
+                }
+            }
+            else
+            {
+                out << "  - Number of static cond. levels          : "
+                    << level << endl;
+            }
+
+            if (isRoot)
+            {
+                out << "Stats at lowest static cond. level:" << endl;
+            }
             tmp1->PrintStats(out, variable, false);
         }
     } // namespace

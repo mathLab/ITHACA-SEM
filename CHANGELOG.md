@@ -3,6 +3,10 @@ Changelog
 
 v4.4.0
 ------
+**Library:**
+- Statistics are now printed for lowest level of multi-level static condensation
+  (!656)
+
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
 

@@ -1347,9 +1347,12 @@ namespace Nektar
                         }
                     }
 
-                    out << "  - Local dof dist. (min/max/mean/dev)     : "
-                        << minval << " " << maxval << " " << (mean / n) << " "
-                        << sqrt(mean2/n - mean*mean/n/n) << endl;
+                    if (maxval > 0.1)
+                    {
+                        out << "  - Local dof dist. (min/max/mean/dev)     : "
+                            << minval << " " << maxval << " " << (mean / n)
+                            << " " << sqrt(mean2/n - mean*mean/n/n) << endl;
+                    }
 
                     vRowComm->Block();
 

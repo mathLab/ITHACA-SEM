@@ -76,13 +76,11 @@ void APE_coupled::v_InitObject()
 
     m_session->LoadParameter("EX_RecvSteps", m_recvSteps, 1);
     m_session->LoadParameter("EX_SendSteps", m_sendSteps, 1);
-    int oversamp;
-    m_session->LoadParameter("EX_Oversample", oversamp, 0);
 
     m_nRecvVars = 6;
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
-                        m_bfField, "cpl1", "precise", 0, 1.0, oversamp);
+                        m_bfField, "cpl1",0, 1.0);
     m_sendExchange = MemoryManager<CwipiExchange>::AllocateSharedPtr(
                             m_coupling, "ex1", m_nRecvVars);
 }

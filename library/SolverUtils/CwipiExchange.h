@@ -52,7 +52,9 @@ public:
     };
 
     CwipiCoupling(MultiRegions::ExpListSharedPtr field,
-                     string name, string distAppname, int outputFreq, double geomTol, int oversamp = 0);
+                  string name,
+                  int outputFreq,
+                  double geomTol);
 
     ~CwipiCoupling();
 
@@ -60,7 +62,6 @@ public:
 
 protected:
 
-    string m_distAppname;
     string m_outputFormat;
     string m_outputFormatOption;
     int m_outputFreq;
@@ -79,8 +80,7 @@ private:
     template <typename T>
     void AddElementsToMesh(T geom, int& coordsPos, int& connecPos, int& conidxPos);
 
-    Array<OneD, Array<OneD, float> > m_weights;
-    Array<OneD, Array<OneD, unsigned int> > m_neighbourInds;
+    void ReadConfig(LibUtilities::SessionReaderSharedPtr session);
 };
 
 
@@ -105,6 +105,7 @@ public:
 protected:
 
     int m_nEVars;
+    NekDouble m_lambda;
 
     string m_sendFieldName;
     string m_recvFieldName;

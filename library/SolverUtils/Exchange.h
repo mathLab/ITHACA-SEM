@@ -93,6 +93,11 @@ public:
         points = m_points;
     }
 
+    const std::map<std::string, std::string> GetConfig()
+    {
+        return m_config;
+    }
+
     inline void FinalizeCoupling()
     {
         v_FinalizeCoupling();
@@ -107,6 +112,8 @@ protected:
     double *m_points;
 
     string m_name;
+
+    std::map<std::string, std::string> m_config;
 
     virtual void v_FinalizeCoupling(void)
     {

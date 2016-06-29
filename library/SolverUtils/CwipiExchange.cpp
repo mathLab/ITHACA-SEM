@@ -51,17 +51,21 @@ namespace SolverUtils
 {
 
 CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
-                                   string name, string distAppname, int outputFreq, double geomTol, int oversamp) :
-    Coupling(field, name),
-    m_distAppname(distAppname),
-    m_outputFormat("Ensight Gold"),
-    m_outputFormatOption("text"),
-    m_outputFreq(outputFreq),
-    m_geomTol(geomTol),
-    m_coords(NULL),
-    m_connecIdx(NULL),
-    m_connec(NULL)
+                             string name,
+                             int outputFreq,
+                             double geomTol)
+    : Coupling(field, name), m_outputFormat("Ensight Gold"),
+      m_outputFormatOption("text"), m_outputFreq(outputFreq),
+      m_geomTol(geomTol), m_coords(NULL), m_connecIdx(NULL), m_connec(NULL)
 {
+    m_config["REMOTENAME"]  = "precise";
+    m_config["OVERSAMPLE"]  = "0";
+    m_config["FILTERWIDTH"] = "-1";
+
+    ReadConfig(m_evalField->GetSession());
+
+    int oversamp = boost::lexical_cast<int>(m_config["OVERSAMPLE"]);
+
     cwipi_dump_application_properties();
 
     //  Init Coupling
@@ -117,7 +121,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
 
     cwipi_create_coupling(m_name.c_str(),
                           CWIPI_COUPLING_PARALLEL_WITH_PARTITIONING,
-                          m_distAppname.c_str(),
+                          m_config["REMOTENAME"].c_str(),
                           spacedim,
                           m_geomTol,
                           CWIPI_STATIC_MESH,
@@ -243,6 +247,57 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     cwipi_set_points_to_locate(m_name.c_str(), m_nPoints, m_points);
 }
 
+void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
+{
+    ASSERTL0(session->DefinesElement("Nektar/Coupling"),
+             "No Coupling config found");
+
+    TiXmlElement *vCoupling = session->GetElement("Nektar/Coupling");
+    ASSERTL0(vCoupling, "Invalid Coupling config");
+
+    // TODO: set m_name here instead of in the constructor
+    string nName;
+    vCoupling->QueryStringAttribute("NAME", &nName);
+    ASSERTL0(nName.size(), "No Coupling NAME attribute set");
+    ASSERTL0(m_name == nName, "Wrong Coupling name");
+    ;
+
+    TiXmlElement *element = vCoupling->FirstChildElement("I");
+    while (element)
+    {
+        std::stringstream tagcontent;
+        tagcontent << *element;
+        // read the property name
+        ASSERTL0(element->Attribute("PROPERTY"),
+                 "Missing PROPERTY attribute in Coupling section "
+                 "XML element: \n\t'" +
+                     tagcontent.str() + "'");
+        std::string property = element->Attribute("PROPERTY");
+        ASSERTL0(!property.empty(),
+                 "PROPERTY attribute must be non-empty in XML "
+                 "element: \n\t'" +
+                     tagcontent.str() + "'");
+
+        // make sure that solver property is capitalised
+        std::string propertyUpper = boost::to_upper_copy(property);
+
+        // read the value
+        ASSERTL0(element->Attribute("VALUE"),
+                 "Missing VALUE attribute in Coupling section "
+                 "XML element: \n\t'" +
+                     tagcontent.str() + "'");
+        std::string value = element->Attribute("VALUE");
+        ASSERTL0(!value.empty(),
+                 "VALUE attribute must be non-empty in XML "
+                 "element: \n\t'" +
+                     tagcontent.str() + "'");
+
+        // Set Variable
+        m_config[propertyUpper] = value;
+
+        element = element->NextSiblingElement("I");
+    }
+}
 
 CwipiCoupling::~CwipiCoupling()
 {
@@ -321,6 +376,9 @@ CwipiExchange::CwipiExchange(SolverUtils::CouplingSharedPointer coupling, string
     m_nEVars(nEVars),
     m_rValsInterl(NULL)
 {
+    m_lambda =
+        boost::lexical_cast<NekDouble>(m_coupling->GetConfig()["FILTERWIDTH"]);
+
     int nPoints = m_coupling->GetNPoints();
 
     m_rValsInterl = (double *) malloc(sizeof(double) * nPoints * m_nEVars);
@@ -417,12 +475,10 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
         }
     }
 
-    NekDouble lambda = 0.5;
-
-    if (lambda > 0)
+    if (m_lambda > 0)
     {
-        lambda = 2 * M_PI / lambda;
-        lambda = lambda * lambda;
+        m_lambda = 2 * M_PI / m_lambda;
+        m_lambda = m_lambda * m_lambda;
         for (int i = 0; i < m_nEVars; ++i)
         {
             Array<OneD, NekDouble> forcing(nPoints);
@@ -434,16 +490,16 @@ void CwipiExchange::v_ReceiveFields(const int step, const NekDouble time,
             }
 
             Vmath::Smul(
-                nPoints, -lambda, recvFields[i]->GetPhys(), 1, forcing, 1);
+                nPoints, -m_lambda, recvFields[i]->GetPhys(), 1, forcing, 1);
 
             // Note we are using the
             // LinearAdvectionDiffusionReaction solver here
-            // instead of HelmSolve since lambda is negative and
+            // instead of HelmSolve since m_lambda is negative and
             // so matrices are not positive definite. Ideally
-            // should allow for negative lambda coefficient in
+            // should allow for negative m_lambda coefficient in
             // HelmSolve
             recvFields[i]->LinearAdvectionDiffusionReactionSolve(
-                Velocity, forcing, recvFields[i]->UpdateCoeffs(), -lambda);
+                Velocity, forcing, recvFields[i]->UpdateCoeffs(), -m_lambda);
 
             evalField->BwdTrans(recvFields[i]->GetCoeffs(), field[i]);
         }

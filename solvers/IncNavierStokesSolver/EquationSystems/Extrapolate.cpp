@@ -369,7 +369,7 @@ namespace Nektar
                     {
                         int nbcoeffs = m_PBndExp[n]->GetNcoeffs();
 
-                        m_PBndExp[n]->FwdTrans(pbc,bndVal);
+                        m_PBndExp[n]->IProductWRTBase(pbc,bndVal);
 
                         Vmath::Svtvp(nbcoeffs,-1.0*m_houtflow->m_pressurePrimCoeff[n],
                                      bndVal, 1,m_PBndExp[n]->UpdateCoeffs(),1,
@@ -398,8 +398,8 @@ namespace Nektar
                     // Reuse divU
                     Vmath::Vvtvp( nqb, normals[i], 1, bndVal, 1, E[i], 1,
                                   divU, 1);
-                    Vmath::Vadd( nqb, divU, 1, m_houtflow->m_UBndExp[i][n]->GetPhys(), 1,
-                                 divU, 1);
+                    Vmath::Vadd( nqb, divU, 1, m_houtflow->m_UBndExp[i][n]->GetPhys(),
+                                 1, divU, 1);
                     Vmath::Smul(nqb, 1.0/kinvis, divU, 1, divU, 1);
                     
                     if(m_hbcType[n] == eConvectiveOBC) 
@@ -517,7 +517,7 @@ namespace Nektar
     {
         m_PBndConds   = m_pressure->GetBndConditions();
         m_PBndExp     = m_pressure->GetBndCondExpansions();
-    
+
         int cnt, n;
     
         // Storage array for high order pressure BCs

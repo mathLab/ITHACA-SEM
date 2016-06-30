@@ -79,8 +79,6 @@ void APE_coupled::v_InitObject()
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
                         m_bfField, "cpl1",0, 1.0);
-    m_sendExchange = MemoryManager<CwipiExchange>::AllocateSharedPtr(
-                            m_coupling, "ex1", m_nRecvVars);
 }
 
 
@@ -172,7 +170,7 @@ void APE_coupled::receiveFields()
         }
         recField[5] = m_stNew; // S
 
-        m_sendExchange->ReceiveFields(0, m_time, recField);
+        m_coupling->ReceiveFields(0, m_time, recField);
 
 
         ASSERTL0(Vmath::Vmin(nq, m_bfNew[0], 1) > 0.0, "received p0 <= 0.0");

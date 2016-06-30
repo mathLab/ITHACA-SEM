@@ -69,16 +69,6 @@ public:
         return m_couplingName;
     };
 
-    int GetNPoints()
-    {
-        return m_nPoints;
-    };
-
-    void GetPoints(double *points)
-    {
-        points = m_points;
-    }
-
     const std::map<std::string, std::string> GetConfig()
     {
         return m_config;
@@ -89,15 +79,33 @@ public:
         v_FinalizeCoupling();
     }
 
+    void SendFields(const int step,
+                    const NekDouble time,
+                    Array<OneD, Array<OneD, NekDouble> > &field)
+    {
+        v_SendFields(step, time, field);
+    }
+
+    void ReceiveFields(const int step,
+                       const NekDouble time,
+                       Array<OneD, Array<OneD, NekDouble> > &field)
+    {
+        v_ReceiveFields(step, time, field);
+    }
+
     void PrintProgressbar(const int position, const int goal) const;
 
 protected:
     string m_couplingName;
 
     std::map<std::string, std::string> m_config;
+    NekDouble m_filtWidth;
 
     MultiRegions::ExpListSharedPtr m_evalField;
     Array<OneD, MultiRegions::ExpListSharedPtr> m_recvFields;
+
+    int m_nSendVars;
+    int m_nRecvVars;
 
     int m_spacedim;
     int m_nPoints;
@@ -105,10 +113,20 @@ protected:
     double *m_coords;
     int *m_connecIdx;
     int *m_connec;
+    double *m_rValsInterl;
+    double *m_sValsInterl;
 
     map<int, int> m_vertMap;
 
     virtual void v_FinalizeCoupling(void);
+
+    virtual void v_SendFields(const int step,
+                              const NekDouble time,
+                              Array<OneD, Array<OneD, NekDouble> > &field);
+
+    virtual void v_ReceiveFields(const int step,
+                                 const NekDouble time,
+                                 Array<OneD, Array<OneD, NekDouble> > &field);
 
 private:
     void ReadConfig(LibUtilities::SessionReaderSharedPtr session);
@@ -127,51 +145,7 @@ private:
 };
 
 typedef boost::shared_ptr<CwipiCoupling> CwipiCouplingSharedPointer;
-
-class CwipiExchange
-{
-public:
-    CwipiExchange(){};
-
-    CwipiExchange(SolverUtils::CwipiCouplingSharedPointer coupling,
-                  string name,
-                  int nEVars);
-
-    ~CwipiExchange();
-
-    void SendFields(const int step,
-                    const NekDouble time,
-                    Array<OneD, Array<OneD, NekDouble> > &field)
-    {
-        v_SendFields(step, time, field);
-    }
-
-    void ReceiveFields(const int step,
-                       const NekDouble time,
-                       Array<OneD, Array<OneD, NekDouble> > &field)
-    {
-        v_ReceiveFields(step, time, field);
-    }
-
-protected:
-    string m_exchangeName;
-
-    CwipiCouplingSharedPointer m_coupling;
-    int m_nEVars;
-    NekDouble m_filtWidth;
-
-    double *m_rValsInterl;
-
-    virtual void v_SendFields(const int step,
-                              const NekDouble time,
-                              Array<OneD, Array<OneD, NekDouble> > &field);
-
-    virtual void v_ReceiveFields(const int step,
-                                 const NekDouble time,
-                                 Array<OneD, Array<OneD, NekDouble> > &field);
-};
-
-typedef boost::shared_ptr<CwipiExchange> CwipiExchangeSharedPtr;
 }
 }
+
 #endif

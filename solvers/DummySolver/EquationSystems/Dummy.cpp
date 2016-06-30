@@ -86,8 +86,6 @@ void Dummy::v_InitObject()
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
         m_fields[0], "cpl1",  0, 1.0);
-    m_sendExchange = MemoryManager<CwipiExchange>::AllocateSharedPtr(
-        m_coupling, "ex1", m_nRecvVars);
 }
 
 /**
@@ -137,7 +135,7 @@ void Dummy::receiveFields()
     {
         last_update = m_time;
 
-        m_sendExchange->ReceiveFields(0, m_time, m_recFields);
+        m_coupling->ReceiveFields(0, m_time, m_recFields);
 
         DumpFields("recFields_" + boost::lexical_cast<std::string>(m_time) +
                        ".pts",

@@ -66,7 +66,6 @@ class APE_coupled : public APE
     protected:
 
         SolverUtils::CwipiCouplingSharedPointer         m_coupling;
-        SolverUtils::CwipiExchangeSharedPtr             m_sendExchange;
         int                                             m_nSendVars;
         int                                             m_nRecvVars;
         int                                             m_recvSteps;

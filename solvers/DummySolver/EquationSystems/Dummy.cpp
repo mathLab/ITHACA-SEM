@@ -93,7 +93,7 @@ Dummy::~Dummy()
  */
 bool Dummy::v_PostIntegrate(int step)
 {
-    receiveFields();
+    m_coupling->ReceiveFields(0, m_time, m_timestep, m_recFields);
 
     return UnsteadySystem::v_PostIntegrate(step);
 }
@@ -120,57 +120,11 @@ void Dummy::DoOdeProjection(
     // do nothing
 }
 
-void Dummy::receiveFields()
-{
-    m_coupling->ReceiveFields(0, m_time, m_timestep, m_recFields);
-
-    DumpFields("recFields_" + boost::lexical_cast<std::string>(m_time) + ".pts",
-               m_fields[0],
-               m_recFields);
-
-    MultiRegions::ExpListSharedPtr recvField = m_coupling->GetRecvField();
-    DumpFields("rawFields_" + boost::lexical_cast<std::string>(m_time) + ".pts",
-               recvField,
-               m_coupling->GetRVals());
-}
-
 void Dummy::v_Output(void)
 {
     Nektar::SolverUtils::EquationSystem::v_Output();
 
     m_coupling->FinalizeCoupling();
-}
-
-void Dummy::DumpFields(const string filename,
-                       MultiRegions::ExpListSharedPtr field,
-                       const Array<OneD, const Array<OneD, NekDouble> > data)
-{
-    ASSERTL0(data.num_elements() == m_recvFieldNames.size(),
-             "dimension mismatch");
-    ASSERTL0(data[0].num_elements() == field->GetTotPoints(),
-             "dimension mismatch");
-
-    int nq = field->GetTotPoints();
-
-    Array<OneD, Array<OneD, NekDouble> > tmp(m_recvFieldNames.size() +
-                                             m_spacedim);
-
-    for (int i = 0; i < m_spacedim; ++i)
-    {
-        tmp[i] = Array<OneD, NekDouble>(nq, 0.0);
-    }
-    field->GetCoords(tmp[0], tmp[1], tmp[2]);
-
-    for (int i = 0; i < m_recvFieldNames.size(); ++i)
-    {
-        tmp[m_spacedim + i] = data[i];
-    }
-
-    LibUtilities::PtsIO ptsIO(m_session->GetComm());
-    LibUtilities::PtsFieldSharedPtr rvPts =
-        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
-            m_spacedim, m_recvFieldNames, tmp);
-    ptsIO.Write(filename, rvPts);
 }
 
 void Dummy::v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,

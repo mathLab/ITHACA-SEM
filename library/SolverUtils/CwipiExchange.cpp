@@ -111,6 +111,8 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
     m_config["OVERSAMPLE"]   = "0";
     m_config["FILTERWIDTH"]  = "-1";
     m_config["RECEIVESTEPS"] = "1";
+    m_config["DUMPRAW"]      = "0";
+
     ASSERTL0(session->DefinesElement("Nektar/Coupling"),
              "No Coupling config found");
 
@@ -122,7 +124,6 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
     vCoupling->QueryStringAttribute("NAME", &nName);
     ASSERTL0(nName.size(), "No Coupling NAME attribute set");
     ASSERTL0(m_couplingName == nName, "Wrong Coupling name");
-    ;
 
     TiXmlElement *element = vCoupling->FirstChildElement("I");
     while (element)
@@ -169,7 +170,7 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
     if (session->GetComm()->GetRank() == 0 && m_config.size() > 0)
     {
         cout << "Coupling Config:" << endl;
-        std::map<std::string, std::string>::iterator x;
+        CouplingConfigMap::iterator x;
         for (x = m_config.begin(); x != m_config.end(); ++x)
         {
             cout << "\t" << x->first << " = " << x->second << endl;
@@ -355,12 +356,6 @@ void CwipiCoupling::AnnounceRecvPoints()
         m_rValsInterl =
             (double *)malloc(sizeof(double) * m_nPoints * m_nRecvVars);
         ASSERTL1(m_rValsInterl != NULL, "malloc failed for m_rValsInterl");
-
-        m_rVals = Array<OneD, Array<OneD, NekDouble> >(m_nRecvVars);
-        for (int i = 0; i < m_nRecvVars; ++i)
-        {
-            m_rVals[i] = Array<OneD, NekDouble>(m_recvField->GetTotPoints());
-        }
     }
     if (m_nSendVars > 0)
     {
@@ -498,12 +493,17 @@ void CwipiCoupling::FetchFields(const int step,
     timer1.Start();
 
     Array<OneD, NekDouble> tmpC(m_recvField->GetNcoeffs());
+    Array<OneD, Array<OneD, NekDouble> > rVals(m_nRecvVars);
+    for (int i = 0; i < m_nRecvVars; ++i)
+    {
+        rVals[i] = Array<OneD, NekDouble>(m_recvField->GetTotPoints());
+    }
 
     // interpolate from m_evalField to m_recvField
     for (int i = 0; i < m_nRecvVars; ++i)
     {
         m_evalField->FwdTrans(field[i], tmpC);
-        m_recvField->BwdTrans(tmpC, m_rVals[i]);
+        m_recvField->BwdTrans(tmpC, rVals[i]);
     }
 
     int nNotLoc = 0;
@@ -552,13 +552,18 @@ void CwipiCoupling::FetchFields(const int step,
             }
             else
             {
-                m_rVals[j][i] = m_rValsInterl[intPos * m_nRecvVars + j];
+                rVals[j][i] = m_rValsInterl[intPos * m_nRecvVars + j];
                 intPos++;
             }
         }
     }
 
     timer3.Start();
+    if (boost::lexical_cast<bool>(m_config["DUMPRAW"]))
+    {
+        DumpRawFields(time, rVals);
+    }
+
     if (m_filtWidth > 0)
     {
         for (int i = 0; i < m_nRecvVars; ++i)
@@ -571,7 +576,7 @@ void CwipiCoupling::FetchFields(const int step,
                 Velocity[j] = Array<OneD, NekDouble>(m_nPoints, 0.0);
             }
 
-            Vmath::Smul(m_nPoints, -m_filtWidth, m_rVals[i], 1, forcing, 1);
+            Vmath::Smul(m_nPoints, -m_filtWidth, rVals[i], 1, forcing, 1);
 
             // Note we are using the
             // LinearAdvectionDiffusionReaction solver here
@@ -589,7 +594,7 @@ void CwipiCoupling::FetchFields(const int step,
     {
         for (int i = 0; i < m_nRecvVars; ++i)
         {
-            m_recvField->FwdTrans(m_rVals[i], tmpC);
+            m_recvField->FwdTrans(rVals[i], tmpC);
             m_evalField->BwdTrans(tmpC, field[i]);
         }
     }
@@ -602,6 +607,40 @@ void CwipiCoupling::FetchFields(const int step,
         cout << "CWIPI time: " << timer2.TimePerTest(1) << ", ";
         cout << "Smoother time: " << timer3.TimePerTest(1) << endl;
     }
+}
+
+void CwipiCoupling::DumpRawFields(const NekDouble time,
+                                  Array<OneD, Array<OneD, NekDouble> > rVals)
+{
+    std::string filename =
+        "rawFields_" + boost::lexical_cast<std::string>(time) + ".pts";
+
+    // HACK
+    std::vector<std::string> recvFieldNames;
+    recvFieldNames.push_back("u0");
+    recvFieldNames.push_back("v0");
+    recvFieldNames.push_back("w0");
+    recvFieldNames.push_back("p0");
+    recvFieldNames.push_back("rho0");
+    recvFieldNames.push_back("S");
+
+    Array<OneD, Array<OneD, NekDouble> > tmp(m_nRecvVars + m_spacedim);
+    for (int i = 0; i < 3; ++i)
+    {
+        tmp[i] = Array<OneD, NekDouble>(m_recvField->GetTotPoints(), 0.0);
+    }
+    m_recvField->GetCoords(tmp[0], tmp[1], tmp[2]);
+
+    for (int i = 0; i < m_nRecvVars; ++i)
+    {
+        tmp[m_spacedim + i] = rVals[i];
+    }
+
+    LibUtilities::PtsIO ptsIO(m_evalField->GetSession()->GetComm());
+    LibUtilities::PtsFieldSharedPtr rvPts =
+        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+            m_spacedim, recvFieldNames, tmp);
+    ptsIO.Write(filename, rvPts);
 }
 }
 }

@@ -41,6 +41,8 @@ namespace Nektar
 namespace SolverUtils
 {
 
+typedef std::map<std::string, std::string> CouplingConfigMap;
+
 class CwipiCoupling
 {
 
@@ -53,26 +55,6 @@ public:
                   double geomTol);
 
     ~CwipiCoupling();
-
-    MultiRegions::ExpListSharedPtr GetEvalField()
-    {
-        return m_evalField;
-    };
-
-    MultiRegions::ExpListSharedPtr GetRecvField()
-    {
-        return m_recvField;
-    };
-
-    const Array<OneD, const Array<OneD, NekDouble> > GetRVals()
-    {
-        return m_rVals;
-    }
-
-    string GetName()
-    {
-        return m_couplingName;
-    };
 
     const std::map<std::string, std::string> GetConfig()
     {
@@ -98,7 +80,7 @@ public:
 protected:
     string m_couplingName;
 
-    std::map<std::string, std::string> m_config;
+    CouplingConfigMap m_config;
     NekDouble m_filtWidth;
 
     MultiRegions::ExpListSharedPtr m_evalField;
@@ -120,7 +102,6 @@ protected:
     int *m_connecIdx;
     int *m_connec;
     double *m_rValsInterl;
-    Array<OneD, Array<OneD, NekDouble> > m_rVals;
     double *m_sValsInterl;
 
     map<int, int> m_vertMap;
@@ -135,6 +116,9 @@ private:
     void AnnounceMesh();
 
     void AnnounceRecvPoints();
+
+    void DumpRawFields(const NekDouble time,
+                       Array<OneD, Array<OneD, NekDouble> > rVals);
 
     template <typename T>
     void AddElementsToMesh(T geom,

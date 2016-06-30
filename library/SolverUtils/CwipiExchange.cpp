@@ -59,10 +59,6 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
       m_connec(NULL), m_rValsInterl(NULL), m_sValsInterl(NULL)
 {
     // HACK: m_nSendVars(0), m_nRecvVars(6)
-    m_config["REMOTENAME"]   = "precise";
-    m_config["OVERSAMPLE"]   = "0";
-    m_config["FILTERWIDTH"]  = "-1";
-    m_config["RECEIVESTEPS"] = "1";
     ReadConfig(m_evalField->GetSession());
 
     cwipi_dump_application_properties();
@@ -110,6 +106,11 @@ CwipiCoupling::~CwipiCoupling()
 
 void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
 {
+    // defaults
+    m_config["REMOTENAME"]   = "precise";
+    m_config["OVERSAMPLE"]   = "0";
+    m_config["FILTERWIDTH"]  = "-1";
+    m_config["RECEIVESTEPS"] = "1";
     ASSERTL0(session->DefinesElement("Nektar/Coupling"),
              "No Coupling config found");
 
@@ -141,6 +142,12 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
 
         // make sure that solver property is capitalised
         std::string propertyUpper = boost::to_upper_copy(property);
+
+        CouplingConfigMap::const_iterator x = m_config.find(propertyUpper);
+        ASSERTL0(x != m_config.end(),
+                 "Invalid PROPERTY attribute in Coupling section "
+                 "XML element: \n\t'" +
+                     tagcontent.str() + "'");
 
         // read the value
         ASSERTL0(element->Attribute("VALUE"),

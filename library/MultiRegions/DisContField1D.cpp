@@ -1349,11 +1349,6 @@ namespace Nektar
                              ::RobinBoundaryCondition>(m_bndConditions[i])
                              ->m_robinFunction).Evaluate(x0[0],x1[0],x2[0],time));
                         
-                        m_bndCondExpansions[i]->SetPhys(0,
-                            (boost::static_pointer_cast<SpatialDomains
-                             ::RobinBoundaryCondition>(m_bndConditions[i])
-                             ->m_robinPrimitiveCoeff).Evaluate(x0[0],x1[0],x2[0],time));
-                        
                     }
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eNotDefined)
@@ -1508,20 +1503,24 @@ namespace Nektar
 
             for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                MultiRegions::ExpListSharedPtr locExpList;
-
                 if (m_bndConditions[i]->GetBoundaryConditionType() ==
-                   SpatialDomains::eRobin)
+                    SpatialDomains::eRobin)
                 {
                     int elmtid;
-                    Array<OneD, NekDouble> Array_tmp;
 
-                    locExpList = m_bndCondExpansions[i];
-
+                    Array<OneD, NekDouble> x0(1);
+                    Array<OneD, NekDouble> x1(1);
+                    Array<OneD, NekDouble> x2(1);
+                    Array<OneD, NekDouble> coeffphys(1);
+                    
+                    coeffphys[0]  = (boost::static_pointer_cast<SpatialDomains
+                         ::RobinBoundaryCondition>(m_bndConditions[i])
+                         ->m_robinPrimitiveCoeff).
+                    Evaluate(x0[0],x1[0],x2[0],0.0);
+                        
                     RobinBCInfoSharedPtr rInfo =
                         MemoryManager<RobinBCInfo>::
-                            AllocateSharedPtr(
-                                VertID[i],Array_tmp = locExpList->GetPhys());
+                            AllocateSharedPtr(VertID[i],coeffphys);
 
                     elmtid = ElmtID[i];
                     // make link list if necessary (not likely in

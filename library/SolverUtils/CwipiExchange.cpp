@@ -466,6 +466,11 @@ void CwipiCoupling::ReceiveFields(const int step,
 {
     ASSERTL1(m_nRecvVars == field.num_elements(), "field size mismatch");
 
+    if (m_recvSteps < 1)
+    {
+        return;
+    }
+
     int nq = m_evalField->GetTotPoints();
 
     // make sure we have sensible data in old/new field the first time this

@@ -34,7 +34,10 @@
 #ifndef NEKTAR_CWIPIEXCHANGE
 #define NEKTAR_CWIPIEXCHANGE
 
+#include <SolverUtils/Interpolator.h>
 #include <SolverUtils/EquationSystem.h>
+
+#include <cwipi.h>
 
 namespace Nektar
 {
@@ -69,12 +72,14 @@ public:
     void SendFields(const int step,
                     const NekDouble time,
                     const NekDouble timestep,
-                    Array<OneD, Array<OneD, NekDouble> > &field);
+                    const Array<OneD, const Array<OneD, NekDouble> > &field);
 
     void ReceiveFields(const int step,
                        const NekDouble time,
                        const NekDouble timestep,
                        Array<OneD, Array<OneD, NekDouble> > &field);
+
+    void GetInterpField(Array<OneD, Array<OneD, NekDouble> > &interpField);
 
     void PrintProgressbar(const int position, const int goal) const;
 
@@ -83,6 +88,8 @@ protected:
 
     CouplingConfigMap m_config;
     NekDouble m_filtWidth;
+
+    Array<OneD, Array<OneD, NekDouble> > m_sendField;
 
     MultiRegions::ExpListSharedPtr m_evalField;
     MultiRegions::ExpListSharedPtr m_recvField;
@@ -111,7 +118,14 @@ protected:
 
     map<int, int> m_vertMap;
 
+    SolverUtils::InterpolatorSharedPtr m_sendInterpolator;
+
     virtual void v_FinalizeCoupling(void);
+
+    const NekDouble GetSendField(const int i, const int j) const
+    {
+        return m_sendField[i][j];
+    }
 
 private:
     void ReadConfig(LibUtilities::SessionReaderSharedPtr session);
@@ -137,6 +151,10 @@ private:
 };
 
 typedef boost::shared_ptr<CwipiCoupling> CwipiCouplingSharedPointer;
+
+typedef boost::function<void(Array<OneD, Array<OneD, NekDouble> > interpField,
+                             const int nPts)> SendCallbackType;
+std::map<std::string, SendCallbackType> CouplingMap;
 }
 }
 

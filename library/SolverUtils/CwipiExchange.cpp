@@ -43,12 +43,49 @@
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
 
-#include <cwipi.h>
-
 namespace Nektar
 {
 namespace SolverUtils
 {
+
+static void InterpCallback(
+    const int entities_dim,
+    const int n_local_vertex,
+    const int n_local_element,
+    const int n_local_polhyedra,
+    const int n_distant_point,
+    const double local_coordinates[],
+    const int local_connectivity_index[],
+    const int local_connectivity[],
+    const int local_polyhedra_face_index[],
+    const int local_polyhedra_cell_to_face_connectivity[],
+    const int local_polyhedra_face_connectivity_index[],
+    const int local_polyhedra_face_connectivity[],
+    const double distant_points_coordinates[],
+    const int distant_points_location[],
+    const float distant_points_distance[],
+    const int distant_points_barycentric_coordinates_index[],
+    const double distant_points_barycentric_coordinates[],
+    const int stride,
+    const cwipi_solver_type_t solver_type,
+    const void *local_field,
+    void *distant_field)
+{
+    Array<OneD, Array<OneD, NekDouble> > interpField(stride);
+    // HACK
+    CouplingMap["0"](interpField, n_distant_point);
+
+    ASSERTL0(interpField.num_elements() == stride, "size mismatch");
+    ASSERTL0(interpField[0].num_elements() == n_distant_point, "size mismatch");
+
+    for (int i = 0; i < n_distant_point; i++)
+    {
+        for (int j = 0; j < stride; ++j)
+        {
+            ((double *)distant_field)[i * stride + j] = interpField[j][i];
+        }
+    }
+}
 
 CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                              string name,
@@ -88,6 +125,10 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     AnnounceMesh();
 
     AnnounceRecvPoints();
+
+    // HACK
+    CouplingMap["0"] = boost::bind(&CwipiCoupling::GetInterpField, this, _1);
+    cwipi_set_interpolation_function(m_couplingName.c_str(), InterpCallback);
 }
 
 CwipiCoupling::~CwipiCoupling()
@@ -377,6 +418,7 @@ void CwipiCoupling::AnnounceRecvPoints()
     }
 
     cwipi_set_points_to_locate(m_couplingName.c_str(), m_nPoints, m_points);
+    cwipi_locate(m_couplingName.c_str());
 
     if (m_nRecvVars > 0)
     {
@@ -390,6 +432,12 @@ void CwipiCoupling::AnnounceRecvPoints()
             sizeof(double) * m_evalField->GetGraph()->GetNvertices() *
             m_nSendVars);
         ASSERTL1(m_sValsInterl != NULL, "malloc failed for m_sValsInterl");
+        for (int i = 0;
+             i < m_evalField->GetGraph()->GetNvertices() * m_nSendVars;
+             ++i)
+        {
+            m_sValsInterl[i] = i;
+        }
     }
 }
 
@@ -454,37 +502,87 @@ void CwipiCoupling::PrintProgressbar(const int position, const int goal) const
     }
 }
 
-void CwipiCoupling::SendFields(const int step,
-                               const NekDouble time,
-                               const NekDouble timestep,
-                               Array<OneD, Array<OneD, NekDouble> > &field)
+void CwipiCoupling::GetInterpField(
+    Array<OneD, Array<OneD, NekDouble> > &interpField)
+{
+    ASSERTL0(interpField.num_elements() == m_nSendVars, "size mismatch");
 
+    int n_distant_point = cwipi_get_n_distant_points(m_couplingName.c_str());
+
+    if (not m_sendInterpolator)
+    {
+        Array<OneD, Array<OneD, NekDouble> > local(3);
+        for (int i = 0; i < 3; ++i)
+        {
+            local[i] = Array<OneD, NekDouble>(m_evalField->GetTotPoints(), 0.0);
+        }
+        m_evalField->GetCoords(local[0], local[1], local[2]);
+        LibUtilities::PtsFieldSharedPtr locatPts =
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, local);
+
+        double *distant_points_coordinates =
+            cwipi_get_distant_coordinates(m_couplingName.c_str());
+        Array<OneD, Array<OneD, NekDouble> > dist(3);
+        for (int i = 0; i < 3; ++i)
+        {
+            dist[i] = Array<OneD, NekDouble>(n_distant_point);
+            for (int j = 0; j < n_distant_point; ++j)
+            {
+                dist[i][j] = distant_points_coordinates[3 * j + i];
+            }
+        }
+        LibUtilities::PtsFieldSharedPtr distPts =
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, dist);
+
+        m_sendInterpolator =
+            MemoryManager<SolverUtils::Interpolator>::AllocateSharedPtr(
+                SolverUtils::eNearestNeighbour);
+        m_sendInterpolator->CalcWeights(locatPts, distPts);
+        m_sendInterpolator->PrintStatistics();
+    }
+
+    for (int i = 0; i < m_nSendVars; ++i)
+    {
+        interpField[i] = Array<OneD, NekDouble>(n_distant_point);
+    }
+
+    LibUtilities::PtsFieldSharedPtr ptsIn =
+        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(0,
+                                                                 m_sendField);
+    LibUtilities::PtsFieldSharedPtr ptsOut =
+        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(0,
+                                                                 interpField);
+    m_sendInterpolator->Interpolate(ptsIn, ptsOut);
+
+    cout << "interpField.num_elements() = " << interpField.num_elements()
+         << endl;
+    cout << "interpField[0].num_elements() = " << interpField[0].num_elements()
+         << endl;
+}
+
+void CwipiCoupling::SendFields(
+    const int step,
+    const NekDouble time,
+    const NekDouble timestep,
+    const Array<OneD, const Array<OneD, NekDouble> > &field)
 {
     if (m_sendSteps < 1)
     {
         return;
     }
 
+    // HACK
+    //     m_sendField = field;
+    m_sendField = Array<OneD, Array<OneD, NekDouble> >(m_nSendVars);
+    for (int i = 0; i < m_nSendVars; ++i)
+    {
+        m_sendField[i] =
+            Array<OneD, NekDouble>(m_evalField->GetTotPoints(), 5.678);
+    }
+
     ASSERTL1(m_nSendVars == field.num_elements(), "field size mismatch");
 
     cout << "sending fields at i = " << step << ", t = " << time << endl;
-
-    int nVerts = m_evalField->GetGraph()->GetNvertices();
-
-    Array<OneD, NekDouble> tmpC(m_evalField->GetNcoeffs());
-    Array<OneD, Array<OneD, NekDouble> > sVals(m_nSendVars);
-    for (int i = 0; i < m_nSendVars; ++i)
-    {
-        sVals[i] = Array<OneD, NekDouble>(nVerts, 1.2345);
-    }
-
-    for (int j = 0; j < m_nSendVars; ++j)
-    {
-        for (int i = 0; i < nVerts; ++i)
-        {
-            m_sValsInterl[i * m_nSendVars + j] = sVals[j][i];
-        }
-    }
 
     int nNotLoc = 0;
     // workaround a bug in cwipi: receiving_field_name should be const char* but

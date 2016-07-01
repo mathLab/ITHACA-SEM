@@ -68,6 +68,7 @@ public:
 
     void SendFields(const int step,
                     const NekDouble time,
+                    const NekDouble timestep,
                     Array<OneD, Array<OneD, NekDouble> > &field);
 
     void ReceiveFields(const int step,

@@ -176,6 +176,7 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
     m_nSendVars = m_sendFieldNames.size();
 
     m_recvSteps = boost::lexical_cast<int>(m_config["RECEIVESTEPS"]);
+    m_sendSteps = boost::lexical_cast<int>(m_config["SENDSTEPS"]);
 
     m_filtWidth = boost::lexical_cast<NekDouble>(m_config["FILTERWIDTH"]);
 
@@ -385,8 +386,9 @@ void CwipiCoupling::AnnounceRecvPoints()
     }
     if (m_nSendVars > 0)
     {
-        m_sValsInterl =
-            (double *)malloc(sizeof(double) * m_nPoints * m_nSendVars);
+        m_sValsInterl = (double *)malloc(
+            sizeof(double) * m_evalField->GetGraph()->GetNvertices() *
+            m_nSendVars);
         ASSERTL1(m_sValsInterl != NULL, "malloc failed for m_sValsInterl");
     }
 }
@@ -454,9 +456,52 @@ void CwipiCoupling::PrintProgressbar(const int position, const int goal) const
 
 void CwipiCoupling::SendFields(const int step,
                                const NekDouble time,
+                               const NekDouble timestep,
                                Array<OneD, Array<OneD, NekDouble> > &field)
+
 {
-    ASSERTL0(false, "not implemented yet")
+    if (m_sendSteps < 1)
+    {
+        return;
+    }
+
+    ASSERTL1(m_nSendVars == field.num_elements(), "field size mismatch");
+
+    cout << "sending fields at i = " << step << ", t = " << time << endl;
+
+    int nVerts = m_evalField->GetGraph()->GetNvertices();
+
+    Array<OneD, NekDouble> tmpC(m_evalField->GetNcoeffs());
+    Array<OneD, Array<OneD, NekDouble> > sVals(m_nSendVars);
+    for (int i = 0; i < m_nSendVars; ++i)
+    {
+        sVals[i] = Array<OneD, NekDouble>(nVerts, 1.2345);
+    }
+
+    for (int j = 0; j < m_nSendVars; ++j)
+    {
+        for (int i = 0; i < nVerts; ++i)
+        {
+            m_sValsInterl[i * m_nSendVars + j] = sVals[j][i];
+        }
+    }
+
+    int nNotLoc = 0;
+    // workaround a bug in cwipi: receiving_field_name should be const char* but
+    // is char*
+    char sendFN[10];
+    strcpy(sendFN, "dummyName");
+
+    cwipi_exchange(m_couplingName.c_str(),
+                   "ex1",
+                   m_nSendVars,
+                   step,
+                   time,
+                   sendFN,
+                   m_sValsInterl,
+                   "",
+                   NULL,
+                   &nNotLoc);
 }
 
 void CwipiCoupling::ReceiveFields(const int step,
@@ -464,12 +509,12 @@ void CwipiCoupling::ReceiveFields(const int step,
                                   const NekDouble timestep,
                                   Array<OneD, Array<OneD, NekDouble> > &field)
 {
-    ASSERTL1(m_nRecvVars == field.num_elements(), "field size mismatch");
-
     if (m_recvSteps < 1)
     {
         return;
     }
+
+    ASSERTL1(m_nRecvVars == field.num_elements(), "field size mismatch");
 
     int nq = m_evalField->GetTotPoints();
 

@@ -94,6 +94,7 @@ Dummy::~Dummy()
 bool Dummy::v_PostIntegrate(int step)
 {
     m_coupling->ReceiveFields(0, m_time, m_timestep, m_recFields);
+    m_coupling->SendFields(0, m_time, m_timestep, m_recFields);
 
     return UnsteadySystem::v_PostIntegrate(step);
 }

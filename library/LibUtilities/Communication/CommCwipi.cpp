@@ -64,8 +64,16 @@ CommCwipi::CommCwipi(int narg, char* arg[])
         ASSERTL0(false, "Failed to initialise MPI");
     }
 
+    std::string localName = "";
+    for (int i = 0; i < narg; ++i) {
+        if (!std::strcmp(arg[i], "--cwipi"))
+        {
+            localName = arg[i+1];
+        }
+    }
+
     MPI_Comm localComm;
-    cwipi_init(MPI_COMM_WORLD, "nektar", &localComm);
+    cwipi_init(MPI_COMM_WORLD, localName.c_str(), &localComm);
     m_comm = localComm;
 
     MPI_Comm_size( m_comm, &m_size );

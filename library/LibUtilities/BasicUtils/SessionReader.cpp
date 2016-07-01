@@ -383,7 +383,8 @@ namespace Nektar
                                  "only partition mesh into N overlapping partitions.")
                 ("part-info",    "Output partition information")
 #ifdef NEKTAR_USE_CWIPI
-                ("cwipi",        "use CWIPI")
+                ("cwipi",        po::value<std::string>(),
+                                 "set CWIPI name")
 #endif
             ;
 

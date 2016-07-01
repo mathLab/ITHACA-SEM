@@ -90,9 +90,13 @@ protected:
     Array<OneD, Array<OneD, NekDouble> > m_newFields;
 
     int m_nSendVars;
-    int m_nRecvVars;
-    int m_recvSteps;
+    std::vector<std::string> m_sendFieldNames;
     int m_sendSteps;
+
+    int m_nRecvVars;
+    std::vector<std::string> m_recvFieldNames;
+    int m_recvSteps;
+
     NekDouble m_lastUpdate;
 
     int m_spacedim;

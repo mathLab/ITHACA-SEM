@@ -33,15 +33,15 @@
 
 #include "CwipiExchange.h"
 
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/Foundations/Interp.h>
+#include <LibUtilities/Foundations/PhysGalerkinProject.h>
 
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
-
-#include <LibUtilities/Foundations/Interp.h>
-#include <LibUtilities/Foundations/PhysGalerkinProject.h>
 
 #include <cwipi.h>
 
@@ -54,25 +54,21 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                              string name,
                              int outputFreq,
                              double geomTol)
-    : m_couplingName(name), m_evalField(field), m_nSendVars(0), m_nRecvVars(6),
-      m_lastUpdate(-1E23), m_points(NULL), m_coords(NULL), m_connecIdx(NULL),
-      m_connec(NULL), m_rValsInterl(NULL), m_sValsInterl(NULL)
+    : m_couplingName(name), m_evalField(field), m_lastUpdate(-1E23),
+      m_points(NULL), m_coords(NULL), m_connecIdx(NULL), m_connec(NULL),
+      m_rValsInterl(NULL), m_sValsInterl(NULL)
 {
-    // HACK: m_nSendVars(0), m_nRecvVars(6)
     ReadConfig(m_evalField->GetSession());
 
     cwipi_dump_application_properties();
 
     m_spacedim = m_evalField->GetGraph()->GetSpaceDimension();
 
-    m_filtWidth = boost::lexical_cast<NekDouble>(m_config["FILTERWIDTH"]);
     if (m_filtWidth > 0)
     {
         m_filtWidth = 2 * M_PI / m_filtWidth;
         m_filtWidth = m_filtWidth * m_filtWidth;
     }
-
-    m_recvSteps = boost::lexical_cast<int>(m_config["RECEIVESTEPS"]);
 
     //  Init Coupling
     cwipi_solver_type_t solver_type = CWIPI_SOLVER_CELL_VERTEX;
@@ -107,11 +103,14 @@ CwipiCoupling::~CwipiCoupling()
 void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
 {
     // defaults
-    m_config["REMOTENAME"]   = "precise";
-    m_config["OVERSAMPLE"]   = "0";
-    m_config["FILTERWIDTH"]  = "-1";
-    m_config["RECEIVESTEPS"] = "1";
-    m_config["DUMPRAW"]      = "0";
+    m_config["REMOTENAME"]       = "precise";
+    m_config["OVERSAMPLE"]       = "0";
+    m_config["FILTERWIDTH"]      = "-1";
+    m_config["RECEIVESTEPS"]     = "0";
+    m_config["RECEIVEVARIABLES"] = "";
+    m_config["SENDSTEPS"]        = "0";
+    m_config["SENDVARIABLES"]    = "";
+    m_config["DUMPRAW"]          = "0";
 
     ASSERTL0(session->DefinesElement("Nektar/Coupling"),
              "No Coupling config found");
@@ -167,6 +166,19 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
         element = element->NextSiblingElement("I");
     }
 
+    // mangle config into variables. This is ugly
+    ParseUtils::GenerateOrderedStringVector(
+        m_config["RECEIVEVARIABLES"].c_str(), m_recvFieldNames);
+    m_nRecvVars = m_recvFieldNames.size();
+
+    ParseUtils::GenerateOrderedStringVector(m_config["SENDVARIABLES"].c_str(),
+                                            m_sendFieldNames);
+    m_nSendVars = m_sendFieldNames.size();
+
+    m_recvSteps = boost::lexical_cast<int>(m_config["RECEIVESTEPS"]);
+
+    m_filtWidth = boost::lexical_cast<NekDouble>(m_config["FILTERWIDTH"]);
+
     if (session->GetComm()->GetRank() == 0 && m_config.size() > 0)
     {
         cout << "Coupling Config:" << endl;
@@ -175,7 +187,21 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
         {
             cout << "\t" << x->first << " = " << x->second << endl;
         }
-        cout << endl;
+
+        cout << "\tRECEIVEVARIABLES (parsed) = [";
+        std::vector<string>::const_iterator i;
+        for (i = m_recvFieldNames.begin(); i != m_recvFieldNames.end(); ++i)
+        {
+            cout << *i << ", ";
+        }
+        cout << "]" << endl;
+
+        cout << "\tSENDVARIABLES (parsed) = [";
+        for (i = m_sendFieldNames.begin(); i != m_sendFieldNames.end(); ++i)
+        {
+            cout << *i << ", ";
+        }
+        cout << "]" << endl;
     }
 }
 
@@ -615,15 +641,6 @@ void CwipiCoupling::DumpRawFields(const NekDouble time,
     std::string filename =
         "rawFields_" + boost::lexical_cast<std::string>(time) + ".pts";
 
-    // HACK
-    std::vector<std::string> recvFieldNames;
-    recvFieldNames.push_back("u0");
-    recvFieldNames.push_back("v0");
-    recvFieldNames.push_back("w0");
-    recvFieldNames.push_back("p0");
-    recvFieldNames.push_back("rho0");
-    recvFieldNames.push_back("S");
-
     Array<OneD, Array<OneD, NekDouble> > tmp(m_nRecvVars + m_spacedim);
     for (int i = 0; i < 3; ++i)
     {
@@ -639,7 +656,7 @@ void CwipiCoupling::DumpRawFields(const NekDouble time,
     LibUtilities::PtsIO ptsIO(m_evalField->GetSession()->GetComm());
     LibUtilities::PtsFieldSharedPtr rvPts =
         MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
-            m_spacedim, recvFieldNames, tmp);
+            m_spacedim, m_recvFieldNames, tmp);
     ptsIO.Write(filename, rvPts);
 }
 }

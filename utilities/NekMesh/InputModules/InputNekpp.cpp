@@ -393,6 +393,7 @@ void InputNekpp::Process()
             vertToString[vid] = strs;
 
             vertex = vertex->NextSiblingElement("V");
+
         }
 
         TiXmlElement *edge = cad->FirstChildElement("E");
@@ -429,9 +430,9 @@ void InputNekpp::Process()
 
         int fid;
 
-        while(edge)
+        while(face)
         {
-            std::string f(edge->ValueStr());
+            std::string f(face->ValueStr());
             ASSERTL0(f == "F", (std::string("Unknown CAD type:") + f).c_str());
 
             /// Read edge id attribute.
@@ -468,6 +469,7 @@ void InputNekpp::Process()
     map<pair<int,int>, vector<string> >::iterator fsit;
 
     {
+        int ct= 0;
         NodeSet::iterator it;
         for(it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end();
             it++)
@@ -475,6 +477,7 @@ void InputNekpp::Process()
             vsit = vertToString.find((*it)->m_id);
             if(vsit != vertToString.end())
             {
+                ct++;
                 for(int i = 0; i < vsit->second.size(); i++)
                 {
                     istringstream iss(vsit->second[i]);
@@ -500,9 +503,11 @@ void InputNekpp::Process()
                 }
             }
         }
+        ASSERTL0(ct == vertToString.size(), "did not find all CAD information");
     }
 
     {
+        int ct = 0;
         EdgeSet::iterator it;
         for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end();
             it++)
@@ -512,6 +517,7 @@ void InputNekpp::Process()
                 esit = edgeToString.find(pair<int,int>((*it)->m_id,j));
                 if(esit != edgeToString.end())
                 {
+                    ct++;
                     for(int i = 0; i < esit->second.size(); i++)
                     {
                         istringstream iss(esit->second[i]);
@@ -538,9 +544,11 @@ void InputNekpp::Process()
                 }
             }
         }
+        ASSERTL0(ct == edgeToString.size(), "did not find all CAD information");
     }
 
     {
+        int ct = 0;
         FaceSet::iterator it;
         for(it = m_mesh->m_faceSet.begin(); it != m_mesh->m_faceSet.end();
             it++)
@@ -550,6 +558,7 @@ void InputNekpp::Process()
                 fsit = faceToString.find(pair<int,int>((*it)->m_id,j));
                 if(fsit != faceToString.end())
                 {
+                    ct++;
                     for(int i = 0; i < fsit->second.size(); i++)
                     {
                         istringstream iss(fsit->second[i]);
@@ -576,6 +585,7 @@ void InputNekpp::Process()
                 }
             }
         }
+        ASSERTL0(ct == faceToString.size(), "did not find all CAD information");
     }
 #endif
 

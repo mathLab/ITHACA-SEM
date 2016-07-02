@@ -115,12 +115,12 @@ void OutputNekpp::Process()
     WriteXmlEdges(geomTag);
     WriteXmlFaces(geomTag);
     WriteXmlElements(geomTag);
-    WriteXmlCurves(geomTag);
     if(m_mesh->m_hasCAD)
     {
         WriteXmlCADId(geomTag);
         WriteXmlCAD(geomTag);
     }
+    WriteXmlCurves(geomTag);
     WriteXmlComposites(geomTag);
     WriteXmlDomain(geomTag);
     WriteXmlExpansions(root);
@@ -1001,9 +1001,12 @@ void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
     TiXmlElement *cad = new TiXmlElement("CAD");
 
     {
-        NodeSet::iterator it;
-        for (it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end();
-             ++it)
+        std::set<NodeSharedPtr>::iterator it;
+
+        std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
+                                    m_mesh->m_vertexSet.end());
+
+        for (it = tmp.begin(); it != tmp.end(); ++it)
         {
             if((*it)->GetNumCadCurve() > 0 || (*it)->GetNumCADSurf() > 0)
             {
@@ -1025,7 +1028,7 @@ void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
             }
         }
     }
-
+    
     {
         EdgeSet::iterator it;
         for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end();

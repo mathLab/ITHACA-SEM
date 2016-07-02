@@ -75,8 +75,6 @@ ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(true, "", "Optimise for hyper elasticity");
     m_config["numthreads"] =
         ConfigOption(false, "1", "Number of threads");
-    m_config["nq"] =
-        ConfigOption(false, "0", "Number of quad points");
     m_config["stats"] =
         ConfigOption(false, "", "Write a file with list of scaled jacobians");
     m_config["restol"] =
@@ -120,9 +118,20 @@ void ProcessVarOpti::Process()
     const int maxIter = m_config["maxiter"].as<int>();
     const NekDouble restol = m_config["restol"].as<NekDouble>();
 
-    m_mesh->m_nummode = m_config["nq"].as<int>();
+    EdgeSet::iterator eit;
+    bool fd = false;
+    for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+    {
+        if((*eit)->m_edgeNodes.size() > 0)
+        {
+            m_mesh->m_nummode = (*eit)->m_edgeNodes.size() + 2;
+            fd = true;
+            break;
+        }
+    }
+    ASSERTL0(fd,"failed to find order of mesh")
 
-    ASSERTL0(m_mesh->m_nummode > 2,"not specified high-order");
+    cout << "Indentified order as: " << m_mesh->m_nummode - 1 << endl;
 
     if(m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
     {
@@ -208,35 +217,36 @@ void ProcessVarOpti::Process()
     GetElementMap();
 
     vector<vector<NodeSharedPtr> > freenodes = GetColouredNodes();
-    vector<vector<NodeOpti> > optiNodes;
+    vector<vector<NodeOpti*> > optiNodes;
 
     for(int i = 0; i < freenodes.size(); i++)
     {
-        vector<NodeOpti> ns;
+        vector<NodeOpti*> ns;
         for(int j = 0; j < freenodes[i].size(); j++)
         {
             NodeElMap::iterator it = nodeElMap.find(freenodes[i][j]->m_id);
             ASSERTL0(it != nodeElMap.end(), "could not find");
-            if(freenodes[i][j]->GetNumCadCurve() ==  0 && freenodes[i][j]->GetNumCadCurve() == 0)
+
+            if(freenodes[i][j]->GetNumCadCurve() ==  0 && freenodes[i][j]->GetNumCADSurf() == 0)
             {
                 if(m_mesh->m_spaceDim == 3)
                 {
-                    ns.push_back(NodeOpti3D3D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti));
+                    ns.push_back(new NodeOpti3D3D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti));
                 }
                 else
                 {
-                    ns.push_back(NodeOpti2D2D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti));
+                    ns.push_back(new NodeOpti2D2D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti));
                 }
             }
             else if(freenodes[i][j]->GetNumCadCurve() == 1)
             {
                 vector<pair<int, CADCurveSharedPtr> > cs = freenodes[i][j]->GetCADCurves();
-                ns.push_back(NodeOpti1D3D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti,cs[0].second));
+                ns.push_back(new NodeOpti1D3D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti,cs[0].second));
             }
             else if(freenodes[i][j]->GetNumCADSurf() == 1)
             {
                 vector<pair<int, CADSurfSharedPtr> > ss = freenodes[i][j]->GetCADSurfs();
-                ns.push_back(NodeOpti2D3D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti,ss[0].second));
+                ns.push_back(new NodeOpti2D3D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti,ss[0].second));
             }
             else
             {
@@ -289,7 +299,7 @@ void ProcessVarOpti::Process()
             vector<Thread::ThreadJob*> jobs(optiNodes[i].size());
             for(int j = 0; j < optiNodes[i].size(); j++)
             {
-                jobs[j] = optiNodes[i][j].GetJob();
+                jobs[j] = optiNodes[i][j]->GetJob();
             }
 
             tm->SetNumWorkers(0);

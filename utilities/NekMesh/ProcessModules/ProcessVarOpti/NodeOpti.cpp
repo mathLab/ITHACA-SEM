@@ -744,7 +744,7 @@ NekDouble NodeOpti::GetFunctional()
 
 NodeOptiJob* NodeOpti::GetJob()
 {
-    return new NodeOptiJob(*this);
+    return new NodeOptiJob(this);
 }
 
 }

@@ -49,14 +49,14 @@ namespace Utilities
 class NodeOptiJob : public Thread::ThreadJob
 {
 public:
-    NodeOptiJob(NodeOpti no) : node(no) {}
+    NodeOptiJob(NodeOpti* no) : node(no) {}
 
     void Run()
     {
-        node.Optimise();
+        node->Optimise();
     }
 private:
-    NodeOpti node;
+    NodeOpti* node;
 };
 
 }

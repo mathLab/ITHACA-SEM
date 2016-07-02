@@ -60,7 +60,7 @@ public:
 
     virtual ~NodeOpti(){};
 
-    virtual void Optimise(){};
+    virtual void Optimise() = 0;
     NodeOptiJob *GetJob();
 protected:
     virtual Array<OneD, NekDouble> GetGrad()
@@ -80,6 +80,7 @@ protected:
 class NodeOpti1D3D : public NodeOpti //1D optimsation in 3D space
 {
 public:
+
     NodeOpti1D3D(NodeSharedPtr n, vector<ElDataSharedPtr> e,
                  ResidualSharedPtr r, DerivUtilSharedPtr d,
                  PtsHelperSharedPtr p, optimiser o, CADCurveSharedPtr c)

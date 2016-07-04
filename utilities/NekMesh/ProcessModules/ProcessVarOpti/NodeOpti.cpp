@@ -165,10 +165,17 @@ void NodeOpti1D3D::Optimise()
 
         delT = G[0] / G[1];
 
+        Array<OneD, NekDouble> bd = curve->Bounds();
+
         bool found = false;
         while(alpha > 1e-10)
         {
             nt = tc - alpha * delT;
+            if(nt < bd[0] || nt > bd[1])
+            {
+                alpha /= 2.0;
+                continue;
+            }
             p = curve->P(nt);
             node->m_x = p[0];
             node->m_y = p[1];
@@ -221,11 +228,21 @@ void NodeOpti2D3D::Optimise()
         NekDouble delU = 1.0/(G[2]*G[3]-G[4]*G[4])*(G[3]*G[0] - G[4]*G[1]);
         NekDouble delV = 1.0/(G[2]*G[3]-G[4]*G[4])*(G[2]*G[1] - G[4]*G[0]);
 
+        Array<OneD, NekDouble> bd = surf->GetBounds();
+
         bool found = false;
         while(alpha > 1e-10)
         {
             uvt[0] = uvc[0] - alpha * delU;
             uvt[1] = uvc[1] - alpha * delV;
+
+            if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
+               uvt[1] < bd[2] || uvt[1] > bd[3])
+            {
+                alpha /= 2.0;
+                continue;
+            }
+
             p = surf->P(uvt);
             node->m_x = p[0];
             node->m_y = p[1];
@@ -313,7 +330,7 @@ Array<OneD, NekDouble> NodeOpti2D3D::GetGrad()
 {
     Array<OneD, NekDouble> uvc = node->GetCADSurfInfo(surf->GetId());
     NekDouble dx = 1e-4;
-    vector<NekDouble> w(9);
+    vector<NekDouble> w(7);
 
     for(int i = 0; i < 7; i++)
     {
@@ -331,11 +348,10 @@ Array<OneD, NekDouble> NodeOpti2D3D::GetGrad()
 
     //ret[0] d/dx
     //ret[1] d/dy
-    //ret[2] d/dz
 
-    //ret[3] d2/dx2
-    //ret[4] d2/dy2
-    //ret[5] d2/dxdy
+    //ret[2] d2/dx2
+    //ret[3] d2/dy2
+    //ret[4] d2/dxdy
 
 
     ret[0] = (w[1] - w[4]) / 2.0 / dx;

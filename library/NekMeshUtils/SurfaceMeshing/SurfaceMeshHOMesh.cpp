@@ -253,7 +253,7 @@ void SurfaceMesh::HOSurf()
     LibUtilities::PointsManager()[ekey]->GetPoints(gll);
 
     LibUtilities::PointsKey pkey(m_mesh->m_nummode,
-                                 LibUtilities::eNodalTriFekete);
+                                 LibUtilities::eNodalTriElec);
     Array<OneD, NekDouble> u, v;
 
     int nq = m_mesh->m_nummode;
@@ -692,7 +692,7 @@ void SurfaceMesh::HOSurf()
         }
 
         f->m_faceNodes = honodes;
-        f->m_curveType = LibUtilities::eNodalTriFekete;
+        f->m_curveType = LibUtilities::eNodalTriElec;
     }
 
     if (m_mesh->m_verbose)

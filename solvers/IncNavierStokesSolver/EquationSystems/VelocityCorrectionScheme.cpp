@@ -81,6 +81,19 @@ namespace Nektar
             ASSERTL0(false,"Need to set up pressure field definition");
         }
 
+        // Determine diffusion coefficients for each field
+        m_diffCoeff = Array<OneD, NekDouble> (m_nConvectiveFields, m_kinvis);
+        for (n = 0; n < m_nConvectiveFields; ++n)
+        {
+            std::string varName = m_session->GetVariable(n);
+            if ( m_session->DefinesFunction("DiffusionCoefficient", varName))
+            {
+                LibUtilities::EquationSharedPtr ffunc
+                    = m_session->GetFunction("DiffusionCoefficient", varName);
+                m_diffCoeff[n] = ffunc->Evaluate();
+            }
+        }
+
         // creation of the extrapolation object
         if(m_equationType == eUnsteadyNavierStokes)
         {
@@ -406,10 +419,10 @@ namespace Nektar
 
         // Subtract inarray/(aii_dt) and divide by kinvis. Kinvis will
         // need to be updated for the convected fields.
-        for(int i = 0; i < nvel; ++i)
+        for(int i = 0; i < m_nConvectiveFields; ++i)
         {
             Blas::Daxpy(phystot,-aii_dtinv,inarray[i],1,Forcing[i],1);
-            Blas::Dscal(phystot,1.0/m_kinvis,&(Forcing[i])[0],1);
+            Blas::Dscal(phystot,1.0/m_diffCoeff[i],&(Forcing[i])[0],1);
         }
     }
 
@@ -438,8 +451,7 @@ namespace Nektar
         const NekDouble aii_Dt)
     {
         StdRegions::ConstFactorMap factors;
-        // Setup coefficients for equation
-        factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_kinvis;
+
         if(m_useSpecVanVisc)
         {
             factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
@@ -449,6 +461,8 @@ namespace Nektar
         // Solve Helmholtz system and put in Physical space
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
+            // Setup coefficients for equation
+            factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_diffCoeff[i];
             m_fields[i]->HelmSolve(Forcing[i], m_fields[i]->UpdateCoeffs(),
                                    NullFlagList, factors);
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);

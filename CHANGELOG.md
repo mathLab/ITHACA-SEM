@@ -1,8 +1,25 @@
 Changelog
 =========
 
+v4.4.0
+------
+**IncNavierStokesSolver:**
+- Add ability to simulate additional scalar fields (!624)
+
+**NekMesh:**
+- Modify curve module to allow for spline input (!628)
+
 v4.3.3
 ------
+**Library**:
+- Minor fix to suppress Xxt output unless `--verbose` is specified (!642)
+
+**FieldConvert**:
+- Fix to avoid repeated import of field file (!649)
+
+**CompressibleFlowSolver**:
+- Fix issue with residual output (!647)
+
 **Packaging**:
 - Fix NekMesh dependencies for DEB package (!650)
 

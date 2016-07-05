@@ -192,7 +192,9 @@ namespace Nektar
                                    &pLocToGloMap):
             m_linSysKey(pKey),
             m_expList(pExpList),
-            m_robinBCInfo(m_expList.lock()->GetRobinBCInfo())
+            m_robinBCInfo(m_expList.lock()->GetRobinBCInfo()),
+            m_verbose(m_expList.lock()->GetSession()->
+                      DefinesCmdLineArgument("verbose"))
         {
         }
 

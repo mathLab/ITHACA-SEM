@@ -117,6 +117,8 @@ namespace Nektar
         NekDouble m_sVVCutoffRatio;
         /// Diffusion coefficient of SVV modes
         NekDouble m_sVVDiffCoeff;
+        /// Diffusion coefficients (will be kinvis for velocities)
+        Array<OneD, NekDouble> m_diffCoeff;
 
         /// Save aiiDt value to use as a trip to reset global matrix setup
         Array<OneD, NekDouble> m_saved_aii_Dt;

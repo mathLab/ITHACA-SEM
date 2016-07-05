@@ -97,6 +97,13 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
 {
     ReadConfig(m_evalField->GetSession());
 
+    cwipi_add_local_int_control_parameter("nSendVars", m_nSendVars);
+    cwipi_add_local_int_control_parameter("nRecvVars", m_nRecvVars);
+    cwipi_add_local_string_control_parameter(
+        "recvFieldNames", m_config["RECEIVEVARIABLES"].c_str());
+    cwipi_add_local_string_control_parameter("sendFieldNames",
+                                             m_config["SENDVARIABLES"].c_str());
+
     cwipi_dump_application_properties();
 
     m_spacedim = m_evalField->GetGraph()->GetSpaceDimension();

@@ -130,11 +130,11 @@ protected:
 private:
     void ReadConfig(LibUtilities::SessionReaderSharedPtr session);
 
-    void SetupRecvFields();
+    void SetupReceive();
 
+    void SetupSend();
     void AnnounceMesh();
 
-    void AnnounceRecvPoints();
 
     void DumpRawFields(const NekDouble time,
                        Array<OneD, Array<OneD, NekDouble> > rVals);

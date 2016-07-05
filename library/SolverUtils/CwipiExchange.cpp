@@ -120,15 +120,11 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                           "Ensight Gold",
                           "text");
 
-    SetupRecvFields();
-
     AnnounceMesh();
 
-    AnnounceRecvPoints();
+    SetupReceive();
 
-    // HACK
-    CouplingMap["0"] = boost::bind(&CwipiCoupling::GetInterpField, this, _1);
-    cwipi_set_interpolation_function(m_couplingName.c_str(), InterpCallback);
+    SetupSend();
 }
 
 CwipiCoupling::~CwipiCoupling()
@@ -247,7 +243,7 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
     }
 }
 
-void CwipiCoupling::SetupRecvFields()
+void CwipiCoupling::SetupReceive()
 {
     int oversamp = boost::lexical_cast<int>(m_config["OVERSAMPLE"]);
 
@@ -299,6 +295,66 @@ void CwipiCoupling::SetupRecvFields()
         m_oldFields[i] = Array<OneD, NekDouble>(m_evalField->GetTotPoints());
         m_newFields[i] = Array<OneD, NekDouble>(m_evalField->GetTotPoints());
     }
+
+    // define the quadrature points at which we want to receive data
+    m_nPoints = m_recvField->GetTotPoints();
+    Array<OneD, Array<OneD, NekDouble> > coords(3);
+    coords[0] = Array<OneD, NekDouble>(m_nPoints);
+    coords[1] = Array<OneD, NekDouble>(m_nPoints);
+    coords[2] = Array<OneD, NekDouble>(m_nPoints);
+    m_recvField->GetCoords(coords[0], coords[1], coords[2]);
+
+    m_points = (double *)malloc(sizeof(double) * 3 * m_nPoints);
+    ASSERTL1(m_points != NULL, "malloc failed for m_points");
+
+    for (int i = 0; i < m_nPoints; ++i)
+    {
+        m_points[3 * i + 0] = double(coords[0][i]);
+
+        if (m_spacedim > 1)
+        {
+            m_points[3 * i + 1] = double(coords[1][i]);
+        }
+        else
+        {
+            m_points[3 * i + 1] = 0.0;
+        }
+
+        if (m_spacedim > 2)
+        {
+            m_points[3 * i + 2] = double(coords[2][i]);
+        }
+        else
+        {
+            m_points[3 * i + 2] = 0.0;
+        }
+    }
+
+    cwipi_set_points_to_locate(m_couplingName.c_str(), m_nPoints, m_points);
+    cwipi_locate(m_couplingName.c_str());
+
+    m_rValsInterl = (double *)malloc(sizeof(double) * m_nPoints * m_nRecvVars);
+    ASSERTL1(m_rValsInterl != NULL, "malloc failed for m_rValsInterl");
+}
+
+void CwipiCoupling::SetupSend()
+{
+    // this array is never used because of our send callback method
+    m_sValsInterl = (double *)malloc(
+        sizeof(double) * m_evalField->GetGraph()->GetNvertices() * m_nSendVars);
+    ASSERTL1(m_sValsInterl != NULL, "malloc failed for m_sValsInterl");
+    for (int i = 0; i < m_evalField->GetGraph()->GetNvertices() * m_nSendVars;
+         ++i)
+    {
+        m_sValsInterl[i] = i;
+    }
+
+    // register this coupling as sender
+    // HACK
+    CouplingMap["0"] = boost::bind(&CwipiCoupling::SendCallback, this, _1, _2);
+    cwipi_set_interpolation_function(m_couplingName.c_str(), InterpCallback);
+}
+
 }
 
 void CwipiCoupling::AnnounceMesh()
@@ -379,66 +435,6 @@ void CwipiCoupling::AnnounceMesh()
 
     cwipi_define_mesh(
         m_couplingName.c_str(), nVerts, nElts, m_coords, m_connecIdx, m_connec);
-}
-
-void CwipiCoupling::AnnounceRecvPoints()
-{
-    // define the quadrature points at which we want to receive data
-    m_nPoints = m_recvField->GetTotPoints();
-    Array<OneD, Array<OneD, NekDouble> > coords(3);
-    coords[0] = Array<OneD, NekDouble>(m_nPoints);
-    coords[1] = Array<OneD, NekDouble>(m_nPoints);
-    coords[2] = Array<OneD, NekDouble>(m_nPoints);
-    m_recvField->GetCoords(coords[0], coords[1], coords[2]);
-
-    m_points = (double *)malloc(sizeof(double) * 3 * m_nPoints);
-    ASSERTL1(m_points != NULL, "malloc failed for m_points");
-
-    for (int i = 0; i < m_nPoints; ++i)
-    {
-        m_points[3 * i + 0] = double(coords[0][i]);
-
-        if (m_spacedim > 1)
-        {
-            m_points[3 * i + 1] = double(coords[1][i]);
-        }
-        else
-        {
-            m_points[3 * i + 1] = 0.0;
-        }
-
-        if (m_spacedim > 2)
-        {
-            m_points[3 * i + 2] = double(coords[2][i]);
-        }
-        else
-        {
-            m_points[3 * i + 2] = 0.0;
-        }
-    }
-
-    cwipi_set_points_to_locate(m_couplingName.c_str(), m_nPoints, m_points);
-    cwipi_locate(m_couplingName.c_str());
-
-    if (m_nRecvVars > 0)
-    {
-        m_rValsInterl =
-            (double *)malloc(sizeof(double) * m_nPoints * m_nRecvVars);
-        ASSERTL1(m_rValsInterl != NULL, "malloc failed for m_rValsInterl");
-    }
-    if (m_nSendVars > 0)
-    {
-        m_sValsInterl = (double *)malloc(
-            sizeof(double) * m_evalField->GetGraph()->GetNvertices() *
-            m_nSendVars);
-        ASSERTL1(m_sValsInterl != NULL, "malloc failed for m_sValsInterl");
-        for (int i = 0;
-             i < m_evalField->GetGraph()->GetNvertices() * m_nSendVars;
-             ++i)
-        {
-            m_sValsInterl[i] = i;
-        }
-    }
 }
 
 void CwipiCoupling::v_FinalizeCoupling(void)

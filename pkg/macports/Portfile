@@ -7,7 +7,7 @@ PortGroup           mpi 1.0
 
 name                nektarpp
 conflicts           nektarpp-devel
-version             4.2.0
+version             4.3.2
 categories          science
 platforms           darwin
 license             MIT
@@ -24,10 +24,10 @@ long_description    \
 homepage            http://www.nektar.info/
 master_sites        http://www.nektar.info/downloads/file/
 distname            nektar++-${version}
-extract.suffix      .tar.bz2
+extract.suffix      .tar.gz
 
-checksums           rmd160  5e2d9b947b2dbc47ec10d7e74c56fb1ea4333a44 \
-                    sha256  89ebf3c7e1c5b1f6cf3afb2476ed4726a1d97f3b4e232301bb1c848884484367
+checksums           rmd160  fbacd4e2ca2d514f936fe200fcc5c1c31345423d \
+                    sha256  afa20b74ed19165c9356f5ec5e33dac7de9bf48e7f2076db6488c7c03d331dd0
 
 mpi.setup
 

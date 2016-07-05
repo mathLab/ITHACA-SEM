@@ -79,7 +79,8 @@ public:
                        const NekDouble timestep,
                        Array<OneD, Array<OneD, NekDouble> > &field);
 
-    void GetInterpField(Array<OneD, Array<OneD, NekDouble> > &interpField);
+    void SendCallback(Array<OneD, Array<OneD, NekDouble> > &interpField,
+                      const int nPts);
 
     void PrintProgressbar(const int position, const int goal) const;
 
@@ -133,8 +134,10 @@ private:
     void SetupReceive();
 
     void SetupSend();
-    void AnnounceMesh();
 
+    void SetupSendInterpolation();
+
+    void AnnounceMesh();
 
     void DumpRawFields(const NekDouble time,
                        Array<OneD, Array<OneD, NekDouble> > rVals);

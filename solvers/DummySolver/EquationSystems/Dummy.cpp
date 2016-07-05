@@ -63,22 +63,22 @@ void Dummy::v_InitObject()
     ASSERTL0(m_session->DefinesCmdLineArgument("cwipi"),
              "This EquationSystem requires the --cwipi command line switch");
 
-    // HACK
-    m_recvFieldNames.push_back("u0");
-    m_recvFieldNames.push_back("v0");
-    m_recvFieldNames.push_back("w0");
-    m_recvFieldNames.push_back("p0");
-    m_recvFieldNames.push_back("rho0");
-    m_recvFieldNames.push_back("S");
+    m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
+        m_fields[0], "cpl1", 0, 1.0);
 
-    m_recFields = Array<OneD, Array<OneD, NekDouble> >(m_recvFieldNames.size());
+    m_recFields = Array<OneD, Array<OneD, NekDouble> >(
+        m_coupling->GetRecvFieldNames().size());
     for (int i = 0; i < m_recFields.num_elements(); ++i)
     {
         m_recFields[i] = Array<OneD, NekDouble>(GetTotPoints(), 0.0);
     }
 
-    m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
-        m_fields[0], "cpl1", 0, 1.0);
+    m_sendFields = Array<OneD, Array<OneD, NekDouble> >(
+        m_coupling->GetSendFieldNames().size());
+    for (int i = 0; i < m_sendFields.num_elements(); ++i)
+    {
+        m_sendFields[i] = Array<OneD, NekDouble>(GetTotPoints(), 0.0);
+    }
 }
 
 /**
@@ -93,8 +93,16 @@ Dummy::~Dummy()
  */
 bool Dummy::v_PostIntegrate(int step)
 {
+    if (m_sendFields.num_elements() > 0)
+    {
+        EvaluateFunction(m_coupling->GetSendFieldNames(),
+                         m_sendFields,
+                         "SendFields",
+                         m_time);
+    }
+
     m_coupling->ReceiveFields(0, m_time, m_timestep, m_recFields);
-    m_coupling->SendFields(0, m_time, m_timestep, m_recFields);
+    m_coupling->SendFields(0, m_time, m_timestep, m_sendFields);
 
     return UnsteadySystem::v_PostIntegrate(step);
 }
@@ -131,12 +139,12 @@ void Dummy::v_Output(void)
 void Dummy::v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                              std::vector<std::string> &variables)
 {
-    for (int i = 0; i < m_recvFieldNames.size(); i++)
+    for (int i = 0; i < m_recFields.num_elements(); i++)
     {
         Array<OneD, NekDouble> tmpC(GetNcoeffs());
 
         m_fields[0]->FwdTrans(m_recFields[i], tmpC);
-        variables.push_back(m_recvFieldNames[i]);
+        variables.push_back(m_coupling->GetRecvFieldNames()[i]);
         fieldcoeffs.push_back(tmpC);
     }
 }

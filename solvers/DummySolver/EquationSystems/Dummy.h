@@ -94,9 +94,6 @@ protected:
 private:
     Array<OneD, Array<OneD, NekDouble> > m_recFields;
     Array<OneD, Array<OneD, NekDouble> > m_sendFields;
-
-    std::vector<std::string> m_recvFieldNames;
-    std::vector<std::string> m_sendFieldNames;
 };
 }
 

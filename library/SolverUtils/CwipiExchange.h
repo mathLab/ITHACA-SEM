@@ -64,6 +64,16 @@ public:
         return m_config;
     }
 
+    std::vector<std::string> GetSendFieldNames()
+    {
+        return m_sendFieldNames;
+    }
+
+    std::vector<std::string> GetRecvFieldNames()
+    {
+        return m_recvFieldNames;
+    }
+
     inline void FinalizeCoupling()
     {
         v_FinalizeCoupling();

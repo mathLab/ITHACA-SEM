@@ -586,14 +586,7 @@ void CwipiCoupling::SendFields(
 
     ASSERTL1(m_nSendVars == field.num_elements(), "field size mismatch");
 
-    // HACK
-    //     m_sendField = field;
-    m_sendField = Array<OneD, Array<OneD, NekDouble> >(m_nSendVars);
-    for (int i = 0; i < m_nSendVars; ++i)
-    {
-        m_sendField[i] =
-            Array<OneD, NekDouble>(m_evalField->GetTotPoints(), 5.678);
-    }
+    m_sendField = field;
 
     cout << "sending fields at i = " << step << ", t = " << time << endl;
 

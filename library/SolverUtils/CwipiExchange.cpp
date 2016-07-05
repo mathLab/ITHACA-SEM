@@ -122,9 +122,17 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
 
     AnnounceMesh();
 
-    SetupReceive();
+    if (m_nRecvVars > 0 and m_recvSteps > 0)
+    {
+        SetupReceive();
+    }
 
-    SetupSend();
+    cwipi_locate(m_couplingName.c_str());
+
+    if (m_nSendVars > 0 and m_sendSteps > 0)
+    {
+        SetupSend();
+    }
 }
 
 CwipiCoupling::~CwipiCoupling()
@@ -331,7 +339,6 @@ void CwipiCoupling::SetupReceive()
     }
 
     cwipi_set_points_to_locate(m_couplingName.c_str(), m_nPoints, m_points);
-    cwipi_locate(m_couplingName.c_str());
 
     m_rValsInterl = (double *)malloc(sizeof(double) * m_nPoints * m_nRecvVars);
     ASSERTL1(m_rValsInterl != NULL, "malloc failed for m_rValsInterl");
@@ -601,7 +608,7 @@ void CwipiCoupling::ReceiveFields(const int step,
                                   const NekDouble timestep,
                                   Array<OneD, Array<OneD, NekDouble> > &field)
 {
-    if (m_nRecvVars < 1 or m_sendSteps < 1)
+    if (m_nRecvVars < 1 or m_recvSteps < 1)
     {
         return;
     }

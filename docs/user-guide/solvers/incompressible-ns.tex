@@ -592,10 +592,14 @@ the advection term using the pressure inverse mass matrix. It can be used just i
 
 
 \item \inltt{SpectralVanishingViscosity}: activates a stabilization technique
-which increases the viscosity on the highest Fourier frequencies of a Quasi-3D approach.
+which increases the viscosity on the modes with the highest frequencies.
 \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="SpectralVanishingViscosity" VALUE="True"/>
 \end{lstlisting}
+
+In a Quasi-3D simulation, this will affect both the Fourier and the spectral/hp expansions.
+To activate them independently, use \inltt{SpectralVanishingViscositySpectralHP} 
+and \inltt{SpectralVanishingViscosityHomo1D}.
 
 \item \inltt{DEALIASING}: activates the 3/2 padding rule on the advection term
 of a Quasi-3D simulation.
@@ -1102,6 +1106,61 @@ functions \inltt{AdaptiveLowerinModes} and/or
 element is taken as the average of the function in the quadrature
 points of the element. If these functions are defined, the values set
 for the tolerances in the \texttt{PARAMETERS} section are ignored.
+
+\section{Advecting extra passive scalar fields}
+
+In some cases, it might be useful to advect passive scalar fields with the velocity obtained from the
+solution of the Navier-Stokes equation. For example, in study of mass transfer or heat transfer problems
+where getting analytical expression for advection velocity is not possible, the transport (advection-diffusion)
+equation needs to be solved along with the Navier-Stokes equation to get the scalar concentration or
+temperature distribution in the flow field.
+
+In the input file, the extra field variables that are being advected need to be defined after the variables
+representing the velocity components. The pressure needs to be at the end of the list. For example, for
+a 2D simulation the expansions and variables would be defined as
+
+\begin{lstlisting}[style=XMLStyle]
+<EXPANSIONS>
+    <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u,v,c1,c2,p" TYPE="MODIFIED" />
+</EXPANSIONS>
+
+<VARIABLES>
+    <V ID="0"> u  </V>
+    <V ID="1"> v  </V>
+    <V ID="2"> c1 </V>
+    <V ID="3"> c2 </V>
+    <V ID="4"> p  </V>
+</VARIABLES>
+\end{lstlisting}
+where u, v are the velocity components, c1 and c2 are extra fields that are being advected and p is the pressure.
+
+In addition, diffusion coefficients for each extra variable can be specified by adding a function
+\inltt{DiffusionCoefficient}
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="DiffusionCoefficient">
+    <E VAR="c1" VALUE="0.1" />
+    <E VAR="c2" VALUE="0.01" />
+</FUNCTION>
+\end{lstlisting}
+
+Boundary conditions for the extra fields are set up in the same way as the velocity and pressure
+\begin{lstlisting}[style=XMLStyle]
+<BOUNDARYCONDITIONS>
+  <REGION REF="0">
+    <D VAR="u"  VALUE="0" />
+    <D VAR="v"  VALUE="0" />
+    <D VAR="c1" VALUE="1" />
+    <D VAR="c2" VALUE="0" />
+    <N VAR="p"  USERDEFINEDTYPE="H" VALUE="0" />
+  </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+It should be noted that if the diffusion coefficient is too small, the transport equation becomes advection dominated.
+This leads to small grid spacing required to resolve all physical scales associated with the transport equation
+(the ratio of resolution required for transport to Navier Stokes equation scales with $Sc^{3/4}$, where $Sc$ is the
+Schmidt number = kinematic viscosity/diffusion coefficient). Hence, small diffusion coefficient might lead to spurious
+oscillations if the mesh spacing is not small enough.
 
 \section{Examples}
 

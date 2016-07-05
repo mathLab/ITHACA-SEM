@@ -67,11 +67,15 @@ ProcessScalGrad::~ProcessScalGrad()
 
 void ProcessScalGrad::Process(po::variables_map &vm)
 {
-    int i, j, k;
     if (m_f->m_verbose)
     {
-        cout << "ProcessScalGrad: Calculating scalar gradient..." << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessScalGrad: Calculating scalar gradient..." << endl;
+        }
     }
+
+    int i, j, k;
 
     // Set up Field options to output boundary fld
     string bvalues =  m_config["bnd"].as<string>();
@@ -237,7 +241,6 @@ void ProcessScalGrad::Process(po::variables_map &vm)
         {
             m_f->m_exp[j]->UpdateBndCondExpansion(m_f->m_bndRegionsToWrite[b]) = BndExp[j][m_f->m_bndRegionsToWrite[b]];
         }
-
     }
 }
 

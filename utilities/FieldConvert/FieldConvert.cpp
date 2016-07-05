@@ -45,6 +45,7 @@ using namespace Nektar::Utilities;
 int main(int argc, char* argv[])
 {
     Timer     timer;
+    Timer     moduleTimer;
     timer.Start();
     po::options_description desc("Available options");
     desc.add_options()
@@ -67,6 +68,9 @@ int main(int argc, char* argv[])
         ("nprocs", po::value<int>(),
                 "Used to define nprocs if running serial problem to mimic "
                 "parallel run.")
+        ("npz", po::value<int>(),
+                "Used to define number of partitions in z for Homogeneous1D "
+                "expansions for parallel runs.")
         ("onlyshape", po::value<string>(),
                  "Only use element with defined shape type i.e. -onlyshape "
                  " Tetrahedron")
@@ -376,8 +380,23 @@ int main(int argc, char* argv[])
     // Run field process.
     for (int i = 0; i < modules.size(); ++i)
     {
+        if(f->m_verbose && f->m_comm->GetRank() == 0)
+        {
+            moduleTimer.Start();
+        }
         modules[i]->Process(vm);
         cout.flush();
+        if(f->m_verbose && f->m_comm->GetRank() == 0)
+        {
+            moduleTimer.Stop();
+            NekDouble cpuTime = moduleTimer.TimePerTest(1);
+
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << modules[i]->GetModuleName()
+                 << " CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+        }
     }
 
     if(f->m_verbose)
@@ -386,14 +405,12 @@ int main(int argc, char* argv[])
         {
             timer.Stop();
             NekDouble cpuTime = timer.TimePerTest(1);
-            
+
             stringstream ss;
             ss << cpuTime << "s";
             cout << "Total CPU Time: " << setw(8) << left
                  << ss.str() << endl;
-            cpuTime = 0.0;
         }
-        
     }
     return 0;
 }

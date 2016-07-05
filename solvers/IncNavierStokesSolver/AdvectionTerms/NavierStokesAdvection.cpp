@@ -255,9 +255,16 @@ namespace Nektar
                 {
                     if(fields[0]->GetWaveSpace() == true)
                     {
-                        // take d/dx, d/dy  gradients in physical Fourier space
-                        fields[0]->PhysDeriv(velocity[n],grad0,grad1);
-
+                        if (n < ndim)
+                        {
+                            // take d/dx, d/dy  gradients in physical Fourier space
+                            fields[0]->PhysDeriv(velocity[n],grad0,grad1);
+                        }
+                        else
+                        {
+                            fields[0]->HomogeneousBwdTrans(inarray[n],wkSp);
+                            fields[0]->PhysDeriv(wkSp,grad0,grad1);
+                        }
                         // Take d/dz derivative using wave space field
                         fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],inarray[n],
                                               outarray[n]);

@@ -72,8 +72,10 @@ static void InterpCallback(
     void *distant_field)
 {
     Array<OneD, Array<OneD, NekDouble> > interpField(stride);
-    // HACK
-    CouplingMap["0"](interpField, n_distant_point);
+
+    std::stringstream sst;
+    sst << entities_dim << "," << n_local_vertex << "," << stride;
+    SenderCouplings[sst.str()](interpField, n_distant_point);
 
     ASSERTL0(interpField.num_elements() == stride, "size mismatch");
     ASSERTL0(interpField[0].num_elements() == n_distant_point, "size mismatch");
@@ -364,8 +366,11 @@ void CwipiCoupling::SetupSend()
     }
 
     // register this coupling as sender
-    // HACK
-    CouplingMap["0"] = boost::bind(&CwipiCoupling::SendCallback, this, _1, _2);
+    std::stringstream sst;
+    sst << m_spacedim << "," << m_evalField->GetGraph()->GetNvertices() << ","
+        << m_nSendVars;
+    SenderCouplings[sst.str()] =
+        boost::bind(&CwipiCoupling::SendCallback, this, _1, _2);
     cwipi_set_interpolation_function(m_couplingName.c_str(), InterpCallback);
 }
 

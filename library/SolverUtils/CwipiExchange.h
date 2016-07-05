@@ -157,7 +157,7 @@ typedef boost::shared_ptr<CwipiCoupling> CwipiCouplingSharedPointer;
 
 typedef boost::function<void(Array<OneD, Array<OneD, NekDouble> > interpField,
                              const int nPts)> SendCallbackType;
-std::map<std::string, SendCallbackType> CouplingMap;
+std::map<std::string, SendCallbackType> SenderCouplings;
 }
 }
 

@@ -13,6 +13,8 @@ v4.3.3
 ------
 **Library**:
 - Minor fix to suppress Xxt output unless `--verbose` is specified (!642)
+- Fix of DirectFull solver in case where only Neumann boundary conditions 
+  are imposed. (!655)
 
 **FieldConvert**:
 - Fix to avoid repeated import of field file (!649)

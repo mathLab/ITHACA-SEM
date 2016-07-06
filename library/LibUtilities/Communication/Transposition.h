@@ -65,7 +65,8 @@ namespace Nektar
         public:
             LIB_UTILITIES_EXPORT Transposition(
                     const LibUtilities::BasisKey &HomoBasis0,
-                          LibUtilities::CommSharedPtr hcomm);
+                          LibUtilities::CommSharedPtr hcomm0,
+                          LibUtilities::CommSharedPtr hcomm1);
 
             LIB_UTILITIES_EXPORT Transposition(
                     const LibUtilities::BasisKey &HomoBasis0,
@@ -85,6 +86,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT Array<OneD, unsigned int> GetKs(void);
 
             LIB_UTILITIES_EXPORT unsigned int GetPlaneID(int i);
+
+            LIB_UTILITIES_EXPORT unsigned int GetStripID(void);
 
             LIB_UTILITIES_EXPORT Array<OneD, unsigned int> GetPlanesIDs(void);
 
@@ -151,6 +154,9 @@ namespace Nektar
 
             /// IDs of the planes on the processes.
             Array<OneD, unsigned int> m_planes_IDs;
+
+            /// IDs of the strips on the processes.
+            unsigned int m_strip_ID;
 
             /// Fourier wave numbers associated with the planes.
             Array<OneD, unsigned int> m_K;

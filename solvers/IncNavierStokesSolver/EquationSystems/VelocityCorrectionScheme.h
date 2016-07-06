@@ -65,26 +65,50 @@ namespace Nektar
 
         virtual void v_InitObject();
 
-        void SetUpPressureForcing(const Array<OneD, const Array<OneD, NekDouble> > &fields,
-								  Array<OneD, Array<OneD, NekDouble> > &Forcing,
-								  const NekDouble aii_Dt);
+        void SetUpPressureForcing(
+                    const Array<OneD, const Array<OneD, NekDouble> > &fields,
+                    Array<OneD, Array<OneD, NekDouble> > &Forcing,
+                    const NekDouble aii_Dt)
+        {
+            v_SetUpPressureForcing( fields, Forcing, aii_Dt);
+        }
 
-        void SetUpViscousForcing(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-								 Array<OneD, Array<OneD, NekDouble> > &Forcing,
-								 const NekDouble aii_Dt);
+        void SetUpViscousForcing(
+                    const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                    Array<OneD, Array<OneD, NekDouble> > &Forcing,
+                    const NekDouble aii_Dt)
+        {
+            v_SetUpViscousForcing( inarray, Forcing, aii_Dt);
+        }
+        
+        void SolvePressure( const Array<OneD, NekDouble>  &Forcing)
+        {
+            v_SolvePressure( Forcing);
+        }
+        
+        void SolveViscous(
+                    const Array<OneD, const Array<OneD, NekDouble> > &Forcing,
+                    Array<OneD, Array<OneD, NekDouble> > &outarray,
+                    const NekDouble aii_Dt)
+        {
+            v_SolveViscous( Forcing, outarray, aii_Dt);
+        }
 
-        void SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-									   Array<OneD, Array<OneD, NekDouble> > &outarray,
-									   const NekDouble time,
-									   const NekDouble a_iixDt);
+        void SolveUnsteadyStokesSystem(
+                    const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                    Array<OneD, Array<OneD, NekDouble> > &outarray,
+                    const NekDouble time,
+                    const NekDouble a_iixDt);
 
-        void EvaluateAdvection_SetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-											  Array<OneD, Array<OneD, NekDouble> > &outarray,
-											  const NekDouble time);
+        void EvaluateAdvection_SetPressureBCs(
+                    const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                    Array<OneD, Array<OneD, NekDouble> > &outarray,
+                    const NekDouble time)
+        {
+            v_EvaluateAdvection_SetPressureBCs( inarray, outarray, time);
+        }
 
     protected:
-
-    private:
         /// bool to identify if spectral vanishing viscosity is active.
         bool m_useHomo1DSpecVanVisc;
         /// bool to identify if spectral vanishing viscosity is active.
@@ -93,6 +117,12 @@ namespace Nektar
         NekDouble m_sVVCutoffRatio;
         /// Diffusion coefficient of SVV modes
         NekDouble m_sVVDiffCoeff;
+
+        /// Save aiiDt value to use as a trip to reset global matrix setup
+        Array<OneD, NekDouble> m_saved_aii_Dt;
+
+        /// Variable Coefficient map for the Laplacian which can be activated as part of SVV or otherwise
+        StdRegions::VarCoeffMap m_varCoeffLap; 
 
         // Virtual functions
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
@@ -106,6 +136,31 @@ namespace Nektar
         virtual Array<OneD, bool> v_GetSystemSingularChecks();
 
         virtual int v_GetForceDimension();
+        
+        virtual void v_SetUpPressureForcing(
+                    const Array<OneD, const Array<OneD, NekDouble> > &fields,
+                    Array<OneD, Array<OneD, NekDouble> > &Forcing,
+                    const NekDouble aii_Dt);
+        
+        virtual void v_SetUpViscousForcing(
+                    const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                    Array<OneD, Array<OneD, NekDouble> > &Forcing,
+                    const NekDouble aii_Dt);
+        
+        virtual void v_SolvePressure( const Array<OneD, NekDouble>  &Forcing);
+        
+        virtual void v_SolveViscous(
+                    const Array<OneD, const Array<OneD, NekDouble> > &Forcing,
+                    Array<OneD, Array<OneD, NekDouble> > &outarray,
+                    const NekDouble aii_Dt);
+        
+        virtual void v_EvaluateAdvection_SetPressureBCs(
+                    const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                    Array<OneD, Array<OneD, NekDouble> > &outarray,
+                    const NekDouble time);
+        
+    private:
+        
     };
 
     typedef boost::shared_ptr<VelocityCorrectionScheme>

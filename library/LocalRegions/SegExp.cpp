@@ -37,6 +37,7 @@
 #include <LocalRegions/SegExp.h>
 #include <LibUtilities/Foundations/Interp.h>
 
+using namespace std;
 
 namespace Nektar
 {
@@ -425,6 +426,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     case LibUtilities::eModified_A:
                     case LibUtilities::eModified_B:
                         {
+                            ASSERTL1(m_base[0]->GetPointsType() == LibUtilities::eGaussLobattoLegendre,"Cannot use FwdTrans_BndConstrained method with non GLL points");
                             offset = 2;
                         }
                         break;
@@ -634,6 +636,13 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             Vmath::Vvtvp(nq, &Fy[0], 1, &normals[1][0], 1, &Fn[0], 1, &Fn[0], 1);
 
             v_IProductWRTBase(Fn,outarray);
+        }
+
+        void SegExp::v_NormVectorIProductWRTBase(
+            const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                  Array<OneD,       NekDouble>               &outarray)
+        {
+            NormVectorIProductWRTBase(Fvec[0], Fvec[1], outarray);
         }
 
         //-----------------------------

@@ -36,6 +36,8 @@
 #ifndef NEKTAR_LIBRARY_COLLECTIONS_COLLECTION_H
 #define NEKTAR_LIBRARY_COLLECTIONS_COLLECTION_H
 
+#include <vector>
+
 #include <StdRegions/StdExpansion.h>
 #include <SpatialDomains/Geometry.h>
 #include <Collections/CollectionsDeclspec.h>
@@ -56,8 +58,8 @@ class Collection
     public:
 
         COLLECTIONS_EXPORT Collection(
-                vector<StdRegions::StdExpansionSharedPtr>     pCollExp,
-                OperatorImpMap                               &impTypes);
+                std::vector<StdRegions::StdExpansionSharedPtr>  pCollExp,
+                OperatorImpMap                                 &impTypes);
 
         inline void ApplyOperator(
                 const OperatorType                           &op,
@@ -81,7 +83,7 @@ class Collection
 
     protected:
         StdRegions::StdExpansionSharedPtr                     m_stdExp;
-        vector<SpatialDomains::GeometrySharedPtr>             m_geom;
+        std::vector<SpatialDomains::GeometrySharedPtr>        m_geom;
         boost::unordered_map<OperatorType, OperatorSharedPtr> m_ops;
         CoalescedGeomDataSharedPtr                            m_geomData;
 

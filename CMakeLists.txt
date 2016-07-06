@@ -154,7 +154,13 @@ ENDIF()
 INCLUDE (NektarCommon)
 
 # Set various ThirdParty locations
-SET(TPURL   http://www.nektar.info/thirdparty)
+OPTION(THIRDPARTY_USE_SSL "Use secure HTTP connection to download third-party files." OFF)
+IF (THIRDPARTY_USE_SSL)
+    SET(TPURL https://www.nektar.info/thirdparty)
+ELSE()
+    SET(TPURL http://www.nektar.info/thirdparty)
+ENDIF()
+
 SET(TPSRC   ${CMAKE_SOURCE_DIR}/ThirdParty)
 SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
 SET(TPDIST  ${CMAKE_BINARY_DIR}/ThirdParty/dist)
@@ -185,7 +191,6 @@ INCLUDE (ThirdPartySMV)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyANN)
 INCLUDE (ThirdPartyCCM)
-INCLUDE (ThirdPartyHDF5)
 
 
 INCLUDE (Doxygen)
@@ -280,7 +285,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 # Build active components
 IF (NEKTAR_BUILD_LIBRARY)
     SET(NEKTAR++_LIBRARIES SolverUtils LibUtilities StdRegions SpatialDomains LocalRegions
-        MultiRegions Collections NekMeshUtils)
+        MultiRegions Collections GlobalMapping NekMeshUtils)
     INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)
     INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake COMPONENT dev)
@@ -304,11 +309,15 @@ IF (NEKTAR_BUILD_TESTS)
     ENDIF (NEKTAR_USE_MPI)
 ENDIF (NEKTAR_BUILD_TESTS)
 
+# Compile list of definitions for Nektar++Config.cmake input file. We exclude
+# vtk definitions which should not be required for external builds.
 SET(NEKTAR_DEFINITIONS "")
 GET_DIRECTORY_PROPERTY(
     NEKTAR_DEFINITIONS_LIST DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS)
 FOREACH(def ${NEKTAR_DEFINITIONS_LIST})
-    SET(NEKTAR_DEFINITIONS "${NEKTAR_DEFINITIONS} -D${def}")
+    IF (NOT def MATCHES "^vtk")
+        SET(NEKTAR_DEFINITIONS "${NEKTAR_DEFINITIONS} -D${def}")
+    ENDIF()
 ENDFOREACH()
 
 # Write out Nektar++ build configuration

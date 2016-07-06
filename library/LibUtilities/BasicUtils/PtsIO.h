@@ -52,11 +52,11 @@
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 
-using namespace std;
 namespace Nektar
 {
 namespace LibUtilities
 {
+using namespace std;
 
 typedef std::map<std::string, std::string> PtsMetaDataMap;
 static PtsMetaDataMap NullPtsMetaDataMap;

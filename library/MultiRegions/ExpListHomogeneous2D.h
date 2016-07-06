@@ -62,7 +62,7 @@ namespace Nektar
 
         /// A map between homo matrix keys and their associated block
         /// matrices.
-        typedef map< Homogeneous2DMatType, DNekBlkMatSharedPtr> Homo2DBlockMatrixMap;
+        typedef std::map< Homogeneous2DMatType, DNekBlkMatSharedPtr> Homo2DBlockMatrixMap;
         /// A shared pointer to a BlockMatrixMap.
         typedef boost::shared_ptr<Homo2DBlockMatrixMap> Homo2DBlockMatrixMapShPtr;
 

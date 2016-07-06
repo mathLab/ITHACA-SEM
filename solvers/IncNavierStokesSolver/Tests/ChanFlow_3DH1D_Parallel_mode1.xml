@@ -23,6 +23,7 @@
       <P> IO_InfoSteps  = 1000       </P>
       <P> Kinvis        = 1         </P>
       <P> HomModesZ     = 4          </P>
+      <P> IterativeSolverTolerance = 1e-10 </P>
       <P> LZ            = 1.0        </P>
     </PARAMETERS>
 

@@ -43,6 +43,8 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 #include <LibUtilities/Foundations/Interp.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

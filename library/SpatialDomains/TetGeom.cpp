@@ -39,6 +39,8 @@
 #include <StdRegions/StdTetExp.h>
 #include <SpatialDomains/SegGeom.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace SpatialDomains

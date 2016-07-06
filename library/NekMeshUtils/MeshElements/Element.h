@@ -58,20 +58,20 @@ namespace NekMeshUtils
  */
 template <typename T> struct HOTriangle
 {
-    HOTriangle(vector<int> pVertId, vector<T> pSurfVerts)
+    HOTriangle(std::vector<int> pVertId, std::vector<T> pSurfVerts)
         : vertId(pVertId), surfVerts(pSurfVerts)
     {
     }
-    HOTriangle(vector<int> pVertId) : vertId(pVertId)
+    HOTriangle(std::vector<int> pVertId) : vertId(pVertId)
     {
     }
 
     /// The triangle vertex IDs
-    vector<int> vertId;
+    std::vector<int> vertId;
 
     /// The triangle surface vertices -- templated so that this can
     /// either be nodes or IDs.
-    vector<T> surfVerts;
+    std::vector<T> surfVerts;
 
     /**
      * @brief Rotates the triangle of data points inside #surfVerts
@@ -83,7 +83,7 @@ template <typename T> struct HOTriangle
     {
         int n, i, j, cnt;
         int np = ((int)sqrt(8.0 * surfVerts.size() + 1.0) - 1) / 2;
-        vector<T> tmp(np * np);
+        std::vector<T> tmp(np * np);
 
         for (n = 0; n < nrot; ++n)
         {
@@ -119,7 +119,7 @@ template <typename T> struct HOTriangle
     {
         int i, j, cnt;
         int np = ((int)sqrt(8.0 * surfVerts.size() + 1.0) - 1) / 2;
-        vector<T> tmp(np * np);
+        std::vector<T> tmp(np * np);
 
         for (cnt = i = 0; i < np; ++i)
         {
@@ -141,7 +141,7 @@ template <typename T> struct HOTriangle
     /**
      * @brief Align this surface to a given vertex ID.
      */
-    void Align(vector<int> vertId)
+    void Align(std::vector<int> vertId)
     {
         if (vertId[0] == this->vertId[0])
         {
@@ -357,6 +357,8 @@ public:
                 n -= m_edge[i]->GetNodeCount();
             }
             n += m_vertex.size();
+            std::cerr << "Not supported." << std::endl;
+            exit(1);
         }
         return n;
     }
@@ -470,6 +472,96 @@ public:
     {
         cerr << "WARNING: Unsupported curvature for a " << m_vertex.size()
              << "-vertex element is not yet implemented." << endl;
+        // Node orderings are different for different elements.
+        // Triangle
+        if (m_vertex.size() == 2)
+        {
+            nodeList.push_back(m_vertex[0]);
+            for (int i = 0; i < m_volumeNodes.size(); ++i)
+            {
+                nodeList.push_back(m_volumeNodes[i]);
+            }
+            nodeList.push_back(m_vertex[1]);
+        }
+        else if (m_vertex.size() == 3)
+        {
+            int n = m_edge[0]->GetNodeCount();
+            nodeList.resize(n * (n + 1) / 2);
+
+            // Populate nodelist
+            std::copy(m_vertex.begin(), m_vertex.end(), nodeList.begin());
+            for (int i = 0; i < 3; ++i)
+            {
+                std::copy(m_edge[i]->m_edgeNodes.begin(),
+                          m_edge[i]->m_edgeNodes.end(),
+                          nodeList.begin() + 3 + i * (n - 2));
+                if (m_edge[i]->m_n1 != m_vertex[i])
+                {
+                    // If edge orientation is reversed relative to node
+                    // ordering, we need to reverse order of nodes.
+                    std::reverse(nodeList.begin() + 3 + i * (n - 2),
+                                 nodeList.begin() + 3 + (i + 1) * (n - 2));
+                }
+            }
+
+            // Copy volume nodes.
+            std::copy(m_volumeNodes.begin(),
+                      m_volumeNodes.end(),
+                      nodeList.begin() + 3 * (n - 1));
+        }
+        // Quad
+        else if (m_dim == 2 && m_vertex.size() == 4)
+        {
+            int n = m_edge[0]->GetNodeCount();
+            nodeList.resize(n * n);
+
+            // Write vertices
+            nodeList[0]         = m_vertex[0];
+            nodeList[n - 1]     = m_vertex[1];
+            nodeList[n * n - 1] = m_vertex[2];
+            nodeList[n * (n - 1)] = m_vertex[3];
+
+            // Write edge-interior
+            int skips[4][2] = {
+                {0, 1}, {n - 1, n}, {n * n - 1, -1}, {n * (n - 1), -n}};
+            for (int i = 0; i < 4; ++i)
+            {
+                bool reverseEdge = m_edge[i]->m_n1 == m_vertex[i];
+
+                if (!reverseEdge)
+                {
+                    for (int j = 1; j < n - 1; ++j)
+                    {
+                        nodeList[skips[i][0] + j * skips[i][1]] =
+                            m_edge[i]->m_edgeNodes[n - 2 - j];
+                    }
+                }
+                else
+                {
+                    for (int j = 1; j < n - 1; ++j)
+                    {
+                        nodeList[skips[i][0] + j * skips[i][1]] =
+                            m_edge[i]->m_edgeNodes[j - 1];
+                    }
+                }
+            }
+
+            // Write interior
+            for (int i = 1; i < n - 1; ++i)
+            {
+                for (int j = 1; j < n - 1; ++j)
+                {
+                    nodeList[i * n + j] =
+                        m_volumeNodes[(i - 1) * (n - 2) + (j - 1)];
+                }
+            }
+        }
+        else
+        {
+            std::cerr << "GetXmlCurveString for a " << m_vertex.size()
+                      << "-vertex element is not yet implemented."
+                      << std::endl;
+        }
     }
 
     /// Generates a string listing the coordinates of all nodes
@@ -514,15 +606,16 @@ public:
         int i, j;
         for (i = 0; i < m_vertex.size(); ++i)
         {
-            cout << m_vertex[i]->m_x << " " << m_vertex[i]->m_y << " "
-                 << m_vertex[i]->m_z << endl;
+            std::cout << m_vertex[i]->m_x << " " << m_vertex[i]->m_y << " "
+                      << m_vertex[i]->m_z << std::endl;
         }
         for (i = 0; i < m_edge.size(); ++i)
         {
             for (j = 0; j < m_edge[i]->m_edgeNodes.size(); ++j)
             {
                 NodeSharedPtr n = m_edge[i]->m_edgeNodes[j];
-                cout << n->m_x << " " << n->m_y << " " << n->m_z << endl;
+                std::cout << n->m_x << " " << n->m_y << " " << n->m_z
+                          << std::endl;
             }
         }
         for (i = 0; i < m_face.size(); ++i)
@@ -530,7 +623,8 @@ public:
             for (j = 0; j < m_face[i]->m_faceNodes.size(); ++j)
             {
                 NodeSharedPtr n = m_face[i]->m_faceNodes[j];
-                cout << n->m_x << " " << n->m_y << " " << n->m_z << endl;
+                std::cout << n->m_x << " " << n->m_y << " " << n->m_z
+                          << std::endl;
             }
         }
     }

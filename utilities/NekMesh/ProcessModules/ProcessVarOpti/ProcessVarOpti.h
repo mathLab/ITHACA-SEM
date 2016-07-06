@@ -45,7 +45,7 @@ namespace Utilities
 
 struct ElData
 {
-    ElData(vector<NodeSharedPtr> innodes, int spaceDim)
+    ElData(std::vector<NodeSharedPtr> innodes, int spaceDim)
     {
         nodes.resize(innodes.size());
         for (int i = 0; i < innodes.size(); ++i)
@@ -66,8 +66,8 @@ struct ElData
     }
 
     ElementSharedPtr el;
-    vector<vector<NekDouble *> > nodes;
-    vector<Array<OneD, NekDouble> > maps;
+    std::vector<std::vector<NekDouble *> > nodes;
+    std::vector<Array<OneD, NekDouble> > maps;
 };
 typedef boost::shared_ptr<ElData> ElDataSharedPtr;
 
@@ -120,17 +120,17 @@ public:
     /// Write mesh to output file.
     virtual void Process();
 private:
-    typedef map<int, vector<ElDataSharedPtr> > NodeElMap;
+    typedef std::map<int, std::vector<ElDataSharedPtr> > NodeElMap;
 
     void FillQuadPoints();
     void GetElementMap();
-    vector<Array<OneD, NekDouble> > MappingIdealToRef(ElementSharedPtr el);
-    vector<vector<NodeSharedPtr> > GetColouredNodes();
-    void WriteStats(string file);
+    std::vector<Array<OneD, NekDouble> > MappingIdealToRef(ElementSharedPtr el);
+    std::vector<std::vector<NodeSharedPtr> > GetColouredNodes();
+    void WriteStats(std::string file);
     void EvaluateMesh();
 
     NodeElMap nodeElMap;
-    vector<ElDataSharedPtr> dataSet;
+    std::vector<ElDataSharedPtr> dataSet;
 
     ResidualSharedPtr res;
     DerivUtilSharedPtr derivUtil;

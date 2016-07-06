@@ -37,6 +37,9 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
 #include <LibUtilities/BasicUtils/DBUtils.hpp>
+
+using namespace std;
+
 namespace Nektar
 {
   namespace MultiRegions
@@ -619,5 +622,14 @@ namespace Nektar
           return 0;
       }
       
+
+      /**
+       *
+       */
+      void ContField3D::v_ClearGlobalLinSysManager(void)
+      {
+          m_globalLinSysManager.ClearManager("GlobalLinSys");
+      }
+
   } //end of namespace
 } //end of namespace

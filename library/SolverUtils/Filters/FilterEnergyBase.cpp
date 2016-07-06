@@ -37,6 +37,8 @@
 
 #include <SolverUtils/Filters/FilterEnergyBase.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils

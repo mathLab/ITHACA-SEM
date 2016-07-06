@@ -114,21 +114,6 @@ void InputCAD::Process()
         m_writeoctree = pSession->GetSolverInfo("WriteOctree") == "TRUE";
     }
 
-    vector<unsigned int> symsurfs;
-    vector<unsigned int> blsurfs;
-    if (m_makeBL)
-    {
-        string sym, bl;
-        bl = pSession->GetSolverInfo("BLSurfs");
-        ParseUtils::GenerateSeqVector(bl.c_str(), blsurfs);
-        sort(blsurfs.begin(), blsurfs.end());
-        ASSERTL0(blsurfs.size() > 0,
-                 "No surfaces selected to make boundary layer on");
-    }
-
-    m_mesh->m_hasCAD = true;
-    m_mesh->m_CADId = m_CADName;
-
     CADSystemSharedPtr m_cad =
         MemoryManager<CADSystem>::AllocateSharedPtr(m_CADName);
 
@@ -138,6 +123,37 @@ void InputCAD::Process()
     }
 
     ASSERTL0(m_cad->LoadCAD(), "Failed to load CAD");
+
+
+    vector<int> bs = m_cad->GetBoundarySurfs();
+
+    vector<unsigned int> symsurfs;
+    vector<unsigned int> blsurfs, blsurfst;
+    if (m_makeBL)
+    {
+        string sym, bl;
+        bl = pSession->GetSolverInfo("BLSurfs");
+        ParseUtils::GenerateSeqVector(bl.c_str(), blsurfst);
+        sort(blsurfst.begin(), blsurfst.end());
+        ASSERTL0(blsurfst.size() > 0,
+                 "No surfaces selected to make boundary layer on");
+        for(int i = 0; i < blsurfst.size(); i++)
+        {
+            bool add = true;
+            for(int j = 0; j < bs.size(); j++)
+            {
+                if(bs[j] == blsurfst[i])
+                {
+                    add = false;
+                    break;
+                }
+            }
+            if(add)
+            {
+                blsurfs.push_back(blsurfst[i]);
+            }
+        }
+    }
 
     if (m_mesh->m_verbose)
     {
@@ -253,6 +269,19 @@ void InputCAD::Process()
 
     m_surfacemesh->Report();
 
+    //m_mesh->m_nummode = 2;
+
+    EdgeSet::iterator eit;
+    int count = 0;
+    for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+    {
+        if((*eit)->m_elLink.size() != 2)
+        {
+            count++;
+        }
+    }
+    cout << "not linked " << count << endl;
+
     map<int, FaceSharedPtr> surftopriface;
     // map of surface element id to opposite prism
     // face for psudo surface in tetmesh
@@ -264,6 +293,9 @@ void InputCAD::Process()
                                         m_cad, m_mesh, blsurfs, m_blthick);
 
         m_blmesh->Mesh();
+
+        //m_mesh->m_element[2].clear();
+        //return;
 
         m_surfacemesh->Remesh(m_blmesh);
 
@@ -292,12 +324,16 @@ void InputCAD::Process()
 
     m_tet->Mesh();
 
+    //m_mesh->m_element[2].clear();
+
     ClearElementLinks();
     ProcessVertices();
     ProcessEdges();
     ProcessFaces();
     ProcessElements();
     ProcessComposites();
+
+    //return;
 
     m_surfacemesh->HOSurf();
 

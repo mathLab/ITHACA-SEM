@@ -36,6 +36,8 @@
 #include <Collections/Collection.h>
 #include <sstream>
 
+using namespace std;
+
 namespace Nektar {
 namespace Collections {
 

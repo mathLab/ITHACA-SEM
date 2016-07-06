@@ -38,6 +38,8 @@
 #include <MultiRegions/GlobalLinSysXxtStaticCond.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

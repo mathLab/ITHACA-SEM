@@ -61,7 +61,7 @@ ProcessInterpPointDataToFld::ProcessInterpPointDataToFld(FieldSharedPtr f)
 {
 
     m_config["interpcoord"] = ConfigOption(false, "-1",
-                                    "coordinate id ot use for interpolation");
+                                    "coordinate id to use for interpolation");
 
 }
 

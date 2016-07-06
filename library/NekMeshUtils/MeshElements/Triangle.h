@@ -44,7 +44,6 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-
 /**
  * @brief A 2-dimensional three-sided element.
  */

@@ -43,6 +43,8 @@
 #include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace Utilities

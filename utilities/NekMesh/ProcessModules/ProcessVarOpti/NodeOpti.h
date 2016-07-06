@@ -51,7 +51,7 @@ class NodeOptiJob;
 class NodeOpti
 {
 public:
-    NodeOpti(NodeSharedPtr n, vector<ElDataSharedPtr> e,
+    NodeOpti(NodeSharedPtr n, std::vector<ElDataSharedPtr> e,
              ResidualSharedPtr r, DerivUtilSharedPtr d,
              PtsHelperSharedPtr p, optimiser o)
              : node(n), data(e), res(r), derivUtil(d), ptsHelp(p), opti(o)
@@ -69,7 +69,7 @@ protected:
     }
     template<int DIM> NekDouble GetFunctional();
     NodeSharedPtr node;
-    vector<ElDataSharedPtr> data;
+    std::vector<ElDataSharedPtr> data;
 
     ResidualSharedPtr res;
     DerivUtilSharedPtr derivUtil;
@@ -81,7 +81,7 @@ class NodeOpti1D3D : public NodeOpti //1D optimsation in 3D space
 {
 public:
 
-    NodeOpti1D3D(NodeSharedPtr n, vector<ElDataSharedPtr> e,
+    NodeOpti1D3D(NodeSharedPtr n, std::vector<ElDataSharedPtr> e,
                  ResidualSharedPtr r, DerivUtilSharedPtr d,
                  PtsHelperSharedPtr p, optimiser o, CADCurveSharedPtr c)
                  : NodeOpti(n,e,r,d,p,o), curve(c)
@@ -100,7 +100,7 @@ private:
 class NodeOpti2D3D : public NodeOpti //1D optimsation in 3D space
 {
 public:
-    NodeOpti2D3D(NodeSharedPtr n, vector<ElDataSharedPtr> e,
+    NodeOpti2D3D(NodeSharedPtr n, std::vector<ElDataSharedPtr> e,
                  ResidualSharedPtr r, DerivUtilSharedPtr d,
                  PtsHelperSharedPtr p, optimiser o, CADSurfSharedPtr s)
                  : NodeOpti(n,e,r,d,p,o), surf(s)
@@ -119,7 +119,7 @@ private:
 class NodeOpti3D3D : public NodeOpti //1D optimsation in 3D space
 {
 public:
-    NodeOpti3D3D(NodeSharedPtr n, vector<ElDataSharedPtr> e,
+    NodeOpti3D3D(NodeSharedPtr n, std::vector<ElDataSharedPtr> e,
                  ResidualSharedPtr r, DerivUtilSharedPtr d,
                  PtsHelperSharedPtr p, optimiser o)
                  : NodeOpti(n,e,r,d,p,o)
@@ -137,7 +137,7 @@ private:
 class NodeOpti2D2D : public NodeOpti //1D optimsation in 3D space
 {
 public:
-    NodeOpti2D2D(NodeSharedPtr n, vector<ElDataSharedPtr> e,
+    NodeOpti2D2D(NodeSharedPtr n, std::vector<ElDataSharedPtr> e,
                  ResidualSharedPtr r, DerivUtilSharedPtr d,
                  PtsHelperSharedPtr p, optimiser o)
                  : NodeOpti(n,e,r,d,p,o)

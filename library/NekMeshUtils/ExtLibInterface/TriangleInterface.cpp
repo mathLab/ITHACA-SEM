@@ -122,15 +122,6 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
     {
         dt.triangulate("pYY");
     }
-
-    // verify the mesh a bit
-    if (dt.out.numberofpoints - dt.out.numberofedges + dt.out.numberoftriangles !=
-        2 - m_centers.size())
-    {
-        cout << endl << "epc wrong" << endl;
-        cout << dt.out.numberofpoints - dt.out.numberofedges + dt.out.numberoftriangles
-             << " " << m_centers.size() << " " << sid << endl;
-    }
 }
 
 void TriangleInterface::SetUp()

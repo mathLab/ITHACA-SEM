@@ -338,8 +338,8 @@ void InputNekpp::Process()
         }
     }
 
-    SpatialDomains::ExpansionMap em = graph->GetExpansions();
-    m_mesh->m_nummode = em[0]->m_basisKeyVector[1].GetNumPoints();
+    // set up composite labels if they exist
+    m_mesh->m_faceLabels = graph->GetCompositesLabels();
 
 #ifdef NEKTAR_USE_MESHGEN
 

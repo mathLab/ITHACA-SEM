@@ -211,8 +211,8 @@ namespace Nektar
                     const Orientation      faceOrient,
                     Array<OneD, unsigned int> &maparray,
                     Array<OneD,          int> &signarray,
-                    int                        nummodesA = -1,
-                    int                        nummodesB = -1);
+                    int                        P = -1,
+                    int                        Q = -1);
             STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId,
                                                           bool useCoeffPacking = false);            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(const int eid,
                     const Orientation edgeOrient,

@@ -64,7 +64,6 @@ void OutputStdOut::Process(po::variables_map &vm)
 {
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
-    int i;
 
     if (m_f->m_verbose)
     {

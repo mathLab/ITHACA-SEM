@@ -37,6 +37,7 @@
 
 #include <PulseWaveSolver/Utilities/PulseWaveSystemOutput.h>
 
+using namespace std;
 
 namespace Nektar
 {

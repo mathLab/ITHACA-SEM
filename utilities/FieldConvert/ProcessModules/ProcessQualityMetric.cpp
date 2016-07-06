@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessJacobianEnergy.cpp
+//  File: ProcessQualityMetric.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Compute energy of Jacobian.
+//  Description: Compute quality metric of Roca et al.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -78,7 +78,6 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
 
     Array<OneD, NekDouble> &phys   = m_f->m_exp[0]->UpdatePhys();
     Array<OneD, NekDouble> &coeffs = m_f->m_exp[0]->UpdateCoeffs();
-    int expdim = m_f->m_graph->GetMeshDimension();
 
     for(int i =0; i < m_f->m_exp[0]->GetExpSize(); ++i)
     {
@@ -111,7 +110,6 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
 inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
                                  StdRegions::StdExpansionSharedPtr chi)
 {
-    int dim = geom->GetShapeDim();
     vector<DNekMat> ret;
 
     if(geom->GetShapeType() == LibUtilities::eQuadrilateral)
@@ -142,8 +140,6 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
 
                 dxdz(0,1) = 0.5*(-a1*xy[0][0] - a2*xy[1][0] + a2*xy[2][0] + a1*xy[3][0]);
                 dxdz(1,1) = 0.5*(-a1*xy[0][1] - a2*xy[1][1] + a2*xy[2][1] + a1*xy[3][1]);
-
-                NekDouble det = 1.0/(dxdz(0,0)*dxdz(1,1) - dxdz(1,0)*dxdz(0,1));
 
                 dxdz.Invert();
                 ret.push_back(dxdz);
@@ -255,7 +251,7 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
                 for(int i = 0; i < b[0]->GetNumPoints(); i++)
                 {
                     NekDouble xi1 = 0.5*(1+eta1[i])*(1-eta3[k])-1.0;
-                    NekDouble a1 = 0.5*(1-xi1),     a2 = 0.5*(1+xi1);
+                    NekDouble a2 = 0.5*(1+xi1);
                     NekDouble b1 = 0.5*(1-eta2[j]), b2 = 0.5*(1+eta2[j]);
                     NekDouble c1 = 0.5*(1-eta3[k]), c2 = 0.5*(1+eta3[k]);
 

@@ -67,7 +67,8 @@ class ProcessInterpPoints : public ProcessModule
                                    Array<OneD, Array<OneD, NekDouble> >   &pts,
                                    NekDouble                               clamp_low,
                                    NekDouble                               clamp_up,
-                                   NekDouble                               def_value);
+                                   NekDouble                               def_value,
+                                   bool                                    isRoot);
 };
 
 }

@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //
 //  File: ProcessIsoContour.cpp
 //
@@ -31,7 +31,7 @@
 //
 //  Description: Generate isocontours from field data.
 //
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 #include <string>
 #include <iostream>
 using namespace std;
@@ -40,6 +40,7 @@ using namespace std;
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 
 namespace Nektar
@@ -68,6 +69,7 @@ ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
 
     m_config["fieldid"]            = ConfigOption(false, "NotSet",
                                         "field id to extract");
+
     m_config["fieldvalue"]         = ConfigOption(false, "NotSet",
                                         "field value to extract");
 
@@ -76,21 +78,24 @@ ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
                                         "values");
 
     m_config["smooth"]             = ConfigOption(true, "NotSet",
-                                        "Smooth isocontour (implies global "
-                                        "condense)");
+                                        "Smooth isocontour (might require "
+                                                  "globalcondense)");
+
     m_config["smoothiter"]         = ConfigOption(false, "100",
                                         "Number of smoothing cycle, default = "
                                         "100");
+
     m_config["smoothposdiffusion"] = ConfigOption(false,"0.5",
                                         "Postive diffusion coefficient "
                                         "(0 < lambda < 1), default = 0.5");
+
     m_config["smoothnegdiffusion"] = ConfigOption(false,"0.495",
                                         "Negative diffusion coefficient "
                                         "(0 < mu < 1), default = 0.495");
 
     m_config["removesmallcontour"] = ConfigOption(false,"0",
                                         "Remove contours with less than specified number of triangles."
-                                                    "Only valid with GlobalCondense or Smooth options.");
+                                         "Only valid with GlobalCondense or Smooth options.");
 
 
 }
@@ -101,89 +106,147 @@ ProcessIsoContour::~ProcessIsoContour(void)
 
 void ProcessIsoContour::Process(po::variables_map &vm)
 {
+    Timer timer;
+    int rank = m_f->m_comm->GetRank();
+    
+    if(m_f->m_verbose)
+    {
+        if(rank == 0)
+        {
+            cout << "Process Contour extraction..." << endl;
+            timer.Start();
+        }
+    }
+
     vector<IsoSharedPtr> iso;
 
-    // extract all fields to equi-spaced
-    SetupEquiSpacedField();
-
-    int     fieldid;
-    NekDouble value;
-
-    if(m_config["fieldstr"].m_beenSet) //generate field of interest
+    if(m_f->m_fieldPts.get()) // assume we have read .dat file to directly input dat file.
     {
-        fieldid = m_f->m_fieldPts->GetNFields();
-
-        Array<OneD, NekDouble> pts(m_f->m_fieldPts->GetNpoints());
-
-        // evaluate new function
-        LibUtilities::AnalyticExpressionEvaluator strEval;
-        string varstr = "x y z";
-        vector<Array<OneD, const NekDouble> > interpfields;
-
-        for(int i = 0; i < m_f->m_fieldPts->GetDim(); ++i)
-        {
-            interpfields.push_back(m_f->m_fieldPts->GetPts(i));
-        }
-        for(int i = 0; i < m_f->m_fieldPts->GetNFields(); ++i)
-        {
-            varstr += " " + m_f->m_fieldPts->GetFieldName(i);
-            interpfields.push_back(m_f->m_fieldPts->GetPts(i+3));
-        }
-
-        int ExprId  = -1;
-        std::string str = m_config["fieldstr"].as<string>();
-        ExprId = strEval.DefineFunction(varstr.c_str(), str);
-
-        strEval.Evaluate(ExprId, interpfields, pts);
-
-        // set up field name if provided otherwise called "isocon" from default
-        string fieldName = m_config["fieldname"].as<string>();
-
-        m_f->m_fieldPts->AddField(pts, fieldName);
+        SetupIsoFromFieldPts(iso);
     }
-    else
+    else // extract isocontour from field 
     {
-        ASSERTL0(m_config["fieldid"].as<string>() != "NotSet", "fieldid must be specified");
-        fieldid = m_config["fieldid"].as<int>();
-    }
-
-    ASSERTL0(m_config["fieldvalue"].as<string>() != "NotSet", "fieldvalue must be specified");
-    value   = m_config["fieldvalue"].as<NekDouble>();
-
-    iso = ExtractContour(fieldid,value);
-    bool smoothing      = m_config["smooth"].m_beenSet;
-    bool globalcondense = m_config["globalcondense"].m_beenSet;
-    if(smoothing||globalcondense)
-    {
-        vector<IsoSharedPtr> glob_iso;
-        int nfields = m_f->m_fieldPts->GetNFields() + m_f->m_fieldPts->GetDim();
-        IsoSharedPtr g_iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
-        int mincontour = 0; 
-
-        g_iso->globalcondense(iso);
-
-        if(smoothing)
+        if(m_f->m_exp.size() == 0)
         {
-            int  niter = m_config["smoothiter"].as<int>();
-            NekDouble lambda = m_config["smoothposdiffusion"].as<NekDouble>();
-            NekDouble mu     = m_config["smoothnegdiffusion"].as<NekDouble>();
-            g_iso->smooth(niter,lambda,-mu);
+            return;
         }
 
-
-        if((mincontour = m_config["removesmallcontour"].as<int>()))
+        // extract all fields to equi-spaced
+        SetupEquiSpacedField();
+        
+        int     fieldid;
+        NekDouble value;
+        
+        if(m_config["fieldstr"].m_beenSet) //generate field of interest
         {
-            g_iso->separate_regions(glob_iso,mincontour);
+            fieldid = m_f->m_fieldPts->GetNFields();
+            
+            Array<OneD, NekDouble> pts(m_f->m_fieldPts->GetNpoints());
+            
+            // evaluate new function
+            LibUtilities::AnalyticExpressionEvaluator strEval;
+            string varstr = "x y z";
+            vector<Array<OneD, const NekDouble> > interpfields;
+            
+            for(int i = 0; i < m_f->m_fieldPts->GetDim(); ++i)
+            {
+                interpfields.push_back(m_f->m_fieldPts->GetPts(i));
+            }
+            for(int i = 0; i < m_f->m_fieldPts->GetNFields(); ++i)
+            {
+                varstr += " " + m_f->m_fieldPts->GetFieldName(i);
+                interpfields.push_back(m_f->m_fieldPts->GetPts(i+3));
+            }
+            
+            int ExprId  = -1;
+            std::string str = m_config["fieldstr"].as<string>();
+            ExprId = strEval.DefineFunction(varstr.c_str(), str);
+            
+            strEval.Evaluate(ExprId, interpfields, pts);
+            
+            // set up field name if provided otherwise called "isocon" from default
+            string fieldName = m_config["fieldname"].as<string>();
+
+            m_f->m_fieldPts->AddField(pts, fieldName);
         }
         else
         {
-            glob_iso.push_back(g_iso);
+            ASSERTL0(m_config["fieldid"].as<string>() != "NotSet", "fieldid must be specified");
+            fieldid = m_config["fieldid"].as<int>();
         }
-        ResetFieldPts(glob_iso);
+        
+        ASSERTL0(m_config["fieldvalue"].as<string>() != "NotSet", "fieldvalue must be specified");
+        value   = m_config["fieldvalue"].as<NekDouble>();
+
+        iso = ExtractContour(fieldid,value);
+
     }
-    else
+
+    // Process isocontour
+    bool smoothing      = m_config["smooth"].m_beenSet;
+    bool globalcondense = m_config["globalcondense"].m_beenSet;
+    if(globalcondense)
     {
-        ResetFieldPts(iso);
+        int nfields = m_f->m_fieldPts->GetNFields() + m_f->m_fieldPts->GetDim();
+        IsoSharedPtr g_iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
+
+        g_iso->globalcondense(iso,m_f->m_verbose);
+
+
+        iso.clear();
+        iso.push_back(g_iso);
+    }
+
+    if(smoothing)
+    {
+        int  niter = m_config["smoothiter"].as<int>();
+        NekDouble lambda = m_config["smoothposdiffusion"].as<NekDouble>();
+        NekDouble mu     = m_config["smoothnegdiffusion"].as<NekDouble>();
+        for(int i =0 ; i < iso.size(); ++i)
+        {
+            iso[i]->smooth(niter,lambda,-mu);
+        }
+    }
+    
+    int mincontour = 0; 
+    if((mincontour = m_config["removesmallcontour"].as<int>()))
+    {
+        vector<IsoSharedPtr> new_iso;
+
+        if(rank == 0)
+        {
+            cout << "Identifying separate regions [." << flush ;
+        }
+        for(int i =0 ; i < iso.size(); ++i)
+        {
+            iso[i]->separate_regions(new_iso,mincontour,m_f->m_verbose);
+        }
+       
+        if(rank == 0)
+        {
+            cout << "]" << endl <<  flush ;
+        }
+
+        // reset iso to new_iso;
+        iso = new_iso;
+    }
+    
+    ResetFieldPts(iso);
+    
+
+    if(m_f->m_verbose)
+    {
+        if(rank == 0)
+        {
+            timer.Stop();
+            NekDouble cpuTime = timer.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "Process Isocontour CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            cpuTime = 0.0;
+        }
     }
 }
 
@@ -524,6 +587,58 @@ void ProcessIsoContour::ResetFieldPts(vector<IsoSharedPtr> &iso)
     m_f->m_fieldPts->SetConnectivity(ptsConn);
 }
 
+// reset m_fieldPts with values from iso;
+void ProcessIsoContour::SetupIsoFromFieldPts(vector<IsoSharedPtr> &isovec)
+{
+    ASSERTL0(m_f->m_fieldPts->GetPtsType() == LibUtilities::ePtsTriBlock,
+             "Assume input is from ePtsTriBlock");
+
+    // get information from PtsField
+    int dim     = m_f->m_fieldPts->GetDim();
+    int nfields = m_f->m_fieldPts->GetNFields() + dim;
+    Array<OneD, Array<OneD, NekDouble> > fieldpts;
+    m_f->m_fieldPts->GetPts(fieldpts); 
+    vector<Array<OneD, int> > ptsConn;
+    m_f->m_fieldPts->GetConnectivity(ptsConn);
+
+
+    int cnt = 0;
+    for(int c = 0; c < ptsConn.size(); ++c)
+    {
+        // set up single iso with all the information from PtsField
+        IsoSharedPtr iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-dim);
+        
+        int nelmt = 0;
+        nelmt = ptsConn[c].num_elements()/3;
+
+        iso->set_ntris(nelmt);
+        iso->resize_vid(3*nelmt);
+        
+        // fill in connectivity values. 
+        int nvert = 0; 
+        for(int i = 0; i < ptsConn[c].num_elements(); ++i)
+        {
+            int cid = ptsConn[c][i]-cnt;
+            iso->set_vid(i,cid);
+            nvert = max(cid,nvert);
+        }
+        nvert++;
+        
+        iso->set_nvert(nvert);
+        iso->resize_fields(nvert);
+        
+        // fill in points values (including coordinates)
+        for(int i = 0; i < nvert; ++i)
+        {
+            iso->set_fields(i,fieldpts,i+cnt);
+        }
+        cnt += nvert;
+        isovec.push_back(iso);
+    }
+    
+}
+ 
+
 void Iso::condense(void)
 {
     register int i,j,cnt;
@@ -583,7 +698,7 @@ void Iso::condense(void)
 
                 m_vid[3*i+j] = v.m_id;
                 ++cnt;
-            }
+           }
         }
     }
 
@@ -659,7 +774,7 @@ bool same(NekDouble x1, NekDouble y1, NekDouble z1,
     return false;
 }
 
-void Iso::globalcondense(vector<IsoSharedPtr> &iso)
+void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
 {
     int    i,j,n;
     int    nvert,nelmt;
@@ -734,7 +849,7 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
 
         for(i = 0; i < niso; ++i)
         {
-            for(j = i+1; j < niso; ++j)
+            for(j = i; j < niso; ++j)
             {
                 NekDouble diff=sqrt((sph[i][0]-sph[j][0])*(sph[i][0]-sph[j][0])+
                           (sph[i][1]-sph[j][1])*(sph[i][1]-sph[j][1])+
@@ -747,6 +862,7 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
                 }
             }
         }
+
     }
 
 
@@ -755,36 +871,46 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
         vidmap[i] = Array<OneD, int>(iso[i]->m_nvert,-1);
     }
     nvert = 0;
-    // identify which vertices are connected to tolerance
-    cout << "GlobalCondense: Matching Vertices [" << endl << flush;
     int cnt = 0;
     // count up amount of checking to be done
-    NekDouble totpts = 0; 
+    NekDouble totiso = 0; 
     for(i = 0; i < niso; ++i)
     {
-        for(n = 0; n < isocon[i].size(); ++n)
-        {
-            int con = isocon[i][n];
-            totpts += iso[i]->m_nvert*iso[con]->m_nvert;
-        }
+        totiso += isocon[i].size();
     }
-    int totchk  = totpts/50;
-    int cnt_out = 0; 
+
+
+    if(verbose)
+    {
+        cout << "Progress Bar totiso: " << totiso << endl;
+    }
     for(i = 0; i < niso; ++i)
     {
-        for(n = 0; n < isocon[i].size(); ++n)
+        for(n = 0; n < isocon[i].size(); ++n, ++cnt)
         {
+            
+            if(verbose && totiso >= 40)
+            {
+                LibUtilities::PrintProgressbar(cnt,totiso,"Condensing verts");
+            }
+
             int con = isocon[i][n];
             for(id1 = 0; id1 < iso[i]->m_nvert; ++id1)
             {
-                for(id2 = 0; id2 < iso[con]->m_nvert; ++id2, ++cnt)
-                {
-                    if(cnt%totchk == 0)
-                    {
-                        cout <<cnt_out << "%" << '\r' << flush;
-                        cnt_out +=2; 
-                    }
 
+                if(verbose && totiso < 40)
+                {
+                    LibUtilities::PrintProgressbar(id1,iso[i]->m_nvert,"isocon");
+                }
+
+                int start  = 0; 
+                if(con == i)
+                {
+                    start = id1+1;
+                }
+                for(id2 = start; id2 < iso[con]->m_nvert; ++id2)
+                {
+                    
                     if((vidmap[con][id2] == -1)||(vidmap[i][id1] == -1))
                     {
                         if(same(iso[i]->m_x[id1],  iso[i]->m_y[id1],
@@ -811,7 +937,7 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
                 }
             }
         }
-
+        
         for(id1 = 0; id1 < iso[i]->m_nvert;++id1)
         {
             if(vidmap[i][id1] == -1)
@@ -820,7 +946,6 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
             }
         }
     }
-    cout <<endl << "]"<<endl;
     m_nvert = nvert;
 
     nelmt = 0;
@@ -848,7 +973,6 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
         m_fields[i].resize(m_nvert);
     }
 
-
     // reset coordinate and fields.
     for(n = 0; n < niso; ++n)
     {
@@ -864,6 +988,7 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
             }
         }
     }
+    cout << endl;
 }
 
 void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
@@ -959,9 +1084,9 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
         }
     }
 }
+    
 
-
-    void Iso::separate_regions(vector<IsoSharedPtr> &sep_iso, int minsize)
+    void Iso::separate_regions(vector<IsoSharedPtr> &sep_iso, int minsize, bool verbose)
     {
         int i,j,k,id;
         Array<OneD, vector<int> >vertcon(m_nvert);
@@ -970,7 +1095,7 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
         list<int>::iterator cid;
 
         Array<OneD, bool> viddone(m_nvert,false);
-        
+
         // make list of connecting tris around each vertex
         for(i = 0; i < m_ntris; ++i)
         {
@@ -983,11 +1108,16 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
         Array<OneD, int> vidregion(m_nvert,-1);
   
         int nregions = -1;
-
-        cout << "Identifying separate regions [." << flush ;
-        // check all points are assigned;
+        
+        
+        // check all points are assigned to a region
         for(k = 0; k < m_nvert; ++k)
         {
+            if(verbose)
+            {
+                LibUtilities::PrintProgressbar(k,m_nvert,"Separating regions");
+            }
+
             if(vidregion[k] == -1)
             {
                 vidregion[k] = ++nregions;
@@ -1035,7 +1165,6 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
         }
         nregions++;
 
-        cout << "]" << endl <<  flush ;
         
         Array<OneD, int> nvert(nregions,0);
         Array<OneD, int> nelmt(nregions,0);

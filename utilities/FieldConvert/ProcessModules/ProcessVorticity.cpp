@@ -38,6 +38,8 @@
 using namespace std;
 
 #include "ProcessVorticity.h"
+#include "ProcessMapping.h"
+#include <GlobalMapping/Mapping.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
@@ -84,7 +86,7 @@ void ProcessVorticity::Process(po::variables_map &vm)
     int addfields = (spacedim == 2)? 1:3;
 
     int npoints = m_f->m_exp[0]->GetNpoints();
-    Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields);
+    Array<OneD, Array<OneD, NekDouble> > grad(spacedim*spacedim);
     Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
 
     int nstrips;
@@ -93,7 +95,7 @@ void ProcessVorticity::Process(po::variables_map &vm)
 
     m_f->m_exp.resize(nfields*nstrips);
 
-    for (i = 0; i < nfields*nfields; ++i)
+    for (i = 0; i < spacedim*spacedim; ++i)
     {
         grad[i] = Array<OneD, NekDouble>(npoints);
     }
@@ -102,44 +104,118 @@ void ProcessVorticity::Process(po::variables_map &vm)
     {
         outfield[i] = Array<OneD, NekDouble>(npoints);
     }
+    
+    Array<OneD, Array<OneD, NekDouble> >   tmp(spacedim);
+    for( int i = 0; i<spacedim; i++)
+    {
+        tmp[i] = Array<OneD, NekDouble> (npoints);
+    }
 
     vector<MultiRegions::ExpListSharedPtr> Exp(nstrips*addfields);
-
+    
+    // Get mapping
+    GlobalMapping::MappingSharedPtr mapping = 
+                            ProcessMapping::GetMapping(m_f);
+    
     for(s = 0; s < nstrips; ++s) //homogeneous strip varient
     {
+        // Get velocity and convert to Cartesian system,
+        //      if it is still in transformed system
+        Array<OneD, Array<OneD, NekDouble> > vel (spacedim);
+        if (m_f->m_fieldMetaDataMap.count("MappingCartesianVel"))
+        {
+            if(m_f->m_fieldMetaDataMap["MappingCartesianVel"] == "False")
+            {
+                // Initialize arrays and copy velocity
+                for ( int i =0; i<spacedim; ++i )
+                {
+                    vel[i] = Array<OneD, NekDouble> (npoints);      
+                    if (m_f->m_exp[0]->GetWaveSpace())
+                    {
+                        m_f->m_exp[0]->HomogeneousBwdTrans(
+                                                m_f->m_exp[s*nfields+i]->GetPhys(),
+                                                vel[i]);
+                    }
+                    else
+                    {
+                        Vmath::Vcopy(npoints, m_f->m_exp[s*nfields+i]->GetPhys(),1,
+                                                vel[i],1);
+                    }
+
+                }
+                // Convert velocity to cartesian system
+                mapping->ContravarToCartesian(vel, vel);            
+                // Convert back to wavespace if necessary
+                if (m_f->m_exp[0]->GetWaveSpace())
+                {
+                    for ( int i =0; i<spacedim; ++i )
+                    {
+                        m_f->m_exp[0]->HomogeneousFwdTrans(vel[i], vel[i]);
+                    }
+                }        
+            }
+            else
+            {
+                for ( int i =0; i<spacedim; ++i )
+                {
+                    vel[i] = Array<OneD, NekDouble> (npoints); 
+                    Vmath::Vcopy(npoints, m_f->m_exp[s*nfields+i]->GetPhys(), 1,
+                                                vel[i], 1);
+                }
+            }
+        }
+        else
+        {
+            for ( int i =0; i<spacedim; ++i )
+            {
+                vel[i] = Array<OneD, NekDouble> (npoints); 
+                Vmath::Vcopy(npoints, m_f->m_exp[s*nfields+i]->GetPhys(), 1,
+                                            vel[i], 1);
+            }
+        }
+        
         // Calculate Gradient & Vorticity
         if (spacedim == 2)
         {
-            for (i = 0; i < nfields; ++i)
+            for (i = 0; i < spacedim; ++i)
             {
-                m_f->m_exp[s*nfields+i]->PhysDeriv(m_f->m_exp[s*nfields+i]->GetPhys(),
-                                                    grad[i*nfields],
-                                                    grad[i*nfields+1]);
+                m_f->m_exp[s*nfields+i]->PhysDeriv(vel[i],
+                                                   tmp[0],
+                                                   tmp[1]);
+                mapping->CovarToCartesian(tmp, tmp);
+                for( int j = 0; j<spacedim; j++)
+                {
+                    Vmath::Vcopy(npoints, tmp[j], 1, grad[i*spacedim+j], 1 );
+                }
             }
             // W_z = Vx - Uy
-            Vmath::Vsub(npoints, grad[1*nfields+0], 1,
-                        grad[0*nfields+1], 1,
+            Vmath::Vsub(npoints, grad[1*spacedim+0], 1,
+                        grad[0*spacedim+1], 1,
                         outfield[0], 1);
         }
         else
         {
-            for (i = 0; i < nfields; ++i)
+            for (i = 0; i < spacedim; ++i)
             {
-
-                m_f->m_exp[s*nfields+i]->PhysDeriv(m_f->m_exp[s*nfields+i]->GetPhys(),
-                                                    grad[i*nfields],
-                                                    grad[i*nfields+1],
-                                                    grad[i*nfields+2]);
+                m_f->m_exp[s*nfields+i]->PhysDeriv(vel[i],
+                                                    tmp[0],
+                                                    tmp[1],
+                                                    tmp[2]);
+                mapping->CovarToCartesian(tmp, tmp);
+                for( int j = 0; j<spacedim; j++)
+                {
+                    Vmath::Vcopy(npoints, tmp[j], 1, grad[i*spacedim+j], 1 );
+                }
             }
 
             // W_x = Wy - Vz
-            Vmath::Vsub(npoints, grad[2*nfields+1], 1, grad[1*nfields+2], 1,
+            Vmath::Vsub(npoints, grad[2*spacedim+1], 1, grad[1*spacedim+2], 1,
                         outfield[0],1);
             // W_y = Uz - Wx
-            Vmath::Vsub(npoints, grad[0*nfields+2], 1, grad[2*nfields+0], 1,
+            Vmath::Vsub(npoints, grad[0*spacedim+2], 1, grad[2*spacedim+0], 1,
                         outfield[1], 1);
             // W_z = Vx - Uy
-            Vmath::Vsub(npoints, grad[1*nfields+0], 1, grad[0*nfields+1], 1,
+            Vmath::Vsub(npoints, grad[1*spacedim+0], 1, grad[0*spacedim+1], 1,
                         outfield[2], 1);
         }
 

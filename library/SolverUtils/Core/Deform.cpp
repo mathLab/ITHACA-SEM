@@ -44,6 +44,8 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ExpList.h>
 
+using namespace std;
+
 namespace Nektar {
 namespace SolverUtils {
 

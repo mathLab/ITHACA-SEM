@@ -47,12 +47,12 @@
 #include <boost/shared_ptr.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
-using namespace std;
-
 namespace Nektar
 {
     namespace LibUtilities
     {
+        using namespace std;
+
         typedef boost::unique_lock<boost::shared_mutex> WriteLock;
         typedef boost::shared_lock<boost::shared_mutex> ReadLock;
 

@@ -58,15 +58,18 @@ static std::vector<std::vector<NekDouble> > NullVectorNekDoubleVector =
 struct FieldDefinitions
 {
     FieldDefinitions(
-        ShapeType shapeType,
+        ShapeType                                   shapeType,
         const std::vector<unsigned int>            &elementIDs,
         const std::vector<LibUtilities::BasisType> &basis,
         bool                                        uniOrder,
         const std::vector<unsigned int>            &numModes,
         const std::vector<std::string>             &fields,
-        int NumHomoDir = 0,
+        int                                         NumHomoDir = 0,
         const std::vector<NekDouble>               &HomoLengths
                                                           = NullNekDoubleVector,
+        bool                                        homoStrips = false,
+        const std::vector<unsigned int>            &HomoSIDs 
+                                                        = NullUnsignedIntVector,
         const std::vector<unsigned int>            &HomoZIDs
                                                         = NullUnsignedIntVector,
         const std::vector<unsigned int>            &HomoYIDs
@@ -79,6 +82,7 @@ struct FieldDefinitions
         bool numPointsDef = false)
         : m_shapeType(shapeType), m_elementIDs(elementIDs), m_basis(basis),
           m_numHomogeneousDir(NumHomoDir), m_homogeneousLengths(HomoLengths),
+          m_homoStrips(homoStrips), m_homogeneousSIDs(HomoSIDs),
           m_homogeneousZIDs(HomoZIDs), m_homogeneousYIDs(HomoYIDs),
           m_points(points), m_pointsDef(pointsDef), m_uniOrder(uniOrder),
           m_numModes(numModes), m_numPoints(numPoints),
@@ -91,6 +95,8 @@ struct FieldDefinitions
     std::vector<LibUtilities::BasisType>  m_basis;
     int                                   m_numHomogeneousDir;
     std::vector<NekDouble>                m_homogeneousLengths;
+    bool                                  m_homoStrips;
+    std::vector<unsigned int>             m_homogeneousSIDs;
     std::vector<unsigned int>             m_homogeneousZIDs;
     std::vector<unsigned int>             m_homogeneousYIDs;
     /// True if filesystem is shared.
@@ -183,6 +189,7 @@ public:
 protected:
     /// Communicator to use when writing parallel format
     LibUtilities::CommSharedPtr m_comm;
+
     /// True if same filesystem accessible by all processes.
     bool                        m_sharedFilesystem;
 

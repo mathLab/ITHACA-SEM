@@ -110,13 +110,13 @@ public:
      */
     void GetOctreeMesh(MeshSharedPtr m);
 
-    void SetUDSFile(string n)
+    void SetUDSFile(std::string n)
     {
         m_udsfile = n;
         m_udsfileset = true;
     }
 
-    void SetSourcePoints(vector<vector<NekDouble> > pts, NekDouble size)
+    void SetSourcePoints(std::vector<std::vector<NekDouble> > pts, NekDouble size)
     {
         m_sourcepointsset = true;
         m_sourcePoints = pts;
@@ -195,10 +195,10 @@ private:
     int m_numoct;
 
     bool m_udsfileset;
-    string m_udsfile;
+    std::string m_udsfile;
 
     bool m_sourcepointsset;
-    vector<vector<NekDouble> > m_sourcePoints;
+    std::vector<std::vector<NekDouble> > m_sourcePoints;
     NekDouble m_sourcePointSize;
 };
 

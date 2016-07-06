@@ -124,13 +124,13 @@ public:
     boost::unordered_map<int, Node> m_vertexNormals;
     /// Set of all pairs of element ID and edge/face number on which to
     /// apply spherigon surface smoothing.
-    set<pair<int, int> >            m_spherigonSurfs;
+    std::set<std::pair<int, int> >  m_spherigonSurfs;
     /// List of face labels for composite annotation
-    map<int, string>                m_faceLabels;
+    std::map<int, std::string>           m_faceLabels;
     /// Whether the mesh has CAD
     bool                            m_hasCAD;
     /// CAD file ID
-    string                          m_CADId;
+    std::string                     m_CADId;
 #ifdef NEKTAR_USE_MESHGEN
     CADSystemSharedPtr              m_cad;
 #endif

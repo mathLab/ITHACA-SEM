@@ -37,6 +37,8 @@
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList1D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

@@ -331,13 +331,13 @@ public:
             std::pair<CADCurveSharedPtr, NekDouble >(cu, t);
     }
 
-    vector<string> GetCADString()
+    std::vector<std::string> GetCADString()
     {
-        vector<string> ret;
+        std::vector<std::string> ret;
         std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator c;
         for (c = CADCurveList.begin(); c != CADCurveList.end(); c++)
         {
-            stringstream ss;
+            std::stringstream ss;
             ss << std::scientific << std::setprecision(8);
             ss << "C " << c->first << " " << c->second.second << " " << 0.0;
             ret.push_back(ss.str());
@@ -346,7 +346,7 @@ public:
             iterator s;
         for (s = CADSurfList.begin(); s != CADSurfList.end(); s++)
         {
-            stringstream ss;
+            std::stringstream ss;
             ss << std::scientific << std::setprecision(8);
             ss << "S " << s->first << " " << s->second.second[0] <<
                   " " << s->second.second[1];

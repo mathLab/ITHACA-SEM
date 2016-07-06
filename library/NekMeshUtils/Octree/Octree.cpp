@@ -1008,7 +1008,7 @@ void Octree::CompileSourcePointList()
 
             Array<OneD, NekDouble> x1(3), x2(3);
             NekDouble r, d;
-            x1[0] = stod(word);
+            x1[0] = boost::lexical_cast<double>(word);
             s >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2] >> r >> d;
 
             lsources.push_back(linesource(x1, x2, r, d));

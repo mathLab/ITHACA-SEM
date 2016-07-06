@@ -6,6 +6,7 @@
 #include <MultiRegions/ContField2D.h>
 #include <SpatialDomains/MeshGraph2D.h>
 
+using namespace std;
 using namespace Nektar;
 
 // This routine projects a polynomial which has energy in all mdoes of

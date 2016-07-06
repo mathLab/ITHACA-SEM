@@ -38,7 +38,7 @@
 using namespace std;
 
 #include "InputFld.h"
-
+using namespace Nektar;
 
 static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
                 "NumberOfPoints","n","Define number of points to dump output");
@@ -90,9 +90,15 @@ InputFld::~InputFld()
  */
 void InputFld::Process(po::variables_map &vm)
 {
+    Timer timer;
+
     if(m_f->m_verbose)
     {
-        cout << "Processing input fld file" << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "Processing input fld file" << endl;
+            timer.Start();
+        }
     }
 
     int i,j;
@@ -143,8 +149,9 @@ void InputFld::Process(po::variables_map &vm)
         const SpatialDomains::ExpansionMap &expansions = m_f->m_graph->GetExpansions();
 
         // if Range has been speficied it is possible to have a
-        // partition which is empty so ccheck this and return if
+        // partition which is empty so check this and return if
         // no elements present.
+
         if(!expansions.size())
         {
             return;
@@ -194,12 +201,13 @@ void InputFld::Process(po::variables_map &vm)
         {
             nfields = m_f->m_fielddef[0]->m_fields.size();
         }
-
-
+        
+        
         m_f->m_exp.resize(nfields*nstrips);
 
         vector<string> vars = m_f->m_session->GetVariables();
 
+        
         // declare other fields;
         for (int s = 0; s < nstrips; ++s) //homogeneous strip varient
         {
@@ -207,9 +215,13 @@ void InputFld::Process(po::variables_map &vm)
             {
                 if(i < vars.size())
                 {
-                     m_f->m_exp[s*nfields+i] = m_f->AppendExpList(
+                    // check to see if field already defined 
+                    if(!m_f->m_exp[s*nfields+i]) 
+                    {
+                        m_f->m_exp[s*nfields+i] = m_f->AppendExpList(
                              m_f->m_fielddef[0]->m_numHomogeneousDir,
                              vars[i]);
+                    }
                 }
                 else
                 {
@@ -230,6 +242,7 @@ void InputFld::Process(po::variables_map &vm)
             }
         }
 
+        // Extract data to coeffs and bwd transform
         for(int s = 0; s < nstrips; ++s) //homogeneous strip varient
         {
             for (j = 0; j < nfields; ++j)
@@ -248,25 +261,38 @@ void InputFld::Process(po::variables_map &vm)
             }
         }
 
-        // if range is defined reset up output field in case or
-        // reducing fld definition
-        if(vm.count("range"))
-        {
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                = m_f->m_exp[0]->GetFieldDefinitions();
-            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+        // reset output field in case Import loaded elements that are not
+        // in the expansion (because of range option of partitioning)
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+            = m_f->m_exp[0]->GetFieldDefinitions();
+        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-            for (j = 0; j < nfields; ++j)
+        for (j = 0; j < nfields; ++j)
+        {
+            for (i = 0; i < FieldDef.size(); ++i)
             {
-                for (i = 0; i < FieldDef.size(); ++i)
-                {
-                    FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
-                    m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-                }
+                FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
+                m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
             }
-            m_f->m_fielddef = FieldDef;
-            m_f->m_data     = FieldData;
         }
+        m_f->m_fielddef = FieldDef;
+        m_f->m_data     = FieldData;
+    }
+
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timer.Stop();
+            NekDouble cpuTime = timer.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "InputFld  CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            cpuTime = 0.0;
+        }
+        
     }
 }
 

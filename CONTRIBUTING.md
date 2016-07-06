@@ -132,7 +132,9 @@ Nektar++ also has a growing number of tutorials to help introduce users and
 developers to the use of the library and the range of application solvers. These
 are stored in a separate repository, but are available from the main repository
 through a git submodule. To populate the docs/tutorial directory run `git
-submodule init` followed by `git submodule update`.
+submodule init` followed by `git submodule update --remote`. The latter command
+will ensure you have the latest master branch of the tutorials within your
+source tree.
 
 ## Code review and merging
 All merge requests will be reviewed by one of the senior developers. We try to

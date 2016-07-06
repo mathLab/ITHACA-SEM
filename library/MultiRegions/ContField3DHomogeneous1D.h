@@ -90,6 +90,8 @@ namespace Nektar
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
                     const Array<OneD, const NekDouble> &dirForcing);
+            
+            virtual void v_ClearGlobalLinSysManager(void);
         };
 
         typedef boost::shared_ptr<ContField3DHomogeneous1D>  

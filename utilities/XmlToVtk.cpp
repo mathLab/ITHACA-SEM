@@ -43,7 +43,12 @@
 #include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 
+using namespace std;
 using namespace Nektar;
+
+Array<OneD, NekDouble> GetQ(
+        SpatialDomains::DerivStorage &deriv,
+        LocalRegions::ExpansionSharedPtr exp);
 
 int main(int argc, char *argv[])
 {
@@ -200,56 +205,29 @@ int main(int argc, char *argv[])
         Array<OneD, NekDouble> x2 (Exp[0]->GetNpoints());
         Exp[0]->GetCoords(x0, x1, x2);
 
-        vector<NekDouble> jacDist;
-
-        if (quality)
-        {
-            jacDist.resize(Exp[0]->GetExpSize());
-        }
-
         // Write out field containing Jacobian.
         for(int i = 0; i < Exp[0]->GetExpSize(); ++i)
         {
             LocalRegions::ExpansionSharedPtr e = Exp[0]->GetExp(i);
-            SpatialDomains::GeomFactorsSharedPtr g = e->GetMetricInfo();
-            LibUtilities::PointsKeyVector ptsKeys = e->GetPointsKeys();
-            unsigned int npts = e->GetTotPoints();
-            NekDouble scaledJac = 1.0;
+            SpatialDomains::GeometrySharedPtr geom = e->GetGeom();
+            StdRegions::StdExpansionSharedPtr chi  = geom->GetXmap();
+            LibUtilities::PointsKeyVector     p    = chi->GetPointsKeys();
+            SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
 
-            if (g->GetGtype() == SpatialDomains::eDeformed)
-            {
-                const Array<OneD, const NekDouble> &jacobian
-                    = g->GetJac(ptsKeys);
-                if (!quality)
-                {
-                    Vmath::Vcopy(npts, jacobian, 1, 
-                                 tmp = Exp[0]->UpdatePhys()
+            // Grab Jacobian entries (on collapsed quadrature points)
+            SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
+            const int npts  = chi->GetTotPoints();
+
+
+            Array<OneD, const NekDouble> q = GetQ(deriv, e);
+            Vmath::Vcopy(npts, q, 1,
+                         tmp = Exp[0]->UpdatePhys()
                                  + Exp[0]->GetPhys_Offset(i), 1);
-                }
-                else
-                {
-                    scaledJac = Vmath::Vmin(npts, jacobian, 1) /
-                                Vmath::Vmax(npts, jacobian, 1);
-                    
-                    Vmath::Fill(npts, scaledJac,
-                                tmp = Exp[0]->UpdatePhys()
-                                    + Exp[0]->GetPhys_Offset(i), 1);
-                }
-            }
-            else
-            {
-                Vmath::Fill (npts, g->GetJac(ptsKeys)[0], 
-                                   tmp = Exp[0]->UpdatePhys()
-                                        + Exp[0]->GetPhys_Offset(i), 1);
-            }
 
-            if (quality)
-            {
-                jacDist[i] = scaledJac;
-            }
+
 
             Exp[0]->WriteVtkPieceHeader(outfile, i);
-            Exp[0]->WriteVtkPieceData  (outfile, i, "Jac");
+            Exp[0]->WriteVtkPieceData  (outfile, i, "Q");
             Exp[0]->WriteVtkPieceFooter(outfile, i);
         }
 
@@ -260,25 +238,6 @@ int main(int argc, char *argv[])
              << " at coords (" << x0[n] << ", " << x1[n] << ", " << x2[n] << ")"
              << endl;
 
-        if (quality)
-        {
-            string distName = vSession->GetSessionName() + ".jac";
-            ofstream dist(distName.c_str());
-            dist.setf (ios::scientific, ios::floatfield);
-
-            for (int i = 0; i < Exp[0]->GetExpSize(); ++i)
-            {
-                dist << setw(10) << i << "    "
-                     << setw(20) << setprecision(15) << jacDist[i] << endl;
-            }
-
-            dist.close();
-
-            cout << "- Minimum/maximum scaled Jacobian: "
-                 << Vmath::Vmin(Exp[0]->GetExpSize(), &jacDist[0], 1) << " "
-                 << Vmath::Vmax(Exp[0]->GetExpSize(), &jacDist[0], 1)
-                 << endl;
-        }
     }
     else
     {
@@ -295,3 +254,73 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+Array<OneD, NekDouble> GetQ(
+        SpatialDomains::DerivStorage &deriv,
+        LocalRegions::ExpansionSharedPtr exp)
+{
+    StdRegions::StdExpansionSharedPtr chi = exp->GetGeom()->GetXmap();
+    const int pts = deriv[0][0].num_elements();
+    const int nq  = chi->GetTotPoints();
+    const int expDim = chi->GetNumBases();
+
+    Array<OneD, NekDouble> jac(pts, 0.0);
+    Array<OneD, NekDouble> eta(nq);
+
+    switch (expDim)
+    {
+        case 2:
+        {
+            Vmath::Vvtvvtm(pts, &deriv[0][0][0], 1, &deriv[1][1][0], 1,
+                           &deriv[1][0][0], 1, &deriv[0][1][0], 1,
+                           &jac[0],         1);
+            break;
+        }
+        case 3:
+        {
+            Array<OneD, NekDouble> tmp(pts, 0.0);
+            Vmath::Vvtvvtm(pts, &deriv[1][1][0], 1, &deriv[2][2][0], 1,
+                           &deriv[2][1][0], 1, &deriv[1][2][0], 1,
+                           &tmp[0],         1);
+            Vmath::Vvtvp  (pts, &deriv[0][0][0], 1, &tmp[0],         1,
+                           &jac[0],         1, &jac[0],         1);
+            Vmath::Vvtvvtm(pts, &deriv[2][1][0], 1, &deriv[0][2][0], 1,
+                           &deriv[0][1][0], 1, &deriv[2][2][0], 1,
+                           &tmp[0],         1);
+            Vmath::Vvtvp  (pts, &deriv[1][0][0], 1, &tmp[0],         1,
+                           &jac[0],         1, &jac[0],         1);
+            Vmath::Vvtvvtm(pts, &deriv[0][1][0], 1, &deriv[1][2][0], 1,
+                           &deriv[1][1][0], 1, &deriv[0][2][0], 1,
+                           &tmp[0],         1);
+            Vmath::Vvtvp  (pts, &deriv[2][0][0], 1, &tmp[0],         1,
+                           &jac[0],         1, &jac[0],         1);
+            break;
+        }
+    }
+
+    for (int k = 0; k < pts; ++k)
+    {
+        NekDouble frob = 0.0;
+
+        for (int i = 0; i < deriv.num_elements(); ++i)
+        {
+            for (int j = 0; j < deriv[i].num_elements(); ++j)
+            {
+                frob += deriv[i][j][k]*deriv[i][j][k];
+            }
+        }
+
+        NekDouble delta = 0.0; // fixme
+        NekDouble sigma = 0.5*(jac[k] + sqrt(jac[k]*jac[k] + 4*delta*delta));
+
+        eta[k] = expDim * pow(sigma,2.0/expDim) / frob;
+        if(eta[k] > 1 || eta[k] < 0)
+            cout << eta[k] << endl;
+    }
+
+    if (pts == 1)
+    {
+        Vmath::Fill(nq-1, eta[0], &eta[1], 1);
+    }
+
+    return eta;
+}

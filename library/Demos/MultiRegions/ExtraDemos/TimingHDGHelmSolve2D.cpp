@@ -7,7 +7,7 @@
 #include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/DisContField2D.h>
 
-
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])

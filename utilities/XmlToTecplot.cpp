@@ -42,6 +42,7 @@
 #include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])

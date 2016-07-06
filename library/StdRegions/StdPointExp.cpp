@@ -35,6 +35,8 @@
 
 #include <StdRegions/StdPointExp.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace StdRegions

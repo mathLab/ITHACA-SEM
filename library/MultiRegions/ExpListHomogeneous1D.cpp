@@ -40,6 +40,8 @@
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/Expansion2D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -70,7 +72,7 @@ namespace Nektar
                            m_comm->GetColumnComm();
 
             m_transposition = MemoryManager<LibUtilities::Transposition>
-                                ::AllocateSharedPtr(HomoBasis, m_StripZcomm);
+                                ::AllocateSharedPtr(HomoBasis, m_comm, m_StripZcomm);
 
             m_planes = Array<OneD,ExpListSharedPtr>(
                                 m_homogeneousBasis->GetNumPoints() /
@@ -106,6 +108,7 @@ namespace Nektar
         ExpListHomogeneous1D::ExpListHomogeneous1D(const ExpListHomogeneous1D &In):
             ExpList(In,false),
             m_transposition(In.m_transposition),
+            m_StripZcomm(In.m_StripZcomm),
             m_useFFT(In.m_useFFT),
             m_FFT(In.m_FFT),
             m_tmpIN(In.m_tmpIN),
@@ -129,7 +132,7 @@ namespace Nektar
             m_tmpOUT(In.m_tmpOUT),
             m_homogeneousBasis(In.m_homogeneousBasis),
             m_lhom(In.m_lhom), 
-            m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
+            m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr()),
             m_dealiasing(In.m_dealiasing),
             m_padsize(In.m_padsize)
         {
@@ -498,7 +501,7 @@ namespace Nektar
                 }
                 else 
                 {
-                    Vmath::Vcopy(nrows,sortedinarray,1,outarray,1);
+                    Vmath::Vcopy(nrows,sortedoutarray,1,outarray,1);
                 }
                 
             }
@@ -622,6 +625,15 @@ namespace Nektar
             std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
             
+            std::vector<unsigned int> StripsIDs;
+
+            bool strips;
+            m_session->MatchSolverInfo("HomoStrip","True",strips,false);
+            if (strips)
+            {
+                StripsIDs.push_back(m_transposition->GetStripID());
+            }
+            
             std::vector<unsigned int> PlanesIDs;
             int IDoffset = 0;
 
@@ -637,11 +649,8 @@ namespace Nektar
                 PlanesIDs.push_back(m_transposition->GetPlaneID(i)+IDoffset);
             }
             
-            int NumHomoStrip;
-            m_session->LoadParameter("Strip_Z",NumHomoStrip,1);
- 
-            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, NumHomoStrip, HomoBasis, HomoLen, PlanesIDs);
-            
+            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, 
+                    HomoLen, strips, StripsIDs, PlanesIDs);
             return returnval;
         }
 
@@ -652,6 +661,15 @@ namespace Nektar
             
             std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
+            
+            std::vector<unsigned int> StripsIDs;
+
+            bool strips;
+            m_session->MatchSolverInfo("HomoStrip","True",strips,false);
+            if (strips)
+            {
+                StripsIDs.push_back(m_transposition->GetStripID());
+            }
             
             std::vector<unsigned int> PlanesIDs;
             int IDoffset = 0;
@@ -666,11 +684,9 @@ namespace Nektar
                 PlanesIDs.push_back(m_transposition->GetPlaneID(i)+IDoffset);
             }
             
-            int NumHomoStrip;
-            m_session->LoadParameter("Strip_Z",NumHomoStrip,1);
-
             // enforce NumHomoDir == 1 by direct call
-            m_planes[0]->GeneralGetFieldDefinitions(fielddef, 1, NumHomoStrip, HomoBasis,HomoLen,PlanesIDs);
+            m_planes[0]->GeneralGetFieldDefinitions(fielddef, 1, HomoBasis,
+                    HomoLen, strips, StripsIDs, PlanesIDs);
         }
 
 
@@ -745,20 +761,12 @@ namespace Nektar
                 int planes_offset = 0;
                 Array<OneD, NekDouble> coeff_tmp;
                 std::map<int,int>::iterator it;
-                int IDoffset = 0;
-
-                // introduce a 2 plane offset for single mode case so can
-                // be post-processed or used in MultiMode expansion. 
-                if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
-                {
-                    IDoffset  = 2;
-                }
                 
                 // Build map of plane IDs lying on this processor.
                 std::map<int,int> homoZids;
                 for (i = 0; i < m_planes.num_elements(); ++i)
                 {
-                    homoZids[m_transposition->GetPlaneID(i)+IDoffset] = i;
+                    homoZids[m_transposition->GetPlaneID(i)] = i;
                 }
                 
                 if(fielddef->m_numHomogeneousDir)
@@ -864,8 +872,37 @@ namespace Nektar
             int nq = (*m_exp)[expansion]->GetTotPoints();
             int npoints_per_plane = m_planes[0]->GetTotPoints();
 
+            // If we are using Fourier points, output extra plane to fill domain
+            int outputExtraPlane = 0;
+            Array<OneD, NekDouble> extraPlane;
+            if ( m_homogeneousBasis->GetBasisType()   == LibUtilities::eFourier
+               && m_homogeneousBasis->GetPointsType() ==
+                    LibUtilities::eFourierEvenlySpaced)
+            {
+                outputExtraPlane = 1;
+                // Get extra plane data
+                if (m_StripZcomm->GetSize() == 1)
+                {
+                    extraPlane = m_phys + m_phys_offset[expansion];
+                }
+                else
+                {
+                    // Determine to and from rank for communication
+                    int size     = m_StripZcomm->GetSize();
+                    int rank     = m_StripZcomm->GetRank();
+                    int fromRank = (rank+1) % size;
+                    int toRank   = (rank == 0) ? size-1 : rank-1;
+                    // Communicate using SendRecv
+                    extraPlane = Array<OneD, NekDouble>(nq);
+                    Array<OneD, NekDouble> send (nq,
+                            m_phys + m_phys_offset[expansion]);
+                    m_StripZcomm->SendRecv(toRank, send,
+                                           fromRank, extraPlane);
+                }
+            }
+
             // printing the fields of that zone
-            outfile << "        <DataArray type=\"Float32\" Name=\""
+            outfile << "        <DataArray type=\"Float64\" Name=\""
                     << var << "\">" << endl;
             outfile << "          ";
             for (int n = 0; n < m_planes.num_elements(); ++n)
@@ -874,6 +911,14 @@ namespace Nektar
                 for(i = 0; i < nq; ++i)
                 {
                     outfile << (fabs(phys[i]) < NekConstants::kNekZeroTol ? 0 : phys[i]) << " ";
+                }
+            }
+            if (outputExtraPlane)
+            {
+                for(i = 0; i < nq; ++i)
+                {
+                    outfile << (fabs(extraPlane[i]) < NekConstants::kNekZeroTol ?
+                                0 : extraPlane[i]) << " ";
                 }
             }
             outfile << endl;

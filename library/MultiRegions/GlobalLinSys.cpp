@@ -192,7 +192,9 @@ namespace Nektar
                                    &pLocToGloMap):
             m_linSysKey(pKey),
             m_expList(pExpList),
-            m_robinBCInfo(m_expList.lock()->GetRobinBCInfo())
+            m_robinBCInfo(m_expList.lock()->GetRobinBCInfo()),
+            m_verbose(m_expList.lock()->GetSession()->
+                      DefinesCmdLineArgument("verbose"))
         {
         }
 
@@ -369,7 +371,17 @@ namespace Nektar
                 // redeclare loc_mat to point to new_mat plus the scalar.
                 tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
                     1.0, new_mat);
-                loc_mat->SetBlock(0,0,tmp_mat);
+                DNekScalBlkMatSharedPtr new_loc_mat;
+                unsigned int exp_size[] = {tmp_mat->GetRows(), loc_mat->GetBlock(1,1)->GetRows()};
+                unsigned int nblks = 2;
+                new_loc_mat = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
+
+
+                new_loc_mat->SetBlock(0,0,tmp_mat);
+                new_loc_mat->SetBlock(0,1,loc_mat->GetBlock(0,1));
+                new_loc_mat->SetBlock(1,0,loc_mat->GetBlock(1,0));
+                new_loc_mat->SetBlock(1,1,loc_mat->GetBlock(1,1));
+                loc_mat = new_loc_mat;
             }
 
             return loc_mat;

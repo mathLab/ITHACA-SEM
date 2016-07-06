@@ -62,6 +62,8 @@
 #include <Collections/CollectionOptimisation.h>
 #include <Collections/Operator.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -1389,18 +1391,19 @@ namespace Nektar
                     }
                 }
 
-                std::string msg = "Failed to find point within element to tolerance of "
-                    + boost::lexical_cast<std::string>(tol)
-                    + " using local point ("
-                    + boost::lexical_cast<std::string>(locCoords[0]) +","
-                    + boost::lexical_cast<std::string>(locCoords[1]) +","
-                    + boost::lexical_cast<std::string>(locCoords[1]) 
-                    + ") in element: "
-                    + boost::lexical_cast<std::string>(min_id);
-                WARNINGL1(false,msg.c_str());
-
                 if(returnNearestElmt)
                 {
+
+                    std::string msg = "Failed to find point within element to tolerance of "
+                        + boost::lexical_cast<std::string>(tol)
+                        + " using local point ("
+                        + boost::lexical_cast<std::string>(locCoords[0]) +","
+                        + boost::lexical_cast<std::string>(locCoords[1]) +","
+                        + boost::lexical_cast<std::string>(locCoords[1]) 
+                        + ") in element: "
+                        + boost::lexical_cast<std::string>(min_id);
+                    WARNINGL1(false,msg.c_str());
+                    
                     Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
                     return min_id;
                 }
@@ -1898,7 +1901,13 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
+        
+        void ExpList::v_ClearGlobalLinSysManager(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+        
         void ExpList::ExtractFileBCs(
             const std::string               &fileName,
             const std::string               &varName,
@@ -1976,12 +1985,13 @@ namespace Nektar
 
         void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
                                                   int NumHomoDir,
-                                                  int NumHomoStrip,
                                                   Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis,
                                                   std::vector<NekDouble> &HomoLen,
+                                                  bool  homoStrips,
+                                                  std::vector<unsigned int> &HomoSIDs,
                                                   std::vector<unsigned int> &HomoZIDs,
                                                   std::vector<unsigned int> &HomoYIDs)
-        {
+        {   
             int startenum = (int) LibUtilities::eSegment;
             int endenum   = (int) LibUtilities::eHexahedron;
             int s         = 0;
@@ -2066,16 +2076,13 @@ namespace Nektar
 
                 if(elementIDs.size() > 0)
                 {
-                    for(int i = 0; i < NumHomoStrip; ++i)
-                    {
-                        LibUtilities::FieldDefinitionsSharedPtr fdef  =
-                            MemoryManager<LibUtilities::FieldDefinitions>::
-                                AllocateSharedPtr(shape, elementIDs, basis,
-                                                  UniOrder, numModes,fields,
-                                                  NumHomoDir, HomoLen, HomoZIDs,
-                                                  HomoYIDs);
-                        fielddef.push_back(fdef);
-                    }
+                    LibUtilities::FieldDefinitionsSharedPtr fdef  =
+                        MemoryManager<LibUtilities::FieldDefinitions>::
+                            AllocateSharedPtr(shape, elementIDs, basis,
+                                            UniOrder, numModes,fields,
+                                            NumHomoDir, HomoLen, homoStrips,
+                                            HomoSIDs, HomoZIDs, HomoYIDs);
+                    fielddef.push_back(fdef);
                 }
             }
         }
@@ -2352,6 +2359,15 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
+        
+        const vector<bool> &ExpList::v_GetLeftAdjacentFaces(void) const
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            vector<bool> returnval;
+            return returnval;
+        }
+
 
         void ExpList::v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)
         {
@@ -2634,15 +2650,6 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
-        /**
-         */
-        void ExpList::v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
-                                            Array<OneD,int> &EdgeID)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
         
         /**
          */
@@ -2778,6 +2785,15 @@ namespace Nektar
             }
         }
 
+        /**
+         */
+        void ExpList::v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
+                                            Array<OneD,int> &EdgeID)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+        
         /**
          */
         void ExpList::v_ReadGlobalOptimizationParameters()
@@ -3071,6 +3087,12 @@ namespace Nektar
                 }
             }
         }
+        
+        void ExpList::ClearGlobalLinSysManager(void)
+        {
+            v_ClearGlobalLinSysManager();
+        }
+
     } //end of namespace
 } //end of namespace
 

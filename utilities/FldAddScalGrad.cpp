@@ -8,6 +8,7 @@
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/ContField2D.h>
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])
@@ -241,7 +242,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    for(int j = 0; j < addfields; ++j)
+    for(j = 0; j < addfields; ++j)
     {
         int ncoeffs = exp[0]->GetNcoeffs();
         Array<OneD, NekDouble> output(ncoeffs);

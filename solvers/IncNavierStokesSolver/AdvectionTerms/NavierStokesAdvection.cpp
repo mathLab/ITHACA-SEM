@@ -35,6 +35,8 @@
 
 #include <IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string NavierStokesAdvection::className  = SolverUtils::GetAdvectionFactory().RegisterCreatorFunction("Convective", NavierStokesAdvection::create);
@@ -190,11 +192,19 @@ namespace Nektar
                 }
                 else if(fields[0]->GetWaveSpace() == true && m_homogen_dealiasing == false)
                 {
-                    // take d/dx, d/dy  gradients in physical Fourier space
-                    fields[0]->PhysDeriv(advVel[n],grad0,grad1);
-
+                    if (n < ndim)
+                    {
+                        // take d/dx, d/dy  gradients in physical Fourier space
+                        fields[0]->PhysDeriv(advVel[n],grad0,grad1);
+                    }
+                    else
+                    {
+                        fields[0]->HomogeneousBwdTrans(inarray[n],wkSp);
+                        fields[0]->PhysDeriv(wkSp,grad0,grad1);
+                    }
                     // Take d/dz derivative using wave space field
-                    fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],inarray[n],
+                    fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                          inarray[n],
                                           outarray[n]);
                     fields[0]->HomogeneousBwdTrans(outarray[n],grad2);
 

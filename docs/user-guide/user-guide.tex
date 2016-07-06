@@ -50,6 +50,7 @@ openany, % A chapter may start on either a recto or verso page.
 \maxsecnumdepth{paragraph} % Subsections (and higher) are numbered
 \setsecnumdepth{paragraph}
 
+
 \makeatletter %
 \makechapterstyle{standard}{
   \setlength{\beforechapskip}{0\baselineskip}
@@ -71,6 +72,7 @@ openany, % A chapter may start on either a recto or verso page.
 
 %\chapterstyle{standard}
 \chapterstyle{madsen}
+
 
 \setsecheadstyle{\normalfont\large\bfseries}
 \setsubsecheadstyle{\normalfont\normalsize\bfseries}
@@ -143,7 +145,8 @@ openany, % A chapter may start on either a recto or verso page.
 
 
 %%% NEW COMMANDS
-%%%-----------------------------------------------------------------------------
+%%%----------------------------------------------------------------------------% Definition of subsubsubsection
+\newcommand{\subsubsubsection}[1]{\vspace{9pt}\noindent{\textbf{\em #1:}}\vspace*{3pt}}
 
 % Nektar++ version
 \usepackage{xspace}
@@ -385,6 +388,7 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 
 \begin{document}
 
+
 \frontmatter
 
 % Render pretty title page if not building HTML
@@ -420,12 +424,17 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 
 \import{xml/}{xml}
 
-\part{Applications and Utilities}
+\part{Preprocessing \& Postprocessing}
+\label{p:prepost}
+
+\import{utilities/}{preprocessing}
+
+\import{utilities/}{postprocessing}
+
+\part{Solver Applications}
 \label{p:applications}
 
 \import{solvers/}{solvers}
-
-\import{utilities/}{utilities}
 
 \part{Reference}
 \import{optimisation/}{optimisation}

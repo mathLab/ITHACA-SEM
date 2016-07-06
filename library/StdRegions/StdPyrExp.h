@@ -252,8 +252,8 @@ namespace Nektar
             //---------------------------------------
             // Private helper functions
             //---------------------------------------
-            map<Mode, unsigned int, cmpop> m_map;
-            map<int, map<int, map<int, pair<int, int> > > > m_idxMap;
+            std::map<Mode, unsigned int, cmpop> m_map;
+            std::map<int, std::map<int, std::map<int, std::pair<int, int> > > > m_idxMap;
         };    
         typedef boost::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
     } //end of namespace

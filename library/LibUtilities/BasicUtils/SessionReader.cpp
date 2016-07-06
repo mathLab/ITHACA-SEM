@@ -338,6 +338,8 @@ namespace Nektar
                                  "number of slices in Z-dir")
                 ("part-only",    po::value<int>(),
                                  "only partition mesh into N partitions.")
+                ("part-only-overlapping",    po::value<int>(),
+                                 "only partition mesh into N overlapping partitions.")
                 ("part-info",    "Output partition information")
             ;
 
@@ -1461,12 +1463,26 @@ namespace Nektar
                     {
                         TiXmlElement *vMainEntry =
                             vMainNektar->FirstChildElement(p->Value());
-                        TiXmlElement *q = new TiXmlElement(*p);
-                        if (vMainEntry)
+
+                        // First check if the new item is in fact blank
+                        if (!p->FirstChild() && vMainEntry)
                         {
-                            vMainNektar->RemoveChild(vMainEntry);
+                            std::string warningmsg =
+                                "File " + pFilenames[i] + " contains " +
+                                "an empty XML element " +
+                                std::string(p->Value()) +
+                                " which will be ignored.";
+                            WARNINGL0(false, warningmsg.c_str());
                         }
-                        vMainNektar->LinkEndChild(q);
+                        else
+                        {
+                            if (vMainEntry)
+                            {
+                                vMainNektar->RemoveChild(vMainEntry);
+                            }
+                            TiXmlElement *q = new TiXmlElement(*p);
+                            vMainNektar->LinkEndChild(q);
+                        }
                         p = p->NextSiblingElement();
                     }
 
@@ -1600,7 +1616,8 @@ namespace Nektar
             // Mesh has not been partitioned so do partitioning if required.
             // Note in the serial case nothing is done as we have already loaded
             // the mesh.
-            if (DefinesCmdLineArgument("part-only"))
+            if (DefinesCmdLineArgument("part-only")||
+                DefinesCmdLineArgument("part-only-overlapping"))
             {
                 // Perform partitioning of the mesh only. For this we insist
                 // the code is run in serial (parallel execution is pointless).
@@ -1608,12 +1625,21 @@ namespace Nektar
                         "The 'part-only' option should be used in serial.");
 
                 // Number of partitions is specified by the parameter.
-                int nParts = GetCmdLineArgument<int>("part-only");
+                int nParts; 
                 SessionReaderSharedPtr vSession     = GetSharedThisPtr();
                 MeshPartitionSharedPtr vPartitioner =
                         GetMeshPartitionFactory().CreateInstance(
                                             vPartitionerName, vSession);
-                vPartitioner->PartitionMesh(nParts, true);
+                if(DefinesCmdLineArgument("part-only"))
+                {
+                    nParts = GetCmdLineArgument<int>("part-only");
+                    vPartitioner->PartitionMesh(nParts, true);
+                }
+                else  
+                {
+                    nParts = GetCmdLineArgument<int>("part-only-overlapping");
+                    vPartitioner->PartitionMesh(nParts, true, true);
+                }
                 vPartitioner->WriteAllPartitions(vSession);
                 vPartitioner->GetCompositeOrdering(m_compOrder);
                 vPartitioner->GetBndRegionOrdering(m_bndRegOrder);

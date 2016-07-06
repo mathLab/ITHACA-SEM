@@ -36,6 +36,8 @@
 #include <SolverUtils/DriverSteadyState.h>
 #include <SolverUtils/AdvectionSystem.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils

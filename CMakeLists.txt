@@ -96,8 +96,8 @@ MARK_AS_ADVANCED(NEKTAR_BUILD_PACKAGES)
 
 OPTION(NEKTAR_TEST_ALL "Include full set of regression tests to this build." OFF)
 
-# Meshing and CAD options
-OPTION(NEKTAR_USE_OCC "Use OpenCascade for geometry interface." OFF)
+# Meshing utilities and library
+OPTION(NEKTAR_USE_MESHGEN "Build mesh generation utilities." OFF)
 
 # Build options
 OPTION(NEKTAR_FULL_DEBUG "Enable Full Debugging." OFF)
@@ -154,7 +154,13 @@ ENDIF()
 INCLUDE (NektarCommon)
 
 # Set various ThirdParty locations
-SET(TPURL   http://www.nektar.info/thirdparty)
+OPTION(THIRDPARTY_USE_SSL "Use secure HTTP connection to download third-party files." OFF)
+IF (THIRDPARTY_USE_SSL)
+    SET(TPURL https://www.nektar.info/thirdparty)
+ELSE()
+    SET(TPURL http://www.nektar.info/thirdparty)
+ENDIF()
+
 SET(TPSRC   ${CMAKE_SOURCE_DIR}/ThirdParty)
 SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
 SET(TPDIST  ${CMAKE_BINARY_DIR}/ThirdParty/dist)
@@ -181,6 +187,8 @@ INCLUDE (ThirdPartyPETSc)
 INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
+INCLUDE (ThirdPartyTriangle)
+INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyCCM)
 
 INCLUDE (Doxygen)
@@ -249,6 +257,10 @@ ELSE( NEKTAR_USE_MEMORY_POOLS )
     REMOVE_DEFINITIONS(-DNEKTAR_MEMORY_POOL_ENABLED)
 ENDIF( NEKTAR_USE_MEMORY_POOLS )
 
+IF (NEKTAR_USE_MESHGEN)
+    ADD_DEFINITIONS(-DNEKTAR_USE_MESHGEN)
+ENDIF()
+
 SET(Boost_USE_STATIC_LIBS OFF)
 IF( WIN32 )
     # The auto-linking feature has problems with USE_STATIC_LIBS off, so we use
@@ -271,10 +283,10 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 # Build active components
 IF (NEKTAR_BUILD_LIBRARY)
     SET(NEKTAR++_LIBRARIES SolverUtils LibUtilities StdRegions SpatialDomains LocalRegions
-        MultiRegions Collections)
+        MultiRegions Collections GlobalMapping NekMeshUtils)
     INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)
-    INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake)
+    INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake COMPONENT dev)
 ENDIF (NEKTAR_BUILD_LIBRARY)
 
 IF (NEKTAR_BUILD_SOLVERS)
@@ -295,11 +307,15 @@ IF (NEKTAR_BUILD_TESTS)
     ENDIF (NEKTAR_USE_MPI)
 ENDIF (NEKTAR_BUILD_TESTS)
 
+# Compile list of definitions for Nektar++Config.cmake input file. We exclude
+# vtk definitions which should not be required for external builds.
 SET(NEKTAR_DEFINITIONS "")
 GET_DIRECTORY_PROPERTY(
     NEKTAR_DEFINITIONS_LIST DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS)
 FOREACH(def ${NEKTAR_DEFINITIONS_LIST})
-    SET(NEKTAR_DEFINITIONS "${NEKTAR_DEFINITIONS} -D${def}")
+    IF (NOT def MATCHES "^vtk")
+        SET(NEKTAR_DEFINITIONS "${NEKTAR_DEFINITIONS} -D${def}")
+    ENDIF()
 ENDFOREACH()
 
 # Write out Nektar++ build configuration
@@ -308,7 +324,8 @@ CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/Nektar++Config.cmake.in
 
 # Install Nektar++ CMake configuration file
 INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
-    DESTINATION ${NEKTAR_LIB_DIR}/cmake/)
+    DESTINATION ${NEKTAR_LIB_DIR}/cmake/
+    COMPONENT dev)
 
 # Install ThirdParty headers to subdirectory of ${NEKTAR_INCLUDE_DIR}
 INSTALL(DIRECTORY ${TPDIST}/include/

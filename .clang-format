@@ -1,5 +1,6 @@
 BasedOnStyle: LLVM
 AlignAfterOpenBracket: true
+AlignConsecutiveAssignments: true
 IndentWidth: 4
 AlwaysBreakAfterDefinitionReturnType: None
 PenaltyReturnTypeOnItsOwnLine: 9999999

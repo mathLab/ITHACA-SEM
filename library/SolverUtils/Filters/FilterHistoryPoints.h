@@ -80,9 +80,11 @@ class FilterHistoryPoints : public Filter
         SpatialDomains::PointGeomVector         m_historyPoints;
         unsigned int                            m_index;
         unsigned int                            m_outputFrequency;
-         /// plane to take history point from if using a homogeneous1D expansion
+        /// plane to take history point from if using a homogeneous1D expansion
         unsigned int                            m_outputPlane;
+        Array<OneD, int>                        m_planeIDs;
         bool                                    m_isHomogeneous1D;
+        bool                                    m_waveSpace;
         std::string                             m_outputFile;
         std::ofstream                           m_outputStream;
         std::stringstream                       m_historyPointStream;

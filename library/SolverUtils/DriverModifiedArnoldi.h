@@ -71,10 +71,10 @@ class DriverModifiedArnoldi: public DriverArnoldi
         virtual ~DriverModifiedArnoldi();
 
         /// Virtual function for initialisation implementation.
-        virtual void v_InitObject(ostream &out = cout );
+        virtual void v_InitObject(std::ostream &out = std::cout );
 
         /// Virtual function for solve implementation.
-        virtual void v_Execute(ostream &out = cout);
+        virtual void v_Execute(std::ostream &out = std::cout);
 
     private:
         /// Generates a new vector in the sequence by applying the linear operator.
@@ -99,7 +99,7 @@ class DriverModifiedArnoldi: public DriverArnoldi
                         Array<OneD, NekDouble> &wi,
                         const NekDouble resnorm,
                         const int nvec,
-                        ofstream &evlout,
+                        std::ofstream &evlout,
                         NekDouble &resid0);
 
 

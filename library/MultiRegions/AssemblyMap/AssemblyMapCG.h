@@ -46,20 +46,20 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        static map<int,int> NullIntIntMap;
-        const static vector<map<int,int> > NullVecIntIntMap;
+        static std::map<int,int> NullIntIntMap;
+        const static std::vector<std::map<int,int> > NullVecIntIntMap;
 
         class AssemblyMapCG;
         typedef boost::shared_ptr<AssemblyMapCG>  AssemblyMapCGSharedPtr;
         typedef boost::tuple<int, int, NekDouble> ExtraDirDof;
 
-        typedef vector<map<int, int> > DofGraph;
+        typedef std::vector<std::map<int, int> > DofGraph;
 
         MULTI_REGIONS_EXPORT
-        pair<int, StdRegions::Orientation> DeterminePeriodicEdgeOrientId(
+        std::pair<int, StdRegions::Orientation> DeterminePeriodicEdgeOrientId(
             int                           meshEdgeId,
             StdRegions::Orientation       edgeOrient,
-            const vector<PeriodicEntity> &periodicEdges);
+            const std::vector<PeriodicEntity> &periodicEdges);
 
         MULTI_REGIONS_EXPORT
         StdRegions::Orientation  DeterminePeriodicFaceOrient(
@@ -104,7 +104,7 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapCG();
 
-            MULTI_REGIONS_EXPORT map<int, vector<ExtraDirDof> >
+            MULTI_REGIONS_EXPORT std::map<int, std::vector<ExtraDirDof> >
                 &GetExtraDirDofs()
             {
                 return m_extraDirDofs;
@@ -145,7 +145,7 @@ namespace Nektar
             int m_maxStaticCondLevel;
             /// Map indicating degrees of freedom which are Dirichlet but whose
             /// value is stored on another processor.
-            map<int, vector<ExtraDirDof> > m_extraDirDofs;
+            std::map<int, std::vector<ExtraDirDof> > m_extraDirDofs;
 
             MULTI_REGIONS_EXPORT int CreateGraph(
                 const ExpList                       &locExp,
@@ -157,8 +157,8 @@ namespace Nektar
                 const PeriodicMap                   &periodicFaces,
                 DofGraph                            &graph,
                 BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
-                set<int>                            &extraDirVerts,
-                set<int>                            &extraDirEdges,
+                std::set<int>                       &extraDirVerts,
+                std::set<int>                       &extraDirEdges,
                 int                                 &firstNonDirGraphVertId,
                 int                                 &nExtraDirichlet,
                 int                                  mdswitch = 1);

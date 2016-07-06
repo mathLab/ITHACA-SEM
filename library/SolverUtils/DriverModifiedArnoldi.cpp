@@ -38,6 +38,8 @@
 
 #include <SolverUtils/DriverModifiedArnoldi.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils
@@ -191,7 +193,14 @@ void DriverModifiedArnoldi::v_Execute(ostream &out)
         // Test for convergence.
         converged = EV_test(i, i, zvec, wr, wi, resnorm,
             std::min(i, m_nvec), evlout, resid0);
-        converged = max (converged, 0);
+        if ( i >= m_nvec)
+        {
+            converged = max (converged, 0);
+        }
+        else
+        {
+            converged = 0;
+        }
 
         if (m_comm->GetRank() == 0)
         {

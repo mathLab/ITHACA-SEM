@@ -49,12 +49,12 @@
         </VARIABLES>
         
         <BOUNDARYREGIONS>
-          <B ID="0"> C[1] </B>    <!-- Inlet      -->
-          <B ID="1"> C[6] </B>    <!-- Outlet     -->
-          <B ID="2"> C[2] </B>    <!-- Wall       -->
-          <B ID="3"> C[3] </B>    <!-- Wall left  -->
-          <B ID="4"> C[4] </B>    <!-- Wall       -->
-          <B ID="5"> C[5] </B>    <!-- Wall right -->
+          <B ID="0"> C[1] </B>    <!-- Z = 0      -->
+          <B ID="1"> C[6] </B>    <!-- Z = 1      -->
+          <B ID="2"> C[2] </B>    <!-- Y = 0      -->
+          <B ID="3"> C[3] </B>    <!-- X = 1      -->
+          <B ID="4"> C[4] </B>    <!-- Y = 1     -->
+          <B ID="5"> C[5] </B>    <!-- X = 0      -->
         </BOUNDARYREGIONS>
         
         <BOUNDARYCONDITIONS>
@@ -65,11 +65,6 @@
             <D VAR="p" VALUE="0.5*(1-exp(2*KovLam*x))" />
           </REGION>
           <REGION REF="1">
-            <N VAR="u" USERDEFINEDTYPE="HOutflow" VALUE="-Kinvis*KovLam*exp(KovLam*x)*cos(2*PI*y) - 0.5*(1-exp(2*KovLam*x))-0.5*(((1-exp(KovLam*x)*cos(2*PI*y))*(1-exp(KovLam*x)*cos(2*PI*y))+(KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y))*(KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y))))*(0.5*(1.0-tanh((1-exp(KovLam*x)*cos(2*PI*y))*20)))" />
-            <N VAR="v" VALUE="KovLam*KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y)" />
-            <N VAR="w" VALUE="0" />
-            <D VAR="p" USERDEFINEDTYPE="HOutflow" VALUE="-Kinvis*KovLam*exp(KovLam*x)*cos(2*PI*y) - 0.5*(1-exp(2*KovLam*x)) -0.5*(((1-exp(KovLam*x)*cos(2*PI*y))*(1-exp(KovLam*x)*cos(2*PI*y))+(KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y))*(KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y))))*(0.5*(1.0-tanh((1-exp(KovLam*x)*cos(2*PI*y))*20)))" />
-
             <D VAR="u" VALUE="(1-exp(KovLam*x)*cos(2*PI*y))" />
             <D VAR="v" VALUE="(KovLam/(2*PI))*exp(KovLam*x)*sin(2*PI*y)" />
             <D VAR="w" VALUE="0" />
@@ -82,10 +77,10 @@
             <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
           </REGION>
           <REGION REF="3">
-            <D VAR="u" VALUE="(1-exp(KovLam*x)*cos(2*PI*y))" />
-            <D VAR="v" VALUE="(KovLam/(2*PI))*exp(KovLam*x)*sin(2*PI*y)" />
-            <D VAR="w" VALUE="0" />
-            <D VAR="p" VALUE="0.5*(1-exp(2*KovLam*x))" />
+            <N VAR="u" USERDEFINEDTYPE="HOutflow" VALUE="-Kinvis*KovLam*exp(KovLam*x)*cos(2*PI*y) - 0.5*(1-exp(2*KovLam*x))-0.5*(((1-exp(KovLam*x)*cos(2*PI*y))*(1-exp(KovLam*x)*cos(2*PI*y))+(KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y))*(KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y))))*(0.5*(1.0-tanh((1-exp(KovLam*x)*cos(2*PI*y))*20)))" />
+            <N VAR="v" VALUE="KovLam*KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y)" />
+            <N VAR="w" VALUE="0" />
+            <D VAR="p" USERDEFINEDTYPE="HOutflow" VALUE="Kinvis*KovLam*exp(KovLam*x)*cos(2*PI*y) + 0.5*(1-exp(2*KovLam*x)) + 0.5*(((1-exp(KovLam*x)*cos(2*PI*y))*(1-exp(KovLam*x)*cos(2*PI*y)) + (KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y))*(KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y))))*(0.5*(1.0-tanh((1-exp(KovLam*x)*cos(2*PI*y))*20)))" />
           </REGION>
           <REGION REF="4">
             <D VAR="u" VALUE="(1-exp(KovLam*x)*cos(2*PI*y))" />

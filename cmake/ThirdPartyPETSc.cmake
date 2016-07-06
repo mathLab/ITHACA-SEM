@@ -49,7 +49,10 @@ IF (NEKTAR_USE_PETSC)
             BINARY_DIR ${TPBUILD}/petsc-3.5.2
             URL http://www.nektar.info/thirdparty/petsc-lite-3.5.2.tar.gz
             URL_MD5 "d707336a98d7cb31d843804d020edc94"
-            CONFIGURE_COMMAND ./configure
+            CONFIGURE_COMMAND
+                OMPI_CC=${CMAKE_C_COMPILER}
+                OMPI_CXX=${CMAKE_CXX_COMPILER}
+                ./configure
                 --with-cc=${PETSC_C_COMPILER}
                 --with-cxx=${PETSC_CXX_COMPILER}
                 --with-shared-libraries=0
@@ -84,6 +87,9 @@ IF (NEKTAR_USE_PETSC)
 
     ADD_DEFINITIONS(-DNEKTAR_USING_PETSC)
     INCLUDE_DIRECTORIES(SYSTEM ${PETSC_INCLUDES})
+    IF (NOT NEKTAR_USE_MPI)
+        INCLUDE_DIRECTORIES(SYSTEM ${PETSC_INCLUDES}/mpiuni)
+    ENDIF (NOT NEKTAR_USE_MPI)
 
     MARK_AS_ADVANCED(PETSC_CURRENT PETSC_DIR PETSC_LIBRARIES PETSC_INCLUDES)
 ENDIF( NEKTAR_USE_PETSC )

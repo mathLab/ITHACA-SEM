@@ -38,7 +38,7 @@ IF (NEKTAR_USE_FFTW)
             BINARY_DIR ${TPBUILD}/fftw-3.2.2
             TMP_DIR ${TPBUILD}/fftw-3.2.2-tmp
             INSTALL_DIR ${TPDIST}
-            CONFIGURE_COMMAND ${TPSRC}/fftw-3.2.2/configure --prefix=${TPDIST} --quiet --enable-shared --disable-dependency-tracking
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} ${TPSRC}/fftw-3.2.2/configure --prefix=${TPDIST} --quiet --enable-shared --disable-dependency-tracking
         )
 
         SET(FFTW_LIBRARY fftw3 CACHE FILEPATH

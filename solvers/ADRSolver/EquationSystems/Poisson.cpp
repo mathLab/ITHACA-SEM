@@ -35,6 +35,8 @@
 
 #include <ADRSolver/EquationSystems/Poisson.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string Poisson::className1 = GetEquationSystemFactory().RegisterCreatorFunction("Poisson", Poisson::create);

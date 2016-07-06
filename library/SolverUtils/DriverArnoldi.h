@@ -92,12 +92,12 @@ protected:
 
     void WriteFld(std::string file, Array<OneD, NekDouble> coeffs);
 
-    void WriteEvs(ostream &evlout, const int k,
+    void WriteEvs(std::ostream &evlout, const int k,
                   const NekDouble real, const NekDouble imag,
                   NekDouble resid = NekConstants::kNekUnsetDouble,
                   bool DumpInverse = true);
 
-    virtual void v_InitObject(ostream &out = cout);
+    virtual void v_InitObject(std::ostream &out = std::cout);
 
     virtual  Array<OneD, NekDouble> v_GetRealEvl(void)
     {

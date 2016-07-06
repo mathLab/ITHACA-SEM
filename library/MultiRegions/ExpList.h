@@ -92,7 +92,7 @@ namespace Nektar
     
         /// A map between global matrix keys and their associated block
         /// matrices.
-        typedef map<GlobalMatrixKey,DNekScalBlkMatSharedPtr> BlockMatrixMap;
+        typedef std::map<GlobalMatrixKey,DNekScalBlkMatSharedPtr> BlockMatrixMap;
         /// A shared pointer to a BlockMatrixMap.
         typedef boost::shared_ptr<BlockMatrixMap> BlockMatrixMapShPtr;
                    
@@ -702,6 +702,8 @@ namespace Nektar
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
 
+            inline const std::vector<bool> &GetLeftAdjacentFaces(void) const;
+            
             inline void ExtractTracePhys(Array<OneD,NekDouble> &outarray);
 
             inline void ExtractTracePhys(
@@ -757,11 +759,13 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
                 int NumHomoDir = 0,
-                int NumHomoStrip = 1,
                 Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis =
                     LibUtilities::NullBasisSharedPtr1DArray,
                 std::vector<NekDouble> &HomoLen =
                     LibUtilities::NullNekDoubleVector,
+                bool  homoStrips = false,
+                std::vector<unsigned int> &HomoSIDs =
+                    LibUtilities::NullUnsignedIntVector,
                 std::vector<unsigned int> &HomoZIDs =
                     LibUtilities::NullUnsignedIntVector,
                 std::vector<unsigned int> &HomoYIDs =
@@ -773,7 +777,7 @@ namespace Nektar
                 return m_globalOptParam;
             }
 
-            map<int, RobinBCInfoSharedPtr> GetRobinBCInfo()
+            std::map<int, RobinBCInfoSharedPtr> GetRobinBCInfo()
             {
                 return v_GetRobinBCInfo();
             }
@@ -891,6 +895,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void CreateCollections(
                     Collections::ImplementationType ImpType
                                                     = Collections::eNoImpType);
+
+            MULTI_REGIONS_EXPORT void ClearGlobalLinSysManager(void);
 
         protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
@@ -1100,6 +1106,8 @@ namespace Nektar
                 const Array<OneD,const NekDouble>  &field,
                       Array<OneD,NekDouble> &Fwd,
                       Array<OneD,NekDouble> &Bwd);
+
+            virtual const std::vector<bool> &v_GetLeftAdjacentFaces(void) const;
 
             virtual void v_ExtractTracePhys(
                 Array<OneD,NekDouble> &outarray);
@@ -1325,6 +1333,8 @@ namespace Nektar
                 const Array<OneD, NekDouble> &inarray,
                       Array<OneD, NekDouble> &outarray);
 
+            virtual void v_ClearGlobalLinSysManager(void);
+
             void ExtractFileBCs(const std::string                &fileName,
                                 const std::string                &varName,
                                 const boost::shared_ptr<ExpList>  locExpList);
@@ -1350,7 +1360,7 @@ namespace Nektar
                 const NekDouble   x2_in   = NekConstants::kNekUnsetDouble,
                 const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
             
-            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
+            virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
             
             
             virtual void v_GetPeriodicEntities(
@@ -1411,7 +1421,7 @@ namespace Nektar
 
             for(i= 0; i < (*m_exp).size(); ++i)
             {
-                returnval = max(returnval,
+                returnval = (std::max)(returnval,
                                 (*m_exp)[i]->EvalBasisNumModesMax());
             }
 
@@ -1430,7 +1440,7 @@ namespace Nektar
             for(i= 0; i < (*m_exp).size(); ++i)
             {
                 returnval[i]
-                    = max(returnval[i],(*m_exp)[i]->EvalBasisNumModesMax());
+                    = (std::max)(returnval[i],(*m_exp)[i]->EvalBasisNumModesMax());
             }
 
             return returnval;
@@ -2047,6 +2057,11 @@ namespace Nektar
             v_GetFwdBwdTracePhys(field,Fwd,Bwd);
         }
 
+        inline const std::vector<bool> &ExpList::GetLeftAdjacentFaces(void) const
+        {
+            return v_GetLeftAdjacentFaces();
+        }
+        
         inline void ExpList::ExtractTracePhys(Array<OneD,NekDouble> &outarray)
         {
             v_ExtractTracePhys(outarray);

@@ -35,9 +35,13 @@
 
 #include <string>
 #include <iostream>
+#include <iomanip>
 using namespace std;
 
+#include <LibUtilities/BasicUtils/Timer.h>
+
 #include "InputXml.h"
+using namespace Nektar;
 
 static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
                 "NumberOfPoints","n","Define number of points to dump output");
@@ -84,11 +88,27 @@ InputXml::~InputXml()
  */
 void InputXml::Process(po::variables_map &vm)
 {
+    Timer timerpart;
+
+    //check for multiple calls to inputXml due to split xml
+    //files. If so just return
+    int expsize = m_f->m_exp.size();
+    m_f->m_comm->AllReduce(expsize,LibUtilities::ReduceMax);
+    
+    if(expsize != 0)
+    {
+        return; 
+    }
 
     if(m_f->m_verbose)
     {
-        cout << "Processing input xml file" << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "Processing input xml file" << endl;
+            timerpart.Start();
+        }
     }
+
     // check to see if fld file defined so can use in
     // expansion defintion if required
     string fldending;
@@ -114,7 +134,6 @@ void InputXml::Process(po::variables_map &vm)
 
     string xml_ending = "xml";
     string xml_gz_ending = "xml.gz";
-
 
     std::vector<std::string> files;
     // load .xml ending
@@ -206,31 +225,87 @@ void InputXml::Process(po::variables_map &vm)
                  "argument");
     }
 
+    // Set up command lines options that will be passed through to SessionReader
+    vector<string> cmdArgs;
+    cmdArgs.push_back("FieldConvert");
 
     if(m_f->m_verbose)
     {
-        string firstarg = "FieldConvert";
-        string verbose = "-v";
-        char **argv;
-        argv = (char**)malloc(2*sizeof(char*));
-        argv[0] = (char *)malloc(firstarg.size()*sizeof(char));
-        argv[1] = (char *)malloc(verbose.size()*sizeof(char));
-
-        sprintf(argv[0],"%s",firstarg.c_str());
-        sprintf(argv[1],"%s",verbose.c_str());
-
-        m_f->m_session = LibUtilities::SessionReader::
-            CreateInstance(2, (char **)argv, files, m_f->m_comm);
+        cmdArgs.push_back("--verbose");
     }
-    else
+
+    if(vm.count("shared-filesystem"))
     {
-        m_f->m_session = LibUtilities::SessionReader::
-            CreateInstance(0, 0, files, m_f->m_comm);
+        cmdArgs.push_back("--shared-filesystem");
     }
 
+    if(vm.count("part-only"))
+    {
+        cmdArgs.push_back("--part-only");
+        cmdArgs.push_back(
+            boost::lexical_cast<string>(vm["part-only"].as<int>()));
+    }
+
+    if(vm.count("part-only-overlapping"))
+    {
+        cmdArgs.push_back("--part-only-overlapping");
+        cmdArgs.push_back(
+            boost::lexical_cast<string>(vm["part-only-overlapping"].as<int>()));
+    }
+
+    if(vm.count("npz"))
+    {
+        cmdArgs.push_back("--npz");
+        cmdArgs.push_back(
+            boost::lexical_cast<string>(vm["npz"].as<int>()));
+    }
+
+    int argc = cmdArgs.size();
+    const char **argv = new const char*[argc];
+    for (int i = 0; i < argc; ++i)
+    {
+        argv[i] = cmdArgs[i].c_str();
+    }
+
+    m_f->m_session = LibUtilities::SessionReader::
+        CreateInstance(argc, (char **) argv, files, m_f->m_comm);
+
+    // Free up memory.
+    delete [] argv;
+
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timerpart.Stop();
+            NekDouble cpuTime = timerpart.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "\t InputXml session reader CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            timerpart.Start();
+        }
+    }
+    
     m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
     m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
                     ::AllocateSharedPtr(m_f->m_session->GetComm());
+
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timerpart.Stop();
+            NekDouble cpuTime = timerpart.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "\t InputXml mesh graph setup  CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            timerpart.Start();
+        }
+    }
 
     // currently load all field (possibly could read data from
     // expansion list but it is re-arranged in expansion)
@@ -246,12 +321,31 @@ void InputXml::Process(po::variables_map &vm)
 
     m_f->m_exp.resize(1);
 
-    // load fielddef if fld file is defined This gives
+    // load fielddef header if fld file is defined. This gives
     // precedence to Homogeneous definition in fld file
     int NumHomogeneousDir = 0;
     if(fldfilegiven)
     {
-        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef);
+        // use original expansion to identify which elements are in
+        // this partition/subrange
+
+        Array<OneD,int> ElementGIDs(expansions.size());
+        SpatialDomains::ExpansionMap::const_iterator expIt;
+
+        int i = 0; 
+        for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+        {
+            ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
+        }
+
+        m_f->m_fielddef.clear();
+        m_f->m_data.clear();
+
+        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],
+                           m_f->m_fielddef,
+                           m_f->m_data,
+                           m_f->m_fieldMetaDataMap,
+                           ElementGIDs);
         NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
 
         //----------------------------------------------
@@ -290,6 +384,29 @@ void InputXml::Process(po::variables_map &vm)
 
         m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
     }
+    else
+    {
+        if(vm.count("output-points"))
+        {
+            int nPointsNew = vm["output-points"].as<int>();
+            m_f->m_graph->SetExpansionsToPointOrder(nPointsNew);
+        }
+    }
+
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timerpart.Stop();
+            NekDouble cpuTime = timerpart.TimePerTest(1);
+            
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "\t InputXml setexpansion CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            timerpart.Start();
+        }
+    }
 
     // Override number of planes with value from cmd line
     if(NumHomogeneousDir == 1 && vm.count("output-points-hom-z"))
@@ -299,7 +416,21 @@ void InputXml::Process(po::variables_map &vm)
     }
 
     m_f->m_exp[0] = m_f->SetUpFirstExpList(NumHomogeneousDir,fldfilegiven);
-}
+    
+    if(m_f->m_verbose)
+    {
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            timerpart.Stop();
+            NekDouble cpuTime = timerpart.TimePerTest(1);
+            
+            stringstream ss1;
 
+            ss1 << cpuTime << "s";
+            cout << "\t InputXml set first exp CPU Time: " << setw(8) << left
+                 << ss1.str() << endl;
+        }
+    }
+}
 }
 }

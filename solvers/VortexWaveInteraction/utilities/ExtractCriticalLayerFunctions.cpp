@@ -37,6 +37,8 @@
 
 #include <MultiRegions/ExpList.h>
 
+using namespace std;
+using namespace Nektar;
 
 void Computestreakpositions(MultiRegions::ExpListSharedPtr &streak,
                             Array<OneD, NekDouble> &xc,  

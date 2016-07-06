@@ -37,6 +37,8 @@
 #include <iomanip>
 #include <CardiacEPSolver/Filters/FilterElectrogram.h>
 
+using namespace std;
+
 namespace Nektar
 {
 std::string FilterElectrogram::className =

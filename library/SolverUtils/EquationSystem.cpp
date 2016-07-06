@@ -52,13 +52,15 @@
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
+#include <GlobalMapping/Mapping.h>
+
 #include <boost/format.hpp>
 # include <boost/function.hpp>
 
 #include <iostream>
 #include <string>
 
-using std::string;
+using namespace std;
 
 namespace Nektar
 {
@@ -885,9 +887,9 @@ namespace Nektar
                 }
                 else
                 {
-
                     LibUtilities::PtsFieldSharedPtr ptsField;
-                    LibUtilities::Import(filename, ptsField);
+                    LibUtilities::PtsIO ptsIO(m_session->GetComm());
+                    ptsIO.Import(filename, ptsField);
 
                     Array <OneD,  Array<OneD,  NekDouble> > coords(3);
                     coords[0] = Array<OneD, NekDouble>(nq);
@@ -1554,18 +1556,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> > &F,
             Array<OneD, NekDouble> &outarray)
         {
-            // Use dimension of velocity vector to dictate dimension of operation
-            int ndim    = F.num_elements();
-            int nCoeffs = m_fields[0]->GetNcoeffs();
-
-            Array<OneD, NekDouble> iprod(nCoeffs);
-            Vmath::Zero(nCoeffs, outarray, 1);
-
-            for (int i = 0; i < ndim; ++i)
-            {
-                m_fields[0]->IProductWRTDerivBase(i, F[i], iprod);
-                Vmath::Vadd(nCoeffs, iprod, 1, outarray, 1, outarray, 1);
-            }
+            m_fields[0]->IProductWRTDerivBase(F,outarray);
         }
 
         /**
@@ -1711,7 +1702,7 @@ namespace Nektar
             int nPointsTot      = GetNpoints();
             int ncoeffs         = GetNcoeffs();
             int nTracePointsTot = GetTraceNpoints();
-        
+
             if (!nvariables)
             {
                 nvariables      = m_fields.num_elements();
@@ -2079,8 +2070,17 @@ namespace Nektar
             {
                 m_fieldMetaDataMap["Time"] = boost::lexical_cast<std::string>(m_time);
             }
+            
+            // If necessary, add mapping information to metadata
+            //      and output mapping coordinates
+            Array<OneD, MultiRegions::ExpListSharedPtr> fields(1);
+            fields[0] = field;           
+            GlobalMapping::MappingSharedPtr mapping = 
+                    GlobalMapping::Mapping::Load(m_session, fields);
+            LibUtilities::FieldMetaDataMap fieldMetaDataMap(m_fieldMetaDataMap);
+            mapping->Output( fieldMetaDataMap, outname);
 
-            m_fld->Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
+            m_fld->Write(outname, FieldDef, FieldData, fieldMetaDataMap);
         }
 
 
@@ -2249,12 +2249,19 @@ namespace Nektar
             AddSummaryItem(s, "Session Name", m_sessionName);
             AddSummaryItem(s, "Spatial Dim.", m_spacedim);
             AddSummaryItem(s, "Max SEM Exp. Order", m_fields[0]->EvalBasisNumModesMax());
+
+            if (m_session->GetComm()->GetSize() > 1)
+            {
+                AddSummaryItem(s, "Num. Processes",
+                        m_session->GetComm()->GetSize());
+            }
+
             if(m_HomogeneousType == eHomogeneous1D)
             {
                 AddSummaryItem(s, "Quasi-3D", "Homogeneous in z-direction");
                 AddSummaryItem(s, "Expansion Dim.", m_expdim + 1);
                 AddSummaryItem(s, "Num. Hom. Modes (z)", m_npointsZ);
-                AddSummaryItem(s, "Hom. length (LZ)", "m_LhomZ");
+                AddSummaryItem(s, "Hom. length (LZ)", m_LhomZ);
                 AddSummaryItem(s, "FFT Type", m_useFFT ? "FFTW" : "MVM");
                 if (m_halfMode)
                 {
@@ -2267,8 +2274,6 @@ namespace Nektar
                 else if (m_multipleModes)
                 {
                     AddSummaryItem(s, "ModeType", "Multiple Modes");
-                    AddSummaryItem(s, "Selected Mode",
-                                      boost::lexical_cast<string>(m_NumMode));
                 }
             }
             else if(m_HomogeneousType == eHomogeneous2D)
@@ -2277,8 +2282,8 @@ namespace Nektar
                 AddSummaryItem(s, "Expansion Dim.", m_expdim + 2);
                 AddSummaryItem(s, "Num. Hom. Modes (y)", m_npointsY);
                 AddSummaryItem(s, "Num. Hom. Modes (z)", m_npointsZ);
-                AddSummaryItem(s, "Hom. length (LY)", "m_LhomY");
-                AddSummaryItem(s, "Hom. length (LZ)", "m_LhomZ");
+                AddSummaryItem(s, "Hom. length (LY)", m_LhomY);
+                AddSummaryItem(s, "Hom. length (LZ)", m_LhomZ);
                 AddSummaryItem(s, "FFT Type", m_useFFT ? "FFTW" : "MVM");
             }
             else

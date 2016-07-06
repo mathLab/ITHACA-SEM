@@ -43,6 +43,8 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 #include <LibUtilities/Foundations/Interp.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -1215,7 +1217,7 @@ namespace Nektar
                     << ntot << "\" NumberOfCells=\""
                     << ntotminus << "\">" << endl;
             outfile << "      <Points>" << endl;
-            outfile << "        <DataArray type=\"Float32\" "
+            outfile << "        <DataArray type=\"Float64\" "
                     << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
             outfile << "          ";
             for (i = 0; i < ntot; ++i)

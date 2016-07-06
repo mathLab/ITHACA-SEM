@@ -90,7 +90,7 @@ public:
                        Array<OneD, Array<OneD, NekDouble> > &field);
 
     void SendCallback(Array<OneD, Array<OneD, NekDouble> > &interpField,
-                      const int nPts);
+                      Array<OneD, Array<OneD, NekDouble> > distCoords);
 
     void PrintProgressbar(const int position, const int goal) const;
 
@@ -145,6 +145,9 @@ private:
 
     void SetupSend();
 
+    void EvaluateFields(Array<OneD, Array<OneD, NekDouble> > interpField,
+                        Array<OneD, Array<OneD, NekDouble> > distCoords);
+
     void SetupSendInterpolation();
 
     void AnnounceMesh();
@@ -166,7 +169,8 @@ private:
 typedef boost::shared_ptr<CwipiCoupling> CwipiCouplingSharedPointer;
 
 typedef boost::function<void(Array<OneD, Array<OneD, NekDouble> > interpField,
-                             const int nPts)> SendCallbackType;
+                             Array<OneD, Array<OneD, NekDouble> > distCoords)>
+    SendCallbackType;
 std::map<std::string, SendCallbackType> SenderCouplings;
 }
 }

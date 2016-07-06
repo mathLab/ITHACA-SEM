@@ -73,9 +73,19 @@ static void InterpCallback(
 {
     Array<OneD, Array<OneD, NekDouble> > interpField(stride);
 
+    Array<OneD, Array<OneD, NekDouble> > distCoords(n_distant_point);
+    for (int i = 0; i < n_distant_point; ++i)
+    {
+        distCoords[i] = Array<OneD, NekDouble>(3);
+        for (int j = 0; j < 3; ++j)
+        {
+            distCoords[i][j] = distant_points_coordinates[3 * i + j];
+        }
+    }
+
     std::stringstream sst;
     sst << entities_dim << "," << n_local_vertex << "," << stride;
-    SenderCouplings[sst.str()](interpField, n_distant_point);
+    SenderCouplings[sst.str()](interpField, distCoords);
 
     ASSERTL0(interpField.num_elements() == stride, "size mismatch");
     ASSERTL0(interpField[0].num_elements() == n_distant_point, "size mismatch");
@@ -165,6 +175,7 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
     m_config["SENDSTEPS"]        = "0";
     m_config["SENDVARIABLES"]    = "";
     m_config["DUMPRAW"]          = "0";
+    m_config["SENDMETHOD"]       = "NEARESTNEIGHBOUR";
 
     ASSERTL0(session->DefinesElement("Nektar/Coupling"),
              "No Coupling config found");
@@ -374,6 +385,58 @@ void CwipiCoupling::SetupSend()
     cwipi_set_interpolation_function(m_couplingName.c_str(), InterpCallback);
 }
 
+void CwipiCoupling::EvaluateFields(
+    Array<OneD, Array<OneD, NekDouble> > interpField,
+    Array<OneD, Array<OneD, NekDouble> > distCoords)
+{
+    int nOutPts = distCoords.num_elements();
+
+    Array<OneD, NekDouble> Lcoords(m_spacedim, 0.0);
+    for (int i = 0; i < nOutPts; ++i)
+    {
+        // Obtain Element and LocalCoordinate to interpolate
+        int elmtid    = -1;
+        NekDouble tol = NekConstants::kNekZeroTol;
+        while (elmtid < 0 and tol <= 1E3 * NekConstants::kNekZeroTol)
+        {
+            elmtid = m_evalField->GetExpIndex(distCoords[i], Lcoords, tol);
+            tol *= 2;
+        }
+        if (tol > 2 * NekConstants::kNekZeroTol)
+        {
+            for (int j = 0; j < m_spacedim; ++j)
+            {
+                if (Lcoords[j] < -1 - 0.75 * NekConstants::kNekZeroTol)
+                {
+                    Lcoords[j] = -1;
+                }
+                if (Lcoords[j] > 1 + 0.75 * NekConstants::kNekZeroTol)
+                {
+                    Lcoords[j] = 1;
+                }
+            }
+        }
+
+        ASSERTL0(elmtid >= 0,
+                 "no element found for (" +
+                     boost::lexical_cast<string>(distCoords[i][0]) + ", " +
+                     boost::lexical_cast<string>(distCoords[i][1]) + ", " +
+                     boost::lexical_cast<string>(distCoords[i][2]) + ")");
+
+        int offset =
+            m_evalField->GetPhys_Offset(m_evalField->GetOffset_Elmt_Id(elmtid));
+
+        for (int f = 0; f < m_nSendVars; ++f)
+        {
+            NekDouble value = m_evalField->GetExp(elmtid)->StdPhysEvaluate(
+                Lcoords, m_sendField[f] + offset);
+
+            ASSERTL0(!(boost::math::isnan)(value), "new value is not a number");
+            interpField[f][i] = value;
+        }
+    }
+}
+
 void CwipiCoupling::SetupSendInterpolation()
 {
     const double *distCoords =
@@ -550,27 +613,35 @@ void CwipiCoupling::PrintProgressbar(const int position, const int goal) const
 }
 
 void CwipiCoupling::SendCallback(
-    Array<OneD, Array<OneD, NekDouble> > &interpField, const int nPts)
+    Array<OneD, Array<OneD, NekDouble> > &interpField,
+    Array<OneD, Array<OneD, NekDouble> > distCoords)
 {
     ASSERTL0(interpField.num_elements() == m_nSendVars, "size mismatch");
 
-    if (not m_sendInterpolator)
-    {
-        SetupSendInterpolation();
-    }
-
     for (int i = 0; i < m_nSendVars; ++i)
     {
-        interpField[i] = Array<OneD, NekDouble>(nPts);
+        interpField[i] = Array<OneD, NekDouble>(distCoords.num_elements());
     }
 
-    LibUtilities::PtsFieldSharedPtr ptsIn =
-        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(0,
-                                                                 m_sendField);
-    LibUtilities::PtsFieldSharedPtr ptsOut =
-        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(0,
-                                                                 interpField);
-    m_sendInterpolator->Interpolate(ptsIn, ptsOut);
+    if (m_config["SENDMETHOD"] == "NEARESTNEIGHBOUR")
+    {
+        if (not m_sendInterpolator)
+        {
+            SetupSendInterpolation();
+        }
+
+        LibUtilities::PtsFieldSharedPtr ptsIn =
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+                0, m_sendField);
+        LibUtilities::PtsFieldSharedPtr ptsOut =
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+                0, interpField);
+        m_sendInterpolator->Interpolate(ptsIn, ptsOut);
+    }
+    else
+    {
+        EvaluateFields(interpField, distCoords);
+    }
 }
 
 void CwipiCoupling::SendFields(

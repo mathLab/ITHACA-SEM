@@ -537,7 +537,7 @@ NekDouble NodeOpti::GetFunctional()
     {
         case eLinEl:
         {
-            const NekDouble nu = 0.45;
+            const NekDouble nu = 0.4;
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
@@ -591,7 +591,7 @@ NekDouble NodeOpti::GetFunctional()
 
         case eHypEl:
         {
-            const NekDouble nu = 0.45;
+            const NekDouble nu = 0.4;
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 

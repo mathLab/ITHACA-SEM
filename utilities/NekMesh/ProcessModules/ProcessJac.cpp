@@ -105,8 +105,38 @@ void ProcessJac::Process()
 
             if (printList)
             {
+                LibUtilities::PointsKeyVector p = geom->GetPointsKeys();
+                SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
+                const int pts = deriv[0][0].num_elements();
+                Array<OneD,NekDouble> jc(pts);
+                for (int k = 0; k < pts; ++k)
+                {
+                    DNekMat jac(m_mesh->m_expDim, m_mesh->m_expDim, 0.0, eFULL);
+
+                    for (int l = 0; l < m_mesh->m_expDim; ++l)
+                    {
+                        for (int j = 0; j < m_mesh->m_expDim; ++j)
+                        {
+                            jac(j,l) = deriv[l][j][k];
+                        }
+                    }
+
+                    if(m_mesh->m_expDim == 2)
+                    {
+                        jc[k] = jac(0,0) * jac(1,1) - jac(0,1)*jac(1,0);
+                    }
+                    else if(m_mesh->m_expDim == 3)
+                    {
+                        jc[k] =  jac(0,0) * (jac(1,1)*jac(2,2) - jac(2,1)*jac(1,2)) -
+                                 jac(0,1) * (jac(1,0)*jac(2,2) - jac(2,0)*jac(1,2)) +
+                                 jac(0,2) * (jac(1,0)*jac(2,1) - jac(2,0)*jac(1,1));
+                    }
+                }
+
                 cout << "  - " << el[i]->GetId() << " ("
                      << LibUtilities::ShapeTypeMap[el[i]->GetConf().m_e] << ")"
+                     << "  " << Vmath::Vmin(jc.num_elements(),jc,1) /
+                                Vmath::Vmax(jc.num_elements(),jc,1)
                      << endl;
             }
 

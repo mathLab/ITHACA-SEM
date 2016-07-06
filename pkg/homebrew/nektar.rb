@@ -1,22 +1,22 @@
-class Nektar < Formula
-  # Nektar++ will, by default, download and build its ThirdParty
-  # dependencies. This download strategy has been added so that Homebrew can
-  # download resources and check hashes independently.
-  class NektarThirdPartyDownloadStrategy < CurlDownloadStrategy
-    def stage
-      cp cached_location, basename_without_params
-    end
+# Nektar++ will, by default, download and build its ThirdParty
+# dependencies. This download strategy has been added so that Homebrew can
+# download resources and check hashes independently.
+class NektarThirdPartyDownloadStrategy < CurlDownloadStrategy
+  def stage
+    cp cached_location, basename_without_params
   end
+end
 
+class Nektar < Formula
   desc "Nektar++ spectral/hp element framework"
   homepage "https://www.nektar.info/"
-  url "http://www.nektar.info/downloads/file/nektar-4.2.0.tar.gz"
-  sha256 "5ae78f8fae4f0f1bfab9fe94fdb5c1b356f9a8acf8e2bca1680e3c1f04529873"
+  url "http://www.nektar.info/downloads/file/nektar-4.3.2.tar.gz"
+  sha256 "afa20b74ed19165c9356f5ec5e33dac7de9bf48e7f2076db6488c7c03d331dd0"
   head "https://gitlab.nektar.info/nektar/nektar.git"
 
   option "with-demos", "Compile Nektar++ demo executables"
 
-  depends_on "cmake"  => :build
+  depends_on "cmake"  => :run
   depends_on "boost"
   depends_on "tinyxml"
   depends_on "homebrew/dupes/zlib"
@@ -78,7 +78,7 @@ class Nektar < Formula
     end
 
     mkdir "build" do
-      system "cmake", *args, ".."
+      system "cmake", "..", *args
       system "make"
       components = %w[ThirdParty lib solvers util dev]
       components.each { |c| system "cmake", "-DCOMPONENT=#{c}", "-P", "cmake_install.cmake" }
@@ -87,10 +87,12 @@ class Nektar < Formula
 
   test do
     (testpath/"helm.cpp").write <<-EOS
+#include <iostream>
 #include <MultiRegions/ContField2D.h>
 #include <SpatialDomains/MeshGraph2D.h>
 
 using namespace Nektar;
+using namespace std;
 
 int main(int argc, char *argv[])
 {

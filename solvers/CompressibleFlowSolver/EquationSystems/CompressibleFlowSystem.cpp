@@ -2823,6 +2823,11 @@ namespace Nektar
             return true;
         }
 
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1);
+        }
+
         return false;
     }
 

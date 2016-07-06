@@ -1,6 +1,30 @@
 Changelog
 =========
 
+v4.4.0
+------
+**IncNavierStokesSolver:**
+- Add ability to simulate additional scalar fields (!624)
+
+**NekMesh:**
+- Modify curve module to allow for spline input (!628)
+
+v4.3.3
+------
+**Library**:
+- Minor fix to suppress Xxt output unless `--verbose` is specified (!642)
+- Fix of DirectFull solver in case where only Neumann boundary conditions 
+  are imposed. (!655)
+
+**FieldConvert**:
+- Fix to avoid repeated import of field file (!649)
+
+**CompressibleFlowSolver**:
+- Fix issue with residual output (!647)
+
+**Packaging**:
+- Fix NekMesh dependencies for DEB package (!650)
+
 v4.3.2
 ------
 **Library**:
@@ -13,11 +37,14 @@ v4.3.2
 - Fix minor performance issue with time integration schemes (!632)
 - Fix FilterCheckpoint filter to be consistent with `IO_CheckSteps` (!633)
 - Fix `IO_CheckSteps` to avoid missing first checkpoint (!639)
+- Fix bug in iterative solver where only root process would ASSERT when
+  exceeding the maximum number of iterations (!636)
 
 **FieldConvert**:
 - Fix appearence of duplicate messages when running in parallel (!626)
 - Fix issue with efficiency when using large number of 3DH1D planes (!627)
 - Add module for combining average fields (!620)
+- Fix wall shear stress processing module for parallel execution (!635)
 
 **Packaging**:
 - Fixes for DEB package dependencies (!630)

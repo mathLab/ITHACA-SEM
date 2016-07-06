@@ -32,7 +32,7 @@ mesh-generator \gmsh to the XML file format.
   converted into base64. This is identified for each section by the attribute
   \inltt{COMPRESSED="B64Z-LittleEndian''}.  To output
   in ascii format add the module option ``:xml:uncompress'' to the .xml file,
-  i.e. \\ \inltt{ MeshConvert file.msh newfile.xml:xml:uncompress}
+  i.e. \\ \inltt{ \mc file.msh newfile.xml:xml:uncompress}
 \end{notebox}
 
 \section{Exporting a mesh from \gmsh}
@@ -290,7 +290,7 @@ converted into base64. If you wish to see an ascii output you need to
 specify the output module option \inltt{uncompress} by executing:
 
 \begin{lstlisting}[style=BashInputStyle]
-MeshConvert Mesh.msh output.xml:xml:uncompress
+NekMesh Mesh.msh output.xml:xml:uncompress
 \end{lstlisting}
 
 In the rest of these subsections, we discuss the various processing modules
@@ -302,13 +302,13 @@ To extract composite surfaces 2 and 3  from a mesh use the module \inltt{extract
 module:
 %
 \begin{lstlisting}[style=BashInputStyle]
-MeshConvert -m extract:surf=2,3 Mesh.xml output.xml
+NekMesh -m extract:surf=2,3 Mesh.xml output.xml
 \end{lstlisting}
 %
 If you also wish to have the boundaries of the extracted surface detected add the \inltt{detectbnd} option
 %
 \begin{lstlisting}[style=BashInputStyle]
-MeshConvert -m extract:surf=2,3:detectbnd Mesh.xml output.xml
+NekMesh -m extract:surf=2,3:detectbnd Mesh.xml output.xml
 \end{lstlisting}
 
 \subsection{Negative Jacobian detection}

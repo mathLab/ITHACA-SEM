@@ -19,6 +19,7 @@ v4.3.3
 
 **CompressibleFlowSolver**:
 - Fix issue with residual output (!647)
+- Fix deadlocking issue with boundary conditions (!657)
 
 **Packaging**:
 - Fix NekMesh dependencies for DEB package (!650)

@@ -369,7 +369,7 @@ void Interpolator::Interpolate(
         }
 
         // Obtain Element and LocalCoordinate to interpolate
-        int elmtid = m_expInField[0]->GetExpIndex(Scoords, Lcoords, 1e-3);
+        int elmtid = m_expInField[0]->GetExpIndex(Scoords, Lcoords, NekConstants::kNekZeroTol);
 
         if (elmtid >= 0)
         {
@@ -445,7 +445,7 @@ void Interpolator::Interpolate(
         }
 
         // Obtain Element and LocalCoordinate to interpolate
-        int elmtid = m_expInField[0]->GetExpIndex(coords, Lcoords, 1e-3);
+        int elmtid = m_expInField[0]->GetExpIndex(coords, Lcoords, NekConstants::kNekZeroTol);
 
         if (elmtid >= 0)
         {

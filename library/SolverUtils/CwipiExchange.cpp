@@ -584,7 +584,6 @@ void CwipiCoupling::FetchFields(const int step,
         }
     }
 
-    timer3.Start();
     if (boost::lexical_cast<bool>(m_config["DUMPRAW"]))
     {
         DumpRawFields(time, rVals);
@@ -594,6 +593,8 @@ void CwipiCoupling::FetchFields(const int step,
     {
         for (int i = 0; i < m_nRecvVars; ++i)
         {
+            timer3.Start();
+
             Array<OneD, NekDouble> forcing(m_nPoints);
 
             Array<OneD, Array<OneD, NekDouble> > Velocity(m_spacedim);
@@ -614,6 +615,13 @@ void CwipiCoupling::FetchFields(const int step,
                 Velocity, forcing, tmpC, -m_filtWidth);
 
             m_evalField->BwdTrans(tmpC, field[i]);
+            timer3.Stop();
+
+            if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+            {
+                cout << "Smoother time (" << m_recvFieldNames[i]
+                     << "): " << timer3.TimePerTest(1) << endl;
+            }
         }
     }
     else
@@ -624,14 +632,12 @@ void CwipiCoupling::FetchFields(const int step,
             m_evalField->BwdTrans(tmpC, field[i]);
         }
     }
-    timer3.Stop();
     timer1.Stop();
 
     if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
     {
         cout << "Receive total time: " << timer1.TimePerTest(1) << ", ";
         cout << "CWIPI time: " << timer2.TimePerTest(1) << ", ";
-        cout << "Smoother time: " << timer3.TimePerTest(1) << endl;
     }
 }
 

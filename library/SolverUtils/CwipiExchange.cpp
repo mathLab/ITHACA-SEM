@@ -116,7 +116,11 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     cwipi_add_local_string_control_parameter("sendFieldNames",
                                              m_config["SENDVARIABLES"].c_str());
 
-    cwipi_dump_application_properties();
+    if (m_evalField->GetComm()->GetRank() == 0 &&
+        m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+    {
+        cwipi_dump_application_properties();
+    }
 
     m_spacedim = m_evalField->GetGraph()->GetSpaceDimension();
 
@@ -146,6 +150,11 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
         SetupReceive();
     }
 
+    if (m_evalField->GetComm()->GetRank() == 0 &&
+        m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+    {
+        cout << "locating..." << endl;
+    }
     cwipi_locate(m_couplingName.c_str());
 
     if (m_nSendVars > 0 and m_sendSteps > 0)
@@ -245,7 +254,8 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
 
     m_filtWidth = boost::lexical_cast<NekDouble>(m_config["FILTERWIDTH"]);
 
-    if (session->GetComm()->GetRank() == 0 && m_config.size() > 0)
+    if (session->GetComm()->GetRank() == 0 &&
+        session->DefinesCmdLineArgument("verbose") && m_config.size() > 0)
     {
         cout << "Coupling Config:" << endl;
         CouplingConfigMap::iterator x;
@@ -659,7 +669,11 @@ void CwipiCoupling::SendFields(
 
     m_sendField = field;
 
-    cout << "sending fields at i = " << step << ", t = " << time << endl;
+    if (m_evalField->GetComm()->GetRank() == 0 &&
+        m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+    {
+        cout << "sending fields at i = " << step << ", t = " << time << endl;
+    }
 
     int nNotLoc = 0;
     // workaround a bug in cwipi: receiving_field_name should be const char* but
@@ -738,7 +752,11 @@ void CwipiCoupling::FetchFields(const int step,
 {
     ASSERTL1(m_nRecvVars == field.num_elements(), "field size mismatch");
 
-    cout << "receiving fields at i = " << step << ", t = " << time << endl;
+    if (m_evalField->GetComm()->GetRank() == 0 &&
+        m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+    {
+        cout << "receiving fields at i = " << step << ", t = " << time << endl;
+    }
 
     Timer timer1, timer2, timer3;
     timer1.Start();
@@ -862,7 +880,7 @@ void CwipiCoupling::FetchFields(const int step,
     if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
     {
         cout << "Receive total time: " << timer1.TimePerTest(1) << ", ";
-        cout << "CWIPI time: " << timer2.TimePerTest(1) << ", ";
+        cout << "CWIPI time: " << timer2.TimePerTest(1) << endl;
     }
 }
 

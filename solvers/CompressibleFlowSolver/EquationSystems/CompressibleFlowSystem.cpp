@@ -406,7 +406,6 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     {
         int i;
-        int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
 
         const Array<OneD, const int> &traceBndMap
@@ -496,7 +495,6 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     {
         int i;
-        int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
 
         const Array<OneD, const int> &traceBndMap
@@ -564,7 +562,6 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> >    &physarray)
     {
         int i;
-        int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
 
         const Array<OneD, const int> &traceBndMap
@@ -654,7 +651,6 @@ namespace Nektar
     {
         int i, j;
         int nTracePts = GetTraceTotPoints();
-        int nVariables = physarray.num_elements();
         int nDimensions = m_spacedim;
 
         const Array<OneD, const int> &traceBndMap
@@ -1523,7 +1519,6 @@ namespace Nektar
         int i, j;
         int e, pnt;
         int id1, id2, nBCEdgePts;
-        int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
         int nDimensions = m_spacedim;
 

@@ -93,7 +93,7 @@ namespace Nektar
             virtual void v_WeakPenaltyO1(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-		const Array<OneD, Array<OneD, NekDouble> >        &uplus,
+                const Array<OneD, Array<OneD, NekDouble> >        &uplus,
                       Array<OneD, Array<OneD, NekDouble> >      &penaltyfluxO1);
             
             virtual void v_NumericalFluxO2(
@@ -107,7 +107,7 @@ namespace Nektar
                 const int                                          var,
                 const int                                          dir,
                 const Array<OneD, const NekDouble>                &qfield,
-	        const Array<OneD, const NekDouble>                &qtemp,
+                const Array<OneD, const NekDouble>                &qtemp,
                       Array<OneD,       NekDouble>                &penaltyflux);
 
             virtual void v_SetHomoDerivs(

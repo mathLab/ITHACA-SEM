@@ -647,57 +647,92 @@ int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
             switch (fielddefs->m_shapeType)
             {
                 case eSegment:
-                    datasize += fielddefs->m_numModes[cnt++];
+                {
+                    int l = fielddefs->m_numModes[cnt++];
+                    if(fielddefs->m_numHomogeneousDir == 1)
+                    {
+                        datasize += l*fielddefs->m_numModes[cnt++];
+                    }
+                    else if(fielddefs->m_numHomogeneousDir == 2)
+                    {
+                        int m = fielddefs->m_numModes[cnt++];
+                        datasize += l*m*fielddefs->m_numModes[cnt++];
+                    }
+                    else
+                    {
+                        datasize += l;
+                    }
                     break;
+                }
                 case eTriangle:
                 {
                     int l = fielddefs->m_numModes[cnt++];
                     int m = fielddefs->m_numModes[cnt++];
-                    datasize += StdTriData::getNumberOfCoefficients(l, m);
+                    if(fielddefs->m_numHomogeneousDir == 1)
+                    {
+                        datasize += StdTriData::getNumberOfCoefficients(l,m)*
+                            fielddefs->m_homogeneousZIDs.size();
+                        cnt++;
+                    }
+                    else
+                    {
+                        datasize += StdTriData::getNumberOfCoefficients(l,m);
+                    }
+                    break;
                 }
-                break;
                 case eQuadrilateral:
                 {
                     int l = fielddefs->m_numModes[cnt++];
                     int m = fielddefs->m_numModes[cnt++];
-                    datasize += l * m;
+                    if(fielddefs->m_numHomogeneousDir == 1)
+                    {
+                        datasize += l*m*fielddefs->m_homogeneousZIDs.size();
+                        cnt++;
+                    }
+                    else
+                    {
+                        datasize += l*m;
+                    }
+
+                    break;
                 }
-                break;
                 case eTetrahedron:
                 {
                     int l = fielddefs->m_numModes[cnt++];
                     int m = fielddefs->m_numModes[cnt++];
                     int n = fielddefs->m_numModes[cnt++];
                     datasize += StdTetData::getNumberOfCoefficients(l, m, n);
+                    break;
                 }
-                break;
                 case ePyramid:
                 {
                     int l = fielddefs->m_numModes[cnt++];
                     int m = fielddefs->m_numModes[cnt++];
                     int n = fielddefs->m_numModes[cnt++];
                     datasize += StdPyrData::getNumberOfCoefficients(l, m, n);
+                    break;
                 }
-                break;
                 case ePrism:
                 {
                     int l = fielddefs->m_numModes[cnt++];
                     int m = fielddefs->m_numModes[cnt++];
                     int n = fielddefs->m_numModes[cnt++];
                     datasize += StdPrismData::getNumberOfCoefficients(l, m, n);
+                    break;
                 }
-                break;
                 case eHexahedron:
                 {
                     int l = fielddefs->m_numModes[cnt++];
                     int m = fielddefs->m_numModes[cnt++];
                     int n = fielddefs->m_numModes[cnt++];
                     datasize += l * m * n;
+                    break;
                 }
-                break;
                 default:
+                {
                     ASSERTL0(false, "Unsupported shape type.");
                     break;
+                }
             }
         }
     }

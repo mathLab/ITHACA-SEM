@@ -939,46 +939,22 @@ namespace Nektar
             case 0:
             case 5:
                 {
-                    if( faceOrient < 9 )
-                    {
-                        numModes0 = nummodes[0];
-                        numModes1 = nummodes[1];
-                    }
-                    else
-                    {
-                        numModes0 = nummodes[1];
-                        numModes1 = nummodes[0];
-                    }
+                    numModes0 = nummodes[0];
+                    numModes1 = nummodes[1];
                 }
                 break;
             case 1:
             case 3:
                 {
-                    if( faceOrient < 9 )
-                    {
-                        numModes0 = nummodes[0];
-                        numModes1 = nummodes[2];
-                    }
-                    else
-                    {
-                        numModes0 = nummodes[2];
-                        numModes1 = nummodes[0];
-                    }
+                    numModes0 = nummodes[0];
+                    numModes1 = nummodes[2];
                 }
                 break;
             case 2:
             case 4:
                 {
-                    if( faceOrient < 9 )
-                    {
-                        numModes0 = nummodes[1];
-                        numModes1 = nummodes[2];
-                    }
-                    else
-                    {
-                        numModes0 = nummodes[2];
-                        numModes1 = nummodes[1];
-                    }
+                    numModes0 = nummodes[1];
+                    numModes1 = nummodes[2];
                 }
                 break;
             default:
@@ -986,6 +962,11 @@ namespace Nektar
                     ASSERTL0(false,"fid out of range");
                 }
                 break;
+            }
+
+            if ( faceOrient >= 9 )
+            {
+                std::swap(numModes0, numModes1);
             }
         }
 

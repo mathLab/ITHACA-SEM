@@ -880,16 +880,8 @@ namespace Nektar
             // quad
             case 0:
                 {
-                    if( faceOrient < 9 )
-                    {
-                        numModes0 = nummodes[0];
-                        numModes1 = nummodes[1];
-                    }
-                    else
-                    {
-                        numModes0 = nummodes[1];
-                        numModes1 = nummodes[0];
-                    }
+                    numModes0 = nummodes[0];
+                    numModes1 = nummodes[1];
                 }
                 break;
             case 1:
@@ -906,6 +898,11 @@ namespace Nektar
                     numModes1 = nummodes[2];
                 }
                 break;
+            }
+
+            if ( faceOrient >= 9 )
+            {
+                std::swap(numModes0, numModes1);
             }
         }
 

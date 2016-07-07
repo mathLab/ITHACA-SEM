@@ -38,6 +38,7 @@
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
+#include <LibUtilities/BasicUtils/ShapeType.hpp>
 
 
 #include <boost/config.hpp>
@@ -1365,7 +1366,7 @@ namespace Nektar
             }
             // Now use information from all partitions to determine
             //    the correct size
-            map<int, int>::iterator dofIt;
+            map<int, int>::iterator dofIt, dofIt2;
             // edges
             Array<OneD, long> edgeId (dofs[1].size());
             Array<OneD, NekDouble> edgeDof (dofs[1].size());
@@ -1385,32 +1386,37 @@ namespace Nektar
             Array<OneD, long> faceId (faceModes[0].size());
             Array<OneD, NekDouble> faceP (faceModes[0].size());
             Array<OneD, NekDouble> faceQ (faceModes[0].size());
-            for(dofIt = faceModes[0].begin(), i=0; dofIt != faceModes[0].end(); dofIt++, i++)
+            for(dofIt = faceModes[0].begin(), dofIt2 = faceModes[1].begin(),i=0;
+                dofIt != faceModes[0].end(); dofIt++, dofIt2++, i++)
             {
                 faceId[i] = dofIt->first;
                 faceP[i] = (NekDouble) dofIt->second;
-                faceQ[i] = (NekDouble) faceModes[1][dofIt->first];
+                faceQ[i] = (NekDouble) dofIt2->second;
             }
             Gs::gs_data *tmp2 = Gs::Init(faceId, vComm);
             Gs::Gather(faceP, Gs::gs_min, tmp2);
             Gs::Gather(faceQ, Gs::gs_min, tmp2);
             Gs::Finalise(tmp2);
+            int P, Q;
             for (i=0; i < faceModes[0].size(); i++)
             {
                 faceModes[0][faceId[i]] = (int) (faceP[i]+0.5);
                 faceModes[1][faceId[i]] = (int) (faceQ[i]+0.5);
+                P = faceModes[0][faceId[i]];
+                Q = faceModes[1][faceId[i]];
                 if (faceType[faceId[i]] == LibUtilities::eQuadrilateral)
                 {
                     // Quad face
-                    dofs[2][faceId[i]] = (faceModes[0][faceId[i]] - 2) *
-                                         (faceModes[1][faceId[i]] - 2);
+                    dofs[2][faceId[i]] =
+                      LibUtilities::StdQuadData::getNumberOfCoefficients(P,Q) -
+                      LibUtilities::StdQuadData::getNumberOfBndCoefficients(P,Q);
                 }
                 else
                 {
                     // Tri face
-                    dofs[2][faceId[i]] = (faceModes[0][faceId[i]]-2) *
-                                         (2*(faceModes[1][faceId[i]]-2) -
-                                            (faceModes[0][faceId[i]]-2) -1)/2;
+                    dofs[2][faceId[i]] =
+                      LibUtilities::StdTriData::getNumberOfCoefficients(P,Q) -
+                      LibUtilities::StdTriData::getNumberOfBndCoefficients(P,Q);
                 }
             }
 

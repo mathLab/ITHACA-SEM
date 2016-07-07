@@ -740,32 +740,16 @@ namespace Nektar
             // base quad
             case 0:
                 {
-                    if( faceOrient < 9 )
-                    {
-                        numModes0 = nummodes[0];
-                        numModes1 = nummodes[1];
-                    }
-                    else
-                    {
-                        numModes0 = nummodes[1];
-                        numModes1 = nummodes[0];
-                    }
+                    numModes0 = nummodes[0];
+                    numModes1 = nummodes[1];
                 }
                 break;
             // front and back quad
             case 2:
             case 4:
                 {
-                    if( faceOrient < 9 )
-                    {
-                        numModes0 = nummodes[1];
-                        numModes1 = nummodes[2];
-                    }
-                    else
-                    {
-                        numModes0 = nummodes[2];
-                        numModes1 = nummodes[1];
-                    }
+                    numModes0 = nummodes[1];
+                    numModes1 = nummodes[2];
                 }
                 break;
             // triangles
@@ -776,6 +760,11 @@ namespace Nektar
                     numModes1 = nummodes[2];
                 }
                 break;
+            }
+
+            if ( faceOrient >= 9 )
+            {
+                std::swap(numModes0, numModes1);
             }
         }
 

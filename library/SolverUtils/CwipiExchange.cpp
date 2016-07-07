@@ -829,7 +829,7 @@ void CwipiCoupling::FetchFields(const int step,
         }
     }
 
-    if (boost::lexical_cast<bool>(m_config["DUMPRAW"]))
+    if (m_config["DUMPRAW"] != "0")
     {
         DumpRawFields(time, rVals);
     }
@@ -889,8 +889,17 @@ void CwipiCoupling::FetchFields(const int step,
 void CwipiCoupling::DumpRawFields(const NekDouble time,
                                   Array<OneD, Array<OneD, NekDouble> > rVals)
 {
+#ifdef _WIN32
+    // We need this to make sure boost::format has always
+    // two digits in the exponents of Scientific notation.
+    unsigned int old_exponent_format;
+    old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
+    filename = boost::str(boost::format(filename) % m_time);
+    _set_output_format(old_exponent_format);
+#else
     std::string filename =
-        "rawFields_" + boost::lexical_cast<std::string>(time) + ".pts";
+        boost::str(boost::format(m_config["DUMPRAW"]) % time);
+#endif
 
     Array<OneD, Array<OneD, NekDouble> > tmp(m_nRecvVars + m_spacedim);
     for (int i = 0; i < 3; ++i)

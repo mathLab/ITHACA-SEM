@@ -159,6 +159,10 @@ class FieldIOHdf5 : public FieldIO
 public:
     static const unsigned int ELEM_DCMP_IDX;
     static const unsigned int VAL_DCMP_IDX;
+    static const unsigned int ORDER_DCMP_IDX;
+    static const unsigned int HOMY_DCMP_IDX;
+    static const unsigned int HOMZ_DCMP_IDX;
+    static const unsigned int HOMS_DCMP_IDX;
     static const unsigned int HASH_DCMP_IDX;
     static const unsigned int MAX_DCMPS;
 
@@ -167,7 +171,7 @@ public:
     static const unsigned int ORDER_CNT_IDX;
     static const unsigned int HOMY_CNT_IDX;
     static const unsigned int HOMZ_CNT_IDX;
-    static const unsigned int STRIP_CNT_IDX;
+    static const unsigned int HOMS_CNT_IDX;
     static const unsigned int MAX_CNTS;
 
     static const unsigned int IDS_IDX_IDX;
@@ -175,7 +179,7 @@ public:
     static const unsigned int ORDER_IDX_IDX;
     static const unsigned int HOMY_IDX_IDX;
     static const unsigned int HOMZ_IDX_IDX;
-    static const unsigned int STRIP_IDX_IDX;
+    static const unsigned int HOMS_IDX_IDX;
     static const unsigned int MAX_IDXS;
 
     /// Creates an instance of this class

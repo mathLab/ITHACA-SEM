@@ -38,6 +38,8 @@
 
 #include <DummySolver/EquationSystems/Dummy.h>
 
+using namespace std;
+
 namespace Nektar
 {
 string Dummy::className = GetEquationSystemFactory().RegisterCreatorFunction(

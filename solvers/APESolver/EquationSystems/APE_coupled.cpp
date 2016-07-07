@@ -35,6 +35,9 @@
 
 namespace Nektar
 {
+
+using namespace std;
+
 string APE_coupled::className =
     GetEquationSystemFactory().RegisterCreatorFunction(
         "APE_coupled",

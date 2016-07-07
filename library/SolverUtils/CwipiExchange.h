@@ -53,7 +53,7 @@ public:
     CwipiCoupling(){};
 
     CwipiCoupling(MultiRegions::ExpListSharedPtr field,
-                  string name,
+                  std::string name,
                   int outputFreq,
                   double geomTol);
 
@@ -95,7 +95,7 @@ public:
     void PrintProgressbar(const int position, const int goal) const;
 
 protected:
-    string m_couplingName;
+    std::string m_couplingName;
 
     CouplingConfigMap m_config;
     NekDouble m_filtWidth;
@@ -127,7 +127,7 @@ protected:
     double *m_rValsInterl;
     double *m_sValsInterl;
 
-    map<int, int> m_vertMap;
+    std::map<int, int> m_vertMap;
 
     SolverUtils::InterpolatorSharedPtr m_sendInterpolator;
 

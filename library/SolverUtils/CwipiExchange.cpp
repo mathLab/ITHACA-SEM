@@ -48,6 +48,8 @@ namespace Nektar
 namespace SolverUtils
 {
 
+using namespace std;
+
 static void InterpCallback(
     const int entities_dim,
     const int n_local_vertex,
@@ -100,7 +102,7 @@ static void InterpCallback(
 }
 
 CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
-                             string name,
+                             std::string name,
                              int outputFreq,
                              double geomTol)
     : m_couplingName(name), m_evalField(field), m_lastUpdate(-1E23),

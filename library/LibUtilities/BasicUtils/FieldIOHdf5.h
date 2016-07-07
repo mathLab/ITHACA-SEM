@@ -205,7 +205,7 @@ private:
     struct OffsetHelper {
         OffsetHelper() : data(0), order(0), homy(0), homz(0), homs(0) {}
         OffsetHelper(const OffsetHelper &in) :
-            data(in.data), order(in.data), homy(in.homy), homz(in.homz),
+            data(in.data), order(in.order), homy(in.homy), homz(in.homz),
             homs(in.homs)
         {
         }
@@ -234,7 +234,9 @@ private:
 
     LIB_UTILITIES_EXPORT void ImportFieldDef(H5::PListSharedPtr        readPL,
                                              H5::GroupSharedPtr        root,
-                                             OffsetHelper              offsets,
+                                             std::vector<size_t>      &decomps,
+                                             size_t                    decomp,
+                                             OffsetHelper              offset,
                                              std::string               group,
                                              FieldDefinitionsSharedPtr def);
 

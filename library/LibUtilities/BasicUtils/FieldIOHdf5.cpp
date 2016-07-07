@@ -902,7 +902,8 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 
             FieldDefinitionsSharedPtr fielddef =
                 MemoryManager<FieldDefinitions>::AllocateSharedPtr();
-            ImportFieldDef(readPL, root, fieldNameStream.str(), fielddef);
+            ImportFieldDef(readPL, root, decomps, *sIt, decompsToOffsets[*sIt],
+                           fieldNameStream.str(), fielddef);
 
             fielddef->m_elementIDs = groupsToElmts[*sIt];
             fielddefs.push_back(fielddef);
@@ -912,7 +913,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
                 std::vector<NekDouble> decompFieldData;
                 ImportFieldData(
                     readPL, data_dset, data_fspace,
-                    decompsToDataOffsets[*sIt].data, decomps, *sIt, fielddef,
+                    decompsToOffsets[*sIt].data, decomps, *sIt, fielddef,
                     decompFieldData);
                 fielddata.push_back(decompFieldData);
             }
@@ -933,6 +934,8 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 void FieldIOHdf5::ImportFieldDef(
     H5::PListSharedPtr        readPL,
     H5::GroupSharedPtr        root,
+    std::vector<size_t>      &decomps,
+    size_t                    decomp,
     OffsetHelper              offset,
     std::string               group,
     FieldDefinitionsSharedPtr def)
@@ -942,6 +945,8 @@ void FieldIOHdf5::ImportFieldDef(
 
     H5::GroupSharedPtr field = root->OpenGroup(group);
     ASSERTL1(field, prfx.str() + "cannot open field group, " + group + '.');
+
+    def->m_uniOrder = false;
 
     H5::Group::AttrIterator attrIt  = field->attr_begin();
     H5::Group::AttrIterator attrEnd = field->attr_end();
@@ -1087,6 +1092,42 @@ void FieldIOHdf5::ImportFieldDef(
             ASSERTL1(false, prfx.str() + errstr.c_str());
         }
     }
+
+    if (def->m_numHomogeneousDir == 1)
+    {
+        H5::DataSetSharedPtr homz_dset = root->OpenDataSet("HOMOGENEOUSZIDS");
+        H5::DataSpaceSharedPtr homz_fspace = homz_dset->GetSpace();
+        size_t dsize = decomps[decomp * MAX_DCMPS + HOMZ_DCMP_IDX];
+        homz_fspace->SelectRange(offset.homz, dsize);
+        homz_dset->Read(def->m_homogeneousZIDs, homz_fspace, readPL);
+    }
+
+    if (def->m_numHomogeneousDir == 2)
+    {
+        H5::DataSetSharedPtr homy_dset = root->OpenDataSet("HOMOGENEOUSYIDS");
+        H5::DataSpaceSharedPtr homy_fspace = homy_dset->GetSpace();
+        size_t dsize = decomps[decomp * MAX_DCMPS + HOMY_DCMP_IDX];
+        homy_fspace->SelectRange(offset.homy, dsize);
+        homy_dset->Read(def->m_homogeneousYIDs, homy_fspace, readPL);
+    }
+
+    if (def->m_homoStrips)
+    {
+        H5::DataSetSharedPtr homs_dset = root->OpenDataSet("HOMOGENEOUSSIDS");
+        H5::DataSpaceSharedPtr homs_fspace = homs_dset->GetSpace();
+        size_t dsize = decomps[decomp * MAX_DCMPS + HOMS_DCMP_IDX];
+        homs_fspace->SelectRange(offset.homs, dsize);
+        homs_dset->Read(def->m_homogeneousSIDs, homs_fspace, readPL);
+    }
+
+    if (!def->m_uniOrder)
+    {
+        H5::DataSetSharedPtr order_dset = root->OpenDataSet("POLYORDERS");
+        H5::DataSpaceSharedPtr order_fspace = order_dset->GetSpace();
+        size_t dsize = decomps[decomp * MAX_DCMPS + ORDER_DCMP_IDX];
+        order_fspace->SelectRange(offset.order, dsize);
+        order_dset->Read(def->m_numModes, order_fspace, readPL);
+    }
 }
 
 /**
@@ -1103,11 +1144,12 @@ void FieldIOHdf5::ImportFieldDef(
  */
 void FieldIOHdf5::ImportFieldData(
     H5::PListSharedPtr               readPL,
-    H5::GroupSharedPtr               root,
-    OffsetHelper                    &offsets,
+    H5::DataSetSharedPtr             data_dset,
+    H5::DataSpaceSharedPtr           data_fspace,
+    size_t                           data_i,
     std::vector<std::size_t>        &decomps,
     size_t                           decomp,
-    FieldDefinitionsSharedPtr        fielddef,
+    const FieldDefinitionsSharedPtr  fielddef,
     std::vector<NekDouble>          &fielddata)
 {
     std::stringstream prfx;

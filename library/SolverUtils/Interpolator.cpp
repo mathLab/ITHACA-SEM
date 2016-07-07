@@ -67,47 +67,6 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
     m_weights   = Array<OneD, Array<OneD, float> >(nOutPts);
     m_neighInds = Array<OneD, Array<OneD, unsigned int> >(nOutPts);
 
-    std::vector<PtsPointPair> inPoints;
-    for (int i = 0; i < m_ptsInField->GetNpoints(); ++i)
-    {
-        Array<OneD, NekDouble> coords(3, 0.0);
-        for (int j = 0; j < m_ptsInField->GetDim(); ++j)
-        {
-            coords[j] = m_ptsInField->GetPointVal(j, i);
-        }
-        inPoints.push_back(
-            PtsPointPair(BPoint(coords[0], coords[1], coords[2]), i));
-    }
-    m_rtree = MemoryManager<PtsRtree>::AllocateSharedPtr();
-    m_rtree->insert(inPoints.begin(), inPoints.end());
-
-    // remove duplicates from tree
-    for (std::vector<PtsPointPair>::iterator it = inPoints.begin();
-         it != inPoints.end();
-         ++it)
-    {
-        std::vector<PtsPointPair> result;
-
-        // find nearest 2 points (2 because one of these might be the one we are
-        // checking)
-        m_rtree->query(bgi::nearest((*it).first, 2),
-                       std::back_inserter(result));
-
-        // in case any of these 2 points is too close, remove the current point
-        // from the tree
-        for (std::vector<PtsPointPair>::iterator it2 = result.begin();
-             it2 != result.end();
-             ++it2)
-        {
-            if ((*it).second != (*it2).second &&
-                bg::distance((*it).first, (*it2).first) <=
-                    NekConstants::kNekZeroTol)
-            {
-                m_rtree->remove(*it);
-                break;
-            }
-        }
-    }
     // set a default method
     if (m_method == eNoMethod)
     {
@@ -119,6 +78,11 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
         {
             m_method = eShepard;
         }
+    }
+
+    if (m_method != eQuadratic)
+    {
+        SetupTree();
     }
 
     switch (m_method)
@@ -369,7 +333,8 @@ void Interpolator::Interpolate(
         }
 
         // Obtain Element and LocalCoordinate to interpolate
-        int elmtid = m_expInField[0]->GetExpIndex(Scoords, Lcoords, NekConstants::kNekZeroTol);
+        int elmtid = m_expInField[0]->GetExpIndex(
+            Scoords, Lcoords, NekConstants::kNekZeroTol);
 
         if (elmtid >= 0)
         {
@@ -445,7 +410,8 @@ void Interpolator::Interpolate(
         }
 
         // Obtain Element and LocalCoordinate to interpolate
-        int elmtid = m_expInField[0]->GetExpIndex(coords, Lcoords, NekConstants::kNekZeroTol);
+        int elmtid = m_expInField[0]->GetExpIndex(
+            coords, Lcoords, NekConstants::kNekZeroTol);
 
         if (elmtid >= 0)
         {
@@ -673,8 +639,10 @@ void Interpolator::CalcW_Linear(const PtsPoint &searchPt, int m_coordId)
 
     for (i = 0; i < npts - 1; ++i)
     {
-        if ((m_ptsInField->GetPointVal(0, i) <= (coord + NekConstants::kNekZeroTol)) &&
-            (coord <= (m_ptsInField->GetPointVal(0, i + 1) + NekConstants::kNekZeroTol)))
+        if ((m_ptsInField->GetPointVal(0, i) <=
+             (coord + NekConstants::kNekZeroTol)) &&
+            (coord <=
+             (m_ptsInField->GetPointVal(0, i + 1) + NekConstants::kNekZeroTol)))
         {
             NekDouble pdiff = m_ptsInField->GetPointVal(0, i + 1) -
                               m_ptsInField->GetPointVal(0, i);
@@ -799,8 +767,10 @@ void Interpolator::CalcW_Quadratic(const PtsPoint &searchPt, int m_coordId)
 
     for (i = 0; i < npts - 1; ++i)
     {
-        if ((m_ptsInField->GetPointVal(0, i) <= (coord + NekConstants::kNekZeroTol)) &&
-            (coord <= (m_ptsInField->GetPointVal(0, i + 1) + NekConstants::kNekZeroTol)))
+        if ((m_ptsInField->GetPointVal(0, i) <=
+             (coord + NekConstants::kNekZeroTol)) &&
+            (coord <=
+             (m_ptsInField->GetPointVal(0, i + 1) + NekConstants::kNekZeroTol)))
         {
             NekDouble pdiff = m_ptsInField->GetPointVal(0, i + 1) -
                               m_ptsInField->GetPointVal(0, i);
@@ -858,6 +828,53 @@ void Interpolator::CalcW_Quadratic(const PtsPoint &searchPt, int m_coordId)
              "Failed to find coordinate " + boost::lexical_cast<string>(coord) +
                  " within provided input points");
 };
+
+void Interpolator::SetupTree()
+{
+    std::vector<PtsPointPair> inPoints;
+    for (int i = 0; i < m_ptsInField->GetNpoints(); ++i)
+    {
+        Array<OneD, NekDouble> coords(3, 0.0);
+        for (int j = 0; j < m_ptsInField->GetDim(); ++j)
+        {
+            coords[j] = m_ptsInField->GetPointVal(j, i);
+        }
+        inPoints.push_back(
+            PtsPointPair(BPoint(coords[0], coords[1], coords[2]), i));
+    }
+    m_rtree = MemoryManager<PtsRtree>::AllocateSharedPtr();
+    m_rtree->insert(inPoints.begin(), inPoints.end());
+
+    // remove duplicates from tree
+    for (std::vector<PtsPointPair>::iterator it = inPoints.begin();
+         it != inPoints.end();
+         ++it)
+    {
+        std::vector<PtsPointPair> result;
+
+        // find nearest 2 points (2 because one of these might be the one we
+        // are
+        // checking)
+        m_rtree->query(bgi::nearest((*it).first, 2),
+                       std::back_inserter(result));
+
+        // in case any of these 2 points is too close, remove the current
+        // point
+        // from the tree
+        for (std::vector<PtsPointPair>::iterator it2 = result.begin();
+             it2 != result.end();
+             ++it2)
+        {
+            if ((*it).second != (*it2).second &&
+                bg::distance((*it).first, (*it2).first) <=
+                    NekConstants::kNekZeroTol)
+            {
+                m_rtree->remove(*it);
+                break;
+            }
+        }
+    }
+}
 
 /**
  * @brief Finds the neares neighbours of a point

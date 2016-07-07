@@ -161,9 +161,9 @@ private:
     class PtsPoint
     {
     public:
-        int                     idx;
-        Array<OneD, NekDouble>  coords;
-        NekDouble               dist;
+        int idx;
+        Array<OneD, NekDouble> coords;
+        NekDouble dist;
 
         PtsPoint() : idx(-1), coords(Array<OneD, NekDouble>(3)), dist(1E30){};
 
@@ -227,10 +227,13 @@ private:
     LIB_UTILITIES_EXPORT void CalcW_Quadratic(const PtsPoint &searchPt,
                                               int coordId);
 
-    LIB_UTILITIES_EXPORT void FindNeighbours(const PtsPoint &searchPt,
-                                             std::vector<PtsPoint> &neighbourPts,
-                                             const NekDouble dist,
-                                             const unsigned int maxPts = 1);
+    LIB_UTILITIES_EXPORT void SetupTree();
+
+    LIB_UTILITIES_EXPORT void FindNeighbours(
+        const PtsPoint &searchPt,
+        std::vector<PtsPoint> &neighbourPts,
+        const NekDouble dist,
+        const unsigned int maxPts = 1);
 
     LIB_UTILITIES_EXPORT void FindNNeighbours(
         const PtsPoint &searchPt,

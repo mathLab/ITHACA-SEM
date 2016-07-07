@@ -280,9 +280,8 @@ namespace Nektar
                                 StdRegions::NullVarCoeffMap,
                 const Array<OneD, const NekDouble> &dirForcing =
                 NullNekDouble1DArray,
-                const Array<OneD, const NekDouble> &weakForcing =
-                                NullNekDouble1DArray);
-
+                const bool PhysSpaceForcing = true);
+            
             /// Solve Advection Diffusion Reaction
             inline void LinearAdvectionDiffusionReactionSolve(
                 const Array<OneD, Array<OneD, NekDouble> > &velocity,
@@ -1138,7 +1137,7 @@ namespace Nektar
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const Array<OneD, const NekDouble> &dirForcing,
-                const Array<OneD, const NekDouble> &weakForcing);
+                const bool PhysSpaceForcing);
 
             virtual void v_LinearAdvectionDiffusionReactionSolve(
                 const Array<OneD, Array<OneD, NekDouble> > &velocity,
@@ -1666,11 +1665,11 @@ namespace Nektar
             const StdRegions::ConstFactorMap &factors,
             const StdRegions::VarCoeffMap &varcoeff,
             const Array<OneD, const NekDouble> &dirForcing,
-            const Array<OneD, const NekDouble> &weakForcing)
+            const bool PhysSpaceForcing)
 
         {
-            v_HelmSolve(inarray, outarray, flags, factors, varcoeff, dirForcing,
-                        weakForcing);
+            v_HelmSolve(inarray, outarray, flags, factors, varcoeff,
+                        dirForcing, PhysSpaceForcing);
         }
 
 

@@ -1862,7 +1862,8 @@ namespace Nektar
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const Array<OneD, const NekDouble> &dirForcing,
-                const Array<OneD, const NekDouble>& weakForcing)
+                const bool  PhysSpaceForcing)
+
         {
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
@@ -1875,14 +1876,14 @@ namespace Nektar
             //----------------------------------
             //  Setup RHS Inner product
             //----------------------------------
-            if(weakForcing == NullNekDouble1DArray)
+            if(PhysSpaceForcing)
             {
                 IProductWRTBase(inarray,f);
                 Vmath::Neg(m_ncoeffs,f,1);
             }
             else
             {
-                Vmath::Smul(m_ncoeffs,-1.0,weakForcing,1,f,1);
+                Vmath::Smul(m_ncoeffs,-1.0,inarray,1,f,1);
             }
 
             //----------------------------------

@@ -526,18 +526,18 @@ namespace Nektar
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const Array<OneD, const NekDouble> &dirForcing,
-                const Array<OneD, const NekDouble> &weakForcing)
+                const bool PhysSpaceForcing)
         {
             // Inner product of forcing
             int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             Array<OneD,NekDouble> wsp(contNcoeffs);
-            if(weakForcing == NullNekDouble1DArray)
+            if(PhysSpaceForcing)
             {
                 IProductWRTBase(inarray,wsp,eGlobal);
             }
             else
             {
-                Assemble(weakForcing,wsp);
+                Assemble(inarray,wsp);
             }
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition

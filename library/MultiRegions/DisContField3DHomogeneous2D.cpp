@@ -212,7 +212,7 @@ namespace Nektar
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const Array<OneD, const NekDouble> &dirForcing,
-                const Array<OneD, const NekDouble> &weakForcing)
+                const bool PhysSpaceForcing)
         {
             int n,m;
             int cnt = 0;
@@ -241,16 +241,18 @@ namespace Nektar
             {
                 for(m = 0; m < nhom_modes_y; ++m)
                 {
-                    wfce = (weakForcing == NullNekDouble1DArray)? weakForcing:weakForcing+cnt1;
                     beta_z = 2*M_PI*(n/2)/m_lhom_z;
                     beta_y = 2*M_PI*(m/2)/m_lhom_y;
                     new_factors = factors;
-                    new_factors[StdRegions::eFactorLambda] += beta_y*beta_y + beta_z*beta_z;
+                    new_factors[StdRegions::eFactorLambda] +=
+                        beta_y*beta_y + beta_z*beta_z;
                     
-                    m_lines[n]->HelmSolve(fce + cnt,
+                    wfce = (PhysSpaceForcing)? fce+cnt:fce+cnt1;
+                    m_lines[n]->HelmSolve(wfce,
                                           e_out = outarray + cnt1,
-                                          flags, new_factors, varcoeff, dirForcing,
-                                          wfce);
+                                          flags, new_factors,
+                                          varcoeff, dirForcing,
+                                          PhysSpaceForcing);
                     
                     cnt  += m_lines[n]->GetTotPoints();
                     cnt1 += m_lines[n]->GetNcoeffs();

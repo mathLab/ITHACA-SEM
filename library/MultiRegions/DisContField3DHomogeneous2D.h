@@ -135,7 +135,7 @@ namespace Nektar
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
                     const Array<OneD, const NekDouble> &dirForcing,
-                    const Array<OneD, const NekDouble> &weakForcing);
+                    const bool PhysSpaceForcing);
             
             virtual void v_EvaluateBoundaryConditions(
                 const NekDouble   time    = 0.0,

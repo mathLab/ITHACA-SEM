@@ -1169,7 +1169,7 @@ namespace Nektar
             const StdRegions::ConstFactorMap &factors,
             const StdRegions::VarCoeffMap &varcoeff,
             const Array<OneD, const NekDouble> &dirForcing,
-            const Array<OneD, const NekDouble> &weakForcing)
+            const bool PhysSpaceForcing)
 
         {
             int i,n,cnt,nbndry;
@@ -1179,16 +1179,16 @@ namespace Nektar
             Array<OneD,NekDouble> e_f, e_l;
 
             //----------------------------------
-            // Setup RHS Inner product
+            // Setup RHS Inner product if required
             //----------------------------------
-            if(weakForcing == NullNekDouble1DArray)
+            if(PhysSpaceForcing)
             {
                 IProductWRTBase(inarray,f);
                 Vmath::Neg(m_ncoeffs,f,1);
             }
             else
             {
-                Vmath::Smul(m_ncoeffs,-1.0,weakForcing,1,f,1);
+                Vmath::Smul(m_ncoeffs,-1.0,inarray,1,f,1);
             }
 
             //----------------------------------
@@ -1513,10 +1513,11 @@ namespace Nektar
                     Array<OneD, NekDouble> x2(1);
                     Array<OneD, NekDouble> coeffphys(1);
                     
+                    m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
+
                     coeffphys[0]  = (boost::static_pointer_cast<SpatialDomains
                          ::RobinBoundaryCondition>(m_bndConditions[i])
-                         ->m_robinPrimitiveCoeff).
-                    Evaluate(x0[0],x1[0],x2[0],0.0);
+                         ->m_robinPrimitiveCoeff).Evaluate(x0[0],x1[0],x2[0],0.0);
                         
                     RobinBCInfoSharedPtr rInfo =
                         MemoryManager<RobinBCInfo>::

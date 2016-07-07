@@ -253,7 +253,7 @@ namespace Nektar
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
                     const Array<OneD, const NekDouble> &dirForcing,
-                    const Array<OneD, const NekDouble>& weakForcing);
+                    const bool PhysSpaceForcing);
 
             /// Calculates the result of the multiplication of a global
             /// matrix of type specified by \a mkey with a vector given by \a

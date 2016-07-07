@@ -828,7 +828,11 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
     size_t cnt = 0, cnt2 = 0;
 
     // Mapping from each decomposition to offsets in the data array.
-    vector<size_t> decompsToDataOffsets(nDecomps);
+    vector<size_t> decompsToDataOffsets (nDecomps);
+    vector<size_t> decompsToOrderOffsets(nDecomps);
+    vector<size_t> decompsToHomYOffsets (nDecomps);
+    vector<size_t> decompsToHomZOffsets (nDecomps);
+    vector<size_t> decompsToHomSOffsets (nDecomps);
 
     // Mapping from each group's hash to a vector of element IDs. Note this has
     // to be unsigned int, since that's what we use in FieldDefinitions.
@@ -840,13 +844,18 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
     // True if we are pulling element IDs from ElementIDs.
     bool selective = toread.size() > 0;
 
-    // Counter for data offsets
-    size_t dataOffset = 0;
+    // Counters for data offsets
+    size_t dataOffset = 0, orderOffset = 0, homYOffset = 0, homZOffset = 0;
+    size_t homSOffset = 0;
 
     for (size_t i = 0; i < nDecomps; ++i, cnt += MAX_DCMPS)
     {
         size_t nElmt     = decomps[cnt + ELEM_DCMP_IDX];
         size_t dataSize  = decomps[cnt + VAL_DCMP_IDX];
+        size_t orderSize = decomps[cnt + ORDER_DCMP_IDX];
+        size_t homYSize  = decomps[cnt + HOMY_DCMP_IDX];
+        size_t homZSize  = decomps[cnt + HOMZ_DCMP_IDX];
+        size_t homSSize  = decomps[cnt + HOMS_DCMP_IDX];
         size_t groupHash = decomps[cnt + HASH_DCMP_IDX];
 
         vector<size_t> tmp;
@@ -882,8 +891,17 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
         }
 
         groupsToElmts[i] = tmp2;
-        decompsToDataOffsets[i] = dataOffset;
-        dataOffset += dataSize;
+        decompsToDataOffsets [i] = dataOffset;
+        decompsToOrderOffsets[i] = orderOffset;
+        decompsToHomYOffsets [i] = homYOffset;
+        decompsToHomZOffsets [i] = homZOffset;
+        decompsToHomSOffsets [i] = homSOffset;
+
+        dataOffset  += dataSize;
+        orderOffset += orderSize;
+        homYOffset  += homYSize;
+        homZOffset  += homZSize;
+        homSOffset  += homSSize;
     }
 
     map<size_t, set<size_t> >::iterator gIt;

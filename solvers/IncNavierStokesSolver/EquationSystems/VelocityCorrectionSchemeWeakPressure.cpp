@@ -255,7 +255,7 @@ namespace Nektar
         // Solver Pressure Poisson Equation
         m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(), NullFlagList,
                               factors, StdRegions::NullVarCoeffMap,
-                              NullNekDouble1DArray, Forcing);
+                              NullNekDouble1DArray, false);
     }
     
 } //end of namespace

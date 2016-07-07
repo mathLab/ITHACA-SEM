@@ -60,8 +60,6 @@ namespace Nektar
     {
     }
 
-
-	
     /** 
      * Function to extrapolate the new pressure boundary condition.
      * Based on the velocity field and on the advection term.
@@ -86,7 +84,7 @@ namespace Nektar
             // Extrapolate to m_pressureHBCs to n+1
             ExtrapolateArray(m_pressureHBCs);
 
-            // \int_bnd q x n.u^{n} ds update current normal of field
+            // \int_bnd q  n.u^{n} ds update current normal of field
             // add m_pressureHBCs to gamma_0/Dt * m_acceleration[0] 
             AddVelBC();
             
@@ -98,7 +96,35 @@ namespace Nektar
         CalcOutflowBCs(fields, kinvis);
     }
 
-	
+    // In weak pressure formulation  we also require \int q u.n ds on outflow boundary
+    void WeakPressureExtrapolate::v_AddNormVelOnOBC(const int noutflow, const int nreg,
+                                                    Array<OneD, Array<OneD, NekDouble> > &u)
+    {
+        int nbcoeffs = m_PBndExp[nreg]->GetNcoeffs();
+        int nqb      = m_PBndExp[nreg]->GetTotPoints();
+        
+        Array<OneD, NekDouble> IProdVnTmp(nbcoeffs);
+
+        Array<OneD, Array<OneD, NekDouble> > ubnd(m_curl_dim);
+
+
+        for(int i = 0; i < m_curl_dim; ++i)
+        {
+            EvaluateBDFArray(m_houtflow->m_outflowVelBnd[noutflow][i]);
+            
+            ubnd[i] = m_houtflow->m_outflowVelBnd[noutflow][i][m_intSteps-1];
+
+            // point input u to the first part of the array for later uee. 
+            u[i] = m_houtflow->m_outflowVelBnd[noutflow][i][0];
+        }
+        
+        m_PBndExp[nreg]->NormVectorIProductWRTBase(ubnd,IProdVnTmp);
+
+        Vmath::Svtvp(nbcoeffs,-1.0/m_timestep,IProdVnTmp,1,m_PBndExp[nreg]->UpdateCoeffs(),1,
+                     m_PBndExp[nreg]->UpdateCoeffs(),1);
+    }
+
+    
     /** 
      *  vritual function which only puts in the curl operator into the bcs
      */

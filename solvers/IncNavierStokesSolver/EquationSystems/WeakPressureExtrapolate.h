@@ -94,6 +94,8 @@ namespace Nektar
                                    Array<OneD, NekDouble> &Q, 
                                    Array<OneD, const NekDouble> &Advection);
         
+        virtual void v_AddNormVelOnOBC(const int nbcoeffs, const int nreg,
+                                       Array<OneD, Array<OneD, NekDouble> > &u);
     };
     
 }

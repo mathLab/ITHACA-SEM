@@ -84,6 +84,8 @@ namespace Nektar
         virtual ~Extrapolate();
 
         void GenerateHOPBCMap(const LibUtilities::SessionReaderSharedPtr& pSsession);
+        
+        void UpdateRobinPrimCoeff(void);
 
         inline void SubSteppingTimeIntegration(
             const int intMethod,
@@ -136,6 +138,8 @@ namespace Nektar
 
         void ExtrapolateArray( Array<OneD, Array<OneD, NekDouble> > &array);
 
+        void EvaluateBDFArray(Array<OneD, Array<OneD, NekDouble> > &array);
+
         void AccelerationBDF( Array<OneD, Array<OneD, NekDouble> > &array);
 
         void ExtrapolateArray(
@@ -143,6 +147,9 @@ namespace Nektar
             Array<OneD, NekDouble>  &newarray,
             Array<OneD, NekDouble>  &outarray);
         
+        void AddNormVelOnOBC(const int nbcoeffs, const int nreg,
+                             Array<OneD, Array<OneD, NekDouble> > &u);
+
     protected: 
         virtual void v_EvaluatePressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
@@ -189,7 +196,9 @@ namespace Nektar
             NekDouble kinvis);
             
         virtual void v_CorrectPressureBCs( const Array<OneD, NekDouble>  &pressure);
-        
+
+        virtual void v_AddNormVelOnOBC(const int nbcoeffs, const int nreg,
+                                       Array<OneD, Array<OneD, NekDouble> > &u);
         void CalcOutflowBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             NekDouble kinvis);
@@ -288,10 +297,14 @@ namespace Nektar
         NekDouble   m_obcAlpha2;
         NekDouble   m_U0;
         NekDouble   m_delta;
+        std::string m_defVelPrimCoeff[3]; 
         
-        /// Storage for current and previous velocity fields at the outflow for high order outflow BCs
+        /// Storage for current and previous velocity fields along the outflow 
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble > > > > m_outflowVel;
 
+        /// Storage for current and previous velocities along the outflow boundary
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble > > > > m_outflowVelBnd;
+        
         /// Velocity boundary condition expansions on high order boundaries. 
         Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >  m_UBndExp;
 
@@ -383,6 +396,17 @@ namespace Nektar
     {
         v_CorrectPressureBCs(pressure);
     }
+
+    
+    /**
+     *
+     */
+    inline void Extrapolate::AddNormVelOnOBC(const int nbcoeffs, const int nreg,
+                                             Array<OneD, Array<OneD, NekDouble> > &u)
+    {
+        v_AddNormVelOnOBC(nbcoeffs,nreg,u);
+    }
+
 }
 
 #endif

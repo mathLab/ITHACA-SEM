@@ -67,7 +67,6 @@ namespace Nektar
         const NekDouble Aii_Dt,
         NekDouble kinvis)
     {
-        int nConvectiveFields =m_fields.num_elements()-1;
         Array<OneD, Array<OneD, NekDouble> > nullvelfields;
         
         m_pressureCalls++;
@@ -87,6 +86,35 @@ namespace Nektar
 
         // Evaluate High order outflow conditiosn if required. 
         CalcOutflowBCs(inarray, kinvis);
+    }
+
+
+    // In weak pressure formulation  we also require \int q u.n ds on outflow boundary
+    void SubSteppingExtrapolateWeakPressure::v_AddNormVelOnOBC(const int cnt, const int nreg,
+                                                               Array<OneD, Array<OneD, NekDouble> > &u)
+    {
+        int nbcoeffs = m_PBndExp[nreg]->GetNcoeffs();
+        int nqb      = m_PBndExp[nreg]->GetTotPoints();
+        
+        Array<OneD, NekDouble> IProdVnTmp(nbcoeffs);
+
+        Array<OneD, Array<OneD, NekDouble> > ubnd(m_curl_dim);
+
+
+        for(int i = 0; i < m_curl_dim; ++i)
+        {
+            EvaluateBDFArray(m_houtflow->m_outflowVelBnd[cnt][i]);
+            
+            ubnd[i] = m_houtflow->m_outflowVelBnd[cnt][i][m_intSteps-1];
+
+            // point input u to the first part of the array for later uee. 
+            u[i] = m_houtflow->m_outflowVelBnd[cnt][i][0];
+        }
+        
+        m_PBndExp[nreg]->NormVectorIProductWRTBase(ubnd,IProdVnTmp);
+
+        Vmath::Svtvp(nbcoeffs,-1.0/m_timestep,IProdVnTmp,1,m_PBndExp[nreg]->UpdateCoeffs(),1,
+                     m_PBndExp[nreg]->UpdateCoeffs(),1);
     }
 }
 

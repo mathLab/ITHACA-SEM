@@ -826,8 +826,8 @@ namespace Nektar
 
                 for(j = 0; j < nEdges; ++j)
                 {
-                    nEdgeIntCoeffs = EdgeSize[meshEdgeId];
                     meshEdgeId = exp->GetGeom()->GetEid(j);
+                    nEdgeIntCoeffs = EdgeSize[meshEdgeId];
                     if(graph[1].count(meshEdgeId) == 0)
                     {
                         if(tempGraph[1].count(meshEdgeId) == 0)

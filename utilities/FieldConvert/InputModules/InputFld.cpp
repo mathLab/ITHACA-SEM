@@ -162,6 +162,7 @@ void InputFld::Process(po::variables_map &vm)
                 m_f->m_data,
                 m_f->m_fieldMetaDataMap,
                 ElementGIDs);
+        }
     }
     else // load all data.
     {

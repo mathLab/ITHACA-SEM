@@ -164,10 +164,18 @@ public:
 
     static const unsigned int ELEM_CNT_IDX;
     static const unsigned int VAL_CNT_IDX;
+    static const unsigned int ORDER_CNT_IDX;
+    static const unsigned int HOMY_CNT_IDX;
+    static const unsigned int HOMZ_CNT_IDX;
+    static const unsigned int STRIP_CNT_IDX;
     static const unsigned int MAX_CNTS;
 
     static const unsigned int IDS_IDX_IDX;
     static const unsigned int DATA_IDX_IDX;
+    static const unsigned int ORDER_IDX_IDX;
+    static const unsigned int HOMY_IDX_IDX;
+    static const unsigned int HOMZ_IDX_IDX;
+    static const unsigned int STRIP_IDX_IDX;
     static const unsigned int MAX_IDXS;
 
     /// Creates an instance of this class

@@ -61,6 +61,12 @@ class ProcessPrintFldNorms : public ProcessModule
         virtual ~ProcessPrintFldNorms();
 
         virtual void Process(po::variables_map &vm);
+
+        virtual std::string GetModuleName()
+        {
+            return "ProcessPrintFldNorms";
+        }
+
 };
 
 }

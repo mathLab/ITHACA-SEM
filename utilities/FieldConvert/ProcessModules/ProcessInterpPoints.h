@@ -65,6 +65,11 @@ class ProcessInterpPoints : public ProcessModule
 
         void PrintProgressbar(const int position, const int goal) const;
 
+        virtual std::string GetModuleName()
+        {
+            return "ProcessInterpPoints";
+        }
+
     private:
 
         void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,

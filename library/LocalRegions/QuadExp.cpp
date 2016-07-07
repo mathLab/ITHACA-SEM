@@ -899,7 +899,7 @@ namespace Nektar
                     outarray = Array<OneD, int>(nquad1);
                     for (int i = 0; i < nquad1; ++i)
                     {
-                        outarray[i] = (nquad0-1) + i*nquad1;
+                        outarray[i] = (nquad0-1) + i*nquad0;
                     }
                     break;
                 case 2:
@@ -980,7 +980,7 @@ namespace Nektar
                                          &(jac[0])+(nquad0-1), nquad0,
                                          &(j[0]), 1);
                             
-                            for (i = 0; i < nquad0; ++i)
+                            for (i = 0; i < nquad1; ++i)
                             {
                                 outarray[i] = j[i]*sqrt(g0[i]*g0[i] +
                                                                    g2[i]*g2[i]);
@@ -1020,7 +1020,7 @@ namespace Nektar
                                          &(jac[0])+nquad0*(nquad1-1), -nquad0,
                                          &(j[0]), 1);
                             
-                            for (i = 0; i < nquad0; ++i)
+                            for (i = 0; i < nquad1; ++i)
                             {
                                 outarray[i] = j[i]*sqrt(g0[i]*g0[i] +
                                                         g2[i]*g2[i]);
@@ -1195,7 +1195,15 @@ namespace Nektar
             LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
             const Array<TwoD, const NekDouble> & df = geomFactors->GetDerivFactors(ptsKeys);
             const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac(ptsKeys);
-            int nqe = m_base[0]->GetNumPoints();
+            int nqe;
+            if (edge == 0 || edge == 2)
+            {
+                nqe = m_base[0]->GetNumPoints();
+            }
+            else
+            {
+                nqe = m_base[1]->GetNumPoints();
+            }
             int vCoordDim = GetCoordim();
 
             m_edgeNormals[edge] = Array<OneD, Array<OneD, NekDouble> >

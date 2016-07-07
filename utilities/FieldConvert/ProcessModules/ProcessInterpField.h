@@ -63,6 +63,11 @@ class ProcessInterpField : public ProcessModule
 
         void PrintProgressbar(const int position, const int goal) const;
 
+        virtual std::string GetModuleName()
+        {
+            return "ProcessInterpField";
+        }
+
     private:
         FieldSharedPtr m_fromField;
 

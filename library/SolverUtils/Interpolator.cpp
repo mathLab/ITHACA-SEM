@@ -673,8 +673,8 @@ void Interpolator::CalcW_Linear(const PtsPoint &searchPt, int m_coordId)
 
     for (i = 0; i < npts - 1; ++i)
     {
-        if ((m_ptsInField->GetPointVal(0, i) <= coord) &&
-            (coord <= m_ptsInField->GetPointVal(0, i + 1)))
+        if ((m_ptsInField->GetPointVal(0, i) <= (coord + NekConstants::kNekZeroTol)) &&
+            (coord <= (m_ptsInField->GetPointVal(0, i + 1) + NekConstants::kNekZeroTol)))
         {
             NekDouble pdiff = m_ptsInField->GetPointVal(0, i + 1) -
                               m_ptsInField->GetPointVal(0, i);
@@ -799,8 +799,8 @@ void Interpolator::CalcW_Quadratic(const PtsPoint &searchPt, int m_coordId)
 
     for (i = 0; i < npts - 1; ++i)
     {
-        if ((m_ptsInField->GetPointVal(0, i) <= coord) &&
-            (coord <= m_ptsInField->GetPointVal(0, i + 1)))
+        if ((m_ptsInField->GetPointVal(0, i) <= (coord + NekConstants::kNekZeroTol)) &&
+            (coord <= (m_ptsInField->GetPointVal(0, i + 1) + NekConstants::kNekZeroTol)))
         {
             NekDouble pdiff = m_ptsInField->GetPointVal(0, i + 1) -
                               m_ptsInField->GetPointVal(0, i);

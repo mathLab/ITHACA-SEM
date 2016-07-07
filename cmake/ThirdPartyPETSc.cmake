@@ -51,7 +51,7 @@ IF (NEKTAR_USE_PETSC)
             TMP_DIR ${TPBUILD}/petsc-3.7.2-tmp
             INSTALL_DIR ${TPDIST}
             BINARY_DIR ${TPBUILD}/petsc-3.7.2
-            URL http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.7.2.tar.gz
+            URL http://www.nektar.info/thirdparty/petsc-lite-3.7.2.tar.gz
             URL_MD5 "26c2ff8eaaa9e49aea063f839f5daa7e"
             CONFIGURE_COMMAND
                 OMPI_CC=${CMAKE_C_COMPILER}
@@ -59,8 +59,7 @@ IF (NEKTAR_USE_PETSC)
                 ${PYTHON_EXECUTABLE} ./configure
                 --with-cc=${PETSC_C_COMPILER}
                 --with-cxx=${PETSC_CXX_COMPILER}
-                --with-shared-libraries=0
-                --with-pic=1
+                --with-shared-libraries=1
                 --with-x=0
                 --with-ssl=0
                 --prefix=${TPDIST}
@@ -75,7 +74,7 @@ IF (NEKTAR_USE_PETSC)
             "PETSc includes" FORCE)
 
         LINK_DIRECTORIES(${TPDIST}/lib)
-        MESSAGE(STATUS "Build PETSc: ${TPDIST}/${LIB_DIR}/lib${PETSC_LIBRARIES}.a")
+        MESSAGE(STATUS "Build PETSc: ${TPDIST}/${LIB_DIR}/lib${PETSC_LIBRARIES}.so")
         SET(PETSC_CONFIG_INCLUDE_DIR ${TPINC})
     ELSE (THIRDPARTY_BUILD_PETSC)
         INCLUDE(FindPETSc)

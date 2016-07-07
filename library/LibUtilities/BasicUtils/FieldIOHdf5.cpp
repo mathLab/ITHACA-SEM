@@ -828,11 +828,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
     size_t cnt = 0, cnt2 = 0;
 
     // Mapping from each decomposition to offsets in the data array.
-    vector<size_t> decompsToDataOffsets (nDecomps);
-    vector<size_t> decompsToOrderOffsets(nDecomps);
-    vector<size_t> decompsToHomYOffsets (nDecomps);
-    vector<size_t> decompsToHomZOffsets (nDecomps);
-    vector<size_t> decompsToHomSOffsets (nDecomps);
+    vector<OffsetHelper> decompsToOffsets (nDecomps);
 
     // Mapping from each group's hash to a vector of element IDs. Note this has
     // to be unsigned int, since that's what we use in FieldDefinitions.
@@ -845,17 +841,11 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
     bool selective = toread.size() > 0;
 
     // Counters for data offsets
-    size_t dataOffset = 0, orderOffset = 0, homYOffset = 0, homZOffset = 0;
-    size_t homSOffset = 0;
+    OffsetHelper running;
 
     for (size_t i = 0; i < nDecomps; ++i, cnt += MAX_DCMPS)
     {
         size_t nElmt     = decomps[cnt + ELEM_DCMP_IDX];
-        size_t dataSize  = decomps[cnt + VAL_DCMP_IDX];
-        size_t orderSize = decomps[cnt + ORDER_DCMP_IDX];
-        size_t homYSize  = decomps[cnt + HOMY_DCMP_IDX];
-        size_t homZSize  = decomps[cnt + HOMZ_DCMP_IDX];
-        size_t homSSize  = decomps[cnt + HOMS_DCMP_IDX];
         size_t groupHash = decomps[cnt + HASH_DCMP_IDX];
 
         vector<size_t> tmp;
@@ -891,17 +881,13 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
         }
 
         groupsToElmts[i] = tmp2;
-        decompsToDataOffsets [i] = dataOffset;
-        decompsToOrderOffsets[i] = orderOffset;
-        decompsToHomYOffsets [i] = homYOffset;
-        decompsToHomZOffsets [i] = homZOffset;
-        decompsToHomSOffsets [i] = homSOffset;
+        decompsToOffsets[i] = running;
 
-        dataOffset  += dataSize;
-        orderOffset += orderSize;
-        homYOffset  += homYSize;
-        homZOffset  += homZSize;
-        homSOffset  += homSSize;
+        running.data  += decomps[cnt + VAL_DCMP_IDX];
+        running.order += decomps[cnt + ORDER_DCMP_IDX];
+        running.homy  += decomps[cnt + HOMY_DCMP_IDX];
+        running.homz  += decomps[cnt + HOMZ_DCMP_IDX];
+        running.homs  += decomps[cnt + HOMS_DCMP_IDX];
     }
 
     map<size_t, set<size_t> >::iterator gIt;
@@ -925,8 +911,9 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
             {
                 std::vector<NekDouble> decompFieldData;
                 ImportFieldData(
-                    readPL, data_dset, data_fspace, decompsToDataOffsets[*sIt],
-                    decomps, *sIt, fielddef, decompFieldData);
+                    readPL, data_dset, data_fspace,
+                    decompsToDataOffsets[*sIt].data, decomps, *sIt, fielddef,
+                    decompFieldData);
                 fielddata.push_back(decompFieldData);
             }
         }
@@ -946,6 +933,7 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 void FieldIOHdf5::ImportFieldDef(
     H5::PListSharedPtr        readPL,
     H5::GroupSharedPtr        root,
+    OffsetHelper              offset,
     std::string               group,
     FieldDefinitionsSharedPtr def)
 {
@@ -1115,12 +1103,11 @@ void FieldIOHdf5::ImportFieldDef(
  */
 void FieldIOHdf5::ImportFieldData(
     H5::PListSharedPtr               readPL,
-    H5::DataSetSharedPtr             data_dset,
-    H5::DataSpaceSharedPtr           data_fspace,
-    size_t                           data_i,
+    H5::GroupSharedPtr               root,
+    OffsetHelper                    &offsets,
     std::vector<std::size_t>        &decomps,
     size_t                           decomp,
-    const FieldDefinitionsSharedPtr  fielddef,
+    FieldDefinitionsSharedPtr        fielddef,
     std::vector<NekDouble>          &fielddata)
 {
     std::stringstream prfx;

@@ -8,8 +8,8 @@
 
 IF (NOT WIN32)
    CMAKE_DEPENDENT_OPTION(NEKTAR_USE_ANN
-       "Use ANN routines for performing the Approximate Nearest Neighbour searches." OFF
-       "NEKTAR_USE_MESHGEN" ON)
+       "Use ANN routines for performing Approximate Nearest Neighbour searches." ON
+       "NEKTAR_USE_MESHGEN" OFF)
 ENDIF(NOT WIN32)
 
 IF (NEKTAR_USE_ANN)
@@ -24,22 +24,19 @@ IF (NEKTAR_USE_ANN)
         SET(BUILD_ANN ON)
     ENDIF ()
 
-    CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_ANN
-        "Build ANN library from ThirdParty" ${BUILD_ANN}
-        "NEKTAR_USE_ANN" OFF)
+    OPTION(THIRDPARTY_BUILD_ANN "Build ANN library from ThirdParty" ${BUILD_ANN})
 
     IF (THIRDPARTY_BUILD_ANN)
-
         # Note that ANN is compiled in the source-tree, so we unpack the
         # source code in the ThirdParty builds directory.
         SET(ANN_DIR ${TPBUILD}/ann-1.1.2)
         SET(ANN_SRC ${ANN_DIR}/src)
 
         IF (APPLE)
-            SET(ANN_CFLAGS "-O3")
+            SET(ANN_CFLAGS "-O3 -fPIC")
             SET(ANN_MAKELIB "libtool -static -o")
         ELSE ()
-            SET(ANN_CFLAGS "-O3")
+            SET(ANN_CFLAGS "-O3 -fPIC")
             SET(ANN_MAKELIB "ar ruv")
         ENDIF ()
 

@@ -2546,18 +2546,8 @@ using namespace boost::assign;
 
                         }
 
-                        LibUtilities::Equation coeff = boost::
-                            static_pointer_cast<SpatialDomains::
-                                RobinBoundaryCondition>(
-                                    m_bndConditions[i])->m_robinPrimitiveCoeff;
-                        
                         locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
-                        
-                        // Put primitive coefficient into the physical 
-                        // space storage
-                        coeff.Evaluate(x0, x1, x2, time,
-                                       locExpList->UpdatePhys());
                         
                     }
                     else

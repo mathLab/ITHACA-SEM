@@ -14,6 +14,7 @@ SET(FieldConvertHeaders
     OutputModules/OutputXml.h
     ProcessModules/ProcessAddFld.h
     ProcessModules/ProcessBoundaryExtract.h
+    ProcessModules/ProcessCombineAvg.h
     ProcessModules/ProcessConcatenateFld.h
     ProcessModules/ProcessDeform.h
     ProcessModules/ProcessDisplacement.h
@@ -40,7 +41,6 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessC0Projection.h
     ProcessModules/ProcessQCriterion.h
     ProcessModules/ProcessQualityMetric.h
-    ProcessModules/ProcessFilterForMeshing.h
 )
 
 SET(FieldConvertSources
@@ -59,6 +59,7 @@ SET(FieldConvertSources
     OutputModules/OutputXml.cpp
     ProcessModules/ProcessAddFld.cpp
     ProcessModules/ProcessBoundaryExtract.cpp
+    ProcessModules/ProcessCombineAvg.cpp
     ProcessModules/ProcessConcatenateFld.cpp
     ProcessModules/ProcessDeform.cpp
     ProcessModules/ProcessDisplacement.cpp
@@ -85,7 +86,6 @@ SET(FieldConvertSources
     ProcessModules/ProcessC0Projection.cpp
     ProcessModules/ProcessQCriterion.cpp
     ProcessModules/ProcessQualityMetric.cpp
-    ProcessModules/ProcessFilterForMeshing.cpp
 )
 
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})

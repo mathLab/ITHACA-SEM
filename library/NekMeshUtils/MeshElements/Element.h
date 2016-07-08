@@ -629,6 +629,12 @@ public:
         }
     }
 
+    NEKMESHUTILS_EXPORT void Flip()
+    {
+        ASSERTL0(m_face.size() == 0,"only works in 2D")
+        std::swap(m_vertex[0],m_vertex[1]);
+    }
+
 #ifdef NEKTAR_USE_MESHGEN
     int CADSurfId;
 #endif

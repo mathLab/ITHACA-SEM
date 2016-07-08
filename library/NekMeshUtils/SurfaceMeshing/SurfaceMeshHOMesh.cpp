@@ -605,6 +605,7 @@ void SurfaceMesh::HOSurf()
             Array<OneD, NekDouble> uv(2);
             s->ProjectTo(loc,uv);
             uvi.push_back(uv);
+
         }
 
         vector<NodeSharedPtr> honodes;

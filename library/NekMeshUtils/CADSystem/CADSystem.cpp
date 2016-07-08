@@ -133,8 +133,6 @@ vector<int> CADSystem::GetBoundarySurfs()
         }
     }
 
-    cout << endl;
-
     set<int>::iterator it;
     for(it = surfs.begin(); it != surfs.end(); it++)
     {
@@ -374,7 +372,6 @@ bool CADSystem::LoadCAD()
             TopoDS_Shape edge = localEdges.FindKey(j);
             if (BRep_Tool::Degenerated(TopoDS::Edge(edge)))
             {
-                cout << "degen edge on face " << i << endl;
                 gp_Pnt2d p1, p2;
 
                 BRep_Tool::UVPoints(TopoDS::Edge(edge), TopoDS::Face(face), p1,

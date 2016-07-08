@@ -49,9 +49,11 @@ namespace NekMeshUtils
 struct blInfo
 {
     NodeSharedPtr pNode;
-    NekDouble bl;
+    NodeSharedPtr oNode;
+    int bl;
     Array<OneD, NekDouble> N;
     int symsurf;
+    bool onSym;
 };
 
 class BLMesh

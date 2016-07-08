@@ -66,7 +66,10 @@ void ProcessVorticity::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessVorticity: Calculating vorticity..." << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessVorticity: Calculating vorticity..." << endl;
+        }
     }
 
     int i, j, s;

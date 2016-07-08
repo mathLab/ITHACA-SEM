@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessQCriterion.h
+//  File: ProcessCombineAvg.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes Q Criterion field.
+//  Description: Combines two fld files containing average fields.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSFILTERFORMESHING
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSFILTERFORMESHING
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSCOMBINEAVG
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSCOMBINEAVG
 
 #include "../Module.h"
 
@@ -44,23 +44,31 @@ namespace Utilities
 {
 
 /**
- * @brief This processing module calculates the Q Criterion and adds it
- * as an extra-field to the output file.
+ * @brief This processing module combines two fld files containing average fields
+ *
  */
-class ProcessFilterForMeshing : public ProcessModule
+class ProcessCombineAvg : public ProcessModule
 {
     public:
         /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessFilterForMeshing>::AllocateSharedPtr(f);
+        static boost::shared_ptr<Module> create(FieldSharedPtr f)
+        {
+            return MemoryManager<ProcessCombineAvg>::AllocateSharedPtr(f);
         }
         static ModuleKey className;
 
-        ProcessFilterForMeshing(FieldSharedPtr f);
-        virtual ~ProcessFilterForMeshing();
+        ProcessCombineAvg(FieldSharedPtr f);
+        virtual ~ProcessCombineAvg();
 
         /// Write mesh to output file.
         virtual void Process(po::variables_map &vm);
+
+        virtual std::string GetModuleName()
+        {
+            return "ProcessCombineAvg";
+        }
+
+    private:
 };
 
 }

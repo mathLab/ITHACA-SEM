@@ -258,6 +258,19 @@ namespace Nektar
                     }
                 }
 
+                static bool PoolCreated(std::string whichPool)
+                {
+                    bool value = false;
+                    typename ValueContainerPool::iterator x;
+
+                    x = m_ValueContainerPool.find(whichPool);
+                    if (x != m_ValueContainerPool.end())
+                    {
+                        value = true;
+                    }
+                    return value;
+                }
+
                 static void EnableManagement(std::string whichPool = "")
                 {
                     typename FlagContainerPool::iterator x;

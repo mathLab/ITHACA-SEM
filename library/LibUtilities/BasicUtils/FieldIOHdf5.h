@@ -58,8 +58,8 @@ class H5DataSource : public DataSource
 {
 public:
     /// Constructor based on filename.
-    H5DataSource(const std::string &fn)
-        : doc(H5::File::Open(fn, H5F_ACC_RDONLY))
+    H5DataSource(const std::string &fn, H5::PListSharedPtr parallelProps)
+        : doc(H5::File::Open(fn, H5F_ACC_RDONLY, parallelProps))
     {
     }
 
@@ -76,9 +76,10 @@ public:
     }
 
     /// Static constructor for this data source.
-    static DataSourceSharedPtr create(const std::string &fn)
+    static DataSourceSharedPtr create(
+        const std::string &fn, H5::PListSharedPtr parallelProps)
     {
-        return DataSourceSharedPtr(new H5DataSource(fn));
+        return DataSourceSharedPtr(new H5DataSource(fn, parallelProps));
     }
 
 private:
@@ -157,6 +158,8 @@ typedef boost::shared_ptr<H5TagWriter> H5TagWriterSharedPtr;
 class FieldIOHdf5 : public FieldIO
 {
 public:
+    static const unsigned int FORMAT_VERSION;
+
     static const unsigned int ELEM_DCMP_IDX;
     static const unsigned int VAL_DCMP_IDX;
     static const unsigned int ORDER_DCMP_IDX;

@@ -454,7 +454,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank)
 
     if (rank == 0)
     {
-        cout << "Writing: " << specPath << endl;
+        cout << "Writing: " << specPath;
     }
 
     // serial processing just add ending.

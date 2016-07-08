@@ -57,6 +57,8 @@ std::string FieldIOHdf5::className =
     GetFieldIOFactory().RegisterCreatorFunction(
         "Hdf5", FieldIOHdf5::create, "HDF5-based output of field data.");
 
+const unsigned int FieldIOHdf5::FORMAT_VERSION = 1;
+
 const unsigned int FieldIOHdf5::ELEM_DCMP_IDX  = 0;
 const unsigned int FieldIOHdf5::VAL_DCMP_IDX   = 1;
 const unsigned int FieldIOHdf5::ORDER_DCMP_IDX = 2;
@@ -97,7 +99,6 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
 
     if (m_comm->GetRank() == 0)
     {
-        cout << prfx.str() << "entering..." << endl;
         tm0 = m_comm->Wtime();
     }
 
@@ -358,6 +359,9 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         ASSERTL1(root, prfx.str() + "cannot create root group.");
         TagWriterSharedPtr info_writer(new H5TagWriter(root));
         AddInfoTag(info_writer, fieldmetadatamap);
+
+        // Record file format version as attribute in main group.
+        root->SetAttribute("FORMAT_VERSION", FORMAT_VERSION);
 
         // Calculate the indexes to be used by each MPI process when reading the
         // IDS and DATA datasets
@@ -748,11 +752,10 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     m_comm->Block();
 
     // all data has been written
-    if (0 == m_comm->GetRank())
+    if (m_comm->GetRank() == 0)
     {
         tm1 = m_comm->Wtime();
-        cout << prfx.str() << "leaving after " << tm1 - tm0 << " secs..."
-             << endl;
+        cout << " (" << tm1 - tm0 << "s, HDF5)" << endl;
     }
 }
 
@@ -764,11 +767,11 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 {
     std::stringstream prfx;
     int nRanks = m_comm->GetSize();
-    DataSourceSharedPtr dataSource = H5DataSource::create(infilename);
 
     // Set properties for parallel file access (if we're in parallel)
     H5::PListSharedPtr parallelProps = H5::PList::Default();
     H5::PListSharedPtr readPL = H5::PList::Default();
+
     if (nRanks > 1)
     {
         // Use MPI/O to access the file
@@ -779,12 +782,35 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
         readPL->SetDxMpioCollective();
     }
 
+    DataSourceSharedPtr dataSource = H5DataSource::create(
+        infilename, parallelProps);
+
     // Open the root group of the hdf5 file
     H5DataSourceSharedPtr h5 =
         boost::static_pointer_cast<H5DataSource>(dataSource);
     ASSERTL1(h5, prfx.str() + "cannot open HDF5 file.");
     H5::GroupSharedPtr root = h5->Get()->OpenGroup("NEKTAR");
     ASSERTL1(root, prfx.str() + "cannot open root group.");
+
+    // Check format version
+    unsigned int formatVersion;
+    H5::Group::AttrIterator attrIt  = root->attr_begin();
+    H5::Group::AttrIterator attrEnd = root->attr_end();
+    for (; attrIt != attrEnd; ++attrIt)
+    {
+        if (*attrIt == "FORMAT_VERSION")
+        {
+            break;
+        }
+    }
+
+    ASSERTL0(attrIt != attrEnd,
+             "Unable to determine Nektar++ HDF5 file version");
+    root->GetAttribute("FORMAT_VERSION", formatVersion);
+
+    ASSERTL0(formatVersion <= FORMAT_VERSION,
+             "File format if " + infilename + " is higher than supported in "
+             "this version of Nektar++");
 
     // Open the datasets
     H5::DataSetSharedPtr decomps_dset = root->OpenDataSet("DECOMPOSITION");
@@ -1093,7 +1119,7 @@ void FieldIOHdf5::ImportFieldDef(
         }
     }
 
-    if (def->m_numHomogeneousDir == 1)
+    if (def->m_numHomogeneousDir >= 1)
     {
         H5::DataSetSharedPtr homz_dset = root->OpenDataSet("HOMOGENEOUSZIDS");
         H5::DataSpaceSharedPtr homz_fspace = homz_dset->GetSpace();
@@ -1102,7 +1128,7 @@ void FieldIOHdf5::ImportFieldDef(
         homz_dset->Read(def->m_homogeneousZIDs, homz_fspace, readPL);
     }
 
-    if (def->m_numHomogeneousDir == 2)
+    if (def->m_numHomogeneousDir >= 2)
     {
         H5::DataSetSharedPtr homy_dset = root->OpenDataSet("HOMOGENEOUSYIDS");
         H5::DataSpaceSharedPtr homy_fspace = homy_dset->GetSpace();
@@ -1172,7 +1198,8 @@ DataSourceSharedPtr FieldIOHdf5::v_ImportFieldMetaData(
     std::string       filename,
     FieldMetaDataMap &fieldmetadatamap)
 {
-    DataSourceSharedPtr ans = H5DataSource::create(filename);
+    H5::PListSharedPtr parallelProps = H5::PList::Default();
+    DataSourceSharedPtr ans = H5DataSource::create(filename, parallelProps);
     ImportHDF5FieldMetaData(ans, fieldmetadatamap);
     return ans;
 }

@@ -23,7 +23,7 @@ if(NOT DEFINED OCE_DIR)
   endif()
 endif()
 
-find_package(OCE QUIET)
+find_package(OCE QUIET HINTS)
 if(OCE_FOUND)
   message(STATUS "-- OpenCASCADE Community Edition has been found.")
   # Disable this define. For more details see bug #0001872
@@ -61,12 +61,14 @@ else(OCE_FOUND) #look for OpenCASCADE
       /usr/local/opt/opencascade/include
       /opt/opencascade/include
       /opt/opencascade/inc
+#      /opt/local/include/oce
     )
     FIND_LIBRARY(OCC_LIBRARY TKernel
       /usr/lib
       /usr/local/lib
       /usr/local/opt/opencascade/lib
       /opt/opencascade/lib
+#      /opt/local/lib
     )
   endif(WIN32)
   if(OCC_LIBRARY)

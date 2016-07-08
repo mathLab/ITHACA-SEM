@@ -72,6 +72,8 @@ IF(NEKTAR_USE_MESHGEN)
                 -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
                 -DINSTALL_DIR:PATH=${TPBUILD}/opencascade-6.9
                 -DCMAKE_CXX_FLAGS:STRING=-DTIXML_USE_STL
+                -DBUILD_Draw=OFF
+                -DBUILD_Visualization=OFF
                 ${TPSRC}/opencascade-6.9
             )
 
@@ -103,5 +105,6 @@ IF(NEKTAR_USE_MESHGEN)
         ADD_CUSTOM_TARGET(opencascade-6.9 ALL)
         MESSAGE(STATUS "Found OpenCASCADE: ${OCC_LIBRARY_DIR}")
         SET(OPENCASCADE_CONFIG_INCLUDE_DIR ${OCC_INCLUDE_DIR})
+        INCLUDE_DIRECTORIES(SYSTEM ${OCC_INCLUDE_DIR})
     ENDIF()
 ENDIF()

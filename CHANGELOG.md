@@ -6,6 +6,9 @@ v4.4.0
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
 
+**FieldConvert:**
+- Allow equi-spaced output for 1D and 2DH1D fields (!613)
+
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
 

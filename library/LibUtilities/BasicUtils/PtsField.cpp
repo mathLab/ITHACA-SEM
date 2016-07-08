@@ -403,7 +403,8 @@ void PtsField::CalcW_Linear(const int physPtIdx, const NekDouble coord)
 
     for (i = 0; i < npts - 1; ++i)
     {
-        if ((m_pts[0][i] <= coord) && (coord <= m_pts[0][i + 1]))
+        if ((m_pts[0][i] <= (coord + NekConstants::kNekZeroTol)) &&
+            (coord <= (m_pts[0][i + 1]+ NekConstants::kNekZeroTol)) )
         {
             NekDouble pdiff = m_pts[0][i + 1] - m_pts[0][i];
 
@@ -500,7 +501,8 @@ void PtsField::CalcW_Quadratic(const int physPtIdx, const NekDouble coord)
 
     for (i = 0; i < npts - 1; ++i)
     {
-        if ((m_pts[0][i] <= coord) && (coord <= m_pts[0][i + 1]))
+        if ((m_pts[0][i] <= (coord + NekConstants::kNekZeroTol)) &&
+            (coord <= (m_pts[0][i + 1]+ NekConstants::kNekZeroTol)) )
         {
             NekDouble pdiff = m_pts[0][i + 1] - m_pts[0][i];
             NekDouble h1, h2, h3;

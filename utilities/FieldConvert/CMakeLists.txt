@@ -13,6 +13,7 @@ SET(FieldConvertHeaders
     OutputModules/OutputPts.h
     OutputModules/OutputXml.h
     ProcessModules/ProcessAddFld.h
+    ProcessModules/ProcessAddCompositeID.h
     ProcessModules/ProcessBoundaryExtract.h
     ProcessModules/ProcessCombineAvg.h
     ProcessModules/ProcessConcatenateFld.h
@@ -58,6 +59,7 @@ SET(FieldConvertSources
     OutputModules/OutputPts.cpp
     OutputModules/OutputXml.cpp
     ProcessModules/ProcessAddFld.cpp
+    ProcessModules/ProcessAddCompositeID.cpp
     ProcessModules/ProcessBoundaryExtract.cpp
     ProcessModules/ProcessCombineAvg.cpp
     ProcessModules/ProcessConcatenateFld.cpp

@@ -59,7 +59,6 @@ ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f) : ProcessModule
     m_config["fldtoboundary"] = ConfigOption(true,"NotSet","Extract fld values to boundary");
     m_config["addnormals"] = ConfigOption(true,"NotSet","Add normals to output");
 
-
     f->m_writeBndFld = true;
     f->m_declareExpansionAsContField = true;
 

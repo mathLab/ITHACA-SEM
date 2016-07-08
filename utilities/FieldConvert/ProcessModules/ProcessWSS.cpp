@@ -59,6 +59,7 @@ ProcessWSS::ProcessWSS(FieldSharedPtr f) : ProcessModule(f)
     m_config["addnormals"] = ConfigOption(true,"NotSet","Add normals to output");
     f->m_writeBndFld = true;
     f->m_declareExpansionAsContField = true;
+    f->m_requireBoundaryExpansion = true;
     m_f->m_fldToBnd = false;
 }
 

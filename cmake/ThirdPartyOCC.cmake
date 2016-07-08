@@ -37,8 +37,8 @@ IF(NEKTAR_USE_MESHGEN)
         EXTERNALPROJECT_ADD(
             opencascade-6.9
             PREFIX ${TPSRC}
-            URL http://files.opencascade.com/OCCT/OCC_6.9.0_release/opencascade-6.9.0.tgz
-            URL_MD5 ba87fe9f5ca47e3dfd62aad7223f0e7f
+            URL http://ae-nektar.ae.ic.ac.uk/~dmoxey/OCE-0.17.2.tar.gz
+            URL_MD5 bf2226be4cd192606af677cf178088e5
             STAMP_DIR ${TPBUILD}/stamp
             BINARY_DIR ${TPBUILD}/opencascade-6.9
             DOWNLOAD_DIR ${TPSRC}
@@ -48,21 +48,12 @@ IF(NEKTAR_USE_MESHGEN)
                 -G ${CMAKE_GENERATOR}
                 -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
                 -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
-                -DINSTALL_DIR:PATH=${TPDIST}
-                -DCMAKE_CXX_FLAGS:STRING=-DTIXML_USE_STL
+                -DOCE_INSTALL_PREFIX:PATH=${TPDIST}
+                -DOCE_TESTING=OFF
+                -DOCE_VISUALISATION=OFF
+                -DOCE_DISABLE_X11=ON
                 ${TPSRC}/opencascade-6.9
             )
-
-        IF (APPLE)
-            SET(OCC_LIBDIR ${TPBUILD}/opencascade-6.9/mac64/clang/)
-        ENDIF()
-        
-        EXTERNALPROJECT_ADD_STEP(opencascade-6.9 post-install
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${TPDIST}/lib
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${TPDIST}/include
-            COMMAND ${CMAKE_COMMAND} -E copy_directory ${TPBUILD}/opencascade-6.9/dist/inc ${TPDIST}/include
-            COMMAND ${CMAKE_COMMAND} -E copy_directory ${OCC_LIBDIR} ${TPDIST}/lib
-            DEPENDEES install)
 
         # Patch OS X libraries to fix install name problems.
         #EXTERNALPROJECT_ADD_STEP(opencascade-6.9 patch-install-path
@@ -72,10 +63,11 @@ IF(NEKTAR_USE_MESHGEN)
 
         MESSAGE(STATUS "Build OpenCascade: ${TPDIST}/lib")
         LINK_DIRECTORIES(${TPDIST}/lib)
-        INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include)
+        INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include/oce)
     ELSE()
         ADD_CUSTOM_TARGET(opencascade-6.9 ALL)
         MESSAGE(STATUS "Found OpenCASCADE: ${OCC_LIBRARY_DIR}")
         SET(OPENCASCADE_CONFIG_INCLUDE_DIR ${OCC_INCLUDE_DIR})
+        INCLUDE_DIRECTORIES(SYSTEM ${OCC_INCLUDE_DIR})
     ENDIF()
 ENDIF()

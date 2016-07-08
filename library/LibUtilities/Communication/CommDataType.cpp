@@ -32,7 +32,9 @@
 // Description: Define static members for the different data types
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #include <LibUtilities/Communication/CommDataType.h>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
 {

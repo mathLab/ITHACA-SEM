@@ -111,7 +111,14 @@ typedef boost::shared_ptr<DataSource> DataSourceSharedPtr;
 struct FieldDefinitions
 {
     /// Default constructor
-    FieldDefinitions() {}
+    FieldDefinitions() : m_shapeType(eNoShapeType),
+                         m_numHomogeneousDir(0),
+                         m_homoStrips(false),
+                         m_pointsDef(false),
+                         m_uniOrder(true),
+                         m_numPointsDef(false)
+    {
+    }
 
     /// Simple constructor to allocate all internal properties.
     FieldDefinitions(

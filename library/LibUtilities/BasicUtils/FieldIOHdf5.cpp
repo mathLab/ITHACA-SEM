@@ -972,8 +972,7 @@ void FieldIOHdf5::ImportFieldDef(
     H5::GroupSharedPtr field = root->OpenGroup(group);
     ASSERTL1(field, prfx.str() + "cannot open field group, " + group + '.');
 
-    def->m_homoStrips = false;
-    def->m_uniOrder   = false;
+    def->m_uniOrder = false;
 
     H5::Group::AttrIterator attrIt  = field->attr_begin();
     H5::Group::AttrIterator attrEnd = field->attr_end();

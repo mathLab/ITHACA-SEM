@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessCurve.h
+//  File: ProcessCombineAvg.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,47 +29,48 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: create curved edges using a custom expression y = f(x)
+//  Description: Combines two fld files containing average fields.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_PROCESSPROCESSCURVE
-#define UTILITIES_NEKMESH_PROCESSPROCESSCURVE
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSCOMBINEAVG
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSCOMBINEAVG
 
-#include "ProcessCurvedEdges.h"
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
-#include <LibUtilities/BasicUtils/PtsField.h>
+#include "../Module.h"
 
 namespace Nektar
 {
 namespace Utilities
 {
 
-class ProcessCurve : public ProcessCurvedEdges
+/**
+ * @brief This processing module combines two fld files containing average fields
+ *
+ */
+class ProcessCombineAvg : public ProcessModule
 {
-public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
-    {
-        return MemoryManager<ProcessCurve>::AllocateSharedPtr(m);
-    }
-    static ModuleKey className;
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f)
+        {
+            return MemoryManager<ProcessCombineAvg>::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
 
-    ProcessCurve(MeshSharedPtr m);
-    virtual ~ProcessCurve();
+        ProcessCombineAvg(FieldSharedPtr f);
+        virtual ~ProcessCombineAvg();
 
-protected:
-    void v_GenerateEdgeNodes(EdgeSharedPtr edge);
+        /// Write mesh to output file.
+        virtual void Process(po::variables_map &vm);
 
-private:
-    NekDouble EvaluateCoordinate(NekDouble xCoord);
+        virtual std::string GetModuleName()
+        {
+            return "ProcessCombineAvg";
+        }
 
-    bool                                        m_fromFile;
-    LibUtilities::AnalyticExpressionEvaluator   m_fEval;
-    int                                         m_fExprId;
-    LibUtilities::PtsFieldSharedPtr             m_fieldPts;
-
+    private:
 };
+
 }
 }
 

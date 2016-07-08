@@ -68,6 +68,7 @@ struct Field {
     Field() : m_verbose(false),
               m_declareExpansionAsContField(false),
               m_declareExpansionAsDisContField(false),
+              m_requireBoundaryExpansion(false),
               m_writeBndFld(false),
               m_fldToBnd(false),
               m_addNormals(false),
@@ -88,6 +89,8 @@ struct Field {
 
     bool                                    m_declareExpansionAsContField;
     bool                                    m_declareExpansionAsDisContField;
+
+    bool                                    m_requireBoundaryExpansion;
 
     bool                                    m_useFFT;
 
@@ -156,7 +159,7 @@ struct Field {
                     // Choose points to be at evenly spaced points at
                     // nplanes points
                     const LibUtilities::PointsKey
-                        Pkey(nplanes, LibUtilities::ePolyEvenlySpaced);
+                        Pkey(nplanes, LibUtilities::eFourierEvenlySpaced);
 
                     const LibUtilities::BasisKey Bkey(btype, nplanes, Pkey);
 
@@ -207,11 +210,11 @@ struct Field {
                     // Choose points to be at evenly spaced points at
                     // nplanes points
                     const LibUtilities::PointsKey
-                        PkeyY(nylines, LibUtilities::ePolyEvenlySpaced);
+                        PkeyY(nylines, LibUtilities::eFourierEvenlySpaced);
                     const LibUtilities::BasisKey BkeyY(btype1, nylines, PkeyY);
 
                     const LibUtilities::PointsKey
-                        PkeyZ(nzlines, LibUtilities::ePolyEvenlySpaced);
+                        PkeyZ(nzlines, LibUtilities::eFourierEvenlySpaced);
                     const LibUtilities::BasisKey BkeyZ(btype2, nzlines, PkeyZ);
 
                     if(m_declareExpansionAsContField)
@@ -309,7 +312,7 @@ struct Field {
                     // Choose points to be at evenly spaced points at
                     // nplanes points
                     const LibUtilities::PointsKey
-                        Pkey(nplanes, LibUtilities::ePolyEvenlySpaced);
+                        Pkey(nplanes, LibUtilities::eFourierEvenlySpaced);
 
                     const LibUtilities::BasisKey  Bkey(btype, nplanes, Pkey);
 
@@ -402,7 +405,7 @@ struct Field {
                                                  string var = "DefaultVar",
                                                  bool NewField = false)
     {
-        if(var.compare("DefaultVar") == 0 && m_declareExpansionAsContField)
+        if(var.compare("DefaultVar") == 0 && m_requireBoundaryExpansion)
         {
             if (m_session->GetVariables().size())
             {

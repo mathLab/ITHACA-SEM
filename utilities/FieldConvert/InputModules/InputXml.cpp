@@ -253,6 +253,13 @@ void InputXml::Process(po::variables_map &vm)
             boost::lexical_cast<string>(vm["part-only-overlapping"].as<int>()));
     }
 
+    if(vm.count("npz"))
+    {
+        cmdArgs.push_back("--npz");
+        cmdArgs.push_back(
+            boost::lexical_cast<string>(vm["npz"].as<int>()));
+    }
+
     int argc = cmdArgs.size();
     const char **argv = new const char*[argc];
     for (int i = 0; i < argc; ++i)
@@ -330,10 +337,14 @@ void InputXml::Process(po::variables_map &vm)
         {
             ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
         }
-        
-        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef,
-                           LibUtilities::NullVectorNekDoubleVector,
-                           LibUtilities::NullFieldMetaDataMap,
+
+        m_f->m_fielddef.clear();
+        m_f->m_data.clear();
+
+        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],
+                           m_f->m_fielddef,
+                           m_f->m_data,
+                           m_f->m_fieldMetaDataMap,
                            ElementGIDs);
         NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
 

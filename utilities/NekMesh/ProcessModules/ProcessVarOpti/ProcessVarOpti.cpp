@@ -38,7 +38,6 @@
 #include <NekMeshUtils/MeshElements/Element.h>
 #include "ProcessVarOpti.h"
 #include "NodeOpti.h"
-#include "NodeOptiJob.h"
 #include "ElUtil.h"
 
 #include <boost/thread/mutex.hpp>
@@ -76,8 +75,6 @@ ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(true, "", "Optimise for hyper elasticity");
     m_config["numthreads"] =
         ConfigOption(false, "1", "Number of threads");
-    m_config["stats"] =
-        ConfigOption(false, "", "Write a file with list of scaled jacobians");
     m_config["restol"] =
         ConfigOption(false, "1e-6", "Tolerance criterion");
     m_config["maxiter"] =
@@ -171,10 +168,10 @@ void ProcessVarOpti::Process()
             NekMatrix<NekDouble> Vandermonde = LibUtilities::GetVandermonde(U1,V1);
             NekMatrix<NekDouble> VandermondeI = Vandermonde;
             VandermondeI.Invert();
-            derivUtil->VdmD[0] = interp * (
-              LibUtilities::GetVandermondeForXDerivative(U1,V1) * VandermondeI);
-            derivUtil->VdmD[1] = interp * (
-              LibUtilities::GetVandermondeForYDerivative(U1,V1) * VandermondeI);
+            derivUtil->VdmDL[0] = LibUtilities::GetVandermondeForXDerivative(U1,V1) * VandermondeI;
+            derivUtil->VdmDL[1] = LibUtilities::GetVandermondeForYDerivative(U1,V1) * VandermondeI;
+            derivUtil->VdmD[0] = interp * derivUtil->VdmDL[0];
+            derivUtil->VdmD[1] = interp * derivUtil->VdmDL[1];
             //derivUtil->quadW = LibUtilities::MakeQuadratureWeights(U2,V1);
             Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
             NekVector<NekDouble> quadWi(qds);
@@ -203,12 +200,12 @@ void ProcessVarOpti::Process()
                                 LibUtilities::GetTetVandermonde(U1,V1,W1);
             NekMatrix<NekDouble> VandermondeI = Vandermonde;
             VandermondeI.Invert();
-            derivUtil->VdmD[0] = interp * (
-              LibUtilities::GetVandermondeForTetXDerivative(U1,V1,W1) * VandermondeI);
-            derivUtil->VdmD[1] = interp * (
-              LibUtilities::GetVandermondeForTetYDerivative(U1,V1,W1) * VandermondeI);
-            derivUtil->VdmD[2] = interp * (
-              LibUtilities::GetVandermondeForTetZDerivative(U1,V1,W1) * VandermondeI);
+            derivUtil->VdmDL[0] = LibUtilities::GetVandermondeForTetXDerivative(U1,V1,W1) * VandermondeI;
+            derivUtil->VdmDL[1] = LibUtilities::GetVandermondeForTetYDerivative(U1,V1,W1) * VandermondeI;
+            derivUtil->VdmDL[2] = LibUtilities::GetVandermondeForTetZDerivative(U1,V1,W1) * VandermondeI;
+            derivUtil->VdmD[0] = interp * derivUtil->VdmDL[0];
+            derivUtil->VdmD[1] = interp * derivUtil->VdmDL[1];
+            derivUtil->VdmD[2] = interp * derivUtil->VdmDL[2];
             Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
             NekVector<NekDouble> quadWi(qds);
             derivUtil->quadW = quadWi;
@@ -268,6 +265,13 @@ void ProcessVarOpti::Process()
         mx = max(mx, int(optiNodes[i].size()));
     }
 
+    res->startInv =0;
+    res->worstJac = numeric_limits<double>::max();
+    for(int i = 0; i < dataSet.size(); i++)
+    {
+        dataSet[i]->Evaluate();
+    }
+
     cout << scientific << endl;
     cout << "N elements:\t\t" << m_mesh->m_element[m_mesh->m_expDim].size() << endl
          << "N elements invalid:\t" << res->startInv << endl
@@ -309,7 +313,19 @@ void ProcessVarOpti::Process()
             tm->Wait();
         }
 
-        EvaluateMesh();
+        res->startInv =0;
+        res->worstJac = numeric_limits<double>::max();
+
+        vector<Thread::ThreadJob*> elJobs(dataSet.size());
+        for(int i = 0; i < dataSet.size(); i++)
+        {
+            elJobs[i] = dataSet[i]->GetJob();
+        }
+
+        tm->SetNumWorkers(0);
+        tm->QueueJobs(elJobs);
+        tm->SetNumWorkers(nThreads);
+        tm->Wait();
 
         cout << ctr <<  "\tResidual: " << res->val << " " << res->worstJac << endl;
         if(ctr >= maxIter)
@@ -319,17 +335,8 @@ void ProcessVarOpti::Process()
     t.Stop();
     cout << "Time to compute: " << t.TimePerTest(1) << endl;
 
-    EvaluateMesh();
-
     cout << "Invalid at end:\t\t" << res->startInv << endl;
     cout << "Worst at end:\t\t" << res->worstJac << endl;
-
-    if(m_config["stats"].beenSet)
-    {
-        string file = m_config["stats"].as<string>();
-        cout << "writing stats to " << file.c_str() << endl;
-        WriteStats(file);
-    }
 }
 
 }

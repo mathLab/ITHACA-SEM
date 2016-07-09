@@ -36,24 +36,69 @@
 #ifndef UTILITIES_NEKMESH_PROCESSVAROPTI_ELUTIL
 #define UTILITIES_NEKMESH_PROCESSVAROPTI_ELUTIL
 
+#include "../../Module.h"
+
+#include <LibUtilities/BasicUtils/Thread.h>
+
 namespace Nektar
 {
 namespace Utilities
 {
 
-class ElUtil
+struct DerivUtil;
+struct PtsHelper;
+struct Residual;
+
+typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
+typedef boost::shared_ptr<PtsHelper> PtsHelperSharedPtr;
+typedef boost::shared_ptr<Residual> ResidualSharedPtr;
+
+class ElUtilJob;
+
+class ElUtil : public boost::enable_shared_from_this<ElUtil>
 {
 public:
-    ElUtil(ElementSharedPtr e)
+    ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d, PtsHelperSharedPtr p,
+           ResidualSharedPtr, int n);
+
+    ElUtilJob *GetJob();
+
+    int GetId()
+    {
+        return m_el->GetId();
+    }
+
+    std::vector<std::vector<NekDouble *> > nodes;
+    std::vector<Array<OneD, NekDouble> > maps;
+
+    void Evaluate();
 
 private:
-    ElementSharedPtr m_el;
-    std::vector<std::vector<NekDouble *> > m_nodes;
-    std::vector<Array<OneD, NekDouble> > m_maps;
-    int m_dim;
-};
 
+    std::vector<Array<OneD, NekDouble> > MappingIdealToRef();
+
+    ElementSharedPtr m_el;
+    int m_dim;
+    int m_mode;
+
+    DerivUtilSharedPtr derivUtil;
+    PtsHelperSharedPtr ptsHelp;
+    ResidualSharedPtr res;
+};
 typedef boost::shared_ptr<ElUtil> ElUtilSharedPtr;
+
+class ElUtilJob : public Thread::ThreadJob
+{
+public:
+    ElUtilJob(ElUtil* e) : el(e) {}
+
+    void Run()
+    {
+        el->Evaluate();
+    }
+private:
+    ElUtil* el;
+};
 
 }
 }

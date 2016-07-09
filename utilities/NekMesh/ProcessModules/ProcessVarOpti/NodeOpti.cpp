@@ -34,7 +34,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "NodeOpti.h"
-#include "NodeOptiJob.h"
 
 using namespace std;
 using namespace Nektar::NekMeshUtils;

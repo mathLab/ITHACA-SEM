@@ -38,6 +38,8 @@
 
 #include "../../Module.h"
 
+#include "ElUtil.h"
+
 namespace Nektar
 {
 namespace Utilities
@@ -46,6 +48,7 @@ namespace Utilities
 struct DerivUtil
 {
     NekMatrix<NekDouble> VdmD[3];
+    NekMatrix<NekDouble> VdmDL[3]; //deriv matrix without interp
     NekVector<NekDouble> quadW;
 };
 typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
@@ -98,8 +101,6 @@ private:
     void GetElementMap();
     std::vector<Array<OneD, NekDouble> > MappingIdealToRef(ElementSharedPtr el);
     std::vector<std::vector<NodeSharedPtr> > GetColouredNodes();
-    void WriteStats(std::string file);
-    void EvaluateMesh();
 
     NodeElMap nodeElMap;
     std::vector<ElUtilSharedPtr> dataSet;

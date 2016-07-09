@@ -35,11 +35,6 @@
 
 #include "ProcessVarOpti.h"
 
-#include <StdRegions/StdTriExp.h>
-#include <StdRegions/StdQuadExp.h>
-#include <StdRegions/StdTetExp.h>
-#include <StdRegions/StdPrismExp.h>
-
 #include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
@@ -230,7 +225,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
             bool islocked = false;
             for(int j = 0; j < it->second.size(); j++)
             {
-                set<int>::iterator sit = locked.find(it->second[j]->el->GetId());
+                set<int>::iterator sit = locked.find(it->second[j]->GetId());
                 if(sit != locked.end())
                 {
                     islocked = true;
@@ -243,7 +238,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
                 completed.insert(remain[i]->m_id);
                 for(int j = 0; j < it->second.size(); j++)
                 {
-                    locked.insert(it->second[j]->el->GetId());
+                    locked.insert(it->second[j]->GetId());
                 }
             }
         }
@@ -270,7 +265,8 @@ void ProcessVarOpti::GetElementMap()
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
         vector<NodeSharedPtr> ns;
         el->GetCurvedNodes(ns);
-        ElUtilSharedPtr d = boost::shared_ptr<ElUtil>(new ElUtil(el));
+        ElUtilSharedPtr d = boost::shared_ptr<ElUtil>(new ElUtil(el, derivUtil,
+                                    ptsHelp, res, m_mesh->m_nummode));
         dataSet.push_back(d);
     }
 
@@ -539,208 +535,6 @@ void ProcessVarOpti::FillQuadPoints()
             el->SetVolumeNodes(hons);
             el->SetCurveType(LibUtilities::eNodalTetElec);
         }
-    }
-
-    EvaluateMesh();
-}
-
-void ProcessVarOpti::EvaluateMesh()
-{
-    res->startInv =0;
-    res->worstJac = numeric_limits<double>::max();
-
-    if(m_mesh->m_expDim == 2)
-    {
-        LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
-                                      LibUtilities::eNodalTriElec);
-        Array<OneD, NekDouble> u1, v1;
-
-        LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
-
-        NekVector<NekDouble> U1(u1), V1(v1);
-
-        NekMatrix<NekDouble> Vandermonde = LibUtilities::GetVandermonde(U1,V1);
-        NekMatrix<NekDouble> VandermondeI = Vandermonde;
-        VandermondeI.Invert();
-        NekMatrix<NekDouble> VdmDxt =  (
-          LibUtilities::GetVandermondeForXDerivative(U1,V1) * VandermondeI);
-        NekMatrix<NekDouble> VdmDyt =  (
-          LibUtilities::GetVandermondeForYDerivative(U1,V1) * VandermondeI);
-
-
-
-        for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
-        {
-            ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
-
-            vector<NodeSharedPtr> ns;
-            el->GetCurvedNodes(ns);
-
-            NekDouble mx = -1.0 * numeric_limits<double>::max();
-            NekDouble mn =  numeric_limits<double>::max();
-
-
-            NekVector<NekDouble> X(u1.num_elements()),Y(u1.num_elements());
-            for(int j = 0; j < u1.num_elements(); j++)
-            {
-                X(j) = ns[j]->m_x;
-                Y(j) = ns[j]->m_y;
-            }
-
-            NekVector<NekDouble> x1i(u1.num_elements()),y1i(u1.num_elements()),
-                                 x2i(u1.num_elements()),y2i(u1.num_elements());
-
-            x1i = VdmDxt*X;
-            y1i = VdmDxt*Y;
-            x2i = VdmDyt*X;
-            y2i = VdmDyt*Y;
-
-            for(int j = 0; j < u1.num_elements(); j++)
-            {
-                NekDouble jacDet = x1i(j) * y2i(j) - x2i(j)*y1i(j);
-                mx = max(mx,jacDet);
-                mn = min(mn,jacDet);
-            }
-
-            if(mn < 0)
-            {
-                res->startInv++;
-            }
-            res->worstJac = min(res->worstJac,mn/mx);
-        }
-    }
-    else
-    {
-        LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
-                                      LibUtilities::eNodalTetElec);
-        Array<OneD, NekDouble> u1, v1,w1;
-
-        LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1,w1);
-
-        NekVector<NekDouble> U1(u1), V1(v1), W1(w1);
-
-        NekMatrix<NekDouble> Vandermonde = LibUtilities::GetTetVandermonde(U1,V1,W1);
-        NekMatrix<NekDouble> VandermondeI = Vandermonde;
-        VandermondeI.Invert();
-        NekMatrix<NekDouble> VdmDxt =  (
-          LibUtilities::GetVandermondeForTetXDerivative(U1,V1,W1) * VandermondeI);
-        NekMatrix<NekDouble> VdmDyt =  (
-          LibUtilities::GetVandermondeForTetYDerivative(U1,V1,W1) * VandermondeI);
-        NekMatrix<NekDouble> VdmDzt =  (
-          LibUtilities::GetVandermondeForTetZDerivative(U1,V1,W1) * VandermondeI);
-
-        for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
-        {
-            ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
-
-            vector<NodeSharedPtr> ns;
-            el->GetCurvedNodes(ns);
-
-            NekDouble mx = -1.0 * numeric_limits<double>::max();
-            NekDouble mn =  numeric_limits<double>::max();
-
-            NekVector<NekDouble> X(u1.num_elements()),Y(u1.num_elements()),Z(u1.num_elements());
-            for(int j = 0; j < u1.num_elements(); j++)
-            {
-                X(j) = ns[j]->m_x;
-                Y(j) = ns[j]->m_y;
-                Z(j) = ns[j]->m_z;
-            }
-
-            NekVector<NekDouble> x1i(u1.num_elements()),y1i(u1.num_elements()),z1i(u1.num_elements()),
-                                 x2i(u1.num_elements()),y2i(u1.num_elements()),z2i(u1.num_elements()),
-                                 x3i(u1.num_elements()),y3i(u1.num_elements()),z3i(u1.num_elements());
-
-            x1i = VdmDxt*X;
-            y1i = VdmDxt*Y;
-            z1i = VdmDxt*Z;
-            x2i = VdmDyt*X;
-            y2i = VdmDyt*Y;
-            z2i = VdmDyt*Z;
-            x3i = VdmDzt*X;
-            y3i = VdmDzt*Y;
-            z3i = VdmDzt*Z;
-
-            for(int j = 0; j < u1.num_elements(); j++)
-            {
-
-                DNekMat dxdz(3,3,1.0,eFULL);
-                dxdz(0,0) = x1i(j);
-                dxdz(0,1) = x2i(j);
-                dxdz(0,2) = x3i(j);
-                dxdz(1,0) = y1i(j);
-                dxdz(1,1) = y2i(j);
-                dxdz(1,2) = y3i(j);
-                dxdz(2,0) = z1i(j);
-                dxdz(2,1) = z2i(j);
-                dxdz(2,2) = z3i(j);
-
-                NekDouble jacDet = dxdz(0,0)*(dxdz(1,1)*dxdz(2,2)-dxdz(2,1)*dxdz(1,2))
-                       -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
-                       +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
-
-                mx = max(mx,jacDet);
-                mn = min(mn,jacDet);
-            }
-
-
-
-            if(mn < 0)
-            {
-                res->startInv++;
-            }
-
-            res->worstJac = min(res->worstJac,mn/mx);
-        }
-    }
-}
-
-void ProcessVarOpti::WriteStats(string file)
-{
-    ASSERTL0(file != "", "no file name given");
-
-    ofstream out;
-    out.open(file.c_str());
-    out << scientific;
-
-    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
-    {
-        vector<NodeSharedPtr> ns;
-        m_mesh->m_element[m_mesh->m_expDim][i]->GetCurvedNodes(ns);
-        int pts = ns.size();
-        int dim = m_mesh->m_element[m_mesh->m_expDim][i]->GetDim();
-
-        NekDouble mx = -1.0 * numeric_limits<double>::max();
-        NekDouble mn = numeric_limits<double>::max();
-
-        if(dim == 2)
-        {
-            NekVector<NekDouble> X(pts),Y(pts),Z(pts),
-                                 x1(pts),y1(pts),
-                                 x2(pts),y2(pts);
-            for(int i = 0; i < pts; i++)
-            {
-                X(i) = ns[i]->m_x;
-                Y(i) = ns[i]->m_y;
-            }
-
-            x1 = derivUtil->VdmD[0]*X;
-            y1 = derivUtil->VdmD[0]*Y;
-            x2 = derivUtil->VdmD[0]*X;
-            y2 = derivUtil->VdmD[0]*Y;
-
-            for(int i = 0; i < pts; i++)
-            {
-                mx = max(mx, x1(i)*y2(i)-y1(i)*x2(i));
-                mn = min(mn, x1(i)*y2(i)-y1(i)*x2(i));
-            }
-
-        }
-        else
-        {
-            ASSERTL0(false,"not coded");
-        }
-        out << mn / mx << endl;
     }
 }
 

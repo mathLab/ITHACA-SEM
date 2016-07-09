@@ -34,6 +34,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "ElUtil.h"
+#include "ProcessVarOpti.h"
+
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 using namespace std;
 
@@ -42,14 +45,21 @@ namespace Nektar
 namespace Utilities
 {
 
-ElUtil::ElUtil(ElementSharedPtr e)
+boost::mutex mtx2;
+
+ElUtil::ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d, PtsHelperSharedPtr p,
+               ResidualSharedPtr r, int n)
 {
-    m_el = el;
+    m_el = e;
+    derivUtil = d;
+    ptsHelp = p;
+    res = r;
+    m_mode = n;
     m_dim = m_el->GetDim();
-    m_maps = MappingIdealToRef();
-    m_nodes.resize(innodes.size());
+    maps = MappingIdealToRef();
     vector<NodeSharedPtr> ns;
     m_el->GetCurvedNodes(ns);
+    nodes.resize(ns.size());
     for (int i = 0; i < ns.size(); ++i)
     {
         nodes[i].resize(m_dim);
@@ -78,7 +88,7 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
 
     ElementSharedPtr E = GetElementFactory().CreateInstance(
                             ec.m_e, ec, m_el->GetVertexList(),
-                            el->GetTagList());
+                            m_el->GetTagList());
 
     SpatialDomains::GeometrySharedPtr    geom = E->GetGeom(m_dim);
     geom->FillGeom();
@@ -130,7 +140,7 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
     }
     else if(geom->GetShapeType() == LibUtilities::eTriangle)
     {
-        LibUtilities::PointsKey pkey(m_mesh->m_nummode,
+        LibUtilities::PointsKey pkey(m_mode,
                                      LibUtilities::eNodalTriElec);
         Array<OneD, NekDouble> u, v;
         LibUtilities::PointsManager()[pkey]->GetPoints(u, v);
@@ -185,7 +195,7 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
     }
     else if(geom->GetShapeType() == LibUtilities::eTetrahedron)
     {
-        LibUtilities::PointsKey pkey(m_mesh->m_nummode,
+        LibUtilities::PointsKey pkey(m_mode,
                                      LibUtilities::eNodalTetElec);
         Array<OneD, NekDouble> u, v, w;
         LibUtilities::PointsManager()[pkey]->GetPoints(u, v, w);
@@ -327,6 +337,95 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
     }
 
     return ret;
+}
+
+void ElUtil::Evaluate()
+{
+    NekDouble mx = -1.0 * numeric_limits<double>::max();
+    NekDouble mn =  numeric_limits<double>::max();
+
+    if(m_dim == 2)
+    {
+        NekVector<NekDouble> X(nodes.size()),Y(nodes.size());
+        for(int j = 0; j < nodes.size(); j++)
+        {
+            X(j) = *nodes[j][0];
+            Y(j) = *nodes[j][1];
+        }
+
+        NekVector<NekDouble> x1i(nodes.size()),y1i(nodes.size()),
+                             x2i(nodes.size()),y2i(nodes.size());
+
+        x1i = derivUtil->VdmDL[0]*X;
+        y1i = derivUtil->VdmDL[0]*Y;
+        x2i = derivUtil->VdmDL[1]*X;
+        y2i = derivUtil->VdmDL[1]*Y;
+
+        for(int j = 0; j < nodes.size(); j++)
+        {
+            NekDouble jacDet = x1i(j) * y2i(j) - x2i(j)*y1i(j);
+            mx = max(mx,jacDet);
+            mn = min(mn,jacDet);
+        }
+    }
+    else if(m_dim == 3)
+    {
+        NekVector<NekDouble> X(nodes.size()),Y(nodes.size()),Z(nodes.size());
+        for(int j = 0; j < nodes.size(); j++)
+        {
+            X(j) = *nodes[j][0];
+            Y(j) = *nodes[j][1];
+            Z(j) = *nodes[j][2];
+        }
+
+        NekVector<NekDouble> x1i(nodes.size()),y1i(nodes.size()),z1i(nodes.size()),
+                             x2i(nodes.size()),y2i(nodes.size()),z2i(nodes.size()),
+                             x3i(nodes.size()),y3i(nodes.size()),z3i(nodes.size());
+
+        x1i = derivUtil->VdmDL[0]*X;
+        y1i = derivUtil->VdmDL[0]*Y;
+        z1i = derivUtil->VdmDL[0]*Z;
+        x2i = derivUtil->VdmDL[1]*X;
+        y2i = derivUtil->VdmDL[1]*Y;
+        z2i = derivUtil->VdmDL[1]*Z;
+        x3i = derivUtil->VdmDL[2]*X;
+        y3i = derivUtil->VdmDL[2]*Y;
+        z3i = derivUtil->VdmDL[2]*Z;
+
+        for(int j = 0; j < nodes.size(); j++)
+        {
+            DNekMat dxdz(3,3,1.0,eFULL);
+            dxdz(0,0) = x1i(j);
+            dxdz(0,1) = x2i(j);
+            dxdz(0,2) = x3i(j);
+            dxdz(1,0) = y1i(j);
+            dxdz(1,1) = y2i(j);
+            dxdz(1,2) = y3i(j);
+            dxdz(2,0) = z1i(j);
+            dxdz(2,1) = z2i(j);
+            dxdz(2,2) = z3i(j);
+
+            NekDouble jacDet = dxdz(0,0)*(dxdz(1,1)*dxdz(2,2)-dxdz(2,1)*dxdz(1,2))
+                   -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
+                   +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
+
+            mx = max(mx,jacDet);
+            mn = min(mn,jacDet);
+        }
+    }
+
+    mtx2.lock();
+    if(mn < 0)
+    {
+        res->startInv++;
+    }
+    res->worstJac = min(res->worstJac,mn/mx);
+    mtx2.unlock();
+}
+
+ElUtilJob* ElUtil::GetJob()
+{
+    return new ElUtilJob(this);
 }
 
 }

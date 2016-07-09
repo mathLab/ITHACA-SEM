@@ -33,82 +33,27 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_PROCESSVAROPTI
-#define UTILITIES_NEKMESH_PROCESSVAROPTI
-
-#include "../../Module.h"
+#ifndef UTILITIES_NEKMESH_PROCESSVAROPTI_ELUTIL
+#define UTILITIES_NEKMESH_PROCESSVAROPTI_ELUTIL
 
 namespace Nektar
 {
 namespace Utilities
 {
 
-struct DerivUtil
-{
-    NekMatrix<NekDouble> VdmD[3];
-    NekVector<NekDouble> quadW;
-};
-typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
-
-struct PtsHelper
-{
-    int ptsHigh;
-    int ptsLow;
-};
-typedef boost::shared_ptr<PtsHelper> PtsHelperSharedPtr;
-
-enum optimiser
-{
-    eLinEl,
-    eWins,
-    eRoca,
-    eHypEl
-};
-
-struct Residual
-{
-    NekDouble val;
-    int n;
-    int nDoF;
-    int startInv;
-    NekDouble worstJac;
-};
-
-typedef boost::shared_ptr<Residual> ResidualSharedPtr;
-
-class ProcessVarOpti : public ProcessModule
+class ElUtil
 {
 public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
-    {
-        return MemoryManager<ProcessVarOpti>::AllocateSharedPtr(m);
-    }
-    static ModuleKey className;
+    ElUtil(ElementSharedPtr e)
 
-    ProcessVarOpti(MeshSharedPtr m);
-    virtual ~ProcessVarOpti();
-
-    /// Write mesh to output file.
-    virtual void Process();
 private:
-    typedef std::map<int, std::vector<ElUtilSharedPtr> > NodeElMap;
-
-    void FillQuadPoints();
-    void GetElementMap();
-    std::vector<Array<OneD, NekDouble> > MappingIdealToRef(ElementSharedPtr el);
-    std::vector<std::vector<NodeSharedPtr> > GetColouredNodes();
-    void WriteStats(std::string file);
-    void EvaluateMesh();
-
-    NodeElMap nodeElMap;
-    std::vector<ElUtilSharedPtr> dataSet;
-
-    ResidualSharedPtr res;
-    DerivUtilSharedPtr derivUtil;
-    PtsHelperSharedPtr ptsHelp;
-    optimiser opti;
+    ElementSharedPtr m_el;
+    std::vector<std::vector<NekDouble *> > m_nodes;
+    std::vector<Array<OneD, NekDouble> > m_maps;
+    int m_dim;
 };
+
+typedef boost::shared_ptr<ElUtil> ElUtilSharedPtr;
 
 }
 }

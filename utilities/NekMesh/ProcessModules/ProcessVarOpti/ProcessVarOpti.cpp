@@ -39,6 +39,7 @@
 #include "ProcessVarOpti.h"
 #include "NodeOpti.h"
 #include "NodeOptiJob.h"
+#include "ElUtil.h"
 
 #include <boost/thread/mutex.hpp>
 

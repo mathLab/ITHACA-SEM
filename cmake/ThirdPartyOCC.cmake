@@ -33,7 +33,7 @@ IF(NEKTAR_USE_MESHGEN)
           TKSTL
           TKShHealing
           TKXSBase
-          TKBin
+          TKBinL
           TKBool
           TKBO
           TKBRep

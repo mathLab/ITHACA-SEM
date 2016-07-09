@@ -146,7 +146,7 @@ namespace Nektar
             }
             else
             {
-                SolveLinearSystem(nDirDofs, pInput, pOutput, pLocToGloMap);
+                SolveLinearSystem(nGlobDofs, pInput, pOutput, pLocToGloMap, nDirDofs);
             }
         }
 

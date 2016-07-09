@@ -79,6 +79,7 @@ int CommDataTypeGetSize(CommDataType dt)
         default:
             ASSERTL0(false, "Unrecognised datatype!");
     }
+    return sizeof(void);
 #endif
 }
 

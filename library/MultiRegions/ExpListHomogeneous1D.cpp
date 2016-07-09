@@ -169,16 +169,16 @@ namespace Nektar
         
         /**
          * Dealiasing routine
+         *
+         * @param inarray1  First term of the product
+         * @param inarray2  Second term of the product
+         * @param outarray  Dealiased product
          */
         void ExpListHomogeneous1D::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
                                                    const Array<OneD, NekDouble> &inarray2,
                                                    Array<OneD, NekDouble> &outarray, 
                                                    CoeffState coeffstate)
         {
-            // inarray1 = first term of the product
-            // inarray2 = second term of the product
-            // dealiased product stored in outarray
-
             int num_dofs = inarray1.num_elements();
             int N = m_homogeneousBasis->GetNumPoints();
 
@@ -267,17 +267,21 @@ namespace Nektar
             }
         }
 
+        /**
+         * Dealiasing routine for dot product
+         *
+         * @param inarray1  First term of the product with dimension ndim
+         *                  (e.g. U)
+         * @param inarray2  Second term of the product with dimension ndim*nvec
+         *                  (e.g. grad U)
+         * @param outarray  Dealiased product with dimension nvec
+         */
         void ExpListHomogeneous1D::v_DealiasedDotProd(
                         const Array<OneD, Array<OneD, NekDouble> > &inarray1,
                         const Array<OneD, Array<OneD, NekDouble> > &inarray2,
                         Array<OneD, Array<OneD, NekDouble> > &outarray,
                         CoeffState coeffstate)
         {
-            // inarray1 = first term of the product
-            //            with dimension ndim (e.g. U)
-            // inarray2 = second term of the product
-            //            with dimension ndim*nvec (e.g. grad U)
-            // dealiased product stored in outarray with dimension nvec
             int ndim = inarray1.num_elements();
             ASSERTL1( inarray2.num_elements() % ndim == 0,
                      "Wrong dimensions for DealiasedDotProd.");

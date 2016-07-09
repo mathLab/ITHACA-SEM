@@ -188,12 +188,14 @@ namespace Nektar
                         this_rank_participates);
 
                 ASSERTL0(bool(comm_region) == bool(this_rank_participates),
-                        "Rank should be in communicator but wasn't or is in communicator but shouldn't be.");
+                         "Rank should be in communicator but wasn't or is in "
+                         "communicator but shouldn't be.");
 
                 if (this_rank_participates)
+                {
                     m_boundaryCommunicators[reg_it->first] = comm_region;
+                }
             }
-
         }
 
         /**

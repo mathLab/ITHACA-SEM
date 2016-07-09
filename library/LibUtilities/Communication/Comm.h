@@ -63,7 +63,7 @@ namespace Nektar
 
         LIB_UTILITIES_EXPORT CommFactory& GetCommFactory();
 
-		/// Type of operation to perform in AllReduce.
+        /// Type of operation to perform in AllReduce.
         enum ReduceOperator
         {
             ReduceSum,
@@ -87,9 +87,9 @@ namespace Nektar
 
                 /// Block execution until all processes reach this point
                 LIB_UTILITIES_EXPORT inline void Block();
-		
-		/// Return the time in seconds
-		LIB_UTILITIES_EXPORT inline double Wtime();
+
+                /// Return the time in seconds
+                LIB_UTILITIES_EXPORT inline NekDouble Wtime();
 
                 template<class T>
                 void Send(int pProc, T& pData);
@@ -113,7 +113,7 @@ namespace Nektar
                         Array<OneD, T>& pRecvData,
                         Array<OneD, int>& pRecvDataSizeMap,
                         Array<OneD, int>& pRecvDataOffsetMap);
-                
+
                 template<class T>
                 void Bcast(T& data, int rootProc);
 
@@ -146,7 +146,7 @@ namespace Nektar
                 virtual void v_Finalise() = 0;
                 virtual int  v_GetRank() = 0;
                 virtual void v_Block() = 0;
-		virtual double v_Wtime() = 0;
+                virtual NekDouble v_Wtime() = 0;
                 virtual void v_Send(void* buf, int count, CommDataType dt, int dest) = 0;
                 virtual void v_Recv(void* buf, int count, CommDataType dt, int source) = 0;
                 virtual void v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
@@ -214,7 +214,7 @@ namespace Nektar
             v_Block();
         }
 
-	/**
+        /**
          *
          */
         inline double Comm::Wtime()
@@ -258,8 +258,8 @@ namespace Nektar
                        CommDataTypeTraits<T>::GetDataType(),
                        pRecvProc);
         }
-		
-		/**
+
+        /**
          *
          */
         template <class T>
@@ -272,7 +272,7 @@ namespace Nektar
                     CommDataTypeTraits<T>::GetDataType(),
                     pSendProc, pRecvProc);
         }
-		
+
         /**
          *
          */
@@ -306,8 +306,8 @@ namespace Nektar
                        count,
                        CommDataTypeTraits<T>::GetDataType());
         }
-		
-		/**
+
+        /**
          *
          */
         template<class T>
@@ -327,17 +327,18 @@ namespace Nektar
                         pRecvDataOffsetMap.get(),
                         CommDataTypeTraits<T>::GetDataType());
         }
+
         /**
          *
          */
-		template<class T>
-		void Comm::Bcast(T& pData, int pRoot)
-		{
-		    v_Bcast(CommDataTypeTraits<T>::GetPointer(pData),
-		            CommDataTypeTraits<T>::GetCount(pData),
-		            CommDataTypeTraits<T>::GetDataType(),
-		            pRoot);
-		}
+        template<class T>
+        void Comm::Bcast(T& pData, int pRoot)
+        {
+            v_Bcast(CommDataTypeTraits<T>::GetPointer(pData),
+                    CommDataTypeTraits<T>::GetCount(pData),
+                    CommDataTypeTraits<T>::GetDataType(),
+                    pRoot);
+        }
 
         template<class T>
         void Comm::Exscan(T& pData, const enum ReduceOperator pOp, T& ans)
@@ -392,13 +393,13 @@ namespace Nektar
             return ans;
         }
 
-		/**
-		 * @brief If the flag is non-zero create a new communicator.
-		 */
-		inline CommSharedPtr Comm::CommCreateIf(int flag)
-		{
-		    return v_CommCreateIf(flag);
-		}
+        /**
+         * @brief If the flag is non-zero create a new communicator.
+         */
+        inline CommSharedPtr Comm::CommCreateIf(int flag)
+        {
+            return v_CommCreateIf(flag);
+        }
 
         /**
          * @brief Splits this communicator into a grid of size pRows*pColumns

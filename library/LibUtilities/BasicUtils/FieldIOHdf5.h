@@ -196,7 +196,9 @@ public:
     /// Name of class
     LIB_UTILITIES_EXPORT static std::string className;
 
-    FieldIOHdf5(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem);
+    LIB_UTILITIES_EXPORT FieldIOHdf5(
+        LibUtilities::CommSharedPtr pComm,
+        bool sharedFilesystem);
 
     /// Get class name
     inline virtual const std::string &GetClassName() const

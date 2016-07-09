@@ -32,124 +32,131 @@
 // Description: Describes data types (using MPI_Datatype if available)
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_LIB_UTILITIES_COMMDATATYPE_H
 #define NEKTAR_LIB_UTILITIES_COMMDATATYPE_H
 
-#include <vector>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <vector>
 
 #ifdef NEKTAR_USE_MPI
 #include <mpi.h>
 
 namespace Nektar
 {
-    namespace LibUtilities
-    {
-        typedef MPI_Datatype CommDataType;
-    }
+namespace LibUtilities
+{
+typedef MPI_Datatype CommDataType;
 }
+}
+
 #else
 
 namespace Nektar
 {
-    namespace LibUtilities
-    {
-        enum CommDataType
-        {
-            MPI_INT, MPI_UNSIGNED,
-            MPI_LONG, MPI_UNSIGNED_LONG,
-            MPI_LONG_LONG, MPI_UNSIGNED_LONG_LONG,
-            MPI_FLOAT, MPI_DOUBLE, MPI_LONG_DOUBLE
-        };
-    }
+namespace LibUtilities
+{
+enum CommDataType
+{
+    MPI_INT,
+    MPI_UNSIGNED,
+    MPI_LONG,
+    MPI_UNSIGNED_LONG,
+    MPI_LONG_LONG,
+    MPI_UNSIGNED_LONG_LONG,
+    MPI_FLOAT,
+    MPI_DOUBLE,
+    MPI_LONG_DOUBLE
+};
+}
 }
 #endif
 
 namespace Nektar
 {
-    template<typename Dim, typename DataType> class Array;
+template <typename Dim, typename DataType> class Array;
 
-    namespace LibUtilities
+namespace LibUtilities
+{
+int CommDataTypeGetSize(CommDataType);
+
+LIB_UTILITIES_EXPORT template <class T> class CommDataTypeTraits
+{
+    static CommDataType type;
+
+public:
+    static CommDataType &GetDataType()
     {
-        int CommDataTypeGetSize(CommDataType);
-
-        template<class T>
-        class CommDataTypeTraits
-        {
-                static CommDataType type;
-            public:
-                static CommDataType& GetDataType()
-                {
-                    return type;
-                }
-                static void* GetPointer(T& val)
-                {
-                    return &val;
-                }
-                static const void* GetPointer(const T& val)
-                {
-                    return &val;
-                }
-                static int GetCount(const T& val)
-                {
-                    return 1;
-                }
-
-                const static bool IsVector = false;
-        };
-
-        /**
-         * Partial specialisation for vectors
-         */
-        template<class elemT>
-        class CommDataTypeTraits<std::vector<elemT> >
-        {
-            public:
-                static CommDataType& GetDataType()
-                {
-                    return CommDataTypeTraits<elemT>::GetDataType();
-                }
-                static void* GetPointer(std::vector<elemT>& val)
-                {
-                    return &val[0];
-                }
-                static const void* GetPointer(const std::vector<elemT>& val)
-                {
-                    return &val[0];
-                }
-                static int GetCount(const std::vector<elemT>& val)
-                {
-                    return val.size();
-                }
-                const static bool IsVector = true;
-        };
-
-        /**
-         * Partial specialisation for vectors
-         */
-        template<class elemT>
-        class CommDataTypeTraits<Array<OneD, elemT> >
-        {
-            public:
-                static CommDataType& GetDataType()
-                {
-                    return CommDataTypeTraits<elemT>::GetDataType();
-                }
-                static void* GetPointer(Array<OneD, elemT>& val)
-                {
-                    return val.get();
-                }
-                static const void* GetPointer(const Array<OneD, elemT>& val)
-                {
-                    return val.get();
-                }
-                static int GetCount(const Array<OneD, elemT>& val)
-                {
-                    return val.num_elements();
-                }
-                const static bool IsVector = true;
-        };
+        return type;
     }
+    static void *GetPointer(T &val)
+    {
+        return &val;
+    }
+    static const void *GetPointer(const T &val)
+    {
+        return &val;
+    }
+    static int GetCount(const T &val)
+    {
+        return 1;
+    }
+
+    const static bool IsVector = false;
+};
+
+/**
+ * Partial specialisation for vectors
+ */
+LIB_UTILITIES_EXPORT template <class elemT>
+class CommDataTypeTraits<std::vector<elemT> >
+{
+public:
+    static CommDataType &GetDataType()
+    {
+        return CommDataTypeTraits<elemT>::GetDataType();
+    }
+    static void *GetPointer(std::vector<elemT> &val)
+    {
+        return &val[0];
+    }
+    static const void *GetPointer(const std::vector<elemT> &val)
+    {
+        return &val[0];
+    }
+    static int GetCount(const std::vector<elemT> &val)
+    {
+        return val.size();
+    }
+    const static bool IsVector = true;
+};
+
+/**
+ * Partial specialisation for vectors
+ */
+LIB_UTILITIES_EXPORT template <class elemT>
+class CommDataTypeTraits<Array<OneD, elemT> >
+{
+public:
+    static CommDataType &GetDataType()
+    {
+        return CommDataTypeTraits<elemT>::GetDataType();
+    }
+    static void *GetPointer(Array<OneD, elemT> &val)
+    {
+        return val.get();
+    }
+    static const void *GetPointer(const Array<OneD, elemT> &val)
+    {
+        return val.get();
+    }
+    static int GetCount(const Array<OneD, elemT> &val)
+    {
+        return val.num_elements();
+    }
+    const static bool IsVector = true;
+};
+}
 }
 
 #endif

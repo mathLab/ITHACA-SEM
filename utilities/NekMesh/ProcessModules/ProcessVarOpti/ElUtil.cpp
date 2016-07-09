@@ -56,7 +56,6 @@ ElUtil::ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d, PtsHelperSharedPtr p,
     res = r;
     m_mode = n;
     m_dim = m_el->GetDim();
-    maps = MappingIdealToRef();
     vector<NodeSharedPtr> ns;
     m_el->GetCurvedNodes(ns);
     nodes.resize(ns.size());
@@ -420,6 +419,10 @@ void ElUtil::Evaluate()
         res->startInv++;
     }
     res->worstJac = min(res->worstJac,mn/mx);
+    mtx2.unlock();
+
+    mtx2.lock();
+    maps = MappingIdealToRef();
     mtx2.unlock();
 }
 

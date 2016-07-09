@@ -327,7 +327,7 @@ void ProcessVarOpti::Process()
         tm->SetNumWorkers(nThreads);
         tm->Wait();
 
-        cout << ctr <<  "\tResidual: " << res->val << " " << res->worstJac << endl;
+        cout << ctr <<  "\tResidual: " << res->val << " " << res->worstJac << " " << res->startInv << endl;
         if(ctr >= maxIter)
             break;
     }

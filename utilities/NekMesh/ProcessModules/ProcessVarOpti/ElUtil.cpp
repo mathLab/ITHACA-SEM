@@ -74,12 +74,13 @@ ElUtil::ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d, PtsHelperSharedPtr p,
             nodes[i][2] = &ns[i]->m_z;
         }
     }
+    maps = MappingIdealToRef();
 }
 
 vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
 {
     //need to make ideal element out of old element
-    ElmtConfig ec = m_el->GetConf();
+    /*ElmtConfig ec = m_el->GetConf();
     ec.m_order  = 1;
     ec.m_faceNodes = false;
     ec.m_volumeNodes = false;
@@ -91,11 +92,11 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
 
     SpatialDomains::GeometrySharedPtr    geom = E->GetGeom(m_dim);
     geom->FillGeom();
-    StdRegions::StdExpansionSharedPtr    chi  = geom->GetXmap();
+    StdRegions::StdExpansionSharedPtr    chi  = geom->GetXmap();*/
 
     vector<Array<OneD, NekDouble> > ret;
 
-    if(geom->GetShapeType() == LibUtilities::eQuadrilateral)
+    if(m_el->GetConf().m_e == LibUtilities::eQuadrilateral)
     {
         ASSERTL0(false,"Not coded");
         /*vector<Array<OneD, NekDouble> > xy;
@@ -137,9 +138,9 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             }
         }*/
     }
-    else if(geom->GetShapeType() == LibUtilities::eTriangle)
+    else if(m_el->GetConf().m_e == LibUtilities::eTriangle)
     {
-        LibUtilities::PointsKey pkey(m_mode,
+        /*LibUtilities::PointsKey pkey(m_mode,
                                      LibUtilities::eNodalTriElec);
         Array<OneD, NekDouble> u, v;
         LibUtilities::PointsManager()[pkey]->GetPoints(u, v);
@@ -190,88 +191,51 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             r[3] = dxdz(0,1);
             r[4] = dxdz(1,1);
             ret.push_back(r);
-        }
+        }*/
     }
-    else if(geom->GetShapeType() == LibUtilities::eTetrahedron)
+    else if(m_el->GetConf().m_e == LibUtilities::eTetrahedron)
     {
-        LibUtilities::PointsKey pkey(m_mode,
-                                     LibUtilities::eNodalTetElec);
-        Array<OneD, NekDouble> u, v, w;
-        LibUtilities::PointsManager()[pkey]->GetPoints(u, v, w);
+        DNekMat J(3,3,0.0);
+        J(0,0) = (*nodes[1][0] - *nodes[0][0]);
+        J(1,0) = (*nodes[1][1] - *nodes[0][1]);
+        J(2,0) = (*nodes[1][2] - *nodes[0][2]);
+        J(0,1) = (*nodes[2][0] - *nodes[0][0]);
+        J(1,1) = (*nodes[2][1] - *nodes[0][1]);
+        J(2,1) = (*nodes[2][2] - *nodes[0][2]);
+        J(0,2) = (*nodes[3][0] - *nodes[0][0]);
+        J(1,2) = (*nodes[3][1] - *nodes[0][1]);
+        J(2,2) = (*nodes[3][2] - *nodes[0][2]);
 
-        Array<OneD, NekDouble> xc(chi->GetTotPoints());
-        Array<OneD, NekDouble> yc(chi->GetTotPoints());
-        Array<OneD, NekDouble> zc(chi->GetTotPoints());
+        J.Invert();
 
-        Array<OneD, NekDouble> coeffs0 = geom->GetCoeffs(0);
-        Array<OneD, NekDouble> coeffs1 = geom->GetCoeffs(1);
-        Array<OneD, NekDouble> coeffs2 = geom->GetCoeffs(2);
+        DNekMat R(3,3,0.0);
+        R(0,0) = 2.0;
+        R(1,1) = 2.0;
+        R(2,2) = 2.0;
 
-        chi->BwdTrans(coeffs0,xc);
-        chi->BwdTrans(coeffs1,yc);
-        chi->BwdTrans(coeffs2,zc);
-
-        NekVector<NekDouble> X(ptsHelp->ptsLow),Y(ptsHelp->ptsLow),Z(ptsHelp->ptsLow);
-        for(int j = 0; j < u.num_elements(); j++)
-        {
-            Array<OneD, NekDouble> xp(3);
-            xp[0] = u[j];
-            xp[1] = v[j];
-            xp[2] = w[j];
-
-            X(j) = chi->PhysEvaluate(xp, xc);
-            Y(j) = chi->PhysEvaluate(xp, yc);
-            Z(j) = chi->PhysEvaluate(xp, zc);
-        }
-
-        NekVector<NekDouble> x1i(ptsHelp->ptsHigh),y1i(ptsHelp->ptsHigh),z1i(ptsHelp->ptsHigh),
-                             x2i(ptsHelp->ptsHigh),y2i(ptsHelp->ptsHigh),z2i(ptsHelp->ptsHigh),
-                             x3i(ptsHelp->ptsHigh),y3i(ptsHelp->ptsHigh),z3i(ptsHelp->ptsHigh);
-
-        x1i = derivUtil->VdmD[0]*X;
-        y1i = derivUtil->VdmD[0]*Y;
-        z1i = derivUtil->VdmD[0]*Z;
-        x2i = derivUtil->VdmD[1]*X;
-        y2i = derivUtil->VdmD[1]*Y;
-        z2i = derivUtil->VdmD[1]*Z;
-        x3i = derivUtil->VdmD[2]*X;
-        y3i = derivUtil->VdmD[2]*Y;
-        z3i = derivUtil->VdmD[2]*Z;
+        J = J * R;
 
         for(int i = 0 ; i < ptsHelp->ptsHigh; i++)
         {
-            DNekMat dxdz(3,3,1.0,eFULL);
-            dxdz(0,0) = x1i(i);
-            dxdz(0,1) = x2i(i);
-            dxdz(0,2) = x3i(i);
-            dxdz(1,0) = y1i(i);
-            dxdz(1,1) = y2i(i);
-            dxdz(1,2) = y3i(i);
-            dxdz(2,0) = z1i(i);
-            dxdz(2,1) = z2i(i);
-            dxdz(2,2) = z3i(i);
-
             Array<OneD, NekDouble> r(10,0.0); //store det in 10th entry
 
-            r[9] = dxdz(0,0)*(dxdz(1,1)*dxdz(2,2)-dxdz(2,1)*dxdz(1,2))
-                  -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
-                  +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
+            r[9] = 1.0/(J(0,0)*(J(1,1)*J(2,2)-J(2,1)*J(1,2))
+                       -J(0,1)*(J(1,0)*J(2,2)-J(2,0)*J(1,2))
+                       +J(0,2)*(J(1,0)*J(2,1)-J(2,0)*J(1,1)));
 
-            dxdz.Invert();
-
-            r[0] = dxdz(0,0);
-            r[1] = dxdz(1,0);
-            r[2] = dxdz(2,0);
-            r[3] = dxdz(0,1);
-            r[4] = dxdz(1,1);
-            r[5] = dxdz(2,1);
-            r[6] = dxdz(0,2);
-            r[7] = dxdz(1,2);
-            r[8] = dxdz(2,2);
+            r[0] = J(0,0);
+            r[1] = J(1,0);
+            r[2] = J(2,0);
+            r[3] = J(0,1);
+            r[4] = J(1,1);
+            r[5] = J(2,1);
+            r[6] = J(0,2);
+            r[7] = J(1,2);
+            r[8] = J(2,2);
             ret.push_back(r);
         }
     }
-    else if(geom->GetShapeType() == LibUtilities::ePrism)
+    else if(m_el->GetConf().m_e == LibUtilities::ePrism)
     {
         ASSERTL0(false, "not coded");
         /*vector<Array<OneD, NekDouble> > xyz;
@@ -421,9 +385,9 @@ void ElUtil::Evaluate()
     res->worstJac = min(res->worstJac,mn/mx);
     mtx2.unlock();
 
-    mtx2.lock();
+    //mtx2.lock();
     maps = MappingIdealToRef();
-    mtx2.unlock();
+    //mtx2.unlock();
 }
 
 ElUtilJob* ElUtil::GetJob()

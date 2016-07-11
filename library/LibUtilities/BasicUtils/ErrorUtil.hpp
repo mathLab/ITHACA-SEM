@@ -75,7 +75,7 @@ namespace ErrorUtil
         NekError(const std::string& message) : std::runtime_error(message) {}
     };
         
-    inline static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
+    inline static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level, bool DoComm = false)
     {
         // The user of outStream is primarily for the unit tests.
         // The unit tests often generate errors on purpose to make sure
@@ -94,11 +94,14 @@ namespace ErrorUtil
         // the correct rank. Messages are only printed on rank zero.
         int rank = 0;
 #if defined(NEKTAR_USE_MPI)
-        int flag;
-        MPI_Initialized(&flag);
-        if(flag)
+        int flag = 0;
+        if(DoComm)
         {
-            MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+            MPI_Initialized(&flag);
+            if(flag)
+            {
+                MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+            }
         }
 #endif
 
@@ -138,9 +141,12 @@ namespace ErrorUtil
                 }
             }
 #if defined(NEKTAR_USE_MPI)
-            if (flag)
+            if(DoComm)
             {
-                MPI_Barrier(MPI_COMM_WORLD);
+                if (flag)
+                {
+                    MPI_Barrier(MPI_COMM_WORLD);
+                }
             }
 #endif
             throw NekError(baseMsg);
@@ -185,6 +191,10 @@ namespace ErrorUtil
 #define NEKERROR(type, msg) \
     ErrorUtil::Error(type, __FILE__, __LINE__, msg, 0);
 
+
+#define ROOTONLY_NEKERROR(type, msg)                                     \
+    ErrorUtil::Error(type, __FILE__, __LINE__, msg, 0,true);
+
 #define ASSERTL0(condition,msg) \
     if(!(condition)) \
 { \
@@ -211,7 +221,7 @@ namespace ErrorUtil
 #define WARNINGL1(condition,msg) \
     if(!(condition)) \
 { \
-    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 0); \
+    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 1); \
 }
 
 #else //defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
@@ -233,7 +243,7 @@ namespace ErrorUtil
 #define WARNINGL2(condition,msg) \
     if(!(condition)) \
 { \
-    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 0); \
+    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 2); \
 }
 
 #else //NEKTAR_FULLDEBUG

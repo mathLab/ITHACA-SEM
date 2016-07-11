@@ -64,7 +64,6 @@ IF (NEKTAR_USE_HDF5)
             "HDF5 libraries" FORCE)
         SET(HDF5_INCLUDE_DIRS ${TPDIST}/include CACHE FILEPATH
             "HDF5 include directory" FORCE)
-        THIRDPARTY_SHARED_LIBNAME(HDF5_LIBRARIES)
 
         LINK_DIRECTORIES(${TPDIST}/lib)
 

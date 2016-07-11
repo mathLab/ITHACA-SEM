@@ -80,9 +80,9 @@ namespace LibUtilities
 {
 int CommDataTypeGetSize(CommDataType);
 
-LIB_UTILITIES_EXPORT template <class T> class CommDataTypeTraits
+template <class T> class CommDataTypeTraits
 {
-    static CommDataType type;
+    LIB_UTILITIES_EXPORT static CommDataType type;
 
 public:
     static CommDataType &GetDataType()
@@ -108,7 +108,7 @@ public:
 /**
  * Partial specialisation for vectors
  */
-LIB_UTILITIES_EXPORT template <class elemT>
+template <class elemT>
 class CommDataTypeTraits<std::vector<elemT> >
 {
 public:
@@ -134,7 +134,7 @@ public:
 /**
  * Partial specialisation for vectors
  */
-LIB_UTILITIES_EXPORT template <class elemT>
+template <class elemT>
 class CommDataTypeTraits<Array<OneD, elemT> >
 {
 public:

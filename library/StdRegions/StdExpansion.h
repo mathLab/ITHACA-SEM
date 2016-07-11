@@ -478,6 +478,12 @@ namespace Nektar
             }
 
 
+            boost::shared_ptr<StdExpansion> GetLinStdExp(void) const
+            {
+                return v_GetLinStdExp();
+            }
+            
+
             int GetShapeDimension() const
             {
                 return v_GetShapeDimension();
@@ -1596,6 +1602,9 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual boost::shared_ptr<StdExpansion> 
                 v_GetStdExp(void) const;
 
+            STD_REGIONS_EXPORT virtual boost::shared_ptr<StdExpansion> 
+                v_GetLinStdExp(void) const;
+            
             STD_REGIONS_EXPORT virtual int v_GetShapeDimension() const;
 
             STD_REGIONS_EXPORT virtual bool  v_IsBoundaryInteriorExpansion();

@@ -90,8 +90,7 @@ public:
         const Array<OneD, Array<OneD, float> > &weights,
         const Array<OneD, Array<OneD, unsigned int> > &neighInds)
         : m_ptsInfo(NullPtsInfoMap), m_dim(dim), m_fieldNames(fieldnames),
-          m_pts(pts), m_ptsType(ePtsFile), m_weights(weights),
-          m_neighInds(neighInds){};
+          m_pts(pts), m_ptsType(ePtsFile) {};
 
     LIB_UTILITIES_EXPORT void GetConnectivity(
         std::vector<Array<OneD, int> > &conn) const;
@@ -146,11 +145,6 @@ public:
     LIB_UTILITIES_EXPORT std::vector<NekDouble> GetBoxSize() const;
 
     LIB_UTILITIES_EXPORT void SetBoxSize(const std::vector<NekDouble> boxsize);
-    template <typename FuncPointerT, typename ObjectPointerT>
-    void setProgressCallback(FuncPointerT func, ObjectPointerT obj)
-    {
-        m_progressCallback = boost::bind(func, obj, _1, _2);
-    }
 
     /// map for information about points that can be added through PtsInfo enum
     std::map<PtsInfo, int> m_ptsInfo;
@@ -173,18 +167,9 @@ private:
     std::vector<Array<OneD, int> > m_ptsConn;
     /// Type of the PtsField
     PtsType m_ptsType;
-    /// Interpolation weights for each neighbour.
-    /// Structure: m_weights[physPtIdx][neighbourIdx]
-    Array<OneD, Array<OneD, float> > m_weights;
-    /// Indices of the relevant neighbours for each physical point.
-    /// Structure: m_neighInds[ptIdx][neighbourIdx]
-    Array<OneD, Array<OneD, unsigned int> > m_neighInds;
 
     /// vector of box size xmin,xmax,ymin,ymax,zmin,zmax
     std::vector<NekDouble> m_boxSize;
-
-    boost::function<void(const int position, const int goal)>
-        m_progressCallback;
 };
 
 typedef boost::shared_ptr<PtsField> PtsFieldSharedPtr;

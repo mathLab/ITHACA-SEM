@@ -11,7 +11,7 @@ OPTION(NEKTAR_USE_HDF5
 
 IF (NEKTAR_USE_HDF5)
     IF (NOT NEKTAR_USE_MPI)
-        MESSAGE(FATAL_ERROR "HDF5 requires Nektar++ to be compiled using NEKTAR_USE_MPI.")
+        MESSAGE(FATAL_ERROR "HDF5 requires Nektar++ to be configured with NEKTAR_USE_MPI for MPI support.")
     ENDIF()
 
     # Try to find parallel system HDF5 first.

@@ -33,14 +33,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSHOMOGENEOUSSTRETCH
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSHOMOGENEOUSSTRETCH
+#ifndef FIELDUTILS_PROCESSHOMOGENEOUSSTRETCH
+#define FIELDUTILS_PROCESSHOMOGENEOUSSTRETCH
 
 #include "../Module.h"
 
 namespace Nektar
 {
-namespace Utilities
+namespace FieldUtils
 {
 
 /**

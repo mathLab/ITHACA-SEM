@@ -44,7 +44,7 @@ using namespace std;
 
 namespace Nektar
 {
-namespace Utilities
+namespace FieldUtils
 {
 
 ModuleKey ProcessHomogeneousStretch::className =

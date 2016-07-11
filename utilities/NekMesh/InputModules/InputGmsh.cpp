@@ -191,6 +191,7 @@ void InputGmsh::Process()
     // Open the file stream.
     OpenStream();
 
+    m_mesh->m_hasCAD = false;
     m_mesh->m_expDim   = 0;
     m_mesh->m_spaceDim = 0;
     string line;

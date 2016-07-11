@@ -327,9 +327,9 @@ void ProcessVarOpti::FillQuadPoints()
 
     for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
     {
-        if((*eit)->m_edgeNodes.size() > 0)
+        if((*eit)->m_edgeNodes.size() > 0 && (*eit)->m_curveType == LibUtilities::eGaussLobattoLegendre)
         {
-            //already high-order just need to Id
+            //already high-order just need to Id and double check type
             for(int i = 0; i < (*eit)->m_edgeNodes.size(); i++)
             {
                 (*eit)->m_edgeNodes[i]->m_id = id++;
@@ -446,7 +446,7 @@ void ProcessVarOpti::FillQuadPoints()
         FaceSet::iterator it;
         for(it = m_mesh->m_faceSet.begin(); it != m_mesh->m_faceSet.end(); it++)
         {
-            if((*it)->m_faceNodes.size() > 0)
+            if((*it)->m_faceNodes.size() > 0 && (*it)->m_curveType == LibUtilities::eNodalTriElec)
             {
                 for(int i = 0; i < (*it)->m_faceNodes.size(); i++)
                 {

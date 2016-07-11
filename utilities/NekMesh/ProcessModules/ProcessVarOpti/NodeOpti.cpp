@@ -548,13 +548,13 @@ NekDouble NodeOpti::GetFunctional()
     {
         case eLinEl:
         {
-            const NekDouble nu = 0.45;
+            const NekDouble nu = 0.4;
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
             for (int i = 0; i < nElmt; ++i)
             {
-                bool valid = true;
+                //bool valid = true;
                 NekDouble jacDet[ptsHelp->ptsHigh], trEtE[ptsHelp->ptsHigh];
 
                 for(int k = 0; k < ptsHelp->ptsHigh; ++k)
@@ -575,31 +575,41 @@ NekDouble NodeOpti::GetFunctional()
                     }
                     jacDet[k] = JacDet<DIM>(jacIdeal);
                     trEtE[k]  = LinElasTrace<DIM>(jacIdeal);
-                    valid = valid ? jacDet[k] > 0.0 : false;
+                    //valid = valid ? jacDet[k] > 0.0 : false;
                 }
 
                 NekDouble de = 1e-2;
 
-                if (!valid)
-                {
+                //if (!valid)
+                //{
                     for(int k = 0; k < ptsHelp->ptsHigh; ++k)
                     {
-                        NekDouble sigma = 0.5*(jacDet[k] + sqrt(jacDet[k]*jacDet[k] + 4.0*de*de));
+                        NekDouble sigma;
+                        if(jacDet[k] < de*1e3)
+                        {
+                            sigma = 0.5*(jacDet[k] + sqrt(jacDet[k]*jacDet[k] + 4.0*de*de));
+                        }
+                        else
+                        {
+                            sigma = jacDet[k];
+                        }
+
                         NekDouble lsigma = log(sigma);
                         integral += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (K * 0.5 * lsigma * lsigma + mu * trEtE[k]);
                     }
-                }
-                else
-                {
-                    for(int k = 0; k < ptsHelp->ptsHigh; ++k)
-                    {
-                        NekDouble lsigma = log(jacDet[k]);
-                        integral += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (K * 0.5 * lsigma * lsigma + mu * trEtE[k]);
-                    }
-                }
+                //}
+                //else
+                //{
+                //    for(int k = 0; k < ptsHelp->ptsHigh; ++k)
+                //    {
+                //        NekDouble lsigma = log(jacDet[k]);
+                //        integral += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (K * 0.5 * lsigma * lsigma + mu * trEtE[k]);
+                //    }
+                //}
             }
             break;
         }
+
 
         case eHypEl:
         {

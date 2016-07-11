@@ -21,6 +21,7 @@ SET(FieldConvertHeaders
     ProcessModules/ProcessEquiSpacedOutput.h
     ProcessModules/ProcessGrad.h
     ProcessModules/ProcessHomogeneousPlane.h
+    ProcessModules/ProcessHomogeneousStretch.h
     ProcessModules/ProcessInnerProduct.h
     ProcessModules/ProcessInterpField.h
     ProcessModules/ProcessInterpPoints.h
@@ -66,6 +67,7 @@ SET(FieldConvertSources
     ProcessModules/ProcessEquiSpacedOutput.cpp
     ProcessModules/ProcessGrad.cpp
     ProcessModules/ProcessHomogeneousPlane.cpp
+    ProcessModules/ProcessHomogeneousStretch.cpp
     ProcessModules/ProcessInnerProduct.cpp
     ProcessModules/ProcessInterpField.cpp
     ProcessModules/ProcessInterpPoints.cpp
@@ -108,6 +110,7 @@ ADD_NEKTAR_TEST(pointdatatofld)
 # ADD_NEKTAR_TEST(chan3D_pts)
 ADD_NEKTAR_TEST(chan3DH1D_meanmode)
 ADD_NEKTAR_TEST(chan3DH1D_plane)
+ADD_NEKTAR_TEST(chan3DH1D_stretch)
 ADD_NEKTAR_TEST(chan3D_probe)
 ADD_NEKTAR_TEST(cube_prismhex)
 ADD_NEKTAR_TEST(outflow_pointdatatofld)

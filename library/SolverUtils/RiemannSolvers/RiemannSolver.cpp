@@ -182,12 +182,12 @@ namespace Nektar
                 {
                     case 1:
                     {    // do nothing
-			const int nq = inarray[0].num_elements();
+                        const int nq = inarray[0].num_elements();
                         const int vx = (int)vecLocs[i][0];
                         Vmath::Vmul (nq, inarray [vx], 1, normals [0],  1,
                                          outarray[vx], 1);
                         break;
-		    }
+                    }
                     case 2:
                     {
                         const int nq = inarray[0].num_elements();
@@ -273,12 +273,12 @@ namespace Nektar
                 {
                     case 1:
                     {    // do nothing
-			const int nq = normals[0].num_elements();
+                        const int nq = normals[0].num_elements();
                         const int vx = (int)vecLocs[i][0];
                         Vmath::Vmul (nq, inarray [vx], 1, normals [0],  1,
                                          outarray[vx], 1);
                         break;
-		    }
+                    }
                     case 2:
                     {
                         const int nq = normals[0].num_elements();

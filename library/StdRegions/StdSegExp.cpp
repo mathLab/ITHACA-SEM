@@ -240,32 +240,12 @@ namespace Nektar
                 NekMatrix<NekDouble> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
                 out = B * in;
 
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS
 
             }
         }
 
-        /** \brief Forward transform from physical quadrature space stored in 
-         *  \a inarray and evaluate the expansion coefficients and store in 
-         *  \a outarray
-         *
-         *  Perform a forward transform using a Galerkin projection by taking the 
-         *  inner product of the physical points and multiplying by the inverse of
-         *  the mass matrix using the Solve method of the standard matrix 
-         *  container holding the local mass matrix, i.e. \f$ {\bf \hat{u}} = 
-         *  {\bf M}^{-1} {\bf I} \f$ where \f$ {\bf I}[p] =  \int^1_{-1} 
-         *  \phi_p(\xi_1) u(\xi_1) d\xi_1 \f$
-         *
-         *  This function stores the expansion coefficients calculated by the 
-         *  transformation in the coefficient space array \a outarray
-         *
-         *  \param inarray: array of physical quadrature points to be transformed
-         *
-         *  \param outarray: the coeffficients of the expansion 
-         */
-
-
-	void StdSegExp::v_ReduceOrderCoeffs(
+        void StdSegExp::v_ReduceOrderCoeffs(
             int                                 numMin,
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
@@ -301,8 +281,25 @@ namespace Nektar
             LibUtilities::InterpCoeff1D(
                 bortho0, coeff_tmp, b0, outarray);
         }
- 
 
+        /**
+         * \brief Forward transform from physical quadrature space stored in \a
+         * inarray and evaluate the expansion coefficients and store in \a
+         * outarray
+         *
+         * Perform a forward transform using a Galerkin projection by taking the
+         * inner product of the physical points and multiplying by the inverse
+         * of the mass matrix using the Solve method of the standard matrix
+         * container holding the local mass matrix, i.e. \f$ {\bf \hat{u}} =
+         * {\bf M}^{-1} {\bf I} \f$ where \f$ {\bf I}[p] = \int^1_{-1}
+         * \phi_p(\xi_1) u(\xi_1) d\xi_1 \f$
+         *
+         * This function stores the expansion coefficients calculated by the
+         * transformation in the coefficient space array \a outarray
+         *
+         * \param inarray: array of physical quadrature points to be transformed
+         * \param outarray: the coeffficients of the expansion
+         */
         void StdSegExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
         {

@@ -7,6 +7,7 @@
 #include <MultiRegions/ExpList3D.h>
 #include <SpatialDomains/MeshGraph3D.h>
 
+using namespace std;
 using namespace Nektar;
 
 // This routine projects a polynomial which has energy in all mdoes of

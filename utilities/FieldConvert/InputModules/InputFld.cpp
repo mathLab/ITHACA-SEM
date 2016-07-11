@@ -38,7 +38,7 @@
 using namespace std;
 
 #include "InputFld.h"
-
+using namespace Nektar;
 
 static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
                 "NumberOfPoints","n","Define number of points to dump output");
@@ -90,14 +90,12 @@ InputFld::~InputFld()
  */
 void InputFld::Process(po::variables_map &vm)
 {
-    Timer timer;
 
     if(m_f->m_verbose)
     {
         if(m_f->m_comm->GetRank() == 0)
         {
             cout << "Processing input fld file" << endl;
-            timer.Start();
         }
     }
 
@@ -141,41 +139,45 @@ void InputFld::Process(po::variables_map &vm)
     }
 
 
-    if(m_f->m_graph)  // all for restricted expansion defintion when loading field
+    if(m_f->m_graph)
     {
-        // currently load all field (possibly could read data from expansion list
-        // but it is re-arranged in expansion)
-
-        const SpatialDomains::ExpansionMap &expansions = m_f->m_graph->GetExpansions();
-
-        // if Range has been speficied it is possible to have a
-        // partition which is empty so check this and return if
-        // no elements present.
-
-        if(!expansions.size())
+        if (m_f->m_data.size() == 0)
         {
-            return;
+            // currently load all field (possibly could read data from
+            //  expansion list but it is re-arranged in expansion)
+
+            const SpatialDomains::ExpansionMap &expansions =
+                    m_f->m_graph->GetExpansions();
+
+            // if Range has been speficied it is possible to have a
+            // partition which is empty so check this and return if
+            // no elements present.
+
+            if(!expansions.size())
+            {
+                return;
+            }
+
+            m_f->m_exp.resize(1);
+
+            Array<OneD,int> ElementGIDs(expansions.size());
+            SpatialDomains::ExpansionMap::const_iterator expIt;
+
+            i = 0;
+            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            {
+                ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
+            }
+
+            m_f->m_fielddef.clear();
+            m_f->m_data.clear();
+
+            m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],
+                               m_f->m_fielddef,
+                               m_f->m_data,
+                               m_f->m_fieldMetaDataMap,
+                               ElementGIDs);
         }
-
-        m_f->m_exp.resize(1);
-
-        Array<OneD,int> ElementGIDs(expansions.size());
-        SpatialDomains::ExpansionMap::const_iterator expIt;
-
-        i = 0;
-        for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
-        {
-            ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
-        }
-
-        m_f->m_fielddef.clear();
-        m_f->m_data.clear();
-
-        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],
-                           m_f->m_fielddef,
-                           m_f->m_data,
-                           m_f->m_fieldMetaDataMap,
-                           ElementGIDs);
     }
     else // load all data.
     {
@@ -261,41 +263,22 @@ void InputFld::Process(po::variables_map &vm)
             }
         }
 
-        // if range is defined reset up output field in case of
-        // reducing fld definition
-        if(vm.count("range"))
-        {
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                = m_f->m_exp[0]->GetFieldDefinitions();
-            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+        // reset output field in case Import loaded elements that are not
+        // in the expansion (because of range option of partitioning)
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+            = m_f->m_exp[0]->GetFieldDefinitions();
+        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-            for (j = 0; j < nfields; ++j)
+        for (j = 0; j < nfields; ++j)
+        {
+            for (i = 0; i < FieldDef.size(); ++i)
             {
-                for (i = 0; i < FieldDef.size(); ++i)
-                {
-                    FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
-                    m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-                }
+                FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
+                m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
             }
-            m_f->m_fielddef = FieldDef;
-            m_f->m_data     = FieldData;
         }
-    }
-
-    if(m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
-            
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "InputFld  CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-            cpuTime = 0.0;
-        }
-        
+        m_f->m_fielddef = FieldDef;
+        m_f->m_data     = FieldData;
     }
 }
 

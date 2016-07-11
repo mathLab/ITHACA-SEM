@@ -1614,8 +1614,8 @@ namespace Nektar
                     {
                         t_new[0] += V(0,j)*t_old[j];
                     }
-                    i_start = 1;
                 }
+                i_start = 1;
             }
             
             for(i = i_start; i < m_numsteps; i++)

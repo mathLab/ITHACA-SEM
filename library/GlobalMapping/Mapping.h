@@ -417,9 +417,9 @@ class Mapping
         int                                         m_nConvectiveFields;
 
         /// Name of the function containing the coordinates
-        string                                      m_funcName;
+        std::string                                 m_funcName;
         /// Name of the function containing the velocity of the coordinates
-        string                                      m_velFuncName;
+        std::string                                 m_velFuncName;
 
 
         // Flags to help the solver

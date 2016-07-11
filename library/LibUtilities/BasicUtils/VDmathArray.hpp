@@ -40,10 +40,10 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Communication/Comm.h>
 
-using namespace Nektar;
 
 namespace VDmath
 {
+    using namespace Nektar;
 
     /// \brief
     template<class T> T Ddot2(LibUtilities::CommSharedPtr& pComm, int n,

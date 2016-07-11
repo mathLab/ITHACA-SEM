@@ -37,6 +37,8 @@
 #include <iostream>
 #include <iomanip>
 
+using namespace std;
+
 namespace Nektar
 {
     string UnsteadyDiffusion::className = GetEquationSystemFactory().RegisterCreatorFunction("UnsteadyDiffusion", UnsteadyDiffusion::create);

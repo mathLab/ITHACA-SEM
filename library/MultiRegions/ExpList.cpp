@@ -62,6 +62,8 @@
 #include <Collections/CollectionOptimisation.h>
 #include <Collections/Operator.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

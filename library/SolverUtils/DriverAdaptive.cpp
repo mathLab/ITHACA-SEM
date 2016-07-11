@@ -44,6 +44,8 @@
 #include <StdRegions/StdHexExp.h>
 #include <GlobalMapping/Mapping.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils
@@ -351,9 +353,14 @@ void DriverAdaptive::v_Execute(ostream &out)
         //
         // @todo This could be made better by replacing individual matrices
         //       within the linear system.
-        LibUtilities::NekManager<MultiRegions::GlobalLinSysKey,
-                                 MultiRegions::GlobalLinSys>::
-            ClearManager(std::string("GlobalLinSys"));
+        if (LibUtilities::NekManager<MultiRegions::GlobalLinSysKey,
+                                     MultiRegions::GlobalLinSys>::
+                PoolCreated(std::string("GlobalLinSys")))
+        {
+            LibUtilities::NekManager<MultiRegions::GlobalLinSysKey,
+                                     MultiRegions::GlobalLinSys>::
+                ClearManager(std::string("GlobalLinSys"));
+        }
 
         int chkNumber = m_equ[0]->GetCheckpointNumber();
         int chkSteps  = m_equ[0]->GetCheckpointSteps();

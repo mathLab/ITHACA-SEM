@@ -57,10 +57,10 @@ public:
     {
         ElementSharedPtr e = boost::shared_ptr<Element>(
             new Tetrahedron(pConf, pNodeList, pTagList));
-        vector<FaceSharedPtr> faces = e->GetFaceList();
+        std::vector<FaceSharedPtr> faces = e->GetFaceList();
         for (int i = 0; i < faces.size(); ++i)
         {
-            faces[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e, i));
+            faces[i]->m_elLink.push_back(std::pair<ElementSharedPtr, int>(e, i));
         }
         return e;
     }

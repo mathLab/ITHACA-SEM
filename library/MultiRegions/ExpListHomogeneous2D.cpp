@@ -39,6 +39,8 @@
 #include <StdRegions/StdQuadExp.h>
 #include <LocalRegions/Expansion.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -732,7 +734,7 @@ namespace Nektar
             int npoints_per_line = m_lines[0]->GetTotPoints();
 
             // printing the fields of that zone
-            outfile << "        <DataArray type=\"Float32\" Name=\""
+            outfile << "        <DataArray type=\"Float64\" Name=\""
                     << var << "\">" << endl;
             outfile << "          ";
             for (int n = 0; n < m_lines.num_elements(); ++n)

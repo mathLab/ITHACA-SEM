@@ -36,6 +36,8 @@
 #include <MultiRegions/GlobalLinSysDirectFull.h>
 #include <MultiRegions/ExpList.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -144,7 +146,7 @@ namespace Nektar
             }
             else
             {
-                SolveLinearSystem(nDirDofs, pInput, pOutput, pLocToGloMap);
+                SolveLinearSystem(nGlobDofs, pInput, pOutput, pLocToGloMap, nDirDofs);
             }
         }
 

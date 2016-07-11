@@ -39,6 +39,8 @@
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <SpatialDomains/HexGeom.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace LocalRegions

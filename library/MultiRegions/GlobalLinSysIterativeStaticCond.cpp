@@ -41,6 +41,8 @@
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/SparseUtils.hpp>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

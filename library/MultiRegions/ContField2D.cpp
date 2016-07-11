@@ -36,6 +36,8 @@
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

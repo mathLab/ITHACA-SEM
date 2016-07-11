@@ -71,7 +71,7 @@
 
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
-
+using namespace std;
 using namespace Nektar;
 
 NekDouble m_Re;

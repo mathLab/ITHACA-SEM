@@ -40,6 +40,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <ShallowWaterSolver/EquationSystems/LinearSWE.h>
 
+using namespace std;
+
 namespace Nektar
 {
   string LinearSWE::className = 

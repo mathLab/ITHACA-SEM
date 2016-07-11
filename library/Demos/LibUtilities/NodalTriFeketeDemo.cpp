@@ -11,8 +11,8 @@ using namespace std;
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/Foundations/Points.h>
 
-using namespace Nektar;
 using namespace boost;
+using namespace Nektar;
 using namespace Nektar::LibUtilities;
 
 int main(int argc, char *argv[])

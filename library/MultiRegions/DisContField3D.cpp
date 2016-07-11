@@ -46,7 +46,8 @@
 #include <boost/assign/std/vector.hpp>
 #include <boost/tuple/tuple.hpp>
 
- using namespace boost::assign;
+using namespace std;
+using namespace boost::assign;
 
  namespace Nektar
  {

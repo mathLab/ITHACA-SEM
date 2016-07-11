@@ -36,6 +36,8 @@
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <SolverUtils/Filters/FilterEnergy1D.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils

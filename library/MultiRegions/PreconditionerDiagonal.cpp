@@ -39,6 +39,8 @@
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <math.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

@@ -195,7 +195,7 @@ namespace Nektar
 
                 for(i = 0; i < m_base.num_elements(); ++i)
                 {
-                    returnval = max(returnval, m_base[i]->GetNumModes());
+                    returnval = std::max(returnval, m_base[i]->GetNumModes());
                 }
 
                 return returnval;

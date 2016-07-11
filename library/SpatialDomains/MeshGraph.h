@@ -284,7 +284,7 @@ namespace Nektar
                         CompositeMap &compositeVector) const;
 
                 inline const CompositeMap &GetComposites() const;
-                inline const map<int,string> &GetCompositesLabels() const;
+                inline const std::map<int, std::string> &GetCompositesLabels() const;
 
                 inline const std::vector<CompositeMap> &GetDomain(void) const;
 
@@ -428,7 +428,7 @@ namespace Nektar
                 bool                                    m_meshPartitioned;
 
                 CompositeMap                            m_meshComposites;
-                map<int,string>                         m_compositesLabels;
+                std::map<int, std::string>              m_compositesLabels;
                 std::vector<CompositeMap>               m_domain;
                 DomainRangeShPtr                        m_domainRange;
 
@@ -485,7 +485,7 @@ namespace Nektar
          * \brief Return a map of integers and strings containing the
          * labels of each composite
          */
-        inline const map<int,string>  &MeshGraph::GetCompositesLabels() const
+        inline const std::map<int, std::string> &MeshGraph::GetCompositesLabels() const
         {
             return m_compositesLabels;
         }
@@ -589,7 +589,7 @@ namespace Nektar
             PointGeomSharedPtr returnval;
             PointGeomMap::iterator x = m_vertSet.find(id);
             ASSERTL0(x != m_vertSet.end(),
-                     "Vertex " + boost::lexical_cast<string>(id)
+                     "Vertex " + boost::lexical_cast<std::string>(id)
                      + " not found.");
             return x->second;
         }

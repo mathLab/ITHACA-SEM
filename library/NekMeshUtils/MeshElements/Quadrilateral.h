@@ -56,10 +56,10 @@ public:
     {
         ElementSharedPtr e = boost::shared_ptr<Element>(
             new Quadrilateral(pConf, pNodeList, pTagList));
-        vector<EdgeSharedPtr> m_edges = e->GetEdgeList();
+        std::vector<EdgeSharedPtr> m_edges = e->GetEdgeList();
         for (int i = 0; i < m_edges.size(); ++i)
         {
-            m_edges[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e, i));
+            m_edges[i]->m_elLink.push_back(std::pair<ElementSharedPtr, int>(e, i));
         }
         return e;
     }

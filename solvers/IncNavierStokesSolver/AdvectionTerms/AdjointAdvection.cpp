@@ -46,6 +46,7 @@
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 #include <MultiRegions/DisContField3DHomogeneous2D.h>
 
+using namespace std;
 
 namespace Nektar
 {
@@ -494,77 +495,59 @@ void AdjointAdvection::v_SetBaseFlow(
  * coefficient storage.
  * @param   infile          Filename to read.
  */
-void AdjointAdvection::ImportFldBase(std::string pInfile,
-        Array<OneD, MultiRegions::ExpListSharedPtr>& pFields, int slice)
+void AdjointAdvection::ImportFldBase(
+        std::string                                  pInfile,
+        Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        int                                          pSlice)
 {
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
-    std::vector<std::vector<NekDouble> > FieldData;
+    std::vector<std::vector<NekDouble> >                 FieldData;
 
-    int nqtot = pFields[0]->GetTotPoints();
+    int nqtot = m_baseflow[0].num_elements();
     Array<OneD, NekDouble> tmp_coeff(pFields[0]->GetNcoeffs(), 0.0);
 
-    //Get Homogeneous
-    LibUtilities::FieldIOSharedPtr fld =
-            MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-                                                    m_session->GetComm());
-    fld->Import(pInfile, FieldDef, FieldData);
+    int numexp = pFields[0]->GetExpSize();
+    Array<OneD,int> ElementGIDs(numexp);
 
-    int nvar = m_session->GetVariables().size();
-    int s;
-
-    if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
+    // Define list of global element ids
+    for(int i = 0; i < numexp; ++i)
     {
-        std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
+        ElementGIDs[i] = pFields[0]->GetExp(i)->GetGeom()->GetGlobalID();
     }
 
-    // copy FieldData into m_fields
-    for(int j = 0; j < nvar; ++j)
+    LibUtilities::FieldIOSharedPtr fld =
+    MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
+                                                    m_session->GetComm());
+    fld->Import(pInfile, FieldDef, FieldData,
+                LibUtilities::NullFieldMetaDataMap,
+                ElementGIDs);
+
+    int nSessionVar     = m_session->GetVariables().size();
+    int nSessionConvVar = nSessionVar - 1;
+    int nFileVar        = FieldDef[0]->m_fields.size();
+    int nFileConvVar    = nFileVar - 1; // Ignore pressure
+    if (m_HalfMode)
+    {
+        ASSERTL0(nFileVar == 3, "For half mode, expect 2D2C base flow.");
+        nFileConvVar = 2;
+    }
+
+    for(int j = 0; j < nFileConvVar; ++j)
     {
         for(int i = 0; i < FieldDef.size(); ++i)
         {
-            if ((m_session->DefinesSolverInfo("HOMOGENEOUS") &&
-                (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D" ||
-                 m_session->GetSolverInfo("HOMOGENEOUS")=="1D" ||
-                 m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D")) &&
-                nvar==4)
-            {
-                // w-component must be ignored and set to zero.
-                if (j != nvar - 2)
-                {
-                    // p component (it is 4th variable of the 3D and corresponds 3nd variable of 2D)
-                    s = (j == nvar - 1) ? 2 : j;
+            bool flag = FieldDef[i]->m_fields[j] ==
+                m_session->GetVariable(j);
 
-                    //extraction of the 2D
-                    pFields[j]->ExtractDataToCoeffs(
-                                        FieldDef[i],
-                                        FieldData[i],
-                                        FieldDef[i]->m_fields[s],
-                                        tmp_coeff);
-                }
+            ASSERTL0(flag, (std::string("Order of ") + pInfile
+                            + std::string(" data and that defined in "
+                            "the session file differs")).c_str());
 
-                // Put zero on higher modes
-                int ncplane = (pFields[0]->GetNcoeffs()) / m_npointsZ;
-
-                if (m_npointsZ > 2)
-                {
-                    Vmath::Zero(ncplane*(m_npointsZ-2),
-                                &tmp_coeff[2*ncplane],1);
-                }
-            }
-            //2D cases and Homogeneous1D Base Flows
-            else
-            {
-                bool flag = FieldDef[i]->m_fields[j] ==
-                                                m_session->GetVariable(j);
-
-                ASSERTL0(flag, (std::string("Order of ") + pInfile
-                                + std::string(" data and that defined in "
-                                              "m_boundaryconditions differs")).c_str());
-
-                pFields[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                               FieldDef[i]->m_fields[j],
-                                               tmp_coeff);
-            }
+            pFields[j]->ExtractDataToCoeffs(
+                                FieldDef[i],
+                                FieldData[i],
+                                FieldDef[i]->m_fields[j],
+                                tmp_coeff);
         }
 
         if(m_SingleMode || m_HalfMode)
@@ -573,26 +556,33 @@ void AdjointAdvection::ImportFldBase(std::string pInfile,
 
             if(m_SingleMode)
             {
-                //copy the bwd into the second plane for single Mode Analysis
+                //copy the bwd trans into the second plane for single
+                //Mode Analysis
                 int ncplane=(pFields[0]->GetNpoints())/m_npointsZ;
                 Vmath::Vcopy(ncplane,&m_baseflow[j][0],1,&m_baseflow[j][ncplane],1);
             }
         }
-        else
+        else // fully 3D base flow - put in physical space.
         {
+            bool oldwavespace = pFields[j]->GetWaveSpace();
+            pFields[j]->SetWaveSpace(false);
             pFields[j]->BwdTrans(tmp_coeff, m_baseflow[j]);
+            pFields[j]->SetWaveSpace(oldwavespace);
         }
     }
 
+    // Zero unused fields (e.g. w in a 2D2C base flow).
+    for (int j = nFileConvVar; j < nSessionConvVar; ++j) {
+        Vmath::Fill(nqtot, 0.0, m_baseflow[j], 1);
+    }
+
+    // If time-periodic, put loaded data into the slice storage.
     if(m_session->DefinesParameter("N_slices"))
     {
-        int n = pFields.num_elements()-1;
-
-        for(int i=0; i<n;++i)
+        for(int i = 0; i < nSessionConvVar; ++i)
         {
-            Vmath::Vcopy(nqtot, &m_baseflow[i][0], 1, &m_interp[i][slice*nqtot], 1);
+            Vmath::Vcopy(nqtot, &m_baseflow[i][0], 1, &m_interp[i][pSlice*nqtot], 1);
         }
-
     }
 }
 

@@ -41,6 +41,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/UnsteadySystem.h>
 
+using namespace std;
+
 namespace Nektar
 {	
     namespace SolverUtils
@@ -328,22 +330,18 @@ namespace Nektar
                 }
 
                 // search for NaN and quit if found
-                bool nanFound = false;
+                int nanFound = 0;
                 for (i = 0; i < nvariables; ++i)
                 {
                     if (Vmath::Nnan(fields[i].num_elements(), fields[i], 1) > 0)
                     {
-                        cout << "NaN found in variable \""
-                             << m_session->GetVariable(i)
-                             << "\", terminating" << endl;
-                        nanFound = true;
+                        nanFound = 1;
                     }
                 }
-
-                if (nanFound)
-                {
-                    break;
-                }
+                m_session->GetComm()->AllReduce(nanFound,
+                            LibUtilities::ReduceMax);
+                ASSERTL0 (!nanFound,
+                            "NaN found during time integration.");
 
                 // Update filters
                 std::vector<FilterSharedPtr>::iterator x;
@@ -353,7 +351,7 @@ namespace Nektar
                 }
 
                 // Write out checkpoint files
-                if ((m_checksteps && step && !((step + 1) % m_checksteps)) ||
+                if ((m_checksteps && !((step + 1) % m_checksteps)) ||
                      doCheckTime)
                 {
                     if(m_HomogeneousType == eHomogeneous1D)

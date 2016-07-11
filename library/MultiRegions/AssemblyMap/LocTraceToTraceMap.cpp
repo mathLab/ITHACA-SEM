@@ -44,6 +44,8 @@
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace MultiRegions

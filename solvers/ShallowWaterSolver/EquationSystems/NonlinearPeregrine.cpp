@@ -41,6 +41,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <ShallowWaterSolver/EquationSystems/NonlinearPeregrine.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

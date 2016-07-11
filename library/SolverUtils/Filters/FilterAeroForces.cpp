@@ -44,6 +44,8 @@
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <SolverUtils/Filters/FilterAeroForces.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils

@@ -36,6 +36,8 @@
 #include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
 #include <LibUtilities/Communication/Comm.h>
 
+using namespace std;
+
 namespace Nektar
 {
     NekDouble Extrapolate::StifflyStable_Betaq_Coeffs[3][3] = {

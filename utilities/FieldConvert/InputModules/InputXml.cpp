@@ -41,6 +41,7 @@ using namespace std;
 #include <LibUtilities/BasicUtils/Timer.h>
 
 #include "InputXml.h"
+using namespace Nektar;
 
 static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
                 "NumberOfPoints","n","Define number of points to dump output");
@@ -87,7 +88,7 @@ InputXml::~InputXml()
  */
 void InputXml::Process(po::variables_map &vm)
 {
-    Timer timer, timerpart;
+    Timer timerpart;
 
     //check for multiple calls to inputXml due to split xml
     //files. If so just return
@@ -104,7 +105,6 @@ void InputXml::Process(po::variables_map &vm)
         if(m_f->m_comm->GetRank() == 0)
         {
             cout << "Processing input xml file" << endl;
-            timer.Start();
             timerpart.Start();
         }
     }
@@ -253,6 +253,13 @@ void InputXml::Process(po::variables_map &vm)
             boost::lexical_cast<string>(vm["part-only-overlapping"].as<int>()));
     }
 
+    if(vm.count("npz"))
+    {
+        cmdArgs.push_back("--npz");
+        cmdArgs.push_back(
+            boost::lexical_cast<string>(vm["npz"].as<int>()));
+    }
+
     int argc = cmdArgs.size();
     const char **argv = new const char*[argc];
     for (int i = 0; i < argc; ++i)
@@ -330,10 +337,14 @@ void InputXml::Process(po::variables_map &vm)
         {
             ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
         }
-        
-        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef,
-                           LibUtilities::NullVectorNekDoubleVector,
-                           LibUtilities::NullFieldMetaDataMap,
+
+        m_f->m_fielddef.clear();
+        m_f->m_data.clear();
+
+        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],
+                           m_f->m_fielddef,
+                           m_f->m_data,
+                           m_f->m_fieldMetaDataMap,
                            ElementGIDs);
         NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
 
@@ -397,21 +408,6 @@ void InputXml::Process(po::variables_map &vm)
         }
     }
 
-    if(m_f->m_verbose)
-    {
-        if(m_f->m_comm->GetRank() == 0)
-        {
-            timerpart.Stop();
-            NekDouble cpuTime = timerpart.TimePerTest(1);
-            
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "\t InputXml setexpansion CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-            timerpart.Start();
-        }
-    }
-
     // Override number of planes with value from cmd line
     if(NumHomogeneousDir == 1 && vm.count("output-points-hom-z"))
     {
@@ -433,16 +429,6 @@ void InputXml::Process(po::variables_map &vm)
             ss1 << cpuTime << "s";
             cout << "\t InputXml set first exp CPU Time: " << setw(8) << left
                  << ss1.str() << endl;
-
-            
-            timer.Stop();
-            cpuTime = timer.TimePerTest(1);
-            
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "InputXml  CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-
         }
     }
 }

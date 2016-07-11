@@ -67,8 +67,8 @@ public:
 
 private:
     void FindContiguousSurface(ElementSharedPtr start,
-                               set<int> &doneIds,
-                               vector<ElementSharedPtr> &block);
+                               std::set<int> &doneIds,
+                               std::vector<ElementSharedPtr> &block);
 };
 }
 }

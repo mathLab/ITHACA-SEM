@@ -62,21 +62,7 @@ ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f) : ProcessModule
 
     f->m_writeBndFld = true;
     f->m_declareExpansionAsContField = true;
-    f->m_declareAsNewField = true;
-
-    // check for correct input files
-    if((f->m_inputfiles.count("xml") == 0)&&(f->m_inputfiles.count("xml.gz") == 0))
-    {
-        cout << "An xml or xml.gz input file must be specified for the boundary extraction module" << endl;
-        exit(3);
-    }
-
-    if((f->m_inputfiles.count("fld") == 0)&&(f->m_inputfiles.count("chk") == 0)&&(f->m_inputfiles.count("rst") == 0))
-    {
-        cout << "A fld or chk or rst input file must be specified for the boundary extraction module" << endl;
-
-        exit(3);
-    }
+    f->m_requireBoundaryExpansion = true;
 
 }
 
@@ -88,18 +74,65 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessBoundaryExtract: Setting up boundary extraction..." << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessBoundaryExtract: Setting up boundary extraction..."
+                 << endl;
+        }
+    }
+
+    m_f->m_fldToBnd = m_config["fldtoboundary"].m_beenSet;
+    m_f->m_addNormals = m_config["addnormals"].m_beenSet;
+
+    // check for correct input files
+    if((m_f->m_inputfiles.count("xml") == 0)&&(m_f->m_inputfiles.count("xml.gz") == 0))
+    {
+        cout << "An xml or xml.gz input file must be specified for the boundary extraction module" << endl;
+        exit(3);
+    }
+
+    if(m_f->m_fldToBnd)
+    {
+        if((m_f->m_inputfiles.count("fld") == 0) &&
+           (m_f->m_inputfiles.count("chk") == 0) &&
+           (m_f->m_inputfiles.count("rst") == 0))
+        {
+            cout << "A fld or chk or rst input file must be specified for "
+                 << "the boundary extraction module with fldtoboundary option."
+                 << endl;
+
+            exit(3);
+        }
     }
 
     // Set up Field options to output boundary fld
     string bvalues =  m_config["bnd"].as<string>();
 
-    if(bvalues.compare("All") == 0)
+    if(boost::iequals(bvalues,"All"))
     {
-        Array<OneD, const MultiRegions::ExpListSharedPtr>
-            BndExp = m_f->m_exp[0]->GetBndCondExpansions();
+        int numBndExp = 0; 
 
-        for(int i = 0; i < BndExp.num_elements(); ++i)
+        SpatialDomains::BoundaryConditions bcs(m_f->m_session,
+                                               m_f->m_exp[0]->GetGraph());
+        const SpatialDomains::BoundaryRegionCollection bregions  =
+                                                    bcs.GetBoundaryRegions();
+
+        SpatialDomains::BoundaryRegionCollection::const_iterator breg_it;
+        for(breg_it = bregions.begin(); breg_it != bregions.end();
+            ++breg_it)
+        {
+            numBndExp = max(numBndExp,breg_it->first);
+        }
+        // assuming all boundary regions are consecutive number if
+        // regions is one more tham maximum id
+        numBndExp++; 
+
+        // not all partitions in parallel touch all boundaries so 
+        // find maximum number of boundaries
+        m_f->m_session->GetComm()->AllReduce(numBndExp,LibUtilities::ReduceMax);
+
+        // THis presumes boundary regions are numbered consecutively
+        for(int i = 0; i < numBndExp; ++i)
         {
             m_f->m_bndRegionsToWrite.push_back(i);
         }
@@ -107,12 +140,9 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
     else
     {
         ASSERTL0(ParseUtils::GenerateOrderedVector(bvalues.c_str(),
-                                                   m_f->m_bndRegionsToWrite),"Failed to interpret range string");
+                                                   m_f->m_bndRegionsToWrite),
+                 "Failed to interpret bnd values string");
     }
-
-    m_f->m_fldToBnd = m_config["fldtoboundary"].m_beenSet;
-    m_f->m_addNormals = m_config["addnormals"].m_beenSet;
-
 }
 
 }

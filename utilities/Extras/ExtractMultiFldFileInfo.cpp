@@ -4,6 +4,7 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>  // for ASSERTL0
 #include <SpatialDomains/MeshGraph.h>   // for FieldDefinitions, etc
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])

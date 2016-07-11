@@ -51,7 +51,7 @@ ModuleKey ProcessInterpPoints::className =
        ModuleKey(eProcessModule, "interppoints"),
        ProcessInterpPoints::create,
        "Interpolates a set of points to another, requires fromfld and "
-       "fromxml to be defined, a line or plane of points can be "
+       "fromxml to be defined, a line, plane or block of points can be "
        "defined");
 
 
@@ -85,12 +85,22 @@ ProcessInterpPoints::ProcessInterpPoints(FieldSharedPtr f) : ProcessModule(f)
             ConfigOption(false, "NotSet",
                          "Specify a line of N points using "
                          "line=N,x0,y0,z0,z1,y1,z1");
-
     m_config["plane"] =
             ConfigOption(false, "NotSet",
-                         "Specify a plane of N1 x N1 points using "
+                         "Specify a plane of N1 x N2 points using "
                          "plane=N1,N2,x0,y0,z0,z1,y1,z1,x2,y2,z2,x3,"
                          "y3,z3");
+    m_config["box"] =
+            ConfigOption(false, "NotSet",
+                         "Specify a rectangular box of N1 x N2 x N3 points "
+                         "using a box of points limited by box="
+                         "N1,N2,N3,xmin,xmax,ymin,ymax,zmin,zmax");
+
+    m_config["cp"] = 
+            ConfigOption(false,"NotSet",
+                         "Parameters p0 and q to determine pressure coefficients "
+                         "(box only currently)");
+
 }
 
 ProcessInterpPoints::~ProcessInterpPoints()
@@ -99,14 +109,19 @@ ProcessInterpPoints::~ProcessInterpPoints()
 
 void ProcessInterpPoints::Process(po::variables_map &vm)
 {
-
     if(m_f->m_verbose)
     {
-        cout << "Processing point interpolation" << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessInterpPoints: interpolating to points..." << endl;
+        }
     }
 
+    int rank   = m_f->m_comm->GetRank();
+    int nprocs = m_f->m_comm->GetSize();
 
-    // Check for command line point specification if no .pts file specified
+    // Check for command line point specification if no .pts file
+    // specified
     if(m_f->m_fieldPts == LibUtilities::NullPtsField)
     {
         if(m_config["line"].as<string>().compare("NotSet") != 0)
@@ -118,7 +133,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                      "Failed to interpret line string");
 
             ASSERTL0(values.size() > 2,
-                     "line string should contain 2Dim+1 values "
+                     "line string should contain 2 Dim+1 values "
                      "N,x0,y0,z0,x1,y1,z1");
 
             double tmp;
@@ -167,8 +182,8 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                      "Failed to interpret plane string");
 
             ASSERTL0(values.size() > 9,
-                     "plane string should contain 4Dim+2 values "
-                     "N1,N2,x0,y0,x1,y1,x2,y2,x3,y3");
+                     "plane string should contain 4 Dim+2 values "
+                     "N1,N2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3");
 
             double tmp;
             ASSERTL0(std::modf(values[0], &tmp) == 0.0, "N1 is not an integer");
@@ -184,27 +199,82 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
             Array<OneD, Array<OneD, NekDouble> > pts(dim);
 
-            for(int i = 0; i < dim; ++i)
-            {
-                pts[i] = Array<OneD,NekDouble>(npts1*npts2);
-            }
+            int totpts = npts1*npts2;
+            int nlocpts = totpts/nprocs;
 
-            for(int j = 0; j < npts2; ++j)
+            if(rank < nprocs-1)
             {
-                for(int i = 0; i < npts1; ++i)
+                for(int i = 0; i < dim; ++i)
                 {
-                    pts[0][i+j*npts1] =
-                        (values[2] + i/((NekDouble)(npts1-1))*(values[dim+2] - values[2]))*(1.0-j/((NekDouble)(npts2-1))) +
-                        (values[3*dim+2] + i/((NekDouble)(npts1-1))*(values[2*dim+2] - values[3*dim+2]))*(j/((NekDouble)(npts2-1)));
-                    pts[1][i+j*npts1] =
-                        (values[3] + i/((NekDouble)(npts1-1))*(values[dim+3] - values[3]))*(1.0-j/((NekDouble)(npts2-1))) +
-                        (values[3*dim+3] + i/((NekDouble)(npts1-1))*(values[2*dim+3] - values[3*dim+3]))*(j/((NekDouble)(npts2-1)));
-                    
-                    if(dim > 2)
+                    pts[i] = Array<OneD,NekDouble>(nlocpts);
+                }
+
+                int cnt    = 0; 
+                int cntloc = 0; 
+                
+                for(int j = 0; j < npts2; ++j)
+                {
+                    for(int i = 0; i < npts1; ++i)
                     {
-                        pts[2][i+j*npts1] =
-                            (values[4] + i/((NekDouble)(npts1-1))*(values[dim+4] - values[4]))*(1.0-j/((NekDouble)(npts2-1))) +
-                            (values[3*dim+4] + i/((NekDouble)(npts1-1))*(values[2*dim+4] - values[3*dim+4]))*(j/((NekDouble)(npts2-1)));
+                        
+                        if((cnt >= rank*nlocpts)&&(cnt < (rank+1)*nlocpts))
+                        {
+                            pts[0][cntloc] =
+                                (values[2] + i/((NekDouble)(npts1-1))*(values[dim+2] - values[2]))*(1.0-j/((NekDouble)(npts2-1))) +
+                                (values[3*dim+2] + i/((NekDouble)(npts1-1))*(values[2*dim+2] - values[3*dim+2]))*(j/((NekDouble)(npts2-1)));
+
+                            pts[1][cntloc] =
+                                (values[3] + i/((NekDouble)(npts1-1))*(values[dim+3] - values[3]))*(1.0-j/((NekDouble)(npts2-1))) +
+                                (values[3*dim+3] + i/((NekDouble)(npts1-1))*(values[2*dim+3] - values[3*dim+3]))*(j/((NekDouble)(npts2-1)));
+                            
+                            if(dim > 2)
+                            {
+                                pts[2][cntloc] =
+                                    (values[4] + i/((NekDouble)(npts1-1))*(values[dim+4] - values[4]))*(1.0-j/((NekDouble)(npts2-1))) +
+                                    (values[3*dim+4] + i/((NekDouble)(npts1-1))*(values[2*dim+4] - values[3*dim+4]))*(j/((NekDouble)(npts2-1)));
+                            }
+                            cntloc++;
+                        }
+                        cnt++;
+                    }
+                }
+            }
+            else
+            {
+                totpts = totpts - rank*nlocpts;
+                
+                for(int i = 0; i < dim; ++i)
+                {
+                    pts[i] = Array<OneD,NekDouble>(totpts);
+                }
+                
+                int cnt    = 0; 
+                int cntloc = 0; 
+                
+                for(int j = 0; j < npts2; ++j)
+                {
+                    for(int i = 0; i < npts1; ++i)
+                    {
+                        
+                        if(cnt >= rank*nlocpts)
+                        {
+                            pts[0][cntloc] =
+                                (values[2] + i/((NekDouble)(npts1-1))*(values[dim+2] - values[2]))*(1.0-j/((NekDouble)(npts2-1))) +
+                                (values[3*dim+2] + i/((NekDouble)(npts1-1))*(values[2*dim+2] - values[3*dim+2]))*(j/((NekDouble)(npts2-1)));
+                            
+                            pts[1][cntloc] =
+                                (values[3] + i/((NekDouble)(npts1-1))*(values[dim+3] - values[3]))*(1.0-j/((NekDouble)(npts2-1))) +
+                                (values[3*dim+3] + i/((NekDouble)(npts1-1))*(values[2*dim+3] - values[3*dim+3]))*(j/((NekDouble)(npts2-1)));
+                            
+                            if(dim > 2)
+                            {
+                                pts[2][cntloc] =
+                                    (values[4] + i/((NekDouble)(npts1-1))*(values[dim+4] - values[4]))*(1.0-j/((NekDouble)(npts2-1))) +
+                                    (values[3*dim+4] + i/((NekDouble)(npts1-1))*(values[2*dim+4] - values[3*dim+4]))*(j/((NekDouble)(npts2-1)));
+                            }
+                            cntloc++;
+                        }
+                        cnt++;
                     }
                 }
             }
@@ -215,7 +285,108 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
             m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsPlane);
             m_f->m_fieldPts->SetPointsPerEdge(ppe);
-           
+
+        }
+        else if(m_config["box"].as<string>().compare("NotSet") != 0)
+        {
+            string help = m_config["box"].as<string>();
+            vector<NekDouble> values;
+            ASSERTL0(ParseUtils::GenerateUnOrderedVector(
+                             m_config["box"].as<string>().c_str(),values),
+                     "Failed to interpret box string");
+            
+            ASSERTL0(values.size() == 9,
+                     "box string should contain 9 values "
+                     "N1,N2,N3,xmin,xmax,ymin,ymax,zmin,zmax");
+
+            int dim = 3;
+
+            int npts1 = values[0];
+            int npts2 = values[1];
+            int npts3 = values[2];
+
+            Array<OneD, Array<OneD, NekDouble> > pts(dim);
+
+            int totpts = npts1*npts2*npts3;
+            int nlocpts = totpts/nprocs;
+
+            if(rank < nprocs-1) // for rank 0 to nproc-1
+            {
+                totpts = nlocpts;
+
+                for(int i = 0; i < dim; ++i)
+                {
+                    pts[i] = Array<OneD,NekDouble>(totpts);
+                }
+                
+                int cnt    = 0; 
+                int cntloc = 0; 
+                
+                for(int k = 0; k < npts3; ++k)
+                {
+                    for(int j = 0; j < npts2; ++j)
+                    {
+                        for(int i = 0; i < npts1; ++i)
+                        {
+                            if((cnt >= rank*nlocpts)&&(cnt < (rank+1)*nlocpts))
+                            {
+                                pts[0][cntloc] = values[3] + 
+                                    i/((NekDouble)(npts1-1))*(values[4]-values[3]);
+                                pts[1][cntloc] = values[5] + 
+                                    j/((NekDouble)(npts2-1))*(values[6]-values[5]);
+                                pts[2][cntloc] = values[7] + 
+                                    k/((NekDouble)(npts3-1))*(values[8]-values[7]);
+                                cntloc++;
+                            }
+                            cnt++;
+                        }
+                    }
+                }
+            }
+            else  // give last rank all remaining points 
+            {
+                totpts = totpts - rank*nlocpts;
+
+                for(int i = 0; i < dim; ++i)
+                {
+                    pts[i] = Array<OneD,NekDouble>(totpts);
+                }
+                
+                int cnt    = 0; 
+                int cntloc = 0; 
+                
+                for(int k = 0; k < npts3; ++k)
+                {
+                    for(int j = 0; j < npts2; ++j)
+                    {
+                        for(int i = 0; i < npts1; ++i)
+                        {
+                            if(cnt >= rank*nlocpts)
+                            {
+                                pts[0][cntloc] = values[3] + 
+                                    i/((NekDouble)(npts1-1))*(values[4]-values[3]);
+                                pts[1][cntloc] = values[5] + 
+                                    j/((NekDouble)(npts2-1))*(values[6]-values[5]);
+                                pts[2][cntloc] = values[7] + 
+                                    k/((NekDouble)(npts3-1))*(values[8]-values[7]);
+                                cntloc++;
+                            }
+                            cnt++;
+                        }
+                    }
+                }
+            }
+
+            vector<int> ppe;
+            ppe.push_back(npts1);
+            ppe.push_back(npts2);
+            ppe.push_back(npts3);
+            m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
+            m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsBox);
+            m_f->m_fieldPts->SetPointsPerEdge(ppe);
+            vector<NekDouble> boxdim;
+            boxdim.assign(&values[3],&values[3]+6);
+            m_f->m_fieldPts->SetBoxSize(boxdim);
         }
     }
 
@@ -237,12 +408,21 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     m_f->m_fieldPts->GetPts(pts);
 
     rng->m_checkShape   = false;
+    rng->m_zmin = -1;
+    rng->m_zmax =  1;
+    rng->m_ymin = -1;
+    rng->m_ymax =  1;
     switch(coordim)
     {
     case 3:
         rng->m_doZrange = true;
         rng->m_zmin = Vmath::Vmin(npts, pts[2],1);
         rng->m_zmax = Vmath::Vmax(npts, pts[2],1);
+        if(rng->m_zmax == rng->m_zmin)
+        {
+            rng->m_zmin -=1; 
+            rng->m_zmax +=1; 
+        }
     case 2:
         rng->m_doYrange = true;
         rng->m_ymin = Vmath::Vmin(npts, pts[1],1);
@@ -262,6 +442,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     // Read in local from field partitions
     const SpatialDomains::ExpansionMap &expansions = fromField->m_graph->GetExpansions();
 
+
     fromField->m_fld = MemoryManager<LibUtilities::FieldIO>
         ::AllocateSharedPtr(fromField->m_session->GetComm());
 
@@ -274,6 +455,11 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     {
         ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
     }
+
+    // check to see that we do have some elmement in teh domain since
+    // possibly all points could be outside of the domain
+    ASSERTL0(i > 0, "No elements are set. Are the interpolated points "
+             "wihtin the domain given by the xml files?");
 
     string fromfld = m_config["fromfld"].as<string>();
     fromField->m_fld->Import(fromfld,fromField->m_fielddef,
@@ -318,9 +504,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         m_f->m_fieldPts->AddField(newPts, fromField->m_fielddef[0]->m_fields[j]);
     }
 
-    if(fromField->m_session->GetComm()->GetRank() == 0)
+    if(rank == 0)
     {
-        cout << "Interpolating [" << flush;
+        cout << "Interpolating on proc 0 [" << flush;
     }
 
     NekDouble clamp_low = m_config["clamptolowervalue"].as<NekDouble>();
@@ -328,13 +514,12 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
 
     InterpolateFieldToPts(fromField->m_exp, pts,
-                          clamp_low, clamp_up, def_value);
-
-    if(fromField->m_session->GetComm()->GetRank() == 0)
+                          clamp_low, clamp_up, def_value, !rank);
+    
+    if(rank == 0)
     {
         cout << "]" << endl;
     }
-
 }
 
 void ProcessInterpPoints::InterpolateFieldToPts(
@@ -342,20 +527,81 @@ void ProcessInterpPoints::InterpolateFieldToPts(
                                                 Array<OneD, Array<OneD, NekDouble> >   &pts,
                                                 NekDouble                              clamp_low,
                                                 NekDouble                              clamp_up,
-                                                NekDouble                              def_value)
+                                                NekDouble                              def_value,
+                                                bool isRoot)
 {
-    int expdim = pts.num_elements();
+    int dim = pts.num_elements();
 
-    Array<OneD, NekDouble> coords(expdim), Lcoords(expdim);
+    Array<OneD, NekDouble> coords(dim), Lcoords(dim);
     int nq1 = pts[0].num_elements();
     int elmtid, offset;
     int r, f;
     int intpts = 0;
+    int nfields = field0.size();
+    int pfield = -1;
+    NekDouble p0,qinv;
+    vector<int> velid;
 
+    if(!boost::iequals(m_config["cp"].as<string>(),"NotSet"))
+    {
+
+        vector<NekDouble> values;
+        ASSERTL0(ParseUtils::GenerateUnOrderedVector(
+                      m_config["cp"].as<string>().c_str(),values),
+                 "Failed to interpret cp string");
+
+        ASSERTL0(values.size() == 2,
+                 "cp string should contain 2 values "
+                 "p0 and q (=1/2 rho u^2)");
+
+        p0  =  values[0];
+        qinv = 1.0/values[1];
+        
+        LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
+
+        for(int i = 0; i < fPts->GetNFields(); ++i)
+        {
+            if(boost::iequals(fPts->GetFieldName(i),"p"))
+            {
+                pfield = i;
+            }
+
+            if(boost::iequals(fPts->GetFieldName(i),"u")||
+               boost::iequals(fPts->GetFieldName(i),"v")||
+               boost::iequals(fPts->GetFieldName(i),"w"))
+            {
+                velid.push_back(i);
+            }
+        }
+        
+        if(pfield != -1)
+        {
+            Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
+            m_f->m_fieldPts->AddField(newPts, "Cp");
+            nfields += 1;
+
+            if(velid.size())
+            {
+                Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
+                m_f->m_fieldPts->AddField(newPts, "Cp0");
+                nfields += 1;
+            }
+            else
+            {
+                WARNINGL0(false,"Did not find velocity components for Cp0");
+            }
+        }
+        else
+        {
+            WARNINGL0(false,"Failed to find 'p' field to determine cp0");
+        }
+
+    }
+    
     // resize data field
-    m_f->m_data.resize(field0.size());
+    m_f->m_data.resize(nfields);
 
-    for (f = 0; f < field0.size(); ++f)
+    for (f = 0; f < nfields; ++f)
     {
         m_f->m_data[f].resize(nq1);
     }
@@ -364,7 +610,7 @@ void ProcessInterpPoints::InterpolateFieldToPts(
     {
         coords[0] = pts[0][r];
         coords[1] = pts[1][r];
-        if (expdim == 3)
+        if (dim == 3)
         {
             coords[2] = pts[2][r];
         }
@@ -405,11 +651,28 @@ void ProcessInterpPoints::InterpolateFieldToPts(
             }
         }
 
-        if (intpts%1000 == 0)
+        if (intpts%1000 == 0&&isRoot)
         {
             cout <<"." << flush;
         }
         intpts ++;
+
+        if(pfield != -1) // calculate cp
+        {
+            m_f->m_data[nfields-2][r] = qinv*(m_f->m_data[pfield][r] - p0);
+
+            if(velid.size()) // calculate cp0
+            {
+                NekDouble q = 0; 
+                for(int i = 0; i < velid.size(); ++i)
+                {
+                    q += 0.5*m_f->m_data[velid[i]][r]*m_f->m_data[velid[i]][r];
+                }
+                
+                m_f->m_data[nfields-1][r] = qinv*(m_f->m_data[pfield][r]+q - p0);
+            }
+        }
+
     }
 }
 

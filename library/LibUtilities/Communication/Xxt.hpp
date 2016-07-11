@@ -37,7 +37,6 @@
 #define NEKTAR_LIB_UTILITIES_COMMUNICATION_XXT_HPP
 
 #include <iostream>
-using namespace std;
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -46,10 +45,12 @@ using namespace std;
 #ifdef NEKTAR_USE_MPI
 #include <LibUtilities/Communication/CommMpi.h>
 #endif
-using namespace Nektar;
+
 
 namespace Xxt
 {
+    using namespace std;
+    using namespace Nektar;
 #ifdef NEKTAR_USE_MPI
     typedef MPI_Comm comm_ext;
     typedef MPI_Request comm_req;

@@ -35,6 +35,8 @@
 
 #include <PulseWaveSolver/EquationSystems/ArterialPressureArea.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

@@ -8,6 +8,7 @@
 
 #include <LibUtilities/Foundations/Foundations.hpp>
 
+using namespace std;
 using namespace Nektar;
 
 NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2);

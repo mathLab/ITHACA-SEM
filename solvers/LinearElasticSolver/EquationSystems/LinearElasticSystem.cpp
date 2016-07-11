@@ -56,6 +56,8 @@
 #include <MultiRegions/GlobalLinSysPETScStaticCond.h>
 #endif
 
+using namespace std;
+
 namespace Nektar
 {
 

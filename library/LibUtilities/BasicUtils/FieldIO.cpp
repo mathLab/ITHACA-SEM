@@ -147,8 +147,9 @@ namespace Nektar
          *
          */
         FieldIO::FieldIO(LibUtilities::CommSharedPtr pComm,
-                         bool                        sharedFilesystem)
-            : m_comm(pComm), m_sharedFilesystem(sharedFilesystem)
+                         bool                        sharedFilesystem) :
+            m_comm(pComm),
+            m_sharedFilesystem(sharedFilesystem)
         {
         }
 
@@ -178,7 +179,11 @@ namespace Nektar
             // Prepare to write out data. In parallel, we must create directory
             // and determine the full pathname to the file to write out.
             // Any existing file/directory which is in the way is removed.
-            std::string filename = SetUpOutput(outFile, fielddefs, fieldmetadatamap);
+            std::string filename = SetUpOutput(outFile);
+            if (m_comm->GetSize() > 1)
+            {
+                SetUpFieldMetaData(outFile, fielddefs, fieldmetadatamap);
+            }
 
             // Create the file (partition)
             TiXmlDocument doc;
@@ -226,6 +231,11 @@ namespace Nektar
                     else if (fielddefs[f]->m_numHomogeneousDir == 2)
                     {
                         shapeStringStream << "-HomogenousExp2D";
+                    }
+
+                    if (fielddefs[f]->m_homoStrips)
+                    {
+                        shapeStringStream << "-Strips";
                     }
 
                     shapeString = shapeStringStream.str();
@@ -306,6 +316,24 @@ namespace Nektar
                             homoZIDsString = homoZIDsStringStream.str();
                         }
                         elemTag->SetAttribute("HOMOGENEOUSZIDS", homoZIDsString);
+                    }
+                    
+                    if(fielddefs[f]->m_homogeneousSIDs.size() > 0)
+                    {
+                        std::string homoSIDsString;
+                        {
+                            std::stringstream homoSIDsStringStream;
+                            bool first = true;
+                            for(int i = 0; i < fielddefs[f]->m_homogeneousSIDs.size(); i++)
+                            {
+                                if (!first)
+                                    homoSIDsStringStream << ",";
+                                homoSIDsStringStream << fielddefs[f]->m_homogeneousSIDs[i];
+                                first = false;
+                            }
+                            homoSIDsString = homoSIDsStringStream.str();
+                        }
+                        elemTag->SetAttribute("HOMOGENEOUSSIDS", homoSIDsString);
                     }
                 }
 
@@ -728,6 +756,7 @@ namespace Nektar
                     std::string shapeString;
                     std::string basisString;
                     std::string homoLengthsString;
+                    std::string homoSIDsString;
                     std::string homoZIDsString;
                     std::string homoYIDsString;
                     std::string numModesString;
@@ -755,6 +784,10 @@ namespace Nektar
                         else if (attrName == "HOMOGENEOUSLENGTHS")
                         {
                             homoLengthsString.insert(0,attr->Value());
+                        }
+                        else if (attrName == "HOMOGENEOUSSIDS")
+                        {
+                            homoSIDsString.insert(0,attr->Value());
                         }
                         else if (attrName == "HOMOGENEOUSZIDS")
                         {
@@ -809,6 +842,14 @@ namespace Nektar
 
                         // Get the next attribute.
                         attr = attr->Next();
+                    }
+
+
+                    // Check to see if using strips formulation
+                    bool strips = false;
+                    if(shapeString.find("Strips")!=string::npos)
+                    {
+                        strips = true;
                     }
 
                     // Check to see if homogeneous expansion and if so
@@ -880,6 +921,13 @@ namespace Nektar
                         ASSERTL0(valid, "Unable to correctly parse the number of homogeneous lengths.");
                     }
 
+                    // Get Homogeneous strips IDs
+                    std::vector<unsigned int> homoSIDs;
+                    if(strips)
+                    {
+                        valid = ParseUtils::GenerateSeqVector(homoSIDsString.c_str(), homoSIDs);
+                        ASSERTL0(valid, "Unable to correctly parse homogeneous strips IDs.");
+                    }
                     // Get Homogeneous points IDs
                     std::vector<unsigned int> homoZIDs;
                     std::vector<unsigned int> homoYIDs;
@@ -949,7 +997,11 @@ namespace Nektar
                     valid = ParseUtils::GenerateOrderedStringVector(fieldsString.c_str(), Fields);
                     ASSERTL0(valid, "Unable to correctly parse the number of fields.");
 
-                    FieldDefinitionsSharedPtr fielddef  = MemoryManager<FieldDefinitions>::AllocateSharedPtr(shape, elementIds, basis, UniOrder, numModes, Fields, numHomoDir, homoLengths, homoZIDs, homoYIDs, points, pointDef, numPoints, numPointDef);
+                    FieldDefinitionsSharedPtr fielddef  = 
+                            MemoryManager<FieldDefinitions>::AllocateSharedPtr(shape, 
+                            elementIds, basis, UniOrder, numModes, Fields, numHomoDir, 
+                            homoLengths, strips, homoSIDs, homoZIDs, homoYIDs, 
+                            points, pointDef, numPoints, numPointDef);
 
                     fielddefs.push_back(fielddef);
 
@@ -1137,9 +1189,7 @@ namespace Nektar
         /**
          *
          */
-        std::string FieldIO::SetUpOutput(const std::string outname,
-                const std::vector<FieldDefinitionsSharedPtr>& fielddefs,
-                const FieldMetaDataMap &fieldmetadatamap)
+        std::string FieldIO::SetUpOutput(const std::string outname)
         {
             ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
 
@@ -1158,8 +1208,8 @@ namespace Nektar
             else
             {
                 // Guess at filename that might belong to this process.
-                boost::format pad("P%1$07d.fld");
-                pad % m_comm->GetRank();
+                boost::format pad("P%1$07d.%2$s");
+                pad % m_comm->GetRank() % GetFileEnding();
 
                 // Generate full path name
                 fs::path poutfile(pad.str());
@@ -1212,20 +1262,6 @@ namespace Nektar
                 return LibUtilities::PortablePath(specPath);
             }
 
-            // Compute number of elements on this process and share with other
-            // processes. Also construct list of elements on this process from
-            // available vector of field definitions.
-            std::vector<unsigned int> elmtnums(nprocs,0);
-            std::vector<unsigned int> idlist;
-            int i;
-            for (i = 0; i < fielddefs.size(); ++i)
-            {
-                elmtnums[rank] += fielddefs[i]->m_elementIDs.size();
-                idlist.insert(idlist.end(), fielddefs[i]->m_elementIDs.begin(),
-                                            fielddefs[i]->m_elementIDs.end());
-            }
-            m_comm->AllReduce(elmtnums,LibUtilities::ReduceMax);
-
             // Create the destination directory
             try
             {
@@ -1240,6 +1276,37 @@ namespace Nektar
             }
 
             m_comm->Block();
+
+            // Return the full path to the partition for this process
+            return LibUtilities::PortablePath(fulloutname);
+        }
+
+
+        void FieldIO::SetUpFieldMetaData(
+            const string outname,
+            const vector< FieldDefinitionsSharedPtr > &fielddefs,
+            const FieldMetaDataMap &fieldmetadatamap)
+        {
+            ASSERTL0(!outname.empty(), "Empty path given to SetUpFieldMetaData()");
+
+            int nprocs = m_comm->GetSize();
+            int rank   = m_comm->GetRank();
+
+            fs::path specPath (outname);
+
+            // Compute number of elements on this process and share with other
+            // processes. Also construct list of elements on this process from
+            // available vector of field definitions.
+            std::vector<unsigned int> elmtnums(nprocs,0);
+            std::vector<unsigned int> idlist;
+            int i;
+            for (i = 0; i < fielddefs.size(); ++i)
+            {
+                elmtnums[rank] += fielddefs[i]->m_elementIDs.size();
+                idlist.insert(idlist.end(), fielddefs[i]->m_elementIDs.begin(),
+                                            fielddefs[i]->m_elementIDs.end());
+            }
+            m_comm->AllReduce(elmtnums,LibUtilities::ReduceMax);
 
             // Collate per-process element lists on root process to generate
             // the info file.
@@ -1260,8 +1327,8 @@ namespace Nektar
                 std::vector<std::string> filenames;
                 for(int i = 0; i < nprocs; ++i)
                 {
-                    boost::format pad("P%1$07d.fld");
-                    pad % i;
+                    boost::format pad("P%1$07d.%2$s");
+                    pad % i % GetFileEnding();
                     filenames.push_back(pad.str());
                 }
 
@@ -1279,9 +1346,8 @@ namespace Nektar
                 m_comm->Send(0, idlist);
             }
 
-            // Return the full path to the partition for this process
-            return LibUtilities::PortablePath(fulloutname);
         }
+
 
         /**
          *

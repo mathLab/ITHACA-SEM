@@ -36,6 +36,7 @@
 #include <SolverUtils/EquationSystem.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
+using namespace std;
 using namespace Nektar;
 using namespace Nektar::SolverUtils;
 

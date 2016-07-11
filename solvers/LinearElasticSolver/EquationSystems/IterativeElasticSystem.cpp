@@ -46,6 +46,8 @@
 
 #include <LinearElasticSolver/EquationSystems/IterativeElasticSystem.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

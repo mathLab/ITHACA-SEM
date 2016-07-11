@@ -39,6 +39,8 @@
 #include <CardiacEPSolver/Filters/FilterCheckpointCellModel.h>
 #include <CardiacEPSolver/Filters/FilterCellHistoryPoints.h>
 
+using namespace std;
+
 namespace Nektar
 {
     /**

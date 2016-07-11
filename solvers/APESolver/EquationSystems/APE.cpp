@@ -39,6 +39,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <APESolver/EquationSystems/APE.h>
 
+using namespace std;
+
 namespace Nektar
 {
 string APE::className = GetEquationSystemFactory().RegisterCreatorFunction(
@@ -276,7 +278,17 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
 {
     std::string varName;
     int nvariables = m_fields.num_elements();
-    int cnt = 0;
+    int cnt        = 0;
+    int nTracePts  = GetTraceTotPoints();
+
+    // Extract trace for boundaries. Needs to be done on all processors to avoid
+    // deadlock.
+    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+    for (int i = 0; i < nvariables; ++i)
+    {
+        Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+        m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
+    }
 
     // loop over Boundary Regions
     for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
@@ -284,7 +296,7 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
         // Wall Boundary Condition
         if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
         {
-            WallBC(n, cnt, inarray);
+            WallBC(n, cnt, Fwd, inarray);
         }
 
         // Time Dependent Boundary Condition (specified in meshfile)
@@ -305,20 +317,12 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
  * @brief Wall boundary conditions for the APE equations.
  */
 void APE::WallBC(int bcRegion, int cnt,
+                 Array<OneD, Array<OneD, NekDouble> > &Fwd,
                  Array<OneD, Array<OneD, NekDouble> > &physarray)
 {
-    int nTracePts = GetTraceTotPoints();
     int nVariables = physarray.num_elements();
 
     const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
-
-    // Get physical values of the forward trace
-    Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
-    for (int i = 0; i < nVariables; ++i)
-    {
-        Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-        m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-    }
 
     // Adjust the physical values of the trace to take
     // user defined boundaries into account

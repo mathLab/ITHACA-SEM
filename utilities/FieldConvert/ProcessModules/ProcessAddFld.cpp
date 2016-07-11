@@ -50,14 +50,14 @@ namespace Utilities
 ModuleKey ProcessAddFld::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "addfld"),
-        ProcessAddFld::create, "rescale input field by a constant factor.");
+        ProcessAddFld::create, "add two fields together with optional scaling. Must specify fromfld and scaling is optionally specified with input option scale.");
 
 ProcessAddFld::ProcessAddFld(FieldSharedPtr f) : ProcessModule(f)
 {
     m_config["scale"]   = ConfigOption(false, "1.0", "scale factor");
 
     m_config["fromfld"] = ConfigOption(false, "NotSet",
-                                "Fld file form which to interpolate field");
+                                "Fld file form which to add field");
 
     ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
              "Need to specify fromfld=file.fld ");
@@ -72,7 +72,10 @@ void ProcessAddFld::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessAddFld: Adding new fld to input fld" << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessAddFld: Adding new fld to input fld..." << endl;
+        }
     }
 
     ASSERTL0(m_f->m_data.size() != 0,"No input data defined");
@@ -91,14 +94,16 @@ void ProcessAddFld::Process(po::variables_map &vm)
         {
             ElementGIDs[i] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
         }
-        m_f->m_fld->Import(fromfld,fromField->m_fielddef,
+        m_f->m_fld->Import(fromfld,
+                           fromField->m_fielddef,
                            fromField->m_data,
                            LibUtilities::NullFieldMetaDataMap,
                            ElementGIDs);
     }
     else
     {
-        m_f->m_fld->Import(fromfld,fromField->m_fielddef,
+        m_f->m_fld->Import(fromfld,
+                           fromField->m_fielddef,
                            fromField->m_data,
                            LibUtilities::NullFieldMetaDataMap);
     }
@@ -151,13 +156,28 @@ void ProcessAddFld::Process(po::variables_map &vm)
         {
             Vmath::Vcopy(ncoeffs,m_f->m_exp[j]->GetCoeffs(),1, SaveFld,1);
 
+
+            // since expansion is set up according to m_f search for same variable in new field
+            int nfield;
+            for (nfield = 0; nfield < fromField->m_fielddef[0]->m_fields.size(); ++nfield)
+            {
+                if(fromField->m_fielddef[0]->m_fields[nfield] ==
+                   m_f->m_fielddef[0]->m_fields[j])
+                {
+                    break;
+                }
+            }
+
+            ASSERTL0(nfield != fromField->m_fielddef[0]->m_fields.size(),
+                     "Could not find field " + m_f->m_fielddef[0]->m_fields[j] + " in from field");
+            
             // load new field
             for (int i = 0; i < fromField->m_data.size(); ++i)
             {
                 m_f->m_exp[j]->ExtractDataToCoeffs(
                                        fromField->m_fielddef[i],
                                        fromField->m_data[i],
-                                       fromField->m_fielddef[i]->m_fields[j],
+                                       fromField->m_fielddef[i]->m_fields[nfield],
                                        m_f->m_exp[j]->UpdateCoeffs());
             }
 
@@ -181,7 +201,6 @@ void ProcessAddFld::Process(po::variables_map &vm)
 
         m_f->m_fielddef = FieldDef;
         m_f->m_data     = FieldData;
-
     }
 }
 

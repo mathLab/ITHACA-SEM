@@ -61,13 +61,20 @@ class ProcessInterpPoints : public ProcessModule
         /// Write mesh to output file.
         virtual void Process(po::variables_map &vm);
 
+        virtual std::string GetModuleName()
+        {
+            return "ProcessInterpPoints";
+        }
+
+
     private:
 
         void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
                                    Array<OneD, Array<OneD, NekDouble> >   &pts,
                                    NekDouble                               clamp_low,
                                    NekDouble                               clamp_up,
-                                   NekDouble                               def_value);
+                                   NekDouble                               def_value,
+                                   bool                                    isRoot);
 };
 
 }

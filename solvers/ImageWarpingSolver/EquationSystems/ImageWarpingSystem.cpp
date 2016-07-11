@@ -36,6 +36,8 @@
 #include <ImageWarpingSolver/EquationSystems/ImageWarpingSystem.h>
 #include <MultiRegions/ContField2D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string ImageWarpingSystem::className = 

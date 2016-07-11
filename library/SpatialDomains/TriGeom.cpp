@@ -42,6 +42,7 @@
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/GeomFactors.h>
 
+using namespace std;
 
 namespace Nektar
 {
@@ -246,7 +247,7 @@ namespace Nektar
         {
             int i, j, vmap[3] = {-1,-1,-1};
             NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
-           
+
             // For periodic faces, we calculate the vector between the centre
             // points of the two faces. (For connected faces this will be
             // zero). We can then use this to determine alignment later in the
@@ -297,7 +298,7 @@ namespace Nektar
                         break;
                 }
             }
-            else 
+            else
             {
                 switch (vmap[0])
                 {
@@ -316,7 +317,7 @@ namespace Nektar
             ASSERTL0(false, "Unable to determine triangle orientation");
             return StdRegions::eNoOrientation;
         }
-        
+
 
         /**
          *
@@ -602,7 +603,7 @@ namespace Nektar
         /**
          *
          */
-        NekDouble TriGeom::v_GetLocCoords(const Array<OneD,const NekDouble> &coords, 
+        NekDouble TriGeom::v_GetLocCoords(const Array<OneD,const NekDouble> &coords,
                                           Array<OneD,NekDouble> &Lcoords)
         {
             NekDouble resid = 0.0;
@@ -610,27 +611,27 @@ namespace Nektar
 
             // calculate local coordinate for coord
             if(GetMetricInfo()->GetGtype() == eRegular)
-            { 
-                NekDouble coords2 = (m_coordim == 3)? coords[2]: 0.0; 
+            {
+                NekDouble coords2 = (m_coordim == 3)? coords[2]: 0.0;
                 PointGeom dv1, dv2, norm, orth1, orth2;
                 PointGeom xin(m_coordim,0,coords[0],coords[1],coords2);
 
-                // Calculate edge vectors from 0-1 and 0-2 edges. 
+                // Calculate edge vectors from 0-1 and 0-2 edges.
                 dv1.Sub(*m_verts[1],*m_verts[0]);
                 dv2.Sub(*m_verts[2],*m_verts[0]);
 
                 // Obtain normal to plane in which dv1 and dv2 lie
                 norm.Mult(dv1,dv2);
-                
-                // Obtain vector which are proportional to normal of dv1 and dv2. 
+
+                // Obtain vector which are proportional to normal of dv1 and dv2.
                 orth1.Mult(norm,dv1);
                 orth2.Mult(norm,dv2);
-                
+
                 // Start with vector of desired points minus vertex_0
                 xin -= *m_verts[0];
 
                 // Calculate length using L/|dv1| = (x-v0).n1/(dv1.n1) for coordiante 1
-                // Then rescale to [-1,1]. 
+                // Then rescale to [-1,1].
                 Lcoords[0] = xin.dot(orth2)/dv1.dot(orth2);
                 Lcoords[0] = 2*Lcoords[0]-1;
                 Lcoords[1] = xin.dot(orth1)/dv2.dot(orth1);
@@ -654,16 +655,16 @@ namespace Nektar
                 Vmath::Sadd(npts, -coords[1], ptsy,1,tmpy,1);
                 Vmath::Vmul (npts, tmpx,1,tmpx,1,tmpx,1);
                 Vmath::Vvtvp(npts, tmpy,1,tmpy,1,tmpx,1,tmpx,1);
-                          
+
                 int min_i = Vmath::Imin(npts,tmpx,1);
-                
+
                 Lcoords[0] = za[min_i%za.num_elements()];
                 Lcoords[1] = zb[min_i/za.num_elements()];
 
-                // recover cartesian coordinate from collapsed coordinate. 
+                // recover cartesian coordinate from collapsed coordinate.
                 Lcoords[0] = (1.0+Lcoords[0])*(1.0-Lcoords[1])/2 -1.0;
 
-                // Perform newton iteration to find local coordinates 
+                // Perform newton iteration to find local coordinates
                 NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords,resid);
             }
             return resid;
@@ -800,7 +801,7 @@ namespace Nektar
         /**
          *
          */
-        bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, 
+        bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                       Array<OneD, NekDouble> &stdCoord,
                                       NekDouble tol)
         {
@@ -808,7 +809,7 @@ namespace Nektar
             return v_ContainsPoint(gloCoord,stdCoord,tol,resid);
         }
 
-        bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, 
+        bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                       Array<OneD, NekDouble> &stdCoord,
                                       NekDouble tol,
                                       NekDouble &resid)
@@ -849,21 +850,16 @@ namespace Nektar
         void TriGeom::SetUpXmap()
         {
             int order0  = m_edges[0]->GetBasis(0)->GetNumModes();
-            int points0 = m_edges[0]->GetBasis(0)->GetNumPoints();
             int order1  = max(order0,
                               max(m_edges[1]->GetBasis(0)->GetNumModes(),
                                   m_edges[2]->GetBasis(0)->GetNumModes()));
-            int points1 = max(points0,
-                              max(m_edges[1]->GetBasis(0)->GetNumPoints(),
-                                  m_edges[2]->GetBasis(0)->GetNumPoints()));
-
 
             const LibUtilities::BasisKey B0(
                 LibUtilities::eModified_A, order0, LibUtilities::PointsKey(
-                    points0, LibUtilities::eGaussLobattoLegendre));
+                    order0+1, LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey B1(
                 LibUtilities::eModified_B, order1, LibUtilities::PointsKey(
-                    points1, LibUtilities::eGaussRadauMAlpha1Beta0));
+                    order1, LibUtilities::eGaussRadauMAlpha1Beta0));
 
             m_xmap = MemoryManager<StdRegions::StdTriExp>
                 ::AllocateSharedPtr(B0,B1);

@@ -362,163 +362,106 @@ namespace Nektar
             return m_geom->GetCoordim();
         }
 
-        void PyrExp::v_GetFacePhysVals(
-            const int                                face,
-            const StdRegions::StdExpansionSharedPtr &FaceExp,
-            const Array<OneD, const NekDouble>      &inarray,
-                  Array<OneD,       NekDouble>      &outarray,
-            StdRegions::Orientation                  orient)
+        void PyrExp::v_GetFacePhysMap(const int               face,
+                                      Array<OneD, int>        &outarray)
         {
-            int nq0 = m_base[0]->GetNumPoints();
-            int nq1 = m_base[1]->GetNumPoints();
-            int nq2 = m_base[2]->GetNumPoints();
-
-            Array<OneD,NekDouble> o_tmp(GetFaceNumPoints(face));
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            int nquad2 = m_base[2]->GetNumPoints();
             
-            if (orient == StdRegions::eNoOrientation)
-            {
-                orient = GetForient(face);
-            }
+            int nq0 = 0; 
+            int nq1 = 0; 
 
             switch(face)
             {
-                case 0:
-                    if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
-                    {
-                        //Directions A and B positive
-                        Vmath::Vcopy(nq0*nq1,&(inarray[0]),1,&(o_tmp[0]),1);
-                    }
-                    else if(orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
-                    {
-                        //Direction A negative and B positive
-                        for (int j=0; j<nq1; j++)
-                        {
-                            Vmath::Vcopy(nq0,&(inarray[0])+(nq0-1)+j*nq0,-1,&(o_tmp[0])+(j*nq0),1);
-                        }
-                    }
-                    else if(orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
-                    {
-                        //Direction A positive and B negative
-                        for (int j=0; j<nq1; j++)
-                        {
-                            Vmath::Vcopy(nq0,&(inarray[0])+nq0*(nq1-1-j),1,&(o_tmp[0])+(j*nq0),1);
-                        }
-                    } 
-                    else if(orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
-                    {
-                        //Direction A negative and B negative
-                        for(int j=0; j<nq1; j++)
-                        {
-                            Vmath::Vcopy(nq0,&(inarray[0])+(nq0*nq1-1-j*nq0),-1,&(o_tmp[0])+(j*nq0),1);
-                        }
-                    }
-                    else if(orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
-                    {
-                        //Transposed, Direction A and B positive
-                        for (int i=0; i<nq0; i++)
-                        {
-                            Vmath::Vcopy(nq1,&(inarray[0])+i,nq0,&(o_tmp[0])+(i*nq1),1);
-                        }
-                    }
-                    else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
-                    {
-                        //Transposed, Direction A positive and B negative
-                        for (int i=0; i<nq0; i++)
-                        {
-                            Vmath::Vcopy(nq1,&(inarray[0])+(nq0-1-i),nq0,&(o_tmp[0])+(i*nq1),1);
-                        }
-                    } 
-                    else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
-                    {
-                        //Transposed, Direction A negative and B positive
-                        for (int i=0; i<nq0; i++)
-                        {
-                            Vmath::Vcopy(nq1,&(inarray[0])+i+nq0*(nq1-1),-nq0,&(o_tmp[0])+(i*nq1),1);
-                        }
-                    } 
-                    else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
-                    {
-                        //Transposed, Direction A and B negative
-                        for (int i=0; i<nq0; i++)
-                        {
-                            Vmath::Vcopy(nq1,&(inarray[0])+(nq0*nq1-1-i),-nq0,&(o_tmp[0])+(i*nq1),1);
-                        }
-                    } 
-                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(), o_tmp,
-                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
-                    break;
-
-                case 1:
+            case 0:
+                nq0 = nquad0;
+                nq1 = nquad1;
+                if(outarray.num_elements()!=nq0*nq1)
                 {
-                    for (int k = 0; k < nq2; k++)
-                    {
-                        Vmath::Vcopy(nq0,inarray.get()+nq0*nq1*k,1,outarray.get()+k*nq0,1);
-                    }
-                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), outarray.get(),
-                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp.get());
-                    break;
+                    outarray = Array<OneD, int>(nq0*nq1);
+                }
+                
+                //Directions A and B positive
+                for(int i = 0; i < nquad0*nquad1; ++i)
+                {
+                    outarray[i] = i;
                 }
 
+                break;
+              case 1:
+                    nq0 = nquad0;
+                    nq1 = nquad2;
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+                    
+                    //Direction A and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+                        for(int i = 0; i < nquad0; ++i)
+                        {
+                            outarray[k*nquad0+i] = (nquad0*nquad1*k)+i;
+                        }
+                    }
+
+                    break; 
                 case 2:
-                {
-                    Vmath::Vcopy(nq1*nq2,inarray.get()+(nq0-1),nq0,outarray.get(),1);
-                    LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), outarray.get(),
-                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp.get());
-                    break;
-                }
-
-                case 3:
-                {
-                    for (int k = 0; k < nq2; k++)
+                    nq0 = nquad1;
+                    nq1 = nquad2;
+                    if(outarray.num_elements()!=nq0*nq1)
                     {
-                        Vmath::Vcopy(nq0,inarray.get()+nq0*(nq1-1)+nq0*nq1*k,1,outarray.get()+(k*nq0),1);
+                        outarray = Array<OneD, int>(nq0*nq1);
                     }
-                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), outarray.get(),
-                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp.get());
-                }
-
-                case 4:
-                {
-                    Vmath::Vcopy(nq1*nq2,inarray.get(),nq0,outarray.get(),1);
-                    LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), outarray.get(),
-                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp.get());
+                    
+                    //Directions A and B positive
+                    for(int j = 0; j < nquad1*nquad2; ++j)
+                    {
+                        outarray[j] = nquad0-1 + j*nquad0;
+                        
+                    }
                     break;
-                }
+                case 3:
+                
+                    nq0 = nquad0;
+                    nq1 = nquad2;
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+                    
+                    //Direction A and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+                        for(int i = 0; i < nquad0; ++i)
+                        {
+                            outarray[k*nquad0+i] = nquad0*(nquad1-1) + (nquad0*nquad1*k)+i;
+                        }
+                    }
+                    
+                case 4:
+                    nq0 = nquad1;
+                    nq1 = nquad2;
 
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+                    
+                    //Directions A and B positive
+                    for(int j = 0; j < nquad1*nquad2; ++j)
+                    {
+                        outarray[j] = j*nquad0;
+                        
+                    }
+                    break;
                 default:
                     ASSERTL0(false,"face value (> 4) is out of range");
                     break;
-	    }
-
-            if (face > 0)
-            {
-                int fnq1 = FaceExp->GetNumPoints(0);
-                int fnq2 = FaceExp->GetNumPoints(1);
-
-                if ((int)orient == 7)
-                {
-                    for (int j = 0; j < fnq2; ++j)
-                    {
-                        Vmath::Vcopy(fnq1, o_tmp.get()+((j+1)*fnq1-1), -1, outarray.get()+j*fnq1, 1);
-                    }
-                }
-                else
-                {
-                    Vmath::Vcopy(fnq1*fnq2, o_tmp.get(), 1, outarray.get(), 1);
-                }
             }
         }
         
-        void PyrExp::v_GetTracePhysVals(
-            const int                                face,
-            const StdRegions::StdExpansionSharedPtr &FaceExp,
-            const Array<OneD, const NekDouble>      &inarray,
-                  Array<OneD,       NekDouble>      &outarray,
-            StdRegions::Orientation                  orient)
-        {
-            v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
-        }
-
         void PyrExp::v_ComputeFaceNormal(const int face)
         {
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors =

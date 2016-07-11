@@ -42,6 +42,7 @@
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <IncNavierStokesSolver/Filters/FilterMovingBody.h>
+#include <GlobalMapping/Mapping.h>
 
 namespace Nektar
 {
@@ -70,6 +71,9 @@ class ForcingMovingBody : public SolverUtils::Forcing
         static std::string className;
 
     protected:
+        // Mapping object
+        GlobalMapping::MappingSharedPtr               m_mapping;
+
         virtual void v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
             const unsigned int&                         pNumForcingFields,
@@ -82,6 +86,7 @@ class ForcingMovingBody : public SolverUtils::Forcing
             const NekDouble&                            time);
 
     private:
+
         ForcingMovingBody(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
@@ -96,32 +101,15 @@ class ForcingMovingBody : public SolverUtils::Forcing
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const TiXmlElement* pForce);
 
-        void UpdateMotion(
-            const Array<OneD, MultiRegions::ExpListSharedPtr>&  pFields,
-            const Array<OneD, Array<OneD, NekDouble> >       &  fields,
-                  NekDouble time );
-
-        void TensionedCableModel(
+        void Newmark_betaSolver(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                   Array<OneD, NekDouble> &FcePhysinArray,
                   Array<OneD, NekDouble> &MotPhysinArray);
 
         void EvaluateStructDynModel(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                  Array<OneD, NekDouble> &Hydroforces,
                   NekDouble time );
-
-        void CalculateForcing(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
-
-        void MappingBndConditions(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &pfields,
-            const Array<OneD, Array<OneD, NekDouble> >        & fields,
-                  NekDouble time );
-
-        void EvaluateAccelaration(
-            const Array<OneD, NekDouble> &input,
-                  Array<OneD, NekDouble> &output,
-                  int npoints);
 
         void SetDynEqCoeffMatrix(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
@@ -144,9 +132,7 @@ class ForcingMovingBody : public SolverUtils::Forcing
         /// storage for the cable's force(x,y) variables
         Array<OneD, NekDouble> m_Aeroforces;
         /// storage for the cable's motion(x,y) variables
-        Array<OneD, NekDouble> m_MotionVars;
-        /// srorage for the velocity in z-direction
-        Array<OneD, Array<OneD, NekDouble> > m_W;
+        Array<OneD, Array<OneD, NekDouble> >m_MotionVars;
         /// fictitious velocity storage
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fV;
         /// fictitious acceleration storage
@@ -166,7 +152,10 @@ class ForcingMovingBody : public SolverUtils::Forcing
         /// Store the derivatives of motion variables in y-direction
         Array<OneD, Array< OneD, NekDouble> > m_eta;
         ///
-        Array<OneD, Array< OneD, NekDouble> > m_forcing;
+        unsigned int                    m_outputFrequency;
+        Array<OneD, std::ofstream>      m_outputStream;
+        std::string                     m_outputFile_fce;
+        std::string                     m_outputFile_mot;
 };
 
 }

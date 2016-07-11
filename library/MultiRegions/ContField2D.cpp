@@ -36,6 +36,8 @@
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -809,8 +811,8 @@ namespace Nektar
          * @param   inarray     An ExpList, containing the discrete evaluation
          *                      of the forcing function \f$f(\boldsymbol{x})\f$
          *                      at the quadrature points in its array #m_phys.
-         * @param   lambda      The parameter \f$\lambda\f$ of the Helmholtz
-         *                      equation
+         * @param   factors    The parameter \f$\lambda\f$ of the Helmholtz
+         *                      equation is specified through the factors map
          */
         void ContField2D::v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
@@ -1043,6 +1045,15 @@ namespace Nektar
                                 ContField2D::v_GetBndConditions()
         {
             return GetBndConditions();
+        }
+
+
+        /**
+         * Reset the GlobalLinSys Manager 
+         */
+        void ContField2D::v_ClearGlobalLinSysManager(void)
+        {
+            m_globalLinSysManager.ClearManager("GlobalLinSys");
         }
 
     } // end of namespace

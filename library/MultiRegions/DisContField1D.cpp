@@ -39,6 +39,8 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <SpatialDomains/MeshGraph1D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

@@ -36,6 +36,8 @@
 #include <Collections/CollectionOptimisation.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace Collections

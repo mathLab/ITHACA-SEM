@@ -38,6 +38,8 @@
 using namespace std;
 
 #include "ProcessGrad.h"
+#include "ProcessMapping.h"
+#include <GlobalMapping/Mapping.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
@@ -64,7 +66,10 @@ void ProcessGrad::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessGrad: Calculating gradients..." << endl;
+        if(m_f->m_comm->GetRank() == 0)
+        {
+            cout << "ProcessGrad: Calculating gradients..." << endl;
+        }
     }
 
     int i, j;
@@ -81,15 +86,94 @@ void ProcessGrad::Process(po::variables_map &vm)
     {
         grad[i] = Array<OneD, NekDouble>(npoints);
     }
+    
+    Array<OneD, Array<OneD, NekDouble> >   tmp(spacedim);
+    for( int i = 0; i<spacedim; i++)
+    {
+        tmp[i] = Array<OneD, NekDouble> (npoints);
+    }
+    
+    // Get mapping
+    GlobalMapping::MappingSharedPtr mapping = 
+                            ProcessMapping::GetMapping(m_f);
+    
+    // Get velocity and convert to Cartesian system,
+    //      if it is still in transformed system
+    Array<OneD, Array<OneD, NekDouble> > vel (spacedim);
+    if (m_f->m_fieldMetaDataMap.count("MappingCartesianVel"))
+    {
+        if(m_f->m_fieldMetaDataMap["MappingCartesianVel"] == "False")
+        {
+            // Initialize arrays and copy velocity
+            for ( int i =0; i<spacedim; ++i )
+            {
+                vel[i] = Array<OneD, NekDouble> (npoints);      
+                if (m_f->m_exp[0]->GetWaveSpace())
+                {
+                    m_f->m_exp[0]->HomogeneousBwdTrans(
+                                            m_f->m_exp[i]->GetPhys(),
+                                            vel[i]);
+                }
+                else
+                {
+                    Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(),1,
+                                            vel[i],1);
+                }
+
+            }
+            // Convert velocity to cartesian system
+            mapping->ContravarToCartesian(vel, vel);            
+            // Convert back to wavespace if necessary
+            if (m_f->m_exp[0]->GetWaveSpace())
+            {
+                for ( int i =0; i<spacedim; ++i )
+                {
+                    m_f->m_exp[0]->HomogeneousFwdTrans(vel[i], vel[i]);
+                }
+            }        
+        }
+        else
+        {
+            for ( int i =0; i<spacedim; ++i )
+            {
+                vel[i] = Array<OneD, NekDouble> (npoints); 
+                Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(), 1,
+                                            vel[i], 1);
+            }
+        }
+    }
+    else
+    {
+        for ( int i =0; i<spacedim; ++i )
+        {
+            vel[i] = Array<OneD, NekDouble> (npoints); 
+            Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(), 1,
+                                        vel[i], 1);
+        }        
+    }
 
     // Calculate Gradient
     for (i = 0; i < nfields; ++i)
     {
         for (j = 0; j < spacedim; ++j)
         {
-            m_f->m_exp[i]->PhysDeriv(MultiRegions::DirCartesianMap[j],
-                                     m_f->m_exp[i]->GetPhys(),
-                                     grad[i*spacedim+j]);
+            if (i<spacedim)
+            {
+                m_f->m_exp[i]->PhysDeriv(MultiRegions::DirCartesianMap[j],
+                                         vel[i],
+                                         tmp[j]);
+            }
+            else
+            {
+                m_f->m_exp[i]->PhysDeriv(MultiRegions::DirCartesianMap[j],
+                                         m_f->m_exp[i]->GetPhys(),
+                                         tmp[j]);                
+            }
+        }
+        mapping->CovarToCartesian(tmp, tmp);
+        for( int j = 0; j<spacedim; j++)
+        {
+            Vmath::Vcopy(npoints, tmp[j], 1, grad[i*spacedim+j], 1 );
         }
     }
 

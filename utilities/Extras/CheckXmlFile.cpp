@@ -3,6 +3,7 @@
 
 #include <MultiRegions/ExpList.h>
 
+using namespace std;
 using namespace Nektar;
 
 bool CheckTetRotation(Array<OneD, NekDouble> &xc, Array<OneD, NekDouble> &yc, 

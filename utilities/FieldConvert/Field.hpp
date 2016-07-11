@@ -68,7 +68,7 @@ struct Field {
     Field() : m_verbose(false),
               m_declareExpansionAsContField(false),
               m_declareExpansionAsDisContField(false),
-              m_declareAsNewField(false),
+              m_requireBoundaryExpansion(false),
               m_writeBndFld(false),
               m_fldToBnd(false),
               m_addNormals(false),
@@ -77,9 +77,9 @@ struct Field {
 
     ~Field()
     {
-        if (m_session)
+        if (m_comm)
         {
-            m_session->Finalise();
+            m_comm->Finalise();
         }
     }
     bool                                    m_verbose;
@@ -89,7 +89,8 @@ struct Field {
 
     bool                                    m_declareExpansionAsContField;
     bool                                    m_declareExpansionAsDisContField;
-    bool                                    m_declareAsNewField;
+
+    bool                                    m_requireBoundaryExpansion;
 
     bool                                    m_useFFT;
 
@@ -106,6 +107,7 @@ struct Field {
     bool                                    m_addNormals;
 
     bool                                    m_setUpEquiSpacedFields;
+
     LibUtilities::PtsFieldSharedPtr         m_fieldPts;
 
     MultiRegions::AssemblyMapCGSharedPtr    m_locToGlobalMap;
@@ -157,7 +159,7 @@ struct Field {
                     // Choose points to be at evenly spaced points at
                     // nplanes points
                     const LibUtilities::PointsKey
-                        Pkey(nplanes, LibUtilities::ePolyEvenlySpaced);
+                        Pkey(nplanes, LibUtilities::eFourierEvenlySpaced);
 
                     const LibUtilities::BasisKey Bkey(btype, nplanes, Pkey);
 
@@ -208,11 +210,11 @@ struct Field {
                     // Choose points to be at evenly spaced points at
                     // nplanes points
                     const LibUtilities::PointsKey
-                        PkeyY(nylines, LibUtilities::ePolyEvenlySpaced);
+                        PkeyY(nylines, LibUtilities::eFourierEvenlySpaced);
                     const LibUtilities::BasisKey BkeyY(btype1, nylines, PkeyY);
 
                     const LibUtilities::PointsKey
-                        PkeyZ(nzlines, LibUtilities::ePolyEvenlySpaced);
+                        PkeyZ(nzlines, LibUtilities::eFourierEvenlySpaced);
                     const LibUtilities::BasisKey BkeyZ(btype2, nzlines, PkeyZ);
 
                     if(m_declareExpansionAsContField)
@@ -310,7 +312,7 @@ struct Field {
                     // Choose points to be at evenly spaced points at
                     // nplanes points
                     const LibUtilities::PointsKey
-                        Pkey(nplanes, LibUtilities::ePolyEvenlySpaced);
+                        Pkey(nplanes, LibUtilities::eFourierEvenlySpaced);
 
                     const LibUtilities::BasisKey  Bkey(btype, nplanes, Pkey);
 
@@ -403,10 +405,12 @@ struct Field {
                                                  string var = "DefaultVar",
                                                  bool NewField = false)
     {
-        if (m_declareAsNewField)
+        if(var.compare("DefaultVar") == 0 && m_requireBoundaryExpansion)
         {
-            NewField = true;
-            var = m_session->GetVariables()[0];
+            if (m_session->GetVariables().size())
+            {
+                var = m_session->GetVariables()[0];
+            }
         }
         MultiRegions::ExpListSharedPtr tmp;
         switch (m_graph->GetMeshDimension())
@@ -525,7 +529,7 @@ struct Field {
                             ASSERTL0(tmp2,"Failed to type cast m_exp[0]");
                             tmp = MemoryManager<MultiRegions::
                                 ContField3DHomogeneous1D>::
-                                AllocateSharedPtr(*tmp2);
+                                AllocateSharedPtr(*tmp2, m_graph, var);
                         }
                     }
                     else  if(m_declareExpansionAsDisContField)

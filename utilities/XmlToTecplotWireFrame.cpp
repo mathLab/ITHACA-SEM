@@ -3,6 +3,7 @@
 
 #include <MultiRegions/ExpList.h>
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])

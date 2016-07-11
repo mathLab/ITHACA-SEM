@@ -38,7 +38,9 @@
 #include <SolverUtils/DriverAdaptive.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdTriExp.h>
-//#include <GlobalMapping/Mapping.h>
+#include <GlobalMapping/Mapping.h>
+
+using namespace std;
 
 namespace Nektar
 {
@@ -119,7 +121,11 @@ void DriverAdaptive::v_Execute(ostream &out)
     NekDouble period   = m_session->GetParameter("TimeStep") * numSteps;
 
     Array<OneD, NekDouble> coeffs, phys, physReduced, tmpArray;
-    // GlobalMapping::MappingSharedPtr mapping;
+
+    // Get mapping
+    GlobalMapping::MappingSharedPtr mapping;
+    mapping = GlobalMapping::Mapping::Load(m_session,
+                                           m_equ[0]->UpdateFields());
 
     // Adaptive loop
     LocalRegions::ExpansionSharedPtr Exp;
@@ -280,10 +286,6 @@ void DriverAdaptive::v_Execute(ostream &out)
             }
         }
 
-        // Get mapping (not in master yet...)
-        // mapping = GlobalMapping::Mapping::Load(m_session,
-        //                                      m_equ[0]->UpdateFields());
-
         // Write new expansion section to the session reader
         ReplaceExpansion(fields, deltaP);
 
@@ -291,15 +293,23 @@ void DriverAdaptive::v_Execute(ostream &out)
         //
         // @todo This could be made better by replacing individual matrices
         //       within the linear system.
-        LibUtilities::NekManager<MultiRegions::GlobalLinSysKey,
-                                 MultiRegions::GlobalLinSys>::
-            ClearManager(std::string("GlobalLinSys"));
+        if (LibUtilities::NekManager<MultiRegions::GlobalLinSysKey,
+                                     MultiRegions::GlobalLinSys>::
+                PoolCreated(std::string("GlobalLinSys")))
+        {
+            LibUtilities::NekManager<MultiRegions::GlobalLinSysKey,
+                                     MultiRegions::GlobalLinSys>::
+                ClearManager(std::string("GlobalLinSys"));
+        }
 
         int chkNumber = m_equ[0]->GetCheckpointNumber();
         int chkSteps  = m_equ[0]->GetCheckpointSteps();
 
         // Initialise driver again
         Driver::v_InitObject(out);
+
+        // Update mapping (must be before m_equ[0]->DoInitialise();)
+        mapping->ReplaceField(m_equ[0]->UpdateFields());
 
         // Set chkSteps to zero to avoid writing initial condition
         m_equ[0]->SetCheckpointSteps(0);
@@ -323,9 +333,6 @@ void DriverAdaptive::v_Execute(ostream &out)
                 m_equ[0]->UpdateFields()[n]->GetCoeffs(),
                 m_equ[0]->UpdateFields()[n]->UpdatePhys());
         }
-
-        // Update mapping
-        // mapping->ReplaceField(m_equ[0]->UpdateFields());
 
         // Solve equation
         m_equ[0]->DoSolve();

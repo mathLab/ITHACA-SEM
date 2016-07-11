@@ -184,7 +184,8 @@ namespace Nektar
                     const Array<OneD,const NekDouble> &inarray,
                     Array<OneD,      NekDouble> &outarray,
                     CoeffState coeffstate);
-
+            
+            virtual void v_ClearGlobalLinSysManager(void);
 
         };
         typedef boost::shared_ptr<ContField3D>      ContField3DSharedPtr;
@@ -229,6 +230,7 @@ namespace Nektar
         {
             return  m_locToGloMap;
         }
+
 
     } //end of namespace
 } //end of namespace

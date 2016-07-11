@@ -128,6 +128,14 @@ should provide:
 - Generally, code should be well-commented using regular C++ comments to explain
   its function to help in reviewing it.
 
+Nektar++ also has a growing number of tutorials to help introduce users and
+developers to the use of the library and the range of application solvers. These
+are stored in a separate repository, but are available from the main repository
+through a git submodule. To populate the docs/tutorial directory run `git
+submodule init` followed by `git submodule update --remote`. The latter command
+will ensure you have the latest master branch of the tutorials within your
+source tree.
+
 ## Code review and merging
 All merge requests will be reviewed by one of the senior developers. We try to
 stick to the following process:
@@ -199,7 +207,7 @@ for new files, or cosmetic `tidy/*` branches, but try to stick to existing
 formatting elsewhere.
 
 Installing it is straightforward on most package managers. Nektar++ relies on
-options that are used in version 3.6 or later.
+options that are used in version 3.7 or later.
 
 There are a number of instructions on how to use `clang-format` inside a number
 of text editors on the

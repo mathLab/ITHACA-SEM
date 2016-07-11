@@ -195,6 +195,19 @@ void PtsField::GetWeights(
     neighbourInds = m_neighInds;
 }
 
+PtsField::PtsField(const int dim, const Array< OneD, Array< OneD, NekDouble > > &pts):
+    m_dim(dim),
+    m_pts(pts),
+    m_ptsType(ePtsFile)
+{
+    for (int i = 0; i < GetNFields(); ++i)
+    {
+        m_fieldNames.push_back("NA");
+    }
+}
+
+
+
 /**
  * @brief Set the connectivity data for ePtsTetBlock and ePtsTriBlock
  *
@@ -268,9 +281,9 @@ void PtsField::AddField(const Array< OneD, NekDouble > &pts,
                         const string fieldName)
 {
     int nTotvars = m_pts.num_elements();
-    int nPts = m_pts[0].num_elements();
 
-    ASSERTL1(pts.num_elements() ==  nPts, "Field size mismatch");
+    ASSERTL1(pts.num_elements() ==  m_pts[0].num_elements(), 
+            "Field size mismatch");
 
     // redirect existing pts
     Array<OneD, Array<OneD, NekDouble> > newpts(nTotvars + 1);
@@ -333,23 +346,15 @@ int PtsField::GetPointsPerEdge(const int i) const
 /**
  * @brief Set the number of points per edge
  *
- * @param nPtsPerEdge  Number of points per edge. Empty if the point data has no
- * specific shape (ePtsLine) or is a block (ePtsTetBlock, ePtsTriBlock), size=1
- * for ePtsLine and 2 for a ePtsPlane
+ * @param nPtsPerEdge Number of points per edge. Empty if the point
+ * data has no specific shape (ePtsLine) or is a block (ePtsTetBlock,
+ * ePtsTriBlock), size=1 for ePtsLine, 2 for ePtsPlane and 3 for ePtsBox
  */
 void PtsField::SetPointsPerEdge(const vector< int > nPtsPerEdge)
 {
-    ASSERTL0(m_ptsType == ePtsLine || m_ptsType == ePtsPlane,
-             "SetPointsPerEdge only supported for ePtsLine and ePtsPlane .");
-
-    int totPts(1);
-    for (int i = 0; i < nPtsPerEdge.size(); ++i)
-    {
-        totPts = totPts * nPtsPerEdge.at(i);
-    }
-
-    ASSERTL0(totPts == m_pts[0].num_elements(),
-             "nPtsPerEdge does not match total number of points");
+    ASSERTL0(m_ptsType == ePtsLine || m_ptsType == ePtsPlane || 
+             m_ptsType == ePtsBox,
+             "SetPointsPerEdge only supported for ePtsLine, ePtsPlane and ePtsBox.");
 
     m_nPtsPerEdge = nPtsPerEdge;
 }
@@ -365,6 +370,18 @@ void PtsField::SetPtsType(const PtsType type)
 {
     m_ptsType = type;
 }
+
+vector<NekDouble> PtsField::GetBoxSize() const
+{
+    return m_boxSize;
+}
+
+void PtsField::SetBoxSize(const vector< NekDouble> boxSize)
+{
+    m_boxSize = boxSize;
+}
+
+
 
 
 /**
@@ -385,7 +402,8 @@ void PtsField::CalcW_Linear(const int physPtIdx, const NekDouble coord)
 
     for (i = 0; i < npts - 1; ++i)
     {
-        if ((m_pts[0][i] <= coord) && (coord <= m_pts[0][i + 1]))
+        if ((m_pts[0][i] <= (coord + NekConstants::kNekZeroTol)) &&
+            (coord <= (m_pts[0][i + 1]+ NekConstants::kNekZeroTol)) )
         {
             NekDouble pdiff = m_pts[0][i + 1] - m_pts[0][i];
 
@@ -482,7 +500,8 @@ void PtsField::CalcW_Quadratic(const int physPtIdx, const NekDouble coord)
 
     for (i = 0; i < npts - 1; ++i)
     {
-        if ((m_pts[0][i] <= coord) && (coord <= m_pts[0][i + 1]))
+        if ((m_pts[0][i] <= (coord + NekConstants::kNekZeroTol)) &&
+            (coord <= (m_pts[0][i + 1]+ NekConstants::kNekZeroTol)) )
         {
             NekDouble pdiff = m_pts[0][i + 1] - m_pts[0][i];
             NekDouble h1, h2, h3;

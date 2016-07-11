@@ -36,6 +36,8 @@
 #include <SolverUtils/Forcing/ForcingBody.h>
 #include <MultiRegions/ExpList.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils

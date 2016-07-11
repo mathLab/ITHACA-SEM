@@ -37,6 +37,8 @@
 #include <LibUtilities/Foundations/InterpCoeff.h>
  
 
+using namespace std;
+
 namespace Nektar
 {
     namespace StdRegions

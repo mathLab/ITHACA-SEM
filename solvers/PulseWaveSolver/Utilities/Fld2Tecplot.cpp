@@ -6,6 +6,7 @@
 
 #include <PulseWaveSolver/EquationSystems/PulseWaveSystem.h>
 
+using namespace std;
 using namespace Nektar;
 using namespace Nektar::SolverUtils;
 
@@ -36,7 +37,7 @@ int main(int argc, char *argv[])
         char **newargv = new char*[newargc];
 
         newargv[0] = argv[0];
-        newargv[1] = new char[30];
+        newargv[1] = new char[31];
         strcpy(newargv[1], "--SetToOneSpaceDimension=false");
 
         for(int i = 1; i < argc; ++i)

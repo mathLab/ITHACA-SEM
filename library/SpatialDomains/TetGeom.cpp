@@ -39,6 +39,8 @@
 #include <StdRegions/StdTetExp.h>
 #include <SpatialDomains/SegGeom.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -49,24 +51,24 @@ namespace Nektar
             {0,1,3},{0,1,2},{0,2,3},{1,2,3}};
         const unsigned int TetGeom::EdgeFaceConnectivity  [6][2] = {
             {0,1},{0,2},{0,3},{1,3},{1,2},{2,3}};
-        
+
         TetGeom::TetGeom()
         {
             m_shapeType = LibUtilities::eTetrahedron;
         }
-        
+
         TetGeom::TetGeom(const TriGeomSharedPtr faces[]) :
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
             m_shapeType = LibUtilities::eTetrahedron;
-            
+
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+TetGeom::kNfaces);
-            
+
             /// Set up orientation vectors with correct amount of elements.
             m_eorient.resize(kNedges);
             m_forient.resize(kNfaces);
-            
+
             SetUpLocalEdges();
             SetUpLocalVertices();
             SetUpEdgeOrientation();
@@ -74,12 +76,12 @@ namespace Nektar
             SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
-        
+
         TetGeom::~TetGeom()
         {
-            
+
         }
-        
+
         /**
          * @brief Determines if a point specified in global coordinates is
          * located within this tetrahedral geometry.
@@ -91,11 +93,11 @@ namespace Nektar
             return v_ContainsPoint(gloCoord,locCoord,tol);
         }
 
-        bool TetGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, 
+        bool TetGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                       Array<OneD, NekDouble> &locCoord,
                                       NekDouble tol)
         {
-            NekDouble resid; 
+            NekDouble resid;
             return v_ContainsPoint(gloCoord,locCoord,tol,resid);
         }
 
@@ -103,7 +105,7 @@ namespace Nektar
          * @brief Determines if a point specified in global coordinates is
          * located within this tetrahedral geometry and return local caretsian coordinates
          */
-        bool TetGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, 
+        bool TetGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                       Array<OneD, NekDouble> &locCoord,
                                       NekDouble tol,
                                       NekDouble &resid)
@@ -125,15 +127,15 @@ namespace Nektar
 
                 const int npts = m_xmap->GetTotPoints();
                 Array<OneD, NekDouble> pts(npts);
-                
+
                 for(i = 0; i < 3; ++i)
                 {
                     m_xmap->BwdTrans(m_coeffs[i], pts);
 
                     mincoord[i] = Vmath::Vmin(pts.num_elements(),pts,1);
                     maxcoord[i] = Vmath::Vmax(pts.num_elements(),pts,1);
-                    
-                    diff = max(maxcoord[i] - mincoord[i],diff); 
+
+                    diff = max(maxcoord[i] - mincoord[i],diff);
                 }
 
                 for(i = 0; i < 3; ++i)
@@ -145,10 +147,10 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // Convert to the local (eta) coordinates.
             resid = v_GetLocCoords(gloCoord, locCoord);
-            
+
             // Check local coordinate is within cartesian bounds.
             if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol) &&
                 locCoord[2] >= -(1+tol)                            &&
@@ -156,7 +158,7 @@ namespace Nektar
             {
                 return true;
             }
-            
+
             // If out of range clamp locCoord to be within [-1,1]^3
             // since any larger value will be very oscillatory if
             // called by 'returnNearestElmt' option in
@@ -178,7 +180,7 @@ namespace Nektar
         }
 
 
-        /// Get Local cartesian points 
+        /// Get Local cartesian points
         NekDouble TetGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble>& coords,
                   Array<OneD,       NekDouble>& Lcoords)
@@ -187,7 +189,7 @@ namespace Nektar
 
             // calculate local coordinates (eta) for coord
             if(GetMetricInfo()->GetGtype() == eRegular)
-            {   
+            {
                 // Point inside tetrahedron
                 PointGeom r(m_coordim, 0, coords[0], coords[1], coords[2]);
 
@@ -217,7 +219,7 @@ namespace Nektar
                 Lcoords[1] = 2.0*gamma - 1.0;
                 Lcoords[2] = 2.0*delta - 1.0;
 
-                // Set ptdist to distance to nearest vertex 
+                // Set ptdist to distance to nearest vertex
                 for(int i = 0; i < 4; ++i)
                 {
                     ptdist = min(ptdist,r.dist(*m_verts[i]));
@@ -239,7 +241,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> za = m_xmap->GetPoints(0);
                 const Array<OneD, const NekDouble> zb = m_xmap->GetPoints(1);
                 const Array<OneD, const NekDouble> zc = m_xmap->GetPoints(2);
-                
+
                 //guess the first local coords based on nearest point
                 Vmath::Sadd(npts, -coords[0], ptsx,1,tmp1,1);
                 Vmath::Vmul (npts, tmp1,1,tmp1,1,tmp1,1);
@@ -247,10 +249,10 @@ namespace Nektar
                 Vmath::Vvtvp(npts, tmp2,1,tmp2,1,tmp1,1,tmp1,1);
                 Vmath::Sadd(npts, -coords[2], ptsz,1,tmp2,1);
                 Vmath::Vvtvp(npts, tmp2,1,tmp2,1,tmp1,1,tmp1,1);
-                          
+
                 int min_i = Vmath::Imin(npts,tmp1,1);
-                
-                // distance from coordinate to nearest point for return value. 
+
+                // distance from coordinate to nearest point for return value.
                 ptdist = sqrt(tmp1[min_i]);
 
                 // Get collapsed coordinate
@@ -260,22 +262,22 @@ namespace Nektar
                 Lcoords[1] = zb[min_i/qa];
                 Lcoords[0] = za[min_i%qa];
 
-                // recover cartesian coordinate from collapsed coordinate. 
+                // recover cartesian coordinate from collapsed coordinate.
                 Lcoords[1] = (1.0+Lcoords[0])*(1.0-Lcoords[2])/2 -1.0;
                 Lcoords[0] = (1.0+Lcoords[0])*(-Lcoords[1]-Lcoords[2])/2 -1.0;
 
-                // Perform newton iteration to find local coordinates 
+                // Perform newton iteration to find local coordinates
                 NekDouble resid = 0.0;
                 NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords,resid);
             }
             return ptdist;
         }
-        
+
         int TetGeom::v_GetNumVerts() const
         {
             return 4;
         }
-        
+
         int TetGeom::v_GetNumEdges() const
         {
             return 6;
@@ -319,7 +321,7 @@ namespace Nektar
 
         void TetGeom::SetUpLocalEdges()
         {
-            
+
             // find edge 0
             int i,j;
             unsigned int check;
@@ -332,9 +334,9 @@ namespace Nektar
             {
                 std::ostringstream errstrm;
                 errstrm << "Local edge 0 (eid=" << m_faces[0]->GetEid(0);
-                errstrm  << ") on face " <<  m_faces[0]->GetFid(); 
+                errstrm  << ") on face " <<  m_faces[0]->GetFid();
                 errstrm << " must be the same as local edge 0 (eid="<<m_faces[1]->GetEid(0);
-                errstrm << ") on face " <<   m_faces[1]->GetFid(); 
+                errstrm << ") on face " <<   m_faces[1]->GetFid();
                 ASSERTL0(false, errstrm.str());
             }
 
@@ -729,7 +731,7 @@ namespace Nektar
                         orientation++;
                     }
                 }
-				
+
 				orientation = orientation + 5;
 
                 // Fill the m_forient array
@@ -763,20 +765,10 @@ namespace Nektar
             int order0 = *max_element(tmp.begin(), tmp.end());
 
             tmp.clear();
-            tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(0));
-            int points0 = *max_element(tmp.begin(), tmp.end());
-
-            tmp.clear();
             tmp.push_back(order0);
             tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
             tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
             int order1 = *max_element(tmp.begin(), tmp.end());
-
-            tmp.clear();
-            tmp.push_back(points0);
-            tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(1));
-            tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(2));
-            int points1 = *max_element(tmp.begin(), tmp.end());
 
             tmp.clear();
             tmp.push_back(order0);
@@ -786,26 +778,18 @@ namespace Nektar
             tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(1));
             int order2 = *max_element(tmp.begin(), tmp.end());
 
-            tmp.clear();
-            tmp.push_back(points0);
-            tmp.push_back(points1);
-            tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNumPoints(1));
-            tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNumPoints(2));
-            tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNumPoints(1));
-            int points2 = *max_element(tmp.begin(), tmp.end());
-
             const LibUtilities::BasisKey A(
                 LibUtilities::eModified_A, order0,
                 LibUtilities::PointsKey(
-                    points0, LibUtilities::eGaussLobattoLegendre));
+                    order0+1, LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey B(
                 LibUtilities::eModified_B, order1,
                 LibUtilities::PointsKey(
-                    points1, LibUtilities::eGaussRadauMAlpha1Beta0));
+                    order1, LibUtilities::eGaussRadauMAlpha1Beta0));
             const LibUtilities::BasisKey C(
                 LibUtilities::eModified_C, order2,
                 LibUtilities::PointsKey(
-                    points2, LibUtilities::eGaussRadauMAlpha2Beta0));
+                    order2, LibUtilities::eGaussRadauMAlpha2Beta0));
 
             m_xmap = MemoryManager<StdRegions::StdTetExp>::AllocateSharedPtr(
                 A, B, C);

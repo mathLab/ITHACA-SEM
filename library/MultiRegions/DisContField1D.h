@@ -94,7 +94,7 @@ namespace Nektar
             // Return the internal vector which directs whether the normal flux
             // at the trace defined by Left and Right Adjacent elements
             // is negated with respect to the segment normal
-            MULTI_REGIONS_EXPORT vector<bool> &GetNegatedFluxNormal(void);
+            MULTI_REGIONS_EXPORT std::vector<bool> &GetNegatedFluxNormal(void);
 
         protected:
             /// The number of boundary segments on which Dirichlet boundary
@@ -139,15 +139,15 @@ namespace Nektar
              * copied from forwards to backwards space in case of a periodic
              * boundary condition.
              */
-            vector<int> m_periodicFwdCopy;
-            vector<int> m_periodicBwdCopy;
+            std::vector<int> m_periodicFwdCopy;
+            std::vector<int> m_periodicBwdCopy;
 
 
             /*
              * @brief A map identifying which verts are left- and right-adjacent
              * for DG.
              */
-            vector<bool> m_leftAdjacentVerts;
+            std::vector<bool> m_leftAdjacentVerts;
 
 
             /// Discretises the boundary conditions.
@@ -212,7 +212,7 @@ namespace Nektar
                 SpatialDomains::BoundaryConditions &bcs,
                 const std::string variable);
             
-            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
+            virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
             
             virtual const Array<OneD,const MultiRegions::ExpListSharedPtr>
                 &v_GetBndCondExpansions()
@@ -265,7 +265,7 @@ namespace Nektar
             
             bool IsLeftAdjacentVertex(const int n, const int e);
 
-            vector<bool> m_negatedFluxNormal;
+            std::vector<bool> m_negatedFluxNormal;
 
             SpatialDomains::BoundaryConditionsSharedPtr GetDomainBCs(const SpatialDomains::CompositeMap &domain,
                                                                      const SpatialDomains::BoundaryConditions &Allbcs,

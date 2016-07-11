@@ -40,6 +40,8 @@
 #include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace LocalRegions 

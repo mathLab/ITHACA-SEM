@@ -36,6 +36,8 @@
 #include <PulseWaveSolver/EquationSystems/RCROutflow.h>
 #include <SpatialDomains/MeshGraph.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

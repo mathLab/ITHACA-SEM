@@ -43,6 +43,8 @@
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string CompressibleFlowSystem::className =
@@ -2819,6 +2821,11 @@ namespace Nektar
         if (maxL2 <= m_steadyStateTol)
         {
             return true;
+        }
+
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1);
         }
 
         return false;

@@ -154,7 +154,13 @@ ENDIF()
 INCLUDE (NektarCommon)
 
 # Set various ThirdParty locations
-SET(TPURL   https://www.nektar.info/thirdparty)
+OPTION(THIRDPARTY_USE_SSL "Use secure HTTP connection to download third-party files." OFF)
+IF (THIRDPARTY_USE_SSL)
+    SET(TPURL https://www.nektar.info/thirdparty)
+ELSE()
+    SET(TPURL http://www.nektar.info/thirdparty)
+ENDIF()
+
 SET(TPSRC   ${CMAKE_SOURCE_DIR}/ThirdParty)
 SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
 SET(TPDIST  ${CMAKE_BINARY_DIR}/ThirdParty/dist)

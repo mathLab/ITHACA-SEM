@@ -39,6 +39,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <APESolver/EquationSystems/APE.h>
 
+using namespace std;
+
 namespace Nektar
 {
 string APE::className = GetEquationSystemFactory().RegisterCreatorFunction(

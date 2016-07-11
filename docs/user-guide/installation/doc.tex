@@ -1,0 +1,67 @@
+\section{Compiling Documentation}
+Documentation for Nektar++ is provided in a number of forms:
+\begin{itemize}
+\item User Guide (LaTeX, compiled to pdf or html)
+\item Source code documentation (Doxygen compiled to html)
+\end{itemize}
+
+\subsection{Dependencies}
+To build the LaTeX documents (user guide or tutorials), the following
+dependencies are required:
+\begin{itemize}
+\item texlive-base
+\item texlive-latex-extra
+\item texlive-science
+\item imagemagick
+\end{itemize}
+
+To build the Doxygen documentation, the following dependencies are required:
+\begin{itemize}
+\item doxygen
+\item graphviz
+\end{itemize}
+
+\subsection{Compiling the User Guide}
+To compile the User Guide:
+\begin{enumerate}
+\item Configure the Nektar++ build tree as normal.
+\item Run
+    \begin{lstlisting}[style=BashInputStyle]
+make user-guide-pdf
+\end{lstlisting}
+to make the PDF version, or run
+\begin{lstlisting}[style=BashInputStyle]
+make user-guide-html
+\end{lstlisting}
+to make the HTML version.
+\end{enumerate}
+
+\subsection{Compiling the code documentation}
+To compile the code documentation enable the \inltt{NEKTAR\_BUILD\_DOC} option
+in the \inlsh{ccmake} configuration tool.
+
+You can then compile the HTML code documentation using:
+\begin{lstlisting}[style=BashInputStyle]
+make doc
+\end{lstlisting}
+
+
+\section{Compiling Tutorials}
+If you are using a clone of the \nekpp git repository, you can also download
+the source for the \nekpp tutorials which is available as a \emph{git submodule}.
+
+\begin{enumerate}
+\item From a \nekpp working directory (e.g. \inlsh{\$NEKPP}):
+\begin{lstlisting}[style=BashInputStyle]
+git submodule init
+git submodule update --remote
+\end{lstlisting}
+\item From your build directory (e.g. \inlsh{\$NEKPP/build}), re-run \inlsh{cmake} to update the build system to include the tutorials
+\begin{lstlisting}[style=BashInputStyle]
+cmake ../
+\end{lstlisting}
+\item Compile each required tutorial, for example
+\begin{lstlisting}[style=BashInputStyle]
+make flow-stability-channel
+\end{lstlisting}
+\end{enumerate}

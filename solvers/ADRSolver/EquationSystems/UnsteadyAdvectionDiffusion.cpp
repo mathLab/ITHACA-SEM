@@ -37,6 +37,8 @@
 
 #include <ADRSolver/EquationSystems/UnsteadyAdvectionDiffusion.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string UnsteadyAdvectionDiffusion::className

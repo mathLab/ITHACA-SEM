@@ -106,15 +106,13 @@ ProcessIsoContour::~ProcessIsoContour(void)
 
 void ProcessIsoContour::Process(po::variables_map &vm)
 {
-    Timer timer;
     int rank = m_f->m_comm->GetRank();
     
     if(m_f->m_verbose)
     {
         if(rank == 0)
         {
-            cout << "Process Contour extraction..." << endl;
-            timer.Start();
+            cout << "ProcessIsoContour: Extracting contours..." << endl;
         }
     }
 
@@ -232,22 +230,6 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     }
     
     ResetFieldPts(iso);
-    
-
-    if(m_f->m_verbose)
-    {
-        if(rank == 0)
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
-            
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "Process Isocontour CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-            cpuTime = 0.0;
-        }
-    }
 }
 
 

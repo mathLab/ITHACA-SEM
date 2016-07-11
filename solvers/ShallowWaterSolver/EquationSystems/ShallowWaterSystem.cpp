@@ -37,6 +37,8 @@
 
 #include <ShallowWaterSolver/EquationSystems/ShallowWaterSystem.h>
 
+using namespace std;
+
 namespace Nektar
 {
     /**

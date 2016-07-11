@@ -35,6 +35,8 @@
 
 #include <MultiRegions/GlobalLinSysIterative.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -59,16 +61,12 @@ namespace Nektar
                   m_useProjection(false),
                   m_numPrevSols(0)
         {
-            LibUtilities::SessionReaderSharedPtr vSession
-                                            = pExpList.lock()->GetSession();
-
             m_tolerance = pLocToGloMap->GetIterativeTolerance();
             m_maxiter   = pLocToGloMap->GetMaxIterations();
 
             LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm()->GetRowComm();
             m_root    = (vComm->GetRank())? false : true;
-            m_verbose = (vSession->DefinesCmdLineArgument("verbose"))? true :false;
-            
+
             int successiveRHS;
             
             if((successiveRHS = pLocToGloMap->GetSuccessiveRHS()))
@@ -471,9 +469,9 @@ namespace Nektar
                              << " (error = " << sqrt(eps/m_rhs_magnitude)
                              << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
                              << endl;
-                        ASSERTL0(false,
-                                 "Exceeded maximum number of iterations");
                     }
+                    ASSERTL0(false,
+                             "Exceeded maximum number of iterations");
                 }
 
                 // Compute new search direction p_k, q_k

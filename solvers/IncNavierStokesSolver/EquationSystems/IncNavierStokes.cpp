@@ -44,6 +44,8 @@
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

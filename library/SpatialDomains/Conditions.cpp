@@ -38,6 +38,8 @@
 #include <SpatialDomains/Conditions.h>
 #include <tinyxml.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace SpatialDomains

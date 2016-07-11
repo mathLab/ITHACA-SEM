@@ -1774,7 +1774,7 @@ namespace Nektar
                 for(int i = 0; i < m_base.num_elements(); ++i)
                 {
                     nqbase = m_base[i]->GetNumPoints();
-                    np     = max(np,nqbase);
+                    np     = std::max(np,nqbase);
                 }
                 
                 StdMatrixKey Ikey(ePhysInterpToEquiSpaced, shape, *this);

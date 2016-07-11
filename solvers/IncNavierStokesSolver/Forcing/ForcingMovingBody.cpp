@@ -37,6 +37,8 @@
 #include <IncNavierStokesSolver/Forcing/ForcingMovingBody.h>
 #include <MultiRegions/ExpList.h>
 
+using namespace std;
+
 namespace Nektar
 {
 std::string ForcingMovingBody::className = SolverUtils::GetForcingFactory().

@@ -47,12 +47,12 @@
 #include <boost/shared_ptr.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
-using namespace std;
-
 namespace Nektar
 {
     namespace LibUtilities
     {
+        using namespace std;
+
         typedef boost::unique_lock<boost::shared_mutex> WriteLock;
         typedef boost::shared_lock<boost::shared_mutex> ReadLock;
 
@@ -256,6 +256,19 @@ namespace Nektar
                             x->second->clear();
                         }
                     }
+                }
+
+                static bool PoolCreated(std::string whichPool)
+                {
+                    bool value = false;
+                    typename ValueContainerPool::iterator x;
+
+                    x = m_ValueContainerPool.find(whichPool);
+                    if (x != m_ValueContainerPool.end())
+                    {
+                        value = true;
+                    }
+                    return value;
                 }
 
                 static void EnableManagement(std::string whichPool = "")

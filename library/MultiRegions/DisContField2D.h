@@ -177,14 +177,14 @@ namespace Nektar
              * copied from forwards to backwards space in case of a periodic
              * boundary condition.
              */
-            vector<int> m_periodicFwdCopy;
-            vector<int> m_periodicBwdCopy;
+            std::vector<int> m_periodicFwdCopy;
+            std::vector<int> m_periodicBwdCopy;
 
             /*
              * @brief A map identifying which edges are left- and right-adjacent
              * for DG.
              */
-            vector<bool> m_leftAdjacentEdges;
+            std::vector<bool> m_leftAdjacentEdges;
 
             void SetUpDG(const std::string  = "DefaultVar");
             bool SameTypeOfBoundaryConditions(const DisContField2D &In);
@@ -292,7 +292,7 @@ namespace Nektar
                 const NekDouble   x2_in   = NekConstants::kNekUnsetDouble,
                 const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
 
-            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
+            virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
         };
         
         typedef boost::shared_ptr<DisContField2D>   DisContField2DSharedPtr;

@@ -42,6 +42,7 @@
 #include <SpatialDomains/Curve.hpp>
 #include <SpatialDomains/GeomFactors.h>
 
+using namespace std;
 
 namespace Nektar
 {

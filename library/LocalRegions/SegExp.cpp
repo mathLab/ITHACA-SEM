@@ -37,6 +37,7 @@
 #include <LocalRegions/SegExp.h>
 #include <LibUtilities/Foundations/Interp.h>
 
+using namespace std;
 
 namespace Nektar
 {

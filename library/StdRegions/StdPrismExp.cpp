@@ -36,6 +36,8 @@
 #include <StdRegions/StdPrismExp.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace StdRegions

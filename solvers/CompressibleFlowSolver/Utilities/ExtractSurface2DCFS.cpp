@@ -65,8 +65,7 @@
 
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
-// #include <SolverUtils/Filters/Filter.h>
-
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])

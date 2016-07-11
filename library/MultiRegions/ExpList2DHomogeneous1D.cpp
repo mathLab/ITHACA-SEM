@@ -37,6 +37,8 @@
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList1D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -365,9 +367,24 @@ namespace Nektar
             int expansion,
             int istrip)
         {
+            // If there is only one plane (e.g. HalfMode), we write a 2D plane.
+            if (m_planes.num_elements() == 1)
+            {
+                m_planes[0]->WriteVtkPieceHeader(outfile, expansion);
+                return;
+            }
+
+            // If we are using Fourier points, output extra plane to fill domain
+            int outputExtraPlane = 0;
+            if ( m_homogeneousBasis->GetBasisType()   == LibUtilities::eFourier
+               && m_homogeneousBasis->GetPointsType() ==
+                    LibUtilities::eFourierEvenlySpaced)
+            {
+                outputExtraPlane = 1;
+            }
             int i, j;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
-            int nquad1 = m_planes.num_elements();
+            int nquad1 = m_planes.num_elements() + outputExtraPlane;
             int ntot = nquad0*nquad1;
             int ntotminus = (nquad0-1)*(nquad1-1);
 
@@ -376,6 +393,20 @@ namespace Nektar
             coords[1] = Array<OneD,NekDouble>(ntot);
             coords[2] = Array<OneD,NekDouble>(ntot);
             GetCoords(expansion,coords[0],coords[1],coords[2]);
+
+            if (outputExtraPlane)
+            {
+                // Copy coords[0] and coords[1] to extra plane
+                Array<OneD,NekDouble> tmp;
+                Vmath::Vcopy (nquad0, coords[0], 1,
+                                      tmp = coords[0] + (nquad1-1)*nquad0, 1);
+                Vmath::Vcopy (nquad0, coords[1], 1,
+                                      tmp = coords[1] + (nquad1-1)*nquad0, 1);
+                // Fill coords[2] for extra plane
+                NekDouble z = coords[2][nquad0*m_planes.num_elements()-1] +
+                              (coords[2][nquad0] - coords[2][0]);
+                Vmath::Fill(nquad0, z, tmp = coords[2] + (nquad1-1)*nquad0, 1);
+            }
 
             outfile << "    <Piece NumberOfPoints=\""
                     << ntot << "\" NumberOfCells=\""

@@ -99,10 +99,10 @@ class FilterMovingBody : public SolverUtils::Filter
         LibUtilities::SessionReaderSharedPtr m_session;
 
         /// ID's of boundary regions where we want the forces
-        vector<unsigned int>            m_boundaryRegionsIdList;
+        std::vector<unsigned int>       m_boundaryRegionsIdList;
         /// Determines if a given Boundary Region is in
         /// m_boundaryRegionsIdList
-        vector<bool>                    m_boundaryRegionIsInList;
+        std::vector<bool>               m_boundaryRegionIsInList;
         unsigned int                    m_index_f;
         unsigned int                    m_index_m;
         unsigned int                    m_outputFrequency;

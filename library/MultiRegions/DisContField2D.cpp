@@ -44,6 +44,7 @@
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
+using namespace std;
 
 namespace Nektar
 {

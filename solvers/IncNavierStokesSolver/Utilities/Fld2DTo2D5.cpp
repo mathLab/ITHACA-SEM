@@ -9,6 +9,8 @@
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
+
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])

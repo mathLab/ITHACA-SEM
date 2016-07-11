@@ -39,6 +39,8 @@
 #include "petscao.h"
 #include "petscis.h"
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

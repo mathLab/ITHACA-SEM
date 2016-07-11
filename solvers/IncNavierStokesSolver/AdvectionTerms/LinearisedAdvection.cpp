@@ -46,6 +46,7 @@
 #include <MultiRegions/DisContField3DHomogeneous1D.h>
 #include <MultiRegions/DisContField3DHomogeneous2D.h>
 
+using namespace std;
 
 namespace Nektar
 {
@@ -354,32 +355,31 @@ void LinearisedAdvection::v_Advect(
                 fields[0]->PhysDeriv(m_baseflow[1],
                                      grad_base_v0, grad_base_v1);
             }
+            else if(m_singleMode) // single mode where d/dz = 0
+            {
+                fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0,
+                                     grad_base_u1);
+                fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0,
+                                     grad_base_v1);
+                fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0,
+                                     grad_base_w1);
+            }
+            else if(m_multipleModes)
+            {
+                // Differentiate base flow in physical space
+                bool oldwavespace = fields[0]->GetWaveSpace();
+                fields[0]->SetWaveSpace(false);
+                fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0,
+                                     grad_base_u1,  grad_base_u2);
+                fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0,
+                                     grad_base_v1,  grad_base_v2);
+                fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0,
+                                     grad_base_w1,  grad_base_w2);
+                fields[0]->SetWaveSpace(oldwavespace);
+            }
             else
             {
-                if(m_multipleModes)
-                {
-                    // Differentiate base flow in physical space
-                    bool oldwavespace = fields[0]->GetWaveSpace();
-                    fields[0]->SetWaveSpace(false);
-                    fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0,
-                                         grad_base_u1,  grad_base_u2);
-                    fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0,
-                                         grad_base_v1,  grad_base_v2);
-                    fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0,
-                                         grad_base_w1,  grad_base_w2);
-                    fields[0]->SetWaveSpace(oldwavespace);
-
-
-                }
-                else // has to be single mode where d/dz = 0
-                {
-                    fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0,
-                                         grad_base_u1);
-                    fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0,
-                                         grad_base_v1);
-                    fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0,
-                                         grad_base_w1);
-                }
+                ASSERTL0(false, "ERROR: Must be one of half, single or multiple modes");
             }
 
             //x-equation
@@ -389,7 +389,7 @@ void LinearisedAdvection::v_Advect(
             if(m_multipleModes)
             {
                 fields[0]->PhysDeriv(inarray[0], grad0, grad1, grad2);
-                // transform gradients into physical fouier space
+                // transform gradients into physical Fourier space
                 fields[0]->HomogeneousBwdTrans(grad0, grad0);
                 fields[0]->HomogeneousBwdTrans(grad1, grad1);
                 fields[0]->HomogeneousBwdTrans(grad2, grad2);
@@ -405,6 +405,7 @@ void LinearisedAdvection::v_Advect(
                     fields[0]->PhysDeriv(inarray[0], grad0, grad1, grad2);
                 }
             }
+
             //Evaluate:  U du'/dx
             Vmath::Vmul (nPointsTot, grad0, 1,  m_baseflow[0], 1,
                          outarray[0], 1);
@@ -513,7 +514,7 @@ void LinearisedAdvection::v_Advect(
             Vmath::Vvtvp(nPointsTot, grad1,      1, m_baseflow[1], 1,
                          outarray[2],  1, outarray[2],   1);
 
-            if(!m_halfMode)// if halfmode W = 0
+            if(!m_halfMode) // since if halfmode W = 0
             {
                 //Evaluate u' dW/dx
                 Vmath::Vvtvp(nPointsTot,grad_base_w0,1,advVel[0],1,
@@ -571,17 +572,18 @@ void LinearisedAdvection::v_SetBaseFlow(
  * Import field from infile and load into \a m_fields. This routine will
  * also perform a \a BwdTrans to ensure data is in both the physical and
  * coefficient storage.
- * @param   infile          Filename to read.
+ * @param   pInFile          Filename to read.
+ * @param   pFields          Array of expansion lists
  */
-void LinearisedAdvection::ImportFldBase(std::string pInfile,
-        Array<OneD, MultiRegions::ExpListSharedPtr>& pFields, int slice)
+void LinearisedAdvection::ImportFldBase(
+        std::string                                  pInfile,
+        Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        int                                          pSlice)
 {
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
-    std::vector<std::vector<NekDouble> > FieldData;
+    std::vector<std::vector<NekDouble> >                 FieldData;
 
     int nqtot = m_baseflow[0].num_elements();
-    int nvar = m_session->GetVariables().size();
-    int s;
     Array<OneD, NekDouble> tmp_coeff(pFields[0]->GetNcoeffs(), 0.0);
 
     int numexp = pFields[0]->GetExpSize();
@@ -593,7 +595,6 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
         ElementGIDs[i] = pFields[0]->GetExp(i)->GetGeom()->GetGlobalID();
     }
 
-    //Get Homogeneous
     LibUtilities::FieldIOSharedPtr fld =
     MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
                                                     m_session->GetComm());
@@ -601,72 +602,36 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
                 LibUtilities::NullFieldMetaDataMap,
                 ElementGIDs);
 
-
-    if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
+    int nSessionVar     = m_session->GetVariables().size();
+    int nSessionConvVar = nSessionVar - 1;
+    int nFileVar        = FieldDef[0]->m_fields.size();
+    int nFileConvVar    = nFileVar - 1; // Ignore pressure
+    if (m_halfMode)
     {
-        std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
+        ASSERTL0(nFileVar == 3, "For half mode, expect 2D2C base flow.");
+        nFileConvVar = 2;
     }
 
-    // copy FieldData into m_fields
-    for(int j = 0; j < nvar; ++j)
+    for(int j = 0; j < nFileConvVar; ++j)
     {
         for(int i = 0; i < FieldDef.size(); ++i)
         {
-            if((m_session->DefinesSolverInfo("HOMOGENEOUS") &&
-               (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D" ||
-                m_session->GetSolverInfo("HOMOGENEOUS")=="1D" ||
-                m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D")) &&
-                 m_multipleModes==false)
-            {
-                // w-component must be ignored and set to zero.
-                // SJS I do not believe this is always the case
-                if (j != nvar - 2)
-                {
-                    // p component (it is 4th variable of the 3D and
-                    // corresponds 3rd variable of 2D)
-                    s = (j == nvar - 1) ? 2 : j;
+            bool flag = FieldDef[i]->m_fields[j] ==
+                m_session->GetVariable(j);
 
-                    //extraction of the 2D
-                    pFields[j]->ExtractDataToCoeffs(
-                                        FieldDef[i],
-                                        FieldData[i],
-                                        FieldDef[i]->m_fields[s],
-                                        tmp_coeff);
+            ASSERTL0(flag, (std::string("Order of ") + pInfile
+                            + std::string(" data and that defined in "
+                            "the session file differs")).c_str());
 
-                }
-
-                //Zero higher modes than being considered in
-                //multi-mode expansion
-                if (m_npointsZ > 2)
-                {
-                    // @Chris not clear why this is being done. Seems
-                    // to be zeroing all but the first two complex
-                    // modes?
-                    int ncplane = (pFields[0]->GetNcoeffs()) / m_npointsZ;
-                    Vmath::Zero(ncplane*(m_npointsZ-2),
-                                &tmp_coeff[2*ncplane], 1);
-                }
-            }
-            // 2D cases
-            else
-            {
-                bool flag = FieldDef[i]->m_fields[j] ==
-                    m_session->GetVariable(j);
-
-                ASSERTL0(flag, (std::string("Order of ") + pInfile
-                                + std::string(" data and that defined in "
-                                "m_boundaryconditions differs")).c_str());
-
-                pFields[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                FieldDef[i]->m_fields[j],
-                                                tmp_coeff);
-            }
+            pFields[j]->ExtractDataToCoeffs(
+                                FieldDef[i],
+                                FieldData[i],
+                                FieldDef[i]->m_fields[j],
+                                tmp_coeff);
         }
 
         if(m_singleMode || m_halfMode)
         {
-            //pFields[j]->SetWaveSpace(true);
-
             pFields[j]->GetPlane(0)->BwdTrans(tmp_coeff, m_baseflow[j]);
 
             if(m_singleMode)
@@ -686,16 +651,18 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
         }
     }
 
+    // Zero unused fields (e.g. w in a 2D2C base flow).
+    for (int j = nFileConvVar; j < nSessionConvVar; ++j) {
+        Vmath::Fill(nqtot, 0.0, m_baseflow[j], 1);
+    }
+
+    // If time-periodic, put loaded data into the slice storage.
     if(m_session->DefinesParameter("N_slices"))
     {
-        int nConvectiveFields = pFields.num_elements()-1;
-
-        for(int i=0; i<nConvectiveFields;++i)
+        for(int i = 0; i < nSessionConvVar; ++i)
         {
-
-            Vmath::Vcopy(nqtot, &m_baseflow[i][0], 1, &m_interp[i][slice*nqtot], 1);
+            Vmath::Vcopy(nqtot, &m_baseflow[i][0], 1, &m_interp[i][pSlice*nqtot], 1);
         }
-
     }
 }
 

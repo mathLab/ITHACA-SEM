@@ -40,6 +40,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <ShallowWaterSolver/EquationSystems/NonlinearSWE.h>
 
+using namespace std;
+
 namespace Nektar
 {
   string NonlinearSWE::className = 

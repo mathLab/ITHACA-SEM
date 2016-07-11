@@ -7,6 +7,7 @@
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 #include <IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.h>
 
+using namespace std;
 using namespace Nektar;
 using namespace Nektar::SolverUtils;
 

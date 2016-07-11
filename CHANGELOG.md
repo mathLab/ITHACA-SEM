@@ -3,6 +3,10 @@ Changelog
 
 v4.4.0
 ------
+**Library:**
+- Fix filters when using adaptive driver to avoid output being overwritten after
+  each adaptive update (!588)
+
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
 

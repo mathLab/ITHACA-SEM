@@ -1305,7 +1305,7 @@ namespace Nektar
             int p, q, numModes0, numModes1;
             int cnt = 0;
             int intDofCnt;
-            int meshVertId, meshEdgeId, meshFaceId;
+            int meshVertId, meshEdgeId, meshEdgeId2, meshFaceId, meshFaceId2;
             int globalId;
             int nEdgeInteriorCoeffs;
             int firstNonDirGraphVertId;
@@ -1395,6 +1395,32 @@ namespace Nektar
                     }
                 }
             }
+
+            // Add non-local periodic dofs to the map
+            for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
+            {
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    meshEdgeId2 = pIt->second[i].id;
+                    if (dofs[1].count(meshEdgeId2) == 0)
+                    {
+                        dofs[1][meshEdgeId2] = 1e6;
+                    }
+                }
+            }
+            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
+            {
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    meshFaceId2 = pIt->second[i].id;
+                    if (faceModes[0][meshFaceId2] == 0)
+                    {
+                        faceModes[0][meshFaceId2] = 1e6;
+                        faceModes[1][meshFaceId2] = 1e6;
+                    }
+                }
+            }
+
             // Now use information from all partitions to determine
             //    the correct size
             map<int, int>::iterator dofIt, dofIt2;
@@ -1413,6 +1439,19 @@ namespace Nektar
             {
                 dofs[1][edgeId[i]] = (int) (edgeDof[i]+0.5);
             }
+            // Periodic edges
+            for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
+            {
+                meshEdgeId = pIt->first;
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    meshEdgeId2 = pIt->second[i].id;
+                    if (dofs[1][meshEdgeId2] < dofs[1][meshEdgeId])
+                    {
+                        dofs[1][meshEdgeId] = dofs[1][meshEdgeId2];
+                    }
+                }
+            }
             // faces
             Array<OneD, long> faceId (faceModes[0].size());
             Array<OneD, NekDouble> faceP (faceModes[0].size());
@@ -1428,11 +1467,32 @@ namespace Nektar
             Gs::Gather(faceP, Gs::gs_min, tmp2);
             Gs::Gather(faceQ, Gs::gs_min, tmp2);
             Gs::Finalise(tmp2);
-            int P, Q;
             for (i=0; i < faceModes[0].size(); i++)
             {
                 faceModes[0][faceId[i]] = (int) (faceP[i]+0.5);
                 faceModes[1][faceId[i]] = (int) (faceQ[i]+0.5);
+            }
+            // Periodic faces
+            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
+            {
+                meshFaceId = pIt->first;
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    meshFaceId2 = pIt->second[i].id;
+                    if (faceModes[0][meshFaceId2] < faceModes[0][meshFaceId])
+                    {
+                        faceModes[0][meshFaceId] = faceModes[0][meshFaceId2];
+                    }
+                    if (faceModes[1][meshFaceId2] < faceModes[1][meshFaceId])
+                    {
+                        faceModes[1][meshFaceId] = faceModes[1][meshFaceId2];
+                    }
+                }
+            }
+            // Calculate number of dof in each face
+            int P, Q;
+            for (i=0; i < faceModes[0].size(); i++)
+            {
                 P = faceModes[0][faceId[i]];
                 Q = faceModes[1][faceId[i]];
                 if (faceType[faceId[i]] == LibUtilities::eQuadrilateral)
@@ -1912,7 +1972,7 @@ namespace Nektar
                 if (m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {
                     Array<OneD, int> vwgts_perm(
-                        dofs[0].size() + dofs[1].size() + dofs[2].size()
+                        graph[0].size() + graph[1].size() + graph[2].size()
                         - firstNonDirGraphVertId);
 
                     for (i = 0; i < locExpVector.size(); ++i)

@@ -137,6 +137,27 @@ void PtsField::AddField(const Array< OneD, NekDouble > &pts,
     m_fieldNames.push_back(fieldName);
 }
 
+void PtsField::AddPoints(const Array<OneD, const Array<OneD, NekDouble> > &pts)
+{
+    ASSERTL1(pts.num_elements() == m_pts.num_elements(),
+             "number of variables mismatch");
+
+    // TODO: dont copy, dont iterate
+    for (int i = 0; i < m_pts.num_elements(); ++i)
+    {
+        Array<OneD, NekDouble> tmp(m_pts[i].num_elements() + pts[i].num_elements());
+        for (int j = 0; j < m_pts[i].num_elements(); ++j)
+        {
+            tmp[j] = m_pts[i][j];
+        }
+        for (int j = 0; j < pts[i].num_elements(); ++j)
+        {
+            tmp[m_pts[i].num_elements() + j] = pts[i][j];
+        }
+        m_pts[i] = tmp;
+    }
+}
+
 int PtsField::GetNpoints() const
 {
     return m_pts[0].num_elements();

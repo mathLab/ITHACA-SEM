@@ -114,6 +114,8 @@ public:
     LIB_UTILITIES_EXPORT void AddField(const Array<OneD, NekDouble> &pts,
                                        const std::string fieldName);
 
+    LIB_UTILITIES_EXPORT void AddPoints(const Array< OneD, const Array< OneD, NekDouble > > &pts);
+
     LIB_UTILITIES_EXPORT int GetNpoints() const;
 
     LIB_UTILITIES_EXPORT NekDouble GetPointVal(const int fieldInd,

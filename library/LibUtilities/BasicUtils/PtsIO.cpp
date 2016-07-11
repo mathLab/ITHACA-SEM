@@ -47,6 +47,7 @@
 
 #include <LibUtilities/BasicUtils/FileSystem.h>
 
+using namespace std;
 
 namespace Nektar
 {
@@ -138,11 +139,14 @@ void PtsIO::Import(const string &inFile,
         // Load metadata
         ImportFieldMetaData(infile, fieldmetadatamap);
 
-        // TODO: This currently only loads the filename matching our rank.
-        filenames.clear();
-        boost::format pad("P%1$07d.%2$s");
-        pad % m_comm->GetRank() % GetFileEnding();
-        filenames.push_back(pad.str());
+        if (filenames.size() == m_comm->GetSize())
+        {
+        // only load the file that matches this rank
+            filenames.clear();
+            boost::format pad("P%1$07d.%2$s");
+            pad % m_comm->GetRank() % GetFileEnding();
+            filenames.push_back(pad.str());
+        }
 
         for (int i = 0; i < filenames.size(); ++i)
         {
@@ -160,7 +164,19 @@ void PtsIO::Import(const string &inFile,
                    << doc1.ErrorCol() << std::endl;
             ASSERTL0(loadOkay1, errstr.str());
 
-            ImportFieldData(doc1, ptsField);
+            if (i == 0)
+            {
+                ImportFieldData(doc1, ptsField);
+            }
+            else
+            {
+                LibUtilities::PtsFieldSharedPtr newPtsField;
+                ImportFieldData(doc1, newPtsField);
+                Array<OneD, Array<OneD, NekDouble> > pts;
+                newPtsField->GetPts(pts);
+                ptsField->AddPoints(pts);
+            }
+
         }
     }
     else

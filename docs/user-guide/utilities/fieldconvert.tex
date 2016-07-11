@@ -102,6 +102,7 @@ possibly also Reynolds stresses) into single file;
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
 \item \inltt{homplane}: Extract a plane from 3DH1D expansions;
+\item \inltt{homstretch}: Stretch a 3DH1D expansion by an integer factor;
 \item \inltt{innerproduct}: take the inner product between one or a series of fields with another field (or series of fields). 
 \item \inltt{interpfield}: Interpolates one field to another, requires fromxml, fromfld to be defined;
 \item \inltt{interppointdatatofld}: Interpolates given discrete data using a finite difference approximation to a fld file given an xml file;
@@ -324,6 +325,21 @@ FieldConvert -m homplane:wavespace:planeid=value file.xml \
 \end{lstlisting}
 
 The output file \inltt{file-plane.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise it either in Tecplot or in Paraview.
+
+\subsection{Stretch a 3DH1D expansion: \textit{homstretch} module}
+
+To stretch a 3DH1D expansion in the z-direction, use the command:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m homstretch:factor=value file.xml file.fld file-stretch.fld
+\end{lstlisting}
+The number of modes in the resulting field can be chosen using the command-line
+parameter \inltt{output-points-hom-z}. Note that the output for
+this module should always be a \inltt{.fld} file and this should not
+be used in combination with other modules using a single command.
+
+The output file \inltt{file-stretch.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise it either in Tecplot or in Paraview.
 

@@ -9,6 +9,9 @@ v4.4.0
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
 
+**FieldConvert:**
+- Add module to stretch homogeneous direction (!609)
+
 v4.3.3
 ------
 **Library**:

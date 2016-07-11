@@ -1,6 +1,4 @@
-SET(FieldConvertSources
-    FieldConvert.cpp
-)
+SET(FieldConvertSources FieldConvert.cpp)
 
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources})
 TARGET_LINK_LIBRARIES(FieldConvert FieldUtils)
@@ -22,6 +20,7 @@ ADD_NEKTAR_TEST(pointdatatofld)
 # ADD_NEKTAR_TEST(chan3D_pts)
 ADD_NEKTAR_TEST(chan3DH1D_meanmode)
 ADD_NEKTAR_TEST(chan3DH1D_plane)
+ADD_NEKTAR_TEST(chan3DH1D_stretch)
 ADD_NEKTAR_TEST(chan3D_probe)
 ADD_NEKTAR_TEST(cube_prismhex)
 ADD_NEKTAR_TEST(outflow_pointdatatofld)

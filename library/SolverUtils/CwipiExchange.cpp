@@ -874,7 +874,7 @@ void CwipiCoupling::FetchFields(const int step,
             }
         }
     }
-    else if (boost::lexical_cast<int>(m_config["OVERSAMPLE"]) > 0)
+    else
     {
         for (int i = 0; i < m_nRecvVars; ++i)
         {

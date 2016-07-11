@@ -150,6 +150,15 @@ void Dummy::v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
         variables.push_back(m_coupling->GetRecvFieldNames()[i]);
         fieldcoeffs.push_back(tmpC);
     }
+
+    for (int i = 0; i < m_sendFields.num_elements(); i++)
+    {
+        Array<OneD, NekDouble> tmpC(GetNcoeffs());
+
+        m_fields[0]->FwdTrans(m_sendFields[i], tmpC);
+        variables.push_back(m_coupling->GetSendFieldNames()[i]);
+        fieldcoeffs.push_back(tmpC);
+    }
 }
 
 } // end of namespace

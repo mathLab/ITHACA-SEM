@@ -95,6 +95,7 @@ void NodeOpti3D3D::Optimise()
     {
         //needs to optimise
         NekDouble currentW = GetFunctional<3>();
+        NekDouble functional;
         NekDouble xc       = node->m_x;
         NekDouble yc       = node->m_y;
         NekDouble zc       = node->m_z;
@@ -121,7 +122,8 @@ void NodeOpti3D3D::Optimise()
             node->m_x = xc - alpha * delX;
             node->m_y = yc - alpha * delY;
             node->m_z = zc - alpha * delZ;
-            if(GetFunctional<3>() < currentW)
+            functional = GetFunctional<3>();
+            if(functional < currentW)
             {
                 found = true;
                 break;
@@ -136,11 +138,13 @@ void NodeOpti3D3D::Optimise()
             node->m_x = xc;
             node->m_y = yc;
             node->m_z = zc;
+            functional = currentW;
             // cout << "warning: had to reset node" << endl;
         }
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
+        res->func += functional;
         mtx.unlock();
     }
 }
@@ -154,6 +158,7 @@ void NodeOpti1D3D::Optimise()
         //needs to optimise
         NekDouble tc = node->GetCADCurveInfo(curve->GetId());
         NekDouble currentW = GetFunctional<3>();
+        NekDouble functional;
         NekDouble xc       = node->m_x;
         NekDouble yc       = node->m_y;
         NekDouble zc       = node->m_z;
@@ -179,7 +184,8 @@ void NodeOpti1D3D::Optimise()
             node->m_x = p[0];
             node->m_y = p[1];
             node->m_z = p[2];
-            if(GetFunctional<3>() < currentW)
+            functional = GetFunctional<3>();
+            if(functional < currentW)
             {
                 found = true;
                 break;
@@ -196,6 +202,7 @@ void NodeOpti1D3D::Optimise()
             node->m_x = p[0];
             node->m_y = p[1];
             node->m_z = p[2];
+            functional = currentW;
             // cout << "warning: had to reset node" << endl;
         }
         else
@@ -205,6 +212,7 @@ void NodeOpti1D3D::Optimise()
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
+        res->func += functional;
         mtx.unlock();
     }
 }
@@ -218,6 +226,7 @@ void NodeOpti2D3D::Optimise()
         //needs to optimise
         Array<OneD, NekDouble> uvc = node->GetCADSurfInfo(surf->GetId());
         NekDouble currentW = GetFunctional<3>();
+        NekDouble functional;
         NekDouble xc       = node->m_x;
         NekDouble yc       = node->m_y;
         NekDouble zc       = node->m_z;
@@ -246,7 +255,8 @@ void NodeOpti2D3D::Optimise()
             node->m_x = p[0];
             node->m_y = p[1];
             node->m_z = p[2];
-            if(GetFunctional<3>() < currentW)
+            functional = GetFunctional<3>();
+            if(functional < currentW)
             {
                 found = true;
                 break;
@@ -262,6 +272,7 @@ void NodeOpti2D3D::Optimise()
             node->m_x = p[0];
             node->m_y = p[1];
             node->m_z = p[2];
+            functional = currentW;
             // cout << "warning: had to reset node" << endl;
         }
         else
@@ -271,6 +282,7 @@ void NodeOpti2D3D::Optimise()
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
+        res->func += functional;
         mtx.unlock();
     }
 }
@@ -536,13 +548,13 @@ NekDouble NodeOpti::GetFunctional()
     {
         case eLinEl:
         {
-            const NekDouble nu = 0.4;
+            const NekDouble nu = 0.45;
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
             for (int i = 0; i < nElmt; ++i)
             {
-                //bool valid = true;
+                bool valid = true;
                 NekDouble jacDet[ptsHelp->ptsHigh], trEtE[ptsHelp->ptsHigh];
 
                 for(int k = 0; k < ptsHelp->ptsHigh; ++k)
@@ -563,37 +575,28 @@ NekDouble NodeOpti::GetFunctional()
                     }
                     jacDet[k] = JacDet<DIM>(jacIdeal);
                     trEtE[k]  = LinElasTrace<DIM>(jacIdeal);
-                    //valid = valid ? jacDet[k] > 0.0 : false;
+                    valid = valid ? jacDet[k] > 0.0 : false;
                 }
 
-                NekDouble de = 1e-4;
+                NekDouble de = 1e-2;
 
-                //if (!valid)
-                //{
+                if (!valid)
+                {
                     for(int k = 0; k < ptsHelp->ptsHigh; ++k)
                     {
-                        NekDouble sigma;
-                        if(jacDet[k] < de*1e3)
-                        {
-                            sigma = 0.5*(jacDet[k] + sqrt(jacDet[k]*jacDet[k] + 4.0*de*de));
-                        }
-                        else
-                        {
-                            sigma = jacDet[k];
-                        }
-
+                        NekDouble sigma = 0.5*(jacDet[k] + sqrt(jacDet[k]*jacDet[k] + 4.0*de*de));
                         NekDouble lsigma = log(sigma);
                         integral += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (K * 0.5 * lsigma * lsigma + mu * trEtE[k]);
                     }
-                //}
-                //else
-                //{
-                //    for(int k = 0; k < ptsHelp->ptsHigh; ++k)
-                //    {
-                //        NekDouble lsigma = log(jacDet[k]);
-                //        integral += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (K * 0.5 * lsigma * lsigma + mu * trEtE[k]);
-                //    }
-                //}
+                }
+                else
+                {
+                    for(int k = 0; k < ptsHelp->ptsHigh; ++k)
+                    {
+                        NekDouble lsigma = log(jacDet[k]);
+                        integral += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (K * 0.5 * lsigma * lsigma + mu * trEtE[k]);
+                    }
+                }
             }
             break;
         }

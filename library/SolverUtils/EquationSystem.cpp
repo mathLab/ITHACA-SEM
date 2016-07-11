@@ -920,6 +920,20 @@ namespace Nektar
                     {
                         m_interpolators[interpKey] = SolverUtils::Interpolator(
                                 Nektar::SolverUtils::eShepard);
+                        if (m_comm->GetRank() == 0)
+                        {
+                            m_interpolators[interpKey].SetProgressCallback(
+                                    &EquationSystem::PrintProgressbar, this);
+                        }
+                        m_interpolators[interpKey].CalcWeights(ptsField, outPts);
+                        if (m_comm->GetRank() == 0)
+                        {
+                            cout << endl;
+                            if(GetSession()->DefinesCmdLineArgument("verbose"))
+                            {
+                                m_interpolators[interpKey].PrintStatistics();
+                            }
+                        }
                     }
                     m_interpolators[interpKey].Interpolate(ptsField, outPts);
 

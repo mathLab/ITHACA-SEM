@@ -28,9 +28,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: 2D and 3D Nodal Triangle and Tetrahedron Utilities header file --
-//              Basis function, Interpolation, Integral, Derivation, etc. 
+//
+// Description: 2D and 3D Nodal Triangle and Tetrahedron Utilities header file
+//              Basis function, Interpolation, Integral, Derivation, etc.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -50,8 +50,67 @@
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+
+class NodalUtil
+{
+    typedef boost::shared_ptr<NekDouble> SharedMatrix;
+
+public:
+    NodalUtil(int degree) : m_degree(degree)
     {
+    }
+
+    LIB_UTILITIES_EXPORT NekVector<NekDouble> GetWeights();
+    LIB_UTILITIES_EXPORT SharedMatrix GetVandermonde();
+    LIB_UTILITIES_EXPORT SharedMatrix GetVandermondeForDeriv(int dir);
+    LIB_UTILITIES_EXPORT SharedMatrix GetDerivMatrix(int dir);
+    LIB_UTILITIES_EXPORT SharedMatrix GetInterpolationMatrix();
+
+protected:
+    int m_degree;
+    int m_numPoints;
+    Array<OneD, NekDouble> m_r;
+    Array<OneD, NekDouble> m_s;
+    Array<OneD, NekDouble> m_t;
+
+    virtual NekVector<NekDouble> v_OrthoBasis(const int mode) = 0;
+    virtual NekVector<NekDouble> v_OrthoBasisDeriv(
+        const int dir, const int mode) = 0;
+    virtual int v_NumModes() = 0;
+};
+
+class NodalUtilTriangle : public NodalUtil
+{
+public:
+    NodalUtilTriangle(int numPoints,
+                      Array<OneD, NekDouble> &r,
+                      Array<OneD, NekDouble> &s)
+        : NodalUtil(numPoints), m_r(r), m_s(s)
+    {
+        for (int i = 0; i <= m_degree; ++i)
+        {
+            for (int j = 0; j <= m_degree - i; ++j)
+            {
+                m_ordering.push_back(std::make_pair(i,j));
+            }
+        }
+    }
+
+protected:
+    std::vector<std::pair<int, int> > m_ordering;
+    Array<OneD, NekDouble> m_eta1;
+    Array<OneD, NekDouble> m_eta2;
+
+    virtual NekVector<NekDouble> v_OrthoBasis(const int mode);
+    virtual NekVector<NekDouble> v_OrthoBasisDeriv(
+        const int dir, const int mode);
+    virtual int v_NumModes()
+    {
+        return (m_degree + 1) * (m_degree + 2) / 2;
+    }
+};
 
         // /////////////////////////////////////
         // General matrix and vector stuff        
@@ -165,8 +224,7 @@ namespace Nektar
                                                                     const NekVector<NekDouble>& z, int degree);
         LIB_UTILITIES_EXPORT NekMatrix<NekDouble> GetTetZDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
                                                                     const NekVector<NekDouble>& z);
-
-    } // end of LibUtilities namespace
+} // end of LibUtilities namespace
 } // end of Nektar namespace
 
 #endif //NODALUTIL_H

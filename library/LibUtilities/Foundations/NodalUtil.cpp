@@ -28,9 +28,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: 2D Nodal Triangle Fekete Utilities --
-//              Basis function, Interpolation, Integral, Derivation, etc.                
+//              Basis function, Interpolation, Integral, Derivation, etc
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -46,8 +46,198 @@
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+
+typedef boost::shared_ptr<NekMatrix<NekDouble> > SharedMatrix;
+
+NekVector<NekDouble> NodalUtil::GetWeights()
+{
+    // Get number of modes in orthogonal basis
+    int numModes = v_NumModes();
+
+    // If we have the same number of nodes as modes, then we can solve the
+    // linear system V^T w = (1,0,...)
+    if (numModes == m_numPoints)
     {
+        NekVector<NekDouble> g(m_r.num_elements(), 0);
+        g(0) = 1.0;
+
+        SharedMatrix V = GetVandermonde();
+
+        // Solve the system V^T w = g to obtain weights.
+        LinearSystem matL(V);
+        return matL.SolveTranspose(g);
+    }
+    else
+    {
+        // System is either over- or under-determined. Need to do least squares
+        // here using SVD.
+    }
+}
+
+SharedMatrix NodalUtil::GetVandermonde()
+{
+    int rows = m_numPoints;
+    int cols = v_NumModes();
+
+    SharedMatrix matV = MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(
+        rows, cols, 0.0);
+
+    for (int j = 0; j < cols; ++j)
+    {
+        NekVector<NekDouble> col = v_OrthoBasis();
+        for (int i = 0; i < rows; ++i)
+        {
+            (*matV)(i, j) = col[j];
+        }
+    }
+
+    return matV;
+}
+
+SharedMatrix NodalUtil::GetVandermondeForDeriv(int dir)
+{
+    int rows = m_numPoints;
+    int cols = v_NumModes();
+
+    SharedMatrix matV = MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(
+        rows, cols, 0.0);
+
+    for (int j = 0; j < cols; ++j)
+    {
+        NekVector<NekDouble> col = v_OrthoBasisDeriv(dir);
+        for (int i = 0; i < rows; ++i)
+        {
+            (*matV)(i, j) = col[j];
+        }
+    }
+
+    return matV;
+}
+
+SharedMatrix NodalUtil::GetDerivMatrix(int dir)
+{
+    SharedMatrix V  = GetVandermonde();
+    SharedMatrix Vd = GetVandermondeForDeriv(dir);
+    SharedMatrix D = MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(
+        rows, cols, 0.0);
+
+    return matV;
+}
+
+NodalUtilTriangle(int numPoints,
+                  Array<OneD, NekDouble> &r,
+                  Array<OneD, NekDouble> &s)
+    : NodalUtil(numPoints), m_r(r), m_s(s)
+{
+    for (int i = 0; i <= m_degree; ++i)
+    {
+        for (int j = 0; j <= m_degree - i; ++j)
+        {
+            m_ordering.push_back(std::make_pair(i,j));
+        }
+    }
+
+    // Calculate collapsed coordinates from r/s values
+    m_eta1 = Array<OneD, NekDouble>(m_numPoints);
+    m_eta2 = Array<OneD, NekDouble>(m_numPoints);
+    for (int i = 0; i < m_numPoints; ++i)
+    {
+        if (fabs(m_s[i] - 1.0) < NekConstants::kNekZeroTol)
+        {
+            m_eta1[i] = -1.0;
+            m_eta2[1] =  1.0;
+        }
+        else
+        {
+            m_eta1[i] = 2.0 * (1.0 + m_r[0]) / (1.0 - m_s[i]) - 1.0;
+            m_eta2[i] = m_s[i];
+        }
+    }
+}
+
+NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasis(const int mode)
+{
+    int numPoints = m_r.num_elements();
+    std::vector<NekDouble> jacobi_i(numPoints), jacobi_j(numPoints);
+    std::pair<int, int> modes = m_ordering[mode];
+
+    // Calculate Jacobi polynomials
+    Polylib::jacobfd(
+        numPoints, &m_eta1[0], &jacobi_i[0], NULL, modes.first, 0.0, 0.0);
+    Polylib::jacobfd(
+        numPoints, &m_eta2[0], &jacobi_j[0], NULL, modes.second,
+        2.0*modes.first + 1.0, 0.0);
+
+    NekVector<NekDouble> ret(numPoints);
+    NekDouble sqrt2 = sqrt(2.0);
+
+    for (int i = 0; i < numPoints; ++i)
+    {
+        ret[i] = sqrt2 * jacobi_i[i] * jacobi_j[i] *
+            pow(1.0 - m_eta2[i], modes.first);
+    }
+
+    return ret;
+}
+
+NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
+    const int dir, const int mode)
+{
+    int numPoints = m_r.num_elements();
+    std::vector<NekDouble> jacobi_i(numPoints), jacobi_j(numPoints);
+    std::vector<NekDouble> jacobi_di(numPoints), jacobi_dj(numPoints);
+    std::pair<int, int> modes = m_ordering[mode];
+
+    // Calculate Jacobi polynomials and their derivatives
+    Polylib::jacobfd(
+        numPoints, &m_eta1[0], &jacobi_i[0], &jacobi_di[0], modes.first, 0.0,
+        0.0);
+    Polylib::jacobfd(
+        numPoints, &m_eta2[0], &jacobi_j[0], &jacobi_dj[0], modes.second,
+        2.0*modes.first + 1.0, 0.0);
+
+    NekVector<NekDouble> ret(numPoints);
+    NekDouble sqrt2 = sqrt(2.0);
+
+    if (dir == 0)
+    {
+        for (int i = 0; i < numPoints; ++i)
+        {
+            ret[i] = sqrt2 * jacobi_di[i] * jacobi_j[i];
+            if (modes.first > 0)
+            {
+                ret[i] *= pow(1.0 - m_eta2[i], modes.first - 1.0);
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < numPoints; ++i)
+        {
+            ret[i] = sqrt2 * jacobi_di[i] * jacobi_j[i] * 0.5 * (1 + m_eta1[i]);
+            if (modes.first > 0)
+            {
+                ret[i] *= pow(1.0 - m_eta2[i], modes.first - 1.0);
+            }
+
+            NekDouble tmp = sqrt2 * jacobi_i[i] * jacobi_dj[i] *
+                pow(1.0 - m_eta2[i], modes.first);
+
+            if (modes.first > 0)
+            {
+                tmp += sqrt2 * jacobi_i[i] * jacobi_j[i] *
+                    pow(1.0 - m_eta2[i], modes.first-1);
+            }
+
+            ret[i] += tmp;
+        }
+    }
+
+    return ret;
+}
+
 
         template< typename T > NekVector<T> GetColumn(const NekMatrix<T> & matA, int n)
         {

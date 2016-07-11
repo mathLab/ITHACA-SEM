@@ -81,12 +81,10 @@ public:
 
     void SendFields(const int step,
                     const NekDouble time,
-                    const NekDouble timestep,
                     const Array<OneD, const Array<OneD, NekDouble> > &field);
 
     void ReceiveFields(const int step,
                        const NekDouble time,
-                       const NekDouble timestep,
                        Array<OneD, Array<OneD, NekDouble> > &field);
 
     void SendCallback(Array<OneD, Array<OneD, NekDouble> > &interpField,
@@ -116,7 +114,8 @@ protected:
     std::vector<std::string> m_recvFieldNames;
     int m_recvSteps;
 
-    NekDouble m_lastUpdate;
+    int m_lastSend;
+    int m_lastReceive;
 
     int m_spacedim;
     int m_nPoints;

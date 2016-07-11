@@ -71,9 +71,9 @@ APE_coupled::~APE_coupled()
 }
 
 /**
- * @brief v_PostIntegrate
+ * @brief v_PreIntegrate
  */
-bool APE_coupled::v_PostIntegrate(int step)
+bool APE_coupled::v_PreIntegrate(int step)
 {
     if (m_cflsteps && !((step + 1) % m_cflsteps))
     {
@@ -107,7 +107,7 @@ bool APE_coupled::v_PostIntegrate(int step)
         m_bfField->BwdTrans(tmpC, m_st[i]);
     }
 
-    return UnsteadySystem::v_PostIntegrate(step);
+    return UnsteadySystem::v_PreIntegrate(step);
 }
 
 void APE_coupled::receiveFields()
@@ -137,7 +137,7 @@ void APE_coupled::receiveFields()
     }
     recField[5] = m_st[0]; // S
 
-    m_coupling->ReceiveFields(0, m_time, m_timestep, recField);
+    m_coupling->ReceiveFields(0, m_time, recField);
 
     // HACK
     for (int i = 0; i < nq; ++i)

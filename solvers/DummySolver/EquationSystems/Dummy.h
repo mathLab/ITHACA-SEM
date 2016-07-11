@@ -83,7 +83,7 @@ protected:
         Array<OneD, Array<OneD, NekDouble> > &outarray,
         const NekDouble time);
 
-    virtual bool v_PostIntegrate(int step);
+    virtual bool v_PreIntegrate(int step);
 
     virtual void v_Output(void);
 

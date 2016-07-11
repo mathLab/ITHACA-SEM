@@ -105,9 +105,9 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                              std::string name,
                              int outputFreq,
                              double geomTol)
-    : m_couplingName(name), m_evalField(field), m_lastUpdate(-1E23),
-      m_points(NULL), m_coords(NULL), m_connecIdx(NULL), m_connec(NULL),
-      m_rValsInterl(NULL), m_sValsInterl(NULL)
+    : m_couplingName(name), m_evalField(field), m_lastSend(-1E6),
+      m_lastReceive(-1E6), m_points(NULL), m_coords(NULL), m_connecIdx(NULL),
+      m_connec(NULL), m_rValsInterl(NULL), m_sValsInterl(NULL)
 {
     ReadConfig(m_evalField->GetSession());
 
@@ -659,7 +659,6 @@ void CwipiCoupling::SendCallback(
 void CwipiCoupling::SendFields(
     const int step,
     const NekDouble time,
-    const NekDouble timestep,
     const Array<OneD, const Array<OneD, NekDouble> > &field)
 {
     if (m_nSendVars < 1 or m_sendSteps < 1)
@@ -669,35 +668,41 @@ void CwipiCoupling::SendFields(
 
     ASSERTL1(m_nSendVars == field.num_elements(), "field size mismatch");
 
-    m_sendField = field;
-
-    if (m_evalField->GetComm()->GetRank() == 0 &&
-        m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+    if (step >= m_lastSend + m_sendSteps)
     {
-        cout << "sending fields at i = " << step << ", t = " << time << endl;
+        m_lastSend = step;
+
+        m_sendField = field;
+
+        if (m_evalField->GetComm()->GetRank() == 0 &&
+            m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+        {
+            cout << "sending fields at i = " << step << ", t = " << time
+                 << endl;
+        }
+
+        int nNotLoc = 0;
+        // workaround a bug in cwipi: receiving_field_name should be const char*
+        // but
+        // is char*
+        char sendFN[10];
+        strcpy(sendFN, "dummyName");
+
+        cwipi_exchange(m_couplingName.c_str(),
+                       "ex1",
+                       m_nSendVars,
+                       step,
+                       time,
+                       sendFN,
+                       m_sValsInterl,
+                       "",
+                       NULL,
+                       &nNotLoc);
     }
-
-    int nNotLoc = 0;
-    // workaround a bug in cwipi: receiving_field_name should be const char* but
-    // is char*
-    char sendFN[10];
-    strcpy(sendFN, "dummyName");
-
-    cwipi_exchange(m_couplingName.c_str(),
-                   "ex1",
-                   m_nSendVars,
-                   step,
-                   time,
-                   sendFN,
-                   m_sValsInterl,
-                   "",
-                   NULL,
-                   &nNotLoc);
 }
 
 void CwipiCoupling::ReceiveFields(const int step,
                                   const NekDouble time,
-                                  const NekDouble timestep,
                                   Array<OneD, Array<OneD, NekDouble> > &field)
 {
     if (m_nRecvVars < 1 or m_recvSteps < 1)
@@ -711,7 +716,7 @@ void CwipiCoupling::ReceiveFields(const int step,
 
     // make sure we have sensible data in old/new field the first time this
     // method is called
-    if (m_lastUpdate < 0.0)
+    if (m_lastReceive < 0)
     {
         for (int i = 0; i < m_nRecvVars; ++i)
         {
@@ -720,9 +725,9 @@ void CwipiCoupling::ReceiveFields(const int step,
         }
     }
 
-    if (time >= m_lastUpdate + m_recvSteps * timestep)
+    if (step >= m_lastReceive + m_recvSteps)
     {
-        m_lastUpdate = time;
+        m_lastReceive = step;
 
         for (int i = 0; i < m_nRecvVars; ++i)
         {
@@ -733,7 +738,7 @@ void CwipiCoupling::ReceiveFields(const int step,
     }
 
     NekDouble fact =
-        (time - m_lastUpdate + timestep) / (m_recvSteps * timestep);
+        NekDouble(step - m_lastReceive + 1) / NekDouble(m_recvSteps);
     for (int i = 0; i < m_nRecvVars; ++i)
     {
         Vmath::Svtsvtp(nq,

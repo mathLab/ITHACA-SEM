@@ -71,7 +71,7 @@ protected:
 
     virtual void v_InitObject();
 
-    virtual bool v_PostIntegrate(int step);
+    virtual bool v_PreIntegrate(int step);
 
     virtual void v_Output(void);
 

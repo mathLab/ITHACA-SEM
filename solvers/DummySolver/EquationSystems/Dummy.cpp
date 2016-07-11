@@ -91,10 +91,12 @@ Dummy::~Dummy()
 }
 
 /**
- * @brief v_PostIntegrate
+ * @brief v_PreIntegrate
  */
-bool Dummy::v_PostIntegrate(int step)
+bool Dummy::v_PreIntegrate(int step)
 {
+    m_coupling->ReceiveFields(step, m_time, m_recFields);
+
     if (m_sendFields.num_elements() > 0)
     {
         EvaluateFunction(m_coupling->GetSendFieldNames(),
@@ -103,10 +105,9 @@ bool Dummy::v_PostIntegrate(int step)
                          m_time);
     }
 
-    m_coupling->ReceiveFields(0, m_time, m_timestep, m_recFields);
-    m_coupling->SendFields(0, m_time, m_timestep, m_sendFields);
+    m_coupling->SendFields(step, m_time, m_sendFields);
 
-    return UnsteadySystem::v_PostIntegrate(step);
+    return UnsteadySystem::v_PreIntegrate(step);
 }
 
 /**

@@ -3,6 +3,10 @@ Changelog
 
 v4.4.0
 ------
+**Library:**
+- Add support for variable polynomial order for 3D simulations with continuous
+  Galerkin discretisation (!604)
+
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
 

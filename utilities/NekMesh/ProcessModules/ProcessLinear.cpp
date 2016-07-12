@@ -124,8 +124,6 @@ void ProcessLinear::Process()
             // Generate geometric factors.
             SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
 
-            // Get the Jacobian and, if it is negative, print a warning
-            // message.
             if (!gfac->IsValid())
             {
                 el[i]->SetVolumeNodes(zeroNodes);
@@ -144,7 +142,7 @@ void ProcessLinear::Process()
                 {
                     map<int,vector<FaceSharedPtr> >::iterator it =
                                         eidToFace.find(e[j]->m_id);
-                    for(int k = 0; k < it->second.size(); j++)
+                    for(int k = 0; k < it->second.size(); k++)
                     {
                         it->second[k]->m_faceNodes = zeroNodes;
                     }

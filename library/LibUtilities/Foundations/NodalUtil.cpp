@@ -77,9 +77,7 @@ NekVector<NekDouble> NodalUtil::GetWeights()
 
 SharedMatrix NodalUtil::GetVandermonde()
 {
-    int rows = m_numPoints;
-    int cols = v_NumModes();
-
+    int rows = m_numPoints, cols = v_NumModes();
     SharedMatrix matV = MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(
         rows, cols, 0.0);
 
@@ -97,9 +95,7 @@ SharedMatrix NodalUtil::GetVandermonde()
 
 SharedMatrix NodalUtil::GetVandermondeForDeriv(int dir)
 {
-    int rows = m_numPoints;
-    int cols = v_NumModes();
-
+    int rows = m_numPoints, cols = v_NumModes();
     SharedMatrix matV = MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(
         rows, cols, 0.0);
 
@@ -188,36 +184,40 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasis(const int mode)
 NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
     const int dir, const int mode)
 {
-    int numPoints = m_r.num_elements();
-    std::vector<NekDouble> jacobi_i(numPoints), jacobi_j(numPoints);
-    std::vector<NekDouble> jacobi_di(numPoints), jacobi_dj(numPoints);
+    std::vector<NekDouble> jacobi_i(m_numPoints), jacobi_j(m_numPoints);
+    std::vector<NekDouble> jacobi_di(m_numPoints), jacobi_dj(m_numPoints);
     std::pair<int, int> modes = m_ordering[mode];
 
     // Calculate Jacobi polynomials and their derivatives
     Polylib::jacobfd(
-        numPoints, &m_eta1[0], &jacobi_i[0], &jacobi_di[0], modes.first, 0.0,
+        m_numPoints, &m_eta1[0], &jacobi_i[0], &jacobi_di[0], modes.first, 0.0,
         0.0);
     Polylib::jacobfd(
-        numPoints, &m_eta2[0], &jacobi_j[0], &jacobi_dj[0], modes.second,
+        m_numPoints, &m_eta2[0], &jacobi_j[0], &jacobi_dj[0], modes.second,
         2.0*modes.first + 1.0, 0.0);
 
-    NekVector<NekDouble> ret(numPoints);
+    NekVector<NekDouble> ret(m_numPoints);
     NekDouble sqrt2 = sqrt(2.0);
 
     if (dir == 0)
     {
-        for (int i = 0; i < numPoints; ++i)
+        cout << "DERIV: " << modes.first << " " << modes.second << endl;
+        for (int i = 0; i < m_numPoints; ++i)
         {
+            cout << m_eta1[i] << " " << jacobi_di[i] << " " << jacobi_j[i];
             ret[i] = sqrt2 * jacobi_di[i] * jacobi_j[i];
             if (modes.first > 0)
             {
                 ret[i] *= pow(1.0 - m_eta2[i], modes.first - 1.0);
+                cout << " " << pow(1.0 - m_eta2[i], modes.first - 1.0);
             }
+            cout << endl;
         }
+        cout << endl;
     }
     else
     {
-        for (int i = 0; i < numPoints; ++i)
+        for (int i = 0; i < m_numPoints; ++i)
         {
             ret[i] = sqrt2 * jacobi_di[i] * jacobi_j[i] * 0.5 * (1 + m_eta1[i]);
             if (modes.first > 0)

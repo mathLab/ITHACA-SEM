@@ -74,17 +74,26 @@ int main(int argc, char *argv[])
 
     {
         NodalUtilTriangle lel(degree, ax, ay);
-        cout << "MY VANDERMONDE" << endl;
-        cout << *lel.GetVandermonde() << endl;
-        cout << "OLD VANDERMONDE" << endl;
-        NekMatrix<NekDouble> tmp2 = GetVandermonde(x,y);
-        cout << tmp2 << endl;
-        NekVector<NekDouble> tmp = lel.GetWeights();
-        cout << "MY WEIGHTS" << endl;
-        cout << tmp << endl;
-        NekVector<NekDouble> tmp3 = MakeQuadratureWeights(x,y);
-        cout << "OLD WEIGHTS" << endl;
-        cout << tmp3 << endl;
+        // cout << "MY VANDERMONDE" << endl;
+        // cout << *lel.GetVandermonde() << endl;
+        // cout << "OLD VANDERMONDE" << endl;
+        // NekMatrix<NekDouble> tmp2 = GetVandermonde(x,y);
+        // cout << tmp2 << endl;
+        // NekVector<NekDouble> tmp = lel.GetWeights();
+        // cout << "MY WEIGHTS" << endl;
+        // cout << tmp << endl;
+        // NekVector<NekDouble> tmp3 = MakeQuadratureWeights(x,y);
+        // cout << "OLD WEIGHTS" << endl;
+        // cout << tmp3 << endl;
+
+        cout << "OLD VANDERMONDE X" << endl;
+        NekMatrix<NekDouble> tmp = GetVandermondeForXDerivative(x, y);
+        cout << tmp << endl << endl;
+
+        cout << "NEW VANDERMONDE X" << endl;
+        NekMatrix<NekDouble> tmp2 = *lel.GetVandermondeForDeriv(0);
+        cout << tmp2 << endl << endl;
+
         return 0;
     }
     

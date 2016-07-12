@@ -78,7 +78,7 @@ protected:
     virtual void v_Output(void);
 
 private:
-    void receiveFields();
+    void receiveFields(int step);
 };
 }
 

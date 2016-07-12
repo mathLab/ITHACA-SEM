@@ -75,7 +75,7 @@ APE_coupled::~APE_coupled()
  */
 bool APE_coupled::v_PreIntegrate(int step)
 {
-    receiveFields();
+    receiveFields(step);
 
     Array<OneD, NekDouble> tmpC(GetNcoeffs());
     for (int i = 0; i < m_spacedim + 2; ++i)
@@ -118,7 +118,7 @@ bool APE_coupled::v_PostIntegrate(int step)
     return UnsteadySystem::v_PostIntegrate(step);
 }
 
-void APE_coupled::receiveFields()
+void APE_coupled::receiveFields(int step)
 {
     int nq = GetTotPoints();
 
@@ -145,7 +145,7 @@ void APE_coupled::receiveFields()
     }
     recField[5] = m_st[0]; // S
 
-    m_coupling->ReceiveFields(0, m_time, recField);
+    m_coupling->ReceiveFields(step, m_time, recField);
 
     // HACK
     for (int i = 0; i < nq; ++i)

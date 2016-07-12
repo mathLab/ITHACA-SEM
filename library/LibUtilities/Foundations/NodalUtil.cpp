@@ -113,10 +113,14 @@ SharedMatrix NodalUtil::GetVandermondeForDeriv(int dir)
 
 SharedMatrix NodalUtil::GetDerivMatrix(int dir)
 {
-    // SharedMatrix V  = GetVandermonde();
-    // SharedMatrix Vd = GetVandermondeForDeriv(dir);
+    SharedMatrix V  = GetVandermonde();
+    SharedMatrix Vd = GetVandermondeForDeriv(dir);
     SharedMatrix D = MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(
-        1, 1, 0.0);
+        V->GetRows(), V->GetColumns(), 0.0);
+
+    V->Invert();
+
+    *D = (*Vd) * (*V);
 
     return D;
 }
@@ -188,12 +192,19 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
     std::vector<NekDouble> jacobi_di(m_numPoints), jacobi_dj(m_numPoints);
     std::pair<int, int> modes = m_ordering[mode];
 
-    // Calculate Jacobi polynomials and their derivatives
+    // Calculate Jacobi polynomials and their derivatives. Note that we use both
+    // jacobfd and jacobd since jacobfd is only valid for derivatives in the
+    // open interval (-1,1).
     Polylib::jacobfd(
-        m_numPoints, &m_eta1[0], &jacobi_i[0], &jacobi_di[0], modes.first, 0.0,
+        m_numPoints, &m_eta1[0], &jacobi_i[0], NULL, modes.first, 0.0,
         0.0);
     Polylib::jacobfd(
-        m_numPoints, &m_eta2[0], &jacobi_j[0], &jacobi_dj[0], modes.second,
+        m_numPoints, &m_eta2[0], &jacobi_j[0], NULL, modes.second,
+        2.0*modes.first + 1.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_eta1[0], &jacobi_di[0], modes.first, 0.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_eta2[0], &jacobi_dj[0], modes.second,
         2.0*modes.first + 1.0, 0.0);
 
     NekVector<NekDouble> ret(m_numPoints);
@@ -201,40 +212,33 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
 
     if (dir == 0)
     {
-        cout << "DERIV: " << modes.first << " " << modes.second << endl;
         for (int i = 0; i < m_numPoints; ++i)
         {
-            cout << m_eta1[i] << " " << jacobi_di[i] << " " << jacobi_j[i];
-            ret[i] = sqrt2 * jacobi_di[i] * jacobi_j[i];
+            ret[i] = 2.0 * sqrt2 * jacobi_di[i] * jacobi_j[i];
             if (modes.first > 0)
             {
                 ret[i] *= pow(1.0 - m_eta2[i], modes.first - 1.0);
-                cout << " " << pow(1.0 - m_eta2[i], modes.first - 1.0);
             }
-            cout << endl;
         }
-        cout << endl;
     }
     else
     {
         for (int i = 0; i < m_numPoints; ++i)
         {
-            ret[i] = sqrt2 * jacobi_di[i] * jacobi_j[i] * 0.5 * (1 + m_eta1[i]);
+            ret[i] = (1 + m_eta1[i]) * sqrt2 * jacobi_di[i] * jacobi_j[i];
             if (modes.first > 0)
             {
                 ret[i] *= pow(1.0 - m_eta2[i], modes.first - 1.0);
             }
 
-            NekDouble tmp = sqrt2 * jacobi_i[i] * jacobi_dj[i] *
-                pow(1.0 - m_eta2[i], modes.first);
-
+            NekDouble tmp = jacobi_dj[i] * pow(1.0 - m_eta2[i], modes.first);
             if (modes.first > 0)
             {
-                tmp += sqrt2 * jacobi_i[i] * jacobi_j[i] *
+                tmp -= modes.first * jacobi_j[i] *
                     pow(1.0 - m_eta2[i], modes.first-1);
             }
 
-            ret[i] += tmp;
+            ret[i] += sqrt2 * jacobi_i[i] * tmp;
         }
     }
 

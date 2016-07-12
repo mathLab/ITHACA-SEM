@@ -28,6 +28,7 @@ v4.3.3
 **FieldConvert**:
 - Fix to avoid repeated import of field file (!649)
 - Fix issue with C^0 projection (!644)
+- Fix verbose output when using --procid (!648)
 
 **CompressibleFlowSolver**:
 - Fix issue with residual output (!647)

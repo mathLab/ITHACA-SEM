@@ -54,7 +54,7 @@ OutputSTL::OutputSTL(MeshSharedPtr m) : OutputModule(m)
 {
 }
 
-OutputGmsh::~OutputGmsh()
+OutputSTL::~OutputSTL()
 {
 }
 
@@ -66,7 +66,7 @@ void OutputSTL::Process()
         cout << "Outputstl: Writing file..." << endl;
     }
 
-    OpenStream()
+    OpenStream();
 
     m_mshFile << "solid " << m_config["outfile"].as<string>() << endl;
     m_mshFile << std::scientific << setprecision(8);

@@ -19,6 +19,8 @@ v4.4.0
 v4.3.3
 ------
 **Library**:
+- Fix filters when using adaptive driver to avoid output being overwritten after
+  each adaptive update (!588)
 - Minor fix to suppress Xxt output unless `--verbose` is specified (!642)
 - Fix of DirectFull solver in case where only Neumann boundary conditions 
   are imposed. (!655)

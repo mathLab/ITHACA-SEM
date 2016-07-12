@@ -1413,7 +1413,7 @@ namespace Nektar
                 for (i = 0; i < pIt->second.size(); ++i)
                 {
                     meshFaceId2 = pIt->second[i].id;
-                    if (faceModes[0][meshFaceId2] == 0)
+                    if (faceModes[0].count(meshFaceId2) == 0)
                     {
                         faceModes[0][meshFaceId2] = 1e6;
                         faceModes[1][meshFaceId2] = 1e6;

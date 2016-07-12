@@ -37,7 +37,6 @@ v4.3.3
 
 **Packaging**:
 - Fix NekMesh dependencies for DEB package (!650)
->>>>>>> master
 
 v4.3.2
 ------

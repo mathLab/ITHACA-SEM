@@ -40,7 +40,7 @@ IF (NEKTAR_USE_HDF5)
         EXTERNALPROJECT_ADD(
             hdf5-1.8.16
             PREFIX ${TPSRC}
-            URL http://ae-nektar.ae.ic.ac.uk/~dmoxey/hdf5-1.8.16.tar.bz2
+            URL ${TPURL}/hdf5-1.8.16.tar.bz2
             URL_MD5 79c1593573ebddf734eee8d43ecfe483
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}

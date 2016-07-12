@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v4.3.3
+------
+**FieldConvert**
+- Fix verbose output when using --procid (!648)
+
 v4.3.2
 ------
 **Library**:

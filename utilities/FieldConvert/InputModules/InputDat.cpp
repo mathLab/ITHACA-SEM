@@ -82,7 +82,10 @@ void InputDat::Process(po::variables_map &vm)
 
     if(m_f->m_verbose)
     {
-        cout << "Processing input dat file" << endl;
+        if(m_f->m_comm->TreatAsRankZero())
+        {
+            cout << "Processing input dat file" << endl;
+        }
     }
 
     string      line, word, tag;

@@ -72,6 +72,7 @@ NekVector<NekDouble> NodalUtil::GetWeights()
     {
         // System is either over- or under-determined. Need to do least squares
         // here using SVD.
+        return NekVector<NekDouble>();
     }
 }
 
@@ -128,11 +129,11 @@ SharedMatrix NodalUtil::GetDerivMatrix(int dir)
 NodalUtilTriangle::NodalUtilTriangle(int                     degree,
                                      Array<OneD, NekDouble> &r,
                                      Array<OneD, NekDouble> &s)
-    : NodalUtil(degree)
+    : NodalUtil(degree, 2), m_eta(2)
 {
     m_numPoints = r.num_elements();
-    m_r = r;
-    m_s = s;
+    m_xi[0] = r;
+    m_xi[1] = s;
 
     for (int i = 0; i <= m_degree; ++i)
     {
@@ -143,20 +144,20 @@ NodalUtilTriangle::NodalUtilTriangle(int                     degree,
     }
 
     // Calculate collapsed coordinates from r/s values
-    m_eta1 = Array<OneD, NekDouble>(m_numPoints);
-    m_eta2 = Array<OneD, NekDouble>(m_numPoints);
+    m_eta[0] = Array<OneD, NekDouble>(m_numPoints);
+    m_eta[1] = Array<OneD, NekDouble>(m_numPoints);
 
     for (int i = 0; i < m_numPoints; ++i)
     {
-        if (fabs(m_s[i]-1.0) < NekConstants::kNekZeroTol)
+        if (fabs(m_xi[1][i]-1.0) < NekConstants::kNekZeroTol)
         {
-            m_eta1[i] = -1.0;
-            m_eta2[i] =  1.0;
+            m_eta[0][i] = -1.0;
+            m_eta[1][i] =  1.0;
         }
         else
         {
-            m_eta1[i] = 2*(1+m_r[i])/(1-m_s[i])-1.0;
-            m_eta2[i] = m_s[i];
+            m_eta[0][i] = 2*(1+m_xi[0][i])/(1-m_xi[1][i])-1.0;
+            m_eta[1][i] = m_xi[1][i];
         }
     }
 }
@@ -168,9 +169,9 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasis(const int mode)
 
     // Calculate Jacobi polynomials
     Polylib::jacobfd(
-        m_numPoints, &m_eta1[0], &jacobi_i[0], NULL, modes.first, 0.0, 0.0);
+        m_numPoints, &m_eta[0][0], &jacobi_i[0], NULL, modes.first, 0.0, 0.0);
     Polylib::jacobfd(
-        m_numPoints, &m_eta2[0], &jacobi_j[0], NULL, modes.second,
+        m_numPoints, &m_eta[1][0], &jacobi_j[0], NULL, modes.second,
         2.0 * modes.first + 1.0, 0.0);
 
     NekVector<NekDouble> ret(m_numPoints);
@@ -179,7 +180,7 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasis(const int mode)
     for (int i = 0; i < m_numPoints; ++i)
     {
         ret[i] = sqrt2 * jacobi_i[i] * jacobi_j[i] *
-            pow(1.0 - m_eta2[i], modes.first);
+            pow(1.0 - m_eta[1][i], modes.first);
     }
 
     return ret;
@@ -196,15 +197,15 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
     // jacobfd and jacobd since jacobfd is only valid for derivatives in the
     // open interval (-1,1).
     Polylib::jacobfd(
-        m_numPoints, &m_eta1[0], &jacobi_i[0], NULL, modes.first, 0.0,
+        m_numPoints, &m_eta[0][0], &jacobi_i[0], NULL, modes.first, 0.0,
         0.0);
     Polylib::jacobfd(
-        m_numPoints, &m_eta2[0], &jacobi_j[0], NULL, modes.second,
+        m_numPoints, &m_eta[1][0], &jacobi_j[0], NULL, modes.second,
         2.0*modes.first + 1.0, 0.0);
     Polylib::jacobd(
-        m_numPoints, &m_eta1[0], &jacobi_di[0], modes.first, 0.0, 0.0);
+        m_numPoints, &m_eta[0][0], &jacobi_di[0], modes.first, 0.0, 0.0);
     Polylib::jacobd(
-        m_numPoints, &m_eta2[0], &jacobi_dj[0], modes.second,
+        m_numPoints, &m_eta[1][0], &jacobi_dj[0], modes.second,
         2.0*modes.first + 1.0, 0.0);
 
     NekVector<NekDouble> ret(m_numPoints);
@@ -217,7 +218,7 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
             ret[i] = 2.0 * sqrt2 * jacobi_di[i] * jacobi_j[i];
             if (modes.first > 0)
             {
-                ret[i] *= pow(1.0 - m_eta2[i], modes.first - 1.0);
+                ret[i] *= pow(1.0 - m_eta[1][i], modes.first - 1.0);
             }
         }
     }
@@ -225,20 +226,200 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
     {
         for (int i = 0; i < m_numPoints; ++i)
         {
-            ret[i] = (1 + m_eta1[i]) * sqrt2 * jacobi_di[i] * jacobi_j[i];
+            ret[i] = (1 + m_eta[0][i]) * sqrt2 * jacobi_di[i] * jacobi_j[i];
             if (modes.first > 0)
             {
-                ret[i] *= pow(1.0 - m_eta2[i], modes.first - 1.0);
+                ret[i] *= pow(1.0 - m_eta[1][i], modes.first - 1.0);
             }
 
-            NekDouble tmp = jacobi_dj[i] * pow(1.0 - m_eta2[i], modes.first);
+            NekDouble tmp = jacobi_dj[i] * pow(1.0 - m_eta[1][i], modes.first);
             if (modes.first > 0)
             {
                 tmp -= modes.first * jacobi_j[i] *
-                    pow(1.0 - m_eta2[i], modes.first-1);
+                    pow(1.0 - m_eta[1][i], modes.first-1);
             }
 
             ret[i] += sqrt2 * jacobi_i[i] * tmp;
+        }
+    }
+
+    return ret;
+}
+
+NodalUtilTetrahedron::NodalUtilTetrahedron(int                     degree,
+                                           Array<OneD, NekDouble> &r,
+                                           Array<OneD, NekDouble> &s,
+                                           Array<OneD, NekDouble> &t)
+    : NodalUtil(degree, 3), m_eta(3)
+{
+    m_numPoints = r.num_elements();
+    m_xi[0] = r;
+    m_xi[1] = s;
+    m_xi[2] = t;
+
+    for (int i = 0; i <= m_degree; ++i)
+    {
+        for (int j = 0; j <= m_degree - i; ++j)
+        {
+            for (int k = 0; k <= m_degree - i - j; ++k)
+            {
+                m_ordering.push_back(Mode(i, j, k));
+            }
+        }
+    }
+
+    // Calculate collapsed coordinates from r/s values
+    m_eta[0] = Array<OneD, NekDouble>(m_numPoints);
+    m_eta[1] = Array<OneD, NekDouble>(m_numPoints);
+    m_eta[2] = Array<OneD, NekDouble>(m_numPoints);
+
+    for (int i = 0; i < m_numPoints; ++i)
+    {
+        if (fabs(m_xi[2][i] - 1.0) < NekConstants::kNekZeroTol)
+        {
+            // Very top point of the tetrahedron
+            m_eta[0][i] = -1.0;
+            m_eta[1][i] = -1.0;
+            m_eta[2][i] = m_xi[2][i];
+        }
+        else
+        {
+            if (fabs(m_xi[1][i] - 1.0) <  NekConstants::kNekZeroTol)
+            {
+                // Distant diagonal edge shared by all eta_x coordinate planes:
+                // the xi_y == -xi_z line
+                m_eta[0][i] = -1.0;
+            }
+            else if (fabs(m_xi[1][i] + m_xi[2][i]) < NekConstants::kNekZeroTol)
+            {
+                m_eta[0][i] = -1.0;
+            }
+            else
+            {
+                m_eta[0][i] = 2.0 * (1.0 + m_xi[0][i]) /
+                    (-m_xi[1][i] - m_xi[2][i]) - 1.0;
+            }
+            m_eta[1][i] = 2.0 * (1.0 + m_xi[1][i]) / (1.0 - m_xi[2][i]) - 1.0;
+            m_eta[2][i] = m_xi[2][i];
+        }
+    }
+}
+
+NekVector<NekDouble> NodalUtilTetrahedron::v_OrthoBasis(const int mode)
+{
+    std::vector<NekDouble> jacA(m_numPoints), jacB(m_numPoints);
+    std::vector<NekDouble> jacC(m_numPoints);
+    Mode modes = m_ordering[mode];
+
+    const int I = modes.get<0>(), J = modes.get<1>(), K = modes.get<2>();
+
+    // Calculate Jacobi polynomials
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[0][0], &jacA[0], NULL, I, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[1][0], &jacB[0], NULL, J, 2.0 * I + 1.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[2][0], &jacC[0], NULL, K, 2.0 * (I+J) + 2.0, 0.0);
+
+    NekVector<NekDouble> ret(m_numPoints);
+    NekDouble sqrt8 = sqrt(8.0);
+
+    for (int i = 0; i < m_numPoints; ++i)
+    {
+        ret[i] = sqrt8 * jacA[i] * jacB[i] * jacC[i] *
+            pow(1.0 - m_eta[1][i], I) * pow(1.0 - m_eta[2][i], I + J);
+    }
+
+    return ret;
+}
+
+NekVector<NekDouble> NodalUtilTetrahedron::v_OrthoBasisDeriv(
+    const int dir, const int mode)
+{
+    std::vector<NekDouble> jacA(m_numPoints), jacB(m_numPoints);
+    std::vector<NekDouble> jacC(m_numPoints);
+    std::vector<NekDouble> jacDerivA(m_numPoints), jacDerivB(m_numPoints);
+    std::vector<NekDouble> jacDerivC(m_numPoints);
+    Mode modes = m_ordering[mode];
+
+    const int I = modes.get<0>(), J = modes.get<1>(), K = modes.get<2>();
+
+    // Calculate Jacobi polynomials
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[0][0], &jacA[0], NULL, I, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[1][0], &jacB[0], NULL, J, 2.0 * I + 1.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[2][0], &jacC[0], NULL, K, 2.0 * (I+J) + 2.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_eta[0][0], &jacDerivA[0], I, 0.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_eta[1][0], &jacDerivB[0], J, 2.0 * I + 1.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_eta[2][0], &jacDerivC[0], K, 2.0 * (I+J) + 2.0, 0.0);
+
+    NekVector<NekDouble> ret(m_numPoints);
+    NekDouble sqrt8 = sqrt(8.0);
+
+    // Always compute x-derivative since this term appears in the latter two
+    // terms.
+    for (int i = 0; i < m_numPoints; ++i)
+    {
+        ret[i] = 4.0 * sqrt8 * jacDerivA[i] * jacB[i] * jacC[i];
+
+        if (I > 0)
+        {
+            ret[i] *= pow(1 - m_eta[1][i], I - 1);
+        }
+
+        if (I + J > 0)
+        {
+            ret[i] *= pow(1 - m_eta[2][i], I + J - 1);
+        }
+    }
+
+    if (dir >= 1)
+    {
+        // Multiply by (1+a)/2
+        NekVector<NekDouble> tmp(m_numPoints);
+
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] *= 0.5 * (m_eta[0][i] + 1.0);
+
+            tmp[i] = 2.0 * sqrt8 * jacA[i] * jacC[i];
+            if (I + J > 0)
+            {
+                tmp[i] *= pow(1.0 - m_eta[2][i], I + J - 1);
+            }
+
+            NekDouble tmp2 = jacDerivB[i] * pow(1.0 - m_eta[1][i], I);
+            if (I > 0)
+            {
+                tmp2 -= I * jacB[i] * pow(1.0 - m_eta[1][i], I - 1);
+            }
+
+            tmp[i] *= tmp2;
+        }
+
+        if (dir == 1)
+        {
+            ret += tmp;
+            return ret;
+        }
+
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] += 0.5 * (1.0 + m_eta[1][i]) * tmp[i];
+
+            NekDouble tmp2 = jacDerivC[i] * pow(1.0 - m_eta[2][i], I + J);
+            if (I + J > 0)
+            {
+                tmp2 -= jacC[i] * (I + J) * pow(1.0 - m_eta[2][i], I + J - 1);
+            }
+
+            ret[i] += sqrt8 * jacA[i] * jacB[i] * pow(1.0 - m_eta[1][i], I) *
+                tmp2;
         }
     }
 

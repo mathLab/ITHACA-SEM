@@ -37,6 +37,8 @@
 #ifndef NODALUTIL_H
 #define NODALUTIL_H
 
+#include <boost/tuple/tuple.hpp>
+
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
@@ -58,7 +60,7 @@ typedef boost::shared_ptr<NekMatrix<NekDouble> > SharedMatrix;
 class NodalUtil
 {
 public:
-    NodalUtil(int degree) : m_degree(degree)
+    NodalUtil(int degree, int dim) : m_degree(degree), m_dim(dim), m_xi(dim)
     {
     }
 
@@ -69,11 +71,10 @@ public:
     //LIB_UTILITIES_EXPORT SharedMatrix GetInterpolationMatrix();
 
 protected:
+    int m_dim;
     int m_degree;
     int m_numPoints;
-    Array<OneD, NekDouble> m_r;
-    Array<OneD, NekDouble> m_s;
-    Array<OneD, NekDouble> m_t;
+    Array<OneD, Array<OneD, NekDouble> > m_xi;
 
     virtual NekVector<NekDouble> v_OrthoBasis(const int mode) = 0;
     virtual NekVector<NekDouble> v_OrthoBasisDeriv(
@@ -90,8 +91,7 @@ public:
 
 protected:
     std::vector<std::pair<int, int> > m_ordering;
-    Array<OneD, NekDouble> m_eta1;
-    Array<OneD, NekDouble> m_eta2;
+    Array<OneD, Array<OneD, NekDouble> > m_eta;
 
     virtual NekVector<NekDouble> v_OrthoBasis(const int mode);
     virtual NekVector<NekDouble> v_OrthoBasisDeriv(
@@ -99,6 +99,29 @@ protected:
     virtual int v_NumModes()
     {
         return (m_degree + 1) * (m_degree + 2) / 2;
+    }
+};
+
+class NodalUtilTetrahedron : public NodalUtil
+{
+    typedef boost::tuple<int, int, int> Mode;
+
+public:
+    NodalUtilTetrahedron(int degree,
+                         Array<OneD, NekDouble> &r,
+                         Array<OneD, NekDouble> &s,
+                         Array<OneD, NekDouble> &t);
+
+protected:
+    std::vector<Mode> m_ordering;
+    Array<OneD, Array<OneD, NekDouble> > m_eta;
+
+    virtual NekVector<NekDouble> v_OrthoBasis(const int mode);
+    virtual NekVector<NekDouble> v_OrthoBasisDeriv(
+        const int dir, const int mode);
+    virtual int v_NumModes()
+    {
+        return (m_degree + 1) * (m_degree + 2) * (m_degree + 3) / 6;
     }
 };
 

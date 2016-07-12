@@ -95,15 +95,21 @@ void ProcessLinear::Process()
     }
     else if (invalid)
     {
-        if (m_mesh->m_expDim == 3)
+        vector<NodeSharedPtr> zeroNodes;
+
+        map<int,vector<FaceSharedPtr> > eidToFace;
+
+        if(m_mesh->m_expDim > 2)
         {
-            FaceSet::iterator fit;
-            for (fit = m_mesh->m_faceSet.begin();
-                 fit != m_mesh->m_faceSet.end();
-                 fit++)
+            FaceSet::iterator it;
+            for(it = m_mesh->m_faceSet.begin();
+                it != m_mesh->m_faceSet.end(); it++)
             {
-                ASSERTL0((*fit)->m_faceNodes.size() == 0,
-                         "has not be setup to handle face curvature yet");
+                vector<EdgeSharedPtr> es = (*it)->m_edgeList;
+                for(int i = 0; i < es.size(); i++)
+                {
+                    eidToFace[es[i]->m_id].push_back((*it));
+                }
             }
         }
 
@@ -122,18 +128,25 @@ void ProcessLinear::Process()
             // message.
             if (!gfac->IsValid())
             {
+                el[i]->SetVolumeNodes(zeroNodes);
 
                 vector<FaceSharedPtr> f = el[i]->GetFaceList();
                 for (int j = 0; j < f.size(); j++)
                 {
-                    vector<EdgeSharedPtr> e = f[j]->m_edgeList;
-                    for (int k = 0; k < e.size(); k++)
+                    f[j]->m_faceNodes = zeroNodes;
+                }
+                vector<EdgeSharedPtr> e = el[i]->GetEdgeList();
+                for(int j = 0; j < e.size(); j++)
+                {
+                    e[j]->m_edgeNodes = zeroNodes;
+                }
+                for(int j = 0; j < e.size(); j++)
+                {
+                    map<int,vector<FaceSharedPtr> >::iterator it =
+                                        eidToFace.find(e[j]->m_id);
+                    for(int k = 0; k < it->second.size(); j++)
                     {
-                        if (e[k]->m_edgeNodes.size())
-                        {
-                            vector<NodeSharedPtr> zeroNodes;
-                            e[k]->m_edgeNodes = zeroNodes;
-                        }
+                        it->second[k]->m_faceNodes = zeroNodes;
                     }
                 }
             }

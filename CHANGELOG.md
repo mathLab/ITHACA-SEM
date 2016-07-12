@@ -32,6 +32,7 @@ v4.3.3
 **CompressibleFlowSolver**:
 - Fix issue with residual output (!647)
 - Issues with 1D Euler solver fixed (!565)
+- Fix deadlocking issue with boundary conditions (!657)
 
 **Packaging**:
 - Fix NekMesh dependencies for DEB package (!650)

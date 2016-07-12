@@ -68,6 +68,7 @@ struct Field {
     Field() : m_verbose(false),
               m_declareExpansionAsContField(false),
               m_declareExpansionAsDisContField(false),
+              m_requireBoundaryExpansion(false),
               m_writeBndFld(false),
               m_fldToBnd(false),
               m_addNormals(false),
@@ -88,6 +89,8 @@ struct Field {
 
     bool                                    m_declareExpansionAsContField;
     bool                                    m_declareExpansionAsDisContField;
+
+    bool                                    m_requireBoundaryExpansion;
 
     bool                                    m_useFFT;
 
@@ -402,7 +405,7 @@ struct Field {
                                                  string var = "DefaultVar",
                                                  bool NewField = false)
     {
-        if(var.compare("DefaultVar") == 0 && m_declareExpansionAsContField)
+        if(var.compare("DefaultVar") == 0 && m_requireBoundaryExpansion)
         {
             if (m_session->GetVariables().size())
             {

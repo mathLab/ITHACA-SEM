@@ -164,43 +164,52 @@ namespace Nektar
                          const int n,
                          const NekDouble time,
                          int &cnt,
+                         Array<OneD, Array<OneD, NekDouble> > &Fwd,
                          Array<OneD, Array<OneD, NekDouble> > &inarray);
-        
         void WallBC(
             int                                                 bcRegion,
             int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void WallViscousBC(
             int                                                 bcRegion,
             int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void SymmetryBC(
             int                                                 bcRegion,
             int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void RiemannInvariantBC(
             int                                                 bcRegion,
             int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void PressureOutflowNonReflectiveBC(
             int                                                 bcRegion,
             int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void PressureOutflowBC(
             int                                                 bcRegion,
             int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void PressureOutflowFileBC(
             int                                                 bcRegion,
             int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void PressureInflowFileBC(
             int                                                 bcRegion,
             int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void ExtrapOrder0BC(
             int                                                 bcRegion,
             int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void GetVelocityVector(
             const Array<OneD,       Array<OneD, NekDouble> > &physfield,

@@ -40,6 +40,8 @@ using namespace std;
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
+#include <SolverUtils/Interpolator.h>
 #include <boost/math/special_functions/fpclassify.hpp>
 namespace Nektar
 {
@@ -217,23 +219,44 @@ void ProcessInterpField::Process(po::variables_map &vm)
         m_f->m_exp[0]->GetCoords(x1, y1, z1);
     }
 
-    if(m_f->m_session->GetComm()->TreatAsRankZero())
-    {
-        cout << "Interpolating [" << flush;
-    }
-
     NekDouble clamp_low = m_config["clamptolowervalue"].as<NekDouble>();
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
 
-    InterpolateField(m_fromField->m_exp, m_f->m_exp,
-                     x1, y1, z1, clamp_low, clamp_up,def_value);
-
-    if(m_f->m_session->GetComm()->TreatAsRankZero())
+    for (int i = 0; i < nfields; i++)
     {
-        cout << "]" << endl;
+        for (int j = 0; j < nq1; ++j)
+        {
+            m_f->m_exp[i]->UpdatePhys()[j] = def_value;
+        }
     }
 
+    SolverUtils::Interpolator interp;
+    if (m_f->m_comm->GetRank() == 0)
+    {
+        interp.SetProgressCallback(&ProcessInterpField::PrintProgressbar,
+                                   this);
+    }
+    interp.Interpolate(m_fromField->m_exp, m_f->m_exp);
+    if (m_f->m_comm->GetRank() == 0)
+    {
+        cout << endl;
+    }
+
+    for (int i = 0; i < nfields; ++i)
+    {
+        for (int j = 0; j < nq1; ++j)
+        {
+            if (m_f->m_exp[i]->GetPhys()[j] > clamp_up)
+            {
+                m_f->m_exp[i]->UpdatePhys()[j] = clamp_up;
+            }
+            else if (m_f->m_exp[i]->GetPhys()[j] < clamp_low)
+            {
+                m_f->m_exp[i]->UpdatePhys()[j] = clamp_low;
+            }
+        }
+    }
 
     // put field into field data for output
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
@@ -255,84 +278,12 @@ void ProcessInterpField::Process(po::variables_map &vm)
     m_f->m_data     = FieldData;
 }
 
-void ProcessInterpField::InterpolateField(
-                         vector<MultiRegions::ExpListSharedPtr> &field0,
-                         vector<MultiRegions::ExpListSharedPtr> &field1,
-                         Array<OneD, NekDouble>                      x,
-                         Array<OneD, NekDouble>                      y,
-                         Array<OneD, NekDouble>                      z,
-                         NekDouble                                   clamp_low,
-                         NekDouble                                   clamp_up,
-                         NekDouble                                   def_value)
+void ProcessInterpField::PrintProgressbar(const int position,
+                                          const int goal) const
 {
-    int expdim = field0[0]->GetCoordim(0);
-
-    Array<OneD, NekDouble> coords(expdim), Lcoords(expdim);
-    int nq1 = field1[0]->GetTotPoints();
-    int elmtid, offset;
-    int r, f;
-    static int intpts = 0;
-
-    ASSERTL0(field0.size() == field1.size(),
-             "Input field dimension must be same as output dimension");
-
-    for (r = 0; r < nq1; r++)
-    {
-        coords[0] = x[r];
-        coords[1] = y[r];
-        if (expdim == 3)
-        {
-            coords[2] = z[r];
-        }
-
-        // Obtain nearest Element and LocalCoordinate to interpolate
-        elmtid = field0[0]->GetExpIndex(coords, Lcoords, 1e-3,true);
-
-        if(elmtid >= 0)
-        {
-            offset = field0[0]->GetPhys_Offset(field0[0]->
-                                               GetOffset_Elmt_Id(elmtid));
-
-            for (f = 0; f < field1.size(); ++f)
-            {
-                NekDouble value;
-                value = field0[f]->GetExp(elmtid)->
-                    StdPhysEvaluate(Lcoords, field0[f]->GetPhys() +offset);
-
-                if ((boost::math::isnan)(value))
-                {
-                    ASSERTL0(false, "new value is not a number");
-                }
-                else
-                {
-                    if(value > clamp_up)
-                    {
-                        value = clamp_up;
-                    }
-                    else if( value < clamp_low)
-                    {
-                        value = clamp_low;
-                    }
-
-                    field1[f]->UpdatePhys()[r] = value;
-                }
-            }
-        }
-        else
-        {
-            for (f = 0; f < field1.size(); ++f)
-            {
-                field1[f]->UpdatePhys()[r] = def_value;
-            }
-        }
-
-        if (intpts%1000 == 0)
-        {
-            cout <<"." << flush;
-        }
-        intpts ++;
-    }
+    LibUtilities::PrintProgressbar(position, goal, "Interpolating");
 }
+
 
 }
 }

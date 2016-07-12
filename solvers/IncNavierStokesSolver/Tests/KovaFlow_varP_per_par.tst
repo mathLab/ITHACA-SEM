@@ -2,7 +2,7 @@
 <test>
     <description>Kovasznay Flow variable P, periodic BC (parallel)</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>--use-metis KovaFlow_varP_per.xml</parameters>
+    <parameters>--use-metis -I GlobalSysSoln=XxtMultiLevelStaticCond KovaFlow_varP_per.xml</parameters>
     <processes> 3 </processes>
     <files>
         <file description="Session File">KovaFlow_varP_per.xml</file>

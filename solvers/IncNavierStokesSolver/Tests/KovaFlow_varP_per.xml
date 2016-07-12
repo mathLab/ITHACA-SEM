@@ -16,7 +16,6 @@
             <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
             <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
             <I PROPERTY="AdvectionForm" VALUE="Convective" />
-            <I PROPERTY="GlobalSysSoln" VALUE="XxtMultiLevelStaticCond" />
             <I PROPERTY="Projection" VALUE="Galerkin" />
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
         </SOLVERINFO>

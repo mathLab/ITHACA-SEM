@@ -98,6 +98,18 @@ void ProcessLinear::Process()
         vector<NodeSharedPtr> zeroNodes;
 
         map<int,vector<FaceSharedPtr> > eidToFace;
+        map<int,vector<ElementSharedPtr> > eidToElm;
+
+        vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
+
+        for(int i = 0; i < el.size(); i++)
+        {
+            vector<EdgeSharedPtr> e = el[i]->GetEdgeList();
+            for(int j = 0; j < e.size(); j++)
+            {
+                eidToElm[e[j]->m_id].push_back(el[i]);
+            }
+        }
 
         if(m_mesh->m_expDim > 2)
         {
@@ -113,41 +125,67 @@ void ProcessLinear::Process()
             }
         }
 
-        vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
+        set<int> neigh;
+
         // Iterate over list of elements of expansion dimension.
-        for (int i = 0; i < el.size(); ++i)
+        while(el.size() > 0)
         {
-            // Create elemental geometry.
-            SpatialDomains::GeometrySharedPtr geom =
-                el[i]->GetGeom(m_mesh->m_spaceDim);
-
-            // Generate geometric factors.
-            SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
-
-            if (!gfac->IsValid())
+            for (int i = 0; i < el.size(); ++i)
             {
-                el[i]->SetVolumeNodes(zeroNodes);
+                // Create elemental geometry.
+                SpatialDomains::GeometrySharedPtr geom =
+                    el[i]->GetGeom(m_mesh->m_spaceDim);
 
-                vector<FaceSharedPtr> f = el[i]->GetFaceList();
-                for (int j = 0; j < f.size(); j++)
+                // Generate geometric factors.
+                SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
+
+                if (!gfac->IsValid())
                 {
-                    f[j]->m_faceNodes = zeroNodes;
-                }
-                vector<EdgeSharedPtr> e = el[i]->GetEdgeList();
-                for(int j = 0; j < e.size(); j++)
-                {
-                    e[j]->m_edgeNodes = zeroNodes;
-                }
-                for(int j = 0; j < e.size(); j++)
-                {
-                    map<int,vector<FaceSharedPtr> >::iterator it =
-                                        eidToFace.find(e[j]->m_id);
-                    for(int k = 0; k < it->second.size(); k++)
+                    el[i]->SetVolumeNodes(zeroNodes);
+
+                    vector<FaceSharedPtr> f = el[i]->GetFaceList();
+                    for (int j = 0; j < f.size(); j++)
                     {
-                        it->second[k]->m_faceNodes = zeroNodes;
+                        f[j]->m_faceNodes = zeroNodes;
+                    }
+                    vector<EdgeSharedPtr> e = el[i]->GetEdgeList();
+                    for(int j = 0; j < e.size(); j++)
+                    {
+                        e[j]->m_edgeNodes = zeroNodes;
+                    }
+                    for(int j = 0; j < e.size(); j++)
+                    {
+                        map<int,vector<FaceSharedPtr> >::iterator it =
+                                            eidToFace.find(e[j]->m_id);
+                        for(int k = 0; k < it->second.size(); k++)
+                        {
+                            it->second[k]->m_faceNodes = zeroNodes;
+                        }
+                    }
+                    for(int j = 0; j < e.size(); j++)
+                    {
+                        map<int,vector<ElementSharedPtr> >::iterator it =
+                                            eidToElm.find(e[j]->m_id);
+                        for(int k = 0; k < it->second.size(); k++)
+                        {
+                            neigh.insert(it->second[k]->GetId());
+                        }
                     }
                 }
             }
+
+            vector<ElementSharedPtr> tmp = el;
+            el.clear();
+            set<int>::iterator it;
+            for(int i = 0; i < tmp.size(); i++)
+            {
+                it = neigh.find(tmp[i]->GetId());
+                if(it != neigh.end())
+                {
+                    el.push_back(tmp[i]);
+                }
+            }
+            neigh.clear();
         }
     }
 }

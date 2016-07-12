@@ -37,6 +37,7 @@
 #include <iomanip>
 #include <limits>
 
+#include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
 #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
@@ -49,8 +50,6 @@ namespace Nektar
 namespace LibUtilities
 {
 
-typedef boost::shared_ptr<NekMatrix<NekDouble> > SharedMatrix;
-
 NekVector<NekDouble> NodalUtil::GetWeights()
 {
     // Get number of modes in orthogonal basis
@@ -60,8 +59,8 @@ NekVector<NekDouble> NodalUtil::GetWeights()
     // linear system V^T w = (1,0,...)
     if (numModes == m_numPoints)
     {
-        NekVector<NekDouble> g(m_r.num_elements(), 0);
-        g(0) = 1.0;
+        NekVector<NekDouble> g(m_numPoints, 0.0);
+        g(0) = 2.0*sqrt(2.0);
 
         SharedMatrix V = GetVandermonde();
 
@@ -86,10 +85,10 @@ SharedMatrix NodalUtil::GetVandermonde()
 
     for (int j = 0; j < cols; ++j)
     {
-        NekVector<NekDouble> col = v_OrthoBasis();
+        NekVector<NekDouble> col = v_OrthoBasis(j);
         for (int i = 0; i < rows; ++i)
         {
-            (*matV)(i, j) = col[j];
+            (*matV)(i, j) = col[i];
         }
     }
 
@@ -106,10 +105,10 @@ SharedMatrix NodalUtil::GetVandermondeForDeriv(int dir)
 
     for (int j = 0; j < cols; ++j)
     {
-        NekVector<NekDouble> col = v_OrthoBasisDeriv(dir);
+        NekVector<NekDouble> col = v_OrthoBasisDeriv(dir, j);
         for (int i = 0; i < rows; ++i)
         {
-            (*matV)(i, j) = col[j];
+            (*matV)(i, j) = col[i];
         }
     }
 
@@ -118,19 +117,23 @@ SharedMatrix NodalUtil::GetVandermondeForDeriv(int dir)
 
 SharedMatrix NodalUtil::GetDerivMatrix(int dir)
 {
-    SharedMatrix V  = GetVandermonde();
-    SharedMatrix Vd = GetVandermondeForDeriv(dir);
+    // SharedMatrix V  = GetVandermonde();
+    // SharedMatrix Vd = GetVandermondeForDeriv(dir);
     SharedMatrix D = MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(
-        rows, cols, 0.0);
+        1, 1, 0.0);
 
-    return matV;
+    return D;
 }
 
-NodalUtilTriangle(int numPoints,
-                  Array<OneD, NekDouble> &r,
-                  Array<OneD, NekDouble> &s)
-    : NodalUtil(numPoints), m_r(r), m_s(s)
+NodalUtilTriangle::NodalUtilTriangle(int                     degree,
+                                     Array<OneD, NekDouble> &r,
+                                     Array<OneD, NekDouble> &s)
+    : NodalUtil(degree)
 {
+    m_numPoints = r.num_elements();
+    m_r = r;
+    m_s = s;
+
     for (int i = 0; i <= m_degree; ++i)
     {
         for (int j = 0; j <= m_degree - i; ++j)
@@ -142,16 +145,17 @@ NodalUtilTriangle(int numPoints,
     // Calculate collapsed coordinates from r/s values
     m_eta1 = Array<OneD, NekDouble>(m_numPoints);
     m_eta2 = Array<OneD, NekDouble>(m_numPoints);
+
     for (int i = 0; i < m_numPoints; ++i)
     {
-        if (fabs(m_s[i] - 1.0) < NekConstants::kNekZeroTol)
+        if (fabs(m_s[i]-1.0) < NekConstants::kNekZeroTol)
         {
             m_eta1[i] = -1.0;
-            m_eta2[1] =  1.0;
+            m_eta2[i] =  1.0;
         }
         else
         {
-            m_eta1[i] = 2.0 * (1.0 + m_r[0]) / (1.0 - m_s[i]) - 1.0;
+            m_eta1[i] = 2*(1+m_r[i])/(1-m_s[i])-1.0;
             m_eta2[i] = m_s[i];
         }
     }
@@ -159,21 +163,20 @@ NodalUtilTriangle(int numPoints,
 
 NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasis(const int mode)
 {
-    int numPoints = m_r.num_elements();
-    std::vector<NekDouble> jacobi_i(numPoints), jacobi_j(numPoints);
+    std::vector<NekDouble> jacobi_i(m_numPoints), jacobi_j(m_numPoints);
     std::pair<int, int> modes = m_ordering[mode];
 
     // Calculate Jacobi polynomials
     Polylib::jacobfd(
-        numPoints, &m_eta1[0], &jacobi_i[0], NULL, modes.first, 0.0, 0.0);
+        m_numPoints, &m_eta1[0], &jacobi_i[0], NULL, modes.first, 0.0, 0.0);
     Polylib::jacobfd(
-        numPoints, &m_eta2[0], &jacobi_j[0], NULL, modes.second,
-        2.0*modes.first + 1.0, 0.0);
+        m_numPoints, &m_eta2[0], &jacobi_j[0], NULL, modes.second,
+        2.0 * modes.first + 1.0, 0.0);
 
-    NekVector<NekDouble> ret(numPoints);
+    NekVector<NekDouble> ret(m_numPoints);
     NekDouble sqrt2 = sqrt(2.0);
 
-    for (int i = 0; i < numPoints; ++i)
+    for (int i = 0; i < m_numPoints; ++i)
     {
         ret[i] = sqrt2 * jacobi_i[i] * jacobi_j[i] *
             pow(1.0 - m_eta2[i], modes.first);
@@ -580,7 +583,7 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
                     eta_1[el] = -1.0; // When y is close to 1, then we have a removeable singularity
                 }
             }
-    
+
             // Initialize the vertical coordinate of the triangle (gamma in Barycentric coordinates)
             NekVector<NekDouble> eta_2 = y;
     
@@ -721,6 +724,8 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
                     {
                             matV(i,n) = columnVector[i];
                     }
+                    //cout << "OLD MODES " << p << " " << q << endl;
+                    //cout << columnVector << endl;
                 }
             }
     

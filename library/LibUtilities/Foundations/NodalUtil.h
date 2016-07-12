@@ -53,10 +53,10 @@ namespace Nektar
 namespace LibUtilities
 {
 
+typedef boost::shared_ptr<NekMatrix<NekDouble> > SharedMatrix;
+
 class NodalUtil
 {
-    typedef boost::shared_ptr<NekDouble> SharedMatrix;
-
 public:
     NodalUtil(int degree) : m_degree(degree)
     {
@@ -66,7 +66,7 @@ public:
     LIB_UTILITIES_EXPORT SharedMatrix GetVandermonde();
     LIB_UTILITIES_EXPORT SharedMatrix GetVandermondeForDeriv(int dir);
     LIB_UTILITIES_EXPORT SharedMatrix GetDerivMatrix(int dir);
-    LIB_UTILITIES_EXPORT SharedMatrix GetInterpolationMatrix();
+    //LIB_UTILITIES_EXPORT SharedMatrix GetInterpolationMatrix();
 
 protected:
     int m_degree;
@@ -84,19 +84,9 @@ protected:
 class NodalUtilTriangle : public NodalUtil
 {
 public:
-    NodalUtilTriangle(int numPoints,
+    NodalUtilTriangle(int degree,
                       Array<OneD, NekDouble> &r,
-                      Array<OneD, NekDouble> &s)
-        : NodalUtil(numPoints), m_r(r), m_s(s)
-    {
-        for (int i = 0; i <= m_degree; ++i)
-        {
-            for (int j = 0; j <= m_degree - i; ++j)
-            {
-                m_ordering.push_back(std::make_pair(i,j));
-            }
-        }
-    }
+                      Array<OneD, NekDouble> &s);
 
 protected:
     std::vector<std::pair<int, int> > m_ordering;

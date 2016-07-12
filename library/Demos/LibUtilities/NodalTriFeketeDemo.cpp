@@ -68,10 +68,25 @@ int main(int argc, char *argv[])
     boost::shared_ptr<Points<NekDouble> > points = PointsManager()[PointsKey(nPtsPerSide, pointsType)];
 
     NodalTriFekete *ntf = dynamic_cast<NodalTriFekete*>(points.get());
-    Array<OneD, const NekDouble> ax, ay;
+    Array<OneD,  NekDouble> ax, ay;
     ntf->GetPoints(ax,ay);
     NekVector<NekDouble> x = ToVector(ax), y = ToVector(ay);
 
+    {
+        NodalUtilTriangle lel(degree, ax, ay);
+        cout << "MY VANDERMONDE" << endl;
+        cout << *lel.GetVandermonde() << endl;
+        cout << "OLD VANDERMONDE" << endl;
+        NekMatrix<NekDouble> tmp2 = GetVandermonde(x,y);
+        cout << tmp2 << endl;
+        NekVector<NekDouble> tmp = lel.GetWeights();
+        cout << "MY WEIGHTS" << endl;
+        cout << tmp << endl;
+        NekVector<NekDouble> tmp3 = MakeQuadratureWeights(x,y);
+        cout << "OLD WEIGHTS" << endl;
+        cout << tmp3 << endl;
+        return 0;
+    }
     
     // /////////////////////////////////////////////
     // Interpolation

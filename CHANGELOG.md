@@ -23,6 +23,7 @@ v4.4.0
 v4.3.3
 ------
 **Library**:
+- Auto-detect a shared filesystem and removed --shared-filesystem option (!654)
 - Fix filters when using adaptive driver to avoid output being overwritten after
   each adaptive update (!588)
 - Minor fix to suppress Xxt output unless `--verbose` is specified (!642)

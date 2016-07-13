@@ -45,52 +45,39 @@ namespace Nektar
 
 class APE_coupled : public APE
 {
-    public:
+public:
+    friend class MemoryManager<APE_coupled>;
 
-        friend class MemoryManager<APE_coupled>;
+    /// Creates an instance of this class
+    static EquationSystemSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession)
+    {
+        EquationSystemSharedPtr p =
+            MemoryManager<APE_coupled>::AllocateSharedPtr(pSession);
+        p->InitObject();
+        return p;
+    }
+    /// Name of class
+    static std::string className;
 
-        /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr &pSession)
-        {
-            EquationSystemSharedPtr p = MemoryManager<APE_coupled>::AllocateSharedPtr(pSession);
-            p->InitObject();
-            return p;
-        }
-        /// Name of class
-        static std::string className;
+    /// Destructor
+    virtual ~APE_coupled();
 
-        /// Destructor
-        virtual ~APE_coupled();
+protected:
+    SolverUtils::CwipiCouplingSharedPointer m_coupling;
 
-    protected:
+    /// Initialises UnsteadySystem class members.
+    APE_coupled(const LibUtilities::SessionReaderSharedPtr &pSession);
 
-        SolverUtils::CwipiCouplingSharedPointer         m_coupling;
-        int                                             m_nSendVars;
-        int                                             m_nRecvVars;
-        int                                             m_recvSteps;
-        int                                             m_sendSteps;
+    virtual void v_InitObject();
 
-        Array<OneD, Array<OneD, NekDouble> >            m_bfOld;
-        Array<OneD, Array<OneD, NekDouble> >            m_bfNew;
-        Array<OneD, NekDouble>                          m_stOld;
-        Array<OneD, NekDouble>                          m_stNew;
+    virtual bool v_PostIntegrate(int step);
 
-        /// Initialises UnsteadySystem class members.
-        APE_coupled(const LibUtilities::SessionReaderSharedPtr &pSession);
+    virtual void v_Output(void);
 
-        virtual void v_InitObject();
-
-        virtual bool v_PostIntegrate(int step);
-
-        virtual void v_Output(void);
-
-    private:
-
-        void receiveFields();
-
+private:
+    void receiveFields();
 };
 }
 
 #endif
-

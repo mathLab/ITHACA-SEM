@@ -54,15 +54,15 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                              string name,
                              int outputFreq,
                              double geomTol)
-    : m_couplingName(name), m_evalField(field),
-      m_nSendVars(0), m_nRecvVars(6), m_points(NULL), m_coords(NULL),
-      m_connecIdx(NULL), m_connec(NULL), m_rValsInterl(NULL),
-      m_sValsInterl(NULL)
+    : m_couplingName(name), m_evalField(field), m_nSendVars(0), m_nRecvVars(6),
+      m_lastUpdate(-1E23), m_points(NULL), m_coords(NULL), m_connecIdx(NULL),
+      m_connec(NULL), m_rValsInterl(NULL), m_sValsInterl(NULL)
 {
     // HACK: m_nSendVars(0), m_nRecvVars(6)
-    m_config["REMOTENAME"]  = "precise";
-    m_config["OVERSAMPLE"]  = "0";
-    m_config["FILTERWIDTH"] = "-1";
+    m_config["REMOTENAME"]   = "precise";
+    m_config["OVERSAMPLE"]   = "0";
+    m_config["FILTERWIDTH"]  = "-1";
+    m_config["RECEIVESTEPS"] = "1";
     ReadConfig(m_evalField->GetSession());
 
     cwipi_dump_application_properties();
@@ -75,6 +75,8 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
         m_filtWidth = 2 * M_PI / m_filtWidth;
         m_filtWidth = m_filtWidth * m_filtWidth;
     }
+
+    m_recvSteps = boost::lexical_cast<int>(m_config["RECEIVESTEPS"]);
 
     //  Init Coupling
     cwipi_solver_type_t solver_type = CWIPI_SOLVER_CELL_VERTEX;
@@ -156,6 +158,17 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
 
         element = element->NextSiblingElement("I");
     }
+
+    if (session->GetComm()->GetRank() == 0 && m_config.size() > 0)
+    {
+        cout << "Coupling Config:" << endl;
+        std::map<std::string, std::string>::iterator x;
+        for (x = m_config.begin(); x != m_config.end(); ++x)
+        {
+            cout << "\t" << x->first << " = " << x->second << endl;
+        }
+        cout << endl;
+    }
 }
 
 void CwipiCoupling::SetupRecvFields()
@@ -167,41 +180,32 @@ void CwipiCoupling::SetupRecvFields()
     recvGraph->SetExpansionsToPointOrder(
         oversamp + m_evalField->GetExp(0)->GetNumPoints(0));
 
-    // HACK: 6
     // TODO: DeclareCoeffPhysArrays
-    m_recvFields = Array<OneD, MultiRegions::ExpListSharedPtr>(6);
     switch (m_spacedim)
     {
         case 1:
         {
-            for (int i = 0; i < 6; ++i)
-            {
-                m_recvFields[i] =
-                    MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(
-                        m_evalField->GetSession(), recvGraph, "DefaultVar");
-            }
+            m_recvField =
+                MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(
+                    m_evalField->GetSession(), recvGraph, "DefaultVar");
             break;
         }
 
         case 2:
         {
-            for (int i = 0; i < 6; ++i)
-            {
-                m_recvFields[i] =
-                    MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(
-                        m_evalField->GetSession(), recvGraph);
-            }
+
+            m_recvField =
+                MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(
+                    m_evalField->GetSession(), recvGraph);
             break;
         }
 
         case 3:
         {
-            for (int i = 0; i < 6; ++i)
-            {
-                m_recvFields[i] =
-                    MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(
-                        m_evalField->GetSession(), recvGraph);
-            }
+
+            m_recvField =
+                MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(
+                    m_evalField->GetSession(), recvGraph);
             break;
         }
 
@@ -210,6 +214,14 @@ void CwipiCoupling::SetupRecvFields()
             ASSERTL0(false, "Expansion dimension not recognised");
             break;
         }
+    }
+
+    m_oldFields = Array<OneD, Array<OneD, NekDouble> >(m_nRecvVars);
+    m_newFields = Array<OneD, Array<OneD, NekDouble> >(m_nRecvVars);
+    for (int i = 0; i < m_nRecvVars; ++i)
+    {
+        m_oldFields[i] = Array<OneD, NekDouble>(m_evalField->GetTotPoints());
+        m_newFields[i] = Array<OneD, NekDouble>(m_evalField->GetTotPoints());
     }
 }
 
@@ -296,12 +308,12 @@ void CwipiCoupling::AnnounceMesh()
 void CwipiCoupling::AnnounceRecvPoints()
 {
     // define the quadrature points at which we want to receive data
-    m_nPoints = m_recvFields[0]->GetTotPoints();
+    m_nPoints = m_recvField->GetTotPoints();
     Array<OneD, Array<OneD, NekDouble> > coords(3);
     coords[0] = Array<OneD, NekDouble>(m_nPoints);
     coords[1] = Array<OneD, NekDouble>(m_nPoints);
     coords[2] = Array<OneD, NekDouble>(m_nPoints);
-    m_recvFields[0]->GetCoords(coords[0], coords[1], coords[2]);
+    m_recvField->GetCoords(coords[0], coords[1], coords[2]);
 
     m_points = (double *)malloc(sizeof(double) * 3 * m_nPoints);
     ASSERTL1(m_points != NULL, "malloc failed for m_points");
@@ -336,6 +348,12 @@ void CwipiCoupling::AnnounceRecvPoints()
         m_rValsInterl =
             (double *)malloc(sizeof(double) * m_nPoints * m_nRecvVars);
         ASSERTL1(m_rValsInterl != NULL, "malloc failed for m_rValsInterl");
+
+        m_rVals = Array<OneD, Array<OneD, NekDouble> >(m_nRecvVars);
+        for (int i = 0; i < m_nRecvVars; ++i)
+        {
+            m_rVals[i] = Array<OneD, NekDouble>(m_recvField->GetTotPoints());
+        }
     }
     if (m_nSendVars > 0)
     {
@@ -406,22 +424,65 @@ void CwipiCoupling::PrintProgressbar(const int position, const int goal) const
     }
 }
 
-void CwipiCoupling::v_SendFields(const int step,
-                                 const NekDouble time,
-                                 Array<OneD, Array<OneD, NekDouble> > &field)
+void CwipiCoupling::SendFields(const int step,
+                               const NekDouble time,
+                               Array<OneD, Array<OneD, NekDouble> > &field)
 {
     ASSERTL0(false, "not implemented yet")
 }
 
-void CwipiCoupling::v_ReceiveFields(const int step,
-                                    const NekDouble time,
-                                    Array<OneD, Array<OneD, NekDouble> > &field)
+void CwipiCoupling::ReceiveFields(const int step,
+                                  const NekDouble time,
+                                  const NekDouble timestep,
+                                  Array<OneD, Array<OneD, NekDouble> > &field)
 {
-    static NekDouble lastUdate = -1;
-    ASSERTL0(time > lastUdate,
-             "CwipiCoupling::v_ReceiveFields called twice in this timestep")
-    lastUdate = time;
+    ASSERTL1(m_nRecvVars == field.num_elements(), "field size mismatch");
 
+    int nq = m_evalField->GetTotPoints();
+
+    // make sure we have sensible data in old/new field the first time this
+    // method is called
+    if (m_lastUpdate < 0.0)
+    {
+        for (int i = 0; i < m_nRecvVars; ++i)
+        {
+            Vmath::Vcopy(nq, field[i], 1, m_oldFields[i], 1);
+            Vmath::Vcopy(nq, field[i], 1, m_newFields[i], 1);
+        }
+    }
+
+    if (time >= m_lastUpdate + m_recvSteps * timestep)
+    {
+        m_lastUpdate = time;
+
+        for (int i = 0; i < m_nRecvVars; ++i)
+        {
+            Vmath::Vcopy(nq, m_newFields[i], 1, m_oldFields[i], 1);
+        }
+
+        FetchFields(step, time, m_newFields);
+    }
+
+    NekDouble fact =
+        (time - m_lastUpdate + timestep) / (m_recvSteps * timestep);
+    for (int i = 0; i < m_nRecvVars; ++i)
+    {
+        Vmath::Svtsvtp(nq,
+                       fact,
+                       m_newFields[i],
+                       1,
+                       (1 - fact),
+                       m_oldFields[i],
+                       1,
+                       field[i],
+                       1);
+    }
+}
+
+void CwipiCoupling::FetchFields(const int step,
+                                const NekDouble time,
+                                Array<OneD, Array<OneD, NekDouble> > &field)
+{
     ASSERTL1(m_nRecvVars == field.num_elements(), "field size mismatch");
 
     cout << "receiving fields at i = " << step << ", t = " << time << endl;
@@ -429,12 +490,13 @@ void CwipiCoupling::v_ReceiveFields(const int step,
     Timer timer1, timer2, timer3;
     timer1.Start();
 
-    // interpolate from m_evalField to recvField
+    Array<OneD, NekDouble> tmpC(m_recvField->GetNcoeffs());
+
+    // interpolate from m_evalField to m_recvField
     for (int i = 0; i < m_nRecvVars; ++i)
     {
-        m_evalField->FwdTrans(field[i], m_recvFields[i]->UpdateCoeffs());
-        m_recvFields[i]->BwdTrans(m_recvFields[i]->GetCoeffs(),
-                                  m_recvFields[i]->UpdatePhys());
+        m_evalField->FwdTrans(field[i], tmpC);
+        m_recvField->BwdTrans(tmpC, m_rVals[i]);
     }
 
     int nNotLoc = 0;
@@ -483,8 +545,7 @@ void CwipiCoupling::v_ReceiveFields(const int step,
             }
             else
             {
-                m_recvFields[j]->UpdatePhys()[i] =
-                    m_rValsInterl[intPos * m_nRecvVars + j];
+                m_rVals[j][i] = m_rValsInterl[intPos * m_nRecvVars + j];
                 intPos++;
             }
         }
@@ -503,12 +564,7 @@ void CwipiCoupling::v_ReceiveFields(const int step,
                 Velocity[j] = Array<OneD, NekDouble>(m_nPoints, 0.0);
             }
 
-            Vmath::Smul(m_nPoints,
-                        -m_filtWidth,
-                        m_recvFields[i]->GetPhys(),
-                        1,
-                        forcing,
-                        1);
+            Vmath::Smul(m_nPoints, -m_filtWidth, m_rVals[i], 1, forcing, 1);
 
             // Note we are using the
             // LinearAdvectionDiffusionReaction solver here
@@ -516,28 +572,24 @@ void CwipiCoupling::v_ReceiveFields(const int step,
             // so matrices are not positive definite. Ideally
             // should allow for negative m_filtWidth coefficient in
             // HelmSolve
-            m_recvFields[i]->LinearAdvectionDiffusionReactionSolve(
-                Velocity,
-                forcing,
-                m_recvFields[i]->UpdateCoeffs(),
-                -m_filtWidth);
+            m_recvField->LinearAdvectionDiffusionReactionSolve(
+                Velocity, forcing, tmpC, -m_filtWidth);
 
-            m_evalField->BwdTrans(m_recvFields[i]->GetCoeffs(), field[i]);
+            m_evalField->BwdTrans(tmpC, field[i]);
         }
     }
     else
     {
         for (int i = 0; i < m_nRecvVars; ++i)
         {
-            m_recvFields[i]->FwdTrans(m_recvFields[i]->GetPhys(),
-                                      m_recvFields[i]->UpdateCoeffs());
-            m_evalField->BwdTrans(m_recvFields[i]->GetCoeffs(), field[i]);
+            m_recvField->FwdTrans(m_rVals[i], tmpC);
+            m_evalField->BwdTrans(tmpC, field[i]);
         }
     }
     timer3.Stop();
     timer1.Stop();
 
-    if (m_recvFields[0]->GetSession()->DefinesCmdLineArgument("verbose"))
+    if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
     {
         cout << "Receive total time: " << timer1.TimePerTest(1) << ", ";
         cout << "CWIPI time: " << timer2.TimePerTest(1) << ", ";

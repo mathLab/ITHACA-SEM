@@ -31,21 +31,20 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
 #include <APESolver/EquationSystems/APE_coupled.h>
 
 namespace Nektar
 {
-string APE_coupled::className = GetEquationSystemFactory().RegisterCreatorFunction(
-                                    "APE_coupled", APE_coupled::create,
-                                    "Coupled APE1/APE4 (Acoustic Perturbation Equations)");
+string APE_coupled::className =
+    GetEquationSystemFactory().RegisterCreatorFunction(
+        "APE_coupled",
+        APE_coupled::create,
+        "Coupled APE1/APE4 (Acoustic Perturbation Equations)");
 
-
-APE_coupled::APE_coupled(
-    const LibUtilities::SessionReaderSharedPtr &pSession) : APE(pSession)
+APE_coupled::APE_coupled(const LibUtilities::SessionReaderSharedPtr &pSession)
+    : APE(pSession)
 {
 }
-
 
 /**
  * @brief Initialization object for the APE class.
@@ -57,39 +56,16 @@ void APE_coupled::v_InitObject()
     ASSERTL0(m_session->DefinesCmdLineArgument("cwipi"),
              "This EquationSystem requires the --cwipi command line switch");
 
-    m_stOld = Array<OneD, NekDouble>(GetTotPoints());
-    m_stNew = Array<OneD, NekDouble>(GetTotPoints());
-    Vmath::Vcopy(GetTotPoints(), m_st[0], 1, m_stOld, 1);
-    Vmath::Vcopy(GetTotPoints(), m_st[0], 1, m_stNew, 1);
-
-    m_bfOld = Array<OneD, Array<OneD, NekDouble> >(m_spacedim + 2);
-    m_bfNew = Array<OneD, Array<OneD, NekDouble> >(m_spacedim + 2);
-    for (int i = 0; i < m_spacedim + 2; ++i)
-    {
-        m_bfOld[i] = Array<OneD, NekDouble>(GetTotPoints());
-        m_bfNew[i] = Array<OneD, NekDouble>(GetTotPoints());
-        Vmath::Vcopy(GetTotPoints(), m_bf[i], 1, m_bfOld[i], 1);
-        Vmath::Vcopy(GetTotPoints(), m_bf[i], 1, m_bfNew[i], 1);
-    }
-
-    m_session->LoadParameter("EX_RecvSteps", m_recvSteps, 1);
-    m_session->LoadParameter("EX_SendSteps", m_sendSteps, 1);
-
-    m_nRecvVars = 6;
-
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
-                        m_bfField, "cpl1",0, 1.0);
+        m_bfField, "cpl1", 0, 1.0);
 }
-
 
 /**
  * @brief Destructor for APE class.
  */
 APE_coupled::~APE_coupled()
 {
-
 }
-
 
 /**
  * @brief v_PostIntegrate
@@ -131,62 +107,38 @@ bool APE_coupled::v_PostIntegrate(int step)
     return UnsteadySystem::v_PostIntegrate(step);
 }
 
-
 void APE_coupled::receiveFields()
 {
-    static NekDouble last_update = -1E23;
     int nq = GetTotPoints();
 
-    if (m_time >= last_update + m_recvSteps * m_timestep)
+    Array<OneD, Array<OneD, NekDouble> > recField(6);
+
+    recField[3] = m_bf[0]; // p0
+    recField[4] = m_bf[1]; // rho0
+    recField[0] = m_bf[2]; // u0
+    if (m_spacedim > 1)
     {
-        last_update = m_time;
-
-        Vmath::Vcopy(nq, m_stNew, 1, m_stOld, 1);
-        for (int i = 0; i < m_spacedim + 2; ++i)
-        {
-            Vmath::Vcopy(nq, m_bfNew[i], 1, m_bfOld[i], 1);
-        }
-
-        Array<OneD, Array<OneD, NekDouble> > recField(m_nRecvVars);
-
-        recField[3] = m_bfNew[0]; // p0
-        recField[4] = m_bfNew[1]; // rho0
-        recField[0] = m_bfNew[2]; // u0
-        if (m_spacedim > 1)
-        {
-            recField[1] = m_bfNew[3]; // v0
-        }
-        else
-        {
-            recField[1] = Array<OneD, NekDouble>(nq);
-        }
-        if (m_spacedim > 2)
-        {
-            recField[2] = m_bfNew[4]; // w0
-        }
-        else
-        {
-            recField[2] = Array<OneD, NekDouble>(nq);
-        }
-        recField[5] = m_stNew; // S
-
-        m_coupling->ReceiveFields(0, m_time, recField);
-
-
-        ASSERTL0(Vmath::Vmin(nq, m_bfNew[0], 1) > 0.0, "received p0 <= 0.0");
-        ASSERTL0(Vmath::Vmin(nq, m_bfNew[1], 1) > 0.0, "received rho0 <= 0.0");
+        recField[1] = m_bf[3]; // v0
     }
-
-    // linear interpolation in time. We cant do this iteratively because m_sourceTerms
-    // and m_bf will be changed in v_PostIntegrate()
-    NekDouble fact = (m_time - last_update + m_timestep) / (m_recvSteps * m_timestep);
-    Vmath::Svtsvtp(GetTotPoints(), fact, m_stNew, 1, (1 - fact), m_stOld, 1, m_st[0], 1);
-    for (int i = 0; i < m_spacedim + 2; ++i)
+    else
     {
-        Vmath::Svtsvtp(GetTotPoints(), fact, m_bfNew[i], 1, (1 - fact), m_bfOld[i], 1, m_bf[i], 1);
+        recField[1] = Array<OneD, NekDouble>(nq);
     }
+    if (m_spacedim > 2)
+    {
+        recField[2] = m_bf[4]; // w0
+    }
+    else
+    {
+        recField[2] = Array<OneD, NekDouble>(nq);
+    }
+    recField[5] = m_st[0]; // S
+
+    m_coupling->ReceiveFields(0, m_time, m_timestep, recField);
+
+    ASSERTL0(Vmath::Vmin(nq, m_bf[0], 1) > 0.0, "received p0 <= 0.0");
+    ASSERTL0(Vmath::Vmin(nq, m_bf[1], 1) > 0.0, "received rho0 <= 0.0");
 }
-
 
 void APE_coupled::v_Output(void)
 {
@@ -195,5 +147,4 @@ void APE_coupled::v_Output(void)
     m_coupling->FinalizeCoupling();
 }
 
-} //end of namespace
-
+} // end of namespace

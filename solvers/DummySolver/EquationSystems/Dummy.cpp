@@ -63,29 +63,22 @@ void Dummy::v_InitObject()
     ASSERTL0(m_session->DefinesCmdLineArgument("cwipi"),
              "This EquationSystem requires the --cwipi command line switch");
 
-    m_session->LoadParameter("EX_RecvSteps", m_recvSteps, 1);
-    m_session->LoadParameter("EX_SendSteps", m_sendSteps, 1);
-
+    // HACK
     m_recvFieldNames.push_back("u0");
     m_recvFieldNames.push_back("v0");
     m_recvFieldNames.push_back("w0");
-    m_recvFieldNames.resize(m_spacedim);
-
     m_recvFieldNames.push_back("p0");
     m_recvFieldNames.push_back("rho0");
     m_recvFieldNames.push_back("S");
 
-    // HACK
-    m_nRecvVars = 6; //m_recvFieldNames.size();
-
-    m_recFields = Array<OneD, Array<OneD, NekDouble> >(m_nRecvVars);
+    m_recFields = Array<OneD, Array<OneD, NekDouble> >(m_recvFieldNames.size());
     for (int i = 0; i < m_recFields.num_elements(); ++i)
     {
-        m_recFields[i] = Array<OneD, NekDouble>(GetTotPoints());
+        m_recFields[i] = Array<OneD, NekDouble>(GetTotPoints(), 0.0);
     }
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
-        m_fields[0], "cpl1",  0, 1.0);
+        m_fields[0], "cpl1", 0, 1.0);
 }
 
 /**
@@ -129,31 +122,16 @@ void Dummy::DoOdeProjection(
 
 void Dummy::receiveFields()
 {
-    static NekDouble last_update = -1E23;
+    m_coupling->ReceiveFields(0, m_time, m_timestep, m_recFields);
 
-    if (m_time >= last_update + m_recvSteps * m_timestep)
-    {
-        last_update = m_time;
+    DumpFields("recFields_" + boost::lexical_cast<std::string>(m_time) + ".pts",
+               m_fields[0],
+               m_recFields);
 
-        m_coupling->ReceiveFields(0, m_time, m_recFields);
-
-        DumpFields("recFields_" + boost::lexical_cast<std::string>(m_time) +
-                       ".pts",
-                   m_fields[0],
-                   m_recFields);
-
-        Array<OneD, MultiRegions::ExpListSharedPtr> recvFields =
-            m_coupling->GetRecvFields();
-        Array<OneD, Array<OneD, NekDouble> > tmp(m_nRecvVars);
-        for (int i = 0; i < m_nRecvVars; ++i)
-        {
-            tmp[i] = recvFields[i]->GetPhys();
-        }
-        DumpFields("rawFields_" + boost::lexical_cast<std::string>(m_time) +
-                       ".pts",
-                   recvFields[0],
-                   tmp);
-    }
+    MultiRegions::ExpListSharedPtr recvField = m_coupling->GetRecvField();
+    DumpFields("rawFields_" + boost::lexical_cast<std::string>(m_time) + ".pts",
+               recvField,
+               m_coupling->GetRVals());
 }
 
 void Dummy::v_Output(void)
@@ -165,15 +143,17 @@ void Dummy::v_Output(void)
 
 void Dummy::DumpFields(const string filename,
                        MultiRegions::ExpListSharedPtr field,
-                       Array<OneD, Array<OneD, NekDouble> > data)
+                       const Array<OneD, const Array<OneD, NekDouble> > data)
 {
-    ASSERTL0(data.num_elements() == m_nRecvVars, "dimension mismatch");
+    ASSERTL0(data.num_elements() == m_recvFieldNames.size(),
+             "dimension mismatch");
     ASSERTL0(data[0].num_elements() == field->GetTotPoints(),
              "dimension mismatch");
 
     int nq = field->GetTotPoints();
 
-    Array<OneD, Array<OneD, NekDouble> > tmp(m_nRecvVars + m_spacedim);
+    Array<OneD, Array<OneD, NekDouble> > tmp(m_recvFieldNames.size() +
+                                             m_spacedim);
 
     for (int i = 0; i < m_spacedim; ++i)
     {
@@ -181,7 +161,7 @@ void Dummy::DumpFields(const string filename,
     }
     field->GetCoords(tmp[0], tmp[1], tmp[2]);
 
-    for (int i = 0; i < m_nRecvVars; ++i)
+    for (int i = 0; i < m_recvFieldNames.size(); ++i)
     {
         tmp[m_spacedim + i] = data[i];
     }
@@ -196,7 +176,7 @@ void Dummy::DumpFields(const string filename,
 void Dummy::v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                              std::vector<std::string> &variables)
 {
-    for (int i = 0; i < m_spacedim + 2; i++)
+    for (int i = 0; i < m_recvFieldNames.size(); i++)
     {
         Array<OneD, NekDouble> tmpC(GetNcoeffs());
 

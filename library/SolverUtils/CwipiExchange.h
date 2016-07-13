@@ -59,10 +59,15 @@ public:
         return m_evalField;
     };
 
-    Array<OneD, MultiRegions::ExpListSharedPtr> GetRecvFields()
+    MultiRegions::ExpListSharedPtr GetRecvField()
     {
-        return m_recvFields;
+        return m_recvField;
     };
+
+    const Array<OneD, const Array<OneD, NekDouble> > GetRVals()
+    {
+        return m_rVals;
+    }
 
     string GetName()
     {
@@ -81,17 +86,12 @@ public:
 
     void SendFields(const int step,
                     const NekDouble time,
-                    Array<OneD, Array<OneD, NekDouble> > &field)
-    {
-        v_SendFields(step, time, field);
-    }
+                    Array<OneD, Array<OneD, NekDouble> > &field);
 
     void ReceiveFields(const int step,
                        const NekDouble time,
-                       Array<OneD, Array<OneD, NekDouble> > &field)
-    {
-        v_ReceiveFields(step, time, field);
-    }
+                       const NekDouble timestep,
+                       Array<OneD, Array<OneD, NekDouble> > &field);
 
     void PrintProgressbar(const int position, const int goal) const;
 
@@ -102,10 +102,16 @@ protected:
     NekDouble m_filtWidth;
 
     MultiRegions::ExpListSharedPtr m_evalField;
-    Array<OneD, MultiRegions::ExpListSharedPtr> m_recvFields;
+    MultiRegions::ExpListSharedPtr m_recvField;
+
+    Array<OneD, Array<OneD, NekDouble> > m_oldFields;
+    Array<OneD, Array<OneD, NekDouble> > m_newFields;
 
     int m_nSendVars;
     int m_nRecvVars;
+    int m_recvSteps;
+    int m_sendSteps;
+    NekDouble m_lastUpdate;
 
     int m_spacedim;
     int m_nPoints;
@@ -114,19 +120,12 @@ protected:
     int *m_connecIdx;
     int *m_connec;
     double *m_rValsInterl;
+    Array<OneD, Array<OneD, NekDouble> > m_rVals;
     double *m_sValsInterl;
 
     map<int, int> m_vertMap;
 
     virtual void v_FinalizeCoupling(void);
-
-    virtual void v_SendFields(const int step,
-                              const NekDouble time,
-                              Array<OneD, Array<OneD, NekDouble> > &field);
-
-    virtual void v_ReceiveFields(const int step,
-                                 const NekDouble time,
-                                 Array<OneD, Array<OneD, NekDouble> > &field);
 
 private:
     void ReadConfig(LibUtilities::SessionReaderSharedPtr session);
@@ -142,6 +141,10 @@ private:
                            int &coordsPos,
                            int &connecPos,
                            int &conidxPos);
+
+    void FetchFields(const int step,
+                     const NekDouble time,
+                     Array<OneD, Array<OneD, NekDouble> > &field);
 };
 
 typedef boost::shared_ptr<CwipiCoupling> CwipiCouplingSharedPointer;

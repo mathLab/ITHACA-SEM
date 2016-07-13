@@ -67,11 +67,7 @@ public:
     virtual ~Dummy();
 
 protected:
-    SolverUtils::CwipiCouplingSharedPointer         m_coupling;
-    int m_nSendVars;
-    int m_nRecvVars;
-    int m_recvSteps;
-    int m_sendSteps;
+    SolverUtils::CwipiCouplingSharedPointer m_coupling;
 
     /// Initialises UnsteadySystem class members.
     Dummy(const LibUtilities::SessionReaderSharedPtr &pSession);
@@ -103,7 +99,7 @@ private:
 
     void DumpFields(const string filename,
                     MultiRegions::ExpListSharedPtr field,
-                    Nektar::Array<OneD, Array<OneD, NekDouble> > data);
+                    const Array<OneD, const Array<OneD, NekDouble> > data);
 };
 }
 

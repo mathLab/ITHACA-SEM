@@ -136,6 +136,15 @@ void APE_coupled::receiveFields()
 
     m_coupling->ReceiveFields(0, m_time, m_timestep, recField);
 
+    // HACK
+    for (int i = 0; i < nq; ++i)
+    {
+        if (m_bf[0][i] < 201164.11)
+        {
+            m_bf[0][i] = 201164.11;
+        }
+    }
+
     ASSERTL0(Vmath::Vmin(nq, m_bf[0], 1) > 0.0, "received p0 <= 0.0");
     ASSERTL0(Vmath::Vmin(nq, m_bf[1], 1) > 0.0, "received rho0 <= 0.0");
 }

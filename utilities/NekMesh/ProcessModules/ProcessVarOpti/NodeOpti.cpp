@@ -578,12 +578,11 @@ NekDouble NodeOpti::GetFunctional()
                     //valid = valid ? jacDet[k] > 0.0 : false;
                 }
 
-                NekDouble de = 1e-2;
-
                 //if (!valid)
                 //{
                     for(int k = 0; k < ptsHelp->ptsHigh; ++k)
                     {
+                        NekDouble de = 1e-3 * data[i]->maps[k][9];
                         NekDouble sigma;
                         if(jacDet[k] < de*1e3)
                         {

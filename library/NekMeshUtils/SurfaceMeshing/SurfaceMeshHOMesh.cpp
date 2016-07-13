@@ -345,7 +345,7 @@ void SurfaceMesh::HOSurf()
                         tb * (1.0 - gll[k]) / 2.0 + te * (1.0 + gll[k]) / 2.0;
                 }
 
-                Array<OneD, NekDouble> xi(nq - 2);
+                /*Array<OneD, NekDouble> xi(nq - 2);
                 for (int k = 1; k < nq - 1; k++)
                 {
                     xi[k - 1] = ti[k];
@@ -412,12 +412,12 @@ void SurfaceMesh::HOSurf()
                     }
                 }
                 // need to pull the solution out of opti
-                ti = opti->GetSolution();
+                ti = opti->GetSolution();*/
 
                 vector<CADSurfSharedPtr> s = c->GetAdjSurf();
 
                 ASSERTL0(s.size() == 2, "Number of common surfs should be 2");
-
+                
                 vector<NodeSharedPtr> honodes(m_mesh->m_nummode - 2);
                 for (int k = 1; k < m_mesh->m_nummode - 1; k++)
                 {
@@ -455,7 +455,7 @@ void SurfaceMesh::HOSurf()
                     uvi[k] = uv;
                 }
 
-                Array<OneD, NekDouble> bnds = s->GetBounds();
+                /*Array<OneD, NekDouble> bnds = s->GetBounds();
                 Array<OneD, NekDouble> all(2 * nq);
                 for (int k = 0; k < nq; k++)
                 {
@@ -551,7 +551,7 @@ void SurfaceMesh::HOSurf()
                 {
                     uvi[k][0] = all[k * 2 + 0];
                     uvi[k][1] = all[k * 2 + 1];
-                }
+                }*/
 
                 vector<NodeSharedPtr> honodes(nq - 2);
                 for (int k = 1; k < nq - 1; k++)

@@ -36,13 +36,12 @@ IF (NEKTAR_USE_CWIPI)
     IF (THIRDPARTY_BUILD_CWIPI)
         INCLUDE(ExternalProject)
 
-        get_filename_component(MPI_LIBRARY_PATH ${MPI_LIBRARY} PATH)
-        get_filename_component(MPI_BIN_PATH ${MPI_C_COMPILER} PATH)
-        get_filename_component(MPI_INC_PATH ${MPI_LIBRARY_PATH} PATH)
-        set(MPI_INC_PATH "${MPI_INC_PATH}/include")
-
         IF(NOT CMAKE_Fortran_COMPILER)
             MESSAGE(ERROR "MPI_Fortran_COMPILER not set")
+        ENDIF()
+
+        IF(NOT NEKTAR_USE_MPI)
+            MESSAGE(ERROR "NEKTAR_USE_MPI not set")
         ENDIF()
 
         EXTERNALPROJECT_ADD(
@@ -60,10 +59,9 @@ IF (NEKTAR_USE_CWIPI)
                 OMPI_CC=${CMAKE_C_COMPILER}
                 OMPI_CXX=${CMAKE_CXX_COMPILER}
                 ${TPSRC}/cwipi-0.8.2/configure
-                CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} FC=${CMAKE_Fortran_COMPILER}
-                --with-mpi-include=${MPI_INC_PATH}
-                --with-mpi-lib=${MPI_LIBRARY_PATH}
-                --with-mpi-bin=${MPI_BIN_PATH}
+                CC=${MPI_C_COMPILER}
+                CXX=${MPI_CXX_COMPILER}
+                FC=${MPI_Fortran_COMPILER}
                 --prefix=${TPDIST}
                 --libdir=${TPDIST}/lib
                 --quiet
@@ -92,6 +90,7 @@ ENDIF( NEKTAR_USE_CWIPI )
 
 INCLUDE_DIRECTORIES(SYSTEM ${CWIPI_INCLUDE_DIR})
 
+MARK_AS_ADVANCED(CWIPI_DIR)
 MARK_AS_ADVANCED(CWIPI_LIBRARY)
 MARK_AS_ADVANCED(CWIPI_LIBRARY_FVMC)
 MARK_AS_ADVANCED(CWIPI_LIBRARY_BFTC)

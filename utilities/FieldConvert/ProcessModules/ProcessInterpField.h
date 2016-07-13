@@ -61,6 +61,8 @@ class ProcessInterpField : public ProcessModule
         /// Write mesh to output file.
         virtual void Process(po::variables_map &vm);
 
+        void PrintProgressbar(const int position, const int goal) const;
+
         virtual std::string GetModuleName()
         {
             return "ProcessInterpField";
@@ -69,14 +71,6 @@ class ProcessInterpField : public ProcessModule
     private:
         FieldSharedPtr m_fromField;
 
-        void InterpolateField(vector<MultiRegions::ExpListSharedPtr> &field0,
-                              vector<MultiRegions::ExpListSharedPtr> &field1,
-                              Array<OneD, NekDouble>                  x,
-                              Array<OneD, NekDouble>                  y,
-                              Array<OneD, NekDouble>                  z,
-                              NekDouble                               clamp_low,
-                              NekDouble                               clamp_up,
-                              NekDouble                               def_value);
 };
 }
 }

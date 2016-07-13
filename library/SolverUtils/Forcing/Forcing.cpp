@@ -118,17 +118,9 @@ namespace Nektar
             return vForceList;
         }
 
-        void Forcing::Smooth(const MultiRegions::ExpListSharedPtr &field)
+        Nektar::Array<OneD, Array<OneD, NekDouble> > &Forcing::UpdateForces()
         {
-            Array<OneD, NekDouble> tmpC(m_Forcing[0].num_elements());
-            for (int i = 0; i < m_NumVariable; ++i)
-            {
-                field->IProductWRTBase(m_Forcing[i], tmpC);
-                field->MultiplyByElmtInvMass(tmpC, tmpC);
-                field->LocalToGlobal(tmpC, tmpC);
-                field->GlobalToLocal(tmpC, tmpC);
-                field->BwdTrans(tmpC, m_Forcing[i]);
-            }
+            return m_Forcing;
         }
 
         const Nektar::Array<OneD, const Array<OneD, NekDouble> > &Forcing::GetForces()

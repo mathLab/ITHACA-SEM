@@ -153,7 +153,14 @@ void APE::v_InitObject()
     std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
     for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
     {
-        (*x)->Smooth(m_bfField);
+        for (int i = 0; i < (*x)->GetForces().num_elements(); ++i)
+        {
+            m_bfField->IProductWRTBase((*x)->GetForces()[i], tmpC);
+            m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
+            m_bfField->LocalToGlobal(tmpC, tmpC);
+            m_bfField->GlobalToLocal(tmpC, tmpC);
+            m_bfField->BwdTrans(tmpC, (*x)->UpdateForces()[i]);
+        }
     }
 
     // Do not forwards transform initial condition
@@ -331,7 +338,14 @@ bool APE::v_PostIntegrate(int step)
     std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
     for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
     {
-        (*x)->Smooth(m_bfField);
+        for (int i = 0; i < (*x)->GetForces().num_elements(); ++i)
+        {
+            m_bfField->IProductWRTBase((*x)->GetForces()[i], tmpC);
+            m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
+            m_bfField->LocalToGlobal(tmpC, tmpC);
+            m_bfField->GlobalToLocal(tmpC, tmpC);
+            m_bfField->BwdTrans(tmpC, (*x)->UpdateForces()[i]);
+        }
     }
 
     for (int i = 0; i < m_spacedim + 2; ++i)

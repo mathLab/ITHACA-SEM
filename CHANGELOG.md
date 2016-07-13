@@ -39,6 +39,7 @@ v4.3.3
 
 **Packaging**:
 - Fix NekMesh dependencies for DEB package (!650)
+- Fix PETSc build on newer linux distributions (!646)
 
 v4.3.2
 ------

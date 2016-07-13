@@ -123,7 +123,9 @@ namespace Nektar
         void SetBoundaryIsentropicVortex(
             int                                              bcRegion,
             NekDouble                                        time,
-            int cnt, Array<OneD, Array<OneD, NekDouble> >   &physarray);
+            int                                              cnt,
+            Array<OneD, Array<OneD, NekDouble> >            &Fwd,
+            Array<OneD, Array<OneD, NekDouble> >            &physarray);
 
         /// Ringleb Flow Test Case.
         void GetExactRinglebFlow(
@@ -135,6 +137,7 @@ namespace Nektar
             int                                              bcRegion,
             NekDouble                                        time,
             int                                              cnt,
+            Array<OneD, Array<OneD, NekDouble> >            &Fwd,
             Array<OneD, Array<OneD, NekDouble> >            &physarray);
     };
 }

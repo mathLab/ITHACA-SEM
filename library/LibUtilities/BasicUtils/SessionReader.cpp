@@ -289,7 +289,7 @@ namespace Nektar
             // In verbose mode, print out parameters and solver info sections
             if (m_verbose && m_comm)
             {
-                if (m_comm->GetRank() == 0 && m_parameters.size() > 0)
+                if (m_comm->TreatAsRankZero() && m_parameters.size() > 0)
                 {
                     cout << "Parameters:" << endl;
                     ParameterMap::iterator x;
@@ -300,7 +300,7 @@ namespace Nektar
                     cout << endl;
                 }
 
-                if (m_comm->GetRank() == 0 && m_solverInfo.size() > 0)
+                if (m_comm->TreatAsRankZero() && m_solverInfo.size() > 0)
                 {
                     cout << "Solver Info:" << endl;
                     SolverInfoMap::iterator x;
@@ -1600,7 +1600,7 @@ namespace Nektar
 
             // Get row of comm, or the whole comm if not split
             CommSharedPtr vCommMesh = m_comm->GetRowComm();
-            const bool isRoot = (m_comm->GetRank() == 0);
+            const bool isRoot = m_comm->TreatAsRankZero();
 
             // Delete any existing loaded mesh
             if (m_xmlDoc)
@@ -1633,7 +1633,8 @@ namespace Nektar
 
             // If the mesh is already partitioned, we are done. Remaining
             // processes must load their partitions.
-            if (isPartitioned) {
+            if (isPartitioned)
+            {
                 if (!isRoot)
                 {
                     m_xmlDoc = MergeDoc(m_filenames);
@@ -1707,7 +1708,7 @@ namespace Nektar
                     vector<unsigned int> keys, vals;
                     int i;
 
-                    if (vComm->GetRank() == 0)
+                    if (isRoot)
                     {
                         m_xmlDoc = MergeDoc(m_filenames);
 

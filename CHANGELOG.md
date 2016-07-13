@@ -1,13 +1,48 @@
 Changelog
 =========
 
+v4.4.0
+------
+**Library:**
+- Add support for variable polynomial order for 3D simulations with continuous
+  Galerkin discretisation (!604)
+- Add support for variable polynomial order with periodic boundary conditions
+  (!658)
+- Sped up interpolataion from pts files and fixed parallel pts import (!584)
+- Increased required boost version to 1.56.0 (!584)
+
+**IncNavierStokesSolver:**
+- Add ability to simulate additional scalar fields (!624)
+
+**NekMesh:**
+- Modify curve module to allow for spline input (!628)
+
+**FieldConvert:**
+- Add module to stretch homogeneous direction (!609)
+
 v4.3.3
 ------
 **Library**:
 - Auto-detect a shared filesystem and removed --shared-filesystem option (!654)
+- Fix filters when using adaptive driver to avoid output being overwritten after
+  each adaptive update (!588)
+- Minor fix to suppress Xxt output unless `--verbose` is specified (!642)
+- Fix of DirectFull solver in case where only Neumann boundary conditions 
+  are imposed. (!655)
+
+**FieldConvert**:
+- Fix to avoid repeated import of field file (!649)
+- Fix issue with C^0 projection (!644)
+- Fix verbose output when using --procid (!648)
+
+**CompressibleFlowSolver**:
+- Fix issue with residual output (!647)
+- Issues with 1D Euler solver fixed (!565)
+- Fix deadlocking issue with boundary conditions (!657)
 
 **Packaging**:
 - Fix NekMesh dependencies for DEB package (!650)
+- Fix PETSc build on newer linux distributions (!646)
 
 v4.3.2
 ------

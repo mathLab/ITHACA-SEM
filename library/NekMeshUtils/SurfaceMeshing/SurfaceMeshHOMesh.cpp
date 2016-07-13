@@ -455,8 +455,8 @@ void SurfaceMesh::HOSurf()
                     uvi[k] = uv;
                 }
 
-                //Array<OneD, NekDouble> bnds = s->GetBounds();
-                /*Array<OneD, NekDouble> all(2 * nq);
+                Array<OneD, NekDouble> bnds = s->GetBounds();
+                Array<OneD, NekDouble> all(2 * nq);
                 for (int k = 0; k < nq; k++)
                 {
                     all[k * 2 + 0] = uvi[k][0];
@@ -551,7 +551,7 @@ void SurfaceMesh::HOSurf()
                 {
                     uvi[k][0] = all[k * 2 + 0];
                     uvi[k][1] = all[k * 2 + 1];
-                }*/
+                }
 
                 vector<NodeSharedPtr> honodes(nq - 2);
                 for (int k = 1; k < nq - 1; k++)

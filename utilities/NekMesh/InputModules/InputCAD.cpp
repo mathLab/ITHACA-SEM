@@ -121,6 +121,9 @@ void InputCAD::Process()
         cout << "Building mesh for: " << m_CADName << endl;
     }
 
+    m_mesh->m_hasCAD = true;
+    m_mesh->m_CADId = m_CADName;
+
     ASSERTL0(m_cad->LoadCAD(), "Failed to load CAD");
 
 

@@ -36,6 +36,7 @@
 #ifndef NODALTETEVENLYSPACED_H
 #define NODALTETEVENLYSPACED_H
 
+#include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
@@ -92,6 +93,8 @@ namespace Nektar
             }
 
         private:
+            boost::shared_ptr<NodalUtilTetrahedron> m_util;
+
             /// Default constructor should not be called except by Create matrix
             NodalTetEvenlySpaced():PointsBaseType(NullPointsKey)
             {

@@ -13,21 +13,6 @@ SET(FoundationSources
 	
 SET(NodalDemoSources NodalDemo.cpp)
 
-SET(NodalTriFeketeSources
-	NodalTriFeketeDemo.cpp)
-
-SET(NodalTriElecSources
-    NodalTriElecDemo.cpp)
-
-SET(NodalTriEvenlySpacedSources
-    NodalTriEvenlySpacedDemo.cpp)
-
-SET(NodalTetEvenlySpacedSources
-    NodalTetEvenlySpacedDemo.cpp)
-
-SET(NodalTetElecSources
-	NodalTetElecDemo.cpp)
-
 SET(TimeIntegrationDemoSources
 	TimeIntegrationDemo.cpp)
 
@@ -45,21 +30,6 @@ TARGET_LINK_LIBRARIES(FoundationDemo LibUtilities)
 
 ADD_NEKTAR_EXECUTABLE(NodalDemo demos NodalDemoSources)
 TARGET_LINK_LIBRARIES(NodalDemo LibUtilities)
-
-ADD_NEKTAR_EXECUTABLE(NodalTriFeketeDemo demos NodalTriFeketeSources )
-TARGET_LINK_LIBRARIES(NodalTriFeketeDemo LibUtilities)
-
-ADD_NEKTAR_EXECUTABLE(NodalTriElecDemo demos NodalTriElecSources)
-TARGET_LINK_LIBRARIES(NodalTriElecDemo LibUtilities)
-
-ADD_NEKTAR_EXECUTABLE(NodalTriEvenlySpacedDemo demos NodalTriEvenlySpacedSources)
-TARGET_LINK_LIBRARIES(NodalTriEvenlySpacedDemo LibUtilities)
-
-ADD_NEKTAR_EXECUTABLE(NodalTetEvenlySpacedDemo demos NodalTetEvenlySpacedSources)
-TARGET_LINK_LIBRARIES(NodalTetEvenlySpacedDemo LibUtilities)
-
-ADD_NEKTAR_EXECUTABLE(NodalTetElecDemo demos NodalTetElecSources)
-TARGET_LINK_LIBRARIES(NodalTetElecDemo LibUtilities)
 
 ADD_NEKTAR_EXECUTABLE(TimeIntegrationDemo demos TimeIntegrationDemoSources)
 TARGET_LINK_LIBRARIES(TimeIntegrationDemo LibUtilities)

@@ -41,6 +41,8 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 
+#include <SolverUtils/Interpolator.h>
+
 #include <NekMeshUtils/MeshElements/Element.h>
 
 #include "ProcessCurve.h"
@@ -209,13 +211,17 @@ NekDouble ProcessCurve::EvaluateCoordinate(NekDouble xCoord)
 {
     if (m_fromFile)
     {
-        Array<OneD, Array<OneD, NekDouble> > physCoords(1);
-        physCoords[0] = Array<OneD, NekDouble>(1,xCoord);
-        Array<OneD, Array<OneD, NekDouble> > intFields;
+        Array<OneD, Array<OneD, NekDouble> > tmp(2);
+        tmp[0] = Array<OneD, NekDouble>(1, xCoord);
+        tmp[1] = Array<OneD, NekDouble>(1, 0.0);
 
-        m_fieldPts->Interpolate(physCoords, intFields);
+        LibUtilities::PtsFieldSharedPtr toPts =
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(1, tmp);
 
-        return intFields[0][0];
+        SolverUtils::Interpolator interp;
+        interp.Interpolate(m_fieldPts, toPts);
+
+        return tmp[1][0];
     }
     else
     {

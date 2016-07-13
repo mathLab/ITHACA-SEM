@@ -102,7 +102,7 @@ void InputXml::Process(po::variables_map &vm)
 
     if(m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             cout << "Processing input xml file" << endl;
             timerpart.Start();
@@ -275,7 +275,7 @@ void InputXml::Process(po::variables_map &vm)
 
     if(m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             timerpart.Stop();
             NekDouble cpuTime = timerpart.TimePerTest(1);
@@ -294,7 +294,7 @@ void InputXml::Process(po::variables_map &vm)
 
     if(m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             timerpart.Stop();
             NekDouble cpuTime = timerpart.TimePerTest(1);
@@ -395,7 +395,7 @@ void InputXml::Process(po::variables_map &vm)
 
     if(m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             timerpart.Stop();
             NekDouble cpuTime = timerpart.TimePerTest(1);
@@ -419,7 +419,7 @@ void InputXml::Process(po::variables_map &vm)
     
     if(m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             timerpart.Stop();
             NekDouble cpuTime = timerpart.TimePerTest(1);

@@ -380,13 +380,13 @@ int main(int argc, char* argv[])
     // Run field process.
     for (int i = 0; i < modules.size(); ++i)
     {
-        if(f->m_verbose && f->m_comm->GetRank() == 0)
+        if(f->m_verbose && f->m_comm->TreatAsRankZero())
         {
             moduleTimer.Start();
         }
         modules[i]->Process(vm);
         cout.flush();
-        if(f->m_verbose && f->m_comm->GetRank() == 0)
+        if(f->m_verbose && f->m_comm->TreatAsRankZero())
         {
             moduleTimer.Stop();
             NekDouble cpuTime = moduleTimer.TimePerTest(1);
@@ -401,7 +401,7 @@ int main(int argc, char* argv[])
 
     if(f->m_verbose)
     {
-        if(f->m_comm->GetRank() == 0)
+        if(f->m_comm->TreatAsRankZero())
         {
             timer.Stop();
             NekDouble cpuTime = timer.TimePerTest(1);

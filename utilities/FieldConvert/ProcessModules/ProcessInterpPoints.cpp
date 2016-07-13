@@ -40,7 +40,10 @@ using namespace std;
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
+#include <SolverUtils/Interpolator.h>
 #include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/lexical_cast.hpp>
 namespace Nektar
 {
 namespace Utilities
@@ -111,7 +114,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 {
     if(m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             cout << "ProcessInterpPoints: interpolating to points..." << endl;
         }
@@ -126,7 +129,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     {
         if(m_config["line"].as<string>().compare("NotSet") != 0)
         {
-            string help = m_config["line"].as<string>();
             vector<NekDouble> values;
             ASSERTL0(ParseUtils::GenerateUnOrderedVector(
                         m_config["line"].as<string>().c_str(),values),
@@ -175,7 +177,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         }
         else if(m_config["plane"].as<string>().compare("NotSet") != 0)
         {
-            string help = m_config["plane"].as<string>();
             vector<NekDouble> values;
             ASSERTL0(ParseUtils::GenerateUnOrderedVector(
                              m_config["plane"].as<string>().c_str(),values),
@@ -289,7 +290,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         }
         else if(m_config["box"].as<string>().compare("NotSet") != 0)
         {
-            string help = m_config["box"].as<string>();
             vector<NekDouble> values;
             ASSERTL0(ParseUtils::GenerateUnOrderedVector(
                              m_config["box"].as<string>().c_str(),values),
@@ -478,8 +478,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     fromField->m_exp.resize(nfields);
     fromField->m_exp[0] = fromField->SetUpFirstExpList(NumHomogeneousDir,true);
 
-    m_f->m_exp.resize(nfields);
-
     // declare auxiliary fields.
     for(i = 1; i < nfields; ++i)
     {
@@ -499,179 +497,155 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         }
         fromField->m_exp[j]->BwdTrans(fromField->m_exp[j]->GetCoeffs(),
                                       fromField->m_exp[j]->UpdatePhys());
-    }
 
-    if(rank == 0)
-    {
-        cout << "Interpolating on proc 0 [" << flush;
+        Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
+        m_f->m_fieldPts->AddField(newPts, fromField->m_fielddef[0]->m_fields[j]);
     }
 
     NekDouble clamp_low = m_config["clamptolowervalue"].as<NekDouble>();
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
 
-    InterpolateFieldToPts(fromField, pts,
-                          clamp_low, clamp_up, def_value, !rank);
-    
-    if(rank == 0)
+    InterpolateFieldToPts(fromField->m_exp, m_f->m_fieldPts,
+                          clamp_low, clamp_up, def_value);
+
+    if(!boost::iequals(m_config["cp"].as<string>(),"NotSet"))
     {
-        cout << "]" << endl;
+        calcCp0();
     }
 }
 
-void ProcessInterpPoints::InterpolateFieldToPts(
-                                                FieldSharedPtr                         &fromField,
-                                                Array<OneD, Array<OneD, NekDouble> >   &pts,
-                                                NekDouble                              clamp_low,
-                                                NekDouble                              clamp_up,
-                                                NekDouble                              def_value,
-                                                bool isRoot)
-{
-    int dim = pts.num_elements();
 
-    vector<MultiRegions::ExpListSharedPtr> field0 = fromField->m_exp;
-    Array<OneD, NekDouble> coords(dim), Lcoords(dim);
-    int nq1 = pts[0].num_elements();
-    int elmtid, offset;
-    int r, f;
-    int intpts = 0;
+void ProcessInterpPoints::InterpolateFieldToPts(
+                         vector<MultiRegions::ExpListSharedPtr> &field0,
+                         LibUtilities::PtsFieldSharedPtr        &pts,
+                         NekDouble                              clamp_low,
+                         NekDouble                              clamp_up,
+                         NekDouble                              def_value)
+{
+    ASSERTL0(pts->GetNFields() >= field0.size(), "ptField has too few fields");
+
     int nfields = field0.size();
+    
+    SolverUtils::Interpolator interp;
+    if (m_f->m_comm->GetRank() == 0)
+    {
+        interp.SetProgressCallback(&ProcessInterpPoints::PrintProgressbar,
+                                   this);
+    }
+    interp.Interpolate(field0, pts);
+    if (m_f->m_comm->GetRank() == 0)
+    {
+        cout << endl;
+    }
+
+    for (int f = 0; f < nfields; ++f)
+    {
+        for (int i = 0; i < pts->GetNpoints(); ++i)
+        {
+            if (pts->GetPointVal(pts->GetDim() + f, i) > clamp_up)
+            {
+                pts->SetPointVal(pts->GetDim() + f, i, clamp_up);
+            }
+            else if (pts->GetPointVal(pts->GetDim() + f, i) < clamp_low)
+            {
+                pts->SetPointVal(pts->GetDim() + f, i, clamp_low);
+            }
+        }
+    }
+}
+
+
+void ProcessInterpPoints::calcCp0()
+{
+    LibUtilities::PtsFieldSharedPtr pts = m_f->m_fieldPts;
+    int dim = pts->GetDim();
+    int nq1 = pts->GetNpoints();
+    int r, f;
     int pfield = -1;
     NekDouble p0,qinv;
     vector<int> velid;
 
-    if(!boost::iequals(m_config["cp"].as<string>(),"NotSet"))
+    vector<NekDouble> values;
+    ASSERTL0(ParseUtils::GenerateUnOrderedVector(
+                    m_config["cp"].as<string>().c_str(),values),
+                "Failed to interpret cp string");
+
+    ASSERTL0(values.size() == 2,
+                "cp string should contain 2 values "
+                "p0 and q (=1/2 rho u^2)");
+
+    p0  =  values[0];
+    qinv = 1.0/values[1];
+
+    for(int i = 0; i < pts->GetNFields(); ++i)
     {
-
-        vector<NekDouble> values;
-        ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                      m_config["cp"].as<string>().c_str(),values),
-                 "Failed to interpret cp string");
-
-        ASSERTL0(values.size() == 2,
-                 "cp string should contain 2 values "
-                 "p0 and q (=1/2 rho u^2)");
-
-        p0  =  values[0];
-        qinv = 1.0/values[1];
-
-        for(int i = 0; i < nfields; ++i)
+        if(boost::iequals(pts->GetFieldName(i),"p"))
         {
-            if(boost::iequals(fromField->m_fielddef[0]->m_fields[i],"p"))
-            {
-                pfield = i;
-            }
-
-            if(boost::iequals(fromField->m_fielddef[0]->m_fields[i],"u")||
-               boost::iequals(fromField->m_fielddef[0]->m_fields[i],"v")||
-               boost::iequals(fromField->m_fielddef[0]->m_fields[i],"w"))
-            {
-                velid.push_back(i);
-            }
-        }
-        
-        if(pfield != -1)
-        {
-            nfields += 1;
-
-            if(velid.size())
-            {
-                nfields += 1;
-            }
-            else
-            {
-                WARNINGL0(false,"Did not find velocity components for Cp0");
-            }
-        }
-        else
-        {
-            WARNINGL0(false,"Failed to find 'p' field to determine cp0");
+            pfield = i;
         }
 
+        if(boost::iequals(pts->GetFieldName(i),"u")||
+            boost::iequals(pts->GetFieldName(i),"v")||
+            boost::iequals(pts->GetFieldName(i),"w"))
+        {
+            velid.push_back(i);
+        }
     }
-    
-    // Allocate data storage
-    Array<OneD, Array< OneD, NekDouble> > data(nfields);
 
-    for (f = 0; f < nfields; ++f)
+    if(pfield != -1)
     {
-        data[f] = Array< OneD, NekDouble>(nq1, def_value);
+        if(!velid.size())
+        {
+            WARNINGL0(false,"Did not find velocity components for Cp0");
+        }
+    }
+    else
+    {
+        WARNINGL0(false,"Failed to find 'p' field to determine cp0");
+    }
+
+    // Allocate data storage
+    Array<OneD, Array< OneD, NekDouble> > data(2);
+
+    for (f = 0; f < 2; ++f)
+    {
+        data[f] = Array< OneD, NekDouble>(nq1, 0.0);
     }
 
     for (r = 0; r < nq1; r++)
     {
-        coords[0] = pts[0][r];
-        coords[1] = pts[1][r];
-        if (dim == 3)
-        {
-            coords[2] = pts[2][r];
-        }
-
-        // Obtain Element and LocalCoordinate to interpolate
-        elmtid = field0[0]->GetExpIndex(coords, Lcoords, 1e-3);
-
-        if(elmtid >= 0)
-        {
-            offset = field0[0]->GetPhys_Offset(field0[0]->
-                                               GetOffset_Elmt_Id(elmtid));
-
-            for (f = 0; f < field0.size(); ++f)
-            {
-                NekDouble value;
-                value = field0[f]->GetExp(elmtid)->
-                    StdPhysEvaluate(Lcoords, field0[f]->GetPhys() +offset);
-
-                if ((boost::math::isnan)(value))
-                {
-                    ASSERTL0(false, "new value is not a number");
-                }
-                else
-                {
-                    value = (value > clamp_up)? clamp_up :
-                        ((value < clamp_low)? clamp_low :
-                         value);
-
-                    data[f][r] = value;
-                }
-            }
-        }
-
-        if (intpts%1000 == 0&&isRoot)
-        {
-            cout <<"." << flush;
-        }
-        intpts ++;
-
         if(pfield != -1) // calculate cp
         {
-            data[nfields-2][r] = qinv*(data[pfield][r] - p0);
+            data[0][r] = qinv*(pts->GetPointVal(dim + pfield, r) - p0);
 
             if(velid.size()) // calculate cp0
             {
-                NekDouble q = 0; 
+                NekDouble q = 0;
                 for(int i = 0; i < velid.size(); ++i)
                 {
-                    q += 0.5*data[velid[i]][r]*data[velid[i]][r];
+                    q += 0.5*pts->GetPointVal(dim + velid[i], r)*
+                             pts->GetPointVal(dim + velid[i], r);
                 }
-                
-                data[nfields-1][r] = qinv*(data[pfield][r]+q - p0);
+                data[1][r] = qinv*(pts->GetPointVal(dim + pfield, r)+q - p0);
             }
         }
     }
-    // Add fields to m_fieldPts
-    for (f = 0; f < field0.size(); ++f)
-    {
-        m_f->m_fieldPts->AddField(data[f],
-                fromField->m_fielddef[0]->m_fields[f]);
-    }
+
     if(pfield != -1)
     {
-        m_f->m_fieldPts->AddField(data[field0.size()], "Cp");
+        pts->AddField(data[0], "Cp");
         if(velid.size())
         {
-            m_f->m_fieldPts->AddField(data[field0.size()+1], "Cp0");
+            pts->AddField(data[1], "Cp0");
         }
     }
+}
+
+void ProcessInterpPoints::PrintProgressbar(const int position,
+                                           const int goal) const
+{
+    LibUtilities::PrintProgressbar(position, goal, "Interpolating");
 }
 
 }

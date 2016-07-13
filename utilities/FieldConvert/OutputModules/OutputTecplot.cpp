@@ -86,7 +86,10 @@ void OutputTecplot::Process(po::variables_map &vm)
 
     if (m_f->m_verbose)
     {
-        cout << "OutputTecplot: Writing file..." << endl;
+        if(m_f->m_comm->TreatAsRankZero())
+        {
+            cout << "OutputTecplot: Writing file..." << endl;
+        }
     }
 
 

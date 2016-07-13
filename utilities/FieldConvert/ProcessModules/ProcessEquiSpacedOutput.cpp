@@ -83,7 +83,7 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 {
     if(m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             cout << "Interpolating fields to equispaced..." << endl;
         }

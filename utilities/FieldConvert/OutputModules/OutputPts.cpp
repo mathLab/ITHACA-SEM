@@ -64,7 +64,10 @@ void OutputPts::Process(po::variables_map &vm)
 
     if (m_f->m_verbose)
     {
-        cout << "OutputPts: Writing file..." << endl;
+        if(m_f->m_comm->TreatAsRankZero())
+        {
+            cout << "OutputPts: Writing file..." << endl;
+        }
     }
 
     fs::path writefile(filename);

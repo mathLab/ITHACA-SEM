@@ -3,6 +3,9 @@ Changelog
 
 v4.3.3
 ------
+**Library**:
+- Auto-detect a shared filesystem and removed --shared-filesystem option (!654)
+
 **Packaging**:
 - Fix NekMesh dependencies for DEB package (!650)
 

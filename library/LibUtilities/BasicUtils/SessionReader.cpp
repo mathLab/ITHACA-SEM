@@ -322,19 +322,20 @@ namespace Nektar
             {
                 if (m_comm->GetRank() == 0)
                 {
-                    std::ofstream testfile ("shared-fs-testfile");
+                    std::ofstream testfile("shared-fs-testfile");
                     testfile << "" << std::endl;
+                    ASSERTL1(!testfile.fail(), "Test file creation failed");
                     testfile.close();
                 }
                 m_comm->Block();
 
-                std::ifstream testfile("shared-fs-testfile");
-                int exists = (bool) testfile;
+                int exists = (bool)boost::filesystem::exists("shared-fs-testfile");
                 m_comm->AllReduce(exists, LibUtilities::ReduceSum);
 
                 m_sharedFilesystem = (exists == m_comm->GetSize());
 
-                if ((m_sharedFilesystem && m_comm->GetRank() == 0) || !m_sharedFilesystem)
+                if ((m_sharedFilesystem && m_comm->GetRank() == 0) ||
+                    !m_sharedFilesystem)
                 {
                     std::remove("shared-fs-testfile");
                 }
@@ -346,7 +347,7 @@ namespace Nektar
 
             if (m_verbose && m_comm->GetRank() == 0 && m_sharedFilesystem)
             {
-                cout << "shared filesystem detected" << endl;
+                cout << "Shared filesystem detected" << endl;
             }
         }
 

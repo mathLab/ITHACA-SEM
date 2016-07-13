@@ -126,7 +126,7 @@ namespace Utilities
     {
         if (m_f->m_verbose)
         {
-            if(m_f->m_comm->GetRank() == 0)
+            if(m_f->m_comm->TreatAsRankZero())
             {
                 cout << "ProcessDisplacement: Calculating displacement..."
                      << endl;

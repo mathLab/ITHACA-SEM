@@ -14,12 +14,14 @@ SET(FieldConvertHeaders
     OutputModules/OutputXml.h
     ProcessModules/ProcessAddFld.h
     ProcessModules/ProcessBoundaryExtract.h
+    ProcessModules/ProcessCombineAvg.h
     ProcessModules/ProcessConcatenateFld.h
     ProcessModules/ProcessDeform.h
     ProcessModules/ProcessDisplacement.h
     ProcessModules/ProcessEquiSpacedOutput.h
     ProcessModules/ProcessGrad.h
     ProcessModules/ProcessHomogeneousPlane.h
+    ProcessModules/ProcessHomogeneousStretch.h
     ProcessModules/ProcessInnerProduct.h
     ProcessModules/ProcessInterpField.h
     ProcessModules/ProcessInterpPoints.h
@@ -58,12 +60,14 @@ SET(FieldConvertSources
     OutputModules/OutputXml.cpp
     ProcessModules/ProcessAddFld.cpp
     ProcessModules/ProcessBoundaryExtract.cpp
+    ProcessModules/ProcessCombineAvg.cpp
     ProcessModules/ProcessConcatenateFld.cpp
     ProcessModules/ProcessDeform.cpp
     ProcessModules/ProcessDisplacement.cpp
     ProcessModules/ProcessEquiSpacedOutput.cpp
     ProcessModules/ProcessGrad.cpp
     ProcessModules/ProcessHomogeneousPlane.cpp
+    ProcessModules/ProcessHomogeneousStretch.cpp
     ProcessModules/ProcessInnerProduct.cpp
     ProcessModules/ProcessInterpField.cpp
     ProcessModules/ProcessInterpPoints.cpp
@@ -106,19 +110,10 @@ ADD_NEKTAR_TEST(pointdatatofld)
 # ADD_NEKTAR_TEST(chan3D_pts)
 ADD_NEKTAR_TEST(chan3DH1D_meanmode)
 ADD_NEKTAR_TEST(chan3DH1D_plane)
+ADD_NEKTAR_TEST(chan3DH1D_stretch)
 ADD_NEKTAR_TEST(chan3D_probe)
 ADD_NEKTAR_TEST(cube_prismhex)
 ADD_NEKTAR_TEST(outflow_pointdatatofld)
-
-# windows produces slightly differently formatted files which results in
-# different hashes
-#IF(WIN32)
-#    ADD_NEKTAR_TEST(chan3D_probe_win)
-#    ADD_NEKTAR_TEST(chan3D_equispacedoutput_win)
-#    ADD_NEKTAR_TEST(chan3D_isocontour_win)
-#ELSE(WIN32)
-#ENDIF(WIN32)
-
 ADD_NEKTAR_TEST(chan3D_equispacedoutput)
 ADD_NEKTAR_TEST(chan3D_isocontour)
 

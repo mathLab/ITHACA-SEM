@@ -102,7 +102,7 @@ void InputXml::Process(po::variables_map &vm)
 
     if(m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             cout << "Processing input xml file" << endl;
             timerpart.Start();
@@ -275,7 +275,7 @@ void InputXml::Process(po::variables_map &vm)
 
     if(m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             timerpart.Stop();
             NekDouble cpuTime = timerpart.TimePerTest(1);
@@ -294,7 +294,7 @@ void InputXml::Process(po::variables_map &vm)
 
     if(m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             timerpart.Stop();
             NekDouble cpuTime = timerpart.TimePerTest(1);
@@ -337,10 +337,14 @@ void InputXml::Process(po::variables_map &vm)
         {
             ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
         }
-        
-        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef,
-                           LibUtilities::NullVectorNekDoubleVector,
-                           LibUtilities::NullFieldMetaDataMap,
+
+        m_f->m_fielddef.clear();
+        m_f->m_data.clear();
+
+        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],
+                           m_f->m_fielddef,
+                           m_f->m_data,
+                           m_f->m_fieldMetaDataMap,
                            ElementGIDs);
         NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
 
@@ -391,7 +395,7 @@ void InputXml::Process(po::variables_map &vm)
 
     if(m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             timerpart.Stop();
             NekDouble cpuTime = timerpart.TimePerTest(1);
@@ -415,7 +419,7 @@ void InputXml::Process(po::variables_map &vm)
     
     if(m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             timerpart.Stop();
             NekDouble cpuTime = timerpart.TimePerTest(1);

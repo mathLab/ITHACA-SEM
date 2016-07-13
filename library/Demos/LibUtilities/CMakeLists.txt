@@ -11,6 +11,8 @@ SET(PartitionAnalyseSources
 SET(FoundationSources
     FoundationDemo.cpp)	
 	
+SET(NodalDemoSources NodalDemo.cpp)
+
 SET(NodalTriFeketeSources
 	NodalTriFeketeDemo.cpp)
 
@@ -40,6 +42,9 @@ TARGET_LINK_LIBRARIES(PartitionAnalyse LibUtilities)
 
 ADD_NEKTAR_EXECUTABLE(FoundationDemo demos FoundationSources )
 TARGET_LINK_LIBRARIES(FoundationDemo LibUtilities)
+
+ADD_NEKTAR_EXECUTABLE(NodalDemo demos NodalDemoSources)
+TARGET_LINK_LIBRARIES(NodalDemo LibUtilities)
 
 ADD_NEKTAR_EXECUTABLE(NodalTriFeketeDemo demos NodalTriFeketeSources )
 TARGET_LINK_LIBRARIES(NodalTriFeketeDemo LibUtilities)

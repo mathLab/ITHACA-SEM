@@ -96,10 +96,18 @@ namespace Nektar
         CalcOutflowBCs(fields, kinvis);
     }
 
-    // In weak pressure formulation  we also require \int q u.n ds on outflow boundary
-    void WeakPressureExtrapolate::v_AddNormVelOnOBC(const int noutflow, const int nreg,
-                                                    Array<OneD, Array<OneD, NekDouble> > &u)
+    // In weak pressure formulation we also require \int q u.n ds on
+    // outflow boundary
+    void WeakPressureExtrapolate::v_AddNormVelOnOBC(const int noutflow,
+                                               const int nreg,
+                                               Array<OneD,
+                                               Array<OneD, NekDouble> > &u)
     {
+        if(!m_houtflow.get()) // no outflow on partition so just return 
+        {
+           return;
+        }
+
         int nbcoeffs = m_PBndExp[nreg]->GetNcoeffs();
         int nqb      = m_PBndExp[nreg]->GetTotPoints();
         

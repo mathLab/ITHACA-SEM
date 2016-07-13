@@ -85,17 +85,21 @@ namespace Nektar
      */
     void Extrapolate::AddDuDt(void)
     {
-        // Update velocity BF at n+1 (actually only needs doing if velocity is time dependent on HBCs)
-        IProductNormVelocityBCOnHBC(m_iprodnormvel[m_intSteps]);
-
-        //Calculate acceleration term at level n based on previous steps
-        AccelerationBDF(m_iprodnormvel);
-
-        // Subtract acceleration term off m_pressureHBCs[nlevels-1]
-        Vmath::Svtvp(m_numHBCDof, -1.0/m_timestep,
-                     m_iprodnormvel[m_intSteps],  1,
-                     m_pressureHBCs[m_intSteps-1], 1,
-                     m_pressureHBCs[m_intSteps-1], 1);
+        if(m_numHBCDof)
+        {
+            // Update velocity BF at n+1 (actually only needs doing if
+            // velocity is time dependent on HBCs)
+            IProductNormVelocityBCOnHBC(m_iprodnormvel[m_intSteps]);
+            
+            //Calculate acceleration term at level n based on previous steps
+            AccelerationBDF(m_iprodnormvel);
+            
+            // Subtract acceleration term off m_pressureHBCs[nlevels-1]
+            Vmath::Svtvp(m_numHBCDof, -1.0/m_timestep,
+                         m_iprodnormvel[m_intSteps],  1,
+                         m_pressureHBCs[m_intSteps-1], 1,
+                         m_pressureHBCs[m_intSteps-1], 1);
+        }
     }
 
     /**
@@ -103,18 +107,21 @@ namespace Nektar
      */
     void Extrapolate::AddVelBC(void)
     {
-        int order = std::min(m_pressureCalls,m_intSteps);
-        
-        // Update velocity BF at n+1 (actually only needs doing if
-        // velocity is time dependent on HBCs)
-        IProductNormVelocityBCOnHBC(m_iprodnormvel[0]);
-
-        // Subtract acceleration term off m_pressureHBCs[nlevels-1]
-        Vmath::Svtvp(m_numHBCDof,
-                     -1.0*StifflyStable_Gamma0_Coeffs[order-1]/m_timestep,
-                     m_iprodnormvel[0],  1,
-                     m_pressureHBCs[m_intSteps-1], 1,
-                     m_pressureHBCs[m_intSteps-1], 1);
+        if(m_numHBCDof)
+        {
+            int order = std::min(m_pressureCalls,m_intSteps);
+            
+            // Update velocity BF at n+1 (actually only needs doing if
+            // velocity is time dependent on HBCs)
+            IProductNormVelocityBCOnHBC(m_iprodnormvel[0]);
+            
+            // Subtract acceleration term off m_pressureHBCs[nlevels-1]
+            Vmath::Svtvp(m_numHBCDof,
+                         -1.0*StifflyStable_Gamma0_Coeffs[order-1]/m_timestep,
+                         m_iprodnormvel[0],  1,
+                         m_pressureHBCs[m_intSteps-1], 1,
+                         m_pressureHBCs[m_intSteps-1], 1);
+        }
     }
  
     /**
@@ -481,6 +488,11 @@ namespace Nektar
     
     void Extrapolate::IProductNormVelocityBCOnHBC(Array<OneD, NekDouble> &IProdVn)
     {
+
+        if(!m_HBCnumber)
+        {
+            return;
+        }
         int i,n,cnt;
         Array<OneD, NekDouble> IProdVnTmp; 
         Array<OneD, Array<OneD, NekDouble> > velbc(m_bnd_dim);
@@ -567,7 +579,6 @@ namespace Nektar
                 m_numHBCDof += m_PBndExp[n]->GetNcoeffs();
                 m_HBCnumber += m_PBndExp[n]->GetExpSize();
             }
-
                        
             // High order outflow convective condition
             if(m_PBndConds[n]->GetBoundaryConditionType() ==
@@ -970,29 +981,33 @@ namespace Nektar
         int nlevels  = array.num_elements();
         int nPts     = array[0].num_elements();
 
-        // Update array
-        RollOver(array);
 
-        // Calculate acceleration using Backward Differentiation Formula
-        Array<OneD, NekDouble> accelerationTerm (nPts, 0.0);
-        if (m_pressureCalls > 2)
+        if(nPts)
         {
-            int acc_order = min(m_pressureCalls-2,m_intSteps);
-            Vmath::Smul(nPts,
-                             StifflyStable_Gamma0_Coeffs[acc_order-1],
-                             m_iprodnormvel[0], 1,
-                             accelerationTerm,  1);
-
-            for(int i = 0; i < acc_order; i++)
+            // Update array
+            RollOver(array);
+            
+            // Calculate acceleration using Backward Differentiation Formula
+            Array<OneD, NekDouble> accelerationTerm (nPts, 0.0);
+            if (m_pressureCalls > 2)
             {
-                Vmath::Svtvp(nPts,
-                            -1*StifflyStable_Alpha_Coeffs[acc_order-1][i],
-                             m_iprodnormvel[i+1], 1,
-                             accelerationTerm,    1,
-                             accelerationTerm,    1);
+                int acc_order = min(m_pressureCalls-2,m_intSteps);
+                Vmath::Smul(nPts,
+                            StifflyStable_Gamma0_Coeffs[acc_order-1],
+                            m_iprodnormvel[0], 1,
+                             accelerationTerm,  1);
+                
+                for(int i = 0; i < acc_order; i++)
+                {
+                    Vmath::Svtvp(nPts,
+                                 -1*StifflyStable_Alpha_Coeffs[acc_order-1][i],
+                                 m_iprodnormvel[i+1], 1,
+                                 accelerationTerm,    1,
+                                 accelerationTerm,    1);
+                }
             }
+            m_iprodnormvel[nlevels-1] = accelerationTerm;
         }
-        m_iprodnormvel[nlevels-1] = accelerationTerm;
     }
     
     void Extrapolate::CopyPressureHBCsToPbndExp(void)

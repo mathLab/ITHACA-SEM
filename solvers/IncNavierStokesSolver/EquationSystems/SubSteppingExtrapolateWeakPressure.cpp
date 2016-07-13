@@ -93,6 +93,11 @@ namespace Nektar
     void SubSteppingExtrapolateWeakPressure::v_AddNormVelOnOBC(const int cnt, const int nreg,
                                                                Array<OneD, Array<OneD, NekDouble> > &u)
     {
+        if(!m_houtflow.get()) // no outflow on partition so just return 
+        {
+           return;
+        }
+
         int nbcoeffs = m_PBndExp[nreg]->GetNcoeffs();
         int nqb      = m_PBndExp[nreg]->GetTotPoints();
         

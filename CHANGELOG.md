@@ -6,6 +6,8 @@ v4.4.0
 **Library:**
 - Add support for variable polynomial order for 3D simulations with continuous
   Galerkin discretisation (!604)
+- Add support for variable polynomial order with periodic boundary conditions
+  (!658)
 
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)

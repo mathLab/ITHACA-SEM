@@ -3,6 +3,14 @@ Changelog
 
 v4.4.0
 ------
+**Library:**
+- Add support for variable polynomial order for 3D simulations with continuous
+  Galerkin discretisation (!604)
+- Add support for variable polynomial order with periodic boundary conditions
+  (!658)
+- Sped up interpolataion from pts files and fixed parallel pts import (!584)
+- Increased required boost version to 1.56.0 (!584)
+
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
 
@@ -10,9 +18,15 @@ v4.4.0
 - Modify curve module to allow for spline input (!628)
 - Fix namespace issue in star-ccm input header in NekMesh (!661) 
 
+**FieldConvert:**
+- Add module to stretch homogeneous direction (!609)
+
 v4.3.3
 ------
 **Library**:
+- Auto-detect a shared filesystem and removed --shared-filesystem option (!654)
+- Fix filters when using adaptive driver to avoid output being overwritten after
+  each adaptive update (!588)
 - Minor fix to suppress Xxt output unless `--verbose` is specified (!642)
 - Fix of DirectFull solver in case where only Neumann boundary conditions
   are imposed. (!655)
@@ -20,12 +34,16 @@ v4.3.3
 **FieldConvert**:
 - Fix to avoid repeated import of field file (!649)
 - Fix issue with C^0 projection (!644)
+- Fix verbose output when using --procid (!648)
 
 **CompressibleFlowSolver**:
 - Fix issue with residual output (!647)
+- Issues with 1D Euler solver fixed (!565)
+- Fix deadlocking issue with boundary conditions (!657)
 
 **Packaging**:
 - Fix NekMesh dependencies for DEB package (!650)
+- Fix PETSc build on newer linux distributions (!646)
 
 v4.3.2
 ------
@@ -38,6 +56,7 @@ v4.3.2
   output is produced in physical space (!621).
 - Fix minor performance issue with time integration schemes (!632)
 - Fix FilterCheckpoint filter to be consistent with `IO_CheckSteps` (!633)
+- Fix CMake configuration for building on Windows 10 with VS 2015 (!641)
 - Fix `IO_CheckSteps` to avoid missing first checkpoint (!639)
 - Fix bug in iterative solver where only root process would ASSERT when
   exceeding the maximum number of iterations (!636)

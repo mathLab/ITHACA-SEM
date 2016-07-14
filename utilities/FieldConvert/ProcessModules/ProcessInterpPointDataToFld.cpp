@@ -40,6 +40,8 @@ using namespace std;
 
 #include "ProcessInterpPointDataToFld.h"
 
+#include <SolverUtils/Interpolator.h>
+#include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
@@ -73,7 +75,7 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 {
     if(m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             cout << "ProcessInterpPointDataToFld: interpolating data to field..."
                  << endl;
@@ -98,39 +100,40 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     }
 
     int totpoints = m_f->m_exp[0]->GetTotPoints();
-    Array< OneD, Array<OneD, NekDouble> > coords(3);
-
-    coords[0] = Array<OneD,NekDouble>(totpoints);
-    coords[1] = Array<OneD,NekDouble>(totpoints);
-    coords[2] = Array<OneD,NekDouble>(totpoints);
-
-    m_f->m_exp[0]->GetCoords(coords[0],coords[1],coords[2]);
+    Array<OneD, Array<OneD, NekDouble> > intFields(3 + nFields);
+    for (int i = 0; i < 3 + nFields; ++i)
+    {
+        intFields[i] = Array<OneD,  NekDouble>(totpoints);
+    }
+    m_f->m_exp[0]->GetCoords(intFields[0],intFields[1],intFields[2]);
+    LibUtilities::PtsFieldSharedPtr outPts =
+            MemoryManager<LibUtilities::PtsField>::
+            AllocateSharedPtr(3, intFields);
 
     int coord_id = m_config["interpcoord"].as<int>();
     ASSERTL0(coord_id <= m_f->m_fieldPts->GetDim() - 1,
         "interpcoord is bigger than the Pts files dimension");
 
-    // interpolate points and transform
-    Array<OneD, Array<OneD, NekDouble> > intFields(nFields);
-    if (m_f->m_session->GetComm()->GetRank() == 0)
+    SolverUtils::Interpolator interp(SolverUtils::eNoMethod, coord_id);
+
+    if (m_f->m_comm->GetRank() == 0)
     {
-        m_f->m_fieldPts->setProgressCallback(
+        interp.SetProgressCallback(
             &ProcessInterpPointDataToFld::PrintProgressbar, this);
-        cout << "Interpolating:       ";
     }
-    m_f->m_fieldPts->Interpolate(coords, intFields, coord_id);
+    interp.Interpolate(m_f->m_fieldPts, outPts);
+    if (m_f->m_comm->GetRank() == 0)
+    {
+        cout << endl;
+    }
+
 
     for(i = 0; i < totpoints; ++i)
     {
         for(j = 0; j < nFields; ++j)
         {
-            m_f->m_exp[j]->SetPhys(i, intFields[j][i]);
+            m_f->m_exp[j]->SetPhys(i, outPts->GetPointVal(j,i));
         }
-    }
-
-    if(m_f->m_session->GetComm()->GetRank() == 0)
-    {
-        cout << endl;
     }
 
     // forward transform fields

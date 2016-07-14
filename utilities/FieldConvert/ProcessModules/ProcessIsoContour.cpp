@@ -106,11 +106,9 @@ ProcessIsoContour::~ProcessIsoContour(void)
 
 void ProcessIsoContour::Process(po::variables_map &vm)
 {
-    int rank = m_f->m_comm->GetRank();
-    
     if(m_f->m_verbose)
     {
-        if(rank == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             cout << "ProcessIsoContour: Extracting contours..." << endl;
         }
@@ -211,7 +209,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     {
         vector<IsoSharedPtr> new_iso;
 
-        if(rank == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             cout << "Identifying separate regions [." << flush ;
         }
@@ -220,7 +218,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
             iso[i]->separate_regions(new_iso,mincontour,m_f->m_verbose);
         }
        
-        if(rank == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             cout << "]" << endl <<  flush ;
         }

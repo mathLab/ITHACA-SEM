@@ -45,8 +45,6 @@
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/Foundations/Points.h>
 
-
-//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for NekManager
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 
@@ -169,9 +167,9 @@ protected:
 class NodalUtilTriangle : public NodalUtil
 {
 public:
-    NodalUtilTriangle(int degree,
-                      Array<OneD, NekDouble> r,
-                      Array<OneD, NekDouble> s);
+    LIB_UTILITIES_EXPORT NodalUtilTriangle(int degree,
+                                           Array<OneD, NekDouble> r,
+                                           Array<OneD, NekDouble> s);
 
 protected:
     /// Mapping from the \f$ (i,j) \f$ indexing of the basis to a continuous
@@ -212,10 +210,10 @@ class NodalUtilTetrahedron : public NodalUtil
     typedef boost::tuple<int, int, int> Mode;
 
 public:
-    NodalUtilTetrahedron(int degree,
-                         Array<OneD, NekDouble> r,
-                         Array<OneD, NekDouble> s,
-                         Array<OneD, NekDouble> t);
+    LIB_UTILITIES_EXPORT NodalUtilTetrahedron(int degree,
+                                              Array<OneD, NekDouble> r,
+                                              Array<OneD, NekDouble> s,
+                                              Array<OneD, NekDouble> t);
 
 protected:
     /// Mapping from the \f$ (i,j,k) \f$ indexing of the basis to a continuous
@@ -257,10 +255,10 @@ class NodalUtilPrism : public NodalUtil
     typedef boost::tuple<int, int, int> Mode;
 
 public:
-    NodalUtilPrism(int degree,
-                   Array<OneD, NekDouble> r,
-                   Array<OneD, NekDouble> s,
-                   Array<OneD, NekDouble> t);
+    LIB_UTILITIES_EXPORT NodalUtilPrism(int degree,
+                                        Array<OneD, NekDouble> r,
+                                        Array<OneD, NekDouble> s,
+                                        Array<OneD, NekDouble> t);
 
 protected:
     /// Mapping from the \f$ (i,j) \f$ indexing of the basis to a continuous

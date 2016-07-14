@@ -8,12 +8,13 @@ v4.4.0
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
+- Fix namespace issue in star-ccm input header in NekMesh (!661) 
 
 v4.3.3
 ------
 **Library**:
 - Minor fix to suppress Xxt output unless `--verbose` is specified (!642)
-- Fix of DirectFull solver in case where only Neumann boundary conditions 
+- Fix of DirectFull solver in case where only Neumann boundary conditions
   are imposed. (!655)
 
 **FieldConvert**:
@@ -106,7 +107,7 @@ v4.3.0
   (!537)
 - Fix bug with initial conditions of CG simulations using variable P (!543)
 - Fix bug in 3DH2D with non-zero Dirichlet boundary conditions (!545)
-- Added in a method to convert equispaced interpolated points back to 
+- Added in a method to convert equispaced interpolated points back to
   coefficients which requires the introduction of a new StdRegions matrix.(!561)
 - Empty XML tags which would override non-empty XML tags are now ignored (!581)
 - Add contribution guide (!551)

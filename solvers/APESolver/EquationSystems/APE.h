@@ -102,6 +102,8 @@ class APE : public UnsteadySystem
                 const Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
+        virtual bool v_PreIntegrate(int step);
+
         virtual bool v_PostIntegrate(int step);
 
         void GetStdVelocity(Array< OneD, NekDouble >& stdV);

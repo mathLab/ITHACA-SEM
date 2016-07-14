@@ -138,30 +138,8 @@ void APE::v_InitObject()
         m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
     }
     EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
-    Array<OneD, NekDouble> tmpC(GetNcoeffs());
-    for (int i = 0; i < m_spacedim + 2; ++i)
-    {
-        m_bfField->IProductWRTBase(m_bf[i], tmpC);
-        m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
-        m_bfField->LocalToGlobal(tmpC, tmpC);
-        m_bfField->GlobalToLocal(tmpC, tmpC);
-        m_bfField->BwdTrans(tmpC, m_bf[i]);
-    }
 
     m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, 1);
-
-    std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-    for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
-    {
-        for (int i = 0; i < (*x)->GetForces().num_elements(); ++i)
-        {
-            m_bfField->IProductWRTBase((*x)->GetForces()[i], tmpC);
-            m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
-            m_bfField->LocalToGlobal(tmpC, tmpC);
-            m_bfField->GlobalToLocal(tmpC, tmpC);
-            m_bfField->BwdTrans(tmpC, (*x)->UpdateForces()[i]);
-        }
-    }
 
     // Do not forwards transform initial condition
     m_homoInitialFwd = false;
@@ -321,17 +299,8 @@ void APE::GetFluxVector(
 /**
  * @brief v_PostIntegrate
  */
-bool APE::v_PostIntegrate(int step)
+bool APE::v_PreIntegrate(int step)
 {
-    if (m_cflsteps && !((step + 1) % m_cflsteps))
-    {
-        NekDouble cfl = GetCFLEstimate();
-        if (m_comm->GetRank() == 0)
-        {
-            cout << "CFL: " << cfl << endl;
-        }
-    }
-
     EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
 
     Array<OneD, NekDouble> tmpC(GetNcoeffs());
@@ -358,7 +327,23 @@ bool APE::v_PostIntegrate(int step)
         m_bfField->BwdTrans(tmpC, m_bf[i]);
     }
 
-    return UnsteadySystem::v_PostIntegrate(step);
+    return UnsteadySystem::v_PreIntegrate(step);
+}
+
+
+/**
+ * @brief v_PostIntegrate
+ */
+bool APE::v_PostIntegrate(int step)
+{
+    if (m_cflsteps && !((step + 1) % m_cflsteps))
+    {
+        NekDouble cfl = GetCFLEstimate();
+        if (m_comm->GetRank() == 0)
+        {
+            cout << "CFL: " << cfl << endl;
+        }
+    }
 }
 
 

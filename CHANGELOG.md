@@ -10,6 +10,7 @@ v4.4.0
   (!658)
 - Sped up interpolataion from pts files and fixed parallel pts import (!584)
 - Increased required boost version to 1.56.0 (!584)
+- Rework nodal utilities to support nodal prismatic elements (!660)
 
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)

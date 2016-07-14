@@ -109,6 +109,11 @@ namespace SolverUtils
         }
 
         m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
+        for (int i = 0; i < m_NumVariable; ++i)
+        {
+            m_Forcing[i] = Array<OneD, NekDouble> (pFields[0]->GetTotPoints(), 0.0);
+        }
+
 
         Update(pFields, 0.0);
     }
@@ -120,7 +125,6 @@ namespace SolverUtils
     {
         for (int i = 0; i < m_NumVariable; ++i)
         {
-            m_Forcing[i] = Array<OneD, NekDouble> (nq, 0.0);
             std::string  s_FieldStr   = m_session->GetVariable(i);
             ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
                      "Variable '" + s_FieldStr + "' not defined.");

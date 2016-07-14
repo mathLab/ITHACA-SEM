@@ -172,13 +172,19 @@ SharedMatrix NodalUtil::GetDerivMatrix(int dir)
  * @brief Construct the interpolation matrix used to evaluate the basis at the
  * points @p xi inside the element.
  *
- * This routine returns a matrix \f$ \mathbf{I} \f$ that can be used to evaluate
- * the nodal basis at the points defined by the parameter @p xi, In particular
- * if the array \f$ \mathbf{u} \f$ with components \f$ \mathbf{u}_i =
- * u^\delta(\xi_i) \f$ represents the function 
+ * This routine returns a matrix \f$ \mathbf{I}(\mathbf{a}) \f$ that can be used
+ * to evaluate the nodal basis at the points defined by the parameter @p xi,
+ * which is denoted by \f$ \mathbf{a} = (a_1, \dots, a_N) \f$ and \f$ N \f$ is
+ * the number of points in @p xi.
+ *
+ * In particular, if the array \f$ \mathbf{u} \f$ with components \f$
+ * \mathbf{u}_i = u^\delta(\xi_i) \f$ represents the polynomial approximation of
+ * a function \f$ u \f$ evaluated at the nodal points NodalUtil::m_xi, then the
+ * evaluation of \f$ u^\delta \f$ evaluated at the input points \f$ \mathbf{a}
+ * \f$ is given by \f$ \mathbf{I}(\mathbf{a})\mathbf{u} \f$.
  *
  * @param xi  An array of first size number of spatial dimensions \f$ d \f$ and
- *            secondary size the number of points to
+ *            secondary size the number of points to interpolate.
  */
 SharedMatrix NodalUtil::GetInterpolationMatrix(
     Array<OneD, Array<OneD, NekDouble> > &xi)
@@ -198,21 +204,24 @@ SharedMatrix NodalUtil::GetInterpolationMatrix(
 /**
  * @brief Construct the nodal utility class for a triangle.
  *
- * The constructor of this class sets up two important member variables:
+ * The constructor of this class sets up two member variables used in the
+ * evaluation of the orthogonal basis:
  *
  * - NodalUtilTriangle::m_eta is used to construct the collapsed coordinate
  *   locations of the nodal points \f$ (\eta_1, \eta_2) \f$ inside the square
- *   \f$[-1,1]\f$
+ *   \f$[-1,1]^2\f$ on which the orthogonal basis functions are defined.
  * - NodalUtilTriangle::m_ordering constructs a mapping from the index set \f$ I
  *   = \{ (i,j)\ |\ 0\leq i,j \leq P, i+j \leq P \}\f$ to an ordering \f$ 0 \leq
  *   m(ij) \leq (P+1)(P+2)/2 \f$ that defines the monomials \f$ \xi_1^i \xi_2^j
  *   \f$ that span the triangular space. This is then used to calculate which
- *   \f$ (i,j) \f$ pair corresponds to a column of the Vandermonde matrix when
+ *   \f$ (i,j) \f$ pair corresponding to a column of the Vandermonde matrix when
  *   calculating the orthogonal polynomials.
  *
  * @param degree  Polynomial order of this nodal triangle.
- * @param r       \f$ r \f$-coordinates of nodal points in the standard element.
- * @param s       \f$ s \f$-coordinates of nodal points in the standard element.
+ * @param r       \f$ \xi_1 \f$-coordinates of nodal points in the standard
+ *                element.
+ * @param s       \f$ \xi_2 \f$-coordinates of nodal points in the standard
+ *                element.
  */
 NodalUtilTriangle::NodalUtilTriangle(int                    degree,
                                      Array<OneD, NekDouble> r,
@@ -263,7 +272,8 @@ NodalUtilTriangle::NodalUtilTriangle(int                    degree,
  * \psi_{m(ij)} = \sqrt{2} P^{(0,0)}_i(\xi_1) P_j^{(2i+1,0)}(\xi_2) (1-\xi_2)^i
  * \f]
  *
- * where \f$ m(ij) \f$ is the mapping defined in NodalUtilTriangle::m_ordering.
+ * where \f$ m(ij) \f$ is the mapping defined in NodalUtilTriangle::m_ordering
+ * and \f$ J_n^{(\alpha,\beta)}(z) \f$ denotes the standard Jacobi polynomial.
  *
  * @param mode  The mode of the orthogonal basis to evaluate.
  */
@@ -295,14 +305,9 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasis(const int mode)
  * @brief Return the value of the derivative of the modal functions for the
  * triangular element at the nodal points #m_xi for a given mode.
  *
- * In a triangle, we use the orthogonal basis
- *
- * \f[
- * \psi_{m(ij)} = \sqrt{2} P^{(0,0)}_i(\xi_1) P_j^{(2i+1,0)}(\xi_2) (1-\xi_2)^i
- * \f]
- *
- * where \f$ m(ij) \f$ is the mapping defined in
- * NodalUtilTriangle::m_ordering. The derivative is then evaluated
+ * Note that this routine must use the chain rule combined with the collapsed
+ * coordinate derivatives as described in Sherwin & Karniadakis (2nd edition),
+ * pg 150.
  *
  * @param mode  The mode of the orthogonal basis to evaluate.
  */
@@ -333,6 +338,7 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
 
     if (dir == 0)
     {
+        // d/d(\xi_1) = 2/(1-\eta_2) d/d(\eta_1)
         for (int i = 0; i < m_numPoints; ++i)
         {
             ret[i] = 2.0 * sqrt2 * jacobi_di[i] * jacobi_j[i];
@@ -344,6 +350,7 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
     }
     else
     {
+        // d/d(\xi_2) = 2(1+\eta_1)/(1-\eta_2) d/d(\eta_1) + d/d(eta_2)
         for (int i = 0; i < m_numPoints; ++i)
         {
             ret[i] = (1 + m_eta[0][i]) * sqrt2 * jacobi_di[i] * jacobi_j[i];
@@ -369,21 +376,27 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
 /**
  * @brief Construct the nodal utility class for a tetrahedron.
  *
- * The constructor of this class sets up two important member variables:
+ * The constructor of this class sets up two member variables used in the
+ * evaluation of the orthogonal basis:
  *
- * - NodalUtilTriangle::m_eta is used to construct the collapsed coordinate
- *   locations of the nodal points \f$ (\eta_1, \eta_2) \f$ inside the square
- *   \f$[-1,1]\f$
- * - NodalUtilTriangle::m_ordering constructs a mapping from the index set \f$ I
- *   = \{ (i,j)\ |\ 0\leq i,j \leq P, i+j \leq P \}\f$ to an ordering \f$ 0 \leq
- *   m(ij) \leq (P+1)(P+2)/2 \f$ that defines the monomials \f$ \xi_1^i \xi_2^j
- *   \f$ that span the triangular space. This is then used to calculate which
- *   \f$ (i,j) \f$ pair corresponds to a column of the Vandermonde matrix when
- *   calculating the orthogonal polynomials.
+ * - NodalUtilTetrahedron::m_eta is used to construct the collapsed coordinate
+ *   locations of the nodal points \f$ (\eta_1, \eta_2, \eta_3) \f$ inside the
+ *   cube \f$[-1,1]^3\f$ on which the orthogonal basis functions are defined.
+ * - NodalUtilTetrahedron::m_ordering constructs a mapping from the index set
+ *   \f$ I = \{ (i,j,k)\ |\ 0\leq i,j,k \leq P, i+j \leq P, i+j+k \leq P \}\f$
+ *   to an ordering \f$ 0 \leq m(ijk) \leq (P+1)(P+2)(P+3)/6 \f$ that defines
+ *   the monomials \f$ \xi_1^i \xi_2^j \xi_3^k \f$ that span the tetrahedral
+ *   space. This is then used to calculate which \f$ (i,j,k) \f$ triple
+ *   (represented as a boost tuple) corresponding to a column of the Vandermonde
+ *   matrix when calculating the orthogonal polynomials.
  *
- * @param degree  Polynomial order of this nodal triangle.
- * @param r       \f$ r \f$-coordinates of nodal points in the standard element.
- * @param s       \f$ s \f$-coordinates of nodal points in the standard element.
+ * @param degree  Polynomial order of this nodal tetrahedron
+ * @param r       \f$ \xi_1 \f$-coordinates of nodal points in the standard
+ *                element.
+ * @param s       \f$ \xi_2 \f$-coordinates of nodal points in the standard
+ *                element.
+ * @param t       \f$ \xi_3 \f$-coordinates of nodal points in the standard
+ *                element.
  */
 NodalUtilTetrahedron::NodalUtilTetrahedron(int                    degree,
                                            Array<OneD, NekDouble> r,
@@ -444,6 +457,20 @@ NodalUtilTetrahedron::NodalUtilTetrahedron(int                    degree,
     }
 }
 
+/**
+ * @brief Return the value of the modal functions for the tetrahedral element at
+ * the nodal points #m_xi for a given mode.
+ *
+ * In a tetrahedron, we use the orthogonal basis
+ *
+ * \f[ \psi_{m(ijk)} = \sqrt{8} P^{(0,0)}_i(\xi_1) P_j^{(2i+1,0)}(\xi_2)
+ * P_k^{(2i+2j+2,0)}(\xi_3) (1-\xi_2)^i (1-\xi_3)^{i+j} \f]
+ *
+ * where \f$ m(ijk) \f$ is the mapping defined in #m_ordering and \f$
+ * J_n^{(\alpha,\beta)}(z) \f$ denotes the standard Jacobi polynomial.
+ *
+ * @param mode  The mode of the orthogonal basis to evaluate.
+ */
 NekVector<NekDouble> NodalUtilTetrahedron::v_OrthoBasis(const int mode)
 {
     std::vector<NekDouble> jacA(m_numPoints), jacB(m_numPoints);
@@ -472,6 +499,16 @@ NekVector<NekDouble> NodalUtilTetrahedron::v_OrthoBasis(const int mode)
     return ret;
 }
 
+/**
+ * @brief Return the value of the derivative of the modal functions for the
+ * tetrahedral element at the nodal points #m_xi for a given mode.
+ *
+ * Note that this routine must use the chain rule combined with the collapsed
+ * coordinate derivatives as described in Sherwin & Karniadakis (2nd edition),
+ * pg 152.
+ *
+ * @param mode  The mode of the orthogonal basis to evaluate.
+ */
 NekVector<NekDouble> NodalUtilTetrahedron::v_OrthoBasisDeriv(
     const int dir, const int mode)
 {
@@ -565,6 +602,31 @@ NekVector<NekDouble> NodalUtilTetrahedron::v_OrthoBasisDeriv(
     return ret;
 }
 
+/**
+ * @brief Construct the nodal utility class for a prism.
+ *
+ * The constructor of this class sets up two member variables used in the
+ * evaluation of the orthogonal basis:
+ *
+ * - NodalUtilPrism::m_eta is used to construct the collapsed coordinate
+ *   locations of the nodal points \f$ (\eta_1, \eta_2, \eta_3) \f$ inside the
+ *   cube \f$[-1,1]^3\f$ on which the orthogonal basis functions are defined.
+ * - NodalUtilPrism::m_ordering constructs a mapping from the index set
+ *   \f$ I = \{ (i,j,k)\ |\ 0\leq i,j,k \leq P, i+k \leq P \}\f$ to an ordering
+ *   \f$ 0 \leq m(ijk) \leq (P+1)(P+1)(P+2)/2 \f$ that defines the monomials \f$
+ *   \xi_1^i \xi_2^j \xi_3^k \f$ that span the prismatic space. This is then
+ *   used to calculate which \f$ (i,j,k) \f$ triple (represented as a boost
+ *   tuple) corresponding to a column of the Vandermonde matrix when calculating
+ *   the orthogonal polynomials.
+ *
+ * @param degree  Polynomial order of this nodal tetrahedron
+ * @param r       \f$ \xi_1 \f$-coordinates of nodal points in the standard
+ *                element.
+ * @param s       \f$ \xi_2 \f$-coordinates of nodal points in the standard
+ *                element.
+ * @param t       \f$ \xi_3 \f$-coordinates of nodal points in the standard
+ *                element.
+ */
 NodalUtilPrism::NodalUtilPrism(int                    degree,
                                Array<OneD, NekDouble> r,
                                Array<OneD, NekDouble> s,
@@ -612,6 +674,20 @@ NodalUtilPrism::NodalUtilPrism(int                    degree,
     }
 }
 
+/**
+ * @brief Return the value of the modal functions for the prismatic element at
+ * the nodal points #m_xi for a given mode.
+ *
+ * In a prism, we use the orthogonal basis
+ *
+ * \f[ \psi_{m(ijk)} = \sqrt{2} P^{(0,0)}_i(\xi_1) P_j^{(0,0)}(\xi_2)
+ * P_k^{(2i+1,0)}(\xi_3) (1-\xi_3)^i \f]
+ *
+ * where \f$ m(ijk) \f$ is the mapping defined in #m_ordering and \f$
+ * J_n^{(\alpha,\beta)}(z) \f$ denotes the standard Jacobi polynomial.
+ *
+ * @param mode  The mode of the orthogonal basis to evaluate.
+ */
 NekVector<NekDouble> NodalUtilPrism::v_OrthoBasis(const int mode)
 {
     std::vector<NekDouble> jacA(m_numPoints), jacB(m_numPoints);
@@ -640,6 +716,16 @@ NekVector<NekDouble> NodalUtilPrism::v_OrthoBasis(const int mode)
     return ret;
 }
 
+/**
+ * @brief Return the value of the derivative of the modal functions for the
+ * prismatic element at the nodal points #m_xi for a given mode.
+ *
+ * Note that this routine must use the chain rule combined with the collapsed
+ * coordinate derivatives as described in Sherwin & Karniadakis (2nd edition),
+ * pg 152.
+ *
+ * @param mode  The mode of the orthogonal basis to evaluate.
+ */
 NekVector<NekDouble> NodalUtilPrism::v_OrthoBasisDeriv(
     const int dir, const int mode)
 {

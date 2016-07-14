@@ -181,6 +181,9 @@ int main(int argc, char *argv[])
             case ePrism:
                 exact = M_E - 1.0 / M_E / M_E / M_E;
                 break;
+            default:
+                exact = 0.0;
+                break;
         }
 
         cout << "L inf error : " << fabs(exact - integral) << endl;

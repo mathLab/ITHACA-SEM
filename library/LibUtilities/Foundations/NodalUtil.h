@@ -64,18 +64,28 @@ typedef boost::shared_ptr<NekMatrix<NekDouble> > SharedMatrix;
  * The NodalUtil class and its subclasses are designed to take care of some
  * common issues that arise when considering triangles, tetrahedra and prismatic
  * elements that are equipped with a nodal Lagrangian basis, defined using a set
- * of nodal points that we store in the array NodalUtil::m_xi. Since one cannot
- * write this basis analytically, we instead construct the Vandermonde matrix
+ * of nodal points \f$ \xi_i \f$ that we store in the array
+ * NodalUtil::m_xi. Since one cannot write this basis analytically, we instead
+ * construct the Vandermonde matrix
  *
- * \f[ \mathbf{V}_{ij} \f]
+ * \f[ \mathbf{V}_{ij} = \psi_j(\xi_i) \f]
+ *
+ * where \f$ \psi_j \f$ is a basis that spans the polynomial space of the
+ * element. The Vandermonde matrix can then be used to construct the integration
+ * weights, derivative and interpolation matrices. Although this can be any
+ * basis, such as the monomial basis \f$ x^i y^j z^k \f$, in practice this is
+ * numerically unstable at high polynomial orders. Elements are therefore
+ * expected to use the 'traditional' modal orthogonal basis. See Sherwin &
+ * Karniadakis or Hesthaven & Warburton for further details of this basis and
+ * the surrounding numerical issues.
+ *
+ * This class therefore contains the generic logic needed to construct various
+ * matrices, and subclasses override virtual functions that define the
+ * orthogonal basis and its derivatives for a particular element type.
  */
 class NodalUtil
 {
 public:
-    NodalUtil(int degree, int dim) : m_dim(dim), m_degree(degree), m_xi(dim)
-    {
-    }
-
     LIB_UTILITIES_EXPORT NekVector<NekDouble> GetWeights();
     LIB_UTILITIES_EXPORT SharedMatrix GetVandermonde();
     LIB_UTILITIES_EXPORT SharedMatrix GetVandermondeForDeriv(int dir);
@@ -84,20 +94,78 @@ public:
         Array<OneD, Array<OneD, NekDouble> > &xi);
 
 protected:
+    /**
+     * @brief Set up the NodalUtil object.
+     *
+     * @param dim     Dimension of the element.
+     * @param degree  Polynomial degree of the element.
+     */
+    NodalUtil(int degree, int dim) : m_dim(dim), m_degree(degree), m_xi(dim)
+    {
+    }
+
+    /// Dimension of the nodal element
     int m_dim;
+    /// Degree of the nodal element
     int m_degree;
+    /// Total number of nodal points
     int m_numPoints;
+    /// Coordinates of the nodal points defining the basis
     Array<OneD, Array<OneD, NekDouble> > m_xi;
 
+    /**
+     * @brief Return the values of the orthogonal basis at the nodal points for
+     * a given mode.
+     *
+     * @param dir   Coordinate direction of derivative.
+     * @param mode  Mode number, which is between 0 and NodalUtil::v_NumModes()
+     *              - 1.
+     */
     virtual NekVector<NekDouble> v_OrthoBasis(const int mode) = 0;
+
+    /**
+     * @brief Return the values of the derivative of the orthogonal basis at the
+     * nodal points for a given mode.
+     *
+     * @param dir   Coordinate direction of derivative.
+     * @param mode  Mode number, which is between 0 and NodalUtil::v_NumModes()
+     *              - 1.
+     */
     virtual NekVector<NekDouble> v_OrthoBasisDeriv(
         const int dir, const int mode) = 0;
+
+    /**
+     * @brief Construct a NodalUtil object of the appropriate element type for a
+     * given set of points.
+     *
+     * This function is used inside NodalUtil::GetInterpolationMatrix so that
+     * the (potentially non-square) Vandermonde matrix can be constructed to
+     * create the interpolation matrix at an arbitrary set of points in the
+     * domain.
+     */
     virtual boost::shared_ptr<NodalUtil> v_CreateUtil(
         Array<OneD, Array<OneD, NekDouble> > &xi) = 0;
+
+    /**
+     * @brief Return the value of the integral of the zero-th mode for this
+     * element.
+     *
+     * Note that for the orthogonal basis under consideration, all modes
+     * integrate to zero asides from the zero-th mode. This function is used in
+     * NodalUtil::GetWeights to determine integration weights.
+     */
     virtual NekDouble v_ModeZeroIntegral() = 0;
+
+    /**
+     * @brief Calculate the number of degrees of freedom for this element.
+     */
     virtual int v_NumModes() = 0;
 };
 
+/**
+ * @brief Specialisation of the NodalUtil class to support nodal triangular
+ * elements.
+ */
 class NodalUtilTriangle : public NodalUtil
 {
 public:
@@ -106,7 +174,11 @@ public:
                       Array<OneD, NekDouble> s);
 
 protected:
+    /// Mapping from the \f$ (i,j) \f$ indexing of the basis to a continuous
+    /// ordering.
     std::vector<std::pair<int, int> > m_ordering;
+
+    /// Collapsed coordinates \f$ (\eta_1, \eta_2) \f$ of the nodal points.
     Array<OneD, Array<OneD, NekDouble> > m_eta;
 
     virtual NekVector<NekDouble> v_OrthoBasis(const int mode);
@@ -131,6 +203,10 @@ protected:
     }
 };
 
+/**
+ * @brief Specialisation of the NodalUtil class to support nodal tetrahedral
+ * elements.
+ */
 class NodalUtilTetrahedron : public NodalUtil
 {
     typedef boost::tuple<int, int, int> Mode;
@@ -142,7 +218,12 @@ public:
                          Array<OneD, NekDouble> t);
 
 protected:
+    /// Mapping from the \f$ (i,j,k) \f$ indexing of the basis to a continuous
+    /// ordering.
     std::vector<Mode> m_ordering;
+
+    /// Collapsed coordinates \f$ (\eta_1, \eta_2, \eta_3) \f$ of the nodal
+    /// points.
     Array<OneD, Array<OneD, NekDouble> > m_eta;
 
     virtual NekVector<NekDouble> v_OrthoBasis(const int mode);
@@ -167,6 +248,10 @@ protected:
     }
 };
 
+/**
+ * @brief Specialisation of the NodalUtil class to support nodal prismatic
+ * elements.
+ */
 class NodalUtilPrism : public NodalUtil
 {
     typedef boost::tuple<int, int, int> Mode;
@@ -178,7 +263,12 @@ public:
                    Array<OneD, NekDouble> t);
 
 protected:
+    /// Mapping from the \f$ (i,j) \f$ indexing of the basis to a continuous
+    /// ordering.
     std::vector<Mode> m_ordering;
+
+    /// Collapsed coordinates \f$ (\eta_1, \eta_2, \eta_3) \f$ of the nodal
+    /// points.
     Array<OneD, Array<OneD, NekDouble> > m_eta;
 
     virtual NekVector<NekDouble> v_OrthoBasis(const int mode);
@@ -203,7 +293,7 @@ protected:
     }
 };
 
-} // end of LibUtilities namespace
-} // end of Nektar namespace
+}
+}
 
 #endif //NODALUTIL_H

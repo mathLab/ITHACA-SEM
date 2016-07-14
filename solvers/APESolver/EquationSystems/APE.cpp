@@ -139,7 +139,7 @@ void APE::v_InitObject()
     }
     EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
 
-    m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, 1);
+    m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, m_spacedim + 1);
 
     // Do not forwards transform initial condition
     m_homoInitialFwd = false;
@@ -608,12 +608,12 @@ void APE::v_ExtraFldOutput(
         m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
         m_bfField->LocalToGlobal(tmpC, tmpC);
         m_bfField->GlobalToLocal(tmpC, tmpC);
-        m_bfField->BwdTrans(tmpC, m_bf[i]);
 
         variables.push_back(m_bfNames[i]);
         fieldcoeffs.push_back(tmpC);
     }
 
+    int f = 0;
     std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
     for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
     {
@@ -626,9 +626,11 @@ void APE::v_ExtraFldOutput(
             m_bfField->LocalToGlobal(tmpC, tmpC);
             m_bfField->GlobalToLocal(tmpC, tmpC);
 
-            variables.push_back("S");
+            variables.push_back("F_" + boost::lexical_cast<string>(f) +
+                                "_" + m_session->GetVariable(i));
             fieldcoeffs.push_back(tmpC);
         }
+        f++;
     }
 }
 

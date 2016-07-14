@@ -16,7 +16,6 @@ v4.4.0
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
-- Fix namespace issue in star-ccm input header in NekMesh (!661) 
 
 **FieldConvert:**
 - Add module to stretch homogeneous direction (!609)
@@ -35,6 +34,9 @@ v4.3.3
 - Fix to avoid repeated import of field file (!649)
 - Fix issue with C^0 projection (!644)
 - Fix verbose output when using --procid (!648)
+
+**NekMesh:**
+- Fix namespace issue in Star-CCM+ input header in NekMesh (!661)
 
 **CompressibleFlowSolver**:
 - Fix issue with residual output (!647)

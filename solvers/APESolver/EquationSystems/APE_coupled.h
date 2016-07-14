@@ -66,6 +66,8 @@ public:
 protected:
     SolverUtils::CwipiCouplingSharedPointer m_coupling;
 
+    ForcingSharedPtr                        m_extForcing;
+
     /// Initialises UnsteadySystem class members.
     APE_coupled(const LibUtilities::SessionReaderSharedPtr &pSession);
 

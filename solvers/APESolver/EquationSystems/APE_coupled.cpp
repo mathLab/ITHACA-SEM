@@ -61,6 +61,10 @@ void APE_coupled::v_InitObject()
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
         m_bfField, "cpl1", 0, 1.0);
+
+    m_extForcing = GetForcingFactory().CreateInstance(
+        "Programmatic", m_session, m_fields, 1, 0);
+    m_forcing.push_back(m_extForcing);
 }
 
 /**
@@ -78,6 +82,19 @@ bool APE_coupled::v_PreIntegrate(int step)
     receiveFields(step);
 
     Array<OneD, NekDouble> tmpC(GetNcoeffs());
+    std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+    for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+    {
+        for (int i = 0; i < (*x)->GetForces().num_elements(); ++i)
+        {
+            m_bfField->IProductWRTBase((*x)->GetForces()[i], tmpC);
+            m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
+            m_bfField->LocalToGlobal(tmpC, tmpC);
+            m_bfField->GlobalToLocal(tmpC, tmpC);
+            m_bfField->BwdTrans(tmpC, (*x)->UpdateForces()[i]);
+        }
+    }
+
     for (int i = 0; i < m_spacedim + 2; ++i)
     {
         // ensure the field is C0-continuous
@@ -87,16 +104,6 @@ bool APE_coupled::v_PreIntegrate(int step)
         m_bfField->GlobalToLocal(tmpC, tmpC);
         m_bfField->BwdTrans(tmpC, m_bf[i]);
     }
-
-//     for (int i = 0; i < m_st.num_elements(); ++i)
-//     {
-//         // ensure the field is C0-continuous
-//         m_bfField->IProductWRTBase(m_st[i], tmpC);
-//         m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
-//         m_bfField->LocalToGlobal(tmpC, tmpC);
-//         m_bfField->GlobalToLocal(tmpC, tmpC);
-//         m_bfField->BwdTrans(tmpC, m_st[i]);
-//     }
 
     return UnsteadySystem::v_PreIntegrate(step);
 }
@@ -127,7 +134,7 @@ void APE_coupled::receiveFields(int step)
     {
         recField[2] = Array<OneD, NekDouble>(nq);
     }
-    recField[5] = Array<OneD, NekDouble>(nq); // m_st[0]; // S
+    recField[5] = m_extForcing->UpdateForces()[0]; // F_p
 
     m_coupling->ReceiveFields(step, m_time, recField);
 

@@ -73,8 +73,6 @@ protected:
 
     virtual bool v_PreIntegrate(int step);
 
-    virtual bool v_PostIntegrate(int step);
-
     virtual void v_Output(void);
 
 private:

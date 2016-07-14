@@ -101,22 +101,6 @@ bool APE_coupled::v_PreIntegrate(int step)
     return UnsteadySystem::v_PreIntegrate(step);
 }
 
-/**
- * @brief v_PostIntegrate
- */
-bool APE_coupled::v_PostIntegrate(int step)
-{
-    if (m_cflsteps && !((step + 1) % m_cflsteps))
-    {
-        NekDouble cfl = GetCFLEstimate();
-        if (m_comm->GetRank() == 0)
-        {
-            cout << "CFL: " << cfl << endl;
-        }
-    }
-
-    return UnsteadySystem::v_PostIntegrate(step);
-}
 
 void APE_coupled::receiveFields(int step)
 {

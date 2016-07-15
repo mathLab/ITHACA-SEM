@@ -230,6 +230,97 @@ SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom(int coordDim)
     return ret;
 }
 
+StdRegions::Orientation Tetrahedron::GetEdgeOrient(
+    int edgeId, EdgeSharedPtr edge)
+{
+    int locVert = edgeId;
+    int edgeVerts[6][2] = { {0,1}, {1,2}, {0,2}, {0,3}, {1,3}, {2,3} };
+
+    if (edge->m_n1 == m_vertex[edgeVerts[edgeId][0]])
+    {
+        return StdRegions::eForwards;
+    }
+    else if (edge->m_n1 == m_vertex[edgeVerts[edgeId][1]])
+    {
+        return StdRegions::eBackwards;
+    }
+    else
+    {
+        ASSERTL1(false, "Edge is not connected to this quadrilateral.");
+    }
+
+    return StdRegions::eNoOrientation;
+}
+
+void Tetrahedron::MakeOrder(int                                order,
+                            SpatialDomains::GeometrySharedPtr  geom,
+                            LibUtilities::PointsType           pType,
+                            int                                coordDim,
+                            int                               &id)
+{
+    m_conf.m_order = order;
+    m_volumeNodes.clear();
+
+    if (order == 1 || order == 2)
+    {
+        m_conf.m_volumeNodes = m_conf.m_faceNodes = false;
+        return;
+    }
+    else if (order == 2)
+    {
+        m_conf.m_faceNodes   = true;
+        m_conf.m_volumeNodes = false;
+        return;
+    }
+    else if (order == 3)
+    {
+        m_conf.m_volumeNodes = false;
+        return;
+    }
+
+    int nPoints = order + 1;
+    StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+
+    Array<OneD, NekDouble> px, py, pz;
+    LibUtilities::PointsKey pKey(nPoints, pType);
+    ASSERTL1(pKey.GetPointsDim() == 3, "Points distribution must be 3D");
+    LibUtilities::PointsManager()[pKey]->GetPoints(px, py, pz);
+
+    Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
+
+    for (int i = 0; i < coordDim; ++i)
+    {
+        phys[i] = Array<OneD, NekDouble>(xmap->GetTotPoints());
+        xmap->BwdTrans(geom->GetCoeffs(i), phys[i]);
+    }
+
+    const int nTetPts    = nPoints * (nPoints + 1) * (nPoints + 2) / 6;
+    const int nTetIntPts = (nPoints - 4) * (nPoints - 3) * (nPoints - 2) / 6;
+    m_volumeNodes.resize(nTetIntPts);
+
+    for (int i = 4 + 6*(nPoints-2) + 2*(nPoints-3)*(nPoints-2), cnt = 0;
+         i < nTetPts; ++i, ++cnt)
+    {
+        Array<OneD, NekDouble> xp(3);
+        xp[0] = px[i];
+        xp[1] = py[i];
+        xp[2] = pz[i];
+
+        Array<OneD, NekDouble> x(3, 0.0);
+        for (int j = 0; j < coordDim; ++j)
+        {
+            x[j] = xmap->PhysEvaluate(xp, phys[j]);
+        }
+
+        m_volumeNodes[cnt] = boost::shared_ptr<Node>(
+            new Node(id++, x[0], x[1], x[2]));
+    }
+
+    m_curveType          = pType;
+    m_conf.m_faceNodes   = true;
+    m_conf.m_volumeNodes = true;
+}
+
 /**
  * @brief Return the number of nodes defining a tetrahedron.
  */
@@ -242,124 +333,6 @@ unsigned int Tetrahedron::GetNumNodes(ElmtConfig pConf)
         return 4 * (n + 1) * (n + 2) / 2 - 6 * (n + 1) + 4;
     else
         return 6 * (n + 1) - 8;
-}
-
-/**
- * @brief .
- */
-void Tetrahedron::Complete(int order)
-{
-    int i, j;
-
-    // Create basis key for a nodal tetrahedron.
-    LibUtilities::BasisKey B0(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-    LibUtilities::BasisKey B1(
-        LibUtilities::eOrtho_B,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussRadauMAlpha1Beta0));
-    LibUtilities::BasisKey B2(
-        LibUtilities::eOrtho_C,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussRadauMAlpha2Beta0));
-
-    // Create a standard nodal tetrahedron in order to get the
-    // Vandermonde matrix to perform interpolation to nodal points.
-    StdRegions::StdNodalTetExpSharedPtr nodalTet =
-        MemoryManager<StdRegions::StdNodalTetExp>::AllocateSharedPtr(
-            B0, B1, B2, LibUtilities::eNodalTetEvenlySpaced);
-
-    Array<OneD, NekDouble> x, y, z;
-
-    nodalTet->GetNodalPoints(x, y, z);
-
-    SpatialDomains::TetGeomSharedPtr geom =
-        boost::dynamic_pointer_cast<SpatialDomains::TetGeom>(this->GetGeom(3));
-
-    // Create basis key for a tetrahedron.
-    LibUtilities::BasisKey C0(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-    LibUtilities::BasisKey C1(
-        LibUtilities::eOrtho_B,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussRadauMAlpha1Beta0));
-    LibUtilities::BasisKey C2(
-        LibUtilities::eOrtho_C,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussRadauMAlpha2Beta0));
-
-    // Create a tet.
-    LocalRegions::TetExpSharedPtr tet =
-        MemoryManager<LocalRegions::TetExp>::AllocateSharedPtr(
-            C0, C1, C2, geom);
-
-    // Get coordinate array for tetrahedron.
-    int nqtot = tet->GetTotPoints();
-    Array<OneD, NekDouble> alloc(6 * nqtot);
-    Array<OneD, NekDouble> xi(alloc);
-    Array<OneD, NekDouble> yi(alloc + nqtot);
-    Array<OneD, NekDouble> zi(alloc + 2 * nqtot);
-    Array<OneD, NekDouble> xo(alloc + 3 * nqtot);
-    Array<OneD, NekDouble> yo(alloc + 4 * nqtot);
-    Array<OneD, NekDouble> zo(alloc + 5 * nqtot);
-    Array<OneD, NekDouble> tmp;
-
-    tet->GetCoords(xi, yi, zi);
-
-    for (i = 0; i < 3; ++i)
-    {
-        Array<OneD, NekDouble> coeffs(nodalTet->GetNcoeffs());
-        tet->FwdTrans(alloc + i * nqtot, coeffs);
-        // Apply Vandermonde matrix to project onto nodal space.
-        nodalTet->ModalToNodal(coeffs, tmp = alloc + (i + 3) * nqtot);
-    }
-
-    // Now extract points from the co-ordinate arrays into the
-    // edge/face/volume nodes. First, extract edge-interior nodes.
-    for (i = 0; i < 6; ++i)
-    {
-        int pos = 4 + i * (order - 1);
-        m_edge[i]->m_edgeNodes.clear();
-        for (j = 0; j < order - 1; ++j)
-        {
-            m_edge[i]->m_edgeNodes.push_back(NodeSharedPtr(
-                new Node(0, xo[pos + j], yo[pos + j], zo[pos + j])));
-        }
-    }
-
-    // Now extract face-interior nodes.
-    for (i = 0; i < 4; ++i)
-    {
-        int pos = 4 + 6 * (order - 1) + i * (order - 2) * (order - 1) / 2;
-        m_face[i]->m_faceNodes.clear();
-        for (j = 0; j < (order - 2) * (order - 1) / 2; ++j)
-        {
-            m_face[i]->m_faceNodes.push_back(NodeSharedPtr(
-                new Node(0, xo[pos + j], yo[pos + j], zo[pos + j])));
-        }
-    }
-
-    // Finally extract volume nodes.
-    int pos = 4 + 6 * (order - 1) + 4 * (order - 2) * (order - 1) / 2;
-    for (i = pos; i < (order + 1) * (order + 2) * (order + 3) / 6; ++i)
-    {
-        m_volumeNodes.push_back(
-            NodeSharedPtr(new Node(0, xo[i], yo[i], zo[i])));
-    }
-
-    m_conf.m_order       = order;
-    m_conf.m_faceNodes   = true;
-    m_conf.m_volumeNodes = true;
 }
 
 struct TetOrient

@@ -37,6 +37,8 @@
 #include <iostream>
 using namespace std;
 
+#include <boost/tuple/tuple.hpp>
+
 #include <NekMeshUtils/MeshElements/Element.h>
 #include <NekMeshUtils/MeshElements/Point.h>
 #include <NekMeshUtils/MeshElements/Line.h>
@@ -160,6 +162,131 @@ std::vector<int> triTensorNodeOrdering(const std::vector<int> &nodes, int n)
             cnt2 += n - 2 - j;
         }
     }
+
+    return nodeList;
+}
+
+std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
+{
+    std::vector<int> nodeList;
+    int cnt2;
+    int nTri = n*(n+1)/2;
+    int nTet = n*(n+1)*(n+2)/6;
+
+    nodeList.resize(nodes.size());
+    nodeList[0] = nodes[0];
+
+    // Vertices
+    if (n > 1)
+    {
+        nodeList[n - 1]    = nodes[1];
+        nodeList[nTri - 1] = nodes[2];
+        nodeList[nTet - 1] = nodes[3];
+    }
+
+    if (n == 1)
+    {
+        return nodeList;
+    }
+
+    // Set up a map that takes (a,b,c) -> m to help us figure out where things
+    // are inside the tetrahedron.
+
+    typedef boost::tuple<int, int, int> Mode;
+    struct cmpop
+    {
+        bool operator()(Mode const &a, Mode const &b) const
+        {
+            if (a.get<0>() < b.get<0>())
+            {
+                return true;
+            }
+            if (a.get<0>() > b.get<0>())
+            {
+                return false;
+            }
+    
+            if (a.get<1>() < b.get<1>())
+            {
+                return true;
+            }
+            if (a.get<1>() > b.get<1>())
+            {
+                return false;
+            }
+    
+            if (a.get<2>() < b.get<2>())
+            {
+                return true;
+            }
+
+            return false;
+        }
+    };
+    std::map<Mode, int, cmpop> tmp;
+
+    for (int k = 0, cnt = 0; k < n; ++k)
+    {
+        for (int j = 0; j < n - k; ++j)
+        {
+            for (int i = 0; i < n - k - j; ++i)
+            {
+                tmp[Mode(i,j,k)] = cnt++;
+            }
+        }
+    }
+
+    for (int i = 1; i < n-1; ++i)
+    {
+        int eI = i-1;
+        nodeList[tmp[Mode(i,0,0)]]     = nodes[4 + eI];
+        nodeList[tmp[Mode(n-1-i,i,0)]] = nodes[4 + (n-2) + eI];
+        nodeList[tmp[Mode(0,n-1-i,0)]] = nodes[4 + 2*(n-2) + eI];
+        nodeList[tmp[Mode(0,0,n-1-i)]] = nodes[4 + 3*(n-2) + eI];
+        nodeList[tmp[Mode(0,i,n-1-i)]] = nodes[4 + 4*(n-2) + eI];
+        nodeList[tmp[Mode(i,0,n-1-i)]] = nodes[4 + 5*(n-2) + eI];
+    }
+
+
+    // Edges
+    // if (n > 2)
+    // {
+    //     int cnt = n, cnt2 = 0;
+    //     for (int i = 1; i < n - 1; ++i)
+    //     {
+    //         nodeList[i]               = nodes[4 + i - 1];
+    //         nodeList[cnt]             = nodes[3 + 3 * (n - 2) - i];
+    //         nodeList[cnt + n - i - 1] = nodes[3 + (n - 2) + i - 1];
+    //         cnt += n - i;
+    //     }
+    // }
+
+    // // Faces
+
+    // // Interior (recursion)
+
+    // // Interior (recursion)
+    // if (n > 3)
+    // {
+    //     // Reorder interior nodes
+    //     std::vector<int> interior((n - 3) * (n - 2) / 2);
+    //     std::copy(
+    //         nodes.begin() + 3 + 3 * (n - 2), nodes.end(), interior.begin());
+    //     interior = triTensorNodeOrdering(interior, n - 3);
+
+    //     // Copy into full node list
+    //     cnt  = n;
+    //     cnt2 = 0;
+    //     for (int j = 1; j < n - 2; ++j)
+    //     {
+    //         for (int i = 0; i < n - j - 2; ++i)
+    //         {
+    //             nodeList[cnt + i + 1] = interior[cnt2 + i];
+    //         }
+    //         cnt += n - j;
+    //         cnt2 += n - 2 - j;
+    //     }
+    // }
 
     return nodeList;
 }
@@ -728,6 +855,38 @@ vector<int> InputGmsh::TetReordering(ElmtConfig conf)
         }
     }
 
+    if (conf.m_volumeNodes == false)
+    {
+        return mapping;
+    }
+
+    const int nInt = (order - 3) * (order - 2) * (order - 1) / 6;
+    if (nInt <= 0)
+    {
+        return mapping;
+    }
+
+    if (nInt == 1)
+    {
+        mapping.push_back(mapping.size());
+        return mapping;
+    }
+
+    int ntot = (order+1)*(order+2)*(order+3)/6;
+    vector<int> interior;
+
+    for (int i = 4 + 6 * n + 4 * n2; i < ntot; ++i)
+    {
+        interior.push_back(i);
+    }
+
+    if (interior.size() > 0)
+    {
+        interior = tetTensorNodeOrdering(interior, order-3);
+    }
+
+    mapping.insert(mapping.end(), interior.begin(), interior.end());
+
     return mapping;
 }
 
@@ -995,7 +1154,7 @@ std::map<unsigned int, ElmtConfig> InputGmsh::GenElmMap()
     tmp[ 26] = ElmtConfig(eSegment,        3,  true, false);
     tmp[ 27] = ElmtConfig(eSegment,        4,  true, false);
     tmp[ 28] = ElmtConfig(eSegment,        5,  true, false);
-    tmp[ 29] = ElmtConfig(eTetrahedron,    3,  true,  true);
+    tmp[ 29] = ElmtConfig(eTetrahedron,    3,  true, false);
     tmp[ 30] = ElmtConfig(eTetrahedron,    4,  true,  true);
     tmp[ 31] = ElmtConfig(eTetrahedron,    5,  true,  true);
     tmp[ 32] = ElmtConfig(eTetrahedron,    4,  true, false);

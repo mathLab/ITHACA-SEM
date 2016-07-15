@@ -103,6 +103,7 @@ void Mesh::MakeOrder(int                      order,
         pTypes[LibUtilities::eSegment]       = LibUtilities::ePolyEvenlySpaced;
         pTypes[LibUtilities::eTriangle]      = LibUtilities::eNodalTriEvenlySpaced;
         pTypes[LibUtilities::eQuadrilateral] = LibUtilities::ePolyEvenlySpaced;
+        pTypes[LibUtilities::eTetrahedron]   = LibUtilities::eNodalTetEvenlySpaced;
     }
 
     for(eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++)
@@ -146,20 +147,28 @@ void Mesh::MakeOrder(int                      order,
         processedEdges.insert(edgeId);
     }
 
-    const int nElmt = m_element[m_expDim].size();
-    for (int i = 0; i < nElmt; ++i)
+    for(fit = m_faceSet.begin(); fit != m_faceSet.end(); fit++)
     {
-        ElementSharedPtr el = m_element[m_expDim][i];
-        int elmtId = el->GetId();
+        int faceId = (*fit)->m_id;
 
-        if (processedVolumes.find(elmtId) != processedVolumes.end())
+        if (processedFaces.find(faceId) != processedFaces.end())
         {
             continue;
         }
 
-        el->MakeOrder(order, volGeoms[elmtId], pTypes[el->GetConf().m_e],
+        LibUtilities::ShapeType type = (*fit)->m_vertexList.size() == 3 ?
+            LibUtilities::eTriangle : LibUtilities::eQuadrilateral;
+        (*fit)->MakeOrder(order, faceGeoms[faceId], pTypes[type], m_spaceDim,
+                          id);
+        processedFaces.insert(faceId);
+    }
+
+    const int nElmt = m_element[m_expDim].size();
+    for (int i = 0; i < nElmt; ++i)
+    {
+        ElementSharedPtr el = m_element[m_expDim][i];
+        el->MakeOrder(order, volGeoms[el->GetId()], pTypes[el->GetConf().m_e],
                       m_spaceDim, id);
-        processedEdges.insert(elmtId);
     }
 }
 

@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/MeshElements/Element.h>
+#include <NekMeshUtils/MeshElements/Triangle.h>
 
 #include "OutputGmsh.h"
 #include "../InputModules/InputGmsh.h"
@@ -211,6 +212,8 @@ void OutputGmsh::Process()
                 tags.push_back(nodeList[j]->m_id);
             }
 
+            int face_ids[4][3] = {{0, 1, 2}, {0, 1, 3}, {1, 2, 3}, {0, 2, 3}};
+
             // Process edge-interior points
             for (int j = 0; j < edgeList.size(); ++j)
             {
@@ -236,9 +239,28 @@ void OutputGmsh::Process()
             for (int j = 0; j < faceList.size(); ++j)
             {
                 nodeList = faceList[j]->m_faceNodes;
-                for (int k = 0; k < nodeList.size(); ++k)
+
+                if (faceList[j]->m_vertexList.size() == 3)
                 {
-                    tags.push_back(nodeList[k]->m_id);
+                    vector<int> faceIds(3), volFaceIds(3);
+
+                    for (int k = 0; k < 3; ++k)
+                    {
+                        faceIds   [k] = faceList[j]->m_vertexList[k]->m_id;
+                        volFaceIds[k] = e->GetVertexList()[face_ids[j][k]]->m_id;
+                    }
+
+                    HOTriangle<NodeSharedPtr> hoTri(faceIds, nodeList);
+                    hoTri.Align(volFaceIds);
+
+                    for (int k = 0; k < hoTri.surfVerts.size(); ++k)
+                    {
+                        tags.push_back(hoTri.surfVerts[k]->m_id);
+                    }
+                }
+                else
+                {
+                    // todo
                 }
             }
 
@@ -248,8 +270,12 @@ void OutputGmsh::Process()
                 tags.push_back(volList[j]->m_id);
             }
 
+            // Construct inverse of input reordering
+            cout << "ELMT TYPE = " << elmtType << endl;
             vector<int> reordering = InputGmsh::CreateReordering(elmtType);
             vector<int> inv(tags.size());
+            cout << reordering.size() << " " << tags.size() << endl;
+
             for (int j = 0; j < tags.size(); ++j)
             {
                 inv[reordering[j]] = j;

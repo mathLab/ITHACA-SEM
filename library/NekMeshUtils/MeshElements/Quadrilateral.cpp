@@ -140,7 +140,7 @@ void Quadrilateral::MakeOrder(int                                order,
                               int                                coordDim,
                               int                               &id)
 {
-    // Triangles of order < 2 have no interior volume points.
+    // Quadrilaterals of order < 2 have no interior volume points.
     if (order < 2)
     {
         m_volumeNodes.clear();

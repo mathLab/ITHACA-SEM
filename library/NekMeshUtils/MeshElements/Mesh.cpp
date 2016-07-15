@@ -87,7 +87,6 @@ unsigned int Mesh::GetNumEntities()
 void Mesh::MakeOrder(int                      order,
                      LibUtilities::PointsType distType)
 {
-    int nq = order + 1;
     int id = m_vertexSet.size();
 
     EdgeSet::iterator eit;
@@ -101,8 +100,9 @@ void Mesh::MakeOrder(int                      order,
     std::map<LibUtilities::ShapeType, LibUtilities::PointsType> pTypes;
     if (distType == LibUtilities::ePolyEvenlySpaced)
     {
-        pTypes[LibUtilities::eSegment]  = LibUtilities::ePolyEvenlySpaced;
-        pTypes[LibUtilities::eTriangle] = LibUtilities::eNodalTriEvenlySpaced;
+        pTypes[LibUtilities::eSegment]       = LibUtilities::ePolyEvenlySpaced;
+        pTypes[LibUtilities::eTriangle]      = LibUtilities::eNodalTriEvenlySpaced;
+        pTypes[LibUtilities::eQuadrilateral] = LibUtilities::ePolyEvenlySpaced;
     }
 
     for(eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++)

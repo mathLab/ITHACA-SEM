@@ -92,13 +92,6 @@ namespace Nektar
         return m_scale*m_matrix->Scale();
     }
 
-    template<>
-    typename NekMatrix<NekMatrix< NekDouble, StandardMatrixTag>, ScaledMatrixTag>::NumberType
-    NekMatrix<NekMatrix< NekDouble, StandardMatrixTag>, ScaledMatrixTag>::Scale() const
-    {
-        return m_scale;
-    }
-
     template<typename DataType, typename InnerMatrixType>
     void NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::SetScale(const NumberType& value)
     {

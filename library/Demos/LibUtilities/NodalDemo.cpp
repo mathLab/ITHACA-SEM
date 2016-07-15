@@ -172,8 +172,8 @@ int main(int argc, char *argv[])
         switch(shape)
         {
             case eTriangle:
-                exact = -0.5 * (sin(1) + cos(1) + M_E * M_E * (sin(1) - cos(1)))
-                    / M_E;
+                exact = -0.5 * (sin(1.0) + cos(1.0) + M_E * M_E *
+                                (sin(1.0) - cos(1.0))) / M_E;
                 break;
             case eTetrahedron:
                 exact = 1.0 / M_E - 1.0 / M_E / M_E / M_E;

@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/MeshElements/Mesh.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 using namespace std;
 
@@ -79,5 +80,88 @@ unsigned int Mesh::GetNumEntities()
 
     return nEnt;
 }
+
+/**
+ * @brief Convert this mesh into a high-order mesh.
+ */
+void Mesh::MakeOrder(int                      order,
+                     LibUtilities::PointsType distType)
+{
+    int nq = order + 1;
+    int id = m_vertexSet.size();
+
+    EdgeSet::iterator eit;
+    FaceSet::iterator fit;
+
+    boost::unordered_map<int, SpatialDomains::Geometry1DSharedPtr> edgeGeoms;
+    boost::unordered_map<int, SpatialDomains::Geometry2DSharedPtr> faceGeoms;
+    boost::unordered_map<int, SpatialDomains::GeometrySharedPtr> volGeoms;
+
+    // Decide on distribution of points to use for each shape type.
+    std::map<LibUtilities::ShapeType, LibUtilities::PointsType> pTypes;
+    if (distType == LibUtilities::ePolyEvenlySpaced)
+    {
+        pTypes[LibUtilities::eSegment]  = LibUtilities::ePolyEvenlySpaced;
+        pTypes[LibUtilities::eTriangle] = LibUtilities::eNodalTriEvenlySpaced;
+    }
+
+    for(eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++)
+    {
+        SpatialDomains::Geometry1DSharedPtr geom =
+            (*eit)->GetGeom(m_spaceDim);
+        geom->FillGeom();
+        edgeGeoms[(*eit)->m_id] = geom;
+    }
+
+    for(fit = m_faceSet.begin(); fit != m_faceSet.end(); fit++)
+    {
+        SpatialDomains::Geometry2DSharedPtr geom =
+            (*fit)->GetGeom(m_spaceDim);
+        geom->FillGeom();
+        faceGeoms[(*fit)->m_id] = geom;
+    }
+
+    for(int i = 0; i < m_element[m_expDim].size(); i++)
+    {
+        ElementSharedPtr el = m_element[m_expDim][i];
+        SpatialDomains::GeometrySharedPtr geom =
+            el->GetGeom(m_spaceDim);
+        geom->FillGeom();
+        volGeoms[el->GetId()] = geom;
+    }
+
+    boost::unordered_set<int> processedEdges, processedFaces, processedVolumes;
+
+    for(eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++)
+    {
+        int edgeId = (*eit)->m_id;
+
+        if (processedEdges.find(edgeId) != processedEdges.end())
+        {
+            continue;
+        }
+
+        (*eit)->MakeOrder(order, edgeGeoms[edgeId],
+                          pTypes[LibUtilities::eSegment], m_spaceDim, id);
+        processedEdges.insert(edgeId);
+    }
+
+    const int nElmt = m_element[m_expDim].size();
+    for (int i = 0; i < nElmt; ++i)
+    {
+        ElementSharedPtr el = m_element[m_expDim][i];
+        int elmtId = el->GetId();
+
+        if (processedVolumes.find(elmtId) != processedVolumes.end())
+        {
+            continue;
+        }
+
+        el->MakeOrder(order, volGeoms[elmtId], pTypes[el->GetConf().m_e],
+                      m_spaceDim, id);
+        processedEdges.insert(elmtId);
+    }
+}
+
 }
 }

@@ -448,13 +448,29 @@ public:
                  "This function should be implemented at a shape level.");
         return boost::shared_ptr<SpatialDomains::Geometry>();
     }
+
     NEKMESHUTILS_EXPORT int GetMaxOrder();
+
     /// Complete this object.
-    NEKMESHUTILS_EXPORT virtual void Complete(int order)
+    NEKMESHUTILS_EXPORT virtual void MakeOrder(
+        int                                order,
+        SpatialDomains::GeometrySharedPtr  geom,
+        LibUtilities::PointsType           edgeType,
+        int                                coordDim,
+        int                               &id)
     {
         ASSERTL0(false,
                  "This function should be implemented at a shape level.");
     }
+
+    NEKMESHUTILS_EXPORT virtual StdRegions::Orientation GetEdgeOrient(
+        int edgeId, EdgeSharedPtr edge)
+    {
+        ASSERTL0(false,
+                 "This function should be implemented at a shape level.");
+        return StdRegions::eNoOrientation;
+    }
+
     NEKMESHUTILS_EXPORT void Print()
     {
         int i, j;

@@ -98,6 +98,8 @@ void OutputNekpp::Process()
         cout << "OutputNekpp: Writing file..." << endl;
     }
 
+    m_mesh->MakeOrder(5, LibUtilities::ePolyEvenlySpaced);
+
     TiXmlDocument doc;
     TiXmlDeclaration *decl = new TiXmlDeclaration("1.0", "utf-8", "");
     doc.LinkEndChild(decl);
@@ -679,7 +681,8 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
             }
         }
         // 2D elements in 3-space, output face curvature information
-        else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
+        else if (m_mesh->m_expDim == 2 &&
+                 m_mesh->m_spaceDim >= 2)
         {
             vector<ElementSharedPtr>::iterator it;
             for (it = m_mesh->m_element[m_mesh->m_expDim].begin();

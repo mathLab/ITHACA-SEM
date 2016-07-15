@@ -38,6 +38,7 @@
 
 #include <iomanip>
 
+#include <LibUtilities/Foundations/ManagerAccess.h>
 #include <SpatialDomains/SegGeom.h>
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
@@ -167,6 +168,44 @@ public:
         }
 
         return ret;
+    }
+
+    void MakeOrder(int                                order,
+                   SpatialDomains::GeometrySharedPtr  geom,
+                   LibUtilities::PointsType           edgeType,
+                   int                                coordDim,
+                   int                               &id)
+    {
+        int nPoints = order + 1;
+        StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+
+        Array<OneD, NekDouble> edgePoints;
+        LibUtilities::PointsKey edgeKey(nPoints, edgeType);
+        LibUtilities::PointsManager()[edgeKey]->GetPoints(edgePoints);
+
+        Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
+
+        for (int i = 0; i < coordDim; ++i)
+        {
+            phys[i] = Array<OneD, NekDouble>(xmap->GetTotPoints());
+            xmap->BwdTrans(geom->GetCoeffs(i), phys[i]);
+        }
+
+        m_edgeNodes.resize(nPoints - 2);
+
+        for (int i = 1; i < nPoints - 1; ++i)
+        {
+            Array<OneD, NekDouble> x(3, 0.0);
+            for (int j = 0; j < coordDim; ++j)
+            {
+                x[j] = xmap->PhysEvaluate(edgePoints + i, phys[j]);
+            }
+
+            m_edgeNodes[i-1] = boost::shared_ptr<Node>(
+                new Node(id++, x[0], x[1], x[2]));
+        }
+
+        m_curveType = edgeType;
     }
 
     /// ID of edge.

@@ -215,7 +215,7 @@ private:
         {
         }
 
-        size_t data, order, homy, homz, homs;
+        uint64_t data, order, homy, homz, homs;
     };
 
     LIB_UTILITIES_EXPORT virtual void v_Write(
@@ -239,8 +239,8 @@ private:
 
     LIB_UTILITIES_EXPORT void ImportFieldDef(H5::PListSharedPtr        readPL,
                                              H5::GroupSharedPtr        root,
-                                             std::vector<size_t>      &decomps,
-                                             size_t                    decomp,
+                                             std::vector<uint64_t>    &decomps,
+                                             uint64_t                  decomp,
                                              OffsetHelper              offset,
                                              std::string               group,
                                              FieldDefinitionsSharedPtr def);
@@ -249,9 +249,9 @@ private:
         H5::PListSharedPtr               readPL,
         H5::DataSetSharedPtr             data_dset,
         H5::DataSpaceSharedPtr           data_fspace,
-        size_t                           data_i,
-        std::vector<std::size_t>        &decomps,
-        size_t                           decomp,
+        uint64_t                         data_i,
+        std::vector<uint64_t>           &decomps,
+        uint64_t                         decomp,
         const FieldDefinitionsSharedPtr  fielddef,
         std::vector<NekDouble>          &fielddata);
 };

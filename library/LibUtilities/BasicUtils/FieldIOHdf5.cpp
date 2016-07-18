@@ -147,9 +147,9 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     ASSERTL1(root_rank >= 0 && root_rank < m_comm->GetSize(),
              prfx.str() + "invalid root rank.");
 
-    std::vector<std::size_t> decomps(nMaxFields * MAX_DCMPS, 0);
-    std::vector<std::size_t> all_hashes(nMaxFields * m_comm->GetSize(), 0);
-    std::vector<std::size_t> cnts(MAX_CNTS, 0);
+    std::vector<uint64_t> decomps(nMaxFields * MAX_DCMPS, 0);
+    std::vector<uint64_t> all_hashes(nMaxFields * m_comm->GetSize(), 0);
+    std::vector<uint64_t> cnts(MAX_CNTS, 0);
     std::vector<std::string> fieldNames(nFields);
     std::vector<std::string> shapeStrings(nFields);
     std::vector<std::vector<NekDouble> > homoLengths(nFields);
@@ -335,7 +335,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
 
         boost::hash<std::string> string_hasher;
         std::stringstream fieldNameStream;
-        std::size_t fieldDefHash = string_hasher(hashStream.str());
+        uint64_t fieldDefHash = string_hasher(hashStream.str());
 
         decomps[f * MAX_DCMPS + HASH_DCMP_IDX]         = fieldDefHash;
         all_hashes[m_comm->GetRank() * nMaxFields + f] = fieldDefHash;
@@ -345,10 +345,10 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     }
 
     // Gather information from all MPI processes
-    std::vector<std::size_t> all_cnts = m_comm->Gather(root_rank, cnts);
-    std::vector<std::size_t> all_idxs(m_comm->GetSize() * MAX_IDXS, 0);
-    std::vector<std::size_t> all_decomps = m_comm->Gather(root_rank, decomps);
-    std::vector<std::size_t> all_dsetsize(MAX_CNTS, 0);
+    std::vector<uint64_t> all_cnts = m_comm->Gather(root_rank, cnts);
+    std::vector<uint64_t> all_idxs(m_comm->GetSize() * MAX_IDXS, 0);
+    std::vector<uint64_t> all_decomps = m_comm->Gather(root_rank, decomps);
+    std::vector<uint64_t> all_dsetsize(MAX_CNTS, 0);
 
     // The root rank creates the file layout from scratch
     if (amRoot)
@@ -478,9 +478,9 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     // information to the root processor, but this is a bit convoluted.
 
     // This set stores the unique hashes.
-    std::set<size_t> hashToProc;
+    std::set<uint64_t> hashToProc;
     // This map takes ranks to hashes this process will write.
-    std::map<int, std::vector<size_t> > writingProcs;
+    std::map<int, std::vector<uint64_t> > writingProcs;
 
     // Gather all field hashes to every processor.
     m_comm->AllReduce(all_hashes, LibUtilities::ReduceMax);
@@ -489,7 +489,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     {
         for (int i = 0; i < nMaxFields; ++i)
         {
-            size_t hash = all_hashes[n*nMaxFields + i];
+            uint64_t hash = all_hashes[n*nMaxFields + i];
 
             // Note hash can be zero if, on this process, nFields < nMaxFields.
             if (hashToProc.find(hash) != hashToProc.end() || hash == 0)
@@ -502,7 +502,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     }
 
     // Having constructed the map, go ahead and write the attributes out.
-    map<int, std::vector<size_t> >::iterator sIt;
+    map<int, std::vector<uint64_t> >::iterator sIt;
     for (sIt = writingProcs.begin(); sIt != writingProcs.end(); sIt++)
     {
         int rank = sIt->first;
@@ -600,13 +600,13 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     }
 
     // Initialise the dataset indexes for all MPI processes
-    std::vector<std::size_t> idx = m_comm->Scatter(root_rank, all_idxs);
-    std::size_t ids_i            = idx[IDS_IDX_IDX];
-    std::size_t data_i           = idx[DATA_IDX_IDX];
-    std::size_t order_i          = idx[ORDER_IDX_IDX];
-    std::size_t homy_i           = idx[HOMY_IDX_IDX];
-    std::size_t homz_i           = idx[HOMZ_IDX_IDX];
-    std::size_t homs_i           = idx[HOMS_IDX_IDX];
+    std::vector<uint64_t> idx = m_comm->Scatter(root_rank, all_idxs);
+    uint64_t ids_i            = idx[IDS_IDX_IDX];
+    uint64_t data_i           = idx[DATA_IDX_IDX];
+    uint64_t order_i          = idx[ORDER_IDX_IDX];
+    uint64_t homy_i           = idx[HOMY_IDX_IDX];
+    uint64_t homz_i           = idx[HOMZ_IDX_IDX];
+    uint64_t homs_i           = idx[HOMS_IDX_IDX];
 
     // Set properties for parallel file access (if we're in parallel)
     H5::PListSharedPtr parallelProps = H5::PList::Default();
@@ -834,20 +834,20 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
     ASSERTL1(data_fspace, prfx.str() + "cannot open DATA filespace.");
 
     // Read entire IDS data set to get list of global IDs.
-    std::vector<std::size_t> ids;
+    std::vector<uint64_t> ids;
 
     ids_dset->Read(ids, ids_fspace, readPL);
 
-    boost::unordered_set<size_t> toread;
+    boost::unordered_set<uint64_t> toread;
     if (ElementIDs != NullInt1DArray)
     {
-        for (size_t i = 0; i < ElementIDs.num_elements(); ++i)
+        for (uint64_t i = 0; i < ElementIDs.num_elements(); ++i)
         {
             toread.insert(ElementIDs[i]);
         }
     }
 
-    std::vector<std::size_t> decomps;
+    std::vector<uint64_t> decomps;
     decomps_dset->Read(decomps, decomps_fspace, readPL);
 
     size_t nDecomps = decomps.size() / MAX_DCMPS;
@@ -858,10 +858,10 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 
     // Mapping from each group's hash to a vector of element IDs. Note this has
     // to be unsigned int, since that's what we use in FieldDefinitions.
-    map<size_t, vector<unsigned int> > groupsToElmts;
+    map<uint64_t, vector<unsigned int> > groupsToElmts;
 
     // Mapping from each group's hash to each of the decompositions.
-    map<size_t, set<size_t> > groupsToDecomps;
+    map<uint64_t, set<uint64_t> > groupsToDecomps;
 
     // True if we are pulling element IDs from ElementIDs.
     bool selective = toread.size() > 0;
@@ -871,16 +871,16 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 
     for (size_t i = 0; i < nDecomps; ++i, cnt += MAX_DCMPS)
     {
-        size_t nElmt     = decomps[cnt + ELEM_DCMP_IDX];
-        size_t groupHash = decomps[cnt + HASH_DCMP_IDX];
+        uint64_t nElmt     = decomps[cnt + ELEM_DCMP_IDX];
+        uint64_t groupHash = decomps[cnt + HASH_DCMP_IDX];
 
-        vector<size_t> tmp;
+        vector<uint64_t> tmp;
 
         if (selective)
         {
             for (size_t j = 0; j < nElmt; ++j)
             {
-                size_t elmtId = ids[cnt2 + j];
+                uint64_t elmtId = ids[cnt2 + j];
                 if (toread.find(elmtId) != toread.end())
                 {
                     tmp.push_back(elmtId);
@@ -916,11 +916,11 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
         running.homs  += decomps[cnt + HOMS_DCMP_IDX];
     }
 
-    map<size_t, set<size_t> >::iterator gIt;
+    map<uint64_t, set<uint64_t> >::iterator gIt;
     for (gIt = groupsToDecomps.begin(); gIt != groupsToDecomps.end(); ++gIt)
     {
         // Select region from dataset for this decomposition.
-        set<size_t>::iterator sIt;
+        set<uint64_t>::iterator sIt;
         for (sIt = gIt->second.begin(); sIt != gIt->second.end(); ++sIt)
         {
             std::stringstream fieldNameStream;
@@ -960,8 +960,8 @@ void FieldIOHdf5::v_Import(const std::string &infilename,
 void FieldIOHdf5::ImportFieldDef(
     H5::PListSharedPtr        readPL,
     H5::GroupSharedPtr        root,
-    std::vector<size_t>      &decomps,
-    size_t                    decomp,
+    std::vector<uint64_t>    &decomps,
+    uint64_t                  decomp,
     OffsetHelper              offset,
     std::string               group,
     FieldDefinitionsSharedPtr def)
@@ -1123,7 +1123,7 @@ void FieldIOHdf5::ImportFieldDef(
     {
         H5::DataSetSharedPtr homz_dset = root->OpenDataSet("HOMOGENEOUSZIDS");
         H5::DataSpaceSharedPtr homz_fspace = homz_dset->GetSpace();
-        size_t dsize = decomps[decomp * MAX_DCMPS + HOMZ_DCMP_IDX];
+        uint64_t dsize = decomps[decomp * MAX_DCMPS + HOMZ_DCMP_IDX];
         homz_fspace->SelectRange(offset.homz, dsize);
         homz_dset->Read(def->m_homogeneousZIDs, homz_fspace, readPL);
     }
@@ -1132,7 +1132,7 @@ void FieldIOHdf5::ImportFieldDef(
     {
         H5::DataSetSharedPtr homy_dset = root->OpenDataSet("HOMOGENEOUSYIDS");
         H5::DataSpaceSharedPtr homy_fspace = homy_dset->GetSpace();
-        size_t dsize = decomps[decomp * MAX_DCMPS + HOMY_DCMP_IDX];
+        uint64_t dsize = decomps[decomp * MAX_DCMPS + HOMY_DCMP_IDX];
         homy_fspace->SelectRange(offset.homy, dsize);
         homy_dset->Read(def->m_homogeneousYIDs, homy_fspace, readPL);
     }
@@ -1141,7 +1141,7 @@ void FieldIOHdf5::ImportFieldDef(
     {
         H5::DataSetSharedPtr homs_dset = root->OpenDataSet("HOMOGENEOUSSIDS");
         H5::DataSpaceSharedPtr homs_fspace = homs_dset->GetSpace();
-        size_t dsize = decomps[decomp * MAX_DCMPS + HOMS_DCMP_IDX];
+        uint64_t dsize = decomps[decomp * MAX_DCMPS + HOMS_DCMP_IDX];
         homs_fspace->SelectRange(offset.homs, dsize);
         homs_dset->Read(def->m_homogeneousSIDs, homs_fspace, readPL);
     }
@@ -1150,7 +1150,7 @@ void FieldIOHdf5::ImportFieldDef(
     {
         H5::DataSetSharedPtr order_dset = root->OpenDataSet("POLYORDERS");
         H5::DataSpaceSharedPtr order_fspace = order_dset->GetSpace();
-        size_t dsize = decomps[decomp * MAX_DCMPS + ORDER_DCMP_IDX];
+        uint64_t dsize = decomps[decomp * MAX_DCMPS + ORDER_DCMP_IDX];
         order_fspace->SelectRange(offset.order, dsize);
         order_dset->Read(def->m_numModes, order_fspace, readPL);
     }
@@ -1172,17 +1172,17 @@ void FieldIOHdf5::ImportFieldData(
     H5::PListSharedPtr               readPL,
     H5::DataSetSharedPtr             data_dset,
     H5::DataSpaceSharedPtr           data_fspace,
-    size_t                           data_i,
-    std::vector<std::size_t>        &decomps,
-    size_t                           decomp,
+    uint64_t                         data_i,
+    std::vector<uint64_t>           &decomps,
+    uint64_t                         decomp,
     const FieldDefinitionsSharedPtr  fielddef,
     std::vector<NekDouble>          &fielddata)
 {
     std::stringstream prfx;
     prfx << m_comm->GetRank() << ": FieldIOHdf5::ImportFieldData(): ";
 
-    size_t nElemVals   = decomps[decomp * MAX_DCMPS + VAL_DCMP_IDX];
-    size_t nFieldVals  = nElemVals;
+    uint64_t nElemVals  = decomps[decomp * MAX_DCMPS + VAL_DCMP_IDX];
+    uint64_t nFieldVals = nElemVals;
 
     data_fspace->SelectRange(data_i, nFieldVals);
     data_dset->Read(fielddata, data_fspace, readPL);

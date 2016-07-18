@@ -8,6 +8,8 @@ v4.4.0
   Galerkin discretisation (!604)
 - Add support for variable polynomial order with periodic boundary conditions
   (!658)
+- Statistics are now printed for lowest level of multi-level static condensation
+  (!656)
 - Sped up interpolataion from pts files and fixed parallel pts import (!584)
 - Increased required boost version to 1.56.0 (!584)
 

@@ -75,7 +75,7 @@ namespace Nektar
                   const NekMatrix<LhsInnerMatrixType, BlockMatrixTag>& lhs,
                   const NekVector<DataType>& rhs);
 
-    void DiagonalBlockFullScalMatrixMultiply(NekVector<double>& result,
+    LIB_UTILITIES_EXPORT void DiagonalBlockFullScalMatrixMultiply(NekVector<double>& result,
                      const NekMatrix<NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>& lhs,
                      const NekVector<double>& rhs);
 

@@ -1398,16 +1398,12 @@ namespace Nektar
             }
 
             int level = 1;
-            AssemblyMapSharedPtr tmp = m_nextLevelLocalToGlobalMap, tmp1;
-            while (tmp)
+            AssemblyMapSharedPtr tmp = m_nextLevelLocalToGlobalMap;
+            while (tmp->m_nextLevelLocalToGlobalMap)
             {
-                tmp1 = tmp;
-                tmp  = tmp->m_nextLevelLocalToGlobalMap;
+                tmp = tmp->m_nextLevelLocalToGlobalMap;
                 ++level;
             }
-
-            // Increment by one to obtain number of levels.
-            ++level;
 
             // Print out multi-level static condensation information.
             if (n > 1)
@@ -1455,7 +1451,7 @@ namespace Nektar
             {
                 out << "Stats at lowest static cond. level:" << endl;
             }
-            tmp1->PrintStats(out, variable, false);
+            tmp->PrintStats(out, variable, false);
         }
     } // namespace
 } // namespace

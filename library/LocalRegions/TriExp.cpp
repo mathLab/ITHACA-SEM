@@ -365,11 +365,8 @@ namespace Nektar
                     rhs[i] = tmp1[ mapArray[i] ];
                 }
 
-                Blas::Dspmv('U',nInteriorDofs,
-                                    matsys->Scale(),
-                                    &((matsys->GetOwnedMatrix())->GetPtr())[0],
-                                    rhs.get(),1,0.0,
-                                    result.get(),1);
+                Blas::Dgemv('N', nInteriorDofs, nInteriorDofs, matsys->Scale(), &((matsys->GetOwnedMatrix())->GetPtr())[0],
+                            nInteriorDofs,rhs.get(),1,0.0,result.get(),1);
 
                 for(i = 0; i < nInteriorDofs; i++)
                 {
@@ -1395,19 +1392,7 @@ namespace Nektar
                     DNekMatSharedPtr A = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nbdry);
                     DNekMatSharedPtr B = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nint);
                     DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
-                    DNekMatSharedPtr D;
-                    if ( (mkey.GetMatrixType() == StdRegions::eMass)      ||
-                         (mkey.GetMatrixType() == StdRegions::eLaplacian) ||
-                         (mkey.GetMatrixType() == StdRegions::eHelmholtz))
-                    {
-                        D = MemoryManager<DNekMat>::
-                            AllocateSharedPtr(nint,nint, eSYMMETRIC);
-                    }
-                    else
-                    {
-                        D = MemoryManager<DNekMat>::
-                            AllocateSharedPtr(nint,nint, eFULL);
-                    }
+                    DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
 
                     Array<OneD,unsigned int> bmap(nbdry);
                     Array<OneD,unsigned int> imap(nint);

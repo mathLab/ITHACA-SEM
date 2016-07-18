@@ -244,7 +244,7 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
             homoLengths[f].resize(nSubFields);
             for (int sf = 0; sf < nSubFields; ++sf)
             {
-                std::size_t len = fielddefs[f]->m_homogeneousLengths[sf];
+                uint64_t len = fielddefs[f]->m_homogeneousLengths[sf];
                 hashStream << len;
                 homoLengths[f][sf] = len;
             }

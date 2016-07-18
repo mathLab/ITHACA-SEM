@@ -70,7 +70,7 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             cout << "ProcessHomogeneousPlane: Extracting plane..." << endl;
         }

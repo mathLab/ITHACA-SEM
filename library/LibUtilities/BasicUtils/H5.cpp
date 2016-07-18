@@ -221,7 +221,7 @@ GroupSharedPtr CanHaveGroupsDataSets::CreateGroup(const std::string &name,
 {
     hid_t grp;
     H5_CONSTRUCT(grp,
-                 H5Gcreate,
+                 H5Gcreate2,
                  (m_Id,
                   name.c_str(),
                   H5P_DEFAULT,
@@ -239,7 +239,7 @@ DataSetSharedPtr CanHaveGroupsDataSets::CreateDataSet(const std::string &name,
 {
     hid_t ds;
     H5_CONSTRUCT(ds,
-                 H5Dcreate,
+                 H5Dcreate2,
                  (m_Id,
                   name.c_str(),
                   type->GetId(),
@@ -559,7 +559,7 @@ AttributeSharedPtr Attribute::Create(hid_t parent,
 {
     hid_t id;
     H5_CONSTRUCT(id,
-                 H5Acreate,
+                 H5Acreate2,
                  (parent,
                   name.c_str(),
                   type->GetId(),

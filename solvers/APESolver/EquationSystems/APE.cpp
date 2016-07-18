@@ -372,7 +372,7 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
     std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
     for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
     {
-        (*x)->Apply(m_fields, outarray, outarray, m_time);
+        (*x)->Apply(m_fields, inarray, outarray, m_time);
     }
 }
 

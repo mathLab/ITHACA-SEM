@@ -214,9 +214,12 @@ namespace Nektar
 
         unsigned int curResultRow = 0;
         unsigned int curWrapperRow = 0;
-        unsigned int rowsInBlock, columnsInBlock;
+        unsigned int rowsInBlock = 0;
+        unsigned int columnsInBlock = 0;
         for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)
         {
+            curResultRow  += rowsInBlock;
+            curWrapperRow += columnsInBlock;
             if ( blockRow == 0)
             {
                 rowsInBlock    = rowSizes[blockRow] + 1;
@@ -228,8 +231,14 @@ namespace Nektar
                 columnsInBlock = colSizes[blockRow] - colSizes[blockRow-1];
             }
 
-            if( rowsInBlock == 0 || columnsInBlock == 0)
+            if( rowsInBlock == 0)
             {
+                continue;
+            }
+            if( columnsInBlock == 0)
+            {
+                std::fill(result.begin()+curResultRow,
+                         result.begin()+curResultRow + rowsInBlock, 0.0);
                 continue;
             }
 
@@ -243,10 +252,8 @@ namespace Nektar
             const double* rhsWrapper = rhs_ptr + curWrapperRow;
             Multiply(resultWrapper, *block, rhsWrapper);
             //resultWrapper = (*block)*rhsWrapper;
-
-            curResultRow  += rowsInBlock;
-            curWrapperRow += columnsInBlock;
         }
+        curResultRow  += rowsInBlock;
         if (curResultRow < result.GetRows())
         {
             std::fill(result.begin()+curResultRow, result.end(), 0.0);
@@ -267,9 +274,12 @@ namespace Nektar
 
         unsigned int curResultRow = 0;
         unsigned int curWrapperRow = 0;
-        unsigned int rowsInBlock, columnsInBlock;
+        unsigned int rowsInBlock = 0;
+        unsigned int columnsInBlock = 0;
         for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)
         {
+            curResultRow  += rowsInBlock;
+            curWrapperRow += columnsInBlock;
             if ( blockRow == 0)
             {
                 rowsInBlock    = rowSizes[blockRow] + 1;
@@ -281,8 +291,14 @@ namespace Nektar
                 columnsInBlock = colSizes[blockRow] - colSizes[blockRow-1];
             }
 
-            if( rowsInBlock == 0 || columnsInBlock == 0)
+            if( rowsInBlock == 0)
             {
+                continue;
+            }
+            if( columnsInBlock == 0)
+            {
+                std::fill(result.begin()+curResultRow,
+                         result.begin()+curResultRow + rowsInBlock, 0.0);
                 continue;
             }
 
@@ -294,15 +310,14 @@ namespace Nektar
 
             double* resultWrapper = result_ptr + curResultRow;
             const double* rhsWrapper = rhs_ptr + curWrapperRow;
-            curResultRow  += rowsInBlock;
-            curWrapperRow += columnsInBlock;
 
             // Multiply
             const unsigned int* size = block->GetSize();
             Blas::Dgemv('N', size[0], size[1], block->Scale(),
-                        block->GetRawPtr(), rowsInBlock, rhsWrapper, 1,
+                        block->GetRawPtr(), size[0], rhsWrapper, 1,
                         0.0, resultWrapper, 1);
         }
+        curResultRow  += rowsInBlock;
         if (curResultRow < result.GetRows())
         {
             std::fill(result.begin()+curResultRow, result.end(), 0.0);

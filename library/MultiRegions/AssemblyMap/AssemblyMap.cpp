@@ -1397,7 +1397,7 @@ namespace Nektar
                 return;
             }
 
-            int level = 1;
+            int level = 2;
             AssemblyMapSharedPtr tmp = m_nextLevelLocalToGlobalMap;
             while (tmp->m_nextLevelLocalToGlobalMap)
             {

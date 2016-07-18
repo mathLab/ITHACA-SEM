@@ -38,6 +38,7 @@
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
+#include <LibUtilities/BasicUtils/ShapeType.hpp>
 
 
 #include <boost/config.hpp>
@@ -832,8 +833,8 @@ namespace Nektar
 
                 for(j = 0; j < nEdges; ++j)
                 {
-                    nEdgeIntCoeffs = exp->GetEdgeNcoeffs(j) - 2;
                     meshEdgeId = exp->GetGeom()->GetEid(j);
+                    nEdgeIntCoeffs = EdgeSize[meshEdgeId];
                     if(graph[1].count(meshEdgeId) == 0)
                     {
                         if(tempGraph[1].count(meshEdgeId) == 0)
@@ -1303,12 +1304,12 @@ namespace Nektar
             : AssemblyMap(pSession, variable)
         {
             int i, j, k, l;
+            int p, q, numModes0, numModes1;
             int cnt = 0;
             int intDofCnt;
-            int meshVertId, meshEdgeId, meshFaceId;
+            int meshVertId, meshEdgeId, meshEdgeId2, meshFaceId, meshFaceId2;
             int globalId;
             int nEdgeInteriorCoeffs;
-            int nFaceInteriorCoeffs;
             int firstNonDirGraphVertId;
             LibUtilities::CommSharedPtr         vComm = m_comm->GetRowComm();
             LocalRegions::ExpansionSharedPtr    exp, bndExp;
@@ -1328,6 +1329,8 @@ namespace Nektar
             // Stores vertex, edge and face reordered vertices.
             DofGraph graph(3);
             DofGraph dofs(3);
+            vector<map<int, int> > faceModes(2);
+            map<int, LibUtilities::ShapeType> faceType;
 
             set<int> extraDirVerts, extraDirEdges;
             BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
@@ -1338,25 +1341,26 @@ namespace Nektar
             {
                 exp = locExpVector[i];
 
-                for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
+                for(j = 0; j < exp->GetNverts(); ++j)
                 {
                     dofs[0][exp->GetGeom()->GetVid(j)] = 1;
                 }
 
-                for(j = 0; j < locExpVector[i]->GetNedges(); ++j)
+                for(j = 0; j < exp->GetNedges(); ++j)
                 {
                     if (dofs[1].count(exp->GetGeom()->GetEid(j)) > 0)
                     {
                         if (dofs[1][exp->GetGeom()->GetEid(j)] !=
-                                    locExpVector[i]->GetEdgeNcoeffs(j)-2)
+                                    exp->GetEdgeNcoeffs(j)-2)
                         {
                             ASSERTL0( (exp->GetEdgeBasisType(j) == LibUtilities::eModified_A) ||
-                                      (exp->GetEdgeBasisType(j) == LibUtilities::eModified_B),
+                                      (exp->GetEdgeBasisType(j) == LibUtilities::eModified_B) ||
+                                      (exp->GetEdgeBasisType(j) == LibUtilities::eModified_C),
                                     "CG with variable order only available with modal expansion");
                         }
                         dofs[1][exp->GetGeom()->GetEid(j)] =
                                 min(dofs[1][exp->GetGeom()->GetEid(j)],
-                                    locExpVector[i]->GetEdgeNcoeffs(j)-2);
+                                    exp->GetEdgeNcoeffs(j)-2);
                     }
                     else
                     {
@@ -1365,36 +1369,69 @@ namespace Nektar
                     }
                 }
 
-                for(j = 0; j < locExpVector[i]->GetNfaces(); ++j)
+                for(j = 0; j < exp->GetNfaces(); ++j)
                 {
-                    if (dofs[2].count(exp->GetGeom()->GetFid(j)) > 0)
+                    faceOrient  = exp->GetGeom()->GetForient(j);
+                    meshFaceId  = exp->GetGeom()->GetFid(j);
+                    exp->GetFaceNumModes(j, faceOrient, numModes0, numModes1);
+
+                    if (faceModes[0].count(meshFaceId) > 0)
                     {
-                        if (dofs[2][exp->GetGeom()->GetFid(j)] !=
-                                     exp->GetFaceIntNcoeffs(j))
-                        {
-                            ASSERTL0( false,
-                                    "CG with variable order not available in 3D");
-                        }
-                        dofs[2][exp->GetGeom()->GetFid(j)] =
-                                min(dofs[2][exp->GetGeom()->GetFid(j)],
-                                    exp->GetFaceIntNcoeffs(j));
+                        faceModes[0][meshFaceId] =
+                                min(faceModes[0][meshFaceId], numModes0);
+
+                        faceModes[1][meshFaceId] =
+                                min(faceModes[1][meshFaceId], numModes1);
                     }
                     else
                     {
-                        dofs[2][exp->GetGeom()->GetFid(j)] =
-                            exp->GetFaceIntNcoeffs(j);
+                        faceModes[0][meshFaceId] = numModes0;
+                        faceModes[1][meshFaceId] = numModes1;
+
+                        // Get shape of this face
+                        SpatialDomains::Geometry3DSharedPtr geom;
+                        geom = boost::dynamic_pointer_cast<SpatialDomains::
+                                Geometry3D> (exp->GetGeom());
+                        faceType[meshFaceId] =
+                                geom->GetFace(j)->GetShapeType();
                     }
                 }
             }
+
+            // Add non-local periodic dofs to the map
+            for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
+            {
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    meshEdgeId2 = pIt->second[i].id;
+                    if (dofs[1].count(meshEdgeId2) == 0)
+                    {
+                        dofs[1][meshEdgeId2] = 1e6;
+                    }
+                }
+            }
+            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
+            {
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    meshFaceId2 = pIt->second[i].id;
+                    if (faceModes[0].count(meshFaceId2) == 0)
+                    {
+                        faceModes[0][meshFaceId2] = 1e6;
+                        faceModes[1][meshFaceId2] = 1e6;
+                    }
+                }
+            }
+
             // Now use information from all partitions to determine
             //    the correct size
-            map<int, int>::iterator dofIt;
+            map<int, int>::iterator dofIt, dofIt2;
             // edges
             Array<OneD, long> edgeId (dofs[1].size());
             Array<OneD, NekDouble> edgeDof (dofs[1].size());
             for(dofIt = dofs[1].begin(), i=0; dofIt != dofs[1].end(); dofIt++, i++)
             {
-                edgeId[i] = dofIt->first;
+                edgeId[i] = dofIt->first + 1;
                 edgeDof[i] = (NekDouble) dofIt->second;
             }
             Gs::gs_data *tmp = Gs::Init(edgeId, vComm);
@@ -1402,22 +1439,78 @@ namespace Nektar
             Gs::Finalise(tmp);
             for (i=0; i < dofs[1].size(); i++)
             {
-                dofs[1][edgeId[i]] = (int) (edgeDof[i]+0.5);
+                dofs[1][edgeId[i]-1] = (int) (edgeDof[i]+0.5);
+            }
+            // Periodic edges
+            for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
+            {
+                meshEdgeId = pIt->first;
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    meshEdgeId2 = pIt->second[i].id;
+                    if (dofs[1][meshEdgeId2] < dofs[1][meshEdgeId])
+                    {
+                        dofs[1][meshEdgeId] = dofs[1][meshEdgeId2];
+                    }
+                }
             }
             // faces
-            Array<OneD, long> faceId (dofs[2].size());
-            Array<OneD, NekDouble> faceDof (dofs[2].size());
-            for(dofIt = dofs[2].begin(), i=0; dofIt != dofs[2].end(); dofIt++, i++)
+            Array<OneD, long> faceId (faceModes[0].size());
+            Array<OneD, NekDouble> faceP (faceModes[0].size());
+            Array<OneD, NekDouble> faceQ (faceModes[0].size());
+            for(dofIt = faceModes[0].begin(), dofIt2 = faceModes[1].begin(),i=0;
+                dofIt != faceModes[0].end(); dofIt++, dofIt2++, i++)
             {
-                faceId[i] = dofIt->first;
-                faceDof[i] = (NekDouble) dofIt->second;
+                faceId[i] = dofIt->first+1;
+                faceP[i] = (NekDouble) dofIt->second;
+                faceQ[i] = (NekDouble) dofIt2->second;
             }
             Gs::gs_data *tmp2 = Gs::Init(faceId, vComm);
-            Gs::Gather(faceDof, Gs::gs_min, tmp2);
+            Gs::Gather(faceP, Gs::gs_min, tmp2);
+            Gs::Gather(faceQ, Gs::gs_min, tmp2);
             Gs::Finalise(tmp2);
-            for (i=0; i < dofs[2].size(); i++)
+            for (i=0; i < faceModes[0].size(); i++)
             {
-                dofs[2][faceId[i]] = (int) (faceDof[i]+0.5);
+                faceModes[0][faceId[i]-1] = (int) (faceP[i]+0.5);
+                faceModes[1][faceId[i]-1] = (int) (faceQ[i]+0.5);
+            }
+            // Periodic faces
+            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
+            {
+                meshFaceId = pIt->first;
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    meshFaceId2 = pIt->second[i].id;
+                    if (faceModes[0][meshFaceId2] < faceModes[0][meshFaceId])
+                    {
+                        faceModes[0][meshFaceId] = faceModes[0][meshFaceId2];
+                    }
+                    if (faceModes[1][meshFaceId2] < faceModes[1][meshFaceId])
+                    {
+                        faceModes[1][meshFaceId] = faceModes[1][meshFaceId2];
+                    }
+                }
+            }
+            // Calculate number of dof in each face
+            int P, Q;
+            for (i=0; i < faceModes[0].size(); i++)
+            {
+                P = faceModes[0][faceId[i]-1];
+                Q = faceModes[1][faceId[i]-1];
+                if (faceType[faceId[i]-1] == LibUtilities::eQuadrilateral)
+                {
+                    // Quad face
+                    dofs[2][faceId[i]-1] =
+                      LibUtilities::StdQuadData::getNumberOfCoefficients(P,Q) -
+                      LibUtilities::StdQuadData::getNumberOfBndCoefficients(P,Q);
+                }
+                else
+                {
+                    // Tri face
+                    dofs[2][faceId[i]-1] =
+                      LibUtilities::StdTriData::getNumberOfCoefficients(P,Q) -
+                      LibUtilities::StdTriData::getNumberOfBndCoefficients(P,Q);
+                }
             }
 
             Array<OneD, const BndCond> bndCondVec(1, bndConditions);
@@ -1480,7 +1573,6 @@ namespace Nektar
 
                 for(j = 0; j < exp->GetNfaces(); ++j)
                 {
-                    nFaceInteriorCoeffs = exp->GetFaceIntNcoeffs(j);
                     meshFaceId = exp->GetGeom()->GetFid(j);
                     graphVertOffset[graph[2][meshFaceId]+1] = dofs[2][meshFaceId];
                 }
@@ -1592,7 +1684,6 @@ namespace Nektar
 
                 for(j = 0; j < exp->GetNfaces(); ++j)
                 {
-                    nFaceInteriorCoeffs = exp->GetFaceIntNcoeffs(j);
                     faceOrient          = exp->GetGeom()->GetForient(j);
                     meshFaceId          = exp->GetGeom()->GetFid(j);
 
@@ -1607,29 +1698,81 @@ namespace Nektar
                     exp->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
 
                     // Set the global DOF's for the interior modes of face j
-                    for(k = 0; k < dofs[2][exp->GetGeom()->GetFid(j)]; ++k)
+                    exp->GetFaceNumModes(j, faceOrient, numModes0, numModes1);
+                    switch(faceType[meshFaceId])
                     {
-                        m_localToGlobalMap[cnt+faceInteriorMap[k]] =
-                            graphVertOffset[graph[2][meshFaceId]]+k;
-                    }
-                    for(k = dofs[2][exp->GetGeom()->GetFid(j)]; k < nFaceInteriorCoeffs; ++k)
+                    case LibUtilities::eQuadrilateral:
                     {
-                        m_localToGlobalMap[cnt+faceInteriorMap[k]] =
-                            graphVertOffset[graph[2][meshFaceId]];
-                    }
-
-                    if(m_signChange)
-                    {
-                        for(k = 0; k < dofs[2][exp->GetGeom()->GetFid(j)]; ++k)
+                        int kLoc=0;
+                        k = 0;
+                        for( q = 2; q < numModes1; q++)
                         {
-                            m_localToGlobalSign[cnt+faceInteriorMap[k]] = (NekDouble) faceInteriorSign[k];
-                        }
-                        for(k = dofs[2][exp->GetGeom()->GetFid(j)]; k < nFaceInteriorCoeffs; ++k)
-                        {
-                            m_localToGlobalSign[cnt+faceInteriorMap[k]] = 0;
+                            for( p = 2; p < numModes0; p++)
+                            {
+                                if( (p < faceModes[0][meshFaceId]) &&
+                                    (q < faceModes[1][meshFaceId]))
+                                {
+                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =
+                                        graphVertOffset[graph[2][meshFaceId]]+k;
+                                    if(m_signChange)
+                                    {
+                                        m_localToGlobalSign[cnt+faceInteriorMap[kLoc]] =
+                                            (NekDouble) faceInteriorSign[kLoc];
+                                    }
+                                    k++;
+                                }
+                                else
+                                {
+                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =
+                                        graphVertOffset[graph[2][meshFaceId]];
+                                    if(m_signChange)
+                                    {
+                                        m_localToGlobalSign[cnt+faceInteriorMap[kLoc]] = 0.0;
+                                    }
+                                }
+                                kLoc++;
+                            }
                         }
                     }
-
+                    break;
+                    case LibUtilities::eTriangle:
+                    {
+                        int kLoc=0;
+                        k = 0;
+                        for( p = 2; p < numModes0; p++)
+                        {
+                            for( q = 1; q < numModes1-p; q++)
+                            {
+                                if( (p   < faceModes[0][meshFaceId]) &&
+                                    (p+q < faceModes[1][meshFaceId]))
+                                {
+                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =
+                                        graphVertOffset[graph[2][meshFaceId]]+k;
+                                    if(m_signChange)
+                                    {
+                                        m_localToGlobalSign[cnt+faceInteriorMap[kLoc]] =
+                                            (NekDouble) faceInteriorSign[kLoc];
+                                    }
+                                    k++;
+                                }
+                                else
+                                {
+                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =
+                                        graphVertOffset[graph[2][meshFaceId]];
+                                    if(m_signChange)
+                                    {
+                                        m_localToGlobalSign[cnt+faceInteriorMap[kLoc]] = 0.0;
+                                    }
+                                }
+                                kLoc++;
+                            }
+                        }
+                    }
+                    break;
+                    default:
+                        ASSERTL0(false,"Shape not recognised");
+                        break;
+                    }
                 }
             }
 
@@ -1690,18 +1833,27 @@ namespace Nektar
                         bndExp->GetEdgeInteriorMap(
                             k,edgeOrient,edgeInteriorMap,edgeInteriorSign);
 
-                        for(l = 0; l < nEdgeInteriorCoeffs; ++l)
+                        for(l = 0; l < dofs[1][meshEdgeId]; ++l)
                         {
                             m_bndCondCoeffsToGlobalCoeffsMap[cnt+edgeInteriorMap[l]] =
                                 graphVertOffset[graph[1][meshEdgeId]]+l;
+                        }
+                        for(l = dofs[1][meshEdgeId]; l < nEdgeInteriorCoeffs; ++l)
+                        {
+                            m_bndCondCoeffsToGlobalCoeffsMap[cnt+edgeInteriorMap[l]] =
+                                graphVertOffset[graph[1][meshEdgeId]];
                         }
 
                         // Fill the sign vector if required
                         if(m_signChange)
                         {
-                            for(l = 0; l < nEdgeInteriorCoeffs; ++l)
+                            for(l = 0; l < dofs[1][meshEdgeId]; ++l)
                             {
                                 m_bndCondCoeffsToGlobalCoeffsSign[cnt+edgeInteriorMap[l]] = (NekDouble) edgeInteriorSign[l];
+                            }
+                            for(l = dofs[1][meshEdgeId]; l < nEdgeInteriorCoeffs; ++l)
+                            {
+                                m_bndCondCoeffsToGlobalCoeffsSign[cnt+edgeInteriorMap[l]] = 0.0;
                             }
                         }
 
@@ -1716,13 +1868,22 @@ namespace Nektar
                             foundExtraEdges.count(meshEdgeId) == 0 &&
                             nEdgeInteriorCoeffs > 0)
                         {
-                            for(l = 0; l < nEdgeInteriorCoeffs; ++l)
+                            for(l = 0; l < dofs[1][meshEdgeId]; ++l)
                             {
                                 int loc = bndCondExp[i]->GetCoeff_Offset(j) +
                                     edgeInteriorMap[l];
                                 int gid = graphVertOffset[
                                     graph[1][meshEdgeId]]+l;
                                 ExtraDirDof t(loc, gid, edgeInteriorSign[l]);
+                                m_extraDirDofs[i].push_back(t);
+                            }
+                            for(l = dofs[1][meshEdgeId]; l < nEdgeInteriorCoeffs; ++l)
+                            {
+                                int loc = bndCondExp[i]->GetCoeff_Offset(j) +
+                                    edgeInteriorMap[l];
+                                int gid = graphVertOffset[
+                                    graph[1][meshEdgeId]];
+                                ExtraDirDof t(loc, gid, 0.0);
                                 m_extraDirDofs[i].push_back(t);
                             }
                             foundExtraEdges.insert(meshEdgeId);
@@ -1813,7 +1974,7 @@ namespace Nektar
                 if (m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {
                     Array<OneD, int> vwgts_perm(
-                        dofs[0].size() + dofs[1].size() + dofs[2].size()
+                        graph[0].size() + graph[1].size() + graph[2].size()
                         - firstNonDirGraphVertId);
 
                     for (i = 0; i < locExpVector.size(); ++i)
@@ -2009,7 +2170,7 @@ namespace Nektar
             int maxIntDof = 0;
             int dof = 0;
             int cnt;
-            int i,j,k;
+            int i,j,k,l;
             int meshVertId;
             int meshEdgeId;
             int meshFaceId;
@@ -2110,14 +2271,22 @@ namespace Nektar
                     dof = exp->GetEdgeNcoeffs(j)-2;
 
                     // Set the global DOF's for the interior modes of edge j
-                    //    run backwards because of variable P case "ghost" modes
-                    for(k = dof-1; k >= 0; --k)
+                    //    for varP, ignore modes with sign == 0
+                    for(k = 0, l = 0; k < dof; ++k)
                     {
+                        if (m_signChange)
+                        {
+                            if (m_localToGlobalSign[cnt+edgeInteriorMap[k]]==0)
+                            {
+                                continue;
+                            }
+                        }
                         vGlobalId = m_localToGlobalMap[cnt+edgeInteriorMap[k]];
                         m_globalToUniversalMap[vGlobalId]
-                           = nVert + meshEdgeId * maxEdgeDof + k + 1;
+                           = nVert + meshEdgeId * maxEdgeDof + l + 1;
                         m_globalToUniversalBndMap[vGlobalId]=m_globalToUniversalMap[vGlobalId];
                         maxBndGlobalId = (vGlobalId > maxBndGlobalId ? vGlobalId : maxBndGlobalId);
+                        l++;
                     }
                 }
 
@@ -2142,16 +2311,23 @@ namespace Nektar
                     exp->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
                     dof = exp->GetFaceIntNcoeffs(j);
 
-
-                    for(k = dof-1; k >= 0; --k)
+                    for(k = 0, l = 0; k < dof; ++k)
                     {
+                        if (m_signChange)
+                        {
+                            if (m_localToGlobalSign[cnt+faceInteriorMap[k]]==0)
+                            {
+                                continue;
+                            }
+                        }
                         vGlobalId = m_localToGlobalMap[cnt+faceInteriorMap[k]];
                         m_globalToUniversalMap[vGlobalId]
                            = nVert + nEdge*maxEdgeDof + meshFaceId * maxFaceDof
-                                   + k + 1;
+                                   + l + 1;
                         m_globalToUniversalBndMap[vGlobalId]=m_globalToUniversalMap[vGlobalId];
 
                         maxBndGlobalId = (vGlobalId > maxBndGlobalId ? vGlobalId : maxBndGlobalId);
+                        l++;
                     }
                 }
 

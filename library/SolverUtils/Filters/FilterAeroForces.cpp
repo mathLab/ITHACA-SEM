@@ -310,7 +310,17 @@ void FilterAeroForces::v_Initialise(
     if (vComm->GetRank() == 0)
     {
         // Open output stream
-        m_outputStream.open(m_outputFile.c_str());
+        bool adaptive;
+        m_session->MatchSolverInfo("Driver", "Adaptive",
+                                    adaptive, false);
+        if (adaptive)
+        {
+            m_outputStream.open(m_outputFile.c_str(), ofstream::app);
+        }
+        else
+        {
+            m_outputStream.open(m_outputFile.c_str());
+        }
         m_outputStream << "# Forces acting on bodies" << endl;
         for( int i = 0; i < expdim; i++ )
         {

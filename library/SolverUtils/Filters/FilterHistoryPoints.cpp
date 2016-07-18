@@ -368,7 +368,17 @@ void FilterHistoryPoints::v_Initialise(
         }
 
         // Open output stream
-        m_outputStream.open(m_outputFile.c_str());
+        bool adaptive;
+        m_session->MatchSolverInfo("Driver", "Adaptive",
+                                    adaptive, false);
+        if (adaptive)
+        {
+            m_outputStream.open(m_outputFile.c_str(), ofstream::app);
+        }
+        else
+        {
+            m_outputStream.open(m_outputFile.c_str());
+        }
         m_outputStream << "# History data for variables (:";
 
         for (i = 0; i < pFields.num_elements(); ++i)

@@ -132,10 +132,7 @@ class Operator
                 const Array<OneD, const NekDouble> &input,
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp
-                                                    = NullNekDouble1DArray)
-        {
-            ASSERTL0(false, "Not valid for this operator.");
-        }
+                                                    = NullNekDouble1DArray) = 0;
 
         COLLECTIONS_EXPORT virtual ~Operator();
 

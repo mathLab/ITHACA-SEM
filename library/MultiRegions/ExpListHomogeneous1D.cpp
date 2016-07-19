@@ -78,6 +78,19 @@ namespace Nektar
                                 m_homogeneousBasis->GetNumPoints() /
                                 m_StripZcomm->GetSize());
 
+            ASSERTL0( m_homogeneousBasis->GetNumPoints() %
+                      m_StripZcomm->GetSize() == 0,
+                      "HomModesZ should be a multiple of npz.");
+
+            if (  (m_homogeneousBasis->GetBasisType() !=
+                    LibUtilities::eFourierHalfModeRe)
+               && (m_homogeneousBasis->GetBasisType() !=
+                    LibUtilities::eFourierHalfModeIm) )
+            {
+                ASSERTL0( m_planes.num_elements() % 2 == 0,
+                      "HomModesZ/npz should be an even integer.");
+            }
+
             if(m_useFFT)
             {
                 m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance(

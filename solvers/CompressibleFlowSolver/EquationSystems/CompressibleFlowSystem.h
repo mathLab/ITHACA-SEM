@@ -55,16 +55,6 @@ namespace Nektar
 
         friend class MemoryManager<CompressibleFlowSystem>;
 
-        /// Creates an instance of this class
-        static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            return MemoryManager<CompressibleFlowSystem>::
-                AllocateSharedPtr(pSession);
-        }
-        /// Name of class
-        static std::string className;
-
         virtual ~CompressibleFlowSystem();
 
         /// Function to calculate the stability limit for DG/CG.
@@ -89,7 +79,6 @@ namespace Nektar
         NekDouble                           m_wInf;
         NekDouble                           m_UInf;
         NekDouble                           m_gasConstant;
-        NekDouble                           m_Twall;
         std::string                         m_ViscosityType;
         std::string                         m_shockCaptureType;
         NekDouble                           m_mu;
@@ -105,8 +94,6 @@ namespace Nektar
         NekDouble                           m_C2;
         NekDouble                           m_hFactor;
         NekDouble                           m_Prandtl;
-        NekDouble                           m_amplitude;
-        NekDouble                           m_omega;
 
         // L2 error file
         std::ofstream m_errFile;

@@ -15,11 +15,13 @@ v4.4.0
 - New FieldUtils library allows support for most `FieldConvert` post-processing
   operations during simulation using a new filter (!589)
 - Adjust CMake dependencies to reduce compile time (!671)
+- Update Body/Field forces at each timestep (!665)
 
 **APESolver:**
 - Use a continuous basefield projection and revert to constant c formulation (!664)
 - Added ability to compute CFL number (!664)
 - Output Sourceterm (!664)
+- Use the Forcing framework to define source terms (!665)
 
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)

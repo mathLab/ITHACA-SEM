@@ -2844,7 +2844,6 @@ namespace Nektar
 
             for (int i = 0; i < m_fields.num_elements(); ++i)
             {
-                cout << Vmath::Vmax(nPoints, m_fields[i]->GetPhys(), 1) << endl;
                 m_un[i] = Array<OneD, NekDouble>(nPoints);
                 Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1);
             }

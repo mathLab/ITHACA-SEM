@@ -1,6 +1,7 @@
 SET(FieldUtilsHeaders
     Module.h
     Field.hpp
+    Interpolator.h
     InputModules/InputDat.h
     InputModules/InputFld.h
     InputModules/InputXml.h
@@ -46,6 +47,7 @@ SET(FieldUtilsHeaders
 
 SET(FieldUtilsSources
     Module.cpp
+    Interpolator.cpp
     InputModules/InputDat.cpp
     InputModules/InputFld.cpp
     InputModules/InputXml.cpp

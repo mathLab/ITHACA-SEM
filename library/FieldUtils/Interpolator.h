@@ -34,8 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_INTERPOLATOR_H
-#define NEKTAR_SOLVERUTILS_INTERPOLATOR_H
+#ifndef FIELDUTILS_INTERPOLATOR_H
+#define FIELDUTILS_INTERPOLATOR_H
 
 #include <vector>
 
@@ -54,12 +54,14 @@
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 
+#include "FieldUtilsDeclspec.h"
+
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
 
 namespace Nektar
 {
-namespace SolverUtils
+namespace FieldUtils
 {
 
 enum InterpMethod
@@ -102,52 +104,52 @@ public:
           m_coordId(coordId){};
 
     /// Compute interpolation weights without doing any interpolation
-    LIB_UTILITIES_EXPORT void CalcWeights(
+    FIELD_UTILS_EXPORT void CalcWeights(
         const LibUtilities::PtsFieldSharedPtr ptsInField,
         LibUtilities::PtsFieldSharedPtr &ptsOutField);
 
     /// Interpolate from a pts field to a pts field
-    LIB_UTILITIES_EXPORT void Interpolate(
+    FIELD_UTILS_EXPORT void Interpolate(
         const LibUtilities::PtsFieldSharedPtr ptsInField,
         LibUtilities::PtsFieldSharedPtr &ptsOutField);
 
     /// Interpolate from an expansion to an expansion
-    LIB_UTILITIES_EXPORT void Interpolate(
+    FIELD_UTILS_EXPORT void Interpolate(
         const std::vector<MultiRegions::ExpListSharedPtr> expInField,
         std::vector<MultiRegions::ExpListSharedPtr> &expOutField);
 
     /// Interpolate from an expansion to a pts field
-    LIB_UTILITIES_EXPORT void Interpolate(
+    FIELD_UTILS_EXPORT void Interpolate(
         const std::vector<MultiRegions::ExpListSharedPtr> expInField,
         LibUtilities::PtsFieldSharedPtr &ptsOutField);
 
     /// Interpolate from a pts field to an expansion
-    LIB_UTILITIES_EXPORT void Interpolate(
+    FIELD_UTILS_EXPORT void Interpolate(
         const LibUtilities::PtsFieldSharedPtr ptsInField,
         std::vector<MultiRegions::ExpListSharedPtr> &expOutField);
 
     /// returns the dimension of the Interpolator.
     /// Should be higher than the dimensions of the interpolated fields
-    LIB_UTILITIES_EXPORT int GetDim() const;
+    FIELD_UTILS_EXPORT int GetDim() const;
 
     /// Returns the filter width
-    LIB_UTILITIES_EXPORT NekDouble GetFiltWidth() const;
+    FIELD_UTILS_EXPORT NekDouble GetFiltWidth() const;
 
     /// Returns the coordinate id along which the interpolation should be
     /// performed
-    LIB_UTILITIES_EXPORT int GetCoordId() const;
+    FIELD_UTILS_EXPORT int GetCoordId() const;
 
     /// Returns the interpolation method used by this interpolator
-    LIB_UTILITIES_EXPORT InterpMethod GetInterpMethod() const;
+    FIELD_UTILS_EXPORT InterpMethod GetInterpMethod() const;
 
     /// Returns the input field
-    LIB_UTILITIES_EXPORT LibUtilities::PtsFieldSharedPtr GetInField() const;
+    FIELD_UTILS_EXPORT LibUtilities::PtsFieldSharedPtr GetInField() const;
 
     /// Returns the output field
-    LIB_UTILITIES_EXPORT LibUtilities::PtsFieldSharedPtr GetOutField() const;
+    FIELD_UTILS_EXPORT LibUtilities::PtsFieldSharedPtr GetOutField() const;
 
     /// Print statics of the interpolation weights
-    LIB_UTILITIES_EXPORT void PrintStatistics();
+    FIELD_UTILS_EXPORT void PrintStatistics();
 
     /// sets a callback funtion which gets called every time the interpolation
     /// progresses
@@ -213,29 +215,29 @@ private:
     boost::function<void(const int position, const int goal)>
         m_progressCallback;
 
-    LIB_UTILITIES_EXPORT void CalcW_Gauss(const PtsPoint &searchPt,
+    FIELD_UTILS_EXPORT void CalcW_Gauss(const PtsPoint &searchPt,
                                           const NekDouble sigma,
                                           const int maxPts = 250);
 
-    LIB_UTILITIES_EXPORT void CalcW_Linear(const PtsPoint &searchPt,
+    FIELD_UTILS_EXPORT void CalcW_Linear(const PtsPoint &searchPt,
                                            int coordId);
 
-    LIB_UTILITIES_EXPORT void CalcW_NNeighbour(const PtsPoint &searchPt);
+    FIELD_UTILS_EXPORT void CalcW_NNeighbour(const PtsPoint &searchPt);
 
-    LIB_UTILITIES_EXPORT void CalcW_Shepard(const PtsPoint &searchPt);
+    FIELD_UTILS_EXPORT void CalcW_Shepard(const PtsPoint &searchPt);
 
-    LIB_UTILITIES_EXPORT void CalcW_Quadratic(const PtsPoint &searchPt,
+    FIELD_UTILS_EXPORT void CalcW_Quadratic(const PtsPoint &searchPt,
                                               int coordId);
 
-    LIB_UTILITIES_EXPORT void SetupTree();
+    FIELD_UTILS_EXPORT void SetupTree();
 
-    LIB_UTILITIES_EXPORT void FindNeighbours(
+    FIELD_UTILS_EXPORT void FindNeighbours(
         const PtsPoint &searchPt,
         std::vector<PtsPoint> &neighbourPts,
         const NekDouble dist,
         const unsigned int maxPts = 1);
 
-    LIB_UTILITIES_EXPORT void FindNNeighbours(
+    FIELD_UTILS_EXPORT void FindNNeighbours(
         const PtsPoint &searchPt,
         std::vector<PtsPoint> &neighbourPts,
         const unsigned int numPts = 1);

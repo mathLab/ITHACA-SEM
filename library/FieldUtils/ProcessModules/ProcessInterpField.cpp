@@ -41,7 +41,7 @@ using namespace std;
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
-#include <SolverUtils/Interpolator.h>
+#include <FieldUtils/Interpolator.h>
 #include <boost/math/special_functions/fpclassify.hpp>
 namespace Nektar
 {
@@ -231,7 +231,7 @@ void ProcessInterpField::Process(po::variables_map &vm)
         }
     }
 
-    SolverUtils::Interpolator interp;
+    Interpolator interp;
     if (m_f->m_comm->GetRank() == 0)
     {
         interp.SetProgressCallback(&ProcessInterpField::PrintProgressbar,

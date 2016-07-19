@@ -34,13 +34,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Interpolator.h>
+#include <FieldUtils/Interpolator.h>
 
 using namespace std;
 
 namespace Nektar
 {
-namespace SolverUtils
+namespace FieldUtils
 {
 
 /**

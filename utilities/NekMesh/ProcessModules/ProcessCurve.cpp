@@ -41,7 +41,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 
-#include <SolverUtils/Interpolator.h>
+#include <FieldUtils/Interpolator.h>
 
 #include <NekMeshUtils/MeshElements/Element.h>
 
@@ -218,7 +218,7 @@ NekDouble ProcessCurve::EvaluateCoordinate(NekDouble xCoord)
         LibUtilities::PtsFieldSharedPtr toPts =
             MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(1, tmp);
 
-        SolverUtils::Interpolator interp;
+        FieldUtils::Interpolator interp;
         interp.Interpolate(m_fieldPts, toPts);
 
         return tmp[1][0];

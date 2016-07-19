@@ -40,7 +40,7 @@ using namespace std;
 
 #include "ProcessInterpPointDataToFld.h"
 
-#include <SolverUtils/Interpolator.h>
+#include <FieldUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
@@ -114,7 +114,7 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     ASSERTL0(coord_id <= m_f->m_fieldPts->GetDim() - 1,
         "interpcoord is bigger than the Pts files dimension");
 
-    SolverUtils::Interpolator interp(SolverUtils::eNoMethod, coord_id);
+    Interpolator interp(eNoMethod, coord_id);
 
     if (m_f->m_comm->GetRank() == 0)
     {

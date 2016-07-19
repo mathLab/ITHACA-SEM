@@ -320,9 +320,9 @@ namespace Nektar
                 for( int i = 0; i < m_curl_dim; i++)
                 {
                     Vmath::Vvtvp(nqb, normals[i], 1, u[i], 1,
-                                                 un, 1, un, 1);
+                                 un, 1, un, 1);
                     Vmath::Vvtvp(nqb, u[i], 1, u[i], 1,
-                                                 u2, 1, u2, 1);
+                                 u2, 1, u2, 1);
                 }
 
                 // Calculate S_0(u.n) = 0.5*(1-tanh(u.n/*U0*delta))
@@ -349,22 +349,33 @@ namespace Nektar
                     Vmath::Vmul(nqb, E[i], 1, S0, 1, E[i], 1);
                 }
 
-                // Calculate E(n,u).n
+                // if non-zero forcing is provided we want to subtract
+                // value if we want to interpret values as being the
+                // desired pressure value. This is now precribed from
+                // the velocity forcing to be consistent with the
+                // paper except f_b = - f_b
+
+                // Calculate (E(n,u) + f_b).n
                 Array<OneD, NekDouble> En (nqb, 0.0);
-                for( int i = 0; i < m_curl_dim; i++)
+                for( int i = 0; i < m_curl_dim; i++) // SJS: should this not really be m_bnd_dim? 
                 {
-                    Vmath::Vvtvp(nqb, normals[i], 1, E[i], 1,
-                                                 En, 1, En, 1);
+                    // Use bndVal as temporary
+                    Vmath::Vsub(nqb,E[i],1,m_houtflow->
+                                m_UBndExp[i][n]->GetPhys(),
+                                1,  bndVal, 1);
+
+                    Vmath::Vvtvp(nqb, normals[i], 1, bndVal, 1,
+                                 En, 1, En, 1);
+
                 }
 
-                // Calculate pressure bc = kinvis*n.gradU.n - E.n
+                // Calculate pressure bc = kinvis*n.gradU.n - E.n + f_b.n
                 Array<OneD, NekDouble> pbc (nqb, 0.0);
                 Vmath::Svtvm( nqb, kinvis, nGradUn, 1, En, 1, pbc, 1);
-                Vmath::Vadd( nqb, pbc, 1, m_PBndExp[n]->GetPhys(), 1,
-                                             pbc, 1);
 
                 if(m_hbcType[n] == eOBC)
                 {
+                    
                     if ( m_PBndExp[n]->GetWaveSpace())
                     {
                         m_PBndExp[n]->HomogeneousFwdTrans(pbc, bndVal);
@@ -379,6 +390,7 @@ namespace Nektar
                 }
                 else if(m_hbcType[n] == eConvectiveOBC) // add outflow values to calculation from HBC
                 {
+                    
                     if ( m_PBndExp[n]->GetWaveSpace())
                     {
                         ASSERTL0(false,"Needs updating");
@@ -392,8 +404,9 @@ namespace Nektar
                         int nbcoeffs = m_PBndExp[n]->GetNcoeffs();
 
                         m_PBndExp[n]->IProductWRTBase(pbc,bndVal);
-
-                        Vmath::Svtvp(nbcoeffs,-1.0*m_houtflow->m_pressurePrimCoeff[n],
+                        
+                        // Note we have the negative of what is in the Dong paper in bndVal
+                        Vmath::Svtvp(nbcoeffs,m_houtflow->m_pressurePrimCoeff[n],
                                      bndVal, 1,m_PBndExp[n]->UpdateCoeffs(),1,
                                      m_PBndExp[n]->UpdateCoeffs(),1);
                     }
@@ -423,15 +436,19 @@ namespace Nektar
                 }
                 
                 // Calculate velocity boundary conditions
-                //    = 1/kinvis * (pbc n - kinvis divU n  + E)
+                //    = 1/kinvis * (pbc n - kinvis divU n  + E - f_b)
+#if 1
                 Vmath::Smul(nqb, kinvis, divU, 1, divU, 1);
-                Vmath::Vsub( nqb, pbc, 1, divU, 1, bndVal, 1);
+                Vmath::Vsub(nqb, pbc, 1, divU, 1, bndVal, 1);
+#else
+                Vmath::Vcopy(nqb,pbc,1,bndVal,1);
+#endif
                 for(int i = 0; i < m_curl_dim; ++i)
                 {
                     // Reuse divU
                     Vmath::Vvtvp( nqb, normals[i], 1, bndVal, 1, E[i], 1,
                                   divU, 1);
-                    Vmath::Vadd( nqb, divU, 1, m_houtflow->m_UBndExp[i][n]->GetPhys(),
+                    Vmath::Vsub( nqb, divU, 1, m_houtflow->m_UBndExp[i][n]->GetPhys(),
                                  1, divU, 1);
                     Vmath::Smul(nqb, 1.0/kinvis, divU, 1, divU, 1);
                     

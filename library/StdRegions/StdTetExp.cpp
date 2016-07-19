@@ -906,6 +906,38 @@ namespace Nektar
             StdTetExp::v_BwdTrans(tmp, outarray);
         }
 
+        void StdTetExp::v_GetFaceNumModes(
+                    const int                  fid,
+                    const Orientation          faceOrient,
+                    int &numModes0,
+                    int &numModes1)
+        {
+            int nummodes [3] = {m_base[0]->GetNumModes(),
+                                m_base[1]->GetNumModes(),
+                                m_base[2]->GetNumModes()};
+            switch(fid)
+            {
+            case 0:
+                {
+                    numModes0 = nummodes[0];
+                    numModes1 = nummodes[1];
+                }
+                break;
+            case 1:
+                {
+                    numModes0 = nummodes[0];
+                    numModes1 = nummodes[2];
+                }
+                break;
+            case 2:
+            case 3:
+                {
+                    numModes0 = nummodes[1];
+                    numModes1 = nummodes[2];
+                }
+                break;
+            }
+        }
 
         //---------------------------
         // Helper functions

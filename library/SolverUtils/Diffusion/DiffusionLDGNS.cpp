@@ -249,11 +249,20 @@ namespace Nektar
                 fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
                 fields[0]->GetTrace()->Upwind(Vn, Fwd[i], Bwd[i], numflux[i]);
             }
-             
+
+            // Extract internal values of the scalar variables for Neumann bcs
+            Array< OneD, Array<OneD, NekDouble > > uplus(nScalars);
+
+            for (i = 0; i < nScalars; ++i)
+            {
+                uplus[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
+                fields[i]->ExtractTracePhys(inarray[i], uplus[i]);
+            }
+
             // Modify the values in case of boundary interfaces
             if (fields[0]->GetBndCondExpansions().num_elements())
             {
-                v_WeakPenaltyO1(fields, inarray, numflux);
+                v_WeakPenaltyO1(fields, inarray, uplus, numflux);
             }
             
             // Splitting the numerical flux into the dimensions
@@ -273,7 +282,8 @@ namespace Nektar
          */
         void DiffusionLDGNS::v_WeakPenaltyO1(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,	   
+            const Array<OneD, Array<OneD, NekDouble> >        &uplus,
                   Array<OneD, Array<OneD, NekDouble> >        &penaltyfluxO1)
         {            
             int cnt;
@@ -290,17 +300,13 @@ namespace Nektar
             Array<OneD, NekDouble> Tw(nTracePts, m_Twall);
             
             Array< OneD, Array<OneD, NekDouble > > scalarVariables(nScalars);
-            Array< OneD, Array<OneD, NekDouble > > uplus(nScalars);
-            
+
             // Extract internal values of the scalar variables for Neumann bcs
             for (i = 0; i < nScalars; ++i)
             {
                 scalarVariables[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
-                
-                uplus[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
-                fields[i]->ExtractTracePhys(inarray[i], uplus[i]);
             }
-            
+
             // Compute boundary conditions for velocities
             for (i = 0; i < nScalars-1; ++i)
             {
@@ -502,7 +508,9 @@ namespace Nektar
                 Vmath::Svtvp(nTracePts, 1.0, m_traceNormals[i], 1, 
                              Vn, 1, Vn, 1);
             }
-                        
+
+            Array<OneD, NekDouble > qtemp(nTracePts);
+
             // Evaulate Riemann flux 
             // qflux = \hat{q} \cdot u = q \cdot n 
             // Notice: i = 1 (first row of the viscous tensor is zero)
@@ -520,11 +528,14 @@ namespace Nektar
                     // Multiply the Riemann flux by the trace normals
                     Vmath::Vmul(nTracePts, m_traceNormals[j], 1, qfluxtemp, 1, 
                                 qfluxtemp, 1);
-                                                            
+                 
+                    // Extract the physical values of the solution at the boundaries
+                    fields[i]->ExtractTracePhys(qfield[j][i], qtemp);
+
                     // Impose weak boundary condition with flux
                     if (fields[0]->GetBndCondExpansions().num_elements())
                     {
-                        v_WeakPenaltyO2(fields, i, j, qfield[j][i], qfluxtemp);
+                        v_WeakPenaltyO2(fields, i, j, qfield[j][i], qtemp, qfluxtemp);
                     }
                     
                     // Store the final flux into qflux
@@ -544,6 +555,7 @@ namespace Nektar
             const int                                          var,
             const int                                          dir,
             const Array<OneD, const NekDouble>                &qfield,
+            const Array<OneD, const NekDouble>                &qtemp,
                   Array<OneD,       NekDouble>                &penaltyflux)
         {
             int cnt = 0;
@@ -555,11 +567,7 @@ namespace Nektar
             int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
             
             Array<OneD, NekDouble > uterm(nTracePts);
-            Array<OneD, NekDouble > qtemp(nTracePts);
 
-            // Extract the physical values of the solution at the boundaries
-            fields[var]->ExtractTracePhys(qfield, qtemp);
-            
             // Loop on the boundary regions to apply appropriate bcs
             for (i = 0; i < nBndRegions; ++i)
             {

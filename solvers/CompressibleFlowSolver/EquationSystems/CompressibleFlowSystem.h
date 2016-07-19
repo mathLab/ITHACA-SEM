@@ -267,9 +267,6 @@ namespace Nektar
         void GetArtificialDynamicViscosity(
             const Array<OneD,  Array<OneD, NekDouble> > &physfield,
                   Array<OneD,              NekDouble>   &mu_var);
-        void SetVarPOrderElmt(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &PolyOrder);
         void GetForcingTerm(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > outarrayForcing);

@@ -87,8 +87,8 @@
     </FUNCTION>
   </CONDITIONS>
   <FORCING>
-    <FORCE TYPE="Body">
-        <BODYFORCE> Source <BODYFORCE/>
+    <FORCE TYPE="Field">
+        <FIELDFORCE> Source <FIELDFORCE/>
     </FORCE>
   </FORCING>
 </NEKTAR>

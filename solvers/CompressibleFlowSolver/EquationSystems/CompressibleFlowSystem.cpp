@@ -109,7 +109,6 @@ namespace Nektar
         }
 
         m_session->LoadParameter ("GasConstant",   m_gasConstant,   287.058);
-        m_session->LoadParameter ("Twall",         m_Twall,         300.15);
         m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
         m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
         m_session->LoadParameter ("Skappa",        m_Skappa,        -2.048);
@@ -126,13 +125,9 @@ namespace Nektar
         m_session->LoadParameter ("thermalConductivity",
                                   m_thermalConductivity, 0.0257);
 
-        m_EqTypeStr = m_session->GetSolverInfo("EQTYPE");
-
         m_Cp      = m_gamma / (m_gamma - 1.0) * m_gasConstant;
         m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
 
-        m_session->LoadParameter("amplitude",      m_amplitude,      0.001);
-        m_session->LoadParameter("omega",          m_omega,          1.0);
         m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 0.0);
 
         // Forcing terms for the sponge region
@@ -224,7 +219,8 @@ namespace Nektar
                                                   GetViscousFluxVector, this);
                 }
 
-                if (m_shockCaptureType=="Smooth" && m_EqTypeStr=="EulerADCFE")
+                std::string eqTypeStr = m_session->GetSolverInfo("EQTYPE");
+                if (m_shockCaptureType=="Smooth" && eqTypeStr=="EulerADCFE")
                 {
                     m_advection->SetFluxVector(&CompressibleFlowSystem::
                                                GetFluxVector, this);
@@ -232,7 +228,7 @@ namespace Nektar
                     m_diffusion->SetArtificialDiffusionVector(
                         &CompressibleFlowSystem::GetSmoothArtificialViscosity, this);
                 }
-                if (m_shockCaptureType=="NonSmooth" && m_EqTypeStr=="EulerADCFE")
+                if (m_shockCaptureType=="NonSmooth" && eqTypeStr=="EulerADCFE")
                 {
                     m_advection->SetFluxVector(&CompressibleFlowSystem::
                                                GetFluxVector, this);

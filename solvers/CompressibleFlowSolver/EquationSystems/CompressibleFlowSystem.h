@@ -92,7 +92,6 @@ namespace Nektar
         NekDouble                           m_Twall;
         std::string                         m_ViscosityType;
         std::string                         m_shockCaptureType;
-        std::string                         m_EqTypeStr;
         NekDouble                           m_mu;
         NekDouble                           m_Skappa;
         NekDouble                           m_Kappa;

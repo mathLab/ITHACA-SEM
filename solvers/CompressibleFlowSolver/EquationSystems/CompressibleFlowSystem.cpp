@@ -81,23 +81,15 @@ namespace Nektar
         }
 
         // Get gamma parameter from session file.
-        ASSERTL0(m_session->DefinesParameter("Gamma"),
-                 "Compressible flow sessions must define a Gamma parameter.");
         m_session->LoadParameter("Gamma", m_gamma, 1.4);
 
         // Get E0 parameter from session file.
-        ASSERTL0(m_session->DefinesParameter("pInf"),
-                 "Compressible flow sessions must define a pInf parameter.");
         m_session->LoadParameter("pInf", m_pInf, 101325);
 
         // Get rhoInf parameter from session file.
-        ASSERTL0(m_session->DefinesParameter("rhoInf"),
-                 "Compressible flow sessions must define a rhoInf parameter.");
         m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
 
         // Get uInf parameter from session file.
-        ASSERTL0(m_session->DefinesParameter("uInf"),
-                 "Compressible flow sessions must define a uInf parameter.");
         m_session->LoadParameter("uInf", m_uInf, 0.1);
 
         m_UInf = m_uInf;
@@ -105,9 +97,6 @@ namespace Nektar
         // Get vInf parameter from session file.
         if (m_spacedim == 2 || m_spacedim == 3)
         {
-            ASSERTL0(m_session->DefinesParameter("vInf"),
-                     "Compressible flow sessions must define a vInf parameter"
-                     "for 2D/3D problems.");
             m_session->LoadParameter("vInf", m_vInf, 0.0);
             m_UInf = sqrt(m_uInf*m_uInf + m_vInf*m_vInf);
         }
@@ -115,9 +104,6 @@ namespace Nektar
         // Get wInf parameter from session file.
         if (m_spacedim == 3)
         {
-            ASSERTL0(m_session->DefinesParameter("wInf"),
-                     "Compressible flow sessions must define a wInf parameter"
-                     "for 3D problems.");
             m_session->LoadParameter("wInf", m_wInf, 0.0);
             m_UInf = sqrt(m_uInf*m_uInf + m_vInf*m_vInf + m_wInf*m_wInf);
         }

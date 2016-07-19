@@ -13,9 +13,13 @@ IF (NOT WIN32)
 ENDIF(NOT WIN32)
 
 IF (NEKTAR_USE_ANN)
-    # First search for system ANN installs. Hint /opt/local for MacPorts.
-    FIND_LIBRARY(ANN_LIBRARY    NAMES ANN PATHS /opt/local/lib /usr/local/opt/ann/lib)
-    FIND_PATH   (ANN_INCLUDE_DIR ANN.h PATHS /opt/local/include /usr/local/opt/ann/include/ANN)
+    # First search for system ANN installs. Hint /opt/local for MacPorts and
+    # /usr/local/opt/ann for Homebrew.
+    FIND_LIBRARY(ANN_LIBRARY NAMES ANN
+        PATHS /opt/local/lib /usr/local/opt/ann/lib $ENV{ANN_ROOT}/lib)
+    FIND_PATH   (ANN_INCLUDE_DIR ANN.h
+        PATHS /opt/local/include /usr/local/opt/ann/include $ENV{ANN_ROOT}/include
+        PATH_SUFFIXES ANN)
     GET_FILENAME_COMPONENT(ANN_LIBRARY_PATH ${ANN_LIBRARY} PATH)
 
     IF (ANN_LIBRARY AND ANN_INCLUDE_DIR)

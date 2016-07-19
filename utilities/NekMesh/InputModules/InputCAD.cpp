@@ -69,6 +69,7 @@ ModuleKey InputCAD::className = GetModuleFactory().RegisterCreatorFunction(
  */
 InputCAD::InputCAD(MeshSharedPtr m) : InputModule(m)
 {
+    
 }
 
 InputCAD::~InputCAD()

@@ -111,7 +111,6 @@ namespace Nektar
         m_session->LoadParameter ("FL",            m_FacL,          0.0);
         m_session->LoadParameter ("FH",            m_FacH,          0.0);
         m_session->LoadParameter ("hFactor",       m_hFactor,       1.0);
-        m_session->LoadParameter ("epsMax",        m_eps_max,       1.0);
         m_session->LoadParameter ("C1",            m_C1,            3.0);
         m_session->LoadParameter ("C2",            m_C2,            5.0);
         m_session->LoadSolverInfo("ShockCaptureType",
@@ -3261,11 +3260,6 @@ namespace Nektar
         NekDouble DeltaPhi = ThetaH-Phi0;
 
         Vmath::Zero(eps_bar.num_elements(), eps_bar, 1);
-
-            /*Vmath::Smul(eps_bar.num_elements(),
-                    m_eps_max,
-                    &physfield[nvariables-1][0], 1,
-                    &eps_bar[0], 1);*/
 
         for (int e = 0; e < eps_bar.num_elements(); e++)
         {

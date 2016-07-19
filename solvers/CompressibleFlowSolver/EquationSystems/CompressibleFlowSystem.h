@@ -87,7 +87,6 @@ namespace Nektar
         NekDouble                           m_mu0;
         NekDouble                           m_FacL;
         NekDouble                           m_FacH;
-        NekDouble                           m_eps_max;
         NekDouble                           m_thermalConductivity;
         NekDouble                           m_Cp;
         NekDouble                           m_C1;

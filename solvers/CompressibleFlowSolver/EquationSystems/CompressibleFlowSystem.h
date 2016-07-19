@@ -258,9 +258,6 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &physarray,
                   Array<OneD,                   NekDouble>   &Sensor,
                   Array<OneD,                   NekDouble>   &SensorKappa);
-        void GetElementDimensions(
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-                  Array<OneD,                   NekDouble >  &hmin);
         void GetAbsoluteVelocity(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,                   NekDouble>   &Vtot);

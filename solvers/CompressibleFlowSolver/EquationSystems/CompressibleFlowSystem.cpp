@@ -3199,70 +3199,6 @@ namespace Nektar
         }
     }
 
-    void CompressibleFlowSystem::GetElementDimensions(
-        Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        Array<OneD,                   NekDouble >  &hmin)
-    {
-        // So far, this function is only implemented for quads
-        const int nElements = m_fields[0]->GetExpSize();
-
-        SpatialDomains::HexGeomSharedPtr    ElHexGeom;
-
-        NekDouble hx = 0.0;
-        NekDouble hy = 0.0;
-
-        for (int e = 0; e < nElements; e++)
-        {
-            NekDouble nedges = m_fields[0]->GetExp(e)->GetNedges();
-            Array <OneD, NekDouble> L1(nedges, 0.0);
-
-            for (int j = 0; j < nedges; ++j)
-            {
-
-                NekDouble x0 = 0.0;
-                NekDouble y0 = 0.0;
-                NekDouble z0 = 0.0;
-
-                NekDouble x1 = 0.0;
-                NekDouble y1 = 0.0;
-                NekDouble z1 = 0.0;
-
-                if (boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
-                                            m_fields[0]->GetExp(e)->GetGeom()))
-                {
-                    SpatialDomains::QuadGeomSharedPtr ElQuadGeom =
-                        boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
-                                            m_fields[0]->GetExp(e)->GetGeom());
-
-                    ElQuadGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0, y0, z0);
-                    ElQuadGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1, y1, z1);
-
-                    L1[j] = sqrt(pow((x0-x1),2)+pow((y0-y1),2)+pow((z0-z1),2));
-                }
-                else
-                {
-                    ASSERTL0(false, "GetElementDimensions() is only "
-                                    "implemented for quadrilateral elements");
-                }
-            }
-            // determine the minimum length in x and y direction
-            // still have to find a better estimate when dealing
-            // with unstructured meshes
-            if(boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
-                                            m_fields[0]->GetExp(e)->GetGeom()))
-            {
-                hx = min(L1[0], L1[2]);
-                hy = min(L1[1], L1[3]);
-
-                outarray[0][e] = hx;
-                outarray[1][e] = hy;
-            }
-        }
-
-        hmin[0] = Vmath::Vmin(outarray[0].num_elements(), outarray[0], 1);
-        hmin[1] = Vmath::Vmin(outarray[1].num_elements(), outarray[1], 1);
-    }
-
     void CompressibleFlowSystem::GetAbsoluteVelocity(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,                   NekDouble>   &Vtot)
@@ -3420,6 +3356,7 @@ namespace Nektar
             PointCount += nQuadPointsElement;
         }
     }
+
 
     void CompressibleFlowSystem::v_ExtraFldOutput(
         std::vector<Array<OneD, NekDouble> > &fieldcoeffs,

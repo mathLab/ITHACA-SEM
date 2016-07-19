@@ -233,32 +233,34 @@ namespace Nektar
                 // Setting up Riemann solver for advection operator
                 m_session->LoadSolverInfo("UpwindType", riemName, "Average");
 
-                m_riemannSolver = SolverUtils::GetRiemannSolverFactory()
+                SolverUtils::RiemannSolverSharedPtr riemannSolver;
+                riemannSolver = SolverUtils::GetRiemannSolverFactory()
                                             .CreateInstance(riemName);
 
                 // Setting up upwind solver for diffusion operator
-                m_riemannSolverLDG = SolverUtils::GetRiemannSolverFactory()
+                SolverUtils::RiemannSolverSharedPtr riemannSolverLDG;
+                riemannSolverLDG = SolverUtils::GetRiemannSolverFactory()
                                                 .CreateInstance("UpwindLDG");
 
                 // Setting up parameters for advection operator Riemann solver
-                m_riemannSolver->SetParam (
+                riemannSolver->SetParam (
                     "gamma",   &CompressibleFlowSystem::GetGamma,   this);
-                m_riemannSolver->SetAuxVec(
+                riemannSolver->SetAuxVec(
                     "vecLocs", &CompressibleFlowSystem::GetVecLocs, this);
-                m_riemannSolver->SetVector(
+                riemannSolver->SetVector(
                     "N",       &CompressibleFlowSystem::GetNormals, this);
 
                 // Setting up parameters for diffusion operator Riemann solver
-                m_riemannSolverLDG->SetParam (
+                riemannSolverLDG->SetParam (
                     "gamma",   &CompressibleFlowSystem::GetGamma,   this);
-                m_riemannSolverLDG->SetVector(
+                riemannSolverLDG->SetVector(
                     "vecLocs", &CompressibleFlowSystem::GetVecLocs, this);
-                m_riemannSolverLDG->SetVector(
+                riemannSolverLDG->SetVector(
                     "N",       &CompressibleFlowSystem::GetNormals, this);
 
                 // Concluding initialisation of advection / diffusion operators
-                m_advection->SetRiemannSolver   (m_riemannSolver);
-                m_diffusion->SetRiemannSolver   (m_riemannSolverLDG);
+                m_advection->SetRiemannSolver   (riemannSolver);
+                m_diffusion->SetRiemannSolver   (riemannSolverLDG);
                 m_advection->InitObject         (m_session, m_fields);
                 m_diffusion->InitObject         (m_session, m_fields);
                 break;

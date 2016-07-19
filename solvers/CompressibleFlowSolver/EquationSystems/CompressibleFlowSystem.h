@@ -66,8 +66,6 @@ namespace Nektar
             const Array<OneD,int> &ExpOrder);
 
     protected:
-        SolverUtils::RiemannSolverSharedPtr m_riemannSolver;
-        SolverUtils::RiemannSolverSharedPtr m_riemannSolverLDG;
         SolverUtils::AdvectionSharedPtr     m_advection;
         SolverUtils::DiffusionSharedPtr     m_diffusion;
         Array<OneD, Array<OneD, NekDouble> >m_vecLocs;
@@ -97,16 +95,11 @@ namespace Nektar
         // L2 error file
         std::ofstream m_errFile;
 
-        // Check for steady state at step interval
-        int m_steadyStateSteps;
-
         // Tolerance to which steady state should be evaluated at
         NekDouble m_steadyStateTol;
 
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
-        StdRegions::StdQuadExpSharedPtr            m_OrthoQuadExp;
-        StdRegions::StdHexExpSharedPtr             m_OrthoHexExp;
         bool                                       m_smoothDiffusion;
 
 

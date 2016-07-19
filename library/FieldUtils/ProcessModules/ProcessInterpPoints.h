@@ -38,6 +38,8 @@
 
 #include "../Module.h"
 
+#include <LibUtilities/BasicUtils/PtsField.h>
+
 namespace Nektar
 {
 namespace FieldUtils
@@ -61,20 +63,22 @@ class ProcessInterpPoints : public ProcessModule
         /// Write mesh to output file.
         virtual void Process(po::variables_map &vm);
 
+        void PrintProgressbar(const int position, const int goal) const;
+
         virtual std::string GetModuleName()
         {
             return "ProcessInterpPoints";
         }
 
-
     private:
 
         void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
-                                   Array<OneD, Array<OneD, NekDouble> >   &pts,
+                                   LibUtilities::PtsFieldSharedPtr        &pts,
                                    NekDouble                               clamp_low,
                                    NekDouble                               clamp_up,
-                                   NekDouble                               def_value,
-                                   bool                                    isRoot);
+                                   NekDouble                               def_value);
+
+        void calcCp0();
 };
 
 }

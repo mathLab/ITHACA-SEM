@@ -195,6 +195,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT const std::string  GetSessionNameRank() const;
             /// Returns the communication object.
             LIB_UTILITIES_EXPORT CommSharedPtr &GetComm();
+            /// Returns the communication object.
+            LIB_UTILITIES_EXPORT bool GetSharedFilesystem();
             /// Finalises the session.
             LIB_UTILITIES_EXPORT void Finalise();
 
@@ -457,6 +459,8 @@ namespace Nektar
             FilterMap                                 m_filters;
             /// Be verbose
             bool                                      m_verbose;
+            /// Running on a shared filesystem
+            bool                                      m_sharedFilesystem;
             /// Map of original composite ordering for parallel periodic bcs.
             CompositeOrdering                         m_compOrder;
             /// Map of original boundary region ordering for parallel periodic
@@ -480,6 +484,8 @@ namespace Nektar
 
             /// Returns a shared pointer to the current object.
             inline SessionReaderSharedPtr GetSharedThisPtr();
+
+            LIB_UTILITIES_EXPORT void TestSharedFilesystem();
 
             /// Parse the program arguments and fill #m_cmdLineOptions
             std::vector<std::string> ParseCommandLineArguments(

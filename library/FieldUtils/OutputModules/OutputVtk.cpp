@@ -74,7 +74,10 @@ void OutputVtk::Process(po::variables_map &vm)
     int i, j;
     if (m_f->m_verbose)
     {
-        cout << "OutputVtk: Writing file..." << endl;
+        if(m_f->m_comm->TreatAsRankZero())
+        {
+            cout << "OutputVtk: Writing file..." << endl;
+        }
     }
 
     // Extract the output filename and extension
@@ -96,7 +99,7 @@ void OutputVtk::Process(po::variables_map &vm)
         fs::path poutfile(filename.c_str());
         fs::path specPath(path.c_str());
         
-        if(m_f->m_comm->GetRank() == 0)
+        if(m_f->m_comm->TreatAsRankZero())
         {
             try
             {

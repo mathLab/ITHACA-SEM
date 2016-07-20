@@ -70,16 +70,14 @@ namespace Nektar
 
     }
 
-    void NavierStokesCFE::DoOdeRhs(
+    void NavierStokesCFE::v_DoDiffusion(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time)
+              Array<OneD,       Array<OneD, NekDouble> > &outarray)
     {
         int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
 
-        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
 
         Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables-1);
@@ -93,10 +91,6 @@ namespace Nektar
         {
             inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
         }
-
-        // Advection term in physical rhs form
-        m_advection->Advect(nvariables, m_fields, advVel, inarray,
-                            outarray, time);
 
         // Extract pressure and temperature
         Array<OneD, NekDouble > pressure   (npoints);
@@ -117,52 +111,10 @@ namespace Nektar
 
         for (i = 0; i < nvariables; ++i)
         {
-            Vmath::Vsub(npoints,
+            Vmath::Vadd(npoints,
                         outarrayDiff[i], 1,
                         outarray[i], 1,
                         outarray[i], 1);
-        }
-
-        // Add sponge layer if defined in the session file
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
-        {
-            (*x)->Apply(m_fields, inarray, outarray, time);
-        }
-    }
-
-    void NavierStokesCFE::DoOdeProjection(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time)
-    {
-        int i;
-        int nvariables = inarray.num_elements();
-
-        switch(m_projectionType)
-        {
-            case MultiRegions::eDiscontinuous:
-            {
-                // Just copy over array
-                int npoints = GetNpoints();
-
-                for(i = 0; i < nvariables; ++i)
-                {
-                    Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
-                }
-                SetBoundaryConditions(outarray, time);
-                break;
-            }
-            case MultiRegions::eGalerkin:
-            case MultiRegions::eMixed_CG_Discontinuous:
-            {
-                ASSERTL0(false, "No Continuous Galerkin for full compressible "
-                                "Navier-Stokes equations");
-                break;
-            }
-            default:
-                ASSERTL0(false, "Unknown projection scheme");
-                break;
         }
     }
 }

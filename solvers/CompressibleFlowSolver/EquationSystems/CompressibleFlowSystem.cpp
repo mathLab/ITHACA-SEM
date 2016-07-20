@@ -206,6 +206,16 @@ namespace Nektar
                 break;
             }
         }
+
+        if (m_explicitAdvection)
+        {
+            m_ode.DefineOdeRhs    (&CompressibleFlowSystem::DoOdeRhs, this);
+            m_ode.DefineProjection(&CompressibleFlowSystem::DoOdeProjection, this);
+        }
+        else
+        {
+            ASSERTL0(false, "Implicit CFS not set up.");
+        }
     }
 
     /**
@@ -214,6 +224,100 @@ namespace Nektar
     CompressibleFlowSystem::~CompressibleFlowSystem()
     {
 
+    }
+
+    /**
+     * @brief Compute the right-hand side.
+     */
+    void CompressibleFlowSystem::DoOdeRhs(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble                                   time)
+    {
+        int i;
+        int nvariables = inarray.num_elements();
+        int npoints    = GetNpoints();
+
+        DoAdvection(inarray, outarray, time);
+
+        // Negate results
+        for (i = 0; i < nvariables; ++i)
+        {
+            Vmath::Neg(npoints, outarray[i], 1);
+        }
+
+        DoDiffusion(inarray, outarray);
+
+        // Add forcing terms
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        {
+            (*x)->Apply(m_fields, inarray, outarray, time);
+        }
+    }
+
+    /**
+     * @brief Compute the projection and call the method for imposing the 
+     * boundary conditions in case of discontinuous projection.
+     */
+    void CompressibleFlowSystem::DoOdeProjection(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble                                   time)
+    {
+        int i;
+        int nvariables = inarray.num_elements();
+
+        switch(m_projectionType)
+        {
+            case MultiRegions::eDiscontinuous:
+            {
+                // Just copy over array
+                int npoints = GetNpoints();
+
+                for(i = 0; i < nvariables; ++i)
+                {
+                    Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
+                }
+                SetBoundaryConditions(outarray, time);
+                break;
+            }
+            case MultiRegions::eGalerkin:
+            case MultiRegions::eMixed_CG_Discontinuous:
+            {
+                ASSERTL0(false, "No Continuous Galerkin for full compressible "
+                                "Navier-Stokes equations");
+                break;
+            }
+            default:
+                ASSERTL0(false, "Unknown projection scheme");
+                break;
+        }
+    }
+
+    /**
+     * @brief Compute the advection terms for the right-hand side
+     */
+    void CompressibleFlowSystem::DoAdvection(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble                                   time)
+    {
+        int nvariables = inarray.num_elements();
+        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
+
+        m_advection->Advect(nvariables, m_fields, advVel, inarray,
+                            outarray, time);
+    }
+
+    /**
+     * @brief Add the diffusions terms to the right-hand side
+     */
+    void CompressibleFlowSystem::DoDiffusion(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray)
+    {
+        v_DoDiffusion(inarray, outarray);
     }
 
     void CompressibleFlowSystem::SetBoundaryConditions(

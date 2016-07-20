@@ -71,15 +71,9 @@ namespace Nektar
 
         virtual void v_InitObject();
 
-        void DoOdeRhs(
+        virtual void v_DoDiffusion(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time);
-    
-        void DoOdeProjection(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time);
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray);
 
         void GetSmoothArtificialViscosity(
             const Array<OneD, Array<OneD, NekDouble> > &physfield,

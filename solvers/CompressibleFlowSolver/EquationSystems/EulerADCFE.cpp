@@ -97,31 +97,19 @@ namespace Nektar
 
     }
 
-    void EulerADCFE::DoOdeRhs(
+    void EulerADCFE::v_DoDiffusion(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-        Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time)
+        Array<OneD,       Array<OneD, NekDouble> > &outarray)
     {
         int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
 
-        Array<OneD, Array<OneD, NekDouble> > advVel;
-        Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
 
         for (i = 0; i < nvariables; ++i)
         {
-            outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);
             outarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
-        }
-
-        m_advection->Advect(nvariables, m_fields, advVel, inarray,
-                                        outarrayAdv, m_time);
-
-        for (i = 0; i < nvariables; ++i)
-        {
-            Vmath::Neg(npoints, outarrayAdv[i], 1);
         }
 
         m_diffusion->Diffuse(nvariables, m_fields, inarray, outarrayDiff);
@@ -131,7 +119,7 @@ namespace Nektar
             for (i = 0; i < nvariables; ++i)
             {
                 Vmath::Vadd(npoints,
-                            outarrayAdv[i], 1,
+                            outarray[i], 1,
                             outarrayDiff[i], 1,
                             outarray[i], 1);
             }
@@ -173,7 +161,7 @@ namespace Nektar
             for (i = 0; i < nvariables; ++i)
             {
                 Vmath::Vadd(npoints,
-                            outarrayAdv[i], 1,
+                            outarray[i], 1,
                             outarrayDiff[i], 1,
                             outarray[i], 1);
             }
@@ -195,47 +183,6 @@ namespace Nektar
                             outarrayForcing[i], 1,
                             outarray[i], 1);
             }
-        }
-
-        // Add sponge layer if defined in the session file
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
-        {
-            (*x)->Apply(m_fields, inarray, outarray, time);
-        }
-    }
-
-    void EulerADCFE::DoOdeProjection(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-        Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time)
-    {
-        int i;
-        int nvariables = inarray.num_elements();
-
-        switch(m_projectionType)
-        {
-            case MultiRegions::eDiscontinuous:
-            {
-                // Just copy over array
-                int npoints = GetNpoints();
-
-                for(i = 0; i < nvariables; ++i)
-                {
-                    Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
-                }
-                SetBoundaryConditions(outarray, time);
-                break;
-            }
-            case MultiRegions::eGalerkin:
-            case MultiRegions::eMixed_CG_Discontinuous:
-            {
-                ASSERTL0(false, "No Continuous Galerkin for Euler equations");
-                break;
-            }
-            default:
-                ASSERTL0(false, "Unknown projection scheme");
-                break;
         }
     }
 

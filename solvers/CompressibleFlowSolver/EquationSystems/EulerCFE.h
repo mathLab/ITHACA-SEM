@@ -63,16 +63,6 @@ namespace Nektar
 
         EulerCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
 
-        virtual void v_InitObject();
-
-        void DoOdeRhs(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time);
-        void DoOdeProjection(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time);
     };
 }
 #endif

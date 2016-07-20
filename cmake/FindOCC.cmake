@@ -6,6 +6,13 @@
 # OCC_LIBRARY_DIR    - where the OCC library directory can be found
 # OCC_LIBRARIES      - Link this to use OCC
 # OCC_OCAF_LIBRARIES - Link this to use OCC OCAF framework
+#
+# Adapted from FreeCAD: http://free-cad.sf.net
+
+set(TEST_ENV $ENV{OCE_ROOT})
+if(NOT DEFINED OCE_DIR AND DEFINED TEST_ENV)
+  file(GLOB OCE_DIR $ENV{OCE_ROOT}/lib/oce-*)
+endif()
 
 # First try to find OpenCASCADE Community Edition
 if(NOT DEFINED OCE_DIR)
@@ -23,7 +30,7 @@ if(NOT DEFINED OCE_DIR)
   endif()
 endif()
 
-find_package(OCE QUIET HINTS)
+find_package(OCE QUIET)
 if(OCE_FOUND)
   message(STATUS "-- OpenCASCADE Community Edition has been found.")
   # Disable this define. For more details see bug #0001872
@@ -68,7 +75,7 @@ else(OCE_FOUND) #look for OpenCASCADE
       /usr/local/lib
       /usr/local/opt/opencascade/lib
       /opt/opencascade/lib
-      /opt/local/lib
+      opt/local/lib
     )
   endif(WIN32)
   if(OCC_LIBRARY)
@@ -115,7 +122,6 @@ if(OCC_FOUND)
     TKSTL
     TKShHealing
     TKXSBase
-    TKBinL
     TKBool
     TKBO
     TKBRep

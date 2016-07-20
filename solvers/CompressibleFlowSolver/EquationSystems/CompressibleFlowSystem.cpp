@@ -245,6 +245,37 @@ namespace Nektar
         UnsteadySystem::v_GenerateSummary(s);
     }
 
+    void CompressibleFlowSystem::SetBoundaryConditions(
+            Array<OneD, Array<OneD, NekDouble> >             &physarray,
+            NekDouble                                         time)
+    {
+        v_SetBoundaryConditions(physarray, time);
+    }
+
+    void CompressibleFlowSystem::v_SetBoundaryConditions(
+            Array<OneD, Array<OneD, NekDouble> >             &physarray,
+            NekDouble                                         time)
+    {
+        int cnt        = 0;
+        int nTracePts  = GetTraceTotPoints();
+        int nvariables = physarray.num_elements();
+
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+        for (int i = 0; i < nvariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+        }
+
+        // loop over Boundary Regions
+        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+        {
+            std::string type = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
+            SetCommonBC(type, n, time, cnt, Fwd, physarray);
+            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
+        }
+    }
+
     /**
      * @brief Set boundary conditions which can be: 
      * a) Wall and Symmerty BCs implemented at CompressibleFlowSystem level

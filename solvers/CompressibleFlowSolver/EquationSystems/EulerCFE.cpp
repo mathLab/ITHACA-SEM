@@ -205,67 +205,6 @@ namespace Nektar
                 break;
         }
     }
-    
-    /**
-     * @brief Set boundary conditions which can be: 
-     * a) Wall and Symmerty BCs implemented at CompressibleFlowSystem level
-     *          since they are compressible solver specific;
-     * b) Isentropic vortex and Ringleb flow BCs implemented at EulerCFE level
-     *    since they are Euler solver specific;
-     * c) Time dependent BCs.
-     * 
-     * @param inarray: fields array.
-     * @param time:    time.
-     */
-    void EulerCFE::SetBoundaryConditions(
-        Array<OneD, Array<OneD, NekDouble> > &inarray, 
-        NekDouble                             time)
-    {
-        std::string varName;
-        int cnt        = 0;
-        int nvariables = inarray.num_elements();
-        int nTracePts  = GetTraceTotPoints();
-
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        for (int i = 0; i < nvariables; ++i)
-        {
-            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-            m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
-        }
-
-        std::string userDefStr;
-        int nreg = m_fields[0]->GetBndConditions().num_elements();
-        // Loop over Boundary Regions
-        for (int n = 0; n < nreg; ++n)
-        {
-            userDefStr = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
-            if(!userDefStr.empty())
-            {
-                if(boost::iequals(userDefStr,"WallViscous"))
-                {
-                    ASSERTL0(false, "WallViscous is a wrong bc for the "
-                             "Euler equations");
-                }
-                else if(boost::iequals(userDefStr, "IsentropicVortex"))
-                {
-                    // Isentropic Vortex Boundary Condition
-                    SetBoundaryIsentropicVortex(n, time, cnt, Fwd, inarray);
-                }
-                else if (boost::iequals(userDefStr,"RinglebFlow"))
-                {
-                    SetBoundaryRinglebFlow(n, time, cnt, Fwd, inarray);
-                }
-                else
-                {
-                    // set up userdefined BC common to all solvers
-                    SetCommonBC(userDefStr, n, time, cnt, Fwd, inarray);
-                }
-            }
-
-            // no User Defined conditions provided so skip cnt 
-            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize(); 
-        }
-    }
 
     /**
      * @brief Get the exact solutions for isentropic vortex and Ringleb

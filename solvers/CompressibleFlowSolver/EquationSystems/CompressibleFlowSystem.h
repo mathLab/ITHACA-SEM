@@ -135,6 +135,14 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
 
+        void SetBoundaryConditions(
+            Array<OneD, Array<OneD, NekDouble> >             &physarray,
+            NekDouble                                         time);
+
+        virtual void v_SetBoundaryConditions(
+            Array<OneD, Array<OneD, NekDouble> >             &physarray,
+            NekDouble                                         time);
+
         void SetCommonBC(const std::string &userDefStr,
                          const int n,
                          const NekDouble time,

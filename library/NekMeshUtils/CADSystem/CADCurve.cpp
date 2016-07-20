@@ -107,6 +107,22 @@ Array<OneD, NekDouble> CADCurve::P(NekDouble t)
     return location;
 }
 
+Array<OneD, NekDouble> CADCurve::D1(NekDouble t)
+{
+    Array<OneD, NekDouble> out(6);
+    gp_Pnt loc;
+    gp_Vec d1;
+    m_occCurve.D1(t, loc, d1);
+    out[0] = loc.X();
+    out[1] = loc.Y();
+    out[2] = loc.Z();
+    out[3] = d1.X();
+    out[4] = d1.Y();
+    out[5] = d1.Z();
+
+    return out;
+}
+
 Array<OneD, NekDouble> CADCurve::D2(NekDouble t)
 {
     Array<OneD, NekDouble> out(9);

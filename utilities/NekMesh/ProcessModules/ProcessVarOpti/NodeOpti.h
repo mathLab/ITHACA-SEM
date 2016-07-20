@@ -73,6 +73,9 @@ protected:
     NodeSharedPtr node;
     std::vector<ElUtilSharedPtr> data;
 
+    void CalcDX();
+
+    NekDouble dx;
     ResidualSharedPtr res;
     DerivUtilSharedPtr derivUtil;
     PtsHelperSharedPtr ptsHelp;

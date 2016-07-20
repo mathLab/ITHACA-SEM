@@ -239,7 +239,7 @@ void ProcessVarOpti::Process()
             else if(freenodes[i][j]->GetNumCadCurve() == 1)
             {
                 vector<pair<int, CADCurveSharedPtr> > cs = freenodes[i][j]->GetCADCurves();
-                ns.push_back(new NodeOpti1D3D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti,cs[0].second));
+                //ns.push_back(new NodeOpti1D3D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti,cs[0].second));
             }
             else if(freenodes[i][j]->GetNumCADSurf() == 1)
             {

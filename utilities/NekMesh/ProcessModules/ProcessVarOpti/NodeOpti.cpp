@@ -45,8 +45,20 @@ namespace Utilities
 
 boost::mutex mtx;
 
+void NodeOpti::CalcDX()
+{
+    dx = numeric_limits<double>::max();
+
+    for(int i = 0; i < data.size(); i++)
+    {
+        dx = min(dx, data[i]->delta);
+    }
+}
+
 void NodeOpti2D2D::Optimise()
 {
+    CalcDX();
+
     Array<OneD, NekDouble> G = GetGrad();
 
     if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-10)
@@ -89,6 +101,8 @@ void NodeOpti2D2D::Optimise()
 
 void NodeOpti3D3D::Optimise()
 {
+    CalcDX();
+
     Array<OneD, NekDouble> G = GetGrad();
 
     if(sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) > 1e-10)
@@ -144,13 +158,15 @@ void NodeOpti3D3D::Optimise()
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
-        res->func += functional;
+        res->func = max(res->func, functional);
         mtx.unlock();
     }
 }
 
 void NodeOpti1D3D::Optimise()
 {
+    CalcDX();
+
     Array<OneD, NekDouble> G = GetGrad();
 
     if(sqrt(G[0]*G[0]) > 1e-10)
@@ -212,13 +228,15 @@ void NodeOpti1D3D::Optimise()
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
-        res->func += functional;
+        res->func = max(res->func, functional);
         mtx.unlock();
     }
 }
 
 void NodeOpti2D3D::Optimise()
 {
+    CalcDX();
+
     Array<OneD, NekDouble> G = GetGrad();
 
     if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-10)
@@ -282,7 +300,7 @@ void NodeOpti2D3D::Optimise()
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
-        res->func += functional;
+        res->func = max(res->func, functional);
         mtx.unlock();
     }
 }
@@ -304,19 +322,24 @@ NekDouble dir[13][3] = {{  0.0,  0.0,  0.0 },  // 0  (x   , y   , z   )
 Array<OneD, NekDouble> NodeOpti1D3D::GetGrad()
 {
     NekDouble tc = node->GetCADCurveInfo(curve->GetId());
-    NekDouble dx = 1e-4;
+    Array<OneD, NekDouble> d1 = curve->D1(tc);
+
+    NekDouble dr = sqrt(d1[3]*d1[3] + d1[4]*d1[4] + d1[5]*d1[5]);
+
+    NekDouble dt = dx / dr;
+
     vector<NekDouble> w(3);
 
     w[0] = GetFunctional<3>();
 
-    NekDouble nt = tc + dx;
+    NekDouble nt = tc + dt;
     Array<OneD, NekDouble> p = curve->P(nt);
     node->m_x = p[0];
     node->m_y = p[1];
     node->m_z = p[2];
     w[1] = GetFunctional<3>();
 
-    nt = tc - dx;
+    nt = tc - dt;
     p = curve->P(nt);
     node->m_x = p[0];
     node->m_y = p[1];
@@ -331,8 +354,8 @@ Array<OneD, NekDouble> NodeOpti1D3D::GetGrad()
 
     Array<OneD, NekDouble> ret(2,0.0);
 
-    ret[0] = (w[1] - w[2]) / 2.0 / dx;
-    ret[1] = (w[1] + w[2] - 2.0*w[0]) / dx / dx;
+    ret[0] = (w[1] - w[2]) / 2.0 / dt;
+    ret[1] = (w[1] + w[2] - 2.0*w[0]) / dt / dt;
 
     return ret;
 }
@@ -340,20 +363,32 @@ Array<OneD, NekDouble> NodeOpti1D3D::GetGrad()
 Array<OneD, NekDouble> NodeOpti2D3D::GetGrad()
 {
     Array<OneD, NekDouble> uvc = node->GetCADSurfInfo(surf->GetId());
-    NekDouble dx = 1e-4;
+    Array<OneD, NekDouble> d1 = surf->D1(uvc);
+
+    NekDouble dru = sqrt(d1[3]*d1[3] + d1[4]*d1[4] + d1[5]*d1[5]);
+    NekDouble drv = sqrt(d1[6]*d1[6] + d1[7]*d1[7] + d1[8]*d1[8]);
+
+    NekDouble du = dx / dru;
+    NekDouble dv = dx / drv;
+
     vector<NekDouble> w(7);
 
     for(int i = 0; i < 7; i++)
     {
         Array<OneD, NekDouble> uvt(2);
-        uvt[0] = uvc[0] + dir[i][0] * dx;
-        uvt[1] = uvc[1] + dir[i][1] * dx;
+        uvt[0] = uvc[0] + dir[i][0] * du;
+        uvt[1] = uvc[1] + dir[i][1] * dv;
         Array<OneD, NekDouble> p = surf->P(uvt);
         node->m_x = p[0];
         node->m_y = p[1];
         node->m_z = p[2];
         w[i] = GetFunctional<3>();
     }
+
+    Array<OneD, NekDouble> p = surf->P(uvc);
+    node->m_x = p[0];
+    node->m_y = p[1];
+    node->m_z = p[2];
 
     Array<OneD, NekDouble> ret(5,0.0);
 
@@ -365,11 +400,11 @@ Array<OneD, NekDouble> NodeOpti2D3D::GetGrad()
     //ret[4] d2/dxdy
 
 
-    ret[0] = (w[1] - w[4]) / 2.0 / dx;
-    ret[1] = (w[3] - w[6]) / 2.0 / dx;
-    ret[2] = (w[1] + w[4] - 2.0*w[0]) / dx / dx;
-    ret[3] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
-    ret[4] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / dx / dx;
+    ret[0] = (w[1] - w[4]) / 2.0 / du;
+    ret[1] = (w[3] - w[6]) / 2.0 / dv;
+    ret[2] = (w[1] + w[4] - 2.0*w[0]) / du / du;
+    ret[3] = (w[3] + w[6] - 2.0*w[0]) / dv / dv;
+    ret[4] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / du / dv;
 
     return ret;
 }
@@ -378,7 +413,6 @@ Array<OneD, NekDouble> NodeOpti2D2D::GetGrad()
 {
     NekDouble xc = node->m_x;
     NekDouble yc = node->m_y;
-    NekDouble dx = 1e-4;
     vector<NekDouble> w(9);
 
     for(int i = 0; i < 7; i++)
@@ -414,7 +448,6 @@ Array<OneD, NekDouble> NodeOpti3D3D::GetGrad()
     NekDouble xc = node->m_x;
     NekDouble yc = node->m_y;
     NekDouble zc = node->m_z;
-    NekDouble dx = 1e-6;
 
     vector<NekDouble> w;
 
@@ -551,12 +584,12 @@ NekDouble NodeOpti::GetFunctional()
             const NekDouble nu = 0.4;
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
+            NekDouble jacDet[nElmt][ptsHelp->ptsHigh],
+                       trEtE[nElmt][ptsHelp->ptsHigh];
+            NekDouble jacMin = 0.0;
 
             for (int i = 0; i < nElmt; ++i)
             {
-                //bool valid = true;
-                NekDouble jacDet[ptsHelp->ptsHigh], trEtE[ptsHelp->ptsHigh];
-
                 for(int k = 0; k < ptsHelp->ptsHigh; ++k)
                 {
                     NekDouble jacIdeal[DIM*DIM];
@@ -573,38 +606,20 @@ NekDouble NodeOpti::GetFunctional()
                             }
                         }
                     }
-                    jacDet[k] = JacDet<DIM>(jacIdeal);
-                    trEtE[k]  = LinElasTrace<DIM>(jacIdeal);
-                    //valid = valid ? jacDet[k] > 0.0 : false;
+                    jacDet[i][k] = JacDet<DIM>(jacIdeal);
+                    trEtE[i][k]  = LinElasTrace<DIM>(jacIdeal);
+                    jacMin = min(jacMin,jacDet[i][k]);
                 }
-
-                //if (!valid)
-                //{
-                    for(int k = 0; k < ptsHelp->ptsHigh; ++k)
-                    {
-                        NekDouble de = 1e-3 * data[i]->maps[k][9];
-                        NekDouble sigma;
-                        if(jacDet[k] < de*1e3)
-                        {
-                            sigma = 0.5*(jacDet[k] + sqrt(jacDet[k]*jacDet[k] + 4.0*de*de));
-                        }
-                        else
-                        {
-                            sigma = jacDet[k];
-                        }
-
-                        NekDouble lsigma = log(sigma);
-                        integral += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (K * 0.5 * lsigma * lsigma + mu * trEtE[k]);
-                    }
-                //}
-                //else
-                //{
-                //    for(int k = 0; k < ptsHelp->ptsHigh; ++k)
-                //    {
-                //        NekDouble lsigma = log(jacDet[k]);
-                //        integral += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (K * 0.5 * lsigma * lsigma + mu * trEtE[k]);
-                //    }
-                //}
+            }
+            NekDouble ep = sqrt(1e-22 + 0.004*jacMin*jacMin);
+            for (int i = 0; i < nElmt; ++i)
+            {
+                for(int k = 0; k < ptsHelp->ptsHigh; ++k)
+                {
+                    NekDouble sigma = 0.5*(jacDet[i][k] + sqrt(jacDet[i][k]*jacDet[i][k] + ep*ep));
+                    NekDouble lsigma = log(sigma);
+                    integral += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (K * 0.5 * lsigma * lsigma + mu * trEtE[i][k]);
+                }
             }
             break;
         }

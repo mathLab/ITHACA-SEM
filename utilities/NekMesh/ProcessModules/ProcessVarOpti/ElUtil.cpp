@@ -388,6 +388,9 @@ void ElUtil::Evaluate()
     //mtx2.lock();
     maps = MappingIdealToRef();
     //mtx2.unlock();
+
+    delta = pow(maps[0][9]/6.0, 1.0/m_dim) / m_el->GetConf().m_order / 10.0;
+
 }
 
 ElUtilJob* ElUtil::GetJob()

@@ -96,6 +96,8 @@ public:
      */
     Array<OneD, NekDouble> P(NekDouble t);
 
+    Array<OneD, NekDouble> D1(NekDouble t);
+
     /**
      * @brief Gets the second derivatives at t
      */

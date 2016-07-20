@@ -19,7 +19,9 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./EquationSystems/CompressibleFlowSystem.cpp
        ./EquationSystems/EulerCFE.cpp
        ./EquationSystems/EulerADCFE.cpp
+       ./EquationSystems/IsentropicVortex.cpp
        ./EquationSystems/NavierStokesCFE.cpp
+       ./EquationSystems/RinglebFlow.cpp
        ./Filters/FilterEnergy.cpp
        ./RiemannSolvers/AverageSolver.cpp
        ./RiemannSolvers/AUSM0Solver.cpp

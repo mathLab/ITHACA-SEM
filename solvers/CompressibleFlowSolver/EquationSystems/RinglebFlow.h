@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File EulerCFE.h
+// File RinglebFlow.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,41 +29,44 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in conservative variables without artificial diffusion
+// Description: Euler equations for Ringleb flow
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERCFE_H
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERCFE_H
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_RINGLEBFLOW_H
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_RINGLEBFLOW_H
 
-#include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
+#include <CompressibleFlowSolver/EquationSystems/EulerCFE.h>
 
 namespace Nektar
 {
 
-    class EulerCFE : public CompressibleFlowSystem
+    class RinglebFlow : public EulerCFE
     {
     public:
-        friend class MemoryManager<EulerCFE>;
+        friend class MemoryManager<RinglebFlow>;
 
         /// Creates an instance of this class.
         static SolverUtils::EquationSystemSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            SolverUtils::EquationSystemSharedPtr p = MemoryManager<EulerCFE>::AllocateSharedPtr(pSession);
+            SolverUtils::EquationSystemSharedPtr p = MemoryManager<RinglebFlow>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
         }
         /// Name of class.
         static std::string className;
 
-        virtual ~EulerCFE();
+        virtual ~RinglebFlow();
 
     protected:
 
-        EulerCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
+        RinglebFlow(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
+
+        /// Print a summary of time stepping parameters.
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
         void DoOdeRhs(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
@@ -73,10 +76,29 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const NekDouble                                   time);
-        virtual void v_SetInitialConditions(
-            NekDouble               initialtime = 0.0,
-            bool                    dumpInitialConditions = true,
-            const int domain = 0);
+
+        virtual void v_EvaluateExactSolution(
+            unsigned int            field,
+            Array<OneD, NekDouble> &outfield,
+            const NekDouble         time = 0.0);
+
+        virtual void v_SetBoundaryConditions(
+            Array<OneD, Array<OneD, NekDouble> >             &physarray,
+            NekDouble                                         time);
+
+    private:
+        /// Ringleb Flow Test Case.
+        void GetExactRinglebFlow(
+            int                                             field,
+            Array<OneD, NekDouble>                         &outarray);
+        void SetInitialRinglebFlow(
+            void);
+        void SetBoundaryRinglebFlow(
+            int                                              bcRegion,
+            NekDouble                                        time,
+            int                                              cnt,
+            Array<OneD, Array<OneD, NekDouble> >            &Fwd,
+            Array<OneD, Array<OneD, NekDouble> >            &physarray);
     };
 }
 #endif

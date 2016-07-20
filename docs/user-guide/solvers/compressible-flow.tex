@@ -245,6 +245,8 @@ Under this section it is possible to set the solver information.
 \begin{itemize}
 \item \inltt{NavierStokesCFE} (Compressible Navier-Stokes equations);
 \item \inltt{EulerCFE} (Compressible Euler equations).
+\item \inltt{IsentropicVortex} (Isentropic vortex test case).
+\item \inltt{RinglebFlow} (Ringleb flow test case).
 \end{itemize}
 \item \inltt{Projection} is the type of projection we want to use:
 \begin{itemize}
@@ -289,14 +291,6 @@ we want to use for the advection operator:
 \item \inltt{HLLC};
 \item \inltt{LaxFriedrichs};
 \item \inltt{Roe}.
-\end{itemize}
-\item \inltt{ProblemType} is the problem type we want to solve. 
-This tag is supported for solving ad hoc problems such as the 
-isentropic vortex or the Ringleb flow.
-\begin{itemize}
-\item \inltt{General};
-\item \inltt{IsentropicVortex};
-\item \inltt{RinglebFlow};\\[0.2em]
 \end{itemize}
 \item \inltt{ViscosityType} is the viscosity type we want to use:
 \begin{itemize}

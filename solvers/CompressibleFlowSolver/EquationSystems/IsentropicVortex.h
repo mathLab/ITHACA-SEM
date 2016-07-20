@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File EulerCFE.h
+// File IsentropicVortex.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,41 +29,44 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in conservative variables without artificial diffusion
+// Description: Euler equations for isentropic vortex
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERCFE_H
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERCFE_H
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_ISENVORTEX_H
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_ISENVORTEX_H
 
-#include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
+#include <CompressibleFlowSolver/EquationSystems/EulerCFE.h>
 
 namespace Nektar
 {
 
-    class EulerCFE : public CompressibleFlowSystem
+    class IsentropicVortex : public EulerCFE
     {
     public:
-        friend class MemoryManager<EulerCFE>;
+        friend class MemoryManager<IsentropicVortex>;
 
         /// Creates an instance of this class.
         static SolverUtils::EquationSystemSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            SolverUtils::EquationSystemSharedPtr p = MemoryManager<EulerCFE>::AllocateSharedPtr(pSession);
+            SolverUtils::EquationSystemSharedPtr p = MemoryManager<IsentropicVortex>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
         }
         /// Name of class.
         static std::string className;
 
-        virtual ~EulerCFE();
+        virtual ~IsentropicVortex();
 
     protected:
 
-        EulerCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
+        IsentropicVortex(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
+
+        /// Print a summary of time stepping parameters.
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
         void DoOdeRhs(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
@@ -77,6 +80,37 @@ namespace Nektar
             NekDouble               initialtime = 0.0,
             bool                    dumpInitialConditions = true,
             const int domain = 0);
+
+        virtual void v_EvaluateExactSolution(
+            unsigned int            field,
+            Array<OneD, NekDouble> &outfield,
+            const NekDouble         time = 0.0);
+
+        virtual void v_SetBoundaryConditions(
+            Array<OneD, Array<OneD, NekDouble> >             &physarray,
+            NekDouble                                         time);
+
+    private:
+        /// Isentropic Vortex Test Case.
+        void EvaluateIsentropicVortex(
+            const Array<OneD, NekDouble>                    &x,
+            const Array<OneD, NekDouble>                    &y,
+            const Array<OneD, NekDouble>                    &z,
+                  Array<OneD, Array<OneD, NekDouble> >      &u,
+                  NekDouble                                  time,
+            const int                                        o = 0);
+        void GetExactIsentropicVortex(
+            int                                              field,
+            Array<OneD, NekDouble>                          &outarray,
+            NekDouble                                        time);
+        void SetInitialIsentropicVortex(
+            NekDouble                                        initialtime);
+        void SetBoundaryIsentropicVortex(
+            int                                              bcRegion,
+            NekDouble                                        time,
+            int                                              cnt,
+            Array<OneD, Array<OneD, NekDouble> >            &Fwd,
+            Array<OneD, Array<OneD, NekDouble> >            &physarray);
     };
 }
 #endif

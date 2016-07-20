@@ -132,6 +132,8 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
 
+        void InitializeSteadyState();
+
         void SetBoundaryConditions(
             Array<OneD, Array<OneD, NekDouble> >             &physarray,
             NekDouble                                         time);

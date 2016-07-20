@@ -1583,6 +1583,40 @@ namespace Nektar
         bool      dumpInitialConditions,
         const int domain)
     {
+        EquationSystem::v_SetInitialConditions(initialtime, false);
+
+        // insert white noise in initial condition
+        NekDouble Noise;
+        int phystot = m_fields[0]->GetTotPoints();
+        Array<OneD, NekDouble> noise(phystot);
+
+        m_session->LoadParameter("Noise", Noise,0.0);
+        int m_nConvectiveFields =  m_fields.num_elements();
+
+        if (Noise > 0.0)
+        {
+            for (int i = 0; i < m_nConvectiveFields; i++)
+            {
+                Vmath::FillWhiteNoise(phystot, Noise, noise, 1,
+                                      m_comm->GetColumnComm()->GetRank()+1);
+                Vmath::Vadd(phystot, m_fields[i]->GetPhys(), 1,
+                            noise, 1, m_fields[i]->UpdatePhys(), 1);
+                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
+                                                 m_fields[i]->UpdateCoeffs());
+            }
+        }
+
+        InitializeSteadyState();
+
+        if (dumpInitialConditions)
+        {
+            // Dump initial conditions to file
+            Checkpoint_Output(0);
+        }
+    }
+
+    void CompressibleFlowSystem::InitializeSteadyState()
+    {
         if (m_session->DefinesParameter("SteadyStateTol"))
         {
             const int nPoints = m_fields[0]->GetTotPoints();

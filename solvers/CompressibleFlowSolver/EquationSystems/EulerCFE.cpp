@@ -80,25 +80,6 @@ namespace Nektar
     }
 
     /**
-     * @brief Set the initial conditions.
-     */
-    void EulerCFE::v_SetInitialConditions(
-        NekDouble   initialtime, 
-        bool        dumpInitialConditions,
-        const int   domain)
-    {
-        EquationSystem::v_SetInitialConditions(initialtime, false);
-
-        CompressibleFlowSystem::v_SetInitialConditions();
-
-        if (dumpInitialConditions && m_checksteps)
-        {
-            // Dump initial conditions to file
-            Checkpoint_Output(0);
-        }
-    }
-
-    /**
      * @brief Compute the right-hand side.
      */
     void EulerCFE::DoOdeRhs(

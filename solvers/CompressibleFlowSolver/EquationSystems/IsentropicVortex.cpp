@@ -79,7 +79,7 @@ namespace Nektar
         bool        dumpInitialConditions,
         const int   domain)
     {
-        CompressibleFlowSystem::v_SetInitialConditions();
+        InitializeSteadyState();
 
         int nTotQuadPoints  = GetTotPoints();
         Array<OneD, NekDouble> x(nTotQuadPoints);

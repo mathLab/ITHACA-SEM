@@ -172,24 +172,6 @@ namespace Nektar
                                                   GetViscousFluxVector, this);
                 }
 
-                std::string eqTypeStr = m_session->GetSolverInfo("EQTYPE");
-                if (m_shockCaptureType=="Smooth" && eqTypeStr=="EulerADCFE")
-                {
-                    m_advection->SetFluxVector(&CompressibleFlowSystem::
-                                               GetFluxVector, this);
-
-                    m_diffusion->SetArtificialDiffusionVector(
-                        &CompressibleFlowSystem::GetSmoothArtificialViscosity, this);
-                }
-                if (m_shockCaptureType=="NonSmooth" && eqTypeStr=="EulerADCFE")
-                {
-                    m_advection->SetFluxVector(&CompressibleFlowSystem::
-                                               GetFluxVector, this);
-
-                    m_diffusion->SetArtificialDiffusionVector(
-                        &CompressibleFlowSystem::GetArtificialDynamicViscosity, this);
-                }
-
                 // Setting up Riemann solver for advection operator
                 m_session->LoadSolverInfo("UpwindType", riemName, "Average");
 
@@ -1699,186 +1681,6 @@ namespace Nektar
 
     }
 
-    void CompressibleFlowSystem::GetForcingTerm(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > outarrayForcing)
-    {
-        const int nPts = m_fields[0]->GetTotPoints();
-        const int nvariables = m_fields.num_elements();
-        const int nElements = m_fields[0]->GetExpSize();
-
-        Array<OneD,  NekDouble>  Sensor(nPts, 0.0);
-        Array<OneD,  NekDouble>  SensorKappa(nPts, 0.0);
-        Array <OneD, NekDouble > Lambda(nPts, 0.0);
-        Array <OneD, NekDouble > Tau(nPts, 1.0);
-        Array <OneD, NekDouble > soundspeed(nPts, 0.0);
-        Array <OneD, NekDouble > pressure(nPts, 0.0);
-        Array <OneD, NekDouble > temperature(nPts, 0.0);
-        Array <OneD, NekDouble > absVelocity(nPts, 0.0);
-        Array <OneD, NekDouble > hel(nPts, 0.0);
-        Array <OneD, NekDouble > h_minmin(m_spacedim, 0.0);
-
-        Array<OneD,int> pOrderElmt = GetNumExpModesPerExp();
-        Array<OneD, NekDouble> pOrder (nPts, 0.0);
-
-        // Thermodynamic related quantities
-        m_varConv->GetPressure(inarray, pressure);
-        m_varConv->GetTemperature(inarray, pressure, temperature);
-        m_varConv->GetSoundSpeed(inarray, pressure, soundspeed);
-        m_varConv->GetAbsoluteVelocity(inarray, absVelocity);
-        GetSensor(inarray, Sensor, SensorKappa);
-
-        // Determine the maximum wavespeed
-        Vmath::Vadd(nPts, absVelocity, 1, soundspeed, 1, Lambda, 1);
-
-        NekDouble LambdaMax = Vmath::Vmax(nPts, Lambda, 1);
-
-        int PointCount = 0;
-
-        for (int e = 0; e < nElements; e++)
-        {
-            int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-
-            for (int n = 0; n < nQuadPointsElement; n++)
-            {
-                pOrder[n + PointCount] = pOrderElmt[e];
-
-                // order 1.0e-06
-                Tau[n + PointCount] =
-                    1.0 / (m_C1*pOrder[n + PointCount]*LambdaMax);
-
-                outarrayForcing[nvariables-1][n + PointCount] =
-                    1 / Tau[n + PointCount] * (m_hFactor * LambdaMax /
-                                        pOrder[n + PointCount] *
-                                        SensorKappa[n + PointCount] -
-                                        inarray[nvariables-1][n + PointCount]);
-            }
-            PointCount += nQuadPointsElement;
-        }
-    }
-
-    void CompressibleFlowSystem::GetSmoothArtificialViscosity(
-        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-              Array<OneD,             NekDouble  > &eps_bar)
-    {
-        int nvariables = physfield.num_elements();
-        int nPts       = m_fields[0]->GetTotPoints();
-
-        Array<OneD, NekDouble > pressure   (nPts, 0.0);
-        Array<OneD, NekDouble > temperature(nPts, 0.0);
-        Array<OneD, NekDouble > sensor     (nPts, 0.0);
-        Array<OneD, NekDouble > SensorKappa(nPts, 0.0);
-        Array<OneD, NekDouble > absVelocity(nPts, 0.0);
-        Array<OneD, NekDouble > soundspeed (nPts, 0.0);
-        Array<OneD, NekDouble > Lambda     (nPts, 0.0);
-        Array<OneD, NekDouble > mu_var     (nPts, 0.0);
-        Array<OneD, NekDouble > h_minmin   (m_spacedim, 0.0);
-        Vmath::Zero(nPts, eps_bar, 1);
-
-        // Thermodynamic related quantities
-        m_varConv->GetPressure(physfield, pressure);
-        m_varConv->GetTemperature(physfield, pressure, temperature);
-        m_varConv->GetSoundSpeed(physfield, pressure, soundspeed);
-        m_varConv->GetAbsoluteVelocity(physfield, absVelocity);
-        GetSensor(physfield, sensor, SensorKappa);
-
-        // Determine the maximum wavespeed
-        Vmath::Vadd(nPts, absVelocity, 1, soundspeed, 1, Lambda, 1);
-
-        // Determine hbar = hx_i/h
-        Array<OneD,int> pOrderElmt = GetNumExpModesPerExp();
-
-        NekDouble ThetaH = m_FacH;
-        NekDouble ThetaL = m_FacL;
-
-        NekDouble Phi0     = (ThetaH+ThetaL)/2;
-        NekDouble DeltaPhi = ThetaH-Phi0;
-
-        Vmath::Zero(eps_bar.num_elements(), eps_bar, 1);
-
-        for (int e = 0; e < eps_bar.num_elements(); e++)
-        {
-            if (physfield[nvariables-1][e] <= (Phi0 - DeltaPhi))
-            {
-                eps_bar[e] = 0;
-            }
-            else if(physfield[nvariables-1][e] >= (Phi0 + DeltaPhi))
-            {
-                eps_bar[e] = m_mu0;
-            }
-            else if(abs(physfield[nvariables-1][e]-Phi0) < DeltaPhi)
-            {
-                eps_bar[e] = m_mu0/2*(1+sin(M_PI*
-                (physfield[nvariables-1][e]-Phi0)/(2*DeltaPhi)));
-            }
-        }
-
-    }
-
-    void CompressibleFlowSystem::GetArtificialDynamicViscosity(
-        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-              Array<OneD,             NekDouble  > &mu_var)
-    {
-        const int nElements = m_fields[0]->GetExpSize();
-        int PointCount      = 0;
-        int nTotQuadPoints  = GetTotPoints();
-
-        Array<OneD, NekDouble> S_e        (nTotQuadPoints, 0.0);
-        Array<OneD, NekDouble> se         (nTotQuadPoints, 0.0);
-        Array<OneD, NekDouble> Sensor     (nTotQuadPoints, 0.0);
-        Array<OneD, NekDouble> SensorKappa(nTotQuadPoints, 0.0);
-        Array<OneD, NekDouble> absVelocity(nTotQuadPoints, 0.0);
-        Array<OneD, NekDouble> soundspeed (nTotQuadPoints, 0.0);
-        Array<OneD, NekDouble> pressure   (nTotQuadPoints, 0.0);
-
-        m_varConv->GetAbsoluteVelocity(physfield, absVelocity);
-        m_varConv->GetPressure        (physfield, pressure);
-        m_varConv->GetSoundSpeed      (physfield, pressure, soundspeed);
-        GetSensor          (physfield, Sensor, SensorKappa);
-
-        Array<OneD, NekDouble> Lambda(nTotQuadPoints, 1.0);
-        Vmath::Vadd(nTotQuadPoints, absVelocity, 1, soundspeed, 1, Lambda, 1);
-
-        for (int e = 0; e < nElements; e++)
-        {
-            // Threshold value specified in C. Biottos thesis.  Based on a 1D
-            // shock tube problem S_k = log10(1/p^4). See G.E. Barter and
-            // D.L. Darmofal. Shock Capturing with PDE-based artificial
-            // diffusion for DGFEM: Part 1 Formulation, Journal of Computational
-            // Physics 229 (2010) 1810-1827 for further reference
-
-            // Adjustable depending on the coarsness of the mesh. Might want to
-            // move this variable into the session file
-
-            int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-
-            for (int n = 0; n < nQuadPointsElement; n++)
-            {
-                NekDouble mu_0 = m_mu0;
-
-                if (Sensor[n+PointCount] < (m_Skappa-m_Kappa))
-                {
-                    mu_var[n+PointCount] = 0;
-                }
-                else if (Sensor[n+PointCount] >= (m_Skappa-m_Kappa)
-                        && Sensor[n+PointCount] <= (m_Skappa+m_Kappa))
-                {
-                    mu_var[n+PointCount] = mu_0 * (0.5 * (1 + sin(
-                                           M_PI * (Sensor[n+PointCount] -
-                                                   m_Skappa - m_Kappa) /
-                                                            (2*m_Kappa))));
-                }
-                else if (Sensor[n+PointCount] > (m_Skappa+m_Kappa))
-                {
-                    mu_var[n+PointCount] = mu_0;
-                }
-            }
-
-            PointCount += nQuadPointsElement;
-        }
-    }
-
-
     void CompressibleFlowSystem::v_ExtraFldOutput(
         std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
         std::vector<std::string>             &variables)
@@ -1898,33 +1700,29 @@ namespace Nektar
             }
 
             Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys);
-            Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys), smooth(nPhys);
+            Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys);
 
             m_varConv->GetPressure  (tmp, pressure);
             m_varConv->GetSoundSpeed(tmp, pressure, soundspeed);
             m_varConv->GetMach      (tmp, soundspeed, mach);
             GetSensor    (tmp, sensor, SensorKappa);
-            GetSmoothArtificialViscosity    (tmp, smooth);
 
             Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs);
-            Array<OneD, NekDouble> sensFwd(nCoeffs), smoothFwd(nCoeffs);
+            Array<OneD, NekDouble> sensFwd(nCoeffs);
 
             m_fields[0]->FwdTrans(pressure,   pFwd);
             m_fields[0]->FwdTrans(soundspeed, sFwd);
             m_fields[0]->FwdTrans(mach,       mFwd);
             m_fields[0]->FwdTrans(sensor,     sensFwd);
-            m_fields[0]->FwdTrans(smooth,     smoothFwd);
 
             variables.push_back  ("p");
             variables.push_back  ("a");
             variables.push_back  ("Mach");
             variables.push_back  ("Sensor");
-            variables.push_back  ("SmoothVisc");
             fieldcoeffs.push_back(pFwd);
             fieldcoeffs.push_back(sFwd);
             fieldcoeffs.push_back(mFwd);
             fieldcoeffs.push_back(sensFwd);
-            fieldcoeffs.push_back(smoothFwd);
         }
     }
 }

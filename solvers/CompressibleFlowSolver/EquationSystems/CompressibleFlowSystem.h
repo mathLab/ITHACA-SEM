@@ -142,9 +142,6 @@ namespace Nektar
                          Array<OneD, Array<OneD, NekDouble> > &Fwd,
                          Array<OneD, Array<OneD, NekDouble> > &inarray);
 
-        void GetSmoothArtificialViscosity(
-            const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,             NekDouble  > &eps_bar);
         void GetStdVelocity(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,                   NekDouble>   &stdV);
@@ -156,12 +153,7 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &physarray,
                   Array<OneD,                   NekDouble>   &Sensor,
                   Array<OneD,                   NekDouble>   &SensorKappa);
-        void GetArtificialDynamicViscosity(
-            const Array<OneD,  Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,              NekDouble>   &mu_var);
-        void GetForcingTerm(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > outarrayForcing);
+
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
         virtual void v_SetInitialConditions(

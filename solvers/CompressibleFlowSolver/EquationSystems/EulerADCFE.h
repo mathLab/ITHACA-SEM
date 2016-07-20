@@ -40,18 +40,8 @@
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 
 namespace Nektar
-{  
-    enum ProblemType
-    {           
-        eGeneral,          ///< No problem defined - Default Inital data
-        SIZE_ProblemType   ///< Length of enum list
-    };
-  
-    const char* const ProblemTypeMap[] =
-    {
-        "General"
-    };
-  
+{
+
     /**
      * 
      * 
@@ -75,17 +65,11 @@ namespace Nektar
     
         virtual ~EulerADCFE();
 
-        ///< problem type selector
-        ProblemType m_problemType;
-    
     protected:
         EulerADCFE(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
-
-        /// Print a summary of time stepping parameters.
-        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
         void DoOdeRhs(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
@@ -97,10 +81,21 @@ namespace Nektar
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const NekDouble                                   time);
 
-        virtual void v_SetInitialConditions(
-            NekDouble initialtime = 0.0,
-            bool dumpInitialConditions = true,
-            const int domain = 0);
+        void GetSmoothArtificialViscosity(
+            const Array<OneD, Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,             NekDouble  > &eps_bar);
+
+        void GetArtificialDynamicViscosity(
+            const Array<OneD,  Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,              NekDouble>   &mu_var);
+
+        void GetForcingTerm(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > outarrayForcing);
+
+        virtual void v_ExtraFldOutput(
+            std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+            std::vector<std::string>             &variables);
     };
 }
 #endif

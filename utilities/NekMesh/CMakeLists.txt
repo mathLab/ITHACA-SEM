@@ -68,6 +68,12 @@ IF (NEKTAR_USE_MESHGEN)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputCAD.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
 
+IF (NEKTAR_USE_ANN)
+   LIST(APPEND NekMeshSources ProcessModules/ProcessNormalFromPlyFileANN.cpp)
+ELSE (NEKTAR_USE_ANN)
+   LIST(APPEND NekMeshSources ProcessModules/ProcessNormalFromPlyFile.cpp)
+ENDIF (NEKTAR_USE_ANN)
+
 # Don't use macro -- this way we can just link against NekMeshUtils and
 # LocalRegions.
 ADD_EXECUTABLE(NekMesh ${NekMeshSources})

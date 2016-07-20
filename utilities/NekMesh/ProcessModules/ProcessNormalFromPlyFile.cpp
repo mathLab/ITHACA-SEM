@@ -1,6 +1,6 @@
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessSpherigon.h
+//  File: ProcessNormalFromPlyFile.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,54 +29,62 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Refine boundary layer of elements.
+//  Description: Method for processing normals from ply file which is
+//  part of the ProcessSpherigon method
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_PROCESSJAC
-#define UTILITIES_NEKMESH_PROCESSJAC
+#include "ProcessSpherigon.h"
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
 
-
-#include "../Module.h"
-#include "../InputModules/InputPly.h"
+using namespace std;
 
 namespace Nektar
 {
 namespace Utilities
 {
-
-class ProcessSpherigon : public ProcessModule
+void ProcessSpherigon::FindNormalFromPlyFile(MeshSharedPtr &plymesh,
+                                             map<int,NodeSharedPtr> &surfverts)
 {
-public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    int      cnt = 0;
+    int      j;
+    int      prog,cntmin;
+    NodeSet::iterator it;
+    map<int, NodeSharedPtr>::iterator vIt;
+    Node     tmp,tmpsav;
+    NekDouble mindiff, diff;
+
+    for (vIt = surfverts.begin(); vIt != surfverts.end(); ++vIt, ++cnt)
     {
-        return MemoryManager<ProcessSpherigon>::AllocateSharedPtr(m);
+        if(m_mesh->m_verbose)
+        {
+            prog = LibUtilities::PrintProgressbar(cnt,surfverts.size(),
+                                                  "Nearest ply verts",prog);
+        }
+        
+        mindiff = 1e12;
+        
+        for (j = 0, it = plymesh->m_vertexSet.begin();
+             it != plymesh->m_vertexSet.end();
+             ++it, ++j)
+        {
+            tmp  = *(vIt->second) - *(*it);
+            diff = tmp.abs2();
+            
+            if (diff < mindiff)
+            {
+                mindiff = diff;
+                cntmin  = (*it)->m_id;
+                tmpsav  = tmp;
+            }
+        }
+        
+        ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),
+                 "cntmin is out of range");
+        m_mesh->m_vertexNormals[vIt->first] =
+            plymesh->m_vertexNormals[cntmin];
+        
     }
-    static ModuleKey className;
-
-    ProcessSpherigon(MeshSharedPtr m);
-    virtual ~ProcessSpherigon();
-
-    /// Write mesh to output file.
-    virtual void Process();
-
-protected:
-    void  GenerateNormals(std::vector<ElementSharedPtr> &el,
-                            MeshSharedPtr &mesh);
-    NekDouble CrossProdMag (Node &a, Node &b);
-    void   UnitCrossProd   (Node &a, Node &b, Node &c);
-    NekDouble Blend        (NekDouble r);
-    void   SuperBlend      (std::vector<NekDouble> &r,
-                            std::vector<Node>   &Q,
-                            Node           &P,
-                            std::vector<NekDouble> &blend);
-
-    void  FindNormalFromPlyFile(MeshSharedPtr &plymesh,
-                                std::map<int,NodeSharedPtr> &surfverts);
-};
-
 }
 }
-
-#endif
+}

@@ -44,9 +44,6 @@
 #include <NekMeshUtils/MeshElements/Element.h>
 
 #include "ProcessSpherigon.h"
-#include <LibUtilities/BasicUtils/Progressbar.hpp>
-
-#include "ANN/ANN.h"
 
 using namespace std;
 using namespace Nektar::NekMeshUtils;
@@ -57,7 +54,6 @@ namespace Nektar
 {
 namespace Utilities
 {
-
 ModuleKey ProcessSpherigon::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "spherigon"), ProcessSpherigon::create);
@@ -485,7 +481,6 @@ void ProcessSpherigon::Process()
         inply.open(normalfile.c_str());
         ASSERTL0(inply, string("Could not open input ply file: ") + normalfile);
 
-        int j;
         MeshSharedPtr m = boost::shared_ptr<Mesh>(new Mesh());
         plyfile = boost::shared_ptr<InputPly>(new InputPly(m));
         plyfile->ReadPly(inply, scale);
@@ -517,115 +512,16 @@ void ProcessSpherigon::Process()
             }
         }
 
-        // loop over all element in ply mesh and determine
-        // xmin,xmax,ymin,ymax as search criterion
-
-        NekDouble mindiff, diff;
-        int cntmin;
 
         if (m_mesh->m_verbose)
         {
             cout << "\t Processing surface normals " << endl;
         }
 
-#if 1  // use libANN
-        int n_neighbs = 5;
-        int neighbs_max = 100; 
-        int nplypts = plymesh->m_vertexSet.size();
-        ANNpointArray dataPts = annAllocPts(nplypts, 3);
-        ANNidxArray   nnIdx = new ANNidx [neighbs_max];
-        ANNdistArray  dists = new ANNdist[neighbs_max];
-        map<int,int>  AnnidtoPlyid; 
-        
-        //Fill vertex array into libAnn format
-        for (j = 0, it = plymesh->m_vertexSet.begin();
-             it != plymesh->m_vertexSet.end();
-             ++it, ++j)
-        {
-            dataPts[j][0] = (*it)->m_x;
-            dataPts[j][1] = (*it)->m_y;
-            dataPts[j][2] = (*it)->m_z;
-            AnnidtoPlyid[j] = (*it)->m_id;
-        }
-        
-        //Build tree
-        ANNkd_tree* kdTree;
-        // build search structure
-        kdTree = new ANNkd_tree( dataPts,	  // the data points
-                                 nplypts,	  // number of points
-                                 3);	  // dimension of space
-        
-        //Find neipghbours
-        ANNpoint queryPt = annAllocPt(3);
-        int      unique_index = 0;
-        bool     unique_index_found = false;
-        int      prog; 
-        int      cnt;
-        
-        for (cnt = 0, vIt = surfverts.begin(); vIt != surfverts.end();
-             ++vIt, ++cnt)
-        {
-            if(m_mesh->m_verbose)
-            {
-                prog = LibUtilities::PrintProgressbar(cnt,surfverts.size(),
-                                                      "Nearest ply verts",prog);
-            }
+        // loop over all element in ply mesh and determine
+        // and set normal to nearest point in ply mesh
+        FindNormalFromPlyFile(plymesh,surfverts);
 
-            n_neighbs  = 5; 
-            queryPt[0] = vIt->second->m_x; 
-            queryPt[1] = vIt->second->m_y;
-            queryPt[2] = vIt->second->m_z;
-            kdTree->annkSearch(queryPt, n_neighbs, nnIdx, dists, 0); //eps set to zero
-            
-            ASSERTL1(dists[0] < dists[1],"Assumption that dist values are ordered from smallest to largest is not correct");
-
-            cntmin = AnnidtoPlyid[nnIdx[0]];
-            
-            ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),
-                     "cntmin is out of range");
-            
-            m_mesh->m_vertexNormals[vIt->first] =
-                plymesh->m_vertexNormals[cntmin];
-
-        }
-    
-#else // original 
-        int cnt = 0;
-        map<int, int> locnorm;
-        int      prog; 
-        for (vIt = surfverts.begin(); vIt != surfverts.end(); ++vIt, ++cnt)
-        {
-            if(m_mesh->m_verbose)
-            {
-                prog = LibUtilities::PrintProgressbar(cnt,surfverts.size(),
-                                                      "Nearest ply verts",prog);
-            }
-            
-            mindiff = 1e12;
-
-            for (j = 0, it = plymesh->m_vertexSet.begin();
-                 it != plymesh->m_vertexSet.end();
-                 ++it, ++j)
-            {
-                tmp  = *(vIt->second) - *(*it);
-                diff = tmp.abs2();
-
-                if (diff < mindiff)
-                {
-                    mindiff = diff;
-                    cntmin  = (*it)->m_id;
-                    tmpsav  = tmp;
-                }
-            }
-            locnorm[cntmin] = vIt->first;
-
-            ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),
-                     "cntmin is out of range");
-            m_mesh->m_vertexNormals[vIt->first] =
-                plymesh->m_vertexNormals[cntmin];
-
-        }
-#endif
         normalsGenerated = true;
     }
     else if (m_mesh->m_vertexNormals.size() == 0)

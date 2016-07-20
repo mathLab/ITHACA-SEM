@@ -100,8 +100,8 @@ namespace Nektar
 
         // Extract pressure and temperature
         Array<OneD, NekDouble > pressure   (npoints);
-        GetPressure(inarray, pressure);
-        GetTemperature(inarray, pressure, inarrayDiff[nvariables-2]);
+        m_varConv->GetPressure(inarray, pressure);
+        m_varConv->GetTemperature(inarray, pressure, inarrayDiff[nvariables-2]);
 
         // Extract velocities
         for (i = 1; i < nvariables-1; ++i)

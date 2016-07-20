@@ -61,6 +61,9 @@ namespace Nektar
     {
         UnsteadySystem::v_InitObject();
 
+        m_varConv = MemoryManager<VariableConverter>::AllocateSharedPtr(
+                    m_session, m_spacedim);
+
         ASSERTL0(m_session->DefinesSolverInfo("UPWINDTYPE"),
                  "No UPWINDTYPE defined in session.");
 
@@ -85,7 +88,7 @@ namespace Nektar
         m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
 
         // Get uInf parameter from session file.
-        NekDouble velInf;
+        NekDouble velInf, gasConstant;
         m_session->LoadParameter("uInf", velInf, 0.1);
 
         m_UInf = velInf*velInf;
@@ -105,7 +108,7 @@ namespace Nektar
         }
         m_UInf = sqrt(m_UInf);
 
-        m_session->LoadParameter ("GasConstant",   m_gasConstant,   287.058);
+        m_session->LoadParameter ("GasConstant",   gasConstant,   287.058);
         m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
         m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
         m_session->LoadParameter ("Skappa",        m_Skappa,        -2.048);
@@ -121,7 +124,7 @@ namespace Nektar
         m_session->LoadParameter ("thermalConductivity",
                                   m_thermalConductivity, 0.0257);
 
-        m_Cp      = m_gamma / (m_gamma - 1.0) * m_gasConstant;
+        m_Cp      = m_gamma / (m_gamma - 1.0) * gasConstant;
         m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
 
         m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 0.0);
@@ -320,8 +323,8 @@ namespace Nektar
             Vmath::Vcopy(nq, physfield[i+1], 1, flux[0][i], 1);
         }
 
-        GetVelocityVector(physfield, velocity);
-        GetPressure      (physfield, velocity, pressure);
+        m_varConv->GetVelocityVector(physfield, velocity);
+        m_varConv->GetPressure(physfield, velocity, pressure);
 
         // Flux vector for the velocity fields
         for (i = 0; i < m_spacedim; ++i)
@@ -407,8 +410,8 @@ namespace Nektar
                 OneDptscale, physfield_interp[i+1], flux[0][i]);
         }
 
-        GetVelocityVector(physfield_interp, velocity);
-        GetPressure      (physfield_interp, velocity, pressure);
+        m_varConv->GetVelocityVector(physfield_interp, velocity);
+        m_varConv->GetPressure      (physfield_interp, velocity, pressure);
 
         // Evaluation of flux vector for the velocity fields
         for (i = 0; i < m_spacedim; ++i)
@@ -477,7 +480,7 @@ namespace Nektar
         // Variable viscosity through the Sutherland's law
         if (m_ViscosityType == "Variable")
         {
-            GetDynamicViscosity(physfield[nVariables-2], mu);
+            m_varConv->GetDynamicViscosity(physfield[nVariables-2], mu);
             NekDouble tRa = m_Cp / m_Prandtl;
             Vmath::Smul(nPts, tRa, &mu[0], 1, &thermalConductivity[0], 1);
         }
@@ -864,13 +867,13 @@ namespace Nektar
         }
 
         // Thermodynamic related quantities
-        GetPressure(fields_interp, pressure);
-        GetTemperature(fields_interp, pressure, temperature);
+        m_varConv->GetPressure(fields_interp, pressure);
+        m_varConv->GetTemperature(fields_interp, pressure, temperature);
 
         // Variable viscosity through the Sutherland's law
         if (m_ViscosityType == "Variable")
         {
-            GetDynamicViscosity(fields_interp[variables_phys-1], mu);
+            m_varConv->GetDynamicViscosity(fields_interp[variables_phys-1], mu);
         }
         else
         {
@@ -1207,202 +1210,6 @@ namespace Nektar
 }
 
     /**
-     * @brief Calculate the pressure field \f$ p =
-     * (\gamma-1)(E-\frac{1}{2}\rho\| \mathbf{v} \|^2) \f$ assuming an ideal
-     * gas law.
-     *
-     * @param physfield  Input momentum.
-     * @param pressure   Computed pressure field.
-     */
-    void CompressibleFlowSystem::GetPressure(
-        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-              Array<OneD,                   NekDouble>   &pressure)
-    {
-        int       nBCEdgePts  = physfield[0].num_elements();
-        NekDouble alpha = -0.5;
-
-        // Calculate ||rho v||^2
-        Vmath::Vmul(nBCEdgePts, physfield[1], 1, physfield[1], 1, pressure, 1);
-        for (int i = 1; i < m_spacedim; ++i)
-        {
-            Vmath::Vvtvp(nBCEdgePts, physfield[1+i], 1, physfield[1+i], 1,
-                               pressure,       1, pressure,       1);
-        }
-        // Divide by rho to get rho*||v||^2
-        Vmath::Vdiv (nBCEdgePts, pressure, 1, physfield[0], 1, pressure, 1);
-        // pressure <- E - 0.5*pressure
-        Vmath::Svtvp(nBCEdgePts, alpha,
-                     pressure, 1, physfield[m_spacedim+1], 1, pressure, 1);
-        // Multiply by (gamma-1)
-        Vmath::Smul (nBCEdgePts, m_gamma-1, pressure, 1, pressure, 1);
-    }
-
-    /**
-     * @brief Compute the enthalpy term \f$ H = E + p/rho \$.
-     */
-    void CompressibleFlowSystem::GetEnthalpy(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure,
-                  Array<OneD,                   NekDouble>   &enthalpy)
-    {
-        int npts  = m_fields[0]->GetTotPoints();
-        Array<OneD, NekDouble> tmp(npts, 0.0);
-
-        // Calculate E = rhoE/rho
-        Vmath::Vdiv(npts, physfield[m_spacedim+1], 1, physfield[0], 1, tmp, 1);
-        // Calculate p/rho
-        Vmath::Vdiv(npts, pressure, 1, physfield[0], 1, enthalpy, 1);
-        // Calculate H = E + p/rho
-        Vmath::Vadd(npts, tmp, 1, enthalpy, 1, enthalpy, 1);
-    }
-
-    /**
-     * @brief Calculate the pressure field \f$ p =
-     * (\gamma-1)(E-\frac{1}{2}\rho\| \mathbf{v} \|^2) \f$ assuming an ideal
-     * gas law.
-     *
-     * This is a slightly optimised way to calculate the pressure field which
-     * avoids division by the density field if the velocity field has already
-     * been calculated.
-     *
-     * @param physfield  Input momentum.
-     * @param velocity   Velocity vector.
-     * @param pressure   Computed pressure field.
-     */
-    void CompressibleFlowSystem::GetPressure(
-        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-        const Array<OneD, const Array<OneD, NekDouble> > &velocity,
-              Array<OneD,                   NekDouble>   &pressure)
-    {
-        int nBCEdgePts = physfield[0].num_elements();
-        NekDouble alpha = -0.5;
-
-        // Calculate ||\rho v||^2.
-        Vmath::Vmul (nBCEdgePts, velocity[0], 1, physfield[1], 1, pressure, 1);
-        for (int i = 1; i < m_spacedim; ++i)
-        {
-            Vmath::Vvtvp(nBCEdgePts, velocity[i], 1, physfield[1+i], 1,
-                               pressure,    1, pressure,       1);
-        }
-        // pressure <- E - 0.5*pressure
-        Vmath::Svtvp(nBCEdgePts,     alpha,
-                     pressure, 1, physfield[m_spacedim+1], 1, pressure, 1);
-        // Multiply by (gamma-1).
-        Vmath::Smul (nBCEdgePts, m_gamma-1, pressure, 1, pressure, 1);
-    }
-
-    /**
-     * @brief Compute the velocity field \f$ \mathbf{v} \f$ given the momentum
-     * \f$ \rho\mathbf{v} \f$.
-     *
-     * @param physfield  Momentum field.
-     * @param velocity   Velocity field.
-     */
-    void CompressibleFlowSystem::GetVelocityVector(
-        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-              Array<OneD, Array<OneD, NekDouble> > &velocity)
-    {
-        const int nBCEdgePts = physfield[0].num_elements();
-
-        for (int i = 0; i < m_spacedim; ++i)
-        {
-            Vmath::Vdiv(nBCEdgePts, physfield[1+i], 1, physfield[0], 1,
-                              velocity[i],    1);
-        }
-    }
-
-    /**
-     * @brief Compute the temperature \f$ T = p/\rho R \f$.
-     *
-     * @param physfield    Input physical field.
-     * @param pressure     The pressure field corresponding to physfield.
-     * @param temperature  The resulting temperature \f$ T \f$.
-     */
-    void CompressibleFlowSystem::GetTemperature(
-        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-        Array<OneD,                         NekDouble  > &pressure,
-        Array<OneD,                         NekDouble  > &temperature)
-    {
-        const int nq = physfield[0].num_elements();
-
-        Vmath::Vdiv(nq, pressure, 1, physfield[0], 1, temperature, 1);
-        Vmath::Smul(nq, 1.0/m_gasConstant, temperature, 1, temperature, 1);
-    }
-
-    /**
-     * @brief Compute the sound speed \f$ c = sqrt(\gamma p/\rho) \f$.
-     *
-     * @param physfield    Input physical field.
-     * @param pressure     The pressure field corresponding to physfield.
-     * @param soundspeed   The resulting sound speed \f$ c \f$.
-     */
-    void CompressibleFlowSystem::GetSoundSpeed(
-        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-              Array<OneD,             NekDouble  > &pressure,
-              Array<OneD,             NekDouble  > &soundspeed)
-    {
-        const int nq = m_fields[0]->GetTotPoints();
-        Vmath::Vdiv (nq, pressure, 1, physfield[0], 1, soundspeed, 1);
-        Vmath::Smul (nq, m_gamma, soundspeed, 1, soundspeed, 1);
-        Vmath::Vsqrt(nq, soundspeed, 1, soundspeed, 1);
-    }
-
-    /**
-     * @brief Compute the mach number \f$ M = \| \mathbf{v} \|^2 / c \f$.
-     *
-     * @param physfield    Input physical field.
-     * @param soundfield   The speed of sound corresponding to physfield.
-     * @param mach         The resulting mach number \f$ M \f$.
-     */
-    void CompressibleFlowSystem::GetMach(
-        Array<OneD, Array<OneD, NekDouble> > &physfield,
-        Array<OneD,             NekDouble  > &soundspeed,
-        Array<OneD,             NekDouble  > &mach)
-    {
-        const int nq = m_fields[0]->GetTotPoints();
-
-        Vmath::Vmul(nq, physfield[1], 1, physfield[1], 1, mach, 1);
-
-        for (int i = 1; i < m_spacedim; ++i)
-        {
-            Vmath::Vvtvp(nq, physfield[1+i], 1, physfield[1+i], 1,
-                             mach,           1, mach,           1);
-        }
-
-        Vmath::Vdiv(nq, mach, 1, physfield[0], 1, mach, 1);
-        Vmath::Vdiv(nq, mach, 1, physfield[0], 1, mach, 1);
-        Vmath::Vsqrt(nq, mach, 1, mach, 1);
-
-        Vmath::Vdiv(nq, mach, 1, soundspeed,   1, mach, 1);
-    }
-
-    /**
-     * @brief Compute the dynamic viscosity using the Sutherland's law
-     * \f$ \mu = \mu_star * (T / T_star)^3/2 * (T_star + 110) / (T + 110) \f$,
-     * where:   \mu_star = 1.7894 * 10^-5 Kg / (m * s)
-     *          T_star   = 288.15 K
-     *
-     * @param physfield    Input physical field.
-     * @param mu           The resulting dynamic viscosity.
-     */
-    void CompressibleFlowSystem::GetDynamicViscosity(
-        const Array<OneD, const NekDouble> &temperature,
-              Array<OneD,       NekDouble> &mu)
-    {
-        const int nPts    = temperature.num_elements();
-        NekDouble mu_star = m_mu;
-        NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
-        NekDouble ratio;
-
-        for (int i = 0; i < nPts; ++i)
-        {
-            ratio = temperature[i] / T_star;
-            mu[i] = mu_star * ratio * sqrt(ratio) *
-                    (T_star + 110.0) / (temperature[i] + 110.0);
-        }
-    }
-
-    /**
      * @brief Perform post-integration checks, presently just to check steady
      * state behaviour.
      */
@@ -1494,41 +1301,6 @@ namespace Nektar
         }
 
         return false;
-    }
-
-    /**
-     * @brief Calculate entropy.
-     */
-    void CompressibleFlowSystem::GetEntropy(
-        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-        const Array<OneD, const NekDouble>               &pressure,
-        const Array<OneD, const NekDouble>               &temperature,
-              Array<OneD,       NekDouble>               &entropy)
-    {
-        NekDouble entropy_sum = 0.0;
-        const int npts = m_fields[0]->GetTotPoints();
-        const NekDouble temp_inf = m_pInf/(m_rhoInf*m_gasConstant);;
-        Array<OneD, NekDouble> L2entropy(npts, 0.0);
-
-        for (int i = 0; i < npts; ++i)
-        {
-            entropy[i] = m_gamma / (m_gamma - 1.0) * m_gasConstant *
-                            log(temperature[i]/temp_inf) - m_gasConstant *
-                            log(pressure[i] / m_pInf);
-        }
-
-        Vmath::Vmul(npts, entropy, 1, entropy, 1, L2entropy, 1);
-
-        entropy_sum = Vmath::Vsum(npts, L2entropy, 1);
-
-        entropy_sum = sqrt(entropy_sum);
-
-        std::ofstream m_file( "L2entropy.txt", std::ios_base::app);
-
-        m_file << setprecision(16) << scientific << entropy_sum << endl;
-        //m_file << Vmath::Vmax(entropy.num_elements(),entropy,1) << endl;
-
-        m_file.close();
     }
 
     /**
@@ -1683,9 +1455,9 @@ namespace Nektar
             stdVelocity[i] = Array<OneD, NekDouble>(nTotQuadPoints, 0.0);
         }
 
-        GetVelocityVector(inarray, velocity);
-        GetPressure      (inarray, velocity, pressure);
-        GetSoundSpeed    (inarray, pressure, soundspeed);
+        m_varConv->GetVelocityVector(inarray, velocity);
+        m_varConv->GetPressure      (inarray, velocity, pressure);
+        m_varConv->GetSoundSpeed    (inarray, pressure, soundspeed);
 
         for(int el = 0; el < n_element; ++el)
         {
@@ -1950,10 +1722,10 @@ namespace Nektar
         Array<OneD, NekDouble> pOrder (nPts, 0.0);
 
         // Thermodynamic related quantities
-        GetPressure(inarray, pressure);
-        GetTemperature(inarray, pressure, temperature);
-        GetSoundSpeed(inarray, pressure, soundspeed);
-        GetAbsoluteVelocity(inarray, absVelocity);
+        m_varConv->GetPressure(inarray, pressure);
+        m_varConv->GetTemperature(inarray, pressure, temperature);
+        m_varConv->GetSoundSpeed(inarray, pressure, soundspeed);
+        m_varConv->GetAbsoluteVelocity(inarray, absVelocity);
         GetSensor(inarray, Sensor, SensorKappa);
 
         // Determine the maximum wavespeed
@@ -1985,36 +1757,6 @@ namespace Nektar
         }
     }
 
-    void CompressibleFlowSystem::GetAbsoluteVelocity(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,                   NekDouble>   &Vtot)
-    {
-        int nTotQuadPoints = GetTotPoints();
-
-        // Getting the velocity vector on the 2D normal space
-        Array<OneD, Array<OneD, NekDouble> > velocity   (m_spacedim);
-
-        Vmath::Zero(Vtot.num_elements(), Vtot, 1);
-
-        for (int i = 0; i < m_spacedim; ++i)
-        {
-            velocity[i] = Array<OneD, NekDouble>(nTotQuadPoints);
-        }
-
-        GetVelocityVector(inarray, velocity);
-
-        for (int i = 0; i < m_spacedim; ++i)
-        {
-            Vmath::Vvtvp(nTotQuadPoints,
-                         velocity[i], 1,
-                         velocity[i], 1,
-                         Vtot, 1,
-                         Vtot, 1);
-        }
-
-        Vmath::Vsqrt(Vtot.num_elements(),Vtot,1,Vtot,1);
-    }
-
     void CompressibleFlowSystem::GetSmoothArtificialViscosity(
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
               Array<OneD,             NekDouble  > &eps_bar)
@@ -2034,10 +1776,10 @@ namespace Nektar
         Vmath::Zero(nPts, eps_bar, 1);
 
         // Thermodynamic related quantities
-        GetPressure(physfield, pressure);
-        GetTemperature(physfield, pressure, temperature);
-        GetSoundSpeed(physfield, pressure, soundspeed);
-        GetAbsoluteVelocity(physfield, absVelocity);
+        m_varConv->GetPressure(physfield, pressure);
+        m_varConv->GetTemperature(physfield, pressure, temperature);
+        m_varConv->GetSoundSpeed(physfield, pressure, soundspeed);
+        m_varConv->GetAbsoluteVelocity(physfield, absVelocity);
         GetSensor(physfield, sensor, SensorKappa);
 
         // Determine the maximum wavespeed
@@ -2089,12 +1831,11 @@ namespace Nektar
         Array<OneD, NekDouble> soundspeed (nTotQuadPoints, 0.0);
         Array<OneD, NekDouble> pressure   (nTotQuadPoints, 0.0);
 
-        GetAbsoluteVelocity(physfield, absVelocity);
-        GetPressure        (physfield, pressure);
-        GetSoundSpeed      (physfield, pressure, soundspeed);
+        m_varConv->GetAbsoluteVelocity(physfield, absVelocity);
+        m_varConv->GetPressure        (physfield, pressure);
+        m_varConv->GetSoundSpeed      (physfield, pressure, soundspeed);
         GetSensor          (physfield, Sensor, SensorKappa);
 
-        Array<OneD, int> pOrderElmt = GetNumExpModesPerExp();
         Array<OneD, NekDouble> Lambda(nTotQuadPoints, 1.0);
         Vmath::Vadd(nTotQuadPoints, absVelocity, 1, soundspeed, 1, Lambda, 1);
 
@@ -2110,7 +1851,6 @@ namespace Nektar
             // move this variable into the session file
 
             int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-            Array <OneD, NekDouble> one2D(nQuadPointsElement, 1.0);
 
             for (int n = 0; n < nQuadPointsElement; n++)
             {
@@ -2160,9 +1900,9 @@ namespace Nektar
             Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys);
             Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys), smooth(nPhys);
 
-            GetPressure  (tmp, pressure);
-            GetSoundSpeed(tmp, pressure, soundspeed);
-            GetMach      (tmp, soundspeed, mach);
+            m_varConv->GetPressure  (tmp, pressure);
+            m_varConv->GetSoundSpeed(tmp, pressure, soundspeed);
+            m_varConv->GetMach      (tmp, soundspeed, mach);
             GetSensor    (tmp, sensor, SensorKappa);
             GetSmoothArtificialViscosity    (tmp, smooth);
 

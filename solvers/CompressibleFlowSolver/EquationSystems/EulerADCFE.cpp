@@ -176,9 +176,9 @@ namespace Nektar
             Array <OneD, NekDouble > pres   (npoints, 0.0);
             Array <OneD, NekDouble > wave_sp(npoints, 0.0);
 
-            GetPressure(inarray, pres);
-            GetSoundSpeed(inarray, pres, a_vel);
-            GetAbsoluteVelocity(inarray, u_abs);
+            m_varConv->GetPressure(inarray, pres);
+            m_varConv->GetSoundSpeed(inarray, pres, a_vel);
+            m_varConv->GetAbsoluteVelocity(inarray, u_abs);
 
             Vmath::Vadd(npoints, a_vel, 1, u_abs, 1, wave_sp, 1);
 

@@ -36,6 +36,7 @@
 #ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_COMPRESSIBLEFLOWSYSTEM_H
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_COMPRESSIBLEFLOWSYSTEM_H
 
+#include <CompressibleFlowSolver/Misc/VariableConverter.h>
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/AdvectionSystem.h>
@@ -73,7 +74,6 @@ namespace Nektar
         NekDouble                           m_pInf;
         NekDouble                           m_rhoInf;
         NekDouble                           m_UInf;
-        NekDouble                           m_gasConstant;
         std::string                         m_ViscosityType;
         std::string                         m_shockCaptureType;
         NekDouble                           m_mu;
@@ -88,6 +88,9 @@ namespace Nektar
         NekDouble                           m_C2;
         NekDouble                           m_hFactor;
         NekDouble                           m_Prandtl;
+
+        // Auxiliary object to convert variables
+        VariableConverterSharedPtr          m_varConv;
 
         // L2 error file
         std::ofstream m_errFile;
@@ -139,43 +142,9 @@ namespace Nektar
                          Array<OneD, Array<OneD, NekDouble> > &Fwd,
                          Array<OneD, Array<OneD, NekDouble> > &inarray);
 
-        void GetVelocityVector(
-            const Array<OneD,       Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,       Array<OneD, NekDouble> > &velocity);
-        void GetSoundSpeed(
-            const Array<OneD,       Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure,
-                  Array<OneD,                   NekDouble>   &soundspeed);
-        void GetMach(
-                  Array<OneD,       Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &soundspeed,
-                  Array<OneD,                   NekDouble>   &mach);
-        void GetTemperature(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure,
-                  Array<OneD,                   NekDouble>   &temperature);
-        void GetPressure(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure);
-        void GetPressure(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-            const Array<OneD, const Array<OneD, NekDouble> > &velocity,
-                  Array<OneD,                   NekDouble>   &pressure);
-        void GetEnthalpy(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure,
-                  Array<OneD,                   NekDouble>   &enthalpy);
-        void GetEntropy(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-            const Array<OneD, const             NekDouble>   &pressure,
-            const Array<OneD, const             NekDouble>   &temperature,
-                  Array<OneD,                   NekDouble>   &entropy);
         void GetSmoothArtificialViscosity(
             const Array<OneD, Array<OneD, NekDouble> > &physfield,
                   Array<OneD,             NekDouble  > &eps_bar);
-        void GetDynamicViscosity(
-            const Array<OneD, const NekDouble> &temperature,
-                  Array<OneD,       NekDouble> &mu);
         void GetStdVelocity(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,                   NekDouble>   &stdV);
@@ -187,9 +156,6 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &physarray,
                   Array<OneD,                   NekDouble>   &Sensor,
                   Array<OneD,                   NekDouble>   &SensorKappa);
-        void GetAbsoluteVelocity(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,                   NekDouble>   &Vtot);
         void GetArtificialDynamicViscosity(
             const Array<OneD,  Array<OneD, NekDouble> > &physfield,
                   Array<OneD,              NekDouble>   &mu_var);
@@ -202,11 +168,6 @@ namespace Nektar
             NekDouble initialtime           = 0.0,
             bool      dumpInitialConditions = true,
             const int domain                = 0);
-
-        NekDouble GetGasConstant()
-        {
-            return m_gasConstant;
-        }
 
         NekDouble GetGamma()
         {

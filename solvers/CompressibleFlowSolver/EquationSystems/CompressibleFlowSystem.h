@@ -99,13 +99,6 @@ namespace Nektar
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
         bool                                       m_smoothDiffusion;
 
-
-        // Pressure storage for PressureOutflowFileBC
-        Array<OneD, NekDouble> m_pressureStorage;
-
-        // Field storage for PressureInflowFileBC
-        Array<OneD, Array<OneD, NekDouble> > m_fieldStorage;
-
         // Storage for L2 norm error
         Array<OneD, Array<OneD, NekDouble> > m_un;
 
@@ -124,9 +117,6 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
-        void GetFluxVectorPDESC(
-            const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         void GetViscousFluxVectorDeAlias(
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,

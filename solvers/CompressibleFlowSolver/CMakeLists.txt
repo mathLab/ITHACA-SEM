@@ -4,6 +4,16 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_COMPRESSIBLE_FLOW
 
 IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     SET(CompressibleFlowSolverSource 
+       ./BoundaryConditions/CFSBndCond.cpp
+       ./BoundaryConditions/ExtrapOrder0BC.cpp
+       ./BoundaryConditions/PressureInflowFileBC.cpp
+       ./BoundaryConditions/PressureOutflowBC.cpp
+       ./BoundaryConditions/PressureOutflowFileBC.cpp
+       ./BoundaryConditions/PressureOutflowNonReflectiveBC.cpp
+       ./BoundaryConditions/RiemannInvariantBC.cpp
+       ./BoundaryConditions/SymmetryBC.cpp
+       ./BoundaryConditions/WallBC.cpp
+       ./BoundaryConditions/WallViscousBC.cpp
        ./CompressibleFlowSolver.cpp 
        ./EquationSystems/CompressibleFlowSystem.cpp
        ./EquationSystems/EulerCFE.cpp

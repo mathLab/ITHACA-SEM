@@ -159,7 +159,6 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     std::vector<std::string> numModesPerDirUni(nFields);
 
     int homDim = -1;
-    bool hasStrips = false;
     int varOrder = 0;
 
     for (int f = 0; f < nFields; ++f)
@@ -231,7 +230,6 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
         if (fielddefs[f]->m_homoStrips)
         {
             shapeStringStream << "-Strips";
-            hasStrips = true;
         }
 
         shapeStrings[f] = shapeStringStream.str();

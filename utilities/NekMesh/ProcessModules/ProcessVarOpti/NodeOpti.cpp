@@ -611,12 +611,22 @@ NekDouble NodeOpti::GetFunctional()
                     jacMin = min(jacMin,jacDet[i][k]);
                 }
             }
-            NekDouble ep = sqrt(1e-22 + 0.004*jacMin*jacMin);
+            NekDouble gam = numeric_limits<float>::epsilon();
+            NekDouble ep;
+            if(jacMin < gam)
+            {
+                ep = sqrt(gam*(gam-jacMin));
+            }
+            else
+            {
+                ep = 0.0;
+            }
+
             for (int i = 0; i < nElmt; ++i)
             {
                 for(int k = 0; k < ptsHelp->ptsHigh; ++k)
                 {
-                    NekDouble sigma = 0.5*(jacDet[i][k] + sqrt(jacDet[i][k]*jacDet[i][k] + ep*ep));
+                    NekDouble sigma = 0.5*(jacDet[i][k] + sqrt(jacDet[i][k]*jacDet[i][k] + 4.0*ep*ep));
                     NekDouble lsigma = log(sigma);
                     integral += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (K * 0.5 * lsigma * lsigma + mu * trEtE[i][k]);
                 }

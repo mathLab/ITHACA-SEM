@@ -72,9 +72,6 @@ namespace Nektar
         NekDouble                           m_gamma;
         NekDouble                           m_pInf;
         NekDouble                           m_rhoInf;
-        NekDouble                           m_uInf;
-        NekDouble                           m_vInf;
-        NekDouble                           m_wInf;
         NekDouble                           m_UInf;
         NekDouble                           m_gasConstant;
         std::string                         m_ViscosityType;

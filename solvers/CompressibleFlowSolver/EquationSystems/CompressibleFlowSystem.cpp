@@ -85,22 +85,23 @@ namespace Nektar
         m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
 
         // Get uInf parameter from session file.
-        m_session->LoadParameter("uInf", m_uInf, 0.1);
+        NekDouble uInf, vInf, wInf;
+        m_session->LoadParameter("uInf", uInf, 0.1);
 
-        m_UInf = m_uInf;
+        m_UInf = uInf;
 
         // Get vInf parameter from session file.
         if (m_spacedim == 2 || m_spacedim == 3)
         {
-            m_session->LoadParameter("vInf", m_vInf, 0.0);
-            m_UInf = sqrt(m_uInf*m_uInf + m_vInf*m_vInf);
+            m_session->LoadParameter("vInf", vInf, 0.0);
+            m_UInf = sqrt(uInf*uInf + vInf*vInf);
         }
 
         // Get wInf parameter from session file.
         if (m_spacedim == 3)
         {
-            m_session->LoadParameter("wInf", m_wInf, 0.0);
-            m_UInf = sqrt(m_uInf*m_uInf + m_vInf*m_vInf + m_wInf*m_wInf);
+            m_session->LoadParameter("wInf", wInf, 0.0);
+            m_UInf = sqrt(uInf*uInf + vInf*vInf + wInf*wInf);
         }
 
         m_session->LoadParameter ("GasConstant",   m_gasConstant,   287.058);
@@ -127,52 +128,6 @@ namespace Nektar
         // Forcing terms for the sponge region
         m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
                                                m_fields.num_elements());
-
-        // Loop over Boundary Regions for PressureOutflowFileBC
-        int nvariables = m_fields.num_elements();
-        Array<OneD, Array<OneD, NekDouble> > tmpStorage(nvariables);
-        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-        {
-            // PressureOutflowFile Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                "PressureOutflowFile")
-            {
-                int numBCPts = m_fields[0]->
-                    GetBndCondExpansions()[n]->GetNpoints();
-                m_pressureStorage = Array<OneD, NekDouble>(numBCPts, 0.0);
-                for (int i = 0; i < nvariables; ++i)
-                {
-                    tmpStorage[i] = Array<OneD, NekDouble>(numBCPts, 0.0);
-
-                    Vmath::Vcopy(
-                        numBCPts,
-                        m_fields[i]->GetBndCondExpansions()[n]->GetPhys(), 1,
-                        tmpStorage[i], 1);
-                }
-                GetPressure(tmpStorage, m_pressureStorage);
-            }
-        }
-
-        // Loop over Boundary Regions for PressureInflowFileBC
-        m_fieldStorage = Array<OneD, Array<OneD, NekDouble> > (nvariables);
-        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-        {
-            // PressureInflowFile Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                "PressureInflowFile")
-            {
-                int numBCPts = m_fields[0]->
-                    GetBndCondExpansions()[n]->GetNpoints();
-                for (int i = 0; i < nvariables; ++i)
-                {
-                    m_fieldStorage[i] = Array<OneD, NekDouble>(numBCPts, 0.0);
-                    Vmath::Vcopy(
-                        numBCPts,
-                        m_fields[i]->GetBndCondExpansions()[n]->GetPhys(), 1,
-                        m_fieldStorage[i], 1);
-                }
-            }
-        }
 
         // Type of advection class to be used
         switch(m_projectionType)

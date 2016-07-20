@@ -15,39 +15,16 @@ IF(NEKTAR_USE_MESHGEN)
     ELSE()
         SET(BUILD_OCC ON)
     ENDIF()
-
+    
     OPTION(THIRDPARTY_BUILD_OCC "Build OpenCascade library from ThirdParty."
         ${BUILD_OCC})
 
     IF (THIRDPARTY_BUILD_OCC)
         INCLUDE(ExternalProject)
 
-        SET(OCC_LIBRARIES_TMP
-          TKFillet
-          TKMesh
-          TKernel
-          TKG2d
-          TKG3d
-          TKMath
-          TKIGES
-          TKSTL
-          TKShHealing
-          TKXSBase
-          TKBinL
-          TKBool
-          TKBO
-          TKBRep
-          TKTopAlgo
-          TKGeomAlgo
-          TKGeomBase
-          TKOffset
-          TKPrim
-          TKSTEP
-          TKSTEPBase
-          TKSTEPAttr
-          TKHLR
-          TKFeat
-        )
+        SET(OCC_LIBRARIES_TMP PTKernel TKernel TKMath TKBRep TKIGES TKSTEP TKSTEPAttr
+            TKSTEP209 TKSTEPBase TKShapeSchema TKGeomBase TKGeomAlgo TKG3d TKG2d
+            TKXSBase TKPShape TKTopAlgo TKShHealing)
         FOREACH(OCC_LIB ${OCC_LIBRARIES_TMP})
             LIST(APPEND OCC_LIBRARIES ${TPDIST}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${OCC_LIB}${CMAKE_SHARED_LIBRARY_SUFFIX})
         ENDFOREACH()
@@ -56,7 +33,7 @@ IF(NEKTAR_USE_MESHGEN)
         IF(WIN32)
             MESSAGE(SEND_ERROR "Cannot currently use OpenCascade with Nektar++ on Windows")
         ENDIF()
-
+        
         EXTERNALPROJECT_ADD(
             opencascade-6.9
             PREFIX ${TPSRC}
@@ -66,6 +43,7 @@ IF(NEKTAR_USE_MESHGEN)
             BINARY_DIR ${TPBUILD}/opencascade-6.9
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/opencascade-6.9
+            INSTALL_DIR ${TPBUILD}/opencascade-6.9/dist
             CONFIGURE_COMMAND ${CMAKE_COMMAND}
                 -G ${CMAKE_GENERATOR}
                 -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
@@ -77,12 +55,17 @@ IF(NEKTAR_USE_MESHGEN)
                 ${TPSRC}/opencascade-6.9
             )
 
+        # Patch OS X libraries to fix install name problems.
+        EXTERNALPROJECT_ADD_STEP(opencascade-6.9 patch-install-path
+            COMMAND bash ${CMAKE_SOURCE_DIR}/cmake/scripts/patch-occ.sh ${TPDIST}/lib ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}
+            ALWAYS 1
+            DEPENDEES install)
+
         MESSAGE(STATUS "Build OpenCascade: ${TPDIST}/lib")
         LINK_DIRECTORIES(${TPDIST}/lib)
         INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include/oce)
     ELSE()
         ADD_CUSTOM_TARGET(opencascade-6.9 ALL)
-        MESSAGE(STATUS "Found OpenCASCADE: ${OCC_LIBRARY_DIR}")
         SET(OPENCASCADE_CONFIG_INCLUDE_DIR ${OCC_INCLUDE_DIR})
         INCLUDE_DIRECTORIES(SYSTEM ${OCC_INCLUDE_DIR})
     ENDIF()

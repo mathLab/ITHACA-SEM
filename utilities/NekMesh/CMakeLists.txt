@@ -79,7 +79,7 @@ ENDIF (NEKTAR_USE_MESHGEN)
 # LocalRegions.
 ADD_EXECUTABLE(NekMesh ${NekMeshSources})
 SET_COMMON_PROPERTIES(NekMesh)
-TARGET_LINK_LIBRARIES(NekMesh NekMeshUtils LocalRegions)
+TARGET_LINK_LIBRARIES(NekMesh NekMeshUtils LocalRegions SolverUtils)
 SET_PROPERTY(TARGET NekMesh PROPERTY FOLDER util)
 INSTALL(TARGETS NekMesh
     RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT util)
@@ -126,8 +126,7 @@ ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)
 
 # MeshGen test
 IF(NEKTAR_USE_MESHGEN)
-    ADD_NEKTAR_TEST    (MeshGen/cylinder)
-    ADD_NEKTAR_TEST    (MeshGen/sphere)
-    ADD_NEKTAR_TEST_LENGTHY    (MeshGen/predator)
-    ADD_NEKTAR_TEST_LENGTHY    (MeshGen/rev)
+    ADD_NEKTAR_TEST        (MeshGen/cylinder)
+    ADD_NEKTAR_TEST        (MeshGen/sphere)
+    ADD_NEKTAR_TEST_LENGTHY(MeshGen/predator)
 ENDIF()

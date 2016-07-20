@@ -80,16 +80,6 @@ namespace Nektar
             m_diffusion->SetArtificialDiffusionVector(
                         &EulerADCFE::GetArtificialDynamicViscosity, this);
         }
-
-        if (m_explicitAdvection)
-        {
-            m_ode.DefineOdeRhs    (&EulerADCFE::DoOdeRhs, this);
-            m_ode.DefineProjection(&EulerADCFE::DoOdeProjection, this);
-        }
-        else
-        {
-            ASSERTL0(false, "Implicit CFE not set up.");
-        }
     }
 
     EulerADCFE::~EulerADCFE()

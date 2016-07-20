@@ -66,8 +66,6 @@ namespace Nektar
   protected:
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
 
-    virtual void v_InitObject();
-
     virtual void v_DoDiffusion(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,       Array<OneD, NekDouble> > &outarray);

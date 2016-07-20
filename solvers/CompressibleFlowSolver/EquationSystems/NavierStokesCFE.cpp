@@ -50,21 +50,6 @@ namespace Nektar
     {
     }
 
-    void NavierStokesCFE::v_InitObject()
-    {
-        CompressibleFlowSystem::v_InitObject();
-
-        if (m_explicitAdvection)
-        {
-            m_ode.DefineOdeRhs     (&NavierStokesCFE::DoOdeRhs,        this);
-            m_ode.DefineProjection (&NavierStokesCFE::DoOdeProjection, this);
-        }
-        else
-        {
-            ASSERTL0(false, "Implicit CFE not set up.");
-        }
-    }
-
     NavierStokesCFE::~NavierStokesCFE()
     {
 

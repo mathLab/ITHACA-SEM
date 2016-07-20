@@ -63,19 +63,8 @@ namespace Nektar
 
         RinglebFlow(const LibUtilities::SessionReaderSharedPtr& pSession);
 
-        virtual void v_InitObject();
-
         /// Print a summary of time stepping parameters.
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-
-        void DoOdeRhs(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time);
-        void DoOdeProjection(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time);
 
         virtual void v_EvaluateExactSolution(
             unsigned int            field,
@@ -91,8 +80,6 @@ namespace Nektar
         void GetExactRinglebFlow(
             int                                             field,
             Array<OneD, NekDouble>                         &outarray);
-        void SetInitialRinglebFlow(
-            void);
         void SetBoundaryRinglebFlow(
             int                                              bcRegion,
             NekDouble                                        time,

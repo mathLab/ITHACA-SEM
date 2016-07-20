@@ -55,21 +55,6 @@ namespace Nektar
     {
     }
 
-    void RinglebFlow::v_InitObject()
-    {
-        EulerCFE::v_InitObject();
-
-        if (m_explicitAdvection)
-        {
-            m_ode.DefineOdeRhs     (&RinglebFlow::DoOdeRhs,        this);
-            m_ode.DefineProjection (&RinglebFlow::DoOdeProjection, this);
-        }
-        else
-        {
-            ASSERTL0(false, "Implicit CFE not set up.");
-        }
-    }
-
     /**
      * @brief Destructor for EulerCFE class.
      */
@@ -84,74 +69,6 @@ namespace Nektar
     {
         CompressibleFlowSystem::v_GenerateSummary(s);
         SolverUtils::AddSummaryItem(s, "Problem Type", "RinglebFlow");
-    }
-
-    /**
-     * @brief Compute the right-hand side.
-     */
-    void RinglebFlow::DoOdeRhs(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-        Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time)
-    {
-        int i;
-        int nvariables = inarray.num_elements();
-        int npoints    = GetNpoints();
-
-        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
-
-        m_advection->Advect(nvariables, m_fields, advVel, inarray,
-                            outarray, time);
-
-        for (i = 0; i < nvariables; ++i)
-        {
-            Vmath::Neg(npoints, outarray[i], 1);
-        }
-        
-        // Add sponge layer if defined in the session file
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
-        {
-            (*x)->Apply(m_fields, inarray, outarray, time);
-        }
-    }
-    
-    /**
-     * @brief Compute the projection and call the method for imposing the 
-     * boundary conditions in case of discontinuous projection.
-     */
-    void RinglebFlow::DoOdeProjection(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-        Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time)
-    {
-        int i;
-        int nvariables = inarray.num_elements();
-        
-        switch (m_projectionType)
-        {
-            case MultiRegions::eDiscontinuous:
-            {
-                // Just copy over array
-                int npoints = GetNpoints();
-                
-                for(i = 0; i < nvariables; ++i)
-                {
-                    Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
-                }
-                SetBoundaryConditions(outarray, time);
-                break;
-            }
-            case MultiRegions::eGalerkin:
-            case MultiRegions::eMixed_CG_Discontinuous:
-            {
-                ASSERTL0(false, "No Continuous Galerkin for Euler equations");
-                break;
-            }
-            default:
-                ASSERTL0(false, "Unknown projection scheme");
-                break;
-        }
     }
 
     /**

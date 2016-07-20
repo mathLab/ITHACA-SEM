@@ -251,13 +251,13 @@ public:
         std::string       filename,
         FieldMetaDataMap &fieldmetadatamap);
 
-    static const std::string GetFileType(const std::string &filename,
-                                         CommSharedPtr comm);
-    virtual const std::string &GetClassName() const = 0;
+    LIB_UTILITIES_EXPORT static const std::string GetFileType(
+        const std::string &filename, CommSharedPtr comm);
+    LIB_UTILITIES_EXPORT virtual const std::string &GetClassName() const = 0;
 
-    static boost::shared_ptr<FieldIO> CreateDefault(
+    LIB_UTILITIES_EXPORT static boost::shared_ptr<FieldIO> CreateDefault(
         const LibUtilities::SessionReaderSharedPtr session);
-    static boost::shared_ptr<FieldIO> CreateForFile(
+    LIB_UTILITIES_EXPORT static boost::shared_ptr<FieldIO> CreateForFile(
         const LibUtilities::SessionReaderSharedPtr session,
         const std::string &filename);
 

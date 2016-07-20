@@ -237,14 +237,6 @@ namespace Nektar
 
     }
 
-    /**
-     * @brief Print out a summary with some relevant information.
-     */
-    void CompressibleFlowSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
-    {
-        UnsteadySystem::v_GenerateSummary(s);
-    }
-
     void CompressibleFlowSystem::SetBoundaryConditions(
             Array<OneD, Array<OneD, NekDouble> >             &physarray,
             NekDouble                                         time)

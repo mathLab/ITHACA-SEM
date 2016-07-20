@@ -40,18 +40,6 @@
 
 namespace Nektar
 {
-
-  enum ProblemType
-  {
-    eGeneral,          ///< No problem defined - Default Inital data
-    SIZE_ProblemType   ///< Length of enum list
-  };
-
-  const char* const ProblemTypeMap[] =
-    {
-      "General"
-    };
-
   /**
    *
    *
@@ -75,14 +63,11 @@ namespace Nektar
 
     virtual ~NavierStokesCFE();
 
-    // Problem type selector
-    ProblemType m_problemType;
-
   protected:
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
 
     virtual void v_InitObject();
-    virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
+
     void DoOdeRhs(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,       Array<OneD, NekDouble> > &outarray,

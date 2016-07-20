@@ -114,9 +114,6 @@ namespace Nektar
 
         virtual void v_InitObject();
 
-        /// Print a summary of time stepping parameters.
-        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-
         void GetFluxVector(
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);

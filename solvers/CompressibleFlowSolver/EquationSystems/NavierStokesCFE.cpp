@@ -54,24 +54,6 @@ namespace Nektar
     {
         CompressibleFlowSystem::v_InitObject();
 
-        if(m_session->DefinesSolverInfo("PROBLEMTYPE"))
-        {
-
-            std::string ProblemTypeStr = m_session->GetSolverInfo("PROBLEMTYPE");
-            for(int i = 0; i < (int) SIZE_ProblemType; ++i)
-            {
-                if(NoCaseStringCompare(ProblemTypeMap[i],ProblemTypeStr) == 0)
-                {
-                    m_problemType = (ProblemType)i;
-                    break;
-                }
-            }
-        }
-        else
-        {
-            m_problemType = (ProblemType)0;
-        }
-
         if (m_explicitAdvection)
         {
             m_ode.DefineOdeRhs     (&NavierStokesCFE::DoOdeRhs,        this);
@@ -86,13 +68,6 @@ namespace Nektar
     NavierStokesCFE::~NavierStokesCFE()
     {
 
-    }
-
-    void NavierStokesCFE::v_GenerateSummary(SolverUtils::SummaryList& s)
-    {
-        CompressibleFlowSystem::v_GenerateSummary(s);
-        SolverUtils::AddSummaryItem(s, "Problem Type",
-                                    ProblemTypeMap[m_problemType]);
     }
 
     void NavierStokesCFE::v_SetInitialConditions(

@@ -85,24 +85,25 @@ namespace Nektar
         m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
 
         // Get uInf parameter from session file.
-        NekDouble uInf, vInf, wInf;
-        m_session->LoadParameter("uInf", uInf, 0.1);
+        NekDouble velInf;
+        m_session->LoadParameter("uInf", velInf, 0.1);
 
-        m_UInf = uInf;
+        m_UInf = velInf*velInf;
 
         // Get vInf parameter from session file.
         if (m_spacedim == 2 || m_spacedim == 3)
         {
-            m_session->LoadParameter("vInf", vInf, 0.0);
-            m_UInf = sqrt(uInf*uInf + vInf*vInf);
+            m_session->LoadParameter("vInf", velInf, 0.0);
+            m_UInf += velInf*velInf;
         }
 
         // Get wInf parameter from session file.
         if (m_spacedim == 3)
         {
-            m_session->LoadParameter("wInf", wInf, 0.0);
-            m_UInf = sqrt(uInf*uInf + vInf*vInf + wInf*wInf);
+            m_session->LoadParameter("wInf", velInf, 0.0);
+            m_UInf += velInf*velInf;
         }
+        m_UInf = sqrt(m_UInf);
 
         m_session->LoadParameter ("GasConstant",   m_gasConstant,   287.058);
         m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
@@ -2142,42 +2143,48 @@ namespace Nektar
         std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
         std::vector<std::string>             &variables)
     {
-        const int nPhys   = m_fields[0]->GetNpoints();
-        const int nCoeffs = m_fields[0]->GetNcoeffs();
-        Array<OneD, Array<OneD, NekDouble> > tmp(m_fields.num_elements());
-
-        for (int i = 0; i < m_fields.num_elements(); ++i)
+        bool extraFields;
+        m_session->MatchSolverInfo("OutputExtraFields","True",
+                                   extraFields, true);
+        if (extraFields)
         {
-            tmp[i] = m_fields[i]->GetPhys();
+            const int nPhys   = m_fields[0]->GetNpoints();
+            const int nCoeffs = m_fields[0]->GetNcoeffs();
+            Array<OneD, Array<OneD, NekDouble> > tmp(m_fields.num_elements());
+
+            for (int i = 0; i < m_fields.num_elements(); ++i)
+            {
+                tmp[i] = m_fields[i]->GetPhys();
+            }
+
+            Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys);
+            Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys), smooth(nPhys);
+
+            GetPressure  (tmp, pressure);
+            GetSoundSpeed(tmp, pressure, soundspeed);
+            GetMach      (tmp, soundspeed, mach);
+            GetSensor    (tmp, sensor, SensorKappa);
+            GetSmoothArtificialViscosity    (tmp, smooth);
+
+            Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs);
+            Array<OneD, NekDouble> sensFwd(nCoeffs), smoothFwd(nCoeffs);
+
+            m_fields[0]->FwdTrans(pressure,   pFwd);
+            m_fields[0]->FwdTrans(soundspeed, sFwd);
+            m_fields[0]->FwdTrans(mach,       mFwd);
+            m_fields[0]->FwdTrans(sensor,     sensFwd);
+            m_fields[0]->FwdTrans(smooth,     smoothFwd);
+
+            variables.push_back  ("p");
+            variables.push_back  ("a");
+            variables.push_back  ("Mach");
+            variables.push_back  ("Sensor");
+            variables.push_back  ("SmoothVisc");
+            fieldcoeffs.push_back(pFwd);
+            fieldcoeffs.push_back(sFwd);
+            fieldcoeffs.push_back(mFwd);
+            fieldcoeffs.push_back(sensFwd);
+            fieldcoeffs.push_back(smoothFwd);
         }
-
-        Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys);
-        Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys), smooth(nPhys);
-
-        GetPressure  (tmp, pressure);
-        GetSoundSpeed(tmp, pressure, soundspeed);
-        GetMach      (tmp, soundspeed, mach);
-        GetSensor    (tmp, sensor, SensorKappa);
-        GetSmoothArtificialViscosity    (tmp, smooth);
-
-        Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs);
-        Array<OneD, NekDouble> sensFwd(nCoeffs), smoothFwd(nCoeffs);
-
-        m_fields[0]->FwdTrans(pressure,   pFwd);
-        m_fields[0]->FwdTrans(soundspeed, sFwd);
-        m_fields[0]->FwdTrans(mach,       mFwd);
-        m_fields[0]->FwdTrans(sensor,     sensFwd);
-        m_fields[0]->FwdTrans(smooth,     smoothFwd);
-
-        variables.push_back  ("p");
-        variables.push_back  ("a");
-        variables.push_back  ("Mach");
-        variables.push_back  ("Sensor");
-        variables.push_back  ("SmoothVisc");
-        fieldcoeffs.push_back(pFwd);
-        fieldcoeffs.push_back(sFwd);
-        fieldcoeffs.push_back(mFwd);
-        fieldcoeffs.push_back(sensFwd);
-        fieldcoeffs.push_back(smoothFwd);
     }
 }

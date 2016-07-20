@@ -307,26 +307,12 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> > &Fwd,
                       Array<OneD, Array<OneD, NekDouble> > &inarray)
     {
-        std::string varName;
-        int nvariables = m_fields.num_elements();
-
         if(!userDefStr.empty())
         {
-            if(boost::iequals(userDefStr,"TimeDependent"))
-            {
-                for (int i = 0; i < nvariables; ++i)
-                {
-                    varName = m_session->GetVariable(i);
-                    m_fields[i]->EvaluateBoundaryConditions(time, varName);
-                }
-            }
-            else
-            {
-                CFSBndCondSharedPtr bndCond;
-                bndCond = GetCFSBndCondFactory().CreateInstance(userDefStr,
-                            m_session, m_fields, m_traceNormals, m_spacedim, n);
-                bndCond->Apply(n, cnt, Fwd, inarray, time);
-            }
+            CFSBndCondSharedPtr bndCond;
+            bndCond = GetCFSBndCondFactory().CreateInstance(userDefStr,
+                        m_session, m_fields, m_traceNormals, m_spacedim, n);
+            bndCond->Apply(n, cnt, Fwd, inarray, time);
         }
     }
 

@@ -33,14 +33,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
 #include <iostream>
+#include <string>
 using namespace std;
 
 #include "ProcessPrintFldNorms.h"
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
@@ -53,8 +53,7 @@ ModuleKey ProcessPrintFldNorms::className =
         ProcessPrintFldNorms::create,
         "Print L2 and LInf norms to stdout.");
 
-ProcessPrintFldNorms::ProcessPrintFldNorms(FieldSharedPtr f)
-        : ProcessModule(f)
+ProcessPrintFldNorms::ProcessPrintFldNorms(FieldSharedPtr f) : ProcessModule(f)
 {
 }
 
@@ -66,18 +65,18 @@ void ProcessPrintFldNorms::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             cout << "ProcessPrintFldNorms: Printing norms..." << endl;
         }
     }
 
     // Evaluate norms and print
-    for(int j = 0; j < m_f->m_exp.size(); ++j)
+    for (int j = 0; j < m_f->m_exp.size(); ++j)
     {
         m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
                                 m_f->m_exp[j]->UpdatePhys());
-        NekDouble L2   = m_f->m_exp[j]->L2  (m_f->m_exp[j]->GetPhys());
+        NekDouble L2   = m_f->m_exp[j]->L2(m_f->m_exp[j]->GetPhys());
         NekDouble LInf = m_f->m_exp[j]->Linf(m_f->m_exp[j]->GetPhys());
 
         cout << "L 2 error (variable " << m_f->m_session->GetVariable(j)
@@ -86,8 +85,5 @@ void ProcessPrintFldNorms::Process(po::variables_map &vm)
              << ") : " << LInf << endl;
     }
 }
-
 }
 }
-
-

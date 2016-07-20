@@ -48,26 +48,25 @@ namespace FieldUtils
  */
 class ProcessVorticity : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessVorticity>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessVorticity>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessVorticity(FieldSharedPtr f);
-        virtual ~ProcessVorticity();
+    ProcessVorticity(FieldSharedPtr f);
+    virtual ~ProcessVorticity();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessVorticity";
-        }
-
+    virtual std::string GetModuleName()
+    {
+        return "ProcessVorticity";
+    }
 };
-
 }
 }
 

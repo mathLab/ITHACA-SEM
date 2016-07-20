@@ -48,23 +48,23 @@ namespace FieldUtils
  */
 class ProcessConcatenateFld : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessConcatenateFld>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessConcatenateFld>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessConcatenateFld(FieldSharedPtr f);
-        virtual ~ProcessConcatenateFld();
+    ProcessConcatenateFld(FieldSharedPtr f);
+    virtual ~ProcessConcatenateFld();
 
-        virtual void Process(po::variables_map &vm);
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessConcatenateFld";
-        }
-
+    virtual std::string GetModuleName()
+    {
+        return "ProcessConcatenateFld";
+    }
 };
 }
 }

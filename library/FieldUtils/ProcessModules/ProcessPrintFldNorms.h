@@ -49,26 +49,24 @@ namespace FieldUtils
  */
 class ProcessPrintFldNorms : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessPrintFldNorms>
-                                    ::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessPrintFldNorms>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessPrintFldNorms(FieldSharedPtr f);
-        virtual ~ProcessPrintFldNorms();
+    ProcessPrintFldNorms(FieldSharedPtr f);
+    virtual ~ProcessPrintFldNorms();
 
-        virtual void Process(po::variables_map &vm);
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessPrintFldNorms";
-        }
-
+    virtual std::string GetModuleName()
+    {
+        return "ProcessPrintFldNorms";
+    }
 };
-
 }
 }
 

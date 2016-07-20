@@ -39,20 +39,20 @@
 
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <boost/geometry.hpp>
-#include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
 #include <MultiRegions/ExpList.h>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
-#include <LibUtilities/BasicUtils/PtsField.h>
 
 #include "FieldUtilsDeclspec.h"
 
@@ -99,7 +99,7 @@ public:
     Interpolator(InterpMethod method = eNoMethod,
                  short int coordId   = -1,
                  NekDouble filtWidth = 0.0,
-                 int maxPts = 1000)
+                 int maxPts          = 1000)
         : m_method(method), m_filtWidth(filtWidth), m_maxPts(maxPts),
           m_coordId(coordId){};
 
@@ -216,31 +216,28 @@ private:
         m_progressCallback;
 
     FIELD_UTILS_EXPORT void CalcW_Gauss(const PtsPoint &searchPt,
-                                          const NekDouble sigma,
-                                          const int maxPts = 250);
+                                        const NekDouble sigma,
+                                        const int maxPts = 250);
 
-    FIELD_UTILS_EXPORT void CalcW_Linear(const PtsPoint &searchPt,
-                                           int coordId);
+    FIELD_UTILS_EXPORT void CalcW_Linear(const PtsPoint &searchPt, int coordId);
 
     FIELD_UTILS_EXPORT void CalcW_NNeighbour(const PtsPoint &searchPt);
 
     FIELD_UTILS_EXPORT void CalcW_Shepard(const PtsPoint &searchPt);
 
     FIELD_UTILS_EXPORT void CalcW_Quadratic(const PtsPoint &searchPt,
-                                              int coordId);
+                                            int coordId);
 
     FIELD_UTILS_EXPORT void SetupTree();
 
-    FIELD_UTILS_EXPORT void FindNeighbours(
-        const PtsPoint &searchPt,
-        std::vector<PtsPoint> &neighbourPts,
-        const NekDouble dist,
-        const unsigned int maxPts = 1);
+    FIELD_UTILS_EXPORT void FindNeighbours(const PtsPoint &searchPt,
+                                           std::vector<PtsPoint> &neighbourPts,
+                                           const NekDouble dist,
+                                           const unsigned int maxPts = 1);
 
-    FIELD_UTILS_EXPORT void FindNNeighbours(
-        const PtsPoint &searchPt,
-        std::vector<PtsPoint> &neighbourPts,
-        const unsigned int numPts = 1);
+    FIELD_UTILS_EXPORT void FindNNeighbours(const PtsPoint &searchPt,
+                                            std::vector<PtsPoint> &neighbourPts,
+                                            const unsigned int numPts = 1);
 };
 
 typedef boost::shared_ptr<Interpolator> InterpolatorSharedPtr;

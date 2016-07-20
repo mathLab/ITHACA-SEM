@@ -33,16 +33,16 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
 #include <iostream>
+#include <string>
 using namespace std;
 
-#include "ProcessVorticity.h"
 #include "ProcessMapping.h"
+#include "ProcessVorticity.h"
 #include <GlobalMapping/Mapping.h>
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
@@ -52,7 +52,8 @@ namespace FieldUtils
 ModuleKey ProcessVorticity::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "vorticity"),
-        ProcessVorticity::create, "Computes vorticity field.");
+        ProcessVorticity::create,
+        "Computes vorticity field.");
 
 ProcessVorticity::ProcessVorticity(FieldSharedPtr f) : ProcessModule(f)
 {
@@ -66,15 +67,15 @@ void ProcessVorticity::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             cout << "ProcessVorticity: Calculating vorticity..." << endl;
         }
     }
 
     int i, j, s;
-    int expdim    = m_f->m_graph->GetMeshDimension();
-    int spacedim  = expdim;
+    int expdim   = m_f->m_graph->GetMeshDimension();
+    int spacedim = expdim;
     if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
         (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
     {
@@ -86,19 +87,19 @@ void ProcessVorticity::Process(po::variables_map &vm)
         ASSERTL0(false, "Error: Vorticity for a 1D problem cannot "
                         "be computed")
     }
-    int addfields = (spacedim == 2)? 1:3;
+    int addfields = (spacedim == 2) ? 1 : 3;
 
     int npoints = m_f->m_exp[0]->GetNpoints();
-    Array<OneD, Array<OneD, NekDouble> > grad(spacedim*spacedim);
+    Array<OneD, Array<OneD, NekDouble> > grad(spacedim * spacedim);
     Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
 
     int nstrips;
 
-    m_f->m_session->LoadParameter("Strip_Z",nstrips,1);
+    m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
 
-    m_f->m_exp.resize(nfields*nstrips);
+    m_f->m_exp.resize(nfields * nstrips);
 
-    for (i = 0; i < spacedim*spacedim; ++i)
+    for (i = 0; i < spacedim * spacedim; ++i)
     {
         grad[i] = Array<OneD, NekDouble>(npoints);
     }
@@ -107,142 +108,136 @@ void ProcessVorticity::Process(po::variables_map &vm)
     {
         outfield[i] = Array<OneD, NekDouble>(npoints);
     }
-    
-    Array<OneD, Array<OneD, NekDouble> >   tmp(spacedim);
-    for( int i = 0; i<spacedim; i++)
+
+    Array<OneD, Array<OneD, NekDouble> > tmp(spacedim);
+    for (int i = 0; i < spacedim; i++)
     {
-        tmp[i] = Array<OneD, NekDouble> (npoints);
+        tmp[i] = Array<OneD, NekDouble>(npoints);
     }
 
-    vector<MultiRegions::ExpListSharedPtr> Exp(nstrips*addfields);
-    
+    vector<MultiRegions::ExpListSharedPtr> Exp(nstrips * addfields);
+
     // Get mapping
-    GlobalMapping::MappingSharedPtr mapping = 
-                            ProcessMapping::GetMapping(m_f);
-    
-    for(s = 0; s < nstrips; ++s) //homogeneous strip varient
+    GlobalMapping::MappingSharedPtr mapping = ProcessMapping::GetMapping(m_f);
+
+    for (s = 0; s < nstrips; ++s) // homogeneous strip varient
     {
         // Get velocity and convert to Cartesian system,
         //      if it is still in transformed system
-        Array<OneD, Array<OneD, NekDouble> > vel (spacedim);
+        Array<OneD, Array<OneD, NekDouble> > vel(spacedim);
         if (m_f->m_fieldMetaDataMap.count("MappingCartesianVel"))
         {
-            if(m_f->m_fieldMetaDataMap["MappingCartesianVel"] == "False")
+            if (m_f->m_fieldMetaDataMap["MappingCartesianVel"] == "False")
             {
                 // Initialize arrays and copy velocity
-                for ( int i =0; i<spacedim; ++i )
+                for (int i = 0; i < spacedim; ++i)
                 {
-                    vel[i] = Array<OneD, NekDouble> (npoints);      
+                    vel[i] = Array<OneD, NekDouble>(npoints);
                     if (m_f->m_exp[0]->GetWaveSpace())
                     {
                         m_f->m_exp[0]->HomogeneousBwdTrans(
-                                                m_f->m_exp[s*nfields+i]->GetPhys(),
-                                                vel[i]);
+                            m_f->m_exp[s * nfields + i]->GetPhys(), vel[i]);
                     }
                     else
                     {
-                        Vmath::Vcopy(npoints, m_f->m_exp[s*nfields+i]->GetPhys(),1,
-                                                vel[i],1);
+                        Vmath::Vcopy(npoints,
+                                     m_f->m_exp[s * nfields + i]->GetPhys(), 1,
+                                     vel[i], 1);
                     }
-
                 }
                 // Convert velocity to cartesian system
-                mapping->ContravarToCartesian(vel, vel);            
+                mapping->ContravarToCartesian(vel, vel);
                 // Convert back to wavespace if necessary
                 if (m_f->m_exp[0]->GetWaveSpace())
                 {
-                    for ( int i =0; i<spacedim; ++i )
+                    for (int i = 0; i < spacedim; ++i)
                     {
                         m_f->m_exp[0]->HomogeneousFwdTrans(vel[i], vel[i]);
                     }
-                }        
+                }
             }
             else
             {
-                for ( int i =0; i<spacedim; ++i )
+                for (int i = 0; i < spacedim; ++i)
                 {
-                    vel[i] = Array<OneD, NekDouble> (npoints); 
-                    Vmath::Vcopy(npoints, m_f->m_exp[s*nfields+i]->GetPhys(), 1,
-                                                vel[i], 1);
+                    vel[i] = Array<OneD, NekDouble>(npoints);
+                    Vmath::Vcopy(npoints,
+                                 m_f->m_exp[s * nfields + i]->GetPhys(), 1,
+                                 vel[i], 1);
                 }
             }
         }
         else
         {
-            for ( int i =0; i<spacedim; ++i )
+            for (int i = 0; i < spacedim; ++i)
             {
-                vel[i] = Array<OneD, NekDouble> (npoints); 
-                Vmath::Vcopy(npoints, m_f->m_exp[s*nfields+i]->GetPhys(), 1,
-                                            vel[i], 1);
+                vel[i] = Array<OneD, NekDouble>(npoints);
+                Vmath::Vcopy(npoints, m_f->m_exp[s * nfields + i]->GetPhys(), 1,
+                             vel[i], 1);
             }
         }
-        
+
         // Calculate Gradient & Vorticity
         if (spacedim == 2)
         {
             for (i = 0; i < spacedim; ++i)
             {
-                m_f->m_exp[s*nfields+i]->PhysDeriv(vel[i],
-                                                   tmp[0],
-                                                   tmp[1]);
+                m_f->m_exp[s * nfields + i]->PhysDeriv(vel[i], tmp[0], tmp[1]);
                 mapping->CovarToCartesian(tmp, tmp);
-                for( int j = 0; j<spacedim; j++)
+                for (int j = 0; j < spacedim; j++)
                 {
-                    Vmath::Vcopy(npoints, tmp[j], 1, grad[i*spacedim+j], 1 );
+                    Vmath::Vcopy(npoints, tmp[j], 1, grad[i * spacedim + j], 1);
                 }
             }
             // W_z = Vx - Uy
-            Vmath::Vsub(npoints, grad[1*spacedim+0], 1,
-                        grad[0*spacedim+1], 1,
-                        outfield[0], 1);
+            Vmath::Vsub(npoints, grad[1 * spacedim + 0], 1,
+                        grad[0 * spacedim + 1], 1, outfield[0], 1);
         }
         else
         {
             for (i = 0; i < spacedim; ++i)
             {
-                m_f->m_exp[s*nfields+i]->PhysDeriv(vel[i],
-                                                    tmp[0],
-                                                    tmp[1],
-                                                    tmp[2]);
+                m_f->m_exp[s * nfields + i]->PhysDeriv(vel[i], tmp[0], tmp[1],
+                                                       tmp[2]);
                 mapping->CovarToCartesian(tmp, tmp);
-                for( int j = 0; j<spacedim; j++)
+                for (int j = 0; j < spacedim; j++)
                 {
-                    Vmath::Vcopy(npoints, tmp[j], 1, grad[i*spacedim+j], 1 );
+                    Vmath::Vcopy(npoints, tmp[j], 1, grad[i * spacedim + j], 1);
                 }
             }
 
             // W_x = Wy - Vz
-            Vmath::Vsub(npoints, grad[2*spacedim+1], 1, grad[1*spacedim+2], 1,
-                        outfield[0],1);
+            Vmath::Vsub(npoints, grad[2 * spacedim + 1], 1,
+                        grad[1 * spacedim + 2], 1, outfield[0], 1);
             // W_y = Uz - Wx
-            Vmath::Vsub(npoints, grad[0*spacedim+2], 1, grad[2*spacedim+0], 1,
-                        outfield[1], 1);
+            Vmath::Vsub(npoints, grad[0 * spacedim + 2], 1,
+                        grad[2 * spacedim + 0], 1, outfield[1], 1);
             // W_z = Vx - Uy
-            Vmath::Vsub(npoints, grad[1*spacedim+0], 1, grad[0*spacedim+1], 1,
-                        outfield[2], 1);
+            Vmath::Vsub(npoints, grad[1 * spacedim + 0], 1,
+                        grad[0 * spacedim + 1], 1, outfield[2], 1);
         }
 
         for (i = 0; i < addfields; ++i)
         {
-            int n = s*addfields + i;
-            Exp[n] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
+            int n = s * addfields + i;
+            Exp[n] =
+                m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
             Vmath::Vcopy(npoints, outfield[i], 1, Exp[n]->UpdatePhys(), 1);
-            Exp[n]->FwdTrans_IterPerExp(outfield[i],
-                            Exp[n]->UpdateCoeffs());
+            Exp[n]->FwdTrans_IterPerExp(outfield[i], Exp[n]->UpdateCoeffs());
         }
     }
 
     vector<MultiRegions::ExpListSharedPtr>::iterator it;
-    for(s = 0; s < nstrips; ++s)
+    for (s = 0; s < nstrips; ++s)
     {
-        for(i = 0; i < addfields; ++i)
+        for (i = 0; i < addfields; ++i)
         {
-            it = m_f->m_exp.begin()+s*(nfields+addfields)+nfields+i;
-            m_f->m_exp.insert(it, Exp[s*addfields+i]);
+            it = m_f->m_exp.begin() + s * (nfields + addfields) + nfields + i;
+            m_f->m_exp.insert(it, Exp[s * addfields + i]);
         }
     }
 
-    vector<string > outname;
+    vector<string> outname;
     if (addfields == 1)
     {
         outname.push_back("W_z");
@@ -254,27 +249,29 @@ void ProcessVorticity::Process(po::variables_map &vm)
         outname.push_back("W_z");
     }
 
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-        = m_f->m_exp[0]->GetFieldDefinitions();
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
+        m_f->m_exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-    for(s = 0; s < nstrips; ++s) //homogeneous strip varient
+    for (s = 0; s < nstrips; ++s) // homogeneous strip varient
     {
         for (j = 0; j < nfields + addfields; ++j)
         {
-            for (i = 0; i < FieldDef.size()/nstrips; ++i)
+            for (i = 0; i < FieldDef.size() / nstrips; ++i)
             {
-                int n = s * FieldDef.size()/nstrips + i;
+                int n = s * FieldDef.size() / nstrips + i;
 
                 if (j >= nfields)
                 {
-                    FieldDef[n]->m_fields.push_back(outname[j-nfields]);
+                    FieldDef[n]->m_fields.push_back(outname[j - nfields]);
                 }
                 else
                 {
-                    FieldDef[n]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
+                    FieldDef[n]->m_fields.push_back(
+                        m_f->m_fielddef[0]->m_fields[j]);
                 }
-                m_f->m_exp[s*(nfields + addfields)+j]->AppendFieldData(FieldDef[n], FieldData[n]);
+                m_f->m_exp[s * (nfields + addfields) + j]->AppendFieldData(
+                    FieldDef[n], FieldData[n]);
             }
         }
     }
@@ -282,6 +279,5 @@ void ProcessVorticity::Process(po::variables_map &vm)
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;
 }
-
 }
 }

@@ -33,26 +33,26 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
 #include <iostream>
+#include <string>
 using namespace std;
 
 #include "ProcessGrad.h"
 #include "ProcessMapping.h"
 #include <GlobalMapping/Mapping.h>
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
 namespace FieldUtils
 {
 
-ModuleKey ProcessGrad::className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "gradient"),
-        ProcessGrad::create, "Computes gradient of fields.");
+ModuleKey ProcessGrad::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eProcessModule, "gradient"),
+    ProcessGrad::create,
+    "Computes gradient of fields.");
 
 ProcessGrad::ProcessGrad(FieldSharedPtr f) : ProcessModule(f)
 {
@@ -66,7 +66,7 @@ void ProcessGrad::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             cout << "ProcessGrad: Calculating gradients..." << endl;
         }
@@ -76,80 +76,75 @@ void ProcessGrad::Process(po::variables_map &vm)
     int expdim    = m_f->m_graph->GetMeshDimension();
     int spacedim  = m_f->m_fielddef[0]->m_numHomogeneousDir + expdim;
     int nfields   = m_f->m_fielddef[0]->m_fields.size();
-    int addfields = nfields*spacedim;
+    int addfields = nfields * spacedim;
 
     int npoints = m_f->m_exp[0]->GetNpoints();
     Array<OneD, Array<OneD, NekDouble> > grad(addfields);
-    m_f->m_exp.resize(nfields+addfields);
+    m_f->m_exp.resize(nfields + addfields);
 
     for (i = 0; i < addfields; ++i)
     {
         grad[i] = Array<OneD, NekDouble>(npoints);
     }
-    
-    Array<OneD, Array<OneD, NekDouble> >   tmp(spacedim);
-    for( int i = 0; i<spacedim; i++)
+
+    Array<OneD, Array<OneD, NekDouble> > tmp(spacedim);
+    for (int i = 0; i < spacedim; i++)
     {
-        tmp[i] = Array<OneD, NekDouble> (npoints);
+        tmp[i] = Array<OneD, NekDouble>(npoints);
     }
-    
+
     // Get mapping
-    GlobalMapping::MappingSharedPtr mapping = 
-                            ProcessMapping::GetMapping(m_f);
-    
+    GlobalMapping::MappingSharedPtr mapping = ProcessMapping::GetMapping(m_f);
+
     // Get velocity and convert to Cartesian system,
     //      if it is still in transformed system
-    Array<OneD, Array<OneD, NekDouble> > vel (spacedim);
+    Array<OneD, Array<OneD, NekDouble> > vel(spacedim);
     if (m_f->m_fieldMetaDataMap.count("MappingCartesianVel"))
     {
-        if(m_f->m_fieldMetaDataMap["MappingCartesianVel"] == "False")
+        if (m_f->m_fieldMetaDataMap["MappingCartesianVel"] == "False")
         {
             // Initialize arrays and copy velocity
-            for ( int i =0; i<spacedim; ++i )
+            for (int i = 0; i < spacedim; ++i)
             {
-                vel[i] = Array<OneD, NekDouble> (npoints);      
+                vel[i] = Array<OneD, NekDouble>(npoints);
                 if (m_f->m_exp[0]->GetWaveSpace())
                 {
-                    m_f->m_exp[0]->HomogeneousBwdTrans(
-                                            m_f->m_exp[i]->GetPhys(),
-                                            vel[i]);
+                    m_f->m_exp[0]->HomogeneousBwdTrans(m_f->m_exp[i]->GetPhys(),
+                                                       vel[i]);
                 }
                 else
                 {
-                    Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(),1,
-                                            vel[i],1);
+                    Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(), 1, vel[i],
+                                 1);
                 }
-
             }
             // Convert velocity to cartesian system
-            mapping->ContravarToCartesian(vel, vel);            
+            mapping->ContravarToCartesian(vel, vel);
             // Convert back to wavespace if necessary
             if (m_f->m_exp[0]->GetWaveSpace())
             {
-                for ( int i =0; i<spacedim; ++i )
+                for (int i = 0; i < spacedim; ++i)
                 {
                     m_f->m_exp[0]->HomogeneousFwdTrans(vel[i], vel[i]);
                 }
-            }        
+            }
         }
         else
         {
-            for ( int i =0; i<spacedim; ++i )
+            for (int i = 0; i < spacedim; ++i)
             {
-                vel[i] = Array<OneD, NekDouble> (npoints); 
-                Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(), 1,
-                                            vel[i], 1);
+                vel[i] = Array<OneD, NekDouble>(npoints);
+                Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(), 1, vel[i], 1);
             }
         }
     }
     else
     {
-        for ( int i =0; i<spacedim; ++i )
+        for (int i = 0; i < spacedim; ++i)
         {
-            vel[i] = Array<OneD, NekDouble> (npoints); 
-            Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(), 1,
-                                        vel[i], 1);
-        }        
+            vel[i] = Array<OneD, NekDouble>(npoints);
+            Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(), 1, vel[i], 1);
+        }
     }
 
     // Calculate Gradient
@@ -157,57 +152,56 @@ void ProcessGrad::Process(po::variables_map &vm)
     {
         for (j = 0; j < spacedim; ++j)
         {
-            if (i<spacedim)
+            if (i < spacedim)
             {
                 m_f->m_exp[i]->PhysDeriv(MultiRegions::DirCartesianMap[j],
-                                         vel[i],
-                                         tmp[j]);
+                                         vel[i], tmp[j]);
             }
             else
             {
                 m_f->m_exp[i]->PhysDeriv(MultiRegions::DirCartesianMap[j],
-                                         m_f->m_exp[i]->GetPhys(),
-                                         tmp[j]);                
+                                         m_f->m_exp[i]->GetPhys(), tmp[j]);
             }
         }
         mapping->CovarToCartesian(tmp, tmp);
-        for( int j = 0; j<spacedim; j++)
+        for (int j = 0; j < spacedim; j++)
         {
-            Vmath::Vcopy(npoints, tmp[j], 1, grad[i*spacedim+j], 1 );
+            Vmath::Vcopy(npoints, tmp[j], 1, grad[i * spacedim + j], 1);
         }
     }
 
     for (i = 0; i < addfields; ++i)
     {
-        m_f->m_exp[nfields + i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
-        Vmath::Vcopy( npoints, grad[i], 1,
-                        m_f->m_exp[nfields + i]->UpdatePhys(), 1);
-        m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(grad[i],
-                            m_f->m_exp[nfields + i]->UpdateCoeffs());
+        m_f->m_exp[nfields + i] =
+            m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
+        Vmath::Vcopy(npoints, grad[i], 1, m_f->m_exp[nfields + i]->UpdatePhys(),
+                     1);
+        m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(
+            grad[i], m_f->m_exp[nfields + i]->UpdateCoeffs());
     }
 
-    vector<string > outname;
-    for (i = 0; i<nfields; ++i)
+    vector<string> outname;
+    for (i = 0; i < nfields; ++i)
     {
-        if(spacedim == 1)
+        if (spacedim == 1)
         {
-            outname.push_back(m_f->m_fielddef[0]->m_fields[i]+"_x");
+            outname.push_back(m_f->m_fielddef[0]->m_fields[i] + "_x");
         }
         else if (spacedim == 2)
         {
-            outname.push_back(m_f->m_fielddef[0]->m_fields[i]+"_x");
-            outname.push_back(m_f->m_fielddef[0]->m_fields[i]+"_y");
+            outname.push_back(m_f->m_fielddef[0]->m_fields[i] + "_x");
+            outname.push_back(m_f->m_fielddef[0]->m_fields[i] + "_y");
         }
         else if (spacedim == 3)
         {
-            outname.push_back(m_f->m_fielddef[0]->m_fields[i]+"_x");
-            outname.push_back(m_f->m_fielddef[0]->m_fields[i]+"_y");
-            outname.push_back(m_f->m_fielddef[0]->m_fields[i]+"_z");
+            outname.push_back(m_f->m_fielddef[0]->m_fields[i] + "_x");
+            outname.push_back(m_f->m_fielddef[0]->m_fields[i] + "_y");
+            outname.push_back(m_f->m_fielddef[0]->m_fields[i] + "_z");
         }
     }
 
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-        = m_f->m_exp[0]->GetFieldDefinitions();
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
+        m_f->m_exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
     for (j = 0; j < nfields + addfields; ++j)
@@ -216,11 +210,12 @@ void ProcessGrad::Process(po::variables_map &vm)
         {
             if (j >= nfields)
             {
-                FieldDef[i]->m_fields.push_back(outname[j-nfields]);
+                FieldDef[i]->m_fields.push_back(outname[j - nfields]);
             }
             else
             {
-                FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
+                FieldDef[i]->m_fields.push_back(
+                    m_f->m_fielddef[0]->m_fields[j]);
             }
             m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
         }
@@ -229,6 +224,5 @@ void ProcessGrad::Process(po::variables_map &vm)
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;
 }
-
 }
 }

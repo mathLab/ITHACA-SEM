@@ -36,8 +36,8 @@
 #ifndef FIELDUTILS_OUTPUTTECPLOT
 #define FIELDUTILS_OUTPUTTECPLOT
 
-#include <tinyxml.h>
 #include "../Module.h"
+#include <tinyxml.h>
 
 namespace Nektar
 {
@@ -54,41 +54,38 @@ enum TecOutType
 /// Converter from fld to dat.
 class OutputTecplot : public OutputModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<OutputTecplot>::AllocateSharedPtr(f);
-        }
-        static ModuleKey m_className;
-        OutputTecplot(FieldSharedPtr f);
-        virtual ~OutputTecplot();
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<OutputTecplot>::AllocateSharedPtr(f);
+    }
+    static ModuleKey m_className;
+    OutputTecplot(FieldSharedPtr f);
+    virtual ~OutputTecplot();
 
-        /// Write fld to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write fld to output file.
+    virtual void Process(po::variables_map &vm);
 
-    private:
-        bool m_doError;
-        TecOutType m_outputType;
+private:
+    bool m_doError;
+    TecOutType m_outputType;
 
-        void WriteTecplotHeader(std::ofstream &outfile,
-                                std::string var);
+    void WriteTecplotHeader(std::ofstream &outfile, std::string var);
 
-        void WriteTecplotZone(std::ofstream &outfile);
+    void WriteTecplotZone(std::ofstream &outfile);
 
-        int GetNumTecplotBlocks(void);
+    int GetNumTecplotBlocks(void);
 
-        void WriteTecplotField(const int field,
-                               std::ofstream &outfile);
+    void WriteTecplotField(const int field, std::ofstream &outfile);
 
-        void WriteTecplotConnectivity(std::ofstream &outfile);
+    void WriteTecplotConnectivity(std::ofstream &outfile);
 
-        virtual std::string GetModuleName()
-        {
-            return "OutputTecplot";
-        }
-
+    virtual std::string GetModuleName()
+    {
+        return "OutputTecplot";
+    }
 };
-
 }
 }
 

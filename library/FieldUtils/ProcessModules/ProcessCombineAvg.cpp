@@ -33,14 +33,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
 #include <iostream>
+#include <string>
 using namespace std;
 
 #include "ProcessCombineAvg.h"
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
@@ -50,16 +50,17 @@ namespace FieldUtils
 ModuleKey ProcessCombineAvg::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "combineAvg"),
-        ProcessCombineAvg::create, "combine two fields containing averages (and possibly Reynolds stresses). Must specify fromfld.");
+        ProcessCombineAvg::create,
+        "combine two fields containing averages (and possibly Reynolds "
+        "stresses). Must specify fromfld.");
 
 ProcessCombineAvg::ProcessCombineAvg(FieldSharedPtr f) : ProcessModule(f)
 {
-    m_config["fromfld"] = ConfigOption(false, "NotSet",
-                                "Fld file form which to add field");
+    m_config["fromfld"] =
+        ConfigOption(false, "NotSet", "Fld file form which to add field");
 
     ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
              "Need to specify fromfld=file.fld ");
-
 }
 
 ProcessCombineAvg::~ProcessCombineAvg()
@@ -70,19 +71,19 @@ void ProcessCombineAvg::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             cout << "ProcessCombineAvg: Combining new fld into input avg fld..."
                  << endl;
         }
     }
 
-    ASSERTL0(m_f->m_exp.size()  != 0,"No input expansion defined");
+    ASSERTL0(m_f->m_exp.size() != 0, "No input expansion defined");
 
-    int nfields   = m_f->m_fielddef[0]->m_fields.size();
-    int nq        = m_f->m_exp[0]->GetTotPoints();
-    int expdim    = m_f->m_graph->GetMeshDimension();
-    int spacedim  = expdim;
+    int nfields  = m_f->m_fielddef[0]->m_fields.size();
+    int nq       = m_f->m_exp[0]->GetTotPoints();
+    int expdim   = m_f->m_graph->GetMeshDimension();
+    int spacedim = expdim;
     if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
         (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
     {
@@ -90,46 +91,43 @@ void ProcessCombineAvg::Process(po::variables_map &vm)
     }
 
     // Allocate storage for new field and correction (for Reynolds stress)
-    Array<OneD, Array<OneD, NekDouble> >  fromPhys(nfields);
-    Array<OneD, Array<OneD, NekDouble> >  correction(nfields);
+    Array<OneD, Array<OneD, NekDouble> > fromPhys(nfields);
+    Array<OneD, Array<OneD, NekDouble> > correction(nfields);
     for (int j = 0; j < nfields; ++j)
     {
-        fromPhys[j]   = Array<OneD, NekDouble> (nq, 0.0);
-        correction[j] = Array<OneD, NekDouble> (nq, 0.0);
+        fromPhys[j]   = Array<OneD, NekDouble>(nq, 0.0);
+        correction[j] = Array<OneD, NekDouble>(nq, 0.0);
     }
 
-    string         fromfld           = m_config["fromfld"].as<string>();
-    FieldSharedPtr fromField         = boost::shared_ptr<Field>(new Field());
-    LibUtilities::FieldMetaDataMap     fromFieldMetaDataMap;
+    string fromfld           = m_config["fromfld"].as<string>();
+    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
+    LibUtilities::FieldMetaDataMap fromFieldMetaDataMap;
 
     // Set up ElementGIDs in case of parallel processing
-    Array<OneD,int> ElementGIDs(m_f->m_exp[0]->GetExpSize());
+    Array<OneD, int> ElementGIDs(m_f->m_exp[0]->GetExpSize());
     for (int i = 0; i < m_f->m_exp[0]->GetExpSize(); ++i)
     {
         ElementGIDs[i] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
     }
     // Import fromfld file
-    m_f->m_fld->Import(fromfld,
-                       fromField->m_fielddef,
-                       fromField->m_data,
-                       fromFieldMetaDataMap,
-                       ElementGIDs);
+    m_f->m_fld->Import(fromfld, fromField->m_fielddef, fromField->m_data,
+                       fromFieldMetaDataMap, ElementGIDs);
     ASSERTL0(fromField->m_fielddef[0]->m_fields.size() == nfields,
              "Mismatch in number of fields");
     // Extract data to fromPhys
     for (int j = 0; j < nfields; ++j)
     {
-        ASSERTL0(fromField->m_fielddef[0]->m_fields[j] == 
-                 m_f->m_fielddef[0]->m_fields[j], "Field names do not match.");
+        ASSERTL0(fromField->m_fielddef[0]->m_fields[j] ==
+                     m_f->m_fielddef[0]->m_fields[j],
+                 "Field names do not match.");
 
         // load new field (overwrite m_f->m_exp coeffs for now)
         for (int i = 0; i < fromField->m_data.size(); ++i)
         {
             m_f->m_exp[j]->ExtractDataToCoeffs(
-                                   fromField->m_fielddef[i],
-                                   fromField->m_data[i],
-                                   fromField->m_fielddef[i]->m_fields[j],
-                                   m_f->m_exp[j]->UpdateCoeffs());
+                fromField->m_fielddef[i], fromField->m_data[i],
+                fromField->m_fielddef[i]->m_fields[j],
+                m_f->m_exp[j]->UpdateCoeffs());
         }
         m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(), fromPhys[j]);
     }
@@ -159,7 +157,7 @@ void ProcessCombineAvg::Process(po::variables_map &vm)
     // Calculate correction for Reynolds stresses
     if (stress != -1)
     {
-        Array<OneD, NekDouble> tmp  (nq, 0.0);
+        Array<OneD, NekDouble> tmp(nq, 0.0);
         int n = stress;
         // Follow same numbering as FilterReynoldsStresses
         for (int i = 0; i < spacedim; ++i)
@@ -168,13 +166,13 @@ void ProcessCombineAvg::Process(po::variables_map &vm)
             {
                 // correction is zero for averages and
                 //      = (\bar{x_a}-\bar{x_b})*(\bar{y_a}-\bar{y_b})*na*nb/N
-                //      for Reynolds stresses   
-                NekDouble fac = ((NekDouble) (na*nb)) / ((NekDouble) (na+nb));
-                Vmath::Vsub(nq, m_f->m_exp[i]->GetPhys(), 1,
-                                fromPhys[i], 1, correction[n], 1);
-                Vmath::Vsub(nq, m_f->m_exp[j]->GetPhys(), 1,
-                                fromPhys[j], 1, tmp, 1);
-                Vmath::Vmul(nq, correction[n], 1, tmp,  1, correction[n], 1);
+                //      for Reynolds stresses
+                NekDouble fac = ((NekDouble)(na * nb)) / ((NekDouble)(na + nb));
+                Vmath::Vsub(nq, m_f->m_exp[i]->GetPhys(), 1, fromPhys[i], 1,
+                            correction[n], 1);
+                Vmath::Vsub(nq, m_f->m_exp[j]->GetPhys(), 1, fromPhys[j], 1,
+                            tmp, 1);
+                Vmath::Vmul(nq, correction[n], 1, tmp, 1, correction[n], 1);
                 Vmath::Smul(nq, fac, correction[n], 1, correction[n], 1);
             }
         }
@@ -183,78 +181,75 @@ void ProcessCombineAvg::Process(po::variables_map &vm)
     for (int j = 0; j < nfields; ++j)
     {
         // The new value is: (x_a*na + x_b*nb + correction)/N
-        Vmath::Smul(nq, 1.0*na, m_f->m_exp[j]->GetPhys(), 1,
-                            m_f->m_exp[j]->UpdatePhys(), 1);
-        Vmath::Svtvp(nq, 1.0*nb, fromPhys[j], 1,
-                            m_f->m_exp[j]->GetPhys(), 1,
-                            m_f->m_exp[j]->UpdatePhys(), 1);
-        Vmath::Vadd(nq, m_f->m_exp[j]->GetPhys(), 1,
-                            correction[j], 1,
-                            m_f->m_exp[j]->UpdatePhys(), 1);
-        Vmath::Smul(nq, 1.0/(na+nb),
-                            m_f->m_exp[j]->GetPhys(), 1,
-                            m_f->m_exp[j]->UpdatePhys(), 1);
+        Vmath::Smul(nq, 1.0 * na, m_f->m_exp[j]->GetPhys(), 1,
+                    m_f->m_exp[j]->UpdatePhys(), 1);
+        Vmath::Svtvp(nq, 1.0 * nb, fromPhys[j], 1, m_f->m_exp[j]->GetPhys(), 1,
+                     m_f->m_exp[j]->UpdatePhys(), 1);
+        Vmath::Vadd(nq, m_f->m_exp[j]->GetPhys(), 1, correction[j], 1,
+                    m_f->m_exp[j]->UpdatePhys(), 1);
+        Vmath::Smul(nq, 1.0 / (na + nb), m_f->m_exp[j]->GetPhys(), 1,
+                    m_f->m_exp[j]->UpdatePhys(), 1);
 
         m_f->m_exp[j]->FwdTrans_IterPerExp(m_f->m_exp[j]->GetPhys(),
-                            m_f->m_exp[j]->UpdateCoeffs());
+                                           m_f->m_exp[j]->UpdateCoeffs());
     }
 
     // Update metadata
-    m_f->m_fieldMetaDataMap["NumberOfFieldDumps"] = 
-            boost::lexical_cast<std::string>(na+nb);
+    m_f->m_fieldMetaDataMap["NumberOfFieldDumps"] =
+        boost::lexical_cast<std::string>(na + nb);
     NekDouble t0      = -1;
     NekDouble finTime = -1;
-    if(m_f->m_fieldMetaDataMap.count("InitialTime"))
+    if (m_f->m_fieldMetaDataMap.count("InitialTime"))
     {
         string s_t  = m_f->m_fieldMetaDataMap["InitialTime"];
         NekDouble t = atof(s_t.c_str());
 
-        t0          = t;
+        t0 = t;
     }
-    if(fromFieldMetaDataMap.count("InitialTime"))
+    if (fromFieldMetaDataMap.count("InitialTime"))
     {
         string s_t  = fromFieldMetaDataMap["InitialTime"];
         NekDouble t = atof(s_t.c_str());
 
         if (t0 == -1)
         {
-            t0      = t;
+            t0 = t;
         }
         else
         {
-            t0          = std::min(t0, t);
+            t0 = std::min(t0, t);
         }
     }
-    if(m_f->m_fieldMetaDataMap.count("FinalTime"))
+    if (m_f->m_fieldMetaDataMap.count("FinalTime"))
     {
         string s_t  = m_f->m_fieldMetaDataMap["FinalTime"];
         NekDouble t = atof(s_t.c_str());
 
-        finTime     = std::max(t0, t);
+        finTime = std::max(t0, t);
     }
-    if(fromFieldMetaDataMap.count("FinalTime"))
+    if (fromFieldMetaDataMap.count("FinalTime"))
     {
         string s_t  = fromFieldMetaDataMap["FinalTime"];
         NekDouble t = atof(s_t.c_str());
 
-        finTime     = std::max(t0, t);
+        finTime = std::max(t0, t);
     }
     if (t0 != -1)
     {
-        m_f->m_fieldMetaDataMap["InitialTime"] = 
+        m_f->m_fieldMetaDataMap["InitialTime"] =
             boost::lexical_cast<std::string>(t0);
     }
     if (finTime != -1)
     {
-        m_f->m_fieldMetaDataMap["FinalTime"] = 
+        m_f->m_fieldMetaDataMap["FinalTime"] =
             boost::lexical_cast<std::string>(finTime);
     }
 
     // Update field def and data
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-        = m_f->m_exp[0]->GetFieldDefinitions();
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
+        m_f->m_exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-    for(int i = 0; i < nfields; ++i)
+    for (int i = 0; i < nfields; ++i)
     {
         for (int j = 0; j < FieldDef.size(); ++j)
         {
@@ -266,6 +261,5 @@ void ProcessCombineAvg::Process(po::variables_map &vm)
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;
 }
-
 }
 }

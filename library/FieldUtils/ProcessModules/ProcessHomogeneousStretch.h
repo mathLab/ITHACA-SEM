@@ -44,7 +44,7 @@ namespace FieldUtils
 {
 
 /**
- * @brief This processing module stretches the homogeneous direction of a 
+ * @brief This processing module stretches the homogeneous direction of a
  * 3DH1D expansion by an integer factor.
  */
 class ProcessHomogeneousStretch : public ProcessModule
@@ -67,7 +67,6 @@ public:
     {
         return "ProcessHomogeneousStretch";
     }
-
 };
 }
 }

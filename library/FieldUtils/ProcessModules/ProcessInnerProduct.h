@@ -68,7 +68,6 @@ public:
         return "ProcessInnerProduct";
     }
 
-
 private:
     NekDouble IProduct(vector<unsigned int> &processFields,
                        FieldSharedPtr &fromField,

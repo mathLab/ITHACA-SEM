@@ -48,29 +48,29 @@ namespace FieldUtils
  */
 class ProcessInterpField : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessInterpField>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessInterpField>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessInterpField(FieldSharedPtr f);
-        virtual ~ProcessInterpField();
+    ProcessInterpField(FieldSharedPtr f);
+    virtual ~ProcessInterpField();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        void PrintProgressbar(const int position, const int goal) const;
+    void PrintProgressbar(const int position, const int goal) const;
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessInterpField";
-        }
+    virtual std::string GetModuleName()
+    {
+        return "ProcessInterpField";
+    }
 
-    private:
-        FieldSharedPtr m_fromField;
-
+private:
+    FieldSharedPtr m_fromField;
 };
 }
 }

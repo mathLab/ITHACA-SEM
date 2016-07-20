@@ -33,14 +33,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
 #include <iostream>
+#include <string>
 using namespace std;
 
 #include "ProcessHomogeneousPlane.h"
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
@@ -70,7 +70,7 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             cout << "ProcessHomogeneousPlane: Extracting plane..." << endl;
         }
@@ -93,21 +93,21 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
 
     // Look for correct plane (because of parallel case)
     int plane = -1;
-    for( int i = 0; i < m_f->m_fielddef[0]->m_homogeneousZIDs.size(); ++i)
+    for (int i = 0; i < m_f->m_fielddef[0]->m_homogeneousZIDs.size(); ++i)
     {
-        if( m_f->m_fielddef[0]->m_homogeneousZIDs[i] == planeid)
+        if (m_f->m_fielddef[0]->m_homogeneousZIDs[i] == planeid)
         {
             plane = i;
         }
     }
 
-    if( plane != -1)
+    if (plane != -1)
     {
         for (int s = 0; s < nstrips; ++s)
         {
             for (int i = 0; i < nfields; ++i)
             {
-                int n = s * nfields + i;
+                int n         = s * nfields + i;
                 m_f->m_exp[n] = m_f->m_exp[n]->GetPlane(plane);
 
                 if (m_config["wavespace"].m_beenSet)
@@ -152,13 +152,13 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
             for (int i = 0; i < nfields; ++i)
             {
                 int n = s * nfields + i;
-                m_f->m_exp[n] = MemoryManager<MultiRegions::ExpList>
-                                    ::AllocateSharedPtr();
+                m_f->m_exp[n] =
+                    MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr();
             }
         }
-        m_f->m_fielddef = 
-                std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
-        m_f->m_data = std::vector<std::vector<NekDouble> > ();
+        m_f->m_fielddef =
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
+        m_f->m_data = std::vector<std::vector<NekDouble> >();
     }
 }
 }

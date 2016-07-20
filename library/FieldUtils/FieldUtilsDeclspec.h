@@ -34,16 +34,15 @@
 #define NEKTAR_FIELD_UTILS_DECLSPEC_H
 
 #if defined(_MSC_VER)
-    #ifdef FIELD_UTILS_EXPORTS
-        #define FIELD_UTILS_EXPORT _declspec(dllexport)
-    #else
-        #define FIELD_UTILS_EXPORT _declspec(dllimport)
-    #endif
+#ifdef FIELD_UTILS_EXPORTS
+#define FIELD_UTILS_EXPORT _declspec(dllexport)
 #else
-    #define FIELD_UTILS_EXPORT
+#define FIELD_UTILS_EXPORT _declspec(dllimport)
+#endif
+#else
+#define FIELD_UTILS_EXPORT
 #endif
 
 #define LOKI_CLASS_LEVEL_THREADING
 
-#endif //NEKTAR_FIELD_UTILS_DECLSPEC_H
-
+#endif // NEKTAR_FIELD_UTILS_DECLSPEC_H

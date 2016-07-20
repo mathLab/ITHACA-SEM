@@ -48,38 +48,37 @@ namespace FieldUtils
  */
 class ProcessEquiSpacedOutput : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessEquiSpacedOutput>::
-                                                    AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessEquiSpacedOutput>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessEquiSpacedOutput(FieldSharedPtr f);
-        virtual ~ProcessEquiSpacedOutput();
+    ProcessEquiSpacedOutput(FieldSharedPtr f);
+    virtual ~ProcessEquiSpacedOutput();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessEquiSpacedOutput";
-        }
+    virtual std::string GetModuleName()
+    {
+        return "ProcessEquiSpacedOutput";
+    }
 
-    protected:
-        ProcessEquiSpacedOutput(){};
-        void SetupEquiSpacedField(void);
+protected:
+    ProcessEquiSpacedOutput(){};
+    void SetupEquiSpacedField(void);
 
-        void SetHomogeneousConnectivity(void);
+    void SetHomogeneousConnectivity(void);
 
-        void GenOrthoModes(int n,
-                           const Array<OneD,const NekDouble> &phys,
-                           Array<OneD, NekDouble> &coeffs);
+    void GenOrthoModes(int n,
+                       const Array<OneD, const NekDouble> &phys,
+                       Array<OneD, NekDouble> &coeffs);
 
-    private:
+private:
 };
-
 }
 }
 

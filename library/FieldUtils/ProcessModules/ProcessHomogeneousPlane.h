@@ -67,7 +67,6 @@ public:
     {
         return "ProcessScalGrad";
     }
-
 };
 }
 }

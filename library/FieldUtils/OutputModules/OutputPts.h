@@ -36,8 +36,8 @@
 #ifndef FIELDUTILS_OUTPUTPTS
 #define FIELDUTILS_OUTPUTPTS
 
-#include <tinyxml.h>
 #include "../Module.h"
+#include <tinyxml.h>
 
 namespace Nektar
 {

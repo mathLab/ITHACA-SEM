@@ -49,28 +49,27 @@ namespace FieldUtils
  */
 class ProcessScaleInFld : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f)
-        {
-            return MemoryManager<ProcessScaleInFld>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessScaleInFld>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessScaleInFld(FieldSharedPtr f);
-        virtual ~ProcessScaleInFld();
+    ProcessScaleInFld(FieldSharedPtr f);
+    virtual ~ProcessScaleInFld();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessScaleInFld";
-        }
+    virtual std::string GetModuleName()
+    {
+        return "ProcessScaleInFld";
+    }
 
-    private:
+private:
 };
-
 }
 }
 

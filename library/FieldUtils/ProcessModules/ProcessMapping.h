@@ -74,7 +74,6 @@ public:
 private:
     FieldSharedPtr m_fromField;
 };
-
 }
 }
 

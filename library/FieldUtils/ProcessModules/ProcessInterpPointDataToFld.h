@@ -50,33 +50,32 @@ namespace FieldUtils
  */
 class ProcessInterpPointDataToFld : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessInterpPointDataToFld>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessInterpPointDataToFld>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessInterpPointDataToFld(FieldSharedPtr f);
-        virtual ~ProcessInterpPointDataToFld();
+    ProcessInterpPointDataToFld(FieldSharedPtr f);
+    virtual ~ProcessInterpPointDataToFld();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessInterpPointDataToFld";
-        }
+    virtual std::string GetModuleName()
+    {
+        return "ProcessInterpPointDataToFld";
+    }
 
+    void PrintProgressbar(const int position, const int goal) const
+    {
+        LibUtilities::PrintProgressbar(position, goal, "Interpolating");
+    }
 
-        void PrintProgressbar(const int position, const int goal) const
-        {
-            LibUtilities::PrintProgressbar(position, goal, "Interpolating");
-        }
-
-    private:
+private:
 };
-
 }
 }
 

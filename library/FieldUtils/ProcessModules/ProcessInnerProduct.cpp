@@ -33,14 +33,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
 #include <iostream>
+#include <string>
 using namespace std;
 
 #include "ProcessInnerProduct.h"
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
@@ -59,16 +59,12 @@ ProcessInnerProduct::ProcessInnerProduct(FieldSharedPtr f) : ProcessModule(f)
         false, "NotSet", "Fld file form which to interpolate field");
     m_config["fields"] =
         ConfigOption(false, "All", "field id's to be used in inner product");
-    m_config["multifldids"] =
-        ConfigOption(false,
-                     "NotSet",
-                     "Take inner product of multiple field fields with "
-                     "ids given in string. i.e. file_0.chk file_1.chk ...");
+    m_config["multifldids"] = ConfigOption(
+        false, "NotSet", "Take inner product of multiple field fields with "
+                         "ids given in string. i.e. file_0.chk file_1.chk ...");
     m_config["allfromflds"] =
-        ConfigOption(true,
-                     "NotSet",
-                     "Take inner product between all fromflds, "
-                     "requires multifldids to be set");
+        ConfigOption(true, "NotSet", "Take inner product between all fromflds, "
+                                     "requires multifldids to be set");
 }
 
 ProcessInnerProduct::~ProcessInnerProduct()
@@ -79,7 +75,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             cout << "ProcessInnerProduct: Evaluating inner product..." << endl;
         }
@@ -159,11 +155,9 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
 
         for (int f = 0; f < fromfiles.size(); ++f)
         {
-            m_f->m_fld->Import(fromfiles[f],
-                               fromField->m_fielddef,
+            m_f->m_fld->Import(fromfiles[f], fromField->m_fielddef,
                                fromField->m_data,
-                               LibUtilities::NullFieldMetaDataMap,
-                               ElementGIDs);
+                               LibUtilities::NullFieldMetaDataMap, ElementGIDs);
 
             totiprod = IProduct(processFields, fromField, SaveFld);
 
@@ -183,11 +177,9 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
         for (int i = 0; i < fromfiles.size(); ++i)
         {
             allFromField[i] = boost::shared_ptr<Field>(new Field());
-            m_f->m_fld->Import(fromfiles[i],
-                               allFromField[i]->m_fielddef,
+            m_f->m_fld->Import(fromfiles[i], allFromField[i]->m_fielddef,
                                allFromField[i]->m_data,
-                               LibUtilities::NullFieldMetaDataMap,
-                               ElementGIDs);
+                               LibUtilities::NullFieldMetaDataMap, ElementGIDs);
         }
 
         for (int g = 0; g < fromfiles.size(); ++g)
@@ -241,8 +233,7 @@ NekDouble ProcessInnerProduct::IProduct(
         for (int i = 0; i < fromField->m_data.size(); ++i)
         {
             m_f->m_exp[fid]->ExtractDataToCoeffs(
-                fromField->m_fielddef[i],
-                fromField->m_data[i],
+                fromField->m_fielddef[i], fromField->m_data[i],
                 fromField->m_fielddef[i]->m_fields[fid],
                 m_f->m_exp[fid]->UpdateCoeffs());
         }
@@ -250,13 +241,8 @@ NekDouble ProcessInnerProduct::IProduct(
         m_f->m_exp[fid]->BwdTrans(m_f->m_exp[fid]->GetCoeffs(),
                                   m_f->m_exp[fid]->UpdatePhys());
 
-        Vmath::Vmul(nphys,
-                    SaveFld[j],
-                    1,
-                    m_f->m_exp[fid]->GetPhys(),
-                    1,
-                    m_f->m_exp[fid]->UpdatePhys(),
-                    1);
+        Vmath::Vmul(nphys, SaveFld[j], 1, m_f->m_exp[fid]->GetPhys(), 1,
+                    m_f->m_exp[fid]->UpdatePhys(), 1);
 
         NekDouble iprod =
             m_f->m_exp[fid]->PhysIntegral(m_f->m_exp[fid]->UpdatePhys());

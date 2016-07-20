@@ -33,12 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
 #include <iostream>
+#include <string>
 using namespace std;
 
-#include <LibUtilities/BasicUtils/PtsIO.h>
 #include <LibUtilities/BasicUtils/PtsField.h>
+#include <LibUtilities/BasicUtils/PtsIO.h>
 
 #include <tinyxml.h>
 
@@ -51,9 +51,9 @@ namespace FieldUtils
 
 ModuleKey InputDat::m_className[1] = {
     GetModuleFactory().RegisterCreatorFunction(
-            ModuleKey(eInputModule, "dat"),
-            InputDat::create,
-            "Reads Tecplot dat file for FE block triangular format."),
+        ModuleKey(eInputModule, "dat"),
+        InputDat::create,
+        "Reads Tecplot dat file for FE block triangular format."),
 };
 
 /**
@@ -65,7 +65,6 @@ InputDat::InputDat(FieldSharedPtr f) : InputModule(f)
     m_allowedFiles.insert("dat");
 }
 
-
 /**
  *
  */
@@ -73,28 +72,26 @@ InputDat::~InputDat()
 {
 }
 
-
 /**
  *
  */
 void InputDat::Process(po::variables_map &vm)
 {
 
-    if(m_f->m_verbose)
+    if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             cout << "Processing input dat file" << endl;
         }
     }
 
-    string      line, word, tag;
+    string line, word, tag;
     std::ifstream datFile;
     stringstream s;
 
     // Open the file stream.
     string fname = m_f->m_inputfiles["dat"][0];
-
 
     datFile.open(fname.c_str());
     if (!datFile.good())
@@ -111,17 +108,18 @@ void InputDat::Process(po::variables_map &vm)
     {
         getline(datFile, line);
 
-        if(line.find("VARIABLES") != string::npos)
+        if (line.find("VARIABLES") != string::npos)
         {
-            std::size_t  pos = line.find('=');
+            std::size_t pos = line.find('=');
             pos++;
 
             // note this expects a comma separated list but
             // does not work for white space separated lists!
             bool valid = ParseUtils::GenerateOrderedStringVector(
-                                line.substr(pos).c_str(), fieldNames);
-            ASSERTL0(valid,"Unable to process list of field variable in "
-                     " VARIABLES list:  "+ line.substr(pos));
+                line.substr(pos).c_str(), fieldNames);
+            ASSERTL0(valid, "Unable to process list of field variable in "
+                            " VARIABLES list:  " +
+                                line.substr(pos));
 
             // remove coordinates from fieldNames
             fieldNames.erase(fieldNames.begin(), fieldNames.begin() + dim);
@@ -141,9 +139,9 @@ void InputDat::Process(po::variables_map &vm)
     {
         getline(datFile, line);
 
-        if((line.find("ZONE") != string::npos)||
-           (line.find("Zone") != string::npos)||
-           (line.find("zone") != string::npos))
+        if ((line.find("ZONE") != string::npos) ||
+            (line.find("Zone") != string::npos) ||
+            (line.find("zone") != string::npos))
         {
             ReadTecplotFEBlockZone(datFile, line, pts, ptsConn);
         }
@@ -151,88 +149,81 @@ void InputDat::Process(po::variables_map &vm)
 
     datFile.close();
 
-    m_f->m_fieldPts =
-        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
-            dim, fieldNames, pts);
+    m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+        dim, fieldNames, pts);
     m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTriBlock);
     m_f->m_fieldPts->SetConnectivity(ptsConn);
 }
 
-
 /**
  *
  */
-void InputDat::ReadTecplotFEBlockZone(
-    std::ifstream   &datFile,
-    string          &line,
-    Array<OneD, Array<OneD, NekDouble> > &pts,
-    vector<Array<OneD, int> > &ptsConn)
+void InputDat::ReadTecplotFEBlockZone(std::ifstream &datFile,
+                                      string &line,
+                                      Array<OneD, Array<OneD, NekDouble> > &pts,
+                                      vector<Array<OneD, int> > &ptsConn)
 {
     ASSERTL0(line.find("FEBlock") != string::npos,
              "Routine only set up for FEBLock format");
-    ASSERTL0(line.find("ET") != string::npos,
-             "Routine only set up TRIANLES");
+    ASSERTL0(line.find("ET") != string::npos, "Routine only set up TRIANLES");
 
     // read the number of nodes
 
     stringstream s;
     string tag;
-    int start,end;
+    int start, end;
 
     s.clear();
     s.str(line);
     tag = s.str();
 
     // read the number of vertices
-    start = tag.find("N=");
-    end   = tag.find_first_of(',',start);
-    int nvert = atoi(tag.substr(start+2,end).c_str());
+    start     = tag.find("N=");
+    end       = tag.find_first_of(',', start);
+    int nvert = atoi(tag.substr(start + 2, end).c_str());
 
     // read the number of elements
-    start = tag.find("E=");
-    end   = tag.find_first_of(',',start);
-    int nelmt = atoi(tag.substr(start+2,end).c_str());
+    start     = tag.find("E=");
+    end       = tag.find_first_of(',', start);
+    int nelmt = atoi(tag.substr(start + 2, end).c_str());
 
     // set-up or extend m_pts array;
     int norigpts  = pts[0].num_elements();
     int totfields = pts.num_elements();
     Array<OneD, Array<OneD, NekDouble> > origpts(totfields);
-    for(int i = 0; i < totfields; ++i)
+    for (int i = 0; i < totfields; ++i)
     {
         origpts[i] = pts[i];
-        pts[i] = Array<OneD, NekDouble>(norigpts + nvert);
+        pts[i]     = Array<OneD, NekDouble>(norigpts + nvert);
     }
 
     NekDouble value;
-    for(int n = 0; n < totfields; ++n)
+    for (int n = 0; n < totfields; ++n)
     {
 
-        for(int i = 0; i < norigpts; ++i)
+        for (int i = 0; i < norigpts; ++i)
         {
             pts[n][i] = origpts[n][i];
         }
-        for(int i = 0; i < nvert; ++i)
+        for (int i = 0; i < nvert; ++i)
         {
             datFile >> value;
-            pts[n][norigpts+i] = value;
+            pts[n][norigpts + i] = value;
         }
     }
 
     // read connectivity and add to list
     int intvalue;
-    Array<OneD, int> conn(3*nelmt);
-    for(int i = 0; i < 3*nelmt; ++i)
+    Array<OneD, int> conn(3 * nelmt);
+    for (int i = 0; i < 3 * nelmt; ++i)
     {
         datFile >> intvalue;
-        intvalue -=1; // decrement intvalue by 1 for c array convention
+        intvalue -= 1; // decrement intvalue by 1 for c array convention
         conn[i] = norigpts + intvalue;
     }
     ptsConn.push_back(conn);
 
     getline(datFile, line);
 }
-
-
 }
 }
-

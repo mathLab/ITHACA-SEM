@@ -46,29 +46,28 @@ namespace FieldUtils
 /// This processing module scales the input fld file
 class ProcessQualityMetric : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f)
-        {
-            return MemoryManager<ProcessQualityMetric>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessQualityMetric>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessQualityMetric(FieldSharedPtr f);
-        virtual ~ProcessQualityMetric();
+    ProcessQualityMetric(FieldSharedPtr f);
+    virtual ~ProcessQualityMetric();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessQualityMetric";
-        }
+    virtual std::string GetModuleName()
+    {
+        return "ProcessQualityMetric";
+    }
 
-    private:
-        Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e);
+private:
+    Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e);
 };
-
 }
 }
 

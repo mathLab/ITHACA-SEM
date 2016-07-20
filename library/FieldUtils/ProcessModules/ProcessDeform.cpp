@@ -33,51 +33,50 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
 #include <iostream>
+#include <string>
 using namespace std;
 
 #include "ProcessDeform.h"
 
-#include <MultiRegions/ExpList.h>
 #include <GlobalMapping/Deform.h>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
-    namespace FieldUtils
+namespace FieldUtils
+{
+ModuleKey ProcessDeform::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eProcessModule, "deform"),
+    ProcessDeform::create,
+    "Deform a mesh given an input field defining displacement");
+
+ProcessDeform::ProcessDeform(FieldSharedPtr f) : ProcessModule(f)
+{
+}
+
+ProcessDeform::~ProcessDeform()
+{
+}
+
+void ProcessDeform::Process(po::variables_map &vm)
+{
+    if (m_f->m_verbose)
     {
-        ModuleKey ProcessDeform::className =
-            GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey(eProcessModule, "deform"), ProcessDeform::create,
-                "Deform a mesh given an input field defining displacement");
-
-        ProcessDeform::ProcessDeform(FieldSharedPtr f) :
-            ProcessModule(f)
+        if (m_f->m_comm->TreatAsRankZero())
         {
-        }
-
-        ProcessDeform::~ProcessDeform()
-        {
-        }
-
-        void ProcessDeform::Process(po::variables_map &vm)
-        {
-            if (m_f->m_verbose)
-            {
-                if(m_f->m_comm->TreatAsRankZero())
-                {
-                    cout << "ProcessDeform: Deforming grid..." << endl;
-                }
-            }
-
-            Array<OneD, MultiRegions::ExpListSharedPtr> exp(m_f->m_exp.size());
-
-            for (int i = 0; i < exp.num_elements(); ++i)
-            {
-                exp[i] = m_f->m_exp[i];
-            }
-
-            GlobalMapping::UpdateGeometry(m_f->m_graph, exp, false);
+            cout << "ProcessDeform: Deforming grid..." << endl;
         }
     }
+
+    Array<OneD, MultiRegions::ExpListSharedPtr> exp(m_f->m_exp.size());
+
+    for (int i = 0; i < exp.num_elements(); ++i)
+    {
+        exp[i] = m_f->m_exp[i];
+    }
+
+    GlobalMapping::UpdateGeometry(m_f->m_graph, exp, false);
+}
+}
 }

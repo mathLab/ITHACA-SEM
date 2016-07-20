@@ -49,24 +49,24 @@ namespace FieldUtils
  */
 class ProcessWSS : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessWSS>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessWSS>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessWSS(FieldSharedPtr f);
-        virtual ~ProcessWSS();
+    ProcessWSS(FieldSharedPtr f);
+    virtual ~ProcessWSS();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessWSS";
-        }
-
+    virtual std::string GetModuleName()
+    {
+        return "ProcessWSS";
+    }
 };
 }
 }

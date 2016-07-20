@@ -33,9 +33,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <string>
 using namespace std;
 
 #include <LibUtilities/BasicUtils/Timer.h>
@@ -44,7 +44,7 @@ using namespace std;
 using namespace Nektar;
 
 static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
-                "NumberOfPoints","n","Define number of points to dump output");
+    "NumberOfPoints", "n", "Define number of points to dump output");
 
 namespace Nektar
 {
@@ -53,13 +53,10 @@ namespace FieldUtils
 
 ModuleKey InputXml::m_className[5] = {
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "xml"), InputXml::create,
-        "Reads Xml file."),
+        ModuleKey(eInputModule, "xml"), InputXml::create, "Reads Xml file."),
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, "xml.gz"), InputXml::create,
-        "Reads Xml file."),
+        ModuleKey(eInputModule, "xml.gz"), InputXml::create, "Reads Xml file."),
 };
-
 
 /**
  * @brief Set up InputXml object.
@@ -74,14 +71,12 @@ InputXml::InputXml(FieldSharedPtr f) : InputModule(f)
     m_allowedFiles.insert("rst");
 }
 
-
 /**
  *
  */
 InputXml::~InputXml()
 {
 }
-
 
 /**
  *
@@ -90,19 +85,19 @@ void InputXml::Process(po::variables_map &vm)
 {
     Timer timerpart;
 
-    //check for multiple calls to inputXml due to split xml
-    //files. If so just return
+    // check for multiple calls to inputXml due to split xml
+    // files. If so just return
     int expsize = m_f->m_exp.size();
-    m_f->m_comm->AllReduce(expsize,LibUtilities::ReduceMax);
-    
-    if(expsize != 0)
+    m_f->m_comm->AllReduce(expsize, LibUtilities::ReduceMax);
+
+    if (expsize != 0)
     {
-        return; 
+        return;
     }
 
-    if(m_f->m_verbose)
+    if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             cout << "Processing input xml file" << endl;
             timerpart.Start();
@@ -114,12 +109,12 @@ void InputXml::Process(po::variables_map &vm)
     string fldending;
     bool fldfilegiven = true;
 
-    //Determine appropriate field input
-    if(m_f->m_inputfiles.count("fld") != 0)
+    // Determine appropriate field input
+    if (m_f->m_inputfiles.count("fld") != 0)
     {
         fldending = "fld";
     }
-    else if(m_f->m_inputfiles.count("chk") != 0)
+    else if (m_f->m_inputfiles.count("chk") != 0)
     {
         fldending = "chk";
     }
@@ -132,7 +127,7 @@ void InputXml::Process(po::variables_map &vm)
         fldfilegiven = false;
     }
 
-    string xml_ending = "xml";
+    string xml_ending    = "xml";
     string xml_gz_ending = "xml.gz";
 
     std::vector<std::string> files;
@@ -143,63 +138,59 @@ void InputXml::Process(po::variables_map &vm)
     }
 
     // load any .xml.gz endings
-    for (int j =0; j < m_f->m_inputfiles[xml_gz_ending].size(); ++j)
+    for (int j = 0; j < m_f->m_inputfiles[xml_gz_ending].size(); ++j)
     {
         files.push_back(m_f->m_inputfiles[xml_gz_ending][j]);
     }
 
-    SpatialDomains::DomainRangeShPtr rng =
-                                SpatialDomains::NullDomainRangeShPtr;
-
+    SpatialDomains::DomainRangeShPtr rng = SpatialDomains::NullDomainRangeShPtr;
 
     // define range to process output
-    if(vm.count("range"))
+    if (vm.count("range"))
     {
         vector<NekDouble> values;
         ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                    vm["range"].as<string>().c_str(), values),
+                     vm["range"].as<string>().c_str(), values),
                  "Failed to interpret range string");
 
-        ASSERTL0(values.size() > 1,
-                 "Do not have minimum values of xmin,xmax");
+        ASSERTL0(values.size() > 1, "Do not have minimum values of xmin,xmax");
         ASSERTL0(values.size() % 2 == 0,
                  "Do not have an even number of range values");
 
-        int nvalues = values.size()/2;
-        rng = MemoryManager<SpatialDomains::DomainRange>::
-                                                AllocateSharedPtr();
+        int nvalues = values.size() / 2;
+        rng = MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
 
-        rng->m_doZrange     = false;
-        rng->m_doYrange     = false;
-        rng->m_checkShape   = false;
+        rng->m_doZrange   = false;
+        rng->m_doYrange   = false;
+        rng->m_checkShape = false;
 
-        switch(nvalues)
+        switch (nvalues)
         {
-        case 3:
-            rng->m_doZrange = true;
-            rng->m_zmin     = values[4];
-            rng->m_zmax     = values[5];
-        case 2:
-            rng->m_doYrange = true;
-            rng->m_ymin     = values[2];
-            rng->m_ymax     = values[3];
-        case 1:
-            rng->m_doXrange = true;
-            rng->m_xmin     = values[0];
-            rng->m_xmax     = values[1];
-            break;
-        default:
-            ASSERTL0(false,"too many values specfied in range");
+            case 3:
+                rng->m_doZrange = true;
+                rng->m_zmin     = values[4];
+                rng->m_zmax     = values[5];
+            case 2:
+                rng->m_doYrange = true;
+                rng->m_ymin     = values[2];
+                rng->m_ymax     = values[3];
+            case 1:
+                rng->m_doXrange = true;
+                rng->m_xmin     = values[0];
+                rng->m_xmax     = values[1];
+                break;
+            default:
+                ASSERTL0(false, "too many values specfied in range");
         }
     }
 
     // define range to only take a single shape.
-    if(vm.count("onlyshape"))
+    if (vm.count("onlyshape"))
     {
-        if(rng == SpatialDomains::NullDomainRangeShPtr)
+        if (rng == SpatialDomains::NullDomainRangeShPtr)
         {
-            rng = MemoryManager<SpatialDomains::DomainRange>::
-                                                    AllocateSharedPtr();
+            rng =
+                MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
             rng->m_doXrange = false;
             rng->m_doYrange = false;
             rng->m_doZrange = false;
@@ -207,14 +198,13 @@ void InputXml::Process(po::variables_map &vm)
 
         rng->m_checkShape = true;
 
-        string shapematch =
-                    boost::to_upper_copy(vm["onlyshape"].as<string>());
+        string shapematch = boost::to_upper_copy(vm["onlyshape"].as<string>());
         int i;
-        for(i = 0; i < LibUtilities::SIZE_ShapeType; ++i)
+        for (i = 0; i < LibUtilities::SIZE_ShapeType; ++i)
         {
             string shapeval = LibUtilities::ShapeTypeMap[i];
             boost::to_upper(shapeval);
-            if(shapematch.compare(shapeval) == 0)
+            if (shapematch.compare(shapeval) == 0)
             {
                 rng->m_shapeType = (LibUtilities::ShapeType)i;
                 break;
@@ -229,52 +219,51 @@ void InputXml::Process(po::variables_map &vm)
     vector<string> cmdArgs;
     cmdArgs.push_back("FieldConvert");
 
-    if(m_f->m_verbose)
+    if (m_f->m_verbose)
     {
         cmdArgs.push_back("--verbose");
     }
 
-    if(vm.count("part-only"))
+    if (vm.count("part-only"))
     {
         cmdArgs.push_back("--part-only");
         cmdArgs.push_back(
             boost::lexical_cast<string>(vm["part-only"].as<int>()));
     }
 
-    if(vm.count("part-only-overlapping"))
+    if (vm.count("part-only-overlapping"))
     {
         cmdArgs.push_back("--part-only-overlapping");
         cmdArgs.push_back(
             boost::lexical_cast<string>(vm["part-only-overlapping"].as<int>()));
     }
 
-    if(vm.count("npz"))
+    if (vm.count("npz"))
     {
         cmdArgs.push_back("--npz");
-        cmdArgs.push_back(
-            boost::lexical_cast<string>(vm["npz"].as<int>()));
+        cmdArgs.push_back(boost::lexical_cast<string>(vm["npz"].as<int>()));
     }
 
-    int argc = cmdArgs.size();
-    const char **argv = new const char*[argc];
+    int argc          = cmdArgs.size();
+    const char **argv = new const char *[argc];
     for (int i = 0; i < argc; ++i)
     {
         argv[i] = cmdArgs[i].c_str();
     }
 
-    m_f->m_session = LibUtilities::SessionReader::
-        CreateInstance(argc, (char **) argv, files, m_f->m_comm);
+    m_f->m_session = LibUtilities::SessionReader::CreateInstance(
+        argc, (char **)argv, files, m_f->m_comm);
 
     // Free up memory.
-    delete [] argv;
+    delete[] argv;
 
-    if(m_f->m_verbose)
+    if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             timerpart.Stop();
             NekDouble cpuTime = timerpart.TimePerTest(1);
-            
+
             stringstream ss;
             ss << cpuTime << "s";
             cout << "\t InputXml session reader CPU Time: " << setw(8) << left
@@ -282,34 +271,35 @@ void InputXml::Process(po::variables_map &vm)
             timerpart.Start();
         }
     }
-    
-    m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
-    m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
-                    ::AllocateSharedPtr(m_f->m_session->GetComm());
 
-    if(m_f->m_verbose)
+    m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session, rng);
+    m_f->m_fld   = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
+        m_f->m_session->GetComm());
+
+    if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             timerpart.Stop();
             NekDouble cpuTime = timerpart.TimePerTest(1);
-            
+
             stringstream ss;
             ss << cpuTime << "s";
-            cout << "\t InputXml mesh graph setup  CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
+            cout << "\t InputXml mesh graph setup  CPU Time: " << setw(8)
+                 << left << ss.str() << endl;
             timerpart.Start();
         }
     }
 
     // currently load all field (possibly could read data from
     // expansion list but it is re-arranged in expansion)
-    const SpatialDomains::ExpansionMap &expansions = m_f->m_graph->GetExpansions();
+    const SpatialDomains::ExpansionMap &expansions =
+        m_f->m_graph->GetExpansions();
 
     // if Range has been speficied it is possible to have a
     // partition which is empty so ccheck this and return if
     // no elements present.
-    if(!expansions.size())
+    if (!expansions.size())
     {
         return;
     }
@@ -319,15 +309,15 @@ void InputXml::Process(po::variables_map &vm)
     // load fielddef header if fld file is defined. This gives
     // precedence to Homogeneous definition in fld file
     int NumHomogeneousDir = 0;
-    if(fldfilegiven)
+    if (fldfilegiven)
     {
         // use original expansion to identify which elements are in
         // this partition/subrange
 
-        Array<OneD,int> ElementGIDs(expansions.size());
+        Array<OneD, int> ElementGIDs(expansions.size());
         SpatialDomains::ExpansionMap::const_iterator expIt;
 
-        int i = 0; 
+        int i = 0;
         for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
         {
             ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
@@ -336,11 +326,8 @@ void InputXml::Process(po::variables_map &vm)
         m_f->m_fielddef.clear();
         m_f->m_data.clear();
 
-        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],
-                           m_f->m_fielddef,
-                           m_f->m_data,
-                           m_f->m_fieldMetaDataMap,
-                           ElementGIDs);
+        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0], m_f->m_fielddef,
+                           m_f->m_data, m_f->m_fieldMetaDataMap, ElementGIDs);
         NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
 
         //----------------------------------------------
@@ -349,17 +336,17 @@ void InputXml::Process(po::variables_map &vm)
     }
     else
     {
-        if(m_f->m_session->DefinesSolverInfo("HOMOGENEOUS"))
+        if (m_f->m_session->DefinesSolverInfo("HOMOGENEOUS"))
         {
             std::string HomoStr = m_f->m_session->GetSolverInfo("HOMOGENEOUS");
 
-            if((HomoStr == "HOMOGENEOUS1D") || (HomoStr == "Homogeneous1D")
-               || (HomoStr == "1D") || (HomoStr == "Homo1D"))
+            if ((HomoStr == "HOMOGENEOUS1D") || (HomoStr == "Homogeneous1D") ||
+                (HomoStr == "1D") || (HomoStr == "Homo1D"))
             {
                 NumHomogeneousDir = 1;
             }
-            if((HomoStr == "HOMOGENEOUS2D") || (HomoStr == "Homogeneous2D")
-               || (HomoStr == "2D") || (HomoStr == "Homo2D"))
+            if ((HomoStr == "HOMOGENEOUS2D") || (HomoStr == "Homogeneous2D") ||
+                (HomoStr == "2D") || (HomoStr == "Homo2D"))
             {
                 NumHomogeneousDir = 2;
             }
@@ -367,34 +354,33 @@ void InputXml::Process(po::variables_map &vm)
     }
 
     // reset expansion defintion to use equispaced points if required.
-    if(m_requireEquiSpaced || vm.count("output-points"))
+    if (m_requireEquiSpaced || vm.count("output-points"))
     {
         int nPointsNew = 0;
 
-        if(vm.count("output-points"))
+        if (vm.count("output-points"))
         {
             nPointsNew = vm["output-points"].as<int>();
         }
-
 
         m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
     }
     else
     {
-        if(vm.count("output-points"))
+        if (vm.count("output-points"))
         {
             int nPointsNew = vm["output-points"].as<int>();
             m_f->m_graph->SetExpansionsToPointOrder(nPointsNew);
         }
     }
 
-    if(m_f->m_verbose)
+    if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             timerpart.Stop();
             NekDouble cpuTime = timerpart.TimePerTest(1);
-            
+
             stringstream ss;
             ss << cpuTime << "s";
             cout << "\t InputXml setexpansion CPU Time: " << setw(8) << left
@@ -404,21 +390,22 @@ void InputXml::Process(po::variables_map &vm)
     }
 
     // Override number of planes with value from cmd line
-    if(NumHomogeneousDir == 1 && vm.count("output-points-hom-z"))
+    if (NumHomogeneousDir == 1 && vm.count("output-points-hom-z"))
     {
         int expdim = m_f->m_graph->GetMeshDimension();
-        m_f->m_fielddef[0]->m_numModes[expdim] = vm["output-points-hom-z"].as<int>();
+        m_f->m_fielddef[0]->m_numModes[expdim] =
+            vm["output-points-hom-z"].as<int>();
     }
 
-    m_f->m_exp[0] = m_f->SetUpFirstExpList(NumHomogeneousDir,fldfilegiven);
-    
-    if(m_f->m_verbose)
+    m_f->m_exp[0] = m_f->SetUpFirstExpList(NumHomogeneousDir, fldfilegiven);
+
+    if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             timerpart.Stop();
             NekDouble cpuTime = timerpart.TimePerTest(1);
-            
+
             stringstream ss1;
 
             ss1 << cpuTime << "s";

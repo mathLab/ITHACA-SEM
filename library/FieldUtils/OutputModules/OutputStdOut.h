@@ -36,8 +36,8 @@
 #ifndef FIELDUTILS_OUTPUTSTDOUT
 #define FIELDUTILS_OUTPUTSTDOUT
 
-#include <tinyxml.h>
 #include "../Module.h"
+#include <tinyxml.h>
 
 namespace Nektar
 {
@@ -64,7 +64,6 @@ public:
     {
         return "OutputStdOut";
     }
-
 };
 }
 }

@@ -44,33 +44,33 @@ namespace FieldUtils
 {
 
 /**
- * @brief This processing module combines two fld files containing average fields
+ * @brief This processing module combines two fld files containing average
+ * fields
  *
  */
 class ProcessCombineAvg : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f)
-        {
-            return MemoryManager<ProcessCombineAvg>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessCombineAvg>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessCombineAvg(FieldSharedPtr f);
-        virtual ~ProcessCombineAvg();
+    ProcessCombineAvg(FieldSharedPtr f);
+    virtual ~ProcessCombineAvg();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessCombineAvg";
-        }
+    virtual std::string GetModuleName()
+    {
+        return "ProcessCombineAvg";
+    }
 
-    private:
+private:
 };
-
 }
 }
 

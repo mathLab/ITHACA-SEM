@@ -43,129 +43,127 @@ namespace Nektar
 {
 namespace FieldUtils
 {
-    /**
-     * Returns an instance of the module factory, held as a singleton.
-     */
-    ModuleFactory& GetModuleFactory()
+/**
+ * Returns an instance of the module factory, held as a singleton.
+ */
+ModuleFactory &GetModuleFactory()
+{
+    typedef Loki::SingletonHolder<ModuleFactory, Loki::CreateUsingNew,
+                                  Loki::NoDestroy, Loki::SingleThreaded>
+        Type;
+    return Type::Instance();
+}
+
+/**
+ * Prints a given module key to a stream.
+ */
+std::ostream &operator<<(std::ostream &os, const ModuleKey &rhs)
+{
+    return os << ModuleTypeMap[rhs.first] << ": " << rhs.second;
+}
+
+InputModule::InputModule(FieldSharedPtr m) : Module(m)
+{
+    m_config["infile"] = ConfigOption(false, "", "Input filename.");
+}
+
+OutputModule::OutputModule(FieldSharedPtr m) : Module(m)
+{
+    m_config["outfile"] = ConfigOption(false, "", "Output filename.");
+}
+
+void InputModule::AddFile(string fileType, string fileName)
+{
+    // Check to see if this file type is allowed
+    if (m_allowedFiles.count(fileType) == 0)
     {
-        typedef Loki::SingletonHolder<ModuleFactory,
-            Loki::CreateUsingNew,
-            Loki::NoDestroy,
-            Loki::SingleThreaded> Type;
-        return Type::Instance();
+        cerr << "File type " << fileType << " not supported for this "
+             << "module." << endl;
     }
 
-    /**
-     * Prints a given module key to a stream.
-     */
-    std::ostream& operator<<(std::ostream& os, const ModuleKey& rhs)
+    m_f->m_inputfiles[fileType].push_back(fileName);
+}
+/**
+ * @brief Open a file for output.
+ */
+void OutputModule::OpenStream()
+{
+    string fname = m_config["outfile"].as<string>();
+    m_fldFile.open(fname.c_str());
+    if (!m_fldFile.good())
     {
-        return os << ModuleTypeMap[rhs.first] << ": " << rhs.second;
+        cerr << "Error opening file: " << fname << endl;
+        abort();
+    }
+}
+
+/**
+ * @brief Register a configuration option with a module.
+ */
+void Module::RegisterConfig(string key, string val)
+{
+    map<string, ConfigOption>::iterator it = m_config.find(key);
+    if (it == m_config.end())
+    {
+        cerr << "WARNING: Unrecognised config option " << key
+             << ", proceeding anyway." << endl;
     }
 
-    InputModule::InputModule(FieldSharedPtr m) : Module(m)
+    it->second.m_beenSet = true;
+
+    if (it->second.m_isBool)
     {
-        m_config["infile"] = ConfigOption(false, "", "Input filename.");
+        it->second.m_value = "1";
+    }
+    else
+    {
+        it->second.m_value = val;
+    }
+}
+
+/**
+ * @brief Print out all configuration options for a module.
+ */
+void Module::PrintConfig()
+{
+    map<string, ConfigOption>::iterator it;
+
+    if (m_config.size() == 0)
+    {
+        cerr << "No configuration options for this module." << endl;
+        return;
     }
 
-    OutputModule::OutputModule(FieldSharedPtr m) : Module(m)
+    for (it = m_config.begin(); it != m_config.end(); ++it)
     {
-        m_config["outfile"] = ConfigOption(false, "", "Output filename.");
+        cerr << setw(10) << it->first << ": " << it->second.m_desc << endl;
     }
+}
 
-    void InputModule::AddFile(string fileType, string fileName)
+/**
+ * @brief Sets default configuration options for those which have not
+ * been set.
+ */
+void Module::SetDefaults()
+{
+    map<string, ConfigOption>::iterator it;
+
+    for (it = m_config.begin(); it != m_config.end(); ++it)
     {
-        // Check to see if this file type is allowed
-        if (m_allowedFiles.count(fileType) == 0)
+        if (!it->second.m_beenSet)
         {
-            cerr << "File type " << fileType << " not supported for this "
-                 << "module." << endl;
-        }
-
-        m_f->m_inputfiles[fileType].push_back(fileName);
-    }
-    /**
-     * @brief Open a file for output.
-     */
-    void OutputModule::OpenStream()
-    {
-        string fname = m_config["outfile"].as<string>();
-        m_fldFile.open(fname.c_str());
-        if (!m_fldFile.good())
-        {
-            cerr << "Error opening file: " << fname << endl;
-            abort();
-        }
-    }
-
-    /**
-     * @brief Register a configuration option with a module.
-     */
-    void Module::RegisterConfig(string key, string val)
-    {
-        map<string, ConfigOption>::iterator it = m_config.find(key);
-        if (it == m_config.end())
-        {
-            cerr << "WARNING: Unrecognised config option " << key
-                 << ", proceeding anyway." << endl;
-        }
-
-        it->second.m_beenSet = true;
-
-        if (it->second.m_isBool)
-        {
-            it->second.m_value = "1";
-        }
-        else
-        {
-            it->second.m_value = val;
-        }
-    }
-
-    /**
-     * @brief Print out all configuration options for a module.
-     */
-    void Module::PrintConfig()
-    {
-        map<string, ConfigOption>::iterator it;
-
-        if (m_config.size() == 0)
-        {
-            cerr << "No configuration options for this module." << endl;
-            return;
-        }
-
-        for (it = m_config.begin(); it != m_config.end(); ++it)
-        {
-            cerr << setw(10) << it->first << ": " << it->second.m_desc
-                 << endl;
-        }
-    }
-
-    /**
-     * @brief Sets default configuration options for those which have not
-     * been set.
-     */
-    void Module::SetDefaults()
-    {
-        map<string, ConfigOption>::iterator it;
-
-        for (it = m_config.begin(); it != m_config.end(); ++it)
-        {
-            if (!it->second.m_beenSet)
-            {
-                it->second.m_value = it->second.m_defValue;
-            }
+            it->second.m_value = it->second.m_defValue;
         }
     }
+}
 
-    /**
-     * @brief Print a brief summary of information.
-     */
-    void InputModule::PrintSummary()
-    {
-        cout << "Field size = " <<
-            m_f->m_data[0].size() * sizeof(NekDouble) << endl;
-    }
+/**
+ * @brief Print a brief summary of information.
+ */
+void InputModule::PrintSummary()
+{
+    cout << "Field size = " << m_f->m_data[0].size() * sizeof(NekDouble)
+         << endl;
+}
 }
 }

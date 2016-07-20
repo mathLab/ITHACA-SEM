@@ -64,7 +64,7 @@ void OutputPts::Process(po::variables_map &vm)
 
     if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             cout << "OutputPts: Writing file..." << endl;
         }
@@ -75,7 +75,7 @@ void OutputPts::Process(po::variables_map &vm)
     if (fs::exists(writefile) && (vm.count("forceoutput") == 0))
     {
         LibUtilities::CommSharedPtr comm = m_f->m_session->GetComm();
-        int rank = comm->GetRank();
+        int rank                         = comm->GetRank();
         writepts = 0; // set to zero for reduce all to be correct.
 
         if (rank == 0)
@@ -132,8 +132,7 @@ void OutputPts::Process(po::variables_map &vm)
         }
         LibUtilities::PtsFieldSharedPtr tmpPts =
             MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
-                m_f->m_graph->GetMeshDimension(),
-                m_f->m_fielddef[0]->m_fields,
+                m_f->m_graph->GetMeshDimension(), m_f->m_fielddef[0]->m_fields,
                 tmp);
         ptsIO.Write(filename, tmpPts);
     }

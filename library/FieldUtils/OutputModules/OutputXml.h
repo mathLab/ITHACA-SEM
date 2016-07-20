@@ -36,8 +36,8 @@
 #ifndef FIELDUTILS_OUTPUTXML
 #define FIELDUTILS_OUTPUTXML
 
-#include <tinyxml.h>
 #include "../Module.h"
+#include <tinyxml.h>
 
 namespace Nektar
 {
@@ -48,7 +48,8 @@ class OutputXml : public OutputModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
         return MemoryManager<OutputXml>::AllocateSharedPtr(f);
     }
     static ModuleKey m_className;
@@ -60,10 +61,9 @@ public:
     virtual void Process(po::variables_map &vm);
 
     virtual std::string GetModuleName()
-        {
-            return "OutputXml";
-        }
-
+    {
+        return "OutputXml";
+    }
 };
 }
 }

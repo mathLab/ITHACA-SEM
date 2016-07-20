@@ -36,8 +36,8 @@
 #ifndef FIELDUTILS_OUTPUTVTK
 #define FIELDUTILS_OUTPUTVTK
 
-#include <tinyxml.h>
 #include "../Module.h"
+#include <tinyxml.h>
 
 namespace Nektar
 {
@@ -47,28 +47,27 @@ namespace FieldUtils
 /// Converter from fld to vtk.
 class OutputVtk : public OutputModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<OutputVtk>::AllocateSharedPtr(f);
-        }
-        static ModuleKey m_className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<OutputVtk>::AllocateSharedPtr(f);
+    }
+    static ModuleKey m_className;
 
-        OutputVtk(FieldSharedPtr f);
-        virtual ~OutputVtk();
+    OutputVtk(FieldSharedPtr f);
+    virtual ~OutputVtk();
 
-        /// Write fld to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write fld to output file.
+    virtual void Process(po::variables_map &vm);
 
-        void WriteEmptyVtkPiece(std::ofstream &outfile);
+    void WriteEmptyVtkPiece(std::ofstream &outfile);
 
-        virtual std::string GetModuleName()
-        {
-            return "OutputVtk";
-        }
-
+    virtual std::string GetModuleName()
+    {
+        return "OutputVtk";
+    }
 };
-
 }
 }
 

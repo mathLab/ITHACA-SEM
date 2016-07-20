@@ -47,7 +47,8 @@ class ProcessDeform : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
         return MemoryManager<ProcessDeform>::AllocateSharedPtr(f);
     }
     static ModuleKey className;
@@ -62,9 +63,7 @@ public:
     {
         return "ProcessDeform";
     }
-
 };
-
 }
 }
 

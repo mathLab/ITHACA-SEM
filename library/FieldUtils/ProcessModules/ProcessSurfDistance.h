@@ -49,26 +49,25 @@ namespace FieldUtils
  */
 class ProcessSurfDistance : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessSurfDistance>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessSurfDistance>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessSurfDistance(FieldSharedPtr f);
-        virtual ~ProcessSurfDistance();
+    ProcessSurfDistance(FieldSharedPtr f);
+    virtual ~ProcessSurfDistance();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessSurfDistance";
-        }
-
+    virtual std::string GetModuleName()
+    {
+        return "ProcessSurfDistance";
+    }
 };
-
 }
 }
 

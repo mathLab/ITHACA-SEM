@@ -49,27 +49,26 @@ namespace FieldUtils
  */
 class ProcessC0Projection : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f)
-        {
-            return MemoryManager<ProcessC0Projection>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessC0Projection>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessC0Projection(FieldSharedPtr f);
-        virtual ~ProcessC0Projection();
+    ProcessC0Projection(FieldSharedPtr f);
+    virtual ~ProcessC0Projection();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessC0Projection";
-        }
+    virtual std::string GetModuleName()
+    {
+        return "ProcessC0Projection";
+    }
 
-    private:
-
+private:
 };
 }
 }

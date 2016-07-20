@@ -49,28 +49,27 @@ namespace FieldUtils
  */
 class ProcessAddFld : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f)
-        {
-            return MemoryManager<ProcessAddFld>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessAddFld>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessAddFld(FieldSharedPtr f);
-        virtual ~ProcessAddFld();
+    ProcessAddFld(FieldSharedPtr f);
+    virtual ~ProcessAddFld();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessAddFld";
-        }
+    virtual std::string GetModuleName()
+    {
+        return "ProcessAddFld";
+    }
 
-    private:
+private:
 };
-
 }
 }
 

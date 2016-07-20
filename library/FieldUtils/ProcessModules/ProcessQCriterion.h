@@ -49,26 +49,25 @@ namespace FieldUtils
  */
 class ProcessQCriterion : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessQCriterion>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessQCriterion>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessQCriterion(FieldSharedPtr f);
-        virtual ~ProcessQCriterion();
+    ProcessQCriterion(FieldSharedPtr f);
+    virtual ~ProcessQCriterion();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessQCriterion";
-        }
-
+    virtual std::string GetModuleName()
+    {
+        return "ProcessQCriterion";
+    }
 };
-
 }
 }
 

@@ -36,8 +36,8 @@
 #ifndef FIELDUTILS_OUTPUTINFO
 #define FIELDUTILS_OUTPUTINFO
 
-#include <tinyxml.h>
 #include "../Module.h"
+#include <tinyxml.h>
 
 namespace Nektar
 {
@@ -46,26 +46,25 @@ namespace FieldUtils
 
 class OutputInfo : public OutputModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<OutputInfo>::AllocateSharedPtr(f);
-        }
-        static ModuleKey m_className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<OutputInfo>::AllocateSharedPtr(f);
+    }
+    static ModuleKey m_className;
 
-        OutputInfo(FieldSharedPtr f);
-        virtual ~OutputInfo();
+    OutputInfo(FieldSharedPtr f);
+    virtual ~OutputInfo();
 
-        /// Write fld to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write fld to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "OutputInfo";
-        }
-
+    virtual std::string GetModuleName()
+    {
+        return "OutputInfo";
+    }
 };
-
 }
 }
 

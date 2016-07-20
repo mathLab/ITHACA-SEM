@@ -46,9 +46,10 @@ namespace Nektar
 namespace FieldUtils
 {
 
-ModuleKey OutputInfo::m_className = GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eOutputModule, "info"), OutputInfo::create,
-        "Writes an Info file.");
+ModuleKey OutputInfo::m_className =
+    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eOutputModule, "info"),
+                                               OutputInfo::create,
+                                               "Writes an Info file.");
 
 OutputInfo::OutputInfo(FieldSharedPtr f) : OutputModule(f)
 {
@@ -76,8 +77,8 @@ void OutputInfo::Process(po::variables_map &vm)
     int nprocs = vm["nprocs"].as<int>();
 
     LibUtilities::CommSharedPtr vComm = boost::shared_ptr<FieldConvertComm>(
-            new FieldConvertComm(0, NULL, nprocs,0));
-    vComm->SplitComm(1,nprocs);
+        new FieldConvertComm(0, NULL, nprocs, 0));
+    vComm->SplitComm(1, nprocs);
 
     // define new session with psuedo parallel communicator
     string xml_ending    = "xml";
@@ -91,14 +92,14 @@ void OutputInfo::Process(po::variables_map &vm)
     }
 
     // load any .xml.gz endings
-    for (int j =0; j < m_f->m_inputfiles[xml_gz_ending].size(); ++j)
+    for (int j = 0; j < m_f->m_inputfiles[xml_gz_ending].size(); ++j)
     {
         files.push_back(m_f->m_inputfiles[xml_gz_ending][j]);
     }
 
     LibUtilities::SessionReaderSharedPtr vSession =
-                    boost::shared_ptr<LibUtilities::SessionReader>(
-                            new LibUtilities::SessionReader(0,0,files,vComm));
+        boost::shared_ptr<LibUtilities::SessionReader>(
+            new LibUtilities::SessionReader(0, 0, files, vComm));
     vSession->SetUpXmlDoc();
 
     // Default partitioner to use is Metis. Use Scotch as default
@@ -119,8 +120,8 @@ void OutputInfo::Process(po::variables_map &vm)
     }
 
     LibUtilities::MeshPartitionSharedPtr vMeshPartition =
-        LibUtilities::GetMeshPartitionFactory().CreateInstance(
-                                                 vPartitionerName, vSession);
+        LibUtilities::GetMeshPartitionFactory().CreateInstance(vPartitionerName,
+                                                               vSession);
 
     vMeshPartition->PartitionMesh(nprocs, true);
 
@@ -131,13 +132,13 @@ void OutputInfo::Process(po::variables_map &vm)
     for (i = 0; i < nprocs; ++i)
     {
         std::vector<unsigned int> tmp;
-        vMeshPartition->GetElementIDs(i,tmp);
+        vMeshPartition->GetElementIDs(i, tmp);
         ElementIDs[i] = tmp;
     }
 
     // Set up output names
     std::vector<std::string> filenames;
-    for(int i = 0; i < nprocs; ++i)
+    for (int i = 0; i < nprocs; ++i)
     {
         boost::format pad("P%1$07d.fld");
         pad % i;
@@ -145,8 +146,7 @@ void OutputInfo::Process(po::variables_map &vm)
     }
 
     // Write the output file
-    m_f->m_fld->WriteMultiFldFileIDs(filename,filenames, ElementIDs);
+    m_f->m_fld->WriteMultiFldFileIDs(filename, filenames, ElementIDs);
 }
-
 }
 }

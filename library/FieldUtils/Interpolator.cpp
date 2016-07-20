@@ -333,8 +333,8 @@ void Interpolator::Interpolate(
         }
 
         // Obtain Element and LocalCoordinate to interpolate
-        int elmtid = m_expInField[0]->GetExpIndex(
-            Scoords, Lcoords, NekConstants::kNekZeroTol);
+        int elmtid = m_expInField[0]->GetExpIndex(Scoords, Lcoords,
+                                                  NekConstants::kNekZeroTol);
 
         if (elmtid >= 0)
         {
@@ -410,8 +410,8 @@ void Interpolator::Interpolate(
         }
 
         // Obtain Element and LocalCoordinate to interpolate
-        int elmtid = m_expInField[0]->GetExpIndex(
-            coords, Lcoords, NekConstants::kNekZeroTol);
+        int elmtid = m_expInField[0]->GetExpIndex(coords, Lcoords,
+                                                  NekConstants::kNekZeroTol);
 
         if (elmtid >= 0)
         {
@@ -430,8 +430,8 @@ void Interpolator::Interpolate(
                 }
                 else
                 {
-                    m_ptsOutField->SetPointVal(
-                        m_ptsOutField->GetDim() + f, i, value);
+                    m_ptsOutField->SetPointVal(m_ptsOutField->GetDim() + f, i,
+                                               value);
                 }
             }
         }
@@ -600,7 +600,7 @@ void Interpolator::CalcW_Gauss(const PtsPoint &searchPt,
     m_weights[searchPt.idx] = Array<OneD, float>(numPts, 0.0);
 
     NekDouble wSum = 0.0;
-    NekDouble ts2 = 2 * sigmaNew * sigmaNew;
+    NekDouble ts2  = 2 * sigmaNew * sigmaNew;
     for (int i = 0; i < numPts; ++i)
     {
         m_weights[searchPt.idx][i] =
@@ -658,9 +658,9 @@ void Interpolator::CalcW_Linear(const PtsPoint &searchPt, int m_coordId)
             break;
         }
     }
-    ASSERTL0(i != npts - 1,
-             "Failed to find coordinate " + boost::lexical_cast<string>(coord) +
-                 " within provided input points");
+    ASSERTL0(i != npts - 1, "Failed to find coordinate " +
+                                boost::lexical_cast<string>(coord) +
+                                " within provided input points");
 };
 
 /**
@@ -704,7 +704,7 @@ void Interpolator::CalcW_Shepard(const PtsPoint &searchPt)
     // find nearest neighbours
     vector<PtsPoint> neighbourPts;
     int numPts = pow(double(2), m_ptsInField->GetDim());
-    numPts = min(numPts, int(m_ptsInField->GetNpoints() / 2));
+    numPts     = min(numPts, int(m_ptsInField->GetNpoints() / 2));
     FindNNeighbours(searchPt, neighbourPts, numPts);
 
     m_neighInds[searchPt.idx] = Array<OneD, unsigned int>(numPts);
@@ -824,9 +824,9 @@ void Interpolator::CalcW_Quadratic(const PtsPoint &searchPt, int m_coordId)
             break;
         }
     }
-    ASSERTL0(i != npts - 1,
-             "Failed to find coordinate " + boost::lexical_cast<string>(coord) +
-                 " within provided input points");
+    ASSERTL0(i != npts - 1, "Failed to find coordinate " +
+                                boost::lexical_cast<string>(coord) +
+                                " within provided input points");
 };
 
 void Interpolator::SetupTree()
@@ -847,8 +847,7 @@ void Interpolator::SetupTree()
 
     // remove duplicates from tree
     for (std::vector<PtsPointPair>::iterator it = inPoints.begin();
-         it != inPoints.end();
-         ++it)
+         it != inPoints.end(); ++it)
     {
         std::vector<PtsPointPair> result;
 
@@ -862,8 +861,7 @@ void Interpolator::SetupTree()
         // point
         // from the tree
         for (std::vector<PtsPointPair>::iterator it2 = result.begin();
-             it2 != result.end();
-             ++it2)
+             it2 != result.end(); ++it2)
         {
             if ((*it).second != (*it2).second &&
                 bg::distance((*it).first, (*it2).first) <=
@@ -890,8 +888,8 @@ void Interpolator::FindNNeighbours(const PtsPoint &searchPt,
                                    const unsigned int numPts)
 {
     std::vector<PtsPointPair> result;
-    BPoint searchBPoint(
-        searchPt.coords[0], searchPt.coords[1], searchPt.coords[2]);
+    BPoint searchBPoint(searchPt.coords[0], searchPt.coords[1],
+                        searchPt.coords[2]);
     m_rtree->query(bgi::nearest(searchBPoint, numPts),
                    std::back_inserter(result));
 
@@ -924,13 +922,11 @@ void Interpolator::FindNeighbours(const PtsPoint &searchPt,
                                   const NekDouble dist,
                                   const unsigned int maxPts)
 {
-    BPoint searchBPoint(
-        searchPt.coords[0], searchPt.coords[1], searchPt.coords[2]);
-    BPoint bbMin(searchPt.coords[0] - dist,
-                 searchPt.coords[1] - dist,
+    BPoint searchBPoint(searchPt.coords[0], searchPt.coords[1],
+                        searchPt.coords[2]);
+    BPoint bbMin(searchPt.coords[0] - dist, searchPt.coords[1] - dist,
                  searchPt.coords[2] - dist);
-    BPoint bbMax(searchPt.coords[0] + dist,
-                 searchPt.coords[1] + dist,
+    BPoint bbMax(searchPt.coords[0] + dist, searchPt.coords[1] + dist,
                  searchPt.coords[2] + dist);
     bg::model::box<BPoint> bbox(bbMin, bbMax);
 

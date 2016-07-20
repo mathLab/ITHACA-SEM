@@ -50,37 +50,36 @@ namespace FieldUtils
  */
 class ProcessInterpPoints : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessInterpPoints>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessInterpPoints>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessInterpPoints(FieldSharedPtr f);
-        virtual ~ProcessInterpPoints();
+    ProcessInterpPoints(FieldSharedPtr f);
+    virtual ~ProcessInterpPoints();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        void PrintProgressbar(const int position, const int goal) const;
+    void PrintProgressbar(const int position, const int goal) const;
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessInterpPoints";
-        }
+    virtual std::string GetModuleName()
+    {
+        return "ProcessInterpPoints";
+    }
 
-    private:
+private:
+    void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
+                               LibUtilities::PtsFieldSharedPtr &pts,
+                               NekDouble clamp_low,
+                               NekDouble clamp_up,
+                               NekDouble def_value);
 
-        void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
-                                   LibUtilities::PtsFieldSharedPtr        &pts,
-                                   NekDouble                               clamp_low,
-                                   NekDouble                               clamp_up,
-                                   NekDouble                               def_value);
-
-        void calcCp0();
+    void calcCp0();
 };
-
 }
 }
 

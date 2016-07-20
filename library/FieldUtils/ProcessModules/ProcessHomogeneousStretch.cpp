@@ -33,14 +33,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
 #include <iostream>
+#include <string>
 using namespace std;
 
 #include "ProcessHomogeneousStretch.h"
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
@@ -51,8 +51,10 @@ ModuleKey ProcessHomogeneousStretch::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "homstretch"),
         ProcessHomogeneousStretch::create,
-        "Stretches homogeneous direction of a 3DH1D expansion, requires factor to be "
-        "defined. The number of modes in the final expansion can be defined using"
+        "Stretches homogeneous direction of a 3DH1D expansion, requires factor "
+        "to be "
+        "defined. The number of modes in the final expansion can be defined "
+        "using"
         " --output-points-hom-z.");
 
 ProcessHomogeneousStretch::ProcessHomogeneousStretch(FieldSharedPtr f)
@@ -69,7 +71,7 @@ void ProcessHomogeneousStretch::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        if(m_f->m_comm->GetRank() == 0)
+        if (m_f->m_comm->GetRank() == 0)
         {
             cout << "ProcessHomogeneousStretch: Stretching expansion..."
                  << endl;
@@ -85,13 +87,11 @@ void ProcessHomogeneousStretch::Process(po::variables_map &vm)
     ASSERTL0(m_config["factor"].m_beenSet,
              "Missing parameter factor for ProcessHomogeneousStretch");
 
-    int factor = m_config["factor"].as<int>();
+    int factor  = m_config["factor"].as<int>();
     int nfields = m_f->m_fielddef[0]->m_fields.size();
-    int nplanes = m_f->m_exp[0]->GetHomogeneousBasis()->
-                                            GetZ().num_elements();
+    int nplanes = m_f->m_exp[0]->GetHomogeneousBasis()->GetZ().num_elements();
 
-    ASSERTL0(factor > 1,
-             "Parameter factor must be greater than 1.");
+    ASSERTL0(factor > 1, "Parameter factor must be greater than 1.");
 
     int nstrips;
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
@@ -100,20 +100,20 @@ void ProcessHomogeneousStretch::Process(po::variables_map &vm)
     {
         for (int i = 0; i < nfields; ++i)
         {
-            int n = s * nfields + i;
+            int n       = s * nfields + i;
             int ncoeffs = m_f->m_exp[n]->GetPlane(0)->GetNcoeffs();
             // Loop planes backwards so we can copy in place
-            for (int p = nplanes-1; p > 1; --p)
+            for (int p = nplanes - 1; p > 1; --p)
             {
-                int newP = 2 * factor * (p/2) + p%2;
+                int newP = 2 * factor * (p / 2) + p % 2;
                 if (newP < nplanes)
                 {
-                    Vmath::Vcopy(ncoeffs,
-                            m_f->m_exp[n]->GetPlane(p)->GetCoeffs(), 1,
-                            m_f->m_exp[n]->GetPlane(newP)->UpdateCoeffs(), 1);
+                    Vmath::Vcopy(
+                        ncoeffs, m_f->m_exp[n]->GetPlane(p)->GetCoeffs(), 1,
+                        m_f->m_exp[n]->GetPlane(newP)->UpdateCoeffs(), 1);
                 }
-                Vmath::Zero(ncoeffs,
-                            m_f->m_exp[n]->GetPlane(p)->UpdateCoeffs(), 1);
+                Vmath::Zero(ncoeffs, m_f->m_exp[n]->GetPlane(p)->UpdateCoeffs(),
+                            1);
             }
 
             m_f->m_exp[n]->BwdTrans(m_f->m_exp[n]->GetCoeffs(),
@@ -141,8 +141,8 @@ void ProcessHomogeneousStretch::Process(po::variables_map &vm)
     }
     for (int i = 0; i < FieldDef.size(); ++i)
     {
-        FieldDef[i]->m_homogeneousLengths[0] = factor *
-                m_f->m_fielddef[i]->m_homogeneousLengths[0];
+        FieldDef[i]->m_homogeneousLengths[0] =
+            factor * m_f->m_fielddef[i]->m_homogeneousLengths[0];
     }
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;

@@ -49,26 +49,25 @@ namespace FieldUtils
  */
 class ProcessMultiShear : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessMultiShear>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessMultiShear>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessMultiShear(FieldSharedPtr f);
-        virtual ~ProcessMultiShear();
+    ProcessMultiShear(FieldSharedPtr f);
+    virtual ~ProcessMultiShear();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessMultiShear";
-        }
-
+    virtual std::string GetModuleName()
+    {
+        return "ProcessMultiShear";
+    }
 };
-
 }
 }
 

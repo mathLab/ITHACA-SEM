@@ -33,14 +33,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
 #include <iostream>
+#include <string>
 using namespace std;
 
 #include "ProcessNumModes.h"
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <StdRegions/StdQuadExp.h>
 
 namespace Nektar
@@ -50,7 +50,8 @@ namespace FieldUtils
 
 ModuleKey ProcessNumModes::className =
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "nummodes"), ProcessNumModes::create,
+        ModuleKey(eProcessModule, "nummodes"),
+        ProcessNumModes::create,
         "Computes number of modes in each direction for each element.");
 
 ProcessNumModes::ProcessNumModes(FieldSharedPtr f) : ProcessModule(f)
@@ -65,7 +66,7 @@ void ProcessNumModes::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             cout << "ProcessNumModes: Calculating number of modes..." << endl;
         }

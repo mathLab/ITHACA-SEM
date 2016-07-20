@@ -44,14 +44,11 @@ namespace Nektar
 namespace FieldUtils
 {
 
-ModuleKey OutputXml::m_className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eOutputModule, "xml"), OutputXml::create,
-        "Writes an XML file.");
+ModuleKey OutputXml::m_className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eOutputModule, "xml"), OutputXml::create, "Writes an XML file.");
 
 OutputXml::OutputXml(FieldSharedPtr f) : OutputModule(f)
 {
-
 }
 
 OutputXml::~OutputXml()
@@ -60,14 +57,14 @@ OutputXml::~OutputXml()
 
 void OutputXml::Process(po::variables_map &vm)
 {
-    if(!m_f->m_exp.size()) // do nothing if no expansion defined
+    if (!m_f->m_exp.size()) // do nothing if no expansion defined
     {
         return;
     }
 
     if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             cout << "OutputXml: Writing file..." << endl;
         }
@@ -79,6 +76,5 @@ void OutputXml::Process(po::variables_map &vm)
     m_f->m_graph->WriteGeometry(filename);
     cout << "Written file: " << filename << endl;
 }
-
 }
 }

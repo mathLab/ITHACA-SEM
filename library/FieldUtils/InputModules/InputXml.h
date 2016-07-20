@@ -48,27 +48,26 @@ namespace FieldUtils
  */
 class InputXml : public InputModule
 {
-    public:
-        InputXml(FieldSharedPtr f);
-        virtual ~InputXml();
-        virtual void Process(po::variables_map &vm);
+public:
+    InputXml(FieldSharedPtr f);
+    virtual ~InputXml();
+    virtual void Process(po::variables_map &vm);
 
-        /// Creates an instance of this class
-        static ModuleSharedPtr create(FieldSharedPtr f)
-        {
-            return MemoryManager<InputXml>::AllocateSharedPtr(f);
-        }
-        /// %ModuleKey for class.
-        static ModuleKey m_className[];
+    /// Creates an instance of this class
+    static ModuleSharedPtr create(FieldSharedPtr f)
+    {
+        return MemoryManager<InputXml>::AllocateSharedPtr(f);
+    }
+    /// %ModuleKey for class.
+    static ModuleKey m_className[];
 
-        virtual std::string GetModuleName()
-        {
-            return "InputXml";
-        }
+    virtual std::string GetModuleName()
+    {
+        return "InputXml";
+    }
 
-    private:
+private:
 };
-
 }
 }
 

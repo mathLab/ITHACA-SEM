@@ -33,17 +33,17 @@
 //  given data to a fld file
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include <string>
 #include <iostream>
+#include <string>
 
 using namespace std;
 
 #include "ProcessInterpPointDataToFld.h"
 
 #include <FieldUtils/Interpolator.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 namespace Nektar
 {
@@ -52,19 +52,17 @@ namespace FieldUtils
 
 ModuleKey ProcessInterpPointDataToFld::className =
     GetModuleFactory().RegisterCreatorFunction(
-       ModuleKey(eProcessModule, "interppointdatatofld"),
-       ProcessInterpPointDataToFld::create,
-       "Interpolates given discrete data using a finite difference "
-       "approximation to a fld file given a xml file");
-
+        ModuleKey(eProcessModule, "interppointdatatofld"),
+        ProcessInterpPointDataToFld::create,
+        "Interpolates given discrete data using a finite difference "
+        "approximation to a fld file given a xml file");
 
 ProcessInterpPointDataToFld::ProcessInterpPointDataToFld(FieldSharedPtr f)
-        : ProcessModule(f)
+    : ProcessModule(f)
 {
 
-    m_config["interpcoord"] = ConfigOption(false, "-1",
-                                    "coordinate id to use for interpolation");
-
+    m_config["interpcoord"] =
+        ConfigOption(false, "-1", "coordinate id to use for interpolation");
 }
 
 ProcessInterpPointDataToFld::~ProcessInterpPointDataToFld()
@@ -73,28 +71,28 @@ ProcessInterpPointDataToFld::~ProcessInterpPointDataToFld()
 
 void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 {
-    if(m_f->m_verbose)
+    if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
-            cout << "ProcessInterpPointDataToFld: interpolating data to field..."
-                 << endl;
+            cout
+                << "ProcessInterpPointDataToFld: interpolating data to field..."
+                << endl;
         }
     }
 
-    int i,j;
+    int i, j;
 
     // Check for command line point specification if no .pts file specified
     ASSERTL0(m_f->m_fieldPts != LibUtilities::NullPtsField,
              "No input points found");
 
     int nFields = m_f->m_fieldPts->GetNFields();
-    ASSERTL0(nFields > 0,
-             "No field values provided in input");
+    ASSERTL0(nFields > 0, "No field values provided in input");
 
     // assume one field is already defined from input file.
-    m_f->m_exp.resize(nFields+1);
-    for(i = 1; i < nFields; ++i)
+    m_f->m_exp.resize(nFields + 1);
+    for (i = 1; i < nFields; ++i)
     {
         m_f->m_exp[i] = m_f->AppendExpList(0);
     }
@@ -103,16 +101,15 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     Array<OneD, Array<OneD, NekDouble> > intFields(3 + nFields);
     for (int i = 0; i < 3 + nFields; ++i)
     {
-        intFields[i] = Array<OneD,  NekDouble>(totpoints);
+        intFields[i] = Array<OneD, NekDouble>(totpoints);
     }
-    m_f->m_exp[0]->GetCoords(intFields[0],intFields[1],intFields[2]);
+    m_f->m_exp[0]->GetCoords(intFields[0], intFields[1], intFields[2]);
     LibUtilities::PtsFieldSharedPtr outPts =
-            MemoryManager<LibUtilities::PtsField>::
-            AllocateSharedPtr(3, intFields);
+        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, intFields);
 
     int coord_id = m_config["interpcoord"].as<int>();
     ASSERTL0(coord_id <= m_f->m_fieldPts->GetDim() - 1,
-        "interpcoord is bigger than the Pts files dimension");
+             "interpcoord is bigger than the Pts files dimension");
 
     Interpolator interp(eNoMethod, coord_id);
 
@@ -127,26 +124,24 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         cout << endl;
     }
 
-
-    for(i = 0; i < totpoints; ++i)
+    for (i = 0; i < totpoints; ++i)
     {
-        for(j = 0; j < nFields; ++j)
+        for (j = 0; j < nFields; ++j)
         {
-            m_f->m_exp[j]->SetPhys(i, outPts->GetPointVal(j,i));
+            m_f->m_exp[j]->SetPhys(i, outPts->GetPointVal(j, i));
         }
     }
 
     // forward transform fields
-    for(i = 0; i < nFields; ++i)
+    for (i = 0; i < nFields; ++i)
     {
         m_f->m_exp[i]->FwdTrans_IterPerExp(m_f->m_exp[i]->GetPhys(),
                                            m_f->m_exp[i]->UpdateCoeffs());
     }
 
-
     // set up output fld file.
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-        = m_f->m_exp[0]->GetFieldDefinitions();
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
+        m_f->m_exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
     for (j = 0; j < nFields; ++j)
@@ -162,8 +157,5 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;
 }
-
 }
 }
-
-

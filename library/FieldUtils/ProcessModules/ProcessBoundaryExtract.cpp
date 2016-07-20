@@ -33,14 +33,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
 #include <iostream>
+#include <string>
 using namespace std;
 
 #include "ProcessBoundaryExtract.h"
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
@@ -50,20 +50,22 @@ namespace FieldUtils
 ModuleKey ProcessBoundaryExtract::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "extract"),
-        ProcessBoundaryExtract::create, "Extract Boundary field");
+        ProcessBoundaryExtract::create,
+        "Extract Boundary field");
 
-ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f) : ProcessModule(f)
+ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f)
+    : ProcessModule(f)
 {
     // set up dafault values.
-    m_config["bnd"] = ConfigOption(false,"All","Boundary to be extracted");
-    m_config["fldtoboundary"] = ConfigOption(true,"NotSet","Extract fld values to boundary");
-    m_config["addnormals"] = ConfigOption(true,"NotSet","Add normals to output");
+    m_config["bnd"] = ConfigOption(false, "All", "Boundary to be extracted");
+    m_config["fldtoboundary"] =
+        ConfigOption(true, "NotSet", "Extract fld values to boundary");
+    m_config["addnormals"] =
+        ConfigOption(true, "NotSet", "Add normals to output");
 
-
-    f->m_writeBndFld = true;
+    f->m_writeBndFld                 = true;
     f->m_declareExpansionAsContField = true;
-    f->m_requireBoundaryExpansion = true;
-
+    f->m_requireBoundaryExpansion    = true;
 }
 
 ProcessBoundaryExtract::~ProcessBoundaryExtract()
@@ -74,28 +76,31 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        if(m_f->m_comm->TreatAsRankZero())
+        if (m_f->m_comm->TreatAsRankZero())
         {
             cout << "ProcessBoundaryExtract: Setting up boundary extraction..."
                  << endl;
         }
     }
 
-    m_f->m_fldToBnd = m_config["fldtoboundary"].m_beenSet;
+    m_f->m_fldToBnd   = m_config["fldtoboundary"].m_beenSet;
     m_f->m_addNormals = m_config["addnormals"].m_beenSet;
 
     // check for correct input files
-    if((m_f->m_inputfiles.count("xml") == 0)&&(m_f->m_inputfiles.count("xml.gz") == 0))
+    if ((m_f->m_inputfiles.count("xml") == 0) &&
+        (m_f->m_inputfiles.count("xml.gz") == 0))
     {
-        cout << "An xml or xml.gz input file must be specified for the boundary extraction module" << endl;
+        cout << "An xml or xml.gz input file must be specified for the "
+                "boundary extraction module"
+             << endl;
         exit(3);
     }
 
-    if(m_f->m_fldToBnd)
+    if (m_f->m_fldToBnd)
     {
-        if((m_f->m_inputfiles.count("fld") == 0) &&
-           (m_f->m_inputfiles.count("chk") == 0) &&
-           (m_f->m_inputfiles.count("rst") == 0))
+        if ((m_f->m_inputfiles.count("fld") == 0) &&
+            (m_f->m_inputfiles.count("chk") == 0) &&
+            (m_f->m_inputfiles.count("rst") == 0))
         {
             cout << "A fld or chk or rst input file must be specified for "
                  << "the boundary extraction module with fldtoboundary option."
@@ -106,33 +111,33 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
     }
 
     // Set up Field options to output boundary fld
-    string bvalues =  m_config["bnd"].as<string>();
+    string bvalues = m_config["bnd"].as<string>();
 
-    if(boost::iequals(bvalues,"All"))
+    if (boost::iequals(bvalues, "All"))
     {
-        int numBndExp = 0; 
+        int numBndExp = 0;
 
         SpatialDomains::BoundaryConditions bcs(m_f->m_session,
                                                m_f->m_exp[0]->GetGraph());
-        const SpatialDomains::BoundaryRegionCollection bregions  =
-                                                    bcs.GetBoundaryRegions();
+        const SpatialDomains::BoundaryRegionCollection bregions =
+            bcs.GetBoundaryRegions();
 
         SpatialDomains::BoundaryRegionCollection::const_iterator breg_it;
-        for(breg_it = bregions.begin(); breg_it != bregions.end();
-            ++breg_it)
+        for (breg_it = bregions.begin(); breg_it != bregions.end(); ++breg_it)
         {
-            numBndExp = max(numBndExp,breg_it->first);
+            numBndExp = max(numBndExp, breg_it->first);
         }
         // assuming all boundary regions are consecutive number if
         // regions is one more tham maximum id
-        numBndExp++; 
+        numBndExp++;
 
-        // not all partitions in parallel touch all boundaries so 
+        // not all partitions in parallel touch all boundaries so
         // find maximum number of boundaries
-        m_f->m_session->GetComm()->AllReduce(numBndExp,LibUtilities::ReduceMax);
+        m_f->m_session->GetComm()->AllReduce(numBndExp,
+                                             LibUtilities::ReduceMax);
 
         // THis presumes boundary regions are numbered consecutively
-        for(int i = 0; i < numBndExp; ++i)
+        for (int i = 0; i < numBndExp; ++i)
         {
             m_f->m_bndRegionsToWrite.push_back(i);
         }
@@ -144,8 +149,5 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
                  "Failed to interpret bnd values string");
     }
 }
-
 }
 }
-
-

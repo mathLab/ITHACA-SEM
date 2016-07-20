@@ -48,25 +48,24 @@ namespace FieldUtils
  */
 class ProcessBoundaryExtract : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessBoundaryExtract>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessBoundaryExtract>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessBoundaryExtract(FieldSharedPtr f);
-        virtual ~ProcessBoundaryExtract();
+    ProcessBoundaryExtract(FieldSharedPtr f);
+    virtual ~ProcessBoundaryExtract();
 
-        virtual void Process(po::variables_map &vm);
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessBoundaryExtract";
-        }
-
+    virtual std::string GetModuleName()
+    {
+        return "ProcessBoundaryExtract";
+    }
 };
-
 }
 }
 

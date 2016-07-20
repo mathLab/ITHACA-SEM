@@ -49,24 +49,24 @@ namespace FieldUtils
  */
 class ProcessScalGrad : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-            return MemoryManager<ProcessScalGrad>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessScalGrad>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessScalGrad(FieldSharedPtr f);
-        virtual ~ProcessScalGrad();
+    ProcessScalGrad(FieldSharedPtr f);
+    virtual ~ProcessScalGrad();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessScalGrad";
-        }
-
+    virtual std::string GetModuleName()
+    {
+        return "ProcessScalGrad";
+    }
 };
 }
 }

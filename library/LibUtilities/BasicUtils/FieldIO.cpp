@@ -186,7 +186,7 @@ FieldIOSharedPtr FieldIO::CreateDefault(
     return GetFieldIOFactory().CreateInstance(
         iofmt,
         session->GetComm(),
-        session->DefinesCmdLineArgument("shared-filesystem"));
+        session->GetSharedFilesystem());
 }
 
 /**

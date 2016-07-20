@@ -194,6 +194,8 @@ namespace Nektar
             // Create communicator
             CreateComm(argc, argv);
 
+            TestSharedFilesystem();
+
             // If running in parallel change the default global sys solution
             // type.
             if (m_comm->GetSize() > 1)
@@ -236,6 +238,8 @@ namespace Nektar
                         "IterativeStaticCond";
                 }
             }
+
+            TestSharedFilesystem();
 
             // If running in parallel change the default global sys solution
             // type.
@@ -310,6 +314,44 @@ namespace Nektar
         }
 
 
+        void SessionReader::TestSharedFilesystem()
+        {
+            m_sharedFilesystem = false;
+
+            if (m_comm->GetSize() > 1)
+            {
+                if (m_comm->GetRank() == 0)
+                {
+                    std::ofstream testfile("shared-fs-testfile");
+                    testfile << "" << std::endl;
+                    ASSERTL1(!testfile.fail(), "Test file creation failed");
+                    testfile.close();
+                }
+                m_comm->Block();
+
+                int exists = (bool)boost::filesystem::exists("shared-fs-testfile");
+                m_comm->AllReduce(exists, LibUtilities::ReduceSum);
+
+                m_sharedFilesystem = (exists == m_comm->GetSize());
+
+                if ((m_sharedFilesystem && m_comm->GetRank() == 0) ||
+                    !m_sharedFilesystem)
+                {
+                    std::remove("shared-fs-testfile");
+                }
+            }
+            else
+            {
+                m_sharedFilesystem = false;
+            }
+
+            if (m_verbose && m_comm->GetRank() == 0 && m_sharedFilesystem)
+            {
+                cout << "Shared filesystem detected" << endl;
+            }
+        }
+
+
         /**
          * @brief Parses the command-line arguments for known options and
          * filenames.
@@ -327,7 +369,6 @@ namespace Nektar
                                  "override a SOLVERINFO property")
                 ("parameter,P",  po::value<vector<std::string> >(),
                                  "override a parameter")
-                ("shared-filesystem,s", "Using shared filesystem.")
                 ("npx",          po::value<int>(),
                                  "number of procs in X-dir")
                 ("npy",          po::value<int>(),
@@ -619,6 +660,10 @@ namespace Nektar
             return m_comm;
         }
 
+        bool SessionReader::GetSharedFilesystem()
+        {
+            return m_sharedFilesystem;
+        }
 
         /**
          * This routine finalises any parallel communication.
@@ -1657,7 +1702,7 @@ namespace Nektar
             {
                 SessionReaderSharedPtr vSession     = GetSharedThisPtr();
                 int nParts = vCommMesh->GetSize();
-                if (DefinesCmdLineArgument("shared-filesystem"))
+                if (m_sharedFilesystem)
                 {
                     CommSharedPtr vComm = GetComm();
                     vector<unsigned int> keys, vals;

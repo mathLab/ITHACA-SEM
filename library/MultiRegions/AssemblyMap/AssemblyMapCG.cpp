@@ -1252,8 +1252,10 @@ namespace Nektar
 
             // For parallel multi-level static condensation determine the lowest
             // static condensation level amongst processors.
-            if (m_solnType == eIterativeMultiLevelStaticCond ||
-                m_solnType == eXxtMultiLevelStaticCond)
+            if ((m_solnType == eDirectMultiLevelStaticCond ||
+                 m_solnType == ePETScMultiLevelStaticCond ||
+                 m_solnType == eIterativeMultiLevelStaticCond ||
+                 m_solnType == eXxtMultiLevelStaticCond) && bottomUpGraph)
             {
                 m_lowestStaticCondLevel = bottomUpGraph->GetNlevels()-1;
                 vComm->AllReduce(m_lowestStaticCondLevel,
@@ -1305,7 +1307,7 @@ namespace Nektar
             int p, q, numModes0, numModes1;
             int cnt = 0;
             int intDofCnt;
-            int meshVertId, meshEdgeId, meshFaceId;
+            int meshVertId, meshEdgeId, meshEdgeId2, meshFaceId, meshFaceId2;
             int globalId;
             int nEdgeInteriorCoeffs;
             int firstNonDirGraphVertId;
@@ -1395,6 +1397,32 @@ namespace Nektar
                     }
                 }
             }
+
+            // Add non-local periodic dofs to the map
+            for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
+            {
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    meshEdgeId2 = pIt->second[i].id;
+                    if (dofs[1].count(meshEdgeId2) == 0)
+                    {
+                        dofs[1][meshEdgeId2] = 1e6;
+                    }
+                }
+            }
+            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
+            {
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    meshFaceId2 = pIt->second[i].id;
+                    if (faceModes[0].count(meshFaceId2) == 0)
+                    {
+                        faceModes[0][meshFaceId2] = 1e6;
+                        faceModes[1][meshFaceId2] = 1e6;
+                    }
+                }
+            }
+
             // Now use information from all partitions to determine
             //    the correct size
             map<int, int>::iterator dofIt, dofIt2;
@@ -1403,7 +1431,7 @@ namespace Nektar
             Array<OneD, NekDouble> edgeDof (dofs[1].size());
             for(dofIt = dofs[1].begin(), i=0; dofIt != dofs[1].end(); dofIt++, i++)
             {
-                edgeId[i] = dofIt->first;
+                edgeId[i] = dofIt->first + 1;
                 edgeDof[i] = (NekDouble) dofIt->second;
             }
             Gs::gs_data *tmp = Gs::Init(edgeId, vComm);
@@ -1411,7 +1439,20 @@ namespace Nektar
             Gs::Finalise(tmp);
             for (i=0; i < dofs[1].size(); i++)
             {
-                dofs[1][edgeId[i]] = (int) (edgeDof[i]+0.5);
+                dofs[1][edgeId[i]-1] = (int) (edgeDof[i]+0.5);
+            }
+            // Periodic edges
+            for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
+            {
+                meshEdgeId = pIt->first;
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    meshEdgeId2 = pIt->second[i].id;
+                    if (dofs[1][meshEdgeId2] < dofs[1][meshEdgeId])
+                    {
+                        dofs[1][meshEdgeId] = dofs[1][meshEdgeId2];
+                    }
+                }
             }
             // faces
             Array<OneD, long> faceId (faceModes[0].size());
@@ -1420,7 +1461,7 @@ namespace Nektar
             for(dofIt = faceModes[0].begin(), dofIt2 = faceModes[1].begin(),i=0;
                 dofIt != faceModes[0].end(); dofIt++, dofIt2++, i++)
             {
-                faceId[i] = dofIt->first;
+                faceId[i] = dofIt->first+1;
                 faceP[i] = (NekDouble) dofIt->second;
                 faceQ[i] = (NekDouble) dofIt2->second;
             }
@@ -1428,24 +1469,45 @@ namespace Nektar
             Gs::Gather(faceP, Gs::gs_min, tmp2);
             Gs::Gather(faceQ, Gs::gs_min, tmp2);
             Gs::Finalise(tmp2);
+            for (i=0; i < faceModes[0].size(); i++)
+            {
+                faceModes[0][faceId[i]-1] = (int) (faceP[i]+0.5);
+                faceModes[1][faceId[i]-1] = (int) (faceQ[i]+0.5);
+            }
+            // Periodic faces
+            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
+            {
+                meshFaceId = pIt->first;
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    meshFaceId2 = pIt->second[i].id;
+                    if (faceModes[0][meshFaceId2] < faceModes[0][meshFaceId])
+                    {
+                        faceModes[0][meshFaceId] = faceModes[0][meshFaceId2];
+                    }
+                    if (faceModes[1][meshFaceId2] < faceModes[1][meshFaceId])
+                    {
+                        faceModes[1][meshFaceId] = faceModes[1][meshFaceId2];
+                    }
+                }
+            }
+            // Calculate number of dof in each face
             int P, Q;
             for (i=0; i < faceModes[0].size(); i++)
             {
-                faceModes[0][faceId[i]] = (int) (faceP[i]+0.5);
-                faceModes[1][faceId[i]] = (int) (faceQ[i]+0.5);
-                P = faceModes[0][faceId[i]];
-                Q = faceModes[1][faceId[i]];
-                if (faceType[faceId[i]] == LibUtilities::eQuadrilateral)
+                P = faceModes[0][faceId[i]-1];
+                Q = faceModes[1][faceId[i]-1];
+                if (faceType[faceId[i]-1] == LibUtilities::eQuadrilateral)
                 {
                     // Quad face
-                    dofs[2][faceId[i]] =
+                    dofs[2][faceId[i]-1] =
                       LibUtilities::StdQuadData::getNumberOfCoefficients(P,Q) -
                       LibUtilities::StdQuadData::getNumberOfBndCoefficients(P,Q);
                 }
                 else
                 {
                     // Tri face
-                    dofs[2][faceId[i]] =
+                    dofs[2][faceId[i]-1] =
                       LibUtilities::StdTriData::getNumberOfCoefficients(P,Q) -
                       LibUtilities::StdTriData::getNumberOfBndCoefficients(P,Q);
                 }
@@ -1912,7 +1974,7 @@ namespace Nektar
                 if (m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {
                     Array<OneD, int> vwgts_perm(
-                        dofs[0].size() + dofs[1].size() + dofs[2].size()
+                        graph[0].size() + graph[1].size() + graph[2].size()
                         - firstNonDirGraphVertId);
 
                     for (i = 0; i < locExpVector.size(); ++i)

@@ -57,6 +57,14 @@ namespace Nektar
     {
         CompressibleFlowSystem::v_InitObject();
 
+        m_session->LoadParameter ("FL",            m_FacL,          0.0);
+        m_session->LoadParameter ("FH",            m_FacH,          0.0);
+        m_session->LoadParameter ("hFactor",       m_hFactor,       1.0);
+        m_session->LoadParameter ("C1",            m_C1,            3.0);
+        m_session->LoadParameter ("C2",            m_C2,            5.0);
+        m_session->LoadSolverInfo("ShockCaptureType",
+                                  m_shockCaptureType,    "Off");
+
         if (m_shockCaptureType == "Smooth")
         {
             m_diffusion->SetArtificialDiffusionVector(

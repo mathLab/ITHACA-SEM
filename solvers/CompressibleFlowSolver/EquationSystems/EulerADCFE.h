@@ -96,6 +96,14 @@ namespace Nektar
         virtual void v_ExtraFldOutput(
             std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
             std::vector<std::string>             &variables);
+
+        NekDouble                           m_FacL;
+        NekDouble                           m_FacH;
+        NekDouble                           m_C1;
+        NekDouble                           m_C2;
+        NekDouble                           m_hFactor;
+        std::string                         m_shockCaptureType;
+        bool                                m_smoothDiffusion;
     };
 }
 #endif

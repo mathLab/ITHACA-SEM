@@ -75,18 +75,12 @@ namespace Nektar
         NekDouble                           m_rhoInf;
         NekDouble                           m_UInf;
         std::string                         m_ViscosityType;
-        std::string                         m_shockCaptureType;
         NekDouble                           m_mu;
         NekDouble                           m_Skappa;
         NekDouble                           m_Kappa;
         NekDouble                           m_mu0;
-        NekDouble                           m_FacL;
-        NekDouble                           m_FacH;
         NekDouble                           m_thermalConductivity;
         NekDouble                           m_Cp;
-        NekDouble                           m_C1;
-        NekDouble                           m_C2;
-        NekDouble                           m_hFactor;
         NekDouble                           m_Prandtl;
 
         // Auxiliary object to convert variables
@@ -100,7 +94,6 @@ namespace Nektar
 
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
-        bool                                       m_smoothDiffusion;
 
         // Storage for L2 norm error
         Array<OneD, Array<OneD, NekDouble> > m_un;

@@ -114,13 +114,6 @@ namespace Nektar
         m_session->LoadParameter ("Skappa",        m_Skappa,        -2.048);
         m_session->LoadParameter ("Kappa",         m_Kappa,         0.0);
         m_session->LoadParameter ("mu0",           m_mu0,           1.0);
-        m_session->LoadParameter ("FL",            m_FacL,          0.0);
-        m_session->LoadParameter ("FH",            m_FacH,          0.0);
-        m_session->LoadParameter ("hFactor",       m_hFactor,       1.0);
-        m_session->LoadParameter ("C1",            m_C1,            3.0);
-        m_session->LoadParameter ("C2",            m_C2,            5.0);
-        m_session->LoadSolverInfo("ShockCaptureType",
-                                  m_shockCaptureType,    "Off");
         m_session->LoadParameter ("thermalConductivity",
                                   m_thermalConductivity, 0.0257);
 

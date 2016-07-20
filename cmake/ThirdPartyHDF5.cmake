@@ -11,7 +11,7 @@ OPTION(NEKTAR_USE_HDF5
 
 IF (NEKTAR_USE_HDF5)
     IF (NOT NEKTAR_USE_MPI)
-        MESSAGE(FATAL_ERROR "HDF5 requires Nektar++ to be compiled using NEKTAR_USE_MPI.")
+        MESSAGE(FATAL_ERROR "HDF5 requires Nektar++ to be configured with NEKTAR_USE_MPI for MPI support.")
     ENDIF()
 
     # Try to find parallel system HDF5 first.
@@ -40,7 +40,7 @@ IF (NEKTAR_USE_HDF5)
         EXTERNALPROJECT_ADD(
             hdf5-1.8.16
             PREFIX ${TPSRC}
-            URL http://ae-nektar.ae.ic.ac.uk/~dmoxey/hdf5-1.8.16.tar.bz2
+            URL ${TPURL}/hdf5-1.8.16.tar.bz2
             URL_MD5 79c1593573ebddf734eee8d43ecfe483
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
@@ -64,7 +64,6 @@ IF (NEKTAR_USE_HDF5)
             "HDF5 libraries" FORCE)
         SET(HDF5_INCLUDE_DIRS ${TPDIST}/include CACHE FILEPATH
             "HDF5 include directory" FORCE)
-        THIRDPARTY_SHARED_LIBNAME(HDF5_LIBRARIES)
 
         LINK_DIRECTORIES(${TPDIST}/lib)
 
@@ -72,11 +71,12 @@ IF (NEKTAR_USE_HDF5)
 
         SET(HDF5_CONFIG_INCLUDE_DIR ${TPINC})
     ELSE()
+        MESSAGE(STATUS "Found HDF5: ${HDF5_LIBRARIES}")
         SET(HDF5_CONFIG_INCLUDE_DIR ${HDF5_INCLUDE_DIRS})
         ADD_CUSTOM_TARGET(hdf5-1.8.16 ALL)
     ENDIF()
 
     MARK_AS_ADVANCED(HDF5_LIBRARIES)
     MARK_AS_ADVANCED(HDF5_INCLUDE_DIRS)
-    INCLUDE_DIRECTORIES(SYSTEM ${HDF5_INCLUDE_DIRS})
+    INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIRS})
 ENDIF()

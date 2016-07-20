@@ -11,6 +11,7 @@
 namespace po = boost::program_options;
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/ExpList2D.h>
@@ -286,8 +287,8 @@ int main(int argc, char* argv[])
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
 
-        LibUtilities::FieldIOSharedPtr vFld = LibUtilities::MakeDefaultFieldIO(
-            vSession);
+        LibUtilities::FieldIOSharedPtr vFld =
+            LibUtilities::FieldIO::CreateDefault(vSession);
         vFld->Write(outfile, FieldDef, FieldData);
         //-----------------------------------------------
     }

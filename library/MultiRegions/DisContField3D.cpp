@@ -333,6 +333,11 @@ using namespace boost::assign;
                  m_session,graph3D,trace,*this,m_bndCondExpansions,
                  m_bndConditions, m_periodicFaces,variable);
 
+             if (m_session->DefinesCmdLineArgument("verbose"))
+             {
+                 m_traceMap->PrintStats(std::cout, variable);
+             }
+
              Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                  &elmtToTrace = m_traceMap->GetElmtToTrace();
 

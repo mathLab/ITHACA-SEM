@@ -37,6 +37,8 @@
 
 #include <string>
 
+#include <boost/enable_shared_from_this.hpp>
+
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -73,7 +75,7 @@ namespace Nektar
             LIB_UTILITIES_EXPORT virtual bool v_TreatAsRankZero(void);
 
             LIB_UTILITIES_EXPORT virtual void v_Block();
-	    LIB_UTILITIES_EXPORT virtual double v_Wtime();
+            LIB_UTILITIES_EXPORT virtual NekDouble v_Wtime();
             LIB_UTILITIES_EXPORT virtual void v_Send(void* buf, int count, CommDataType dt, int dest);
             LIB_UTILITIES_EXPORT virtual void v_Recv(void* buf, int count, CommDataType dt, int source);
             LIB_UTILITIES_EXPORT virtual void v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,

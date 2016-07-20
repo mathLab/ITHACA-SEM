@@ -102,9 +102,9 @@ namespace Nektar
         /**
          *
          */
-        double CommSerial::v_Wtime()
+        NekDouble CommSerial::v_Wtime()
         {
-	    return 0;
+            return 0;
         }
 
         /**
@@ -130,15 +130,14 @@ namespace Nektar
         {
         }
 
-		/**
+        /**
          *
          */
         void CommSerial::v_SendRecvReplace(void* buf, int count, CommDataType dt,
                 int pSendProc, int pRecvProc)
-		{
-		}
-		
-		
+        {
+        }
+
         /**
          *
          */
@@ -155,8 +154,8 @@ namespace Nektar
         {
 
         }
-		
-		/**
+
+        /**
          *
          */
         void CommSerial::v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[], CommDataType sendtype,
@@ -165,10 +164,10 @@ namespace Nektar
 
         }
 
-		void CommSerial::v_Bcast(void* buffer, int count, CommDataType dt, int root)
-		{
+        void CommSerial::v_Bcast(void* buffer, int count, CommDataType dt, int root)
+        {
 
-		}
+        }
 
         void CommSerial::v_Exscan(Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans)
         {
@@ -193,14 +192,14 @@ namespace Nektar
         {
             ASSERTL0(false, "Cannot split a serial process.");
         }
+
         /**
          *
          */
         CommSharedPtr CommSerial::v_CommCreateIf(int flag)
         {
-            ASSERTL0(false, "Cannot split a serial process.");
-            return CommSharedPtr();
+            ASSERTL0(flag, "Serial process must always be split");
+            return shared_from_this();
         }
-
     }
 }

@@ -32,71 +32,69 @@
 // Description: Define static members for the different data types
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Communication/CommDataType.h>
 
 namespace Nektar
 {
-    namespace LibUtilities
-    {
-        int CommDataTypeGetSize(CommDataType dt)
-        {
+namespace LibUtilities
+{
+int CommDataTypeGetSize(CommDataType dt)
+{
 #ifdef NEKTAR_USE_MPI
-            int size;
-            MPI_Type_size(dt, &size);
-            return size;
+    int size;
+    MPI_Type_size(dt, &size);
+    return size;
 #else
-            switch (dt)
-            {
-                case MPI_INT:
-                    return sizeof(int);
-                    break;
-                case MPI_UNSIGNED:
-                    return sizeof(unsigned);
-                    break;
-                case MPI_LONG:
-                    return sizeof(long);
-                    break;
-                case MPI_UNSIGNED_LONG:
-                    return sizeof(unsigned long);
-                    break;
-                case MPI_LONG_LONG:
-                    return sizeof(long long);
-                    break;
-                case MPI_UNSIGNED_LONG_LONG:
-                    return sizeof(unsigned long long);
-                    break;
-                case MPI_FLOAT:
-                    return sizeof(float);
-                    break;
-                case MPI_DOUBLE:
-                    return sizeof(double);
-                    break;
-                case MPI_LONG_DOUBLE:
-                    return sizeof(long double);
-                    break;
-                default:
-                    ASSERTL0(false, "Unrecognised datatype!");
-            }
-#endif
-        }
-
-        template<>
-        CommDataType CommDataTypeTraits<int>::type = MPI_INT;
-        template<>
-        CommDataType CommDataTypeTraits<unsigned>::type = MPI_UNSIGNED;
-        template<>
-        CommDataType CommDataTypeTraits<long>::type = MPI_LONG;
-        template<>
-        CommDataType CommDataTypeTraits<unsigned long>::type = MPI_UNSIGNED_LONG;
-        template<>
-        CommDataType CommDataTypeTraits<long long>::type = MPI_LONG_LONG;
-        template<>
-        CommDataType CommDataTypeTraits<unsigned long long>::type = MPI_UNSIGNED_LONG_LONG;
-        template<>
-        CommDataType CommDataTypeTraits<float>::type = MPI_FLOAT;
-        template<>
-        CommDataType CommDataTypeTraits<double>::type = MPI_DOUBLE;
-        template<>
-        CommDataType CommDataTypeTraits<long double>::type = MPI_LONG_DOUBLE;
+    switch (dt)
+    {
+        case MPI_INT:
+            return sizeof(int);
+            break;
+        case MPI_UNSIGNED:
+            return sizeof(unsigned);
+            break;
+        case MPI_LONG:
+            return sizeof(long);
+            break;
+        case MPI_UNSIGNED_LONG:
+            return sizeof(unsigned long);
+            break;
+        case MPI_LONG_LONG:
+            return sizeof(long long);
+            break;
+        case MPI_UNSIGNED_LONG_LONG:
+            return sizeof(unsigned long long);
+            break;
+        case MPI_FLOAT:
+            return sizeof(float);
+            break;
+        case MPI_DOUBLE:
+            return sizeof(double);
+            break;
+        case MPI_LONG_DOUBLE:
+            return sizeof(long double);
+            break;
+        default:
+            ASSERTL0(false, "Unrecognised datatype!");
     }
+    return sizeof(int);
+#endif
+}
+
+template <> CommDataType CommDataTypeTraits<int>::type      = MPI_INT;
+template <> CommDataType CommDataTypeTraits<unsigned>::type = MPI_UNSIGNED;
+template <> CommDataType CommDataTypeTraits<long>::type     = MPI_LONG;
+template <>
+CommDataType CommDataTypeTraits<unsigned long>::type = MPI_UNSIGNED_LONG;
+template <> CommDataType CommDataTypeTraits<long long>::type = MPI_LONG_LONG;
+template <>
+CommDataType CommDataTypeTraits<unsigned long long>::type =
+    MPI_UNSIGNED_LONG_LONG;
+template <> CommDataType CommDataTypeTraits<float>::type  = MPI_FLOAT;
+template <> CommDataType CommDataTypeTraits<double>::type = MPI_DOUBLE;
+template <>
+CommDataType CommDataTypeTraits<long double>::type = MPI_LONG_DOUBLE;
+}
 }

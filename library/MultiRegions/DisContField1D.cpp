@@ -149,6 +149,11 @@ namespace Nektar
                                   m_bndCondExpansions, m_bndConditions, 
                                   m_periodicVerts, variable);
 
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                m_traceMap->PrintStats(std::cout, variable);
+            }
+
             // Scatter trace points to 1D elements. For each element, we find
             // the trace point associated to each vertex. The element then
             // retains a pointer to the trace space points, to ensure
@@ -895,11 +900,6 @@ namespace Nektar
             Array<OneD,       NekDouble> &Fwd,
             Array<OneD,       NekDouble> &Bwd)
         {
-            // Expansion casts
-            LocalRegions::Expansion1DSharedPtr exp1D;
-            LocalRegions::Expansion1DSharedPtr exp1DFirst;
-            LocalRegions::Expansion1DSharedPtr exp1DLast;
-
             // Counter variables
             int  n, v;
             
@@ -911,10 +911,7 @@ namespace Nektar
             
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
-            
-            // Basis shared pointer
-            LibUtilities::BasisSharedPtr Basis;
-            
+
             // Set forward and backard state to zero
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
@@ -924,12 +921,8 @@ namespace Nektar
             // Loop on the elements
             for (cnt = n = 0; n < nElements; ++n)
             {
-                exp1D = (*m_exp)[n]->as<LocalRegions::Expansion1D>();
-
                 // Set the offset of each element
                 phys_offset = GetPhys_Offset(n);
-                
-                Basis = (*m_exp)[n]->GetBasis(0);
 
                 for(v = 0; v < 2; ++v, ++cnt)
                 {
@@ -1052,24 +1045,19 @@ namespace Nektar
 
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
-            
-            // Basis shared pointer
-            LibUtilities::BasisSharedPtr Basis;
-            
+
             vector<bool> negatedFluxNormal = GetNegatedFluxNormal();
             
             for (n = 0; n < GetExpSize(); ++n)
             {
-                // Basis definition on each element
-                Basis = (*m_exp)[n]->GetBasis(0);
-                
                 // Number of coefficients on each element
                 int e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
                 
                 offset = GetCoeff_Offset(n);
                 
                 // Implementation for every points except Gauss points
-                if (Basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
+                if ((*m_exp)[n]->GetBasis(0)->GetBasisType() !=
+                     LibUtilities::eGauss_Lagrange)
                 {
                     t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][0]->GetElmtId());
                     if(negatedFluxNormal[2*n])

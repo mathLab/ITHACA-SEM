@@ -69,12 +69,9 @@ void FieldIOXml::v_Write(const std::string &outFile,
                          std::vector<std::vector<NekDouble> > &fielddata,
                          const FieldMetaDataMap &fieldmetadatamap)
 {
-    std::stringstream prfx;
-    prfx << m_comm->GetRank() << ": FieldIOXml::v_Write(): ";
     double tm0 = 0.0, tm1 = 0.0;
     if (m_comm->GetRank() == 0)
     {
-        cout << prfx.str() << "entering..." << endl;
         tm0 = m_comm->Wtime();
     }
 
@@ -326,12 +323,12 @@ void FieldIOXml::v_Write(const std::string &outFile,
     doc.SaveFile(filename);
 
     m_comm->Block();
+
     // all data has been written
-    if (0 == m_comm->GetRank())
+    if (m_comm->GetRank() == 0)
     {
         tm1 = m_comm->Wtime();
-        cout << prfx.str() << "leaving after " << tm1 - tm0 << " secs..."
-             << endl;
+        cout << " (" << tm1 - tm0 << "s, XML)" << endl;
     }
 }
 

@@ -339,7 +339,14 @@ namespace Nektar
                   for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                   {
                       sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                      inout[map[bndcnt++]] = sign * coeffs[j];
+                      if(sign)
+                      {
+                          inout[map[bndcnt++]] = sign * coeffs[j];
+                      }
+                      else
+                      {
+                          bndcnt++;
+                      }
                   }
               }
               else
@@ -465,7 +472,14 @@ namespace Nektar
                   {
                       sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(
                           bndcnt);
-                      tmp[bndMap[bndcnt++]] = sign * coeffs[j];
+                      if (sign)
+                      {
+                          tmp[bndMap[bndcnt++]] = sign * coeffs[j];
+                      }
+                      else
+                      {
+                          bndcnt++;
+                      }
                   }
               }
               else

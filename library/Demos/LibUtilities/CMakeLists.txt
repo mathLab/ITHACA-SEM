@@ -14,5 +14,7 @@ ADD_NEKTAR_EXECUTABLE(NodalTetElecDemo
     COMPONENT demos DEPENDS LibUtilities SOURCES NodalTetElecDemo.cpp)
 ADD_NEKTAR_EXECUTABLE(TimeIntegrationDemo
     COMPONENT demos DEPENDS LibUtilities SOURCES TimeIntegrationDemo.cpp)
-ADD_NEKTAR_EXECUTABLE(FieldIOBenchmarker
-    COMPONENT demos DEPENDS LibUtilities SOURCES FieldIOBenchmarker.cpp)
+IF(NEKTAR_USE_MPI)
+    ADD_NEKTAR_EXECUTABLE(FieldIOBenchmarker
+        COMPONENT demos DEPENDS LibUtilities SOURCES FieldIOBenchmarker.cpp)
+ENDIF()

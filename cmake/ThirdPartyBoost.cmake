@@ -8,9 +8,9 @@
 
 #If the user has not set BOOST_ROOT, look in a couple common places first.
 MESSAGE(STATUS "Searching for Boost:")
-SET(MIN_VER "1.52.0")
+SET(MIN_VER "1.56.0")
 SET(NEEDED_BOOST_LIBS thread iostreams date_time filesystem system
-    program_options regex timer)
+    program_options regex timer chrono)
 SET(Boost_DEBUG 0)
 SET(Boost_NO_BOOST_CMAKE ON)
 IF( BOOST_ROOT )
@@ -65,9 +65,9 @@ IF (THIRDPARTY_BUILD_BOOST)
     INCLUDE(ExternalProject)
 
     # Only build the libraries we need
-    FOREACH(boostlib ${NEEDED_BOOST_LIBS})
-	LIST(APPEND BOOST_LIB_LIST --with-${boostlib})
-    ENDFOREACH()
+    SET(BOOST_LIB_LIST --with-system --with-iostreams --with-filesystem
+        --with-program_options --with-date_time --with-thread
+        --with-regex --with-timer --with-chrono)
 
     IF (NOT WIN32)
         # We need -fPIC for 64-bit builds
@@ -86,10 +86,12 @@ IF (THIRDPARTY_BUILD_BOOST)
             SET(TOOLSET msvc-11.0)
         ELSEIF (MSVC12)
             SET(TOOLSET msvc-12.0)
+        ELSEIF (MSVC14)
+            SET(TOOLSET msvc-14.0)
         ENDIF()
-    ELSE()
+    ELSE(APPLE)
         SET(TOOLSET gcc)
-    ENDIF()
+    ENDIF(APPLE)
 
     IF (NOT WIN32)
         EXTERNALPROJECT_ADD(
@@ -160,24 +162,39 @@ IF (THIRDPARTY_BUILD_BOOST)
     ENDIF(THIRDPARTY_BUILD_ZLIB)
 
     # Set up CMake variables
-    FOREACH(BOOSTLIB ${NEEDED_BOOST_LIBS})
-        STRING(TOUPPER ${BOOSTLIB} BOOSTLIB_UPPER)
-
-        SET(Boost_${BOOSTLIB_UPPER}_LIBRARY boost_${BOOSTLIB})
-        SET(Boost_${BOOSTLIB_UPPER}_LIBRARY_DEBUG boost_${BOOSTLIB})
-        SET(Boost_${BOOSTLIB_UPPER}_LIBRARY_RELEASE boost_${BOOSTLIB})
-
-        THIRDPARTY_SHARED_LIBNAME(Boost_${BOOSTLIB_UPPER}_LIBRARY)
-        THIRDPARTY_SHARED_LIBNAME(Boost_${BOOSTLIB_UPPER}_LIBRARY_DEBUG)
-        THIRDPARTY_SHARED_LIBNAME(Boost_${BOOSTLIB_UPPER}_LIBRARY_RELEASE)
-    ENDFOREACH()
+    SET(Boost_CHRONO_LIBRARY boost_chrono)
+    SET(Boost_CHRONO_LIBRARY_DEBUG boost_chrono)
+    SET(Boost_CHRONO_LIBRARY_RELEASE boost_chrono)
+    SET(Boost_DATE_TIME_LIBRARY boost_date_time)
+    SET(Boost_DATE_TIME_LIBRARY_DEBUG boost_date_time)
+    SET(Boost_DATE_TIME_LIBRARY_RELEASE boost_date_time)
+    SET(Boost_FILESYSTEM_LIBRARY boost_filesystem)
+    SET(Boost_FILESYSTEM_LIBRARY_DEBUG boost_filesystem)
+    SET(Boost_FILESYSTEM_LIBRARY_RELEASE boost_filesystem)
+    SET(Boost_IOSTREAMS_LIBRARY boost_iostreams)
+    SET(Boost_IOSTREAMS_LIBRARY_DEBUG boost_iostreams)
+    SET(Boost_IOSTREAMS_LIBRARY_RELEASE boost_iostreams)
+    SET(Boost_PROGRAM_OPTIONS_LIBRARY boost_program_options)
+    SET(Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG boost_program_options)
+    SET(Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE boost_program_options)
+    SET(Boost_REGEX_LIBRARY boost_regex)
+    SET(Boost_REGEX_LIBRARY_DEBUG boost_regex)
+    SET(Boost_REGEX_LIBRARY_RELEASE boost_regex)
+    SET(Boost_SYSTEM_LIBRARY boost_system)
+    SET(Boost_SYSTEM_LIBRARY_DEBUG boost_system)
+    SET(Boost_SYSTEM_LIBRARY_RELEASE boost_system)
+    SET(Boost_THREAD_LIBRARY boost_thread)
+    SET(Boost_THREAD_LIBRARY_DEBUG boost_thread)
+    SET(Boost_THREAD_LIBRARY_RELEASE boost_thread)
+    SET(Boost_TIMER_LIBRARY boost_timer)
+    SET(Boost_TIMER_LIBRARY_DEBUG boost_timer)
+    SET(Boost_TIMER_LIBRARY_RELEASE boost_timer)
 
     SET(Boost_INCLUDE_DIRS ${TPSRC}/dist/include)
     SET(Boost_CONFIG_INCLUDE_DIR ${TPINC})
     SET(Boost_LIBRARY_DIRS ${TPSRC}/dist/lib)
     SET(Boost_CONFIG_LIBRARY_DIR ${TPLIB})
-    STRING(REPLACE ";" " boost_" Boost_LIBRARIES "${NEEDED_BOOST_LIBS}")
-    SET(Boost_LIBRARIES "boost_${Boost_LIBRARIES}")
+    SET(Boost_LIBRARIES boost_chrono boost_date_time boost_filesystem boost_iostreams boost_program_options boost_regex boost_system boost_thread boost_timer)
     LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
     STRING(REPLACE ";" ", " NEEDED_BOOST_LIBS_STRING "${NEEDED_BOOST_LIBS}")

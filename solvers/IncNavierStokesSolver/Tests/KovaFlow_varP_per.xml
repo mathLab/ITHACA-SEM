@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[7]" NUMMODES="7" FIELDS="u,v,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[8]" NUMMODES="6" FIELDS="u,v,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[9]" NUMMODES="8" FIELDS="u,v,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[10]" NUMMODES="6" FIELDS="u,v,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[11]" NUMMODES="9" FIELDS="u,v,p" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+            <I PROPERTY="AdvectionForm" VALUE="Convective" />
+            <I PROPERTY="Projection" VALUE="Galerkin" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> TimeStep      = 0.001        </P>
+            <P> NumSteps      = 1000       </P>
+            <P> IO_CheckSteps = 1000       </P>
+            <P> IO_InfoSteps  = 1000       </P>
+            <P> Kinvis        = 0.025        </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> p </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+            <B ID="3"> C[4] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="1-1.619099729265964*cos(2*PI*y)" />
+                <D VAR="v" VALUE="-0.248344108585656*sin(2*PI*y)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" VALUE="1-0.381463333531742*cos(2*PI*y)" />
+                <D VAR="v" VALUE="-0.058510399212408*sin(2*PI*y)" />
+                <D VAR="p" VALUE="0.427242862585425" />
+            </REGION>
+            <REGION REF="2">
+                <P VAR="u" VALUE="[3]" />
+                <P VAR="v" VALUE="[3]" />
+                <P VAR="p" VALUE="[3]" />
+            </REGION>
+            <REGION REF="3">
+                <P VAR="u" VALUE="[2]" />
+                <P VAR="v" VALUE="[2]" />
+                <P VAR="p" VALUE="[2]" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="(1-exp(-0.963740544195769*x)*cos(2*PI*y))" />
+            <E VAR="v"
+                VALUE="(-0.963740544195769/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*y)" />
+            <E VAR="p" VALUE="0.5*(1-exp(-2*0.963740544195769*x))" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="(1-exp(-0.963740544195769*x)*cos(2*PI*y))" />
+            <E VAR="v"
+                VALUE="(-0.963740544195769/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*y)" />
+            <E VAR="p" VALUE="0.5*(1-exp(-2*0.963740544195769*x))" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAGD/aj0gwMjFjlf9jDRJhQ5D/Yo8szY5VHmM+C1fwPcP2s2N0Hl2dDk18/MZnnf1aFLUyEHUpHO9a8Cq6u2YtuPweqfgz3caK5H2r+XpgIF5o8uvu4scoj/MeD1X5E+PGiut8WXZ4Pq36E+fxY5RHuE0CTdze//3OXWwLcf4JQ+vG+paKKtTm26OYLQemmsp+NV/7326CbL4zi/py9UPPh8QMANMBNrQAA</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1kskSgjAQBUFckDUIigv6/5/pgelLVyWXV/3yMjWTpCj2dQjtQkvxoBzchlZickflx9CTuAk9i6l3UT6F1uJrRhupz7di5unE1Ou1Dw/iSX1PyiX5twyPYnTOKHUX+dzjXczcD/XPP1jFvOtTTN8v+bz3W8wcH/n8g03MHF/5rJ+Y+f7dGwRp</EDGE>
+        <ELEMENT>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1zskOgyAABmFsRaq0bl3t4vs/ppfh4CTl8iVDAn8I+1PhAY9/eo0RG92XnvCErd4tvcOMZ/1zwR4H7YrqI056p1Gf8aq9Sf2Gd+0t+x/4xJf2tuoLvrW3U//gV3uz+g9X7d0A9rcC/gAA</Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="7">  Q[0-2]             </C>     <!-- Domain -->
+            <C ID="8">  Q[3-5]             </C>     <!-- Domain -->
+            <C ID="9">  Q[6-7]             </C>     <!-- Domain -->
+            <C ID="10"> Q[8-9]             </C>     <!-- Domain -->
+            <C ID="11"> Q[10-11]             </C>   <!-- Domain -->
+            <C ID="1"> E[23,25,27,29] </C>
+            <C ID="2"> E[3,6,9,12] </C>
+            <C ID="3"> E[11,21,30] </C>
+            <C ID="4"> E[0,13,22] </C>
+        </COMPOSITE>
+        <DOMAIN> C[7-11] </DOMAIN>
+    </GEOMETRY>
+</NEKTAR>

@@ -188,7 +188,9 @@ public:
     /// Name of class
     LIB_UTILITIES_EXPORT static std::string className;
 
-    FieldIOXml(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem);
+    LIB_UTILITIES_EXPORT FieldIOXml(
+        LibUtilities::CommSharedPtr pComm,
+        bool sharedFilesystem);
 
     LIB_UTILITIES_EXPORT void ImportFieldDefs(
         DataSourceSharedPtr dataSource,

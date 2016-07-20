@@ -58,8 +58,8 @@ class H5DataSource : public DataSource
 {
 public:
     /// Constructor based on filename.
-    H5DataSource(const std::string &fn)
-        : doc(H5::File::Open(fn, H5F_ACC_RDONLY))
+    H5DataSource(const std::string &fn, H5::PListSharedPtr parallelProps)
+        : doc(H5::File::Open(fn, H5F_ACC_RDONLY, parallelProps))
     {
     }
 
@@ -76,9 +76,10 @@ public:
     }
 
     /// Static constructor for this data source.
-    static DataSourceSharedPtr create(const std::string &fn)
+    static DataSourceSharedPtr create(
+        const std::string &fn, H5::PListSharedPtr parallelProps)
     {
-        return DataSourceSharedPtr(new H5DataSource(fn));
+        return DataSourceSharedPtr(new H5DataSource(fn, parallelProps));
     }
 
 private:
@@ -157,17 +158,31 @@ typedef boost::shared_ptr<H5TagWriter> H5TagWriterSharedPtr;
 class FieldIOHdf5 : public FieldIO
 {
 public:
+    static const unsigned int FORMAT_VERSION;
+
     static const unsigned int ELEM_DCMP_IDX;
     static const unsigned int VAL_DCMP_IDX;
+    static const unsigned int ORDER_DCMP_IDX;
+    static const unsigned int HOMY_DCMP_IDX;
+    static const unsigned int HOMZ_DCMP_IDX;
+    static const unsigned int HOMS_DCMP_IDX;
     static const unsigned int HASH_DCMP_IDX;
     static const unsigned int MAX_DCMPS;
 
     static const unsigned int ELEM_CNT_IDX;
     static const unsigned int VAL_CNT_IDX;
+    static const unsigned int ORDER_CNT_IDX;
+    static const unsigned int HOMY_CNT_IDX;
+    static const unsigned int HOMZ_CNT_IDX;
+    static const unsigned int HOMS_CNT_IDX;
     static const unsigned int MAX_CNTS;
 
     static const unsigned int IDS_IDX_IDX;
     static const unsigned int DATA_IDX_IDX;
+    static const unsigned int ORDER_IDX_IDX;
+    static const unsigned int HOMY_IDX_IDX;
+    static const unsigned int HOMZ_IDX_IDX;
+    static const unsigned int HOMS_IDX_IDX;
     static const unsigned int MAX_IDXS;
 
     /// Creates an instance of this class
@@ -181,7 +196,9 @@ public:
     /// Name of class
     LIB_UTILITIES_EXPORT static std::string className;
 
-    FieldIOHdf5(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem);
+    LIB_UTILITIES_EXPORT FieldIOHdf5(
+        LibUtilities::CommSharedPtr pComm,
+        bool sharedFilesystem);
 
     /// Get class name
     inline virtual const std::string &GetClassName() const
@@ -190,6 +207,17 @@ public:
     }
 
 private:
+    struct OffsetHelper {
+        OffsetHelper() : data(0), order(0), homy(0), homz(0), homs(0) {}
+        OffsetHelper(const OffsetHelper &in) :
+            data(in.data), order(in.order), homy(in.homy), homz(in.homz),
+            homs(in.homs)
+        {
+        }
+
+        uint64_t data, order, homy, homz, homs;
+    };
+
     LIB_UTILITIES_EXPORT virtual void v_Write(
         const std::string &outFile,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
@@ -211,6 +239,9 @@ private:
 
     LIB_UTILITIES_EXPORT void ImportFieldDef(H5::PListSharedPtr        readPL,
                                              H5::GroupSharedPtr        root,
+                                             std::vector<uint64_t>    &decomps,
+                                             uint64_t                  decomp,
+                                             OffsetHelper              offset,
                                              std::string               group,
                                              FieldDefinitionsSharedPtr def);
 
@@ -218,9 +249,9 @@ private:
         H5::PListSharedPtr               readPL,
         H5::DataSetSharedPtr             data_dset,
         H5::DataSpaceSharedPtr           data_fspace,
-        size_t                           data_i,
-        std::vector<std::size_t>        &decomps,
-        size_t                           decomp,
+        uint64_t                         data_i,
+        std::vector<uint64_t>           &decomps,
+        uint64_t                         decomp,
         const FieldDefinitionsSharedPtr  fielddef,
         std::vector<NekDouble>          &fielddata);
 };

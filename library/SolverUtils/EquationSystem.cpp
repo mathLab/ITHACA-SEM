@@ -829,7 +829,7 @@ namespace Nektar
                 {
                     try
                     {
-#ifdef _WIN32
+#if (defined _WIN32 && _MSC_VER < 1900)
                         // We need this to make sure boost::format has always
                         // two digits in the exponents of Scientific notation.
                         unsigned int old_exponent_format;
@@ -890,36 +890,51 @@ namespace Nektar
                     LibUtilities::PtsIO ptsIO(m_session->GetComm());
                     ptsIO.Import(filename, ptsField);
 
-                    Array <OneD,  Array<OneD,  NekDouble> > coords(3);
-                    coords[0] = Array<OneD, NekDouble>(nq);
-                    coords[1] = Array<OneD, NekDouble>(nq);
-                    coords[2] = Array<OneD, NekDouble>(nq);
-                    m_fields[0]->GetCoords(coords[0], coords[1], coords[2]);
+                    Array<OneD, Array<OneD, NekDouble> > pts(ptsField->GetDim() + ptsField->GetNFields());
+                    for (int i = 0; i < ptsField->GetDim() + ptsField->GetNFields(); ++i)
+                    {
+                        pts[i] = Array<OneD,  NekDouble>(nq);
+                    }
+                    if (ptsField->GetDim() == 1)
+                    {
+                        m_fields[0]->GetCoords(pts[0]);
+                    }
+                    else if (ptsField->GetDim() == 2)
+                    {
+                        m_fields[0]->GetCoords(pts[0], pts[1]);
+                    }
+                    else if (ptsField->GetDim() == 3)
+                    {
+                        m_fields[0]->GetCoords(pts[0], pts[1], pts[2]);
+                    }
+                    LibUtilities::PtsFieldSharedPtr outPts =
+                            MemoryManager<LibUtilities::PtsField>::
+                            AllocateSharedPtr(ptsField->GetDim(), ptsField->GetFieldNames(), pts);
 
                     //  check if we already computed this funcKey combination
-                    std::string weightsKey = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
-                    if (m_interpWeights.count(weightsKey) != 0)
+                    std::string interpKey = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
+                    map<std::string, Interpolator >::iterator it
+                        = m_interpolators.find(interpKey);
+                    if (it == m_interpolators.end())
                     {
-                        //  found, re-use
-                        ptsField->SetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
-                    }
-                    else
-                    {
-                        if (m_session->GetComm()->GetRank() == 0)
+                        m_interpolators[interpKey] = SolverUtils::Interpolator(
+                                Nektar::SolverUtils::eShepard);
+                        if (m_comm->GetRank() == 0)
                         {
-                            ptsField->setProgressCallback(&EquationSystem::PrintProgressbar, this);
-                            cout << "Interpolating:       ";
+                            m_interpolators[interpKey].SetProgressCallback(
+                                    &EquationSystem::PrintProgressbar, this);
                         }
-                        ptsField->CalcWeights(coords);
-                        if (m_session->GetComm()->GetRank() == 0)
+                        m_interpolators[interpKey].CalcWeights(ptsField, outPts);
+                        if (m_comm->GetRank() == 0)
                         {
                             cout << endl;
+                            if(GetSession()->DefinesCmdLineArgument("verbose"))
+                            {
+                                m_interpolators[interpKey].PrintStatistics();
+                            }
                         }
-                        ptsField->GetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
                     }
-
-                    Array<OneD,  Array<OneD,  NekDouble> > intFields;
-                    ptsField->Interpolate(intFields);
+                    m_interpolators[interpKey].Interpolate(ptsField, outPts);
 
                     int fieldInd;
                     vector<string> fieldNames = ptsField->GetFieldNames();
@@ -932,7 +947,7 @@ namespace Nektar
                     }
                     ASSERTL0(fieldInd != fieldNames.size(),  "field not found");
 
-                    pArray = intFields[fieldInd];
+                    pArray = pts[ptsField->GetDim() + fieldInd];
                 }
             }
         }
@@ -2255,12 +2270,19 @@ namespace Nektar
             AddSummaryItem(s, "Session Name", m_sessionName);
             AddSummaryItem(s, "Spatial Dim.", m_spacedim);
             AddSummaryItem(s, "Max SEM Exp. Order", m_fields[0]->EvalBasisNumModesMax());
+
+            if (m_session->GetComm()->GetSize() > 1)
+            {
+                AddSummaryItem(s, "Num. Processes",
+                        m_session->GetComm()->GetSize());
+            }
+
             if(m_HomogeneousType == eHomogeneous1D)
             {
                 AddSummaryItem(s, "Quasi-3D", "Homogeneous in z-direction");
                 AddSummaryItem(s, "Expansion Dim.", m_expdim + 1);
                 AddSummaryItem(s, "Num. Hom. Modes (z)", m_npointsZ);
-                AddSummaryItem(s, "Hom. length (LZ)", "m_LhomZ");
+                AddSummaryItem(s, "Hom. length (LZ)", m_LhomZ);
                 AddSummaryItem(s, "FFT Type", m_useFFT ? "FFTW" : "MVM");
                 if (m_halfMode)
                 {
@@ -2281,8 +2303,8 @@ namespace Nektar
                 AddSummaryItem(s, "Expansion Dim.", m_expdim + 2);
                 AddSummaryItem(s, "Num. Hom. Modes (y)", m_npointsY);
                 AddSummaryItem(s, "Num. Hom. Modes (z)", m_npointsZ);
-                AddSummaryItem(s, "Hom. length (LY)", "m_LhomY");
-                AddSummaryItem(s, "Hom. length (LZ)", "m_LhomZ");
+                AddSummaryItem(s, "Hom. length (LY)", m_LhomY);
+                AddSummaryItem(s, "Hom. length (LZ)", m_LhomZ);
                 AddSummaryItem(s, "FFT Type", m_useFFT ? "FFTW" : "MVM");
             }
             else

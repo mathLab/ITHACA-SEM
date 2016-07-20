@@ -2,7 +2,7 @@
 <test>
     <description>3D channel flow, Tetrahedral elements, P=4, periodic BCs, XxtMultiLevelStaticCond, par(2)</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>--use-metis -I GlobalSysSoln=XxtMultiLevelStaticCond Tet_channel_m4_per.xml</parameters>
+    <parameters>--use-metis --verbose -I GlobalSysSoln=XxtMultiLevelStaticCond Tet_channel_m4_per.xml</parameters>
     <processes>2</processes>
     <files>
         <file description="Session File">Tet_channel_m4_per.xml</file>

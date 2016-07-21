@@ -284,7 +284,7 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >        &penaltyfluxO1)
         {            
             int cnt;
-            int i, j, e;            
+            int i, j, e;
             int id1, id2;
             
             int nBndEdgePts, nBndEdges, nBndRegions;
@@ -490,15 +490,13 @@ namespace Nektar
             int nTracePts = fields[0]->GetTrace()->GetTotPoints();
             int nVariables   = fields.num_elements();
             int nDim         = fields[0]->GetCoordim(0);
-            
-            Array<OneD, NekDouble > Fwd(nTracePts);
-            Array<OneD, NekDouble > Bwd(nTracePts);
+
             Array<OneD, NekDouble > Vn (nTracePts, 0.0);
-            
+
             Array<OneD, NekDouble > qFwd     (nTracePts);
             Array<OneD, NekDouble > qBwd     (nTracePts);
             Array<OneD, NekDouble > qfluxtemp(nTracePts, 0.0);
-                                    
+
             // Get the normal velocity Vn
             for(i = 0; i < nDim; ++i)
             {
@@ -559,11 +557,8 @@ namespace Nektar
             int nBndEdges, nBndEdgePts;
             int i, e; 
             int id2;
-            
-            int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
+
             int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
-            
-            Array<OneD, NekDouble > uterm(nTracePts);
 
             // Loop on the boundary regions to apply appropriate bcs
             for (i = 0; i < nBndRegions; ++i)

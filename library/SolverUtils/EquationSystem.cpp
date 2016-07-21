@@ -125,7 +125,7 @@ namespace Nektar
             m_fld = MemoryManager<LibUtilities::FieldIO>
                 ::AllocateSharedPtr(
                     m_session->GetComm(),
-                    m_session->DefinesCmdLineArgument("shared-filesystem"));
+                    m_session->GetSharedFilesystem());
 
             // Read the geometry and the expansion information
             m_graph = SpatialDomains::MeshGraph::Read(m_session);
@@ -832,7 +832,7 @@ namespace Nektar
                 {
                     try
                     {
-#ifdef _WIN32
+#if (defined _WIN32 && _MSC_VER < 1900)
                         // We need this to make sure boost::format has always
                         // two digits in the exponents of Scientific notation.
                         unsigned int old_exponent_format;
@@ -914,12 +914,12 @@ namespace Nektar
 
                     //  check if we already computed this funcKey combination
                     std::string interpKey = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
-                    map<std::string, Interpolator >::iterator it
+                    map<std::string, FieldUtils::Interpolator >::iterator it
                         = m_interpolators.find(interpKey);
                     if (it == m_interpolators.end())
                     {
-                        m_interpolators[interpKey] = SolverUtils::Interpolator(
-                                Nektar::SolverUtils::eShepard);
+                        m_interpolators[interpKey] = FieldUtils::Interpolator(
+                                Nektar::FieldUtils::eShepard);
                         if (m_comm->GetRank() == 0)
                         {
                             m_interpolators[interpKey].SetProgressCallback(

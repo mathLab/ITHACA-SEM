@@ -1252,8 +1252,10 @@ namespace Nektar
 
             // For parallel multi-level static condensation determine the lowest
             // static condensation level amongst processors.
-            if (m_solnType == eIterativeMultiLevelStaticCond ||
-                m_solnType == eXxtMultiLevelStaticCond)
+            if ((m_solnType == eDirectMultiLevelStaticCond ||
+                 m_solnType == ePETScMultiLevelStaticCond ||
+                 m_solnType == eIterativeMultiLevelStaticCond ||
+                 m_solnType == eXxtMultiLevelStaticCond) && bottomUpGraph)
             {
                 m_lowestStaticCondLevel = bottomUpGraph->GetNlevels()-1;
                 vComm->AllReduce(m_lowestStaticCondLevel,
@@ -1429,7 +1431,7 @@ namespace Nektar
             Array<OneD, NekDouble> edgeDof (dofs[1].size());
             for(dofIt = dofs[1].begin(), i=0; dofIt != dofs[1].end(); dofIt++, i++)
             {
-                edgeId[i] = dofIt->first;
+                edgeId[i] = dofIt->first + 1;
                 edgeDof[i] = (NekDouble) dofIt->second;
             }
             Gs::gs_data *tmp = Gs::Init(edgeId, vComm);
@@ -1437,7 +1439,7 @@ namespace Nektar
             Gs::Finalise(tmp);
             for (i=0; i < dofs[1].size(); i++)
             {
-                dofs[1][edgeId[i]] = (int) (edgeDof[i]+0.5);
+                dofs[1][edgeId[i]-1] = (int) (edgeDof[i]+0.5);
             }
             // Periodic edges
             for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
@@ -1459,7 +1461,7 @@ namespace Nektar
             for(dofIt = faceModes[0].begin(), dofIt2 = faceModes[1].begin(),i=0;
                 dofIt != faceModes[0].end(); dofIt++, dofIt2++, i++)
             {
-                faceId[i] = dofIt->first;
+                faceId[i] = dofIt->first+1;
                 faceP[i] = (NekDouble) dofIt->second;
                 faceQ[i] = (NekDouble) dofIt2->second;
             }
@@ -1469,8 +1471,8 @@ namespace Nektar
             Gs::Finalise(tmp2);
             for (i=0; i < faceModes[0].size(); i++)
             {
-                faceModes[0][faceId[i]] = (int) (faceP[i]+0.5);
-                faceModes[1][faceId[i]] = (int) (faceQ[i]+0.5);
+                faceModes[0][faceId[i]-1] = (int) (faceP[i]+0.5);
+                faceModes[1][faceId[i]-1] = (int) (faceQ[i]+0.5);
             }
             // Periodic faces
             for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
@@ -1493,19 +1495,19 @@ namespace Nektar
             int P, Q;
             for (i=0; i < faceModes[0].size(); i++)
             {
-                P = faceModes[0][faceId[i]];
-                Q = faceModes[1][faceId[i]];
-                if (faceType[faceId[i]] == LibUtilities::eQuadrilateral)
+                P = faceModes[0][faceId[i]-1];
+                Q = faceModes[1][faceId[i]-1];
+                if (faceType[faceId[i]-1] == LibUtilities::eQuadrilateral)
                 {
                     // Quad face
-                    dofs[2][faceId[i]] =
+                    dofs[2][faceId[i]-1] =
                       LibUtilities::StdQuadData::getNumberOfCoefficients(P,Q) -
                       LibUtilities::StdQuadData::getNumberOfBndCoefficients(P,Q);
                 }
                 else
                 {
                     // Tri face
-                    dofs[2][faceId[i]] =
+                    dofs[2][faceId[i]-1] =
                       LibUtilities::StdTriData::getNumberOfCoefficients(P,Q) -
                       LibUtilities::StdTriData::getNumberOfBndCoefficients(P,Q);
                 }

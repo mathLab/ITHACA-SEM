@@ -36,11 +36,11 @@
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
-#include "Module.h"
+#include <FieldUtils/Module.h>
 
 using namespace std;
 using namespace Nektar;
-using namespace Nektar::Utilities;
+using namespace Nektar::FieldUtils;
 
 int main(int argc, char* argv[])
 {
@@ -85,7 +85,6 @@ int main(int argc, char* argv[])
                 "Print options for a module.")
         ("module,m", po::value<vector<string> >(),
                 "Specify modules which are to be used.")
-        ("shared-filesystem,s", "Using shared filesystem.")
         ("useSessionVariables",
                 "Use variables defined in session for output")
         ("verbose,v",

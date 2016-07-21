@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File IsentropicVortex.h
+// File: IsentropicVortexBC.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,55 +29,60 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations for isentropic vortex
+// Description: Isentropic vortex boundary condition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_ISENVORTEX_H
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_ISENVORTEX_H
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_BNDCOND_ISENTROPICVORTEXBC
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_BNDCOND_ISENTROPICVORTEXBC
 
-#include <CompressibleFlowSolver/EquationSystems/EulerCFE.h>
+#include "CFSBndCond.h"
+
 
 namespace Nektar
 {
 
-    class IsentropicVortex : public EulerCFE
-    {
+/**
+* @brief Wall boundary conditions for compressible flow problems.
+*/
+class IsentropicVortexBC : public CFSBndCond
+{
     public:
-        friend class MemoryManager<IsentropicVortex>;
 
-        /// Creates an instance of this class.
-        static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+        friend class MemoryManager<IsentropicVortexBC>;
+
+        /// Creates an instance of this class
+        static CFSBndCondSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                const Array<OneD, Array<OneD, NekDouble> >& pTraceNormals,
+                const int pSpaceDim, const int bcRegion)
         {
-            SolverUtils::EquationSystemSharedPtr p = MemoryManager<IsentropicVortex>::AllocateSharedPtr(pSession);
-            p->InitObject();
+            CFSBndCondSharedPtr p = MemoryManager<IsentropicVortexBC>::
+                                    AllocateSharedPtr(pSession, pFields,
+                                            pTraceNormals, pSpaceDim, bcRegion);
             return p;
         }
-        /// Name of class.
-        static std::string className;
 
-        virtual ~IsentropicVortex();
+        ///Name of the class
+        static std::string className;
 
     protected:
 
-        IsentropicVortex(const LibUtilities::SessionReaderSharedPtr& pSession);
-
-        /// Print a summary of time stepping parameters.
-        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-
-        virtual void v_SetInitialConditions(
-            NekDouble               initialtime = 0.0,
-            bool                    dumpInitialConditions = true,
-            const int domain = 0);
-
-        virtual void v_EvaluateExactSolution(
-            unsigned int            field,
-            Array<OneD, NekDouble> &outfield,
-            const NekDouble         time = 0.0);
+        virtual void v_Apply(
+            int                                                 bcRegion,
+            int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
+            Array<OneD, Array<OneD, NekDouble> >               &physarray,
+            const NekDouble                                    &time);
 
     private:
-        /// Isentropic Vortex Test Case.
+        IsentropicVortexBC(const LibUtilities::SessionReaderSharedPtr& pSession,
+               const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+               const Array<OneD, Array<OneD, NekDouble> >& pTraceNormals,
+               const int pSpaceDim,
+               const int bcRegion);
+
         void EvaluateIsentropicVortex(
             const Array<OneD, NekDouble>                    &x,
             const Array<OneD, NekDouble>                    &y,
@@ -85,6 +90,10 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >      &u,
                   NekDouble                                  time,
             const int                                        o = 0);
-    };
+
+        virtual ~IsentropicVortexBC(void){};
+};
+
 }
+
 #endif

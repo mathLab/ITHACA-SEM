@@ -134,58 +134,6 @@ namespace Nektar
         Vmath::Vcopy(nTotQuadPoints, u[field], 1, outfield, 1);
     }
 
-    /**
-     * @brief Set the boundary conditions for the isentropic vortex problem.
-     */
-    void IsentropicVortex::v_SetBoundaryConditions(
-            Array<OneD, Array<OneD, NekDouble> >             &physarray,
-            NekDouble                                         time)
-    {
-        int cnt        = 0;
-        int nTracePts  = GetTraceTotPoints();
-        int nvariables = physarray.num_elements();
-
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        for (int i = 0; i < nvariables; ++i)
-        {
-            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-        }
-
-        const Array<OneD, const int> &bndTraceMap = m_fields[0]->GetTraceBndMap();
-        // loop over Boundary Regions
-        int id2, e_max;
-        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-        {
-            e_max = m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
-
-            for(int e = 0; e < e_max; ++e)
-            {
-                int npoints = m_fields[0]->
-                    GetBndCondExpansions()[n]->GetExp(e)->GetTotPoints();
-                int id1  = m_fields[0]->
-                    GetBndCondExpansions()[n]->GetPhys_Offset(e);
-                id2 = m_fields[0]->GetTrace()->GetPhys_Offset(bndTraceMap[cnt++]);
-
-                Array<OneD,NekDouble> x(npoints, 0.0);
-                Array<OneD,NekDouble> y(npoints, 0.0);
-                Array<OneD,NekDouble> z(npoints, 0.0);
-
-                m_fields[0]->GetBndCondExpansions()[n]->
-                GetExp(e)->GetCoords(x, y, z);
-
-                EvaluateIsentropicVortex(x, y, z, Fwd, time, id2);
-
-                for (int i = 0; i < nvariables; ++i)
-                {
-                    Vmath::Vcopy(npoints, &Fwd[i][id2], 1, 
-                                 &(m_fields[i]->GetBndCondExpansions()[n]->
-                                 UpdatePhys())[id1], 1);
-                }
-            }
-        }
-    }
-
     void IsentropicVortex::EvaluateIsentropicVortex(
         const Array<OneD, NekDouble>               &x,
         const Array<OneD, NekDouble>               &y,

@@ -71,21 +71,11 @@ namespace Nektar
             Array<OneD, NekDouble> &outfield,
             const NekDouble         time = 0.0);
 
-        virtual void v_SetBoundaryConditions(
-            Array<OneD, Array<OneD, NekDouble> >             &physarray,
-            NekDouble                                         time);
-
     private:
         /// Ringleb Flow Test Case.
         void GetExactRinglebFlow(
             int                                             field,
             Array<OneD, NekDouble>                         &outarray);
-        void SetBoundaryRinglebFlow(
-            int                                              bcRegion,
-            NekDouble                                        time,
-            int                                              cnt,
-            Array<OneD, Array<OneD, NekDouble> >            &Fwd,
-            Array<OneD, Array<OneD, NekDouble> >            &physarray);
     };
 }
 #endif

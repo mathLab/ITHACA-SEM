@@ -56,6 +56,7 @@ typedef LibUtilities::NekFactory<std::string, CFSBndCond,
         const Array<OneD, MultiRegions::ExpListSharedPtr>&,
         const Array<OneD, Array<OneD, NekDouble> >&,
         const int,
+        const int,
         const int> CFSBndCondFactory;
 
 /// Declaration of the boundary condition factory singleton
@@ -73,8 +74,6 @@ class CFSBndCond
 
         /// Apply the boundary condition
         void Apply(
-            int                                                 bcRegion,
-            int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time = 0);
@@ -95,17 +94,20 @@ class CFSBndCond
         NekDouble m_pInf;
         Array<OneD, NekDouble> m_velInf;
 
+        /// Id of the boundary region
+        int       m_bcRegion;
+        /// Offset
+        int       m_offset;
+
         /// Constructor
-        CFSBndCond(
-            const LibUtilities::SessionReaderSharedPtr&,
-            const Array<OneD, MultiRegions::ExpListSharedPtr>&,
-            const Array<OneD, Array<OneD, NekDouble> >&,
-            const int,
-            const int);
+        CFSBndCond(const LibUtilities::SessionReaderSharedPtr& pSession,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                const Array<OneD, Array<OneD, NekDouble> >&       pTraceNormals,
+                const int pSpaceDim,
+                const int bcRegion,
+                const int cnt);
 
         virtual void v_Apply(
-            int                                                 bcRegion,
-            int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time)=0;

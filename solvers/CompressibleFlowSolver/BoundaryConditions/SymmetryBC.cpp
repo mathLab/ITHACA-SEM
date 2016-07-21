@@ -49,14 +49,13 @@ SymmetryBC::SymmetryBC(const LibUtilities::SessionReaderSharedPtr& pSession,
            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
            const Array<OneD, Array<OneD, NekDouble> >& pTraceNormals,
            const int pSpaceDim,
-           const int bcRegion)
-    : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion)
+           const int bcRegion,
+           const int cnt)
+    : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
 }
 
 void SymmetryBC::v_Apply(
-        int                                                 bcRegion,
-        int                                                 cnt,
         Array<OneD, Array<OneD, NekDouble> >               &Fwd,
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
@@ -71,15 +70,15 @@ void SymmetryBC::v_Apply(
     // wall.
     int e, id1, id2, nBCEdgePts, eMax;
 
-    eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+    eMax = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->GetExpSize();
 
     for (e = 0; e < eMax; ++e)
     {
-        nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+        nBCEdgePts = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
             GetExp(e)->GetTotPoints();
-        id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+        id1  = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
             GetPhys_Offset(e);
-        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
+        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[m_offset+e]);
 
         if (nVariables == m_spacedim+3)
         {
@@ -133,7 +132,7 @@ void SymmetryBC::v_Apply(
         for (i = 0; i < nVariables; ++i)
         {
             Vmath::Vcopy(nBCEdgePts, &Fwd[i][id2], 1,
-                         &(m_fields[i]->GetBndCondExpansions()[bcRegion]->
+                         &(m_fields[i]->GetBndCondExpansions()[m_bcRegion]->
                            UpdatePhys())[id1], 1);
         }
     }

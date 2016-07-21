@@ -50,8 +50,9 @@ RinglebFlowBC::RinglebFlowBC(const LibUtilities::SessionReaderSharedPtr& pSessio
            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
            const Array<OneD, Array<OneD, NekDouble> >& pTraceNormals,
            const int pSpaceDim,
-           const int bcRegion)
-    : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion)
+           const int bcRegion,
+           const int cnt)
+    : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
     m_expdim = pFields[0]->GetGraph()->GetMeshDimension();
 
@@ -68,8 +69,6 @@ RinglebFlowBC::RinglebFlowBC(const LibUtilities::SessionReaderSharedPtr& pSessio
 }
 
 void RinglebFlowBC::v_Apply(
-        int                                                 bcRegion,
-        int                                                 cnt,
         Array<OneD, Array<OneD, NekDouble> >               &Fwd,
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
@@ -87,19 +86,19 @@ void RinglebFlowBC::v_Apply(
 
     int id2, id2_plane, e_max;
 
-    e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+    e_max = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->GetExpSize();
 
     for(int e = 0; e < e_max; ++e)
     {
         int npoints = m_fields[0]->
-            GetBndCondExpansions()[bcRegion]->GetExp(e)->GetTotPoints();
+            GetBndCondExpansions()[m_bcRegion]->GetExp(e)->GetTotPoints();
         int id1  = m_fields[0]->
-            GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
+            GetBndCondExpansions()[m_bcRegion]->GetPhys_Offset(e);
 
         // For 3DHomogenoeus1D
         if (m_expdim == 2 &&  m_homo1D)
         {
-            int cnt_plane = cnt/n_planes;
+            int m_offset_plane = m_offset/n_planes;
             int e_plane;
             int e_max_plane = e_max/n_planes;
             int nTracePts_plane = m_fields[0]->GetTrace()->GetNpoints();
@@ -110,21 +109,21 @@ void RinglebFlowBC::v_Apply(
             id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
                 m_fields[0]->GetTraceMap()->
                 GetBndCondCoeffsToGlobalCoeffsMap(
-                    cnt_plane + e_plane));
+                    m_offset_plane + e_plane));
             id2 = id2_plane + planeID*nTracePts_plane;
         }
         else // For general case
         {
             id2 = m_fields[0]->
                 GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                GetBndCondTraceToGlobalTraceMap(cnt+e));
+                GetBndCondTraceToGlobalTraceMap(m_offset+e));
         }
 
         Array<OneD,NekDouble> x0(npoints, 0.0);
         Array<OneD,NekDouble> x1(npoints, 0.0);
         Array<OneD,NekDouble> x2(npoints, 0.0);
 
-        m_fields[0]->GetBndCondExpansions()[bcRegion]->
+        m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
         GetExp(e)->GetCoords(x0, x1, x2);
 
         // Flow parameters
@@ -263,7 +262,7 @@ void RinglebFlowBC::v_Apply(
         for (int i = 0; i < nvariables; ++i)
         {
             Vmath::Vcopy(npoints, &Fwd[i][id2], 1, 
-                         &(m_fields[i]->GetBndCondExpansions()[bcRegion]->
+                         &(m_fields[i]->GetBndCondExpansions()[m_bcRegion]->
                          UpdatePhys())[id1],1);
         }
     }

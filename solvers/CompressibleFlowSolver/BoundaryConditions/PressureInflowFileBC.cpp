@@ -49,28 +49,27 @@ PressureInflowFileBC::PressureInflowFileBC(const LibUtilities::SessionReaderShar
            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
            const Array<OneD, Array<OneD, NekDouble> >& pTraceNormals,
            const int pSpaceDim,
-           const int bcRegion)
-    : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion)
+           const int bcRegion,
+           const int cnt)
+    : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
     int nvariables = m_fields.num_elements();
     // Loop over Boundary Regions for PressureInflowFileBC
     m_fieldStorage = Array<OneD, Array<OneD, NekDouble> > (nvariables);
 
     int numBCPts = m_fields[0]->
-        GetBndCondExpansions()[bcRegion]->GetNpoints();
+        GetBndCondExpansions()[m_bcRegion]->GetNpoints();
     for (int i = 0; i < nvariables; ++i)
     {
         m_fieldStorage[i] = Array<OneD, NekDouble>(numBCPts, 0.0);
         Vmath::Vcopy(
             numBCPts,
-            m_fields[i]->GetBndCondExpansions()[bcRegion]->GetPhys(), 1,
+            m_fields[i]->GetBndCondExpansions()[m_bcRegion]->GetPhys(), 1,
             m_fieldStorage[i], 1);
     }
 }
 
 void PressureInflowFileBC::v_Apply(
-        int                                                 bcRegion,
-        int                                                 cnt,
         Array<OneD, Array<OneD, NekDouble> >               &Fwd,
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
@@ -159,17 +158,17 @@ void PressureInflowFileBC::v_Apply(
     int e, id1, id2, npts, pnt;
     NekDouble rhoeb;
 
-    // Loop on the bcRegions
-    for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
+    // Loop on the m_bcRegions
+    for (e = 0; e < m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
          GetExpSize(); ++e)
     {
-        npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+        npts = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
         GetExp(e)->GetTotPoints();
-        id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+        id1 = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
         GetPhys_Offset(e);
-        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
+        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[m_offset+e]);
 
-        // Loop on points of bcRegion 'e'
+        // Loop on points of m_bcRegion 'e'
         for (i = 0; i < npts; i++)
         {
             pnt = id2+i;
@@ -180,7 +179,7 @@ void PressureInflowFileBC::v_Apply(
                 // Partial extrapolation for subsonic cases
                 for (j = 0; j < nVariables-1; ++j)
                 {
-                    (m_fields[j]->GetBndCondExpansions()[bcRegion]->
+                    (m_fields[j]->GetBndCondExpansions()[m_bcRegion]->
                      UpdatePhys())[id1+i] = m_fieldStorage[j][id1+i];
                 }
 
@@ -194,7 +193,7 @@ void PressureInflowFileBC::v_Apply(
                 }
                 rhoeb = gammaMinusOneInv * pressure[pnt] + Ek;
 
-                (m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->
+                (m_fields[nVariables-1]->GetBndCondExpansions()[m_bcRegion]->
                  UpdatePhys())[id1+i] = rhoeb;
             }
             // Supersonic flows
@@ -203,7 +202,7 @@ void PressureInflowFileBC::v_Apply(
                 for (j = 0; j < nVariables; ++j)
                 {
                     // Extrapolation for supersonic cases
-                    (m_fields[j]->GetBndCondExpansions()[bcRegion]->
+                    (m_fields[j]->GetBndCondExpansions()[m_bcRegion]->
                      UpdatePhys())[id1+i] = Fwd[j][pnt];
                 }
             }

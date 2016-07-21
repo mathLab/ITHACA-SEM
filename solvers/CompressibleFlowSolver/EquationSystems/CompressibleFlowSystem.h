@@ -37,6 +37,7 @@
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_COMPRESSIBLEFLOWSYSTEM_H
 
 #include <CompressibleFlowSolver/Misc/VariableConverter.h>
+#include <CompressibleFlowSolver/BoundaryConditions/CFSBndCond.h>
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/AdvectionSystem.h>
@@ -83,6 +84,9 @@ namespace Nektar
 
         // Auxiliary object to convert variables
         VariableConverterSharedPtr          m_varConv;
+
+        // User defined boundary conditions
+        std::vector<CFSBndCondSharedPtr>    m_bndConds;
 
         // L2 error file
         std::ofstream m_errFile;
@@ -143,17 +147,6 @@ namespace Nektar
         void SetBoundaryConditions(
             Array<OneD, Array<OneD, NekDouble> >             &physarray,
             NekDouble                                         time);
-
-        virtual void v_SetBoundaryConditions(
-            Array<OneD, Array<OneD, NekDouble> >             &physarray,
-            NekDouble                                         time);
-
-        void SetCommonBC(const std::string &userDefStr,
-                         const int n,
-                         const NekDouble time,
-                         int &cnt,
-                         Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                         Array<OneD, Array<OneD, NekDouble> > &inarray);
 
         void GetStdVelocity(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,

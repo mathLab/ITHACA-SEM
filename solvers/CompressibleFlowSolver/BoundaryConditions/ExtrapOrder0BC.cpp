@@ -49,14 +49,13 @@ ExtrapOrder0BC::ExtrapOrder0BC(const LibUtilities::SessionReaderSharedPtr& pSess
            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
            const Array<OneD, Array<OneD, NekDouble> >& pTraceNormals,
            const int pSpaceDim,
-           const int bcRegion)
-    : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion)
+           const int bcRegion,
+           const int cnt)
+    : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
 }
 
 void ExtrapOrder0BC::v_Apply(
-        int                                                 bcRegion,
-        int                                                 cnt,
         Array<OneD, Array<OneD, NekDouble> >               &Fwd,
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
@@ -72,35 +71,35 @@ void ExtrapOrder0BC::v_Apply(
 
     int eMax;
 
-    eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+    eMax = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->GetExpSize();
 
-    // Loop on bcRegions
+    // Loop on m_bcRegions
     for (e = 0; e < eMax; ++e)
     {
-        nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+        nBCEdgePts = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
             GetExp(e)->GetTotPoints();
-        id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+        id1 = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
             GetPhys_Offset(e) ;
-        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
+        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[m_offset+e]);
 
-        // Loop on points of bcRegion 'e'
+        // Loop on points of m_bcRegion 'e'
         for (i = 0; i < nBCEdgePts; i++)
         {
             pnt = id2+i;
 
             // Setting up bcs for density
-            (m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            (m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
                 UpdatePhys())[id1+i] = Fwd[0][pnt];
 
             // Setting up bcs for velocities
             for (j = 1; j <=nDimensions; ++j)
             {
-                (m_fields[j]->GetBndCondExpansions()[bcRegion]->
+                (m_fields[j]->GetBndCondExpansions()[m_bcRegion]->
                  UpdatePhys())[id1+i] = Fwd[j][pnt];
             }
 
             // Setting up bcs for energy
-            (m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->
+            (m_fields[nVariables-1]->GetBndCondExpansions()[m_bcRegion]->
                 UpdatePhys())[id1+i] = Fwd[nVariables-1][pnt];
         }
     }

@@ -50,14 +50,13 @@ RiemannInvariantBC::RiemannInvariantBC(
            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
            const Array<OneD, Array<OneD, NekDouble> >& pTraceNormals,
            const int pSpaceDim,
-           const int bcRegion)
-    : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion)
+           const int bcRegion,
+           const int cnt)
+    : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
 }
 
 void RiemannInvariantBC::v_Apply(
-        int                                                 bcRegion,
-        int                                                 cnt,
         Array<OneD, Array<OneD, NekDouble> >               &Fwd,
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
@@ -148,19 +147,19 @@ void RiemannInvariantBC::v_Apply(
     Array<OneD, NekDouble> rhoVelBC(nDimensions, 0.0);
     NekDouble rhoBC, EBC, cBC, sBC, pBC;
 
-    eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+    eMax = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->GetExpSize();
 
-    // Loop on bcRegions
+    // Loop on m_bcRegions
     for (e = 0; e < eMax; ++e)
     {
-        nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+        nBCEdgePts = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
             GetExp(e)->GetTotPoints();
 
-        id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+        id1 = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
             GetPhys_Offset(e);
-        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
+        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[m_offset+e]);
 
-        // Loop on the points of the bcRegion
+        // Loop on the points of the m_bcRegion
         for (i = 0; i < nBCEdgePts; i++)
         {
             pnt = id2+i;
@@ -215,14 +214,14 @@ void RiemannInvariantBC::v_Apply(
                 EBC = pBC * gammaMinusOneInv + EkBC;
 
                 // Imposing Riemann Invariant boundary conditions
-                (m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                (m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
                  UpdatePhys())[id1+i] = rhoBC;
                 for (j = 0; j < nDimensions; ++j)
                 {
-                    (m_fields[j+1]->GetBndCondExpansions()[bcRegion]->
+                    (m_fields[j+1]->GetBndCondExpansions()[m_bcRegion]->
                      UpdatePhys())[id1+i] = rhoVelBC[j];
                 }
-                (m_fields[nDimensions+1]->GetBndCondExpansions()[bcRegion]->
+                (m_fields[nDimensions+1]->GetBndCondExpansions()[m_bcRegion]->
                  UpdatePhys())[id1+i] = EBC;
 
             }
@@ -276,14 +275,14 @@ void RiemannInvariantBC::v_Apply(
                 EBC = pBC * gammaMinusOneInv + EkBC;
 
                 // Imposing Riemann Invariant boundary conditions
-                (m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                (m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
                  UpdatePhys())[id1+i] = rhoBC;
                 for (j = 0; j < nDimensions; ++j)
                 {
-                    (m_fields[j+1]->GetBndCondExpansions()[bcRegion]->
+                    (m_fields[j+1]->GetBndCondExpansions()[m_bcRegion]->
                      UpdatePhys())[id1+i] = rhoVelBC[j];
                 }
-                (m_fields[nDimensions+1]->GetBndCondExpansions()[bcRegion]->
+                (m_fields[nDimensions+1]->GetBndCondExpansions()[m_bcRegion]->
                  UpdatePhys())[id1+i] = EBC;
             }
         }

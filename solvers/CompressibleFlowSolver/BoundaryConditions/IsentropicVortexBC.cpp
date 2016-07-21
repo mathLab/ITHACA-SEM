@@ -49,14 +49,13 @@ IsentropicVortexBC::IsentropicVortexBC(const LibUtilities::SessionReaderSharedPt
            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
            const Array<OneD, Array<OneD, NekDouble> >& pTraceNormals,
            const int pSpaceDim,
-           const int bcRegion)
-    : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion)
+           const int bcRegion,
+           const int cnt)
+    : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
 }
 
 void IsentropicVortexBC::v_Apply(
-        int                                                 bcRegion,
-        int                                                 cnt,
         Array<OneD, Array<OneD, NekDouble> >               &Fwd,
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
@@ -67,21 +66,21 @@ void IsentropicVortexBC::v_Apply(
     // loop over Boundary Regions
     int npoints, id1, id2, e_max;
 
-    e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+    e_max = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->GetExpSize();
 
     for(int e = 0; e < e_max; ++e)
     {
         npoints = m_fields[0]->
-            GetBndCondExpansions()[bcRegion]->GetExp(e)->GetTotPoints();
+            GetBndCondExpansions()[m_bcRegion]->GetExp(e)->GetTotPoints();
         id1  = m_fields[0]->
-            GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
-        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(bndTraceMap[cnt+e]);
+            GetBndCondExpansions()[m_bcRegion]->GetPhys_Offset(e);
+        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(bndTraceMap[m_offset+e]);
 
         Array<OneD,NekDouble> x(npoints, 0.0);
         Array<OneD,NekDouble> y(npoints, 0.0);
         Array<OneD,NekDouble> z(npoints, 0.0);
 
-        m_fields[0]->GetBndCondExpansions()[bcRegion]->
+        m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
         GetExp(e)->GetCoords(x, y, z);
 
         EvaluateIsentropicVortex(x, y, z, Fwd, time, id2);
@@ -89,7 +88,7 @@ void IsentropicVortexBC::v_Apply(
         for (int i = 0; i < nvariables; ++i)
         {
             Vmath::Vcopy(npoints, &Fwd[i][id2], 1, 
-                         &(m_fields[i]->GetBndCondExpansions()[bcRegion]->
+                         &(m_fields[i]->GetBndCondExpansions()[m_bcRegion]->
                          UpdatePhys())[id1], 1);
         }
     }

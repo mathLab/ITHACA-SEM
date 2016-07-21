@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
-#include <CompressibleFlowSolver/BoundaryConditions/CFSBndCond.h>
 #include <LocalRegions/TriExp.h>
 #include <MultiRegions/ExpList.h>
 
@@ -82,6 +81,26 @@ namespace Nektar
         // Forcing terms for the sponge region
         m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
                                                m_fields.num_elements());
+
+        // User-defined boundary conditions
+        int cnt = 0;
+        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+        {
+            std::string type = 
+                    m_fields[0]->GetBndConditions()[n]->GetUserDefined();
+            if(!type.empty())
+            {
+                m_bndConds.push_back(GetCFSBndCondFactory().CreateInstance(
+                        type,
+                        m_session,
+                        m_fields,
+                        m_traceNormals,
+                        m_spacedim,
+                        n,
+                        cnt));
+            }
+            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
+        }
 
         if (m_explicitAdvection)
         {
@@ -319,56 +338,24 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >             &physarray,
             NekDouble                                         time)
     {
-        v_SetBoundaryConditions(physarray, time);
-    }
-
-    void CompressibleFlowSystem::v_SetBoundaryConditions(
-            Array<OneD, Array<OneD, NekDouble> >             &physarray,
-            NekDouble                                         time)
-    {
-        int cnt        = 0;
-        int nTracePts  = GetTraceTotPoints();
-        int nvariables = physarray.num_elements();
-
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        for (int i = 0; i < nvariables; ++i)
+        if (m_bndConds.size())
         {
-            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-        }
+            int nTracePts  = GetTraceTotPoints();
+            int nvariables = physarray.num_elements();
 
-        // loop over Boundary Regions
-        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-        {
-            std::string type = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
-            SetCommonBC(type, n, time, cnt, Fwd, physarray);
-            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
-        }
-    }
+            Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+            for (int i = 0; i < nvariables; ++i)
+            {
+                Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+                m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+            }
 
-    /**
-     * @brief Set boundary conditions which can be: 
-     * a) Wall and Symmerty BCs implemented at CompressibleFlowSystem level
-     *          since they are compressible solver specific;
-     * b) Time dependent BCs.
-     * 
-     * @param inarray: fields array.
-     * @param time:    time.
-     */
-    void CompressibleFlowSystem::SetCommonBC(
-                      const std::string &userDefStr,
-                      const int n,
-                      const NekDouble time,
-                      int &cnt,
-                      Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                      Array<OneD, Array<OneD, NekDouble> > &inarray)
-    {
-        if(!userDefStr.empty())
-        {
-            CFSBndCondSharedPtr bndCond;
-            bndCond = GetCFSBndCondFactory().CreateInstance(userDefStr,
-                        m_session, m_fields, m_traceNormals, m_spacedim, n);
-            bndCond->Apply(n, cnt, Fwd, inarray, time);
+            // Loop over user-defined boundary conditions
+            std::vector<CFSBndCondSharedPtr>::iterator x;
+            for (x = m_bndConds.begin(); x != m_bndConds.end(); ++x)
+            {
+                (*x)->Apply(Fwd, physarray, time);
+            }
         }
     }
 

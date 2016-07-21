@@ -56,11 +56,11 @@ class RinglebFlowBC : public CFSBndCond
                 const LibUtilities::SessionReaderSharedPtr& pSession,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                 const Array<OneD, Array<OneD, NekDouble> >& pTraceNormals,
-                const int pSpaceDim, const int bcRegion)
+                const int pSpaceDim, const int bcRegion, const int cnt)
         {
             CFSBndCondSharedPtr p = MemoryManager<RinglebFlowBC>::
                                     AllocateSharedPtr(pSession, pFields,
-                                            pTraceNormals, pSpaceDim, bcRegion);
+                                    pTraceNormals, pSpaceDim, bcRegion, cnt);
             return p;
         }
 
@@ -70,8 +70,6 @@ class RinglebFlowBC : public CFSBndCond
     protected:
 
         virtual void v_Apply(
-            int                                                 bcRegion,
-            int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time);
@@ -81,7 +79,8 @@ class RinglebFlowBC : public CFSBndCond
                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                const Array<OneD, Array<OneD, NekDouble> >& pTraceNormals,
                const int pSpaceDim,
-               const int bcRegion);
+               const int bcRegion,
+               const int cnt);
         
         virtual ~RinglebFlowBC(void){};
 

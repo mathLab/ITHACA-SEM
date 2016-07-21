@@ -52,11 +52,14 @@ CFSBndCond::CFSBndCond(const LibUtilities::SessionReaderSharedPtr& pSession,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                 const Array<OneD, Array<OneD, NekDouble> >&       pTraceNormals,
                 const int pSpaceDim,
-           const int bcRegion)
+                const int bcRegion,
+                const int cnt)
         : m_session(pSession),
         m_fields(pFields),
         m_traceNormals(pTraceNormals),
-        m_spacedim(pSpaceDim)
+        m_spacedim(pSpaceDim),
+        m_bcRegion(bcRegion),
+        m_offset(cnt)
 {
     m_velInf = Array<OneD, NekDouble> (m_spacedim, 0.0);
     m_session->LoadParameter("Gamma", m_gamma, 1.4);
@@ -75,13 +78,11 @@ CFSBndCond::CFSBndCond(const LibUtilities::SessionReaderSharedPtr& pSession,
  * @param   time
  */
 void CFSBndCond::Apply(
-            int                                                 bcRegion,
-            int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time)
 {
-    v_Apply(bcRegion, cnt, Fwd, physarray, time);
+    v_Apply(Fwd, physarray, time);
 }
 
 }

@@ -122,9 +122,7 @@ namespace Nektar
                                                     numericalFluxO1(m_spaceDim);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
                                                     derivativesO1(m_spaceDim);
-            
-            Array<OneD, Array<OneD, NekDouble> > fluxvector(m_spaceDim);
-            
+
             for (j = 0; j < m_spaceDim; ++j)
             {
                 numericalFluxO1[j] = Array<OneD, Array<OneD, NekDouble> >(
@@ -227,8 +225,7 @@ namespace Nektar
             int nDim       = fields[0]->GetCoordim(0);
             
             Array<OneD, NekDouble > Vn      (nTracePts, 0.0);
-            Array<OneD, NekDouble > fluxtemp(nTracePts, 0.0);
-       
+
             // Get the normal velocity Vn
             for(i = 0; i < nDim; ++i)
             {

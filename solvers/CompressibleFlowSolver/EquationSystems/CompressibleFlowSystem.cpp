@@ -29,20 +29,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Auxiliary functions for the compressible flow system
+// Description: Compressible flow system base class with auxiliary functions
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <iostream>
-#include <iomanip>
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 #include <CompressibleFlowSolver/BoundaryConditions/CFSBndCond.h>
 #include <LocalRegions/TriExp.h>
-#include <LocalRegions/QuadExp.h>
-#include <LocalRegions/HexExp.h>
 #include <MultiRegions/ExpList.h>
-#include <LibUtilities/Foundations/InterpCoeff.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+
 
 using namespace std;
 

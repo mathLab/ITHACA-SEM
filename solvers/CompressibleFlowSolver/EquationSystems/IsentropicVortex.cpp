@@ -33,11 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <iomanip>
-#include <boost/algorithm/string.hpp>
-
-#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <CompressibleFlowSolver/EquationSystems/IsentropicVortex.h>
 
 using namespace std;

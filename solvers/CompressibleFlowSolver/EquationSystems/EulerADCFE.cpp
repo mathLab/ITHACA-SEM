@@ -35,7 +35,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/EquationSystems/EulerADCFE.h>
-#include <boost/algorithm/string.hpp>
 
 using namespace std;
 

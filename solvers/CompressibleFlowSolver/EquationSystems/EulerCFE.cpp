@@ -34,11 +34,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <iomanip>
-#include <boost/algorithm/string.hpp>
-
-#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <CompressibleFlowSolver/EquationSystems/EulerCFE.h>
 
 using namespace std;

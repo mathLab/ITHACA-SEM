@@ -42,8 +42,6 @@
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 #include <SolverUtils/Forcing/Forcing.h>
-#include <StdRegions/StdQuadExp.h>
-#include <StdRegions/StdHexExp.h>
 
 namespace Nektar
 {

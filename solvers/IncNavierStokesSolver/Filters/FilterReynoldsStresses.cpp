@@ -67,7 +67,7 @@ std::string FilterReynoldsStresses::className =
 FilterReynoldsStresses::FilterReynoldsStresses(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const std::map<std::string, std::string> &pParams)
-    : FilterSampler(pSession, pParams)
+    : FilterFieldConvert(pSession, pParams)
 {
     ParamMap::const_iterator it;
 
@@ -139,6 +139,29 @@ void FilterReynoldsStresses::v_Initialise(
     int nExtraFields = dim == 2 ? 3 : 6;
     int origFields   = pFields.num_elements();
 
+    // Allocate storage
+    m_fields.resize(origFields + nExtraFields);
+    m_delta.resize(dim);
+
+    for (int n = 0; n < m_fields.size(); ++n)
+    {
+        m_fields[n] = Array<OneD, NekDouble>(pFields[0]->GetTotPoints(), 0.0);
+    }
+    for (int n = 0; n < m_delta.size(); ++n)
+    {
+        m_delta[n] = Array<OneD, NekDouble>(pFields[0]->GetTotPoints(), 0.0);
+    }
+
+    // Initialise output arrays
+    FilterFieldConvert::v_Initialise(pFields, time);
+}
+
+void FilterReynoldsStresses::v_FillVariablesName(
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
+{
+    int dim          = pFields.num_elements() - 1;
+    int origFields   = pFields.num_elements();
+
     // Fill name of variables
     for (int n = 0; n < origFields; ++n)
     {
@@ -163,22 +186,6 @@ void FilterReynoldsStresses::v_Initialise(
     {
         ASSERTL0(false, "Unsupported dimension");
     }
-
-    // Allocate storage
-    m_fields.resize(origFields + nExtraFields);
-    m_delta.resize(dim);
-
-    for (int n = 0; n < m_fields.size(); ++n)
-    {
-        m_fields[n] = Array<OneD, NekDouble>(pFields[0]->GetTotPoints(), 0.0);
-    }
-    for (int n = 0; n < m_delta.size(); ++n)
-    {
-        m_delta[n] = Array<OneD, NekDouble>(pFields[0]->GetTotPoints(), 0.0);
-    }
-
-    // Initialise output arrays
-    FilterSampler::v_Initialise(pFields, time);
 }
 
 void FilterReynoldsStresses::v_ProcessSample(
@@ -268,6 +275,9 @@ void FilterReynoldsStresses::v_PrepareOutput(
 {
     int dim = pFields.num_elements() - 1;
 
+    m_fieldMetaData["NumberOfFieldDumps"] =
+        boost::lexical_cast<std::string>(m_numSamples);
+
     if (m_movAvg)
     {
         m_scale = 1.0;
@@ -294,9 +304,5 @@ void FilterReynoldsStresses::v_PrepareOutput(
     pFields[0]->SetWaveSpace(waveSpace);
 }
 
-bool FilterReynoldsStresses::v_IsTimeDependent()
-{
-    return true;
-}
 }
 }

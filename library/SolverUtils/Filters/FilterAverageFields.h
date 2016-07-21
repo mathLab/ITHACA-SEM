@@ -36,13 +36,13 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERAVERAGEFIELDS_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERAVERAGEFIELDS_H
 
-#include <SolverUtils/Filters/FilterSampler.h>
+#include <SolverUtils/Filters/FilterFieldConvert.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterAverageFields : public FilterSampler
+class FilterAverageFields : public FilterFieldConvert
 {
 public:
     friend class MemoryManager<FilterAverageFields>;
@@ -66,10 +66,6 @@ public:
     SOLVER_UTILS_EXPORT virtual ~FilterAverageFields();
 
 protected:
-    virtual void v_Initialise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
-    virtual bool v_IsTimeDependent();
     virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);

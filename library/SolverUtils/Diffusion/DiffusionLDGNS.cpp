@@ -106,7 +106,9 @@ namespace Nektar
             const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                  Array<OneD, Array<OneD, NekDouble> >        &outarray)
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
             int i, j;
             int nDim      = fields[0]->GetCoordim(0);
@@ -139,7 +141,7 @@ namespace Nektar
             }
             
             // Compute the numerical fluxes for the first order derivatives
-            v_NumericalFluxO1(fields, inarray, numericalFluxO1);
+            v_NumericalFluxO1(fields, inarray, numericalFluxO1, pFwd, pBwd);
 
             for (j = 0; j < nDim; ++j)
             {
@@ -217,7 +219,9 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr>        &fields,
             const Array<OneD, Array<OneD, NekDouble> >               &inarray,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                                                            &numericalFluxO1)
+                                                            &numericalFluxO1,
+            const Array<OneD, Array<OneD, NekDouble> >               &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >               &pBwd)
         {
             int i, j;
             int nTracePts  = fields[0]->GetTrace()->GetTotPoints();
@@ -234,17 +238,26 @@ namespace Nektar
             }
 
             // Store forwards/backwards space along trace space
-            Array<OneD, Array<OneD, NekDouble> > Fwd    (nScalars);
-            Array<OneD, Array<OneD, NekDouble> > Bwd    (nScalars);
+            Array<OneD, NekDouble> Fwd;
+            Array<OneD, NekDouble> Bwd;
             Array<OneD, Array<OneD, NekDouble> > numflux(nScalars);
-            
+
             for (i = 0; i < nScalars; ++i)
             {
-                Fwd[i]     = Array<OneD, NekDouble>(nTracePts);
-                Bwd[i]     = Array<OneD, NekDouble>(nTracePts);
+                if (pFwd == NullNekDoubleArrayofArray ||
+                    pBwd == NullNekDoubleArrayofArray)
+                {
+                    Fwd    = Array<OneD, NekDouble>(nTracePts);
+                    Bwd    = Array<OneD, NekDouble>(nTracePts);
+                    fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd, Bwd);
+                }
+                else
+                {
+                    Fwd    = pFwd[i];
+                    Bwd    = pBwd[i];
+                }
                 numflux[i] = Array<OneD, NekDouble>(nTracePts);
-                fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
-                fields[0]->GetTrace()->Upwind(Vn, Fwd[i], Bwd[i], numflux[i]);
+                fields[0]->GetTrace()->Upwind(Vn, Fwd, Bwd, numflux[i]);
             }
 
             // Extract internal values of the scalar variables for Neumann bcs

@@ -74,7 +74,9 @@ namespace Nektar
             const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                  Array<OneD, Array<OneD, NekDouble> >        &outarray)
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
             int nBndEdgePts, i, j, k, e;
             int nDim      = fields[0]->GetCoordim(0);
@@ -115,7 +117,7 @@ namespace Nektar
             // Compute q_{\eta} and q_{\xi}
             // Obtain numerical fluxes
 
-            v_NumFluxforScalar(fields, inarray, flux);
+            v_NumFluxforScalar(fields, inarray, flux, pFwd, pBwd);
 
             for (j = 0; j < nDim; ++j)
             {
@@ -219,7 +221,9 @@ namespace Nektar
         void DiffusionLDG::v_NumFluxforScalar(
             const Array<OneD, MultiRegions::ExpListSharedPtr>        &fields,
             const Array<OneD, Array<OneD, NekDouble> >               &ufield,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux,
+            const Array<OneD, Array<OneD, NekDouble> >               &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >               &pBwd)
         {
             int i, j;
             int nTracePts  = fields[0]->GetTrace()->GetTotPoints();
@@ -241,38 +245,45 @@ namespace Nektar
             // Get the sign of (v \cdot n), v = an arbitrary vector
             // Evaluate upwind flux:
             // uflux = \hat{u} \phi \cdot u = u^{(+,-)} n
-            for (j = 0; j < nDim; ++j)
+            for (i = 0; i < nvariables ; ++i)
             {
-                for (i = 0; i < nvariables ; ++i)
+                // Compute Fwd and Bwd value of ufield of i direction
+                if (pFwd == NullNekDoubleArrayofArray ||
+                    pBwd == NullNekDoubleArrayofArray)
                 {
-                    // Compute Fwd and Bwd value of ufield of i direction
                     fields[i]->GetFwdBwdTracePhys(ufield[i], Fwd, Bwd);
+                }
+                else
+                {
+                    Fwd = pFwd[i];
+                    Bwd = pBwd[i];
+                }
 
-                    // if Vn >= 0, flux = uFwd, i.e.,
-                    // edge::eForward, if V*n>=0 <=> V*n_F>=0, pick uflux = uFwd
-                    // edge::eBackward, if V*n>=0 <=> V*n_B<0, pick uflux = uFwd
+                // if Vn >= 0, flux = uFwd, i.e.,
+                // edge::eForward, if V*n>=0 <=> V*n_F>=0, pick uflux = uFwd
+                // edge::eBackward, if V*n>=0 <=> V*n_B<0, pick uflux = uFwd
 
-                    // else if Vn < 0, flux = uBwd, i.e.,
-                    // edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uBwd
-                    // edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uBwd
-                    
-                    fields[i]->GetTrace()->Upwind(/*m_traceNormals[j]*/Vn, 
+                // else if Vn < 0, flux = uBwd, i.e.,
+                // edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uBwd
+                // edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uBwd
+                fields[i]->GetTrace()->Upwind(/*m_traceNormals[j]*/Vn, 
                                                     Fwd, Bwd, fluxtemp);
 
-                    // Imposing weak boundary condition with flux
-                    // if Vn >= 0, uflux = uBwd at Neumann, i.e.,
-                    // edge::eForward, if V*n>=0 <=> V*n_F>=0, pick uflux = uBwd
-                    // edge::eBackward, if V*n>=0 <=> V*n_B<0, pick uflux = uBwd
+                // Imposing weak boundary condition with flux
+                // if Vn >= 0, uflux = uBwd at Neumann, i.e.,
+                // edge::eForward, if V*n>=0 <=> V*n_F>=0, pick uflux = uBwd
+                // edge::eBackward, if V*n>=0 <=> V*n_B<0, pick uflux = uBwd
 
-                    // if Vn >= 0, uflux = uFwd at Neumann, i.e.,
-                    // edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uFwd
-                    // edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uFwd
+                // if Vn >= 0, uflux = uFwd at Neumann, i.e.,
+                // edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uFwd
+                // edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uFwd
+                if(fields[0]->GetBndCondExpansions().num_elements())
+                {
+                    v_WeakPenaltyforScalar(fields, i, ufield[i], fluxtemp);
+                }
 
-                    if(fields[0]->GetBndCondExpansions().num_elements())
-                    {
-                        v_WeakPenaltyforScalar(fields, i, ufield[i], fluxtemp);
-                    }
-
+                for (j = 0; j < nDim; ++j)
+                {
                     // if Vn >= 0, flux = uFwd*(tan_{\xi}^- \cdot \vec{n}), 
                     // i.e,
                     // edge::eForward, uFwd \(\tan_{\xi}^Fwd \cdot \vec{n})

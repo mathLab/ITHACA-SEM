@@ -14,6 +14,8 @@ v4.4.0
   (!656)
 - Sped up interpolataion from pts files and fixed parallel pts import (!584)
 - Increased required boost version to 1.56.0 (!584)
+- New FieldUtils library allows support for most `FieldConvert` post-processing
+  operations during simulation using a new filter (!589)
 
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
@@ -22,6 +24,8 @@ v4.4.0
 - Modify curve module to allow for spline input (!628)
 
 **FieldConvert:**
+- Move all modules to a new library, FieldUtils, to support post-processing
+  during simulations (!589)
 - Add module to stretch homogeneous direction (!609)
 
 v4.3.3

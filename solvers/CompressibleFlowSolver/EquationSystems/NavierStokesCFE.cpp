@@ -57,15 +57,20 @@ namespace Nektar
 
     void NavierStokesCFE::v_DoDiffusion(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray)
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
     {
         int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
+        int nTracePts  = GetTraceTotPoints();
 
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
 
         Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables-1);
+        Array<OneD, Array<OneD, NekDouble> > inFwd(nvariables-1);
+        Array<OneD, Array<OneD, NekDouble> > inBwd(nvariables-1);
 
         for (i = 0; i < nvariables; ++i)
         {
@@ -75,25 +80,45 @@ namespace Nektar
         for (i = 0; i < nvariables-1; ++i)
         {
             inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
+            inFwd[i]       = Array<OneD, NekDouble>(nTracePts);
+            inBwd[i]       = Array<OneD, NekDouble>(nTracePts);
         }
 
-        // Extract pressure and temperature
+        // Extract pressure
         //    (use inarrayDiff[0] as a temporary storage for the pressure)
         m_varConv->GetPressure(inarray, inarrayDiff[0]);
+
+        // Extract temperature
         m_varConv->GetTemperature(inarray, inarrayDiff[0],
                 inarrayDiff[nvariables-2]);
 
         // Extract velocities
-        for (i = 1; i < nvariables-1; ++i)
+        m_varConv->GetVelocityVector(inarray, inarrayDiff);
+
+        // Repeat calculation for trace space
+        if (pFwd == NullNekDoubleArrayofArray || 
+            pBwd == NullNekDoubleArrayofArray)
         {
-            Vmath::Vdiv(npoints,
-                        inarray[i], 1,
-                        inarray[0], 1,
-                        inarrayDiff[i-1], 1);
+            inFwd = NullNekDoubleArrayofArray;
+            inBwd = NullNekDoubleArrayofArray;
+        }
+        else
+        {
+            m_varConv->GetPressure(pFwd,    inFwd[0]);
+            m_varConv->GetPressure(pBwd,    inBwd[0]);
+
+            m_varConv->GetTemperature(pFwd,    inFwd[0],
+                inFwd[nvariables-2]);
+            m_varConv->GetTemperature(pBwd,    inBwd[0],
+                inBwd[nvariables-2]);
+
+            m_varConv->GetVelocityVector(pFwd, inFwd);
+            m_varConv->GetVelocityVector(pBwd, inBwd);
         }
 
         // Diffusion term in physical rhs form
-        m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff);
+        m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff,
+                             inFwd, inBwd);
 
         for (i = 0; i < nvariables; ++i)
         {

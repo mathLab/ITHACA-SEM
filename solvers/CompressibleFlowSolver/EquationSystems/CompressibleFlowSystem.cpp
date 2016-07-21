@@ -251,8 +251,29 @@ namespace Nektar
         int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
+        int nTracePts  = GetTraceTotPoints();
 
-        DoAdvection(inarray, outarray, time);
+        // Store forwards/backwards space along trace space
+        Array<OneD, Array<OneD, NekDouble> > Fwd    (nvariables);
+        Array<OneD, Array<OneD, NekDouble> > Bwd    (nvariables);
+
+        if (m_HomogeneousType == eHomogeneous1D)
+        {
+            Fwd = NullNekDoubleArrayofArray;
+            Bwd = NullNekDoubleArrayofArray;
+        }
+        else
+        {
+            for(i = 0; i < nvariables; ++i)
+            {
+                Fwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
+                Bwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
+                m_fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
+            }
+        }
+
+        // Calculate advection
+        DoAdvection(inarray, outarray, time, Fwd, Bwd);
 
         // Negate results
         for (i = 0; i < nvariables; ++i)
@@ -260,7 +281,8 @@ namespace Nektar
             Vmath::Neg(npoints, outarray[i], 1);
         }
 
-        DoDiffusion(inarray, outarray);
+        // Add diffusion terms
+        DoDiffusion(inarray, outarray, Fwd, Bwd);
 
         // Add forcing terms
         std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
@@ -315,13 +337,15 @@ namespace Nektar
     void CompressibleFlowSystem::DoAdvection(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time)
+        const NekDouble                                   time,
+        const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
     {
         int nvariables = inarray.num_elements();
         Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
 
         m_advection->Advect(nvariables, m_fields, advVel, inarray,
-                            outarray, time);
+                            outarray, time, pFwd, pBwd);
     }
 
     /**
@@ -329,9 +353,11 @@ namespace Nektar
      */
     void CompressibleFlowSystem::DoDiffusion(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray)
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
     {
-        v_DoDiffusion(inarray, outarray);
+        v_DoDiffusion(inarray, outarray, pFwd, pBwd);
     }
 
     void CompressibleFlowSystem::SetBoundaryConditions(

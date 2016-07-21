@@ -138,6 +138,7 @@ namespace Nektar
                 {
                     Fwd[i]     = pFwd[i];
                     Bwd[i]     = pBwd[i];
+                    numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
                 }
             }
 

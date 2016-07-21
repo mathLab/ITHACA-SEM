@@ -78,6 +78,40 @@ namespace Nektar
             m_vecLocs[0][i] = 1 + i;
         }
 
+        // Loading parameters from session file
+        InitialiseParameters();
+
+        // Setting up advection and diffusion operators
+        InitAdvectionDiffusion();
+
+        // Forcing terms for the sponge region
+        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
+                                               m_fields.num_elements());
+
+        if (m_explicitAdvection)
+        {
+            m_ode.DefineOdeRhs    (&CompressibleFlowSystem::DoOdeRhs, this);
+            m_ode.DefineProjection(&CompressibleFlowSystem::DoOdeProjection, this);
+        }
+        else
+        {
+            ASSERTL0(false, "Implicit CFS not set up.");
+        }
+    }
+
+    /**
+     * @brief Destructor for CompressibleFlowSystem class.
+     */
+    CompressibleFlowSystem::~CompressibleFlowSystem()
+    {
+
+    }
+
+    /**
+     * @brief Load CFS parameters from the session file
+     */
+    void CompressibleFlowSystem::InitialiseParameters()
+    {
         // Get gamma parameter from session file.
         m_session->LoadParameter("Gamma", m_gamma, 1.4);
 
@@ -121,109 +155,75 @@ namespace Nektar
         m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
 
         m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 0.0);
-
-        // Forcing terms for the sponge region
-        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
-                                               m_fields.num_elements());
-
-        // Type of advection class to be used
-        switch(m_projectionType)
-        {
-            // Continuous field
-            case MultiRegions::eGalerkin:
-            {
-                ASSERTL0(false, "Continuous field not supported.");
-                break;
-            }
-            // Discontinuous field
-            case MultiRegions::eDiscontinuous:
-            {
-                string advName, diffName, riemName;
-
-                // Setting up advection and diffusion operators
-                m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
-                m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-
-                m_advection = SolverUtils::GetAdvectionFactory()
-                                            .CreateInstance(advName, advName);
-                m_diffusion = SolverUtils::GetDiffusionFactory()
-                                            .CreateInstance(diffName, diffName);
-
-                if (m_specHP_dealiasing)
-                {
-                    m_advection->SetFluxVector(&CompressibleFlowSystem::
-                                               GetFluxVectorDeAlias, this);
-                    m_diffusion->SetFluxVectorNS(
-                        &CompressibleFlowSystem::GetViscousFluxVectorDeAlias,
-                        this);
-                }
-                else
-                {
-                    m_advection->SetFluxVector  (&CompressibleFlowSystem::
-                                                  GetFluxVector, this);
-                    m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
-                                                  GetViscousFluxVector, this);
-                }
-
-                // Setting up Riemann solver for advection operator
-                m_session->LoadSolverInfo("UpwindType", riemName, "Average");
-
-                SolverUtils::RiemannSolverSharedPtr riemannSolver;
-                riemannSolver = SolverUtils::GetRiemannSolverFactory()
-                                            .CreateInstance(riemName);
-
-                // Setting up upwind solver for diffusion operator
-                SolverUtils::RiemannSolverSharedPtr riemannSolverLDG;
-                riemannSolverLDG = SolverUtils::GetRiemannSolverFactory()
-                                                .CreateInstance("UpwindLDG");
-
-                // Setting up parameters for advection operator Riemann solver
-                riemannSolver->SetParam (
-                    "gamma",   &CompressibleFlowSystem::GetGamma,   this);
-                riemannSolver->SetAuxVec(
-                    "vecLocs", &CompressibleFlowSystem::GetVecLocs, this);
-                riemannSolver->SetVector(
-                    "N",       &CompressibleFlowSystem::GetNormals, this);
-
-                // Setting up parameters for diffusion operator Riemann solver
-                riemannSolverLDG->SetParam (
-                    "gamma",   &CompressibleFlowSystem::GetGamma,   this);
-                riemannSolverLDG->SetVector(
-                    "vecLocs", &CompressibleFlowSystem::GetVecLocs, this);
-                riemannSolverLDG->SetVector(
-                    "N",       &CompressibleFlowSystem::GetNormals, this);
-
-                // Concluding initialisation of advection / diffusion operators
-                m_advection->SetRiemannSolver   (riemannSolver);
-                m_diffusion->SetRiemannSolver   (riemannSolverLDG);
-                m_advection->InitObject         (m_session, m_fields);
-                m_diffusion->InitObject         (m_session, m_fields);
-                break;
-            }
-            default:
-            {
-                ASSERTL0(false, "Unsupported projection type.");
-                break;
-            }
-        }
-
-        if (m_explicitAdvection)
-        {
-            m_ode.DefineOdeRhs    (&CompressibleFlowSystem::DoOdeRhs, this);
-            m_ode.DefineProjection(&CompressibleFlowSystem::DoOdeProjection, this);
-        }
-        else
-        {
-            ASSERTL0(false, "Implicit CFS not set up.");
-        }
     }
 
     /**
-     * @brief Destructor for CompressibleFlowSystem class.
+     * @brief Create advection and diffusion objects for CFS
      */
-    CompressibleFlowSystem::~CompressibleFlowSystem()
+    void CompressibleFlowSystem::InitAdvectionDiffusion()
     {
+        // Check if projection type is correct
+        ASSERTL0(m_projectionType == MultiRegions::eDiscontinuous,
+                "Unsupported projection type.");
 
+        string advName, diffName, riemName;
+        m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
+        m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
+
+        m_advection = SolverUtils::GetAdvectionFactory()
+                                    .CreateInstance(advName, advName);
+        m_diffusion = SolverUtils::GetDiffusionFactory()
+                                    .CreateInstance(diffName, diffName);
+
+        if (m_specHP_dealiasing)
+        {
+            m_advection->SetFluxVector(&CompressibleFlowSystem::
+                                       GetFluxVectorDeAlias, this);
+            m_diffusion->SetFluxVectorNS(
+                &CompressibleFlowSystem::GetViscousFluxVectorDeAlias,
+                this);
+        }
+        else
+        {
+            m_advection->SetFluxVector  (&CompressibleFlowSystem::
+                                          GetFluxVector, this);
+            m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
+                                          GetViscousFluxVector, this);
+        }
+
+        // Setting up Riemann solver for advection operator
+        m_session->LoadSolverInfo("UpwindType", riemName, "Average");
+
+        SolverUtils::RiemannSolverSharedPtr riemannSolver;
+        riemannSolver = SolverUtils::GetRiemannSolverFactory()
+                                    .CreateInstance(riemName);
+
+        // Setting up upwind solver for diffusion operator
+        SolverUtils::RiemannSolverSharedPtr riemannSolverLDG;
+        riemannSolverLDG = SolverUtils::GetRiemannSolverFactory()
+                                        .CreateInstance("UpwindLDG");
+
+        // Setting up parameters for advection operator Riemann solver
+        riemannSolver->SetParam (
+            "gamma",   &CompressibleFlowSystem::GetGamma,   this);
+        riemannSolver->SetAuxVec(
+            "vecLocs", &CompressibleFlowSystem::GetVecLocs, this);
+        riemannSolver->SetVector(
+            "N",       &CompressibleFlowSystem::GetNormals, this);
+
+        // Setting up parameters for diffusion operator Riemann solver
+        riemannSolverLDG->SetParam (
+            "gamma",   &CompressibleFlowSystem::GetGamma,   this);
+        riemannSolverLDG->SetVector(
+            "vecLocs", &CompressibleFlowSystem::GetVecLocs, this);
+        riemannSolverLDG->SetVector(
+            "N",       &CompressibleFlowSystem::GetNormals, this);
+
+        // Concluding initialisation of advection / diffusion operators
+        m_advection->SetRiemannSolver   (riemannSolver);
+        m_diffusion->SetRiemannSolver   (riemannSolverLDG);
+        m_advection->InitObject         (m_session, m_fields);
+        m_diffusion->InitObject         (m_session, m_fields);
     }
 
     /**

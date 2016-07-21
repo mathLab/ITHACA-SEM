@@ -103,6 +103,10 @@ namespace Nektar
 
         virtual void v_InitObject();
 
+        void InitialiseParameters();
+
+        void InitAdvectionDiffusion();
+
         void DoOdeRhs(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,

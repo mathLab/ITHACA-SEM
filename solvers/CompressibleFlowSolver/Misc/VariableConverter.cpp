@@ -270,10 +270,9 @@ namespace Nektar
         const Array<OneD, const NekDouble>               &temperature,
               Array<OneD,       NekDouble>               &entropy)
     {
-        NekDouble entropy_sum = 0.0;
+
         const int nPts = physfield[0].num_elements();
         const NekDouble temp_inf = m_pInf/(m_rhoInf*m_gasConstant);;
-        Array<OneD, NekDouble> L2entropy(nPts, 0.0);
 
         for (int i = 0; i < nPts; ++i)
         {
@@ -281,19 +280,6 @@ namespace Nektar
                             log(temperature[i]/temp_inf) - m_gasConstant *
                             log(pressure[i] / m_pInf);
         }
-
-        Vmath::Vmul(nPts, entropy, 1, entropy, 1, L2entropy, 1);
-
-        entropy_sum = Vmath::Vsum(nPts, L2entropy, 1);
-
-        entropy_sum = sqrt(entropy_sum);
-
-        std::ofstream m_file( "L2entropy.txt", std::ios_base::app);
-
-        m_file << setprecision(16) << scientific << entropy_sum << endl;
-        //m_file << Vmath::Vmax(entropy.num_elements(),entropy,1) << endl;
-
-        m_file.close();
     }
 
     void VariableConverter::GetAbsoluteVelocity(

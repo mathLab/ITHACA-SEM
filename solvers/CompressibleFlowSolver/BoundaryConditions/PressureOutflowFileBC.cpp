@@ -74,25 +74,7 @@ PressureOutflowFileBC::PressureOutflowFileBC(
 
     // Get Pressure
     m_pressureStorage = Array<OneD, NekDouble> (numBCPts, 0.0);
-    NekDouble alpha = -0.5;
-
-    // Calculate ||rho v||^2
-    for (int i = 0; i < m_spacedim; ++i)
-    {
-        Vmath::Vvtvp(numBCPts, tmpStorage[1+i], 1, tmpStorage[1+i], 1,
-                           m_pressureStorage, 1, m_pressureStorage, 1);
-    }
-    // Divide by rho to get rho*||v||^2
-    Vmath::Vdiv (numBCPts, m_pressureStorage, 1, tmpStorage[0], 1,
-                           m_pressureStorage, 1);
-    // pressure <- E - 0.5*pressure
-    Vmath::Svtvp(numBCPts, alpha,
-                 m_pressureStorage, 1,
-                 tmpStorage[m_spacedim+1], 1,
-                 m_pressureStorage, 1);
-    // Multiply by (gamma-1)
-    Vmath::Smul (numBCPts, m_gamma-1, m_pressureStorage, 1,
-                                      m_pressureStorage, 1);
+    m_varConv->GetPressure(tmpStorage, m_pressureStorage);
 }
 
 void PressureOutflowFileBC::v_Apply(
@@ -106,24 +88,10 @@ void PressureOutflowFileBC::v_Apply(
     int nDimensions = m_spacedim;
 
     const Array<OneD, const int> &traceBndMap
-    = m_fields[0]->GetTraceBndMap();
+        = m_fields[0]->GetTraceBndMap();
 
     NekDouble gammaMinusOne    = m_gamma - 1.0;
     NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
-
-    Array<OneD, NekDouble> tmp1 (nTracePts, 0.0);
-    Array<OneD, NekDouble> VnInf(nTracePts, 0.0);
-    Array<OneD, NekDouble> velInf(nDimensions, 0.0);
-
-    // Computing the normal velocity for characteristics coming
-    // from outside the computational domain
-    for( i =0; i < nDimensions; i++)
-    {
-        Vmath::Svtvp(nTracePts, m_velInf[i], 
-                     m_traceNormals[i], 1,
-                     VnInf, 1,
-                     VnInf, 1);
-    }
 
     // Computing the normal velocity for characteristics coming
     // from inside the computational domain
@@ -138,41 +106,14 @@ void PressureOutflowFileBC::v_Apply(
     // Computing the absolute value of the velocity in order to compute the
     // Mach number to decide whether supersonic or subsonic
     Array<OneD, NekDouble > absVel(nTracePts, 0.0);
-    for (i = 0; i < nDimensions; ++i)
-    {
-        Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, tmp1, 1);
-        Vmath::Vmul(nTracePts, tmp1, 1, tmp1, 1, tmp1, 1);
-        Vmath::Vadd(nTracePts, tmp1, 1, absVel, 1, absVel, 1);
-    }
-    Vmath::Vsqrt(nTracePts, absVel, 1, absVel, 1);
+    m_varConv->GetAbsoluteVelocity(Fwd, absVel);
 
     // Get speed of sound
-    Array<OneD, NekDouble > soundSpeed (nTracePts, 0.0);
-    Array<OneD, NekDouble > pressure   (nTracePts, 0.0);
+    Array<OneD, NekDouble > pressure  (nTracePts);
+    Array<OneD, NekDouble > soundSpeed(nTracePts);
 
-    for (i = 0; i < nTracePts; i++)
-    {
-        if (m_spacedim == 1)
-        {
-            pressure[i] = (gammaMinusOne) * (Fwd[2][i] -
-                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i]));
-        }
-        else if (m_spacedim == 2)
-        {
-            pressure[i] = (gammaMinusOne) * (Fwd[3][i] -
-                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
-                       Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
-        }
-        else
-        {
-            pressure[i] = (gammaMinusOne) * (Fwd[4][i] -
-                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
-                       Fwd[2][i] * Fwd[2][i] / Fwd[0][i] +
-                       Fwd[3][i] * Fwd[3][i] / Fwd[0][i]));
-        }
-
-        soundSpeed[i] = sqrt(m_gamma * pressure[i] / Fwd[0][i]);
-    }
+    m_varConv->GetPressure(Fwd, pressure);
+    m_varConv->GetSoundSpeed(Fwd, pressure, soundSpeed);
 
     // Get Mach
     Array<OneD, NekDouble > Mach(nTracePts, 0.0);

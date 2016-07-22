@@ -72,18 +72,6 @@ void PressureOutflowNonReflectiveBC::v_Apply(
     NekDouble gammaMinusOne    = m_gamma - 1.0;
     NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
 
-    Array<OneD, NekDouble> VnInf(nTracePts, 0.0);
-
-    // Computing the normal velocity for characteristics coming
-    // from outside the computational domain
-    for( i =0; i < nDimensions; i++)
-    {
-        Vmath::Svtvp(nTracePts, m_velInf[i], 
-                     m_traceNormals[i], 1,
-                     VnInf, 1,
-                     VnInf, 1);
-    }
-
     // Computing the normal velocity for characteristics coming
     // from inside the computational domain
     Array<OneD, NekDouble > Vn (nTracePts, 0.0);
@@ -96,43 +84,15 @@ void PressureOutflowNonReflectiveBC::v_Apply(
 
     // Computing the absolute value of the velocity in order to compute the
     // Mach number to decide whether supersonic or subsonic
-    Array<OneD, NekDouble> tmp (nTracePts, 0.0);
     Array<OneD, NekDouble > absVel(nTracePts, 0.0);
-    for (i = 0; i < nDimensions; ++i)
-    {
-        Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, tmp, 1);
-        Vmath::Vmul(nTracePts, tmp, 1, tmp, 1, tmp, 1);
-        Vmath::Vadd(nTracePts, tmp, 1, absVel, 1, absVel, 1);
-    }
-    Vmath::Vsqrt(nTracePts, absVel, 1, absVel, 1);
+    m_varConv->GetAbsoluteVelocity(Fwd, absVel);
 
     // Get speed of sound
-    Array<OneD, NekDouble > soundSpeed(nTracePts);
     Array<OneD, NekDouble > pressure  (nTracePts);
+    Array<OneD, NekDouble > soundSpeed(nTracePts);
 
-    for (i = 0; i < nTracePts; i++)
-    {
-        if (m_spacedim == 1)
-        {
-            pressure[i] = (gammaMinusOne) * (Fwd[2][i] -
-                                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i]));
-        }
-        else if (m_spacedim == 2)
-        {
-            pressure[i] = (gammaMinusOne) * (Fwd[3][i] -
-                                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
-                                       Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
-        }
-        else
-        {
-            pressure[i] = (gammaMinusOne) * (Fwd[4][i] -
-                                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
-                                       Fwd[2][i] * Fwd[2][i] / Fwd[0][i] +
-                                       Fwd[3][i] * Fwd[3][i] / Fwd[0][i]));
-        }
-
-        soundSpeed[i] = sqrt(m_gamma * pressure[i] / Fwd[0][i]);
-    }
+    m_varConv->GetPressure(Fwd, pressure);
+    m_varConv->GetSoundSpeed(Fwd, pressure, soundSpeed);
 
     // Get Mach
     Array<OneD, NekDouble > Mach(nTracePts, 0.0);

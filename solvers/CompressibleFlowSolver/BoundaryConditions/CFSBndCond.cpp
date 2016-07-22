@@ -74,6 +74,10 @@ CFSBndCond::CFSBndCond(const LibUtilities::SessionReaderSharedPtr& pSession,
     {
         m_session->LoadParameter("wInf", m_velInf[2], 0.1);
     }
+
+    // Create auxiliary object to convert variables
+    m_varConv = MemoryManager<VariableConverter>::AllocateSharedPtr(
+                m_session, m_spacedim);
 }
 
 /**

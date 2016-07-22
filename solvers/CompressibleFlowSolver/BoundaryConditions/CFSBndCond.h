@@ -38,6 +38,7 @@
 
 #include <string>
 
+#include <CompressibleFlowSolver/Misc/VariableConverter.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
@@ -87,6 +88,8 @@ class CFSBndCond
         Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
         /// Space dimension
         int m_spacedim;
+        /// Auxiliary object to convert variables
+        VariableConverterSharedPtr           m_varConv;
 
         /// Parameters of the flow
         NekDouble m_gamma;

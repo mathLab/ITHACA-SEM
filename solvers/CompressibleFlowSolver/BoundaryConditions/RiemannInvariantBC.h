@@ -75,6 +75,9 @@ class RiemannInvariantBC : public CFSBndCond
             Array<OneD, Array<OneD, NekDouble> >               &physarray,
             const NekDouble                                    &time);
 
+        /// Reference normal velocity
+        Array<OneD, NekDouble>               m_VnInf;
+
     private:
         RiemannInvariantBC(const LibUtilities::SessionReaderSharedPtr& pSession,
                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,

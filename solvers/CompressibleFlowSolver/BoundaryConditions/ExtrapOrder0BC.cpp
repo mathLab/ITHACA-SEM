@@ -87,12 +87,8 @@ void ExtrapOrder0BC::v_Apply(
         {
             pnt = id2+i;
 
-            // Setting up bcs for density
-            (m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
-                UpdatePhys())[id1+i] = Fwd[0][pnt];
-
-            // Setting up bcs for velocities
-            for (j = 1; j <=nDimensions; ++j)
+            // Setting up bcs for density and velocities
+            for (j = 0; j <=nDimensions; ++j)
             {
                 (m_fields[j]->GetBndCondExpansions()[m_bcRegion]->
                  UpdatePhys())[id1+i] = Fwd[j][pnt];

@@ -83,25 +83,7 @@ void WallBC::v_Apply(
         // Boundary condition for epsilon term.
         if (nVariables == m_spacedim+3)
         {
-            NekDouble factor  = 1.0;
-            NekDouble factor2 = 1.0;
-
-            Array<OneD, NekDouble > tmp2(nBCEdgePts, 0.0);
-            Vmath::Smul(nBCEdgePts,
-                        factor,
-                        &Fwd[nVariables-1][id2], 1,
-                        &tmp2[0], 1);
-
-            Vmath::Vsub(nBCEdgePts,
-                        &Fwd[nVariables-1][id2], 1,
-                        &tmp2[0], 1,
-                        &Fwd[nVariables-1][id2], 1);
-
-            Vmath::Smul(nBCEdgePts,
-                        factor2,
-                        &Fwd[nVariables-1][id2], 1,
-                        &Fwd[nVariables-1][id2], 1);
-
+            Vmath::Zero(nBCEdgePts, &Fwd[nVariables-1][id2], 1);
         }
 
         // For 2D/3D, define: v* = v - 2(v.n)n

@@ -402,6 +402,17 @@ namespace Nektar
             // qflux = \hat{q} \cdot u = q \cdot n - C_(11)*(u^+ - u^-)
             for (i = 0; i < nvariables; ++i)
             {
+                // Generate Stability term = - C11 ( u- - u+ )
+                fields[i]->GetFwdBwdTracePhys(ufield[i], Fwd, Bwd);
+
+                Vmath::Vsub(nTracePts,
+                            Fwd, 1, Bwd, 1,
+                            uterm, 1);
+
+                Vmath::Smul(nTracePts,
+                            -1.0 * C11, uterm, 1,
+                            uterm, 1);
+
                 qflux[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
                 for (j = 0; j < nDim; ++j)
                 {
@@ -428,18 +439,7 @@ namespace Nektar
                                 m_traceNormals[j], 1, 
                                 qfluxtemp, 1, 
                                 qfluxtemp, 1);
-                    
-                    // Generate Stability term = - C11 ( u- - u+ )
-                    fields[i]->GetFwdBwdTracePhys(ufield[i], Fwd, Bwd);
-                    
-                    Vmath::Vsub(nTracePts, 
-                                Fwd, 1, Bwd, 1, 
-                                uterm, 1);
-                    
-                    Vmath::Smul(nTracePts, 
-                                -1.0 * C11, uterm, 1, 
-                                uterm, 1);
-                    
+
                     // Flux = {Fwd, Bwd} * (nx, ny, nz) + uterm * (nx, ny)
                     Vmath::Vadd(nTracePts, 
                                 uterm, 1, 

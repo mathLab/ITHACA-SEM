@@ -284,7 +284,7 @@ namespace Nektar
                                 numflux[i], 1, numericalFluxO1[j][i], 1);
                 }
             }
-        }        
+        }
         
         /**
          * @brief Imposes appropriate bcs for the 1st order derivatives

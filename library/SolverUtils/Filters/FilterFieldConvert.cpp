@@ -155,7 +155,6 @@ void FilterFieldConvert::v_Initialise(
     // Fill some parameters of m_f
     m_f->m_session = m_session;
     m_f->m_graph = pFields[0]->GetGraph();
-    m_f->m_fld = LibUtilities::FieldIO::CreateDefault(pSession);
     m_f->m_comm = m_f->m_session->GetComm();
 }
 

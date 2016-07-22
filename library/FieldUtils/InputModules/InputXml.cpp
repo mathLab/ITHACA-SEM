@@ -273,8 +273,6 @@ void InputXml::Process(po::variables_map &vm)
     }
 
     m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session, rng);
-    m_f->m_fld   = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-        m_f->m_session->GetComm());
 
     if (m_f->m_verbose)
     {

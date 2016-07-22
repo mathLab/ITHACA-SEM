@@ -148,11 +148,10 @@ void OutputInfo::Process(po::variables_map &vm)
     }
 
     // Write the output file
-    LibUtilities::CommSharedPtr comm = m_fld->m_session ?
-        m_fld->m_session->GetComm() :
+    LibUtilities::CommSharedPtr c = m_f->m_session ? m_f->m_session->GetComm() :
         LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
     boost::shared_ptr<LibUtilities::FieldIOXml> fldXml =
-        boost::static_pointer_cast<FieldIOXml>(
+        boost::static_pointer_cast<LibUtilities::FieldIOXml>(
             LibUtilities::GetFieldIOFactory().CreateInstance("Xml", c, true));
     fldXml->WriteMultiFldFileIDs(filename, filenames, ElementIDs);
 }

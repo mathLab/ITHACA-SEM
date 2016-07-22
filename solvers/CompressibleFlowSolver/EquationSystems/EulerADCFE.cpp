@@ -121,29 +121,20 @@ namespace Nektar
 
             Array <OneD, NekDouble > a_vel  (npoints, 0.0);
             Array <OneD, NekDouble > u_abs  (npoints, 0.0);
-            Array <OneD, NekDouble > pres   (npoints, 0.0);
-            Array <OneD, NekDouble > wave_sp(npoints, 0.0);
+            Array <OneD, NekDouble > tmp   (npoints, 0.0);
 
-            m_varConv->GetPressure(inarray, pres);
-            m_varConv->GetSoundSpeed(inarray, pres, a_vel);
+            m_varConv->GetPressure(inarray, tmp);
+            m_varConv->GetSoundSpeed(inarray, tmp, a_vel);
             m_varConv->GetAbsoluteVelocity(inarray, u_abs);
 
-            Vmath::Vadd(npoints, a_vel, 1, u_abs, 1, wave_sp, 1);
+            Vmath::Vadd(npoints, a_vel, 1, u_abs, 1, tmp, 1);
 
-            NekDouble max_wave_sp = Vmath::Vmax(npoints, wave_sp, 1);
+            NekDouble max_wave_sp = Vmath::Vmax(npoints, tmp, 1);
 
-            Vmath::Smul(npoints,
-                        m_C2,
-                        outarrayDiff[nvariables-1], 1,
-                        outarrayDiff[nvariables-1], 1);
+            NekDouble fac = m_C2*max_wave_sp*pOrder;
 
             Vmath::Smul(npoints,
-                        max_wave_sp,
-                        outarrayDiff[nvariables-1], 1,
-                        outarrayDiff[nvariables-1], 1);
-
-            Vmath::Smul(npoints,
-                        pOrder,
+                        fac,
                         outarrayDiff[nvariables-1], 1,
                         outarrayDiff[nvariables-1], 1);
 
@@ -236,37 +227,17 @@ namespace Nektar
         int nvariables = physfield.num_elements();
         int nPts       = m_fields[0]->GetTotPoints();
 
-        Array<OneD, NekDouble > pressure   (nPts, 0.0);
-        Array<OneD, NekDouble > temperature(nPts, 0.0);
         Array<OneD, NekDouble > sensor     (nPts, 0.0);
         Array<OneD, NekDouble > SensorKappa(nPts, 0.0);
-        Array<OneD, NekDouble > absVelocity(nPts, 0.0);
-        Array<OneD, NekDouble > soundspeed (nPts, 0.0);
-        Array<OneD, NekDouble > Lambda     (nPts, 0.0);
-        Array<OneD, NekDouble > mu_var     (nPts, 0.0);
-        Array<OneD, NekDouble > h_minmin   (m_spacedim, 0.0);
-        Vmath::Zero(nPts, eps_bar, 1);
 
-        // Thermodynamic related quantities
-        m_varConv->GetPressure(physfield, pressure);
-        m_varConv->GetTemperature(physfield, pressure, temperature);
-        m_varConv->GetSoundSpeed(physfield, pressure, soundspeed);
-        m_varConv->GetAbsoluteVelocity(physfield, absVelocity);
+        // Calculate sensor
         GetSensor(physfield, sensor, SensorKappa);
-
-        // Determine the maximum wavespeed
-        Vmath::Vadd(nPts, absVelocity, 1, soundspeed, 1, Lambda, 1);
-
-        // Determine hbar = hx_i/h
-        Array<OneD,int> pOrderElmt = GetNumExpModesPerExp();
 
         NekDouble ThetaH = m_FacH;
         NekDouble ThetaL = m_FacL;
 
         NekDouble Phi0     = (ThetaH+ThetaL)/2;
         NekDouble DeltaPhi = ThetaH-Phi0;
-
-        Vmath::Zero(eps_bar.num_elements(), eps_bar, 1);
 
         for (int e = 0; e < eps_bar.num_elements(); e++)
         {
@@ -281,7 +252,7 @@ namespace Nektar
             else if(abs(physfield[nvariables-1][e]-Phi0) < DeltaPhi)
             {
                 eps_bar[e] = m_mu0/2*(1+sin(M_PI*
-                (physfield[nvariables-1][e]-Phi0)/(2*DeltaPhi)));
+                    (physfield[nvariables-1][e]-Phi0)/(2*DeltaPhi)));
             }
         }
 
@@ -295,21 +266,10 @@ namespace Nektar
         int PointCount      = 0;
         int nTotQuadPoints  = GetTotPoints();
 
-        Array<OneD, NekDouble> S_e        (nTotQuadPoints, 0.0);
-        Array<OneD, NekDouble> se         (nTotQuadPoints, 0.0);
         Array<OneD, NekDouble> Sensor     (nTotQuadPoints, 0.0);
         Array<OneD, NekDouble> SensorKappa(nTotQuadPoints, 0.0);
-        Array<OneD, NekDouble> absVelocity(nTotQuadPoints, 0.0);
-        Array<OneD, NekDouble> soundspeed (nTotQuadPoints, 0.0);
-        Array<OneD, NekDouble> pressure   (nTotQuadPoints, 0.0);
 
-        m_varConv->GetAbsoluteVelocity(physfield, absVelocity);
-        m_varConv->GetPressure        (physfield, pressure);
-        m_varConv->GetSoundSpeed      (physfield, pressure, soundspeed);
         GetSensor          (physfield, Sensor, SensorKappa);
-
-        Array<OneD, NekDouble> Lambda(nTotQuadPoints, 1.0);
-        Vmath::Vadd(nTotQuadPoints, absVelocity, 1, soundspeed, 1, Lambda, 1);
 
         for (int e = 0; e < nElements; e++)
         {

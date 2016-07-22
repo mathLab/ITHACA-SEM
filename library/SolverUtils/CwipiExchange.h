@@ -154,6 +154,8 @@ private:
     void DumpRawFields(const NekDouble time,
                        Array<OneD, Array<OneD, NekDouble> > rVals);
 
+    void OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals);
+
     template <typename T>
     void AddElementsToMesh(T geom,
                            int &coordsPos,

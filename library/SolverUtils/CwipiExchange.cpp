@@ -735,6 +735,7 @@ void CwipiCoupling::ReceiveFields(const int step,
         }
 
         FetchFields(step, time, m_newFields);
+
     }
 
     NekDouble fact =
@@ -834,6 +835,8 @@ void CwipiCoupling::FetchFields(const int step,
         }
     }
 
+    OverrrideFields(rVals);
+
     if (m_config["DUMPRAW"] != "0")
     {
         DumpRawFields(time, rVals);
@@ -888,6 +891,64 @@ void CwipiCoupling::FetchFields(const int step,
     {
         cout << "Receive total time: " << timer1.TimePerTest(1) << ", ";
         cout << "CWIPI time: " << timer2.TimePerTest(1) << endl;
+    }
+}
+
+void CwipiCoupling::OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals)
+{
+    // HACK
+    Array<OneD, Array<OneD, NekDouble> > x(3);
+    x[0] = Array<OneD, NekDouble>(m_recvField->GetTotPoints(), 0.0);
+    x[1] = Array<OneD, NekDouble>(m_recvField->GetTotPoints(), 0.0);
+    x[2] = Array<OneD, NekDouble>(m_recvField->GetTotPoints(), 0.0);
+    m_recvField->GetCoords(x[0], x[1], x[2]);
+    NekDouble distsq = 1E23;
+    NekDouble distsqNew = distsq;
+    int refID = -1;
+    for (int i = 0; i < m_recvField->GetTotPoints(); ++i)
+    {
+        distsqNew = pow(x[0][i] - 0.135, NekDouble(2)) + pow(x[1][i], NekDouble(2)) + pow(x[2][i], NekDouble(2));
+        if (distsqNew < distsq)
+        {
+            distsq = distsqNew;
+            refID = i;
+        }
+    }
+    ASSERTL0(refID >= 0, "refID < 0");
+
+    int ownerRank = -1;
+    distsqNew = distsq;
+    m_evalField->GetSession()->GetComm()->AllReduce(distsqNew, LibUtilities::ReduceMin);
+    if(abs(distsqNew - distsq) <= NekConstants::kNekSqrtTol)
+    {
+        // this rank has the closest point
+        ownerRank = m_evalField->GetSession()->GetComm()->GetRank();
+    }
+    m_evalField->GetSession()->GetComm()->AllReduce(ownerRank, LibUtilities::ReduceMax);
+    ASSERTL0(ownerRank >= 0, "ownerRank < 0");
+
+
+    Array<OneD, NekDouble> data(m_nRecvVars, 0.0);
+    if (ownerRank == m_evalField->GetSession()->GetComm()->GetRank())
+    {
+        for (int j = 0; j < m_nRecvVars; ++j)
+        {
+            data[j] = rVals[j][refID];
+        }
+    }
+    m_evalField->GetSession()->GetComm()->AllReduce(data, LibUtilities::ReduceSum);
+
+
+    for (int i = 0; i < m_recvField->GetTotPoints(); ++i)
+    {
+        NekDouble tmp = pow(x[0][i] - 0.173, NekDouble(2)) + pow(x[1][i], NekDouble(2)) + pow(x[2][i], NekDouble(2));
+        if (tmp <= pow(0.173-0.135, 2))
+        {
+            for (int j = 0; j < m_nRecvVars; ++j)
+            {
+                rVals[j][i] = data[j];
+            }
+        }
     }
 }
 

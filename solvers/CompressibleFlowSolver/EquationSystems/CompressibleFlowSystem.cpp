@@ -749,9 +749,8 @@ namespace Nektar
                 }
                 else
                 {
-                    // Copy to make symmetric
-                    Vmath::Vcopy(nPts, out_interp[i][j+1], 1,
-                                       out_interp[j][i+1], 1);
+                    // Make symmetric
+                    out_interp[j][i+1] = out_interp[i][j+1];
                 }
             }
         }

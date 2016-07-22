@@ -66,21 +66,21 @@ IF( NEKTAR_USE_MPI )
     IF (THIRDPARTY_BUILD_MPI)
         INCLUDE(ExternalProject)
         EXTERNALPROJECT_ADD(
-            mpich-3.2
+            openmpi-1.10.3
             PREFIX ${TPSRC}
-            URL http://ae-nektar.ae.ic.ac.uk/~dmoxey/mpich-3.2.tar.gz
-            URL_MD5 f414cfa77099cd1fa1a5ae4e22db508a
+            URL http://ae-nektar.ae.ic.ac.uk/~dmoxey/openmpi-1.10.3.tar.gz
+            URL_MD5 7d384d6eb454d3a621f932058a822b14
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
-            SOURCE_DIR ${TPSRC}/mpich-3.2
-            BINARY_DIR ${TPBUILD}/mpich-3.2
-            TMP_DIR ${TPBUILD}/mpich-3.2
+            SOURCE_DIR ${TPSRC}/openmpi-1.10.3
+            BINARY_DIR ${TPBUILD}/openmpi-1.10.3
+            TMP_DIR ${TPBUILD}/openmpi-1.10.3
             INSTALL_DIR ${TPDIST}
-            CONFIGURE_COMMAND ${TPSRC}/mpich-3.2/configure --prefix=${TPDIST} --disable-fortran --disable-mpe --enable-g=none --enable-romio --enable-shared --disable-static
+            CONFIGURE_COMMAND ${TPSRC}/openmpi-1.10.3/configure --prefix=${TPDIST} --disable-mpi-fortran --disable-static --disable-vt
             )
 
-        SET_TARGET_PROPERTIES(mpich-3.2 PROPERTIES EXCLUDE_FROM_ALL 1)
-        SET(MPI_CXX_LIBRARIES mpichcxx mpich opa mpl)
+        SET_TARGET_PROPERTIES(openmpi-1.10.3 PROPERTIES EXCLUDE_FROM_ALL 1)
+        SET(MPI_CXX_LIBRARIES mpi mpi_cxx)
         THIRDPARTY_SHARED_LIBNAME(MPI_CXX_LIBRARIES)
         SET(MPI_CXX_LIBRARIES ${MPI_CXX_LIBRARIES} CACHE FILEPATH "MPI C++ libraries" FORCE)
         SET(MPI_CXX_COMPILE_FLAGS "" CACHE STRING "MPI compiler flags" FORCE)
@@ -88,9 +88,19 @@ IF( NEKTAR_USE_MPI )
         SET(MPI_CXX_COMPILER ${TPDIST}/bin/mpicxx CACHE FILEPATH "MPI C++ compiler" FORCE)
         SET(MPI_C_COMPILER ${TPDIST}/bin/mpicc CACHE FILEPATH "MPI C compiler" FORCE)
 
+        SET(OMPI_EXES mpiexec mpirun orted orterun)
+
+        FOREACH(exe ${OMPI_EXES})
+            LIST(APPEND OMPI_EXES2 "${TPDIST}/bin/${exe}")
+        ENDFOREACH()
+
+        INSTALL(PROGRAMS ${OMPI_EXES2}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/${NEKTAR_BIN_DIR}
+            COMPONENT ThirdParty)
+
         MESSAGE(STATUS "Build MPI: ${MPI_CXX_LIBRARIES}")
     ELSE ()
-        ADD_CUSTOM_TARGET(mpich-3.2 ALL)
+        ADD_CUSTOM_TARGET(openmpi-1.10.3 ALL)
         SET(MPI_CONFIG_INCLUDE_DIR ${MPI_CXX_INCLUDE_PATH})
     ENDIF()
 
@@ -113,7 +123,6 @@ IF( NEKTAR_USE_MPI )
             -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
             ${TPSRC}/gsmpi-1.2
         )
-
     SET(GSMPI_LIBRARY gsmpi CACHE FILEPATH
         "GSMPI path" FORCE)
     MARK_AS_ADVANCED(GSMPI_LIBRARY)
@@ -125,5 +134,5 @@ IF( NEKTAR_USE_MPI )
     MESSAGE(STATUS "Build GSMPI: ${GSMPI_LIBRARY}")
     MESSAGE(STATUS "Build XXT: ${XXT_LIBRARY}")
 
-    ADD_DEPENDENCIES(gsmpi-1.2 mpich-3.2)
+    ADD_DEPENDENCIES(gsmpi-1.2 openmpi-1.10.3)
 ENDIF(NEKTAR_USE_MPI)

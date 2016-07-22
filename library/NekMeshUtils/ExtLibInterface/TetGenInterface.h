@@ -42,6 +42,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <NekMeshUtils/MeshElements/Node.h>
+#include <NekMeshUtils/MeshElements/Mesh.h>
 
 #define TETLIBRARY
 #include <tetgen.h>

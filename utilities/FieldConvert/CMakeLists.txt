@@ -1,51 +1,5 @@
-SET(FieldConvertSources
-    Module.cpp
-    FieldConvert.cpp
-    InputModules/InputDat.cpp
-    InputModules/InputFld.cpp
-    InputModules/InputXml.cpp
-    InputModules/InputPts.cpp
-    OutputModules/OutputInfo.cpp
-    OutputModules/OutputTecplot.cpp
-    OutputModules/OutputVtk.cpp
-    OutputModules/OutputFld.cpp
-    OutputModules/OutputStdOut.cpp
-    OutputModules/OutputPts.cpp
-    OutputModules/OutputXml.cpp
-    ProcessModules/ProcessAddFld.cpp
-    ProcessModules/ProcessBoundaryExtract.cpp
-    ProcessModules/ProcessCombineAvg.cpp
-    ProcessModules/ProcessConcatenateFld.cpp
-    ProcessModules/ProcessDeform.cpp
-    ProcessModules/ProcessDisplacement.cpp
-    ProcessModules/ProcessEquiSpacedOutput.cpp
-    ProcessModules/ProcessGrad.cpp
-    ProcessModules/ProcessHomogeneousPlane.cpp
-    ProcessModules/ProcessHomogeneousStretch.cpp
-    ProcessModules/ProcessInnerProduct.cpp
-    ProcessModules/ProcessInterpField.cpp
-    ProcessModules/ProcessInterpPoints.cpp
-    ProcessModules/ProcessInterpPointDataToFld.cpp
-    ProcessModules/ProcessIsoContour.cpp
-    ProcessModules/ProcessJacobianEnergy.cpp
-    ProcessModules/ProcessMapping.cpp
-    ProcessModules/ProcessNumModes.cpp
-    ProcessModules/ProcessMeanMode.cpp
-    ProcessModules/ProcessPointDataToFld.cpp
-    ProcessModules/ProcessPrintFldNorms.cpp
-    ProcessModules/ProcessScaleInFld.cpp
-    ProcessModules/ProcessVorticity.cpp
-    ProcessModules/ProcessScalGrad.cpp
-    ProcessModules/ProcessSurfDistance.cpp
-    ProcessModules/ProcessMultiShear.cpp
-    ProcessModules/ProcessWSS.cpp
-    ProcessModules/ProcessC0Projection.cpp
-    ProcessModules/ProcessQCriterion.cpp
-    ProcessModules/ProcessQualityMetric.cpp
-)
-
 ADD_UTILITIES_EXECUTABLE(FieldConvert
-    COMPONENT fieldconvert DEPENDS SolverUtils SOURCES ${FieldConvertSources})
+    COMPONENT fieldconvert DEPENDS FieldUtils SOURCES FieldConvert.cpp)
 
 #ADD_NEKTAR_TEST(chan3D_tec)  # This test is covered in bfs_tec
 #ADD_NEKTAR_TEST(chan3D_vtu)  # This does not currently work -- hash metric 
@@ -73,7 +27,7 @@ ADD_NEKTAR_TEST(chan3D_isocontour)
 
 IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST(chan3D_tec_par)
-    #ADD_NEKTAR_TEST(chan3D_vtu_par)
+    #ADD_NEKTAR_TEST(chan3D_vtu_par)a
     ADD_NEKTAR_TEST(chan3D_interppointsplane_par)
     ADD_NEKTAR_TEST(chan3D_interppointsbox_par)
     ADD_NEKTAR_TEST(chan3D_vort_par)

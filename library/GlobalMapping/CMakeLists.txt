@@ -1,4 +1,5 @@
 SET(GLOBAL_MAPPING_SOURCES
+  Deform.cpp
   Mapping.cpp
   MappingXofXZ.cpp
   MappingXofZ.cpp
@@ -9,6 +10,7 @@ SET(GLOBAL_MAPPING_SOURCES
 )
 
 SET(GLOBAL_MAPPING_HEADERS
+  Deform.h
   Mapping.h
   MappingXofXZ.h
   MappingXofZ.h

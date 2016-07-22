@@ -1,5 +1,4 @@
 SET(SOLVER_UTILS_SOURCES
-  Core/Deform.cpp
   Core/Misc.cpp
   AdvectionSystem.cpp
   Advection/Advection.cpp
@@ -29,10 +28,9 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterHistoryPoints.cpp
   Filters/FilterModalEnergy.cpp
   Filters/FilterMovingAverage.cpp
-  Filters/FilterSampler.cpp
+  Filters/FilterFieldConvert.cpp
   Filters/FilterThresholdMax.cpp
   Filters/FilterThresholdMin.cpp
-  Interpolator.cpp
   RiemannSolvers/RiemannSolver.cpp
   RiemannSolvers/UpwindSolver.cpp
   RiemannSolvers/UpwindLDGSolver.cpp
@@ -45,7 +43,6 @@ SET(SOLVER_UTILS_SOURCES
 )
 
 SET(SOLVER_UTILS_HEADERS
-  Core/Deform.h
   Core/Misc.h
   AdvectionSystem.h
   Advection/Advection.h
@@ -75,10 +72,9 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterHistoryPoints.h
   Filters/FilterModalEnergy.h
   Filters/FilterMovingAverage.h
-  Filters/FilterSampler.h
+  Filters/FilterFieldConvert.h
   Filters/FilterThresholdMax.h
   Filters/FilterThresholdMin.h
-  Interpolator.h
   RiemannSolvers/RiemannSolver.h
   RiemannSolvers/UpwindSolver.h
   RiemannSolvers/UpwindLDGSolver.h
@@ -105,4 +101,4 @@ ADD_NEKTAR_LIBRARY(SolverUtils
     DESCRIPTION "Nektar++ SolverUtils library"
     SOURCES ${SOLVER_UTILS_SOURCES}
     HEADERS ${SOLVER_UTILS_HEADERS}
-    DEPENDS GlobalMapping)
+    DEPENDS FieldUtils)

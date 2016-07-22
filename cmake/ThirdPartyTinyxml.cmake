@@ -43,22 +43,13 @@ IF (THIRDPARTY_BUILD_TINYXML)
             -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
             -DCMAKE_CXX_FLAGS:STRING=-DTIXML_USE_STL
             ${TPSRC}/tinyxml-2.6.2
-    )
-    SET(TINYXML_LIBRARY tinyxml CACHE FILEPATH
-        "TinyXML library" FORCE)
+        )
+
+    THIRDPARTY_LIBRARY(TINYXML_LIBRARY STATIC tinyxml
+        DESCRIPTION "TinyXML library")
     SET(TINYXML_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
         "TinyXML include" FORCE)
-
-    LINK_DIRECTORIES(${TPDIST}/lib)
-
-    IF (WIN32)
-        MESSAGE(STATUS 
-                "Build TinyXML: ${TPDIST}/${LIB_DIR}/${TINYXML_LIBRARY}.dll")
-    ELSE ()
-        MESSAGE(STATUS 
-                "Build TinyXML: ${TPDIST}/${LIB_DIR}/lib${TINYXML_LIBRARY}.a")
-    ENDIF ()
-
+    MESSAGE(STATUS "Build TinyXML: ${TINYXML_LIBRARY}")
     SET(TINYXML_CONFIG_INCLUDE_DIR ${TPINC})
 ELSE()
     ADD_CUSTOM_TARGET(tinyxml-2.6.2 ALL)

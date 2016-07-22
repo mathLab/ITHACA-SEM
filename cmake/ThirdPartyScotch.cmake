@@ -79,17 +79,12 @@ IF (NEKTAR_USE_SCOTCH)
                 prefix=${TPDIST} install
         )
 
-        SET(SCOTCH_LIBRARY scotch CACHE FILEPATH
-            "Scotch library" FORCE)
-        SET(SCOTCHERR_LIBRARY scotcherr CACHE FILEPATH
-            "Scotch error library" FORCE)
+        THIRDPARTY_LIBRARY(SCOTCH_LIBRARY STATIC scotch
+            DESCRIPTION "Scotch library")
+        THIRDPARTY_LIBRARY(SCOTCHERR_LIBRARY STATIC scotcherr
+            DESCRIPTION "Scotch error library")
         SET(SCOTCH_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
             "Scotch include directory" FORCE)
-
-        LINK_DIRECTORIES(${TPDIST}/lib)
-
-        THIRDPARTY_STATIC_LIBNAME(SCOTCH_LIBRARY)
-        THIRDPARTY_STATIC_LIBNAME(SCOTCHERR_LIBRARY)
         MESSAGE(STATUS "Build Scotch: ${SCOTCH_LIBRARY}")
         SET(SCOTCH_CONFIG_INCLUDE_DIR ${TPINC})
     ELSE (THIRDPARTY_BUILD_SCOTCH)

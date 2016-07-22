@@ -39,16 +39,14 @@ IF (NEKTAR_USE_FFTW)
             TMP_DIR ${TPBUILD}/fftw-3.2.2-tmp
             INSTALL_DIR ${TPDIST}
             CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} ${TPSRC}/fftw-3.2.2/configure --prefix=${TPDIST} --quiet --enable-shared --disable-dependency-tracking
-        )
+            )
 
-        SET(FFTW_LIBRARY fftw3 CACHE FILEPATH
-            "FFTW library" FORCE)
+        THIRDPARTY_LIBRARY(FFTW_LIBRARY SHARED fftw3
+            DESCRIPTION "FFTW library")
         SET(FFTW_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
             "FFTW include" FORCE)
 
-        LINK_DIRECTORIES(${TPDIST}/lib)
-
-        MESSAGE(STATUS "Build FFTW: ${TPDIST}/lib/lib${FFTW_LIBRARY}.so")
+        MESSAGE(STATUS "Build FFTW: ${FFTW_LIBRARY}")
         SET(FFTW_CONFIG_INCLUDE_DIR ${TPINC})
     ELSE ()
         ADD_CUSTOM_TARGET(fftw-3.2.2 ALL)

@@ -32,21 +32,11 @@ IF(NEKTAR_USE_MESHGEN)
                 -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
                 ${TPSRC}/tetgen-1.5
             )
-        SET(TETGEN_LIBRARY tetgen CACHE FILEPATH
-            "TetGen library" FORCE)
+        THIRDPARTY_LIBRARY(TETGEN_LIBRARY STATIC tetgen
+            DESCRIPTION "Tetgen library")
         SET(TETGEN_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
             "TetGen include" FORCE)
-
-        LINK_DIRECTORIES(${TPDIST}/lib)
-
-        IF (WIN32)
-            MESSAGE(STATUS
-                "Build TetGen: ${TPDIST}/${LIB_DIR}/${TETGEN_LIBRARY}.dll")
-        ELSE ()
-            MESSAGE(STATUS
-                "Build TetGen: ${TPDIST}/${LIB_DIR}/lib${TETGEN_LIBRARY}.a")
-        ENDIF ()
-
+        MESSAGE(STATUS "Build TetGen: ${TETGEN_LIBRARY}")
         SET(TETGEN_CONFIG_INCLUDE_DIR ${TPINC})
     ELSE()
         ADD_CUSTOM_TARGET(tetgen-1.5 ALL)
@@ -54,5 +44,7 @@ IF(NEKTAR_USE_MESHGEN)
         SET(TRIANGLE_CONFIG_INCLUDE_DIR ${TETGEN_INCLUDE_DIR})
     ENDIF (THIRDPARTY_BUILD_TETGEN)
 
+    MARK_AS_ADVANCED(TETGEN_LIBRARY)
+    MARK_AS_ADVANCED(TETGEN_INCLUDE_DIR)
     INCLUDE_DIRECTORIES(SYSTEM ${TETGEN_INCLUDE_DIR})
 ENDIF(NEKTAR_USE_MESHGEN)

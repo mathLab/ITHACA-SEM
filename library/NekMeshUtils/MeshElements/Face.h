@@ -61,28 +61,28 @@ class Face
 {
 public:
     /// Create a new face.
-    Face(std::vector<NodeSharedPtr> pVertexList,
-         std::vector<NodeSharedPtr> pFaceNodes,
-         std::vector<EdgeSharedPtr> pEdgeList,
-         LibUtilities::PointsType pCurveType)
-        : m_vertexList(pVertexList), m_edgeList(pEdgeList),
-          m_faceNodes(pFaceNodes), m_curveType(pCurveType), m_geom()
+    NEKMESHUTILS_EXPORT Face(std::vector<NodeSharedPtr> pVertexList,
+                             std::vector<NodeSharedPtr> pFaceNodes,
+                             std::vector<EdgeSharedPtr> pEdgeList,
+                              LibUtilities::PointsType pCurveType)
+                : m_vertexList(pVertexList), m_edgeList(pEdgeList),
+                  m_faceNodes(pFaceNodes), m_curveType(pCurveType), m_geom()
     {
     }
 
     /// Copy an existing face.
-    Face(const Face &pSrc)
-        : m_vertexList(pSrc.m_vertexList), m_edgeList(pSrc.m_edgeList),
-          m_faceNodes(pSrc.m_faceNodes), m_curveType(pSrc.m_curveType),
-          m_geom(pSrc.m_geom)
+    NEKMESHUTILS_EXPORT Face(const Face &pSrc)
+            : m_vertexList(pSrc.m_vertexList), m_edgeList(pSrc.m_edgeList),
+              m_faceNodes(pSrc.m_faceNodes), m_curveType(pSrc.m_curveType),
+              m_geom(pSrc.m_geom)
     {
     }
-    ~Face()
+    NEKMESHUTILS_EXPORT ~Face()
     {
     }
 
     /// Equality is defined by matching all vertices.
-    bool operator==(Face &pSrc)
+    NEKMESHUTILS_EXPORT bool operator==(Face &pSrc)
     {
         std::vector<NodeSharedPtr>::iterator it1, it2;
         for (it1 = m_vertexList.begin(); it1 != m_vertexList.end(); ++it1)
@@ -99,7 +99,7 @@ public:
 
     /// Returns the total number of nodes (vertices, edge nodes and
     /// face nodes).
-    unsigned int GetNodeCount() const
+    NEKMESHUTILS_EXPORT unsigned int GetNodeCount() const
     {
         unsigned int n = m_faceNodes.size();
         for (int i = 0; i < m_edgeList.size(); ++i)
@@ -111,7 +111,7 @@ public:
     }
 
     /// Assemble a list of nodes on curved face
-    void GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+    NEKMESHUTILS_EXPORT void GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
     {
         // Treat 2D point distributions differently to 3D.
         if (m_curveType == LibUtilities::eNodalTriFekete ||
@@ -195,7 +195,7 @@ public:
 
     /// Generates a string listing the coordinates of all nodes
     /// associated with this face.
-    std::string GetXmlCurveString() const
+    NEKMESHUTILS_EXPORT std::string GetXmlCurveString() const
     {
         std::stringstream s;
         std::string str;
@@ -217,7 +217,7 @@ public:
 
     /// Generate either SpatialDomains::TriGeom or
     /// SpatialDomains::QuadGeom for this element.
-    SpatialDomains::Geometry2DSharedPtr GetGeom(int coordDim)
+    NEKMESHUTILS_EXPORT SpatialDomains::Geometry2DSharedPtr GetGeom(int coordDim)
     {
         int nEdge = m_edgeList.size();
 

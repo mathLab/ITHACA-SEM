@@ -538,7 +538,8 @@ typedef Nektar::LibUtilities::NekFactory<LibUtilities::ShapeType,
 
 NEKMESHUTILS_EXPORT ElementFactory &GetElementFactory();
 
-bool operator==(ElementSharedPtr const &e1, ElementSharedPtr const &e2);
+NEKMESHUTILS_EXPORT bool operator==(ElementSharedPtr const &e1,
+                                    ElementSharedPtr const &e2);
 
 /// Define element ordering based on ID.
 struct element_id_less_than

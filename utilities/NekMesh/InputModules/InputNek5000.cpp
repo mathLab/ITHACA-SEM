@@ -81,13 +81,9 @@ void InputNek5000::Process()
     string line, word;
     int nParam, nElements, nCurves;
     int i, j, k, nodeCounter = 0;
-    int nComposite           = 0;
+    int nComposite           = 1;
     LibUtilities::ShapeType elType;
     double vertex[8][3];
-    map<LibUtilities::ShapeType, int> domainComposite;
-    map<LibUtilities::ShapeType, vector<vector<NodeSharedPtr> > > elNodes;
-    map<LibUtilities::ShapeType, vector<int> > elIds;
-    boost::unordered_map<int, int> elMap;
 
     m_mesh->m_expDim   = 0;
     m_mesh->m_spaceDim = 0;
@@ -261,11 +257,14 @@ void InputNek5000::Process()
     LibUtilities::PointsKey curveType(nq, LibUtilities::eGaussLobattoLegendre);
     LibUtilities::PointsManager()[curveType]->GetPoints(rp);
 
-    // Reorder edges
-    // Nek5000 ordering: 0-3: r-direction, 4-7: s-direction, 8-11: t-direction
+    // Map to reorder Nek5000 -> Nektar++ edge ordering. Nek5000 has the same
+    // counter-clockwise ordering of edges/vertices; however the vertical
+    // (i.e. t- or xi_3-direction) edges come last.
     int nek2nekedge[12] = {
-        //0, 2, 8, 10, 3, 1, 11, 9, 4, 5, 7, 6
         0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7
+    };
+    int nek2nekface[6] = {
+        1, 2, 3, 4, 0, 5
     };
 
     if (nCurves > 0)
@@ -378,14 +377,168 @@ void InputNek5000::Process()
                 case 'S':
                 case 'm':
                 case 'M':
-                    cerr << "Curve type '" << curveType << "' is unsupported."
-                         << endl;
+                    cerr << "Curve type '" << curveType << "' on side " << side
+                         << " of element " << elmt << " is unsupported;"
+                         << "will ignore." << endl;
                     break;
                 default:
-                    cerr << "Unknown curve type '" << curveType << "'" << endl;
+                    cerr << "Unknown curve type '" << curveType << "' on side "
+                         << side << " of element " << elmt << "; will ignore."
+                         << endl;
                     break;
             }
         }
+    }
+
+    // Read boundary conditions.
+    getline(m_mshFile, line);
+    getline(m_mshFile, line);
+    if (line.find("BOUNDARY") == string::npos)
+    {
+        cerr << "Cannot find boundary conditions." << endl;
+        abort();
+    }
+
+    int nSurfaces = 0;
+
+    while (m_mshFile.good())
+    {
+        getline(m_mshFile, line);
+        s.clear();
+        s.str(line);
+
+        // Found a new section. We don't support anything in the rea file beyond
+        // this point so we'll just quit.
+        if (line.find("*") != string::npos)
+        {
+            break;
+        }
+
+        ConditionSharedPtr c = MemoryManager<Condition>::AllocateSharedPtr();
+        char bcType;
+        int elmt, side;
+        NekDouble data[5];
+
+        s >> bcType >> elmt >> side;
+        for (i = 0; i < 5; ++i)
+        {
+            s >> data[i];
+        }
+
+        // Our ordering starts from 0, not 1.
+        --elmt;
+        --side;
+
+        ElementSharedPtr el = m_mesh->m_element[m_mesh->m_spaceDim][elmt];
+        vector<string> vals;
+        vector<ConditionType> type;
+
+        switch (bcType)
+        {
+            case 'E':
+                // Edge/face connectivity; ignore since we already have this, at
+                // least for conformal meshes.
+                continue;
+
+            case 'W':
+            {
+                for (i = 0; i < m_mesh->m_fields.size() - 1; ++i)
+                {
+                    vals.push_back("0");
+                    type.push_back(eDirichlet);
+                }
+
+                // Set high-order boundary condition for wall.
+                vals.push_back("0");
+                type.push_back(eHOPCondition);
+                break;
+            }
+        }
+
+        int compTag, conditionId;
+        ElementSharedPtr surfEl;
+
+        // Create element for face (3D) or segment (2D). At the moment this is a
+        // bit of a hack since high-order nodes are not copied, so some output
+        // modules (e.g. Gmsh) will not output correctly.
+        if (el->GetDim() == 3)
+        {
+            FaceSharedPtr f = el->GetFace(nek2nekface[side]);
+            vector<NodeSharedPtr> nodeList;
+            nodeList.insert(nodeList.begin(),
+                            f->m_vertexList.begin(),
+                            f->m_vertexList.end());
+
+            vector<int> tags;
+            ElmtConfig conf(
+                LibUtilities::eQuadrilateral, 1, true, true, false,
+                LibUtilities::eGaussLobattoLegendre);
+            surfEl =
+                GetElementFactory().CreateInstance(LibUtilities::eQuadrilateral,
+                                                   conf, nodeList, tags);
+
+            // Copy high-order surface information from edges.
+            for (int i = 0; i < f->m_vertexList.size(); ++i)
+            {
+                surfEl->GetEdge(i)->m_edgeNodes = f->m_edgeList[i]->m_edgeNodes;
+                surfEl->GetEdge(i)->m_curveType = f->m_edgeList[i]->m_curveType;
+            }
+        }
+        else
+        {
+            EdgeSharedPtr f = el->GetEdge(side);
+
+            vector<NodeSharedPtr> nodeList;
+            nodeList.push_back(f->m_n1);
+            nodeList.push_back(f->m_n2);
+
+            vector<int> tags;
+
+            ElmtConfig conf(
+                LibUtilities::eSegment, 1, true, true, false,
+                LibUtilities::eGaussLobattoLegendre);
+            surfEl = GetElementFactory().CreateInstance(
+                LibUtilities::eSegment, conf, nodeList, tags);
+        }
+
+        // Now attempt to find this boundary condition inside
+        // m_mesh->condition. This is currently a linear search and should
+        // probably be made faster!
+        ConditionMap::iterator it;
+        bool found = false;
+        for (it = m_mesh->m_condition.begin(); it != m_mesh->m_condition.end();
+             ++it)
+        {
+            if (c == it->second)
+            {
+                found = true;
+                c = it->second;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            conditionId = m_mesh->m_condition.size();
+            compTag = nComposite;
+            c->m_composite.push_back(compTag);
+            m_mesh->m_condition[conditionId] = c;
+        }
+        else
+        {
+            compTag = c->m_composite[0];
+        }
+
+        // Insert composite tag into element and insert element into
+        // mesh.
+        vector<int> existingTags = surfEl->GetTagList();
+
+        existingTags.insert(existingTags.begin(), compTag);
+        surfEl->SetTagList(existingTags);
+        surfEl->SetId(nSurfaces);
+
+        m_mesh->m_element[surfEl->GetDim()].push_back(surfEl);
+        nSurfaces++;
     }
 
     m_mshFile.close();

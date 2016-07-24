@@ -1,6 +1,7 @@
 SET(NekMeshHeaders
     InputModules/InputGmsh.h
     InputModules/InputNek.h
+    InputModules/InputNek5000.h
     InputModules/InputNekpp.h
     InputModules/InputPly.h
     InputModules/InputSem.h
@@ -28,6 +29,7 @@ SET(NekMeshHeaders
 SET(NekMeshSources
     InputModules/InputGmsh.cpp
     InputModules/InputNek.cpp
+    InputModules/InputNek5000.cpp
     InputModules/InputNekpp.cpp
     InputModules/InputPly.cpp
     InputModules/InputSem.cpp

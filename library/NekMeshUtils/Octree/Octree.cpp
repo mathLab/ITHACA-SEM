@@ -33,9 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-//#include <algorithm>
-//#include <limits>
-
 #include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 
@@ -190,10 +187,10 @@ void Octree::Build()
         cout << endl << "Octree system" << endl;
 
     // build curvature samples
-    CompileCuravturePointList();
+    CompileSourcePointList();
 
     if (m_verbose)
-        cout << "\tCurvature samples: " << m_cpList.size() << endl;
+        cout << "\tCurvature samples: " << m_SPList.size() << endl;
 
     m_dim = max((boundingBox[1] - boundingBox[0]) / 2.0,
                 (boundingBox[3] - boundingBox[2]) / 2.0);
@@ -207,7 +204,7 @@ void Octree::Build()
 
     // make master octant based on the bounding box of the domain
     m_masteroct = MemoryManager<Octant>::AllocateSharedPtr(
-        0, m_centroid[0], m_centroid[1], m_centroid[2], m_dim, m_cpList);
+        0, m_centroid[0], m_centroid[1], m_centroid[2], m_dim, m_SPList);
 
     SubDivide();
 
@@ -578,28 +575,31 @@ void Octree::PropagateDomain()
 
                         OctantSharedPtr closest;
 
+                        bool f = false;
                         for (int j = 0; j < known.size(); j++)
                         {
                             if (oct->Distance(known[j]) < dist)
                             {
                                 closest = known[j];
                                 dist    = oct->Distance(known[j]);
+                                f = true;
                             }
                         }
+                        ASSERTL0(f,"closest never set");
 
-                        CurvaturePointSharedPtr cp = closest->GetCPPoint();
+                        SPBaseSharedPtr sp = closest->GetABoundPoint();
 
-                        Array<OneD, NekDouble> octloc, cploc, vec(3), uv, N;
+                        Array<OneD, NekDouble> octloc, sploc, vec(3), uv, N;
                         int surf;
-                        cp->GetCAD(surf, uv);
+                        sp->GetCAD(surf, uv);
                         N = m_cad->GetSurf(surf)->N(uv);
 
                         octloc = oct->GetLoc();
-                        cploc  = cp->GetLoc();
+                        sploc  = sp->GetLoc();
 
-                        vec[0] = octloc[0] - cploc[0];
-                        vec[1] = octloc[1] - cploc[1];
-                        vec[2] = octloc[2] - cploc[2];
+                        vec[0] = octloc[0] - sploc[0];
+                        vec[1] = octloc[1] - sploc[1];
+                        vec[2] = octloc[2] - sploc[2];
 
                         NekDouble dot =
                             vec[0] * N[0] + vec[1] * N[1] + vec[2] * N[2];
@@ -842,10 +842,22 @@ struct linesource
     }
 };
 
-void Octree::CompileCuravturePointList()
+void Octree::CompileSourcePointList()
 {
+    if(m_verbose)
+    {
+        cout << "\tCompiling source points" << endl;
+        cout << "\t\tSurface: ";
+    }
+    //first sample surfaces
     for (int i = 1; i <= m_cad->GetNumSurf(); i++)
     {
+        if(m_verbose)
+        {
+            cout << i << " ";
+            cout.flush();
+        }
+
         CADSurfSharedPtr surf         = m_cad->GetSurf(i);
         Array<OneD, NekDouble> bounds = surf->GetBounds();
 
@@ -935,9 +947,6 @@ void Octree::CompileCuravturePointList()
                 // but still need a point for element estimation
                 if (C != 0.0)
                 {
-                    bool minlimited = false;
-                    NekDouble ideal;
-
                     NekDouble del =
                         2.0 * (1.0 / C) * sqrt(m_eps * (2.0 - m_eps));
 
@@ -947,120 +956,104 @@ void Octree::CompileCuravturePointList()
                     }
                     if (del < m_minDelta)
                     {
-                        ideal      = del;
-                        del        = m_minDelta;
-                        minlimited = true;
+                        del = m_minDelta;
                     }
 
-                    if (minlimited)
-                    {
-                        CurvaturePointSharedPtr newCPoint =
-                            MemoryManager<CurvaturePoint>::AllocateSharedPtr(
-                                surf->GetId(), uv, surf->P(uv), del, ideal);
 
-                        m_cpList.push_back(newCPoint);
-                    }
-                    else
-                    {
-                        CurvaturePointSharedPtr newCPoint =
-                            MemoryManager<CurvaturePoint>::AllocateSharedPtr(
-                                surf->GetId(), uv, surf->P(uv), del);
+                    CPointSharedPtr newCPoint = MemoryManager<CPoint>::
+                        AllocateSharedPtr(surf->GetId(), uv, surf->P(uv), del);
 
-                        m_cpList.push_back(newCPoint);
-                    }
+                    m_SPList.push_back(newCPoint);
+
                 }
                 else
                 {
-                    CurvaturePointSharedPtr newCPoint =
-                        MemoryManager<CurvaturePoint>::AllocateSharedPtr(
-                            surf->GetId(), uv, surf->P(uv));
+                    BPointSharedPtr newBPoint = MemoryManager<BPoint>::
+                            AllocateSharedPtr(surf->GetId(), uv, surf->P(uv));
 
-                    m_cpList.push_back(newCPoint);
+                    m_SPList.push_back(newBPoint);
+                }
+            }
+        }
+
+    }
+    if(m_verbose)
+    {
+        cout << endl;
+    }
+
+    if (m_udsfileset)
+    {
+        if(m_verbose)
+        {
+            cout << "\t\tModifying based on uds files" << endl;
+        }
+        // now deal with the user defined spacing
+        vector<linesource> lsources;
+        fstream fle;
+        fle.open(m_udsfile.c_str());
+
+        string fileline;
+
+        while (!fle.eof())
+        {
+            getline(fle, fileline);
+            stringstream s(fileline);
+            string word;
+            s >> word;
+            if (word == "#")
+            {
+                continue;
+            }
+
+            Array<OneD, NekDouble> x1(3), x2(3);
+            NekDouble r, d;
+            x1[0] = boost::lexical_cast<double>(word);
+            s >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2] >> r >> d;
+
+            lsources.push_back(linesource(x1, x2, r, d));
+        }
+        fle.close();
+
+        for (int i = 0; i < m_SPList.size(); i++)
+        {
+            for (int j = 0; j < lsources.size(); j++)
+            {
+                if (lsources[j].withinRange(m_SPList[i]->GetLoc()))
+                {
+                    if(m_SPList[i]->GetType() == ePBoundary)
+                    {
+                        BPointSharedPtr bp =
+                            boost::dynamic_pointer_cast<BPoint>
+                                                            (m_SPList[i]);
+
+                        m_SPList[i] = bp->ChangeType();
+
+                    }
+                    m_SPList[i]->SetDelta(lsources[j].delta);
                 }
             }
         }
     }
 
-    if (m_udsfile == "N")
+    if(m_sourcepointsset)
     {
-        return;
-    }
-
-    // now deal with the user defined spacing
-    vector<linesource> lsources;
-    fstream fle;
-    fle.open(m_udsfile.c_str());
-
-    string fileline;
-
-    while (!fle.eof())
-    {
-        getline(fle, fileline);
-        stringstream s(fileline);
-        string word;
-        s >> word;
-        if (word == "#")
+        if(m_verbose)
         {
-            continue;
+            cout << "\t\tAdding source points from flow solution" << endl;
         }
-
-        Array<OneD, NekDouble> x1(3), x2(3);
-        NekDouble r, d;
-        x1[0] = boost::lexical_cast<double>(word);
-        s >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2] >> r >> d;
-
-        lsources.push_back(linesource(x1, x2, r, d));
-    }
-    fle.close();
-
-    for (int j = 0; j < lsources.size(); j++)
-    {
-        cout << lsources[j].x1[0] << " " << lsources[j].x1[1] << " "
-             << lsources[j].x1[2] << endl;
-        cout << lsources[j].x2[0] << " " << lsources[j].x2[1] << " "
-             << lsources[j].x2[2] << endl;
-        cout << lsources[j].Length() << endl;
-    }
-
-    int ct = 0;
-    for (int i = 0; i < m_cpList.size(); i++)
-    {
-        for (int j = 0; j < lsources.size(); j++)
+        for(int i = 0; i < m_sourcePoints.size(); i++)
         {
-            if (lsources[j].withinRange(m_cpList[i]->GetLoc()))
-            {
-                ct++;
-                m_cpList[i]->SetDelta(lsources[j].delta);
-            }
+            Array<OneD, NekDouble> l(3);
+            l[0] = m_sourcePoints[i][0];
+            l[1] = m_sourcePoints[i][1];
+            l[2] = m_sourcePoints[i][2];
+
+            SrcPointSharedPtr newSpoint = MemoryManager<SrcPoint>::
+                                    AllocateSharedPtr(l, m_sourcePointSize);
+            m_SPList.push_back(newSpoint);
         }
     }
-    cout << ct << endl;
-
-    ///@TODO need to add curvature points with the false tag to make octree
-    ///modification work
-    // off surfaces
-
-    /*for(int i = 0; i < lsources.size(); i++)
-    {
-        int nc; //number of point to add cicularly
-        int nl; //number of point to add length
-
-        nc = ceil(2.0*3.142*lsources[i].R / lsources[i].delta)*2;
-        nl = ceil(lsources[i].Length() / lsources[i].delta)*2;
-
-        NekDouble dr = lsources[i].Length() / nl;
-        NekDouble dtheta = 2.0*3.142 / nc;
-
-        for(int j = 0; j < nl; j++)
-        {
-            NekDouble len =
-            for(int k = 0; k < nc; k++)
-            {
-
-            }
-        }
-
-    }*/
 }
 
 NekDouble Octree::ddx(OctantSharedPtr i, OctantSharedPtr j)

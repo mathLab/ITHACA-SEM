@@ -46,6 +46,16 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+struct blInfo
+{
+    NodeSharedPtr pNode;
+    NodeSharedPtr oNode;
+    int bl;
+    Array<OneD, NekDouble> N;
+    int symsurf;
+    bool onSym;
+};
+
 class BLMesh
 {
 public:
@@ -54,11 +64,11 @@ public:
     /**
      *@brief default constructor
      */
-    BLMesh(MeshSharedPtr             m,
-           std::vector<unsigned int> bls,
-           std::vector<unsigned int> syms,
-           NekDouble                 b)
-        : m_mesh(m), m_blsurfs(bls), m_symsurfs(syms), m_bl(b){};
+    BLMesh(CADSystemSharedPtr s, MeshSharedPtr m, std::vector<unsigned int> bls,
+           NekDouble b) :
+                        m_cad(s), m_mesh(m), m_blsurfs(bls), m_bl(b)
+    {
+    };
 
     /**
      * @brief Execute boundary layer meshing
@@ -68,22 +78,59 @@ public:
     /**
      * @brief Get the map of surface element id to pseudo surface prism face
      */
-    std::map<int, FaceSharedPtr> GetSurfToPri()
+    std::vector<ElementSharedPtr> GetPsuedoSurf()
     {
-        return m_surftopriface;
+        return m_psuedoSurface;
+    }
+
+    /**
+     * @brief Get the list of symetry surfaces
+     */
+    std::vector<int> GetSymSurfs()
+    {
+        return m_symSurfs;
+    }
+
+    /**
+     * @brief Get the map of boundary layer surface nodes to the prism top nodes
+     */
+    std::map<NodeSharedPtr, NodeSharedPtr> GetNodeMap(int s)
+    {
+        std::map<int, std::map<NodeSharedPtr, NodeSharedPtr> >::iterator f;
+        f = m_symNodes.find(s);
+        ASSERTL0(f != m_symNodes.end(), "surf not found");
+        return f->second;
+    }
+
+    /*
+     * @brief Get the list of surfaces to have a boundary layer generated
+     */
+    std::vector<unsigned int> GetBLSurfs()
+    {
+        return m_blsurfs;
     }
 
 private:
-    /// Mesh object containing surface mesh
+
+    NekDouble Visability(std::vector<ElementSharedPtr> tris, Array<OneD, NekDouble> N);
+    Array<OneD, NekDouble> GetNormal(std::vector<ElementSharedPtr> tris);
+
+    ///CAD
+    CADSystemSharedPtr m_cad;
+    /// mesh object containing surface mesh
     MeshSharedPtr m_mesh;
     /// List of surfaces onto which boundary layers are placed
     std::vector<unsigned int> m_blsurfs;
-    /// List of symmetry surfaces
-    std::vector<unsigned int> m_symsurfs;
-    /// Thickness of the boundary layer
+    /// thickness of the boundary layer
     NekDouble m_bl;
-    /// Map from surface element ID to opposite face of prism
-    std::map<int, FaceSharedPtr> m_surftopriface;
+    /// list of surfaces to be remeshed due to the boundary layer
+    std::vector<int> m_symSurfs;
+    /// data structure used to store and develop bl information
+    std::map<NodeSharedPtr, blInfo> blData;
+    /// list of nodes which will lie of symtetry surfaces
+    std::map<int, std::map<NodeSharedPtr, NodeSharedPtr> > m_symNodes;
+    /// list of elements which form the psuedo surface from the top of prisms
+    std::vector<ElementSharedPtr> m_psuedoSurface;
 };
 
 typedef boost::shared_ptr<BLMesh> BLMeshSharedPtr;

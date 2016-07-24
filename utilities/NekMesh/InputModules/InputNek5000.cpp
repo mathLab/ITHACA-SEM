@@ -295,6 +295,10 @@ void InputNek5000::Process()
             {
                 case 'C':
                 {
+                    // Apply circular curvature to edges. Nek5000 assumes that
+                    // the curvature should be imposed in x-y planes and has no
+                    // z-dependence. The following code is adapted from Semtex
+                    // (src/mesh.C)
                     NekDouble radius = curveData[0];
                     int convexity = radius < 0 ? -1 : 1;
                     radius = fabs(radius);
@@ -309,7 +313,7 @@ void InputNek5000::Process()
 
                     if (fabs(P1.m_z - P2.m_z) > 1e-8)
                     {
-                        cout << "nope " << fabs(P1.m_z - P2.m_z) << endl;
+                        cout << "warning: detected non x-y edge." << endl;
                     }
                     P1.m_z = P2.m_z = 0.0;
 
@@ -322,9 +326,7 @@ void InputNek5000::Process()
 
                     if (2.0 * radius < l)
                     {
-                        cerr << "fail, midpoint = (" << midpoint.m_x << ", " << midpoint.m_y
-                             << "), radius = " << radius << ", l = "
-                             << l << endl;
+                        cerr << "failure" << endl;
                     }
                     else
                     {
@@ -361,8 +363,6 @@ void InputNek5000::Process()
 
                     edge->m_edgeNodes.clear();
 
-                    //cout << edge->m_n1->m_x << " " << edge->m_n1->m_y << endl;
-
                     for (j = 1; j < nq-1; ++j) {
                         phi = theta1 + dtheta * 0.5 * (rp[j] + 1.0);
                         NodeSharedPtr asd(new Node(
@@ -371,10 +371,7 @@ void InputNek5000::Process()
                                               centre.m_y + radius * sin(phi),
                                               edge->m_n1->m_z));
                         edge->m_edgeNodes.push_back(asd);
-                        //cout << asd->m_x << " " << asd->m_y << endl;
                     }
-
-                    //cout << edge->m_n2->m_x << " " << edge->m_n2->m_y << endl;
                     break;
                 }
                 case 's':

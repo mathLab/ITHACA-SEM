@@ -538,7 +538,7 @@ To extract a surface use the command:
 
 where the integers are surface IDs to be extracted.
 
-An optional arguemnt of \inltt{detectbnd} can be added to identify the boundary composites as part of the surface extraction. 
+An optional arguemnt of \inltt{detectbnd} can be added to identify the boundary composites as part of the surface extraction.
 
 \subsection{Linearisation}
 
@@ -703,7 +703,7 @@ vertex nodes as boundaries, then the surfaces are meshed in their 2D parameter
 plane using the curve meshes as boundaries and finally the 3D volume is meshed
 using the surface mesh as the boundary to complete the linear mesh. In \mc, to
 achieve greater robustness, the 2D mesh generation library Triangle is used and
-the TetGen library for the 3D. Both of which are highly developed Deluanay based
+the TetGen library for the 3D. Both of which are highly developed Delaunay based
 mesh generators. As with all additional libraies in \nekpp these are
 automatically downloaded and installed if needed.
 
@@ -726,7 +726,7 @@ the parameter plane of the CAD surface to ensure the high-order triangles have
 as little distortion as possible while remaining exactly on the geometric
 surface. To do this the system models the high-order edges and triangles as a
 network of springs with an associated spring energy which is minimised using a
-multidimensional Newton type optimisation procedure with a Guass-Sidel matrix
+multidimensional Newton type optimisation procedure with a Gauss-Seidel matrix
 solver.
 
 \subsubsection{Mesh Correction}

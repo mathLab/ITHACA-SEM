@@ -69,7 +69,6 @@ ModuleKey InputCAD::className = GetModuleFactory().RegisterCreatorFunction(
  */
 InputCAD::InputCAD(MeshSharedPtr m) : InputModule(m)
 {
-    
 }
 
 InputCAD::~InputCAD()
@@ -121,6 +120,9 @@ void InputCAD::Process()
     {
         cout << "Building mesh for: " << m_CADName << endl;
     }
+
+    m_mesh->m_hasCAD = true;
+    m_mesh->m_CADId = m_CADName;
 
     ASSERTL0(m_cad->LoadCAD(), "Failed to load CAD");
 
@@ -340,8 +342,6 @@ void InputCAD::Process()
     ProcessElements();
     ProcessComposites();
 
-    //return;
-
     m_surfacemesh->HOSurf();
 
     if (m_mesh->m_verbose)
@@ -349,6 +349,7 @@ void InputCAD::Process()
         cout << endl;
         cout << m_mesh->m_element[3].size() << endl;
     }
+
 }
 }
 }

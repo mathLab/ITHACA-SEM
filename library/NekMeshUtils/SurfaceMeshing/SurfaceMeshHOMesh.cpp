@@ -384,12 +384,12 @@ void SurfaceMesh::HOSurf()
                     }
                     Norm = sqrt(Norm);
 
-                    if (Norm < 1E-8)
+                    if (Norm < 1E-6)
                     {
                         repeat = false;
                         break;
                     }
-                    if (itct > 1000)
+                    if (itct > 5000)
                     {
                         cout << "failed to optimise on curve" << endl;
                         for (int k = 0; k < nq; k++)
@@ -510,13 +510,13 @@ void SurfaceMesh::HOSurf()
                     }
                     Norm = sqrt(Norm);
 
-                    if (Norm < 1E-8)
+                    if (Norm < 1E-6)
                     {
                         repeat = false;
                         break;
                     }
 
-                    if (itct > 1000)
+                    if (itct > 5000)
                     {
                         cout << "failed to optimise on edge" << endl;
                         for (int k = 0; k < nq; k++)

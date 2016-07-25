@@ -75,6 +75,8 @@ private:
     void WriteXmlCurves(TiXmlElement *pRoot);
     /// Writes the <COMPOSITES> section of the XML file.
     void WriteXmlComposites(TiXmlElement *pRoot);
+    void WriteXmlCADId(TiXmlElement *pRoot);
+    void WriteXmlCAD(TiXmlElement *pRoot);
     /// Writes the <DOMAIN> section of the XML file.
     void WriteXmlDomain(TiXmlElement *pRoot);
     /// Writes the <EXPANSIONS> section of the XML file.

@@ -68,6 +68,7 @@ OutputNekpp::OutputNekpp(MeshSharedPtr m) : OutputModule(m)
     m_config["test"] = ConfigOption(
         true, "0", "Attempt to load resulting mesh and create meshgraph.");
     m_config["uncompress"] = ConfigOption(true, "0", "Uncompress xml sections");
+    m_config["nocad"] = ConfigOption(true,"0","Prevent CAD IO");
 }
 
 OutputNekpp::~OutputNekpp()
@@ -115,6 +116,11 @@ void OutputNekpp::Process()
     WriteXmlEdges(geomTag);
     WriteXmlFaces(geomTag);
     WriteXmlElements(geomTag);
+    if(m_mesh->m_hasCAD && !m_config["nocad"].beenSet)
+    {
+        WriteXmlCADId(geomTag);
+        WriteXmlCAD(geomTag);
+    }
     WriteXmlCurves(geomTag);
     WriteXmlComposites(geomTag);
     WriteXmlDomain(geomTag);
@@ -628,8 +634,11 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
             }
         }
     }
+
     if (!curve)
+    {
         return;
+    }
 
     TiXmlElement *curved = new TiXmlElement("CURVED");
 
@@ -678,32 +687,37 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
                 }
             }
         }
-        // 2D elements in 3-space, output face curvature information
-        else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
+
+        // 2D elements in 2- or 3-space, output face curvature information
+        if (m_mesh->m_expDim >= 2 && m_mesh->m_spaceDim >= m_mesh->m_expDim)
         {
             vector<ElementSharedPtr>::iterator it;
-            for (it = m_mesh->m_element[m_mesh->m_expDim].begin();
-                 it != m_mesh->m_element[m_mesh->m_expDim].end();
+            int d = m_mesh->m_expDim;
+            std::string tag  = d == 2 ? "F"      : "V";
+            std::string attr = d == 2 ? "FACEID" : "VOLID";
+
+            for (it  = m_mesh->m_element[d].begin();
+                 it != m_mesh->m_element[d].end();
                  ++it)
             {
                 // Only generate face curve if there are volume nodes
                 if ((*it)->GetVolumeNodes().size() > 0)
                 {
-                    TiXmlElement *e = new TiXmlElement("F");
+                    TiXmlElement *e = new TiXmlElement(tag);
                     e->SetAttribute("ID", facecnt++);
-                    e->SetAttribute("FACEID", (*it)->GetId());
+                    e->SetAttribute(attr, (*it)->GetId());
                     e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
                     e->SetAttribute(
                         "TYPE",
                         LibUtilities::kPointsTypeStr[(*it)->GetCurveType()]);
-
                     TiXmlText *t0 = new TiXmlText((*it)->GetXmlCurveString());
                     e->LinkEndChild(t0);
                     curved->LinkEndChild(e);
                 }
             }
         }
-        else if (m_mesh->m_expDim == 3)
+
+        if (m_mesh->m_expDim == 3)
         {
             FaceSet::iterator it2;
             for (it2 = m_mesh->m_faceSet.begin();
@@ -831,7 +845,7 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
             }
         }
         // 2D elements in 3-space, output face curvature information
-        else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
+        else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim >= 2)
         {
             vector<ElementSharedPtr>::iterator it;
             for (it = m_mesh->m_element[m_mesh->m_expDim].begin();
@@ -977,6 +991,124 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
         }
     }
     pRoot->LinkEndChild(curved);
+}
+
+void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
+{
+    int vertcnt = 0;
+    int edgecnt = 0;
+    int facecnt = 0;
+
+    TiXmlElement *cad = new TiXmlElement("CAD");
+
+    {
+        std::set<NodeSharedPtr>::iterator it;
+
+        std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
+                                    m_mesh->m_vertexSet.end());
+
+        for (it = tmp.begin(); it != tmp.end(); ++it)
+        {
+            if((*it)->GetNumCadCurve() > 0 || (*it)->GetNumCADSurf() > 0)
+            {
+                TiXmlElement *v = new TiXmlElement("V");
+                v->SetAttribute("ID", vertcnt++);
+                v->SetAttribute("VERTID", (*it)->m_id);
+                vector<string> str = (*it)->GetCADString();
+                for(int i = 0; i < str.size(); i++)
+                {
+                    TiXmlText *t = new TiXmlText(str[i]);
+                    v->LinkEndChild(t);
+                    if(i != str.size() - 1)
+                    {
+                        TiXmlText *t = new TiXmlText(":");
+                        v->LinkEndChild(t);
+                    }
+                }
+                cad->LinkEndChild(v);
+            }
+        }
+    }
+
+    {
+        EdgeSet::iterator it;
+        for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end();
+             ++it)
+        {
+            if((*it)->m_edgeNodes.size() == 0)
+            {
+                continue;
+            }
+
+            if((*it)->m_edgeNodes[0]->GetNumCadCurve() > 0 ||
+               (*it)->m_edgeNodes[0]->GetNumCADSurf() > 0)
+            {
+                for(int i = 0; i < (*it)->m_edgeNodes.size(); i++)
+                {
+                    TiXmlElement *v = new TiXmlElement("E");
+                    v->SetAttribute("ID", edgecnt++);
+                    v->SetAttribute("EDGEID", (*it)->m_id);
+                    v->SetAttribute("NODE", i);
+                    vector<string> str = (*it)->m_edgeNodes[i]->GetCADString();
+                    for(int i = 0; i < str.size(); i++)
+                    {
+                        TiXmlText *t = new TiXmlText(str[i]);
+                        v->LinkEndChild(t);
+                        if(i != str.size() - 1)
+                        {
+                            TiXmlText *t = new TiXmlText(":");
+                            v->LinkEndChild(t);
+                        }
+                    }
+                    cad->LinkEndChild(v);
+                }
+            }
+        }
+    }
+
+    {
+        FaceSet::iterator it;
+        for (it = m_mesh->m_faceSet.begin(); it != m_mesh->m_faceSet.end();
+             ++it)
+        {
+            if((*it)->m_faceNodes.size() == 0)
+            {
+                continue;
+            }
+
+            if((*it)->m_faceNodes[0]->GetNumCADSurf() > 0)
+            {
+                for(int i = 0; i < (*it)->m_faceNodes.size(); i++)
+                {
+                    TiXmlElement *v = new TiXmlElement("F");
+                    v->SetAttribute("ID", facecnt++);
+                    v->SetAttribute("FACEID", (*it)->m_id);
+                    v->SetAttribute("NODE", i);
+                    vector<string> str = (*it)->m_faceNodes[i]->GetCADString();
+                    for(int i = 0; i < str.size(); i++)
+                    {
+                        TiXmlText *t = new TiXmlText(str[i]);
+                        v->LinkEndChild(t);
+                        if(i != str.size() - 1)
+                        {
+                            TiXmlText *t = new TiXmlText(":");
+                            v->LinkEndChild(t);
+                        }
+                    }
+                    cad->LinkEndChild(v);
+                }
+            }
+        }
+    }
+
+    pRoot->LinkEndChild(cad);
+}
+
+void OutputNekpp::WriteXmlCADId(TiXmlElement *pRoot)
+{
+    TiXmlElement *cadTag = new TiXmlElement("CADID");
+    cadTag->SetAttribute("NAME", m_mesh->m_CADId);
+    pRoot->LinkEndChild(cadTag);
 }
 
 void OutputNekpp::WriteXmlComposites(TiXmlElement *pRoot)

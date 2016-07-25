@@ -1,0 +1,330 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+//  File: InputNek5000.cpp
+//
+//  For more information, please see: http://www.nektar.info/
+//
+//  The MIT License
+//
+//  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
+//  Computing and Imaging Institute, University of Utah (USA).
+//
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//
+//  Description: Reads a Nektar++ FLD file.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+using namespace std;
+
+#include <boost/algorithm/string.hpp>
+
+#include "InputNek5000.h"
+using namespace Nektar;
+
+namespace Nektar
+{
+namespace FieldUtils
+{
+
+ModuleKey InputNek5000::m_className[1] = {
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "fld5000"), InputNek5000::create,
+        "Reads Nek5000 field file.")
+};
+
+template <typename T>
+void swap_endian(T &u)
+{
+    union
+    {
+        T u;
+        unsigned char u8[sizeof(T)];
+    } source, dest;
+
+    source.u = u;
+
+    for (size_t k = 0; k < sizeof(T); k++)
+        dest.u8[k] = source.u8[sizeof(T) - k - 1];
+
+    u = dest.u;
+}
+
+/**
+ * @brief Set up InputNek5000 object.
+ *
+ */
+InputNek5000::InputNek5000(FieldSharedPtr f) : InputModule(f)
+{
+    m_allowedFiles.insert("fld5000");
+}
+
+/**
+ *
+ */
+InputNek5000::~InputNek5000()
+{
+}
+
+/**
+ *
+ */
+void InputNek5000::Process(po::variables_map &vm)
+{
+    if (m_f->m_verbose)
+    {
+        if (m_f->m_comm->TreatAsRankZero())
+        {
+            cout << "Processing Nek5000 field file" << endl;
+        }
+    }
+
+    string fldending = "fld5000";
+    ifstream file(m_f->m_inputfiles[fldending][0], ios::binary);
+
+    // Header: 132 bytes for binary.
+    vector<char> data(132);
+    file.read(&data[0], 132);
+
+    // Check header
+    string check(&data[0], 4);
+    string header(&data[4], 128);
+
+    if (check != "#std")
+    {
+        cerr << "Unable to read file" << endl;
+        abort();
+    }
+
+    // Determine whether we need to byte-swap data: 4-byte float at byte 80
+    // should be 6.54321.
+    bool byteSwap = false;
+    float test;
+
+    file.read((char *)(&test), 4);
+    if (test > 6.5 && test < 6.6)
+    {
+        byteSwap = false;
+    }
+    else
+    {
+        swap_endian(test);
+        if (test < 6.5 || test > 6.6)
+        {
+            cerr << "Unable to determine endian-ness of file" << endl;
+            abort();
+        }
+        byteSwap = true;
+    }
+
+    stringstream ss;
+    ss.str(header);
+
+    int nBytes, nBlocksXYZ[3], nBlocks, nTotBlocks, dir, nDirs, nCycle, nDim;
+    NekDouble time;
+
+    string remain;
+    ss >> nBytes >> nBlocksXYZ[0] >> nBlocksXYZ[1] >> nBlocksXYZ[2]
+       >> nBlocks >> nTotBlocks >> time >> nCycle >> dir >> nDirs >> remain;
+    boost::trim(remain);
+
+    nDim = nBlocksXYZ[2] == 1 ? 2 : 3;
+
+    if (m_f->m_verbose)
+    {
+        cout << "Found header information:" << endl;
+        cout << " -- " << (byteSwap ? "" : "do not ") << "need to swap endian"
+             << endl;
+        cout << " -- Data byte size       : " << nBytes << endl;
+        cout << " -- Number of xyz blocks : " << nBlocksXYZ[0] << "x"
+             << nBlocksXYZ[1] << "x" << nBlocksXYZ[2] << endl;
+        cout << " -- Blocks in file/total : " << nBlocks << "/" << nTotBlocks
+             << endl;
+        cout << " -- Simulation time      : " << time << endl;
+        cout << " -- Number of cycles     : " << nCycle << endl;
+        cout << " -- Number of dirs       : " << dir << "/" << nDirs << endl;
+        cout << " -- Remaining header     : " << remain << endl;
+    }
+
+    // Major limitation: we don't read out of multiple directories
+    if (nDirs != 1)
+    {
+        cout << "Number of directories must be one" << endl;
+        abort();
+    }
+
+    if (nBlocks != nTotBlocks)
+    {
+        cout << "Partial field output not supported" << endl;
+        abort();
+    }
+
+    // We don't support non-double data
+    if (nBytes != 8)
+    {
+        cout << "Data file must contain double-precision data" << endl;
+        abort();
+    }
+
+    // Set up a field definition
+    LibUtilities::FieldDefinitionsSharedPtr fielddef = MemoryManager<
+        LibUtilities::FieldDefinitions>::AllocateSharedPtr();
+    fielddef->m_shapeType         = LibUtilities::eHexahedron;
+    fielddef->m_numHomogeneousDir = 0;
+    fielddef->m_homoStrips        = false;
+    fielddef->m_sharedFilesystem  = true;
+    fielddef->m_pointsDef         = false;
+    fielddef->m_uniOrder          = true;
+    fielddef->m_numPointsDef      = false;
+
+    for (int i = 0; i < nDim; ++i)
+    {
+        fielddef->m_basis.push_back(LibUtilities::eGLL_Lagrange);
+        fielddef->m_numModes.push_back(nBlocksXYZ[i]);
+    }
+
+    // Read element IDs
+    uint32_t maxID = 0, minID = numeric_limits<uint32_t>::max();
+    for (uint32_t i = 0; i < nBlocks; ++i)
+    {
+        uint32_t blockNum;
+        file.read((char *)&blockNum, 4);
+        if (byteSwap)
+        {
+            swap_endian(blockNum);
+        }
+        fielddef->m_elementIDs.push_back(blockNum-1);
+
+        maxID = maxID > blockNum ? maxID : blockNum;
+        minID = minID < blockNum ? minID : blockNum;
+    }
+
+    // Determine how many fields we have to extract
+    size_t blockSize = nBlocksXYZ[0] * nBlocksXYZ[1] * nBlocksXYZ[2];
+    size_t dataSize = blockSize * nBlocks;
+
+    for (string::size_type i = 0; i < remain.size(); ++i)
+    {
+        switch (remain[i])
+        {
+            case 'U':
+                fielddef->m_fields.push_back("u");
+                fielddef->m_fields.push_back("v");
+                if (nDim == 3)
+                {
+                    fielddef->m_fields.push_back("w");
+                }
+                break;
+            case 'P':
+                fielddef->m_fields.push_back("p");
+                break;
+            case 'T':
+                fielddef->m_fields.push_back("T");
+                break;
+            case '1':
+            case '2':
+            case '3':
+                fielddef->m_fields.push_back(string("scalar") + remain[i]);
+                break;
+            case ' ':
+                continue;
+            default:
+                cerr << "Field contains unknown variable: " << remain[i] << endl;
+                abort();
+        }
+    }
+
+    m_f->m_data.resize(1);
+    m_f->m_data[0].resize(fielddef->m_fields.size() * dataSize);
+
+    // Now reprocess since different fields need different logic
+    for (size_t i = 0, cnt = 0; i < remain.size(); ++i)
+    {
+        switch (remain[i])
+        {
+            case 'U':
+            {
+                size_t cntVel[3] = {
+                    cnt, cnt + dataSize, cnt + 2*dataSize
+                };
+
+                for (size_t j = 0; j < nBlocks; ++j)
+                {
+                    for (size_t k = 0; k < nDim; ++k)
+                    {
+                        file.read(
+                            (char *)&m_f->m_data[0][cntVel[k]],
+                            blockSize * sizeof(NekDouble));
+                        cntVel[k] += blockSize;
+                    }
+                }
+
+                cnt += nDim * dataSize;
+                break;
+            }
+            case 'P':
+            {
+                file.read(
+                    (char *)&m_f->m_data[0][cnt],
+                    dataSize * sizeof(NekDouble));
+                cnt += dataSize;
+                break;
+            }
+            case '1':
+            case '2':
+            case '3':
+            {
+                file.read(
+                    (char *)&m_f->m_data[0][cnt],
+                    dataSize * sizeof(NekDouble));
+                cnt += dataSize;
+                break;
+            }
+            case ' ':
+                continue;
+        }
+    }
+
+    m_f->m_fielddef.push_back(fielddef);
+
+    if (!m_f->m_fld)
+    {
+        if (m_f->m_session)
+        {
+            m_f->m_fld =
+                MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
+                    m_f->m_session->GetComm());
+        }
+        else // serial communicator
+        {
+            LibUtilities::CommSharedPtr c =
+                LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+            m_f->m_fld =
+                MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(c);
+        }
+    }
+}
+}
+}

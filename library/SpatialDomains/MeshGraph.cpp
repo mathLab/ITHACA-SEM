@@ -2376,25 +2376,25 @@ namespace Nektar
                             m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
                         }
 
-                        // loop over all elements and set expansion
-                        for(k = 0; k < fielddef.size(); ++k)
-                        {
-                            for(int h = 0; h < fielddef[k]->m_fields.size(); ++h)
-                            {
-                                if(fielddef[k]->m_fields[h] == field)
-                                {
-                                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
-                                    LibUtilities::BasisKeyVector def;
+                        // // loop over all elements and set expansion
+                        // for(k = 0; k < fielddef.size(); ++k)
+                        // {
+                        //     for(int h = 0; h < fielddef[k]->m_fields.size(); ++h)
+                        //     {
+                        //         if(fielddef[k]->m_fields[h] == field)
+                        //         {
+                        //             expansionMap = m_expansionMapShPtrMap.find(field)->second;
+                        //             LibUtilities::BasisKeyVector def;
 
-                                    for(int g = 0; g < fielddef[k]->m_elementIDs.size(); ++g)
-                                    {
-                                        ExpansionShPtr tmpexp =
-                                                MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
-                                        (*expansionMap)[fielddef[k]->m_elementIDs[g]] = tmpexp;
-                                    }
-                                }
-                            }
-                        }
+                        //             for(int g = 0; g < fielddef[k]->m_elementIDs.size(); ++g)
+                        //             {
+                        //                 ExpansionShPtr tmpexp =
+                        //                         MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
+                        //                 (*expansionMap)[fielddef[k]->m_elementIDs[g]] = tmpexp;
+                        //             }
+                        //         }
+                        //     }
+                        // }
                     }
                 }
             }
@@ -2418,7 +2418,6 @@ namespace Nektar
 
                 for (j = 0; j < fielddef[i]->m_elementIDs.size(); ++j)
                 {
-
                     LibUtilities::BasisKeyVector bkeyvec;
                     id = fielddef[i]->m_elementIDs[j];
 
@@ -2773,12 +2772,14 @@ namespace Nektar
                         case LibUtilities::eHexahedron:
                         {
                             k = fielddef[i]->m_elementIDs[j];
-                            if(m_hexGeoms.count(k) == 0)
+                            HexGeomMap::iterator hIt = m_hexGeoms.find(k);
+
+                            if(hIt == m_hexGeoms.end())
                             {
                                 continue;
                             }
 
-                            geom = m_hexGeoms[k];
+                            geom = hIt->second;
 
                             for(int b = 0; b < 3; ++b)
                             {
@@ -2813,17 +2814,13 @@ namespace Nektar
                         default:
                             ASSERTL0(false,"Need to set up for pyramid and prism 3D Expansions");
                             break;
-                        }
+                    }
 
-                        for(k = 0; k < fields.size(); ++k)
-                        {
-                            expansionMap = m_expansionMapShPtrMap.find(fields[k])->second;
-                            if((*expansionMap).find(id) != (*expansionMap).end())
-                            {
-                                (*expansionMap)[id]->m_geomShPtr = geom;
-                                (*expansionMap)[id]->m_basisKeyVector = bkeyvec;
-                            }
-                        }
+                    for(k = 0; k < fields.size(); ++k)
+                    {
+                        expansionMap = m_expansionMapShPtrMap[fields[k]];
+                        (*expansionMap)[id] = MemoryManager<Expansion>::AllocateSharedPtr(geom, bkeyvec);
+                    }
                 }
             }
         }

@@ -263,6 +263,10 @@ void InputNek5000::Process()
     int nek2nekedge[12] = {
         0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7
     };
+
+    // Map to reorder Nek5000 -> Nektar++ face ordering. Again we have the same
+    // counter-clockwise ordering; however the 4 vertical faces of the hex are
+    // first, followed by bottom face and then top face.
     int nek2nekface[6] = {
         1, 2, 3, 4, 0, 5
     };

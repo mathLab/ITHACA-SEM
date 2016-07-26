@@ -118,3 +118,10 @@ ADD_NEKTAR_TEST        (Nektar/Tube45)
 # StarCCM tests
 ADD_NEKTAR_TEST        (StarTec/CubePer)
 ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)
+
+# MeshGen test
+IF(NEKTAR_USE_MESHGEN)
+    ADD_NEKTAR_TEST        (MeshGen/cylinder)
+    ADD_NEKTAR_TEST        (MeshGen/sphere)
+    ADD_NEKTAR_TEST_LENGTHY(MeshGen/predator)
+ENDIF()

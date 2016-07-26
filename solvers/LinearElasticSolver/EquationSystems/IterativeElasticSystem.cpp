@@ -42,7 +42,7 @@
 #include <LocalRegions/MatrixKey.h>
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
-#include <SolverUtils/Core/Deform.h>
+#include <GlobalMapping/Deform.h>
 
 #include <LinearElasticSolver/EquationSystems/IterativeElasticSystem.h>
 
@@ -139,7 +139,7 @@ void IterativeElasticSystem::v_DoSolve()
 
         // Perform solve for this iteration and update geometry accordingly.
         LinearElasticSystem::v_DoSolve();
-        UpdateGeometry(m_graph, m_fields);
+        GlobalMapping::UpdateGeometry(m_graph, m_fields);
         WriteGeometry(i);
 
         // Check for invalid elements.

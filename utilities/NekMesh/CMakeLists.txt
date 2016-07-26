@@ -23,6 +23,7 @@ SET(NekMeshHeaders
     ProcessModules/ProcessSpherigon.h
     ProcessModules/ProcessTetSplit.h
     ProcessModules/ProcessOptiExtract.h
+    ProcessModules/ProcessInsertSurface.h
 )
 
 SET(NekMeshSources
@@ -51,6 +52,7 @@ SET(NekMeshSources
     ProcessModules/ProcessSpherigon.cpp
     ProcessModules/ProcessTetSplit.cpp
     ProcessModules/ProcessOptiExtract.cpp
+    ProcessModules/ProcessInsertSurface.cpp
 )
 
 IF (NEKTAR_USE_CCM)

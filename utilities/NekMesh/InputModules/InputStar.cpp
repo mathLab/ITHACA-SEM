@@ -39,8 +39,6 @@
 #include <NekMeshUtils/MeshElements/Element.h>
 #include "InputStar.h"
 
-#include <ANN/ANN.h>
-
 using namespace std;
 using namespace Nektar::NekMeshUtils;
 
@@ -61,11 +59,6 @@ InputStar::InputStar(MeshSharedPtr m) : InputModule(m)
         true,
         "0",
         "Just write out tags from star file for each surface/composite");
-
-    m_config["reconstruct"] = ConfigOption(
-        false,
-        "",
-        "file containing CAD taged surface");
 }
 
 InputStar::~InputStar()
@@ -101,114 +94,6 @@ void InputStar::Process()
     ProcessFaces();
     ProcessElements();
     ProcessComposites();
-
-    if(m_config["reconstruct"].beenSet)
-    {
-        string file = m_config["reconstruct"].as<string>();
-        cout << "recompiling cad information from " << file << endl;
-        MeshSharedPtr inMsh = boost::shared_ptr<Mesh>(new Mesh());
-        inMsh->m_verbose = true;
-        ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
-            ModuleKey(eInputModule, "xml"), inMsh);
-        mod->RegisterConfig("infile", file);
-        mod->Process();
-
-        //build ann tree of surface verticies from inMsh
-        //match surface vertices in ccm mesh to inMsh and copy information
-
-        //tolerance of matching vertices
-        NekDouble tol = 1e-5;
-
-        NodeSet surfaceNodes;
-        for(int i = 0; i < inMsh->m_element[2].size(); i++)
-        {
-            vector<NodeSharedPtr> ns = inMsh->m_element[2][i]->GetVertexList();
-            for(int j = 0; j < ns.size(); j++)
-            {
-                surfaceNodes.insert(ns[j]);
-            }
-        }
-
-        vector<NodeSharedPtr> inMshnodeList(surfaceNodes.begin(), surfaceNodes.end());
-
-        ANNpointArray dataPts;
-        ANNpoint queryPt;
-        ANNidxArray nnIdx;
-        ANNdistArray dists;
-        ANNkd_tree* kdTree;
-
-        queryPt = annAllocPt(3);
-        dataPts = annAllocPts(inMshnodeList.size(),3);
-
-        for(int i = 0; i < inMshnodeList.size(); i++)
-        {
-            dataPts[i][0] = inMshnodeList[i]->m_x;
-            dataPts[i][1] = inMshnodeList[i]->m_y;
-            dataPts[i][2] = inMshnodeList[i]->m_z;
-        }
-
-        kdTree = new ANNkd_tree(dataPts, inMshnodeList.size(), 3);
-
-        int sample = 1;
-        nnIdx = new ANNidx[sample];
-        dists = new ANNdist[sample];
-
-        surfaceNodes.clear();
-        for(int i = 0; i < m_mesh->m_element[2].size(); i++)
-        {
-            vector<NodeSharedPtr> ns = m_mesh->m_element[2][i]->GetVertexList();
-            for(int j = 0; j < ns.size(); j++)
-            {
-                surfaceNodes.insert(ns[j]);
-            }
-        }
-
-        ASSERTL0(surfaceNodes.size() == inMshnodeList.size(),
-                 "surface mesh node count mismatch, will not work");
-
-        EdgeSet surfEdges;
-        for(int i = 0; i < m_mesh->m_element[2].size(); i++)
-        {
-            FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
-            vector<EdgeSharedPtr> es = f->m_edgeList;
-            for(int j = 0; j < es.size(); j++)
-            {
-                surfEdges.insert(es[j]);
-            }
-        }
-
-        EdgeSet::iterator it;
-        for(it = surfEdges.begin(); it != surfEdges.end(); it++)
-        {
-            queryPt[0] = (*it)->m_n1->m_x;
-            queryPt[1] = (*it)->m_n1->m_y;
-            queryPt[2] = (*it)->m_n1->m_z;
-            kdTree->annkSearch(queryPt,sample,nnIdx,dists);
-            ASSERTL0(sqrt(dists[0]) < tol, "cannot locate point accurately enough");
-            NodeSharedPtr inN1 = inMshnodeList[nnIdx[0]];
-
-            queryPt[0] = (*it)->m_n2->m_x;
-            queryPt[1] = (*it)->m_n2->m_y;
-            queryPt[2] = (*it)->m_n2->m_z;
-            kdTree->annkSearch(queryPt,sample,nnIdx,dists);
-            ASSERTL0(sqrt(dists[0]) < tol, "cannot locate point accurately enough");
-            NodeSharedPtr inN2 = inMshnodeList[nnIdx[0]];
-
-            EdgeSharedPtr tst = boost::shared_ptr<Edge>(new Edge(inN1,inN2));
-
-            EdgeSet::iterator f = inMsh->m_edgeSet.find(tst);
-
-            ASSERTL0(f != inMsh->m_edgeSet.end(),"could not find edge in input");
-
-            (*it)->m_edgeNodes = (*f)->m_edgeNodes;
-            (*it)->m_curveType = (*f)->m_curveType;
-
-            if((*f)->m_n1->Distance((*it)->m_n1) > tol)
-            {
-                reverse((*it)->m_edgeNodes.begin(),(*it)->m_edgeNodes.end());
-            }
-        }
-    }
 }
 
 void InputStar::SetupElements(void)

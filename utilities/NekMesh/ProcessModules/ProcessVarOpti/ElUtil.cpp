@@ -397,6 +397,7 @@ void ElUtil::Evaluate()
 
     delta = minEdge / m_el->GetConf().m_order / 500.0;
 
+    minJac = mn;
 }
 
 ElUtilJob* ElUtil::GetJob()

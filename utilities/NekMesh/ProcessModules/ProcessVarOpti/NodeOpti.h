@@ -75,7 +75,10 @@ protected:
 
     void CalcDX();
 
+    void CalcMinJac();
+
     NekDouble dx;
+    NekDouble minJac;
     ResidualSharedPtr res;
     DerivUtilSharedPtr derivUtil;
     optimiser opti;

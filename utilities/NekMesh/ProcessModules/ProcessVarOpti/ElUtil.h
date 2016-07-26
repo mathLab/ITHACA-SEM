@@ -69,6 +69,7 @@ public:
     std::vector<std::vector<NekDouble *> > nodes;
     std::vector<Array<OneD, NekDouble> > maps;
     NekDouble delta;
+    NekDouble minJac;
 
     void Evaluate();
 

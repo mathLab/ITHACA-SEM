@@ -24,7 +24,7 @@ IF(NEKTAR_USE_MESHGEN)
 
         SET(OCC_LIBRARIES_TMP PTKernel TKernel TKMath TKBRep TKIGES TKSTEP TKSTEPAttr
             TKSTEP209 TKSTEPBase TKShapeSchema TKGeomBase TKGeomAlgo TKG3d TKG2d
-            TKXSBase TKPShape TKTopAlgo)
+            TKXSBase TKPShape TKTopAlgo TKShHealing)
         FOREACH(OCC_LIB ${OCC_LIBRARIES_TMP})
             LIST(APPEND OCC_LIBRARIES ${TPDIST}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${OCC_LIB}${CMAKE_SHARED_LIBRARY_SUFFIX})
         ENDFOREACH()
@@ -56,10 +56,10 @@ IF(NEKTAR_USE_MESHGEN)
             )
 
         # Patch OS X libraries to fix install name problems.
-        #EXTERNALPROJECT_ADD_STEP(opencascade-6.9 patch-install-path
-        #    COMMAND bash ${CMAKE_SOURCE_DIR}/cmake/scripts/patch-occ.sh ${TPSRC}/opencascade-6.8/i686/lib ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}
-        #    DEPENDEES build
-        #    DEPENDERS install)
+        EXTERNALPROJECT_ADD_STEP(opencascade-6.9 patch-install-path
+            COMMAND bash ${CMAKE_SOURCE_DIR}/cmake/scripts/patch-occ.sh ${TPDIST}/lib ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}
+            ALWAYS 1
+            DEPENDEES install)
 
         MESSAGE(STATUS "Build OpenCascade: ${TPDIST}/lib")
         LINK_DIRECTORIES(${TPDIST}/lib)

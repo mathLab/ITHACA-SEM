@@ -47,6 +47,8 @@
 #include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
 #include <NekMeshUtils/BLMeshing/BLMesh.h>
 
+#include <NekMeshUtils/ExtLibInterface/TetGenInterface.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -96,6 +98,8 @@ private:
     int m_numtet;
     /// conncetivity of the tets from the interface
     std::vector<Array<OneD, int> > m_tetconnect;
+
+    TetGenInterfaceSharedPtr tetgen;
 
 };
 

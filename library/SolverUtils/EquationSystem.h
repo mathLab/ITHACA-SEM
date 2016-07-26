@@ -46,7 +46,7 @@
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 #include <MultiRegions/ExpList.h>
-#include <SolverUtils/Interpolator.h>
+#include <FieldUtils/Interpolator.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
 
@@ -454,7 +454,7 @@ namespace Nektar
             /// Field input/output
             LibUtilities::FieldIOSharedPtr              m_fld;
             /// Map of interpolator objects
-            std::map<std::string, Interpolator >        m_interpolators;
+            std::map<std::string, FieldUtils::Interpolator > m_interpolators;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.

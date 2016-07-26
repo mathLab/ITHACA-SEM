@@ -167,6 +167,29 @@ namespace Nektar
                 const std::string& pFunctionName,
                 const NekDouble& pTime = 0.0,
                 const int domain = 0);
+
+            // Populate an array with a function variable from session.
+            SOLVER_UTILS_EXPORT void EvaluateFunctionExp(
+                std::string pFieldName,
+                Array<OneD, NekDouble>& pArray,
+                const std::string& pFunctionName,
+                const NekDouble& pTime = 0.0,
+                const int domain = 0);
+
+            // Populate an array with a function variable from session.
+            SOLVER_UTILS_EXPORT void EvaluateFunctionFld(
+                std::string pFieldName,
+                Array<OneD, NekDouble>& pArray,
+                const std::string& pFunctionName,
+                const NekDouble& pTime = 0.0,
+                const int domain = 0);
+
+            SOLVER_UTILS_EXPORT void EvaluateFunctionPts(
+                std::string pFieldName,
+                Array<OneD, NekDouble>& pArray,
+                const std::string& pFunctionName,
+                const NekDouble& pTime = 0.0,
+                const int domain = 0);
             
             // Describe a function.
             SOLVER_UTILS_EXPORT std::string DescribeFunction(

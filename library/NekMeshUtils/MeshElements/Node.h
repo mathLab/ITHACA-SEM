@@ -276,18 +276,6 @@ public:
         return search->second.second;
     }
 
-    std::vector<std::pair<int, CADCurveSharedPtr> > GetCADCurves()
-    {
-        std::vector<std::pair<int, CADCurveSharedPtr> > lst;
-        std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator c;
-        for (c = CADCurveList.begin(); c != CADCurveList.end(); c++)
-        {
-            lst.push_back(
-                std::pair<int, CADCurveSharedPtr>(c->first, c->second.first));
-        }
-        return lst;
-    }
-
     std::vector<std::pair<int, CADSurfSharedPtr> > GetCADSurfs()
     {
         std::vector<std::pair<int, CADSurfSharedPtr> > lst;
@@ -319,40 +307,6 @@ public:
         CADSurfSharedPtr su = CADSurfList[s].first;
         CADSurfList[s] =
             std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> >(su, uv);
-    }
-
-    void MoveCurve(Array<OneD, NekDouble> l, int s, NekDouble t)
-    {
-        m_x                 = l[0];
-        m_y                 = l[1];
-        m_z                 = l[2];
-        CADCurveSharedPtr cu = CADCurveList[s].first;
-        CADCurveList[s] =
-            std::pair<CADCurveSharedPtr, NekDouble >(cu, t);
-    }
-
-    std::vector<std::string> GetCADString()
-    {
-        std::vector<std::string> ret;
-        std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator c;
-        for (c = CADCurveList.begin(); c != CADCurveList.end(); c++)
-        {
-            std::stringstream ss;
-            ss << std::scientific << std::setprecision(8);
-            ss << "C " << c->first << " " << c->second.second << " " << 0.0;
-            ret.push_back(ss.str());
-        }
-        std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >::
-            iterator s;
-        for (s = CADSurfList.begin(); s != CADSurfList.end(); s++)
-        {
-            std::stringstream ss;
-            ss << std::scientific << std::setprecision(8);
-            ss << "S " << s->first << " " << s->second.second[0] <<
-                  " " << s->second.second[1];
-            ret.push_back(ss.str());
-        }
-        return ret;
     }
 
 #endif
@@ -406,7 +360,6 @@ struct NodeHash : std::unary_function<NodeSharedPtr, std::size_t>
     }
 };
 typedef boost::unordered_set<NodeSharedPtr, NodeHash> NodeSet;
-
 }
 }
 

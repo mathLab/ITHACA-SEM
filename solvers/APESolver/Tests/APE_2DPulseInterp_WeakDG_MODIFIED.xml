@@ -342,8 +342,7 @@
       </REGION>
     </BOUNDARYCONDITIONS>
     <FUNCTION NAME="Baseflow"> <!-- Incompressible base flow -->
-      <F VAR="u0" TIMEDEPENDENT="1" FILE="APE_2DPulseInterp_baseflow_%14.8E.pts"/>
-      <E VAR="v0" VALUE="0"/>
+      <F VAR="u0,v0" TIMEDEPENDENT="1" FILE="APE_2DPulseInterp_baseflow_%14.8E.pts"/>
       <E VAR="p0" VALUE="Pinfinity"/>
       <E VAR="rho0" VALUE="Rho0"/>
     </FUNCTION>

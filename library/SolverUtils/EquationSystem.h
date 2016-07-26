@@ -190,6 +190,9 @@ namespace Nektar
                 const std::string& pFunctionName,
                 const NekDouble& pTime = 0.0,
                 const int domain = 0);
+
+            SOLVER_UTILS_EXPORT void InterpPts(
+                std::string funcFilename, std::string filename, Nektar::LibUtilities::PtsFieldSharedPtr& outPts );
             
             // Describe a function.
             SOLVER_UTILS_EXPORT std::string DescribeFunction(

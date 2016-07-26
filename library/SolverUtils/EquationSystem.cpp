@@ -1000,70 +1000,77 @@ namespace Nektar
             }
 
             LibUtilities::PtsFieldSharedPtr outPts;
-
-            LibUtilities::PtsFieldSharedPtr ptsField;
-            LibUtilities::PtsIO ptsIO(m_session->GetComm());
-            ptsIO.Import(filename, ptsField);
-
-            Array<OneD, Array<OneD, NekDouble> > pts(ptsField->GetDim() +
-                                                    ptsField->GetNFields());
-            for (int i = 0; i < ptsField->GetDim() + ptsField->GetNFields(); ++i)
-            {
-                pts[i] = Array<OneD, NekDouble>(nq);
-            }
-            if (ptsField->GetDim() == 1)
-            {
-                m_fields[0]->GetCoords(pts[0]);
-            }
-            else if (ptsField->GetDim() == 2)
-            {
-                m_fields[0]->GetCoords(pts[0], pts[1]);
-            }
-            else if (ptsField->GetDim() == 3)
-            {
-                m_fields[0]->GetCoords(pts[0], pts[1], pts[2]);
-            }
-            outPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
-                ptsField->GetDim(), ptsField->GetFieldNames(), pts);
-
-            //  check if we already computed this funcKey combination
-            std::string interpKey =
-                m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
-            map<std::string, FieldUtils::Interpolator>::iterator it =
-                m_interpolators.find(interpKey);
-            if (it == m_interpolators.end())
-            {
-                m_interpolators[interpKey] =
-                    FieldUtils::Interpolator(Nektar::FieldUtils::eShepard);
-                if (m_comm->GetRank() == 0)
-                {
-                    m_interpolators[interpKey].SetProgressCallback(
-                        &EquationSystem::PrintProgressbar, this);
-                }
-                m_interpolators[interpKey].CalcWeights(ptsField, outPts);
-                if (m_comm->GetRank() == 0)
-                {
-                    cout << endl;
-                    if (GetSession()->DefinesCmdLineArgument("verbose"))
-                    {
-                        m_interpolators[interpKey].PrintStatistics();
-                    }
-                }
-            }
-            m_interpolators[interpKey].Interpolate(ptsField, outPts);
+            std::string funcFilename = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
+            InterpPts(funcFilename, filename, outPts);
 
             int fieldInd;
-            vector<string> fieldNames = ptsField->GetFieldNames();
+            vector<string> fieldNames = outPts->GetFieldNames();
             for (fieldInd = 0; fieldInd < fieldNames.size(); ++fieldInd)
             {
-                if (ptsField->GetFieldName(fieldInd) == pFieldName)
+                if (outPts->GetFieldName(fieldInd) == pFieldName)
                 {
                     break;
                 }
             }
             ASSERTL0(fieldInd != fieldNames.size(), "field not found");
 
-            pArray = pts[ptsField->GetDim() + fieldInd];
+            pArray = outPts->GetPts(fieldInd + outPts->GetDim());
+        }
+
+        void EquationSystem::InterpPts(std::string funcFilename,
+                                       std::string filename,
+                                       LibUtilities::PtsFieldSharedPtr &outPts)
+        {
+            unsigned int nq = m_fields[0]->GetNpoints();
+
+            LibUtilities::PtsFieldSharedPtr inPts;
+            LibUtilities::PtsIO ptsIO(m_session->GetComm());
+            ptsIO.Import(filename, inPts);
+
+            Array<OneD, Array<OneD, NekDouble> > pts(inPts->GetDim() + inPts->GetNFields());
+            for (int i = 0; i < inPts->GetDim() + inPts->GetNFields(); ++i)
+            {
+                pts[i] = Array<OneD, NekDouble>(nq);
+            }
+            if (inPts->GetDim() == 1)
+            {
+                m_fields[0]->GetCoords(pts[0]);
+            }
+            else if (inPts->GetDim() == 2)
+            {
+                m_fields[0]->GetCoords(pts[0], pts[1]);
+            }
+            else if (inPts->GetDim() == 3)
+            {
+                m_fields[0]->GetCoords(pts[0], pts[1], pts[2]);
+            }
+            outPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+                inPts->GetDim(), inPts->GetFieldNames(), pts);
+
+            //  check if we already computed this funcKey combination
+            map<std::string, FieldUtils::Interpolator>::iterator it =
+                m_interpolators.find(funcFilename);
+            if (it == m_interpolators.end())
+            {
+                m_interpolators[funcFilename] =
+                    FieldUtils::Interpolator(Nektar::FieldUtils::eShepard);
+                if (m_comm->GetRank() == 0)
+                {
+                    m_interpolators[funcFilename].SetProgressCallback(
+                        &EquationSystem::PrintProgressbar, this);
+                }
+                m_interpolators[funcFilename].CalcWeights(inPts, outPts);
+                if (m_comm->GetRank() == 0)
+                {
+                    cout << endl;
+                    if (GetSession()->DefinesCmdLineArgument("verbose"))
+                    {
+                        m_interpolators[funcFilename].PrintStatistics();
+                    }
+                }
+            }
+            m_interpolators[funcFilename].Interpolate(inPts, outPts);
+
         }
 
 

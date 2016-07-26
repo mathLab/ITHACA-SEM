@@ -50,15 +50,11 @@ struct DerivUtil
     NekMatrix<NekDouble> VdmD[3];
     NekMatrix<NekDouble> VdmDL[3]; //deriv matrix without interp
     NekVector<NekDouble> quadW;
-};
-typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
 
-struct PtsHelper
-{
     int ptsHigh;
     int ptsLow;
 };
-typedef boost::shared_ptr<PtsHelper> PtsHelperSharedPtr;
+typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
 
 enum optimiser
 {
@@ -75,7 +71,6 @@ struct Residual
     int nDoF;
     int startInv;
     NekDouble worstJac;
-    NekDouble func;
 };
 
 typedef boost::shared_ptr<Residual> ResidualSharedPtr;
@@ -93,12 +88,13 @@ public:
     ProcessVarOpti(MeshSharedPtr m);
     virtual ~ProcessVarOpti();
 
-    /// Write mesh to output file.
     virtual void Process();
+
 private:
     typedef std::map<int, std::vector<ElUtilSharedPtr> > NodeElMap;
 
     void FillQuadPoints();
+    void BuildDerivUtil();
     void GetElementMap();
     std::vector<Array<OneD, NekDouble> > MappingIdealToRef(ElementSharedPtr el);
     std::vector<std::vector<NodeSharedPtr> > GetColouredNodes();
@@ -108,7 +104,6 @@ private:
 
     ResidualSharedPtr res;
     DerivUtilSharedPtr derivUtil;
-    PtsHelperSharedPtr ptsHelp;
     optimiser opti;
 };
 

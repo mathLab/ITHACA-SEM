@@ -47,12 +47,11 @@ namespace Utilities
 
 boost::mutex mtx2;
 
-ElUtil::ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d, PtsHelperSharedPtr p,
+ElUtil::ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d,
                ResidualSharedPtr r, int n)
 {
     m_el = e;
     derivUtil = d;
-    ptsHelp = p;
     res = r;
     m_mode = n;
     m_dim = m_el->GetDim();
@@ -215,7 +214,7 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
 
         J = J * R;
 
-        for(int i = 0 ; i < ptsHelp->ptsHigh; i++)
+        for(int i = 0 ; i < derivUtil->ptsHigh; i++)
         {
             Array<OneD, NekDouble> r(10,0.0); //store det in 10th entry
 

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessJac.h
+//  File: NodeOpti.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -158,7 +158,6 @@ void NodeOpti3D3D::Optimise()
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
-        res->func = max(res->func, functional);
         mtx.unlock();
     }
 }
@@ -228,7 +227,6 @@ void NodeOpti1D3D::Optimise()
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
-        res->func = max(res->func, functional);
         mtx.unlock();
     }
 }
@@ -300,7 +298,6 @@ void NodeOpti2D3D::Optimise()
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
-        res->func = max(res->func, functional);
         mtx.unlock();
     }
 }
@@ -543,21 +540,21 @@ template<int DIM>
 NekDouble NodeOpti::GetFunctional()
 {
     const int nElmt      = data.size();
-    const int totpts = ptsHelp->ptsLow * nElmt;
+    const int totpts = derivUtil->ptsLow * nElmt;
     NekDouble X[DIM * totpts];
 
     // Store x/y components of each element sequentially in memory
     for (int i = 0, cnt = 0; i < nElmt; ++i)
     {
-        for (int j = 0; j < ptsHelp->ptsLow; ++j)
+        for (int j = 0; j < derivUtil->ptsLow; ++j)
         {
             for (int d = 0; d < DIM; ++d)
             {
-                X[cnt + d*ptsHelp->ptsLow + j] = *(data[i]->nodes[j][d]);
+                X[cnt + d*derivUtil->ptsLow + j] = *(data[i]->nodes[j][d]);
             }
         }
 
-        cnt += DIM*ptsHelp->ptsLow;
+        cnt += DIM*derivUtil->ptsLow;
     }
 
     // Storage for derivatives, ordered by:
@@ -565,14 +562,14 @@ NekDouble NodeOpti::GetFunctional()
     //   - number of elements
     //   - cartesian coordinate direction
     //   - quadrature points
-    NekDouble deriv[DIM][nElmt][DIM][ptsHelp->ptsHigh];
+    NekDouble deriv[DIM][nElmt][DIM][derivUtil->ptsHigh];
 
     // Calculate x- and y-gradients
     for (int d = 0; d < DIM; ++d)
     {
-        Blas::Dgemm('N', 'N', ptsHelp->ptsHigh, DIM * nElmt, ptsHelp->ptsLow, 1.0,
-                    derivUtil->VdmD[d].GetRawPtr(), ptsHelp->ptsHigh, X, ptsHelp->ptsLow, 0.0,
-                    &deriv[d][0][0][0], ptsHelp->ptsHigh);
+        Blas::Dgemm('N', 'N', derivUtil->ptsHigh, DIM * nElmt, derivUtil->ptsLow, 1.0,
+                    derivUtil->VdmD[d].GetRawPtr(), derivUtil->ptsHigh, X, derivUtil->ptsLow, 0.0,
+                    &deriv[d][0][0][0], derivUtil->ptsHigh);
     }
 
     NekDouble integral = 0.0;
@@ -584,13 +581,13 @@ NekDouble NodeOpti::GetFunctional()
             const NekDouble nu = 0.4;
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
-            NekDouble jacDet[nElmt][ptsHelp->ptsHigh],
-                       trEtE[nElmt][ptsHelp->ptsHigh];
+            NekDouble jacDet[nElmt][derivUtil->ptsHigh],
+                       trEtE[nElmt][derivUtil->ptsHigh];
             NekDouble jacMin = 0.0;
 
             for (int i = 0; i < nElmt; ++i)
             {
-                for(int k = 0; k < ptsHelp->ptsHigh; ++k)
+                for(int k = 0; k < derivUtil->ptsHigh; ++k)
                 {
                     NekDouble jacIdeal[DIM*DIM];
                     int cnt = 0;
@@ -624,7 +621,7 @@ NekDouble NodeOpti::GetFunctional()
 
             for (int i = 0; i < nElmt; ++i)
             {
-                for(int k = 0; k < ptsHelp->ptsHigh; ++k)
+                for(int k = 0; k < derivUtil->ptsHigh; ++k)
                 {
                     NekDouble sigma = 0.5*(jacDet[i][k] + sqrt(jacDet[i][k]*jacDet[i][k] + 4.0*ep*ep));
                     NekDouble lsigma = log(sigma);
@@ -644,9 +641,9 @@ NekDouble NodeOpti::GetFunctional()
             for (int i = 0; i < nElmt; ++i)
             {
                 bool valid = true;
-                NekDouble jacDet[ptsHelp->ptsHigh], I1[ptsHelp->ptsHigh];
+                NekDouble jacDet[derivUtil->ptsHigh], I1[derivUtil->ptsHigh];
 
-                for(int k = 0; k < ptsHelp->ptsHigh; ++k)
+                for(int k = 0; k < derivUtil->ptsHigh; ++k)
                 {
                     NekDouble jacIdeal[DIM*DIM];
                     int cnt = 0;
@@ -674,7 +671,7 @@ NekDouble NodeOpti::GetFunctional()
 
                 if (!valid)
                 {
-                    for(int k = 0; k < ptsHelp->ptsHigh; ++k)
+                    for(int k = 0; k < derivUtil->ptsHigh; ++k)
                     {
                         NekDouble de = 1e-1;
                         NekDouble sigma = 0.5*(jacDet[k] + sqrt(jacDet[k]*jacDet[k] + 4.0*de*de));
@@ -684,7 +681,7 @@ NekDouble NodeOpti::GetFunctional()
                 }
                 else
                 {
-                    for(int k = 0; k < ptsHelp->ptsHigh; ++k)
+                    for(int k = 0; k < derivUtil->ptsHigh; ++k)
                     {
                         NekDouble lsigma = log(jacDet[k]);
                         integral += derivUtil->quadW[k]*fabs(data[i]->maps[k][9]) * (0.5 * mu * (I1[k] - 3.0 - 2.0*lsigma) + 0.5 * K * lsigma * lsigma);
@@ -699,9 +696,9 @@ NekDouble NodeOpti::GetFunctional()
             for (int i = 0; i < nElmt; ++i)
             {
                 bool valid = true;
-                NekDouble jacDet[ptsHelp->ptsHigh], frob[ptsHelp->ptsHigh];
+                NekDouble jacDet[derivUtil->ptsHigh], frob[derivUtil->ptsHigh];
 
-                for(int k = 0; k < ptsHelp->ptsHigh; ++k)
+                for(int k = 0; k < derivUtil->ptsHigh; ++k)
                 {
                     NekDouble jacIdeal[DIM*DIM];
                     int cnt = 0;
@@ -729,7 +726,7 @@ NekDouble NodeOpti::GetFunctional()
 
                 if (!valid)
                 {
-                    for(int k = 0; k < ptsHelp->ptsHigh; ++k)
+                    for(int k = 0; k < derivUtil->ptsHigh; ++k)
                     {
                         NekDouble de = 1e-2;
                         NekDouble sigma = 0.5*(jacDet[k] + sqrt(jacDet[k]*jacDet[k] + 4.0*de*de));
@@ -738,7 +735,7 @@ NekDouble NodeOpti::GetFunctional()
                 }
                 else
                 {
-                    for(int k = 0; k < ptsHelp->ptsHigh; ++k)
+                    for(int k = 0; k < derivUtil->ptsHigh; ++k)
                     {
                         integral += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (frob[k] / DIM / pow(fabs(jacDet[k]), 2.0/DIM) -1.0);
                     }
@@ -752,9 +749,9 @@ NekDouble NodeOpti::GetFunctional()
             for (int i = 0; i < nElmt; ++i)
             {
                 bool valid = true;
-                NekDouble jacDet[ptsHelp->ptsHigh], frob[ptsHelp->ptsHigh];
+                NekDouble jacDet[derivUtil->ptsHigh], frob[derivUtil->ptsHigh];
 
-                for(int k = 0; k < ptsHelp->ptsHigh; ++k)
+                for(int k = 0; k < derivUtil->ptsHigh; ++k)
                 {
                     NekDouble jacIdeal[DIM*DIM];
                     int cnt = 0;
@@ -782,7 +779,7 @@ NekDouble NodeOpti::GetFunctional()
 
                 if (!valid)
                 {
-                    for(int k = 0; k < ptsHelp->ptsHigh; ++k)
+                    for(int k = 0; k < derivUtil->ptsHigh; ++k)
                     {
                         NekDouble de = 1e-2;
                         NekDouble sigma = 0.5*(jacDet[k] + sqrt(jacDet[k]*jacDet[k] + 4.0*de*de));
@@ -791,7 +788,7 @@ NekDouble NodeOpti::GetFunctional()
                 }
                 else
                 {
-                    for(int k = 0; k < ptsHelp->ptsHigh; ++k)
+                    for(int k = 0; k < derivUtil->ptsHigh; ++k)
                     {
                         integral += derivUtil->quadW[k]*fabs(data[i]->maps[k][9])*(frob[k] / jacDet[k]);
                     }

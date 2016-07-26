@@ -55,7 +55,7 @@ SET(NekMeshSources
     ProcessModules/ProcessTetSplit.cpp
     ProcessModules/ProcessOptiExtract.cpp
     ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
-    ProcessModules/ProcessVarOpti/Utils.cpp
+    ProcessModules/ProcessVarOpti/PreProcessing.cpp
     ProcessModules/ProcessVarOpti/NodeOpti.cpp
     ProcessModules/ProcessVarOpti/ElUtil.cpp
 )

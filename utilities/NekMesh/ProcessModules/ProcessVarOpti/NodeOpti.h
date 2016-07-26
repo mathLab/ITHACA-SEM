@@ -55,8 +55,8 @@ class NodeOpti
 public:
     NodeOpti(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
              ResidualSharedPtr r, DerivUtilSharedPtr d,
-             PtsHelperSharedPtr p, optimiser o)
-             : node(n), data(e), res(r), derivUtil(d), ptsHelp(p), opti(o)
+             optimiser o)
+             : node(n), data(e), res(r), derivUtil(d), opti(o)
     {
     }
 
@@ -78,7 +78,6 @@ protected:
     NekDouble dx;
     ResidualSharedPtr res;
     DerivUtilSharedPtr derivUtil;
-    PtsHelperSharedPtr ptsHelp;
     optimiser opti;
 };
 
@@ -88,8 +87,8 @@ public:
 
     NodeOpti1D3D(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
                  ResidualSharedPtr r, DerivUtilSharedPtr d,
-                 PtsHelperSharedPtr p, optimiser o, CADCurveSharedPtr c)
-                 : NodeOpti(n,e,r,d,p,o), curve(c)
+                 optimiser o, CADCurveSharedPtr c)
+                 : NodeOpti(n,e,r,d,o), curve(c)
     {
     }
 
@@ -107,8 +106,8 @@ class NodeOpti2D3D : public NodeOpti //1D optimsation in 3D space
 public:
     NodeOpti2D3D(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
                  ResidualSharedPtr r, DerivUtilSharedPtr d,
-                 PtsHelperSharedPtr p, optimiser o, CADSurfSharedPtr s)
-                 : NodeOpti(n,e,r,d,p,o), surf(s)
+                 optimiser o, CADSurfSharedPtr s)
+                 : NodeOpti(n,e,r,d,o), surf(s)
     {
     }
 
@@ -126,8 +125,8 @@ class NodeOpti3D3D : public NodeOpti //1D optimsation in 3D space
 public:
     NodeOpti3D3D(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
                  ResidualSharedPtr r, DerivUtilSharedPtr d,
-                 PtsHelperSharedPtr p, optimiser o)
-                 : NodeOpti(n,e,r,d,p,o)
+                 optimiser o)
+                 : NodeOpti(n,e,r,d,o)
     {
     }
 
@@ -144,8 +143,8 @@ class NodeOpti2D2D : public NodeOpti //1D optimsation in 3D space
 public:
     NodeOpti2D2D(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
                  ResidualSharedPtr r, DerivUtilSharedPtr d,
-                 PtsHelperSharedPtr p, optimiser o)
-                 : NodeOpti(n,e,r,d,p,o)
+                 optimiser o)
+                 : NodeOpti(n,e,r,d,o)
     {
     }
 

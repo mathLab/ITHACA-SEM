@@ -45,6 +45,77 @@ namespace Nektar
 namespace Utilities
 {
 
+void ProcessVarOpti::BuildDerivUtil()
+{
+    //build Vandermonde information
+    switch (m_mesh->m_spaceDim)
+    {
+        case 2:
+        {
+            derivUtil->ptsLow  = m_mesh->m_nummode*(m_mesh->m_nummode+1)/2;
+
+            LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
+                                          LibUtilities::eNodalTriElec);
+            LibUtilities::PointsKey pkey2(m_mesh->m_nummode+2,
+                                          LibUtilities::eNodalTriSPI);
+            Array<OneD, NekDouble> u1, v1, u2, v2;
+
+            LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
+            LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2);
+            NekVector<NekDouble> U1(u1), V1(v1);
+            NekVector<NekDouble> U2(u2), V2(v2);
+            derivUtil->ptsHigh = LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
+
+            NekMatrix<NekDouble> interp = LibUtilities::GetInterpolationMatrix(U1, V1, U2, V2);
+
+            NekMatrix<NekDouble> Vandermonde = LibUtilities::GetVandermonde(U1,V1);
+            NekMatrix<NekDouble> VandermondeI = Vandermonde;
+            VandermondeI.Invert();
+            derivUtil->VdmDL[0] = LibUtilities::GetVandermondeForXDerivative(U1,V1) * VandermondeI;
+            derivUtil->VdmDL[1] = LibUtilities::GetVandermondeForYDerivative(U1,V1) * VandermondeI;
+            derivUtil->VdmD[0] = interp * derivUtil->VdmDL[0];
+            derivUtil->VdmD[1] = interp * derivUtil->VdmDL[1];
+            //derivUtil->quadW = LibUtilities::MakeQuadratureWeights(U2,V1);
+            Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
+            NekVector<NekDouble> quadWi(qds);
+            derivUtil->quadW = quadWi;
+        }
+        break;
+        case 3:
+        {
+            derivUtil->ptsLow  = m_mesh->m_nummode*(m_mesh->m_nummode+1)*(m_mesh->m_nummode+2)/6;
+            LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
+                                          LibUtilities::eNodalTetElec);
+            LibUtilities::PointsKey pkey2(m_mesh->m_nummode+2,
+                                          LibUtilities::eNodalTetSPI);
+            Array<OneD, NekDouble> u1, v1, u2, v2, w1, w2;
+            LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
+            LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
+            NekVector<NekDouble> U1(u1), V1(v1), W1(w1);
+            NekVector<NekDouble> U2(u2), V2(v2), W2(w2);
+            derivUtil->ptsHigh = LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
+
+            NekMatrix<NekDouble> interp =
+                        LibUtilities::GetTetInterpolationMatrix(U1, V1, W1,
+                                                                U2, V2, W2);
+
+            NekMatrix<NekDouble> Vandermonde =
+                                LibUtilities::GetTetVandermonde(U1,V1,W1);
+            NekMatrix<NekDouble> VandermondeI = Vandermonde;
+            VandermondeI.Invert();
+            derivUtil->VdmDL[0] = LibUtilities::GetVandermondeForTetXDerivative(U1,V1,W1) * VandermondeI;
+            derivUtil->VdmDL[1] = LibUtilities::GetVandermondeForTetYDerivative(U1,V1,W1) * VandermondeI;
+            derivUtil->VdmDL[2] = LibUtilities::GetVandermondeForTetZDerivative(U1,V1,W1) * VandermondeI;
+            derivUtil->VdmD[0] = interp * derivUtil->VdmDL[0];
+            derivUtil->VdmD[1] = interp * derivUtil->VdmDL[1];
+            derivUtil->VdmD[2] = interp * derivUtil->VdmDL[2];
+            Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
+            NekVector<NekDouble> quadWi(qds);
+            derivUtil->quadW = quadWi;
+        }
+    }
+}
+
 vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
 {
     //this figures out the dirclet nodes and colors the others into paralell sets
@@ -266,7 +337,7 @@ void ProcessVarOpti::GetElementMap()
         vector<NodeSharedPtr> ns;
         el->GetCurvedNodes(ns);
         ElUtilSharedPtr d = boost::shared_ptr<ElUtil>(new ElUtil(el, derivUtil,
-                                    ptsHelp, res, m_mesh->m_nummode));
+                                    res, m_mesh->m_nummode));
         dataSet.push_back(d);
     }
 

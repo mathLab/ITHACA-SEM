@@ -46,11 +46,9 @@ namespace Utilities
 {
 
 struct DerivUtil;
-struct PtsHelper;
 struct Residual;
 
 typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
-typedef boost::shared_ptr<PtsHelper> PtsHelperSharedPtr;
 typedef boost::shared_ptr<Residual> ResidualSharedPtr;
 
 class ElUtilJob;
@@ -58,7 +56,7 @@ class ElUtilJob;
 class ElUtil : public boost::enable_shared_from_this<ElUtil>
 {
 public:
-    ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d, PtsHelperSharedPtr p,
+    ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d,
            ResidualSharedPtr, int n);
 
     ElUtilJob *GetJob();
@@ -83,7 +81,6 @@ private:
     int m_mode;
 
     DerivUtilSharedPtr derivUtil;
-    PtsHelperSharedPtr ptsHelp;
     ResidualSharedPtr res;
 };
 typedef boost::shared_ptr<ElUtil> ElUtilSharedPtr;

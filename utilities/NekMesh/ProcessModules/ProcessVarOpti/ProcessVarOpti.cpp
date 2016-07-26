@@ -127,9 +127,12 @@ void ProcessVarOpti::Process()
             break;
         }
     }
-    ASSERTL0(fd,"failed to find order of mesh")
+    ASSERTL0(fd,"failed to find order of mesh");
 
-    cout << "Indentified order as: " << m_mesh->m_nummode - 1 << endl;
+    if(m_mesh->m_verbose)
+    {
+        cout << "Indentified order as: " << m_mesh->m_nummode - 1 << endl;
+    }
 
     if(m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
     {
@@ -140,83 +143,17 @@ void ProcessVarOpti::Process()
     res->val = 1.0;
 
     derivUtil = boost::shared_ptr<DerivUtil>(new DerivUtil);
-    ptsHelp = boost::shared_ptr<PtsHelper>(new PtsHelper);
 
     FillQuadPoints();
 
-    //build Vandermonde information
-    switch (m_mesh->m_spaceDim)
-    {
-        case 2:
-        {
-            ptsHelp->ptsLow  = m_mesh->m_nummode*(m_mesh->m_nummode+1)/2;
-
-            LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
-                                          LibUtilities::eNodalTriElec);
-            LibUtilities::PointsKey pkey2(m_mesh->m_nummode+2,
-                                          LibUtilities::eNodalTriSPI);
-            Array<OneD, NekDouble> u1, v1, u2, v2;
-
-            LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
-            LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2);
-            NekVector<NekDouble> U1(u1), V1(v1);
-            NekVector<NekDouble> U2(u2), V2(v2);
-            ptsHelp->ptsHigh = LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
-
-            NekMatrix<NekDouble> interp = LibUtilities::GetInterpolationMatrix(U1, V1, U2, V2);
-
-            NekMatrix<NekDouble> Vandermonde = LibUtilities::GetVandermonde(U1,V1);
-            NekMatrix<NekDouble> VandermondeI = Vandermonde;
-            VandermondeI.Invert();
-            derivUtil->VdmDL[0] = LibUtilities::GetVandermondeForXDerivative(U1,V1) * VandermondeI;
-            derivUtil->VdmDL[1] = LibUtilities::GetVandermondeForYDerivative(U1,V1) * VandermondeI;
-            derivUtil->VdmD[0] = interp * derivUtil->VdmDL[0];
-            derivUtil->VdmD[1] = interp * derivUtil->VdmDL[1];
-            //derivUtil->quadW = LibUtilities::MakeQuadratureWeights(U2,V1);
-            Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
-            NekVector<NekDouble> quadWi(qds);
-            derivUtil->quadW = quadWi;
-        }
-        break;
-        case 3:
-        {
-            ptsHelp->ptsLow  = m_mesh->m_nummode*(m_mesh->m_nummode+1)*(m_mesh->m_nummode+2)/6;
-            LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
-                                          LibUtilities::eNodalTetElec);
-            LibUtilities::PointsKey pkey2(m_mesh->m_nummode+2,
-                                          LibUtilities::eNodalTetSPI);
-            Array<OneD, NekDouble> u1, v1, u2, v2, w1, w2;
-            LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
-            LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
-            NekVector<NekDouble> U1(u1), V1(v1), W1(w1);
-            NekVector<NekDouble> U2(u2), V2(v2), W2(w2);
-            ptsHelp->ptsHigh = LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
-
-            NekMatrix<NekDouble> interp =
-                        LibUtilities::GetTetInterpolationMatrix(U1, V1, W1,
-                                                                U2, V2, W2);
-
-            NekMatrix<NekDouble> Vandermonde =
-                                LibUtilities::GetTetVandermonde(U1,V1,W1);
-            NekMatrix<NekDouble> VandermondeI = Vandermonde;
-            VandermondeI.Invert();
-            derivUtil->VdmDL[0] = LibUtilities::GetVandermondeForTetXDerivative(U1,V1,W1) * VandermondeI;
-            derivUtil->VdmDL[1] = LibUtilities::GetVandermondeForTetYDerivative(U1,V1,W1) * VandermondeI;
-            derivUtil->VdmDL[2] = LibUtilities::GetVandermondeForTetZDerivative(U1,V1,W1) * VandermondeI;
-            derivUtil->VdmD[0] = interp * derivUtil->VdmDL[0];
-            derivUtil->VdmD[1] = interp * derivUtil->VdmDL[1];
-            derivUtil->VdmD[2] = interp * derivUtil->VdmDL[2];
-            Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
-            NekVector<NekDouble> quadWi(qds);
-            derivUtil->quadW = quadWi;
-        }
-    }
+    BuildDerivUtil();
 
     GetElementMap();
 
     vector<vector<NodeSharedPtr> > freenodes = GetColouredNodes();
     vector<vector<NodeOpti*> > optiNodes;
 
+    //turn the free nodes into optimisable objects with all required data
     for(int i = 0; i < freenodes.size(); i++)
     {
         vector<NodeOpti*> ns;
@@ -225,30 +162,52 @@ void ProcessVarOpti::Process()
             NodeElMap::iterator it = nodeElMap.find(freenodes[i][j]->m_id);
             ASSERTL0(it != nodeElMap.end(), "could not find");
 
-            if(freenodes[i][j]->GetNumCadCurve() ==  0 && freenodes[i][j]->GetNumCADSurf() == 0)
+            if(freenodes[i][j]->GetNumCadCurve() ==  0 &&
+               freenodes[i][j]->GetNumCADSurf() == 0)
             {
                 if(m_mesh->m_spaceDim == 3)
                 {
-                    ns.push_back(new NodeOpti3D3D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti));
+                    ns.push_back(new NodeOpti3D3D(freenodes[i][j],
+                                                  it->second,
+                                                  res,
+                                                  derivUtil,
+                                                  opti));
                 }
                 else
                 {
-                    ns.push_back(new NodeOpti2D2D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti));
+                    ns.push_back(new NodeOpti2D2D(freenodes[i][j],
+                                                  it->second,
+                                                  res,
+                                                  derivUtil,
+                                                  opti));
                 }
             }
             else if(freenodes[i][j]->GetNumCadCurve() == 1)
             {
-                vector<pair<int, CADCurveSharedPtr> > cs = freenodes[i][j]->GetCADCurves();
-                ns.push_back(new NodeOpti1D3D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti,cs[0].second));
+                vector<pair<int, CADCurveSharedPtr> > cs =
+                                            freenodes[i][j]->GetCADCurves();
+                ns.push_back(new NodeOpti1D3D(freenodes[i][j],
+                                              it->second,
+                                              res,
+                                              derivUtil,
+                                              opti,
+                                              cs[0].second));
             }
             else if(freenodes[i][j]->GetNumCADSurf() == 1)
             {
-                vector<pair<int, CADSurfSharedPtr> > ss = freenodes[i][j]->GetCADSurfs();
-                ns.push_back(new NodeOpti2D3D(freenodes[i][j],it->second,res,derivUtil,ptsHelp,opti,ss[0].second));
+                vector<pair<int, CADSurfSharedPtr> > ss =
+                                            freenodes[i][j]->GetCADSurfs();
+                ns.push_back(new NodeOpti2D3D(freenodes[i][j],
+                                              it->second,
+                                              res,
+                                              derivUtil,
+                                              opti,
+                                              ss[0].second));
             }
             else
             {
-                ASSERTL0(false,"unsure");
+                ASSERTL0(false,
+                    "cannot resolve type of node optimisation to perform");
             }
         }
         optiNodes.push_back(ns);
@@ -299,7 +258,6 @@ void ProcessVarOpti::Process()
     {
         ctr++;
         res->val = 0.0;
-        res->func = 0.0;
         for(int i = 0; i < optiNodes.size(); i++)
         {
             vector<Thread::ThreadJob*> jobs(optiNodes[i].size());
@@ -329,7 +287,6 @@ void ProcessVarOpti::Process()
         tm->Wait();
 
         cout << ctr << "\tResidual: " << res->val
-                    << "\tEnergy: " << res->func
                     << "\tMin Jac: " << res->worstJac
                     << "\tInvalid: " << res->startInv << endl;
         if(ctr >= maxIter)

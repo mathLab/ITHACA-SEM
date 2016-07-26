@@ -22,10 +22,6 @@ SET(NekMeshHeaders
     ProcessModules/ProcessScalar.h
     ProcessModules/ProcessSpherigon.h
     ProcessModules/ProcessTetSplit.h
-    ProcessModules/ProcessOptiExtract.h
-    ProcessModules/ProcessVarOpti/ProcessVarOpti.h
-    ProcessModules/ProcessVarOpti/NodeOpti.h
-    ProcessModules/ProcessVarOpti/ElUtil.h
 )
 
 SET(NekMeshSources
@@ -54,10 +50,6 @@ SET(NekMeshSources
     ProcessModules/ProcessSpherigon.cpp
     ProcessModules/ProcessTetSplit.cpp
     ProcessModules/ProcessOptiExtract.cpp
-    ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
-    ProcessModules/ProcessVarOpti/PreProcessing.cpp
-    ProcessModules/ProcessVarOpti/NodeOpti.cpp
-    ProcessModules/ProcessVarOpti/ElUtil.cpp
 )
 
 IF (NEKTAR_USE_CCM)
@@ -71,8 +63,18 @@ IF (NEKTAR_USE_VTK)
 ENDIF (NEKTAR_USE_VTK)
 
 IF (NEKTAR_USE_MESHGEN)
-    SET(NekMeshHeaders ${NekMeshHeaders} InputModules/InputCAD.h)
-    SET(NekMeshSources ${NekMeshSources} InputModules/InputCAD.cpp)
+    SET(NekMeshHeaders ${NekMeshHeaders}
+                InputModules/InputCAD.h
+                ProcessModules/ProcessOptiExtract.h
+                ProcessModules/ProcessVarOpti/ProcessVarOpti.h
+                ProcessModules/ProcessVarOpti/NodeOpti.h
+                ProcessModules/ProcessVarOpti/ElUtil.h)
+    SET(NekMeshSources ${NekMeshSources}
+                InputModules/InputCAD.cpp
+                ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
+                ProcessModules/ProcessVarOpti/PreProcessing.cpp
+                ProcessModules/ProcessVarOpti/NodeOpti.cpp
+                ProcessModules/ProcessVarOpti/ElUtil.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
 
 # Don't use macro -- this way we can just link against NekMeshUtils and

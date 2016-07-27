@@ -172,34 +172,6 @@ namespace Nektar
                 const std::string& pFunctionName,
                 const NekDouble& pTime = 0.0,
                 const int domain = 0);
-
-            // Populate an array with a function variable from session.
-            SOLVER_UTILS_EXPORT void EvaluateFunctionExp(
-                std::string pFieldName,
-                Array<OneD, NekDouble>& pArray,
-                const std::string& pFunctionName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-
-            // Populate an array with a function variable from session.
-            SOLVER_UTILS_EXPORT void EvaluateFunctionFld(
-                std::string pFieldName,
-                Array<OneD, NekDouble>& pArray,
-                const std::string& pFunctionName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-
-            SOLVER_UTILS_EXPORT void EvaluateFunctionPts(
-                std::string pFieldName,
-                Array<OneD, NekDouble>& pArray,
-                const std::string& pFunctionName,
-                const NekDouble& pTime = 0.0,
-                const int domain = 0);
-
-            SOLVER_UTILS_EXPORT void LoadPts(
-                std::string funcFilename,
-                std::string filename,
-                Nektar::LibUtilities::PtsFieldSharedPtr &outPts);
             
             // Describe a function.
             SOLVER_UTILS_EXPORT std::string DescribeFunction(
@@ -633,6 +605,34 @@ namespace Nektar
                 unsigned int field,
                 Array<OneD, NekDouble> &outfield,
                 const NekDouble time);
+
+            // Populate an array with a function variable from session.
+            SOLVER_UTILS_EXPORT void EvaluateFunctionExp(
+                std::string pFieldName,
+                Array<OneD, NekDouble>& pArray,
+                const std::string& pFunctionName,
+                const NekDouble& pTime = 0.0,
+                const int domain = 0);
+
+            // Populate an array with a function variable from session.
+            SOLVER_UTILS_EXPORT void EvaluateFunctionFld(
+                std::string pFieldName,
+                Array<OneD, NekDouble>& pArray,
+                const std::string& pFunctionName,
+                const NekDouble& pTime = 0.0,
+                const int domain = 0);
+
+            SOLVER_UTILS_EXPORT void EvaluateFunctionPts(
+                std::string pFieldName,
+                Array<OneD, NekDouble>& pArray,
+                const std::string& pFunctionName,
+                const NekDouble& pTime = 0.0,
+                const int domain = 0);
+
+            SOLVER_UTILS_EXPORT void LoadPts(
+                std::string funcFilename,
+                std::string filename,
+                Nektar::LibUtilities::PtsFieldSharedPtr &outPts);
             
             //Initialise m_base in order to store the base flow from a file 
             SOLVER_UTILS_EXPORT void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh);

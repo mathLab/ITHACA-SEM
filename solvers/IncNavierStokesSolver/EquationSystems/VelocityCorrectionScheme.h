@@ -124,7 +124,21 @@ namespace Nektar
         Array<OneD, NekDouble> m_saved_aii_Dt;
 
         /// Variable Coefficient map for the Laplacian which can be activated as part of SVV or otherwise
-        StdRegions::VarCoeffMap m_varCoeffLap; 
+        StdRegions::VarCoeffMap m_varCoeffLap;
+
+        /// Flowrate settings
+        NekDouble m_flowrate;
+        NekDouble m_flowrateArea;
+        /// Flux of the Green's function
+        NekDouble m_greenFlux;
+        int m_flowrateBndID;
+        MultiRegions::ExpListSharedPtr m_flowrateBnd;
+        Array<OneD, Array<OneD, NekDouble> > m_flowrateStokes;
+        Array<OneD, NekDouble> m_flowrateForce;
+
+        void SetupFlowrate();
+        NekDouble MeasureFlowrate(
+            const Array<OneD, Array<OneD, NekDouble> > &inarray);
 
         // Virtual functions
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);

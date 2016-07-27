@@ -120,6 +120,8 @@ namespace Nektar
                           Array<OneD, ExpansionSharedPtr>      &EdgeExp,
                           Array<OneD, Array<OneD, NekDouble> > &coeffs,
                           Array<OneD,             NekDouble>   &outarray);
+                LOCAL_REGIONS_EXPORT NekDouble VectorFlux(
+                    const Array<OneD, Array<OneD, NekDouble > > &vec);
 
             protected:
                 SpatialDomains::GeometrySharedPtr  m_geom;
@@ -170,6 +172,8 @@ namespace Nektar
                           Array<OneD, ExpansionSharedPtr>      &EdgeExp,
                           Array<OneD, Array<OneD, NekDouble> > &coeffs,
                           Array<OneD,             NekDouble>   &outarray);
+                virtual NekDouble v_VectorFlux(
+                    const Array<OneD, Array<OneD, NekDouble > > &vec);
 
             private:
 

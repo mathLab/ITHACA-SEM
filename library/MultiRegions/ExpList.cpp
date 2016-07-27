@@ -1850,6 +1850,25 @@ namespace Nektar
             return err;
         }
 
+        NekDouble ExpList::v_VectorFlux(const Array<OneD, Array<OneD, NekDouble> > &inarray)
+        {
+            NekDouble flux = 0.0;
+            int       i    = 0;
+            int       j;
+
+            for (i = 0; i < (*m_exp).size(); ++i)
+            {
+                Array<OneD, Array<OneD, NekDouble> > tmp(inarray.num_elements());
+                for (j = 0; j < inarray.num_elements(); ++j)
+                {
+                    tmp[j] = Array<OneD, NekDouble>(inarray[j] + m_phys_offset[i]);
+                }
+                flux += (*m_exp)[m_offset_elmt_id[i]]->VectorFlux(tmp);
+            }
+
+            return flux;
+        }
+
         Array<OneD, const NekDouble> ExpList::v_HomogeneousEnergy (void)
         {
             ASSERTL0(false,
@@ -2364,7 +2383,7 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            vector<bool> returnval;
+            static vector<bool> returnval;
             return returnval;
         }
 
@@ -2663,8 +2682,8 @@ namespace Nektar
         /**
          */
         void ExpList::v_ExtractElmtToBndPhys(int i,
-                            Array<OneD, NekDouble> &element,
-                            Array<OneD, NekDouble> &boundary)
+                                             const Array<OneD, NekDouble> &element,
+                                             Array<OneD, NekDouble> &boundary)
         {
             int n, cnt;
             Array<OneD, NekDouble> tmp1, tmp2;
@@ -2813,6 +2832,15 @@ namespace Nektar
                                                                         result;
             return result;
         }
+
+        const Array<OneD, const unsigned int> &ExpList::v_GetBndConditionIDs()
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            static Array<OneD, unsigned int> result;
+            return result;
+        }
+
 
         /**
          */

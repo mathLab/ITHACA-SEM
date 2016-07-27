@@ -69,6 +69,7 @@ namespace Nektar
         
         IncNavierStokes::v_InitObject();
         m_explicitDiffusion = false;
+        m_flowrateBndID = -1;
 
         // Set m_pressure to point to last field of m_fields;
         if (boost::iequals(m_session->GetVariable(m_fields.num_elements()-1), "p"))
@@ -184,7 +185,101 @@ namespace Nektar
         
         // set implicit time-intregration class operators
         m_ode.DefineImplicitSolve(&VelocityCorrectionScheme::SolveUnsteadyStokesSystem,this);
+
+        // Set up bits for flowrate.
+        m_session->LoadParameter("Flowrate", m_flowrate, 0.0);
+
+        if (m_flowrate > 0.0)
+        {
+            SetupFlowrate();
+        }
     }
+
+    void VelocityCorrectionScheme::SetupFlowrate()
+    {
+        ASSERTL0(m_session->DefinesParameter("FlowrateBoundary"),
+                 "Flowrate control requires a boundary region to be set to "
+                 "monitor the flux of the flow field");
+        int br = (int)(m_session->GetParameter("FlowrateBoundary") + 0.5);
+
+        char *forces[] = { "X", "Y", "Z" };
+        m_flowrateForce = Array<OneD, NekDouble>(m_spacedim);
+
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            std::string varName = std::string("Force") + forces[i];
+            ASSERTL0(m_session->DefinesFunction("FlowrateForce", varName),
+                     "A 'FlowrateForce' function must defined with components "
+                     "[ForceX, ...] to define direction of flowrate forcing");
+
+            LibUtilities::EquationSharedPtr ffunc
+                = m_session->GetFunction("FlowrateForce", varName);
+            m_flowrateForce[i] = ffunc->Evaluate();
+        }
+
+        const Array<OneD, const unsigned int> &bcIDs =
+            m_fields[0]->GetBndConditionIDs();
+
+        for (int i = 0; i < bcIDs.num_elements(); ++i)
+        {
+            if (bcIDs[i] == br)
+            {
+                m_flowrateBndID = i;
+                break;
+            }
+        }
+
+        int tmpBr = m_flowrateBndID;
+        m_comm->AllReduce(tmpBr, LibUtilities::ReduceMax);
+        ASSERTL0(tmpBr >= 0, "Unable to find boundary");
+
+        if (m_flowrateBndID >= 0)
+        {
+            m_flowrateBnd = m_fields[0]->GetBndCondExpansions()[m_flowrateBndID];
+
+            Array<OneD, NekDouble> inArea(m_flowrateBnd->GetNpoints(), 1.0);
+            m_flowrateArea = m_flowrateBnd->Integral(inArea);
+        }
+
+        int nqTot = m_fields[0]->GetNpoints();
+        Array<OneD, Array<OneD, NekDouble> > inTmp(m_spacedim);
+        m_flowrateStokes = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            inTmp[i] = Array<OneD, NekDouble>(
+                nqTot, m_flowrateForce[i] * m_timestep);
+            m_flowrateStokes[i] = Array<OneD, NekDouble>(nqTot, 0.0);
+        }
+
+        m_greenFlux = numeric_limits<NekDouble>::max();
+        SolveUnsteadyStokesSystem(inTmp, m_flowrateStokes, 0.0, m_timestep);
+        m_greenFlux = MeasureFlowrate(m_flowrateStokes);
+    }
+
+    NekDouble VelocityCorrectionScheme::MeasureFlowrate(
+        const Array<OneD, Array<OneD, NekDouble> > &inarray)
+    {
+        NekDouble flowrate = 0.0;
+
+        if (m_flowrateBndID >= 0)
+        {
+            Array<OneD, Array<OneD, NekDouble> > boundary(m_spacedim);
+
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                m_fields[i]->ExtractElmtToBndPhys(
+                    m_flowrateBndID, inarray[i], boundary[i]);
+            }
+
+            flowrate = m_flowrateBnd->VectorFlux(boundary);
+        }
+
+        m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
+
+        return flowrate / m_flowrateArea;
+    }
+
     
     /**
      * Destructor
@@ -373,6 +468,19 @@ namespace Nektar
         
         // Solve velocity system
         SolveViscous( F, outarray, aii_Dt);
+
+        // Apply flowrate correction
+        if (m_flowrate > 0.0 && m_greenFlux != numeric_limits<NekDouble>::max())
+        {
+            NekDouble currentFlux = MeasureFlowrate(outarray);
+            NekDouble alpha = (m_flowrate - currentFlux) / m_greenFlux;
+
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                Vmath::Svtvp(phystot, alpha, m_flowrateStokes[i], 1,
+                             outarray[i], 1, outarray[i], 1);
+            }
+        }
     }
         
     /**

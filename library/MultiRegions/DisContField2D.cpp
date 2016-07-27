@@ -636,64 +636,53 @@ namespace Nektar
             const SpatialDomains::BoundaryConditions &bcs,
             const std::string &variable,
             const bool DeclareCoeffPhysArrays)
-        {      
+        {
             int cnt = 0;
             SpatialDomains::BoundaryConditionShPtr             bc;
             MultiRegions::ExpList1DSharedPtr                   locExpList;
-            const SpatialDomains::BoundaryRegionCollection    &bregions = 
+            const SpatialDomains::BoundaryRegionCollection    &bregions =
                 bcs.GetBoundaryRegions();
-            const SpatialDomains::BoundaryConditionCollection &bconditions = 
+            const SpatialDomains::BoundaryConditionCollection &bconditions =
                 bcs.GetBoundaryConditions();
             SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
-            // count the number of non-periodic boundary regions
-            for (it = bregions.begin(); it != bregions.end(); ++it)
-            {
-                bc = GetBoundaryCondition(bconditions, it->first, variable);
-                
-                if (bc->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
-                {
-                    cnt++;
-                }
-            }
+            int nRegions = bregions.size();
 
-            m_bndCondExpansions = 
-                Array<OneD, MultiRegions::ExpListSharedPtr>(cnt);
-            m_bndConditions     = 
-                Array<OneD, SpatialDomains::BoundaryConditionShPtr>(cnt);
-        
+            m_bndCondExpansions =
+                Array<OneD, MultiRegions::ExpListSharedPtr>(nRegions);
+            m_bndConditions     =
+                Array<OneD, SpatialDomains::BoundaryConditionShPtr>(nRegions);
+            m_bndConditionIDs   =
+                Array<OneD, unsigned int>(nRegions);
+
             cnt = 0;
 
-            // list non-periodic boundaries
             for (it = bregions.begin(); it != bregions.end(); ++it)
             {
                 bc = GetBoundaryCondition(bconditions, it->first, variable);
 
-                if (bc->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
+                locExpList = MemoryManager<MultiRegions::ExpList1D>
+                    ::AllocateSharedPtr(m_session, *(it->second), graph2D,
+                                        DeclareCoeffPhysArrays, variable);
+
+                m_bndCondExpansions[cnt]  = locExpList;
+                m_bndConditions[cnt]      = bc;
+                m_bndConditionIDs[cnt]    = it->first;
+
+                std::string type = m_bndConditions[cnt]->GetUserDefined();
+
+                // Set up normals on non-Dirichlet boundary conditions. Second
+                // two conditions ideally should be in local solver setup (when
+                // made into factory)
+                if((bc->GetBoundaryConditionType() !=
+                    SpatialDomains::eDirichlet)||
+                   boost::iequals(type,"I") ||
+                   boost::iequals(type,"CalcBC"))
                 {
-                    locExpList = MemoryManager<MultiRegions::ExpList1D>
-                        ::AllocateSharedPtr(m_session, *(it->second), graph2D,
-                                            DeclareCoeffPhysArrays, variable);
-
-                    m_bndCondExpansions[cnt]  = locExpList;
-                    m_bndConditions[cnt]      = bc;
-                    
-
-                    std::string type = m_bndConditions[cnt]->GetUserDefined();
-                    
-                    // Set up normals on non-Dirichlet boundary
-                    // conditions. Second two conditions ideally
-                    // should be in local solver setup (when made into factory)
-                    if((bc->GetBoundaryConditionType() != 
-                        SpatialDomains::eDirichlet)||
-                       boost::iequals(type,"I") || 
-                       boost::iequals(type,"CalcBC"))
-                    {
-                        SetUpPhysNormals();
-                    }
-
-                    cnt++;
+                    SetUpPhysNormals();
                 }
+
+                cnt++;
             }
         }
 
@@ -2345,7 +2334,12 @@ namespace Nektar
                         // space storage
                         coeff.Evaluate(x0, x1, x2, time,
                                        locExpList->UpdatePhys());
-                    }    
+                    }
+                    else if (m_bndConditions[i]->GetBoundaryConditionType()
+                             == SpatialDomains::ePeriodic)
+                    {
+                        continue;
+                    }
                     else
                     {
                         ASSERTL0(false, "This type of BC not implemented yet");

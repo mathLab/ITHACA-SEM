@@ -840,7 +840,8 @@ namespace Nektar
 			
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+                if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet &&
+                   m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
                 {
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                     {

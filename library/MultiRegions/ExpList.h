@@ -492,6 +492,11 @@ namespace Nektar
                 return v_Integral(inarray);
             }
 
+            NekDouble VectorFlux(const Array<OneD, Array<OneD, NekDouble> > &inarray)
+            {
+                return v_VectorFlux(inarray);
+            }
+
             /// This function calculates the energy associated with
             /// each one of the modesof a 3D homogeneous nD expansion
             Array<OneD, const NekDouble> HomogeneousEnergy (void)
@@ -713,6 +718,8 @@ namespace Nektar
             inline const Array<OneD, const SpatialDomains::
                 BoundaryConditionShPtr>& GetBndConditions();
 
+            inline const Array<OneD, const unsigned int>& GetBndConditionIDs();
+
             inline Array<OneD, SpatialDomains::
                 BoundaryConditionShPtr>& UpdateBndConditions();
 
@@ -746,8 +753,8 @@ namespace Nektar
                             boost::shared_ptr<ExpList> &result);
             
             inline void ExtractElmtToBndPhys(int i,
-                            Array<OneD, NekDouble> &elmt,
-                            Array<OneD, NekDouble> &boundary);
+                                             const Array<OneD, NekDouble> &elmt,
+                                             Array<OneD, NekDouble> &boundary);
             
             inline void ExtractPhysToBndElmt(int i,
                             const Array<OneD, const NekDouble> &phys,
@@ -1258,8 +1265,8 @@ namespace Nektar
                             boost::shared_ptr<ExpList> &result);
             
             virtual void v_ExtractElmtToBndPhys(int i,
-                            Array<OneD, NekDouble> &elmt,
-                            Array<OneD, NekDouble> &boundary);
+                                                const Array<OneD, NekDouble> &elmt,
+                                                Array<OneD, NekDouble> &boundary);
             
             virtual void v_ExtractPhysToBndElmt(int i,
                             const Array<OneD, const NekDouble> &phys,
@@ -1316,6 +1323,8 @@ namespace Nektar
 
             virtual NekDouble v_Integral (
                 const Array<OneD, const NekDouble> &inarray);
+            virtual NekDouble v_VectorFlux (
+                const Array<OneD, Array<OneD, NekDouble> > &inarray);
 
             virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
             virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
@@ -1349,7 +1358,8 @@ namespace Nektar
 
         
         private:
-            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
+            virtual const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
+            virtual const Array<OneD, const unsigned int> &v_GetBndConditionIDs();
             
             virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                 &v_UpdateBndConditions();
@@ -2081,6 +2091,12 @@ namespace Nektar
             return v_GetBndConditions();
         }
 
+        inline const Array<OneD, const unsigned int>
+            &ExpList::GetBndConditionIDs()
+        {
+            return v_GetBndConditionIDs();
+        }
+
 
         inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>
             &ExpList::UpdateBndConditions()
@@ -2154,8 +2170,8 @@ namespace Nektar
         }
         
         inline void ExpList::ExtractElmtToBndPhys(int i,
-                            Array<OneD, NekDouble> &elmt,
-                            Array<OneD, NekDouble> &boundary)
+                                                  const Array<OneD, NekDouble> &elmt,
+                                                  Array<OneD, NekDouble> &boundary)
         {
             v_ExtractElmtToBndPhys(i, elmt, boundary);
         }

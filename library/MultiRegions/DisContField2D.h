@@ -142,6 +142,11 @@ namespace Nektar
              */
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
 
+            /**
+             * @brief The boundary region IDs corresponding to #m_bndConditions.
+             */
+            Array<OneD, unsigned int> m_bndConditionIDs;
+
             GlobalLinSysMapShPtr   m_globalBndMat;
             ExpListSharedPtr       m_trace;
             AssemblyMapDGSharedPtr m_traceMap;
@@ -272,6 +277,11 @@ namespace Nektar
                 &v_GetBndConditions()
             {
                 return m_bndConditions;
+            }
+
+            virtual const Array<OneD, const unsigned int> &v_GetBndConditionIDs()
+            {
+                return m_bndConditionIDs;
             }
 
             virtual MultiRegions::ExpListSharedPtr 

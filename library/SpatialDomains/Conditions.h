@@ -172,9 +172,11 @@ namespace Nektar
 
         struct PeriodicBoundaryCondition : public BoundaryConditionBase
         {
-            PeriodicBoundaryCondition(const unsigned int n):
-                BoundaryConditionBase(ePeriodic),
-                m_connectedBoundaryRegion(n)
+            PeriodicBoundaryCondition(
+                const unsigned int n,
+                const std::string &userDefined = std::string("NoUserDefined"))
+                : BoundaryConditionBase(ePeriodic, userDefined),
+                  m_connectedBoundaryRegion(n)
             {
             }
 

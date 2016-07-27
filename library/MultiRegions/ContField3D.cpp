@@ -561,7 +561,7 @@ namespace Nektar
                           sign * (m_bndCondExpansions[i]->GetCoeffs())[j];
                   }
               }
-              else
+              else if (m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
               {
                   bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
               }

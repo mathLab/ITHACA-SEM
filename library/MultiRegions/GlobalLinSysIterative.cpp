@@ -515,6 +515,7 @@ namespace Nektar
                 eps     = vExchange[2];
 
                 m_totalIterations++;
+
                 // test if norm is within tolerance
                 if (eps < m_tolerance * m_tolerance * m_rhs_magnitude)
                 {

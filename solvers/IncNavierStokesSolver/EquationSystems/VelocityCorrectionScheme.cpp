@@ -187,11 +187,6 @@ namespace Nektar
 
         // Set up bits for flowrate.
         m_session->LoadParameter("Flowrate", m_flowrate, 0.0);
-
-        if (m_flowrate > 0.0)
-        {
-            SetupFlowrate();
-        }
     }
 
     /**
@@ -259,6 +254,7 @@ namespace Nektar
             inTmp[i] = Array<OneD, NekDouble>(
                 nqTot, flowrateForce[i] * m_timestep);
             m_flowrateStokes[i] = Array<OneD, NekDouble>(nqTot, 0.0);
+            Vmath::Zero(m_fields[i]->GetNcoeffs(), m_fields[i]->UpdateCoeffs(), 1);
         }
 
         m_greenFlux = numeric_limits<NekDouble>::max();
@@ -353,6 +349,11 @@ namespace Nektar
      */
     void VelocityCorrectionScheme::v_DoInitialise(void)
     {
+        // Set up flowrate before m_fields are initialised.
+        if (m_flowrate > 0.0)
+        {
+            SetupFlowrate();
+        }
 
         UnsteadySystem::v_DoInitialise();
 

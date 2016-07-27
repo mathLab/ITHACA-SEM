@@ -69,7 +69,6 @@ namespace Nektar
         
         IncNavierStokes::v_InitObject();
         m_explicitDiffusion = false;
-        m_flowrateBndID = -1;
 
         // Set m_pressure to point to last field of m_fields;
         if (boost::iequals(m_session->GetVariable(m_fields.num_elements()-1), "p"))
@@ -197,10 +196,25 @@ namespace Nektar
 
     void VelocityCorrectionScheme::SetupFlowrate()
     {
-        ASSERTL0(m_session->DefinesParameter("FlowrateBoundary"),
-                 "Flowrate control requires a boundary region to be set to "
-                 "monitor the flux of the flow field");
-        int br = (int)(m_session->GetParameter("FlowrateBoundary") + 0.5);
+        m_flowrateBndID = -1;
+
+        const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bcs =
+            m_fields[0]->GetBndConditions();
+
+        for (int i = 0; i < bcs.num_elements(); ++i)
+        {
+            if (boost::iequals(bcs[i]->GetUserDefined(), "Flowrate"))
+            {
+                m_flowrateBndID = i;
+                break;
+            }
+        }
+
+        int tmpBr = m_flowrateBndID;
+        m_comm->AllReduce(tmpBr, LibUtilities::ReduceMax);
+        ASSERTL0(tmpBr >= 0, "One boundary region must be marked using the "
+                             "'Flowrate' user-defined type to monitor the "
+                             "volumetric flowrate.");
 
         char *forces[] = { "X", "Y", "Z" };
         m_flowrateForce = Array<OneD, NekDouble>(m_spacedim);
@@ -216,23 +230,6 @@ namespace Nektar
                 = m_session->GetFunction("FlowrateForce", varName);
             m_flowrateForce[i] = ffunc->Evaluate();
         }
-
-        const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bcs =
-            m_fields[0]->GetBndConditions();
-
-        for (int i = 0; i < bcs.num_elements(); ++i)
-        {
-            if (boost::iequals(bcs[i]->GetUserDefined(), "FLOWRATE"))
-            {
-                m_flowrateBndID = i;
-                break;
-            }
-        }
-
-        int tmpBr = m_flowrateBndID;
-        m_comm->AllReduce(tmpBr, LibUtilities::ReduceMax);
-        ASSERTL0(tmpBr >= 0, "One boundary region must be marked using the "
-                             "'FLOWRATE' user-defined type.");
 
         if (m_flowrateBndID >= 0)
         {

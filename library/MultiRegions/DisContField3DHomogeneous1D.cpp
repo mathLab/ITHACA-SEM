@@ -168,7 +168,7 @@ namespace Nektar
             SpatialDomains::BoundaryConditions &bcs,
             const std::string                   variable)
         {
-            int n;
+            int n, cnt;
 
             // Setup an ExpList2DHomogeneous1D expansion for boundary
             // conditions and link to class declared in m_planes
@@ -178,47 +178,29 @@ namespace Nektar
                 bcs.GetBoundaryConditions();
             SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
-            // count the number of non-periodic boundary regions
-            int cnt = 0;
-            for (it = bregions.begin(); it != bregions.end(); ++it)
-            {
-                SpatialDomains::BoundaryConditionShPtr boundaryCondition =
-                    GetBoundaryCondition(bconditions, it->first, variable);
-                if (boundaryCondition->GetBoundaryConditionType()
-                        != SpatialDomains::ePeriodic)
-                {
-                    cnt++;
-                }
-            }
-
-            m_bndCondExpansions  = Array<OneD,MultiRegions::
-                ExpListSharedPtr>(cnt);
+            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(
+                bregions.size());
             m_bndConditions = m_planes[0]->UpdateBndConditions();
 
             int nplanes = m_planes.num_elements();
             Array<OneD, MultiRegions::ExpListSharedPtr>
                 PlanesBndCondExp(nplanes);
 
-            cnt = 0;
-            for (it = bregions.begin(); it != bregions.end(); ++it)
+            for (it = bregions.begin(), cnt = 0; it != bregions.end(); ++it)
             {
                 SpatialDomains::BoundaryConditionShPtr boundaryCondition =
                     GetBoundaryCondition(bconditions, it->first, variable);
-                if(boundaryCondition->GetBoundaryConditionType() !=
-                   SpatialDomains::ePeriodic)
+                for (n = 0; n < nplanes; ++n)
                 {
-                    for (n = 0; n < nplanes; ++n)
-                    {
-                        PlanesBndCondExp[n] = m_planes[n]->
-                            UpdateBndCondExpansion(cnt);
-                    }
-
-                    m_bndCondExpansions[cnt++] =
-                        MemoryManager<ExpList2DHomogeneous1D>::
-                            AllocateSharedPtr(m_session, HomoBasis, lhom,
-                                              m_useFFT, false,
-                                              PlanesBndCondExp);
+                    PlanesBndCondExp[n] = m_planes[n]->
+                        UpdateBndCondExpansion(cnt);
                 }
+
+                m_bndCondExpansions[cnt++] =
+                    MemoryManager<ExpList2DHomogeneous1D>::
+                    AllocateSharedPtr(m_session, HomoBasis, lhom,
+                                      m_useFFT, false,
+                                      PlanesBndCondExp);
             }
             EvaluateBoundaryConditions(0.0, variable);
         }

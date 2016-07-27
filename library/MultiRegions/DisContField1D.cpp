@@ -201,10 +201,6 @@ namespace Nektar
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                     }
                 }
-                else
-                {
-                    ASSERTL0(false,"Periodic verts need setting up");
-                }
                 cnt += m_bndCondExpansions[n]->GetExpSize();
             }
 
@@ -530,17 +526,13 @@ namespace Nektar
             {
                 const SpatialDomains::BoundaryConditionShPtr boundaryCondition =
                     GetBoundaryCondition(bconditions, it->first, variable);
-                if (boundaryCondition->GetBoundaryConditionType() !=
-                    SpatialDomains::ePeriodic )
+                SpatialDomains::BoundaryRegion::iterator bregionIt;
+                for (bregionIt  = it->second->begin();
+                     bregionIt != it->second->end(); bregionIt++)
                 {
-                    SpatialDomains::BoundaryRegion::iterator bregionIt;
-                    for (bregionIt  = it->second->begin();
-                         bregionIt != it->second->end(); bregionIt++)
-                    {
-                        cnt += bregionIt->second->size();
-                    }
+                    cnt += bregionIt->second->size();
                 }
-            }			
+            }
 
             m_bndCondExpansions
                     = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
@@ -742,7 +734,7 @@ namespace Nektar
                 }
             } // end if Dirichlet
 
-            // then, list the other (non-periodic) boundaries
+            // then, list the other boundaries
             for (it = bregions.begin(); it != bregions.end(); ++it)
             {
                 locBCond = GetBoundaryCondition(bconditions, it->first, variable);
@@ -751,6 +743,7 @@ namespace Nektar
                 {
                 case SpatialDomains::eNeumann:
                 case SpatialDomains::eRobin:
+                case SpatialDomains::ePeriodic:
                 case SpatialDomains::eNotDefined: // presume this will be reused as Neuman, Robin or Dirichlet later
                     {
                         SpatialDomains::BoundaryRegion::iterator bregionIt;
@@ -779,7 +772,6 @@ namespace Nektar
                     }
                     // do nothing for these types
                 case SpatialDomains::eDirichlet:
-                case SpatialDomains::ePeriodic:
                     break;
                 default:
                     ASSERTL0(false,"This type of BC not implemented yet");
@@ -1280,7 +1272,10 @@ namespace Nektar
                     id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
                     BndSol[id] = m_bndCondExpansions[i]->GetCoeff(0);
                 }
-                else
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eNeumann ||
+                         m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eRobin)
                 {
                     id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
                     BndRhs[id] += m_bndCondExpansions[i]->GetCoeff(0);
@@ -1381,6 +1376,11 @@ namespace Nektar
                              ::RobinBoundaryCondition>(m_bndConditions[i])
                              ->m_robinPrimitiveCoeff).Evaluate(x0[0],x1[0],x2[0],time));
                         
+                    }
+                    else if (m_bndConditions[i]->GetBoundaryConditionType()
+                            == SpatialDomains::ePeriodic)
+                    {
+                        continue;
                     }
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eNotDefined)

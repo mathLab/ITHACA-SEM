@@ -681,7 +681,8 @@ namespace Nektar
                         tmp[bndMap[bndcnt++]] = sign * coeffs[j];
                     }
                 }
-                else
+                else if(m_bndConditions[i]->GetBoundaryConditionType() !=
+                        SpatialDomains::ePeriodic)
                 {
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
@@ -837,11 +838,11 @@ namespace Nektar
             int i,j;
             int bndcnt=0;
             Array<OneD, NekDouble> gamma(contNcoeffs, 0.0);
-			
+
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann ||
-                   m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eRobin)
+                   m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
                 {
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                     {

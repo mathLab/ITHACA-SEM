@@ -1762,6 +1762,11 @@ using namespace boost::assign;
 
                     cnt += e;
                 }
+                else if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                             SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
                 else
                 {
                     ASSERTL0(false, "Method only set up for Dirichlet, Neumann "
@@ -2078,7 +2083,8 @@ using namespace boost::assign;
             cnt = 0;
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
@@ -2086,8 +2092,10 @@ using namespace boost::assign;
                         BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
                     }
                 }
-                else if (m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann ||
-                         m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eNeumann ||
+                         m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eRobin)
                 {
                     //Add weak boundary condition to trace forcing
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
@@ -2516,6 +2524,11 @@ using namespace boost::assign;
                         coeff.Evaluate(x0, x1, x2, time,
                                        locExpList->UpdatePhys());
                         
+                    }
+                    else if (m_bndConditions[i]->GetBoundaryConditionType()
+                             == SpatialDomains::ePeriodic)
+                    {
+                        continue;
                     }
                     else
                     {

@@ -646,14 +646,10 @@ namespace Nektar
                 bcs.GetBoundaryConditions();
             SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
-            int nRegions = bregions.size();
-
             m_bndCondExpansions =
-                Array<OneD, MultiRegions::ExpListSharedPtr>(nRegions);
+                Array<OneD, MultiRegions::ExpListSharedPtr>(bregions.size());
             m_bndConditions     =
-                Array<OneD, SpatialDomains::BoundaryConditionShPtr>(nRegions);
-
-            cnt = 0;
+                Array<OneD, SpatialDomains::BoundaryConditionShPtr>(bregions.size());
 
             for (it = bregions.begin(), cnt = 0; it != bregions.end(); ++it)
             {
@@ -1926,7 +1922,7 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == 
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
                        SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
@@ -1935,7 +1931,10 @@ namespace Nektar
                         BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
                     }
                 }
-                else
+                else if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eNeumann ||
+                         m_bndConditions[i]->GetBoundaryConditionType() ==
+                             SpatialDomains::eRobin)
                 {
                     //Add weak boundary condition to trace forcing
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)

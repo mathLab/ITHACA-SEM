@@ -389,12 +389,18 @@ namespace Nektar
                              const SpatialDomains::CompositeMap &domain,
                              const SpatialDomains::MeshGraphSharedPtr &graph2D,
                              const bool DeclareCoeffPhysArrays,
-                             const std::string variable):
+                             const std::string variable,
+                             const LibUtilities::CommSharedPtr comm):
             ExpList(pSession,graph2D)
         {
             SetExpType(e1D);
 
             m_graph = graph2D;
+
+            if (comm)
+            {
+                m_comm = comm;
+            }
 
             int j, id=0;
             SpatialDomains::Composite comp;

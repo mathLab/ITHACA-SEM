@@ -206,6 +206,7 @@ namespace Nektar
     void VelocityCorrectionScheme::SetupFlowrate()
     {
         m_flowrateBndID = -1;
+        m_flowrateArea = 0.0;
 
         const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bcs =
             m_fields[0]->GetBndConditions();
@@ -243,10 +244,11 @@ namespace Nektar
         if (m_flowrateBndID >= 0)
         {
             m_flowrateBnd = m_fields[0]->GetBndCondExpansions()[m_flowrateBndID];
-
             Array<OneD, NekDouble> inArea(m_flowrateBnd->GetNpoints(), 1.0);
             m_flowrateArea = m_flowrateBnd->Integral(inArea);
         }
+
+        m_comm->AllReduce(m_flowrateArea, LibUtilities::ReduceMax);
 
         int nqTot = m_fields[0]->GetNpoints();
         Array<OneD, Array<OneD, NekDouble> > inTmp(m_spacedim);

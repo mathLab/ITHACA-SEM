@@ -614,9 +614,9 @@ using namespace boost::assign;
             MultiRegions::ExpList2DSharedPtr       locExpList;
             SpatialDomains::BoundaryConditionShPtr locBCond;
 
-            const SpatialDomains::BoundaryRegionCollection    &bregions = 
+            const SpatialDomains::BoundaryRegionCollection    &bregions =
                 bcs.GetBoundaryRegions();
-            const SpatialDomains::BoundaryConditionCollection &bconditions = 
+            const SpatialDomains::BoundaryConditionCollection &bconditions =
                 bcs.GetBoundaryConditions();
             SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
@@ -632,7 +632,7 @@ using namespace boost::assign;
                     bconditions, it->first, variable);
                 locExpList = MemoryManager<MultiRegions::ExpList2D>
                     ::AllocateSharedPtr(m_session, *(it->second),
-                                        graph3D, variable);
+                                        graph3D, variable, locBCond->GetComm());
 
                 // Set up normals on non-Dirichlet boundary conditions
                 if(locBCond->GetBoundaryConditionType() !=
@@ -2440,7 +2440,7 @@ using namespace boost::assign;
 
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                             valuesFile = locExpList->GetPhys();
                         }
                         
@@ -2469,7 +2469,7 @@ using namespace boost::assign;
 
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                         }
                         else
                         {
@@ -2496,7 +2496,7 @@ using namespace boost::assign;
 
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                         }
                         else
                         {

@@ -657,7 +657,8 @@ namespace Nektar
 
                 locExpList = MemoryManager<MultiRegions::ExpList1D>
                     ::AllocateSharedPtr(m_session, *(it->second), graph2D,
-                                        DeclareCoeffPhysArrays, variable);
+                                        DeclareCoeffPhysArrays, variable,
+                                        bc->GetComm());
 
                 m_bndCondExpansions[cnt]  = locExpList;
                 m_bndConditions[cnt]      = bc;
@@ -2252,7 +2253,7 @@ namespace Nektar
                         
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                         }
                         else
                         {
@@ -2279,7 +2280,7 @@ namespace Nektar
                         string filebcs  = bcPtr->m_filename;
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                         }
                         else
                         {
@@ -2306,7 +2307,7 @@ namespace Nektar
                         
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->GetComm(), varName, locExpList);
                         }
                         else
                         {

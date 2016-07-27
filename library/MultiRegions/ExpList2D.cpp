@@ -804,10 +804,16 @@ namespace Nektar
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const SpatialDomains::CompositeMap &domain,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
-            const std::string variable):ExpList(pSession, graph3D)
+            const std::string variable,
+            const LibUtilities::CommSharedPtr comm)
+             : ExpList(pSession, graph3D)
          {
-
              SetExpType(e2D);
+
+             if (comm)
+             {
+                 m_comm = comm;
+             }
 
              ASSERTL0(boost::dynamic_pointer_cast<
                       SpatialDomains::MeshGraph3D>(graph3D),

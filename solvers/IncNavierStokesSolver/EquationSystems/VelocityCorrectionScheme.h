@@ -138,6 +138,8 @@ namespace Nektar
         MultiRegions::ExpListSharedPtr m_flowrateBnd;
         /// Stokes solution used to impose flowrate
         Array<OneD, Array<OneD, NekDouble> > m_flowrateStokes;
+        /// Output stream to record flowrate
+        std::ofstream m_flowrateStream;
 
         void SetupFlowrate();
         NekDouble MeasureFlowrate(

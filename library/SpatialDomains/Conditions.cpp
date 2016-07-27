@@ -731,7 +731,7 @@ namespace Nektar
 
                                     attr = attr->Next();
                                 }
-                                BoundaryConditionShPtr periodicCondition(MemoryManager<PeriodicBoundaryCondition>::AllocateSharedPtr(periodicBndRegionIndex[0], userDefined));
+                                BoundaryConditionShPtr periodicCondition(MemoryManager<PeriodicBoundaryCondition>::AllocateSharedPtr(periodicBndRegionIndex[0], userDefined, boundaryRegionComm));
                                 (*boundaryConditions)[*iter]  = periodicCondition;
                             }
                             else

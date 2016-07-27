@@ -895,26 +895,51 @@ namespace Nektar
 
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
-            Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
-            Vmath::Zero(vCoeffs.num_elements(), vCoeffs, 1);
-
-            int numexp = m_fields[0]->GetExpSize();
-            Array<OneD, int> ElementGIDs(numexp);
 
             // Define list of global element ids
+            int numexp = m_fields[0]->GetExpSize();
+            Array<OneD, int> ElementGIDs(numexp);
             for (int i = 0; i < numexp; ++i)
             {
                 ElementGIDs[i] = m_fields[0]->GetExp(i)->GetGeom()->GetGlobalID();
             }
 
-            m_fld->Import(filename,
+            // check if we already loaded this file.
+            // For transient files, funcFilename != filename so we can make sure we only keep
+            // the latest field per funcFilename.
+            std::string funcFilename = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
+            if (m_loadedFldFields.find(funcFilename) != m_loadedFldFields.end())
+            {
+                // found
+                if (m_loadedFldFields[funcFilename].first == filename)
+                {
+                    // found
+                    FieldDef = m_loadedFldFields[funcFilename].second.fieldDef;
+                    FieldData = m_loadedFldFields[funcFilename].second.fieldData;
+                }
+                else
+                {
+                    m_fld->Import(filename,
+                                    FieldDef,
+                                    FieldData,
+                                    LibUtilities::NullFieldMetaDataMap,
+                                    ElementGIDs);
+                }
+            }
+            else
+            {
+                m_fld->Import(filename,
                         FieldDef,
                         FieldData,
                         LibUtilities::NullFieldMetaDataMap,
                         ElementGIDs);
+            }
+            m_loadedFldFields[funcFilename].first = filename;
+            m_loadedFldFields[funcFilename].second.fieldDef = FieldDef;
+            m_loadedFldFields[funcFilename].second.fieldData = FieldData;
 
             int idx = -1;
-
+            Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs(), 0.0);
             // Loop over all the expansions
             for (int i = 0; i < FieldDef.size(); ++i)
             {
@@ -1000,8 +1025,30 @@ namespace Nektar
             }
 
             LibUtilities::PtsFieldSharedPtr outPts;
+            // check if we already loaded this file.
+            // For transient files, funcFilename != filename so we can make sure we only keep
+            // the latest pts field per funcFilename.
             std::string funcFilename = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
-            InterpPts(funcFilename, filename, outPts);
+
+            if (m_loadedPtsFields.find(funcFilename) != m_loadedPtsFields.end())
+            {
+                // found
+                if (m_loadedPtsFields[funcFilename].first == filename)
+                {
+                    // found
+                    outPts = m_loadedPtsFields[funcFilename].second;
+                }
+                else
+                {
+                    LoadPts(funcFilename, filename, outPts);
+                }
+            }
+            else
+            {
+                LoadPts(funcFilename, filename, outPts);
+            }
+            m_loadedPtsFields[funcFilename].first = filename;
+            m_loadedPtsFields[funcFilename].second = outPts;
 
             int fieldInd;
             vector<string> fieldNames = outPts->GetFieldNames();
@@ -1017,7 +1064,8 @@ namespace Nektar
             pArray = outPts->GetPts(fieldInd + outPts->GetDim());
         }
 
-        void EquationSystem::InterpPts(std::string funcFilename,
+
+        void EquationSystem::LoadPts(std::string funcFilename,
                                        std::string filename,
                                        LibUtilities::PtsFieldSharedPtr &outPts)
         {
@@ -1047,10 +1095,8 @@ namespace Nektar
             outPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
                 inPts->GetDim(), inPts->GetFieldNames(), pts);
 
-            //  check if we already computed this funcKey combination
-            map<std::string, FieldUtils::Interpolator>::iterator it =
-                m_interpolators.find(funcFilename);
-            if (it == m_interpolators.end())
+            //  check if we already have an interolator for this funcFilename
+            if (m_interpolators.find(funcFilename) == m_interpolators.end())
             {
                 m_interpolators[funcFilename] =
                     FieldUtils::Interpolator(Nektar::FieldUtils::eShepard);
@@ -1070,7 +1116,6 @@ namespace Nektar
                 }
             }
             m_interpolators[funcFilename].Interpolate(inPts, outPts);
-
         }
 
 

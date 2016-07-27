@@ -706,30 +706,31 @@ namespace Nektar
         }
 
         /**
-         * Populates a forcing function for each of the dependent variables 
-         * using the expression provided by the BoundaryConditions object.
-         * @param   force           Array of fields to assign forcing.
-         */
+        * Populates a forcing function for each of the dependent variables
+        * using the expression provided by the BoundaryConditions object.
+        * @param   force           Array of fields to assign forcing.
+        */
         void EquationSystem::EvaluateFunction(
             std::vector<std::string> pFieldNames,
             Array<OneD, Array<OneD, NekDouble> > &pFields,
-            const std::string& pFunctionName,
-            const NekDouble& pTime,
+            const std::string &pFunctionName,
+            const NekDouble &pTime,
             const int domain)
         {
             ASSERTL1(pFieldNames.size() == pFields.num_elements(),
-                     "Function '" + pFunctionName
-                     + "' variable list size mismatch with array storage.");
+                    "Function '" + pFunctionName +
+                        "' variable list size mismatch with array storage.");
             ASSERTL0(m_session->DefinesFunction(pFunctionName),
-                     "Function '" + pFunctionName + "' does not exist.");
+                    "Function '" + pFunctionName + "' does not exist.");
 
-            for(int i = 0; i < pFieldNames.size(); i++)
+            for (int i = 0; i < pFieldNames.size(); i++)
             {
-                EvaluateFunction(pFieldNames[i], pFields[i], pFunctionName, pTime, domain);
+                EvaluateFunction(pFieldNames[i], pFields[i], pFunctionName, pTime,
+                                domain);
             }
         }
 
-       /**
+        /**
         * Populates a function for each of the dependent variables using
         * the expression or filenames provided by the SessionReader object.
         * @param   force           Array of fields to assign forcing.
@@ -748,11 +749,8 @@ namespace Nektar
 
             for (int i = 0; i < pFieldNames.size(); i++)
             {
-                EvaluateFunction(pFieldNames[i],
-                                pFields[i]->UpdatePhys(),
-                                pFunctionName,
-                                pTime,
-                                domain);
+                EvaluateFunction(pFieldNames[i], pFields[i]->UpdatePhys(),
+                                pFunctionName, pTime, domain);
                 pFields[i]->FwdTrans_IterPerExp(pFields[i]->GetPhys(),
                                                 pFields[i]->UpdateCoeffs());
             }
@@ -792,13 +790,13 @@ namespace Nektar
 
                 if (boost::filesystem::path(filename).extension() != ".pts")
                 {
-                    EvaluateFunctionFld(
-                        pFieldName, pArray, pFunctionName, pTime, domain);
+                    EvaluateFunctionFld(pFieldName, pArray, pFunctionName, pTime,
+                                        domain);
                 }
                 else
                 {
-                    EvaluateFunctionPts(
-                        pFieldName, pArray, pFunctionName, pTime, domain);
+                    EvaluateFunctionPts(pFieldName, pArray, pFunctionName, pTime,
+                                        domain);
                 }
             }
         }
@@ -887,9 +885,8 @@ namespace Nektar
                 }
                 catch (...)
                 {
-                    ASSERTL0(false,
-                            "Invalid Filename in function \"" + pFunctionName +
-                                "\", variable \"" + fileVar + "\"")
+                    ASSERTL0(false, "Invalid Filename in function \"" + pFunctionName +
+                                        "\", variable \"" + fileVar + "\"")
                 }
             }
 
@@ -905,37 +902,33 @@ namespace Nektar
             }
 
             // check if we already loaded this file.
-            // For transient files, funcFilename != filename so we can make sure we only keep
+            // For transient files, funcFilename != filename so we can make sure we only
+            // keep
             // the latest field per funcFilename.
-            std::string funcFilename = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
+            std::string funcFilename =
+                m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
             if (m_loadedFldFields.find(funcFilename) != m_loadedFldFields.end())
             {
                 // found
                 if (m_loadedFldFields[funcFilename].first == filename)
                 {
                     // found
-                    FieldDef = m_loadedFldFields[funcFilename].second.fieldDef;
+                    FieldDef  = m_loadedFldFields[funcFilename].second.fieldDef;
                     FieldData = m_loadedFldFields[funcFilename].second.fieldData;
                 }
                 else
                 {
-                    m_fld->Import(filename,
-                                    FieldDef,
-                                    FieldData,
-                                    LibUtilities::NullFieldMetaDataMap,
-                                    ElementGIDs);
+                    m_fld->Import(filename, FieldDef, FieldData,
+                                LibUtilities::NullFieldMetaDataMap, ElementGIDs);
                 }
             }
             else
             {
-                m_fld->Import(filename,
-                        FieldDef,
-                        FieldData,
-                        LibUtilities::NullFieldMetaDataMap,
-                        ElementGIDs);
+                m_fld->Import(filename, FieldDef, FieldData,
+                            LibUtilities::NullFieldMetaDataMap, ElementGIDs);
             }
-            m_loadedFldFields[funcFilename].first = filename;
-            m_loadedFldFields[funcFilename].second.fieldDef = FieldDef;
+            m_loadedFldFields[funcFilename].first            = filename;
+            m_loadedFldFields[funcFilename].second.fieldDef  = FieldDef;
             m_loadedFldFields[funcFilename].second.fieldData = FieldData;
 
             int idx = -1;
@@ -1018,17 +1011,18 @@ namespace Nektar
                 }
                 catch (...)
                 {
-                    ASSERTL0(false,
-                            "Invalid Filename in function \"" + pFunctionName +
-                                "\", variable \"" + fileVar + "\"")
+                    ASSERTL0(false, "Invalid Filename in function \"" + pFunctionName +
+                                        "\", variable \"" + fileVar + "\"")
                 }
             }
 
             LibUtilities::PtsFieldSharedPtr outPts;
             // check if we already loaded this file.
-            // For transient files, funcFilename != filename so we can make sure we only keep
+            // For transient files, funcFilename != filename so we can make sure we only
+            // keep
             // the latest pts field per funcFilename.
-            std::string funcFilename = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
+            std::string funcFilename =
+                m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
 
             if (m_loadedPtsFields.find(funcFilename) != m_loadedPtsFields.end())
             {
@@ -1047,7 +1041,7 @@ namespace Nektar
             {
                 LoadPts(funcFilename, filename, outPts);
             }
-            m_loadedPtsFields[funcFilename].first = filename;
+            m_loadedPtsFields[funcFilename].first  = filename;
             m_loadedPtsFields[funcFilename].second = outPts;
 
             int fieldInd;
@@ -1064,10 +1058,9 @@ namespace Nektar
             pArray = outPts->GetPts(fieldInd + outPts->GetDim());
         }
 
-
         void EquationSystem::LoadPts(std::string funcFilename,
-                                       std::string filename,
-                                       LibUtilities::PtsFieldSharedPtr &outPts)
+                                    std::string filename,
+                                    LibUtilities::PtsFieldSharedPtr &outPts)
         {
             unsigned int nq = m_fields[0]->GetNpoints();
 
@@ -1075,7 +1068,8 @@ namespace Nektar
             LibUtilities::PtsIO ptsIO(m_session->GetComm());
             ptsIO.Import(filename, inPts);
 
-            Array<OneD, Array<OneD, NekDouble> > pts(inPts->GetDim() + inPts->GetNFields());
+            Array<OneD, Array<OneD, NekDouble> > pts(inPts->GetDim() +
+                                                    inPts->GetNFields());
             for (int i = 0; i < inPts->GetDim() + inPts->GetNFields(); ++i)
             {
                 pts[i] = Array<OneD, NekDouble>(nq);

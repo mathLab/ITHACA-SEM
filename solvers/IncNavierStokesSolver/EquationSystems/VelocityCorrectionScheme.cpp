@@ -194,6 +194,15 @@ namespace Nektar
         }
     }
 
+    /**
+     * @brief Set up the Stokes solution used to impose constant flowrate
+     * through a boundary.
+     *
+     * This routine solves a Stokes equation using a unit forcing that is
+     * determined by the user in order to obtain a correction field applied at
+     * the end of each timestep to impose a constant volumetric flow rate
+     * through a user-defined surface.
+     */
     void VelocityCorrectionScheme::SetupFlowrate()
     {
         m_flowrateBndID = -1;
@@ -217,7 +226,7 @@ namespace Nektar
                              "volumetric flowrate.");
 
         char *forces[] = { "X", "Y", "Z" };
-        m_flowrateForce = Array<OneD, NekDouble>(m_spacedim);
+        Array<OneD, NekDouble> flowrateForce(m_spacedim);
 
         for (int i = 0; i < m_spacedim; ++i)
         {
@@ -228,7 +237,7 @@ namespace Nektar
 
             LibUtilities::EquationSharedPtr ffunc
                 = m_session->GetFunction("FlowrateForce", varName);
-            m_flowrateForce[i] = ffunc->Evaluate();
+            flowrateForce[i] = ffunc->Evaluate();
         }
 
         if (m_flowrateBndID >= 0)
@@ -246,7 +255,7 @@ namespace Nektar
         for (int i = 0; i < m_spacedim; ++i)
         {
             inTmp[i] = Array<OneD, NekDouble>(
-                nqTot, m_flowrateForce[i] * m_timestep);
+                nqTot, flowrateForce[i] * m_timestep);
             m_flowrateStokes[i] = Array<OneD, NekDouble>(nqTot, 0.0);
         }
 
@@ -255,6 +264,17 @@ namespace Nektar
         m_greenFlux = MeasureFlowrate(m_flowrateStokes);
     }
 
+    /**
+     * @brief Measure the volumetric flow rate through the volumetric flow rate
+     * reference surface.
+     *
+     * This routine computes the volumetric flow rate
+     *
+     * \f[ Q(\mathbf{u}) = \frac{1}{\mu(R)} \int_R \mathbf{u} \cdot d\mathbf{s}
+     * \f]
+     *
+     * through the boundary region \f$ R \f$.
+     */
     NekDouble VelocityCorrectionScheme::MeasureFlowrate(
         const Array<OneD, Array<OneD, NekDouble> > &inarray)
     {

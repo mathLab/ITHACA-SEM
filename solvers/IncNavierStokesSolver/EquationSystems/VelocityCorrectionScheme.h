@@ -126,15 +126,18 @@ namespace Nektar
         /// Variable Coefficient map for the Laplacian which can be activated as part of SVV or otherwise
         StdRegions::VarCoeffMap m_varCoeffLap;
 
-        /// Flowrate settings
+        /// Desired volumetric flowrate
         NekDouble m_flowrate;
+        /// Area of the boundary through which we are measuring the flowrate
         NekDouble m_flowrateArea;
-        /// Flux of the Green's function
+        /// Flux of the Stokes function solution
         NekDouble m_greenFlux;
+        /// Boundary ID of the flowrate reference surface
         int m_flowrateBndID;
+        /// Flowrate reference surface
         MultiRegions::ExpListSharedPtr m_flowrateBnd;
+        /// Stokes solution used to impose flowrate
         Array<OneD, Array<OneD, NekDouble> > m_flowrateStokes;
-        Array<OneD, NekDouble> m_flowrateForce;
 
         void SetupFlowrate();
         NekDouble MeasureFlowrate(

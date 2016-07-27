@@ -2833,15 +2833,6 @@ namespace Nektar
             return result;
         }
 
-        const Array<OneD, const unsigned int> &ExpList::v_GetBndConditionIDs()
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static Array<OneD, unsigned int> result;
-            return result;
-        }
-
-
         /**
          */
         Array<OneD,SpatialDomains::BoundaryConditionShPtr> &ExpList::v_UpdateBndConditions()

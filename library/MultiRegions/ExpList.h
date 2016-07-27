@@ -718,8 +718,6 @@ namespace Nektar
             inline const Array<OneD, const SpatialDomains::
                 BoundaryConditionShPtr>& GetBndConditions();
 
-            inline const Array<OneD, const unsigned int>& GetBndConditionIDs();
-
             inline Array<OneD, SpatialDomains::
                 BoundaryConditionShPtr>& UpdateBndConditions();
 
@@ -1359,7 +1357,6 @@ namespace Nektar
         
         private:
             virtual const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
-            virtual const Array<OneD, const unsigned int> &v_GetBndConditionIDs();
             
             virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                 &v_UpdateBndConditions();
@@ -2090,13 +2087,6 @@ namespace Nektar
         {
             return v_GetBndConditions();
         }
-
-        inline const Array<OneD, const unsigned int>
-            &ExpList::GetBndConditionIDs()
-        {
-            return v_GetBndConditionIDs();
-        }
-
 
         inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>
             &ExpList::UpdateBndConditions()

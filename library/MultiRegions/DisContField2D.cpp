@@ -652,12 +652,10 @@ namespace Nektar
                 Array<OneD, MultiRegions::ExpListSharedPtr>(nRegions);
             m_bndConditions     =
                 Array<OneD, SpatialDomains::BoundaryConditionShPtr>(nRegions);
-            m_bndConditionIDs   =
-                Array<OneD, unsigned int>(nRegions);
 
             cnt = 0;
 
-            for (it = bregions.begin(); it != bregions.end(); ++it)
+            for (it = bregions.begin(), cnt = 0; it != bregions.end(); ++it)
             {
                 bc = GetBoundaryCondition(bconditions, it->first, variable);
 
@@ -667,7 +665,6 @@ namespace Nektar
 
                 m_bndCondExpansions[cnt]  = locExpList;
                 m_bndConditions[cnt]      = bc;
-                m_bndConditionIDs[cnt]    = it->first;
 
                 std::string type = m_bndConditions[cnt]->GetUserDefined();
 

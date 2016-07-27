@@ -217,12 +217,12 @@ namespace Nektar
             m_flowrateForce[i] = ffunc->Evaluate();
         }
 
-        const Array<OneD, const unsigned int> &bcIDs =
-            m_fields[0]->GetBndConditionIDs();
+        const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bcs =
+            m_fields[0]->GetBndConditions();
 
-        for (int i = 0; i < bcIDs.num_elements(); ++i)
+        for (int i = 0; i < bcs.num_elements(); ++i)
         {
-            if (bcIDs[i] == br)
+            if (boost::iequals(bcs[i]->GetUserDefined(), "FLOWRATE"))
             {
                 m_flowrateBndID = i;
                 break;
@@ -231,7 +231,8 @@ namespace Nektar
 
         int tmpBr = m_flowrateBndID;
         m_comm->AllReduce(tmpBr, LibUtilities::ReduceMax);
-        ASSERTL0(tmpBr >= 0, "Unable to find boundary");
+        ASSERTL0(tmpBr >= 0, "One boundary region must be marked using the "
+                             "'FLOWRATE' user-defined type.");
 
         if (m_flowrateBndID >= 0)
         {

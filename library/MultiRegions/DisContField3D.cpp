@@ -620,46 +620,29 @@ using namespace boost::assign;
                 bcs.GetBoundaryConditions();
             SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
-            // count the number of non-periodic boundary regions
-            for (it = bregions.begin(); it != bregions.end(); ++it)
-            {
-                SpatialDomains::BoundaryConditionShPtr boundaryCondition = 
-                    GetBoundaryCondition(bconditions, it->first, variable);
-                if (boundaryCondition->GetBoundaryConditionType() != 
-                        SpatialDomains::ePeriodic)
-                {
-                    cnt++;
-                }
-            }
-
-            m_bndCondExpansions = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
-            m_bndConditions     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
-
-            cnt = 0;
+            m_bndCondExpansions =
+                Array<OneD,MultiRegions::ExpListSharedPtr>(bregions.size());
+            m_bndConditions     =
+                Array<OneD,SpatialDomains::BoundaryConditionShPtr>(bregions.size());
 
             // list Dirichlet boundaries first
-            for (it = bregions.begin(); it != bregions.end(); ++it)
+            for (it = bregions.begin(), cnt = 0; it != bregions.end(); ++it)
             {
                 locBCond = GetBoundaryCondition(
                     bconditions, it->first, variable);
+                locExpList = MemoryManager<MultiRegions::ExpList2D>
+                    ::AllocateSharedPtr(m_session, *(it->second),
+                                        graph3D, variable);
 
-                if(locBCond->GetBoundaryConditionType()
-                       != SpatialDomains::ePeriodic)
+                // Set up normals on non-Dirichlet boundary conditions
+                if(locBCond->GetBoundaryConditionType() !=
+                   SpatialDomains::eDirichlet)
                 {
-                    locExpList = MemoryManager<MultiRegions::ExpList2D>
-                        ::AllocateSharedPtr(m_session, *(it->second),
-                                            graph3D, variable);
-
-                    // Set up normals on non-Dirichlet boundary conditions
-                    if(locBCond->GetBoundaryConditionType() != 
-                           SpatialDomains::eDirichlet)
-                    {
-                        SetUpPhysNormals();
-                    }
-
-                    m_bndCondExpansions[cnt]  = locExpList;
-                    m_bndConditions[cnt++]    = locBCond;
+                    SetUpPhysNormals();
                 }
+
+                m_bndCondExpansions[cnt]  = locExpList;
+                m_bndConditions[cnt++]    = locBCond;
             }
         }
 
@@ -2103,7 +2086,8 @@ using namespace boost::assign;
                         BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
                     }
                 }
-                else
+                else if (m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann ||
+                         m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
                 {
                     //Add weak boundary condition to trace forcing
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)

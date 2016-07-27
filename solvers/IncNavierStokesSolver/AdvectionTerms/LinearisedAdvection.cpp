@@ -595,9 +595,9 @@ void LinearisedAdvection::ImportFldBase(
         ElementGIDs[i] = pFields[0]->GetExp(i)->GetGeom()->GetGlobalID();
     }
 
-    LibUtilities::FieldIOSharedPtr fld =
-    MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-                                                    m_session->GetComm());
+    //Get Homogeneous
+    LibUtilities::FieldIOSharedPtr fld = LibUtilities::FieldIO::CreateForFile(
+        m_session, pInfile);
     fld->Import(pInfile, FieldDef, FieldData,
                 LibUtilities::NullFieldMetaDataMap,
                 ElementGIDs);

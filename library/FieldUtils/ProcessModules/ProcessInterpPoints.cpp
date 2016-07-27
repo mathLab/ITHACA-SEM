@@ -32,6 +32,7 @@
 //  Description: Interpolate  field to a series of specified points.
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 #include <iostream>
 #include <string>
 using namespace std;
@@ -44,6 +45,7 @@ using namespace std;
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
+
 namespace Nektar
 {
 namespace FieldUtils
@@ -494,9 +496,6 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     const SpatialDomains::ExpansionMap &expansions =
         fromField->m_graph->GetExpansions();
 
-    fromField->m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-        fromField->m_session->GetComm());
-
     Array<OneD, int> ElementGIDs(expansions.size());
     SpatialDomains::ExpansionMap::const_iterator expIt;
 
@@ -512,8 +511,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                     "wihtin the domain given by the xml files?");
 
     string fromfld = m_config["fromfld"].as<string>();
-    fromField->m_fld->Import(fromfld, fromField->m_fielddef, fromField->m_data,
-                             LibUtilities::NullFieldMetaDataMap, ElementGIDs);
+    m_f->FieldIOForFile(fromfld)->Import(
+        fromfld, fromField->m_fielddef, fromField->m_data,
+        LibUtilities::NullFieldMetaDataMap, ElementGIDs);
 
     int NumHomogeneousDir = fromField->m_fielddef[0]->m_numHomogeneousDir;
 

@@ -2432,17 +2432,15 @@ using namespace boost::assign;
                     if (m_bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eDirichlet)
                     {
-                        string filebcs = boost::static_pointer_cast<
+                        SpatialDomains::DirichletBCShPtr bcPtr = boost::static_pointer_cast<
                             SpatialDomains::DirichletBoundaryCondition>(
-                                m_bndConditions[i])->m_filename;
-                        
-                        string exprbcs = boost::static_pointer_cast<
-                            SpatialDomains::DirichletBoundaryCondition>(
-                                m_bndConditions[i])->m_expr;
+                                m_bndConditions[i]);
+                        string filebcs = bcPtr->m_filename;
+                        string exprbcs = bcPtr->m_expr;
 
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
                             valuesFile = locExpList->GetPhys();
                         }
                         
@@ -2464,13 +2462,14 @@ using namespace boost::assign;
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eNeumann)
                     {
-                        string filebcs = boost::static_pointer_cast<
+                        SpatialDomains::NeumannBCShPtr bcPtr = boost::static_pointer_cast<
                             SpatialDomains::NeumannBoundaryCondition>(
-                                m_bndConditions[i])->m_filename;
+                                m_bndConditions[i]);
+                        string filebcs = bcPtr->m_filename;
 
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
                         }
                         else
                         {
@@ -2490,14 +2489,14 @@ using namespace boost::assign;
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eRobin)
                     {
+                        SpatialDomains::RobinBCShPtr bcPtr = boost::static_pointer_cast<
+                            SpatialDomains::RobinBoundaryCondition>(
+                                m_bndConditions[i]);
+                        string filebcs = bcPtr->m_filename;
 
-                        string filebcs = boost::static_pointer_cast<
-                            SpatialDomains::RobinBoundaryCondition>
-                                (m_bndConditions[i])->m_filename;
-                        
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
                         }
                         else
                         {

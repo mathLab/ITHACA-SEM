@@ -1343,6 +1343,7 @@ namespace Nektar
             virtual void v_ClearGlobalLinSysManager(void);
 
             void ExtractFileBCs(const std::string                &fileName,
+                                LibUtilities::CommSharedPtr       comm,
                                 const std::string                &varName,
                                 const boost::shared_ptr<ExpList>  locExpList);
             

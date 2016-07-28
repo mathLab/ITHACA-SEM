@@ -132,6 +132,8 @@ namespace Nektar
         NekDouble m_flowrateArea;
         /// Flux of the Stokes function solution
         NekDouble m_greenFlux;
+        /// Current flowrate correction
+        NekDouble m_alpha;
         /// Boundary ID of the flowrate reference surface
         int m_flowrateBndID;
         /// Flowrate reference surface
@@ -140,12 +142,16 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > m_flowrateStokes;
         /// Output stream to record flowrate
         std::ofstream m_flowrateStream;
+        /// Interval at which to record flowrate data
+        int m_flowrateSteps;
 
         void SetupFlowrate();
         NekDouble MeasureFlowrate(
             const Array<OneD, Array<OneD, NekDouble> > &inarray);
 
         // Virtual functions
+        virtual bool v_PostIntegrate(int step);
+
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
         virtual void v_TransCoeffToPhys(void);

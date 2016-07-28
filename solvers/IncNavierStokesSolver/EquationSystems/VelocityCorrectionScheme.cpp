@@ -187,6 +187,7 @@ namespace Nektar
 
         // Set up bits for flowrate.
         m_session->LoadParameter("Flowrate", m_flowrate, 0.0);
+        m_session->LoadParameter("IO_FlowSteps", m_flowrateSteps, 0);
     }
 
     /**
@@ -198,7 +199,40 @@ namespace Nektar
      * the end of each timestep to impose a constant volumetric flow rate
      * through a user-defined surface.
      *
-     * 
+     * There are essentially three modes of operation:
+     *
+     * - Standard two-dimensional or three-dimensional simulations
+     * - 3DH1D simulations where the forcing is not in the homogeneous
+     *   direction.
+     * - 3DH1D simulations where the forcing is in the homogeneous direction.
+     *
+     * In the first two cases, the user should define:
+     * - the `Flowrate` parameter, which dictates the volumetric flux through
+     *   the reference area
+     * - tag a boundary region with the `Flowrate` user-defined type to define
+     *   the reference area
+     * - define a `FlowrateForce` function with components `ForceX`, `ForceY`
+     *   and `ForceZ` that defines a unit forcing in the appropriate direction.
+     *
+     * In the latter case, the user should define the `Flowrate` and the
+     * `FlowrateForce` function. The reference area is taken to be the
+     * homogeneous plane.
+     *
+     * We then solve one timestep of the Stokes problem
+     *
+     * \f[ \frac{\partial\mathbf{u}}{\partial t} = -\nabla p +
+     * \nu\nabla^2\mathbf{u} + \mathbf{f} \f]
+     *
+     * with a zero initial condition to obtain a field \f$ \mathbf{u}_s \f$. The
+     * flowrate is then corrected at each timestep \f$ n \f$ by adding the
+     * correction \f$ \alpha\mathbf{u}_s \f$ where
+     *
+     * \f[ \alpha = \frac{\overline{Q} - Q(\mathbf{u^n})}{Q(\mathbf{u}_s)} \f]
+     *
+     * where \f$ Q(\cdot)\f$ is implemented in
+     * VelocityCorrectionScheme::MeasureFlowrate that calculates the volumetric
+     * flux. For more details, see chapter 3.2 of the thesis of D. Moxey
+     * (University of Warwick, 2011).
      */
     void VelocityCorrectionScheme::SetupFlowrate()
     {
@@ -295,6 +329,18 @@ namespace Nektar
         m_greenFlux = numeric_limits<NekDouble>::max();
         SolveUnsteadyStokesSystem(inTmp, m_flowrateStokes, 0.0, m_timestep);
         m_greenFlux = MeasureFlowrate(m_flowrateStokes);
+
+        // Open field
+        if (m_comm->GetRank() == 0)
+        {
+            std::string filename = m_session->GetSessionName();
+            filename += ".prs";
+            m_flowrateStream.open(filename);
+            m_flowrateStream.setf(ios::scientific, ios::floatfield);
+            m_flowrateStream << "# step      time            dP" << endl
+                             << "# -------------------------------------------"
+                             << endl;
+        }
     }
 
     /**
@@ -307,8 +353,7 @@ namespace Nektar
      * Q(\mathbf{u}) = \frac{1}{\mu(R)} \int_R \mathbf{u} \cdot d\mathbf{s}
      * \f]
      *
-     * through the boundary region \f$ R \f$. This region is either defined by
-     * the user in normal 2D or 3D cases, or
+     * through the boundary region \f$ R \f$.
      */
     NekDouble VelocityCorrectionScheme::MeasureFlowrate(
         const Array<OneD, Array<OneD, NekDouble> > &inarray)
@@ -342,8 +387,23 @@ namespace Nektar
             m_comm->GetColumnComm()->AllReduce(
                 flowrate, LibUtilities::ReduceSum);
         }
+        else
+        {
+            m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
+        }
 
         return flowrate / m_flowrateArea;
+    }
+
+    bool VelocityCorrectionScheme::v_PostIntegrate(int step)
+    {
+        if (m_comm->GetRank() == 0)
+        {
+            m_flowrateStream << setw(8) << step << setw(16) << m_time
+                             << setw(16) << m_alpha << endl;
+        }
+
+        return IncNavierStokes::v_PostIntegrate(step);
     }
 
     
@@ -351,7 +411,7 @@ namespace Nektar
      * Destructor
      */
     VelocityCorrectionScheme::~VelocityCorrectionScheme(void)
-    {        
+    {
     }
     
     /**
@@ -544,11 +604,11 @@ namespace Nektar
         if (m_flowrate > 0.0 && m_greenFlux != numeric_limits<NekDouble>::max())
         {
             NekDouble currentFlux = MeasureFlowrate(outarray);
-            NekDouble alpha = (m_flowrate - currentFlux) / m_greenFlux;
+            m_alpha = (m_flowrate - currentFlux) / m_greenFlux;
 
             for (int i = 0; i < m_spacedim; ++i)
             {
-                Vmath::Svtvp(phystot, alpha, m_flowrateStokes[i], 1,
+                Vmath::Svtvp(phystot, m_alpha, m_flowrateStokes[i], 1,
                              outarray[i], 1, outarray[i], 1);
             }
         }

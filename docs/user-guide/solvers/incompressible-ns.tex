@@ -1162,6 +1162,64 @@ This leads to small grid spacing required to resolve all physical scales associa
 Schmidt number = kinematic viscosity/diffusion coefficient). Hence, small diffusion coefficient might lead to spurious
 oscillations if the mesh spacing is not small enough.
 
+\section{Imposing a constant flowrate}
+
+In some simulations, it may be desirable to impose a constant flowrate condition
+in order to drive the flow. A common use case for this is a channel flow, where
+the inflow and outflow are treated using periodic boundary conditions, requiring
+a use of either a body force or a flowrate condition to drive the flow. Often,
+the use of a body force is sufficient, but in some cases (e.g. transitional or
+turbulent simulations), it may be difficult to determine the correct body force
+to use. The incompressible solver supports the use of an alternative forcing
+whereby the volumetric flux through a user-defined surface $R$ of area $\mu(R)$
+%
+\[
+  Q(\mathbf{u}) = \frac{1}{\mu(R)} \int_R \mathbf{u}\cdot d\mathbf{s}
+\]
+%
+is kept constant. This is supported for both standard two- and three-dimensional
+examples, as well as three-dimensional homogeneous simulations, where the
+forcing can either be in the homogeneous direction or perpendicular to it.
+
+To enable this flowrate correction, the \inltt{Flowrate} parameter must first be
+defined, which dictates the value of $Q$ that will be imposed through the
+reference area $R$. If a homogeneous simulation is used and forcing is in the
+homogeneous direction, then the reference area is taken to be the homogeneous
+plane. Otherwise, the user should mark the boundary region to be used using the
+\inltt{Flowrate} user-defined boundary type, for example:
+
+\begin{lstlisting}[style=XMLStyle]
+<BOUNDARYCONDITIONS>
+  <REGION REF="0">
+    <P VAR="u" VALUE="[1]" USERDEFINEDTYPE="Flowrate" />
+    <P VAR="v" VALUE="[1]" USERDEFINEDTYPE="Flowrate" />
+    <P VAR="p" VALUE="[1]" USERDEFINEDTYPE="Flowrate" />
+  </REGION>
+  <REGION REF="1">
+    <P VAR="u" VALUE="[0]" />
+    <P VAR="v" VALUE="[0]" />
+    <P VAR="p" VALUE="[0]" />
+  </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+Finally, a \inltt{FlowrateForce} function must be defined, which specifies the
+direction in which forcing is applied. This should be a unit vector (i.e. of
+magnitude 1) and constant (i.e. not dependent on $x$, $y$, $z$ or $t$). As an
+example, to impose a force in the $x$-direction we specify:
+
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="FlowrateForce">
+  <E VAR="ForceX" VALUE="1.0" />
+  <E VAR="ForceY" VALUE="1.0" />
+  <E VAR="ForceZ" VALUE="1.0" />
+</FUNCTION>
+\end{lstlisting}
+
+Optionally, the \inltt{IO\_FlowSteps} parameter can be defined, which produces a
+file \inltt{session.prs} which records the value of $\alpha$ every
+\inltt{IO\_FlowSteps} steps.
+
 \section{Examples}
 
 \subsection{Kovasznay Flow 2D}

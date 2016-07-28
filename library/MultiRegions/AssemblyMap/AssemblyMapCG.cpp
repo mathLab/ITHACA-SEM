@@ -2427,7 +2427,8 @@ namespace Nektar
 
         void AssemblyMapCG::v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
-                          Array<OneD,       NekDouble>& global) const
+                    Array<OneD,       NekDouble>& global,
+                    bool useComm) const
         {
             Array<OneD, const NekDouble> local;
             if(global.data() == loc.data())
@@ -2450,14 +2451,18 @@ namespace Nektar
             }
 
             // ensure all values are unique by calling a max
-            Gs::Gather(global, Gs::gs_max, m_gsh);
+            if(useComm)
+            {
+                Gs::Gather(global, Gs::gs_max, m_gsh);
+            }
         }
 
         void AssemblyMapCG::v_LocalToGlobal(
                     const NekVector<NekDouble>& loc,
-                          NekVector<      NekDouble>& global) const
+                    NekVector<      NekDouble>& global,
+                    bool useComm) const
         {
-            LocalToGlobal(loc.GetPtr(),global.GetPtr());
+            LocalToGlobal(loc.GetPtr(),global.GetPtr(),useComm);
         }
 
         void AssemblyMapCG::v_GlobalToLocal(

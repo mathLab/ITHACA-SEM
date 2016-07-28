@@ -681,6 +681,9 @@ void CwipiCoupling::SendFields(
                  << endl;
         }
 
+        Timer timer1;
+        timer1.Start();
+
         int nNotLoc = 0;
         // workaround a bug in cwipi: receiving_field_name should be const char*
         // but
@@ -698,6 +701,13 @@ void CwipiCoupling::SendFields(
                        "",
                        NULL,
                        &nNotLoc);
+
+        timer1.Stop();
+
+        if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+        {
+            cout << "Send total time: " << timer1.TimePerTest(1) << endl;
+        }
     }
 }
 
@@ -766,7 +776,7 @@ void CwipiCoupling::FetchFields(const int step,
         cout << "receiving fields at i = " << step << ", t = " << time << endl;
     }
 
-    Timer timer1, timer2, timer3;
+    Timer timer1, timer2, timer3, timer4;
     timer1.Start();
 
     Array<OneD, NekDouble> tmpC(m_recvField->GetNcoeffs());
@@ -776,12 +786,14 @@ void CwipiCoupling::FetchFields(const int step,
         rVals[i] = Array<OneD, NekDouble>(m_recvField->GetTotPoints());
     }
 
+    timer4.Start();
     // interpolate from m_evalField to m_recvField
     for (int i = 0; i < m_nRecvVars; ++i)
     {
         m_evalField->FwdTrans(field[i], tmpC);
         m_recvField->BwdTrans(tmpC, rVals[i]);
     }
+    timer4.Stop();
 
     int nNotLoc = 0;
 
@@ -890,12 +902,16 @@ void CwipiCoupling::FetchFields(const int step,
     if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
     {
         cout << "Receive total time: " << timer1.TimePerTest(1) << ", ";
+        cout << "Inital FwdTrans time: " << timer4.TimePerTest(1) << ", ";
         cout << "CWIPI time: " << timer2.TimePerTest(1) << endl;
     }
 }
 
 void CwipiCoupling::OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals)
 {
+    Timer timer1;
+    timer1.Start();
+
     // HACK
     Array<OneD, Array<OneD, NekDouble> > x(3);
     x[0] = Array<OneD, NekDouble>(m_recvField->GetTotPoints(), 0.0);
@@ -955,6 +971,9 @@ void CwipiCoupling::OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals)
 void CwipiCoupling::DumpRawFields(const NekDouble time,
                                   Array<OneD, Array<OneD, NekDouble> > rVals)
 {
+    Timer timer1;
+    timer1.Start();
+
 #ifdef _WIN32
     // We need this to make sure boost::format has always
     // two digits in the exponents of Scientific notation.
@@ -984,6 +1003,12 @@ void CwipiCoupling::DumpRawFields(const NekDouble time,
         MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
             m_spacedim, m_recvFieldNames, tmp);
     ptsIO.Write(filename, rvPts);
+
+    timer1.Stop();
+    if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+    {
+        cout << "DumpRawFields total time: " << timer1.TimePerTest(1) << endl;
+    }
 }
 }
 }

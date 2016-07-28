@@ -776,7 +776,7 @@ void CwipiCoupling::FetchFields(const int step,
         cout << "receiving fields at i = " << step << ", t = " << time << endl;
     }
 
-    Timer timer1, timer2, timer3, timer4;
+    Timer timer1, timer2, timer3;
     timer1.Start();
 
     Array<OneD, NekDouble> tmpC(m_recvField->GetNcoeffs());
@@ -785,15 +785,6 @@ void CwipiCoupling::FetchFields(const int step,
     {
         rVals[i] = Array<OneD, NekDouble>(m_recvField->GetTotPoints());
     }
-
-    timer4.Start();
-    // interpolate from m_evalField to m_recvField
-    for (int i = 0; i < m_nRecvVars; ++i)
-    {
-        m_evalField->FwdTrans(field[i], tmpC);
-        m_recvField->BwdTrans(tmpC, rVals[i]);
-    }
-    timer4.Stop();
 
     int nNotLoc = 0;
 
@@ -822,6 +813,13 @@ void CwipiCoupling::FetchFields(const int step,
         cout << "WARNING: relocating " << nNotLoc << " of " << m_nPoints
              << " points" << endl;
         notLoc = cwipi_get_not_located_points(m_couplingName.c_str());
+
+        // interpolate from m_evalField to m_recvField
+        for (int i = 0; i < m_nRecvVars; ++i)
+        {
+            m_evalField->FwdTrans(field[i], tmpC);
+            m_recvField->BwdTrans(tmpC, rVals[i]);
+        }
     }
 
     int locPos = 0;
@@ -902,7 +900,6 @@ void CwipiCoupling::FetchFields(const int step,
     if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
     {
         cout << "Receive total time: " << timer1.TimePerTest(1) << ", ";
-        cout << "Inital FwdTrans time: " << timer4.TimePerTest(1) << ", ";
         cout << "CWIPI time: " << timer2.TimePerTest(1) << endl;
     }
 }

@@ -197,6 +197,8 @@ namespace Nektar
      * determined by the user in order to obtain a correction field applied at
      * the end of each timestep to impose a constant volumetric flow rate
      * through a user-defined surface.
+     *
+     * 
      */
     void VelocityCorrectionScheme::SetupFlowrate()
     {
@@ -205,21 +207,6 @@ namespace Nektar
 
         const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bcs =
             m_fields[0]->GetBndConditions();
-
-        for (int i = 0; i < bcs.num_elements(); ++i)
-        {
-            if (boost::iequals(bcs[i]->GetUserDefined(), "Flowrate"))
-            {
-                m_flowrateBndID = i;
-                break;
-            }
-        }
-
-        int tmpBr = m_flowrateBndID;
-        m_comm->AllReduce(tmpBr, LibUtilities::ReduceMax);
-        ASSERTL0(tmpBr >= 0, "One boundary region must be marked using the "
-                             "'Flowrate' user-defined type to monitor the "
-                             "volumetric flowrate.");
 
         char *forces[] = { "X", "Y", "Z" };
         Array<OneD, NekDouble> flowrateForce(m_spacedim);
@@ -236,13 +223,55 @@ namespace Nektar
             flowrateForce[i] = ffunc->Evaluate();
         }
 
+        for (int i = 0; i < bcs.num_elements(); ++i)
+        {
+            if (boost::iequals(bcs[i]->GetUserDefined(), "Flowrate"))
+            {
+                m_flowrateBndID = i;
+                break;
+            }
+        }
+
+        int tmpBr = m_flowrateBndID;
+        m_comm->AllReduce(tmpBr, LibUtilities::ReduceMax);
+        ASSERTL0(tmpBr >= 0 || m_HomogeneousType == eHomogeneous1D,
+                 "One boundary region must be marked using the 'Flowrate' "
+                 "user-defined type to monitor the volumetric flowrate.");
+
         if (m_flowrateBndID >= 0)
         {
             m_flowrateBnd = m_fields[0]->GetBndCondExpansions()[m_flowrateBndID];
-            Array<OneD, NekDouble> inArea(m_flowrateBnd->GetNpoints(), 1.0);
-            m_flowrateArea = m_flowrateBnd->Integral(inArea);
+        }
+        else if (m_HomogeneousType == eHomogeneous1D)
+        {
+            // Get z IDs to find zero-th plane
+            Array<OneD, unsigned int> zIDs = m_fields[0]->GetZIDs();
+            int tmpId = -1;
+
+            for (int i = 0; i < zIDs.num_elements(); ++i)
+            {
+                if (zIDs[i] == 0)
+                {
+                    tmpId = i;
+                    break;
+                }
+            }
+
+            ASSERTL1(tmpId <= 0, "Should be either at location 0 or -1 if not "
+                                 "found");
+
+            if (tmpId != -1)
+            {
+                m_flowrateBnd = m_fields[0]->GetPlane(tmpId);
+            }
         }
 
+        if (m_flowrateBnd)
+        {
+            Array<OneD, NekDouble> inArea(m_flowrateBnd->GetNpoints(), 1.0);
+            m_flowrateArea = m_flowrateBnd->Integral(inArea);
+            cout << "FLOWRATE AREA = " << m_flowrateArea << endl;
+        }
         m_comm->AllReduce(m_flowrateArea, LibUtilities::ReduceMax);
 
         int nqTot = m_fields[0]->GetNpoints();
@@ -254,12 +283,20 @@ namespace Nektar
             inTmp[i] = Array<OneD, NekDouble>(
                 nqTot, flowrateForce[i] * m_timestep);
             m_flowrateStokes[i] = Array<OneD, NekDouble>(nqTot, 0.0);
+            if (m_HomogeneousType == eHomogeneous1D)
+            {
+                Array<OneD, NekDouble> inTmp2(nqTot);
+                m_fields[i]->HomogeneousFwdTrans(inTmp[i], inTmp2);
+                m_fields[i]->SetWaveSpace(true);
+                inTmp[i] = inTmp2;
+            }
             Vmath::Zero(m_fields[i]->GetNcoeffs(), m_fields[i]->UpdateCoeffs(), 1);
         }
 
         m_greenFlux = numeric_limits<NekDouble>::max();
         SolveUnsteadyStokesSystem(inTmp, m_flowrateStokes, 0.0, m_timestep);
         m_greenFlux = MeasureFlowrate(m_flowrateStokes);
+        cout << "GOT GREENFLUX = " << m_greenFlux << endl;
     }
 
     /**
@@ -268,17 +305,19 @@ namespace Nektar
      *
      * This routine computes the volumetric flow rate
      *
-     * \f[ Q(\mathbf{u}) = \frac{1}{\mu(R)} \int_R \mathbf{u} \cdot d\mathbf{s}
+     * \f[
+     * Q(\mathbf{u}) = \frac{1}{\mu(R)} \int_R \mathbf{u} \cdot d\mathbf{s}
      * \f]
      *
-     * through the boundary region \f$ R \f$.
+     * through the boundary region \f$ R \f$. This region is either defined by
+     * the user in normal 2D or 3D cases, or
      */
     NekDouble VelocityCorrectionScheme::MeasureFlowrate(
         const Array<OneD, Array<OneD, NekDouble> > &inarray)
     {
         NekDouble flowrate = 0.0;
 
-        if (m_flowrateBndID >= 0)
+        if (m_flowrateBnd && m_flowrateBndID >= 0)
         {
             Array<OneD, Array<OneD, NekDouble> > boundary(m_spacedim);
 
@@ -289,6 +328,11 @@ namespace Nektar
             }
 
             flowrate = m_flowrateBnd->VectorFlux(boundary);
+        }
+        else if (m_flowrateBnd)
+        {
+            // Homogeneous case
+            flowrate = m_flowrateBnd->Integral(inarray[2]);
         }
 
         m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
@@ -432,6 +476,8 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray, 
         const NekDouble time)
     {
+        cout << "ORIG MAX = " << setprecision(15) <<  Vmath::Vmax(inarray[2].num_elements(), inarray[2], 1) << endl;
+        cout << "ORIG FLOWRATE = " << MeasureFlowrate(inarray) << endl;
         EvaluateAdvectionTerms(inarray, outarray);
 
         // Smooth advection
@@ -501,6 +547,9 @@ namespace Nektar
                 Vmath::Svtvp(phystot, alpha, m_flowrateStokes[i], 1,
                              outarray[i], 1, outarray[i], 1);
             }
+
+            cout << "NEW FLOWRATE = " << MeasureFlowrate(outarray) << endl;
+            cout << "NEW MAX = " << Vmath::Vmax(phystot, outarray[2], 1) << endl;
         }
     }
         

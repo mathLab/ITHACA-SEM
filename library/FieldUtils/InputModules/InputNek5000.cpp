@@ -194,7 +194,6 @@ void InputNek5000::Process(po::variables_map &vm)
     fielddef->m_shapeType         = LibUtilities::eHexahedron;
     fielddef->m_numHomogeneousDir = 0;
     fielddef->m_homoStrips        = false;
-    fielddef->m_sharedFilesystem  = true;
     fielddef->m_pointsDef         = false;
     fielddef->m_uniOrder          = true;
     fielddef->m_numPointsDef      = false;
@@ -308,23 +307,6 @@ void InputNek5000::Process(po::variables_map &vm)
     }
 
     m_f->m_fielddef.push_back(fielddef);
-
-    if (!m_f->m_fld)
-    {
-        if (m_f->m_session)
-        {
-            m_f->m_fld =
-                MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-                    m_f->m_session->GetComm());
-        }
-        else // serial communicator
-        {
-            LibUtilities::CommSharedPtr c =
-                LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
-            m_f->m_fld =
-                MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(c);
-        }
-    }
 }
 }
 }

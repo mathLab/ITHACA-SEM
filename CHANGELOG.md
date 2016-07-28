@@ -14,6 +14,7 @@ v4.4.0
 - Increased required boost version to 1.56.0 (!584)
 - New FieldUtils library allows support for most `FieldConvert` post-processing
   operations during simulation using a new filter (!589)
+- Adjust CMake dependencies to reduce compile time (!671)
 
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)

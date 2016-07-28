@@ -1914,7 +1914,6 @@ namespace Nektar
             const std::string               &varName,
             const boost::shared_ptr<ExpList> locExpList)
         {
-            std::cout << "Rank " << m_comm->GetRank() << " Reading BCs for " << varName << " from " << fileName << std::endl;
             string varString = fileName.substr(0, fileName.find_last_of("."));
             int j, k, len = varString.length();
             varString = varString.substr(len-1, len);
@@ -1923,7 +1922,8 @@ namespace Nektar
             std::vector<std::vector<NekDouble> > FieldData;
 
             std::string ft = LibUtilities::FieldIO::GetFileType(fileName, comm);
-            LibUtilities::FieldIOSharedPtr f = LibUtilities::GetFieldIOFactory().CreateInstance(ft, comm, m_session->DefinesCmdLineArgument("shared-filesystem"));
+            LibUtilities::FieldIOSharedPtr f = LibUtilities::GetFieldIOFactory()
+                .CreateInstance(ft, comm, m_session->GetSharedFilesystem());
 
             f->Import(fileName, FieldDef, FieldData);
 

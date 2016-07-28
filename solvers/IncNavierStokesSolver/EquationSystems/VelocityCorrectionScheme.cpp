@@ -270,7 +270,6 @@ namespace Nektar
         {
             Array<OneD, NekDouble> inArea(m_flowrateBnd->GetNpoints(), 1.0);
             m_flowrateArea = m_flowrateBnd->Integral(inArea);
-            cout << "FLOWRATE AREA = " << m_flowrateArea << endl;
         }
         m_comm->AllReduce(m_flowrateArea, LibUtilities::ReduceMax);
 
@@ -296,7 +295,6 @@ namespace Nektar
         m_greenFlux = numeric_limits<NekDouble>::max();
         SolveUnsteadyStokesSystem(inTmp, m_flowrateStokes, 0.0, m_timestep);
         m_greenFlux = MeasureFlowrate(m_flowrateStokes);
-        cout << "GOT GREENFLUX = " << m_greenFlux << endl;
     }
 
     /**
@@ -328,14 +326,22 @@ namespace Nektar
             }
 
             flowrate = m_flowrateBnd->VectorFlux(boundary);
+            m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
         }
         else if (m_flowrateBnd)
         {
             // Homogeneous case
             flowrate = m_flowrateBnd->Integral(inarray[2]);
-        }
 
-        m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
+            // Now communicate this with other planes
+            m_comm->GetColumnComm()->AllReduce(
+                flowrate, LibUtilities::ReduceSum);
+        }
+        else if (m_HomogeneousType == eHomogeneous1D)
+        {
+            m_comm->GetColumnComm()->AllReduce(
+                flowrate, LibUtilities::ReduceSum);
+        }
 
         return flowrate / m_flowrateArea;
     }
@@ -476,8 +482,6 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray, 
         const NekDouble time)
     {
-        cout << "ORIG MAX = " << setprecision(15) <<  Vmath::Vmax(inarray[2].num_elements(), inarray[2], 1) << endl;
-        cout << "ORIG FLOWRATE = " << MeasureFlowrate(inarray) << endl;
         EvaluateAdvectionTerms(inarray, outarray);
 
         // Smooth advection
@@ -547,9 +551,6 @@ namespace Nektar
                 Vmath::Svtvp(phystot, alpha, m_flowrateStokes[i], 1,
                              outarray[i], 1, outarray[i], 1);
             }
-
-            cout << "NEW FLOWRATE = " << MeasureFlowrate(outarray) << endl;
-            cout << "NEW MAX = " << Vmath::Vmax(phystot, outarray[2], 1) << endl;
         }
     }
         

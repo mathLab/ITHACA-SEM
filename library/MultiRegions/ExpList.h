@@ -348,7 +348,13 @@ namespace Nektar
                 const Array<OneD, NekDouble> &inarray2,
                       Array<OneD, NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
-            
+
+            inline void DealiasedDotProd(
+                const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      CoeffState coeffstate = eLocal);
+
             inline void GetBCValues(
                       Array<OneD, NekDouble> &BndVals,
                 const Array<OneD, NekDouble> &TotField,
@@ -445,11 +451,24 @@ namespace Nektar
             /// Fill Bnd Condition expansion from the values stored in expansion
             inline void FillBndCondFromField(void);
 
-            /// Put the coefficients into global ordering using m_coeffs 
-            inline void LocalToGlobal(void);
+            /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
+            /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
+            // inline
+            MULTI_REGIONS_EXPORT inline void LocalToGlobal(void);
 
-            /// Put the coefficients into local ordering and place in m_coeffs
-            inline void GlobalToLocal(void);
+            MULTI_REGIONS_EXPORT inline void LocalToGlobal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray);
+
+            /// Scatters from the global coefficients
+            /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
+            /// \f$\boldsymbol{\hat{u}}_l\f$.
+            // inline
+            MULTI_REGIONS_EXPORT inline void GlobalToLocal(void);
+
+            MULTI_REGIONS_EXPORT inline void GlobalToLocal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray);
 
             /// Get the \a i th value  (coefficient) of #m_coeffs
             inline NekDouble GetCoeff(int i);
@@ -1156,7 +1175,15 @@ namespace Nektar
 
             virtual void v_LocalToGlobal(void);
 
+            virtual void v_LocalToGlobal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray);
+
             virtual void v_GlobalToLocal(void);
+
+            virtual void v_GlobalToLocal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray);
 
             virtual void v_BwdTrans(
                 const Array<OneD,const NekDouble> &inarray,
@@ -1233,7 +1260,13 @@ namespace Nektar
                 const Array<OneD, NekDouble> &inarray2,
                       Array<OneD, NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
-            
+
+            virtual void v_DealiasedDotProd(
+                const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      CoeffState coeffstate = eLocal);
+
             virtual void v_GetBCValues(
                       Array<OneD, NekDouble> &BndVals,
                 const Array<OneD, NekDouble> &TotField,
@@ -1756,7 +1789,19 @@ namespace Nektar
         {
             v_DealiasedProd(inarray1,inarray2,outarray,coeffstate);
         }
-        
+
+        /**
+         *
+         */
+        inline void ExpList::DealiasedDotProd(
+                const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      CoeffState coeffstate)
+        {
+            v_DealiasedDotProd(inarray1,inarray2,outarray,coeffstate);
+        }
+
         /**
          *
          */
@@ -1851,10 +1896,50 @@ namespace Nektar
         {
             v_LocalToGlobal();
         }
+
+        inline void ExpList::LocalToGlobal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray)
+        {
+            v_LocalToGlobal(inarray, outarray);
+        }
         
         inline void ExpList::GlobalToLocal(void)
         {
             v_GlobalToLocal();
+        }
+
+        /**
+         * This operation is evaluated as:
+         * \f{tabbing}
+         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
+         * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
+         * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
+         * \> \> continue \\
+         * \> continue
+         * \f}
+         * where \a map\f$[e][i]\f$ is the mapping array and \a
+         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
+         * correct modal connectivity between the different elements (both
+         * these arrays are contained in the data member #m_locToGloMap). This
+         * operation is equivalent to the scatter operation
+         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$, where
+         * \f$\mathcal{A}\f$ is the
+         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
+         *
+         * @param   inarray     An array of size \f$N_\mathrm{dof}\f$
+         *                      containing the global degrees of freedom
+         *                      \f$\boldsymbol{x}_g\f$.
+         * @param   outarray    The resulting local degrees of freedom
+         *                      \f$\boldsymbol{x}_l\f$ will be stored in this
+         *                      array of size \f$N_\mathrm{eof}\f$.
+         */
+        inline void ExpList::GlobalToLocal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray)
+        {
+            v_GlobalToLocal(inarray, outarray);
         }
         
 

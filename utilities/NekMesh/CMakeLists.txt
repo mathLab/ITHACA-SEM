@@ -68,21 +68,22 @@ IF (NEKTAR_USE_MESHGEN)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputCAD.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
 
+IF (NEKTAR_USE_ANN)
+    SET(NekMeshHeaders ${NekMeshHeaders} ProcessModules/ProcessInsertSurface.h)
+    SET(NekMeshSources ${NekMeshSources} ProcessModules/ProcessInsertSurface.cpp)
+ENDIF (NEKTAR_USE_ANN)
+
 # Don't use macro -- this way we can just link against NekMeshUtils and
 # LocalRegions.
 ADD_EXECUTABLE(NekMesh ${NekMeshSources})
 SET_COMMON_PROPERTIES(NekMesh)
-TARGET_LINK_LIBRARIES(NekMesh NekMeshUtils LocalRegions SolverUtils)
+TARGET_LINK_LIBRARIES(NekMesh NekMeshUtils FieldUtils)
 SET_PROPERTY(TARGET NekMesh PROPERTY FOLDER util)
 INSTALL(TARGETS NekMesh
     RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT util)
 
 IF (NEKTAR_USE_CCM)
-   TARGET_LINK_LIBRARIES(NekMesh ccmio adf)
-   SET_TARGET_PROPERTIES(NekMesh PROPERTIES
-       IMPORTED_LOCATION ${CCMIO_LIBRARY_PATH}/libccmio.a)
-   INCLUDE_DIRECTORIES(NekMesh ${CCMIO_INCLUDE_DIR})
-   LINK_DIRECTORIES(${CCMIO_LIBRARY_PATH})
+   TARGET_LINK_LIBRARIES(NekMesh ${CCMIO_LIBRARIES})
 ENDIF (NEKTAR_USE_CCM)
 
 IF (NEKTAR_USE_VTK)
@@ -116,3 +117,10 @@ ADD_NEKTAR_TEST        (Nektar/Tube45)
 # StarCCM tests
 ADD_NEKTAR_TEST        (StarTec/CubePer)
 ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)
+
+# MeshGen test
+IF(NEKTAR_USE_MESHGEN)
+    ADD_NEKTAR_TEST        (MeshGen/cylinder)
+    ADD_NEKTAR_TEST        (MeshGen/sphere)
+    ADD_NEKTAR_TEST_LENGTHY(MeshGen/predator)
+ENDIF()

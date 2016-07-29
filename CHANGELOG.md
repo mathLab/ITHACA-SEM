@@ -8,17 +8,31 @@ v4.4.0
   Galerkin discretisation (!604)
 - Add support for variable polynomial order with periodic boundary conditions
   (!658)
+- Statistics are now printed for lowest level of multi-level static condensation
+  (!656)
 - Sped up interpolataion from pts files and fixed parallel pts import (!584)
 - Increased required boost version to 1.56.0 (!584)
+- New FieldUtils library allows support for most `FieldConvert` post-processing
+  operations during simulation using a new filter (!589)
+- Adjust CMake dependencies to reduce compile time (!671)
 - Rework nodal utilities to support nodal prismatic elements (!660)
+
+**APESolver:**
+- Use a continuous basefield projection and revert to constant c formulation (!664)
+- Added ability to compute CFL number (!664)
+- Output Sourceterm (!664)
 
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
+- New module for inserting an alternate high-order surface into the
+  the working mesh (!669)
 
 **FieldConvert:**
+- Move all modules to a new library, FieldUtils, to support post-processing
+  during simulations (!589)
 - Add module to stretch homogeneous direction (!609)
 
 v4.3.3

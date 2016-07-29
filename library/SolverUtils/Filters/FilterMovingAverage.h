@@ -37,13 +37,13 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERMOVINGAVERAGE_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERMOVINGAVERAGE_H
 
-#include <SolverUtils/Filters/FilterSampler.h>
+#include <SolverUtils/Filters/FilterFieldConvert.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterMovingAverage : public FilterSampler
+class FilterMovingAverage : public FilterFieldConvert
 {
 public:
     friend class MemoryManager<FilterMovingAverage>;
@@ -68,11 +68,10 @@ public:
     SOLVER_UTILS_EXPORT virtual ~FilterMovingAverage();
 
 protected:
-    virtual void v_Initialise(
+    virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
-    virtual bool v_IsTimeDependent();
-    virtual void v_ProcessSample(
+    virtual void v_PrepareOutput(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
     virtual std::string v_GetFileSuffix()

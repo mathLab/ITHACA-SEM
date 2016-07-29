@@ -47,7 +47,7 @@ std::string FilterMovingAverage::className =
 FilterMovingAverage::FilterMovingAverage(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const ParamMap &pParams)
-    : FilterSampler(pSession, pParams)
+    : FilterFieldConvert(pSession, pParams)
 {
     ParamMap::const_iterator it;
 
@@ -93,21 +93,6 @@ FilterMovingAverage::~FilterMovingAverage()
 {
 }
 
-void FilterMovingAverage::v_Initialise(
-    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-    const NekDouble &time)
-{
-    int nfield = pFields.num_elements();
-    m_variables.resize(pFields.num_elements());
-    // Fill name of variables
-    for (int n = 0; n < nfield; ++n)
-    {
-        m_variables[n] = pFields[n]->GetSession()->GetVariable(n);
-    }
-    // Now let FilterSampler initialise the output
-    FilterSampler::v_Initialise(pFields, time);
-}
-
 void FilterMovingAverage::v_ProcessSample(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
@@ -134,9 +119,12 @@ void FilterMovingAverage::v_ProcessSample(
     }
 }
 
-bool FilterMovingAverage::v_IsTimeDependent()
+void FilterMovingAverage::v_PrepareOutput(
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
 {
-    return true;
+    m_scale = 1.0;
 }
+
 }
 }

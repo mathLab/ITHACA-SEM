@@ -150,6 +150,8 @@ namespace Nektar
         void AddNormVelOnOBC(const int nbcoeffs, const int nreg,
                              Array<OneD, Array<OneD, NekDouble> > &u);
 
+        void AddPressureToOutflowBCs(NekDouble kinvis);
+        
     protected: 
         virtual void v_EvaluatePressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
@@ -203,8 +205,7 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             NekDouble kinvis);
 
-        void RollOver(
-            Array<OneD, Array<OneD, NekDouble> > &input);
+        void RollOver(Array<OneD, Array<OneD, NekDouble> > &input);
 
         LibUtilities::SessionReaderSharedPtr m_session;
 
@@ -225,7 +226,7 @@ namespace Nektar
 
         SolverUtils::AdvectionSharedPtr m_advObject;
 
-                Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
+        Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
 
         /// Curl-curl dimensionality
         int m_curl_dim;

@@ -436,13 +436,20 @@ namespace Nektar
                 }
                 
                 // Calculate velocity boundary conditions
-                //    = 1/kinvis * (pbc n - kinvis divU n  + E - f_b)
-#if 1
-                Vmath::Smul(nqb, kinvis, divU, 1, divU, 1);
-                Vmath::Vsub(nqb, pbc, 1, divU, 1, bndVal, 1);
-#else
-                Vmath::Vcopy(nqb,pbc,1,bndVal,1);
-#endif
+                if(m_hbcType[n] == eOBC)
+                {
+                    //    = 1/kinvis * (pbc n - kinvis divU n  + E - f_b)
+                    Vmath::Smul(nqb, kinvis, divU, 1, divU, 1);
+                    Vmath::Vsub(nqb, pbc, 1, divU, 1, bndVal, 1);
+                }
+                else if (m_hbcType[n] == eConvectiveOBC)
+                {
+                    //    = 1/kinvis * (kinvis divU n  + E - f_b)
+                    Vmath::Smul(nqb, -1.0*kinvis, divU, 1, bndVal, 1);
+
+                    // pbc  needs to be added after pressure solve
+                }
+
                 for(int i = 0; i < m_curl_dim; ++i)
                 {
                     // Reuse divU
@@ -474,6 +481,53 @@ namespace Nektar
             }
         }
     }
+
+
+    void Extrapolate::AddPressureToOutflowBCs(NekDouble kinvis)
+    {
+        if(!m_houtflow.get())
+        {
+            return;
+        }
+        
+        
+        for(int n  = 0; n < m_PBndConds.num_elements(); ++n)
+        {
+            if(m_hbcType[n] == eConvectiveOBC)
+            {
+                int nqb = m_PBndExp[n]->GetTotPoints();
+                int ncb = m_PBndExp[n]->GetNcoeffs();
+                
+                m_pressure->FillBndCondFromField(n);
+                Array<OneD, NekDouble> pbc = m_PBndExp[n]->UpdatePhys();
+
+                Array<OneD, NekDouble> pcoeffs = m_PBndExp[n]->UpdateCoeffs();
+                Array<OneD, NekDouble> pfull = m_pressure->UpdateCoeffs();
+                m_PBndExp[n]->BwdTrans(m_PBndExp[n]->GetCoeffs(), pbc);
+                
+                Array<OneD, NekDouble> wk(max(nqb,ncb));
+           
+                // Get normal vector
+                Array<OneD, Array<OneD, NekDouble> > normals;
+                m_fields[0]->GetBoundaryNormals(n, normals);
+
+                //  Add  1/kinvis * (pbc n ) 
+                for(int i = 0; i < m_curl_dim; ++i)
+                {
+                    Vmath::Vmul(nqb, normals[i], 1, pbc, 1, wk, 1);
+                    
+                    Vmath::Smul(nqb, 1.0/kinvis, wk, 1, wk, 1);
+
+                    m_houtflow->m_UBndExp[i][n]->IProductWRTBase(wk,wk);
+
+                    Vmath::Vadd(ncb, wk,1,
+                                m_houtflow->m_UBndExp[i][n]->GetCoeffs(), 1,
+                                m_houtflow->m_UBndExp[i][n]->UpdateCoeffs(),1);
+                }
+            }
+        }
+    }
+    
 
     void Extrapolate::IProductNormVelocityOnHBC(
                                                 const Array<OneD, const Array<OneD, NekDouble> >  &Vel, 

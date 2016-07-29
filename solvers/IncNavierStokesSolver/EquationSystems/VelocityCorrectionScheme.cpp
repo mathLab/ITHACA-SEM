@@ -430,8 +430,11 @@ namespace Nektar
         factors[StdRegions::eFactorLambda] = 0.0;
 
         // Solver Pressure Poisson Equation
-        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(), NullFlagList,
-                              factors);
+        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(),
+                              NullFlagList, factors);
+
+        // Add presure to outflow bc if using convective like BCs
+        m_extrapolation->AddPressureToOutflowBCs(m_kinvis); 
     }
     
     /**

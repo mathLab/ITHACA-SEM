@@ -459,9 +459,9 @@ namespace Nektar
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
          */
-        void ContField1D::v_LocalToGlobal(void)
+        void ContField1D::v_LocalToGlobal(bool useComm)
         {
-            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs);
+            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs, useComm);
         }
 
         /**

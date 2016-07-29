@@ -111,7 +111,7 @@ namespace Nektar
             /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
             // inline
-            MULTI_REGIONS_EXPORT void LocalToGlobal();
+            MULTI_REGIONS_EXPORT void LocalToGlobal(bool useComm = true);
 
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
@@ -200,7 +200,7 @@ namespace Nektar
             /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
             // inline
-            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(void);
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(bool useComm);
 
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,

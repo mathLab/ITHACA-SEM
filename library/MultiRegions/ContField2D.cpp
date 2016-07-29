@@ -713,6 +713,37 @@ namespace Nektar
             }
         }
 
+
+        void ContField2D::v_FillBndCondFromField(const int nreg)
+        {
+            NekDouble sign;
+            int bndcnt = 0;
+            const Array<OneD,const int> &bndMap = 
+                m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+            
+            Array<OneD, NekDouble> tmp(m_locToGloMap->GetNumGlobalCoeffs());
+            LocalToGlobal(m_coeffs,tmp,false);
+
+            ASSERTL1(nreg < m_bndCondExpansions.num_elements(),
+                     "nreg is out or range since this many boundary "
+                     "regions to not exist");
+            
+            // Now fill in all other Dirichlet coefficients.
+            Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[nreg]->UpdateCoeffs();
+                
+            for(int j = 0; j < nreg; ++j)
+            {
+                bndcnt += m_bndCondExpansions[j]->GetNcoeffs();
+            }
+            
+            for(int j = 0; j < (m_bndCondExpansions[nreg])->GetNcoeffs(); ++j)
+            {
+                sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                coeffs[j] = sign * tmp[bndMap[bndcnt++]];
+            }
+        }
+
+        
         /**
          * This operation is evaluated as:
          * \f{tabbing}
@@ -763,14 +794,17 @@ namespace Nektar
          * where \f$\mathcal{A}\f$ is the
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
-         * @note    The array #m_coeffs should be filled with the local
-         *          coefficients \f$\boldsymbol{\hat{u}}_l\f$ and that the
-         *          resulting global coefficients \f$\boldsymbol{\hat{u}}_g\f$
-         *          will be stored in #m_coeffs.
+         * @note The array #m_coeffs should be filled with the local
+         *          coefficients \f$\boldsymbol{\hat{u}}_l\f$ and that
+         *          the resulting global coefficients
+         *          \f$\boldsymbol{\hat{u}}_g\f$ will be stored in
+         *          #m_coeffs. Also if useComm is set to false then no
+         *          communication call will be made to check if all
+         *          values are consistent over processors
          */
-        void ContField2D::v_LocalToGlobal(void)
+        void ContField2D::v_LocalToGlobal(bool useComm)
         {
-            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs);
+            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs,useComm);
         }
 
         /**

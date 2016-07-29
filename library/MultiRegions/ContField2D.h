@@ -98,7 +98,8 @@ namespace Nektar
 
             inline void LocalToGlobal(
                             const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,       NekDouble> &outarray) const;
+                            Array<OneD,       NekDouble> &outarra,
+                            bool useComm = true) const;
 
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
@@ -211,9 +212,11 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual void v_FillBndCondFromField();
 
+            MULTI_REGIONS_EXPORT virtual void v_FillBndCondFromField(const int nreg);
+
             /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
-            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(void);
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(bool useComm);
             
 
             /// Scatters from the global coefficients
@@ -360,9 +363,10 @@ namespace Nektar
 
         inline void ContField2D::LocalToGlobal(
                 const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray) const 
+                Array<OneD,NekDouble> &outarray,
+                                               bool useComm) const 
         {
-            m_locToGloMap->LocalToGlobal(inarray, outarray);
+            m_locToGloMap->LocalToGlobal(inarray, outarray, useComm);
         }
 
         /**

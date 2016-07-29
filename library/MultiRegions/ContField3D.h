@@ -92,7 +92,8 @@ namespace Nektar
 
             inline void LocalToGlobal(
                           const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,NekDouble> &outarray);
+                          Array<OneD,NekDouble> &outarray,
+                          bool useComm = true);
 
             inline void Assemble();
 
@@ -160,7 +161,9 @@ namespace Nektar
 
             virtual void v_FillBndCondFromField();
 
-            virtual void v_LocalToGlobal(void);
+            virtual void v_FillBndCondFromField(const int nreg);
+
+            virtual void v_LocalToGlobal(bool useComm);
 
 
             virtual void v_GlobalToLocal(void);
@@ -208,9 +211,10 @@ namespace Nektar
 
         inline void ContField3D::LocalToGlobal(
                 const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray)
+                Array<OneD,NekDouble> &outarray,
+                bool useComm)
         {
-            m_locToGloMap->LocalToGlobal(inarray, outarray);
+            m_locToGloMap->LocalToGlobal(inarray, outarray, useComm);
         }
 
         inline void ContField3D::Assemble()

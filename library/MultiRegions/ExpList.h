@@ -443,11 +443,16 @@ namespace Nektar
             inline void ImposeDirichletConditions(
                 Array<OneD,NekDouble>& outarray);
 
+
             /// Fill Bnd Condition expansion from the values stored in expansion
             inline void FillBndCondFromField(void);
 
+            /// Fill Bnd Condition expansion in nreg from the values stored in expansion
+            inline void FillBndCondFromField(const int nreg);
+
+            
             /// Put the coefficients into global ordering using m_coeffs 
-            inline void LocalToGlobal(void);
+            inline void LocalToGlobal(bool useComm = true);
 
             /// Put the coefficients into local ordering and place in m_coeffs
             inline void GlobalToLocal(void);
@@ -1162,9 +1167,11 @@ namespace Nektar
 
             virtual void v_FillBndCondFromField();
 
+            virtual void v_FillBndCondFromField(const int nreg);
+
             virtual void v_Reset();
 
-            virtual void v_LocalToGlobal(void);
+            virtual void v_LocalToGlobal(bool UseComm);
 
             virtual void v_GlobalToLocal(void);
 
@@ -1876,9 +1883,14 @@ namespace Nektar
             v_FillBndCondFromField();
         }
 
-        inline void ExpList::LocalToGlobal(void)
+        inline void ExpList::FillBndCondFromField(const int nreg)
         {
-            v_LocalToGlobal();
+            v_FillBndCondFromField(nreg);
+        }
+        
+        inline void ExpList::LocalToGlobal(bool useComm)
+        {
+            v_LocalToGlobal(useComm);
         }
         
         inline void ExpList::GlobalToLocal(void)

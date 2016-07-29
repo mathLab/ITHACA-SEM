@@ -196,14 +196,22 @@ namespace Nektar
             }
         }
 
-        /**
-         * 
-         */
-        void  ContField3DHomogeneous1D::v_LocalToGlobal(void) 
+        void ContField3DHomogeneous1D::v_FillBndCondFromField(const int nreg)
         {
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
-                m_planes[n]->LocalToGlobal();
+                m_planes[n]->FillBndCondFromField(nreg);
+            }
+        }
+        
+        /**
+         * 
+         */
+        void  ContField3DHomogeneous1D::v_LocalToGlobal(bool useComm) 
+        {
+            for(int n = 0; n < m_planes.num_elements(); ++n)
+            {
+                m_planes[n]->LocalToGlobal(useComm);
             }
         };
 

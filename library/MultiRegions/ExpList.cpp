@@ -2600,7 +2600,15 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        void ExpList::v_LocalToGlobal(void)
+        /**
+         */
+        void ExpList::v_FillBndCondFromField(const int nreg)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_LocalToGlobal(bool useComm)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

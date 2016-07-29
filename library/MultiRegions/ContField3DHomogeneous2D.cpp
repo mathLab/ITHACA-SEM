@@ -131,11 +131,11 @@ namespace Nektar
         /**
          * 
          */
-        void  ContField3DHomogeneous2D::v_LocalToGlobal(void) 
+        void  ContField3DHomogeneous2D::v_LocalToGlobal(bool useComm) 
         {
             for(int n = 0; n < m_lines.num_elements(); ++n)
             {
-                m_lines[n]->LocalToGlobal();
+                m_lines[n]->LocalToGlobal(useComm);
             }
         };
 

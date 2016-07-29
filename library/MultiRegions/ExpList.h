@@ -348,7 +348,13 @@ namespace Nektar
                 const Array<OneD, NekDouble> &inarray2,
                       Array<OneD, NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
-            
+
+            inline void DealiasedDotProd(
+                const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      CoeffState coeffstate = eLocal);
+
             inline void GetBCValues(
                       Array<OneD, NekDouble> &BndVals,
                 const Array<OneD, NekDouble> &TotField,
@@ -1254,7 +1260,13 @@ namespace Nektar
                 const Array<OneD, NekDouble> &inarray2,
                       Array<OneD, NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
-            
+
+            virtual void v_DealiasedDotProd(
+                const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      CoeffState coeffstate = eLocal);
+
             virtual void v_GetBCValues(
                       Array<OneD, NekDouble> &BndVals,
                 const Array<OneD, NekDouble> &TotField,
@@ -1777,7 +1789,19 @@ namespace Nektar
         {
             v_DealiasedProd(inarray1,inarray2,outarray,coeffstate);
         }
-        
+
+        /**
+         *
+         */
+        inline void ExpList::DealiasedDotProd(
+                const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      CoeffState coeffstate)
+        {
+            v_DealiasedDotProd(inarray1,inarray2,outarray,coeffstate);
+        }
+
         /**
          *
          */

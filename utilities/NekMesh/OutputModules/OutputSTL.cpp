@@ -45,10 +45,8 @@ namespace Nektar
 namespace Utilities
 {
 
-ModuleKey OutputSTL::className =
-    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eOutputModule, "stl"),
-                                               OutputSTL::create,
-                                               "Writes STL file.");
+ModuleKey OutputSTL::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eOutputModule, "stl"), OutputSTL::create, "Writes STL file.");
 
 OutputSTL::OutputSTL(MeshSharedPtr m) : OutputModule(m)
 {
@@ -58,7 +56,6 @@ OutputSTL::~OutputSTL()
 {
 }
 
-
 void OutputSTL::Process()
 {
     if (m_mesh->m_verbose)
@@ -66,7 +63,7 @@ void OutputSTL::Process()
         cout << "Outputstl: Writing file..." << endl;
     }
 
-    ASSERTL0(m_mesh->m_expDim == 3,"3d meshes only");
+    ASSERTL0(m_mesh->m_expDim == 3, "3d meshes only");
 
     OpenStream();
 
@@ -77,7 +74,7 @@ void OutputSTL::Process()
     for (it = m_mesh->m_composite.begin(); it != m_mesh->m_composite.end();
          ++it)
     {
-        if(it->second->m_tag != "F")
+        if (it->second->m_tag != "F")
         {
             continue;
         }
@@ -86,11 +83,11 @@ void OutputSTL::Process()
 
         vector<ElementSharedPtr> el = it->second->m_items;
 
-        for(int i = 0; i < el.size(); i++)
+        for (int i = 0; i < el.size(); i++)
         {
             vector<NodeSharedPtr> ns = el[i]->GetVertexList();
 
-            Array<OneD, NekDouble> tmp(3,0.0);
+            Array<OneD, NekDouble> tmp(3, 0.0);
             tmp[0] = (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
                      (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y);
             tmp[1] = (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x) -
@@ -99,22 +96,23 @@ void OutputSTL::Process()
                      (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x);
 
             NekDouble mt = tmp[0] * tmp[0] + tmp[1] * tmp[1] + tmp[2] * tmp[2];
-            mt = sqrt(mt);
+            mt           = sqrt(mt);
             tmp[0] /= mt;
             tmp[1] /= mt;
             tmp[2] /= mt;
 
-            m_mshFile << "facet normal " << tmp[0] << " " << tmp[1] << " " << endl;
+            m_mshFile << "facet normal " << tmp[0] << " " << tmp[1] << " "
+                      << endl;
             m_mshFile << "outer loop" << endl;
-            for(int j = 0; j < ns.size(); j++)
+            for (int j = 0; j < ns.size(); j++)
             {
-                m_mshFile << "vertex " << ns[j]->m_x << " " << ns[j]->m_y << " " << ns[j]->m_z << endl;
+                m_mshFile << "vertex " << ns[j]->m_x << " " << ns[j]->m_y << " "
+                          << ns[j]->m_z << endl;
             }
             m_mshFile << "endloop" << endl << "endfacet" << endl;
         }
         m_mshFile << "endsolid" << endl;
     }
-
 }
 }
 }

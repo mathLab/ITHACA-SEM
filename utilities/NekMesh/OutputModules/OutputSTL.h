@@ -47,7 +47,8 @@ class OutputSTL : public OutputModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    {
         return MemoryManager<OutputSTL>::AllocateSharedPtr(m);
     }
     static ModuleKey className;
@@ -59,9 +60,7 @@ public:
     virtual void Process();
 
 private:
-
 };
-
 }
 }
 

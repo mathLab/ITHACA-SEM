@@ -20,6 +20,7 @@ v4.4.0
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
+- Add STL surface writer module (!668)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

@@ -344,6 +344,8 @@ bool APE::v_PostIntegrate(int step)
             cout << "CFL: " << cfl << endl;
         }
     }
+
+    return UnsteadySystem::v_PostIntegrate(step);
 }
 
 

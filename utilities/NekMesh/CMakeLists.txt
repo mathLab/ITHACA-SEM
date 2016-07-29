@@ -23,7 +23,6 @@ SET(NekMeshHeaders
     ProcessModules/ProcessSpherigon.h
     ProcessModules/ProcessTetSplit.h
     ProcessModules/ProcessOptiExtract.h
-    ProcessModules/ProcessInsertSurface.h
 )
 
 SET(NekMeshSources
@@ -52,7 +51,6 @@ SET(NekMeshSources
     ProcessModules/ProcessSpherigon.cpp
     ProcessModules/ProcessTetSplit.cpp
     ProcessModules/ProcessOptiExtract.cpp
-    ProcessModules/ProcessInsertSurface.cpp
 )
 
 IF (NEKTAR_USE_CCM)
@@ -69,6 +67,11 @@ IF (NEKTAR_USE_MESHGEN)
     SET(NekMeshHeaders ${NekMeshHeaders} InputModules/InputCAD.h)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputCAD.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
+
+IF (NEKTAR_USE_ANN)
+    SET(NekMeshHeaders ${NekMeshHeaders} ProcessModules/ProcessInsertSurface.h)
+    SET(NekMeshSources ${NekMeshSources} ProcessModules/ProcessInsertSurface.cpp)
+ENDIF (NEKTAR_USE_ANN)
 
 # Don't use macro -- this way we can just link against NekMeshUtils and
 # LocalRegions.

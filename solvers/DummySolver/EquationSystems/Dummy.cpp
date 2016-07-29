@@ -99,10 +99,17 @@ bool Dummy::v_PreIntegrate(int step)
 
     if (m_sendFields.num_elements() > 0)
     {
+        Timer timer1;
+        timer1.Start();
         EvaluateFunction(m_coupling->GetSendFieldNames(),
                          m_sendFields,
                          "SendFields",
                          m_time);
+        timer1.Stop();
+        if (m_session->DefinesCmdLineArgument("verbose"))
+        {
+            cout << "Field evaluation time: " << timer1.TimePerTest(1) << endl;
+        }
     }
 
     m_coupling->SendFields(step, m_time, m_sendFields);

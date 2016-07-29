@@ -176,15 +176,17 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
     nodeList.resize(nodes.size());
     nodeList[0] = nodes[0];
 
-    // Vertices
-    if (n > 1)
+    if (n == 1)
     {
-        nodeList[n - 1]    = nodes[1];
-        nodeList[nTri - 1] = nodes[2];
-        nodeList[nTet - 1] = nodes[3];
+        return nodeList;
     }
 
-    if (n == 1)
+    // Vertices
+    nodeList[n - 1]    = nodes[1];
+    nodeList[nTri - 1] = nodes[2];
+    nodeList[nTet - 1] = nodes[3];
+
+    if (n == 2)
     {
         return nodeList;
     }
@@ -205,7 +207,6 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
             {
                 return false;
             }
-    
             if (a.get<1>() < b.get<1>())
             {
                 return true;
@@ -214,7 +215,6 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
             {
                 return false;
             }
-    
             if (a.get<2>() < b.get<2>())
             {
                 return true;
@@ -236,6 +236,7 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
         }
     }
 
+    // Edges
     for (int i = 1; i < n-1; ++i)
     {
         int eI = i-1;
@@ -247,46 +248,76 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
         nodeList[tmp[Mode(i,0,n-1-i)]] = nodes[4 + 5*(n-2) + eI];
     }
 
+    if (n == 3)
+    {
+        return nodeList;
+    }
 
-    // Edges
-    // if (n > 2)
-    // {
-    //     int cnt = n, cnt2 = 0;
-    //     for (int i = 1; i < n - 1; ++i)
-    //     {
-    //         nodeList[i]               = nodes[4 + i - 1];
-    //         nodeList[cnt]             = nodes[3 + 3 * (n - 2) - i];
-    //         nodeList[cnt + n - i - 1] = nodes[3 + (n - 2) + i - 1];
-    //         cnt += n - i;
-    //     }
-    // }
+    // For faces, we use the triTensorNodeOrdering routine to make our lives
+    // slightly easier.
+    int nFacePts = (n-3)*(n-2)/2;
+    cout << "nFacePts = " << nFacePts << endl;
 
-    // // Faces
+    // Grab face points and reorder into a tensor-product type format
+    vector<vector<int> > tmpNodes(4);
+    int offset = 4 + 6*(n-2);
 
-    // // Interior (recursion)
+    for (int i = 0; i < 4; ++i)
+    {
+        tmpNodes[i].resize(nFacePts);
+        for (int j = 0; j < nFacePts; ++j)
+        {
+            tmpNodes[i][j] = nodes[offset++];
+        }
+        tmpNodes[i] = triTensorNodeOrdering(tmpNodes[i], n-3);
+    }
 
-    // // Interior (recursion)
-    // if (n > 3)
-    // {
-    //     // Reorder interior nodes
-    //     std::vector<int> interior((n - 3) * (n - 2) / 2);
-    //     std::copy(
-    //         nodes.begin() + 3 + 3 * (n - 2), nodes.end(), interior.begin());
-    //     interior = triTensorNodeOrdering(interior, n - 3);
+    // Face 0
+    for (int j = 1, cnt = 0; j < n-2; ++j)
+    {
+        for (int i = 1; i < n-j-1; ++i, ++cnt)
+        {
+            cout << "FACE 0 " << i << " " << j << endl;
+            nodeList[tmp[Mode(i,j,0)]] = tmpNodes[0][cnt];
+        }
+    }
 
-    //     // Copy into full node list
-    //     cnt  = n;
-    //     cnt2 = 0;
-    //     for (int j = 1; j < n - 2; ++j)
-    //     {
-    //         for (int i = 0; i < n - j - 2; ++i)
-    //         {
-    //             nodeList[cnt + i + 1] = interior[cnt2 + i];
-    //         }
-    //         cnt += n - j;
-    //         cnt2 += n - 2 - j;
-    //     }
-    // }
+    // Face 1
+    for (int j = 1, cnt = 0; j < n-2; ++j)
+    {
+        for (int i = 1; i < n-j-1; ++i, ++cnt)
+        {
+            cout << "FACE 1 " << i << " " << j << endl;
+            nodeList[tmp[Mode(i,0,j)]] = tmpNodes[1][cnt];
+        }
+    }
+
+    // Face 2
+    for (int j = 1, cnt = 0; j < n-2; ++j)
+    {
+        for (int i = 1; i < n-j-1; ++i, ++cnt)
+        {
+            cout << "FACE 2 " << i << " " << j << endl;
+            nodeList[tmp[Mode(i,n-1-i-j,j)]] = tmpNodes[3][cnt];
+        }
+    }
+
+    // Face 3
+    for (int j = 1, cnt = 0; j < n-2; ++j)
+    {
+        for (int i = 1; i < n-j-1; ++i, ++cnt)
+        {
+            cout << "FACE 3 " << i << " " << j << endl;
+            nodeList[tmp[Mode(0,i,j)]] = tmpNodes[2][cnt];
+        }
+    }
+
+    if (n == 4)
+    {
+        return nodeList;
+    }
+
+    // Finally, recurse on interior volume
 
     return nodeList;
 }

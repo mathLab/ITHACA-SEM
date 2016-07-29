@@ -91,6 +91,11 @@ protected:
         std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
         std::vector<std::string> &variables);
 
+    virtual bool v_RequireFwdTrans()
+    {
+        return false;
+    }
+
 private:
     Array<OneD, Array<OneD, NekDouble> > m_recFields;
     Array<OneD, Array<OneD, NekDouble> > m_sendFields;

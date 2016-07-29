@@ -2549,7 +2549,24 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+
+        void ExpList::v_LocalToGlobal(const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+
         void ExpList::v_GlobalToLocal(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+
+        void ExpList::v_GlobalToLocal(const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,NekDouble> &outarray)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

@@ -3,25 +3,63 @@ Changelog
 
 v4.4.0
 ------
+**Library:**
+- Add support for variable polynomial order for 3D simulations with continuous
+  Galerkin discretisation (!604)
+- Add support for variable polynomial order with periodic boundary conditions
+  (!658)
+- Statistics are now printed for lowest level of multi-level static condensation
+  (!656)
+- Sped up interpolataion from pts files and fixed parallel pts import (!584)
+- Increased required boost version to 1.56.0 (!584)
+- New FieldUtils library allows support for most `FieldConvert` post-processing
+  operations during simulation using a new filter (!589)
+- Adjust CMake dependencies to reduce compile time (!671)
+
+**APESolver:**
+- Use a continuous basefield projection and revert to constant c formulation (!664)
+- Added ability to compute CFL number (!664)
+- Output Sourceterm (!664)
+
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
+- New module for inserting an alternate high-order surface into the
+  the working mesh (!669)
+
+**FieldConvert:**
+- Move all modules to a new library, FieldUtils, to support post-processing
+  during simulations (!589)
+- Add module to stretch homogeneous direction (!609)
 
 v4.3.3
 ------
 **Library**:
+- Auto-detect a shared filesystem and removed --shared-filesystem option (!654)
+- Fix filters when using adaptive driver to avoid output being overwritten after
+  each adaptive update (!588)
 - Minor fix to suppress Xxt output unless `--verbose` is specified (!642)
+- Fix of DirectFull solver in case where only Neumann boundary conditions
+  are imposed. (!655)
 
 **FieldConvert**:
 - Fix to avoid repeated import of field file (!649)
+- Fix issue with C^0 projection (!644)
+- Fix verbose output when using --procid (!648)
+
+**NekMesh:**
+- Fix namespace issue in Star-CCM+ input header in NekMesh (!661)
 
 **CompressibleFlowSolver**:
 - Fix issue with residual output (!647)
+- Issues with 1D Euler solver fixed (!565)
+- Fix deadlocking issue with boundary conditions (!657)
 
 **Packaging**:
 - Fix NekMesh dependencies for DEB package (!650)
+- Fix PETSc build on newer linux distributions (!646)
 
 v4.3.2
 ------
@@ -34,6 +72,7 @@ v4.3.2
   output is produced in physical space (!621).
 - Fix minor performance issue with time integration schemes (!632)
 - Fix FilterCheckpoint filter to be consistent with `IO_CheckSteps` (!633)
+- Fix CMake configuration for building on Windows 10 with VS 2015 (!641)
 - Fix `IO_CheckSteps` to avoid missing first checkpoint (!639)
 - Fix bug in iterative solver where only root process would ASSERT when
   exceeding the maximum number of iterations (!636)
@@ -103,7 +142,7 @@ v4.3.0
   (!537)
 - Fix bug with initial conditions of CG simulations using variable P (!543)
 - Fix bug in 3DH2D with non-zero Dirichlet boundary conditions (!545)
-- Added in a method to convert equispaced interpolated points back to 
+- Added in a method to convert equispaced interpolated points back to
   coefficients which requires the introduction of a new StdRegions matrix.(!561)
 - Empty XML tags which would override non-empty XML tags are now ignored (!581)
 - Add contribution guide (!551)

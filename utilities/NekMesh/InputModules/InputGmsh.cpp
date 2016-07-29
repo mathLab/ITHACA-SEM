@@ -193,7 +193,6 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
 
     // Set up a map that takes (a,b,c) -> m to help us figure out where things
     // are inside the tetrahedron.
-
     typedef boost::tuple<int, int, int> Mode;
     struct cmpop
     {
@@ -256,7 +255,6 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
     // For faces, we use the triTensorNodeOrdering routine to make our lives
     // slightly easier.
     int nFacePts = (n-3)*(n-2)/2;
-    cout << "nFacePts = " << nFacePts << endl;
 
     // Grab face points and reorder into a tensor-product type format
     vector<vector<int> > tmpNodes(4);
@@ -272,43 +270,47 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
         tmpNodes[i] = triTensorNodeOrdering(tmpNodes[i], n-3);
     }
 
-    // Face 0
-    for (int j = 1, cnt = 0; j < n-2; ++j)
+    if (n > 4)
     {
-        for (int i = 1; i < n-j-1; ++i, ++cnt)
-        {
-            cout << "FACE 0 " << i << " " << j << endl;
-            nodeList[tmp[Mode(i,j,0)]] = tmpNodes[0][cnt];
-        }
+        // Now align faces
+        vector<int> triVertId(3), toAlign(3);
+        triVertId[0] = 0;
+        triVertId[1] = 1;
+        triVertId[2] = 2;
+
+        // Faces 0,2: triangle verts {0,2,1} --> {0,1,2}
+        HOTriangle<int> hoTri(triVertId, tmpNodes[0]);
+        toAlign[0] = 0;
+        toAlign[1] = 2;
+        toAlign[2] = 1;
+
+        hoTri.Align(toAlign);
+        tmpNodes[0] = hoTri.surfVerts;
+
+        hoTri.surfVerts = tmpNodes[2];
+        hoTri.Align(toAlign);
+        tmpNodes[2] = hoTri.surfVerts;
+
+        // Face 3: triangle verts {1,2,0} --> {0,1,2}
+        toAlign[0] = 1;
+        toAlign[1] = 2;
+        toAlign[2] = 0;
+
+        hoTri.surfVerts = tmpNodes[3];
+        hoTri.Align(toAlign);
+        tmpNodes[3] = hoTri.surfVerts;
     }
 
-    // Face 1
+    // Now apply faces. Note that faces 3 and 2 are swapped between Gmsh and
+    // Nektar++ order.
     for (int j = 1, cnt = 0; j < n-2; ++j)
     {
         for (int i = 1; i < n-j-1; ++i, ++cnt)
         {
-            cout << "FACE 1 " << i << " " << j << endl;
-            nodeList[tmp[Mode(i,0,j)]] = tmpNodes[1][cnt];
-        }
-    }
-
-    // Face 2
-    for (int j = 1, cnt = 0; j < n-2; ++j)
-    {
-        for (int i = 1; i < n-j-1; ++i, ++cnt)
-        {
-            cout << "FACE 2 " << i << " " << j << endl;
-            nodeList[tmp[Mode(i,n-1-i-j,j)]] = tmpNodes[3][cnt];
-        }
-    }
-
-    // Face 3
-    for (int j = 1, cnt = 0; j < n-2; ++j)
-    {
-        for (int i = 1; i < n-j-1; ++i, ++cnt)
-        {
-            cout << "FACE 3 " << i << " " << j << endl;
-            nodeList[tmp[Mode(0,i,j)]] = tmpNodes[2][cnt];
+            nodeList[tmp[Mode(i,j,0)]]       = tmpNodes[0][cnt];
+            nodeList[tmp[Mode(i,0,j)]]       = tmpNodes[1][cnt];
+            nodeList[tmp[Mode(n-1-i-j,i,j)]] = tmpNodes[3][cnt];
+            nodeList[tmp[Mode(0,i,j)]]       = tmpNodes[2][cnt];
         }
     }
 
@@ -318,6 +320,23 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
     }
 
     // Finally, recurse on interior volume
+    vector<int> intNodes;
+    for (int i = offset; i < nTet; ++i)
+    {
+        intNodes.push_back(nodes[i]);
+    }
+    intNodes = tetTensorNodeOrdering(intNodes, n-4);
+
+    for (int k = 1, cnt = 0; k < n - 2; ++k)
+    {
+        for (int j = 1; j < n - k - 1; ++j)
+        {
+            for (int i = 1; i < n - k - j - 1; ++i)
+            {
+                nodeList[tmp[Mode(i,j,k)]] = intNodes[cnt++];
+            }
+        }
+    }
 
     return nodeList;
 }

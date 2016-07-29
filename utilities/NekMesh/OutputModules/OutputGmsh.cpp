@@ -113,7 +113,7 @@ void OutputGmsh::Process()
 
     // Convert this mesh into a high-order mesh of uniform order.
     cout << "Mesh order of " << maxOrder << " detected" << endl;
-    maxOrder = 7;
+    maxOrder = 10;
     m_mesh->MakeOrder(maxOrder, LibUtilities::ePolyEvenlySpaced);
 
     // Add edge- and face-interior nodes to vertex set.
@@ -271,10 +271,8 @@ void OutputGmsh::Process()
             }
 
             // Construct inverse of input reordering
-            cout << "ELMT TYPE = " << elmtType << endl;
             vector<int> reordering = InputGmsh::CreateReordering(elmtType);
             vector<int> inv(tags.size());
-            cout << reordering.size() << " " << tags.size() << endl;
 
             for (int j = 0; j < tags.size(); ++j)
             {

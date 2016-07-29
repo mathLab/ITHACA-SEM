@@ -26,6 +26,8 @@ v4.4.0
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
+- New module for inserting an alternate high-order surface into the
+  the working mesh (!669)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

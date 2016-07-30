@@ -335,7 +335,7 @@ namespace Nektar
         {
             std::string filename = m_session->GetSessionName();
             filename += ".prs";
-            m_flowrateStream.open(filename);
+            m_flowrateStream.open(filename.c_str());
             m_flowrateStream.setf(ios::scientific, ios::floatfield);
             m_flowrateStream << "# step      time            dP" << endl
                              << "# -------------------------------------------"

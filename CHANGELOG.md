@@ -15,6 +15,7 @@ v4.4.0
 - New FieldUtils library allows support for most `FieldConvert` post-processing
   operations during simulation using a new filter (!589)
 - Adjust CMake dependencies to reduce compile time (!671)
+- Homogeneous1D dealiasing improvements (!622)
 
 **APESolver:**
 - Use a continuous basefield projection and revert to constant c formulation (!664)
@@ -23,11 +24,13 @@ v4.4.0
 
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
+- Improve performance when using homogeneous dealiasing (!622)
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
-- New module for inserting an alternate high-order surface into the
-  the working mesh (!669)
+- Add STL surface writer module (!668)
+- New module for inserting an alternate high-order surface into the working
+  mesh (!669)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

@@ -37,6 +37,12 @@ v4.4.0
   during simulations (!589)
 - Add module to stretch homogeneous direction (!609)
 
+v4.3.4
+------
+**Library:**
+- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of large
+  simulations (!672)
+
 v4.3.3
 ------
 **Library**:

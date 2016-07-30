@@ -960,6 +960,7 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     // different; need to mirror in the triangular faces, and then
     // reorder vertices to make ordering anticlockwise on base quad.
     static int gmshToNekVerts[6] = {3, 4, 1, 0, 5, 2};
+    // 3->0, 4->1, 1->2, 0->3, 5->4, 2->5
 
     for (i = 0; i < 6; ++i)
     {
@@ -1004,18 +1005,77 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
         return mapping;
     }
 
-    if (order > 2)
+    int nTriInt  = n * (n - 1) / 2;
+    int nQuadInt = n * n;
+
+    // Gmsh faces:
+    //   0 = {0,2,1}, 1 = {3,4,5}, 2 = {0,1,4,3}, 3 = {0,3,5,2}, 4 = {1,2,5,4}
+    // Apply gmshToNekVerts map:
+    //   0 = {3,5,2}, 1 = {0,1,4}, 2 = {3,2,1,0}, 3 = {3,0,4,5}, 4 = {2,5,4,1}
+    // Nektar++ faces:
+    //   0 = {0,1,2,3}, 1 = {0,1,4}, 2 = {1,2,5,4}, 3 = {3,2,5}, 4 = {0,3,5,4}
+    //       {3,2,1,0}      {0,1,4}      {2,5,4,1}      {3,5,2}      {3,0,4,5}
+    // This gives gmsh -> Nektar++ faces:
+    static int gmshToNekFace[5] = {2, 1, 4, 0, 3};
+
+    // Face 0: StdRegions::eDir1FwdDir1_Dir2BwdDir2
+    // Face 2: StdRegions::eDir1BwdDir2_Dir2FwdDir1
+    // Face 4: StdRegions::eDir1BwdDir1_Dir2FwdDir2
+
+    // Face offsets
+    vector<int> offsets(5);
+    offset = 6 + 9 * n;
+    offsets[0] = offset;
+    offsets[1] = offset + nTriInt;
+    offsets[2] = offset + 2 * nTriInt;
+    offsets[3] = offset + 2 * nTriInt + nQuadInt;
+    offsets[4] = offset + 2 * nTriInt + 2 * nQuadInt;
+
+    mapping.resize(6 + 9 * n + 3 * nQuadInt + 2 * nTriInt);
+
+    offset = 6 + 9 * n;
+
+    // Face 0
+    int offset2 = offsets[gmshToNekFace[0]];
+    int j;
+    for (i = 0; i < n; ++i)
     {
-        cerr << "Gmsh prisms of order > 2 with face curvature "
-             << "not supported in NekMesh (or indeed Gmsh at"
-             << "time of writing)." << endl;
-        abort();
+        for (j = 0; j < n; ++j)
+        {
+            mapping[offset + i * n + j] = offset2 + (n - i - 1) * n + j;
+        }
+    }
+    offset += nQuadInt;
+
+    // Face 1
+    offset2 = offsets[gmshToNekFace[1]];
+    for (i = 0; i < nTriInt; ++i)
+    {
+        mapping[offset++] = offset2++;
     }
 
-    mapping.resize(18);
-    mapping[15] = 15;
-    mapping[16] = 17;
-    mapping[17] = 16;
+    // Face 1
+    offset2 = offsets[gmshToNekFace[2]];
+    for (i = 0; i < nQuadInt; ++i)
+    {
+        mapping[offset++] = offset2++;
+        cout << offset-1 << " " << offset2-1 << endl;
+    }
+
+    // Face 1
+    offset2 = offsets[gmshToNekFace[3]];
+    for (i = 0; i < nTriInt; ++i)
+    {
+        mapping[offset++] = offset2++;
+    }
+
+    // Face 1
+    offset2 = offsets[gmshToNekFace[4]];
+    for (i = 0; i < nQuadInt; ++i)
+    {
+        mapping[offset++] = offset2++;
+        cout << offset-1 << " " << offset2-1 << endl;
+    }
 
     return mapping;
 }

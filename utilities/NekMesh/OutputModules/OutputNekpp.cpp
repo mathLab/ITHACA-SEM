@@ -98,8 +98,6 @@ void OutputNekpp::Process()
         cout << "OutputNekpp: Writing file..." << endl;
     }
 
-    m_mesh->MakeOrder(5, LibUtilities::ePolyEvenlySpaced);
-
     TiXmlDocument doc;
     TiXmlDeclaration *decl = new TiXmlDeclaration("1.0", "utf-8", "");
     doc.LinkEndChild(decl);

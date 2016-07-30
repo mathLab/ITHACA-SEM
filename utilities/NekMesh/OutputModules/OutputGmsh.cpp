@@ -113,7 +113,7 @@ void OutputGmsh::Process()
 
     // Convert this mesh into a high-order mesh of uniform order.
     cout << "Mesh order of " << maxOrder << " detected" << endl;
-    maxOrder = 10;
+    maxOrder = 3;
     m_mesh->MakeOrder(maxOrder, LibUtilities::ePolyEvenlySpaced);
 
     // Add edge- and face-interior nodes to vertex set.

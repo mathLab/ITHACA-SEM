@@ -60,7 +60,7 @@ public:
     {
         return MemoryManager<OutputTecplot>::AllocateSharedPtr(f);
     }
-    static ModuleKey m_className;
+    static ModuleKey m_className[];
     OutputTecplot(FieldSharedPtr f);
     virtual ~OutputTecplot();
 
@@ -69,11 +69,15 @@ public:
 
 private:
     bool m_doError;
+    bool m_binary;
     TecOutType m_outputType;
 
-    void WriteTecplotHeader(std::ofstream &outfile, std::string var);
+    void WriteTecplotHeader(std::ofstream &outfile,
+                            std::vector<std::string> &var);
 
-    void WriteTecplotZone(std::ofstream &outfile);
+    void WriteTecplotZone(
+        std::ofstream &outfile,
+        std::vector<std::pair<NekDouble, NekDouble> > &minMax);
 
     int GetNumTecplotBlocks(void);
 

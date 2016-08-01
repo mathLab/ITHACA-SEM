@@ -48,14 +48,18 @@ namespace Nektar
 namespace FieldUtils
 {
 
-ModuleKey OutputTecplot::m_className =
+ModuleKey OutputTecplot::m_className[] =
+{
     GetModuleFactory().RegisterCreatorFunction(ModuleKey(eOutputModule, "dat"),
                                                OutputTecplot::create,
-                                               "Writes a Tecplot file.");
+                                               "Writes a Tecplot file."),
+    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eOutputModule, "plt"),
+                                               OutputTecplot::create,
+                                               "Writes a Tecplot file.")
+};
 
 OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
 {
-
     if (f->m_setUpEquiSpacedFields)
     {
         m_outputType = eFullBlockZoneEquiSpaced;
@@ -65,10 +69,46 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
         m_requireEquiSpaced = true;
         m_outputType        = eFullBlockZone;
     }
+
+    m_binary = true;
 }
 
 OutputTecplot::~OutputTecplot()
 {
+}
+
+template<typename T> void WriteStream(std::ostream &outfile, T data)
+{
+    T tmp = data;
+    outfile.write(reinterpret_cast<char *>(&tmp), sizeof(T));
+}
+
+template<> void WriteStream(std::ostream &outfile, std::string data)
+{
+    // Convert string to array of int32_t
+    for (std::string::size_type i = 0; i < data.size(); ++i)
+    {
+        char strChar = data[i];
+        int32_t strCharInt = strChar;
+        WriteStream(outfile, strCharInt);
+    }
+
+    // Now dump out zero character to terminate
+    WriteStream(outfile, 0);
+}
+
+template<typename T> void WriteStream(std::ostream &outfile,
+                                      Array<OneD, T> data)
+{
+    outfile.write(reinterpret_cast<char *>(&data[0]),
+                  data.num_elements() * sizeof(T));
+}
+
+template<typename T> void WriteStream(std::ostream  &outfile,
+                                      std::vector<T> data)
+{
+    outfile.write(reinterpret_cast<char *>(&data[0]),
+                  data.size() * sizeof(T));
 }
 
 void OutputTecplot::Process(po::variables_map &vm)
@@ -358,25 +398,48 @@ void OutputTecplot::Process(po::variables_map &vm)
     }
     else
     {
-
         // Write solution.
-        ofstream outfile(filename.c_str());
-        std::string var;
+        ofstream outfile(filename.c_str(), m_binary ? ios::binary : ios::out);
+        std::vector<std::string> var;
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> fDef =
             m_f->m_fielddef;
+
         if (fDef.size())
         {
-            var = fDef[0]->m_fields[0];
+            var = fDef[0]->m_fields;
+        }
 
-            for (int j = 1; j < fDef[0]->m_fields.size(); ++j)
+        vector<pair<NekDouble, NekDouble> > minMax(var.size());
+
+        if (var.size()) // see if any variables are defined
+        {
+            // Backward transform all data
+            for (int j = 0; j < m_f->m_exp.size(); ++j)
             {
-                var = var + ", " + fDef[0]->m_fields[j];
+                if (m_f->m_exp[j]->GetPhysState() == false)
+                {
+                    m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
+                                            m_f->m_exp[j]->UpdatePhys());
+                }
+            }
+
+            if (m_binary)
+            {
+                // calculate max/min data
+                for (int j = 0; j < m_f->m_exp.size(); ++j)
+                {
+                    int totpoints = m_f->m_exp[j]->GetNpoints();
+                    minMax[j] = std::make_pair(
+                        Vmath::Vmin(totpoints, m_f->m_exp[j]->GetPhys(), 1),
+                        Vmath::Vmax(totpoints, m_f->m_exp[j]->GetPhys(), 1));
+                }
             }
         }
 
         WriteTecplotHeader(outfile, var);
-        WriteTecplotZone(outfile);
-        if (var.length()) // see if any variables are defined
+        WriteTecplotZone(outfile, minMax);
+
+        if (var.size()) // see if any variables are defined
         {
             for (int j = 0; j < m_f->m_exp.size(); ++j)
             {
@@ -395,7 +458,8 @@ void OutputTecplot::Process(po::variables_map &vm)
  * @param   outfile Output file name.
  * @param   var                 variables names
  */
-void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile, std::string var)
+void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
+                                       std::vector<std::string> &var)
 {
     int coordim = m_f->m_exp[0]->GetExp(0)->GetCoordim();
     MultiRegions::ExpansionType HomoExpType = m_f->m_exp[0]->GetExpType();
@@ -417,23 +481,59 @@ void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile, std::string var)
         coordim += 2;
     }
 
-    outfile << "Variables = x";
+    if (m_binary)
+    {
+        // Version number
+        outfile << "#!TDV112";
 
-    if (coordim == 2)
-    {
-        outfile << ", y";
-    }
-    else if (coordim == 3)
-    {
-        outfile << ", y, z";
-    }
+        // Int value of 1 for endian check
+        WriteStream(outfile, 1);
 
-    if (var.length())
-    {
-        outfile << ", " << var << std::endl << std::endl;
+        // We'll probably write a full solution field
+        WriteStream(outfile, 0);
+
+        // Title
+        std::string title = "";
+        WriteStream(outfile, title);
+
+        // Number of variables
+        WriteStream(outfile, (int)(coordim + var.size()));
+
+        std::string coords[3] = { "x", "y", "z" };
+
+        // Write names of space coordinates and variables
+        for (int i = 0; i < coordim; ++i)
+        {
+            WriteStream(outfile, coords[i]);
+        }
+
+        for (int i = 0; i < var.size(); ++i)
+        {
+            WriteStream(outfile, var[i]);
+        }
     }
     else
     {
+        outfile << "Variables = x";
+
+        if (coordim == 2)
+        {
+            outfile << ", y";
+        }
+        else if (coordim == 3)
+        {
+            outfile << ", y, z";
+        }
+
+        if (var.size())
+        {
+            outfile << var[0];
+            for (int i = 1; i < var.size(); ++i)
+            {
+                outfile << ", " << var[i];
+            }
+        }
+
         outfile << std::endl << std::endl;
     }
 }
@@ -443,7 +543,9 @@ void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile, std::string var)
  * @param   outfile    Output file name.
  * @param   expansion  Expansion that is considered
  */
-void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
+void OutputTecplot::WriteTecplotZone(
+    std::ofstream                                 &outfile,
+    std::vector<std::pair<NekDouble, NekDouble> > &minMax)
 {
     switch (m_outputType)
     {
@@ -504,39 +606,117 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
                 coordim += 1;
             }
 
-            outfile << "Zone, N=" << totpoints << ", E=" << numBlocks
-                    << ", F=FEBlock";
-
-            switch (nBases)
+            if (m_binary)
             {
-                case 1:
-                    outfile << ", ET=LINESEG" << std::endl;
-                    break;
-                case 2:
-                    outfile << ", ET=QUADRILATERAL" << std::endl;
-                    break;
-                case 3:
-                    outfile << ", ET=BRICK" << std::endl;
-                    break;
-            }
+                // Don't bother naming zone
+                WriteStream(outfile, 299.0f); // Zone marker
 
-            // write out coordinates in block format
-            for (j = 0; j < coordim; ++j)
-            {
-                for (i = 0; i < totpoints; ++i)
+                // Write same name as preplot
+                std::string zonename = "ZONE 001";
+                WriteStream(outfile, zonename);
+
+                WriteStream(outfile, -1); // No parent zone
+                WriteStream(outfile, -1); // No strand ID
+                WriteStream(outfile, 0.0); // Solution time
+                WriteStream(outfile, -1); // Unused, set to -1
+
+                // Zone type: 1 = lineseg, 3 = quad, 5 = brick
+                WriteStream(outfile, 2*(nBases-1) + 1);
+
+                WriteStream(outfile, 0); // Data at nodes
+                WriteStream(outfile, 0); // No 1-1 face neighbours
+                WriteStream(outfile, 0); // No user-defined connections
+
+                WriteStream(outfile, totpoints); // Total number of points
+                WriteStream(outfile, numBlocks); // Number of blocks
+
+                WriteStream(outfile, 0); // Unused
+                WriteStream(outfile, 0); // Unused
+                WriteStream(outfile, 0); // Unused
+                WriteStream(outfile, 0); // No auxiliary data names
+
+                // Finalise header
+                WriteStream(outfile, 357.0f);
+
+                // Now start to write data section so that we can dump geometry
+                // information
+
+                // Data marker
+                WriteStream(outfile, 299.0f);
+
+                // Data format: double
+                for (int j = 0; j < coordim + minMax.size(); ++j)
                 {
-                    outfile << coords[j][i] << " ";
-                    if ((!(i % 1000)) && i)
-                    {
-                        outfile << std::endl;
-                    }
+                    WriteStream(outfile, 2);
                 }
-                outfile << std::endl;
+
+                // No passive variables or variable sharing, no zone
+                // connectivity sharing (we only dump one zone)
+                WriteStream(outfile, 0);
+                WriteStream(outfile, 0);
+                WriteStream(outfile, -1);
+
+                int totpoints = coords[0].num_elements();
+
+                // Write out min/max of coordinate data
+                for (int j = 0; j < coordim; ++j)
+                {
+                    WriteStream(
+                        outfile, Vmath::Vmin(totpoints, coords[j], 1));
+                    WriteStream(
+                        outfile, Vmath::Vmax(totpoints, coords[j], 1));
+                }
+
+                // Write out min/max of variables
+                for (int j = 0; j < minMax.size(); ++j)
+                {
+                    WriteStream(outfile, minMax[j].first);
+                    WriteStream(outfile, minMax[j].second);
+                }
+
+                // Dump all of our coordinate points.
+                for (i = 0; i < coordim; ++i)
+                {
+                    WriteStream(outfile, coords[i]);
+                }
+            }
+            else
+            {
+                outfile << "Zone, N=" << totpoints << ", E=" << numBlocks
+                        << ", F=FEBlock";
+
+                switch (nBases)
+                {
+                    case 1:
+                        outfile << ", ET=LINESEG" << std::endl;
+                        break;
+                    case 2:
+                        outfile << ", ET=QUADRILATERAL" << std::endl;
+                        break;
+                    case 3:
+                        outfile << ", ET=BRICK" << std::endl;
+                        break;
+                }
+
+                // write out coordinates in block format
+                for (j = 0; j < coordim; ++j)
+                {
+                    for (i = 0; i < totpoints; ++i)
+                    {
+                        outfile << coords[j][i] << " ";
+                        if ((!(i % 1000)) && i)
+                        {
+                            outfile << std::endl;
+                        }
+                    }
+                    outfile << std::endl;
+                }
             }
             break;
         }
         case eSeperateZones:
         {
+            ASSERTL0(!m_binary, "Binary output for this not supported yet");
             for (int i = 0; i < m_f->m_exp[0]->GetExpSize(); ++i)
             {
                 m_f->m_exp[0]->WriteTecplotZone(outfile, i);
@@ -593,12 +773,6 @@ void OutputTecplot::WriteTecplotField(const int field, std::ofstream &outfile)
     {
         int totpoints = m_f->m_exp[0]->GetTotPoints();
 
-        if (m_f->m_exp[field]->GetPhysState() == false)
-        {
-            m_f->m_exp[field]->BwdTrans(m_f->m_exp[field]->GetCoeffs(),
-                                        m_f->m_exp[field]->UpdatePhys());
-        }
-
         if (m_doError)
         {
             NekDouble l2err =
@@ -611,7 +785,7 @@ void OutputTecplot::WriteTecplotField(const int field, std::ofstream &outfile)
                      << endl;
             }
         }
-        else
+        else if (!m_binary)
         {
             for (int i = 0; i < totpoints; ++i)
             {
@@ -621,11 +795,16 @@ void OutputTecplot::WriteTecplotField(const int field, std::ofstream &outfile)
                     outfile << std::endl;
                 }
             }
+            outfile << std::endl;
         }
-        outfile << std::endl;
+        else
+        {
+            WriteStream(outfile, m_f->m_exp[field]->UpdatePhys());
+        }
     }
     else
     {
+        ASSERTL0(!m_binary, "Unsupported");
         for (int e = 0; e < m_f->m_exp[field]->GetExpSize(); ++e)
         {
             m_f->m_exp[field]->WriteTecplotField(outfile, e);
@@ -642,15 +821,21 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
     for (i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
     {
         cnt = m_f->m_exp[0]->GetPhys_Offset(i);
+        vector<int> conn;
+        int linebreak = 0;
 
         if (nbase == 1)
         {
-            int np0 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
+            int cnt2 = 0;
+            int np0  = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
+
+            linebreak = 2;
+            conn.resize(2 * (np0 - 1));
 
             for (k = 1; k < np0; ++k)
             {
-                outfile << cnt + k + 1 << " ";
-                outfile << cnt + k << endl;
+                conn[cnt2++] = cnt + k;
+                conn[cnt2++] = cnt + k - 1;
             }
 
             cnt += np0;
@@ -661,15 +846,19 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
             int np1       = m_f->m_exp[0]->GetExp(i)->GetNumPoints(1);
             int totPoints = m_f->m_exp[0]->GetTotPoints();
             int nPlanes   = 1;
+            int cnt2      = 0;
 
             if (m_f->m_exp[0]->GetExpType() == MultiRegions::e3DH1D)
             {
                 nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
 
-                if (nPlanes >
-                    1) // default to 2D case for HalfMode when nPlanes = 1
+                // default to 2D case for HalfMode when nPlanes = 1
+                if (nPlanes > 1)
                 {
                     totPoints = m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
+
+                    linebreak = 8;
+                    conn.resize(8 * (np1 - 1) * (np0 - 1) * (nPlanes - 1));
 
                     for (int n = 1; n < nPlanes; ++n)
                     {
@@ -677,29 +866,22 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
                         {
                             for (k = 1; k < np0; ++k)
                             {
-                                outfile << cnt + (n - 1) * totPoints +
-                                               (j - 1) * np0 + k
-                                        << " ";
-                                outfile << cnt + (n - 1) * totPoints +
-                                               (j - 1) * np0 + k + 1
-                                        << " ";
-                                outfile << cnt + (n - 1) * totPoints + j * np0 +
-                                               k + 1
-                                        << " ";
-                                outfile
-                                    << cnt + (n - 1) * totPoints + j * np0 + k
-                                    << " ";
-
-                                outfile
-                                    << cnt + n * totPoints + (j - 1) * np0 + k
-                                    << " ";
-                                outfile << cnt + n * totPoints + (j - 1) * np0 +
-                                               k + 1
-                                        << " ";
-                                outfile << cnt + n * totPoints + j * np0 + k + 1
-                                        << " ";
-                                outfile << cnt + n * totPoints + j * np0 + k
-                                        << endl;
+                                conn[cnt2++] = cnt + (n - 1) * totPoints +
+                                    (j - 1) * np0 + k - 1;
+                                conn[cnt2++] = cnt + (n - 1) * totPoints +
+                                    (j - 1) * np0 + k;
+                                conn[cnt2++] = cnt + (n - 1) * totPoints +
+                                    j * np0 + k;
+                                conn[cnt2++] = cnt + (n - 1) * totPoints +
+                                    j * np0 + k - 1;
+                                conn[cnt2++] = cnt + n * totPoints +
+                                    (j - 1) * np0 + k - 1;
+                                conn[cnt2++] = cnt + n * totPoints +
+                                    (j - 1) * np0 + k;
+                                conn[cnt2++] = cnt + n * totPoints +
+                                    j * np0 + k;
+                                conn[cnt2++] = cnt + n * totPoints +
+                                    j * np0 + k - 1;
                             }
                         }
                     }
@@ -709,23 +891,28 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
 
             if (nPlanes == 1)
             {
+                conn.resize(4 * (np0 - 1) * (np1 - 1));
                 for (j = 1; j < np1; ++j)
                 {
                     for (k = 1; k < np0; ++k)
                     {
-                        outfile << cnt + (j - 1) * np0 + k << " ";
-                        outfile << cnt + (j - 1) * np0 + k + 1 << " ";
-                        outfile << cnt + j * np0 + k + 1 << " ";
-                        outfile << cnt + j * np0 + k << endl;
+                        conn[cnt2++] = cnt + (j - 1) * np0 + k - 1;
+                        conn[cnt2++] = cnt + (j - 1) * np0 + k;
+                        conn[cnt2++] = cnt + j * np0 + k;
+                        conn[cnt2++] = cnt + j * np0 + k - 1;
                     }
                 }
             }
         }
         else if (nbase == 3)
         {
-            int np0 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
-            int np1 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(1);
-            int np2 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(2);
+            int np0  = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
+            int np1  = m_f->m_exp[0]->GetExp(i)->GetNumPoints(1);
+            int np2  = m_f->m_exp[0]->GetExp(i)->GetNumPoints(2);
+            int cnt2 = 0;
+
+            linebreak = 8;
+            conn.resize(8 * (np0 - 1) * (np1 - 1) * (np2 - 1));
 
             for (j = 1; j < np2; ++j)
             {
@@ -733,22 +920,22 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
                 {
                     for (l = 1; l < np0; ++l)
                     {
-                        outfile << cnt + (j - 1) * np0 * np1 + (k - 1) * np0 + l
-                                << " ";
-                        outfile
-                            << cnt + (j - 1) * np0 * np1 + (k - 1) * np0 + l + 1
-                            << " ";
-                        outfile << cnt + (j - 1) * np0 * np1 + k * np0 + l + 1
-                                << " ";
-                        outfile << cnt + (j - 1) * np0 * np1 + k * np0 + l
-                                << " ";
-
-                        outfile << cnt + j * np0 * np1 + (k - 1) * np0 + l
-                                << " ";
-                        outfile << cnt + j * np0 * np1 + (k - 1) * np0 + l + 1
-                                << " ";
-                        outfile << cnt + j * np0 * np1 + k * np0 + l + 1 << " ";
-                        outfile << cnt + j * np0 * np1 + k * np0 + l << endl;
+                        conn[cnt2++] =
+                            cnt + (j - 1) * np0 * np1 + (k - 1) * np0 + l - 1;
+                        conn[cnt2++] =
+                            cnt + (j - 1) * np0 * np1 + (k - 1) * np0 + l;
+                        conn[cnt2++] =
+                            cnt + (j - 1) * np0 * np1 + k * np0 + l;
+                        conn[cnt2++] =
+                            cnt + (j - 1) * np0 * np1 + k * np0 + l - 1;
+                        conn[cnt2++] =
+                            cnt + j * np0 * np1 + (k - 1) * np0 + l - 1;
+                        conn[cnt2++] =
+                            cnt + j * np0 * np1 + (k - 1) * np0 + l;
+                        conn[cnt2++] =
+                            cnt + j * np0 * np1 + k * np0 + l;
+                        conn[cnt2++] =
+                            cnt + j * np0 * np1 + k * np0 + l - 1;
                     }
                 }
             }
@@ -756,6 +943,24 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
         else
         {
             ASSERTL0(false, "Not set up for this dimension");
+        }
+
+        if (m_binary)
+        {
+            WriteStream(outfile, conn);
+        }
+        else
+        {
+            for (j = 0; j < conn.size() - 1; ++j)
+            {
+                if (j && j % linebreak == 0)
+                {
+                    outfile << endl;
+                }
+                outfile << conn[j] + 1 << " ";
+            }
+
+            outfile << conn.back() << endl;
         }
     }
 }

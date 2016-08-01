@@ -151,6 +151,8 @@ namespace Nektar
             NekDouble                       m_lhom;  ///< Width of homogeneous direction
             Homo1DBlockMatrixMapShPtr       m_homogeneous1DBlockMat;
             Array<OneD, ExpListSharedPtr>   m_planes;
+
+            boost::unordered_map<int, int>  m_zIdToPlane;
             
             DNekBlkMatSharedPtr GenHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, CoeffState coeffstate = eLocal) const;
             

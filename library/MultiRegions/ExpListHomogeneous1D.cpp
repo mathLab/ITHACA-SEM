@@ -889,15 +889,17 @@ namespace Nektar
 
             // Determine mapping from element ids to location in
             // expansion list
-            map<int, int> ElmtID_to_ExpID;
-            for(i = 0; i < m_planes[0]->GetExpSize(); ++i)
+            if (m_elmtToExpId.size() == 0)
             {
-                ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+                for(i = 0; i < m_planes[0]->GetExpSize(); ++i)
+                {
+                    m_elmtToExpId[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+                }
             }
 
             for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
             {
-                int eid     = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
+                int eid     = m_elmtToExpId[fielddef->m_elementIDs[i]];
                 int datalen = (*m_exp)[eid]->GetNcoeffs();
 
                 for(n = 0; n < m_planes.num_elements(); ++n)
@@ -946,13 +948,21 @@ namespace Nektar
                 int modes_offset = 0;
                 int planes_offset = 0;
                 Array<OneD, NekDouble> coeff_tmp;
-                std::map<int,int>::iterator it;
+                boost::unordered_map<int,int>::iterator it;
                 
-                // Build map of plane IDs lying on this processor.
-                std::map<int,int> homoZids;
-                for (i = 0; i < m_planes.num_elements(); ++i)
+                // Build map of plane IDs lying on this processor and determine
+                // mapping from element ids to location in expansion list.
+                if (m_zIdToPlane.size() == 0)
                 {
-                    homoZids[m_transposition->GetPlaneID(i)] = i;
+                    for (i = 0; i < m_planes.num_elements(); ++i)
+                    {
+                        m_zIdToPlane[m_transposition->GetPlaneID(i)] = i;
+                    }
+
+                    for (i = 0; i < m_planes[0]->GetExpSize(); ++i)
+                    {
+                        m_elmtToExpId[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+                    }
                 }
                 
                 if(fielddef->m_numHomogeneousDir)
@@ -965,14 +975,6 @@ namespace Nektar
                     nzmodes = 1;
                     fieldDefHomoZids.push_back(0);
                 }
-                
-                // Determine mapping from element ids to location in expansion list.
-                map<int, int> ElmtID_to_ExpID;
-                for(i = 0; i < m_planes[0]->GetExpSize(); ++i)
-                {
-                    ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
-                }
-                
 
                 // calculate number of modes in the current partition
                 int ncoeffs_per_plane = m_planes[0]->GetNcoeffs(); 
@@ -988,10 +990,10 @@ namespace Nektar
                                                                         fielddef->m_numModes,
                                                                         modes_offset);
 
-                    it = ElmtID_to_ExpID.find(fielddef->m_elementIDs[i]); 
+                    it = m_elmtToExpId.find(fielddef->m_elementIDs[i]);
                     
                     // ensure element is on this partition for parallel case. 
-                    if(it == ElmtID_to_ExpID.end())
+                    if(it == m_elmtToExpId.end())
                     {
                         // increase offset for correct FieldData access
                         offset += datalen*nzmodes;
@@ -1006,10 +1008,10 @@ namespace Nektar
                     for(n = 0; n < nzmodes; ++n, offset += datalen)
                     {
                         
-                        it = homoZids.find(fieldDefHomoZids[n]);
+                        it = m_zIdToPlane.find(fieldDefHomoZids[n]);
                         
                         // Check to make sure this mode number lies in this field.
-                        if (it == homoZids.end())
+                        if (it == m_zIdToPlane.end())
                         {
                             continue;
                         } 

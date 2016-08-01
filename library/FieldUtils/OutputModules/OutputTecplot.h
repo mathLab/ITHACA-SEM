@@ -58,10 +58,17 @@ public:
     /// Creates an instance of this class
     static boost::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        return MemoryManager<OutputTecplot>::AllocateSharedPtr(f);
+        return MemoryManager<OutputTecplot>::AllocateSharedPtr(f, false);
     }
+
+    /// Creates an instance of this class using binary output
+    static boost::shared_ptr<Module> createBinary(FieldSharedPtr f)
+    {
+        return MemoryManager<OutputTecplot>::AllocateSharedPtr(f, true);
+    }
+
     static ModuleKey m_className[];
-    OutputTecplot(FieldSharedPtr f);
+    OutputTecplot(FieldSharedPtr f, bool binary);
     virtual ~OutputTecplot();
 
     /// Write fld to output file.

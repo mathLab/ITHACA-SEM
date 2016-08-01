@@ -54,11 +54,13 @@ ModuleKey OutputTecplot::m_className[] =
                                                OutputTecplot::create,
                                                "Writes a Tecplot file."),
     GetModuleFactory().RegisterCreatorFunction(ModuleKey(eOutputModule, "plt"),
-                                               OutputTecplot::create,
-                                               "Writes a Tecplot file.")
+                                               OutputTecplot::createBinary,
+                                               "Writes a Tecplot file in binary"
+                                               " plt format.")
 };
 
-OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
+OutputTecplot::OutputTecplot(FieldSharedPtr f, bool binary) : OutputModule(f),
+                                                              m_binary(binary)
 {
     if (f->m_setUpEquiSpacedFields)
     {
@@ -70,19 +72,31 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
         m_outputType        = eFullBlockZone;
     }
 
-    m_binary = true;
+    m_config["double"] =
+        ConfigOption(true, "0", "Write double-precision data: more "
+                                "accurate but more disk space required");
 }
 
 OutputTecplot::~OutputTecplot()
 {
 }
 
+/**
+ * @brief Helper function to write binary data to stream.
+ */
 template<typename T> void WriteStream(std::ostream &outfile, T data)
 {
     T tmp = data;
     outfile.write(reinterpret_cast<char *>(&tmp), sizeof(T));
 }
 
+/**
+ * @brief Specialisation of WriteStream to support writing std::string.
+ *
+ * Tecplot binary formats represent all strings by writing out their characters
+ * as 32-bit integers, followed by a 32-bit integer null (0) character to denote
+ * the end of the string.
+ */
 template<> void WriteStream(std::ostream &outfile, std::string data)
 {
     // Convert string to array of int32_t
@@ -97,6 +111,10 @@ template<> void WriteStream(std::ostream &outfile, std::string data)
     WriteStream(outfile, 0);
 }
 
+/**
+ * @brief Specialisation of WriteStream to support writing Nektar::Array
+ * datatype.
+ */
 template<typename T> void WriteStream(std::ostream &outfile,
                                       Array<OneD, T> data)
 {
@@ -104,6 +122,9 @@ template<typename T> void WriteStream(std::ostream &outfile,
                   data.num_elements() * sizeof(T));
 }
 
+/**
+ * @brief Specialisation of WriteStream to support writing std::vector datatype.
+ */
 template<typename T> void WriteStream(std::ostream  &outfile,
                                       std::vector<T> data)
 {
@@ -644,10 +665,13 @@ void OutputTecplot::WriteTecplotZone(
                 // Data marker
                 WriteStream(outfile, 299.0f);
 
-                // Data format: double
+                // Data format: either double or single depending on user
+                // options
+                bool useDoubles = m_config["double"].m_beenSet;
+
                 for (int j = 0; j < coordim + minMax.size(); ++j)
                 {
-                    WriteStream(outfile, 2);
+                    WriteStream(outfile, useDoubles ? 2 : 1);
                 }
 
                 // No passive variables or variable sharing, no zone
@@ -677,7 +701,17 @@ void OutputTecplot::WriteTecplotZone(
                 // Dump all of our coordinate points.
                 for (i = 0; i < coordim; ++i)
                 {
-                    WriteStream(outfile, coords[i]);
+                    if (useDoubles)
+                    {
+                        WriteStream(outfile, coords[i]);
+                    }
+                    else
+                    {
+                        vector<float> tmp(totpoints);
+                        std::copy(
+                            &coords[i][0], &coords[i][totpoints], &tmp[0]);
+                        WriteStream(outfile, tmp);
+                    }
                 }
             }
             else
@@ -797,9 +831,16 @@ void OutputTecplot::WriteTecplotField(const int field, std::ofstream &outfile)
             }
             outfile << std::endl;
         }
-        else
+        else if (m_config["double"].m_beenSet)
         {
             WriteStream(outfile, m_f->m_exp[field]->UpdatePhys());
+        }
+        else
+        {
+            vector<float> tmp(totpoints);
+            Array<OneD, NekDouble> data = m_f->m_exp[field]->UpdatePhys();
+            std::copy(&data[0], &data[totpoints], &tmp[0]);
+            WriteStream(outfile, tmp);
         }
     }
     else

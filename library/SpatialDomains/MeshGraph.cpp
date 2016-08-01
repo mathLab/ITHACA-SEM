@@ -2328,7 +2328,7 @@ namespace Nektar
             ExpansionMapShPtr expansionMap = m_expansionMapShPtrMap.find(variable)->second;
 
             iter = expansionMap->find(geom->GetGlobalID());
-            ASSERTL1(iter != expansionMap.end(),
+            ASSERTL1(iter != expansionMap->end(),
                      "Could not find expansion " +
                      boost::lexical_cast<string>(geom->GetGlobalID()) +
                      " in expansion for variable " + variable);

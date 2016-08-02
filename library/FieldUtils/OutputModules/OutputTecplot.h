@@ -62,25 +62,19 @@ public:
     /// Creates an instance of this class
     static boost::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        return MemoryManager<OutputTecplot>::AllocateSharedPtr(f, false);
+        return MemoryManager<OutputTecplot>::AllocateSharedPtr(f);
     }
 
-    /// Creates an instance of this class using binary output
-    static boost::shared_ptr<Module> createBinary(FieldSharedPtr f)
-    {
-        return MemoryManager<OutputTecplot>::AllocateSharedPtr(f, true);
-    }
-
-    static ModuleKey m_className[];
-    OutputTecplot(FieldSharedPtr f, bool binary);
+    static ModuleKey m_className;
+    OutputTecplot(FieldSharedPtr f);
     virtual ~OutputTecplot();
 
     /// Write fld to output file.
     virtual void Process(po::variables_map &vm);
 
-private:
-    bool            m_doError;
+protected:
     bool            m_binary;
+    bool            m_doError;
     TecplotZoneType m_zoneType;
     vector<int>     m_numPoints;
     int             m_numBlocks;
@@ -88,12 +82,10 @@ private:
     vector<Array<OneD, int> > m_conn;
     Array<OneD, Array<OneD, NekDouble> > m_fields;
 
-    void WriteTecplotHeader(std::ofstream &outfile,
-                            std::vector<std::string> &var);
-
-    void WriteTecplotZone(std::ofstream &outfile);
-
-    void WriteTecplotConnectivity(std::ofstream &outfile);
+    virtual void WriteTecplotHeader(std::ofstream &outfile,
+                                    std::vector<std::string> &var);
+    virtual void WriteTecplotZone(std::ofstream &outfile);
+    virtual void WriteTecplotConnectivity(std::ofstream &outfile);
 
     int GetNumTecplotBlocks();
     void CalculateConnectivity();
@@ -103,6 +95,36 @@ private:
         return "OutputTecplot";
     }
 };
+
+class OutputTecplotBinary : public OutputTecplot
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<OutputTecplotBinary>::AllocateSharedPtr(f);
+    }
+
+    static ModuleKey m_className;
+    OutputTecplotBinary(FieldSharedPtr f) : OutputTecplot(f)
+    {
+        m_binary = true;
+        m_config["double"] =
+            ConfigOption(true, "0", "Write double-precision data: more "
+                                    "accurate but more disk space required");
+    }
+
+    virtual ~OutputTecplotBinary()
+    {
+    }
+
+protected:
+    virtual void WriteTecplotHeader(std::ofstream &outfile,
+                                    std::vector<std::string> &var);
+    virtual void WriteTecplotZone(std::ofstream &outfile);
+    virtual void WriteTecplotConnectivity(std::ofstream &outfile);
+};
+
 }
 }
 

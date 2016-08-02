@@ -59,28 +59,24 @@ std::string TecplotZoneTypeMap[] = {
     "POLYHEDRON"
 };
 
-ModuleKey OutputTecplot::m_className[] =
-{
-    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eOutputModule, "dat"),
-                                               OutputTecplot::create,
-                                               "Writes a Tecplot file."),
-    GetModuleFactory().RegisterCreatorFunction(ModuleKey(eOutputModule, "plt"),
-                                               OutputTecplot::createBinary,
-                                               "Writes a Tecplot file in binary"
-                                               " plt format.")
-};
+ModuleKey OutputTecplot::m_className =
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eOutputModule, "dat"),
+        OutputTecplot::create,
+        "Writes a Tecplot file.");
+ModuleKey OutputTecplotBinary::m_className =
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eOutputModule, "plt"),
+        OutputTecplotBinary::create,
+        "Writes a Tecplot file in binary plt format.");
 
-OutputTecplot::OutputTecplot(FieldSharedPtr f, bool binary) : OutputModule(f),
-                                                              m_binary(binary)
+OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f),
+                                                 m_binary(false)
 {
     if (!f->m_setUpEquiSpacedFields)
     {
         m_requireEquiSpaced = true;
     }
-
-    m_config["double"] =
-        ConfigOption(true, "0", "Write double-precision data: more "
-                                "accurate but more disk space required");
 }
 
 OutputTecplot::~OutputTecplot()
@@ -346,62 +342,62 @@ void OutputTecplot::Process(po::variables_map &vm)
 void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
                                        std::vector<std::string> &var)
 {
-    if (m_binary)
+    outfile << "Variables = x";
+
+    if (m_coordim == 2)
     {
-        // Version number
-        outfile << "#!TDV112";
+        outfile << ", y";
+    }
+    else if (m_coordim == 3)
+    {
+        outfile << ", y, z";
+    }
 
-        // Int value of 1 for endian check
-        WriteStream(outfile, 1);
-
-        // We'll probably write a full solution field
-        WriteStream(outfile, 0);
-
-        // Title
-        std::string title = "";
-        WriteStream(outfile, title);
-
-        // Number of variables
-        WriteStream(outfile, (int)(m_coordim + var.size()));
-
-        std::string coords[3] = { "x", "y", "z" };
-
-        // Write names of space coordinates and variables
-        for (int i = 0; i < m_coordim; ++i)
+    if (var.size())
+    {
+        outfile << var[0];
+        for (int i = 1; i < var.size(); ++i)
         {
-            WriteStream(outfile, coords[i]);
-        }
-
-        for (int i = 0; i < var.size(); ++i)
-        {
-            WriteStream(outfile, var[i]);
+            outfile << ", " << var[i];
         }
     }
-    else
+
+    outfile << std::endl << std::endl;
+}
+
+void OutputTecplotBinary::WriteTecplotHeader(std::ofstream &outfile,
+                                             std::vector<std::string> &var)
+{
+    // Version number
+    outfile << "#!TDV112";
+
+    // Int value of 1 for endian check
+    WriteStream(outfile, 1);
+
+    // We'll probably write a full solution field
+    WriteStream(outfile, 0);
+
+    // Title
+    std::string title = "";
+    WriteStream(outfile, title);
+
+    // Number of variables
+    WriteStream(outfile, (int)(m_coordim + var.size()));
+
+    std::string coords[3] = { "x", "y", "z" };
+
+    // Write names of space coordinates and variables
+    for (int i = 0; i < m_coordim; ++i)
     {
-        outfile << "Variables = x";
+        WriteStream(outfile, coords[i]);
+    }
 
-        if (m_coordim == 2)
-        {
-            outfile << ", y";
-        }
-        else if (m_coordim == 3)
-        {
-            outfile << ", y, z";
-        }
-
-        if (var.size())
-        {
-            outfile << var[0];
-            for (int i = 1; i < var.size(); ++i)
-            {
-                outfile << ", " << var[i];
-            }
-        }
-
-        outfile << std::endl << std::endl;
+    for (int i = 0; i < var.size(); ++i)
+    {
+        WriteStream(outfile, var[i]);
     }
 }
+
 
 /**
  * Write Tecplot Files Zone
@@ -410,140 +406,157 @@ void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
  */
 void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
 {
-    int i, j;
-
-    if (m_binary)
+    // Write either points or finite element block
+    if (m_zoneType != eOrdered)
     {
-        // Number of points in zone
-        int nPoints = m_fields[0].num_elements();
-
-        // Don't bother naming zone
-        WriteStream(outfile, 299.0f); // Zone marker
-
-        // Write same name as preplot
-        std::string zonename = "ZONE 001";
-        WriteStream(outfile, zonename);
-
-        WriteStream(outfile, -1); // No parent zone
-        WriteStream(outfile, -1); // No strand ID
-        WriteStream(outfile, 0.0); // Solution time
-        WriteStream(outfile, -1); // Unused, set to -1
-
-        // Zone type: 1 = lineseg, 3 = quad, 5 = brick
-        WriteStream(outfile, (int)m_zoneType);
-
-        WriteStream(outfile, 0); // Data at nodes
-        WriteStream(outfile, 0); // No 1-1 face neighbours
-        WriteStream(outfile, 0); // No user-defined connections
-
-        if (m_zoneType == eOrdered)
+        outfile << "Zone, N=" << m_fields[0].num_elements() << ", E="
+                << m_numBlocks << ", F=FEBlock, ET="
+                << TecplotZoneTypeMap[m_zoneType] << std::endl;
+    }
+    else
+    {
+        std::string dirs[] = { "I", "J", "K" };
+        outfile << "Zone";
+        for (int i = 0; i < m_numPoints.size(); ++i)
         {
-            for (i = 0; i < m_numPoints.size(); ++i)
+            outfile << ", " << dirs[i] << "=" << m_numPoints[i];
+        }
+        outfile << ", F=POINT" << std::endl;
+    }
+
+    // Write out coordinates and field data
+    for (int j = 0; j < m_fields.num_elements(); ++j)
+    {
+        for (int i = 0; i < m_fields[j].num_elements(); ++i)
+        {
+            if ((!(i % 1000)) && i)
             {
-                WriteStream(outfile, m_numPoints[i]);
+                outfile << std::endl;
             }
-
-            for (i = m_numPoints.size(); i < 3; ++i)
-            {
-                WriteStream(outfile, 0);
-            }
+            outfile << m_fields[j][i] << " ";
         }
-        else
+        outfile << std::endl;
+    }
+}
+
+void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
+{
+    // Number of points in zone
+    int nPoints = m_fields[0].num_elements();
+
+    // Don't bother naming zone
+    WriteStream(outfile, 299.0f); // Zone marker
+
+    // Write same name as preplot
+    std::string zonename = "ZONE 001";
+    WriteStream(outfile, zonename);
+
+    WriteStream(outfile, -1); // No parent zone
+    WriteStream(outfile, -1); // No strand ID
+    WriteStream(outfile, 0.0); // Solution time
+    WriteStream(outfile, -1); // Unused, set to -1
+
+    // Zone type: 1 = lineseg, 3 = quad, 5 = brick
+    WriteStream(outfile, (int)m_zoneType);
+
+    WriteStream(outfile, 0); // Data at nodes
+    WriteStream(outfile, 0); // No 1-1 face neighbours
+    WriteStream(outfile, 0); // No user-defined connections
+
+    if (m_zoneType == eOrdered)
+    {
+        for (int i = 0; i < m_numPoints.size(); ++i)
         {
-            WriteStream(outfile, nPoints); // Total number of points
-            WriteStream(outfile, m_numBlocks); // Number of blocks
-        }
-
-        WriteStream(outfile, 0); // Unused
-        WriteStream(outfile, 0); // Unused
-        WriteStream(outfile, 0); // Unused
-        WriteStream(outfile, 0); // No auxiliary data names
-
-        // Finalise header
-        WriteStream(outfile, 357.0f);
-
-        // Now start to write data section so that we can dump geometry
-        // information
-
-        // Data marker
-        WriteStream(outfile, 299.0f);
-
-        // Data format: either double or single depending on user
-        // options
-        bool useDoubles = m_config["double"].m_beenSet;
-
-        for (int j = 0; j < m_fields.num_elements(); ++j)
-        {
-            WriteStream(outfile, useDoubles ? 2 : 1);
-        }
-
-        // No passive variables or variable sharing, no zone
-        // connectivity sharing (we only dump one zone)
-        WriteStream(outfile, 0);
-        WriteStream(outfile, 0);
-        WriteStream(outfile, -1);
-
-        // Write out min/max of field data
-        for (int j = 0; j < m_fields.num_elements(); ++j)
-        {
-            WriteStream(outfile, Vmath::Vmin(nPoints, m_fields[j], 1));
-            WriteStream(outfile, Vmath::Vmax(nPoints, m_fields[j], 1));
+            WriteStream(outfile, m_numPoints[i]);
         }
 
-        // Now dump out field data.
-        if (useDoubles)
+        for (int i = m_numPoints.size(); i < 3; ++i)
         {
-            // For doubles, we can just write data.
-            for (i = 0; i < m_fields.num_elements(); ++i)
-            {
-                WriteStream(outfile, m_fields[i]);
-            }
-        }
-        else
-        {
-            // For single precision, needs typecast first.
-            for (i = 0; i < m_fields.num_elements(); ++i)
-            {
-                int nPoints = m_fields[0].num_elements();
-                vector<float> tmp(nPoints);
-                std::copy(&m_fields[i][0], &m_fields[i][nPoints-1], &tmp[0]);
-                WriteStream(outfile, tmp);
-            }
+            WriteStream(outfile, 0);
         }
     }
     else
     {
-        // Write either points or finite element block
-        if (m_zoneType != eOrdered)
-        {
-            outfile << "Zone, N=" << m_fields[0].num_elements() << ", E="
-                    << m_numBlocks << ", F=FEBlock, ET="
-                    << TecplotZoneTypeMap[m_zoneType] << std::endl;
-        }
-        else
-        {
-            std::string dirs[] = { "I", "J", "K" };
-            outfile << "Zone";
-            for (i = 0; i < m_numPoints.size(); ++i)
-            {
-                outfile << ", " << dirs[i] << "=" << m_numPoints[i];
-            }
-            outfile << ", F=POINT" << std::endl;
-        }
+        WriteStream(outfile, nPoints); // Total number of points
+        WriteStream(outfile, m_numBlocks); // Number of blocks
+    }
 
-        // Write out coordinates and field data
-        for (j = 0; j < m_fields.num_elements(); ++j)
+    WriteStream(outfile, 0); // Unused
+    WriteStream(outfile, 0); // Unused
+    WriteStream(outfile, 0); // Unused
+    WriteStream(outfile, 0); // No auxiliary data names
+
+    // Finalise header
+    WriteStream(outfile, 357.0f);
+
+    // Now start to write data section so that we can dump geometry
+    // information
+
+    // Data marker
+    WriteStream(outfile, 299.0f);
+
+    // Data format: either double or single depending on user
+    // options
+    bool useDoubles = m_config["double"].m_beenSet;
+
+    for (int j = 0; j < m_fields.num_elements(); ++j)
+    {
+        WriteStream(outfile, useDoubles ? 2 : 1);
+    }
+
+    // No passive variables or variable sharing, no zone
+    // connectivity sharing (we only dump one zone)
+    WriteStream(outfile, 0);
+    WriteStream(outfile, 0);
+    WriteStream(outfile, -1);
+
+    // Write out min/max of field data
+    for (int j = 0; j < m_fields.num_elements(); ++j)
+    {
+        WriteStream(outfile, Vmath::Vmin(nPoints, m_fields[j], 1));
+        WriteStream(outfile, Vmath::Vmax(nPoints, m_fields[j], 1));
+    }
+
+    // Now dump out field data.
+    if (useDoubles)
+    {
+        // For doubles, we can just write data.
+        for (int i = 0; i < m_fields.num_elements(); ++i)
         {
-            for (i = 0; i < m_fields[j].num_elements(); ++i)
-            {
-                if ((!(i % 1000)) && i)
-                {
-                    outfile << std::endl;
-                }
-                outfile << m_fields[j][i] << " ";
-            }
-            outfile << std::endl;
+            WriteStream(outfile, m_fields[i]);
         }
+    }
+    else
+    {
+        // For single precision, needs typecast first.
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            int nPoints = m_fields[0].num_elements();
+            vector<float> tmp(nPoints);
+            std::copy(&m_fields[i][0], &m_fields[i][0] + nPoints, &tmp[0]);
+            WriteStream(outfile, tmp);
+        }
+    }
+}
+
+void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
+{
+    for (int i = 0; i < m_conn.size(); ++i)
+    {
+        const int nConn = m_conn[i].num_elements();
+        for (int j = 0; j < nConn - 1; ++j)
+        {
+            outfile << m_conn[i][j] + 1 << " ";
+        }
+        outfile << m_conn[i][nConn-1] + 1 << endl;
+    }
+}
+
+void OutputTecplotBinary::WriteTecplotConnectivity(std::ofstream &outfile)
+{
+    for (int i = 0; i < m_conn.size(); ++i)
+    {
+        WriteStream(outfile, m_conn[i]);
     }
 }
 
@@ -577,75 +590,6 @@ int OutputTecplot::GetNumTecplotBlocks()
     }
 
     return returnval;
-}
-
-// /**
-//  * Write Tecplot Files Field
-//  * @param   outfile    Output file name.
-//  * @param   expansion  Expansion that is considered
-//  */
-// void OutputTecplot::WriteTecplotField(const int field, std::ofstream &outfile)
-// {
-//     int totpoints = m_f->m_exp[0]->GetTotPoints();
-
-//     if (m_doError)
-//     {
-//         NekDouble l2err =
-//             m_f->m_exp[0]->L2(m_f->m_exp[field]->UpdatePhys());
-
-//         if (m_f->m_comm->GetRank() == 0)
-//         {
-//             cout << "L 2 error (variable "
-//                  << m_f->m_fielddef[0]->m_fields[field] << ") : " << l2err
-//                  << endl;
-//         }
-//     }
-//     else if (!m_binary)
-//     {
-//         for (int i = 0; i < totpoints; ++i)
-//         {
-//             outfile << m_f->m_exp[field]->GetPhys()[i] << " ";
-//             if ((!(i % 1000)) && i)
-//             {
-//                 outfile << std::endl;
-//             }
-//         }
-//         outfile << std::endl;
-//     }
-//     else if (m_config["double"].m_beenSet)
-//     {
-//         WriteStream(outfile, m_f->m_exp[field]->UpdatePhys());
-//     }
-//     else
-//     {
-//         vector<float> tmp(totpoints);
-//         Array<OneD, NekDouble> data = m_f->m_exp[field]->UpdatePhys();
-//         std::copy(&data[0], &data[totpoints], &tmp[0]);
-//             WriteStream(outfile, tmp);
-//     }
-// }
-
-void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
-{
-    if (m_binary)
-    {
-        for (int i = 0; i < m_conn.size(); ++i)
-        {
-            WriteStream(outfile, m_conn[i]);
-        }
-    }
-    else
-    {
-        for (int i = 0; i < m_conn.size(); ++i)
-        {
-            const int nConn = m_conn[i].num_elements();
-            for (int j = 0; j < nConn - 1; ++j)
-            {
-                outfile << m_conn[i][j] + 1 << " ";
-            }
-            outfile << m_conn[i][nConn-1] + 1 << endl;
-        }
-    }
 }
 
 void OutputTecplot::CalculateConnectivity()

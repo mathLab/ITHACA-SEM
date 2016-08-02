@@ -21,6 +21,7 @@
             <P> NumSteps = 1000       </P>
             <P> IO_CheckSteps = 1000  </P>
             <P> IO_InfoSteps  = 1000  </P>
+            <P> D0 = 0.1                </P>
             <P> Kinvis = 0.1          </P>
         </PARAMETERS>
 
@@ -48,9 +49,9 @@
                 <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
             </REGION>
             <REGION REF="2">
-                <R VAR="u" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="1.0/TimeStep"/>
-                <R VAR="v" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="1.0/TimeStep"/>
-                <R VAR="p" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="1.0/Kinvis" />
+                <R VAR="u" USERDEFINEDTYPE="HOutflow" VALUE="1.5" PRIMCOEFF="D0/TimeStep"/>
+                <R VAR="v" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="D0/TimeStep"/>
+                <R VAR="p" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="1.0/(D0*Kinvis)" />
             </REGION>
         </BOUNDARYCONDITIONS>
 
@@ -63,7 +64,7 @@
         <FUNCTION NAME="ExactSolution">
             <E VAR="u" VALUE="y*(1-y)" />
             <E VAR="v" VALUE="0" />
-            <E VAR="p" VALUE="-2*Kinvis*(x-1)" />
+            <E VAR="p" VALUE="-2*Kinvis*(x-1)+1.5" />
         </FUNCTION>
 
     </CONDITIONS>

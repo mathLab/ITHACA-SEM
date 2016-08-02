@@ -44,6 +44,8 @@
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <SolverUtils/AdvectionSystem.h>
 
+#define ImplicitPressure 1
+
 namespace Nektar
 {
 

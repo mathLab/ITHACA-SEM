@@ -22,6 +22,7 @@
             <P> IO_CheckSteps = 1000       </P>
             <P> IO_InfoSteps = 1000       </P>
             <P> Kinvis = 0.01         </P>
+            <P> D0     = 1         </P>
         </PARAMETERS>
 
         <VARIABLES>
@@ -48,9 +49,9 @@
                 <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
             </REGION>
             <REGION REF="2">
-                <R VAR="u" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="1.0/TimeStep"/>
-                <R VAR="v" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="1.0/TimeStep"/>
-                <R VAR="p" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="1.0/Kinvis" />
+                <R VAR="u" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="D0/TimeStep"/>
+                <R VAR="v" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="D0/TimeStep"/>
+                <R VAR="p" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="1.0/(D0*Kinvis)" />
             </REGION>
         </BOUNDARYCONDITIONS>
 

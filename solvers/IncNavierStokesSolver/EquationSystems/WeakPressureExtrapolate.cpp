@@ -92,7 +92,7 @@ namespace Nektar
             CopyPressureHBCsToPbndExp();            
         }
 
-        // Evaluate High order outflow conditiosn if required. 
+        // Evaluate High order outflow conditions if required. 
         CalcOutflowBCs(fields, kinvis);
     }
 
@@ -113,8 +113,8 @@ namespace Nektar
         
         Array<OneD, NekDouble> IProdVnTmp(nbcoeffs);
 
+#if 0 
         Array<OneD, Array<OneD, NekDouble> > ubnd(m_curl_dim);
-
 
         for(int i = 0; i < m_curl_dim; ++i)
         {
@@ -123,12 +123,16 @@ namespace Nektar
             ubnd[i] = m_houtflow->m_outflowVelBnd[noutflow][i][m_intSteps-1];
 
             // point input u to the first part of the array for later uee. 
-            u[i] = m_houtflow->m_outflowVelBnd[noutflow][i][0];
+            // u[i] = m_houtflow->m_outflowVelBnd[noutflow][i][0];
+            u[i] = ubnd[i]; 
         }
         
         m_PBndExp[nreg]->NormVectorIProductWRTBase(ubnd,IProdVnTmp);
-
-        Vmath::Svtvp(nbcoeffs,-1.0/m_timestep,IProdVnTmp,1,m_PBndExp[nreg]->UpdateCoeffs(),1,
+#endif
+        m_PBndExp[nreg]->NormVectorIProductWRTBase(u,IProdVnTmp);
+        
+        Vmath::Svtvp(nbcoeffs,-1.0/m_timestep,IProdVnTmp,1,
+                     m_PBndExp[nreg]->UpdateCoeffs(),1,
                      m_PBndExp[nreg]->UpdateCoeffs(),1);
     }
 

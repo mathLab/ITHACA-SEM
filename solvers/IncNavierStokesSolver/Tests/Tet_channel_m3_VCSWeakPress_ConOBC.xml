@@ -330,6 +330,7 @@
             <P> NumSteps      = 50 </P>
             <P> IO_CheckSteps = 10    </P>
             <P> IO_InfoSteps  = 50    </P>
+            <P> D0        = 0.1   </P>
             <P> Kinvis        = 1   </P>
         </PARAMETERS>
 
@@ -357,10 +358,10 @@
                 <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
             </REGION>
             <REGION REF="1">
-              <R VAR="u" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="1.0/TimeStep"/>
-              <R VAR="v" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="1.0/TimeStep"/>
-              <R VAR="w" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="1.0/TimeStep"/>
-              <R VAR="p" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="1.0/Kinvis" />
+              <R VAR="u" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="D0/TimeStep"/>
+              <R VAR="v" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="D0/TimeStep"/>
+              <R VAR="w" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="D0/TimeStep"/>
+              <R VAR="p" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="1.0/(D0*Kinvis)" />
             </REGION>
             <REGION REF="2">
                 <D VAR="u" VALUE="0" />

@@ -5,9 +5,10 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_ADR
 IF( NEKTAR_SOLVER_ADR )
     SET(ADRSolverSource 
        ./ADRSolver.cpp 
+       ./EquationSystems/Helmholtz.cpp
        ./EquationSystems/Laplace.cpp
        ./EquationSystems/Poisson.cpp       
-       ./EquationSystems/Helmholtz.cpp
+       ./EquationSystems/Projection.cpp       
        ./EquationSystems/SteadyAdvectionDiffusion.cpp
        ./EquationSystems/SteadyAdvectionDiffusionReaction.cpp
        ./EquationSystems/UnsteadyAdvection.cpp

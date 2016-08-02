@@ -1026,6 +1026,9 @@ namespace Nektar
             // or not
             bool m_WaveSpace;
 
+            /// Mapping from geometry ID of element to index inside #m_exp
+            boost::unordered_map<int, int> m_elmtToExpId;
+
             /// This function assembles the block diagonal matrix of local
             /// matrices of the type \a mtype.
             const DNekScalBlkMatSharedPtr GenBlockMatrix(

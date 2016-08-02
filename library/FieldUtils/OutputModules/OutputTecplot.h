@@ -44,11 +44,26 @@ namespace Nektar
 namespace FieldUtils
 {
 
-enum TecOutType
-{
-    eFullBlockZone,
-    eFullBlockZoneEquiSpaced,
-    eSeperateZones
+enum TecplotZoneType = {
+    eOrdered = 0,
+    eFELineSeg,
+    eFETriangle,
+    eFEQuadrilateral,
+    eFETetrahedron,
+    eFEBrick,
+    eFEPolygon,
+    eFEPolyhedron
+};
+
+std::string TecplotZoneTypeMap = {
+    "ORDERED",
+    "LINESEG",
+    "TRIANGLE",
+    "QUADRILATERAL",
+    "TETRAHEDRON",
+    "BRICK",
+    "POLYGON",
+    "POLYHEDRON"
 };
 
 /// Converter from fld to dat.
@@ -75,9 +90,15 @@ public:
     virtual void Process(po::variables_map &vm);
 
 private:
-    bool m_doError;
-    bool m_binary;
-    TecOutType m_outputType;
+    bool            m_doError;
+    bool            m_binary;
+    TecplotZoneType m_zoneType;
+    vector<int>     m_numPoints;
+    int             m_numBlocks;
+    int             m_coordim;
+    vector<int>     m_conn;
+    Array<OneD, Array<OneD, NekDouble> > m_outFields;
+    Array<OneD, Array<OneD, NekDouble> > m_coords;
 
     void WriteTecplotHeader(std::ofstream &outfile,
                             std::vector<std::string> &var);
@@ -86,11 +107,11 @@ private:
         std::ofstream &outfile,
         std::vector<std::pair<NekDouble, NekDouble> > &minMax);
 
-    int GetNumTecplotBlocks(void);
-
     void WriteTecplotField(const int field, std::ofstream &outfile);
 
     void WriteTecplotConnectivity(std::ofstream &outfile);
+
+    void CalculateConnectivity();
 
     virtual std::string GetModuleName()
     {

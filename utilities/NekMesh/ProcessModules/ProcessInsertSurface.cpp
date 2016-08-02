@@ -54,7 +54,7 @@ ModuleKey ProcessInsertSurface::className = GetModuleFactory().RegisterCreatorFu
 ProcessInsertSurface::ProcessInsertSurface(MeshSharedPtr m) : ProcessModule(m)
 {
     m_config["mesh"] =
-        ConfigOption(true, "", "Mesh to be inserted.");
+        ConfigOption(false, "", "Mesh to be inserted.");
 }
 
 ProcessInsertSurface::~ProcessInsertSurface()

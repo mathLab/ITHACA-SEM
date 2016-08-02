@@ -44,7 +44,7 @@ namespace Nektar
 namespace FieldUtils
 {
 
-enum TecplotZoneType = {
+enum TecplotZoneType{
     eOrdered = 0,
     eFELineSeg,
     eFETriangle,
@@ -53,17 +53,6 @@ enum TecplotZoneType = {
     eFEBrick,
     eFEPolygon,
     eFEPolyhedron
-};
-
-std::string TecplotZoneTypeMap = {
-    "ORDERED",
-    "LINESEG",
-    "TRIANGLE",
-    "QUADRILATERAL",
-    "TETRAHEDRON",
-    "BRICK",
-    "POLYGON",
-    "POLYHEDRON"
 };
 
 /// Converter from fld to dat.
@@ -96,21 +85,17 @@ private:
     vector<int>     m_numPoints;
     int             m_numBlocks;
     int             m_coordim;
-    vector<int>     m_conn;
-    Array<OneD, Array<OneD, NekDouble> > m_outFields;
-    Array<OneD, Array<OneD, NekDouble> > m_coords;
+    vector<Array<OneD, int> > m_conn;
+    Array<OneD, Array<OneD, NekDouble> > m_fields;
 
     void WriteTecplotHeader(std::ofstream &outfile,
                             std::vector<std::string> &var);
 
-    void WriteTecplotZone(
-        std::ofstream &outfile,
-        std::vector<std::pair<NekDouble, NekDouble> > &minMax);
-
-    void WriteTecplotField(const int field, std::ofstream &outfile);
+    void WriteTecplotZone(std::ofstream &outfile);
 
     void WriteTecplotConnectivity(std::ofstream &outfile);
 
+    int GetNumTecplotBlocks();
     void CalculateConnectivity();
 
     virtual std::string GetModuleName()

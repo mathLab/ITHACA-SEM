@@ -38,54 +38,60 @@
 
 #include <CardiacEPSolver/CellModels/CellModel.h>
 #include <SolverUtils/Filters/Filter.h>
-using namespace SolverUtils;
 
 namespace Nektar
 {
-//    namespace SolverUtils
-//    {
-        class FilterCheckpointCellModel : public Filter
-        {
-        public:
-            friend class MemoryManager<FilterCheckpointCellModel>;
 
-            /// Creates an instance of this class
-            static FilterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams) {
-                FilterSharedPtr p = MemoryManager<FilterCheckpointCellModel>::AllocateSharedPtr(pSession, pParams);
-                //p->InitObject();
-                return p;
-            }
+class FilterCheckpointCellModel : public SolverUtils::Filter
+{
+public:
+    friend class MemoryManager<FilterCheckpointCellModel>;
 
-            ///Name of the class
-            static std::string className;
+    /// Creates an instance of this class
+    static SolverUtils::FilterSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const ParamMap &pParams) {
+        SolverUtils::FilterSharedPtr p
+                        = MemoryManager<FilterCheckpointCellModel>
+                                ::AllocateSharedPtr(pSession, pParams);
+        //p->InitObject();
+        return p;
+    }
 
-            FilterCheckpointCellModel(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
-            ~FilterCheckpointCellModel();
+    ///Name of the class
+    static std::string className;
 
-            void SetCellModel(CellModelSharedPtr &pCellModel)
-            {
-                m_cell = pCellModel;
-            }
+    FilterCheckpointCellModel(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const ParamMap &pParams);
+    ~FilterCheckpointCellModel();
 
-        protected:
-            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual bool v_IsTimeDependent();
+    void SetCellModel(CellModelSharedPtr &pCellModel)
+    {
+        m_cell = pCellModel;
+    }
 
-        private:
-            unsigned int m_index;
-            unsigned int m_outputIndex;
-            unsigned int m_outputFrequency;
-            std::string m_outputFile;
-            CellModelSharedPtr m_cell;
-            LibUtilities::FieldIOSharedPtr m_fld;
-        };
-//    }
+protected:
+    virtual void v_Initialise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+    virtual void v_Update(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+    virtual void v_Finalise(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
+    virtual bool v_IsTimeDependent();
+
+private:
+    unsigned int m_index;
+    unsigned int m_outputIndex;
+    unsigned int m_outputFrequency;
+    std::string m_outputFile;
+    CellModelSharedPtr m_cell;
+    LibUtilities::FieldIOSharedPtr m_fld;
+};
+
 }
 
 #endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */

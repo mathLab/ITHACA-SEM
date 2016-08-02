@@ -118,7 +118,12 @@ namespace Nektar
 #ifdef NEKTAR_USING_PETSC
             PetscFinalize();
 #endif
-            MPI_Finalize();
+            int flag;
+            MPI_Finalized(&flag);
+            if( !flag)
+            {
+                MPI_Finalize();
+            }
         }
 
 
@@ -302,12 +307,12 @@ namespace Nektar
             int retval = MPI_Sendrecv(pSendData.get(),
                          (int) pSendData.num_elements(),
                          MPI_DOUBLE,
-                         pRecvProc,
+                         pSendProc,
                          0,
                          pRecvData.get(),
                          (int) pRecvData.num_elements(),
                          MPI_DOUBLE,
-                         pSendProc,
+                         pRecvProc,
                          0,
                          m_comm,
                          &status);

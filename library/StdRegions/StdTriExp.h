@@ -191,7 +191,8 @@ namespace Nektar
                 const int                  eid,
                 const Orientation      edgeOrient,
                 Array<OneD, unsigned int>& maparray,
-                Array<OneD,          int>& signarray);
+                Array<OneD,          int>& signarray,
+                int P = -1);
             STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId,
                                                            bool useCoeffPacking = false);
             STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(

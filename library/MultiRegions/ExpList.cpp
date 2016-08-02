@@ -62,6 +62,8 @@
 #include <Collections/CollectionOptimisation.h>
 #include <Collections/Operator.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -163,6 +165,46 @@ namespace Nektar
             m_WaveSpace(false)
         {
             SetExpType(eNoType);
+        }
+        
+        /**
+         * Copies the eIds elements from an existing expansion list.
+         * @param   in              Source expansion list.
+         * @param   in              elements that will be in the new exp list.
+         */
+        ExpList::ExpList(const ExpList &in, 
+                         const std::vector<unsigned int> &eIDs,
+                         const bool DeclareCoeffPhysArrays):
+            m_comm(in.m_comm),
+            m_session(in.m_session),
+            m_graph(in.m_graph),
+            m_ncoeffs(0),
+            m_npoints(0),
+            m_coeffs(),
+            m_phys(),
+            m_physState(false),
+            m_exp(MemoryManager<LocalRegions::ExpansionVector>
+                      ::AllocateSharedPtr()),
+            m_coeff_offset(),
+            m_phys_offset(),
+            m_offset_elmt_id(),
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
+            m_WaveSpace(false)
+        {
+            SetExpType(eNoType);
+            
+            for (int i=0; i < eIDs.size(); ++i)
+            {
+                (*m_exp).push_back( (*(in.m_exp))[eIDs[i]]);
+                m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
+                m_npoints += (*m_exp)[i]->GetTotPoints();
+            }
+
+            if(DeclareCoeffPhysArrays)
+            {
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs, 0.0);
+                m_phys   = Array<OneD, NekDouble>(m_npoints, 0.0);
+            }
         }
 
 
@@ -1349,18 +1391,19 @@ namespace Nektar
                     }
                 }
 
-                std::string msg = "Failed to find point within element to tolerance of "
-                    + boost::lexical_cast<std::string>(tol)
-                    + " using local point ("
-                    + boost::lexical_cast<std::string>(locCoords[0]) +","
-                    + boost::lexical_cast<std::string>(locCoords[1]) +","
-                    + boost::lexical_cast<std::string>(locCoords[1]) 
-                    + ") in element: "
-                    + boost::lexical_cast<std::string>(min_id);
-                WARNINGL1(false,msg.c_str());
-
                 if(returnNearestElmt)
                 {
+
+                    std::string msg = "Failed to find point within element to tolerance of "
+                        + boost::lexical_cast<std::string>(tol)
+                        + " using local point ("
+                        + boost::lexical_cast<std::string>(locCoords[0]) +","
+                        + boost::lexical_cast<std::string>(locCoords[1]) +","
+                        + boost::lexical_cast<std::string>(locCoords[1]) 
+                        + ") in element: "
+                        + boost::lexical_cast<std::string>(min_id);
+                    WARNINGL1(false,msg.c_str());
+                    
                     Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
                     return min_id;
                 }
@@ -1858,7 +1901,13 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
+        
+        void ExpList::v_ClearGlobalLinSysManager(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+        
         void ExpList::ExtractFileBCs(
             const std::string               &fileName,
             const std::string               &varName,
@@ -1936,12 +1985,13 @@ namespace Nektar
 
         void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
                                                   int NumHomoDir,
-                                                  int NumHomoStrip,
                                                   Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis,
                                                   std::vector<NekDouble> &HomoLen,
+                                                  bool  homoStrips,
+                                                  std::vector<unsigned int> &HomoSIDs,
                                                   std::vector<unsigned int> &HomoZIDs,
                                                   std::vector<unsigned int> &HomoYIDs)
-        {
+        {   
             int startenum = (int) LibUtilities::eSegment;
             int endenum   = (int) LibUtilities::eHexahedron;
             int s         = 0;
@@ -2026,16 +2076,13 @@ namespace Nektar
 
                 if(elementIDs.size() > 0)
                 {
-                    for(int i = 0; i < NumHomoStrip; ++i)
-                    {
-                        LibUtilities::FieldDefinitionsSharedPtr fdef  =
-                            MemoryManager<LibUtilities::FieldDefinitions>::
-                                AllocateSharedPtr(shape, elementIDs, basis,
-                                                  UniOrder, numModes,fields,
-                                                  NumHomoDir, HomoLen, HomoZIDs,
-                                                  HomoYIDs);
-                        fielddef.push_back(fdef);
-                    }
+                    LibUtilities::FieldDefinitionsSharedPtr fdef  =
+                        MemoryManager<LibUtilities::FieldDefinitions>::
+                            AllocateSharedPtr(shape, elementIDs, basis,
+                                            UniOrder, numModes,fields,
+                                            NumHomoDir, HomoLen, homoStrips,
+                                            HomoSIDs, HomoZIDs, HomoYIDs);
+                    fielddef.push_back(fdef);
                 }
             }
         }
@@ -2159,6 +2206,7 @@ namespace Nektar
                 if (elmtToExpId.count(elmtId) == 0)
                 {
                     offset += datalen;
+                    modes_offset += (*m_exp)[0]->GetNumBases();
                     continue;
                 }
 
@@ -2188,27 +2236,19 @@ namespace Nektar
             int i;
             int offset = 0;
 
-            // check if the same and if so just copy over coeffs
-            if(fromExpList->GetNcoeffs() == m_ncoeffs)
-            {
-                Vmath::Vcopy(m_ncoeffs,fromCoeffs,1,toCoeffs,1);
-            }
-            else
+            for(i = 0; i < (*m_exp).size(); ++i)
             {
                 std::vector<unsigned int> nummodes;
-                for(i = 0; i < (*m_exp).size(); ++i)
+                int eid = m_offset_elmt_id[i];
+                for(int j= 0; j < fromExpList->GetExp(eid)->GetNumBases(); ++j)
                 {
-                    int eid = m_offset_elmt_id[i];
-                    for(int j= 0; j < fromExpList->GetExp(eid)->GetNumBases(); ++j)
-                    {
-                        nummodes.push_back(fromExpList->GetExp(eid)->GetBasisNumModes(j));
-                    }
-
-                    (*m_exp)[eid]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0,
-                                                       &toCoeffs[m_coeff_offset[eid]]);
-
-                    offset += fromExpList->GetExp(eid)->GetNcoeffs();
+                    nummodes.push_back(fromExpList->GetExp(eid)->GetBasisNumModes(j));
                 }
+
+                (*m_exp)[eid]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0,
+                                                   &toCoeffs[m_coeff_offset[eid]]);
+
+                offset += fromExpList->GetExp(eid)->GetNcoeffs();
             }
         }
 
@@ -2319,6 +2359,15 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
+        
+        const vector<bool> &ExpList::v_GetLeftAdjacentFaces(void) const
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            vector<bool> returnval;
+            return returnval;
+        }
+
 
         void ExpList::v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)
         {
@@ -2398,7 +2447,20 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        void ExpList::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,const Array<OneD, NekDouble> &inarray2,Array<OneD, NekDouble> &outarray,CoeffState coeffstate)
+        void ExpList::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+                                      const Array<OneD, NekDouble> &inarray2,
+                                      Array<OneD, NekDouble> &outarray,
+                                      CoeffState coeffstate)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_DealiasedDotProd(
+                        const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                        const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                        Array<OneD, Array<OneD, NekDouble> > &outarray,
+                        CoeffState coeffstate)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2419,6 +2481,52 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
+        }
+        
+        void ExpList::v_NormVectorIProductWRTBase(
+                                Array<OneD, Array<OneD, NekDouble> > &V,
+                                Array<OneD, NekDouble> &outarray)
+        {
+            Array< OneD, NekDouble> tmp;
+            switch (GetCoordim(0))
+            {
+                case 1:
+                {
+                    for(int i = 0; i < GetExpSize(); ++i)
+                    {
+                        (*m_exp)[i]->NormVectorIProductWRTBase(
+                                        V[0] + GetPhys_Offset(i), 
+                                        tmp = outarray + GetCoeff_Offset(i));
+                    }
+                }
+                break;
+                case 2:
+                {
+                    for(int i = 0; i < GetExpSize(); ++i)
+                    {
+                        (*m_exp)[i]->NormVectorIProductWRTBase(
+                                        V[0] + GetPhys_Offset(i),
+                                        V[1] + GetPhys_Offset(i),
+                                        tmp = outarray + GetCoeff_Offset(i));
+                    }
+                }
+                break;
+                case 3:
+                {
+                    for(int i = 0; i < GetExpSize(); ++i)
+                    {
+                        (*m_exp)[i]->NormVectorIProductWRTBase(
+                                        V[0] + GetPhys_Offset(i),
+                                        V[1] + GetPhys_Offset(i),
+                                        V[2] + GetPhys_Offset(i),
+                                        tmp = outarray + GetCoeff_Offset(i));
+                    }
+                }
+                break;
+                default:
+                    ASSERTL0(false,"Dimension not supported");
+                    break;
+            }
         }
 
         void ExpList::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
@@ -2441,7 +2549,24 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+
+        void ExpList::v_LocalToGlobal(const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+
         void ExpList::v_GlobalToLocal(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+
+        void ExpList::v_GlobalToLocal(const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,NekDouble> &outarray)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2555,6 +2680,140 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
+        
+        /**
+         */
+        void ExpList::v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+        
+        /**
+         */
+        void ExpList::v_ExtractElmtToBndPhys(int i,
+                            Array<OneD, NekDouble> &element,
+                            Array<OneD, NekDouble> &boundary)
+        {
+            int n, cnt;
+            Array<OneD, NekDouble> tmp1, tmp2;
+            StdRegions::StdExpansionSharedPtr elmt;
+            
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+            
+            // Initialise result
+            boundary = Array<OneD, NekDouble> 
+                            (GetBndCondExpansions()[i]->GetTotPoints(), 0.0);
+            
+            // Skip other boundary regions
+            for (cnt = n = 0; n < i; ++n)
+            {
+                cnt += GetBndCondExpansions()[n]->GetExpSize();
+            }
+            
+            int offsetBnd;
+            int offsetElmt = 0;
+            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            {
+                offsetBnd = GetBndCondExpansions()[i]->GetPhys_Offset(n);
+                
+                elmt   = GetExp(ElmtID[cnt+n]);
+                elmt->GetTracePhysVals(EdgeID[cnt+n],
+                                      GetBndCondExpansions()[i]->GetExp(n),
+                                      tmp1 = element + offsetElmt,
+                                      tmp2 = boundary + offsetBnd);
+                
+                offsetElmt += elmt->GetTotPoints();
+            }
+        }
+        
+        /**
+         */
+        void ExpList::v_ExtractPhysToBndElmt(int i,
+                            const Array<OneD, const NekDouble> &phys,
+                            Array<OneD, NekDouble> &bndElmt)
+        {
+            int n, cnt, nq;
+            Array<OneD, NekDouble> tmp1, tmp2;
+            
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+            
+            // Skip other boundary regions
+            for (cnt = n = 0; n < i; ++n)
+            {
+                cnt += GetBndCondExpansions()[n]->GetExpSize();
+            }
+            
+            // Count number of points
+            int npoints = 0;
+            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            {
+                npoints += GetExp(ElmtID[cnt+n])->GetTotPoints();
+            }
+            
+            // Initialise result
+            bndElmt = Array<OneD, NekDouble> (npoints, 0.0);
+            
+            // Extract data
+            int offsetPhys;
+            int offsetElmt = 0;
+            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            {
+                nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
+                offsetPhys = GetPhys_Offset(ElmtID[cnt+n]);
+                Vmath::Vcopy(nq, tmp1 = phys    + offsetPhys, 1,
+                                 tmp2 = bndElmt + offsetElmt, 1);
+                offsetElmt += nq;
+            }
+        }
+        
+        /**
+         */
+        void ExpList::v_GetBoundaryNormals(int i,
+                        Array<OneD, Array<OneD, NekDouble> > &normals)
+        {
+            int j, n, cnt, nq;
+            int coordim = GetCoordim(0);
+            Array<OneD, NekDouble> tmp;
+            StdRegions::StdExpansionSharedPtr elmt;
+            
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+            
+            // Initialise result
+            normals = Array<OneD, Array<OneD, NekDouble> > (coordim);
+            for (j = 0; j < coordim; ++j)
+            {
+                normals[j] = Array<OneD, NekDouble> ( 
+                                GetBndCondExpansions()[i]->GetTotPoints(), 0.0);
+            }
+            
+            // Skip other boundary regions
+            for (cnt = n = 0; n < i; ++n)
+            {
+                cnt += GetBndCondExpansions()[n]->GetExpSize();
+            }
+            
+            int offset;
+            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            {
+                offset = GetBndCondExpansions()[i]->GetPhys_Offset(n);
+                nq = GetBndCondExpansions()[i]->GetExp(n)->GetTotPoints();
+                
+                elmt   = GetExp(ElmtID[cnt+n]);
+                const Array<OneD, const Array<OneD, NekDouble> > normalsElmt
+                            = elmt->GetSurfaceNormal(EdgeID[cnt+n]);
+                // Copy to result
+                for (j = 0; j < coordim; ++j)
+                {
+                    Vmath::Vcopy(nq, normalsElmt[j], 1,
+                                     tmp = normals[j] + offset, 1);
+                }
+            }
+        }
 
         /**
          */
@@ -2564,7 +2823,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
+        
         /**
          */
         void ExpList::v_ReadGlobalOptimizationParameters()
@@ -2858,6 +3117,12 @@ namespace Nektar
                 }
             }
         }
+        
+        void ExpList::ClearGlobalLinSysManager(void)
+        {
+            v_ClearGlobalLinSysManager();
+        }
+
     } //end of namespace
 } //end of namespace
 

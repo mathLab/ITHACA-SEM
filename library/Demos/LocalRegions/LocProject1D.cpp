@@ -3,6 +3,7 @@
 #include <LocalRegions/SegExp.h>
 #include <SpatialDomains/SegGeom.h>
 
+using namespace std;
 using namespace Nektar;
 
 static double solutionpoly(double x, int order);

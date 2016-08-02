@@ -60,23 +60,35 @@ std::string FilterBenchmark::className =
  */
 FilterBenchmark::FilterBenchmark(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const std::map<std::string, std::string> &pParams)
+        const ParamMap &pParams)
     : Filter(pSession)
 {
-    ASSERTL0(pParams.find("ThresholdValue") != pParams.end(),
-             "Missing parameter 'ThresholdValue'.");
-    m_thresholdValue = atof(pParams.find("ThresholdValue")->second.c_str());
-    ASSERTL0(pParams.find("InitialValue") != pParams.end(),
-             "Missing parameter 'InitialValue'.");
-    m_initialValue = atof(pParams.find("InitialValue")->second.c_str());
-    ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
-             "Missing parameter 'OutputFile'.");
-    m_outputFile = pParams.find("OutputFile")->second;
+    ParamMap::const_iterator it;
 
+    // ThresholdValue
+    it = pParams.find("ThresholdValue");
+    ASSERTL0(it != pParams.end(), "Missing parameter 'ThresholdValue'.");
+    LibUtilities::Equation equ1(m_session, it->second);
+    m_thresholdValue = floor(equ1.Evaluate());
+
+    // InitialValue
+    it = pParams.find("InitialValue");
+    ASSERTL0(it != pParams.end(), "Missing parameter 'InitialValue'.");
+    LibUtilities::Equation equ2(m_session, it->second);
+    m_initialValue = floor(equ2.Evaluate());
+
+    // OutputFile
+    it = pParams.find("OutputFile");
+    ASSERTL0(it->second.length() > 0, "Missing parameter 'OutputFile'.");
+    m_outputFile = it->second;
+
+    // StartTime
     m_startTime = 0.0;
-    if (pParams.find("StartTime") != pParams.end())
+    it = pParams.find("StartTime");
+    if (it != pParams.end())
     {
-        m_startTime = atof(pParams.find("StartTime")->second.c_str());
+        LibUtilities::Equation equ(m_session, it->second);
+        m_startTime = floor(equ.Evaluate());
     }
 
     m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(

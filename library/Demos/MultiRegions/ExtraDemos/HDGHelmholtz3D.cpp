@@ -15,6 +15,7 @@
  /* Nothing */
 #endif
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])

@@ -62,7 +62,7 @@ class FilterHistoryPoints : public Filter
 
         SOLVER_UTILS_EXPORT FilterHistoryPoints(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams);
+            const ParamMap                             &pParams);
         SOLVER_UTILS_EXPORT ~FilterHistoryPoints();
 
     protected:
@@ -80,9 +80,11 @@ class FilterHistoryPoints : public Filter
         SpatialDomains::PointGeomVector         m_historyPoints;
         unsigned int                            m_index;
         unsigned int                            m_outputFrequency;
-         /// plane to take history point from if using a homogeneous1D expansion
+        /// plane to take history point from if using a homogeneous1D expansion
         unsigned int                            m_outputPlane;
+        Array<OneD, int>                        m_planeIDs;
         bool                                    m_isHomogeneous1D;
+        bool                                    m_waveSpace;
         std::string                             m_outputFile;
         std::ofstream                           m_outputStream;
         std::stringstream                       m_historyPointStream;

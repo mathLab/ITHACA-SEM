@@ -176,6 +176,11 @@ namespace StdRegions
                           Array<OneD,       NekDouble> &outarray,
                     const StdRegions::StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT virtual int v_GetTraceNcoeffs(const int i) const
+            {
+                return GetEdgeNcoeffs(i);
+            }
+
         private:
 
             // Virtual Functions ----------------------------------------

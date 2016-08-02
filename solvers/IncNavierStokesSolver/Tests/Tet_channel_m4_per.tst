@@ -2,7 +2,7 @@
 <test>
     <description>3D channel flow, Tetrahedral elements, P=4, periodic BCs</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>Tet_channel_m4_per.xml</parameters>
+    <parameters>-I GlobalSysSoln=DirectStaticCond Tet_channel_m4_per.xml</parameters>
     <files>
         <file description="Session File">Tet_channel_m4_per.xml</file>
     </files>

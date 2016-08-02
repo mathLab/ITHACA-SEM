@@ -66,6 +66,11 @@ namespace Nektar
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpList2D(  const ExpList2D &In,
                 const bool DeclareCoeffPhysArrays = true);
+            
+            /// Constructor copying only elements defined in eIds.
+            MULTI_REGIONS_EXPORT ExpList2D(  const ExpList2D &In,
+                const std::vector<unsigned int> &eIDs,
+                const bool DeclareCoeffPhysArrays = true);
 
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList2D(

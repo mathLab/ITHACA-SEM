@@ -39,6 +39,8 @@
 #include <StdRegions/StdQuadExp.h>
 #include <LocalRegions/Expansion.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -162,7 +164,7 @@ namespace Nektar
             int npoints = outarray.num_elements(); // number of total physical points
             int nlines  = m_lines.num_elements();  // number of lines == number of Fourier modes = number of Fourier coeff = number of points per slab
             int nslabs  = npoints/nlines;          // number of slabs = numebr of physical points per line
-            
+
             Array<OneD, NekDouble> V1(npoints);
             Array<OneD, NekDouble> V2(npoints);
             Array<OneD, NekDouble> V1V2(npoints);
@@ -175,12 +177,12 @@ namespace Nektar
                 V1 = inarray1;
                 V2 = inarray2;
             }
-            else 
+            else
             {
                 HomogeneousFwdTrans(inarray1,V1,coeffstate);
                 HomogeneousFwdTrans(inarray2,V2,coeffstate);
             }
-            
+
             m_transposition->Transpose(V1,ShufV1,false,LibUtilities::eXtoYZ);
             m_transposition->Transpose(V2,ShufV2,false,LibUtilities::eXtoYZ);
             
@@ -244,7 +246,32 @@ namespace Nektar
                 HomogeneousBwdTrans(V1V2,outarray,coeffstate);
             }
         }
-        
+
+        void ExpListHomogeneous2D::v_DealiasedDotProd(
+                        const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                        const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                        Array<OneD, Array<OneD, NekDouble> > &outarray,
+                        CoeffState coeffstate)
+        {
+            // TODO Proper implementation of this
+            int ndim = inarray1.num_elements();
+            ASSERTL1( inarray2.num_elements() % ndim == 0,
+                     "Wrong dimensions for DealiasedDotProd.");
+            int nvec = inarray2.num_elements() % ndim;
+            int npts = inarray1[0].num_elements();
+
+            Array<OneD, NekDouble> out(npts);
+            for (int i = 0; i < nvec; i++)
+            {
+                Vmath::Zero(npts, outarray[i], 1);
+                for (int j = 0; j < ndim; j++)
+                {
+                    DealiasedProd(inarray1[j], inarray2[i*ndim+j], out);
+                    Vmath::Vadd(npts, outarray[i], 1, out, 1, outarray[i], 1);
+                }
+            }
+        }
+
         void ExpListHomogeneous2D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, CoeffState coeffstate)
         {
             int cnt = 0, cnt1 = 0;
@@ -588,8 +615,28 @@ namespace Nektar
             std::vector<NekDouble> HomoLen(2);
             HomoLen[0] = m_lhom_y;
             HomoLen[1] = m_lhom_z;
+            
+            int nhom_modes_y = m_homogeneousBasis_y->GetNumModes();
+            int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
 
-            m_lines[0]->GeneralGetFieldDefinitions(returnval, 2, 1, HomoBasis, HomoLen);
+            std::vector<unsigned int> sIDs
+                = LibUtilities::NullUnsignedIntVector;
+ 
+            std::vector<unsigned int> yIDs;
+            std::vector<unsigned int> zIDs;
+            
+            for(int n = 0; n < nhom_modes_z; ++n)
+            {
+                for(int m = 0; m < nhom_modes_y; ++m)
+                {
+                    zIDs.push_back(n);
+                    yIDs.push_back(m);
+                }
+            }
+
+            m_lines[0]->GeneralGetFieldDefinitions(returnval, 2, HomoBasis, 
+                                                     HomoLen, false, 
+                                                     sIDs, zIDs, yIDs);
             return returnval;
         }
 
@@ -603,8 +650,28 @@ namespace Nektar
             HomoLen[0] = m_lhom_y;
             HomoLen[1] = m_lhom_z;
             
+            int nhom_modes_y = m_homogeneousBasis_y->GetNumModes();
+            int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
+
+            std::vector<unsigned int> sIDs
+                =LibUtilities::NullUnsignedIntVector;
+
+            std::vector<unsigned int> yIDs;
+            std::vector<unsigned int> zIDs;
+            
+            for(int n = 0; n < nhom_modes_z; ++n)
+            {
+                for(int m = 0; m < nhom_modes_y; ++m)
+                {
+                    zIDs.push_back(n);
+                    yIDs.push_back(m);
+                }
+            }
+            
             // enforce NumHomoDir == 1 by direct call
-            m_lines[0]->GeneralGetFieldDefinitions(fielddef, 2, 1, HomoBasis, HomoLen);
+             m_lines[0]->GeneralGetFieldDefinitions(fielddef, 2, HomoBasis, 
+                                                    HomoLen, false,
+                                                    sIDs, zIDs, yIDs);
         }
         
         void ExpListHomogeneous2D::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
@@ -682,6 +749,29 @@ namespace Nektar
                     offset += datalen;
                 }
             }
+        }
+        
+        void ExpListHomogeneous2D::v_WriteVtkPieceData(std::ostream &outfile, int expansion,
+                                        std::string var)
+        {
+            int i;
+            int nq = (*m_exp)[expansion]->GetTotPoints();
+            int npoints_per_line = m_lines[0]->GetTotPoints();
+
+            // printing the fields of that zone
+            outfile << "        <DataArray type=\"Float64\" Name=\""
+                    << var << "\">" << endl;
+            outfile << "          ";
+            for (int n = 0; n < m_lines.num_elements(); ++n)
+            {
+                const Array<OneD, NekDouble> phys = m_phys + m_phys_offset[expansion] + n*npoints_per_line;
+                for(i = 0; i < nq; ++i)
+                {
+                    outfile << (fabs(phys[i]) < NekConstants::kNekZeroTol ? 0 : phys[i]) << " ";
+                }
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
         }
     
         void ExpListHomogeneous2D::v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,

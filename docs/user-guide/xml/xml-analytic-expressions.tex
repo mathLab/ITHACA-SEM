@@ -199,7 +199,7 @@ defined with \inltt{<PARAMETERS>...</PARAMETERS>}. Parameters play the role of
 constants that may change their values in between of expression evaluations.
 
 \item variables (i.e., \inlsh{x, y, z} and \inlsh{t})
-\item unary minus operator (e.g. \inltt{-x}
+\item unary minus operator (e.g. \inltt{-x})
 \item binary arithmetic operators \inltt{+, -, *, /, \^{}}
    Powering operator allows using real exponents (it is implemented with
    \inlsh{std::pow()} function)
@@ -247,6 +247,20 @@ function and accepts arbitrary real exponents.
 of normal distribution with zero mean. Implemented using the
 \texttt{boost::mt19937} random number generator with boost variate generators
 (see \url{http://www.boost.org/libs/random})
+\end{itemize}
+
+
+\subsubsection{Examples}
+Some straightforward examples include
+\begin{itemize}
+\item Basic arithmetic operators: \inltt{0.5*0.3164/(3000\^{}0.25)}
+\item Simple polynomial functions: \inltt{y*(1-y)}
+\item Use of values defined in \inltt{PARAMETERS} section:
+\inltt{-2*Kinvis*(x-1)}
+\item More complex expressions involving trigonometric functions, parameters and
+constants: \inltt{(LAMBDA/2/PI)*exp(LAMBDA*x)*sin(2*PI*y)}
+\item Boolean operators for multi-domain functions:
+\inltt{(y<0)*sin(y) + (y>=0)*y}
 \end{itemize}
 
 \subsection{Performance considerations}

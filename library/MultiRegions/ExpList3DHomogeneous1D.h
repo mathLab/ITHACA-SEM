@@ -94,6 +94,12 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(
                                          const ExpList3DHomogeneous1D &In,
                                          const bool DeclarePlanesSetCoeffPhys = true);
+            
+            /// Constructor copying only elements defined in eIds.
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(
+                                         const ExpList3DHomogeneous1D &In,
+                                         const std::vector<unsigned int> &eIDs,
+                                         const bool DeclarePlanesSetCoeffPhys = true);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList3DHomogeneous1D();

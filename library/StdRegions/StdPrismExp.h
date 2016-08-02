@@ -165,6 +165,11 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_FillMode(
                 const int mode,
                 Array<OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_GetFaceNumModes(
+                    const int                  fid,
+                    const Orientation          faceOrient,
+                    int &numModes0,
+                    int &numModes1);
 
             //---------------------------------------
             // Helper functions
@@ -200,8 +205,8 @@ namespace Nektar
                 const Orientation      faceOrient,
                 Array<OneD, unsigned int> &maparray,
                 Array<OneD,          int> &signarray,
-                int                        nummodesA = -1,
-                int                        nummodesB = -1);
+                int                        P = -1,
+                int                        Q = -1);
             STD_REGIONS_EXPORT virtual int  v_GetVertexMap(
                 int localVertexId,
                 bool useCoeffPacking = false);

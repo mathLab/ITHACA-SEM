@@ -37,6 +37,8 @@
 #include <boost/functional/hash.hpp>
 #include <StdRegions/StdExpansion.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace StdRegions

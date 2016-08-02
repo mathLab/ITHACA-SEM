@@ -35,6 +35,8 @@
 
 #include <CompressibleFlowSolver/EquationSystems/NavierStokesCFE.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string NavierStokesCFE::className =
@@ -249,12 +251,21 @@ namespace Nektar
     {
         std::string varName;
         int cnt        = 0;
+        int nTracePts  = GetTraceTotPoints();
+        int nvariables = inarray.num_elements();
+
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+        for (int i = 0; i < nvariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+            m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
+        }
 
         // loop over Boundary Regions
         for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
             std::string type = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
-            SetCommonBC(type,n,time,cnt,inarray);
+            SetCommonBC(type, n, time, cnt, Fwd, inarray);
         }
     }
 }

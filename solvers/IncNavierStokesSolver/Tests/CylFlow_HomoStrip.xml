@@ -1824,16 +1824,16 @@
     <CONDITIONS>
         <SOLVERINFO>
             <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
-            <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+            <I PROPERTY="SolverType" VALUE="VCSMapping" />
             <I PROPERTY="EvolutionOperator" VALUE="SkewSymmetric" />
             <I PROPERTY="Projection" VALUE="Galerkin" />
-            <I PROPERTY="GlobalSysSoln" VALUE="DirectStaticCond"/>
+            <I PROPERTY="GlobalSysSoln" VALUE="DirectMultiLevelStaticCond"/>
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
             <I PROPERTY="HOMOGENEOUS" VALUE="1D"/>
             <I PROPERTY="USEFFT" VALUE="FFTW"/>
             <I PROPERTY="HomoStrip" VALUE="True"/>
-            <I PROPERTY="VibrationType" VALUE="CONSTRAINED"/>
-            <I PROPERTY="SupportType" VALUE="FREE-FREE"/>
+            <I PROPERTY="VibrationType" VALUE="Constrained"/>
+            <I PROPERTY="SupportType" VALUE="Free-Free"/>
             <I PROPERTY="FictitiousMassMethod" VALUE="True"/>
         </SOLVERINFO>
         <PARAMETERS>
@@ -1845,18 +1845,18 @@
             <P> Kinvis        = 1/Re             </P>
             <P> HomModesZ     = 2                </P>
             <P> LZ            = PI/8             </P>
-            <P> LC            = 4*PI             </P>
             <P> A             = 0.025            </P>
             <P> omega         = 1.0              </P>
             <P> PROC_Z        = 16               </P>
             <P> Strip_Z       = 16               </P>
-            <P> DistStrip     = PI/2             </P>
+            <P> DistStrip     = PI/4             </P>
+            <P> LC            = 4*PI             </P>
             <P> StructStiff   = 0.02             </P>
             <P> StructRho     = 2.0              </P>
             <P> CableTension  = 8.82             </P>
             <P> BendingStiff  = 0.0              </P>
-            <P> FictDamp      = 0.0              </P>
-            <P> FictMass      = 3.0              </P>
+            <P> FictDamp      = 1.0              </P>
+            <P> FictMass      = 1.5              </P>
         </PARAMETERS>
         <VARIABLES>
             <V ID="0"> u </V>
@@ -1873,13 +1873,13 @@
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
                 <D VAR="u" VALUE="0" />
-                <D VAR="v" VALUE="0" />
+                <D VAR="v" USERDEFINEDTYPE="MovingBody" VALUE="0" />
                 <D VAR="w" VALUE="0" />
                 <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
             </REGION>
             <REGION REF="1">
-                <D VAR="u" USERDEFINEDTYPE="MovingBody" VALUE="1" />
-                <D VAR="v" USERDEFINEDTYPE="MovingBody" VALUE="0" />
+                <D VAR="u" VALUE="1" />
+                <D VAR="v" VALUE="0" />
                 <D VAR="w" VALUE="0" />
                 <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
             </REGION>
@@ -1890,8 +1890,8 @@
                 <D VAR="p" VALUE="0" />
             </REGION>
             <REGION REF="3">
-                <D VAR="u" USERDEFINEDTYPE="MovingBody" VALUE="1" />
-                <D VAR="v" USERDEFINEDTYPE="MovingBody" VALUE="0" />
+                <D VAR="u" VALUE="1" />
+                <D VAR="v" VALUE="0" />
                 <D VAR="w" VALUE="0" />
                 <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
             </REGION>
@@ -1904,11 +1904,25 @@
             <E VAR="x" VALUE="0.0" />
             <E VAR="y" VALUE="-1.0*omega*A*sin(omega*t)*cos(2*PI*z/LC)" />
         </FUNCTION>
+        <FUNCTION NAME="Mapping">
+            <E VAR="x" VALUE="x" />
+            <E VAR="y" VALUE="y+A*cos(omega*t)*cos(2*PI*z/LZ)" />
+        </FUNCTION>
+        <FUNCTION NAME="MappingVel">
+            <E VAR="vx" VALUE="0.0" />
+            <E VAR="vy" VALUE="-1.0*omega*A*sin(omega*t)*cos(2*PI*z/LZ)" />
+        </FUNCTION>
         <FUNCTION NAME="accelerations">
             <E VAR="x" VALUE="0.0" />
             <E VAR="y" VALUE="-1.0*omega*omega*A*cos(omega*t)*cos(2*PI*z/LC)" />
         </FUNCTION>
     </CONDITIONS>
+    
+    <MAPPING TYPE="XYofZ">
+        <COORDS>Mapping</COORDS>
+        <VEL>MappingVel</VEL>
+	</MAPPING>    
+	
     <FORCING>
         <FORCE TYPE="MovingBody">
             <DISPLACEMENTS> displacements </DISPLACEMENTS>
@@ -1919,4 +1933,5 @@
             <PARAM NAME="Boundary"> B[0] </PARAM>
         </FORCE>
     </FORCING>
+
 </NEKTAR>

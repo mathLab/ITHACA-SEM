@@ -9,15 +9,8 @@
         <file description="Session File">bfs_tg.rst</file>
     </files>
     <metrics>
-        <metric type="L2" id="1">
-            <value variable="u" tolerance="1e-12">0.0187703</value>
-            <value variable="v" tolerance="1e-12">0.019542</value>
-            <value variable="p" tolerance="1e-12">0.0292666</value>
-        </metric>
-        <metric type="Linf" id="2">
-            <value variable="u" tolerance="1e-12">0.0434972</value>
-            <value variable="v" tolerance="1e-12">0.0468062</value>
-            <value variable="p" tolerance="1e-12">0.0247981</value>
+        <metric type="Eigenvalue" id="0">
+            <value tolerance="0.001">1.1398,0</value>
         </metric>
     </metrics>
 </test>

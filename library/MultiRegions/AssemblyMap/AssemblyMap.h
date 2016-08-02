@@ -252,7 +252,7 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT int GetNumNonDirFaces() const;
 
-            MULTI_REGIONS_EXPORT void PrintStats(std::ostream &out, std::string variable) const;
+            MULTI_REGIONS_EXPORT void PrintStats(std::ostream &out, std::string variable, bool printHeader = true) const;
 
             MULTI_REGIONS_EXPORT const Array<OneD, const int>& 
                 GetExtraDirEdges();
@@ -290,6 +290,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT GlobalSysSolnType GetGlobalSysSolnType() const;
             MULTI_REGIONS_EXPORT PreconditionerType GetPreconType() const;
             MULTI_REGIONS_EXPORT NekDouble GetIterativeTolerance() const;
+            MULTI_REGIONS_EXPORT int GetMaxIterations() const;
             MULTI_REGIONS_EXPORT int GetSuccessiveRHS() const;
 
             MULTI_REGIONS_EXPORT int GetLowestStaticCondLevel() const
@@ -365,6 +366,9 @@ namespace Nektar
 
             /// Type type of preconditioner to use in iterative solver.
             PreconditionerType m_preconType;
+
+            /// Maximum iterations for iterative solver
+            int m_maxIterations;
 
             /// Tolerance for iterative solver
             NekDouble  m_iterativeTolerance;

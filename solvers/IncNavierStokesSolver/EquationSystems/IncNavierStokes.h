@@ -145,12 +145,8 @@ namespace Nektar
         /// modal energy file
         std::ofstream m_mdlFile;
 
-        /// bool to identify if using a substepping scheme
-        bool m_subSteppingScheme;
         /// bool to identify if advection term smoothing is requested
         bool m_SmoothAdvection;
-
-        LibUtilities::TimeIntegrationWrapperSharedPtr m_subStepIntegrationScheme;
 
         /// Forcing terms
         std::vector<SolverUtils::ForcingSharedPtr>               m_forcing;
@@ -198,8 +194,7 @@ namespace Nektar
         }
 
         void EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-									Array<OneD, Array<OneD, NekDouble> > &outarray,
-									Array<OneD, NekDouble> &wk = NullNekDouble1DArray);
+									Array<OneD, Array<OneD, NekDouble> > &outarray);
 
         void WriteModalEnergy(void);
 
@@ -209,18 +204,21 @@ namespace Nektar
         /// Set Radiation forcing term
         void SetRadiationBoundaryForcing(int fieldid);
 
+        /// Set Normal Velocity Component to Zero
+        void SetZeroNormalVelocity();
+
     	/// Set Womersley Profile If specified
     	void SetWomersleyBoundary(int fieldid,int bndid);
 
         /// evaluate steady state
         bool CalcSteadyState(void);
 
-	    /// Evaluate Bessels for Wom
+	/// Evaluate Bessels for Wom
     	std::complex<NekDouble> CompBessel(int n, std::complex<NekDouble> y);
 
-	    /// Real and imaginary velocity comp. of wom
-	    Array<OneD, NekDouble> wom_vel_r;
-	    Array<OneD, NekDouble> wom_vel_i;
+	/// Real and imaginary velocity comp. of wom
+	Array<OneD, NekDouble> wom_vel_r;
+	Array<OneD, NekDouble> wom_vel_i;
 		
     	/// Wom constants
     	NekDouble R,M,n0,n1,n2,x0,y0,z0;

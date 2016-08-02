@@ -37,6 +37,8 @@
 #include <MultiRegions/GlobalLinSysIterativeFull.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions

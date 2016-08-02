@@ -41,6 +41,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <CompressibleFlowSolver/EquationSystems/EulerCFE.h>
 
+using namespace std;
+
 namespace Nektar
 {
     string EulerCFE::className = 
@@ -221,7 +223,16 @@ namespace Nektar
     {
         std::string varName;
         int cnt        = 0;
-        
+        int nvariables = inarray.num_elements();
+        int nTracePts  = GetTraceTotPoints();
+
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+        for (int i = 0; i < nvariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+            m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
+        }
+
         std::string userDefStr;
         int nreg = m_fields[0]->GetBndConditions().num_elements();
         // Loop over Boundary Regions
@@ -238,16 +249,16 @@ namespace Nektar
                 else if(boost::iequals(userDefStr, "IsentropicVortex"))
                 {
                     // Isentropic Vortex Boundary Condition
-                    SetBoundaryIsentropicVortex(n, time, cnt, inarray);
+                    SetBoundaryIsentropicVortex(n, time, cnt, Fwd, inarray);
                 }
                 else if (boost::iequals(userDefStr,"RinglebFlow"))
                 {
-                    SetBoundaryRinglebFlow(n, time, cnt, inarray);
+                    SetBoundaryRinglebFlow(n, time, cnt, Fwd, inarray);
                 }
                 else
                 {
                     // set up userdefined BC common to all solvers
-                    SetCommonBC(userDefStr,n,time, cnt,inarray);
+                    SetCommonBC(userDefStr, n, time, cnt, Fwd, inarray);
                 }
             }
 
@@ -388,21 +399,13 @@ namespace Nektar
     void EulerCFE::SetBoundaryIsentropicVortex(
         int                                   bcRegion, 
         NekDouble                             time, 
-        int                                   cnt, 
+        int                                   cnt,
+        Array<OneD, Array<OneD, NekDouble> > &Fwd,
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     {
         int nvariables      = physarray.num_elements();
-        int nTraceNumPoints = GetTraceTotPoints();
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
         const Array<OneD, const int> &bndTraceMap = m_fields[0]->GetTraceBndMap();
-        
-        // Get physical values of the forward trace (from exp to phys)
-        for (int i = 0; i < nvariables; ++i)
-        {
-            Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-        }
-        
+
         int id2, e_max;
         e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
         
@@ -834,11 +837,10 @@ namespace Nektar
         int                                      bcRegion, 
         NekDouble                                time, 
         int                                      cnt, 
+        Array<OneD, Array<OneD, NekDouble> >    &Fwd,
         Array<OneD, Array<OneD, NekDouble> >    &physarray)
     {
         int nvariables      = physarray.num_elements();
-        int nTraceNumPoints = GetTraceTotPoints();
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
         
         // For 3DHomogenoeus1D
         int n_planes = 1;
@@ -847,14 +849,6 @@ namespace Nektar
             int nPointsTot = m_fields[0]->GetTotPoints();
             int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
             n_planes = nPointsTot/nPointsTot_plane;
-            nTraceNumPoints = nTraceNumPoints * n_planes;
-        }
-        
-        // Get physical values of the forward trace (from exp to phys)
-        for (int i = 0; i < nvariables; ++i)
-        {
-            Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
         
         int id2, id2_plane, e_max;

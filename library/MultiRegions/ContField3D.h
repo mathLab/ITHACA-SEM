@@ -86,14 +86,6 @@ namespace Nektar
                     Array<OneD, NekDouble> &inout,
                     Array<OneD, NekDouble> &outarray);
 
-            inline void GlobalToLocal(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,NekDouble> &outarray);
-
-            inline void LocalToGlobal(
-                          const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,NekDouble> &outarray);
-
             inline void Assemble();
 
             inline void Assemble(
@@ -163,7 +155,17 @@ namespace Nektar
             virtual void v_LocalToGlobal(void);
 
 
+            virtual void v_LocalToGlobal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray);
+
+
             virtual void v_GlobalToLocal(void);
+
+
+            virtual void v_GlobalToLocal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray);
 
 
             virtual void v_MultiplyByInvMassMatrix(
@@ -184,7 +186,8 @@ namespace Nektar
                     const Array<OneD,const NekDouble> &inarray,
                     Array<OneD,      NekDouble> &outarray,
                     CoeffState coeffstate);
-
+            
+            virtual void v_ClearGlobalLinSysManager(void);
 
         };
         typedef boost::shared_ptr<ContField3D>      ContField3DSharedPtr;
@@ -193,23 +196,6 @@ namespace Nektar
                 &ContField3D::GetBndCondExp()
         {
             return m_bndCondExpansions;
-        }
-
-
-
-        inline void ContField3D::GlobalToLocal(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray)
-        {
-            m_locToGloMap->GlobalToLocal(inarray, outarray);
-        }
-
-
-        inline void ContField3D::LocalToGlobal(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray)
-        {
-            m_locToGloMap->LocalToGlobal(inarray, outarray);
         }
 
         inline void ContField3D::Assemble()
@@ -229,6 +215,7 @@ namespace Nektar
         {
             return  m_locToGloMap;
         }
+
 
     } //end of namespace
 } //end of namespace

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+    <GEOMETRY DIM="1" SPACE="1">
+
+        <VERTEX>
+            <V ID="0">  0.00    0.0    0.0 </V>
+            <V ID="1">  0.20    0.0    0.0 </V>
+            <V ID="2">  0.50    0.0    0.0 </V>
+            <V ID="3">  0.80    0.0    0.0 </V>
+            <V ID="4">  1.00    0.0    0.0 </V>
+        </VERTEX>
+
+        <ELEMENT>
+            <S ID="0"> 0 1 </S>
+            <S ID="1"> 1 2 </S>
+            <S ID="2"> 2 3 </S>
+            <S ID="3"> 3 4 </S>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> S[0-3]</C>
+            <C ID="1"> V[0]</C>
+            <C ID="2"> V[4]</C>
+        </COMPOSITE>
+
+        <DOMAIN> C[0] </DOMAIN>
+
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="3" FIELDS="u,v,w,p" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <SOLVERINFO>
+          <I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>
+          <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
+          <I PROPERTY="AdvectionForm" VALUE="Convective"/>
+          <I PROPERTY="Projection" VALUE="Galerkin"/>
+          <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1"/>
+          <I PROPERTY="HOMOGENEOUS" VALUE="2D"/>
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> TimeStep      = 0.1       </P>
+            <P> NumSteps      = 100         </P>
+            <P> IO_CheckSteps = NumSteps         </P>
+            <P> IO_InfoSteps  = NumSteps          </P>
+            <P> Kinvis        = 1         </P>
+            <P> HomModesY = 4               </P>
+            <P> LY        = 0.5             </P>
+            <P> HomModesZ = 4               </P>
+            <P> LZ        = 0.5             </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V> 
+            <V ID="1"> v </V>
+            <V ID="2"> w </V>  
+            <V ID="3"> p </V> 
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+              <D VAR="u" VALUE="0" />
+              <D VAR="v" VALUE="0" />
+              <D VAR="w" VALUE="0" />
+              <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>            
+            </REGION>
+            <REGION REF="1">
+               <D VAR="u" VALUE="0" />
+               <D VAR="v" VALUE="1" />
+               <D VAR="w" VALUE="0.5" />
+               <D VAR="p" VALUE="0"/>
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="w" VALUE="0" />
+            <E VAR="p" VALUE="0" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="x" />
+            <E VAR="w" VALUE="0.5*x" />
+            <E VAR="p" VALUE="0" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+</NEKTAR>

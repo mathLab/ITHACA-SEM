@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Lax-Friedrichs Riemann solver.
+// Description: LaxFriedrichs Riemann solver.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -39,7 +39,8 @@ namespace Nektar
 {
     std::string LaxFriedrichsSolver::solverName =
         SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
-            "LaxFriedrichs", LaxFriedrichsSolver::create,
+            "LaxFriedrichs",
+			LaxFriedrichsSolver::create,
             "Lax-Friedrichs Riemann solver");
 
     LaxFriedrichsSolver::LaxFriedrichsSolver() : CompressibleSolver()
@@ -67,9 +68,9 @@ namespace Nektar
      * @param Ef        Computed Riemann flux for energy.
      */
     void LaxFriedrichsSolver::v_PointSolve(
-        NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL,
-        NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER,
-        NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef)
+        double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
+        double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
+        double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
     {
         static NekDouble gamma = m_params["gamma"]();
         
@@ -80,137 +81,38 @@ namespace Nektar
         NekDouble uR = rhouR / rhoR;
         NekDouble vR = rhovR / rhoR;
         NekDouble wR = rhowR / rhoR;
-        
+
         // Left and right pressures
         NekDouble pL = (gamma - 1.0) *
-        (EL - 0.5 * (rhouL*uL + rhovL*vL + rhowL*wL));
-        
+            (EL - 0.5 * (rhouL * uL + rhovL * vL + rhowL * wL));
         NekDouble pR = (gamma - 1.0) *
-        (ER - 0.5 * (rhouR*uR + rhovR*vR + rhowR*wR));
+            (ER - 0.5 * (rhouR * uR + rhovR * vR + rhowR * wR));
         
-        // Left and right speeds of sound
-        NekDouble cL = sqrt(gamma * pL / rhoL);
-        NekDouble cR = sqrt(gamma * pR / rhoR);
-        
-        // Left and right entalpies
+        // Left and right enthalpy
         NekDouble hL = (EL + pL) / rhoL;
         NekDouble hR = (ER + pR) / rhoR;
-        
-        // Square root of rhoL and rhoR.
+
+        // Square root of rhoL and rhoR
         NekDouble srL  = sqrt(rhoL);
         NekDouble srR  = sqrt(rhoR);
         NekDouble srLR = srL + srR;
         
-        // Velocity Roe averages
-        NekDouble uRoe   = (srL * uL + srR * uR) / srLR;
-        NekDouble vRoe   = (srL * vL + srR * vR) / srLR;
-        NekDouble wRoe   = (srL * wL + srR * wR) / srLR;
-        NekDouble hRoe   = (srL * hL + srR * hR) / srLR;
-        NekDouble cRoe   = sqrt((gamma - 1.0)*(hRoe - 0.5 *
-                                               (uRoe * uRoe + vRoe * vRoe + wRoe * wRoe)));
+        // Roe average state
+        NekDouble uRoe = (srL * uL + srR * uR) / srLR;
+        NekDouble vRoe = (srL * vL + srR * vR) / srLR;
+        NekDouble wRoe = (srL * wL + srR * wR) / srLR;
+        NekDouble hRoe = (srL * hL + srR * hR) / srLR;
+        NekDouble URoe = (uRoe * uRoe + vRoe * vRoe + wRoe * wRoe);
+        NekDouble cRoe = sqrt((gamma - 1.0)*(hRoe - 0.5 * URoe));
         
-        // Minimum and maximum wave speeds
-        NekDouble S    = std::max(uRoe+cRoe, std::max(uR+cR, -uL+cL));
-        NekDouble sign = 1.0;
-        
-        if(S == -uL+cL)
-        {
-            sign = -1.0;
-        }
-        
-        // Lax-Friedrichs Riemann rho flux
-        rhof  = 0.5 * ((rhouL + rhouR) - sign * S * (rhoR -rhoL));
-        
-        // Lax-Friedrichs Riemann rhou flux
-        rhouf = 0.5 * ((rhoL * uL * uL + pL + rhoR * uR * uR + pR) -
-                       sign * S * (rhouR - rhouL));
-        
-        // Lax-Friedrichs Riemann rhov flux
-        rhovf = 0.5 * ((rhoL * uL * vL + rhoR * uR * vR) -
-                       sign * S * (rhovR - rhovL));
-        
-        // Lax-Friedrichs Riemann rhow flux
-        rhowf = 0.5 * ((rhoL * uL * wL + rhoR * uR * wR) -
-                       sign * S * (rhowR - rhowL));
-        
-        // Lax-Friedrichs Riemann E flux
-        Ef    = 0.5 * ((uL * (EL + pL) + uR * (ER + pR)) -
-                       sign * S * (ER - EL));
+		// Maximum eigenvalue
+		URoe = fabs(uRoe) + cRoe;
+		
+		// Lax-Friedrichs flux formula
+        rhof  = 0.5*(rhouL + rhouR - URoe*(rhoR - rhoL));
+        rhouf = 0.5*(pL + rhouL*uL + pR + rhouR*uR - URoe*(rhouR - rhouL));
+        rhovf = 0.5*(rhouL*vL + rhouR*vR - URoe*(rhovR - rhovL));
+        rhowf = 0.5*(rhouL*wL + rhouR*wR - URoe*(rhowR - rhowL));
+        Ef    = 0.5*(uL*(EL + pL) + uR*(ER + pR) - URoe*(ER - EL));
     }
-    
-    void LaxFriedrichsSolver::v_PointSolveVisc(
-        NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL, NekDouble  EpsL,
-        NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER, NekDouble  EpsR,
-        NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef, NekDouble &Epsf)
-    {
-        static NekDouble gamma = m_params["gamma"]();
-        
-        // Left and right velocities
-        NekDouble uL = rhouL / rhoL;
-        NekDouble vL = rhovL / rhoL;
-        NekDouble wL = rhowL / rhoL;
-        NekDouble uR = rhouR / rhoR;
-        NekDouble vR = rhovR / rhoR;
-        NekDouble wR = rhowR / rhoR;
-        
-        // Left and right pressures
-        NekDouble pL = (gamma - 1.0) *
-        (EL - 0.5 * (rhouL*uL + rhovL*vL + rhowL*wL));
-        
-        NekDouble pR = (gamma - 1.0) *
-        (ER - 0.5 * (rhouR*uR + rhovR*vR + rhowR*wR));
-        
-        // Left and right speeds of sound
-        NekDouble cL = sqrt(gamma * pL / rhoL);
-        NekDouble cR = sqrt(gamma * pR / rhoR);
-        
-        // Left and right entalpies
-        NekDouble hL = (EL + pL) / rhoL;
-        NekDouble hR = (ER + pR) / rhoR;
-        
-        // Square root of rhoL and rhoR.
-        NekDouble srL  = sqrt(rhoL);
-        NekDouble srR  = sqrt(rhoR);
-        NekDouble srLR = srL + srR;
-        
-        // Velocity Roe averages
-        NekDouble uRoe   = (srL * uL + srR * uR) / srLR;
-        NekDouble vRoe   = (srL * vL + srR * vR) / srLR;
-        NekDouble wRoe   = (srL * wL + srR * wR) / srLR;
-        NekDouble hRoe   = (srL * hL + srR * hR) / srLR;
-        NekDouble cRoe   = sqrt((gamma - 1.0)*(hRoe - 0.5 *
-                            (uRoe * uRoe + vRoe * vRoe + wRoe * wRoe)));
-        
-        // Minimum and maximum wave speeds
-        NekDouble S    = std::max(uRoe+cRoe, std::max(uR+cR, -uL+cL));
-        NekDouble sign = 1.0;
-        
-        if(S == -uL+cL)
-        {
-            sign = -1.0;
-        }
-        
-        // Lax-Friedrichs Riemann rho flux
-        rhof  = 0.5 * ((rhouL + rhouR) - sign * S * (rhoR -rhoL));
-        
-        // Lax-Friedrichs Riemann rhou flux
-        rhouf = 0.5 * ((rhoL * uL * uL + pL + rhoR * uR * uR + pR) -
-                       sign * S * (rhouR - rhouL));
-        
-        // Lax-Friedrichs Riemann rhov flux
-        rhovf = 0.5 * ((rhoL * uL * vL + rhoR * uR * vR) -
-                       sign * S * (rhovR - rhovL));
-        
-        // Lax-Friedrichs Riemann rhow flux
-        rhowf = 0.5 * ((rhoL * uL * wL + rhoR * uR * wR) -
-                       sign * S * (rhowR - rhowL));
-        
-        // Lax-Friedrichs Riemann E flux
-        Ef    = 0.5 * ((uL * (EL + pL) + uR * (ER + pR)) -
-                       sign * S * (ER - EL));
-        
-        Epsf  = 0.5 * ((EpsL + EpsR) -
-                       sign * S * (EpsR - EpsL));
-    }
-    
 }

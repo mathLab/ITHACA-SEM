@@ -41,68 +41,68 @@
 
 namespace Nektar
 {
-    class FilterElectrogram : public SolverUtils::Filter
-    {
-    public:
-        friend class MemoryManager<FilterElectrogram>;
 
-        /// Creates an instance of this class
-        static SolverUtils::FilterSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string>   &pParams) {
-            SolverUtils::FilterSharedPtr p = 
-                MemoryManager<FilterElectrogram>::AllocateSharedPtr(
-                        pSession, pParams);
-            return p;
-        }
+class FilterElectrogram : public SolverUtils::Filter
+{
+public:
+    friend class MemoryManager<FilterElectrogram>;
 
-        /// Name of the class
-        static std::string className;
+    /// Creates an instance of this class
+    static SolverUtils::FilterSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const ParamMap                             &pParams) {
+        SolverUtils::FilterSharedPtr p = MemoryManager<FilterElectrogram>
+                                        ::AllocateSharedPtr(pSession, pParams);
+        return p;
+    }
 
-        /// Electrogram filter constructor
-        FilterElectrogram(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string>   &pParams);
+    /// Name of the class
+    static std::string className;
 
-        /// Electrogram filter destructor
-        virtual ~FilterElectrogram();
+    /// Electrogram filter constructor
+    FilterElectrogram(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const ParamMap                             &pParams);
 
-    protected:
-        /// Initialises the electrogram filter and open output file.
-        virtual void v_Initialise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
-        /// Compute extracellular potential at egm points at current time.
-        virtual void v_Update(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
-            const NekDouble &time);
-        /// Finalise the electrogram filter and close output file.
-        virtual void v_Finalise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
-            const NekDouble &time);
-        /// Filter is time-dependent and should be called at each time-step.
-        virtual bool v_IsTimeDependent();
+    /// Electrogram filter destructor
+    virtual ~FilterElectrogram();
 
-    private:
-        /// Gradient of the radius from each electrogram point in x-direction
-        Array<OneD, Array<OneD, NekDouble> >    m_grad_R_x;
-        /// Gradient of the radius from each electrogram point in y-direction
-        Array<OneD, Array<OneD, NekDouble> >    m_grad_R_y;
-        /// Gradient of the radius from each electrogram point in z-direction
-        Array<OneD, Array<OneD, NekDouble> >    m_grad_R_z;
-        /// List of electrogram points
-        SpatialDomains::PointGeomVector         m_electrogramPoints;
-        /// Counts number of calls to update (number of timesteps)
-        unsigned int                            m_index;
-        /// Number of timesteps between outputs
-        unsigned int                            m_outputFrequency;
-        /// Filename to output electrogram data to
-        std::string                             m_outputFile;
-        /// Output file stream for electrogram data
-        std::ofstream                           m_outputStream;
-        /// Point coordinate input string
-        std::stringstream                       m_electrogramStream;
-    };
+protected:
+    /// Initialises the electrogram filter and open output file.
+    virtual void v_Initialise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
+    /// Compute extracellular potential at egm points at current time.
+    virtual void v_Update(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
+    /// Finalise the electrogram filter and close output file.
+    virtual void v_Finalise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
+    /// Filter is time-dependent and should be called at each time-step.
+    virtual bool v_IsTimeDependent();
+
+private:
+    /// Gradient of the radius from each electrogram point in x-direction
+    Array<OneD, Array<OneD, NekDouble> >    m_grad_R_x;
+    /// Gradient of the radius from each electrogram point in y-direction
+    Array<OneD, Array<OneD, NekDouble> >    m_grad_R_y;
+    /// Gradient of the radius from each electrogram point in z-direction
+    Array<OneD, Array<OneD, NekDouble> >    m_grad_R_z;
+    /// List of electrogram points
+    SpatialDomains::PointGeomVector         m_electrogramPoints;
+    /// Counts number of calls to update (number of timesteps)
+    unsigned int                            m_index;
+    /// Number of timesteps between outputs
+    unsigned int                            m_outputFrequency;
+    /// Filename to output electrogram data to
+    std::string                             m_outputFile;
+    /// Output file stream for electrogram data
+    std::ofstream                           m_outputStream;
+    /// Point coordinate input string
+    std::stringstream                       m_electrogramStream;
+};
 }
 
 #endif

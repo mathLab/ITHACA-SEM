@@ -8,9 +8,9 @@
 
 #If the user has not set BOOST_ROOT, look in a couple common places first.
 MESSAGE(STATUS "Searching for Boost:")
-SET(MIN_VER "1.52.0")
+SET(MIN_VER "1.56.0")
 SET(NEEDED_BOOST_LIBS thread iostreams date_time filesystem system
-    program_options regex timer)
+    program_options regex timer chrono)
 SET(Boost_DEBUG 0)
 SET(Boost_NO_BOOST_CMAKE ON)
 IF( BOOST_ROOT )
@@ -67,7 +67,7 @@ IF (THIRDPARTY_BUILD_BOOST)
     # Only build the libraries we need
     SET(BOOST_LIB_LIST --with-system --with-iostreams --with-filesystem
         --with-program_options --with-date_time --with-thread
-        --with-regex --with-timer)
+        --with-regex --with-timer --with-chrono)
 
     IF (NOT WIN32)
         # We need -fPIC for 64-bit builds
@@ -86,6 +86,8 @@ IF (THIRDPARTY_BUILD_BOOST)
             SET(TOOLSET msvc-11.0)
         ELSEIF (MSVC12)
             SET(TOOLSET msvc-12.0)
+        ELSEIF (MSVC14)
+            SET(TOOLSET msvc-14.0)
         ENDIF()
     ELSE(APPLE)
         SET(TOOLSET gcc)
@@ -160,6 +162,9 @@ IF (THIRDPARTY_BUILD_BOOST)
     ENDIF(THIRDPARTY_BUILD_ZLIB)
 
     # Set up CMake variables
+    SET(Boost_CHRONO_LIBRARY boost_chrono)
+    SET(Boost_CHRONO_LIBRARY_DEBUG boost_chrono)
+    SET(Boost_CHRONO_LIBRARY_RELEASE boost_chrono)
     SET(Boost_DATE_TIME_LIBRARY boost_date_time)
     SET(Boost_DATE_TIME_LIBRARY_DEBUG boost_date_time)
     SET(Boost_DATE_TIME_LIBRARY_RELEASE boost_date_time)
@@ -189,7 +194,7 @@ IF (THIRDPARTY_BUILD_BOOST)
     SET(Boost_CONFIG_INCLUDE_DIR ${TPINC})
     SET(Boost_LIBRARY_DIRS ${TPSRC}/dist/lib)
     SET(Boost_CONFIG_LIBRARY_DIR ${TPLIB})
-    SET(Boost_LIBRARIES boost_date_time boost_filesystem boost_iostreams boost_program_options boost_regex boost_system boost_thread boost_timer)
+    SET(Boost_LIBRARIES boost_chrono boost_date_time boost_filesystem boost_iostreams boost_program_options boost_regex boost_system boost_thread boost_timer)
     LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
     STRING(REPLACE ";" ", " NEEDED_BOOST_LIBS_STRING "${NEEDED_BOOST_LIBS}")

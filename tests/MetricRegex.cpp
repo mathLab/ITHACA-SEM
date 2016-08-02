@@ -47,9 +47,13 @@ namespace Nektar
     /**
      * @brief Constructor.
      */
-    MetricRegex::MetricRegex(TiXmlElement *metric, bool generate) : 
+    MetricRegex::MetricRegex(TiXmlElement *metric, bool generate) :
         Metric(metric, generate)
     {
+        // Default behaviour is that the regexes listed in the input file must
+        // be matched in order.
+        m_unordered = false;
+
         // If we are a derived class, do nothing
         if (m_type != "REGEX")
         {
@@ -67,7 +71,7 @@ namespace Nektar
         {
             return;
         }
-        
+
         TiXmlElement *matches = metric->FirstChildElement("matches");
         ASSERTL0(matches, "No matches defined.");
         TiXmlElement *match = matches->FirstChildElement("match");
@@ -118,12 +122,15 @@ namespace Nektar
         std::vector<MetricRegexFieldValue> &okValues = m_matches[0];
         int                                 nMatch   = m_matches.size();
         bool                                success  = true;
+        bool                                matchedTol = false;
         boost::cmatch                       matches;
 
         // Process output file line by line searching for regex matches
         std::string line;
         while (getline(pStdout, line) && m_matches.size() > 0)
         {
+            matchedTol = true;
+
             // Test to see if we have a match on this line.
             if (boost::regex_match(line.c_str(), matches, m_regex))
             {
@@ -134,11 +141,12 @@ namespace Nektar
                     return false;
                 }
 
-                // Check each field in turn
+                // Check each regex capture group in turn
                 for (int i = 1; i < matches.size(); ++i)
                 {
+                    // extract the captured string
                     std::string match(matches[i].first, matches[i].second);
-                    
+
                     if (okValues[i-1].m_useTolerance)
                     {
                         double val;
@@ -162,12 +170,19 @@ namespace Nektar
                         // test.
                         if (val > okValues[i-1].m_tolerance)
                         {
-                            cerr << "Failed tolerance match." << endl;
-                            cerr << "  Expected: " << okValues[i-1].m_value
-                                 << " +/- " << okValues[i-1].m_tolerance
-                                 << endl;
-                            cerr << "  Result:   " << match << endl;
-                            success = false;
+                            if (m_unordered)
+                            {
+                                matchedTol = false;
+                            }
+                            else
+                            {
+                                cerr << "Failed tolerance match." << endl;
+                                cerr << "  Expected: " << okValues[i-1].m_value
+                                     << " +/- " << okValues[i-1].m_tolerance
+                                     << endl;
+                                cerr << "  Result:   " << match << endl;
+                                success = false;
+                            }
                         }
                     }
                     else if (okValues[i-1].m_useIntTolerance)
@@ -192,12 +207,19 @@ namespace Nektar
                         // test.
                         if (val > okValues[i-1].m_intTolerance)
                         {
-                            cerr << "Failed tolerance match." << endl;
-                            cerr << "  Expected: " << okValues[i-1].m_value
-                                 << " +/- " << okValues[i-1].m_intTolerance
-                                 << endl;
-                            cerr << "  Result:   " << match << endl;
-                            success = false;
+                            if (m_unordered)
+                            {
+                                matchedTol = false;
+                            }
+                            else
+                            {
+                                cerr << "Failed tolerance match." << endl;
+                                cerr << "  Expected: " << okValues[i-1].m_value
+                                     << " +/- " << okValues[i-1].m_intTolerance
+                                     << endl;
+                                cerr << "  Result:   " << match << endl;
+                                success = false;
+                            }
                         }
                     }
                     else
@@ -205,17 +227,27 @@ namespace Nektar
                         // Case insensitive match.
                         if (!boost::iequals(match, okValues[i-1].m_value))
                         {
-                            cerr << "Failed case-insensitive match." << endl;
-                            cerr << "  Expected: " << okValues[i-1].m_value
-                                 << endl;
-                            cerr << "  Result:   " << match << endl;
-                            success = false;
+                            if (m_unordered)
+                            {
+                                matchedTol = false;
+                            }
+                            else
+                            {
+                                cerr << "Failed case-insensitive match." << endl;
+                                cerr << "  Expected: " << okValues[i-1].m_value
+                                     << endl;
+                                cerr << "  Result:   " << match << endl;
+                                success = false;
+                            }
                         }
                     }
                 }
 
                 // Remove this match from the list of matches.
-                m_matches.erase(m_matches.begin());
+                if (matchedTol)
+                {
+                    m_matches.erase(m_matches.begin());
+                }
             }
         }
 
@@ -245,7 +277,7 @@ namespace Nektar
             {
                 // Error if no fields in regex then throw an error.
                 ASSERTL0(matches.size() != 1, "No test sections in regex!");
-                
+
                 vector<MetricRegexFieldValue> okValues;
 
                 for (int i = 1; i < matches.size(); ++i)
@@ -253,11 +285,11 @@ namespace Nektar
                     // Create new field.
                     MetricRegexFieldValue okValue;
                     okValue.m_useTolerance = false;
-                    okValue.m_value        = std::string(matches[i].first, 
+                    okValue.m_value        = std::string(matches[i].first,
                                                          matches[i].second);
                     okValues.push_back(okValue);
                 }
-                
+
                 m_matches.push_back(okValues);
             }
         }
@@ -269,34 +301,34 @@ namespace Nektar
             TiXmlElement *matches = m_metric->FirstChildElement("matches");
             if (matches)
             {
-                ASSERTL0(m_metric->RemoveChild(matches), 
+                ASSERTL0(m_metric->RemoveChild(matches),
                          "Couldn't remove matches from metric!");
             }
 
             // Create new matches element.
             matches = new TiXmlElement("matches");
             m_metric->LinkEndChild(matches);
-            
+
             for (int i = 0; i < m_matches.size(); ++i)
             {
                 TiXmlElement *match = new TiXmlElement("match");
                 matches->LinkEndChild(match);
-                
+
                 for (int j = 0; j < m_matches[i].size(); ++j)
                 {
                     TiXmlElement *field = new TiXmlElement("field");
                     match->LinkEndChild(field);
-                    
+
                     field->SetAttribute(
                         "id", boost::lexical_cast<std::string>(j));
-                    
+
                     if (m_matches[i][j].m_useTolerance)
                     {
                         field->SetAttribute(
                             "tolerance", boost::lexical_cast<
                                 std::string>(m_matches[i][j].m_tolerance));
                     }
-                    
+
                     field->LinkEndChild(new TiXmlText(m_matches[i][j].m_value));
                 }
             }

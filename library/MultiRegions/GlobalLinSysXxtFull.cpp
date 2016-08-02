@@ -37,6 +37,8 @@
 #include <MultiRegions/GlobalLinSysXxtFull.h>
 #include <MultiRegions/ExpList.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -275,7 +277,10 @@ namespace Nektar
             // Set up XXT and output some stats
             LibUtilities::CommSharedPtr vComm = pLocToGloMap->GetComm();
             m_crsData = Xxt::Init(nLocal, vId, m_Ai, m_Aj, m_Ar, vComm);
-            Xxt::nektar_crs_stats(m_crsData);
+            if (m_verbose)
+            {
+                Xxt::nektar_crs_stats(m_crsData);
+            }
         }
     }
 }

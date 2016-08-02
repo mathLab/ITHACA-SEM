@@ -37,7 +37,6 @@
 #define NEKTAR_LIB_UTILITIES_COMMUNICATION_XXT_HPP
 
 #include <iostream>
-using namespace std;
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -46,10 +45,12 @@ using namespace std;
 #ifdef NEKTAR_USE_MPI
 #include <LibUtilities/Communication/CommMpi.h>
 #endif
-using namespace Nektar;
+
 
 namespace Xxt
 {
+    using namespace std;
+    using namespace Nektar;
 #ifdef NEKTAR_USE_MPI
     typedef MPI_Comm comm_ext;
     typedef MPI_Request comm_req;
@@ -169,7 +170,10 @@ namespace Xxt
         MPI_Comm_dup(vCommMpi->GetComm(), &vComm.c);
         vComm.id = vCommMpi->GetRank();
         vComm.np = vCommMpi->GetSize();
-        return nektar_crs_setup(pRank, &pId[0], nz, &pAi[0], &pAj[0], &pAr[0], 0, &vComm);
+        crs_data* result = nektar_crs_setup(pRank, &pId[0], nz, &pAi[0],
+                                            &pAj[0], &pAr[0], 0, &vComm);
+        MPI_Comm_free(&vComm.c);
+        return result;
 #else
         return 0;
 #endif
@@ -198,9 +202,11 @@ namespace Xxt
     static inline void Finalise (crs_data* pCrs)
     {
 #ifdef NEKTAR_USE_MPI
-        if (pCrs)
+        int finalized;
+        MPI_Finalized(&finalized);
+        if (pCrs && !finalized)
         {
-            //nektar_crs_free(pCrs);
+            nektar_crs_free(pCrs);
         }
 #endif
     }

@@ -160,10 +160,9 @@ namespace Polylib {
     LIB_UTILITIES_EXPORT void jacobd  (const int, const double *, double *,  const int , 
                   const double, const double);
 
-//    LIB_UTILITIES_EXPORT void BesselComp(const int, std::complex<Nektar::NekDouble> , std::complex<Nektar::NekDouble> );
-    LIB_UTILITIES_EXPORT std::complex<Nektar::NekDouble> ImagBesselComp(const int, std::complex<Nektar::NekDouble> );
+    LIB_UTILITIES_EXPORT std::complex<Nektar::NekDouble> ImagBesselComp(const int,
+                  std::complex<Nektar::NekDouble> );
 
-	
 
 } // end of namespace
 

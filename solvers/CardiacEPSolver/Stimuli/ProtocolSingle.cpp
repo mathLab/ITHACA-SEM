@@ -37,7 +37,7 @@
 #include <CardiacEPSolver/Stimuli/ProtocolSingle.h>
 
 namespace Nektar
-{   
+{
     std::string ProtocolSingle::className
             = GetProtocolFactory().RegisterCreatorFunction(
                             "ProtocolSingle",
@@ -54,7 +54,7 @@ namespace Nektar
      * Protocol.
      *
      */
-    
+
     /**
      * Protocol base class constructor.
      */
@@ -64,37 +64,34 @@ namespace Nektar
             : Protocol(pSession, pXml)
     {
         m_session = pSession;
-        
+
         if (!pXml)
         {
             return;
         }
-        
-        
+
         const TiXmlElement *pXmlparameter;
-        
+
         pXmlparameter = pXml->FirstChildElement("START");
-        m_start = atof(pXmlparameter->GetText()); 
-        
+        m_start = atof(pXmlparameter->GetText());
+
         pXmlparameter = pXml->FirstChildElement("DURATION");
         m_dur = atof(pXmlparameter->GetText());
     }
-    
-    
+
+
     /**
      * Initialise the protocol. Allocate workspace and variable storage.
      */
     void ProtocolSingle::Initialise()
     {
-
     }
 
-    
+
     /**
      *
      */
-    NekDouble ProtocolSingle::v_GetAmplitude(
-                          const NekDouble time)
+    NekDouble ProtocolSingle::v_GetAmplitude(const NekDouble time)
     {
         if(time > m_start && time < (m_start+m_dur))
         {
@@ -104,7 +101,6 @@ namespace Nektar
         {
             return 0.0;
         }
-        
     }
 
 
@@ -113,7 +109,6 @@ namespace Nektar
      */
     void ProtocolSingle::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-
     }
 
 
@@ -122,7 +117,6 @@ namespace Nektar
      */
     void ProtocolSingle::v_SetInitialConditions()
     {
-
     }
 
 }

@@ -32,10 +32,12 @@
 //  Description:
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_SPATIALDOMAINS_CURVE_H
 #define NEKTAR_SPATIALDOMAINS_CURVE_H
 
 #include <SpatialDomains/PointGeom.h>
+#include <boost/unordered_map.hpp>
 
 namespace Nektar
 {
@@ -43,17 +45,23 @@ namespace Nektar
     {
         struct Curve
         {
-            Curve(int curveID, LibUtilities::PointsType type):
-                m_curveID(curveID),m_ptype(type){};
+            Curve(int curveID, LibUtilities::PointsType type)
+                : m_curveID(curveID),
+                  m_ptype  (type)
+            {
+            }
 
-            int          m_curveID; // ID or edge or face which is curved
-            LibUtilities::PointsType   m_ptype;
+            /// ID of the edge or face that is curved
+            int                             m_curveID;
+            /// Points distribution of this curve.
+            LibUtilities::PointsType        m_ptype;
+            /// Points along the curve.
             std::vector<PointGeomSharedPtr> m_points;
         };
 
         typedef boost::shared_ptr<Curve> CurveSharedPtr;
-        typedef std::vector<CurveSharedPtr> CurveVector;
-        typedef boost::shared_ptr<CurveVector> CurveVectorSharedPtr;
+        typedef boost::unordered_map<int, CurveSharedPtr> CurveMap;
     }
 }
+
 #endif

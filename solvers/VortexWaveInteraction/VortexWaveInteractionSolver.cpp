@@ -35,6 +35,7 @@
 
 #include<VortexWaveInteraction/VortexWaveInteraction.h>
 
+using namespace std;
 using namespace Nektar;
 
 #if defined(_MSC_VER) && BOOST_VERSION > 104700

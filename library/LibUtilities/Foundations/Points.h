@@ -376,6 +376,7 @@ namespace Nektar
                     m_derivmatrix[i] = MemoryManager<NekMatrix<DataType> >::AllocateSharedPtr(totNumPoints,totNumPoints);
                 }
             }
+
             Points(const PointsKey &key):m_pointsKey(key)
             {
             }

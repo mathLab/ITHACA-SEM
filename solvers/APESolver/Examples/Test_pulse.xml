@@ -318,7 +318,7 @@
       <I PROPERTY="EQType" VALUE="APE"/>  <!-- Acoustic perturbation equations -->
       <I PROPERTY="Projection" VALUE="DisContinuous"/>
       <I PROPERTY="TimeIntegrationMethod"  VALUE="ClassicalRungeKutta4"/>
-      <I PROPERTY="UpwindType"  VALUE="Upwind"/> <!-- Ignored for Continuous Galerkin projection -->
+      <I PROPERTY="UpwindType"  VALUE="APEUpwind"/> <!-- Ignored for Continuous Galerkin projection -->
     </SOLVERINFO> 
 
 
@@ -353,9 +353,10 @@
     </BOUNDARYCONDITIONS>
     
    <FUNCTION NAME="Baseflow"> <!-- Incompressible base flow -->
-     	<E VAR="U0" VALUE="0" />
-    	<E VAR="V0" VALUE="0" />
-     	<E VAR="P0" VALUE="Pinfinity" />
+     	<E VAR="u0" VALUE="0" />
+    	<E VAR="v0" VALUE="0" />
+     	<E VAR="p0" VALUE="Pinfinity" />
+      <E VAR="rho0" VALUE="Rho0" />
    </FUNCTION>
    
    <FUNCTION NAME="Source"> <!-- Incompressible base flow -->

@@ -60,39 +60,13 @@ namespace Nektar
             MULTI_REGIONS_EXPORT AssemblyMapDG( 
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                const ExpList0DSharedPtr &trace,
+                const ExpListSharedPtr &trace,
                 const ExpList &locExp,
                 const Array<OneD, const MultiRegions::ExpListSharedPtr>
                                                                 &bndConstraint,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond,
-                const PeriodicMap &periodicVerts,
-                const std::string variable = "DefaultVar");
-
-            /// Constructor for trace map for two-dimensional expansion.
-            MULTI_REGIONS_EXPORT AssemblyMapDG(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                const ExpList1DSharedPtr &trace,
-                const ExpList &locExp,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>
-                                                                &bndContraint,
-                const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndCond,
-                const PeriodicMap &periodicEdges,
-                const std::string variable = "DefaultVar");
-
-            /// Constructor for trace map for three-dimensional expansion.
-            MULTI_REGIONS_EXPORT AssemblyMapDG(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                const ExpList2DSharedPtr &trace,
-                const ExpList &locExp,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>
-                                                                &bndConstraint,
-                const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndCond,
-                const PeriodicMap &periodicFaces,
+                const PeriodicMap &periodicTrace,
                 const std::string variable = "DefaultVar");
 
             /// Destructor.
@@ -102,11 +76,11 @@ namespace Nektar
             /// boundary conditions are imposed.
             MULTI_REGIONS_EXPORT int GetNumDirichletBndPhys();
 
-            MULTI_REGIONS_EXPORT Array<OneD, StdRegions::StdExpansionSharedPtr>
+            MULTI_REGIONS_EXPORT Array<OneD, LocalRegions::ExpansionSharedPtr>
                 &GetElmtToTrace(const int i);
 
             MULTI_REGIONS_EXPORT 
-                Array<OneD,Array<OneD,StdRegions::StdExpansionSharedPtr> >
+                Array<OneD,Array<OneD,LocalRegions::ExpansionSharedPtr> >
                 &GetElmtToTrace();
 
             MULTI_REGIONS_EXPORT int GetTraceToUniversalMap(int i);
@@ -123,7 +97,7 @@ namespace Nektar
             int m_numDirichletBndPhys;
 
             /// list of edge expansions for a given element
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> > m_elmtToTrace;
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> > m_elmtToTrace;
             /// Integer map of process trace space quadrature points to
             /// universal space.
             Array<OneD,int> m_traceToUniversalMap;

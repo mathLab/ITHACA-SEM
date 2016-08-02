@@ -6,6 +6,7 @@
 #include <MultiRegions/ContField1D.h>
 #include <SpatialDomains/MeshGraph1D.h>
 
+using namespace std;
 using namespace Nektar;
 
 // compile using Builds/Demos/StdRegions -> make DEBUG=1 ProjectCont1D
@@ -25,7 +26,6 @@ int main(int argc, char *argv[])
     int     coordim;
     Array<OneD,NekDouble> sol;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
-    std::string meshfile(vSession->GetFilename());
 
     if(argc != 2)
     {

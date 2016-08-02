@@ -37,6 +37,8 @@
 #include <MultiRegions/GlobalLinSysIterativeFull.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -123,6 +125,10 @@ namespace Nektar
                           AssemblyMapDG>(pLocToGloMap)))
             {
                 vCG = false;
+            }
+            else
+            {
+                ASSERTL0(false, "Unknown map type");
             }
 
             bool dirForcCalculated = (bool) pDirForcing.num_elements();

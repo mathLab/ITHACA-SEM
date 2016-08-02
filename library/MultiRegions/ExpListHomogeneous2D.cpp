@@ -39,6 +39,8 @@
 #include <StdRegions/StdQuadExp.h>
 #include <LocalRegions/Expansion.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -56,11 +58,11 @@ namespace Nektar
 
         ExpListHomogeneous2D::ExpListHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                    const LibUtilities::BasisKey &HomoBasis_y,
-												   const LibUtilities::BasisKey &HomoBasis_z, 
-												   const NekDouble lhom_y,
-												   const NekDouble lhom_z,
-												   const bool useFFT,
-												   const bool dealiasing):
+                                                   const LibUtilities::BasisKey &HomoBasis_z, 
+                                                   const NekDouble lhom_y,
+                                                   const NekDouble lhom_z,
+                                                   const bool useFFT,
+                                                   const bool dealiasing):
             ExpList(pSession),
             m_useFFT(useFFT),
             m_lhom_y(lhom_y),
@@ -70,33 +72,33 @@ namespace Nektar
         {
             ASSERTL2(HomoBasis_y != LibUtilities::NullBasisKey,
                      "Homogeneous Basis in y direction is a null basis");
-			ASSERTL2(HomoBasis_z != LibUtilities::NullBasisKey,
+            ASSERTL2(HomoBasis_z != LibUtilities::NullBasisKey,
                      "Homogeneous Basis in z direction is a null basis");
            
-			m_homogeneousBasis_y = LibUtilities::BasisManager()[HomoBasis_y];
-			m_homogeneousBasis_z = LibUtilities::BasisManager()[HomoBasis_z];
-			
-			m_transposition = MemoryManager<LibUtilities::Transposition>::AllocateSharedPtr(HomoBasis_y,HomoBasis_z,m_comm->GetColumnComm());
-			
-			m_Ycomm = m_comm->GetColumnComm()->GetRowComm();
-			m_Zcomm = m_comm->GetColumnComm()->GetRowComm();
+            m_homogeneousBasis_y = LibUtilities::BasisManager()[HomoBasis_y];
+            m_homogeneousBasis_z = LibUtilities::BasisManager()[HomoBasis_z];
+            
+            m_transposition = MemoryManager<LibUtilities::Transposition>::AllocateSharedPtr(HomoBasis_y,HomoBasis_z,m_comm->GetColumnComm());
+            
+            m_Ycomm = m_comm->GetColumnComm()->GetRowComm();
+            m_Zcomm = m_comm->GetColumnComm()->GetRowComm();
 
             m_ny = m_homogeneousBasis_y->GetNumPoints()/m_Ycomm->GetSize();
-			m_nz = m_homogeneousBasis_z->GetNumPoints()/m_Zcomm->GetSize();
-			
+            m_nz = m_homogeneousBasis_z->GetNumPoints()/m_Zcomm->GetSize();
+            
             m_lines = Array<OneD,ExpListSharedPtr>(m_ny*m_nz);
 
-			if(m_useFFT)
-			{
-				m_FFT_y = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_ny);
-				m_FFT_z = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_nz);
-			}
-			
-			if(m_dealiasing)
-			{
-				ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,"Remove dealiasing if you want to run in parallel");
-				SetPaddingBase();
-			}
+            if(m_useFFT)
+            {
+                m_FFT_y = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_ny);
+                m_FFT_z = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_nz);
+            }
+            
+            if(m_dealiasing)
+            {
+                ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,"Remove dealiasing if you want to run in parallel");
+                SetPaddingBase();
+            }
         }
 
 
@@ -133,7 +135,7 @@ namespace Nektar
         ExpListHomogeneous2D::~ExpListHomogeneous2D()
         {
         }
-		
+        
         void ExpListHomogeneous2D::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                          Array<OneD, NekDouble> &outarray, 
                                                          CoeffState coeffstate,
@@ -143,7 +145,7 @@ namespace Nektar
             // Forwards trans
             Homogeneous2DTrans(inarray,outarray,true,coeffstate,Shuff,UnShuff);
         }
-	
+    
         void ExpListHomogeneous2D::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                          Array<OneD, NekDouble> &outarray, 
                                                          CoeffState coeffstate,
@@ -153,7 +155,7 @@ namespace Nektar
             // Backwards trans
             Homogeneous2DTrans(inarray,outarray,false,coeffstate,Shuff,UnShuff);
         }
-	
+    
         void ExpListHomogeneous2D::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1, 
                                                    const Array<OneD, NekDouble> &inarray2,
                                                    Array<OneD, NekDouble> &outarray, 
@@ -162,7 +164,7 @@ namespace Nektar
             int npoints = outarray.num_elements(); // number of total physical points
             int nlines  = m_lines.num_elements();  // number of lines == number of Fourier modes = number of Fourier coeff = number of points per slab
             int nslabs  = npoints/nlines;          // number of slabs = numebr of physical points per line
-            
+
             Array<OneD, NekDouble> V1(npoints);
             Array<OneD, NekDouble> V2(npoints);
             Array<OneD, NekDouble> V1V2(npoints);
@@ -175,15 +177,15 @@ namespace Nektar
                 V1 = inarray1;
                 V2 = inarray2;
             }
-            else 
+            else
             {
                 HomogeneousFwdTrans(inarray1,V1,coeffstate);
                 HomogeneousFwdTrans(inarray2,V2,coeffstate);
             }
-            
+
             m_transposition->Transpose(V1,ShufV1,false,LibUtilities::eXtoYZ);
             m_transposition->Transpose(V2,ShufV2,false,LibUtilities::eXtoYZ);
-			
+            
             Array<OneD, NekDouble> PadV1_slab_coeff(m_padsize_y*m_padsize_z,0.0);
             Array<OneD, NekDouble> PadV2_slab_coeff(m_padsize_y*m_padsize_z,0.0);
             Array<OneD, NekDouble> PadRe_slab_coeff(m_padsize_y*m_padsize_z,0.0);
@@ -197,7 +199,7 @@ namespace Nektar
             
             NekVector<NekDouble> PadIN_V2(m_padsize_y*m_padsize_z,PadV2_slab_coeff,eWrapper);
             NekVector<NekDouble> PadOUT_V2(m_padsize_y*m_padsize_z,PadV2_slab_phys,eWrapper);
-			
+            
             NekVector<NekDouble> PadIN_Re(m_padsize_y*m_padsize_z,PadRe_slab_phys,eWrapper);
             NekVector<NekDouble> PadOUT_Re(m_padsize_y*m_padsize_z,PadRe_slab_coeff,eWrapper);
             
@@ -211,19 +213,19 @@ namespace Nektar
                     Vmath::Vcopy(m_ny,&(ShufV1[i*m_ny + j*nlines]),1,&(PadV1_slab_coeff[i*2*m_ny]),1);
                     Vmath::Vcopy(m_ny,&(ShufV2[i*m_ny + j*nlines]),1,&(PadV2_slab_coeff[i*2*m_ny]),1);
                 }
-		
+        
                 //Moving to physical space using the padded system
                 PadOUT_V1 = (*MatBwdPAD)*PadIN_V1;
                 PadOUT_V2 = (*MatBwdPAD)*PadIN_V2;
-		
+        
                 //Perfroming the vectors multiplication in physical
                 //space on the padded system
                 Vmath::Vmul(m_padsize_y*m_padsize_z,PadV1_slab_phys,1,PadV2_slab_phys,1,PadRe_slab_phys,1);
-		
+        
                 //Moving back the result (V1*V2)_phys in Fourier
                 //space, padded system
                 PadOUT_Re = (*MatFwdPAD)*PadIN_Re;
-		
+        
                 //Copying the first half of the padded pencil in the
                 //full vector (Fourier space)
                 for (int i = 0; i < m_nz; i++) 
@@ -244,7 +246,32 @@ namespace Nektar
                 HomogeneousBwdTrans(V1V2,outarray,coeffstate);
             }
         }
-        
+
+        void ExpListHomogeneous2D::v_DealiasedDotProd(
+                        const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                        const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                        Array<OneD, Array<OneD, NekDouble> > &outarray,
+                        CoeffState coeffstate)
+        {
+            // TODO Proper implementation of this
+            int ndim = inarray1.num_elements();
+            ASSERTL1( inarray2.num_elements() % ndim == 0,
+                     "Wrong dimensions for DealiasedDotProd.");
+            int nvec = inarray2.num_elements() % ndim;
+            int npts = inarray1[0].num_elements();
+
+            Array<OneD, NekDouble> out(npts);
+            for (int i = 0; i < nvec; i++)
+            {
+                Vmath::Zero(npts, outarray[i], 1);
+                for (int j = 0; j < ndim; j++)
+                {
+                    DealiasedProd(inarray1[j], inarray2[i*ndim+j], out);
+                    Vmath::Vadd(npts, outarray[i], 1, out, 1, outarray[i], 1);
+                }
+            }
+        }
+
         void ExpListHomogeneous2D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, CoeffState coeffstate)
         {
             int cnt = 0, cnt1 = 0;
@@ -263,7 +290,7 @@ namespace Nektar
                 HomogeneousFwdTrans(outarray,outarray,coeffstate);
             }
         }
-	
+    
         void ExpListHomogeneous2D::v_FwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         {
             int cnt = 0, cnt1 = 0;
@@ -301,24 +328,24 @@ namespace Nektar
                 HomogeneousBwdTrans(outarray,outarray);
             }
         }
-	
+    
         void ExpListHomogeneous2D::v_BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         {
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray;
             int nlines = m_lines.num_elements();
-			
+            
             for(int n = 0; n < nlines; ++n)
             {
                 m_lines[n]->BwdTrans_IterPerExp(inarray+cnt, tmparray = outarray + cnt1);
 
-				cnt    += m_lines[n]->GetNcoeffs();
+                cnt    += m_lines[n]->GetNcoeffs();
                 cnt1   += m_lines[n]->GetTotPoints();
             }
-			if(!m_WaveSpace)
-			{
-				HomogeneousBwdTrans(outarray,outarray);
-			}
+            if(!m_WaveSpace)
+            {
+                HomogeneousBwdTrans(outarray,outarray);
+            }
         }
 
 
@@ -336,7 +363,7 @@ namespace Nektar
                 cnt1   += m_lines[n]->GetTotPoints();
             }
         }
-		
+        
         void ExpListHomogeneous2D::v_IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         {
             int cnt = 0, cnt1 = 0;
@@ -346,7 +373,7 @@ namespace Nektar
             for(int n = 0; n < nlines; ++n)
             {
                 m_lines[n]->IProductWRTBase_IterPerExp(inarray+cnt, tmparray = outarray + cnt1);
-		
+        
                 cnt    += m_lines[n]->GetNcoeffs();
                 cnt1   += m_lines[n]->GetTotPoints();
             }
@@ -365,10 +392,10 @@ namespace Nektar
                 int n  = m_lines.num_elements();   //number of Fourier points in the Fourier directions (x-z grid)
                 int s  = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per line
                 int p  = s/n;                      //number of points per line = n of Fourier transform required
-		
+        
                 Array<OneD, NekDouble> fft_in(s);
                 Array<OneD, NekDouble> fft_out(s);
-		
+        
                 m_transposition->Transpose(inarray,fft_in,false,LibUtilities::eXtoYZ);
                 
                 if(IsForwards)
@@ -386,7 +413,7 @@ namespace Nektar
                         m_FFT_y->FFTBwdTrans(m_tmpIN = fft_in + i*m_ny, m_tmpOUT = fft_out + i*m_ny);
                     }
                 }
-		
+        
                 m_transposition->Transpose(fft_out,fft_in,false,LibUtilities::eYZtoZY);
                 
                 if(IsForwards)
@@ -404,7 +431,7 @@ namespace Nektar
                         m_FFT_z->FFTBwdTrans(m_tmpIN = fft_in + i*m_nz, m_tmpOUT = fft_out + i*m_nz);
                     }
                 }
-		
+        
                 //TODO: required ZYtoX routine
                 m_transposition->Transpose(fft_out,fft_in,false,LibUtilities::eZYtoYZ);
                 
@@ -415,7 +442,7 @@ namespace Nektar
             {
                 DNekBlkMatSharedPtr blkmatY;
                 DNekBlkMatSharedPtr blkmatZ;
-		
+        
                 if(inarray.num_elements() == m_npoints) //transform phys space
                 {
                     if(IsForwards)
@@ -440,37 +467,37 @@ namespace Nektar
                     {
                         blkmatY = GetHomogeneous2DBlockMatrix(eBackwardsCoeffSpaceY1D,coeffstate);
                         blkmatZ = GetHomogeneous2DBlockMatrix(eBackwardsCoeffSpaceZ1D,coeffstate);
-					}
+                    }
                 }
-		
+        
                 int nrowsY = blkmatY->GetRows();
                 int ncolsY = blkmatY->GetColumns();
-		
+        
                 Array<OneD, NekDouble> sortedinarrayY(ncolsY);
                 Array<OneD, NekDouble> sortedoutarrayY(nrowsY);
-		
+        
                 int nrowsZ = blkmatZ->GetRows();
                 int ncolsZ = blkmatZ->GetColumns();
-		
+        
                 Array<OneD, NekDouble> sortedinarrayZ(ncolsZ);
                 Array<OneD, NekDouble> sortedoutarrayZ(nrowsZ);
-		
+        
                 NekVector<NekDouble> inY (ncolsY,sortedinarrayY,eWrapper);
                 NekVector<NekDouble> outY(nrowsY,sortedoutarrayY,eWrapper);
-		
+        
                 NekVector<NekDouble> inZ (ncolsZ,sortedinarrayZ,eWrapper);
                 NekVector<NekDouble> outZ(nrowsZ,sortedoutarrayZ,eWrapper);
-		
+        
                 m_transposition->Transpose(inarray,sortedinarrayY,!IsForwards,LibUtilities::eXtoYZ);
                 
                 outY = (*blkmatY)*inY;
-		
+        
                 m_transposition->Transpose(sortedoutarrayY,sortedinarrayZ,false,LibUtilities::eYZtoZY);
-				
+                
                 outZ = (*blkmatZ)*inZ;
-		
+        
                 m_transposition->Transpose(sortedoutarrayZ,sortedoutarrayY,false,LibUtilities::eZYtoYZ);
-		
+        
                 m_transposition->Transpose(sortedoutarrayY,outarray,false,LibUtilities::eYZtoX);
             }
         }
@@ -529,7 +556,7 @@ namespace Nektar
             {
                 n_exp = m_lines[0]->GetTotPoints(); // will operatore on m_phys
             }
-			
+            
             Array<OneD,unsigned int> nrows(n_exp);
             Array<OneD,unsigned int> ncols(n_exp);
             
@@ -557,7 +584,7 @@ namespace Nektar
                                                 StdSeg.DetShapeType(),
                                                 StdSeg);
                 
-                loc_mat = StdSeg.GetStdMatrix(matkey);				
+                loc_mat = StdSeg.GetStdMatrix(matkey);                
             }
             else
             {
@@ -582,14 +609,34 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> returnval;
             // Set up Homogeneous length details.
             Array<OneD,LibUtilities::BasisSharedPtr> HomoBasis(2);
-			HomoBasis[0] = m_homogeneousBasis_y;
-			HomoBasis[1] = m_homogeneousBasis_z;
-			
+            HomoBasis[0] = m_homogeneousBasis_y;
+            HomoBasis[1] = m_homogeneousBasis_z;
+            
             std::vector<NekDouble> HomoLen(2);
             HomoLen[0] = m_lhom_y;
-			HomoLen[1] = m_lhom_z;
+            HomoLen[1] = m_lhom_z;
+            
+            int nhom_modes_y = m_homogeneousBasis_y->GetNumModes();
+            int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
 
-            m_lines[0]->GeneralGetFieldDefinitions(returnval, 2, HomoBasis, HomoLen);
+            std::vector<unsigned int> sIDs
+                = LibUtilities::NullUnsignedIntVector;
+ 
+            std::vector<unsigned int> yIDs;
+            std::vector<unsigned int> zIDs;
+            
+            for(int n = 0; n < nhom_modes_z; ++n)
+            {
+                for(int m = 0; m < nhom_modes_y; ++m)
+                {
+                    zIDs.push_back(n);
+                    yIDs.push_back(m);
+                }
+            }
+
+            m_lines[0]->GeneralGetFieldDefinitions(returnval, 2, HomoBasis, 
+                                                     HomoLen, false, 
+                                                     sIDs, zIDs, yIDs);
             return returnval;
         }
 
@@ -603,8 +650,28 @@ namespace Nektar
             HomoLen[0] = m_lhom_y;
             HomoLen[1] = m_lhom_z;
             
+            int nhom_modes_y = m_homogeneousBasis_y->GetNumModes();
+            int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
+
+            std::vector<unsigned int> sIDs
+                =LibUtilities::NullUnsignedIntVector;
+
+            std::vector<unsigned int> yIDs;
+            std::vector<unsigned int> zIDs;
+            
+            for(int n = 0; n < nhom_modes_z; ++n)
+            {
+                for(int m = 0; m < nhom_modes_y; ++m)
+                {
+                    zIDs.push_back(n);
+                    yIDs.push_back(m);
+                }
+            }
+            
             // enforce NumHomoDir == 1 by direct call
-            m_lines[0]->GeneralGetFieldDefinitions(fielddef,2, HomoBasis,HomoLen);
+             m_lines[0]->GeneralGetFieldDefinitions(fielddef, 2, HomoBasis, 
+                                                    HomoLen, false,
+                                                    sIDs, zIDs, yIDs);
         }
         
         void ExpListHomogeneous2D::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
@@ -635,7 +702,7 @@ namespace Nektar
                 }
             }
         }
-	
+    
         void ExpListHomogeneous2D::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
         {
             v_AppendFieldData(fielddef,fielddata,m_coeffs);
@@ -676,14 +743,37 @@ namespace Nektar
                 int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
                 int datalen = (*m_exp)[eid]->GetNcoeffs();
                 
-				for(k = 0; k < (NumMod_y*NumMod_z); ++k)
-				{
-					Vmath::Vcopy(datalen,&fielddata[offset],1,&coeffs[m_coeff_offset[eid] + k*ncoeffs_per_line],1);
-					offset += datalen;
-				}
+                for(k = 0; k < (NumMod_y*NumMod_z); ++k)
+                {
+                    Vmath::Vcopy(datalen,&fielddata[offset],1,&coeffs[m_coeff_offset[eid] + k*ncoeffs_per_line],1);
+                    offset += datalen;
+                }
             }
         }
-	
+        
+        void ExpListHomogeneous2D::v_WriteVtkPieceData(std::ostream &outfile, int expansion,
+                                        std::string var)
+        {
+            int i;
+            int nq = (*m_exp)[expansion]->GetTotPoints();
+            int npoints_per_line = m_lines[0]->GetTotPoints();
+
+            // printing the fields of that zone
+            outfile << "        <DataArray type=\"Float64\" Name=\""
+                    << var << "\">" << endl;
+            outfile << "          ";
+            for (int n = 0; n < m_lines.num_elements(); ++n)
+            {
+                const Array<OneD, NekDouble> phys = m_phys + m_phys_offset[expansion] + n*npoints_per_line;
+                for(i = 0; i < nq; ++i)
+                {
+                    outfile << (fabs(phys[i]) < NekConstants::kNekZeroTol ? 0 : phys[i]) << " ";
+                }
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+        }
+    
         void ExpListHomogeneous2D::v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                                Array<OneD, NekDouble> &out_d0,
                                                Array<OneD, NekDouble> &out_d1, 
@@ -718,7 +808,7 @@ namespace Nektar
                 }
                 NekDouble sign = -1.0;
                 NekDouble beta;
-		
+        
                 //along y
                 for(int i = 0; i < m_ny; i++)
                 {
@@ -731,7 +821,7 @@ namespace Nektar
                     
                     sign = -1.0*sign;
                 }
-		
+        
                 //along z
                 sign = -1.0;
                 for(int i = 0; i < m_nz; i++)
@@ -775,7 +865,7 @@ namespace Nektar
                 }
             }
         }
-	
+    
         void ExpListHomogeneous2D::v_PhysDeriv(Direction edir,
                                                const Array<OneD, const NekDouble> &inarray,
                                                Array<OneD, NekDouble> &out_d)
@@ -848,9 +938,9 @@ namespace Nektar
                             sign = -1.0*sign;
                         }
                         if(m_WaveSpace)
-						{
+                        {
                                                     out_d = temparray2;
-						}
+                        }
                         else 
                         {
                             HomogeneousBwdTrans(temparray2,out_d);
@@ -866,14 +956,14 @@ namespace Nektar
                     else 
                     {
                         StdRegions::StdQuadExp StdQuad(m_homogeneousBasis_y->GetBasisKey(),m_homogeneousBasis_z->GetBasisKey());
-			
+            
                         m_transposition->Transpose(inarray,temparray,false,LibUtilities::eXtoYZ);
                         
                         for(int i = 0; i < n_points_line; i++)
                         {
                             StdQuad.PhysDeriv(tmp1 = temparray + i*nyzlines, tmp2 = temparray1 + i*nyzlines, tmp3 = temparray2 + i*nyzlines);
-						}
-			
+                        }
+            
                         if (dir == 1)
                         {
                             m_transposition->Transpose(temparray1,out_d,false,LibUtilities::eYZtoX);
@@ -888,7 +978,7 @@ namespace Nektar
                 }
             }
         }
-	
+    
         void ExpListHomogeneous2D::PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD, NekDouble> &out_d0,
                                              Array<OneD, NekDouble> &out_d1, 
@@ -902,10 +992,10 @@ namespace Nektar
                                              const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD, NekDouble> &out_d)
         {
-            //convert int into enum			
+            //convert int into enum            
             v_PhysDeriv(edir,inarray,out_d);
         }
-	
+    
         void ExpListHomogeneous2D::SetPaddingBase(void)
         {
             NekDouble size_y = 1.5*m_ny;

@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#define LOKI_CLASS_LEVEL_THREADING
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
@@ -63,7 +64,8 @@ namespace Nektar
         {
             typedef Loki::SingletonHolder<RiemannSolverFactory,
                                           Loki::CreateUsingNew,
-                                          Loki::NoDestroy > Type;
+                                          Loki::NoDestroy,
+                                          Loki::SingleThreaded> Type;
             return Type::Instance();
         }
         
@@ -179,9 +181,13 @@ namespace Nektar
                 switch (normals.num_elements())
                 {
                     case 1:
-                        // do nothing
+                    {    // do nothing
+                        const int nq = inarray[0].num_elements();
+                        const int vx = (int)vecLocs[i][0];
+                        Vmath::Vmul (nq, inarray [vx], 1, normals [0],  1,
+                                         outarray[vx], 1);
                         break;
-
+                    }
                     case 2:
                     {
                         const int nq = inarray[0].num_elements();
@@ -266,9 +272,13 @@ namespace Nektar
                 switch (normals.num_elements())
                 {
                     case 1:
-                        // do nothing
+                    {    // do nothing
+                        const int nq = normals[0].num_elements();
+                        const int vx = (int)vecLocs[i][0];
+                        Vmath::Vmul (nq, inarray [vx], 1, normals [0],  1,
+                                         outarray[vx], 1);
                         break;
-
+                    }
                     case 2:
                     {
                         const int nq = normals[0].num_elements();

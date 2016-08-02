@@ -743,10 +743,11 @@
         <SOLVERINFO>
             <I PROPERTY="EQTYPE" VALUE="Monodomain" />
             <I PROPERTY="CellModel" VALUE="CourtemancheRamirezNattel98" />
+            <I PROPERTY="CellModelVariant" VALUE="Original" />
             <I PROPERTY="Projection" VALUE="Continuous"/>
             <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXdirk_3_4_3"/>
-            <I PROPERTY="GlobalSysSoln" VALUE="DirectStaticCond" />
+            <I PROPERTY="GlobalSysSoln" VALUE="IterativeStaticCond" />
         </SOLVERINFO>
         
         <VARIABLES>
@@ -782,7 +783,7 @@
             <p_y2> 0.8</p_y2>
             <p_z2> 0.0</p_z2>
             <p_is> 1.0</p_is>
-            <p_strength> 3.0 </p_strength>
+            <p_strength> 300.0 </p_strength>
             
             <PROTOCOL TYPE = "ProtocolSingle">
                 <START> 0.0  </START>

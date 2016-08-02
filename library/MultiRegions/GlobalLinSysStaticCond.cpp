@@ -41,6 +41,8 @@
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/SparseUtils.hpp>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -118,7 +120,7 @@ namespace Nektar
             int nLocBndDofs        = pLocToGloMap->GetNumLocalBndCoeffs();
             int nIntDofs           = pLocToGloMap->GetNumGlobalCoeffs()
                 - nGlobBndDofs;
-            
+
             Array<OneD, NekDouble> F = m_wsp + 2*nLocBndDofs;
             Array<OneD, NekDouble> tmp;
             if(nDirBndDofs && dirForcCalculated)
@@ -155,11 +157,10 @@ namespace Nektar
                 {
                     DNekScalBlkMat &BinvD      = *m_BinvD;
                     DNekScalBlkMat &SchurCompl = *sc;
-                    
-                    // include dirichlet boundary forcing 
+
+                    // include dirichlet boundary forcing
                     pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
                     V_LocBnd = BinvD*F_Int + SchurCompl*V_LocBnd;
-                    
                 }
                 else if((!dirForcCalculated) && (atLastLevel))
                 {
@@ -268,7 +269,7 @@ namespace Nektar
         {
             int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-            m_wsp = Array<OneD, NekDouble>(2*nLocalBnd + nGlobal);
+            m_wsp = Array<OneD, NekDouble>(2*nLocalBnd + nGlobal, 0.0);
 
             if (pLocToGloMap->AtLastLevel())
             {

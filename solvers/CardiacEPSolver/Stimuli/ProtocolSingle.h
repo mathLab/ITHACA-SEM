@@ -42,7 +42,7 @@ namespace Nektar
 {
     // Forward declaration
     class ProtocolSingle;
-    
+
     /// Protocol base class.
     class ProtocolSingle : public Protocol
     {
@@ -55,29 +55,32 @@ namespace Nektar
             return MemoryManager<ProtocolSingle>
                     ::AllocateSharedPtr(pSession, pXml);
         }
-        
+
         /// Name of class
         static std::string className;
-        
-        ProtocolSingle(const LibUtilities::SessionReaderSharedPtr& pSession,
-                       const TiXmlElement* pXml);
-        
+
+        friend class MemoryManager<ProtocolSingle>;
+
         virtual ~ProtocolSingle() {}
-        
+
         /// Initialise the protocol storage and set initial conditions
         void Initialise();
-        
+
     protected:
         NekDouble m_start;
         NekDouble m_dur;
-        
+
         virtual NekDouble v_GetAmplitude(const NekDouble time);
-        
+
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-        
+
         virtual void v_SetInitialConditions();
+
+    private:
+        ProtocolSingle(const LibUtilities::SessionReaderSharedPtr& pSession,
+                       const TiXmlElement* pXml);
     };
-    
+
 }
 
 #endif

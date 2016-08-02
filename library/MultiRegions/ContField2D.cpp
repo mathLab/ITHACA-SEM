@@ -34,7 +34,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ContField2D.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapCG2D.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
+
+using namespace std;
 
 namespace Nektar
 {
@@ -126,14 +128,14 @@ namespace Nektar
                     boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
                     std::string("GlobalLinSys"))
         {
-            m_locToGloMap = MemoryManager<AssemblyMapCG2D>
+            m_locToGloMap = MemoryManager<AssemblyMapCG>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
-                                    m_periodicVerts,
-                                    m_periodicEdges,
                                     CheckIfSingularSystem,
-                                    variable);
+                                    variable,
+                                    m_periodicVerts,
+                                    m_periodicEdges);
 
             if (m_session->DefinesCmdLineArgument("verbose"))
             {
@@ -178,13 +180,14 @@ namespace Nektar
         {
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
             {
-                m_locToGloMap = MemoryManager<AssemblyMapCG2D>
+                m_locToGloMap = MemoryManager<AssemblyMapCG>
                     ::AllocateSharedPtr(m_session, m_ncoeffs,*this,
                                         m_bndCondExpansions,
                                         m_bndConditions,
+                                        CheckIfSingularSystem,
+                                        variable,
                                         m_periodicVerts,
-                                        m_periodicEdges,
-                                        CheckIfSingularSystem);
+                                        m_periodicEdges);
 
                 if (m_session->DefinesCmdLineArgument("verbose"))
                 {
@@ -662,14 +665,14 @@ namespace Nektar
                 }
             }
             m_locToGloMap->UniversalAssembleBnd(tmp);
-          
+
             // Now fill in all other Dirichlet coefficients.
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == 
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eDirichlet)
                 {
-                    const Array<OneD,const NekDouble>& coeffs = 
+                    const Array<OneD,const NekDouble>& coeffs =
                         m_bndCondExpansions[i]->GetCoeffs();
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
@@ -683,7 +686,7 @@ namespace Nektar
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
-          
+
             Vmath::Vcopy(nDir, tmp, 1, outarray, 1);
         }
 
@@ -734,11 +737,18 @@ namespace Nektar
          * local coefficients \f$\boldsymbol{\hat{u}}_l\f$ will be stored in
          * #m_coeffs.
          */
+        void ContField2D::v_GlobalToLocal(
+            const Array<OneD, const NekDouble> &inarray,
+            Array<OneD,NekDouble> &outarray)
+        {
+            m_locToGloMap->GlobalToLocal(inarray, outarray);
+        }
+
+
         void ContField2D::v_GlobalToLocal(void)
         {
             m_locToGloMap->GlobalToLocal(m_coeffs,m_coeffs);
         }
-
 
 
         /**
@@ -765,6 +775,14 @@ namespace Nektar
          *          resulting global coefficients \f$\boldsymbol{\hat{u}}_g\f$
          *          will be stored in #m_coeffs.
          */
+        void ContField2D::v_LocalToGlobal(
+            const Array<OneD, const NekDouble> &inarray,
+            Array<OneD,NekDouble> &outarray)
+        {
+            m_locToGloMap->LocalToGlobal(inarray, outarray);
+        }
+
+
         void ContField2D::v_LocalToGlobal(void)
         {
             m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs);
@@ -808,8 +826,8 @@ namespace Nektar
          * @param   inarray     An ExpList, containing the discrete evaluation
          *                      of the forcing function \f$f(\boldsymbol{x})\f$
          *                      at the quadrature points in its array #m_phys.
-         * @param   lambda      The parameter \f$\lambda\f$ of the Helmholtz
-         *                      equation
+         * @param   factors    The parameter \f$\lambda\f$ of the Helmholtz
+         *                      equation is specified through the factors map
          */
         void ContField2D::v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
@@ -1042,6 +1060,15 @@ namespace Nektar
                                 ContField2D::v_GetBndConditions()
         {
             return GetBndConditions();
+        }
+
+
+        /**
+         * Reset the GlobalLinSys Manager 
+         */
+        void ContField2D::v_ClearGlobalLinSysManager(void)
+        {
+            m_globalLinSysManager.ClearManager("GlobalLinSys");
         }
 
     } // end of namespace

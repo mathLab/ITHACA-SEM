@@ -11954,13 +11954,5 @@
         <FUNCTION NAME="InitialConditions">
             <F VAR="rho,rhou,rhov,E"    FILE="Perturbation_M05_circle_CBC_back_par.rst"/>
         </FUNCTION>
-        
-        <FUNCTION NAME="ExactSolution">
-            <E VAR="rho"  VALUE="rhoInf" />
-            <E VAR="rhou" VALUE="rhoInf * uInf" />
-            <E VAR="rhov" VALUE="rhoInf * vInf" />
-            <E VAR="E"    VALUE="pInf" />
-        </FUNCTION>
-        
     </CONDITIONS>
 </NEKTAR>

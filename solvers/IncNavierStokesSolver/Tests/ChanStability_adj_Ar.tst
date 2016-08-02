@@ -9,15 +9,9 @@
 	<file description="Session File">ChanStability_adj_Ar.rst</file>
     </files>
     <metrics>
-        <metric type="L2" id="1">
-            <value variable="u" tolerance="1e-12">2.58914</value>
-            <value variable="v" tolerance="1e-12">0.00237598</value>
-            <value variable="p" tolerance="1e-12">0.00236396</value>
-        </metric>
-        <metric type="Linf" id="2">
-            <value variable="u" tolerance="1e-12">1</value>
-            <value variable="v" tolerance="1e-12">0.00200964</value>
-            <value variable="p" tolerance="1e-12">0.00177702</value>
+        <metric type="Eigenvalue" id="0">
+            <value tolerance="0.001">1.00031,0.0349782</value>
+            <value tolerance="0.001">1.00031,-0.0349782</value>
         </metric>
     </metrics>
 </test>

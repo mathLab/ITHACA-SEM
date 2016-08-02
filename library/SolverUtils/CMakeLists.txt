@@ -1,5 +1,6 @@
 SET(SOLVER_UTILS_SOURCES
   Core/Misc.cpp
+  AdvectionSystem.cpp
   Advection/Advection.cpp
   Advection/Advection3DHomogeneous1D.cpp
   Advection/AdvectionFR.cpp
@@ -12,6 +13,7 @@ SET(SOLVER_UTILS_SOURCES
   Diffusion/DiffusionLFR.cpp
   Diffusion/DiffusionLFRNS.cpp
   Driver.cpp
+  DriverAdaptive.cpp
   DriverArnoldi.cpp
   DriverModifiedArnoldi.cpp
   DriverStandard.cpp
@@ -21,9 +23,14 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterAeroForces.cpp
   Filters/FilterAverageFields.cpp
   Filters/FilterCheckpoint.cpp
+  Filters/FilterEnergy1D.cpp
+  Filters/FilterEnergyBase.cpp
   Filters/FilterHistoryPoints.cpp
   Filters/FilterModalEnergy.cpp
+  Filters/FilterMovingAverage.cpp
+  Filters/FilterFieldConvert.cpp
   Filters/FilterThresholdMax.cpp
+  Filters/FilterThresholdMin.cpp
   RiemannSolvers/RiemannSolver.cpp
   RiemannSolvers/UpwindSolver.cpp
   RiemannSolvers/UpwindLDGSolver.cpp
@@ -37,6 +44,7 @@ SET(SOLVER_UTILS_SOURCES
 
 SET(SOLVER_UTILS_HEADERS
   Core/Misc.h
+  AdvectionSystem.h
   Advection/Advection.h
   Advection/AdvectionFR.h
   Advection/Advection3DHomogeneous1D.h
@@ -49,6 +57,7 @@ SET(SOLVER_UTILS_HEADERS
   Diffusion/DiffusionLFR.h
   Diffusion/DiffusionLFRNS.h
   Driver.h
+  DriverAdaptive.h
   DriverArnoldi.h
   DriverModifiedArnoldi.h
   DriverStandard.h
@@ -58,9 +67,14 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterAeroForces.h
   Filters/FilterAverageFields.h
   Filters/FilterCheckpoint.h
+  Filters/FilterEnergy1D.h
+  Filters/FilterEnergyBase.h
   Filters/FilterHistoryPoints.h
   Filters/FilterModalEnergy.h
+  Filters/FilterMovingAverage.h
+  Filters/FilterFieldConvert.h
   Filters/FilterThresholdMax.h
+  Filters/FilterThresholdMin.h
   RiemannSolvers/RiemannSolver.h
   RiemannSolvers/UpwindSolver.h
   RiemannSolvers/UpwindLDGSolver.h
@@ -84,6 +98,6 @@ ENDIF (NEKTAR_USE_ARPACK)
 ADD_DEFINITIONS(-DSOLVER_UTILS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(SolverUtils lib ${NEKTAR_LIBRARY_TYPE} ${SOLVER_UTILS_SOURCES} ${SOLVER_UTILS_HEADERS})
-TARGET_LINK_LIBRARIES(SolverUtils MultiRegions)
+TARGET_LINK_LIBRARIES(SolverUtils FieldUtils)
 
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SolverUtils COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

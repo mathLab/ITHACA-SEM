@@ -74,8 +74,15 @@ namespace Nektar
             STD_REGIONS_EXPORT DNekMatSharedPtr GenNBasisTransMatrix();
 
         protected:
-            boost::shared_ptr<LibUtilities::PointsKey> m_nodalPointsKey;
+            LibUtilities::PointsKey m_nodalPointsKey;
 
+            STD_REGIONS_EXPORT virtual const LibUtilities::PointsKey v_GetNodalPointsKey() const
+            {
+                return m_nodalPointsKey;
+            };
+
+
+            STD_REGIONS_EXPORT virtual bool  v_IsNodalNonTensorialExp();
             
             //---------------------------------------
             // Transforms
@@ -99,7 +106,8 @@ namespace Nektar
                       Array<OneD,       NekDouble>& outarray);
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                 const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD,       NekDouble>& outarray);
+                      Array<OneD,       NekDouble>& outarray,
+                bool                                mult = true);
             STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase(
                 const int                           dir,
                 const Array<OneD, const NekDouble>& inarray,

@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_SUPSTEPPINGEXTRAPOLATE_H
+#ifndef NEKTAR_SOLVERS_SUBSTEPPINGEXTRAPOLATE_H
 #define NEKTAR_SOLVERS_SUBSTEPPINGEXTRAPOLATE_H
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
@@ -42,7 +42,7 @@
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
-#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
+#include <SolverUtils/AdvectionSystem.h>
 #include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
 
 namespace Nektar
@@ -64,8 +64,8 @@ namespace Nektar
             const LibUtilities::SessionReaderSharedPtr &pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             MultiRegions::ExpListSharedPtr              &pPressure,
-            const Array<OneD, int> &pVel,
-            const AdvectionTermSharedPtr &advObject)
+            const Array<OneD, int>                      &pVel,
+            const SolverUtils::AdvectionSharedPtr       &advObject)
         {
             ExtrapolateSharedPtr p = MemoryManager<SubSteppingExtrapolate>
                 ::AllocateSharedPtr(pSession,pFields,pPressure,pVel,advObject);
@@ -80,11 +80,14 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
             MultiRegions::ExpListSharedPtr              pPressure,
             const Array<OneD, int> pVel,
-            const AdvectionTermSharedPtr advObject);
+            const SolverUtils::AdvectionSharedPtr advObject);
 
         virtual ~SubSteppingExtrapolate();
         
     protected:
+        virtual void v_EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &fields,
+                                           const Array<OneD, const Array<OneD, NekDouble> >  &N,
+                                           NekDouble kinvis);
 
         virtual void v_SubSteppingTimeIntegration(
             int intMethod,
@@ -110,15 +113,10 @@ namespace Nektar
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection);
         
-        void AddDuDt(
-            const Array<OneD, const Array<OneD, NekDouble> >  &N,
-            NekDouble Aii_Dt);
-        void AddDuDt2D(
-            const Array<OneD, const Array<OneD, NekDouble> >  &N, 
-            NekDouble Aii_Dt);
-        void AddDuDt3D(
-            const Array<OneD, const Array<OneD, NekDouble> >  &N, 
-            NekDouble Aii_Dt);
+        virtual LibUtilities::TimeIntegrationMethod v_GetSubStepIntegrationMethod(void);
+
+        void AddDuDt(void);
+
 
         void SubStepAdvection(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
@@ -148,7 +146,8 @@ namespace Nektar
 
         NekDouble m_cflSafetyFactor;
         int m_infosteps;
-        int minsubsteps;
+        int m_minsubsteps;
+        int m_maxsubsteps;
     };
 }
 

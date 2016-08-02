@@ -8,6 +8,7 @@
 #include <MultiRegions/ContField3D.h>
 #include <SpatialDomains/MeshGraph3D.h>
 
+using namespace std;
 using namespace Nektar;
 
 // This routine projects a polynomial which has energy in all mdoes of
@@ -22,7 +23,6 @@ int main(int argc, char *argv[])
     int nq, coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
-    std::string meshfile(vSession->GetFilename());
     
     if(argc != 3)
     {

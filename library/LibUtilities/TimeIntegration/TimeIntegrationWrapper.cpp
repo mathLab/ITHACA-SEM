@@ -42,8 +42,9 @@ namespace LibUtilities {
     TimeIntegrationWrapperFactory &GetTimeIntegrationWrapperFactory()
     {
         typedef Loki::SingletonHolder<TimeIntegrationWrapperFactory,
-                                      Loki::CreateUsingNew,
-                                      Loki::NoDestroy > Type;
+            Loki::CreateUsingNew,
+            Loki::NoDestroy,
+            Loki::SingleThreaded> Type;
         return Type::Instance();
     }
 
@@ -168,22 +169,6 @@ namespace LibUtilities {
         m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
         m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
         m_intScheme[1] = TimeIntegrationSchemeManager()[IntKey1];
-    }
-
-    // --------------
-    // BDFImplicitOrder2
-    // --------------
-    string TimeIntegrationRungeKutta2_ImprovedEuler::className =
-        GetTimeIntegrationWrapperFactory().RegisterCreatorFunction(
-            "RungeKutta2_ImprovedEuler",
-            TimeIntegrationRungeKutta2_ImprovedEuler::create);
-    void TimeIntegrationRungeKutta2_ImprovedEuler::v_InitObject()
-    {
-        TimeIntegrationSchemeKey IntKey0(eRungeKutta2_ImprovedEuler);
-        m_method       = eRungeKutta2_ImprovedEuler;
-        m_intSteps     = 1;
-        m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
-        m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
     }
 
     // --------------
@@ -337,6 +322,83 @@ namespace LibUtilities {
     }
 
     // --------------
+    // Midpoint
+    // --------------
+    string TimeIntegrationMidpoint::className =
+        GetTimeIntegrationWrapperFactory().RegisterCreatorFunction(
+            "Midpoint", TimeIntegrationMidpoint::create);
+    void TimeIntegrationMidpoint::v_InitObject()
+    {
+        TimeIntegrationSchemeKey IntKey0(eMidpoint);
+        m_method       = eMidpoint;
+        m_intSteps     = 1;
+        m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
+        m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+    // --------------
+    // RungeKutta2
+    // --------------
+    string TimeIntegrationRungeKutta2::className =
+        GetTimeIntegrationWrapperFactory().RegisterCreatorFunction(
+            "RungeKutta2", TimeIntegrationRungeKutta2::create);
+    void TimeIntegrationRungeKutta2::v_InitObject()
+    {
+        TimeIntegrationSchemeKey IntKey0(eRungeKutta2);
+        m_method       = eRungeKutta2;
+        m_intSteps     = 1;
+        m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
+        m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+    // --------------
+    // RungeKutta2_ImprovedEuler
+    // --------------
+    string TimeIntegrationRungeKutta2_ImprovedEuler::className =
+        GetTimeIntegrationWrapperFactory().RegisterCreatorFunction(
+            "RungeKutta2_ImprovedEuler",
+            TimeIntegrationRungeKutta2_ImprovedEuler::create);
+    void TimeIntegrationRungeKutta2_ImprovedEuler::v_InitObject()
+    {
+        TimeIntegrationSchemeKey IntKey0(eRungeKutta2_ImprovedEuler);
+        m_method       = eRungeKutta2_ImprovedEuler;
+        m_intSteps     = 1;
+        m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
+        m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+    // --------------
+    // RungeKutta2_SSP
+    // --------------
+    string TimeIntegrationRungeKutta2_SSP::className =
+        GetTimeIntegrationWrapperFactory().RegisterCreatorFunction(
+            "RungeKutta2_SSP", TimeIntegrationRungeKutta2_SSP::create);
+    void TimeIntegrationRungeKutta2_SSP::v_InitObject()
+    {
+        TimeIntegrationSchemeKey IntKey0(eRungeKutta2_SSP);
+        m_method       = eRungeKutta2_SSP;
+        m_intSteps     = 1;
+        m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
+        m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+    // --------------
+    // RungeKutta3_SSP
+    // --------------
+    string TimeIntegrationRungeKutta3_SSP::className =
+        GetTimeIntegrationWrapperFactory().RegisterCreatorFunction(
+            "RungeKutta3_SSP",
+            TimeIntegrationRungeKutta3_SSP::create);
+    void TimeIntegrationRungeKutta3_SSP::v_InitObject()
+    {
+        TimeIntegrationSchemeKey IntKey0(eRungeKutta3_SSP);
+        m_method       = eRungeKutta3_SSP;
+        m_intSteps     = 1;
+        m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
+        m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+    // --------------
     // ClassicalRungeKutta4
     // --------------
     string TimeIntegrationClassicalRungeKutta4::className =
@@ -353,31 +415,16 @@ namespace LibUtilities {
     }
 
     // --------------
-    // Midpoint
+    // RungeKutta4
     // --------------
-    string TimeIntegrationMidpoint::className =
+    string TimeIntegrationRungeKutta4::className =
         GetTimeIntegrationWrapperFactory().RegisterCreatorFunction(
-            "Midpoint", TimeIntegrationMidpoint::create);
-    void TimeIntegrationMidpoint::v_InitObject()
+            "RungeKutta4",
+            TimeIntegrationRungeKutta4::create);
+    void TimeIntegrationRungeKutta4::v_InitObject()
     {
-        TimeIntegrationSchemeKey IntKey0(eMidpoint);
-        m_method       = eMidpoint;
-        m_intSteps     = 1;
-        m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
-        m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
-    }
-
-    // --------------
-    // RungeKutta2_ModifiedEuler
-    // --------------
-    string TimeIntegrationRungeKutta2_ModifiedEuler::className =
-        GetTimeIntegrationWrapperFactory().RegisterCreatorFunction(
-            "RungeKutta2_ModifiedEuler",
-            TimeIntegrationRungeKutta2_ModifiedEuler::create);
-    void TimeIntegrationRungeKutta2_ModifiedEuler::v_InitObject()
-    {
-        TimeIntegrationSchemeKey IntKey0(eRungeKutta2_ModifiedEuler);
-        m_method       = eRungeKutta2_ModifiedEuler;
+        TimeIntegrationSchemeKey IntKey0(eRungeKutta4);
+        m_method       = eRungeKutta4;
         m_intSteps     = 1;
         m_intScheme    = vector<TimeIntegrationSchemeSharedPtr>(m_intSteps);
         m_intScheme[0] = TimeIntegrationSchemeManager()[IntKey0];

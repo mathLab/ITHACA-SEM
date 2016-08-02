@@ -39,6 +39,8 @@
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <tinyxml.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -102,83 +104,132 @@ namespace Nektar
             TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
             TiXmlElement* field = NULL;
 
+            CurveMap::iterator it;
+
             /// Look for elements in ELEMENT block.
             field = mesh->FirstChildElement("EDGE");
 
             ASSERTL0(field, "Unable to find EDGE tag in file.");
 
-            /// All elements are of the form: "<E ID="#"> ... </E>", with
-            /// ? being the element type.
-            /// Read the ID field first.
-            TiXmlElement *edge = field->FirstChildElement("E");
+            string IsCompressed;
+            field->QueryStringAttribute("COMPRESSED",&IsCompressed); 
 
-            /// Since all edge data is one big text block, we need to accumulate
-            /// all TEXT data and then parse it.  This approach effectively skips
-            /// all comments or other node types since we only care about the
-            /// edge list.  We cannot handle missing edge numbers as we could
-            /// with missing element numbers due to the text block format.
-            std::string edgeStr;
-            int i,indx;
-            int nextEdgeNumber = -1;
-
-            // Curved Edges
-            map<int, int> edge_curved;
-            for(i = 0; i < m_curvedEdges.size(); ++i)
+            if(IsCompressed.size()) 
             {
-                edge_curved[m_curvedEdges[i]->m_curveID] = i;
-            }
+                ASSERTL0(boost::iequals(IsCompressed,
+                            LibUtilities::CompressData::GetCompressString()),
+                         "Compressed formats do not match. Expected :"
+                         + LibUtilities::CompressData::GetCompressString()
+                         + " but got " + std::string(IsCompressed));
+                // Extract the edge body
+                TiXmlNode* edgeChild = field->FirstChild();
+                ASSERTL0(edgeChild, "Unable to extract the data from "
+                         "the compressed edge tag.");
 
-            while(edge)
-            {
-                nextEdgeNumber++;
-
-                int err = edge->QueryIntAttribute("ID",&indx);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
-
-                TiXmlNode *child = edge->FirstChild();
-                edgeStr.clear();
-                if (child->Type() == TiXmlNode::TEXT)
+                std::string edgeStr;
+                if (edgeChild->Type() == TiXmlNode::TINYXML_TEXT)
                 {
-                    edgeStr += child->ToText()->ValueStr();
+                    edgeStr += edgeChild->ToText()->ValueStr();
                 }
 
-                /// Now parse out the edges, three fields at a time.
-                int vertex1, vertex2;
-                std::istringstream edgeDataStrm(edgeStr.c_str());
+                std::vector<LibUtilities::MeshEdge> edgeData;
+                LibUtilities::CompressData::ZlibDecodeFromBase64Str(edgeStr,
+                                                                    edgeData);
 
-                try
+                int indx;
+                for(int i = 0; i < edgeData.size(); ++i)
                 {
-                    while (!edgeDataStrm.fail())
+                    indx = edgeData[i].id;
+                    PointGeomSharedPtr vertices[2] = {
+                        GetVertex(edgeData[i].v0),
+                        GetVertex(edgeData[i].v1)
+                    };
+                    SegGeomSharedPtr edge;
+
+                    it = m_curvedEdges.find(indx);
+                    if (it == m_curvedEdges.end())
                     {
-                        edgeDataStrm >> vertex1 >> vertex2;
+                        edge = MemoryManager<SegGeom>::AllocateSharedPtr(
+                                            indx, m_spaceDimension, vertices);
+                    }
+                    else
+                    {
+                        edge = MemoryManager<SegGeom>::AllocateSharedPtr(
+                                            indx, m_spaceDimension, vertices,
+                                            it->second);
+                    }
+                    m_segGeoms[indx] = edge;
+                }
+            }
+            else
+            {
 
-                        // Must check after the read because we may be at the end and not know it.
-                        // If we are at the end we will add a duplicate of the last entry if we
-                        // don't check here.
-                        if (!edgeDataStrm.fail())
+                /// All elements are of the form: "<E ID="#"> ... </E>", with
+                /// ? being the element type.
+                /// Read the ID field first.
+                TiXmlElement *edge = field->FirstChildElement("E");
+                
+                /// Since all edge data is one big text block, we need to accumulate
+                /// all TINYXML_TEXT data and then parse it.  This approach effectively skips
+                /// all comments or other node types since we only care about the
+                /// edge list.  We cannot handle missing edge numbers as we could
+                /// with missing element numbers due to the text block format.
+                std::string edgeStr;
+                int indx;
+                
+                while(edge)
+                {
+                    int err = edge->QueryIntAttribute("ID",&indx);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
+                    
+                    TiXmlNode *child = edge->FirstChild();
+                    edgeStr.clear();
+                    if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                    {
+                        edgeStr += child->ToText()->ValueStr();
+                    }
+                    
+                    /// Now parse out the edges, three fields at a time.
+                    int vertex1, vertex2;
+                    std::istringstream edgeDataStrm(edgeStr.c_str());
+                    
+                    try
+                    {
+                        while (!edgeDataStrm.fail())
                         {
-                            PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
-                            SegGeomSharedPtr edge;
-
-                            if (edge_curved.count(indx) == 0)
+                            edgeDataStrm >> vertex1 >> vertex2;
+                            
+                            // Must check after the read because we
+                            // may be at the end and not know it.  If
+                            // we are at the end we will add a
+                            // duplicate of the last entry if we don't
+                            // check here.
+                            if (!edgeDataStrm.fail())
                             {
-                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
+                                PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
+                                SegGeomSharedPtr edge;
+                                it = m_curvedEdges.find(indx);
+                                
+                                if (it == m_curvedEdges.end())
+                                {
+                                    edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
+                                }
+                                else
+                                {
+                                    edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
+                                }
+                                
+                                m_segGeoms[indx] = edge;
                             }
-                            else
-                            {
-                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, m_curvedEdges[edge_curved.find(indx)->second]);
-                            }
-
-                            m_segGeoms[indx] = edge;
                         }
                     }
+                    catch(...)
+                    {
+                        NEKERROR(ErrorUtil::efatal, (std::string("Unable to read edge data: ") + edgeStr).c_str());
+                    }
+                    
+                    edge = edge->NextSiblingElement("E");
                 }
-                catch(...)
-                {
-                    NEKERROR(ErrorUtil::efatal, (std::string("Unable to read edge data: ") + edgeStr).c_str());
-                }
-
-                edge = edge->NextSiblingElement("E");
             }
         }
 
@@ -194,17 +245,12 @@ namespace Nektar
 
             ASSERTL0(field, "Unable to find FACE tag in file.");
 
-            // Curved faces
-            map<int, int> face_curved;
-            for (int i = 0; i < m_curvedFaces.size(); ++i)
-            {
-                face_curved[m_curvedFaces[i]->m_curveID] = i;
-            }
-
             /// All faces are of the form: "<? ID="#"> ... </?>", with
             /// ? being an element type (either Q or T).
+            /// They might be in compressed format and so then need upacking. 
 
             TiXmlElement *element = field->FirstChildElement();
+            CurveMap::iterator it;
 
             while (element)
             {
@@ -213,123 +259,248 @@ namespace Nektar
                 ASSERTL0(elementType == "Q" || elementType == "T",
                     (std::string("Unknown 3D face type: ") + elementType).c_str());
 
-                /// Read id attribute.
-                int indx;
-                int err = element->QueryIntAttribute("ID", &indx);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read face attribute ID.");
 
-                /// Read text element description.
-                TiXmlNode* elementChild = element->FirstChild();
-                std::string elementStr;
-                while(elementChild)
+                string IsCompressed;
+                element->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+                
+                if(IsCompressed.size()) 
                 {
-                    if (elementChild->Type() == TiXmlNode::TEXT)
+                    ASSERTL0(boost::iequals(IsCompressed,
+                            LibUtilities::CompressData:: GetCompressString()),
+                            "Compressed formats do not match. Expected :"
+                            + LibUtilities::CompressData::GetCompressString()
+                            + " but got "+ std::string(IsCompressed));
+
+                    // Extract the face body
+                    TiXmlNode* faceChild = element->FirstChild();
+                    ASSERTL0(faceChild, "Unable to extract the data from "
+                                        "the compressed face tag.");
+
+                    std::string faceStr;
+                    if (faceChild->Type() == TiXmlNode::TINYXML_TEXT)
                     {
-                        elementStr += elementChild->ToText()->ValueStr();
+                        faceStr += faceChild->ToText()->ValueStr();
                     }
-                    elementChild = elementChild->NextSibling();
+
+                    int indx;
+                    if(elementType == "T")
+                    {
+                        std::vector<LibUtilities::MeshTri> faceData;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                            faceStr,faceData);
+
+                        for(int i = 0; i < faceData.size(); ++i)
+                        {
+                            indx = faceData[i].id;
+
+                            /// See if this face has curves.
+                            it = m_curvedFaces.find(indx);
+
+                            /// Create a TriGeom to hold the new definition.
+                            SegGeomSharedPtr edges[TriGeom::kNedges] =
+                            {
+                                GetSegGeom(faceData[i].e[0]),
+                                GetSegGeom(faceData[i].e[1]),
+                                GetSegGeom(faceData[i].e[2])
+                            };
+
+                            StdRegions::Orientation edgeorient[TriGeom::kNedges] =
+                            {
+                                SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                                SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                                SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
+                            };
+
+                            TriGeomSharedPtr trigeom;
+                            if (it == m_curvedFaces.end())
+                            {
+                                trigeom =
+                                    MemoryManager<TriGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient);
+                            }
+                            else
+                            {
+                                trigeom =
+                                    MemoryManager<TriGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient,
+                                                    it->second);
+                            }
+                            trigeom->SetGlobalID(indx);
+                            m_triGeoms[indx] = trigeom;
+                        }
+                    }
+                    else if (elementType == "Q")
+                    {
+                        std::vector<LibUtilities::MeshQuad> faceData;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                            faceStr,faceData);
+
+                        for(int i = 0; i < faceData.size(); ++i)
+                        {
+                            indx = faceData[i].id;
+
+                            /// See if this face has curves.
+                            it = m_curvedFaces.find(indx);
+
+                            /// Create a QuadGeom to hold the new definition.
+                            SegGeomSharedPtr edges[QuadGeom::kNedges] = {
+                                GetSegGeom(faceData[i].e[0]),
+                                GetSegGeom(faceData[i].e[1]),
+                                GetSegGeom(faceData[i].e[2]),
+                                GetSegGeom(faceData[i].e[3])
+                            };
+
+                            StdRegions::Orientation edgeorient[QuadGeom::kNedges] =
+                            {
+                                SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                                SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                                SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
+                                SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
+                            };
+
+                            QuadGeomSharedPtr quadgeom;
+                            if (it == m_curvedEdges.end())
+                            {
+                                quadgeom =
+                                    MemoryManager<QuadGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient);
+                            }
+                            else
+                            {
+                                quadgeom =
+                                    MemoryManager<QuadGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient,
+                                                    it->second);
+                            }
+                            quadgeom->SetGlobalID(indx);
+                            m_quadGeoms[indx] = quadgeom;
+                        }
+                    }
                 }
-
-                ASSERTL0(!elementStr.empty(), "Unable to read face description body.");
-
-                /// Parse out the element components corresponding to type of element.
-                if (elementType == "T")
+                else
                 {
-                    // Read three edge numbers
-                    int edge1, edge2, edge3;
-                    std::istringstream elementDataStrm(elementStr.c_str());
-
-                    try
+                    /// Read id attribute.
+                    int indx;
+                    int err = element->QueryIntAttribute("ID", &indx);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read face attribute ID.");
+                    
+                    /// See if this face has curves.
+                    it = m_curvedFaces.find(indx);
+                    
+                    /// Read text element description.
+                    TiXmlNode* elementChild = element->FirstChild();
+                    std::string elementStr;
+                    while(elementChild)
                     {
-                        elementDataStrm >> edge1;
-                        elementDataStrm >> edge2;
-                        elementDataStrm >> edge3;
-
-                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read face data for TRIANGLE: ") + elementStr).c_str());
-
-                        /// Create a TriGeom to hold the new definition.
-                        SegGeomSharedPtr edges[TriGeom::kNedges] =
+                        if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
                         {
-                            GetSegGeom(edge1),
-                            GetSegGeom(edge2),
-                            GetSegGeom(edge3)
-                        };
-
-                        StdRegions::Orientation edgeorient[TriGeom::kNedges] =
-                        {
-                            SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
-                            SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
-                            SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
-                        };
-                        
-                        TriGeomSharedPtr trigeom;
-                        
-                        if (face_curved.count(indx) == 0)
-                        {
-                            trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient);
+                            elementStr += elementChild->ToText()->ValueStr();
                         }
-                        else
-                        {
-                            trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient, m_curvedFaces[face_curved.find(indx)->second]);
-                        }
-                        
-                        trigeom->SetGlobalID(indx);
-
-                        m_triGeoms[indx] = trigeom;
+                        elementChild = elementChild->NextSibling();
                     }
-                    catch(...)
+                    
+                    ASSERTL0(!elementStr.empty(), "Unable to read face description body.");
+                    
+                    /// Parse out the element components corresponding to type of element.
+                    if (elementType == "T")
                     {
-                        NEKERROR(ErrorUtil::efatal,
-                            (std::string("Unable to read face data for TRIANGLE: ") + elementStr).c_str());
+                        // Read three edge numbers
+                        int edge1, edge2, edge3;
+                        std::istringstream elementDataStrm(elementStr.c_str());
+                        
+                        try
+                        {
+                            elementDataStrm >> edge1;
+                            elementDataStrm >> edge2;
+                            elementDataStrm >> edge3;
+                            
+                            ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read face data for TRIANGLE: ") + elementStr).c_str());
+                            
+                            /// Create a TriGeom to hold the new definition.
+                            SegGeomSharedPtr edges[TriGeom::kNedges] =
+                                {
+                                    GetSegGeom(edge1),
+                                    GetSegGeom(edge2),
+                                    GetSegGeom(edge3)
+                                };
+                            
+                            StdRegions::Orientation edgeorient[TriGeom::kNedges] =
+                                {
+                                    SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                                    SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                                    SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
+                                };
+                            
+                            TriGeomSharedPtr trigeom;
+                            
+                            if (it == m_curvedFaces.end())
+                            {
+                                trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient);
+                            }
+                            else
+                            {
+                                trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient, it->second);
+                            }
+                            
+                            trigeom->SetGlobalID(indx);
+                            
+                            m_triGeoms[indx] = trigeom;
+                        }
+                        catch(...)
+                        {
+                            NEKERROR(ErrorUtil::efatal,
+                                     (std::string("Unable to read face data for TRIANGLE: ") + elementStr).c_str());
+                        }
+                    }
+                    else if (elementType == "Q")
+                    {
+                        // Read four edge numbers
+                        int edge1, edge2, edge3, edge4;
+                        std::istringstream elementDataStrm(elementStr.c_str());
+                        
+                        try
+                        {
+                            elementDataStrm >> edge1;
+                            elementDataStrm >> edge2;
+                            elementDataStrm >> edge3;
+                            elementDataStrm >> edge4;
+                            
+                            ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read face data for QUAD: ") + elementStr).c_str());
+                            
+                            /// Create a QuadGeom to hold the new definition.
+                            SegGeomSharedPtr edges[QuadGeom::kNedges] =
+                                {GetSegGeom(edge1),GetSegGeom(edge2),
+                                 GetSegGeom(edge3),GetSegGeom(edge4)};
+                            
+                            StdRegions::Orientation edgeorient[QuadGeom::kNedges] =
+                                {
+                                    SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                                    SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                                    SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
+                                    SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
+                                };
+                            
+                            QuadGeomSharedPtr quadgeom;
+                            
+                            if (it == m_curvedEdges.end())
+                            {
+                                quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
+                            }
+                            else
+                            {
+                                quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient, it->second);
+                            }
+                            quadgeom->SetGlobalID(indx);
+                            
+                            m_quadGeoms[indx] = quadgeom;
+                            
+                        }
+                        catch(...)
+                        {
+                            NEKERROR(ErrorUtil::efatal,(std::string("Unable to read face data for QUAD: ") + elementStr).c_str());
+                        }
                     }
                 }
-                else if (elementType == "Q")
-                {
-                    // Read four edge numbers
-                    int edge1, edge2, edge3, edge4;
-                    std::istringstream elementDataStrm(elementStr.c_str());
-
-                    try
-                    {
-                        elementDataStrm >> edge1;
-                        elementDataStrm >> edge2;
-                        elementDataStrm >> edge3;
-                        elementDataStrm >> edge4;
-
-                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read face data for QUAD: ") + elementStr).c_str());
-
-                        /// Create a QuadGeom to hold the new definition.
-                        SegGeomSharedPtr edges[QuadGeom::kNedges] =
-                        {GetSegGeom(edge1),GetSegGeom(edge2),
-                         GetSegGeom(edge3),GetSegGeom(edge4)};
-
-                        StdRegions::Orientation edgeorient[QuadGeom::kNedges] =
-                        {
-                            SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
-                            SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
-                            SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
-                            SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
-                        };
-
-                        QuadGeomSharedPtr quadgeom;
-
-                        if (face_curved.count(indx) == 0)
-                        {
-                            quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
-                        } else {
-                            quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient, m_curvedFaces[face_curved.find(indx)->second]);
-                        }
-                        quadgeom->SetGlobalID(indx);
-
-                        m_quadGeoms[indx] = quadgeom;
-
-                    }
-                    catch(...)
-                    {
-                        NEKERROR(ErrorUtil::efatal,(std::string("Unable to read face data for QUAD: ") + elementStr).c_str());
-                    }
-                }
-
                 /// Keep looking
                 element = element->NextSiblingElement();
             }
@@ -344,10 +515,8 @@ namespace Nektar
 
             /// Look for elements in ELEMENT block.
             field = mesh->FirstChildElement("ELEMENT");
-
+            
             ASSERTL0(field, "Unable to find ELEMENT tag in file.");
-
-            int nextElementNumber = -1;
 
             /// All elements are of the form: "<? ID="#"> ... </?>", with
             /// ? being the element type.
@@ -362,272 +531,451 @@ namespace Nektar
                 ASSERTL0(elementType == "A" || elementType == "P" || elementType == "R" || elementType == "H",
                     (std::string("Unknown 3D element type: ") + elementType).c_str());
 
-                /// These should be ordered.
-                nextElementNumber++;
                 
-                /// Read id attribute.
-                int indx;
-                int err = element->QueryIntAttribute("ID", &indx);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
-//                ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
-
-                /// Read text element description.
-                TiXmlNode* elementChild = element->FirstChild();
-                std::string elementStr;
-                while(elementChild)
+                string IsCompressed;
+                element->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+                
+                if(IsCompressed.size()) 
                 {
-                    if (elementChild->Type() == TiXmlNode::TEXT)
+                    ASSERTL0(boost::iequals(IsCompressed,
+                             LibUtilities::CompressData:: GetCompressString()),
+                             "Compressed formats do not match. Expected :"
+                             + LibUtilities::CompressData::GetCompressString()
+                             + " but got " + std::string(IsCompressed));
+
+                    // Extract the face body
+                    TiXmlNode* child = element->FirstChild();
+                    ASSERTL0(child, "Unable to extract the data from "
+                             "the compressed face tag.");
+
+                    std::string str;
+                    if (child->Type() == TiXmlNode::TINYXML_TEXT)
                     {
-                        elementStr += elementChild->ToText()->ValueStr();
+                        str += child->ToText()->ValueStr();
                     }
-                    elementChild = elementChild->NextSibling();
-                }
 
-                ASSERTL0(!elementStr.empty(), "Unable to read element description body.");
-
-                std::istringstream elementDataStrm(elementStr.c_str());
-
-                /// Parse out the element components corresponding to type of element.
-
-                // Tetrahedral
-                if (elementType == "A")
-                {
-                    try
+                    int indx;
+                    if(elementType == "A")
                     {
-                        /// Create arrays for the tri and quad faces.
-                        const int kNfaces = TetGeom::kNfaces;
-                        const int kNtfaces = TetGeom::kNtfaces;
-                        const int kNqfaces = TetGeom::kNqfaces;
-                        TriGeomSharedPtr tfaces[kNtfaces];
-                        //QuadGeomSharedPtr qfaces[kNqfaces];
-                        int Ntfaces = 0;
-                        int Nqfaces = 0;
-
-                        /// Fill the arrays and make sure there aren't too many faces.
-                        std::stringstream errorstring;
-                        errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
-                        for (int i = 0; i < kNfaces; i++)
+                        std::vector<LibUtilities::MeshTet> data;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                                    str,data);
+                        TriGeomSharedPtr tfaces[4];
+                        for(int i = 0; i < data.size(); ++i)
                         {
-                            int faceID;
-                            elementDataStrm >> faceID;
-                            Geometry2DSharedPtr face = GetGeometry2D(faceID);
-                            if (face == Geometry2DSharedPtr() ||
-                                (face->GetShapeType() != LibUtilities::eTriangle && face->GetShapeType() != LibUtilities::eQuadrilateral))
+                            indx = data[i].id;
+                            for(int j = 0; j < 4; ++j)
                             {
-                                std::stringstream errorstring;
-                                errorstring << "Element " << indx << " has invalid face: " << faceID;
-                                ASSERTL0(false, errorstring.str().c_str());
+                                Geometry2DSharedPtr face =
+                                    GetGeometry2D(data[i].f[j]);
+                                tfaces[j] =
+                                    boost::static_pointer_cast<TriGeom>(face);
                             }
-                            else if (face->GetShapeType() == LibUtilities::eTriangle)
-                            {
-                                ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-                                tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
-                            }
-                            else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
-                            {
-                                ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-                            }
+
+                            TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>
+                                                ::AllocateSharedPtr(tfaces));
+                            tetgeom->SetGlobalID(indx);
+                            m_tetGeoms[indx] = tetgeom;
+                            PopulateFaceToElMap(tetgeom, 4);
                         }
-
-                        /// Make sure all of the face indicies could be read, and that there weren't too few.
-                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for TETRAHEDRON: ") + elementStr).c_str());
-                        ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
-                        ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
-
-                        TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>::AllocateSharedPtr(tfaces));
-                        tetgeom->SetGlobalID(indx);
-
-                        m_tetGeoms[indx] = tetgeom;
-                        PopulateFaceToElMap(tetgeom, kNfaces);
                     }
-                    catch(...)
+                    else if (elementType == "P")
                     {
-                        NEKERROR(ErrorUtil::efatal,
-                            (std::string("Unable to read element data for TETRAHEDRON: ") + elementStr).c_str());
-                    }
-                }
-                // Pyramid
-                else if (elementType == "P")
-                {
-                    try
-                    {
-                        /// Create arrays for the tri and quad faces.
-                        const int kNfaces = PyrGeom::kNfaces;
-                        const int kNtfaces = PyrGeom::kNtfaces;
-                        const int kNqfaces = PyrGeom::kNqfaces;
-                        Geometry2DSharedPtr faces[kNfaces];
-                        int Nfaces  = 0;
-                        int Ntfaces = 0;
-                        int Nqfaces = 0;
-
-                        /// Fill the arrays and make sure there aren't too many faces.
-                        std::stringstream errorstring;
-                        errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
-                        for (int i = 0; i < kNfaces; i++)
+                        std::vector<LibUtilities::MeshPyr> data;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                                    str,data);
+                        Geometry2DSharedPtr faces[5];
+                        for(int i = 0; i < data.size(); ++i)
                         {
-                            int faceID;
-                            elementDataStrm >> faceID;
-                            Geometry2DSharedPtr face = GetGeometry2D(faceID);
-                            if (face == Geometry2DSharedPtr() ||
-                                (face->GetShapeType() != LibUtilities::eTriangle && face->GetShapeType() != LibUtilities::eQuadrilateral))
+                            indx = data[i].id;
+                            int Ntfaces = 0;
+                            int Nqfaces = 0;
+                            for(int j = 0; j < 5; ++j)
                             {
-                                std::stringstream errorstring;
-                                errorstring << "Element " << indx << " has invalid face: " << faceID;
-                                ASSERTL0(false, errorstring.str().c_str());
+                                Geometry2DSharedPtr face =
+                                    GetGeometry2D(data[i].f[j]);
+
+                                if (face == Geometry2DSharedPtr() ||
+                                    (face->GetShapeType() !=
+                                        LibUtilities::eTriangle &&
+                                     face->GetShapeType() !=
+                                        LibUtilities::eQuadrilateral))
+                                {
+                                    std::stringstream errorstring;
+                                    errorstring << "Element " << indx
+                                                << " has invalid face: " << j;
+                                    ASSERTL0(false, errorstring.str().c_str());
+                                }
+                                else if (face->GetShapeType() ==
+                                            LibUtilities::eTriangle)
+                                {
+                                    faces[j] = boost
+                                        ::static_pointer_cast<TriGeom>(face);
+                                    Ntfaces++;
+                                }
+                                else if (face->GetShapeType() ==
+                                            LibUtilities::eQuadrilateral)
+                                {
+                                    faces[j] = boost
+                                        ::static_pointer_cast<QuadGeom>(face);
+                                    Nqfaces++;
+                                }
                             }
-                            else if (face->GetShapeType() == LibUtilities::eTriangle)
-                            {
-                                ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-                                faces[Nfaces++] = boost::static_pointer_cast<TriGeom>(face);
-                                Ntfaces++;
-                            }
-                            else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
-                            {
-                                ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-                                faces[Nfaces++] = boost::static_pointer_cast<QuadGeom>(face);
-                                Nqfaces++;
-                            }
+                            ASSERTL0((Ntfaces == 4) && (Nqfaces = 1),
+                                     "Did not identify the correct number of "
+                                     "triangular and quadrilateral faces for a "
+                                     "pyramid");
+
+                            PyrGeomSharedPtr pyrgeom(MemoryManager<PyrGeom>
+                                                ::AllocateSharedPtr(faces));
+                            pyrgeom->SetGlobalID(indx);
+                            m_pyrGeoms[indx] = pyrgeom;
+                            PopulateFaceToElMap(pyrgeom, 5);
                         }
-
-                        /// Make sure all of the face indicies could be read, and that there weren't too few.
-                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for PYRAMID: ") + elementStr).c_str());
-                        ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
-                        ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
-
-                        PyrGeomSharedPtr pyrgeom(MemoryManager<PyrGeom>::AllocateSharedPtr(faces));
-                        pyrgeom->SetGlobalID(indx);
-
-                        m_pyrGeoms[indx] = pyrgeom;
-                        PopulateFaceToElMap(pyrgeom, kNfaces);
                     }
-                    catch(...)
+                    else if (elementType == "R")
                     {
-                        NEKERROR(ErrorUtil::efatal,
-                            (std::string("Unable to read element data for PYRAMID: ") + elementStr).c_str());
-                    }
-                }
-                // Prism
-                else if (elementType == "R")
-                {
-                    try
-                    {
-                        /// Create arrays for the tri and quad faces.
-                        const int kNfaces = PrismGeom::kNfaces;
-                        const int kNtfaces = PrismGeom::kNtfaces;
-                        const int kNqfaces = PrismGeom::kNqfaces;
-                        Geometry2DSharedPtr faces[kNfaces];
-                        int Ntfaces = 0;
-                        int Nqfaces = 0;
-                        int Nfaces  = 0;
-
-                        /// Fill the arrays and make sure there aren't too many faces.
-                        std::stringstream errorstring;
-                        errorstring << "Element " << indx << " must have " 
-                                    << kNtfaces << " triangle face(s), and " 
-                                    << kNqfaces << " quadrilateral face(s).";
-                        
-                        for (int i = 0; i < kNfaces; i++)
+                        std::vector<LibUtilities::MeshPrism> data;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                                    str,data);
+                        Geometry2DSharedPtr faces[5];
+                        for(int i = 0; i < data.size(); ++i)
                         {
-                            int faceID;
-                            elementDataStrm >> faceID;
-                            Geometry2DSharedPtr face = GetGeometry2D(faceID);
-                            if (face == Geometry2DSharedPtr() ||
-                                (face->GetShapeType() != LibUtilities::eTriangle && face->GetShapeType() != LibUtilities::eQuadrilateral))
+                            indx = data[i].id;
+                            int Ntfaces = 0;
+                            int Nqfaces = 0;
+                            for(int j = 0; j < 5; ++j)
                             {
-                                std::stringstream errorstring;
-                                errorstring << "Element " << indx << " has invalid face: " << faceID;
-                                ASSERTL0(false, errorstring.str().c_str());
+                                Geometry2DSharedPtr face =
+                                        GetGeometry2D(data[i].f[j]);
+                                if (face == Geometry2DSharedPtr() ||
+                                    (face->GetShapeType() !=
+                                            LibUtilities::eTriangle &&
+                                     face->GetShapeType() !=
+                                            LibUtilities::eQuadrilateral))
+                                {
+                                    std::stringstream errorstring;
+                                    errorstring << "Element " << indx
+                                                << " has invalid face: " << j;
+                                    ASSERTL0(false, errorstring.str().c_str());
+                                }
+                                else if (face->GetShapeType() ==
+                                                LibUtilities::eTriangle)
+                                {
+                                    faces[j] = boost
+                                        ::static_pointer_cast<TriGeom>(face);
+                                    Ntfaces++;
+                                }
+                                else if (face->GetShapeType() ==
+                                                LibUtilities::eQuadrilateral)
+                                {
+                                    faces[j] = boost
+                                        ::static_pointer_cast<QuadGeom>(face);
+                                    Nqfaces++;
+                                }
                             }
-                            else if (face->GetShapeType() == LibUtilities::eTriangle)
-                            {
-                                ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-                                faces[Nfaces++] = boost::static_pointer_cast<TriGeom>(face);
-                                Ntfaces++;
-                            }
-                            else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
-                            {
-                                ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-                                faces[Nfaces++] = boost::static_pointer_cast<QuadGeom>(face);
-                                Nqfaces++;
-                            }
+                            ASSERTL0((Ntfaces == 2) && (Nqfaces = 3),
+                                     "Did not identify the correct number of "
+                                     "triangular and quadrilateral faces for a "
+                                     "prism");
+
+                            PrismGeomSharedPtr prismgeom(
+                                    MemoryManager<PrismGeom>
+                                            ::AllocateSharedPtr(faces));
+                            prismgeom->SetGlobalID(indx);
+                            m_prismGeoms[indx] = prismgeom;
+                            PopulateFaceToElMap(prismgeom, 5);
                         }
-
-                        /// Make sure all of the face indicies could be read, and that there weren't too few.
-                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for PRISM: ") + elementStr).c_str());
-                        ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
-                        ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
-
-                        PrismGeomSharedPtr prismgeom(MemoryManager<PrismGeom>::AllocateSharedPtr(faces));
-                        prismgeom->SetGlobalID(indx);
-
-                        m_prismGeoms[indx] = prismgeom;
-                        PopulateFaceToElMap(prismgeom, kNfaces);
                     }
-                    catch(...)
+                    else if (elementType == "H")
                     {
-                        NEKERROR(ErrorUtil::efatal,
-                            (std::string("Unable to read element data for PRISM: ") + elementStr).c_str());
-                    }
-                }
-                // Hexahedral
-                else if (elementType == "H")
-                {
-                    try
-                    {
-                        /// Create arrays for the tri and quad faces.
-                        const int kNfaces = HexGeom::kNfaces;
-                        const int kNtfaces = HexGeom::kNtfaces;
-                        const int kNqfaces = HexGeom::kNqfaces;
-                        //TriGeomSharedPtr tfaces[kNtfaces];
-                        QuadGeomSharedPtr qfaces[kNqfaces];
-                        int Ntfaces = 0;
-                        int Nqfaces = 0;
+                        std::vector<LibUtilities::MeshHex> data;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                                    str,data);
 
-                        /// Fill the arrays and make sure there aren't too many faces.
-                        std::stringstream errorstring;
-                        errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
-                        for (int i = 0; i < kNfaces; i++)
+                        QuadGeomSharedPtr faces[6];
+                        for(int i = 0; i < data.size(); ++i)
                         {
-                            int faceID;
-                            elementDataStrm >> faceID;
-                            Geometry2DSharedPtr face = GetGeometry2D(faceID);
-                            if (face == Geometry2DSharedPtr() ||
-                                (face->GetShapeType() != LibUtilities::eTriangle && face->GetShapeType() != LibUtilities::eQuadrilateral))
+                            indx = data[i].id;
+                            for(int j = 0; j < 6; ++j)
                             {
-                                std::stringstream errorstring;
-                                errorstring << "Element " << indx << " has invalid face: " << faceID;
-                                ASSERTL0(false, errorstring.str().c_str());
+                                Geometry2DSharedPtr face =
+                                        GetGeometry2D(data[i].f[j]);
+                                faces[j] = boost
+                                        ::static_pointer_cast<QuadGeom>(face);
                             }
-                            else if (face->GetShapeType() == LibUtilities::eTriangle)
-                            {
-                                ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-                                //tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
-                            }
-                            else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
-                            {
-                                ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-                                qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
-                            }
+
+                            HexGeomSharedPtr hexgeom(MemoryManager<HexGeom>
+                                                    ::AllocateSharedPtr(faces));
+                            hexgeom->SetGlobalID(indx);
+                            m_hexGeoms[indx] = hexgeom;
+                            PopulateFaceToElMap(hexgeom, 6);
                         }
-
-                        /// Make sure all of the face indicies could be read, and that there weren't too few.
-                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for HEXAHEDRAL: ") + elementStr).c_str());
-                        ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
-                        ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
-
-                        HexGeomSharedPtr hexgeom(MemoryManager<HexGeom>::AllocateSharedPtr(qfaces));
-                        hexgeom->SetGlobalID(indx);
-
-                        m_hexGeoms[indx] = hexgeom;
-                        PopulateFaceToElMap(hexgeom, kNfaces);
-                    }
-                    catch(...)
-                    {
-                        NEKERROR(ErrorUtil::efatal,
-                            (std::string("Unable to read element data for HEXAHEDRAL: ") + elementStr).c_str());
                     }
                 }
-
+                else
+                {
+                    /// Read id attribute.
+                    int indx;
+                    int err = element->QueryIntAttribute("ID", &indx);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
+                    
+                    /// Read text element description.
+                    TiXmlNode* elementChild = element->FirstChild();
+                    std::string elementStr;
+                    while(elementChild)
+                    {
+                        if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            elementStr += elementChild->ToText()->ValueStr();
+                        }
+                        elementChild = elementChild->NextSibling();
+                    }
+                    
+                    ASSERTL0(!elementStr.empty(), "Unable to read element description body.");
+                    
+                    std::istringstream elementDataStrm(elementStr.c_str());
+                    
+                    /// Parse out the element components corresponding to type of element.
+                    
+                    // Tetrahedral
+                    if (elementType == "A")
+                    {
+                        try
+                        {
+                            /// Create arrays for the tri and quad faces.
+                            const int kNfaces = TetGeom::kNfaces;
+                            const int kNtfaces = TetGeom::kNtfaces;
+                            const int kNqfaces = TetGeom::kNqfaces;
+                            TriGeomSharedPtr tfaces[kNtfaces];
+                            int Ntfaces = 0;
+                            int Nqfaces = 0;
+                            
+                            /// Fill the arrays and make sure there aren't too many faces.
+                            std::stringstream errorstring;
+                            errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
+                            for (int i = 0; i < kNfaces; i++)
+                            {
+                                int faceID;
+                                elementDataStrm >> faceID;
+                                Geometry2DSharedPtr face = GetGeometry2D(faceID);
+                                if (face == Geometry2DSharedPtr() ||
+                                    (face->GetShapeType() != LibUtilities::eTriangle && face->GetShapeType() != LibUtilities::eQuadrilateral))
+                                {
+                                    std::stringstream errorstring;
+                                    errorstring << "Element " << indx << " has invalid face: " << faceID;
+                                    ASSERTL0(false, errorstring.str().c_str());
+                                }
+                                else if (face->GetShapeType() == LibUtilities::eTriangle)
+                                {
+                                    ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
+                                    tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                }
+                                else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
+                                {
+                                    ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
+                                }
+                            }
+                            
+                            /// Make sure all of the face indicies could be read, and that there weren't too few.
+                            ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for TETRAHEDRON: ") + elementStr).c_str());
+                            ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
+                            ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
+                            
+                            TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>::AllocateSharedPtr(tfaces));
+                            tetgeom->SetGlobalID(indx);
+                            
+                            m_tetGeoms[indx] = tetgeom;
+                            PopulateFaceToElMap(tetgeom, kNfaces);
+                        }
+                        catch(...)
+                        {
+                            NEKERROR(ErrorUtil::efatal,
+                                     (std::string("Unable to read element data for TETRAHEDRON: ") + elementStr).c_str());
+                        }
+                    }
+                    // Pyramid
+                    else if (elementType == "P")
+                    {
+                        try
+                        {
+                            /// Create arrays for the tri and quad faces.
+                            const int kNfaces = PyrGeom::kNfaces;
+                            const int kNtfaces = PyrGeom::kNtfaces;
+                            const int kNqfaces = PyrGeom::kNqfaces;
+                            Geometry2DSharedPtr faces[kNfaces];
+                            int Nfaces  = 0;
+                            int Ntfaces = 0;
+                            int Nqfaces = 0;
+                            
+                            /// Fill the arrays and make sure there aren't too many faces.
+                            std::stringstream errorstring;
+                            errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
+                            for (int i = 0; i < kNfaces; i++)
+                            {
+                                int faceID;
+                                elementDataStrm >> faceID;
+                                Geometry2DSharedPtr face = GetGeometry2D(faceID);
+                                if (face == Geometry2DSharedPtr() ||
+                                    (face->GetShapeType() != LibUtilities::eTriangle && face->GetShapeType() != LibUtilities::eQuadrilateral))
+                                {
+                                    std::stringstream errorstring;
+                                    errorstring << "Element " << indx << " has invalid face: " << faceID;
+                                    ASSERTL0(false, errorstring.str().c_str());
+                                }
+                                else if (face->GetShapeType() == LibUtilities::eTriangle)
+                                {
+                                    ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
+                                    faces[Nfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                    Ntfaces++;
+                                }
+                                else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
+                                {
+                                    ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
+                                    faces[Nfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                                    Nqfaces++;
+                                }
+                            }
+                            
+                            /// Make sure all of the face indicies could be read, and that there weren't too few.
+                            ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for PYRAMID: ") + elementStr).c_str());
+                            ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
+                            ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
+                            
+                            PyrGeomSharedPtr pyrgeom(MemoryManager<PyrGeom>::AllocateSharedPtr(faces));
+                            pyrgeom->SetGlobalID(indx);
+                            
+                            m_pyrGeoms[indx] = pyrgeom;
+                            PopulateFaceToElMap(pyrgeom, kNfaces);
+                        }
+                        catch(...)
+                        {
+                            NEKERROR(ErrorUtil::efatal,
+                                     (std::string("Unable to read element data for PYRAMID: ") + elementStr).c_str());
+                        }
+                    }
+                    // Prism
+                    else if (elementType == "R")
+                    {
+                        try
+                        {
+                            /// Create arrays for the tri and quad faces.
+                            const int kNfaces = PrismGeom::kNfaces;
+                            const int kNtfaces = PrismGeom::kNtfaces;
+                            const int kNqfaces = PrismGeom::kNqfaces;
+                            Geometry2DSharedPtr faces[kNfaces];
+                            int Ntfaces = 0;
+                            int Nqfaces = 0;
+                            int Nfaces  = 0;
+                            
+                            /// Fill the arrays and make sure there aren't too many faces.
+                            std::stringstream errorstring;
+                            errorstring << "Element " << indx << " must have " 
+                                        << kNtfaces << " triangle face(s), and " 
+                                        << kNqfaces << " quadrilateral face(s).";
+                            
+                            for (int i = 0; i < kNfaces; i++)
+                            {
+                                int faceID;
+                                elementDataStrm >> faceID;
+                                Geometry2DSharedPtr face = GetGeometry2D(faceID);
+                                if (face == Geometry2DSharedPtr() ||
+                                    (face->GetShapeType() != LibUtilities::eTriangle && face->GetShapeType() != LibUtilities::eQuadrilateral))
+                                {
+                                    std::stringstream errorstring;
+                                    errorstring << "Element " << indx << " has invalid face: " << faceID;
+                                    ASSERTL0(false, errorstring.str().c_str());
+                                }
+                                else if (face->GetShapeType() == LibUtilities::eTriangle)
+                                {
+                                    ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
+                                    faces[Nfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                    Ntfaces++;
+                                }
+                                else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
+                                {
+                                    ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
+                                    faces[Nfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                                    Nqfaces++;
+                                }
+                            }
+                            
+                            /// Make sure all of the face indicies could be read, and that there weren't too few.
+                            ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for PRISM: ") + elementStr).c_str());
+                            ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
+                            ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
+                            
+                            PrismGeomSharedPtr prismgeom(MemoryManager<PrismGeom>::AllocateSharedPtr(faces));
+                            prismgeom->SetGlobalID(indx);
+                            
+                            m_prismGeoms[indx] = prismgeom;
+                            PopulateFaceToElMap(prismgeom, kNfaces);
+                        }
+                        catch(...)
+                        {
+                            NEKERROR(ErrorUtil::efatal,
+                                     (std::string("Unable to read element data for PRISM: ") + elementStr).c_str());
+                        }
+                    }
+                    // Hexahedral
+                    else if (elementType == "H")
+                    {
+                        try
+                        {
+                            /// Create arrays for the tri and quad faces.
+                            const int kNfaces = HexGeom::kNfaces;
+                            const int kNtfaces = HexGeom::kNtfaces;
+                            const int kNqfaces = HexGeom::kNqfaces;
+                            //TriGeomSharedPtr tfaces[kNtfaces];
+                            QuadGeomSharedPtr qfaces[kNqfaces];
+                            int Ntfaces = 0;
+                            int Nqfaces = 0;
+                            
+                            /// Fill the arrays and make sure there aren't too many faces.
+                            std::stringstream errorstring;
+                            errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
+                            for (int i = 0; i < kNfaces; i++)
+                            {
+                                int faceID;
+                                elementDataStrm >> faceID;
+                                Geometry2DSharedPtr face = GetGeometry2D(faceID);
+                                if (face == Geometry2DSharedPtr() ||
+                                    (face->GetShapeType() != LibUtilities::eTriangle && face->GetShapeType() != LibUtilities::eQuadrilateral))
+                                {
+                                    std::stringstream errorstring;
+                                    errorstring << "Element " << indx << " has invalid face: " << faceID;
+                                    ASSERTL0(false, errorstring.str().c_str());
+                                }
+                                else if (face->GetShapeType() == LibUtilities::eTriangle)
+                                {
+                                    ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
+                                    //tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                }
+                                else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
+                                {
+                                    ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
+                                    qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                                }
+                            }
+                            
+                            /// Make sure all of the face indicies could be read, and that there weren't too few.
+                            ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for HEXAHEDRAL: ") + elementStr).c_str());
+                            ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
+                            ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
+                            
+                            HexGeomSharedPtr hexgeom(MemoryManager<HexGeom>::AllocateSharedPtr(qfaces));
+                            hexgeom->SetGlobalID(indx);
+                            
+                            m_hexGeoms[indx] = hexgeom;
+                            PopulateFaceToElMap(hexgeom, kNfaces);
+                        }
+                        catch(...)
+                        {
+                            NEKERROR(ErrorUtil::efatal,
+                                     (std::string("Unable to read element data for HEXAHEDRAL: ") + elementStr).c_str());
+                        }
+                    }
+                }
                 /// Keep looking
                 element = element->NextSiblingElement();
             }
@@ -662,14 +1010,21 @@ namespace Nektar
                 int indx;
                 int err = composite->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-//                ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
 
+                // read and store label if they exist
+                string labelstr;
+                err = composite->QueryStringAttribute("LABEL", &labelstr);
+                if(err == TIXML_SUCCESS)
+                {
+                    m_compositesLabels[indx] = labelstr;
+                }
+                
                 TiXmlNode* compositeChild = composite->FirstChild();
                 // This is primarily to skip comments that may be present.
                 // Comments appear as nodes just like elements.
                 // We are specifically looking for text in the body
                 // of the definition.
-                while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+                while(compositeChild && compositeChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     compositeChild = compositeChild->NextSibling();
                 }
@@ -993,6 +1348,7 @@ namespace Nektar
             return it->second;
         }
 
+        
         /**
          * Retrieve the basis key for a given face direction.
          */
@@ -1018,6 +1374,9 @@ namespace Nektar
             ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element,
                                                     variable);
 
+            ASSERTL0(expansion, "Could not find expansion connected to face "+
+                     boost::lexical_cast<string>(face->GetGlobalID()));
+
             // Retrieve the geometry object of the element as a Geometry3D.
             Geometry3DSharedPtr geom3d =
                     boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
@@ -1028,115 +1387,23 @@ namespace Nektar
             // coordinate direction of the given face.
             int dir = geom3d->GetDir((*elements)[0]->m_FaceIndx, facedir);
 
-            // Obtain the number of modes for the element basis key in this
-            // direction.
-            int nummodes = (int) expansion->m_basisKeyVector[dir].GetNumModes();
-            int numpoints = (int) expansion->m_basisKeyVector[dir].GetNumPoints();
-
-            switch(expansion->m_basisKeyVector[dir].GetBasisType())
+            if(face->GetNumVerts() == 3)
             {
-            case LibUtilities::eModified_A:
-            case LibUtilities::eModified_B:
-            case LibUtilities::eModified_C:
-                {
-                    switch (facedir)
-                    {
-                    case 0:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
-                        }
-                        break;
-                    case 1:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            if (face->GetNumVerts() == 3)
-                            {
-                                // Triangle
-                                return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
-                            }
-                            else {
-                                // Quadrilateral
-                                return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
-                            }
-                        }
-                        break;
-                    default:
-                        ASSERTL0(false,"invalid value to flag");
-                        break;
-                    }
-                }
-                break;
-            case LibUtilities::eGLL_Lagrange:
-                {
-                    TriGeomSharedPtr triangle = boost::dynamic_pointer_cast<TriGeom>(face);
-                    QuadGeomSharedPtr quadrilateral = boost::dynamic_pointer_cast<QuadGeom>(face);
-
-                    if(quadrilateral)
-                    {
-                        const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
-                        return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
-                    }
-                    else if(triangle)
-                    {
-                        switch (facedir)
-                        {
-                        case 0:
-                            {
-                                const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                                return LibUtilities::BasisKey(LibUtilities::eOrtho_A,nummodes,pkey);
-                            }
-                            break;
-                        case 1:
-                            {
-                                const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
-                                return LibUtilities::BasisKey(LibUtilities::eOrtho_B,nummodes,pkey);
-                            }
-                            break;
-                        default:
-                            ASSERTL0(false,"invalid value to flag");
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a proper Geometry2D failed");
-                    }
-                }
-                break;
-            case LibUtilities::eOrtho_A:
-                {
-                    switch (facedir)
-                    {
-                    case 0:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            return LibUtilities::BasisKey(LibUtilities::eOrtho_A,nummodes,pkey);
-                        }
-                        break;
-                    case 1:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
-                            return LibUtilities::BasisKey(LibUtilities::eOrtho_B,nummodes,pkey);
-                        }
-                        break;
-                    default:
-                        ASSERTL0(false,"invalid value to flag");
-                        break;
-                        }
-                }
-                break;
-//            case eGLL_Lagrange_SEM:
-//                {
-//                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussLobattoLegendre);
-//                    return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
-//                }
-//                break;
-            default:
-                ASSERTL0(false,"expansion type unknown");
-                break;
+                return StdRegions::EvaluateTriFaceBasisKey(facedir,
+                          expansion->m_basisKeyVector[dir].GetBasisType(),
+                          expansion->m_basisKeyVector[dir].GetNumPoints(),
+                          expansion->m_basisKeyVector[dir].GetNumModes());
             }
-            return LibUtilities::NullBasisKey; // Keep things happy by returning a value.
+            else
+            {
+                return StdRegions::EvaluateQuadFaceBasisKey(facedir,
+                          expansion->m_basisKeyVector[dir].GetBasisType(),
+                          expansion->m_basisKeyVector[dir].GetNumPoints(),
+                          expansion->m_basisKeyVector[dir].GetNumModes());
+            }
+            
+            // Keep things happy by returning a value.
+            return LibUtilities::NullBasisKey; 
         }
 
 

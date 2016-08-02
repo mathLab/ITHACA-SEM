@@ -58,7 +58,7 @@ namespace Nektar
 
         /// A map between homo matrix keys and their associated block
         /// matrices.
-        typedef map< Homogeneous1DMatType, DNekBlkMatSharedPtr> Homo1DBlockMatrixMap;
+        typedef std::map< Homogeneous1DMatType, DNekBlkMatSharedPtr> Homo1DBlockMatrixMap;
         /// A shared pointer to a BlockMatrixMap.
         typedef boost::shared_ptr<Homo1DBlockMatrixMap> Homo1DBlockMatrixMapShPtr;
 
@@ -84,17 +84,20 @@ namespace Nektar
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const ExpListHomogeneous1D &In);
+            
+            MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const ExpListHomogeneous1D &In,
+                                                      const std::vector<unsigned int> &eIDs);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpListHomogeneous1D();
 
             MULTI_REGIONS_EXPORT void Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, 
-														 Array<OneD, NekDouble> &outarray, 
-														 bool IsForwards, 
+                                                         Array<OneD, NekDouble> &outarray, 
+                                                         bool IsForwards, 
                                                          
                                  CoeffState coeffstate = eLocal,
-														 bool Shuff = true,
-														 bool UnShuff = true);
+                                                         bool Shuff = true,
+                                                         bool UnShuff = true);
 
             inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                             Array<OneD, NekDouble> &outarray, 
@@ -108,22 +111,17 @@ namespace Nektar
                                             CoeffState coeffstate = eLocal,
                                             bool Shuff = true,
                                             bool UnShuff = true);
-			
-            inline void DealiasedProd(const Array<OneD, NekDouble> &inarray1,
-                                      const Array<OneD, NekDouble> &inarray2,
-                                      Array<OneD, NekDouble> &outarray, 
-                                      CoeffState coeffstate = eLocal);
 
             LibUtilities::BasisSharedPtr  GetHomogeneousBasis(void)
             {
                 return m_homogeneousBasis;
             }
-			
+            
             MULTI_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                                 Array<OneD, NekDouble> &out_d0,
                                                 Array<OneD, NekDouble> &out_d1, 
                                                 Array<OneD, NekDouble> &out_d2);
-			
+            
             MULTI_REGIONS_EXPORT void PhysDeriv(Direction edir,
                                                 const Array<OneD, const NekDouble> &inarray,
                                                 Array<OneD, NekDouble> &out_d);
@@ -134,7 +132,7 @@ namespace Nektar
             }
             
             LibUtilities::TranspositionSharedPtr      m_transposition;
-            
+            LibUtilities::CommSharedPtr               m_StripZcomm;
         protected:
             
             /// FFT variables
@@ -153,6 +151,8 @@ namespace Nektar
             NekDouble                       m_lhom;  ///< Width of homogeneous direction
             Homo1DBlockMatrixMapShPtr       m_homogeneous1DBlockMat;
             Array<OneD, ExpListSharedPtr>   m_planes;
+
+            boost::unordered_map<int, int>  m_zIdToPlane;
             
             DNekBlkMatSharedPtr GenHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, CoeffState coeffstate = eLocal) const;
             
@@ -197,7 +197,7 @@ namespace Nektar
             virtual void v_BwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray,
                                     CoeffState coeffstate);
-			
+            
             virtual void v_BwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray,
                                                Array<OneD,      NekDouble> &outarray);
             
@@ -207,7 +207,7 @@ namespace Nektar
             
             virtual void v_IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
                                                       Array<OneD, NekDouble> &outarray);
-			            
+                        
             virtual std::vector<LibUtilities::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
             
             virtual void v_GetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef);
@@ -221,7 +221,7 @@ namespace Nektar
             virtual void v_ExtractCoeffsToCoeffs(
                                                  const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
 
-            virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
+            virtual void v_WriteVtkPieceData(std::ostream &outfile, int expansion,
                                              std::string var);
 
             virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
@@ -245,7 +245,13 @@ namespace Nektar
                                          const Array<OneD, NekDouble> &inarray2,
                                          Array<OneD, NekDouble> &outarray, 
                                          CoeffState coeffstate = eLocal);
-            
+
+            virtual void v_DealiasedDotProd(
+                const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      CoeffState coeffstate = eLocal);
+
             virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d0,
                                      Array<OneD, NekDouble> &out_d1, 
@@ -284,7 +290,7 @@ namespace Nektar
         {
             v_HomogeneousFwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
         }
-	
+    
         inline void ExpListHomogeneous1D::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                               Array<OneD, NekDouble> &outarray, 
                                                               CoeffState coeffstate,
@@ -293,15 +299,7 @@ namespace Nektar
         {
             v_HomogeneousBwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
         }
-        
-        inline void ExpListHomogeneous1D::DealiasedProd(const Array<OneD, NekDouble> &inarray1,
-                                                        const Array<OneD, NekDouble> &inarray2,
-                                                        Array<OneD, NekDouble> &outarray, 
-                                                        CoeffState coeffstate)
-        {
-            v_DealiasedProd(inarray1,inarray2,outarray,coeffstate);
-        }
-        
+
     } //end of namespace
 } //end of namespace
 

@@ -5478,7 +5478,7 @@
 
         <PARAMETERS>
             <P> TimeStep      = 0.001 </P>
-            <P> NumSteps      = 10 </P>
+            <P> NumSteps      = 50 </P>
             <P> IO_CheckSteps = 10    </P>
             <P> IO_InfoSteps  = 10    </P>
             <P> Kinvis        = 1   </P>
@@ -5492,9 +5492,9 @@
         </VARIABLES>
 
         <BOUNDARYREGIONS>
-            <B ID="0"> C[2] </B>  <!-- Inlet -->
+            <B ID="0"> C[2] </B>    <!-- Inlet -->
             <B ID="1"> C[3] </B>    <!-- Outlet -->
-            <B ID="2"> C[4-7] </B>    <!-- Wall -->
+            <B ID="2"> C[4-7] </B>  <!-- Wall -->
         </BOUNDARYREGIONS>
 
         <BOUNDARYCONDITIONS>

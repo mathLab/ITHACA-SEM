@@ -35,6 +35,8 @@
 
 #include <MultiRegions/ExpList0D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -184,7 +186,7 @@ namespace Nektar
             // Setup Default optimisation information.
             int nel = GetExpSize();
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>::AllocateSharedPtr(nel);
-			
+
             // Set up offset information and array sizes
             SetCoeffPhysOffsets();
 			

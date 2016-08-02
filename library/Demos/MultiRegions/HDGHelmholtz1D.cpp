@@ -7,6 +7,7 @@
 #include <MultiRegions/DisContField1D.h>
 #include <SpatialDomains/MeshGraph1D.h>
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])
@@ -15,7 +16,6 @@ int main(int argc, char *argv[])
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
-    string meshfile(vSession->GetFilename());
 
     MultiRegions::DisContField1DSharedPtr Exp,Fce;
     int     i, nq,  coordim;

@@ -85,6 +85,11 @@ namespace Nektar
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In,
                                    const bool DeclareLinesSetCoeffPhys = true);
+            
+            /// 
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In,
+                                    const std::vector<unsigned int> &eIDs,
+                                    const bool DeclareLinesSetCoeffPhys = true);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList3DHomogeneous2D();
@@ -112,11 +117,11 @@ namespace Nektar
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2);
 
-            virtual void v_WriteTecplotZone(std::ofstream &outfile,
+            virtual void v_WriteTecplotZone(std::ostream &outfile,
                                             int expansion);
 
 
-            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+            virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip);
 
             virtual NekDouble v_L2(
                 const Array<OneD, const NekDouble> &inarray,

@@ -7,13 +7,13 @@
             <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
             <I PROPERTY="AdvectionForm" VALUE="Convective" />
             <I PROPERTY="Projection" VALUE="Galerkin" />
-            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
         </SOLVERINFO>
 
         <PARAMETERS>
             <P> TimeStep = 0.001 </P>
-            <P> NumSteps = 20000    </P>
-            <P> IO_CheckSteps = 100  </P>
+            <P> NumSteps = 1000    </P>
+            <P> IO_CheckSteps = 1000  </P>
             <P> IO_InfoSteps = 10    </P>
             <P> Re = 7500     </P>
             <P> Kinvis = 1.0/Re     </P>
@@ -55,10 +55,9 @@
             <E VAR="p" VALUE="0" />
         </FUNCTION>
 
-        <FUNCTION NAME="Forcing">
-            <E VAR="u" VALUE="8*Kinvis" />
-            <E VAR="v" VALUE="0" />
-            <E VAR="p" VALUE="0" />
+        <FUNCTION NAME="BodyForce">
+          <E VAR="u" VALUE="2*Kinvis" />
+          <E VAR="v" VALUE="0" />
         </FUNCTION>
 
         <FUNCTION NAME="ExactSolution">
@@ -68,6 +67,13 @@
         </FUNCTION>
 
     </CONDITIONS>
+
+        <FORCING>
+          <FORCE TYPE="Body">
+            <BODYFORCE> BodyForce </BODYFORCE>
+          </FORCE>
+        </FORCING>
+
 
 
     <GEOMETRY DIM="2" SPACE="2">
@@ -155,7 +161,7 @@
             <E ID="15"> 11 9   </E>
             <E ID="16"> 10 12   </E>
             <E ID="17"> 12 13   </E>
-            <E ID="18"> 13 11   </E>
+            <E ID="18"> 11 13   </E>
             <E ID="19"> 1 14   </E>
             <E ID="20"> 14 15   </E>
             <E ID="21"> 15 2   </E>
@@ -245,7 +251,7 @@
             <E ID="105"> 60 53   </E>
             <E ID="106"> 61 60   </E>
             <E ID="107"> 61 54   </E>
-            <E ID="108"> 62 61   </E>
+            <E ID="108"> 61 62   </E>
             <E ID="109"> 62 55   </E>
         </EDGE>
         <ELEMENT>

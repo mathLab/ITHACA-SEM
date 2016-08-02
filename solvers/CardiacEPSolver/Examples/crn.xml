@@ -523,10 +523,10 @@
         <SOLVERINFO>
             <I PROPERTY="EQTYPE" VALUE="Monodomain" />
             <I PROPERTY="CellModel" VALUE="CourtemancheRamirezNattel98" />
+            <I PROPERTY="CellModelVariant" VALUE="Original" />
             <I PROPERTY="Projection" VALUE="Continuous"/>
             <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXdirk_3_4_3"/>
-            <I PROPERTY="GlobalSysSoln" VALUE="IterativeStaticCond" />
         </SOLVERINFO>
         
         <VARIABLES>

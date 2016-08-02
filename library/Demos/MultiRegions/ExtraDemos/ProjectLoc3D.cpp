@@ -7,6 +7,7 @@
 #include <MultiRegions/ExpList3D.h>
 #include <SpatialDomains/MeshGraph3D.h>
 
+using namespace std;
 using namespace Nektar;
 
 // This routine projects a polynomial which has energy in all mdoes of
@@ -16,8 +17,6 @@ int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
-
-    string meshfile(vSession->GetFilename());
 
     MultiRegions::ExpList3DSharedPtr Exp,Fce;
     int     i, j, nq,  coordim;

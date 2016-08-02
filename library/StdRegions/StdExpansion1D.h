@@ -78,7 +78,6 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& coords,
                     const Array<OneD, const NekDouble>& physvals);
 
-
         private:
 
             // Virtual Functions ----------------------------------------

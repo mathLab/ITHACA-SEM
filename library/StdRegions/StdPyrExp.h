@@ -157,7 +157,8 @@ namespace Nektar
                       Array<OneD,       NekDouble> &outarray);
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                 const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,       NekDouble> &outarray);
+                      Array<OneD,       NekDouble> &outarray,
+                bool                                multiplybyweights = true);
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFacKernel(
                 const Array<OneD, const NekDouble> &base0,
                 const Array<OneD, const NekDouble> &base1,
@@ -190,6 +191,11 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_FillMode(
                 const int mode, 
                 Array<OneD, NekDouble> &outarray);  
+            STD_REGIONS_EXPORT virtual void v_GetFaceNumModes(
+                    const int                  fid,
+                    const Orientation          faceOrient,
+                    int &numModes0,
+                    int &numModes1);
 
             //---------------------------------------
             // Helper functions
@@ -202,9 +208,12 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_GetEdgeNcoeffs(const int i) const;
             STD_REGIONS_EXPORT virtual int v_GetFaceNcoeffs(const int i) const;
             STD_REGIONS_EXPORT virtual int v_GetFaceIntNcoeffs(const int i) const;
+            STD_REGIONS_EXPORT virtual int v_GetFaceNumPoints(const int i) const;
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(
                 const std::vector<unsigned int> &nummodes, 
                 int &modes_offset);
+            STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey 
+                    v_DetFaceBasisKey(const int i, const int k) const;
             STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(
                 const int i) const;
 
@@ -248,8 +257,8 @@ namespace Nektar
             //---------------------------------------
             // Private helper functions
             //---------------------------------------
-            map<Mode, unsigned int, cmpop> m_map;
-            map<int, map<int, map<int, pair<int, int> > > > m_idxMap;
+            std::map<Mode, unsigned int, cmpop> m_map;
+            std::map<int, std::map<int, std::map<int, std::pair<int, int> > > > m_idxMap;
         };    
         typedef boost::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
     } //end of namespace

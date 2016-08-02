@@ -265,5 +265,21 @@
             <!--<F VAR="u" FILE="cube_HO_225.chk"/>-->
             <E VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(PI*z)" />
         </FUNCTION>
+
     </CONDITIONS>
+
+    <COLLECTIONS>
+        <OPERATOR TYPE="BwdTrans">
+            <ELEMENT TYPE="H" ORDER="2-15" IMPTYPE="SumFac" />
+        </OPERATOR>
+        <OPERATOR TYPE="IProductWRTBase">
+            <ELEMENT TYPE="H" ORDER="2-15" IMPTYPE="SumFac" />
+        </OPERATOR>
+        <OPERATOR TYPE="PhysDeriv">
+            <ELEMENT TYPE="H" ORDER="2-15" IMPTYPE="SumFac" />
+        </OPERATOR>
+        <OPERATOR TYPE="IProductWRTDerivBase">
+            <ELEMENT TYPE="H" ORDER="2-15" IMPTYPE="SumFac" />
+        </OPERATOR>
+     </COLLECTIONS>
 </NEKTAR>

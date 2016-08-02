@@ -42,7 +42,7 @@
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
-#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
+#include <SolverUtils/AdvectionSystem.h>
 #include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
 
 namespace Nektar
@@ -61,11 +61,11 @@ namespace Nektar
 
         /// Creates an instance of this class
         static ExtrapolateSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const LibUtilities::SessionReaderSharedPtr  &pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-            MultiRegions::ExpListSharedPtr  &pPressure,
-            const Array<OneD, int> &pVel,
-            const AdvectionTermSharedPtr &advObject)
+            MultiRegions::ExpListSharedPtr              &pPressure,
+            const Array<OneD, int>                      &pVel,
+            const SolverUtils::AdvectionSharedPtr       &advObject)
         {
             ExtrapolateSharedPtr p = MemoryManager<StandardExtrapolate>
                 ::AllocateSharedPtr(pSession,pFields,pPressure,pVel,advObject);
@@ -78,13 +78,17 @@ namespace Nektar
         StandardExtrapolate(
             const LibUtilities::SessionReaderSharedPtr pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-            MultiRegions::ExpListSharedPtr  pPressure,
-            const Array<OneD, int> pVel,
-            const AdvectionTermSharedPtr advObject);
+            MultiRegions::ExpListSharedPtr              pPressure,
+            const Array<OneD, int>                      pVel,
+            const SolverUtils::AdvectionSharedPtr       advObject);
 
         virtual ~StandardExtrapolate();
         
     protected:
+        virtual void v_EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &fields,
+                                           const Array<OneD, const Array<OneD, NekDouble> >  &N,
+                                           NekDouble kinvis);
+        
         virtual void v_SubSteppingTimeIntegration(
             int intMethod,
             const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme);

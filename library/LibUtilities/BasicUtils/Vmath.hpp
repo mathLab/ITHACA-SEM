@@ -248,6 +248,10 @@ namespace Vmath
     /// \brief Return the minimum element in x - called vmin to avoid
     /// conflict with min
     template<class T>  LIB_UTILITIES_EXPORT T Vmin( int n, const T *x, const int incx);
+
+    /// \brief Return number of NaN elements of x
+    template<class T>  LIB_UTILITIES_EXPORT int Nnan(int n, const T *x, const int incx);
+
     
     /// \brief  vvtvp (vector times vector times vector): z = w*x*y
     template<class T> LIB_UTILITIES_EXPORT T Dot(     int n,

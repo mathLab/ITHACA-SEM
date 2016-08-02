@@ -686,7 +686,7 @@ namespace Nektar
             BOOST_CHECK_EQUAL(rhs_b[2], 30.0);
             BOOST_CHECK_EQUAL(rhs_b[3], 40.0);
             #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULL_DEBUG)
-                BOOST_CHECK_NO_THROW(rhs_a[4])
+                BOOST_CHECK_NO_THROW(rhs_a[4]);
                 BOOST_CHECK_THROW(rhs_a[5], ErrorUtil::NekError);
                 BOOST_CHECK_NO_THROW(rhs_b[3]);
                 BOOST_CHECK_THROW(rhs_b[4], ErrorUtil::NekError);

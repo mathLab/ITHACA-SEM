@@ -80,11 +80,10 @@ namespace Nektar
 	NekDouble cR = sqrt(g * hR);
     
 	// the two-rarefaction wave assumption
-	NekDouble hstar,ustar,fL,fR;
+	NekDouble hstar,fL,fR;
 	hstar = 0.5 * (cL + cR) + 0.25 * (uL - uR);
 	hstar *= hstar;
 	hstar *= (1.0/g);
-	ustar = 0.5*(uL + uR) + cL - cR;
 
     
 	// Compute SL

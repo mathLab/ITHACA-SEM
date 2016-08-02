@@ -39,6 +39,8 @@
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <tinyxml.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -100,92 +102,135 @@ namespace Nektar
             TiXmlHandle docHandle(&doc);
             TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
             TiXmlElement* field = NULL;
+            CurveMap::iterator it;
 
             /// Look for elements in ELEMENT block.
             field = mesh->FirstChildElement("EDGE");
 
             ASSERTL0(field, "Unable to find EDGE tag in file.");
 
-            /// All elements are of the form: "<E ID="#"> ... </E>", with
-            /// ? being the element type.
-            /// Read the ID field first.
-            TiXmlElement *edge = field->FirstChildElement("E");
-
-            /// Since all edge data is one big text block, we need to
-            /// accumulate all TEXT data and then parse it.  This
-            /// approach effectively skips all comments or other node
-            /// types since we only care about the edge list.  We
-            /// cannot handle missing edge numbers as we could with
-            /// missing element numbers due to the text block format.
-            std::string edgeStr;
-            int i,indx;
-            int nextEdgeNumber = -1;
-
-            // Curved Edges
-            map<int, int> edge_curved;
-            for(i = 0; i < m_curvedEdges.size(); ++i)
+            string IsCompressed;
+            field->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+                
+            if(IsCompressed.size()) 
             {
-                edge_curved[m_curvedEdges[i]->m_curveID] = i;
-            }
+                ASSERTL0(boost::iequals(IsCompressed,
+                            LibUtilities::CompressData::GetCompressString()),
+                         "Compressed formats do not match. Expected :"
+                         + LibUtilities::CompressData::GetCompressString()
+                         + " but got " + std::string(IsCompressed));
 
-            while(edge)
-            {
-                nextEdgeNumber++;
+                // Extract the edge body
+                TiXmlNode* edgeChild = field->FirstChild();
+                ASSERTL0(edgeChild, "Unable to extract the data from "
+                         "the compressed edge tag.");
 
-                int err = edge->QueryIntAttribute("ID",&indx);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
-//                ASSERTL0(indx == nextEdgeNumber, "Edge IDs must begin with zero and be sequential.");
-
-                TiXmlNode *child = edge->FirstChild();
-                edgeStr.clear();
-                if (child->Type() == TiXmlNode::TEXT)
+                std::string edgeStr;
+                if (edgeChild->Type() == TiXmlNode::TINYXML_TEXT)
                 {
-                    edgeStr += child->ToText()->ValueStr();
+                    edgeStr += edgeChild->ToText()->ValueStr();
                 }
 
-                /// Now parse out the edges, three fields at a time.
-                int vertex1, vertex2;
-                std::istringstream edgeDataStrm(edgeStr.c_str());
-
-                try
+                std::vector<LibUtilities::MeshEdge> edgeData;
+                LibUtilities::CompressData::ZlibDecodeFromBase64Str(edgeStr,
+                                                                    edgeData);
+                int indx;
+                for(int i = 0; i < edgeData.size(); ++i)
                 {
-                    while (!edgeDataStrm.fail())
+                    indx = edgeData[i].id;
+
+                    PointGeomSharedPtr vertices[2] =
+                        {GetVertex(edgeData[i].v0), GetVertex(edgeData[i].v1)};
+                    SegGeomSharedPtr edge;
+
+                    it = m_curvedEdges.find(indx);
+                    if (it == m_curvedEdges.end())
                     {
-                        edgeDataStrm >> vertex1 >> vertex2;
-
-                        // Must check after the read because we may be
-                        // at the end and not know it.  If we are at
-                        // the end we will add a duplicate of the last
-                        // entry if we don't check here.
-                        if (!edgeDataStrm.fail())
+                        edge = MemoryManager<SegGeom>::AllocateSharedPtr(
+                                            indx, m_spaceDimension, vertices);
+                    }
+                    else
+                    {
+                        edge = MemoryManager<SegGeom>::AllocateSharedPtr(
+                                            indx, m_spaceDimension, vertices,
+                                            it->second);
+                    }
+                    m_segGeoms[indx] = edge;
+                }
+            }
+            else
+            {
+                /// All elements are of the form: "<E ID="#"> ... </E>", with
+                /// ? being the element type.
+                /// Read the ID field first.
+                TiXmlElement *edge = field->FirstChildElement("E");
+                
+                /// Since all edge data is one big text block, we need to
+                /// accumulate all TINYXML_TEXT data and then parse it.  This
+                /// approach effectively skips all comments or other node
+                /// types since we only care about the edge list.  We
+                /// cannot handle missing edge numbers as we could with
+                /// missing element numbers due to the text block format.
+                std::string edgeStr;
+                int indx;
+                
+                while(edge)
+                {
+                    int err = edge->QueryIntAttribute("ID",&indx);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
+                    
+                    TiXmlNode *child = edge->FirstChild();
+                    edgeStr.clear();
+                    if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                    {
+                    edgeStr += child->ToText()->ValueStr();
+                    }
+                    
+                    /// Now parse out the edges, three fields at a time.
+                    int vertex1, vertex2;
+                    std::istringstream edgeDataStrm(edgeStr.c_str());
+                    
+                    try
+                    {
+                        while (!edgeDataStrm.fail())
                         {
-                            PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
-
-                            SegGeomSharedPtr edge;
-
-                            if(edge_curved.count(indx) == 0)
+                            edgeDataStrm >> vertex1 >> vertex2;
+                            
+                            // Must check after the read because we may be
+                            // at the end and not know it.  If we are at
+                            // the end we will add a duplicate of the last
+                            // entry if we don't check here.
+                            if (!edgeDataStrm.fail())
                             {
-                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
-                                edge->SetGlobalID(indx); // Set global mesh id
+                                PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
+                                
+                                SegGeomSharedPtr edge;
+                                
+                                it = m_curvedEdges.find(indx);
+                                
+                                if(it == m_curvedEdges.end())
+                                {
+                                    edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
+                                    edge->SetGlobalID(indx); // Set global mesh id
+                                }
+                                else
+                                {
+                                    edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
+                                    edge->SetGlobalID(indx); //Set global mesh id
+                                }
+                                
+                                m_segGeoms[indx] = edge;
                             }
-                            else
-                            {
-                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, m_curvedEdges[edge_curved.find(indx)->second]);
-                                edge->SetGlobalID(indx); //Set global mesh id
-                            }
-
-                            m_segGeoms[indx] = edge;
                         }
                     }
+                    catch(...)
+                    {
+                        NEKERROR(ErrorUtil::efatal, (std::string("Unable to read edge data: ") + edgeStr).c_str());
+                    }
+                    
+                    edge = edge->NextSiblingElement("E");
                 }
-                catch(...)
-                {
-                    NEKERROR(ErrorUtil::efatal, (std::string("Unable to read edge data: ") + edgeStr).c_str());
-                }
-
-                edge = edge->NextSiblingElement("E");
             }
-
         }
 
         void MeshGraph2D::ReadElements(TiXmlDocument &doc)
@@ -201,42 +246,151 @@ namespace Nektar
             ASSERTL0(field, "Unable to find ELEMENT tag in file.");
 
             // Set up curve map for curved elements on an embedded manifold.
-            map<int, int> faceCurves;
-            map<int,int>::iterator x;
-            for (int i = 0; i < m_curvedFaces.size(); ++i)
-            {
-                faceCurves[m_curvedFaces[i]->m_curveID] = i;
-            }
-
-            int nextElementNumber = -1;
+            CurveMap::iterator it;
 
             /// All elements are of the form: "<? ID="#"> ... </?>", with
             /// ? being the element type.
 
             TiXmlElement *element = field->FirstChildElement();
 
-                while (element)
+            while (element)
+            {
+                std::string elementType(element->ValueStr());
+                
+                ASSERTL0(elementType == "Q" || elementType == "T",
+                         (std::string("Unknown 2D element type: ") + elementType).c_str());
+                
+                string IsCompressed;
+                element->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+                
+                if(IsCompressed.size()) 
                 {
-                    std::string elementType(element->ValueStr());
+                    ASSERTL0(boost::iequals(IsCompressed,
+                            LibUtilities::CompressData:: GetCompressString()),
+                            "Compressed formats do not match. Expected :"
+                            + LibUtilities::CompressData::GetCompressString()
+                            + " but got " + std::string(IsCompressed));
 
-                    ASSERTL0(elementType == "Q" || elementType == "T",
-                             (std::string("Unknown 2D element type: ") + elementType).c_str());
+                    // Extract the face body
+                    TiXmlNode* faceChild = element->FirstChild();
+                    ASSERTL0(faceChild, "Unable to extract the data from "
+                                        "the compressed face tag.");
 
-                    /// These should be ordered.
-                    nextElementNumber++;
+                    std::string faceStr;
+                    if (faceChild->Type() == TiXmlNode::TINYXML_TEXT)
+                    {
+                        faceStr += faceChild->ToText()->ValueStr();
+                    }
 
+                    int indx;
+                    if(elementType == "T")
+                    {
+                        std::vector<LibUtilities::MeshTri> faceData;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                            faceStr, faceData);
+
+                        for(int i = 0; i < faceData.size(); ++i)
+                        {
+                            indx = faceData[i].id;
+
+                            /// See if this face has curves.
+                            it = m_curvedFaces.find(indx);
+
+                            /// Create a TriGeom to hold the new definition.
+                            SegGeomSharedPtr edges[TriGeom::kNedges] =
+                            {
+                                GetSegGeom(faceData[i].e[0]),
+                                GetSegGeom(faceData[i].e[1]),
+                                GetSegGeom(faceData[i].e[2])
+                            };
+
+                            StdRegions::Orientation edgeorient[TriGeom::kNedges] =
+                            {
+                                SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                                SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                                SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
+                            };
+
+                            TriGeomSharedPtr trigeom;
+                            if (it == m_curvedFaces.end())
+                            {
+                                trigeom =
+                                    MemoryManager<TriGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient);
+                            }
+                            else
+                            {
+                                trigeom =
+                                    MemoryManager<TriGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient,
+                                                    it->second);
+                            }
+                            trigeom->SetGlobalID(indx);
+                            m_triGeoms[indx] = trigeom;
+                        }
+                    }
+                    else if (elementType == "Q")
+                    {
+                        std::vector<LibUtilities::MeshQuad> faceData;
+                        LibUtilities::CompressData::ZlibDecodeFromBase64Str(
+                                                            faceStr,faceData);
+
+                        for(int i = 0; i < faceData.size(); ++i)
+                        {
+                            indx = faceData[i].id;
+
+                            /// See if this face has curves.
+                            it = m_curvedFaces.find(indx);
+
+                            /// Create a QuadGeom to hold the new definition.
+                            SegGeomSharedPtr edges[QuadGeom::kNedges] =
+                                {GetSegGeom(faceData[i].e[0]),
+                                 GetSegGeom(faceData[i].e[1]),
+                                 GetSegGeom(faceData[i].e[2]),
+                                 GetSegGeom(faceData[i].e[3])};
+
+                            StdRegions::Orientation edgeorient[QuadGeom::kNedges] =
+                                {
+                                    SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                                    SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                                    SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
+                                    SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
+                                };
+
+                            QuadGeomSharedPtr quadgeom;
+                            if (it == m_curvedEdges.end())
+                            {
+                                quadgeom =
+                                    MemoryManager<QuadGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient);
+                            }
+                            else
+                            {
+                                quadgeom =
+                                    MemoryManager<QuadGeom>::AllocateSharedPtr(
+                                                    indx, edges, edgeorient,
+                                                    it->second);
+                            }
+                            quadgeom->SetGlobalID(indx);
+                            m_quadGeoms[indx] = quadgeom;
+                        }
+                    }
+                }
+                else
+                {
                     /// Read id attribute.
                     int indx;
                     int err = element->QueryIntAttribute("ID", &indx);
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
-//                    ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
-
+                    
+                    it = m_curvedFaces.find(indx);
+                
                     /// Read text element description.
                     TiXmlNode* elementChild = element->FirstChild();
                     std::string elementStr;
                     while(elementChild)
                     {
-                        if (elementChild->Type() == TiXmlNode::TEXT)
+                        if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
                         {
                             elementStr += elementChild->ToText()->ValueStr();
                         }
@@ -262,21 +416,21 @@ namespace Nektar
 
                             /// Create a TriGeom to hold the new definition.
                             SegGeomSharedPtr edges[TriGeom::kNedges] =
-                        {
-                            GetSegGeom(edge1),
-                            GetSegGeom(edge2),
-                            GetSegGeom(edge3)
-                        };
+                            {
+                                GetSegGeom(edge1),
+                                GetSegGeom(edge2),
+                                GetSegGeom(edge3)
+                            };
 
                             StdRegions::Orientation edgeorient[TriGeom::kNedges] =
-                        {
-                            SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
-                            SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
-                            SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
-                        };
+                            {
+                                SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                                SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                                SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
+                            };
 
                             TriGeomSharedPtr trigeom;
-                            if ((x = faceCurves.find(indx)) == faceCurves.end())
+                            if (it == m_curvedFaces.end())
                             {
                                 trigeom = MemoryManager<TriGeom>
                                             ::AllocateSharedPtr(indx,
@@ -289,7 +443,7 @@ namespace Nektar
                                             ::AllocateSharedPtr(indx,
                                                     edges,
                                                     edgeorient,
-                                                    m_curvedFaces[x->second]);
+                                                    it->second);
                             }
                             trigeom->SetGlobalID(indx);
 
@@ -329,7 +483,7 @@ namespace Nektar
                         };
 
                             QuadGeomSharedPtr quadgeom;
-                            if ((x = faceCurves.find(indx)) == faceCurves.end())
+                            if (it == m_curvedFaces.end())
                             {
                                 quadgeom = MemoryManager<QuadGeom>
                                             ::AllocateSharedPtr(indx,
@@ -342,7 +496,7 @@ namespace Nektar
                                             ::AllocateSharedPtr(indx,
                                                     edges,
                                                     edgeorient,
-                                                    m_curvedFaces[x->second]);
+                                                    it->second);
                             }
                             quadgeom->SetGlobalID(indx);
 
@@ -354,10 +508,10 @@ namespace Nektar
                             NEKERROR(ErrorUtil::efatal,(std::string("Unable to read element data for QUAD: ") + elementStr).c_str());
                         }
                     }
-
-                    /// Keep looking
-                    element = element->NextSiblingElement();
                 }
+                /// Keep looking
+                element = element->NextSiblingElement();
+            }
         }
 
         void MeshGraph2D::ReadComposites(TiXmlDocument &doc)
@@ -388,14 +542,21 @@ namespace Nektar
                 int indx;
                 int err = composite->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-//                ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
+
+                // read and store label if they exist
+                string labelstr;
+                err = composite->QueryStringAttribute("LABEL", &labelstr);
+                if(err == TIXML_SUCCESS)
+                {
+                    m_compositesLabels[indx] = labelstr;
+                }
 
                 TiXmlNode* compositeChild = composite->FirstChild();
                 // This is primarily to skip comments that may be present.
                 // Comments appear as nodes just like elements.
                 // We are specifically looking for text in the body
                 // of the definition.
-                while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+                while(compositeChild && compositeChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     compositeChild = compositeChild->NextSibling();
                 }
@@ -691,7 +852,7 @@ namespace Nektar
                         {
                         case LibUtilities::eGaussLobattoLegendre:
                             {
-                                const  LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                                const  LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                                 return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             }
                             break;
@@ -703,7 +864,7 @@ namespace Nektar
                             // here since the ASSERT will stop
                             // execution.  Just return something
                             // to prevent warnings messages.
-                            const  LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                            const  LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                             return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             break;
                         }
@@ -743,6 +904,12 @@ namespace Nektar
                                 return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             }
                             break;
+                        case LibUtilities::eGaussLobattoLegendre:
+                            {
+                                const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
+                                return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
+                            }
+                            break;
 
                         default:
                             ASSERTL0(false,"Unexpected points distribution");
@@ -773,7 +940,7 @@ namespace Nektar
                             // since the ASSERT will stop execution.
                             // Just return something to prevent
                             // warnings messages.
-                            const LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                            const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                             return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             break;
                         }

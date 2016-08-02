@@ -44,11 +44,22 @@
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
+using namespace std;
 
 namespace Nektar
 {
     namespace MultiRegions
     {
+        /**
+         * @class DisContField2D
+         * Abstraction of a global discontinuous two-dimensional spectral/hp
+         * element expansion which approximates the solution of a set of
+         * partial differential equations.
+         */
+        
+        /**
+         * @brief Default constructor.
+         */
         DisContField2D::DisContField2D(void)
         : ExpList2D          (),
           m_bndCondExpansions(),
@@ -65,6 +76,7 @@ namespace Nektar
               m_bndConditions      (In.m_bndConditions),
               m_globalBndMat       (In.m_globalBndMat),
               m_traceMap           (In.m_traceMap),
+              m_locTraceToTraceMap (In.m_locTraceToTraceMap),
               m_boundaryEdges      (In.m_boundaryEdges),
               m_periodicVerts      (In.m_periodicVerts),
               m_periodicEdges      (In.m_periodicEdges),
@@ -80,13 +92,17 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Constructs a global discontinuous field based on an input
+         * mesh with boundary conditions.
+         */
         DisContField2D::DisContField2D(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const SpatialDomains::MeshGraphSharedPtr   &graph2D,
             const std::string                          &variable,
             const bool                                  SetUpJustDG,
             const bool                                  DeclareCoeffPhysArrays)
-            : ExpList2D(pSession,graph2D,DeclareCoeffPhysArrays,variable),
+            : ExpList2D(pSession, graph2D, DeclareCoeffPhysArrays, variable),
               m_bndCondExpansions(),
               m_bndConditions(),
               m_trace(NullExpListSharedPtr),
@@ -96,10 +112,10 @@ namespace Nektar
               m_periodicBwdCopy()
         {
 
-            if(variable.compare("DefaultVar") != 0) // do not set up BCs if default variable
+            if (variable.compare("DefaultVar") != 0) // do not set up BCs if default variable
             {
                 SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
-                GenerateBoundaryConditionExpansion(graph2D,bcs,variable,
+                GenerateBoundaryConditionExpansion(graph2D, bcs, variable,
                                                    DeclareCoeffPhysArrays);
                 
                 if (DeclareCoeffPhysArrays)
@@ -140,7 +156,7 @@ namespace Nektar
                                 locExpList->GetExp(e)->
                                         as<LocalRegions::Expansion>  ();
                         
-                        exp2d->SetEdgeExp(EdgeID[cnt+e], exp);
+                        exp2d->SetEdgeExp(EdgeID[cnt+e], exp1d);
                         exp1d->SetAdjacentElementExp(EdgeID[cnt+e], exp2d);
                     }
                     cnt += m_bndCondExpansions[i]->GetExpSize();
@@ -168,8 +184,10 @@ namespace Nektar
         }
 
 
-        // Copy type constructor which declares new boundary conditions
-        // and re-uses mapping info and trace space if possible
+        /*
+         * @brief Copy type constructor which declares new boundary conditions
+         * and re-uses mapping info and trace space if possible
+         */
         DisContField2D::DisContField2D(
             const DisContField2D                     &In,
             const SpatialDomains::MeshGraphSharedPtr &graph2D,
@@ -202,12 +220,12 @@ namespace Nektar
                     }
                     else
                     {
-                        // set elmt edges to point to robin bc edges if required.
+                        // set elmt edges to point to robin bc edges if required
                         int i, cnt = 0;
                         Array<OneD, int> ElmtID,EdgeID;
                         GetBoundaryToElmtMap(ElmtID,EdgeID);
                         
-                        for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                        for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
                         {
                             MultiRegions::ExpListSharedPtr locExpList;
                             
@@ -226,20 +244,22 @@ namespace Nektar
                                     = locExpList->GetExp(e)->
                                     as<LocalRegions::Expansion>  ();
                                 
-                                exp2d->SetEdgeExp(EdgeID[cnt+e],exp);
-                                exp1d->SetAdjacentElementExp(EdgeID[cnt+e],exp2d);
+                                exp2d->SetEdgeExp(EdgeID[cnt+e], exp1d);
+                                exp1d->SetAdjacentElementExp(EdgeID[cnt+e],
+                                                             exp2d);
                             }
+                            
                             cnt += m_bndCondExpansions[i]->GetExpSize();
                         }
                         
                         
-                        if(m_session->DefinesSolverInfo("PROJECTION"))
+                        if (m_session->DefinesSolverInfo("PROJECTION"))
                         {
                             std::string ProjectStr =
                                 m_session->GetSolverInfo("PROJECTION");
                             
-                            if((ProjectStr == "MixedCGDG") ||
-                               (ProjectStr == "Mixed_CG_Discontinuous"))
+                            if ((ProjectStr == "MixedCGDG") ||
+                                (ProjectStr == "Mixed_CG_Discontinuous"))
                             {
                                 SetUpDG();
                             }
@@ -256,43 +276,45 @@ namespace Nektar
                 }
                 else
                 {
-                    if(SetUpJustDG)
+                    if (SetUpJustDG)
                     {
-                        m_globalBndMat      = In.m_globalBndMat;
-                        m_trace             = In.m_trace;
-                        m_traceMap          = In.m_traceMap;
-                        m_periodicEdges     = In.m_periodicEdges;
-                        m_periodicVerts     = In.m_periodicVerts;
-                        m_periodicFwdCopy   = In.m_periodicFwdCopy;
-                        m_periodicBwdCopy   = In.m_periodicBwdCopy;
-                        m_boundaryEdges     = In.m_boundaryEdges;
-                        m_leftAdjacentEdges = In.m_leftAdjacentEdges;
+                        m_globalBndMat       = In.m_globalBndMat;
+                        m_trace              = In.m_trace;
+                        m_traceMap           = In.m_traceMap;
+                        m_locTraceToTraceMap = In.m_locTraceToTraceMap;
+                        m_periodicEdges      = In.m_periodicEdges;
+                        m_periodicVerts      = In.m_periodicVerts;
+                        m_periodicFwdCopy    = In.m_periodicFwdCopy;
+                        m_periodicBwdCopy    = In.m_periodicBwdCopy;
+                        m_boundaryEdges      = In.m_boundaryEdges;
+                        m_leftAdjacentEdges  = In.m_leftAdjacentEdges;
                     }
                     else 
                     {
-                        m_globalBndMat      = In.m_globalBndMat;
-                        m_trace             = In.m_trace;
-                        m_traceMap          = In.m_traceMap;
-                        m_periodicEdges     = In.m_periodicEdges;
-                        m_periodicVerts     = In.m_periodicVerts;
-                        m_periodicFwdCopy   = In.m_periodicFwdCopy;
-                        m_periodicBwdCopy   = In.m_periodicBwdCopy;
-                        m_boundaryEdges     = In.m_boundaryEdges;
-                        m_leftAdjacentEdges = In.m_leftAdjacentEdges;
+                        m_globalBndMat       = In.m_globalBndMat;
+                        m_trace              = In.m_trace;
+                        m_traceMap           = In.m_traceMap;
+                        m_locTraceToTraceMap = In.m_locTraceToTraceMap;
+                        m_periodicEdges      = In.m_periodicEdges;
+                        m_periodicVerts      = In.m_periodicVerts;
+                        m_periodicFwdCopy    = In.m_periodicFwdCopy;
+                        m_periodicBwdCopy    = In.m_periodicBwdCopy;
+                        m_boundaryEdges      = In.m_boundaryEdges;
+                        m_leftAdjacentEdges  = In.m_leftAdjacentEdges;
                         
-                        // set elmt edges to point to robin bc edges if required.
+                        // set elmt edges to point to robin bc edges if required
                         int i, cnt = 0;
                         Array<OneD, int> ElmtID, EdgeID;
                         GetBoundaryToElmtMap(ElmtID, EdgeID);
                         
-                        for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                        for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
                         {
                             MultiRegions::ExpListSharedPtr locExpList;
                             
                             int e;
                             locExpList = m_bndCondExpansions[i];
                             
-                            for(e = 0; e < locExpList->GetExpSize(); ++e)
+                            for (e = 0; e < locExpList->GetExpSize(); ++e)
                             {
                                 LocalRegions::Expansion2DSharedPtr exp2d
                                     = (*m_exp)[ElmtID[cnt+e]]->
@@ -304,8 +326,9 @@ namespace Nektar
                                     = locExpList->GetExp(e)->
                                     as<LocalRegions::Expansion>  ();
                                 
-                                exp2d->SetEdgeExp(EdgeID[cnt+e],exp);
-                                exp1d->SetAdjacentElementExp(EdgeID[cnt+e],exp2d);
+                                exp2d->SetEdgeExp(EdgeID[cnt+e], exp1d);
+                                exp1d->SetAdjacentElementExp(EdgeID[cnt+e],
+                                                             exp2d);
                             }
                             cnt += m_bndCondExpansions[i]->GetExpSize();
                         }
@@ -381,14 +404,19 @@ namespace Nektar
                                   m_periodicEdges,
                                   variable);
 
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                m_traceMap->PrintStats(std::cout, variable);
+            }
+
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
-            // Scatter trace segments to 2D elements. For each element, we find
-            // the trace segment associated to each edge. The element then
-            // retains a pointer to the trace space segments, to ensure
-            // uniqueness of normals when retrieving from two adjoining elements
-            // which do not lie in a plane.
+            // Scatter trace segments to 2D elements. For each element,
+            // we find the trace segment associated to each edge. The
+            // element then retains a pointer to the trace space segments,
+            // to ensure uniqueness of normals when retrieving from two
+            //adjoining elements which do not lie in a plane.
             for (int i = 0; i < m_exp->size(); ++i)
             {
                 for (int j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
@@ -397,9 +425,8 @@ namespace Nektar
                             (*m_exp)[i]->as<LocalRegions::Expansion2D>();
                     LocalRegions::Expansion1DSharedPtr exp1d =
                             elmtToTrace[i][j]->as<LocalRegions::Expansion1D>();
-                    LocalRegions::ExpansionSharedPtr exp =
-                            elmtToTrace[i][j]->as<LocalRegions::Expansion>  ();
-                    exp2d->SetEdgeExp           (j, exp  );
+                    LocalRegions::ExpansionSharedPtr exp = elmtToTrace[i][j];;
+                    exp2d->SetEdgeExp           (j, exp1d);
                     exp1d->SetAdjacentElementExp(j, exp2d);
                 }
             }
@@ -415,8 +442,7 @@ namespace Nektar
                     
                 int offset      = m_trace->GetPhys_Offset(i);
                 int traceGeomId = traceEl->GetGeom1D()->GetGlobalID();
-                PeriodicMap::iterator pIt = m_periodicEdges.find(
-                    traceGeomId);
+                PeriodicMap::iterator pIt = m_periodicEdges.find(traceGeomId);
 
                 if (pIt != m_periodicEdges.end() && !pIt->second[0].isLocal)
                 {
@@ -436,12 +462,12 @@ namespace Nektar
             int cnt, n, e;
                 
             // Identify boundary edges
-            for(cnt = 0, n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for (cnt = 0, n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 if (m_bndConditions[n]->GetBoundaryConditionType() != 
                     SpatialDomains::ePeriodic)
                 {
-                    for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+                    for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
                         m_boundaryEdges.insert(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
@@ -498,8 +524,8 @@ namespace Nektar
 
                         if (it2 == perEdgeToExpMap.end())
                         {
-                            if (m_session->GetComm()->GetRowComm()->GetSize() > 1 &&
-                                !ent.isLocal)
+                            if (m_session->GetComm()->
+                                GetRowComm()->GetSize() > 1 && !ent.isLocal)
                             {
                                 continue;
                             }
@@ -548,6 +574,10 @@ namespace Nektar
                     }
                 }
             }
+            
+            m_locTraceToTraceMap = MemoryManager<LocTraceToTraceMap>::
+                AllocateSharedPtr(*this, m_trace, elmtToTrace,
+                                  m_leftAdjacentEdges);
         }
         
         /**
@@ -606,7 +636,7 @@ namespace Nektar
             const SpatialDomains::BoundaryConditions &bcs,
             const std::string &variable,
             const bool DeclareCoeffPhysArrays)
-        {  	
+        {      
             int cnt = 0;
             SpatialDomains::BoundaryConditionShPtr             bc;
             MultiRegions::ExpList1DSharedPtr                   locExpList;
@@ -631,7 +661,7 @@ namespace Nektar
                 Array<OneD, MultiRegions::ExpListSharedPtr>(cnt);
             m_bndConditions     = 
                 Array<OneD, SpatialDomains::BoundaryConditionShPtr>(cnt);
-	    
+        
             cnt = 0;
 
             // list non-periodic boundaries
@@ -642,25 +672,27 @@ namespace Nektar
                 if (bc->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
                 {
                     locExpList = MemoryManager<MultiRegions::ExpList1D>
-                        ::AllocateSharedPtr(*(it->second), graph2D,
+                        ::AllocateSharedPtr(m_session, *(it->second), graph2D,
                                             DeclareCoeffPhysArrays, variable);
+
+                    m_bndCondExpansions[cnt]  = locExpList;
+                    m_bndConditions[cnt]      = bc;
                     
-                    // Set up normals on non-Dirichlet boundary conditions
-                    if(bc->GetBoundaryConditionType() != 
-                           SpatialDomains::eDirichlet)
+
+                    std::string type = m_bndConditions[cnt]->GetUserDefined();
+                    
+                    // Set up normals on non-Dirichlet boundary
+                    // conditions. Second two conditions ideally
+                    // should be in local solver setup (when made into factory)
+                    if((bc->GetBoundaryConditionType() != 
+                        SpatialDomains::eDirichlet)||
+                       boost::iequals(type,"I") || 
+                       boost::iequals(type,"CalcBC"))
                     {
                         SetUpPhysNormals();
                     }
 
-                    m_bndCondExpansions[cnt]  = locExpList;
-                    m_bndConditions[cnt]      = bc;
-                    SpatialDomains::BndUserDefinedType type = 
-                        m_bndConditions[cnt++]->GetUserDefined();
-                    if (type == SpatialDomains::eI || 
-                        type == SpatialDomains::eCalcBC)
-                    {
-                        SetUpPhysNormals();
-                    }
+                    cnt++;
                 }
             }
         }
@@ -1146,9 +1178,9 @@ namespace Nektar
                 allCompPairs[first[cnt]] = second[cnt];
             }
 
-            // Search for periodic vertices and edges which are not in a
-            // periodic composite but lie in this process. First, loop over all
-            // information we have from other processors.
+            // Search for periodic vertices and edges which are not in
+            // a periodic composite but lie in this process. First, loop
+            // over all information we have from other processors.
             for (cnt = i = 0; i < totEdges; ++i)
             {
                 int edgeId    = edgeIds[i];
@@ -1166,8 +1198,8 @@ namespace Nektar
 
                     if (perId == periodicVerts.end())
                     {
-                        // This vertex is not included in the map. Figure out
-                        // which vertex it is supposed to be periodic
+                        // This vertex is not included in the map. Figure
+                        // out which vertex it is supposed to be periodic
                         // with. perEdgeId is the edge ID which is periodic with
                         // edgeId. The logic is much the same as the loop above.
                         int perVertexId =
@@ -1294,7 +1326,7 @@ namespace Nektar
             Array<OneD, NekDouble> &Fwd,
             Array<OneD, NekDouble> &Bwd)
         {
-            v_GetFwdBwdTracePhys(m_phys,Fwd,Bwd);
+            v_GetFwdBwdTracePhys(m_phys, Fwd, Bwd);
         }
 
         /**
@@ -1317,8 +1349,8 @@ namespace Nektar
          * left-adjacent elements.
          *
          * @param field is a NekDouble array which contains the 2D data
-         *              from which we wish to extract the backward and forward
-         *              orientated trace/edge arrays.
+         *              from which we wish to extract the backward and
+         *              forward orientated trace/edge arrays.
          * @param Fwd   The resulting forwards space.
          * @param Bwd   The resulting backwards space.
          */
@@ -1327,60 +1359,81 @@ namespace Nektar
                   Array<OneD,       NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            // Loop over elements and collect forward expansion
-            int nexp = GetExpSize();
             int cnt, n, e, npts, phys_offset;
-            Array<OneD,NekDouble> e_tmp;
-            PeriodicMap::iterator it2;
-            boost::unordered_map<int,pair<int,int> >::iterator it3;
-            LocalRegions::Expansion2DSharedPtr exp2d;
 
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
-                &elmtToTrace = m_traceMap->GetElmtToTrace();
-            
             // Zero forward/backward vectors.
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
-            for(cnt = n = 0; n < nexp; ++n)
+            // Basis definition on each element
+            LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
+            if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
             {
-                exp2d = (*m_exp)[n]->as<LocalRegions::Expansion2D>();
-                phys_offset = GetPhys_Offset(n);
 
-                for(e = 0; e < exp2d->GetNedges(); ++e, ++cnt)
+                // blocked routine
+                Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
+                                               GetNLocTracePts());
+
+                m_locTraceToTraceMap->LocTracesFromField(field, edgevals);
+                m_locTraceToTraceMap->InterpLocEdgesToTrace(0, edgevals, Fwd);
+
+                Array<OneD, NekDouble> invals = edgevals + m_locTraceToTraceMap->
+                                                        GetNFwdLocTracePts();
+                m_locTraceToTraceMap->InterpLocEdgesToTrace(1, invals, Bwd);
+            }
+            else
+            {
+                // Loop over elements and collect forward expansion
+                int nexp = GetExpSize();
+                Array<OneD,NekDouble> e_tmp;
+                PeriodicMap::iterator it2;
+                boost::unordered_map<int,pair<int,int> >::iterator it3;
+                LocalRegions::Expansion2DSharedPtr exp2d;
+
+                Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+                for(cnt = n = 0; n < nexp; ++n)
                 {
-                    int offset = m_trace->GetPhys_Offset(
-                        elmtToTrace[n][e]->GetElmtId());
+                    exp2d = (*m_exp)[n]->as<LocalRegions::Expansion2D>();
+                    phys_offset = GetPhys_Offset(n);
 
-                    if (m_leftAdjacentEdges[cnt])
+                    for(e = 0; e < exp2d->GetNedges(); ++e, ++cnt)
                     {
-                        exp2d->GetEdgePhysVals(e, elmtToTrace[n][e],
-                                                     field + phys_offset,
-                                                     e_tmp = Fwd + offset);
-                    }
-                    else
-                    {
-                        exp2d->GetEdgePhysVals(e, elmtToTrace[n][e],
-                                                     field + phys_offset,
-                                                     e_tmp = Bwd + offset);
+                        int offset = m_trace->GetPhys_Offset(
+                            elmtToTrace[n][e]->GetElmtId());
+
+                        if (m_leftAdjacentEdges[cnt])
+                        {
+                            exp2d->GetEdgePhysVals(e, elmtToTrace[n][e],
+                                                   field + phys_offset,
+                                                   e_tmp = Fwd + offset);
+                        }
+                        else
+                        {
+                            exp2d->GetEdgePhysVals(e, elmtToTrace[n][e],
+                                                   field + phys_offset,
+                                                   e_tmp = Bwd + offset);
+                        }
+
                     }
                 }
             }
             
-            // Fill boundary conditions into missing elements.
+            // Fill boundary conditions into missing elements
             int id1, id2 = 0;
             
-            for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-            {				
+            for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
                 if (m_bndConditions[n]->GetBoundaryConditionType() == 
                         SpatialDomains::eDirichlet)
                 {
-                    for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+                    for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
                         npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
-                        id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
-                        id2  = m_trace->GetPhys_Offset(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                        id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                        id2 = m_trace->GetPhys_Offset(m_traceMap->
+                                        GetBndCondTraceToGlobalTraceMap(cnt+e));
                         Vmath::Vcopy(npts,
                             &(m_bndCondExpansions[n]->GetPhys())[id1], 1,
                             &Bwd[id2],                                 1);
@@ -1459,7 +1512,7 @@ namespace Nektar
             int nexp = GetExpSize();
             int n, e, offset, phys_offset;
             Array<OneD,NekDouble> e_tmp;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             ASSERTL1(outarray.num_elements() >= m_trace->GetNpoints(),
@@ -1488,7 +1541,7 @@ namespace Nektar
         {
             int e, n, offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             for(n = 0; n < GetExpSize(); ++n)
@@ -1529,21 +1582,35 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fn, 
                   Array<OneD,       NekDouble> &outarray)
         {
-            int e, n, offset, t_offset;
-            Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
-                &elmtToTrace = m_traceMap->GetElmtToTrace();
-
-            for(n = 0; n < GetExpSize(); ++n)
+            // Basis definition on each element
+            LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
+            if (basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
             {
-                offset = GetCoeff_Offset(n);
-                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                Array<OneD, NekDouble> Fcoeffs(m_trace->GetNcoeffs());
+                m_trace->IProductWRTBase(Fn, Fcoeffs);
+            
+                m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,
+                                                               outarray);
+            }
+            else
+            {
+                int e, n, offset, t_offset;
+                Array<OneD, NekDouble> e_outarray;
+                Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
+                    &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+                for(n = 0; n < GetExpSize(); ++n)
                 {
-                    t_offset = GetTrace()->GetPhys_Offset(
-                        elmtToTrace[n][e]->GetElmtId());
-                    (*m_exp)[n]->AddEdgeNormBoundaryInt(
-                        e, elmtToTrace[n][e], Fn+t_offset,
-                        e_outarray = outarray+offset);
+                    offset = GetCoeff_Offset(n);
+                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                    {
+                        t_offset = GetTrace()->GetPhys_Offset(
+                            elmtToTrace[n][e]->GetElmtId());
+                        (*m_exp)[n]->AddEdgeNormBoundaryInt(
+                            e, elmtToTrace[n][e],
+                            Fn+t_offset,
+                            e_outarray = outarray+offset);
+                    }
                 }
             }
         }
@@ -1578,7 +1645,7 @@ namespace Nektar
         {
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             for (n = 0; n < GetExpSize(); ++n)
@@ -1666,6 +1733,64 @@ namespace Nektar
                 }
             }
         }
+        
+        void DisContField2D::v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result)
+        {
+            int n, cnt, nq;
+            int offsetOld, offsetNew;
+            Array<OneD, NekDouble> tmp1, tmp2;
+            std::vector<unsigned int> eIDs;
+            
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+            
+            // Skip other boundary regions
+            for (cnt = n = 0; n < i; ++n)
+            {
+                cnt += m_bndCondExpansions[n]->GetExpSize();
+            }
+
+            // Populate eIDs with information from BoundaryToElmtMap
+            for (n = 0; n < m_bndCondExpansions[i]->GetExpSize(); ++n)
+            {
+                eIDs.push_back(ElmtID[cnt+n]);
+            }
+            
+            // Create expansion list
+            result = 
+                MemoryManager<ExpList2D>::AllocateSharedPtr(*this, eIDs);
+            
+            // Copy phys and coeffs to new explist
+            for (n = 0; n < result->GetExpSize(); ++n)
+            {
+                nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
+                offsetOld = GetPhys_Offset(ElmtID[cnt+n]);
+                offsetNew = result->GetPhys_Offset(n);
+                Vmath::Vcopy(nq, tmp1 = GetPhys()+ offsetOld, 1,
+                                 tmp2 = result->UpdatePhys()+ offsetNew, 1);
+                
+                nq = GetExp(ElmtID[cnt+n])->GetNcoeffs();
+                offsetOld = GetCoeff_Offset(ElmtID[cnt+n]);
+                offsetNew = result->GetCoeff_Offset(n);
+                Vmath::Vcopy(nq, tmp1 = GetCoeffs()+ offsetOld, 1,
+                                 tmp2 = result->UpdateCoeffs()+ offsetNew, 1);
+            }
+        }
+
+        /**
+         * @brief Reset this field, so that geometry information can be updated.
+         */
+        void DisContField2D::v_Reset()
+        {
+            ExpList::v_Reset();
+
+            // Reset boundary condition expansions.
+            for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                m_bndCondExpansions[n]->Reset();
+            }
+        }
 
         /** 
          * @brief Calculate the \f$ L^2 \f$ error of the \f$ Q_{\rm dir} \f$
@@ -1685,7 +1810,7 @@ namespace Nektar
             Array<OneD, const NekDouble> tmp_coeffs;
             Array<OneD, NekDouble> out_d(m_ncoeffs), out_tmp;
 
-            Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> > 
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> > 
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             StdRegions::Orientation edgedir;
@@ -1967,7 +2092,7 @@ namespace Nektar
         {
             int    i,cnt,e,ncoeff_edge;
             Array<OneD, NekDouble> force, out_tmp, qrhs, qrhs1;
-            Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> > 
+            Array<OneD, Array< OneD, LocalRegions::ExpansionSharedPtr> > 
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             StdRegions::Orientation edgedir;
@@ -2043,21 +2168,8 @@ namespace Nektar
                         ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
                 };
 
-
-                //SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
-                //LocalRegions::QuadExpSharedPtr ppExp = 
-                //	MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
-                //Orthogonal expansion created
-
-                //In case lambdas are causing the trouble, try PhysDeriv instead of DGDeriv
-                //===============================================================================================
-                //(*m_exp)[eid]->BwdTrans(tmp_coeffs = m_coeffs + m_coeff_offset[eid],(*m_exp)[eid]->UpdatePhys());
-                //(*m_exp)[eid]->PhysDeriv((*m_exp)[eid]->GetPhys(), qrhs, qrhs1);
-                //ppExp->IProductWRTDerivBase(0,qrhs,force);
-                //ppExp->IProductWRTDerivBase(1,qrhs1,out_tmp);
-                //===============================================================================================
                
-                //DGDeriv	
+                //DGDeriv    
                 // (d/dx w, d/dx q_0)
                 (*m_exp)[eid]->DGDeriv(
                     0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
@@ -2127,8 +2239,7 @@ namespace Nektar
             for (i = 0; i < nbnd; ++i)
             {
                 if (time == 0.0 || 
-                    m_bndConditions[i]->GetUserDefined() == 
-                    SpatialDomains::eTimeDependent)
+                    m_bndConditions[i]->IsTimeDependent())
                 {
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();
@@ -2235,6 +2346,22 @@ namespace Nektar
                         coeff.Evaluate(x0, x1, x2, time,
                                        locExpList->UpdatePhys());
                     }    
+                    else
+                    {
+                        ASSERTL0(false, "This type of BC not implemented yet");
+                    }
+                }
+                else if (boost::iequals(m_bndConditions[i]->GetUserDefined(),
+                                        "MovingBody"))
+                {
+                    locExpList = m_bndCondExpansions[i];
+                    if (m_bndConditions[i]->GetBoundaryConditionType()
+                            == SpatialDomains::eDirichlet)
+                    {
+                        locExpList->FwdTrans_IterPerExp(
+                                    locExpList->GetPhys(),
+                                    locExpList->UpdateCoeffs());
+                    }
                     else
                     {
                         ASSERTL0(false, "This type of BC not implemented yet");

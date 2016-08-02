@@ -33,54 +33,43 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERENERGY_H
-#define NEKTAR_SOLVERUTILS_FILTERS_FILTERENERGY_H
+#ifndef NEKTAR_INCNAVIERSTOKESSOLVER_FILTERS_FILTERENERGY_H
+#define NEKTAR_INCNAVIERSTOKESSOLVER_FILTERS_FILTERENERGY_H
 
-#include <SolverUtils/Filters/Filter.h>
+#include <SolverUtils/Filters/FilterEnergyBase.h>
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-        class FilterEnergy : public Filter
-        {
-        public:
-            friend class MemoryManager<FilterEnergy>;
 
-            /// Creates an instance of this class
-            static FilterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams) {
-                FilterSharedPtr p = MemoryManager<FilterEnergy>::AllocateSharedPtr(pSession, pParams);
-                //p->InitObject();
-                return p;
-            }
+class FilterEnergy : public SolverUtils::FilterEnergyBase
+{
+public:
+    friend class MemoryManager<FilterEnergy>;
 
-            ///Name of the class
-            static std::string className;
-
-            SOLVER_UTILS_EXPORT FilterEnergy(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
-            SOLVER_UTILS_EXPORT ~FilterEnergy();
-
-        protected:
-            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual bool v_IsTimeDependent();
-
-        private:
-            unsigned int                m_index;
-            unsigned int                m_outputFrequency;
-            std::ofstream               m_outFile;
-            bool                        m_homogeneous;
-            NekDouble                   m_homogeneousLength;
-            NekDouble                   m_area;
-            LibUtilities::CommSharedPtr m_comm;
-            Array<OneD, unsigned int>   m_planes;
-        };
+    /// Creates an instance of this class
+    static SolverUtils::FilterSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const ParamMap &pParams) {
+        SolverUtils::FilterSharedPtr p = MemoryManager<FilterEnergy>
+                                        ::AllocateSharedPtr(pSession, pParams);
+        return p;
     }
+
+    ///Name of the class
+    static std::string className;
+
+    SOLVER_UTILS_EXPORT FilterEnergy(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const ParamMap &pParams);
+    SOLVER_UTILS_EXPORT ~FilterEnergy();
+
+protected:
+    virtual void v_GetVelocity(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const int i,
+        Array<OneD, NekDouble> &velocity);
+};
+
 }
 
 #endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */

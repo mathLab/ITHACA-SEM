@@ -2,7 +2,7 @@
 <test>
     <description>NS, Couette flow, mixed bcs, FRHU advection and LDG diffusion, SEM, parallel</description>
     <executable>CompressibleFlowSolver</executable>
-    <parameters>Couette_FRDG_LDG_GAUSS_par.xml</parameters>
+    <parameters>--use-metis Couette_FRDG_LDG_GAUSS_par.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">Couette_FRDG_LDG_GAUSS_par.xml</file>

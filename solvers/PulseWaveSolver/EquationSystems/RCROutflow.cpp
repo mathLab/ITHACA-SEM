@@ -36,12 +36,14 @@
 #include <PulseWaveSolver/EquationSystems/RCROutflow.h>
 #include <SpatialDomains/MeshGraph.h>
 
+using namespace std;
+
 namespace Nektar
 {
 
     std::string RCROutflow::className
     = GetBoundaryFactory().RegisterCreatorFunction(
-        "RCRterminal",
+        "RCR-terminal",
         RCROutflow::create,
         "RCR  outflow boundary condition");
 

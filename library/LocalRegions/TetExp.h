@@ -94,7 +94,8 @@ namespace Nektar
                       Array<OneD,       NekDouble>& outarray);
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                 const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD,       NekDouble>& outarray);
+                Array<OneD,       NekDouble>& outarray,
+                bool multiplybyweights = true);
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTDerivBase(
                 const int                           dir,
                 const Array<OneD, const NekDouble>& inarray,
@@ -127,6 +128,9 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual 
                 LibUtilities::ShapeType v_DetShapeType() const;
 
+            LOCAL_REGIONS_EXPORT virtual
+                StdRegions::StdExpansionSharedPtr v_GetStdExp(void) const;
+
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
 
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
@@ -135,25 +139,11 @@ namespace Nektar
                 const int                        mode_offset,
                 NekDouble                       *coeffs);
 
-            LOCAL_REGIONS_EXPORT virtual 
-                StdRegions::Orientation v_GetFaceOrient(int face);
-
-            LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysVals(
-                const int                                face,
-                const StdRegions::StdExpansionSharedPtr &FaceExp,
-                const Array<OneD, const NekDouble>      &inarray,
-                      Array<OneD,       NekDouble>      &outarray,
-                StdRegions::Orientation                  orient);
-
-            LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysVals(
-                const int                                face,
-                const StdRegions::StdExpansionSharedPtr &FaceExp,
-                const Array<OneD, const NekDouble>      &inarray,
-                      Array<OneD,       NekDouble>      &outarray,
-                StdRegions::Orientation                  orient);
-
+            LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysMap( 
+                 const int  face,
+                 Array<OneD, int>  &outarray);
+            
             LOCAL_REGIONS_EXPORT void v_ComputeFaceNormal(const int face);      
-
             //-----------------------------
             // Operator creation functions
             //-----------------------------
@@ -161,11 +151,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,NekDouble> &outarray,
                 const StdRegions::StdMatrixKey &mkey);
-
-            LOCAL_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
-                int                                 numMin,
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,       NekDouble> &outarray);
 
             LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
                 const Array<OneD, const NekDouble> &inarray,
@@ -178,6 +163,10 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,NekDouble> &outarray,
                 const StdRegions::StdMatrixKey &mkey);
+            
+            LOCAL_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdRegions::StdMatrixKey &mkey);
 
             //-----------------------------
             // Matrix creation functions

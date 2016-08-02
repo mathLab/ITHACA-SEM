@@ -40,28 +40,40 @@
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
-        static map<int,int> NullIntIntMap;
-        const static vector<map<int,int> > NullVecIntIntMap;
+        static std::map<int,int> NullIntIntMap;
+        const static std::vector<std::map<int,int> > NullVecIntIntMap;
 
-        class ExpList;
         class AssemblyMapCG;
         typedef boost::shared_ptr<AssemblyMapCG>  AssemblyMapCGSharedPtr;
-
         typedef boost::tuple<int, int, NekDouble> ExtraDirDof;
 
-        StdRegions::Orientation  DeterminePeriodicFaceOrient(
-                       StdRegions::Orientation   faceOrient1,
-                       StdRegions::Orientation   faceOrient2);
+        typedef std::vector<std::map<int, int> > DofGraph;
 
-  
+        MULTI_REGIONS_EXPORT
+        std::pair<int, StdRegions::Orientation> DeterminePeriodicEdgeOrientId(
+            int                           meshEdgeId,
+            StdRegions::Orientation       edgeOrient,
+            const std::vector<PeriodicEntity> &periodicEdges);
+
+        MULTI_REGIONS_EXPORT
+        StdRegions::Orientation  DeterminePeriodicFaceOrient(
+            StdRegions::Orientation   faceOrient1,
+            StdRegions::Orientation   faceOrient2);
+
+
         /// Constructs mappings for the C0 scalar continuous Galerkin formulation.
         class AssemblyMapCG: public AssemblyMap
         {
+            typedef Array<OneD, const ExpListSharedPtr> BndCondExp;
+            typedef Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
+                BndCond;
+
         public:
             /// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMapCG(
@@ -71,14 +83,28 @@ namespace Nektar
             /// General constructor for expansions of all dimensions without
             /// boundary conditions.
             MULTI_REGIONS_EXPORT AssemblyMapCG(
-                                    const LibUtilities::SessionReaderSharedPtr &pSession,
-                                    const int numLocalCoeffs,
-                                    const ExpList &locExp);
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const int                                   numLocalCoeffs,
+                const ExpList                              &locExp,
+                const BndCondExp                           &bndCondExp
+                                                    = NullExpListSharedPtrArray,
+                const BndCond                              &bndConditions
+                              = SpatialDomains::NullBoundaryConditionShPtrArray,
+                const bool                                  checkIfSingular
+                                                                        = false,
+                const std::string                           variable
+                                                                 = "defaultVar",
+                const PeriodicMap                          &periodicVerts
+                                                              = NullPeriodicMap,
+                const PeriodicMap                          &periodicEdges
+                                                              = NullPeriodicMap,
+                const PeriodicMap                          &periodicFaces
+                                                             = NullPeriodicMap);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapCG();
 
-            MULTI_REGIONS_EXPORT map<int, vector<ExtraDirDof> >
+            MULTI_REGIONS_EXPORT std::map<int, std::vector<ExtraDirDof> >
                 &GetExtraDirDofs()
             {
                 return m_extraDirDofs;
@@ -109,14 +135,33 @@ namespace Nektar
             int m_numNonDirEdges;
             /// Number of Dirichlet faces
             int m_numNonDirFaces;
+            /// Number of local boundary condition coefficients
+            int m_numLocalBndCondCoeffs;
             /// Extra dirichlet edges in parallel
             Array<OneD, int> m_extraDirEdges;
-
+            /// Number of local boundary condition degrees of freedom.
+            int m_numLocDirBndCondDofs;
             /// Maximum static condensation level.
             int m_maxStaticCondLevel;
             /// Map indicating degrees of freedom which are Dirichlet but whose
             /// value is stored on another processor.
-            map<int, vector<ExtraDirDof> > m_extraDirDofs;
+            std::map<int, std::vector<ExtraDirDof> > m_extraDirDofs;
+
+            MULTI_REGIONS_EXPORT int CreateGraph(
+                const ExpList                       &locExp,
+                const BndCondExp                    &bndCondExp,
+                const Array<OneD, const BndCond>    &bndConditions,
+                const bool                           checkIfSystemSingular,
+                const PeriodicMap                   &periodicVerts,
+                const PeriodicMap                   &periodicEdges,
+                const PeriodicMap                   &periodicFaces,
+                DofGraph                            &graph,
+                BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
+                std::set<int>                       &extraDirVerts,
+                std::set<int>                       &extraDirEdges,
+                int                                 &firstNonDirGraphVertId,
+                int                                 &nExtraDirichlet,
+                int                                  mdswitch = 1);
 
             void SetUpUniversalC0ContMap(
                 const ExpList     &locExp,

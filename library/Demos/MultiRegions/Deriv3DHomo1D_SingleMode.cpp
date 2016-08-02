@@ -7,6 +7,7 @@
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <SpatialDomains/MeshGraph2D.h>
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])
@@ -15,8 +16,6 @@ int main(int argc, char *argv[])
 
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
     
-	string meshfile(vSession->GetFilename());
-
     MultiRegions::ContField3DHomogeneous1DSharedPtr Exp_u, Exp_v, Exp_w;
     
     StdRegions::ConstFactorMap factors;

@@ -35,6 +35,8 @@
 
 #include <SolverUtils/Forcing/ForcingAbsorption.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils
@@ -107,8 +109,6 @@ namespace SolverUtils
         if (funcNameElmt)
         {
             m_funcNameTime = funcNameElmt->GetText();
-            ASSERTL0(m_session->DefinesFunction(funcName),
-                     "Function '" + funcName + "' not defined.");
             m_hasRefFlowTime = true;
         }
 

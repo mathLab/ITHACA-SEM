@@ -118,13 +118,14 @@ namespace Nektar
                 Array<OneD, NekDouble> &coord_2);
             
             virtual void v_WriteTecplotZone(
-                std::ofstream &outfile,
+                std::ostream &outfile,
                 int expansion);
 
 
             virtual void v_WriteVtkPieceHeader(
-                std::ofstream &outfile,
-                int expansion);
+                std::ostream &outfile,
+                int expansion,
+                int istrip);
 
             virtual void v_GetNormals(
                 Array<OneD, Array<OneD, NekDouble> > &normals);

@@ -2,7 +2,7 @@
 <test>
     <description>Euler, pressure perturbation to test RiemannInvariant CBC, parallel</description>
     <executable>CompressibleFlowSolver</executable>
-    <parameters>Perturbation_M05_square_CBC_par.xml</parameters>
+    <parameters>--use-metis Perturbation_M05_square_CBC_par.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File"> Perturbation_M05_square_CBC_par.xml</file>

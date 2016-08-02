@@ -198,7 +198,7 @@ namespace Nektar
             bool isLocal;
         } PeriodicEntity;
 
-        typedef std::map<int, vector<PeriodicEntity> > PeriodicMap;
+        typedef std::map<int, std::vector<PeriodicEntity> > PeriodicMap;
         static PeriodicMap NullPeriodicMap;
     }// end of namespace
 }// end of namespace

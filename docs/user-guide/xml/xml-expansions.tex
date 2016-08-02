@@ -1,20 +1,21 @@
 \section{Expansions}
 This section defines the polynomial expansions used on each of the defined
 geometric composites. Expansion entries specify the number of modes, the basis
-type and have the form
+type. The short-hand version has the following form
 
 \begin{lstlisting}[style=XMLStyle]
 <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u" TYPE="MODIFIED" />
 \end{lstlisting}
 
-or, if we have more then one variable
+or, if we have more then one variable we can apply the same basis to all using
 
 \begin{lstlisting}[style=XMLStyle]
 <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u,v,p" TYPE="MODIFIED" />
 \end{lstlisting}
 
-The expansion basis can also be specified by parts, and thus the user is able to
-increase the quadrature order. For tet elements this takes the form:
+The expansion basis can also be specified in detail as a combination of
+one-dimensional bases, and thus the user is able to, for example, increase the
+quadrature order. For tet elements this takes the form:
 
 \begin{lstlisting}[style=XMLStyle]
 <E COMPOSITE="C[0]" 
@@ -35,3 +36,4 @@ and for prism elements:
    NUMPOINTS="4,4,3"
    FIELDS="u" />
 \end{lstlisting}
+

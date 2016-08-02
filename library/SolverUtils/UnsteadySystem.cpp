@@ -41,6 +41,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/UnsteadySystem.h>
 
+using namespace std;
+
 namespace Nektar
 {	
     namespace SolverUtils
@@ -76,6 +78,8 @@ namespace Nektar
         void UnsteadySystem::v_InitObject()
         {
             EquationSystem::v_InitObject();
+            
+            m_initialStep = 0;
 
             // Load SolverInfo parameters
             m_session->MatchSolverInfo("DIFFUSIONADVANCEMENT","Explicit",
@@ -133,13 +137,17 @@ namespace Nektar
             {
                 case LibUtilities::eForwardEuler:
                 case LibUtilities::eClassicalRungeKutta4:
+                case LibUtilities::eRungeKutta4:
                 {
                     TimeStability = 2.784;
                     break;
                 }
                 case LibUtilities::eAdamsBashforthOrder1:
-                case LibUtilities::eRungeKutta2_ModifiedEuler:
+                case LibUtilities::eMidpoint:
+                case LibUtilities::eRungeKutta2:
                 case LibUtilities::eRungeKutta2_ImprovedEuler:
+                case LibUtilities::eRungeKutta2_SSP:
+                case LibUtilities::eRungeKutta3_SSP:
                 {
                     TimeStability = 2.0;
                     break;
@@ -168,7 +176,7 @@ namespace Nektar
         {
             ASSERTL0(m_intScheme != 0, "No time integration scheme.");
 
-            int i, nchk = 1;
+            int i = 1;
             int nvariables = 0;
             int nfields = m_fields.num_elements();
 
@@ -241,7 +249,7 @@ namespace Nektar
 
             Timer     timer;
             bool      doCheckTime   = false;
-            int       step          = 0;
+            int       step          = m_initialStep;
             NekDouble intTime       = 0.0;
             NekDouble lastCheckTime = 0.0;
             NekDouble cpuTime       = 0.0;
@@ -270,12 +278,12 @@ namespace Nektar
                 }
                 
                 // Perform any solver-specific pre-integration steps
+                timer.Start();
                 if (v_PreIntegrate(step))
                 {
                     break;
                 }
 
-                timer.Start();
                 fields = m_intScheme->TimeIntegrate(
                     step, m_timestep, m_intSoln, m_ode);
                 timer.Stop();
@@ -302,14 +310,7 @@ namespace Nektar
                     ss << cpuTime << "s";
                     cout << " CPU Time: " << setw(8) << left
                          << ss.str() << endl;
-
                     cpuTime = 0.0;
-                }
-                
-                // Perform any solver-specific post-integration steps
-                if (v_PostIntegrate(step))
-                {
-                    break;
                 }
 
                 // Transform data into coefficient space
@@ -321,17 +322,37 @@ namespace Nektar
                         m_fields[m_intVariables[i]]->UpdateCoeffs());
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
-                
+
+                // Perform any solver-specific post-integration steps
+                if (v_PostIntegrate(step))
+                {
+                    break;
+                }
+
+                // search for NaN and quit if found
+                int nanFound = 0;
+                for (i = 0; i < nvariables; ++i)
+                {
+                    if (Vmath::Nnan(fields[i].num_elements(), fields[i], 1) > 0)
+                    {
+                        nanFound = 1;
+                    }
+                }
+                m_session->GetComm()->AllReduce(nanFound,
+                            LibUtilities::ReduceMax);
+                ASSERTL0 (!nanFound,
+                            "NaN found during time integration.");
+
                 // Update filters
                 std::vector<FilterSharedPtr>::iterator x;
                 for (x = m_filters.begin(); x != m_filters.end(); ++x)
                 {
                     (*x)->Update(m_fields, m_time);
                 }
-                
+
                 // Write out checkpoint files
-                if ((m_checksteps && step && !((step + 1) % m_checksteps)) ||
-                    doCheckTime)
+                if ((m_checksteps && !((step + 1) % m_checksteps)) ||
+                     doCheckTime)
                 {
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
@@ -347,7 +368,7 @@ namespace Nektar
                                 transformed[i] = true;
                             }
                         }
-                        Checkpoint_Output(nchk++);
+                        Checkpoint_Output(m_nchk++);
                         for(i = 0; i < nfields; i++)
                         {
                             if (transformed[i])
@@ -362,11 +383,11 @@ namespace Nektar
                     }
                     else
                     {
-                        Checkpoint_Output(nchk++);
+                        Checkpoint_Output(m_nchk++);
                     }
                     doCheckTime = false;
                 }
-                
+
                 // Step advance
                 ++step;
             }
@@ -379,7 +400,11 @@ namespace Nektar
                     cout << "CFL safety factor : " << m_cflSafetyFactor << endl
                          << "CFL time-step     : " << m_timestep        << endl;
                 }
-                cout << "Time-integration  : " << intTime  << "s"   << endl;
+
+                if (m_session->GetSolverInfo("Driver") != "SteadyState")
+                {
+                    cout << "Time-integration  : " << intTime  << "s"   << endl;
+                }
             }
             
             // If homogeneous, transform back into physical space if necessary.
@@ -437,10 +462,17 @@ namespace Nektar
             EquationSystem::v_GenerateSummary(s);
             AddSummaryItem(s, "Advection",
                            m_explicitAdvection ? "explicit" : "implicit");
+
+            if(m_session->DefinesSolverInfo("AdvectionType"))
+            {
+                AddSummaryItem(s, "AdvectionType",
+                               m_session->GetSolverInfo("AdvectionType"));
+            }
+
             AddSummaryItem(s, "Diffusion",
                            m_explicitDiffusion ? "explicit" : "implicit");
 
-            if (m_session->GetSolverInfo("EQTYPE") 
+            if (m_session->GetSolverInfo("EQTYPE")
                     == "SteadyAdvectionDiffusionReaction")
             {
                 AddSummaryItem(s, "Reaction",
@@ -889,6 +921,52 @@ namespace Nektar
         bool UnsteadySystem::v_PostIntegrate(int step)
         {
             return false;
+        }
+
+        bool UnsteadySystem::v_SteadyStateCheck(int step)
+        {
+            return false;
+        }
+
+        void UnsteadySystem::SVVVarDiffCoeff(
+            const Array<OneD, Array<OneD, NekDouble> >  vel,
+                  StdRegions::VarCoeffMap              &varCoeffMap)
+        {
+            int phystot = m_fields[0]->GetTotPoints();
+            int nvel = vel.num_elements();
+
+            Array<OneD, NekDouble> varcoeff(phystot),tmp;
+
+            // calculate magnitude of v
+            Vmath::Vmul(phystot,vel[0],1,vel[0],1,varcoeff,1);
+            for(int n = 1; n < nvel; ++n)
+            {
+                Vmath::Vvtvp(phystot,vel[n],1,vel[n],1,varcoeff,1,varcoeff,1);
+            }
+            Vmath::Vsqrt(phystot,varcoeff,1,varcoeff,1);
+
+            for(int i = 0; i < m_fields[0]->GetNumElmts(); ++i)
+            {
+                int offset = m_fields[0]->GetPhys_Offset(i);
+                int nq = m_fields[0]->GetExp(i)->GetTotPoints();
+                Array<OneD, NekDouble> unit(nq,1.0);
+
+                int nmodes = 0;
+
+                for(int n = 0; n < m_fields[0]->GetExp(i)->GetNumBases(); ++n)
+                {
+                    nmodes = max(nmodes,
+                                 m_fields[0]->GetExp(i)->GetBasisNumModes(n));
+                }
+
+                NekDouble h = m_fields[0]->GetExp(i)->Integral(unit);
+                h = pow(h,(NekDouble) (1.0/nvel))/((NekDouble) nmodes);
+
+                Vmath::Smul(nq,h,varcoeff+offset,1,tmp = varcoeff+offset,1);
+            }
+
+            // set up map with eVarCoffLaplacian key
+            varCoeffMap[StdRegions::eVarCoeffLaplacian] = varcoeff;
         }
     }
 }

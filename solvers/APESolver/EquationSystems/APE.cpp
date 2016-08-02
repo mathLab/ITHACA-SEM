@@ -6,6 +6,7 @@
 //
 // The MIT License
 //
+// Copyright (c) 2015 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -29,7 +30,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Acoustic perturbation equations in conservative variables
+// Description: APE1/APE4 (Acoustic Perturbation Equations)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -37,12 +38,21 @@
 
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <APESolver/EquationSystems/APE.h>
+#include <LocalRegions/TriExp.h>
+#include <LocalRegions/QuadExp.h>
+#include <LocalRegions/HexExp.h>
+
+#include <MultiRegions/ContField1D.h>
+#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField3D.h>
+
+using namespace std;
 
 namespace Nektar
 {
 string APE::className = GetEquationSystemFactory().RegisterCreatorFunction(
             "APE", APE::create,
-            "Acoustic perturbation equations in conservative variables.");
+            "APE1/APE4 (Acoustic Perturbation Equations)");
 
 
 APE::APE(
@@ -63,62 +73,132 @@ void APE::v_InitObject()
     // problems are currently disabled. This should get fixed in the future.
     ASSERTL0(m_spacedim > 1, "1D problems currently not supported by the APE class.");
 
-    // Load constant incompressible density
-    m_session->LoadParameter("Rho0", m_Rho0, 1.204);
+    ASSERTL0(m_projectionType == MultiRegions::eDiscontinuous,
+             "Only Projection=DisContinuous supported by the APE class.");
 
     // Load isentropic coefficient, Ratio of specific heats
     m_session->LoadParameter("Gamma", m_gamma, 1.4);
 
-    // Define Baseflow fields
-    m_basefield = Array<OneD, Array<OneD, NekDouble> >(m_spacedim + 1);
-    m_basefield_names.push_back("P0");
-    m_basefield_names.push_back("U0");
-    m_basefield_names.push_back("V0");
-    m_basefield_names.push_back("W0");
+    m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
+
+    // Define Baseflow and source term fields
+    switch (m_spacedim)
+    {
+        case 1:
+        {
+            for (int i = 0; i < m_spacedim + 2; ++i)
+            {
+                m_bfField = MemoryManager<MultiRegions::ContField1D>::
+                    AllocateSharedPtr(m_session, m_graph);
+            }
+            break;
+        }
+
+        case 2:
+        {
+            for (int i = 0; i < m_spacedim + 2; ++i)
+            {
+                m_bfField = MemoryManager<MultiRegions::ContField2D>::
+                    AllocateSharedPtr(m_session, m_graph);
+            }
+            break;
+        }
+
+        case 3:
+        {
+            for (int i = 0; i < m_spacedim + 2; ++i)
+            {
+                m_bfField = MemoryManager < MultiRegions::ContField3D >::
+                    AllocateSharedPtr(m_session, m_graph);
+            }
+            break;
+        }
+
+        default:
+        {
+
+            ASSERTL0(false, "Expansion dimension not recognised");
+            break;
+        }
+    }
+
+    m_bfNames.push_back("p0");
+    m_bfNames.push_back("rho0");
+    m_bfNames.push_back("u0");
+    m_bfNames.push_back("v0");
+    m_bfNames.push_back("w0");
 
     // Resize the advection velocities vector to dimension of the problem
-    m_basefield_names.resize(m_spacedim + 1);
+    m_bfNames.resize(m_spacedim + 2);
 
-    // if discontinuous  determine numerical flux to use
-    if (m_projectionType == MultiRegions::eDiscontinuous)
+    // Initialize basefield
+    m_bf = Array<OneD, Array<OneD, NekDouble> >(m_spacedim + 2);
+    for (int i = 0; i < m_bf.num_elements(); ++i)
     {
-        // Do not forwards transform initial condition
-        m_homoInitialFwd = false;
-
-        // Define the normal velocity fields
-        if (m_fields[0]->GetTrace())
-        {
-            m_traceBasefield = Array<OneD, Array<OneD, NekDouble> > (m_spacedim+1);
-            for (int i = 0; i < m_spacedim + 1; i++)
-            {
-                m_traceBasefield[i] = Array<OneD, NekDouble>(GetTraceNpoints());
-            }
-        }
-
-        // Set up locations of velocity and base velocity vectors.
-        m_vecLocs = Array<OneD, Array<OneD, NekDouble> >(1);
-        m_vecLocs[0] = Array<OneD, NekDouble>(m_spacedim);
-        for (int i = 0; i < m_spacedim; ++i)
-        {
-            // u', v', w'
-            m_vecLocs[0][i] = 1 + i;
-        }
-
-        string riemName;
-        m_session->LoadSolverInfo("UpwindType", riemName, "APEUpwind");
-        riemName = "APEUpwind";
-        m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(riemName);
-        m_riemannSolver->SetVector("N",         &APE::GetNormals,   this);
-        m_riemannSolver->SetVector("basefield", &APE::GetBasefield, this);
-        m_riemannSolver->SetAuxVec("vecLocs",   &APE::GetVecLocs,   this);
-        m_riemannSolver->SetParam ("Gamma",     &APE::GetGamma,     this);
-        m_riemannSolver->SetParam ("Rho",       &APE::GetRho,       this);
+        m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
     }
+    EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
+    Array<OneD, NekDouble> tmpC(GetNcoeffs());
+    for (int i = 0; i < m_spacedim + 2; ++i)
+    {
+        m_bfField->IProductWRTBase(m_bf[i], tmpC);
+        m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
+        m_bfField->LocalToGlobal(tmpC, tmpC);
+        m_bfField->GlobalToLocal(tmpC, tmpC);
+        m_bfField->BwdTrans(tmpC, m_bf[i]);
+    }
+
+    //  Initialize the sourceterm
+    m_sourceTerms = Array<OneD, NekDouble>(GetTotPoints(), 0.0);
+
+    EvaluateFunction("S", m_sourceTerms, "Source", m_time);
+    m_fields[0]->FwdTrans(m_sourceTerms, tmpC);
+    m_fields[0]->BwdTrans(tmpC, m_sourceTerms);
+
+    // Do not forwards transform initial condition
+    m_homoInitialFwd = false;
+
+    // Define the normal velocity fields
+    if (m_fields[0]->GetTrace())
+    {
+        m_traceBasefield = Array<OneD, Array<OneD, NekDouble> > (m_spacedim + 2);
+        for (int i = 0; i < m_spacedim + 2; i++)
+        {
+            m_traceBasefield[i] = Array<OneD, NekDouble>(GetTraceNpoints());
+        }
+    }
+
+    // Set up locations of velocity and base velocity vectors.
+    m_vecLocs = Array<OneD, Array<OneD, NekDouble> >(1);
+    m_vecLocs[0] = Array<OneD, NekDouble>(m_spacedim);
+    for (int i = 0; i < m_spacedim; ++i)
+    {
+        // u', v', w'
+        m_vecLocs[0][i] = 1 + i;
+    }
+
+    string riemName;
+    m_session->LoadSolverInfo("UpwindType", riemName, "APEUpwind");
+    m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(
+                          riemName);
+    m_riemannSolver->SetVector("N",         &APE::GetNormals,   this);
+    m_riemannSolver->SetVector("basefield", &APE::GetBasefield, this);
+    m_riemannSolver->SetAuxVec("vecLocs",   &APE::GetVecLocs,   this);
+    m_riemannSolver->SetParam("Gamma",     &APE::GetGamma,     this);
+
+    // Set up advection operator
+    string advName;
+    m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
+    m_advection = SolverUtils::GetAdvectionFactory()
+                  .CreateInstance(advName, advName);
+    m_advection->SetFluxVector(&APE::GetFluxVector, this);
+    m_advection->SetRiemannSolver(m_riemannSolver);
+    m_advection->InitObject(m_session, m_fields);
 
     if (m_explicitAdvection)
     {
-        m_ode.DefineOdeRhs     (&APE::DoOdeRhs,        this);
-        m_ode.DefineProjection (&APE::DoOdeProjection, this);
+        m_ode.DefineOdeRhs(&APE::DoOdeRhs,        this);
+        m_ode.DefineProjection(&APE::DoOdeProjection, this);
     }
     else
     {
@@ -136,134 +216,132 @@ APE::~APE()
 }
 
 
-/**
- *
- */
-void APE::v_DoInitialise()
+NekDouble APE::GetCFLEstimate()
 {
-    SetInitialConditions();
-}
+    int nElm = m_fields[0]->GetExpSize();
+    const Array<OneD, int> expOrder = GetNumExpModesPerExp();
 
+    Array<OneD, NekDouble> cfl(nElm, 0.0);
+    Array<OneD, NekDouble> stdVelocity(nElm, 0.0);
 
-/**
- * @brief Compute the numerical flux through the element boundaries.
- *
- */
-void APE::v_NumericalFlux(
-        Array<OneD, Array<OneD, NekDouble> > &physfield,
-        Array<OneD, Array<OneD, NekDouble> > &numflux)
-{
-    //Number the points of the shared edges of the elements
-    int ntp  = GetTraceTotPoints();
-    int nvar = physfield.num_elements();
+    // Get standard velocity to compute the time-step limit
+    GetStdVelocity(stdVelocity);
 
-    // temporary arrays
-    Array<OneD, Array<OneD, NekDouble> >  Fwd(nvar);
-    Array<OneD, Array<OneD, NekDouble> >  Bwd(nvar);
+    // Factors to compute the time-step limit
+    NekDouble alpha   = MaxTimeStepEstimator();
+    NekDouble cLambda = 0.2; // Spencer book-317
 
-    for (int i = 0; i < nvar; ++i)
+    // Loop over elements to compute the time-step limit for each element
+    for (int el = 0; el < nElm; ++el)
     {
-        Fwd[i]  = Array<OneD, NekDouble>(ntp);
-        Bwd[i]  = Array<OneD, NekDouble>(ntp);
+        NekDouble lambdaMax = stdVelocity[el] * cLambda
+            * (expOrder[el] - 1) * (expOrder[el] - 1);
+        cfl[el] = m_timestep * lambdaMax / alpha;
     }
 
-    // get the physical values at the trace
-    for (int i = 0; i < nvar; ++i)
-    {
-        m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd[i],Bwd[i]);
-    }
+    // Get the minimum time-step limit and return the time-step
+    NekDouble maxCFL = Vmath::Vmax(nElm, cfl, 1);
+    m_comm->AllReduce(maxCFL, LibUtilities::ReduceMax);
 
-    // Solve the Riemann problem
-    m_riemannSolver->Solve(m_spacedim, Fwd, Bwd, numflux);
-
+    return maxCFL;
 }
 
 
 /**
+ * @brief Return the flux vector for the APE equations.
  *
+ * @param physfield   Fields.
+ * @param flux        Resulting flux. flux[eq][dir][pt]
  */
-void APE::v_NumericalFlux(
-        Array<OneD, Array<OneD, NekDouble> > &physfield,
-        Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-        Array<OneD, Array<OneD, NekDouble> > &numfluxY )
+void APE::GetFluxVector(
+        const Array<OneD, Array<OneD, NekDouble> > &physfield,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
 {
-    ASSERTL0(false, "This function is not implemented for this equation.");
-}
-
-
-/**
- * @brief Compute the flux vectors.
- */
-void APE::v_GetFluxVector(const int i, const int j,
-                           Array<OneD, Array<OneD, NekDouble> > &physfield,
-                           Array<OneD, Array<OneD, NekDouble> > &flux)
-{
-    v_GetFluxVector(i, physfield, flux);
-}
-
-
-/**
- * @brief Compute the flux vectors.
- */
-void APE::v_GetFluxVector(const int i,
-                             Array<OneD, Array<OneD, NekDouble> > &physfield,
-                             Array<OneD, Array<OneD, NekDouble> > &flux)
-{
-    EvaluateFunction(m_basefield_names, m_basefield, "Baseflow");
-
-    ASSERTL1(flux.num_elements() == m_basefield.num_elements() - 1,
-             "Dimension of flux array and velocity array do not match");
-
     int nq = physfield[0].num_elements();
-    NekDouble tmp0 = 0.0;
     Array<OneD, NekDouble> tmp1(nq);
     Array<OneD, NekDouble> tmp2(nq);
 
-    if (i == 0)
+    ASSERTL1(flux[0].num_elements() == m_spacedim,
+                 "Dimension of flux array and velocity array do not match");
+
+    // F_{adv,p',j} = \gamma p_0 u'_j + p' \bar{u}_j
+    for (int j = 0; j < m_spacedim; ++j)
     {
-        // F_{adv,p',j} = \gamma p_0 u'_j + p' \bar{u}_j
-        for (int j = 0; j < flux.num_elements(); ++j)
-        {
-            Vmath::Zero(nq, flux[j], 1);
+        Vmath::Zero(nq, flux[0][j], 1);
 
-            // construct \gamma p_0 u'_j term
-            Vmath::Smul(nq, m_gamma, m_basefield[0], 1, tmp1, 1);
-            Vmath::Vmul(nq, tmp1, 1, physfield[j+1], 1, tmp1, 1);
+        // construct \gamma p_0 u'_j term
+        Vmath::Smul(nq, m_gamma, m_bf[0], 1, tmp1, 1);
+        Vmath::Vmul(nq, tmp1, 1, physfield[j+1], 1, tmp1, 1);
 
-            // construct p' \bar{u}_j term
-            Vmath::Vmul(nq, physfield[0], 1, m_basefield[j+1], 1, tmp2, 1);
+        // construct p' \bar{u}_j term
+        Vmath::Vmul(nq, physfield[0], 1, m_bf[j+2], 1, tmp2, 1);
 
-            // add both terms
-            Vmath::Vadd(nq, tmp1, 1, tmp2, 1, flux[j], 1);
-        }
+        // add both terms
+        Vmath::Vadd(nq, tmp1, 1, tmp2, 1, flux[0][j], 1);
     }
-    else
-    {
-        // F_{adv,u'_i,j} = (p'/ rho + \bar{u}_k u'_k) \delta_{ij}
-        for (int j = 0; j < flux.num_elements(); ++j)
-        {
-            Vmath::Zero(nq, flux[j], 1);
 
-            if (i-1 == j)
+    for (int i = 1; i < flux.num_elements(); ++i)
+    {
+        ASSERTL1(flux[i].num_elements() == m_spacedim,
+                 "Dimension of flux array and velocity array do not match");
+
+        // F_{adv,u'_i,j} = (p'/ \bar{rho} + \bar{u}_k u'_k) \delta_{ij}
+        for (int j = 0; j < m_spacedim; ++j)
+        {
+            Vmath::Zero(nq, flux[i][j], 1);
+
+            if (i - 1 == j)
             {
-                // contruct p'/ rho term
-                tmp0 = 1 / m_Rho0;
-                Vmath::Smul(nq, tmp0, physfield[0], 1, flux[j], 1);
+                // contruct p'/ \bar{rho} term
+                Vmath::Vdiv(nq, physfield[0], 1, m_bf[1], 1, flux[i][j], 1);
 
                 // construct \bar{u}_k u'_k term
                 Vmath::Zero(nq, tmp1, 1);
-                for (int k = 0; k < flux.num_elements(); ++k)
+                for (int k = 0; k < m_spacedim; ++k)
                 {
-                    Vmath::Vmul(nq, physfield[k+1], 1, m_basefield[k+1], 1, tmp2, 1);
-                    Vmath::Vadd(nq, tmp1, 1, tmp2, 1, tmp1, 1);
+                    Vmath::Vvtvp(nq, physfield[k + 1], 1, m_bf[k + 2 ], 1, tmp1, 1, tmp1, 1);
                 }
 
                 // add terms
-                Vmath::Vadd(nq, flux[j], 1, tmp1, 1, flux[j], 1);
+                Vmath::Vadd(nq, flux[i][j], 1, tmp1, 1, flux[i][j], 1);
             }
         }
     }
+}
 
+
+/**
+ * @brief v_PostIntegrate
+ */
+bool APE::v_PostIntegrate(int step)
+{
+    if (m_cflsteps && !((step + 1) % m_cflsteps))
+    {
+        NekDouble cfl = GetCFLEstimate();
+        if (m_comm->GetRank() == 0)
+        {
+            cout << "CFL: " << cfl << endl;
+        }
+    }
+
+    EvaluateFunction("S", m_sourceTerms, "Source", m_time);
+    EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
+
+    Array<OneD, NekDouble> tmpC(GetNcoeffs());
+    m_fields[0]->FwdTrans(m_sourceTerms, tmpC);
+    m_fields[0]->BwdTrans(tmpC, m_sourceTerms);
+
+    for (int i = 0; i < m_spacedim + 2; ++i)
+    {
+        // ensure the field is C0-continuous
+        m_bfField->IProductWRTBase(m_bf[i], tmpC);
+        m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
+        m_bfField->LocalToGlobal(tmpC, tmpC);
+        m_bfField->GlobalToLocal(tmpC, tmpC);
+        m_bfField->BwdTrans(tmpC, m_bf[i]);
+    }
+
+    return UnsteadySystem::v_PostIntegrate(step);
 }
 
 
@@ -274,105 +352,20 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                          Array<OneD,       Array<OneD, NekDouble> >&outarray,
                    const NekDouble time)
 {
-    int i;
-    int ndim       = m_spacedim;
-    int nvariables = inarray.num_elements();
-    int ncoeffs    = GetNcoeffs();
-    int nq         = GetTotPoints();
+    int nVariables = inarray.num_elements();
+    int nq = GetTotPoints();
 
-    switch(m_projectionType)
+    // WeakDG does not use advVel, so we only provide a dummy array
+    Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
+    m_advection->Advect(nVariables, m_fields, advVel, inarray, outarray, time);
+
+    // Negate the LHS terms
+    for (int i = 0; i < nVariables; ++i)
     {
-        case MultiRegions::eDiscontinuous:
-        {
-            //-------------------------------------------------------
-            //inarray in physical space
-
-            Array<OneD, Array<OneD, NekDouble> > modarray(nvariables);
-
-            for (i = 0; i < nvariables; ++i)
-            {
-                modarray[i]  = Array<OneD, NekDouble>(ncoeffs);
-            }
-
-            // get the advection part
-            // input: physical space
-            // output: modal space
-
-            // straighforward DG
-            WeakDGAdvection(inarray, modarray, true, true);
-
-            // negate the outarray since moving terms to the rhs
-            for(i = 0; i < nvariables; ++i)
-            {
-                Vmath::Neg(ncoeffs,modarray[i],1);
-            }
-
-            // Add "source term"
-            // input: physical space
-            // output: modal space (JOSEF)
-            AddSource(inarray, modarray);
-
-            for(i = 0; i < nvariables; ++i)
-            {
-                m_fields[i]->MultiplyByElmtInvMass(modarray[i],modarray[i]);
-                m_fields[i]->BwdTrans(modarray[i],outarray[i]);
-            }
-            break;
-        }
-
-        case MultiRegions::eGalerkin:
-        case MultiRegions::eMixed_CG_Discontinuous:
-        {
-            Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
-            Array<OneD, Array<OneD, NekDouble> > modarray(nvariables);
-
-            for (i = 0; i < nvariables; ++i)
-            {
-                physarray[i] = Array<OneD, NekDouble>(nq);
-                modarray[i]  = Array<OneD, NekDouble>(ncoeffs);
-            }
-
-            // deep copy
-            for(i = 0; i < nvariables; ++i)
-            {
-                Vmath::Vcopy(nq,inarray[i],1,physarray[i],1);
-            }
-
-            Array<OneD, Array<OneD, NekDouble> > fluxvector(ndim);
-            for(i = 0; i < ndim; ++i)
-            {
-                fluxvector[i]    = Array<OneD, NekDouble>(nq);
-            }
-
-            Array<OneD,NekDouble> tmp(nq);
-            Array<OneD, NekDouble>tmp1(nq);
-
-            for(i = 0; i < nvariables; ++i)
-            {
-                // Get the ith component of the  flux vector in (physical space)
-                APE::GetFluxVector(i, physarray, fluxvector);
-
-                Vmath::Zero(nq, outarray[i], 1);
-                for (int j = 0; j < ndim; ++j)
-                {
-                    // Get the ith component of the  flux vector in (physical space)
-                    m_fields[0]->PhysDeriv(j,fluxvector[j],tmp1);
-                    Vmath::Vadd(nq, outarray[i], 1, tmp1, 1, outarray[i], 1);
-                }
-                Vmath::Neg(nq,outarray[i],1);
-            }
-
-            // Add "source term"
-            // input: physical space
-            // output: modal space
-            AddSource(physarray,outarray);
-            break;
-        }
-
-        default:
-            ASSERTL0(false,"Unknown projection scheme for the APE");
-            break;
+        Vmath::Neg(nq, outarray[i], 1);
     }
+
+    AddSource(outarray);
 }
 
 
@@ -384,42 +377,16 @@ void APE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarr
                                 Array<OneD,       Array<OneD, NekDouble> >&outarray,
                           const NekDouble time)
 {
-    int i;
     int nvariables = inarray.num_elements();
     int nq = m_fields[0]->GetNpoints();
 
     // deep copy
-    for(int i = 0; i < nvariables; ++i)
+    for (int i = 0; i < nvariables; ++i)
     {
-        Vmath::Vcopy(nq,inarray[i],1,outarray[i],1);
+        Vmath::Vcopy(nq, inarray[i], 1, outarray[i], 1);
     }
 
-    switch(m_projectionType)
-    {
-        case MultiRegions::eDiscontinuous:
-        {
-            SetBoundaryConditions(outarray,time);
-            break;
-        }
-
-        case MultiRegions::eGalerkin:
-        case MultiRegions::eMixed_CG_Discontinuous:
-        {
-            UnsteadySystem::SetBoundaryConditions(time);
-            Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
-
-            for(i = 0; i < nvariables; ++i)
-            {
-                m_fields[i]->FwdTrans(outarray[i],coeffs);
-                m_fields[i]->BwdTrans_IterPerExp(coeffs,outarray[i]);
-            }
-            break;
-        }
-
-        default:
-            ASSERTL0(false,"Unknown projection scheme");
-            break;
-    }
+    SetBoundaryConditions(outarray, time);
 }
 
 
@@ -431,19 +398,29 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
 {
     std::string varName;
     int nvariables = m_fields.num_elements();
-    int cnt = 0;
+    int cnt        = 0;
+    int nTracePts  = GetTraceTotPoints();
+
+    // Extract trace for boundaries. Needs to be done on all processors to avoid
+    // deadlock.
+    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+    for (int i = 0; i < nvariables; ++i)
+    {
+        Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+        m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
+    }
 
     // loop over Boundary Regions
     for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
     {
         // Wall Boundary Condition
-        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eWall)
+        if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
         {
-            WallBC(n, cnt, inarray);
+            WallBC(n, cnt, Fwd, inarray);
         }
 
         // Time Dependent Boundary Condition (specified in meshfile)
-        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eTimeDependent)
+        if (m_fields[0]->GetBndConditions()[n]->IsTimeDependent())
         {
             for (int i = 0; i < nvariables; ++i)
             {
@@ -460,20 +437,12 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
  * @brief Wall boundary conditions for the APE equations.
  */
 void APE::WallBC(int bcRegion, int cnt,
+                 Array<OneD, Array<OneD, NekDouble> > &Fwd,
                  Array<OneD, Array<OneD, NekDouble> > &physarray)
 {
-    int nTracePts = GetTraceTotPoints();
     int nVariables = physarray.num_elements();
 
     const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
-
-    // Get physical values of the forward trace
-    Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
-    for (int i = 0; i < nVariables; ++i)
-    {
-        Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-        m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-    }
 
     // Adjust the physical values of the trace to take
     // user defined boundaries into account
@@ -527,20 +496,133 @@ void APE::WallBC(int bcRegion, int cnt,
 /**
  * @brief sourceterm for p' equation obtained from GetSource
  */
-void APE::AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray,
-                    Array< OneD, Array< OneD, NekDouble > > &outarray)
+void APE::AddSource(Array< OneD, Array< OneD, NekDouble > > &outarray)
 {
-    int ncoeffs = outarray[0].num_elements();
-    int nq      = inarray[0].num_elements();
-    Array<OneD, NekDouble> source(nq);
+    Vmath::Vadd(GetTotPoints(), m_sourceTerms, 1, outarray[0], 1, outarray[0], 1);
+}
 
-    EvaluateFunction("S", source, "Source", m_time);
-    if ( m_projectionType == MultiRegions::eDiscontinuous )
+
+/**
+ * @brief Compute the advection velocity in the standard space
+ * for each element of the expansion.
+ *
+ * @param stdV       Standard velocity field.
+ */
+void APE::GetStdVelocity(Array<OneD, NekDouble> &stdV)
+{
+    int nElm = m_fields[0]->GetExpSize();
+
+    ASSERTL1(stdV.num_elements() ==  nElm,  "stdV malformed");
+
+    Array<OneD, Array<OneD, NekDouble> > stdVelocity(m_spacedim);
+    Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim+1);
+    LibUtilities::PointsKeyVector ptsKeys;
+
+    // Zero output array
+    Vmath::Zero(stdV.num_elements(), stdV, 1);
+
+    int cnt = 0;
+
+    for (int el = 0; el < nElm; ++el)
     {
-        m_fields[0]->IProductWRTBase(source,source);
-    }
-    Vmath::Vadd(ncoeffs,source,1,outarray[0],1,outarray[0],1);
+        ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
 
+        // Possible bug: not multiply by jacobian??
+        const SpatialDomains::GeomFactorsSharedPtr metricInfo =
+                m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo();
+        const Array<TwoD, const NekDouble> &gmat =
+                m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()
+                ->GetDerivFactors(ptsKeys);
+
+        int nq = m_fields[0]->GetExp(el)->GetTotPoints();
+
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            stdVelocity[i] = Array<OneD, NekDouble>(nq, 0.0);
+
+            velocity[i] = Array<OneD, NekDouble>(nq, 0.0);
+            for (int j = 0; j < nq; ++j)
+            {
+                // The total advection velocity is v+c, so we need to scale c by
+                // adding it before we do the transformation.
+                NekDouble c = sqrt(m_gamma * m_bf[0][cnt+j] / m_bf[1][cnt+j]);
+                velocity[i][j] = m_bf[i+2][cnt+j] + c;
+            }
+        }
+
+        // scale the velocity components
+        if (metricInfo->GetGtype() == SpatialDomains::eDeformed)
+        {
+            // d xi/ dx = gmat = 1/J * d x/d xi
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                Vmath::Vmul(nq, gmat[i], 1, velocity[0], 1, stdVelocity[i], 1);
+                for (int j = 1; j < m_spacedim; ++j)
+                {
+                    Vmath::Vvtvp(nq, gmat[m_spacedim * j + i], 1, velocity[j],
+                            1, stdVelocity[i], 1, stdVelocity[i], 1);
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                Vmath::Smul(nq, gmat[i][0], velocity[0], 1, stdVelocity[i], 1);
+                for (int j = 1; j < m_spacedim; ++j)
+                {
+                    Vmath::Svtvp(nq, gmat[m_spacedim * j + i][0], velocity[j],
+                            1, stdVelocity[i], 1, stdVelocity[i], 1);
+                }
+            }
+        }
+
+        // compute the max absolute velocity of the element
+        for (int i = 0; i < nq; ++i)
+        {
+            NekDouble pntVelocity = 0.0;
+            for (int j = 0; j < m_spacedim; ++j)
+            {
+                pntVelocity += stdVelocity[j][i] * stdVelocity[j][i];
+            }
+            pntVelocity = sqrt(pntVelocity);
+
+            if (pntVelocity > stdV[el])
+            {
+                stdV[el] = pntVelocity;
+            }
+        }
+
+        cnt += nq;
+    }
+}
+
+
+void APE::v_ExtraFldOutput(
+    std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+    std::vector<std::string>             &variables)
+{
+    const int nCoeffs = m_fields[0]->GetNcoeffs();
+
+    for (int i = 0; i < m_spacedim + 2; i++)
+    {
+        Array<OneD, NekDouble> tmpC(GetNcoeffs());
+
+        // ensure the field is C0-continuous
+        m_bfField->IProductWRTBase(m_bf[i], tmpC);
+        m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
+        m_bfField->LocalToGlobal(tmpC, tmpC);
+        m_bfField->GlobalToLocal(tmpC, tmpC);
+        m_bfField->BwdTrans(tmpC, m_bf[i]);
+
+        variables.push_back(m_bfNames[i]);
+        fieldcoeffs.push_back(tmpC);
+    }
+
+    variables.push_back("S");
+    Array<OneD, NekDouble> FwdS(nCoeffs);
+    m_fields[0]->FwdTrans(m_sourceTerms, FwdS);
+    fieldcoeffs.push_back(FwdS);
 }
 
 
@@ -567,9 +649,9 @@ const Array<OneD, const Array<OneD, NekDouble> > &APE::GetVecLocs()
  */
 const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefield()
 {
-    for (int i = 0; i < m_spacedim +1; i++)
+    for (int i = 0; i < m_spacedim + 2; i++)
     {
-        m_fields[0]->ExtractTracePhys(m_basefield[i], m_traceBasefield[i]);
+        m_fields[0]->ExtractTracePhys(m_bf[i], m_traceBasefield[i]);
     }
     return m_traceBasefield;
 }
@@ -581,15 +663,6 @@ const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefield()
 NekDouble APE::GetGamma()
 {
     return m_gamma;
-}
-
-
-/**
- * @brief Get the density.
- */
-NekDouble APE::GetRho()
-{
-    return m_Rho0;
 }
 
 } //end of namespace

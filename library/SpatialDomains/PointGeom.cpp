@@ -63,6 +63,7 @@ namespace Nektar
             m_shapeType = LibUtilities::ePoint;
             m_coordim = coordim;
             m_vid     = vid;
+            m_globalID = vid;
 
             (*this)(0) = x;
             (*this)(1) = y;
@@ -76,6 +77,7 @@ namespace Nektar
             m_shapeType = T.m_shapeType;
             m_vid = T.m_vid;
             m_coordim = T.m_coordim;
+            m_globalID = T.m_globalID;
 
             std::list<CompToElmt>::const_iterator def;
             for(def = T.m_elmtMap.begin(); def != T.m_elmtMap.end(); def++)

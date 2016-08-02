@@ -97,25 +97,33 @@ namespace Nektar
                 int coll_check);
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                 const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray);
+                Array<OneD, NekDouble> &outarray,
+                bool multiplybyweights= true);
             STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase(
                 const int dir,
                 const Array<OneD, const NekDouble> &inarray,
                 Array<OneD, NekDouble> &outarray);
 
-            //----------------------------
+            //---------------------------
             // Evaluations Methods
             //---------------------------
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_GenMatrix(
                 const StdMatrixKey &mkey);
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
                 const StdMatrixKey &mkey);
-		
             
         private:
             virtual int v_GetNverts() const
             {
                 return 1;
+            }
+
+            virtual int v_GetVertexMap(
+                int localVertexId, bool useCoeffPacking = false)
+            {
+                ASSERTL2(localVertexId == 0,
+                         "Only single point in StdPointExp!");
+                return 0;
             }
         };
 

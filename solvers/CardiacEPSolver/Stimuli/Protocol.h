@@ -43,7 +43,7 @@ namespace Nektar
 {
     // Forward declaration
     class Protocol;
-    
+
     /// A shared pointer to an EquationSystem object
     typedef boost::shared_ptr<Protocol> ProtocolSharedPtr;
 
@@ -55,41 +55,41 @@ namespace Nektar
 
     ProtocolFactory& GetProtocolFactory();
 
-    
+
     /// Protocol base class.
     class Protocol
     {
     public:
-        Protocol(const LibUtilities::SessionReaderSharedPtr& pSession,
-                 const TiXmlElement* pXml);
-        
         virtual ~Protocol() {}
-        
+
         /// Initialise the protocol storage and set initial conditions
         void Initialise();
-        
+
         /// Returns amplitude of stimulus (1 or 0) at given time
         NekDouble GetAmplitude(const NekDouble time)
         {
             return v_GetAmplitude(time);
         }
-        
+
         /// Print a summary of the cell model
         void GenerateSummary(SolverUtils::SummaryList& s)
         {
             v_GenerateSummary(s);
         }
-        
+
     protected:
         /// Session
         LibUtilities::SessionReaderSharedPtr m_session;
 
+        Protocol(const LibUtilities::SessionReaderSharedPtr& pSession,
+                 const TiXmlElement* pXml);
+
         virtual NekDouble v_GetAmplitude(const NekDouble time) = 0;
-        
+
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s) = 0;
-        
+
     };
-    
+
 }
 
 #endif /*PROTOCOL_H_ */

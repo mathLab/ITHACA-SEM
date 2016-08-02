@@ -39,6 +39,8 @@
 #include "petscao.h"
 #include "petscis.h"
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -65,11 +67,6 @@ namespace Nektar
             : GlobalLinSys     (pLinSysKey, pExp, pLocToGloMap),
               GlobalLinSysPETSc(pLinSysKey, pExp, pLocToGloMap)
         {
-            ASSERTL1(m_linSysKey.GetGlobalSysSolnType() == ePETScFullMatrix,
-                     "This routine should only be used when using a Full PETSc"
-                     " matrix solve");
-
-            const int nDofs    = pLocToGloMap->GetNumGlobalCoeffs();
             const int nDirDofs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
 
             int i, j, n, cnt, gid1, gid2, loc_lda;
@@ -82,7 +79,13 @@ namespace Nektar
                                 pLocToGloMap);
 
             // SET UP VECTORS AND MATRIX
-            SetUpMatVec();
+            SetUpMatVec(pLocToGloMap->GetNumGlobalCoeffs(), nDirDofs);
+
+            // SET UP SCATTER OBJECTS
+            SetUpScatter();
+
+            // CONSTRUCT KSP OBJECT
+            SetUpSolver(pLocToGloMap->GetIterativeTolerance());
 
             // POPULATE MATRIX
             for(n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
@@ -118,12 +121,6 @@ namespace Nektar
             // ASSEMBLE MATRIX
             MatAssemblyBegin(m_matrix, MAT_FINAL_ASSEMBLY);
             MatAssemblyEnd  (m_matrix, MAT_FINAL_ASSEMBLY);
-
-            // SET UP SCATTER OBJECTS
-            SetUpScatter();
-
-            // CONSTRUCT KSP OBJECT
-            SetUpSolver(pLocToGloMap->GetIterativeTolerance());
         }
 
 
@@ -183,6 +180,24 @@ namespace Nektar
             {
                 SolveLinearSystem(nDirDofs, pInput, pOutput, pLocToGloMap);
             }
+        }
+
+        /**
+         * @brief Apply matrix-vector multiplication using local approach and
+         * the assembly map.
+         *
+         * @param input   Vector input.
+         * @param output  Result of multiplication.
+         */
+        void GlobalLinSysPETScFull::v_DoMatrixMultiply(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output)
+        {
+            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+
+            // Perform matrix-vector operation A*d_i
+            expList->GeneralMatrixOp(
+                m_linSysKey, input, output, eGlobal);
         }
     }
 }

@@ -93,6 +93,7 @@ namespace SolverUtils
 
         private:
             ForcingProgrammatic(const LibUtilities::SessionReaderSharedPtr& pSession);
+            virtual ~ForcingProgrammatic(void){};
 
     };
 

@@ -8,8 +8,13 @@
         </PARAMETERS>
 
         <SOLVERINFO>
-            <I PROPERTY="CellModel" VALUE="CourtemancheRamirezNattel98cAF" />
+            <I PROPERTY="CellModel" VALUE="CourtemancheRamirezNattel98" />
+            <I PROPERTY="CellModelVariant" VALUE="Original" />
         </SOLVERINFO>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="0" />
+        </FUNCTION>
     </CONDITIONS>
 
     <STIMULI>

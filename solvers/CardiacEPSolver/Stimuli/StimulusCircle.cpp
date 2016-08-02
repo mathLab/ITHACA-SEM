@@ -44,7 +44,7 @@ namespace Nektar
                                                    "StimulusCirc",
                                                    StimulusCirc::create,
                                                    "Circular stimulus.");
-    
+
     /**
      * @class StimulusCirc
      *
@@ -54,7 +54,7 @@ namespace Nektar
      * Stimulus, at specified frequencies determined by the derived classes of
      * Protocol.
      */
-    
+
     /**
      * Stimulus base class constructor.
      */
@@ -67,42 +67,43 @@ namespace Nektar
         m_session = pSession;
         m_field = pField;
         m_nq = pField->GetTotPoints();
-        
+        m_chiCapMembrane = m_session->GetParameter("chi")
+                            * m_session->GetParameter("Cm");
+
         if (!pXml)
         {
             return;
         }
-        
+
         const TiXmlElement *pXmlparameter;
-        
+
         pXmlparameter = pXml->FirstChildElement("p_x1");
         m_px1 = atof(pXmlparameter->GetText());
-        
+
         pXmlparameter = pXml->FirstChildElement("p_y1");
         m_py1 = atof(pXmlparameter->GetText());
-        
+
         pXmlparameter = pXml->FirstChildElement("p_z1");
         m_pz1 = atof(pXmlparameter->GetText());
-        
+
         pXmlparameter = pXml->FirstChildElement("p_r1");
         m_pr1 = atof(pXmlparameter->GetText());
-    
+
         pXmlparameter = pXml->FirstChildElement("p_is");
         m_pis = atof(pXmlparameter->GetText());
-        
+
         pXmlparameter = pXml->FirstChildElement("p_strength");
         m_strength = atof(pXmlparameter->GetText());
     }
-    
+
 
     /**
      * Initialise the stimulus. Allocate workspace and variable storage.
      */
     void StimulusCirc::Initialise()
     {
-        
     }
-    
+
 
     /**
      *
@@ -110,29 +111,28 @@ namespace Nektar
     void StimulusCirc::v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                                 const NekDouble time)
     {
-        
         // Get the dimension of the expansion
         int dim = m_field->GetCoordim(0);
-        
+
         //Retrieve coodrinates of quadrature points
         int nq = m_field->GetNpoints();
         Array<OneD,NekDouble> x0(nq);
         Array<OneD,NekDouble> x1(nq);
         Array<OneD,NekDouble> x2(nq);
-        
+
         // Get the protocol amplitude
         NekDouble v_amp = m_Protocol->GetAmplitude(time) * m_strength;
-        
+
         // get the coordinates
         m_field->GetCoords(x0,x1,x2);
-        
+
         switch (dim)
         {
             case 1:
                 for(int j=0; j<nq; j++)
                 {
-                    outarray[0][j] += v_amp 
-                                    * ( -tanh( (m_pis * x0[j] - m_px1 + m_pr1) 
+                    outarray[0][j] += v_amp
+                                    * ( -tanh( (m_pis * x0[j] - m_px1 + m_pr1)
                                              * (m_pis * x0[j] - m_px1 - m_pr1)
                                              ) / 2.0 + 0.5 );
                 }
@@ -141,9 +141,9 @@ namespace Nektar
                 for(int j=0; j<nq; j++)
                 {
                     outarray[0][j] += v_amp
-                                    * ( -tanh( (m_pis * x0[j] - m_px1+m_pr1) 
-                                             * (m_pis * x0[j] - m_px1-m_pr1) 
-                                             + (m_pis * x1[j] - m_py1+m_pr1) 
+                                    * ( -tanh( (m_pis * x0[j] - m_px1+m_pr1)
+                                             * (m_pis * x0[j] - m_px1-m_pr1)
+                                             + (m_pis * x1[j] - m_py1+m_pr1)
                                              * (m_pis * x1[j] - m_py1-m_pr1)
                                              ) / 2.0 + 0.5 );
                 }
@@ -152,26 +152,23 @@ namespace Nektar
                 for(int j=0; j<nq; j++)
                 {
                     outarray[0][j] += v_amp
-                                    * ( -tanh( (m_pis * x0[j] - m_px1+m_pr1) 
-                                             * (m_pis * x0[j] - m_px1-m_pr1) 
-                                             + (m_pis * x1[j] - m_py1+m_pr1) 
-                                             * (m_pis * x1[j] - m_py1-m_pr1) 
-                                             + (m_pis * x2[j] - m_pz1+m_pr1) 
+                                    * ( -tanh( (m_pis * x0[j] - m_px1+m_pr1)
+                                             * (m_pis * x0[j] - m_px1-m_pr1)
+                                             + (m_pis * x1[j] - m_py1+m_pr1)
+                                             * (m_pis * x1[j] - m_py1-m_pr1)
+                                             + (m_pis * x2[j] - m_pz1+m_pr1)
                                              * (m_pis * x2[j] - m_pz1-m_pr1)
                                              ) / 2.0 + 0.5 );
                 }
                 break;
         }
-        
-
     }
-    
+
 
     /**
      *
      */
     void StimulusCirc::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        
     }
 }

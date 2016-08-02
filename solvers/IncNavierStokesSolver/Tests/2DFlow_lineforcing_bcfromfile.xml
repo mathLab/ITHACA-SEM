@@ -9,20 +9,20 @@
 
     <CONDITIONS>
         <SOLVERINFO>
-            <I PROPERTY="EQTYPE" VALUE="UnSteadyNavierStokes"/>
-            <I PROPERTY="AdvectionForm" VALUE="Convective"/>
-            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
-            <I PROPERTY="Projection" VALUE="Continuous"/>
-            <I PROPERTY="solvertype" VALUE="CoupledLinearisedNS"/>
-            <I PROPERTY="GlobalSysSoln" VALUE="DirectStaticCond" />
+            <I PROPERTY="EQTYPE"                VALUE="UnSteadyNavierStokes"/>
+            <I PROPERTY="AdvectionForm"         VALUE="Convective"          />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"          />
+            <I PROPERTY="Projection"            VALUE="Continuous"          />
+            <I PROPERTY="solvertype"            VALUE="CoupledLinearisedNS" />
+            <I PROPERTY="GlobalSysSoln"         VALUE="DirectStaticCond"    />
         </SOLVERINFO>
 
         <PARAMETERS>
-            <P> TimeStep = 0.001 </P>
-            <P> NumSteps = 1000     </P>
-            <P> IO_CheckSteps = 10000  </P>
-            <P> IO_InfoSteps = 10    </P>
-            <P> Kinvis = 1     </P>
+            <P> TimeStep      = 0.001 </P>
+            <P> NumSteps      = 1000  </P>
+            <P> IO_CheckSteps = 10000 </P>
+            <P> IO_InfoSteps  = 10    </P>
+            <P> Kinvis        = 1     </P>
         </PARAMETERS>
 
         <VARIABLES>
@@ -41,8 +41,7 @@
                 <D VAR="v" VALUE="0" />
             </REGION>
             <REGION REF="1">
-                <N VAR="u" FILE="2DFlow_lineforcing_bcfromfile_u_1.bc" />
-                      <!-- VALUE=3   -->
+                <N VAR="u" FILE="2DFlow_lineforcing_bcfromfile_u_1.bc" /> <!-- VALUE=3   -->
                 <D VAR="v" VALUE="0" />
             </REGION>
         </BOUNDARYCONDITIONS>
@@ -58,8 +57,7 @@
         </FUNCTION>
 
         <FUNCTION NAME="ExactSolution">
-            <E VAR="u" VALUE="-1.5*(y*y-1)" />
-                    <!-- solution edge 5 only -->
+            <E VAR="u" VALUE="-1.5*(y*y-1)" /> <!-- solution edge 5 only -->
             <E VAR="v" VALUE="0" />
         </FUNCTION>
 

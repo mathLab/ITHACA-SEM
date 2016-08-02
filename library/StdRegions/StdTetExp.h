@@ -56,12 +56,12 @@ namespace Nektar
             STD_REGIONS_EXPORT StdTetExp();
             STD_REGIONS_EXPORT StdTetExp(
                 const LibUtilities::BasisKey &Ba,
-                const LibUtilities::BasisKey &Bb, 
+                const LibUtilities::BasisKey &Bb,
                 const LibUtilities::BasisKey &Bc);
             STD_REGIONS_EXPORT StdTetExp(
                 const LibUtilities::BasisKey &Ba,
                 const LibUtilities::BasisKey &Bb,
-                const LibUtilities::BasisKey &Bc, 
+                const LibUtilities::BasisKey &Bc,
                 NekDouble *coeffs,
                 NekDouble *phys);
             STD_REGIONS_EXPORT StdTetExp(const StdTetExp &T);
@@ -134,7 +134,8 @@ namespace Nektar
                       Array<OneD,       NekDouble>& outarray);
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                 const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD,       NekDouble>& outarray);
+                      Array<OneD,       NekDouble>& outarray,
+                bool                                multiplybyweights = true);
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFacKernel (
                 const Array<OneD, const NekDouble>& base0,
                 const Array<OneD, const NekDouble>& base1,
@@ -170,10 +171,14 @@ namespace Nektar
                 Array<OneD, NekDouble> &coords_y,
                 Array<OneD, NekDouble> &coords_z);
             STD_REGIONS_EXPORT virtual void v_FillMode(
-                const int                     mode, 
+                const int                     mode,
                       Array<OneD, NekDouble>& outarray);
-            
-            
+            STD_REGIONS_EXPORT virtual void v_GetFaceNumModes(
+                    const int                  fid,
+                    const Orientation          faceOrient,
+                    int &numModes0,
+                    int &numModes1);
+
             //---------------------------
             // Helper functions
             //---------------------------
@@ -195,7 +200,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int  v_CalcNumberOfCoefficients(
                     const std::vector<unsigned int> &nummodes,
                           int                       &modes_offset);
-            STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey 
+            STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey
                     v_DetFaceBasisKey(const int i, const int k) const;
             STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(
                     const int i) const;
@@ -210,8 +215,8 @@ namespace Nektar
                     const Orientation      faceOrient,
                     Array<OneD, unsigned int> &maparray,
                     Array<OneD,          int> &signarray,
-                    int                        nummodesA = -1,
-                    int                        nummodesB = -1);
+                    int                        P = -1,
+                    int                        Q = -1);
             STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId,
                                                           bool useCoeffPacking = false);            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(const int eid,
                     const Orientation edgeOrient,
@@ -240,6 +245,23 @@ namespace Nektar
                       Array<OneD,       NekDouble>& outarray);
 
             STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(Array<OneD, NekDouble> &array, const StdMatrixKey &mkey);
+
+            //---------------------------------------
+            // Method for applying sensors
+            //---------------------------------------
+            STD_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
+                int                                 numMin,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
+
+            //---------------------------------------
+            // Output interpolation functions
+            //---------------------------------------
+
+            STD_REGIONS_EXPORT virtual void v_GetSimplexEquiSpacedConnectivity(
+                      Array<OneD, int> &conn,
+                      bool              standard = true);
+
         private:
             //---------------------------------------
             // Private helper functions

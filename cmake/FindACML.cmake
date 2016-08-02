@@ -36,10 +36,6 @@ RESET_VAR_IF_CHANGED( ACML_SEARCH_PATHS ACML_USE_SHARED_LIBRARIES)
 SET(ACML_BASE_SEARCH_PATHS "/opt/acml" "C:\\AMD\\acml" "C:\\Program Files\\AMD\\acml")
 SET(ACML_SEARCH_PATHS "")
 
-# The various supported versions.  When new versions come out this will need
-# to be updated to allow automatic detection.
-SET(ACML_VERSIONS 4.2.0 4.1.0 4.0.0 3.5.0 3.6.0 3.6.1)
-
 SET(MP_COMPILER_VERSIONS gfortran64_mp gfortran64_mp_int64 pgi32_mp ifort32_mp)
 SET(COMPILER_VERSIONS gfortran64 gfortran64_int64 pgi32 ifort32)
 
@@ -52,17 +48,19 @@ ELSE( ACML_USE_OPENMP_LIBRARIES )
 ENDIF( ACML_USE_OPENMP_LIBRARIES )
 
 FOREACH(path_iter ${ACML_BASE_SEARCH_PATHS})
-    FOREACH(version_iter ${ACML_VERSIONS})
+    FILE( GLOB install_path ${path_iter}*/ACML-EULA.txt )
+    IF (install_path)
+        LIST( GET install_path 0 install_path)
+        GET_FILENAME_COMPONENT( install_path ${install_path} PATH)
         FOREACH(compiler_iter ${COMPILER_VERSION_TO_USE})
-            LIST(APPEND ACML_SEARCH_PATHS ${path_iter}${version_iter}/${compiler_iter}/include)
+            LIST(APPEND ACML_SEARCH_PATHS 
+                 ${install_path}/${compiler_iter}/include)
         ENDFOREACH(compiler_iter ${COMPILER_VERSION_TO_USE})
-    ENDFOREACH(version_iter ${ACML_VERSIONS})	     
+    ENDIF (install_path)
 ENDFOREACH(path_iter ${ACML_BASE_SEARCH_PATHS})
 
-#MESSAGE(${ACML_SEARCH_PATHS})
 FIND_PATH(ACML_INCLUDE_PATH acml.h ${ACML_SEARCH_PATHS} )
 SET(ACML_LIB_PATH ${ACML_INCLUDE_PATH}/../lib)
-#MESSAGE(${ACML_LIB_PATH})
 
 IF( ACML_USE_SHARED_LIBRARIES )
 	IF( ACML_USE_OPENMP_LIBRARIES )
@@ -100,5 +98,6 @@ ELSE(ACML_FOUND)
   ENDIF (ACML_FIND_REQUIRED)
 ENDIF (ACML_FOUND)
 
-
+MARK_AS_ADVANCED(ACML ACML_INCLUDE_PATH ACML_SEARCH_PATHS
+    ACML_USE_OPENMP_LIBRARIES ACML_USE_SHARED_LIBRARIES)
 

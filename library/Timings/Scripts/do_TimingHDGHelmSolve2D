@@ -11,7 +11,7 @@ MinTimeFile="./MinTimeHDG2D.dat"
 
 MaxNumModesp1=16;
 
-echo "%     Solver  optlevel  Type  nElements     nModes    Time   nCalls   Time/Call    L2Error  ppL2Error L2Error(hi-res)   LinfError   ppLinfErr  LinfErr(hi-res)  nLocCoef  nGlobCoef  nLocBCoef nGlobBCoef  nLocDCoef nGlobDCoef   GlobRank  GlobBndwth   nnz" > $TimingResultsFile
+echo "%     Solver  optlevel  Type  nElements     nModes    Time   nCalls   Time/Call    L2Error  ppL2Error L2Error(hi-res)   LinfError   ppLinfErr  LinfErr(hi-res)  nLocCoef  nGlobCoef  nLocBCoef nGlobBCoef  nLocDCoef nGlobDCoef   GlobRank  GlobBndwth   nnz   FullSolveTime  ppTime" > $TimingResultsFile
 
 # Loop over the mesh-size
 for MeshSize in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
@@ -37,8 +37,9 @@ do
 						TimingHDGHelmSolve2D $Type $MeshSize $NumModes $OptimisationLevel $LinSysSolver
 						echo Nektar++ TimingHDGHelmSolve2D $Type $MeshSize $NumModes $OptimisationLevel $LinSysSolver
 
-						read  LinSysSolverOut optLevelOut TypeOut NumElementsOut NumModesOut ElapsedTimeOut NumCallsOut TimepCallOut L2Out ppL2Out L2OutBis LinfOut ppLinfOut LinfOutBis nLocCoefOut  nGlobCoefOut nLocBCoefOut  nGlobBCoefOut  nLocDCoefOut nGlobDCoefOut GlobRankOut GlobBndwthOut nnzOut< $ExecutableDumpFile
-						if [ $ElapsedTimeOut -lt $MinTime ]; 
+						read  LinSysSolverOut optLevelOut TypeOut NumElementsOut NumModesOut ElapsedTimeOut NumCallsOut TimepCallOut L2Out ppL2Out L2OutBis LinfOut ppLinfOut LinfOutBis nLocCoefOut  nGlobCoefOut nLocBCoefOut  nGlobBCoefOut  nLocDCoefOut nGlobDCoefOut GlobRankOut GlobBndwthOut nnzOut FullSolveTimeOut ppTimeOut< $ExecutableDumpFile
+						comp=`echo "$ElapsedTimeOut < $MinTime" | bc -l`
+						if [ $comp -eq 1 ]; 
 						then
 							MinTime=$ElapsedTimeOut
 							cp $ExecutableDumpFile $MinTimeFile

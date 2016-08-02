@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: APE Equations framework solver
+// Description: APE1/APE4 (Acoustic Perturbation Equations) framework solver
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -37,6 +37,7 @@
 #include <SolverUtils/Driver.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
+using namespace std;
 using namespace Nektar;
 using namespace Nektar::SolverUtils;
 

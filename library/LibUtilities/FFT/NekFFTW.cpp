@@ -68,8 +68,8 @@ namespace Nektar
 
             for(int i=2;i<m_N;i++)
             {
-                m_FFTW_w[i]     = m_FFTW_w[0];
-                m_FFTW_w_inv[i] = m_FFTW_w_inv[0];
+                m_FFTW_w[i]     = m_FFTW_w[0]*2;
+                m_FFTW_w_inv[i] = m_FFTW_w_inv[0]/2;
             }
         }
 

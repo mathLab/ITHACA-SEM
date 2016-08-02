@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>Linear stability with coupled solver (Arpack): Channel</description>
+    <description>Linear stability with coupled solver (Arpack LI): Channel Largest real Ev = (0.00223554,+/-0.249844i)</description>
     <executable>IncNavierStokesSolver</executable>
     <parameters>ChanStability_Coupled.xml</parameters>
     <files>
@@ -9,12 +9,12 @@
     </files>
     <metrics>
         <metric type="L2" id="1">
-            <value variable="u" tolerance="100">2.58948</value>
-            <value variable="v" tolerance="100">0.000352934</value>
+            <value variable="u" tolerance="0.0001">2.58904</value>
+            <value variable="v" tolerance="0.0001">0.00277094</value>
         </metric>
         <metric type="Linf" id="2">
-            <value variable="u" tolerance="100">1.01298</value>
-            <value variable="v" tolerance="100">0.000295924</value>
+            <value variable="u" tolerance="0.00001">1.00159</value>
+            <value variable="v" tolerance="0.00001">0.00375125</value>
         </metric>
     </metrics>
 </test>

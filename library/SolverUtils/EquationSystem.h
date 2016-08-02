@@ -42,7 +42,11 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
+#include <LibUtilities/BasicUtils/PtsField.h>
+#include <LibUtilities/BasicUtils/PtsIO.h>
 #include <MultiRegions/ExpList.h>
+#include <FieldUtils/Interpolator.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
 
@@ -63,7 +67,7 @@ namespace Nektar
         SOLVER_UTILS_EXPORT EquationSystemFactory& GetEquationSystemFactory();
 
         /// A base class for describing how to solve specific equations.
-        class EquationSystem
+        class EquationSystem : public boost::enable_shared_from_this<EquationSystem>
         {
         public:
             /// Destructor
@@ -99,6 +103,18 @@ namespace Nektar
                 return m_sessionName;
             }
 
+            template<class T>
+            boost::shared_ptr<T> as()
+            {
+#if defined __INTEL_COMPILER && BOOST_VERSION > 105200
+                typedef typename boost::shared_ptr<T>::element_type E;
+                E * p = dynamic_cast< E* >( shared_from_this().get() );
+                ASSERTL1(p, "Cannot perform cast");
+                return boost::shared_ptr<T>( shared_from_this(), p );
+#else
+                return boost::dynamic_pointer_cast<T>( shared_from_this() );
+#endif
+            }
 
             /// Reset Session name
             SOLVER_UTILS_EXPORT void ResetSessionName(std::string newname)
@@ -133,6 +149,7 @@ namespace Nektar
                 std::vector<std::string> pFieldNames,
                 Array<OneD, Array<OneD, NekDouble> > &pFields,
                 const std::string& pName,
+                const NekDouble& pTime = 0.0,
                 const int domain = 0);
             
             /// Populate given fields with the function from session.
@@ -140,6 +157,7 @@ namespace Nektar
                 std::vector<std::string> pFieldNames,
                 Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                 const std::string& pName,
+                const NekDouble& pTime = 0.0,
                 const int domain = 0);
             
             // Populate an array with a function variable from session.
@@ -241,7 +259,10 @@ namespace Nektar
                 MultiRegions::ExpListSharedPtr &field,
                 std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                 std::vector<std::string> &variables);
-            
+        
+            /// Write base flow file of #m_fields.
+            SOLVER_UTILS_EXPORT void Checkpoint_BaseFlow(const int n);
+
             /// Write field data to the given filename.
             SOLVER_UTILS_EXPORT void WriteFld(const std::string &outname);
             
@@ -339,7 +360,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT inline void CopyToPhysField(const int i,
                                                             Array<OneD, NekDouble> &output);
             
-            SOLVER_UTILS_EXPORT inline void SetStepsToOne();
+            SOLVER_UTILS_EXPORT inline void SetSteps(const int steps);
             
             SOLVER_UTILS_EXPORT void ZeroPhysFields();
             
@@ -385,8 +406,46 @@ namespace Nektar
             
             /// Perform a case-insensitive string comparison.
             SOLVER_UTILS_EXPORT int NoCaseStringCompare(
-                const string & s1, const string& s2) ;
+                const std::string & s1, const std::string& s2) ;
+
+            SOLVER_UTILS_EXPORT int GetCheckpointNumber()
+            {
+                return m_nchk;
+            }
+
+            SOLVER_UTILS_EXPORT void SetCheckpointNumber(int num)
+            {
+                m_nchk = num;
+            }
+
+            SOLVER_UTILS_EXPORT int GetCheckpointSteps()
+            {
+                return m_checksteps;
+            }
+
+            SOLVER_UTILS_EXPORT void SetCheckpointSteps(int num)
+            {
+                m_checksteps = num;
+            }
+
+            SOLVER_UTILS_EXPORT void SetTime(
+                const NekDouble time)
+            {
+                m_time = time;
+            }
+            
+            SOLVER_UTILS_EXPORT void SetInitialStep(
+                const int step)
+            {
+                m_initialStep = step;
+            }
+            
+            /// Evaluates the boundary conditions at the given time.
+            SOLVER_UTILS_EXPORT void SetBoundaryConditions(NekDouble time);
                 
+            /// Virtual function to identify if operator is negated in DoSolve
+            SOLVER_UTILS_EXPORT virtual bool v_NegatedOp();
+
         protected:
             /// Communicator
             LibUtilities::CommSharedPtr                 m_comm;
@@ -394,6 +453,8 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        m_session;
             /// Field input/output
             LibUtilities::FieldIOSharedPtr              m_fld;
+            /// Map of interpolator objects
+            std::map<std::string, FieldUtils::Interpolator > m_interpolators;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.
@@ -404,20 +465,24 @@ namespace Nektar
             SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
             /// Pointer to graph defining mesh.
             SpatialDomains::MeshGraphSharedPtr          m_graph;
-            /// Filename.
-            std::string                                 m_filename;
             /// Name of the session.
             std::string                                 m_sessionName;
             /// Current time of simulation.
             NekDouble                                   m_time;
+            /// Number of the step where the simulation should begin
+            int                                         m_initialStep;
             /// Finish time of the simulation.
             NekDouble                                   m_fintime;
             /// Time step size
             NekDouble                                   m_timestep;
             /// Lambda constant in real system if one required.
             NekDouble                                   m_lambda;
+
+            std::set<std::string>                       m_loadedFields;
             /// Time between checkpoints.
             NekDouble                                   m_checktime;
+            /// Number of checkpoints written so far
+            int                                         m_nchk;
             /// Number of steps to take.
             int                                         m_steps;
             /// Number of steps between checkpoints.
@@ -427,11 +492,11 @@ namespace Nektar
             /// Expansion dimension.
             int                                         m_expdim;
             /// Flag to determine if single homogeneous mode is used.
-            bool                                        m_SingleMode;
+            bool                                        m_singleMode;
             /// Flag to determine if half homogeneous mode is used.
-            bool                                        m_HalfMode;
+            bool                                        m_halfMode;
             /// Flag to determine if use multiple homogenenous modes are used.
-            bool                                        m_MultipleModes;
+            bool                                        m_multipleModes;
             /// Flag to determine if FFT is used for homogeneous transform.
             bool                                        m_useFFT;
             /**
@@ -483,28 +548,24 @@ namespace Nektar
             
             int m_HomoDirec;    ///< number of homogenous directions
             
-            int m_NumMode;      ///< Mode to use in case of single mode analysis
-            
             
             /// Initialises EquationSystem class members.
             SOLVER_UTILS_EXPORT EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession);
             
             // Here for consistency purposes with old version
-            int nocase_cmp(const string & s1, const string& s2)
+            int nocase_cmp(const std::string & s1, const std::string& s2)
             {
                 return NoCaseStringCompare(s1,s2);
             }
             
             SOLVER_UTILS_EXPORT virtual void v_InitObject();
             
-            /// Evaluates the boundary conditions at the given time.
-            SOLVER_UTILS_EXPORT void SetBoundaryConditions(NekDouble time);
-            
             /// Virtual function for initialisation implementation.
             SOLVER_UTILS_EXPORT virtual void v_DoInitialise();
             
             /// Virtual function for solve implementation.
             SOLVER_UTILS_EXPORT virtual void v_DoSolve();
+            
             
             /// Virtual function for the L_inf error computation between fields and a given exact solution.
             SOLVER_UTILS_EXPORT virtual NekDouble v_LinfError(
@@ -590,6 +651,12 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >         &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
                 Array<OneD, Array<OneD, NekDouble > >              &qflux);
+
+            SOLVER_UTILS_EXPORT void PrintProgressbar(const int position,
+                                                      const int goal) const
+            {
+                LibUtilities::PrintProgressbar(position, goal, "Interpolating");
+            }
         };
         
         
@@ -696,15 +763,15 @@ namespace Nektar
                 std::vector<std::pair<std::string, std::string> > vSummary;
                 v_GenerateSummary(vSummary);
 
-                out << "=======================================================================" << endl;
+                out << "=======================================================================" << std::endl;
                 SummaryList::const_iterator x;
                 for (x = vSummary.begin(); x != vSummary.end(); ++x)
                 {
                     out << "\t";
                     out.width(20);
-                    out << x->first << ": " << x->second << endl;
+                    out << x->first << ": " << x->second << std::endl;
                 }
-                out << "=======================================================================" << endl;
+                out << "=======================================================================" << std::endl;
             }
         }
         
@@ -825,9 +892,9 @@ namespace Nektar
             return m_timestep;
         }
         
-        inline void EquationSystem::SetStepsToOne(void)
+        inline void EquationSystem::SetSteps(const int steps)
         {
-            m_steps=1;
+            m_steps = steps;
         }
         
         inline void EquationSystem::CopyFromPhysField(const int i,

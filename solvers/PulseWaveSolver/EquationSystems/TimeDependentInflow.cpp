@@ -35,6 +35,8 @@
 
 #include <PulseWaveSolver/EquationSystems/TimeDependentInflow.h>
 
+using namespace std;
+
 namespace Nektar
 {
     std::string TimeDependentInflow::className

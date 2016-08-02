@@ -2,7 +2,7 @@
 <test>
     <description>3D unsteady CG implicit diffusion, P = 5</description>
     <executable>ADRSolver</executable>
-    <parameters>ImDiffusion_Hex_Periodic_m5.xml</parameters>
+    <parameters>--use-metis ImDiffusion_Hex_Periodic_m5.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">ImDiffusion_Hex_Periodic_m5.xml</file>

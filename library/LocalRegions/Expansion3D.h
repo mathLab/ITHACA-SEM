@@ -76,48 +76,69 @@ namespace Nektar
                 Array<OneD, NekDouble>            &outarray);
 
             inline void AddNormTraceInt(
-                const int                                      dir,
-                Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
-                Array<OneD, Array<OneD, NekDouble> >          &faceCoeffs,
-                Array<OneD,NekDouble>                         &outarray);
+                const int                             dir,
+                Array<OneD, ExpansionSharedPtr>      &FaceExp,
+                Array<OneD, Array<OneD, NekDouble> > &faceCoeffs,
+                Array<OneD,NekDouble>                &outarray);
 
             inline void AddNormTraceInt(
-                const int                                      dir,
-                Array<OneD, const NekDouble>                  &inarray,
-                Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
-                Array<OneD,NekDouble>                         &outarray,
-                const StdRegions::VarCoeffMap                 &varcoeffs);
+                const int                        dir,
+                Array<OneD, const NekDouble>    &inarray,
+                Array<OneD, ExpansionSharedPtr> &FaceExp,
+                Array<OneD,NekDouble>           &outarray,
+                const StdRegions::VarCoeffMap   &varcoeffs);
 
             inline void AddFaceBoundaryInt(
-                const int                          face,
-                StdRegions::StdExpansionSharedPtr &FaceExp,
-                Array<OneD, NekDouble>            &facePhys,
-                Array<OneD, NekDouble>            &outarray,
-                const StdRegions::VarCoeffMap     &varcoeffs = StdRegions::NullVarCoeffMap);
+                const int                      face,
+                ExpansionSharedPtr            &FaceExp,
+                Array<OneD, NekDouble>        &facePhys,
+                Array<OneD, NekDouble>        &outarray,
+                const StdRegions::VarCoeffMap &varcoeffs = StdRegions::NullVarCoeffMap);
             
             inline SpatialDomains::Geometry3DSharedPtr GetGeom3D() const;
 
+            LOCAL_REGIONS_EXPORT void ReOrientFacePhysMap(const int nvert,
+                                                          const StdRegions::Orientation orient,
+                                                          const int nq0,
+                                                          const int nq1,
+                                                          Array<OneD, int> &idmap);
+            void v_NormVectorIProductWRTBase(
+                const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                      Array<OneD,       NekDouble>               &outarray);
+
         protected:
             virtual void v_DGDeriv(
-                const int                                       dir,
-                const Array<OneD, const NekDouble>             &incoeffs,
-                Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
-                Array<OneD, Array<OneD, NekDouble> >           &faceCoeffs,
-                Array<OneD, NekDouble>                         &out_d);
+                const int                            dir,
+                const Array<OneD, const NekDouble>  &incoeffs,
+                Array<OneD, ExpansionSharedPtr>      &FaceExp,
+                Array<OneD, Array<OneD, NekDouble> > &faceCoeffs,
+                Array<OneD, NekDouble>               &out_d);
             virtual DNekMatSharedPtr v_GenMatrix(
                 const StdRegions::StdMatrixKey &mkey);
             virtual void v_AddFaceNormBoundaryInt(
                 const int                            face,
-                StdRegions::StdExpansionSharedPtr   &FaceExp,
+                const ExpansionSharedPtr            &FaceExp,
                 const Array<OneD, const NekDouble>  &Fn,
                       Array<OneD,       NekDouble>  &outarray);
             virtual void v_AddRobinMassMatrix(
                 const int                           face, 
                 const Array<OneD, const NekDouble> &primCoeffs, 
                 DNekMatSharedPtr                   &inoutmat);
+            virtual StdRegions::Orientation v_GetForient(int face);
 
-            virtual NekDouble v_Integrate(
-                const Array<OneD, const NekDouble>& inarray);
+            virtual void v_GetTracePhysVals(
+                const int                                face,
+                const StdRegions::StdExpansionSharedPtr &FaceExp,
+                const Array<OneD, const NekDouble>      &inarray,
+                      Array<OneD,       NekDouble>      &outarray,
+                StdRegions::Orientation                  orient);
+
+            virtual void v_GetFacePhysVals(
+                const int                                face,
+                const StdRegions::StdExpansionSharedPtr &FaceExp,
+                const Array<OneD, const NekDouble>      &inarray,
+                      Array<OneD,       NekDouble>      &outarray,
+                StdRegions::Orientation                  orient);
 
             //-----------------------------
             // Low Energy Basis functions
@@ -139,6 +160,15 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildVertexMatrix(
                 const DNekScalMatSharedPtr &r_bnd); 
 
+            LOCAL_REGIONS_EXPORT void ReOrientTriFacePhysMap(const StdRegions::Orientation orient,
+                                                             const int nq0,
+                                                             const int nq1,
+                                                             Array<OneD, int> &idmap);
+
+            LOCAL_REGIONS_EXPORT void ReOrientQuadFacePhysMap(const StdRegions::Orientation orient,
+                                                              const int nq0,
+                                                              const int nq1,
+                                                              Array<OneD, int> &idmap);
         private:
             // Do not add members here since it may lead to conflicts.
             // Only use this class for member functions

@@ -2,7 +2,7 @@
 <test>
     <description>Euler, pressure perturbation to test RiemannInvariant CBC (back wave), parallel</description>
     <executable>CompressibleFlowSolver</executable>
-    <parameters>Perturbation_M05_circle_CBC_back_par.xml</parameters>
+    <parameters>--use-metis Perturbation_M05_circle_CBC_back_par.xml</parameters>
     <processes>6</processes>
     <files>
         <file description="Session File"> Perturbation_M05_circle_CBC_back_par.xml</file>

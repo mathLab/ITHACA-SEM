@@ -36,7 +36,7 @@
 #ifndef EXPANSION2D_H
 #define EXPANSION2D_H
 
-#include <LocalRegions/Expansion.h>
+#include <LocalRegions/Expansion1D.h>
 #include <StdRegions/StdExpansion2D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 #include <SpatialDomains/Geometry2D.h>
@@ -45,63 +45,69 @@ namespace Nektar
 {
     namespace LocalRegions
     {
-      class Expansion3D;
-      typedef boost::shared_ptr<Expansion3D> Expansion3DSharedPtr;
-      typedef boost::weak_ptr<Expansion3D> Expansion3DWeakPtr;
+        class Expansion3D;
+        typedef boost::shared_ptr<Expansion3D> Expansion3DSharedPtr;
+        typedef boost::weak_ptr<Expansion3D>   Expansion3DWeakPtr;
 
-      class Expansion2D;
-      typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
-      typedef boost::weak_ptr<Expansion2D> Expansion2DWeakPtr;
-      typedef std::vector< Expansion2DSharedPtr > Expansion2DVector;
-      typedef std::vector< Expansion2DSharedPtr >::iterator Expansion2DVectorIter;
+        class Expansion2D;
+        typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
+        typedef boost::weak_ptr<Expansion2D>   Expansion2DWeakPtr;
+        typedef std::vector< Expansion2DSharedPtr > Expansion2DVector;
+        typedef std::vector< Expansion2DSharedPtr >::iterator
+            Expansion2DVectorIter;
 
-        class Expansion2D: virtual public Expansion, virtual public StdRegions::StdExpansion2D
+        class Expansion2D: virtual public Expansion,
+            virtual public StdRegions::StdExpansion2D
         {
         public:
-            LOCAL_REGIONS_EXPORT Expansion2D(SpatialDomains::Geometry2DSharedPtr pGeom);
+            LOCAL_REGIONS_EXPORT Expansion2D(SpatialDomains::
+                                             Geometry2DSharedPtr pGeom);
+            
             LOCAL_REGIONS_EXPORT virtual ~Expansion2D() {}
             
-            LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation(Array<OneD, StdRegions::StdExpansionSharedPtr> &EdgeExp,
-                                           Array<OneD, NekDouble> &inout);
+            LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation(
+                Array<OneD, ExpansionSharedPtr> &EdgeExp,
+                Array<OneD, NekDouble>          &inout);
 
-            ExpansionSharedPtr GetEdgeExp(int edge, bool SetUpNormal=true);
+            LOCAL_REGIONS_EXPORT Expansion1DSharedPtr GetEdgeExp(int edge, bool SetUpNormal = true);
             
-            void SetEdgeExp(const int edge, ExpansionSharedPtr &e);
+            void SetEdgeExp(const int edge, Expansion1DSharedPtr &e);
 
             inline void AddNormTraceInt(
-                const int                                      dir,
-                Array<OneD,StdRegions::StdExpansionSharedPtr> &EdgeExp,
-                Array<OneD, Array<OneD, NekDouble> >          &edgeCoeffs,
-                Array<OneD,NekDouble>                         &outarray);
+                const int                             dir,
+                Array<OneD, ExpansionSharedPtr>      &EdgeExp,
+                Array<OneD, Array<OneD, NekDouble> > &edgeCoeffs,
+                Array<OneD,             NekDouble>   &outarray);
 
             inline void AddNormTraceInt(
-                const int                                       dir,
-                Array<OneD, const NekDouble>                   &inarray,
-                Array<OneD, StdRegions::StdExpansionSharedPtr> &EdgeExp,
-                Array<OneD, NekDouble>                         &outarray,
-                const StdRegions::VarCoeffMap                  &varcoeffs);
+                const int                        dir,
+                Array<OneD, const NekDouble>    &inarray,
+                Array<OneD, ExpansionSharedPtr> &EdgeExp,
+                Array<OneD, NekDouble>          &outarray,
+                const StdRegions::VarCoeffMap   &varcoeffs);
 
             inline void AddEdgeBoundaryInt(
-                const int                          edge,
-                StdRegions::StdExpansionSharedPtr &EdgeExp,
-                Array<OneD, NekDouble>            &edgePhys,
-                Array<OneD, NekDouble>            &outarray,
-                const StdRegions::VarCoeffMap     &varcoeffs = StdRegions::NullVarCoeffMap);
+                const int                        edge,
+                ExpansionSharedPtr              &EdgeExp,
+                Array<OneD, NekDouble>          &edgePhys,
+                Array<OneD, NekDouble>          &outarray,
+                const StdRegions::VarCoeffMap   &varcoeffs = StdRegions::
+                                                    NullVarCoeffMap);
 
             inline void AddHDGHelmholtzEdgeTerms(
-                const NekDouble                                 tau,
-                const int                                       edge,
-                Array<OneD, StdRegions::StdExpansionSharedPtr> &EdgeExp,
-                Array<OneD, NekDouble>                         &edgePhys,
-                const StdRegions::VarCoeffMap                  &dirForcing,
-                Array<OneD, NekDouble>                         &outarray);
+                const NekDouble                  tau,
+                const int                        edge,
+                Array<OneD, ExpansionSharedPtr> &EdgeExp,
+                Array<OneD, NekDouble>          &edgePhys,
+                const StdRegions::VarCoeffMap   &dirForcing,
+                Array<OneD, NekDouble>          &outarray);
             
             inline void AddHDGHelmholtzTraceTerms(
-                const NekDouble                                 tau,
-                const Array<OneD, const NekDouble>             &inarray,
-                Array<OneD, StdRegions::StdExpansionSharedPtr> &EdgeExp,
-                const StdRegions::VarCoeffMap                  &dirForcing,
-                Array<OneD, NekDouble>                         &outarray);
+                const NekDouble                     tau,
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD, ExpansionSharedPtr>    &EdgeExp,
+                const StdRegions::VarCoeffMap      &dirForcing,
+                Array<OneD, NekDouble>             &outarray);
 
             inline Expansion3DSharedPtr GetLeftAdjacentElementExp() const;
 
@@ -112,73 +118,97 @@ namespace Nektar
             inline int GetRightAdjacentElementFace() const;
 
             inline void SetAdjacentElementExp(
-                        int face,
-                        Expansion3DSharedPtr &f);
+                int                              face,
+                Expansion3DSharedPtr            &f);
 
             inline SpatialDomains::Geometry2DSharedPtr GetGeom2D() const;
+            
+            LOCAL_REGIONS_EXPORT void ReOrientEdgePhysMap(
+                const int                        nvert,
+                const StdRegions::Orientation    orient,
+                const int                        nq0,
+                Array<OneD, int>                &idmap);
 
         protected:
-            std::vector<ExpansionWeakPtr> m_edgeExp;
-            std::vector<bool> m_requireNeg;
+            std::vector<Expansion1DWeakPtr>           m_edgeExp;
+            std::vector<bool>                       m_requireNeg;
             std::map<int, StdRegions::NormalVector> m_edgeNormals;
-            std::map<int, bool> m_negatedNormals;
-            Expansion3DWeakPtr m_elementLeft;
-            Expansion3DWeakPtr m_elementRight;
-            int m_elementFaceLeft;
-            int m_elementFaceRight;
+            std::map<int, bool>                     m_negatedNormals;
+            Expansion3DWeakPtr                      m_elementLeft;
+            Expansion3DWeakPtr                      m_elementRight;
+            int                                     m_elementFaceLeft;
+            int                                     m_elementFaceRight;
 
-            virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
+            virtual DNekMatSharedPtr v_GenMatrix(
+                const StdRegions::StdMatrixKey &mkey);
 
             // Hybridized DG routines
             virtual void v_DGDeriv(
-                const int                                      dir,
-                const Array<OneD, const NekDouble>            &incoeffs,
-                Array<OneD,StdRegions::StdExpansionSharedPtr> &EdgeExp,
-                Array<OneD, Array<OneD, NekDouble> >          &edgeCoeffs,
-                Array<OneD, NekDouble>                        &out_d);
+                const int                             dir,
+                const Array<OneD, const NekDouble>   &incoeffs,
+                Array<OneD, ExpansionSharedPtr>      &EdgeExp,
+                Array<OneD, Array<OneD, NekDouble> > &edgeCoeffs,
+                Array<OneD, NekDouble>               &out_d);
 
             virtual void v_AddEdgeNormBoundaryInt(
                 const int                            edge,
-                StdRegions::StdExpansionSharedPtr   &EdgeExp,
+                const ExpansionSharedPtr            &EdgeExp,
                 const Array<OneD, const NekDouble>  &Fx,
                 const Array<OneD, const NekDouble>  &Fy,
                       Array<OneD,       NekDouble>  &outarray);
 
             virtual void v_AddEdgeNormBoundaryInt(
                 const int                            edge,
-                StdRegions::StdExpansionSharedPtr   &EdgeExp,
+                const ExpansionSharedPtr            &EdgeExp,
                 const Array<OneD, const NekDouble>  &Fn,
                       Array<OneD,       NekDouble>  &outarray);
 
-            virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat);
+            virtual void v_AddRobinMassMatrix(
+                const int                            edgeid,
+                const Array<OneD, const NekDouble > &primCoeffs,
+                DNekMatSharedPtr                    &inoutmat);
 
-            virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs);
+            virtual void v_AddRobinEdgeContribution(
+                const int edgeid,
+                const Array<OneD, const NekDouble> &primCoeffs,
+                Array<OneD, NekDouble> &coeffs);
 
             virtual DNekMatSharedPtr v_BuildVertexMatrix(
                 const DNekScalMatSharedPtr &r_bnd); 
 
             void GetPhysEdgeVarCoeffsFromElement(
-                    const int edge,
-                    StdRegions::StdExpansionSharedPtr &EdgeExp,
-                    const Array<OneD, const NekDouble>  &varcoeff,
-                    Array<OneD,NekDouble> &outarray);
+                const int edge,
+                ExpansionSharedPtr &EdgeExp,
+                const Array<OneD, const NekDouble>  &varcoeff,
+                Array<OneD,NekDouble> &outarray);
+            
+            LOCAL_REGIONS_EXPORT void ReOrientQuadEdgePhysMap(
+                const StdRegions::Orientation    orient,
+                const int                        nq0,
+                Array<OneD, int>                &idmap);
 
             Array<OneD, unsigned int> v_GetEdgeInverseBoundaryMap(int eid);
 
-            virtual void v_NegateEdgeNormal(const int edge);
+            virtual void v_NegateEdgeNormal (const int edge);
             virtual bool v_EdgeNormalNegated(const int edge);
-            virtual void v_SetUpPhysNormals(const int edge);
-            const StdRegions::NormalVector &v_GetEdgeNormal(const int edge) const;
-            const StdRegions::NormalVector &v_GetSurfaceNormal(const int id) const;
+            virtual void v_SetUpPhysNormals (const int edge);
+            const StdRegions::NormalVector &v_GetEdgeNormal(
+                const int edge) const;
+            const StdRegions::NormalVector &v_GetSurfaceNormal(
+                const int id) const;
         };
 
-        inline ExpansionSharedPtr Expansion2D::GetEdgeExp(int edge, bool SetUpNormal)
+        inline Expansion1DSharedPtr Expansion2D::GetEdgeExp(
+            int edge,
+            bool SetUpNormal)
         {
             ASSERTL1(edge < GetNedges(), "Edge out of range.");
             return m_edgeExp[edge].lock();
         }
 
-        inline void Expansion2D::SetEdgeExp(const int edge, ExpansionSharedPtr &e)
+        inline void Expansion2D::SetEdgeExp(
+            const int           edge,
+            Expansion1DSharedPtr &e)
         {
             unsigned int nEdges = GetNedges();
             ASSERTL1(edge < nEdges, "Edge out of range.");
@@ -189,15 +219,20 @@ namespace Nektar
             m_edgeExp[edge] = e;
         }
 
-        inline Expansion3DSharedPtr Expansion2D::GetLeftAdjacentElementExp() const
+        inline Expansion3DSharedPtr Expansion2D::
+            GetLeftAdjacentElementExp() const
         {
-            ASSERTL1(m_elementLeft.lock().get(), "Left adjacent element not set.");
+            ASSERTL1(m_elementLeft.lock().get(),
+                     "Left adjacent element not set.");
             return m_elementLeft.lock();
         }
         
-        inline Expansion3DSharedPtr Expansion2D::GetRightAdjacentElementExp() const
+        inline Expansion3DSharedPtr Expansion2D::
+            GetRightAdjacentElementExp() const
         {
-            ASSERTL1(m_elementLeft.lock().get(), "Right adjacent element not set.");
+            ASSERTL1(m_elementLeft.lock().get(),
+                     "Right adjacent element not set.");
+            
             return m_elementRight.lock();
         }
 
@@ -211,25 +246,30 @@ namespace Nektar
             return m_elementFaceRight;
         }
         
-        inline void Expansion2D::SetAdjacentElementExp(int face, Expansion3DSharedPtr &f)
+        inline void Expansion2D::SetAdjacentElementExp(
+            int                   face,
+            Expansion3DSharedPtr &f)
         {
             if (m_elementLeft.lock().get())
             {
                 ASSERTL1(!m_elementRight.lock().get(),
                          "Both adjacent elements already set.");
-                m_elementRight = f;
+                
+                m_elementRight     = f;
                 m_elementFaceRight = face;
             }
             else
             {
-                m_elementLeft = f;
-                m_elementFaceLeft = face;
+                m_elementLeft      = f;
+                m_elementFaceLeft  = face;
             }
         }
-
-        inline SpatialDomains::Geometry2DSharedPtr Expansion2D::GetGeom2D() const
+        
+        inline SpatialDomains::Geometry2DSharedPtr
+            Expansion2D::GetGeom2D() const
         {
-            return boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>(m_geom);
+            return boost::dynamic_pointer_cast<SpatialDomains::
+                Geometry2D>(m_geom);
         }
     } //end of namespace
 } //end of namespace

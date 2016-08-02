@@ -41,6 +41,9 @@
 #include <SpatialDomains/SegGeom.h>
 
 #include <iomanip>
+
+using namespace std;
+
 namespace Nektar
 {
 namespace SpatialDomains
@@ -80,15 +83,6 @@ namespace SpatialDomains
     {
       return v_GetFace(i);
     }
-
-    /**
-    * @brief Return the orientation of face i in this element.
-    */
-    StdRegions::Orientation Geometry3D::GetFaceOrient(const int i) const
-    {
-      return v_GetFaceOrient(i);
-    }
-
 
     /**
     * @brief Returns the element coordinate direction corresponding to a
@@ -419,7 +413,7 @@ namespace SpatialDomains
     /**
     * @brief Return the orientation of face i in this element.
     */
-    StdRegions::Orientation Geometry3D::v_GetFaceOrient(const int i) const
+    StdRegions::Orientation Geometry3D::v_GetForient(const int i) const
     {
       ASSERTL2(i >= 0 && i <= m_faces.size() - 1,
                "Face ID must be between 0 and "+

@@ -40,6 +40,8 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <ShallowWaterSolver/EquationSystems/NonlinearSWE.h>
 
+using namespace std;
+
 namespace Nektar
 {
   string NonlinearSWE::className = 
@@ -110,10 +112,10 @@ namespace Nektar
 	  // Setting up parameters for advection operator Riemann solver 
 	  m_riemannSolver->SetParam (
                                      "gravity",  
-                                     &NonlinearSWE::GetGravity,   this);
-      m_riemannSolver->SetAuxVec(
+                                     &NonlinearSWE::GetGravity, this);
+          m_riemannSolver->SetAuxVec(
                                      "vecLocs",
-                                     &NonlinearSWE::GetVecLocs,  this);
+                                     &NonlinearSWE::GetVecLocs, this);
 	  m_riemannSolver->SetVector(
 				     "N",
 				     &NonlinearSWE::GetNormals, this);
@@ -273,7 +275,8 @@ namespace Nektar
 	  // Input and output in physical space
 	  Array<OneD, Array<OneD, NekDouble> > advVel;
 	  
-	  m_advection->Advect(nvariables, m_fields, advVel, inarray, outarray);
+	  m_advection->Advect(nvariables, m_fields, advVel, inarray,
+	                      outarray, time);
 	  //-------------------------------------------------------
 	  
 	  
@@ -324,11 +327,12 @@ namespace Nektar
             }
 	  
 	  NonlinearSWE::GetFluxVector(inarray, fluxvector);
-	  //-------------------------------------------------------
+	  //------------------------------------------------------- 
 
-	  
-	  //-------------------------------------------------------
-	  // Take the derivative of the flux terms
+
+
+ 	  //-------------------------------------------------------
+	  // Take the derivative of the flux terms 
 	  // and negate the outarray since moving terms to the rhs
 	  Array<OneD,NekDouble> tmp(nq);
 	  Array<OneD, NekDouble>tmp1(nq);           
@@ -340,6 +344,7 @@ namespace Nektar
 	      Vmath::Vadd(nq,tmp,1,tmp1,1,outarray[i],1);
 	      Vmath::Neg(nq,outarray[i],1);
 	    }
+
 	  
 	  //-------------------------------------------------
 	  // Add "source terms"
@@ -418,21 +423,29 @@ namespace Nektar
       std::string varName;
       int nvariables = m_fields.num_elements();
       int cnt = 0;
+      int nTracePts  = GetTraceTotPoints();
+
+      // Extract trace for boundaries. Needs to be done on all processors to avoid
+      // deadlock.
+      Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+      for (int i = 0; i < nvariables; ++i)
+      {
+          Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+          m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
+      }
 
       // Loop over Boundary Regions
       for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
       {	
 	
           // Wall Boundary Condition
-          if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-              SpatialDomains::eWall)
+          if (boost::iequals(m_fields[0]->GetBndConditions()[n]->GetUserDefined(),"Wall"))
           {
-              WallBoundary2D(n, cnt, inarray);
+              WallBoundary2D(n, cnt, Fwd, inarray);
           }
 	
           // Time Dependent Boundary Condition (specified in meshfile)
-          if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-              SpatialDomains::eTimeDependent)
+          if (m_fields[0]->GetBndConditions()[n]->IsTimeDependent())
           {
               for (int i = 0; i < nvariables; ++i)
               {
@@ -450,20 +463,12 @@ namespace Nektar
      */
     void NonlinearSWE::WallBoundary(
         int                                   bcRegion,
-        int                                   cnt, 
+        int                                   cnt,
+        Array<OneD, Array<OneD, NekDouble> > &Fwd,
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     { 
         int i;
-        int nTracePts = GetTraceTotPoints();
-        int nvariables      = physarray.num_elements();
-        
-        // get physical values of the forward trace
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        for (i = 0; i < nvariables; ++i)
-        {
-            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-        }
+        int nvariables = physarray.num_elements();
         
         // Adjust the physical values of the trace to take 
         // user defined boundaries into account
@@ -517,21 +522,12 @@ namespace Nektar
     }
     
 
-  void NonlinearSWE::WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray)
+  void NonlinearSWE::WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &Fwd, Array<OneD, Array<OneD, NekDouble> > &physarray)
   { 
 
     int i;
-    int nTraceNumPoints = GetTraceTotPoints();
-    int nvariables      = physarray.num_elements();
-    
-    // get physical values of the forward trace
-    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-    for (i = 0; i < nvariables; ++i)
-      {
-	Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-	m_fields[i]->ExtractTracePhys(physarray[i],Fwd[i]);
-      }
-    
+    int nvariables = physarray.num_elements();
+
     // Adjust the physical values of the trace to take 
     // user defined boundaries into account
     int e, id1, id2, npts;

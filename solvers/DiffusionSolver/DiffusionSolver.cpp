@@ -38,6 +38,7 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ContField2D.h>
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])
@@ -59,7 +60,6 @@ int main(int argc, char *argv[])
                     AllocateSharedPtr(session->GetComm());
 
         // Get some information about the session
-        string       fileName    = session->GetFilename();
         string       sessionName = session->GetSessionName();
         string       outFile     = sessionName + ".fld";
         unsigned int nSteps      = session->GetParameter("NumSteps");

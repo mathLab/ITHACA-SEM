@@ -47,22 +47,27 @@ namespace Nektar
     namespace LocalRegions 
     {
         class Expansion2D;
-        typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
-        typedef boost::weak_ptr<Expansion2D> Expansion2DWeakPtr;
+        typedef boost::shared_ptr<Expansion2D>  Expansion2DSharedPtr;
+        typedef boost::weak_ptr<Expansion2D>    Expansion2DWeakPtr;
         
         class Expansion1D;
-        typedef boost::shared_ptr<Expansion1D> Expansion1DSharedPtr;
-        typedef boost::weak_ptr<Expansion1D> Expansion1DWeakPtr;
+        typedef boost::shared_ptr<Expansion1D>  Expansion1DSharedPtr;
+        typedef boost::weak_ptr<Expansion1D>    Expansion1DWeakPtr;
         typedef std::vector< Expansion1DSharedPtr > Expansion1DVector;
-        typedef std::vector< Expansion1DSharedPtr >::iterator Expansion1DVectorIter;
+        typedef std::vector< Expansion1DSharedPtr >::iterator
+            Expansion1DVectorIter;
 
 
-        class Expansion1D: virtual public Expansion, virtual public StdRegions::StdExpansion1D
+        class Expansion1D: virtual public Expansion,
+            virtual public StdRegions::StdExpansion1D
         {
             public:
-                LOCAL_REGIONS_EXPORT Expansion1D(SpatialDomains::Geometry1DSharedPtr pGeom) : Expansion(pGeom), StdExpansion1D()
+                LOCAL_REGIONS_EXPORT Expansion1D(SpatialDomains::
+                                                 Geometry1DSharedPtr pGeom)
+                                                 : Expansion(pGeom),
+                                                   StdExpansion1D()
                 {
-                    m_elementEdgeLeft = -1;
+                    m_elementEdgeLeft  = -1;
                     m_elementEdgeRight = -1;
                 }
 
@@ -82,46 +87,52 @@ namespace Nektar
                 inline int GetRightAdjacentElementEdge() const;
 
                 inline void SetAdjacentElementExp(
-                        int edge,
-                        Expansion2DSharedPtr &e);
+                    int                  edge,
+                    Expansion2DSharedPtr &e);
 
                 void AddHDGHelmholtzTraceTerms(
-                        const NekDouble tau,
-                        const Array<OneD,const NekDouble> &inarray,
-                              Array<OneD,NekDouble> &outarray);
+                    const NekDouble                      tau,
+                    const Array<OneD, const NekDouble>  &inarray,
+                          Array<OneD, NekDouble>        &outarray);
 
                 inline SpatialDomains::Geometry1DSharedPtr GetGeom1D() const;
 
             protected:
-                virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
+                virtual DNekMatSharedPtr v_GenMatrix(
+                    const StdRegions::StdMatrixKey      &mkey);
 
                 virtual void v_AddRobinMassMatrix(
-                        const int vert,
-                        const Array<OneD, const NekDouble > &primCoeffs,
-                        DNekMatSharedPtr &inoutmat);
+                    const int                            vert,
+                    const Array<OneD, const NekDouble > &primCoeffs,
+                    DNekMatSharedPtr                    &inoutmat);
 
                 virtual void v_AddRobinEdgeContribution(
-                        const int vert,
-                        const Array<OneD, const NekDouble > &primCoeffs,
-                              Array<OneD, NekDouble> &coeffs);
+                    const int                            vert,
+                    const Array<OneD, const NekDouble > &primCoeffs,
+                          Array<OneD, NekDouble>        &coeffs);
 			
             private:
                 Expansion2DWeakPtr m_elementLeft;
                 Expansion2DWeakPtr m_elementRight;
-                int m_elementEdgeLeft;
-                int m_elementEdgeRight;
+                int                m_elementEdgeLeft;
+                int                m_elementEdgeRight;
 
         };
         
-        inline Expansion2DSharedPtr Expansion1D::GetLeftAdjacentElementExp() const
+        inline Expansion2DSharedPtr Expansion1D::
+            GetLeftAdjacentElementExp() const
         {
-            ASSERTL1(m_elementLeft.lock().get(), "Left adjacent element not set.");
+            ASSERTL1(m_elementLeft.lock().get(),
+                     "Left adjacent element not set.");
             return m_elementLeft.lock();
         }
 
-        inline Expansion2DSharedPtr Expansion1D::GetRightAdjacentElementExp() const
+        inline Expansion2DSharedPtr Expansion1D::
+            GetRightAdjacentElementExp() const
         {
-            ASSERTL1(m_elementLeft.lock().get(), "Right adjacent element not set.");
+            ASSERTL1(m_elementLeft.lock().get(),
+                     "Right adjacent element not set.");
+            
             return m_elementRight.lock();
         }
 
@@ -135,25 +146,30 @@ namespace Nektar
             return m_elementEdgeRight;
         }
 
-        inline void Expansion1D::SetAdjacentElementExp(int edge, Expansion2DSharedPtr &e)
+        inline void Expansion1D::SetAdjacentElementExp(
+            int                  edge,
+            Expansion2DSharedPtr &e)
         {
             if (m_elementLeft.lock().get())
             {
                 ASSERTL1(!m_elementRight.lock().get(),
                          "Both adjacent elements already set.");
-                m_elementRight = e;
+                
+                m_elementRight     = e;
                 m_elementEdgeRight = edge;
             }
             else
             {
-                m_elementLeft = e;
+                m_elementLeft     = e;
                 m_elementEdgeLeft = edge;
             }
         }
 
-        inline SpatialDomains::Geometry1DSharedPtr Expansion1D::GetGeom1D() const
+        inline SpatialDomains::Geometry1DSharedPtr Expansion1D
+            ::GetGeom1D() const
         {
-            return boost::dynamic_pointer_cast<SpatialDomains::Geometry1D>(m_geom);
+            return boost::dynamic_pointer_cast<SpatialDomains
+                ::Geometry1D>(m_geom);
         }
     } //end of namespace
 } //end of namespace

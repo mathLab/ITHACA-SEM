@@ -55,13 +55,13 @@ namespace Nektar
 
         enum MetricType
         {
-            MetricLaplacian00,
-            MetricLaplacian01,
-            MetricLaplacian02,
-            MetricLaplacian11,
-            MetricLaplacian12,
-            MetricLaplacian22,
-            MetricQuadrature
+            eMetricLaplacian00,
+            eMetricLaplacian01,
+            eMetricLaplacian02,
+            eMetricLaplacian11,
+            eMetricLaplacian12,
+            eMetricLaplacian22,
+            eMetricQuadrature
         };
 
         // type defines for use of PrismExp in a boost vector
@@ -86,6 +86,8 @@ namespace Nektar
 
                 LOCAL_REGIONS_EXPORT SpatialDomains::GeometrySharedPtr GetGeom() const;
 
+                LOCAL_REGIONS_EXPORT void Reset();
+
                 LOCAL_REGIONS_EXPORT virtual const
                     SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
 
@@ -96,6 +98,29 @@ namespace Nektar
                 LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildVertexMatrix(
                     const DNekScalMatSharedPtr &r_bnd);
 			
+                LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryInt(
+                    const int                           edge,
+                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const Array<OneD, const NekDouble> &Fx,
+                    const Array<OneD, const NekDouble> &Fy,
+                          Array<OneD,       NekDouble> &outarray);
+                LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryInt(
+                    const int                           edge,
+                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const Array<OneD, const NekDouble> &Fn,
+                          Array<OneD,       NekDouble> &outarray);
+                LOCAL_REGIONS_EXPORT void AddFaceNormBoundaryInt(
+                    const int                           face,
+                    const boost::shared_ptr<Expansion> &FaceExp,
+                    const Array<OneD, const NekDouble> &Fn,
+                          Array<OneD,       NekDouble> &outarray);
+                LOCAL_REGIONS_EXPORT void DGDeriv(
+                    const int                                   dir,
+                    const Array<OneD, const NekDouble>&         inarray,
+                          Array<OneD, ExpansionSharedPtr>      &EdgeExp,
+                          Array<OneD, Array<OneD, NekDouble> > &coeffs,
+                          Array<OneD,             NekDouble>   &outarray);
+
             protected:
                 SpatialDomains::GeometrySharedPtr  m_geom;
                 SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
@@ -122,6 +147,29 @@ namespace Nektar
 
                 virtual DNekMatSharedPtr v_BuildVertexMatrix(
                     const DNekScalMatSharedPtr &r_bnd); 
+
+                virtual void v_AddEdgeNormBoundaryInt(
+                    const int                           edge,
+                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const Array<OneD, const NekDouble> &Fx,
+                    const Array<OneD, const NekDouble> &Fy,
+                          Array<OneD,       NekDouble> &outarray);
+                virtual void v_AddEdgeNormBoundaryInt(
+                    const int                           edge,
+                    const boost::shared_ptr<Expansion> &EdgeExp,
+                    const Array<OneD, const NekDouble> &Fn,
+                          Array<OneD,       NekDouble> &outarray);
+                virtual void v_AddFaceNormBoundaryInt(
+                    const int                           face,
+                    const boost::shared_ptr<Expansion> &FaceExp,
+                    const Array<OneD, const NekDouble> &Fn,
+                          Array<OneD,       NekDouble> &outarray);
+                virtual void v_DGDeriv(
+                    const int                                   dir,
+                    const Array<OneD, const NekDouble>&         inarray,
+                          Array<OneD, ExpansionSharedPtr>      &EdgeExp,
+                          Array<OneD, Array<OneD, NekDouble> > &coeffs,
+                          Array<OneD,             NekDouble>   &outarray);
 
             private:
 

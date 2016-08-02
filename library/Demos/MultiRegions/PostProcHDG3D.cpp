@@ -18,6 +18,7 @@
  /* Nothing */
 #endif
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])
@@ -28,7 +29,7 @@ int main(int argc, char *argv[])
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
 
     MultiRegions::DisContField3DSharedPtr Exp,Fce;
-    int     i,j,k, nq,  coordim;
+    int     i, nq, coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;

@@ -94,6 +94,12 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(
                                          const ExpList3DHomogeneous1D &In,
                                          const bool DeclarePlanesSetCoeffPhys = true);
+            
+            /// Constructor copying only elements defined in eIds.
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(
+                                         const ExpList3DHomogeneous1D &In,
+                                         const std::vector<unsigned int> &eIDs,
+                                         const bool DeclarePlanesSetCoeffPhys = true);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList3DHomogeneous1D();
@@ -121,9 +127,11 @@ namespace Nektar
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2);
 
-            virtual void v_WriteTecplotConnectivity(std::ofstream &outfile, int expansion);
+            virtual void v_WriteTecplotConnectivity(std::ostream &outfile,
+                                                    int expansion);
 
-            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+            virtual void v_WriteVtkPieceHeader(std::ostream &outfile,
+                                               int expansion, int istrip);
 
             virtual NekDouble v_L2(
                 const Array<OneD, const NekDouble> &inarray,

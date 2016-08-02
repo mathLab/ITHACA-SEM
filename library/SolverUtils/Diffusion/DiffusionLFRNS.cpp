@@ -375,7 +375,9 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {        
             int i, n;
-            NekDouble c0, c1, c2;
+            NekDouble c0 = 0.0;
+            NekDouble c1 = 0.0;
+            NekDouble c2 = 0.0;
             int nquad0, nquad1, nquad2;
             int nmodes0, nmodes1, nmodes2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
@@ -1340,9 +1342,10 @@ namespace Nektar
                                        GetBndCondTraceToGlobalTraceMap(cnt++));
                         
                         // Reinforcing bcs for velocity in case of Wall bcs
-                        if (fields[i]->GetBndConditions()[j]->
-                            GetUserDefined() == 
-                            SpatialDomains::eWallViscous)
+                        if (boost::iequals(fields[i]->GetBndConditions()[j]->
+                            GetUserDefined(),"WallViscous") ||
+                            boost::iequals(fields[i]->GetBndConditions()[j]->
+                            GetUserDefined(),"WallAdiabatic"))
                         {
                             Vmath::Zero(nBndEdgePts, 
                                         &scalarVariables[i][id2], 1);
@@ -1422,9 +1425,8 @@ namespace Nektar
                                    GetBndCondTraceToGlobalTraceMap(cnt++));
                     
                     // Imposing Temperature Twall at the wall 
-                    if (fields[i]->GetBndConditions()[j]->
-                        GetUserDefined() == 
-                        SpatialDomains::eWallViscous)
+                    if (boost::iequals(fields[i]->GetBndConditions()[j]->
+                                       GetUserDefined(),"WallViscous"))
                     {                        
                         Vmath::Vcopy(nBndEdgePts, 
                                      &Tw[0], 1, 
@@ -1460,22 +1462,30 @@ namespace Nektar
 
                     // For Dirichlet boundary condition: uflux = u_bcs
                     if (fields[nScalars]->GetBndConditions()[j]->
-                        GetBoundaryConditionType() == 
-                        SpatialDomains::eDirichlet)
+                        GetBoundaryConditionType() ==
+                        SpatialDomains::eDirichlet &&
+                        !boost::iequals(
+                            fields[nScalars]->GetBndConditions()[j]
+                            ->GetUserDefined(), "WallAdiabatic"))
                     {
-                        Vmath::Vcopy(nBndEdgePts, 
-                                     &scalarVariables[nScalars-1][id2], 1, 
+                        Vmath::Vcopy(nBndEdgePts,
+                                     &scalarVariables[nScalars-1][id2], 1,
                                      &penaltyfluxO1[nScalars-1][id2], 1);
+                        
                     }
                     
                     // For Neumann boundary condition: uflux = u_+
-                    else if ((fields[nScalars]->GetBndConditions()[j])->
-                             GetBoundaryConditionType() == 
-                             SpatialDomains::eNeumann)
+                    else if (((fields[nScalars]->GetBndConditions()[j])->
+                              GetBoundaryConditionType() ==
+                              SpatialDomains::eNeumann) ||
+                             boost::iequals(
+                                 fields[nScalars]->GetBndConditions()[j]
+                                 ->GetUserDefined(), "WallAdiabatic"))
                     {
-                        Vmath::Vcopy(nBndEdgePts, 
-                                     &uplus[nScalars-1][id2], 1, 
+                        Vmath::Vcopy(nBndEdgePts,
+                                     &uplus[nScalars-1][id2], 1,
                                      &penaltyfluxO1[nScalars-1][id2], 1);
+                        
                     }
                 }
             }
@@ -1586,31 +1596,43 @@ namespace Nektar
                     GetPhys_Offset(fields[0]->GetTraceMap()->
                                    GetBndCondTraceToGlobalTraceMap(cnt++));
                     
-                    // In case of Dirichlet bcs: 
-                    // uflux = g_D
-                    // qflux = q+
-                    if (fields[var]->GetBndConditions()[i]->
-                       GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                    
+                    // In case of Dirichlet bcs:
+                    // uflux = gD
+                    if(fields[var]->GetBndConditions()[i]->
+                       GetBoundaryConditionType() == SpatialDomains::eDirichlet
+                       && !boost::iequals(fields[var]->GetBndConditions()[i]
+                                          ->GetUserDefined(), "WallAdiabatic"))
                     {
-                        Vmath::Vmul(nBndEdgePts, &m_traceNormals[dir][id2], 1, 
-                                    &qtemp[id2], 1, &penaltyflux[id2], 1);
-                    }
-                    // 3.4) In case of Neumann bcs: 
-                    // uflux = u+
-                    else if ((fields[var]->GetBndConditions()[i])->
-                        GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                    {
-                        ASSERTL0(false, 
-                                 "Neumann bcs not implemented for LFRNS");
-                        
-                        /*
-                        Vmath::Vmul(nBndEdgePts, 
-                                    &m_traceNormals[dir][id2], 1, 
-                                    &(fields[var]->
-                                      GetBndCondExpansions()[i]->
-                                      UpdatePhys())[id1], 1, 
+                        Vmath::Vmul(nBndEdgePts,
+                                    &m_traceNormals[dir][id2], 1,
+                                    &qtemp[id2], 1,
                                     &penaltyflux[id2], 1);
-                         */
+                    }
+                    // 3.4) In case of Neumann bcs:
+                    // uflux = u+
+                    else if((fields[var]->GetBndConditions()[i])->
+                            GetBoundaryConditionType() == SpatialDomains::eNeumann)
+                    {
+                        ASSERTL0(false,
+                                 "Neumann bcs not implemented for LFRNS");
+                    }
+                    else if(boost::iequals(fields[var]->GetBndConditions()[i]
+                                           ->GetUserDefined(), "WallAdiabatic"))
+                    {
+                        if ((var == m_spaceDim + 1))
+                        {
+                            Vmath::Zero(nBndEdgePts, &penaltyflux[id2], 1);
+                        }
+                        else
+                        {
+                            
+                            Vmath::Vmul(nBndEdgePts,
+                                        &m_traceNormals[dir][id2], 1,
+                                        &qtemp[id2], 1,
+                                        &penaltyflux[id2], 1);
+                        }
+                        
                     }
                 }
             }
@@ -1737,7 +1759,7 @@ namespace Nektar
             LibUtilities::PointsKeyVector ptsKeys;
             Array<OneD, NekDouble> auxArray1, auxArray2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
             
             // Loop on the elements
@@ -1958,7 +1980,7 @@ namespace Nektar
             Array<OneD, NekDouble> auxArray1, auxArray2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
                         
             // Loop on the elements
@@ -2154,7 +2176,7 @@ namespace Nektar
             Array<OneD, NekDouble> auxArray1, auxArray2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
             
             // Loop on the elements

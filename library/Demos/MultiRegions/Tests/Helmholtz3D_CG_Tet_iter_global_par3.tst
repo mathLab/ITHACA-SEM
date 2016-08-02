@@ -2,7 +2,7 @@
 <test>
     <description>Helmholtz 3D CG for Tet iterative SL static global par(3)</description>
     <executable>Helmholtz3D</executable>
-    <parameters>Helmholtz3D_Tet_iter_global.xml</parameters>
+    <parameters>--use-metis Helmholtz3D_Tet_iter_global.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">Helmholtz3D_Tet_iter_global.xml</file>

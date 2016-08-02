@@ -33,6 +33,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEKTAR_USING_PETSC
+#include "petscsys.h"
+#endif
+
 #include <LibUtilities/Communication/CommMpi.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
@@ -65,6 +69,10 @@ namespace Nektar
             m_comm = MPI_COMM_WORLD;
             MPI_Comm_size( m_comm, &m_size );
             MPI_Comm_rank( m_comm, &m_rank );
+
+#ifdef NEKTAR_USING_PETSC
+            PetscInitializeNoArguments();
+#endif
 
             m_type = "Parallel MPI";
         }
@@ -107,7 +115,15 @@ namespace Nektar
          */
         void CommMpi::v_Finalise()
         {
-            MPI_Finalize();
+#ifdef NEKTAR_USING_PETSC
+            PetscFinalize();
+#endif
+            int flag;
+            MPI_Finalized(&flag);
+            if( !flag)
+            {
+                MPI_Finalize();
+            }
         }
 
 
@@ -291,12 +307,12 @@ namespace Nektar
             int retval = MPI_Sendrecv(pSendData.get(),
                          (int) pSendData.num_elements(),
                          MPI_DOUBLE,
-                         pRecvProc,
+                         pSendProc,
                          0,
                          pRecvData.get(),
                          (int) pRecvData.num_elements(),
                          MPI_DOUBLE,
-                         pSendProc,
+                         pRecvProc,
                          0,
                          m_comm,
                          &status);

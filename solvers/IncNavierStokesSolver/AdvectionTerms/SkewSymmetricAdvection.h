@@ -36,60 +36,53 @@
 #ifndef NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
 #define NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
 
-#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
-
-//#define TIMING
-//#ifdef TIMING
-//#include <time.h>
-//#include <sys/time.h>
-//#endif
+#include <SolverUtils/Advection/Advection.h>
 
 
 namespace Nektar
-{     
+{
 
-    class SkewSymmetricAdvection: public AdvectionTerm
-	
-    {
-    public:
-        friend class MemoryManager<SkewSymmetricAdvection>;
+class SkewSymmetricAdvection: public SolverUtils::Advection
 
-        /// Creates an instance of this class
-        static AdvectionTermSharedPtr create(
-                                const LibUtilities::SessionReaderSharedPtr& pSession,
-                                const SpatialDomains::MeshGraphSharedPtr& pGraph) {
-            AdvectionTermSharedPtr p = MemoryManager<SkewSymmetricAdvection>::AllocateSharedPtr(pSession, pGraph);
-            p->InitObject();
-            return p;
-        }
-        /// Name of class
-        static std::string className;
-        static std::string className2;
-        
-	protected:
-        
-        SkewSymmetricAdvection(
-                const LibUtilities::SessionReaderSharedPtr&        pSession,
-                const SpatialDomains::MeshGraphSharedPtr&          pGraph);
+{
+public:
+    friend class MemoryManager<SkewSymmetricAdvection>;
+
+    /// Creates an instance of this class
+    static SolverUtils::AdvectionSharedPtr create(std::string) {
+        return MemoryManager<SkewSymmetricAdvection>::AllocateSharedPtr();
+    }
+
+    /// Name of class
+    static std::string className;
+    static std::string className2;
+
+protected:
+
+    SkewSymmetricAdvection();
+
+    virtual ~SkewSymmetricAdvection();
+
+    virtual void v_InitObject(
+              LibUtilities::SessionReaderSharedPtr         pSession,
+              Array<OneD, MultiRegions::ExpListSharedPtr>  pFields);
+
+    virtual void v_Advect(
+        const int nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+              Array<OneD, Array<OneD, NekDouble> >        &outarray,
+        const NekDouble                                   &time);
+
+private:
+    MultiRegions::CoeffState m_CoeffState;
+    bool m_homogen_dealiasing;
+    bool m_SingleMode;
+    bool m_HalfMode;
+};
 
 
-        virtual ~SkewSymmetricAdvection();
-
-	private:
-
-        //Function for the evaluation of the linearised advective terms
-        virtual void v_ComputeAdvectionTerm(
-                         Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-                         const Array<OneD, Array<OneD, NekDouble> > &pV,
-                         const Array<OneD, const NekDouble> &pU,
-                         Array<OneD, NekDouble> &pOutarray,
-                         int pVelocityComponent,
-						 NekDouble m_time,
-                         Array<OneD, NekDouble> &pWk);
-
-	};
-    
-    
 } //end of namespace
 
 #endif //NEKTAR_SOLVERS_INCNAVIERSTOKES_H

@@ -2,7 +2,7 @@
 <test>
     <description>NS, Couette flow, mixed bcs, WeakDG advection and LDG diffusion, Variable Viscosity, parallel</description>
     <executable>CompressibleFlowSolver</executable>
-    <parameters>Couette_WeakDG_LDG_SEM_VariableMu_par.xml</parameters>
+    <parameters>--use-metis Couette_WeakDG_LDG_SEM_VariableMu_par.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">Couette_WeakDG_LDG_SEM_VariableMu_par.xml</file>

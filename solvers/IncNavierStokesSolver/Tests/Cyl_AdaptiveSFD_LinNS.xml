@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+    <EXPANSIONS>
+        <E COMPOSITE="C[0-1]" NUMMODES="6" FIELDS="u,v,p" TYPE="MODIFIED"/>
+    </EXPANSIONS>
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme"/>
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
+            <I PROPERTY="Projection" VALUE="Galerkin"/>
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
+            <I PROPERTY="Driver" VALUE="SteadyState"/>
+            <I PROPERTY="EvolutionOperator" VALUE="AdaptiveSFD"/>
+        </SOLVERINFO>
+        <PARAMETERS>
+            <P> TimeStep = 0.01   </P>
+            <P> NumSteps = 1.0/TimeStep    </P>
+            <P> IO_CheckSteps = 1.0/TimeStep  </P>
+            <P> IO_InfoSteps  = 0.25/TimeStep   </P>
+            <P> IO_CFLSteps   = 100 </P>
+            <P> Re = 100.0         </P>
+            <P> Kinvis = 1.0/Re         </P>
+        </PARAMETERS>
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> p </V>
+        </VARIABLES>
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[2] </B>
+            <!-- Wall -->
+            <B ID="1"> C[3] </B>
+            <!-- Far Field -->
+            <B ID="2"> C[4] </B>
+            <!-- Outlet -->
+        </BOUNDARYREGIONS>
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="0"/>
+                <D VAR="v" VALUE="0"/>
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" VALUE="0"/>
+                <D VAR="v" VALUE="0"/>
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>
+            </REGION>
+            <REGION REF="2">
+                <N VAR="u" VALUE="0"/>
+                <N VAR="v" VALUE="0"/>
+                <D VAR="p" VALUE="0"/>
+            </REGION>
+        </BOUNDARYCONDITIONS>
+        <FUNCTION NAME="InitialConditions">
+            <F VAR="u,v,p" FILE="Cyl_AdaptiveSFD_Eig.rst"/>
+        </FUNCTION>
+        <FUNCTION NAME="BaseFlow">
+            <E VAR="u" VALUE="1.0"/>
+            <E VAR="v" VALUE="0.0"/>
+            <E VAR="p" VALUE="0.0"/>
+        </FUNCTION>
+    </CONDITIONS>
+</NEKTAR>

@@ -56,7 +56,7 @@ namespace Nektar
                                Bc.GetNumModes()),
                            Ba,Bb,Bc),
             StdTetExp     (Ba,Bb,Bc),
-            m_nodalPointsKey()
+            m_nodalPointsKey(Ba.GetNumModes(),Ntype)
         {
             ASSERTL0(Ba.GetNumModes() <= Bb.GetNumModes(), 
                      "order in 'a' direction is higher than order "
@@ -67,9 +67,6 @@ namespace Nektar
             ASSERTL0(Bb.GetNumModes() <= Bc.GetNumModes(),
                      "order in 'b' direction is higher than order "
                      "in 'c' direction");
-            int nummodes = Ba.GetNumModes();
-            m_nodalPointsKey = MemoryManager<LibUtilities::PointsKey>::
-                AllocateSharedPtr(nummodes,Ntype);
         }
 
         StdNodalTetExp::StdNodalTetExp(const StdNodalTetExp &T):
@@ -84,6 +81,10 @@ namespace Nektar
         { 
         }
         
+        bool StdNodalTetExp::v_IsNodalNonTensorialExp()
+        {
+            return true;
+        }
         
         //-------------------------------
         // Nodal basis specific routines
@@ -95,7 +96,7 @@ namespace Nektar
         {
             StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
                                 NullConstFactorMap, NullVarCoeffMap,
-                                m_nodalPointsKey->GetPointsType());
+                                m_nodalPointsKey.GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
 
             NekVector<NekDouble> nodal(m_ncoeffs,inarray,eWrapper);
@@ -110,7 +111,7 @@ namespace Nektar
         {
             StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
                                 NullConstFactorMap, NullVarCoeffMap,
-                                m_nodalPointsKey->GetPointsType());
+                                m_nodalPointsKey.GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
 
             NekVector<NekDouble> nodal(m_ncoeffs,inarray,eCopy);
@@ -124,7 +125,7 @@ namespace Nektar
         {
             StdMatrixKey      Nkey(eNBasisTrans, DetShapeType(), *this,
                                     NullConstFactorMap, NullVarCoeffMap,
-                                    m_nodalPointsKey->GetPointsType());
+                                    m_nodalPointsKey.GetPointsType());
             DNekMatSharedPtr  vdm = GetStdMatrix(Nkey);
 
             // Multiply out matrix
@@ -138,7 +139,7 @@ namespace Nektar
             Array<OneD, const NekDouble> &y,
             Array<OneD, const NekDouble> &z)
         {
-            LibUtilities::PointsManager()[*m_nodalPointsKey]->GetPoints(x,y,z);
+            LibUtilities::PointsManager()[m_nodalPointsKey]->GetPoints(x,y,z);
         }
 
         DNekMatSharedPtr StdNodalTetExp::GenNBasisTransMatrix()
@@ -205,7 +206,7 @@ namespace Nektar
             // get Mass matrix inverse
             StdMatrixKey      masskey(eInvMass, DetShapeType(), *this,
                                       NullConstFactorMap, NullVarCoeffMap,
-                                      m_nodalPointsKey->GetPointsType());
+                                      m_nodalPointsKey.GetPointsType());
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 
             // copy inarray in case inarray == outarray
@@ -229,9 +230,10 @@ namespace Nektar
         
         void StdNodalTetExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray, 
-                  Array<OneD,       NekDouble>& outarray)
+                  Array<OneD,       NekDouble>& outarray,
+            bool                                multiplybyweights)
         {
-            StdTetExp::v_IProductWRTBase_SumFac(inarray,outarray);
+            StdTetExp::v_IProductWRTBase_SumFac(inarray,outarray,multiplybyweights);
             NodalToModalTranspose(outarray,outarray);    
         }
 

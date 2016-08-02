@@ -37,6 +37,8 @@
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList2D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -107,7 +109,7 @@ namespace Nektar
                 (*m_exp).push_back(m_planes[0]->GetExp(j));
             }
             
-            for(n = 1; n < m_homogeneousBasis->GetNumPoints(); ++n)
+            for(n = 1; n < m_planes.num_elements(); ++n)
             {
                 m_planes[n] = MemoryManager<ExpList2D>::AllocateSharedPtr(*plane_zero,False);
                 for(j = 0; j < nel; ++j)
@@ -137,6 +139,43 @@ namespace Nektar
             {
                 bool False = false;
                 ExpList2DSharedPtr zero_plane = boost::dynamic_pointer_cast<ExpList2D> (In.m_planes[0]);
+
+                for(int n = 0; n < m_planes.num_elements(); ++n)
+                {
+                    m_planes[n] = MemoryManager<ExpList2D>::AllocateSharedPtr(*zero_plane,False);
+                }
+
+                SetCoeffPhys();
+            }
+        }
+        
+        /**
+         * @param   In          ExpList3DHomogeneous1D object to copy.
+         * @param   eIDs Id of elements that should be copied.
+         */
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const ExpList3DHomogeneous1D &In, 
+                const std::vector<unsigned int> &eIDs,
+                bool DeclarePlanesSetCoeffPhys):
+            ExpListHomogeneous1D(In, eIDs)
+        {
+            SetExpType(e3DH1D);
+
+            if(DeclarePlanesSetCoeffPhys)
+            {
+                bool False = false;
+                std::vector<unsigned int> eIDsPlane;
+                int nel = eIDs.size()/m_planes.num_elements();
+                
+                for (int i = 0; i < nel; ++i)
+                {
+                    eIDsPlane.push_back(eIDs[i]);
+                }
+                
+                ExpList2DSharedPtr zero_plane_old =
+                        boost::dynamic_pointer_cast<ExpList2D> (In.m_planes[0]);
+                
+                ExpList2DSharedPtr zero_plane = 
+                        MemoryManager<ExpList2D>::AllocateSharedPtr(*(zero_plane_old), eIDsPlane);
 
                 for(int n = 0; n < m_planes.num_elements(); ++n)
                 {
@@ -279,7 +318,7 @@ namespace Nektar
             }
         }
 
-        void ExpList3DHomogeneous1D::v_WriteTecplotConnectivity(std::ofstream &outfile, int expansion)
+        void ExpList3DHomogeneous1D::v_WriteTecplotConnectivity(std::ostream &outfile, int expansion)
         {
             ASSERTL0(expansion == -1, "Multi-zone output not supported for homogeneous expansions.");
 
@@ -319,14 +358,34 @@ namespace Nektar
             }
         }
 
-        void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+
+        void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(
+                std::ostream    &outfile,
+                int              expansion,
+                int              istrip)
         {
+            // If there is only one plane (e.g. HalfMode), we write a 2D plane.
+            if (m_planes.num_elements() == 1)
+            {
+                m_planes[0]->WriteVtkPieceHeader(outfile, expansion);
+                return;
+            }
+
+            // If we are using Fourier points, output extra plane to fill domain
+            int outputExtraPlane = 0;
+            if ( m_homogeneousBasis->GetBasisType()   == LibUtilities::eFourier
+               && m_homogeneousBasis->GetPointsType() ==
+                    LibUtilities::eFourierEvenlySpaced)
+            {
+                outputExtraPlane = 1;
+            }
+
             int i,j,k;
-            int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
-            int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
-            int nquad2 = m_planes.num_elements();
-            int ntot = nquad0*nquad1*nquad2;
-            int ntotminus = (nquad0-1)*(nquad1-1)*(nquad2-1);
+            int nq0 = (*m_exp)[expansion]->GetNumPoints(0);
+            int nq1 = (*m_exp)[expansion]->GetNumPoints(1);
+            int nq2 = m_planes.num_elements() + outputExtraPlane;
+            int ntot = nq0*nq1*nq2;
+            int ntotminus = (nq0-1)*(nq1-1)*(nq2-1);
 
             Array<OneD,NekDouble> coords[3];
             coords[0] = Array<OneD,NekDouble>(ntot);
@@ -334,11 +393,33 @@ namespace Nektar
             coords[2] = Array<OneD,NekDouble>(ntot);
             GetCoords(expansion,coords[0],coords[1],coords[2]);
 
+            if (outputExtraPlane)
+            {
+                // Copy coords[0] and coords[1] to extra plane
+                Array<OneD,NekDouble> tmp;
+                Vmath::Vcopy (nq0*nq1, coords[0], 1,
+                                      tmp = coords[0] + (nq2-1)*nq0*nq1, 1);
+                Vmath::Vcopy (nq0*nq1, coords[1], 1,
+                                      tmp = coords[1] + (nq2-1)*nq0*nq1, 1);
+                // Fill coords[2] for extra plane
+                NekDouble z = coords[2][nq0*nq1*m_planes.num_elements()-1] +
+                              (coords[2][nq0*nq1] - coords[2][0]);
+                Vmath::Fill(nq0*nq1, z, tmp = coords[2] + (nq2-1)*nq0*nq1, 1);
+            }
+
+            NekDouble DistStrip;
+            m_session->LoadParameter("DistStrip", DistStrip, 0);
+            // Reset the z-coords for homostrips
+            for(int i = 0; i < ntot; i++)
+            {
+                coords[2][i] += istrip*DistStrip;
+            }
+
             outfile << "    <Piece NumberOfPoints=\""
                     << ntot << "\" NumberOfCells=\""
                     << ntotminus << "\">" << endl;
             outfile << "      <Points>" << endl;
-            outfile << "        <DataArray type=\"Float32\" "
+            outfile << "        <DataArray type=\"Float64\" "
                     << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
             outfile << "          ";
             for (i = 0; i < ntot; ++i)
@@ -355,20 +436,20 @@ namespace Nektar
             outfile << "      <Cells>" << endl;
             outfile << "        <DataArray type=\"Int32\" "
                     << "Name=\"connectivity\" format=\"ascii\">" << endl;
-            for (i = 0; i < nquad0-1; ++i)
+            for (i = 0; i < nq0-1; ++i)
             {
-                for (j = 0; j < nquad1-1; ++j)
+                for (j = 0; j < nq1-1; ++j)
                 {
-                    for (k = 0; k < nquad2-1; ++k)
+                    for (k = 0; k < nq2-1; ++k)
                     {
-                        outfile << k*nquad0*nquad1 + j*nquad0 + i << " "
-                                << k*nquad0*nquad1 + j*nquad0 + i + 1 << " "
-                                << k*nquad0*nquad1 + (j+1)*nquad0 + i + 1 << " "
-                                << k*nquad0*nquad1 + (j+1)*nquad0 + i << " "
-                                << (k+1)*nquad0*nquad1 + j*nquad0 + i << " "
-                                << (k+1)*nquad0*nquad1 + j*nquad0 + i + 1 << " "
-                                << (k+1)*nquad0*nquad1 + (j+1)*nquad0 + i + 1 << " "
-                                << (k+1)*nquad0*nquad1 + (j+1)*nquad0 + i << " " << endl;
+                        outfile << k*nq0*nq1     + j*nq0     + i     << " "
+                                << k*nq0*nq1     + j*nq0     + i + 1 << " "
+                                << k*nq0*nq1     + (j+1)*nq0 + i + 1 << " "
+                                << k*nq0*nq1     + (j+1)*nq0 + i     << " "
+                                << (k+1)*nq0*nq1 + j*nq0     + i     << " "
+                                << (k+1)*nq0*nq1 + j*nq0     + i + 1 << " "
+                                << (k+1)*nq0*nq1 + (j+1)*nq0 + i + 1 << " "
+                                << (k+1)*nq0*nq1 + (j+1)*nq0 + i     << endl;
                     }
                 }
             }
@@ -394,7 +475,6 @@ namespace Nektar
             outfile << "      <PointData>" << endl;
         }
 
-
         NekDouble ExpList3DHomogeneous1D::v_L2(
             const Array<OneD, const NekDouble> &inarray,
             const Array<OneD, const NekDouble> &soln)
@@ -409,18 +489,29 @@ namespace Nektar
                 local_w[n] = w[m_transposition->GetPlaneID(n)];
             }
             
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+            if (soln == NullNekDouble1DArray)
             {
-                errL2 = m_planes[n]->L2(inarray + cnt, soln + cnt);
-                cnt  += m_planes[n]->GetTotPoints();
-                err  += errL2*errL2*local_w[n]*m_lhom*0.5;
+                for(int n = 0; n < m_planes.num_elements(); ++n)
+                {
+                    errL2 = m_planes[n]->L2(inarray + cnt);
+                    cnt  += m_planes[n]->GetTotPoints();
+                    err  += errL2*errL2*local_w[n]*m_lhom*0.5;
+                }
             }
-            
+            else
+            {
+                for(int n = 0; n < m_planes.num_elements(); ++n)
+                {
+                    errL2 = m_planes[n]->L2(inarray + cnt, soln + cnt);
+                    cnt  += m_planes[n]->GetTotPoints();
+                    err  += errL2*errL2*local_w[n]*m_lhom*0.5;
+                }
+            }
             m_comm->GetColumnComm()->AllReduce(err, LibUtilities::ReduceSum);
             
             return sqrt(err);
         }
-	
+    
         Array<OneD, const NekDouble> ExpList3DHomogeneous1D::v_HomogeneousEnergy(void)
         {
             Array<OneD, NekDouble> energy(m_planes.num_elements()/2);

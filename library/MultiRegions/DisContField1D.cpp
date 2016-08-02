@@ -39,6 +39,8 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <SpatialDomains/MeshGraph1D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -82,16 +84,42 @@ namespace Nektar
               m_bndCondExpansions(),
               m_bndConditions()
         {
-            SpatialDomains::BoundaryConditions bcs(m_session, graph1D);
+            if (variable.compare("DefaultVar") != 0)
+            {
+                SpatialDomains::BoundaryConditions bcs(m_session, graph1D);
 
-            GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
-            EvaluateBoundaryConditions(0.0, variable);
-            ApplyGeomInfo();
-            FindPeriodicVertices(bcs,variable);
+                GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
+                EvaluateBoundaryConditions(0.0, variable);
+                ApplyGeomInfo();
+                FindPeriodicVertices(bcs,variable);
+            }
 
             if(SetUpJustDG)
             {
                 SetUpDG(variable);
+            }
+            else
+            {
+                int i;
+                Array<OneD, int> ElmtID, VertexID;
+                GetBoundaryToElmtMap(ElmtID, VertexID);
+
+                for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                {
+                    MultiRegions::ExpListSharedPtr locExpList;
+                    locExpList = m_bndCondExpansions[i];
+
+                    LocalRegions::Expansion1DSharedPtr exp1d =
+                            (*m_exp)[ElmtID[i]]->
+                                    as<LocalRegions::Expansion1D>();
+                    LocalRegions::Expansion0DSharedPtr exp0d =
+                            locExpList->GetExp(0)->
+                                    as<LocalRegions::Expansion0D>();
+
+                    exp0d->SetAdjacentElementExp(VertexID[i], exp1d);
+                }
+                
+                SetUpPhysNormals();
             }
 
         }
@@ -123,6 +151,11 @@ namespace Nektar
                 AllocateSharedPtr(m_session, graph1D, trace, *this,
                                   m_bndCondExpansions, m_bndConditions, 
                                   m_periodicVerts, variable);
+
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                m_traceMap->PrintStats(std::cout, variable);
+            }
 
             // Scatter trace points to 1D elements. For each element, we find
             // the trace point associated to each vertex. The element then
@@ -425,13 +458,16 @@ namespace Nektar
             ExpList1D(pSession,graph1D,domain, true,variable,SetToOneSpaceDimension),
             m_bndCondExpansions(),
             m_bndConditions()
-        {			
-            SpatialDomains::BoundaryConditionsSharedPtr DomBCs = GetDomainBCs(domain,Allbcs,variable); 
-            
-            GenerateBoundaryConditionExpansion(graph1D,*DomBCs,variable);
-            EvaluateBoundaryConditions(0.0, variable);
-            ApplyGeomInfo();
-            FindPeriodicVertices(*DomBCs,variable);
+        {
+            if (variable.compare("DefaultVar") != 0)
+            {
+                SpatialDomains::BoundaryConditionsSharedPtr DomBCs = GetDomainBCs(domain,Allbcs,variable);
+
+                GenerateBoundaryConditionExpansion(graph1D,*DomBCs,variable);
+                EvaluateBoundaryConditions(0.0, variable);
+                ApplyGeomInfo();
+                FindPeriodicVertices(*DomBCs,variable);
+            }
 
             SetUpDG(variable);
         }
@@ -797,7 +833,7 @@ namespace Nektar
         {
             if(m_negatedFluxNormal.size() == 0)
             {
-                Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                     &elmtToTrace = m_traceMap->GetElmtToTrace();
 
                 m_negatedFluxNormal.resize(2*GetExpSize());
@@ -870,29 +906,18 @@ namespace Nektar
             Array<OneD,       NekDouble> &Fwd,
             Array<OneD,       NekDouble> &Bwd)
         {
-            // Expansion casts
-            LocalRegions::Expansion1DSharedPtr exp1D;
-            LocalRegions::Expansion1DSharedPtr exp1DFirst;
-            LocalRegions::Expansion1DSharedPtr exp1DLast;
-
             // Counter variables
             int  n, v;
             
             // Number of elements
             int nElements = GetExpSize(); 
             
-            // Number of solution points of each element
-            int nLocalSolutionPts;
-            
             // Initial index of each element
             int phys_offset;
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
-            
-            // Basis shared pointer
-            LibUtilities::BasisSharedPtr Basis;
-            
+
             // Set forward and backard state to zero
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
@@ -902,15 +927,8 @@ namespace Nektar
             // Loop on the elements
             for (cnt = n = 0; n < nElements; ++n)
             {
-                exp1D = (*m_exp)[n]->as<LocalRegions::Expansion1D>();
-
                 // Set the offset of each element
                 phys_offset = GetPhys_Offset(n);
-                
-                // Set the number of solution points of each element
-                nLocalSolutionPts = (*m_exp)[n]->GetNumPoints(0);
-                
-                Basis = (*m_exp)[n]->GetBasis(0);
 
                 for(v = 0; v < 2; ++v, ++cnt)
                 {
@@ -1031,26 +1049,21 @@ namespace Nektar
         {
             int n,offset, t_offset;
 
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
-            
-            // Basis shared pointer
-            LibUtilities::BasisSharedPtr Basis;
-            
+
             vector<bool> negatedFluxNormal = GetNegatedFluxNormal();
             
             for (n = 0; n < GetExpSize(); ++n)
             {
-                // Basis definition on each element
-                Basis = (*m_exp)[n]->GetBasis(0);
-                
                 // Number of coefficients on each element
                 int e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
                 
                 offset = GetCoeff_Offset(n);
                 
                 // Implementation for every points except Gauss points
-                if (Basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
+                if ((*m_exp)[n]->GetBasis(0)->GetBasisType() !=
+                     LibUtilities::eGauss_Lagrange)
                 {
                     t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][0]->GetElmtId());
                     if(negatedFluxNormal[2*n])
@@ -1333,12 +1346,7 @@ namespace Nektar
 
             for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if (time == 0.0 || m_bndConditions[i]->GetUserDefined() ==
-                    SpatialDomains::eTimeDependent || 
-                    m_bndConditions[i]->GetUserDefined() ==
-                    SpatialDomains::eQinflow  ||
-                    m_bndConditions[i]->GetUserDefined() ==
-                    SpatialDomains::eRCRterminal )
+                if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
                     m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
                     
@@ -1445,6 +1453,64 @@ namespace Nektar
             }
 
             ASSERTL1(cnt == nbcs,"Failed to visit all boundary condtiions");
+        }
+        
+        void DisContField1D::v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result)
+        {
+            int n, cnt, nq;
+            int offsetOld, offsetNew;
+            Array<OneD, NekDouble> tmp1, tmp2;
+            std::vector<unsigned int> eIDs;
+            
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+            
+            // Skip other boundary regions
+            for (cnt = n = 0; n < i; ++n)
+            {
+                cnt += m_bndCondExpansions[n]->GetExpSize();
+            }
+
+            // Populate eIDs with information from BoundaryToElmtMap
+            for (n = 0; n < m_bndCondExpansions[i]->GetExpSize(); ++n)
+            {
+                eIDs.push_back(ElmtID[cnt+n]);
+            }
+            
+            // Create expansion list
+            result = 
+                MemoryManager<ExpList1D>::AllocateSharedPtr(*this, eIDs);
+            
+            // Copy phys and coeffs to new explist
+            for (n = 0; n < result->GetExpSize(); ++n)
+            {
+                nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
+                offsetOld = GetPhys_Offset(ElmtID[cnt+n]);
+                offsetNew = result->GetPhys_Offset(n);
+                Vmath::Vcopy(nq, tmp1 = GetPhys()+ offsetOld, 1,
+                                 tmp2 = result->UpdatePhys()+ offsetNew, 1);
+                
+                nq = GetExp(ElmtID[cnt+n])->GetNcoeffs();
+                offsetOld = GetCoeff_Offset(ElmtID[cnt+n]);
+                offsetNew = result->GetCoeff_Offset(n);
+                Vmath::Vcopy(nq, tmp1 = GetCoeffs()+ offsetOld, 1,
+                                 tmp2 = result->UpdateCoeffs()+ offsetNew, 1);
+            }
+        }        
+
+        /**
+         * @brief Reset this field, so that geometry information can be updated.
+         */
+        void DisContField1D::v_Reset()
+        {
+            ExpList::v_Reset();
+
+            // Reset boundary condition expansions.
+            for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                m_bndCondExpansions[n]->Reset();
+            }
         }
 
         /**

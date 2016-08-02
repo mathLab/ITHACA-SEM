@@ -34,9 +34,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ContField3D.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapCG3D.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
 #include <LibUtilities/BasicUtils/DBUtils.hpp>
+
+using namespace std;
+
 namespace Nektar
 {
   namespace MultiRegions
@@ -83,10 +86,10 @@ namespace Nektar
                         boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
                         std::string("GlobalLinSys"))
         {
-            m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(
+            m_locToGloMap = MemoryManager<AssemblyMapCG>::AllocateSharedPtr(
                 m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
-                m_periodicVerts, m_periodicEdges, m_periodicFaces,
-                CheckIfSingularSystem, variable);
+                CheckIfSingularSystem, variable,
+                m_periodicVerts, m_periodicEdges, m_periodicFaces);
 
             if (m_session->DefinesCmdLineArgument("verbose"))
             {
@@ -131,10 +134,10 @@ namespace Nektar
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
             {
                 SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
-                m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(
+                m_locToGloMap = MemoryManager<AssemblyMapCG>::AllocateSharedPtr(
                     m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
-                    m_periodicVerts, m_periodicEdges, m_periodicFaces,
-                    CheckIfSingularSystem,variable);
+                    CheckIfSingularSystem, variable,
+                    m_periodicVerts, m_periodicEdges, m_periodicFaces);
 
                 if (m_session->DefinesCmdLineArgument("verbose"))
                 {
@@ -336,7 +339,14 @@ namespace Nektar
                   for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                   {
                       sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                      inout[map[bndcnt++]] = sign * coeffs[j];
+                      if(sign)
+                      {
+                          inout[map[bndcnt++]] = sign * coeffs[j];
+                      }
+                      else
+                      {
+                          bndcnt++;
+                      }
                   }
               }
               else
@@ -462,7 +472,14 @@ namespace Nektar
                   {
                       sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(
                           bndcnt);
-                      tmp[bndMap[bndcnt++]] = sign * coeffs[j];
+                      if (sign)
+                      {
+                          tmp[bndMap[bndcnt++]] = sign * coeffs[j];
+                      }
+                      else
+                      {
+                          bndcnt++;
+                      }
                   }
               }
               else
@@ -502,11 +519,27 @@ namespace Nektar
           m_locToGloMap->LocalToGlobal(m_coeffs, m_coeffs);
       }
 
+
+      void ContField3D::v_LocalToGlobal(
+          const Array<OneD, const NekDouble> &inarray,
+          Array<OneD,NekDouble> &outarray)
+      {
+          m_locToGloMap->LocalToGlobal(inarray, outarray);
+      }
+
+
       void ContField3D::v_GlobalToLocal(void)
       {
           m_locToGloMap->GlobalToLocal(m_coeffs, m_coeffs);
       }
-      
+
+
+      void ContField3D::v_GlobalToLocal(
+          const Array<OneD, const NekDouble> &inarray,
+          Array<OneD,NekDouble> &outarray)
+      {
+          m_locToGloMap->GlobalToLocal(inarray, outarray);
+      }
 
 
       void ContField3D::v_HelmSolve(
@@ -619,5 +652,14 @@ namespace Nektar
           return 0;
       }
       
+
+      /**
+       *
+       */
+      void ContField3D::v_ClearGlobalLinSysManager(void)
+      {
+          m_globalLinSysManager.ClearManager("GlobalLinSys");
+      }
+
   } //end of namespace
 } //end of namespace

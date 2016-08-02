@@ -47,6 +47,8 @@
 #include <LocalRegions/MatrixKey.h>
 #include <math.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -97,7 +99,7 @@ namespace Nektar
         void PreconditionerLinear::v_BuildPreconditioner()
         {
             GlobalSysSolnType sType  = m_locToGloMap->GetGlobalSysSolnType();
-            ASSERTL0(sType == eIterativeStaticCond,
+            ASSERTL0(sType == eIterativeStaticCond || sType == ePETScStaticCond,
                      "This type of preconditioning is not implemented "
                      "for this solver");
 
@@ -112,19 +114,19 @@ namespace Nektar
 
             switch(solveType)
             {
-                case eLinearPreconXxt:
-                {
-                    linSolveType = eXxtFullMatrix;
-                    break;
-                }
                 case eLinearPreconPETSc:
                 {
-#ifdef NEKTAR_USING_PETSC
                     linSolveType = ePETScFullMatrix;
-#else
+#ifndef NEKTAR_USING_PETSC
                     ASSERTL0(false, "Nektar++ has not been compiled with "
                                     "PETSc support.");
 #endif
+                }
+                case eLinearPreconXxt:
+                default:
+                {
+                    linSolveType = eXxtFullMatrix;
+                    break;
                 }
             }
 
@@ -183,6 +185,7 @@ namespace Nektar
             switch(solvertype)
             {
                 case MultiRegions::eIterativeStaticCond:
+                case MultiRegions::ePETScStaticCond:
                 {
                     int i,val;
                     int nloc = m_vertLocToGloMap->GetNumLocalCoeffs();
@@ -210,8 +213,10 @@ namespace Nektar
                     }
                     
                     // Do solve without enforcing any boundary conditions. 
-                    m_vertLinsys->SolveLinearSystem(m_vertLocToGloMap->GetNumLocalCoeffs(),
-                                                    In,Out,m_vertLocToGloMap);
+                    m_vertLinsys->SolveLinearSystem(
+                        m_vertLocToGloMap->GetNumGlobalCoeffs(),
+                        In,Out,m_vertLocToGloMap,
+                        m_vertLocToGloMap->GetNumGlobalDirBndCoeffs());
                     
                     
                     if(pNonVertOutput != NullNekDouble1DArray)

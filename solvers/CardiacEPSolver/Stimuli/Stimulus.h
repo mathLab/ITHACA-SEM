@@ -48,7 +48,7 @@ namespace Nektar
 {
     // Forward declaration
     class Stimulus;
-    
+
     /// A shared pointer to an EquationSystem object
     typedef boost::shared_ptr<Stimulus> StimulusSharedPtr;
 
@@ -61,33 +61,29 @@ namespace Nektar
 
     StimulusFactory& GetStimulusFactory();
 
-    
+
     /// Stimulus base class.
     class Stimulus
     {
     public:
-        Stimulus(const LibUtilities::SessionReaderSharedPtr& pSession,
-                  const MultiRegions::ExpListSharedPtr& pField,
-                  const TiXmlElement* pXml);
-        
         virtual ~Stimulus() {}
-        
+
         /// Initialise the stimulus storage and set initial conditions
         void Initialise();
-        
+
         /// Updates RHS of outarray by adding a stimulus to it
         void Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                     const NekDouble time)
         {
             v_Update(outarray, time);
         }
-        
+
         /// Print a summary of the outarray
         void GenerateSummary(SolverUtils::SummaryList& s)
         {
             v_GenerateSummary(s);
         }
-        
+
         static std::vector<StimulusSharedPtr> LoadStimuli(
                     const LibUtilities::SessionReaderSharedPtr& pSession,
                     const MultiRegions::ExpListSharedPtr& pField);
@@ -99,14 +95,19 @@ namespace Nektar
         MultiRegions::ExpListSharedPtr m_field;
         /// Number of physical points.
         int m_nq;
+        /// Stimulus protocol to apply
         ProtocolSharedPtr m_Protocol;
-        
+
+        Stimulus(const LibUtilities::SessionReaderSharedPtr& pSession,
+                  const MultiRegions::ExpListSharedPtr& pField,
+                  const TiXmlElement* pXml);
+
         virtual void v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                               const NekDouble time) = 0;
-        
+
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s) = 0;
-        
+
     };
 }
 
-#endif 
+#endif

@@ -33,7 +33,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <StdRegions/StdSegExp.h> 
+#include <StdRegions/StdSegExp.h>
+#include <LibUtilities/Foundations/InterpCoeff.h>
+ 
+
+using namespace std;
 
 namespace Nektar
 {
@@ -236,30 +240,66 @@ namespace Nektar
                 NekMatrix<NekDouble> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
                 out = B * in;
 
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS
 
             }
         }
 
-        /** \brief Forward transform from physical quadrature space stored in 
-         *  \a inarray and evaluate the expansion coefficients and store in 
-         *  \a outarray
-         *
-         *  Perform a forward transform using a Galerkin projection by taking the 
-         *  inner product of the physical points and multiplying by the inverse of
-         *  the mass matrix using the Solve method of the standard matrix 
-         *  container holding the local mass matrix, i.e. \f$ {\bf \hat{u}} = 
-         *  {\bf M}^{-1} {\bf I} \f$ where \f$ {\bf I}[p] =  \int^1_{-1} 
-         *  \phi_p(\xi_1) u(\xi_1) d\xi_1 \f$
-         *
-         *  This function stores the expansion coefficients calculated by the 
-         *  transformation in the coefficient space array \a outarray
-         *
-         *  \param inarray: array of physical quadrature points to be transformed
-         *
-         *  \param outarray: the coeffficients of the expansion 
-         */ 
+        void StdSegExp::v_ReduceOrderCoeffs(
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int n_coeffs = inarray.num_elements();
 
+            Array<OneD, NekDouble> coeff(n_coeffs);
+            Array<OneD, NekDouble> coeff_tmp(n_coeffs,0.0);
+            Array<OneD, NekDouble> tmp;
+            Array<OneD, NekDouble> tmp2;
+
+            int       nmodes0 = m_base[0]->GetNumModes();
+            int       numMax  = nmodes0;
+
+            Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp,1);
+
+            const LibUtilities::PointsKey Pkey0(
+                nmodes0, LibUtilities::eGaussLobattoLegendre);
+
+            LibUtilities::BasisKey b0(m_base[0]->GetBasisType(),nmodes0,Pkey0);
+
+            LibUtilities::BasisKey bortho0(LibUtilities::eOrtho_A,nmodes0,Pkey0);
+
+            LibUtilities::InterpCoeff1D(
+                b0, coeff_tmp, bortho0, coeff);
+
+            Vmath::Zero(n_coeffs,coeff_tmp,1);
+
+            Vmath::Vcopy(numMin,
+                         tmp  = coeff,1,
+                         tmp2 = coeff_tmp,1);
+
+            LibUtilities::InterpCoeff1D(
+                bortho0, coeff_tmp, b0, outarray);
+        }
+
+        /**
+         * \brief Forward transform from physical quadrature space stored in \a
+         * inarray and evaluate the expansion coefficients and store in \a
+         * outarray
+         *
+         * Perform a forward transform using a Galerkin projection by taking the
+         * inner product of the physical points and multiplying by the inverse
+         * of the mass matrix using the Solve method of the standard matrix
+         * container holding the local mass matrix, i.e. \f$ {\bf \hat{u}} =
+         * {\bf M}^{-1} {\bf I} \f$ where \f$ {\bf I}[p] = \int^1_{-1}
+         * \phi_p(\xi_1) u(\xi_1) d\xi_1 \f$
+         *
+         * This function stores the expansion coefficients calculated by the
+         * transformation in the coefficient space array \a outarray
+         *
+         * \param inarray: array of physical quadrature points to be transformed
+         * \param outarray: the coeffficients of the expansion
+         */
         void StdSegExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
         {
@@ -399,7 +439,6 @@ namespace Nektar
         {
             int    nquad = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble> tmp(nquad);
-            Array<OneD, const NekDouble> z =  m_base[0]->GetZ();
             Array<OneD, const NekDouble> w =  m_base[0]->GetW();
 
             Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);
@@ -447,9 +486,26 @@ namespace Nektar
 
         void StdSegExp::v_IProductWRTBase_SumFac(
                 const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray)
+                Array<OneD, NekDouble> &outarray,
+                bool multiplybyweights)
         {
-            v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
+            int    nquad = m_base[0]->GetNumPoints();
+            Array<OneD, NekDouble> tmp(nquad);
+            Array<OneD, const NekDouble> w =  m_base[0]->GetW();
+            Array<OneD, const NekDouble> base =  m_base[0]->GetBdata();
+
+            if(multiplybyweights)
+            {
+                Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);
+
+                Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
+                                &tmp[0],1,0.0,outarray.get(),1);
+            }
+            else
+            {
+                Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
+                            &inarray[0],1,0.0,outarray.get(),1);
+            }
         }
 
 
@@ -519,6 +575,18 @@ namespace Nektar
             Blas::Daxpy(m_ncoeffs, mkey.GetConstFactor(eFactorLambda), wsp.get(), 1, outarray.get(), 1);
         }
 
+        //up to here
+        void StdSegExp::v_MultiplyByStdQuadratureMetric(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {         
+            int nquad0 = m_base[0]->GetNumPoints();
+                
+            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
+
+            Vmath::Vmul(nquad0, inarray.get(),1,
+                        w0.get(),1,outarray.get(),1);
+        }
 
         void StdSegExp::v_GetCoords(
                 Array<OneD, NekDouble> &coords_0,

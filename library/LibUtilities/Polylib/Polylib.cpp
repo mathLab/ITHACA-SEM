@@ -13,9 +13,6 @@
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
-#include <iostream>
-
-using namespace std;
 
 /// Maximum number of iterations in polynomial defalation routine Jacobz
 

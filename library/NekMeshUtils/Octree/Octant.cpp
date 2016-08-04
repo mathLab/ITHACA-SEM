@@ -110,36 +110,36 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, OctantFace> dir)
         m_loc[2] = parentloc[2] - m_hd;
     }
 
-    vector<CurvaturePointSharedPtr> CurvaturePointList = m_parent->GetCPList();
+    vector<SPBaseSharedPtr> SourcePointList = m_parent->GetSPList();
 
     // setup complete
 
     // look over the curvature point list provided by the parent,
     // firstly look to see if it is in the new octant and if so
     // add it to the conserdation of the delta specification
-    for (int i = 0; i < CurvaturePointList.size(); i++)
+    for (int i = 0; i < SourcePointList.size(); i++)
     {
-        Array<OneD, NekDouble> cploc = CurvaturePointList[i]->GetLoc();
+        Array<OneD, NekDouble> cploc = SourcePointList[i]->GetLoc();
         if (!(cploc[0] > m_loc[0] + m_hd || cploc[0] < m_loc[0] - m_hd ||
               cploc[1] > m_loc[1] + m_hd || cploc[1] < m_loc[1] - m_hd ||
               cploc[2] > m_loc[2] + m_hd || cploc[2] < m_loc[2] - m_hd))
         {
-            m_localCPList.push_back(CurvaturePointList[i]);
+            m_localSPList.push_back(SourcePointList[i]);
 
-            if (CurvaturePointList[i]->IsValid())
+            if (SourcePointList[i]->HasDelta())
             {
-                if (CurvaturePointList[i]->GetDelta() > maxDif)
+                if (SourcePointList[i]->GetDelta() > maxDif)
                 {
-                    maxDif = CurvaturePointList[i]->GetDelta();
+                    maxDif = SourcePointList[i]->GetDelta();
                 }
 
-                if (CurvaturePointList[i]->GetDelta() < minDif)
+                if (SourcePointList[i]->GetDelta() < minDif)
                 {
-                    minDif = CurvaturePointList[i]->GetDelta();
+                    minDif = SourcePointList[i]->GetDelta();
                 }
                 m_numValidPoints++;
             }
-            if (CurvaturePointList[i]->Isboundary())
+            if (SourcePointList[i]->Isboundary())
             {
                 m_numBoundaryPoints++;
             }
@@ -157,7 +157,8 @@ Octant::Octant(int i, OctantSharedPtr p, Array<OneD, OctantFace> dir)
 
         SetDelta(minDif);
 
-        if (GetDelta() > 5.0 * DX())
+        //encourage subdivision to keep spec smooth
+        if (GetDelta() < 5.0 * DX())
         {
             m_needToDivide = true;
         }
@@ -175,7 +176,7 @@ Octant::Octant(int i,
                NekDouble y,
                NekDouble z,
                NekDouble dx,
-               const vector<CurvaturePointSharedPtr> &cplist)
+               const vector<SPBaseSharedPtr> &splist)
     : m_id(i), m_hd(dx)
 {
     m_neigbours[eUp]      = vector<OctantSharedPtr>();
@@ -196,11 +197,11 @@ Octant::Octant(int i,
     m_loc[1] = y;
     m_loc[2] = z;
 
-    m_localCPList = cplist;
+    m_localSPList = splist;
 
-    for (int i = 0; i < m_localCPList.size(); i++)
+    for (int i = 0; i < m_localSPList.size(); i++)
     {
-        if (m_localCPList[i]->IsValid())
+        if (m_localSPList[i]->HasDelta())
         {
             m_numValidPoints++;
         }
@@ -506,10 +507,6 @@ void Octant::RemoveNeigbour(int id, OctantFace f)
         {
             m_neigbours[f].push_back(tmp[i]);
         }
-    }
-    if (!found)
-    {
-        // cout << "!!!!!" << "NOT FOUND" << "!!!!!" << endl;
     }
 }
 

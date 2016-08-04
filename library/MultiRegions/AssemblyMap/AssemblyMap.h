@@ -252,7 +252,7 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT int GetNumNonDirFaces() const;
 
-            MULTI_REGIONS_EXPORT void PrintStats(std::ostream &out, std::string variable) const;
+            MULTI_REGIONS_EXPORT void PrintStats(std::ostream &out, std::string variable, bool printHeader = true) const;
 
             MULTI_REGIONS_EXPORT const Array<OneD, const int>& 
                 GetExtraDirEdges();

@@ -519,11 +519,27 @@ namespace Nektar
           m_locToGloMap->LocalToGlobal(m_coeffs, m_coeffs);
       }
 
+
+      void ContField3D::v_LocalToGlobal(
+          const Array<OneD, const NekDouble> &inarray,
+          Array<OneD,NekDouble> &outarray)
+      {
+          m_locToGloMap->LocalToGlobal(inarray, outarray);
+      }
+
+
       void ContField3D::v_GlobalToLocal(void)
       {
           m_locToGloMap->GlobalToLocal(m_coeffs, m_coeffs);
       }
-      
+
+
+      void ContField3D::v_GlobalToLocal(
+          const Array<OneD, const NekDouble> &inarray,
+          Array<OneD,NekDouble> &outarray)
+      {
+          m_locToGloMap->GlobalToLocal(inarray, outarray);
+      }
 
 
       void ContField3D::v_HelmSolve(

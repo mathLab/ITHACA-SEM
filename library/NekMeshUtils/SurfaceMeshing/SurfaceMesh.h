@@ -41,6 +41,7 @@
 #include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/SurfaceMeshing/FaceMesh.h>
 #include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
+#include <NekMeshUtils/BLMeshing/BLMesh.h>
 
 namespace Nektar
 {
@@ -61,10 +62,9 @@ public:
      */
     SurfaceMesh(MeshSharedPtr             m,
                 CADSystemSharedPtr        cad,
-                OctreeSharedPtr           octree,
-                std::vector<unsigned int> sy,
-                NekDouble                 b)
-        : m_mesh(m), m_cad(cad), m_octree(octree), m_symsurfs(sy), m_bl(b){};
+                OctreeSharedPtr           octree)
+        : m_mesh(m), m_cad(cad), m_octree(octree)
+        {};
 
     /**
      * @brief Run all linear meshing routines
@@ -82,11 +82,14 @@ public:
     void Validate();
 
     /**
-     * @brief Print brief information to screen
+     * @brief Remesh the linear surfaces based on the addition of the bl
      */
+    void Remesh(BLMeshSharedPtr blmesh);
+
     void Report();
 
 private:
+
     /// mesh object
     MeshSharedPtr m_mesh;
     /// CAD object
@@ -97,10 +100,6 @@ private:
     std::map<int, FaceMeshSharedPtr> m_facemeshes;
     /// map of individual curve meshes of the curves in the domain
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
-    /// list of sysmetry plane surfaces to build quads onto
-    std::vector<unsigned int> m_symsurfs;
-    /// thickness of the boundary layer if needed
-    NekDouble m_bl;
 };
 
 typedef boost::shared_ptr<SurfaceMesh> SurfaceMeshSharedPtr;

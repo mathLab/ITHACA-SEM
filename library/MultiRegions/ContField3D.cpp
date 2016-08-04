@@ -339,7 +339,14 @@ namespace Nektar
                   for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                   {
                       sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                      inout[map[bndcnt++]] = sign * coeffs[j];
+                      if(sign)
+                      {
+                          inout[map[bndcnt++]] = sign * coeffs[j];
+                      }
+                      else
+                      {
+                          bndcnt++;
+                      }
                   }
               }
               else
@@ -465,7 +472,14 @@ namespace Nektar
                   {
                       sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(
                           bndcnt);
-                      tmp[bndMap[bndcnt++]] = sign * coeffs[j];
+                      if (sign)
+                      {
+                          tmp[bndMap[bndcnt++]] = sign * coeffs[j];
+                      }
+                      else
+                      {
+                          bndcnt++;
+                      }
                   }
               }
               else
@@ -505,11 +519,27 @@ namespace Nektar
           m_locToGloMap->LocalToGlobal(m_coeffs, m_coeffs);
       }
 
+
+      void ContField3D::v_LocalToGlobal(
+          const Array<OneD, const NekDouble> &inarray,
+          Array<OneD,NekDouble> &outarray)
+      {
+          m_locToGloMap->LocalToGlobal(inarray, outarray);
+      }
+
+
       void ContField3D::v_GlobalToLocal(void)
       {
           m_locToGloMap->GlobalToLocal(m_coeffs, m_coeffs);
       }
-      
+
+
+      void ContField3D::v_GlobalToLocal(
+          const Array<OneD, const NekDouble> &inarray,
+          Array<OneD,NekDouble> &outarray)
+      {
+          m_locToGloMap->GlobalToLocal(inarray, outarray);
+      }
 
 
       void ContField3D::v_HelmSolve(

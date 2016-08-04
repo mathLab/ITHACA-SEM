@@ -483,6 +483,12 @@ public:
         }
     }
 
+    NEKMESHUTILS_EXPORT void Flip()
+    {
+        ASSERTL0(m_face.size() == 0,"only works in 2D")
+        std::swap(m_vertex[0],m_vertex[1]);
+    }
+
 #ifdef NEKTAR_USE_MESHGEN
     int CADSurfId;
 #endif
@@ -531,6 +537,9 @@ typedef Nektar::LibUtilities::NekFactory<LibUtilities::ShapeType,
                                          std::vector<int> > ElementFactory;
 
 NEKMESHUTILS_EXPORT ElementFactory &GetElementFactory();
+
+NEKMESHUTILS_EXPORT bool operator==(ElementSharedPtr const &e1,
+                                    ElementSharedPtr const &e2);
 
 /// Define element ordering based on ID.
 struct element_id_less_than

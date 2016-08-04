@@ -97,7 +97,9 @@ MARK_AS_ADVANCED(NEKTAR_BUILD_PACKAGES)
 OPTION(NEKTAR_TEST_ALL "Include full set of regression tests to this build." OFF)
 
 # Meshing utilities and library
-OPTION(NEKTAR_USE_MESHGEN "Build mesh generation utilities." OFF)
+IF (NOT WIN32)
+    OPTION(NEKTAR_USE_MESHGEN "Build mesh generation utilities." OFF)
+ENDIF()
 
 # Build options
 OPTION(NEKTAR_FULL_DEBUG "Enable Full Debugging." OFF)
@@ -180,15 +182,15 @@ INCLUDE (ThirdPartyScotch)
 INCLUDE (ThirdPartyZlib)
 INCLUDE (ThirdPartyBoost)
 INCLUDE (ThirdPartyFFTW)
-INCLUDE (ThirdPartyOCC)
 INCLUDE (ThirdPartyArpack)
 INCLUDE (ThirdPartyMPI)
 INCLUDE (ThirdPartyPETSc)
 INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
-INCLUDE (ThirdPartyTriangle)
+INCLUDE (ThirdPartyOCC)
 INCLUDE (ThirdPartyTetGen)
+INCLUDE (ThirdPartyANN)
 INCLUDE (ThirdPartyCCM)
 
 INCLUDE (Doxygen)
@@ -283,7 +285,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 # Build active components
 IF (NEKTAR_BUILD_LIBRARY)
     SET(NEKTAR++_LIBRARIES SolverUtils LibUtilities StdRegions SpatialDomains LocalRegions
-        MultiRegions Collections GlobalMapping NekMeshUtils)
+        MultiRegions Collections GlobalMapping FieldUtils NekMeshUtils)
     INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)
     INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake COMPONENT dev)

@@ -258,6 +258,10 @@ void SurfaceMesh::HOSurf()
 
     int nq = m_mesh->m_nummode;
 
+    int np = nq * (nq + 1) / 2;
+
+    int ni = (nq-2)*(nq-3) / 2;
+
     LibUtilities::PointsManager()[pkey]->GetPoints(u, v);
 
     set<pair<int, int> > springs     = ListOfFaceSpings(nq);
@@ -380,12 +384,12 @@ void SurfaceMesh::HOSurf()
                     }
                     Norm = sqrt(Norm);
 
-                    if (Norm < 1E-5)
+                    if (Norm < 1E-8)
                     {
                         repeat = false;
                         break;
                     }
-                    if (itct > 100)
+                    if (itct > 1000)
                     {
                         cout << "failed to optimise on curve" << endl;
                         for (int k = 0; k < nq; k++)
@@ -393,15 +397,17 @@ void SurfaceMesh::HOSurf()
                             ti[k] = tb * (1.0 - gll[k]) / 2.0 +
                                     te * (1.0 + gll[k]) / 2.0;
                         }
-                        exit(-1);
                         break;
                     }
                     itct++;
 
                     if (!BGFSUpdate(opti, J, B, H))
                     {
-                        cout << "BFGS reported no update, curve on "
-                             << c->GetId() << endl;
+                        if(m_mesh->m_verbose)
+                        {
+                            cout << "BFGS reported no update, curve on "
+                                << c->GetId() << endl;
+                        }
                         break;
                     }
                 }
@@ -504,13 +510,13 @@ void SurfaceMesh::HOSurf()
                     }
                     Norm = sqrt(Norm);
 
-                    if (Norm < 1E-5)
+                    if (Norm < 1E-8)
                     {
                         repeat = false;
                         break;
                     }
 
-                    if (itct > 100)
+                    if (itct > 1000)
                     {
                         cout << "failed to optimise on edge" << endl;
                         for (int k = 0; k < nq; k++)
@@ -522,15 +528,17 @@ void SurfaceMesh::HOSurf()
                                     uve[1] * (1.0 + gll[k]) / 2.0;
                             uvi[k] = uv;
                         }
-                        exit(-1);
                         break;
                     }
                     itct++;
 
                     if (!BGFSUpdate(opti, J, B, H))
                     {
-                        cout << "BFGS reported no update, edge on " << surf
-                             << endl;
+                        if(m_mesh->m_verbose)
+                        {
+                            cout << "BFGS reported no update, edge on " << surf
+                                << endl;
+                        }
                         // exit(-1);
                         break;
                     }
@@ -564,7 +572,7 @@ void SurfaceMesh::HOSurf()
 
         ASSERTL0(nq <= 5, "not setup for high-orders yet");
 
-        /*vector<NodeSharedPtr> vertices = f->m_vertexList;
+        vector<NodeSharedPtr> vertices = f->m_vertexList;
 
         SpatialDomains::Geometry2DSharedPtr geom = f->GetGeom(3);
         geom->FillGeom();
@@ -617,6 +625,9 @@ void SurfaceMesh::HOSurf()
             uvi[ctr++] = uv;
         }
 
+        /// TODO: face nodes should be optmised but will probably be done via
+        /// variational optimisation.
+        /*
         OptiFaceSharedPtr opti = MemoryManager<OptiFace>::
                                     AllocateSharedPtr(uvi, z, springs, s);
 
@@ -668,7 +679,7 @@ void SurfaceMesh::HOSurf()
             BGFSUpdate(opti, J, B, H); //all will be updated
         }
 
-        uvi = opti->GetSolution();
+        uvi = opti->GetSolution();*/
 
         vector<NodeSharedPtr> honodes;
         for(int j = np - ni; j < np; j++)
@@ -676,13 +687,13 @@ void SurfaceMesh::HOSurf()
             Array<OneD, NekDouble> loc;
             loc = s->P(uvi[j]);
             NodeSharedPtr nn = boost::shared_ptr<Node>(new
-        Node(0,loc[0],loc[1],loc[2]));
+                                            Node(0,loc[0],loc[1],loc[2]));
             nn->SetCADSurf(surf, s, uvi[j]);
             honodes.push_back(nn);
         }
 
         f->m_faceNodes = honodes;
-        f->m_curveType = LibUtilities::eNodalTriFekete;*/
+        f->m_curveType = LibUtilities::eNodalTriFekete;
     }
 
     if (m_mesh->m_verbose)

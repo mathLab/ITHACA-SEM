@@ -133,6 +133,7 @@ vector<Array<OneD, int> > TetGenInterface::Extract()
         tet[3] = output.tetrahedronlist[i * 4 + 3];
         tets.push_back(tet);
     }
+
     return tets;
 }
 

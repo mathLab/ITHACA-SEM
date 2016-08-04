@@ -42,15 +42,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-// horible definitions to get triangle to work
-#define REAL double
-#define ANSI_DECLARATORS
-#define TRILIBRARY
-#define VOID int
-
-extern "C" {
-#include <triangle.h>
-}
+#include <NekMeshUtils/Triangle/Triangle.h>
 
 namespace Nektar
 {
@@ -118,7 +110,7 @@ private:
     /// Stretching factor of parameter plane
     NekDouble                                m_str;
     /// Triangle data strucutres
-    struct triangulateio                     in, out;
+    DelaunayTriangle dt;
 };
 
 typedef boost::shared_ptr<TriangleInterface> TriangleInterfaceSharedPtr;

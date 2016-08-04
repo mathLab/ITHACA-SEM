@@ -274,6 +274,15 @@ namespace Nektar
     {
         std::string varName;
         int cnt        = 0;
+        int nTracePts  = GetTraceTotPoints();
+        int nvariables = inarray.num_elements();
+
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+        for (int i = 0; i < nvariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+            m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
+        }
 
         // loop over Boundary Regions
         for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
@@ -289,12 +298,12 @@ namespace Nektar
             }
             else
             {
-                SetCommonBC(type,n,time, cnt,inarray);
+                SetCommonBC(type, n, time, cnt, Fwd, inarray);
             }
 
-            // no User Defined conditions provided so skip cnt 
-            // this line is left in case solver specific condition is added. 
-            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize(); 
+            // no User Defined conditions provided so skip cnt
+            // this line is left in case solver specific condition is added.
+            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
         }
     }
 }

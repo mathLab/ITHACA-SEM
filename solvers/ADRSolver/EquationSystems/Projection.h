@@ -42,38 +42,37 @@ using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
-    class Projection : public EquationSystem
+class Projection : public EquationSystem
+{
+public:
+    /// Class may only be instantiated through the MemoryManager.
+    friend class MemoryManager<Projection>;
+
+    /// Creates an instance of this class
+    static EquationSystemSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession)
     {
-    public:
-        /// Class may only be instantiated through the MemoryManager.
-        friend class MemoryManager<Projection>;
+        EquationSystemSharedPtr p =
+            MemoryManager<Projection>::AllocateSharedPtr(pSession);
+        p->InitObject();
+        return p;
+    }
 
-        /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            EquationSystemSharedPtr p = MemoryManager<Projection>::
-                AllocateSharedPtr(pSession);
-            p->InitObject();
-            return p;
-        }
+    /// Name of class
+    static std::string className1;
+    static std::string className2;
 
-        /// Name of class
-        static std::string className1;
-        static std::string className2;
+    virtual ~Projection();
 
-        virtual ~Projection();
+protected:
+    Projection(const LibUtilities::SessionReaderSharedPtr &pSession);
 
-    protected:
-        Projection(const LibUtilities::SessionReaderSharedPtr& pSession);
+    virtual void v_InitObject();
+    virtual void v_GenerateSummary(SolverUtils::SummaryList &s);
+    virtual void v_DoSolve();
 
-        virtual void v_InitObject();
-        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-        virtual void v_DoSolve();
-
-    private:
-
-    };
+private:
+};
 }
 
 #endif

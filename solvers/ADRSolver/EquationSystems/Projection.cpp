@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Helmholtz.cpp
+// File Projection.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Projection solve routines 
+// Description: Projection solve routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -39,51 +39,51 @@ using namespace std;
 
 namespace Nektar
 {
-    string Projection::className1 = GetEquationSystemFactory().RegisterCreatorFunction("Projection", Projection::create);
-    string Projection::className2 = GetEquationSystemFactory().RegisterCreatorFunction("SteadyDiffusionReaction", Projection::create);
-    
-    Projection::Projection(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : EquationSystem(pSession)
+string Projection::className1 =
+    GetEquationSystemFactory().RegisterCreatorFunction("Projection",
+                                                       Projection::create);
+string Projection::className2 =
+    GetEquationSystemFactory().RegisterCreatorFunction(
+        "SteadyDiffusionReaction", Projection::create);
+
+Projection::Projection(const LibUtilities::SessionReaderSharedPtr &pSession)
+    : EquationSystem(pSession)
+{
+}
+
+void Projection::v_InitObject()
+{
+    EquationSystem::v_InitObject();
+
+    EvaluateFunction(m_session->GetVariables(), m_fields, "Forcing");
+}
+
+Projection::~Projection()
+{
+}
+
+void Projection::v_DoSolve()
+{
+    for (int i = 0; i < m_fields.num_elements(); ++i)
     {
+        // Zero field so initial conditions are zero
+        Vmath::Zero(m_fields[i]->GetNcoeffs(), m_fields[i]->UpdateCoeffs(), 1);
+        m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),
+                              m_fields[i]->UpdateCoeffs());
+        m_fields[i]->SetPhysState(false);
     }
+}
 
-    void Projection::v_InitObject()
+void Projection::v_GenerateSummary(SolverUtils::SummaryList &s)
+{
+    EquationSystem::SessionSummary(s);
+    for (int i = 0; i < m_fields.num_elements(); ++i)
     {
-        EquationSystem::v_InitObject();
-
-        EvaluateFunction(m_session->GetVariables(), m_fields, "Forcing");
+        stringstream name;
+        name << "Forcing func [" << i << "]";
+        SolverUtils::AddSummaryItem(
+            s, name.str(),
+            m_session->GetFunction("Forcing", i)->GetExpression());
     }
-
-    Projection::~Projection()
-    {
-
-    }
-
-    void Projection::v_DoSolve()
-    {
-
-        for(int i = 0; i < m_fields.num_elements(); ++i)
-        {
-            // Zero field so initial conditions are zero
-            Vmath::Zero(m_fields[i]->GetNcoeffs(),
-                        m_fields[i]->UpdateCoeffs(), 1);
-            m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),
-                                  m_fields[i]->UpdateCoeffs());
-            m_fields[i]->SetPhysState(false);
-        }
-    }
-
-    void Projection::v_GenerateSummary(SolverUtils::SummaryList& s)
-    {
-        EquationSystem::SessionSummary(s);
-        for (int i = 0; i < m_fields.num_elements(); ++i)
-        {
-            stringstream name;
-            name << "Forcing func [" << i << "]";
-            SolverUtils::AddSummaryItem(s, name.str(),
-                    m_session->GetFunction("Forcing", i)->GetExpression());
-        }
-    }
-
+}
 }

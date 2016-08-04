@@ -624,6 +624,12 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
 
 void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
 {
+    // Ordered data have no connectivity information.
+    if (m_zoneType == eOrdered)
+    {
+        return;
+    }
+
     for (int i = 0; i < m_conn.size(); ++i)
     {
         const int nConn = m_conn[i].num_elements();

@@ -39,13 +39,9 @@ using namespace std;
 
 namespace Nektar
 {
-string Projection::className1 =
+string Projection::className =
     GetEquationSystemFactory().RegisterCreatorFunction("Projection",
                                                        Projection::create);
-string Projection::className2 =
-    GetEquationSystemFactory().RegisterCreatorFunction(
-        "SteadyDiffusionReaction", Projection::create);
-
 Projection::Projection(const LibUtilities::SessionReaderSharedPtr &pSession)
     : EquationSystem(pSession)
 {

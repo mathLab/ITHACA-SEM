@@ -59,8 +59,7 @@ public:
     }
 
     /// Name of class
-    static std::string className1;
-    static std::string className2;
+    static std::string className;
 
     virtual ~Projection();
 

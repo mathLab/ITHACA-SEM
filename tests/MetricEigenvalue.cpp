@@ -51,6 +51,9 @@ namespace Nektar
         // We do not mind which order the converged eigenvalues are listed.
         m_unordered = true;
 
+        // Ignore additional regex matches
+        m_ignoreExtra = true;
+
         // Regex for FP numbers of forms: 120, -23, 4.345, 2.4563e-01, -nan
         std::string fp = "-?\\d+\\.?\\d*(?:e[+-]\\d+)?|-?nan";
 

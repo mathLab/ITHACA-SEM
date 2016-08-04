@@ -51,6 +51,7 @@ namespace Nektar
         // error.
         m_regex = "^L 2 error\\s*(?:\\(variable "
             "(\\w+)\\))?\\s*:\\s*([+-]?\\d.+\\d|-?\\d|[+-]?nan|[+-]?inf).*";
+        m_ignoreExtra = true;
 
         // Find the L2 error to match against.
         TiXmlElement *value = metric->FirstChildElement("value");

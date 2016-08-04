@@ -78,6 +78,9 @@ namespace Nektar
         std::vector<std::vector<MetricRegexFieldValue> > m_matches;
         /// If true, regex matches may be in any order in output
         bool m_unordered;
+        /// If true, ignore any extra matches (i.e. if the output produces more
+        /// matches than we expect, the additional ones are ignored.
+        bool m_ignoreExtra;
 
         MetricRegex(TiXmlElement *metric, bool generate);
 

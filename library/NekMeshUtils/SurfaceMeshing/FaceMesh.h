@@ -62,36 +62,21 @@ public:
              MeshSharedPtr                            m,
              CADSurfSharedPtr                         cad,
              OctreeSharedPtr                          oct,
-             const std::map<int, CurveMeshSharedPtr> &cmeshes)
-        : m_mesh(m), m_cadsurf(cad), m_octree(oct), m_curvemeshes(cmeshes),
-          m_id(id)
-
-    {
-        m_edgeloops = m_cadsurf->GetEdges();
-        m_makebl    = false;
-    };
-
-    /**
-     * @brief constructor for building with boundary layer
-     */
-    FaceMesh(const int                                id,
-             MeshSharedPtr                            m,
-             CADSurfSharedPtr                         cad,
-             OctreeSharedPtr                          oct,
              const std::map<int, CurveMeshSharedPtr> &cmeshes,
-             const NekDouble                          b)
+             bool ov)
         : m_mesh(m), m_cadsurf(cad), m_octree(oct), m_curvemeshes(cmeshes),
-          m_id(id), m_bl(b)
+          m_id(id), over(ov)
 
     {
         m_edgeloops = m_cadsurf->GetEdges();
-        m_makebl    = true;
     };
 
     /**
      * @brief mesh exectuation command
      */
-    void Mesh();
+    void Mesh(bool remesh = false);
+
+    void QuadRemesh(std::map<NodeSharedPtr, NodeSharedPtr> nmap);
 
 private:
     /**
@@ -168,13 +153,8 @@ private:
     EdgeSet m_localEdges;
     /// local list of elements
     std::vector<ElementSharedPtr> m_localElements;
-    /// boundary layer thickness
-    NekDouble m_bl;
-    /// should build boundary layer
-    bool m_makebl;
-    /// list of node links between node on loop and its corresponding interior
-    /// node in quads
-    std::vector<std::pair<NodeSharedPtr, NodeSharedPtr> > blpairs;
+
+    bool over;
 };
 
 typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;

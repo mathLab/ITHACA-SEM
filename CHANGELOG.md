@@ -3,9 +3,11 @@ Changelog
 
 v4.4.0
 ------
-**Library:**
+**Library**:
 - Add support for variable polynomial order for 3D simulations with continuous
   Galerkin discretisation (!604)
+- Bump version of gsmpi to suppress autotuning output unless `--verbose` is
+  specified (!652)
 - Add support for variable polynomial order with periodic boundary conditions
   (!658)
 - Statistics are now printed for lowest level of multi-level static condensation

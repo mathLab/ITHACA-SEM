@@ -74,7 +74,6 @@ public:
 
 protected:
     bool            m_binary;
-    bool            m_doError;
     TecplotZoneType m_zoneType;
     vector<int>     m_numPoints;
     int             m_numBlocks;

@@ -134,11 +134,13 @@ template<typename T> void WriteStream(std::ostream  &outfile,
                   data.size() * sizeof(T));
 }
 
+/**
+ * @brief Set up member variables to dump Tecplot format output.
+ */
 void OutputTecplot::Process(po::variables_map &vm)
 {
     LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
 
-    m_doError = (vm.count("error") == 1) ? true : false;
     m_numBlocks = 0;
 
     // Do nothing if no expansion defined
@@ -170,6 +172,9 @@ void OutputTecplot::Process(po::variables_map &vm)
         filename      = start + procId + ext;
     }
 
+    std::string coordVars[] = { "x", "y", "z" };
+    bool doError = (vm.count("error") == 1) ? true : false;
+
     // Open output file
     ofstream outfile(filename.c_str(), m_binary ? ios::binary : ios::out);
 
@@ -195,6 +200,7 @@ void OutputTecplot::Process(po::variables_map &vm)
         MultiRegions::ExpansionType HomoExpType = m_f->m_exp[0]->GetExpType();
 
         m_coordim = m_f->m_exp[0]->GetExp(0)->GetCoordim();
+        var.insert(var.begin(), coordVars, coordVars + m_coordim);
 
         if (HomoExpType == MultiRegions::e3DH1D)
         {
@@ -223,12 +229,10 @@ void OutputTecplot::Process(po::variables_map &vm)
         CalculateConnectivity();
 
         // Set up storage for output fields
-        m_fields = Array<OneD, Array<OneD, NekDouble> >(
-            var.size() + m_coordim);
+        m_fields = Array<OneD, Array<OneD, NekDouble> >(var.size());
 
         // Get coordinates
         int totpoints = m_f->m_exp[0]->GetTotPoints();
-        cout << totpoints << endl;
 
         for (int i = 0; i < m_coordim; ++i)
         {
@@ -248,7 +252,7 @@ void OutputTecplot::Process(po::variables_map &vm)
             m_f->m_exp[0]->GetCoords(m_fields[0], m_fields[1], m_fields[2]);
         }
 
-        if (var.size())
+        if (var.size() > m_coordim)
         {
             // Backward transform all data
             for (int i = 0; i < m_f->m_exp.size(); ++i)
@@ -260,9 +264,24 @@ void OutputTecplot::Process(po::variables_map &vm)
                 }
             }
 
+            // Add references to m_fields
             for (int i = 0; i < m_f->m_exp.size(); ++i)
             {
                 m_fields[i + m_coordim] = m_f->m_exp[i]->UpdatePhys();
+            }
+        }
+
+        // Dump L2 errors of fields.
+        if (doError)
+        {
+            for (int i = 0; i < m_fields.num_elements(); ++i)
+            {
+                NekDouble l2err = m_f->m_exp[0]->L2(m_fields[i]);
+                if (rank == 0)
+                {
+                    cout << "L 2 error (variable " << var[i] << ") : "
+                         << l2err << endl;
+                }
             }
         }
     }
@@ -278,8 +297,13 @@ void OutputTecplot::Process(po::variables_map &vm)
         // Grab connectivity information.
         fPts->GetConnectivity(m_conn);
 
-        // Get fields and coordinates
-        fPts->GetPts(m_fields);
+        // Get field names
+        var = fPts->GetFieldNames();
+        var.insert(var.begin(), coordVars, coordVars + m_coordim);
+
+        // If true, data lies in the PointFld class instead of m_f->m_data (why
+        // do I need this?)
+        bool dataInPts = true;
 
         switch (fPts->GetPtsType())
         {
@@ -287,16 +311,23 @@ void OutputTecplot::Process(po::variables_map &vm)
             case LibUtilities::ePtsLine:
                 m_numPoints.resize(1);
                 m_numPoints[0] = fPts->GetNpoints();
-                m_zoneType = eOrdered;
+                m_zoneType     = eOrdered;
+                dataInPts      = false;
                 break;
             case LibUtilities::ePtsPlane:
                 m_numPoints.resize(2);
                 m_numPoints[0] = fPts->GetPointsPerEdge(0);
                 m_numPoints[1] = fPts->GetPointsPerEdge(1);
+                m_zoneType     = eOrdered;
+                dataInPts      = false;
+                break;
             case LibUtilities::ePtsBox:
                 m_numPoints.resize(3);
+                m_numPoints[0] = fPts->GetPointsPerEdge(0);
+                m_numPoints[1] = fPts->GetPointsPerEdge(1);
                 m_numPoints[2] = fPts->GetPointsPerEdge(2);
                 m_zoneType     = eOrdered;
+                dataInPts      = false;
                 break;
             case LibUtilities::ePtsTriBlock:
             {
@@ -320,15 +351,75 @@ void OutputTecplot::Process(po::variables_map &vm)
                 ASSERTL0(false, "This points type is not supported yet.");
         }
 
+        // Get fields and coordinates
+        m_fields = Array<OneD, Array<OneD, NekDouble> >(var.size());
+
+        if (dataInPts)
+        {
+            // We can just grab everything from points. This should be a
+            // reference, not a copy.
+            fPts->GetPts(m_fields);
+        }
+        else
+        {
+            // Grab coordinates from points
+            for (int i = 0; i < m_coordim; ++i)
+            {
+                m_fields[i] = fPts->GetPts(i);
+            }
+
+            // Grab data from m_data. We copy over to temporary storage and then
+            // destroy entry in m_data to avoid too much memory usage.
+            for (int i = 0; i < fPts->GetNFields(); ++i)
+            {
+                m_fields[i + m_coordim] = Array<OneD, NekDouble>(
+                    m_f->m_data[i].size(), &m_f->m_data[i][0]);
+                m_f->m_data[i].clear();
+            }
+        }
+
         // Only write header if we're root or FE blocks
         writeHeader = m_zoneType != eOrdered || rank == 0;
+
+        if (doError)
+        {
+            NekDouble l2err;
+            for (int i = 0; i < m_fields.num_elements(); ++i)
+            {
+                // calculate rms value
+                int npts = m_fields[i].num_elements();
+
+                l2err = 0.0;
+                for (int j = 0; j < npts; ++j)
+                {
+                    l2err += m_fields[i][j] * m_fields[i][j];
+                }
+
+                m_f->m_comm->AllReduce(l2err, LibUtilities::ReduceSum);
+                m_f->m_comm->AllReduce(npts, LibUtilities::ReduceSum);
+
+                l2err /= npts;
+                l2err = sqrt(l2err);
+
+                if (rank == 0)
+                {
+                    cout << "L 2 error (variable " << var[i] << ") : "
+                         << l2err << endl;
+                }
+            }
+        }
     }
 
     if (writeHeader)
     {
         WriteTecplotHeader(outfile, var);
     }
+
+    // Write zone data.
     WriteTecplotZone(outfile);
+
+    // If we're a FE block format, write connectivity (m_conn will be empty for
+    // point data).
     WriteTecplotConnectivity(outfile);
 
     cout << "Written file: " << filename << endl;
@@ -342,24 +433,11 @@ void OutputTecplot::Process(po::variables_map &vm)
 void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
                                        std::vector<std::string> &var)
 {
-    outfile << "Variables = x";
+    outfile << "Variables = " << var[0];
 
-    if (m_coordim == 2)
+    for (int i = 1; i < var.size(); ++i)
     {
-        outfile << ", y";
-    }
-    else if (m_coordim == 3)
-    {
-        outfile << ", y, z";
-    }
-
-    if (var.size())
-    {
-        outfile << var[0];
-        for (int i = 1; i < var.size(); ++i)
-        {
-            outfile << ", " << var[i];
-        }
+        outfile << ", " << var[i];
     }
 
     outfile << std::endl << std::endl;
@@ -382,15 +460,7 @@ void OutputTecplotBinary::WriteTecplotHeader(std::ofstream &outfile,
     WriteStream(outfile, title);
 
     // Number of variables
-    WriteStream(outfile, (int)(m_coordim + var.size()));
-
-    std::string coords[3] = { "x", "y", "z" };
-
-    // Write names of space coordinates and variables
-    for (int i = 0; i < m_coordim; ++i)
-    {
-        WriteStream(outfile, coords[i]);
-    }
+    WriteStream(outfile, (int)var.size());
 
     for (int i = 0; i < var.size(); ++i)
     {
@@ -412,6 +482,21 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
         outfile << "Zone, N=" << m_fields[0].num_elements() << ", E="
                 << m_numBlocks << ", F=FEBlock, ET="
                 << TecplotZoneTypeMap[m_zoneType] << std::endl;
+
+        // Write out coordinates and field data: ordered by field and then its
+        // data.
+        for (int j = 0; j < m_fields.num_elements(); ++j)
+        {
+            for (int i = 0; i < m_fields[j].num_elements(); ++i)
+            {
+                if ((!(i % 1000)) && i)
+                {
+                    outfile << std::endl;
+                }
+                outfile << m_fields[j][i] << " ";
+            }
+            outfile << std::endl;
+        }
     }
     else
     {
@@ -422,20 +507,17 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
             outfile << ", " << dirs[i] << "=" << m_numPoints[i];
         }
         outfile << ", F=POINT" << std::endl;
-    }
 
-    // Write out coordinates and field data
-    for (int j = 0; j < m_fields.num_elements(); ++j)
-    {
-        for (int i = 0; i < m_fields[j].num_elements(); ++i)
+        // Write out coordinates and field data: ordered by each point then each
+        // field.
+        for (int i = 0; i < m_fields[0].num_elements(); ++i)
         {
-            if ((!(i % 1000)) && i)
+            for (int j = 0; j < m_fields.num_elements(); ++j)
             {
-                outfile << std::endl;
+                outfile << setw(12) << m_fields[j][i] << " ";
             }
-            outfile << m_fields[j][i] << " ";
+            outfile << std::endl;
         }
-        outfile << std::endl;
     }
 }
 
@@ -479,11 +561,11 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
     {
         WriteStream(outfile, nPoints); // Total number of points
         WriteStream(outfile, m_numBlocks); // Number of blocks
+        WriteStream(outfile, 0); // Unused
+        WriteStream(outfile, 0); // Unused
+        WriteStream(outfile, 0); // Unused
     }
 
-    WriteStream(outfile, 0); // Unused
-    WriteStream(outfile, 0); // Unused
-    WriteStream(outfile, 0); // Unused
     WriteStream(outfile, 0); // No auxiliary data names
 
     // Finalise header
@@ -517,7 +599,8 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
         WriteStream(outfile, Vmath::Vmax(nPoints, m_fields[j], 1));
     }
 
-    // Now dump out field data.
+    // Now dump out field data. Unlike the .dat format, all data are ordered by
+    // each field then each variable, even for ordered point data.
     if (useDoubles)
     {
         // For doubles, we can just write data.

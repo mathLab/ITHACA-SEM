@@ -29,48 +29,47 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Add a field to the input field.
+//  Description: Add composite ID as a variable to the field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
+#ifndef FIELDUTILS_PROCESSADDCOMPOSITEID
+#define FIELDUTILS_PROCESSADDCOMPOSITEID
 
-#include "../Module.h"
+#include <FieldUtils/Module.h>
 
 namespace Nektar
 {
-namespace Utilities
+namespace FieldUtils
 {
 
 /**
- * @brief This processing module adds a fld with the composite ID 
+ * @brief This processing module adds a fld with the composite ID
  *
  */
 class ProcessAddCompositeID : public ProcessModule
 {
-    public:
-        /// Creates an instance of this class
-        static boost::shared_ptr<Module> create(FieldSharedPtr f)
-        {
-            return MemoryManager<ProcessAddCompositeID>::AllocateSharedPtr(f);
-        }
-        static ModuleKey className;
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<ProcessAddCompositeID>::AllocateSharedPtr(f);
+    }
+    static ModuleKey className;
 
-        ProcessAddCompositeID(FieldSharedPtr f);
-        virtual ~ProcessAddCompositeID();
+    ProcessAddCompositeID(FieldSharedPtr f);
+    virtual ~ProcessAddCompositeID();
 
-        /// Write mesh to output file.
-        virtual void Process(po::variables_map &vm);
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
 
-        virtual std::string GetModuleName()
-        {
-            return "ProcessAddCompositeID";
-        }
+    virtual std::string GetModuleName()
+    {
+        return "ProcessAddCompositeID";
+    }
 
-    private:
+private:
 };
-
 }
 }
 

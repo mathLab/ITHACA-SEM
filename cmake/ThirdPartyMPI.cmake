@@ -52,7 +52,7 @@ IF( NEKTAR_USE_MPI )
     IF (THIRDPARTY_BUILD_GSMPI)
         EXTERNALPROJECT_ADD(
             gsmpi-1.2.1
-            URL http://ae-nektar.ae.ic.ac.uk/~dmoxey/gsmpi-1.2.1.tar.bz2
+            URL ${TPURL}/gsmpi-1.2.1.tar.bz2
             URL_MD5 18dcb4cd1dcc7876173465c404b1142d
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
@@ -60,7 +60,7 @@ IF( NEKTAR_USE_MPI )
             BINARY_DIR ${TPBUILD}/gsmpi-1.2.1
             TMP_DIR ${TPBUILD}/gsmpi-1.2.1-tmp
             INSTALL_DIR ${TPDIST}
-            CONFIGURE_COMMAND 
+            CONFIGURE_COMMAND
                 ${CMAKE_COMMAND}
                 -G ${CMAKE_GENERATOR}
                 -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}

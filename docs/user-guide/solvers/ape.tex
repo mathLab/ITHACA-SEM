@@ -14,16 +14,16 @@ irrotational acoustic perturbations, in this case perturbations are assumed to
 be exclusively of acoustic nature.
 \begin{subequations}
     \begin{align*}
-	\frac{\partial p'}{\partial t}
-	+ \overline{c}^2 \frac{\partial \overline{\rho} u'_i}{\partial x_i}
-	+ \overline{c}^2 \frac{\partial \overline{u}_i p' / \overline{c}^2}{\partial x_i}
-	&= \overline{c}^2 q_c
-	\\
-	\frac{\partial u'_i}{\partial t}
-	+ \frac{\partial \overline{u}_j u'_j}{\partial x_i}
-	+ \frac{\partial p' / \overline{\rho}}{\partial x_i}
-	&= 0
-	\end{align*}
+        \frac{\partial p'}{\partial t}
+        + \frac{\partial \gamma \overline{p} u'_i}{\partial x_i}
+        + \frac{\partial \overline{u}_i p'}{\partial x_i}
+        &= \overline{c}^2 q_c
+        \\
+        \frac{\partial u'_i}{\partial t}
+        + \frac{\partial \overline{u}_j u'_j}{\partial x_i}
+        + \frac{\partial p' / \overline{\rho}}{\partial x_i}
+        &= U_i
+        \end{align*}
 \end{subequations}
 where $(\overline{u}_i,\overline{p}, \overline{\rho}, \overline{c}^2 = \gamma \overline{p} / \overline{\rho} )$ represents the base flow and $(u'_i,p')$ the perturbations.
 $\overline{c}^2 q_c$ is the acoustic source term.

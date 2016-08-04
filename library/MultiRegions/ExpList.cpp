@@ -2183,16 +2183,18 @@ namespace Nektar
             ASSERTL0(i != fielddef->m_fields.size(),
                      "Field (" + field + ") not found in file.");
 
-            // Determine mapping from element ids to location in expansion list
-            map<int, int> elmtToExpId;
-
-            // Loop in reverse order so that in case where using a Homogeneous
-            // expansion it sets geometry ids to first part of m_exp
-            // list. Otherwise will set to second (complex) expansion
-            for(i = (*m_exp).size()-1; i >= 0; --i)
+            if (m_elmtToExpId.size() == 0)
             {
-                elmtToExpId[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+                // Loop in reverse order so that in case where using a
+                // Homogeneous expansion it sets geometry ids to first part of
+                // m_exp list. Otherwise will set to second (complex) expansion
+                for(i = (*m_exp).size()-1; i >= 0; --i)
+                {
+                    m_elmtToExpId[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+                }
             }
+
+            boost::unordered_map<int, int>::iterator eIt;
 
             for (i = 0; i < fielddef->m_elementIDs.size(); ++i)
             {
@@ -2207,14 +2209,16 @@ namespace Nektar
                                                                 fielddef->m_numModes, modes_offset);
 
                 const int elmtId = fielddef->m_elementIDs[i];
-                if (elmtToExpId.count(elmtId) == 0)
+                eIt = m_elmtToExpId.find(elmtId);
+
+                if (eIt == m_elmtToExpId.end())
                 {
                     offset += datalen;
                     modes_offset += (*m_exp)[0]->GetNumBases();
                     continue;
                 }
 
-                expId   = elmtToExpId[elmtId];
+                expId = eIt->second;
 
                 if (datalen == (*m_exp)[expId]->GetNcoeffs())
                 {
@@ -2224,8 +2228,8 @@ namespace Nektar
                 else
                 {
                     (*m_exp)[expId]->ExtractDataToCoeffs(
-                                                         &fielddata[offset], fielddef->m_numModes,
-                                                         modes_offset, &coeffs[m_coeff_offset[expId]]);
+                        &fielddata[offset], fielddef->m_numModes,
+                        modes_offset, &coeffs[m_coeff_offset[expId]]);
                 }
 
                 offset += datalen;
@@ -2450,7 +2454,20 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        void ExpList::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,const Array<OneD, NekDouble> &inarray2,Array<OneD, NekDouble> &outarray,CoeffState coeffstate)
+        void ExpList::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+                                      const Array<OneD, NekDouble> &inarray2,
+                                      Array<OneD, NekDouble> &outarray,
+                                      CoeffState coeffstate)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_DealiasedDotProd(
+                        const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                        const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                        Array<OneD, Array<OneD, NekDouble> > &outarray,
+                        CoeffState coeffstate)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2539,7 +2556,24 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+
+        void ExpList::v_LocalToGlobal(const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+
         void ExpList::v_GlobalToLocal(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+
+        void ExpList::v_GlobalToLocal(const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,NekDouble> &outarray)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

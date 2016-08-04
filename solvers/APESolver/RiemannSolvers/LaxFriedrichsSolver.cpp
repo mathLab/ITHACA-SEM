@@ -95,18 +95,18 @@ void LaxFriedrichsSolver::v_PointSolve(
     // max absolute eigenvalue of the jacobian of F_n1
     NekDouble a_1_max = std::max(std::abs(u0 - c), std::abs(u0 + c));
 
-    NekDouble pFL = rho0*uL + u0*pL/(c*c);
+    NekDouble pFL = gamma*p0*uL + pL*u0;
     NekDouble uFL = pL/rho0 + u0*uL + v0*vL + w0*wL;
     NekDouble vFL = 0;
     NekDouble wFL = 0;
 
-    NekDouble pFR = rho0*uR + u0*pR/(c*c);
+    NekDouble pFR = gamma*p0*uR + pR*u0;
     NekDouble uFR = pR/rho0 + u0*uR + v0*vR + w0*wR;
     NekDouble vFR = 0;
     NekDouble wFR = 0;
 
     // assemble the face-normal fluxes
-    pF = 0.5*(pFL + pFR - a_1_max*(pR/(c*c) - pL/(c*c)));
+    pF = 0.5*(pFL + pFR - a_1_max*(pR - pL));
     uF = 0.5*(uFL + uFR - a_1_max*(uR - uL));
     vF = 0.5*(vFL + vFR - a_1_max*(vR - vL));
     wF = 0.5*(wFL + wFR - a_1_max*(wR - wL));

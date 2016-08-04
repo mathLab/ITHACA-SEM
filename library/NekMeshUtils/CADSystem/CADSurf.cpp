@@ -112,23 +112,19 @@ Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
         uvr[1] < m_occSurface.FirstVParameter() ||
         uvr[1] > m_occSurface.LastVParameter())
     {
-        if (uvr[0] < m_occSurface.FirstUParameter() &&
-            fabs(m_occSurface.FirstUParameter() - uvr[0]) < 1E-6)
+        if (uvr[0] < m_occSurface.FirstUParameter() )
         {
             uvr[0] = m_occSurface.FirstUParameter();
         }
-        else if (uvr[0] > m_occSurface.LastUParameter() &&
-                 fabs(m_occSurface.LastUParameter() - uvr[0]) < 1E-6)
+        else if (uvr[0] > m_occSurface.LastUParameter() )
         {
             uvr[0] = m_occSurface.LastUParameter();
         }
-        else if (uvr[1] < m_occSurface.FirstVParameter() &&
-                 fabs(m_occSurface.FirstVParameter() - uvr[1]) < 1E-6)
+        else if (uvr[1] < m_occSurface.FirstVParameter())
         {
             uvr[1] = m_occSurface.FirstVParameter();
         }
-        else if (uvr[1] > m_occSurface.LastVParameter() &&
-                 fabs(m_occSurface.LastVParameter() - uvr[1]) < 1E-6)
+        else if (uvr[1] > m_occSurface.LastVParameter() )
         {
             uvr[1] = m_occSurface.LastVParameter();
         }
@@ -342,7 +338,7 @@ void CADSurf::Test(Array<OneD, NekDouble> uv)
 
     if (uv[0] < m_occSurface.FirstUParameter())
     {
-        if (fabs(uv[0] - m_occSurface.FirstUParameter()) > 1E-8)
+        if (fabs(uv[0] - m_occSurface.FirstUParameter()) > 1E-6)
         {
             error << "U(" << uv[0] << ") is less than Umin("
                   << m_occSurface.FirstUParameter() << ")";
@@ -351,7 +347,7 @@ void CADSurf::Test(Array<OneD, NekDouble> uv)
     }
     else if (uv[0] > m_occSurface.LastUParameter())
     {
-        if (fabs(uv[0] - m_occSurface.LastUParameter()) > 1E-8)
+        if (fabs(uv[0] - m_occSurface.LastUParameter()) > 1E-6)
         {
             error << "U(" << uv[0] << ") is greater than Umax("
                   << m_occSurface.LastUParameter() << ")";
@@ -360,7 +356,7 @@ void CADSurf::Test(Array<OneD, NekDouble> uv)
     }
     else if (uv[1] < m_occSurface.FirstVParameter())
     {
-        if (fabs(uv[1] - m_occSurface.FirstVParameter()) > 1E-8)
+        if (fabs(uv[1] - m_occSurface.FirstVParameter()) > 1E-6)
         {
             error << "V(" << uv[1] << ") is less than Vmin("
                   << m_occSurface.FirstVParameter() << ")";
@@ -369,7 +365,7 @@ void CADSurf::Test(Array<OneD, NekDouble> uv)
     }
     else if (uv[1] > m_occSurface.LastVParameter())
     {
-        if (fabs(uv[1] - m_occSurface.LastVParameter()) > 1E-8)
+        if (fabs(uv[1] - m_occSurface.LastVParameter()) > 1E-6)
         {
             error << "V(" << uv[1] << ") is greater than Vmax("
                   << m_occSurface.LastVParameter() << ")";
@@ -378,8 +374,10 @@ void CADSurf::Test(Array<OneD, NekDouble> uv)
     }
 
     error << " On Surface: " << GetId();
-
-    ASSERTL0(passed, error.str());
+    if (!passed)
+    {
+        cout << "Warning: " << error.str() << endl;
+    }
 }
 }
 }

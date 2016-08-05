@@ -602,103 +602,90 @@ void ProcessInterpPoints::InterpolateFieldToPts(
             }
         }
     }
-
-    // copy the pts values to m_data
-    m_f->m_data.resize(nfields);
-    for (int f = 0; f < nfields; ++f)
-    {
-        m_f->m_data[f].resize(pts->GetNpoints());
-        for (int i = 0; i < pts->GetNpoints(); i++)
-        {
-            m_f->m_data[f][i] = pts->GetPointVal(pts->GetDim() + f, i);
-        }
-    }
 }
 
 void ProcessInterpPoints::calcCp0()
 {
-
-    int nq1 = m_f->m_data[0].size();
+    LibUtilities::PtsFieldSharedPtr pts = m_f->m_fieldPts;
+    int dim = pts->GetDim();
+    int nq1 = pts->GetNpoints();
     int r, f;
-    int nfields = m_f->m_data.size();
-    int pfield  = -1;
-    NekDouble p0, qinv;
+    int pfield = -1;
+    NekDouble p0,qinv;
     vector<int> velid;
 
     vector<NekDouble> values;
     ASSERTL0(ParseUtils::GenerateUnOrderedVector(
-                 m_config["cp"].as<string>().c_str(), values),
-             "Failed to interpret cp string");
+                    m_config["cp"].as<string>().c_str(),values),
+                "Failed to interpret cp string");
 
-    ASSERTL0(values.size() == 2, "cp string should contain 2 values "
-                                 "p0 and q (=1/2 rho u^2)");
+    ASSERTL0(values.size() == 2,
+                "cp string should contain 2 values "
+                "p0 and q (=1/2 rho u^2)");
 
-    p0   = values[0];
-    qinv = 1.0 / values[1];
+    p0  =  values[0];
+    qinv = 1.0/values[1];
 
-    for (int i = 0; i < m_f->m_fieldPts->GetNFields(); ++i)
+    for(int i = 0; i < pts->GetNFields(); ++i)
     {
-        if (boost::iequals(m_f->m_fieldPts->GetFieldName(i), "p"))
+        if(boost::iequals(pts->GetFieldName(i),"p"))
         {
             pfield = i;
         }
 
-        if (boost::iequals(m_f->m_fieldPts->GetFieldName(i), "u") ||
-            boost::iequals(m_f->m_fieldPts->GetFieldName(i), "v") ||
-            boost::iequals(m_f->m_fieldPts->GetFieldName(i), "w"))
+        if(boost::iequals(pts->GetFieldName(i),"u")||
+            boost::iequals(pts->GetFieldName(i),"v")||
+            boost::iequals(pts->GetFieldName(i),"w"))
         {
             velid.push_back(i);
         }
     }
 
-    if (pfield != -1)
+    if(pfield != -1)
     {
-        Array<OneD, NekDouble> newPts(m_f->m_fieldPts->GetNpoints());
-        m_f->m_fieldPts->AddField(newPts, "Cp");
-        nfields += 1;
-
-        if (velid.size())
+        if(!velid.size())
         {
-            Array<OneD, NekDouble> newPts(m_f->m_fieldPts->GetNpoints());
-            m_f->m_fieldPts->AddField(newPts, "Cp0");
-            nfields += 1;
-        }
-        else
-        {
-            WARNINGL0(false, "Did not find velocity components for Cp0");
+            WARNINGL0(false,"Did not find velocity components for Cp0");
         }
     }
     else
     {
-        WARNINGL0(false, "Failed to find 'p' field to determine cp0");
+        WARNINGL0(false,"Failed to find 'p' field to determine cp0");
     }
 
-    // resize data field
-    m_f->m_data.resize(nfields);
+    // Allocate data storage
+    Array<OneD, Array< OneD, NekDouble> > data(2);
 
-    for (f = 0; f < nfields; ++f)
+    for (f = 0; f < 2; ++f)
     {
-        m_f->m_data[f].resize(nq1);
+        data[f] = Array< OneD, NekDouble>(nq1, 0.0);
     }
 
     for (r = 0; r < nq1; r++)
     {
-        if (pfield != -1) // calculate cp
+        if(pfield != -1) // calculate cp
         {
-            m_f->m_data[nfields - 2][r] = qinv * (m_f->m_data[pfield][r] - p0);
+            data[0][r] = qinv*(pts->GetPointVal(dim + pfield, r) - p0);
 
-            if (velid.size()) // calculate cp0
+            if(velid.size()) // calculate cp0
             {
                 NekDouble q = 0;
-                for (int i = 0; i < velid.size(); ++i)
+                for(int i = 0; i < velid.size(); ++i)
                 {
-                    q += 0.5 * m_f->m_data[velid[i]][r] *
-                         m_f->m_data[velid[i]][r];
+                    q += 0.5*pts->GetPointVal(dim + velid[i], r)*
+                             pts->GetPointVal(dim + velid[i], r);
                 }
-
-                m_f->m_data[nfields - 1][r] =
-                    qinv * (m_f->m_data[pfield][r] + q - p0);
+                data[1][r] = qinv*(pts->GetPointVal(dim + pfield, r)+q - p0);
             }
+        }
+    }
+
+    if(pfield != -1)
+    {
+        pts->AddField(data[0], "Cp");
+        if(velid.size())
+        {
+            pts->AddField(data[1], "Cp0");
         }
     }
 }

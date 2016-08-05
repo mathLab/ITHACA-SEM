@@ -19,6 +19,9 @@ v4.4.0
 - Adjust CMake dependencies to reduce compile time (!671)
 - Homogeneous1D dealiasing improvements (!622)
 
+**ADRSolver:**
+- Add a projection equation system for C^0 projections (!675)
+
 **APESolver:**
 - Use a continuous basefield projection and revert to constant c formulation (!664)
 - Added ability to compute CFL number (!664)

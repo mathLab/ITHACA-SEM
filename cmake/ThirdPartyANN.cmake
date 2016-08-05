@@ -7,10 +7,13 @@
 ########################################################################
 
 IF (NOT WIN32)
-   CMAKE_DEPENDENT_OPTION(NEKTAR_USE_ANN
-       "Use ANN routines for performing Approximate Nearest Neighbour searches." ON
-       "NEKTAR_USE_MESHGEN" OFF)
+   OPTION(NEKTAR_USE_ANN
+       "Use ANN routines for performing Approximate Nearest Neighbour searches." OFF)
 ENDIF(NOT WIN32)
+
+IF( NEKTAR_USE_MESHGEN )
+    SET(NEKTAR_USE_ANN ON CACHE BOOL "" FORCE)
+ENDIF()
 
 IF (NEKTAR_USE_ANN)
     # First search for system ANN installs. Hint /opt/local for MacPorts and

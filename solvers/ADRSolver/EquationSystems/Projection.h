@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File AlternateSkewAdvection.h
+// File Projection.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,57 +29,49 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Alternate Skew-Symmetric non linear convective term
+// Description: Projection solve routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_ALTERNATESKEWADVECTION_H
-#define NEKTAR_SOLVERS_ALTERNATESKEWADVECTION_H
+#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_PROJECTION_H
+#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_PROJECTION_H
 
-#include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/EquationSystem.h>
+
+using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
-
-class AlternateSkewAdvection: public SolverUtils::Advection
-
+class Projection : public EquationSystem
 {
 public:
-    friend class MemoryManager<AlternateSkewAdvection>;
+    /// Class may only be instantiated through the MemoryManager.
+    friend class MemoryManager<Projection>;
 
     /// Creates an instance of this class
-    static SolverUtils::AdvectionSharedPtr create(std::string)
+    static EquationSystemSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession)
     {
-        return MemoryManager<AlternateSkewAdvection>::AllocateSharedPtr();
+        EquationSystemSharedPtr p =
+            MemoryManager<Projection>::AllocateSharedPtr(pSession);
+        p->InitObject();
+        return p;
     }
+
     /// Name of class
     static std::string className;
-    static std::string className2;
+
+    virtual ~Projection();
 
 protected:
+    Projection(const LibUtilities::SessionReaderSharedPtr &pSession);
 
-    AlternateSkewAdvection();
-
-    virtual ~AlternateSkewAdvection();
-
-    virtual void v_InitObject(
-              LibUtilities::SessionReaderSharedPtr         pSession,
-              Array<OneD, MultiRegions::ExpListSharedPtr>  pFields);
-
-    virtual void v_Advect(
-        const int nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-              Array<OneD, Array<OneD, NekDouble> >        &outarray,
-        const NekDouble                                   &time);
+    virtual void v_InitObject();
+    virtual void v_GenerateSummary(SolverUtils::SummaryList &s);
+    virtual void v_DoSolve();
 
 private:
-    int m_advectioncalls;
-    bool m_SingleMode;
-    bool m_HalfMode;
 };
+}
 
-} //end of namespace
-
-#endif //NEKTAR_SOLVERS_INCNAVIERSTOKES_H
+#endif

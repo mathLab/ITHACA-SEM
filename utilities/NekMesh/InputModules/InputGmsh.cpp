@@ -320,12 +320,12 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
     }
 
     // Finally, recurse on interior volume
-    vector<int> intNodes;
+    vector<int> intNodes, tmpInt;
     for (int i = offset; i < nTet; ++i)
     {
         intNodes.push_back(nodes[i]);
     }
-    intNodes = tetTensorNodeOrdering(intNodes, n-4);
+    tmpInt = tetTensorNodeOrdering(intNodes, n-4);
 
     for (int k = 1, cnt = 0; k < n - 2; ++k)
     {
@@ -333,7 +333,7 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
         {
             for (int i = 1; i < n - k - j - 1; ++i)
             {
-                nodeList[tmp[Mode(i,j,k)]] = intNodes[cnt++];
+                nodeList[tmp[Mode(i,j,k)]] = tmpInt[cnt++];
             }
         }
     }
@@ -348,6 +348,8 @@ std::vector<int> hexTensorNodeOrdering(const std::vector<int> &nodes, int n)
 
     nodeList.resize(nodes.size());
     nodeList[0] = nodes[0];
+
+    cout << "BEING CALED WITH n = " << n << " nodes.size = " << nodes.size() << endl;
 
     if (n == 1)
     {
@@ -368,17 +370,17 @@ std::vector<int> hexTensorNodeOrdering(const std::vector<int> &nodes, int n)
         return nodeList;
     }
 
-    static int hexEdges[12][2] = {
+    int hexEdges[12][2] = {
         { 0, 1 }, { n-1, n }, { n*n-1, -1 }, { n*(n-1), -n },
         { 0, n*n }, { n-1, n*n }, { n*n - 1, n*n }, { n*(n-1), n*n },
         { n*n*(n-1), 1 }, { n*n*(n-1) + n-1, n }, { n*n*n-1, -1 },
         { n*n*(n-1) + n*(n-1), -n }
     };
-    static int hexFaces[6][3] = {
+    int hexFaces[6][3] = {
         { 0, 1, n }, { 0, 1, n*n }, { n-1, n, n*n },
         { n*(n-1), 1, n*n }, { 0, n, n*n }, { n*n*(n-1), 1, n }
     };
-    static int gmshToNekEdge[12] = {0, -3, 4, 1, 5, 2, 6, 7, 8, -11, 9, 10};
+    int gmshToNekEdge[12] = {0, -3, 4, 1, 5, 2, 6, 7, 8, -11, 9, 10};
 
     // Edges
     int offset = 8;
@@ -403,7 +405,7 @@ std::vector<int> hexTensorNodeOrdering(const std::vector<int> &nodes, int n)
     }
 
     // Faces
-    static int gmsh2NekFace[6] = {0, 1, 4, 2, 3, 5};
+    int gmsh2NekFace[6] = {0, 1, 4, 2, 3, 5};
 
     // Map which defines orientation between Gmsh and Nektar++ faces.
     StdRegions::Orientation faceOrient[6] = {
@@ -467,27 +469,29 @@ std::vector<int> hexTensorNodeOrdering(const std::vector<int> &nodes, int n)
             for (j = 1; j < n-1; ++j)
             {
                 nodeList[hexFaces[face][0] + j*hexFaces[face][1] + k*hexFaces[face][2]]
-                    = faceNodes[(j-1)*(n-2) + j - 1];
+                    = faceNodes[(k-1)*(n-2) + j-1];
             }
         }
     }
 
     // Finally, recurse on interior volume
-    vector<int> intNodes;
+    vector<int> intNodes, tmpInt;
     for (int i = 8 + 12 * (n-2) + 6 * (n-2) * (n-2); i < n*n*n; ++i)
     {
         intNodes.push_back(nodes[i]);
     }
-    intNodes = hexTensorNodeOrdering(intNodes, n-2);
 
-    for (int k = 1, cnt = 0; k < n - 1; ++k)
+    if (intNodes.size())
     {
-        for (int j = 1; j < n - 1; ++j)
+        tmpInt = hexTensorNodeOrdering(intNodes, n-2);
+        for (int k = 1, cnt = 0; k < n - 1; ++k)
         {
-            for (int i = 1; i < n - 1; ++i)
+            for (int j = 1; j < n - 1; ++j)
             {
-                cout << "LOLINT " << i + j * n + k * n * n << " " << intNodes[cnt] << endl;
-                nodeList[i + j * n + k * n * n] = intNodes[cnt++];
+                for (int i = 1; i < n - 1; ++i)
+                {
+                    nodeList[i + j * n + k * n * n] = tmpInt[cnt++];
+                }
             }
         }
     }

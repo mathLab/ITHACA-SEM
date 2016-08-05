@@ -36,6 +36,7 @@ v4.4.0
 - Add STL surface writer module (!668)
 - New module for inserting an alternate high-order surface into the working
   mesh (!669)
+- Improvements to mesh linearisation module (!659)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

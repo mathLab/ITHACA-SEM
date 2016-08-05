@@ -15,7 +15,7 @@ IF(NEKTAR_USE_MESHGEN)
     ELSE()
         SET(BUILD_OCC ON)
     ENDIF()
-    
+
     OPTION(THIRDPARTY_BUILD_OCC "Build OpenCascade library from ThirdParty."
         ${BUILD_OCC})
 
@@ -33,7 +33,7 @@ IF(NEKTAR_USE_MESHGEN)
         IF(WIN32)
             MESSAGE(SEND_ERROR "Cannot currently use OpenCascade with Nektar++ on Windows")
         ENDIF()
-        
+
         EXTERNALPROJECT_ADD(
             opencascade-6.9
             PREFIX ${TPSRC}

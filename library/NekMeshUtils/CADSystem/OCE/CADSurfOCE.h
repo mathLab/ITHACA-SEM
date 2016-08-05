@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADSystem.cpp
+//  File: CADSurf.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,58 +29,78 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: CAD object surface.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CADSystem.h"
-#include "CADVert.h"
-#include "CADCurve.h"
-#include "CADSurf.h"
+#ifndef NekMeshUtils_CADSYSTEM_OCE_CADSURFOCE
+#define NekMeshUtils_CADSYSTEM_OCE_CADSURFOCE
 
-using namespace std;
+#include "../CADSurf.h"
+#include <NekMeshUtils/CADSystem/OpenCascade.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-std::ostream& operator<<(std::ostream&os, const EngineKey& rhs)
+class CADSurfOCE : public CADSurf
 {
-    return os << rhs.second;
+public:
+
+    static CADSurfSharedPtr create()
+    {
+        return MemoryManager<CADSurfOCE>::AllocateSharedPtr();
+    }
+
+    static EngineKey key;
+
+    CADSurfOCE() {};
+
+    ~CADSurfOCE(){};
+
+    void Initialise(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
+
+    Array<OneD, NekDouble> GetBounds()
+    {
+        Array<OneD,NekDouble> b(4);
+
+        b[0] = m_occSurface.FirstUParameter();
+        b[1] = m_occSurface.LastUParameter();
+        b[2] = m_occSurface.FirstVParameter();
+        b[3] = m_occSurface.LastVParameter();
+
+        return b;
+    }
+
+    Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
+
+    Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
+
+    Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
+
+    Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
+
+    Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
+
+    NekDouble DistanceTo(Array<OneD, NekDouble> p);
+
+    void ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv);
+
+    NekDouble Curvature(Array<OneD, NekDouble> uv);
+
+private:
+    /// Function which tests the the value of uv used is within the surface
+    void Test(Array<OneD, NekDouble> uv);
+    /// OpenCascade object for surface.
+    BRepAdaptor_Surface m_occSurface;
+    /// Alternate OpenCascade object for surface. Used by reverse lookup.
+    Handle(Geom_Surface) m_s;
+};
+
+typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+
+}
 }
 
-EngineFactory& GetEngineFactory()
-{
-    typedef Loki::SingletonHolder<EngineFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
-
-CADVertFactory& GetCADVertFactory()
-{
-    typedef Loki::SingletonHolder<CADVertFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
-
-CADCurveFactory& GetCADCurveFactory()
-{
-    typedef Loki::SingletonHolder<CADCurveFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
-
-CADSurfFactory& GetCADSurfFactory()
-{
-    typedef Loki::SingletonHolder<CADSurfFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
-
-}
-}
+#endif

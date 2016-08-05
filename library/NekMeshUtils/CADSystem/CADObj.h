@@ -53,12 +53,6 @@ enum cadType
     surf
 };
 
-/**
- * @brief class for CAD curves.
- *
- * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
- * Nektar++.
- */
 class CADObj
 {
 public:

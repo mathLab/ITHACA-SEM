@@ -33,9 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <sstream>
-
-#include <NekMeshUtils/CADSystem/CADSurf.h>
+#include "CADSurfOCE.h"
 
 using namespace std;
 
@@ -44,10 +42,14 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-CADSurf::CADSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein) : m_edges(ein)
+EngineKey CADSurfOCE::key = GetCADSurfFactory().RegisterCreatorFunction(
+        EngineKey(eOCE,"oce"),CADSurfOCE::create,"CADSurfOCE");
+
+void CADSurfOCE::Initialise(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
 {
     // this bit of code changes the units of the cad from mm opencascade
     // defualt to m
+    m_edges = ein;
     gp_Trsf transform;
     gp_Pnt ori(0.0, 0.0, 0.0);
     transform.SetScale(ori, 1.0 / 1000.0);
@@ -56,12 +58,11 @@ CADSurf::CADSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein) : m_edges(ein)
     in.Move(mv);
     m_occSurface    = BRepAdaptor_Surface(TopoDS::Face(in));
     m_correctNormal = true;
-    m_hasTwoCurves  = false;
     m_id            = i;
     m_type          = surf;
 }
 
-Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
+Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p)
 {
     // has to transfer back to mm
     gp_Pnt loc(p[0] * 1000.0, p[1] * 1000.0, p[2] * 1000.0);
@@ -137,7 +138,7 @@ Array<OneD, NekDouble> CADSurf::locuv(Array<OneD, NekDouble> p)
     return uvr;
 }
 
-NekDouble CADSurf::Curvature(Array<OneD, NekDouble> uv)
+NekDouble CADSurfOCE::Curvature(Array<OneD, NekDouble> uv)
 {
     Test(uv);
 
@@ -178,7 +179,7 @@ NekDouble CADSurf::Curvature(Array<OneD, NekDouble> uv)
     return kv[0] > kv[1] ? kv[0] : kv[1];
 }
 
-NekDouble CADSurf::DistanceTo(Array<OneD, NekDouble> p)
+NekDouble CADSurfOCE::DistanceTo(Array<OneD, NekDouble> p)
 {
     gp_Pnt loc(p[0] * 1000.0, p[1] * 1000.0, p[2] * 1000.0);
 
@@ -195,7 +196,7 @@ NekDouble CADSurf::DistanceTo(Array<OneD, NekDouble> p)
     return p3.Distance(loc);
 }
 
-void CADSurf::ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv)
+void CADSurfOCE::ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv)
 {
     gp_Pnt loc(tp[0] * 1000.0, tp[1] * 1000.0, tp[2] * 1000.0);
 
@@ -217,19 +218,7 @@ void CADSurf::ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv)
     uv[1] = p2.Y();
 }
 
-bool CADSurf::IsPlane()
-{
-    if (m_occSurface.GetType() == GeomAbs_Plane)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-Array<OneD, NekDouble> CADSurf::P(Array<OneD, NekDouble> uv)
+Array<OneD, NekDouble> CADSurfOCE::P(Array<OneD, NekDouble> uv)
 {
     Test(uv);
 
@@ -242,7 +231,7 @@ Array<OneD, NekDouble> CADSurf::P(Array<OneD, NekDouble> uv)
     return location;
 }
 
-Array<OneD, NekDouble> CADSurf::N(Array<OneD, NekDouble> uv)
+Array<OneD, NekDouble> CADSurfOCE::N(Array<OneD, NekDouble> uv)
 {
     Test(uv);
 
@@ -275,7 +264,7 @@ Array<OneD, NekDouble> CADSurf::N(Array<OneD, NekDouble> uv)
     return normal;
 }
 
-Array<OneD, NekDouble> CADSurf::D1(Array<OneD, NekDouble> uv)
+Array<OneD, NekDouble> CADSurfOCE::D1(Array<OneD, NekDouble> uv)
 {
     Test(uv);
 
@@ -297,7 +286,7 @@ Array<OneD, NekDouble> CADSurf::D1(Array<OneD, NekDouble> uv)
     return r;
 }
 
-Array<OneD, NekDouble> CADSurf::D2(Array<OneD, NekDouble> uv)
+Array<OneD, NekDouble> CADSurfOCE::D2(Array<OneD, NekDouble> uv)
 {
     Test(uv);
 
@@ -328,7 +317,7 @@ Array<OneD, NekDouble> CADSurf::D2(Array<OneD, NekDouble> uv)
     return r;
 }
 
-void CADSurf::Test(Array<OneD, NekDouble> uv)
+void CADSurfOCE::Test(Array<OneD, NekDouble> uv)
 {
     stringstream error;
 

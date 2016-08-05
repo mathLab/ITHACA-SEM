@@ -36,13 +36,6 @@
 #ifndef NEKMESHUTILS_CADSYSTEM_CADCURVE
 #define NEKMESHUTILS_CADSYSTEM_CADCURVE
 
-#include <boost/shared_ptr.hpp>
-
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-
-#include <NekMeshUtils/CADSystem/OpenCascade.h>
-
 #include <NekMeshUtils/CADSystem/CADObj.h>
 #include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
@@ -66,7 +59,7 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADCurve(int i, TopoDS_Shape in);
+    CADCurve(){};
 
     ~CADCurve(){};
 
@@ -75,7 +68,11 @@ public:
      *
      * @return Array of two entries, min and max parametric coordinate.
      */
-    Array<OneD, NekDouble> Bounds();
+    virtual Array<OneD, NekDouble> Bounds()
+    {
+        ASSERTL0(false,"must be implement at derived level");
+        return Array<OneD, NekDouble>();
+    }
 
     /**
      * @brief Calculates the arclength between the two paremetric points \p ti
@@ -85,7 +82,11 @@ public:
      * @param tf Second parametric coordinate.
      * @return Arc length between \p ti and \p tf.
      */
-    NekDouble Length(NekDouble ti, NekDouble tf);
+    virtual NekDouble Length(NekDouble ti, NekDouble tf)
+    {
+        ASSERTL0(false,"must be implement at derived level");
+        return 0.0;
+    }
 
     /**
      * @brief Gets the location (x,y,z) in an array out of the curve at
@@ -94,12 +95,20 @@ public:
      * @param t Parametric coordinate
      * @return Array of x,y,z
      */
-    Array<OneD, NekDouble> P(NekDouble t);
+    virtual Array<OneD, NekDouble> P(NekDouble t)
+    {
+        ASSERTL0(false,"must be implement at derived level");
+        return Array<OneD, NekDouble>();
+    }
 
     /**
      * @brief Gets the second derivatives at t
      */
-    Array<OneD, NekDouble> D2(NekDouble t);
+     virtual Array<OneD, NekDouble> D2(NekDouble t)
+     {
+         ASSERTL0(false,"must be implement at derived level");
+         return Array<OneD, NekDouble>();
+     }
 
     /**
      * @brief Calculates the parametric coordinate and arclength location
@@ -110,14 +119,22 @@ public:
      *
      * @todo This really needs improving for accuracy.
      */
-    NekDouble tAtArcLength(NekDouble s);
+    virtual NekDouble tAtArcLength(NekDouble s)
+    {
+        ASSERTL0(false,"must be implement at derived level");
+        return 0.0;
+    }
 
     /**
      * @brief Gets the start and end of the curve.
      *
      * @return Array with 6 entries of endpoints x1,y1,z1,x2,y2,z2.
      */
-    Array<OneD, NekDouble> GetMinMax();
+    virtual Array<OneD, NekDouble> GetMinMax()
+    {
+        ASSERTL0(false,"must be implement at derived level");
+        return Array<OneD, NekDouble>();
+    }
 
     /// set the ids of the surfaces either side of the curve
     void SetAdjSurf(std::vector<CADSurfSharedPtr> i)
@@ -152,11 +169,7 @@ public:
         return m_mainVerts;
     }
 
-private:
-    /// OpenCascade object of the curve.
-    BRepAdaptor_Curve m_occCurve;
-    /// OpenCascade edge
-    TopoDS_Edge m_occEdge;
+protected:
     /// Length of edge
     NekDouble m_length;
     /// List of surfaces which this curve belongs to.
@@ -166,6 +179,11 @@ private:
 };
 
 typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
+
+typedef LibUtilities::NekFactory<EngineKey,CADCurve> CADCurveFactory;
+
+CADCurveFactory& GetCADCurveFactory();
+
 }
 }
 

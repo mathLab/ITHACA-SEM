@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADSystem.cpp
+//  File: CADCurve.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,58 +29,50 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: CAD object curve.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CADSystem.h"
-#include "CADVert.h"
-#include "CADCurve.h"
-#include "CADSurf.h"
+#ifndef NEKMESHUTILS_CADSYSTEM_OCE_CADVERTOCE
+#define NEKMESHUTILS_CADSYSTEM_OCE_CADVERTOCE
 
-using namespace std;
+#include "../CADVert.h"
+#include <NekMeshUtils/MeshElements/Node.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-std::ostream& operator<<(std::ostream&os, const EngineKey& rhs)
+class CADVertOCE : public CADVert
 {
-    return os << rhs.second;
-}
+public:
 
-EngineFactory& GetEngineFactory()
-{
-    typedef Loki::SingletonHolder<EngineFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
+    static CADVertSharedPtr create()
+    {
+        return MemoryManager<CADVertOCE>::AllocateSharedPtr();
+    }
 
-CADVertFactory& GetCADVertFactory()
-{
-    typedef Loki::SingletonHolder<CADVertFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
+    static EngineKey key;
 
-CADCurveFactory& GetCADCurveFactory()
-{
-    typedef Loki::SingletonHolder<CADCurveFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
+    /**
+     * @brief Default constructor.
+     */
+    CADVertOCE()
+    {
 
-CADSurfFactory& GetCADSurfFactory()
-{
-    typedef Loki::SingletonHolder<CADSurfFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
+    }
+
+    ~CADVertOCE(){};
+
+    void Initialise(int i, TopoDS_Shape in);
+
+private:
+    /// OpenCascade object of the curve.
+    gp_Pnt m_occVert;
+};
 
 }
 }
+
+#endif

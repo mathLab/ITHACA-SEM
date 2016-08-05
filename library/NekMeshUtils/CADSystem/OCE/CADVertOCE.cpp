@@ -33,10 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CADSystem.h"
-#include "CADVert.h"
-#include "CADCurve.h"
-#include "CADSurf.h"
+#include "CADSystemOCE.h"
+#include "CADVertOCE.h"
 
 using namespace std;
 
@@ -45,41 +43,25 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-std::ostream& operator<<(std::ostream&os, const EngineKey& rhs)
-{
-    return os << rhs.second;
-}
+EngineKey CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
+        EngineKey(eOCE,"oce"),CADVertOCE::create,"CAD vert oce");
 
-EngineFactory& GetEngineFactory()
+void CADVertOCE::Initialise(int i, TopoDS_Shape in)
 {
-    typedef Loki::SingletonHolder<EngineFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
+    gp_Trsf transform;
+    gp_Pnt ori(0.0, 0.0, 0.0);
+    transform.SetScale(ori, 1.0 / 1000.0);
+    TopLoc_Location mv(transform);
+    in.Move(mv);
 
-CADVertFactory& GetCADVertFactory()
-{
-    typedef Loki::SingletonHolder<CADVertFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
+    m_id      = i;
+    m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
 
-CADCurveFactory& GetCADCurveFactory()
-{
-    typedef Loki::SingletonHolder<CADCurveFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
+    m_node = boost::shared_ptr<Node>(
+        new Node(i - 1, m_occVert.X(), m_occVert.Y(), m_occVert.Z()));
+    degen = false;
 
-CADSurfFactory& GetCADSurfFactory()
-{
-    typedef Loki::SingletonHolder<CADSurfFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
+    m_type = vert;
 }
 
 }

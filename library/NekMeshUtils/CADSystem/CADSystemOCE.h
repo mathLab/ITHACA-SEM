@@ -41,7 +41,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <NekMeshUtils/CADSystem/OpenCascade.h>
 
 namespace Nektar
 {
@@ -54,18 +54,7 @@ class CADCurve;
 typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
 class CADSurf;
 typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
-
-/**
- * @brief struct which descibes a collection of cad edges which for a
- *        loop on the cad surface
- */
-struct EdgeLoop
-{
-    std::vector<CADCurveSharedPtr> edges;
-    std::vector<int> edgeo; //0 is forward 1 is backward
-    Array<OneD, NekDouble> center;
-    NekDouble area;
-};
+struct EdgeLoop;
 
 /**
  * @brief Base class for CAD interface system.
@@ -81,16 +70,8 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADSystem(std::string name) : m_name(name) {};
-
-    ~CADSystem(){};
-
-    /**
-     * @brief Return the name of the CAD system.
-     */
-    std::string GetName()
+    CADSystemOCE(const std::string &name) : CADSystem(name)
     {
-        return m_name;
     }
 
     /**
@@ -98,21 +79,7 @@ public:
      *
      * @return true if completed successfully
      */
-    virtual bool LoadCAD()
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return false;
-    }
-
-    /**
-     * @brief Reports basic properties to screen.
-     */
-    void Report()
-    {
-        std::cout << std::endl << "CAD report:" << std::endl;
-        std::cout << "\tCAD has: " << m_curves.size() << " curves." << std::endl;
-        std::cout << "\tCAD has: " << m_surfs.size() << " surfaces." << std::endl;
-    }
+    bool LoadCAD();
 
     /**
      * @brief Returns bounding box of the domain.
@@ -122,67 +89,16 @@ public:
      *
      * @return Array with 6 entries: xmin, xmax, ymin, ymax, zmin and zmax.
      */
-    virtual Array<OneD, NekDouble> GetBoundingBox()
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return Array<OneD, NekDouble>();
-    }
+    Array<OneD, NekDouble> GetBoundingBox();
 
-    /**
-     * @brief Get the number of surfaces.
-     */
-    int GetNumSurf()
-    {
-        return m_surfs.size();
-    }
-
-    /**
-     * @brief Get the number of curves.
-     */
-    int GetNumCurve()
-    {
-        return m_curves.size();
-    }
-
-    /**
-     * @brief Gets a curve from the map.
-     */
-    CADCurveSharedPtr GetCurve(int i)
-    {
-        std::map<int, CADCurveSharedPtr>::iterator search = m_curves.find(i);
-        ASSERTL0(search != m_curves.end(), "curve does not exist");
-
-        return search->second;
-    }
-
-    /**
-     * @brief Gets a surface from the map.
-     */
-    CADSurfSharedPtr GetSurf(int i)
-    {
-        std::map<int, CADSurfSharedPtr>::iterator search = m_surfs.find(i);
-        ASSERTL0(search != m_surfs.end(), "surface does not exist");
-
-        return search->second;
-    }
-
-    /**
-     * @brief Gets map of all vertices
-     */
-    std::map<int, CADVertSharedPtr> GetVerts()
-    {
-        return m_verts;
-    }
-
-    /**
-     * @brief Gets number of vertices
-     */
-    int GetNumVerts()
-    {
-        return m_verts.size();
-    }
-
-protected:
+private:
+    /// Function to add curve to CADSystem::m_verts.
+    void AddVert(int i, TopoDS_Shape in);
+    /// Function to add curve to CADSystem::m_curves.
+    void AddCurve(int i, TopoDS_Shape in, int fv, int lv);
+    /// Function to add surface to CADSystem::m_surfs.
+    void AddSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
+    /// Name of cad file to be opened, including file extension.
     std::string m_name;
     /// Map of curves
     std::map<int, CADCurveSharedPtr> m_curves;
@@ -190,21 +106,10 @@ protected:
     std::map<int, CADSurfSharedPtr> m_surfs;
     /// Map of vertices
     std::map<int, CADVertSharedPtr> m_verts;
+    /// OCC master object
+    TopoDS_Shape shape;
 };
 
-typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;
-
-enum EngineType{
-  eOCE,
-  eCFI
-};
-
-typedef std::pair<EngineType,std::string> EngineKey;
-std::ostream& operator<<(std::ostream&os, const EngineKey& rhs);
-
-typedef LibUtilities::NekFactory<EngineKey,CADSystem,std::string> EngineFactory;
-
-EngineFactory& GetEngineFactory();
 
 }
 }

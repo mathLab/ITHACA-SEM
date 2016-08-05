@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADSystem.cpp
+//  File: CADSystem.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,54 +33,52 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CADSystem.h"
-#include "CADVert.h"
-#include "CADCurve.h"
-#include "CADSurf.h"
+#ifndef NekMeshUtils_CADSYSTEM_OCE_CADSYSTEMOCE
+#define NekMeshUtils_CADSYSTEM_OCE_CADSYSTEMOCE
 
-using namespace std;
+#include "../CADSystem.h"
+
+#include "OpenCascade.h"
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-std::ostream& operator<<(std::ostream&os, const EngineKey& rhs)
+class CADSystemOCE : public CADSystem
 {
-    return os << rhs.second;
-}
+public:
 
-EngineFactory& GetEngineFactory()
-{
-    typedef Loki::SingletonHolder<EngineFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
+    static CADSystemSharedPtr create(std::string name)
+    {
+        return MemoryManager<CADSystemOCE>::AllocateSharedPtr(name);
+    }
 
-CADVertFactory& GetCADVertFactory()
-{
-    typedef Loki::SingletonHolder<CADVertFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
+    static EngineKey key;
 
-CADCurveFactory& GetCADCurveFactory()
-{
-    typedef Loki::SingletonHolder<CADCurveFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
+    /**
+     * @brief Default constructor.
+     */
+    CADSystemOCE(std::string name) : CADSystem(name) {}
+    ~CADSystemOCE(){};
 
-CADSurfFactory& GetCADSurfFactory()
-{
-    typedef Loki::SingletonHolder<CADSurfFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
+    bool LoadCAD();
+
+    Array<OneD, NekDouble> GetBoundingBox();
+
+private:
+    /// Function to add curve to CADSystem::m_verts.
+    void AddVert(int i, TopoDS_Shape in);
+    /// Function to add curve to CADSystem::m_curves.
+    void AddCurve(int i, TopoDS_Shape in, int fv, int lv);
+    /// Function to add surface to CADSystem::m_surfs.
+    void AddSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
+    /// OCC master object
+    TopoDS_Shape shape;
+};
+
 
 }
 }
+
+#endif

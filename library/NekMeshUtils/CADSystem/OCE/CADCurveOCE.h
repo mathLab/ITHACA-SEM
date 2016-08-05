@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADSystem.cpp
+//  File: CADCurve.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,58 +29,81 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: cad object methods.
+//  Description: CAD object curve.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CADSystem.h"
-#include "CADVert.h"
-#include "CADCurve.h"
-#include "CADSurf.h"
+#ifndef NEKMESHUTILS_CADSYSTEM_OCE_CADCURVEOCE
+#define NEKMESHUTILS_CADSYSTEM_OCE_CADCURVEOCE
 
-using namespace std;
+#include "../CADCurve.h"
+#include "OpenCascade.h"
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-std::ostream& operator<<(std::ostream&os, const EngineKey& rhs)
+/**
+ * @brief class for CAD curves.
+ *
+ * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
+ * Nektar++.
+ */
+class CADCurveOCE : public CADCurve
 {
-    return os << rhs.second;
+public:
+
+    static CADCurveSharedPtr create()
+    {
+        return MemoryManager<CADCurveOCE>::AllocateSharedPtr();
+    }
+
+    static EngineKey key;
+
+    CADCurveOCE(){};
+
+    ~CADCurveOCE(){};
+
+    Array<OneD, NekDouble> Bounds();
+
+    NekDouble Length(NekDouble ti, NekDouble tf);
+
+    Array<OneD, NekDouble> P(NekDouble t);
+
+    Array<OneD, NekDouble> D2(NekDouble t);
+
+    NekDouble tAtArcLength(NekDouble s);
+
+    Array<OneD, NekDouble> GetMinMax();
+
+    void Initialise(int i, TopoDS_Shape in)
+    {
+        gp_Trsf transform;
+        gp_Pnt ori(0.0, 0.0, 0.0);
+        transform.SetScale(ori, 1.0 / 1000.0);
+        TopLoc_Location mv(transform);
+        in.Move(mv);
+
+        m_occEdge  = TopoDS::Edge(in);
+        m_occCurve = BRepAdaptor_Curve(m_occEdge);
+
+        GProp_GProps System;
+        BRepGProp::LinearProperties(m_occEdge, System);
+        m_length = System.Mass();
+
+        m_id   = i;
+        m_type = curve;
+    }
+
+private:
+    /// OpenCascade object of the curve.
+    BRepAdaptor_Curve m_occCurve;
+    /// OpenCascade edge
+    TopoDS_Edge m_occEdge;
+};
+
+}
 }
 
-EngineFactory& GetEngineFactory()
-{
-    typedef Loki::SingletonHolder<EngineFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
-
-CADVertFactory& GetCADVertFactory()
-{
-    typedef Loki::SingletonHolder<CADVertFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
-
-CADCurveFactory& GetCADCurveFactory()
-{
-    typedef Loki::SingletonHolder<CADCurveFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
-
-CADSurfFactory& GetCADSurfFactory()
-{
-    typedef Loki::SingletonHolder<CADSurfFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
-
-}
-}
+#endif

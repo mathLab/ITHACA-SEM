@@ -185,8 +185,17 @@ Prism::Prism(ElmtConfig pConf,
                 faceNodes.push_back(pNodeList[face_offset[face] + i]);
             }
         }
-        m_face.push_back(FaceSharedPtr(new Face(
-            faceVertices, faceNodes, faceEdges, m_conf.m_faceCurveType)));
+
+        // Try to translate between common face curve types
+        LibUtilities::PointsType pType = m_conf.m_faceCurveType;
+
+        if (pType == LibUtilities::ePolyEvenlySpaced && (j == 1 || j == 3))
+        {
+            pType = LibUtilities::eNodalTriEvenlySpaced;
+        }
+
+        m_face.push_back(
+            FaceSharedPtr(new Face(faceVertices, faceNodes, faceEdges, pType)));
     }
 
     // Re-order edge array to be consistent with Nektar++ ordering.

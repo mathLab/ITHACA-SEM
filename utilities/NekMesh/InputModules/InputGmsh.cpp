@@ -1119,7 +1119,7 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     // different; need to mirror in the triangular faces, and then
     // reorder vertices to make ordering anticlockwise on base quad.
     static int gmshToNekVerts[6] = {3, 4, 1, 0, 5, 2};
-    // 3->0, 4->1, 1->2, 0->3, 5->4, 2->5
+    // Inverse (gmsh vert -> Nektar++ vert): 3->0, 4->1, 1->2, 0->3, 5->4, 2->5
 
     for (i = 0; i < 6; ++i)
     {
@@ -1134,8 +1134,18 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     // Curvilinear edges.
     mapping.resize(6 + 9 * n);
 
+    // Nektar++ edges:
+    //   0 =    1 =    2 =    3 =    4 =    5 =    6 =    7 =    8 =
+    //   {0,1}, {1,2}, {3,2}, {0,3}, {0,4}, {1,4}, {2,5}, {3,5}, {4,5}
+
+    // Gmsh edges:
+    //   {0,1}, {0,2}, {0,3}, {1,2}, {1,4}, {2,5}, {3,4}, {3,5}, {4,5}
+    // Apply inverse mapping:
+    //   {3,2}, {3,5}, {3,0}, {2,5}, {2,1}, {5,4}, {0,1}, {0,4}, {1,4}
+    //   = 2    = 7    = -3   = 6    = -1   = -8   = 0    = 4    = 5
+
     static int gmshToNekEdge[9] = {2, 7, 3, 6, 1, 8, 0, 4, 5};
-    static int gmshToNekRev[9]  = {1, 0, 1, 0, 1, 1, 0, 0, 0};
+    static int gmshToNekRev[9]  = {0, 0, 1, 0, 1, 1, 0, 0, 0};
 
     // Reorder edges.
     int offset, cnt = 6;
@@ -1182,7 +1192,7 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     // Face 4: StdRegions::eDir1BwdDir1_Dir2FwdDir2
 
     // Face offsets
-    vector<int> offsets(5);
+    vector<int> offsets(5), offsets2(5);
     offset = 6 + 9 * n;
     offsets[0] = offset;
     offsets[1] = offset + nTriInt;
@@ -1190,51 +1200,117 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     offsets[3] = offset + 2 * nTriInt + nQuadInt;
     offsets[4] = offset + 2 * nTriInt + 2 * nQuadInt;
 
+    offsets2[0] = offset;
+    offsets2[1] = offset + nQuadInt;
+    offsets2[2] = offset + nQuadInt + nTriInt;
+    offsets2[3] = offset + 2 * nQuadInt + nTriInt;
+    offsets2[4] = offset + 2 * nQuadInt + 2 * nTriInt;
+
     mapping.resize(6 + 9 * n + 3 * nQuadInt + 2 * nTriInt);
 
     offset = 6 + 9 * n;
 
-    // Face 0
-    int offset2 = offsets[gmshToNekFace[0]];
-    int j;
-    for (i = 0; i < n; ++i)
+    vector<int> triVertId(3);
+    triVertId[0] = 0;
+    triVertId[1] = 1;
+    triVertId[2] = 2;
+
+    vector<int> quadVertId(4);
+    quadVertId[0] = 0;
+    quadVertId[1] = 1;
+    quadVertId[2] = 2;
+    quadVertId[3] = 3;
+
+    for (i = 0; i < 5; ++i)
     {
-        for (j = 0; j < n; ++j)
+        int face    = gmshToNekFace[i];
+        int offset2 = offsets[i];
+        offset      = offsets[face];
+
+        bool tri = i < 2;
+        int nFacePts = tri ? nTriInt : nQuadInt;
+
+        if (nFacePts == 0)
         {
-            mapping[offset + i * n + j] = offset2 + (n - i - 1) * n + j;
+            continue;
+        }
+
+        // Create a list of interior face nodes for this face only.
+        vector<int> faceNodes(nFacePts);
+        vector<int> toAlign(tri ? 3 : 4);
+        for (int j = 0; j < nFacePts; ++j)
+        {
+            faceNodes[j] = offset2 + j;
+        }
+
+        if (tri)
+        {
+            // Now get the reordering of this face, which puts Gmsh
+            // recursive ordering into Nektar++ row-by-row order.
+            vector<int> tmp = triTensorNodeOrdering(faceNodes, n - 1);
+            HOTriangle<int> hoTri(triVertId, tmp);
+
+            // Apply reorientation
+            if (i == 0)
+            {
+                // Triangle verts {0,2,1} --> {0,1,2}
+                toAlign[0] = 0;
+                toAlign[1] = 2;
+                toAlign[2] = 1;
+                hoTri.Align(toAlign);
+            }
+
+            // Fill in mapping.
+            for (int j = 0; j < nTriInt; ++j)
+            {
+                mapping[offset + j] = hoTri.surfVerts[j];
+            }
+        }
+        else
+        {
+            vector<int> tmp = quadTensorNodeOrdering(faceNodes, n - 1);
+            HOQuadrilateral<int> hoQuad(quadVertId, tmp);
+
+            // Apply reorientation
+            if (i == 2)
+            {
+                toAlign[0] = 3;
+                toAlign[1] = 2;
+                toAlign[2] = 1;
+                toAlign[3] = 0;
+            }
+            else if (i == 3)
+            {
+                toAlign[0] = 1;
+                toAlign[1] = 0;
+                toAlign[2] = 3;
+                toAlign[3] = 2;
+            }
+            else if (i == 4)
+            {
+                toAlign[0] = 1;
+                toAlign[1] = 2;
+                toAlign[2] = 3;
+                toAlign[3] = 0;
+            }
+
+            hoQuad.Align(toAlign);
+
+            // Fill in mapping.
+            for (int j = 0; j < nQuadInt; ++j)
+            {
+                mapping[offset + j] = hoQuad.surfVerts[j];
+            }
         }
     }
-    offset += nQuadInt;
 
-    // Face 1
-    offset2 = offsets[gmshToNekFace[1]];
-    for (i = 0; i < nTriInt; ++i)
+    if (conf.m_volumeNodes == false)
     {
-        mapping[offset++] = offset2++;
+        return mapping;
     }
 
-    // Face 1
-    offset2 = offsets[gmshToNekFace[2]];
-    for (i = 0; i < nQuadInt; ++i)
-    {
-        mapping[offset++] = offset2++;
-        cout << offset-1 << " " << offset2-1 << endl;
-    }
-
-    // Face 1
-    offset2 = offsets[gmshToNekFace[3]];
-    for (i = 0; i < nTriInt; ++i)
-    {
-        mapping[offset++] = offset2++;
-    }
-
-    // Face 1
-    offset2 = offsets[gmshToNekFace[4]];
-    for (i = 0; i < nQuadInt; ++i)
-    {
-        mapping[offset++] = offset2++;
-        cout << offset-1 << " " << offset2-1 << endl;
-    }
+    // Interior points
+    offset = offsets[4];
 
     return mapping;
 }

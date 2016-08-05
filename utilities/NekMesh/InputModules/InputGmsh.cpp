@@ -1118,12 +1118,12 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     // To get from Gmsh -> Nektar++ prism, coordinates axes are
     // different; need to mirror in the triangular faces, and then
     // reorder vertices to make ordering anticlockwise on base quad.
-    static int gmshToNekVerts[6] = {3, 4, 1, 0, 5, 2};
+    static int nekToGmshVerts[6] = {3, 4, 1, 0, 5, 2};
     // Inverse (gmsh vert -> Nektar++ vert): 3->0, 4->1, 1->2, 0->3, 5->4, 2->5
 
     for (i = 0; i < 6; ++i)
     {
-        mapping[i] = gmshToNekVerts[i];
+        mapping[i] = nekToGmshVerts[i];
     }
 
     if (order == 1)
@@ -1137,13 +1137,12 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     // Nektar++ edges:
     //   0 =    1 =    2 =    3 =    4 =    5 =    6 =    7 =    8 =
     //   {0,1}, {1,2}, {3,2}, {0,3}, {0,4}, {1,4}, {2,5}, {3,5}, {4,5}
-
-    // Gmsh edges:
+    // Gmsh edges (from Geo/MPrism.h of Gmsh source):
     //   {0,1}, {0,2}, {0,3}, {1,2}, {1,4}, {2,5}, {3,4}, {3,5}, {4,5}
-    // Apply inverse mapping:
+    // Apply inverse of gmshToNekVerts map:
     //   {3,2}, {3,5}, {3,0}, {2,5}, {2,1}, {5,4}, {0,1}, {0,4}, {1,4}
+    // Nektar++ mapping (negative indicates reverse orientation):
     //   = 2    = 7    = -3   = 6    = -1   = -8   = 0    = 4    = 5
-
     static int gmshToNekEdge[9] = {2, 7, 3, 6, 1, 8, 0, 4, 5};
     static int gmshToNekRev[9]  = {0, 0, 1, 0, 1, 1, 0, 0, 0};
 
@@ -1177,29 +1176,28 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     int nTriInt  = n * (n - 1) / 2;
     int nQuadInt = n * n;
 
-    // Gmsh faces:
-    //   0 = {0,2,1}, 1 = {3,4,5}, 2 = {0,1,4,3}, 3 = {0,3,5,2}, 4 = {1,2,5,4}
-    // Apply gmshToNekVerts map:
-    //   0 = {3,5,2}, 1 = {0,1,4}, 2 = {3,2,1,0}, 3 = {3,0,4,5}, 4 = {2,5,4,1}
     // Nektar++ faces:
     //   0 = {0,1,2,3}, 1 = {0,1,4}, 2 = {1,2,5,4}, 3 = {3,2,5}, 4 = {0,3,5,4}
-    //       {3,2,1,0}      {0,1,4}      {2,5,4,1}      {3,5,2}      {3,0,4,5}
+    // Gmsh faces (from Geo/MPrism.h of Gmsh source):
+    //   {0,2,1}, {3,4,5}, {0,1,4,3}, {0,3,5,2}, {1,2,5,4}
+    // Apply inverse of gmshToNekVerts map:
+    //   {3,5,2}, {0,1,4}, {3,2,1,0}, {3,0,4,5}, {2,5,4,1}
+    //   = 3      = 1      = 0        = 4        = 2
     // This gives gmsh -> Nektar++ faces:
-    static int gmshToNekFace[5] = {2, 1, 4, 0, 3};
-
-    // Face 0: StdRegions::eDir1FwdDir1_Dir2BwdDir2
-    // Face 2: StdRegions::eDir1BwdDir2_Dir2FwdDir1
-    // Face 4: StdRegions::eDir1BwdDir1_Dir2FwdDir2
+    static int gmshToNekFace[5] = {3, 1, 0, 4, 2};
 
     // Face offsets
     vector<int> offsets(5), offsets2(5);
     offset = 6 + 9 * n;
+
+    // Offsets in the gmsh order: TTQQQ
     offsets[0] = offset;
     offsets[1] = offset + nTriInt;
     offsets[2] = offset + 2 * nTriInt;
     offsets[3] = offset + 2 * nTriInt + nQuadInt;
     offsets[4] = offset + 2 * nTriInt + 2 * nQuadInt;
 
+    // Offsets in the Nektar++ order: QTQTQ
     offsets2[0] = offset;
     offsets2[1] = offset + nQuadInt;
     offsets2[2] = offset + nQuadInt + nTriInt;
@@ -1225,7 +1223,7 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     {
         int face    = gmshToNekFace[i];
         int offset2 = offsets[i];
-        offset      = offsets[face];
+        offset      = offsets2[face];
 
         bool tri = i < 2;
         int nFacePts = tri ? nTriInt : nQuadInt;
@@ -1268,7 +1266,7 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
         }
         else
         {
-            vector<int> tmp = quadTensorNodeOrdering(faceNodes, n - 1);
+            vector<int> tmp = quadTensorNodeOrdering(faceNodes, n);
             HOQuadrilateral<int> hoQuad(quadVertId, tmp);
 
             // Apply reorientation
@@ -1288,10 +1286,10 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
             }
             else if (i == 4)
             {
-                toAlign[0] = 1;
-                toAlign[1] = 2;
-                toAlign[2] = 3;
-                toAlign[3] = 0;
+                toAlign[0] = 3;
+                toAlign[1] = 0;
+                toAlign[2] = 1;
+                toAlign[3] = 2;
             }
 
             hoQuad.Align(toAlign);

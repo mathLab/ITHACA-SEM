@@ -51,9 +51,8 @@ namespace Nektar
         Metric(metric, generate)
     {
         // Default behaviour is that the regexes listed in the input file must
-        // be matched in order and we match everything.
+        // be matched in order.
         m_unordered = false;
-        m_ignoreExtra = false;
 
         // If we are a derived class, do nothing
         if (m_type != "REGEX")
@@ -128,33 +127,13 @@ namespace Nektar
 
         // Process output file line by line searching for regex matches
         std::string line;
-        int gotMatches = 0;
-
-        while (getline(pStdout, line))
+        while (getline(pStdout, line) && m_matches.size() > 0)
         {
             matchedTol = true;
 
             // Test to see if we have a match on this line.
             if (boost::regex_match(line.c_str(), matches, m_regex))
             {
-                ++gotMatches;
-
-                // In this case we have found more matches than are specified in
-                // the match list. Either ignore this if m_ignoreExtra is set,
-                // or keep going.
-                if (m_matches.size() == 0)
-                {
-                    if (m_ignoreExtra)
-                    {
-                        --gotMatches;
-                        break;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-
                 // Error if no fields in regex then throw an error.
                 if (matches.size() == 1)
                 {
@@ -272,10 +251,10 @@ namespace Nektar
             }
         }
 
-        if (gotMatches != nMatch)
+        if (m_matches.size() != 0)
         {
-            cerr << "Expected " << nMatch << " matches but found "
-                 << gotMatches << "!" << endl;
+            cerr << "Expected " << nMatch << " matches but only found "
+                 << (nMatch - m_matches.size()) << "!" << endl;
             success = false;
         }
 

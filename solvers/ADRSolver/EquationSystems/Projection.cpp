@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File AlternateSkewAdvection.h
+// File Projection.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,57 +29,57 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Alternate Skew-Symmetric non linear convective term
+// Description: Projection solve routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_ALTERNATESKEWADVECTION_H
-#define NEKTAR_SOLVERS_ALTERNATESKEWADVECTION_H
+#include <ADRSolver/EquationSystems/Projection.h>
 
-#include <SolverUtils/Advection/Advection.h>
+using namespace std;
 
 namespace Nektar
 {
-
-class AlternateSkewAdvection: public SolverUtils::Advection
-
+string Projection::className =
+    GetEquationSystemFactory().RegisterCreatorFunction("Projection",
+                                                       Projection::create);
+Projection::Projection(const LibUtilities::SessionReaderSharedPtr &pSession)
+    : EquationSystem(pSession)
 {
-public:
-    friend class MemoryManager<AlternateSkewAdvection>;
+}
 
-    /// Creates an instance of this class
-    static SolverUtils::AdvectionSharedPtr create(std::string)
+void Projection::v_InitObject()
+{
+    EquationSystem::v_InitObject();
+
+    EvaluateFunction(m_session->GetVariables(), m_fields, "Forcing");
+}
+
+Projection::~Projection()
+{
+}
+
+void Projection::v_DoSolve()
+{
+    for (int i = 0; i < m_fields.num_elements(); ++i)
     {
-        return MemoryManager<AlternateSkewAdvection>::AllocateSharedPtr();
+        // Zero field so initial conditions are zero
+        Vmath::Zero(m_fields[i]->GetNcoeffs(), m_fields[i]->UpdateCoeffs(), 1);
+        m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),
+                              m_fields[i]->UpdateCoeffs());
+        m_fields[i]->SetPhysState(false);
     }
-    /// Name of class
-    static std::string className;
-    static std::string className2;
+}
 
-protected:
-
-    AlternateSkewAdvection();
-
-    virtual ~AlternateSkewAdvection();
-
-    virtual void v_InitObject(
-              LibUtilities::SessionReaderSharedPtr         pSession,
-              Array<OneD, MultiRegions::ExpListSharedPtr>  pFields);
-
-    virtual void v_Advect(
-        const int nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-              Array<OneD, Array<OneD, NekDouble> >        &outarray,
-        const NekDouble                                   &time);
-
-private:
-    int m_advectioncalls;
-    bool m_SingleMode;
-    bool m_HalfMode;
-};
-
-} //end of namespace
-
-#endif //NEKTAR_SOLVERS_INCNAVIERSTOKES_H
+void Projection::v_GenerateSummary(SolverUtils::SummaryList &s)
+{
+    EquationSystem::SessionSummary(s);
+    for (int i = 0; i < m_fields.num_elements(); ++i)
+    {
+        stringstream name;
+        name << "Forcing func [" << i << "]";
+        SolverUtils::AddSummaryItem(
+            s, name.str(),
+            m_session->GetFunction("Forcing", i)->GetExpression());
+    }
+}
+}

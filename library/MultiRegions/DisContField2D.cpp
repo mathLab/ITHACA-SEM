@@ -404,6 +404,11 @@ namespace Nektar
                                   m_periodicEdges,
                                   variable);
 
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                m_traceMap->PrintStats(std::cout, variable);
+            }
+
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 

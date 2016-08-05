@@ -1412,12 +1412,13 @@ namespace Nektar
                     int l = fielddefs->m_numModes[cnt++];
                     if(fielddefs->m_numHomogeneousDir == 1)
                     {
-                        datasize += l*fielddefs->m_numModes[cnt++];
+                        datasize += l*fielddefs->m_homogeneousZIDs.size();
+                        cnt++;
                     }
                     else if(fielddefs->m_numHomogeneousDir == 2)
                     {
-                        int m = fielddefs->m_numModes[cnt++];
-                        datasize += l*m*fielddefs->m_numModes[cnt++];
+                        datasize += l*fielddefs->m_homogeneousYIDs.size();
+                        cnt += 2;
                     }
                     else
                     {
@@ -1507,12 +1508,13 @@ namespace Nektar
                             int l = fielddefs->m_numModes[cnt++];
                             if(fielddefs->m_numHomogeneousDir == 1)
                             {
-                                datasize += l*fielddefs->m_numModes[cnt++];
+                                datasize += l*fielddefs->m_homogeneousZIDs.size();
+                                cnt++;
                             }
                             else if(fielddefs->m_numHomogeneousDir == 2)
                             {
-                                int m = fielddefs->m_numModes[cnt++];
-                                datasize += l*m*fielddefs->m_numModes[cnt++];
+                                datasize += l*fielddefs->m_homogeneousYIDs.size();
+                                cnt += 2;
                             }
                             else
                             {

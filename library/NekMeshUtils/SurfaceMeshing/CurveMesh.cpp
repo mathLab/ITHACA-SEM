@@ -227,13 +227,16 @@ void CurveMesh::Mesh()
         m_mesh->m_edgeSet.insert(e);
     }
 
-    cout << "\r                                                                "
-            "                             ";
-    cout << scientific << "\r\t\tCurve " << m_id << endl
-         << "\t\t\tLength: " << m_curvelength << endl
-         << "\t\t\tNodes: " << m_meshpoints.size() << endl
-         << "\t\t\tSample points: " << m_numSamplePoints << endl
-         << endl;
+    if(m_mesh->m_verbose)
+    {
+        cout << "\r                                                                "
+                "                             ";
+        cout << scientific << "\r\t\tCurve " << m_id << endl
+             << "\t\t\tLength: " << m_curvelength << endl
+             << "\t\t\tNodes: " << m_meshpoints.size() << endl
+             << "\t\t\tSample points: " << m_numSamplePoints << endl
+             << endl;
+    }
 }
 
 void CurveMesh::GetPhiFunction()

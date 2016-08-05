@@ -148,8 +148,10 @@ namespace Gs
      *                      communication.
      * @return GSLib data structure containing mapping information.
      */
-    static inline gs_data* Init (  const Nektar::Array<OneD, long> pId,
-                            const LibUtilities::CommSharedPtr& pComm)
+    static inline gs_data* Init(
+        const Nektar::Array<OneD, long>    pId,
+        const LibUtilities::CommSharedPtr &pComm,
+        bool                               verbose = true)
     {
 #ifdef NEKTAR_USE_MPI
         if (pComm->GetSize() == 1)
@@ -162,8 +164,8 @@ namespace Gs
         MPI_Comm_dup(vCommMpi->GetComm(), &vComm.c);
         vComm.id = vCommMpi->GetRank();
         vComm.np = vCommMpi->GetSize();
-        gs_data* result = nektar_gs_setup(pId.get(),pId.num_elements(), 
-                                                    &vComm, 0, gs_auto, 1);
+        gs_data* result = nektar_gs_setup(pId.get(),pId.num_elements(),
+                                          &vComm, 0, gs_auto, (int)verbose);
         MPI_Comm_free(&vComm.c);
         return result;
 #else

@@ -6,6 +6,9 @@ install_path=$2
 
 for file in $path/*.dylib
 do
+    if [ -L $file ]; then
+        continue
+    fi
     echo Repairing: $file
     install_name_tool -id $install_path/`basename $file` $file
     DYLIBS=`otool -L $file | grep -v "/" | awk -F' ' '{ print $1 }'`

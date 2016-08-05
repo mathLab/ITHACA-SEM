@@ -180,6 +180,7 @@ void OutputGmsh::Process()
             // First output element ID and type.
             int elmtType = elmMap[e->GetConf()];
             m_mshFile << id << " " << elmtType << " ";
+            cout << elmtType << endl;
 
             // Write out number of element tags and then the tags
             // themselves.
@@ -260,7 +261,11 @@ void OutputGmsh::Process()
                 }
                 else
                 {
-                    // todo
+                    // NEEDS ALIGNMENT
+                    for (int k = 0; k < nodeList.size(); ++k)
+                    {
+                        tags.push_back(nodeList[k]->m_id);
+                    }
                 }
             }
 
@@ -273,6 +278,8 @@ void OutputGmsh::Process()
             // Construct inverse of input reordering
             vector<int> reordering = InputGmsh::CreateReordering(elmtType);
             vector<int> inv(tags.size());
+
+            cout << tags.size() << endl;
 
             for (int j = 0; j < tags.size(); ++j)
             {

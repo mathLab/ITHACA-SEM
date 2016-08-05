@@ -233,8 +233,7 @@ SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom(int coordDim)
 StdRegions::Orientation Tetrahedron::GetEdgeOrient(
     int edgeId, EdgeSharedPtr edge)
 {
-    int locVert = edgeId;
-    int edgeVerts[6][2] = { {0,1}, {1,2}, {0,2}, {0,3}, {1,3}, {2,3} };
+    static int edgeVerts[6][2] = { {0,1}, {1,2}, {0,2}, {0,3}, {1,3}, {2,3} };
 
     if (edge->m_n1 == m_vertex[edgeVerts[edgeId][0]])
     {
@@ -278,6 +277,10 @@ void Tetrahedron::MakeOrder(int                                order,
         return;
     }
 
+    m_curveType          = pType;
+    m_conf.m_faceNodes   = true;
+    m_conf.m_volumeNodes = true;
+
     int nPoints = order + 1;
     StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
 
@@ -315,10 +318,6 @@ void Tetrahedron::MakeOrder(int                                order,
         m_volumeNodes[cnt] = boost::shared_ptr<Node>(
             new Node(id++, x[0], x[1], x[2]));
     }
-
-    m_curveType          = pType;
-    m_conf.m_faceNodes   = true;
-    m_conf.m_volumeNodes = true;
 }
 
 /**

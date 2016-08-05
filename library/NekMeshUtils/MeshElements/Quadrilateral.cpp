@@ -140,6 +140,18 @@ void Quadrilateral::MakeOrder(int                                order,
                               int                                coordDim,
                               int                               &id)
 {
+    m_conf.m_order = order;
+
+    if (order == 1)
+    {
+        m_conf.m_volumeNodes = m_conf.m_faceNodes = false;
+        return;
+    }
+
+    m_conf.m_faceNodes   = true;
+    m_conf.m_volumeNodes = false;
+    m_curveType          = pType;
+
     // Quadrilaterals of order < 2 have no interior volume points.
     if (order < 2)
     {
@@ -184,11 +196,6 @@ void Quadrilateral::MakeOrder(int                                order,
                 new Node(id++, x[0], x[1], x[2]));
         }
     }
-
-    m_curveType          = pType;
-    m_conf.m_order       = order;
-    m_conf.m_faceNodes   = true;
-    m_conf.m_volumeNodes = false;
 }
 
 SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)

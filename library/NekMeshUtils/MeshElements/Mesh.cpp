@@ -104,6 +104,7 @@ void Mesh::MakeOrder(int                      order,
         pTypes[LibUtilities::eTriangle]      = LibUtilities::eNodalTriEvenlySpaced;
         pTypes[LibUtilities::eQuadrilateral] = LibUtilities::ePolyEvenlySpaced;
         pTypes[LibUtilities::eTetrahedron]   = LibUtilities::eNodalTetEvenlySpaced;
+        pTypes[LibUtilities::eHexahedron]    = LibUtilities::ePolyEvenlySpaced;
     }
 
     for(eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++)

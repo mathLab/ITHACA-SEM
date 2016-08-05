@@ -52,6 +52,157 @@ ModuleKey OutputGmsh::className =
                                                OutputGmsh::create,
                                                "Writes Gmsh msh file.");
 
+/**
+ * @brief A lightweight struct for dealing with high-order quadrilateral
+ * alignment.
+ */
+template <typename T> struct HOQuadrilateral
+{
+    HOQuadrilateral(std::vector<int> pVertId, std::vector<T> pSurfVerts)
+        : vertId(pVertId), surfVerts(pSurfVerts)
+    {
+    }
+
+    HOQuadrilateral(std::vector<int> pVertId) : vertId(pVertId)
+    {
+    }
+
+    /// The quadrilateral vertex IDs
+    std::vector<int> vertId;
+
+    /// The quadrilateral surface vertices -- templated so that this can either
+    /// be nodes or IDs.
+    std::vector<T> surfVerts;
+
+    void ReverseX()
+    {
+        int np = (int)(sqrt(surfVerts.size()) + 0.5);
+        for (int i = 0; i < np; ++i)
+        {
+            for (int j = 0; j < np/2; ++j)
+            {
+                swap(surfVerts[i*np + j], surfVerts[i*np + np-j-1]);
+            }
+        }
+    }
+
+    void ReverseY()
+    {
+        int np = (int)(sqrt(surfVerts.size()) + 0.5);
+        // Reverse y direction
+        for (int j = 0; j < np; ++j)
+        {
+            for (int i = 0; i < np/2; ++i)
+            {
+                swap(surfVerts[i*np + j], surfVerts[(np-i-1)*np + j]);
+            }
+        }
+    }
+
+    void Transpose()
+    {
+        int np = (int)(sqrt(surfVerts.size()) + 0.5);
+        vector<T> tmp(surfVerts.size());
+
+        for (int i = 0; i < np; ++i)
+        {
+            for (int j = 0; j < np; ++j)
+            {
+                tmp[i*np+j] = surfVerts[j*np+i];
+            }
+        }
+
+        surfVerts = tmp;
+    }
+
+    /**
+     * @brief Align this surface to a given vertex ID.
+     */
+    void Align(std::vector<int> vertId)
+    {
+        int vmap[4] = {-1, -1, -1, -1};
+
+        // Determine which vertices map to vertId
+        for (int i = 0; i < 4; ++i)
+        {
+            for (int j = 0; j < 4; ++j)
+            {
+                if (this->vertId[j] == vertId[i])
+                {
+                    vmap[i] = j;
+                    break;
+                }
+            }
+
+            ASSERTL1(vmap[i] != -1,
+                     "Could not determine mapping between vertex IDs");
+        }
+
+        StdRegions::Orientation orient = StdRegions::eNoOrientation;
+
+        if (vmap[1] == (vmap[0]+1) % 4)
+        {
+            switch (vmap[0])
+            {
+                case 0:
+                    orient = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+                    break;
+                case 1:
+                    orient = StdRegions::eDir1BwdDir2_Dir2FwdDir1;
+                    break;
+                case 2:
+                    orient = StdRegions::eDir1BwdDir1_Dir2BwdDir2;
+                    break;
+                case 3:
+                    orient = StdRegions::eDir1FwdDir2_Dir2BwdDir1;
+                    break;
+            }
+        }
+        else
+        {
+            switch (vmap[0])
+            {
+                case 0:
+                    orient = StdRegions::eDir1FwdDir2_Dir2FwdDir1;
+                    break;
+                case 1:
+                    orient = StdRegions::eDir1BwdDir1_Dir2FwdDir2;
+                    break;
+                case 2:
+                    orient = StdRegions::eDir1BwdDir2_Dir2BwdDir1;
+                    break;
+                case 3:
+                    orient = StdRegions::eDir1FwdDir1_Dir2BwdDir2;
+                    break;
+            }
+        }
+
+        if (orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1 ||
+            orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1 ||
+            orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1 ||
+            orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+        {
+            Transpose();
+        }
+
+        if (orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2 ||
+            orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2 ||
+            orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1 ||
+            orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+        {
+            ReverseX();
+        }
+
+        if (orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2 ||
+            orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2 ||
+            orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1 ||
+            orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+        {
+            ReverseY();
+        }
+    }
+};
+
 OutputGmsh::OutputGmsh(MeshSharedPtr m) : OutputModule(m)
 {
     map<unsigned int, ElmtConfig> igelmap = InputGmsh::GenElmMap();
@@ -113,7 +264,7 @@ void OutputGmsh::Process()
 
     // Convert this mesh into a high-order mesh of uniform order.
     cout << "Mesh order of " << maxOrder << " detected" << endl;
-    maxOrder = 3;
+    maxOrder = 4;
     m_mesh->MakeOrder(maxOrder, LibUtilities::ePolyEvenlySpaced);
 
     // Add edge- and face-interior nodes to vertex set.
@@ -180,7 +331,6 @@ void OutputGmsh::Process()
             // First output element ID and type.
             int elmtType = elmMap[e->GetConf()];
             m_mshFile << id << " " << elmtType << " ";
-            cout << elmtType << endl;
 
             // Write out number of element tags and then the tags
             // themselves.
@@ -213,8 +363,6 @@ void OutputGmsh::Process()
                 tags.push_back(nodeList[j]->m_id);
             }
 
-            int face_ids[4][3] = {{0, 1, 2}, {0, 1, 3}, {1, 2, 3}, {0, 2, 3}};
-
             // Process edge-interior points
             for (int j = 0; j < edgeList.size(); ++j)
             {
@@ -243,6 +391,9 @@ void OutputGmsh::Process()
 
                 if (faceList[j]->m_vertexList.size() == 3)
                 {
+                    // TODO: move face_ids into a member function of Element
+                    int face_ids[4][3] = {
+                        {0, 1, 2}, {0, 1, 3}, {1, 2, 3}, {0, 2, 3}};
                     vector<int> faceIds(3), volFaceIds(3);
 
                     for (int k = 0; k < 3; ++k)
@@ -261,10 +412,24 @@ void OutputGmsh::Process()
                 }
                 else
                 {
-                    // NEEDS ALIGNMENT
-                    for (int k = 0; k < nodeList.size(); ++k)
+                    // TODO: move face_ids into a member function of Element
+                    int face_ids[6][4] = {{0, 1, 2, 3}, {0, 1, 5, 4},
+                                          {1, 2, 6, 5}, {3, 2, 6, 7},
+                                          {0, 3, 7, 4}, {4, 5, 6, 7}};
+                    vector<int> faceIds(4), volFaceIds(4);
+
+                    for (int k = 0; k < 4; ++k)
                     {
-                        tags.push_back(nodeList[k]->m_id);
+                        faceIds   [k] = faceList[j]->m_vertexList[k]->m_id;
+                        volFaceIds[k] = e->GetVertexList()[face_ids[j][k]]->m_id;
+                    }
+
+                    HOQuadrilateral<NodeSharedPtr> hoQuad(faceIds, nodeList);
+                    hoQuad.Align(volFaceIds);
+
+                    for (int k = 0; k < hoQuad.surfVerts.size(); ++k)
+                    {
+                        tags.push_back(hoQuad.surfVerts[k]->m_id);
                     }
                 }
             }
@@ -278,8 +443,6 @@ void OutputGmsh::Process()
             // Construct inverse of input reordering
             vector<int> reordering = InputGmsh::CreateReordering(elmtType);
             vector<int> inv(tags.size());
-
-            cout << tags.size() << endl;
 
             for (int j = 0; j < tags.size(); ++j)
             {

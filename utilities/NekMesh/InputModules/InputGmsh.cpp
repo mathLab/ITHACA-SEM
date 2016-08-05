@@ -343,11 +343,8 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
 
 std::vector<int> hexTensorNodeOrdering(const std::vector<int> &nodes, int n)
 {
+    int i, j, k;
     std::vector<int> nodeList;
-    int cnt2;
-    int nEdge = n-2;
-    int nFace = nEdge * nEdge;
-    int nHex = n * n * n;
 
     nodeList.resize(nodes.size());
     nodeList[0] = nodes[0];
@@ -371,112 +368,129 @@ std::vector<int> hexTensorNodeOrdering(const std::vector<int> &nodes, int n)
         return nodeList;
     }
 
-    // static int hexEdges[12][2] =
-    //     { { 0, 1 }, { n, n*2 } };
-    // static int gmshToNekEdge[12] = {0, -3, 4, 1, 5, 2, 6, 7, 8, -11, 9, 10};
+    static int hexEdges[12][2] = {
+        { 0, 1 }, { n-1, n }, { n*n-1, -1 }, { n*(n-1), -n },
+        { 0, n*n }, { n-1, n*n }, { n*n - 1, n*n }, { n*(n-1), n*n },
+        { n*n*(n-1), 1 }, { n*n*(n-1) + n-1, n }, { n*n*n-1, -1 },
+        { n*n*(n-1) + n*(n-1), -n }
+    };
+    static int hexFaces[6][3] = {
+        { 0, 1, n }, { 0, 1, n*n }, { n-1, n, n*n },
+        { n*(n-1), 1, n*n }, { 0, n, n*n }, { n*n*(n-1), 1, n }
+    };
+    static int gmshToNekEdge[12] = {0, -3, 4, 1, 5, 2, 6, 7, 8, -11, 9, 10};
 
-    // // Edges
-    // for (int i = 1; i < n-1; ++i)
-    // {
-    //     int eI = i-1;
-    //     nodeList[tmp[Mode(i,0,0)]]     = nodes[4 + eI];
-    //     nodeList[tmp[Mode(n-1-i,i,0)]] = nodes[4 + (n-2) + eI];
-    //     nodeList[tmp[Mode(0,n-1-i,0)]] = nodes[4 + 2*(n-2) + eI];
-    //     nodeList[tmp[Mode(0,0,n-1-i)]] = nodes[4 + 3*(n-2) + eI];
-    //     nodeList[tmp[Mode(0,i,n-1-i)]] = nodes[4 + 4*(n-2) + eI];
-    //     nodeList[tmp[Mode(i,0,n-1-i)]] = nodes[4 + 5*(n-2) + eI];
-    // }
+    // Edges
+    int offset = 8;
+    for (int i = 0; i < 12; ++i)
+    {
+        int e = abs(gmshToNekEdge[i]);
 
-    // if (n == 3)
-    // {
-    //     return nodeList;
-    // }
+        if (gmshToNekEdge[i] >= 0)
+        {
+            for (int j = 1; j < n-1; ++j)
+            {
+                nodeList[hexEdges[e][0] + j*hexEdges[e][1]] = nodes[offset++];
+            }
+        }
+        else
+        {
+            for (int j = 1; j < n-1; ++j)
+            {
+                nodeList[hexEdges[e][0] + (n-j-1)*hexEdges[e][1]] = nodes[offset++];
+            }
+        }
+    }
 
-    // // For faces, we use the triTensorNodeOrdering routine to make our lives
-    // // slightly easier.
-    // int nFacePts = (n-3)*(n-2)/2;
+    // Faces
+    static int gmsh2NekFace[6] = {0, 1, 4, 2, 3, 5};
 
-    // // Grab face points and reorder into a tensor-product type format
-    // vector<vector<int> > tmpNodes(4);
-    // int offset = 4 + 6*(n-2);
+    // Map which defines orientation between Gmsh and Nektar++ faces.
+    StdRegions::Orientation faceOrient[6] = {
+        StdRegions::eDir1FwdDir2_Dir2FwdDir1,
+        StdRegions::eDir1FwdDir1_Dir2FwdDir2,
+        StdRegions::eDir1FwdDir2_Dir2FwdDir1,
+        StdRegions::eDir1FwdDir1_Dir2FwdDir2,
+        StdRegions::eDir1BwdDir1_Dir2FwdDir2,
+        StdRegions::eDir1FwdDir1_Dir2FwdDir2};
 
-    // for (int i = 0; i < 4; ++i)
-    // {
-    //     tmpNodes[i].resize(nFacePts);
-    //     for (int j = 0; j < nFacePts; ++j)
-    //     {
-    //         tmpNodes[i][j] = nodes[offset++];
-    //     }
-    //     tmpNodes[i] = triTensorNodeOrdering(tmpNodes[i], n-3);
-    // }
+    for (i = 0; i < 6; ++i)
+    {
+        int n2 = (n-2)*(n-2);
+        int face = gmsh2NekFace[i];
+        offset   = 8 + 12 * (n-2) + i * n2;
 
-    // if (n > 4)
-    // {
-    //     // Now align faces
-    //     vector<int> triVertId(3), toAlign(3);
-    //     triVertId[0] = 0;
-    //     triVertId[1] = 1;
-    //     triVertId[2] = 2;
+        // Create a list of interior face nodes for this face only.
+        vector<int> faceNodes(n2);
+        for (j = 0; j < n2; ++j)
+        {
+            faceNodes[j] = nodes[offset + j];
+        }
 
-    //     // Faces 0,2: triangle verts {0,2,1} --> {0,1,2}
-    //     HOTriangle<int> hoTri(triVertId, tmpNodes[0]);
-    //     toAlign[0] = 0;
-    //     toAlign[1] = 2;
-    //     toAlign[2] = 1;
+        // Now get the reordering of this face, which puts Gmsh
+        // recursive ordering into Nektar++ row-by-row order.
+        faceNodes = quadTensorNodeOrdering(faceNodes, n-2);
+        vector<int> tmp(n2);
 
-    //     hoTri.Align(toAlign);
-    //     tmpNodes[0] = hoTri.surfVerts;
+        // Finally reorient the face according to the geometry
+        // differences.
+        if (faceOrient[i] == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+        {
+            // Orientation is the same, just copy.
+            tmp = faceNodes;
+        }
+        else if (faceOrient[i] == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+        {
+            // Tranposed faces
+            for (j = 0; j < n-2; ++j)
+            {
+                for (k = 0; k < n-2; ++k)
+                {
+                    tmp[j * (n-2) + k] = faceNodes[k * (n-2) + j];
+                }
+            }
+        }
+        else if (faceOrient[i] == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+        {
+            for (j = 0; j < n-2; ++j)
+            {
+                for (k = 0; k < n-2; ++k)
+                {
+                    tmp[j * (n-2) + k] = faceNodes[j * (n-2) + (n - k - 3)];
+                }
+            }
+        }
 
-    //     hoTri.surfVerts = tmpNodes[2];
-    //     hoTri.Align(toAlign);
-    //     tmpNodes[2] = hoTri.surfVerts;
+        // Now put this into the right place in the output array
+        for (k = 1; k < n-1; ++k)
+        {
+            for (j = 1; j < n-1; ++j)
+            {
+                nodeList[hexFaces[face][0] + j*hexFaces[face][1] + k*hexFaces[face][2]]
+                    = faceNodes[(j-1)*(n-2) + j - 1];
+            }
+        }
+    }
 
-    //     // Face 3: triangle verts {1,2,0} --> {0,1,2}
-    //     toAlign[0] = 1;
-    //     toAlign[1] = 2;
-    //     toAlign[2] = 0;
+    // Finally, recurse on interior volume
+    vector<int> intNodes;
+    for (int i = 8 + 12 * (n-2) + 6 * (n-2) * (n-2); i < n*n*n; ++i)
+    {
+        intNodes.push_back(nodes[i]);
+    }
+    intNodes = hexTensorNodeOrdering(intNodes, n-2);
 
-    //     hoTri.surfVerts = tmpNodes[3];
-    //     hoTri.Align(toAlign);
-    //     tmpNodes[3] = hoTri.surfVerts;
-    // }
-
-    // // Now apply faces. Note that faces 3 and 2 are swapped between Gmsh and
-    // // Nektar++ order.
-    // for (int j = 1, cnt = 0; j < n-2; ++j)
-    // {
-    //     for (int i = 1; i < n-j-1; ++i, ++cnt)
-    //     {
-    //         nodeList[tmp[Mode(i,j,0)]]       = tmpNodes[0][cnt];
-    //         nodeList[tmp[Mode(i,0,j)]]       = tmpNodes[1][cnt];
-    //         nodeList[tmp[Mode(n-1-i-j,i,j)]] = tmpNodes[3][cnt];
-    //         nodeList[tmp[Mode(0,i,j)]]       = tmpNodes[2][cnt];
-    //     }
-    // }
-
-    // if (n == 4)
-    // {
-    //     return nodeList;
-    // }
-
-    // // Finally, recurse on interior volume
-    // vector<int> intNodes;
-    // for (int i = offset; i < nTet; ++i)
-    // {
-    //     intNodes.push_back(nodes[i]);
-    // }
-    // intNodes = tetTensorNodeOrdering(intNodes, n-4);
-
-    // for (int k = 1, cnt = 0; k < n - 2; ++k)
-    // {
-    //     for (int j = 1; j < n - k - 1; ++j)
-    //     {
-    //         for (int i = 1; i < n - k - j - 1; ++i)
-    //         {
-    //             nodeList[tmp[Mode(i,j,k)]] = intNodes[cnt++];
-    //         }
-    //     }
-    // }
+    for (int k = 1, cnt = 0; k < n - 1; ++k)
+    {
+        for (int j = 1; j < n - 1; ++j)
+        {
+            for (int i = 1; i < n - 1; ++i)
+            {
+                cout << "LOLINT " << i + j * n + k * n * n << " " << intNodes[cnt] << endl;
+                nodeList[i + j * n + k * n * n] = intNodes[cnt++];
+            }
+        }
+    }
 
     return nodeList;
 }

@@ -45,6 +45,7 @@ v4.4.0
 - Move all modules to a new library, FieldUtils, to support post-processing
   during simulations (!589)
 - Add module to stretch homogeneous direction (!609)
+- Add module to add composite ID of elements as a field (!674)
 
 v4.3.4
 ------

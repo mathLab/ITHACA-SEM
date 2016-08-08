@@ -124,6 +124,10 @@ void InputCAD::Process()
     {
         m_cad = GetEngineFactory().CreateInstance(EngineKey(eOCE,"oce"),m_CADName);
     }
+    else if(boost::iequals(tmp1.back(), "FBM"))
+    {
+        m_cad = GetEngineFactory().CreateInstance(EngineKey(eCFI,"cfi"),m_CADName);
+    }
     else
     {
         ASSERTL0(false,"not loaded any CAD engine");
@@ -135,6 +139,8 @@ void InputCAD::Process()
     }
 
     ASSERTL0(m_cad->LoadCAD(), "Failed to load CAD");
+
+    exit(-1);
 
     vector<unsigned int> symsurfs;
     vector<unsigned int> blsurfs;

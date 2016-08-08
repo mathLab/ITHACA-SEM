@@ -68,11 +68,7 @@ public:
      *
      * @return Array of two entries, min and max parametric coordinate.
      */
-    virtual Array<OneD, NekDouble> Bounds()
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return Array<OneD, NekDouble>();
-    }
+    virtual Array<OneD, NekDouble> Bounds() = 0;
 
     /**
      * @brief Calculates the arclength between the two paremetric points \p ti
@@ -82,11 +78,7 @@ public:
      * @param tf Second parametric coordinate.
      * @return Arc length between \p ti and \p tf.
      */
-    virtual NekDouble Length(NekDouble ti, NekDouble tf)
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return 0.0;
-    }
+    virtual NekDouble Length(NekDouble ti, NekDouble tf) = 0;
 
     /**
      * @brief Gets the location (x,y,z) in an array out of the curve at
@@ -95,20 +87,12 @@ public:
      * @param t Parametric coordinate
      * @return Array of x,y,z
      */
-    virtual Array<OneD, NekDouble> P(NekDouble t)
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return Array<OneD, NekDouble>();
-    }
+    virtual Array<OneD, NekDouble> P(NekDouble t) = 0;
 
     /**
      * @brief Gets the second derivatives at t
      */
-     virtual Array<OneD, NekDouble> D2(NekDouble t)
-     {
-         ASSERTL0(false,"must be implement at derived level");
-         return Array<OneD, NekDouble>();
-     }
+     virtual Array<OneD, NekDouble> D2(NekDouble t) = 0;
 
     /**
      * @brief Calculates the parametric coordinate and arclength location
@@ -119,22 +103,14 @@ public:
      *
      * @todo This really needs improving for accuracy.
      */
-    virtual NekDouble tAtArcLength(NekDouble s)
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return 0.0;
-    }
+    virtual NekDouble tAtArcLength(NekDouble s) = 0;
 
     /**
      * @brief Gets the start and end of the curve.
      *
      * @return Array with 6 entries of endpoints x1,y1,z1,x2,y2,z2.
      */
-    virtual Array<OneD, NekDouble> GetMinMax()
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return Array<OneD, NekDouble>();
-    }
+    virtual Array<OneD, NekDouble> GetMinMax() = 0;
 
     /// set the ids of the surfaces either side of the curve
     void SetAdjSurf(std::vector<CADSurfSharedPtr> i)

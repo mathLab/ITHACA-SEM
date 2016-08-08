@@ -83,11 +83,7 @@ public:
      *
      * @return Array of 4 entries with parametric umin,umax,vmin,vmax.
      */
-    virtual Array<OneD, NekDouble> GetBounds()
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return Array<OneD, NekDouble>();
-    }
+    virtual Array<OneD, NekDouble> GetBounds() = 0;
 
     /**
      * @brief Get the normal vector at parametric point u,v.
@@ -95,11 +91,7 @@ public:
      * @param uv Array of u and v parametric coords.
      * @return Array of xyz components of normal vector.
      */
-    virtual Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv)
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return Array<OneD, NekDouble>();
-    }
+    virtual Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv) = 0;
 
     /**
      * @brief Get the set of first derivatives at parametric point u,v
@@ -107,11 +99,7 @@ public:
      * @param uv Array of u and v parametric coords.
      * @return Array of xyz copmonents of first derivatives.
      */
-    virtual Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv)
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return Array<OneD, NekDouble>();
-    }
+    virtual Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv) = 0;
 
     /**
      * @brief Get the set of second derivatives at parametric point u,v
@@ -119,11 +107,7 @@ public:
      * @param uv array of u and v parametric coords
      * @return array of xyz copmonents of second derivatives
      */
-    virtual Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv)
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return Array<OneD, NekDouble>();
-    }
+    virtual Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv) = 0;
 
     /**
      * @brief Get the x,y,z at parametric point u,v.
@@ -131,11 +115,7 @@ public:
      * @param uv Array of u and v parametric coords.
      * @return Array of xyz location.
      */
-    virtual Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv)
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return Array<OneD, NekDouble>();
-    }
+    virtual Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv) = 0;
 
     /**
      * @brief Performs a reverse look up to find u,v and x,y,z.
@@ -143,40 +123,25 @@ public:
      * @param p Array of xyz location
      * @return The parametric location of xyz on this surface
      */
-    virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p)
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return Array<OneD, NekDouble>();
-    }
+    virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p) = 0;
 
     /**
      * @brief does unconstrained locuv to project point from anywhere
      * and calculate the distance between the orthonormal projection to the surface
      * and the point
      */
-    virtual NekDouble DistanceTo(Array<OneD, NekDouble> p)
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return 0.0;
-    }
+    virtual NekDouble DistanceTo(Array<OneD, NekDouble> p) = 0;
 
     /**
      * @brief takes a point from anywhere find the nearest surface point and its
      * uv
      */
-    virtual void ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv)
-    {
-        ASSERTL0(false,"must be implement at derived level");
-    }
+    virtual void ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv) = 0;
 
     /**
      * @brief returns curvature at point uv
      */
-    virtual NekDouble Curvature(Array<OneD, NekDouble> uv)
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return 0.0;
-    }
+    virtual NekDouble Curvature(Array<OneD, NekDouble> uv) = 0;
 
     /**
      * @brief sets the flag to reverse the normal for this suface,
@@ -199,10 +164,7 @@ protected:
     /// normal
     bool m_correctNormal;
     /// Function which tests the the value of uv used is within the surface
-    virtual void Test(Array<OneD, NekDouble> uv)
-    {
-        ASSERTL0(false,"must be implement at derived level");
-    }
+    virtual void Test(Array<OneD, NekDouble> uv) = 0;
     /// List of bounding edges in loops with orientation.
     std::vector<EdgeLoop> m_edges;
 };

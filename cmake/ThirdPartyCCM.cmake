@@ -9,9 +9,6 @@ OPTION(NEKTAR_USE_CCM
    "CCM star i/o library is available." OFF)
 
 IF( NEKTAR_USE_CCM )
-<<<<<<< HEAD
-    FIND_LIBRARY(CCMIO_LIBRARY NAMES "ccmio" "adf" PATHS /usr/local/lib ${Nektar++_TP_LIBRARY_DIRS})
-=======
 
     set(CCMIO_LIBRARIES
         ccmio
@@ -19,7 +16,6 @@ IF( NEKTAR_USE_CCM )
     )
 
     FIND_LIBRARY(CCMIO_LIBRARY NAMES "ccmio" PATHS /usr/local/lib ${Nektar++_TP_LIBRARY_DIRS})
->>>>>>> origin/master
 
     IF( CCMIO_LIBRARY )
         MESSAGE(STATUS "Found Ccmio: ${CCMIO_LIBRARY}")

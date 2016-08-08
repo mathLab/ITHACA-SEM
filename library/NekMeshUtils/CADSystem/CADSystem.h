@@ -98,11 +98,7 @@ public:
      *
      * @return true if completed successfully
      */
-    virtual bool LoadCAD()
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return false;
-    }
+    virtual bool LoadCAD() = 0;
 
     /**
      * @brief Reports basic properties to screen.
@@ -122,11 +118,7 @@ public:
      *
      * @return Array with 6 entries: xmin, xmax, ymin, ymax, zmin and zmax.
      */
-    virtual Array<OneD, NekDouble> GetBoundingBox()
-    {
-        ASSERTL0(false,"must be implement at derived level");
-        return Array<OneD, NekDouble>();
-    }
+    virtual Array<OneD, NekDouble> GetBoundingBox() = 0;
 
     /**
      * @brief Get the number of surfaces.

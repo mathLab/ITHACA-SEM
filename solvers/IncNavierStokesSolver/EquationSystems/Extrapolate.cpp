@@ -223,8 +223,7 @@ namespace Nektar
         }
 
         Array<OneD, Array<OneD, NekDouble> > Velocity(m_curl_dim);
-        Array<OneD, Array<OneD, NekDouble> > VelBnd(m_curl_dim);
-        
+
         MultiRegions::ExpListSharedPtr BndElmtExp;
         int cnt    = 0;
 
@@ -236,9 +235,10 @@ namespace Nektar
         for(int n  = 0; n < m_PBndConds.num_elements(); ++n)
         {
             if((m_hbcType[n] == eOBC)||(m_hbcType[n] == eConvectiveOBC))
-            {                // Get expansion with element on this boundary
+            {
+                // Get expansion with element on this boundary
                 m_fields[0]->GetBndElmtExpansion(n, BndElmtExp, false);
-                int nqb = max(m_PBndExp[n]->GetTotPoints(),m_PBndExp[n]->GetNcoeffs());
+                int nqb = m_PBndExp[n]->GetTotPoints();
                 int nq  = BndElmtExp->GetTotPoints();
 
                 // Get velocity and extrapolate
@@ -391,27 +391,22 @@ namespace Nektar
                 }
                 else if(m_hbcType[n] == eConvectiveOBC) // add outflow values to calculation from HBC
                 {
-                    
+                    int nbcoeffs = m_PBndExp[n]->GetNcoeffs();
+                    Array<OneD, NekDouble> bndCoeffs (nbcoeffs, 0.0);
                     if ( m_PBndExp[n]->GetWaveSpace())
                     {
-                        ASSERTL0(false,"Needs updating");
-                        
                         m_PBndExp[n]->HomogeneousFwdTrans(pbc, bndVal);
-                        m_PBndExp[n]->FwdTrans(bndVal,
-                                               m_PBndExp[n]->UpdateCoeffs());
+                        m_PBndExp[n]->IProductWRTBase(bndVal,bndCoeffs);
                     }
                     else
                     {
-                        int nbcoeffs = m_PBndExp[n]->GetNcoeffs();
-
-                        m_PBndExp[n]->IProductWRTBase(pbc,bndVal);
-                        
-                        // Note we have the negative of what is in the Dong paper in bndVal
-                        Vmath::Svtvp(nbcoeffs,m_houtflow->m_pressurePrimCoeff[n],
-                                     bndVal, 1,m_PBndExp[n]->UpdateCoeffs(),1,
-                                     m_PBndExp[n]->UpdateCoeffs(),1);
+                        m_PBndExp[n]->IProductWRTBase(pbc,bndCoeffs);
                     }
-                    
+                    // Note we have the negative of what is in the Dong paper in bndVal
+                    Vmath::Svtvp(nbcoeffs,m_houtflow->m_pressurePrimCoeff[n],
+                                 bndCoeffs, 1,m_PBndExp[n]->UpdateCoeffs(),1,
+                                 m_PBndExp[n]->UpdateCoeffs(),1);
+
                     // evaluate u^n at outflow boundary for velocity BC
                     for( int i = 0; i < m_curl_dim; i++)
                     {
@@ -421,8 +416,6 @@ namespace Nektar
                                         m_houtflow->
                                         m_outflowVelBnd[cnt][i][m_intSteps-1]);
 
-                        
-                        
                         EvaluateBDFArray(m_houtflow->m_outflowVelBnd[cnt][i]);
                         
                         // point u[i] to BDF evalauted value \hat{u}
@@ -481,7 +474,7 @@ namespace Nektar
                                      u[i], 1,divU,1,divU,1);
                     }
 
-                    if ( m_fields[0]->GetWaveSpace())
+                    if ( m_houtflow->m_UBndExp[i][n]->GetWaveSpace())
                     {
                         m_houtflow->m_UBndExp[i][n]->HomogeneousFwdTrans(divU,
                                                                          divU);

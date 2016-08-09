@@ -514,7 +514,12 @@ namespace Nektar
                 //Vmath::Fill(ncb,1.5,pcoeffs,1);
                 Array<OneD, NekDouble> pfull = m_pressure->UpdateCoeffs();
                 m_PBndExp[n]->BwdTrans(m_PBndExp[n]->GetCoeffs(), pbc);
-                
+
+                if (m_PBndExp[n]->GetWaveSpace())
+                {
+                    m_PBndExp[n]->HomogeneousBwdTrans(pbc, pbc);
+                }
+
                 Array<OneD, NekDouble> wk(nqb);
                 Array<OneD, NekDouble> wk1(ncb);
            
@@ -529,6 +534,11 @@ namespace Nektar
                     
                     Vmath::Smul(nqb, 1.0/kinvis, wk, 1, wk, 1);
 
+                    if (m_houtflow->m_UBndExp[i][n]->GetWaveSpace())
+                    {
+                        m_houtflow->m_UBndExp[i][n]->
+                                    HomogeneousFwdTrans(wk, wk);
+                    }
                     m_houtflow->m_UBndExp[i][n]->IProductWRTBase(wk,wk1);
 
                     Vmath::Vadd(ncb, wk1,1,

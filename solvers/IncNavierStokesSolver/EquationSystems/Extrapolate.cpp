@@ -152,16 +152,14 @@ namespace Nektar
                 int nqb = m_PBndExp[n]->GetTotPoints();
                 int nq  = BndElmtExp->GetTotPoints();
 
-                BndValues[0] = Array<OneD, NekDouble> (nqb*m_bnd_dim,0.0);
-                for(int i = 1; i < m_bnd_dim; i++)
+                for(int i = 0; i < m_bnd_dim; i++)
                 {
-                    BndValues[i] = BndValues[i-1]+nqb;
+                    BndValues[i] = Array<OneD, NekDouble> (nqb,0.0);
                 }
 
-                Q[0] = Array<OneD, NekDouble> (nq*m_curl_dim,0.0);
-                for(int i = 1; i < m_curl_dim; i++)
+                for(int i = 0; i < m_curl_dim; i++)
                 {
-                    Q[i] = Q[i-1]+nq;
+                    Q[i] = Array<OneD, NekDouble> (nq,0.0);
                 }
 
                 // Obtaining fields on BndElmtExp

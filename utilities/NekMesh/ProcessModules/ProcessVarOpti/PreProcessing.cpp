@@ -66,23 +66,21 @@ void ProcessVarOpti::BuildDerivUtil()
             derivUtil->ptsHigh =
                 LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
 
-            LibUtilities::NodalUtilTriangle nodalTri1(
+            LibUtilities::NodalUtilTriangle nodalTri(
                 m_mesh->m_nummode - 1, u1, v1);
-            LibUtilities::NodalUtilTriangle nodalTri2(
-                m_mesh->m_nummode - 1, u2, v2);
 
             Array<OneD, Array<OneD, NekDouble> > uv2(2);
             uv2[0] = u2;
             uv2[1] = v2;
 
-            NekMatrix<NekDouble> interp = *nodalTri1.GetInterpolationMatrix(uv2);
+            NekMatrix<NekDouble> interp = *nodalTri.GetInterpolationMatrix(uv2);
 
-            NekMatrix<NekDouble> Vandermonde = *nodalTri2.GetVandermonde();
+            NekMatrix<NekDouble> Vandermonde = *nodalTri.GetVandermonde();
             NekMatrix<NekDouble> VandermondeI = Vandermonde;
             VandermondeI.Invert();
 
-            derivUtil->VdmDL[0] = *nodalTri1.GetVandermondeForDeriv(0) * VandermondeI;
-            derivUtil->VdmDL[1] = *nodalTri1.GetVandermondeForDeriv(1) * VandermondeI;
+            derivUtil->VdmDL[0] = *nodalTri.GetVandermondeForDeriv(0) * VandermondeI;
+            derivUtil->VdmDL[1] = *nodalTri.GetVandermondeForDeriv(1) * VandermondeI;
             derivUtil->VdmD[0] = interp * derivUtil->VdmDL[0];
             derivUtil->VdmD[1] = interp * derivUtil->VdmDL[1];
             //derivUtil->quadW = LibUtilities::MakeQuadratureWeights(U2,V1);
@@ -105,24 +103,25 @@ void ProcessVarOpti::BuildDerivUtil()
             derivUtil->ptsHigh =
                 LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
 
-            LibUtilities::NodalUtilTetrahedron nodalTet1(
+            LibUtilities::NodalUtilTetrahedron nodalTet(
                 m_mesh->m_nummode - 1, u1, v1, w1);
-            LibUtilities::NodalUtilTetrahedron nodalTet2(
-                m_mesh->m_nummode - 1, u2, v2, w2);
 
-            Array<OneD, Array<OneD, NekDouble> > uv2(3);
+            Array<OneD, Array<OneD, NekDouble> > uv2(3), uv1(3);
             uv2[0] = u2;
             uv2[1] = v2;
             uv2[2] = w2;
+            uv1[0] = u1;
+            uv1[1] = v1;
+            uv1[2] = w1;
 
-            NekMatrix<NekDouble> interp = *nodalTet1.GetInterpolationMatrix(uv2);
-            NekMatrix<NekDouble> Vandermonde = *nodalTet1.GetVandermonde();
+            NekMatrix<NekDouble> interp = *nodalTet.GetInterpolationMatrix(uv2);
+            NekMatrix<NekDouble> Vandermonde = *nodalTet.GetVandermonde();
             NekMatrix<NekDouble> VandermondeI = Vandermonde;
             VandermondeI.Invert();
 
-            derivUtil->VdmDL[0] = *nodalTet1.GetVandermondeForDeriv(0) * VandermondeI;
-            derivUtil->VdmDL[1] = *nodalTet1.GetVandermondeForDeriv(1) * VandermondeI;
-            derivUtil->VdmDL[2] = *nodalTet1.GetVandermondeForDeriv(2) * VandermondeI;
+            derivUtil->VdmDL[0] = *nodalTet.GetVandermondeForDeriv(0) * VandermondeI;
+            derivUtil->VdmDL[1] = *nodalTet.GetVandermondeForDeriv(1) * VandermondeI;
+            derivUtil->VdmDL[2] = *nodalTet.GetVandermondeForDeriv(2) * VandermondeI;
 
             derivUtil->VdmD[0] = interp * derivUtil->VdmDL[0];
             derivUtil->VdmD[1] = interp * derivUtil->VdmDL[1];
@@ -135,17 +134,17 @@ void ProcessVarOpti::BuildDerivUtil()
             derivUtil->basisDeriv = Array<OneD, Array<OneD, NekDouble> >(
                 derivUtil->ptsHigh);
 
-            NekVector<NekDouble> tmp(derivUtil->ptsHigh);
+            NekVector<NekDouble> tmp(derivUtil->ptsLow);
             NekVector<NekDouble> derivout[3];
 
             for (int i = 0; i < 3; ++i)
             {
-                for (int j = 0; j < derivUtil->ptsHigh; ++j)
+                for (int j = 0; j < derivUtil->ptsLow; ++j)
                 {
-                    tmp(j) = uv2[i][j];
+                    tmp(j) = uv1[i][j];
                 }
 
-                derivout[i] = derivUtil->VdmD[i] * tmp;
+                derivout[i] = derivUtil->VdmD[0] * tmp;
             }
 
             for (int i = 0; i < derivUtil->ptsHigh; ++i)

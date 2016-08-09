@@ -470,8 +470,8 @@ public:
     NEKMESHUTILS_EXPORT virtual void GetCurvedNodes(
         std::vector<NodeSharedPtr> &nodeList) const
     {
-        cerr << "WARNING: Unsupported curvature for a " << m_vertex.size()
-             << "-vertex element is not yet implemented." << endl;
+        std::cerr << "WARNING: Unsupported curvature for a " << m_vertex.size()
+                  << "-vertex element is not yet implemented." << std::endl;
         // Node orderings are different for different elements.
         // Triangle
         if (m_vertex.size() == 2)

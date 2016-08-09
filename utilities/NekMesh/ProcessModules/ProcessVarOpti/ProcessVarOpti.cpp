@@ -79,6 +79,8 @@ ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "1e-6", "Tolerance criterion");
     m_config["maxiter"] =
         ConfigOption(false, "500", "Maximum number of iterations");
+    m_config["nq"] =
+        ConfigOption(false, "-1", "Order of mesh");
 }
 
 ProcessVarOpti::~ProcessVarOpti()
@@ -116,25 +118,32 @@ void ProcessVarOpti::Process()
     const int maxIter = m_config["maxiter"].as<int>();
     const NekDouble restol = m_config["restol"].as<NekDouble>();
 
+    m_mesh->m_nummode = m_config["nq"].as<int>();
+
     EdgeSet::iterator eit;
-    // bool fd = false;
-    // for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
-    // {
-    //     if((*eit)->m_edgeNodes.size() > 0)
-    //     {
-    //         m_mesh->m_nummode = (*eit)->m_edgeNodes.size() + 2;
-    //         fd = true;
-    //         break;
-    //     }
-    // }
-    // ASSERTL0(fd,"failed to find order of mesh");
-    m_mesh->m_nummode = 5;
-    if(m_mesh->m_verbose)
+
+    if (m_mesh->m_nummode == -1)
     {
-        cout << "Indentified order as: " << m_mesh->m_nummode - 1 << endl;
+        bool fd = false;
+        for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+        {
+            if((*eit)->m_edgeNodes.size() > 0)
+            {
+                m_mesh->m_nummode = (*eit)->m_edgeNodes.size() + 2;
+                fd = true;
+                break;
+            }
+        }
+
+        ASSERTL0(fd,"failed to find order of mesh");
     }
 
-    if(m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
+    if(m_mesh->m_verbose)
+    {
+        cout << "Identified mesh order as: " << m_mesh->m_nummode - 1 << endl;
+    }
+
+    if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
     {
         ASSERTL0(false,"cannot deal with manifolds");
     }
@@ -145,70 +154,39 @@ void ProcessVarOpti::Process()
     derivUtil = boost::shared_ptr<DerivUtil>(new DerivUtil);
 
     FillQuadPoints();
-
     BuildDerivUtil();
-
     GetElementMap();
 
     vector<vector<NodeSharedPtr> > freenodes = GetColouredNodes();
-    vector<vector<NodeOpti*> > optiNodes;
+    vector<vector<NodeOptiSharedPtr> > optiNodes;
 
     //turn the free nodes into optimisable objects with all required data
     for(int i = 0; i < freenodes.size(); i++)
     {
-        vector<NodeOpti*> ns;
+        vector<NodeOptiSharedPtr> ns;
         for(int j = 0; j < freenodes[i].size(); j++)
         {
             NodeElMap::iterator it = nodeElMap.find(freenodes[i][j]->m_id);
             ASSERTL0(it != nodeElMap.end(), "could not find");
 
-            if(freenodes[i][j]->GetNumCadCurve() ==  0 &&
-               freenodes[i][j]->GetNumCADSurf() == 0)
+            int optiType = m_mesh->m_spaceDim;
+
+            if (freenodes[i][j]->GetNumCadCurve() == 1)
             {
-                if(m_mesh->m_spaceDim == 3)
-                {
-                    ns.push_back(new NodeOpti3D3D(freenodes[i][j],
-                                                  it->second,
-                                                  res,
-                                                  derivUtil,
-                                                  opti));
-                }
-                else
-                {
-                    ns.push_back(new NodeOpti2D2D(freenodes[i][j],
-                                                  it->second,
-                                                  res,
-                                                  derivUtil,
-                                                  opti));
-                }
+                optiType += 10;
             }
-            else if(freenodes[i][j]->GetNumCadCurve() == 1)
+            else if (freenodes[i][j]->GetNumCADSurf() == 1)
             {
-                vector<pair<int, CADCurveSharedPtr> > cs =
-                                            freenodes[i][j]->GetCADCurves();
-                ns.push_back(new NodeOpti1D3D(freenodes[i][j],
-                                              it->second,
-                                              res,
-                                              derivUtil,
-                                              opti,
-                                              cs[0].second));
-            }
-            else if(freenodes[i][j]->GetNumCADSurf() == 1)
-            {
-                vector<pair<int, CADSurfSharedPtr> > ss =
-                                            freenodes[i][j]->GetCADSurfs();
-                ns.push_back(new NodeOpti2D3D(freenodes[i][j],
-                                              it->second,
-                                              res,
-                                              derivUtil,
-                                              opti,
-                                              ss[0].second));
+                optiType += 20;
             }
             else
             {
-                ASSERTL0(false,
-                    "cannot resolve type of node optimisation to perform");
+                optiType += 10*m_mesh->m_expDim;
             }
+
+            ns.push_back(
+                GetNodeOptiFactory().CreateInstance(
+                    optiType, freenodes[i][j], it->second, res, derivUtil, opti));
         }
         optiNodes.push_back(ns);
     }

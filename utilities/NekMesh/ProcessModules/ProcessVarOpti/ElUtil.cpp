@@ -139,58 +139,36 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
     }
     else if(m_el->GetConf().m_e == LibUtilities::eTriangle)
     {
-        /*LibUtilities::PointsKey pkey(m_mode,
-                                     LibUtilities::eNodalTriElec);
-        Array<OneD, NekDouble> u, v;
-        LibUtilities::PointsManager()[pkey]->GetPoints(u, v);
+        DNekMat J(2,2,0.0);
+        J(0,0) = (*nodes[1][0] - *nodes[0][0]);
+        J(1,0) = (*nodes[1][1] - *nodes[0][1]);
+        J(0,1) = (*nodes[2][0] - *nodes[0][0]);
+        J(1,1) = (*nodes[2][1] - *nodes[0][1]);
 
-        Array<OneD, NekDouble> xc(chi->GetTotPoints());
-        Array<OneD, NekDouble> yc(chi->GetTotPoints());
+        J.Invert();
 
-        Array<OneD, NekDouble> coeffs0 = geom->GetCoeffs(0);
-        Array<OneD, NekDouble> coeffs1 = geom->GetCoeffs(1);
+        DNekMat R(2,2,0.0);
+        R(0,0) = 2.0;
+        R(1,1) = 2.0;
 
-        chi->BwdTrans(coeffs0,xc);
-        chi->BwdTrans(coeffs1,yc);
+        J = J * R;
 
-        NekVector<NekDouble> X(ptsHelp->ptsLow),Y(ptsHelp->ptsLow);
-        for(int j = 0; j < u.num_elements(); j++)
+        for(int i = 0 ; i < derivUtil->ptsHigh; i++)
         {
-            Array<OneD, NekDouble> xp(2);
-            xp[0] = u[j];
-            xp[1] = v[j];
+            Array<OneD, NekDouble> r(10,0.0); //store det in 10th entry
 
-            X(j) = chi->PhysEvaluate(xp, xc);
-            Y(j) = chi->PhysEvaluate(xp, yc);
-        }
-
-        NekVector<NekDouble> x1i(ptsHelp->ptsHigh),y1i(ptsHelp->ptsHigh),
-                             x2i(ptsHelp->ptsHigh),y2i(ptsHelp->ptsHigh);
-
-        x1i = derivUtil->VdmD[0]*X;
-        y1i = derivUtil->VdmD[0]*Y;
-        x2i = derivUtil->VdmD[1]*X;
-        y2i = derivUtil->VdmD[1]*Y;
-
-        for(int i = 0 ; i < ptsHelp->ptsHigh; i++)
-        {
-            DNekMat dxdz(2,2,1.0,eFULL);
-            dxdz(0,0) = x1i(i);
-            dxdz(0,1) = x2i(i);
-            dxdz(1,0) = y1i(i);
-            dxdz(1,1) = y2i(i);
-
-            Array<OneD, NekDouble> r(10,0.0);
-            r[9] = dxdz(0,0)*dxdz(1,1)-dxdz(1,0)*dxdz(0,1);
-
-            dxdz.Invert();
-
-            r[0] = dxdz(0,0);
-            r[1] = dxdz(1,0);
-            r[3] = dxdz(0,1);
-            r[4] = dxdz(1,1);
+            r[9] = 1.0 / (J(0,0) * J(1,1) - J(0,1) * J(1,0));
+            r[0] = J(0,0);
+            r[1] = J(1,0);
+            r[2] = 0.0;
+            r[3] = J(0,1);
+            r[4] = J(1,1);
+            r[5] = 0.0;
+            r[6] = 0.0;
+            r[7] = 0.0;
+            r[8] = 0.0;
             ret.push_back(r);
-        }*/
+        }
     }
     else if(m_el->GetConf().m_e == LibUtilities::eTetrahedron)
     {
@@ -396,7 +374,7 @@ void ElUtil::Evaluate()
     }
 
     //delta = minEdge / m_el->GetConf().m_order / 500.0;
-    delta = 1e-4;
+    delta = 1e-6;
     minJac = mn;
 }
 

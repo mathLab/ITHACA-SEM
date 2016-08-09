@@ -1028,7 +1028,7 @@ void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
             }
         }
     }
-    
+
     {
         EdgeSet::iterator it;
         for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end();
@@ -1100,7 +1100,10 @@ void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
         }
     }
 
-    pRoot->LinkEndChild(cad);
+    if (cad->FirstChild())
+    {
+        pRoot->LinkEndChild(cad);
+    }
 }
 
 void OutputNekpp::WriteXmlCADId(TiXmlElement *pRoot)

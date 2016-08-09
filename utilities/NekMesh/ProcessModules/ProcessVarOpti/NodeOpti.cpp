@@ -43,7 +43,12 @@ namespace Nektar
 namespace Utilities
 {
 
-boost::mutex mtx;
+NodeOptiFactory &GetNodeOptiFactory()
+{
+    typedef Loki::SingletonHolder<NodeOptiFactory, Loki::CreateUsingNew,
+                                  Loki::NoDestroy> Type;
+    return Type::Instance();
+}
 
 void NodeOpti::CalcDX()
 {
@@ -64,6 +69,9 @@ void NodeOpti::CalcMinJac()
         minJac = min(minJac, data[i]->minJac);
     }
 }
+
+int NodeOpti2D2D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
+    22, NodeOpti2D2D::create, "2D2D");
 
 void NodeOpti2D2D::Optimise()
 {
@@ -110,320 +118,6 @@ void NodeOpti2D2D::Optimise()
     }
 }
 
-
-void NodeOpti3D3D::Optimise()
-{
-    CalcDX();
-
-    CalcMinJac();
-
-    Array<OneD, NekDouble> G = GetGrad();
-
-    if(sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) > 1e-10)
-    {
-        //needs to optimise
-        NekDouble currentW = GetFunctional<3>();
-        NekDouble functional;
-        NekDouble xc       = node->m_x;
-        NekDouble yc       = node->m_y;
-        NekDouble zc       = node->m_z;
-        NekDouble alpha    = 1.0;
-        NekDouble delX;
-        NekDouble delY;
-        NekDouble delZ;
-
-        NekDouble det = G[3]*(G[4]*G[5]-G[8]*G[8])
-                       -G[6]*(G[6]*G[5]-G[7]*G[8])
-                       +G[7]*(G[6]*G[8]-G[7]*G[4]);
-
-        delX = G[0]*(G[4]*G[5]-G[8]*G[8]) + G[1]*(G[7]*G[8]-G[6]*G[5]) + G[2]*(G[6]*G[8]-G[7]*G[4]);
-        delX /= det;
-        delY = G[0]*(G[8]*G[7]-G[6]*G[5]) + G[1]*(G[3]*G[5]-G[7]*G[7]) + G[2]*(G[6]*G[7]-G[3]*G[8]);
-        delY /= det;
-        delZ = G[0]*(G[6]*G[8]-G[4]*G[7]) + G[1]*(G[6]*G[7]-G[3]*G[8]) + G[2]*(G[3]*G[4]-G[6]*G[6]);
-        delZ /= det;
-
-
-        bool found = false;
-        while(alpha > 1e-10)
-        {
-            node->m_x = xc - alpha * delX;
-            node->m_y = yc - alpha * delY;
-            node->m_z = zc - alpha * delZ;
-            functional = GetFunctional<3>();
-            if(functional < currentW)
-            {
-                found = true;
-                break;
-            }
-
-            alpha /= 2.0;
-        }
-
-        if(!found)
-        {
-            //reset the node
-            node->m_x = xc;
-            node->m_y = yc;
-            node->m_z = zc;
-            functional = currentW;
-            //cout << "warning: had to reset node" << endl;
-        }
-        mtx.lock();
-        res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
-                            (node->m_z-zc)*(node->m_z-zc)),res->val);
-        mtx.unlock();
-    }
-}
-
-void NodeOpti1D3D::Optimise()
-{
-    CalcDX();
-
-    CalcMinJac();
-
-    Array<OneD, NekDouble> G = GetGrad();
-
-    if(sqrt(G[0]*G[0]) > 1e-10)
-    {
-        //needs to optimise
-        NekDouble tc = node->GetCADCurveInfo(curve->GetId());
-        NekDouble currentW = GetFunctional<3>();
-        NekDouble functional;
-        NekDouble xc       = node->m_x;
-        NekDouble yc       = node->m_y;
-        NekDouble zc       = node->m_z;
-        NekDouble alpha    = 1.0;
-        NekDouble delT;
-        NekDouble nt;
-        Array<OneD, NekDouble> p;
-
-        delT = G[0] / G[1];
-
-        Array<OneD, NekDouble> bd = curve->Bounds();
-
-        bool found = false;
-        while(alpha > 1e-10)
-        {
-            nt = tc - alpha * delT;
-            if(nt < bd[0] || nt > bd[1])
-            {
-                alpha /= 2.0;
-                continue;
-            }
-            p = curve->P(nt);
-            node->m_x = p[0];
-            node->m_y = p[1];
-            node->m_z = p[2];
-            functional = GetFunctional<3>();
-            if(functional < currentW)
-            {
-                found = true;
-                break;
-            }
-
-            alpha /= 2.0;
-        }
-
-        if(!found)
-        {
-            //reset the node
-            nt = tc;
-            p = curve->P(nt);
-            node->m_x = p[0];
-            node->m_y = p[1];
-            node->m_z = p[2];
-            functional = currentW;
-            // cout << "warning: had to reset node" << endl;
-        }
-        else
-        {
-            node->MoveCurve(p,curve->GetId(),nt);
-        }
-        mtx.lock();
-        res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
-                            (node->m_z-zc)*(node->m_z-zc)),res->val);
-        mtx.unlock();
-    }
-}
-
-void NodeOpti2D3D::Optimise()
-{
-    CalcDX();
-
-    CalcMinJac();
-
-    Array<OneD, NekDouble> G = GetGrad();
-
-    if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-10)
-    {
-        //needs to optimise
-        Array<OneD, NekDouble> uvc = node->GetCADSurfInfo(surf->GetId());
-        NekDouble currentW = GetFunctional<3>();
-        NekDouble functional;
-        NekDouble xc       = node->m_x;
-        NekDouble yc       = node->m_y;
-        NekDouble zc       = node->m_z;
-        NekDouble alpha    = 1.0;
-        Array<OneD, NekDouble> uvt(2);
-        Array<OneD, NekDouble> p;
-        NekDouble delU = 1.0/(G[2]*G[3]-G[4]*G[4])*(G[3]*G[0] - G[4]*G[1]);
-        NekDouble delV = 1.0/(G[2]*G[3]-G[4]*G[4])*(G[2]*G[1] - G[4]*G[0]);
-
-        Array<OneD, NekDouble> bd = surf->GetBounds();
-
-        bool found = false;
-        while(alpha > 1e-10)
-        {
-            uvt[0] = uvc[0] - alpha * delU;
-            uvt[1] = uvc[1] - alpha * delV;
-
-            if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
-               uvt[1] < bd[2] || uvt[1] > bd[3])
-            {
-                alpha /= 2.0;
-                continue;
-            }
-
-            p = surf->P(uvt);
-            node->m_x = p[0];
-            node->m_y = p[1];
-            node->m_z = p[2];
-            functional = GetFunctional<3>();
-            if(functional < currentW)
-            {
-                found = true;
-                break;
-            }
-
-            alpha /= 2.0;
-        }
-
-        if(!found)
-        {
-            //reset the node
-            p = surf->P(uvc);
-            node->m_x = p[0];
-            node->m_y = p[1];
-            node->m_z = p[2];
-            functional = currentW;
-            // cout << "warning: had to reset node" << endl;
-        }
-        else
-        {
-            node->Move(p,surf->GetId(),uvt);
-        }
-        mtx.lock();
-        res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
-                            (node->m_z-zc)*(node->m_z-zc)),res->val);
-        mtx.unlock();
-    }
-}
-
-NekDouble dir[13][3] = {{  0.0,  0.0,  0.0 },  // 0  (x   , y   , z   )
-                        {  1.0,  0.0,  0.0 },  // 1  (x+dx, y   , z   )
-                        {  1.0,  1.0,  0.0 },  // 2  (x+dx, y+dy, z   )
-                        {  0.0,  1.0,  0.0 },  // 3  (x   , y+dy, z   )
-                        { -1.0,  0.0,  0.0 },  // 4  (x-dx, y   , z   )
-                        { -1.0, -1.0,  0.0 },  // 5  (x-dx, y-dy, z   )
-                        {  0.0, -1.0,  0.0 },  // 6  (x   , y-dy, z   )
-                        { -1.0,  0.0, -1.0 },  // 7  (x-dx, y   , z-dz)
-                        {  0.0,  0.0, -1.0 },  // 8 (x   , y   , z-dz)
-                        {  0.0,  0.0,  1.0 },  // 9 (x   , y   , z+dz)
-                        {  1.0,  0.0,  1.0 },  // 10 (x+dx, y   , z+dz)
-                        {  0.0,  1.0,  1.0 },  // 11 (x   , y+dy, z+dz)
-                        {  0.0, -1.0, -1.0 }}; // 12 (x   , y-dy, z-dz)
-
-Array<OneD, NekDouble> NodeOpti1D3D::GetGrad()
-{
-    NekDouble tc = node->GetCADCurveInfo(curve->GetId());
-    Array<OneD, NekDouble> d1 = curve->D1(tc);
-
-    NekDouble dr = sqrt(d1[3]*d1[3] + d1[4]*d1[4] + d1[5]*d1[5]);
-
-    NekDouble dt = dx / dr;
-
-    vector<NekDouble> w(3);
-
-    w[0] = GetFunctional<3>();
-
-    NekDouble nt = tc + dt;
-    Array<OneD, NekDouble> p = curve->P(nt);
-    node->m_x = p[0];
-    node->m_y = p[1];
-    node->m_z = p[2];
-    w[1] = GetFunctional<3>();
-
-    nt = tc - dt;
-    p = curve->P(nt);
-    node->m_x = p[0];
-    node->m_y = p[1];
-    node->m_z = p[2];
-    w[2] = GetFunctional<3>();
-
-    nt = tc;
-    p = curve->P(nt);
-    node->m_x = p[0];
-    node->m_y = p[1];
-    node->m_z = p[2];
-
-    Array<OneD, NekDouble> ret(2,0.0);
-
-    ret[0] = (w[1] - w[2]) / 2.0 / dt;
-    ret[1] = (w[1] + w[2] - 2.0*w[0]) / dt / dt;
-
-    return ret;
-}
-
-Array<OneD, NekDouble> NodeOpti2D3D::GetGrad()
-{
-    Array<OneD, NekDouble> uvc = node->GetCADSurfInfo(surf->GetId());
-    Array<OneD, NekDouble> d1 = surf->D1(uvc);
-
-    NekDouble dru = sqrt(d1[3]*d1[3] + d1[4]*d1[4] + d1[5]*d1[5]);
-    NekDouble drv = sqrt(d1[6]*d1[6] + d1[7]*d1[7] + d1[8]*d1[8]);
-
-    NekDouble du = dx / dru;
-    NekDouble dv = dx / drv;
-
-    vector<NekDouble> w(7);
-
-    for(int i = 0; i < 7; i++)
-    {
-        Array<OneD, NekDouble> uvt(2);
-        uvt[0] = uvc[0] + dir[i][0] * du;
-        uvt[1] = uvc[1] + dir[i][1] * dv;
-        Array<OneD, NekDouble> p = surf->P(uvt);
-        node->m_x = p[0];
-        node->m_y = p[1];
-        node->m_z = p[2];
-        w[i] = GetFunctional<3>();
-    }
-
-    Array<OneD, NekDouble> p = surf->P(uvc);
-    node->m_x = p[0];
-    node->m_y = p[1];
-    node->m_z = p[2];
-
-    Array<OneD, NekDouble> ret(5,0.0);
-
-    //ret[0] d/dx
-    //ret[1] d/dy
-
-    //ret[2] d2/dx2
-    //ret[3] d2/dy2
-    //ret[4] d2/dxdy
-
-
-    ret[0] = (w[1] - w[4]) / 2.0 / du;
-    ret[1] = (w[3] - w[6]) / 2.0 / dv;
-    ret[2] = (w[1] + w[4] - 2.0*w[0]) / du / du;
-    ret[3] = (w[3] + w[6] - 2.0*w[0]) / dv / dv;
-    ret[4] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / du / dv;
-
-    return ret;
-}
-
 Array<OneD, NekDouble> NodeOpti2D2D::GetGrad()
 {
     NekDouble xc = node->m_x;
@@ -456,6 +150,80 @@ Array<OneD, NekDouble> NodeOpti2D2D::GetGrad()
     ret[4] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / dx / dx;
 
     return ret;
+}
+
+int NodeOpti3D3D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
+    33, NodeOpti3D3D::create, "3D3D");
+
+void NodeOpti3D3D::Optimise()
+{
+    CalcDX();
+
+    CalcMinJac();
+
+    Array<OneD, NekDouble> G = GetGrad();
+
+    if(sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) > 1e-10)
+    {
+        //needs to optimise
+        NekDouble currentW = GetFunctional<3>();
+        NekDouble functional;
+        NekDouble xc       = node->m_x;
+        NekDouble yc       = node->m_y;
+        NekDouble zc       = node->m_z;
+        NekDouble alpha    = 1.0;
+        NekDouble delX;
+        NekDouble delY;
+        NekDouble delZ;
+
+        NekDouble det = G[3]*(G[4]*G[5]-G[8]*G[8])
+                       -G[6]*(G[6]*G[5]-G[7]*G[8])
+                       +G[7]*(G[6]*G[8]-G[7]*G[4]);
+
+        delX = G[0]*(G[4]*G[5]-G[8]*G[8]) +
+               G[1]*(G[7]*G[8]-G[6]*G[5]) +
+               G[2]*(G[6]*G[8]-G[7]*G[4]);
+        delY = G[0]*(G[8]*G[7]-G[6]*G[5]) +
+               G[1]*(G[3]*G[5]-G[7]*G[7]) +
+               G[2]*(G[6]*G[7]-G[3]*G[8]);
+        delZ = G[0]*(G[6]*G[8]-G[4]*G[7]) +
+               G[1]*(G[6]*G[7]-G[3]*G[8]) +
+               G[2]*(G[3]*G[4]-G[6]*G[6]);
+
+        delX /= det;
+        delY /= det;
+        delZ /= det;
+
+        bool found = false;
+        while(alpha > 1e-10)
+        {
+            node->m_x = xc - alpha * delX;
+            node->m_y = yc - alpha * delY;
+            node->m_z = zc - alpha * delZ;
+            functional = GetFunctional<3>();
+            if(functional < currentW)
+            {
+                found = true;
+                break;
+            }
+
+            alpha /= 2.0;
+        }
+
+        if(!found)
+        {
+            //reset the node
+            node->m_x = xc;
+            node->m_y = yc;
+            node->m_z = zc;
+            //functional = currentW;
+            //cout << "warning: had to reset node" << endl;
+        }
+        mtx.lock();
+        res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
+                            (node->m_z-zc)*(node->m_z-zc)),res->val);
+        mtx.unlock();
+    }
 }
 
 Array<OneD, NekDouble> NodeOpti3D3D::GetGrad()
@@ -494,17 +262,16 @@ Array<OneD, NekDouble> NodeOpti3D3D::GetGrad()
     //ret[7] d2/dxdz
     //ret[8] d2/dydz
 
-
-    //ret[0] = (w[1] - w[4]) / 2.0 / dx;
-    //ret[1] = (w[3] - w[6]) / 2.0 / dx;
-    //ret[2] = (w[9] - w[8]) / 2.0 / dx;
-
-    ret[0] = gradient[0];
-    ret[1] = gradient[1];
-    ret[2] = gradient[2];
+    //ret[0] = gradient[0];
+    //ret[1] = gradient[1];
+    //ret[2] = gradient[2];
 
     //cout << "APPROX: " << ret[0] << " " << ret[1] << " " << ret[2] << endl;
     //cout << endl;
+
+    ret[0] = (w[1] - w[4]) / 2.0 / dx;
+    ret[1] = (w[3] - w[6]) / 2.0 / dx;
+    ret[2] = (w[9] - w[8]) / 2.0 / dx;
 
     ret[3] = (w[1] + w[4] - 2.0*w[0]) / dx / dx;
     ret[4] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
@@ -599,7 +366,7 @@ inline void InvTrans<3>(NekDouble in[3][3], NekDouble out[3][3])
 template<int DIM>
 NekDouble NodeOpti::GetFunctional()
 {
-    const int nElmt      = data.size();
+    const int nElmt  = data.size();
     const int totpts = derivUtil->ptsLow * nElmt;
     NekDouble X[DIM * totpts];
 
@@ -627,13 +394,13 @@ NekDouble NodeOpti::GetFunctional()
     // Calculate x- and y-gradients
     for (int d = 0; d < DIM; ++d)
     {
-        Blas::Dgemm('N', 'N', derivUtil->ptsHigh, DIM * nElmt, derivUtil->ptsLow, 1.0,
-                    derivUtil->VdmD[d].GetRawPtr(), derivUtil->ptsHigh, X, derivUtil->ptsLow, 0.0,
-                    &deriv[d][0][0][0], derivUtil->ptsHigh);
+        Blas::Dgemm(
+            'N', 'N', derivUtil->ptsHigh, DIM * nElmt, derivUtil->ptsLow, 1.0,
+            derivUtil->VdmD[d].GetRawPtr(), derivUtil->ptsHigh, X,
+            derivUtil->ptsLow, 0.0, &deriv[d][0][0][0], derivUtil->ptsHigh);
     }
 
     NekDouble integral = 0.0;
-
     NekDouble gam = numeric_limits<float>::epsilon();
     NekDouble ep;
     if(minJac < gam)
@@ -649,7 +416,7 @@ NekDouble NodeOpti::GetFunctional()
     {
         case eLinEl:
         {
-            const NekDouble nu = 0.4;
+            const NekDouble nu = 0.45;
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
@@ -668,7 +435,7 @@ NekDouble NodeOpti::GetFunctional()
                             for (int l = 0; l < DIM; ++l)
                             {
                                 jacIdeal[cnt] +=
-                                deriv[l][i][n][k] * data[i]->maps[k][m * 3 + l];
+                                    deriv[l][i][n][k] * data[i]->maps[k][m * 3 + l];
                             }
                         }
                     }

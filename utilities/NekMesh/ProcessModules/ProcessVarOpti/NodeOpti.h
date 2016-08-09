@@ -36,10 +36,10 @@
 #ifndef UTILITIES_NEKMESH_NODEOPTI
 #define UTILITIES_NEKMESH_NODEOPTI
 
+#include <ostream>
+
 #include "../../Module.h"
 #include "ProcessVarOpti.h"
-
-#include <NekMeshUtils/CADSystem/CADCurve.h>
 
 #include <LibUtilities/BasicUtils/Thread.h>
 
@@ -47,6 +47,22 @@ namespace Nektar
 {
 namespace Utilities
 {
+
+const NekDouble dir[13][3] = {
+    {  0.0,  0.0,  0.0 },  // 0  (x   , y   , z   )
+    {  1.0,  0.0,  0.0 },  // 1  (x+dx, y   , z   )
+    {  1.0,  1.0,  0.0 },  // 2  (x+dx, y+dy, z   )
+    {  0.0,  1.0,  0.0 },  // 3  (x   , y+dy, z   )
+    { -1.0,  0.0,  0.0 },  // 4  (x-dx, y   , z   )
+    { -1.0, -1.0,  0.0 },  // 5  (x-dx, y-dy, z   )
+    {  0.0, -1.0,  0.0 },  // 6  (x   , y-dy, z   )
+    { -1.0,  0.0, -1.0 },  // 7  (x-dx, y   , z-dz)
+    {  0.0,  0.0, -1.0 },  // 8  (x   , y   , z-dz)
+    {  0.0,  0.0,  1.0 },  // 9  (x   , y   , z+dz)
+    {  1.0,  0.0,  1.0 },  // 10 (x+dx, y   , z+dz)
+    {  0.0,  1.0,  1.0 },  // 11 (x   , y+dy, z+dz)
+    {  0.0, -1.0, -1.0 }   // 12 (x   , y-dy, z-dz)
+};
 
 class NodeOptiJob;
 
@@ -64,6 +80,7 @@ public:
 
     virtual void Optimise() = 0;
     NodeOptiJob *GetJob();
+
 protected:
     virtual Array<OneD, NekDouble> GetGrad()
     {
@@ -75,9 +92,9 @@ protected:
     std::vector<NekDouble> gradient;
 
     void CalcDX();
-
     void CalcMinJac();
 
+    boost::mutex mtx;
     NekDouble dx;
     NekDouble minJac;
     ResidualSharedPtr res;
@@ -85,44 +102,17 @@ protected:
     optimiser opti;
 };
 
-class NodeOpti1D3D : public NodeOpti //1D optimsation in 3D space
-{
-public:
+typedef boost::shared_ptr<NodeOpti> NodeOptiSharedPtr;
+typedef LibUtilities::NekFactory<int,
+                                 NodeOpti,
+                                 NodeSharedPtr,
+                                 std::vector<ElUtilSharedPtr>,
+                                 ResidualSharedPtr,
+                                 DerivUtilSharedPtr,
+                                 optimiser> NodeOptiFactory;
 
-    NodeOpti1D3D(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
-                 ResidualSharedPtr r, DerivUtilSharedPtr d,
-                 optimiser o, CADCurveSharedPtr c)
-                 : NodeOpti(n,e,r,d,o), curve(c)
-    {
-    }
+NodeOptiFactory &GetNodeOptiFactory();
 
-    ~NodeOpti1D3D(){};
-
-    void Optimise();
-
-private:
-    Array<OneD, NekDouble> GetGrad();
-    CADCurveSharedPtr curve;
-};
-
-class NodeOpti2D3D : public NodeOpti //1D optimsation in 3D space
-{
-public:
-    NodeOpti2D3D(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
-                 ResidualSharedPtr r, DerivUtilSharedPtr d,
-                 optimiser o, CADSurfSharedPtr s)
-                 : NodeOpti(n,e,r,d,o), surf(s)
-    {
-    }
-
-    ~NodeOpti2D3D(){};
-
-    void Optimise();
-
-private:
-    Array<OneD, NekDouble> GetGrad();
-    CADSurfSharedPtr surf;
-};
 
 class NodeOpti3D3D : public NodeOpti //1D optimsation in 3D space
 {
@@ -137,6 +127,15 @@ public:
     ~NodeOpti3D3D(){};
 
     void Optimise();
+
+    static int m_type;
+    static NodeOptiSharedPtr create(
+        NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
+        ResidualSharedPtr r, DerivUtilSharedPtr d,
+        optimiser o)
+    {
+        return NodeOptiSharedPtr(new NodeOpti3D3D(n, e, r, d, o));
+    }
 
 private:
     Array<OneD, NekDouble> GetGrad();
@@ -155,6 +154,15 @@ public:
     ~NodeOpti2D2D(){};
 
     void Optimise();
+
+    static int m_type;
+    static NodeOptiSharedPtr create(
+        NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
+        ResidualSharedPtr r, DerivUtilSharedPtr d,
+        optimiser o)
+    {
+        return NodeOptiSharedPtr(new NodeOpti2D2D(n, e, r, d, o));
+    }
 
 private:
     Array<OneD, NekDouble> GetGrad();

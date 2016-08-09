@@ -354,7 +354,21 @@ public:
         }
         return ret;
     }
+#else
+    int GetNumCadCurve()
+    {
+        return 0;
+    }
 
+    int GetNumCADSurf()
+    {
+        return 0;
+    }
+
+    std::vector<std::string> GetCADString()
+    {
+        return std::vector<std::string>();
+    }
 #endif
 
     /// ID of node.

@@ -343,11 +343,21 @@ namespace Nektar
         void ExpListHomogeneous1D::v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, CoeffState coeffstate)
         {
             int cnt = 0, cnt1 = 0;
-            Array<OneD, NekDouble> tmparray;
-            
+            Array<OneD, NekDouble> tmparray, tmpIn;
+
+            if(m_WaveSpace)
+            {
+                tmpIn = inarray;
+            }
+            else
+            {
+                tmpIn = Array<OneD, NekDouble> (inarray.num_elements(), 0.0);
+                HomogeneousFwdTrans(inarray,tmpIn);
+            }
+
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
-                m_planes[n]->IProductWRTBase(inarray+cnt, tmparray = outarray + cnt1,coeffstate);
+                m_planes[n]->IProductWRTBase(tmpIn+cnt, tmparray = outarray + cnt1,coeffstate);
 
                 cnt1    += m_planes[n]->GetNcoeffs();
                 cnt   += m_planes[n]->GetTotPoints();
@@ -360,11 +370,21 @@ namespace Nektar
         void ExpListHomogeneous1D::v_IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         { 
             int cnt = 0, cnt1 = 0;
-            Array<OneD, NekDouble> tmparray;
-            
+            Array<OneD, NekDouble> tmparray, tmpIn;
+
+            if(m_WaveSpace)
+            {
+                tmpIn = inarray;
+            }
+            else
+            {
+                tmpIn = Array<OneD, NekDouble> (inarray.num_elements(), 0.0);
+                HomogeneousFwdTrans(inarray,tmpIn);
+            }
+
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
-                m_planes[n]->IProductWRTBase_IterPerExp(inarray+cnt, tmparray = outarray + cnt1);
+                m_planes[n]->IProductWRTBase_IterPerExp(tmpIn+cnt, tmparray = outarray + cnt1);
         
                 cnt1  += m_planes[n]->GetNcoeffs();
                 cnt   += m_planes[n]->GetTotPoints();

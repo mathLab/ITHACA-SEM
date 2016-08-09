@@ -171,6 +171,10 @@ public:
                                            Array<OneD, NekDouble> r,
                                            Array<OneD, NekDouble> s);
 
+    LIB_UTILITIES_EXPORT virtual ~NodalUtilTriangle()
+    {
+    }
+
 protected:
     /// Mapping from the \f$ (i,j) \f$ indexing of the basis to a continuous
     /// ordering.
@@ -214,6 +218,10 @@ public:
                                               Array<OneD, NekDouble> r,
                                               Array<OneD, NekDouble> s,
                                               Array<OneD, NekDouble> t);
+
+    LIB_UTILITIES_EXPORT virtual ~NodalUtilTetrahedron()
+    {
+    }
 
 protected:
     /// Mapping from the \f$ (i,j,k) \f$ indexing of the basis to a continuous
@@ -259,6 +267,10 @@ public:
                                         Array<OneD, NekDouble> r,
                                         Array<OneD, NekDouble> s,
                                         Array<OneD, NekDouble> t);
+
+    LIB_UTILITIES_EXPORT virtual ~NodalUtilPrism()
+    {
+    }
 
 protected:
     /// Mapping from the \f$ (i,j) \f$ indexing of the basis to a continuous

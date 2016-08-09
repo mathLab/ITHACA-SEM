@@ -114,7 +114,7 @@ void OutputGmsh::Process()
 
     // Convert this mesh into a high-order mesh of uniform order.
     cout << "Mesh order of " << maxOrder << " detected" << endl;
-    maxOrder = 7;
+    maxOrder = 4;
     m_mesh->MakeOrder(maxOrder, LibUtilities::ePolyEvenlySpaced);
 
     // Add edge- and face-interior nodes to vertex set.
@@ -242,8 +242,10 @@ void OutputGmsh::Process()
                 if (faceList[j]->m_vertexList.size() == 3)
                 {
                     // TODO: move face_ids into a member function of Element
-                    int face_ids[4][3] = {
-                        {0, 1, 2}, {0, 1, 3}, {1, 2, 3}, {0, 2, 3}};
+                    int face_ids[5][4] = {
+                        {0, 1, 2, 3}, {0, 1, 4, -1}, {1, 2, 5, 4}, {3, 2, 5, -1}, {0, 3, 5, 4}};
+                    //int face_ids[4][3] = {
+                    //    {0, 1, 2}, {0, 1, 3}, {1, 2, 3}, {0, 2, 3}};
                     vector<int> faceIds(3), volFaceIds(3);
 
                     for (int k = 0; k < 3; ++k)
@@ -263,9 +265,11 @@ void OutputGmsh::Process()
                 else
                 {
                     // TODO: move face_ids into a member function of Element
-                    int face_ids[6][4] = {{0, 1, 2, 3}, {0, 1, 5, 4},
-                                          {1, 2, 6, 5}, {3, 2, 6, 7},
-                                          {0, 3, 7, 4}, {4, 5, 6, 7}};
+                    int face_ids[5][4] = {
+                        {0, 1, 2, 3}, {0, 1, 4, -1}, {1, 2, 5, 4}, {3, 2, 5, -1}, {0, 3, 5, 4}};
+                    //int face_ids[6][4] = {{0, 1, 2, 3}, {0, 1, 5, 4},
+                    //                      {1, 2, 6, 5}, {3, 2, 6, 7},
+                    //                      {0, 3, 7, 4}, {4, 5, 6, 7}};
                     vector<int> faceIds(4), volFaceIds(4);
 
                     for (int k = 0; k < 4; ++k)

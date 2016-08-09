@@ -301,8 +301,7 @@ void Tetrahedron::MakeOrder(int                                order,
     const int nTetIntPts = (nPoints - 4) * (nPoints - 3) * (nPoints - 2) / 6;
     m_volumeNodes.resize(nTetIntPts);
 
-    for (int i = 4 + 6*(nPoints-2) + 2*(nPoints-3)*(nPoints-2), cnt = 0;
-         i < nTetPts; ++i, ++cnt)
+    for (int i = nTetPts - nTetIntPts, cnt = 0; i < nTetPts; ++i, ++cnt)
     {
         Array<OneD, NekDouble> xp(3);
         xp[0] = px[i];

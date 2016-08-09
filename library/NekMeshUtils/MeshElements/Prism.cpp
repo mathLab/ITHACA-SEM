@@ -251,124 +251,90 @@ SpatialDomains::GeometrySharedPtr Prism::GetGeom(int coordDim)
     return ret;
 }
 
-/**
- * @brief .
- */
-void Prism::Complete(int order)
+StdRegions::Orientation Prism::GetEdgeOrient(
+    int edgeId, EdgeSharedPtr edge)
 {
-    int i, j, pos;
+    static int edgeVerts[9][2] = {
+        {0,1}, {1,2}, {3,2}, {0,3}, {0,4}, {1,4}, {2,5}, {3,5}, {4,5}
+    };
 
-    // Create basis key for a nodal tetrahedron.
-    LibUtilities::BasisKey B0(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-    LibUtilities::BasisKey B1(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-    LibUtilities::BasisKey B2(
-        LibUtilities::eOrtho_B,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussRadauMAlpha1Beta0));
-
-    // Create a standard nodal prism in order to get the Vandermonde
-    // matrix to perform interpolation to nodal points.
-    StdRegions::StdNodalPrismExpSharedPtr nodalPrism =
-        MemoryManager<StdRegions::StdNodalPrismExp>::AllocateSharedPtr(
-            B0, B1, B2, LibUtilities::eNodalPrismEvenlySpaced);
-
-    Array<OneD, NekDouble> x, y, z;
-    nodalPrism->GetNodalPoints(x, y, z);
-
-    SpatialDomains::PrismGeomSharedPtr geom =
-        boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
-            this->GetGeom(3));
-
-    // Create basis key for a prism.
-    LibUtilities::BasisKey C0(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-    LibUtilities::BasisKey C1(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-    LibUtilities::BasisKey C2(
-        LibUtilities::eOrtho_B,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussRadauMAlpha1Beta0));
-
-    // Create a prism.
-    LocalRegions::PrismExpSharedPtr prism =
-        MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(
-            C0, C1, C2, geom);
-
-    // Get coordinate array for tetrahedron.
-    int nqtot = prism->GetTotPoints();
-    Array<OneD, NekDouble> alloc(6 * nqtot);
-    Array<OneD, NekDouble> xi(alloc);
-    Array<OneD, NekDouble> yi(alloc + nqtot);
-    Array<OneD, NekDouble> zi(alloc + 2 * nqtot);
-    Array<OneD, NekDouble> xo(alloc + 3 * nqtot);
-    Array<OneD, NekDouble> yo(alloc + 4 * nqtot);
-    Array<OneD, NekDouble> zo(alloc + 5 * nqtot);
-    Array<OneD, NekDouble> tmp;
-
-    prism->GetCoords(xi, yi, zi);
-
-    for (i = 0; i < 3; ++i)
+    if (edge->m_n1 == m_vertex[edgeVerts[edgeId][0]])
     {
-        Array<OneD, NekDouble> coeffs(nodalPrism->GetNcoeffs());
-        prism->FwdTrans(alloc + i * nqtot, coeffs);
-        // Apply Vandermonde matrix to project onto nodal space.
-        nodalPrism->ModalToNodal(coeffs, tmp = alloc + (i + 3) * nqtot);
+        return StdRegions::eForwards;
+    }
+    else if (edge->m_n1 == m_vertex[edgeVerts[edgeId][1]])
+    {
+        return StdRegions::eBackwards;
+    }
+    else
+    {
+        ASSERTL1(false, "Edge is not connected to this quadrilateral.");
     }
 
-    // Now extract points from the co-ordinate arrays into the
-    // edge/face/volume nodes. First, extract edge-interior nodes.
-    for (i = 0; i < 9; ++i)
+    return StdRegions::eNoOrientation;
+}
+
+void Prism::MakeOrder(int                                order,
+                      SpatialDomains::GeometrySharedPtr  geom,
+                      LibUtilities::PointsType           pType,
+                      int                                coordDim,
+                      int                               &id)
+{
+    m_conf.m_order = order;
+    m_volumeNodes.clear();
+
+    if (order == 1)
     {
-        pos = 6 + i * (order - 1);
-        m_edge[i]->m_edgeNodes.clear();
-        for (j = 0; j < order - 1; ++j)
-        {
-            m_edge[i]->m_edgeNodes.push_back(NodeSharedPtr(
-                new Node(0, xo[pos + j], yo[pos + j], zo[pos + j])));
-        }
+        m_conf.m_volumeNodes = m_conf.m_faceNodes = false;
+        return;
+    }
+    else if (order == 2)
+    {
+        m_conf.m_faceNodes   = true;
+        m_conf.m_volumeNodes = false;
+        return;
     }
 
-    // Now extract face-interior nodes.
-    pos = 6 + 9 * (order - 1);
-    for (i = 0; i < 5; ++i)
-    {
-        int facesize =
-            i % 2 ? (order - 2) * (order - 1) / 2 : (order - 1) * (order - 1);
-        m_face[i]->m_faceNodes.clear();
-        for (j = 0; j < facesize; ++j)
-        {
-            m_face[i]->m_faceNodes.push_back(NodeSharedPtr(
-                new Node(0, xo[pos + j], yo[pos + j], zo[pos + j])));
-        }
-        pos += facesize;
-    }
-
-    // Finally extract volume nodes.
-    for (i = pos; i < (order + 1) * (order + 1) * (order + 2) / 2; ++i)
-    {
-        m_volumeNodes.push_back(
-            NodeSharedPtr(new Node(0, xo[i], yo[i], zo[i])));
-    }
-
-    m_conf.m_order       = order;
     m_conf.m_faceNodes   = true;
     m_conf.m_volumeNodes = true;
+    m_curveType          = pType;
+
+    int nPoints = order + 1;
+    StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+
+    Array<OneD, NekDouble> px, py, pz;
+    LibUtilities::PointsKey pKey(nPoints, pType);
+    ASSERTL1(pKey.GetPointsDim() == 3, "Points distribution must be 3D");
+    LibUtilities::PointsManager()[pKey]->GetPoints(px, py, pz);
+
+    Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
+
+    for (int i = 0; i < coordDim; ++i)
+    {
+        phys[i] = Array<OneD, NekDouble>(xmap->GetTotPoints());
+        xmap->BwdTrans(geom->GetCoeffs(i), phys[i]);
+    }
+
+    const int nPrismPts  = nPoints * nPoints * (nPoints + 1) / 2;
+    const int nPrismIntPts = (nPoints - 2) * (nPoints - 3) * (nPoints - 2) / 2;
+    m_volumeNodes.resize(nPrismIntPts);
+
+    for (int i = nPrismPts - nPrismIntPts, cnt = 0; i < nPrismPts; ++i, ++cnt)
+    {
+        Array<OneD, NekDouble> xp(3);
+        xp[0] = px[i];
+        xp[1] = py[i];
+        xp[2] = pz[i];
+
+        Array<OneD, NekDouble> x(3, 0.0);
+        for (int j = 0; j < coordDim; ++j)
+        {
+            x[j] = xmap->PhysEvaluate(xp, phys[j]);
+        }
+
+        m_volumeNodes[cnt] = boost::shared_ptr<Node>(
+            new Node(id++, x[0], x[1], x[2]));
+    }
 }
 
 /**

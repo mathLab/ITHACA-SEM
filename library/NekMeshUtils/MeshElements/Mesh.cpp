@@ -104,6 +104,16 @@ void Mesh::MakeOrder(int                      order,
         pTypes[LibUtilities::eTriangle]      = LibUtilities::eNodalTriEvenlySpaced;
         pTypes[LibUtilities::eQuadrilateral] = LibUtilities::ePolyEvenlySpaced;
         pTypes[LibUtilities::eTetrahedron]   = LibUtilities::eNodalTetEvenlySpaced;
+        pTypes[LibUtilities::ePrism]         = LibUtilities::eNodalPrismEvenlySpaced;
+        pTypes[LibUtilities::eHexahedron]    = LibUtilities::ePolyEvenlySpaced;
+    }
+    else if (distType == LibUtilities::eGaussLobattoLegendre)
+    {
+        pTypes[LibUtilities::eSegment]       = LibUtilities::ePolyEvenlySpaced;
+        pTypes[LibUtilities::eTriangle]      = LibUtilities::eNodalTriEvenlySpaced;
+        pTypes[LibUtilities::eQuadrilateral] = LibUtilities::ePolyEvenlySpaced;
+        pTypes[LibUtilities::eTetrahedron]   = LibUtilities::eNodalTetEvenlySpaced;
+        pTypes[LibUtilities::ePrism]         = LibUtilities::eNodalPrismEvenlySpaced;
         pTypes[LibUtilities::eHexahedron]    = LibUtilities::ePolyEvenlySpaced;
     }
 

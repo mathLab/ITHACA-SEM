@@ -341,6 +341,51 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
     return nodeList;
 }
 
+std::vector<int> prismTensorNodeOrdering(const std::vector<int> &nodes, int n)
+{
+    std::vector<int> nodeList;
+    int cnt2;
+    int nTri = n*(n+1)/2;
+    int nPrism = n*n*(n+1)/2;
+
+    if (n == 0)
+    {
+        return nodeList;
+    }
+
+    nodeList.resize(nodes.size());
+
+    if (n == 1)
+    {
+        nodeList[0] = nodes[1];
+        nodeList[1] = nodes[0];
+        return nodeList;
+    }
+
+    static int nekToGmshVerts[6] = {3, 4, 1, 0, 5, 2};
+
+    // Vertices
+    nodeList[0] = nodes[nekToGmshVerts[0]];
+    nodeList[1] = nodes[nekToGmshVerts[1]];
+    nodeList[2] = nodes[nekToGmshVerts[2]];
+    nodeList[3] = nodes[nekToGmshVerts[3]];
+    nodeList[4] = nodes[nekToGmshVerts[4]];
+    nodeList[5] = nodes[nekToGmshVerts[5]];
+    // nodeList[0]          = nodes[nekToGmshVerts[0]];
+    // nodeList[n - 1]      = nodes[nekToGmshVerts[1]];
+    // nodeList[n*n - 1]    = nodes[nekToGmshVerts[2]];
+    // nodeList[n*(n-1)]    = nodes[nekToGmshVerts[3]];
+    // nodeList[nPrism-1-n] = nodes[nekToGmshVerts[4]];
+    // nodeList[nPrism-1]   = nodes[nekToGmshVerts[5]];
+
+    if (n == 2)
+    {
+        return nodeList;
+    }
+
+    return nodeList;
+}
+
 std::vector<int> hexTensorNodeOrdering(const std::vector<int> &nodes, int n)
 {
     int i, j, k;
@@ -348,8 +393,6 @@ std::vector<int> hexTensorNodeOrdering(const std::vector<int> &nodes, int n)
 
     nodeList.resize(nodes.size());
     nodeList[0] = nodes[0];
-
-    cout << "BEING CALED WITH n = " << n << " nodes.size = " << nodes.size() << endl;
 
     if (n == 1)
     {
@@ -1190,14 +1233,14 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     vector<int> offsets(5), offsets2(5);
     offset = 6 + 9 * n;
 
-    // Offsets in the gmsh order: TTQQQ
+    // Offsets in the gmsh order: face ordering is TTQQQ
     offsets[0] = offset;
     offsets[1] = offset + nTriInt;
     offsets[2] = offset + 2 * nTriInt;
     offsets[3] = offset + 2 * nTriInt + nQuadInt;
     offsets[4] = offset + 2 * nTriInt + 2 * nQuadInt;
 
-    // Offsets in the Nektar++ order: QTQTQ
+    // Offsets in the Nektar++ order: face ordering is QTQTQ
     offsets2[0] = offset;
     offsets2[1] = offset + nQuadInt;
     offsets2[2] = offset + nQuadInt + nTriInt;
@@ -1308,7 +1351,17 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     }
 
     // Interior points
-    offset = offsets[4];
+    offset = offsets[4] + nQuadInt;
+    vector<int> intPoints, tmp;
+
+    for (int i = offset; i < (order+1) * (order+1) * (order+2) / 2; ++i)
+    {
+        intPoints.push_back(i);
+    }
+
+    // Reorder this stuff
+    tmp = prismTensorNodeOrdering(intPoints, order - 2);
+    mapping.insert(mapping.end(), tmp.begin(), tmp.end());
 
     return mapping;
 }

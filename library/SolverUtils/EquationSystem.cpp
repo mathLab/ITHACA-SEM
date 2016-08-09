@@ -914,12 +914,12 @@ namespace Nektar
 
                     //  check if we already computed this funcKey combination
                     std::string interpKey = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
-                    map<std::string, Interpolator >::iterator it
+                    map<std::string, FieldUtils::Interpolator >::iterator it
                         = m_interpolators.find(interpKey);
                     if (it == m_interpolators.end())
                     {
-                        m_interpolators[interpKey] = SolverUtils::Interpolator(
-                                Nektar::SolverUtils::eShepard);
+                        m_interpolators[interpKey] = FieldUtils::Interpolator(
+                                Nektar::FieldUtils::eShepard);
                         if (m_comm->GetRank() == 0)
                         {
                             m_interpolators[interpKey].SetProgressCallback(

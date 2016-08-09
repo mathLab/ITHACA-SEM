@@ -171,9 +171,9 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
     Array<OneD, NekDouble> bestN = Np;
 
     NekDouble val = -1.0*numeric_limits<double>::max();
-    NekDouble dtheta = 3.142/5.0;
-    NekDouble dphi = 3.142/5.0;
-    while(dtheta > 3.142/300.0)
+    NekDouble dtheta = M_PI/5.0;
+    NekDouble dphi = M_PI/5.0;
+    while(dtheta > M_PI/300.0)
     {
         NekDouble theta0 = acos(bestN[2]);
         NekDouble phi0   = atan2(bestN[1],bestN[0]);
@@ -339,14 +339,10 @@ void BLMesh::Mesh()
 
             if(Visability(g->second,bln.N) < 0.0)
             {
-                cout << "failed " << (*it)->m_x << " " << (*it)->m_y << " "
-                                  << (*it)->m_z << " " << Visability(g->second,bln.N) << endl;
+                cerr << "failed " << (*it)->m_x << " " << (*it)->m_y << " "
+                                  << (*it)->m_z << " "
+                                  << Visability(g->second,bln.N) << endl;
                 failed++;
-            }
-
-            if(Visability(g->second,bln.N) < 0.1)
-            {
-                cout << "Visability low" << endl;
             }
 
             Array<OneD, NekDouble> loc = (*it)->GetLoc();

@@ -329,6 +329,7 @@ void InputCAD::Process()
     {
         m_mesh->m_expDim = 3;
         m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, m_octree);
+
     }
 
     m_tet->Mesh();
@@ -341,6 +342,24 @@ void InputCAD::Process()
     ProcessFaces();
     ProcessElements();
     ProcessComposites();
+
+    FaceSet::iterator fit;
+    count = 0;
+    for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
+    {
+        if((*fit)->m_elLink.size() != 2)
+        {
+            count++;
+        }
+    }
+
+    if (count - m_mesh->m_element[2].size() > 0)
+    {
+        cerr << "Error: mesh contains unconnected faces and is not valid "
+             << count - m_mesh->m_element[2].size()
+             << endl;
+        abort();
+    }
 
     //return;
 

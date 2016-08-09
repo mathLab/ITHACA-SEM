@@ -2460,19 +2460,14 @@ namespace Nektar
         ExpansionShPtr MeshGraph::GetExpansion(GeometrySharedPtr geom, const std::string variable)
         {
             ExpansionMapIter iter;
-            ExpansionShPtr returnval;
-
             ExpansionMapShPtr expansionMap = m_expansionMapShPtrMap.find(variable)->second;
 
-            for (iter = expansionMap->begin(); iter!=expansionMap->end(); ++iter)
-            {
-                if ((iter->second)->m_geomShPtr == geom)
-                {
-                    returnval = iter->second;
-                    break;
-                }
-            }
-            return returnval;
+            iter = expansionMap->find(geom->GetGlobalID());
+            ASSERTL1(iter != expansionMap->end(),
+                     "Could not find expansion " +
+                     boost::lexical_cast<string>(geom->GetGlobalID()) +
+                     " in expansion for variable " + variable);
+            return iter->second;
         }
 
 

@@ -430,11 +430,11 @@ void FaceMesh::DiagonalSwap()
     for (nit = m_localNodes.begin(); nit != m_localNodes.end(); nit++)
     {
         //this routine is broken and needs looking at
-        //if ((*nit)->GetNumCadCurve() == 0)
-        //{
+        if ((*nit)->GetNumCadCurve() == 0)
+        {
             // node is interior
             idealConnec[(*nit)->m_id] = 6;
-        /*}
+        }
         else
         {
             // need to identify the two other nodes on the boundary to find
@@ -457,7 +457,7 @@ void FaceMesh::DiagonalSwap()
 
             idealConnec[(*nit)->m_id] =
                 ceil((*nit)->Angle(ns[0], ns[1]) / 3.142 * 3) + 1;
-        }*/
+        }
     }
     for (nit = m_localNodes.begin(); nit != m_localNodes.end(); nit++)
     {

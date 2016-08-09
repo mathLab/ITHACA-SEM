@@ -9,6 +9,7 @@ SET(NekMeshHeaders
     Module.h
     OutputModules/OutputGmsh.h
     OutputModules/OutputNekpp.h
+    OutputModules/OutputSTL.h
     ProcessModules/ProcessBL.h
     ProcessModules/ProcessCurve.h
     ProcessModules/ProcessCurvedEdges.h
@@ -36,6 +37,7 @@ SET(NekMeshSources
     Module.cpp
     OutputModules/OutputGmsh.cpp
     OutputModules/OutputNekpp.cpp
+    OutputModules/OutputSTL.cpp
     ProcessModules/ProcessBL.cpp
     ProcessModules/ProcessCurve.cpp
     ProcessModules/ProcessCurvedEdges.cpp
@@ -77,21 +79,22 @@ IF (NEKTAR_USE_MESHGEN)
                 ProcessModules/ProcessVarOpti/ElUtil.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
 
+IF (NEKTAR_USE_ANN)
+    SET(NekMeshHeaders ${NekMeshHeaders} ProcessModules/ProcessInsertSurface.h)
+    SET(NekMeshSources ${NekMeshSources} ProcessModules/ProcessInsertSurface.cpp)
+ENDIF (NEKTAR_USE_ANN)
+
 # Don't use macro -- this way we can just link against NekMeshUtils and
 # LocalRegions.
 ADD_EXECUTABLE(NekMesh ${NekMeshSources})
 SET_COMMON_PROPERTIES(NekMesh)
-TARGET_LINK_LIBRARIES(NekMesh NekMeshUtils LocalRegions SolverUtils)
+TARGET_LINK_LIBRARIES(NekMesh NekMeshUtils FieldUtils)
 SET_PROPERTY(TARGET NekMesh PROPERTY FOLDER util)
 INSTALL(TARGETS NekMesh
     RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT util)
 
 IF (NEKTAR_USE_CCM)
-   TARGET_LINK_LIBRARIES(NekMesh ccmio adf)
-   SET_TARGET_PROPERTIES(NekMesh PROPERTIES
-       IMPORTED_LOCATION ${CCMIO_LIBRARY_PATH}/libccmio.a)
-   INCLUDE_DIRECTORIES(NekMesh ${CCMIO_INCLUDE_DIR})
-   LINK_DIRECTORIES(${CCMIO_LIBRARY_PATH})
+   TARGET_LINK_LIBRARIES(NekMesh ${CCMIO_LIBRARIES})
 ENDIF (NEKTAR_USE_CCM)
 
 IF (NEKTAR_USE_VTK)

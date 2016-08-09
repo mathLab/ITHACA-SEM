@@ -51,6 +51,8 @@ struct DerivUtil
     NekMatrix<NekDouble> VdmDL[3]; //deriv matrix without interp
     NekVector<NekDouble> quadW;
 
+    Array<OneD, Array<OneD, NekDouble> > basisDeriv;
+
     int ptsHigh;
     int ptsLow;
 };

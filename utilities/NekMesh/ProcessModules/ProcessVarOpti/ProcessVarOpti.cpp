@@ -117,18 +117,18 @@ void ProcessVarOpti::Process()
     const NekDouble restol = m_config["restol"].as<NekDouble>();
 
     EdgeSet::iterator eit;
-    bool fd = false;
-    for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
-    {
-        if((*eit)->m_edgeNodes.size() > 0)
-        {
-            m_mesh->m_nummode = (*eit)->m_edgeNodes.size() + 2;
-            fd = true;
-            break;
-        }
-    }
-    ASSERTL0(fd,"failed to find order of mesh");
-
+    // bool fd = false;
+    // for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+    // {
+    //     if((*eit)->m_edgeNodes.size() > 0)
+    //     {
+    //         m_mesh->m_nummode = (*eit)->m_edgeNodes.size() + 2;
+    //         fd = true;
+    //         break;
+    //     }
+    // }
+    // ASSERTL0(fd,"failed to find order of mesh");
+    m_mesh->m_nummode = 5;
     if(m_mesh->m_verbose)
     {
         cout << "Indentified order as: " << m_mesh->m_nummode - 1 << endl;

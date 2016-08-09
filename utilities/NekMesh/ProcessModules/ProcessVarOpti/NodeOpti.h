@@ -72,6 +72,7 @@ protected:
     template<int DIM> NekDouble GetFunctional();
     NodeSharedPtr node;
     std::vector<ElUtilSharedPtr> data;
+    std::vector<NekDouble> gradient;
 
     void CalcDX();
 

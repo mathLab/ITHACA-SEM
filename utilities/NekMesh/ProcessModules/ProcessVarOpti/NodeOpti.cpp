@@ -167,7 +167,7 @@ void NodeOpti3D3D::Optimise()
             node->m_y = yc;
             node->m_z = zc;
             functional = currentW;
-            // cout << "warning: had to reset node" << endl;
+            //cout << "warning: had to reset node" << endl;
         }
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
@@ -477,6 +477,10 @@ Array<OneD, NekDouble> NodeOpti3D3D::GetGrad()
     node->m_y = yc;
     node->m_z = zc;
 
+    w[0] = GetFunctional<3>();
+
+    //cout << "ANALYTIC: " << gradient[0] << " " << gradient[1] << " " << gradient[2] << endl;
+
     Array<OneD, NekDouble> ret(9,0.0);
 
     //ret[0] d/dx
@@ -490,9 +494,17 @@ Array<OneD, NekDouble> NodeOpti3D3D::GetGrad()
     //ret[7] d2/dxdz
     //ret[8] d2/dydz
 
-    ret[0] = (w[1] - w[4]) / 2.0 / dx;
-    ret[1] = (w[3] - w[6]) / 2.0 / dx;
-    ret[2] = (w[9] - w[8]) / 2.0 / dx;
+
+    //ret[0] = (w[1] - w[4]) / 2.0 / dx;
+    //ret[1] = (w[3] - w[6]) / 2.0 / dx;
+    //ret[2] = (w[9] - w[8]) / 2.0 / dx;
+
+    ret[0] = gradient[0];
+    ret[1] = gradient[1];
+    ret[2] = gradient[2];
+
+    //cout << "APPROX: " << ret[0] << " " << ret[1] << " " << ret[2] << endl;
+    //cout << endl;
 
     ret[3] = (w[1] + w[4] - 2.0*w[0]) / dx / dx;
     ret[4] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
@@ -552,6 +564,36 @@ template<> inline NekDouble LinElasTrace<3>(NekDouble *jac)
             (jac[3]*jac[6]+jac[4]*jac[7]+jac[5]*jac[8])+
             (jac[0]*jac[3]+jac[1]*jac[4]+jac[3]*jac[5])*
             (jac[0]*jac[3]+jac[1]*jac[4]+jac[3]*jac[5]));
+}
+
+template<int DIM> inline void InvTrans(NekDouble in[DIM][DIM],
+                                       NekDouble out[DIM][DIM])
+{
+}
+
+template<>
+inline void InvTrans<2>(NekDouble in[2][2], NekDouble out[2][2])
+{
+    NekDouble invDet = 1.0 / JacDet<2>(&in[0][0]);
+    out[0][0] =  in[1][1] * invDet;
+    out[1][0] = -in[0][1] * invDet;
+    out[0][1] = -in[1][0] * invDet;
+    out[1][1] =  in[0][0] * invDet;
+}
+
+template<>
+inline void InvTrans<3>(NekDouble in[3][3], NekDouble out[3][3])
+{
+    NekDouble invdet = 1.0 / JacDet<3>(&in[0][0]);
+    out[0][0] =  (in[1][1]*in[2][2]-in[2][1]*in[1][2])*invdet;
+    out[1][0] = -(in[0][1]*in[2][2]-in[0][2]*in[2][1])*invdet;
+    out[2][0] =  (in[0][1]*in[1][2]-in[0][2]*in[1][1])*invdet;
+    out[0][1] = -(in[1][0]*in[2][2]-in[1][2]*in[2][0])*invdet;
+    out[1][1] =  (in[0][0]*in[2][2]-in[0][2]*in[2][0])*invdet;
+    out[2][1] = -(in[0][0]*in[1][2]-in[1][0]*in[0][2])*invdet;
+    out[0][2] =  (in[1][0]*in[2][1]-in[2][0]*in[1][1])*invdet;
+    out[1][2] = -(in[0][0]*in[2][1]-in[2][0]*in[0][1])*invdet;
+    out[2][2] =  (in[0][0]*in[1][1]-in[1][0]*in[0][1])*invdet;
 }
 
 template<int DIM>
@@ -651,13 +693,17 @@ NekDouble NodeOpti::GetFunctional()
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
+            gradient.resize(3);
+            gradient[0] = gradient[1] = gradient[2] = 0.0;
+            NekDouble jacIdeal[DIM*DIM], jacIdeal2[DIM][DIM];
+
             for (int i = 0; i < nElmt; ++i)
             {
                 for(int k = 0; k < derivUtil->ptsHigh; ++k)
                 {
                     NekDouble jacDet, I1;
-                    NekDouble jacIdeal[DIM*DIM];
                     int cnt = 0;
+
                     for (int m = 0; m < DIM; ++m)
                     {
                         for (int n = 0; n < DIM; ++n, ++cnt)
@@ -668,6 +714,7 @@ NekDouble NodeOpti::GetFunctional()
                                 jacIdeal[cnt] +=
                                 deriv[l][i][n][k] * data[i]->maps[k][m * 3 + l];
                             }
+                            jacIdeal2[m][n] = jacIdeal[cnt];
                         }
                     }
 
@@ -685,6 +732,60 @@ NekDouble NodeOpti::GetFunctional()
                                 fabs(data[i]->maps[k][9]) *
                                 (0.5 * mu * (I1 - 3.0 - 2.0*lsigma) +
                                  0.5 * K * lsigma * lsigma);
+
+                    NekDouble jacInvTrans[DIM][DIM];
+                    NekDouble jacDetDeriv[DIM];
+                    InvTrans<DIM>(jacIdeal2, jacInvTrans);
+
+                    for (int m = 0; m < DIM; ++m)
+                    {
+                        jacDetDeriv[m] = 0.0;
+                        for (int n = 0; n < DIM; ++n)
+                        {
+                            jacDetDeriv[m] += jacInvTrans[m][n] *
+                                derivUtil->basisDeriv[k][n];
+                        }
+                        jacDetDeriv[m] *= jacDet;
+                    }
+
+                    NekDouble jacDeriv[DIM][DIM][DIM];
+                    for (int m = 0; m < DIM; ++m)
+                    {
+                        for (int n = 0; n < DIM; ++n)
+                        {
+                            NekDouble delta = m == n ? 1.0 : 0.0;
+                            for (int l = 0; l < DIM; ++l)
+                            {
+                                jacDeriv[m][n][l] = delta * derivUtil->basisDeriv[k][l];
+                            }
+                        }
+                    }
+
+                    NekDouble frobProd[DIM];
+                    for (int m = 0; m < DIM; ++m)
+                    {
+                        frobProd[m] = 0.0;
+                        for (int n = 0; n < DIM; ++n)
+                        {
+                            for (int l = 0; l < DIM; ++l)
+                            {
+                                frobProd[m] += jacIdeal2[n][l] * jacDeriv[m][n][l];
+                            }
+                        }
+                    }
+
+                    for (int j = 0; j < DIM; ++j)
+                    {
+                        // gradient[j] += derivUtil->quadW[k] *
+                        //     fabs(data[i]->maps[k][9]) * (
+                        //         mu * frobProd[j] + (K * lsigma - mu) / sigma *
+                        //         (0.5 * jacDetDeriv[j] * (
+                        //             1.0 + jacDet / (2.0 * sigma + jacDet))));
+                        gradient[j] = derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
+                            mu * frobProd[j] + (
+                                0.5 * jacDetDeriv[j] * (1.0 + jacDet / (2.0*sigma - jacDet))
+                                / jacDet * (K * log(jacDet) - mu)));
+                    }
                 }
             }
             break;

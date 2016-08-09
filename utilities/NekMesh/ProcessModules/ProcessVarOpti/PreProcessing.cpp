@@ -62,17 +62,27 @@ void ProcessVarOpti::BuildDerivUtil()
 
             LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
             LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2);
-            NekVector<NekDouble> U1(u1), V1(v1);
-            NekVector<NekDouble> U2(u2), V2(v2);
-            derivUtil->ptsHigh = LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
 
-            NekMatrix<NekDouble> interp = LibUtilities::GetInterpolationMatrix(U1, V1, U2, V2);
+            derivUtil->ptsHigh =
+                LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
 
-            NekMatrix<NekDouble> Vandermonde = LibUtilities::GetVandermonde(U1,V1);
+            LibUtilities::NodalUtilTriangle nodalTri1(
+                m_mesh->m_nummode - 1, u1, v1);
+            LibUtilities::NodalUtilTriangle nodalTri2(
+                m_mesh->m_nummode - 1, u2, v2);
+
+            Array<OneD, Array<OneD, NekDouble> > uv2(2);
+            uv2[0] = u2;
+            uv2[1] = v2;
+
+            NekMatrix<NekDouble> interp = *nodalTri1.GetInterpolationMatrix(uv2);
+
+            NekMatrix<NekDouble> Vandermonde = *nodalTri2.GetVandermonde();
             NekMatrix<NekDouble> VandermondeI = Vandermonde;
             VandermondeI.Invert();
-            derivUtil->VdmDL[0] = LibUtilities::GetVandermondeForXDerivative(U1,V1) * VandermondeI;
-            derivUtil->VdmDL[1] = LibUtilities::GetVandermondeForYDerivative(U1,V1) * VandermondeI;
+
+            derivUtil->VdmDL[0] = *nodalTri1.GetVandermondeForDeriv(0) * VandermondeI;
+            derivUtil->VdmDL[1] = *nodalTri1.GetVandermondeForDeriv(1) * VandermondeI;
             derivUtil->VdmD[0] = interp * derivUtil->VdmDL[0];
             derivUtil->VdmD[1] = interp * derivUtil->VdmDL[1];
             //derivUtil->quadW = LibUtilities::MakeQuadratureWeights(U2,V1);
@@ -91,21 +101,29 @@ void ProcessVarOpti::BuildDerivUtil()
             Array<OneD, NekDouble> u1, v1, u2, v2, w1, w2;
             LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
             LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
-            NekVector<NekDouble> U1(u1), V1(v1), W1(w1);
-            NekVector<NekDouble> U2(u2), V2(v2), W2(w2);
-            derivUtil->ptsHigh = LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
 
-            NekMatrix<NekDouble> interp =
-                        LibUtilities::GetTetInterpolationMatrix(U1, V1, W1,
-                                                                U2, V2, W2);
+            derivUtil->ptsHigh =
+                LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
 
-            NekMatrix<NekDouble> Vandermonde =
-                                LibUtilities::GetTetVandermonde(U1,V1,W1);
+            LibUtilities::NodalUtilTetrahedron nodalTet1(
+                m_mesh->m_nummode - 1, u1, v1, w1);
+            LibUtilities::NodalUtilTetrahedron nodalTet2(
+                m_mesh->m_nummode - 1, u2, v2, w2);
+
+            Array<OneD, Array<OneD, NekDouble> > uv2(3);
+            uv2[0] = u2;
+            uv2[1] = v2;
+            uv2[2] = w2;
+
+            NekMatrix<NekDouble> interp = *nodalTet1.GetInterpolationMatrix(uv2);
+            NekMatrix<NekDouble> Vandermonde = *nodalTet1.GetVandermonde();
             NekMatrix<NekDouble> VandermondeI = Vandermonde;
             VandermondeI.Invert();
-            derivUtil->VdmDL[0] = LibUtilities::GetVandermondeForTetXDerivative(U1,V1,W1) * VandermondeI;
-            derivUtil->VdmDL[1] = LibUtilities::GetVandermondeForTetYDerivative(U1,V1,W1) * VandermondeI;
-            derivUtil->VdmDL[2] = LibUtilities::GetVandermondeForTetZDerivative(U1,V1,W1) * VandermondeI;
+
+            derivUtil->VdmDL[0] = *nodalTet1.GetVandermondeForDeriv(0) * VandermondeI;
+            derivUtil->VdmDL[1] = *nodalTet1.GetVandermondeForDeriv(1) * VandermondeI;
+            derivUtil->VdmDL[2] = *nodalTet1.GetVandermondeForDeriv(2) * VandermondeI;
+
             derivUtil->VdmD[0] = interp * derivUtil->VdmDL[0];
             derivUtil->VdmD[1] = interp * derivUtil->VdmDL[1];
             derivUtil->VdmD[2] = interp * derivUtil->VdmDL[2];

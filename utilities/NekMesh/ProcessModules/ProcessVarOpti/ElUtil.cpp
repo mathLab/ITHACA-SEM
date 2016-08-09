@@ -395,8 +395,8 @@ void ElUtil::Evaluate()
         minEdge = min(minEdge,es[i]->m_n1->Distance(es[i]->m_n2));
     }
 
-    delta = minEdge / m_el->GetConf().m_order / 500.0;
-
+    //delta = minEdge / m_el->GetConf().m_order / 500.0;
+    delta = 1e-4;
     minJac = mn;
 }
 

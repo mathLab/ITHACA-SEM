@@ -85,12 +85,12 @@ void NodeOpti2D2D::Optimise()
 
     Array<OneD, NekDouble> GA = GetGrad(true);
 
-    cout << endl;
-    cout << G[0] << " " << G[1] << endl;
-    cout << GA[0] << " " << GA[1] << endl;
-
-    if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-10)
+    if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-6)
     {
+        cout << endl;
+        cout << "approx " << G[0] << " " << G[1] << endl;
+        cout << "analytic " << GA[0] << " " << GA[1] << endl;
+
         //needs to optimise
         NekDouble currentW = GetFunctional<2>();
         NekDouble xc       = node->m_x;
@@ -120,6 +120,7 @@ void NodeOpti2D2D::Optimise()
             node->m_y = yc;
             cout << "warning: had to reset node" << endl;
         }
+        exit(-1);
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)),res->val);
         mtx.unlock();
@@ -493,6 +494,8 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
+            grad = Array<OneD, NekDouble>(DIM,0.0);
+
             for (int i = 0; i < nElmt; ++i)
             {
                 for(int k = 0; k < derivUtil->ptsHigh; ++k)
@@ -511,7 +514,6 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
                     // Derivative of basis function in each direction
                     if(analytic)
                     {
-                        grad = Array<OneD, NekDouble>(DIM,0.0);
                         NekDouble jacInvTrans[DIM][DIM];
                         NekDouble jacDetDeriv[DIM];
 
@@ -567,7 +569,7 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
                                     jacDerivPhi[p][n][m] = 0.0;
                                     for (int l = 0; l < DIM; ++l)
                                     {
-                                        jacDerivPhi[p][n][m] +=
+                                        jacDerivPhi[p][n][m] += jacDeriv[p][n][m]*
                                                 data[i]->maps[k][m * 3 + l];
                                     }
                                 }
@@ -589,7 +591,7 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
 
                         for (int j = 0; j < DIM; ++j)
                         {
-                            grad[j] = derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
+                            grad[j] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
                                 mu * frobProd[j] + (jacDetDeriv[j] / (2.0*sigma - jacDet)
                                     * (K * lsigma - mu)));
                         }

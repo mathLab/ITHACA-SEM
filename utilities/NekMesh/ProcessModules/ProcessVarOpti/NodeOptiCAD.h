@@ -33,12 +33,17 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_NODEOPTI
-#define UTILITIES_NEKMESH_NODEOPTI
+#ifndef UTILITIES_NEKMESH_NODEOPTICAD
+#define UTILITIES_NEKMESH_NODEOPTICAD
 
 #include "NodeOpti.h"
 
 #include <NekMeshUtils/CADSystem/CADCurve.h>
+
+namespace Nektar
+{
+namespace Utilities
+{
 
 class NodeOpti1D3D : public NodeOpti //1D optimsation in 3D space
 {
@@ -60,7 +65,7 @@ public:
         ResidualSharedPtr r, DerivUtilSharedPtr d,
         optimiser o)
     {
-        vector<pair<int, CADCurveSharedPtr> > cs = n->GetCADCurves();
+        std::vector<std::pair<int, CADCurveSharedPtr> > cs = n->GetCADCurves();
         return NodeOptiSharedPtr(new NodeOpti1D3D(n, e, r, d, o, cs[0].second));
     }
 
@@ -89,7 +94,7 @@ public:
         ResidualSharedPtr r, DerivUtilSharedPtr d,
         optimiser o)
     {
-        vector<pair<int, CADCurveSharedPtr> > ss = n->GetCADSurfs();
+        std::vector<std::pair<int, CADSurfSharedPtr> > ss = n->GetCADSurfs();
         return NodeOptiSharedPtr(new NodeOpti2D3D(n, e, r, d, o, ss[0].second));
     }
 
@@ -97,5 +102,8 @@ private:
     Array<OneD, NekDouble> GetGrad();
     CADSurfSharedPtr surf;
 };
+
+}
+}
 
 #endif

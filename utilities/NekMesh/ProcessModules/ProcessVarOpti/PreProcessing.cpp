@@ -63,8 +63,7 @@ void ProcessVarOpti::BuildDerivUtil()
             LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
             LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2);
 
-            derivUtil->ptsHigh =
-                LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
+            derivUtil->ptsHigh = u2.num_elements();
 
             LibUtilities::NodalUtilTriangle nodalTri(
                 m_mesh->m_nummode - 1, u1, v1);
@@ -100,8 +99,7 @@ void ProcessVarOpti::BuildDerivUtil()
             LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
             LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
 
-            derivUtil->ptsHigh =
-                LibUtilities::PointsManager()[pkey2]->GetNumPointsAlt();
+            derivUtil->ptsHigh = u2.num_elements();
 
             LibUtilities::NodalUtilTetrahedron nodalTet(
                 m_mesh->m_nummode - 1, u1, v1, w1);
@@ -131,7 +129,7 @@ void ProcessVarOpti::BuildDerivUtil()
             derivUtil->quadW = quadWi;
 
             // Set up derivatives
-            derivUtil->basisDeriv = Array<OneD, Array<OneD, NekDouble> >(
+            /*derivUtil->basisDeriv = Array<OneD, Array<OneD, NekDouble> >(
                 derivUtil->ptsHigh);
 
             NekVector<NekDouble> tmp(derivUtil->ptsLow);
@@ -154,7 +152,7 @@ void ProcessVarOpti::BuildDerivUtil()
                 {
                     derivUtil->basisDeriv[i][j] = derivout[j](i);
                 }
-            }
+            }*/
         }
     }
 }

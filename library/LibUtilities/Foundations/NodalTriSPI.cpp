@@ -107,12 +107,6 @@ namespace Nektar
             return returnval;
         }
 
-        int NodalTriSPI::GetNumPointsAlt()
-        {
-            return NodalTriSPINPTS[GetNumPoints()-2];
-        }
-
-
     } // end of namespace stdregion
 } // end of namespace stdregion
 

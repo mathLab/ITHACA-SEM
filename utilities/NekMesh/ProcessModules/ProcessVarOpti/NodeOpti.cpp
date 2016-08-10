@@ -453,7 +453,6 @@ NekDouble NodeOpti::GetFunctional()
             break;
         }
 
-
         case eHypEl:
         {
             const NekDouble nu = 0.4;
@@ -500,7 +499,7 @@ NekDouble NodeOpti::GetFunctional()
                                 (0.5 * mu * (I1 - 3.0 - 2.0*lsigma) +
                                  0.5 * K * lsigma * lsigma);
 
-                    NekDouble jacInvTrans[DIM][DIM];
+                    /*NekDouble jacInvTrans[DIM][DIM];
                     NekDouble jacDetDeriv[DIM];
                     InvTrans<DIM>(jacIdeal2, jacInvTrans);
 
@@ -552,7 +551,7 @@ NekDouble NodeOpti::GetFunctional()
                             mu * frobProd[j] + (
                                 0.5 * jacDetDeriv[j] * (1.0 + jacDet / (2.0*sigma - jacDet))
                                 / jacDet * (K * log(jacDet) - mu)));
-                    }
+                    }*/
                 }
             }
             break;

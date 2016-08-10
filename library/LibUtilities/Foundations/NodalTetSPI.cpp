@@ -52,18 +52,18 @@ namespace Nektar
 
             for(int i = 0; i < 3; i++)
             {
-                m_points[i] = Array<OneD, DataType>(NodalTetSPINPTS[numPoints-1]);
+                m_points[i] = Array<OneD, DataType>(NodalTetSPINPTS[numPoints-2]);
             }
 
             int index=0;
 
             // initialize values
-            for(unsigned int i=0; i < numPoints-1; ++i)
+            for(unsigned int i=0; i < numPoints-2; ++i)
             {
                 index += NodalTetSPINPTS[i];
             }
 
-            for(int i = 0; i < NodalTetSPINPTS[numPoints-1]; i++)
+            for(int i = 0; i < NodalTetSPINPTS[numPoints-2]; i++)
             {
                 m_points[0][i] = NodalTetSPIData[index][0];
                 m_points[1][i] = NodalTetSPIData[index][1];
@@ -79,7 +79,7 @@ namespace Nektar
         {
             unsigned int numPoints = GetNumPoints();
 
-            m_weights = Array<OneD, DataType>(NodalTetSPINPTS[numPoints-1]);
+            m_weights = Array<OneD, DataType>(NodalTetSPINPTS[numPoints-2]);
 
             int index=0;
 
@@ -89,7 +89,7 @@ namespace Nektar
                 index += NodalTetSPINPTS[i];
             }
 
-            for(int i = 0; i < NodalTetSPINPTS[numPoints-1]; i++)
+            for(int i = 0; i < NodalTetSPINPTS[numPoints-2]; i++)
             {
                 m_weights[i] = NodalTetSPIData[index][3];
                 index++;
@@ -107,12 +107,5 @@ namespace Nektar
             returnval->Initialize();
             return returnval;
         }
-
-        int NodalTetSPI::GetNumPointsAlt()
-        {
-            return NodalTetSPINPTS[GetNumPoints()-1];
-        }
-
-
     } // end of namespace stdregion
 } // end of namespace stdregion

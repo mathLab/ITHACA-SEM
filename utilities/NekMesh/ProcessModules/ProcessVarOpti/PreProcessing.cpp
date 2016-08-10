@@ -86,6 +86,33 @@ void ProcessVarOpti::BuildDerivUtil()
             Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
             NekVector<NekDouble> quadWi(qds);
             derivUtil->quadW = quadWi;
+
+            // Set up derivatives
+            derivUtil->basisDeriv = Array<OneD, Array<OneD, NekDouble> >(
+                derivUtil->ptsHigh);
+
+            NekVector<NekDouble> tmp(derivUtil->ptsLow);
+            NekVector<NekDouble> derivout[2];
+
+            for (int i = 0; i < 2; ++i)
+            {
+                for (int j = 0; j < derivUtil->ptsLow; ++j)
+                {
+                    tmp(j) = uv1[i][j];
+                }
+
+                derivout[i] = derivUtil->VdmD[i] * tmp;
+            }
+
+            for (int i = 0; i < derivUtil->ptsHigh; ++i)
+            {
+                derivUtil->basisDeriv[i] = Array<OneD, NekDouble>(2);
+                for (int j = 0; j < 2; ++j)
+                {
+                    derivUtil->basisDeriv[i][j] = derivout[j](i);
+                }
+            }
+
         }
         break;
         case 3:
@@ -129,7 +156,7 @@ void ProcessVarOpti::BuildDerivUtil()
             derivUtil->quadW = quadWi;
 
             // Set up derivatives
-            /*derivUtil->basisDeriv = Array<OneD, Array<OneD, NekDouble> >(
+            derivUtil->basisDeriv = Array<OneD, Array<OneD, NekDouble> >(
                 derivUtil->ptsHigh);
 
             NekVector<NekDouble> tmp(derivUtil->ptsLow);
@@ -142,7 +169,7 @@ void ProcessVarOpti::BuildDerivUtil()
                     tmp(j) = uv1[i][j];
                 }
 
-                derivout[i] = derivUtil->VdmD[0] * tmp;
+                derivout[i] = derivUtil->VdmD[i] * tmp;
             }
 
             for (int i = 0; i < derivUtil->ptsHigh; ++i)
@@ -152,7 +179,7 @@ void ProcessVarOpti::BuildDerivUtil()
                 {
                     derivUtil->basisDeriv[i][j] = derivout[j](i);
                 }
-            }*/
+            }
         }
     }
 }

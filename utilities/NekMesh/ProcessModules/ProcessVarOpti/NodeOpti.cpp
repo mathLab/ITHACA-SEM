@@ -144,13 +144,13 @@ Array<OneD, NekDouble> NodeOpti2D2D::GetGrad()
     //ret[4] d2/dy2
     //ret[5] d2/dxdy
 
-    //cout << "ANALYTIC: " << gradient[0] << " " << gradient[1] << endl;
+    cout << "ANALYTIC: " << gradient[0] << " " << gradient[1] << endl;
     ret[0] = (w[1] - w[4]) / 2.0 / dx;
     ret[1] = (w[3] - w[6]) / 2.0 / dx;
-    //cout << "APPROX: " << ret[0] << " " << ret[1] << endl;
+    cout << "APPROX: " << ret[0] << " " << ret[1] << endl;
 
-    //ret[0] = gradient[0];
-    //ret[1] = gradient[1];
+    ret[0] = gradient[0];
+    ret[1] = gradient[1];
 
     ret[2] = (w[1] + w[4] - 2.0*w[0]) / dx / dx;
     ret[3] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
@@ -507,7 +507,16 @@ NekDouble NodeOpti::GetFunctional()
                                 (0.5 * mu * (I1 - 3.0 - 2.0*lsigma) +
                                  0.5 * K * lsigma * lsigma);
 
-                    /*NekDouble jacInvTrans[DIM][DIM];
+                    //
+
+                    // Derivative of basis function in each direction
+                    NekDouble basisDeriv[DIM];
+                    for (int m = 0; m < DIM; ++m)
+                    {
+                        basisDeriv[m] = *(derivUtil->VdmD[m])(k,k);
+                    }
+
+                    NekDouble jacInvTrans[DIM][DIM];
                     NekDouble jacDetDeriv[DIM];
                     InvTrans<DIM>(jacIdeal, jacInvTrans);
 
@@ -516,8 +525,7 @@ NekDouble NodeOpti::GetFunctional()
                         jacDetDeriv[m] = 0.0;
                         for (int n = 0; n < DIM; ++n)
                         {
-                            jacDetDeriv[m] += jacInvTrans[m][n] *
-                                derivUtil->basisDeriv[k][n];
+                            jacDetDeriv[m] += jacInvTrans[m][n] * basisDeriv[m];
                         }
                         jacDetDeriv[m] *= jacDet;
                     }
@@ -530,7 +538,7 @@ NekDouble NodeOpti::GetFunctional()
                             NekDouble delta = m == n ? 1.0 : 0.0;
                             for (int l = 0; l < DIM; ++l)
                             {
-                                jacDeriv[m][n][l] = delta * derivUtil->basisDeriv[k][l];
+                                jacDeriv[m][n][l] = delta * basisDeriv[m];
                             }
                         }
                     }
@@ -554,7 +562,7 @@ NekDouble NodeOpti::GetFunctional()
                             mu * frobProd[j] + (
                                 0.5 * jacDetDeriv[j] * (1.0 + jacDet / (2.0*sigma - jacDet))
                                 / jacDet * (K * log(jacDet) - mu)));
-                    }*/
+                    }
                 }
             }
             break;

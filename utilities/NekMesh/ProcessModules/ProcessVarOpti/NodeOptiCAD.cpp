@@ -195,7 +195,7 @@ void NodeOpti2D3D::Optimise()
     }
 }
 
-Array<OneD, NekDouble> NodeOpti1D3D::GetGrad()
+Array<OneD, NekDouble> NodeOpti1D3D::GetGrad(bool analytic)
 {
     NekDouble tc = node->GetCADCurveInfo(curve->GetId());
     Array<OneD, NekDouble> d1 = curve->D1(tc);
@@ -236,7 +236,7 @@ Array<OneD, NekDouble> NodeOpti1D3D::GetGrad()
     return ret;
 }
 
-Array<OneD, NekDouble> NodeOpti2D3D::GetGrad()
+Array<OneD, NekDouble> NodeOpti2D3D::GetGrad(bool analytic)
 {
     Array<OneD, NekDouble> uvc = node->GetCADSurfInfo(surf->GetId());
     Array<OneD, NekDouble> d1 = surf->D1(uvc);

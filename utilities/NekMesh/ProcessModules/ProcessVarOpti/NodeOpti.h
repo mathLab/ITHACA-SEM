@@ -82,14 +82,14 @@ public:
     NodeOptiJob *GetJob();
 
 protected:
-    virtual Array<OneD, NekDouble> GetGrad()
+    virtual Array<OneD, NekDouble> GetGrad(bool analytic = false)
     {
         return Array<OneD,NekDouble>();
     }
-    template<int DIM> NekDouble GetFunctional();
+    template<int DIM> NekDouble GetFunctional(bool analytic = false);
     NodeSharedPtr node;
     std::vector<ElUtilSharedPtr> data;
-    std::vector<NekDouble> gradient;
+    Array<OneD, NekDouble> grad;
 
     void CalcDX();
     void CalcMinJac();
@@ -138,7 +138,7 @@ public:
     }
 
 private:
-    Array<OneD, NekDouble> GetGrad();
+    Array<OneD, NekDouble> GetGrad(bool analytic = false);
 };
 
 class NodeOpti2D2D : public NodeOpti //1D optimsation in 3D space
@@ -165,7 +165,7 @@ public:
     }
 
 private:
-    Array<OneD, NekDouble> GetGrad();
+    Array<OneD, NekDouble> GetGrad(bool analytic = false);
 };
 
 class NodeOptiJob : public Thread::ThreadJob

@@ -83,6 +83,12 @@ void NodeOpti2D2D::Optimise()
 
     Array<OneD, NekDouble> G = GetGrad();
 
+    Array<OneD, NekDouble> GA = GetGrad(true);
+
+    cout << endl;
+    cout << G[0] << " " << G[1] << endl;
+    cout << GA[0] << " " << GA[1] << endl;
+
     if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-10)
     {
         //needs to optimise
@@ -112,7 +118,7 @@ void NodeOpti2D2D::Optimise()
             //reset the node
             node->m_x = xc;
             node->m_y = yc;
-            // cout << "warning: had to reset node" << endl;
+            cout << "warning: had to reset node" << endl;
         }
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)),res->val);
@@ -120,8 +126,15 @@ void NodeOpti2D2D::Optimise()
     }
 }
 
-Array<OneD, NekDouble> NodeOpti2D2D::GetGrad()
+Array<OneD, NekDouble> NodeOpti2D2D::GetGrad(bool analytic)
 {
+
+    if(analytic)
+    {
+        GetFunctional<2>(true);
+        return grad;
+    }
+
     NekDouble xc = node->m_x;
     NekDouble yc = node->m_y;
     vector<NekDouble> w(9);
@@ -144,13 +157,8 @@ Array<OneD, NekDouble> NodeOpti2D2D::GetGrad()
     //ret[4] d2/dy2
     //ret[5] d2/dxdy
 
-    cout << "ANALYTIC: " << gradient[0] << " " << gradient[1] << endl;
     ret[0] = (w[1] - w[4]) / 2.0 / dx;
     ret[1] = (w[3] - w[6]) / 2.0 / dx;
-    cout << "APPROX: " << ret[0] << " " << ret[1] << endl;
-
-    ret[0] = gradient[0];
-    ret[1] = gradient[1];
 
     ret[2] = (w[1] + w[4] - 2.0*w[0]) / dx / dx;
     ret[3] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
@@ -233,7 +241,7 @@ void NodeOpti3D3D::Optimise()
     }
 }
 
-Array<OneD, NekDouble> NodeOpti3D3D::GetGrad()
+Array<OneD, NekDouble> NodeOpti3D3D::GetGrad(bool analytic)
 {
     NekDouble xc = node->m_x;
     NekDouble yc = node->m_y;
@@ -412,7 +420,7 @@ inline NekDouble FrobeniusNorm(NekDouble inarray[DIM][DIM])
 }
 
 template<int DIM>
-NekDouble NodeOpti::GetFunctional()
+NekDouble NodeOpti::GetFunctional(bool analytic)
 {
     const int nElmt  = data.size();
     const int totpts = derivUtil->ptsLow * nElmt;
@@ -452,13 +460,6 @@ NekDouble NodeOpti::GetFunctional()
     NekDouble gam = numeric_limits<float>::epsilon();
     NekDouble ep = minJac < gam ? sqrt(gam*(gam-minJac)) : 0.0;
     NekDouble jacIdeal[DIM][DIM], jacDet;
-
-    // Zero storage for analytic gradient
-    gradient.resize(DIM);
-    for (int i = 0; i < DIM; ++i)
-    {
-        gradient[i] = 0.0;
-    }
 
     switch(opti)
     {
@@ -507,61 +508,62 @@ NekDouble NodeOpti::GetFunctional()
                                 (0.5 * mu * (I1 - 3.0 - 2.0*lsigma) +
                                  0.5 * K * lsigma * lsigma);
 
-                    //
-
                     // Derivative of basis function in each direction
-                    NekDouble basisDeriv[DIM];
-                    for (int m = 0; m < DIM; ++m)
+                    if(analytic)
                     {
-                        basisDeriv[m] = *(derivUtil->VdmD[m])(k,k);
-                    }
+                        grad = Array<OneD, NekDouble>(DIM,0.0);
+                        NekDouble jacInvTrans[DIM][DIM];
+                        NekDouble jacDetDeriv[DIM];
+                        InvTrans<DIM>(jacIdeal, jacInvTrans);
 
-                    NekDouble jacInvTrans[DIM][DIM];
-                    NekDouble jacDetDeriv[DIM];
-                    InvTrans<DIM>(jacIdeal, jacInvTrans);
-
-                    for (int m = 0; m < DIM; ++m)
-                    {
-                        jacDetDeriv[m] = 0.0;
-                        for (int n = 0; n < DIM; ++n)
+                        NekDouble basisDeriv[DIM];
+                        for (int m = 0; m < DIM; ++m)
                         {
-                            jacDetDeriv[m] += jacInvTrans[m][n] * basisDeriv[m];
+                            basisDeriv[m] = *(derivUtil->VdmD[m])(k,k);
                         }
-                        jacDetDeriv[m] *= jacDet;
-                    }
 
-                    NekDouble jacDeriv[DIM][DIM][DIM];
-                    for (int m = 0; m < DIM; ++m)
-                    {
-                        for (int n = 0; n < DIM; ++n)
+                        for (int m = 0; m < DIM; ++m)
                         {
-                            NekDouble delta = m == n ? 1.0 : 0.0;
-                            for (int l = 0; l < DIM; ++l)
+                            jacDetDeriv[m] = 0.0;
+                            for (int n = 0; n < DIM; ++n)
                             {
-                                jacDeriv[m][n][l] = delta * basisDeriv[m];
+                                jacDetDeriv[m] += jacInvTrans[m][n] * basisDeriv[m];
+                            }
+                            jacDetDeriv[m] *= jacDet;
+                        }
+
+                        NekDouble jacDeriv[DIM][DIM][DIM];
+                        for (int m = 0; m < DIM; ++m)
+                        {
+                            for (int n = 0; n < DIM; ++n)
+                            {
+                                NekDouble delta = m == n ? 1.0 : 0.0;
+                                for (int l = 0; l < DIM; ++l)
+                                {
+                                    jacDeriv[m][n][l] = delta * basisDeriv[m];
+                                }
                             }
                         }
-                    }
 
-                    NekDouble frobProd[DIM];
-                    for (int m = 0; m < DIM; ++m)
-                    {
-                        frobProd[m] = 0.0;
-                        for (int n = 0; n < DIM; ++n)
+                        NekDouble frobProd[DIM];
+                        for (int m = 0; m < DIM; ++m)
                         {
-                            for (int l = 0; l < DIM; ++l)
+                            frobProd[m] = 0.0;
+                            for (int n = 0; n < DIM; ++n)
                             {
-                                frobProd[m] += jacIdeal[n][l] * jacDeriv[m][n][l];
+                                for (int l = 0; l < DIM; ++l)
+                                {
+                                    frobProd[m] += jacIdeal[n][l] * jacDeriv[m][n][l];
+                                }
                             }
                         }
-                    }
 
-                    for (int j = 0; j < DIM; ++j)
-                    {
-                        gradient[j] = derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
-                            mu * frobProd[j] + (
-                                0.5 * jacDetDeriv[j] * (1.0 + jacDet / (2.0*sigma - jacDet))
-                                / jacDet * (K * log(jacDet) - mu)));
+                        for (int j = 0; j < DIM; ++j)
+                        {
+                            grad[j] = derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
+                                mu * frobProd[j] + (jacDetDeriv[j] / (2.0*sigma - jacDet)
+                                    * (K * lsigma - mu)));
+                        }
                     }
                 }
             }

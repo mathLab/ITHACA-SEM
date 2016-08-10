@@ -56,8 +56,8 @@ void ProcessVarOpti::BuildDerivUtil()
 
             LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                           LibUtilities::eNodalTriElec);
-            LibUtilities::PointsKey pkey2(m_mesh->m_nummode+2,
-                                          LibUtilities::eNodalTriSPI);
+            LibUtilities::PointsKey pkey2(m_mesh->m_nummode,
+                                          LibUtilities::eNodalTriElec);
             Array<OneD, NekDouble> u1, v1, u2, v2;
 
             LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
@@ -68,7 +68,9 @@ void ProcessVarOpti::BuildDerivUtil()
             LibUtilities::NodalUtilTriangle nodalTri(
                 m_mesh->m_nummode - 1, u1, v1);
 
-            Array<OneD, Array<OneD, NekDouble> > uv2(2);
+            Array<OneD, Array<OneD, NekDouble> > uv2(2), uv1(2);
+            uv1[0] = u1;
+            uv1[1] = v1;
             uv2[0] = u2;
             uv2[1] = v2;
 
@@ -112,7 +114,6 @@ void ProcessVarOpti::BuildDerivUtil()
                     derivUtil->basisDeriv[i][j] = derivout[j](i);
                 }
             }
-
         }
         break;
         case 3:

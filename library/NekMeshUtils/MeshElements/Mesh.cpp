@@ -109,12 +109,12 @@ void Mesh::MakeOrder(int                      order,
     }
     else if (distType == LibUtilities::eGaussLobattoLegendre)
     {
-        pTypes[LibUtilities::eSegment]       = LibUtilities::ePolyEvenlySpaced;
-        pTypes[LibUtilities::eTriangle]      = LibUtilities::eNodalTriEvenlySpaced;
-        pTypes[LibUtilities::eQuadrilateral] = LibUtilities::ePolyEvenlySpaced;
-        pTypes[LibUtilities::eTetrahedron]   = LibUtilities::eNodalTetEvenlySpaced;
-        pTypes[LibUtilities::ePrism]         = LibUtilities::eNodalPrismEvenlySpaced;
-        pTypes[LibUtilities::eHexahedron]    = LibUtilities::ePolyEvenlySpaced;
+        pTypes[LibUtilities::eSegment]       = LibUtilities::eGaussLobattoLegendre;
+        pTypes[LibUtilities::eTriangle]      = LibUtilities::eNodalTriElec;
+        pTypes[LibUtilities::eQuadrilateral] = LibUtilities::eGaussLobattoLegendre;
+        pTypes[LibUtilities::eTetrahedron]   = LibUtilities::eNodalTetElec;
+        // Prism still to do.
+        pTypes[LibUtilities::eHexahedron]    = LibUtilities::eGaussLobattoLegendre;
     }
 
     for(eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++)

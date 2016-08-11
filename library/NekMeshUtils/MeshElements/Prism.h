@@ -86,6 +86,10 @@ public:
         int                                coordDim,
         int                               &id);
     NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
+    NEKMESHUTILS_EXPORT virtual int GetFaceVertex(int i, int j)
+    {
+        return m_faceIds[i][j];
+    }
 
     /**
      * Orientation of prism; unchanged = 0; clockwise = 1;
@@ -95,6 +99,9 @@ public:
 
 protected:
     void OrientPrism();
+
+private:
+    static int m_faceIds[5][4];
 };
 }
 }

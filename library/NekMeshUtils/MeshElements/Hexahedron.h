@@ -87,6 +87,13 @@ public:
         int                               &id);
 
     NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
+    NEKMESHUTILS_EXPORT virtual int GetFaceVertex(int i, int j)
+    {
+        return m_faceIds[i][j];
+    }
+
+private:
+    static int m_faceIds[6][4];
 };
 }
 }

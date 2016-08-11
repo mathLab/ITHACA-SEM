@@ -166,10 +166,40 @@ std::vector<int> triTensorNodeOrdering(const std::vector<int> &nodes, int n)
     return nodeList;
 }
 
+typedef boost::tuple<int, int, int> Mode;
+struct cmpop
+{
+    bool operator()(Mode const &a, Mode const &b) const
+    {
+        if (a.get<0>() < b.get<0>())
+        {
+            return true;
+        }
+        if (a.get<0>() > b.get<0>())
+        {
+            return false;
+        }
+        if (a.get<1>() < b.get<1>())
+        {
+            return true;
+        }
+        if (a.get<1>() > b.get<1>())
+        {
+            return false;
+        }
+        if (a.get<2>() < b.get<2>())
+        {
+            return true;
+        }
+
+        return false;
+    }
+};
+
+
 std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
 {
     std::vector<int> nodeList;
-    int cnt2;
     int nTri = n*(n+1)/2;
     int nTet = n*(n+1)*(n+2)/6;
 
@@ -193,35 +223,6 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
 
     // Set up a map that takes (a,b,c) -> m to help us figure out where things
     // are inside the tetrahedron.
-    typedef boost::tuple<int, int, int> Mode;
-    struct cmpop
-    {
-        bool operator()(Mode const &a, Mode const &b) const
-        {
-            if (a.get<0>() < b.get<0>())
-            {
-                return true;
-            }
-            if (a.get<0>() > b.get<0>())
-            {
-                return false;
-            }
-            if (a.get<1>() < b.get<1>())
-            {
-                return true;
-            }
-            if (a.get<1>() > b.get<1>())
-            {
-                return false;
-            }
-            if (a.get<2>() < b.get<2>())
-            {
-                return true;
-            }
-
-            return false;
-        }
-    };
     std::map<Mode, int, cmpop> tmp;
 
     for (int k = 0, cnt = 0; k < n; ++k)
@@ -344,9 +345,6 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
 std::vector<int> prismTensorNodeOrdering(const std::vector<int> &nodes, int n)
 {
     std::vector<int> nodeList;
-    int cnt2;
-    int nTri = n*(n+1)/2;
-    int nPrism = n*n*(n+1)/2;
 
     if (n == 0)
     {
@@ -355,33 +353,34 @@ std::vector<int> prismTensorNodeOrdering(const std::vector<int> &nodes, int n)
 
     nodeList.resize(nodes.size());
 
-    if (n == 1)
+    if (n == 2)
     {
         nodeList[0] = nodes[1];
         nodeList[1] = nodes[0];
         return nodeList;
     }
 
-    static int nekToGmshVerts[6] = {3, 4, 1, 0, 5, 2};
-
-    // Vertices
-    nodeList[0] = nodes[nekToGmshVerts[0]];
-    nodeList[1] = nodes[nekToGmshVerts[1]];
-    nodeList[2] = nodes[nekToGmshVerts[2]];
-    nodeList[3] = nodes[nekToGmshVerts[3]];
-    nodeList[4] = nodes[nekToGmshVerts[4]];
-    nodeList[5] = nodes[nekToGmshVerts[5]];
-    // nodeList[0]          = nodes[nekToGmshVerts[0]];
-    // nodeList[n - 1]      = nodes[nekToGmshVerts[1]];
-    // nodeList[n*n - 1]    = nodes[nekToGmshVerts[2]];
-    // nodeList[n*(n-1)]    = nodes[nekToGmshVerts[3]];
-    // nodeList[nPrism-1-n] = nodes[nekToGmshVerts[4]];
-    // nodeList[nPrism-1]   = nodes[nekToGmshVerts[5]];
-
-    if (n == 2)
+    // For some reason, this ordering is different. Whereas Gmsh usually orders
+    // vertices first, followed by edges, this ordering goes VVE-VVE-VVE for the
+    // three edges that contain edge-interior information, but also vertex
+    // orientation is not the same as the original Gmsh prism. The below is done
+    // by looking at the ordering by hand and is hence why we don't support
+    // order > 4 right now.
+    if (n == 3)
     {
-        return nodeList;
+        nodeList[0] = nodes[1];
+        nodeList[1] = nodes[4];
+        nodeList[2] = nodes[2];
+        nodeList[3] = nodes[5];
+        nodeList[4] = nodes[0];
+        nodeList[5] = nodes[3];
+        nodeList[6] = nodes[7];
+        nodeList[7] = nodes[8];
+        nodeList[8] = nodes[6];
     }
+
+    ASSERTL0(n < 4, "Prism Gmsh input and output is incomplete for orders "
+                    "larger than 4");
 
     return nodeList;
 }
@@ -1359,8 +1358,8 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
         intPoints.push_back(i);
     }
 
-    // Reorder this stuff
-    tmp = prismTensorNodeOrdering(intPoints, order - 2);
+    // Reorder interior points
+    tmp = prismTensorNodeOrdering(intPoints, order - 1);
     mapping.insert(mapping.end(), tmp.begin(), tmp.end());
 
     return mapping;

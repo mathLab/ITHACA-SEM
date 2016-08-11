@@ -56,7 +56,6 @@ ModuleKey OutputGmsh::className =
 OutputGmsh::OutputGmsh(MeshSharedPtr m) : OutputModule(m)
 {
     map<unsigned int, ElmtConfig> igelmap = InputGmsh::GenElmMap();
-
     map<unsigned int, ElmtConfig>::iterator it;
 
     // Populate #InputGmsh::elmMap and use this to construct an
@@ -238,25 +237,20 @@ void OutputGmsh::Process()
             for (int j = 0; j < faceList.size(); ++j)
             {
                 nodeList = faceList[j]->m_faceNodes;
+                int nFaceVerts = faceList[j]->m_vertexList.size();
+                vector<int> faceIds(nFaceVerts), volFaceIds(nFaceVerts);
 
-                if (faceList[j]->m_vertexList.size() == 3)
+                for (int k = 0; k < nFaceVerts; ++k)
                 {
-                    // TODO: move face_ids into a member function of Element
-                    int face_ids[5][4] = {
-                        {0, 1, 2, 3}, {0, 1, 4, -1}, {1, 2, 5, 4}, {3, 2, 5, -1}, {0, 3, 5, 4}};
-                    //int face_ids[4][3] = {
-                    //    {0, 1, 2}, {0, 1, 3}, {1, 2, 3}, {0, 2, 3}};
-                    vector<int> faceIds(3), volFaceIds(3);
+                    faceIds   [k] = faceList[j]->m_vertexList[k]->m_id;
+                    volFaceIds[k] =
+                        e->GetVertexList()[e->GetFaceVertex(j, k)]->m_id;
+                }
 
-                    for (int k = 0; k < 3; ++k)
-                    {
-                        faceIds   [k] = faceList[j]->m_vertexList[k]->m_id;
-                        volFaceIds[k] = e->GetVertexList()[face_ids[j][k]]->m_id;
-                    }
-
+                if (nFaceVerts == 3)
+                {
                     HOTriangle<NodeSharedPtr> hoTri(faceIds, nodeList);
                     hoTri.Align(volFaceIds);
-
                     for (int k = 0; k < hoTri.surfVerts.size(); ++k)
                     {
                         tags.push_back(hoTri.surfVerts[k]->m_id);
@@ -264,20 +258,6 @@ void OutputGmsh::Process()
                 }
                 else
                 {
-                    // TODO: move face_ids into a member function of Element
-                    int face_ids[5][4] = {
-                        {0, 1, 2, 3}, {0, 1, 4, -1}, {1, 2, 5, 4}, {3, 2, 5, -1}, {0, 3, 5, 4}};
-                    //int face_ids[6][4] = {{0, 1, 2, 3}, {0, 1, 5, 4},
-                    //                      {1, 2, 6, 5}, {3, 2, 6, 7},
-                    //                      {0, 3, 7, 4}, {4, 5, 6, 7}};
-                    vector<int> faceIds(4), volFaceIds(4);
-
-                    for (int k = 0; k < 4; ++k)
-                    {
-                        faceIds   [k] = faceList[j]->m_vertexList[k]->m_id;
-                        volFaceIds[k] = e->GetVertexList()[face_ids[j][k]]->m_id;
-                    }
-
                     HOQuadrilateral<NodeSharedPtr> hoQuad(faceIds, nodeList);
                     hoQuad.Align(volFaceIds);
 

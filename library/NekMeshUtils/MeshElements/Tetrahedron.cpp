@@ -51,6 +51,11 @@ LibUtilities::ShapeType Tetrahedron::m_type =
     GetElementFactory().RegisterCreatorFunction(
         LibUtilities::eTetrahedron, Tetrahedron::create, "Tetrahedron");
 
+/// Vertex IDs that make up tetrahedron faces.
+int Tetrahedron::m_faceIds[4][3] = {
+    {0, 1, 2}, {0, 1, 3}, {1, 2, 3}, {0, 2, 3}
+};
+
 /**
  * @brief Create a tetrahedron element.
  */
@@ -116,9 +121,6 @@ Tetrahedron::Tetrahedron(ElmtConfig pConf,
         }
     }
 
-    // Face-vertex IDs
-    int face_ids[4][3] = {{0, 1, 2}, {0, 1, 3}, {1, 2, 3}, {0, 2, 3}};
-
     // Face-edge IDs
     int face_edges[4][3];
 
@@ -134,9 +136,9 @@ Tetrahedron::Tetrahedron(ElmtConfig pConf,
         // additional note below).
         for (int k = 0; k < 3; ++k)
         {
-            faceVertices.push_back(m_vertex[face_ids[j][k]]);
-            NodeSharedPtr a = m_vertex[face_ids[j][k]];
-            NodeSharedPtr b = m_vertex[face_ids[j][(k + 1) % 3]];
+            faceVertices.push_back(m_vertex[m_faceIds[j][k]]);
+            NodeSharedPtr a = m_vertex[m_faceIds[j][k]];
+            NodeSharedPtr b = m_vertex[m_faceIds[j][(k + 1) % 3]];
             for (unsigned int i = 0; i < m_edge.size(); ++i)
             {
                 if (((*(m_edge[i]->m_n1) == *a) &&
@@ -159,10 +161,10 @@ Tetrahedron::Tetrahedron(ElmtConfig pConf,
             const int nFaceNodes = n * (n - 1) / 2;
 
             // Get the vertex IDs of whatever face we are processing.
-            vector<int> faceIds(3);
-            faceIds[0] = faceVertices[0]->m_id;
-            faceIds[1] = faceVertices[1]->m_id;
-            faceIds[2] = faceVertices[2]->m_id;
+            vector<int> faceVertIds(3);
+            faceVertIds[0] = faceVertices[0]->m_id;
+            faceVertIds[1] = faceVertices[1]->m_id;
+            faceVertIds[2] = faceVertices[2]->m_id;
 
             // Find out the original face number as we were given it in
             // the constructor using the orientation map.
@@ -187,14 +189,14 @@ Tetrahedron::Tetrahedron(ElmtConfig pConf,
 
             // Find the original face vertex IDs.
             vector<int> origFaceIds(3);
-            origFaceIds[0] = pNodeList[face_ids[origFace][0]]->m_id;
-            origFaceIds[1] = pNodeList[face_ids[origFace][1]]->m_id;
-            origFaceIds[2] = pNodeList[face_ids[origFace][2]]->m_id;
+            origFaceIds[0] = pNodeList[m_faceIds[origFace][0]]->m_id;
+            origFaceIds[1] = pNodeList[m_faceIds[origFace][1]]->m_id;
+            origFaceIds[2] = pNodeList[m_faceIds[origFace][2]]->m_id;
 
             // Construct a HOTriangle object which performs the
             // orientation magically for us.
             HOTriangle<NodeSharedPtr> hoTri(origFaceIds, faceNodes);
-            hoTri.Align(faceIds);
+            hoTri.Align(faceVertIds);
 
             // Copy the face nodes back again.
             faceNodes = hoTri.surfVerts;
@@ -384,8 +386,6 @@ bool operator==(const struct TetOrient &a, const struct TetOrient &b)
  */
 void Tetrahedron::OrientTet()
 {
-    static int face_ids[4][3] = {{0, 1, 2}, {0, 1, 3}, {1, 2, 3}, {0, 2, 3}};
-
     TetOrientSet faces;
 
     // Create a copy of the original vertex ordering. This is used to
@@ -395,9 +395,9 @@ void Tetrahedron::OrientTet()
     {
         vector<int> nodes(3);
 
-        nodes[0] = m_vertex[face_ids[i][0]]->m_id;
-        nodes[1] = m_vertex[face_ids[i][1]]->m_id;
-        nodes[2] = m_vertex[face_ids[i][2]]->m_id;
+        nodes[0] = m_vertex[m_faceIds[i][0]]->m_id;
+        nodes[1] = m_vertex[m_faceIds[i][1]]->m_id;
+        nodes[2] = m_vertex[m_faceIds[i][2]]->m_id;
 
         sort(nodes.begin(), nodes.end());
         struct TetOrient faceNodes(nodes, i);
@@ -490,9 +490,9 @@ void Tetrahedron::OrientTet()
     {
         vector<int> nodes(3);
 
-        nodes[0] = m_vertex[face_ids[i][0]]->m_id;
-        nodes[1] = m_vertex[face_ids[i][1]]->m_id;
-        nodes[2] = m_vertex[face_ids[i][2]]->m_id;
+        nodes[0] = m_vertex[m_faceIds[i][0]]->m_id;
+        nodes[1] = m_vertex[m_faceIds[i][1]]->m_id;
+        nodes[2] = m_vertex[m_faceIds[i][2]]->m_id;
         sort(nodes.begin(), nodes.end());
 
         struct TetOrient faceNodes(nodes, 0);

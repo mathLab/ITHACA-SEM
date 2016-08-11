@@ -471,6 +471,13 @@ public:
         return StdRegions::eNoOrientation;
     }
 
+    NEKMESHUTILS_EXPORT virtual int GetFaceVertex(int i, int j)
+    {
+        ASSERTL0(false,
+                 "This function should be implemented at a shape level.");
+        return 0;
+    }
+
     NEKMESHUTILS_EXPORT void Print()
     {
         int i, j;

@@ -47,6 +47,12 @@ LibUtilities::ShapeType Hexahedron::m_type =
     GetElementFactory().RegisterCreatorFunction(
         LibUtilities::eHexahedron, Hexahedron::create, "Hexahedron");
 
+/// Vertex IDs that make up hexahedron faces.
+int Hexahedron::m_faceIds[6][4] = {
+    {0, 1, 2, 3}, {0, 1, 5, 4}, {1, 2, 6, 5},
+    {3, 2, 6, 7}, {0, 3, 7, 4}, {4, 5, 6, 7}
+};
+
 /**
  * @brief Create a hexahedral element.
  */
@@ -102,12 +108,6 @@ Hexahedron::Hexahedron(ElmtConfig pConf,
 
     // Create faces
     int face_edges[6][4];
-    int face_ids[6][4] = {{0, 1, 2, 3},
-                          {0, 1, 5, 4},
-                          {1, 2, 6, 5},
-                          {3, 2, 6, 7},
-                          {0, 3, 7, 4},
-                          {4, 5, 6, 7}};
     for (int j = 0; j < 6; ++j)
     {
         vector<NodeSharedPtr> faceVertices;
@@ -115,9 +115,9 @@ Hexahedron::Hexahedron(ElmtConfig pConf,
         vector<NodeSharedPtr> faceNodes;
         for (int k = 0; k < 4; ++k)
         {
-            faceVertices.push_back(m_vertex[face_ids[j][k]]);
-            NodeSharedPtr a = m_vertex[face_ids[j][k]];
-            NodeSharedPtr b = m_vertex[face_ids[j][(k + 1) % 4]];
+            faceVertices.push_back(m_vertex[m_faceIds[j][k]]);
+            NodeSharedPtr a = m_vertex[m_faceIds[j][k]];
+            NodeSharedPtr b = m_vertex[m_faceIds[j][(k + 1) % 4]];
             for (unsigned int i = 0; i < m_edge.size(); ++i)
             {
                 if (((*(m_edge[i]->m_n1) == *a) &&

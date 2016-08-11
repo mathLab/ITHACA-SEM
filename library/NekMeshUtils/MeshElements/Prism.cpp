@@ -49,6 +49,11 @@ LibUtilities::ShapeType Prism::m_type =
     GetElementFactory().RegisterCreatorFunction(
         LibUtilities::ePrism, Prism::create, "Prism");
 
+/// Vertex IDs that make up prism faces.
+int Prism::m_faceIds[5][4] = {
+    {0, 1, 2, 3}, {0, 1, 4, -1}, {1, 2, 5, 4}, {3, 2, 5, -1}, {0, 3, 5, 4}
+};
+
 /**
  * @brief Create a prism element.
  */
@@ -114,8 +119,6 @@ Prism::Prism(ElmtConfig pConf,
     }
 
     // Create faces
-    int face_ids[5][4] = {
-        {0, 1, 2, 3}, {0, 1, 4, -1}, {1, 2, 5, 4}, {3, 2, 5, -1}, {0, 3, 5, 4}};
     int face_edges[5][4];
 
     int face_offset[5];
@@ -135,9 +138,9 @@ Prism::Prism(ElmtConfig pConf,
 
         for (int k = 0; k < nEdge; ++k)
         {
-            faceVertices.push_back(m_vertex[face_ids[j][k]]);
-            NodeSharedPtr a = m_vertex[face_ids[j][k]];
-            NodeSharedPtr b = m_vertex[face_ids[j][(k + 1) % nEdge]];
+            faceVertices.push_back(m_vertex[m_faceIds[j][k]]);
+            NodeSharedPtr a = m_vertex[m_faceIds[j][k]];
+            NodeSharedPtr b = m_vertex[m_faceIds[j][(k + 1) % nEdge]];
             unsigned int i;
             for (i = 0; i < m_edge.size(); ++i)
             {
@@ -319,12 +322,16 @@ void Prism::MakeOrder(int                                order,
     const int nPrismIntPts = (nPoints - 2) * (nPoints - 3) * (nPoints - 2) / 2;
     m_volumeNodes.resize(nPrismIntPts);
 
+    cout << "numpoints = " << nPrismIntPts << endl;
+
     for (int i = nPrismPts - nPrismIntPts, cnt = 0; i < nPrismPts; ++i, ++cnt)
     {
         Array<OneD, NekDouble> xp(3);
         xp[0] = px[i];
         xp[1] = py[i];
         xp[2] = pz[i];
+
+        cout << xp[0] << " " << xp[1] << " " << xp[2] << endl;
 
         Array<OneD, NekDouble> x(3, 0.0);
         for (int j = 0; j < coordDim; ++j)

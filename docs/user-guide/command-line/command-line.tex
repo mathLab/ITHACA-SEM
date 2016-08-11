@@ -27,7 +27,7 @@ Override a solverinfo (or define a new one) specified in the XML file.
 \hangindent=1.5cm Determines the output format for writing \nekpp field files
 that are used to store, for example, checkpoint and solution field files. The
 default for \inlsh{format} is \inlsh{Xml}, which is an XML-based format, which
-is written as one file per processor. If \nekpp is compiled with HDF5 support,
+is written as one file per process. If \nekpp is compiled with HDF5 support,
 then an alternative option is \inlsh{Hdf5}, which will write one file for all
 processors and can be more efficient for very large-scale parallel jobs.
 

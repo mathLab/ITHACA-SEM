@@ -71,13 +71,6 @@ namespace Nektar
                            m_comm->GetColumnComm()->GetColumnComm()  :
                            m_comm->GetColumnComm();
 
-            m_transposition = MemoryManager<LibUtilities::Transposition>
-                                ::AllocateSharedPtr(HomoBasis, m_comm, m_StripZcomm);
-
-            m_planes = Array<OneD,ExpListSharedPtr>(
-                                m_homogeneousBasis->GetNumPoints() /
-                                m_StripZcomm->GetSize());
-
             ASSERTL0( m_homogeneousBasis->GetNumPoints() %
                       m_StripZcomm->GetSize() == 0,
                       "HomModesZ should be a multiple of npz.");
@@ -87,9 +80,18 @@ namespace Nektar
                && (m_homogeneousBasis->GetBasisType() !=
                     LibUtilities::eFourierHalfModeIm) )
             {
-                ASSERTL0( m_planes.num_elements() % 2 == 0,
-                      "HomModesZ/npz should be an even integer.");
+                ASSERTL0(
+                    (m_homogeneousBasis->GetNumPoints() /
+                     m_StripZcomm->GetSize()) % 2 == 0,
+                    "HomModesZ/npz should be an even integer.");
             }
+
+            m_transposition = MemoryManager<LibUtilities::Transposition>
+                                ::AllocateSharedPtr(HomoBasis, m_comm, m_StripZcomm);
+
+            m_planes = Array<OneD,ExpListSharedPtr>(
+                                m_homogeneousBasis->GetNumPoints() /
+                                m_StripZcomm->GetSize());
 
             if(m_useFFT)
             {

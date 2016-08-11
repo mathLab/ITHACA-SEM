@@ -322,16 +322,12 @@ void Prism::MakeOrder(int                                order,
     const int nPrismIntPts = (nPoints - 2) * (nPoints - 3) * (nPoints - 2) / 2;
     m_volumeNodes.resize(nPrismIntPts);
 
-    cout << "numpoints = " << nPrismIntPts << endl;
-
     for (int i = nPrismPts - nPrismIntPts, cnt = 0; i < nPrismPts; ++i, ++cnt)
     {
         Array<OneD, NekDouble> xp(3);
         xp[0] = px[i];
         xp[1] = py[i];
         xp[2] = pz[i];
-
-        cout << xp[0] << " " << xp[1] << " " << xp[2] << endl;
 
         Array<OneD, NekDouble> x(3, 0.0);
         for (int j = 0; j < coordDim; ++j)

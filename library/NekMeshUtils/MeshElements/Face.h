@@ -265,9 +265,6 @@ public:
                 m_faceNodes[cnt] = boost::shared_ptr<Node>(
                     new Node(id++, x[0], x[1], x[2]));
             }
-            std::cout << "NFACEPTS = " << m_faceNodes.size() << std::endl;
-
-
             m_curveType = pType;
         }
         else if (m_vertexList.size() == 4)

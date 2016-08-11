@@ -85,14 +85,16 @@ void NodeOpti2D2D::Optimise()
 
     Array<OneD, NekDouble> GA = GetGrad(true);
 
-    G[0] = GA[0];
-    G[1] = GA[1];
-
     if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-6)
     {
-        // cout << endl;
-        // cout << "approx " << G[0] << " " << G[1] << endl;
-        // cout << "analytic " << GA[0] << " " << GA[1] << endl;
+        cout << endl;
+        cout << "approx " << G[0] << " " << G[1] << endl;
+        cout << "approx " << G[2] << " " << G[3] << " " << G[4] << endl;
+        cout << "analytic " << GA[0] << " " << GA[1] << endl;
+        cout << "analytic " << GA[2] << " " << GA[3] << " " << GA[4] << endl;
+
+        G[0] = GA[0];
+        G[1] = GA[1];
 
         //needs to optimise
         NekDouble currentW = GetFunctional<2>();
@@ -121,9 +123,9 @@ void NodeOpti2D2D::Optimise()
             //reset the node
             node->m_x = xc;
             node->m_y = yc;
-            //cout << "warning: had to reset node" << endl;
+            cout << "warning: had to reset node" << endl;
         }
-        //exit(-1);
+        exit(-1);
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)),res->val);
         mtx.unlock();
@@ -385,6 +387,26 @@ inline void InvTrans<3>(NekDouble in[3][3], NekDouble out[3][3])
     out[2][2] =  (in[0][0]*in[1][1]-in[1][0]*in[0][1])*invdet;
 }
 
+template<int DIM> inline NekDouble FrobProd(NekDouble in1[DIM][DIM],
+                                            NekDouble in2[DIM][DIM])
+{
+    return 0;
+}
+
+template<>
+inline NekDouble FrobProd<2>(NekDouble in1[2][2], NekDouble in2[2][2])
+{
+    NekDouble ret = 0;
+    for (int n = 0; n < 2; ++n)
+    {
+        for (int l = 0; l < 2; ++l)
+        {
+            ret += in1[n][l] * in2[n][l];
+        }
+    }
+    return ret;
+}
+
 // Typedef for derivative storage, we use boost::multi_array so we can pass this
 // to functions easily
 typedef boost::multi_array<NekDouble, 4> DerivArray;
@@ -497,7 +519,7 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
-            grad = Array<OneD, NekDouble>(DIM,0.0);
+            grad = Array<OneD, NekDouble>(DIM==2 ? 5 : 9,0.0);
 
             for (int i = 0; i < nElmt; ++i)
             {
@@ -582,13 +604,15 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
                         NekDouble frobProd[DIM];
                         for (int m = 0; m < DIM; ++m)
                         {
-                            frobProd[m] = 0.0;
-                            for (int n = 0; n < DIM; ++n)
+                            frobProd[m] = FrobProd<DIM>(jacIdeal,jacDerivPhi[m]);
+                        }
+
+                        NekDouble frobProdHes[DIM][DIM]; //holder for the hessian frobprods
+                        for (int m = 0; m < DIM; ++m)
+                        {
+                            for(int l = m; l < DIM; ++l)
                             {
-                                for (int l = 0; l < DIM; ++l)
-                                {
-                                    frobProd[m] += jacIdeal[n][l] * jacDerivPhi[m][n][l];
-                                }
+                                frobProdHes[m][l] = FrobProd<DIM>(jacDerivPhi[m],jacDerivPhi[l]);
                             }
                         }
 
@@ -597,6 +621,16 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
                             grad[j] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
                                 mu * frobProd[j] + (jacDetDeriv[j] / (2.0*sigma - jacDet)
                                     * (K * lsigma - mu)));
+                        }
+                        int ct = 0;
+                        for (int m = 0; m < DIM; ++m)
+                        {
+                            for(int l = m; l < DIM; ++l, ct++)
+                            {
+                                grad[ct+DIM] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
+                                    mu * frobProdHes[m][l] + jacDetDeriv[m]*jacDetDeriv[l]*(
+                                        K/(2.0*sigma-jacDet)/(2.0*sigma-jacDet) - jacDet*(k*lsigma-mu)));
+                            }
                         }
                     }
                 }

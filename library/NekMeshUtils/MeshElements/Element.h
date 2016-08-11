@@ -451,7 +451,7 @@ public:
 
     NEKMESHUTILS_EXPORT int GetMaxOrder();
 
-    /// Complete this object.
+    /// Insert interior (i.e. volume) points into this element.
     NEKMESHUTILS_EXPORT virtual void MakeOrder(
         int                                order,
         SpatialDomains::GeometrySharedPtr  geom,

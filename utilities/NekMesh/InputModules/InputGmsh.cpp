@@ -64,8 +64,31 @@ ModuleKey InputGmsh::className = GetModuleFactory().RegisterCreatorFunction(
 std::map<unsigned int, ElmtConfig> InputGmsh::elmMap = InputGmsh::GenElmMap();
 
 /**
- * @brief Reorder a quadrilateral to appear in Nektar++ ordering from
- * Gmsh.
+ * @brief Reorder Gmsh nodes so that they appear in a tensor product format
+ * suitable for the interior of a Nektar++ quadrilateral.
+ *
+ * For an example, consider a second order quadrilateral. This routine will
+ * produce a permutation map that applies the following permutation:
+ *
+ * ```
+ *   3---6---2         6---7---8
+ *   |       |         |       |
+ *   7   8   5   --->  3   4   5
+ *   |       |         |       |
+ *   0---4---1         0---1---2
+ *
+ *     Gmsh          tensor-product
+ * ```
+ *
+ * We assume that Gmsh uses a recursive ordering system, so that interior nodes
+ * are reordered by calling this function recursively.
+ *
+ * @param nodes   The integer IDs of the nodes to be reordered, in Gmsh format.
+ * @param n       The number of nodes in one coordinate direction. If this is
+ *                zero we assume no reordering needs to be done and return the
+ *                identity permutation.
+ *
+ * @return The nodes vector in tensor-product ordering.
  */
 std::vector<int> quadTensorNodeOrdering(const std::vector<int> &nodes, int n)
 {
@@ -115,6 +138,35 @@ std::vector<int> quadTensorNodeOrdering(const std::vector<int> &nodes, int n)
     return nodeList;
 }
 
+/**
+ * @brief Reorder Gmsh nodes so that they appear in a "tensor product" format
+ * suitable for the interior of a Nektar++ triangle.
+ *
+ * For an example, consider a third-order triangle. This routine will produce a
+ * permutation map that applies the following permutation:
+ *
+ * ```
+ *   2                 9
+ *   | \               | \
+ *   7   6             7   7
+ *   |     \           |     \
+ *   8   9   5         4   5   6
+ *   |         \       |         \
+ *   0---3---4---1     0---1---2---3
+ *
+ *       Gmsh          tensor-product
+ * ```
+ *
+ * We assume that Gmsh uses a recursive ordering system, so that interior nodes
+ * are reordered by calling this function recursively.
+ *
+ * @param nodes   The integer IDs of the nodes to be reordered, in Gmsh format.
+ * @param n       The number of nodes in one coordinate direction. If this is
+ *                zero we assume no reordering needs to be done and return the
+ *                identity permutation.
+ *
+ * @return The nodes vector in tensor-product ordering.
+ */
 std::vector<int> triTensorNodeOrdering(const std::vector<int> &nodes, int n)
 {
     std::vector<int> nodeList;
@@ -196,7 +248,40 @@ struct cmpop
     }
 };
 
-
+/**
+ * @brief Reorder Gmsh nodes so that they appear in a "tensor product" format
+ * suitable for the interior of a Nektar++ tetrahedron.
+ *
+ * For an example, consider a second order tetrahedron. This routine will
+ * produce a permutation map that applies the following permutation:
+ *
+ * ```
+ *               2                           5
+ *             ,/|`\                       ,/|`\
+ *           ,/  |  `\                   ,/  |  `\
+ *         ,6    '.   `5               ,3    '.   `4
+ *       ,/       8     `\           ,/       8     `\
+ *     ,/         |       `\       ,/         |       `\
+ *    0--------4--'.--------1     0--------1--'.--------2
+ *     `\.         |      ,/       `\.         |      ,/
+ *        `\.      |    ,9            `\.      |    ,7
+ *           `7.   '. ,/                 `6.   '. ,/
+ *              `\. |/                      `\. |/
+ *                 `3                          `9
+ *
+ *             Gmsh                     tensor-product
+ * ```
+ *
+ * We assume that Gmsh uses a recursive ordering system, so that interior nodes
+ * are reordered by calling this function recursively.
+ *
+ * @param nodes   The integer IDs of the nodes to be reordered, in Gmsh format.
+ * @param n       The number of nodes in one coordinate direction. If this is
+ *                zero we assume no reordering needs to be done and return the
+ *                identity permutation.
+ *
+ * @return The nodes vector in tensor-product ordering.
+ */
 std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
 {
     std::vector<int> nodeList;
@@ -342,6 +427,40 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
     return nodeList;
 }
 
+/**
+ * @brief Reorder Gmsh nodes so that they appear in a "tensor product" format
+ * suitable for the interior of a Nektar++ prism. This routine is specifically
+ * designed for *interior* Gmsh nodes only.
+ *
+ * Prisms are a bit of a special case, in that interior nodes are heterogeneous
+ * in the number of points they use. As an example, for a second-order interior
+ * of a fourth-order prism, this routine calculates the mapping taking us
+ *
+ * ```
+ *               ,6                        ,8
+ *            .-' | \                   .-' | \
+ *         ,-3    |   \              ,-5    |   \
+ *      ,-'  | \  |     \         ,-'  | \  |     \
+ *     2     |   \7-------8      2     |   \6-------7
+ *     | \   | ,-' \   ,-'       | \   | ,-' \   ,-'
+ *     |   \,5------,0'          |   \,3------,4'
+ *     |,-'  \   ,-'             |,-'  \   ,-'
+ *     1-------4'                0-------1'
+ *
+ *             Gmsh                 tensor-product
+ * ```
+ *
+ * @todo Make this routine work for higher orders. The Gmsh ordering seems
+ *       a little different than other elements, therefore the functionality is
+ *       (for now) hard-coded to orders less than 5.
+ *
+ * @param nodes   The integer IDs of the nodes to be reordered, in Gmsh format.
+ * @param n       The number of nodes in one coordinate direction. If this is
+ *                zero we assume no reordering needs to be done and return the
+ *                identity permutation.
+ *
+ * @return The nodes vector in tensor-product ordering.
+ */
 std::vector<int> prismTensorNodeOrdering(const std::vector<int> &nodes, int n)
 {
     std::vector<int> nodeList;
@@ -385,6 +504,39 @@ std::vector<int> prismTensorNodeOrdering(const std::vector<int> &nodes, int n)
     return nodeList;
 }
 
+/**
+ * @brief Reorder Gmsh nodes so that they appear in a "tensor product" format
+ * suitable for the interior of a Nektar++ hexahedron.
+ *
+ * For an example, consider a second order hexahedron. This routine will produce
+ * a permutation map that applies the following permutation:
+ *
+ * ```
+ *    3----13----2         6----7-----8
+ *    |\         |\        |\         |\
+ *    |15    24  | 14      |15    16  | 18
+ *    9  \ 20    11 \      3  \  4    5  \
+ *    |   7----19+---6     |   24---25+---26
+ *    |22 |  26  | 23|     |12 |  13  | 14|
+ *    0---+-8----1   |     0---+-1----2   |
+ *     \ 17    25 \  18     \ 21    22 \  23
+ *     10 |  21    12|       9 |  10    11|
+ *       \|         \|        \|         \|
+ *        4----16----5         18---19----20
+ *
+ *          Gmsh            tensor-product
+ * ```
+ *
+ * We assume that Gmsh uses a recursive ordering system, so that interior nodes
+ * are reordered by calling this function recursively.
+ *
+ * @param nodes   The integer IDs of the nodes to be reordered, in Gmsh format.
+ * @param n       The number of nodes in one coordinate direction. If this is
+ *                zero we assume no reordering needs to be done and return the
+ *                identity permutation.
+ *
+ * @return The nodes vector in tensor-product ordering.
+ */
 std::vector<int> hexTensorNodeOrdering(const std::vector<int> &nodes, int n)
 {
     int i, j, k;
@@ -555,12 +707,11 @@ InputGmsh::~InputGmsh()
 }
 
 /**
- * Gmsh file contains a list of nodes and their coordinates, along with
- * a list of elements and those nodes which define them. We read in and
- * store the list of nodes in #m_node and store the list of elements in
- * #m_element. Each new element is supplied with a list of entries from
- * #m_node which defines the element. Finally some mesh statistics are
- * printed.
+ * Gmsh file contains a list of nodes and their coordinates, along with a list
+ * of elements and those nodes which define them. We read in and store the list
+ * of nodes in #m_node and store the list of elements in #m_element. Each new
+ * element is supplied with a list of entries from m_node which defines the
+ * element. Finally some mesh statistics are printed.
  *
  * @param   pFilename           Filename of Gmsh file to read.
  */

@@ -160,8 +160,8 @@ Array<OneD, NekDouble> NodeOpti2D2D::GetGrad(bool analytic)
     //ret[1] d/dy
 
     //ret[3] d2/dx2
-    //ret[4] d2/dy2
-    //ret[5] d2/dxdy
+    //ret[4] d2/dxdy
+    //ret[5] d2/dy2
 
     ret[0] = (w[1] - w[4]) / 2.0 / dx;
     ret[1] = (w[3] - w[6]) / 2.0 / dx;

@@ -85,11 +85,14 @@ void NodeOpti2D2D::Optimise()
 
     Array<OneD, NekDouble> GA = GetGrad(true);
 
+    G[0] = GA[0];
+    G[1] = GA[1];
+
     if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-6)
     {
-        cout << endl;
-        cout << "approx " << G[0] << " " << G[1] << endl;
-        cout << "analytic " << GA[0] << " " << GA[1] << endl;
+        // cout << endl;
+        // cout << "approx " << G[0] << " " << G[1] << endl;
+        // cout << "analytic " << GA[0] << " " << GA[1] << endl;
 
         //needs to optimise
         NekDouble currentW = GetFunctional<2>();
@@ -118,9 +121,9 @@ void NodeOpti2D2D::Optimise()
             //reset the node
             node->m_x = xc;
             node->m_y = yc;
-            cout << "warning: had to reset node" << endl;
+            //cout << "warning: had to reset node" << endl;
         }
-        exit(-1);
+        //exit(-1);
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)),res->val);
         mtx.unlock();
@@ -531,7 +534,7 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
                         NekDouble basisDeriv[DIM];
                         for (int m = 0; m < DIM; ++m)
                         {
-                            basisDeriv[m] = *(derivUtil->VdmD[m])(k,k);
+                            basisDeriv[m] = *(derivUtil->VdmD[m])(k,nodeIds[i]);
                         }
 
                         NekDouble derivDet = Determinant<DIM>(phiM);
@@ -541,7 +544,7 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
                             jacDetDeriv[m] = 0.0;
                             for (int n = 0; n < DIM; ++n)
                             {
-                                jacDetDeriv[m] += jacInvTrans[m][n] * basisDeriv[m];
+                                jacDetDeriv[m] += jacInvTrans[m][n] * basisDeriv[n];
                             }
                             jacDetDeriv[m] *= derivDet / data[i]->maps[k][9];
                         }
@@ -554,7 +557,7 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
                                 NekDouble delta = m == n ? 1.0 : 0.0;
                                 for (int l = 0; l < DIM; ++l)
                                 {
-                                    jacDeriv[m][n][l] = delta * basisDeriv[m];
+                                    jacDeriv[m][n][l] = delta * basisDeriv[l];
                                 }
                             }
                         }

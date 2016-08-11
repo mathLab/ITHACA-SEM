@@ -69,10 +69,11 @@ class NodeOptiJob;
 class NodeOpti
 {
 public:
-    NodeOpti(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
+    NodeOpti(NodeSharedPtr n,
+             std::pair<std::vector<int>, std::vector<ElUtilSharedPtr> > e,
              ResidualSharedPtr r, DerivUtilSharedPtr d,
              optimiser o)
-             : node(n), data(e), res(r), derivUtil(d), opti(o)
+        : node(n), nodeIds(e.first), data(e.second), res(r), derivUtil(d), opti(o)
     {
     }
 
@@ -88,6 +89,7 @@ protected:
     }
     template<int DIM> NekDouble GetFunctional(bool analytic = false);
     NodeSharedPtr node;
+    std::vector<int> nodeIds;
     std::vector<ElUtilSharedPtr> data;
     Array<OneD, NekDouble> grad;
 
@@ -106,7 +108,8 @@ typedef boost::shared_ptr<NodeOpti> NodeOptiSharedPtr;
 typedef LibUtilities::NekFactory<int,
                                  NodeOpti,
                                  NodeSharedPtr,
-                                 std::vector<ElUtilSharedPtr>,
+                                 std::pair<std::vector<int>,
+                                           std::vector<ElUtilSharedPtr> >,
                                  ResidualSharedPtr,
                                  DerivUtilSharedPtr,
                                  optimiser> NodeOptiFactory;
@@ -117,7 +120,8 @@ NodeOptiFactory &GetNodeOptiFactory();
 class NodeOpti3D3D : public NodeOpti //1D optimsation in 3D space
 {
 public:
-    NodeOpti3D3D(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
+    NodeOpti3D3D(NodeSharedPtr n,
+                 std::pair<std::vector<int>, std::vector<ElUtilSharedPtr> > e,
                  ResidualSharedPtr r, DerivUtilSharedPtr d,
                  optimiser o)
                  : NodeOpti(n,e,r,d,o)
@@ -130,7 +134,8 @@ public:
 
     static int m_type;
     static NodeOptiSharedPtr create(
-        NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
+        NodeSharedPtr n,
+        std::pair<std::vector<int>, std::vector<ElUtilSharedPtr> > e,
         ResidualSharedPtr r, DerivUtilSharedPtr d,
         optimiser o)
     {
@@ -144,7 +149,8 @@ private:
 class NodeOpti2D2D : public NodeOpti //1D optimsation in 3D space
 {
 public:
-    NodeOpti2D2D(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
+    NodeOpti2D2D(NodeSharedPtr n,
+                 std::pair<std::vector<int>, std::vector<ElUtilSharedPtr> > e,
                  ResidualSharedPtr r, DerivUtilSharedPtr d,
                  optimiser o)
                  : NodeOpti(n,e,r,d,o)
@@ -157,7 +163,7 @@ public:
 
     static int m_type;
     static NodeOptiSharedPtr create(
-        NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
+        NodeSharedPtr n, std::pair<std::vector<int>, std::vector<ElUtilSharedPtr> > e,
         ResidualSharedPtr r, DerivUtilSharedPtr d,
         optimiser o)
     {

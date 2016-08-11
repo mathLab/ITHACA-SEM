@@ -56,8 +56,8 @@ void ProcessVarOpti::BuildDerivUtil()
 
             LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                           LibUtilities::eNodalTriElec);
-            LibUtilities::PointsKey pkey2(m_mesh->m_nummode,
-                                          LibUtilities::eNodalTriElec);
+            LibUtilities::PointsKey pkey2(m_mesh->m_nummode+2,
+                                          LibUtilities::eNodalTriSPI);
             Array<OneD, NekDouble> u1, v1, u2, v2;
 
             LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
@@ -88,19 +88,6 @@ void ProcessVarOpti::BuildDerivUtil()
             Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
             NekVector<NekDouble> quadWi(qds);
             derivUtil->quadW = quadWi;
-
-            // Set up derivatives
-            // derivUtil->basisDeriv = Array<OneD, Array<OneD, NekDouble> >(
-            //     derivUtil->ptsHigh);
-
-            // for (int i = 0; i < 2; ++i)
-            // {
-            //     derivUtil->basisDeriv[i] = Array<OneD, NekDouble>(2);
-            //     for (int j = 0; j < derivUtil->ptsHigh; ++j)
-            //     {
-            //         derivUtil->basisDeriv[i][j] = (*derivUtil->VmdD[i])(j);
-            //     }
-            // }
         }
         break;
         case 3:
@@ -142,32 +129,6 @@ void ProcessVarOpti::BuildDerivUtil()
             Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
             NekVector<NekDouble> quadWi(qds);
             derivUtil->quadW = quadWi;
-
-            // Set up derivatives
-            derivUtil->basisDeriv = Array<OneD, Array<OneD, NekDouble> >(
-                derivUtil->ptsHigh);
-
-            NekVector<NekDouble> tmp(derivUtil->ptsLow);
-            NekVector<NekDouble> derivout[3];
-
-            for (int i = 0; i < 3; ++i)
-            {
-                for (int j = 0; j < derivUtil->ptsLow; ++j)
-                {
-                    tmp(j) = uv1[i][j];
-                }
-
-                derivout[i] = derivUtil->VdmD[i] * tmp;
-            }
-
-            for (int i = 0; i < derivUtil->ptsHigh; ++i)
-            {
-                derivUtil->basisDeriv[i] = Array<OneD, NekDouble>(3);
-                for (int j = 0; j < 3; ++j)
-                {
-                    derivUtil->basisDeriv[i][j] = derivout[j](i);
-                }
-            }
         }
     }
 }
@@ -349,10 +310,13 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
         {
             NodeElMap::iterator it = nodeElMap.find(remain[i]->m_id);
             ASSERTL0(it != nodeElMap.end(),"could not find");
+
+            vector<ElUtilSharedPtr> &elUtils = it->second.second;
+
             bool islocked = false;
-            for(int j = 0; j < it->second.size(); j++)
+            for(int j = 0; j < elUtils.size(); j++)
             {
-                set<int>::iterator sit = locked.find(it->second[j]->GetId());
+                set<int>::iterator sit = locked.find(elUtils[j]->GetId());
                 if(sit != locked.end())
                 {
                     islocked = true;
@@ -363,9 +327,9 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
             {
                 layer.push_back(remain[i]);
                 completed.insert(remain[i]->m_id);
-                for(int j = 0; j < it->second.size(); j++)
+                for(int j = 0; j < elUtils.size(); j++)
                 {
-                    locked.insert(it->second[j]->GetId());
+                    locked.insert(elUtils[j]->GetId());
                 }
             }
         }
@@ -405,7 +369,8 @@ void ProcessVarOpti::GetElementMap()
 
         for(int j = 0; j < ns.size(); j++)
         {
-            nodeElMap[ns[j]->m_id].push_back(dataSet[i]);
+            nodeElMap[ns[j]->m_id].first.push_back(j);
+            nodeElMap[ns[j]->m_id].second.push_back(dataSet[i]);
         }
     }
 }

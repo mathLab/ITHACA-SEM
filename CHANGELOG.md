@@ -3,22 +3,51 @@ Changelog
 
 v4.4.0
 ------
-**Library:**
+**Library**:
 - Add support for variable polynomial order for 3D simulations with continuous
   Galerkin discretisation (!604)
+- Bump version of gsmpi to suppress autotuning output unless `--verbose` is
+  specified (!652)
 - Add support for variable polynomial order with periodic boundary conditions
   (!658)
+- Statistics are now printed for lowest level of multi-level static condensation
+  (!656)
 - Sped up interpolataion from pts files and fixed parallel pts import (!584)
 - Increased required boost version to 1.56.0 (!584)
+- New FieldUtils library allows support for most `FieldConvert` post-processing
+  operations during simulation using a new filter (!589)
+- Adjust CMake dependencies to reduce compile time (!671)
+- Homogeneous1D dealiasing improvements (!622)
+
+**ADRSolver:**
+- Add a projection equation system for C^0 projections (!675)
+
+**APESolver:**
+- Use a continuous basefield projection and revert to constant c formulation (!664)
+- Added ability to compute CFL number (!664)
+- Output Sourceterm (!664)
 
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
+- Improve performance when using homogeneous dealiasing (!622)
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
+- Add STL surface writer module (!668)
+- New module for inserting an alternate high-order surface into the working
+  mesh (!669)
+- Improvements to mesh linearisation module (!659)
 
 **FieldConvert:**
+- Move all modules to a new library, FieldUtils, to support post-processing
+  during simulations (!589)
 - Add module to stretch homogeneous direction (!609)
+
+v4.3.4
+------
+**Library:**
+- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of large
+  simulations (!672)
 
 v4.3.3
 ------

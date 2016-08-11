@@ -39,7 +39,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <NekMeshUtils/CADSystem/CADSystem.h>
-#include <NekMeshUtils/Octree/CurvaturePoint.hpp>
+#include <NekMeshUtils/Octree/SourcePoint.hpp>
 #include <NekMeshUtils/Octree/Octant.h>
 #include <NekMeshUtils/MeshElements/Mesh.h>
 
@@ -72,11 +72,12 @@ public:
            const bool ver,
            const NekDouble min,
            const NekDouble max,
-           const NekDouble eps,
-           const string uds)
+           const NekDouble eps)
         : m_minDelta(min), m_maxDelta(max), m_eps(eps), m_cad(cad),
-          m_verbose(ver), m_udsfile(uds)
+          m_verbose(ver)
     {
+        m_udsfileset = false;
+        m_sourcepointsset = false;
     }
 
     /**
@@ -109,6 +110,19 @@ public:
      */
     void GetOctreeMesh(MeshSharedPtr m);
 
+    void SetUDSFile(std::string n)
+    {
+        m_udsfile = n;
+        m_udsfileset = true;
+    }
+
+    void SetSourcePoints(std::vector<std::vector<NekDouble> > pts, NekDouble size)
+    {
+        m_sourcepointsset = true;
+        m_sourcePoints = pts;
+        m_sourcePointSize = size;
+    }
+
 private:
     /**
      * @brief Smooths specification over all octants to a gradation criteria
@@ -119,7 +133,7 @@ private:
      * @brief gets an optimum number of curvature sampling points and
      * calculates the curavture at these points
      */
-    void CompileCuravturePointList();
+    void CompileSourcePointList();
 
     /**
      * @brief Function which initiates and controls the subdivision process
@@ -171,8 +185,8 @@ private:
     Array<OneD, NekDouble> m_centroid;
     /// physical size of the octree
     NekDouble m_dim;
-    /// list of curvature sample points
-    std::vector<CurvaturePointSharedPtr> m_cpList;
+    /// list of source points
+    std::vector<SPBaseSharedPtr> m_SPList;
     /// list of leaf octants
     std::vector<OctantSharedPtr> m_octants;
     /// master octant for searching
@@ -180,7 +194,12 @@ private:
     /// number of octants made, used for id index
     int m_numoct;
 
-    string m_udsfile;
+    bool m_udsfileset;
+    std::string m_udsfile;
+
+    bool m_sourcepointsset;
+    std::vector<std::vector<NekDouble> > m_sourcePoints;
+    NekDouble m_sourcePointSize;
 };
 
 typedef boost::shared_ptr<Octree> OctreeSharedPtr;

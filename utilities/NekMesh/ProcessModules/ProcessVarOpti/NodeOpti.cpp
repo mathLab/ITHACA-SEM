@@ -52,6 +52,16 @@ NodeOptiFactory &GetNodeOptiFactory()
     return Type::Instance();
 }
 
+void NodeOpti::CalcDX()
+{
+    dx = numeric_limits<double>::max();
+
+    for(int i = 0; i < data.size(); i++)
+    {
+        dx = min(dx, data[i]->delta);
+    }
+}
+
 void NodeOpti::CalcMinJac()
 {
     minJac = numeric_limits<double>::max();
@@ -65,44 +75,34 @@ void NodeOpti::CalcMinJac()
 int NodeOpti2D2D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
     22, NodeOpti2D2D::create, "2D2D");
 
-void NodeOpti2D2D::FillBasisDeriv()
-{
-    basisDeriv = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(data.size());
-    for (int i = 0; i < data.size(); ++i)
-    {
-        basisDeriv[i] = Array<OneD, Array<OneD, NekDouble> >(derivUtil->ptsHigh);
-        for(int k = 0; k < derivUtil->ptsHigh; ++k)
-        {
-            basisDeriv[i][k] = Array<OneD, NekDouble>(2);
-            for (int m = 0; m < 2; ++m)
-            {
-                basisDeriv[i][k][m] = *(derivUtil->VdmD[m])(k,nodeIds[i]);
-            }
-        }
-    }
-}
-
 void NodeOpti2D2D::Optimise()
 {
+    CalcDX();
+
     CalcMinJac();
 
-    NekDouble currentW = GetFunctional<2>(false);
+    Array<OneD, NekDouble> G = GetGrad();
 
-    //ret[0] d/dx
-    //ret[1] d/dy
+    Array<OneD, NekDouble> GA = GetGrad(true);
 
-    //ret[2] d2/dx2
-    //ret[3] d2/dxdy
-    //ret[4] d2/dy2
-
-    if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-10)
+    if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-6)
     {
+        cout << endl;
+        cout << "approx " << G[0] << " " << G[1] << endl;
+        cout << "approx " << G[2] << " " << G[3] << " " << G[4] << endl;
+        cout << "analytic " << GA[0] << " " << GA[1] << endl;
+        cout << "analytic " << GA[2] << " " << GA[3] << " " << GA[4] << endl;
+
+        G[0] = GA[0];
+        G[1] = GA[1];
+
         //needs to optimise
+        NekDouble currentW = GetFunctional<2>();
         NekDouble xc       = node->m_x;
         NekDouble yc       = node->m_y;
         NekDouble alpha    = 1.0;
-        NekDouble delX = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[4]*G[0] - G[3]*G[1]);
-        NekDouble delY = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[2]*G[1] - G[3]*G[0]);
+        NekDouble delX = 1.0/(G[2]*G[3]-G[4]*G[4])*(G[3]*G[0] - G[4]*G[1]);
+        NekDouble delY = 1.0/(G[2]*G[3]-G[4]*G[4])*(G[2]*G[1] - G[4]*G[0]);
 
         bool found = false;
         while(alpha > 1e-10)
@@ -123,48 +123,66 @@ void NodeOpti2D2D::Optimise()
             //reset the node
             node->m_x = xc;
             node->m_y = yc;
-            //cout << "warning: had to reset node" << endl;
+            cout << "warning: had to reset node" << endl;
         }
+        exit(-1);
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)),res->val);
         mtx.unlock();
     }
 }
 
-int NodeOpti3D3D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
-    33, NodeOpti3D3D::create, "3D3D");
-
-void NodeOpti3D3D::FillBasisDeriv()
+Array<OneD, NekDouble> NodeOpti2D2D::GetGrad(bool analytic)
 {
-    basisDeriv = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(data.size());
-    for (int i = 0; i < data.size(); ++i)
+
+    if(analytic)
     {
-        basisDeriv[i] = Array<OneD, Array<OneD, NekDouble> >(derivUtil->ptsHigh);
-        for(int k = 0; k < derivUtil->ptsHigh; ++k)
-        {
-            basisDeriv[i][k] = Array<OneD, NekDouble>(3);
-            for (int m = 0; m < 3; ++m)
-            {
-                basisDeriv[i][k][m] = *(derivUtil->VdmD[m])(k,nodeIds[i]);
-            }
-        }
+        GetFunctional<2>(true);
+        return grad;
     }
-}
 
-void NodeOpti3D3D::Optimise()
-{
-    CalcMinJac();
+    NekDouble xc = node->m_x;
+    NekDouble yc = node->m_y;
+    vector<NekDouble> w(9);
+
+    for(int i = 0; i < 7; i++)
+    {
+        node->m_x = xc + dir[i][0] * dx;
+        node->m_y = yc + dir[i][1] * dx;
+        w[i] = GetFunctional<2>();
+    }
+    node->m_x = xc;
+    node->m_y = yc;
+
+    Array<OneD, NekDouble> ret(5,0.0);
 
     //ret[0] d/dx
     //ret[1] d/dy
-    //ret[2] d/dz
 
     //ret[3] d2/dx2
-    //ret[4] d2/dy2
-    //ret[5] d2/dz2
-    //ret[6] d2/dxdy
-    //ret[7] d2/dxdz
-    //ret[8] d2/dydz
+    //ret[4] d2/dxdy
+    //ret[5] d2/dy2
+
+    ret[0] = (w[1] - w[4]) / 2.0 / dx;
+    ret[1] = (w[3] - w[6]) / 2.0 / dx;
+
+    ret[2] = (w[1] + w[4] - 2.0*w[0]) / dx / dx;
+    ret[3] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
+    ret[4] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / dx / dx;
+
+    return ret;
+}
+
+int NodeOpti3D3D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
+    33, NodeOpti3D3D::create, "3D3D");
+
+void NodeOpti3D3D::Optimise()
+{
+    CalcDX();
+
+    CalcMinJac();
+
+    Array<OneD, NekDouble> G = GetGrad();
 
     if(sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) > 1e-10)
     {
@@ -227,6 +245,64 @@ void NodeOpti3D3D::Optimise()
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
         mtx.unlock();
     }
+}
+
+Array<OneD, NekDouble> NodeOpti3D3D::GetGrad(bool analytic)
+{
+    NekDouble xc = node->m_x;
+    NekDouble yc = node->m_y;
+    NekDouble zc = node->m_z;
+
+    vector<NekDouble> w;
+
+    for(int i = 0; i < 13; i++)
+    {
+        node->m_x = xc + dir[i][0] * dx;
+        node->m_y = yc + dir[i][1] * dx;
+        node->m_z = zc + dir[i][2] * dx;
+        w.push_back(GetFunctional<3>());
+    }
+    node->m_x = xc;
+    node->m_y = yc;
+    node->m_z = zc;
+
+    w[0] = GetFunctional<3>();
+
+    //cout << "ANALYTIC: " << gradient[0] << " " << gradient[1] << " " << gradient[2] << endl;
+
+    Array<OneD, NekDouble> ret(9,0.0);
+
+    //ret[0] d/dx
+    //ret[1] d/dy
+    //ret[2] d/dz
+
+    //ret[3] d2/dx2
+    //ret[4] d2/dy2
+    //ret[5] d2/dz2
+    //ret[6] d2/dxdy
+    //ret[7] d2/dxdz
+    //ret[8] d2/dydz
+
+    //ret[0] = gradient[0];
+    //ret[1] = gradient[1];
+    //ret[2] = gradient[2];
+
+    ret[0] = (w[1] - w[4]) / 2.0 / dx;
+    ret[1] = (w[3] - w[6]) / 2.0 / dx;
+    ret[2] = (w[9] - w[8]) / 2.0 / dx;
+
+    //cout << "APPROX: " << ret[0] << " " << ret[1] << " " << ret[2] << endl;
+    //cout << endl;
+
+    ret[3] = (w[1] + w[4] - 2.0*w[0]) / dx / dx;
+    ret[4] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
+    ret[5] = (w[9] + w[8] - 2.0*w[0]) / dx / dx;
+
+    ret[6] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / dx / dx;
+    ret[7] = (w[10] - w[1] - w[9] + 2.0*w[0] - w[4] - w[8] + w[7]) / 2.0 / dx / dx;
+    ret[8] = (w[11] - w[3] - w[9] + 2.0*w[0] - w[6] - w[8] + w[12]) / 2.0 / dx / dx;
+
+    return ret;
 }
 
 template<int DIM> inline NekDouble Determinant(NekDouble jac[DIM][DIM])
@@ -331,20 +407,6 @@ inline NekDouble FrobProd<2>(NekDouble in1[2][2], NekDouble in2[2][2])
     return ret;
 }
 
-template<>
-inline NekDouble FrobProd<3>(NekDouble in1[3][3], NekDouble in2[3][3])
-{
-    NekDouble ret = 0;
-    for (int n = 0; n < 3; ++n)
-    {
-        for (int l = 0; l < 3; ++l)
-        {
-            ret += in1[n][l] * in2[n][l];
-        }
-    }
-    return ret;
-}
-
 // Typedef for derivative storage, we use boost::multi_array so we can pass this
 // to functions easily
 typedef boost::multi_array<NekDouble, 4> DerivArray;
@@ -384,7 +446,7 @@ inline NekDouble FrobeniusNorm(NekDouble inarray[DIM][DIM])
 }
 
 template<int DIM>
-NekDouble NodeOpti::GetFunctional(bool functionalOnly)
+NekDouble NodeOpti::GetFunctional(bool analytic)
 {
     const int nElmt  = data.size();
     const int totpts = derivUtil->ptsLow * nElmt;
@@ -423,6 +485,7 @@ NekDouble NodeOpti::GetFunctional(bool functionalOnly)
     NekDouble integral = 0.0;
     NekDouble gam = numeric_limits<float>::epsilon();
     NekDouble ep = minJac < gam ? sqrt(gam*(gam-minJac)) : 0.0;
+    NekDouble jacIdeal[DIM][DIM], jacDet;
 
     switch(opti)
     {
@@ -436,8 +499,8 @@ NekDouble NodeOpti::GetFunctional(bool functionalOnly)
             {
                 for(int k = 0; k < derivUtil->ptsHigh; ++k)
                 {
-                    NekDouble jacIdeal[DIM][DIM];
-                    NekDouble jacDet = CalcIdealJac(i, k, deriv, data, jacIdeal);
+                    jacDet = CalcIdealJac(i, k, deriv, data, jacIdeal);
+
                     NekDouble trEtE = LinElasTrace<DIM>(jacIdeal);
                     NekDouble sigma =
                         0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*ep*ep));
@@ -456,12 +519,13 @@ NekDouble NodeOpti::GetFunctional(bool functionalOnly)
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
+            grad = Array<OneD, NekDouble>(DIM==2 ? 5 : 9,0.0);
+
             for (int i = 0; i < nElmt; ++i)
             {
                 for(int k = 0; k < derivUtil->ptsHigh; ++k)
                 {
-                    NekDouble jacIdeal[DIM][DIM];
-                    NekDouble jacDet = CalcIdealJac(i, k, deriv, data, jacIdeal);
+                    jacDet = CalcIdealJac(i, k, deriv, data, jacIdeal);
                     NekDouble I1 = FrobeniusNorm(jacIdeal);
 
                     NekDouble sigma =
@@ -472,99 +536,103 @@ NekDouble NodeOpti::GetFunctional(bool functionalOnly)
                                 (0.5 * mu * (I1 - 3.0 - 2.0*lsigma) +
                                  0.5 * K * lsigma * lsigma);
 
-                    if(functionalOnly)
-                        continue;
-
                     // Derivative of basis function in each direction
-                    G = Array<OneD, NekDouble>(DIM==2 ? 5 : 9,0.0);
-                    NekDouble jacInvTrans[DIM][DIM];
-                    NekDouble jacDetDeriv[DIM];
-                    //extract phiM from deriv
-                    NekDouble phiM[DIM][DIM];
-                    for (int m = 0; m < DIM; ++m)
+                    if(analytic)
                     {
-                        for (int n = 0; n < DIM; ++n)
-                        {
-                            phiM[n][m] = deriv[m][i][n][k];
-                        }
-                    }
-                    InvTrans<DIM>(phiM, jacInvTrans);
-                    NekDouble derivDet = Determinant<DIM>(phiM);
+                        NekDouble jacInvTrans[DIM][DIM];
+                        NekDouble jacDetDeriv[DIM];
 
-                    for (int m = 0; m < DIM; ++m)
-                    {
-                        jacDetDeriv[m] = 0.0;
-                        for (int n = 0; n < DIM; ++n)
-                        {
-                            jacDetDeriv[m] += jacInvTrans[m][n] * basisDeriv[i][k][n];
-                        }
-                        jacDetDeriv[m] *= derivDet / data[i]->maps[k][9];
-                    }
-
-                    NekDouble jacDeriv[DIM][DIM][DIM];
-                    for (int m = 0; m < DIM; ++m)
-                    {
-                        for (int n = 0; n < DIM; ++n)
-                        {
-                            NekDouble delta = m == n ? 1.0 : 0.0;
-                            for (int l = 0; l < DIM; ++l)
-                            {
-                                jacDeriv[m][n][l] = delta * basisDeriv[i][k][l];
-                            }
-                        }
-                    }
-
-                    NekDouble jacDerivPhi[DIM][DIM][DIM];
-                    for (int p = 0; p < DIM; ++p)
-                    {
+                        NekDouble phiM[DIM][DIM];
                         for (int m = 0; m < DIM; ++m)
                         {
                             for (int n = 0; n < DIM; ++n)
                             {
-                                jacDerivPhi[p][n][m] = 0.0;
+                                phiM[n][m] = deriv[m][i][n][k];
+                            }
+                        }
+
+                        InvTrans<DIM>(phiM, jacInvTrans);
+
+                        NekDouble basisDeriv[DIM];
+                        for (int m = 0; m < DIM; ++m)
+                        {
+                            basisDeriv[m] = *(derivUtil->VdmD[m])(k,nodeIds[i]);
+                        }
+
+                        NekDouble derivDet = Determinant<DIM>(phiM);
+
+                        for (int m = 0; m < DIM; ++m)
+                        {
+                            jacDetDeriv[m] = 0.0;
+                            for (int n = 0; n < DIM; ++n)
+                            {
+                                jacDetDeriv[m] += jacInvTrans[m][n] * basisDeriv[n];
+                            }
+                            jacDetDeriv[m] *= derivDet / data[i]->maps[k][9];
+                        }
+
+                        NekDouble jacDeriv[DIM][DIM][DIM];
+                        for (int m = 0; m < DIM; ++m)
+                        {
+                            for (int n = 0; n < DIM; ++n)
+                            {
+                                NekDouble delta = m == n ? 1.0 : 0.0;
                                 for (int l = 0; l < DIM; ++l)
                                 {
-                                    jacDerivPhi[p][n][m] += jacDeriv[p][n][m]*
-                                            data[i]->maps[k][m * 3 + l];
+                                    jacDeriv[m][n][l] = delta * basisDeriv[l];
                                 }
                             }
                         }
-                    }
 
-                    NekDouble frobProd[DIM];
-                    for (int m = 0; m < DIM; ++m)
-                    {
-                        frobProd[m] = FrobProd<DIM>(jacIdeal,jacDerivPhi[m]);
-                    }
-
-                    NekDouble frobProdHes[DIM][DIM]; //holder for the hessian frobprods
-                    for (int m = 0; m < DIM; ++m)
-                    {
-                        for(int l = m; l < DIM; ++l)
+                        NekDouble jacDerivPhi[DIM][DIM][DIM];
+                        for (int p = 0; p < DIM; ++p)
                         {
-                            frobProdHes[m][l] = FrobProd<DIM>(jacDerivPhi[m],jacDerivPhi[l]);
+                            for (int m = 0; m < DIM; ++m)
+                            {
+                                for (int n = 0; n < DIM; ++n)
+                                {
+                                    jacDerivPhi[p][n][m] = 0.0;
+                                    for (int l = 0; l < DIM; ++l)
+                                    {
+                                        jacDerivPhi[p][n][m] += jacDeriv[p][n][m]*
+                                                data[i]->maps[k][m * 3 + l];
+                                    }
+                                }
+                            }
+                        }
+
+                        NekDouble frobProd[DIM];
+                        for (int m = 0; m < DIM; ++m)
+                        {
+                            frobProd[m] = FrobProd<DIM>(jacIdeal,jacDerivPhi[m]);
+                        }
+
+                        NekDouble frobProdHes[DIM][DIM]; //holder for the hessian frobprods
+                        for (int m = 0; m < DIM; ++m)
+                        {
+                            for(int l = m; l < DIM; ++l)
+                            {
+                                frobProdHes[m][l] = FrobProd<DIM>(jacDerivPhi[m],jacDerivPhi[l]);
+                            }
+                        }
+
+                        for (int j = 0; j < DIM; ++j)
+                        {
+                            grad[j] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
+                                mu * frobProd[j] + (jacDetDeriv[j] / (2.0*sigma - jacDet)
+                                    * (K * lsigma - mu)));
+                        }
+                        int ct = 0;
+                        for (int m = 0; m < DIM; ++m)
+                        {
+                            for(int l = m; l < DIM; ++l, ct++)
+                            {
+                                grad[ct+DIM] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
+                                    mu * frobProdHes[m][l] + jacDetDeriv[m]*jacDetDeriv[l]*(
+                                        K/(2.0*sigma-jacDet)/(2.0*sigma-jacDet) - jacDet*(k*lsigma-mu)));
+                            }
                         }
                     }
-
-                    //gradient
-                    for (int j = 0; j < DIM; ++j)
-                    {
-                        G[j] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
-                            mu * frobProd[j] + (jacDetDeriv[j] / (2.0*sigma - jacDet)
-                                * (K * lsigma - mu)));
-                    }
-                    //hessian
-                    int ct = 0;
-                    for (int m = 0; m < DIM; ++m)
-                    {
-                        for(int l = m; l < DIM; ++l, ct++)
-                        {
-                            G[ct+DIM] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
-                                mu * frobProdHes[m][l] + jacDetDeriv[m]*jacDetDeriv[l]*(
-                                    K/(2.0*sigma-jacDet)/(2.0*sigma-jacDet) - jacDet*(k*lsigma-mu)));
-                        }
-                    }
-
                 }
             }
             break;
@@ -576,8 +644,7 @@ NekDouble NodeOpti::GetFunctional(bool functionalOnly)
             {
                 for(int k = 0; k < derivUtil->ptsHigh; ++k)
                 {
-                    NekDouble jacIdeal[DIM][DIM];
-                    NekDouble jacDet = CalcIdealJac(i, k, deriv, data, jacIdeal);
+                    jacDet = CalcIdealJac(i, k, deriv, data, jacIdeal);
                     NekDouble frob = FrobeniusNorm(jacIdeal);
                     NekDouble sigma = 0.5*(jacDet +
                                     sqrt(jacDet*jacDet + 4.0*ep*ep));
@@ -595,8 +662,7 @@ NekDouble NodeOpti::GetFunctional(bool functionalOnly)
             {
                 for(int k = 0; k < derivUtil->ptsHigh; ++k)
                 {
-                    NekDouble jacIdeal[DIM][DIM];
-                    NekDouble jacDet = CalcIdealJac(i, k, deriv, data, jacIdeal);
+                    jacDet = CalcIdealJac(i, k, deriv, data, jacIdeal);
                     NekDouble frob = FrobeniusNorm(jacIdeal);
                     NekDouble sigma = 0.5*(jacDet +
                                     sqrt(jacDet*jacDet + 4.0*ep*ep));

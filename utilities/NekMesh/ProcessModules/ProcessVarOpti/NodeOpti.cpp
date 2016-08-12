@@ -85,12 +85,76 @@ int NodeOpti2D2D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
 
 void NodeOpti2D2D::Optimise()
 {
-    CalcDX();
-
     CalcMinJac();
 
-    Array<OneD, NekDouble> G = GetGrad();
-    Array<OneD, NekDouble> GA = GetGrad(true);
+#if 0
+    Array<OneD, NekDouble> G = GetGrad(true), G2;
+
+    // Gradient already zero
+    if (G[0]*G[0] + G[1]*G[1] > 1e-12)
+    {
+        NekDouble alpha = 1.0;
+        NekDouble xc    = node->m_x;
+        NekDouble yc    = node->m_y;
+        const NekDouble c1 = 1e-5, c2 = 0.9;
+        NekDouble currentVal = GetFunctional<2>();
+        bool found = false;
+
+        while (alpha > 1e-10)
+        {
+            // Search direction
+            NekDouble delX = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[4]*G[0] - G[3]*G[1]);
+            NekDouble delY = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[2]*G[1] - G[3]*G[0]);
+
+            // Update node
+            node->m_x = xc - alpha * delX;
+            node->m_y = yc - alpha * delY;
+
+            // Re-evaluate functional and gradients
+            G2 = GetGrad(true);
+
+            NekDouble newVal = GetFunctional<2>();
+
+            // Dot product of p_k with gradient
+            NekDouble tmp = G[0] * delX + G[1] * delY;
+
+            // Wolfe conditions
+            if (newVal <= currentVal + c1 * alpha * tmp &&
+                (G2[0] * delX + G2[1] * delY) >= c2 * tmp)
+            {
+                found = true;
+                break;
+            }
+
+            G = G2;
+            alpha /= 2.0;
+        }
+
+        if(!found)
+        {
+            //reset the node
+            node->m_x = xc;
+            node->m_y = yc;
+            //cout << "warning: had to reset node " << " " << nodeIds[0] << endl;
+            //cout << "    approx grad  : " << tmp[0] << " " << tmp[1] << endl;
+            //cout << "    approx hess  : " << tmp[2] << " " << tmp[3] << " " << tmp[4] << endl;
+            //cout << "    analytic grad: " << GA[0] << " " << GA[1] << endl;
+            //cout << "    analytic hess: " << GA[2] << " " << GA[3] << " " << GA[4] << endl;
+            mtx.lock();
+            res->nReset++;
+            mtx.unlock();
+        }
+
+        mtx.lock();
+        res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)),res->val);
+        mtx.unlock();
+    }
+
+#else
+
+    CalcDX();
+    //Array<OneD, NekDouble> G = GetGrad();
+    Array<OneD, NekDouble> GA = GetGrad(true), G(5);
 
     //NekDouble tmp[5] = { G[0], G[1], G[2], G[3], G[4] };
     G[0] = GA[0];
@@ -98,6 +162,14 @@ void NodeOpti2D2D::Optimise()
     G[2] = GA[2];
     G[3] = GA[4];
     G[4] = GA[3];
+
+
+    // // Check Hessian
+    // NekDouble trace = GA[2] + GA[4];
+    // NekDouble det = GA[2]*GA[4] - GA[3]*GA[3];
+
+    // cout << trace/2 + sqrt(0.25*trace*trace - det) << " "
+    //      << trace/2 + sqrt(0.25*trace*trace - det) << endl;
 
     if(G[0]*G[0] + G[1]*G[1] > 1e-12)
     {
@@ -136,15 +208,18 @@ void NodeOpti2D2D::Optimise()
             node->m_y = yc;
             //cout << "warning: had to reset node " << " " << nodeIds[0] << endl;
             //cout << "    approx grad  : " << tmp[0] << " " << tmp[1] << endl;
-            // cout << "    approx hess  : " << tmp[2] << " " << tmp[3] << " " << tmp[4] << endl;
+            //cout << "    approx hess  : " << tmp[2] << " " << tmp[3] << " " << tmp[4] << endl;
             //cout << "    analytic grad: " << GA[0] << " " << GA[1] << endl;
-            // cout << "    analytic hess: " << GA[2] << " " << GA[3] << " " << GA[4] << endl;
+            //cout << "    analytic hess: " << GA[2] << " " << GA[3] << " " << GA[4] << endl;
+            mtx.lock();
+            res->nReset++;
+            mtx.unlock();
         }
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)),res->val);
-        res->nReset++;
         mtx.unlock();
     }
+#endif
 }
 
 Array<OneD, NekDouble> NodeOpti2D2D::GetGrad(bool analytic)

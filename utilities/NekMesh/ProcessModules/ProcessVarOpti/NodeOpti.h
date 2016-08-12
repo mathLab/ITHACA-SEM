@@ -83,17 +83,14 @@ public:
     NodeOptiJob *GetJob();
 
 protected:
-    virtual Array<OneD, NekDouble> GetGrad(bool analytic = false)
-    {
-        return Array<OneD,NekDouble>();
-    }
-    template<int DIM> NekDouble GetFunctional(bool analytic = false);
+    virtual void FillBasisDeriv(){};
+    template<int DIM> NekDouble GetFunctional(bool functionalOnly = true);
     NodeSharedPtr node;
     std::vector<int> nodeIds;
     std::vector<ElUtilSharedPtr> data;
-    Array<OneD, NekDouble> grad;
+    Array<OneD, NekDouble> G;
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > basisDeriv;
 
-    void CalcDX();
     void CalcMinJac();
 
     boost::mutex mtx;
@@ -126,6 +123,7 @@ public:
                  optimiser o)
                  : NodeOpti(n,e,r,d,o)
     {
+        FillBasisDeriv();
     }
 
     ~NodeOpti3D3D(){};
@@ -143,7 +141,7 @@ public:
     }
 
 private:
-    Array<OneD, NekDouble> GetGrad(bool analytic = false);
+    void FillBasisDeriv();
 };
 
 class NodeOpti2D2D : public NodeOpti //1D optimsation in 3D space
@@ -155,6 +153,7 @@ public:
                  optimiser o)
                  : NodeOpti(n,e,r,d,o)
     {
+        FillBasisDeriv();
     }
 
     ~NodeOpti2D2D(){};
@@ -171,7 +170,7 @@ public:
     }
 
 private:
-    Array<OneD, NekDouble> GetGrad(bool analytic = false);
+    void FillBasisDeriv();
 };
 
 class NodeOptiJob : public Thread::ThreadJob

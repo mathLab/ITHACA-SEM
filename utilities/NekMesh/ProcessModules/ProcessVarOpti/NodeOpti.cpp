@@ -95,9 +95,9 @@ void NodeOpti2D2D::Optimise()
     //NekDouble tmp[5] = { G[0], G[1], G[2], G[3], G[4] };
     G[0] = GA[0];
     G[1] = GA[1];
-    //G[2] = GA[2];
-    //G[3] = GA[3];
-    //G[4] = GA[4];
+    G[2] = GA[2];
+    G[3] = GA[4];
+    G[4] = GA[3];
 
     if(G[0]*G[0] + G[1]*G[1] > 1e-12)
     {
@@ -638,7 +638,7 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
                             {
                                 grad[ct+DIM] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
                                     mu * frobProdHes[m][l] + jacDetDeriv[m]*jacDetDeriv[l]*(
-                                        K/(2.0*sigma-jacDet)/(2.0*sigma-jacDet) - jacDet*(k*lsigma-mu)));
+                                        K/(2.0*sigma-jacDet)/(2.0*sigma-jacDet) - jacDet*(K*lsigma-mu)));
                             }
                         }
                     }

@@ -213,7 +213,7 @@ public:
         const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap);
 
     LIB_UTILITIES_EXPORT void SetUpFieldMetaData(
-        const std::string outname,
+        const std::string &outname,
         const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         const FieldMetaDataMap &fieldmetadatamap);
 
@@ -229,7 +229,7 @@ public:
         std::vector<std::vector<NekDouble> > &fielddata =
             NullVectorNekDoubleVector,
         FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
-        const Array<OneD, int> ElementiDs = NullInt1DArray);
+        const Array<OneD, int> &ElementIDs = NullInt1DArray);
 
     /// Returns the class name.
     inline virtual const std::string &GetClassName() const
@@ -245,7 +245,7 @@ private:
         const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap);
 
     LIB_UTILITIES_EXPORT virtual DataSourceSharedPtr v_ImportFieldMetaData(
-        std::string filename, FieldMetaDataMap &fieldmetadatamap);
+        const std::string &filename, FieldMetaDataMap &fieldmetadatamap);
 };
 
 }

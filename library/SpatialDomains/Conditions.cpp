@@ -71,9 +71,10 @@ namespace Nektar
         {
             Array<OneD, int> ans(set.size());
             std::set<int>::const_iterator it = set.begin(), end = set.end();
-            int i = 0;
-            for (; it != end; ++it, ++i)
+            for (int i = 0; it != end; ++it, ++i)
+            {
                 ans[i] = *it;
+            }
             return ans;
         }
 
@@ -765,22 +766,25 @@ namespace Nektar
                                 std::string periodicBndRegionIndexStr =
                                         attrData.substr(beg + 1, end - beg - 1);
                                 ASSERTL0(beg < end,
-                                        (std::string(
-                                                "Error reading periodic boundary region definition for boundary region: ")
-                                                + boundaryRegionIDStrm.str()).c_str());
+                                         (std::string(
+                                             "Error reading periodic boundary "
+                                             "region definition for boundary "
+                                             "region: ")
+                                          + boundaryRegionIDStrm.str())
+                                         .c_str());
 
                                 vector<unsigned int> periodicBndRegionIndex;
                                 bool parseGood = ParseUtils::GenerateSeqVector(
                                         periodicBndRegionIndexStr.c_str(),
                                         periodicBndRegionIndex);
 
-                                ASSERTL0(
-                                        parseGood
-                                                && (periodicBndRegionIndex.size()
-                                                        == 1),
-                                        (std::string(
-                                                "Unable to read periodic boundary condition for boundary region: ")
-                                                + boundaryRegionIDStrm.str()).c_str());
+                                ASSERTL0(parseGood &&
+                                         periodicBndRegionIndex.size() == 1,
+                                         (std::string(
+                                             "Unable to read periodic boundary "
+                                             "condition for boundary region: "
+                                             + boundaryRegionIDStrm.str()))
+                                         .c_str());
 
                                 BoundaryConditionShPtr periodicCondition(
                                         MemoryManager<PeriodicBoundaryCondition>::AllocateSharedPtr(
@@ -797,8 +801,8 @@ namespace Nektar
                     }
                     else if (conditionType == "C")
                     {
-                        NEKERROR(ErrorUtil::ewarning,
-                                "Cauchy type boundary conditions not implemented.");
+                        ASSERTL0(false, "Cauchy type boundary conditions not "
+                                        "implemented.");
                     }
 
                     conditionElement = conditionElement->NextSiblingElement();

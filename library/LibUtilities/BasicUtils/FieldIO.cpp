@@ -278,7 +278,7 @@ LIB_UTILITIES_EXPORT void Import(
     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
     std::vector<std::vector<NekDouble> > &fielddata,
     FieldMetaDataMap &fieldinfomap,
-    const Array<OneD, int> ElementIDs)
+    const Array<OneD, int> &ElementIDs)
 {
 #ifdef NEKTAR_USE_MPI
     int size;
@@ -300,7 +300,6 @@ LIB_UTILITIES_EXPORT void Import(
 #endif
     CommSharedPtr c    = GetCommFactory().CreateInstance("Serial", 0, 0);
     const std::string iofmt = FieldIO::GetFileType(infilename, c);
-    std::cout << "LOADING " << iofmt << std::endl;
     FieldIOSharedPtr f = GetFieldIOFactory().CreateInstance(iofmt, c, false);
     f->Import(infilename, fielddefs, fielddata, fieldinfomap, ElementIDs);
 }
@@ -509,8 +508,6 @@ int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
     {
         return 0;
     }
-    // ASSERTL0(fielddefs->m_elementIDs.size() > 0, "Fielddefs vector must
-    // contain at least one element of data .");
 
     unsigned int numbasis = 0;
 
@@ -563,12 +560,13 @@ int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
                 int l = fielddefs->m_numModes[cnt++];
                 if (fielddefs->m_numHomogeneousDir == 1)
                 {
-                    datasize += l * fielddefs->m_numModes[cnt++];
+                    datasize += l * fielddefs->m_homogeneousZIDs.size();
+                    cnt++;
                 }
                 else if (fielddefs->m_numHomogeneousDir == 2)
                 {
-                    int m = fielddefs->m_numModes[cnt++];
-                    datasize += l * m * fielddefs->m_numModes[cnt++];
+                    datasize += l * fielddefs->m_homogeneousYIDs.size();
+                    cnt += 2;
                 }
                 else
                 {
@@ -656,91 +654,88 @@ int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
                 case eSegment:
                 {
                     int l = fielddefs->m_numModes[cnt++];
-                    if(fielddefs->m_numHomogeneousDir == 1)
+                    if (fielddefs->m_numHomogeneousDir == 1)
                     {
-                        datasize += l*fielddefs->m_homogeneousZIDs.size();
+                        datasize += l * fielddefs->m_homogeneousZIDs.size();
                         cnt++;
                     }
-                    else if(fielddefs->m_numHomogeneousDir == 2)
+                    else if (fielddefs->m_numHomogeneousDir == 2)
                     {
-                        datasize += l*fielddefs->m_homogeneousYIDs.size();
+                        datasize += l * fielddefs->m_homogeneousYIDs.size();
                         cnt += 2;
                     }
                     else
                     {
                         datasize += l;
                     }
-                    break;
                 }
+                break;
                 case eTriangle:
                 {
                     int l = fielddefs->m_numModes[cnt++];
                     int m = fielddefs->m_numModes[cnt++];
-                    if(fielddefs->m_numHomogeneousDir == 1)
+                    if (fielddefs->m_numHomogeneousDir == 1)
                     {
-                        datasize += StdTriData::getNumberOfCoefficients(l,m)*
-                            fielddefs->m_homogeneousZIDs.size();
+                        datasize += StdTriData::getNumberOfCoefficients(l, m) *
+                                    fielddefs->m_homogeneousZIDs.size();
                         cnt++;
                     }
                     else
                     {
-                        datasize += StdTriData::getNumberOfCoefficients(l,m);
+                        datasize += StdTriData::getNumberOfCoefficients(l, m);
                     }
-                    break;
                 }
+                break;
                 case eQuadrilateral:
                 {
                     int l = fielddefs->m_numModes[cnt++];
                     int m = fielddefs->m_numModes[cnt++];
-                    if(fielddefs->m_numHomogeneousDir == 1)
+                    if (fielddefs->m_numHomogeneousDir == 1)
                     {
-                        datasize += l*m*fielddefs->m_homogeneousZIDs.size();
+                        datasize += l * m * fielddefs->m_homogeneousZIDs.size();
                         cnt++;
                     }
                     else
                     {
-                        datasize += l*m;
+                        datasize += l * m;
                     }
-
-                    break;
                 }
+                break;
                 case eTetrahedron:
                 {
                     int l = fielddefs->m_numModes[cnt++];
                     int m = fielddefs->m_numModes[cnt++];
                     int n = fielddefs->m_numModes[cnt++];
                     datasize += StdTetData::getNumberOfCoefficients(l, m, n);
-                    break;
                 }
+                break;
                 case ePyramid:
                 {
                     int l = fielddefs->m_numModes[cnt++];
                     int m = fielddefs->m_numModes[cnt++];
                     int n = fielddefs->m_numModes[cnt++];
                     datasize += StdPyrData::getNumberOfCoefficients(l, m, n);
-                    break;
                 }
+                break;
                 case ePrism:
                 {
                     int l = fielddefs->m_numModes[cnt++];
                     int m = fielddefs->m_numModes[cnt++];
                     int n = fielddefs->m_numModes[cnt++];
                     datasize += StdPrismData::getNumberOfCoefficients(l, m, n);
-                    break;
                 }
+                break;
                 case eHexahedron:
                 {
                     int l = fielddefs->m_numModes[cnt++];
                     int m = fielddefs->m_numModes[cnt++];
                     int n = fielddefs->m_numModes[cnt++];
                     datasize += l * m * n;
-                    break;
                 }
+                break;
                 default:
-                {
                     ASSERTL0(false, "Unsupported shape type.");
                     break;
-                }
             }
         }
     }

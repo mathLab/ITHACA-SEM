@@ -2372,7 +2372,8 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            return vector<bool>();
+            static vector<bool> tmp;
+            return tmp;
         }
 
 

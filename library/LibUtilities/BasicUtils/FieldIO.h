@@ -42,7 +42,6 @@
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/Points.h>
-#include <boost/assign/list_of.hpp>
 #include <tinyxml.h>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
@@ -51,6 +50,9 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+
+typedef std::map<std::string, std::string> FieldMetaDataMap;
+static FieldMetaDataMap NullFieldMetaDataMap;
 
 /**
  * @brief Base class for writing hierarchical data (XML or HDF5).
@@ -67,15 +69,6 @@ protected:
     virtual ~TagWriter() {}
 };
 typedef boost::shared_ptr<TagWriter> TagWriterSharedPtr;
-
-static std::vector<NekDouble> NullNekDoubleVector;
-static std::vector<LibUtilities::PointsType> NullPointsTypeVector;
-static std::vector<unsigned int> NullUnsignedIntVector;
-
-typedef std::map<std::string, std::string> FieldMetaDataMap;
-static FieldMetaDataMap NullFieldMetaDataMap;
-static std::vector<std::vector<NekDouble> > NullVectorNekDoubleVector =
-    boost::assign::list_of(NullNekDoubleVector);
 
 /**
  * @class A simple class encapsulating a data source. This allows us to pass
@@ -197,7 +190,7 @@ LIB_UTILITIES_EXPORT void Import(
     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
     std::vector<std::vector<NekDouble> > &fielddata = NullVectorNekDoubleVector,
     FieldMetaDataMap &fieldinfomap                  = NullFieldMetaDataMap,
-    const Array<OneD, int> ElementIDs = NullInt1DArray);
+    const Array<OneD, int> &ElementIDs = NullInt1DArray);
 
 // Forward declare
 class FieldIO;
@@ -249,11 +242,11 @@ public:
         std::vector<std::vector<NekDouble> > &fielddata =
             NullVectorNekDoubleVector,
         FieldMetaDataMap &fieldinfomap    = NullFieldMetaDataMap,
-        const Array<OneD, int> ElementIDs = NullInt1DArray);
+        const Array<OneD, int> &ElementIDs = NullInt1DArray);
 
     LIB_UTILITIES_EXPORT DataSourceSharedPtr ImportFieldMetaData(
-        std::string       filename,
-        FieldMetaDataMap &fieldmetadatamap);
+        const std::string &filename,
+        FieldMetaDataMap  &fieldmetadatamap);
 
     LIB_UTILITIES_EXPORT static const std::string GetFileType(
         const std::string &filename, CommSharedPtr comm);
@@ -301,13 +294,13 @@ protected:
         const std::string &infilename,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         std::vector<std::vector<NekDouble> >
-            &fielddata                    = NullVectorNekDoubleVector,
-        FieldMetaDataMap &fieldinfomap    = NullFieldMetaDataMap,
-        const Array<OneD, int> ElementIDs = NullInt1DArray) = 0;
+            &fielddata                     = NullVectorNekDoubleVector,
+        FieldMetaDataMap &fieldinfomap     = NullFieldMetaDataMap,
+        const Array<OneD, int> &ElementIDs = NullInt1DArray) = 0;
 
     /// @copydoc FieldIO::ImportFieldMetaData
     LIB_UTILITIES_EXPORT virtual DataSourceSharedPtr v_ImportFieldMetaData(
-        std::string filename, FieldMetaDataMap &fieldmetadatamap) = 0;
+        const std::string &filename, FieldMetaDataMap &fieldmetadatamap) = 0;
 };
 
 typedef boost::shared_ptr<FieldIO> FieldIOSharedPtr;
@@ -346,7 +339,7 @@ inline void FieldIO::Import(const std::string                      &infilename,
                             std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                             std::vector<std::vector<NekDouble> >   &fielddata,
                             FieldMetaDataMap                       &fieldinfo,
-                            const Array<OneD, int>                  ElementIDs)
+                            const Array<OneD, int>                 &ElementIDs)
 {
     v_Import(infilename, fielddefs, fielddata, fieldinfo, ElementIDs);
 }
@@ -359,7 +352,7 @@ inline void FieldIO::Import(const std::string                      &infilename,
  *                          filename.
  */
 inline DataSourceSharedPtr FieldIO::ImportFieldMetaData(
-    std::string filename, FieldMetaDataMap &fieldmetadatamap)
+    const std::string &filename, FieldMetaDataMap &fieldmetadatamap)
 {
     return v_ImportFieldMetaData(filename, fieldmetadatamap);
 }

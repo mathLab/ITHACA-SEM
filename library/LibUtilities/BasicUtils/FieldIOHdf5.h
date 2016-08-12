@@ -122,7 +122,8 @@ typedef boost::shared_ptr<H5TagWriter> H5TagWriterSharedPtr;
  * This class implements a HDF5 reader/writer based on MPI/O that is designed to
  * operate on a single file across all processors of a simulation. The
  * definition follows vaguely similar lines to XML output but is stored somewhat
- * differently. At a basic level metadata is organised as follows:
+ * differently to accommodate parallel reading and writing. At a basic level
+ * metadata is organised as follows:
  *
  *   - Nektar++ data lies in the root `/NEKTAR` group.
  *   - The contents of a FieldDefinitions object is hashed to construct a unique
@@ -130,30 +131,44 @@ typedef boost::shared_ptr<H5TagWriter> H5TagWriterSharedPtr;
  *     root group. We then use the H5TagWriter to assign the field definitions
  *     to each group.
  *   - In a similar fashion, we create a `Metadata` group to contain field
- *     metadata that is written
+ *     metadata that is written.
  *
- * We then define two data sets to contain field data:
+ * We then define five data sets to contain field data:
  *
  *   - The `DATA` dataset contains the double-precision modal coefficient data.
  *   - The `IDS` dataset contains the element IDs of the elements that are
  *     written out.
+ *   - The `POLYORDERS` dataset is written if the field data contains variable
+ *     polynomial order, and contains the (possibly hetergeneous) mode orders in
+ *     each direction for each of the elements.
+ *   - The `HOMOGENEOUSZIDS` dataset contains the IDs of z-planes for
+ *     homogeneous simulations, if the data are homogeneous.
+ *   - The `HOMOGENEOUSYIDS` dataset contains the IDs of y-planes for
+ *     homogeneous simulations, if the data are homogeneous.
+ *   - The `HOMOGENEOUSSIDS` dataset contains the strip IDs for
+ *     homogeneous simulations, if the data are homogeneous and use strips.
  *
- * The ordering is defined according to:
+ * The ordering is defined according to the `DECOMPOSITION` dataset. A
+ * `decomposition' in this class is essentially a single field definition with
+ * its accompanying data. Data are written into each dataset by the order of
+ * each decomposition. Each decomposition contains the following seven integers
+ * that define it per field definition per processor:
  *
- *   - The `INDEXES` dataset, of size NPROCS * 2 contains the following
- *     information per processor:
- *       - Offset of the start of this block's element IDs
- *         (FieldIOHdf5::IDS_IDX_IDX)
- *       - Offset of the start of this block in the data array
- *         (FieldIOHdf5::DATA_IDX_IDX)
- *   - The `DECOMPOSITION` dataset contains the following three integers of
- *     information per field definition per processor:
- *       - Number of elements in this field definition
- *         (FieldIOHdf5::ELEM_DCMP_IDX)
- *       - Number of entries in the data array for this field definition
- *         (FieldIOHdf5::VAL_DCMP_IDX)
- *       - Hash of the field definition that these entries belong inside
- *         (FieldIOHdf5::HASH_DCMP_IDX).
+ *   - Number of elements in this field definition (index #ELEM_DCMP_IDX).
+ *   - Number of entries in the `DATA` array for this field definition
+ *     (index #VAL_DCMP_IDX)
+ *   - Number of entries in the `POLYORDERS` array for this field definition
+ *     (index #ORDER_DCMP_IDX)
+ *   - Number of entries in the `HOMOGENEOUSZIDS` array (index #HOMZ_DCMP_IDX).
+ *   - Number of entries in the `HOMOGENEOUSYIDS` array (index #HOMY_DCMP_IDX).
+ *   - Number of entries in the `HOMOGENEOUSSIDS` array (index #HOMS_DCMP_IDX).
+ *   - Hash of the field definition, represented as a 32-bit integer, which
+ *     describes the name of the attribute that contains the rest of the field
+ *     definition information (e.g. field names, basis type, etc).
+ *
+ * The number of decompositions is therefore calculated as the field size
+ * divided by #MAX_DCMPS which allows us to calculate the offsets of the data
+ * for each field definition within the arrays.
  */
 class FieldIOHdf5 : public FieldIO
 {
@@ -228,26 +243,28 @@ private:
         std::vector<std::vector<NekDouble> > &fielddata,
         const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap);
 
-    LIB_UTILITIES_EXPORT virtual void v_Import(const std::string &infilename,
-                          std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                          std::vector<std::vector<NekDouble> > &fielddata =
-                              NullVectorNekDoubleVector,
-                          FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
-                          const Array<OneD, int> ElementiDs = NullInt1DArray);
+    LIB_UTILITIES_EXPORT virtual void v_Import(
+        const std::string &infilename,
+        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+        std::vector<std::vector<NekDouble> > &fielddata =
+                                                      NullVectorNekDoubleVector,
+        FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
+        const Array<OneD, int> &ElementIDs = NullInt1DArray);
 
     LIB_UTILITIES_EXPORT virtual DataSourceSharedPtr v_ImportFieldMetaData(
-        std::string filename, FieldMetaDataMap &fieldmetadatamap);
+        const std::string &filename, FieldMetaDataMap &fieldmetadatamap);
 
     LIB_UTILITIES_EXPORT void ImportHDF5FieldMetaData(
         DataSourceSharedPtr dataSource, FieldMetaDataMap &fieldmetadatamap);
 
-    LIB_UTILITIES_EXPORT void ImportFieldDef(H5::PListSharedPtr        readPL,
-                                             H5::GroupSharedPtr        root,
-                                             std::vector<uint64_t>    &decomps,
-                                             uint64_t                  decomp,
-                                             OffsetHelper              offset,
-                                             std::string               group,
-                                             FieldDefinitionsSharedPtr def);
+    LIB_UTILITIES_EXPORT void ImportFieldDef(
+        H5::PListSharedPtr        readPL,
+        H5::GroupSharedPtr        root,
+        std::vector<uint64_t>    &decomps,
+        uint64_t                  decomp,
+        OffsetHelper              offset,
+        std::string               group,
+        FieldDefinitionsSharedPtr def);
 
     LIB_UTILITIES_EXPORT void ImportFieldData(
         H5::PListSharedPtr               readPL,

@@ -11,7 +11,8 @@ OPTION(NEKTAR_USE_HDF5
 
 IF (NEKTAR_USE_HDF5)
     IF (NOT NEKTAR_USE_MPI)
-        MESSAGE(FATAL_ERROR "HDF5 requires Nektar++ to be configured with NEKTAR_USE_MPI for MPI support.")
+        MESSAGE(FATAL_ERROR "HDF5 requires Nektar++ to be configured with "
+                "NEKTAR_USE_MPI for MPI support.")
     ENDIF()
 
     # Try to find parallel system HDF5 first.
@@ -32,7 +33,7 @@ IF (NEKTAR_USE_HDF5)
         "NEKTAR_USE_HDF5" OFF)
 
     IF(THIRDPARTY_BUILD_HDF5)
-        IF (NOT CMAKE_VERSION VERSION_GREATER 3.1.0 AND NOT CMAKE_VERSION VERSION_EQUAL 3.1.0)
+        IF (CMAKE_VERSION VERSION_LESS 3.1.0)
             MESSAGE(FATAL_ERROR "HDF5 compilation requires CMake 3.1.0 or later.")
         ENDIF()
 

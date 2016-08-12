@@ -74,10 +74,16 @@ std::string fldCmdFormat = SessionReader::RegisterCmdLineArgument(
 FieldIOFactory &GetFieldIOFactory()
 {
     typedef Loki::
-        SingletonHolder<FieldIOFactory, Loki::CreateUsingNew, Loki::NoDestroy>
-            Type;
+        SingletonHolder<FieldIOFactory, Loki::CreateUsingNew, Loki::NoDestroy,
+                        Loki::ClassLevelLockable> Type;
     return Type::Instance();
 }
+
+/// Enumerator for auto-detection of FieldIO types.
+enum FieldIOType {
+    eXML,
+    eHDF5
+};
 
 /**
  * @brief Determine file type of given input file.
@@ -94,8 +100,7 @@ FieldIOFactory &GetFieldIOFactory()
 const std::string FieldIO::GetFileType(const std::string &filename,
                                        CommSharedPtr comm)
 {
-    // We'll use 0 => XML and 1 => HDF5.
-    int code = 0;
+    FieldIOType ioType = eXML;
     int size = comm->GetSize();
     int rank = comm->GetRank();
 
@@ -123,13 +128,13 @@ const std::string FieldIO::GetFileType(const std::string &filename,
 
         std::ifstream datafile(datafilename.c_str(), ios_base::binary);
 
-        code = 1;
+        ioType = eHDF5;
         for (unsigned i = 0; i < 8 && datafile.good(); ++i)
         {
             unsigned char byte = datafile.get();
             if (byte != magic[i])
             {
-                code = 0;
+                ioType = eXML;
                 break;
             }
         }
@@ -137,15 +142,17 @@ const std::string FieldIO::GetFileType(const std::string &filename,
 
     if (size > 1)
     {
+        int code = (int)ioType;
         comm->Bcast(code, 0);
+        ioType = (FieldIOType)code;
     }
 
     std::string iofmt;
-    if (code == 0)
+    if (ioType == eXML)
     {
         iofmt = "Xml";
     }
-    else if (code == 1)
+    else if (ioType == eHDF5)
     {
         iofmt = "Hdf5";
     }

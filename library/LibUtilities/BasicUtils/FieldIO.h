@@ -233,6 +233,10 @@ public:
     LIB_UTILITIES_EXPORT FieldIO(
         LibUtilities::CommSharedPtr pComm, bool sharedFilesystem);
 
+    LIB_UTILITIES_EXPORT virtual ~FieldIO()
+    {
+    }
+
     LIB_UTILITIES_EXPORT inline void Write(
         const std::string &outFile,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,

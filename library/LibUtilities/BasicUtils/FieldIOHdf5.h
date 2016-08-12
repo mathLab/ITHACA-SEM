@@ -200,6 +200,10 @@ public:
         LibUtilities::CommSharedPtr pComm,
         bool sharedFilesystem);
 
+    LIB_UTILITIES_EXPORT virtual ~FieldIOHdf5()
+    {
+    }
+
     /// Get class name
     inline virtual const std::string &GetClassName() const
     {

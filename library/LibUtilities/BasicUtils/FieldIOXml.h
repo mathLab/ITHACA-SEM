@@ -192,6 +192,10 @@ public:
         LibUtilities::CommSharedPtr pComm,
         bool sharedFilesystem);
 
+    LIB_UTILITIES_EXPORT virtual ~FieldIOXml()
+    {
+    }
+
     LIB_UTILITIES_EXPORT void ImportFieldDefs(
         DataSourceSharedPtr dataSource,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,

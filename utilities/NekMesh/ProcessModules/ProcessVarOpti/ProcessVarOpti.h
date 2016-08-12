@@ -72,6 +72,7 @@ struct Residual
     int n;
     int nDoF;
     int startInv;
+    int nReset;
     NekDouble worstJac;
 };
 

@@ -236,6 +236,7 @@ void ProcessVarOpti::Process()
     {
         ctr++;
         res->val = 0.0;
+        res->nReset = 0;
         for(int i = 0; i < optiNodes.size(); i++)
         {
             vector<Thread::ThreadJob*> jobs(optiNodes[i].size());
@@ -250,7 +251,7 @@ void ProcessVarOpti::Process()
             tm->Wait();
         }
 
-        res->startInv =0;
+        res->startInv = 0;
         res->worstJac = numeric_limits<double>::max();
 
         vector<Thread::ThreadJob*> elJobs(dataSet.size());
@@ -266,7 +267,9 @@ void ProcessVarOpti::Process()
 
         cout << ctr << "\tResidual: " << res->val
                     << "\tMin Jac: " << res->worstJac
-                    << "\tInvalid: " << res->startInv << endl;
+                    << "\tInvalid: " << res->startInv
+                    << "\tReset nodes: " << res->nReset
+                    << endl;
         if(ctr >= maxIter)
             break;
     }

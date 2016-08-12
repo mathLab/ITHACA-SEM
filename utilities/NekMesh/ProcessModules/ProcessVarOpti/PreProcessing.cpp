@@ -56,7 +56,7 @@ void ProcessVarOpti::BuildDerivUtil()
 
             LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                           LibUtilities::eNodalTriElec);
-            LibUtilities::PointsKey pkey2(m_mesh->m_nummode+2,
+            LibUtilities::PointsKey pkey2(m_mesh->m_nummode + 2,
                                           LibUtilities::eNodalTriSPI);
             Array<OneD, NekDouble> u1, v1, u2, v2;
 

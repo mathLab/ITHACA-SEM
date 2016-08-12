@@ -47,9 +47,17 @@ namespace Utilities
 
 NodeOptiFactory &GetNodeOptiFactory()
 {
+    /*
     typedef Loki::SingletonHolder<NodeOptiFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy> Type;
+                                  Loki::NoDestroy, Loki::ClassLevelLockable> Type;
     return Type::Instance();
+    */
+    //typedef Loki::SingletonHolder<NodeOptiFactory, Loki::CreateUsingNew,
+    //                              Loki::NoDestroy, Loki::ClassLevelLockable> Type;
+    //return Type::Instance();
+
+    static NodeOptiFactory asd;
+    return asd;
 }
 
 void NodeOpti::CalcDX()
@@ -82,19 +90,22 @@ void NodeOpti2D2D::Optimise()
     CalcMinJac();
 
     Array<OneD, NekDouble> G = GetGrad();
-
     Array<OneD, NekDouble> GA = GetGrad(true);
 
-    if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-6)
-    {
-        cout << endl;
-        cout << "approx " << G[0] << " " << G[1] << endl;
-        cout << "approx " << G[2] << " " << G[3] << " " << G[4] << endl;
-        cout << "analytic " << GA[0] << " " << GA[1] << endl;
-        cout << "analytic " << GA[2] << " " << GA[3] << " " << GA[4] << endl;
+    //NekDouble tmp[5] = { G[0], G[1], G[2], G[3], G[4] };
+    G[0] = GA[0];
+    G[1] = GA[1];
+    //G[2] = GA[2];
+    //G[3] = GA[3];
+    //G[4] = GA[4];
 
-        G[0] = GA[0];
-        G[1] = GA[1];
+    if(G[0]*G[0] + G[1]*G[1] > 1e-12)
+    {
+        // cout << endl;
+        // cout << "approx " << G[0] << " " << G[1] << endl;
+        // cout << "approx " << G[2] << " " << G[3] << " " << G[4] << endl;
+        // cout << "analytic " << GA[0] << " " << GA[1] << endl;
+        // cout << "analytic " << GA[2] << " " << GA[3] << " " << GA[4] << endl;
 
         //needs to optimise
         NekDouble currentW = GetFunctional<2>();
@@ -123,11 +134,15 @@ void NodeOpti2D2D::Optimise()
             //reset the node
             node->m_x = xc;
             node->m_y = yc;
-            cout << "warning: had to reset node" << endl;
+            //cout << "warning: had to reset node " << " " << nodeIds[0] << endl;
+            //cout << "    approx grad  : " << tmp[0] << " " << tmp[1] << endl;
+            // cout << "    approx hess  : " << tmp[2] << " " << tmp[3] << " " << tmp[4] << endl;
+            //cout << "    analytic grad: " << GA[0] << " " << GA[1] << endl;
+            // cout << "    analytic hess: " << GA[2] << " " << GA[3] << " " << GA[4] << endl;
         }
-        exit(-1);
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)),res->val);
+        res->nReset++;
         mtx.unlock();
     }
 }
@@ -390,16 +405,10 @@ inline void InvTrans<3>(NekDouble in[3][3], NekDouble out[3][3])
 template<int DIM> inline NekDouble FrobProd(NekDouble in1[DIM][DIM],
                                             NekDouble in2[DIM][DIM])
 {
-    return 0;
-}
-
-template<>
-inline NekDouble FrobProd<2>(NekDouble in1[2][2], NekDouble in2[2][2])
-{
     NekDouble ret = 0;
-    for (int n = 0; n < 2; ++n)
+    for (int n = 0; n < DIM; ++n)
     {
-        for (int l = 0; l < 2; ++l)
+        for (int l = 0; l < DIM; ++l)
         {
             ret += in1[n][l] * in2[n][l];
         }
@@ -519,7 +528,7 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
-            grad = Array<OneD, NekDouble>(DIM==2 ? 5 : 9,0.0);
+            grad = Array<OneD, NekDouble>(DIM == 2 ? 5 : 9, 0.0);
 
             for (int i = 0; i < nElmt; ++i)
             {
@@ -552,14 +561,13 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
                         }
 
                         InvTrans<DIM>(phiM, jacInvTrans);
+                        NekDouble derivDet = Determinant<DIM>(phiM);
 
                         NekDouble basisDeriv[DIM];
                         for (int m = 0; m < DIM; ++m)
                         {
                             basisDeriv[m] = *(derivUtil->VdmD[m])(k,nodeIds[i]);
                         }
-
-                        NekDouble derivDet = Determinant<DIM>(phiM);
 
                         for (int m = 0; m < DIM; ++m)
                         {
@@ -568,7 +576,7 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
                             {
                                 jacDetDeriv[m] += jacInvTrans[m][n] * basisDeriv[n];
                             }
-                            jacDetDeriv[m] *= derivDet / data[i]->maps[k][9];
+                            jacDetDeriv[m] *= derivDet / fabs(data[i]->maps[k][9]);
                         }
 
                         NekDouble jacDeriv[DIM][DIM][DIM];
@@ -591,11 +599,12 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
                             {
                                 for (int n = 0; n < DIM; ++n)
                                 {
-                                    jacDerivPhi[p][n][m] = 0.0;
+                                    jacDerivPhi[p][m][n] = 0.0;
                                     for (int l = 0; l < DIM; ++l)
                                     {
-                                        jacDerivPhi[p][n][m] += jacDeriv[p][n][m]*
-                                                data[i]->maps[k][m * 3 + l];
+                                        // want phi_I^{-1} (l,n)
+                                        jacDerivPhi[p][m][n] +=
+                                            jacDeriv[p][m][l] * data[i]->maps[k][l + 3*n];
                                     }
                                 }
                             }
@@ -620,7 +629,7 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
                         {
                             grad[j] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
                                 mu * frobProd[j] + (jacDetDeriv[j] / (2.0*sigma - jacDet)
-                                    * (K * lsigma - mu)));
+                                                    * (K * lsigma - mu)));
                         }
                         int ct = 0;
                         for (int m = 0; m < DIM; ++m)

@@ -89,6 +89,7 @@ protected:
     }
     template<int DIM> NekDouble GetFunctional(bool analytic = false);
     NodeSharedPtr node;
+    boost::mutex mtx;
     std::vector<int> nodeIds;
     std::vector<ElUtilSharedPtr> data;
     Array<OneD, NekDouble> grad;
@@ -96,7 +97,6 @@ protected:
     void CalcDX();
     void CalcMinJac();
 
-    boost::mutex mtx;
     NekDouble dx;
     NekDouble minJac;
     ResidualSharedPtr res;

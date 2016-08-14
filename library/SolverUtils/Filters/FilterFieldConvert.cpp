@@ -127,7 +127,7 @@ FilterFieldConvert::FilterFieldConvert(
     }
     // Output module
     modcmds.push_back(m_outputFile);
-    // Create modules 
+    // Create modules
     CreateModules(modcmds);
 }
 
@@ -155,8 +155,6 @@ void FilterFieldConvert::v_Initialise(
     // Fill some parameters of m_f
     m_f->m_session = m_session;
     m_f->m_graph = pFields[0]->GetGraph();
-    m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
-                    ::AllocateSharedPtr(m_f->m_session->GetComm());
     m_f->m_comm = m_f->m_session->GetComm();
 }
 
@@ -168,7 +166,7 @@ void FilterFieldConvert::v_FillVariablesName(
     for (int n = 0; n < nfield; ++n)
     {
         m_variables[n] = pFields[n]->GetSession()->GetVariable(n);
-    }    
+    }
 }
 
 void FilterFieldConvert::v_Update(

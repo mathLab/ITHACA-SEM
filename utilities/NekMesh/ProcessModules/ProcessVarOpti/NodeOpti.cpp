@@ -86,19 +86,21 @@ int NodeOpti2D2D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
 void NodeOpti2D2D::Optimise()
 {
     CalcMinJac();
+    CalcDX();
 
-#if 0
-    Array<OneD, NekDouble> G = GetGrad(true), G2;
+    Array<OneD, NekDouble> G = GetGrad(true);
 
     // Gradient already zero
     if (G[0]*G[0] + G[1]*G[1] > 1e-12)
     {
-        NekDouble alpha = 1.0;
-        NekDouble xc    = node->m_x;
-        NekDouble yc    = node->m_y;
+        NekDouble alpha    = 1.0;
+        NekDouble xc       = node->m_x;
+        NekDouble yc       = node->m_y;
+        NekDouble currentW = GetFunctional<2>();
+        bool      found    = false;
+#if 0
+        Array<OneD, NekDouble> G2;
         const NekDouble c1 = 1e-5, c2 = 0.9;
-        NekDouble currentVal = GetFunctional<2>();
-        bool found = false;
 
         while (alpha > 1e-10)
         {
@@ -119,7 +121,7 @@ void NodeOpti2D2D::Optimise()
             NekDouble tmp = G[0] * delX + G[1] * delY;
 
             // Wolfe conditions
-            if (newVal <= currentVal + c1 * alpha * tmp &&
+            if (newVal <= currentW + c1 * alpha * tmp &&
                 (G2[0] * delX + G2[1] * delY) >= c2 * tmp)
             {
                 found = true;
@@ -129,65 +131,11 @@ void NodeOpti2D2D::Optimise()
             G = G2;
             alpha /= 2.0;
         }
-
-        if(!found)
-        {
-            //reset the node
-            node->m_x = xc;
-            node->m_y = yc;
-            //cout << "warning: had to reset node " << " " << nodeIds[0] << endl;
-            //cout << "    approx grad  : " << tmp[0] << " " << tmp[1] << endl;
-            //cout << "    approx hess  : " << tmp[2] << " " << tmp[3] << " " << tmp[4] << endl;
-            //cout << "    analytic grad: " << GA[0] << " " << GA[1] << endl;
-            //cout << "    analytic hess: " << GA[2] << " " << GA[3] << " " << GA[4] << endl;
-            mtx.lock();
-            res->nReset++;
-            mtx.unlock();
-        }
-
-        mtx.lock();
-        res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)),res->val);
-        mtx.unlock();
-    }
-
 #else
-
-    CalcDX();
-    //Array<OneD, NekDouble> G = GetGrad();
-    Array<OneD, NekDouble> GA = GetGrad(true), G(5);
-
-    //NekDouble tmp[5] = { G[0], G[1], G[2], G[3], G[4] };
-    G[0] = GA[0];
-    G[1] = GA[1];
-    G[2] = GA[2];
-    G[3] = GA[4];
-    G[4] = GA[3];
-
-
-    // // Check Hessian
-    // NekDouble trace = GA[2] + GA[4];
-    // NekDouble det = GA[2]*GA[4] - GA[3]*GA[3];
-
-    // cout << trace/2 + sqrt(0.25*trace*trace - det) << " "
-    //      << trace/2 + sqrt(0.25*trace*trace - det) << endl;
-
-    if(G[0]*G[0] + G[1]*G[1] > 1e-12)
-    {
-        // cout << endl;
-        // cout << "approx " << G[0] << " " << G[1] << endl;
-        // cout << "approx " << G[2] << " " << G[3] << " " << G[4] << endl;
-        // cout << "analytic " << GA[0] << " " << GA[1] << endl;
-        // cout << "analytic " << GA[2] << " " << GA[3] << " " << GA[4] << endl;
-
         //needs to optimise
-        NekDouble currentW = GetFunctional<2>();
-        NekDouble xc       = node->m_x;
-        NekDouble yc       = node->m_y;
-        NekDouble alpha    = 1.0;
-        NekDouble delX = 1.0/(G[2]*G[3]-G[4]*G[4])*(G[3]*G[0] - G[4]*G[1]);
-        NekDouble delY = 1.0/(G[2]*G[3]-G[4]*G[4])*(G[2]*G[1] - G[4]*G[0]);
+        NekDouble delX = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[4]*G[0] - G[3]*G[1]);
+        NekDouble delY = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[2]*G[1] - G[3]*G[0]);
 
-        bool found = false;
         while(alpha > 1e-10)
         {
             node->m_x = xc - alpha * delX;
@@ -200,31 +148,28 @@ void NodeOpti2D2D::Optimise()
 
             alpha /= 2.0;
         }
-
-        if(!found)
+#endif
+        if (!found)
         {
             //reset the node
             node->m_x = xc;
             node->m_y = yc;
-            //cout << "warning: had to reset node " << " " << nodeIds[0] << endl;
-            //cout << "    approx grad  : " << tmp[0] << " " << tmp[1] << endl;
-            //cout << "    approx hess  : " << tmp[2] << " " << tmp[3] << " " << tmp[4] << endl;
-            //cout << "    analytic grad: " << GA[0] << " " << GA[1] << endl;
-            //cout << "    analytic hess: " << GA[2] << " " << GA[3] << " " << GA[4] << endl;
+
             mtx.lock();
             res->nReset++;
             mtx.unlock();
         }
+
         mtx.lock();
-        res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)),res->val);
+        res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+
+                            (node->m_y-yc)*(node->m_y-yc)),
+                       res->val);
         mtx.unlock();
     }
-#endif
 }
 
 Array<OneD, NekDouble> NodeOpti2D2D::GetGrad(bool analytic)
 {
-
     if(analytic)
     {
         GetFunctional<2>(true);
@@ -250,15 +195,16 @@ Array<OneD, NekDouble> NodeOpti2D2D::GetGrad(bool analytic)
     //ret[1] d/dy
 
     //ret[3] d2/dx2
-    //ret[4] d2/dxdy
-    //ret[5] d2/dy2
+    //ret[4] d2/dy2
+    //ret[5] d2/dxdy
 
     ret[0] = (w[1] - w[4]) / 2.0 / dx;
     ret[1] = (w[3] - w[6]) / 2.0 / dx;
 
     ret[2] = (w[1] + w[4] - 2.0*w[0]) / dx / dx;
-    ret[3] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
-    ret[4] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / dx / dx;
+    ret[4] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
+
+    ret[3] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / dx / dx;
 
     return ret;
 }
@@ -268,11 +214,10 @@ int NodeOpti3D3D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
 
 void NodeOpti3D3D::Optimise()
 {
+    CalcMinJac();
     CalcDX();
 
-    CalcMinJac();
-
-    Array<OneD, NekDouble> G = GetGrad();
+    Array<OneD, NekDouble> G = GetGrad(true);
 
     if(sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) > 1e-10)
     {
@@ -283,30 +228,28 @@ void NodeOpti3D3D::Optimise()
         NekDouble yc       = node->m_y;
         NekDouble zc       = node->m_z;
         NekDouble alpha    = 1.0;
-        NekDouble delX;
-        NekDouble delY;
-        NekDouble delZ;
+        NekDouble delX, delY, delZ;
 
-        NekDouble det = G[3]*(G[4]*G[5]-G[8]*G[8])
-                       -G[6]*(G[6]*G[5]-G[7]*G[8])
-                       +G[7]*(G[6]*G[8]-G[7]*G[4]);
+        NekDouble det = G[3]*(G[6]*G[8]-G[7]*G[7])
+                       -G[4]*(G[4]*G[8]-G[5]*G[7])
+                       +G[5]*(G[4]*G[7]-G[5]*G[6]);
 
-        delX = G[0]*(G[4]*G[5]-G[8]*G[8]) +
-               G[1]*(G[7]*G[8]-G[6]*G[5]) +
-               G[2]*(G[6]*G[8]-G[7]*G[4]);
-        delY = G[0]*(G[8]*G[7]-G[6]*G[5]) +
-               G[1]*(G[3]*G[5]-G[7]*G[7]) +
-               G[2]*(G[6]*G[7]-G[3]*G[8]);
-        delZ = G[0]*(G[6]*G[8]-G[4]*G[7]) +
-               G[1]*(G[6]*G[7]-G[3]*G[8]) +
-               G[2]*(G[3]*G[4]-G[6]*G[6]);
+        delX = G[0]*(G[6]*G[8]-G[7]*G[7]) +
+               G[1]*(G[5]*G[7]-G[4]*G[8]) +
+               G[2]*(G[4]*G[7]-G[5]*G[6]);
+        delY = G[0]*(G[7]*G[5]-G[4]*G[8]) +
+               G[1]*(G[3]*G[8]-G[5]*G[5]) +
+               G[2]*(G[4]*G[5]-G[3]*G[7]);
+        delZ = G[0]*(G[4]*G[7]-G[6]*G[5]) +
+               G[1]*(G[4]*G[5]-G[3]*G[7]) +
+               G[2]*(G[3]*G[6]-G[4]*G[4]);
 
         delX /= det;
         delY /= det;
         delZ /= det;
 
         bool found = false;
-        while(alpha > 1e-10)
+        while (alpha > 1e-10)
         {
             node->m_x = xc - alpha * delX;
             node->m_y = yc - alpha * delY;
@@ -323,12 +266,13 @@ void NodeOpti3D3D::Optimise()
 
         if(!found)
         {
-            //reset the node
             node->m_x = xc;
             node->m_y = yc;
             node->m_z = zc;
-            //functional = currentW;
-            //cout << "warning: had to reset node" << endl;
+
+            mtx.lock();
+            res->nReset++;
+            mtx.unlock();
         }
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
@@ -339,6 +283,12 @@ void NodeOpti3D3D::Optimise()
 
 Array<OneD, NekDouble> NodeOpti3D3D::GetGrad(bool analytic)
 {
+    if (analytic)
+    {
+        GetFunctional<3>(true);
+        return grad;
+    }
+
     NekDouble xc = node->m_x;
     NekDouble yc = node->m_y;
     NekDouble zc = node->m_z;
@@ -352,13 +302,12 @@ Array<OneD, NekDouble> NodeOpti3D3D::GetGrad(bool analytic)
         node->m_z = zc + dir[i][2] * dx;
         w.push_back(GetFunctional<3>());
     }
+
     node->m_x = xc;
     node->m_y = yc;
     node->m_z = zc;
 
     w[0] = GetFunctional<3>();
-
-    //cout << "ANALYTIC: " << gradient[0] << " " << gradient[1] << " " << gradient[2] << endl;
 
     Array<OneD, NekDouble> ret(9,0.0);
 
@@ -367,30 +316,23 @@ Array<OneD, NekDouble> NodeOpti3D3D::GetGrad(bool analytic)
     //ret[2] d/dz
 
     //ret[3] d2/dx2
-    //ret[4] d2/dy2
-    //ret[5] d2/dz2
-    //ret[6] d2/dxdy
-    //ret[7] d2/dxdz
-    //ret[8] d2/dydz
-
-    //ret[0] = gradient[0];
-    //ret[1] = gradient[1];
-    //ret[2] = gradient[2];
+    //ret[4] d2/dxdy
+    //ret[5] d2/dxdz
+    //ret[6] d2/dy2
+    //ret[7] d2/dydz
+    //ret[8] d2/dz2
 
     ret[0] = (w[1] - w[4]) / 2.0 / dx;
     ret[1] = (w[3] - w[6]) / 2.0 / dx;
     ret[2] = (w[9] - w[8]) / 2.0 / dx;
 
-    //cout << "APPROX: " << ret[0] << " " << ret[1] << " " << ret[2] << endl;
-    //cout << endl;
-
     ret[3] = (w[1] + w[4] - 2.0*w[0]) / dx / dx;
-    ret[4] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
-    ret[5] = (w[9] + w[8] - 2.0*w[0]) / dx / dx;
+    ret[6] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
+    ret[8] = (w[9] + w[8] - 2.0*w[0]) / dx / dx;
 
-    ret[6] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / dx / dx;
-    ret[7] = (w[10] - w[1] - w[9] + 2.0*w[0] - w[4] - w[8] + w[7]) / 2.0 / dx / dx;
-    ret[8] = (w[11] - w[3] - w[9] + 2.0*w[0] - w[6] - w[8] + w[12]) / 2.0 / dx / dx;
+    ret[4] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / dx / dx;
+    ret[5] = (w[10] - w[1] - w[9] + 2.0*w[0] - w[4] - w[8] + w[7]) / 2.0 / dx / dx;
+    ret[7] = (w[11] - w[3] - w[9] + 2.0*w[0] - w[6] - w[8] + w[12]) / 2.0 / dx / dx;
 
     return ret;
 }

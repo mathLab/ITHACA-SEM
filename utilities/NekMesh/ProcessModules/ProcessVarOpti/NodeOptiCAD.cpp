@@ -126,9 +126,9 @@ void NodeOpti2D3D::Optimise()
     CalcDX();
     CalcMinJac();
 
-    Array<OneD, NekDouble> G = GetGrad();
+    Array<OneD, NekDouble> G = GetGrad(true);
 
-    if(sqrt(G[0]*G[0] + G[1]*G[1]) > 1e-10)
+    if (G[0]*G[0] + G[1]*G[1] > 1e-16)
     {
         //needs to optimise
         Array<OneD, NekDouble> uvc = node->GetCADSurfInfo(surf->GetId());
@@ -257,6 +257,34 @@ Array<OneD, NekDouble> NodeOpti1D3D::GetGrad(bool analytic)
 Array<OneD, NekDouble> NodeOpti2D3D::GetGrad(bool analytic)
 {
     Array<OneD, NekDouble> uvc = node->GetCADSurfInfo(surf->GetId());
+    Array<OneD, NekDouble> ret(5, 0.0);
+
+    if (analytic)
+    {
+        GetFunctional<3>(true);
+        Array<OneD, NekDouble> d2 = surf->D2(uvc);
+
+        // Gradients
+        ret[0] = d2[3] * grad[0] + d2[4] * grad[1] + d2[5] * grad[2];
+        ret[1] = d2[6] * grad[0] + d2[7] * grad[1] + d2[8] * grad[2];
+        // Hessian: ret[2] = d2/dx2, ret[3] = d2/dy2, ret[4] = d2/dxdy
+        /*
+        ret[2] = (grad[0] * d2[9] + grad[1] * d2[10] + grad[2] * d2[11]) +
+            d2[3] * (grad[3] * d2[3] + grad[4] * d2[4] + grad[5] * d2[5]) +
+            d2[4] * (grad[4] * d2[3] + grad[6] * d2[4] + grad[7] * d2[5]) +
+            d2[5] * (grad[5] * d2[3] + grad[7] * d2[4] + grad[8] * d2[5]);
+        ret[3] = (grad[0] * d2[12] + grad[1] * d2[13] + grad[2] * d2[14]) +
+            d2[6] * (grad[3] * d2[6] + grad[4] * d2[7] + grad[5] * d2[8]) +
+            d2[7] * (grad[4] * d2[6] + grad[6] * d2[7] + grad[7] * d2[8]) +
+            d2[8] * (grad[5] * d2[6] + grad[7] * d2[7] + grad[8] * d2[8]);
+        ret[4] = (grad[0] * d2[15] + grad[1] * d2[16] + grad[2] * d2[17]) +
+            d2[6] * (grad[3] * d2[3] + grad[4] * d2[4] + grad[5] * d2[5]) +
+            d2[7] * (grad[4] * d2[3] + grad[6] * d2[4] + grad[7] * d2[5]) +
+            d2[8] * (grad[5] * d2[3] + grad[7] * d2[4] + grad[8] * d2[5]);
+        */
+        //return ret;
+    }
+
     Array<OneD, NekDouble> d1 = surf->D1(uvc);
 
     NekDouble dru = sqrt(d1[3]*d1[3] + d1[4]*d1[4] + d1[5]*d1[5]);
@@ -284,8 +312,6 @@ Array<OneD, NekDouble> NodeOpti2D3D::GetGrad(bool analytic)
     node->m_y = p[1];
     node->m_z = p[2];
 
-    Array<OneD, NekDouble> ret(5,0.0);
-
     //ret[0] d/dx
     //ret[1] d/dy
 
@@ -293,9 +319,8 @@ Array<OneD, NekDouble> NodeOpti2D3D::GetGrad(bool analytic)
     //ret[3] d2/dy2
     //ret[4] d2/dxdy
 
-
-    ret[0] = (w[1] - w[4]) / 2.0 / du;
-    ret[1] = (w[3] - w[6]) / 2.0 / dv;
+    //ret[0] = (w[1] - w[4]) / 2.0 / du;
+    //ret[1] = (w[3] - w[6]) / 2.0 / dv;
     ret[2] = (w[1] + w[4] - 2.0*w[0]) / du / du;
     ret[3] = (w[3] + w[6] - 2.0*w[0]) / dv / dv;
     ret[4] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / du / dv;

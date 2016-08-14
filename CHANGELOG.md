@@ -61,6 +61,12 @@ v4.3.4
 - Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of large
   simulations (!672)
 
+v4.3.4
+------
+**Library**:
+- Added additional assertions to ensure homogeneous simulations have an even
+  number of planes per process (!666)
+
 v4.3.3
 ------
 **Library**:

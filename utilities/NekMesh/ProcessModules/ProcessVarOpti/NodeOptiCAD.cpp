@@ -51,12 +51,11 @@ int NodeOpti1D3D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
 void NodeOpti1D3D::Optimise()
 {
     CalcDX();
-
     CalcMinJac();
 
-    Array<OneD, NekDouble> G = GetGrad();
+    Array<OneD, NekDouble> G = GetGrad(true);
 
-    if(sqrt(G[0]*G[0]) > 1e-10)
+    if (G[0]*G[0] > 1e-12)
     {
         //needs to optimise
         NekDouble tc = node->GetCADCurveInfo(curve->GetId());
@@ -125,7 +124,6 @@ int NodeOpti2D3D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
 void NodeOpti2D3D::Optimise()
 {
     CalcDX();
-
     CalcMinJac();
 
     Array<OneD, NekDouble> G = GetGrad();
@@ -198,8 +196,30 @@ void NodeOpti2D3D::Optimise()
 Array<OneD, NekDouble> NodeOpti1D3D::GetGrad(bool analytic)
 {
     NekDouble tc = node->GetCADCurveInfo(curve->GetId());
-    Array<OneD, NekDouble> d1 = curve->D1(tc);
+    Array<OneD, NekDouble> ret(2,0.0);
 
+    if (analytic)
+    {
+        GetFunctional<3>(true);
+
+        // Grab first and second order CAD derivatives
+        Array<OneD, NekDouble> d1 = curve->D1(tc);
+        Array<OneD, NekDouble> d2 = curve->D2(tc);
+
+        // Multiply gradient by derivative of CAD
+        ret[0] = grad[0] * d2[3] + grad[1] * d2[4] + grad[2] * d2[5];
+
+        // Second order: product rule of above, so multiply gradient by second
+        // order CAD derivatives and Hessian by gradient of CAD
+        ret[1] = grad[0] * d2[6] + grad[1] * d2[7] + grad[2] * d2[8]
+            + d2[3] * (grad[3] * d2[3] + grad[4] * d2[4] + grad[5] * d2[5])
+            + d2[4] * (grad[4] * d2[3] + grad[6] * d2[4] + grad[7] * d2[5])
+            + d2[5] * (grad[5] * d2[3] + grad[7] * d2[4] + grad[8] * d2[5]);
+
+        return ret;
+    }
+
+    Array<OneD, NekDouble> d1 = curve->D1(tc);
     NekDouble dr = sqrt(d1[3]*d1[3] + d1[4]*d1[4] + d1[5]*d1[5]);
 
     NekDouble dt = dx / dr;
@@ -227,8 +247,6 @@ Array<OneD, NekDouble> NodeOpti1D3D::GetGrad(bool analytic)
     node->m_x = p[0];
     node->m_y = p[1];
     node->m_z = p[2];
-
-    Array<OneD, NekDouble> ret(2,0.0);
 
     ret[0] = (w[1] - w[2]) / 2.0 / dt;
     ret[1] = (w[1] + w[2] - 2.0*w[0]) / dt / dt;

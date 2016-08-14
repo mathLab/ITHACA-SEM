@@ -219,7 +219,7 @@ void NodeOpti3D3D::Optimise()
 
     Array<OneD, NekDouble> G = GetGrad(true);
 
-    if(sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) > 1e-10)
+    if(G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > 1e-12)
     {
         //needs to optimise
         NekDouble currentW = GetFunctional<3>();

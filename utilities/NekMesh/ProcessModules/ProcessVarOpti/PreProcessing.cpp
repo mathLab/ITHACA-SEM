@@ -419,15 +419,15 @@ void ProcessVarOpti::FillQuadPoints()
 
     for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
     {
-        // if((*eit)->m_edgeNodes.size() > 0 && (*eit)->m_curveType == LibUtilities::eGaussLobattoLegendre)
-        // {
-        //     //already high-order just need to Id and double check type
-        //     for(int i = 0; i < (*eit)->m_edgeNodes.size(); i++)
-        //     {
-        //         (*eit)->m_edgeNodes[i]->m_id = id++;
-        //     }
-        //     continue;
-        // }
+        if((*eit)->m_edgeNodes.size() > 0 && (*eit)->m_curveType == LibUtilities::eGaussLobattoLegendre)
+        {
+            //already high-order just need to Id and double check type
+            for(int i = 0; i < (*eit)->m_edgeNodes.size(); i++)
+            {
+                (*eit)->m_edgeNodes[i]->m_id = id++;
+            }
+            continue;
+        }
         SpatialDomains::Geometry1DSharedPtr geom = edgeGeoms[(*eit)->m_id];
         StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
 

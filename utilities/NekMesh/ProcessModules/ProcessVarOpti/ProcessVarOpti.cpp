@@ -118,10 +118,10 @@ void ProcessVarOpti::Process()
     const int maxIter = m_config["maxiter"].as<int>();
     const NekDouble restol = m_config["restol"].as<NekDouble>();
 
-    m_mesh->m_nummode = m_config["nq"].as<int>();
+    //m_mesh->m_nummode = m_config["nq"].as<int>();
 
     EdgeSet::iterator eit;
-
+    m_mesh->m_nummode = -1;
     if (m_mesh->m_nummode == -1)
     {
         bool fd = false;

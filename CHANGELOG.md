@@ -18,6 +18,9 @@ v4.4.0
   operations during simulation using a new filter (!589)
 - Adjust CMake dependencies to reduce compile time (!671)
 - Homogeneous1D dealiasing improvements (!622)
+- Add support for HDF5 as an alternative output to XML-based output, including
+  refactoring of FieldIO, improvements to MPI interface and added communicators
+  to boundary conditions (!615)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)

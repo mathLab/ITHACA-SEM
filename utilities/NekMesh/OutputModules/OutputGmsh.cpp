@@ -64,6 +64,8 @@ OutputGmsh::OutputGmsh(MeshSharedPtr m) : OutputModule(m)
     {
         elmMap[it->second] = it->first;
     }
+
+    m_config["order"] = ConfigOption(false, "-1", "Enforce a polynomial order");
 }
 
 OutputGmsh::~OutputGmsh()
@@ -87,6 +89,9 @@ void OutputGmsh::Process()
         cout << "OutputGmsh: Writing file..." << endl;
     }
 
+    boost::unordered_map<int, vector<int> > orderingMap;
+    boost::unordered_map<int, vector<int> >::iterator oIt;
+
     // Open the file stream.
     OpenStream();
 
@@ -98,23 +103,36 @@ void OutputGmsh::Process()
     int id = m_mesh->m_vertexSet.size();
     vector<ElementSharedPtr> toComplete;
 
-    int maxOrder = -1;
+    int order = m_config["order"].as<int>();
 
-    // Do first pass over elements of expansion dimension to determine
-    // which elements need completion.
-    for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
+    if (order != -1)
     {
-        ElementSharedPtr e = m_mesh->m_element[m_mesh->m_expDim][i];
-        if (e->GetMaxOrder() > maxOrder)
+        if (m_mesh->m_verbose)
         {
-            maxOrder = e->GetMaxOrder();
+            cout << "Making mesh of order " << order << endl;
+        }
+    }
+    else
+    {
+        // Do first pass over elements of expansion dimension to determine
+        // which elements need completion.
+        for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
+        {
+            ElementSharedPtr e = m_mesh->m_element[m_mesh->m_expDim][i];
+            if (e->GetMaxOrder() > order)
+            {
+                order = e->GetMaxOrder();
+            }
         }
     }
 
     // Convert this mesh into a high-order mesh of uniform order.
-    cout << "Mesh order of " << maxOrder << " detected" << endl;
-    maxOrder = 4;
-    m_mesh->MakeOrder(maxOrder, LibUtilities::ePolyEvenlySpaced);
+    if (m_mesh->m_verbose)
+    {
+        cout << "Mesh order of " << order << " detected" << endl;
+    }
+
+    m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
 
     // Add edge- and face-interior nodes to vertex set.
     EdgeSet::iterator eIt;

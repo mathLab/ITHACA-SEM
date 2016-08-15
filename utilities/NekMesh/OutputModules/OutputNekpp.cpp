@@ -68,6 +68,7 @@ OutputNekpp::OutputNekpp(MeshSharedPtr m) : OutputModule(m)
     m_config["test"] = ConfigOption(
         true, "0", "Attempt to load resulting mesh and create meshgraph.");
     m_config["uncompress"] = ConfigOption(true, "0", "Uncompress xml sections");
+    m_config["order"] = ConfigOption(false, "-1", "Enforce a polynomial order");
 }
 
 OutputNekpp::~OutputNekpp()
@@ -96,6 +97,13 @@ void OutputNekpp::Process()
     if (m_mesh->m_verbose)
     {
         cout << "OutputNekpp: Writing file..." << endl;
+    }
+
+    int order = m_config["order"].as<int>();
+
+    if (order != -1)
+    {
+        m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
     }
 
     TiXmlDocument doc;

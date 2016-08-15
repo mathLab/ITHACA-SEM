@@ -194,7 +194,7 @@ void FilterFieldConvert::v_Initialise(
         {
             for (int i = 0; i < fieldData.size(); ++i)
             {
-                pFields[j]->ExtractDataToCoeffs(
+                pFields[0]->ExtractDataToCoeffs(
                     fieldDef[i],
                     fieldData[i],
                     m_variables[j],

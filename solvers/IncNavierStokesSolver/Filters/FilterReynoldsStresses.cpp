@@ -155,8 +155,18 @@ void FilterReynoldsStresses::v_Initialise(
     // Initialise output arrays
     FilterFieldConvert::v_Initialise(pFields, time);
 
-    ASSERTL0( m_numSamples == 0,
-            "Restart not implemented for Reynolds Stresses.");
+    // Update m_fields if using restart file
+    if (m_numSamples)
+    {
+        for (int j = 0; j < m_fields.size(); ++j)
+        {
+            pFields[0]->BwdTrans(m_outFields[j], m_fields[j]);
+            if (pFields[0]->GetWaveSpace())
+            {
+                pFields[0]->HomogeneousBwdTrans(m_fields[j], m_fields[j]);
+            }
+        }
+    }
 }
 
 void FilterReynoldsStresses::v_FillVariablesName(

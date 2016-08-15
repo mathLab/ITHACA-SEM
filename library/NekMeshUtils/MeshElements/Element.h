@@ -244,9 +244,9 @@ public:
         m_id = p;
     }
     /// Replace a vertex with another vertex object.
-    NEKMESHUTILS_EXPORT void SetVertex(unsigned int p, NodeSharedPtr pNew);
+    NEKMESHUTILS_EXPORT void SetVertex(unsigned int p, NodeSharedPtr pNew, bool descend = true);
     /// Replace an edge with another edge object.
-    NEKMESHUTILS_EXPORT void SetEdge(unsigned int p, EdgeSharedPtr pNew);
+    NEKMESHUTILS_EXPORT void SetEdge(unsigned int p, EdgeSharedPtr pNew, bool descend = true);
     /// Replace a face with another face object.
     NEKMESHUTILS_EXPORT void SetFace(unsigned int p, FaceSharedPtr pNew);
     /// Set a correspondence between this element and an edge

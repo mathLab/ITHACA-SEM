@@ -87,12 +87,13 @@ protected:
     {
         return Array<OneD,NekDouble>();
     }
-    template<int DIM> NekDouble GetFunctional(bool analytic = false);
+    template<int DIM> NekDouble GetFunctional(bool gradient = true,
+                                              bool hessian = true);
     NodeSharedPtr node;
     boost::mutex mtx;
     std::vector<int> nodeIds;
     std::vector<ElUtilSharedPtr> data;
-    Array<OneD, NekDouble> grad;
+    Array<OneD, NekDouble> G;
 
     void CalcDX();
     void CalcMinJac();
@@ -143,7 +144,7 @@ public:
     }
 
 private:
-    Array<OneD, NekDouble> GetGrad(bool analytic = false);
+
 };
 
 class NodeOpti2D2D : public NodeOpti //1D optimsation in 3D space
@@ -171,7 +172,7 @@ public:
     }
 
 private:
-    Array<OneD, NekDouble> GetGrad(bool analytic = false);
+
 };
 
 class NodeOptiJob : public Thread::ThreadJob

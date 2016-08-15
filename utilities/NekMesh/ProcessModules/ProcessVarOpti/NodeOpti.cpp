@@ -86,9 +86,8 @@ int NodeOpti2D2D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
 void NodeOpti2D2D::Optimise()
 {
     CalcMinJac();
-    CalcDX();
 
-    Array<OneD, NekDouble> G = GetGrad(true);
+    NekDouble currentW = GetFunctional<2>();
 
     // Gradient already zero
     if (G[0]*G[0] + G[1]*G[1] > 1e-12)
@@ -96,51 +95,29 @@ void NodeOpti2D2D::Optimise()
         NekDouble alpha    = 1.0;
         NekDouble xc       = node->m_x;
         NekDouble yc       = node->m_y;
-        NekDouble currentW = GetFunctional<2>();
+
         bool      found    = false;
-#if 0
-        Array<OneD, NekDouble> G2;
-        const NekDouble c1 = 1e-5, c2 = 0.9;
+        const NekDouble c1 = 1e-4, c2 = 0.9;
+
+        // Search direction
+        NekDouble delX = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[4]*G[0] - G[3]*G[1]);
+        NekDouble delY = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[2]*G[1] - G[3]*G[0]);
+        // Dot product of p_k with gradient
+        NekDouble tmp = (G[0] * delX + G[1] * delY) * -1.0;
 
         while (alpha > 1e-10)
         {
-            // Search direction
-            NekDouble delX = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[4]*G[0] - G[3]*G[1]);
-            NekDouble delY = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[2]*G[1] - G[3]*G[0]);
-
             // Update node
             node->m_x = xc - alpha * delX;
             node->m_y = yc - alpha * delY;
 
-            // Re-evaluate functional and gradients
-            G2 = GetGrad(true);
-
-            NekDouble newVal = GetFunctional<2>();
-
-            // Dot product of p_k with gradient
-            NekDouble tmp = G[0] * delX + G[1] * delY;
+            NekDouble newVal = GetFunctional<2>(true,false);
+            //dont need the hessian again this function updates G to be the new
+            //location
 
             // Wolfe conditions
             if (newVal <= currentW + c1 * alpha * tmp &&
-                (G2[0] * delX + G2[1] * delY) >= c2 * tmp)
-            {
-                found = true;
-                break;
-            }
-
-            G = G2;
-            alpha /= 2.0;
-        }
-#else
-        //needs to optimise
-        NekDouble delX = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[4]*G[0] - G[3]*G[1]);
-        NekDouble delY = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[2]*G[1] - G[3]*G[0]);
-
-        while(alpha > 1e-10)
-        {
-            node->m_x = xc - alpha * delX;
-            node->m_y = yc - alpha * delY;
-            if(GetFunctional<2>() < currentW)
+                -1.0 * (G[0] * delX + G[1] * delY) >= c2 * tmp)
             {
                 found = true;
                 break;
@@ -148,7 +125,6 @@ void NodeOpti2D2D::Optimise()
 
             alpha /= 2.0;
         }
-#endif
         if (!found)
         {
             //reset the node
@@ -168,62 +144,18 @@ void NodeOpti2D2D::Optimise()
     }
 }
 
-Array<OneD, NekDouble> NodeOpti2D2D::GetGrad(bool analytic)
-{
-    if(analytic)
-    {
-        GetFunctional<2>(true);
-        return grad;
-    }
-
-    NekDouble xc = node->m_x;
-    NekDouble yc = node->m_y;
-    vector<NekDouble> w(9);
-
-    for(int i = 0; i < 7; i++)
-    {
-        node->m_x = xc + dir[i][0] * dx;
-        node->m_y = yc + dir[i][1] * dx;
-        w[i] = GetFunctional<2>();
-    }
-    node->m_x = xc;
-    node->m_y = yc;
-
-    Array<OneD, NekDouble> ret(5,0.0);
-
-    //ret[0] d/dx
-    //ret[1] d/dy
-
-    //ret[3] d2/dx2
-    //ret[4] d2/dy2
-    //ret[5] d2/dxdy
-
-    ret[0] = (w[1] - w[4]) / 2.0 / dx;
-    ret[1] = (w[3] - w[6]) / 2.0 / dx;
-
-    ret[2] = (w[1] + w[4] - 2.0*w[0]) / dx / dx;
-    ret[4] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
-
-    ret[3] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / dx / dx;
-
-    return ret;
-}
-
 int NodeOpti3D3D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
     33, NodeOpti3D3D::create, "3D3D");
 
 void NodeOpti3D3D::Optimise()
 {
     CalcMinJac();
-    CalcDX();
 
-    Array<OneD, NekDouble> G = GetGrad(true);
+    NekDouble currentW = GetFunctional<3>();
 
     if(G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > 1e-12)
     {
         //needs to optimise
-        NekDouble currentW = GetFunctional<3>();
-        NekDouble functional;
         NekDouble xc       = node->m_x;
         NekDouble yc       = node->m_y;
         NekDouble zc       = node->m_z;
@@ -236,8 +168,8 @@ void NodeOpti3D3D::Optimise()
 
         delX = G[0]*(G[6]*G[8]-G[7]*G[7]) +
                G[1]*(G[5]*G[7]-G[4]*G[8]) +
-               G[2]*(G[4]*G[7]-G[5]*G[6]);
-        delY = G[0]*(G[7]*G[5]-G[4]*G[8]) +
+               G[2]*(G[4]*G[7]-G[3]*G[7]);
+        delY = G[0]*(G[7]*G[5]-G[4]*G[5]) +
                G[1]*(G[3]*G[8]-G[5]*G[5]) +
                G[2]*(G[4]*G[5]-G[3]*G[7]);
         delZ = G[0]*(G[4]*G[7]-G[6]*G[5]) +
@@ -249,13 +181,24 @@ void NodeOpti3D3D::Optimise()
         delZ /= det;
 
         bool found = false;
+        const NekDouble c1 = 1e-4, c2 = 0.9;
+        // Dot product of p_k with gradient
+        NekDouble tmp = (G[0] * delX + G[1] * delY + G[2] * delZ) * -1.0;
+
         while (alpha > 1e-10)
         {
+            // Update node
             node->m_x = xc - alpha * delX;
             node->m_y = yc - alpha * delY;
             node->m_z = zc - alpha * delZ;
-            functional = GetFunctional<3>();
-            if(functional < currentW)
+
+            NekDouble newVal = GetFunctional<3>(true,false);
+            //dont need the hessian again this function updates G to be the new
+            //location
+
+            // Wolfe conditions
+            if (newVal <= currentW + c1 * alpha * tmp &&
+                -1.0 * (G[0] * delX + G[1] * delY + G[2] * delZ) >= c2 * tmp)
             {
                 found = true;
                 break;
@@ -263,7 +206,6 @@ void NodeOpti3D3D::Optimise()
 
             alpha /= 2.0;
         }
-
         if(!found)
         {
             node->m_x = xc;
@@ -279,62 +221,6 @@ void NodeOpti3D3D::Optimise()
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
         mtx.unlock();
     }
-}
-
-Array<OneD, NekDouble> NodeOpti3D3D::GetGrad(bool analytic)
-{
-    if (analytic)
-    {
-        GetFunctional<3>(true);
-        return grad;
-    }
-
-    NekDouble xc = node->m_x;
-    NekDouble yc = node->m_y;
-    NekDouble zc = node->m_z;
-
-    vector<NekDouble> w;
-
-    for(int i = 0; i < 13; i++)
-    {
-        node->m_x = xc + dir[i][0] * dx;
-        node->m_y = yc + dir[i][1] * dx;
-        node->m_z = zc + dir[i][2] * dx;
-        w.push_back(GetFunctional<3>());
-    }
-
-    node->m_x = xc;
-    node->m_y = yc;
-    node->m_z = zc;
-
-    w[0] = GetFunctional<3>();
-
-    Array<OneD, NekDouble> ret(9,0.0);
-
-    //ret[0] d/dx
-    //ret[1] d/dy
-    //ret[2] d/dz
-
-    //ret[3] d2/dx2
-    //ret[4] d2/dxdy
-    //ret[5] d2/dxdz
-    //ret[6] d2/dy2
-    //ret[7] d2/dydz
-    //ret[8] d2/dz2
-
-    ret[0] = (w[1] - w[4]) / 2.0 / dx;
-    ret[1] = (w[3] - w[6]) / 2.0 / dx;
-    ret[2] = (w[9] - w[8]) / 2.0 / dx;
-
-    ret[3] = (w[1] + w[4] - 2.0*w[0]) / dx / dx;
-    ret[6] = (w[3] + w[6] - 2.0*w[0]) / dx / dx;
-    ret[8] = (w[9] + w[8] - 2.0*w[0]) / dx / dx;
-
-    ret[4] = (w[2] - w[1] - w[3] + 2.0*w[0] - w[4] - w[6] + w[5]) / 2.0 / dx / dx;
-    ret[5] = (w[10] - w[1] - w[9] + 2.0*w[0] - w[4] - w[8] + w[7]) / 2.0 / dx / dx;
-    ret[7] = (w[11] - w[3] - w[9] + 2.0*w[0] - w[6] - w[8] + w[12]) / 2.0 / dx / dx;
-
-    return ret;
 }
 
 template<int DIM> inline NekDouble Determinant(NekDouble jac[DIM][DIM])
@@ -471,8 +357,11 @@ inline NekDouble FrobeniusNorm(NekDouble inarray[DIM][DIM])
     return ret;
 }
 
+template<optimiser opti>
+NekDouble NodeOpti::EvaluateIntegral(bool gradient, bool hessian)
+
 template<int DIM>
-NekDouble NodeOpti::GetFunctional(bool analytic)
+NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
 {
     const int nElmt  = data.size();
     const int totpts = derivUtil->ptsLow * nElmt;
@@ -512,6 +401,7 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
     NekDouble gam = numeric_limits<float>::epsilon();
     NekDouble ep = minJac < gam ? sqrt(gam*(gam-minJac)) : 0.0;
     NekDouble jacIdeal[DIM][DIM], jacDet;
+    G = Array<OneD, NekDouble>(DIM == 2 ? 5 : 9, 0.0);
 
     switch(opti)
     {
@@ -545,8 +435,6 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
-            grad = Array<OneD, NekDouble>(DIM == 2 ? 5 : 9, 0.0);
-
             for (int i = 0; i < nElmt; ++i)
             {
                 for(int k = 0; k < derivUtil->ptsHigh; ++k)
@@ -563,7 +451,7 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
                                  0.5 * K * lsigma * lsigma);
 
                     // Derivative of basis function in each direction
-                    if(analytic)
+                    if(gradient)
                     {
                         NekDouble jacInvTrans[DIM][DIM];
                         NekDouble jacDetDeriv[DIM];
@@ -633,29 +521,34 @@ NekDouble NodeOpti::GetFunctional(bool analytic)
                             frobProd[m] = FrobProd<DIM>(jacIdeal,jacDerivPhi[m]);
                         }
 
-                        NekDouble frobProdHes[DIM][DIM]; //holder for the hessian frobprods
-                        for (int m = 0; m < DIM; ++m)
-                        {
-                            for(int l = m; l < DIM; ++l)
-                            {
-                                frobProdHes[m][l] = FrobProd<DIM>(jacDerivPhi[m],jacDerivPhi[l]);
-                            }
-                        }
-
                         for (int j = 0; j < DIM; ++j)
                         {
-                            grad[j] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
+                            G[j] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
                                 mu * frobProd[j] + (jacDetDeriv[j] / (2.0*sigma - jacDet)
                                                     * (K * lsigma - mu)));
                         }
-                        int ct = 0;
-                        for (int m = 0; m < DIM; ++m)
+
+                        if(hessian)
                         {
-                            for(int l = m; l < DIM; ++l, ct++)
+                            NekDouble frobProdHes[DIM][DIM]; //holder for the hessian frobprods
+                            for (int m = 0; m < DIM; ++m)
                             {
-                                grad[ct+DIM] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
-                                    mu * frobProdHes[m][l] + jacDetDeriv[m]*jacDetDeriv[l]*(
-                                        K/(2.0*sigma-jacDet)/(2.0*sigma-jacDet) - jacDet*(K*lsigma-mu)));
+                                for(int l = m; l < DIM; ++l)
+                                {
+                                    frobProdHes[m][l] = FrobProd<DIM>(jacDerivPhi[m],jacDerivPhi[l]);
+                                }
+                            }
+
+
+                            int ct = 0;
+                            for (int m = 0; m < DIM; ++m)
+                            {
+                                for(int l = m; l < DIM; ++l, ct++)
+                                {
+                                    G[ct+DIM] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
+                                        mu * frobProdHes[m][l] + jacDetDeriv[m]*jacDetDeriv[l]*(
+                                            K/(2.0*sigma-jacDet)/(2.0*sigma-jacDet) - jacDet*(K*lsigma-mu)));
+                                }
                             }
                         }
                     }

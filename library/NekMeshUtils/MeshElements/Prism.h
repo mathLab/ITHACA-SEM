@@ -84,7 +84,9 @@ public:
         SpatialDomains::GeometrySharedPtr  geom,
         LibUtilities::PointsType           pType,
         int                                coordDim,
-        int                               &id);
+        int                               &id,
+        bool                               justConfig = false);
+
     NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
     NEKMESHUTILS_EXPORT virtual int GetFaceVertex(int i, int j)
     {

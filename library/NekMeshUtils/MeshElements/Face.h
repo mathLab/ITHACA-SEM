@@ -249,6 +249,7 @@ public:
             const int nTriPts = nPoints * (nPoints + 1) / 2;
             const int nTriIntPts = (nPoints - 3) * (nPoints - 2) / 2;
             m_faceNodes.resize(nTriIntPts);
+            std::cout << "num tri int pts: " << nTriIntPts << " " << nTriPts << " " << nPoints << std::endl;
 
             for (int i = 3 + 3*(nPoints-2), cnt = 0; i < nTriPts; ++i, ++cnt)
             {

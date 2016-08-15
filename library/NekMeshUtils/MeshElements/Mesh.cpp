@@ -96,27 +96,33 @@ void Mesh::MakeOrder(int                      order,
     boost::unordered_map<int, SpatialDomains::Geometry2DSharedPtr> faceGeoms;
     boost::unordered_map<int, SpatialDomains::GeometrySharedPtr> volGeoms;
 
-    // Decide on distribution of points to use for each shape type.
+    // Decide on distribution of points to use for each shape type based on the
+    // input we've been supplied.
     std::map<LibUtilities::ShapeType, LibUtilities::PointsType> pTypes;
     if (distType == LibUtilities::ePolyEvenlySpaced)
     {
-        pTypes[LibUtilities::eSegment]       = LibUtilities::ePolyEvenlySpaced;
-        pTypes[LibUtilities::eTriangle]      = LibUtilities::eNodalTriEvenlySpaced;
+        pTypes[LibUtilities::eSegment]  = LibUtilities::ePolyEvenlySpaced;
+        pTypes[LibUtilities::eTriangle] = LibUtilities::eNodalTriEvenlySpaced;
         pTypes[LibUtilities::eQuadrilateral] = LibUtilities::ePolyEvenlySpaced;
-        pTypes[LibUtilities::eTetrahedron]   = LibUtilities::eNodalTetEvenlySpaced;
-        pTypes[LibUtilities::ePrism]         = LibUtilities::eNodalPrismEvenlySpaced;
-        pTypes[LibUtilities::eHexahedron]    = LibUtilities::ePolyEvenlySpaced;
+        pTypes[LibUtilities::eTetrahedron] =
+            LibUtilities::eNodalTetEvenlySpaced;
+        pTypes[LibUtilities::ePrism] = LibUtilities::eNodalPrismEvenlySpaced;
+        pTypes[LibUtilities::eHexahedron] = LibUtilities::ePolyEvenlySpaced;
     }
     else if (distType == LibUtilities::eGaussLobattoLegendre)
     {
-        pTypes[LibUtilities::eSegment]       = LibUtilities::eGaussLobattoLegendre;
-        pTypes[LibUtilities::eTriangle]      = LibUtilities::eNodalTriElec;
-        pTypes[LibUtilities::eQuadrilateral] = LibUtilities::eGaussLobattoLegendre;
-        pTypes[LibUtilities::eTetrahedron]   = LibUtilities::eNodalTetElec;
         // Prism still to do.
-        pTypes[LibUtilities::eHexahedron]    = LibUtilities::eGaussLobattoLegendre;
+        pTypes[LibUtilities::eSegment]  = LibUtilities::eGaussLobattoLegendre;
+        pTypes[LibUtilities::eTriangle] = LibUtilities::eNodalTriElec;
+        pTypes[LibUtilities::eQuadrilateral] =
+            LibUtilities::eGaussLobattoLegendre;
+        pTypes[LibUtilities::eTetrahedron] = LibUtilities::eNodalTetElec;
+        pTypes[LibUtilities::eHexahedron] = LibUtilities::eGaussLobattoLegendre;
     }
 
+    // Begin by generating Nektar++ geometry objects for edges, faces and
+    // elements so that we don't affect any neighbouring elements in the mesh as
+    // we process each element.
     for(eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++)
     {
         SpatialDomains::Geometry1DSharedPtr geom =
@@ -144,6 +150,8 @@ void Mesh::MakeOrder(int                      order,
 
     boost::unordered_set<int> processedEdges, processedFaces, processedVolumes;
 
+    // Call MakeOrder with our generated geometries on each edge to fill in edge
+    // interior nodes.
     for(eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++)
     {
         int edgeId = (*eit)->m_id;
@@ -158,6 +166,8 @@ void Mesh::MakeOrder(int                      order,
         processedEdges.insert(edgeId);
     }
 
+    // Call MakeOrder with our generated geometries on each face to fill in face
+    // interior nodes.
     for(fit = m_faceSet.begin(); fit != m_faceSet.end(); fit++)
     {
         int faceId = (*fit)->m_id;
@@ -174,6 +184,40 @@ void Mesh::MakeOrder(int                      order,
         processedFaces.insert(faceId);
     }
 
+    // Copy curvature into boundary conditions
+    for (int i = 0; i < m_element[1].size(); ++i)
+    {
+        ElementSharedPtr el = m_element[1][i];
+        EdgeSharedPtr edge = el->GetEdgeLink();
+
+        if (!edge)
+        {
+            continue;
+        }
+
+        // Copy face curvature
+        el->SetVolumeNodes(edge->m_edgeNodes);
+        el->MakeOrder(order, SpatialDomains::GeometrySharedPtr(),
+                      pTypes[el->GetConf().m_e], m_spaceDim, id, true);
+    }
+
+    for (int i = 0; i < m_element[2].size(); ++i)
+    {
+        ElementSharedPtr el = m_element[2][i];
+        FaceSharedPtr face = el->GetFaceLink();
+
+        if (!face)
+        {
+            continue;
+        }
+
+        // Copy face curvature
+        el->MakeOrder(order, SpatialDomains::GeometrySharedPtr(),
+                      pTypes[el->GetConf().m_e], m_spaceDim, id, true);
+        el->SetVolumeNodes(face->m_faceNodes);
+    }
+
+    // Finally, fill in volumes.
     const int nElmt = m_element[m_expDim].size();
     for (int i = 0; i < nElmt; ++i)
     {

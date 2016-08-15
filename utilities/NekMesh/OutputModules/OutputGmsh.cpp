@@ -212,10 +212,17 @@ void OutputGmsh::Process()
                 tags.push_back(nodeList[j]->m_id);
             }
 
+            cout << "GOT " << nodeList.size() << " VERTS" << endl;
+            cout << "GOT " << edgeList.size() << " EDGES" << endl;
+            cout << "GOT " << faceList.size() << " FACES" << endl;
+            cout << "GOT " << volList.size() << " VOLS" << endl;
+
             // Process edge-interior points
             for (int j = 0; j < edgeList.size(); ++j)
             {
                 nodeList = edgeList[j]->m_edgeNodes;
+
+                cout << "edge " << j << ": " << edgeList[j]->m_edgeNodes.size() << endl;
 
                 if (e->GetEdgeOrient(j, edgeList[j]) == StdRegions::eForwards)
                 {
@@ -269,6 +276,7 @@ void OutputGmsh::Process()
             }
 
             // Process volume nodes
+            cout << volList.size() << endl;
             for (int j = 0; j < volList.size(); ++j)
             {
                 tags.push_back(volList[j]->m_id);
@@ -277,6 +285,12 @@ void OutputGmsh::Process()
             // Construct inverse of input reordering
             vector<int> reordering = InputGmsh::CreateReordering(elmtType);
             vector<int> inv(tags.size());
+
+            cout << "TAGS LENGTH: " << tags.size() << endl;
+            cout << "REORDERING LENGTH: " << reordering.size() << endl;
+
+            ASSERTL1(tags.size() == reordering.size(),
+                     "Reordering map size not equal to element tags.");
 
             for (int j = 0; j < tags.size(); ++j)
             {

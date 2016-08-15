@@ -457,7 +457,8 @@ public:
         SpatialDomains::GeometrySharedPtr  geom,
         LibUtilities::PointsType           edgeType,
         int                                coordDim,
-        int                               &id)
+        int                               &id,
+        bool                               justConfig = false)
     {
         ASSERTL0(false,
                  "This function should be implemented at a shape level.");

@@ -257,9 +257,11 @@ void Tetrahedron::MakeOrder(int                                order,
                             SpatialDomains::GeometrySharedPtr  geom,
                             LibUtilities::PointsType           pType,
                             int                                coordDim,
-                            int                               &id)
+                            int                               &id,
+                            bool                               justConfig)
 {
     m_conf.m_order = order;
+    m_curveType    = pType;
     m_volumeNodes.clear();
 
     if (order == 1 || order == 2)
@@ -279,9 +281,13 @@ void Tetrahedron::MakeOrder(int                                order,
         return;
     }
 
-    m_curveType          = pType;
     m_conf.m_faceNodes   = true;
     m_conf.m_volumeNodes = true;
+
+    if (justConfig)
+    {
+        return;
+    }
 
     int nPoints = order + 1;
     StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();

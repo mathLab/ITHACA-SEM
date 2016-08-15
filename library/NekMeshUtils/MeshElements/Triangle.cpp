@@ -173,12 +173,25 @@ void Triangle::MakeOrder(int                                order,
                          SpatialDomains::GeometrySharedPtr  geom,
                          LibUtilities::PointsType           pType,
                          int                                coordDim,
-                         int                               &id)
+                         int                               &id,
+                         bool                               justConfig)
 {
+    m_conf.m_order       = order;
+    m_curveType          = pType;
+    m_conf.m_volumeNodes = false;
+    m_volumeNodes.clear();
+
     // Triangles of order < 3 have no interior volume points.
-    if (order < 3)
+    if (order == 1 || order == 2)
     {
-        m_volumeNodes.clear();
+        m_conf.m_faceNodes = false;
+        return;
+    }
+
+    m_conf.m_faceNodes = true;
+
+    if (justConfig)
+    {
         return;
     }
 
@@ -218,7 +231,6 @@ void Triangle::MakeOrder(int                                order,
             new Node(id++, x[0], x[1], x[2]));
     }
 
-    m_curveType          = pType;
     m_conf.m_order       = order;
     m_conf.m_faceNodes   = true;
     m_conf.m_volumeNodes = false;

@@ -73,7 +73,10 @@ protected:
         const NekDouble &time);
     virtual void v_PrepareOutput(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time);
+        const NekDouble &time)
+    {
+        // Do nothing
+    }
     virtual std::string v_GetFileSuffix()
     {
         return "_movAvg";

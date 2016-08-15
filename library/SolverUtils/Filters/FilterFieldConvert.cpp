@@ -120,7 +120,6 @@ FilterFieldConvert::FilterFieldConvert(
         m_outputFrequency = floor(equ.Evaluate());
     }
 
-    m_scale       = 1.0;
     m_numSamples  = 0;
     m_index       = 0;
     m_outputIndex = 0;
@@ -212,11 +211,12 @@ void FilterFieldConvert::v_Initialise(
             m_numSamples = 1;
         }
 
-        // Multiply by numSamples
+        // Divide by scale
+        NekDouble scale = v_GetScale();
         for (int n = 0; n < m_outFields.size(); ++n)
         {
             Vmath::Smul(m_outFields[n].num_elements(),
-                        1.0*m_numSamples,
+                        1.0/scale,
                         m_outFields[n],
                         1,
                         m_outFields[n],
@@ -283,10 +283,11 @@ void FilterFieldConvert::v_PrepareOutput(
 void FilterFieldConvert::OutputField(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, int dump)
 {
+    NekDouble scale = v_GetScale();
     for (int n = 0; n < m_outFields.size(); ++n)
     {
         Vmath::Smul(m_outFields[n].num_elements(),
-                    m_scale,
+                    scale,
                     m_outFields[n],
                     1,
                     m_outFields[n],
@@ -333,7 +334,7 @@ void FilterFieldConvert::OutputField(
         for (int n = 0; n < m_outFields.size(); ++n)
         {
             Vmath::Smul(m_outFields[n].num_elements(),
-                        1.0 / m_scale,
+                        1.0 / scale,
                         m_outFields[n],
                         1,
                         m_outFields[n],

@@ -103,6 +103,7 @@ void FilterMovingAverage::v_ProcessSample(
     {
         alpha = 1.0;
     }
+    cout << "alpha = " << alpha << endl;
 
     // \bar{u}_n = alpha * u_n + (1-alpha) * \bar{u}_{n-1}
     for (int n = 0; n < pFields.num_elements(); ++n)
@@ -117,13 +118,6 @@ void FilterMovingAverage::v_ProcessSample(
                        m_outFields[n],
                        1);
     }
-}
-
-void FilterMovingAverage::v_PrepareOutput(
-    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-    const NekDouble &time)
-{
-    m_scale = 1.0;
 }
 
 }

@@ -154,6 +154,9 @@ void FilterReynoldsStresses::v_Initialise(
 
     // Initialise output arrays
     FilterFieldConvert::v_Initialise(pFields, time);
+
+    ASSERTL0( m_numSamples == 0,
+            "Restart not implemented for Reynolds Stresses.");
 }
 
 void FilterReynoldsStresses::v_FillVariablesName(

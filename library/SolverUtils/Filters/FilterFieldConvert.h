@@ -113,6 +113,7 @@ protected:
     unsigned int m_outputFrequency;
     unsigned int m_sampleFrequency;
     std::string  m_outputFile;
+    std::string  m_restartFile;
     unsigned int m_index;
     unsigned int m_outputIndex;
     vector<ModuleSharedPtr> m_modules;

@@ -292,22 +292,34 @@ void OutputGmsh::Process()
                 tags.push_back(volList[j]->m_id);
             }
 
-            // Construct inverse of input reordering
-            vector<int> reordering = InputGmsh::CreateReordering(elmtType);
-            vector<int> inv(tags.size());
+            // Construct inverse of input reordering. First try to find it in
+            // our cache.
+            oIt = orderingMap.find(elmtType);
 
-            ASSERTL1(tags.size() == reordering.size(),
-                     "Reordering map size not equal to element tags.");
-
-            for (int j = 0; j < tags.size(); ++j)
+            // If it's not created, then create it.
+            if (oIt == orderingMap.end())
             {
-                inv[reordering[j]] = j;
+                vector<int> reordering = InputGmsh::CreateReordering(elmtType);
+                vector<int> inv(tags.size());
+
+                ASSERTL1(tags.size() == reordering.size(),
+                         "Reordering map size not equal to element tags.");
+
+                for (int j = 0; j < tags.size(); ++j)
+                {
+                    inv[reordering[j]] = j;
+                }
+
+                oIt = orderingMap.insert(make_pair(elmtType, inv)).first;
             }
+
+            ASSERTL1(tags.size() == oIt->second.size(),
+                     "Reordering map size not equal to element tags.");
 
             // Finally write element nodes.
             for (int j = 0; j < tags.size(); ++j)
             {
-                m_mshFile << tags[inv[j]] + 1 << " ";
+                m_mshFile << tags[oIt->second[j]] + 1 << " ";
             }
 
             m_mshFile << endl;

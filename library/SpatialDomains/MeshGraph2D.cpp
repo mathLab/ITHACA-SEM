@@ -36,6 +36,7 @@
 #include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>
+#include <LibUtilities/BasicUtils/CompressData.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <tinyxml.h>
 

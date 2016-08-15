@@ -16,6 +16,8 @@ SET(NodalDemoSources NodalDemo.cpp)
 SET(TimeIntegrationDemoSources
 	TimeIntegrationDemo.cpp)
 
+SET(FieldIOBenchmarkerSources
+	FieldIOBenchmarker.cpp)
 
 #ADD_NEKTAR_EXECUTABLE(Graph demos GraphSources )
 #SET_LAPACK_LINK_LIBRARIES(Graph)
@@ -43,3 +45,8 @@ ADD_NEKTAR_TEST(NodalDemo_Prism_Interp_P7)
 ADD_NEKTAR_TEST(NodalDemo_Tet_Deriv_P8)
 ADD_NEKTAR_TEST(NodalDemo_Tet_Integral_P6)
 ADD_NEKTAR_TEST(NodalDemo_Tet_Interp_P7)
+
+IF(NEKTAR_USE_HDF5)
+    ADD_NEKTAR_EXECUTABLE(FieldIOBenchmarker demos FieldIOBenchmarkerSources)
+    TARGET_LINK_LIBRARIES(FieldIOBenchmarker LibUtilities)
+ENDIF()

@@ -50,7 +50,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
-#include <LibUtilities/BasicUtils/FieldIO.h>
+#include <LibUtilities/BasicUtils/FieldIOXml.h>
 
 namespace Nektar
 {
@@ -67,11 +67,15 @@ LIB_UTILITIES_EXPORT void Import(const string &inFile,
 LIB_UTILITIES_EXPORT void Write(const string &outFile,
                                 const PtsFieldSharedPtr &ptsField);
 
-class PtsIO : protected FieldIO
+class PtsIO : public FieldIOXml
 {
 public:
     LIB_UTILITIES_EXPORT PtsIO(LibUtilities::CommSharedPtr pComm,
                                bool sharedFilesystem = false);
+
+    LIB_UTILITIES_EXPORT virtual ~PtsIO()
+    {
+    }
 
     LIB_UTILITIES_EXPORT void Import(
         const string &inFile,

@@ -18,6 +18,9 @@ v4.4.0
   operations during simulation using a new filter (!589)
 - Adjust CMake dependencies to reduce compile time (!671)
 - Homogeneous1D dealiasing improvements (!622)
+- Add support for HDF5 as an alternative output to XML-based output, including
+  refactoring of FieldIO, improvements to MPI interface and added communicators
+  to boundary conditions (!615)
 - Rework nodal utilities to support nodal prismatic elements (!660)
 
 **ADRSolver:**
@@ -32,16 +35,21 @@ v4.4.0
 - Add ability to simulate additional scalar fields (!624)
 - Improve performance when using homogeneous dealiasing (!622)
 
+**FieldConvert:**
+- Allow equi-spaced output for 1D and 2DH1D fields (!613)
+
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
 - Add STL surface writer module (!668)
 - New module for inserting an alternate high-order surface into the working
   mesh (!669)
+- Improvements to mesh linearisation module (!659)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing
   during simulations (!589)
 - Add module to stretch homogeneous direction (!609)
+- Add module to add composite ID of elements as a field (!674)
 
 v4.3.4
 ------

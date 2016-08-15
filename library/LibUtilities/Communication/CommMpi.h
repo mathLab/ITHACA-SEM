@@ -35,8 +35,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_COMMMPI_H
 #define NEKTAR_LIB_UTILITIES_COMMMPI_H
 
-#include <string>
 #include <mpi.h>
+#include <string>
 
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -49,67 +49,76 @@
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+// Forward declarations
+class CommMpi;
+
+/// Pointer to a Communicator object.
+typedef boost::shared_ptr<CommMpi> CommMpiSharedPtr;
+
+/// A global linear system.
+class CommMpi : public Comm
+{
+public:
+    /// Creates an instance of this class
+    static CommSharedPtr create(int narg, char *arg[])
     {
-        // Forward declarations
-        class CommMpi;
-
-        /// Pointer to a Communicator object.
-        typedef boost::shared_ptr<CommMpi> CommMpiSharedPtr;
-
-        /// A global linear system.
-        class CommMpi : public Comm
-        {
-        public:
-            /// Creates an instance of this class
-            static CommSharedPtr create(int narg, char* arg[])
-            {
-                return MemoryManager<CommMpi>::AllocateSharedPtr(narg,arg);
-            }
-
-            /// Name of class
-            static std::string className;
-
-            CommMpi(int narg, char* arg[]);
-            virtual ~CommMpi();
-
-            MPI_Comm GetComm();
-
-        protected:
-            virtual void v_Finalise();
-            virtual int  v_GetRank();
-            virtual void v_Block();
-	    virtual double v_Wtime();
-            virtual bool v_TreatAsRankZero(void);
-            virtual void v_Send(void* buf, int count, CommDataType dt, int dest);
-            virtual void v_Recv(void* buf, int count, CommDataType dt, int source);
-            virtual void v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
-                                   void *recvbuf, int recvcount, CommDataType recvtype, int source);
-            virtual void v_SendRecvReplace(void* buf, int count, CommDataType dt,
-                    int pSendProc, int pRecvProc);
-            virtual void v_AllReduce(void* buf, int count, CommDataType dt, enum ReduceOperator pOp);
-            virtual void v_AlltoAll(void* sendbuf, int sendcount, CommDataType sendtype,
-                                    void* recvbuf, int recvcount, CommDataType recvtype);
-            virtual void v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[], CommDataType sendtype,
-                    void *recvbuf, int recvcounts[], int rdispls[], CommDataType recvtype);
-			virtual void v_Bcast(void* buffer, int count, CommDataType dt, int root);
-			virtual void v_Exscan(Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans);
-
-            virtual void v_Gather(void* sendbuf, int sendcount, CommDataType sendtype,
-                    void *recvbuf, int recvcount, CommDataType recvtype, int root);
-            virtual void v_Scatter(void *sendbuf, int sendcount, CommDataType sendtype,
-                    void *recvbuf, int recvcount, CommDataType recvtype, int root);
-
-            virtual void v_SplitComm(int pRows, int pColumns);
-            virtual CommSharedPtr v_CommCreateIf(int flag);
-
-        private:
-            MPI_Comm m_comm;
-            int m_rank;
-
-            CommMpi(MPI_Comm pComm);
-        };
+        return MemoryManager<CommMpi>::AllocateSharedPtr(narg, arg);
     }
+
+    /// Name of class
+    static std::string className;
+
+    CommMpi(int narg, char *arg[]);
+    virtual ~CommMpi();
+
+    MPI_Comm GetComm();
+
+protected:
+    virtual void v_Finalise();
+    virtual int v_GetRank();
+    virtual void v_Block();
+    virtual double v_Wtime();
+    virtual bool v_TreatAsRankZero(void);
+    virtual void v_Send(void *buf, int count, CommDataType dt, int dest);
+    virtual void v_Recv(void *buf, int count, CommDataType dt, int source);
+    virtual void v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype,
+                            int dest, void *recvbuf, int recvcount,
+                            CommDataType recvtype, int source);
+    virtual void v_SendRecvReplace(void *buf, int count, CommDataType dt,
+                                   int pSendProc, int pRecvProc);
+    virtual void v_AllReduce(void *buf, int count, CommDataType dt,
+                             enum ReduceOperator pOp);
+    virtual void v_AlltoAll(void *sendbuf, int sendcount, CommDataType sendtype,
+                            void *recvbuf, int recvcount,
+                            CommDataType recvtype);
+    virtual void v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[],
+                             CommDataType sendtype, void *recvbuf,
+                             int recvcounts[], int rdispls[],
+                             CommDataType recvtype);
+    virtual void v_Bcast(void *buffer, int count, CommDataType dt, int root);
+    virtual void v_Exscan(Array<OneD, unsigned long long> &pData,
+                          const enum ReduceOperator pOp,
+                          Array<OneD, unsigned long long> &ans);
+
+    virtual void v_Gather(void *sendbuf, int sendcount, CommDataType sendtype,
+                          void *recvbuf, int recvcount, CommDataType recvtype,
+                          int root);
+    virtual void v_Scatter(void *sendbuf, int sendcount, CommDataType sendtype,
+                           void *recvbuf, int recvcount, CommDataType recvtype,
+                           int root);
+
+    virtual void v_SplitComm(int pRows, int pColumns);
+    virtual CommSharedPtr v_CommCreateIf(int flag);
+
+private:
+    MPI_Comm m_comm;
+    int m_rank;
+
+    CommMpi(MPI_Comm pComm);
+};
+}
 }
 
 #endif

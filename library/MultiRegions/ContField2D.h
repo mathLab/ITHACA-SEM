@@ -83,23 +83,6 @@ namespace Nektar
             /// The default destructor.
             MULTI_REGIONS_EXPORT virtual ~ContField2D();
 
-            /// Scatters from the global coefficients
-            /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
-            /// \f$\boldsymbol{\hat{u}}_l\f$.
-            inline void GlobalToLocal(
-                                  Array<OneD,NekDouble> &outarray) const;
-
-            /// Scatters from the global coefficients
-            /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
-            /// \f$\boldsymbol{\hat{u}}_l\f$.
-            inline void GlobalToLocal(
-                            const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,       NekDouble> &outarray) const;
-
-            inline void LocalToGlobal(
-                            const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,       NekDouble> &outarray) const;
-
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
             inline void Assemble();
@@ -213,12 +196,19 @@ namespace Nektar
 
             /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray);
+
             MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(void);
             
-
             /// Scatters from the global coefficients
             /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
             /// \f$\boldsymbol{\hat{u}}_l\f$.
+            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray);
+
             MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(void);
 
             /// Template method virtual forwarder for FwdTrans().
@@ -292,77 +282,6 @@ namespace Nektar
 
         typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;
 
-
-
-        /**
-         * This operation is evaluated as:
-         * \f{tabbing}
-         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
-         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
-         * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
-         * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
-         * \> \> continue \\
-         * \> continue
-         * \f}
-         * where \a map\f$[e][i]\f$ is the mapping array and \a
-         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
-         * correct modal connectivity between the different elements (both
-         * these arrays are contained in the data member #m_locToGloMap). This
-         * operation is equivalent to the scatter operation
-         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$,
-         * where \f$\mathcal{A}\f$ is the
-         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
-         *
-         * @param   outarray    The resulting local degrees of freedom
-         *                      \f$\boldsymbol{x}_l\f$ will be stored in this
-         *                      array of size \f$N_\mathrm{eof}\f$.
-         */
-        inline void ContField2D::GlobalToLocal(
-                                Array<OneD,NekDouble> &outarray) const
-        {
-            m_locToGloMap->GlobalToLocal(m_coeffs,outarray);
-        }
-
-
-        /**
-         * This operation is evaluated as:
-         * \f{tabbing}
-         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
-         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
-         * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
-         * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
-         * \> \> continue \\
-         * \> continue
-         * \f}
-         * where \a map\f$[e][i]\f$ is the mapping array and \a
-         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
-         * correct modal connectivity between the different elements (both
-         * these arrays are contained in the data member #m_locToGloMap). This
-         * operation is equivalent to the scatter operation
-         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$,
-         * where \f$\mathcal{A}\f$ is the
-         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
-         *
-         * @param   inarray     An array of size \f$N_\mathrm{dof}\f$
-         *                      containing the global degrees of freedom
-         *                      \f$\boldsymbol{x}_g\f$.
-         * @param   outarray    The resulting local degrees of freedom
-         *                      \f$\boldsymbol{x}_l\f$ will be stored in this
-         *                      array of size \f$N_\mathrm{eof}\f$.
-         */
-        inline void ContField2D::GlobalToLocal(
-                            const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,       NekDouble> &outarray) const
-        {
-            m_locToGloMap->GlobalToLocal(inarray,outarray);
-        }
-
-        inline void ContField2D::LocalToGlobal(
-                const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray) const 
-        {
-            m_locToGloMap->LocalToGlobal(inarray, outarray);
-        }
 
         /**
          * This operation is evaluated as:

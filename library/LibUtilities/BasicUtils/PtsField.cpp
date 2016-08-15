@@ -76,7 +76,8 @@ void PtsField::GetConnectivity(vector< Array< OneD, int > > &conn) const
  */
 void PtsField::SetConnectivity(const vector< Array< OneD, int > > &conn)
 {
-    ASSERTL1((m_ptsType == ePtsTetBlock || m_ptsType == ePtsTriBlock),
+    ASSERTL1((m_ptsType == ePtsTetBlock || m_ptsType == ePtsTriBlock ||
+              m_ptsType == ePtsSegBlock),
              "ptsType must be set before connectivity");
 
     m_ptsConn = conn;

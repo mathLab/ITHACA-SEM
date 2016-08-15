@@ -108,8 +108,7 @@ public:
 /**
  * Partial specialisation for vectors
  */
-template <class elemT>
-class CommDataTypeTraits<std::vector<elemT> >
+template <class elemT> class CommDataTypeTraits<std::vector<elemT> >
 {
 public:
     static CommDataType &GetDataType()
@@ -134,8 +133,7 @@ public:
 /**
  * Partial specialisation for vectors
  */
-template <class elemT>
-class CommDataTypeTraits<Array<OneD, elemT> >
+template <class elemT> class CommDataTypeTraits<Array<OneD, elemT> >
 {
 public:
     static CommDataType &GetDataType()

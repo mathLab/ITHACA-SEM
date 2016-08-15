@@ -37,69 +37,84 @@
 
 #include <string>
 
-#include <boost/enable_shared_from_this.hpp>
-
 #include <LibUtilities/Communication/Comm.h>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+// Forward declarations
+class CommSerial;
+
+/// Pointer to a Communicator object.
+typedef boost::shared_ptr<CommSerial> CommSerialSharedPtr;
+
+/// A global linear system.
+class CommSerial : public Comm
+{
+public:
+    /// Creates an instance of this class
+    LIB_UTILITIES_EXPORT static CommSharedPtr create(int narg, char *arg[])
     {
-        // Forward declarations
-        class CommSerial;
-
-        /// Pointer to a Communicator object.
-        typedef boost::shared_ptr<CommSerial> CommSerialSharedPtr;
-
-        /// A global linear system.
-        class CommSerial : public Comm
-        {
-        public:
-            /// Creates an instance of this class
-            LIB_UTILITIES_EXPORT static CommSharedPtr create(int narg, char* arg[])
-            {
-                return MemoryManager<CommSerial>::AllocateSharedPtr(narg,arg);
-            }
-
-            /// Name of class
-            LIB_UTILITIES_EXPORT static std::string className;
-
-            LIB_UTILITIES_EXPORT CommSerial(int argc, char* argv[]);
-            LIB_UTILITIES_EXPORT virtual ~CommSerial();
-
-        protected:
-            LIB_UTILITIES_EXPORT virtual void v_Finalise();
-            LIB_UTILITIES_EXPORT virtual int  v_GetRank();
-            LIB_UTILITIES_EXPORT virtual bool v_TreatAsRankZero(void);
-
-            LIB_UTILITIES_EXPORT virtual void v_Block();
-            LIB_UTILITIES_EXPORT virtual NekDouble v_Wtime();
-            LIB_UTILITIES_EXPORT virtual void v_Send(void* buf, int count, CommDataType dt, int dest);
-            LIB_UTILITIES_EXPORT virtual void v_Recv(void* buf, int count, CommDataType dt, int source);
-            LIB_UTILITIES_EXPORT virtual void v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
-                    void *recvbuf, int recvcount, CommDataType recvtype, int source);
-            LIB_UTILITIES_EXPORT virtual void v_SendRecvReplace(void* buf, int count, CommDataType dt,
-                    int pSendProc, int pRecvProc);
-            LIB_UTILITIES_EXPORT virtual void v_AllReduce(void* buf, int count, CommDataType dt, enum ReduceOperator pOp);
-            LIB_UTILITIES_EXPORT virtual void v_AlltoAll(void* sendbuf, int sendcount, CommDataType sendtype,
-                    void* recvbuf, int recvcount, CommDataType recvtype);
-            LIB_UTILITIES_EXPORT virtual void v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[], CommDataType sendtype,
-                    void *recvbuf, int recvcounts[], int rdispls[], CommDataType recvtype);
-            LIB_UTILITIES_EXPORT virtual void v_Bcast(void* buffer, int count, CommDataType dt, int root);
-            LIB_UTILITIES_EXPORT virtual void v_Exscan(Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans);
-            LIB_UTILITIES_EXPORT virtual void v_Gather(void* sendbuf, int sendcount, CommDataType sendtype,
-                    void *recvbuf, int recvcount, CommDataType recvtype, int root);
-            LIB_UTILITIES_EXPORT virtual void v_Scatter(void* sendbuf, int sendcount, CommDataType sendtype,
-                    void *recvbuf, int recvcount, CommDataType recvtype, int root);
-
-            LIB_UTILITIES_EXPORT virtual void v_SplitComm(int pRows, int pColumns);
-            LIB_UTILITIES_EXPORT virtual CommSharedPtr v_CommCreateIf(int flag);
-
-        };
-
+        return MemoryManager<CommSerial>::AllocateSharedPtr(narg, arg);
     }
+
+    /// Name of class
+    LIB_UTILITIES_EXPORT static std::string className;
+
+    LIB_UTILITIES_EXPORT CommSerial(int argc, char *argv[]);
+    LIB_UTILITIES_EXPORT virtual ~CommSerial();
+
+protected:
+    LIB_UTILITIES_EXPORT virtual void v_Finalise();
+    LIB_UTILITIES_EXPORT virtual int v_GetRank();
+    LIB_UTILITIES_EXPORT virtual bool v_TreatAsRankZero(void);
+
+    LIB_UTILITIES_EXPORT virtual void v_Block();
+    LIB_UTILITIES_EXPORT virtual NekDouble v_Wtime();
+    LIB_UTILITIES_EXPORT virtual void v_Send(void *buf, int count,
+                                             CommDataType dt, int dest);
+    LIB_UTILITIES_EXPORT virtual void v_Recv(void *buf, int count,
+                                             CommDataType dt, int source);
+    LIB_UTILITIES_EXPORT virtual void v_SendRecv(
+        void *sendbuf, int sendcount, CommDataType sendtype, int dest,
+        void *recvbuf, int recvcount, CommDataType recvtype, int source);
+    LIB_UTILITIES_EXPORT virtual void v_SendRecvReplace(void *buf, int count,
+                                                        CommDataType dt,
+                                                        int pSendProc,
+                                                        int pRecvProc);
+    LIB_UTILITIES_EXPORT virtual void v_AllReduce(void *buf, int count,
+                                                  CommDataType dt,
+                                                  enum ReduceOperator pOp);
+    LIB_UTILITIES_EXPORT virtual void v_AlltoAll(void *sendbuf, int sendcount,
+                                                 CommDataType sendtype,
+                                                 void *recvbuf, int recvcount,
+                                                 CommDataType recvtype);
+    LIB_UTILITIES_EXPORT virtual void v_AlltoAllv(
+        void *sendbuf, int sendcounts[], int sensdispls[],
+        CommDataType sendtype, void *recvbuf, int recvcounts[], int rdispls[],
+        CommDataType recvtype);
+    LIB_UTILITIES_EXPORT virtual void v_Bcast(void *buffer, int count,
+                                              CommDataType dt, int root);
+    LIB_UTILITIES_EXPORT virtual void v_Exscan(
+        Array<OneD, unsigned long long> &pData, const enum ReduceOperator pOp,
+        Array<OneD, unsigned long long> &ans);
+    LIB_UTILITIES_EXPORT virtual void v_Gather(void *sendbuf, int sendcount,
+                                               CommDataType sendtype,
+                                               void *recvbuf, int recvcount,
+                                               CommDataType recvtype, int root);
+    LIB_UTILITIES_EXPORT virtual void v_Scatter(void *sendbuf, int sendcount,
+                                                CommDataType sendtype,
+                                                void *recvbuf, int recvcount,
+                                                CommDataType recvtype,
+                                                int root);
+
+    LIB_UTILITIES_EXPORT virtual void v_SplitComm(int pRows, int pColumns);
+    LIB_UTILITIES_EXPORT virtual CommSharedPtr v_CommCreateIf(int flag);
+};
+}
 }
 
 #endif

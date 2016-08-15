@@ -220,13 +220,8 @@ GroupSharedPtr CanHaveGroupsDataSets::CreateGroup(const std::string &name,
                                                   PListSharedPtr accessPL)
 {
     hid_t grp;
-    H5_CONSTRUCT(grp,
-                 H5Gcreate2,
-                 (m_Id,
-                  name.c_str(),
-                  H5P_DEFAULT,
-                  createPL->GetId(),
-                  accessPL->GetId()));
+    H5_CONSTRUCT(grp, H5Gcreate2, (m_Id, name.c_str(), H5P_DEFAULT,
+                                   createPL->GetId(), accessPL->GetId()));
     GroupSharedPtr ans(new Group(grp));
     return ans;
 }
@@ -238,15 +233,9 @@ DataSetSharedPtr CanHaveGroupsDataSets::CreateDataSet(const std::string &name,
                                                       PListSharedPtr accessPL)
 {
     hid_t ds;
-    H5_CONSTRUCT(ds,
-                 H5Dcreate2,
-                 (m_Id,
-                  name.c_str(),
-                  type->GetId(),
-                  space->GetId(),
-                  H5P_DEFAULT,
-                  createPL->GetId(),
-                  accessPL->GetId()));
+    H5_CONSTRUCT(ds, H5Dcreate2,
+                 (m_Id, name.c_str(), type->GetId(), space->GetId(),
+                  H5P_DEFAULT, createPL->GetId(), accessPL->GetId()));
 
     DataSetSharedPtr ans(new DataSet(ds));
     return ans;
@@ -307,30 +296,17 @@ CanHaveGroupsDataSets::LinkIterator
     m_idx = m_next;
     if (m_idx < m_size)
     {
-        H5_CALL(H5Literate,
-                (m_grp->GetId(),
-                 H5_INDEX_NAME,
-                 H5_ITER_NATIVE,
-                 &m_next,
-                 LinkIterator::helper,
-                 this));
+        H5_CALL(H5Literate, (m_grp->GetId(), H5_INDEX_NAME, H5_ITER_NATIVE,
+                             &m_next, LinkIterator::helper, this));
     }
     return *this;
 }
 bool CanHaveGroupsDataSets::LinkIterator::operator==(
     const CanHaveGroupsDataSets::LinkIterator &other) const
 {
-    if (m_grp == other.m_grp)
-    {
-        if (m_idx == other.m_idx)
-        {
-            return true;
-        }
-    }
-    return false;
+    return (m_grp == other.m_grp && m_idx == other.m_idx);
 }
-herr_t CanHaveGroupsDataSets::LinkIterator::helper(hid_t g_id,
-                                                   const char *name,
+herr_t CanHaveGroupsDataSets::LinkIterator::helper(hid_t g_id, const char *name,
                                                    const H5L_info_t *info,
                                                    void *op_data)
 {
@@ -390,31 +366,18 @@ CanHaveAttributes::AttrIterator &CanHaveAttributes::AttrIterator::operator++()
     m_idx = m_next;
     if (m_next < m_size)
     {
-        H5_CALL(H5Aiterate2,
-                (m_obj->GetId(),
-                 H5_INDEX_CRT_ORDER,
-                 H5_ITER_INC,
-                 &m_next,
-                 AttrIterator::helper,
-                 this));
+        H5_CALL(H5Aiterate2, (m_obj->GetId(), H5_INDEX_CRT_ORDER, H5_ITER_INC,
+                              &m_next, AttrIterator::helper, this));
     }
     return *this;
 }
 bool CanHaveAttributes::AttrIterator::operator==(
     const CanHaveAttributes::AttrIterator &other) const
 {
-    if (m_obj == other.m_obj)
-    {
-        if (m_idx == other.m_idx)
-        {
-            return true;
-        }
-    }
-    return false;
+    return m_obj == other.m_obj && m_idx == other.m_idx;
 }
 
-herr_t CanHaveAttributes::AttrIterator::helper(hid_t g_id,
-                                               const char *name,
+herr_t CanHaveAttributes::AttrIterator::helper(hid_t g_id, const char *name,
                                                const H5A_info_t *info,
                                                void *op_data)
 {
@@ -503,7 +466,9 @@ DataTypeSharedPtr DataType::String(size_t len)
     DataTypeSharedPtr s1  = PredefinedDataType::CS1();
     DataTypeSharedPtr ans = s1->Copy();
     if (len == 0)
+    {
         len = H5T_VARIABLE;
+    }
     H5_CALL(H5Tset_size, (ans->GetId(), len));
     return ans;
 }
@@ -552,20 +517,13 @@ const hid_t DataTypeTraits<unsigned long long>::NativeType = H5T_NATIVE_ULLONG;
 
 template <> const hid_t DataTypeTraits<double>::NativeType = H5T_NATIVE_DOUBLE;
 
-AttributeSharedPtr Attribute::Create(hid_t parent,
-                                     const std::string &name,
+AttributeSharedPtr Attribute::Create(hid_t parent, const std::string &name,
                                      DataTypeSharedPtr type,
                                      DataSpaceSharedPtr space)
 {
     hid_t id;
-    H5_CONSTRUCT(id,
-                 H5Acreate2,
-                 (parent,
-                  name.c_str(),
-                  type->GetId(),
-                  space->GetId(),
-                  H5P_DEFAULT,
-                  H5P_DEFAULT));
+    H5_CONSTRUCT(id, H5Acreate2, (parent, name.c_str(), type->GetId(),
+                                  space->GetId(), H5P_DEFAULT, H5P_DEFAULT));
     return AttributeSharedPtr(new Attribute(id));
 }
 
@@ -594,20 +552,15 @@ DataSpaceSharedPtr Attribute::GetSpace() const
 File::File(hid_t id) : Object(id)
 {
 }
-FileSharedPtr File::Create(const std::string &filename,
-                           unsigned mode,
-                           PListSharedPtr createPL,
-                           PListSharedPtr accessPL)
+FileSharedPtr File::Create(const std::string &filename, unsigned mode,
+                           PListSharedPtr createPL, PListSharedPtr accessPL)
 {
     hid_t id;
-    H5_CONSTRUCT(
-        id,
-        H5Fcreate,
-        (filename.c_str(), mode, createPL->GetId(), accessPL->GetId()));
+    H5_CONSTRUCT(id, H5Fcreate, (filename.c_str(), mode, createPL->GetId(),
+                                 accessPL->GetId()));
     return FileSharedPtr(new File(id));
 }
-FileSharedPtr File::Open(const std::string &filename,
-                         unsigned mode,
+FileSharedPtr File::Open(const std::string &filename, unsigned mode,
                          PListSharedPtr accessPL)
 {
     hid_t id;

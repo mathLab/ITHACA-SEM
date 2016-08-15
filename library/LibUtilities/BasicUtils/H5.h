@@ -622,9 +622,11 @@ void CanHaveAttributes::SetAttribute(const std::string &name,
     if (DataTypeConversionPolicy<T>::MustConvert)
     {
         converted_vals.resize(value.size());
-        for (size_t i         = 0; i < value.size(); ++i)
+        for (size_t i = 0; i < value.size(); ++i)
+        {
             converted_vals[i] = DataTypeConversionPolicy<T>::Convert(value[i]);
-        converted_buf         = &converted_vals[0];
+        }
+        converted_buf = &converted_vals[0];
     }
     else
     {

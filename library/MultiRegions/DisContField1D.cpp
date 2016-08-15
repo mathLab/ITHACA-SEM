@@ -84,12 +84,15 @@ namespace Nektar
               m_bndCondExpansions(),
               m_bndConditions()
         {
-            SpatialDomains::BoundaryConditions bcs(m_session, graph1D);
+            if (variable.compare("DefaultVar") != 0)
+            {
+                SpatialDomains::BoundaryConditions bcs(m_session, graph1D);
 
-            GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
-            EvaluateBoundaryConditions(0.0, variable);
-            ApplyGeomInfo();
-            FindPeriodicVertices(bcs,variable);
+                GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
+                EvaluateBoundaryConditions(0.0, variable);
+                ApplyGeomInfo();
+                FindPeriodicVertices(bcs,variable);
+            }
 
             if(SetUpJustDG)
             {
@@ -451,13 +454,16 @@ namespace Nektar
             ExpList1D(pSession,graph1D,domain, true,variable,SetToOneSpaceDimension),
             m_bndCondExpansions(),
             m_bndConditions()
-        {			
-            SpatialDomains::BoundaryConditionsSharedPtr DomBCs = GetDomainBCs(domain,Allbcs,variable); 
-            
-            GenerateBoundaryConditionExpansion(graph1D,*DomBCs,variable);
-            EvaluateBoundaryConditions(0.0, variable);
-            ApplyGeomInfo();
-            FindPeriodicVertices(*DomBCs,variable);
+        {
+            if (variable.compare("DefaultVar") != 0)
+            {
+                SpatialDomains::BoundaryConditionsSharedPtr DomBCs = GetDomainBCs(domain,Allbcs,variable);
+
+                GenerateBoundaryConditionExpansion(graph1D,*DomBCs,variable);
+                EvaluateBoundaryConditions(0.0, variable);
+                ApplyGeomInfo();
+                FindPeriodicVertices(*DomBCs,variable);
+            }
 
             SetUpDG(variable);
         }

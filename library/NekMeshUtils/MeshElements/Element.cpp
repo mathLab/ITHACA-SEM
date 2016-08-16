@@ -71,8 +71,10 @@ Element::Element(ElmtConfig pConf, unsigned int pNumNodes,
  * searched and the corresponding edge/face nodes are updated to
  * maintain consistency.
  *
- * @param  p     Index of the vertex to replace.
- * @param  pNew  New vertex.
+ * @param  p        Index of the vertex to replace.
+ * @param  pNew     New vertex.
+ * @param  descend  If true, we loop over edges and faces and replace the
+ *                  corresponding vertices with @p pNew.
  */
 void Element::SetVertex(unsigned int p, NodeSharedPtr pNew, bool descend)
 {
@@ -125,8 +127,10 @@ void Element::SetVertex(unsigned int p, NodeSharedPtr pNew, bool descend)
  * When an edge is replaced, the element faces are also searched and
  * the corresponding face edges are updated to maintain consistency.
  *
- * @param  p     Index of the edge to replace.
- * @param  pNew  New edge.
+ * @param  p        Index of the edge to replace.
+ * @param  pNew     New edge.
+ * @param  descend  If true, we loop over faces and replace the corresponding
+ *                  face edge with @p pNew.
  */
 void Element::SetEdge(unsigned int p, EdgeSharedPtr pNew, bool descend)
 {

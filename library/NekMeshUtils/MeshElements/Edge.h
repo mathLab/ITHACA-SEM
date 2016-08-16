@@ -170,6 +170,7 @@ public:
         return ret;
     }
 
+    /// Make this edge an order @p order edge. @see Element::MakeOrder.
     void MakeOrder(int                                order,
                    SpatialDomains::GeometrySharedPtr  geom,
                    LibUtilities::PointsType           edgeType,

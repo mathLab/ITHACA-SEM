@@ -114,7 +114,7 @@ template <typename T> struct HOQuadrilateral
 
     void ReverseX()
     {
-        int np = (int)(sqrt(surfVerts.size()) + 0.5);
+        int np = (int)(sqrt((NekDouble)surfVerts.size()) + 0.5);
         for (int i = 0; i < np; ++i)
         {
             for (int j = 0; j < np/2; ++j)

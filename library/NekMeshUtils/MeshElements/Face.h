@@ -111,7 +111,8 @@ public:
     }
 
     /// Assemble a list of nodes on curved face
-    NEKMESHUTILS_EXPORT void GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+    NEKMESHUTILS_EXPORT void GetCurvedNodes(
+        std::vector<NodeSharedPtr> &nodeList) const
     {
         // Treat 2D point distributions differently to 3D.
         if (m_curveType == LibUtilities::eNodalTriFekete ||
@@ -215,6 +216,7 @@ public:
         return s.str();
     }
 
+    /// Make this face an order @p order face. @see Element::MakeOrder.
     void MakeOrder(int                                order,
                    SpatialDomains::GeometrySharedPtr  geom,
                    LibUtilities::PointsType           pType,

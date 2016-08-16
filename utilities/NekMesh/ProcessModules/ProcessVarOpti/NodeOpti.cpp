@@ -665,7 +665,7 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                                 for(int l = m; l < DIM; ++l, ct++)
                                 {
                                     G[ct+DIM] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
-                                        G[m]*G[l]/W + 2.0*integral*(frobProdHes[m][l]/frob
+                                        G[m]*G[l]/W + 2.0*W*(frobProdHes[m][l]/frob
                                             - 2.0 * frobProd[m]*frobProd[l]/frob/frob
                                             + jacDetDeriv[m]*jacDetDeriv[l] * jacDet/(2.0*sigma-jacDet)/(2.0*sigma-jacDet)/(2.0*sigma-jacDet)/DIM));
                                 }
@@ -687,9 +687,9 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                     NekDouble frob = FrobeniusNorm(jacIdeal);
                     NekDouble sigma = 0.5*(jacDet +
                                     sqrt(jacDet*jacDet + 4.0*ep*ep));
+                    NekDouble W = frob / sigma;
                     integral += derivUtil->quadW[k]*
-                                fabs(data[i]->maps[k][9])*
-                                (frob / sigma);
+                                fabs(data[i]->maps[k][9])* W;
 
                     // Derivative of basis function in each direction
                     if(gradient)
@@ -764,9 +764,9 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
 
                         for (int j = 0; j < DIM; ++j)
                         {
-                        //    G[j] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
-                        //        mu * frobProd[j] + (jacDetDeriv[j] / (2.0*sigma - jacDet)
-                        //                            * (K * lsigma - mu)));
+                            G[j] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
+                                    W*(2.0*frobProd[j]/frob -
+                                            jacDetDeriv[j]/(2.0*sigma-jacDet)));
                         }
 
                         if(hessian)
@@ -786,9 +786,10 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                             {
                                 for(int l = m; l < DIM; ++l, ct++)
                                 {
-                                //    G[ct+DIM] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
-                                //        mu * frobProdHes[m][l] + jacDetDeriv[m]*jacDetDeriv[l]*(
-                                //            K/(2.0*sigma-jacDet)/(2.0*sigma-jacDet) - jacDet*(K*lsigma-mu)));
+                                    G[ct+DIM] += derivUtil->quadW[k] * fabs(data[i]->maps[k][9]) * (
+                                        G[m]*G[l]/W + 2.0*W*(frobProdHes[m][l]/frob
+                                            - 2.0 * frobProd[m]*frobProd[l]/frob/frob
+                                            + 0.5*jacDetDeriv[m]*jacDetDeriv[l] * jacDet/(2.0*sigma-jacDet)/(2.0*sigma-jacDet)/(2.0*sigma-jacDet)/DIM));
                                 }
                             }
                         }

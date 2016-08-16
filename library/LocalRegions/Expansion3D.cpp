@@ -1235,17 +1235,17 @@ namespace Nektar
             const DNekScalMatSharedPtr &r_bnd)
         {
             MatrixStorage storage = eFULL;
-            DNekMatSharedPtr m_vertexmatrix;
+            DNekMatSharedPtr vertexmatrix;
 
             int nVerts, vid1, vid2, vMap1, vMap2;
             NekDouble VertexValue;
 
             nVerts = GetNverts();
 
-            m_vertexmatrix =
+            vertexmatrix =
                 MemoryManager<DNekMat>::AllocateSharedPtr(
                     nVerts, nVerts, 0.0, storage);
-            DNekMat &VertexMat = (*m_vertexmatrix);
+            DNekMat &VertexMat = (*vertexmatrix);
 
             for (vid1 = 0; vid1 < nVerts; ++vid1)
             {
@@ -1259,7 +1259,7 @@ namespace Nektar
                 }
             }
 
-            return m_vertexmatrix;
+            return vertexmatrix;
         }
 
         DNekMatSharedPtr Expansion3D::v_BuildTransformationMatrix(
@@ -1311,9 +1311,9 @@ namespace Nektar
 
             // Define storage for vertex transpose matrix and zero all entries
             MatrixStorage storage = eFULL;
-            DNekMatSharedPtr m_transformationmatrix;
-            DNekMatSharedPtr m_transposedtransformationmatrix;
-
+            DNekMatSharedPtr transformationmatrix;
+            DNekMatSharedPtr transposedtransformationmatrix;
+            
             m_transformationmatrix =
                 MemoryManager<DNekMat>::AllocateSharedPtr(
                     nBndCoeffs, nBndCoeffs, 0.0, storage);
@@ -1321,8 +1321,8 @@ namespace Nektar
                 MemoryManager<DNekMat>::AllocateSharedPtr(
                     nBndCoeffs, nBndCoeffs, 0.0, storage);
 
-            DNekMat &R  = (*m_transformationmatrix);
-            DNekMat &RT = (*m_transposedtransformationmatrix);
+            DNekMat &R  = (*transformationmatrix);
+            DNekMat &RT = (*transposedtransformationmatrix);
 
             // Build the vertex-edge/face transform matrix: This matrix is
             // constructed from the submatrices corresponding to the couping
@@ -1385,15 +1385,15 @@ namespace Nektar
                     offset += nmodes;
                 }
 
-                DNekMatSharedPtr m_vertexedgefacetransformmatrix =
+                DNekMatSharedPtr vertexedgefacetransformmatrix =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
                         1, efRow, 0.0, storage);
-                DNekMat &Sveft = (*m_vertexedgefacetransformmatrix);
+                DNekMat &Sveft = (*vertexedgefacetransformmatrix);
 
-                DNekMatSharedPtr m_vertexedgefacecoupling =
+                DNekMatSharedPtr vertexedgefacecoupling =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
                         1, efRow, 0.0, storage);
-                DNekMat &Svef = (*m_vertexedgefacecoupling);
+                DNekMat &Svef = (*vertexedgefacecoupling);
 
                 // Vertex-edge coupling
                 for (n = 0; n < nedgemodesconnected; ++n)
@@ -1414,7 +1414,8 @@ namespace Nektar
                                                    facemodearray[n]);
 
                     // Set the value in the vertex edge/face matrix
-                    Svef.SetValue(0, n + nedgemodesconnected, VertexEdgeFaceValue);
+                    Svef.SetValue(0, n + nedgemodesconnected,
+                                  VertexEdgeFaceValue);
                 }
 
                 /*
@@ -1425,10 +1426,10 @@ namespace Nektar
                  */
 
                 // Allocation of matrix to store edge/face-edge/face coupling
-                DNekMatSharedPtr m_edgefacecoupling =
+                DNekMatSharedPtr edgefacecoupling =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
                         efRow, efRow, 0.0, storage);
-                DNekMat &Sefef = (*m_edgefacecoupling);
+                DNekMat &Sefef = (*edgefacecoupling);
 
                 NekDouble EdgeEdgeValue, FaceFaceValue;
 
@@ -1551,22 +1552,22 @@ namespace Nektar
                 efRow = GetEdgeNcoeffs(eid) - 2;
 
                 // Edge-face coupling matrix
-                DNekMatSharedPtr m_efedgefacecoupling =
+                DNekMatSharedPtr efedgefacecoupling =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
                         efRow, efCol, 0.0, storage);
-                DNekMat &Mef = (*m_efedgefacecoupling);
+                DNekMat &Mef = (*efedgefacecoupling);
 
                 // Face-face coupling matrix
-                DNekMatSharedPtr m_effacefacecoupling =
+                DNekMatSharedPtr effacefacecoupling =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
                         efCol, efCol, 0.0, storage);
-                DNekMat &Meff = (*m_effacefacecoupling);
+                DNekMat &Meff = (*effacefacecoupling);
 
                 // Edge-face transformation matrix
-                DNekMatSharedPtr m_edgefacetransformmatrix =
+                DNekMatSharedPtr edgefacetransformmatrix =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
                         efRow, efCol, 0.0, storage);
-                DNekMat &Meft = (*m_edgefacetransformmatrix);
+                DNekMat &Meft = (*edgefacetransformmatrix);
 
                 int nfacemodesconnected =
                     GetFaceIntNcoeffs(geom->GetEdgeFaceMap(eid, 0)) +
@@ -1662,12 +1663,12 @@ namespace Nektar
             if ((matrixType == StdRegions::ePreconR)||
                 (matrixType == StdRegions::ePreconRMass))
             {
-                return m_transformationmatrix;
+                return transformationmatrix;
             }
             else if ((matrixType == StdRegions::ePreconRT)||
                      (matrixType == StdRegions::ePreconRTMass))
             {
-                return m_transposedtransformationmatrix;
+                return transposedtransformationmatrix;
             }
             else
             {
@@ -1686,21 +1687,21 @@ namespace Nektar
          *  0 & 0 & \mathbf{I}} \end{array}\right]\f]
          */
         DNekMatSharedPtr Expansion3D::v_BuildInverseTransformationMatrix(
-            const DNekScalMatSharedPtr & m_transformationmatrix)
+            const DNekScalMatSharedPtr & transformationmatrix)
         {
             int i, j, n, eid = 0, fid = 0;
             int nCoeffs = NumBndryCoeffs();
             NekDouble MatrixValue;
-            DNekScalMat &R = (*m_transformationmatrix);
+            DNekScalMat &R = (*transformationmatrix);
 
             // Define storage for vertex transpose matrix and zero all entries
             MatrixStorage storage = eFULL;
 
             // Inverse transformation matrix
-            DNekMatSharedPtr m_inversetransformationmatrix =
+            DNekMatSharedPtr inversetransformationmatrix =
                 MemoryManager<DNekMat>::AllocateSharedPtr(
                     nCoeffs, nCoeffs, 0.0, storage);
-            DNekMat &InvR = (*m_inversetransformationmatrix);
+            DNekMat &InvR = (*inversetransformationmatrix);
 
             int nVerts = GetNverts();
             int nEdges = GetNedges();
@@ -1809,7 +1810,7 @@ namespace Nektar
                 InvR.SetValue(i, i, 1.0);
             }
 
-            return m_inversetransformationmatrix;
+            return inversetransformationmatrix;
         }
 
         Array<OneD, unsigned int> Expansion3D::v_GetEdgeInverseBoundaryMap(

@@ -80,7 +80,7 @@ void NodeOpti2D2D::Optimise()
     NekDouble currentW = GetFunctional<2>();
 
     // Gradient already zero
-    if (G[0]*G[0] + G[1]*G[1] > gradTol)
+    if (G[0]*G[0] + G[1]*G[1] > gradTol())
     {
         NekDouble alpha    = 1.0;
         NekDouble xc       = node->m_x;
@@ -94,7 +94,7 @@ void NodeOpti2D2D::Optimise()
         // Dot product of p_k with gradient
         NekDouble tmp = (G[0] * delX + G[1] * delY) * -1.0;
 
-        while (alpha > alphaTol)
+        while (alpha > alphaTol())
         {
             // Update node
             node->m_x = xc - alpha * delX;
@@ -105,8 +105,8 @@ void NodeOpti2D2D::Optimise()
             //location
 
             // Wolfe conditions
-            if (newVal <= currentW + c1 * alpha * tmp &&
-                -1.0 * (G[0] * delX + G[1] * delY) >= c2 * tmp)
+            if (newVal <= currentW + c1() * alpha * tmp &&
+                -1.0 * (G[0] * delX + G[1] * delY) >= c2() * tmp)
             {
                 found = true;
                 break;
@@ -142,7 +142,7 @@ void NodeOpti3D3D::Optimise()
 
     NekDouble currentW = GetFunctional<3>();
 
-    if(G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol)
+    if(G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
         //needs to optimise
         NekDouble xc       = node->m_x;
@@ -173,7 +173,7 @@ void NodeOpti3D3D::Optimise()
         // Dot product of p_k with gradient
         NekDouble tmp = (G[0] * delX + G[1] * delY + G[2] * delZ) * -1.0;
 
-        while (alpha > alphaTol)
+        while (alpha > alphaTol())
         {
             // Update node
             node->m_x = xc - alpha * delX;
@@ -185,8 +185,8 @@ void NodeOpti3D3D::Optimise()
             //location
 
             // Wolfe conditions
-            if (newVal <= currentW + c1 * alpha * tmp &&
-                -1.0 * (G[0] * delX + G[1] * delY + G[2] * delZ) >= c2 * tmp)
+            if (newVal <= currentW + c1() * alpha * tmp &&
+                -1.0 * (G[0] * delX + G[1] * delY + G[2] * delZ) >= c2() * tmp)
             {
                 found = true;
                 break;

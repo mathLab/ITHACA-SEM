@@ -103,10 +103,10 @@ protected:
     DerivUtilSharedPtr derivUtil;
     optimiser opti;
 
-    static const NekDouble c1 = 1e-4;
-    static const NekDouble c2 = 0.9;
-    static const NekDouble gradTol = 1e-12;
-    static const NekDouble alphaTol = 1e-10;
+    static NekDouble c1() {return 1e-4;}
+    static NekDouble c2() {return 0.9;}
+    static NekDouble gradTol() {return 1e-12;}
+    static NekDouble alphaTol() {return 1e-10;}
 };
 
 typedef boost::shared_ptr<NodeOpti> NodeOptiSharedPtr;

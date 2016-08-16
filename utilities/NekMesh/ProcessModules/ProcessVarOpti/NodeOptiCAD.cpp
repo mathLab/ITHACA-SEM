@@ -54,11 +54,11 @@ void NodeOpti1D3D::Optimise()
 
     NekDouble currentW = GetFunctional<3>();
 
-    //modify the gradient to be on the cad system
-    ProcessGradient();
-
-    if (G[0]*G[0] > gradTol)
+    if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
+        //modify the gradient to be on the cad system
+        ProcessGradient();
+
         //needs to optimise
         NekDouble tc = node->GetCADCurveInfo(curve->GetId());
         NekDouble xc       = node->m_x;
@@ -78,7 +78,7 @@ void NodeOpti1D3D::Optimise()
 
         bool found = false;
 
-        while (alpha > alphaTol)
+        while (alpha > alphaTol())
         {
             // Update node
             nt = tc - alpha * delT;
@@ -97,8 +97,8 @@ void NodeOpti1D3D::Optimise()
             ProcessGradient();
 
             // Wolfe conditions
-            if (newVal <= currentW + c1 * alpha * tmp &&
-                -1.0 * (G[0] * delT) >= c2 * tmp)
+            if (newVal <= currentW + c1() * alpha * tmp &&
+                -1.0 * (G[0] * delT) >= c2() * tmp)
             {
                 found = true;
                 break;
@@ -137,11 +137,19 @@ void NodeOpti2D3D::Optimise()
 
     NekDouble currentW = GetFunctional<3>();
 
-    //modify the gradient to be on the cad system
-    ProcessGradient();
-
-    if (G[0]*G[0] + G[1]*G[1] > 1e-16)
+    if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
+        cout << "***********************************" << endl;
+        cout << G[0] << " " << G[1] << " " << G[2] << endl
+             << G[3] << " " << G[4] << " " << G[5] << " " << G[6] << " " << G[7] << " " << G[8] << endl;
+        cout << endl;
+
+        //modify the gradient to be on the cad system
+        ProcessGradient();
+
+        cout << endl << G[0] << " " << G[1] << endl << G[2] << " " << G[3] << " " << G[4] << endl;
+        cout << endl;
+
         //needs to optimise
         Array<OneD, NekDouble> uvc = node->GetCADSurfInfo(surf->GetId());
         NekDouble xc       = node->m_x;
@@ -151,8 +159,10 @@ void NodeOpti2D3D::Optimise()
         Array<OneD, NekDouble> uvt(2);
         Array<OneD, NekDouble> p;
 
-        NekDouble delU = 1.0/(G[2]*G[3]-G[4]*G[4])*(G[3]*G[0] - G[4]*G[1]);
-        NekDouble delV = 1.0/(G[2]*G[3]-G[4]*G[4])*(G[2]*G[1] - G[4]*G[0]);
+        NekDouble delU = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[4]*G[0] - G[3]*G[1]);
+        NekDouble delV = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[2]*G[1] - G[3]*G[0]);
+
+        cout << delU << " " << delV << endl << endl;
 
         // Dot product of p_k with gradient
         NekDouble tmp = (G[0] * delU + G[1] * delV) * -1.0;
@@ -160,7 +170,7 @@ void NodeOpti2D3D::Optimise()
         Array<OneD, NekDouble> bd = surf->GetBounds();
 
         bool found = false;
-        while(alpha > gradTol)
+        while(alpha > alphaTol())
         {
             uvt[0] = uvc[0] - alpha * delU;
             uvt[1] = uvc[1] - alpha * delV;
@@ -181,9 +191,11 @@ void NodeOpti2D3D::Optimise()
             NekDouble newVal = GetFunctional<3>(true,false);
             ProcessGradient();
 
+            cout << currentW << " " <<  newVal << endl;
+
             // Wolfe conditions
-            if (newVal <= currentW + c1 * alpha * tmp &&
-                -1.0 * (G[0] * delU + G[1] * delV) >= c2 * tmp)
+            if (newVal <= currentW + c1() * alpha * tmp &&
+                -1.0 * (G[0] * delU + G[1] * delV) >= c2() * tmp)
             {
                 found = true;
                 break;
@@ -239,6 +251,7 @@ void NodeOpti1D3D::ProcessGradient()
 void NodeOpti2D3D::ProcessGradient()
 {
     Array<OneD, NekDouble> uvc = node->GetCADSurfInfo(surf->GetId());
+
     Array<OneD, NekDouble> grad = G;
     G = Array<OneD, NekDouble>(5,0.0);
 
@@ -287,9 +300,9 @@ void NodeOpti2D3D::ProcessGradient()
     G[3] = grad[0] * d2[15] + grad[1] * d2[16] + grad[2] * d2[17];
     G[4] = grad[0] * d2[12] + grad[1] * d2[13] + grad[2] * d2[14];
 
-   G[2] += d2[3] * g + d2[4] * h + d2[5] * i;
-   G[3] += d2[3] * h + d2[4] * j + d2[5] * l;
-   G[4] += d2[6] * h + d2[7] * j + d2[8] * l;
+    G[2] += d2[3] * g + d2[4] * h + d2[5] * i;
+    G[3] += d2[3] * h + d2[4] * j + d2[5] * l;
+    G[4] += d2[6] * h + d2[7] * j + d2[8] * l;
 }
 
 }

@@ -43,6 +43,7 @@ v4.4.0
 - New module for inserting an alternate high-order surface into the working
   mesh (!669)
 - Improvements to mesh linearisation module (!659)
+- Add support for Gmsh high-order output (!679)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

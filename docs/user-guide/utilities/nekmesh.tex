@@ -297,19 +297,27 @@ In the rest of these subsections, we discuss the various processing modules
 available within \mc.
 
 \subsection{Extract surfaces from a mesh}
+\label{s:utilities:nekmesh:extract}
 
-To extract composite surfaces 2 and 3  from a mesh use the module \inltt{extract}
-module:
+Often one wants to visualise surfaces of a 3D mesh, or extract the values of
+variables on the surface and visualise them. To support this, \mc can extract
+two-dimensional surfaces which can be visualised using \inltt{FieldConvert} in
+order to extract the value of a 3D field on a given surface.
+
+As an example, we can extract composite surfaces 2 and 3-5 from a mesh using the
+\inltt{extract} module:
 %
 \begin{lstlisting}[style=BashInputStyle]
-NekMesh -m extract:surf=2,3 Mesh.xml output.xml
+NekMesh -m extract:surf=2,3-5 Mesh.xml output.xml
 \end{lstlisting}
 %
-If you also wish to have the boundaries of the extracted surface detected add the \inltt{detectbnd} option
+If you also wish to have the boundaries of the extracted surface detected add
+the \inltt{detectbnd} option
 %
 \begin{lstlisting}[style=BashInputStyle]
-NekMesh -m extract:surf=2,3:detectbnd Mesh.xml output.xml
+NekMesh -m extract:surf=2,3-5:detectbnd Mesh.xml output.xml
 \end{lstlisting}
+which will produce new composites for the extracted boundary.
 
 \subsection{Negative Jacobian detection}
 
@@ -521,24 +529,6 @@ The module parameters are:
   hollow cylinder. However, there are no checks to ensure the resulting elements
   are not self-intersecting.
 \end{notebox}
-
-\subsection{Surface extraction}
-
-Often one wants to visualise a particular surface of a 3D mesh. \mc supports
-extraction of two-dimensional surfaces which can be converted using
-\inltt{XmlToVtk} or similar programs for visualisation purposes, or combined
-with \inltt{FieldConvert} in order to extract the value of a 3D field on a given
-surface.
-
-To extract a surface use the command:
-
-\begin{lstlisting}[style=BashInputStyle]
-  NekMesh -m extract:surf=12,3,4 volume-mesh.xml surface-mesh.xml
-\end{lstlisting}
-
-where the integers are surface IDs to be extracted.
-
-An optional arguemnt of \inltt{detectbnd} can be added to identify the boundary composites as part of the surface extraction.
 
 \subsection{Linearisation}
 

@@ -43,6 +43,7 @@ using namespace std;
 namespace io = boost::iostreams;
 
 #include <tinyxml.h>
+#include <LibUtilities/BasicUtils/CompressData.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/MeshEntities.hpp>
 #include <SpatialDomains/MeshGraph.h>

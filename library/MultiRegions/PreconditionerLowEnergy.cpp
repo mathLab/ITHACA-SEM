@@ -800,11 +800,14 @@ namespace Nektar
                 m_RBlk->SetBlock(n,n, transmatrixmap[eType]);
                 m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
             }
-            
+
+            bool verbose =
+                expList->GetSession()->DefinesCmdLineArgument("verbose");
+
             if(nNonDirVerts!=0)
             {
                 //Exchange vertex data over different processes
-                Gs::gs_data *tmp = Gs::Init(VertBlockToUniversalMap, m_comm);
+                Gs::gs_data *tmp = Gs::Init(VertBlockToUniversalMap, m_comm, verbose);
                 Gs::Gather(vertArray, Gs::gs_add, tmp);
                 
             }
@@ -820,7 +823,7 @@ namespace Nektar
             }
 
             //Exchange edge data over different processes
-            Gs::gs_data *tmp1 = Gs::Init(EdgeBlockToUniversalMap, m_comm);
+            Gs::gs_data *tmp1 = Gs::Init(EdgeBlockToUniversalMap, m_comm, verbose);
             Gs::Gather(GlobalEdgeBlock, Gs::gs_add, tmp1);
 
             Array<OneD, NekDouble> GlobalFaceBlock(ntotalfaceentries,0.0);
@@ -834,7 +837,7 @@ namespace Nektar
             }
 
             //Exchange face data over different processes
-            Gs::gs_data *tmp2 = Gs::Init(FaceBlockToUniversalMap, m_comm);
+            Gs::gs_data *tmp2 = Gs::Init(FaceBlockToUniversalMap, m_comm, verbose);
             Gs::Gather(GlobalFaceBlock, Gs::gs_add, tmp2);
             
             // Populate vertex block

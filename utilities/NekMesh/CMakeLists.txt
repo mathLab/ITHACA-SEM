@@ -98,6 +98,7 @@ ENDIF (NEKTAR_USE_VTK)
 
 # Nektar++
 ADD_NEKTAR_TEST        (Nektar++/InvalidTetFace)
+ADD_NEKTAR_TEST        (Nektar++/InvalidQuads)
 ADD_NEKTAR_TEST        (Nektar++/Tube45Refinement)
 ADD_NEKTAR_TEST        (Nektar++/Tube45Refinement_extractsurf)
 ADD_NEKTAR_TEST        (Nektar++/CylQuadBl)

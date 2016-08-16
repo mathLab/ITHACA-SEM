@@ -366,15 +366,6 @@ void ElUtil::Evaluate()
     maps = MappingIdealToRef();
     //mtx2.unlock();
 
-    NekDouble minEdge = numeric_limits<double>::max();
-    vector<EdgeSharedPtr> es = m_el->GetEdgeList();
-    for(int i = 0; i < es.size(); i++)
-    {
-        minEdge = min(minEdge,es[i]->m_n1->Distance(es[i]->m_n2));
-    }
-
-    //delta = minEdge / m_el->GetConf().m_order / 500.0;
-    delta = 1e-4;
     minJac = mn;
 }
 

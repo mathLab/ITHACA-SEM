@@ -95,7 +95,6 @@ protected:
     std::vector<ElUtilSharedPtr> data;
     Array<OneD, NekDouble> G;
 
-    void CalcDX();
     void CalcMinJac();
 
     NekDouble dx;
@@ -103,6 +102,11 @@ protected:
     ResidualSharedPtr res;
     DerivUtilSharedPtr derivUtil;
     optimiser opti;
+
+    static const NekDouble c1 = 1e-4;
+    static const NekDouble c2 = 0.9;
+    static const NekDouble gradTol = 1e-12;
+    static const NekDouble alphaTol = 1e-10;
 };
 
 typedef boost::shared_ptr<NodeOpti> NodeOptiSharedPtr;

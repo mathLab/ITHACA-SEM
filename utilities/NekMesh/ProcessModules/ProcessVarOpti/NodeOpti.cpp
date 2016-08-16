@@ -60,16 +60,6 @@ NodeOptiFactory &GetNodeOptiFactory()
     return asd;
 }
 
-void NodeOpti::CalcDX()
-{
-    dx = numeric_limits<double>::max();
-
-    for(int i = 0; i < data.size(); i++)
-    {
-        dx = min(dx, data[i]->delta);
-    }
-}
-
 void NodeOpti::CalcMinJac()
 {
     minJac = numeric_limits<double>::max();
@@ -90,14 +80,13 @@ void NodeOpti2D2D::Optimise()
     NekDouble currentW = GetFunctional<2>();
 
     // Gradient already zero
-    if (G[0]*G[0] + G[1]*G[1] > 1e-12)
+    if (G[0]*G[0] + G[1]*G[1] > gradTol)
     {
         NekDouble alpha    = 1.0;
         NekDouble xc       = node->m_x;
         NekDouble yc       = node->m_y;
 
         bool      found    = false;
-        const NekDouble c1 = 1e-4, c2 = 0.9;
 
         // Search direction
         NekDouble delX = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[4]*G[0] - G[3]*G[1]);
@@ -105,7 +94,7 @@ void NodeOpti2D2D::Optimise()
         // Dot product of p_k with gradient
         NekDouble tmp = (G[0] * delX + G[1] * delY) * -1.0;
 
-        while (alpha > 1e-10)
+        while (alpha > alphaTol)
         {
             // Update node
             node->m_x = xc - alpha * delX;
@@ -153,7 +142,7 @@ void NodeOpti3D3D::Optimise()
 
     NekDouble currentW = GetFunctional<3>();
 
-    if(G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > 1e-12)
+    if(G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol)
     {
         //needs to optimise
         NekDouble xc       = node->m_x;
@@ -181,11 +170,10 @@ void NodeOpti3D3D::Optimise()
         delZ /= det;
 
         bool found = false;
-        const NekDouble c1 = 1e-4, c2 = 0.9;
         // Dot product of p_k with gradient
         NekDouble tmp = (G[0] * delX + G[1] * delY + G[2] * delZ) * -1.0;
 
-        while (alpha > 1e-10)
+        while (alpha > alphaTol)
         {
             // Update node
             node->m_x = xc - alpha * delX;

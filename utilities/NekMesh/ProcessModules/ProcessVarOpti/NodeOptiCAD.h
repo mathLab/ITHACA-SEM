@@ -72,7 +72,7 @@ public:
     }
 
 private:
-    Array<OneD, NekDouble> GetGrad(bool analytic = false);
+    void ProcessGradient();
     CADCurveSharedPtr curve;
 };
 
@@ -103,7 +103,7 @@ public:
     }
 
 private:
-    Array<OneD, NekDouble> GetGrad(bool analytic = false);
+    void ProcessGradient();
     CADSurfSharedPtr surf;
 };
 

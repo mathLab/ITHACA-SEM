@@ -53,7 +53,6 @@ public:
     CwipiCoupling(){};
 
     CwipiCoupling(MultiRegions::ExpListSharedPtr field,
-                  std::string name,
                   int outputFreq,
                   double geomTol);
 

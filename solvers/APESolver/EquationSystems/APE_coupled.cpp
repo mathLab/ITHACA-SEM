@@ -60,7 +60,7 @@ void APE_coupled::v_InitObject()
              "This EquationSystem requires the --cwipi command line switch");
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
-        m_bfField, "cpl1", 0, 1.0);
+        m_bfField, 0, 1.0);
 
     m_extForcing = GetForcingFactory().CreateInstance(
         "Programmatic", m_session, m_fields, 1, 0);

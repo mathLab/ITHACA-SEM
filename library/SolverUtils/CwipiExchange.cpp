@@ -102,10 +102,9 @@ static void InterpCallback(
 }
 
 CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
-                             std::string name,
                              int outputFreq,
                              double geomTol)
-    : m_couplingName(name), m_evalField(field), m_lastSend(-1E6),
+    : m_evalField(field), m_lastSend(-1E6),
       m_lastReceive(-1E6), m_points(NULL), m_coords(NULL), m_connecIdx(NULL),
       m_connec(NULL), m_rValsInterl(NULL), m_sValsInterl(NULL)
 {
@@ -194,11 +193,8 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
     TiXmlElement *vCoupling = session->GetElement("Nektar/Coupling");
     ASSERTL0(vCoupling, "Invalid Coupling config");
 
-    // TODO: set m_name here instead of in the constructor
-    string nName;
-    vCoupling->QueryStringAttribute("NAME", &nName);
-    ASSERTL0(nName.size(), "No Coupling NAME attribute set");
-    ASSERTL0(m_couplingName == nName, "Wrong Coupling name");
+    vCoupling->QueryStringAttribute("NAME", &m_couplingName);
+    ASSERTL0(m_couplingName.size(), "No Coupling NAME attribute set");
 
     TiXmlElement *element = vCoupling->FirstChildElement("I");
     while (element)

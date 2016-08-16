@@ -66,7 +66,7 @@ void Dummy::v_InitObject()
              "This EquationSystem requires the --cwipi command line switch");
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
-        m_fields[0], "cpl1", 0, 1.0);
+        m_fields[0], 0, 1.0);
 
     m_recFields = Array<OneD, Array<OneD, NekDouble> >(
         m_coupling->GetRecvFieldNames().size());

@@ -82,7 +82,18 @@ unsigned int Mesh::GetNumEntities()
 }
 
 /**
- * @brief Convert this mesh into a high-order mesh.
+ * @brief Convert this mesh into a mesh of uniform polynomial order @p order
+ * with a curve point distribution @p distType.
+ *
+ * This routine adds curvature points into a mesh so that the resulting elements
+ * are all of a uniform order @p order and all high-order vertices are
+ * consistently ordered. It proceeds in a bottom-up fashion:
+ *
+ * - First construct all edge, face and elemental geometry mappings.
+ * - Then call the local MakeOrder functions on each edge, face and element of
+ *   dimension Mesh::m_expDim.
+ * - Finally, any boundary elements are updated so that they have the same
+ *   interior degrees of freedom as their corresponding edge or face links.
  */
 void Mesh::MakeOrder(int                      order,
                      LibUtilities::PointsType distType)
@@ -118,6 +129,10 @@ void Mesh::MakeOrder(int                      order,
             LibUtilities::eGaussLobattoLegendre;
         pTypes[LibUtilities::eTetrahedron] = LibUtilities::eNodalTetElec;
         pTypes[LibUtilities::eHexahedron] = LibUtilities::eGaussLobattoLegendre;
+    }
+    else
+    {
+        ASSERTL1(false, "Mesh::MakeOrder does not support this points type.");
     }
 
     // Begin by generating Nektar++ geometry objects for edges, faces and

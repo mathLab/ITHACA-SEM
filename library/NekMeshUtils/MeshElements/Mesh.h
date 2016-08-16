@@ -133,8 +133,8 @@ public:
     /// Returns the total number of entities in the mesh.
     NEKMESHUTILS_EXPORT unsigned int GetNumEntities();
 
-    void MakeOrder(int                      order,
-                   LibUtilities::PointsType distType);
+    NEKMESHUTILS_EXPORT void MakeOrder(int                      order,
+                                       LibUtilities::PointsType distType);
 };
 /// Shared pointer to a mesh.
 typedef boost::shared_ptr<Mesh> MeshSharedPtr;

@@ -94,13 +94,15 @@ void ProcessAddFld::Process(po::variables_map &vm)
         {
             ElementGIDs[i] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
         }
-        m_f->m_fld->Import(fromfld, fromField->m_fielddef, fromField->m_data,
-                           LibUtilities::NullFieldMetaDataMap, ElementGIDs);
+        m_f->FieldIOForFile(fromfld)->Import(
+            fromfld, fromField->m_fielddef, fromField->m_data,
+            LibUtilities::NullFieldMetaDataMap, ElementGIDs);
     }
     else
     {
-        m_f->m_fld->Import(fromfld, fromField->m_fielddef, fromField->m_data,
-                           LibUtilities::NullFieldMetaDataMap);
+        m_f->FieldIOForFile(fromfld)->Import(
+            fromfld, fromField->m_fielddef, fromField->m_data,
+            LibUtilities::NullFieldMetaDataMap);
     }
 
     bool samelength = true;

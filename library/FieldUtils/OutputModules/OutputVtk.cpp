@@ -185,12 +185,23 @@ void OutputVtk::Process(po::variables_map &vm)
             case LibUtilities::ePtsLine:
             {
                 ASSERTL0(false,
-                         "VTK output needs settig up for PtsFile or Pts Line");
+                    "VTK output needs setting up for ePtsFile and ePtsLine");
                 break;
             }
             case LibUtilities::ePtsPlane:
             {
                 ASSERTL0(false, "VTK output needs settig up for PtsPlane");
+                break;
+            }
+            case LibUtilities::ePtsBox:
+            {
+                ASSERTL0(false,"VTK output needs settig up for PtsBox");
+                break;
+            }
+            case LibUtilities::ePtsSegBlock:
+            {
+                nvert = 2;
+                vtktype = 3;
                 break;
             }
             case LibUtilities::ePtsTriBlock:

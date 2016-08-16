@@ -170,6 +170,13 @@ namespace Nektar
             // Do system solve
             KSPSolve(m_ksp, m_b, m_x);
 
+            KSPConvergedReason reason;
+            KSPGetConvergedReason(m_ksp, &reason);
+            ASSERTL0(reason > 0,
+                    "PETSc solver diverged, reason is: " +
+                        std::string(KSPConvergedReasons[reason]));
+
+
             // Scatter results to local vector
             VecScatterBegin(m_ctx, m_x, m_locVec,
                             INSERT_VALUES, SCATTER_FORWARD);

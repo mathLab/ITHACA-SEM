@@ -139,16 +139,16 @@ void NodeOpti2D3D::Optimise()
 
     if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
-        cout << "***********************************" << endl;
-        cout << G[0] << " " << G[1] << " " << G[2] << endl
-             << G[3] << " " << G[4] << " " << G[5] << " " << G[6] << " " << G[7] << " " << G[8] << endl;
-        cout << endl;
+        //cout << "***********************************" << endl;
+        //cout << G[0] << " " << G[1] << " " << G[2] << endl
+        //     << G[3] << " " << G[4] << " " << G[5] << " " << G[6] << " " << G[7] << " " << G[8] << endl;
+        //cout << endl;
 
         //modify the gradient to be on the cad system
         ProcessGradient();
 
-        cout << endl << G[0] << " " << G[1] << endl << G[2] << " " << G[3] << " " << G[4] << endl;
-        cout << endl;
+        //cout << endl << G[0] << " " << G[1] << endl << G[2] << " " << G[3] << " " << G[4] << endl;
+        //cout << endl;
 
         //needs to optimise
         Array<OneD, NekDouble> uvc = node->GetCADSurfInfo(surf->GetId());
@@ -162,7 +162,7 @@ void NodeOpti2D3D::Optimise()
         NekDouble delU = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[4]*G[0] - G[3]*G[1]);
         NekDouble delV = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[2]*G[1] - G[3]*G[0]);
 
-        cout << delU << " " << delV << endl << endl;
+        //cout << delU << " " << delV << endl << endl;
 
         // Dot product of p_k with gradient
         NekDouble tmp = (G[0] * delU + G[1] * delV) * -1.0;
@@ -191,7 +191,7 @@ void NodeOpti2D3D::Optimise()
             NekDouble newVal = GetFunctional<3>(true,false);
             ProcessGradient();
 
-            cout << currentW << " " <<  newVal << endl;
+            //cout << currentW << " " <<  newVal << endl;
 
             // Wolfe conditions
             if (newVal <= currentW + c1() * alpha * tmp &&
@@ -214,12 +214,9 @@ void NodeOpti2D3D::Optimise()
             node->Move(p,surf->GetId(),uvc);
 
             mtx.lock();
+            cout << node->m_id << " " << delU << " " << delV << " " << (G[2]*G[4]-G[3]*G[3]) << endl;
             res->nReset++;
             mtx.unlock();
-        }
-        else
-        {
-            node->Move(p,surf->GetId(),uvt);
         }
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
@@ -289,20 +286,22 @@ void NodeOpti2D3D::ProcessGradient()
     G[0] = d2[3] * grad[0] + d2[4] * grad[1] + d2[5] * grad[2];
     G[1] = d2[6] * grad[0] + d2[7] * grad[1] + d2[8] * grad[2];
 
-    NekDouble g = grad[3] * d2[3] + grad[4] * d2[4] + grad[5] * d2[5];
-    NekDouble h = grad[3] * d2[6] + grad[4] * d2[7] + grad[5] * d2[8];
-    NekDouble i = grad[4] * d2[3] + grad[6] * d2[4] + grad[7] * d2[5];
-    NekDouble j = grad[4] * d2[6] + grad[6] * d2[7] + grad[7] * d2[8];
-    NekDouble k = grad[5] * d2[3] + grad[7] * d2[4] + grad[8] * d2[5];
-    NekDouble l = grad[5] * d2[6] + grad[7] * d2[7] + grad[8] * d2[8];
-
     G[2] = grad[0] * d2[9] + grad[1] * d2[10] + grad[2] * d2[11];
     G[3] = grad[0] * d2[15] + grad[1] * d2[16] + grad[2] * d2[17];
     G[4] = grad[0] * d2[12] + grad[1] * d2[13] + grad[2] * d2[14];
 
-    G[2] += d2[3] * g + d2[4] * h + d2[5] * i;
-    G[3] += d2[3] * h + d2[4] * j + d2[5] * l;
-    G[4] += d2[6] * h + d2[7] * j + d2[8] * l;
+    G[2] += grad[3]*d2[3]*d2[3] + grad[6]*d2[4]*d2[4] + grad[8]*d2[5]*d2[5]
+          + 2.0*grad[4]*d2[3]*d2[4] + 2.0*grad[5]*d2[3]*d2[5] + 2.0*grad[7]*d2[4]*d2[5];
+    G[3] += grad[3]*d2[3]*d2[6] + grad[8]*d2[5]*d2[8] + grad[6]*d2[4]*d2[7]
+          + grad[4]*(d2[3]*d2[7] + d2[4]*d2[6])
+          + grad[5]*(d2[3]*d2[8] + d2[5]*d2[6])
+          + grad[7]*(d2[4]*d2[8] + d2[5]*d2[7]);
+    G[4] += grad[3]*d2[6]*d2[6] + grad[6]*d2[7]*d2[7] + grad[8]*d2[7]*d2[7]
+          + 2.0*grad[4]*d2[6]*d2[7] + 2.0*grad[5]*d2[6]*d2[8] + 2.0*grad[7]*d2[7]*d2[8];
+
+    //G[2] = 1.0;
+    ///G[3] = 0.0;
+    //G[4] = 1.0;
 }
 
 }

@@ -126,7 +126,7 @@ template <typename T> struct HOQuadrilateral
 
     void ReverseY()
     {
-        int np = (int)(sqrt(surfVerts.size()) + 0.5);
+        int np = (int)(sqrt((NekDouble)surfVerts.size()) + 0.5);
         // Reverse y direction
         for (int j = 0; j < np; ++j)
         {
@@ -139,7 +139,7 @@ template <typename T> struct HOQuadrilateral
 
     void Transpose()
     {
-        int np = (int)(sqrt(surfVerts.size()) + 0.5);
+        int np = (int)(sqrt((NekDouble)surfVerts.size()) + 0.5);
         std::vector<T> tmp(surfVerts.size());
 
         for (int i = 0; i < np; ++i)

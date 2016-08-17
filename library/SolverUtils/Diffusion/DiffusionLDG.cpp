@@ -165,6 +165,12 @@ namespace Nektar
 
                 for (i = 0; i < nBndRegions; ++i)
                 {
+                    if (fields[0]->GetBndConditions()[i]->GetBoundaryConditionType()
+                        == SpatialDomains::ePeriodic)
+                    {
+                        continue;
+                    }
+
                     // Number of boundary expansion related to that region
                     int nBndEdges = fields[0]->
                         GetBndCondExpansions()[i]->GetExpSize();

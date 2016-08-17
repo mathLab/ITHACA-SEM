@@ -64,7 +64,7 @@ namespace Nektar
 
         /**
          * @brief Compute the advection term at each time-step using the
-         * Discontinuous Glaerkin approach (DG).
+         * Discontinuous Galerkin approach (DG).
          *
          * @param nConvectiveFields   Number of fields.
          * @param fields              Pointer to fields.

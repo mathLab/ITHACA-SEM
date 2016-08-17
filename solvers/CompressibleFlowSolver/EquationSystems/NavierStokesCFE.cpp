@@ -264,6 +264,12 @@ namespace Nektar
         // loop over Boundary Regions
         for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
+            if (m_fields[0]->GetBndConditions()[n]->GetBoundaryConditionType()
+                == SpatialDomains::ePeriodic)
+            {
+                continue;
+            }
+
             std::string type = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
             SetCommonBC(type, n, time, cnt, Fwd, inarray);
         }

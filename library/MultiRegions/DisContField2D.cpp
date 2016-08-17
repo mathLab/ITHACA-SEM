@@ -472,8 +472,8 @@ namespace Nektar
                         m_boundaryEdges.insert(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                     }
+                    cnt += m_bndCondExpansions[n]->GetExpSize();
                 }
-                cnt += m_bndCondExpansions[n]->GetExpSize();
             }
                 
             // Set up information for periodic boundary conditions.

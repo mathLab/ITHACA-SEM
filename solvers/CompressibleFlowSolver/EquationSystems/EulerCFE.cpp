@@ -238,6 +238,12 @@ namespace Nektar
         // Loop over Boundary Regions
         for (int n = 0; n < nreg; ++n)
         {
+            if (m_fields[0]->GetBndConditions()[n]->GetBoundaryConditionType()
+                == SpatialDomains::ePeriodic)
+            {
+                continue;
+            }
+
             userDefStr = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
             if(!userDefStr.empty())
             {

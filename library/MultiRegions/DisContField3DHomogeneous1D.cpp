@@ -632,6 +632,12 @@ namespace Nektar
                 int nExp      = m_bndCondExpansions[i]->GetExpSize();
                 int nPlaneExp = nExp / nPlanes;
 
+                if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 for (n = 0; n < nPlanes; ++n)
                 {
                     const int offset = n * nTracePlane;

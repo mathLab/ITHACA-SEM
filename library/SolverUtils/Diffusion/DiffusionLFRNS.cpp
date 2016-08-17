@@ -1327,6 +1327,12 @@ namespace Nektar
                 GetBndCondExpansions().num_elements();
                 for (j = 0; j < nBndRegions; ++j)
                 {
+                    if (fields[i+1]->GetBndConditions()[j]->
+                        GetBoundaryConditionType() == SpatialDomains::ePeriodic)
+                    {
+                        continue;
+                    }
+
                     nBndEdges = fields[i+1]->
                     GetBndCondExpansions()[j]->GetExpSize();
                     for (e = 0; e < nBndEdges; ++e)
@@ -1412,6 +1418,13 @@ namespace Nektar
             {
                 nBndEdges = fields[nScalars]->
                 GetBndCondExpansions()[j]->GetExpSize();
+
+                if (fields[nScalars]->GetBndConditions()[j]->
+                    GetBoundaryConditionType() == SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 for (e = 0; e < nBndEdges; ++e)
                 {
                     nBndEdgePts = fields[nScalars]->
@@ -1586,6 +1599,12 @@ namespace Nektar
                 nBndEdges = fields[var]->
                 GetBndCondExpansions()[i]->GetExpSize();
                 
+                if (fields[var]->GetBndConditions()[i]->
+                    GetBoundaryConditionType() == SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 // Weakly impose bcs by modifying flux values
                 for (e = 0; e < nBndEdges; ++e)
                 {

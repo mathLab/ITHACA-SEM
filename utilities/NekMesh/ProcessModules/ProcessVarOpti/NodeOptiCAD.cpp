@@ -222,14 +222,8 @@ void NodeOpti2D3D::Optimise()
             ProcessGradient();
             cout << "Gradient surf\t" << G[0] << " " << G[1] << endl
                  << "Hessian surf\t" << G[2] << " " << G[3] << " " << G[4] << endl
-                 << (G[2]*G[4]-G[3]*G[3]) << " " << minJac << endl;
+                 << (G[2]*G[4]-G[3]*G[3]) << " " << minJac << endl << endl;
 
-
-
-            Array<OneD, NekDouble> d2 = surf->D2(uvc);
-            NekVector<NekDouble> tmp(d2);
-            cout << tmp << endl << endl;
-            
             res->nReset++;
             mtx.unlock();
         }
@@ -301,18 +295,20 @@ void NodeOpti2D3D::ProcessGradient()
     G[0] = d2[3] * grad[0] + d2[4] * grad[1] + d2[5] * grad[2];
     G[1] = d2[6] * grad[0] + d2[7] * grad[1] + d2[8] * grad[2];
 
-    G[2] = grad[0] * d2[9] + grad[1] * d2[10] + grad[2] * d2[11];
-    G[3] = grad[0] * d2[15] + grad[1] * d2[16] + grad[2] * d2[17];
-    G[4] = grad[0] * d2[12] + grad[1] * d2[13] + grad[2] * d2[14];
-
-    G[2] += grad[3]*d2[3]*d2[3] + grad[6]*d2[4]*d2[4] + grad[8]*d2[5]*d2[5]
+    G[2]  = grad[0] * d2[9] + grad[1] * d2[10] + grad[2] * d2[11]
+          + grad[3]*d2[3]*d2[3] + grad[6]*d2[4]*d2[4] + grad[8]*d2[5]*d2[5]
           + 2.0*grad[4]*d2[3]*d2[4] + 2.0*grad[5]*d2[3]*d2[5] + 2.0*grad[7]*d2[4]*d2[5];
-    G[3] += grad[3]*d2[3]*d2[6] + grad[8]*d2[5]*d2[8] + grad[6]*d2[4]*d2[7]
+
+    G[4]  = grad[0] * d2[12] + grad[1] * d2[13] + grad[2] * d2[14]
+          + grad[3]*d2[6]*d2[6] + grad[6]*d2[7]*d2[7] + grad[8]*d2[8]*d2[8]
+          + 2.0*grad[4]*d2[6]*d2[7] + 2.0*grad[5]*d2[6]*d2[8] + 2.0*grad[7]*d2[7]*d2[8];
+
+    G[3]  = grad[0] * d2[15] + grad[1] * d2[16] + grad[2] * d2[17]
+          + grad[3]*d2[3]*d2[6] + grad[6]*d2[4]*d2[7] + grad[8]*d2[5]*d2[8]
           + grad[4]*(d2[3]*d2[7] + d2[4]*d2[6])
           + grad[5]*(d2[3]*d2[8] + d2[5]*d2[6])
           + grad[7]*(d2[4]*d2[8] + d2[5]*d2[7]);
-    G[4] += grad[3]*d2[6]*d2[6] + grad[6]*d2[7]*d2[7] + grad[8]*d2[7]*d2[7]
-          + 2.0*grad[4]*d2[6]*d2[7] + 2.0*grad[5]*d2[6]*d2[8] + 2.0*grad[7]*d2[7]*d2[8];
+
 
     //G[2] = 1.0;
     ///G[3] = 0.0;

@@ -159,7 +159,7 @@
 
         <PARAMETERS>
             <P> TimeStep      = 0.01 </P>
-            <P> NumSteps      = 1000 </P>
+            <P> NumSteps      = 500 </P>
             <P> IO_CheckSteps = 0    </P>
             <P> IO_InfoSteps  = 100    </P>
             <P> Kinvis        = 1   </P>

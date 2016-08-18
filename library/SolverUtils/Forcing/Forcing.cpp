@@ -201,7 +201,7 @@ namespace Nektar
                 Vmath::Zero(vCoeffs.num_elements(), vCoeffs, 1);
 
                 LibUtilities::FieldIOSharedPtr fld =
-                    MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_session->GetComm());
+                    LibUtilities::FieldIO::CreateForFile(m_session, filename);
                 fld->Import(filename, FieldDef, FieldData);
 
                 int idx = -1;

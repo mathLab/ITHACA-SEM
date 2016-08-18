@@ -348,7 +348,13 @@ namespace Nektar
                 const Array<OneD, NekDouble> &inarray2,
                       Array<OneD, NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
-            
+
+            inline void DealiasedDotProd(
+                const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      CoeffState coeffstate = eLocal);
+
             inline void GetBCValues(
                       Array<OneD, NekDouble> &BndVals,
                 const Array<OneD, NekDouble> &TotField,
@@ -875,7 +881,7 @@ namespace Nektar
             }
 
             /// Returns the session object
-            boost::shared_ptr<LibUtilities::SessionReader> GetSession()
+            boost::shared_ptr<LibUtilities::SessionReader> GetSession() const
             {
                 return m_session;
             }
@@ -1019,6 +1025,9 @@ namespace Nektar
             // it's a bool which determine if the expansion is in the wave space (coefficient space)
             // or not
             bool m_WaveSpace;
+
+            /// Mapping from geometry ID of element to index inside #m_exp
+            boost::unordered_map<int, int> m_elmtToExpId;
 
             /// This function assembles the block diagonal matrix of local
             /// matrices of the type \a mtype.
@@ -1254,7 +1263,13 @@ namespace Nektar
                 const Array<OneD, NekDouble> &inarray2,
                       Array<OneD, NekDouble> &outarray,
                       CoeffState coeffstate = eLocal);
-            
+
+            virtual void v_DealiasedDotProd(
+                const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      CoeffState coeffstate = eLocal);
+
             virtual void v_GetBCValues(
                       Array<OneD, NekDouble> &BndVals,
                 const Array<OneD, NekDouble> &TotField,
@@ -1357,6 +1372,7 @@ namespace Nektar
             virtual void v_ClearGlobalLinSysManager(void);
 
             void ExtractFileBCs(const std::string                &fileName,
+                                LibUtilities::CommSharedPtr       comm,
                                 const std::string                &varName,
                                 const boost::shared_ptr<ExpList>  locExpList);
             
@@ -1777,7 +1793,19 @@ namespace Nektar
         {
             v_DealiasedProd(inarray1,inarray2,outarray,coeffstate);
         }
-        
+
+        /**
+         *
+         */
+        inline void ExpList::DealiasedDotProd(
+                const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+                const Array<OneD, Array<OneD, NekDouble> > &inarray2,
+                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      CoeffState coeffstate)
+        {
+            v_DealiasedDotProd(inarray1,inarray2,outarray,coeffstate);
+        }
+
         /**
          *
          */

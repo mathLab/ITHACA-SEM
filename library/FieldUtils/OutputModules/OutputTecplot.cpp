@@ -217,16 +217,12 @@ void OutputTecplot::Process(po::variables_map &vm)
 
         if (DumpAsFEPoint) // dump in point format
         {
-            for (i = 0; i < fPts->GetNpoints(); ++i)
+            for(i = 0; i < fPts->GetNpoints(); ++i)
             {
-                for (j = 0; j < dim; ++j)
+                for(j = 0; j < dim + fPts->GetNFields(); ++j)
                 {
-                    outfile << std::setw(12) << fPts->GetPointVal(j, i) << " ";
-                }
-
-                for (j = 0; j < fPts->GetNFields(); ++j)
-                {
-                    outfile << std::setw(12) << m_f->m_data[j][i] << " ";
+                    outfile << std::setw(12)
+                            << fPts->GetPointVal(j, i) << " ";
                 }
                 outfile << endl;
             }
@@ -267,7 +263,8 @@ void OutputTecplot::Process(po::variables_map &vm)
                     l2err = 0.0;
                     for (j = 0; j < fPts->GetNpoints(); ++j)
                     {
-                        l2err += m_f->m_data[i][j] * m_f->m_data[i][j];
+                        l2err += fPts->GetPointVal(dim+i, j)*
+                                 fPts->GetPointVal(dim+i, j);
                     }
                     m_f->m_comm->AllReduce(l2err, LibUtilities::ReduceSum);
 

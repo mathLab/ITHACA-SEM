@@ -43,6 +43,7 @@
 #include <LibUtilities/BasicUtils/NekPtr.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
+#include <boost/assign/list_of.hpp>
 #include <boost/multi_array.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -801,7 +802,13 @@ namespace Nektar
         return !(lhs == rhs);
     }
 
-
+    namespace LibUtilities
+    {
+        static std::vector<NekDouble> NullNekDoubleVector;
+        static std::vector<unsigned int> NullUnsignedIntVector;
+        static std::vector<std::vector<NekDouble> > NullVectorNekDoubleVector =
+            boost::assign::list_of(NullNekDoubleVector);
+    }
 }
 
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_SHARED_ARRAY_HPP

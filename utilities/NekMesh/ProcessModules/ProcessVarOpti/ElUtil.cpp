@@ -367,6 +367,8 @@ void ElUtil::Evaluate()
     //mtx2.unlock();
 
     minJac = mn;
+
+    linear = mn / mx > 0.99;
 }
 
 ElUtilJob* ElUtil::GetJob()

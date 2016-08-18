@@ -215,14 +215,14 @@ void NodeOpti2D3D::Optimise()
 
             mtx.lock();
 
-            NekDouble newVal = GetFunctional<3>();
+            /*NekDouble newVal = GetFunctional<3>();
             cout << node->m_id << " " << delU << " " << delV << endl
                  << "Gradient 3D\t" << G[0] << " " << G[1] << " " << G[2] << endl
                  << "Hessian 3D\t" << G[3] << " " << G[4] << " " << G[5] << " " << G[6] << " " << G[7] << " " << G[8] << endl;
             ProcessGradient();
             cout << "Gradient surf\t" << G[0] << " " << G[1] << endl
                  << "Hessian surf\t" << G[2] << " " << G[3] << " " << G[4] << endl
-                 << (G[2]*G[4]-G[3]*G[3]) << " " << minJac << endl << endl;
+                 << (G[2]*G[4]-G[3]*G[3]) << " " << minJac << endl << endl;*/
 
             res->nReset++;
             mtx.unlock();

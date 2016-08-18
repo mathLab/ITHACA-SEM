@@ -43,6 +43,8 @@
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
 
+#include <boost/functional/hash.hpp>
+
 namespace Nektar
 {
 namespace SolverUtils
@@ -104,7 +106,7 @@ static void InterpCallback(
 CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                              int outputFreq,
                              double geomTol)
-    : m_evalField(field), m_lastSend(-1E6),
+    : m_evalField(field), m_sendHandle(-1), m_recvHandle(-1), m_lastSend(-1E6),
       m_lastReceive(-1E6), m_points(NULL), m_coords(NULL), m_connecIdx(NULL),
       m_connec(NULL), m_rValsInterl(NULL), m_sValsInterl(NULL)
 {
@@ -652,7 +654,7 @@ void CwipiCoupling::SendCallback(
     }
 }
 
-void CwipiCoupling::SendFields(
+void CwipiCoupling::SendStart(
     const int step,
     const NekDouble time,
     const Array<OneD, const Array<OneD, NekDouble> > &field)
@@ -680,24 +682,20 @@ void CwipiCoupling::SendFields(
         Timer timer1;
         timer1.Start();
 
-        int nNotLoc = 0;
-        // workaround a bug in cwipi: receiving_field_name should be const char*
-        // but
-        // is char*
         char sendFN[10];
         strcpy(sendFN, "dummyName");
 
-        cwipi_exchange(m_couplingName.c_str(),
+        // TODO: make this more unique, e.g. NAME_SENDER_RECEIVER
+        int tag = boost::hash<std::string>()(m_couplingName) / UINT_MAX;
+        cwipi_issend(m_couplingName.c_str(),
                        "ex1",
+                       tag,
                        m_nSendVars,
                        step,
                        time,
                        sendFN,
                        m_sValsInterl,
-                       "",
-                       NULL,
-                       &nNotLoc);
-
+                       &m_sendHandle);
         timer1.Stop();
 
         if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
@@ -707,9 +705,72 @@ void CwipiCoupling::SendFields(
     }
 }
 
-void CwipiCoupling::ReceiveFields(const int step,
-                                  const NekDouble time,
-                                  Array<OneD, Array<OneD, NekDouble> > &field)
+
+void CwipiCoupling::SendComplete()
+{
+    if (m_nSendVars < 1 or m_sendSteps < 1)
+    {
+        return;
+    }
+
+    if (m_sendHandle >= 0)
+    {
+        Timer timer1;
+        timer1.Start();
+        cwipi_wait_issend(m_couplingName.c_str(), m_sendHandle);
+        timer1.Stop();
+
+        // set to -1 so we dont try finishing a send before a new one was started
+        m_sendHandle = -1;
+
+        if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+        {
+            cout << "Send waiting time: " << timer1.TimePerTest(1) << endl;
+        }
+    }
+}
+
+
+void CwipiCoupling::ReceiveStart()
+{
+    if (m_nRecvVars < 1 or m_recvSteps < 1)
+    {
+        return;
+    }
+
+    if (m_recvHandle < 0)
+    {
+        Timer timer1;
+        timer1.Start();
+        // workaround a bug in cwipi: receiving_field_name should be const char* but
+        // is char*
+        char recFN[10];
+        strcpy(recFN, "dummyName");
+
+        // TODO: make this more unique, e.g. NAME_SENDER_RECEIVER
+        int tag = boost::hash<std::string>()(m_couplingName) / UINT_MAX;
+        cwipi_irecv(m_couplingName.c_str(),
+                    "ex1",
+                    tag,
+                    m_nRecvVars,
+                    0,
+                    0.0,
+                    recFN,
+                    m_rValsInterl,
+                    &m_recvHandle);
+        timer1.Stop();
+
+        if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+        {
+            cout << "Receive start time: " << timer1.TimePerTest(1) << endl;
+        }
+    }
+}
+
+void CwipiCoupling::ReceiveCompleteInterp(
+    const int step,
+    const NekDouble time,
+    Array<OneD, Array<OneD, NekDouble> > &field)
 {
     if (m_nRecvVars < 1 or m_recvSteps < 1)
     {
@@ -733,15 +794,12 @@ void CwipiCoupling::ReceiveFields(const int step,
 
     if (step >= m_lastReceive + m_recvSteps)
     {
-        m_lastReceive = step;
-
         for (int i = 0; i < m_nRecvVars; ++i)
         {
             Vmath::Vcopy(nq, m_newFields[i], 1, m_oldFields[i], 1);
         }
 
-        FetchFields(step, time, m_newFields);
-
+        ReceiveComplete(step, time, m_newFields);
     }
 
     NekDouble fact =
@@ -760,143 +818,143 @@ void CwipiCoupling::ReceiveFields(const int step,
     }
 }
 
-void CwipiCoupling::FetchFields(const int step,
-                                const NekDouble time,
-                                Array<OneD, Array<OneD, NekDouble> > &field)
+
+
+void CwipiCoupling::ReceiveComplete(const int step,
+                                    const NekDouble time,
+                                    Array<OneD, Array<OneD, NekDouble> > &field)
 {
     ASSERTL1(m_nRecvVars == field.num_elements(), "field size mismatch");
 
-    if (m_evalField->GetComm()->GetRank() == 0 &&
-        m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+    if (m_nRecvVars < 1 or m_recvSteps < 1)
     {
-        cout << "receiving fields at i = " << step << ", t = " << time << endl;
+        return;
     }
 
-    Timer timer1, timer2, timer3;
-    timer1.Start();
-
-    Array<OneD, NekDouble> tmpC(m_recvField->GetNcoeffs());
-    Array<OneD, Array<OneD, NekDouble> > rVals(m_nRecvVars);
-    for (int i = 0; i < m_nRecvVars; ++i)
+    if (step >= m_lastReceive + m_recvSteps)
     {
-        rVals[i] = Array<OneD, NekDouble>(m_recvField->GetTotPoints());
-    }
+        m_lastReceive = step;
 
-    int nNotLoc = 0;
+        if (m_evalField->GetComm()->GetRank() == 0 &&
+            m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+        {
+            cout << "waiting for receive at i = " << step << ", t = " << time << endl;
+        }
 
-    // workaround a bug in cwipi: receiving_field_name should be const char* but
-    // is char*
-    char recFN[10];
-    strcpy(recFN, "dummyName");
+        Timer timer1, timer2, timer3;
+        timer1.Start();
 
-    timer2.Start();
-    cwipi_exchange(m_couplingName.c_str(),
-                   "ex1",
-                   m_nRecvVars,
-                   step,
-                   time,
-                   "",
-                   NULL,
-                   recFN,
-                   m_rValsInterl,
-                   &nNotLoc);
-    timer2.Stop();
-
-    int tmp           = -1;
-    const int *notLoc = &tmp;
-    if (nNotLoc != 0)
-    {
-        cout << "WARNING: relocating " << nNotLoc << " of " << m_nPoints
-             << " points" << endl;
-        notLoc = cwipi_get_not_located_points(m_couplingName.c_str());
-
-        // interpolate from m_evalField to m_recvField
+        Array<OneD, NekDouble> tmpC(m_recvField->GetNcoeffs());
+        Array<OneD, Array<OneD, NekDouble> > rVals(m_nRecvVars);
         for (int i = 0; i < m_nRecvVars; ++i)
         {
-            m_evalField->FwdTrans(field[i], tmpC);
-            m_recvField->BwdTrans(tmpC, rVals[i]);
+            rVals[i] = Array<OneD, NekDouble>(m_recvField->GetTotPoints());
         }
-    }
 
-    int locPos = 0;
-    int intPos = 0;
-    for (int j = 0; j < m_nRecvVars; ++j)
-    {
-        locPos = 0;
-        intPos = 0;
+        timer2.Start();
+        cwipi_wait_irecv(m_couplingName.c_str(), m_recvHandle);
+        timer2.Stop();
 
-        for (int i = 0; i < m_nPoints; ++i)
+        // set to -1 so we know we can start receiving again
+        m_recvHandle = -1;
+
+        int tmp           = -1;
+        const int *notLoc = &tmp;
+        int nNotLoc = cwipi_get_n_not_located_points(m_couplingName.c_str());
+        if (nNotLoc != 0)
         {
-            // cwipi indices start from 1
-            if (notLoc[locPos] - 1 == i)
+            cout << "WARNING: relocating " << nNotLoc << " of " << m_nPoints
+                << " points" << endl;
+            notLoc = cwipi_get_not_located_points(m_couplingName.c_str());
+
+            // interpolate from m_evalField to m_recvField
+            for (int i = 0; i < m_nRecvVars; ++i)
             {
-                // keep the original value of field[j][i]
-                locPos++;
-            }
-            else
-            {
-                rVals[j][i] = m_rValsInterl[intPos * m_nRecvVars + j];
-                intPos++;
+                m_evalField->FwdTrans(field[i], tmpC);
+                m_recvField->BwdTrans(tmpC, rVals[i]);
             }
         }
-    }
 
-    OverrrideFields(rVals);
-
-    if (m_config["DUMPRAW"] != "0")
-    {
-        DumpRawFields(time, rVals);
-    }
-
-    if (m_filtWidth > 0)
-    {
-        for (int i = 0; i < m_nRecvVars; ++i)
+        int locPos = 0;
+        int intPos = 0;
+        for (int j = 0; j < m_nRecvVars; ++j)
         {
-            timer3.Start();
+            locPos = 0;
+            intPos = 0;
 
-            Array<OneD, NekDouble> forcing(m_nPoints);
-
-            Array<OneD, Array<OneD, NekDouble> > Velocity(m_spacedim);
-            for (int j = 0; j < m_spacedim; ++j)
+            for (int i = 0; i < m_nPoints; ++i)
             {
-                Velocity[j] = Array<OneD, NekDouble>(m_nPoints, 0.0);
-            }
-
-            Vmath::Smul(m_nPoints, -m_filtWidth, rVals[i], 1, forcing, 1);
-
-            // Note we are using the
-            // LinearAdvectionDiffusionReaction solver here
-            // instead of HelmSolve since m_filtWidth is negative and
-            // so matrices are not positive definite. Ideally
-            // should allow for negative m_filtWidth coefficient in
-            // HelmSolve
-            m_recvField->LinearAdvectionDiffusionReactionSolve(
-                Velocity, forcing, tmpC, -m_filtWidth);
-
-            m_evalField->BwdTrans(tmpC, field[i]);
-            timer3.Stop();
-
-            if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
-            {
-                cout << "Smoother time (" << m_recvFieldNames[i]
-                     << "): " << timer3.TimePerTest(1) << endl;
+                // cwipi indices start from 1
+                if (notLoc[locPos] - 1 == i)
+                {
+                    // keep the original value of field[j][i]
+                    locPos++;
+                }
+                else
+                {
+                    rVals[j][i] = m_rValsInterl[intPos * m_nRecvVars + j];
+                    intPos++;
+                }
             }
         }
-    }
-    else
-    {
-        for (int i = 0; i < m_nRecvVars; ++i)
+
+        OverrrideFields(rVals);
+
+        if (m_config["DUMPRAW"] != "0")
         {
-            m_recvField->FwdTrans(rVals[i], tmpC);
-            m_evalField->BwdTrans(tmpC, field[i]);
+            DumpRawFields(time, rVals);
         }
-    }
-    timer1.Stop();
 
-    if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
-    {
-        cout << "Receive total time: " << timer1.TimePerTest(1) << ", ";
-        cout << "CWIPI time: " << timer2.TimePerTest(1) << endl;
+        if (m_filtWidth > 0)
+        {
+            for (int i = 0; i < m_nRecvVars; ++i)
+            {
+                timer3.Start();
+
+                Array<OneD, NekDouble> forcing(m_nPoints);
+
+                Array<OneD, Array<OneD, NekDouble> > Velocity(m_spacedim);
+                for (int j = 0; j < m_spacedim; ++j)
+                {
+                    Velocity[j] = Array<OneD, NekDouble>(m_nPoints, 0.0);
+                }
+
+                Vmath::Smul(m_nPoints, -m_filtWidth, rVals[i], 1, forcing, 1);
+
+                // Note we are using the
+                // LinearAdvectionDiffusionReaction solver here
+                // instead of HelmSolve since m_filtWidth is negative and
+                // so matrices are not positive definite. Ideally
+                // should allow for negative m_filtWidth coefficient in
+                // HelmSolve
+                m_recvField->LinearAdvectionDiffusionReactionSolve(
+                    Velocity, forcing, tmpC, -m_filtWidth);
+
+                m_evalField->BwdTrans(tmpC, field[i]);
+                timer3.Stop();
+
+                if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+                {
+                    cout << "Smoother time (" << m_recvFieldNames[i]
+                        << "): " << timer3.TimePerTest(1) << endl;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < m_nRecvVars; ++i)
+            {
+                m_recvField->FwdTrans(rVals[i], tmpC);
+                m_evalField->BwdTrans(tmpC, field[i]);
+            }
+        }
+        timer1.Stop();
+
+        if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+        {
+            cout << "Receive total time: " << timer1.TimePerTest(1) << ", ";
+            cout << "Receive waiting time: " << timer2.TimePerTest(1) << endl;
+        }
     }
 }
 

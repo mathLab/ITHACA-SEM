@@ -78,13 +78,21 @@ public:
         v_FinalizeCoupling();
     }
 
-    void SendFields(const int step,
-                    const NekDouble time,
-                    const Array<OneD, const Array<OneD, NekDouble> > &field);
+    void SendStart(const int step,
+                   const NekDouble time,
+                   const Array<OneD, const Array<OneD, NekDouble> > &field);
 
-    void ReceiveFields(const int step,
-                       const NekDouble time,
-                       Array<OneD, Array<OneD, NekDouble> > &field);
+    void SendComplete();
+
+    void ReceiveStart();
+
+    void ReceiveComplete(const int step,
+                         const NekDouble time,
+                         Array<OneD, Array<OneD, NekDouble> > &field);
+
+    void ReceiveCompleteInterp(const int step,
+                               const NekDouble time,
+                               Array<OneD, Array<OneD, NekDouble> > &field);
 
     void SendCallback(Array<OneD, Array<OneD, NekDouble> > &interpField,
                       Array<OneD, Array<OneD, NekDouble> > distCoords);
@@ -112,6 +120,9 @@ protected:
     int m_nRecvVars;
     std::vector<std::string> m_recvFieldNames;
     int m_recvSteps;
+
+    int m_sendHandle;
+    int m_recvHandle;
 
     int m_lastSend;
     int m_lastReceive;
@@ -160,10 +171,6 @@ private:
                            int &coordsPos,
                            int &connecPos,
                            int &conidxPos);
-
-    void FetchFields(const int step,
-                     const NekDouble time,
-                     Array<OneD, Array<OneD, NekDouble> > &field);
 };
 
 typedef boost::shared_ptr<CwipiCoupling> CwipiCouplingSharedPointer;

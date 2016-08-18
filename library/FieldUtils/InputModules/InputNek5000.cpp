@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Reads a Nektar++ FLD file.
+//  Description: Reads a Nek5000 checkpoint file.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -102,7 +102,7 @@ void InputNek5000::Process(po::variables_map &vm)
     }
 
     string fldending = "fld5000";
-    ifstream file(m_f->m_inputfiles[fldending][0], ios::binary);
+    ifstream file(m_f->m_inputfiles[fldending][0].c_str(), ios::binary);
 
     // Header: 132 bytes for binary.
     vector<char> data(132);

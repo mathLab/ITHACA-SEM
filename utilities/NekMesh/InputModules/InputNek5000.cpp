@@ -404,6 +404,8 @@ void InputNek5000::Process()
     }
 
     int nSurfaces = 0;
+    boost::unordered_set<pair<int, int> > periodicIn, periodicOut;
+    int periodicInId = -1, periodicOutId = -1;
 
     while (m_mshFile.good())
     {
@@ -434,8 +436,8 @@ void InputNek5000::Process()
         --side;
 
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_spaceDim][elmt];
-        vector<string> vals;
-        vector<ConditionType> type;
+
+        std::string fields[] = { "u", "v", "w", "p" };
 
         switch (bcType)
         {
@@ -448,23 +450,87 @@ void InputNek5000::Process()
             {
                 for (i = 0; i < m_mesh->m_fields.size() - 1; ++i)
                 {
-                    vals.push_back("0");
-                    type.push_back(eDirichlet);
+                    c->field.push_back(fields[i]);
+                    c->value.push_back("0");
+                    c->type.push_back(eDirichlet);
                 }
 
                 // Set high-order boundary condition for wall.
-                vals.push_back("0");
-                type.push_back(eHOPCondition);
+                c->field.push_back(fields[3]);
+                c->value.push_back("0");
+                c->type.push_back(eHOPCondition);
                 break;
             }
+
+            case 'P':
+            {
+                // Determine periodic element and face.
+                int perElmt = (int)(data[0] + 0.5) - 1;
+                int perFace = (int)(data[1] + 0.5) - 1;
+
+                bool setup = false;
+                if (periodicInId == -1)
+                {
+                    periodicInId = m_mesh->m_condition.size();
+                    periodicOutId = m_mesh->m_condition.size()+1;
+                    setup = true;
+                }
+
+                if (periodicIn.find(make_pair(perElmt, perFace)) !=
+                    periodicIn.end())
+                {
+                    swap(periodicInId, periodicOutId);
+                }
+                else
+                {
+                    periodicIn.insert(make_pair(elmt, side));
+                }
+
+                std::string periodicInStr = "[" +
+                    boost::lexical_cast<string>(periodicInId) + "]";
+                std::string periodicOutStr = "[" +
+                    boost::lexical_cast<string>(periodicOutId) + "]";
+
+                for (i = 0; i < m_mesh->m_fields.size() - 1; ++i)
+                {
+                    c->field.push_back(fields[i]);
+                    c->value.push_back(periodicOutStr);
+                    c->type.push_back(ePeriodic);
+                }
+
+                c->field.push_back(fields[3]);
+                c->value.push_back(periodicOutStr);
+                c->type.push_back(ePeriodic);
+
+                if (setup)
+                {
+                    ConditionSharedPtr c2 = MemoryManager<Condition>
+                        ::AllocateSharedPtr();
+
+                    c->m_composite.push_back(nComposite++);
+                    c2->m_composite.push_back(nComposite++);
+
+                    c2->field = c->field;
+                    c2->type = c->type;
+                    for (i = 0; i < c->type.size(); ++i)
+                    {
+                        c2->value.push_back(periodicInStr);
+                    }
+
+                    m_mesh->m_condition[periodicInId] = c;
+                    m_mesh->m_condition[periodicOutId] = c2;
+                }
+                break;
+            }
+
+            default:
+                continue;
         }
 
         int compTag, conditionId;
         ElementSharedPtr surfEl;
 
-        // Create element for face (3D) or segment (2D). At the moment this is a
-        // bit of a hack since high-order nodes are not copied, so some output
-        // modules (e.g. Gmsh) will not output correctly.
+        // Create element for face (3D) or segment (2D).
         if (el->GetDim() == 3)
         {
             FaceSharedPtr f = el->GetFace(nek2nekface[side]);
@@ -552,6 +618,15 @@ void InputNek5000::Process()
     ProcessFaces();
     ProcessElements();
     ProcessComposites();
+
+    // -- Set periodic composites to not be reordered.
+    if (periodicInId != -1)
+    {
+        m_mesh->m_composite[m_mesh->m_condition[periodicInId]
+                            ->m_composite[0]]->m_reorder = false;
+        m_mesh->m_composite[m_mesh->m_condition[periodicOutId]
+                            ->m_composite[0]]->m_reorder = false;
+    }
 }
 
 }

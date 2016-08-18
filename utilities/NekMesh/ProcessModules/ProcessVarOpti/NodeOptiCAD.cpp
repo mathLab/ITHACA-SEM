@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "NodeOptiCAD.h"
+#include "Evaluator.hxx"
 
 using namespace std;
 using namespace Nektar::NekMeshUtils;

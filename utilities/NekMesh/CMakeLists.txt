@@ -27,6 +27,7 @@ SET(NekMeshHeaders
     ProcessModules/ProcessVarOpti/ProcessVarOpti.h
     ProcessModules/ProcessVarOpti/NodeOpti.h
     ProcessModules/ProcessVarOpti/ElUtil.h
+    ProcessModules/ProcessVarOpti/Evaluator.hxx
 )
 
 SET(NekMeshSources

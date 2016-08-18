@@ -298,10 +298,20 @@ namespace Nektar
                                 "A filename must be specified for the FILE "
                                 "attribute of expansion");
 
+                    // Create fieldIO object to load file
+                    //    need a serial communicator to avoid problems with
+                    //    shared file system
+                    CommSharedPtr comm=
+                            GetCommFactory().CreateInstance("Serial", 0, 0);
+                    std::string iofmt = FieldIO::GetFileType(
+                                filenameStr, comm);
+                    FieldIOSharedPtr f = GetFieldIOFactory().CreateInstance(
+                                iofmt,
+                                comm,
+                                pSession->GetSharedFilesystem());
                     // Load field definitions from file
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
-                    LibUtilities::FieldIO f(pSession->GetComm());
-                    f.Import(filenameStr, fielddefs);
+                    f->Import(filenameStr, fielddefs);
 
                     // Parse field definitions
                     for (int i = 0; i < fielddefs.size(); ++i)

@@ -1067,8 +1067,10 @@ namespace Nektar
                                 "attribute of expansion");
 
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
-                    LibUtilities::FieldIO f(m_session->GetComm());
-                    f.Import(filenameStr, fielddefs);
+                    LibUtilities::FieldIOSharedPtr f =
+                            LibUtilities::FieldIO::CreateForFile(
+                            m_session, filenameStr);
+                    f->Import(filenameStr, fielddefs);
                     SetExpansions(fielddefs);
                 }
                 else

@@ -53,6 +53,18 @@ in its compressed format \inltt{test.xml.gz}.
 %
 %
 %
+\section{Convert field files between XML and HDF5 format}
+%
+When \nekpp is compiled with HDF5 support, solvers can select the format used
+for output of \inltt{.fld} files. FieldConvert can be used to convert between
+these formats using an option on the \inltt{.fld} output module. For example, if
+\inltt{in.fld} is stored in the default XML format, it can be converted to HDF5
+format by issuing the command
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert in.fld out.fld:fld:format=Hdf5
+\end{lstlisting}
+% 
 \section{Range option \textit{-r}}
 The Fieldconvert range option \inltt{-r} allows the user to specify
 a sub-range of the mesh (computational domain) by using an
@@ -95,6 +107,7 @@ Specifically, FieldConvert has these additional functionalities
 \begin{enumerate}
 \item \inltt{C0Projection}: Computes the C0 projection of a given output file;
 \item \inltt{QCriterion}: Computes the Q-Criterion for a given output file;
+\item \inltt{addcompositeid}: Adds the composite ID of an element as an additional field;
 \item \inltt{addFld}: Sum two .fld files;
 \item \inltt{combineAvg}: Combine two \nekpp binary output (.chk or .fld) field file containing averages of fields (and
 possibly also Reynolds stresses) into single file;
@@ -102,6 +115,7 @@ possibly also Reynolds stresses) into single file;
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
 \item \inltt{homplane}: Extract a plane from 3DH1D expansions;
+\item \inltt{homstretch}: Stretch a 3DH1D expansion by an integer factor;
 \item \inltt{innerproduct}: take the inner product between one or a series of fields with another field (or series of fields). 
 \item \inltt{interpfield}: Interpolates one field to another, requires fromxml, fromfld to be defined;
 \item \inltt{interppointdatatofld}: Interpolates given discrete data using a finite difference approximation to a fld file given an xml file;
@@ -183,6 +197,22 @@ to visualise the result either in Tecplot, Paraview or VisIt.
 %
 %
 %
+
+\subsection{Add composite ID: \textit{addcompositeid} module}
+When dealing with a geometry that has many surfaces, we need to identify the
+composites to assign boundary conditions. To assist in this, FieldConvert has a
+\inltt{addcompositeid} module, which adds the composite ID of every element as a
+new field. To use this we simply run
+%
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m addcompositeid mesh.xml out.dat
+\end{lstlisting}
+%
+In this case, we have produced a Tecplot file which contains the mesh and a
+variable that contains the composite ID. To assist in boundary identification,
+the input file \inlsh{mesh.xml} should be a surface XML file that can be
+obtained through the \mc \inltt{extract} module (see section
+\ref{s:utilities:nekmesh:extract}).
 
 \subsection{Sum two .fld files: \textit{addFld} module}
 To sum two .fld files one can use the \inltt{addFld} module of FieldConvert
@@ -324,6 +354,21 @@ FieldConvert -m homplane:wavespace:planeid=value file.xml \
 \end{lstlisting}
 
 The output file \inltt{file-plane.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise it either in Tecplot or in Paraview.
+
+\subsection{Stretch a 3DH1D expansion: \textit{homstretch} module}
+
+To stretch a 3DH1D expansion in the z-direction, use the command:
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m homstretch:factor=value file.xml file.fld file-stretch.fld
+\end{lstlisting}
+The number of modes in the resulting field can be chosen using the command-line
+parameter \inltt{output-points-hom-z}. Note that the output for
+this module should always be a \inltt{.fld} file and this should not
+be used in combination with other modules using a single command.
+
+The output file \inltt{file-stretch.fld} can be processed in a similar 
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise it either in Tecplot or in Paraview.
 

@@ -194,6 +194,8 @@ namespace Nektar
             // Create communicator
             CreateComm(argc, argv);
 
+            TestSharedFilesystem();
+
             // If running in parallel change the default global sys solution
             // type.
             if (m_comm->GetSize() > 1)
@@ -236,6 +238,8 @@ namespace Nektar
                         "IterativeStaticCond";
                 }
             }
+
+            TestSharedFilesystem();
 
             // If running in parallel change the default global sys solution
             // type.
@@ -285,7 +289,7 @@ namespace Nektar
             // In verbose mode, print out parameters and solver info sections
             if (m_verbose && m_comm)
             {
-                if (m_comm->GetRank() == 0 && m_parameters.size() > 0)
+                if (m_comm->TreatAsRankZero() && m_parameters.size() > 0)
                 {
                     cout << "Parameters:" << endl;
                     ParameterMap::iterator x;
@@ -296,7 +300,7 @@ namespace Nektar
                     cout << endl;
                 }
 
-                if (m_comm->GetRank() == 0 && m_solverInfo.size() > 0)
+                if (m_comm->TreatAsRankZero() && m_solverInfo.size() > 0)
                 {
                     cout << "Solver Info:" << endl;
                     SolverInfoMap::iterator x;
@@ -306,6 +310,44 @@ namespace Nektar
                     }
                     cout << endl;
                 }
+            }
+        }
+
+
+        void SessionReader::TestSharedFilesystem()
+        {
+            m_sharedFilesystem = false;
+
+            if (m_comm->GetSize() > 1)
+            {
+                if (m_comm->GetRank() == 0)
+                {
+                    std::ofstream testfile("shared-fs-testfile");
+                    testfile << "" << std::endl;
+                    ASSERTL1(!testfile.fail(), "Test file creation failed");
+                    testfile.close();
+                }
+                m_comm->Block();
+
+                int exists = (bool)boost::filesystem::exists("shared-fs-testfile");
+                m_comm->AllReduce(exists, LibUtilities::ReduceSum);
+
+                m_sharedFilesystem = (exists == m_comm->GetSize());
+
+                if ((m_sharedFilesystem && m_comm->GetRank() == 0) ||
+                    !m_sharedFilesystem)
+                {
+                    std::remove("shared-fs-testfile");
+                }
+            }
+            else
+            {
+                m_sharedFilesystem = false;
+            }
+
+            if (m_verbose && m_comm->GetRank() == 0 && m_sharedFilesystem)
+            {
+                cout << "Shared filesystem detected" << endl;
             }
         }
 
@@ -327,7 +369,6 @@ namespace Nektar
                                  "override a SOLVERINFO property")
                 ("parameter,P",  po::value<vector<std::string> >(),
                                  "override a parameter")
-                ("shared-filesystem,s", "Using shared filesystem.")
                 ("npx",          po::value<int>(),
                                  "number of procs in X-dir")
                 ("npy",          po::value<int>(),
@@ -619,6 +660,10 @@ namespace Nektar
             return m_comm;
         }
 
+        bool SessionReader::GetSharedFilesystem()
+        {
+            return m_sharedFilesystem;
+        }
 
         /**
          * This routine finalises any parallel communication.
@@ -1555,7 +1600,7 @@ namespace Nektar
 
             // Get row of comm, or the whole comm if not split
             CommSharedPtr vCommMesh = m_comm->GetRowComm();
-            const bool isRoot = (m_comm->GetRank() == 0);
+            const bool isRoot = m_comm->TreatAsRankZero();
 
             // Delete any existing loaded mesh
             if (m_xmlDoc)
@@ -1584,11 +1629,12 @@ namespace Nektar
                     }
                 }
             }
-            GetComm()->AllReduce(isPartitioned, LibUtilities::ReduceMax);
+            GetComm()->Bcast(isPartitioned, 0);
 
             // If the mesh is already partitioned, we are done. Remaining
             // processes must load their partitions.
-            if (isPartitioned) {
+            if (isPartitioned)
+            {
                 if (!isRoot)
                 {
                     m_xmlDoc = MergeDoc(m_filenames);
@@ -1656,13 +1702,13 @@ namespace Nektar
             {
                 SessionReaderSharedPtr vSession     = GetSharedThisPtr();
                 int nParts = vCommMesh->GetSize();
-                if (DefinesCmdLineArgument("shared-filesystem"))
+                if (m_sharedFilesystem)
                 {
                     CommSharedPtr vComm = GetComm();
                     vector<unsigned int> keys, vals;
                     int i;
 
-                    if (vComm->GetRank() == 0)
+                    if (isRoot)
                     {
                         m_xmlDoc = MergeDoc(m_filenames);
 
@@ -1681,11 +1727,7 @@ namespace Nektar
                         keys.resize(2);
                         keys[0] = m_compOrder.size();
                         keys[1] = m_bndRegOrder.size();
-
-                        for (i = 1; i < vComm->GetSize(); ++i)
-                        {
-                            vComm->Send(i, keys);
-                        }
+                        vComm->Bcast(keys, 0);
 
                         // Construct the keys and sizes of values for composite
                         // ordering
@@ -1701,16 +1743,12 @@ namespace Nektar
                         }
 
                         // Send across data.
-                        for (i = 1; i < vComm->GetSize(); ++i)
+                        vComm->Bcast(keys, 0);
+                        vComm->Bcast(vals, 0);
+                        for (cIt  = m_compOrder.begin();
+                                cIt != m_compOrder.end(); ++cIt)
                         {
-                            vComm->Send(i, keys);
-                            vComm->Send(i, vals);
-
-                            for (cIt  = m_compOrder.begin();
-                                 cIt != m_compOrder.end(); ++cIt)
-                            {
-                                vComm->Send(i, cIt->second);
-                            }
+                            vComm->Bcast(cIt->second, 0);
                         }
 
                         // Construct the keys and sizes of values for composite
@@ -1727,16 +1765,12 @@ namespace Nektar
                         }
 
                         // Send across data.
-                        for (i = 1; i < vComm->GetSize(); ++i)
+                        vComm->Bcast(keys, 0);
+                        vComm->Bcast(vals, 0);
+                        for (bIt  = m_bndRegOrder.begin();
+                                bIt != m_bndRegOrder.end(); ++bIt)
                         {
-                            vComm->Send(i, keys);
-                            vComm->Send(i, vals);
-
-                            for (bIt  = m_bndRegOrder.begin();
-                                 bIt != m_bndRegOrder.end(); ++bIt)
-                            {
-                                vComm->Send(i, bIt->second);
-                            }
+                            vComm->Bcast(bIt->second, 0);
                         }
 
                         if (DefinesCmdLineArgument("part-info"))
@@ -1747,32 +1781,32 @@ namespace Nektar
                     else
                     {
                         keys.resize(2);
-                        vComm->Recv(0, keys);
+                        vComm->Bcast(keys, 0);
 
                         int cmpSize = keys[0];
                         int bndSize = keys[1];
 
                         keys.resize(cmpSize);
                         vals.resize(cmpSize);
-                        vComm->Recv(0, keys);
-                        vComm->Recv(0, vals);
+                        vComm->Bcast(keys, 0);
+                        vComm->Bcast(vals, 0);
 
                         for (int i = 0; i < keys.size(); ++i)
                         {
                             vector<unsigned int> tmp(vals[i]);
-                            vComm->Recv(0, tmp);
+                            vComm->Bcast(tmp, 0);
                             m_compOrder[keys[i]] = tmp;
                         }
 
                         keys.resize(bndSize);
                         vals.resize(bndSize);
-                        vComm->Recv(0, keys);
-                        vComm->Recv(0, vals);
+                        vComm->Bcast(keys, 0);
+                        vComm->Bcast(vals, 0);
 
                         for (int i = 0; i < keys.size(); ++i)
                         {
                             vector<unsigned int> tmp(vals[i]);
-                            vComm->Recv(0, tmp);
+                            vComm->Bcast(tmp, 0);
                             m_bndRegOrder[keys[i]] = tmp;
                         }
                     }

@@ -73,7 +73,6 @@ Array<OneD, NekDouble> CADSystem::GetBoundingBox()
 
     for (int i = 1; i <= m_curves.size(); i++)
     {
-        gp_Pnt start, end;
         CADCurveSharedPtr c         = GetCurve(i);
         Array<OneD, NekDouble> ends = c->GetMinMax();
 
@@ -89,6 +88,60 @@ Array<OneD, NekDouble> CADSystem::GetBoundingBox()
 
     return bound;
 }
+
+vector<int> CADSystem::GetBoundarySurfs()
+{
+    vector<int> ret;
+
+    set<int> surfs;
+    vector<CADCurveSharedPtr> cs;
+
+    Array<OneD, NekDouble> bound = GetBoundingBox();
+
+    for (int i = 1; i <= m_curves.size(); i++)
+    {
+        CADCurveSharedPtr c         = GetCurve(i);
+        Array<OneD, NekDouble> ends = c->GetMinMax();
+
+        if((fabs(bound[0] - ends[0]) < 1e-4 ||
+            fabs(bound[0] - ends[3]) < 1e-4 ||
+            fabs(bound[1] - ends[0]) < 1e-4 ||
+            fabs(bound[1] - ends[3]) < 1e-4)
+           &&
+           (fabs(bound[2] - ends[1]) < 1e-4 ||
+            fabs(bound[2] - ends[4]) < 1e-4 ||
+            fabs(bound[3] - ends[1]) < 1e-4 ||
+            fabs(bound[3] - ends[4]) < 1e-4)
+           &&
+           (fabs(bound[4] - ends[2]) < 1e-4 ||
+            fabs(bound[4] - ends[5]) < 1e-4 ||
+            fabs(bound[5] - ends[2]) < 1e-4 ||
+            fabs(bound[5] - ends[5]) < 1e-4) )
+        {
+            //curve touches on bounding box
+            cs.push_back(c);
+        }
+
+    }
+
+    for(int i = 0; i < cs.size(); i++)
+    {
+        vector<CADSurfSharedPtr> s = cs[i]->GetAdjSurf();
+        for(int j = 0; j < s.size(); j++)
+        {
+            surfs.insert(s[j]->GetId());
+        }
+    }
+
+    set<int>::iterator it;
+    for(it = surfs.begin(); it != surfs.end(); it++)
+    {
+        ret.push_back(*it);
+    }
+
+    return ret;
+}
+
 
 bool CADSystem::LoadCAD()
 {
@@ -319,7 +372,6 @@ bool CADSystem::LoadCAD()
             TopoDS_Shape edge = localEdges.FindKey(j);
             if (BRep_Tool::Degenerated(TopoDS::Edge(edge)))
             {
-                cout << "degen edge on face " << i << endl;
                 gp_Pnt2d p1, p2;
 
                 BRep_Tool::UVPoints(TopoDS::Edge(edge), TopoDS::Face(face), p1,

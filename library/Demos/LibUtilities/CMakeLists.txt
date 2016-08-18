@@ -29,6 +29,8 @@ SET(NodalTetElecSources
 SET(TimeIntegrationDemoSources
 	TimeIntegrationDemo.cpp)
 
+SET(FieldIOBenchmarkerSources
+	FieldIOBenchmarker.cpp)
 
 #ADD_NEKTAR_EXECUTABLE(Graph demos GraphSources )
 #SET_LAPACK_LINK_LIBRARIES(Graph)
@@ -59,3 +61,7 @@ TARGET_LINK_LIBRARIES(NodalTetElecDemo LibUtilities)
 ADD_NEKTAR_EXECUTABLE(TimeIntegrationDemo demos TimeIntegrationDemoSources)
 TARGET_LINK_LIBRARIES(TimeIntegrationDemo LibUtilities)
 
+IF(NEKTAR_USE_HDF5)
+    ADD_NEKTAR_EXECUTABLE(FieldIOBenchmarker demos FieldIOBenchmarkerSources)
+    TARGET_LINK_LIBRARIES(FieldIOBenchmarker LibUtilities)
+ENDIF()

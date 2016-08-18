@@ -34,40 +34,36 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/Communication/Comm.h>
-#include <loki/Singleton.h>             // for CreateUsingNew, NoDestroy, etc
+#include <loki/Singleton.h> // for CreateUsingNew, NoDestroy, etc
 
 namespace Nektar
 {
-    namespace LibUtilities
-    {
-        Comm::Comm(int narg, char* arg[])
-        {
+namespace LibUtilities
+{
+Comm::Comm(int narg, char *arg[])
+{
+}
 
-        }
+Comm::Comm()
+{
+}
 
-        Comm::Comm()
-        {
+Comm::~Comm()
+{
+}
 
-        }
+// Method to enforce that all existing files are removed
+bool Comm::v_RemoveExistingFiles(void)
+{
+    return true;
+}
 
-        Comm::~Comm()
-        {
-
-        }
-
-        // Method to enforce that all existing files are removed
-        bool Comm::v_RemoveExistingFiles(void)
-        {
-            return true;
-        }
-
-        CommFactory& GetCommFactory()
-        {
-            typedef Loki::SingletonHolder<CommFactory,
-                Loki::CreateUsingNew,
-                Loki::NoDestroy,
-                Loki::SingleThreaded> Type;
-            return Type::Instance();
-        }
-    }
+CommFactory &GetCommFactory()
+{
+    typedef Loki::SingletonHolder<CommFactory, Loki::CreateUsingNew,
+                                  Loki::NoDestroy, Loki::SingleThreaded>
+        Type;
+    return Type::Instance();
+}
+}
 }

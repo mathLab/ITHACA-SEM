@@ -87,8 +87,8 @@ public:
     friend class MemoryManager<OptiFace>;
 
     OptiFace(Array<OneD, Array<OneD, NekDouble> > a,
-             map<pair<int, int>, NekDouble> w,
-             set<pair<int, int> > sp,
+             std::map<std::pair<int, int>, NekDouble> w,
+             std::set<std::pair<int, int> > sp,
              CADSurfSharedPtr su)
     {
         uv     = a;
@@ -116,8 +116,8 @@ public:
 
 private:
     CADSurfSharedPtr s;
-    map<pair<int, int>, NekDouble> z;
-    set<pair<int, int> > spring;
+    std::map<std::pair<int, int>, NekDouble> z;
+    std::set<std::pair<int, int> > spring;
     Array<OneD, Array<OneD, NekDouble> > uv;
     int ni, np, nq;
 };

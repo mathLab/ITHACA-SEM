@@ -47,6 +47,12 @@ LibUtilities::ShapeType Hexahedron::m_type =
     GetElementFactory().RegisterCreatorFunction(
         LibUtilities::eHexahedron, Hexahedron::create, "Hexahedron");
 
+/// Vertex IDs that make up hexahedron faces.
+int Hexahedron::m_faceIds[6][4] = {
+    {0, 1, 2, 3}, {0, 1, 5, 4}, {1, 2, 6, 5},
+    {3, 2, 6, 7}, {0, 3, 7, 4}, {4, 5, 6, 7}
+};
+
 /**
  * @brief Create a hexahedral element.
  */
@@ -102,12 +108,6 @@ Hexahedron::Hexahedron(ElmtConfig pConf,
 
     // Create faces
     int face_edges[6][4];
-    int face_ids[6][4] = {{0, 1, 2, 3},
-                          {0, 1, 5, 4},
-                          {1, 2, 6, 5},
-                          {3, 2, 6, 7},
-                          {0, 3, 7, 4},
-                          {4, 5, 6, 7}};
     for (int j = 0; j < 6; ++j)
     {
         vector<NodeSharedPtr> faceVertices;
@@ -115,9 +115,9 @@ Hexahedron::Hexahedron(ElmtConfig pConf,
         vector<NodeSharedPtr> faceNodes;
         for (int k = 0; k < 4; ++k)
         {
-            faceVertices.push_back(m_vertex[face_ids[j][k]]);
-            NodeSharedPtr a = m_vertex[face_ids[j][k]];
-            NodeSharedPtr b = m_vertex[face_ids[j][(k + 1) % 4]];
+            faceVertices.push_back(m_vertex[m_faceIds[j][k]]);
+            NodeSharedPtr a = m_vertex[m_faceIds[j][k]];
+            NodeSharedPtr b = m_vertex[m_faceIds[j][(k + 1) % 4]];
             for (unsigned int i = 0; i < m_edge.size(); ++i)
             {
                 if (((*(m_edge[i]->m_n1) == *a) &&
@@ -174,6 +174,96 @@ SpatialDomains::GeometrySharedPtr Hexahedron::GetGeom(int coordDim)
     ret = MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces);
 
     return ret;
+}
+
+StdRegions::Orientation Hexahedron::GetEdgeOrient(
+    int edgeId, EdgeSharedPtr edge)
+{
+    static int edgeVerts[12][2] = { {0,1}, {1,2}, {2,3}, {3,0}, {0,4}, {1,5},
+                                    {2,6}, {3,7}, {4,5}, {5,6}, {6,7}, {7,4} };
+
+    if (edge->m_n1 == m_vertex[edgeVerts[edgeId][0]])
+    {
+        return StdRegions::eForwards;
+    }
+    else if (edge->m_n1 == m_vertex[edgeVerts[edgeId][1]])
+    {
+        return StdRegions::eBackwards;
+    }
+    else
+    {
+        ASSERTL1(false, "Edge is not connected to this hexahedron.");
+    }
+
+    return StdRegions::eNoOrientation;
+}
+
+void Hexahedron::MakeOrder(int                                order,
+                           SpatialDomains::GeometrySharedPtr  geom,
+                           LibUtilities::PointsType           pType,
+                           int                                coordDim,
+                           int                               &id,
+                           bool                               justConfig)
+{
+    m_curveType    = pType;
+    m_conf.m_order = order;
+    m_volumeNodes.clear();
+
+    if (order == 1)
+    {
+        m_conf.m_volumeNodes = m_conf.m_faceNodes = false;
+        return;
+    }
+
+    m_conf.m_faceNodes   = true;
+    m_conf.m_volumeNodes = true;
+
+    if (justConfig)
+    {
+        return;
+    }
+
+    int nPoints = order + 1;
+    StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+
+    Array<OneD, NekDouble> px;
+    LibUtilities::PointsKey pKey(nPoints, pType);
+    ASSERTL1(pKey.GetPointsDim() == 1, "Points distribution must be 1D");
+    LibUtilities::PointsManager()[pKey]->GetPoints(px);
+
+    Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
+
+    for (int i = 0; i < coordDim; ++i)
+    {
+        phys[i] = Array<OneD, NekDouble>(xmap->GetTotPoints());
+        xmap->BwdTrans(geom->GetCoeffs(i), phys[i]);
+    }
+
+    int nHexIntPts = (nPoints - 2) * (nPoints - 2) * (nPoints - 2);
+    m_volumeNodes.resize(nHexIntPts);
+
+    for (int i = 1, cnt = 0; i < nPoints-1; ++i)
+    {
+        for (int j = 1; j < nPoints-1; ++j)
+        {
+            for (int k = 1; k < nPoints-1; ++k, ++cnt)
+            {
+                Array<OneD, NekDouble> xp(3);
+                xp[0] = px[k];
+                xp[1] = px[j];
+                xp[2] = px[i];
+
+                Array<OneD, NekDouble> x(3, 0.0);
+                for (int k = 0; k < coordDim; ++k)
+                {
+                    x[k] = xmap->PhysEvaluate(xp, phys[k]);
+                }
+
+                m_volumeNodes[cnt] = boost::shared_ptr<Node>(
+                    new Node(id++, x[0], x[1], x[2]));
+            }
+        }
+    }
 }
 
 /**

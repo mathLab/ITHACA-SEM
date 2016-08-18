@@ -68,9 +68,7 @@ FilterCheckpointCellModel::FilterCheckpointCellModel(
 
     m_outputIndex = 0;
     m_index = 0;
-    m_fld = MemoryManager<LibUtilities::FieldIO>
-                ::AllocateSharedPtr(m_session->GetComm());
-
+    m_fld = LibUtilities::FieldIO::CreateDefault(m_session);
 }
 
 FilterCheckpointCellModel::~FilterCheckpointCellModel()

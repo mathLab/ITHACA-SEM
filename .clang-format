@@ -13,5 +13,4 @@ AllowShortLoopsOnASingleLine: false
 IndentCaseLabels: true
 Standard: Cpp03
 AccessModifierOffset: -4
-BinPackParameters: false
-BinPackArguments: false
+BinPackParameters: true

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>3D channel flow, Hexahedral elements, P=8, flowrate</description>
+    <description>3D channel flow, Hexahedral elements, P=3, flowrate</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>-I GlobalSysSoln=XxtStaticCond Hex_channel_m8_Flowrate.xml</parameters>
+    <parameters>-I GlobalSysSoln=XxtStaticCond Hex_channel_m3_Flowrate.xml</parameters>
     <processes>3</processes>
     <files>
-        <file description="Session File">Hex_channel_m8_Flowrate.xml</file>
+        <file description="Session File">Hex_channel_m3_Flowrate.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

@@ -35,8 +35,10 @@
 
 
 #include <SpatialDomains/MeshGraph.h>
+#include <LibUtilities/BasicUtils/CompressData.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
+#include <LibUtilities/BasicUtils/FieldIOXml.h>
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdTetExp.h>
 #include <StdRegions/StdPyrExp.h>
@@ -63,6 +65,7 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+#include <boost/make_shared.hpp>
 
 using namespace std;
 
@@ -1047,8 +1050,10 @@ namespace Nektar
                 else if(expType == "ELEMENTS")  // Reading a file with the expansion definition
                 {
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
-                    LibUtilities::FieldIO f(m_session->GetComm());
-                    f.ImportFieldDefs(doc, fielddefs, true);
+
+                    // This has to use the XML reader since we are treating the already parsed XML as a standard FLD file.
+                    boost::shared_ptr<LibUtilities::FieldIOXml> f = boost::make_shared<LibUtilities::FieldIOXml>(m_session->GetComm(), false);
+                    f->ImportFieldDefs(LibUtilities::XmlDataSource::create(doc), fielddefs, true);
                     cout << "    Number of elements: " << fielddefs.size() << endl;
                     SetExpansions(fielddefs);
                 }
@@ -2325,19 +2330,14 @@ namespace Nektar
         ExpansionShPtr MeshGraph::GetExpansion(GeometrySharedPtr geom, const std::string variable)
         {
             ExpansionMapIter iter;
-            ExpansionShPtr returnval;
-
             ExpansionMapShPtr expansionMap = m_expansionMapShPtrMap.find(variable)->second;
 
-            for (iter = expansionMap->begin(); iter!=expansionMap->end(); ++iter)
-            {
-                if ((iter->second)->m_geomShPtr == geom)
-                {
-                    returnval = iter->second;
-                    break;
-                }
-            }
-            return returnval;
+            iter = expansionMap->find(geom->GetGlobalID());
+            ASSERTL1(iter != expansionMap->end(),
+                     "Could not find expansion " +
+                     boost::lexical_cast<string>(geom->GetGlobalID()) +
+                     " in expansion for variable " + variable);
+            return iter->second;
         }
 
 

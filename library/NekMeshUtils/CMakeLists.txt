@@ -29,6 +29,7 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/CADCurve.cpp
         CADSystem/CADSurf.cpp
         Optimisation/BGFS-B.cpp
+        Triangle/Triangle.cpp
     )
 ENDIF()
 
@@ -52,7 +53,7 @@ SET(NEKMESHUTILS_HEADERS
 
 IF(NEKTAR_USE_MESHGEN)
     SET(NEKMESHUTILS_HEADERS ${NEKMESHUTILS_HEADERS}
-        Octree/CurvaturePoint.hpp
+        Octree/SourcePoint.hpp
         SurfaceMeshing/CurveMesh.h
         Octree/Octant.h
         Octree/Octree.h
@@ -71,6 +72,7 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/OpenCascade.h
         Optimisation/BGFS-B.h
         Optimisation/OptimiseObj.h
+        Triangle/Triangle.h
     )
 ENDIF()
 
@@ -80,13 +82,17 @@ ADD_NEKTAR_LIBRARY(NekMeshUtils lib ${NEKTAR_LIBRARY_TYPE}
     ${NEKMESHUTILS_SOURCES} ${NEKMESHUTILS_HEADERS})
 TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC LocalRegions)
 
+IF(NEKTAR_USE_ANN)
+    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${ANN_LIBRARY})
+ENDIF()
+
 IF(NEKTAR_USE_MESHGEN)
-    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TRIANGLE_LIBRARY})
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TETGEN_LIBRARY})
+    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${OCC_LIBRARIES})
+
     SET(OCC_DEF LIN LININTEL HAVE_WOK_CONFIG_H HAVE_CONFIG_H CSFDB)
-    SET_TARGET_PROPERTIES(NekMeshUtils PROPERTIES COMPILE_DEFINITIONS "${OCC_DEF}")
-    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${OCC_LIBS})
-    ADD_DEPENDENCIES(NekMeshUtils opencascade-6.8 triangle-1.6 tetgen-1.5)
+    SET_PROPERTY(TARGET NekMeshUtils APPEND PROPERTY COMPILE_DEFINITIONS ${OCC_DEF})
+    ADD_DEPENDENCIES(NekMeshUtils opencascade-6.9 tetgen-1.5)
 ENDIF()
 
 INSTALL(DIRECTORY ./

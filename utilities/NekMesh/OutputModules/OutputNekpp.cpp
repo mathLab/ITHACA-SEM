@@ -126,7 +126,7 @@ void OutputNekpp::Process()
     string filename = m_config["outfile"].as<string>();
 
     // Compress output and append .gz extension
-    if (m_config["z"].as<bool>())
+    if (m_config["z"].beenSet)
     {
         filename += ".gz";
         ofstream fout(filename.c_str(),
@@ -171,7 +171,7 @@ void OutputNekpp::Process()
 
 void OutputNekpp::WriteXmlNodes(TiXmlElement *pRoot)
 {
-    bool UnCompressed = m_config["uncompress"].as<bool>();
+    bool UnCompressed = m_config["uncompress"].beenSet;
 
     TiXmlElement *verTag = new TiXmlElement("VERTEX");
     std::set<NodeSharedPtr>::iterator it;
@@ -221,7 +221,7 @@ void OutputNekpp::WriteXmlNodes(TiXmlElement *pRoot)
 
 void OutputNekpp::WriteXmlEdges(TiXmlElement *pRoot)
 {
-    bool UnCompressed = m_config["uncompress"].as<bool>();
+    bool UnCompressed = m_config["uncompress"].beenSet;
 
     if (m_mesh->m_expDim >= 2)
     {
@@ -274,7 +274,7 @@ void OutputNekpp::WriteXmlEdges(TiXmlElement *pRoot)
 
 void OutputNekpp::WriteXmlFaces(TiXmlElement *pRoot)
 {
-    bool UnCompressed = m_config["uncompress"].as<bool>();
+    bool UnCompressed = m_config["uncompress"].beenSet;
 
     if (m_mesh->m_expDim == 3)
     {
@@ -387,7 +387,7 @@ void OutputNekpp::WriteXmlFaces(TiXmlElement *pRoot)
 
 void OutputNekpp::WriteXmlElements(TiXmlElement *pRoot)
 {
-    bool UnCompressed = m_config["uncompress"].as<bool>();
+    bool UnCompressed = m_config["uncompress"].beenSet;
 
     TiXmlElement *verTag           = new TiXmlElement("ELEMENT");
     vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
@@ -600,7 +600,7 @@ void OutputNekpp::WriteXmlElements(TiXmlElement *pRoot)
 
 void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
 {
-    bool UnCompressed = m_config["uncompress"].as<bool>();
+    bool UnCompressed = m_config["uncompress"].beenSet;
 
     int edgecnt = 0;
 

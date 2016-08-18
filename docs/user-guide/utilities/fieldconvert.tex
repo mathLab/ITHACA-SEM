@@ -107,6 +107,7 @@ Specifically, FieldConvert has these additional functionalities
 \begin{enumerate}
 \item \inltt{C0Projection}: Computes the C0 projection of a given output file;
 \item \inltt{QCriterion}: Computes the Q-Criterion for a given output file;
+\item \inltt{addcompositeid}: Adds the composite ID of an element as an additional field;
 \item \inltt{addFld}: Sum two .fld files;
 \item \inltt{combineAvg}: Combine two \nekpp binary output (.chk or .fld) field file containing averages of fields (and
 possibly also Reynolds stresses) into single file;
@@ -196,6 +197,22 @@ to visualise the result either in Tecplot, Paraview or VisIt.
 %
 %
 %
+
+\subsection{Add composite ID: \textit{addcompositeid} module}
+When dealing with a geometry that has many surfaces, we need to identify the
+composites to assign boundary conditions. To assist in this, FieldConvert has a
+\inltt{addcompositeid} module, which adds the composite ID of every element as a
+new field. To use this we simply run
+%
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m addcompositeid mesh.xml out.dat
+\end{lstlisting}
+%
+In this case, we have produced a Tecplot file which contains the mesh and a
+variable that contains the composite ID. To assist in boundary identification,
+the input file \inlsh{mesh.xml} should be a surface XML file that can be
+obtained through the \mc \inltt{extract} module (see section
+\ref{s:utilities:nekmesh:extract}).
 
 \subsection{Sum two .fld files: \textit{addFld} module}
 To sum two .fld files one can use the \inltt{addFld} module of FieldConvert

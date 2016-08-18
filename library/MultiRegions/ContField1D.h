@@ -64,7 +64,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField1D(
                         const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                        const std::string &variable);
+                        const std::string &variable  = "DefaultVar");
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ContField1D(const ContField1D &In);
@@ -101,17 +101,6 @@ namespace Nektar
             // inline
             MULTI_REGIONS_EXPORT const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& GetBndConditions();
-            /// Scatters from the global coefficients
-            /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
-            /// \f$\boldsymbol{\hat{u}}_l\f$.
-            // inline
-            MULTI_REGIONS_EXPORT void GlobalToLocal( const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,NekDouble> &outarray);
-
-            /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
-            /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
-            // inline
-            MULTI_REGIONS_EXPORT void LocalToGlobal();
 
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
@@ -194,12 +183,19 @@ namespace Nektar
             /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
             /// \f$\boldsymbol{\hat{u}}_l\f$.
             // inline
+            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray);
+
             MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(void);
-            
 
             /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
             // inline
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray);
+
             MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(void);
 
             virtual void v_HelmSolve(
@@ -248,40 +244,6 @@ namespace Nektar
                                 ContField1D::GetBndConditions()
         {
             return m_bndConditions;
-        }
-
-
-        /**
-         * This operation is evaluated as:
-         * \f{tabbing}
-         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
-         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
-         * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
-         * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
-         * \> \> continue \\
-         * \> continue
-         * \f}
-         * where \a map\f$[e][i]\f$ is the mapping array and \a
-         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
-         * correct modal connectivity between the different elements (both
-         * these arrays are contained in the data member #m_locToGloMap). This
-         * operation is equivalent to the scatter operation
-         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$, where
-         * \f$\mathcal{A}\f$ is the
-         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
-         *
-         * @param   inarray     An array of size \f$N_\mathrm{dof}\f$
-         *                      containing the global degrees of freedom
-         *                      \f$\boldsymbol{x}_g\f$.
-         * @param   outarray    The resulting local degrees of freedom
-         *                      \f$\boldsymbol{x}_l\f$ will be stored in this
-         *                      array of size \f$N_\mathrm{eof}\f$.
-         */
-        inline void ContField1D::GlobalToLocal(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,NekDouble> &outarray)
-        {
-            m_locToGloMap->GlobalToLocal(inarray,outarray);
         }
 
 

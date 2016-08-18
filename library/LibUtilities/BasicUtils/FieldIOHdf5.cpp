@@ -52,42 +52,124 @@ template <> inline DataTypeSharedPtr DataTypeTraits<BasisType>::GetType()
 
 }
 
-
 std::string FieldIOHdf5::className =
     GetFieldIOFactory().RegisterCreatorFunction(
         "Hdf5", FieldIOHdf5::create, "HDF5-based output of field data.");
 
+/// Version of the Nektar++ HDF5 format, which is embedded into the main NEKTAR
+/// group as an attribute.
 const unsigned int FieldIOHdf5::FORMAT_VERSION = 1;
 
+// The following definitions allow us to consistently refer to indexes pulled
+// out of the various datasets.
+
+/// A helper for FieldIOHdf5::v_Write and FieldIOHdf5::v_Import. Describes the
+/// position of the number of elements in decomposition (i.e. field definition).
 const unsigned int FieldIOHdf5::ELEM_DCMP_IDX  = 0;
+/// A helper for FieldIOHdf5::v_Write and FieldIOHdf5::v_Import. Describes the
+/// position of the number of data points in decomposition (i.e. field
+/// definition).
 const unsigned int FieldIOHdf5::VAL_DCMP_IDX   = 1;
+/// A helper for FieldIOHdf5::v_Write and FieldIOHdf5::v_Import. Describes the
+/// position of the number of elements multiplied by the dimension of the
+/// element, giving number of modes when variable polynomial order is defined.
 const unsigned int FieldIOHdf5::ORDER_DCMP_IDX = 2;
+/// A helper for FieldIOHdf5::v_Write and FieldIOHdf5::v_Import. Describes the
+/// position of the number of the number of y-planes for homogeneous
+/// simulations.
 const unsigned int FieldIOHdf5::HOMY_DCMP_IDX  = 3;
+/// A helper for FieldIOHdf5::v_Write and FieldIOHdf5::v_Import. Describes the
+/// position of the number of the number of z-planes for homogeneous
+/// simulations.
 const unsigned int FieldIOHdf5::HOMZ_DCMP_IDX  = 4;
+/// A helper for FieldIOHdf5::v_Write and FieldIOHdf5::v_Import. Describes the
+/// position of the number of the number of strips for homogeneous simulations.
 const unsigned int FieldIOHdf5::HOMS_DCMP_IDX  = 5;
+/// The hash of the field definition information, which defines the name of the
+/// attribute containing the field definition itself.
 const unsigned int FieldIOHdf5::HASH_DCMP_IDX  = 6;
+/// A helper for FieldIOHdf5::v_Write. Describes the maximum number of items in
+/// the decomposition per field definition.
 const unsigned int FieldIOHdf5::MAX_DCMPS      = FieldIOHdf5::HASH_DCMP_IDX + 1;
+
+/// A helper for FieldIOHdf5::v_Write. Describes the position of the number of
+/// elements in the cnt array.
 const unsigned int FieldIOHdf5::ELEM_CNT_IDX   = 0;
+/// A helper for FieldIOHdf5::v_Write. Describes the position of the number of
+/// data points in the cnt array.
 const unsigned int FieldIOHdf5::VAL_CNT_IDX    = 1;
+/// A helper for FieldIOHdf5::v_Write. Describes the position of the number of
+/// order points in the cnt array.
 const unsigned int FieldIOHdf5::ORDER_CNT_IDX  = 2;
+/// A helper for FieldIOHdf5::v_Write. Describes the position of the number of
+/// homogeneous y-planes in the cnt array.
 const unsigned int FieldIOHdf5::HOMY_CNT_IDX   = 3;
+/// A helper for FieldIOHdf5::v_Write. Describes the position of the number of
+/// homogeneous z-planes in the cnt array.
 const unsigned int FieldIOHdf5::HOMZ_CNT_IDX   = 4;
+/// A helper for FieldIOHdf5::v_Write. Describes the position of the number of
+/// homogeneous strips in the cnt array.
 const unsigned int FieldIOHdf5::HOMS_CNT_IDX   = 5;
+/// A helper for FieldIOHdf5::v_Write. Describes the maximum number of items in
+/// the cnt array per field definition.
 const unsigned int FieldIOHdf5::MAX_CNTS       = FieldIOHdf5::HOMS_CNT_IDX + 1;
+
+/// A helper for FieldIOHdf5::v_Write. Describes the position of the element IDs
+/// within the indexing set.
 const unsigned int FieldIOHdf5::IDS_IDX_IDX    = 0;
+/// A helper for FieldIOHdf5::v_Write. Describes the position of the data size
+/// within the indexing set.
 const unsigned int FieldIOHdf5::DATA_IDX_IDX   = 1;
+/// A helper for FieldIOHdf5::v_Write. Describes the position of the element
+/// order within the indexing set.
 const unsigned int FieldIOHdf5::ORDER_IDX_IDX  = 2;
+/// A helper for FieldIOHdf5::v_Write. Describes the position of the number of
+/// y-planes within the indexing set.
 const unsigned int FieldIOHdf5::HOMY_IDX_IDX   = 3;
+/// A helper for FieldIOHdf5::v_Write. Describes the position of the number of
+/// z-planes within the indexing set.
 const unsigned int FieldIOHdf5::HOMZ_IDX_IDX   = 4;
+/// A helper for FieldIOHdf5::v_Write. Describes the position of the number of
+/// homogeneous strips within the indexing set.
 const unsigned int FieldIOHdf5::HOMS_IDX_IDX   = 5;
+/// A helper for FieldIOHdf5::v_Write. Describes the maximum number of items in
+/// the indexing set.
 const unsigned int FieldIOHdf5::MAX_IDXS       = FieldIOHdf5::HOMS_IDX_IDX + 1;
 
+/**
+ * @brief Construct the FieldIO object for HDF5 output.
+ *
+ * @param pComm              Communicator object.
+ * @param sharedFilesystem   True if this system has a shared filesystem.
+ */
 FieldIOHdf5::FieldIOHdf5(LibUtilities::CommSharedPtr pComm,
                          bool sharedFilesystem)
     : FieldIO(pComm, sharedFilesystem)
 {
 }
 
+/**
+ * @brief Write a HDF5 file to @p outFile given the field definitions @p
+ * fielddefs, field data @p fielddata and metadata @p fieldmetadatamap.
+ *
+ * The writing strategy for HDF5 output is as follows:
+ *
+ *   - Each rank determines the amount of data needed to be written into each
+ *     dataset.
+ *   - Each rank communicates its decomposition information to the root process.
+ *   - The root processor initialises the output structure, writes the
+ *     decomposition dataset and all the field definition information.
+ *   - Other ranks may have field definitions that do not belong to the root
+ *     process, in which case they open the file and append this (since
+ *     attributes cannot be written in parallel).
+ *   - Each of the other ranks writes their data contributions to the rest of
+ *     the set.
+ *
+ * @param outFile           Output filename.
+ * @param fielddefs         Input field definitions.
+ * @param fielddata         Input field data.
+ * @param fieldmetadatamap  Field metadata.
+ */
 void FieldIOHdf5::v_Write(const std::string &outFile,
                           std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                           std::vector<std::vector<NekDouble> > &fielddata,
@@ -757,11 +839,23 @@ void FieldIOHdf5::v_Write(const std::string &outFile,
     }
 }
 
+/**
+ * @brief Import a HDF5 format file.
+ *
+ * @param finfilename       Input filename
+ * @param fielddefs         Field definitions of resulting field
+ * @param fielddata         Field data of resulting field
+ * @param fieldinfomap      Field metadata of resulting field
+ * @param ElementIDs        If specified, contains the list of element IDs on
+ *                          this rank. The resulting field definitions will only
+ *                          contain data for the element IDs specified in this
+ *                          array.
+ */
 void FieldIOHdf5::v_Import(const std::string &infilename,
                            std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                            std::vector<std::vector<NekDouble> > &fielddata,
                            FieldMetaDataMap &fieldinfomap,
-                           const Array<OneD, int> ElementIDs)
+                           const Array<OneD, int> &ElementIDs)
 {
     std::stringstream prfx;
     int nRanks = m_comm->GetSize();
@@ -1021,12 +1115,9 @@ void FieldIOHdf5::ImportFieldDef(
                 }
             }
 
-            ASSERTL0(valid,
-                     prfx.str() +
-                     std::string(
+            ASSERTL0(valid, prfx.str() + std::string(
                          "unable to correctly parse the shape type: ")
-                     .append(shapeString)
-                     .c_str());
+                     .append(shapeString).c_str());
         }
         else if (attrName == "BASIS")
         {
@@ -1160,9 +1251,9 @@ void FieldIOHdf5::ImportFieldDef(
  * @param readPL       Reading parameter list.
  * @param data_dset    Pointer to the `DATA` dataset.
  * @param data_fspace  Pointer to the `DATA` data space.
- * @param data_i       ...
+ * @param data_i       Index in the `DATA` dataset to start reading from.
  * @param decomps      Information from the `DECOMPOSITION` dataset.
- * @param decomp       ...
+ * @param decomp       Index of the decomposition.
  * @param fielddef     Field definitions for this file
  * @param fielddata    On return contains resulting field data.
  */
@@ -1192,9 +1283,16 @@ void FieldIOHdf5::ImportFieldData(
         "input data is not the same length as header information.");
 }
 
+/**
+ * @brief Import field metadata from @p filename and return the data source
+ * which wraps @p filename.
+ *
+ * @param filename          Input filename.
+ * @param fieldmetadatamap  Resulting field metadata from @p dataSource.
+ */
 DataSourceSharedPtr FieldIOHdf5::v_ImportFieldMetaData(
-    std::string       filename,
-    FieldMetaDataMap &fieldmetadatamap)
+    const std::string &filename,
+    FieldMetaDataMap  &fieldmetadatamap)
 {
     H5::PListSharedPtr parallelProps = H5::PList::Default();
     DataSourceSharedPtr ans = H5DataSource::create(filename, parallelProps);
@@ -1202,6 +1300,12 @@ DataSourceSharedPtr FieldIOHdf5::v_ImportFieldMetaData(
     return ans;
 }
 
+/**
+ * @brief Import field metadata from @p dataSource.
+ *
+ * @param dataSource        Input datasource, which should be a H5DataSource.
+ * @param fieldmetadatamap  Resulting field metadata from @p dataSource.
+ */
 void FieldIOHdf5::ImportHDF5FieldMetaData(DataSourceSharedPtr dataSource,
                                           FieldMetaDataMap &fieldmetadatamap)
 {

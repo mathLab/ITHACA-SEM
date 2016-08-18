@@ -60,10 +60,10 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
     ASSERTL0(numPoints > 2, ss.str());
 
-    in.numberofpoints          = numPoints;
-    in.numberofpointattributes = 0;
-    in.pointlist               = new REAL[in.numberofpoints * 2];
-    in.pointmarkerlist         = new int [in.numberofpoints];
+    dt.in.numberofpoints          = numPoints;
+    dt.in.numberofpointattributes = 0;
+    dt.in.pointlist               = new double[dt.in.numberofpoints * 2];
+    dt.in.pointmarkerlist         = new int [dt.in.numberofpoints];
 
     int pointc = 0;
 
@@ -75,8 +75,8 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
             Array<OneD, NekDouble> uv =
                 m_boundingloops[i][j]->GetCADSurfInfo(sid);
-            in.pointlist[pointc * 2 + 0] = uv[0] * m_str;
-            in.pointlist[pointc * 2 + 1] = uv[1];
+            dt.in.pointlist[pointc * 2 + 0] = uv[0] * m_str;
+            dt.in.pointlist[pointc * 2 + 1] = uv[1];
         }
     }
 
@@ -85,133 +85,116 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
         nodemap[pointc] = m_stienerpoints[i];
 
         Array<OneD, NekDouble> uv    = m_stienerpoints[i]->GetCADSurfInfo(sid);
-        in.pointlist[pointc * 2 + 0] = uv[0] * m_str;
-        in.pointlist[pointc * 2 + 1] = uv[1];
+        dt.in.pointlist[pointc * 2 + 0] = uv[0] * m_str;
+        dt.in.pointlist[pointc * 2 + 1] = uv[1];
     }
 
-    in.numberofsegments = numSeg;
-    in.segmentlist      = new int[in.numberofsegments * 2];
+    dt.in.numberofsegments = numSeg;
+    dt.in.segmentlist      = new int[dt.in.numberofsegments * 2];
     pointc = 0;
     for (int i = 0; i < m_boundingloops.size(); i++, pointc++)
     {
         int first = pointc;
         for (int j = 0; j < m_boundingloops[i].size() - 1; j++, pointc++)
         {
-            in.segmentlist[pointc * 2 + 0] = pointc;
-            in.segmentlist[pointc * 2 + 1] = pointc + 1;
+            dt.in.segmentlist[pointc * 2 + 0] = pointc;
+            dt.in.segmentlist[pointc * 2 + 1] = pointc + 1;
         }
-        in.segmentlist[pointc * 2 + 0] = pointc;
-        in.segmentlist[pointc * 2 + 1] = first;
+        dt.in.segmentlist[pointc * 2 + 0] = pointc;
+        dt.in.segmentlist[pointc * 2 + 1] = first;
     }
 
-    in.numberofregions = 0;
-    in.numberofholes   = m_centers.size() - 1;
-    in.holelist        = new REAL[in.numberofholes * 2];
+    dt.in.numberofregions = 0;
+    dt.in.numberofholes   = m_centers.size() - 1;
+    dt.in.holelist        = new double[dt.in.numberofholes * 2];
 
     for (int i = 1; i < m_centers.size(); i++)
     {
-        in.holelist[(i - 1) * 2 + 0] = m_centers[i][0] * m_str;
-        in.holelist[(i - 1) * 2 + 1] = m_centers[i][1];
+        dt.in.holelist[(i - 1) * 2 + 0] = m_centers[i][0] * m_str;
+        dt.in.holelist[(i - 1) * 2 + 1] = m_centers[i][1];
     }
 
-    if (Quiet && Quality)
+    if (Quality)
     {
-        triangulate("pzenqQYY", &in, &out, NULL);
+        dt.triangulate("pqYY");
     }
-    else if (Quiet && !Quality)
+    else if (!Quality)
     {
-        triangulate("pzenYYQ", &in, &out, NULL);
-    }
-    else if (!Quiet && Quality)
-    {
-        triangulate("pzenqYY", &in, &out, NULL);
-    }
-    else if (!Quiet && !Quality)
-    {
-        triangulate("pzenYY", &in, &out, NULL);
-    }
-
-    // verify the mesh a bit
-    if (out.numberofpoints - out.numberofedges + out.numberoftriangles !=
-        2 - m_centers.size())
-    {
-        cout << endl << "epc wrong" << endl;
-        cout << out.numberofpoints - out.numberofedges + out.numberoftriangles
-             << " " << m_centers.size() << " " << sid << endl;
+        dt.triangulate("pYY");
     }
 }
 
 void TriangleInterface::SetUp()
 {
-    in.pointlist                   = (REAL *)NULL;
-    in.pointattributelist          = (REAL *)NULL;
-    in.pointmarkerlist             = (int *)NULL;
-    in.numberofpoints              = 0;
-    in.numberofpointattributes     = 0;
+    dt.in.pointlist                   = (double *)NULL;
+    dt.in.pointattributelist          = (double *)NULL;
+    dt.in.pointmarkerlist             = (int *)NULL;
+    dt.in.numberofpoints              = 0;
+    dt.in.numberofpointattributes     = 0;
     //
-    in.trianglelist                = (int *)NULL;
-    in.triangleattributelist       = (REAL *)NULL;
-    in.trianglearealist            = (REAL *)NULL;
-    in.neighborlist                = (int *)NULL;
-    in.numberoftriangles           = 0;
-    in.numberofcorners             = 0;
-    in.numberoftriangleattributes  = 0;
+    dt.in.trianglelist                = (int *)NULL;
+    dt.in.triangleattributelist       = (double *)NULL;
+    dt.in.trianglearealist            = (double *)NULL;
+    dt.in.neighborlist                = (int *)NULL;
+    dt.in.numberoftriangles           = 0;
+    dt.in.numberofcorners             = 0;
+    dt.in.numberoftriangleattributes  = 0;
     //
-    in.segmentlist                 = (int *)NULL;
-    in.segmentmarkerlist           = (int *)NULL;
-    in.numberofsegments            = 0;
+    dt.in.segmentlist                 = (int *)NULL;
+    dt.in.segmentmarkerlist           = (int *)NULL;
+    dt.in.numberofsegments            = 0;
     //
-    in.holelist                    = (REAL *)NULL;
-    in.numberofholes               = 0;
+    dt.in.holelist                    = (double *)NULL;
+    dt.in.numberofholes               = 0;
     //
-    in.regionlist                  = (REAL *)NULL;
-    in.numberofregions             = 0;
+    dt.in.regionlist                  = (double *)NULL;
+    dt.in.numberofregions             = 0;
     //
-    in.edgelist                    = (int *)NULL;
-    in.edgemarkerlist              = (int *)NULL;
-    in.normlist                    = (REAL *)NULL;
-    in.numberofedges               = 0;
+    dt.in.edgelist                    = (int *)NULL;
+    dt.in.edgemarkerlist              = (int *)NULL;
+    dt.in.normlist                    = (double *)NULL;
+    dt.in.numberofedges               = 0;
     //
-    out.pointlist                  = (REAL *)NULL;
-    out.pointattributelist         = (REAL *)NULL;
-    out.pointmarkerlist            = (int *)NULL;
-    out.numberofpoints             = 0;
-    out.numberofpointattributes    = 0;
+    dt.out.pointlist                  = (double *)NULL;
+    dt.out.pointattributelist         = (double *)NULL;
+    dt.out.pointmarkerlist            = (int *)NULL;
+    dt.out.numberofpoints             = 0;
+    dt.out.numberofpointattributes    = 0;
     //
-    out.trianglelist               = (int *)NULL;
-    out.triangleattributelist      = (REAL *)NULL;
-    out.trianglearealist           = (REAL *)NULL;
-    out.neighborlist               = (int *)NULL;
-    out.numberoftriangles          = 0;
-    out.numberofcorners            = 0;
-    out.numberoftriangleattributes = 0;
+    dt.out.trianglelist               = (int *)NULL;
+    dt.out.triangleattributelist      = (double *)NULL;
+    dt.out.trianglearealist           = (double *)NULL;
+    dt.out.neighborlist               = (int *)NULL;
+    dt.out.numberoftriangles          = 0;
+    dt.out.numberofcorners            = 0;
+    dt.out.numberoftriangleattributes = 0;
     //
-    out.segmentlist                = (int *)NULL;
-    out.segmentmarkerlist          = (int *)NULL;
-    out.numberofsegments           = 0;
+    dt.out.segmentlist                = (int *)NULL;
+    dt.out.segmentmarkerlist          = (int *)NULL;
+    dt.out.numberofsegments           = 0;
     //
-    out.holelist                   = (REAL *)NULL;
-    out.numberofholes              = 0;
+    dt.out.holelist                   = (double *)NULL;
+    dt.out.numberofholes              = 0;
     //
-    out.regionlist                 = (REAL *)NULL;
-    out.numberofregions            = 0;
+    dt.out.regionlist                 = (double *)NULL;
+    dt.out.numberofregions            = 0;
     //
-    out.edgelist                   = (int *)NULL;
-    out.edgemarkerlist             = (int *)NULL;
-    out.normlist                   = (REAL *)NULL;
-    out.numberofedges              = 0;
+    dt.out.edgelist                   = (int *)NULL;
+    dt.out.edgemarkerlist             = (int *)NULL;
+    dt.out.normlist                   = (double *)NULL;
+    dt.out.numberofedges              = 0;
 }
 
 void TriangleInterface::Extract(
     std::vector<std::vector<NodeSharedPtr> > &Connec)
 {
     Connec.clear();
-    for (int i = 0; i < out.numberoftriangles; i++)
+    for (int i = 0; i < dt.out.numberoftriangles; i++)
     {
         map<int, NodeSharedPtr>::iterator n1, n2, n3;
-        n1 = nodemap.find(out.trianglelist[i * 3 + 0]);
-        n2 = nodemap.find(out.trianglelist[i * 3 + 1]);
-        n3 = nodemap.find(out.trianglelist[i * 3 + 2]);
+        n1 = nodemap.find(dt.out.trianglelist[i * 3 + 0]);
+        n2 = nodemap.find(dt.out.trianglelist[i * 3 + 1]);
+        n3 = nodemap.find(dt.out.trianglelist[i * 3 + 2]);
 
         ASSERTL0(n1 != nodemap.end() && n2 != nodemap.end() &&
                      n3 != nodemap.end(),

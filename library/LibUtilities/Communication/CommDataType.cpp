@@ -40,6 +40,14 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+
+/**
+ * @brief Return the size in bytes of a data type @p dt.
+ *
+ * @param dt  Data type
+ *
+ * @return Size of @p dt in bytes.
+ */
 int CommDataTypeGetSize(CommDataType dt)
 {
 #ifdef NEKTAR_USE_MPI
@@ -51,31 +59,22 @@ int CommDataTypeGetSize(CommDataType dt)
     {
         case MPI_INT:
             return sizeof(int);
-            break;
         case MPI_UNSIGNED:
             return sizeof(unsigned);
-            break;
         case MPI_LONG:
             return sizeof(long);
-            break;
         case MPI_UNSIGNED_LONG:
             return sizeof(unsigned long);
-            break;
         case MPI_LONG_LONG:
             return sizeof(long long);
-            break;
         case MPI_UNSIGNED_LONG_LONG:
             return sizeof(unsigned long long);
-            break;
         case MPI_FLOAT:
             return sizeof(float);
-            break;
         case MPI_DOUBLE:
             return sizeof(double);
-            break;
         case MPI_LONG_DOUBLE:
             return sizeof(long double);
-            break;
         default:
             ASSERTL0(false, "Unrecognised datatype!");
     }
@@ -83,17 +82,26 @@ int CommDataTypeGetSize(CommDataType dt)
 #endif
 }
 
+/// Type trait mapping an int to MPI_INT
 template <> CommDataType CommDataTypeTraits<int>::type      = MPI_INT;
+/// Type trait mapping an unsigned int to MPI_UNSIGNED
 template <> CommDataType CommDataTypeTraits<unsigned>::type = MPI_UNSIGNED;
+/// Type trait mapping a long int to MPI_LONG
 template <> CommDataType CommDataTypeTraits<long>::type     = MPI_LONG;
+/// Type trait mapping an unsigned long int to MPI_UNSIGNED_LONG
 template <>
 CommDataType CommDataTypeTraits<unsigned long>::type = MPI_UNSIGNED_LONG;
+/// Type trait mapping a long long int to MPI_LONG_LONG
 template <> CommDataType CommDataTypeTraits<long long>::type = MPI_LONG_LONG;
+/// Type trait mapping an unsigned long long int to MPI_UNSIGNED_LONG_LONG
 template <>
 CommDataType CommDataTypeTraits<unsigned long long>::type =
     MPI_UNSIGNED_LONG_LONG;
+/// Type trait mapping a float to MPI_FLOAT
 template <> CommDataType CommDataTypeTraits<float>::type  = MPI_FLOAT;
+/// Type trait mapping a double to MPI_DOUBLE
 template <> CommDataType CommDataTypeTraits<double>::type = MPI_DOUBLE;
+/// Type trait mapping a long double to MPI_LONG_DOUBLE
 template <>
 CommDataType CommDataTypeTraits<long double>::type = MPI_LONG_DOUBLE;
 }

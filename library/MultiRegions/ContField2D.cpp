@@ -737,11 +737,18 @@ namespace Nektar
          * local coefficients \f$\boldsymbol{\hat{u}}_l\f$ will be stored in
          * #m_coeffs.
          */
+        void ContField2D::v_GlobalToLocal(
+            const Array<OneD, const NekDouble> &inarray,
+            Array<OneD,NekDouble> &outarray)
+        {
+            m_locToGloMap->GlobalToLocal(inarray, outarray);
+        }
+
+
         void ContField2D::v_GlobalToLocal(void)
         {
             m_locToGloMap->GlobalToLocal(m_coeffs,m_coeffs);
         }
-
 
 
         /**
@@ -768,6 +775,14 @@ namespace Nektar
          *          resulting global coefficients \f$\boldsymbol{\hat{u}}_g\f$
          *          will be stored in #m_coeffs.
          */
+        void ContField2D::v_LocalToGlobal(
+            const Array<OneD, const NekDouble> &inarray,
+            Array<OneD,NekDouble> &outarray)
+        {
+            m_locToGloMap->LocalToGlobal(inarray, outarray);
+        }
+
+
         void ContField2D::v_LocalToGlobal(void)
         {
             m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs);

@@ -73,6 +73,10 @@ public:
     LIB_UTILITIES_EXPORT PtsIO(LibUtilities::CommSharedPtr pComm,
                                bool sharedFilesystem = false);
 
+    LIB_UTILITIES_EXPORT virtual ~PtsIO()
+    {
+    }
+
     LIB_UTILITIES_EXPORT void Import(
         const string &inFile,
         PtsFieldSharedPtr &ptsField,

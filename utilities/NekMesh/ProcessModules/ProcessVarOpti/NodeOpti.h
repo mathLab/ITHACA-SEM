@@ -103,7 +103,7 @@ protected:
     DerivUtilSharedPtr derivUtil;
     optimiser opti;
 
-    static NekDouble gam;
+    static const NekDouble gam;
 
     static NekDouble c1() {return 1e-4;}
     static NekDouble c2() {return 0.9;}

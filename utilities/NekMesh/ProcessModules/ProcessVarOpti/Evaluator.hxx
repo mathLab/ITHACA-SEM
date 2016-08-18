@@ -36,8 +36,6 @@
 #ifndef UTILITIES_NEKMESH_NODEOPTI_EVALUATOR
 #define UTILITIES_NEKMESH_NODEOPTI_EVALUATOR
 
-#include <limits>
-
 namespace Nektar
 {
 namespace Utilities

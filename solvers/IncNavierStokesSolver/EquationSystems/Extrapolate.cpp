@@ -358,7 +358,7 @@ namespace Nektar
 
                 // Calculate (E(n,u) + f_b).n
                 Array<OneD, NekDouble> En (nqb, 0.0);
-                for( int i = 0; i < m_curl_dim; i++) // SJS: should this not really be m_bnd_dim? 
+                for( int i = 0; i < m_bnd_dim; i++)
                 {
                     // Use bndVal as temporary
                     Vmath::Vsub(nqb,E[i],1,m_houtflow->
@@ -510,9 +510,6 @@ namespace Nektar
                 m_pressure->FillBndCondFromField(n);
                 Array<OneD, NekDouble> pbc(nqb);
 
-                Array<OneD, NekDouble> pcoeffs = m_PBndExp[n]->UpdateCoeffs();
-                //Vmath::Fill(ncb,1.5,pcoeffs,1);
-                Array<OneD, NekDouble> pfull = m_pressure->UpdateCoeffs();
                 m_PBndExp[n]->BwdTrans(m_PBndExp[n]->GetCoeffs(), pbc);
 
                 if (m_PBndExp[n]->GetWaveSpace())
@@ -1087,19 +1084,19 @@ namespace Nektar
                 int acc_order = min(m_pressureCalls-2,m_intSteps);
                 Vmath::Smul(nPts,
                             StifflyStable_Gamma0_Coeffs[acc_order-1],
-                            m_iprodnormvel[0], 1,
+                            array[0], 1,
                              accelerationTerm,  1);
                 
                 for(int i = 0; i < acc_order; i++)
                 {
                     Vmath::Svtvp(nPts,
                                  -1*StifflyStable_Alpha_Coeffs[acc_order-1][i],
-                                 m_iprodnormvel[i+1], 1,
+                                 array[i+1], 1,
                                  accelerationTerm,    1,
                                  accelerationTerm,    1);
                 }
             }
-            m_iprodnormvel[nlevels-1] = accelerationTerm;
+            array[nlevels-1] = accelerationTerm;
         }
     }
     

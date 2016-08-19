@@ -118,12 +118,8 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
         "recvFieldNames", m_config["RECEIVEVARIABLES"].c_str());
     cwipi_add_local_string_control_parameter("sendFieldNames",
                                              m_config["SENDVARIABLES"].c_str());
-
-    if (m_evalField->GetComm()->GetRank() == 0 &&
-        m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
-    {
-        cwipi_dump_application_properties();
-    }
+    m_recvTag = boost::hash<std::string>()(m_couplingName + m_config["REMOTENAME"] + m_config["LOCALNAME"]) / UINT_MAX;
+    cwipi_add_local_int_control_parameter("receiveTag", m_recvTag);
 
     m_spacedim = m_evalField->GetGraph()->GetSpaceDimension();
 
@@ -145,6 +141,15 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                           outputFreq,
                           "Ensight Gold",
                           "text");
+    cwipi_synchronize_control_parameter(m_config["REMOTENAME"].c_str());
+
+    if (m_evalField->GetComm()->GetRank() == 0 &&
+        m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+    {
+        cwipi_dump_application_properties();
+    }
+
+    m_sendTag = cwipi_get_distant_int_control_parameter(m_config["REMOTENAME"].c_str(), "receiveTag");
 
     AnnounceMesh();
 
@@ -693,11 +698,9 @@ void CwipiCoupling::Send(
         char sendFN[10];
         strcpy(sendFN, "dummyName");
 
-        int tag = boost::hash<std::string>()(m_couplingName + m_config["LOCALNAME"] + m_config["REMOTENAME"]) / UINT_MAX;
-        cout << "tag = " << tag << endl;
         cwipi_issend(m_couplingName.c_str(),
                        "ex1",
-                       tag,
+                       m_sendTag,
                        m_nSendVars,
                        step,
                        time,
@@ -752,11 +755,9 @@ void CwipiCoupling::ReceiveStart()
     char recFN[10];
     strcpy(recFN, "dummyName");
 
-    int tag = boost::hash<std::string>()(m_couplingName + m_config["REMOTENAME"] + m_config["LOCALNAME"]) / UINT_MAX;
-    cout << "tag = " << tag << endl;
     cwipi_irecv(m_couplingName.c_str(),
                 "ex1",
-                tag,
+                m_recvTag,
                 m_nRecvVars,
                 0,
                 0.0,

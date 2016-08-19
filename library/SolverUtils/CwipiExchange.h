@@ -120,6 +120,9 @@ protected:
     int m_sendHandle;
     int m_recvHandle;
 
+    int m_sendTag;
+    int m_recvTag;
+
     int m_lastSend;
     int m_lastReceive;
 

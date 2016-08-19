@@ -78,21 +78,17 @@ public:
         v_FinalizeCoupling();
     }
 
-    void SendStart(const int step,
-                   const NekDouble time,
-                   const Array<OneD, const Array<OneD, NekDouble> > &field);
+    void Send(const int step,
+              const NekDouble time,
+              const Array<OneD, const Array<OneD, NekDouble> > &field);
 
-    void SendComplete();
+    void Receive(const int step,
+                 const NekDouble time,
+                 Array<OneD, Array<OneD, NekDouble> > &field);
 
-    void ReceiveStart();
-
-    void ReceiveComplete(const int step,
-                         const NekDouble time,
-                         Array<OneD, Array<OneD, NekDouble> > &field);
-
-    void ReceiveCompleteInterp(const int step,
-                               const NekDouble time,
-                               Array<OneD, Array<OneD, NekDouble> > &field);
+    void ReceiveInterp(const int step,
+                       const NekDouble time,
+                       Array<OneD, Array<OneD, NekDouble> > &field);
 
     void SendCallback(Array<OneD, Array<OneD, NekDouble> > &interpField,
                       Array<OneD, Array<OneD, NekDouble> > distCoords);
@@ -153,6 +149,10 @@ private:
     void SetupReceive();
 
     void SetupSend();
+
+    void SendComplete();
+
+    void ReceiveStart();
 
     void EvaluateFields(Array<OneD, Array<OneD, NekDouble> > interpField,
                         Array<OneD, Array<OneD, NekDouble> > distCoords);

@@ -67,7 +67,6 @@ void Dummy::v_InitObject()
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
         m_fields[0], 0, 1.0);
-    m_coupling->ReceiveStart();
 
     m_recFields = Array<OneD, Array<OneD, NekDouble> >(
         m_coupling->GetRecvFieldNames().size());
@@ -111,11 +110,9 @@ bool Dummy::v_PreIntegrate(int step)
         }
     }
 
-    m_coupling->SendComplete();
-    m_coupling->SendStart(step, m_time, m_sendFields);
+    m_coupling->Send(step, m_time, m_sendFields);
 
-    m_coupling->ReceiveCompleteInterp(step, m_time, m_recFields);
-    m_coupling->ReceiveStart();
+    m_coupling->ReceiveInterp(step, m_time, m_recFields);
 
     return UnsteadySystem::v_PreIntegrate(step);
 }

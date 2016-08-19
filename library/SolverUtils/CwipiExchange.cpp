@@ -164,6 +164,8 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
     {
         SetupSend();
     }
+
+    ReceiveStart();
 }
 
 CwipiCoupling::~CwipiCoupling()
@@ -657,7 +659,7 @@ void CwipiCoupling::SendCallback(
     }
 }
 
-void CwipiCoupling::SendStart(
+void CwipiCoupling::Send(
     const int step,
     const NekDouble time,
     const Array<OneD, const Array<OneD, NekDouble> > &field)
@@ -671,6 +673,9 @@ void CwipiCoupling::SendStart(
 
     if (step >= m_lastSend + m_sendSteps)
     {
+
+        SendComplete();
+
         m_lastSend = step;
 
         m_sendField = field;
@@ -712,71 +717,64 @@ void CwipiCoupling::SendStart(
 
 void CwipiCoupling::SendComplete()
 {
-    if (m_nSendVars < 1 or m_sendSteps < 1)
+    if (m_sendHandle < 0)
     {
         return;
     }
 
-    if (m_sendHandle >= 0)
+    Timer timer1;
+    timer1.Start();
+    cwipi_wait_issend(m_couplingName.c_str(), m_sendHandle);
+    timer1.Stop();
+
+    // set to -1 so we dont try finishing a send before a new one was started
+    m_sendHandle = -1;
+
+    if (m_evalField->GetComm()->GetRank() == 0 &&
+        m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
     {
-        Timer timer1;
-        timer1.Start();
-        cwipi_wait_issend(m_couplingName.c_str(), m_sendHandle);
-        timer1.Stop();
-
-        // set to -1 so we dont try finishing a send before a new one was started
-        m_sendHandle = -1;
-
-        if (m_evalField->GetComm()->GetRank() == 0 &&
-            m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
-        {
-            cout << "Send waiting time: " << timer1.TimePerTest(1) << endl;
-        }
+        cout << "Send waiting time: " << timer1.TimePerTest(1) << endl;
     }
 }
 
 
 void CwipiCoupling::ReceiveStart()
 {
-    if (m_nRecvVars < 1 or m_recvSteps < 1)
+    if (m_recvHandle >= 0)
     {
         return;
     }
 
-    if (m_recvHandle < 0)
+    Timer timer1;
+    timer1.Start();
+    // workaround a bug in cwipi: receiving_field_name should be const char* but
+    // is char*
+    char recFN[10];
+    strcpy(recFN, "dummyName");
+
+    int tag = boost::hash<std::string>()(m_couplingName + m_config["REMOTENAME"] + m_config["LOCALNAME"]) / UINT_MAX;
+    cout << "tag = " << tag << endl;
+    cwipi_irecv(m_couplingName.c_str(),
+                "ex1",
+                tag,
+                m_nRecvVars,
+                0,
+                0.0,
+                recFN,
+                m_rValsInterl,
+                &m_recvHandle);
+    timer1.Stop();
+
+    if (m_evalField->GetComm()->GetRank() == 0 &&
+        m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
     {
-        Timer timer1;
-        timer1.Start();
-        // workaround a bug in cwipi: receiving_field_name should be const char* but
-        // is char*
-        char recFN[10];
-        strcpy(recFN, "dummyName");
-
-        int tag = boost::hash<std::string>()(m_couplingName + m_config["REMOTENAME"] + m_config["LOCALNAME"]) / UINT_MAX;
-        cout << "tag = " << tag << endl;
-        cwipi_irecv(m_couplingName.c_str(),
-                    "ex1",
-                    tag,
-                    m_nRecvVars,
-                    0,
-                    0.0,
-                    recFN,
-                    m_rValsInterl,
-                    &m_recvHandle);
-        timer1.Stop();
-
-        if (m_evalField->GetComm()->GetRank() == 0 &&
-            m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
-        {
-            cout << "Receive start time: " << timer1.TimePerTest(1) << endl;
-        }
+        cout << "Receive start time: " << timer1.TimePerTest(1) << endl;
     }
 }
 
-void CwipiCoupling::ReceiveCompleteInterp(
-    const int step,
-    const NekDouble time,
-    Array<OneD, Array<OneD, NekDouble> > &field)
+void CwipiCoupling::ReceiveInterp(const int step,
+                                  const NekDouble time,
+                                  Array<OneD, Array<OneD, NekDouble> > &field)
 {
     if (m_nRecvVars < 1 or m_recvSteps < 1)
     {
@@ -805,7 +803,7 @@ void CwipiCoupling::ReceiveCompleteInterp(
             Vmath::Vcopy(nq, m_newFields[i], 1, m_oldFields[i], 1);
         }
 
-        ReceiveComplete(step, time, m_newFields);
+        Receive(step, time, m_newFields);
     }
 
     NekDouble fact =
@@ -824,11 +822,9 @@ void CwipiCoupling::ReceiveCompleteInterp(
     }
 }
 
-
-
-void CwipiCoupling::ReceiveComplete(const int step,
-                                    const NekDouble time,
-                                    Array<OneD, Array<OneD, NekDouble> > &field)
+void CwipiCoupling::Receive(const int step,
+                            const NekDouble time,
+                            Array<OneD, Array<OneD, NekDouble> > &field)
 {
     ASSERTL1(m_nRecvVars == field.num_elements(), "field size mismatch");
 
@@ -963,6 +959,8 @@ void CwipiCoupling::ReceiveComplete(const int step,
             cout << "Receive total time: " << timer1.TimePerTest(1) << ", ";
             cout << "Receive waiting time: " << timer2.TimePerTest(1) << endl;
         }
+
+        ReceiveStart();
     }
 }
 

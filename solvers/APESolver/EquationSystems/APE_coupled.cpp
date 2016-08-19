@@ -61,7 +61,6 @@ void APE_coupled::v_InitObject()
 
     m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
         m_bfField, 0, 1.0);
-    m_coupling->ReceiveStart();
 
     m_extForcing = GetForcingFactory().CreateInstance(
         "Programmatic", m_session, m_fields, 1, 0);
@@ -137,8 +136,7 @@ void APE_coupled::receiveFields(int step)
     }
     recField[5] = m_extForcing->UpdateForces()[0]; // F_p
 
-    m_coupling->ReceiveCompleteInterp(step, m_time, recField);
-    m_coupling->ReceiveStart();
+    m_coupling->ReceiveInterp(step, m_time, recField);
 
     ASSERTL0(Vmath::Vmin(nq, m_bf[0], 1) > 0.0, "received p0 <= 0.0");
     ASSERTL0(Vmath::Vmin(nq, m_bf[1], 1) > 0.0, "received rho0 <= 0.0");

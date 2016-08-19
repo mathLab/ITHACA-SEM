@@ -119,6 +119,9 @@ ADD_NEKTAR_TEST        (Gmsh/SquareTri)
 # Nektar tests
 ADD_NEKTAR_TEST        (Nektar/HexLinear)
 ADD_NEKTAR_TEST        (Nektar/Tube45)
+# Nek5000 tests
+ADD_NEKTAR_TEST        (Nek5000/3da)
+ADD_NEKTAR_TEST        (Nek5000/r1854a)
 # StarCCM tests
 ADD_NEKTAR_TEST        (StarTec/CubePer)
 ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)

@@ -65,13 +65,13 @@ InputNek5000::~InputNek5000()
 }
 
 /**
- * @brief Processes Nektar file format.
+ * @brief Processes Nek5000 file format.
  *
- * Nektar sessions are defined by rea files, and contain sections defining a DNS
- * simulation in a specific order. The converter only reads mesh information,
- * curve information if it exists and boundary information.
- *
- * @param pFilename Filename of Nektar session file to read.
+ * Nek5000 sessions are defined by rea files, and contain sections defining a
+ * DNS simulation in a specific order. The converter only reads mesh
+ * information, curve information if it exists and boundary information. The
+ * format is similar to the rea format supported by #InputNek, but the layout is
+ * sufficiently different that this module is separate.
  */
 void InputNek5000::Process()
 {
@@ -192,7 +192,7 @@ void InputNek5000::Process()
         }
         else
         {
-            // - hex: 4 lines with x/y/z-coords for base 4 nodes, then 4 more
+            // - hex: 3 lines with x/y/z-coords for base 4 nodes, then 3 more
             //   for upper 4 nodes
             elType = LibUtilities::eHexahedron;
             nNodes = 8;
@@ -209,9 +209,9 @@ void InputNek5000::Process()
             }
         }
 
-        // Nektar meshes do not contain a unique list of nodes, so this
-        // block constructs a unique set so that elements can be created
-        // with unique nodes.
+        // Nek5000 meshes do not contain a unique list of nodes, so this block
+        // constructs a unique set so that elements can be created with unique
+        // nodes.
         vector<NodeSharedPtr> nodeList(nNodes);
         for (k = 0; k < nNodes; ++k)
         {
@@ -276,14 +276,45 @@ void InputNek5000::Process()
         for (i = 0; i < nCurves; ++i)
         {
             getline(m_mshFile, line);
-            s.clear();
-            s.str(line);
 
             int elmt, side;
             NekDouble curveData[5];
             char curveType;
 
-            s >> side >> elmt;
+            if (nElements < 1000)
+            {
+                // side in first 3 characters, elmt in next 3
+                s.str(line.substr(0, 3));
+                s >> side;
+                s.clear();
+                s.str(line.substr(3, 3));
+                s >> elmt;
+                line = line.substr(6);
+            }
+            else if (nElements < 1000000)
+            {
+                // side in first 2 characters, elmt in next 6
+                s.str(line.substr(0, 2));
+                s >> side;
+                s.clear();
+                s.str(line.substr(2, 6));
+                s >> elmt;
+                line = line.substr(8);
+            }
+            else
+            {
+                // side in first 2 characters, elmt in next 12
+                s.str(line.substr(0, 2));
+                s >> side;
+                s.clear();
+                s.str(line.substr(2, 12));
+                s >> elmt;
+                line = line.substr(14);
+            }
+
+            s.clear();
+            s.str(line);
+
             for (j = 0; j < 5; ++j)
             {
                 s >> curveData[j];
@@ -352,7 +383,8 @@ void InputNek5000::Process()
                     link      = centroid - midpoint;
                     sign      = link.dot(unitNormal);
                     sign      = convexity * sign / fabs(sign);
-                    centre    = midpoint + unitNormal * (sign * cos(semiangle) * radius);
+                    centre    = midpoint + unitNormal * (sign * cos(semiangle) *
+                                                         radius);
 
                     NekDouble theta1, theta2, dtheta, phi;
                     theta1 = atan2 (P1.m_y - centre.m_y, P1.m_x - centre.m_x);
@@ -404,14 +436,15 @@ void InputNek5000::Process()
     }
 
     int nSurfaces = 0;
-    boost::unordered_set<pair<int, int> > periodicIn, periodicOut;
+    boost::unordered_set<pair<int, int> > periodicIn;
     int periodicInId = -1, periodicOutId = -1;
 
+    // Boundary conditions: should be precisely nElements * nFaces lines to
+    // read.
+    int lineCnt = 0;
     while (m_mshFile.good())
     {
         getline(m_mshFile, line);
-        s.clear();
-        s.str(line);
 
         // Found a new section. We don't support anything in the rea file beyond
         // this point so we'll just quit.
@@ -425,7 +458,55 @@ void InputNek5000::Process()
         int elmt, side;
         NekDouble data[5];
 
-        s >> bcType >> elmt >> side;
+        // type in chars 0-3
+        s.clear();
+        s.str(line.substr(0, 4));
+        s >> bcType;
+
+        if (nElements < 1000)
+        {
+            // elmt in chars 4-6, side in next 3
+            s.clear();
+            s.str(line.substr(4, 3));
+            s >> elmt;
+            s.clear();
+            s.str(line.substr(7, 3));
+            s >> side;
+            line = line.substr(10);
+        }
+        else if (nElements < 100000)
+        {
+            // elmt in chars 4-8, side in next 1
+            s.clear();
+            s.str(line.substr(4, 5));
+            s >> elmt;
+            s.clear();
+            s.str(line.substr(9, 1));
+            s >> side;
+            line = line.substr(10);
+        }
+        else if (nElements < 1000000)
+        {
+            // elmt in chars 4-9, no side
+            s.clear();
+            s.str(line.substr(4, 6));
+            s >> elmt;
+            side = lineCnt % (2 * m_mesh->m_expDim);
+            line = line.substr(9);
+        }
+        else
+        {
+            // elmt in chars 4-15, no side
+            s.clear();
+            s.str(line.substr(4, 12));
+            s >> elmt;
+            side = lineCnt % (2 * m_mesh->m_expDim);
+            line = line.substr(15);
+        }
+
+        s.clear();
+        s.str(line);
+
         for (i = 0; i < 5; ++i)
         {
             s >> data[i];
@@ -434,6 +515,9 @@ void InputNek5000::Process()
         // Our ordering starts from 0, not 1.
         --elmt;
         --side;
+
+        // Increment lines read
+        lineCnt++;
 
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_spaceDim][elmt];
 
@@ -611,7 +695,13 @@ void InputNek5000::Process()
         nSurfaces++;
     }
 
-    m_mshFile.close();
+    if (lineCnt != nElements * (m_mesh->m_expDim * 2))
+    {
+        cerr << "Warning: boundary conditions may not have been correctly read "
+             << "from Nek5000 input file." << endl;
+    }
+
+    m_mshFile.reset();
 
     // -- Process rest of mesh.
     ProcessEdges();

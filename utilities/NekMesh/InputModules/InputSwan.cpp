@@ -84,7 +84,7 @@ void InputSwan::Process()
     if (tmp[0] != tmp[5] || tmp[0] != 4 * sizeof(int))
     {
         cout << "Header data broken" << endl;
-        m_mshFile.close();
+        m_mshFile.reset();
         return;
     }
 
@@ -109,7 +109,7 @@ void InputSwan::Process()
         tets[0] != ND * NB_Tet * sizeof(int))
     {
         cout << "ERROR [InputSwan]: Tetrahedron data broken." << endl;
-        m_mshFile.close();
+        m_mshFile.reset();
         return;
     }
 
@@ -126,7 +126,7 @@ void InputSwan::Process()
     if (tmp[0] != tmp[1] || tmp[0] != 3 * NB_Points * sizeof(double))
     {
         cout << "ERROR [InputSwan]: Point data broken." << endl;
-        m_mshFile.close();
+        m_mshFile.reset();
         return;
     }
 
@@ -180,7 +180,7 @@ void InputSwan::Process()
     if (tmp[0] != tmp[1])
     {
         cout << "ERROR [InputSwan]: Surface data broken." << endl;
-        m_mshFile.close();
+        m_mshFile.reset();
         return;
     }
 
@@ -206,7 +206,7 @@ void InputSwan::Process()
         m_mesh->m_element[2].push_back(E);
     }
 
-    m_mshFile.close();
+    m_mshFile.reset();
 
     // Process the rest of the mesh.
     ProcessVertices();

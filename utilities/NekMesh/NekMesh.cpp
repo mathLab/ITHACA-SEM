@@ -200,6 +200,14 @@ int main(int argc, char* argv[])
             {
                 int    dot    = tmp1[0].find_last_of('.') + 1;
                 string ext    = tmp1[0].substr(dot, tmp1[0].length() - dot);
+
+                if (ext == "gz")
+                {
+                    string tmp = tmp1[0].substr(0, tmp1[0].length() - 3);
+                    dot = tmp.find_last_of('.') + 1;
+                    ext = tmp.substr(dot, tmp.length() - dot);
+                }
+
                 module.second = ext;
                 tmp1.push_back(string(i == 0 ? "infile=" : "outfile=")+tmp1[0]);
             }

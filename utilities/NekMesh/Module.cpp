@@ -33,9 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/iostreams/filter/gzip.hpp>
+
 #include "Module.h"
 
 using namespace std;
+namespace io = boost::iostreams;
 
 namespace Nektar
 {
@@ -78,7 +81,19 @@ OutputModule::OutputModule(MeshSharedPtr m) : Module(m)
 void InputModule::OpenStream()
 {
     string fname = m_config["infile"].as<string>();
-    m_mshFile.open(fname.c_str());
+
+    if (fname.size() > 3 && fname.substr(fname.size() - 3, 3) == ".gz")
+    {
+        m_mshFileStream.open(fname.c_str(), ios_base::in | ios_base::binary);
+        m_mshFile.push(io::gzip_decompressor());
+        m_mshFile.push(m_mshFileStream);
+    }
+    else
+    {
+        m_mshFileStream.open(fname.c_str());
+        m_mshFile.push(m_mshFileStream);
+    }
+
     if (!m_mshFile.good())
     {
         cerr << "Error opening file: " << fname << endl;
@@ -92,7 +107,19 @@ void InputModule::OpenStream()
 void OutputModule::OpenStream()
 {
     string fname = m_config["outfile"].as<string>();
-    m_mshFile.open(fname.c_str());
+
+    if (fname.size() > 3 && fname.substr(fname.size() - 3, 3) == ".gz")
+    {
+        m_mshFileStream.open(fname.c_str(), ios_base::out | ios_base::binary);
+        m_mshFile.push(io::gzip_compressor());
+        m_mshFile.push(m_mshFileStream);
+    }
+    else
+    {
+        m_mshFileStream.open(fname.c_str());
+        m_mshFile.push(m_mshFileStream);
+    }
+
     if (!m_mshFile.good())
     {
         cerr << "Error opening file: " << fname << endl;

@@ -701,7 +701,8 @@ void CwipiCoupling::SendStart(
                        &m_sendHandle);
         timer1.Stop();
 
-        if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+        if (m_evalField->GetComm()->GetRank() == 0 &&
+            m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
         {
             cout << "Send total time: " << timer1.TimePerTest(1) << endl;
         }
@@ -726,7 +727,8 @@ void CwipiCoupling::SendComplete()
         // set to -1 so we dont try finishing a send before a new one was started
         m_sendHandle = -1;
 
-        if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+        if (m_evalField->GetComm()->GetRank() == 0 &&
+            m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
         {
             cout << "Send waiting time: " << timer1.TimePerTest(1) << endl;
         }
@@ -763,7 +765,8 @@ void CwipiCoupling::ReceiveStart()
                     &m_recvHandle);
         timer1.Stop();
 
-        if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+        if (m_evalField->GetComm()->GetRank() == 0 &&
+            m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
         {
             cout << "Receive start time: " << timer1.TimePerTest(1) << endl;
         }
@@ -936,7 +939,8 @@ void CwipiCoupling::ReceiveComplete(const int step,
                 m_evalField->BwdTrans(tmpC, field[i]);
                 timer3.Stop();
 
-                if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+                if (m_evalField->GetComm()->GetRank() == 0 &&
+                    m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
                 {
                     cout << "Smoother time (" << m_recvFieldNames[i]
                         << "): " << timer3.TimePerTest(1) << endl;
@@ -953,7 +957,8 @@ void CwipiCoupling::ReceiveComplete(const int step,
         }
         timer1.Stop();
 
-        if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+        if (m_evalField->GetComm()->GetRank() == 0 &&
+            m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
         {
             cout << "Receive total time: " << timer1.TimePerTest(1) << ", ";
             cout << "Receive waiting time: " << timer2.TimePerTest(1) << endl;
@@ -1059,7 +1064,8 @@ void CwipiCoupling::DumpRawFields(const NekDouble time,
     ptsIO.Write(filename, rvPts);
 
     timer1.Stop();
-    if (m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
+    if (m_evalField->GetComm()->GetRank() == 0 &&
+            m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
     {
         cout << "DumpRawFields total time: " << timer1.TimePerTest(1) << endl;
     }

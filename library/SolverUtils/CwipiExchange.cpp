@@ -179,6 +179,7 @@ CwipiCoupling::~CwipiCoupling()
 void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
 {
     // defaults
+    m_config["LOCALNAME"]        = "nektar";
     m_config["REMOTENAME"]       = "precise";
     m_config["OVERSAMPLE"]       = "0";
     m_config["FILTERWIDTH"]      = "-1";
@@ -191,6 +192,8 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
 
     ASSERTL0(session->DefinesElement("Nektar/Coupling"),
              "No Coupling config found");
+
+    m_config["LOCALNAME"] = session->GetCmdLineArgument<std::string>("cwipi");
 
     TiXmlElement *vCoupling = session->GetElement("Nektar/Coupling");
     ASSERTL0(vCoupling, "Invalid Coupling config");
@@ -685,8 +688,8 @@ void CwipiCoupling::SendStart(
         char sendFN[10];
         strcpy(sendFN, "dummyName");
 
-        // TODO: make this more unique, e.g. NAME_SENDER_RECEIVER
-        int tag = boost::hash<std::string>()(m_couplingName) / UINT_MAX;
+        int tag = boost::hash<std::string>()(m_couplingName + m_config["LOCALNAME"] + m_config["REMOTENAME"]) / UINT_MAX;
+        cout << "tag = " << tag << endl;
         cwipi_issend(m_couplingName.c_str(),
                        "ex1",
                        tag,
@@ -747,8 +750,8 @@ void CwipiCoupling::ReceiveStart()
         char recFN[10];
         strcpy(recFN, "dummyName");
 
-        // TODO: make this more unique, e.g. NAME_SENDER_RECEIVER
-        int tag = boost::hash<std::string>()(m_couplingName) / UINT_MAX;
+        int tag = boost::hash<std::string>()(m_couplingName + m_config["REMOTENAME"] + m_config["LOCALNAME"]) / UINT_MAX;
+        cout << "tag = " << tag << endl;
         cwipi_irecv(m_couplingName.c_str(),
                     "ex1",
                     tag,

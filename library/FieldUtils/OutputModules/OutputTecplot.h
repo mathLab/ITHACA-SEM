@@ -74,11 +74,15 @@ public:
 
 protected:
     bool            m_binary;
+    bool            m_parallel;
     TecplotZoneType m_zoneType;
     vector<int>     m_numPoints;
     int             m_numBlocks;
     int             m_coordim;
+    int             m_totConn;
     vector<Array<OneD, int> > m_conn;
+    Array<OneD, int> m_rankFieldSizes;
+    Array<OneD, int> m_rankConnSizes;
     Array<OneD, Array<OneD, NekDouble> > m_fields;
 
     virtual void WriteTecplotHeader(std::ofstream &outfile,
@@ -118,6 +122,8 @@ public:
     }
 
 protected:
+    void WriteDoubleOrFloat(std::ofstream          &outfile,
+                            Array<OneD, NekDouble> &data);
     virtual void WriteTecplotHeader(std::ofstream &outfile,
                                     std::vector<std::string> &var);
     virtual void WriteTecplotZone(std::ofstream &outfile);

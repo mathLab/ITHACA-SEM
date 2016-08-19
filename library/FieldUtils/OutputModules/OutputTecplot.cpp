@@ -71,7 +71,8 @@ ModuleKey OutputTecplotBinary::m_className =
         "Writes a Tecplot file in binary plt format.");
 
 OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f),
-                                                 m_binary(false)
+                                                 m_binary(false),
+                                                 m_parallel(false)
 {
     if (!f->m_setUpEquiSpacedFields)
     {
@@ -149,6 +150,8 @@ void OutputTecplot::Process(po::variables_map &vm)
         return;
     }
 
+    m_parallel = m_binary && m_f->m_comm->GetType() == "Parallel MPI";
+
     if (m_f->m_verbose)
     {
         if (m_f->m_comm->TreatAsRankZero())
@@ -162,8 +165,9 @@ void OutputTecplot::Process(po::variables_map &vm)
 
     int nprocs = m_f->m_comm->GetSize();
     int rank   = m_f->m_comm->GetRank();
+
     // Amend for parallel output if required
-    if (nprocs != 1)
+    if (nprocs != 1 && !m_parallel)
     {
         int dot       = filename.find_last_of('.');
         string ext    = filename.substr(dot, filename.length() - dot);
@@ -176,7 +180,12 @@ void OutputTecplot::Process(po::variables_map &vm)
     bool doError = (vm.count("error") == 1) ? true : false;
 
     // Open output file
-    ofstream outfile(filename.c_str(), m_binary ? ios::binary : ios::out);
+    ofstream outfile;
+
+    if ((m_parallel && rank == 0) || !m_parallel)
+    {
+        outfile.open(filename.c_str(), m_binary ? ios::binary : ios::out);
+    }
 
     std::vector<std::string> var;
     bool writeHeader = true;
@@ -301,10 +310,6 @@ void OutputTecplot::Process(po::variables_map &vm)
         var = fPts->GetFieldNames();
         var.insert(var.begin(), coordVars, coordVars + m_coordim);
 
-        // If true, data lies in the PointFld class instead of m_f->m_data (why
-        // do I need this?)
-        bool dataInPts = true;
-
         switch (fPts->GetPtsType())
         {
             case LibUtilities::ePtsFile:
@@ -312,14 +317,12 @@ void OutputTecplot::Process(po::variables_map &vm)
                 m_numPoints.resize(1);
                 m_numPoints[0] = fPts->GetNpoints();
                 m_zoneType     = eOrdered;
-                dataInPts      = false;
                 break;
             case LibUtilities::ePtsPlane:
                 m_numPoints.resize(2);
                 m_numPoints[0] = fPts->GetPointsPerEdge(0);
                 m_numPoints[1] = fPts->GetPointsPerEdge(1);
                 m_zoneType     = eOrdered;
-                dataInPts      = false;
                 break;
             case LibUtilities::ePtsBox:
                 m_numPoints.resize(3);
@@ -327,7 +330,6 @@ void OutputTecplot::Process(po::variables_map &vm)
                 m_numPoints[1] = fPts->GetPointsPerEdge(1);
                 m_numPoints[2] = fPts->GetPointsPerEdge(2);
                 m_zoneType     = eOrdered;
-                dataInPts      = false;
                 break;
             case LibUtilities::ePtsTriBlock:
             {
@@ -354,32 +356,13 @@ void OutputTecplot::Process(po::variables_map &vm)
         // Get fields and coordinates
         m_fields = Array<OneD, Array<OneD, NekDouble> >(var.size());
 
-        if (dataInPts)
-        {
-            // We can just grab everything from points. This should be a
-            // reference, not a copy.
-            fPts->GetPts(m_fields);
-        }
-        else
-        {
-            // Grab coordinates from points
-            for (int i = 0; i < m_coordim; ++i)
-            {
-                m_fields[i] = fPts->GetPts(i);
-            }
+        // We can just grab everything from points. This should be a
+        // reference, not a copy.
+        fPts->GetPts(m_fields);
 
-            // Grab data from m_data. We copy over to temporary storage and then
-            // destroy entry in m_data to avoid too much memory usage.
-            for (int i = 0; i < fPts->GetNFields(); ++i)
-            {
-                m_fields[i + m_coordim] = Array<OneD, NekDouble>(
-                    m_f->m_data[i].size(), &m_f->m_data[i][0]);
-                m_f->m_data[i].clear();
-            }
-        }
-
-        // Only write header if we're root or FE blocks
-        writeHeader = m_zoneType != eOrdered || rank == 0;
+        // Only write header if we're root or FE block; binary files always
+        // write header
+        writeHeader = (m_zoneType != eOrdered || rank == 0) || m_binary;
 
         if (doError)
         {
@@ -410,6 +393,33 @@ void OutputTecplot::Process(po::variables_map &vm)
         }
     }
 
+    if (m_parallel)
+    {
+        // Reduce on number of blocks and number of points.
+        m_f->m_comm->AllReduce(m_numBlocks, LibUtilities::ReduceSum);
+        for (int i = 0; i < m_numPoints.size(); ++i)
+        {
+            m_f->m_comm->AllReduce(m_numPoints[i], LibUtilities::ReduceSum);
+        }
+
+        // Root process needs to know how much data everyone else has for
+        // writing in parallel.
+        m_rankFieldSizes       = Array<OneD, int>(nprocs, 0);
+        m_rankConnSizes        = Array<OneD, int>(nprocs, 0);
+        m_rankFieldSizes[rank] = m_fields[0].num_elements();
+
+        m_totConn = 0;
+        for (int i = 0; i < m_conn.size(); ++i)
+        {
+            m_totConn += m_conn[i].num_elements();
+        }
+
+        m_rankConnSizes[rank] = m_totConn;
+
+        m_f->m_comm->AllReduce(m_rankFieldSizes, LibUtilities::ReduceSum);
+        m_f->m_comm->AllReduce(m_rankConnSizes, LibUtilities::ReduceSum);
+    }
+
     if (writeHeader)
     {
         WriteTecplotHeader(outfile, var);
@@ -422,7 +432,10 @@ void OutputTecplot::Process(po::variables_map &vm)
     // point data).
     WriteTecplotConnectivity(outfile);
 
-    cout << "Written file: " << filename << endl;
+    if ((m_parallel && rank == 0) || !m_parallel)
+    {
+        cout << "Written file: " << filename << endl;
+    }
 }
 
 /**
@@ -446,6 +459,11 @@ void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
 void OutputTecplotBinary::WriteTecplotHeader(std::ofstream &outfile,
                                              std::vector<std::string> &var)
 {
+    if (m_parallel && m_f->m_comm->GetRank() > 0)
+    {
+        return;
+    }
+
     // Version number
     outfile << "#!TDV112";
 
@@ -521,103 +539,150 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
     }
 }
 
-void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
+void OutputTecplotBinary::WriteDoubleOrFloat(std::ofstream          &outfile,
+                                             Array<OneD, NekDouble> &data)
 {
-    // Number of points in zone
-    int nPoints = m_fields[0].num_elements();
-
-    // Don't bother naming zone
-    WriteStream(outfile, 299.0f); // Zone marker
-
-    // Write same name as preplot
-    std::string zonename = "ZONE 001";
-    WriteStream(outfile, zonename);
-
-    WriteStream(outfile, -1); // No parent zone
-    WriteStream(outfile, -1); // No strand ID
-    WriteStream(outfile, 0.0); // Solution time
-    WriteStream(outfile, -1); // Unused, set to -1
-
-    // Zone type: 1 = lineseg, 3 = quad, 5 = brick
-    WriteStream(outfile, (int)m_zoneType);
-
-    WriteStream(outfile, 0); // Data at nodes
-    WriteStream(outfile, 0); // No 1-1 face neighbours
-    WriteStream(outfile, 0); // No user-defined connections
-
-    if (m_zoneType == eOrdered)
-    {
-        for (int i = 0; i < m_numPoints.size(); ++i)
-        {
-            WriteStream(outfile, m_numPoints[i]);
-        }
-
-        for (int i = m_numPoints.size(); i < 3; ++i)
-        {
-            WriteStream(outfile, 0);
-        }
-    }
-    else
-    {
-        WriteStream(outfile, nPoints); // Total number of points
-        WriteStream(outfile, m_numBlocks); // Number of blocks
-        WriteStream(outfile, 0); // Unused
-        WriteStream(outfile, 0); // Unused
-        WriteStream(outfile, 0); // Unused
-    }
-
-    WriteStream(outfile, 0); // No auxiliary data names
-
-    // Finalise header
-    WriteStream(outfile, 357.0f);
-
-    // Now start to write data section so that we can dump geometry
-    // information
-
-    // Data marker
-    WriteStream(outfile, 299.0f);
-
-    // Data format: either double or single depending on user
-    // options
+    // Data format: either double or single depending on user options
     bool useDoubles = m_config["double"].m_beenSet;
 
-    for (int j = 0; j < m_fields.num_elements(); ++j)
-    {
-        WriteStream(outfile, useDoubles ? 2 : 1);
-    }
-
-    // No passive variables or variable sharing, no zone
-    // connectivity sharing (we only dump one zone)
-    WriteStream(outfile, 0);
-    WriteStream(outfile, 0);
-    WriteStream(outfile, -1);
-
-    // Write out min/max of field data
-    for (int j = 0; j < m_fields.num_elements(); ++j)
-    {
-        WriteStream(outfile, Vmath::Vmin(nPoints, m_fields[j], 1));
-        WriteStream(outfile, Vmath::Vmax(nPoints, m_fields[j], 1));
-    }
-
-    // Now dump out field data. Unlike the .dat format, all data are ordered by
-    // each field then each variable, even for ordered point data.
     if (useDoubles)
     {
         // For doubles, we can just write data.
-        for (int i = 0; i < m_fields.num_elements(); ++i)
-        {
-            WriteStream(outfile, m_fields[i]);
-        }
+        WriteStream(outfile, data);
     }
     else
     {
         // For single precision, needs typecast first.
+        int nPts = data.num_elements();
+        vector<float> tmp(data.num_elements());
+        std::copy(&data[0], &data[0] + nPts, &tmp[0]);
+        WriteStream(outfile, tmp);
+    }
+}
+
+void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
+{
+    Array<OneD, NekDouble> fieldMin(m_fields.num_elements());
+    Array<OneD, NekDouble> fieldMax(m_fields.num_elements());
+
+    // Data format: either double or single depending on user options
+    bool useDoubles = m_config["double"].m_beenSet;
+
+    if ((m_parallel && m_f->m_comm->GetRank() == 0) || !m_parallel)
+    {
+        // Don't bother naming zone
+        WriteStream(outfile, 299.0f); // Zone marker
+
+        // Write same name as preplot
+        std::string zonename = "ZONE 001";
+        WriteStream(outfile, zonename);
+
+        WriteStream(outfile, -1); // No parent zone
+        WriteStream(outfile, -1); // No strand ID
+        WriteStream(outfile, 0.0); // Solution time
+        WriteStream(outfile, -1); // Unused, set to -1
+
+        // Zone type: 1 = lineseg, 3 = quad, 5 = brick
+        WriteStream(outfile, (int)m_zoneType);
+
+        WriteStream(outfile, 0); // Data at nodes
+        WriteStream(outfile, 0); // No 1-1 face neighbours
+        WriteStream(outfile, 0); // No user-defined connections
+
+        if (m_zoneType == eOrdered)
+        {
+            for (int i = 0; i < m_numPoints.size(); ++i)
+            {
+                WriteStream(outfile, m_numPoints[i]);
+            }
+
+            for (int i = m_numPoints.size(); i < 3; ++i)
+            {
+                WriteStream(outfile, 0);
+            }
+        }
+        else
+        {
+            // Number of points in zone
+            int nPoints = m_parallel ?
+                Vmath::Vsum(m_f->m_comm->GetSize(), m_rankFieldSizes, 1) :
+                m_fields[0].num_elements();
+
+            WriteStream(outfile, nPoints); // Total number of points
+            WriteStream(outfile, m_numBlocks); // Number of blocks
+            WriteStream(outfile, 0); // Unused
+            WriteStream(outfile, 0); // Unused
+            WriteStream(outfile, 0); // Unused
+        }
+
+        WriteStream(outfile, 0); // No auxiliary data names
+
+        // Finalise header
+        WriteStream(outfile, 357.0f);
+
+        // Now start to write data section so that we can dump geometry
+        // information
+
+        // Data marker
+        WriteStream(outfile, 299.0f);
+
+        for (int j = 0; j < m_fields.num_elements(); ++j)
+        {
+            WriteStream(outfile, useDoubles ? 2 : 1);
+        }
+
+        // No passive variables or variable sharing, no zone connectivity
+        // sharing (we only dump one zone)
+        WriteStream(outfile, 0);
+        WriteStream(outfile, 0);
+        WriteStream(outfile, -1);
+    }
+
+    for (int i = 0; i < m_fields.num_elements(); ++i)
+    {
+        fieldMin[i] = Vmath::Vmin(m_fields[i].num_elements(), m_fields[i], 1);
+        fieldMax[i] = Vmath::Vmax(m_fields[i].num_elements(), m_fields[i], 1);
+    }
+
+    m_f->m_comm->AllReduce(fieldMin, LibUtilities::ReduceMin);
+    m_f->m_comm->AllReduce(fieldMax, LibUtilities::ReduceMax);
+
+    // Write out min/max of field data
+    if ((m_parallel && m_f->m_comm->GetRank() == 0) || !m_parallel)
+    {
         for (int i = 0; i < m_fields.num_elements(); ++i)
         {
-            int nPoints = m_fields[0].num_elements();
-            vector<float> tmp(nPoints);
-            std::copy(&m_fields[i][0], &m_fields[i][0] + nPoints, &tmp[0]);
-            WriteStream(outfile, tmp);
+            WriteStream(outfile, fieldMin[i]);
+            WriteStream(outfile, fieldMax[i]);
+        }
+    }
+
+    if (m_parallel && m_f->m_comm->GetRank() == 0)
+    {
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            WriteDoubleOrFloat(outfile, m_fields[i]);
+
+            for (int n = 1; n < m_f->m_comm->GetSize(); ++n)
+            {
+                Array<OneD, NekDouble> tmp(m_rankFieldSizes[n]);
+                m_f->m_comm->Recv(n, tmp);
+                WriteDoubleOrFloat(outfile, tmp);
+            }
+        }
+    }
+    else if (m_parallel && m_f->m_comm->GetRank() > 0)
+    {
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            m_f->m_comm->Send(0, m_fields[i]);
+        }
+    }
+    else
+    {
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            WriteDoubleOrFloat(outfile, m_fields[i]);
         }
     }
 }
@@ -643,9 +708,43 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
 
 void OutputTecplotBinary::WriteTecplotConnectivity(std::ofstream &outfile)
 {
-    for (int i = 0; i < m_conn.size(); ++i)
+    if (m_parallel && m_f->m_comm->GetRank() > 0)
     {
-        WriteStream(outfile, m_conn[i]);
+        // Need to amalgamate connectivity information
+        Array<OneD, int> conn(m_totConn);
+        for (int i = 0, cnt = 0; i < m_conn.size(); ++i)
+        {
+            Vmath::Vcopy(m_conn[i].num_elements(), &m_conn[i][0], 1,
+                         &conn[cnt], 1);
+            cnt += m_conn[i].num_elements();
+        }
+        m_f->m_comm->Send(0, conn);
+    }
+    else
+    {
+        for (int i = 0; i < m_conn.size(); ++i)
+        {
+            WriteStream(outfile, m_conn[i]);
+        }
+
+        if (m_parallel && m_f->m_comm->GetRank() == 0)
+        {
+            int offset = m_rankFieldSizes[0];
+
+            for (int n = 1; n < m_f->m_comm->GetSize(); ++n)
+            {
+                Array<OneD, int> conn(m_rankConnSizes[n]);
+                m_f->m_comm->Recv(n, conn);
+
+                for (int j = 0; j < conn.num_elements(); ++j)
+                {
+                    conn[j] += offset;
+                }
+
+                WriteStream(outfile, conn);
+                offset += m_rankFieldSizes[n];
+            }
+        }
     }
 }
 

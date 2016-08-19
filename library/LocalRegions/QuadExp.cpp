@@ -1492,7 +1492,8 @@ namespace Nektar
             const NekDouble *data,
             const std::vector<unsigned int > &nummodes,
             int mode_offset,
-                NekDouble *coeffs)
+            NekDouble *coeffs,
+            std::vector<LibUtilities::BasisType> &fromType)
         {
             int data_order0 = nummodes[mode_offset];
             int fillorder0  = std::min(m_base[0]->GetNumModes(),data_order0);

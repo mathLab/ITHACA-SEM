@@ -999,14 +999,6 @@ namespace Nektar
             return 0;
         }
 
-        void StdExpansion::v_ExtractDataToCoeffs(const NekDouble *data,
-                                                 const std::vector<unsigned int > &nummodes,
-                                                 const int nmode_offset,
-                                                 NekDouble *coeffs)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is not defined for this class");
-        }
-
         void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, Array< OneD, NekDouble> &outarray)
         {
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");

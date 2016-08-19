@@ -21,6 +21,8 @@ v4.4.0
 - Add support for HDF5 as an alternative output to XML-based output, including
   refactoring of FieldIO, improvements to MPI interface and added communicators
   to boundary conditions (!615)
+- Extend ExtractDataToCoeffs to support interpolation between basis types for
+  quads and hexahedra (!682)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)

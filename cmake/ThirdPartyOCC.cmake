@@ -37,7 +37,7 @@ IF(NEKTAR_USE_MESHGEN)
         EXTERNALPROJECT_ADD(
             opencascade-6.9
             PREFIX ${TPSRC}
-            URL http://ae-nektar.ae.ic.ac.uk/~dmoxey/OCE-0.17.2.tar.gz
+            URL ${TPURL}/OCE-0.17.2.tar.gz
             URL_MD5 bf2226be4cd192606af677cf178088e5
             STAMP_DIR ${TPBUILD}/stamp
             BINARY_DIR ${TPBUILD}/opencascade-6.9

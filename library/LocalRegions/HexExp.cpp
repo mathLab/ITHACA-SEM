@@ -633,8 +633,9 @@ namespace Nektar
                 fromType[1] != m_base[1]->GetBasisType() ||
                 fromType[2] != m_base[2]->GetBasisType())
             {
-                // Cheaty times: construct a hex with the appropriate basis type
-                // at our quadrature points.
+                // Construct a hex with the appropriate basis type at our
+                // quadrature points, and one more to do a forwards
+                // transform. We can then copy the output to coeffs.
                 StdRegions::StdHexExp tmpHex(
                     LibUtilities::BasisKey(
                         fromType[0], data_order0, m_base[0]->GetPointsKey()),

@@ -2,9 +2,9 @@
 <test>
     <description>Channel Flow P=8, flowrate driven</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>ChanFlow_m8.xml</parameters>
+    <parameters>ChanFlow_m8_Flowrate.xml</parameters>
     <files>
-        <file description="Session File">ChanFlow_m8.xml</file>
+        <file description="Session File">ChanFlow_m8_Flowrate.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

@@ -21,6 +21,8 @@ v4.4.0
 - Add support for HDF5 as an alternative output to XML-based output, including
   refactoring of FieldIO, improvements to MPI interface and added communicators
   to boundary conditions (!615)
+- Allow expansions to be loaded directly from field file (!617)
+- New options for load balancing (DOF or BOUNDARY) in mesh partitioner (!617)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)

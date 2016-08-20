@@ -23,6 +23,7 @@ v4.4.0
   to boundary conditions (!615)
 - Allow expansions to be loaded directly from field file (!617)
 - New options for load balancing (DOF or BOUNDARY) in mesh partitioner (!617)
+- Update Body/Field forces at each timestep (!665)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)
@@ -31,6 +32,7 @@ v4.4.0
 - Use a continuous basefield projection and revert to constant c formulation (!664)
 - Added ability to compute CFL number (!664)
 - Output Sourceterm (!664)
+- Use the Forcing framework to define source terms (!665)
 
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)

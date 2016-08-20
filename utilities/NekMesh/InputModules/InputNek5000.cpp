@@ -442,6 +442,8 @@ void InputNek5000::Process()
     // Boundary conditions: should be precisely nElements * nFaces lines to
     // read.
     int lineCnt = 0;
+    int perIn = 0, perOut = 0;
+
     while (m_mshFile.good())
     {
         getline(m_mshFile, line);
@@ -560,14 +562,18 @@ void InputNek5000::Process()
                     setup = true;
                 }
 
-                if (periodicIn.find(make_pair(perElmt, perFace)) !=
-                    periodicIn.end())
+                bool hasIn = periodicIn.find(make_pair(perElmt, perFace)) !=
+                    periodicIn.end();
+
+                if (hasIn)
                 {
                     swap(periodicInId, periodicOutId);
+                    perOut++;
                 }
                 else
                 {
                     periodicIn.insert(make_pair(elmt, side));
+                    perIn++;
                 }
 
                 std::string periodicInStr = "[" +
@@ -604,6 +610,12 @@ void InputNek5000::Process()
                     m_mesh->m_condition[periodicInId] = c;
                     m_mesh->m_condition[periodicOutId] = c2;
                 }
+
+                if (hasIn)
+                {
+                    swap(periodicInId, periodicOutId);
+                }
+
                 break;
             }
 
@@ -699,6 +711,11 @@ void InputNek5000::Process()
     {
         cerr << "Warning: boundary conditions may not have been correctly read "
              << "from Nek5000 input file." << endl;
+    }
+
+    if (perIn != perOut)
+    {
+        cerr << "Warning: number of periodic faces does not match." << endl;
     }
 
     m_mshFile.reset();

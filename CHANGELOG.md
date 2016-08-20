@@ -21,6 +21,8 @@ v4.4.0
 - Add support for HDF5 as an alternative output to XML-based output, including
   refactoring of FieldIO, improvements to MPI interface and added communicators
   to boundary conditions (!615)
+- Allow expansions to be loaded directly from field file (!617)
+- New options for load balancing (DOF or BOUNDARY) in mesh partitioner (!617)
 - Extend ExtractDataToCoeffs to support interpolation between basis types for
   quads and hexahedra (!682)
 
@@ -45,6 +47,7 @@ v4.4.0
 - New module for inserting an alternate high-order surface into the working
   mesh (!669)
 - Improvements to mesh linearisation module (!659)
+- Add support for Gmsh high-order output (!679)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

@@ -47,6 +47,11 @@ LibUtilities::ShapeType Pyramid::type =
     GetElementFactory().RegisterCreatorFunction(
         LibUtilities::ePyramid, Pyramid::create, "Pyramid");
 
+/// Vertex IDs that make up pyramid faces.
+int Pyramid::m_faceIds[5][4] = {
+    {0, 1, 2, 3}, {0, 1, 4, -1}, {1, 2, 4, -1}, {3, 2, 4, -1}, {0, 3, 4, -1}
+};
+
 /**
  * @brief Create a pyramidic element.
  */
@@ -98,11 +103,6 @@ Pyramid::Pyramid(ElmtConfig pConf,
     }
 
     // Create faces
-    int face_ids[5][4] = {{0, 1, 2, 3},
-                          {0, 1, 4, -1},
-                          {1, 2, 4, -1},
-                          {3, 2, 4, -1},
-                          {0, 3, 4, -1}};
     int face_edges[5][4];
     int faceoffset = 5 + 8 * n;
     for (int j = 0; j < 5; ++j)
@@ -114,9 +114,9 @@ Pyramid::Pyramid(ElmtConfig pConf,
 
         for (int k = 0; k < nEdge; ++k)
         {
-            faceVertices.push_back(m_vertex[face_ids[j][k]]);
-            NodeSharedPtr a = m_vertex[face_ids[j][k]];
-            NodeSharedPtr b = m_vertex[face_ids[j][(k + 1) % nEdge]];
+            faceVertices.push_back(m_vertex[m_faceIds[j][k]]);
+            NodeSharedPtr a = m_vertex[m_faceIds[j][k]];
+            NodeSharedPtr b = m_vertex[m_faceIds[j][(k + 1) % nEdge]];
             for (unsigned int i = 0; i < m_edge.size(); ++i)
             {
                 if ((m_edge[i]->m_n1 == a && m_edge[i]->m_n2 == b) ||

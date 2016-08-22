@@ -35,8 +35,11 @@
 
 #include <boost/multi_array.hpp>
 
+#include <limits>
+
 #include "NodeOpti.h"
 #include "Evaluator.hxx"
+#include "Hessian.hxx"
 
 using namespace std;
 using namespace Nektar::NekMeshUtils;
@@ -71,75 +74,6 @@ void NodeOpti::CalcMinJac()
     {
         minJac = min(minJac, data[i]->minJac);
     }
-}
-
-NekDouble NodeOpti::ModifyHessian()
-{
-    Array<OneD, NekDouble> eigR(3);
-    Array<OneD, NekDouble> eigI(3);
-    Array<OneD, NekDouble> eigV(9);
-    NekMatrix<NekDouble> H(3,3);
-    H(0,0) = G[3];
-    H(1,0) = G[4];
-    H(0,1) = H(1,0);
-    H(2,0) = G[5];
-    H(0,2) = H(2,0);
-    H(1,1) = G[6];
-    H(2,1) = G[7];
-    H(1,2) = H(2,1);
-    H(2,2) = G[8];
-
-    int nVel = 3;
-    char jobvl = 'N', jobvr = 'V';
-    int worklen = 8*nVel, info;
-
-    DNekMat eval   (nVel, nVel, 0.0, eDIAGONAL);
-    DNekMat evec   (nVel, nVel, 0.0, eFULL);
-    Array<OneD, NekDouble> vl  (nVel*nVel);
-    Array<OneD, NekDouble> work(worklen);
-    Array<OneD, NekDouble> wi  (nVel);
-
-    Lapack::Dgeev(jobvl, jobvr, nVel, H.GetRawPtr(), nVel,
-                  &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
-                  &(evec.GetPtr())[0], nVel,
-                  &work[0], worklen, info);
-
-    DNekMat evecT = evec;
-    evecT.Transpose();
-
-    NekDouble delta = 1e-6;
-
-    if(eval(0,0) < 0.0 || eval(1,1) < 0.0 || eval(2,2) < 0.0)
-    {
-        for(int i = 0; i < 3; i++)
-        {
-            eval(i,i) = fabs(eval(i,i));
-            if(eval(i,i) < delta)
-            {
-                eval(i,i) = delta;
-            }
-        }
-
-        DNekMat Hb = evec * eval * evecT;
-
-        G[3] = Hb(0,0);
-        G[4] = Hb(1,0);
-        G[5] = Hb(2,0);
-        G[6] = Hb(1,1);
-        G[7] = Hb(2,1);
-        G[8] = Hb(2,2);
-
-        Lapack::Dgeev(jobvl, jobvr, nVel, Hb.GetRawPtr(), nVel,
-                      &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
-                      &(evec.GetPtr())[0], nVel,
-                      &work[0], worklen, info);
-        if(eval(0,0) < 0.0 || eval(1,1) < 0.0 || eval(2,2) < 0.0)
-        {
-            cout << "still negative" << endl;
-        }
-    }
-
-    return min(min(eval(0,0),eval(1,1)),eval(2,2));
 }
 
 int NodeOpti2D2D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
@@ -215,8 +149,7 @@ void NodeOpti3D3D::Optimise()
     CalcMinJac();
 
     NekDouble currentW = GetFunctional<3>();
-
-    NekDouble minHes = ModifyHessian();
+    NekDouble newVal;
 
     if(G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
@@ -224,53 +157,126 @@ void NodeOpti3D3D::Optimise()
         NekDouble xc       = node->m_x;
         NekDouble yc       = node->m_y;
         NekDouble zc       = node->m_z;
-        NekDouble alpha    = 1.0;
-        NekDouble delX, delY, delZ;
 
+        Array<OneD, NekDouble> sk(3), dk(3), pk(3);
+        bool DNC = false;
+        NekDouble lhs;
+
+        int def = IsIndefinite<3>();
+        if(def)
+        {
+            //the dk vector needs calculating
+            NekDouble val;
+            MinEigen<3>(val,dk);
+
+            if(dk[0]*G[0] + dk[1]*G[1] + dk[2]*G[2] > 0.0)
+            {
+                for(int i = 0; i < 3; i++)
+                {
+                    dk[i] *= -1.0;
+                }
+            }
+
+            lhs = dk[0] * (dk[0]*G[3] + dk[1]*G[4] + dk[2]*G[5]) +
+                  dk[1] * (dk[0]*G[4] + dk[1]*G[6] + dk[2]*G[7]) +
+                  dk[2] * (dk[0]*G[5] + dk[1]*G[7] + dk[2]*G[8]);
+
+            ASSERTL0(lhs < 0.0 , "weirdness");
+
+            DNC = true;
+        }
+
+        //calculate sk
         NekDouble det = G[3]*(G[6]*G[8]-G[7]*G[7])
                        -G[4]*(G[4]*G[8]-G[5]*G[7])
                        +G[5]*(G[4]*G[7]-G[5]*G[6]);
 
-        delX = G[0]*(G[6]*G[8]-G[7]*G[7]) +
-               G[1]*(G[5]*G[7]-G[4]*G[8]) +
-               G[2]*(G[4]*G[7]-G[3]*G[7]);
-        delY = G[0]*(G[7]*G[5]-G[4]*G[5]) +
-               G[1]*(G[3]*G[8]-G[5]*G[5]) +
-               G[2]*(G[4]*G[5]-G[3]*G[7]);
-        delZ = G[0]*(G[4]*G[7]-G[6]*G[5]) +
-               G[1]*(G[4]*G[5]-G[3]*G[7]) +
-               G[2]*(G[3]*G[6]-G[4]*G[4]);
+        sk[0] = G[0]*(G[6]*G[8]-G[7]*G[7]) +
+                G[1]*(G[5]*G[7]-G[4]*G[8]) +
+                G[2]*(G[4]*G[7]-G[3]*G[7]);
+        sk[1] = G[0]*(G[7]*G[5]-G[4]*G[5]) +
+                G[1]*(G[3]*G[8]-G[5]*G[5]) +
+                G[2]*(G[4]*G[5]-G[3]*G[7]);
+        sk[2] = G[0]*(G[4]*G[7]-G[6]*G[5]) +
+                G[1]*(G[4]*G[5]-G[3]*G[7]) +
+                G[2]*(G[3]*G[6]-G[4]*G[4]);
 
-        delX /= det;
-        delY /= det;
-        delZ /= det;
+        sk[0] /= det * -1.0;
+        sk[1] /= det * -1.0;
+        sk[2] /= det * -1.0;
 
-        bool found = false;
-        NekDouble newVal;
-        // Dot product of p_k with gradient
-        NekDouble tmp = (G[0] * delX + G[1] * delY + G[2] * delZ) * -1.0;
+        bool runDNC = false; //so want to make this varible runDMC
+        bool found  = false;
 
-        while (alpha > alphaTol())
+        if(DNC)
         {
-            // Update node
-            node->m_x = xc - alpha * delX;
-            node->m_y = yc - alpha * delY;
-            node->m_z = zc - alpha * delZ;
-
-            newVal = GetFunctional<3>(true,false);
-            //dont need the hessian again this function updates G to be the new
-            //location
-            //
-            // Wolfe conditions
-            if (newVal <= currentW + c1() * alpha * tmp &&
-                -1.0 * (G[0] * delX + G[1] * delY + G[2] * delZ) >= c2() * tmp)
-            {
-                found = true;
-                break;
-            }
-
-            alpha /= 2.0;
+            NekDouble skmag = sqrt(sk[0]*sk[0] + sk[1]*sk[1] + sk[2]*sk[2]);
+            runDNC = !((G[0]*sk[0]+G[1]*sk[1]+G[2]*sk[2])/skmag <=
+                        2.0*(0.5*lhs + G[0]*dk[0]+G[1]*dk[1]+G[2]*dk[2]));
         }
+
+        if(!runDNC)
+        {
+            //normal gradient line Search
+            NekDouble alpha    = 1.0;
+            NekDouble hes = sk[0] * (sk[0]*G[3] + sk[1]*G[4] + sk[2]*G[5]) +
+                            sk[1] * (sk[0]*G[4] + sk[1]*G[6] + sk[2]*G[7]) +
+                            sk[2] * (sk[0]*G[5] + sk[1]*G[7] + sk[2]*G[8]);
+            hes = min(hes,0.0);
+
+            while (alpha > alphaTol())
+            {
+                // Update node
+                node->m_x = xc + alpha * sk[0];
+                node->m_y = yc + alpha * sk[1];
+                node->m_z = zc + alpha * sk[2];
+
+                newVal = GetFunctional<3>(false,false);
+                //dont need the hessian again this function updates G to be the new
+                //location
+                //
+                // Wolfe conditions
+                if (newVal <= currentW + c1() * (
+                    alpha*(G[0]*sk[0]+G[1]*sk[1]+G[2]*sk[2]) + 0.5*alpha*alpha*hes))
+                {
+                    found = true;
+                    break;
+                }
+
+                alpha /= 2.0;
+            }
+        }
+        else
+        {
+            cout << "using dnc" << endl;
+            NekDouble sig = 0.01;  //small inital step size
+            NekDouble alpha = sig;
+
+            NekDouble hes = lhs;
+
+            while (alpha > alphaTol())
+            {
+                // Update node
+                node->m_x = xc + alpha * dk[0];
+                node->m_y = yc + alpha * dk[1];
+                node->m_z = zc + alpha * dk[2];
+
+                newVal = GetFunctional<3>(false,false);
+                //dont need the hessian again this function updates G to be the new
+                //location
+                //
+                // Wolfe conditions
+                if (newVal <= currentW + c1() * (
+                    alpha*(G[0]*dk[0]+G[1]*dk[1]+G[2]*dk[2]) + 0.5*alpha*alpha*hes))
+                {
+                    found = true;
+                    break;
+                }
+
+                alpha /= 2.0;
+            }
+        }
+
         if(!found)
         {
             node->m_x = xc;
@@ -281,6 +287,7 @@ void NodeOpti3D3D::Optimise()
             res->nReset++;
             mtx.unlock();
         }
+
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);

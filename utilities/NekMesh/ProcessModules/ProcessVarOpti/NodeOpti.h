@@ -97,7 +97,9 @@ protected:
 
     void CalcMinJac();
 
-    NekDouble ModifyHessian();
+    template<int DIM> int IsIndefinite();
+    template<int DIM> void ModifyHessian();
+    template<int DIM> void MinEigen(NekDouble &val, Array<OneD, NekDouble> &vec);
 
     NekDouble dx;
     NekDouble minJac;

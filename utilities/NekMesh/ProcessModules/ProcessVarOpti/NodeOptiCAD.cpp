@@ -55,8 +55,6 @@ void NodeOpti1D3D::Optimise()
 
     NekDouble currentW = GetFunctional<3>();
 
-    NekDouble minHes = ModifyHessian();
-
     if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
         //modify the gradient to be on the cad system
@@ -141,8 +139,6 @@ void NodeOpti2D3D::Optimise()
     CalcMinJac();
 
     NekDouble currentW = GetFunctional<3>();
-
-    NekDouble minHes = ModifyHessian();
 
     if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {

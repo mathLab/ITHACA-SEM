@@ -260,8 +260,10 @@ namespace Nektar
                     m_session->LoadParameter("x1",y0);
                     m_session->LoadParameter("x2",z0);
 
+                    LibUtilities::CommSharedPtr  c =
+                            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
                     LibUtilities::PtsIOSharedPtr pts =
-                            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr();
+                            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(c);
                     LibUtilities::PtsFieldSharedPtr m_fieldPts;
 
 

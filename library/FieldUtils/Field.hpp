@@ -101,7 +101,6 @@ struct Field
     LibUtilities::CommSharedPtr m_comm;
     LibUtilities::SessionReaderSharedPtr m_session;
     SpatialDomains::MeshGraphSharedPtr m_graph;
-    LibUtilities::FieldIOSharedPtr m_fld;
     LibUtilities::PtsIOSharedPtr m_ptsIO;
     map<string, vector<string> > m_inputfiles;
 
@@ -400,6 +399,39 @@ struct Field
         return exp;
     };
 
+    /**
+     * @brief Construct a FieldIO object for the file @p filename.
+     *
+     * This routine constructs an appropriate FieldIO object for a filename
+     * through the LibUtilities::FieldIO::GetFileType function to detect the
+     * file format. The result is then cached in Field::m_fld to avoid needing
+     * to repeatedly construct the object.
+     *
+     * @param filename  Filename to open.
+     * @return Reader for @p filename.
+     */
+    FIELD_UTILS_EXPORT LibUtilities::FieldIOSharedPtr FieldIOForFile(
+        string filename)
+    {
+        LibUtilities::CommSharedPtr c = m_session ? m_session->GetComm() :
+            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+        string fmt = LibUtilities::FieldIO::GetFileType(filename, c);
+        map<string, LibUtilities::FieldIOSharedPtr>::iterator it =
+            m_fld.find(fmt);
+
+        if (it == m_fld.end())
+        {
+            LibUtilities::FieldIOSharedPtr fld =
+                LibUtilities::GetFieldIOFactory().CreateInstance(fmt, c, true);
+            m_fld[fmt] = fld;
+            return fld;
+        }
+        else
+        {
+            return it->second;
+        }
+    }
+
     FIELD_UTILS_EXPORT MultiRegions::ExpListSharedPtr AppendExpList(
         int NumHomogeneousDir, string var = "DefaultVar", bool NewField = false)
     {
@@ -691,6 +723,11 @@ struct Field
 
         return tmp;
     }
+
+private:
+    /// Map to store FieldIO instances. Key is the reader type, value is the
+    /// FieldIO object.
+    map<string, LibUtilities::FieldIOSharedPtr> m_fld;
 };
 
 typedef boost::shared_ptr<Field> FieldSharedPtr;

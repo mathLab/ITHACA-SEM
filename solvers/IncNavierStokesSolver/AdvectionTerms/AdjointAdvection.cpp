@@ -272,14 +272,26 @@ void AdjointAdvection::v_Advect(
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
     int nqtot            = fields[0]->GetTotPoints();
+    int ndim             = advVel.num_elements();
     ASSERTL1(nConvectiveFields == inarray.num_elements(),"Number of convective fields and Inarray are not compatible");
 
-    Array<OneD, NekDouble > Deriv = Array<OneD, NekDouble> (nqtot*nConvectiveFields);
+    Array<OneD, Array<OneD, NekDouble> > velocity(ndim);
+    for(int i = 0; i < ndim; ++i)
+    {
+        if(fields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode)
+        {
+            velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
+            fields[i]->HomogeneousBwdTrans(advVel[i],velocity[i]);
+        }
+        else
+        {
+            velocity[i] = advVel[i];
+        }
+    }
 
     for(int n = 0; n < nConvectiveFields; ++n)
     {
         //v_ComputeAdvectionTerm(fields,advVel,inarray[i],outarray[i],i,time,Deriv);
-        int ndim       = advVel.num_elements();
         int nPointsTot = fields[0]->GetNpoints();
         Array<OneD, NekDouble> grad0,grad1,grad2;
 
@@ -326,7 +338,7 @@ void AdjointAdvection::v_Advect(
                     //Evaluate  U du'/dx
                     Vmath::Vmul(nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
                     //Evaluate U du'/dx+ u' dU/dx
-                    Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot,grad_base_u0,1,velocity[0],1,outarray[n],1,outarray[n],1);
                     break;
 
                     //2D
@@ -355,9 +367,9 @@ void AdjointAdvection::v_Advect(
                         //Evaluate - (U du'/dx+ V du'/dy)
                         Vmath::Neg(nPointsTot,outarray[n],1);
                         //Evaluate -(U du'/dx+ V du'/dy)+u' dU/dx
-                        Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[n],1,outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad_base_u0,1,velocity[0],1,outarray[n],1,outarray[n],1);
                         //Evaluate -(U du'/dx+ V du'/dy) +u' dU/dx +v' dV/dx
-                        Vmath::Vvtvp(nPointsTot,grad_base_v0,1,advVel[1],1,outarray[n],1,outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad_base_v0,1,velocity[1],1,outarray[n],1,outarray[n],1);
                         break;
 
                         //y-equation
@@ -369,9 +381,9 @@ void AdjointAdvection::v_Advect(
                         //Evaluate -(U dv'/dx+ V dv'/dy)
                         Vmath::Neg(nPointsTot,outarray[n],1);
                         //Evaluate (U dv'/dx+ V dv'/dy)+u' dU/dy
-                        Vmath::Vvtvp(nPointsTot,grad_base_u1,1,advVel[0],1,outarray[n],1,outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad_base_u1,1,velocity[0],1,outarray[n],1,outarray[n],1);
                         //Evaluate (U dv'/dx+ V dv'/dy +u' dv/dx)+v' dV/dy
-                        Vmath::Vvtvp(nPointsTot,grad_base_v1,1,advVel[1],1,outarray[n],1,outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad_base_v1,1,velocity[1],1,outarray[n],1,outarray[n],1);
                         break;
                 }
                     break;
@@ -421,11 +433,11 @@ void AdjointAdvection::v_Advect(
                         //Evaluate -(U du'/dx+ V du'/dy+W du'/dz)
                         Vmath::Neg(nPointsTot,outarray[n],1);
                         //Evaluate -(U du'/dx+ V du'/dy+W du'/dz)+u' dU/dx
-                        Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[n],1,outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad_base_u0,1,velocity[0],1,outarray[n],1,outarray[n],1);
                         //Evaluate -(U du'/dx+ V du'/dy+W du'/dz)+u'dU/dx+ v' dV/dx
-                        Vmath::Vvtvp(nPointsTot,grad_base_v0,1,advVel[1],1,outarray[n],1,outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad_base_v0,1,velocity[1],1,outarray[n],1,outarray[n],1);
                         //Evaluate -(U du'/dx+ V du'/dy+W du'/dz)+u'dU/dx+ v' dV/dx+ w' dW/dz
-                        Vmath::Vvtvp(nPointsTot,grad_base_w0,1,advVel[2],1,outarray[n],1,outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad_base_w0,1,velocity[2],1,outarray[n],1,outarray[n],1);
                         break;
                         //y-equation
                     case 1:
@@ -438,11 +450,11 @@ void AdjointAdvection::v_Advect(
                         //Evaluate -(U dv'/dx+ V dv'/dy+W dv'/dz)
                         Vmath::Neg(nPointsTot,outarray[n],1);
                         //Evaluate  -(U dv'/dx+ V dv'/dy+W dv'/dz)+u' dU/dy
-                        Vmath::Vvtvp(nPointsTot,grad_base_u1,1,advVel[0],1,outarray[n],1,outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad_base_u1,1,velocity[0],1,outarray[n],1,outarray[n],1);
                         //Evaluate  -(U dv'/dx+ V dv'/dy+W dv'/dz)+u' dU/dy +v' dV/dy
-                        Vmath::Vvtvp(nPointsTot,grad_base_v1,1,advVel[1],1,outarray[n],1,outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad_base_v1,1,velocity[1],1,outarray[n],1,outarray[n],1);
                         //Evaluate  -(U dv'/dx+ V dv'/dy+W dv'/dz)+u' dU/dy +v' dV/dy+ w' dW/dy
-                        Vmath::Vvtvp(nPointsTot,grad_base_w1,1,advVel[2],1,outarray[n],1,outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad_base_w1,1,velocity[2],1,outarray[n],1,outarray[n],1);
                         break;
 
                         //z-equation
@@ -456,11 +468,11 @@ void AdjointAdvection::v_Advect(
                         //Evaluate -(U dw'/dx+ V dw'/dx+ W dw'/dz)
                         Vmath::Neg(nPointsTot,outarray[n],1);
                         //Evaluate -(U dw'/dx+ V dw'/dx+ W dw'/dz)+u' dU/dz
-                        Vmath::Vvtvp(nPointsTot,grad_base_u2,1,advVel[0],1,outarray[n],1,outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad_base_u2,1,velocity[0],1,outarray[n],1,outarray[n],1);
                         //Evaluate -(U dw'/dx+ V dw'/dx+ W dw'/dz)+u' dU/dz+v'dV/dz
-                        Vmath::Vvtvp(nPointsTot,grad_base_v2,1,advVel[1],1,outarray[n],1,outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad_base_v2,1,velocity[1],1,outarray[n],1,outarray[n],1);
                         //Evaluate -(U dw'/dx+ V dw'/dx+ W dw'/dz)+u' dU/dz+v'dV/dz + w' dW/dz
-                        Vmath::Vvtvp(nPointsTot,grad_base_w2,1,advVel[2],1,outarray[n],1,outarray[n],1);
+                        Vmath::Vvtvp(nPointsTot,grad_base_w2,1,velocity[2],1,outarray[n],1,outarray[n],1);
                         break;
                 }
                     break;
@@ -518,8 +530,7 @@ void AdjointAdvection::ImportFldBase(
     }
 
     LibUtilities::FieldIOSharedPtr fld =
-    MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-                                                    m_session->GetComm());
+        LibUtilities::FieldIO::CreateForFile(m_session, pInfile);
     fld->Import(pInfile, FieldDef, FieldData,
                 LibUtilities::NullFieldMetaDataMap,
                 ElementGIDs);

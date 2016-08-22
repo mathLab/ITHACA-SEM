@@ -61,28 +61,28 @@ class Face
 {
 public:
     /// Create a new face.
-    Face(std::vector<NodeSharedPtr> pVertexList,
-         std::vector<NodeSharedPtr> pFaceNodes,
-         std::vector<EdgeSharedPtr> pEdgeList,
-         LibUtilities::PointsType pCurveType)
-        : m_vertexList(pVertexList), m_edgeList(pEdgeList),
-          m_faceNodes(pFaceNodes), m_curveType(pCurveType), m_geom()
+    NEKMESHUTILS_EXPORT Face(std::vector<NodeSharedPtr> pVertexList,
+                             std::vector<NodeSharedPtr> pFaceNodes,
+                             std::vector<EdgeSharedPtr> pEdgeList,
+                              LibUtilities::PointsType pCurveType)
+                : m_vertexList(pVertexList), m_edgeList(pEdgeList),
+                  m_faceNodes(pFaceNodes), m_curveType(pCurveType), m_geom()
     {
     }
 
     /// Copy an existing face.
-    Face(const Face &pSrc)
-        : m_vertexList(pSrc.m_vertexList), m_edgeList(pSrc.m_edgeList),
-          m_faceNodes(pSrc.m_faceNodes), m_curveType(pSrc.m_curveType),
-          m_geom(pSrc.m_geom)
+    NEKMESHUTILS_EXPORT Face(const Face &pSrc)
+            : m_vertexList(pSrc.m_vertexList), m_edgeList(pSrc.m_edgeList),
+              m_faceNodes(pSrc.m_faceNodes), m_curveType(pSrc.m_curveType),
+              m_geom(pSrc.m_geom)
     {
     }
-    ~Face()
+    NEKMESHUTILS_EXPORT ~Face()
     {
     }
 
     /// Equality is defined by matching all vertices.
-    bool operator==(Face &pSrc)
+    NEKMESHUTILS_EXPORT bool operator==(Face &pSrc)
     {
         std::vector<NodeSharedPtr>::iterator it1, it2;
         for (it1 = m_vertexList.begin(); it1 != m_vertexList.end(); ++it1)
@@ -99,7 +99,7 @@ public:
 
     /// Returns the total number of nodes (vertices, edge nodes and
     /// face nodes).
-    unsigned int GetNodeCount() const
+    NEKMESHUTILS_EXPORT unsigned int GetNodeCount() const
     {
         unsigned int n = m_faceNodes.size();
         for (int i = 0; i < m_edgeList.size(); ++i)
@@ -111,7 +111,8 @@ public:
     }
 
     /// Assemble a list of nodes on curved face
-    void GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+    NEKMESHUTILS_EXPORT void GetCurvedNodes(
+        std::vector<NodeSharedPtr> &nodeList) const
     {
         // Treat 2D point distributions differently to 3D.
         if (m_curveType == LibUtilities::eNodalTriFekete ||
@@ -195,7 +196,7 @@ public:
 
     /// Generates a string listing the coordinates of all nodes
     /// associated with this face.
-    std::string GetXmlCurveString() const
+    NEKMESHUTILS_EXPORT std::string GetXmlCurveString() const
     {
         std::stringstream s;
         std::string str;
@@ -215,9 +216,117 @@ public:
         return s.str();
     }
 
+    /// Make this face an order @p order face. @see Element::MakeOrder.
+    void MakeOrder(int                                order,
+                   SpatialDomains::GeometrySharedPtr  geom,
+                   LibUtilities::PointsType           pType,
+                   int                                coordDim,
+                   int                               &id)
+    {
+        if (m_vertexList.size() == 3)
+        {
+            // Triangles of order < 3 have no interior volume points.
+            if (order < 3)
+            {
+                m_faceNodes.clear();
+                return;
+            }
+
+            int nPoints = order + 1;
+            StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+
+            Array<OneD, NekDouble> px, py;
+            LibUtilities::PointsKey pKey(nPoints, pType);
+            ASSERTL1(pKey.GetPointsDim() == 2, "Points distribution must be 2D");
+            LibUtilities::PointsManager()[pKey]->GetPoints(px, py);
+
+            Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
+
+            for (int i = 0; i < coordDim; ++i)
+            {
+                phys[i] = Array<OneD, NekDouble>(xmap->GetTotPoints());
+                xmap->BwdTrans(geom->GetCoeffs(i), phys[i]);
+            }
+
+            const int nTriPts = nPoints * (nPoints + 1) / 2;
+            const int nTriIntPts = (nPoints - 3) * (nPoints - 2) / 2;
+            m_faceNodes.resize(nTriIntPts);
+
+            for (int i = 3 + 3*(nPoints-2), cnt = 0; i < nTriPts; ++i, ++cnt)
+            {
+                Array<OneD, NekDouble> xp(2);
+                xp[0] = px[i];
+                xp[1] = py[i];
+
+                Array<OneD, NekDouble> x(3, 0.0);
+                for (int j = 0; j < coordDim; ++j)
+                {
+                    x[j] = xmap->PhysEvaluate(xp, phys[j]);
+                }
+
+                m_faceNodes[cnt] = boost::shared_ptr<Node>(
+                    new Node(id++, x[0], x[1], x[2]));
+            }
+            m_curveType = pType;
+        }
+        else if (m_vertexList.size() == 4)
+        {
+            // Quads of order < 2 have no interior volume points.
+            if (order < 2)
+            {
+                m_faceNodes.clear();
+                return;
+            }
+
+            int nPoints = order + 1;
+            StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+
+            Array<OneD, NekDouble> px;
+            LibUtilities::PointsKey pKey(nPoints, pType);
+            ASSERTL1(pKey.GetPointsDim() == 1, "Points distribution must be 1D");
+            LibUtilities::PointsManager()[pKey]->GetPoints(px);
+
+            Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
+
+            for (int i = 0; i < coordDim; ++i)
+            {
+                phys[i] = Array<OneD, NekDouble>(xmap->GetTotPoints());
+                xmap->BwdTrans(geom->GetCoeffs(i), phys[i]);
+            }
+
+            int nQuadIntPts = (nPoints - 2) * (nPoints - 2);
+            m_faceNodes.resize(nQuadIntPts);
+
+            for (int i = 1, cnt = 0; i < nPoints-1; ++i)
+            {
+                for (int j = 1; j < nPoints-1; ++j, ++cnt)
+                {
+                    Array<OneD, NekDouble> xp(2);
+                    xp[0] = px[j];
+                    xp[1] = px[i];
+
+                    Array<OneD, NekDouble> x(3, 0.0);
+                    for (int k = 0; k < coordDim; ++k)
+                    {
+                        x[k] = xmap->PhysEvaluate(xp, phys[k]);
+                    }
+
+                    m_faceNodes[cnt] = boost::shared_ptr<Node>(
+                        new Node(id++, x[0], x[1], x[2]));
+                }
+            }
+
+            m_curveType = pType;
+        }
+        else
+        {
+            ASSERTL0(false, "Unknown number of vertices");
+        }
+    }
+
     /// Generate either SpatialDomains::TriGeom or
     /// SpatialDomains::QuadGeom for this element.
-    SpatialDomains::Geometry2DSharedPtr GetGeom(int coordDim)
+    NEKMESHUTILS_EXPORT SpatialDomains::Geometry2DSharedPtr GetGeom(int coordDim)
     {
         int nEdge = m_edgeList.size();
 

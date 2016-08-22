@@ -253,8 +253,19 @@ void LinearisedAdvection::v_Advect(
     int nPointsTot = fields[0]->GetNpoints();
     int ndim       = advVel.num_elements();
 
-    Array<OneD, NekDouble > Deriv
-                = Array<OneD, NekDouble> (nPointsTot*nConvectiveFields);
+    Array<OneD, Array<OneD, NekDouble> > velocity(ndim);
+    for(int i = 0; i < ndim; ++i)
+    {
+        if(fields[i]->GetWaveSpace() && !m_singleMode && !m_halfMode)
+        {
+            velocity[i] = Array<OneD, NekDouble>(nPointsTot,0.0);
+            fields[i]->HomogeneousBwdTrans(advVel[i],velocity[i]);
+        }
+        else
+        {
+            velocity[i] = advVel[i];
+        }
+    }
 
     Array<OneD, NekDouble> grad0,grad1,grad2;
 
@@ -312,10 +323,10 @@ void LinearisedAdvection::v_Advect(
             Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[0],1,
                          outarray[0],1);
             //Evaluate (U du'/dx+ V du'/dy)+u' dU/dx
-            Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[0],1,
+            Vmath::Vvtvp(nPointsTot,grad_base_u0,1,velocity[0],1,outarray[0],1,
                          outarray[0],1);
             //Evaluate (U du'/dx+ V du'/dy +u' dU/dx)+v' dU/dy
-            Vmath::Vvtvp(nPointsTot,grad_base_u1,1,advVel[1],1,outarray[0],1,
+            Vmath::Vvtvp(nPointsTot,grad_base_u1,1,velocity[1],1,outarray[0],1,
                          outarray[0],1);
             Vmath::Neg(nPointsTot,outarray[0],1);
 
@@ -327,10 +338,10 @@ void LinearisedAdvection::v_Advect(
             Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[1],1,
                          outarray[1],1);
             //Evaluate (U dv'/dx+ V dv'/dy)+u' dV/dx
-            Vmath::Vvtvp(nPointsTot,grad_base_v0,1,advVel[0],1,outarray[1],1,
+            Vmath::Vvtvp(nPointsTot,grad_base_v0,1,velocity[0],1,outarray[1],1,
                          outarray[1],1);
             //Evaluate (U dv'/dx+ V dv'/dy +u' dv/dx)+v' dV/dy
-            Vmath::Vvtvp(nPointsTot,grad_base_v1,1,advVel[1],1,outarray[1],1,
+            Vmath::Vvtvp(nPointsTot,grad_base_v1,1,velocity[1],1,outarray[1],1,
                          outarray[1],1);
             Vmath::Neg(nPointsTot,outarray[1],1);
         }
@@ -415,10 +426,10 @@ void LinearisedAdvection::v_Advect(
             Vmath::Vvtvp(nPointsTot, grad1,  1,  m_baseflow[1], 1,
                          outarray[0], 1,  outarray[0],   1);
             //Evaluate and add: u' dU/dx
-            Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,
+            Vmath::Vvtvp(nPointsTot,grad_base_u0,1,velocity[0],1,
                          outarray[0],1,outarray[0],1);
             //Evaluate and add: v' dU/dy
-            Vmath::Vvtvp(nPointsTot,grad_base_u1,1,advVel[1],1,
+            Vmath::Vvtvp(nPointsTot,grad_base_u1,1,velocity[1],1,
                          outarray[0],1,outarray[0],1);
 
             if(!m_halfMode)
@@ -432,7 +443,7 @@ void LinearisedAdvection::v_Advect(
             {
                 //Evaluate and add w' dU/dz
                 Vmath::Vvtvp(nPointsTot,grad_base_u2,1,
-                             advVel[2],1,outarray[0],1,outarray[0],1);
+                             velocity[2],1,outarray[0],1,outarray[0],1);
                 fields[0]->HomogeneousFwdTrans(outarray[0],outarray[0]);
             }
             Vmath::Neg(nPointsTot,outarray[0],1);
@@ -465,10 +476,10 @@ void LinearisedAdvection::v_Advect(
             Vmath::Vvtvp(nPointsTot, grad1,     1,  m_baseflow[1], 1,
                          outarray[1], 1,  outarray[1],   1);
             //Evaluate u' dV/dx
-            Vmath::Vvtvp(nPointsTot,grad_base_v0,1,advVel[0],1
+            Vmath::Vvtvp(nPointsTot,grad_base_v0,1,velocity[0],1
                          ,outarray[1],1,outarray[1],1);
             //Evaluate v' dV/dy
-            Vmath::Vvtvp(nPointsTot,grad_base_v1,1,advVel[1],1,
+            Vmath::Vvtvp(nPointsTot,grad_base_v1,1,velocity[1],1,
                          outarray[1],1,outarray[1],1);
 
             if(!m_halfMode)
@@ -481,7 +492,7 @@ void LinearisedAdvection::v_Advect(
             if(m_multipleModes)
             {
                 //Evaluate  w' dV/dz
-                Vmath::Vvtvp(nPointsTot,grad_base_v2,1,advVel[2],1,
+                Vmath::Vvtvp(nPointsTot,grad_base_v2,1,velocity[2],1,
                              outarray[1],1,outarray[1],1);
                 fields[0]->HomogeneousFwdTrans(outarray[1],outarray[1]);
             }
@@ -519,10 +530,10 @@ void LinearisedAdvection::v_Advect(
             if(!m_halfMode) // since if halfmode W = 0
             {
                 //Evaluate u' dW/dx
-                Vmath::Vvtvp(nPointsTot,grad_base_w0,1,advVel[0],1,
+                Vmath::Vvtvp(nPointsTot,grad_base_w0,1,velocity[0],1,
                              outarray[2],1,outarray[2],1);
                 //Evaluate v' dW/dy
-                Vmath::Vvtvp(nPointsTot,grad_base_w1,1,advVel[1],1,
+                Vmath::Vvtvp(nPointsTot,grad_base_w1,1,velocity[1],1,
                              outarray[2],1,outarray[2],1);
 
                 //Evaluate W dw'/dz
@@ -533,7 +544,7 @@ void LinearisedAdvection::v_Advect(
             if(m_multipleModes)
             {
                 //Evaluate w' dW/dz
-                Vmath::Vvtvp(nPointsTot,grad_base_w2,1,advVel[2],1,
+                Vmath::Vvtvp(nPointsTot,grad_base_w2,1,velocity[2],1,
                              outarray[2],1,outarray[2],1);
                 fields[0]->HomogeneousFwdTrans(outarray[2],outarray[2]);
             }
@@ -597,9 +608,9 @@ void LinearisedAdvection::ImportFldBase(
         ElementGIDs[i] = pFields[0]->GetExp(i)->GetGeom()->GetGlobalID();
     }
 
-    LibUtilities::FieldIOSharedPtr fld =
-    MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-                                                    m_session->GetComm());
+    //Get Homogeneous
+    LibUtilities::FieldIOSharedPtr fld = LibUtilities::FieldIO::CreateForFile(
+        m_session, pInfile);
     fld->Import(pInfile, FieldDef, FieldData,
                 LibUtilities::NullFieldMetaDataMap,
                 ElementGIDs);

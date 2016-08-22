@@ -78,6 +78,8 @@ protected:
 
 private:
     int m_advectioncalls;
+    bool m_SingleMode;
+    bool m_HalfMode;
 };
 
 } //end of namespace

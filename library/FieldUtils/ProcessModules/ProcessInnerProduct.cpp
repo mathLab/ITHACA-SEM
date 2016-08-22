@@ -155,9 +155,9 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
 
         for (int f = 0; f < fromfiles.size(); ++f)
         {
-            m_f->m_fld->Import(fromfiles[f], fromField->m_fielddef,
-                               fromField->m_data,
-                               LibUtilities::NullFieldMetaDataMap, ElementGIDs);
+            m_f->FieldIOForFile(fromfiles[f])->Import(
+                fromfiles[f], fromField->m_fielddef, fromField->m_data,
+                LibUtilities::NullFieldMetaDataMap, ElementGIDs);
 
             totiprod = IProduct(processFields, fromField, SaveFld);
 
@@ -177,9 +177,11 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
         for (int i = 0; i < fromfiles.size(); ++i)
         {
             allFromField[i] = boost::shared_ptr<Field>(new Field());
-            m_f->m_fld->Import(fromfiles[i], allFromField[i]->m_fielddef,
-                               allFromField[i]->m_data,
-                               LibUtilities::NullFieldMetaDataMap, ElementGIDs);
+
+            m_f->FieldIOForFile(fromfiles[i])->Import(
+                fromfiles[i], allFromField[i]->m_fielddef,
+                allFromField[i]->m_data, LibUtilities::NullFieldMetaDataMap,
+                ElementGIDs);
         }
 
         for (int g = 0; g < fromfiles.size(); ++g)

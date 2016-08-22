@@ -74,6 +74,7 @@ struct Residual
     int startInv;
     int nReset;
     NekDouble worstJac;
+    NekDouble func;
 };
 
 typedef boost::shared_ptr<Residual> ResidualSharedPtr;

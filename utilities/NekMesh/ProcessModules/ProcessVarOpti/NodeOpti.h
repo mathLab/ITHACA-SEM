@@ -97,6 +97,8 @@ protected:
 
     void CalcMinJac();
 
+    NekDouble ModifyHessian();
+
     NekDouble dx;
     NekDouble minJac;
     ResidualSharedPtr res;
@@ -107,7 +109,7 @@ protected:
 
     static NekDouble c1() {return 1e-4;}
     static NekDouble c2() {return 0.9;}
-    static NekDouble gradTol() {return 1e-12;}
+    static NekDouble gradTol() {return 1e-16;}
     static NekDouble alphaTol() {return 1e-10;}
 };
 

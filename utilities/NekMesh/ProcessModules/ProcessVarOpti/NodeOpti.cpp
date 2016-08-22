@@ -73,6 +73,75 @@ void NodeOpti::CalcMinJac()
     }
 }
 
+NekDouble NodeOpti::ModifyHessian()
+{
+    Array<OneD, NekDouble> eigR(3);
+    Array<OneD, NekDouble> eigI(3);
+    Array<OneD, NekDouble> eigV(9);
+    NekMatrix<NekDouble> H(3,3);
+    H(0,0) = G[3];
+    H(1,0) = G[4];
+    H(0,1) = H(1,0);
+    H(2,0) = G[5];
+    H(0,2) = H(2,0);
+    H(1,1) = G[6];
+    H(2,1) = G[7];
+    H(1,2) = H(2,1);
+    H(2,2) = G[8];
+
+    int nVel = 3;
+    char jobvl = 'N', jobvr = 'V';
+    int worklen = 8*nVel, info;
+
+    DNekMat eval   (nVel, nVel, 0.0, eDIAGONAL);
+    DNekMat evec   (nVel, nVel, 0.0, eFULL);
+    Array<OneD, NekDouble> vl  (nVel*nVel);
+    Array<OneD, NekDouble> work(worklen);
+    Array<OneD, NekDouble> wi  (nVel);
+
+    Lapack::Dgeev(jobvl, jobvr, nVel, H.GetRawPtr(), nVel,
+                  &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
+                  &(evec.GetPtr())[0], nVel,
+                  &work[0], worklen, info);
+
+    DNekMat evecT = evec;
+    evecT.Transpose();
+
+    NekDouble delta = 1e-6;
+
+    if(eval(0,0) < 0.0 || eval(1,1) < 0.0 || eval(2,2) < 0.0)
+    {
+        for(int i = 0; i < 3; i++)
+        {
+            eval(i,i) = fabs(eval(i,i));
+            if(eval(i,i) < delta)
+            {
+                eval(i,i) = delta;
+            }
+        }
+
+        DNekMat Hb = evec * eval * evecT;
+
+        G[3] = Hb(0,0);
+        G[4] = Hb(1,0);
+        G[5] = Hb(2,0);
+        G[6] = Hb(1,1);
+        G[7] = Hb(2,1);
+        G[8] = Hb(2,2);
+
+        Lapack::Dgeev(jobvl, jobvr, nVel, Hb.GetRawPtr(), nVel,
+                      &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
+                      &(evec.GetPtr())[0], nVel,
+                      &work[0], worklen, info);
+        if(eval(0,0) < 0.0 || eval(1,1) < 0.0 || eval(2,2) < 0.0)
+        {
+            cout << "still negative" << endl;
+        }
+    }
+
+    return min(min(eval(0,0),eval(1,1)),eval(2,2));
+}
+
 int NodeOpti2D2D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
     22, NodeOpti2D2D::create, "2D2D");
 
@@ -90,6 +159,7 @@ void NodeOpti2D2D::Optimise()
         NekDouble yc       = node->m_y;
 
         bool      found    = false;
+        NekDouble newVal;
 
         // Search direction
         NekDouble delX = 1.0/(G[2]*G[4]-G[3]*G[3])*(G[4]*G[0] - G[3]*G[1]);
@@ -103,7 +173,7 @@ void NodeOpti2D2D::Optimise()
             node->m_x = xc - alpha * delX;
             node->m_y = yc - alpha * delY;
 
-            NekDouble newVal = GetFunctional<2>(true,false);
+            newVal = GetFunctional<2>(true,false);
             //dont need the hessian again this function updates G to be the new
             //location
 
@@ -129,6 +199,7 @@ void NodeOpti2D2D::Optimise()
         }
 
         mtx.lock();
+        res->func += newVal;
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+
                             (node->m_y-yc)*(node->m_y-yc)),
                        res->val);
@@ -144,6 +215,8 @@ void NodeOpti3D3D::Optimise()
     CalcMinJac();
 
     NekDouble currentW = GetFunctional<3>();
+
+    NekDouble minHes = ModifyHessian();
 
     if(G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
@@ -173,6 +246,7 @@ void NodeOpti3D3D::Optimise()
         delZ /= det;
 
         bool found = false;
+        NekDouble newVal;
         // Dot product of p_k with gradient
         NekDouble tmp = (G[0] * delX + G[1] * delY + G[2] * delZ) * -1.0;
 
@@ -183,10 +257,10 @@ void NodeOpti3D3D::Optimise()
             node->m_y = yc - alpha * delY;
             node->m_z = zc - alpha * delZ;
 
-            NekDouble newVal = GetFunctional<3>(true,false);
+            newVal = GetFunctional<3>(true,false);
             //dont need the hessian again this function updates G to be the new
             //location
-
+            //
             // Wolfe conditions
             if (newVal <= currentW + c1() * alpha * tmp &&
                 -1.0 * (G[0] * delX + G[1] * delY + G[2] * delZ) >= c2() * tmp)
@@ -210,6 +284,7 @@ void NodeOpti3D3D::Optimise()
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
+        res->func +=newVal;
         mtx.unlock();
     }
 }

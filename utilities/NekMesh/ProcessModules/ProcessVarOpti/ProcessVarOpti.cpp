@@ -232,10 +232,14 @@ void ProcessVarOpti::Process()
     Timer t;
     t.Start();
 
+    ofstream file;
+    file.open("res.txt");
+
     while (res->val > restol)
     {
         ctr++;
         res->val = 0.0;
+        res->func = 0.0;
         res->nReset = 0;
         for(int i = 0; i < optiNodes.size(); i++)
         {
@@ -265,14 +269,18 @@ void ProcessVarOpti::Process()
         tm->SetNumWorkers(nThreads);
         tm->Wait();
 
+        file << res->val << " " << res->worstJac << " " << res->func << endl;
+
         cout << ctr << "\tResidual: " << res->val
                     << "\tMin Jac: " << res->worstJac
                     << "\tInvalid: " << res->startInv
                     << "\tReset nodes: " << res->nReset
+                    << "\tFunctional: " << res->func
                     << endl;
         if(ctr >= maxIter)
             break;
     }
+    file.close();
 
     t.Stop();
     cout << "Time to compute: " << t.TimePerTest(1) << endl;

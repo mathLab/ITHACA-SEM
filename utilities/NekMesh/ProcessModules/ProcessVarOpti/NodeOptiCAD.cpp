@@ -55,6 +55,8 @@ void NodeOpti1D3D::Optimise()
 
     NekDouble currentW = GetFunctional<3>();
 
+    NekDouble minHes = ModifyHessian();
+
     if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
         //modify the gradient to be on the cad system
@@ -78,6 +80,7 @@ void NodeOpti1D3D::Optimise()
         NekDouble tmp = (G[0] * delT) * -1.0;
 
         bool found = false;
+        NekDouble newVal;
 
         while (alpha > alphaTol())
         {
@@ -94,7 +97,7 @@ void NodeOpti1D3D::Optimise()
             node->m_z = p[2];
             node->MoveCurve(p,curve->GetId(),nt);
 
-            NekDouble newVal = GetFunctional<3>(true,false);
+            newVal = GetFunctional<3>(true,false);
             ProcessGradient();
 
             // Wolfe conditions
@@ -125,6 +128,7 @@ void NodeOpti1D3D::Optimise()
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
+        res->func += newVal;
         mtx.unlock();
     }
 }
@@ -137,6 +141,8 @@ void NodeOpti2D3D::Optimise()
     CalcMinJac();
 
     NekDouble currentW = GetFunctional<3>();
+
+    NekDouble minHes = ModifyHessian();
 
     if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
@@ -171,6 +177,7 @@ void NodeOpti2D3D::Optimise()
         Array<OneD, NekDouble> bd = surf->GetBounds();
 
         bool found = false;
+        NekDouble newVal;
         while(alpha > alphaTol())
         {
             uvt[0] = uvc[0] - alpha * delU;
@@ -189,7 +196,7 @@ void NodeOpti2D3D::Optimise()
             node->m_z = p[2];
             node->Move(p,surf->GetId(),uvt);
 
-            NekDouble newVal = GetFunctional<3>(true,false);
+            newVal = GetFunctional<3>(true,false);
             ProcessGradient();
 
             //cout << currentW << " " <<  newVal << endl;
@@ -224,13 +231,14 @@ void NodeOpti2D3D::Optimise()
             cout << "Gradient surf\t" << G[0] << " " << G[1] << endl
                  << "Hessian surf\t" << G[2] << " " << G[3] << " " << G[4] << endl
                  << (G[2]*G[4]-G[3]*G[3]) << " " << minJac << endl << endl;*/
-
             res->nReset++;
             mtx.unlock();
         }
+
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
+        res->func += newVal;
         mtx.unlock();
     }
 }

@@ -213,7 +213,8 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
     }
 
     NekDouble integral = 0.0;
-    NekDouble ep = minJac < gam ? sqrt(gam*(gam-minJac)) : 0.0;
+    //NekDouble ep = minJac < gam ? sqrt(gam*(gam-minJac)) : 0.0;
+    NekDouble ep = minJac < 0.0 ? sqrt(1e-9 + 0.04*minJac*minJac) : sqrt(1e-9);
     NekDouble jacIdeal[DIM][DIM], jacDet;
     G = Array<OneD, NekDouble>(DIM == 2 ? 5 : 9, 0.0);
 

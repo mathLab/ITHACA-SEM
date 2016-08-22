@@ -65,7 +65,6 @@ namespace SolverUtils
                                    const TiXmlElement* pForce)
     {
         m_NumVariable = pNumForcingFields;
-        int nq        = pFields[0]->GetTotPoints();
 
         const TiXmlElement* funcNameElmt = pForce->FirstChildElement("BODYFORCE");
         if(!funcNameElmt)
@@ -76,9 +75,15 @@ namespace SolverUtils
                      "specifying function name which prescribes body force.");
         }
 
-        string funcName = funcNameElmt->GetText();
-        ASSERTL0(m_session->DefinesFunction(funcName),
-                 "Function '" + funcName + "' not defined.");
+        m_funcName = funcNameElmt->GetText();
+        ASSERTL0(m_session->DefinesFunction(m_funcName),
+                 "Function '" + m_funcName + "' not defined.");
+
+        bool singleMode, halfMode;
+        m_session->MatchSolverInfo("ModeType","SingleMode",singleMode,false);
+        m_session->MatchSolverInfo("ModeType","HalfMode",  halfMode,  false);
+        bool homogeneous = pFields[0]->GetExpType() == MultiRegions::e3DH1D;
+        m_transform = (singleMode || halfMode || homogeneous);
 
         // Time function is optional
         funcNameElmt = pForce->FirstChildElement("BODYFORCETIMEFCN");
@@ -104,35 +109,41 @@ namespace SolverUtils
         }
 
         m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
-
-        std::string  s_FieldStr;
-
         for (int i = 0; i < m_NumVariable; ++i)
         {
-            m_Forcing[i] = Array<OneD, NekDouble> (nq, 0.0);
-            s_FieldStr   = m_session->GetVariable(i);
-            ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
-                     "Variable '" + s_FieldStr + "' not defined.");
-            EvaluateFunction(pFields, m_session, s_FieldStr,
-                             m_Forcing[i], funcName);
+            m_Forcing[i] = Array<OneD, NekDouble> (pFields[0]->GetTotPoints(), 0.0);
         }
 
-        bool singleMode, halfMode;
-        m_session->MatchSolverInfo("ModeType","SingleMode",singleMode,false);
-        m_session->MatchSolverInfo("ModeType","HalfMode",  halfMode,  false);
-        bool homogeneous = pFields[0]->GetExpType() == MultiRegions::e3DH1D;
+
+        Update(pFields, 0.0);
+    }
+
+
+    void ForcingBody::Update(
+            const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields,
+            const NekDouble &time)
+    {
+        for (int i = 0; i < m_NumVariable; ++i)
+        {
+            std::string  s_FieldStr   = m_session->GetVariable(i);
+            ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
+                     "Variable '" + s_FieldStr + "' not defined.");
+            EvaluateFunction(pFields, m_session, s_FieldStr,
+                             m_Forcing[i], m_funcName, time);
+        }
 
         // If singleMode or halfMode, transform the forcing term to be in
         // physical space in the plane, but Fourier space in the homogeneous
         // direction
-        if (singleMode || halfMode || homogeneous)
+        if (m_transform)
         {
             for (int i = 0; i < m_NumVariable; ++i)
             {
-                pFields[0]->HomogeneousFwdTrans(m_Forcing[i],m_Forcing[i]);
+                pFields[0]->HomogeneousFwdTrans(m_Forcing[i], m_Forcing[i]);
             }
         }
     }
+
 
     void ForcingBody::v_Apply(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -140,7 +151,6 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
-
         if(m_hasTimeFcnScaling)
         {
             Array<OneD, NekDouble>  TimeFcn(1);
@@ -157,6 +167,8 @@ namespace SolverUtils
         }
         else
         {
+            Update(fields, time);
+
             for (int i = 0; i < m_NumVariable; i++)
             {
                 Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,

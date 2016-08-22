@@ -881,7 +881,7 @@ namespace Nektar
             }
 
             /// Returns the session object
-            boost::shared_ptr<LibUtilities::SessionReader> GetSession()
+            boost::shared_ptr<LibUtilities::SessionReader> GetSession() const
             {
                 return m_session;
             }
@@ -1372,6 +1372,7 @@ namespace Nektar
             virtual void v_ClearGlobalLinSysManager(void);
 
             void ExtractFileBCs(const std::string                &fileName,
+                                LibUtilities::CommSharedPtr       comm,
                                 const std::string                &varName,
                                 const boost::shared_ptr<ExpList>  locExpList);
             

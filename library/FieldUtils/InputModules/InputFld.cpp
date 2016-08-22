@@ -119,24 +119,7 @@ void InputFld::Process(po::variables_map &vm)
         ASSERTL0(false, "no input file found");
     }
 
-    if (!m_f->m_fld)
-    {
-        if (m_f->m_session)
-        {
-            m_f->m_fld =
-                MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-                    m_f->m_session->GetComm());
-        }
-        else // serial communicator
-        {
-            LibUtilities::CommSharedPtr c =
-                LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
-            m_f->m_fld =
-                MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(c);
-        }
-    }
-
-    if (m_f->m_graph)
+    if(m_f->m_graph)
     {
         if (m_f->m_data.size() == 0)
         {
@@ -169,15 +152,16 @@ void InputFld::Process(po::variables_map &vm)
             m_f->m_fielddef.clear();
             m_f->m_data.clear();
 
-            m_f->m_fld->Import(m_f->m_inputfiles[fldending][0], m_f->m_fielddef,
-                               m_f->m_data, m_f->m_fieldMetaDataMap,
-                               ElementGIDs);
+            m_f->FieldIOForFile(m_f->m_inputfiles[fldending][0])->Import(
+                m_f->m_inputfiles[fldending][0], m_f->m_fielddef, m_f->m_data,
+                m_f->m_fieldMetaDataMap, ElementGIDs);
         }
     }
     else // load all data.
     {
-        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0], m_f->m_fielddef,
-                           m_f->m_data, m_f->m_fieldMetaDataMap);
+        m_f->FieldIOForFile(m_f->m_inputfiles[fldending][0])->Import(
+            m_f->m_inputfiles[fldending][0], m_f->m_fielddef, m_f->m_data,
+            m_f->m_fieldMetaDataMap);
     }
 
     // if m_exp defined presume we want to load all field  into expansions

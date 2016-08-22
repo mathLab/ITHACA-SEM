@@ -71,6 +71,21 @@ namespace Nektar
                            m_comm->GetColumnComm()->GetColumnComm()  :
                            m_comm->GetColumnComm();
 
+            ASSERTL0( m_homogeneousBasis->GetNumPoints() %
+                      m_StripZcomm->GetSize() == 0,
+                      "HomModesZ should be a multiple of npz.");
+
+            if (  (m_homogeneousBasis->GetBasisType() !=
+                    LibUtilities::eFourierHalfModeRe)
+               && (m_homogeneousBasis->GetBasisType() !=
+                    LibUtilities::eFourierHalfModeIm) )
+            {
+                ASSERTL0(
+                    (m_homogeneousBasis->GetNumPoints() /
+                     m_StripZcomm->GetSize()) % 2 == 0,
+                    "HomModesZ/npz should be an even integer.");
+            }
+
             m_transposition = MemoryManager<LibUtilities::Transposition>
                                 ::AllocateSharedPtr(HomoBasis, m_comm, m_StripZcomm);
 

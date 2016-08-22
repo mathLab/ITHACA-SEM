@@ -138,6 +138,25 @@ SpatialDomains::GeometrySharedPtr Triangle::GetGeom(int coordDim)
     return ret;
 }
 
+StdRegions::Orientation Triangle::GetEdgeOrient(int edgeId, EdgeSharedPtr edge)
+{
+    int locVert = edgeId;
+    if (edge->m_n1 == m_vertex[locVert])
+    {
+        return StdRegions::eForwards;
+    }
+    else if (edge->m_n2 == m_vertex[locVert])
+    {
+        return StdRegions::eBackwards;
+    }
+    else
+    {
+        ASSERTL1(false, "Edge is not connected to this triangle.");
+    }
+
+    return StdRegions::eNoOrientation;
+}
+
 /**
  * @brief Return the number of nodes defining a triangle.
  */
@@ -150,92 +169,71 @@ unsigned int Triangle::GetNumNodes(ElmtConfig pConf)
         return (n + 1) * (n + 2) / 2;
 }
 
-void Triangle::Complete(int order)
+void Triangle::MakeOrder(int                                order,
+                         SpatialDomains::GeometrySharedPtr  geom,
+                         LibUtilities::PointsType           pType,
+                         int                                coordDim,
+                         int                               &id,
+                         bool                               justConfig)
 {
-    int i, j;
+    m_conf.m_order       = order;
+    m_curveType          = pType;
+    m_conf.m_volumeNodes = false;
+    m_volumeNodes.clear();
 
-    // Create basis key for a nodal tetrahedron.
-    LibUtilities::BasisKey B0(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-    LibUtilities::BasisKey B1(
-        LibUtilities::eOrtho_B,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussRadauMAlpha1Beta0));
-
-    // Create a standard nodal triangle in order to get the
-    // Vandermonde matrix to perform interpolation to nodal points.
-    StdRegions::StdNodalTriExpSharedPtr nodalTri =
-        MemoryManager<StdRegions::StdNodalTriExp>::AllocateSharedPtr(
-            B0, B1, LibUtilities::eNodalTriEvenlySpaced);
-
-    SpatialDomains::TriGeomSharedPtr geom =
-        boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(this->GetGeom(3));
-
-    // Create basis key for a triangle.
-    LibUtilities::BasisKey C0(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-    LibUtilities::BasisKey C1(
-        LibUtilities::eOrtho_B,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussRadauMAlpha1Beta0));
-
-    // Create a triangle.
-    LocalRegions::TriExpSharedPtr tri =
-        MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(C0, C1, geom);
-
-    // Get coordinate array for tetrahedron.
-    int nqtot = tri->GetTotPoints();
-    Array<OneD, NekDouble> alloc(6 * nqtot);
-    Array<OneD, NekDouble> xi(alloc);
-    Array<OneD, NekDouble> yi(alloc + nqtot);
-    Array<OneD, NekDouble> zi(alloc + 2 * nqtot);
-    Array<OneD, NekDouble> xo(alloc + 3 * nqtot);
-    Array<OneD, NekDouble> yo(alloc + 4 * nqtot);
-    Array<OneD, NekDouble> zo(alloc + 5 * nqtot);
-    Array<OneD, NekDouble> tmp;
-
-    tri->GetCoords(xi, yi, zi);
-
-    for (i = 0; i < 3; ++i)
+    // Triangles of order < 3 have no interior volume points.
+    if (order == 1 || order == 2)
     {
-        Array<OneD, NekDouble> coeffs(nodalTri->GetNcoeffs());
-        tri->FwdTrans(alloc + i * nqtot, coeffs);
-        // Apply Vandermonde matrix to project onto nodal space.
-        nodalTri->ModalToNodal(coeffs, tmp = alloc + (i + 3) * nqtot);
+        m_conf.m_faceNodes = false;
+        return;
     }
 
-    // Now extract points from the co-ordinate arrays into the
-    // edge/face/volume nodes. First, extract edge-interior nodes.
-    for (i = 0; i < 3; ++i)
+    m_conf.m_faceNodes = true;
+
+    if (justConfig)
     {
-        int pos = 3 + i * (order - 1);
-        m_edge[i]->m_edgeNodes.clear();
-        for (j = 0; j < order - 1; ++j)
+        return;
+    }
+
+    int nPoints = order + 1;
+    StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+
+    Array<OneD, NekDouble> px, py;
+    LibUtilities::PointsKey pKey(nPoints, pType);
+    ASSERTL1(pKey.GetPointsDim() == 2, "Points distribution must be 2D");
+    LibUtilities::PointsManager()[pKey]->GetPoints(px, py);
+
+    Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
+
+    for (int i = 0; i < coordDim; ++i)
+    {
+        phys[i] = Array<OneD, NekDouble>(xmap->GetTotPoints());
+        xmap->BwdTrans(geom->GetCoeffs(i), phys[i]);
+    }
+
+    const int nTriPts = nPoints * (nPoints + 1) / 2;
+    const int nTriIntPts = (nPoints - 3) * (nPoints - 2) / 2;
+    m_volumeNodes.resize(nTriIntPts);
+
+    for (int i = 3 + 3*(nPoints-2), cnt = 0; i < nTriPts; ++i, ++cnt)
+    {
+        Array<OneD, NekDouble> xp(2);
+        xp[0] = px[i];
+        xp[1] = py[i];
+
+        Array<OneD, NekDouble> x(3, 0.0);
+        for (int j = 0; j < coordDim; ++j)
         {
-            m_edge[i]->m_edgeNodes.push_back(NodeSharedPtr(
-                new Node(0, xo[pos + j], yo[pos + j], zo[pos + j])));
+            x[j] = xmap->PhysEvaluate(xp, phys[j]);
         }
-    }
 
-    // Extract face-interior nodes.
-    int pos = 3 + 3 * (order - 1);
-    for (i = pos; i < (order + 1) * (order + 2) / 2; ++i)
-    {
-        m_volumeNodes.push_back(
-            NodeSharedPtr(new Node(0, xo[i], yo[i], zo[i])));
+        m_volumeNodes[cnt] = boost::shared_ptr<Node>(
+            new Node(id++, x[0], x[1], x[2]));
     }
 
     m_conf.m_order       = order;
     m_conf.m_faceNodes   = true;
-    m_conf.m_volumeNodes = true;
+    m_conf.m_volumeNodes = false;
 }
 }
 }

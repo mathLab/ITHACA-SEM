@@ -1979,6 +1979,7 @@ namespace Nektar
         
         void ExpList::ExtractFileBCs(
             const std::string               &fileName,
+            LibUtilities::CommSharedPtr      comm,
             const std::string               &varName,
             const boost::shared_ptr<ExpList> locExpList)
         {
@@ -1989,8 +1990,11 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            LibUtilities::FieldIO f(m_session->GetComm());
-            f.Import(fileName, FieldDef, FieldData);
+            std::string ft = LibUtilities::FieldIO::GetFileType(fileName, comm);
+            LibUtilities::FieldIOSharedPtr f = LibUtilities::GetFieldIOFactory()
+                .CreateInstance(ft, comm, m_session->GetSharedFilesystem());
+
+            f->Import(fileName, FieldDef, FieldData);
 
             bool found = false;
             for (j = 0; j < FieldDef.size(); ++j)
@@ -2437,8 +2441,8 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            vector<bool> returnval;
-            return returnval;
+            static vector<bool> tmp;
+            return tmp;
         }
 
 

@@ -133,6 +133,7 @@ private:
     NekDouble                    m_LhomZ;
     bool                         m_homogen_dealiasing;
 };
+
 }
 }
 

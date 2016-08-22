@@ -97,9 +97,7 @@ FilterThresholdMax::FilterThresholdMax(
         m_thresholdVar = x - varlist.begin();
     }
 
-    m_fld = MemoryManager<LibUtilities::FieldIO>
-                ::AllocateSharedPtr(pSession->GetComm());
-
+    m_fld = LibUtilities::FieldIO::CreateDefault(pSession);
 }
 
 FilterThresholdMax::~FilterThresholdMax()

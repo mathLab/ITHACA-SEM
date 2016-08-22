@@ -214,12 +214,13 @@ void Module::ProcessEdges(bool ReprocessEdges)
     // Create links for 1D elements
     for (int i = 0; i < m_mesh->m_element[1].size(); ++i)
     {
-        NodeSharedPtr v0 = m_mesh->m_element[1][i]->GetVertex(0);
-        NodeSharedPtr v1 = m_mesh->m_element[1][i]->GetVertex(1);
+        ElementSharedPtr elmt = m_mesh->m_element[1][i];
+        NodeSharedPtr v0 = elmt->GetVertex(0);
+        NodeSharedPtr v1 = elmt->GetVertex(1);
         vector<NodeSharedPtr> edgeNodes;
         EdgeSharedPtr E = boost::shared_ptr<Edge>(
-                               new Edge(v0, v1, edgeNodes,
-                     m_mesh->m_element[1][i]->GetConf().m_edgeCurveType));
+            new Edge(v0, v1, edgeNodes, elmt->GetConf().m_edgeCurveType));
+
         EdgeSet::iterator it = m_mesh->m_edgeSet.find(E);
         if (it == m_mesh->m_edgeSet.end())
         {
@@ -227,20 +228,25 @@ void Module::ProcessEdges(bool ReprocessEdges)
                  << "1D element " << i << endl;
             abort();
         }
-        m_mesh->m_element[1][i]->SetEdgeLink(*it);
+        elmt->SetEdgeLink(*it);
 
         // Update 2D element boundary map.
         pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);
         eMap.first->SetBoundaryLink(eMap.second, i);
 
+        // Update vertices
+        elmt->SetVertex(0, (*it)->m_n1, false);
+        elmt->SetVertex(1, (*it)->m_n2, false);
+
         // Copy curvature to edge.
         if ((*it)->m_edgeNodes.size() > 0)
         {
-            ElementSharedPtr edge = m_mesh->m_element[1][i];
+            ElementSharedPtr edge = elmt;
             if (edge->GetVertex(0) == (*it)->m_n1)
             {
                 edge->SetVolumeNodes((*it)->m_edgeNodes);
             }
+            elmt->SetCurveType((*it)->m_curveType);
         }
     }
 }
@@ -283,14 +289,14 @@ void Module::ProcessFaces(bool ReprocessFaces)
                 {
                     (*(testIns.first))->m_id = fid++;
                     (*(testIns.first))->m_elLink.push_back(
-                    pair<ElementSharedPtr,int>(elmt[i],j));
+                        pair<ElementSharedPtr,int>(elmt[i],j));
                 }
                 else
                 {
                     elmt[i]->SetFace(j,*testIns.first);
                     // Update face to element map.
                     (*(testIns.first))->m_elLink.push_back(
-                    pair<ElementSharedPtr,int>(elmt[i],j));
+                        pair<ElementSharedPtr,int>(elmt[i],j));
                 }
             }
         }
@@ -299,12 +305,14 @@ void Module::ProcessFaces(bool ReprocessFaces)
     // Create links for 2D elements
     for (int i = 0; i < m_mesh->m_element[2].size(); ++i)
     {
-        vector<NodeSharedPtr> vertices = m_mesh->m_element[2][i]->GetVertexList();
+        ElementSharedPtr elmt = m_mesh->m_element[2][i];
+        vector<NodeSharedPtr> vertices = elmt->GetVertexList();
         vector<NodeSharedPtr> faceNodes;
-        vector<EdgeSharedPtr> edgeList = m_mesh->m_element[2][i]->GetEdgeList();
+        vector<EdgeSharedPtr> edgeList = elmt->GetEdgeList();
         FaceSharedPtr F = boost::shared_ptr<Face>(
             new Face(vertices, faceNodes, edgeList,
-                     m_mesh->m_element[2][i]->GetConf().m_faceCurveType));
+                     elmt->GetConf().m_faceCurveType));
+
         FaceSet::iterator it = m_mesh->m_faceSet.find(F);
         if (it == m_mesh->m_faceSet.end())
         {
@@ -312,11 +320,26 @@ void Module::ProcessFaces(bool ReprocessFaces)
                  << "element " << i << endl;
             abort();
         }
-        m_mesh->m_element[2][i]->SetFaceLink(*it);
+
+        elmt->SetFaceLink(*it);
+
+        // Set edges/vertices
+        for (int j = 0; j < elmt->GetVertexCount(); ++j)
+        {
+            elmt->SetVertex(j, (*it)->m_vertexList[j], false);
+            elmt->SetEdge(j, (*it)->m_edgeList[j], false);
+        }
 
         // Update 3D element boundary map.
         pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);
         eMap.first->SetBoundaryLink(eMap.second, i);
+
+        // Copy face curvature
+        if ((*it)->m_faceNodes.size() > 0)
+        {
+            elmt->SetVolumeNodes((*it)->m_faceNodes);
+            elmt->SetCurveType((*it)->m_curveType);
+        }
     }
 }
 

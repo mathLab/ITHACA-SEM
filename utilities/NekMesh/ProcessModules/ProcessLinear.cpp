@@ -69,7 +69,9 @@ void ProcessLinear::Process()
     bool all     = m_config["all"].as<bool>();
     bool invalid = m_config["invalid"].as<bool>();
 
-    ASSERTL0(all || invalid, "must specify option all or invalid");
+    ASSERTL0(all || invalid,
+             "Must specify an option: all (to remove all curvature) or invalid "
+             "(to remove curvature that makes elements invalid)");
 
     if (all)
     {
@@ -92,51 +94,122 @@ void ProcessLinear::Process()
             vector<NodeSharedPtr> empty;
             m_mesh->m_element[m_mesh->m_expDim][i]->SetVolumeNodes(empty);
         }
+
+        if (m_mesh->m_verbose)
+        {
+            cerr << "Removed all element curvature" << endl;
+        }
     }
     else if (invalid)
     {
-        if (m_mesh->m_expDim == 3)
+        map<int,vector<FaceSharedPtr> > eidToFace;
+        map<int,vector<ElementSharedPtr> > eidToElm;
+
+        vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
+
+        for(int i = 0; i < el.size(); i++)
         {
-            FaceSet::iterator fit;
-            for (fit = m_mesh->m_faceSet.begin();
-                 fit != m_mesh->m_faceSet.end();
-                 fit++)
+            vector<EdgeSharedPtr> e = el[i]->GetEdgeList();
+            for(int j = 0; j < e.size(); j++)
             {
-                ASSERTL0((*fit)->m_faceNodes.size() == 0,
-                         "has not be setup to handle face curvature yet");
+                eidToElm[e[j]->m_id].push_back(el[i]);
             }
         }
 
-        vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
-        // Iterate over list of elements of expansion dimension.
-        for (int i = 0; i < el.size(); ++i)
+        if(m_mesh->m_expDim > 2)
         {
-            // Create elemental geometry.
-            SpatialDomains::GeometrySharedPtr geom =
-                el[i]->GetGeom(m_mesh->m_spaceDim);
-
-            // Generate geometric factors.
-            SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
-
-            // Get the Jacobian and, if it is negative, print a warning
-            // message.
-            if (!gfac->IsValid())
+            FaceSet::iterator it;
+            for(it = m_mesh->m_faceSet.begin();
+                it != m_mesh->m_faceSet.end(); it++)
             {
-
-                vector<FaceSharedPtr> f = el[i]->GetFaceList();
-                for (int j = 0; j < f.size(); j++)
+                vector<EdgeSharedPtr> es = (*it)->m_edgeList;
+                for(int i = 0; i < es.size(); i++)
                 {
-                    vector<EdgeSharedPtr> e = f[j]->m_edgeList;
-                    for (int k = 0; k < e.size(); k++)
+                    eidToFace[es[i]->m_id].push_back((*it));
+                }
+            }
+        }
+
+        set<int> neigh;
+        vector<NodeSharedPtr> zeroNodes;
+        boost::unordered_set<int> clearedEdges, clearedFaces, clearedElmts;
+
+        // Iterate over list of elements of expansion dimension.
+        while(el.size() > 0)
+        {
+            for (int i = 0; i < el.size(); ++i)
+            {
+                // Create elemental geometry.
+                SpatialDomains::GeometrySharedPtr geom =
+                    el[i]->GetGeom(m_mesh->m_spaceDim);
+
+                // Generate geometric factors.
+                SpatialDomains::GeomFactorsSharedPtr gfac =
+                    geom->GetGeomFactors();
+
+                if (!gfac->IsValid())
+                {
+                    clearedElmts.insert(el[i]->GetId());;
+                    el[i]->SetVolumeNodes(zeroNodes);
+
+                    vector<FaceSharedPtr> f = el[i]->GetFaceList();
+                    for (int j = 0; j < f.size(); j++)
                     {
-                        if (e[k]->m_edgeNodes.size())
+                        f[j]->m_faceNodes.clear();
+                        clearedFaces.insert(f[j]->m_id);
+                    }
+                    vector<EdgeSharedPtr> e = el[i]->GetEdgeList();
+                    for(int j = 0; j < e.size(); j++)
+                    {
+                        e[j]->m_edgeNodes.clear();
+                        clearedEdges.insert(e[j]->m_id);
+                    }
+
+                    if(m_mesh->m_expDim > 2)
+                    {
+                        for(int j = 0; j < e.size(); j++)
                         {
-                            vector<NodeSharedPtr> zeroNodes;
-                            e[k]->m_edgeNodes = zeroNodes;
+                            map<int,vector<FaceSharedPtr> >::iterator it =
+                                eidToFace.find(e[j]->m_id);
+                            for(int k = 0; k < it->second.size(); k++)
+                            {
+                                clearedEdges.insert(it->second[k]->m_id);
+                                it->second[k]->m_faceNodes.clear();
+                            }
+                        }
+                    }
+
+                    for(int j = 0; j < e.size(); j++)
+                    {
+                        map<int,vector<ElementSharedPtr> >::iterator it =
+                                            eidToElm.find(e[j]->m_id);
+                        for(int k = 0; k < it->second.size(); k++)
+                        {
+                            neigh.insert(it->second[k]->GetId());
                         }
                     }
                 }
             }
+
+            vector<ElementSharedPtr> tmp = el;
+            el.clear();
+            set<int>::iterator it;
+            for(int i = 0; i < tmp.size(); i++)
+            {
+                it = neigh.find(tmp[i]->GetId());
+                if(it != neigh.end())
+                {
+                    el.push_back(tmp[i]);
+                }
+            }
+            neigh.clear();
+        }
+
+        if (m_mesh->m_verbose)
+        {
+            cerr << "Removed curvature from " << clearedElmts.size()
+                 << " elements (" << clearedEdges.size() << " edges, "
+                 << clearedFaces.size() << " faces)" << endl;
         }
     }
 }

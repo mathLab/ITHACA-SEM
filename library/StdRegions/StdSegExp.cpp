@@ -641,6 +641,32 @@ namespace Nektar
 
             switch(mattype = mkey.GetMatrixType())
             {
+            case ePhysInterpToEquiSpaced:
+                {
+                    int nq = m_base[0]->GetNumPoints();
+
+                    // take definition from key
+                    if(mkey.ConstFactorExists(eFactorConst))
+                    {
+                        nq = (int) mkey.GetConstFactor(eFactorConst);
+                    }
+
+                    int neq = LibUtilities::StdSegData::
+                                              getNumberOfCoefficients(nq);
+                    Array<OneD, NekDouble >   coords (1);
+                    DNekMatSharedPtr          I     ;
+                    Mat                     = MemoryManager<DNekMat>::
+                                                AllocateSharedPtr(neq, nq);
+
+                    for(int i = 0; i < neq; ++i)
+                    {
+                        coords[0] = -1.0 + 2*i/(NekDouble)(neq-1);
+                        I         = m_base[0]->GetI(coords);
+                        Vmath::Vcopy(nq, I->GetRawPtr(), 1,
+                                         Mat->GetRawPtr()+i,neq);
+                    }
+                }
+                break;
             case eFwdTrans:
                 {
                     Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
@@ -761,6 +787,20 @@ namespace Nektar
             return localDOF;
         }
 
+        void StdSegExp::v_GetSimplexEquiSpacedConnectivity(
+            Array<OneD, int> &conn,
+            bool              standard)
+        {
+            int np = m_base[0]->GetNumPoints();
+
+            conn     = Array<OneD, int>(2*(np-1));
+            int cnt  = 0;
+            for(int i = 0; i < np-1; ++i)
+            {
+                conn[cnt++] = i;
+                conn[cnt++] = i+1;
+            }
+        }
 
     }//end namespace
 }//end namespace

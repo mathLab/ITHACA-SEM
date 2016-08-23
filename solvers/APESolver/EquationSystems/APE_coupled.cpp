@@ -138,8 +138,14 @@ void APE_coupled::receiveFields(int step)
 
     m_coupling->ReceiveInterp(step, m_time, recField);
 
-    ASSERTL0(Vmath::Vmin(nq, m_bf[0], 1) > 0.0, "received p0 <= 0.0");
-    ASSERTL0(Vmath::Vmin(nq, m_bf[1], 1) > 0.0, "received rho0 <= 0.0");
+    int p0err = (Vmath::Vmin(nq, m_bf[0], 1) < 0.0);
+    m_session->GetComm()->AllReduce(p0err, LibUtilities::ReduceMax);
+    ASSERTL0 (p0err == 0, "received rho0 <= 0.0");
+
+    int rho0err = (Vmath::Vmin(nq, m_bf[1], 1) < 0.0);
+    m_session->GetComm()->AllReduce(rho0err, LibUtilities::ReduceMax);
+    ASSERTL0 (rho0err == 0, "received p0 <= 0.0");
+
 }
 
 void APE_coupled::v_Output(void)

@@ -98,7 +98,6 @@ protected:
     void CalcMinJac();
 
     template<int DIM> int IsIndefinite();
-    template<int DIM> void ModifyHessian();
     template<int DIM> void MinEigen(NekDouble &val, Array<OneD, NekDouble> &vec);
 
     NekDouble dx;
@@ -109,9 +108,9 @@ protected:
 
     static const NekDouble gam;
 
-    static NekDouble c1() {return 1e-4;}
+    static NekDouble c1() {return 1e-3;}
     static NekDouble c2() {return 0.9;}
-    static NekDouble gradTol() {return 1e-16;}
+    static NekDouble gradTol() {return 1e-20;}
     static NekDouble alphaTol() {return 1e-10;}
 };
 

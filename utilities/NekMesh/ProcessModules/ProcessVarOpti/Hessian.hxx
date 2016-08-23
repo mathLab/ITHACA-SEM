@@ -47,6 +47,16 @@ template<int DIM> int NodeOpti::IsIndefinite()
     ASSERTL0(false,"DIM error");
 }
 
+template<> int NodeOpti::IsIndefinite<1>()
+{
+    if(G[1] < 0.0)
+    {
+        return 2;
+    }
+
+    return 0;
+}
+
 template<> int NodeOpti::IsIndefinite<2>()
 {
     Array<OneD, NekDouble> eigR(2);
@@ -78,7 +88,7 @@ template<> int NodeOpti::IsIndefinite<2>()
     {
         if(eval(0,0) < 0.0 && eval(1,1) < 0.0)
         {
-            ASSERTL0(false,"not sure what to do with this");
+            return 2;
         }
         else
         {
@@ -136,132 +146,15 @@ template<> int NodeOpti::IsIndefinite<3>()
     return 0;
 }
 
-template<int DIM> void NodeOpti::ModifyHessian()
-{
-    ASSERTL0(false,"DIM error");
-}
-
-template<> void NodeOpti::ModifyHessian<2>()
-{
-    Array<OneD, NekDouble> eigR(2);
-    Array<OneD, NekDouble> eigI(2);
-    NekMatrix<NekDouble> H(2,2);
-    H(0,0) = G[2];
-    H(1,0) = G[3];
-    H(0,1) = H(1,0);
-    H(1,1) = G[4];
-
-    int nVel = 2;
-    char jobvl = 'N', jobvr = 'N';
-    int worklen = 8*nVel, info;
-
-    DNekMat eval   (nVel, nVel, 0.0, eDIAGONAL);
-    DNekMat evec   (nVel, nVel, 0.0, eFULL);
-    Array<OneD, NekDouble> vl  (nVel*nVel);
-    Array<OneD, NekDouble> work(worklen);
-    Array<OneD, NekDouble> wi  (nVel);
-
-    Lapack::Dgeev(jobvl, jobvr, nVel, H.GetRawPtr(), nVel,
-                  &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
-                  &(evec.GetPtr())[0], nVel,
-                  &work[0], worklen, info);
-
-    ASSERTL0(!info,"dgeev failed");
-
-    DNekMat evecT = evec;
-    evecT.Transpose();
-
-    NekDouble delta = 1e-6;
-
-    for(int i = 0; i < 2; i++)
-    {
-        eval(i,i) = fabs(eval(i,i));
-        if(eval(i,i) < delta)
-        {
-            eval(i,i) = delta;
-        }
-    }
-
-    DNekMat Hb = evec * eval * evecT;
-
-    G[2] = Hb(0,0);
-    G[3] = Hb(1,0);
-    G[4] = Hb(1,1);
-
-    /*Lapack::Dgeev(jobvl, jobvr, nVel, Hb.GetRawPtr(), nVel,
-                  &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
-                  &(evec.GetPtr())[0], nVel,
-                  &work[0], worklen, info);
-
-    ASSERTL0(!(eval(0,0) < 0.0 || eval(1,1) < 0.0 || eval(2,2) < 0.0),"still negative");*/
-}
-
-template<> void NodeOpti::ModifyHessian<3>()
-{
-    Array<OneD, NekDouble> eigR(3);
-    Array<OneD, NekDouble> eigI(3);
-    NekMatrix<NekDouble> H(3,3);
-    H(0,0) = G[3];
-    H(1,0) = G[4];
-    H(0,1) = H(1,0);
-    H(2,0) = G[5];
-    H(0,2) = H(2,0);
-    H(1,1) = G[6];
-    H(2,1) = G[7];
-    H(1,2) = H(2,1);
-    H(2,2) = G[8];
-
-    int nVel = 3;
-    char jobvl = 'N', jobvr = 'N';
-    int worklen = 8*nVel, info;
-
-    DNekMat eval   (nVel, nVel, 0.0, eDIAGONAL);
-    DNekMat evec   (nVel, nVel, 0.0, eFULL);
-    Array<OneD, NekDouble> vl  (nVel*nVel);
-    Array<OneD, NekDouble> work(worklen);
-    Array<OneD, NekDouble> wi  (nVel);
-
-    Lapack::Dgeev(jobvl, jobvr, nVel, H.GetRawPtr(), nVel,
-                  &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
-                  &(evec.GetPtr())[0], nVel,
-                  &work[0], worklen, info);
-
-    DNekMat evecT = evec;
-    evecT.Transpose();
-
-    NekDouble delta = 1e-6;
-
-    for(int i = 0; i < 3; i++)
-    {
-        eval(i,i) = fabs(eval(i,i));
-        if(eval(i,i) < delta)
-        {
-            eval(i,i) = delta;
-        }
-    }
-
-    DNekMat Hb = evec * eval * evecT;
-
-    G[3] = Hb(0,0);
-    G[4] = Hb(1,0);
-    G[5] = Hb(2,0);
-    G[6] = Hb(1,1);
-    G[7] = Hb(2,1);
-    G[8] = Hb(2,2);
-
-    /*Lapack::Dgeev(jobvl, jobvr, nVel, Hb.GetRawPtr(), nVel,
-                  &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
-                  &(evec.GetPtr())[0], nVel,
-                  &work[0], worklen, info);
-    if(eval(0,0) < 0.0 || eval(1,1) < 0.0 || eval(2,2) < 0.0)
-    {
-        cout << "still negative" << endl;
-    }*/
-}
-
 template<int DIM> void NodeOpti::MinEigen(NekDouble &val, Array<OneD, NekDouble> &vec)
 {
     ASSERTL0(false,"DIM error");
+}
+
+template<> void NodeOpti::MinEigen<1>(NekDouble &val, Array<OneD, NekDouble> &vec)
+{
+    vec[0] = 1.0;
+    val = G[1];
 }
 
 template<> void NodeOpti::MinEigen<2>(NekDouble &val, Array<OneD, NekDouble> &vec)
@@ -303,8 +196,8 @@ template<> void NodeOpti::MinEigen<2>(NekDouble &val, Array<OneD, NekDouble> &ve
     }
 
     val = eval(minI,minI);
-    vec[0] = evec(minI,0);
-    vec[1] = evec(minI,1);
+    vec[0] = evec(0,minI);
+    vec[1] = evec(1,minI);
 }
 
 template<> void NodeOpti::MinEigen<3>(NekDouble &val, Array<OneD, NekDouble> &vec)

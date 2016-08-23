@@ -158,7 +158,7 @@ void NodeOpti3D3D::Optimise()
         NekDouble yc       = node->m_y;
         NekDouble zc       = node->m_z;
 
-        Array<OneD, NekDouble> sk(3), dk(3), pk(3);
+        Array<OneD, NekDouble> sk(3), dk(3);
         bool DNC = false;
         NekDouble lhs;
 
@@ -215,6 +215,8 @@ void NodeOpti3D3D::Optimise()
                         2.0*(0.5*lhs + G[0]*dk[0]+G[1]*dk[1]+G[2]*dk[2]));
         }
 
+        NekDouble pg = (G[0]*sk[0]+G[1]*sk[1]+G[2]*sk[2]);
+
         if(!runDNC)
         {
             //normal gradient line Search
@@ -237,7 +239,7 @@ void NodeOpti3D3D::Optimise()
                 //
                 // Wolfe conditions
                 if (newVal <= currentW + c1() * (
-                    alpha*(G[0]*sk[0]+G[1]*sk[1]+G[2]*sk[2]) + 0.5*alpha*alpha*hes))
+                    alpha*pg+ 0.5*alpha*alpha*hes))
                 {
                     found = true;
                     break;
@@ -248,7 +250,6 @@ void NodeOpti3D3D::Optimise()
         }
         else
         {
-            cout << "using dnc" << endl;
             NekDouble sig = 0.01;  //small inital step size
             NekDouble alpha = sig;
 
@@ -267,7 +268,7 @@ void NodeOpti3D3D::Optimise()
                 //
                 // Wolfe conditions
                 if (newVal <= currentW + c1() * (
-                    alpha*(G[0]*dk[0]+G[1]*dk[1]+G[2]*dk[2]) + 0.5*alpha*alpha*hes))
+                    alpha*pg + 0.5*alpha*alpha*hes))
                 {
                     found = true;
                     break;
@@ -285,6 +286,8 @@ void NodeOpti3D3D::Optimise()
 
             mtx.lock();
             res->nReset++;
+            if(runDNC)
+                cout << "dnc reset" << endl;
             mtx.unlock();
         }
 

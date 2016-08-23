@@ -208,9 +208,9 @@ void NodeOpti3D3D::Optimise()
         bool runDNC = false; //so want to make this varible runDMC
         bool found  = false;
 
+        NekDouble skmag = sqrt(sk[0]*sk[0] + sk[1]*sk[1] + sk[2]*sk[2]);
         if(DNC)
         {
-            NekDouble skmag = sqrt(sk[0]*sk[0] + sk[1]*sk[1] + sk[2]*sk[2]);
             runDNC = !((G[0]*sk[0]+G[1]*sk[1]+G[2]*sk[2])/skmag <=
                         2.0*(0.5*lhs + G[0]*dk[0]+G[1]*dk[1]+G[2]*dk[2]));
         }
@@ -250,7 +250,8 @@ void NodeOpti3D3D::Optimise()
         }
         else
         {
-            NekDouble sig = 0.01;  //small inital step size
+            cout << "3D DNC" << endl;
+            NekDouble sig = 0.1;  
             NekDouble alpha = sig;
 
             NekDouble hes = lhs;

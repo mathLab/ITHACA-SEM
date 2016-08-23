@@ -146,6 +146,7 @@ void NodeOpti1D3D::Optimise()
         }
         else
         {
+            cout << "curve DNC" << endl;
             NekDouble sig = 0.01;  //small inital step size
             NekDouble alpha = sig;
 
@@ -260,9 +261,10 @@ void NodeOpti2D3D::Optimise()
         bool runDNC = false; //so want to make this varible runDMC
         bool found  = false;
 
+        NekDouble skmag = sqrt(sk[0]*sk[0] + sk[1]*sk[1]);
+
         if(DNC)
         {
-            NekDouble skmag = sqrt(sk[0]*sk[0] + sk[1]*sk[1]);
             runDNC = !((G[0]*sk[0]+G[1]*sk[1])/skmag <=
                         2.0*(0.5*lhs + G[0]*dk[0]+G[1]*dk[1]));
         }
@@ -314,7 +316,7 @@ void NodeOpti2D3D::Optimise()
         else
         {
             cout << "surf DNC" << endl;
-            NekDouble sig = 1.0;  //small inital step size
+            NekDouble sig = 0.1;    //small inital step size
             NekDouble alpha = sig;
 
             NekDouble hes = lhs;

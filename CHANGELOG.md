@@ -21,6 +21,9 @@ v4.4.0
 - Add support for HDF5 as an alternative output to XML-based output, including
   refactoring of FieldIO, improvements to MPI interface and added communicators
   to boundary conditions (!615)
+- Allow expansions to be loaded directly from field file (!617)
+- New options for load balancing (DOF or BOUNDARY) in mesh partitioner (!617)
+- Update Body/Field forces at each timestep (!665)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)
@@ -29,6 +32,7 @@ v4.4.0
 - Use a continuous basefield projection and revert to constant c formulation (!664)
 - Added ability to compute CFL number (!664)
 - Output Sourceterm (!664)
+- Use the Forcing framework to define source terms (!665)
 
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
@@ -56,6 +60,9 @@ v4.3.4
 **Library:**
 - Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of
   large simulations (!672)
+- Added additional assertions to ensure homogeneous simulations have an even
+  number of planes per process (!666)
+- Fix compilation with NEKTAR_USE_MESHGEN option
 - Fix IterativeFull solver in parallel (!685)
 
 v4.3.3

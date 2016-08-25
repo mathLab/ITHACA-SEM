@@ -147,9 +147,15 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual Array<OneD, unsigned int> 
                 v_GetEdgeInverseBoundaryMap(int eid);
 
+            LOCAL_REGIONS_EXPORT virtual Array<OneD, Array<OneD, unsigned int> >
+                v_GetEdgeInverseBoundaryMap(void);
+            
             LOCAL_REGIONS_EXPORT virtual Array<OneD, unsigned int>
                 v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = StdRegions::eNoOrientation);
-
+            
+            LOCAL_REGIONS_EXPORT virtual Array<OneD,  Array<OneD, unsigned int> >
+                v_GetFaceInverseBoundaryMap();
+            
             LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildTransformationMatrix(
                 const DNekScalMatSharedPtr &r_bnd, 
                 const StdRegions::MatrixType matrixType);

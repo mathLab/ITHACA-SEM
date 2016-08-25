@@ -187,7 +187,7 @@ namespace Nektar
                 {
                     DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
                     DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
-                        m_expList.lock()->GetOffset_Elmt_Id(n), mat);
+                        n, mat);
                     m_schurCompl->SetBlock(n, n, t);
                 }
             }

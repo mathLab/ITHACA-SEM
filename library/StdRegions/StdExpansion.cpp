@@ -1750,6 +1750,14 @@ namespace Nektar
             return noinversemap;
         }
 
+        Array<OneD, Array<OneD, unsigned int> >
+        StdExpansion::v_GetEdgeInverseBoundaryMap()
+        {
+            ASSERTL0(false, "Not implemented.");
+            Array<OneD, Array<OneD, unsigned int> > noinversemap(1);
+            return noinversemap;
+        }
+        
         Array<OneD, unsigned int>
         StdExpansion::v_GetFaceInverseBoundaryMap(int fid,
                                 StdRegions::Orientation faceOrient)
@@ -1759,6 +1767,14 @@ namespace Nektar
             return noinversemap;
         }
 
+        Array<OneD, Array<OneD, unsigned int> > 
+        StdExpansion::v_GetFaceInverseBoundaryMap()
+        {
+            ASSERTL0(false, "Not implemented.");
+            Array<OneD, Array<OneD, unsigned int> > noinversemap(1);
+            return noinversemap;
+        }
+        
         DNekMatSharedPtr
         StdExpansion::v_BuildInverseTransformationMatrix(
             const DNekScalMatSharedPtr & m_transformationmatrix)

@@ -1314,10 +1314,10 @@ namespace Nektar
             DNekMatSharedPtr transformationmatrix;
             DNekMatSharedPtr transposedtransformationmatrix;
             
-            m_transformationmatrix =
+            transformationmatrix =
                 MemoryManager<DNekMat>::AllocateSharedPtr(
                     nBndCoeffs, nBndCoeffs, 0.0, storage);
-            m_transposedtransformationmatrix =
+            transposedtransformationmatrix =
                 MemoryManager<DNekMat>::AllocateSharedPtr(
                     nBndCoeffs, nBndCoeffs, 0.0, storage);
 
@@ -1855,6 +1855,53 @@ namespace Nektar
             return edgemaparray;
         }
 
+
+        Array<OneD, Array<OneD, unsigned int> >
+        Expansion3D::v_GetEdgeInverseBoundaryMap(void)
+        {
+            int n, j;
+            int nEdgeCoeffs;
+            int nBndCoeffs = NumBndryCoeffs();
+
+            Array<OneD, unsigned int> bmap(nBndCoeffs);
+            GetBoundaryMap(bmap);
+
+            // Map from full system to statically condensed system (i.e reverse
+            // GetBoundaryMap)
+            map<int, int> invmap;
+            for (j = 0; j < nBndCoeffs; ++j)
+            {
+                invmap[bmap[j]] = j;
+            }
+
+            int nedges = GetNedges(); 
+            Array<OneD, Array<OneD, unsigned int> > returnval(nedges);
+            
+            for(int eid = 0; eid < nedges; ++eid)
+            {
+                // Number of interior edge coefficients
+                nEdgeCoeffs = GetEdgeNcoeffs(eid) - 2;
+                
+                Array<OneD, unsigned int> edgemaparray(nEdgeCoeffs);
+                Array<OneD, unsigned int> maparray =
+                    Array<OneD, unsigned int>(nEdgeCoeffs);
+                Array<OneD, int> signarray         =
+                    Array<OneD, int>(nEdgeCoeffs, 1);
+                
+                // maparray is the location of the edge within the matrix
+                GetEdgeInteriorMap(eid, StdRegions::eForwards,
+                                   maparray, signarray);
+                
+                for (n = 0; n < nEdgeCoeffs; ++n)
+                {
+                    edgemaparray[n] = invmap[maparray[n]];
+                }
+                returnval[eid] = edgemaparray;
+            }
+
+            return returnval;
+        }
+        
         Array<OneD, unsigned int>
         Expansion3D::v_GetFaceInverseBoundaryMap(
             int fid,
@@ -1906,6 +1953,55 @@ namespace Nektar
             return facemaparray;
         }
 
+        Array<OneD, Array<OneD, unsigned int> > 
+        Expansion3D::v_GetFaceInverseBoundaryMap(void)
+        {
+            int n, j;
+            int nFaceCoeffs;
+
+            int nBndCoeffs = NumBndryCoeffs();
+
+            Array<OneD, unsigned int> bmap(nBndCoeffs);
+            GetBoundaryMap(bmap);
+
+            // Map from full system to statically condensed system (i.e reverse
+            // GetBoundaryMap)
+            map<int, int> reversemap;
+            for (j = 0; j < bmap.num_elements(); ++j)
+            {
+                reversemap[bmap[j]] = j;
+            }
+
+            int nfaces = GetNfaces();
+            Array<OneD, Array<OneD, unsigned int> > returnval(nfaces);
+
+            for(int fid = 0; fid < nfaces; ++fid)
+            {
+                // Number of interior face coefficients
+                nFaceCoeffs = GetFaceIntNcoeffs(fid);
+                
+                Array<OneD, unsigned int> facemaparray(nFaceCoeffs);
+                StdRegions::Orientation   fOrient; 
+                Array<OneD, unsigned int> maparray  =
+                    Array<OneD, unsigned int>(nFaceCoeffs);
+                Array<OneD, int>          signarray =
+                    Array<OneD, int>(nFaceCoeffs, 1);
+                
+                // maparray is the location of the face within the matrix
+                GetFaceInteriorMap(fid, StdRegions::eDir1FwdDir1_Dir2FwdDir2,
+                                   maparray, signarray);
+                
+                for (n = 0; n < nFaceCoeffs; ++n)
+                {
+                    facemaparray[n] = reversemap[maparray[n]];
+                }
+
+                returnval[fid] = facemaparray;
+            }
+            return returnval;
+        }
+
+        
         StdRegions::Orientation Expansion3D::v_GetForient(int face)
         {
             return m_geom->GetForient(face);

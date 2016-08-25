@@ -79,51 +79,35 @@ namespace Nektar
             const boost::weak_ptr<GlobalLinSys> m_linsys;
             boost::shared_ptr<AssemblyMap> m_locToGloMap;
 
-	    DNekBlkMatSharedPtr     m_BlkMat;
-            DNekScalMatSharedPtr    m_bnd_mat;
+	    DNekBlkMatSharedPtr  m_BlkMat;
+            DNekScalMatSharedPtr m_bnd_mat;
 
-            DNekScalBlkMatSharedPtr m_RBlk;
-            DNekScalBlkMatSharedPtr m_RTBlk;
-            DNekScalBlkMatSharedPtr m_InvRBlk;
-            DNekScalBlkMatSharedPtr m_InvRTBlk;
+            DNekBlkMatSharedPtr m_RBlk;
+            DNekBlkMatSharedPtr m_InvRBlk;
 
-            DNekScalMatSharedPtr    m_Rtet;
-            DNekScalMatSharedPtr    m_RTtet;
-            DNekScalMatSharedPtr    m_Rinvtet;
-            DNekScalMatSharedPtr    m_RTinvtet;
-
-            DNekScalMatSharedPtr    m_Rhex;
-            DNekScalMatSharedPtr    m_RThex;
-            DNekScalMatSharedPtr    m_Rinvhex;
-            DNekScalMatSharedPtr    m_RTinvhex;
-
-            DNekScalMatSharedPtr    m_Rprism;
-            DNekScalMatSharedPtr    m_RTprism;
-            DNekScalMatSharedPtr    m_Rinvprism;
-            DNekScalMatSharedPtr    m_RTinvprism;
-
-            DNekScalMatSharedPtr    m_maxRtet;
-            DNekScalMatSharedPtr    m_maxRTtet;
-            DNekScalMatSharedPtr    m_maxRhex;
-            DNekScalMatSharedPtr    m_maxRThex;
-            DNekScalMatSharedPtr    m_maxRTinvtet;
-            DNekScalMatSharedPtr    m_maxRTinvhex;
-
+            int m_nummodesmax;
+            std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr> m_maxRmat;
+            std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > m_edgeMapMaxR; 
+            std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > m_faceMapMaxR; 
+            
             Array<OneD, NekDouble>  m_locToGloSignMult;
             Array<OneD, NekDouble>  m_multiplicity;
             Array<OneD, int>        m_map;
 
+            // store how many consecutive similar blocks there are in R and Rinv
+            std::vector<std::pair<int,int> >  m_sameBlock;  
+            
 	private:
 
             void SetUpReferenceElements(void);
-
-            void SetUpVariableReferenceElements(void);
-
+            
             void CreateMultiplicityMap(void);
 
             void SetupBlockTransformationMatrix(void);
 
-            void ModifyPrismTransformationMatrix(
+            DNekMatSharedPtr ExtractLocMat(StdRegions::StdExpansionSharedPtr  &locExp);
+
+        void ModifyPrismTransformationMatrix(
                 LocalRegions::TetExpSharedPtr TetExp,
                 LocalRegions::PrismExpSharedPtr PrismExp,
                 DNekMatSharedPtr Rmodprism,
@@ -165,7 +149,7 @@ namespace Nektar
             virtual void v_BuildPreconditioner();
             
             virtual DNekScalMatSharedPtr
-                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalMat > &loc_mat);
+                v_TransformedSchurCompl(int n, const boost::shared_ptr<DNekScalMat > &loc_mat);
         };
     }
 }

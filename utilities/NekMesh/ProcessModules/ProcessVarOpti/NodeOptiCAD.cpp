@@ -146,7 +146,6 @@ void NodeOpti1D3D::Optimise()
         }
         else
         {
-            cout << "curve DNC" << endl;
             NekDouble sig = 0.01;  //small inital step size
             NekDouble alpha = sig;
 
@@ -315,26 +314,28 @@ void NodeOpti2D3D::Optimise()
         }
         else
         {
-            cout << "surf DNC" << endl;
-            NekDouble sig = 0.1;    //small inital step size
-            NekDouble alpha = sig;
+            NekDouble sig = 1.0;    //small inital step size
+            NekDouble beta = 0.5;
+            int l = 0;
+            NekDouble alpha = pow(beta,l);
 
             NekDouble hes = lhs;
 
             pg = (G[0]*dk[0]+G[1]*dk[1]);
 
-            while(alpha > alphaTol())
+            //choose whether to do forward or reverse line search
+            bool mustReverseLineSearch = false;
+            uvt[0] = uvc[0] + dk[0];
+            uvt[1] = uvc[1] + dk[1];
+            if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
+               uvt[1] < bd[2] || uvt[1] > bd[3])
             {
-                uvt[0] = uvc[0] + alpha * dk[0];
-                uvt[1] = uvc[1] + alpha * dk[1];
-
-                if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
-                   uvt[1] < bd[2] || uvt[1] > bd[3])
-                {
-                    alpha /= 2.0;
-                    continue;
-                }
-
+                //because its out of the parameter plane
+                mustReverseLineSearch = true;
+            }
+            if(!mustReverseLineSearch)
+            {
+                //can try out the vector step
                 p = surf->P(uvt);
                 node->m_x = p[0];
                 node->m_y = p[1];
@@ -342,18 +343,102 @@ void NodeOpti2D3D::Optimise()
                 node->Move(p,surf->GetId(),uvt);
 
                 newVal = GetFunctional<3>(false,false);
+            }
 
-                //cout << currentW << " " <<  newVal << endl;
+            if(newVal <= currentW + c1() * (
+                pg + 0.5*hes) && !mustReverseLineSearch)
+            {
+                //this is a minimser so see if we can extend further
 
-                // Wolfe conditions
-                if (newVal <= currentW + c1() * (
-                    alpha*pg+ 0.5*alpha*alpha*hes))
+                while (l > -10)
                 {
-                    found = true;
-                    break;
-                }
+                    // Update node
+                    uvt[0] = uvc[0] + alpha * dk[0];
+                    uvt[1] = uvc[1] + alpha * dk[1];
+                    if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
+                       uvt[1] < bd[2] || uvt[1] > bd[3])
+                    {
+                        //we could possibly find a optimiser but the point has
+                        //gone out of the parameter plane
+                        found = true;
+                        break;
+                    }
 
-                alpha /= 2.0;
+                    p = surf->P(uvt);
+                    node->m_x = p[0];
+                    node->m_y = p[1];
+                    node->m_z = p[2];
+                    node->Move(p,surf->GetId(),uvt);
+
+                    newVal = GetFunctional<3>(false,false);
+
+                    uvt[0] = uvc[0] + alpha/beta * dk[0];
+                    uvt[1] = uvc[1] + alpha/beta * dk[1];
+
+                    if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
+                       uvt[1] < bd[2] || uvt[1] > bd[3])
+                    {
+                        //we could possibly find a optimiser but the point has
+                        //gone out of the parameter plane
+                        found = true;
+                        break;
+                    }
+
+                    p = surf->P(uvt);
+                    node->m_x = p[0];
+                    node->m_y = p[1];
+                    node->m_z = p[2];
+                    node->Move(p,surf->GetId(),uvt);
+
+                    NekDouble dbVal = GetFunctional<3>(false,false);
+
+                    if (newVal <= currentW + c1() * (
+                        alpha*pg + 0.5*alpha*alpha*hes) &&
+                        dbVal > currentW + c1() *(
+                        alpha/beta*pg + 0.5*alpha*alpha*hes/beta/beta))
+                    {
+                        found = true;
+                        break;
+                    }
+
+                    l--;
+                    alpha = pow(beta,l);
+                }
+            }
+            else
+            {
+                //this is not a minimser so reverse line search
+                while (alpha > alphaTol())
+                {
+                    // Update node
+                    uvt[0] = uvc[0] + alpha * dk[0];
+                    uvt[1] = uvc[1] + alpha * dk[1];
+
+                    if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
+                       uvt[1] < bd[2] || uvt[1] > bd[3])
+                    {
+                        alpha /= 2.0;
+                        continue;
+                    }
+
+                    p = surf->P(uvt);
+                    node->m_x = p[0];
+                    node->m_y = p[1];
+                    node->m_z = p[2];
+                    node->Move(p,surf->GetId(),uvt);
+
+                    newVal = GetFunctional<3>(false,false);
+
+                    if (newVal <= currentW + c1() * (
+                        alpha*pg + 0.5*alpha*alpha*hes))
+                    {
+                        found = true;
+                        break;
+                    }
+
+                    l++;
+                    alpha = pow(beta,l);
+                }
             }
         }
 

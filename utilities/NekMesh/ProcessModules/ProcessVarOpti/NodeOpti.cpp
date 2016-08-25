@@ -250,32 +250,75 @@ void NodeOpti3D3D::Optimise()
         }
         else
         {
-            cout << "3D DNC" << endl;
-            NekDouble sig = 0.1;
-            NekDouble alpha = sig;
+            NekDouble sig = 1.0;
+            NekDouble beta = 0.5;
+            int l = 0;
+            NekDouble alpha = pow(beta,l);
 
             NekDouble hes = lhs;
 
-            while (alpha > alphaTol())
+            pg = (G[0]*dk[0]+G[1]*dk[1]+G[2]*dk[2]);
+
+            //choose whether to do forward or reverse line search
+            node->m_x = xc + dk[0];
+            node->m_y = yc + dk[1];
+            node->m_z = zc + dk[2];
+            newVal = GetFunctional<3>(false,false);
+
+            if(newVal <= currentW + c1() * (
+                pg + 0.5*hes))
             {
-                // Update node
-                node->m_x = xc + alpha * dk[0];
-                node->m_y = yc + alpha * dk[1];
-                node->m_z = zc + alpha * dk[2];
-
-                newVal = GetFunctional<3>(false,false);
-                //dont need the hessian again this function updates G to be the new
-                //location
-                //
-                // Wolfe conditions
-                if (newVal <= currentW + c1() * (
-                    alpha*pg + 0.5*alpha*alpha*hes))
+                //this is a minimser so see if we can extend further
+                while (l > -10)
                 {
-                    found = true;
-                    break;
-                }
+                    // Update node
+                    node->m_x = xc + alpha * dk[0];
+                    node->m_y = yc + alpha * dk[1];
+                    node->m_z = zc + alpha * dk[2];
 
-                alpha /= 2.0;
+                    newVal = GetFunctional<3>(false,false);
+
+                    node->m_x = xc + alpha/beta * dk[0];
+                    node->m_y = yc + alpha/beta * dk[1];
+                    node->m_z = zc + alpha/beta * dk[2];
+
+                    NekDouble dbVal = GetFunctional<3>(false,false);
+
+                    if (newVal <= currentW + c1() * (
+                        alpha*pg + 0.5*alpha*alpha*hes) &&
+                        dbVal > currentW + c1() *(
+                        alpha/beta*pg + 0.5*alpha*alpha*hes/beta/beta))
+                    {
+                        found = true;
+                        break;
+                    }
+
+                    l--;
+                    alpha = pow(beta,l);
+                }
+            }
+            else
+            {
+                //this is not a minimser so reverse line search
+                while (alpha > alphaTol())
+                {
+                    // Update node
+                    node->m_x = xc + alpha * dk[0];
+                    node->m_y = yc + alpha * dk[1];
+                    node->m_z = zc + alpha * dk[2];
+
+                    newVal = GetFunctional<3>(false,false);
+
+                    if (newVal <= currentW + c1() * (
+                        alpha*pg + 0.5*alpha*alpha*hes))
+                    {
+                        found = true;
+                        break;
+                    }
+
+                    l++;
+                    alpha = pow(beta,l);
+                }
             }
         }
 

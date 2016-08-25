@@ -251,7 +251,7 @@ void NodeOpti3D3D::Optimise()
         else
         {
             cout << "3D DNC" << endl;
-            NekDouble sig = 0.1;  
+            NekDouble sig = 0.1;
             NekDouble alpha = sig;
 
             NekDouble hes = lhs;

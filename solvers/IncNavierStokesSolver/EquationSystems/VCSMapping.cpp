@@ -221,7 +221,7 @@ namespace Nektar
         }
         
         // Add mapping terms
-        ApplyIncNSMappingForcing( outarray );
+        ApplyIncNSMappingForcing( inarray, outarray);
         
         // Calculate High-Order pressure boundary conditions
         m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis);
@@ -739,6 +739,7 @@ namespace Nektar
      * Explicit terms of the mapping
      */
     void   VCSMapping::ApplyIncNSMappingForcing(
+        const Array<OneD, Array<OneD, NekDouble> >    &inarray,
         Array<OneD, Array<OneD, NekDouble> >          &outarray)
     {
         int physTot = m_fields[0]->GetTotPoints();
@@ -758,7 +759,7 @@ namespace Nektar
         {
             for (int i = 0; i < m_nConvectiveFields; ++i)
             {
-                vel[i] = m_fields[i]->GetPhys();
+                vel[i] = inarray[i];
                 m_fields[0]->HomogeneousBwdTrans(vel[i],velPhys[i]);
             }
         }
@@ -766,8 +767,8 @@ namespace Nektar
         {
             for (int i = 0; i < m_nConvectiveFields; ++i)
             {
-                vel[i] = m_fields[i]->GetPhys();
-                Vmath::Vcopy(physTot, m_fields[i]->GetPhys(), 1, velPhys[i], 1);
+                vel[i] = inarray[i];
+                Vmath::Vcopy(physTot, inarray[i], 1, velPhys[i], 1);
             }
         }
 

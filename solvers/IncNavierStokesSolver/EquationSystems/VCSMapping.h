@@ -64,6 +64,7 @@ namespace Nektar
         
         // 
         void ApplyIncNSMappingForcing (
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
         virtual ~VCSMapping();

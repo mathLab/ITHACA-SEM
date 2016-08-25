@@ -81,6 +81,8 @@ namespace Nektar
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             
+            m_comm = expList->GetComm();
+
             StdRegions::StdExpansionSharedPtr locExpansion;
 
             locExpansion = expList->GetExp(0);
@@ -267,7 +269,6 @@ namespace Nektar
                 }
             }
 
-            m_comm = expList->GetComm();
 
             // Loop over all the elements in the domain and compute max edge
             // DOF and set up unique ordering. 
@@ -3009,11 +3010,11 @@ namespace Nektar
             cnt1 = 0; 
             for(int e = 0; e < nedges; ++e)
             {
-                cnt = 0; 
                 int nEdgeInteriorCoeffs = locExp->GetEdgeNcoeffs(e) -2;
                 
                 for(int j = 0; j < nEdgeInteriorCoeffs; ++j, ++cnt1)
                 {
+                    cnt = 0; 
                     for(int f = 0; f < nfaces; ++f)
                     {
                         int nFaceInteriorCoeffs =

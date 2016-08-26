@@ -1854,53 +1854,6 @@ namespace Nektar
 
             return edgemaparray;
         }
-
-
-        Array<OneD, Array<OneD, unsigned int> >
-        Expansion3D::v_GetEdgeInverseBoundaryMap(void)
-        {
-            int n, j;
-            int nEdgeCoeffs;
-            int nBndCoeffs = NumBndryCoeffs();
-
-            Array<OneD, unsigned int> bmap(nBndCoeffs);
-            GetBoundaryMap(bmap);
-
-            // Map from full system to statically condensed system (i.e reverse
-            // GetBoundaryMap)
-            map<int, int> invmap;
-            for (j = 0; j < nBndCoeffs; ++j)
-            {
-                invmap[bmap[j]] = j;
-            }
-
-            int nedges = GetNedges(); 
-            Array<OneD, Array<OneD, unsigned int> > returnval(nedges);
-            
-            for(int eid = 0; eid < nedges; ++eid)
-            {
-                // Number of interior edge coefficients
-                nEdgeCoeffs = GetEdgeNcoeffs(eid) - 2;
-                
-                Array<OneD, unsigned int> edgemaparray(nEdgeCoeffs);
-                Array<OneD, unsigned int> maparray =
-                    Array<OneD, unsigned int>(nEdgeCoeffs);
-                Array<OneD, int> signarray         =
-                    Array<OneD, int>(nEdgeCoeffs, 1);
-                
-                // maparray is the location of the edge within the matrix
-                GetEdgeInteriorMap(eid, StdRegions::eForwards,
-                                   maparray, signarray);
-                
-                for (n = 0; n < nEdgeCoeffs; ++n)
-                {
-                    edgemaparray[n] = invmap[maparray[n]];
-                }
-                returnval[eid] = edgemaparray;
-            }
-
-            return returnval;
-        }
         
         Array<OneD, unsigned int>
         Expansion3D::v_GetFaceInverseBoundaryMap(
@@ -1953,10 +1906,13 @@ namespace Nektar
             return facemaparray;
         }
 
-        Array<OneD, Array<OneD, unsigned int> > 
-        Expansion3D::v_GetFaceInverseBoundaryMap(void)
+        void Expansion3D::v_GetInverseBoundaryMaps(
+                    Array<OneD, unsigned int> &vmap,
+                    Array<OneD, Array<OneD, unsigned int> > &emap,
+                    Array<OneD, Array<OneD, unsigned int> > &fmap )
         {
             int n, j;
+            int nEdgeCoeffs;
             int nFaceCoeffs;
 
             int nBndCoeffs = NumBndryCoeffs();
@@ -1972,8 +1928,41 @@ namespace Nektar
                 reversemap[bmap[j]] = j;
             }
 
+            int nverts = GetNverts();
+            vmap = Array<OneD, unsigned int>(nverts);
+            for (n = 0; n < nverts; ++n)
+            {
+                int id = GetVertexMap(n,true);
+                vmap[n] = reversemap[id]; // not sure what should be true here. 
+            } 
+            
+            int nedges = GetNedges();
+            emap = Array<OneD, Array<OneD, unsigned int> >(nedges);
+            
+            for(int eid = 0; eid < nedges; ++eid)
+            {
+                // Number of interior edge coefficients
+                nEdgeCoeffs = GetEdgeNcoeffs(eid) - 2;
+                
+                Array<OneD, unsigned int> edgemaparray(nEdgeCoeffs);
+                Array<OneD, unsigned int> maparray =
+                    Array<OneD, unsigned int>(nEdgeCoeffs);
+                Array<OneD, int> signarray         =
+                    Array<OneD, int>(nEdgeCoeffs, 1);
+                
+                // maparray is the location of the edge within the matrix
+                GetEdgeInteriorMap(eid, StdRegions::eForwards,
+                                   maparray, signarray);
+                
+                for (n = 0; n < nEdgeCoeffs; ++n)
+                {
+                    edgemaparray[n] = reversemap[maparray[n]];
+                }
+                emap[eid] = edgemaparray;
+            }
+            
             int nfaces = GetNfaces();
-            Array<OneD, Array<OneD, unsigned int> > returnval(nfaces);
+            fmap = Array<OneD, Array<OneD, unsigned int> >(nfaces);
 
             for(int fid = 0; fid < nfaces; ++fid)
             {
@@ -1996,9 +1985,8 @@ namespace Nektar
                     facemaparray[n] = reversemap[maparray[n]];
                 }
 
-                returnval[fid] = facemaparray;
+                fmap[fid] = facemaparray;
             }
-            return returnval;
         }
 
         

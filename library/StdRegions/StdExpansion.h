@@ -1348,12 +1348,6 @@ namespace Nektar
                 return v_GetEdgeInverseBoundaryMap(eid);
             }
 
-            STD_REGIONS_EXPORT Array<OneD, Array<OneD, unsigned int> >
-                GetEdgeInverseBoundaryMap()
-            {
-                return v_GetEdgeInverseBoundaryMap();
-            }
-
 
             STD_REGIONS_EXPORT Array<OneD, unsigned int>
                 GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = eNoOrientation)
@@ -1362,10 +1356,13 @@ namespace Nektar
             }
 
 
-            STD_REGIONS_EXPORT Array<OneD, Array<OneD, unsigned int> > 
-                GetFaceInverseBoundaryMap()
+            STD_REGIONS_EXPORT void GetInverseBoundaryMaps(
+                    Array<OneD, unsigned int> &vmap,
+                    Array<OneD, Array<OneD, unsigned int> > &emap,
+                    Array<OneD, Array<OneD, unsigned int> > &fmap )
+                
             {
-                return v_GetFaceInverseBoundaryMap();
+                v_GetInverseBoundaryMaps(vmap,emap,fmap);
             }
             
             STD_REGIONS_EXPORT DNekMatSharedPtr BuildInverseTransformationMatrix(
@@ -1886,14 +1883,13 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual Array<OneD, unsigned int>
                 v_GetEdgeInverseBoundaryMap(int eid);
 
-            STD_REGIONS_EXPORT virtual Array<OneD, Array<OneD, unsigned int> >
-                v_GetEdgeInverseBoundaryMap();
-            
             STD_REGIONS_EXPORT virtual Array<OneD, unsigned int>
                 v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = eNoOrientation);
 
-            STD_REGIONS_EXPORT virtual Array<OneD, Array<OneD, unsigned int> >
-                v_GetFaceInverseBoundaryMap();
+            STD_REGIONS_EXPORT virtual void v_GetInverseBoundaryMaps(
+                    Array<OneD, unsigned int> &vmap,
+                    Array<OneD, Array<OneD, unsigned int> > &emap,
+                    Array<OneD, Array<OneD, unsigned int> > &fmap );
             
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildInverseTransformationMatrix(const DNekScalMatSharedPtr & m_transformationmatrix);
 

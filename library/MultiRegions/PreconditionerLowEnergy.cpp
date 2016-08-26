@@ -1749,12 +1749,10 @@ namespace Nektar
             if(m_linSysKey.GetMatrixType() == StdRegions::eMass)
             {
                 PreconR  = StdRegions::ePreconRMass;
-                PreconRT = StdRegions::ePreconRTMass;
             }
             else
             {
                 PreconR  = StdRegions::ePreconR;
-                PreconRT = StdRegions::ePreconRT;
             }
 
             /*
@@ -1767,52 +1765,39 @@ namespace Nektar
                 (PreconR, LibUtilities::eTetrahedron,
                  *TetExp, m_linSysKey.GetConstFactors());
 
-            //Matrix keys for tetrahedral transposed transformation matrix
-            LocalRegions::MatrixKey TetRT
-                (PreconRT, LibUtilities::eTetrahedron,
-                 *TetExp,  m_linSysKey.GetConstFactors());
-
             //Matrix keys for prismaticl element transformation matrix
             LocalRegions::MatrixKey PrismR
                 (PreconR, LibUtilities::ePrism,
                  *PrismExp, m_linSysKey.GetConstFactors());
             
-            //Matrix keys for prismatic element transposed transformation
-            //matrix
-            LocalRegions::MatrixKey PrismRT
-                (PreconRT, LibUtilities::ePrism,
-                 *PrismExp,  m_linSysKey.GetConstFactors());
-
             //Matrix keys for hexahedral element transformation matrix
             LocalRegions::MatrixKey HexR
                 (PreconR, LibUtilities::eHexahedron,
                  *HexExp, m_linSysKey.GetConstFactors());
             
-            //Matrix keys for hexahedral element transposed transformation
-            //matrix
-            LocalRegions::MatrixKey HexRT
-                (PreconRT, LibUtilities::eHexahedron,
-                 *HexExp,  m_linSysKey.GetConstFactors());
-            
             /*
              * Create transformation matrices for the tetrahedral element
              */
+
+            Array<OneD, unsigned int>  vmap; 
+            Array<OneD, Array<OneD, unsigned int> > emap;
+            Array<OneD, Array<OneD, unsigned int> > fmap;
             
             //Get tetrahedral transformation matrix
-            m_maxRmat[LibUtilities::eTetrahedron] =
-                TetExp->GetLocMatrix(TetR);
-            m_edgeMapMaxR[LibUtilities::eTetrahedron] =
-                TetExp->GetEdgeInverseBoundaryMap();
-            m_faceMapMaxR[LibUtilities::eTetrahedron] =
-                TetExp->GetFaceInverseBoundaryMap();
+            DNekScalMatSharedPtr TetMat = TetExp->GetLocMatrix(TetR);
+            m_maxRmat[LibUtilities::eTetrahedron] = TetMat;
+
+            TetExp->GetInverseBoundaryMaps(vmap,emap,fmap);
+            m_edgeMapMaxR[LibUtilities::eTetrahedron] = emap; 
+            m_faceMapMaxR[LibUtilities::eTetrahedron] = fmap; 
             
             //Get prismatic transformation matrix
             m_maxRmat[LibUtilities::ePrism] =
                 PrismExp->GetLocMatrix(PrismR);
-            m_edgeMapMaxR[LibUtilities::ePrism] =
-                PrismExp->GetEdgeInverseBoundaryMap();
-            m_faceMapMaxR[LibUtilities::ePrism] =
-                PrismExp->GetFaceInverseBoundaryMap();
+
+            PrismExp->GetInverseBoundaryMaps(vmap,emap,fmap);
+            m_edgeMapMaxR[LibUtilities::ePrism] = emap;
+            m_faceMapMaxR[LibUtilities::ePrism] = fmap; 
 
             // Note we do not have pyramid here since this has to be
             // constructed from other shapes
@@ -1820,10 +1805,9 @@ namespace Nektar
             //Get hexahedral transformation matrix
             m_maxRmat[LibUtilities::eHexahedron] =
                 HexExp->GetLocMatrix(HexR);
-            m_edgeMapMaxR[LibUtilities::eHexahedron] =
-                HexExp->GetEdgeInverseBoundaryMap();
-            m_faceMapMaxR[LibUtilities::eHexahedron] =
-                HexExp->GetFaceInverseBoundaryMap();
+            HexExp->GetInverseBoundaryMaps(vmap,emap,fmap);
+            m_edgeMapMaxR[LibUtilities::eHexahedron] = emap;
+            m_faceMapMaxR[LibUtilities::eHexahedron] = fmap; 
 
 #if 0
             -> Need to now have section which takes the maximum matrices on mixed meshes and replaced for example the tet expansion with elements from the hex or if just a tet prism mesh just take elements from the Tet to put in the prism? 
@@ -2949,7 +2933,6 @@ namespace Nektar
                       &locExp)
         {
             LibUtilities::ShapeType eType=locExp->DetShapeType();
-            int cnt, cnt1;
             int nverts = locExp->GetNverts();
             int nedges = locExp->GetNedges();
             int nfaces = locExp->GetNfaces();
@@ -2962,7 +2945,12 @@ namespace Nektar
             int nRows = locExp->NumBndryCoeffs();
             DNekMatSharedPtr newmat = MemoryManager<DNekMat>::
                 AllocateSharedPtr(nRows,nRows,zero,eFULL);
-            
+
+            Array<OneD, unsigned int>  vmap; 
+            Array<OneD, Array<OneD, unsigned int> > elocmap;
+            Array<OneD, Array<OneD, unsigned int> > flocmap;
+
+            locExp->GetInverseBoundaryMaps(vmap,elocmap,flocmap);
             
             // fill diagonal
             for(int i = 0; i < nRows; ++i)
@@ -2974,56 +2962,42 @@ namespace Nektar
             // fill vertex off diagonal
             for(int v = 0; v < nverts; ++v)
             {
-                cnt = 0;
-                
                 for(int e = 0; e < nedges; ++e)
                 {
                     int nEdgeInteriorCoeffs = locExp->GetEdgeNcoeffs(e) -2;
-                    for(int i = 0; i < nEdgeInteriorCoeffs; ++i,++cnt)
+                    for(int i = 0; i < nEdgeInteriorCoeffs; ++i)
                     {
-                        val = (*m_maxRmat[eType])(v,emap[e][i]);
-                        newmat->SetValue(v,nverts+cnt,val);
+                        val = (*m_maxRmat[eType])(vmap[v],emap[e][i]);
+                        newmat->SetValue(vmap[v],elocmap[e][i],val);
                     }
                 }
-                
 
                 for(int f = 0; f < nfaces; ++f)
                 {
                     int nFaceInteriorCoeffs = locExp->GetFaceIntNcoeffs(f);
-                    for(int i = 0; i < nFaceInteriorCoeffs; ++i,++cnt)
+                    for(int i = 0; i < nFaceInteriorCoeffs; ++i)
                     {
-                        val = (*m_maxRmat[eType])(v,fmap[f][i]);
-                        newmat->SetValue(v,nverts+cnt,val);
+                        val = (*m_maxRmat[eType])(vmap[v],fmap[f][i]);
+                        newmat->SetValue(vmap[v],flocmap[f][i],val);
                     }
                 }
             }            
             
-            
-            // fill edges off diagonal
-            int offset = nverts; 
-            for(int e = 0; e < nedges; ++e)
-            {
-                int nEdgeInteriorCoeffs = locExp->GetEdgeNcoeffs(e) - 2;
-                offset += nEdgeInteriorCoeffs; 
-            }
-            
-            cnt1 = 0; 
             for(int e = 0; e < nedges; ++e)
             {
                 int nEdgeInteriorCoeffs = locExp->GetEdgeNcoeffs(e) -2;
                 
-                for(int j = 0; j < nEdgeInteriorCoeffs; ++j, ++cnt1)
+                for(int j = 0; j < nEdgeInteriorCoeffs; ++j)
                 {
-                    cnt = 0; 
                     for(int f = 0; f < nfaces; ++f)
                     {
                         int nFaceInteriorCoeffs =
                             locExp->GetFaceIntNcoeffs(f);
                         
-                        for(int i = 0; i < nFaceInteriorCoeffs; ++i,++cnt)
+                        for(int i = 0; i < nFaceInteriorCoeffs; ++i)
                         {
                             val = (*m_maxRmat[eType])(emap[e][j],fmap[f][i]);
-                            newmat->SetValue(nverts+cnt1,offset+cnt,val);
+                            newmat->SetValue(elocmap[e][j],flocmap[f][i],val);
                         }
                     }
                 }
@@ -3033,7 +3007,4 @@ namespace Nektar
         }
     }
 }
-
-
-
 

@@ -330,8 +330,6 @@ void NodeOpti3D3D::Optimise()
 
             mtx.lock();
             res->nReset++;
-            if(runDNC)
-                cout << "dnc reset" << endl;
             mtx.unlock();
         }
 

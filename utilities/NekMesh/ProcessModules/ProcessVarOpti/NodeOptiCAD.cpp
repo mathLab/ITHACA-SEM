@@ -102,12 +102,15 @@ void NodeOpti1D3D::Optimise()
         bool runDNC = false; //so want to make this varible runDMC
         bool found  = false;
 
+        NekDouble skmag = sqrt(sk[0]*sk[0]);
+
         if(DNC)
         {
-            NekDouble skmag = sqrt(sk[0]*sk[0]);
             runDNC = !((G[0]*sk[0])/skmag <=
                         2.0*(0.5*lhs + G[0]*dk[0]));
         }
+
+        NekDouble pg = G[0]*sk[0];
 
         if(!runDNC)
         {
@@ -129,13 +132,12 @@ void NodeOpti1D3D::Optimise()
                 node->m_x = p[0];
                 node->m_y = p[1];
                 node->m_z = p[2];
-                node->MoveCurve(p,curve->GetId(),nt);
 
                 newVal = GetFunctional<3>(false,false);
                 //
                 // Wolfe conditions
                 if (newVal <= currentW + c1() * (
-                    alpha*(G[0]*sk[0]) + 0.5*alpha*alpha*hes))
+                    alpha*pg+ 0.5*alpha*alpha*hes))
                 {
                     found = true;
                     break;
@@ -146,37 +148,112 @@ void NodeOpti1D3D::Optimise()
         }
         else
         {
-            NekDouble sig = 0.01;  //small inital step size
-            NekDouble alpha = sig;
+            NekDouble sig = 1.0;  //small inital step size
+            NekDouble beta = 0.5;
+            int l = 0;
+            NekDouble alpha = pow(beta,l);
 
             NekDouble hes = lhs;
 
-            while (alpha > alphaTol())
+            pg = G[0]*dk[0];
+
+            //choose whether to do forward or reverse line search
+            nt = tc + alpha * dk[0];
+
+            if(nt < bd[0] || nt > bd[1])
             {
-                // Update node
-                nt = tc + alpha * dk[0];
-                if(nt < bd[0] || nt > bd[1])
-                {
-                    alpha /= 2.0;
-                    continue;
-                }
+                //because its out of the parameter plane
+                newVal = numeric_limits<double>::max();
+            }
+            else
+            {
+                //can try out the vector step
                 p = curve->P(nt);
                 node->m_x = p[0];
                 node->m_y = p[1];
                 node->m_z = p[2];
-                node->MoveCurve(p,curve->GetId(),nt);
 
                 newVal = GetFunctional<3>(false,false);
-                //
-                // Wolfe conditions
-                if (newVal <= currentW + c1() * (
-                    alpha*(G[0]*sk[0]) + 0.5*alpha*alpha*hes))
-                {
-                    found = true;
-                    break;
-                }
+            }
 
-                alpha /= 2.0;
+            if(newVal <= currentW + c1() * (
+                pg + 0.5*hes))
+            {
+
+                //this is a minimser so see if we can extend further
+                while (l > -10)
+                {
+                    // Update node
+                    //
+                    nt = tc + alpha/beta * dk[0];
+                    if(nt < bd[0] || nt > bd[1])
+                    {
+                        //we could possibly find a optimiser but the point has
+                        //gone out of the parameter plane
+                        found = true;
+                        nt = tc + alpha * dk[0];
+                        break;
+                    }
+
+                    p = curve->P(nt);
+                    node->m_x = p[0];
+                    node->m_y = p[1];
+                    node->m_z = p[2];
+                    NekDouble dbVal = GetFunctional<3>(false,false);
+
+                    nt = tc + alpha/beta * dk[0];
+                    //dont acutally need to check this point
+                    //because it was checked previously above
+
+                    p = curve->P(nt);
+                    node->m_x = p[0];
+                    node->m_y = p[1];
+                    node->m_z = p[2];
+
+                    newVal = GetFunctional<3>(false,false);
+
+                    if (newVal <= currentW + c1() * (
+                        alpha*pg + 0.5*alpha*alpha*hes) &&
+                        dbVal > currentW + c1() *(
+                        alpha/beta*pg + 0.5*alpha*alpha*hes/beta/beta))
+                    {
+                        found = true;
+                        break;
+                    }
+
+                    l--;
+                    alpha = pow(beta,l);
+                }
+            }
+            else
+            {
+                while (alpha > alphaTol())
+                {
+                    // Update node
+                    nt = tc + alpha * dk[0];
+                    if(nt < bd[0] || nt > bd[1])
+                    {
+                        alpha /= 2.0;
+                        continue;
+                    }
+                    p = curve->P(nt);
+                    node->m_x = p[0];
+                    node->m_y = p[1];
+                    node->m_z = p[2];
+                    node->MoveCurve(p,curve->GetId(),nt);
+
+                    newVal = GetFunctional<3>(false,false);
+                    //
+                    // Wolfe conditions
+                    if (newVal <= currentW + c1() * (
+                        alpha*pg + 0.5*alpha*alpha*hes))
+                    {
+                        found = true;
+                        break;
+                    }
+
+                    alpha /= 2.0;
+                }
             }
         }
 
@@ -188,13 +265,14 @@ void NodeOpti1D3D::Optimise()
             node->m_x = p[0];
             node->m_y = p[1];
             node->m_z = p[2];
-            node->MoveCurve(p,curve->GetId(),nt);
 
             mtx.lock();
             res->nReset++;
-            if(runDNC)
-                cout << "dnc reset, curve" << endl;
             mtx.unlock();
+        }
+        else
+        {
+            node->MoveCurve(p,curve->GetId(),nt);
         }
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
@@ -226,6 +304,7 @@ void NodeOpti2D3D::Optimise()
         NekDouble zc       = node->m_z;
         Array<OneD, NekDouble> uvt(2);
         Array<OneD, NekDouble> p;
+        Array<OneD, NekDouble> bd = surf->GetBounds();
 
         Array<OneD, NekDouble> sk(2), dk(2);
         bool DNC = false;
@@ -268,8 +347,6 @@ void NodeOpti2D3D::Optimise()
                         2.0*(0.5*lhs + G[0]*dk[0]+G[1]*dk[1]));
         }
 
-        Array<OneD, NekDouble> bd = surf->GetBounds();
-
         NekDouble pg = (G[0]*sk[0]+G[1]*sk[1]);
 
         if(!runDNC)
@@ -295,7 +372,6 @@ void NodeOpti2D3D::Optimise()
                 node->m_x = p[0];
                 node->m_y = p[1];
                 node->m_z = p[2];
-                node->Move(p,surf->GetId(),uvt);
 
                 newVal = GetFunctional<3>(false,false);
 
@@ -324,63 +400,45 @@ void NodeOpti2D3D::Optimise()
             pg = (G[0]*dk[0]+G[1]*dk[1]);
 
             //choose whether to do forward or reverse line search
-            bool mustReverseLineSearch = false;
             uvt[0] = uvc[0] + dk[0];
             uvt[1] = uvc[1] + dk[1];
+
             if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
                uvt[1] < bd[2] || uvt[1] > bd[3])
             {
                 //because its out of the parameter plane
-                mustReverseLineSearch = true;
+                newVal = numeric_limits<double>::max();
             }
-            if(!mustReverseLineSearch)
+            else
             {
                 //can try out the vector step
                 p = surf->P(uvt);
                 node->m_x = p[0];
                 node->m_y = p[1];
                 node->m_z = p[2];
-                node->Move(p,surf->GetId(),uvt);
 
                 newVal = GetFunctional<3>(false,false);
             }
 
             if(newVal <= currentW + c1() * (
-                pg + 0.5*hes) && !mustReverseLineSearch)
+                pg + 0.5*hes))
             {
-                //this is a minimser so see if we can extend further
 
+                //this is a minimser so see if we can extend further
                 while (l > -10)
                 {
                     // Update node
-                    uvt[0] = uvc[0] + alpha * dk[0];
-                    uvt[1] = uvc[1] + alpha * dk[1];
-                    if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
-                       uvt[1] < bd[2] || uvt[1] > bd[3])
-                    {
-                        //we could possibly find a optimiser but the point has
-                        //gone out of the parameter plane
-                        found = true;
-                        break;
-                    }
-
-                    p = surf->P(uvt);
-                    node->m_x = p[0];
-                    node->m_y = p[1];
-                    node->m_z = p[2];
-                    node->Move(p,surf->GetId(),uvt);
-
-                    newVal = GetFunctional<3>(false,false);
-
+                    //
                     uvt[0] = uvc[0] + alpha/beta * dk[0];
                     uvt[1] = uvc[1] + alpha/beta * dk[1];
-
                     if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
                        uvt[1] < bd[2] || uvt[1] > bd[3])
                     {
                         //we could possibly find a optimiser but the point has
                         //gone out of the parameter plane
                         found = true;
+                        uvt[0] = uvc[0] + alpha * dk[0];
+                        uvt[1] = uvc[1] + alpha * dk[1];
                         break;
                     }
 
@@ -388,9 +446,19 @@ void NodeOpti2D3D::Optimise()
                     node->m_x = p[0];
                     node->m_y = p[1];
                     node->m_z = p[2];
-                    node->Move(p,surf->GetId(),uvt);
-
                     NekDouble dbVal = GetFunctional<3>(false,false);
+
+                    uvt[0] = uvc[0] + alpha * dk[0];
+                    uvt[1] = uvc[1] + alpha * dk[1];
+                    //dont acutally need to check this point
+                    //because it was checked previously above
+
+                    p = surf->P(uvt);
+                    node->m_x = p[0];
+                    node->m_y = p[1];
+                    node->m_z = p[2];
+
+                    newVal = GetFunctional<3>(false,false);
 
                     if (newVal <= currentW + c1() * (
                         alpha*pg + 0.5*alpha*alpha*hes) &&
@@ -408,9 +476,8 @@ void NodeOpti2D3D::Optimise()
             else
             {
                 //this is not a minimser so reverse line search
-                while (alpha > alphaTol())
+                while(alpha > alphaTol())
                 {
-                    // Update node
                     uvt[0] = uvc[0] + alpha * dk[0];
                     uvt[1] = uvc[1] + alpha * dk[1];
 
@@ -425,12 +492,12 @@ void NodeOpti2D3D::Optimise()
                     node->m_x = p[0];
                     node->m_y = p[1];
                     node->m_z = p[2];
-                    node->Move(p,surf->GetId(),uvt);
 
                     newVal = GetFunctional<3>(false,false);
 
+                    // Wolfe conditions
                     if (newVal <= currentW + c1() * (
-                        alpha*pg + 0.5*alpha*alpha*hes))
+                        alpha*pg+ 0.5*alpha*alpha*hes))
                     {
                         found = true;
                         break;
@@ -449,11 +516,14 @@ void NodeOpti2D3D::Optimise()
             node->m_x = p[0];
             node->m_y = p[1];
             node->m_z = p[2];
-            node->Move(p,surf->GetId(),uvc);
 
             mtx.lock();
             res->nReset++;
             mtx.unlock();
+        }
+        else
+        {
+            node->Move(p,surf->GetId(),uvt);
         }
 
         mtx.lock();
@@ -461,6 +531,13 @@ void NodeOpti2D3D::Optimise()
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
         res->func += newVal;
         mtx.unlock();
+
+        Array<OneD, NekDouble> uva = node->GetCADSurfInfo(surf->GetId());
+        if(uva[0] < bd[0] || uva[0] > bd[1] ||
+           uva[1] < bd[2] || uva[1] > bd[3])
+        {
+            ASSERTL1(false,"something when very wrong and the node finished out of its parameter plane");
+        }
     }
 }
 

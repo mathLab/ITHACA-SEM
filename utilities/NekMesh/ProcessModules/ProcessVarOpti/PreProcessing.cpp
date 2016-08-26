@@ -95,7 +95,7 @@ void ProcessVarOpti::BuildDerivUtil()
             derivUtil->ptsLow  = m_mesh->m_nummode*(m_mesh->m_nummode+1)*(m_mesh->m_nummode+2)/6;
             LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                           LibUtilities::eNodalTetElec);
-            LibUtilities::PointsKey pkey2(m_mesh->m_nummode+3,
+            LibUtilities::PointsKey pkey2(m_mesh->m_nummode+4,
                                           LibUtilities::eNodalTetSPI);
             Array<OneD, NekDouble> u1, v1, u2, v2, w1, w2;
             LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);

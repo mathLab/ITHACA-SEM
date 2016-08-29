@@ -58,8 +58,12 @@ v4.4.0
 v4.3.4
 ------
 **Library:**
-- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of large
-  simulations (!672)
+- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of
+  large simulations (!672)
+- Added additional assertions to ensure homogeneous simulations have an even
+  number of planes per process (!666)
+- Fix compilation with NEKTAR_USE_MESHGEN option
+- Fix IterativeFull solver in parallel (!685)
 
 v4.3.4
 ------

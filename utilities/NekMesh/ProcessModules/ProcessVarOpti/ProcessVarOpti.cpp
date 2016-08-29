@@ -83,6 +83,10 @@ ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "-1", "Order of mesh");
     m_config["region"] =
         ConfigOption(false, "0.0", "create regions based on target");
+    m_config["resfile"] =
+        ConfigOption(false, "", "writes residual values to file");
+    m_config["histfile"] =
+        ConfigOption(false, "", "histogram of scaled jac");
 }
 
 ProcessVarOpti::~ProcessVarOpti()
@@ -218,8 +222,21 @@ void ProcessVarOpti::Process()
         dataSet[i]->Evaluate();
     }
 
+    if(m_config["histfile"].beenSet)
+    {
+        ofstream histFile;
+        string name = m_config["histfile"].as<string>() + "_start.txt";
+        histFile.open(name.c_str());
+
+        for(int i = 0; i < dataSet.size(); i++)
+        {
+            histFile << dataSet[i]->scaledJac << endl;
+        }
+        histFile.close();
+    }
+
     cout << scientific << endl;
-    cout << "N elements:\t\t" << m_mesh->m_element[m_mesh->m_expDim].size() << endl
+    cout << "N elements:\t\t" << m_mesh->m_element[m_mesh->m_expDim].size() - elLock.size() << endl
          << "N elements invalid:\t" << res->startInv << endl
          << "Worst jacobian:\t\t" << res->worstJac << endl
          << "N free nodes:\t\t" << res->n << endl
@@ -241,8 +258,11 @@ void ProcessVarOpti::Process()
     Timer t;
     t.Start();
 
-    ofstream file;
-    file.open("res.txt");
+    ofstream resFile;
+    if(m_config["resfile"].beenSet)
+    {
+        resFile.open(m_config["resfile"].as<string>().c_str());
+    }
 
     while (res->val > restol)
     {
@@ -278,7 +298,10 @@ void ProcessVarOpti::Process()
         tm->SetNumWorkers(nThreads);
         tm->Wait();
 
-        file << res->val << " " << res->worstJac << " " << res->func << endl;
+        if(m_config["resfile"].beenSet)
+        {
+            resFile << res->val << " " << res->worstJac << " " << res->func << endl;
+        }
 
         cout << ctr << "\tResidual: " << res->val
                     << "\tMin Jac: " << res->worstJac
@@ -289,7 +312,23 @@ void ProcessVarOpti::Process()
         if(ctr >= maxIter)
             break;
     }
-    file.close();
+
+    if(m_config["histfile"].beenSet)
+    {
+        ofstream histFile;
+        string name = m_config["histfile"].as<string>() + "_end.txt";
+        histFile.open(name.c_str());
+
+        for(int i = 0; i < dataSet.size(); i++)
+        {
+            histFile << dataSet[i]->scaledJac << endl;
+        }
+        histFile.close();
+    }
+    if(m_config["resfile"].beenSet)
+    {
+        resFile.close();
+    }
 
     t.Stop();
     cout << "Time to compute: " << t.TimePerTest(1) << endl;

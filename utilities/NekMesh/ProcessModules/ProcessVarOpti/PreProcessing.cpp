@@ -101,6 +101,16 @@ void ProcessVarOpti::BuildDerivUtil()
             LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
             LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
 
+            LibUtilities::PointsKey pkey3(m_mesh->m_nummode,
+                                        LibUtilities::eNodalPrismElec);
+            Array<OneD, NekDouble> u3,v3,w3;
+            LibUtilities::PointsManager()[pkey3]->GetPoints(u3,v3,w3);
+            for(int i = 0; i < u3.num_elements(); i++)
+            {
+                cout << u3[i] << " " << v3[i] << " " << w3[i] << endl;
+            }
+            exit(-1);
+
             derivUtil->ptsHigh = u2.num_elements();
 
             LibUtilities::NodalUtilTetrahedron nodalTet(

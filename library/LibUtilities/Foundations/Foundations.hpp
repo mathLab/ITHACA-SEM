@@ -98,10 +98,10 @@ namespace Nektar
             "NodalTetElec",
             "NodalTetSPI",
             "NodalPrismEvenlySpaced"
+            "NodalPrismElec"
         };
 
     } // end of namespace
 } // end of namespace
 
 #endif //FOUNDATIONS_H
-

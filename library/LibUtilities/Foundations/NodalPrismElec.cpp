@@ -149,22 +149,25 @@ namespace Nektar
 
             // Populate m_points
             unsigned int npts = GetNumPoints();
-            NekDouble delta = 2.0/(npts - 1.0);
-            for(unsigned int z=0, index=0; z<npts; ++z){
-                for(int y=0; y<npts; ++y){
-                    for(int x=0; x<npts-z; ++x, ++index){
-                        NekDouble xi = -1.0 + x*delta;
-                        NekDouble yi = -1.0 + y*delta;
-                        NekDouble zi = -1.0 + z*delta;
 
-                        m_points[0][index] = xi;
-                        m_points[1][index] = yi;
-                        m_points[2][index] = zi;
-                    }
+            LibUtilities::PointsKey pkey1(npts, LibUtilities::eNodalTriElec);
+            Array<OneD, NekDouble> u1, v1;
+            LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
+            LibUtilities::PointsKey pkey2(npts, LibUtilities::eGaussLobattoLegendre);
+            Array<OneD, NekDouble> u;
+            LibUtilities::PointsManager()[pkey2]->GetPoints(u);
+
+            for(int y = 0, index = 0; y < npts; y++)
+            {
+                for(int t = 0; t < u1.num_elements(); t++, index++)
+                {
+                    m_points[0][index] = u1[t];
+                    m_points[1][index] = u[y];
+                    m_points[2][index] = v1[t];
                 }
             }
 
-            NodalPointReorder3d();
+            //NodalPointReorder3d();
             m_util = MemoryManager<NodalUtilPrism>::AllocateSharedPtr(
                 npts - 1, m_points[0], m_points[1], m_points[2]);
         }

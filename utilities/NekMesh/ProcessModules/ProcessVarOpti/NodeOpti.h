@@ -48,22 +48,6 @@ namespace Nektar
 namespace Utilities
 {
 
-const NekDouble dir[13][3] = {
-    {  0.0,  0.0,  0.0 },  // 0  (x   , y   , z   )
-    {  1.0,  0.0,  0.0 },  // 1  (x+dx, y   , z   )
-    {  1.0,  1.0,  0.0 },  // 2  (x+dx, y+dy, z   )
-    {  0.0,  1.0,  0.0 },  // 3  (x   , y+dy, z   )
-    { -1.0,  0.0,  0.0 },  // 4  (x-dx, y   , z   )
-    { -1.0, -1.0,  0.0 },  // 5  (x-dx, y-dy, z   )
-    {  0.0, -1.0,  0.0 },  // 6  (x   , y-dy, z   )
-    { -1.0,  0.0, -1.0 },  // 7  (x-dx, y   , z-dz)
-    {  0.0,  0.0, -1.0 },  // 8  (x   , y   , z-dz)
-    {  0.0,  0.0,  1.0 },  // 9  (x   , y   , z+dz)
-    {  1.0,  0.0,  1.0 },  // 10 (x+dx, y   , z+dz)
-    {  0.0,  1.0,  1.0 },  // 11 (x   , y+dy, z+dz)
-    {  0.0, -1.0, -1.0 }   // 12 (x   , y-dy, z-dz)
-};
-
 class NodeOptiJob;
 
 class NodeOpti
@@ -83,10 +67,7 @@ public:
     NodeOptiJob *GetJob();
 
 protected:
-    virtual Array<OneD, NekDouble> GetGrad(bool analytic = false)
-    {
-        return Array<OneD,NekDouble>();
-    }
+
     template<int DIM> NekDouble GetFunctional(bool gradient = true,
                                               bool hessian = true);
     NodeSharedPtr node;
@@ -96,6 +77,7 @@ protected:
     Array<OneD, NekDouble> G;
 
     void CalcMinJac();
+    bool Linear();
 
     template<int DIM> int IsIndefinite();
     template<int DIM> void MinEigen(NekDouble &val, Array<OneD, NekDouble> &vec);

@@ -101,8 +101,9 @@ private:
     void FillQuadPoints();
     void BuildDerivUtil();
     void GetElementMap();
+    std::vector<ElementSharedPtr> GetLockedElements(NekDouble thres);
     std::vector<Array<OneD, NekDouble> > MappingIdealToRef(ElementSharedPtr el);
-    std::vector<std::vector<NodeSharedPtr> > GetColouredNodes();
+    std::vector<std::vector<NodeSharedPtr> > GetColouredNodes(std::vector<ElementSharedPtr> elLock);
 
     NodeElMap nodeElMap;
     std::vector<ElUtilSharedPtr> dataSet;

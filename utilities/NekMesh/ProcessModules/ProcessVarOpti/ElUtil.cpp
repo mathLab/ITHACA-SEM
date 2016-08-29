@@ -346,8 +346,8 @@ void ElUtil::Evaluate()
             dxdz(2,2) = z3i(j);
 
             NekDouble jacDet = dxdz(0,0)*(dxdz(1,1)*dxdz(2,2)-dxdz(2,1)*dxdz(1,2))
-                   -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
-                   +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
+                              -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
+                              +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
 
             mx = max(mx,jacDet);
             mn = min(mn,jacDet);
@@ -367,8 +367,6 @@ void ElUtil::Evaluate()
     //mtx2.unlock();
 
     minJac = mn;
-
-    linear = mn / mx > 0.99;
 }
 
 ElUtilJob* ElUtil::GetJob()

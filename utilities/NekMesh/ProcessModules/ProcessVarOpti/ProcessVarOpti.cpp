@@ -81,6 +81,8 @@ ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "500", "Maximum number of iterations");
     m_config["nq"] =
         ConfigOption(false, "-1", "Order of mesh");
+    m_config["region"] =
+        ConfigOption(false, "0.0", "create regions based on target");
 }
 
 ProcessVarOpti::~ProcessVarOpti()
@@ -157,7 +159,14 @@ void ProcessVarOpti::Process()
     BuildDerivUtil();
     GetElementMap();
 
-    vector<vector<NodeSharedPtr> > freenodes = GetColouredNodes();
+    vector<ElementSharedPtr> elLock;
+
+    if(m_config["region"].beenSet)
+    {
+        elLock = GetLockedElements(m_config["region"].as<NekDouble>());
+    }
+
+    vector<vector<NodeSharedPtr> > freenodes = GetColouredNodes(elLock);
     vector<vector<NodeOptiSharedPtr> > optiNodes;
 
     //turn the free nodes into optimisable objects with all required data

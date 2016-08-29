@@ -1215,7 +1215,7 @@ void OutputNekpp::WriteXmlExpansions(TiXmlElement *pRoot)
 
             if (m_mesh->m_fields.size() == 0)
             {
-                exp->SetAttribute("FIELDS", "u");
+                exp->SetAttribute("FIELDS", "u,v,w");
             }
             else
             {

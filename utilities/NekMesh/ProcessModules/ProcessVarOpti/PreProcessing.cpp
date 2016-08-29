@@ -133,8 +133,19 @@ void ProcessVarOpti::BuildDerivUtil()
     }
 }
 
-vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
+vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSharedPtr> elLock)
 {
+    NodeSet ignoredNodes;
+    for(int i = 0; i < elLock.size(); i++)
+    {
+        vector<NodeSharedPtr> nodes;
+        elLock[i]->GetCurvedNodes(nodes);
+        for(int j = 0; j < nodes.size(); j++)
+        {
+            ignoredNodes.insert(nodes[j]);
+        }
+    }
+
     //this figures out the dirclet nodes and colors the others into paralell sets
     NodeSet boundaryNodes;
 
@@ -217,7 +228,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
     for (nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end(); ++nit)
     {
         NodeSet::iterator nit2 = boundaryNodes.find(*nit);
-        if(nit2 == boundaryNodes.end())
+        NodeSet::iterator nit3 = ignoredNodes.find(*nit);
+        if(nit2 == boundaryNodes.end() && nit3 == ignoredNodes.end())
         {
             remain.push_back(*nit);
             if((*nit)->GetNumCadCurve() == 1)
@@ -241,8 +253,9 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
         vector<NodeSharedPtr> n = (*eit)->m_edgeNodes;
         for(int j = 0; j < n.size(); j++)
         {
-            NodeSet::iterator nit = boundaryNodes.find(n[j]);
-            if(nit == boundaryNodes.end())
+            NodeSet::iterator nit2 = boundaryNodes.find(n[j]);
+            NodeSet::iterator nit3 = ignoredNodes.find(n[j]);
+            if(nit2 == boundaryNodes.end() && nit3 == ignoredNodes.end())
             {
                 remain.push_back(n[j]);
                 if(n[j]->GetNumCadCurve() == 1)
@@ -266,8 +279,9 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
     {
         for(int j = 0; j < (*fit)->m_faceNodes.size(); j++)
         {
-            NodeSet::iterator nit = boundaryNodes.find((*fit)->m_faceNodes[j]);
-            if(nit == boundaryNodes.end())
+            NodeSet::iterator nit2 = boundaryNodes.find((*fit)->m_faceNodes[j]);
+            NodeSet::iterator nit3 = ignoredNodes.find((*fit)->m_faceNodes[j]);
+            if(nit2 == boundaryNodes.end() && nit3 == ignoredNodes.end())
             {
                 remain.push_back((*fit)->m_faceNodes[j]);
                 if((*fit)->m_faceNodes[j]->GetNumCADSurf() == 1)
@@ -288,8 +302,9 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes()
             m_mesh->m_element[m_mesh->m_expDim][i]->GetVolumeNodes();
         for(int j = 0; j < ns.size(); j++)
         {
-            NodeSet::iterator nit = boundaryNodes.find(ns[j]);
-            if(nit == boundaryNodes.end())
+            NodeSet::iterator nit2 = boundaryNodes.find(ns[j]);
+            NodeSet::iterator nit3 = ignoredNodes.find(ns[j]);
+            if(nit2 == boundaryNodes.end() && nit3 == ignoredNodes.end())
             {
                 remain.push_back(ns[j]);
                 res->nDoF += 3;
@@ -373,6 +388,157 @@ void ProcessVarOpti::GetElementMap()
             nodeElMap[ns[j]->m_id].second.push_back(dataSet[i]);
         }
     }
+}
+
+vector<ElementSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
+{
+    vector<ElementSharedPtr> elBelowThres;
+    for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
+    {
+        ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+        vector<NodeSharedPtr> nodes;
+        el->GetCurvedNodes(nodes);
+        NekDouble mx = -1.0 * numeric_limits<double>::max();
+        NekDouble mn =  numeric_limits<double>::max();
+
+        if(m_mesh->m_expDim == 2)
+        {
+            NekVector<NekDouble> X(nodes.size()),Y(nodes.size());
+            for(int j = 0; j < nodes.size(); j++)
+            {
+                X(j) = nodes[j]->m_x;
+                Y(j) = nodes[j]->m_y;
+            }
+
+            NekVector<NekDouble> x1i(nodes.size()),y1i(nodes.size()),
+                                 x2i(nodes.size()),y2i(nodes.size());
+
+            x1i = derivUtil->VdmDL[0]*X;
+            y1i = derivUtil->VdmDL[0]*Y;
+            x2i = derivUtil->VdmDL[1]*X;
+            y2i = derivUtil->VdmDL[1]*Y;
+
+            for(int j = 0; j < nodes.size(); j++)
+            {
+                NekDouble jacDet = x1i(j) * y2i(j) - x2i(j)*y1i(j);
+                mx = max(mx,jacDet);
+                mn = min(mn,jacDet);
+            }
+        }
+        else if(m_mesh->m_expDim == 3)
+        {
+            NekVector<NekDouble> X(nodes.size()),Y(nodes.size()),Z(nodes.size());
+            for(int j = 0; j < nodes.size(); j++)
+            {
+                X(j) = nodes[j]->m_x;
+                Y(j) = nodes[j]->m_y;
+                Z(j) = nodes[j]->m_z;
+            }
+
+            NekVector<NekDouble> x1i(nodes.size()),y1i(nodes.size()),z1i(nodes.size()),
+                                 x2i(nodes.size()),y2i(nodes.size()),z2i(nodes.size()),
+                                 x3i(nodes.size()),y3i(nodes.size()),z3i(nodes.size());
+
+            x1i = derivUtil->VdmDL[0]*X;
+            y1i = derivUtil->VdmDL[0]*Y;
+            z1i = derivUtil->VdmDL[0]*Z;
+            x2i = derivUtil->VdmDL[1]*X;
+            y2i = derivUtil->VdmDL[1]*Y;
+            z2i = derivUtil->VdmDL[1]*Z;
+            x3i = derivUtil->VdmDL[2]*X;
+            y3i = derivUtil->VdmDL[2]*Y;
+            z3i = derivUtil->VdmDL[2]*Z;
+
+            for(int j = 0; j < nodes.size(); j++)
+            {
+                DNekMat dxdz(3,3,1.0,eFULL);
+                dxdz(0,0) = x1i(j);
+                dxdz(0,1) = x2i(j);
+                dxdz(0,2) = x3i(j);
+                dxdz(1,0) = y1i(j);
+                dxdz(1,1) = y2i(j);
+                dxdz(1,2) = y3i(j);
+                dxdz(2,0) = z1i(j);
+                dxdz(2,1) = z2i(j);
+                dxdz(2,2) = z3i(j);
+
+                NekDouble jacDet = dxdz(0,0)*(dxdz(1,1)*dxdz(2,2)-dxdz(2,1)*dxdz(1,2))
+                                  -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
+                                  +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
+
+                mx = max(mx,jacDet);
+                mn = min(mn,jacDet);
+            }
+        }
+
+        if(mn/mx < thres)
+        {
+            elBelowThres.push_back(el);
+        }
+    }
+
+    boost::unordered_set<int> inmesh;
+    pair<boost::unordered_set<int>::iterator, bool> t;
+    vector<ElementSharedPtr> totest;
+
+    for (int i = 0; i < elBelowThres.size(); i++)
+    {
+        t = inmesh.insert(elBelowThres[i]->GetId());
+
+        vector<FaceSharedPtr> f = elBelowThres[i]->GetFaceList();
+        for (int j = 0; j < f.size(); j++)
+        {
+            for (int k = 0; k < f[j]->m_elLink.size(); k++)
+            {
+                if (f[j]->m_elLink[k].first->GetId() == elBelowThres[i]->GetId())
+                    continue;
+
+                t = inmesh.insert(f[j]->m_elLink[k].first->GetId());
+                if (t.second)
+                {
+                    totest.push_back(f[j]->m_elLink[k].first);
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < 12; i++)
+    {
+        vector<ElementSharedPtr> tmp = totest;
+        totest.clear();
+        for (int j = 0; j < tmp.size(); j++)
+        {
+            vector<FaceSharedPtr> f = tmp[j]->GetFaceList();
+            for (int k = 0; k < f.size(); k++)
+            {
+                for (int l = 0; l < f[k]->m_elLink.size(); l++)
+                {
+                    if (f[k]->m_elLink[l].first->GetId() == tmp[j]->GetId())
+                        continue;
+
+                    t = inmesh.insert(f[k]->m_elLink[l].first->GetId());
+                    if (t.second)
+                    {
+                        totest.push_back(f[k]->m_elLink[l].first);
+                    }
+                }
+            }
+        }
+    }
+
+    //now need to invert the list
+    vector<ElementSharedPtr> ret;
+    for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
+    {
+        ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+        boost::unordered_set<int>::iterator s = inmesh.find(el->GetId());
+        if(s == inmesh.end())
+        {
+            ret.push_back(el);
+        }
+    }
+
+    return ret;
 }
 
 void ProcessVarOpti::FillQuadPoints()

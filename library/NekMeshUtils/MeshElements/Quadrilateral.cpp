@@ -114,63 +114,89 @@ Quadrilateral::Quadrilateral(ElmtConfig pConf,
     }
 }
 
-void Quadrilateral::Complete(int order)
+StdRegions::Orientation Quadrilateral::GetEdgeOrient(
+    int edgeId, EdgeSharedPtr edge)
 {
-    LibUtilities::BasisKey C0(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-
-    SpatialDomains::QuadGeomSharedPtr geom =
-        boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(this->GetGeom(3));
-
-    // Create a quad.
-    LocalRegions::QuadExpSharedPtr quad =
-        MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(C0, C0, geom);
-
-    // Get coordinate array for quadrilateral.
-    int nqtot = quad->GetTotPoints();
-    Array<OneD, NekDouble> alloc(3 * nqtot);
-    Array<OneD, NekDouble> x(alloc);
-    Array<OneD, NekDouble> y(alloc + 1 * nqtot);
-    Array<OneD, NekDouble> z(alloc + 2 * nqtot);
-
-    quad->GetCoords(x, y, z);
-
-    // Now extract points from the co-ordinate arrays into the edge
-    // and face nodes. First, extract edge-interior nodes.
-    int edgeMap[4][2] = {{0, 1},
-                         {order, order + 1},
-                         {nqtot - 1, -1},
-                         {order * (order + 1), -order - 1}};
-
-    for (int i = 0; i < 4; ++i)
+    int locVert = edgeId;
+    if (edge->m_n1 == m_vertex[locVert])
     {
-        int pos = edgeMap[i][0] + edgeMap[i][1];
-        m_edge[i]->m_edgeNodes.clear();
-        for (int j = 1; j < order; ++j, pos += edgeMap[i][1])
-        {
-            m_edge[i]->m_edgeNodes.push_back(
-                NodeSharedPtr(new Node(0, x[pos], y[pos], z[pos])));
-        }
+        return StdRegions::eForwards;
+    }
+    else if (edge->m_n2 == m_vertex[locVert])
+    {
+        return StdRegions::eBackwards;
+    }
+    else
+    {
+        ASSERTL1(false, "Edge is not connected to this quadrilateral.");
     }
 
-    // Extract face-interior nodes.
-    m_volumeNodes.clear();
-    for (int i = 1; i < order; ++i)
-    {
-        int pos = i * (order + 1);
-        for (int j = 1; j < order; ++j)
-        {
-            m_volumeNodes.push_back(
-                NodeSharedPtr(new Node(0, x[pos + j], y[pos + j], z[pos + j])));
-        }
-    }
+    return StdRegions::eNoOrientation;
+}
 
+void Quadrilateral::MakeOrder(int                                order,
+                              SpatialDomains::GeometrySharedPtr  geom,
+                              LibUtilities::PointsType           pType,
+                              int                                coordDim,
+                              int                               &id,
+                              bool                               justConfig)
+{
     m_conf.m_order       = order;
-    m_conf.m_faceNodes   = true;
-    m_conf.m_volumeNodes = true;
+    m_curveType          = pType;
+    m_conf.m_volumeNodes = false;
+    m_volumeNodes.clear();
+
+    // Quadrilaterals of order == 1 have no interior volume points.
+    if (order == 1)
+    {
+        m_conf.m_faceNodes = false;
+        return;
+    }
+
+    m_conf.m_faceNodes = true;
+
+    if (justConfig)
+    {
+        return;
+    }
+
+    int nPoints = order + 1;
+    StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+
+    Array<OneD, NekDouble> px;
+    LibUtilities::PointsKey pKey(nPoints, pType);
+    ASSERTL1(pKey.GetPointsDim() == 1, "Points distribution must be 1D");
+    LibUtilities::PointsManager()[pKey]->GetPoints(px);
+
+    Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
+
+    for (int i = 0; i < coordDim; ++i)
+    {
+        phys[i] = Array<OneD, NekDouble>(xmap->GetTotPoints());
+        xmap->BwdTrans(geom->GetCoeffs(i), phys[i]);
+    }
+
+    int nQuadIntPts = (nPoints - 2) * (nPoints - 2);
+    m_volumeNodes.resize(nQuadIntPts);
+
+    for (int i = 1, cnt = 0; i < nPoints-1; ++i)
+    {
+        for (int j = 1; j < nPoints-1; ++j, ++cnt)
+        {
+            Array<OneD, NekDouble> xp(2);
+            xp[0] = px[j];
+            xp[1] = px[i];
+
+            Array<OneD, NekDouble> x(3, 0.0);
+            for (int k = 0; k < coordDim; ++k)
+            {
+                x[k] = xmap->PhysEvaluate(xp, phys[k]);
+            }
+
+            m_volumeNodes[cnt] = boost::shared_ptr<Node>(
+                new Node(id++, x[0], x[1], x[2]));
+        }
+    }
 }
 
 SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)

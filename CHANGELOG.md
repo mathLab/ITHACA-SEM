@@ -19,6 +19,13 @@ v4.4.0
 - Adjust CMake dependencies to reduce compile time (!671)
 - Homogeneous1D dealiasing improvements (!622)
 - Rework nodal utilities to support nodal prismatic elements (!660)
+- Add support for HDF5 as an alternative output to XML-based output, including
+  refactoring of FieldIO, improvements to MPI interface and added communicators
+  to boundary conditions (!615)
+- Allow expansions to be loaded directly from field file (!617)
+- New options for load balancing (DOF or BOUNDARY) in mesh partitioner (!617)
+- Update Body/Field forces at each timestep (!665)
+>>>>>>> upstream/master
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)
@@ -27,27 +34,38 @@ v4.4.0
 - Use a continuous basefield projection and revert to constant c formulation (!664)
 - Added ability to compute CFL number (!664)
 - Output Sourceterm (!664)
+- Use the Forcing framework to define source terms (!665)
 
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
 - Improve performance when using homogeneous dealiasing (!622)
+
+**FieldConvert:**
+- Allow equi-spaced output for 1D and 2DH1D fields (!613)
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
 - Add STL surface writer module (!668)
 - New module for inserting an alternate high-order surface into the working
   mesh (!669)
+- Improvements to mesh linearisation module (!659)
+- Add support for Gmsh high-order output (!679)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing
   during simulations (!589)
 - Add module to stretch homogeneous direction (!609)
+- Add module to add composite ID of elements as a field (!674)
 
 v4.3.4
 ------
 **Library:**
-- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of large
-  simulations (!672)
+- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of
+  large simulations (!672)
+- Added additional assertions to ensure homogeneous simulations have an even
+  number of planes per process (!666)
+- Fix compilation with NEKTAR_USE_MESHGEN option
+- Fix IterativeFull solver in parallel (!685)
 
 v4.3.3
 ------

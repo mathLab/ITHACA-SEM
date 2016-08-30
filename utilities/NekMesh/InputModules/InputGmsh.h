@@ -66,15 +66,15 @@ public:
      * Element map; takes a msh id to an %ElmtConfig object.
      */
     static std::map<unsigned int, ElmtConfig> elmMap;
+    static std::vector<int> CreateReordering(unsigned int InputGmshEntity);
 
 private:
     int GetNnodes(unsigned int InputGmshEntity);
-    std::vector<int> CreateReordering(unsigned int InputGmshEntity);
-    std::vector<int> TriReordering(ElmtConfig conf);
-    std::vector<int> QuadReordering(ElmtConfig conf);
-    std::vector<int> HexReordering(ElmtConfig conf);
-    std::vector<int> PrismReordering(ElmtConfig conf);
-    std::vector<int> TetReordering(ElmtConfig conf);
+    static std::vector<int> TriReordering(ElmtConfig conf);
+    static std::vector<int> QuadReordering(ElmtConfig conf);
+    static std::vector<int> HexReordering(ElmtConfig conf);
+    static std::vector<int> PrismReordering(ElmtConfig conf);
+    static std::vector<int> TetReordering(ElmtConfig conf);
 };
 }
 }

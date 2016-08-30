@@ -34,6 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/MeshElements/Element.h>
+#include <NekMeshUtils/MeshElements/Triangle.h>
+#include <NekMeshUtils/MeshElements/Quadrilateral.h>
 
 #include "OutputGmsh.h"
 #include "../InputModules/InputGmsh.h"
@@ -54,7 +56,6 @@ ModuleKey OutputGmsh::className =
 OutputGmsh::OutputGmsh(MeshSharedPtr m) : OutputModule(m)
 {
     map<unsigned int, ElmtConfig> igelmap = InputGmsh::GenElmMap();
-
     map<unsigned int, ElmtConfig>::iterator it;
 
     // Populate #InputGmsh::elmMap and use this to construct an
@@ -63,6 +64,8 @@ OutputGmsh::OutputGmsh(MeshSharedPtr m) : OutputModule(m)
     {
         elmMap[it->second] = it->first;
     }
+
+    m_config["order"] = ConfigOption(false, "-1", "Enforce a polynomial order");
 }
 
 OutputGmsh::~OutputGmsh()
@@ -86,6 +89,9 @@ void OutputGmsh::Process()
         cout << "OutputGmsh: Writing file..." << endl;
     }
 
+    boost::unordered_map<int, vector<int> > orderingMap;
+    boost::unordered_map<int, vector<int> >::iterator oIt;
+
     // Open the file stream.
     OpenStream();
 
@@ -97,109 +103,64 @@ void OutputGmsh::Process()
     int id = m_mesh->m_vertexSet.size();
     vector<ElementSharedPtr> toComplete;
 
-    int maxOrder = -1;
+    int order = m_config["order"].as<int>();
 
-    // Do first pass over elements of expansion dimension to determine
-    // which elements need completion.
-    for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
+    if (order != -1)
     {
-        ElementSharedPtr e = m_mesh->m_element[m_mesh->m_expDim][i];
-        if (e->GetMaxOrder() > maxOrder)
+        if (m_mesh->m_verbose)
         {
-            maxOrder = e->GetMaxOrder();
+            cout << "Making mesh of order " << order << endl;
         }
     }
-
-    // maxOrder = 2;
-    for (int d = 1; d <= 3; ++d)
+    else
     {
-        for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
+        // Do first pass over elements of expansion dimension to determine
+        // which elements need completion.
+        for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
         {
-            ElementSharedPtr e = m_mesh->m_element[d][i];
-            if ((e->GetConf().m_order <= 1 && maxOrder > 1) ||
-                (e->GetConf().m_order == maxOrder &&
-                 e->GetConf().m_faceNodes == false))
+            ElementSharedPtr e = m_mesh->m_element[m_mesh->m_expDim][i];
+            if (e->GetMaxOrder() > order)
             {
-                toComplete.push_back(e);
+                order = e->GetMaxOrder();
             }
-            // Generate geometry information for this element. This will
-            // be stored locally inside each element.
-            SpatialDomains::GeometrySharedPtr geom =
-                m_mesh->m_element[d][i]->GetGeom(m_mesh->m_spaceDim);
         }
     }
 
-    // Complete these elements.
-    for (int i = 0; i < toComplete.size(); ++i)
+    // Convert this mesh into a high-order mesh of uniform order.
+    if (m_mesh->m_verbose)
     {
-        toComplete[i]->Complete(maxOrder);
+        cout << "Mesh order of " << order << " detected" << endl;
     }
 
-    // Do second pass over elements to enumerate high-order vertices.
+    m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
+
+    // Add edge- and face-interior nodes to vertex set.
+    EdgeSet::iterator eIt;
+    FaceSet::iterator fIt;
+
+    for (eIt = m_mesh->m_edgeSet.begin(); eIt != m_mesh->m_edgeSet.end(); ++eIt)
+    {
+        m_mesh->m_vertexSet.insert((*eIt)->m_edgeNodes.begin(),
+                                   (*eIt)->m_edgeNodes.end());
+    }
+
+    for (fIt = m_mesh->m_faceSet.begin(); fIt != m_mesh->m_faceSet.end(); ++fIt)
+    {
+        m_mesh->m_vertexSet.insert((*fIt)->m_faceNodes.begin(),
+                                   (*fIt)->m_faceNodes.end());
+    }
+
+    // Do second pass over elements for volume nodes.
     for (int d = 1; d <= 3; ++d)
     {
         for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
         {
-            // Keep track of faces and edges to ensure that high-order
-            // nodes are only added once on common faces/edges.
-            boost::unordered_set<int> edgesDone;
-            boost::unordered_set<int> facesDone;
             ElementSharedPtr e = m_mesh->m_element[d][i];
+            vector<NodeSharedPtr> volList = e->GetVolumeNodes();
 
-            if (e->GetConf().m_order > 1)
+            for (int j = 0; j < volList.size(); ++j)
             {
-                vector<NodeSharedPtr> tmp;
-                vector<EdgeSharedPtr> edgeList = e->GetEdgeList();
-                vector<FaceSharedPtr> faceList = e->GetFaceList();
-                vector<NodeSharedPtr> volList  = e->GetVolumeNodes();
-
-                for (int j = 0; j < edgeList.size(); ++j)
-                {
-                    boost::unordered_set<int>::iterator it =
-                        edgesDone.find(edgeList[j]->m_id);
-                    if (it == edgesDone.end() || d != 3)
-                    {
-                        tmp.insert(tmp.end(),
-                                   edgeList[j]->m_edgeNodes.begin(),
-                                   edgeList[j]->m_edgeNodes.end());
-                        edgesDone.insert(edgeList[j]->m_id);
-                    }
-                }
-
-                for (int j = 0; j < faceList.size(); ++j)
-                {
-                    boost::unordered_set<int>::iterator it =
-                        facesDone.find(faceList[j]->m_id);
-                    if (it == facesDone.end() || d != 3)
-                    {
-                        tmp.insert(tmp.end(),
-                                   faceList[j]->m_faceNodes.begin(),
-                                   faceList[j]->m_faceNodes.end());
-                        facesDone.insert(faceList[j]->m_id);
-                    }
-                }
-
-                tmp.insert(tmp.end(), volList.begin(), volList.end());
-
-                // Even though faces/edges are at this point unique
-                // across the mesh, still need to test inserts since
-                // high-order nodes may already have been inserted into
-                // the list from an adjoining element or a boundary
-                // element.
-                for (int j = 0; j < tmp.size(); ++j)
-                {
-                    pair<NodeSet::iterator, bool> testIns =
-                        m_mesh->m_vertexSet.insert(tmp[j]);
-
-                    if (testIns.second)
-                    {
-                        (*(testIns.first))->m_id = id++;
-                    }
-                    else
-                    {
-                        tmp[j]->m_id = (*(testIns.first))->m_id;
-                    }
-                }
+                m_mesh->m_vertexSet.insert(volList[j]);
             }
         }
     }
@@ -214,7 +175,7 @@ void OutputGmsh::Process()
 
     for (it = tmp.begin(); it != tmp.end(); ++it)
     {
-        m_mshFile << (*it)->m_id << " " << scientific << setprecision(10)
+        m_mshFile << (*it)->m_id+1 << " " << scientific << setprecision(10)
                   << (*it)->m_x << " " << (*it)->m_y << " " << (*it)->m_z
                   << endl;
     }
@@ -226,7 +187,7 @@ void OutputGmsh::Process()
     m_mshFile << "$Elements" << endl;
     m_mshFile << m_mesh->GetNumEntities() << endl;
 
-    id = 0;
+    id = 1;
 
     for (int d = 1; d <= 3; ++d)
     {
@@ -235,7 +196,8 @@ void OutputGmsh::Process()
             ElementSharedPtr e = m_mesh->m_element[d][i];
 
             // First output element ID and type.
-            m_mshFile << id << " " << elmMap[e->GetConf()] << " ";
+            int elmtType = elmMap[e->GetConf()];
+            m_mshFile << id << " " << elmtType << " ";
 
             // Write out number of element tags and then the tags
             // themselves.
@@ -268,170 +230,96 @@ void OutputGmsh::Process()
                 tags.push_back(nodeList[j]->m_id);
             }
 
-            if (e->GetConf().m_order > 1)
+            // Process edge-interior points
+            for (int j = 0; j < edgeList.size(); ++j)
             {
-                for (int j = 0; j < edgeList.size(); ++j)
+                nodeList = edgeList[j]->m_edgeNodes;
+
+                if (e->GetEdgeOrient(j, edgeList[j]) == StdRegions::eForwards)
                 {
-                    nodeList = edgeList[j]->m_edgeNodes;
                     for (int k = 0; k < nodeList.size(); ++k)
                     {
                         tags.push_back(nodeList[k]->m_id);
-                        // cout << "EDGENODE" << endl;
                     }
                 }
-
-                for (int j = 0; j < faceList.size(); ++j)
+                else
                 {
-                    nodeList = faceList[j]->m_faceNodes;
-                    for (int k = 0; k < nodeList.size(); ++k)
+                    for (int k = nodeList.size() - 1; k >= 0; --k)
                     {
-                        // cout << "FACENODE" << endl;
                         tags.push_back(nodeList[k]->m_id);
                     }
                 }
-
-                for (int j = 0; j < volList.size(); ++j)
-                {
-                    // cout << "VOLNODE" << endl;
-                    tags.push_back(volList[j]->m_id);
-                }
             }
 
-            // Re-order tetrahedral vertices.
-            if (e->GetConf().m_e == LibUtilities::eTetrahedron)
+            // Process face-interior points
+            for (int j = 0; j < faceList.size(); ++j)
             {
-                int order = e->GetConf().m_order;
-                if (order > 4)
-                {
-                    cerr << "Temporary error: Gmsh tets only supported "
-                         << "up to 4th order - will fix soon!" << endl;
-                    abort();
-                }
-                int pos = 4;
-                // Swap edge 1->3 nodes with edge 2->3 nodes.
-                pos = 4 + 4 * (order - 1);
-                for (int j = 0; j < order - 1; ++j)
-                {
-                    swap(tags[j + pos], tags[j + pos + order - 1]);
-                }
-                // Reverse ordering of other vertical edge-interior
-                // nodes.
-                reverse(tags.begin() + 4 + 3 * (order - 1),
-                        tags.begin() + 4 + 4 * (order - 1));
-                reverse(tags.begin() + 4 + 4 * (order - 1),
-                        tags.begin() + 4 + 5 * (order - 1));
-                reverse(tags.begin() + 4 + 5 * (order - 1),
-                        tags.begin() + 4 + 6 * (order - 1));
+                nodeList = faceList[j]->m_faceNodes;
+                int nFaceVerts = faceList[j]->m_vertexList.size();
+                vector<int> faceIds(nFaceVerts), volFaceIds(nFaceVerts);
 
-                // Swap face 2 nodes with face 3.
-                pos = 4 + 6 * (order - 1) + 2 * (order - 2) * (order - 1) / 2;
-                for (int j = 0; j < (order - 2) * (order - 1) / 2; ++j)
+                for (int k = 0; k < nFaceVerts; ++k)
                 {
-                    swap(tags[j + pos],
-                         tags[j + pos + (order - 2) * (order - 1) / 2]);
+                    faceIds   [k] = faceList[j]->m_vertexList[k]->m_id;
+                    volFaceIds[k] =
+                        e->GetVertexList()[e->GetFaceVertex(j, k)]->m_id;
                 }
 
-                // Re-order face points. Gmsh ordering (node->face) is:
-                //
-                // Face 0: 0->2->1
-                // Face 1: 0->1->3
-                // Face 2: 0->3->2
-                // Face 3: 3->1->2
-                //
-                // Therefore need to reorder nodes for faces 0, 2 and
-                // 3 to match nodal ordering.
-
-                // Re-order face 0: transpose
-                vector<int> tmp((order - 2) * (order - 1) / 2);
-                int a = 0;
-                pos = 4 + 6 * (order - 1);
-                for (int j = 0; j < order - 2; ++j)
+                if (nFaceVerts == 3)
                 {
-                    for (int k = 0; k < order - 2 - j; ++k, ++a)
+                    HOTriangle<NodeSharedPtr> hoTri(faceIds, nodeList);
+                    hoTri.Align(volFaceIds);
+                    for (int k = 0; k < hoTri.surfVerts.size(); ++k)
                     {
-                        tmp[a] =
-                            tags[pos + j + k * (2 * (order - 2) + 1 - k) / 2];
+                        tags.push_back(hoTri.surfVerts[k]->m_id);
                     }
                 }
-                for (int j = 0; j < (order - 1) * (order - 2) / 2; ++j)
+                else
                 {
-                    tags[pos + j] = tmp[j];
-                }
+                    HOQuadrilateral<NodeSharedPtr> hoQuad(faceIds, nodeList);
+                    hoQuad.Align(volFaceIds);
 
-                // Re-order face 2: transpose
-                pos = 4 + 6 * (order - 1) + 2 * (order - 2) * (order - 1) / 2;
-                a = 0;
-                for (int j = 0; j < order - 2; ++j)
-                {
-                    for (int k = 0; k < order - 2 - j; ++k, ++a)
+                    for (int k = 0; k < hoQuad.surfVerts.size(); ++k)
                     {
-                        tmp[a] =
-                            tags[pos + j + k * (2 * (order - 2) + 1 - k) / 2];
+                        tags.push_back(hoQuad.surfVerts[k]->m_id);
                     }
-                }
-                for (int j = 0; j < (order - 1) * (order - 2) / 2; ++j)
-                {
-                    tags[pos + j] = tmp[j];
-                }
-
-                // Re-order face 3: reflect in y direction
-                pos = 4 + 6 * (order - 1) + 3 * (order - 2) * (order - 1) / 2;
-                a = 0;
-                for (int j = 0; j < order - 2; ++j)
-                {
-                    for (int k = order - 3 - j; k >= 0; --k, ++a)
-                    {
-                        tmp[a] =
-                            tags[pos + j + k * (2 * (order - 2) + 1 - k) / 2];
-                    }
-                }
-
-                for (int j = 0; j < (order - 1) * (order - 2) / 2; ++j)
-                {
-                    tags[pos + j] = tmp[j];
                 }
             }
-            // Re-order prism vertices.
-            else if (e->GetConf().m_e == LibUtilities::ePrism)
+
+            // Process volume nodes
+            for (int j = 0; j < volList.size(); ++j)
             {
-                int order = e->GetConf().m_order;
-                if (order > 2)
+                tags.push_back(volList[j]->m_id);
+            }
+
+            // Construct inverse of input reordering. First try to find it in
+            // our cache.
+            oIt = orderingMap.find(elmtType);
+
+            // If it's not created, then create it.
+            if (oIt == orderingMap.end())
+            {
+                vector<int> reordering = InputGmsh::CreateReordering(elmtType);
+                vector<int> inv(tags.size());
+
+                ASSERTL1(tags.size() == reordering.size(),
+                         "Reordering map size not equal to element tags.");
+
+                for (int j = 0; j < tags.size(); ++j)
                 {
-                    cerr << "Temporary error: Gmsh prisms only "
-                         << "supported up to 2nd order!" << endl;
-                    abort();
+                    inv[reordering[j]] = j;
                 }
 
-                // Swap nodes.
-                vector<int> temp(18);
-                temp[0]  = tags[0];
-                temp[1]  = tags[1];
-                temp[2]  = tags[4];
-                temp[3]  = tags[3];
-                temp[4]  = tags[2];
-                temp[5]  = tags[5];
-                temp[6]  = tags[6];
-                temp[7]  = tags[10];
-                temp[8]  = tags[9];
-                temp[9]  = tags[11];
-                temp[10] = tags[7];
-                temp[11] = tags[14];
-                temp[12] = tags[8];
-                temp[13] = tags[13];
-                temp[14] = tags[12];
-                temp[15] = tags[15];
-                temp[16] = tags[17];
-                temp[17] = tags[16];
-                for (int k = 0; k < 18; ++k)
-                {
-                    tags[k] = temp[k];
-                }
+                oIt = orderingMap.insert(make_pair(elmtType, inv)).first;
             }
+
+            ASSERTL1(tags.size() == oIt->second.size(),
+                     "Reordering map size not equal to element tags.");
 
             // Finally write element nodes.
             for (int j = 0; j < tags.size(); ++j)
             {
-                m_mshFile << tags[j] << " ";
+                m_mshFile << tags[oIt->second[j]] + 1 << " ";
             }
 
             m_mshFile << endl;

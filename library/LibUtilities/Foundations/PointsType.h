@@ -36,6 +36,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_POINTS_TYPE_H
 #define NEKTAR_LIB_UTILITIES_POINTS_TYPE_H
 
+#include <vector>
+
 namespace Nektar
 {
     namespace LibUtilities
@@ -78,6 +80,8 @@ namespace Nektar
             eNodalPrismElec,                //!<  3D electrostatically spaced points on a Prism
             SIZE_PointsType                 //!<  Length of enum list
         };
+
+        static std::vector<LibUtilities::PointsType> NullPointsTypeVector;
     }
 }
 

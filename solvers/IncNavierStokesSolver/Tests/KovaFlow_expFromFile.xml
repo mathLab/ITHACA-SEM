@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <EXPANSIONS>
+        <F FILE="KovaFlow_m8.rst" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+            <I PROPERTY="AdvectionForm" VALUE="Convective" />
+            <I PROPERTY="Projection" VALUE="Galerkin" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
+            <I PROPERTY="GlobalSysSoln" VALUE="XxtMultiLevelStaticCond" />
+            <I PROPERTY="WEIGHTPARTITIONS" VALUE="DOF" />
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> TimeStep      = 0.001        </P>
+            <P> NumSteps      = 100       </P>
+            <P> IO_CheckSteps = 100       </P>
+            <P> IO_InfoSteps  = 100       </P>
+            <P> Kinvis        = 0.025        </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> p </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="1-1.619099729265964*cos(2*PI*y)" />
+                <D VAR="v" VALUE="-0.248344108585656*sin(2*PI*y)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" VALUE="1-0.381463333531742*cos(2*PI*y)" />
+                <D VAR="v" VALUE="-0.058510399212408*sin(2*PI*y)" />
+                <D VAR="p" VALUE="0.427242862585425" />
+            </REGION>
+            <REGION REF="2">
+                <N VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <N VAR="p" VALUE="0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <F VAR="u,v,p" FILE="KovaFlow_m8.rst" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="(1-exp(-0.963740544195769*x)*cos(2*PI*y))" />
+            <E VAR="v"
+                VALUE="(-0.963740544195769/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*y)" />
+            <E VAR="p" VALUE="0.5*(1-exp(-2*0.963740544195769*x))" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAGD/aj0gwMjFjlf9jDRJhQ5D/Yo8szY5VHmM+C1fwPcP2s2N0Hl2dDk18/MZnnf1aFLUyEHUpHO9a8Cq6u2YtuPweqfgz3caK5H2r+XpgIF5o8uvu4scoj/MeD1X5E+PGiut8WXZ4Pq36E+fxY5RHuE0CTdze//3OXWwLcf4JQ+vG+paKKtTm26OYLQemmsp+NV/7326CbL4zi/py9UPPh8QMANMBNrQAA</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1kskSgjAQBUFckDUIigv6/5/pgelLVyWXV/3yMjWTpCj2dQjtQkvxoBzchlZickflx9CTuAk9i6l3UT6F1uJrRhupz7di5unE1Ou1Dw/iSX1PyiX5twyPYnTOKHUX+dzjXczcD/XPP1jFvOtTTN8v+bz3W8wcH/n8g03MHF/5rJ+Y+f7dGwRp</EDGE>
+        <ELEMENT>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1zskOgyAABmFsRaq0bl3t4vs/ppfh4CTl8iVDAn8I+1PhAY9/eo0RG92XnvCErd4tvcOMZ/1zwR4H7YrqI056p1Gf8aq9Sf2Gd+0t+x/4xJf2tuoLvrW3U//gV3uz+g9X7d0A9rcC/gAA</Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> Q[0-11] </C>
+            <C ID="1"> E[23,25,27,29] </C>
+            <C ID="2"> E[3,6,9,12] </C>
+            <C ID="3"> E[0,11,13,21-22,30] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+</NEKTAR>

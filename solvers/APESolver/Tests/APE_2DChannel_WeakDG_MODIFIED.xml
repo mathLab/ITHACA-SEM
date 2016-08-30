@@ -796,9 +796,6 @@
       <E VAR="u0"   VALUE="200" />
       <E VAR="v0"   VALUE="0" />
     </FUNCTION>
-    <FUNCTION NAME="Source">
-      <E VAR="S" VALUE="0"/>
-    </FUNCTION>
     <FUNCTION NAME="ExactSolution"> <!-- Not really the exact solution -->
       <E VAR="p" VALUE="0"/>
       <E VAR="u" VALUE="0"/>

@@ -116,9 +116,6 @@ void ProcessMultiShear::Process(po::variables_map &vm)
         m_fromField[i]            = boost::shared_ptr<Field>(new Field());
         m_fromField[i]->m_session = m_f->m_session;
         m_fromField[i]->m_graph   = m_f->m_graph;
-        m_fromField[i]->m_fld =
-            MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-                m_fromField[0]->m_session->GetComm());
     }
 
     // Import all fld files.
@@ -133,13 +130,13 @@ void ProcessMultiShear::Process(po::variables_map &vm)
                 ElementGIDs[j] =
                     m_f->m_exp[0]->GetExp(j)->GetGeom()->GetGlobalID();
             }
-            m_fromField[i]->m_fld->Import(
+            m_f->FieldIOForFile(infiles[i])->Import(
                 infiles[i], m_fromField[i]->m_fielddef, m_fromField[i]->m_data,
                 LibUtilities::NullFieldMetaDataMap, ElementGIDs);
         }
         else
         {
-            m_fromField[i]->m_fld->Import(
+            m_f->FieldIOForFile(infiles[i])->Import(
                 infiles[i], m_fromField[i]->m_fielddef, m_fromField[i]->m_data,
                 LibUtilities::NullFieldMetaDataMap);
         }

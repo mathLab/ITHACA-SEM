@@ -68,9 +68,7 @@ FilterCheckpoint::FilterCheckpoint(
     LibUtilities::Equation equ(m_session, it->second);
     m_outputFrequency = floor(equ.Evaluate());
 
-    m_fld         = MemoryManager<LibUtilities::FieldIO>
-                        ::AllocateSharedPtr(pSession->GetComm());
-
+    m_fld = LibUtilities::FieldIO::CreateDefault(pSession);
 }
 
 FilterCheckpoint::~FilterCheckpoint()

@@ -49,22 +49,31 @@ namespace Nektar
     {
         namespace
         {
-           // construct the geometory and set the coordinate of triangle
-           // edges and vertices are ordered as anticlockwise
             bool isVertex(int i, int j, int npts){
-                return (i==0 && j==0) || (i==(npts-1) && j==0) || (i==0 && j==(npts-1));
+                return (i==0 && j==0) ||
+                       (i==(npts-1) && j==0) ||
+                       (i==0 && j==(npts-1)) ||
+                       (i==(npts-1) && j==(npts-1));
             }
 
             bool isEdge(int i, int j, int npts){
-                return i==0 || j==0 || i+j==npts-1; //i+j=tot num of steps
+                return i==0 || j==0 || i==(npts-1) || j==(npts-1);
             }
 
-            bool isEdge_1(int i, int j, int npts){
+            bool isEdge_01(int i, int j, int npts){
                 return i==0;
             }
 
-            bool isEdge_2(int i, int j, int npts){
-                return i+j==npts-1;
+            bool isEdge_12(int i, int j, int npts){
+                return j==(npts-1);
+            }
+
+            bool isEdge_23(int i, int j, int npts){
+                return i==(npts-1);
+            }
+
+            bool isEdge_30(int i, int j, int npts){
+                return j==0;
             }
         }
 
@@ -77,10 +86,10 @@ namespace Nektar
             // Populate m_points
             unsigned int npts = GetNumPoints();
             NekDouble delta = 2.0/(npts - 1.0);
-            for(int i=0, index=0; i<npts; ++i){ // y-direction
-                for(int j=0; j<npts-i; ++j,++index){ // x-direction
-                    NekDouble    x = -1.0 + j*delta;
-                    NekDouble    y = -1.0 + i*delta;
+            for(int i=0, index=0; i<npts; ++i){
+                for(int j=0; j<npts; ++j,++index){
+                    NekDouble    x = -1.0 + i*delta;
+                    NekDouble    y = -1.0 + j*delta;
                     m_points[0][index] = x;
                     m_points[1][index] = y;
                 }
@@ -150,9 +159,10 @@ namespace Nektar
             unsigned int npts = GetNumPoints();
             using std::vector;
             vector<int> vertex;
-            vector<int> iEdge_1; // interior edge points on the bottom triangle edge
-            vector<int> iEdge_2; // interior edge points on the right triangle edge
-            vector<int> iEdge_3; // interior edge points on the left triangle edge
+            vector<int> iEdge_01;
+            vector<int> iEdge_12;
+            vector<int> iEdge_23;
+            vector<int> iEdge_30;
             vector<int> interiorPoints;
             vector<int> map;
 
@@ -166,18 +176,21 @@ namespace Nektar
 
                     } else if( isEdge(i,j,npts) ) { // interior edge
 
-                        if(isEdge_1(i,j,npts)){  // bottom edge
+                        if(isEdge_01(i,j,npts)){  // bottom edge
 
-                            iEdge_1.push_back(index);
+                            iEdge_01.push_back(index);
 
-                        }else if(isEdge_2(i,j,npts)){  // right edge
+                        }else if(isEdge_12(i,j,npts)){  // right edge
 
-                            iEdge_2.push_back(index);
+                            iEdge_12.push_back(index);
 
-                        }else   // left edge
-                        {
-                            // Add backwards.  This is because of counter clockwise.
-                            iEdge_3.insert(iEdge_3.begin(), index);
+                        }else if(isEdge_23(i,j,npts)){  // right edge
+
+                            iEdge_23.push_back(index);
+
+                        }else if(isEdge_30(i,j,npts)){  // right edge
+
+                            iEdge_30.push_back(index);
                         }
 
                     } else { // Interior points
@@ -187,6 +200,10 @@ namespace Nektar
                 }
             }
 
+            swap(vertex[2],vertex[3]);
+            reverse(iEdge_23.begin(),iEdge_23.end());
+            reverse(iEdge_30.begin(),iEdge_30.end());
+
             // Mapping the vertex, edges, and interior points using the permutation matrix,
             // so the points are ordered anticlockwise.
             for(unsigned int k=0; k<vertex.size(); ++k){
@@ -194,19 +211,24 @@ namespace Nektar
                 map.push_back(vertex[k]);
             }
 
-            for(unsigned int k=0; k<iEdge_1.size(); ++k){
+            for(unsigned int k=0; k<iEdge_01.size(); ++k){
 
-                map.push_back(iEdge_1[k]);
+                map.push_back(iEdge_01[k]);
             }
 
-            for(unsigned int k=0; k<iEdge_2.size(); ++k){
+            for(unsigned int k=0; k<iEdge_12.size(); ++k){
 
-                map.push_back(iEdge_2[k]);
+                map.push_back(iEdge_12[k]);
             }
 
-            for(unsigned int k=0; k<iEdge_3.size(); ++k){
+            for(unsigned int k=0; k<iEdge_23.size(); ++k){
 
-                map.push_back(iEdge_3[k]);
+                map.push_back(iEdge_23[k]);
+            }
+
+            for(unsigned int k=0; k<iEdge_30.size(); ++k){
+
+                map.push_back(iEdge_30[k]);
             }
 
             for(unsigned int k=0; k<interiorPoints.size(); ++k){

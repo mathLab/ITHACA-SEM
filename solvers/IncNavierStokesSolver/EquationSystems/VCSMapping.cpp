@@ -190,18 +190,6 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray, 
         const NekDouble time)
     {       
-        // Update mapping and Deal with Dirichlet boundary conditions
-        if (m_mapping->IsTimeDependent())
-        {
-            if (m_mapping->IsFromFunction())
-            {
-                // If the transformation is explicitly defined, update it here 
-                // Otherwise, it will be done somewhere else (ForcingMovingBody)
-                m_mapping->UpdateMapping(time);
-            }
-            m_mapping->UpdateBCs(time);
-        }       
-        
         EvaluateAdvectionTerms(inarray, outarray);
 
         // Smooth advection
@@ -222,9 +210,21 @@ namespace Nektar
         
         // Add mapping terms
         ApplyIncNSMappingForcing( inarray, outarray);
-        
+
         // Calculate High-Order pressure boundary conditions
         m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis);
+
+        // Update mapping and deal with Dirichlet boundary conditions
+        if (m_mapping->IsTimeDependent())
+        {
+            if (m_mapping->IsFromFunction())
+            {
+                // If the transformation is explicitly defined, update it here
+                // Otherwise, it will be done somewhere else (ForcingMovingBody)
+                m_mapping->UpdateMapping(time+m_timestep);
+            }
+            m_mapping->UpdateBCs(time+m_timestep);
+        }
     }
     
         

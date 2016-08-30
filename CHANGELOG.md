@@ -65,6 +65,9 @@ v4.3.4
 - Fix compilation with NEKTAR_USE_MESHGEN option
 - Fix IterativeFull solver in parallel (!685)
 
+**IncNavierStokesSolver:**
+- Fix 2nd order time-integration for VCSMapping (!687)
+
 v4.3.3
 ------
 **Library**:

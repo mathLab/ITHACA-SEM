@@ -109,7 +109,7 @@ private:
     std::vector<ElUtilSharedPtr> dataSet;
 
     ResidualSharedPtr res;
-    DerivUtilSharedPtr derivUtil;
+    std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> derivUtil;
     optimiser opti;
 };
 

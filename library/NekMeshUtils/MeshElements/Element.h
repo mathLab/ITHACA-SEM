@@ -273,6 +273,11 @@ public:
     {
         return m_conf;
     }
+    ///returns the shapetype
+    NEKMESHUTILS_EXPORT LibUtilities::ShapeType GetShapeType() const
+    {
+        return m_conf.m_e;
+    }
     /// Returns the tag which defines the element shape.
     NEKMESHUTILS_EXPORT std::string GetTag() const
     {

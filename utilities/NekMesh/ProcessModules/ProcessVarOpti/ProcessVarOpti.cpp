@@ -157,8 +157,6 @@ void ProcessVarOpti::Process()
     res = boost::shared_ptr<Residual>(new Residual);
     res->val = 1.0;
 
-    derivUtil = boost::shared_ptr<DerivUtil>(new DerivUtil);
-
     FillQuadPoints();
     BuildDerivUtil();
     GetElementMap();

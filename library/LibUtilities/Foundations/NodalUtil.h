@@ -303,6 +303,51 @@ protected:
     }
 };
 
+/**
+ * @brief Specialisation of the NodalUtil class to support nodal quad
+ * elements.
+ */
+class NodalUtilQuad : public NodalUtil
+{
+public:
+    LIB_UTILITIES_EXPORT NodalUtilQuad(int degree,
+                                       Array<OneD, NekDouble> r,
+                                       Array<OneD, NekDouble> s);
+
+    LIB_UTILITIES_EXPORT virtual ~NodalUtilQuad()
+    {
+    }
+
+protected:
+    /// Mapping from the \f$ (i,j) \f$ indexing of the basis to a continuous
+    /// ordering.
+    std::vector<std::pair<int, int> > m_ordering;
+
+    /// Collapsed coordinates \f$ (\eta_1, \eta_2) \f$ of the nodal points.
+    Array<OneD, Array<OneD, NekDouble> > m_eta;
+
+    virtual NekVector<NekDouble> v_OrthoBasis(const int mode);
+    virtual NekVector<NekDouble> v_OrthoBasisDeriv(
+        const int dir, const int mode);
+
+    virtual boost::shared_ptr<NodalUtil> v_CreateUtil(
+        Array<OneD, Array<OneD, NekDouble> > &xi)
+    {
+        return MemoryManager<NodalUtilQuad>::AllocateSharedPtr(
+            m_degree, xi[0], xi[1]);
+    }
+
+    virtual NekDouble v_ModeZeroIntegral()
+    {
+        return 4.0;
+    }
+
+    virtual int v_NumModes()
+    {
+        return (m_degree + 1) * (m_degree + 1);
+    }
+};
+
 }
 }
 

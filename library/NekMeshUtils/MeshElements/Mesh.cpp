@@ -114,7 +114,7 @@ void Mesh::MakeOrder(int                      order,
     {
         pTypes[LibUtilities::eSegment]  = LibUtilities::ePolyEvenlySpaced;
         pTypes[LibUtilities::eTriangle] = LibUtilities::eNodalTriEvenlySpaced;
-        pTypes[LibUtilities::eQuadrilateral] = LibUtilities::ePolyEvenlySpaced;
+        pTypes[LibUtilities::eQuadrilateral] = LibUtilities::eNodalQuadEvenlySpaced;
         pTypes[LibUtilities::eTetrahedron] =
             LibUtilities::eNodalTetEvenlySpaced;
         pTypes[LibUtilities::ePrism] = LibUtilities::eNodalPrismEvenlySpaced;
@@ -125,8 +125,8 @@ void Mesh::MakeOrder(int                      order,
         // Prism still to do.
         pTypes[LibUtilities::eSegment]  = LibUtilities::eGaussLobattoLegendre;
         pTypes[LibUtilities::eTriangle] = LibUtilities::eNodalTriElec;
-        pTypes[LibUtilities::eQuadrilateral] =
-            LibUtilities::eGaussLobattoLegendre;
+        pTypes[LibUtilities::eQuadrilateral] = LibUtilities::eNodalQuadElec;
+        pTypes[LibUtilities::ePrism] = LibUtilities::eNodalPrismElec;
         pTypes[LibUtilities::eTetrahedron] = LibUtilities::eNodalTetElec;
         pTypes[LibUtilities::eHexahedron] = LibUtilities::eGaussLobattoLegendre;
     }
@@ -164,6 +164,9 @@ void Mesh::MakeOrder(int                      order,
     }
 
     boost::unordered_set<int> processedEdges, processedFaces, processedVolumes;
+
+    //note if CAD previously existed on the face or edge, the new points need
+    //to be projected onto the CAD entity.
 
     // Call MakeOrder with our generated geometries on each edge to fill in edge
     // interior nodes.

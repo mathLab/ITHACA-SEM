@@ -47,7 +47,7 @@ namespace Utilities
 
 void ProcessVarOpti::BuildDerivUtil()
 {
-    //build Vandermonde information
+/*    //build Vandermonde information
     switch (m_mesh->m_spaceDim)
     {
         case 2:
@@ -189,7 +189,7 @@ void ProcessVarOpti::BuildDerivUtil()
                 derivUtil[7]->quadW = quadWi;
             }
         }
-    }
+    }*/
 }
 
 vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSharedPtr> elLock)
@@ -452,7 +452,7 @@ void ProcessVarOpti::GetElementMap()
 
 vector<ElementSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
 {
-    vector<ElementSharedPtr> elBelowThres;
+/*    vector<ElementSharedPtr> elBelowThres;
     for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
     {
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
@@ -598,7 +598,7 @@ vector<ElementSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
         }
     }
 
-    return ret;
+    return ret;*/
 }
 
 void ProcessVarOpti::FillQuadPoints()

@@ -323,12 +323,15 @@ void Module::ProcessFaces(bool ReprocessFaces)
 
         elmt->SetFaceLink(*it);
 
+        //Im not sure why but this little bit of code breaks the high-order
+        //surface generator. M.T 31/8/16
         // Set edges/vertices
-        for (int j = 0; j < elmt->GetVertexCount(); ++j)
+        /*for (int j = 0; j < elmt->GetVertexCount(); ++j)
         {
             elmt->SetVertex(j, (*it)->m_vertexList[j], false);
             elmt->SetEdge(j, (*it)->m_edgeList[j], false);
-        }
+        }*/
+
 
         // Update 3D element boundary map.
         pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);

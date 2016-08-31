@@ -341,6 +341,8 @@ void InputNekpp::Process()
     // set up composite labels if they exist
     m_mesh->m_faceLabels = graph->GetCompositesLabels();
 
+    m_mesh->m_hasCAD = false;
+
 #ifdef NEKTAR_USE_MESHGEN
 
     if(pSession->DefinesElement("NEKTAR/GEOMETRY/CADID"))

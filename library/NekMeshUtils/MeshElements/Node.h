@@ -331,26 +331,32 @@ public:
             std::pair<CADCurveSharedPtr, NekDouble >(cu, t);
     }
 
-    std::vector<std::string> GetCADString()
+    std::vector<std::pair<int,std::string> > GetCADCurveInfoVector()
     {
-        std::vector<std::string> ret;
+        std::vector<std::pair<int,std::string> > ret;
         std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator c;
         for (c = CADCurveList.begin(); c != CADCurveList.end(); c++)
         {
             std::stringstream ss;
             ss << std::scientific << std::setprecision(8);
-            ss << "C " << c->first << " " << c->second.second << " " << 0.0;
-            ret.push_back(ss.str());
+            ss << c->second.second;
+            ret.push_back(std::pair<int,std::string>(c->first,ss.str()));
+
         }
+        return ret;
+    }
+
+    std::vector<std::pair<int,std::string> > GetCADSurfInfoVector()
+    {
+        std::vector<std::pair<int,std::string> > ret;
         std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >::
             iterator s;
         for (s = CADSurfList.begin(); s != CADSurfList.end(); s++)
         {
             std::stringstream ss;
             ss << std::scientific << std::setprecision(8);
-            ss << "S " << s->first << " " << s->second.second[0] <<
-                  " " << s->second.second[1];
-            ret.push_back(ss.str());
+            ss << s->second.second[0] << " " << s->second.second[1];
+            ret.push_back(std::pair<int,std::string>(s->first,ss.str()));
         }
         return ret;
     }
@@ -365,9 +371,13 @@ public:
         return 0;
     }
 
-    std::vector<std::string> GetCADString()
+    std::vector<std::pair<int,std::string> > GetCADCurveInfoVector()
     {
-        return std::vector<std::string>();
+        return std::vector<std::pair<int,std::string> >();
+    }
+    std::vector<std::pair<int,std::string> > GetCADSurfInfoVector()
+    {
+        return std::vector<std::pair<int,std::string> >();
     }
 #endif
 

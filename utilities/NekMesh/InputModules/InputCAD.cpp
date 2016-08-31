@@ -277,6 +277,8 @@ void InputCAD::Process()
         }
     }
 
+    //curve cad taging is working and tested to this point
+
     if (count > 0)
     {
         cerr << "Error: mesh contains unconnected edges and is not valid"

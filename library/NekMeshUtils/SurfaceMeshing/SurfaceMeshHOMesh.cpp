@@ -417,7 +417,7 @@ void SurfaceMesh::HOSurf()
                 vector<CADSurfSharedPtr> s = c->GetAdjSurf();
 
                 ASSERTL0(s.size() == 2, "Number of common surfs should be 2");
-                
+
                 vector<NodeSharedPtr> honodes(m_mesh->m_nummode - 2);
                 for (int k = 1; k < m_mesh->m_nummode - 1; k++)
                 {

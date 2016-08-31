@@ -1109,7 +1109,7 @@ void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
         }
     }
 
-/*    {
+    {
         FaceSet::iterator it;
         for (it = m_mesh->m_faceSet.begin(); it != m_mesh->m_faceSet.end();
              ++it)
@@ -1121,29 +1121,32 @@ void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
 
             if((*it)->m_faceNodes[0]->GetNumCADSurf() > 0)
             {
-                for(int i = 0; i < (*it)->m_faceNodes.size(); i++)
+                TiXmlElement *f = new TiXmlElement("F");
+                f->SetAttribute("ID", facecnt++);
+                f->SetAttribute("FACEID", (*it)->m_id);
+                f->SetAttribute("ONSURF", (*it)->m_faceNodes[0]->GetCADSurfInfoVector()[0].first);
+
+                for(int j = 0; j < (*it)->m_faceNodes.size(); j++)
                 {
-                    TiXmlElement *v = new TiXmlElement("F");
-                    v->SetAttribute("ID", facecnt++);
-                    v->SetAttribute("FACEID", (*it)->m_id);
-                    v->SetAttribute("NODE", i);
-                    vector<string> str = (*it)->m_faceNodes[i]->GetCADString();
-                    for(int i = 0; i < str.size(); i++)
+                    TiXmlElement *n = new TiXmlElement("N");
+                    n->SetAttribute("NODEID", j);
+
+                    vector<pair<int,string> > info = (*it)->m_faceNodes[j]->GetCADSurfInfoVector();
+                    for(int i = 0; i < info.size(); i++)
                     {
-                        TiXmlText *t = new TiXmlText(str[i]);
-                        v->LinkEndChild(t);
-                        if(i != str.size() - 1)
-                        {
-                            TiXmlText *t = new TiXmlText(":");
-                            v->LinkEndChild(t);
-                        }
+                        TiXmlElement *s = new TiXmlElement("S");
+                        s->SetAttribute("CADID", info[i].first);
+                        TiXmlText *t = new TiXmlText(info[i].second);
+                        s->LinkEndChild(t);
+                        n->LinkEndChild(s);
                     }
-                    cad->LinkEndChild(v);
+                    f->LinkEndChild(n);
                 }
+                cad->LinkEndChild(f);
             }
         }
     }
-*/
+
     if (cad->FirstChild())
     {
         pRoot->LinkEndChild(cad);

@@ -47,26 +47,25 @@ namespace Utilities
 
 void ProcessVarOpti::BuildDerivUtil()
 {
-/*    //build Vandermonde information
+    //build Vandermonde information
     switch (m_mesh->m_spaceDim)
     {
         case 2:
         {
-            //triangle is 3 in shapetype enum
-            //quad is 4
-            derivUtil[3] = boost::shared_ptr<DerivUtil>(new DerivUtil);
-            derivUtil[3]->ptsLow  = m_mesh->m_nummode*(m_mesh->m_nummode+1)/2;
+            LibUtilities::ShapeType st = LibUtilities::eTriangle;
+            derivUtil[st] = boost::shared_ptr<DerivUtil>(new DerivUtil);
+            derivUtil[st]->ptsLow  = m_mesh->m_nummode*(m_mesh->m_nummode+1)/2;
 
             LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                           LibUtilities::eNodalTriElec);
-            LibUtilities::PointsKey pkey2(m_mesh->m_nummode + 2,
+            LibUtilities::PointsKey pkey2(m_mesh->m_nummode + 4,
                                           LibUtilities::eNodalTriSPI);
             Array<OneD, NekDouble> u1, v1, u2, v2;
 
             LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
             LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2);
 
-            derivUtil[3]->ptsHigh = u2.num_elements();
+            derivUtil[st]->ptsHigh = u2.num_elements();
 
             LibUtilities::NodalUtilTriangle nodalTri(
                 m_mesh->m_nummode - 1, u1, v1);
@@ -83,23 +82,22 @@ void ProcessVarOpti::BuildDerivUtil()
             NekMatrix<NekDouble> VandermondeI = Vandermonde;
             VandermondeI.Invert();
 
-            derivUtil[3]->VdmDL[0] = *nodalTri.GetVandermondeForDeriv(0) * VandermondeI;
-            derivUtil[3]->VdmDL[1] = *nodalTri.GetVandermondeForDeriv(1) * VandermondeI;
-            derivUtil[3]->VdmD[0] = interp * derivUtil[3]->VdmDL[0];
-            derivUtil[3]->VdmD[1] = interp * derivUtil[3]->VdmDL[1];
+            derivUtil[st]->VdmDL[0] = *nodalTri.GetVandermondeForDeriv(0) * VandermondeI;
+            derivUtil[st]->VdmDL[1] = *nodalTri.GetVandermondeForDeriv(1) * VandermondeI;
+            derivUtil[st]->VdmD[0] = interp * derivUtil[st]->VdmDL[0];
+            derivUtil[st]->VdmD[1] = interp * derivUtil[st]->VdmDL[1];
             //derivUtil->quadW = LibUtilities::MakeQuadratureWeights(U2,V1);
             Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
             NekVector<NekDouble> quadWi(qds);
-            derivUtil[3]->quadW = quadWi;
+            derivUtil[st]->quadW = quadWi;
         }
         break;
         case 3:
         {
             {
-                //tet is 5
-                //prism is 7
-                derivUtil[5] = boost::shared_ptr<DerivUtil>(new DerivUtil);
-                derivUtil[5]->ptsLow  = m_mesh->m_nummode*(m_mesh->m_nummode+1)*(m_mesh->m_nummode+2)/6;
+                LibUtilities::ShapeType st = LibUtilities::eTetrahedron;
+                derivUtil[st] = boost::shared_ptr<DerivUtil>(new DerivUtil);
+                derivUtil[st]->ptsLow  = m_mesh->m_nummode*(m_mesh->m_nummode+1)*(m_mesh->m_nummode+2)/6;
                 LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                               LibUtilities::eNodalTetElec);
                 LibUtilities::PointsKey pkey2(m_mesh->m_nummode+4,
@@ -113,7 +111,7 @@ void ProcessVarOpti::BuildDerivUtil()
                 Array<OneD, NekDouble> u3,v3,w3;
                 LibUtilities::PointsManager()[pkey3]->GetPoints(u3,v3,w3);
 
-                derivUtil[5]->ptsHigh = u2.num_elements();
+                derivUtil[st]->ptsHigh = u2.num_elements();
 
                 LibUtilities::NodalUtilTetrahedron nodalTet(
                     m_mesh->m_nummode - 1, u1, v1, w1);
@@ -131,21 +129,22 @@ void ProcessVarOpti::BuildDerivUtil()
                 NekMatrix<NekDouble> VandermondeI = Vandermonde;
                 VandermondeI.Invert();
 
-                derivUtil[5]->VdmDL[0] = *nodalTet.GetVandermondeForDeriv(0) * VandermondeI;
-                derivUtil[5]->VdmDL[1] = *nodalTet.GetVandermondeForDeriv(1) * VandermondeI;
-                derivUtil[5]->VdmDL[2] = *nodalTet.GetVandermondeForDeriv(2) * VandermondeI;
+                derivUtil[st]->VdmDL[0] = *nodalTet.GetVandermondeForDeriv(0) * VandermondeI;
+                derivUtil[st]->VdmDL[1] = *nodalTet.GetVandermondeForDeriv(1) * VandermondeI;
+                derivUtil[st]->VdmDL[2] = *nodalTet.GetVandermondeForDeriv(2) * VandermondeI;
 
-                derivUtil[5]->VdmD[0] = interp * derivUtil[5]->VdmDL[0];
-                derivUtil[5]->VdmD[1] = interp * derivUtil[5]->VdmDL[1];
-                derivUtil[5]->VdmD[2] = interp * derivUtil[5]->VdmDL[2];
+                derivUtil[st]->VdmD[0] = interp * derivUtil[st]->VdmDL[0];
+                derivUtil[st]->VdmD[1] = interp * derivUtil[st]->VdmDL[1];
+                derivUtil[st]->VdmD[2] = interp * derivUtil[st]->VdmDL[2];
                 Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
                 NekVector<NekDouble> quadWi(qds);
-                derivUtil[5]->quadW = quadWi;
+                derivUtil[st]->quadW = quadWi;
             }
 
             {
-                derivUtil[7] = boost::shared_ptr<DerivUtil>(new DerivUtil);
-                derivUtil[7]->ptsLow  = m_mesh->m_nummode*m_mesh->m_nummode*(m_mesh->m_nummode+1)/2;
+                LibUtilities::ShapeType st = LibUtilities::ePrism;
+                derivUtil[st] = boost::shared_ptr<DerivUtil>(new DerivUtil);
+                derivUtil[st]->ptsLow  = m_mesh->m_nummode*m_mesh->m_nummode*(m_mesh->m_nummode+1)/2;
                 LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                               LibUtilities::eNodalPrismElec);
                 LibUtilities::PointsKey pkey2(m_mesh->m_nummode+4,
@@ -159,9 +158,9 @@ void ProcessVarOpti::BuildDerivUtil()
                 Array<OneD, NekDouble> u3,v3,w3;
                 LibUtilities::PointsManager()[pkey3]->GetPoints(u3,v3,w3);
 
-                derivUtil[7]->ptsHigh = u2.num_elements();
+                derivUtil[st]->ptsHigh = u2.num_elements();
 
-                LibUtilities::NodalUtilPrims nodalPrism(
+                LibUtilities::NodalUtilPrism nodalPrism(
                     m_mesh->m_nummode - 1, u1, v1, w1);
 
                 Array<OneD, Array<OneD, NekDouble> > uv2(3), uv1(3);
@@ -177,19 +176,19 @@ void ProcessVarOpti::BuildDerivUtil()
                 NekMatrix<NekDouble> VandermondeI = Vandermonde;
                 VandermondeI.Invert();
 
-                derivUtil[7]->VdmDL[0] = *nodalPrism.GetVandermondeForDeriv(0) * VandermondeI;
-                derivUtil[7]->VdmDL[1] = *nodalPrism.GetVandermondeForDeriv(1) * VandermondeI;
-                derivUtil[7]->VdmDL[2] = *nodalPrism.GetVandermondeForDeriv(2) * VandermondeI;
+                derivUtil[st]->VdmDL[0] = *nodalPrism.GetVandermondeForDeriv(0) * VandermondeI;
+                derivUtil[st]->VdmDL[1] = *nodalPrism.GetVandermondeForDeriv(1) * VandermondeI;
+                derivUtil[st]->VdmDL[2] = *nodalPrism.GetVandermondeForDeriv(2) * VandermondeI;
 
-                derivUtil[7]->VdmD[0] = interp * derivUtil[7]->VdmDL[0];
-                derivUtil[7]->VdmD[1] = interp * derivUtil[7]->VdmDL[1];
-                derivUtil[7]->VdmD[2] = interp * derivUtil[7]->VdmDL[2];
+                derivUtil[st]->VdmD[0] = interp * derivUtil[st]->VdmDL[0];
+                derivUtil[st]->VdmD[1] = interp * derivUtil[st]->VdmDL[1];
+                derivUtil[st]->VdmD[2] = interp * derivUtil[st]->VdmDL[2];
                 Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
                 NekVector<NekDouble> quadWi(qds);
-                derivUtil[7]->quadW = quadWi;
+                derivUtil[st]->quadW = quadWi;
             }
         }
-    }*/
+    }
 }
 
 vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSharedPtr> elLock)

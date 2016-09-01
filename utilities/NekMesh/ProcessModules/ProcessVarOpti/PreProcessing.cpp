@@ -451,7 +451,7 @@ void ProcessVarOpti::GetElementMap()
 
 vector<ElementSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
 {
-/*    vector<ElementSharedPtr> elBelowThres;
+    vector<ElementSharedPtr> elBelowThres;
     for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
     {
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
@@ -597,12 +597,13 @@ vector<ElementSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
         }
     }
 
-    return ret;*/
+    return ret;
 }
 
 void ProcessVarOpti::FillQuadPoints()
 {
-    int nq = m_mesh->m_nummode;
+    m_mesh->MakeOrder(m_mesh->m_nummode-1,LibUtilities::eGaussLobattoLegendre);
+    /*int nq = m_mesh->m_nummode;
     int id = m_mesh->m_vertexSet.size();
 
     LibUtilities::PointsKey ekey(m_mesh->m_nummode,
@@ -852,7 +853,7 @@ void ProcessVarOpti::FillQuadPoints()
             el->SetVolumeNodes(hons);
             el->SetCurveType(LibUtilities::eNodalTetElec);
         }
-    }
+    }*/
 }
 
 }

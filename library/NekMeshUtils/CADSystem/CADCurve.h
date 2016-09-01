@@ -154,6 +154,8 @@ public:
         return m_mainVerts;
     }
 
+    void Loct(Array<OneD, NekDouble> &xyz, NekDouble &t);
+
 private:
     /// OpenCascade object of the curve.
     BRepAdaptor_Curve m_occCurve;

@@ -95,6 +95,29 @@ NekDouble CADCurve::Length(NekDouble ti, NekDouble tf)
     return System.Mass() / 1000.0;
 }
 
+void CADCurve::Loct(Array<OneD, NekDouble> &xyz, NekDouble &t)
+{
+    Array<OneD, NekDouble> b = Bounds();
+    Handle(Geom_Curve) NewCurve = BRep_Tool::Curve(m_occEdge, b[0], b[1]);
+
+    gp_Pnt loc(xyz[0] * 1000.0, xyz[1] * 1000.0, xyz[2] * 1000.0);
+    GeomAPI_ProjectPointOnCurve locator(loc,NewCurve);
+    if (locator.NbPoints() == 0)
+    {
+        ASSERTL0(false,"failed");
+    }
+    else
+    {
+        t = locator.Parameter(0);
+        gp_Pnt tst = locator.NearestPoint();
+        NekDouble dis = tst.Distance(loc);
+        if(dis > 1e-6)
+        {
+            cout << "large curve projection: " << dis << endl;
+        }
+    }
+}
+
 Array<OneD, NekDouble> CADCurve::P(NekDouble t)
 {
     Array<OneD, NekDouble> location(3);

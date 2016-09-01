@@ -595,6 +595,7 @@ void InputNekpp::Process()
             for(int j = 0; j < (*it)->m_edgeNodes.size(); j++)
             {
                 esit = edgeToString.find(pair<int,int>((*it)->m_id,j));
+                int surf = 0;
                 if(esit != edgeToString.end())
                 {
                     ct++;
@@ -609,6 +610,7 @@ void InputNekpp::Process()
                         else if(esit->second.second[i].type == "S")
                         {
                             int s = esit->second.second[i].id;
+                            surf = s;
                             Array<OneD,NekDouble> uv(2);
                             uv[0] = esit->second.second[i].u;
                             uv[1] = esit->second.second[i].v;
@@ -625,6 +627,12 @@ void InputNekpp::Process()
                     (*it)->onCurve = true;
                     (*it)->CADCurveId = esit->second.first;
                     (*it)->CADCurve = m_mesh->m_cad->GetCurve(esit->second.first);
+                }
+                else if(surf > 0)
+                {
+                    (*it)->onSurf = true;
+                    (*it)->CADSurfId = surf;
+                    (*it)->CADSurf = m_mesh->m_cad->GetSurf(surf);
                 }
             }
         }

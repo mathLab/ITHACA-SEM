@@ -621,19 +621,20 @@ void InputNekpp::Process()
                             ASSERTL0(false,"unsure on type");
                         }
                     }
+                    if(esit->second.first > 0)
+                    {
+                        (*it)->onCurve = true;
+                        (*it)->CADCurveId = esit->second.first;
+                        (*it)->CADCurve = m_mesh->m_cad->GetCurve(esit->second.first);
+                    }
+                    else if(surf > 0)
+                    {
+                        (*it)->onSurf = true;
+                        (*it)->CADSurfId = surf;
+                        (*it)->CADSurf = m_mesh->m_cad->GetSurf(surf);
+                    }
                 }
-                if(esit->second.first > 0)
-                {
-                    (*it)->onCurve = true;
-                    (*it)->CADCurveId = esit->second.first;
-                    (*it)->CADCurve = m_mesh->m_cad->GetCurve(esit->second.first);
-                }
-                else if(surf > 0)
-                {
-                    (*it)->onSurf = true;
-                    (*it)->CADSurfId = surf;
-                    (*it)->CADSurf = m_mesh->m_cad->GetSurf(surf);
-                }
+
             }
         }
         ASSERTL0(ct == edgeToString.size(), "did not find all CAD information");
@@ -659,13 +660,14 @@ void InputNekpp::Process()
                         uv[1] = esit->second.second[i].v;
                         (*it)->m_faceNodes[j]->SetCADSurf(s,m_mesh->m_cad->GetSurf(s),uv);
                     }
+                    if(fsit->second.first > 0)
+                    {
+                        (*it)->onSurf = true;
+                        (*it)->CADSurfId = esit->second.first;
+                        (*it)->CADSurf = m_mesh->m_cad->GetSurf(fsit->second.first);
+                    }
                 }
-                if(fsit->second.first > 0)
-                {
-                    (*it)->onSurf = true;
-                    (*it)->CADSurfId = esit->second.first;
-                    (*it)->CADSurf = m_mesh->m_cad->GetSurf(fsit->second.first);
-                }
+
             }
         }
         ASSERTL0(ct == faceToString.size(), "did not find all CAD information");

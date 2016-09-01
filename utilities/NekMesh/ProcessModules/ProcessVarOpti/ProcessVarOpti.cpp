@@ -172,7 +172,7 @@ void ProcessVarOpti::Process()
     vector<vector<NodeOptiSharedPtr> > optiNodes;
 
     //turn the free nodes into optimisable objects with all required data
-/*    for(int i = 0; i < freenodes.size(); i++)
+    for(int i = 0; i < freenodes.size(); i++)
     {
         vector<NodeOptiSharedPtr> ns;
         for(int j = 0; j < freenodes[i].size(); j++)
@@ -201,7 +201,7 @@ void ProcessVarOpti::Process()
         }
         optiNodes.push_back(ns);
     }
-*/
+
     int nset = optiNodes.size();
     int p = 0;
     int mn = numeric_limits<int>::max();

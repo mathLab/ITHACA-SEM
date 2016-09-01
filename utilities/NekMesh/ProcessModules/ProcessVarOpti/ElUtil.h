@@ -73,6 +73,11 @@ public:
 
     void Evaluate();
 
+    ElementSharedPtr GetEl()
+    {
+        return m_el;
+    }
+
 private:
 
     std::vector<Array<OneD, NekDouble> > MappingIdealToRef();

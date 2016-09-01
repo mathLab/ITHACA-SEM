@@ -338,11 +338,11 @@ void Module::ProcessFaces(bool ReprocessFaces)
         eMap.first->SetBoundaryLink(eMap.second, i);
 
         // Copy face curvature
-        if ((*it)->m_faceNodes.size() > 0)
+        /*if ((*it)->m_faceNodes.size() > 0)
         {
             elmt->SetVolumeNodes((*it)->m_faceNodes);
             elmt->SetCurveType((*it)->m_curveType);
-        }
+        }*/
     }
 }
 

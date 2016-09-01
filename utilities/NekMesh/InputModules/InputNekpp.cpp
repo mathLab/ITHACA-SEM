@@ -652,18 +652,18 @@ void InputNekpp::Process()
                 if(fsit != faceToString.end())
                 {
                     ct++;
-                    for(int i = 0; i < esit->second.second.size(); i++)
+                    for(int i = 0; i < fsit->second.second.size(); i++)
                     {
-                        int s = esit->second.second[i].id;
+                        int s = fsit->second.second[i].id;
                         Array<OneD,NekDouble> uv(2);
-                        uv[0] = esit->second.second[i].u;
-                        uv[1] = esit->second.second[i].v;
+                        uv[0] = fsit->second.second[i].u;
+                        uv[1] = fsit->second.second[i].v;
                         (*it)->m_faceNodes[j]->SetCADSurf(s,m_mesh->m_cad->GetSurf(s),uv);
                     }
                     if(fsit->second.first > 0)
                     {
                         (*it)->onSurf = true;
-                        (*it)->CADSurfId = esit->second.first;
+                        (*it)->CADSurfId = fsit->second.first;
                         (*it)->CADSurf = m_mesh->m_cad->GetSurf(fsit->second.first);
                     }
                 }

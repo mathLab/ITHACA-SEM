@@ -141,6 +141,12 @@ void ProcessVarOpti::Process()
             }
         }
 
+        if(!fd && m_config["nq"].beenSet)
+        {
+            m_mesh->m_nummode = m_config["nq"].as<int>();
+            fd = true;
+        }
+
         ASSERTL0(fd,"failed to find order of mesh");
     }
 
@@ -157,7 +163,7 @@ void ProcessVarOpti::Process()
     res = boost::shared_ptr<Residual>(new Residual);
     res->val = 1.0;
 
-    FillQuadPoints();
+    m_mesh->MakeOrder(m_mesh->m_nummode-1,LibUtilities::eGaussLobattoLegendre);
     return;
     BuildDerivUtil();
     GetElementMap();
@@ -281,6 +287,10 @@ void ProcessVarOpti::Process()
             tm->QueueJobs(jobs);
             tm->SetNumWorkers(nThreads);
             tm->Wait();
+            //for(int j = 0; j < jobs.size(); j++)
+            //{
+            //    jobs[j]->Run();
+            //}
         }
 
         res->startInv = 0;

@@ -98,7 +98,6 @@ private:
     typedef std::map<int, std::pair<std::vector<int>,
                                     std::vector<ElUtilSharedPtr> > > NodeElMap;
 
-    void FillQuadPoints();
     void BuildDerivUtil();
     void GetElementMap();
     std::vector<ElementSharedPtr> GetLockedElements(NekDouble thres);

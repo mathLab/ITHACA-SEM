@@ -100,7 +100,7 @@ void CADCurve::Loct(Array<OneD, NekDouble> &xyz, NekDouble &t)
     Array<OneD, NekDouble> b = Bounds();
     Handle(Geom_Curve) NewCurve = BRep_Tool::Curve(m_occEdge, b[0], b[1]);
 
-    gp_Pnt loc(xyz[0] * 1000.0, xyz[1] * 1000.0, xyz[2] * 1000.0);
+    gp_Pnt loc(xyz[0], xyz[1], xyz[2]);
     GeomAPI_ProjectPointOnCurve locator(loc,NewCurve);
     if (locator.NbPoints() == 0)
     {

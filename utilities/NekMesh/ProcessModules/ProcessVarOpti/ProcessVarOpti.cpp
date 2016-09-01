@@ -158,6 +158,7 @@ void ProcessVarOpti::Process()
     res->val = 1.0;
 
     FillQuadPoints();
+    return;
     BuildDerivUtil();
     GetElementMap();
 

@@ -108,7 +108,7 @@ void CADCurve::Loct(Array<OneD, NekDouble> &xyz, NekDouble &t)
     }
     else
     {
-        t = locator.Parameter(0);
+        t = locator.Parameter(1);
         gp_Pnt tst = locator.NearestPoint();
         NekDouble dis = tst.Distance(loc);
         if(dis > 1e-6)

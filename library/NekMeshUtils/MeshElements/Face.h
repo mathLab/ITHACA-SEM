@@ -482,6 +482,14 @@ public:
     std::vector<std::pair<ElementSharedPtr, int> > m_elLink;
     /// Nektar++ representation of geometry
     SpatialDomains::Geometry2DSharedPtr  m_geom;
+
+#ifdef NEKTAR_USE_MESHGEN
+    bool onSurf;
+    /// id of cad curve which edge lies on
+    int CADSurfId;
+    CADSurfSharedPtr CADSurf;
+#endif
+
 };
 /// Shared pointer to a face.
 typedef boost::shared_ptr<Face> FaceSharedPtr;

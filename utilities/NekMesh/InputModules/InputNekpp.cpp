@@ -371,7 +371,7 @@ void InputNekpp::Process()
 
     map<int, vector<cadVar> > vertToString;
     map<pair<int,int>, pair<int,vector<cadVar> > > edgeToString;
-    map<pair<int,int>, vector<cadVar> > faceToString;
+    map<pair<int,int>, pair<int,vector<cadVar> > > faceToString;
 
     if(pSession->DefinesElement("NEKTAR/GEOMETRY/CAD"))
     {
@@ -432,7 +432,6 @@ void InputNekpp::Process()
         TiXmlElement *edge = cad->FirstChildElement("E");
 
         int eid;
-        int node;
 
         while(edge)
         {
@@ -486,7 +485,7 @@ void InputNekpp::Process()
                 }
 
                 node = node->NextSiblingElement("N");
-                edgeToString[pair<int,int>(eid,nid)] = pair<int,vector<cadVar>(cu,items);
+                edgeToString[pair<int,int>(eid,nid)] = pair<int,vector<cadVar> >(cu,items);
             }
 
             edge = edge->NextSiblingElement("E");
@@ -505,7 +504,7 @@ void InputNekpp::Process()
             err = face->QueryIntAttribute("FACEID", &fid);
             ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute FACEID.");
             int su;
-            err = edge->QueryIntAttribute("ONSURF", &su);
+            err = face->QueryIntAttribute("ONSURF", &su);
             ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute EDGEID.");
 
             TiXmlElement *node = face->FirstChildElement("N");
@@ -532,7 +531,7 @@ void InputNekpp::Process()
                 }
 
                 node = node->NextSiblingElement("N");
-                edgeToString[pair<int,int>(fid,nid)] = pair<int,vector<cadVar>(su,items);
+                faceToString[pair<int,int>(fid,nid)] = pair<int,vector<cadVar> >(su,items);
             }
 
             face = face->NextSiblingElement("F");
@@ -547,9 +546,9 @@ void InputNekpp::Process()
 
 #ifdef NEKTAR_USE_MESHGEN
 
-    map<int, vector<string> >::iterator vsit;
-    map<pair<int,int>, vector<string> >::iterator esit;
-    map<pair<int,int>, vector<string> >::iterator fsit;
+    map<int, vector<cadVar> >::iterator vsit;
+    map<pair<int,int>, pair<int,vector<cadVar> > >::iterator esit;
+    map<pair<int,int>, pair<int,vector<cadVar> > >::iterator fsit;
 
     {
         int ct= 0;
@@ -563,21 +562,19 @@ void InputNekpp::Process()
                 ct++;
                 for(int i = 0; i < vsit->second.size(); i++)
                 {
-                    istringstream iss(vsit->second[i]);
-                    string t;
-                    int id;
-                    NekDouble u, v;
-                    iss >> t >> id >> u >> v;
-                    if(t == "C")
+                    if(vsit->second[i].type == "C")
                     {
-                        (*it)->SetCADCurve(id,m_mesh->m_cad->GetCurve(id),u);
+                        int c = vsit->second[i].id;
+                        int t = vsit->second[i].u;
+                        (*it)->SetCADCurve(c,m_mesh->m_cad->GetCurve(c),t);
                     }
-                    else if(t == "S")
+                    else if(vsit->second[i].type == "S")
                     {
+                        int s = vsit->second[i].id;
                         Array<OneD,NekDouble> uv(2);
-                        uv[0] = u;
-                        uv[1] = v;
-                        (*it)->SetCADSurf(id,m_mesh->m_cad->GetSurf(id),uv);
+                        uv[0] = vsit->second[i].u;
+                        uv[1] = vsit->second[i].v;
+                        (*it)->SetCADSurf(s,m_mesh->m_cad->GetSurf(s),uv);
                     }
                     else
                     {
@@ -601,29 +598,33 @@ void InputNekpp::Process()
                 if(esit != edgeToString.end())
                 {
                     ct++;
-                    for(int i = 0; i < esit->second.size(); i++)
+                    for(int i = 0; i < esit->second.second.size(); i++)
                     {
-                        istringstream iss(esit->second[i]);
-                        string t;
-                        int id;
-                        NekDouble u, v;
-                        iss >> t >> id >> u >> v;
-                        if(t == "C")
+                        if(esit->second.second[i].type == "C")
                         {
-                            (*it)->m_edgeNodes[j]->SetCADCurve(id,m_mesh->m_cad->GetCurve(id),u);
+                            int c = esit->second.second[i].id;
+                            int t = esit->second.second[i].u;
+                            (*it)->m_edgeNodes[j]->SetCADCurve(c,m_mesh->m_cad->GetCurve(c),t);
                         }
-                        else if(t == "S")
+                        else if(esit->second.second[i].type == "S")
                         {
+                            int s = esit->second.second[i].id;
                             Array<OneD,NekDouble> uv(2);
-                            uv[0] = u;
-                            uv[1] = v;
-                            (*it)->m_edgeNodes[j]->SetCADSurf(id,m_mesh->m_cad->GetSurf(id),uv);
+                            uv[0] = esit->second.second[i].u;
+                            uv[1] = esit->second.second[i].v;
+                            (*it)->m_edgeNodes[j]->SetCADSurf(s,m_mesh->m_cad->GetSurf(s),uv);
                         }
                         else
                         {
                             ASSERTL0(false,"unsure on type");
                         }
                     }
+                }
+                if(esit->second.first > 0)
+                {
+                    (*it)->onCurve = true;
+                    (*it)->CADCurveId = esit->second.first;
+                    (*it)->CADCurve = m_mesh->m_cad->GetCurve(esit->second.first);
                 }
             }
         }
@@ -642,29 +643,20 @@ void InputNekpp::Process()
                 if(fsit != faceToString.end())
                 {
                     ct++;
-                    for(int i = 0; i < fsit->second.size(); i++)
+                    for(int i = 0; i < esit->second.second.size(); i++)
                     {
-                        istringstream iss(fsit->second[i]);
-                        string t;
-                        int id;
-                        NekDouble u, v;
-                        iss >> t >> id >> u >> v;
-                        if(t == "C")
-                        {
-                            (*it)->m_faceNodes[j]->SetCADCurve(id,m_mesh->m_cad->GetCurve(id),u);
-                        }
-                        else if(t == "S")
-                        {
-                            Array<OneD,NekDouble> uv(2);
-                            uv[0] = u;
-                            uv[1] = v;
-                            (*it)->m_faceNodes[j]->SetCADSurf(id,m_mesh->m_cad->GetSurf(id),uv);
-                        }
-                        else
-                        {
-                            ASSERTL0(false,"unsure on type");
-                        }
+                        int s = esit->second.second[i].id;
+                        Array<OneD,NekDouble> uv(2);
+                        uv[0] = esit->second.second[i].u;
+                        uv[1] = esit->second.second[i].v;
+                        (*it)->m_faceNodes[j]->SetCADSurf(s,m_mesh->m_cad->GetSurf(s),uv);
                     }
+                }
+                if(fsit->second.first > 0)
+                {
+                    (*it)->onSurf = true;
+                    (*it)->CADSurfId = esit->second.first;
+                    (*it)->CADSurf = m_mesh->m_cad->GetSurf(fsit->second.first);
                 }
             }
         }

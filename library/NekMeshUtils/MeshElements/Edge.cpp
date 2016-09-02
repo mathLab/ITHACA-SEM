@@ -151,8 +151,7 @@ void Edge::MakeOrder(int                                order,
                 loc[0] = m_edgeNodes[i]->m_x;
                 loc[1] = m_edgeNodes[i]->m_y;
                 loc[2] = m_edgeNodes[i]->m_z;
-                NekDouble t;
-                CADCurve->Loct(loc,t);
+                NekDouble t = CADCurve->loct(loc);
                 m_edgeNodes[i]->SetCADCurve(CADCurveId,CADCurve,t);
 
                 std::vector<CADSurfSharedPtr> s = CADCurve->GetAdjSurf();

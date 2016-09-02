@@ -48,6 +48,7 @@ CADCurve::CADCurve(int i, TopoDS_Shape in)
     gp_Pnt ori(0.0, 0.0, 0.0);
     transform.SetScale(ori, 1.0 / 1000.0);
     TopLoc_Location mv(transform);
+    TopoDS_Shape cp = in;
     in.Move(mv);
 
     m_occEdge  = TopoDS::Edge(in);
@@ -56,6 +57,9 @@ CADCurve::CADCurve(int i, TopoDS_Shape in)
     GProp_GProps System;
     BRepGProp::LinearProperties(m_occEdge, System);
     m_length = System.Mass();
+
+    Array<OneD, NekDouble> b = Bounds();
+    m_c = BRep_Tool::Curve(TopoDS::Edge(cp), b[0], b[1]);
 
     m_id   = i;
     m_type = curve;
@@ -87,35 +91,37 @@ NekDouble CADCurve::tAtArcLength(NekDouble s)
 NekDouble CADCurve::Length(NekDouble ti, NekDouble tf)
 {
     Array<OneD, NekDouble> b = Bounds();
-    Handle(Geom_Curve) m_c = BRep_Tool::Curve(m_occEdge, b[0], b[1]);
-    Handle(Geom_Curve) NewCurve = new Geom_TrimmedCurve(m_c, ti, tf);
+    Handle(Geom_Curve) c = BRep_Tool::Curve(m_occEdge, b[0], b[1]);
+    Handle(Geom_Curve) NewCurve = new Geom_TrimmedCurve(c, ti, tf);
     TopoDS_Edge NewEdge = BRepBuilderAPI_MakeEdge(NewCurve);
     GProp_GProps System;
     BRepGProp::LinearProperties(NewEdge, System);
     return System.Mass() / 1000.0;
 }
 
-void CADCurve::Loct(Array<OneD, NekDouble> &xyz, NekDouble &t)
+NekDouble CADCurve::loct(Array<OneD, NekDouble> xyz)
 {
+    NekDouble t = 0.0;
     Array<OneD, NekDouble> b = Bounds();
-    Handle(Geom_Curve) NewCurve = BRep_Tool::Curve(m_occEdge, b[0], b[1]);
 
-    gp_Pnt loc(xyz[0], xyz[1], xyz[2]);
-    GeomAPI_ProjectPointOnCurve locator(loc,NewCurve);
-    if (locator.NbPoints() == 0)
+    gp_Pnt loc(xyz[0]*1000.0, xyz[1]*1000.0, xyz[2]*1000.0);
+    GeomAPI_ProjectPointOnCurve projection(
+        loc,m_c,b[0],b[1]);
+
+    if (projection.NbPoints() == 0)
     {
         ASSERTL0(false,"failed");
     }
     else
     {
-        t = locator.Parameter(1);
-        gp_Pnt tst = locator.NearestPoint();
-        NekDouble dis = tst.Distance(loc);
-        if(dis > 1e-6)
+        t = projection.Parameter(1);
+        if(projection.Distance(1) > 1e-6)
         {
-            cout << "large curve projection: " << dis << endl;
+            cout << "large curve projection: " << projection.Distance(1) << endl;
         }
     }
+
+    return t;
 }
 
 Array<OneD, NekDouble> CADCurve::P(NekDouble t)

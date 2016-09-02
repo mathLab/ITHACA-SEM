@@ -106,11 +106,6 @@ void ProcessVarOpti::BuildDerivUtil()
                 LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
                 LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
 
-                LibUtilities::PointsKey pkey3(m_mesh->m_nummode,
-                                            LibUtilities::eNodalPrismElec);
-                Array<OneD, NekDouble> u3,v3,w3;
-                LibUtilities::PointsManager()[pkey3]->GetPoints(u3,v3,w3);
-
                 derivUtil[st]->ptsHigh = u2.num_elements();
 
                 LibUtilities::NodalUtilTetrahedron nodalTet(
@@ -152,11 +147,6 @@ void ProcessVarOpti::BuildDerivUtil()
                 Array<OneD, NekDouble> u1, v1, u2, v2, w1, w2;
                 LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
                 LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
-
-                LibUtilities::PointsKey pkey3(m_mesh->m_nummode,
-                                            LibUtilities::eNodalPrismElec);
-                Array<OneD, NekDouble> u3,v3,w3;
-                LibUtilities::PointsManager()[pkey3]->GetPoints(u3,v3,w3);
 
                 derivUtil[st]->ptsHigh = u2.num_elements();
 

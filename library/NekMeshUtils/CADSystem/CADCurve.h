@@ -154,13 +154,15 @@ public:
         return m_mainVerts;
     }
 
-    void Loct(Array<OneD, NekDouble> &xyz, NekDouble &t);
+    NekDouble loct(Array<OneD, NekDouble> xyz);
 
 private:
     /// OpenCascade object of the curve.
     BRepAdaptor_Curve m_occCurve;
     /// OpenCascade edge
     TopoDS_Edge m_occEdge;
+    /// Alternate object used for reverse lookups
+    Handle(Geom_Curve) m_c;
     /// Length of edge
     NekDouble m_length;
     /// List of surfaces which this curve belongs to.

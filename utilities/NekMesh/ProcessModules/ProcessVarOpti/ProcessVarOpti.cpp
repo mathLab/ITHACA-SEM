@@ -164,7 +164,6 @@ void ProcessVarOpti::Process()
     res->val = 1.0;
 
     m_mesh->MakeOrder(m_mesh->m_nummode-1,LibUtilities::eGaussLobattoLegendre);
-    return;
     BuildDerivUtil();
     GetElementMap();
 

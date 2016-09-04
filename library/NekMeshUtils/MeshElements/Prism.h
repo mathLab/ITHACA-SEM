@@ -77,6 +77,8 @@ public:
 
     NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
         int coordDim);
+    NEKMESHUTILS_EXPORT virtual void GetCurvedNodes(
+        std::vector<NodeSharedPtr> &nodeList) const;
     NEKMESHUTILS_EXPORT virtual StdRegions::Orientation GetEdgeOrient(
         int edgeId, EdgeSharedPtr edge);
     NEKMESHUTILS_EXPORT virtual void MakeOrder(

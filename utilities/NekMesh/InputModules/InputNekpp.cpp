@@ -62,6 +62,8 @@ ModuleKey InputNekpp::className =
  */
 InputNekpp::InputNekpp(MeshSharedPtr m) : InputModule(m)
 {
+    m_config["nocad"] =
+        ConfigOption(false,"","Ignores any cad information");
 }
 
 InputNekpp::~InputNekpp()
@@ -352,7 +354,7 @@ void InputNekpp::Process()
 
 #ifdef NEKTAR_USE_MESHGEN
 
-    if(pSession->DefinesElement("NEKTAR/GEOMETRY/CADID"))
+    if(pSession->DefinesElement("NEKTAR/GEOMETRY/CADID") && !(m_config["nocad"].beenSet))
     {
         m_mesh->m_hasCAD = true;
         TiXmlElement* id = pSession->GetElement("NEKTAR/GEOMETRY/CADID");
@@ -373,7 +375,7 @@ void InputNekpp::Process()
     map<pair<int,int>, pair<int,vector<cadVar> > > edgeToString;
     map<pair<int,int>, pair<int,vector<cadVar> > > faceToString;
 
-    if(pSession->DefinesElement("NEKTAR/GEOMETRY/CAD"))
+    if(pSession->DefinesElement("NEKTAR/GEOMETRY/CAD") && !(m_config["nocad"].beenSet))
     {
         int err;
 

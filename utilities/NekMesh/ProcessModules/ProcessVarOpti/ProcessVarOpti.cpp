@@ -131,20 +131,24 @@ void ProcessVarOpti::Process()
     if (m_mesh->m_nummode == -1)
     {
         bool fd = false;
-        for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
-        {
-            if((*eit)->m_edgeNodes.size() > 0)
-            {
-                m_mesh->m_nummode = (*eit)->m_edgeNodes.size() + 2;
-                fd = true;
-                break;
-            }
-        }
 
-        if(!fd && m_config["nq"].beenSet)
+        if(m_config["nq"].beenSet)
         {
             m_mesh->m_nummode = m_config["nq"].as<int>();
             fd = true;
+        }
+
+        if(!fd)
+        {
+            for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+            {
+                if((*eit)->m_edgeNodes.size() > 0)
+                {
+                    m_mesh->m_nummode = (*eit)->m_edgeNodes.size() + 2;
+                    fd = true;
+                    break;
+                }
+            }
         }
 
         ASSERTL0(fd,"failed to find order of mesh");

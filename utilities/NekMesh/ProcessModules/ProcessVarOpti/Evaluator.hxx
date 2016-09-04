@@ -214,8 +214,8 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
     }
 
     NekDouble integral = 0.0;
-    //NekDouble ep = minJac < 1e-9 ? sqrt(1e-9*(1e-9-minJac)) : 1e-9;
-    NekDouble ep = minJac < 1e-9 ? sqrt(1e-18 + 0.04*minJac*minJac) : 1e-9;
+    NekDouble ep = minJac < 0.0 ? sqrt(gam*(gam-minJac)) : gam;
+    //NekDouble ep = minJac < gam ? sqrt(gam*gam + minJac*minJac) : gam;
     NekDouble jacIdeal[DIM][DIM], jacDet;
     G = Array<OneD, NekDouble>(DIM == 2 ? 5 : 9, 0.0);
 
@@ -262,6 +262,10 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
 
                     NekDouble sigma =
                         0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*ep*ep));
+                    if(sigma < 1e-20)
+                    {
+                        sigma = 1e-20;
+                    }
                     NekDouble lsigma = log(sigma);
                     integral += derivUtil[st]->quadW[k]*
                         fabs(data[i]->maps[k][9]) *
@@ -619,6 +623,8 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
             break;
         }
     }
+
+    ASSERTL0(std::isfinite(integral),"inf in integral");
 
     return integral;
 }

@@ -171,7 +171,7 @@ namespace Nektar
 
                // Build the lattice triangle left to right - bottom to top
             for(int i=0, index=0; i<npts; ++i){ // y-direction
-                for(int j=0; j<npts-i; ++j,++index){ // x-direction
+                for(int j=0; j<npts; ++j,++index){ // x-direction
 
                     if( isVertex(i,j,npts) ) {
 
@@ -210,7 +210,6 @@ namespace Nektar
             // Mapping the vertex, edges, and interior points using the permutation matrix,
             // so the points are ordered anticlockwise.
             for(unsigned int k=0; k<vertex.size(); ++k){
-
                 map.push_back(vertex[k]);
             }
 
@@ -238,7 +237,6 @@ namespace Nektar
 
                 map.push_back(interiorPoints[k]);
             }
-
 
             Array<OneD,NekDouble> points[2];
             points[0] = Array<OneD,NekDouble>(GetTotNumPoints());

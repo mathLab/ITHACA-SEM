@@ -79,7 +79,7 @@ ElUtil::ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d,
 vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
 {
     //need to make ideal element out of old element
-    /*ElmtConfig ec = m_el->GetConf();
+    ElmtConfig ec = m_el->GetConf();
     ec.m_order  = 1;
     ec.m_faceNodes = false;
     ec.m_volumeNodes = false;
@@ -89,9 +89,11 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
                             ec.m_e, ec, m_el->GetVertexList(),
                             m_el->GetTagList());
 
+    mtx2.lock();
     SpatialDomains::GeometrySharedPtr    geom = E->GetGeom(m_dim);
     geom->FillGeom();
-    StdRegions::StdExpansionSharedPtr    chi  = geom->GetXmap();*/
+    StdRegions::StdExpansionSharedPtr    chi  = geom->GetXmap();
+    mtx2.unlock();
 
     vector<Array<OneD, NekDouble> > ret;
 
@@ -214,8 +216,7 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
     }
     else if(m_el->GetConf().m_e == LibUtilities::ePrism)
     {
-        ASSERTL0(false, "not coded");
-        /*vector<Array<OneD, NekDouble> > xyz;
+        vector<Array<OneD, NekDouble> > xyz;
         for(int i = 0; i < geom->GetNumVerts(); i++)
         {
             Array<OneD, NekDouble> loc(3);
@@ -269,7 +270,7 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
                     ret.push_back(r);
                 }
             }
-        }*/
+        }
     }
     else
     {

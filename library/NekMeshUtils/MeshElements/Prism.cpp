@@ -479,19 +479,6 @@ void Prism::GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
             fcid.push_back(m_face[i]->m_vertexList[2]->m_id);
             fcid.push_back(m_face[i]->m_vertexList[3]->m_id);
 
-            for(int j = 0; j < fcid.size(); j++)
-            {
-                cout << m_face[i]->m_vertexList[j]->m_x << " " << m_face[i]->m_vertexList[j]->m_y << " " << m_face[i]->m_vertexList[j]->m_z << endl;
-            }
-
-            for(int j = 0; j < m_face[i]->m_faceNodes.size(); j++)
-            {
-                cout << m_face[i]->m_faceNodes[j]->m_x << " " << m_face[i]->m_faceNodes[j]->m_y << " " << m_face[i]->m_faceNodes[j]->m_z << endl;
-            }
-
-            exit(-1);
-
-
             HOQuadrilateral<NodeSharedPtr> hoq(fcid, m_face[i]->m_faceNodes);
 
             hoq.Align(ts[i]);
@@ -506,12 +493,6 @@ void Prism::GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
     std::copy(m_volumeNodes.begin(),
               m_volumeNodes.end(),
               nodeList.begin() + k);
-
-    for(int i = 0; i < nodeList.size(); i++)
-    {
-        cout << nodeList[i]->m_x << " " << nodeList[i]->m_y << " " << nodeList[i]->m_z << endl;
-    }
-    exit(-1);
 }
 
 /**

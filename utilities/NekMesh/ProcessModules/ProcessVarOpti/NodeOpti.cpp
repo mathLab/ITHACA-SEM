@@ -150,7 +150,7 @@ void NodeOpti3D3D::Optimise()
 
     NekDouble currentW = GetFunctional<3>();
     NekDouble newVal;
-
+    
     if(G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
         //needs to optimise

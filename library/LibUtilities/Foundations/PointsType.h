@@ -78,6 +78,7 @@ namespace Nektar
             eNodalTetSPI,                   //!<  3D Nodal Symmetric positive internal tet (Whitherden, Vincent)
             eNodalPrismEvenlySpaced,        //!<  3D Evenly-spaced points on a Prism
             eNodalPrismElec,                //!<  3D electrostatically spaced points on a Prism
+            eNodalPrismSPI,                 //!<  3D prism SPI 
             SIZE_PointsType                 //!<  Length of enum list
         };
 

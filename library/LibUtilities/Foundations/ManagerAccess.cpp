@@ -46,6 +46,7 @@
 #include <LibUtilities/Foundations/NodalTriEvenlySpaced.h>
 #include <LibUtilities/Foundations/NodalTetEvenlySpaced.h>
 #include <LibUtilities/Foundations/NodalTetSPI.h>
+#include <LibUtilities/Foundations/NodalPrismSPI.h>
 #include <LibUtilities/Foundations/NodalPrismEvenlySpaced.h>
 #include <LibUtilities/Foundations/NodalPrismElec.h>
 #include <LibUtilities/Foundations/NodalQuadEvenlySpaced.h>
@@ -95,6 +96,7 @@ namespace Nektar
             const bool NodalTetEveInited = PointsManager().RegisterCreator(PointsKey(0, eNodalTetEvenlySpaced), NodalTetEvenlySpaced::Create);
             const bool NodalPrismEveInited = PointsManager().RegisterCreator(PointsKey(0, eNodalPrismEvenlySpaced), NodalPrismEvenlySpaced::Create);
             const bool NodalPrismElecInited = PointsManager().RegisterCreator(PointsKey(0, eNodalPrismElec), NodalPrismElec::Create);
+            const bool NodalPrismSPIInited = PointsManager().RegisterCreator(PointsKey(0, eNodalPrismSPI), NodalPrismSPI::Create);
 
             const bool Basis_Inited = BasisManager().RegisterGlobalCreator(Basis::Create);
         };

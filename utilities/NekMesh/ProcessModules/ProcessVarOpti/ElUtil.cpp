@@ -78,24 +78,9 @@ ElUtil::ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d,
 
 vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
 {
-    //need to make ideal element out of old element
-    ElmtConfig ec = m_el->GetConf();
-    ec.m_order  = 1;
-    ec.m_faceNodes = false;
-    ec.m_volumeNodes = false;
-    ec.m_reorient = false;
-
-    ElementSharedPtr E = GetElementFactory().CreateInstance(
-                            ec.m_e, ec, m_el->GetVertexList(),
-                            m_el->GetTagList());
-
-    mtx2.lock();
-    SpatialDomains::GeometrySharedPtr    geom = E->GetGeom(m_dim);
-    geom->FillGeom();
-    StdRegions::StdExpansionSharedPtr    chi  = geom->GetXmap();
-    mtx2.unlock();
-
     vector<Array<OneD, NekDouble> > ret;
+
+    LibUtilities::ShapeType st = m_el->GetConf().m_e;
 
     if(m_el->GetConf().m_e == LibUtilities::eQuadrilateral)
     {
@@ -216,60 +201,76 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
     }
     else if(m_el->GetConf().m_e == LibUtilities::ePrism)
     {
-        vector<Array<OneD, NekDouble> > xyz;
-        for(int i = 0; i < geom->GetNumVerts(); i++)
+        // r,s,t are the coordinates of the SPI points
+        Array<OneD, NekDouble> r = derivUtil->ptx;
+        Array<OneD, NekDouble> s = derivUtil->pty;
+        Array<OneD, NekDouble> t = derivUtil->ptz;
+
+        vector<Array<OneD, NekDouble> > xyz(6);
+        vector<NodeSharedPtr> ns = m_el->GetVertexList();
+        for(int i = 0; i < 6; i++)
         {
-            Array<OneD, NekDouble> loc(3);
-            SpatialDomains::PointGeomSharedPtr p = geom->GetVertex(i);
-            p->GetCoords(loc);
-            xyz.push_back(loc);
+            Array<OneD, NekDouble> x(3);
+            x[0] = ns[i]->m_x;
+            x[1] = ns[i]->m_y;
+            x[2] = ns[i]->m_z;
+            xyz[i] = x;
         }
 
-        Array<OneD, const LibUtilities::BasisSharedPtr> b = chi->GetBase();
-        Array<OneD, NekDouble> eta1 = b[0]->GetZ();
-        Array<OneD, NekDouble> eta2 = b[1]->GetZ();
-        Array<OneD, NekDouble> eta3 = b[2]->GetZ();
-
-        for(int k = 0; k < b[2]->GetNumPoints(); k++)
+        for (int i = 0; i < r.num_elements(); ++i)
         {
-            for(int j = 0; j < b[1]->GetNumPoints(); j++)
-            {
-                for(int i = 0; i < b[0]->GetNumPoints(); i++)
-                {
-                    NekDouble xi1 = 0.5*(1+eta1[i])*(1-eta3[k])-1.0;
-                    NekDouble a1 = 0.5*(1-xi1),     a2 = 0.5*(1+xi1);
-                    NekDouble b1 = 0.5*(1-eta2[j]), b2 = 0.5*(1+eta2[j]);
-                    NekDouble c1 = 0.5*(1-eta3[k]), c2 = 0.5*(1+eta3[k]);
+            NekDouble a2  = 0.5 * (1 + r[i]);
+            NekDouble b1  = 0.5 * (1 - s[i]);
+            NekDouble b2  = 0.5 * (1 + s[i]);
+            NekDouble c1  = 0.5 * (1 - t[i]);
+            NekDouble c2  = 0.5 * (1 + t[i]);
 
-                    DNekMat dxdz(3,3,1.0,eFULL);
+            DNekMat J(3, 3, 1.0, eFULL);
 
-                    dxdz(0,0) = 0.5*(-b1*xyz[0][0] + b1*xyz[1][0] + b2*xyz[2][0] - b2*xyz[3][0]);
-                    dxdz(1,0) = 0.5*(-b1*xyz[0][1] + b1*xyz[1][1] + b2*xyz[2][1] - b2*xyz[3][1]);
-                    dxdz(2,0) = 0.5*(-b1*xyz[0][2] + b1*xyz[1][2] + b2*xyz[2][2] - b2*xyz[3][2]);
+            J(0, 0) = 0.5 * (-b1 * xyz[0][0] + b1 * xyz[1][0] +
+                                b2 * xyz[2][0] - b2 * xyz[3][0]);
+            J(1, 0) = 0.5 * (-b1 * xyz[0][1] + b1 * xyz[1][1] +
+                                b2 * xyz[2][1] - b2 * xyz[3][1]);
+            J(2, 0) = 0.5 * (-b1 * xyz[0][2] + b1 * xyz[1][2] +
+                                b2 * xyz[2][2] - b2 * xyz[3][2]);
 
-                    dxdz(0,1) = 0.5*((a2-c1)*xyz[0][0] - a2*xyz[1][0] + a2*xyz[2][0] + (c1-a2)*xyz[3][0] - c2*xyz[4][0] + c2*xyz[5][0]);
-                    dxdz(1,1) = 0.5*((a2-c1)*xyz[0][1] - a2*xyz[1][1] + a2*xyz[2][1] + (c1-a2)*xyz[3][1] - c2*xyz[4][1] + c2*xyz[5][1]);
-                    dxdz(2,1) = 0.5*((a2-c1)*xyz[0][2] - a2*xyz[1][2] + a2*xyz[2][2] + (c1-a2)*xyz[3][2] - c2*xyz[4][2] + c2*xyz[5][2]);
+            J(0, 1) = 0.5 * ((a2 - c1) * xyz[0][0] - a2 * xyz[1][0] +
+                                a2 * xyz[2][0] + (c1 - a2) * xyz[3][0] -
+                                c2 * xyz[4][0] + c2 * xyz[5][0]);
+            J(1, 1) = 0.5 * ((a2 - c1) * xyz[0][1] - a2 * xyz[1][1] +
+                                a2 * xyz[2][1] + (c1 - a2) * xyz[3][1] -
+                                c2 * xyz[4][1] + c2 * xyz[5][1]);
+            J(2, 1) = 0.5 * ((a2 - c1) * xyz[0][2] - a2 * xyz[1][2] +
+                                a2 * xyz[2][2] + (c1 - a2) * xyz[3][2] -
+                                c2 * xyz[4][2] + c2 * xyz[5][2]);
 
-                    dxdz(0,2) = 0.5*(-b1*xyz[0][0] - b2*xyz[3][0] + b1*xyz[4][0] + b2*xyz[5][0]);
-                    dxdz(1,2) = 0.5*(-b1*xyz[0][1] - b2*xyz[3][1] + b1*xyz[4][1] + b2*xyz[5][1]);
-                    dxdz(2,2) = 0.5*(-b1*xyz[0][2] - b2*xyz[3][2] + b1*xyz[4][2] + b2*xyz[5][2]);
+            J(0, 2) = 0.5 * (-b1 * xyz[0][0] - b2 * xyz[3][0] +
+                                b1 * xyz[4][0] + b2 * xyz[5][0]);
+            J(1, 2) = 0.5 * (-b1 * xyz[0][1] - b2 * xyz[3][1] +
+                                b1 * xyz[4][1] + b2 * xyz[5][1]);
+            J(2, 2) = 0.5 * (-b1 * xyz[0][2] - b2 * xyz[3][2] +
+                                b1 * xyz[4][2] + b2 * xyz[5][2]);
 
-                    dxdz.Invert();
-                    Array<OneD, NekDouble> r(9,0.0);
-                    r[0] = dxdz(0,0);
-                    r[1] = dxdz(1,0);
-                    r[3] = dxdz(0,1);
-                    r[4] = dxdz(1,1);
-                    r[2] = dxdz(2,0);
-                    r[5] = dxdz(2,1);
-                    r[6] = dxdz(0,2);
-                    r[7] = dxdz(1,2);
-                    r[8] = dxdz(2,2);
-                    ret.push_back(r);
-                }
-            }
+            J.Invert();
+
+            Array<OneD, NekDouble> r(10,0.0); //store det in 10th entry
+
+            r[9] = 1.0/(J(0,0)*(J(1,1)*J(2,2)-J(2,1)*J(1,2))
+                       -J(0,1)*(J(1,0)*J(2,2)-J(2,0)*J(1,2))
+                       +J(0,2)*(J(1,0)*J(2,1)-J(2,0)*J(1,1)));
+
+            r[0] = J(0,0);
+            r[1] = J(1,0);
+            r[2] = J(2,0);
+            r[3] = J(0,1);
+            r[4] = J(1,1);
+            r[5] = J(2,1);
+            r[6] = J(0,2);
+            r[7] = J(1,2);
+            r[8] = J(2,2);
+            ret.push_back(r);
         }
+
     }
     else
     {

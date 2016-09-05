@@ -249,9 +249,7 @@ namespace Nektar
             for(unsigned int index=0; index<map.size(); ++index){
                 m_points[0][index] = points[0][map[index]];
                 m_points[1][index] = points[1][map[index]];
-                cout << m_points[0][index] << " " << m_points[1][index] << endl;
             }
-            exit(-1);
 
         }
 

@@ -89,8 +89,8 @@ namespace Nektar
             Array<OneD, NekDouble> u;
             LibUtilities::PointsManager()[pkey]->GetPoints(u);
 
-            for(int i=0, index=0; i<npts; ++i){
-                for(int j=0; j<npts; ++j,++index){
+            for(int j=0, index=0; j<npts; ++j){
+                for(int i=0; i<npts; ++i,++index){
                     NekDouble    x = u[i];
                     NekDouble    y = u[j];
                     m_points[0][index] = x;
@@ -170,8 +170,8 @@ namespace Nektar
             vector<int> map;
 
                // Build the lattice triangle left to right - bottom to top
-            for(int i=0, index=0; i<npts; ++i){ // y-direction
-                for(int j=0; j<npts; ++j,++index){ // x-direction
+            for(int i=0, index=0; i<npts; ++i){ // x-direction
+                for(int j=0; j<npts; ++j,++index){ // y-direction
 
                     if( isVertex(i,j,npts) ) {
 
@@ -187,11 +187,11 @@ namespace Nektar
 
                             iEdge_12.push_back(index);
 
-                        }else if(isEdge_23(i,j,npts)){  // right edge
+                        }else if(isEdge_23(i,j,npts)){  // top edge
 
                             iEdge_23.push_back(index);
 
-                        }else if(isEdge_30(i,j,npts)){  // right edge
+                        }else if(isEdge_30(i,j,npts)){  // left edge
 
                             iEdge_30.push_back(index);
                         }
@@ -249,7 +249,9 @@ namespace Nektar
             for(unsigned int index=0; index<map.size(); ++index){
                 m_points[0][index] = points[0][map[index]];
                 m_points[1][index] = points[1][map[index]];
+                cout << m_points[0][index] << " " << m_points[1][index] << endl;
             }
+            exit(-1);
 
         }
 

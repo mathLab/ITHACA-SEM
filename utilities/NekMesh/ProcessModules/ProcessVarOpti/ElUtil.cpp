@@ -232,7 +232,6 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
 
         for(int k = 0; k < b[2]->GetNumPoints(); k++)
         {
-
             for(int j = 0; j < b[1]->GetNumPoints(); j++)
             {
                 for(int i = 0; i < b[0]->GetNumPoints(); i++)

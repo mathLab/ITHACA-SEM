@@ -160,6 +160,7 @@ template <typename T> struct HOQuadrilateral
      */
     void Align(std::vector<int> vertId)
     {
+
         int vmap[4] = {-1, -1, -1, -1};
 
         // Determine which vertices map to vertId

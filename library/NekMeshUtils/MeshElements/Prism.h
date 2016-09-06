@@ -57,11 +57,11 @@ public:
     {
         ElementSharedPtr e =
             boost::shared_ptr<Element>(new Prism(pConf, pNodeList, pTagList));
-        std::vector<FaceSharedPtr> faces = e->GetFaceList();
-        for (int i = 0; i < faces.size(); ++i)
-        {
-            faces[i]->m_elLink.push_back(std::pair<ElementSharedPtr, int>(e, i));
-        }
+        //std::vector<FaceSharedPtr> faces = e->GetFaceList();
+        //for (int i = 0; i < faces.size(); ++i)
+        //{
+        //    faces[i]->m_elLink.push_back(std::pair<ElementSharedPtr, int>(e, i));
+        //}
         return e;
     }
     /// Element type

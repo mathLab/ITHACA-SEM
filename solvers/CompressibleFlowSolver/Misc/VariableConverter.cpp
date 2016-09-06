@@ -53,8 +53,23 @@ namespace Nektar
         m_session->LoadParameter ("rhoInf", m_rhoInf, 1.225);
         m_session->LoadParameter ("GasConstant",   m_gasConstant,   287.058);
         m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
-        m_session->LoadParameter ("thermalConductivity",
-                                  m_thermalConductivity, 0.0257);
+
+        if( m_session->DefinesParameter("thermalConductivity"))
+        {
+            ASSERTL0( !m_session->DefinesParameter("Pr"),
+                 "Cannot define both Pr and thermalConductivity.");
+
+            m_session->LoadParameter ("thermalConductivity",
+                                        m_thermalConductivity);
+        }
+        else
+        {
+            NekDouble Pr, Cp;
+            m_session->LoadParameter ("Pr",
+                                        Pr, 0.72);
+            Cp = m_gamma / (m_gamma - 1.0) * m_gasConstant;
+            m_thermalConductivity = Cp * m_mu / Pr;
+        }
     }
 
     /**
@@ -270,7 +285,6 @@ namespace Nektar
         const Array<OneD, const NekDouble>               &temperature,
               Array<OneD,       NekDouble>               &entropy)
     {
-
         const int nPts = physfield[0].num_elements();
         const NekDouble temp_inf = m_pInf/(m_rhoInf*m_gasConstant);;
 

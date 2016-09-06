@@ -126,17 +126,22 @@ namespace Nektar
      */
     void CompressibleFlowSystem::InitialiseParameters()
     {
+        NekDouble velInf, gasConstant;
+
         // Get gamma parameter from session file.
         m_session->LoadParameter("Gamma", m_gamma, 1.4);
 
-        // Get E0 parameter from session file.
+        // Get gas constant from session file and compute Cp
+        m_session->LoadParameter ("GasConstant",   gasConstant,   287.058);
+        m_Cp      = m_gamma / (m_gamma - 1.0) * gasConstant;
+
+        // Get pInf parameter from session file.
         m_session->LoadParameter("pInf", m_pInf, 101325);
 
         // Get rhoInf parameter from session file.
         m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
 
         // Get uInf parameter from session file.
-        NekDouble velInf, gasConstant;
         m_session->LoadParameter("uInf", velInf, 0.1);
 
         m_UInf = velInf*velInf;
@@ -156,18 +161,33 @@ namespace Nektar
         }
         m_UInf = sqrt(m_UInf);
 
-        m_session->LoadParameter ("GasConstant",   gasConstant,   287.058);
+        // Viscosity
         m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
         m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
+
+        // Thermal conductivity or Prandtl
+        if( m_session->DefinesParameter("thermalConductivity"))
+        {
+            ASSERTL0( !m_session->DefinesParameter("Pr"),
+                 "Cannot define both Pr and thermalConductivity.");
+
+            m_session->LoadParameter ("thermalConductivity",
+                                        m_thermalConductivity);
+            m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
+        }
+        else
+        {
+            m_session->LoadParameter ("Pr",
+                                        m_Prandtl, 0.72);
+            m_thermalConductivity = m_Cp * m_mu / m_Prandtl;
+        }
+
+        // Parameters for sensor
         m_session->LoadParameter ("Skappa",        m_Skappa,        -2.048);
         m_session->LoadParameter ("Kappa",         m_Kappa,         0.0);
         m_session->LoadParameter ("mu0",           m_mu0,           1.0);
-        m_session->LoadParameter ("thermalConductivity",
-                                  m_thermalConductivity, 0.0257);
 
-        m_Cp      = m_gamma / (m_gamma - 1.0) * gasConstant;
-        m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
-
+        // Steady state tolerance
         m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 0.0);
     }
 

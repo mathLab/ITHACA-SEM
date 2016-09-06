@@ -68,11 +68,11 @@ CFSBndCond::CFSBndCond(const LibUtilities::SessionReaderSharedPtr& pSession,
     m_session->LoadParameter("uInf", m_velInf[0], 0.1);
     if (m_spacedim >= 2)
     {
-        m_session->LoadParameter("vInf", m_velInf[1], 0.1);
+        m_session->LoadParameter("vInf", m_velInf[1], 0.0);
     }
     if (m_spacedim == 3)
     {
-        m_session->LoadParameter("wInf", m_velInf[2], 0.1);
+        m_session->LoadParameter("wInf", m_velInf[2], 0.0);
     }
 
     // Create auxiliary object to convert variables

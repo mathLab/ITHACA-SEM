@@ -226,7 +226,9 @@ conditions are employed (i.e. $T_{w}$). Default value = 300.15$K$;
 \item \inltt{wInf} farfield $Z$-component of the velocity (i.e. $w_{\infty}$). Default value = 0.0 $m/s$;
 \item \inltt{mu} dynamic viscosity (i.e. $\mu_{\infty}$). Default value = 1.78e-05 $Pa s$;
 \item \inltt{Pr} Prandtl number. Default value = 0.72;
-\item \inltt{thermalConductivity} thermal conductivity (i.e. $\kappa_{\infty}$). Default value = 0.0257 $W / (K m)$;
+\item \inltt{thermalConductivity} thermal conductivity (i.e. $\kappa_{\infty}$). This can be set as an
+ alternative to \inltt{Pr}, in which case the Prandtl number is calculated from $\kappa_{\infty}$ 
+ (it is only possible to set one of them). By default, this is obtained from the Prandtl number;
 \end{itemize}
 
 \subsection*{Solver info}

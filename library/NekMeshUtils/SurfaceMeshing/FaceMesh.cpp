@@ -200,6 +200,7 @@ void FaceMesh::QuadRemesh(map<NodeSharedPtr, NodeSharedPtr> nmap)
             tags.push_back(m_id + (over ? 2000 : 200));
             ElementSharedPtr E = GetElementFactory().CreateInstance(
                                     LibUtilities::eQuadrilateral, conf, ns, tags);
+            E->CADSurfId = m_id;
             m_localElements.push_back(E);
 
         }
@@ -226,7 +227,8 @@ void FaceMesh::QuadRemesh(map<NodeSharedPtr, NodeSharedPtr> nmap)
             vector<int> tags;
             tags.push_back(m_id + (over ? 2000 : 200));
             ElementSharedPtr E = GetElementFactory().CreateInstance(
-                                    LibUtilities::eQuadrilateral, conf, ns, tags);;
+                                    LibUtilities::eQuadrilateral, conf, ns, tags);
+            E->CADSurfId = m_id;
             m_localElements.push_back(E);
 
         }

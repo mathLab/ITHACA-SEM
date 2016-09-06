@@ -254,7 +254,10 @@ void SurfaceMesh::HOSurf()
 
     LibUtilities::PointsKey pkey(m_mesh->m_nummode,
                                  LibUtilities::eNodalTriElec);
-    Array<OneD, NekDouble> u, v;
+
+    LibUtilities::PointsKey qkey(m_mesh->m_nummode,
+                                 LibUtilities::eNodalQuadElec);
+    Array<OneD, NekDouble> u, v, uq, vq;
 
     int nq = m_mesh->m_nummode;
 
@@ -262,7 +265,12 @@ void SurfaceMesh::HOSurf()
 
     int ni = (nq-2)*(nq-3) / 2;
 
+    int npq = nq * nq;
+
+    int niq = npq - 4 - 4*(nq-2);
+
     LibUtilities::PointsManager()[pkey]->GetPoints(u, v);
+    LibUtilities::PointsManager()[qkey]->GetPoints(uq,vq);
 
     set<pair<int, int> > springs     = ListOfFaceSpings(nq);
     map<pair<int, int>, NekDouble> z = weights(springs, u, v);
@@ -281,17 +289,15 @@ void SurfaceMesh::HOSurf()
                 i, m_mesh->m_element[2].size(), "\t\tSurface elements");
         }
 
-        if (m_mesh->m_element[2][i]->GetConf().m_e ==
-            LibUtilities::eQuadrilateral)
-        {
-            // not setup for high-order quads yet
-            continue;
-        }
-
         int surf           = m_mesh->m_element[2][i]->CADSurfId;
         CADSurfSharedPtr s = m_cad->GetSurf(surf);
 
         FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
+
+        f->onSurf = true;
+        f->CADSurfId = surf;
+        f->CADSurf = s;
+
         vector<EdgeSharedPtr> surfedges =
             m_mesh->m_element[2][i]->GetEdgeList();
 
@@ -589,38 +595,76 @@ void SurfaceMesh::HOSurf()
         xmap->BwdTrans(coeffs1,yc);
         xmap->BwdTrans(coeffs2,zc);
 
-        //build an array of all uvs
-        vector<Array<OneD, NekDouble> > uvi;
-        for(int j = np-ni; j < np; j++)
+        if(vertices.size() == 3)
         {
-            Array<OneD, NekDouble> xp(2);
-            xp[0] = u[j];
-            xp[1] = v[j];
+            //build an array of all uvs
+            vector<Array<OneD, NekDouble> > uvi;
+            for(int j = np-ni; j < np; j++)
+            {
+                Array<OneD, NekDouble> xp(2);
+                xp[0] = u[j];
+                xp[1] = v[j];
 
-            Array<OneD, NekDouble> loc(3);
-            loc[0] = xmap->PhysEvaluate(xp, xc);
-            loc[1] = xmap->PhysEvaluate(xp, yc);
-            loc[2] = xmap->PhysEvaluate(xp, zc);
+                Array<OneD, NekDouble> loc(3);
+                loc[0] = xmap->PhysEvaluate(xp, xc);
+                loc[1] = xmap->PhysEvaluate(xp, yc);
+                loc[2] = xmap->PhysEvaluate(xp, zc);
 
-            Array<OneD, NekDouble> uv(2);
-            s->ProjectTo(loc,uv);
-            uvi.push_back(uv);
+                Array<OneD, NekDouble> uv(2);
+                s->ProjectTo(loc,uv);
+                uvi.push_back(uv);
 
+            }
+
+            vector<NodeSharedPtr> honodes;
+            for(int j = 0; j < ni; j++)
+            {
+                Array<OneD, NekDouble> loc;
+                loc = s->P(uvi[j]);
+                NodeSharedPtr nn = boost::shared_ptr<Node>(new
+                                                Node(0,loc[0],loc[1],loc[2]));
+                nn->SetCADSurf(surf, s, uvi[j]);
+                honodes.push_back(nn);
+            }
+
+            f->m_faceNodes = honodes;
+            f->m_curveType = LibUtilities::eNodalTriElec;
         }
-
-        vector<NodeSharedPtr> honodes;
-        for(int j = 0; j < ni; j++)
+        else if(vertices.size() == 4)
         {
-            Array<OneD, NekDouble> loc;
-            loc = s->P(uvi[j]);
-            NodeSharedPtr nn = boost::shared_ptr<Node>(new
-                                            Node(0,loc[0],loc[1],loc[2]));
-            nn->SetCADSurf(surf, s, uvi[j]);
-            honodes.push_back(nn);
-        }
+            //build an array of all uvs
+            vector<Array<OneD, NekDouble> > uvi;
+            for(int j = npq-niq; j < npq; j++)
+            {
+                Array<OneD, NekDouble> xp(2);
+                xp[0] = uq[j];
+                xp[1] = vq[j];
 
-        f->m_faceNodes = honodes;
-        f->m_curveType = LibUtilities::eNodalTriElec;
+                Array<OneD, NekDouble> loc(3);
+                loc[0] = xmap->PhysEvaluate(xp, xc);
+                loc[1] = xmap->PhysEvaluate(xp, yc);
+                loc[2] = xmap->PhysEvaluate(xp, zc);
+
+                Array<OneD, NekDouble> uv(2);
+                s->ProjectTo(loc,uv);
+                uvi.push_back(uv);
+
+            }
+
+            vector<NodeSharedPtr> honodes;
+            for(int j = 0; j < niq; j++)
+            {
+                Array<OneD, NekDouble> loc;
+                loc = s->P(uvi[j]);
+                NodeSharedPtr nn = boost::shared_ptr<Node>(new
+                                                Node(0,loc[0],loc[1],loc[2]));
+                nn->SetCADSurf(surf, s, uvi[j]);
+                honodes.push_back(nn);
+            }
+
+            f->m_faceNodes = honodes;
+            f->m_curveType = LibUtilities::eNodalQuadElec;
+        }
     }
 
     if (m_mesh->m_verbose)

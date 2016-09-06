@@ -298,7 +298,7 @@ void InputCAD::Process()
 
         m_blmesh->Mesh();
 
-        m_mesh->m_element[2].clear();
+        /*m_mesh->m_element[2].clear();
         m_mesh->m_expDim = 3;
         ClearElementLinks();
         ProcessVertices();
@@ -306,7 +306,7 @@ void InputCAD::Process()
         ProcessFaces();
         ProcessElements();
         ProcessComposites();
-        return;
+        return;*/
 
         m_surfacemesh->Remesh(m_blmesh);
 
@@ -337,6 +337,7 @@ void InputCAD::Process()
     m_tet->Mesh();
 
     //m_mesh->m_element[2].clear();
+    //m_mesh->m_expDim = 2;
 
     ClearElementLinks();
     ProcessVertices();
@@ -344,6 +345,8 @@ void InputCAD::Process()
     ProcessFaces();
     ProcessElements();
     ProcessComposites();
+
+    //return;
 
     FaceSet::iterator fit;
     count = 0;

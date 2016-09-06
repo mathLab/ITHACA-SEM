@@ -57,6 +57,7 @@ void TetMesh::Mesh()
     // in the octree
     map<int, NekDouble> IdToDelta;
     vector<Array<OneD, int> > surfacetris;
+    NodeSet alreadyInSurface;
 
     int cnt = 0;
     if(!m_usePSurface)
@@ -86,7 +87,7 @@ void TetMesh::Mesh()
     else
     {
         ASSERTL0(false,"logic needs replacing will not work currently");
-        /*vector<unsigned int> blsurfs = m_blmesh->GetBLSurfs();
+        vector<unsigned int> blsurfs = m_blmesh->GetBLSurfs();
         vector<ElementSharedPtr> Psurf = m_blmesh->GetPsuedoSurf();
         //surface triangles will need to be checked against surftopriface to get the right face
         //all surface elements are sequentially numbered so this should be easy to find in map
@@ -117,19 +118,18 @@ void TetMesh::Mesh()
             Array<OneD, int> tri(3);
             for(int j = 0; j < n.size(); j++)
             {
-                map<int, int>::iterator it;
-                it = NodeIdToTetgenId.find(n[j]->m_id);
-                if(it == NodeIdToTetgenId.end())
+                map<int, NodeSharedPtr>::iterator it;
+                it = IdToNode.find(n[j]->m_id);
+                if(it == IdToNode.end())
                 {
                     tri[j] = cnt;
-                    NodeIdToTetgenId[n[j]->m_id] = cnt;
-                    TetgenIdToNode[cnt] = n[j];
-                    TetgenIdToDelta[cnt] = m_octree->Query(n[j]->GetLoc());
+                    IdToNode[cnt] = n[j];
+                    IdToDelta[cnt] = m_octree->Query(n[j]->GetLoc());
                     cnt++;
                 }
                 else
                 {
-                    tri[j] = it->second;
+                    tri[j] = it->first;
                 }
             }
             surfacetris.push_back(tri);
@@ -141,22 +141,21 @@ void TetMesh::Mesh()
             for(int j = 0; j < n.size(); j++)
             {
                 map<int, int>::iterator it;
-                it = NodeIdToTetgenId.find(n[j]->m_id);
-                if(it == NodeIdToTetgenId.end())
+                it = IdToNode.find(n[j]->m_id);
+                if(it == IdToNode.end())
                 {
                     tri[j] = cnt;
-                    NodeIdToTetgenId[n[j]->m_id] = cnt;
-                    TetgenIdToNode[cnt] = n[j];
-                    TetgenIdToDelta[cnt] = m_octree->Query(n[j]->GetLoc());
+                    IdToNode[cnt] = n[j];
+                    IdToDelta[cnt] = m_octree->Query(n[j]->GetLoc());
                     cnt++;
                 }
                 else
                 {
-                    tri[j] = it->second;
+                    tri[j] = it->first;
                 }
             }
             surfacetris.push_back(tri);
-        }*/
+        }
     }
 
     if (m_mesh->m_verbose)

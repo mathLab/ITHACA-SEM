@@ -36,6 +36,7 @@
 
 #include <SpatialDomains/QuadGeom.h>
 #include <LibUtilities/Foundations/Interp.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 #include <StdRegions/StdQuadExp.h>
 #include <SpatialDomains/SegGeom.h>
@@ -535,46 +536,98 @@ namespace Nektar
 
                 if (m_curve)
                 {
-                    int npts = m_curve->m_points.size();
-                    int nEdgePts = (int)sqrt(static_cast<NekDouble>(npts));
-                    Array<OneD, NekDouble> tmp(npts);
-                    Array<OneD, NekDouble> tmp2(m_xmap->GetTotPoints());
-                    LibUtilities::PointsKey curveKey(
-                        nEdgePts, m_curve->m_ptype);
+                    int pdim = LibUtilities::PointsManager()[
+                        LibUtilities::PointsKey(2, m_curve->m_ptype)]
+                        ->GetPointsDim();
 
-                    // Sanity checks:
-                    // - Curved faces should have square number of points;
-                    // - Each edge should have sqrt(npts) points.
-                    ASSERTL0(nEdgePts * nEdgePts == npts,
-                             "NUMPOINTS should be a square number in"
-                             " quadrilteral "
-                             + boost::lexical_cast<string>(m_globalID));
-
-                    for (i = 0; i < kNedges; ++i)
+                    // Deal with 2D points type separately
+                    // (e.g. electrostatic or Fekete points) to 1D tensor
+                    // product.
+                    if (pdim == 2)
                     {
-                        ASSERTL0(
-                            m_edges[i]->GetXmap()->GetNcoeffs() == nEdgePts,
-                            "Number of edge points does not correspond to "
-                            "number of face points in quadrilateral "
-                            + boost::lexical_cast<string>(m_globalID));
-                    }
+                        int N = m_curve->m_points.size();
+                        int nEdgePts = (int)(sqrt((NekDouble)N) + 0.5);
 
-                    for (i = 0; i < m_coordim; ++i)
-                    {
-                        for (j = 0; j < npts; ++j)
+                        ASSERTL0(nEdgePts*nEdgePts == N,
+                                 "NUMPOINTS should be a square number for"
+                                 " quadrilateral "
+                                 + boost::lexical_cast<string>(m_globalID));
+
+                        for (i = 0; i < kNedges; ++i)
                         {
-                            tmp[j] = (m_curve->m_points[j]->GetPtr())[i];
+                            ASSERTL0(
+                                m_edges[i]->GetXmap()->GetNcoeffs() == nEdgePts,
+                                "Number of edge points does not correspond "
+                                "to number of face points in triangle "
+                                + boost::lexical_cast<string>(m_globalID));
                         }
 
-                        // Interpolate m_curve points to GLL points
-                        LibUtilities::Interp2D(
-                            curveKey, curveKey, tmp,
-                            m_xmap->GetBasis(0)->GetPointsKey(),
-                            m_xmap->GetBasis(1)->GetPointsKey(),
-                            tmp2);
+                        const LibUtilities::PointsKey P0(
+                            nEdgePts, LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::BasisKey  T0(
+                            LibUtilities::eOrtho_A, nEdgePts, P0);
+                        Array<OneD, NekDouble> phys(
+                            max(nEdgePts*nEdgePts, m_xmap->GetTotPoints()));
+                        Array<OneD, NekDouble> tmp(nEdgePts*nEdgePts);
 
-                        // Forwards transform to get coefficient space.
-                        m_xmap->FwdTrans(tmp2, m_coeffs[i]);
+                        for(i = 0; i < m_coordim; ++i)
+                        {
+                            StdRegions::StdQuadExpSharedPtr t =
+                                MemoryManager<StdRegions::StdQuadExp>
+                                ::AllocateSharedPtr(T0, T0);
+
+                            for (j = 0; j < N; ++j)
+                            {
+                                phys[j] = (m_curve->m_points[j]->GetPtr())[i];
+                            }
+
+                            // Forwards transform to get coefficient space.
+                            m_xmap->FwdTrans(phys, m_coeffs[i]);
+                        }
+                    }
+                    else if (pdim == 1)
+                    {
+                        int npts = m_curve->m_points.size();
+                        int nEdgePts = (int)sqrt(static_cast<NekDouble>(npts));
+                        Array<OneD, NekDouble> tmp(npts);
+                        Array<OneD, NekDouble> tmp2(m_xmap->GetTotPoints());
+                        LibUtilities::PointsKey curveKey(
+                            nEdgePts, m_curve->m_ptype);
+
+                        // Sanity checks:
+                        // - Curved faces should have square number of points;
+                        // - Each edge should have sqrt(npts) points.
+                        ASSERTL0(nEdgePts * nEdgePts == npts,
+                                 "NUMPOINTS should be a square number in"
+                                 " quadrilteral "
+                                 + boost::lexical_cast<string>(m_globalID));
+
+                        for (i = 0; i < kNedges; ++i)
+                        {
+                            ASSERTL0(
+                                m_edges[i]->GetXmap()->GetNcoeffs() == nEdgePts,
+                                "Number of edge points does not correspond to "
+                                "number of face points in quadrilateral "
+                                + boost::lexical_cast<string>(m_globalID));
+                        }
+
+                        for (i = 0; i < m_coordim; ++i)
+                        {
+                            for (j = 0; j < npts; ++j)
+                            {
+                                tmp[j] = (m_curve->m_points[j]->GetPtr())[i];
+                            }
+
+                            // Interpolate m_curve points to GLL points
+                            LibUtilities::Interp2D(
+                                curveKey, curveKey, tmp,
+                                m_xmap->GetBasis(0)->GetPointsKey(),
+                                m_xmap->GetBasis(1)->GetPointsKey(),
+                                tmp2);
+
+                            // Forwards transform to get coefficient space.
+                            m_xmap->FwdTrans(tmp2, m_coeffs[i]);
+                        }
                     }
                 }
 

@@ -57,12 +57,13 @@ public:
              std::pair<std::vector<int>, std::vector<ElUtilSharedPtr> > e,
              ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
              optimiser o)
-        : node(n), nodeIds(e.first), data(e.second), res(r), opti(o)
+        : node(n), res(r), derivUtil(d), opti(o)
     {
         //filter element types within d vector
-        for(int i = 0; i < d.size(); i++)
+        for(int i = 0; i < e.second.size(); i++)
         {
-            data[d[i]->GetEl()->GetShapeType()].push_back(d[i]);
+            data[e.second[i]->GetEl()->GetShapeType()].push_back(e.second[i]);
+            nodeIds[e.second[i]->GetEl()->GetShapeType()].push_back(e.first[i]);
         }
     }
 
@@ -77,8 +78,8 @@ protected:
                                               bool hessian = true);
     NodeSharedPtr node;
     boost::mutex mtx;
-    std::vector<int> nodeIds;
-    std::map<LibUtilities::ShapeType>,std::vector<ElUtilSharedPtr> > data;
+    std::map<LibUtilities::ShapeType,std::vector<int> > nodeIds;
+    std::map<LibUtilities::ShapeType,std::vector<ElUtilSharedPtr> > data;
     Array<OneD, NekDouble> G;
 
     void CalcMinJac();

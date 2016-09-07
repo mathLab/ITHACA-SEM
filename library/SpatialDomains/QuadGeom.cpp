@@ -564,36 +564,42 @@ namespace Nektar
                                 + boost::lexical_cast<string>(m_globalID));
                         }
 
-                        //const LibUtilities::PointsKey P0(
-                        //    nEdgePts, LibUtilities::eGaussLobattoLegendre);
-                        //const LibUtilities::BasisKey  Q0(
-                        //    LibUtilities::eOrtho_A, nEdgePts, P0);
+                        const LibUtilities::PointsKey P0(
+                            nEdgePts, LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::BasisKey  Q0(
+                            LibUtilities::eOrtho_A, nEdgePts, P0);
                         Array<OneD, NekDouble> phys(N);
                         Array<OneD, NekDouble> tmp(nEdgePts*nEdgePts);
 
-                        LibUtilities::PointsKey curveKey(
-                            nEdgePts, (m_curve->m_ptype == LibUtilities::eNodalQuadElec ?
-                                        LibUtilities::eGaussLobattoLegendre : LibUtilities::ePolyEvenlySpaced));
+                        //LibUtilities::PointsKey curveKey(
+                        //    nEdgePts, (m_curve->m_ptype == LibUtilities::eNodalQuadElec ?
+                        //                LibUtilities::eGaussLobattoLegendre : LibUtilities::ePolyEvenlySpaced));
 
                         for(i = 0; i < m_coordim; ++i)
                         {
-                            //StdRegions::StdQuadExpSharedPtr t =
-                            //    MemoryManager<StdRegions::StdQuadExp>
-                            //    ::AllocateSharedPtr(Q0, Q0);
+                            StdRegions::StdQuadExpSharedPtr q =
+                                MemoryManager<StdRegions::StdQuadExp>
+                                ::AllocateSharedPtr(Q0, Q0);
 
                             for (j = 0; j < N; ++j)
                             {
                                 phys[j] = (m_curve->m_points[j]->GetPtr())[i];
                             }
 
+                            q->BwdTrans(phys,tmp);
+
                             LibUtilities::Interp2D(
-                                curveKey, curveKey, phys,
+                                P0, P0, tmp,
                                 m_xmap->GetBasis(0)->GetPointsKey(),
                                 m_xmap->GetBasis(1)->GetPointsKey(),
-                                tmp);
+                                phys);
+
+                            //cout << LibUtilities::kPointsTypeStr[curveKey.GetPointsType()] << endl;
+                            //cout << LibUtilities::kPointsTypeStr[m_xmap->GetBasis(0)->GetPointsKey().GetPointsType()] << endl;
+                            //cout << LibUtilities::kPointsTypeStr[m_xmap->GetBasis(1)->GetPointsKey().GetPointsType()] << endl;
 
                             // Forwards transform to get coefficient space.
-                            m_xmap->FwdTrans(tmp, m_coeffs[i]);
+                            m_xmap->FwdTrans(phys, m_coeffs[i]);
                         }
                     }
                     else if (pdim == 1)

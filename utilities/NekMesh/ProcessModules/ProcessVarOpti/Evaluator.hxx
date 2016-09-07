@@ -181,7 +181,7 @@ template<int DIM>
 NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
 {
     map<LibUtilities::ShapeType,vector<ElUtilSharedPtr> >::iterator typeIt;
-    vector<DerivArray> derivs;
+    map<LibUtilities::ShapeType,DerivArray> derivs;
 
     for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
     {
@@ -209,7 +209,8 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
         //   - number of elements
         //   - cartesian coordinate direction
         //   - quadrature points
-        DerivArray deriv(boost::extents[DIM][nElmt][DIM][derivUtil[typeIt->first]->ptsHigh]);
+        //DerivArray deriv(boost::extents[DIM][nElmt][DIM][derivUtil[typeIt->first]->ptsHigh]);
+        derivs[typeIt->first] = DerivArray(boost::extents[DIM][nElmt][DIM][derivUtil[typeIt->first]->ptsHigh]);
 
         // Calculate x- and y-gradients
         for (int d = 0; d < DIM; ++d)
@@ -217,15 +218,16 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
             Blas::Dgemm(
                 'N', 'N', derivUtil[typeIt->first]->ptsHigh, DIM * nElmt, derivUtil[typeIt->first]->ptsLow, 1.0,
                 derivUtil[typeIt->first]->VdmD[d].GetRawPtr(), derivUtil[typeIt->first]->ptsHigh, X,
-                derivUtil[typeIt->first]->ptsLow, 0.0, &deriv[d][0][0][0], derivUtil[typeIt->first]->ptsHigh);
+                derivUtil[typeIt->first]->ptsLow, 0.0, &derivs[typeIt->first][d][0][0][0], derivUtil[typeIt->first]->ptsHigh);
         }
 
-        derivs.push_back(deriv);
+        //derivs[typeIt->first] = deriv;
     }
 
 
     NekDouble integral = 0.0;
-    NekDouble ep = minJac < 0.0 ? sqrt(gam*(gam-minJac)) : gam;
+    NekDouble ep = minJac < 1e-9 ? sqrt(1e-18 + 0.04*minJac*minJac) : 1e-9;
+    //NekDouble ep = minJac < 0.0 ? sqrt(gam*(gam-minJac)) : gam;
     //NekDouble ep = minJac < gam ? sqrt(gam*gam + minJac*minJac) : gam;
     NekDouble jacIdeal[DIM][DIM], jacDet;
     G = Array<OneD, NekDouble>(DIM == 2 ? 5 : 9, 0.0);
@@ -238,14 +240,13 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
-            int t = 0;
-            for(typeIt = data.begin(); typeIt != data.end(); typeIt++, t++)
+            for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
             {
                 for (int i = 0; i < typeIt->second.size(); ++i)
                 {
                     for(int k = 0; k < derivUtil[typeIt->first]->ptsHigh; ++k)
                     {
-                        jacDet = CalcIdealJac(i, k, derivs[t], typeIt->second, jacIdeal);
+                        jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
 
                         NekDouble trEtE = LinElasTrace<DIM>(jacIdeal);
                         NekDouble sigma =
@@ -268,14 +269,13 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
-            int t = 0;
-            for(typeIt = data.begin(); typeIt != data.end(); typeIt++, t++)
+            for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
             {
                 for (int i = 0; i < typeIt->second.size(); ++i)
                 {
                     for(int k = 0; k < derivUtil[typeIt->first]->ptsHigh; ++k)
                     {
-                        jacDet = CalcIdealJac(i, k, derivs[t], typeIt->second, jacIdeal);
+                        jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
                         NekDouble I1 = FrobeniusNorm(jacIdeal);
 
                         NekDouble sigma =
@@ -301,7 +301,7 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                             {
                                 for (int n = 0; n < DIM; ++n)
                                 {
-                                    phiM[n][m] = derivs[t][m][i][n][k];
+                                    phiM[n][m] = derivs[typeIt->first][m][i][n][k];
                                 }
                             }
 

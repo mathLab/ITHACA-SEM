@@ -545,8 +545,10 @@ namespace Nektar
                     // product.
                     if (pdim == 2)
                     {
-                        int N = m_curve->m_points.size();
-                        int nEdgePts = (int)(sqrt((NekDouble)N) + 0.5);
+                        int N = m_curve->m_points.size(); //full number of points in the quad
+                        int nEdgePts = (int)(sqrt((NekDouble)N) + 0.5); //number of points along one edge
+
+                        cout << "hit" << endl;
 
                         ASSERTL0(nEdgePts*nEdgePts == N,
                                  "NUMPOINTS should be a square number for"
@@ -558,31 +560,40 @@ namespace Nektar
                             ASSERTL0(
                                 m_edges[i]->GetXmap()->GetNcoeffs() == nEdgePts,
                                 "Number of edge points does not correspond "
-                                "to number of face points in triangle "
+                                "to number of face points in quadrilateral "
                                 + boost::lexical_cast<string>(m_globalID));
                         }
 
-                        const LibUtilities::PointsKey P0(
-                            nEdgePts, LibUtilities::eGaussLobattoLegendre);
-                        const LibUtilities::BasisKey  T0(
-                            LibUtilities::eOrtho_A, nEdgePts, P0);
-                        Array<OneD, NekDouble> phys(
-                            max(nEdgePts*nEdgePts, m_xmap->GetTotPoints()));
+                        //const LibUtilities::PointsKey P0(
+                        //    nEdgePts, LibUtilities::eGaussLobattoLegendre);
+                        //const LibUtilities::BasisKey  Q0(
+                        //    LibUtilities::eOrtho_A, nEdgePts, P0);
+                        Array<OneD, NekDouble> phys(N);
                         Array<OneD, NekDouble> tmp(nEdgePts*nEdgePts);
+
+                        LibUtilities::PointsKey curveKey(
+                            nEdgePts, (m_curve->m_ptype == LibUtilities::eNodalQuadElec ?
+                                        LibUtilities::eGaussLobattoLegendre : LibUtilities::ePolyEvenlySpaced));
 
                         for(i = 0; i < m_coordim; ++i)
                         {
-                            StdRegions::StdQuadExpSharedPtr t =
-                                MemoryManager<StdRegions::StdQuadExp>
-                                ::AllocateSharedPtr(T0, T0);
+                            //StdRegions::StdQuadExpSharedPtr t =
+                            //    MemoryManager<StdRegions::StdQuadExp>
+                            //    ::AllocateSharedPtr(Q0, Q0);
 
                             for (j = 0; j < N; ++j)
                             {
                                 phys[j] = (m_curve->m_points[j]->GetPtr())[i];
                             }
 
+                            LibUtilities::Interp2D(
+                                curveKey, curveKey, phys,
+                                m_xmap->GetBasis(0)->GetPointsKey(),
+                                m_xmap->GetBasis(1)->GetPointsKey(),
+                                tmp);
+
                             // Forwards transform to get coefficient space.
-                            m_xmap->FwdTrans(phys, m_coeffs[i]);
+                            m_xmap->FwdTrans(tmp, m_coeffs[i]);
                         }
                     }
                     else if (pdim == 1)

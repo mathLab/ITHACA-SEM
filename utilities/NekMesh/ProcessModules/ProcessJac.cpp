@@ -131,8 +131,6 @@ void ProcessJac::Process()
 
         bool valid = gfac->IsValid();
 
-        cout << scaledJac << " " << thres << endl;
-
         if (extract && (scaledJac < thres || !valid))
         {
             m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);

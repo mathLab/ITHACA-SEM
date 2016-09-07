@@ -210,7 +210,9 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
         //   - cartesian coordinate direction
         //   - quadrature points
         //DerivArray deriv(boost::extents[DIM][nElmt][DIM][derivUtil[typeIt->first]->ptsHigh]);
-        derivs[typeIt->first] = DerivArray(boost::extents[DIM][nElmt][DIM][derivUtil[typeIt->first]->ptsHigh]);
+        derivs.insert(std::make_pair(
+                          typeIt->first, 
+                          DerivArray(boost::extents[DIM][nElmt][DIM][derivUtil[typeIt->first]->ptsHigh])));
 
         // Calculate x- and y-gradients
         for (int d = 0; d < DIM; ++d)

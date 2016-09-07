@@ -178,40 +178,49 @@ inline NekDouble FrobeniusNorm(NekDouble inarray[DIM][DIM])
 template<int DIM>
 NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
 {
-    LibUtilities::ShapeType st = data[0]->GetEl()->GetShapeType();
-    const int nElmt  = data.size();
-    const int totpts = derivUtil[st]->ptsLow * nElmt;
-    NekDouble X[DIM * totpts];
+    map<LibUtilities::ShapeType,vector<ElUtilSharedPtr> >::typeIt;
+    vector<DerivArray> derivs;
 
-    // Store x/y components of each element sequentially in memory
-    for (int i = 0, cnt = 0; i < nElmt; ++i)
+    for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
     {
-        for (int j = 0; j < derivUtil[st]->ptsLow; ++j)
+        const int nElmt  = typeIt->second.size();
+        const int totpts = derivUtil[typeIt->first]->ptsLow * nElmt;
+        NekDouble X[DIM * totpts];
+
+        // Store x/y components of each element sequentially in memory
+        for (int i = 0, cnt = 0; i < nElmt; ++i)
         {
-            for (int d = 0; d < DIM; ++d)
+            for (int j = 0; j < derivUtil[typeIt->first]->ptsLow; ++j)
             {
-                X[cnt + d*derivUtil[st]->ptsLow + j] = *(data[i]->nodes[j][d]);
+                for (int d = 0; d < DIM; ++d)
+                {
+                    X[cnt + d*derivUtil[typeIt->first]->ptsLow + j] =
+                                        *(typeIt->second[i]->nodes[j][d]);
+                }
             }
+
+            cnt += DIM*derivUtil[typeIt->first]->ptsLow;
         }
 
-        cnt += DIM*derivUtil[st]->ptsLow;
+        // Storage for derivatives, ordered by:
+        //   - standard coordinate direction
+        //   - number of elements
+        //   - cartesian coordinate direction
+        //   - quadrature points
+        DerivArray deriv(boost::extents[DIM][nElmt][DIM][derivUtil[typeIt->first]->ptsHigh]);
+
+        // Calculate x- and y-gradients
+        for (int d = 0; d < DIM; ++d)
+        {
+            Blas::Dgemm(
+                'N', 'N', derivUtil[typeIt->first]->ptsHigh, DIM * nElmt, derivUtil[typeIt->first]->ptsLow, 1.0,
+                derivUtil[typeIt->first]->VdmD[d].GetRawPtr(), derivUtil[typeIt->first]->ptsHigh, X,
+                derivUtil[typeIt->first]->ptsLow, 0.0, &deriv[d][0][0][0], derivUtil[typeIt->first]->ptsHigh);
+        }
+
+        derivs.push_back(deriv);
     }
 
-    // Storage for derivatives, ordered by:
-    //   - standard coordinate direction
-    //   - number of elements
-    //   - cartesian coordinate direction
-    //   - quadrature points
-    DerivArray deriv(boost::extents[DIM][nElmt][DIM][derivUtil[st]->ptsHigh]);
-
-    // Calculate x- and y-gradients
-    for (int d = 0; d < DIM; ++d)
-    {
-        Blas::Dgemm(
-            'N', 'N', derivUtil[st]->ptsHigh, DIM * nElmt, derivUtil[st]->ptsLow, 1.0,
-            derivUtil[st]->VdmD[d].GetRawPtr(), derivUtil[st]->ptsHigh, X,
-            derivUtil[st]->ptsLow, 0.0, &deriv[d][0][0][0], derivUtil[st]->ptsHigh);
-    }
 
     NekDouble integral = 0.0;
     NekDouble ep = minJac < 0.0 ? sqrt(gam*(gam-minJac)) : gam;
@@ -227,21 +236,25 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
-            for (int i = 0; i < nElmt; ++i)
+            int l = 0;
+            for(typeIt = data.begin(); typeIt != data.end(); typeIt++, l++)
             {
-                for(int k = 0; k < derivUtil[st]->ptsHigh; ++k)
+                for (int i = 0; i < it->second.size(); ++i)
                 {
-                    jacDet = CalcIdealJac(i, k, deriv, data, jacIdeal);
+                    for(int k = 0; k < derivUtil[typeIt->first]->ptsHigh; ++k)
+                    {
+                        jacDet = CalcIdealJac(i, k, deriv[l], it->second, jacIdeal);
 
-                    NekDouble trEtE = LinElasTrace<DIM>(jacIdeal);
-                    NekDouble sigma =
-                        0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*ep*ep));
-                    NekDouble lsigma = log(sigma);
-                    integral += derivUtil[st]->quadW[k] *
-                                fabs(data[i]->maps[k][9]) *
-                                (K * 0.5 * lsigma * lsigma + mu * trEtE);
-                    if(gradient)
-                        ASSERTL0(false,"no gradient capability for linear elastic");
+                        NekDouble trEtE = LinElasTrace<DIM>(jacIdeal);
+                        NekDouble sigma =
+                            0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*ep*ep));
+                        NekDouble lsigma = log(sigma);
+                        integral += derivUtil[typeIt->first]->quadW[k] *
+                                    fabs(typeIt->second[i]->maps[k][9]) *
+                                    (K * 0.5 * lsigma * lsigma + mu * trEtE);
+                        if(gradient)
+                            ASSERTL0(false,"no gradient capability for linear elastic");
+                    }
                 }
             }
             break;

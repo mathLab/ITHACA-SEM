@@ -739,8 +739,8 @@ namespace Nektar
      * Explicit terms of the mapping
      */
     void   VCSMapping::ApplyIncNSMappingForcing(
-        const Array<OneD, Array<OneD, NekDouble> >    &inarray,
-        Array<OneD, Array<OneD, NekDouble> >          &outarray)
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+        Array<OneD, Array<OneD, NekDouble> >             &outarray)
     {
         int physTot = m_fields[0]->GetTotPoints();
         Array<OneD, Array<OneD, NekDouble> >       vel(m_nConvectiveFields);
@@ -822,7 +822,7 @@ namespace Nektar
     }
     
         void VCSMapping::MappingAdvectionCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &velPhys,
+            const Array<OneD, const Array<OneD, NekDouble> >  &velPhys,
             Array<OneD, Array<OneD, NekDouble> >              &outarray)
         {
             int physTot = m_fields[0]->GetTotPoints();
@@ -847,8 +847,8 @@ namespace Nektar
         }
         
         void VCSMapping::MappingAccelerationCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &vel,
-            const Array<OneD, Array<OneD, NekDouble> >        &velPhys,
+            const Array<OneD, const Array<OneD, NekDouble> >  &vel,
+            const Array<OneD, const Array<OneD, NekDouble> >  &velPhys,
             Array<OneD, Array<OneD, NekDouble> >              &outarray)
         {
             int physTot = m_fields[0]->GetTotPoints();
@@ -953,7 +953,7 @@ namespace Nektar
         }
 
         void VCSMapping::MappingViscousCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &velPhys,
+            const Array<OneD, const Array<OneD, NekDouble> >  &velPhys,
             Array<OneD, Array<OneD, NekDouble> >              &outarray)
         {
             // L(U) - 1.0*d^2(u^i)/dx^jdx^j

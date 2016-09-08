@@ -255,9 +255,7 @@ void SurfaceMesh::HOSurf()
     LibUtilities::PointsKey pkey(m_mesh->m_nummode,
                                  LibUtilities::eNodalTriElec);
 
-    LibUtilities::PointsKey qkey(m_mesh->m_nummode,
-                                 LibUtilities::eNodalQuadElec);
-    Array<OneD, NekDouble> u, v, uq, vq;
+    Array<OneD, NekDouble> u, v;
 
     int nq = m_mesh->m_nummode;
 
@@ -270,7 +268,6 @@ void SurfaceMesh::HOSurf()
     int niq = npq - 4 - 4*(nq-2);
 
     LibUtilities::PointsManager()[pkey]->GetPoints(u, v);
-    LibUtilities::PointsManager()[qkey]->GetPoints(uq,vq);
 
     set<pair<int, int> > springs     = ListOfFaceSpings(nq);
     map<pair<int, int>, NekDouble> z = weights(springs, u, v);
@@ -634,21 +631,24 @@ void SurfaceMesh::HOSurf()
         {
             //build an array of all uvs
             vector<Array<OneD, NekDouble> > uvi;
-            for(int j = npq-niq; j < npq; j++)
+            for(int i = 1; i < nq - 1; i++)
             {
-                Array<OneD, NekDouble> xp(2);
-                xp[0] = uq[j];
-                xp[1] = vq[j];
+                for(int j = 1; j < nq - 1; j++)
+                {
+                    Array<OneD, NekDouble> xp(2);
+                    xp[0] = gll[j];
+                    xp[1] = gll[i];
 
-                Array<OneD, NekDouble> loc(3);
-                loc[0] = xmap->PhysEvaluate(xp, xc);
-                loc[1] = xmap->PhysEvaluate(xp, yc);
-                loc[2] = xmap->PhysEvaluate(xp, zc);
+                    Array<OneD, NekDouble> loc(3);
+                    loc[0] = xmap->PhysEvaluate(xp, xc);
+                    loc[1] = xmap->PhysEvaluate(xp, yc);
+                    loc[2] = xmap->PhysEvaluate(xp, zc);
 
-                Array<OneD, NekDouble> uv(2);
-                s->ProjectTo(loc,uv);
-                uvi.push_back(uv);
+                    Array<OneD, NekDouble> uv(2);
+                    s->ProjectTo(loc,uv);
+                    uvi.push_back(uv);
 
+                }
             }
 
             vector<NodeSharedPtr> honodes;
@@ -663,7 +663,7 @@ void SurfaceMesh::HOSurf()
             }
 
             f->m_faceNodes = honodes;
-            f->m_curveType = LibUtilities::eNodalQuadElec;
+            f->m_curveType = LibUtilities::eGaussLobattoLegendre;
         }
     }
 

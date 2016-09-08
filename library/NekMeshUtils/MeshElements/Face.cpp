@@ -209,10 +209,10 @@ void Face::MakeOrder(int                                order,
         int nPoints = order + 1;
         StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
 
-        Array<OneD, NekDouble> px, py;
+        Array<OneD, NekDouble> px;
         LibUtilities::PointsKey pKey(nPoints, pType);
-        ASSERTL1(pKey.GetPointsDim() == 2, "Points distribution must be 2D");
-        LibUtilities::PointsManager()[pKey]->GetPoints(px,py);
+        ASSERTL1(pKey.GetPointsDim() == 1, "Points distribution must be 1D");
+        LibUtilities::PointsManager()[pKey]->GetPoints(px);
 
         Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
 
@@ -225,21 +225,23 @@ void Face::MakeOrder(int                                order,
         int nQuadIntPts = (nPoints - 2) * (nPoints - 2);
         m_faceNodes.resize(nQuadIntPts);
 
-        for (int i = px.num_elements() - nQuadIntPts, cnt = 0;
-            i < px.num_elements(); ++i)
+        for (int i = 1, cnt = 0; i < nPoints-1; ++i)
         {
-            Array<OneD, NekDouble> xp(2);
-            xp[0] = px[i];
-            xp[1] = py[i];
-
-            Array<OneD, NekDouble> x(3, 0.0);
-            for (int k = 0; k < coordDim; ++k)
+            for (int j = 1; j < nPoints-1; ++j, ++cnt)
             {
-                x[k] = xmap->PhysEvaluate(xp, phys[k]);
-            }
+                Array<OneD, NekDouble> xp(2);
+                xp[0] = px[j];
+                xp[1] = px[i];
 
-            m_faceNodes[cnt++] = boost::shared_ptr<Node>(
-                new Node(id++, x[0], x[1], x[2]));
+                Array<OneD, NekDouble> x(3, 0.0);
+                for (int k = 0; k < coordDim; ++k)
+                {
+                    x[k] = xmap->PhysEvaluate(xp, phys[k]);
+                }
+
+                m_faceNodes[cnt] = boost::shared_ptr<Node>(
+                    new Node(id++, x[0], x[1], x[2]));
+            }
         }
 
         m_curveType = pType;

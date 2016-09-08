@@ -180,6 +180,7 @@ void ProcessVarOpti::BuildDerivUtil()
                 derivUtil[st]->ptx = u2;
                 derivUtil[st]->pty = v2;
                 derivUtil[st]->ptz = w2;
+
             }
         }
     }

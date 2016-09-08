@@ -201,11 +201,6 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
     }
     else if(m_el->GetConf().m_e == LibUtilities::ePrism)
     {
-        // r,s,t are the coordinates of the SPI points
-        Array<OneD, NekDouble> r = derivUtil->ptx;
-        Array<OneD, NekDouble> s = derivUtil->pty;
-        Array<OneD, NekDouble> t = derivUtil->ptz;
-
         vector<Array<OneD, NekDouble> > xyz(6);
         vector<NodeSharedPtr> ns = m_el->GetVertexList();
         for(int i = 0; i < 6; i++)
@@ -217,39 +212,39 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             xyz[i] = x;
         }
 
-        for (int i = 0; i < r.num_elements(); ++i)
+        for (int i = 0; i < derivUtil->ptsHigh; ++i)
         {
-            NekDouble a2  = 0.5 * (1 + r[i]);
-            NekDouble b1  = 0.5 * (1 - s[i]);
-            NekDouble b2  = 0.5 * (1 + s[i]);
-            NekDouble c1  = 0.5 * (1 - t[i]);
-            NekDouble c2  = 0.5 * (1 + t[i]);
+            NekDouble a2  = 0.5 * (1 + derivUtil->ptx[i]);
+            NekDouble b1  = 0.5 * (1 - derivUtil->pty[i]);
+            NekDouble b2  = 0.5 * (1 + derivUtil->pty[i]);
+            NekDouble c1  = 0.5 * (1 - derivUtil->ptz[i]);
+            NekDouble c2  = 0.5 * (1 + derivUtil->ptz[i]);
 
             DNekMat J(3, 3, 1.0, eFULL);
 
             J(0, 0) = 0.5 * (-b1 * xyz[0][0] + b1 * xyz[1][0] +
-                                b2 * xyz[2][0] - b2 * xyz[3][0]);
+                              b2 * xyz[2][0] - b2 * xyz[3][0]);
             J(1, 0) = 0.5 * (-b1 * xyz[0][1] + b1 * xyz[1][1] +
-                                b2 * xyz[2][1] - b2 * xyz[3][1]);
+                              b2 * xyz[2][1] - b2 * xyz[3][1]);
             J(2, 0) = 0.5 * (-b1 * xyz[0][2] + b1 * xyz[1][2] +
-                                b2 * xyz[2][2] - b2 * xyz[3][2]);
+                              b2 * xyz[2][2] - b2 * xyz[3][2]);
 
-            J(0, 1) = 0.5 * ((a2 - c1) * xyz[0][0] - a2 * xyz[1][0] +
-                                a2 * xyz[2][0] + (c1 - a2) * xyz[3][0] -
-                                c2 * xyz[4][0] + c2 * xyz[5][0]);
-            J(1, 1) = 0.5 * ((a2 - c1) * xyz[0][1] - a2 * xyz[1][1] +
-                                a2 * xyz[2][1] + (c1 - a2) * xyz[3][1] -
-                                c2 * xyz[4][1] + c2 * xyz[5][1]);
-            J(2, 1) = 0.5 * ((a2 - c1) * xyz[0][2] - a2 * xyz[1][2] +
-                                a2 * xyz[2][2] + (c1 - a2) * xyz[3][2] -
-                                c2 * xyz[4][2] + c2 * xyz[5][2]);
+            J(0, 1) = 0.5 * ((a2 - c1) * xyz[0][0] -        a2 * xyz[1][0] +
+                                    a2 * xyz[2][0] + (c1 - a2) * xyz[3][0] -
+                                    c2 * xyz[4][0] +        c2 * xyz[5][0]);
+            J(1, 1) = 0.5 * ((a2 - c1) * xyz[0][1] -        a2 * xyz[1][1] +
+                                    a2 * xyz[2][1] + (c1 - a2) * xyz[3][1] -
+                                    c2 * xyz[4][1] +        c2 * xyz[5][1]);
+            J(2, 1) = 0.5 * ((a2 - c1) * xyz[0][2] -        a2 * xyz[1][2] +
+                                    a2 * xyz[2][2] + (c1 - a2) * xyz[3][2] -
+                                    c2 * xyz[4][2] +        c2 * xyz[5][2]);
 
             J(0, 2) = 0.5 * (-b1 * xyz[0][0] - b2 * xyz[3][0] +
-                                b1 * xyz[4][0] + b2 * xyz[5][0]);
+                              b1 * xyz[4][0] + b2 * xyz[5][0]);
             J(1, 2) = 0.5 * (-b1 * xyz[0][1] - b2 * xyz[3][1] +
-                                b1 * xyz[4][1] + b2 * xyz[5][1]);
+                              b1 * xyz[4][1] + b2 * xyz[5][1]);
             J(2, 2) = 0.5 * (-b1 * xyz[0][2] - b2 * xyz[3][2] +
-                                b1 * xyz[4][2] + b2 * xyz[5][2]);
+                              b1 * xyz[4][2] + b2 * xyz[5][2]);
 
             J.Invert();
 
@@ -353,6 +348,46 @@ void ElUtil::Evaluate()
             mx = max(mx,jacDet);
             mn = min(mn,jacDet);
         }
+
+        /*NekVector<NekDouble> x1i2(derivUtil->ptsHigh),y1i2(derivUtil->ptsHigh),z1i2(derivUtil->ptsHigh),
+                             x2i2(derivUtil->ptsHigh),y2i2(derivUtil->ptsHigh),z2i2(derivUtil->ptsHigh),
+                             x3i2(derivUtil->ptsHigh),y3i2(derivUtil->ptsHigh),z3i2(derivUtil->ptsHigh);
+
+        x1i2 = derivUtil->VdmD[0]*X;
+        y1i2 = derivUtil->VdmD[0]*Y;
+        z1i2 = derivUtil->VdmD[0]*Z;
+        x2i2 = derivUtil->VdmD[1]*X;
+        y2i2 = derivUtil->VdmD[1]*Y;
+        z2i2 = derivUtil->VdmD[1]*Z;
+        x3i2 = derivUtil->VdmD[2]*X;
+        y3i2 = derivUtil->VdmD[2]*Y;
+        z3i2 = derivUtil->VdmD[2]*Z;
+
+        NekDouble mx2 = -1.0 * numeric_limits<double>::max();
+        NekDouble mn2 =  numeric_limits<double>::max();
+
+        for(int j = 0; j < derivUtil->ptsHigh; j++)
+        {
+            DNekMat dxdz(3,3,1.0,eFULL);
+            dxdz(0,0) = x1i2(j);
+            dxdz(0,1) = x2i2(j);
+            dxdz(0,2) = x3i2(j);
+            dxdz(1,0) = y1i2(j);
+            dxdz(1,1) = y2i2(j);
+            dxdz(1,2) = y3i2(j);
+            dxdz(2,0) = z1i2(j);
+            dxdz(2,1) = z2i2(j);
+            dxdz(2,2) = z3i2(j);
+
+            NekDouble jacDet = dxdz(0,0)*(dxdz(1,1)*dxdz(2,2)-dxdz(2,1)*dxdz(1,2))
+                              -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
+                              +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
+
+            mx2 = max(mx2,jacDet);
+            mn2 = min(mn2,jacDet);
+        }
+
+        cout << mn/mx << " " << mn2/mx2 << endl;*/
     }
 
     mtx2.lock();
@@ -363,9 +398,7 @@ void ElUtil::Evaluate()
     res->worstJac = min(res->worstJac,mn/mx);
     mtx2.unlock();
 
-    //mtx2.lock();
     maps = MappingIdealToRef();
-    //mtx2.unlock();
 
     minJac = mn;
     scaledJac = mn/mx;

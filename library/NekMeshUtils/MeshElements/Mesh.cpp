@@ -114,7 +114,7 @@ void Mesh::MakeOrder(int                      order,
     {
         pTypes[LibUtilities::eSegment]  = LibUtilities::ePolyEvenlySpaced;
         pTypes[LibUtilities::eTriangle] = LibUtilities::eNodalTriEvenlySpaced;
-        pTypes[LibUtilities::eQuadrilateral] = LibUtilities::eNodalQuadEvenlySpaced;
+        pTypes[LibUtilities::eQuadrilateral] = LibUtilities::ePolyEvenlySpaced;
         pTypes[LibUtilities::eTetrahedron] =
             LibUtilities::eNodalTetEvenlySpaced;
         pTypes[LibUtilities::ePrism] = LibUtilities::eNodalPrismEvenlySpaced;
@@ -125,7 +125,7 @@ void Mesh::MakeOrder(int                      order,
         // Prism still to do.
         pTypes[LibUtilities::eSegment]  = LibUtilities::eGaussLobattoLegendre;
         pTypes[LibUtilities::eTriangle] = LibUtilities::eNodalTriElec;
-        pTypes[LibUtilities::eQuadrilateral] = LibUtilities::eNodalQuadElec;
+        pTypes[LibUtilities::eQuadrilateral] = LibUtilities::eGaussLobattoLegendre;
         pTypes[LibUtilities::ePrism] = LibUtilities::eNodalPrismElec;
         pTypes[LibUtilities::eTetrahedron] = LibUtilities::eNodalTetElec;
         pTypes[LibUtilities::eHexahedron] = LibUtilities::eGaussLobattoLegendre;

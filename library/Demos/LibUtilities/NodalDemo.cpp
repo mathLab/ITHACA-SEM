@@ -99,7 +99,6 @@ int main(int argc, char *argv[])
     nodalTypes[eNodalTetEvenlySpaced]   = eTetrahedron;
     nodalTypes[eNodalTetElec]           = eTetrahedron;
     nodalTypes[eNodalPrismEvenlySpaced] = ePrism;
-    nodalTypes[eNodalQuadEvenlySpaced] = eQuadrilateral;
 
     if (!vm.count("type"))
     {

@@ -71,14 +71,12 @@ namespace Nektar
             eNodalTriFekete,                //!<  2D Nodal Fekete Points on a Triangle
             eNodalTriSPI,                   //!<  2D Nodal Symmetric positive internal triangle (Whitherden, Vincent)
             eNodalTriEvenlySpaced,          //!<  2D Evenly-spaced points on a Triangle
-            eNodalQuadEvenlySpaced,         //!<  2D Evenly-spaced points on a quad
-            eNodalQuadElec,                 //!<  2D GLL(elec) points on a quad
             eNodalTetEvenlySpaced,          //!<  3D Evenly-spaced points on a Tetrahedron
             eNodalTetElec,                  //!<  3D Nodal Electrostatic Points on a Tetrahedron
             eNodalTetSPI,                   //!<  3D Nodal Symmetric positive internal tet (Whitherden, Vincent)
             eNodalPrismEvenlySpaced,        //!<  3D Evenly-spaced points on a Prism
             eNodalPrismElec,                //!<  3D electrostatically spaced points on a Prism
-            eNodalPrismSPI,                 //!<  3D prism SPI 
+            eNodalPrismSPI,                 //!<  3D prism SPI
             SIZE_PointsType                 //!<  Length of enum list
         };
 

@@ -65,9 +65,10 @@ namespace Nektar
 
             for(int i = 0; i < NodalPrismSPINPTS[numPoints-2]; i++)
             {
+                //need to flip y and z because of quad orientation
                 m_points[0][i] = NodalPrismSPIData[index][0];
-                m_points[1][i] = NodalPrismSPIData[index][1];
-                m_points[2][i] = NodalPrismSPIData[index][2];
+                m_points[1][i] = NodalPrismSPIData[index][2];
+                m_points[2][i] = NodalPrismSPIData[index][1];
                 index++;
             }
 

@@ -255,7 +255,7 @@ void ProcessVarOpti::Process()
          << "Max set:\t\t" << mx << endl
          << "Residual tolerance:\t" << restol << endl;
 
-    return;
+    //return;
 
     int nThreads = m_config["numthreads"].as<int>();
 

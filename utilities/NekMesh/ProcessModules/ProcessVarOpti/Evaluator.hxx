@@ -363,8 +363,8 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                                         dEdxi[p][m][n] = 0.0;
                                         for (int l = 0; l < DIM; ++l)
                                         {
-                                            dEdxi[p][m][n] += (jacIdeal[l][m] * jacDeriv[p][l][n] +
-                                                               jacDeriv[p][l][m] * jacIdeal[l][n]) * 0.5;
+                                            dEdxi[p][m][n] += (jacIdeal[l][m] * jacDerivPhi[p][l][n] +
+                                                               jacDerivPhi[p][l][m] * jacIdeal[l][n]) * 0.5;
                                         }
                                     }
                                 }

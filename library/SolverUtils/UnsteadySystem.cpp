@@ -89,6 +89,8 @@ namespace Nektar
             m_session->MatchSolverInfo("REACTIONADVANCEMENT", "Explicit",
                                        m_explicitReaction, true);
 
+            m_session->LoadParameter("CheckNanSteps", m_nanSteps, 1);
+
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
             {
@@ -317,9 +319,12 @@ namespace Nektar
                 for (i = 0; i < nvariables; ++i)
                 {
                     m_fields[m_intVariables[i]]->SetPhys(fields[i]);
-                    m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(
-                        fields[i],
-                        m_fields[m_intVariables[i]]->UpdateCoeffs());
+                    if( v_RequireFwdTrans() )
+                    {
+                        m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(
+                            fields[i],
+                            m_fields[m_intVariables[i]]->UpdateCoeffs());
+                    }
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
 
@@ -330,19 +335,22 @@ namespace Nektar
                 }
 
                 // search for NaN and quit if found
-                int nanFound = 0;
-                for (i = 0; i < nvariables; ++i)
+                if (m_nanSteps && !((step+1) % m_nanSteps) )
                 {
-                    if (Vmath::Nnan(fields[i].num_elements(), fields[i], 1) > 0)
+                    int nanFound = 0;
+                    for (i = 0; i < nvariables; ++i)
                     {
-                        nanFound = 1;
+                        if (Vmath::Nnan(fields[i].num_elements(),
+                                fields[i], 1) > 0)
+                        {
+                            nanFound = 1;
+                        }
                     }
+                    m_session->GetComm()->AllReduce(nanFound,
+                                LibUtilities::ReduceMax);
+                    ASSERTL0 (!nanFound,
+                                "NaN found during time integration.");
                 }
-                m_session->GetComm()->AllReduce(nanFound,
-                            LibUtilities::ReduceMax);
-                ASSERTL0 (!nanFound,
-                            "NaN found during time integration.");
-
                 // Update filters
                 std::vector<FilterSharedPtr>::iterator x;
                 for (x = m_filters.begin(); x != m_filters.end(); ++x)

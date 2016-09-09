@@ -99,8 +99,7 @@ public:
     virtual void Process();
 
 private:
-    typedef std::map<int, std::pair<std::vector<int>,
-                                    std::vector<ElUtilSharedPtr> > > NodeElMap;
+    typedef std::map<int, std::vector<ElUtilSharedPtr> > NodeElMap;
 
     void BuildDerivUtil();
     void GetElementMap();

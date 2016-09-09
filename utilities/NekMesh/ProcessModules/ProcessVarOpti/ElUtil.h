@@ -78,6 +78,11 @@ public:
         return m_el;
     }
 
+    int NodeId(int in)
+    {
+        return m_idmap[in];
+    }
+
 private:
 
     std::vector<Array<OneD, NekDouble> > MappingIdealToRef();

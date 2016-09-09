@@ -288,14 +288,14 @@ void ProcessVarOpti::Process()
                 jobs[j] = optiNodes[i][j]->GetJob();
             }
 
-            //tm->SetNumWorkers(0);
-            //tm->QueueJobs(jobs);
-            //tm->SetNumWorkers(nThreads);
-            //tm->Wait();
-            for(int j = 0; j < jobs.size(); j++)
-            {
-                jobs[j]->Run();
-            }
+            tm->SetNumWorkers(0);
+            tm->QueueJobs(jobs);
+            tm->SetNumWorkers(nThreads);
+            tm->Wait();
+            //for(int j = 0; j < jobs.size(); j++)
+            //{
+            //    jobs[j]->Run();
+            //}
         }
 
         res->startInv = 0;

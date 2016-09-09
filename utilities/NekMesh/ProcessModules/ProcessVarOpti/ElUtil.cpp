@@ -75,7 +75,7 @@ ElUtil::ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d,
 
         m_idmap[ns[i]->m_id] = i;
     }
-    //maps = MappingIdealToRef();
+    maps = MappingIdealToRef();
 }
 
 vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
@@ -283,6 +283,8 @@ void ElUtil::Evaluate()
 {
     NekDouble mx = -1.0 * numeric_limits<double>::max();
     NekDouble mn =  numeric_limits<double>::max();
+
+    ASSERTL0(nodes.size() == derivUtil->ptsLow,"node count wrong");
 
     if(m_dim == 2)
     {

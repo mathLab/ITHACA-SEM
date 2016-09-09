@@ -381,7 +381,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
             NodeElMap::iterator it = nodeElMap.find(remain[i]->m_id);
             ASSERTL0(it != nodeElMap.end(),"could not find");
 
-            vector<ElUtilSharedPtr> &elUtils = it->second.second;
+            vector<ElUtilSharedPtr> &elUtils = it->second;
 
             bool islocked = false;
             for(int j = 0; j < elUtils.size(); j++)
@@ -440,8 +440,7 @@ void ProcessVarOpti::GetElementMap()
 
         for(int j = 0; j < ns.size(); j++)
         {
-            nodeElMap[ns[j]->m_id].first.push_back(j);
-            nodeElMap[ns[j]->m_id].second.push_back(dataSet[i]);
+            nodeElMap[ns[j]->m_id].push_back(dataSet[i]);
         }
 
         ASSERTL0(derivUtil[dataSet[i]->GetEl()->GetShapeType()]->ptsLow == ns.size(), "mismatch node count");

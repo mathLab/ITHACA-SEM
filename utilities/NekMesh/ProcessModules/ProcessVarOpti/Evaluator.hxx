@@ -308,7 +308,7 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                             NekDouble basisDeriv[DIM];
                             for (int m = 0; m < DIM; ++m)
                             {
-                                basisDeriv[m] = *(derivUtil[typeIt->first]->VdmD[m])(k,nodeIds[typeIt->first][i]);
+                                basisDeriv[m] = *(derivUtil[typeIt->first]->VdmD[m])(k,typeIt->second[i]->NodeId(node->m_id));
                             }
 
                             for (int m = 0; m < DIM; ++m)
@@ -463,7 +463,7 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                             NekDouble basisDeriv[DIM];
                             for (int m = 0; m < DIM; ++m)
                             {
-                                basisDeriv[m] = *(derivUtil[typeIt->first]->VdmD[m])(k,nodeIds[typeIt->first][i]);
+                                basisDeriv[m] = *(derivUtil[typeIt->first]->VdmD[m])(k,typeIt->second[i]->NodeId(node->m_id));
                             }
 
                             for (int m = 0; m < DIM; ++m)
@@ -587,7 +587,7 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                             NekDouble basisDeriv[DIM];
                             for (int m = 0; m < DIM; ++m)
                             {
-                                basisDeriv[m] = *(derivUtil[typeIt->first]->VdmD[m])(k,nodeIds[typeIt->first][i]);
+                                basisDeriv[m] = *(derivUtil[typeIt->first]->VdmD[m])(k,typeIt->second[i]->NodeId(node->m_id));
                             }
 
                             for (int m = 0; m < DIM; ++m)
@@ -712,7 +712,7 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                             NekDouble basisDeriv[DIM];
                             for (int m = 0; m < DIM; ++m)
                             {
-                                basisDeriv[m] = *(derivUtil[typeIt->first]->VdmD[m])(k,nodeIds[typeIt->first][i]);
+                                basisDeriv[m] = *(derivUtil[typeIt->first]->VdmD[m])(k,typeIt->second[i]->NodeId(node->m_id));
                             }
 
                             for (int m = 0; m < DIM; ++m)

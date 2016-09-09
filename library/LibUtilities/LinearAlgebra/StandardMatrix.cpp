@@ -41,7 +41,6 @@ namespace Nektar
         Matrix<DataType>(0, 0),
         m_data(),
         m_wrapperType(eCopy),
-        m_storagePolicy(eFULL),
         m_numberOfSuperDiagonals(std::numeric_limits<unsigned int>::max()),
         m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max()),
         m_tempSpace()
@@ -53,10 +52,9 @@ namespace Nektar
     NekMatrix<DataType, StandardMatrixTag>::NekMatrix(unsigned int rows, unsigned int columns, MatrixStorage policy,
               unsigned int subDiagonals,
               unsigned int superDiagonals) :
-        Matrix<DataType>(rows, columns),
+        Matrix<DataType>(rows, columns, policy),
         m_data(),
         m_wrapperType(eCopy),
-        m_storagePolicy(policy),
         m_numberOfSuperDiagonals(superDiagonals),
         m_numberOfSubDiagonals(subDiagonals),
         m_tempSpace()
@@ -70,10 +68,9 @@ namespace Nektar
               unsigned int subDiagonals,
               unsigned int superDiagonals,
               unsigned int capacity) :
-        Matrix<DataType>(rows, columns),
+        Matrix<DataType>(rows, columns, policy),
         m_data(),
         m_wrapperType(eCopy),
-        m_storagePolicy(policy),
         m_numberOfSuperDiagonals(superDiagonals),
         m_numberOfSubDiagonals(subDiagonals),
         m_tempSpace()
@@ -88,10 +85,9 @@ namespace Nektar
               MatrixStorage policy,
               unsigned int subDiagonals,
               unsigned int superDiagonals) :
-        Matrix<DataType>(rows, columns),
+        Matrix<DataType>(rows, columns, policy),
         m_data(),
         m_wrapperType(eCopy),
-        m_storagePolicy(policy),
         m_numberOfSuperDiagonals(superDiagonals),
         m_numberOfSubDiagonals(subDiagonals),
         m_tempSpace()
@@ -105,10 +101,9 @@ namespace Nektar
               MatrixStorage policy,
               unsigned int subDiagonals,
               unsigned int superDiagonals) :
-        Matrix<DataType>(rows, columns),
+        Matrix<DataType>(rows, columns, policy),
         m_data(),
         m_wrapperType(eCopy),
-        m_storagePolicy(policy),
         m_numberOfSuperDiagonals(superDiagonals),
         m_numberOfSubDiagonals(subDiagonals),
         m_tempSpace()
@@ -123,10 +118,9 @@ namespace Nektar
               MatrixStorage policy,
               unsigned int subDiagonals,
               unsigned int superDiagonals) :
-        Matrix<DataType>(rows, columns),
+        Matrix<DataType>(rows, columns, policy),
         m_data(),
         m_wrapperType(eCopy),
-        m_storagePolicy(policy),
         m_numberOfSuperDiagonals(superDiagonals),
         m_numberOfSubDiagonals(subDiagonals),
         m_tempSpace()
@@ -140,10 +134,9 @@ namespace Nektar
               MatrixStorage policy,
               unsigned int subDiagonals,
               unsigned int superDiagonals) :
-        Matrix<DataType>(rows, columns),
+        Matrix<DataType>(rows, columns, policy),
         m_data(),
         m_wrapperType(wrapperType),
-        m_storagePolicy(policy),
         m_numberOfSuperDiagonals(superDiagonals),
         m_numberOfSubDiagonals(subDiagonals),
         m_tempSpace()
@@ -164,17 +157,12 @@ namespace Nektar
         Matrix<DataType>(rhs),
         m_data(),
         m_wrapperType(rhs.m_wrapperType),
-        m_storagePolicy(rhs.m_storagePolicy),
         m_numberOfSuperDiagonals(rhs.m_numberOfSuperDiagonals),
         m_numberOfSubDiagonals(rhs.m_numberOfSubDiagonals),
         m_tempSpace()
     {
         PerformCopyConstruction(rhs);
     }
-
-
-    template<typename DataType>
-    MatrixStorage NekMatrix<DataType, StandardMatrixTag>::GetType() const { return m_storagePolicy; }
 
     template<typename DataType>
     NekMatrix<DataType, StandardMatrixTag>& NekMatrix<DataType, StandardMatrixTag>::operator=(const NekMatrix<DataType, StandardMatrixTag>& rhs)
@@ -185,7 +173,6 @@ namespace Nektar
         }
 
         Matrix<DataType>::operator=(rhs);
-        m_storagePolicy = rhs.m_storagePolicy;
         m_numberOfSubDiagonals = rhs.m_numberOfSubDiagonals;
         m_numberOfSuperDiagonals = rhs.m_numberOfSuperDiagonals;
 
@@ -399,12 +386,6 @@ namespace Nektar
     PointerWrapper NekMatrix<DataType, StandardMatrixTag>::GetWrapperType() const { return m_wrapperType; }
 
     template<typename DataType>
-    char NekMatrix<DataType, StandardMatrixTag>::GetTransposeFlag() const
-    {
-        return this->GetRawTransposeFlag();
-    }
-
-    template<typename DataType>
     boost::tuples::tuple<unsigned int, unsigned int>
     NekMatrix<DataType, StandardMatrixTag>::Advance(unsigned int curRow, unsigned int curColumn) const
     {
@@ -418,7 +399,7 @@ namespace Nektar
         unsigned int numRows = this->GetTransposedRows(transpose);
         unsigned int numColumns = this->GetTransposedColumns(transpose);
 
-        switch(m_storagePolicy)
+        switch(this->GetStorageType())
         {
             case eFULL:
                 return FullMatrixFuncs::Advance(
@@ -481,11 +462,10 @@ namespace Nektar
         BaseType(rhs),
         m_data(),
         m_wrapperType(wrapperType),
-        m_storagePolicy(rhs.m_storagePolicy),
         m_numberOfSuperDiagonals(rhs.m_numberOfSuperDiagonals),
         m_numberOfSubDiagonals(rhs.m_numberOfSubDiagonals)
     {
-            PerformCopyConstruction(rhs);
+        PerformCopyConstruction(rhs);
     }
 
 
@@ -562,12 +542,6 @@ namespace Nektar
     unsigned int NekMatrix<DataType, StandardMatrixTag>::v_GetStorageSize() const
     {
         return NekMatrix<DataType, StandardMatrixTag>::GetStorageSize();
-    }
-
-    template<typename DataType>
-    MatrixStorage NekMatrix<DataType, StandardMatrixTag>::v_GetStorageType() const
-    {
-        return NekMatrix<DataType, StandardMatrixTag>::GetType();
     }
 
     template<typename DataType>
@@ -765,9 +739,12 @@ namespace Nektar
                 DiagonalMatrixFuncs::Invert(this->GetRows(), this->GetColumns(),
                     this->GetData());
                 break;
+            case eSYMMETRIC:
+                SymmetricMatrixFuncs::Invert(this->GetRows(), this->GetColumns(),
+                    this->GetData());
+                break;
             case eUPPER_TRIANGULAR:
             case eLOWER_TRIANGULAR:
-            case eSYMMETRIC:
             case eBANDED:
                 NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
                 break;

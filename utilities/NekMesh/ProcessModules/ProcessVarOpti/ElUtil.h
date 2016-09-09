@@ -85,6 +85,7 @@ private:
     ElementSharedPtr m_el;
     int m_dim;
     int m_mode;
+    std::map<int,int> m_idmap;
 
     DerivUtilSharedPtr derivUtil;
     ResidualSharedPtr res;

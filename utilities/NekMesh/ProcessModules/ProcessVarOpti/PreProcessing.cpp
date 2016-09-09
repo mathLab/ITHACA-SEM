@@ -134,6 +134,7 @@ void ProcessVarOpti::BuildDerivUtil()
                 Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
                 NekVector<NekDouble> quadWi(qds);
                 derivUtil[st]->quadW = quadWi;
+                derivUtil[st]->st = st;
             }
 
             {
@@ -181,6 +182,7 @@ void ProcessVarOpti::BuildDerivUtil()
                 derivUtil[st]->pty = v2;
                 derivUtil[st]->ptz = w2;
 
+                derivUtil[st]->st = st;
             }
         }
     }
@@ -441,6 +443,8 @@ void ProcessVarOpti::GetElementMap()
             nodeElMap[ns[j]->m_id].first.push_back(j);
             nodeElMap[ns[j]->m_id].second.push_back(dataSet[i]);
         }
+
+        ASSERTL0(derivUtil[dataSet[i]->GetEl()->GetShapeType()]->ptsLow == ns.size(), "mismatch node count");
     }
 }
 

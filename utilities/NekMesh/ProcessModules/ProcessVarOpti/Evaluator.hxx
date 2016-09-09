@@ -229,6 +229,8 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                 }
             }
 
+            //ASSERTL0(typeIt->second[i]->GetEl()->GetShapeType() == typeIt->first,"shape mismatch");
+
             cnt += DIM*derivUtil[typeIt->first]->ptsLow;
         }
 
@@ -256,7 +258,7 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
 
 
     NekDouble integral = 0.0;
-    NekDouble ep = minJac < 1e-9 ? sqrt(1e-18 + 0.04*minJac*minJac) : 1e-9;
+    NekDouble ep = minJac < 1e-7 ? sqrt(1e-14 + 0.004*minJac*minJac) : 1e-7;
     //NekDouble ep = minJac < 0.0 ? sqrt(gam*(gam-minJac)) : gam;
     //NekDouble ep = minJac < gam ? sqrt(gam*gam + minJac*minJac) : gam;
     NekDouble jacIdeal[DIM][DIM], jacDet;

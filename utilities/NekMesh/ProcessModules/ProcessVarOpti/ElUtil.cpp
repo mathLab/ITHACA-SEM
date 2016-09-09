@@ -72,8 +72,10 @@ ElUtil::ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d,
         {
             nodes[i][2] = &ns[i]->m_z;
         }
+
+        m_idmap[ns[i]->m_id] = i;
     }
-    maps = MappingIdealToRef();
+    //maps = MappingIdealToRef();
 }
 
 vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
@@ -214,37 +216,39 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
 
         for (int i = 0; i < derivUtil->ptsHigh; ++i)
         {
+            NekDouble a1  = 0.5 * (1 - derivUtil->ptx[i]);
             NekDouble a2  = 0.5 * (1 + derivUtil->ptx[i]);
             NekDouble b1  = 0.5 * (1 - derivUtil->pty[i]);
             NekDouble b2  = 0.5 * (1 + derivUtil->pty[i]);
             NekDouble c1  = 0.5 * (1 - derivUtil->ptz[i]);
             NekDouble c2  = 0.5 * (1 + derivUtil->ptz[i]);
+            NekDouble d   = 0.5 * (derivUtil->ptx[i] + derivUtil->ptz[i]);
 
             DNekMat J(3, 3, 1.0, eFULL);
 
-            J(0, 0) = 0.5 * (-b1 * xyz[0][0] + b1 * xyz[1][0] +
-                              b2 * xyz[2][0] - b2 * xyz[3][0]);
-            J(1, 0) = 0.5 * (-b1 * xyz[0][1] + b1 * xyz[1][1] +
-                              b2 * xyz[2][1] - b2 * xyz[3][1]);
-            J(2, 0) = 0.5 * (-b1 * xyz[0][2] + b1 * xyz[1][2] +
-                              b2 * xyz[2][2] - b2 * xyz[3][2]);
+            J(0,0) = - 0.5 * b1 * xyz[0][0] + 0.5 * b1 * xyz[1][0]
+                     + 0.5 * b2 * xyz[2][0] - 0.5 * b2 * xyz[3][0];
+            J(1,0) = - 0.5 * b1 * xyz[0][1] + 0.5 * b1 * xyz[1][1]
+                     + 0.5 * b2 * xyz[2][1] - 0.5 * b2 * xyz[3][1];
+            J(2,0) = - 0.5 * b1 * xyz[0][2] + 0.5 * b1 * xyz[1][2]
+                     + 0.5 * b2 * xyz[2][2] - 0.5 * b2 * xyz[3][2];
 
-            J(0, 1) = 0.5 * ((a2 - c1) * xyz[0][0] -        a2 * xyz[1][0] +
-                                    a2 * xyz[2][0] + (c1 - a2) * xyz[3][0] -
-                                    c2 * xyz[4][0] +        c2 * xyz[5][0]);
-            J(1, 1) = 0.5 * ((a2 - c1) * xyz[0][1] -        a2 * xyz[1][1] +
-                                    a2 * xyz[2][1] + (c1 - a2) * xyz[3][1] -
-                                    c2 * xyz[4][1] +        c2 * xyz[5][1]);
-            J(2, 1) = 0.5 * ((a2 - c1) * xyz[0][2] -        a2 * xyz[1][2] +
-                                    a2 * xyz[2][2] + (c1 - a2) * xyz[3][2] -
-                                    c2 * xyz[4][2] +        c2 * xyz[5][2]);
+            J(0,1) =   0.5 * d  * xyz[0][0] - 0.5 * a2 * xyz[1][0]
+                     + 0.5 * a2 * xyz[2][0] - 0.5 * d  * xyz[3][0]
+                     - 0.5 * c2 * xyz[4][0] + 0.5 * c2 * xyz[5][0];
+            J(1,1) =   0.5 * d  * xyz[0][1] - 0.5 * a2 * xyz[1][1]
+                     + 0.5 * a2 * xyz[2][1] - 0.5 * d  * xyz[3][1]
+                     - 0.5 * c2 * xyz[4][1] + 0.5 * c2 * xyz[5][1];
+            J(2,1) =   0.5 * d  * xyz[0][2] - 0.5 * a2 * xyz[1][2]
+                     + 0.5 * a2 * xyz[2][2] - 0.5 * d  * xyz[3][2]
+                     - 0.5 * c2 * xyz[4][2] + 0.5 * c2 * xyz[5][2];
 
-            J(0, 2) = 0.5 * (-b1 * xyz[0][0] - b2 * xyz[3][0] +
-                              b1 * xyz[4][0] + b2 * xyz[5][0]);
-            J(1, 2) = 0.5 * (-b1 * xyz[0][1] - b2 * xyz[3][1] +
-                              b1 * xyz[4][1] + b2 * xyz[5][1]);
-            J(2, 2) = 0.5 * (-b1 * xyz[0][2] - b2 * xyz[3][2] +
-                              b1 * xyz[4][2] + b2 * xyz[5][2]);
+            J(0,2) = - 0.5 * b1 * xyz[0][0] - 0.5 * b2 * xyz[3][0]
+                     + 0.5 * b1 * xyz[4][0] + 0.5 * b2 * xyz[5][0];
+            J(1,2) = - 0.5 * b1 * xyz[0][1] - 0.5 * b2 * xyz[3][1]
+                     + 0.5 * b1 * xyz[4][1] + 0.5 * b2 * xyz[5][1];
+            J(2,2) = - 0.5 * b1 * xyz[0][2] - 0.5 * b2 * xyz[3][2]
+                     + 0.5 * b1 * xyz[4][2] + 0.5 * b2 * xyz[5][2];
 
             J.Invert();
 

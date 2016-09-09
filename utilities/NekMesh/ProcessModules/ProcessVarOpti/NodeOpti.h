@@ -65,6 +65,15 @@ public:
             data[e.second[i]->GetEl()->GetShapeType()].push_back(e.second[i]);
             nodeIds[e.second[i]->GetEl()->GetShapeType()].push_back(e.first[i]);
         }
+
+        //std::map<LibUtilities::ShapeType,std::vector<ElUtilSharedPtr> >::iterator typeIt;
+        //for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
+        //{
+        //    for(int i = 0; i < typeIt->second.size(); i++)
+        //    {
+        //        std::cout << LibUtilities::ShapeTypeMap[typeIt->first] << " " << LibUtilities::ShapeTypeMap[typeIt->second[i]->GetEl()->GetShapeType()] << std::endl;
+        //    }
+        //}
     }
 
     virtual ~NodeOpti(){};

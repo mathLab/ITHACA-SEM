@@ -52,44 +52,86 @@ void ProcessVarOpti::BuildDerivUtil()
     {
         case 2:
         {
-            LibUtilities::ShapeType st = LibUtilities::eTriangle;
-            derivUtil[st] = boost::shared_ptr<DerivUtil>(new DerivUtil);
-            derivUtil[st]->ptsLow  = m_mesh->m_nummode*(m_mesh->m_nummode+1)/2;
+            {
+                LibUtilities::ShapeType st = LibUtilities::eTriangle;
+                derivUtil[st] = boost::shared_ptr<DerivUtil>(new DerivUtil);
+                derivUtil[st]->ptsLow  = m_mesh->m_nummode*(m_mesh->m_nummode+1)/2;
 
-            LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
-                                          LibUtilities::eNodalTriElec);
-            LibUtilities::PointsKey pkey2(m_mesh->m_nummode + 4,
-                                          LibUtilities::eNodalTriSPI);
-            Array<OneD, NekDouble> u1, v1, u2, v2;
+                LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
+                                              LibUtilities::eNodalTriElec);
+                LibUtilities::PointsKey pkey2(m_mesh->m_nummode + 4,
+                                              LibUtilities::eNodalTriSPI);
+                Array<OneD, NekDouble> u1, v1, u2, v2;
 
-            LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
-            LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2);
+                LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
+                LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2);
 
-            derivUtil[st]->ptsHigh = u2.num_elements();
+                derivUtil[st]->ptsHigh = u2.num_elements();
 
-            LibUtilities::NodalUtilTriangle nodalTri(
-                m_mesh->m_nummode - 1, u1, v1);
+                LibUtilities::NodalUtilTriangle nodalTri(
+                    m_mesh->m_nummode - 1, u1, v1);
 
-            Array<OneD, Array<OneD, NekDouble> > uv2(2), uv1(2);
-            uv1[0] = u1;
-            uv1[1] = v1;
-            uv2[0] = u2;
-            uv2[1] = v2;
+                Array<OneD, Array<OneD, NekDouble> > uv2(2), uv1(2);
+                uv1[0] = u1;
+                uv1[1] = v1;
+                uv2[0] = u2;
+                uv2[1] = v2;
 
-            NekMatrix<NekDouble> interp = *nodalTri.GetInterpolationMatrix(uv2);
+                NekMatrix<NekDouble> interp = *nodalTri.GetInterpolationMatrix(uv2);
 
-            NekMatrix<NekDouble> Vandermonde = *nodalTri.GetVandermonde();
-            NekMatrix<NekDouble> VandermondeI = Vandermonde;
-            VandermondeI.Invert();
+                NekMatrix<NekDouble> Vandermonde = *nodalTri.GetVandermonde();
+                NekMatrix<NekDouble> VandermondeI = Vandermonde;
+                VandermondeI.Invert();
 
-            derivUtil[st]->VdmDL[0] = *nodalTri.GetVandermondeForDeriv(0) * VandermondeI;
-            derivUtil[st]->VdmDL[1] = *nodalTri.GetVandermondeForDeriv(1) * VandermondeI;
-            derivUtil[st]->VdmD[0] = interp * derivUtil[st]->VdmDL[0];
-            derivUtil[st]->VdmD[1] = interp * derivUtil[st]->VdmDL[1];
-            //derivUtil->quadW = LibUtilities::MakeQuadratureWeights(U2,V1);
-            Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
-            NekVector<NekDouble> quadWi(qds);
-            derivUtil[st]->quadW = quadWi;
+                derivUtil[st]->VdmDL[0] = *nodalTri.GetVandermondeForDeriv(0) * VandermondeI;
+                derivUtil[st]->VdmDL[1] = *nodalTri.GetVandermondeForDeriv(1) * VandermondeI;
+                derivUtil[st]->VdmD[0] = interp * derivUtil[st]->VdmDL[0];
+                derivUtil[st]->VdmD[1] = interp * derivUtil[st]->VdmDL[1];
+                //derivUtil->quadW = LibUtilities::MakeQuadratureWeights(U2,V1);
+                Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
+                NekVector<NekDouble> quadWi(qds);
+                derivUtil[st]->quadW = quadWi;
+            }
+            /*{
+                LibUtilities::ShapeType st = LibUtilities::eQuadrilateral;
+                derivUtil[st] = boost::shared_ptr<DerivUtil>(new DerivUtil);
+                derivUtil[st]->ptsLow  = m_mesh->m_nummode*m_mesh->m_nummode;
+
+                LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
+                                              LibUtilities::eNodalTriElec);
+                LibUtilities::PointsKey pkey2(m_mesh->m_nummode + 4,
+                                              LibUtilities::eNodalTriSPI);
+                Array<OneD, NekDouble> u1, v1, u2, v2;
+
+                LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
+                LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2);
+
+                derivUtil[st]->ptsHigh = u2.num_elements();
+
+                LibUtilities::NodalUtilTriangle nodalTri(
+                    m_mesh->m_nummode - 1, u1, v1);
+
+                Array<OneD, Array<OneD, NekDouble> > uv2(2), uv1(2);
+                uv1[0] = u1;
+                uv1[1] = v1;
+                uv2[0] = u2;
+                uv2[1] = v2;
+
+                NekMatrix<NekDouble> interp = *nodalTri.GetInterpolationMatrix(uv2);
+
+                NekMatrix<NekDouble> Vandermonde = *nodalTri.GetVandermonde();
+                NekMatrix<NekDouble> VandermondeI = Vandermonde;
+                VandermondeI.Invert();
+
+                derivUtil[st]->VdmDL[0] = *nodalTri.GetVandermondeForDeriv(0) * VandermondeI;
+                derivUtil[st]->VdmDL[1] = *nodalTri.GetVandermondeForDeriv(1) * VandermondeI;
+                derivUtil[st]->VdmD[0] = interp * derivUtil[st]->VdmDL[0];
+                derivUtil[st]->VdmD[1] = interp * derivUtil[st]->VdmDL[1];
+                //derivUtil->quadW = LibUtilities::MakeQuadratureWeights(U2,V1);
+                Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
+                NekVector<NekDouble> quadWi(qds);
+                derivUtil[st]->quadW = quadWi;
+            }*/
         }
         break;
         case 3:
@@ -134,7 +176,6 @@ void ProcessVarOpti::BuildDerivUtil()
                 Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
                 NekVector<NekDouble> quadWi(qds);
                 derivUtil[st]->quadW = quadWi;
-                derivUtil[st]->st = st;
             }
 
             {
@@ -181,8 +222,6 @@ void ProcessVarOpti::BuildDerivUtil()
                 derivUtil[st]->ptx = u2;
                 derivUtil[st]->pty = v2;
                 derivUtil[st]->ptz = w2;
-
-                derivUtil[st]->st = st;
             }
         }
     }

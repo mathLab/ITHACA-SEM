@@ -57,8 +57,6 @@ struct DerivUtil
     int ptsLow;
 
     Array<OneD, NekDouble> ptx, pty, ptz;
-
-    LibUtilities::ShapeType st;
 };
 typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
 

@@ -142,6 +142,9 @@ void ProcessVarOpti::BuildDerivUtil()
                 Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
                 NekVector<NekDouble> quadWi(qds);
                 derivUtil[st]->quadW = quadWi;
+
+                derivUtil[st]->ptx = u2;
+                derivUtil[st]->pty = v2;
             }
         }
         break;
@@ -222,6 +225,65 @@ void ProcessVarOpti::BuildDerivUtil()
                 derivUtil[st]->VdmDL[0] = *nodalPrism.GetVandermondeForDeriv(0) * VandermondeI;
                 derivUtil[st]->VdmDL[1] = *nodalPrism.GetVandermondeForDeriv(1) * VandermondeI;
                 derivUtil[st]->VdmDL[2] = *nodalPrism.GetVandermondeForDeriv(2) * VandermondeI;
+
+                derivUtil[st]->VdmD[0] = interp * derivUtil[st]->VdmDL[0];
+                derivUtil[st]->VdmD[1] = interp * derivUtil[st]->VdmDL[1];
+                derivUtil[st]->VdmD[2] = interp * derivUtil[st]->VdmDL[2];
+                Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
+                NekVector<NekDouble> quadWi(qds);
+                derivUtil[st]->quadW = quadWi;
+
+                derivUtil[st]->ptx = u2;
+                derivUtil[st]->pty = v2;
+                derivUtil[st]->ptz = w2;
+            }
+
+            {
+                LibUtilities::ShapeType st = LibUtilities::eHexahedron;
+                derivUtil[st] = boost::shared_ptr<DerivUtil>(new DerivUtil);
+                derivUtil[st]->ptsLow  = m_mesh->m_nummode*m_mesh->m_nummode*m_mesh->m_nummode;
+                LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
+                                              LibUtilities::eGaussLobattoLegendre);
+                LibUtilities::PointsKey pkey2(m_mesh->m_nummode+4,
+                                              LibUtilities::eGaussLobattoLegendre);
+                Array<OneD, NekDouble> u1(m_mesh->m_nummode), v1(m_mesh->m_nummode), u2(m_mesh->m_nummode), v2, w1, w2, tmp;
+                LibUtilities::PointsManager()[pkey1]->GetPoints(tmp);
+                LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
+
+                derivUtil[st]->ptsHigh = u2.num_elements();
+
+                for(int i = 0, ct = 0; i < m_mesh->m_nummode; i++)
+                {
+                    for(int j = 0; j < m_mesh->m_nummode; j++)
+                    {
+                        for(int k = 0; k < m_mesh->m_nummode; k++, ct++)
+                        {
+                            u1[ct] = tmp[k];
+                            v1[ct] = tmp[j];
+                            w1[ct] = tmp[i];
+                        }
+                    }
+                }
+
+                LibUtilities::NodalUtilHex nodalHex(
+                    m_mesh->m_nummode - 1, u1, v1, w1);
+
+                Array<OneD, Array<OneD, NekDouble> > uv2(3), uv1(3);
+                uv2[0] = u2;
+                uv2[1] = v2;
+                uv2[2] = w2;
+                uv1[0] = u1;
+                uv1[1] = v1;
+                uv1[2] = w1;
+
+                NekMatrix<NekDouble> interp = *nodalHex.GetInterpolationMatrix(uv2);
+                NekMatrix<NekDouble> Vandermonde = *nodalHex.GetVandermonde();
+                NekMatrix<NekDouble> VandermondeI = Vandermonde;
+                VandermondeI.Invert();
+
+                derivUtil[st]->VdmDL[0] = *nodalHex.GetVandermondeForDeriv(0) * VandermondeI;
+                derivUtil[st]->VdmDL[1] = *nodalHex.GetVandermondeForDeriv(1) * VandermondeI;
+                derivUtil[st]->VdmDL[2] = *nodalHex.GetVandermondeForDeriv(2) * VandermondeI;
 
                 derivUtil[st]->VdmD[0] = interp * derivUtil[st]->VdmDL[0];
                 derivUtil[st]->VdmD[1] = interp * derivUtil[st]->VdmDL[1];

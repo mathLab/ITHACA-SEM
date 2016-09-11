@@ -86,45 +86,53 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
 
     if(m_el->GetConf().m_e == LibUtilities::eQuadrilateral)
     {
-        ASSERTL0(false,"Not coded");
-        /*vector<Array<OneD, NekDouble> > xy;
-        for(int i = 0; i < geom->GetNumVerts(); i++)
+        vector<Array<OneD, NekDouble> > xyz(6);
+        vector<NodeSharedPtr> ns = m_el->GetVertexList();
+        for(int i = 0; i < 4; i++)
         {
-            Array<OneD, NekDouble> loc(2);
-            SpatialDomains::PointGeomSharedPtr p = geom->GetVertex(i);
-            p->GetCoords(loc);
-            xy.push_back(loc);
+            Array<OneD, NekDouble> x(3);
+            x[0] = ns[i]->m_x;
+            x[1] = ns[i]->m_y;
+            x[2] = ns[i]->m_z;
+            xyz[i] = x;
         }
 
-        Array<OneD, const LibUtilities::BasisSharedPtr> b = chi->GetBase();
-        Array<OneD, NekDouble> u = b[0]->GetZ();
-        Array<OneD, NekDouble> v = b[1]->GetZ();
-
-        for(int j = 0; j < b[1]->GetNumPoints(); j++)
+        for (int i = 0; i < derivUtil->ptsHigh; ++i)
         {
-            for(int i = 0; i < b[0]->GetNumPoints(); i++)
-            {
-                NekDouble a1 = 0.5*(1.0-u[i]), a2 = 0.5*(1.0+u[i]);
-                NekDouble b1 = 0.5*(1.0-v[j]), b2 = 0.5*(1.0+v[j]);
-                DNekMat dxdz(2,2,1.0,eFULL);
+            NekDouble a1  = 0.5 * (1 - derivUtil->ptx[i]);
+            NekDouble a2  = 0.5 * (1 + derivUtil->ptx[i]);
+            NekDouble b1  = 0.5 * (1 - derivUtil->pty[i]);
+            NekDouble b2  = 0.5 * (1 + derivUtil->pty[i]);
 
-                dxdz(0,0) = 0.5*(-b1*xy[0][0] + b1*xy[1][0] + b2*xy[2][0] - b2*xy[3][0]);
-                dxdz(1,0) = 0.5*(-b1*xy[0][1] + b1*xy[1][1] + b2*xy[2][1] - b2*xy[3][1]);
+            DNekMat J(2, 2, 1.0, eFULL);
 
-                dxdz(0,1) = 0.5*(-a1*xy[0][0] - a2*xy[1][0] + a2*xy[2][0] + a1*xy[3][0]);
-                dxdz(1,1) = 0.5*(-a1*xy[0][1] - a2*xy[1][1] + a2*xy[2][1] + a1*xy[3][1]);
+            J(0,0) = - 0.5 * b1 * xyz[0][0] + 0.5 * b1 * xyz[1][0]
+                     + 0.5 * b2 * xyz[2][0] - 0.5 * b2 * xyz[3][0];
+            J(1,0) = - 0.5 * b1 * xyz[0][1] + 0.5 * b1 * xyz[1][1]
+                     + 0.5 * b2 * xyz[2][1] - 0.5 * b2 * xyz[3][1];
 
-                NekDouble det = 1.0/(dxdz(0,0)*dxdz(1,1) - dxdz(1,0)*dxdz(0,1));
+            J(0,1) = - 0.5 * a1 * xyz[0][0] - 0.5 * a2 * xyz[1][0]
+                     + 0.5 * a2 * xyz[2][0] + 0.5 * a1 * xyz[3][0];
+            J(1,1) = - 0.5 * a1 * xyz[0][1] - 0.5 * a2 * xyz[1][1]
+                     + 0.5 * a2 * xyz[2][1] + 0.5 * a1 * xyz[3][1];
 
-                dxdz.Invert();
-                Array<OneD, NekDouble> r(9,0.0);
-                r[0] = dxdz(0,0);
-                r[1] = dxdz(1,0);
-                r[3] = dxdz(0,1);
-                r[4] = dxdz(1,1);
-                ret.push_back(r);
-            }
-        }*/
+            J.Invert();
+
+            Array<OneD, NekDouble> r(10,0.0); //store det in 10th entry
+
+            r[9] = 1.0 / (J(0,0) * J(1,1) - J(0,1) * J(1,0));
+
+            r[0] = J(0,0);
+            r[1] = J(1,0);
+            r[2] = 0.0;
+            r[3] = J(0,1);
+            r[4] = J(1,1);
+            r[5] = 0.0;
+            r[6] = 0.0;
+            r[7] = 0.0;
+            r[8] = 0.0;
+            ret.push_back(r);
+        }
     }
     else if(m_el->GetConf().m_e == LibUtilities::eTriangle)
     {
@@ -270,6 +278,89 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             ret.push_back(r);
         }
 
+    }
+    else if (m_el->GetConf().m_e == LibUtilities::eHexahedron)
+    {
+        vector<Array<OneD, NekDouble> > xyz(8);
+        vector<NodeSharedPtr> ns = m_el->GetVertexList();
+        for(int i = 0; i < 8; i++)
+        {
+            Array<OneD, NekDouble> x(3);
+            x[0] = ns[i]->m_x;
+            x[1] = ns[i]->m_y;
+            x[2] = ns[i]->m_z;
+            xyz[i] = x;
+        }
+
+        for (int i = 0; i < derivUtil->ptsHigh; ++i)
+        {
+            NekDouble a1  = 0.5 * (1 - derivUtil->ptx[i]);
+            NekDouble a2  = 0.5 * (1 + derivUtil->ptx[i]);
+            NekDouble b1  = 0.5 * (1 - derivUtil->pty[i]);
+            NekDouble b2  = 0.5 * (1 + derivUtil->pty[i]);
+            NekDouble c1  = 0.5 * (1 - derivUtil->ptz[i]);
+            NekDouble c2  = 0.5 * (1 + derivUtil->ptz[i]);
+
+            DNekMat J(3, 3, 1.0, eFULL);
+
+            J(0,0) = - 0.5 * b1 * c1 * xyz[0][0] + 0.5 * b1 * c1 * xyz[1][0]
+                     + 0.5 * b2 * c1 * xyz[2][0] - 0.5 * b2 * c1 * xyz[3][0];
+                     - 0.5 * b1 * c2 * xyz[5][0] + 0.5 * b1 * c2 * xyz[5][0]
+                     + 0.5 * b2 * c2 * xyz[6][0] - 0.5 * b2 * c2 * xyz[7][0];
+            J(1,0) = - 0.5 * b1 * c1 * xyz[0][1] + 0.5 * b1 * c1 * xyz[1][1]
+                     + 0.5 * b2 * c1 * xyz[2][1] - 0.5 * b2 * c1 * xyz[3][1];
+                     - 0.5 * b1 * c2 * xyz[5][1] + 0.5 * b1 * c2 * xyz[5][1]
+                     + 0.5 * b2 * c2 * xyz[6][1] - 0.5 * b2 * c2 * xyz[7][1];
+            J(2,0) = - 0.5 * b1 * c1 * xyz[0][2] + 0.5 * b1 * c1 * xyz[1][2]
+                     + 0.5 * b2 * c1 * xyz[2][2] - 0.5 * b2 * c1 * xyz[3][2];
+                     - 0.5 * b1 * c2 * xyz[5][2] + 0.5 * b1 * c2 * xyz[5][2]
+                     + 0.5 * b2 * c2 * xyz[6][2] - 0.5 * b2 * c2 * xyz[7][2];
+
+            J(0,1) = - 0.5 * a1 * c1 * xyz[0][0] - 0.5 * a2 * c1 * xyz[1][0]
+                     + 0.5 * a2 * c1 * xyz[2][0] + 0.5 * a1 * c1 * xyz[3][0];
+                     - 0.5 * a1 * c2 * xyz[5][0] - 0.5 * a2 * c2 * xyz[5][0]
+                     + 0.5 * a2 * c2 * xyz[6][0] + 0.5 * a1 * c2 * xyz[7][0];
+            J(1,1) = - 0.5 * a1 * c1 * xyz[0][1] - 0.5 * a2 * c1 * xyz[1][1]
+                     + 0.5 * a2 * c1 * xyz[2][1] + 0.5 * a1 * c1 * xyz[3][1];
+                     - 0.5 * a1 * c2 * xyz[5][1] - 0.5 * a2 * c2 * xyz[5][1]
+                     + 0.5 * a2 * c2 * xyz[6][1] + 0.5 * a1 * c2 * xyz[7][1];
+            J(2,1) = - 0.5 * a1 * c1 * xyz[0][2] - 0.5 * a2 * c1 * xyz[1][2]
+                     + 0.5 * a2 * c1 * xyz[2][2] + 0.5 * a1 * c1 * xyz[3][2];
+                     - 0.5 * a1 * c2 * xyz[5][2] - 0.5 * a2 * c2 * xyz[5][2]
+                     + 0.5 * a2 * c2 * xyz[6][2] + 0.5 * a1 * c2 * xyz[7][2];
+
+            J(0,0) = - 0.5 * b1 * a1 * xyz[0][0] - 0.5 * b1 * a2 * xyz[1][0]
+                     - 0.5 * b2 * a2 * xyz[2][0] - 0.5 * b2 * a1 * xyz[3][0];
+                     + 0.5 * b1 * a1 * xyz[5][0] + 0.5 * b1 * a2 * xyz[5][0]
+                     + 0.5 * b2 * a2 * xyz[6][0] + 0.5 * b2 * a1 * xyz[7][0];
+            J(1,0) = - 0.5 * b1 * a1 * xyz[0][1] - 0.5 * b1 * a2 * xyz[1][1]
+                     - 0.5 * b2 * a2 * xyz[2][1] - 0.5 * b2 * a1 * xyz[3][1];
+                     + 0.5 * b1 * a1 * xyz[5][1] + 0.5 * b1 * a2 * xyz[5][1]
+                     + 0.5 * b2 * a2 * xyz[6][1] + 0.5 * b2 * a1 * xyz[7][1];
+            J(2,0) = - 0.5 * b1 * a1 * xyz[0][2] - 0.5 * b1 * a2 * xyz[1][2]
+                     - 0.5 * b2 * a2 * xyz[2][2] - 0.5 * b2 * a1 * xyz[3][2];
+                     + 0.5 * b1 * a1 * xyz[5][2] + 0.5 * b1 * a2 * xyz[5][2]
+                     + 0.5 * b2 * a2 * xyz[6][2] + 0.5 * b2 * a1 * xyz[7][2];
+
+            J.Invert();
+
+            Array<OneD, NekDouble> r(10,0.0); //store det in 10th entry
+
+            r[9] = 1.0/(J(0,0)*(J(1,1)*J(2,2)-J(2,1)*J(1,2))
+                       -J(0,1)*(J(1,0)*J(2,2)-J(2,0)*J(1,2))
+                       +J(0,2)*(J(1,0)*J(2,1)-J(2,0)*J(1,1)));
+
+            r[0] = J(0,0);
+            r[1] = J(1,0);
+            r[2] = J(2,0);
+            r[3] = J(0,1);
+            r[4] = J(1,1);
+            r[5] = J(2,1);
+            r[6] = J(0,2);
+            r[7] = J(1,2);
+            r[8] = J(2,2);
+            ret.push_back(r);
+        }
     }
     else
     {

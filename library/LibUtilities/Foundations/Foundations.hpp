@@ -94,6 +94,7 @@ namespace Nektar
             "NodalTriFekete",
             "NodalTriSPI",
             "NodalTriEvenlySpaced",
+            "NodalQuadSPI",
             "NodalTetEvenlySpaced",
             "NodalTetElec",
             "NodalTetSPI",

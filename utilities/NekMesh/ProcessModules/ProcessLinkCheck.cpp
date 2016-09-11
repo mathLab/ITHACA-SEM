@@ -74,6 +74,7 @@ void ProcessLinkCheck::Process()
             count++;
         }
     }
+    
 
     if (count - m_mesh->m_element[2].size() > 0)
     {

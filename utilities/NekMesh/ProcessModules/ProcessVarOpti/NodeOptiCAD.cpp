@@ -334,7 +334,7 @@ void NodeOpti2D3D::Optimise()
         }
 
         sk[0] = -1.0/(G[2]*G[4]-G[3]*G[3])*(G[4]*G[0] - G[3]*G[1]);
-        sk[1] = -1.0/(G[2]*G[4]-G[3]*G[3])*(G[2]*G[1] - G[3]*G[0]);;
+        sk[1] = -1.0/(G[2]*G[4]-G[3]*G[3])*(G[2]*G[1] - G[3]*G[0]);
 
         bool runDNC = false; //so want to make this varible runDMC
         bool found  = false;

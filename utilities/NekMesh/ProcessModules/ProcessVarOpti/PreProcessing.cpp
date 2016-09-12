@@ -238,7 +238,7 @@ void ProcessVarOpti::BuildDerivUtil()
                 derivUtil[st]->ptz = w2;
             }
 
-            {
+            /*{
                 LibUtilities::ShapeType st = LibUtilities::eHexahedron;
                 derivUtil[st] = boost::shared_ptr<DerivUtil>(new DerivUtil);
                 derivUtil[st]->ptsLow  = m_mesh->m_nummode*m_mesh->m_nummode*m_mesh->m_nummode;
@@ -246,7 +246,7 @@ void ProcessVarOpti::BuildDerivUtil()
                                               LibUtilities::eGaussLobattoLegendre);
                 LibUtilities::PointsKey pkey2(m_mesh->m_nummode+4,
                                               LibUtilities::eGaussLobattoLegendre);
-                Array<OneD, NekDouble> u1(m_mesh->m_nummode), v1(m_mesh->m_nummode), u2(m_mesh->m_nummode), v2, w1, w2, tmp;
+                Array<OneD, NekDouble> u1(m_mesh->m_nummode), v1(m_mesh->m_nummode), u2, v2, w1(m_mesh->m_nummode), w2, tmp;
                 LibUtilities::PointsManager()[pkey1]->GetPoints(tmp);
                 LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
 
@@ -295,7 +295,7 @@ void ProcessVarOpti::BuildDerivUtil()
                 derivUtil[st]->ptx = u2;
                 derivUtil[st]->pty = v2;
                 derivUtil[st]->ptz = w2;
-            }
+            }*/
         }
     }
 }

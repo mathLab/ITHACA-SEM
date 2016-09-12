@@ -106,7 +106,8 @@ void ProcessLinear::Process()
         map<int,vector<FaceSharedPtr> > eidToFace;
         map<int,vector<ElementSharedPtr> > eidToElm;
 
-        vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
+        vector<ElementSharedPtr> els = m_mesh->m_element[m_mesh->m_expDim];
+        vector<ElementSharedPtr> el = els;
 
         for(int i = 0; i < el.size(); i++)
         {
@@ -184,15 +185,16 @@ void ProcessLinear::Process()
                 }
             }
 
-            vector<ElementSharedPtr> tmp = el;
             el.clear();
-            set<int>::iterator it;
-            for(int i = 0; i < tmp.size(); i++)
+            set<int>::iterator it1;
+            boost::unordered_set<int>::iterator it2;
+            for(int i = 0; i < els.size(); i++)
             {
-                it = neigh.find(tmp[i]->GetId());
-                if(it != neigh.end())
+                it1 = neigh.find(els[i]->GetId());
+                it2 = clearedElmts.find(els[i]->GetId());
+                if(it1 != neigh.end() && it2 == clearedElmts.end())
                 {
-                    el.push_back(tmp[i]);
+                    el.push_back(els[i]);
                 }
             }
             neigh.clear();

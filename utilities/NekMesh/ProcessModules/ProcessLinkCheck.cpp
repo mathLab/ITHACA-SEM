@@ -65,6 +65,13 @@ void ProcessLinkCheck::Process()
         cout << "ProcessJac: Checking links... " << endl;
     }
 
+    ClearElementLinks();
+    ProcessVertices();
+    ProcessEdges();
+    ProcessFaces();
+    ProcessElements();
+    ProcessComposites();
+
     FaceSet::iterator fit;
     int count = 0;
     for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
@@ -74,7 +81,7 @@ void ProcessLinkCheck::Process()
             count++;
         }
     }
-    
+
 
     if (count - m_mesh->m_element[2].size() > 0)
     {

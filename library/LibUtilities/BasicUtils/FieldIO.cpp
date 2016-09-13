@@ -127,6 +127,7 @@ const std::string FieldIO::GetFileType(const std::string &filename,
             0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a};
 
         std::ifstream datafile(datafilename.c_str(), ios_base::binary);
+        ASSERTL0(datafile.good(), "Unable to open file: " + filename);
 
         ioType = eHDF5;
         for (unsigned i = 0; i < 8 && datafile.good(); ++i)

@@ -43,9 +43,14 @@ namespace Nektar
     string EulerCFE::className = 
     SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
         "EulerCFE", EulerCFE::create, 
-        "Euler equations in conservative variables without "
-        "artificial diffusion.");
-    
+        "Euler equations in conservative variables.");
+
+    string EulerCFE::className2 =
+    SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
+        "EulerADCFE", EulerCFE::create,
+        "Euler equations in conservative variables with "
+        "artificial diffusion (deprecated).");
+
     EulerCFE::EulerCFE(
         const LibUtilities::SessionReaderSharedPtr& pSession)
     : CompressibleFlowSystem(pSession)

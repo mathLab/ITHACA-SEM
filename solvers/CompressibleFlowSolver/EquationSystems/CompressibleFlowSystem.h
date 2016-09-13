@@ -36,6 +36,7 @@
 #ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_COMPRESSIBLEFLOWSYSTEM_H
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_COMPRESSIBLEFLOWSYSTEM_H
 
+#include <CompressibleFlowSolver/ArtificialDiffusion/ArtificialDiffusion.h>
 #include <CompressibleFlowSolver/Misc/VariableConverter.h>
 #include <CompressibleFlowSolver/BoundaryConditions/CFSBndCond.h>
 #include <SolverUtils/UnsteadySystem.h>
@@ -68,16 +69,15 @@ namespace Nektar
     protected:
         SolverUtils::AdvectionSharedPtr     m_advection;
         SolverUtils::DiffusionSharedPtr     m_diffusion;
+        ArtificialDiffusionSharedPtr        m_artificialDiffusion;
         Array<OneD, Array<OneD, NekDouble> >m_vecLocs;
         NekDouble                           m_gamma;
         NekDouble                           m_pInf;
         NekDouble                           m_rhoInf;
         NekDouble                           m_UInf;
         std::string                         m_ViscosityType;
+        std::string                         m_shockCaptureType;
         NekDouble                           m_mu;
-        NekDouble                           m_Skappa;
-        NekDouble                           m_Kappa;
-        NekDouble                           m_mu0;
         NekDouble                           m_thermalConductivity;
         NekDouble                           m_Cp;
         NekDouble                           m_Prandtl;
@@ -107,7 +107,7 @@ namespace Nektar
 
         void InitialiseParameters();
 
-        void InitAdvectionDiffusion();
+        void InitAdvection();
 
         void DoOdeRhs(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
@@ -137,14 +137,6 @@ namespace Nektar
         void GetFluxVectorDeAlias(
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
-        void GetViscousFluxVector(
-            const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
-        void GetViscousFluxVectorDeAlias(
-            const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
 
         void InitializeSteadyState();
 

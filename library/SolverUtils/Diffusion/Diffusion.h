@@ -115,11 +115,6 @@ namespace Nektar
                 m_fluxVectorNS = fluxVector;
             }
 
-            inline void SetRiemannSolver(RiemannSolverSharedPtr riemann)
-            {
-                m_riemann = riemann;
-            }
-
             inline void SetHomoDerivs(Array<OneD, Array<OneD, NekDouble> > &deriv)
             {
                 v_SetHomoDerivs(deriv);
@@ -133,7 +128,6 @@ namespace Nektar
         protected:
             DiffusionFluxVecCB              m_fluxVector;
             DiffusionFluxVecCBNS            m_fluxVectorNS;
-            RiemannSolverSharedPtr          m_riemann;
             DiffusionArtificialDiffusion    m_ArtificialDiffusionVector;
 
             virtual void v_InitObject(

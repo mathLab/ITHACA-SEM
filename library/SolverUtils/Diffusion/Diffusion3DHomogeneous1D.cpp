@@ -115,28 +115,9 @@ namespace Nektar
             m_planeCounter = 0;
             m_planeDiff->SetFluxVectorNS(m_fluxVectorNS);
 
-            if (m_riemann)
-            {
-                // Set Riemann solver and flux vector callback for this plane.
-                m_planeDiff->SetRiemannSolver(m_riemann);
-
-                // Override Riemann solver scalar and vector callbacks.
-                map<string, RSScalarFuncType>::iterator it1;
-                map<string, RSScalarFuncType> scalars = m_riemann->GetScalars();
-
-                for (it1 = scalars.begin(); it1 != scalars.end(); ++it1)
-                {
-                    boost::shared_ptr<HomoRSScalar> tmp =
-                        MemoryManager<HomoRSScalar>
-                            ::AllocateSharedPtr(it1->second, m_numPlanes);
-                    m_riemann->SetScalar(it1->first, &HomoRSScalar::Exec, tmp);
-                }
-            }
-
             m_fieldsPlane   = Array<OneD, MultiRegions::ExpListSharedPtr>
                                                             (nConvectiveFields);
-            
-            
+
             if (m_fluxVectorNS)
             {
                 m_inarrayPlane  = Array<OneD, Array<OneD, NekDouble> >

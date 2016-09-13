@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File EulerArtificialDiffusionCFE.h
+// File: SmoothShockCapture.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,75 +29,64 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in conservative variables with artificial
-// diffusion
+// Description: Smooth artificial diffusion for shock capture
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERADCFE_H
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERADCFE_H
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_ARTIFICIALDIFFUSION_SMOOTH
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_ARTIFICIALDIFFUSION_SMOOTH
 
-#include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
+#include "ArtificialDiffusion.h"
+
 
 namespace Nektar
 {
 
-    /**
-     * 
-     * 
-     **/
-    class EulerADCFE : public CompressibleFlowSystem
-    {
+/**
+* @brief Wall boundary conditions for compressible flow problems.
+*/
+class SmoothShockCapture : public ArtificialDiffusion
+{
     public:
-        friend class MemoryManager<EulerADCFE>;
+
+        friend class MemoryManager<SmoothShockCapture>;
 
         /// Creates an instance of this class
-        static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+        static ArtificialDiffusionSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                const int spacedim)
         {
-            SolverUtils::EquationSystemSharedPtr p = MemoryManager<
-                EulerADCFE>::AllocateSharedPtr(pSession);
-            p->InitObject();
+            ArtificialDiffusionSharedPtr p = MemoryManager<SmoothShockCapture>::
+                                AllocateSharedPtr(pSession, pFields, spacedim);
             return p;
         }
-        /// Name of class
+
+        ///Name of the class
         static std::string className;
-    
-        virtual ~EulerADCFE();
 
     protected:
-        EulerADCFE(
-            const LibUtilities::SessionReaderSharedPtr& pSession);
 
-        virtual void v_InitObject();
-
-        virtual void v_DoDiffusion(
+        virtual void v_DoArtificialDiffusion(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray);
+            Array<OneD,       Array<OneD, NekDouble> > &outarray);
 
-        void GetSmoothArtificialViscosity(
+        virtual void v_GetArtificialViscosity(
             const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,             NekDouble  > &eps_bar);
+                  Array<OneD, NekDouble  >             &mu);
 
-        void GetArtificialDynamicViscosity(
-            const Array<OneD,  Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,              NekDouble>   &mu_var);
+    private:
+        SmoothShockCapture(const LibUtilities::SessionReaderSharedPtr& pSession,
+               const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+               const int spacedim);
+
+        virtual ~SmoothShockCapture(void){};
 
         void GetForcingTerm(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > outarrayForcing);
+};
 
-        virtual void v_ExtraFldOutput(
-            std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-            std::vector<std::string>             &variables);
-
-        NekDouble                           m_FacL;
-        NekDouble                           m_FacH;
-        NekDouble                           m_C1;
-        NekDouble                           m_C2;
-        NekDouble                           m_hFactor;
-        std::string                         m_shockCaptureType;
-        bool                                m_smoothDiffusion;
-    };
 }
+
 #endif

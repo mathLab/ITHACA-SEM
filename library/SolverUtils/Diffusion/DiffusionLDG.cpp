@@ -228,7 +228,7 @@ namespace Nektar
             int i, j;
             int nTracePts  = fields[0]->GetTrace()->GetTotPoints();
             int nvariables = fields.num_elements();
-            int nDim       = uflux.num_elements();
+            int nDim       = fields[0]->GetCoordim(0);;
 
             Array<OneD, NekDouble > Fwd     (nTracePts);
             Array<OneD, NekDouble > Bwd     (nTracePts);

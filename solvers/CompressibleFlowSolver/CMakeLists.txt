@@ -4,6 +4,9 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_COMPRESSIBLE_FLOW
 
 IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     SET(CompressibleFlowSolverSource 
+       ./ArtificialDiffusion/ArtificialDiffusion.cpp
+       ./ArtificialDiffusion/NonSmoothShockCapture.cpp
+       ./ArtificialDiffusion/SmoothShockCapture.cpp
        ./BoundaryConditions/CFSBndCond.cpp
        ./BoundaryConditions/ExtrapOrder0BC.cpp
        ./BoundaryConditions/IsentropicVortexBC.cpp
@@ -20,7 +23,6 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./CompressibleFlowSolver.cpp 
        ./EquationSystems/CompressibleFlowSystem.cpp
        ./EquationSystems/EulerCFE.cpp
-       ./EquationSystems/EulerADCFE.cpp
        ./EquationSystems/IsentropicVortex.cpp
        ./EquationSystems/NavierStokesCFE.cpp
        ./EquationSystems/RinglebFlow.cpp

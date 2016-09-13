@@ -66,11 +66,22 @@ namespace Nektar
   protected:
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
 
+    virtual void v_InitObject();
+
     virtual void v_DoDiffusion(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
+
+    void GetViscousFluxVector(
+        const Array<OneD, Array<OneD, NekDouble> >         &physfield,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
+    void GetViscousFluxVectorDeAlias(
+        const Array<OneD, Array<OneD, NekDouble> >         &physfield,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
   };
 }
 #endif

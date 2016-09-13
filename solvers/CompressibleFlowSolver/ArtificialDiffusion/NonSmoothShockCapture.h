@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File EulerCFE.h
+// File: NonSmoothShockCapture.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,40 +29,57 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in conservative variables without artificial diffusion
+// Description: NonSmooth artificial diffusion for shock capture
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERCFE_H
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERCFE_H
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_ARTIFICIALDIFFUSION_NONSMOOTH
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_ARTIFICIALDIFFUSION_NONSMOOTH
 
-#include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
+#include "ArtificialDiffusion.h"
+
 
 namespace Nektar
 {
 
-    class EulerCFE : public CompressibleFlowSystem
-    {
+/**
+* @brief Wall boundary conditions for compressible flow problems.
+*/
+class NonSmoothShockCapture : public ArtificialDiffusion
+{
     public:
-        friend class MemoryManager<EulerCFE>;
 
-        /// Creates an instance of this class.
-        static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+        friend class MemoryManager<NonSmoothShockCapture>;
+
+        /// Creates an instance of this class
+        static ArtificialDiffusionSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                const int spacedim)
         {
-            SolverUtils::EquationSystemSharedPtr p = MemoryManager<EulerCFE>::AllocateSharedPtr(pSession);
-            p->InitObject();
+            ArtificialDiffusionSharedPtr p =
+                                MemoryManager<NonSmoothShockCapture>::
+                                AllocateSharedPtr(pSession, pFields, spacedim);
             return p;
         }
-        /// Name of class.
-        static std::string className, className2;
 
-        virtual ~EulerCFE();
+        ///Name of the class
+        static std::string className;
 
     protected:
 
-        EulerCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
+        virtual void v_GetArtificialViscosity(
+            const Array<OneD, Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, NekDouble  >             &mu);
 
-    };
+    private:
+        NonSmoothShockCapture(const LibUtilities::SessionReaderSharedPtr& pSession,
+               const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+               const int spacedim);
+
+        virtual ~NonSmoothShockCapture(void){};
+};
+
 }
+
 #endif

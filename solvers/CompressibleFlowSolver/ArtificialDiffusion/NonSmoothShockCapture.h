@@ -43,7 +43,8 @@ namespace Nektar
 {
 
 /**
-* @brief Wall boundary conditions for compressible flow problems.
+ * @brief Non Smooth artificial diffusion for shock capture for compressible
+ * flow problems.
 */
 class NonSmoothShockCapture : public ArtificialDiffusion
 {

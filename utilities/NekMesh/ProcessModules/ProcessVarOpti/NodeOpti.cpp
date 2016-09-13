@@ -119,7 +119,10 @@ void NodeOpti2D2D::Optimise()
         node->m_x = xc + 1e-4*dir[i][0];
         node->m_y = yc + 1e-4*dir[i][1];
 
-        ReCalcMaps();
+        if(IsVertex())
+        {
+            ReCalcMaps();
+        }
 
         d.push_back(GetFunctional<2>(false,false));
     }
@@ -192,7 +195,10 @@ void NodeOpti2D2D::Optimise()
                 // Update node
                 node->m_x = xc + alpha * sk[0];
                 node->m_y = yc + alpha * sk[1];
-                ReCalcMaps();
+                if(IsVertex())
+                {
+                    ReCalcMaps();
+                }
 
                 newVal = GetFunctional<2>(false,false);
                 //dont need the hessian again this function updates G to be the new
@@ -223,7 +229,10 @@ void NodeOpti2D2D::Optimise()
             //choose whether to do forward or reverse line search
             node->m_x = xc + dk[0];
             node->m_y = yc + dk[1];
-            ReCalcMaps();
+            if(IsVertex())
+            {
+                ReCalcMaps();
+            }
             newVal = GetFunctional<2>(false,false);
 
             if(newVal <= currentW + c1() * (
@@ -235,13 +244,19 @@ void NodeOpti2D2D::Optimise()
                     // Update node
                     node->m_x = xc + alpha * dk[0];
                     node->m_y = yc + alpha * dk[1];
-                    ReCalcMaps();
+                    if(IsVertex())
+                    {
+                        ReCalcMaps();
+                    }
 
                     newVal = GetFunctional<2>(false,false);
 
                     node->m_x = xc + alpha/beta * dk[0];
                     node->m_y = yc + alpha/beta * dk[1];
-                    ReCalcMaps();
+                    if(IsVertex())
+                    {
+                        ReCalcMaps();
+                    }
 
                     NekDouble dbVal = GetFunctional<2>(false,false);
 
@@ -266,7 +281,10 @@ void NodeOpti2D2D::Optimise()
                     // Update node
                     node->m_x = xc + alpha * dk[0];
                     node->m_y = yc + alpha * dk[1];
-                    ReCalcMaps();
+                    if(IsVertex())
+                    {
+                        ReCalcMaps();
+                    }
 
                     newVal = GetFunctional<2>(false,false);
 
@@ -287,7 +305,10 @@ void NodeOpti2D2D::Optimise()
             //reset the node
             node->m_x = xc;
             node->m_y = yc;
-            ReCalcMaps();
+            if(IsVertex())
+            {
+                ReCalcMaps();
+            }
 
             mtx.lock();
             res->nReset++;

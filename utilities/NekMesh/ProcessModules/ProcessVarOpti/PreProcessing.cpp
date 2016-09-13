@@ -135,7 +135,6 @@ void ProcessVarOpti::BuildDerivUtil()
                     for(int j = 0; j < m_mesh->m_nummode+4; j++, ct++)
                     {
                         qds[ct] = qtmp[i]*qtmp[j];
-                        cout << qds[ct] << endl;
                     }
                 }
 

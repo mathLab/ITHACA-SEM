@@ -89,7 +89,7 @@ namespace Nektar
             mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
 
             ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
-            
+
             ReadCurves(doc);
             ReadEdges(doc);
             ReadElements(doc);
@@ -111,9 +111,9 @@ namespace Nektar
             ASSERTL0(field, "Unable to find EDGE tag in file.");
 
             string IsCompressed;
-            field->QueryStringAttribute("COMPRESSED",&IsCompressed); 
-                
-            if(IsCompressed.size()) 
+            field->QueryStringAttribute("COMPRESSED",&IsCompressed);
+
+            if(IsCompressed.size())
             {
                 ASSERTL0(boost::iequals(IsCompressed,
                             LibUtilities::CompressData::GetCompressString()),
@@ -165,7 +165,7 @@ namespace Nektar
                 /// ? being the element type.
                 /// Read the ID field first.
                 TiXmlElement *edge = field->FirstChildElement("E");
-                
+
                 /// Since all edge data is one big text block, we need to
                 /// accumulate all TINYXML_TEXT data and then parse it.  This
                 /// approach effectively skips all comments or other node
@@ -174,29 +174,29 @@ namespace Nektar
                 /// missing element numbers due to the text block format.
                 std::string edgeStr;
                 int indx;
-                
+
                 while(edge)
                 {
                     int err = edge->QueryIntAttribute("ID",&indx);
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
-                    
+
                     TiXmlNode *child = edge->FirstChild();
                     edgeStr.clear();
                     if (child->Type() == TiXmlNode::TINYXML_TEXT)
                     {
                     edgeStr += child->ToText()->ValueStr();
                     }
-                    
+
                     /// Now parse out the edges, three fields at a time.
                     int vertex1, vertex2;
                     std::istringstream edgeDataStrm(edgeStr.c_str());
-                    
+
                     try
                     {
                         while (!edgeDataStrm.fail())
                         {
                             edgeDataStrm >> vertex1 >> vertex2;
-                            
+
                             // Must check after the read because we may be
                             // at the end and not know it.  If we are at
                             // the end we will add a duplicate of the last
@@ -204,11 +204,11 @@ namespace Nektar
                             if (!edgeDataStrm.fail())
                             {
                                 PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
-                                
+
                                 SegGeomSharedPtr edge;
-                                
+
                                 it = m_curvedEdges.find(indx);
-                                
+
                                 if(it == m_curvedEdges.end())
                                 {
                                     edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
@@ -219,7 +219,7 @@ namespace Nektar
                                     edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, it->second);
                                     edge->SetGlobalID(indx); //Set global mesh id
                                 }
-                                
+
                                 m_segGeoms[indx] = edge;
                             }
                         }
@@ -228,7 +228,7 @@ namespace Nektar
                     {
                         NEKERROR(ErrorUtil::efatal, (std::string("Unable to read edge data: ") + edgeStr).c_str());
                     }
-                    
+
                     edge = edge->NextSiblingElement("E");
                 }
             }
@@ -257,14 +257,14 @@ namespace Nektar
             while (element)
             {
                 std::string elementType(element->ValueStr());
-                
+
                 ASSERTL0(elementType == "Q" || elementType == "T",
                          (std::string("Unknown 2D element type: ") + elementType).c_str());
-                
+
                 string IsCompressed;
-                element->QueryStringAttribute("COMPRESSED",&IsCompressed); 
-                
-                if(IsCompressed.size()) 
+                element->QueryStringAttribute("COMPRESSED",&IsCompressed);
+
+                if(IsCompressed.size())
                 {
                     ASSERTL0(boost::iequals(IsCompressed,
                             LibUtilities::CompressData:: GetCompressString()),
@@ -359,7 +359,7 @@ namespace Nektar
                                 };
 
                             QuadGeomSharedPtr quadgeom;
-                            if (it == m_curvedEdges.end())
+                            if (it == m_curvedFaces.end())
                             {
                                 quadgeom =
                                     MemoryManager<QuadGeom>::AllocateSharedPtr(
@@ -383,9 +383,9 @@ namespace Nektar
                     int indx;
                     int err = element->QueryIntAttribute("ID", &indx);
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
-                    
+
                     it = m_curvedFaces.find(indx);
-                
+
                     /// Read text element description.
                     TiXmlNode* elementChild = element->FirstChild();
                     std::string elementStr;
@@ -787,7 +787,7 @@ namespace Nektar
                     {
                         triGeomShPtr = boost::dynamic_pointer_cast<TriGeom>(*geomIter);
                         quadGeomShPtr = boost::dynamic_pointer_cast<QuadGeom>(*geomIter);
-                        
+
                         if (triGeomShPtr || quadGeomShPtr)
                         {
                             int edgeNum;
@@ -963,7 +963,7 @@ namespace Nektar
                 const LibUtilities::PointsKey pkey(numpoints,expansion->m_basisKeyVector[edge_id].GetPointsType());
                 return LibUtilities::BasisKey(expansion->m_basisKeyVector[edge_id].GetBasisType(),nummodes,pkey);
             }
-            
+
             ASSERTL0(false, "Unable to determine edge points type.");
             return LibUtilities::NullBasisKey;
         }

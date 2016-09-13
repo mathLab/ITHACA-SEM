@@ -85,7 +85,7 @@ public:
 
     void CalcMap()
     {
-        maps = MappingIdealToRef();
+        //maps = MappingIdealToRef();
     }
 
 private:
@@ -96,6 +96,7 @@ private:
     int m_dim;
     int m_mode;
     std::map<int,int> m_idmap;
+    std::vector<std::vector<std::vector<Array<OneD, NekDouble> > > > mapder;
 
     DerivUtilSharedPtr derivUtil;
     ResidualSharedPtr res;

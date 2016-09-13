@@ -97,6 +97,8 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             xyz[i] = x;
         }
 
+        vector<DNekMat> tmp;
+
         for (int i = 0; i < derivUtil->ptsHigh; ++i)
         {
             NekDouble a1  = 0.5 * (1 - derivUtil->ptx[i]);
@@ -117,6 +119,8 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
                      + 0.5 * a2 * xyz[2][1] + 0.5 * a1 * xyz[3][1];
 
             J.Invert();
+
+            tmp.push_back(J);
 
             Array<OneD, NekDouble> r(10,0.0); //store det in 10th entry
 
@@ -495,7 +499,7 @@ void ElUtil::Evaluate()
     res->worstJac = min(res->worstJac,mn/mx);
     mtx2.unlock();
 
-    maps = MappingIdealToRef();
+    //maps = MappingIdealToRef();
 
     minJac = mn;
     scaledJac = mn/mx;

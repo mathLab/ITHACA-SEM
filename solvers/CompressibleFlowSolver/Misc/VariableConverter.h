@@ -94,6 +94,11 @@ namespace Nektar
         void GetAbsoluteVelocity(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,                   NekDouble>   &Vtot);
+        void GetSensor(
+            const MultiRegions::ExpListSharedPtr             &field,
+            const Array<OneD, const Array<OneD, NekDouble> > &physarray,
+                  Array<OneD,                   NekDouble>   &Sensor,
+                  Array<OneD,                   NekDouble>   &SensorKappa);
 
     protected:
         LibUtilities::SessionReaderSharedPtr m_session;
@@ -104,6 +109,9 @@ namespace Nektar
         NekDouble                            m_gasConstant;
         NekDouble                            m_mu;
         NekDouble                            m_thermalConductivity;
+        NekDouble                            m_Skappa;
+        NekDouble                            m_Kappa;
+        NekDouble                            m_mu0;
     };
 }
 #endif

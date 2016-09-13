@@ -189,7 +189,7 @@ namespace Nektar
         m_varConv->GetPressure(inarray, pressure);
         m_varConv->GetSoundSpeed(inarray, pressure, soundspeed);
         m_varConv->GetAbsoluteVelocity(inarray, absVelocity);
-        GetSensor(inarray, Sensor, SensorKappa);
+        m_varConv->GetSensor(m_fields[0], inarray, Sensor, SensorKappa);
 
         // Determine the maximum wavespeed
         Vmath::Vadd(nPts, absVelocity, 1, soundspeed, 1, Lambda, 1);
@@ -231,7 +231,7 @@ namespace Nektar
         Array<OneD, NekDouble > SensorKappa(nPts, 0.0);
 
         // Calculate sensor
-        GetSensor(physfield, sensor, SensorKappa);
+        m_varConv->GetSensor(m_fields[0], physfield, sensor, SensorKappa);
 
         NekDouble ThetaH = m_FacH;
         NekDouble ThetaL = m_FacL;
@@ -269,7 +269,7 @@ namespace Nektar
         Array<OneD, NekDouble> Sensor     (nTotQuadPoints, 0.0);
         Array<OneD, NekDouble> SensorKappa(nTotQuadPoints, 0.0);
 
-        GetSensor          (physfield, Sensor, SensorKappa);
+        m_varConv->GetSensor(m_fields[0], physfield, Sensor, SensorKappa);
 
         for (int e = 0; e < nElements; e++)
         {

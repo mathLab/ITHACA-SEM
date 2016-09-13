@@ -70,6 +70,11 @@ namespace Nektar
             Cp = m_gamma / (m_gamma - 1.0) * m_gasConstant;
             m_thermalConductivity = Cp * m_mu / Pr;
         }
+
+        // Parameters for sensor
+        m_session->LoadParameter ("Skappa",        m_Skappa,        -2.048);
+        m_session->LoadParameter ("Kappa",         m_Kappa,         0.0);
+        m_session->LoadParameter ("mu0",           m_mu0,           1.0);
     }
 
     /**
@@ -324,6 +329,136 @@ namespace Nektar
         }
 
         Vmath::Vsqrt(nPts,Vtot,1,Vtot,1);
+    }
+
+    void VariableConverter::GetSensor(
+        const MultiRegions::ExpListSharedPtr             &field,
+        const Array<OneD, const Array<OneD, NekDouble> > &physarray,
+              Array<OneD,                   NekDouble>   &Sensor,
+              Array<OneD,                   NekDouble>   &SensorKappa)
+    {
+        int e, NumModesElement, nQuadPointsElement;
+        int nTotQuadPoints  = field->GetTotPoints();
+        int nElements       = field->GetExpSize();
+
+        // Find solution (SolP) at p = P;
+        // The input array (physarray) is the solution at p = P;
+
+        Array<OneD,int> ExpOrderElement = field->EvalBasisNumModesMaxPerExp();
+
+        Array<OneD, NekDouble> SolP    (nTotQuadPoints, 0.0);
+        Array<OneD, NekDouble> SolPmOne(nTotQuadPoints, 0.0);
+        Array<OneD, NekDouble> SolNorm (nTotQuadPoints, 0.0);
+
+        Vmath::Vcopy(nTotQuadPoints, physarray[0], 1, SolP, 1);
+
+        int CoeffsCount = 0;
+
+        for (e = 0; e < nElements; e++)
+        {
+            NumModesElement        = ExpOrderElement[e];
+            int nQuadPointsElement = field->GetExp(e)->GetTotPoints();
+            int nCoeffsElement     = field->GetExp(e)->GetNcoeffs();
+            int numCutOff          = NumModesElement - 1;
+
+            // Set-up of the Orthogonal basis for a Quadrilateral element which
+            // is needed to obtain thesolution at P =  p - 1;
+
+            Array<OneD, NekDouble> SolPElementPhys  (nQuadPointsElement, 0.0);
+            Array<OneD, NekDouble> SolPElementCoeffs(nCoeffsElement,     0.0);
+
+            Array<OneD, NekDouble> SolPmOneElementPhys(nQuadPointsElement, 0.0);
+            Array<OneD, NekDouble> SolPmOneElementCoeffs(nCoeffsElement, 0.0);
+
+            // create vector the save the solution points per element at P = p;
+
+            for (int i = 0; i < nQuadPointsElement; i++)
+            {
+                SolPElementPhys[i] = SolP[CoeffsCount+i];
+            }
+
+            field->GetExp(e)->FwdTrans(SolPElementPhys,
+                                             SolPElementCoeffs);
+
+            // ReduceOrderCoeffs reduces the polynomial order of the solution
+            // that is represented by the coeffs given as an inarray. This is
+            // done by projecting the higher order solution onto the orthogonal
+            // basis and padding the higher order coefficients with zeros.
+
+            field->GetExp(e)->ReduceOrderCoeffs(numCutOff,
+                                                      SolPElementCoeffs,
+                                                      SolPmOneElementCoeffs);
+
+            field->GetExp(e)->BwdTrans(SolPmOneElementCoeffs,
+                                             SolPmOneElementPhys);
+
+            for (int i = 0; i < nQuadPointsElement; i++)
+            {
+                SolPmOne[CoeffsCount+i] = SolPmOneElementPhys[i];
+            }
+
+            NekDouble SolPmeanNumerator   = 0.0;
+            NekDouble SolPmeanDenumerator = 0.0;
+
+            // Determining the norm of the numerator of the Sensor
+
+            Vmath::Vsub(nQuadPointsElement,
+                        SolPElementPhys, 1,
+                        SolPmOneElementPhys, 1,
+                        SolNorm, 1);
+
+            Vmath::Vmul(nQuadPointsElement,
+                        SolNorm, 1,
+                        SolNorm, 1,
+                        SolNorm, 1);
+
+            for (int i = 0; i < nQuadPointsElement; i++)
+            {
+                SolPmeanNumerator   += SolNorm[i];
+                SolPmeanDenumerator += SolPElementPhys[i];
+            }
+
+            for (int i = 0; i < nQuadPointsElement; ++i)
+            {
+                Sensor[CoeffsCount+i] =
+                    sqrt(SolPmeanNumerator / nQuadPointsElement) /
+                    sqrt(SolPmeanDenumerator / nQuadPointsElement);
+
+                Sensor[CoeffsCount+i] = log10(Sensor[CoeffsCount+i]);
+            }
+            CoeffsCount += nQuadPointsElement;
+        }
+
+        CoeffsCount = 0.0;
+
+        for (e = 0; e < nElements; e++)
+        {
+            NumModesElement    = ExpOrderElement[e];
+            NekDouble ThetaS   = m_mu0;
+            NekDouble Phi0     = m_Skappa;
+            NekDouble DeltaPhi = m_Kappa;
+            nQuadPointsElement = field->GetExp(e)->GetTotPoints();
+
+            for (int i = 0; i < nQuadPointsElement; i++)
+            {
+                if (Sensor[CoeffsCount+i] <= (Phi0 - DeltaPhi))
+                {
+                    SensorKappa[CoeffsCount+i] = 0;
+                }
+                else if(Sensor[CoeffsCount+i] >= (Phi0 + DeltaPhi))
+                {
+                    SensorKappa[CoeffsCount+i] = ThetaS;
+                }
+                else if(abs(Sensor[CoeffsCount+i]-Phi0) < DeltaPhi)
+                {
+                    SensorKappa[CoeffsCount+i] =
+                        ThetaS / 2 * (1 + sin(M_PI * (Sensor[CoeffsCount+i] -
+                                                      Phi0) / (2 * DeltaPhi)));
+                }
+            }
+
+            CoeffsCount += nQuadPointsElement;
+        }
     }
 
 }

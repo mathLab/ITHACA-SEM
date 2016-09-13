@@ -159,11 +159,6 @@ namespace Nektar
         virtual bool v_PostIntegrate(int step);
         bool CalcSteadyState(bool output);
 
-        void GetSensor(
-            const Array<OneD, const Array<OneD, NekDouble> > &physarray,
-                  Array<OneD,                   NekDouble>   &Sensor,
-                  Array<OneD,                   NekDouble>   &SensorKappa);
-
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
         virtual void v_SetInitialConditions(

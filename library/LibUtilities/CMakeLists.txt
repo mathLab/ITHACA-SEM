@@ -140,7 +140,6 @@ SET(FoundationHeaders
     ./Foundations/NodalTetSPI.h
     ./Foundations/NodalPrismSPI.h
     ./Foundations/NodalTetSPIData.h
-    ./Foundations/NodalPrismSPIData.h
     ./Foundations/NodalUtil.h
     ./Foundations/PhysGalerkinProject.h
     ./Foundations/Points.h

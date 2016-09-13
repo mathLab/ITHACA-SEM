@@ -37,7 +37,7 @@
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
-#include <LibUtilities/Foundations/NodalPrismSPIData.h>
+#include <LibUtilities/Foundations/NodalTriSPIData.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
@@ -50,50 +50,57 @@ namespace Nektar
             // Allocate the storage for points
             unsigned int numPoints = GetNumPoints();
 
+            PointsKey e(numPoints,eGaussLobattoLegendre);
+            Array<OneD, NekDouble> gll;
+            PointsManager()[e]->GetPoints(gll);
+
             for(int i = 0; i < 3; i++)
             {
-                m_points[i] = Array<OneD, DataType>(NodalPrismSPINPTS[numPoints-2]);
+                m_points[i] = Array<OneD, DataType>(NodalTriSPINPTS[numPoints-2]*numPoints);
             }
 
-            int index=0;
-
-            // initialize values
-            for(unsigned int i=0; i < numPoints-2; ++i)
+            for(int j = 0; j < numPoints; j++)
             {
-                index += NodalPrismSPINPTS[i];
+                int index=0;
+                for(unsigned int i=0; i < numPoints-2; ++i)
+                {
+                    index += NodalTriSPINPTS[i];
+                }
+                for(int i = 0; i < NodalTriSPINPTS[numPoints-2]; i++)
+                {
+                    //need to flip y and z because of quad orientation
+                    m_points[0][i + j*numPoints] = NodalTriSPIData[index][0];
+                    m_points[1][i + j*numPoints] = gll[j];
+                    m_points[2][i + j*numPoints] = NodalTriSPIData[index][1];
+                    index++;
+                }
             }
-
-            for(int i = 0; i < NodalPrismSPINPTS[numPoints-2]; i++)
-            {
-                //need to flip y and z because of quad orientation
-                m_points[0][i] = NodalPrismSPIData[index][0];
-                m_points[1][i] = NodalPrismSPIData[index][2];
-                m_points[2][i] = NodalPrismSPIData[index][1];
-                index++;
-            }
-
-
-           //exit(0);
+// exit(0);
         }
 
         void NodalPrismSPI::CalculateWeights()
         {
             unsigned int numPoints = GetNumPoints();
 
-            m_weights = Array<OneD, DataType>(NodalPrismSPINPTS[numPoints-2]);
+            m_weights = Array<OneD, DataType>(NodalTriSPINPTS[numPoints-2]*numPoints);
 
-            int index=0;
+            PointsKey e(numPoints,eGaussLobattoLegendre);
+            Array<OneD, NekDouble> gll = PointsManager()[e]->GetW();
 
-            // initialize values
-            for(unsigned int i=0; i < numPoints-2; ++i)
+            NekDouble tot = 0.0;
+            for(int j = 0; j < numPoints; j++)
             {
-                index += NodalPrismSPINPTS[i];
-            }
-
-            for(int i = 0; i < NodalPrismSPINPTS[numPoints-2]; i++)
-            {
-                m_weights[i] = NodalPrismSPIData[index][3];
-                index++;
+                int index=0;
+                for(unsigned int i=0; i < numPoints-2; ++i)
+                {
+                    index += NodalTriSPINPTS[i];
+                }
+                for(int i = 0; i < NodalTriSPINPTS[numPoints-2]; i++)
+                {
+                    m_weights[i + j*numPoints] = NodalTriSPIData[index][2] * gll[j];
+                    tot += m_weights[i + j*numPoints];
+                    index++;
+                }
             }
         }
 

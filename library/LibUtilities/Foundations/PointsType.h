@@ -71,7 +71,6 @@ namespace Nektar
             eNodalTriFekete,                //!<  2D Nodal Fekete Points on a Triangle
             eNodalTriSPI,                   //!<  2D Nodal Symmetric positive internal triangle (Whitherden, Vincent)
             eNodalTriEvenlySpaced,          //!<  2D Evenly-spaced points on a Triangle
-            eNodalQuadSPI,                  //!<  2d spi on quad
             eNodalTetEvenlySpaced,          //!<  3D Evenly-spaced points on a Tetrahedron
             eNodalTetElec,                  //!<  3D Nodal Electrostatic Points on a Tetrahedron
             eNodalTetSPI,                   //!<  3D Nodal Symmetric positive internal tet (Whitherden, Vincent)

@@ -65,6 +65,8 @@ public:
             data[e[i]->GetEl()->GetShapeType()].push_back(e[i]);
         }
 
+        vertex = false;
+
         //std::map<LibUtilities::ShapeType,std::vector<ElUtilSharedPtr> >::iterator typeIt;
         //for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
         //{
@@ -80,6 +82,16 @@ public:
     virtual void Optimise() = 0;
     NodeOptiJob *GetJob();
 
+    void SetVertex()
+    {
+        vertex = true;
+    }
+
+    bool IsVertex()
+    {
+        return vertex;
+    }
+
 protected:
 
     template<int DIM> NekDouble GetFunctional(bool gradient = true,
@@ -89,8 +101,11 @@ protected:
     std::map<LibUtilities::ShapeType,std::vector<ElUtilSharedPtr> > data;
     Array<OneD, NekDouble> G;
 
+    bool vertex;
+
     void CalcMinJac();
     bool Linear();
+    void ReCalcMaps();
 
     template<int DIM> int IsIndefinite();
     template<int DIM> void MinEigen(NekDouble &val, Array<OneD, NekDouble> &vec);

@@ -83,6 +83,11 @@ public:
         return m_idmap[in];
     }
 
+    void CalcMap()
+    {
+        maps = MappingIdealToRef();
+    }
+
 private:
 
     std::vector<Array<OneD, NekDouble> > MappingIdealToRef();

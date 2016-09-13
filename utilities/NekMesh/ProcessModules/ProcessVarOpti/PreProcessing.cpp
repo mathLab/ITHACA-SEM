@@ -96,15 +96,17 @@ void ProcessVarOpti::BuildDerivUtil()
                 LibUtilities::ShapeType st = LibUtilities::eQuadrilateral;
                 derivUtil[st] = boost::shared_ptr<DerivUtil>(new DerivUtil);
                 derivUtil[st]->ptsLow  = m_mesh->m_nummode*m_mesh->m_nummode;
+                derivUtil[st]->ptsHigh = (m_mesh->m_nummode+4)*(m_mesh->m_nummode+4);
 
                 LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                               LibUtilities::eGaussLobattoLegendre);
                 LibUtilities::PointsKey pkey2(m_mesh->m_nummode + 4,
-                                              LibUtilities::eNodalQuadSPI);
-                Array<OneD, NekDouble> u1(derivUtil[st]->ptsLow), v1(derivUtil[st]->ptsLow), u2, v2, tmp;
+                                              LibUtilities::eGaussLobattoLegendre);
+                Array<OneD, NekDouble> u1(derivUtil[st]->ptsLow), v1(derivUtil[st]->ptsLow),
+                                       u2(derivUtil[st]->ptsHigh), v2(derivUtil[st]->ptsHigh), tmp, tmp2;
 
                 LibUtilities::PointsManager()[pkey1]->GetPoints(tmp);
-                LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2);
+                LibUtilities::PointsManager()[pkey2]->GetPoints(tmp2);
 
                 //Get curved nodes ordering for a Quadrilateral is left to right
                 //ordering so the we need to use gll and redistrobute it.
@@ -117,7 +119,25 @@ void ProcessVarOpti::BuildDerivUtil()
                     }
                 }
 
-                derivUtil[st]->ptsHigh = u2.num_elements();
+                for(int i = 0, ct = 0; i < m_mesh->m_nummode+4; i++)
+                {
+                    for(int j = 0; j < m_mesh->m_nummode+4; j++, ct++)
+                    {
+                        u2[ct] = tmp2[j];
+                        v2[ct] = tmp2[i];
+                    }
+                }
+
+                Array<OneD, NekDouble> qtmp = LibUtilities::PointsManager()[pkey2]->GetW();
+                Array<OneD, NekDouble> qds(derivUtil[st]->ptsHigh);
+                for(int i = 0, ct = 0; i < m_mesh->m_nummode+4; i++)
+                {
+                    for(int j = 0; j < m_mesh->m_nummode+4; j++, ct++)
+                    {
+                        qds[ct] = qtmp[i]*qtmp[j];
+                        cout << qds[ct] << endl;
+                    }
+                }
 
                 LibUtilities::NodalUtilQuad nodalQuad(
                     m_mesh->m_nummode - 1, u1, v1);
@@ -139,7 +159,7 @@ void ProcessVarOpti::BuildDerivUtil()
                 derivUtil[st]->VdmD[0] = interp * derivUtil[st]->VdmDL[0];
                 derivUtil[st]->VdmD[1] = interp * derivUtil[st]->VdmDL[1];
                 //derivUtil->quadW = LibUtilities::MakeQuadratureWeights(U2,V1);
-                Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
+                //Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
                 NekVector<NekDouble> quadWi(qds);
                 derivUtil[st]->quadW = quadWi;
 

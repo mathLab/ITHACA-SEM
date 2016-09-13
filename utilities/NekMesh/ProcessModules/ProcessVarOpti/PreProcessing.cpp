@@ -217,7 +217,7 @@ void ProcessVarOpti::BuildDerivUtil()
                 derivUtil[st]->ptsLow  = m_mesh->m_nummode*m_mesh->m_nummode*(m_mesh->m_nummode+1)/2;
                 LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                               LibUtilities::eNodalPrismElec);
-                LibUtilities::PointsKey pkey2(m_mesh->m_nummode+4,
+                LibUtilities::PointsKey pkey2(m_mesh->m_nummode+3,
                                               LibUtilities::eNodalPrismSPI);
                 Array<OneD, NekDouble> u1, v1, u2, v2, w1, w2;
                 LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
@@ -251,6 +251,8 @@ void ProcessVarOpti::BuildDerivUtil()
                 Array<OneD, NekDouble> qds = LibUtilities::PointsManager()[pkey2]->GetW();
                 NekVector<NekDouble> quadWi(qds);
                 derivUtil[st]->quadW = quadWi;
+
+                cout << quadWi << endl;
 
                 derivUtil[st]->ptx = u2;
                 derivUtil[st]->pty = v2;

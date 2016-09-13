@@ -434,7 +434,7 @@ void ElUtil::Evaluate()
 
         Array<OneD, NekDouble> jacs(nodes.size());
 
-        if(m_el->GetShapeType() == LibUtilities::ePrism)
+        /*if(m_el->GetShapeType() == LibUtilities::ePrism)
         {
             cout << endl;
 
@@ -449,7 +449,7 @@ void ElUtil::Evaluate()
             Array<OneD, NekDouble> phys(xmap->GetTotPoints());
             xmap->BwdTrans(coeff, phys);
 
-            LibUtilities::PointsKey pkey1(4,
+            LibUtilities::PointsKey pkey1(5,
                                           LibUtilities::eNodalPrismElec);
             Array<OneD, NekDouble> u1, v1, w1;
             LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
@@ -467,7 +467,7 @@ void ElUtil::Evaluate()
                 mn2 = min(mn2,jacs[i]);
 
             }
-        }
+        }*/
 
         for(int j = 0; j < nodes.size(); j++)
         {
@@ -485,19 +485,19 @@ void ElUtil::Evaluate()
             NekDouble jacDet = dxdz(0,0)*(dxdz(1,1)*dxdz(2,2)-dxdz(2,1)*dxdz(1,2))
                               -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
                               +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
-            if(m_el->GetShapeType() == LibUtilities::ePrism)
+            /*if(m_el->GetShapeType() == LibUtilities::ePrism)
             {
                 cout << jacDet << " " << jacs[j] << endl;
-            }
+            }*/
             mx = max(mx,jacDet);
             mn = min(mn,jacDet);
         }
 
-        if(m_el->GetShapeType() == LibUtilities::ePrism)
+        /*if(m_el->GetShapeType() == LibUtilities::ePrism)
         {
             cout << endl << mn/mx << " " << mn2/mx2 << endl;
             exit(-1);
-        }
+        }*/
 
                 /*NekVector<NekDouble> x1i2(derivUtil->ptsHigh),y1i2(derivUtil->ptsHigh),z1i2(derivUtil->ptsHigh),
                              x2i2(derivUtil->ptsHigh),y2i2(derivUtil->ptsHigh),z2i2(derivUtil->ptsHigh),

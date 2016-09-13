@@ -267,14 +267,15 @@ Note that the Continuous projection is not supported in the Compressible Flow So
 \item \inltt{FRcmin} (Flux-Reconstruction with $c = c_{min}$);
 \item \inltt{FRcinf} (Flux-Reconstruction with $c = \infty$).
 \end{itemize}
-\item \inltt{DiffusionType} is the diffusion operator we want to use:
+\item \inltt{DiffusionType} is the diffusion operator we want to use
+for the Navier-Stokes equations:
 \begin{itemize}
-\item \inltt{WeakDG} (classical DG in weak form);
-\item \inltt{FRDG} (Flux-Reconstruction recovering nodal DG scheme);
-\item \inltt{FRSD} (Flux-Reconstruction recovering a spectral difference (SD) scheme);
-\item \inltt{FRHU} (Flux-Reconstruction recovering Huynh (G2) scheme);
-\item \inltt{FRcmin} (Flux-Reconstruction with $c = c_{min}$);
-\item \inltt{FRcinf} (Flux-Reconstruction with $c = \infty$).
+\item \inltt{LDGNS} (LDG);
+\item \inltt{LFRDGNS} (Flux-Reconstruction recovering nodal DG scheme);
+\item \inltt{LFRSDNS} (Flux-Reconstruction recovering a spectral difference (SD) scheme);
+\item \inltt{LFRHUNS} (Flux-Reconstruction recovering Huynh (G2) scheme);
+\item \inltt{LFRcminNS} (Flux-Reconstruction with $c = c_{min}$);
+\item \inltt{LFRcinfNS} (Flux-Reconstruction with $c = \infty$).
 \end{itemize}
 \item \inltt{TimeIntegrationMethod} is the time-integration scheme we want to use. 
 Note that only an explicit discretisation is supported:

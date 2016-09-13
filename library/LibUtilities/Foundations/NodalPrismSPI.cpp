@@ -59,19 +59,19 @@ namespace Nektar
                 m_points[i] = Array<OneD, DataType>(NodalTriSPINPTS[numPoints-2]*numPoints);
             }
 
-            for(int j = 0; j < numPoints; j++)
+            for(int j = 0, ct = 0; j < numPoints; j++)
             {
                 int index=0;
                 for(unsigned int i=0; i < numPoints-2; ++i)
                 {
                     index += NodalTriSPINPTS[i];
                 }
-                for(int i = 0; i < NodalTriSPINPTS[numPoints-2]; i++)
+                for(int i = 0; i < NodalTriSPINPTS[numPoints-2]; i++, ct++)
                 {
                     //need to flip y and z because of quad orientation
-                    m_points[0][i + j*numPoints] = NodalTriSPIData[index][0];
-                    m_points[1][i + j*numPoints] = gll[j];
-                    m_points[2][i + j*numPoints] = NodalTriSPIData[index][1];
+                    m_points[0][ct] = NodalTriSPIData[index][0];
+                    m_points[1][ct] = gll[j];
+                    m_points[2][ct] = NodalTriSPIData[index][1];
                     index++;
                 }
             }
@@ -87,18 +87,16 @@ namespace Nektar
             PointsKey e(numPoints,eGaussLobattoLegendre);
             Array<OneD, NekDouble> gll = PointsManager()[e]->GetW();
 
-            NekDouble tot = 0.0;
-            for(int j = 0; j < numPoints; j++)
+            for(int j = 0, ct = 0; j < numPoints; j++)
             {
                 int index=0;
                 for(unsigned int i=0; i < numPoints-2; ++i)
                 {
                     index += NodalTriSPINPTS[i];
                 }
-                for(int i = 0; i < NodalTriSPINPTS[numPoints-2]; i++)
+                for(int i = 0; i < NodalTriSPINPTS[numPoints-2]; i++, ct++)
                 {
-                    m_weights[i + j*numPoints] = NodalTriSPIData[index][2] * gll[j];
-                    tot += m_weights[i + j*numPoints];
+                    m_weights[ct] = NodalTriSPIData[index][2] * gll[j];
                     index++;
                 }
             }

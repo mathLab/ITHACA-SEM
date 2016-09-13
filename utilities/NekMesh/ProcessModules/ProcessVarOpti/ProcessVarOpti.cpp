@@ -208,11 +208,6 @@ void ProcessVarOpti::Process()
             ns.push_back(
                 GetNodeOptiFactory().CreateInstance(
                     optiType, freenodes[i][j], it->second, res, derivUtil, opti));
-
-            if(freenodes[i][j]->m_id < m_mesh->m_vertexSet.size())
-            {
-                ns.back()->SetVertex();
-            }
         }
         optiNodes.push_back(ns);
     }

@@ -81,18 +81,6 @@ void NodeOpti::CalcMinJac()
     }
 }
 
-void NodeOpti::ReCalcMaps()
-{
-    std::map<LibUtilities::ShapeType,std::vector<ElUtilSharedPtr> >::iterator typeIt;
-    for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
-    {
-        for(int i = 0; i < typeIt->second.size(); i++)
-        {
-            typeIt->second[i]->CalcMap();
-        }
-    }
-}
-
 int NodeOpti2D2D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
     22, NodeOpti2D2D::create, "2D2D");
 
@@ -107,37 +95,15 @@ void NodeOpti2D2D::Optimise()
 {
     CalcMinJac();
 
-    NekDouble currentW = GetFunctional<2>(false,false);
+    NekDouble currentW = GetFunctional<2>();
     NekDouble newVal;
-
-    NekDouble xc       = node->m_x;
-    NekDouble yc       = node->m_y;
-
-    vector<NekDouble> d;
-    for(int i = 0; i < 6; i++)
-    {
-        node->m_x = xc + 1e-4*dir[i][0];
-        node->m_y = yc + 1e-4*dir[i][1];
-
-        if(IsVertex())
-        {
-            ReCalcMaps();
-        }
-
-        d.push_back(GetFunctional<2>(false,false));
-    }
-
-    G = Array<OneD, NekDouble>(5);
-    G[0] = (d[1] - d[3]) / 2e-4;
-    G[1] = (d[2] - d[4]) / 2e-4;
-    G[2] = (d[1] + d[3] - 2*currentW) / 1e-8;
-    G[3] = (d[0] - d[1] - d[2] + 2*currentW - d[3] - d[4] + d[5]) / 2e-8;
-    G[4] = (d[2] + d[4] - 2*currentW) / 1e-8;
 
     // Gradient already zero
     if (G[0]*G[0] + G[1]*G[1] > gradTol())
     {
         //needs to optimise
+        NekDouble xc       = node->m_x;
+        NekDouble yc       = node->m_y;
 
         Array<OneD, NekDouble> sk(2), dk(2);
         bool DNC = false;
@@ -195,10 +161,6 @@ void NodeOpti2D2D::Optimise()
                 // Update node
                 node->m_x = xc + alpha * sk[0];
                 node->m_y = yc + alpha * sk[1];
-                if(IsVertex())
-                {
-                    ReCalcMaps();
-                }
 
                 newVal = GetFunctional<2>(false,false);
                 //dont need the hessian again this function updates G to be the new
@@ -229,10 +191,7 @@ void NodeOpti2D2D::Optimise()
             //choose whether to do forward or reverse line search
             node->m_x = xc + dk[0];
             node->m_y = yc + dk[1];
-            if(IsVertex())
-            {
-                ReCalcMaps();
-            }
+
             newVal = GetFunctional<2>(false,false);
 
             if(newVal <= currentW + c1() * (
@@ -244,19 +203,11 @@ void NodeOpti2D2D::Optimise()
                     // Update node
                     node->m_x = xc + alpha * dk[0];
                     node->m_y = yc + alpha * dk[1];
-                    if(IsVertex())
-                    {
-                        ReCalcMaps();
-                    }
 
                     newVal = GetFunctional<2>(false,false);
 
                     node->m_x = xc + alpha/beta * dk[0];
                     node->m_y = yc + alpha/beta * dk[1];
-                    if(IsVertex())
-                    {
-                        ReCalcMaps();
-                    }
 
                     NekDouble dbVal = GetFunctional<2>(false,false);
 
@@ -281,10 +232,6 @@ void NodeOpti2D2D::Optimise()
                     // Update node
                     node->m_x = xc + alpha * dk[0];
                     node->m_y = yc + alpha * dk[1];
-                    if(IsVertex())
-                    {
-                        ReCalcMaps();
-                    }
 
                     newVal = GetFunctional<2>(false,false);
 
@@ -305,10 +252,6 @@ void NodeOpti2D2D::Optimise()
             //reset the node
             node->m_x = xc;
             node->m_y = yc;
-            if(IsVertex())
-            {
-                ReCalcMaps();
-            }
 
             mtx.lock();
             res->nReset++;

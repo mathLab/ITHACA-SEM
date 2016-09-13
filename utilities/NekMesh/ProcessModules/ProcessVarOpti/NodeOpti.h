@@ -64,33 +64,12 @@ public:
         {
             data[e[i]->GetEl()->GetShapeType()].push_back(e[i]);
         }
-
-        vertex = false;
-
-        //std::map<LibUtilities::ShapeType,std::vector<ElUtilSharedPtr> >::iterator typeIt;
-        //for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
-        //{
-        //    for(int i = 0; i < typeIt->second.size(); i++)
-        //    {
-        //        std::cout << LibUtilities::ShapeTypeMap[typeIt->first] << " " << LibUtilities::ShapeTypeMap[typeIt->second[i]->GetEl()->GetShapeType()] << std::endl;
-        //    }
-        //}
     }
 
     virtual ~NodeOpti(){};
 
     virtual void Optimise() = 0;
     NodeOptiJob *GetJob();
-
-    void SetVertex()
-    {
-        vertex = true;
-    }
-
-    bool IsVertex()
-    {
-        return vertex;
-    }
 
 protected:
 
@@ -101,11 +80,8 @@ protected:
     std::map<LibUtilities::ShapeType,std::vector<ElUtilSharedPtr> > data;
     Array<OneD, NekDouble> G;
 
-    bool vertex;
-
     void CalcMinJac();
     bool Linear();
-    void ReCalcMaps();
 
     template<int DIM> int IsIndefinite();
     template<int DIM> void MinEigen(NekDouble &val, Array<OneD, NekDouble> &vec);

@@ -939,10 +939,10 @@ namespace Nektar
             Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs);
             Array<OneD, NekDouble> sensFwd(nCoeffs);
 
-            m_fields[0]->FwdTrans(pressure,   pFwd);
-            m_fields[0]->FwdTrans(soundspeed, sFwd);
-            m_fields[0]->FwdTrans(mach,       mFwd);
-            m_fields[0]->FwdTrans(sensor,     sensFwd);
+            m_fields[0]->FwdTrans_IterPerExp(pressure,   pFwd);
+            m_fields[0]->FwdTrans_IterPerExp(soundspeed, sFwd);
+            m_fields[0]->FwdTrans_IterPerExp(mach,       mFwd);
+            m_fields[0]->FwdTrans_IterPerExp(sensor,     sensFwd);
 
             variables.push_back  ("p");
             variables.push_back  ("a");
@@ -957,7 +957,7 @@ namespace Nektar
             {
                 // reuse pressure
                 m_artificialDiffusion->GetArtificialViscosity(tmp, pressure);
-                m_fields[0]->FwdTrans(pressure,   pFwd);
+                m_fields[0]->FwdTrans_IterPerExp(pressure,   pFwd);
 
                 variables.push_back  ("ArtificialVisc");
                 fieldcoeffs.push_back(pFwd);

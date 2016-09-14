@@ -68,6 +68,9 @@ namespace Nektar
             {
             }
 
+            Array<OneD, NekDouble> t0,t1,tw,e0,ew;
+            int numtri;
+
             void CalculatePoints();
             void CalculateWeights();
             void CalculateDerivMatrix();

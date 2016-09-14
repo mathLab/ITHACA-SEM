@@ -260,6 +260,10 @@ void Face::MakeOrder(int                                order,
             loc[1] = m_faceNodes[i]->m_y;
             loc[2] = m_faceNodes[i]->m_z;
             Array<OneD, NekDouble> uv = CADSurf->locuv(loc);
+            loc = CADSurf->P(uv);
+            m_faceNodes[i]->m_x = loc[0];
+            m_faceNodes[i]->m_y = loc[1];
+            m_faceNodes[i]->m_z = loc[2];
             m_faceNodes[i]->SetCADSurf(CADSurfId,CADSurf,uv);
         }
     }

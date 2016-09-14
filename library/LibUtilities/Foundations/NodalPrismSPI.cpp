@@ -37,7 +37,6 @@
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
-#include <LibUtilities/Foundations/NodalTriSPIData.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
@@ -51,28 +50,27 @@ namespace Nektar
             unsigned int numPoints = GetNumPoints();
 
             PointsKey e(numPoints,eGaussLobattoLegendre);
-            Array<OneD, NekDouble> gll;
-            PointsManager()[e]->GetPoints(gll);
+            PointsManager()[e]->GetPoints(e0);
+            ew = PointsManager()[e]->GetW();
+
+            PointsKey t(numPoints,eNodalTriSPI);
+            PointsManager()[t]->GetPoints(t0,t1);
+            tw = PointsManager()[t]->GetW();
+            numtri = tw.num_elements();
 
             for(int i = 0; i < 3; i++)
             {
-                m_points[i] = Array<OneD, DataType>(NodalTriSPINPTS[numPoints-2]*numPoints);
+                m_points[i] = Array<OneD, DataType>(numtri*numPoints);
             }
 
             for(int j = 0, ct = 0; j < numPoints; j++)
             {
-                int index=0;
-                for(unsigned int i=0; i < numPoints-2; ++i)
-                {
-                    index += NodalTriSPINPTS[i];
-                }
-                for(int i = 0; i < NodalTriSPINPTS[numPoints-2]; i++, ct++)
+                for(int i = 0; i < numtri; i++, ct++)
                 {
                     //need to flip y and z because of quad orientation
-                    m_points[0][ct] = NodalTriSPIData[index][0];
-                    m_points[1][ct] = gll[j];
-                    m_points[2][ct] = NodalTriSPIData[index][1];
-                    index++;
+                    m_points[0][ct] = t0[i];
+                    m_points[1][ct] = e0[j];
+                    m_points[2][ct] = t1[i];
                 }
             }
 // exit(0);
@@ -82,22 +80,13 @@ namespace Nektar
         {
             unsigned int numPoints = GetNumPoints();
 
-            m_weights = Array<OneD, DataType>(NodalTriSPINPTS[numPoints-2]*numPoints);
-
-            PointsKey e(numPoints,eGaussLobattoLegendre);
-            Array<OneD, NekDouble> gll = PointsManager()[e]->GetW();
+            m_weights = Array<OneD, DataType>(numtri*numPoints);
 
             for(int j = 0, ct = 0; j < numPoints; j++)
             {
-                int index=0;
-                for(unsigned int i=0; i < numPoints-2; ++i)
+                for(int i = 0; i < numtri; i++, ct++)
                 {
-                    index += NodalTriSPINPTS[i];
-                }
-                for(int i = 0; i < NodalTriSPINPTS[numPoints-2]; i++, ct++)
-                {
-                    m_weights[ct] = NodalTriSPIData[index][2] * gll[j];
-                    index++;
+                    m_weights[ct] = tw[i] * ew[j];
                 }
             }
         }

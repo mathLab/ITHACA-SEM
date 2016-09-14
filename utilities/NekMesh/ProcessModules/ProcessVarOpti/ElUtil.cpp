@@ -226,13 +226,31 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             xyz[i] = x;
         }
 
+        ElmtConfig c = m_el->GetConf();
+        c.m_order = 1;
+        c.m_reorient = false;
+        c.m_volumeNodes = false;
+        c.m_faceNodes = false;
+
+        ElementSharedPtr E = GetElementFactory().CreateInstance(
+            c.m_e, c, ns, m_el->GetTagList());
+
+        SpatialDomains::GeometrySharedPtr geom = m_el->GetGeom(3);
+        LibUtilities::PointsKeyVector p = geom->GetPointsKeys();
+        SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
+        Array<OneD, NekDouble> jc = gfac->GetJac(p);
+
+        StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+        Array<OneD, NekDouble> coeff(xmap->GetNcoeffs());
+        xmap->FwdTrans(jc,coeff);
+        Array<OneD, NekDouble> phys(xmap->GetTotPoints());
+        xmap->BwdTrans(coeff, phys);
+
         for (int i = 0; i < derivUtil->ptsHigh; ++i)
         {
-            NekDouble a1  = 0.5 * (1 - derivUtil->ptx[i]);
             NekDouble a2  = 0.5 * (1 + derivUtil->ptx[i]);
             NekDouble b1  = 0.5 * (1 - derivUtil->pty[i]);
             NekDouble b2  = 0.5 * (1 + derivUtil->pty[i]);
-            NekDouble c1  = 0.5 * (1 - derivUtil->ptz[i]);
             NekDouble c2  = 0.5 * (1 + derivUtil->ptz[i]);
             NekDouble d   = 0.5 * (derivUtil->ptx[i] + derivUtil->ptz[i]);
 
@@ -270,6 +288,13 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
                        -J(0,1)*(J(1,0)*J(2,2)-J(2,0)*J(1,2))
                        +J(0,2)*(J(1,0)*J(2,1)-J(2,0)*J(1,1)));
 
+                       Array<OneD, NekDouble> xp(3);
+                       xp[0] = derivUtil->ptx[i];
+                       xp[1] = derivUtil->pty[i];
+                       xp[2] = derivUtil->ptz[i];
+
+                       cout << r[9] << " " << xmap->PhysEvaluate(xp, phys) << endl;
+
             r[0] = J(0,0);
             r[1] = J(1,0);
             r[2] = J(2,0);
@@ -281,6 +306,7 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             r[8] = J(2,2);
             ret.push_back(r);
         }
+        exit(-1);
 
     }
     else if (m_el->GetConf().m_e == LibUtilities::eHexahedron)
@@ -365,6 +391,8 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             r[8] = J(2,2);
             ret.push_back(r);
         }
+
+        exit(-1);
     }
     else
     {

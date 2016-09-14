@@ -54,7 +54,7 @@ void NodeOpti1D3D::Optimise()
     CalcMinJac();
 
     NekDouble currentW = GetFunctional<3>();
-    NekDouble newVal;
+    NekDouble newVal = currentW;
 
     if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
@@ -290,7 +290,7 @@ void NodeOpti2D3D::Optimise()
     CalcMinJac();
 
     NekDouble currentW = GetFunctional<3>();
-    NekDouble newVal;
+    NekDouble newVal = currentW;
 
     if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {

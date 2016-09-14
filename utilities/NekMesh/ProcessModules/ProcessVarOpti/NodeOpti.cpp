@@ -96,7 +96,7 @@ void NodeOpti2D2D::Optimise()
     CalcMinJac();
 
     NekDouble currentW = GetFunctional<2>();
-    NekDouble newVal;
+    NekDouble newVal = currentW;
 
     // Gradient already zero
     if (G[0]*G[0] + G[1]*G[1] > gradTol())
@@ -275,7 +275,7 @@ void NodeOpti3D3D::Optimise()
     CalcMinJac();
 
     NekDouble currentW = GetFunctional<3>();
-    NekDouble newVal;
+    NekDouble newVal = currentW;
 
     if(G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {

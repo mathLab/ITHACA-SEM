@@ -56,14 +56,12 @@ void NodeOpti1D3D::Optimise()
     NekDouble currentW = GetFunctional<3>();
     NekDouble newVal = currentW;
 
-    cout << "curve " << sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) << endl;
+    //cout << "curve " << sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) << endl;
 
-    if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
+    if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol() && false)
     {
         //modify the gradient to be on the cad system
         ProcessGradient();
-
-        cout << G[0] << " " << G[1] << endl;
 
         //needs to optimise
         NekDouble tc = node->GetCADCurveInfo(curve->GetId());
@@ -75,26 +73,10 @@ void NodeOpti1D3D::Optimise()
 
         Array<OneD, NekDouble> sk(1), dk(1), pk(1);
         bool DNC = false;
-        NekDouble lhs;
 
-        int def = IsIndefinite<1>();
-        if(def)
+        if(G[1] < 0.0)
         {
-            //the dk vector needs calculating
-            NekDouble val;
-            MinEigen<1>(val,dk);
-
-            if(dk[0]*G[0] > 0.0)
-            {
-                for(int i = 0; i < 1; i++)
-                {
-                    dk[i] *= -1.0;
-                }
-            }
-
-            lhs = dk[0] * (dk[0]*G[1]);
-
-            ASSERTL0(lhs < 0.0 , "weirdness");
+            dk[0] = G[0];
 
             DNC = true;
         }
@@ -103,25 +85,14 @@ void NodeOpti1D3D::Optimise()
 
         Array<OneD, NekDouble> bd = curve->Bounds();
 
-        bool runDNC = false; //so want to make this varible runDMC
         bool found  = false;
-
-        NekDouble skmag = sqrt(sk[0]*sk[0]);
-
-        if(DNC)
-        {
-            runDNC = !((G[0]*sk[0])/skmag <=
-                        2.0*(0.5*lhs + G[0]*dk[0]));
-        }
 
         NekDouble pg = G[0]*sk[0];
 
-        if(!runDNC)
+        if(!DNC || true)
         {
             //normal gradient line Search
             NekDouble alpha    = 1.0;
-            NekDouble hes = sk[0] * (sk[0]*G[1]);
-            hes = min(hes,0.0);
 
             while (alpha > alphaTol())
             {
@@ -141,7 +112,7 @@ void NodeOpti1D3D::Optimise()
                 //
                 // Wolfe conditions
                 if (newVal <= currentW + c1() * (
-                    alpha*pg+ 0.5*alpha*alpha*hes))
+                    alpha*pg))
                 {
                     found = true;
                     break;
@@ -156,8 +127,6 @@ void NodeOpti1D3D::Optimise()
             NekDouble beta = 0.5;
             int l = 0;
             NekDouble alpha = pow(beta,l);
-
-            NekDouble hes = lhs;
 
             pg = G[0]*dk[0];
 
@@ -181,7 +150,7 @@ void NodeOpti1D3D::Optimise()
             }
 
             if(newVal <= currentW + c1() * (
-                pg + 0.5*hes))
+                pg))
             {
 
                 //this is a minimser so see if we can extend further
@@ -217,9 +186,9 @@ void NodeOpti1D3D::Optimise()
                     newVal = GetFunctional<3>(false,false);
 
                     if (newVal <= currentW + c1() * (
-                        alpha*pg + 0.5*alpha*alpha*hes) &&
+                        alpha*pg) &&
                         dbVal > currentW + c1() *(
-                        alpha/beta*pg + 0.5*alpha*alpha*hes/beta/beta))
+                        alpha/beta*pg))
                     {
                         found = true;
                         break;
@@ -250,7 +219,7 @@ void NodeOpti1D3D::Optimise()
                     //
                     // Wolfe conditions
                     if (newVal <= currentW + c1() * (
-                        alpha*pg + 0.5*alpha*alpha*hes))
+                        alpha*pg))
                     {
                         found = true;
                         break;

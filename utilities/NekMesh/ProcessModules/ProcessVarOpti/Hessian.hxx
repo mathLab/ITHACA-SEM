@@ -47,16 +47,6 @@ template<int DIM> int NodeOpti::IsIndefinite()
     ASSERTL0(false,"DIM error");
 }
 
-template<> int NodeOpti::IsIndefinite<1>()
-{
-    if(G[1] < 0.0)
-    {
-        return 2;
-    }
-
-    return 0;
-}
-
 template<> int NodeOpti::IsIndefinite<2>()
 {
     Array<OneD, NekDouble> eigR(2);
@@ -151,12 +141,6 @@ template<> int NodeOpti::IsIndefinite<3>()
 template<int DIM> void NodeOpti::MinEigen(NekDouble &val, Array<OneD, NekDouble> &vec)
 {
     ASSERTL0(false,"DIM error");
-}
-
-template<> void NodeOpti::MinEigen<1>(NekDouble &val, Array<OneD, NekDouble> &vec)
-{
-    vec[0] = 1.0;
-    val = G[1];
 }
 
 template<> void NodeOpti::MinEigen<2>(NekDouble &val, Array<OneD, NekDouble> &vec)

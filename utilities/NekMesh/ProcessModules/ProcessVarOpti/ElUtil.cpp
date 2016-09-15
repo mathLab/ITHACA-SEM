@@ -86,7 +86,7 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
 
     if(m_el->GetConf().m_e == LibUtilities::eQuadrilateral)
     {
-        vector<Array<OneD, NekDouble> > xyz(6);
+        vector<Array<OneD, NekDouble> > xyz(4);
         vector<NodeSharedPtr> ns = m_el->GetVertexList();
         for(int i = 0; i < 4; i++)
         {
@@ -96,8 +96,6 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             x[2] = ns[i]->m_z;
             xyz[i] = x;
         }
-
-        vector<DNekMat> tmp;
 
         for (int i = 0; i < derivUtil->ptsHigh; ++i)
         {
@@ -119,8 +117,6 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
                      + 0.5 * a2 * xyz[2][1] + 0.5 * a1 * xyz[3][1];
 
             J.Invert();
-
-            tmp.push_back(J);
 
             Array<OneD, NekDouble> r(10,0.0); //store det in 10th entry
 
@@ -226,26 +222,6 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             xyz[i] = x;
         }
 
-        ElmtConfig c = m_el->GetConf();
-        c.m_order = 1;
-        c.m_reorient = false;
-        c.m_volumeNodes = false;
-        c.m_faceNodes = false;
-
-        ElementSharedPtr E = GetElementFactory().CreateInstance(
-            c.m_e, c, ns, m_el->GetTagList());
-
-        SpatialDomains::GeometrySharedPtr geom = m_el->GetGeom(3);
-        LibUtilities::PointsKeyVector p = geom->GetPointsKeys();
-        SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
-        Array<OneD, NekDouble> jc = gfac->GetJac(p);
-
-        StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
-        Array<OneD, NekDouble> coeff(xmap->GetNcoeffs());
-        xmap->FwdTrans(jc,coeff);
-        Array<OneD, NekDouble> phys(xmap->GetTotPoints());
-        xmap->BwdTrans(coeff, phys);
-
         for (int i = 0; i < derivUtil->ptsHigh; ++i)
         {
             NekDouble a2  = 0.5 * (1 + derivUtil->ptx[i]);
@@ -288,13 +264,6 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
                        -J(0,1)*(J(1,0)*J(2,2)-J(2,0)*J(1,2))
                        +J(0,2)*(J(1,0)*J(2,1)-J(2,0)*J(1,1)));
 
-                       Array<OneD, NekDouble> xp(3);
-                       xp[0] = derivUtil->ptx[i];
-                       xp[1] = derivUtil->pty[i];
-                       xp[2] = derivUtil->ptz[i];
-
-                       cout << r[9] << " " << xmap->PhysEvaluate(xp, phys) << endl;
-
             r[0] = J(0,0);
             r[1] = J(1,0);
             r[2] = J(2,0);
@@ -306,7 +275,6 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             r[8] = J(2,2);
             ret.push_back(r);
         }
-        exit(-1);
 
     }
     else if (m_el->GetConf().m_e == LibUtilities::eHexahedron)
@@ -446,21 +414,19 @@ void ElUtil::Evaluate()
             Z(j) = *nodes[j][2];
         }
 
-        NekVector<NekDouble> x1i(nodes.size()),y1i(nodes.size()),z1i(nodes.size()),
-                             x2i(nodes.size()),y2i(nodes.size()),z2i(nodes.size()),
-                             x3i(nodes.size()),y3i(nodes.size()),z3i(nodes.size());
+        NekVector<NekDouble> x1i(derivUtil->ptsHigh),y1i(derivUtil->ptsHigh),z1i(derivUtil->ptsHigh),
+                             x2i(derivUtil->ptsHigh),y2i(derivUtil->ptsHigh),z2i(derivUtil->ptsHigh),
+                             x3i(derivUtil->ptsHigh),y3i(derivUtil->ptsHigh),z3i(derivUtil->ptsHigh);
 
-        x1i = derivUtil->VdmDL[0]*X;
-        y1i = derivUtil->VdmDL[0]*Y;
-        z1i = derivUtil->VdmDL[0]*Z;
-        x2i = derivUtil->VdmDL[1]*X;
-        y2i = derivUtil->VdmDL[1]*Y;
-        z2i = derivUtil->VdmDL[1]*Z;
-        x3i = derivUtil->VdmDL[2]*X;
-        y3i = derivUtil->VdmDL[2]*Y;
-        z3i = derivUtil->VdmDL[2]*Z;
-
-        Array<OneD, NekDouble> jacs(nodes.size());
+        x1i = derivUtil->VdmD[0]*X;
+        y1i = derivUtil->VdmD[0]*Y;
+        z1i = derivUtil->VdmD[0]*Z;
+        x2i = derivUtil->VdmD[1]*X;
+        y2i = derivUtil->VdmD[1]*Y;
+        z2i = derivUtil->VdmD[1]*Z;
+        x3i = derivUtil->VdmD[2]*X;
+        y3i = derivUtil->VdmD[2]*Y;
+        z3i = derivUtil->VdmD[2]*Z;
 
         /*if(m_el->GetShapeType() == LibUtilities::ePrism)
         {
@@ -497,7 +463,7 @@ void ElUtil::Evaluate()
             }
         }*/
 
-        for(int j = 0; j < nodes.size(); j++)
+        for(int j = 0; j < derivUtil->ptsHigh; j++)
         {
             DNekMat dxdz(3,3,1.0,eFULL);
             dxdz(0,0) = x1i(j);

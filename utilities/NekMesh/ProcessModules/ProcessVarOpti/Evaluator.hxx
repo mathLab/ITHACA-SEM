@@ -191,6 +191,8 @@ inline NekDouble CalcIdealJac(int elmt,
         }
     }
 
+    //this matrix multiplier has been checked MT 14/9
+
     return Determinant(jacIdeal);
 }
 
@@ -258,7 +260,7 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
 
 
     NekDouble integral = 0.0;
-    NekDouble ep = minJac < 1e-7 ? sqrt(1e-14 + 0.004*minJac*minJac) : 1e-7;
+    NekDouble ep = minJac < 1e-4 ? sqrt(1e-8 + 0.004*minJac*minJac) : 1e-4;
     //NekDouble ep = minJac < 0.0 ? sqrt(gam*(gam-minJac)) : gam;
     //NekDouble ep = minJac < gam ? sqrt(gam*gam + minJac*minJac) : gam;
     NekDouble jacIdeal[DIM][DIM], jacDet;
@@ -430,15 +432,25 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                         jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
                         NekDouble I1 = FrobeniusNorm(jacIdeal);
 
+                        //if(gradient && minJac > 0.0 && jacDet < 0.0)
+                        //{
+                        //    ASSERTL0(false,"minjac is positive but jacdet is negative");
+                        //    return numeric_limits<double>::max();
+                        //}
+
+                        //ep = minJac < 0.0 ? sqrt(gam*jacDet*(gam*jacDet-minJac)) : gam*jacDet;
+
                         NekDouble sigma =
                             0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*ep*ep));
-                        if(sigma < 1e-20)
+
+                        if(sigma < numeric_limits<float>::min())
                         {
-                            sigma = 1e-20;
+                            sigma = numeric_limits<float>::min();
                         }
+
                         NekDouble lsigma = log(sigma);
                         integral += derivUtil[typeIt->first]->quadW[k]*
-                            fabs(typeIt->second[i]->maps[k][9]) *
+                                    fabs(typeIt->second[i]->maps[k][9]) *
                                     (0.5 * mu * (I1 - 3.0 - 2.0*lsigma) +
                                      0.5 * K * lsigma * lsigma);
 

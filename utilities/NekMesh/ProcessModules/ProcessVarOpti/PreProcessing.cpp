@@ -694,7 +694,7 @@ vector<ElementSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
         }
     }
 
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < 8; i++)
     {
         vector<ElementSharedPtr> tmp = totest;
         totest.clear();

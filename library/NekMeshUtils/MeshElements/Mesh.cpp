@@ -214,9 +214,9 @@ void Mesh::MakeOrder(int                      order,
         }
 
         // Copy face curvature
-        el->SetVolumeNodes(edge->m_edgeNodes);
         el->MakeOrder(order, SpatialDomains::GeometrySharedPtr(),
                       pTypes[el->GetConf().m_e], m_spaceDim, id, true);
+        el->SetVolumeNodes(edge->m_edgeNodes);
     }
 
     for (int i = 0; i < m_element[2].size(); ++i)

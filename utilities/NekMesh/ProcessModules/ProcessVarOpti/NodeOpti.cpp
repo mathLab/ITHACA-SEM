@@ -95,15 +95,36 @@ void NodeOpti2D2D::Optimise()
 {
     CalcMinJac();
 
-    NekDouble currentW = GetFunctional<2>();
+    NekDouble currentW = GetFunctional<2>(false,false);
     NekDouble newVal = currentW;
+
+    return;
+
+    NekDouble xc       = node->m_x;
+    NekDouble yc       = node->m_y;
+
+    vector<NekDouble> d;
+    for(int i = 0; i < 6; i++)
+    {
+        node->m_x = xc + 1e-6*dir[i][0];
+        node->m_y = yc + 1e-6*dir[i][1];
+
+        d.push_back(GetFunctional<2>(false,false));
+    }
+
+    G = Array<OneD, NekDouble>(5);
+    G[0] = (d[1] - d[3]) / 2e-6;
+    G[1] = (d[2] - d[4]) / 2e-6;
+    G[2] = (d[1] + d[3] - 2*currentW) / 1e-12;
+    G[3] = (d[0] - d[1] - d[2] + 2*currentW - d[3] - d[4] + d[5]) / 2e-12;
+    G[4] = (d[2] + d[4] - 2*currentW) / 1e-12;
 
     // Gradient already zero
     if (G[0]*G[0] + G[1]*G[1] > gradTol())
     {
         //needs to optimise
-        NekDouble xc       = node->m_x;
-        NekDouble yc       = node->m_y;
+        //NekDouble xc       = node->m_x;
+        //NekDouble yc       = node->m_y;
 
         Array<OneD, NekDouble> sk(2), dk(2);
         bool DNC = false;
@@ -462,9 +483,11 @@ void NodeOpti3D3D::Optimise()
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
-        res->func +=newVal;
         mtx.unlock();
     }
+    mtx.lock();
+    res->func += newVal;
+    mtx.unlock();
 }
 
 NodeOptiJob* NodeOpti::GetJob()

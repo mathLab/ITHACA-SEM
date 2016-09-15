@@ -56,10 +56,14 @@ void NodeOpti1D3D::Optimise()
     NekDouble currentW = GetFunctional<3>();
     NekDouble newVal = currentW;
 
+    cout << "curve " << sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) << endl;
+
     if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
         //modify the gradient to be on the cad system
         ProcessGradient();
+
+        cout << G[0] << " " << G[1] << endl;
 
         //needs to optimise
         NekDouble tc = node->GetCADCurveInfo(curve->GetId());
@@ -277,13 +281,16 @@ void NodeOpti1D3D::Optimise()
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
-        res->func += newVal;
         mtx.unlock();
     }
+
+    mtx.lock();
+    res->func += newVal;
+    mtx.unlock();
 }
 
 int NodeOpti2D3D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
-    23, NodeOpti2D3D::create, "1D3D");
+    23, NodeOpti2D3D::create, "2D3D");
 
 void NodeOpti2D3D::Optimise()
 {
@@ -291,6 +298,8 @@ void NodeOpti2D3D::Optimise()
 
     NekDouble currentW = GetFunctional<3>();
     NekDouble newVal = currentW;
+
+    //cout << "curve " << sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) << endl;
 
     if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
@@ -529,7 +538,6 @@ void NodeOpti2D3D::Optimise()
         mtx.lock();
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
-        res->func += newVal;
         mtx.unlock();
 
         Array<OneD, NekDouble> uva = node->GetCADSurfInfo(surf->GetId());
@@ -539,6 +547,10 @@ void NodeOpti2D3D::Optimise()
             ASSERTL1(false,"something when very wrong and the node finished out of its parameter plane");
         }
     }
+
+    mtx.lock();
+    res->func += newVal;
+    mtx.unlock();
 }
 
 void NodeOpti1D3D::ProcessGradient()

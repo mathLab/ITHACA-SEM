@@ -182,6 +182,7 @@ void ProcessVarOpti::Process()
     vector<vector<NodeOptiSharedPtr> > optiNodes;
 
     //turn the free nodes into optimisable objects with all required data
+    set<int> check;
     for(int i = 0; i < freenodes.size(); i++)
     {
         vector<NodeOptiSharedPtr> ns;
@@ -194,7 +195,7 @@ void ProcessVarOpti::Process()
 
             if (freenodes[i][j]->GetNumCadCurve() == 1)
             {
-                //cout << freenodes[i][j]->m_x << " " << freenodes[i][j]->m_y << " " << freenodes[i][j]->m_z << endl;
+                continue;
                 optiType += 10;
             }
             else if (freenodes[i][j]->GetNumCADSurf() == 1)
@@ -205,6 +206,10 @@ void ProcessVarOpti::Process()
             {
                 optiType += 10*m_mesh->m_expDim;
             }
+
+            set<int>::iterator c = check.find(freenodes[i][j]->m_id);
+            ASSERTL0(c == check.end(),"duplicate node");
+            check.insert(freenodes[i][j]->m_id);
 
             ns.push_back(
                 GetNodeOptiFactory().CreateInstance(
@@ -256,7 +261,7 @@ void ProcessVarOpti::Process()
          << "Max set:\t\t" << mx << endl
          << "Residual tolerance:\t" << restol << endl;
 
-    return;
+    //return;
 
     int nThreads = m_config["numthreads"].as<int>();
 

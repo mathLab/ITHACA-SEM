@@ -415,8 +415,6 @@ void NodeOpti2D3D::Optimise()
                         //we could possibly find a optimiser but the point has
                         //gone out of the parameter plane
                         found = true;
-                        uvt[0] = uvc[0] + alpha * dk[0];
-                        uvt[1] = uvc[1] + alpha * dk[1];
                         break;
                     }
 

@@ -194,6 +194,7 @@ void ProcessVarOpti::Process()
 
             if (freenodes[i][j]->GetNumCadCurve() == 1)
             {
+                //cout << freenodes[i][j]->m_x << " " << freenodes[i][j]->m_y << " " << freenodes[i][j]->m_z << endl;
                 optiType += 10;
             }
             else if (freenodes[i][j]->GetNumCADSurf() == 1)
@@ -255,7 +256,7 @@ void ProcessVarOpti::Process()
          << "Max set:\t\t" << mx << endl
          << "Residual tolerance:\t" << restol << endl;
 
-    //return;
+    return;
 
     int nThreads = m_config["numthreads"].as<int>();
 

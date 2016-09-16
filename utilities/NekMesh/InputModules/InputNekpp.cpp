@@ -372,8 +372,8 @@ void InputNekpp::Process()
     }
 
     map<int, vector<cadVar> > vertToString;
-    map<pair<int,int>, pair<int,vector<cadVar> > > edgeToString;
-    map<pair<int,int>, pair<int,vector<cadVar> > > faceToString;
+    map<int, pair<int,map<int,vector<cadVar> > > > edgeToString;
+    map<int, pair<int,map<int,vector<cadVar> > > > faceToString;
 
     if(pSession->DefinesElement("NEKTAR/GEOMETRY/CAD") && !(m_config["nocad"].beenSet))
     {
@@ -450,6 +450,7 @@ void InputNekpp::Process()
 
             TiXmlElement *node = edge->FirstChildElement("N");
 
+            map<int,vector<cadVar> > nds;
             while(node)
             {
                 int nid;
@@ -486,10 +487,11 @@ void InputNekpp::Process()
                     surf = surf->NextSiblingElement("S");
                 }
 
+                nds[nid] = items;
                 node = node->NextSiblingElement("N");
-                edgeToString[pair<int,int>(eid,nid)] = pair<int,vector<cadVar> >(cu,items);
-            }
 
+            }
+            edgeToString[eid] = pair<int,map<int,vector<cadVar> > >(cu,nds);
             edge = edge->NextSiblingElement("E");
         }
 
@@ -510,7 +512,7 @@ void InputNekpp::Process()
             ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute EDGEID.");
 
             TiXmlElement *node = face->FirstChildElement("N");
-
+            map<int,vector<cadVar> > nds;
             while(node)
             {
                 int nid;
@@ -532,10 +534,10 @@ void InputNekpp::Process()
                     surf = surf->NextSiblingElement("S");
                 }
 
+                nds[nid] = items;
                 node = node->NextSiblingElement("N");
-                faceToString[pair<int,int>(fid,nid)] = pair<int,vector<cadVar> >(su,items);
             }
-
+            faceToString[fid] = pair<int,map<int,vector<cadVar> > >(su,nds);
             face = face->NextSiblingElement("F");
         }
     }
@@ -549,8 +551,8 @@ void InputNekpp::Process()
 #ifdef NEKTAR_USE_MESHGEN
 
     map<int, vector<cadVar> >::iterator vsit;
-    map<pair<int,int>, pair<int,vector<cadVar> > >::iterator esit;
-    map<pair<int,int>, pair<int,vector<cadVar> > >::iterator fsit;
+    map<int, pair<int,map<int,vector<cadVar> > > >::iterator esit;
+    map<int, pair<int,map<int,vector<cadVar> > > >::iterator fsit;
 
     {
         int ct= 0;
@@ -589,33 +591,41 @@ void InputNekpp::Process()
     }
 
     {
-        int ct = 0;
         EdgeSet::iterator it;
         for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end();
             it++)
         {
-            for(int j = 0; j < (*it)->m_edgeNodes.size(); j++)
+            esit = edgeToString.find((*it)->m_id);
+            if(esit != edgeToString.end())
             {
-                esit = edgeToString.find(pair<int,int>((*it)->m_id,j));
-                int surf = 0;
-                if(esit != edgeToString.end())
+                if(esit->second.first != 0)
                 {
-                    ct++;
-                    for(int i = 0; i < esit->second.second.size(); i++)
+                    (*it)->onCurve = true;
+                    (*it)->CADCurveId = esit->second.first;
+                    (*it)->CADCurve = m_mesh->m_cad->GetCurve(esit->second.first);
+                }
+
+                int surf = 0;
+                for(int j = 0; j < (*it)->m_edgeNodes.size(); j++)
+                {
+                    vector<cadVar> items = esit->second.second[j];
+
+
+                    for(int i = 0; i < items.size(); i++)
                     {
-                        if(esit->second.second[i].type == "C")
+                        if(items[i].type == "C")
                         {
-                            int c = esit->second.second[i].id;
-                            int t = esit->second.second[i].u;
+                            int c = items[i].id;
+                            int t = items[i].u;
                             (*it)->m_edgeNodes[j]->SetCADCurve(c,m_mesh->m_cad->GetCurve(c),t);
                         }
-                        else if(esit->second.second[i].type == "S")
+                        else if(items[i].type == "S")
                         {
-                            int s = esit->second.second[i].id;
+                            int s = items[i].id;
                             surf = s;
                             Array<OneD,NekDouble> uv(2);
-                            uv[0] = esit->second.second[i].u;
-                            uv[1] = esit->second.second[i].v;
+                            uv[0] = items[i].u;
+                            uv[1] = items[i].v;
                             (*it)->m_edgeNodes[j]->SetCADSurf(s,m_mesh->m_cad->GetSurf(s),uv);
                         }
                         else
@@ -623,59 +633,49 @@ void InputNekpp::Process()
                             ASSERTL0(false,"unsure on type");
                         }
                     }
-                    if(esit->second.first > 0)
-                    {
-                        (*it)->onCurve = true;
-                        (*it)->CADCurveId = esit->second.first;
-                        (*it)->CADCurve = m_mesh->m_cad->GetCurve(esit->second.first);
-                    }
-                    else if(surf > 0)
-                    {
-                        (*it)->onSurf = true;
-                        (*it)->CADSurfId = surf;
-                        (*it)->CADSurf = m_mesh->m_cad->GetSurf(surf);
-                    }
+
+                }
+                if(surf > 0 && esit->second.first == 0)
+                {
+                    (*it)->onSurf = true;
+                    (*it)->CADSurfId = surf;
+                    (*it)->CADSurf = m_mesh->m_cad->GetSurf(surf);
                 }
 
+                ASSERTL0((*it)->onSurf || (*it)->onCurve,"must be part of some cad enity");
+                ASSERTL0(!((*it)->onSurf && (*it)->onCurve),"cant be part of both");
             }
         }
-        ASSERTL0(ct == edgeToString.size(), "did not find all CAD information");
     }
 
     {
-        int ct = 0;
         FaceSet::iterator it;
         for(it = m_mesh->m_faceSet.begin(); it != m_mesh->m_faceSet.end();
             it++)
         {
-            for(int j = 0; j < (*it)->m_faceNodes.size(); j++)
+            fsit = faceToString.find((*it)->m_id);
+            if(fsit != faceToString.end())
             {
-                fsit = faceToString.find(pair<int,int>((*it)->m_id,j));
-                if(fsit != faceToString.end())
+                (*it)->onSurf = true;
+                (*it)->CADSurfId = fsit->second.first;
+                (*it)->CADSurf = m_mesh->m_cad->GetSurf(fsit->second.first);
+
+                for(int j = 0; j < (*it)->m_faceNodes.size(); j++)
                 {
-                    ct++;
-                    for(int i = 0; i < fsit->second.second.size(); i++)
+                    vector<cadVar> items = fsit->second.second[j];
+                    for(int i = 0; i < items.size(); i++)
                     {
-                        int s = fsit->second.second[i].id;
+                        int s = items[i].id;
                         Array<OneD,NekDouble> uv(2);
-                        uv[0] = fsit->second.second[i].u;
-                        uv[1] = fsit->second.second[i].v;
+                        uv[0] = items[i].u;
+                        uv[1] = items[i].v;
                         (*it)->m_faceNodes[j]->SetCADSurf(s,m_mesh->m_cad->GetSurf(s),uv);
                     }
-                    if(fsit->second.first > 0)
-                    {
-                        (*it)->onSurf = true;
-                        (*it)->CADSurfId = fsit->second.first;
-                        (*it)->CADSurf = m_mesh->m_cad->GetSurf(fsit->second.first);
-                    }
                 }
-
             }
         }
-        ASSERTL0(ct == faceToString.size(), "did not find all CAD information");
     }
 #endif
-
 }
 }
 }

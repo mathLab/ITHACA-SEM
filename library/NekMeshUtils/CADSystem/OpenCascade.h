@@ -68,6 +68,7 @@
 #include <ShapeAnalysis_Wire.hxx>
 #include <TopoDS_Wire.hxx>
 #include <ShapeAnalysis_Surface.hxx>
+#include <ShapeAnalysis_Curve.hxx>
 #include <Standard_Macro.hxx>
 
 #endif

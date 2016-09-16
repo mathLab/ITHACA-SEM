@@ -91,8 +91,7 @@ NekDouble CADCurve::tAtArcLength(NekDouble s)
 NekDouble CADCurve::Length(NekDouble ti, NekDouble tf)
 {
     Array<OneD, NekDouble> b = Bounds();
-    Handle(Geom_Curve) c = BRep_Tool::Curve(m_occEdge, b[0], b[1]);
-    Handle(Geom_Curve) NewCurve = new Geom_TrimmedCurve(c, ti, tf);
+    Handle(Geom_Curve) NewCurve = new Geom_TrimmedCurve(m_c, ti, tf);
     TopoDS_Edge NewEdge = BRepBuilderAPI_MakeEdge(NewCurve);
     GProp_GProps System;
     BRepGProp::LinearProperties(NewEdge, System);
@@ -105,7 +104,7 @@ NekDouble CADCurve::loct(Array<OneD, NekDouble> xyz)
     Array<OneD, NekDouble> b = Bounds();
 
     gp_Pnt loc(xyz[0]*1000.0, xyz[1]*1000.0, xyz[2]*1000.0);
-    GeomAPI_ProjectPointOnCurve projection(
+    /*GeomAPI_ProjectPointOnCurve projection(
         loc,m_c,b[0],b[1]);
 
     if (projection.NbPoints() == 0)
@@ -119,7 +118,13 @@ NekDouble CADCurve::loct(Array<OneD, NekDouble> xyz)
         {
             cout << "large curve projection: " << projection.Distance(1) << endl;
         }
-    }
+    }*/
+
+    ShapeAnalysis_Curve sac;
+    gp_Pnt p;
+    NekDouble d = sac.Project(m_c,loc,1e-7,p,t);
+
+    ASSERTL0(p.Distance(loc) < 1e-6, "large loct distance sac");
 
     return t;
 }

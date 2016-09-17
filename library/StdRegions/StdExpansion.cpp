@@ -1752,7 +1752,9 @@ namespace Nektar
 
         Array<OneD, unsigned int>
         StdExpansion::v_GetFaceInverseBoundaryMap(int fid,
-                                StdRegions::Orientation faceOrient)
+                                                  StdRegions::Orientation faceOrient,
+                                                  int P1,
+                                                  int P2)
         {
             ASSERTL0(false, "Not implemented.");
             Array<OneD, unsigned int> noinversemap(1);

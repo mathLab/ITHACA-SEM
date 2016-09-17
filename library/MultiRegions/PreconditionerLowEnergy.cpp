@@ -92,10 +92,6 @@ namespace Nektar
             ASSERTL0(nDim==3,
                      "Preconditioner type only valid in 3D");
             
-            //Sets up reference element and builds transformation matrix for
-            // maximum polynomial order meshes
-            SetUpReferenceElements();
-
             //Set up block transformation matrix
             SetupBlockTransformationMatrix();
 
@@ -899,7 +895,17 @@ namespace Nektar
             map<int,int> EdgeSize;
             
             int n;
- 
+
+            std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr>         maxRmat;
+            map<LibUtilities::ShapeType, LocalRegions::ExpansionSharedPtr > maxElmt; 
+            map<LibUtilities::ShapeType, Array<OneD, unsigned int> >        vertMapMaxR; 
+            map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > edgeMapMaxR;
+
+            
+            //Sets up reference element and builds transformation matrix for
+            // maximum polynomial order meshes
+            SetUpReferenceElements(maxRmat,maxElmt,vertMapMaxR,edgeMapMaxR);
+            
             const Array<OneD,const unsigned int>& nbdry_size
                 = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
 
@@ -926,12 +932,16 @@ namespace Nektar
             {
                 int eid = expList->GetOffset_Elmt_Id(n);
                 locExp = expList->GetExp(eid);
-
+                LibUtilities::ShapeType eltype = locExp->DetShapeType();
+                
                 int nbndcoeffs = locExp->NumBndryCoeffs();
 
                 if(m_sameBlock.size() == 0)
                 {
-                    rmat = ExtractLocMat(locExp);
+                    rmat = ExtractLocMat(locExp,maxRmat[eltype],
+                                         maxElmt[eltype],
+                                         vertMapMaxR[eltype],
+                                         edgeMapMaxR[eltype]);
                     //Block R matrix
                     m_RBlk->SetBlock(n, n, rmat);
 
@@ -970,7 +980,10 @@ namespace Nektar
                     }
                     else
                     {
-                        rmat = ExtractLocMat(locExp);
+                        rmat = ExtractLocMat(locExp,maxRmat[eltype],
+                                             maxElmt[eltype],
+                                             vertMapMaxR[eltype],
+                                             edgeMapMaxR[eltype]);
                         //Block R matrix
                         m_RBlk->SetBlock(n, n, rmat);
 
@@ -1694,7 +1707,11 @@ namespace Nektar
 	 *
          * Sets up multiple reference elements based on the element expansion. 
 	 */
-        void PreconditionerLowEnergy::SetUpReferenceElements()
+        void PreconditionerLowEnergy::SetUpReferenceElements(
+                 std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr> &maxRmat,
+                 map<LibUtilities::ShapeType, LocalRegions::ExpansionSharedPtr > &maxElmt,
+                 map<LibUtilities::ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
+                 map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR)
         {
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
@@ -1720,14 +1737,14 @@ namespace Nektar
             SpatialDomains::HexGeomSharedPtr   hexgeom  = CreateRefHexGeom();
 
             /* Determine the maximum expansion order for all elements */
-            m_nummodesmax = 0; 
+            int nummodesmax = 0; 
             for(int n = 0; n < expList->GetNumElmts(); ++n)
             {
-                m_nummodesmax = max(m_nummodesmax,expList->GetExp(n)->GetBasisNumModes(0));
-                m_nummodesmax = max(m_nummodesmax,expList->GetExp(n)->GetBasisNumModes(1));
-                m_nummodesmax = max(m_nummodesmax,expList->GetExp(n)->GetBasisNumModes(2));
+                nummodesmax = max(nummodesmax,expList->GetExp(n)->GetBasisNumModes(0));
+                nummodesmax = max(nummodesmax,expList->GetExp(n)->GetBasisNumModes(1));
+                nummodesmax = max(nummodesmax,expList->GetExp(n)->GetBasisNumModes(2));
             }
-            m_comm->AllReduce(m_nummodesmax, LibUtilities::ReduceMax);
+            m_comm->AllReduce(nummodesmax, LibUtilities::ReduceMax);
             
             /*
              * Set up a transformation matrices for equal max order
@@ -1736,16 +1753,16 @@ namespace Nektar
 
             //Bases for Tetrahedral element
             const LibUtilities::BasisKey TetBa(
-                                               LibUtilities::eModified_A, m_nummodesmax,
-                                               LibUtilities::PointsKey(m_nummodesmax+1,
+                                               LibUtilities::eModified_A, nummodesmax,
+                                               LibUtilities::PointsKey(nummodesmax+1,
                                                                        LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey TetBb(
-                                               LibUtilities::eModified_B, m_nummodesmax,
-                                               LibUtilities::PointsKey(m_nummodesmax,
+                                               LibUtilities::eModified_B, nummodesmax,
+                                               LibUtilities::PointsKey(nummodesmax,
                                                                        LibUtilities::eGaussRadauMAlpha1Beta0));
             const LibUtilities::BasisKey TetBc(
-                                               LibUtilities::eModified_C, m_nummodesmax,
-                                               LibUtilities::PointsKey(m_nummodesmax,
+                                               LibUtilities::eModified_C, nummodesmax,
+                                               LibUtilities::PointsKey(nummodesmax,
                                                                        LibUtilities::eGaussRadauMAlpha2Beta0));
 
             //Create reference tetrahedral expansion
@@ -1757,17 +1774,17 @@ namespace Nektar
             
             //Bases for Prism element
             const LibUtilities::BasisKey PrismBa(
-                                                 LibUtilities::eModified_A, m_nummodesmax,
-                                                 LibUtilities::PointsKey(m_nummodesmax+1,
+                                                 LibUtilities::eModified_A, nummodesmax,
+                                                 LibUtilities::PointsKey(nummodesmax+1,
                                                                          LibUtilities::eGaussLobattoLegendre));
 
             const LibUtilities::BasisKey PrismBb(
-                                                 LibUtilities::eModified_A, m_nummodesmax,
-                                                 LibUtilities::PointsKey(m_nummodesmax+1,
+                                                 LibUtilities::eModified_A, nummodesmax,
+                                                 LibUtilities::PointsKey(nummodesmax+1,
                                                                          LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey PrismBc(
-                                                 LibUtilities::eModified_B, m_nummodesmax,
-                                                 LibUtilities::PointsKey(m_nummodesmax,
+                                                 LibUtilities::eModified_B, nummodesmax,
+                                                 LibUtilities::PointsKey(nummodesmax,
                                                                          LibUtilities::eGaussRadauMAlpha1Beta0));
 
             //Create reference prismatic expansion
@@ -1779,16 +1796,16 @@ namespace Nektar
 
             //Bases for Hex element
             const LibUtilities::BasisKey HexBa(
-                                               LibUtilities::eModified_A, m_nummodesmax,
-                                               LibUtilities::PointsKey(m_nummodesmax+1,
+                                               LibUtilities::eModified_A, nummodesmax,
+                                               LibUtilities::PointsKey(nummodesmax+1,
                                                                        LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey HexBb(
-                                               LibUtilities::eModified_A, m_nummodesmax,
-                                               LibUtilities::PointsKey(m_nummodesmax+1,
+                                               LibUtilities::eModified_A, nummodesmax,
+                                               LibUtilities::PointsKey(nummodesmax+1,
                                                                        LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey HexBc(
-                                               LibUtilities::eModified_A, m_nummodesmax,
-                                               LibUtilities::PointsKey(m_nummodesmax+1,
+                                               LibUtilities::eModified_A, nummodesmax,
+                                               LibUtilities::PointsKey(nummodesmax+1,
                                                                        LibUtilities::eGaussLobattoLegendre));
             
             //Create reference prismatic expansion
@@ -1839,35 +1856,35 @@ namespace Nektar
             
             //Get tetrahedral transformation matrix
             DNekScalMatSharedPtr TetMat = TetExp->GetLocMatrix(TetR);
-            m_maxRmat[LibUtilities::eTetrahedron] = TetMat;
+            maxRmat[LibUtilities::eTetrahedron] = TetMat;
 
             TetExp->GetInverseBoundaryMaps(vmap,emap,fmap);
-            m_vertMapMaxR[LibUtilities::eTetrahedron] = vmap; 
-            m_edgeMapMaxR[LibUtilities::eTetrahedron] = emap; 
+            vertMapMaxR[LibUtilities::eTetrahedron] = vmap; 
+            edgeMapMaxR[LibUtilities::eTetrahedron] = emap; 
 
-            m_maxElmt[LibUtilities::eTetrahedron] = TetExp; 
+            maxElmt[LibUtilities::eTetrahedron] = TetExp; 
             
             //Get prismatic transformation matrix
-            m_maxRmat[LibUtilities::ePrism] =
+            maxRmat[LibUtilities::ePrism] =
                 PrismExp->GetLocMatrix(PrismR);
 
             PrismExp->GetInverseBoundaryMaps(vmap,emap,fmap);
-            m_vertMapMaxR[LibUtilities::ePrism] = vmap; 
-            m_edgeMapMaxR[LibUtilities::ePrism] = emap;
+            vertMapMaxR[LibUtilities::ePrism] = vmap; 
+            edgeMapMaxR[LibUtilities::ePrism] = emap;
 
-            m_maxElmt[LibUtilities::ePrism] = PrismExp; 
+            maxElmt[LibUtilities::ePrism] = PrismExp; 
 
             // Note we do not have pyramid here since this has to be
             // constructed from other shapes - will need mappings however!
 
             //Get hexahedral transformation matrix
-            m_maxRmat[LibUtilities::eHexahedron] =
+            maxRmat[LibUtilities::eHexahedron] =
                 HexExp->GetLocMatrix(HexR);
             HexExp->GetInverseBoundaryMaps(vmap,emap,fmap);
-            m_vertMapMaxR[LibUtilities::eHexahedron] = vmap; 
-            m_edgeMapMaxR[LibUtilities::eHexahedron] = emap;
+            vertMapMaxR[LibUtilities::eHexahedron] = vmap; 
+            edgeMapMaxR[LibUtilities::eHexahedron] = emap;
 
-            m_maxElmt[LibUtilities::eHexahedron] = HexExp; 
+            maxElmt[LibUtilities::eHexahedron] = HexExp; 
 
 #if 0
             -> Need to now have section which takes the maximum matrices on mixed meshes and replaced for example the tet expansion with elements from the hex or if just a tet prism mesh just take elements from the Tet to put in the prism? 
@@ -2989,14 +3006,14 @@ namespace Nektar
 #endif
 
         DNekMatSharedPtr PreconditionerLowEnergy::
-        ExtractLocMat(StdRegions::StdExpansionSharedPtr &locExp)
+        ExtractLocMat(StdRegions::StdExpansionSharedPtr &locExp,
+                      DNekScalMatSharedPtr              &maxRmat,
+                      LocalRegions::ExpansionSharedPtr  &maxExp,
+                      Array<OneD, unsigned int>         &vmap,
+                      Array<OneD, Array<OneD, unsigned int> > &emap)
         {
-            LibUtilities::ShapeType eType=locExp->DetShapeType();
             NekDouble val;
             NekDouble zero = 0.0;
-            
-            Array<OneD, unsigned int>               vmap = m_vertMapMaxR[eType];
-            Array<OneD, Array<OneD, unsigned int> > emap = m_edgeMapMaxR[eType];
             
             int nRows = locExp->NumBndryCoeffs();
             DNekMatSharedPtr newmat = MemoryManager<DNekMat>::
@@ -3014,7 +3031,7 @@ namespace Nektar
                 val = 1.0;
                 newmat->SetValue(i,i,val);
             }
-#if 1
+
             int nverts = locExp->GetNverts();
             int nedges = locExp->GetNedges();
             int nfaces = locExp->GetNfaces();
@@ -3028,7 +3045,7 @@ namespace Nektar
                 {
                     for(int i = 0; i < nEdgeInteriorCoeffs; ++i)
                     {
-                        val = (*m_maxRmat[eType])(vmap[v],emap[e][i]);
+                        val = (*maxRmat)(vmap[v],emap[e][i]);
                         newmat->SetValue(vlocmap[v],elocmap[e][i],val);
                     }
                 }
@@ -3036,7 +3053,6 @@ namespace Nektar
 
             for(int f = 0; f < nfaces; ++f)
             {
-#if 1
                 // Get details to extrac this face from max reference matrix
                 StdRegions::Orientation FwdOrient = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
                 int m0,m1; //Local face expansion orders. 
@@ -3045,7 +3061,7 @@ namespace Nektar
                 
                 locExp->GetFaceNumModes(f,FwdOrient,m0,m1);
                 
-                Array<OneD, unsigned int> fmapRmat = m_maxElmt[eType]->
+                Array<OneD, unsigned int> fmapRmat = maxExp->
                     GetFaceInverseBoundaryMap(f,FwdOrient, m0,m1);
                 
                 // fill in vertex to face coupling 
@@ -3053,13 +3069,11 @@ namespace Nektar
                 {
                     for(int i = 0; i < nFaceInteriorCoeffs; ++i)
                     {
-                        val = (*m_maxRmat[eType])(vmap[v],fmapRmat[i]);
+                        val = (*maxRmat)(vmap[v],fmapRmat[i]);
                         newmat->SetValue(vlocmap[v],flocmap[f][i],val);
                     }
                 }
-#endif
 
-#if 1
                 // fill in edges to face coupling 
                 for(int e = 0; e < nedges; ++e)
                 {
@@ -3070,14 +3084,12 @@ namespace Nektar
                         
                         for(int i = 0; i < nFaceInteriorCoeffs; ++i)
                         {
-                            val = (*m_maxRmat[eType])(emap[e][j],fmapRmat[i]);
+                            val = (*maxRmat)(emap[e][j],fmapRmat[i]);
                             newmat->SetValue(elocmap[e][j],flocmap[f][i],val);
                         }
                     }
                 }
-#endif
             }
-#endif
             
             return newmat;
         }

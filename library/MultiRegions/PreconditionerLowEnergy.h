@@ -81,15 +81,8 @@ namespace Nektar
 
 	    DNekBlkMatSharedPtr m_BlkMat;
             DNekBlkMatSharedPtr m_RBlk;
-
             DNekBlkMatSharedPtr m_InvRBlk;
 
-            int m_nummodesmax;
-
-            std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr> m_maxRmat;
-            std::map<LibUtilities::ShapeType, Array<OneD, unsigned int> > m_vertMapMaxR; 
-            std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > m_edgeMapMaxR; 
-            std::map<LibUtilities::ShapeType, LocalRegions::ExpansionSharedPtr > m_maxElmt; 
             
             Array<OneD, NekDouble>  m_locToGloSignMult;
             Array<OneD, NekDouble>  m_multiplicity;
@@ -102,16 +95,25 @@ namespace Nektar
             
 	private:
 
-            void SetUpReferenceElements(void);
-            
-            void CreateMultiplicityMap(void);
-
             void SetupBlockTransformationMatrix(void);
 
-            DNekMatSharedPtr ExtractLocMat(StdRegions::StdExpansionSharedPtr  &locExp);
+            void SetUpReferenceElements(
+                 std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr> &maxRmat,
+                 std::map<LibUtilities::ShapeType, LocalRegions::ExpansionSharedPtr > &maxElmt,
+                 std::map<LibUtilities::ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
+                 std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR);
+            
+            DNekMatSharedPtr ExtractLocMat(StdRegions::StdExpansionSharedPtr &locExp,
+                                           DNekScalMatSharedPtr              &maxRmat,
+                                           LocalRegions::ExpansionSharedPtr  &expMax,
+                                           Array<OneD, unsigned int>         &vertMapMaxR,
+                                      Array<OneD, Array<OneD, unsigned int> > &edgeMapMaxR);
 
 
-        void ModifyPrismTransformationMatrix(
+            void CreateMultiplicityMap(void);
+            
+
+            void ModifyPrismTransformationMatrix(
                 LocalRegions::TetExpSharedPtr TetExp,
                 LocalRegions::PrismExpSharedPtr PrismExp,
                 DNekMatSharedPtr Rmodprism,
@@ -121,9 +123,9 @@ namespace Nektar
                 DNekScalMatSharedPtr RTmat,
                 LocalRegions::HexExpSharedPtr maxTetExp);
 
-            SpatialDomains::TetGeomSharedPtr CreateRefTetGeom(void);
+            SpatialDomains::TetGeomSharedPtr   CreateRefTetGeom(void);
             SpatialDomains::PrismGeomSharedPtr CreateRefPrismGeom(void);
-            SpatialDomains::HexGeomSharedPtr CreateRefHexGeom(void);
+            SpatialDomains::HexGeomSharedPtr   CreateRefHexGeom(void);
 
             virtual void v_InitObject();
 

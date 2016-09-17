@@ -86,14 +86,19 @@ namespace Nektar
             DNekBlkMatSharedPtr m_InvRBlk;
 
             int m_nummodesmax;
+
             std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr> m_maxRmat;
+            std::map<LibUtilities::ShapeType, Array<OneD, unsigned int> > m_vertMapMaxR; 
             std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > m_edgeMapMaxR; 
-            std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > m_faceMapMaxR; 
+            std::map<LibUtilities::ShapeType, LocalRegions::ExpansionSharedPtr > m_maxElmt; 
             
             Array<OneD, NekDouble>  m_locToGloSignMult;
+            Array<OneD, NekDouble>  m_locMask;
             Array<OneD, NekDouble>  m_multiplicity;
             Array<OneD, int>        m_map;
 
+            bool m_signChange;
+            
             // store how many consecutive similar blocks there are in R and Rinv
             std::vector<std::pair<int,int> >  m_sameBlock;  
             
@@ -105,7 +110,8 @@ namespace Nektar
 
             void SetupBlockTransformationMatrix(void);
 
-            DNekMatSharedPtr ExtractLocMat(StdRegions::StdExpansionSharedPtr  &locExp);
+            DNekMatSharedPtr ExtractLocMat(StdRegions::StdExpansionSharedPtr  &locExp,
+                                           std::map<int,int> &EdgeSize);
 
         void ModifyPrismTransformationMatrix(
                 LocalRegions::TetExpSharedPtr TetExp,
@@ -134,7 +140,7 @@ namespace Nektar
             virtual void v_DoTransformToLowEnergy(
                 const Array<OneD, NekDouble>& pInput,
                 Array<OneD, NekDouble>& pOutput);
-
+            
             virtual void v_DoTransformFromLowEnergy(
                 Array<OneD, NekDouble>& pInOut);
 
@@ -149,7 +155,8 @@ namespace Nektar
             virtual void v_BuildPreconditioner();
             
             virtual DNekScalMatSharedPtr
-                v_TransformedSchurCompl(int n, const boost::shared_ptr<DNekScalMat > &loc_mat);
+                v_TransformedSchurCompl(int n, int offset, 
+                                        const boost::shared_ptr<DNekScalMat > &loc_mat);
         };
     }
 }

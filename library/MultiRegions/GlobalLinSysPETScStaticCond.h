@@ -108,10 +108,10 @@ namespace Nektar
             virtual DNekScalBlkMatSharedPtr v_PreSolve(
                 int                     scLevel,
                 NekVector<NekDouble>   &F_GlobBnd);
-            virtual void v_BasisTransform(
+            virtual void v_BasisFwdTransform(
                 Array<OneD, NekDouble>& pInOut,
                 int                     offset);
-            virtual void v_BasisInvTransform(
+            virtual void v_BasisBwdTransform(
                 Array<OneD, NekDouble>& pInOut);
 
             virtual GlobalLinSysStaticCondSharedPtr v_Recurse(

@@ -178,7 +178,8 @@ namespace Nektar
          * \f$\mathbf{R}^{T}\f$
          */
         DNekScalMatSharedPtr Preconditioner::v_TransformedSchurCompl(
-            int offset, const boost::shared_ptr<DNekScalMat> &loc_mat)
+                       int offset, int bnd_offset,
+                       const boost::shared_ptr<DNekScalMat> &loc_mat)
 	{
 	    return loc_mat;
 	}

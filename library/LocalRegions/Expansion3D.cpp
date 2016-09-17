@@ -1858,9 +1858,11 @@ namespace Nektar
         Array<OneD, unsigned int>
         Expansion3D::v_GetFaceInverseBoundaryMap(
             int fid,
-            StdRegions::Orientation faceOrient)
+            StdRegions::Orientation faceOrient,
+            int P1,
+            int P2)
         {
-            int n, j;
+            int n,m,j;
             int nFaceCoeffs;
 
             int nBndCoeffs = NumBndryCoeffs();
@@ -1879,7 +1881,6 @@ namespace Nektar
             // Number of interior face coefficients
             nFaceCoeffs = GetFaceIntNcoeffs(fid);
 
-            Array<OneD, unsigned int> facemaparray(nFaceCoeffs);
             StdRegions::Orientation   fOrient; 
             Array<OneD, unsigned int> maparray  =
                 Array<OneD, unsigned int>(nFaceCoeffs);
@@ -1898,10 +1899,64 @@ namespace Nektar
             // maparray is the location of the face within the matrix
             GetFaceInteriorMap(fid, fOrient, maparray, signarray);
 
-            for (n = 0; n < nFaceCoeffs; ++n)
+            Array<OneD, unsigned int> facemaparray;
+            int locP1,locP2;
+            GetFaceNumModes(fid,fOrient,locP1,locP2);
+            
+            if(P1 == -1)
             {
-                facemaparray[n] = reversemap[maparray[n]];
+                P1 = locP1;
             }
+            else
+            {
+                ASSERTL1(P1 <= locP1,"Expect value of passed P1 to "
+                         "be lower or equal to face num modes");
+            }
+            
+            if(P2 == -1)
+            {
+                P2 = locP2; 
+            }
+            else
+            {
+                ASSERTL1(P2 <= locP2,"Expect value of passed P2 to "
+                         "be lower or equal to face num modes");
+            }
+
+            switch(GetGeom3D()->GetFace(fid)->GetShapeType())
+            {
+            case LibUtilities::eTriangle:
+                {
+                    facemaparray= Array<OneD, unsigned int>(LibUtilities::StdTriData::getNumberOfCoefficients(P1-3,P2-3));                    
+                    int cnt = 0;
+                    int cnt1 = 0; 
+                    for(n = 0; n < P1-3; ++n)
+                    {
+                        for(int m = 0; m < P2-3-n; ++m, ++cnt)
+                        {
+                            facemaparray[cnt] = reversemap[maparray[cnt1+m]];
+                        }
+                        cnt1 += locP2-3-n;
+                    }
+                }
+            break;
+            case LibUtilities::eQuadrilateral:
+                {
+                    facemaparray = Array<OneD, unsigned int>(LibUtilities::StdQuadData::getNumberOfCoefficients(P1-2,P2-2));                    
+                    int cnt = 0;
+                    int cnt1 = 0; 
+                    for(n = 0; n < P2-2; ++n)
+                    {
+                        for(int m = 0; m < P1-2; ++m, ++cnt)
+                        {
+                            facemaparray[cnt] = reversemap[maparray[cnt1+m]];
+                        }
+                        cnt1 += locP1-2;
+                    }
+                }
+                break;
+            }
+            
 
             return facemaparray;
         }
@@ -1970,7 +2025,6 @@ namespace Nektar
                 nFaceCoeffs = GetFaceIntNcoeffs(fid);
                 
                 Array<OneD, unsigned int> facemaparray(nFaceCoeffs);
-                StdRegions::Orientation   fOrient; 
                 Array<OneD, unsigned int> maparray  =
                     Array<OneD, unsigned int>(nFaceCoeffs);
                 Array<OneD, int>          signarray =

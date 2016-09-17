@@ -95,10 +95,13 @@ void NodeOpti2D2D::Optimise()
 {
     CalcMinJac();
 
-    NekDouble currentW = GetFunctional<2>(false,false);
+    NekDouble currentW = GetFunctional<2>();
     NekDouble newVal = currentW;
 
-    return;
+    cout << endl;
+    cout << G[0] << " " << G[1] << " " << G[2] << " " << G[3] << " " << G[4] << endl;
+
+    Array<OneD, NekDouble> Gt = G;
 
     NekDouble xc       = node->m_x;
     NekDouble yc       = node->m_y;
@@ -106,18 +109,22 @@ void NodeOpti2D2D::Optimise()
     vector<NekDouble> d;
     for(int i = 0; i < 6; i++)
     {
-        node->m_x = xc + 1e-6*dir[i][0];
-        node->m_y = yc + 1e-6*dir[i][1];
+        node->m_x = xc + 1e-8*dir[i][0];
+        node->m_y = yc + 1e-8*dir[i][1];
 
         d.push_back(GetFunctional<2>(false,false));
     }
 
     G = Array<OneD, NekDouble>(5);
-    G[0] = (d[1] - d[3]) / 2e-6;
-    G[1] = (d[2] - d[4]) / 2e-6;
-    G[2] = (d[1] + d[3] - 2*currentW) / 1e-12;
-    G[3] = (d[0] - d[1] - d[2] + 2*currentW - d[3] - d[4] + d[5]) / 2e-12;
-    G[4] = (d[2] + d[4] - 2*currentW) / 1e-12;
+    G[0] = (d[1] - d[3]) / 2e-8;
+    G[1] = (d[2] - d[4]) / 2e-8;
+    G[2] = (d[1] + d[3] - 2*currentW) / 1e-16;
+    G[3] = (d[0] - d[1] - d[2] + 2*currentW - d[3] - d[4] + d[5]) / 2e-16;
+    G[4] = (d[2] + d[4] - 2*currentW) / 1e-16;
+
+    cout << G[0] << " " << G[1] << " " << G[2] << " " << G[3] << " " << G[4] << endl;
+
+    G = Gt;
 
     // Gradient already zero
     if (G[0]*G[0] + G[1]*G[1] > gradTol())

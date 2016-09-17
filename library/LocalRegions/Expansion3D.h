@@ -148,7 +148,7 @@ namespace Nektar
                 v_GetEdgeInverseBoundaryMap(int eid);
 
             LOCAL_REGIONS_EXPORT virtual Array<OneD, unsigned int>
-                v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = StdRegions::eNoOrientation);
+                v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = StdRegions::eNoOrientation, int P1=-1, int P2=-1);
             
             LOCAL_REGIONS_EXPORT void v_GetInverseBoundaryMaps(
                     Array<OneD, unsigned int> &vmap,

@@ -918,30 +918,6 @@ namespace Nektar
            
             int offset = 0;
 
-            // Set up list of unique edge sizes
-            for(n=0; n < n_exp; ++n)
-            {
-                int eid = expList->GetOffset_Elmt_Id(n);
-                locExp = expList->GetExp(eid);
-
-                int nEdges = locExp->GetNedges();
-                for(int j = 0; j < nEdges; ++j)
-                {
-                    int nEdgeInteriorCoeffs = locExp->GetEdgeNcoeffs(j) - 2;
-                    int meshEdgeId = locExp->as<LocalRegions::Expansion3D>()
-                        ->GetGeom3D()->GetEid(j);
-                    if(EdgeSize.count(meshEdgeId) == 0)
-                    {
-                        EdgeSize[meshEdgeId] = nEdgeInteriorCoeffs;
-                    }
-                    else
-                    {
-                        EdgeSize[meshEdgeId] = min(EdgeSize[meshEdgeId],
-                                                   nEdgeInteriorCoeffs);
-                    }
-                }
-            }                
-
             // Set up transformation matrices whilst checking to see if
             // consecutive matrices are the same and if so reuse the
             // matrices and store how many consecutive offsets there
@@ -955,7 +931,7 @@ namespace Nektar
 
                 if(m_sameBlock.size() == 0)
                 {
-                    rmat = ExtractLocMat(locExp,EdgeSize);
+                    rmat = ExtractLocMat(locExp);
                     //Block R matrix
                     m_RBlk->SetBlock(n, n, rmat);
 
@@ -982,20 +958,6 @@ namespace Nektar
                             reuse = false;
                             break;
                         }
-
-#if 1
-                        for(int j = 0; j < locExp->GetNedges(); ++j)
-                        {
-                            if(EdgeSize[locExpSav->as<LocalRegions::Expansion3D>()
-                                          ->GetGeom3D()->GetEid(j)] !=
-                               EdgeSize[locExp->as<LocalRegions::Expansion3D>()
-                                          ->GetGeom3D()->GetEid(j)])
-                            {
-                                reuse = false;
-                                break;
-                            }
-                        }
-#endif
                     }
 
                     if(reuse)
@@ -1008,7 +970,7 @@ namespace Nektar
                     }
                     else
                     {
-                        rmat = ExtractLocMat(locExp,EdgeSize);
+                        rmat = ExtractLocMat(locExp);
                         //Block R matrix
                         m_RBlk->SetBlock(n, n, rmat);
 
@@ -1065,13 +1027,6 @@ namespace Nektar
             Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(),
                          tmp.get(), m_map.get(), pLocalIn.get());
 
-            // multiply by mask for variable p. 
-            if(m_signChange)
-            {
-                //                Vmath::Vmul(m_locMask.num_elements(), m_locMask, 1,
-                //                            pLocalIn, 1, pLocalIn, 1);
-            }
-            
             //Multiply by the block transformation matrix
 	    int cnt = 0; 
 	    int cnt1 = 0;
@@ -1136,13 +1091,6 @@ namespace Nektar
             Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(),
                          tmp.get(), m_map.get(), pLocalIn.get());
 
-            // multiply by mask for variable p. 
-            if(m_signChange)
-            {
-                //Vmath::Vmul(m_locMask.num_elements(), m_locMask, 1,
-                //pLocalIn, 1, pLocalIn, 1);
-            }
-            
             //Multiply by the block transformation matrix
 	    int cnt = 0; 
 	    int cnt1 = 0;
@@ -1213,14 +1161,6 @@ namespace Nektar
 		cnt1 += nexp;
 	    }
 
-#if 0 
-            if(m_signChange)
-            {
-                Vmath::Vmul(m_locMask.num_elements(), m_locMask, 1,
-                            pLocalIn, 1, pLocalIn, 1);
-            }
-#endif
-            
             //Assemble local boundary to global boundary
             Vmath::Assmb(nLocBndDofs, m_locToGloSignMult.get(),pLocal.get(), m_map.get(), tmp.get());
 
@@ -1453,13 +1393,11 @@ namespace Nektar
 
             // Construct a map of 1/multiplicity
             m_locToGloSignMult = Array<OneD, NekDouble>(nEntries);
-            m_locMask          = Array<OneD, NekDouble>(nEntries);
             for (i = 0; i < nEntries; ++i)
             {
                 if(m_signChange)
                 {
                     m_locToGloSignMult[i] = sign[i]*1.0/vCounts[vMap[i]];
-                    m_locMask[i] = (sign[i] == 0.0)? 0.0:1.0; 
                 }
                 else
                 {
@@ -3051,8 +2989,7 @@ namespace Nektar
 #endif
 
         DNekMatSharedPtr PreconditionerLowEnergy::
-        ExtractLocMat(StdRegions::StdExpansionSharedPtr
-                      &locExp, map<int,int> &EdgeSize)
+        ExtractLocMat(StdRegions::StdExpansionSharedPtr &locExp)
         {
             LibUtilities::ShapeType eType=locExp->DetShapeType();
             NekDouble val;
@@ -3087,7 +3024,6 @@ namespace Nektar
             {
                 int nEdgeInteriorCoeffs = locExp->GetEdgeNcoeffs(e) -2;
                 
-                //nEdgeInteriorCoeffs = EdgeSize[locExp->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetEid(e)];
                 for(int v = 0; v < nverts; ++v)
                 {
                     for(int i = 0; i < nEdgeInteriorCoeffs; ++i)

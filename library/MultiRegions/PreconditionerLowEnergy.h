@@ -79,10 +79,9 @@ namespace Nektar
             const boost::weak_ptr<GlobalLinSys> m_linsys;
             boost::shared_ptr<AssemblyMap> m_locToGloMap;
 
-	    DNekBlkMatSharedPtr  m_BlkMat;
-            DNekScalMatSharedPtr m_bnd_mat;
-
+	    DNekBlkMatSharedPtr m_BlkMat;
             DNekBlkMatSharedPtr m_RBlk;
+
             DNekBlkMatSharedPtr m_InvRBlk;
 
             int m_nummodesmax;
@@ -93,7 +92,6 @@ namespace Nektar
             std::map<LibUtilities::ShapeType, LocalRegions::ExpansionSharedPtr > m_maxElmt; 
             
             Array<OneD, NekDouble>  m_locToGloSignMult;
-            Array<OneD, NekDouble>  m_locMask;
             Array<OneD, NekDouble>  m_multiplicity;
             Array<OneD, int>        m_map;
 
@@ -110,8 +108,8 @@ namespace Nektar
 
             void SetupBlockTransformationMatrix(void);
 
-            DNekMatSharedPtr ExtractLocMat(StdRegions::StdExpansionSharedPtr  &locExp,
-                                           std::map<int,int> &EdgeSize);
+            DNekMatSharedPtr ExtractLocMat(StdRegions::StdExpansionSharedPtr  &locExp);
+
 
         void ModifyPrismTransformationMatrix(
                 LocalRegions::TetExpSharedPtr TetExp,

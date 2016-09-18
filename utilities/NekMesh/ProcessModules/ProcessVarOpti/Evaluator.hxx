@@ -286,6 +286,9 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                         NekDouble trEtE = FrobProd<DIM>(Emat,Emat);
                         NekDouble sigma =
                             0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*ep*ep));
+
+                        ASSERTL0(sigma > numeric_limits<double>::min(),"dividing by zero");
+
                         NekDouble lsigma = log(sigma);
                         integral += derivUtil[typeIt->first]->quadW[k] *
                                     fabs(typeIt->second[i]->maps[k][9]) *
@@ -423,14 +426,11 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                         //}
 
                         //ep = minJac < 0.0 ? sqrt(gam*jacDet*(gam*jacDet-minJac)) : gam*jacDet;
-
+                        //ep *= fabs(typeIt->second[i]->maps[k][9]);
                         NekDouble sigma =
                             0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*ep*ep));
 
-                        if(sigma < numeric_limits<float>::min())
-                        {
-                            sigma = numeric_limits<float>::min();
-                        }
+                        ASSERTL0(sigma > numeric_limits<double>::min(),"dividing by zero");
 
                         NekDouble lsigma = log(sigma);
                         integral += derivUtil[typeIt->first]->quadW[k]*
@@ -559,6 +559,7 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                         NekDouble frob = FrobeniusNorm(jacIdeal);
                         NekDouble sigma = 0.5*(jacDet +
                                         sqrt(jacDet*jacDet + 4.0*ep*ep));
+                        ASSERTL0(sigma > numeric_limits<double>::min(),"dividing by zero");
                         NekDouble W = frob / DIM / pow(fabs(sigma), 2.0/DIM);
                         integral += derivUtil[typeIt->first]->quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * W;
 
@@ -683,6 +684,7 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                         NekDouble frob = FrobeniusNorm(jacIdeal);
                         NekDouble sigma = 0.5*(jacDet +
                                         sqrt(jacDet*jacDet + 4.0*ep*ep));
+                        ASSERTL0(sigma > numeric_limits<double>::min(),"dividing by zero");
                         NekDouble W = frob / sigma;
                         integral += derivUtil[typeIt->first]->quadW[k]*
                                     fabs(typeIt->second[i]->maps[k][9])* W;

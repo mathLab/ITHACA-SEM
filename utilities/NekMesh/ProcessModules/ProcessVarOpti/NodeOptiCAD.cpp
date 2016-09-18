@@ -401,7 +401,6 @@ void NodeOpti2D3D::Optimise()
             if(newVal <= currentW + c1() * (
                 pg + 0.5*hes))
             {
-
                 //this is a minimser so see if we can extend further
                 while (l > -10)
                 {
@@ -415,6 +414,8 @@ void NodeOpti2D3D::Optimise()
                         //we could possibly find a optimiser but the point has
                         //gone out of the parameter plane
                         found = true;
+                        uvt[0] = uvc[0] + alpha * dk[0];
+                        uvt[1] = uvc[1] + alpha * dk[1];
                         break;
                     }
 
@@ -447,6 +448,11 @@ void NodeOpti2D3D::Optimise()
 
                     l--;
                     alpha = pow(beta,l);
+                }
+                if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
+                   uvt[1] < bd[2] || uvt[1] > bd[3])
+                {
+                    cout << "out of bound" << endl;
                 }
             }
             else
@@ -511,7 +517,7 @@ void NodeOpti2D3D::Optimise()
         if(uva[0] < bd[0] || uva[0] > bd[1] ||
            uva[1] < bd[2] || uva[1] > bd[3])
         {
-            ASSERTL1(false,"something when very wrong and the node finished out of its parameter plane");
+            ASSERTL0(false,"something when very wrong and the node finished out of its parameter plane");
         }
     }
 

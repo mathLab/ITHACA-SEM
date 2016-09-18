@@ -151,46 +151,6 @@ template<int DIM> inline void CalcLinElGrad(NekDouble jacIdeal[DIM][DIM],
 
 }
 
-template<int DIM> inline void CalcLinElHes(NekDouble jacDerivPhi1[DIM][DIM],
-                                           NekDouble jacDerivPhi2[DIM][DIM],
-                                           NekDouble d2Edxi[DIM][DIM])
-{
-    NekDouble part1[DIM][DIM];
-    for (int m = 0; m < DIM; ++m)
-    {
-        for (int n = 0; n < DIM; ++n)
-        {
-            part1[m][n] = 0.0;
-            for (int l = 0; l < DIM; ++l)
-            {
-                // want phi_I^{-1} (l,n)
-                part1[m][n] += jacDerivPhi1[l][m] * jacDerivPhi2[l][n];
-            }
-        }
-    }
-    NekDouble part2[DIM][DIM];
-    for (int m = 0; m < DIM; ++m)
-    {
-        for (int n = 0; n < DIM; ++n)
-        {
-            part2[m][n] = 0.0;
-            for (int l = 0; l < DIM; ++l)
-            {
-                // want phi_I^{-1} (l,n)
-                part2[m][n] += jacDerivPhi2[l][m] * jacDerivPhi1[l][n];
-            }
-        }
-    }
-
-    for (int m = 0; m < DIM; ++m)
-    {
-        for (int n = 0; n < DIM; ++n)
-        {
-            d2Edxi[m][n] = part1[m][n] * part2[m][n];
-        }
-    }
-}
-
 template<int DIM> inline NekDouble FrobProd(NekDouble in1[DIM][DIM],
                                             NekDouble in2[DIM][DIM])
 {
@@ -414,21 +374,13 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                             if(hessian)
                             {
                                 NekDouble frobProdHes[DIM][DIM]; //holder for the hessian frobprods
-                                NekDouble frobProdHes2[DIM][DIM];
                                 for (int m = 0; m < DIM; ++m)
                                 {
                                     for(int l = m; l < DIM; ++l)
                                     {
                                         frobProdHes[m][l] = FrobProd<DIM>(dEdxi[m],dEdxi[l]);
-
-                                        NekDouble d2Edxi[DIM][DIM];
-
-                                        CalcLinElHes<DIM>(jacDerivPhi[m],jacDerivPhi[l], d2Edxi);
-
-                                        frobProdHes2[m][l] = FrobProd<DIM>(d2Edxi,Emat);
                                     }
                                 }
-
 
                                 int ct = 0;
                                 for (int m = 0; m < DIM; ++m)

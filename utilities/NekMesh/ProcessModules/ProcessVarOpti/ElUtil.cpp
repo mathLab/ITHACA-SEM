@@ -403,6 +403,21 @@ void ElUtil::Evaluate()
             mx = max(mx,jacDet);
             mn = min(mn,jacDet);
         }
+
+        NekVector<NekDouble> x1i2(derivUtil->ptsHigh),y1i2(derivUtil->ptsHigh),
+                             x2i2(derivUtil->ptsHigh),y2i2(derivUtil->ptsHigh);
+
+        x1i2 = derivUtil->VdmD[0]*X;
+        y1i2 = derivUtil->VdmD[0]*Y;
+        x2i2 = derivUtil->VdmD[1]*X;
+        y2i2 = derivUtil->VdmD[1]*Y;
+
+        for(int j = 0; j < derivUtil->ptsHigh; j++)
+        {
+            NekDouble jacDet = x1i2(j) * y2i2(j) - x2i2(j)*y1i2(j);
+            mx = max(mx,jacDet);
+            mn = min(mn,jacDet);
+        }
     }
     else if(m_dim == 3)
     {

@@ -98,7 +98,7 @@ void NodeOpti2D2D::Optimise()
     NekDouble currentW = GetFunctional<2>();
     NekDouble newVal = currentW;
 
-    cout << endl;
+    /*cout << endl;
     cout << G[0] << " " << G[1] << " " << G[2] << " " << G[3] << " " << G[4] << endl;
 
     Array<OneD, NekDouble> Gt = G;
@@ -124,14 +124,14 @@ void NodeOpti2D2D::Optimise()
 
     cout << G[0] << " " << G[1] << " " << G[2] << " " << G[3] << " " << G[4] << endl;
 
-    G = Gt;
+    G = Gt;*/
 
     // Gradient already zero
     if (G[0]*G[0] + G[1]*G[1] > gradTol())
     {
         //needs to optimise
-        //NekDouble xc       = node->m_x;
-        //NekDouble yc       = node->m_y;
+        NekDouble xc       = node->m_x;
+        NekDouble yc       = node->m_y;
 
         Array<OneD, NekDouble> sk(2), dk(2);
         bool DNC = false;
@@ -287,12 +287,15 @@ void NodeOpti2D2D::Optimise()
         }
 
         mtx.lock();
-        res->func += newVal;
         res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+
                             (node->m_y-yc)*(node->m_y-yc)),
                        res->val);
         mtx.unlock();
     }
+
+    mtx.lock();
+    res->func += newVal;
+    mtx.unlock();
 }
 
 int NodeOpti3D3D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(

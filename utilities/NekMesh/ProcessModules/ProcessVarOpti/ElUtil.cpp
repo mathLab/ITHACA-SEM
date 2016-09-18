@@ -443,41 +443,6 @@ void ElUtil::Evaluate()
         y3i = derivUtil->VdmD[2]*Y;
         z3i = derivUtil->VdmD[2]*Z;
 
-        /*if(m_el->GetShapeType() == LibUtilities::ePrism)
-        {
-            cout << endl;
-
-            SpatialDomains::GeometrySharedPtr geom = m_el->GetGeom(3);
-            LibUtilities::PointsKeyVector p = geom->GetPointsKeys();
-            SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
-            Array<OneD, NekDouble> jc = gfac->GetJac(p);
-
-            StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
-            Array<OneD, NekDouble> coeff(xmap->GetNcoeffs());
-            xmap->FwdTrans(jc,coeff);
-            Array<OneD, NekDouble> phys(xmap->GetTotPoints());
-            xmap->BwdTrans(coeff, phys);
-
-            LibUtilities::PointsKey pkey1(5,
-                                          LibUtilities::eNodalPrismElec);
-            Array<OneD, NekDouble> u1, v1, w1;
-            LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
-
-            for(int i = 0; i < u1.num_elements(); i++)
-            {
-                Array<OneD, NekDouble> xp(3);
-                xp[0] = u1[i];
-                xp[1] = v1[i];
-                xp[2] = w1[i];
-
-                jacs[i] = xmap->PhysEvaluate(xp, phys);
-
-                mx2 = max(mx2,jacs[i]);
-                mn2 = min(mn2,jacs[i]);
-
-            }
-        }*/
-
         for(int j = 0; j < derivUtil->ptsHigh; j++)
         {
             DNekMat dxdz(3,3,1.0,eFULL);
@@ -502,51 +467,43 @@ void ElUtil::Evaluate()
             mn = min(mn,jacDet);
         }
 
-        /*if(m_el->GetShapeType() == LibUtilities::ePrism)
-        {
-            cout << endl << mn/mx << " " << mn2/mx2 << endl;
-            exit(-1);
-        }*/
+        NekVector<NekDouble> x1i2(nodes.size()),y1i2(nodes.size()),z1i2(nodes.size()),
+                             x2i2(nodes.size()),y2i2(nodes.size()),z2i2(nodes.size()),
+                             x3i2(nodes.size()),y3i2(nodes.size()),z3i2(nodes.size());
 
-                /*NekVector<NekDouble> x1i2(derivUtil->ptsHigh),y1i2(derivUtil->ptsHigh),z1i2(derivUtil->ptsHigh),
-                             x2i2(derivUtil->ptsHigh),y2i2(derivUtil->ptsHigh),z2i2(derivUtil->ptsHigh),
-                             x3i2(derivUtil->ptsHigh),y3i2(derivUtil->ptsHigh),z3i2(derivUtil->ptsHigh);
+        x1i2 = derivUtil->VdmDL[0]*X;
+        y1i2 = derivUtil->VdmDL[0]*Y;
+        z1i2 = derivUtil->VdmDL[0]*Z;
+        x2i2 = derivUtil->VdmDL[1]*X;
+        y2i2 = derivUtil->VdmDL[1]*Y;
+        z2i2 = derivUtil->VdmDL[1]*Z;
+        x3i2 = derivUtil->VdmDL[2]*X;
+        y3i2 = derivUtil->VdmDL[2]*Y;
+        z3i2 = derivUtil->VdmDL[2]*Z;
 
-        x1i2 = derivUtil->VdmD[0]*X;
-        y1i2 = derivUtil->VdmD[0]*Y;
-        z1i2 = derivUtil->VdmD[0]*Z;
-        x2i2 = derivUtil->VdmD[1]*X;
-        y2i2 = derivUtil->VdmD[1]*Y;
-        z2i2 = derivUtil->VdmD[1]*Z;
-        x3i2 = derivUtil->VdmD[2]*X;
-        y3i2 = derivUtil->VdmD[2]*Y;
-        z3i2 = derivUtil->VdmD[2]*Z;
-
-        NekDouble mx2 = -1.0 * numeric_limits<double>::max();
-        NekDouble mn2 =  numeric_limits<double>::max();
-
-        for(int j = 0; j < derivUtil->ptsHigh; j++)
+        for(int j = 0; j < nodes.size(); j++)
         {
             DNekMat dxdz(3,3,1.0,eFULL);
-            dxdz(0,0) = x1i2(j);
-            dxdz(0,1) = x2i2(j);
-            dxdz(0,2) = x3i2(j);
-            dxdz(1,0) = y1i2(j);
-            dxdz(1,1) = y2i2(j);
-            dxdz(1,2) = y3i2(j);
-            dxdz(2,0) = z1i2(j);
-            dxdz(2,1) = z2i2(j);
-            dxdz(2,2) = z3i2(j);
+            dxdz(0,0) = x1i(j);
+            dxdz(0,1) = x2i(j);
+            dxdz(0,2) = x3i(j);
+            dxdz(1,0) = y1i(j);
+            dxdz(1,1) = y2i(j);
+            dxdz(1,2) = y3i(j);
+            dxdz(2,0) = z1i(j);
+            dxdz(2,1) = z2i(j);
+            dxdz(2,2) = z3i(j);
 
             NekDouble jacDet = dxdz(0,0)*(dxdz(1,1)*dxdz(2,2)-dxdz(2,1)*dxdz(1,2))
                               -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
                               +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
-
-            mx2 = max(mx2,jacDet);
-            mn2 = min(mn2,jacDet);
+            /*if(m_el->GetShapeType() == LibUtilities::ePrism)
+            {
+                cout << jacDet << " " << jacs[j] << endl;
+            }*/
+            mx = max(mx,jacDet);
+            mn = min(mn,jacDet);
         }
-
-        cout << mn/mx << " " << mn2/mx2 << endl;*/
     }
 
     mtx2.lock();
@@ -555,6 +512,7 @@ void ElUtil::Evaluate()
         res->startInv++;
     }
     res->worstJac = min(res->worstJac,mn/mx);
+    res->minJac = min(res->minJac,mn/mx);
     mtx2.unlock();
 
     //maps = MappingIdealToRef();

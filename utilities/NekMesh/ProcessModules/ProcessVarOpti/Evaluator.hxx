@@ -258,8 +258,8 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
 
 
     NekDouble integral = 0.0;
-    NekDouble ep = minJac < 1e-4 ? sqrt(1e-8 + 0.004*minJac*minJac) : 1e-4;
-    //NekDouble ep = minJac < 0.0 ? sqrt(gam*(gam-minJac)) : gam;
+    NekDouble ep = minJac < 0.0 ? sqrt(1e-8 + 0.004*minJac*minJac) : 1e-4;
+    //NekDouble ep = minJac < 0.0 ? sqrt(gam*100*(gam*100-minJac)) : gam*100;
     //NekDouble ep = minJac < gam ? sqrt(gam*gam + minJac*minJac) : gam;
     NekDouble jacIdeal[DIM][DIM], jacDet;
     G = Array<OneD, NekDouble>(DIM == 2 ? 5 : 9, 0.0);
@@ -426,10 +426,11 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                         //}
 
                         //ep = minJac < 0.0 ? sqrt(gam*jacDet*(gam*jacDet-minJac)) : gam*jacDet;
-                        //ep *= fabs(typeIt->second[i]->maps[k][9]);
+                        //ep *= fabs(jacDet);
                         NekDouble sigma =
                             0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*ep*ep));
 
+                        //cout << sigma << " " << jacDet << " " << ep << " " << minJac <<  endl;
                         ASSERTL0(sigma > numeric_limits<double>::min(),"dividing by zero");
 
                         NekDouble lsigma = log(sigma);

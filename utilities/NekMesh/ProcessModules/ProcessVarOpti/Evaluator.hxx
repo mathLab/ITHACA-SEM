@@ -151,6 +151,34 @@ template<int DIM> inline void CalcLinElGrad(NekDouble jacIdeal[DIM][DIM],
 
 }
 
+template<int DIM> inline void CalcLinElSecGrad(NekDouble jacDeriv1[DIM][DIM],
+                                               NekDouble jacDeriv2[DIM][DIM],
+                                               NekDouble out[DIM][DIM])
+{
+    NekDouble part1[DIM][DIM], part2[DIM][DIM];
+    for (int m = 0; m < DIM; ++m)
+    {
+        for (int n = 0; n < DIM; ++n)
+        {
+            part1[m][n] = 0.0;
+            part2[m][n] = 0.0;
+            for (int l = 0; l < DIM; ++l)
+            {
+                part1[m][n] += jacDeriv1[l][m] * jacDeriv2[l][n];
+                part2[m][n] += jacDeriv2[l][m] * jacDeriv1[l][n];
+            }
+        }
+    }
+
+    for (int m = 0; m < DIM; ++m)
+    {
+        for (int n = 0; n < DIM; ++n)
+        {
+            out[m][n] = 0.5*(part1[m][n] + part2[m][n]);
+        }
+    }
+}
+
 template<int DIM> inline NekDouble FrobProd(NekDouble in1[DIM][DIM],
                                             NekDouble in2[DIM][DIM])
 {
@@ -382,6 +410,11 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                                     for(int l = m; l < DIM; ++l)
                                     {
                                         frobProdHes[m][l] = FrobProd<DIM>(dEdxi[m],dEdxi[l]);
+
+                                        NekDouble d2Edxi[DIM][DIM];
+                                        CalcLinElSecGrad<DIM>(jacDerivPhi[m],jacDerivPhi[l],d2Edxi);
+
+                                        frobProdHes[m][l] += FrobProd<DIM>(d2Edxi,Emat);
                                     }
                                 }
 

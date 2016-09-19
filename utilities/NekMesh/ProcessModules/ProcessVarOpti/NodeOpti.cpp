@@ -74,13 +74,6 @@ void NodeOpti::CalcMinJac()
 int NodeOpti2D2D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
     22, NodeOpti2D2D::create, "2D2D");
 
-NekDouble dir[6][2] = {{1,1},
-                       {1,0},
-                       {0,1},
-                       {-1,0},
-                       {0,-1},
-                       {-1,-1}};
-
 void NodeOpti2D2D::Optimise()
 {
     CalcMinJac();
@@ -291,12 +284,62 @@ void NodeOpti2D2D::Optimise()
 int NodeOpti3D3D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
     33, NodeOpti3D3D::create, "3D3D");
 
+NekDouble dir[12][3] = {{1,0,0},
+                       {-1,0,0},
+                       {0,1,0},
+                       {0,-1,0},
+                       {0,0,1},
+                       {0,0,-1},
+                       {1,1,0},
+                       {-1,-1,0},
+                       {1,0,1},
+                       {-1,0,-1},
+                       {0,1,1},
+                       {0,-1,-1}};
+
+
 void NodeOpti3D3D::Optimise()
 {
     CalcMinJac();
 
     NekDouble currentW = GetFunctional<3>();
     NekDouble newVal = currentW;
+
+    /*//cout << endl;
+    //cout << G[0] << " " << G[1] << " " << G[2] << " " << G[3] << " " << G[4] << " " << G[5] << " " << G[6] << " " << G[7] << " " << G[8] << endl;
+
+    Array<OneD, NekDouble> Gt = G;
+
+    NekDouble xc       = node->m_x;
+    NekDouble yc       = node->m_y;
+    NekDouble zc       = node->m_z;
+
+    vector<NekDouble> d;
+    for(int i = 0; i < 12; i++)
+    {
+        node->m_x = xc + 1e-6*dir[i][0];
+        node->m_y = yc + 1e-6*dir[i][1];
+        node->m_z = zc + 1e-6*dir[i][2];
+
+        d.push_back(GetFunctional<3>(false,false));
+    }
+
+    G = Array<OneD, NekDouble>(9);
+    G[0] = (d[0] - d[1]) / 2e-6;
+    G[1] = (d[2] - d[3]) / 2e-6;
+    G[2] = (d[4] - d[5]) / 2e-6;
+
+    G[3] = (d[0] + d[1] - 2*currentW) / 1e-12;
+    G[6] = (d[2] + d[3] - 2*currentW) / 1e-12;
+    G[8] = (d[4] + d[5] - 2*currentW) / 1e-12;
+
+    G[4] = (d[6] - d[0] - d[2] + 2*currentW - d[1] - d[3] + d[7]) / 2e-12;
+    G[5] = (d[8] - d[0] - d[4] + 2*currentW - d[1] - d[5] + d[9]) / 2e-12;
+    G[7] = (d[10] - d[2] - d[4] + 2*currentW - d[3] - d[5] + d[11]) / 2e-12;
+
+    //cout << G[0] << " " << G[1] << " " << G[2] << " " << G[3] << " " << G[4] << " " << G[5] << " " << G[6] << " " << G[7] << " " << G[8] << endl;
+
+    G = Gt;*/
 
     if(G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {

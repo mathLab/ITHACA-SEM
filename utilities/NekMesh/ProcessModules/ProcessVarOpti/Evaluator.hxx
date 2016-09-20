@@ -397,9 +397,8 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
 
                             for (int j = 0; j < DIM; ++j)
                             {
-                                NekDouble add = derivUtil[typeIt->first]->quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
+                                G[j] += derivUtil[typeIt->first]->quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
                                         2.0 * mu * frobProd[j] + K * lsigma * jacDetDeriv[j] / (2.0*sigma - jacDet));
-                                G[j] += add;
                             }
 
                             if(hessian)

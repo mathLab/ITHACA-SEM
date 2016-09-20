@@ -484,15 +484,15 @@ void ElUtil::Evaluate()
         for(int j = 0; j < nodes.size(); j++)
         {
             DNekMat dxdz(3,3,1.0,eFULL);
-            dxdz(0,0) = x1i(j);
-            dxdz(0,1) = x2i(j);
-            dxdz(0,2) = x3i(j);
-            dxdz(1,0) = y1i(j);
-            dxdz(1,1) = y2i(j);
-            dxdz(1,2) = y3i(j);
-            dxdz(2,0) = z1i(j);
-            dxdz(2,1) = z2i(j);
-            dxdz(2,2) = z3i(j);
+            dxdz(0,0) = x1i2(j);
+            dxdz(0,1) = x2i2(j);
+            dxdz(0,2) = x3i2(j);
+            dxdz(1,0) = y1i2(j);
+            dxdz(1,1) = y2i2(j);
+            dxdz(1,2) = y3i2(j);
+            dxdz(2,0) = z1i2(j);
+            dxdz(2,1) = z2i2(j);
+            dxdz(2,2) = z3i2(j);
 
             NekDouble jacDet = dxdz(0,0)*(dxdz(1,1)*dxdz(2,2)-dxdz(2,1)*dxdz(1,2))
                               -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))

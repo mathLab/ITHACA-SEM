@@ -447,6 +447,9 @@ void SurfaceMesh::HOSurf()
                 Array<OneD, NekDouble> uvb, uve;
                 uvb = e->m_n1->GetCADSurfInfo(surf);
                 uve = e->m_n2->GetCADSurfInfo(surf);
+                e->onSurf = true;
+                e->CADSurf = s;
+                e->CADSurfId = surf;
                 Array<OneD, Array<OneD, NekDouble> > uvi(nq);
                 for (int k = 0; k < nq; k++)
                 {

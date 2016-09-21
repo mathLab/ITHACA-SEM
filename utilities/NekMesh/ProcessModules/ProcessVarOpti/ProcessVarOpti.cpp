@@ -231,6 +231,7 @@ void ProcessVarOpti::Process()
 
     res->startInv =0;
     res->worstJac = numeric_limits<double>::max();
+    res->minJac = numeric_limits<double>::max();
     for(int i = 0; i < dataSet.size(); i++)
     {
         dataSet[i]->Evaluate();
@@ -306,6 +307,7 @@ void ProcessVarOpti::Process()
 
         res->startInv = 0;
         res->worstJac = numeric_limits<double>::max();
+        res->minJac = numeric_limits<double>::max();
 
         vector<Thread::ThreadJob*> elJobs(dataSet.size());
         for(int i = 0; i < dataSet.size(); i++)
@@ -322,6 +324,8 @@ void ProcessVarOpti::Process()
         {
             resFile << res->val << " " << res->worstJac << " " << res->func << endl;
         }
+
+        cout << res->minJac << endl;
 
         cout << ctr << "\tResidual: " << res->val
                     << "\tMin Jac: " << res->worstJac

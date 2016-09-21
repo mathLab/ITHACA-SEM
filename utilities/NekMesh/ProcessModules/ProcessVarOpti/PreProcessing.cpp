@@ -59,7 +59,7 @@ void ProcessVarOpti::BuildDerivUtil()
 
                 LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                               LibUtilities::eNodalTriElec);
-                LibUtilities::PointsKey pkey2(m_mesh->m_nummode + 4,
+                LibUtilities::PointsKey pkey2(m_mesh->m_nummode + 6,
                                               LibUtilities::eNodalTriSPI);
                 Array<OneD, NekDouble> u1, v1, u2, v2;
 
@@ -96,11 +96,11 @@ void ProcessVarOpti::BuildDerivUtil()
                 LibUtilities::ShapeType st = LibUtilities::eQuadrilateral;
                 derivUtil[st] = boost::shared_ptr<DerivUtil>(new DerivUtil);
                 derivUtil[st]->ptsLow  = m_mesh->m_nummode*m_mesh->m_nummode;
-                derivUtil[st]->ptsHigh = (m_mesh->m_nummode+4)*(m_mesh->m_nummode+4);
+                derivUtil[st]->ptsHigh = (m_mesh->m_nummode+6)*(m_mesh->m_nummode+6);
 
                 LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                               LibUtilities::eGaussLobattoLegendre);
-                LibUtilities::PointsKey pkey2(m_mesh->m_nummode + 4,
+                LibUtilities::PointsKey pkey2(m_mesh->m_nummode + 6,
                                               LibUtilities::eGaussLobattoLegendre);
                 Array<OneD, NekDouble> u1(derivUtil[st]->ptsLow), v1(derivUtil[st]->ptsLow),
                                        u2(derivUtil[st]->ptsHigh), v2(derivUtil[st]->ptsHigh), tmp, tmp2;
@@ -119,9 +119,9 @@ void ProcessVarOpti::BuildDerivUtil()
                     }
                 }
 
-                for(int i = 0, ct = 0; i < m_mesh->m_nummode+4; i++)
+                for(int i = 0, ct = 0; i < m_mesh->m_nummode+6; i++)
                 {
-                    for(int j = 0; j < m_mesh->m_nummode+4; j++, ct++)
+                    for(int j = 0; j < m_mesh->m_nummode+6; j++, ct++)
                     {
                         u2[ct] = tmp2[j];
                         v2[ct] = tmp2[i];
@@ -411,9 +411,12 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
         }
     }
 
+    cout << boundaryNodes.size() << endl;
+
     vector<NodeSharedPtr> remain;
     res->nDoF = 0;
 
+    int vertex = 0, edge = 0, face = 0;
     NodeSet::iterator nit;
     for (nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end(); ++nit)
     {
@@ -425,10 +428,12 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
             if((*nit)->GetNumCadCurve() == 1)
             {
                 res->nDoF++;
+                vertex++;
             }
             else if((*nit)->GetNumCADSurf() == 1)
             {
                 res->nDoF += 2;
+                vertex++;
             }
             else
             {
@@ -436,6 +441,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
             }
         }
     }
+
+
 
     EdgeSet::iterator eit;
     for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
@@ -451,10 +458,12 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
                 if(n[j]->GetNumCadCurve() == 1)
                 {
                     res->nDoF++;
+                    edge++;
                 }
                 else if(n[j]->GetNumCADSurf() == 1)
                 {
                     res->nDoF += 2;
+                    edge++;
                 }
                 else
                 {
@@ -477,14 +486,18 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
                 if((*fit)->m_faceNodes[j]->GetNumCADSurf() == 1)
                 {
                     res->nDoF += 2;
+                    face++;
                 }
                 else
                 {
                     res->nDoF += 3;
+                    face++;
                 }
             }
         }
     }
+
+    cout << vertex << " " << edge << " " << face << endl;
 
     for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {

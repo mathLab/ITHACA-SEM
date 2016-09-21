@@ -400,8 +400,8 @@ void ElUtil::Evaluate()
         for(int j = 0; j < nodes.size(); j++)
         {
             NekDouble jacDet = x1i(j) * y2i(j) - x2i(j)*y1i(j);
-            mx = max(mx,jacDet);
-            mn = min(mn,jacDet);
+            mx2 = max(mx2,jacDet);
+            mn2 = min(mn2,jacDet);
         }
 
         NekVector<NekDouble> x1i2(derivUtil->ptsHigh),y1i2(derivUtil->ptsHigh),
@@ -459,6 +459,7 @@ void ElUtil::Evaluate()
             NekDouble jacDet = dxdz(0,0)*(dxdz(1,1)*dxdz(2,2)-dxdz(2,1)*dxdz(1,2))
                               -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
                               +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
+            jacDet /= maps[j][9];
             /*if(m_el->GetShapeType() == LibUtilities::ePrism)
             {
                 cout << jacDet << " " << jacs[j] << endl;
@@ -501,24 +502,24 @@ void ElUtil::Evaluate()
             {
                 cout << jacDet << " " << jacs[j] << endl;
             }*/
-            mx = max(mx,jacDet);
-            mn = min(mn,jacDet);
+            mx2 = max(mx2,jacDet);
+            mn2 = min(mn2,jacDet);
         }
     }
 
     mtx2.lock();
-    if(mn < 0)
+    if(mn2 < 0)
     {
         res->startInv++;
     }
-    res->worstJac = min(res->worstJac,mn/mx);
-    res->minJac = min(res->minJac,mn/mx);
+    res->worstJac = min(res->worstJac,mn2/mx2);
+    res->minJac = min(res->minJac,mn);
     mtx2.unlock();
 
     //maps = MappingIdealToRef();
 
     minJac = mn;
-    scaledJac = mn/mx;
+    scaledJac = mn2/mx2;
 }
 
 ElUtilJob* ElUtil::GetJob()

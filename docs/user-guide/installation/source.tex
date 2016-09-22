@@ -402,7 +402,14 @@ ModMETIS          & \cmark & \cmark & \cmark       & \\
     \item Rename \texttt{libs-msvc12.0} to \texttt{lib}
     \item Inside the \texttt{lib} directory, create duplicates of
     \texttt{boost\_zlib.dll} and \texttt{boost\_bzip2.dll} called
-    \texttt{zlib.dll} and \texttt{libbz2.dll}.
+    \texttt{zlib.dll} and \texttt{libbz2.dll}
+	\item Add a \inlsh{BOOST\_HOME} environment variable. To do so,
+	navigate to \emph{Control Panel > System and Security > System}, select
+	\emph{Advanced System Settings}, and in the \emph{Advanced} tab click the
+	\emph{Environment Variables}. In the \emph{System Variables} box, click
+	\emph{New}. In the \emph{New System Variable} window, type \inlsh{BOOST\_HOME}
+	next to \emph{Variable name} and \inlsh{C:\textbackslash local\textbackslash
+	boost\_1\_57\_0} next to\emph{Variable value}.
   \end{itemize}
   \item Unpack \inlsh{nektar++-\nekver.tar.gz} using WinRAR.
 

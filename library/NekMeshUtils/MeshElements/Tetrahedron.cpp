@@ -51,6 +51,11 @@ LibUtilities::ShapeType Tetrahedron::m_type =
     GetElementFactory().RegisterCreatorFunction(
         LibUtilities::eTetrahedron, Tetrahedron::create, "Tetrahedron");
 
+/// Vertex IDs that make up tetrahedron faces.
+int Tetrahedron::m_faceIds[4][3] = {
+    {0, 1, 2}, {0, 1, 3}, {1, 2, 3}, {0, 2, 3}
+};
+
 /**
  * @brief Create a tetrahedron element.
  */
@@ -116,9 +121,6 @@ Tetrahedron::Tetrahedron(ElmtConfig pConf,
         }
     }
 
-    // Face-vertex IDs
-    int face_ids[4][3] = {{0, 1, 2}, {0, 1, 3}, {1, 2, 3}, {0, 2, 3}};
-
     // Face-edge IDs
     int face_edges[4][3];
 
@@ -134,9 +136,9 @@ Tetrahedron::Tetrahedron(ElmtConfig pConf,
         // additional note below).
         for (int k = 0; k < 3; ++k)
         {
-            faceVertices.push_back(m_vertex[face_ids[j][k]]);
-            NodeSharedPtr a = m_vertex[face_ids[j][k]];
-            NodeSharedPtr b = m_vertex[face_ids[j][(k + 1) % 3]];
+            faceVertices.push_back(m_vertex[m_faceIds[j][k]]);
+            NodeSharedPtr a = m_vertex[m_faceIds[j][k]];
+            NodeSharedPtr b = m_vertex[m_faceIds[j][(k + 1) % 3]];
             for (unsigned int i = 0; i < m_edge.size(); ++i)
             {
                 if (((*(m_edge[i]->m_n1) == *a) &&
@@ -159,10 +161,10 @@ Tetrahedron::Tetrahedron(ElmtConfig pConf,
             const int nFaceNodes = n * (n - 1) / 2;
 
             // Get the vertex IDs of whatever face we are processing.
-            vector<int> faceIds(3);
-            faceIds[0] = faceVertices[0]->m_id;
-            faceIds[1] = faceVertices[1]->m_id;
-            faceIds[2] = faceVertices[2]->m_id;
+            vector<int> faceVertIds(3);
+            faceVertIds[0] = faceVertices[0]->m_id;
+            faceVertIds[1] = faceVertices[1]->m_id;
+            faceVertIds[2] = faceVertices[2]->m_id;
 
             // Find out the original face number as we were given it in
             // the constructor using the orientation map.
@@ -187,14 +189,14 @@ Tetrahedron::Tetrahedron(ElmtConfig pConf,
 
             // Find the original face vertex IDs.
             vector<int> origFaceIds(3);
-            origFaceIds[0] = pNodeList[face_ids[origFace][0]]->m_id;
-            origFaceIds[1] = pNodeList[face_ids[origFace][1]]->m_id;
-            origFaceIds[2] = pNodeList[face_ids[origFace][2]]->m_id;
+            origFaceIds[0] = pNodeList[m_faceIds[origFace][0]]->m_id;
+            origFaceIds[1] = pNodeList[m_faceIds[origFace][1]]->m_id;
+            origFaceIds[2] = pNodeList[m_faceIds[origFace][2]]->m_id;
 
             // Construct a HOTriangle object which performs the
             // orientation magically for us.
             HOTriangle<NodeSharedPtr> hoTri(origFaceIds, faceNodes);
-            hoTri.Align(faceIds);
+            hoTri.Align(faceVertIds);
 
             // Copy the face nodes back again.
             faceNodes = hoTri.surfVerts;
@@ -230,6 +232,101 @@ SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom(int coordDim)
     return ret;
 }
 
+StdRegions::Orientation Tetrahedron::GetEdgeOrient(
+    int edgeId, EdgeSharedPtr edge)
+{
+    static int edgeVerts[6][2] = { {0,1}, {1,2}, {0,2}, {0,3}, {1,3}, {2,3} };
+
+    if (edge->m_n1 == m_vertex[edgeVerts[edgeId][0]])
+    {
+        return StdRegions::eForwards;
+    }
+    else if (edge->m_n1 == m_vertex[edgeVerts[edgeId][1]])
+    {
+        return StdRegions::eBackwards;
+    }
+    else
+    {
+        ASSERTL1(false, "Edge is not connected to this quadrilateral.");
+    }
+
+    return StdRegions::eNoOrientation;
+}
+
+void Tetrahedron::MakeOrder(int                                order,
+                            SpatialDomains::GeometrySharedPtr  geom,
+                            LibUtilities::PointsType           pType,
+                            int                                coordDim,
+                            int                               &id,
+                            bool                               justConfig)
+{
+    m_conf.m_order = order;
+    m_curveType    = pType;
+    m_volumeNodes.clear();
+
+    if (order == 1 || order == 2)
+    {
+        m_conf.m_volumeNodes = m_conf.m_faceNodes = false;
+        return;
+    }
+    else if (order == 2)
+    {
+        m_conf.m_faceNodes   = true;
+        m_conf.m_volumeNodes = false;
+        return;
+    }
+    else if (order == 3)
+    {
+        m_conf.m_volumeNodes = false;
+        return;
+    }
+
+    m_conf.m_faceNodes   = true;
+    m_conf.m_volumeNodes = true;
+
+    if (justConfig)
+    {
+        return;
+    }
+
+    int nPoints = order + 1;
+    StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+
+    Array<OneD, NekDouble> px, py, pz;
+    LibUtilities::PointsKey pKey(nPoints, pType);
+    ASSERTL1(pKey.GetPointsDim() == 3, "Points distribution must be 3D");
+    LibUtilities::PointsManager()[pKey]->GetPoints(px, py, pz);
+
+    Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
+
+    for (int i = 0; i < coordDim; ++i)
+    {
+        phys[i] = Array<OneD, NekDouble>(xmap->GetTotPoints());
+        xmap->BwdTrans(geom->GetCoeffs(i), phys[i]);
+    }
+
+    const int nTetPts    = nPoints * (nPoints + 1) * (nPoints + 2) / 6;
+    const int nTetIntPts = (nPoints - 4) * (nPoints - 3) * (nPoints - 2) / 6;
+    m_volumeNodes.resize(nTetIntPts);
+
+    for (int i = nTetPts - nTetIntPts, cnt = 0; i < nTetPts; ++i, ++cnt)
+    {
+        Array<OneD, NekDouble> xp(3);
+        xp[0] = px[i];
+        xp[1] = py[i];
+        xp[2] = pz[i];
+
+        Array<OneD, NekDouble> x(3, 0.0);
+        for (int j = 0; j < coordDim; ++j)
+        {
+            x[j] = xmap->PhysEvaluate(xp, phys[j]);
+        }
+
+        m_volumeNodes[cnt] = boost::shared_ptr<Node>(
+            new Node(id++, x[0], x[1], x[2]));
+    }
+}
+
 /**
  * @brief Return the number of nodes defining a tetrahedron.
  */
@@ -242,124 +339,6 @@ unsigned int Tetrahedron::GetNumNodes(ElmtConfig pConf)
         return 4 * (n + 1) * (n + 2) / 2 - 6 * (n + 1) + 4;
     else
         return 6 * (n + 1) - 8;
-}
-
-/**
- * @brief .
- */
-void Tetrahedron::Complete(int order)
-{
-    int i, j;
-
-    // Create basis key for a nodal tetrahedron.
-    LibUtilities::BasisKey B0(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-    LibUtilities::BasisKey B1(
-        LibUtilities::eOrtho_B,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussRadauMAlpha1Beta0));
-    LibUtilities::BasisKey B2(
-        LibUtilities::eOrtho_C,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussRadauMAlpha2Beta0));
-
-    // Create a standard nodal tetrahedron in order to get the
-    // Vandermonde matrix to perform interpolation to nodal points.
-    StdRegions::StdNodalTetExpSharedPtr nodalTet =
-        MemoryManager<StdRegions::StdNodalTetExp>::AllocateSharedPtr(
-            B0, B1, B2, LibUtilities::eNodalTetEvenlySpaced);
-
-    Array<OneD, NekDouble> x, y, z;
-
-    nodalTet->GetNodalPoints(x, y, z);
-
-    SpatialDomains::TetGeomSharedPtr geom =
-        boost::dynamic_pointer_cast<SpatialDomains::TetGeom>(this->GetGeom(3));
-
-    // Create basis key for a tetrahedron.
-    LibUtilities::BasisKey C0(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-    LibUtilities::BasisKey C1(
-        LibUtilities::eOrtho_B,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussRadauMAlpha1Beta0));
-    LibUtilities::BasisKey C2(
-        LibUtilities::eOrtho_C,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussRadauMAlpha2Beta0));
-
-    // Create a tet.
-    LocalRegions::TetExpSharedPtr tet =
-        MemoryManager<LocalRegions::TetExp>::AllocateSharedPtr(
-            C0, C1, C2, geom);
-
-    // Get coordinate array for tetrahedron.
-    int nqtot = tet->GetTotPoints();
-    Array<OneD, NekDouble> alloc(6 * nqtot);
-    Array<OneD, NekDouble> xi(alloc);
-    Array<OneD, NekDouble> yi(alloc + nqtot);
-    Array<OneD, NekDouble> zi(alloc + 2 * nqtot);
-    Array<OneD, NekDouble> xo(alloc + 3 * nqtot);
-    Array<OneD, NekDouble> yo(alloc + 4 * nqtot);
-    Array<OneD, NekDouble> zo(alloc + 5 * nqtot);
-    Array<OneD, NekDouble> tmp;
-
-    tet->GetCoords(xi, yi, zi);
-
-    for (i = 0; i < 3; ++i)
-    {
-        Array<OneD, NekDouble> coeffs(nodalTet->GetNcoeffs());
-        tet->FwdTrans(alloc + i * nqtot, coeffs);
-        // Apply Vandermonde matrix to project onto nodal space.
-        nodalTet->ModalToNodal(coeffs, tmp = alloc + (i + 3) * nqtot);
-    }
-
-    // Now extract points from the co-ordinate arrays into the
-    // edge/face/volume nodes. First, extract edge-interior nodes.
-    for (i = 0; i < 6; ++i)
-    {
-        int pos = 4 + i * (order - 1);
-        m_edge[i]->m_edgeNodes.clear();
-        for (j = 0; j < order - 1; ++j)
-        {
-            m_edge[i]->m_edgeNodes.push_back(NodeSharedPtr(
-                new Node(0, xo[pos + j], yo[pos + j], zo[pos + j])));
-        }
-    }
-
-    // Now extract face-interior nodes.
-    for (i = 0; i < 4; ++i)
-    {
-        int pos = 4 + 6 * (order - 1) + i * (order - 2) * (order - 1) / 2;
-        m_face[i]->m_faceNodes.clear();
-        for (j = 0; j < (order - 2) * (order - 1) / 2; ++j)
-        {
-            m_face[i]->m_faceNodes.push_back(NodeSharedPtr(
-                new Node(0, xo[pos + j], yo[pos + j], zo[pos + j])));
-        }
-    }
-
-    // Finally extract volume nodes.
-    int pos = 4 + 6 * (order - 1) + 4 * (order - 2) * (order - 1) / 2;
-    for (i = pos; i < (order + 1) * (order + 2) * (order + 3) / 6; ++i)
-    {
-        m_volumeNodes.push_back(
-            NodeSharedPtr(new Node(0, xo[i], yo[i], zo[i])));
-    }
-
-    m_conf.m_order       = order;
-    m_conf.m_faceNodes   = true;
-    m_conf.m_volumeNodes = true;
 }
 
 struct TetOrient
@@ -413,8 +392,6 @@ bool operator==(const struct TetOrient &a, const struct TetOrient &b)
  */
 void Tetrahedron::OrientTet()
 {
-    static int face_ids[4][3] = {{0, 1, 2}, {0, 1, 3}, {1, 2, 3}, {0, 2, 3}};
-
     TetOrientSet faces;
 
     // Create a copy of the original vertex ordering. This is used to
@@ -424,9 +401,9 @@ void Tetrahedron::OrientTet()
     {
         vector<int> nodes(3);
 
-        nodes[0] = m_vertex[face_ids[i][0]]->m_id;
-        nodes[1] = m_vertex[face_ids[i][1]]->m_id;
-        nodes[2] = m_vertex[face_ids[i][2]]->m_id;
+        nodes[0] = m_vertex[m_faceIds[i][0]]->m_id;
+        nodes[1] = m_vertex[m_faceIds[i][1]]->m_id;
+        nodes[2] = m_vertex[m_faceIds[i][2]]->m_id;
 
         sort(nodes.begin(), nodes.end());
         struct TetOrient faceNodes(nodes, i);
@@ -519,9 +496,9 @@ void Tetrahedron::OrientTet()
     {
         vector<int> nodes(3);
 
-        nodes[0] = m_vertex[face_ids[i][0]]->m_id;
-        nodes[1] = m_vertex[face_ids[i][1]]->m_id;
-        nodes[2] = m_vertex[face_ids[i][2]]->m_id;
+        nodes[0] = m_vertex[m_faceIds[i][0]]->m_id;
+        nodes[1] = m_vertex[m_faceIds[i][1]]->m_id;
+        nodes[2] = m_vertex[m_faceIds[i][2]]->m_id;
         sort(nodes.begin(), nodes.end());
 
         struct TetOrient faceNodes(nodes, 0);

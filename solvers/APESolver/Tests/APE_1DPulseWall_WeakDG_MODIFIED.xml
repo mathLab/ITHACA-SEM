@@ -79,9 +79,6 @@
       <E VAR="p0" VALUE="Pinfinity"/>
       <E VAR="rho0" VALUE="Rho0"/>
     </FUNCTION>
-    <FUNCTION NAME="Source">
-      <E VAR="S" VALUE="0"/>
-    </FUNCTION>
     <FUNCTION NAME="ExactSolution"> <!-- Not really the exact solution -->
       <E VAR="p" VALUE="0"/>
       <E VAR="u" VALUE="0"/>

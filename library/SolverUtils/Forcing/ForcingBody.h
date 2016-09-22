@@ -85,11 +85,18 @@ namespace SolverUtils
                     const NekDouble &time);
 
         private:
+            std::string                     m_funcName;
+            bool                            m_hasTimeFcnScaling;
+            LibUtilities::EquationSharedPtr m_timeFcnEqn;
+            bool                            m_transform;
+
             ForcingBody(const LibUtilities::SessionReaderSharedPtr& pSession);
+
             virtual ~ForcingBody(void){};
 
-            bool m_hasTimeFcnScaling;
-            LibUtilities::EquationSharedPtr m_timeFcnEqn;
+            void Update(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                const NekDouble &time);
     };
 
 }

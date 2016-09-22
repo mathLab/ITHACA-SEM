@@ -369,7 +369,7 @@ automatically in the build process.
                   &        & \multicolumn{2}{c}{Installation} & \\ \cmidrule(r){3-4}
 Package           & Req.   & User   & Auto.        & Note \\
 \midrule
-MS Visual Studio  & \cmark & \cmark &              & 2012 and 2013 known working\\
+MS Visual Studio  & \cmark & \cmark &              & 2012, 2013 and 2015 known working\\
 CMake $\geq 3.0$  & \cmark & \cmark &              & \\
 BLAS              & \cmark & \cmark & \cmark       & \\
 LAPACK            & \cmark & \cmark & \cmark       & \\
@@ -382,10 +382,10 @@ ModMETIS          & \cmark & \cmark & \cmark       & \\
 \subsubsection{Detailed instructions}
 
 \begin{enumerate}
-  \item Install Microsoft Visual Studio 2013 (preferred) or 2012 (known to
+  \item Install Microsoft Visual Studio 2015 (preferred), 2013 or 2012 (known to
   work). This can be obtained from Microsoft free of charge by using their
-  Express developer tools from
-  \url{http://www.visualstudio.com/en-us/products/visual-studio-express-vs.aspx}.
+  Community developer tools from
+  \url{https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx}.
   \item Install WinRAR from \url{http://www.rarlab.com/download.htm}.
   \item Install CMake 3.0+ from \url{http://www.cmake.org/download/}. When
   prompted, select the option to add CMake to the system PATH.
@@ -422,8 +422,8 @@ ModMETIS          & \cmark & \cmark & \cmark       & \\
   \item Create a \inlsh{builds} directory within the \inlsh{nektar++-\nekver}
   subdirectory.
   \item Open a Visual Studio terminal. From the start menu, this can be found in
-  \emph{All Programs > Visual Studio 2013 > Visual Studio Tools > Developer
-    Command Prompt for VS2013}.
+  \emph{All Programs > Visual Studio 2015 > Visual Studio Tools > Developer
+    Command Prompt for VS2015}.
   \item Change directory into the \texttt{builds} directory and run the CMake
   graphical utility:
   \begin{lstlisting}[style=BashInputStyle]
@@ -431,8 +431,8 @@ ModMETIS          & \cmark & \cmark & \cmark       & \\
     cmake-gui ..
   \end{lstlisting}
   \item Select the build system you want to generate build scripts for. Note
-  that \emph{Visual Studio 2013} is listed as \emph{Visual Studio 12} in the
-  drop-down list. If you have a 64-bit installation of Windows 7, you should
+  that \emph{Visual Studio 2015} is listed as \emph{Visual Studio 14} in the
+  drop-down list. If you have a 64-bit installation of Windows, you should
   select the \emph{Win64} variant, otherwise 32-bit executables will be
   generated. Select the option to use the native compilers.
   \item Click the \emph{Configure} button, then the \emph{Generate} button.

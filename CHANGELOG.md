@@ -64,6 +64,10 @@ v4.3.4
   number of planes per process (!666)
 - Fix compilation with NEKTAR_USE_MESHGEN option
 - Fix IterativeFull solver in parallel (!685)
+- Fix error message for missing fld file (!689)
+
+**IncNavierStokesSolver:**
+- Fix 2nd order time-integration for VCSMapping (!687)
 
 v4.3.4
 ------

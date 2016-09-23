@@ -57,7 +57,7 @@ void NodeOpti1D3D::Optimise()
 
     //cout << "curve " << sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) << endl;
 
-    if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol() && false)
+    if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
         //modify the gradient to be on the cad system
         ProcessGradient();
@@ -80,7 +80,14 @@ void NodeOpti1D3D::Optimise()
             DNC = true;
         }
 
-        sk[0] = G[0] / G[1] * -1.0;
+        if(G[1] < 0.00001)
+        {
+            sk[0] = G[0] * -1.0;
+        }
+        else
+        {
+            sk[0] = G[0] / G[1] * -1.0;
+        }
 
         Array<OneD, NekDouble> bd = curve->Bounds();
 

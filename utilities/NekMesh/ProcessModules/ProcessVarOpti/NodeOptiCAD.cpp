@@ -51,9 +51,8 @@ int NodeOpti1D3D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
 
 void NodeOpti1D3D::Optimise()
 {
-    CalcMinJac();
-
-    NekDouble currentW = GetFunctional<3>();
+    NekDouble minJacNew;
+    NekDouble currentW = GetFunctional<3>(minJacNew);
     NekDouble newVal = currentW;
 
     //cout << "curve " << sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) << endl;
@@ -108,7 +107,7 @@ void NodeOpti1D3D::Optimise()
                 node->m_y = p[1];
                 node->m_z = p[2];
 
-                newVal = GetFunctional<3>(false,false);
+                newVal = GetFunctional<3>(minJacNew,false,false);
                 //
                 // Wolfe conditions
                 if (newVal <= currentW + c1() * (
@@ -146,7 +145,7 @@ void NodeOpti1D3D::Optimise()
                 node->m_y = p[1];
                 node->m_z = p[2];
 
-                newVal = GetFunctional<3>(false,false);
+                newVal = GetFunctional<3>(minJacNew,false,false);
             }
 
             if(newVal <= currentW + c1() * (
@@ -172,7 +171,7 @@ void NodeOpti1D3D::Optimise()
                     node->m_x = p[0];
                     node->m_y = p[1];
                     node->m_z = p[2];
-                    NekDouble dbVal = GetFunctional<3>(false,false);
+                    NekDouble dbVal = GetFunctional<3>(minJacNew,false,false);
 
                     nt = tc + alpha/beta * dk[0];
                     //dont acutally need to check this point
@@ -183,7 +182,7 @@ void NodeOpti1D3D::Optimise()
                     node->m_y = p[1];
                     node->m_z = p[2];
 
-                    newVal = GetFunctional<3>(false,false);
+                    newVal = GetFunctional<3>(minJacNew,false,false);
 
                     if (newVal <= currentW + c1() * (
                         alpha*pg) &&
@@ -215,7 +214,7 @@ void NodeOpti1D3D::Optimise()
                     node->m_z = p[2];
                     node->MoveCurve(p,curve->GetId(),nt);
 
-                    newVal = GetFunctional<3>(false,false);
+                    newVal = GetFunctional<3>(minJacNew,false,false);
                     //
                     // Wolfe conditions
                     if (newVal <= currentW + c1() * (
@@ -245,6 +244,7 @@ void NodeOpti1D3D::Optimise()
         }
         else
         {
+            minJac = minJacNew;
             node->MoveCurve(p,curve->GetId(),nt);
         }
         mtx.lock();
@@ -263,9 +263,8 @@ int NodeOpti2D3D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
 
 void NodeOpti2D3D::Optimise()
 {
-    CalcMinJac();
-
-    NekDouble currentW = GetFunctional<3>();
+    NekDouble minJacNew;
+    NekDouble currentW = GetFunctional<3>(minJacNew);
     NekDouble newVal = currentW;
 
     //cout << "curve " << sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) << endl;
@@ -351,7 +350,7 @@ void NodeOpti2D3D::Optimise()
                 node->m_y = p[1];
                 node->m_z = p[2];
 
-                newVal = GetFunctional<3>(false,false);
+                newVal = GetFunctional<3>(minJacNew,false,false);
 
                 //cout << currentW << " " <<  newVal << endl;
 
@@ -395,7 +394,7 @@ void NodeOpti2D3D::Optimise()
                 node->m_y = p[1];
                 node->m_z = p[2];
 
-                newVal = GetFunctional<3>(false,false);
+                newVal = GetFunctional<3>(minJacNew,false,false);
             }
 
             if(newVal <= currentW + c1() * (
@@ -423,7 +422,7 @@ void NodeOpti2D3D::Optimise()
                     node->m_x = p[0];
                     node->m_y = p[1];
                     node->m_z = p[2];
-                    NekDouble dbVal = GetFunctional<3>(false,false);
+                    NekDouble dbVal = GetFunctional<3>(minJacNew,false,false);
 
                     uvt[0] = uvc[0] + alpha * dk[0];
                     uvt[1] = uvc[1] + alpha * dk[1];
@@ -435,7 +434,7 @@ void NodeOpti2D3D::Optimise()
                     node->m_y = p[1];
                     node->m_z = p[2];
 
-                    newVal = GetFunctional<3>(false,false);
+                    newVal = GetFunctional<3>(minJacNew,false,false);
 
                     if (newVal <= currentW + c1() * (
                         alpha*pg + 0.5*alpha*alpha*hes) &&
@@ -475,7 +474,7 @@ void NodeOpti2D3D::Optimise()
                     node->m_y = p[1];
                     node->m_z = p[2];
 
-                    newVal = GetFunctional<3>(false,false);
+                    newVal = GetFunctional<3>(minJacNew,false,false);
 
                     // Wolfe conditions
                     if (newVal <= currentW + c1() * (
@@ -505,6 +504,7 @@ void NodeOpti2D3D::Optimise()
         }
         else
         {
+            minJac = minJacNew;
             node->Move(p,surf->GetId(),uvt);
         }
 

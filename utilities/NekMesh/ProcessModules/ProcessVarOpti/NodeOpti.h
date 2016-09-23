@@ -68,19 +68,22 @@ public:
 
     virtual ~NodeOpti(){};
 
+    void CalcMinJac();
+
     virtual void Optimise() = 0;
     NodeOptiJob *GetJob();
 
 protected:
 
-    template<int DIM> NekDouble GetFunctional(bool gradient = true,
+    template<int DIM> NekDouble GetFunctional(NekDouble &minJacNew,
+                                              bool gradient = true,
                                               bool hessian = true);
     NodeSharedPtr node;
     boost::mutex mtx;
     std::map<LibUtilities::ShapeType,std::vector<ElUtilSharedPtr> > data;
     Array<OneD, NekDouble> G;
 
-    void CalcMinJac();
+
     bool Linear();
 
     template<int DIM> int IsIndefinite();

@@ -234,7 +234,7 @@ inline NekDouble FrobeniusNorm(NekDouble inarray[DIM][DIM])
 }
 
 template<int DIM>
-NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
+NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient, bool hessian)
 {
     map<LibUtilities::ShapeType,vector<ElUtilSharedPtr> >::iterator typeIt;
     map<LibUtilities::ShapeType,DerivArray> derivs;
@@ -284,11 +284,11 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
         //derivs[typeIt->first] = deriv;
     }
 
-
+    minJacNew = std::numeric_limits<double>::max();
     NekDouble integral = 0.0;
-    NekDouble ep = minJac < 0.0 ? sqrt(1e-12 + 0.04*minJac*minJac) : 1e-6;
+    //NekDouble ep = minJac < 0.0 ? sqrt(1e-12 + 0.04*minJac*minJac) : 1e-6;
     //NekDouble ep = minJac < 0.0 ? sqrt(gam*(gam-minJac)) : gam;
-    //NekDouble ep = minJac < 0.0 ? sqrt(gam*gam + minJac*minJac) : gam;
+    NekDouble ep = minJac < 0.0 ? sqrt(gam*gam + minJac*minJac) : gam;
     NekDouble jacIdeal[DIM][DIM], jacDet;
     G = Array<OneD, NekDouble>(DIM == 2 ? 5 : 9, 0.0);
 
@@ -307,6 +307,7 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                     for(int k = 0; k < derivUtil[typeIt->first]->ptsHigh; ++k)
                     {
                         jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
+                        minJacNew = min(minJacNew,jacDet);
 
                         NekDouble Emat[DIM][DIM];
                         EMatrix<DIM>(jacIdeal,Emat);
@@ -315,6 +316,10 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                         NekDouble sigma =
                             0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*ep*ep));
 
+                        if(sigma < numeric_limits<double>::min() && !gradient)
+                        {
+                            return numeric_limits<double>::max();
+                        }
                         ASSERTL0(sigma > numeric_limits<double>::min(),"dividing by zero");
 
                         NekDouble lsigma = log(sigma);
@@ -449,6 +454,7 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                     for(int k = 0; k < derivUtil[typeIt->first]->ptsHigh; ++k)
                     {
                         jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
+                        minJacNew = min(minJacNew,jacDet);
                         NekDouble I1 = FrobeniusNorm(jacIdeal);
 
                         //if(gradient && minJac > 0.0 && jacDet < 0.0)
@@ -462,7 +468,11 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                         NekDouble sigma =
                             0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*ep*ep));
 
-                        //cout << sigma << " " << jacDet << " " << ep << " " << minJac <<  endl;
+
+                        if(sigma < numeric_limits<double>::min() && !gradient)
+                        {
+                            return numeric_limits<double>::max();
+                        }
                         ASSERTL0(sigma > numeric_limits<double>::min(),"dividing by zero");
 
                         NekDouble lsigma = log(sigma);
@@ -589,9 +599,14 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                     for(int k = 0; k < derivUtil[typeIt->first]->ptsHigh; ++k)
                     {
                         jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
+                        minJacNew = min(minJacNew,jacDet);
                         NekDouble frob = FrobeniusNorm(jacIdeal);
                         NekDouble sigma = 0.5*(jacDet +
                                         sqrt(jacDet*jacDet + 4.0*ep*ep));
+                        if(sigma < numeric_limits<double>::min() && !gradient)
+                        {
+                            return numeric_limits<double>::max();
+                        }
                         ASSERTL0(sigma > numeric_limits<double>::min(),"dividing by zero");
                         NekDouble W = frob / DIM / pow(fabs(sigma), 2.0/DIM);
                         integral += derivUtil[typeIt->first]->quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * W;
@@ -714,9 +729,14 @@ NekDouble NodeOpti::GetFunctional(bool gradient, bool hessian)
                     for(int k = 0; k < derivUtil[typeIt->first]->ptsHigh; ++k)
                     {
                         jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
+                        minJacNew = min(minJacNew,jacDet);
                         NekDouble frob = FrobeniusNorm(jacIdeal);
                         NekDouble sigma = 0.5*(jacDet +
                                         sqrt(jacDet*jacDet + 4.0*ep*ep));
+                        if(sigma < numeric_limits<double>::min() && !gradient)
+                        {
+                            return numeric_limits<double>::max();
+                        }
                         ASSERTL0(sigma > numeric_limits<double>::min(),"dividing by zero");
                         NekDouble W = frob / sigma;
                         integral += derivUtil[typeIt->first]->quadW[k]*

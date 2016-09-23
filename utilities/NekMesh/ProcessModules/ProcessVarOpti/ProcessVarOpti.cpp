@@ -231,10 +231,10 @@ void ProcessVarOpti::Process()
 
     res->startInv =0;
     res->worstJac = numeric_limits<double>::max();
-    res->minJac = numeric_limits<double>::max();
     for(int i = 0; i < dataSet.size(); i++)
     {
         dataSet[i]->Evaluate();
+        dataSet[i]->InitialMinJac();
     }
 
     if(m_config["histfile"].beenSet)
@@ -281,6 +281,15 @@ void ProcessVarOpti::Process()
         resFile.open(m_config["resfile"].as<string>().c_str());
     }
 
+    for(int i = 0; i < optiNodes.size(); i++)
+    {
+        vector<Thread::ThreadJob*> jobs(optiNodes[i].size());
+        for(int j = 0; j < optiNodes[i].size(); j++)
+        {
+            optiNodes[i][j]->CalcMinJac();
+        }
+    }
+
     while (res->val > restol)
     {
         ctr++;
@@ -307,7 +316,6 @@ void ProcessVarOpti::Process()
 
         res->startInv = 0;
         res->worstJac = numeric_limits<double>::max();
-        res->minJac = numeric_limits<double>::max();
 
         vector<Thread::ThreadJob*> elJobs(dataSet.size());
         for(int i = 0; i < dataSet.size(); i++)
@@ -324,8 +332,6 @@ void ProcessVarOpti::Process()
         {
             resFile << res->val << " " << res->worstJac << " " << res->func << endl;
         }
-
-        cout << res->minJac << endl;
 
         cout << ctr << "\tResidual: " << res->val
                     << "\tMin Jac: " << res->worstJac

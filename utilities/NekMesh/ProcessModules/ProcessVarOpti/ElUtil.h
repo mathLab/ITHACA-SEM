@@ -72,6 +72,7 @@ public:
     NekDouble scaledJac;
 
     void Evaluate();
+    void InitialMinJac();
 
     ElementSharedPtr GetEl()
     {

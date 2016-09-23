@@ -68,7 +68,15 @@ const NekDouble NodeOpti::gam = numeric_limits<float>::epsilon();
 
 void NodeOpti::CalcMinJac()
 {
-    minJac = res->minJac;
+    minJac = numeric_limits<double>::max();
+    map<LibUtilities::ShapeType,vector<ElUtilSharedPtr> >::iterator typeIt;
+    for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
+    {
+        for(int i = 0; i < typeIt->second.size(); i++)
+        {
+            minJac = min(minJac,typeIt->second[i]->minJac);
+        }
+    }
 }
 
 int NodeOpti2D2D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
@@ -76,9 +84,8 @@ int NodeOpti2D2D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
 
 void NodeOpti2D2D::Optimise()
 {
-    CalcMinJac();
-
-    NekDouble currentW = GetFunctional<2>();
+    NekDouble minJacNew;
+    NekDouble currentW = GetFunctional<2>(minJacNew);
     NekDouble newVal = currentW;
 
     /*cout << endl;
@@ -173,7 +180,7 @@ void NodeOpti2D2D::Optimise()
                 node->m_x = xc + alpha * sk[0];
                 node->m_y = yc + alpha * sk[1];
 
-                newVal = GetFunctional<2>(false,false);
+                newVal = GetFunctional<2>(minJacNew,false,false);
                 //dont need the hessian again this function updates G to be the new
                 //location
                 //
@@ -203,7 +210,7 @@ void NodeOpti2D2D::Optimise()
             node->m_x = xc + dk[0];
             node->m_y = yc + dk[1];
 
-            newVal = GetFunctional<2>(false,false);
+            newVal = GetFunctional<2>(minJacNew,false,false);
 
             if(newVal <= currentW + c1() * (
                 pg + 0.5*hes))
@@ -215,12 +222,12 @@ void NodeOpti2D2D::Optimise()
                     node->m_x = xc + alpha * dk[0];
                     node->m_y = yc + alpha * dk[1];
 
-                    newVal = GetFunctional<2>(false,false);
+                    newVal = GetFunctional<2>(minJacNew,false,false);
 
                     node->m_x = xc + alpha/beta * dk[0];
                     node->m_y = yc + alpha/beta * dk[1];
 
-                    NekDouble dbVal = GetFunctional<2>(false,false);
+                    NekDouble dbVal = GetFunctional<2>(minJacNew,false,false);
 
                     if (newVal <= currentW + c1() * (
                         alpha*pg + 0.5*alpha*alpha*hes) &&
@@ -244,7 +251,7 @@ void NodeOpti2D2D::Optimise()
                     node->m_x = xc + alpha * dk[0];
                     node->m_y = yc + alpha * dk[1];
 
-                    newVal = GetFunctional<2>(false,false);
+                    newVal = GetFunctional<2>(minJacNew,false,false);
 
                     if (newVal <= currentW + c1() * (
                         alpha*pg + 0.5*alpha*alpha*hes))
@@ -267,6 +274,10 @@ void NodeOpti2D2D::Optimise()
             mtx.lock();
             res->nReset++;
             mtx.unlock();
+        }
+        else
+        {
+            minJac = minJacNew;
         }
 
         mtx.lock();
@@ -300,9 +311,8 @@ NekDouble dir[12][3] = {{1,0,0},
 
 void NodeOpti3D3D::Optimise()
 {
-    CalcMinJac();
-
-    NekDouble currentW = GetFunctional<3>();
+    NekDouble minJacNew;
+    NekDouble currentW = GetFunctional<3>(minJacNew);
     NekDouble newVal = currentW;
 
     /*//cout << endl;
@@ -423,7 +433,7 @@ void NodeOpti3D3D::Optimise()
                 node->m_y = yc + alpha * sk[1];
                 node->m_z = zc + alpha * sk[2];
 
-                newVal = GetFunctional<3>(false,false);
+                newVal = GetFunctional<3>(minJacNew,false,false);
                 //dont need the hessian again this function updates G to be the new
                 //location
                 //
@@ -453,7 +463,7 @@ void NodeOpti3D3D::Optimise()
             node->m_x = xc + dk[0];
             node->m_y = yc + dk[1];
             node->m_z = zc + dk[2];
-            newVal = GetFunctional<3>(false,false);
+            newVal = GetFunctional<3>(minJacNew,false,false);
 
             if(newVal <= currentW + c1() * (
                 pg + 0.5*hes))
@@ -466,13 +476,13 @@ void NodeOpti3D3D::Optimise()
                     node->m_y = yc + alpha * dk[1];
                     node->m_z = zc + alpha * dk[2];
 
-                    newVal = GetFunctional<3>(false,false);
+                    newVal = GetFunctional<3>(minJacNew,false,false);
 
                     node->m_x = xc + alpha/beta * dk[0];
                     node->m_y = yc + alpha/beta * dk[1];
                     node->m_z = zc + alpha/beta * dk[2];
 
-                    NekDouble dbVal = GetFunctional<3>(false,false);
+                    NekDouble dbVal = GetFunctional<3>(minJacNew,false,false);
 
                     if (newVal <= currentW + c1() * (
                         alpha*pg + 0.5*alpha*alpha*hes) &&
@@ -497,7 +507,7 @@ void NodeOpti3D3D::Optimise()
                     node->m_y = yc + alpha * dk[1];
                     node->m_z = zc + alpha * dk[2];
 
-                    newVal = GetFunctional<3>(false,false);
+                    newVal = GetFunctional<3>(minJacNew,false,false);
 
                     if (newVal <= currentW + c1() * (
                         alpha*pg + 0.5*alpha*alpha*hes))
@@ -521,6 +531,10 @@ void NodeOpti3D3D::Optimise()
             mtx.lock();
             res->nReset++;
             mtx.unlock();
+        }
+        else
+        {
+            minJac = minJacNew;
         }
 
         mtx.lock();

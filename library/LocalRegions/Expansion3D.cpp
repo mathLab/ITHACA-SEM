@@ -890,7 +890,6 @@ namespace Nektar
                     Vmath::Vcopy(m_ncoeffs,&outarray[0],1,
                                  &(lmat->GetPtr())[0],1);
 
-                    //cout << endl << *lmat << endl;
                     lmat->Invert();
                 }
                 break;
@@ -1312,18 +1311,14 @@ namespace Nektar
             // Define storage for vertex transpose matrix and zero all entries
             MatrixStorage storage = eFULL;
             DNekMatSharedPtr transformationmatrix;
-            DNekMatSharedPtr transposedtransformationmatrix;
             
             transformationmatrix =
                 MemoryManager<DNekMat>::AllocateSharedPtr(
                     nBndCoeffs, nBndCoeffs, 0.0, storage);
-            transposedtransformationmatrix =
-                MemoryManager<DNekMat>::AllocateSharedPtr(
-                    nBndCoeffs, nBndCoeffs, 0.0, storage);
 
             DNekMat &R  = (*transformationmatrix);
-            DNekMat &RT = (*transposedtransformationmatrix);
 
+            
             // Build the vertex-edge/face transform matrix: This matrix is
             // constructed from the submatrices corresponding to the couping
             // between each vertex and the attached edges/faces
@@ -1475,6 +1470,9 @@ namespace Nektar
                                        nedgemodesconnected + m,
                                        FaceFaceValue);
 
+                        FaceFaceValue = (*r_bnd)(facemodearray[m],
+                                                 edgemodearray[n]);
+
                         // and transpose
                         Sefef.SetValue(nedgemodesconnected + m,
                                        n,
@@ -1482,12 +1480,12 @@ namespace Nektar
                     }
                 }
 
-
                 // Invert edge-face coupling matrix
                 if (efRow)
                 {
                     Sefef.Invert();
 
+                    
                     //R_{v}=-S_{v,ef}inv(S_{ef,ef})
                     Sveft = -Svef * Sefef;
                 }
@@ -1495,8 +1493,6 @@ namespace Nektar
                 // Populate R with R_{ve} components
                 for (n = 0; n < edgemodearray.num_elements(); ++n)
                 {
-                    RT.SetValue(edgemodearray[n], GetVertexMap(vid),
-                                Sveft(0, n));
                     R.SetValue(GetVertexMap(vid), edgemodearray[n],
                                Sveft(0, n));
                 }
@@ -1504,8 +1500,6 @@ namespace Nektar
                 // Populate R with R_{vf} components
                 for (n = 0; n < facemodearray.num_elements(); ++n)
                 {
-                    RT.SetValue(facemodearray[n], GetVertexMap(vid),
-                                Sveft(0, n + nedgemodesconnected));
                     R.SetValue(GetVertexMap(vid), facemodearray[n],
                                Sveft(0, n + nedgemodesconnected));
                 }
@@ -1648,8 +1642,6 @@ namespace Nektar
                     {
                         R.SetValue(edgemodearray[n], facemodearray[m],
                                    Meft(n, m));
-                        RT.SetValue(facemodearray[m], edgemodearray[n],
-                                    Meft(n, m));
                     }
                 }
             }
@@ -1657,18 +1649,12 @@ namespace Nektar
             for (i = 0; i < R.GetRows(); ++i)
             {
                 R.SetValue(i, i, 1.0);
-                RT.SetValue(i, i, 1.0);
             }
 
             if ((matrixType == StdRegions::ePreconR)||
                 (matrixType == StdRegions::ePreconRMass))
             {
                 return transformationmatrix;
-            }
-            else if ((matrixType == StdRegions::ePreconRT)||
-                     (matrixType == StdRegions::ePreconRTMass))
-            {
-                return transposedtransformationmatrix;
             }
             else
             {
@@ -1987,7 +1973,7 @@ namespace Nektar
             vmap = Array<OneD, unsigned int>(nverts);
             for (n = 0; n < nverts; ++n)
             {
-                int id = GetVertexMap(n,true);
+                int id = GetVertexMap(n);
                 vmap[n] = reversemap[id]; // not sure what should be true here. 
             } 
             

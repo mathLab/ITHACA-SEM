@@ -39,6 +39,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <LocalRegions/TetExp.h>
+#include <LocalRegions/PyrExp.h>
 #include <LocalRegions/PrismExp.h>
 #include <LocalRegions/HexExp.h>
 
@@ -103,16 +104,21 @@ namespace Nektar
                  std::map<LibUtilities::ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
                  std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR);
             
+            void SetUpPyrMaxRMat(int nummodesmax,
+                 LocalRegions::PyrExpSharedPtr &PyrExp,
+                 std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr> &maxRmat,
+                 std::map<LibUtilities::ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
+                 std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
+                 std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR);
+
             DNekMatSharedPtr ExtractLocMat(StdRegions::StdExpansionSharedPtr &locExp,
                                            DNekScalMatSharedPtr              &maxRmat,
                                            LocalRegions::ExpansionSharedPtr  &expMax,
                                            Array<OneD, unsigned int>         &vertMapMaxR,
                                       Array<OneD, Array<OneD, unsigned int> > &edgeMapMaxR);
 
-
             void CreateMultiplicityMap(void);
             
-
             void ModifyPrismTransformationMatrix(
                 LocalRegions::TetExpSharedPtr TetExp,
                 LocalRegions::PrismExpSharedPtr PrismExp,
@@ -124,6 +130,7 @@ namespace Nektar
                 LocalRegions::HexExpSharedPtr maxTetExp);
 
             SpatialDomains::TetGeomSharedPtr   CreateRefTetGeom(void);
+            SpatialDomains::PyrGeomSharedPtr   CreateRefPyrGeom(void);
             SpatialDomains::PrismGeomSharedPtr CreateRefPrismGeom(void);
             SpatialDomains::HexGeomSharedPtr   CreateRefHexGeom(void);
 

@@ -393,7 +393,7 @@ namespace Nektar
              Array<OneD, Array<OneD, NekDouble> > xi(3);
              xi[0] = xia;
              xi[1] = yia;
-             xi[1] = zia;
+             xi[2] = zia;
 
              boost::shared_ptr<NekMatrix<NekDouble> > mat =
                  m_util->GetInterpolationMatrix(xi);

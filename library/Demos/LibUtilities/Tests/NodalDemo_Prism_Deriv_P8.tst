@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>Nodal prism integration, evenly spaced points, P = 8</description>
+    <description>Nodal prism derivative, evenly spaced points, P = 8</description>
     <executable>NodalDemo</executable>
     <parameters>--order 8 --type 27 --deriv</parameters>
     <metrics>

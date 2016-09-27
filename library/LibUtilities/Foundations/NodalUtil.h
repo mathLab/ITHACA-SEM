@@ -115,9 +115,10 @@ protected:
      * @brief Return the values of the orthogonal basis at the nodal points for
      * a given mode.
      *
-     * @param dir   Coordinate direction of derivative.
      * @param mode  Mode number, which is between 0 and NodalUtil::v_NumModes()
      *              - 1.
+     *
+     * @return Orthogonal mode @p mode evaluated at the nodal points.
      */
     virtual NekVector<NekDouble> v_OrthoBasis(const int mode) = 0;
 
@@ -140,6 +141,8 @@ protected:
      * the (potentially non-square) Vandermonde matrix can be constructed to
      * create the interpolation matrix at an arbitrary set of points in the
      * domain.
+     *
+     * @param xi  Distribution of nodal points to create utility with.
      */
     virtual boost::shared_ptr<NodalUtil> v_CreateUtil(
         Array<OneD, Array<OneD, NekDouble> > &xi) = 0;

@@ -60,6 +60,8 @@ namespace LibUtilities
  * of the orthogonal basis for each element type, \f$ \mathbf{g}_i = 0 \f$ for
  * \f$ i > 0 \f$. We use NodalUtil::v_ModeZeroIntegral to return the analytic
  * value of \f$ \mathbf{g}_0 \f$.
+ *
+ * @return Vector of integration weights for the integration points.
  */
 NekVector<NekDouble> NodalUtil::GetWeights()
 {
@@ -94,6 +96,8 @@ NekVector<NekDouble> NodalUtil::GetWeights()
  * with each entry as \f$\mathbf{V}_{ij} = (\psi_i(\xi_j))\f$ where \f$ \psi_i
  * \f$ is the orthogonal basis obtained through the abstract function
  * NodalUtil::v_OrthoBasis.
+ *
+ * @return The Vandermonde matrix.
  */
 SharedMatrix NodalUtil::GetVandermonde()
 {
@@ -124,6 +128,9 @@ SharedMatrix NodalUtil::GetVandermonde()
  * NodalUtil::v_OrthoBasisDeriv.
  *
  * @param dir  Direction of derivative in the standard element.
+ *
+ * @return Vandermonde matrix corresponding with derivative of the basis
+ *         functions in direction @p dir.
  */
 SharedMatrix NodalUtil::GetVandermondeForDeriv(int dir)
 {
@@ -153,6 +160,10 @@ SharedMatrix NodalUtil::GetVandermondeForDeriv(int dir)
  * \mathbf{V}_d \mathbf{V}^{-1} \f$, where \f$ \mathbf{V}_d \f$ is the
  * derivative Vandermonde matrix and \f$ \mathbf{V} \f$ is the Vandermonde
  * matrix.
+ *
+ * @param dir  Coordinate direction in which to evaluate the derivative.
+ *
+ * @return The derivative matrix for direction @p dir.
  */
 SharedMatrix NodalUtil::GetDerivMatrix(int dir)
 {
@@ -185,6 +196,8 @@ SharedMatrix NodalUtil::GetDerivMatrix(int dir)
  *
  * @param xi  An array of first size number of spatial dimensions \f$ d \f$ and
  *            secondary size the number of points to interpolate.
+ *
+ * @return The interpolation matrix for the points @p xi.
  */
 SharedMatrix NodalUtil::GetInterpolationMatrix(
     Array<OneD, Array<OneD, NekDouble> > &xi)
@@ -276,6 +289,8 @@ NodalUtilTriangle::NodalUtilTriangle(int                    degree,
  * and \f$ J_n^{(\alpha,\beta)}(z) \f$ denotes the standard Jacobi polynomial.
  *
  * @param mode  The mode of the orthogonal basis to evaluate.
+ *
+ * @return Vector containing orthogonal basis evaluated at the points #m_xi.
  */
 NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasis(const int mode)
 {
@@ -309,7 +324,11 @@ NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasis(const int mode)
  * coordinate derivatives as described in Sherwin & Karniadakis (2nd edition),
  * pg 150.
  *
+ * @param dir   Coordinate direction in which to evaluate the derivative.
  * @param mode  The mode of the orthogonal basis to evaluate.
+ *
+ * @return Vector containing the derivative of the orthogonal basis evaluated at
+ *         the points #m_xi.
  */
 NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
     const int dir, const int mode)
@@ -470,6 +489,8 @@ NodalUtilTetrahedron::NodalUtilTetrahedron(int                    degree,
  * J_n^{(\alpha,\beta)}(z) \f$ denotes the standard Jacobi polynomial.
  *
  * @param mode  The mode of the orthogonal basis to evaluate.
+ *
+ * @return Vector containing orthogonal basis evaluated at the points #m_xi.
  */
 NekVector<NekDouble> NodalUtilTetrahedron::v_OrthoBasis(const int mode)
 {
@@ -507,7 +528,11 @@ NekVector<NekDouble> NodalUtilTetrahedron::v_OrthoBasis(const int mode)
  * coordinate derivatives as described in Sherwin & Karniadakis (2nd edition),
  * pg 152.
  *
+ * @param dir   Coordinate direction in which to evaluate the derivative.
  * @param mode  The mode of the orthogonal basis to evaluate.
+ *
+ * @return Vector containing the derivative of the orthogonal basis evaluated at
+ *         the points #m_xi.
  */
 NekVector<NekDouble> NodalUtilTetrahedron::v_OrthoBasisDeriv(
     const int dir, const int mode)
@@ -687,6 +712,8 @@ NodalUtilPrism::NodalUtilPrism(int                    degree,
  * J_n^{(\alpha,\beta)}(z) \f$ denotes the standard Jacobi polynomial.
  *
  * @param mode  The mode of the orthogonal basis to evaluate.
+ *
+ * @return Vector containing orthogonal basis evaluated at the points #m_xi.
  */
 NekVector<NekDouble> NodalUtilPrism::v_OrthoBasis(const int mode)
 {
@@ -725,6 +752,10 @@ NekVector<NekDouble> NodalUtilPrism::v_OrthoBasis(const int mode)
  * pg 152.
  *
  * @param mode  The mode of the orthogonal basis to evaluate.
+ * @param dir   Coordinate direction in which to evaluate the derivative.
+ *
+ * @return Vector containing the derivative of the orthogonal basis evaluated at
+ *         the points #m_xi.
  */
 NekVector<NekDouble> NodalUtilPrism::v_OrthoBasisDeriv(
     const int dir, const int mode)

@@ -56,6 +56,11 @@ v4.4.0
 - Add module to stretch homogeneous direction (!609)
 - Add module to add composite ID of elements as a field (!674)
 
+v4.3.5
+------
+**Documentation**
+- Update build instructions in user guide for Windows (!692)
+
 v4.3.4
 ------
 **Library:**

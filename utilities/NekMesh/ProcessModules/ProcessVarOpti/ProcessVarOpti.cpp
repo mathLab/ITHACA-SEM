@@ -295,7 +295,9 @@ void ProcessVarOpti::Process()
         ctr++;
         res->val = 0.0;
         res->func = 0.0;
-        res->nReset = 0;
+        res->nReset[0] = 0;
+        res->nReset[1] = 0;
+        res->nReset[2] = 0;
         for(int i = 0; i < optiNodes.size(); i++)
         {
             vector<Thread::ThreadJob*> jobs(optiNodes[i].size());
@@ -336,7 +338,7 @@ void ProcessVarOpti::Process()
         cout << ctr << "\tResidual: " << res->val
                     << "\tMin Jac: " << res->worstJac
                     << "\tInvalid: " << res->startInv
-                    << "\tReset nodes: " << res->nReset
+                    << "\tReset nodes: " << res->nReset[0] << "/" << res->nReset[1] << "/" << res->nReset[2]
                     << "\tFunctional: " << res->func
                     << endl;
         if(ctr >= maxIter)

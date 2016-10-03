@@ -246,7 +246,7 @@ void NodeOpti1D3D::Optimise()
             node->m_z = p[2];
 
             mtx.lock();
-            res->nReset++;
+            res->nReset[0]++;
             mtx.unlock();
         }
         else
@@ -506,7 +506,7 @@ void NodeOpti2D3D::Optimise()
             node->m_z = p[2];
 
             mtx.lock();
-            res->nReset++;
+            res->nReset[1]++;
             mtx.unlock();
         }
         else

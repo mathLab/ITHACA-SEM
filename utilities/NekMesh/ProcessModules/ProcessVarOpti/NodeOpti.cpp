@@ -272,7 +272,7 @@ void NodeOpti2D2D::Optimise()
             node->m_y = yc;
 
             mtx.lock();
-            res->nReset++;
+            res->nReset[2]++;
             mtx.unlock();
         }
         else
@@ -529,7 +529,7 @@ void NodeOpti3D3D::Optimise()
             node->m_z = zc;
 
             mtx.lock();
-            res->nReset++;
+            res->nReset[3]++;
             mtx.unlock();
         }
         else

@@ -39,6 +39,8 @@
 #include "../CADVert.h"
 #include <NekMeshUtils/MeshElements/Node.h>
 
+#include "OpenCascade.h"
+
 namespace Nektar
 {
 namespace NekMeshUtils

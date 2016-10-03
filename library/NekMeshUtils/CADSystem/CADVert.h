@@ -41,7 +41,6 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-#include <NekMeshUtils/CADSystem/OpenCascade.h>
 #include <NekMeshUtils/CADSystem/CADObj.h>
 #include <NekMeshUtils/MeshElements/Node.h>
 

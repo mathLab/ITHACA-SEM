@@ -37,7 +37,8 @@
 #define NekMeshUtils_CADSYSTEM_OCE_CADSURFOCE
 
 #include "../CADSurf.h"
-#include <NekMeshUtils/CADSystem/OpenCascade.h>
+
+#include "OpenCascade.h"
 
 namespace Nektar
 {

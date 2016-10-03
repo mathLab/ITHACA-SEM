@@ -39,7 +39,6 @@
 #include <boost/shared_ptr.hpp>
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <NekMeshUtils/CADSystem/OpenCascade.h>
 
 namespace Nektar
 {

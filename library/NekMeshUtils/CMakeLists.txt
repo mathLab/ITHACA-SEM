@@ -71,7 +71,7 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/CADVert.h
         CADSystem/CADCurve.h
         CADSystem/CADSurf.h
-        CADSystem/OpenCascade.h
+        CADSystem/OCE/OpenCascade.h
         CADSystem/OCE/CADSystemOCE.h
         CADSystem/OCE/CADVertOCE.h
         CADSystem/OCE/CADCurveOCE.h

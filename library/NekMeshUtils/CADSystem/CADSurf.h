@@ -158,8 +158,6 @@ public:
         return !m_correctNormal;
     }
 
-    void Initialise(int i, TopoDS_Shape in);
-
 protected:
     /// normal
     bool m_correctNormal;

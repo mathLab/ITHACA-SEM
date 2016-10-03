@@ -44,12 +44,6 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-/**
- * @brief class for CAD curves.
- *
- * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
- * Nektar++.
- */
 class CADCurveOCE : public CADCurve
 {
 public:

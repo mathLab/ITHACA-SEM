@@ -49,7 +49,7 @@ class CADCurve;
 typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
 
 /**
- * @brief class for handleing a cad surface
+ * @brief base class for a cad surface
  */
 
 class CADSurf : public CADObj
@@ -65,13 +65,7 @@ public:
     ~CADSurf(){};
 
     /**
-     * @brief Get the IDs of the edges which bound the surface.
-     *
-     * The edges are organsised into two vectors, which are grouped into the
-     * continuous loops of the bounding edges, then the edges, which are a
-     * pair of integers. The first item is the edge ID and the second is an
-     * integer that indicates whether this edge is orientated forwards or
-     * backwards on this surface to form the loop.
+     * @brief Get the loop structures which bound the cad surface
      */
     std::vector<EdgeLoop> GetEdges()
     {
@@ -153,6 +147,9 @@ public:
         m_correctNormal = false;
     }
 
+    /**
+     * @brief query reversed normal
+     */
     bool IsReversedNormal()
     {
         return !m_correctNormal;

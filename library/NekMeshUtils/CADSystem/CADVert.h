@@ -50,10 +50,8 @@ namespace NekMeshUtils
 {
 
 /**
- * @brief class for CAD curves.
+ * @brief base class for CAD verticies.
  *
- * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
- * Nektar++.
  */
 class CADVert : public CADObj
 {
@@ -122,7 +120,7 @@ protected:
     NodeSharedPtr m_node;
     /// degen marker
     bool degen;
-    // degen surface
+    /// degen surface
     int degensurf;
 };
 

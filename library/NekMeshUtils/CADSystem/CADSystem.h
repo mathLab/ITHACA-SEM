@@ -48,6 +48,7 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+//forward declorators
 class CADVert;
 typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
 class CADCurve;
@@ -56,7 +57,7 @@ class CADSurf;
 typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
 
 /**
- * @brief struct which descibes a collection of cad edges which for a
+ * @brief struct which descibes a collection of cad edges which are a
  *        loop on the cad surface
  */
 struct EdgeLoop
@@ -70,7 +71,7 @@ struct EdgeLoop
 /**
  * @brief Base class for CAD interface system.
  *
- * A class which can load and interact with CAD for Nektar++ using OpenCascade.
+ * A class which can load and interact with CAD for Nektar++.
  * This class contains maps to subclasses surface and curves.
  */
 class CADSystem
@@ -175,6 +176,7 @@ public:
     }
 
 protected:
+    /// Name of cad file
     std::string m_name;
     /// Map of curves
     std::map<int, CADCurveSharedPtr> m_curves;

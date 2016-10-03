@@ -46,10 +46,8 @@ namespace NekMeshUtils
 {
 
 /**
- * @brief class for CAD curves.
+ * @brief base class for CAD curves.
  *
- * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
- * Nektar++.
  */
 class CADCurve : public CADObj
 {
@@ -112,19 +110,25 @@ public:
      */
     virtual Array<OneD, NekDouble> GetMinMax() = 0;
 
-    /// set the ids of the surfaces either side of the curve
+    /**
+     * @brief set the ids of the surfaces either side of the curve
+     */
     void SetAdjSurf(std::vector<CADSurfSharedPtr> i)
     {
         m_adjSurfs = i;
     }
 
-    /// returns the ids of neigbouring surfaces
+    /*
+     * @brief returns the ids of neigbouring surfaces
+     */
     std::vector<CADSurfSharedPtr> GetAdjSurf()
     {
         return m_adjSurfs;
     }
 
-    /// returns lenght of the curve
+    /*
+     * @brief returns lenght of the curve
+     */
     NekDouble GetTotLength()
     {
         return m_length;
@@ -138,8 +142,10 @@ public:
         m_mainVerts = falVert;
     }
 
-    /// get the ids of the vertices that are the ends of the curve,
-    /// which are in the main cad list
+    /*
+     * @brief get the vertices that are the ends of the curve,
+     * which are in the main cad list
+     */
     std::vector<CADVertSharedPtr> GetVertex()
     {
         return m_mainVerts;

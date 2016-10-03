@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FoundationsFwd.hpp
+// File NodalTriElec.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,63 +29,53 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Forward declarations of Foundation classes and typedefs
+// Description: Header file of 2D Nodal Triangle Fekete Points
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef FOUNDATIONS_FWD_H
-#define FOUNDATIONS_FWD_H
+#ifndef NODALTRISPI_H
+#define NODALTRISPI_H
 
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <vector>
-#include <boost/smart_ptr/shared_ptr.hpp>
-//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp> // for NekManager
-#include <LibUtilities/BasicUtils/NekManager.hpp>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
+#include <boost/shared_ptr.hpp>
+#include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
 {
     namespace LibUtilities
     {
 
-        class BLPoints;
-        class Basis;
-        class BasisKey;
-        class FourierPoints;
-        class FourierSingleModePoints;
-        class GaussPoints;
-        class GraphVertexObject;
-        class GraphEdgeObject;
-        class Graph;
-        class NodalTetEvenlySpaced;
-        class NodalTetElec;
-        class NodalPrismEvenlySpaced;
-        class NodalPrismElec;
-        class NodalTriElec;
-        class NodalTriEvenlySpaced;
-        class NodalTriFekete;
-        class PointsKey;
-        class PolyEPoints;
+        class NodalTriSPI: public Points<NekDouble>
+        {
+        public:
 
-        template<typename DataT>
-        class Points;
+            virtual ~NodalTriSPI()
+            {
+            }
 
+            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType>
+                Create(const PointsKey &key);
 
+            NodalTriSPI(const PointsKey &key):PointsBaseType(key)
+            {
+            }
 
-        /// Name for a vector of BasisKeys.
-        typedef std::vector< BasisKey > BasisKeyVector;
-        /// Name for an iterator over a BasisKeyVector.
-        typedef std::vector< BasisKey >::iterator BasisKeyVectorIter;
+            int GetNumPointsAlt();
 
+        private:
+            NodalTriSPI():PointsBaseType(NullPointsKey)
+            {
+            }
 
-        typedef boost::shared_ptr<Basis> BasisSharedPtr;
-        typedef std::vector< BasisSharedPtr > BasisVector;
-        typedef std::vector< BasisSharedPtr >::iterator BasisVectorIter;
+            void CalculatePoints();
+            void CalculateWeights();
+            void CalculateDerivMatrix();
 
-        typedef Points<NekDouble> PointsBaseType;
-        typedef boost::shared_ptr<Points<NekDouble> > PointsSharedPtr;
-        typedef int GraphVertexID;
-
-    } // end of namespace
+        };
+   } // end of namespace
 } // end of namespace
 
-#endif // FOUNDATIONS_FWD_H
+#endif //NODALTRIELEC_H

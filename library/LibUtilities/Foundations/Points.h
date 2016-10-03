@@ -28,8 +28,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: Header file of Points definition 
+//
+// Description: Header file of Points definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -48,12 +48,12 @@
 
 namespace Nektar
 {
-    
+
     namespace LibUtilities
     {
         // Need to add method to compute total number of points given dimension
         // and number of points.
-        
+
         /// Defines a specification for a set of points.
         class PointsKey
         {
@@ -65,24 +65,24 @@ namespace Nektar
             {
                 LIB_UTILITIES_EXPORT bool operator()(const PointsKey &lhs, const PointsKey &rhs) const;
             };
-            
+
             /// Default constructor.
            PointsKey(void):
-                m_numpoints(0), 
+                m_numpoints(0),
                 m_pointstype(eNoPointsType),
                 m_factor(NekConstants::kNekUnsetDouble)
                 {
                 }
-            
+
             /// Constructor defining the number and distribution of points.
         PointsKey(const int &numpoints, const PointsType &pointstype,
-                  const NekDouble factor = NekConstants::kNekUnsetDouble): 
-                m_numpoints(numpoints), 
+                  const NekDouble factor = NekConstants::kNekUnsetDouble):
+                m_numpoints(numpoints),
                     m_pointstype(pointstype),
                     m_factor(factor)
                     {
                     }
-                
+
             /// Destructor.
                 virtual ~PointsKey()
                 {
@@ -93,16 +93,16 @@ namespace Nektar
             {
                 *this = key; // defer to assignment operator
             }
-            
+
             PointsKey& operator=(const PointsKey &key)
             {
                 m_numpoints  = key.m_numpoints;
                 m_pointstype = key.m_pointstype;
                 m_factor     = key.m_factor;
-                
+
                 return *this;
             }
-            
+
             inline unsigned int GetNumPoints() const
             {
                 return m_numpoints;
@@ -120,7 +120,7 @@ namespace Nektar
 
             inline bool operator==(const PointsKey &key)
             {
-                
+
                 if(fabs(m_factor - key.m_factor) < NekConstants::kNekZeroTol)
                 {
                     return (m_numpoints == key.m_numpoints &&
@@ -161,9 +161,11 @@ namespace Nektar
                 case eNodalTetElec:
                 case eNodalTetEvenlySpaced:
                 case eNodalPrismEvenlySpaced:
+                case eNodalPrismElec:
+                case eNodalPrismSPI:
                     dimpoints = 3;
                     break;
-                    
+
                 default:
                     break;
                 }
@@ -183,16 +185,23 @@ namespace Nektar
                 case eNodalTriEvenlySpaced:
                     totpoints = m_numpoints*(m_numpoints+1)/2;
                     break;
+                case eNodalTriSPI: ASSERTL0(false,"this method cannot be implemented");
+                    break;
 
                 case eNodalTetElec:
                 case eNodalTetEvenlySpaced:
                     totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
                     break;
-                    
+                case eNodalTetSPI: ASSERTL0(false,"this method cannot be implemented");
+                    break;
+
                 case eNodalPrismEvenlySpaced:
+                case eNodalPrismElec:
                     totpoints = m_numpoints*m_numpoints*(m_numpoints+1)/2;
                     break;
-                    
+                case eNodalPrismSPI: ASSERTL0(false,"this method cannot be implemented");
+                    break;
+
                 default:
                     break;
                 }
@@ -263,13 +272,13 @@ namespace Nektar
                 return m_points[0];
             }
 
-            inline const Array<OneD, const DataType>& GetW() const 
+            inline const Array<OneD, const DataType>& GetW() const
             {
-                return m_weights; 
-            } 
+                return m_weights;
+            }
 
             inline void GetZW(Array<OneD, const DataType> &z,
-                Array<OneD, const DataType> &w) const 
+                Array<OneD, const DataType> &w) const
             {
                 z = m_points[0];
                 w = m_weights;
@@ -307,21 +316,21 @@ namespace Nektar
                 boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
-			
+
             virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x)
             {
                 ASSERTL0(false, "Method not implemented");
                 boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
-			
+
             virtual const MatrixSharedPtrType GetI(unsigned int numpoints, const Array<OneD, const DataType>& x)
             {
                 ASSERTL0(false, "Method not implemented");
                 boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
-			
+
             virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x, const Array<OneD, const DataType>& y)
             {
                 ASSERTL0(false, "Method not implemented");
@@ -351,7 +360,7 @@ namespace Nektar
             MatrixSharedPtrType   m_derivmatrix[3];
             NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_InterpManager;
             NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_GalerkinProjectionManager;
-            
+
             virtual void CalculatePoints()
             {
                 unsigned int pointsDim = GetPointsDim();
@@ -394,6 +403,6 @@ namespace Nektar
         };
 
     }; // end of namespace
-} // end of namespace 
+} // end of namespace
 
 #endif //NEKTAR_LIB_UTILITIES_FOUNDATIONS_POINTS_H

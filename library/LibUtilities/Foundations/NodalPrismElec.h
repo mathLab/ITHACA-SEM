@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NodalTetEvenlySpaced.h
+// File NodalPrismElec.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -28,49 +28,49 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: Header file of 2D Nodal Tetrahedron Evenly Spaced Points
+//
+// Description: Header file of 3D Nodal Prism Elec Points
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NODALTETEVENLYSPACED_H
-#define NODALTETEVENLYSPACED_H
+#ifndef NODALPRISMELEC_H
+#define NODALPRISMELEC_H
 
-#include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
-#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
+#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/NodalUtil.h>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <boost/shared_ptr.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
-    namespace LibUtilities 
+    namespace LibUtilities
     {
-        class NodalTetEvenlySpaced: public Points<NekDouble>
+        class NodalPrismElec: public Points<NekDouble>
         {
         public:
-
-            virtual ~NodalTetEvenlySpaced()
-            {
-                
-            }
-
-            NodalTetEvenlySpaced(const PointsKey &key):PointsBaseType(key)
+            virtual ~NodalPrismElec()
             {
 
             }
-            
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> 
+
+            NodalPrismElec(const PointsKey &key):PointsBaseType(key)
+            {
+
+            }
+
+            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType>
                 Create(const PointsKey &key);
 
             const MatrixSharedPtrType GetI(const PointsKey &pkey)
             {
-                ASSERTL0(pkey.GetPointsDim() == 3, 
-                         "NodalTetEvenlySpaced Points can only interp to other "
-                         "3d point distributions");
+                ASSERTL0(pkey.GetPointsDim() == 3,
+                         "NodalPrismElec Points can only interp to "
+                         "other 3d point distributions");
                 Array<OneD, const NekDouble> x, y, z;
                 PointsManager()[pkey]->GetPoints(x, y, z);
                 return GetI(x, y, z);
@@ -86,17 +86,17 @@ namespace Nektar
 
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
                 CalculateInterpMatrix(x, y, z, interp);
-                
+
                 NekDouble* d = interp.data();
                 return MemoryManager<NekMatrix<NekDouble> >
                     ::AllocateSharedPtr(numpoints, np, d);
             }
 
         private:
-            boost::shared_ptr<NodalUtilTetrahedron> m_util;
+            boost::shared_ptr<NodalUtilPrism> m_util;
 
             /// Default constructor should not be called except by Create matrix
-            NodalTetEvenlySpaced():PointsBaseType(NullPointsKey)
+            NodalPrismElec():PointsBaseType(NullPointsKey)
             {
             }
 
@@ -109,8 +109,8 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &yi,
                 const Array<OneD, const NekDouble> &zi,
                       Array<OneD,       NekDouble> &interp);
-        }; // end of NodalTetEvenlySpaced
+        }; // end of NodalPrismElec
    } // end of namespace
-} // end of namespace 
+} // end of namespace
 
-#endif //NODALTETEVENLYSPACED_H
+#endif //NODALPRISMELEC_H

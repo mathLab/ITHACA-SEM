@@ -96,6 +96,8 @@ public:
      */
     Array<OneD, NekDouble> P(NekDouble t);
 
+    Array<OneD, NekDouble> D1(NekDouble t);
+
     /**
      * @brief Gets the second derivatives at t
      */
@@ -152,11 +154,15 @@ public:
         return m_mainVerts;
     }
 
+    NekDouble loct(Array<OneD, NekDouble> xyz);
+
 private:
     /// OpenCascade object of the curve.
     BRepAdaptor_Curve m_occCurve;
     /// OpenCascade edge
     TopoDS_Edge m_occEdge;
+    /// Alternate object used for reverse lookups
+    Handle(Geom_Curve) m_c;
     /// Length of edge
     NekDouble m_length;
     /// List of surfaces which this curve belongs to.

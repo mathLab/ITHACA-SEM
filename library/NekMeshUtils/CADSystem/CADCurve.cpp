@@ -48,6 +48,7 @@ CADCurve::CADCurve(int i, TopoDS_Shape in)
     gp_Pnt ori(0.0, 0.0, 0.0);
     transform.SetScale(ori, 1.0 / 1000.0);
     TopLoc_Location mv(transform);
+    TopoDS_Shape cp = in;
     in.Move(mv);
 
     m_occEdge  = TopoDS::Edge(in);
@@ -56,6 +57,9 @@ CADCurve::CADCurve(int i, TopoDS_Shape in)
     GProp_GProps System;
     BRepGProp::LinearProperties(m_occEdge, System);
     m_length = System.Mass();
+
+    Array<OneD, NekDouble> b = Bounds();
+    m_c = BRep_Tool::Curve(TopoDS::Edge(cp), b[0], b[1]);
 
     m_id   = i;
     m_type = curve;
@@ -87,12 +91,42 @@ NekDouble CADCurve::tAtArcLength(NekDouble s)
 NekDouble CADCurve::Length(NekDouble ti, NekDouble tf)
 {
     Array<OneD, NekDouble> b = Bounds();
-    Handle(Geom_Curve) m_c = BRep_Tool::Curve(m_occEdge, b[0], b[1]);
     Handle(Geom_Curve) NewCurve = new Geom_TrimmedCurve(m_c, ti, tf);
     TopoDS_Edge NewEdge = BRepBuilderAPI_MakeEdge(NewCurve);
     GProp_GProps System;
     BRepGProp::LinearProperties(NewEdge, System);
     return System.Mass() / 1000.0;
+}
+
+NekDouble CADCurve::loct(Array<OneD, NekDouble> xyz)
+{
+    NekDouble t = 0.0;
+    Array<OneD, NekDouble> b = Bounds();
+
+    gp_Pnt loc(xyz[0]*1000.0, xyz[1]*1000.0, xyz[2]*1000.0);
+    /*GeomAPI_ProjectPointOnCurve projection(
+        loc,m_c,b[0],b[1]);
+
+    if (projection.NbPoints() == 0)
+    {
+        ASSERTL0(false,"failed");
+    }
+    else
+    {
+        t = projection.Parameter(1);
+        if(projection.Distance(1) > 1e-6)
+        {
+            cout << "large curve projection: " << projection.Distance(1) << endl;
+        }
+    }*/
+
+    ShapeAnalysis_Curve sac;
+    gp_Pnt p;
+    NekDouble d = sac.Project(m_c,loc,1e-7,p,t);
+
+    ASSERTL0(p.Distance(loc) < 1e-6, "large loct distance sac");
+
+    return t;
 }
 
 Array<OneD, NekDouble> CADCurve::P(NekDouble t)
@@ -105,6 +139,22 @@ Array<OneD, NekDouble> CADCurve::P(NekDouble t)
     location[2] = loc.Z();
 
     return location;
+}
+
+Array<OneD, NekDouble> CADCurve::D1(NekDouble t)
+{
+    Array<OneD, NekDouble> out(6);
+    gp_Pnt loc;
+    gp_Vec d1;
+    m_occCurve.D1(t, loc, d1);
+    out[0] = loc.X();
+    out[1] = loc.Y();
+    out[2] = loc.Z();
+    out[3] = d1.X();
+    out[4] = d1.Y();
+    out[5] = d1.Z();
+
+    return out;
 }
 
 Array<OneD, NekDouble> CADCurve::D2(NekDouble t)

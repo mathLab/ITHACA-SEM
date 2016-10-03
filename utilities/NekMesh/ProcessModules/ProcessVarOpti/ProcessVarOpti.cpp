@@ -195,6 +195,7 @@ void ProcessVarOpti::Process()
 
             if (freenodes[i][j]->GetNumCadCurve() == 1)
             {
+                //continue;
                 optiType += 10;
             }
             else if (freenodes[i][j]->GetNumCADSurf() == 1)

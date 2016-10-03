@@ -57,6 +57,11 @@ v4.4.0
 - Add module to stretch homogeneous direction (!609)
 - Add module to add composite ID of elements as a field (!674)
 
+v4.3.5
+------
+**Documentation**
+- Update build instructions in user guide for Windows (!692)
+
 v4.3.4
 ------
 **Library:**
@@ -66,6 +71,10 @@ v4.3.4
   number of planes per process (!666)
 - Fix compilation with NEKTAR_USE_MESHGEN option
 - Fix IterativeFull solver in parallel (!685)
+- Fix error message for missing fld file (!689)
+
+**IncNavierStokesSolver:**
+- Fix 2nd order time-integration for VCSMapping (!687)
 
 v4.3.3
 ------

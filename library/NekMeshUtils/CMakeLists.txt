@@ -52,6 +52,7 @@ SET(NEKMESHUTILS_HEADERS
     MeshElements/Prism.h
     MeshElements/Hexahedron.h
     MeshElements/HOAlignment.h
+    MeshElements/ElementConfig.h
     )
 
 IF(NEKTAR_USE_MESHGEN)

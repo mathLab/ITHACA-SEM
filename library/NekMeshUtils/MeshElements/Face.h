@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh face object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -149,13 +149,12 @@ public:
 
 #ifdef NEKTAR_USE_MESHGEN
     bool onSurf;
-    /// id of cad curve which edge lies on
     int CADSurfId;
     CADSurfSharedPtr CADSurf;
 #endif
 
 };
-/// Shared pointer to a face.
+
 typedef boost::shared_ptr<Face> FaceSharedPtr;
 
 NEKMESHUTILS_EXPORT bool operator==(FaceSharedPtr const &p1,
@@ -183,6 +182,7 @@ struct FaceHash : std::unary_function<FaceSharedPtr, std::size_t>
     }
 };
 typedef boost::unordered_set<FaceSharedPtr, FaceHash> FaceSet;
+
 }
 }
 

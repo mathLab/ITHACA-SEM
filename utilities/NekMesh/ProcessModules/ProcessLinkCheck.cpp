@@ -104,9 +104,9 @@ void ProcessLinkCheck::Process()
 
     if (count - m_mesh->m_element[m_mesh->m_expDim-1].size() != 0)
     {
-        cout << "Link Check Error: mesh contains incorrectly connected" 
+        cout << "Link Check Error: mesh contains incorrectly connected"
              << " entities and is not valid: "
-             << fabs(count - m_mesh->m_element[m_mesh->m_expDim-1].size())
+             << count - m_mesh->m_element[m_mesh->m_expDim-1].size()
              << endl;
     }
 }

@@ -65,6 +65,7 @@ void ProcessLinkCheck::Process()
         cout << "ProcessJac: Checking links... " << endl;
     }
 
+    //need to reset all links first to make sure there are no bugs!
     ClearElementLinks();
     ProcessVertices();
     ProcessEdges();
@@ -72,21 +73,41 @@ void ProcessLinkCheck::Process()
     ProcessElements();
     ProcessComposites();
 
-    FaceSet::iterator fit;
     int count = 0;
-    for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
+
+    if(m_mesh->m_expDim == 2)
     {
-        if((*fit)->m_elLink.size() != 2)
+        EdgeSet::iterator eit;
+        for(eit = m_mesh->m_edgeSet.begin();
+            eit != m_mesh->m_edgeSet.end(); eit++)
         {
-            count++;
+            if((*eit)->m_elLink.size() != 2)
+            {
+                count++;
+            }
+        }
+    }
+    else
+    {
+        FaceSet::iterator fit;
+        for(fit = m_mesh->m_faceSet.begin();
+            fit != m_mesh->m_faceSet.end(); fit++)
+        {
+            if((*fit)->m_elLink.size() != 2)
+            {
+                count++;
+            }
         }
     }
 
 
-    if (count - m_mesh->m_element[2].size() > 0)
+
+    if (count - m_mesh->m_element[m_mesh->m_expDim-1].size() != 0)
     {
-        cout << "Link Check Error: mesh contains unconnected faces and is not valid "
-             << count - m_mesh->m_element[2].size() << endl;
+        cout << "Link Check Error: mesh contains incorrectly connected" 
+             << " entities and is not valid: "
+             << fabs(count - m_mesh->m_element[m_mesh->m_expDim-1].size())
+             << endl;
     }
 }
 

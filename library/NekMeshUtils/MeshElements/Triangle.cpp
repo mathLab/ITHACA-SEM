@@ -37,6 +37,8 @@
 #include <LocalRegions/TriExp.h>
 #include <NekMeshUtils/MeshElements/Triangle.h>
 
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 using namespace std;
 
 namespace Nektar

@@ -36,6 +36,8 @@
 #include <LocalRegions/QuadExp.h>
 #include <NekMeshUtils/MeshElements/Quadrilateral.h>
 
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 using namespace std;
 
 namespace Nektar

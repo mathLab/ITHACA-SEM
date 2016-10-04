@@ -38,7 +38,10 @@
 #include <SpatialDomains/PrismGeom.h>
 
 #include <NekMeshUtils/MeshElements/Prism.h>
-#include <NekMeshUtils/MeshElements/Quadrilateral.h>
+#include <NekMeshUtils/MeshElements/HOAlignment.h>
+
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 using namespace std;
 
 namespace Nektar

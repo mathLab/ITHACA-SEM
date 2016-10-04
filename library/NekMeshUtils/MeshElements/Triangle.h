@@ -38,6 +38,7 @@
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 #include <NekMeshUtils/MeshElements/Element.h>
+#include <NekMeshUtils/MeshElements/HOAlignment.h>
 
 namespace Nektar
 {

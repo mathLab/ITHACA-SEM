@@ -36,6 +36,8 @@
 #include <SpatialDomains/HexGeom.h>
 #include <NekMeshUtils/MeshElements/Hexahedron.h>
 
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 using namespace std;
 
 namespace Nektar

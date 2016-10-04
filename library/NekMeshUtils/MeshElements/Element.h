@@ -29,14 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh element.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_ELEMENT
-#define NekMeshUtils_MESHELEMENTS_ELEMENT
-
-#include <iomanip>
+#ifndef NEKMESHUTILS_MESHELEMENTS_ELEMENT
+#define NEKMESHUTILS_MESHELEMENTS_ELEMENT
 
 #include <LibUtilities/Foundations/PointsType.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
@@ -49,142 +47,7 @@ namespace Nektar
 {
 namespace NekMeshUtils
 {
-/**
- * @brief A lightweight struct for dealing with high-order triangle
- * alignment.
- *
- * The logic underlying these routines is taken from the original Nektar
- * code.
- */
-template <typename T> struct HOTriangle
-{
-    HOTriangle(std::vector<int> pVertId, std::vector<T> pSurfVerts)
-        : vertId(pVertId), surfVerts(pSurfVerts)
-    {
-    }
-    HOTriangle(std::vector<int> pVertId) : vertId(pVertId)
-    {
-    }
 
-    /// The triangle vertex IDs
-    std::vector<int> vertId;
-
-    /// The triangle surface vertices -- templated so that this can
-    /// either be nodes or IDs.
-    std::vector<T> surfVerts;
-
-    /**
-     * @brief Rotates the triangle of data points inside #surfVerts
-     * counter-clockwise nrot times.
-     *
-     * @param nrot Number of times to rotate triangle.
-     */
-    void Rotate(int nrot)
-    {
-        int n, i, j, cnt;
-        int np = ((int)sqrt(8.0 * surfVerts.size() + 1.0) - 1) / 2;
-        std::vector<T> tmp(np * np);
-
-        for (n = 0; n < nrot; ++n)
-        {
-            for (cnt = i = 0; i < np; ++i)
-            {
-                for (j = 0; j < np - i; ++j, cnt++)
-                {
-                    tmp[i * np + j] = surfVerts[cnt];
-                }
-            }
-            for (cnt = i = 0; i < np; ++i)
-            {
-                for (j = 0; j < np - i; ++j, cnt++)
-                {
-                    surfVerts[cnt] = tmp[(np - 1 - i - j) * np + i];
-                }
-            }
-        }
-    }
-
-    /**
-     * @brief Reflect data points inside #surfVerts.
-     *
-     * This applies a mapping essentially doing the following
-     * reordering:
-     *
-     * 9          9
-     * 7 8    ->  8 7
-     * 4 5 6      6 5 4
-     * 0 1 2 3    3 2 1 0
-     */
-    void Reflect()
-    {
-        int i, j, cnt;
-        int np = ((int)sqrt(8.0 * surfVerts.size() + 1.0) - 1) / 2;
-        std::vector<T> tmp(np * np);
-
-        for (cnt = i = 0; i < np; ++i)
-        {
-            for (j = 0; j < np - i; ++j, cnt++)
-            {
-                tmp[i * np + np - i - 1 - j] = surfVerts[cnt];
-            }
-        }
-
-        for (cnt = i = 0; i < np; ++i)
-        {
-            for (j = 0; j < np - i; ++j, cnt++)
-            {
-                surfVerts[cnt] = tmp[i * np + j];
-            }
-        }
-    }
-
-    /**
-     * @brief Align this surface to a given vertex ID.
-     */
-    void Align(std::vector<int> vertId)
-    {
-        if (vertId[0] == this->vertId[0])
-        {
-            if (vertId[1] == this->vertId[1] || vertId[1] == this->vertId[2])
-            {
-                if (vertId[1] == this->vertId[2])
-                {
-                    Rotate(1);
-                    Reflect();
-                }
-            }
-        }
-        else if (vertId[0] == this->vertId[1])
-        {
-            if (vertId[1] == this->vertId[0] || vertId[1] == this->vertId[2])
-            {
-                if (vertId[1] == this->vertId[0])
-                {
-                    Reflect();
-                }
-                else
-                {
-                    Rotate(2);
-                }
-            }
-        }
-        else if (vertId[0] == this->vertId[2])
-        {
-            if (vertId[1] == this->vertId[0] || vertId[1] == this->vertId[1])
-            {
-                if (vertId[1] == this->vertId[1])
-                {
-                    Rotate(2);
-                    Reflect();
-                }
-                else
-                {
-                    Rotate(1);
-                }
-            }
-        }
-    }
-};
 /**
  * @brief Basic information about an element.
  *

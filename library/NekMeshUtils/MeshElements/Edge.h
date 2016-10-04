@@ -29,16 +29,13 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh Edge.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_EDGE
-#define NekMeshUtils_MESHELEMENTS_EDGE
+#ifndef NEKMESHUTILS_MESHELEMENTS_EDGE
+#define NEKMESHUTILS_MESHELEMENTS_EDGE
 
-#include <iomanip>
-
-#include <LibUtilities/Foundations/ManagerAccess.h>
 #include <SpatialDomains/SegGeom.h>
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>

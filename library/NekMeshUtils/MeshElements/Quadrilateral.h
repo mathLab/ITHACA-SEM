@@ -55,14 +55,8 @@ public:
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList)
     {
-        ElementSharedPtr e = boost::shared_ptr<Element>(
+        return boost::shared_ptr<Element>(
             new Quadrilateral(pConf, pNodeList, pTagList));
-        std::vector<EdgeSharedPtr> m_edges = e->GetEdgeList();
-        for (int i = 0; i < m_edges.size(); ++i)
-        {
-            m_edges[i]->m_elLink.push_back(std::pair<ElementSharedPtr, int>(e, i));
-        }
-        return e;
     }
     /// Element type
     static LibUtilities::ShapeType m_type;
@@ -77,6 +71,8 @@ public:
 
     NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
         int coordDim);
+    NEKMESHUTILS_EXPORT virtual void GetCurvedNodes(
+        std::vector<NodeSharedPtr> &nodeList) const;
     NEKMESHUTILS_EXPORT virtual StdRegions::Orientation GetEdgeOrient(
         int edgeId, EdgeSharedPtr edge);
     NEKMESHUTILS_EXPORT virtual void MakeOrder(
@@ -158,6 +154,7 @@ template <typename T> struct HOQuadrilateral
      */
     void Align(std::vector<int> vertId)
     {
+
         int vmap[4] = {-1, -1, -1, -1};
 
         // Determine which vertices map to vertId

@@ -50,6 +50,142 @@ namespace Nektar
 namespace NekMeshUtils
 {
 /**
+ * @brief A lightweight struct for dealing with high-order triangle
+ * alignment.
+ *
+ * The logic underlying these routines is taken from the original Nektar
+ * code.
+ */
+template <typename T> struct HOTriangle
+{
+    HOTriangle(std::vector<int> pVertId, std::vector<T> pSurfVerts)
+        : vertId(pVertId), surfVerts(pSurfVerts)
+    {
+    }
+    HOTriangle(std::vector<int> pVertId) : vertId(pVertId)
+    {
+    }
+
+    /// The triangle vertex IDs
+    std::vector<int> vertId;
+
+    /// The triangle surface vertices -- templated so that this can
+    /// either be nodes or IDs.
+    std::vector<T> surfVerts;
+
+    /**
+     * @brief Rotates the triangle of data points inside #surfVerts
+     * counter-clockwise nrot times.
+     *
+     * @param nrot Number of times to rotate triangle.
+     */
+    void Rotate(int nrot)
+    {
+        int n, i, j, cnt;
+        int np = ((int)sqrt(8.0 * surfVerts.size() + 1.0) - 1) / 2;
+        std::vector<T> tmp(np * np);
+
+        for (n = 0; n < nrot; ++n)
+        {
+            for (cnt = i = 0; i < np; ++i)
+            {
+                for (j = 0; j < np - i; ++j, cnt++)
+                {
+                    tmp[i * np + j] = surfVerts[cnt];
+                }
+            }
+            for (cnt = i = 0; i < np; ++i)
+            {
+                for (j = 0; j < np - i; ++j, cnt++)
+                {
+                    surfVerts[cnt] = tmp[(np - 1 - i - j) * np + i];
+                }
+            }
+        }
+    }
+
+    /**
+     * @brief Reflect data points inside #surfVerts.
+     *
+     * This applies a mapping essentially doing the following
+     * reordering:
+     *
+     * 9          9
+     * 7 8    ->  8 7
+     * 4 5 6      6 5 4
+     * 0 1 2 3    3 2 1 0
+     */
+    void Reflect()
+    {
+        int i, j, cnt;
+        int np = ((int)sqrt(8.0 * surfVerts.size() + 1.0) - 1) / 2;
+        std::vector<T> tmp(np * np);
+
+        for (cnt = i = 0; i < np; ++i)
+        {
+            for (j = 0; j < np - i; ++j, cnt++)
+            {
+                tmp[i * np + np - i - 1 - j] = surfVerts[cnt];
+            }
+        }
+
+        for (cnt = i = 0; i < np; ++i)
+        {
+            for (j = 0; j < np - i; ++j, cnt++)
+            {
+                surfVerts[cnt] = tmp[i * np + j];
+            }
+        }
+    }
+
+    /**
+     * @brief Align this surface to a given vertex ID.
+     */
+    void Align(std::vector<int> vertId)
+    {
+        if (vertId[0] == this->vertId[0])
+        {
+            if (vertId[1] == this->vertId[1] || vertId[1] == this->vertId[2])
+            {
+                if (vertId[1] == this->vertId[2])
+                {
+                    Rotate(1);
+                    Reflect();
+                }
+            }
+        }
+        else if (vertId[0] == this->vertId[1])
+        {
+            if (vertId[1] == this->vertId[0] || vertId[1] == this->vertId[2])
+            {
+                if (vertId[1] == this->vertId[0])
+                {
+                    Reflect();
+                }
+                else
+                {
+                    Rotate(2);
+                }
+            }
+        }
+        else if (vertId[0] == this->vertId[2])
+        {
+            if (vertId[1] == this->vertId[0] || vertId[1] == this->vertId[1])
+            {
+                if (vertId[1] == this->vertId[1])
+                {
+                    Rotate(2);
+                    Reflect();
+                }
+                else
+                {
+                    Rotate(1);
+                }
+            }
+        }
+    }
+};
+/**
  * @brief Basic information about an element.
  *
  * ElmtConfig contains four member variables which denote the
@@ -83,19 +219,18 @@ struct ElmtConfig
 
     /// Element type (e.g. triangle, quad, etc).
     LibUtilities::ShapeType m_e;
-    /// Denotes whether the element contains face nodes. For 2D
-    /// elements, if this is true then the element contains interior
-    /// nodes.
+    /// Denotes whether the element contains face nodes. For 2D elements, if
+    /// this is true then the element contains interior nodes.
     bool m_faceNodes;
-    /// Denotes whether the element contains volume (i.e. interior)
-    /// nodes. These are not supported by either the mesh converter or
-    /// Nektar++ but are included for completeness and are required
-    /// for some output modules (e.g. Gmsh).
+    /// Denotes whether the element contains volume (i.e. interior) nodes. These
+    /// are not supported by either the mesh converter or Nektar++ but are
+    /// included for completeness and are required for some output modules
+    /// (e.g. Gmsh).
     bool m_volumeNodes;
     /// Order of the element.
     unsigned int m_order;
-    /// Denotes whether the element needs to be re-orientated for a
-    /// spectral element framework.
+    /// Denotes whether the element needs to be re-orientated for a spectral
+    /// element framework.
     bool m_reorient;
     /// Distribution of points in edges.
     LibUtilities::PointsType m_edgeCurveType;
@@ -137,6 +272,11 @@ public:
     NEKMESHUTILS_EXPORT ElmtConfig GetConf() const
     {
         return m_conf;
+    }
+    ///returns the shapetype
+    NEKMESHUTILS_EXPORT LibUtilities::ShapeType GetShapeType() const
+    {
+        return m_conf.m_e;
     }
     /// Returns the tag which defines the element shape.
     NEKMESHUTILS_EXPORT std::string GetTag() const
@@ -213,6 +353,15 @@ public:
         }
         else
         {
+            for (int i = 0; i < m_face.size(); ++i)
+            {
+                n += m_face[i]->GetNodeCount();
+            }
+            for (int i = 0; i < m_edge.size(); ++i)
+            {
+                n -= m_edge[i]->GetNodeCount();
+            }
+            n += m_vertex.size();
             std::cerr << "Not supported." << std::endl;
             exit(1);
         }
@@ -325,9 +474,13 @@ public:
         return s.str();
     }
 
-    NEKMESHUTILS_EXPORT void GetCurvedNodes(
+    NEKMESHUTILS_EXPORT virtual void GetCurvedNodes(
         std::vector<NodeSharedPtr> &nodeList) const
     {
+        ASSERTL0(false,
+                 "This function should be implemented at a shape level.");
+        /*std::cerr << "WARNING: Unsupported curvature for a " << m_vertex.size()
+                  << "-vertex element is not yet implemented." << std::endl;
         // Node orderings are different for different elements.
         // Triangle
         if (m_vertex.size() == 2)
@@ -417,7 +570,7 @@ public:
             std::cerr << "GetXmlCurveString for a " << m_vertex.size()
                       << "-vertex element is not yet implemented."
                       << std::endl;
-        }
+        }*/
     }
 
     /// Generates a string listing the coordinates of all nodes

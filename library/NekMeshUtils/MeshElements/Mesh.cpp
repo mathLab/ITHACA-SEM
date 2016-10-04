@@ -125,8 +125,8 @@ void Mesh::MakeOrder(int                      order,
         // Prism still to do.
         pTypes[LibUtilities::eSegment]  = LibUtilities::eGaussLobattoLegendre;
         pTypes[LibUtilities::eTriangle] = LibUtilities::eNodalTriElec;
-        pTypes[LibUtilities::eQuadrilateral] =
-            LibUtilities::eGaussLobattoLegendre;
+        pTypes[LibUtilities::eQuadrilateral] = LibUtilities::eGaussLobattoLegendre;
+        pTypes[LibUtilities::ePrism] = LibUtilities::eGaussLobattoLegendre;
         pTypes[LibUtilities::eTetrahedron] = LibUtilities::eNodalTetElec;
         pTypes[LibUtilities::eHexahedron] = LibUtilities::eGaussLobattoLegendre;
     }
@@ -164,6 +164,9 @@ void Mesh::MakeOrder(int                      order,
     }
 
     boost::unordered_set<int> processedEdges, processedFaces, processedVolumes;
+
+    //note if CAD previously existed on the face or edge, the new points need
+    //to be projected onto the CAD entity.
 
     // Call MakeOrder with our generated geometries on each edge to fill in edge
     // interior nodes.
@@ -211,9 +214,9 @@ void Mesh::MakeOrder(int                      order,
         }
 
         // Copy face curvature
-        el->SetVolumeNodes(edge->m_edgeNodes);
         el->MakeOrder(order, SpatialDomains::GeometrySharedPtr(),
                       pTypes[el->GetConf().m_e], m_spaceDim, id, true);
+        el->SetVolumeNodes(edge->m_edgeNodes);
     }
 
     for (int i = 0; i < m_element[2].size(); ++i)

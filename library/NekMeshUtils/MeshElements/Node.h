@@ -276,6 +276,18 @@ public:
         return search->second.second;
     }
 
+    std::vector<std::pair<int, CADCurveSharedPtr> > GetCADCurves()
+    {
+        std::vector<std::pair<int, CADCurveSharedPtr> > lst;
+        std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator c;
+        for (c = CADCurveList.begin(); c != CADCurveList.end(); c++)
+        {
+            lst.push_back(
+                std::pair<int, CADCurveSharedPtr>(c->first, c->second.first));
+        }
+        return lst;
+    }
+
     std::vector<std::pair<int, CADSurfSharedPtr> > GetCADSurfs()
     {
         std::vector<std::pair<int, CADSurfSharedPtr> > lst;
@@ -309,6 +321,64 @@ public:
             std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> >(su, uv);
     }
 
+    void MoveCurve(Array<OneD, NekDouble> l, int s, NekDouble t)
+    {
+        m_x                 = l[0];
+        m_y                 = l[1];
+        m_z                 = l[2];
+        CADCurveSharedPtr cu = CADCurveList[s].first;
+        CADCurveList[s] =
+            std::pair<CADCurveSharedPtr, NekDouble >(cu, t);
+    }
+
+    std::vector<std::pair<int,std::string> > GetCADCurveInfoVector()
+    {
+        std::vector<std::pair<int,std::string> > ret;
+        std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator c;
+        for (c = CADCurveList.begin(); c != CADCurveList.end(); c++)
+        {
+            std::stringstream ss;
+            ss << std::scientific << std::setprecision(8);
+            ss << c->second.second;
+            ret.push_back(std::pair<int,std::string>(c->first,ss.str()));
+
+        }
+        return ret;
+    }
+
+    std::vector<std::pair<int,std::string> > GetCADSurfInfoVector()
+    {
+        std::vector<std::pair<int,std::string> > ret;
+        std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >::
+            iterator s;
+        for (s = CADSurfList.begin(); s != CADSurfList.end(); s++)
+        {
+            std::stringstream ss;
+            ss << std::scientific << std::setprecision(8);
+            ss << s->second.second[0] << " " << s->second.second[1];
+            ret.push_back(std::pair<int,std::string>(s->first,ss.str()));
+        }
+        return ret;
+    }
+#else
+    int GetNumCadCurve()
+    {
+        return 0;
+    }
+
+    int GetNumCADSurf()
+    {
+        return 0;
+    }
+
+    std::vector<std::pair<int,std::string> > GetCADCurveInfoVector()
+    {
+        return std::vector<std::pair<int,std::string> >();
+    }
+    std::vector<std::pair<int,std::string> > GetCADSurfInfoVector()
+    {
+        return std::vector<std::pair<int,std::string> >();
+    }
 #endif
 
     /// ID of node.
@@ -360,6 +430,7 @@ struct NodeHash : std::unary_function<NodeSharedPtr, std::size_t>
     }
 };
 typedef boost::unordered_set<NodeSharedPtr, NodeHash> NodeSet;
+
 }
 }
 

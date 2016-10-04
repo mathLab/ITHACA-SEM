@@ -169,12 +169,40 @@ unsigned int Triangle::GetNumNodes(ElmtConfig pConf)
         return (n + 1) * (n + 2) / 2;
 }
 
+void Triangle::GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+{
+    int n = m_edge[0]->GetNodeCount();
+    nodeList.resize(n * (n + 1) / 2);
+
+    // Populate nodelist
+    std::copy(m_vertex.begin(), m_vertex.end(), nodeList.begin());
+    for (int i = 0; i < 3; ++i)
+    {
+        std::copy(m_edge[i]->m_edgeNodes.begin(),
+                  m_edge[i]->m_edgeNodes.end(),
+                  nodeList.begin() + 3 + i * (n - 2));
+        if (m_edge[i]->m_n1 != m_vertex[i])
+        {
+            // If edge orientation is reversed relative to node ordering, we
+            // need to reverse order of nodes.
+            std::reverse(nodeList.begin() + 3 + i * (n - 2),
+                         nodeList.begin() + 3 + (i + 1) * (n - 2));
+        }
+    }
+
+    // Copy volume nodes.
+    std::copy(m_volumeNodes.begin(),
+              m_volumeNodes.end(),
+              nodeList.begin() + 3 * (n - 1));
+}
+
 void Triangle::MakeOrder(int                                order,
                          SpatialDomains::GeometrySharedPtr  geom,
                          LibUtilities::PointsType           pType,
                          int                                coordDim,
                          int                               &id,
                          bool                               justConfig)
+
 {
     m_conf.m_order       = order;
     m_curveType          = pType;

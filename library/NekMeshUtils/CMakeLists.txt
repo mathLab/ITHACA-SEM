@@ -1,6 +1,8 @@
 SET(NEKMESHUTILS_SOURCES
     MeshElements/Mesh.cpp
     MeshElements/Element.cpp
+    MeshElements/Edge.cpp
+    MeshElements/Face.cpp
     MeshElements/BooleanOperators.cpp
     MeshElements/Point.cpp
     MeshElements/Line.cpp
@@ -90,8 +92,8 @@ IF(NEKTAR_USE_MESHGEN)
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TETGEN_LIBRARY})
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${OCC_LIBRARIES})
 
-    SET(OCC_DEF LIN LININTEL HAVE_WOK_CONFIG_H HAVE_CONFIG_H CSFDB)
-    SET_PROPERTY(TARGET NekMeshUtils APPEND PROPERTY COMPILE_DEFINITIONS ${OCC_DEF})
+    #SET(OCC_DEF LIN LININTEL HAVE_WOK_CONFIG_H HAVE_CONFIG_H CSFDB)
+    #SET_PROPERTY(TARGET NekMeshUtils APPEND PROPERTY COMPILE_DEFINITIONS ${OCC_DEF})
     ADD_DEPENDENCIES(NekMeshUtils opencascade-6.9 tetgen-1.5)
 ENDIF()
 

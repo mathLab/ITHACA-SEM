@@ -67,9 +67,13 @@ public:
     /// Element type
     static LibUtilities::ShapeType m_type;
 
+    /**
+     * @brief Create a hexahedral element.
+     */
     NEKMESHUTILS_EXPORT Hexahedron(ElmtConfig pConf,
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList);
+    /// copy hex element
     NEKMESHUTILS_EXPORT Hexahedron(const Hexahedron &pSrc);
     NEKMESHUTILS_EXPORT virtual ~Hexahedron()
     {

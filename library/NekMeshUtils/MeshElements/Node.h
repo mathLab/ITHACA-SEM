@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh node object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,6 +69,7 @@ public:
     // Node(const Node& pSrc)
     //    : m_id(pSrc.m_id), m_x(pSrc.m_x), m_y(pSrc.m_y),
     //      m_z(pSrc.m_z), m_geom() {}
+    /// create an empty node
     NEKMESHUTILS_EXPORT Node() : m_id(0), m_x(0.0), m_y(0.0), m_z(0.0), m_geom()
     {
     }

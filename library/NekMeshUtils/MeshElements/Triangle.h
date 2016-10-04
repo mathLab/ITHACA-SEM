@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Mesh.h
+//  File: Triangle.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh triangle object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_TRIANGLE
-#define NekMeshUtils_MESHELEMENTS_TRIANGLE
+#ifndef NEKMESHUTILS_MESHELEMENTS_TRIANGLE
+#define NEKMESHUTILS_MESHELEMENTS_TRIANGLE
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 #include <NekMeshUtils/MeshElements/Element.h>
@@ -87,36 +87,6 @@ public:
     NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
 };
 
-typedef HOTriangle<NodeSharedPtr> HOSurf;
-typedef boost::shared_ptr<HOSurf> HOSurfSharedPtr;
-
-/**
- * Hash class for high-order surfaces.
- */
-struct HOSurfHash : std::unary_function<HOSurfSharedPtr, std::size_t>
-{
-    /**
-     * Calculate hash of a given high-order surface p by taking
-     * successive hashes of the vertex IDs.
-     */
-    std::size_t operator()(HOSurfSharedPtr const &p) const
-    {
-        std::size_t seed     = 0;
-        std::vector<int> ids = p->vertId;
-
-        std::sort(ids.begin(), ids.end());
-        for (int i = 0; i < ids.size(); ++i)
-        {
-            boost::hash_combine(seed, ids[i]);
-        }
-        return seed;
-    }
-};
-
-NEKMESHUTILS_EXPORT bool operator==(HOSurfSharedPtr const &p1,
-                                    HOSurfSharedPtr const &p2);
-
-typedef boost::unordered_set<HOSurfSharedPtr, HOSurfHash> HOSurfSet;
 }
 }
 

@@ -61,7 +61,7 @@ public:
 private:
     NekDouble m_minDelta, m_maxDelta, m_eps, m_blthick;
     int m_order;
-    bool m_makeBL, m_writeoctree;
+    bool m_makeBL;
 };
 }
 }

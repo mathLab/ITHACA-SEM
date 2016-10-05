@@ -109,18 +109,11 @@ void InputCAD::Process()
         m_makeBL = false;
     }
 
-    if (pSession->DefinesSolverInfo("WriteOctree"))
-    {
-        m_writeoctree = pSession->GetSolverInfo("WriteOctree") == "TRUE";
-    }
-
-    m_mesh->m_cad = MemoryManager<CADSystem>::AllocateSharedPtr(m_mesh->m_CADId);
-
     if (m_mesh->m_verbose)
     {
         cout << "Building mesh for: " << m_mesh->m_CADId << endl;
     }
-
+    m_mesh->m_cad = MemoryManager<CADSystem>::AllocateSharedPtr(m_mesh->m_CADId);
     ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
 
 
@@ -180,30 +173,20 @@ void InputCAD::Process()
         cout << endl << "\tWith thickness " << m_blthick << endl;
     }
 
-    // create octree
-    OctreeSharedPtr m_octree = MemoryManager<Octree>::AllocateSharedPtr(
-        m_mesh->m_cad, m_mesh->m_verbose, m_minDelta, m_maxDelta, m_eps);
+    ModuleSharedPtr octr = GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "octree"), m_mesh);
+    octr->RegisterConfig("mindel",boost::lexical_cast<std::string>(m_minDelta));
+    octr->RegisterConfig("maxdel",boost::lexical_cast<std::string>(m_maxDelta));
+    octr->RegisterConfig("eps",boost::lexical_cast<std::string>(m_eps));
 
     if(pSession->DefinesSolverInfo("SourcePoints"))
     {
         ASSERTL0(boost::filesystem::exists(pSession->GetSolverInfo("SourcePoints").c_str()),
                  "sourcepoints file does not exist");
-        vector<vector<NekDouble> > points;
-        ifstream file;
-        file.open(pSession->GetSolverInfo("SourcePoints").c_str());
-        string line;
-
-        while (getline(file, line))
-        {
-            vector<NekDouble> point(3);
-            stringstream s(line);
-            s >> point[0] >> point[1] >> point[2];
-            points.push_back(point);
-        }
+        octr->RegisterConfig("sourcefile",pSession->GetSolverInfo("SourcePoints"));
         NekDouble sp;
         pSession->LoadParameter("SPSize", sp);
-        m_octree->SetSourcePoints(points, sp);
-
+        octr->RegisterConfig("sourcesize",boost::lexical_cast<std::string>(sp));
     }
 
     if (pSession->DefinesSolverInfo("UserDefinedSpacing"))
@@ -212,30 +195,17 @@ void InputCAD::Process()
         ASSERTL0(boost::filesystem::exists(udsName.c_str()),
                  "UserDefinedSpacing file does not exist");
 
-        m_octree->SetUDSFile(udsName);
+        octr->RegisterConfig("udsfile",udsName);
     }
 
-    m_octree->Build();
-
-    if (m_writeoctree)
+    if (pSession->DefinesSolverInfo("WriteOctree"))
     {
-        MeshSharedPtr oct = boost::shared_ptr<Mesh>(new Mesh());
-        oct->m_expDim     = 3;
-        oct->m_spaceDim   = 3;
-        oct->m_nummode    = 2;
-
-        m_octree->GetOctreeMesh(oct);
-
-        ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
-            ModuleKey(eOutputModule, "xml"), oct);
-        mod->RegisterConfig("outfile", fn + "_oct.xml");
-        mod->ProcessVertices();
-        mod->ProcessEdges();
-        mod->ProcessFaces();
-        mod->ProcessElements();
-        mod->ProcessComposites();
-        mod->Process();
+        octr->RegisterConfig("writeoctree",fn + "_oct.xml");
     }
+
+    octr->Process();
+
+    OctreeSharedPtr octree = boost::dynamic_pointer_cast<Octree>(octr);
 
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
@@ -252,7 +222,7 @@ void InputCAD::Process()
     //create surface mesh
     m_mesh->m_expDim--; //just to make it easier to surface mesh for now
     SurfaceMeshSharedPtr m_surfacemesh = MemoryManager<SurfaceMesh>::
-                AllocateSharedPtr(m_mesh, m_mesh->m_cad, m_octree);
+                AllocateSharedPtr(m_mesh, m_mesh->m_cad, octree);
 
     m_surfacemesh->Mesh();
 
@@ -320,12 +290,12 @@ void InputCAD::Process()
         m_mesh->m_expDim = 3;
 
         m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(
-            m_mesh, m_octree, m_blmesh);
+            m_mesh, octree, m_blmesh);
     }
     else
     {
         m_mesh->m_expDim = 3;
-        m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, m_octree);
+        m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, octree);
 
     }
 

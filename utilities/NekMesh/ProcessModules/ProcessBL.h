@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSBL
 #define UTILITIES_NEKMESH_PROCESSBL
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

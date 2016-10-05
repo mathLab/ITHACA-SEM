@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_INPUTSWAN
 #define UTILITIES_NEKMESH_INPUTSWAN
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

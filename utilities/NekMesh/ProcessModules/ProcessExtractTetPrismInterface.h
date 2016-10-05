@@ -37,7 +37,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSEXTRACTTETPRISMINTERFACE
 #define UTILITIES_NEKMESH_PROCESSEXTRACTTETPRISMINTERFACE
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

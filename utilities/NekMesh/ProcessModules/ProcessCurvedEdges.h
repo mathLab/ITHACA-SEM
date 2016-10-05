@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSCURVEDEDGES
 #define UTILITIES_NEKMESH_PROCESSCURVEDEDGES
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

@@ -41,7 +41,7 @@
 #include <boost/unordered_map.hpp>
 
 #include <NekMeshUtils/MeshElements/Triangle.h>
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

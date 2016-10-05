@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSJAC
 #define UTILITIES_NEKMESH_PROCESSJAC
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

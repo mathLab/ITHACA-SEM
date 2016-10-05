@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSPERALIGN
 #define UTILITIES_NEKMESH_PROCESSPERALIGN
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

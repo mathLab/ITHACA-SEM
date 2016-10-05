@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSLINEAR
 #define UTILITIES_NEKMESH_PROCESSLINEAR
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

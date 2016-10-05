@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_INPUTSTAR
 #define UTILITIES_NEKMESH_INPUTSTAR
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 #include "ccmio.h"
 

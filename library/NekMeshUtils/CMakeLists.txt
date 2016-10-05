@@ -1,4 +1,5 @@
 SET(NEKMESHUTILS_SOURCES
+    Module/Module.cpp
     MeshElements/Mesh.cpp
     MeshElements/Element.cpp
     MeshElements/Edge.cpp
@@ -37,6 +38,7 @@ ENDIF()
 
 SET(NEKMESHUTILS_HEADERS
     NekMeshUtilsDeclspec.h
+    Module/Module.h
     MeshElements/Node.h
     MeshElements/Edge.h
     MeshElements/Face.h

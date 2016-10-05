@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_OUTPUTSTL
 #define UTILITIES_NEKMESH_OUTPUTSTL
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

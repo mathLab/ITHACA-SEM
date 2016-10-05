@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSINSERTSURFACE
 #define UTILITIES_NEKMESH_PROCESSINSERTSURFACE
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

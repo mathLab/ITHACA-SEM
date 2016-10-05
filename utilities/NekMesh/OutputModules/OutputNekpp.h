@@ -38,7 +38,7 @@
 
 #include <tinyxml.h>
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

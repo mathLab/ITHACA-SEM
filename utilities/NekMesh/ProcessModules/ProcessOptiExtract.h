@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSOPTIEXTRACT
 #define UTILITIES_NEKMESH_PROCESSOPTIEXTRACT
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

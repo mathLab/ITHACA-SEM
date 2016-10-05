@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_INPUTCAD
 #define UTILITIES_NEKMESH_INPUTCAD
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

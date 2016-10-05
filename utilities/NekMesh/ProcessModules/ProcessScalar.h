@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSSCALAR
 #define UTILITIES_NEKMESH_PROCESSSCALAR
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

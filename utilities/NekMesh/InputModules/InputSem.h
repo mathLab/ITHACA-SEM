@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_INPUTSEM
 #define UTILITIES_NEKMESH_INPUTSEM
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {

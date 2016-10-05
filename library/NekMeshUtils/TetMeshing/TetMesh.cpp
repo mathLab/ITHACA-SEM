@@ -49,6 +49,7 @@ void TetMesh::Mesh()
     tetgen = MemoryManager<TetGenInterface>::AllocateSharedPtr();
 
     map<int, NodeSharedPtr> IdToNode;
+    map<NodeSharedPtr, int> IdToNodeRev;
     // at this point all nodes are in m_mesh->m_vertexset, but if there is a
     // boundary layer, we dont want all of them, also, tetgen ids must be
     // sequential so there is a map from tetgen id to real nodes
@@ -57,6 +58,7 @@ void TetMesh::Mesh()
     // in the octree
     map<int, NekDouble> IdToDelta;
     vector<Array<OneD, int> > surfacetris;
+    NodeSet alreadyInSurface;
 
     int cnt = 0;
     if(!m_usePSurface)
@@ -85,8 +87,8 @@ void TetMesh::Mesh()
     }
     else
     {
-        ASSERTL0(false,"logic needs replacing will not work currently");
-        /*vector<unsigned int> blsurfs = m_blmesh->GetBLSurfs();
+        //ASSERTL0(false,"logic needs replacing will not work currently");
+        vector<unsigned int> blsurfs = m_blmesh->GetBLSurfs();
         vector<ElementSharedPtr> Psurf = m_blmesh->GetPsuedoSurf();
         //surface triangles will need to be checked against surftopriface to get the right face
         //all surface elements are sequentially numbered so this should be easy to find in map
@@ -117,19 +119,20 @@ void TetMesh::Mesh()
             Array<OneD, int> tri(3);
             for(int j = 0; j < n.size(); j++)
             {
-                map<int, int>::iterator it;
-                it = NodeIdToTetgenId.find(n[j]->m_id);
-                if(it == NodeIdToTetgenId.end())
+                pair<NodeSet::iterator,bool> testIns =
+                    alreadyInSurface.insert(n[j]);
+
+                if (testIns.second)
                 {
                     tri[j] = cnt;
-                    NodeIdToTetgenId[n[j]->m_id] = cnt;
-                    TetgenIdToNode[cnt] = n[j];
-                    TetgenIdToDelta[cnt] = m_octree->Query(n[j]->GetLoc());
+                    IdToNode[cnt] = n[j];
+                    IdToNodeRev[n[j]] = cnt;
+                    IdToDelta[cnt] = m_octree->Query(n[j]->GetLoc());
                     cnt++;
                 }
                 else
                 {
-                    tri[j] = it->second;
+                    tri[j] = IdToNodeRev[(*testIns.first)];
                 }
             }
             surfacetris.push_back(tri);
@@ -140,23 +143,43 @@ void TetMesh::Mesh()
             Array<OneD, int> tri(3);
             for(int j = 0; j < n.size(); j++)
             {
-                map<int, int>::iterator it;
-                it = NodeIdToTetgenId.find(n[j]->m_id);
-                if(it == NodeIdToTetgenId.end())
+                pair<NodeSet::iterator,bool> testIns =
+                    alreadyInSurface.insert(n[j]);
+
+                if (testIns.second)
                 {
                     tri[j] = cnt;
-                    NodeIdToTetgenId[n[j]->m_id] = cnt;
-                    TetgenIdToNode[cnt] = n[j];
-                    TetgenIdToDelta[cnt] = m_octree->Query(n[j]->GetLoc());
+                    IdToNode[cnt] = n[j];
+                    IdToNodeRev[n[j]] = cnt;
+                    IdToDelta[cnt] = m_octree->Query(n[j]->GetLoc());
                     cnt++;
                 }
                 else
                 {
-                    tri[j] = it->second;
+                    tri[j] = IdToNodeRev[(*testIns.first)];
                 }
             }
             surfacetris.push_back(tri);
-        }*/
+        }
+
+        /*m_mesh->m_vertexSet.clear(); m_mesh->m_faceSet.clear(); m_mesh->m_element[2].clear();
+        m_mesh->m_edgeSet.clear(); m_mesh->m_element[3].clear();
+        //m_mesh->m_element[2] = Psurf;
+        ElmtConfig tconf(LibUtilities::eTriangle,1,false,false);
+        vector<int> tags;
+        tags.push_back(1);
+        for(int i = 0; i < surfacetris.size(); i++)
+        {
+            vector<NodeSharedPtr> tn;
+            for(int j = 0; j < 3; j++)
+            {
+                tn.push_back(IdToNode[surfacetris[i][j]]);
+            }
+            ElementSharedPtr E = GetElementFactory().
+                        CreateInstance(LibUtilities::eTriangle, tconf, tn, tags);
+            m_mesh->m_element[2].push_back(E);
+        }
+        return;*/
     }
 
     if (m_mesh->m_verbose)
@@ -195,10 +218,10 @@ void TetMesh::Mesh()
 
     m_tetconnect = tetgen->Extract();
 
-    /*m_mesh->m_vertexSet.clear(); m_mesh->m_faceSet.clear(); m_mesh->m_element[2].clear();
-    m_mesh->m_edgeSet.clear(); m_mesh->m_element[3].clear();
+    //m_mesh->m_vertexSet.clear(); m_mesh->m_faceSet.clear(); m_mesh->m_element[2].clear();
+    //m_mesh->m_edgeSet.clear(); m_mesh->m_element[3].clear();
 
-    newp.clear();
+    /*newp.clear();
     tetgen->GetNewPoints(0,newp);
     vector<NodeSharedPtr> nodes;
     for (int i = 0; i < newp.size(); i++)

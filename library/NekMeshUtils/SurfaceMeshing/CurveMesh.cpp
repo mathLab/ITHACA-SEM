@@ -159,16 +159,6 @@ void CurveMesh::Mesh()
     ASSERTL0(Ne + 1 == m_meshpoints.size(),
              "incorrect number of points in curve mesh");
 
-    for (int i = 0; i < m_meshpoints.size(); i++)
-    {
-        Array<OneD, NekDouble> loc = m_meshpoints[i]->GetLoc();
-        for (int j = 0; j < 2; j++)
-        {
-            Array<OneD, NekDouble> uv = s[j]->locuv(loc);
-            m_meshpoints[i]->SetCADSurf(s[j]->GetId(), s[j], uv);
-        }
-    }
-
     /*//post process the curve mesh to analyse for bad segments based on
     high-order normals and split if needed
     int ct = 1;

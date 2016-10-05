@@ -72,11 +72,6 @@ public:
     void Mesh();
 
     /**
-     * @brief run all high-order surface meshing routines
-     */
-    void HOSurf();
-
-    /**
      * @brief Validate the linear surface mesh
      */
     void Validate();

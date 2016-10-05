@@ -43,20 +43,20 @@ namespace Nektar
 namespace Utilities
 {
 
-class InputCAD : public InputModule
+class InputCAD : public NekMeshUtils::InputModule
 {
 public:
-    InputCAD(MeshSharedPtr m);
+    InputCAD(NekMeshUtils::MeshSharedPtr m);
     virtual ~InputCAD();
     virtual void Process();
 
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m)
+    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<InputCAD>::AllocateSharedPtr(m);
     }
     /// %ModuleKey for class.
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
 private:
     NekDouble m_minDelta, m_maxDelta, m_eps, m_blthick;

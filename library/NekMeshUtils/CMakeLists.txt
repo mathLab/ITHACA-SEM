@@ -21,7 +21,7 @@ IF(NEKTAR_USE_MESHGEN)
         Octree/Octant.cpp
         Octree/Octree.cpp
         SurfaceMeshing/SurfaceMesh.cpp
-        SurfaceMeshing/SurfaceMeshHOMesh.cpp
+        SurfaceMeshing/HOSurfaceMesh.cpp
         SurfaceMeshing/FaceMesh.cpp
         SurfaceMeshing/OptimiseFunctions.cpp
         ExtLibInterface/TriangleInterface.cpp
@@ -64,6 +64,7 @@ IF(NEKTAR_USE_MESHGEN)
         Octree/Octant.h
         Octree/Octree.h
         SurfaceMeshing/SurfaceMesh.h
+        SurfaceMeshing/HOSurfaceMesh.h
         SurfaceMeshing/FaceMesh.h
         SurfaceMeshing/OptimiseFunctions.h
         ExtLibInterface/TriangleInterface.h

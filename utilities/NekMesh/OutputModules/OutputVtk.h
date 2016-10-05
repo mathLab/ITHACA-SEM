@@ -44,17 +44,17 @@ namespace Utilities
 {
 
 /// Converter for Gmsh files.
-class OutputVtk : public OutputModule
+class OutputVtk : public NekMeshUtils::OutputModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<OutputVtk>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    OutputVtk(MeshSharedPtr m);
+    OutputVtk(NekMeshUtils::MeshSharedPtr m);
     virtual ~OutputVtk();
 
     /// Write mesh to output file.

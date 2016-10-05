@@ -44,17 +44,17 @@ namespace Utilities
 {
 
 /// Converter for Swansea mesh format.
-class InputSwan : public InputModule
+class InputSwan : public NekMeshUtils::InputModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<InputSwan>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    InputSwan(MeshSharedPtr m);
+    InputSwan(NekMeshUtils::MeshSharedPtr m);
     virtual ~InputSwan();
 
     /// Populate and validate required data structures.

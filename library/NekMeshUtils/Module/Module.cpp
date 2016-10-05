@@ -39,7 +39,7 @@ using namespace std;
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMeshUtils
 {
 
 /**

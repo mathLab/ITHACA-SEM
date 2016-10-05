@@ -42,6 +42,9 @@ namespace Nektar
 {
 namespace Utilities
 {
+
+using namespace Nektar::NekMeshUtils;
+
 ModuleKey ProcessLinear::className = GetModuleFactory().RegisterCreatorFunction(
     ModuleKey(eProcessModule, "linearise"),
     ProcessLinear::create,

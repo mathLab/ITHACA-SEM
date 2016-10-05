@@ -35,9 +35,12 @@
 
 #include <list>
 #include <algorithm>
-#include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
+
+#include <NekMeshUtils/SurfaceMeshing/HOSurfaceMesh.h>
 #include <NekMeshUtils/Optimisation/BGFS-B.h>
 #include <NekMeshUtils/SurfaceMeshing/OptimiseFunctions.h>
+#include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
 
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LocalRegions/MatrixKey.h>
@@ -49,7 +52,7 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-set<pair<int, int> > ListOfFaceSpings(int nq)
+inline set<pair<int, int> > ListOfFaceSpings(int nq)
 {
     map<pair<int, int>, int> nodeorder;
     map<int, pair<int, int> > nodeorderRev;
@@ -175,9 +178,9 @@ set<pair<int, int> > ListOfFaceSpings(int nq)
     return ret;
 }
 
-map<pair<int, int>, NekDouble> weights(set<pair<int, int> > springs,
-                                       Array<OneD, NekDouble> u,
-                                       Array<OneD, NekDouble> v)
+inline map<pair<int, int>, NekDouble> weights(set<pair<int, int> > springs,
+                                              Array<OneD, NekDouble> u,
+                                              Array<OneD, NekDouble> v)
 {
     map<pair<int, int>, NekDouble> ret;
 
@@ -238,7 +241,22 @@ map<pair<int, int>, NekDouble> weights(set<pair<int, int> > springs,
     return ret;
 }
 
-void SurfaceMesh::HOSurf()
+ModuleKey HOSurfaceMesh::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eProcessModule, "hosurface"),
+    HOSurfaceMesh::create,
+    "Generates a high-order surface mesh based on CAD");
+
+HOSurfaceMesh::HOSurfaceMesh(MeshSharedPtr m) : ProcessModule(m)
+{
+    m_config["extract"] =
+        ConfigOption(true, "0", "Extract non-valid elements from mesh.");
+}
+
+HOSurfaceMesh::~HOSurfaceMesh()
+{
+}
+
+void HOSurfaceMesh::Process()
 {
     if (m_mesh->m_verbose)
         cout << endl << "\tHigh-Order Surface meshing" << endl;
@@ -287,7 +305,7 @@ void SurfaceMesh::HOSurf()
         }
 
         int surf           = m_mesh->m_element[2][i]->CADSurfId;
-        CADSurfSharedPtr s = m_cad->GetSurf(surf);
+        CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(surf);
 
         FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
 
@@ -443,7 +461,7 @@ void SurfaceMesh::HOSurf()
             else
             {
                 // edge is on surface and needs 2d optimisation
-                CADSurfSharedPtr s = m_cad->GetSurf(surf);
+                CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(surf);
                 Array<OneD, NekDouble> uvb, uve;
                 uvb = e->m_n1->GetCADSurfInfo(surf);
                 uve = e->m_n2->GetCADSurfInfo(surf);

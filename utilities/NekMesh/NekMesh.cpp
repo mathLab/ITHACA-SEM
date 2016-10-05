@@ -40,7 +40,6 @@
 #include <NekMeshUtils/Module/Module.h>
 
 using namespace std;
-using namespace Nektar::Utilities;
 using namespace Nektar::NekMeshUtils;
 
 namespace po = boost::program_options;

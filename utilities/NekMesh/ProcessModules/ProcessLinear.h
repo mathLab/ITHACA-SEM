@@ -46,17 +46,17 @@ namespace Utilities
  * @brief This processing module removes all the high-order information
  * from the mesh leaving just the linear elements
  */
-class ProcessLinear : public ProcessModule
+class ProcessLinear : public NekMeshUtils::ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessLinear>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    ProcessLinear(MeshSharedPtr m);
+    ProcessLinear(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessLinear();
 
     /// Write mesh to output file.

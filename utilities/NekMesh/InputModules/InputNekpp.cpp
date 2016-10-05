@@ -45,11 +45,13 @@ namespace Nektar
 {
 namespace Utilities
 {
+
+using namespace Nektar::NekMeshUtils;
+
 ModuleKey InputNekpp::className =
     GetModuleFactory().RegisterCreatorFunction(ModuleKey(eInputModule, "xml"),
                                                InputNekpp::create,
                                                "Reads Nektar++ xml file.");
-
 /**
  * @brief Set up InputNekpp object.
  */

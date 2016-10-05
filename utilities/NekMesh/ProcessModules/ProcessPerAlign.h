@@ -43,17 +43,17 @@ namespace Nektar
 namespace Utilities
 {
 
-class ProcessPerAlign : public ProcessModule
+class ProcessPerAlign : public NekMeshUtils::ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessPerAlign>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    ProcessPerAlign(MeshSharedPtr m);
+    ProcessPerAlign(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessPerAlign();
 
     /// Write mesh to output file.

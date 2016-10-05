@@ -43,17 +43,17 @@ namespace Nektar
 namespace Utilities
 {
 
-class OutputSTL : public OutputModule
+class OutputSTL : public NekMeshUtils::OutputModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<OutputSTL>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    OutputSTL(MeshSharedPtr m);
+    OutputSTL(NekMeshUtils::MeshSharedPtr m);
     virtual ~OutputSTL();
 
     /// Write mesh to output file.

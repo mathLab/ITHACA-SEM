@@ -360,7 +360,10 @@ void InputCAD::Process()
 
     //return;
 
-    m_surfacemesh->HOSurf();
+    ModuleSharedPtr hom = GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "hosurface"), m_mesh);
+    //mod->RegisterConfig("outfile", fn + "_oct.xml");
+    hom->Process();
 
     if (m_mesh->m_verbose)
     {

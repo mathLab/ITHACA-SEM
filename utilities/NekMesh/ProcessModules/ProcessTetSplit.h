@@ -49,17 +49,17 @@ namespace Utilities
  * method. For now it simply prints a list of elements which have
  * negative Jacobian.
  */
-class ProcessTetSplit : public ProcessModule
+class ProcessTetSplit : public NekMeshUtils::ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessTetSplit>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    ProcessTetSplit(MeshSharedPtr m);
+    ProcessTetSplit(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessTetSplit();
 
     /// Write mesh to output file.

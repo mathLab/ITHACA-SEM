@@ -126,7 +126,7 @@ public:
     /// apply spherigon surface smoothing.
     std::set<std::pair<int, int> >  m_spherigonSurfs;
     /// List of face labels for composite annotation
-    std::map<int, std::string>           m_faceLabels;
+    std::map<int, std::string>      m_faceLabels;
     /// Whether the mesh has CAD
     bool                            m_hasCAD;
     /// CAD file ID

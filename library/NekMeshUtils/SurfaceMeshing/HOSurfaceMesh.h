@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputCAD.h
+//  File: ProcessJac.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,39 +29,34 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Create mesh from CAD.
+//  Description: Calculate jacobians of elements.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTCAD
-#define UTILITIES_NEKMESH_INPUTCAD
+#ifndef NEKMESHUTILS_SURFACE_HO
+#define NEKMESHUTILS_SURFACE_HO
 
 #include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMeshUtils
 {
 
-class InputCAD : public NekMeshUtils::InputModule
+class HOSurfaceMesh : public ProcessModule
 {
 public:
-    InputCAD(NekMeshUtils::MeshSharedPtr m);
-    virtual ~InputCAD();
-    virtual void Process();
-
     /// Creates an instance of this class
-    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
-        return MemoryManager<InputCAD>::AllocateSharedPtr(m);
+        return MemoryManager<HOSurfaceMesh>::AllocateSharedPtr(m);
     }
-    /// %ModuleKey for class.
-    static NekMeshUtils::ModuleKey className;
+    static ModuleKey className;
 
-private:
-    NekDouble m_minDelta, m_maxDelta, m_eps, m_blthick;
-    int m_order;
-    bool m_makeBL, m_writeoctree;
+    HOSurfaceMesh(MeshSharedPtr m);
+    virtual ~HOSurfaceMesh();
+
+    virtual void Process();
 };
 }
 }

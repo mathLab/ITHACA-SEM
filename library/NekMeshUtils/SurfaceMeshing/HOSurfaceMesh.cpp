@@ -215,12 +215,6 @@ inline map<pair<int, int>, NekDouble> weights(set<pair<int, int> > springs,
 
     DNekMat pts = M * C;
 
-    /*for(int i = 0; i < u.num_elements(); i++)
-    {
-        cout << pts(0,i) << " " << pts(1,i) << endl;
-    }
-    exit(-1);*/
-
     set<pair<int, int> >::iterator it;
     for (it = springs.begin(); it != springs.end(); it++)
     {
@@ -228,15 +222,6 @@ inline map<pair<int, int>, NekDouble> weights(set<pair<int, int> > springs,
                               (pts(0, (*it).first) - pts(0, (*it).second)) +
                           (pts(1, (*it).first) - pts(1, (*it).second)) *
                               (pts(1, (*it).first) - pts(1, (*it).second)));
-
-        if ((*it).first == 12 && (*it).second == 13)
-            ret[(*it)] *= 1.2;
-
-        if ((*it).first == 12 && (*it).second == 14)
-            ret[(*it)] *= 1.2;
-
-        if ((*it).first == 13 && (*it).second == 14)
-            ret[(*it)] *= 1.2;
     }
     return ret;
 }
@@ -248,8 +233,8 @@ ModuleKey HOSurfaceMesh::className = GetModuleFactory().RegisterCreatorFunction(
 
 HOSurfaceMesh::HOSurfaceMesh(MeshSharedPtr m) : ProcessModule(m)
 {
-    m_config["extract"] =
-        ConfigOption(true, "0", "Extract non-valid elements from mesh.");
+    m_config["opti"] =
+        ConfigOption(true, "0", "Perform edge node optimisation.");
 }
 
 HOSurfaceMesh::~HOSurfaceMesh()
@@ -290,11 +275,20 @@ void HOSurfaceMesh::Process()
     set<pair<int, int> > springs     = ListOfFaceSpings(nq);
     map<pair<int, int>, NekDouble> z = weights(springs, u, v);
 
-    // because edges are listed twice need a method to not repeat over them
-    EdgeSet completedEdges;
+    bool qOpti = m_config["opti"].beenSet;
 
     // loop over all the faces in the surface mesh, check all three edges for
     // high order info, if nothing high-order the edge.
+
+    EdgeSet surfaceEdges;
+    EdgeSet completedEdges;
+
+    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+    {
+        vector<EdgeSharedPtr> es = m_mesh->m_element[2][i]->GetEdgeList();
+        for(int j = 0; j < es.size(); j++)
+            surfaceEdges.insert(es[j]);
+    }
 
     for (int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
@@ -313,43 +307,33 @@ void HOSurfaceMesh::Process()
         f->CADSurfId = surf;
         f->CADSurf = s;
 
-        vector<EdgeSharedPtr> surfedges =
-            m_mesh->m_element[2][i]->GetEdgeList();
-
         vector<EdgeSharedPtr> edges = f->m_edgeList;
         for (int j = 0; j < edges.size(); j++)
         {
+            EdgeSharedPtr e = edges[j];
             // test insert the edge into completedEdges
             // if the edge already exists move on
             // if not figure out its high-order information
 
-            EdgeSet::iterator test = completedEdges.find(edges[j]);
+            EdgeSet::iterator test = completedEdges.find(e);
 
             if (test != completedEdges.end())
             {
                 continue;
             }
 
-            EdgeSharedPtr e = edges[j];
-
             // the edges in the element are different to those in the face
             // the cad information is stored in the element edges which are not
-            // in the m_mesh->m_edgeSet group.
+            // in the m_mesh->m_edgeSet groups
             // need to link them together and copy the cad information to be
             // able to identify how to make it high-order
-            bool foundsurfaceedge = false;
-            for (int k = 0; k < surfedges.size(); k++)
-            {
-                if (surfedges[k] == e)
-                {
-                    e->onCurve       = surfedges[k]->onCurve;
-                    e->CADCurveId    = surfedges[k]->CADCurveId;
-                    e->CADCurve      = surfedges[k]->CADCurve;
-                    foundsurfaceedge = true;
-                }
-            }
-            ASSERTL0(foundsurfaceedge,
-                     "cannot find corresponding surface edge");
+            EdgeSet::iterator it = surfaceEdges.find(e);
+            ASSERTL0(it != surfaceEdges.end(),"could not find edge in surface");
+            e->onCurve       = (*it)->onCurve;
+            e->CADCurveId    = (*it)->CADCurveId;
+            e->CADCurve      = (*it)->CADCurve;
+
+            vector<NodeSharedPtr> honodes(m_mesh->m_nummode - 2);
 
             if (e->onCurve)
             {
@@ -366,80 +350,82 @@ void HOSurfaceMesh::Process()
                         tb * (1.0 - gll[k]) / 2.0 + te * (1.0 + gll[k]) / 2.0;
                 }
 
-                /*Array<OneD, NekDouble> xi(nq - 2);
-                for (int k = 1; k < nq - 1; k++)
+                if(qOpti)
                 {
-                    xi[k - 1] = ti[k];
-                }
+                    Array<OneD, NekDouble> xi(nq - 2);
+                    for (int k = 1; k < nq - 1; k++)
+                    {
+                        xi[k - 1] = ti[k];
+                    }
 
-                OptiEdgeSharedPtr opti =
-                    MemoryManager<OptiEdge>::AllocateSharedPtr(ti, gll, c);
+                    OptiEdgeSharedPtr opti =
+                        MemoryManager<OptiEdge>::AllocateSharedPtr(ti, gll, c);
 
-                DNekMat B(
-                    nq - 2, nq - 2, 0.0); // approximate hessian (I to start)
-                for (int k = 0; k < nq - 2; k++)
-                {
-                    B(k, k) = 1.0;
-                }
-                DNekMat H(nq - 2,
-                          nq - 2,
-                          0.0); // approximate inverse hessian (I to start)
-                for (int k = 0; k < nq - 2; k++)
-                {
-                    H(k, k) = 1.0;
-                }
-
-                DNekMat J = opti->dF(xi);
-
-                Array<OneD, NekDouble> bnds = c->Bounds();
-
-                bool repeat = true;
-                int itct = 0;
-                while (repeat)
-                {
-                    NekDouble Norm = 0;
+                    DNekMat B(
+                        nq - 2, nq - 2, 0.0); // approximate hessian (I to start)
                     for (int k = 0; k < nq - 2; k++)
                     {
-                        Norm += J(k, 0) * J(k, 0) / (bnds[1] - bnds[0]) /
-                                (bnds[1] - bnds[0]);
+                        B(k, k) = 1.0;
                     }
-                    Norm = sqrt(Norm);
+                    DNekMat H(nq - 2,
+                              nq - 2,
+                              0.0); // approximate inverse hessian (I to start)
+                    for (int k = 0; k < nq - 2; k++)
+                    {
+                        H(k, k) = 1.0;
+                    }
 
-                    if (Norm < 1E-8)
-                    {
-                        repeat = false;
-                        break;
-                    }
-                    if (itct > 1000)
-                    {
-                        cout << "failed to optimise on curve" << endl;
-                        for (int k = 0; k < nq; k++)
-                        {
-                            ti[k] = tb * (1.0 - gll[k]) / 2.0 +
-                                    te * (1.0 + gll[k]) / 2.0;
-                        }
-                        break;
-                    }
-                    itct++;
+                    DNekMat J = opti->dF(xi);
 
-                    if (!BGFSUpdate(opti, J, B, H))
+                    Array<OneD, NekDouble> bnds = c->Bounds();
+
+                    bool repeat = true;
+                    int itct = 0;
+                    while (repeat)
                     {
-                        if(m_mesh->m_verbose)
+                        NekDouble Norm = 0;
+                        for (int k = 0; k < nq - 2; k++)
                         {
-                            cout << "BFGS reported no update, curve on "
-                                << c->GetId() << endl;
+                            Norm += J(k, 0) * J(k, 0) / (bnds[1] - bnds[0]) /
+                                    (bnds[1] - bnds[0]);
                         }
-                        break;
+                        Norm = sqrt(Norm);
+
+                        if (Norm < 1E-8)
+                        {
+                            repeat = false;
+                            break;
+                        }
+                        if (itct > 1000)
+                        {
+                            cout << "failed to optimise on curve" << endl;
+                            for (int k = 0; k < nq; k++)
+                            {
+                                ti[k] = tb * (1.0 - gll[k]) / 2.0 +
+                                        te * (1.0 + gll[k]) / 2.0;
+                            }
+                            break;
+                        }
+                        itct++;
+
+                        if (!BGFSUpdate(opti, J, B, H))
+                        {
+                            if(m_mesh->m_verbose)
+                            {
+                                cout << "BFGS reported no update, curve on "
+                                    << c->GetId() << endl;
+                            }
+                            break;
+                        }
                     }
+                    // need to pull the solution out of opti
+                    ti = opti->GetSolution();
                 }
-                // need to pull the solution out of opti
-                ti = opti->GetSolution();*/
 
                 vector<CADSurfSharedPtr> s = c->GetAdjSurf();
 
                 ASSERTL0(s.size() == 2, "Number of common surfs should be 2");
 
-                vector<NodeSharedPtr> honodes(m_mesh->m_nummode - 2);
                 for (int k = 1; k < m_mesh->m_nummode - 1; k++)
                 {
                     Array<OneD, NekDouble> loc = c->P(ti[k]);
@@ -453,10 +439,6 @@ void HOSurfaceMesh::Process()
                     nn->SetCADSurf(s[1]->GetId(), s[1], uv);
                     honodes[k - 1] = nn;
                 }
-
-                e->m_edgeNodes = honodes;
-                e->m_curveType = LibUtilities::eGaussLobattoLegendre;
-                completedEdges.insert(e);
             }
             else
             {
@@ -479,105 +461,107 @@ void HOSurfaceMesh::Process()
                     uvi[k] = uv;
                 }
 
-                /*Array<OneD, NekDouble> bnds = s->GetBounds();
-                Array<OneD, NekDouble> all(2 * nq);
-                for (int k = 0; k < nq; k++)
+                if(qOpti)
                 {
-                    all[k * 2 + 0] = uvi[k][0];
-                    all[k * 2 + 1] = uvi[k][1];
-                }
+                    Array<OneD, NekDouble> bnds = s->GetBounds();
+                    Array<OneD, NekDouble> all(2 * nq);
+                    for (int k = 0; k < nq; k++)
+                    {
+                        all[k * 2 + 0] = uvi[k][0];
+                        all[k * 2 + 1] = uvi[k][1];
+                    }
 
-                Array<OneD, NekDouble> xi(2 * (nq - 2));
-                for (int k = 1; k < nq - 1; k++)
-                {
-                    xi[(k - 1) * 2 + 0] = all[k * 2 + 0];
-                    xi[(k - 1) * 2 + 1] = all[k * 2 + 1];
-                }
+                    Array<OneD, NekDouble> xi(2 * (nq - 2));
+                    for (int k = 1; k < nq - 1; k++)
+                    {
+                        xi[(k - 1) * 2 + 0] = all[k * 2 + 0];
+                        xi[(k - 1) * 2 + 1] = all[k * 2 + 1];
+                    }
 
-                OptiEdgeSharedPtr opti =
-                    MemoryManager<OptiEdge>::AllocateSharedPtr(all, gll, s);
+                    OptiEdgeSharedPtr opti =
+                        MemoryManager<OptiEdge>::AllocateSharedPtr(all, gll, s);
 
-                DNekMat B(2 * (nq - 2),
-                          2 * (nq - 2),
-                          0.0); // approximate hessian (I to start)
-                for (int k = 0; k < 2 * (nq - 2); k++)
-                {
-                    B(k, k) = 1.0;
-                }
-                DNekMat H(2 * (nq - 2),
-                          2 * (nq - 2),
-                          0.0); // approximate inverse hessian (I to start)
-                for (int k = 0; k < 2 * (nq - 2); k++)
-                {
-                    H(k, k) = 1.0;
-                }
-
-                DNekMat J = opti->dF(xi);
-
-                bool repeat = true;
-                int itct    = 0;
-                while (repeat)
-                {
-                    NekDouble Norm = 0;
+                    DNekMat B(2 * (nq - 2),
+                              2 * (nq - 2),
+                              0.0); // approximate hessian (I to start)
                     for (int k = 0; k < 2 * (nq - 2); k++)
                     {
-                        if (k % 2 == 0)
-                        {
-                            Norm += J(k, 0) * J(k, 0) / (bnds[1] - bnds[0]) /
-                                    (bnds[1] - bnds[0]);
-                        }
-                        else
-                        {
-                            Norm += J(k, 0) * J(k, 0) / (bnds[3] - bnds[2]) /
-                                    (bnds[3] - bnds[2]);
-                        }
+                        B(k, k) = 1.0;
                     }
-                    Norm = sqrt(Norm);
-
-                    if (Norm < 1E-8)
+                    DNekMat H(2 * (nq - 2),
+                              2 * (nq - 2),
+                              0.0); // approximate inverse hessian (I to start)
+                    for (int k = 0; k < 2 * (nq - 2); k++)
                     {
-                        repeat = false;
-                        break;
+                        H(k, k) = 1.0;
                     }
 
-                    if (itct > 1000)
-                    {
-                        cout << "failed to optimise on edge" << endl;
-                        for (int k = 0; k < nq; k++)
-                        {
-                            Array<OneD, NekDouble> uv(2);
-                            uv[0] = uvb[0] * (1.0 - gll[k]) / 2.0 +
-                                    uve[0] * (1.0 + gll[k]) / 2.0;
-                            uv[1] = uvb[1] * (1.0 - gll[k]) / 2.0 +
-                                    uve[1] * (1.0 + gll[k]) / 2.0;
-                            uvi[k] = uv;
-                        }
-                        break;
-                    }
-                    itct++;
+                    DNekMat J = opti->dF(xi);
 
-                    if (!BGFSUpdate(opti, J, B, H))
+                    bool repeat = true;
+                    int itct    = 0;
+                    while (repeat)
                     {
-                        if(m_mesh->m_verbose)
+                        NekDouble Norm = 0;
+                        for (int k = 0; k < 2 * (nq - 2); k++)
                         {
-                            cout << "BFGS reported no update, edge on " << surf
-                                << endl;
+                            if (k % 2 == 0)
+                            {
+                                Norm += J(k, 0) * J(k, 0) / (bnds[1] - bnds[0]) /
+                                        (bnds[1] - bnds[0]);
+                            }
+                            else
+                            {
+                                Norm += J(k, 0) * J(k, 0) / (bnds[3] - bnds[2]) /
+                                        (bnds[3] - bnds[2]);
+                            }
                         }
-                        // exit(-1);
-                        break;
+                        Norm = sqrt(Norm);
+
+                        if (Norm < 1E-8)
+                        {
+                            repeat = false;
+                            break;
+                        }
+
+                        if (itct > 1000)
+                        {
+                            cout << "failed to optimise on edge" << endl;
+                            for (int k = 0; k < nq; k++)
+                            {
+                                Array<OneD, NekDouble> uv(2);
+                                uv[0] = uvb[0] * (1.0 - gll[k]) / 2.0 +
+                                        uve[0] * (1.0 + gll[k]) / 2.0;
+                                uv[1] = uvb[1] * (1.0 - gll[k]) / 2.0 +
+                                        uve[1] * (1.0 + gll[k]) / 2.0;
+                                uvi[k] = uv;
+                            }
+                            break;
+                        }
+                        itct++;
+
+                        if (!BGFSUpdate(opti, J, B, H))
+                        {
+                            if(m_mesh->m_verbose)
+                            {
+                                cout << "BFGS reported no update, edge on " << surf
+                                    << endl;
+                            }
+                            // exit(-1);
+                            break;
+                        }
+                    }
+
+                    all = opti->GetSolution();
+
+                    // need to put all backinto uv
+                    for (int k = 0; k < nq; k++)
+                    {
+                        uvi[k][0] = all[k * 2 + 0];
+                        uvi[k][1] = all[k * 2 + 1];
                     }
                 }
 
-                all = opti->GetSolution();
-
-                // need to put all backinto uv
-                for (int k = 0; k < nq; k++)
-                {
-                    uvi[k][0] = all[k * 2 + 0];
-                    uvi[k][1] = all[k * 2 + 1];
-                }*/
-
-                vector<NodeSharedPtr> honodes(nq - 2);
                 for (int k = 1; k < nq - 1; k++)
                 {
                     Array<OneD, NekDouble> loc;
@@ -587,14 +571,14 @@ void HOSurfaceMesh::Process()
                     nn->SetCADSurf(s->GetId(), s, uvi[k]);
                     honodes[k - 1] = nn;
                 }
-
-                e->m_edgeNodes = honodes;
-                e->m_curveType = LibUtilities::eGaussLobattoLegendre;
-                completedEdges.insert(e);
             }
+
+            e->m_edgeNodes = honodes;
+            e->m_curveType = LibUtilities::eGaussLobattoLegendre;
+            completedEdges.insert(e);
         }
 
-        ASSERTL0(nq <= 5, "not setup for high-orders yet");
+        //just add the face interior nodes through interp and project
 
         vector<NodeSharedPtr> vertices = f->m_vertexList;
 
@@ -686,6 +670,7 @@ void HOSurfaceMesh::Process()
             f->m_faceNodes = honodes;
             f->m_curveType = LibUtilities::eGaussLobattoLegendre;
         }
+
     }
 
     if (m_mesh->m_verbose)

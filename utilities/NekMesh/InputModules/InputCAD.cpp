@@ -89,7 +89,8 @@ void InputCAD::Process()
     pSession->LoadParameter("MaxDelta", m_maxDelta);
     pSession->LoadParameter("EPS", m_eps);
     pSession->LoadParameter("Order", m_order);
-    m_CADName = pSession->GetSolverInfo("CADFile");
+    m_mesh->m_CADId = pSession->GetSolverInfo("CADFile");
+    m_mesh->m_hasCAD = true;
 
     if (pSession->DefinesSolverInfo("MeshType"))
     {
@@ -113,18 +114,17 @@ void InputCAD::Process()
         m_writeoctree = pSession->GetSolverInfo("WriteOctree") == "TRUE";
     }
 
-    CADSystemSharedPtr m_cad =
-        MemoryManager<CADSystem>::AllocateSharedPtr(m_CADName);
+    m_mesh->m_cad = MemoryManager<CADSystem>::AllocateSharedPtr(m_mesh->m_CADId);
 
     if (m_mesh->m_verbose)
     {
-        cout << "Building mesh for: " << m_CADName << endl;
+        cout << "Building mesh for: " << m_mesh->m_CADId << endl;
     }
 
-    ASSERTL0(m_cad->LoadCAD(), "Failed to load CAD");
+    ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
 
 
-    vector<int> bs = m_cad->GetBoundarySurfs();
+    vector<int> bs = m_mesh->m_cad->GetBoundarySurfs();
 
     vector<unsigned int> symsurfs;
     vector<unsigned int> blsurfs, blsurfst;
@@ -161,7 +161,7 @@ void InputCAD::Process()
              << "\tmax delta: " << m_maxDelta << endl
              << "\tesp: " << m_eps << endl
              << "\torder: " << m_order << endl;
-        m_cad->Report();
+        m_mesh->m_cad->Report();
     }
 
     if (m_makeBL && m_mesh->m_verbose)
@@ -182,7 +182,7 @@ void InputCAD::Process()
 
     // create octree
     OctreeSharedPtr m_octree = MemoryManager<Octree>::AllocateSharedPtr(
-        m_cad, m_mesh->m_verbose, m_minDelta, m_maxDelta, m_eps);
+        m_mesh->m_cad, m_mesh->m_verbose, m_minDelta, m_maxDelta, m_eps);
 
     if(pSession->DefinesSolverInfo("SourcePoints"))
     {
@@ -252,7 +252,7 @@ void InputCAD::Process()
     //create surface mesh
     m_mesh->m_expDim--; //just to make it easier to surface mesh for now
     SurfaceMeshSharedPtr m_surfacemesh = MemoryManager<SurfaceMesh>::
-                AllocateSharedPtr(m_mesh, m_cad, m_octree);
+                AllocateSharedPtr(m_mesh, m_mesh->m_cad, m_octree);
 
     m_surfacemesh->Mesh();
 
@@ -289,7 +289,7 @@ void InputCAD::Process()
     if (m_makeBL)
     {
         BLMeshSharedPtr m_blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(
-                                        m_cad, m_mesh, blsurfs, m_blthick);
+                                        m_mesh->m_cad, m_mesh, blsurfs, m_blthick);
 
         m_blmesh->Mesh();
 
@@ -362,7 +362,7 @@ void InputCAD::Process()
 
     ModuleSharedPtr hom = GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh);
-    //mod->RegisterConfig("outfile", fn + "_oct.xml");
+    //hom->RegisterConfig("opti","");
     hom->Process();
 
     if (m_mesh->m_verbose)

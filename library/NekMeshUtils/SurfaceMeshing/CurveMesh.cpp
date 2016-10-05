@@ -213,7 +213,7 @@ void CurveMesh::Mesh()
             new Edge(m_meshpoints[i], m_meshpoints[i + 1]));
         e->CADCurveId = m_id;
         e->CADCurve   = m_cadcurve;
-        e->onCurve = true;
+        e->onCurve    = true;
         m_mesh->m_edgeSet.insert(e);
     }
 

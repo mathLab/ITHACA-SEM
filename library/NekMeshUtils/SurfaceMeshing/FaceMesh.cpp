@@ -828,7 +828,7 @@ void FaceMesh::BuildLocalMesh()
             if (!(s == m_mesh->m_edgeSet.end()))
             {
                 edgs[j] = *s;
-                E->SetEdge(j, edgs[j]);
+                E->SetEdge(j, *s);
             }
 
             pair<EdgeSet::iterator, bool> test = m_localEdges.insert(edgs[j]);

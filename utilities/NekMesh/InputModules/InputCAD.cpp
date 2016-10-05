@@ -360,9 +360,15 @@ void InputCAD::Process()
 
     //return;
 
+
+
     ModuleSharedPtr hom = GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh);
-    //hom->RegisterConfig("opti","");
+    if(pSession->DefinesSolverInfo("SurfaceOpt"))
+    {
+        hom->RegisterConfig("opti","");
+    }
+
     hom->Process();
 
     if (m_mesh->m_verbose)

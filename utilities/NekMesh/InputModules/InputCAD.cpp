@@ -43,8 +43,7 @@
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 #include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
-#include <NekMeshUtils/BLMeshing/BLMesh.h>
-#include <NekMeshUtils/TetMeshing/TetMesh.h>
+#include <NekMeshUtils/VolumeMeshing/VolumeMesh.h>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/Communication/CommSerial.h>
@@ -173,20 +172,20 @@ void InputCAD::Process()
         cout << endl << "\tWith thickness " << m_blthick << endl;
     }
 
-    ModuleSharedPtr octr = GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "octree"), m_mesh);
-    octr->RegisterConfig("mindel",boost::lexical_cast<std::string>(m_minDelta));
-    octr->RegisterConfig("maxdel",boost::lexical_cast<std::string>(m_maxDelta));
-    octr->RegisterConfig("eps",boost::lexical_cast<std::string>(m_eps));
+    m_mesh->m_octree = boost::shared_ptr<Octree>(new Octree(m_mesh));
+
+    m_mesh->m_octree->RegisterConfig("mindel",boost::lexical_cast<std::string>(m_minDelta));
+    m_mesh->m_octree->RegisterConfig("maxdel",boost::lexical_cast<std::string>(m_maxDelta));
+    m_mesh->m_octree->RegisterConfig("eps",boost::lexical_cast<std::string>(m_eps));
 
     if(pSession->DefinesSolverInfo("SourcePoints"))
     {
         ASSERTL0(boost::filesystem::exists(pSession->GetSolverInfo("SourcePoints").c_str()),
                  "sourcepoints file does not exist");
-        octr->RegisterConfig("sourcefile",pSession->GetSolverInfo("SourcePoints"));
+        m_mesh->m_octree->RegisterConfig("sourcefile",pSession->GetSolverInfo("SourcePoints"));
         NekDouble sp;
         pSession->LoadParameter("SPSize", sp);
-        octr->RegisterConfig("sourcesize",boost::lexical_cast<std::string>(sp));
+        m_mesh->m_octree->RegisterConfig("sourcesize",boost::lexical_cast<std::string>(sp));
     }
 
     if (pSession->DefinesSolverInfo("UserDefinedSpacing"))
@@ -195,17 +194,15 @@ void InputCAD::Process()
         ASSERTL0(boost::filesystem::exists(udsName.c_str()),
                  "UserDefinedSpacing file does not exist");
 
-        octr->RegisterConfig("udsfile",udsName);
+        m_mesh->m_octree->RegisterConfig("udsfile",udsName);
     }
 
     if (pSession->DefinesSolverInfo("WriteOctree"))
     {
-        octr->RegisterConfig("writeoctree",fn + "_oct.xml");
+        m_mesh->m_octree->RegisterConfig("writeoctree",fn + "_oct.xml");
     }
 
-    octr->Process();
-
-    OctreeSharedPtr octree = boost::dynamic_pointer_cast<Octree>(octr);
+    m_mesh->m_octree->Process();
 
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
@@ -222,7 +219,7 @@ void InputCAD::Process()
     //create surface mesh
     m_mesh->m_expDim--; //just to make it easier to surface mesh for now
     SurfaceMeshSharedPtr m_surfacemesh = MemoryManager<SurfaceMesh>::
-                AllocateSharedPtr(m_mesh, m_mesh->m_cad, octree);
+                AllocateSharedPtr(m_mesh, m_mesh->m_cad, m_mesh->m_octree);
 
     m_surfacemesh->Mesh();
 
@@ -234,103 +231,16 @@ void InputCAD::Process()
 
     m_surfacemesh->Report();
 
-    EdgeSet::iterator eit;
-    int count = 0;
-    for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
-    {
-        if((*eit)->m_elLink.size() != 2)
-        {
-            count++;
-        }
-    }
-
-    if (count > 0)
-    {
-        cerr << "Error: mesh contains unconnected edges and is not valid"
-             << endl;
-        abort();
-    }
-
-    map<int, FaceSharedPtr> surftopriface;
-    // map of surface element id to opposite prism
-    // face for psudo surface in tetmesh
-
-    TetMeshSharedPtr m_tet;
-    if (m_makeBL)
-    {
-        BLMeshSharedPtr m_blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(
-                                        m_mesh->m_cad, m_mesh, blsurfs, m_blthick);
-
-        m_blmesh->Mesh();
-
-        //m_mesh->m_element[2].clear();
-        //m_mesh->m_expDim = 3;
-        /*ClearElementLinks();
-        ProcessVertices();
-        ProcessEdges();
-        ProcessFaces();
-        ProcessElements();
-        ProcessComposites();
-        return;*/
-
-        m_surfacemesh->Remesh(m_blmesh);
-
-        /*m_mesh->m_nummode = 2;
-        m_mesh->m_expDim = 3;
-        m_mesh->m_element[2].clear();
-        ClearElementLinks();
-        ProcessVertices();
-        ProcessEdges();
-        ProcessFaces();
-        ProcessElements();
-        ProcessComposites();
-        return;*/
-
-        //create tet mesh
-        m_mesh->m_expDim = 3;
-
-        m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(
-            m_mesh, octree, m_blmesh);
-    }
-    else
-    {
-        m_mesh->m_expDim = 3;
-        m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, octree);
-
-    }
-
-    m_tet->Mesh();
-
     //m_mesh->m_element[2].clear();
 
-    ClearElementLinks();
-    ProcessVertices();
-    ProcessEdges();
-    ProcessFaces();
-    ProcessElements();
-    ProcessComposites();
-
-    FaceSet::iterator fit;
-    count = 0;
-    for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
+    ModuleSharedPtr vol = GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "volumemesh"), m_mesh);
+    /*if(pSession->DefinesSolverInfo("SurfaceOpt"))
     {
-        if((*fit)->m_elLink.size() != 2)
-        {
-            count++;
-        }
-    }
+        vol->RegisterConfig("opti","");
+    }*/
 
-    if (count - m_mesh->m_element[2].size() > 0)
-    {
-        cerr << "Error: mesh contains unconnected faces and is not valid "
-             << count - m_mesh->m_element[2].size()
-             << endl;
-        abort();
-    }
-
-    //return;
-
-
+    vol->Process();
 
     ModuleSharedPtr hom = GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh);

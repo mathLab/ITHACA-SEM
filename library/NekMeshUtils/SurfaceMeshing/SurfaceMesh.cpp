@@ -127,7 +127,7 @@ void SurfaceMesh::Report()
     }
 }
 
-void SurfaceMesh::Remesh(BLMeshSharedPtr blmesh)
+/*void SurfaceMesh::Remesh(BLMeshSharedPtr blmesh)
 {
     vector<int> surfs = blmesh->GetSymSurfs();
     for(int i = 0; i < surfs.size(); i++)
@@ -139,7 +139,7 @@ void SurfaceMesh::Remesh(BLMeshSharedPtr blmesh)
     }
 
 
-}
+}*/
 
 }
 }

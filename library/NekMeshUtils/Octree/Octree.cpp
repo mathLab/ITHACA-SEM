@@ -42,12 +42,7 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-ModuleKey Octree::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "octree"),
-    Octree::create,
-    "Generates a octree represenation on the geometry with spacing info");
-
-Octree::Octree(MeshSharedPtr m) : ProcessModule(m)
+Octree::Octree(MeshSharedPtr m) : m_mesh(m)
 {
     m_config["mindel"] =
         ConfigOption(false, "0", "mindelta.");

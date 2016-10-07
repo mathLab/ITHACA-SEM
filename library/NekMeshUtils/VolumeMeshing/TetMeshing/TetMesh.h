@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SurfaceMeshing.h
+//  File: TetMesh.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,18 +29,25 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: class containing all surfacemeshing routines and classes.
+//  Description: class for tet meshing
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_SURFACEMESHING_SURFACEMESH
-#define NEKMESHUTILS_SURFACEMESHING_SURFACEMESH
+#ifndef NEKTAR_MESHUTILS_TETMESHING_TETMESH_H
+#define NEKTAR_MESHUTILS_TETMESHING_TETMESH_H
+
+#include <boost/shared_ptr.hpp>
+
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <NekMeshUtils/MeshElements/Mesh.h>
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 #include <NekMeshUtils/Octree/Octree.h>
-#include <NekMeshUtils/SurfaceMeshing/FaceMesh.h>
-#include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
+#include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
+#include <NekMeshUtils/VolumeMeshing/BLMeshing/BLMesh.h>
+
+#include <NekMeshUtils/ExtLibInterface/TetGenInterface.h>
 
 namespace Nektar
 {
@@ -48,55 +55,52 @@ namespace NekMeshUtils
 {
 
 /**
- * @brief class containing all surface meshing routines methods and classes
+ * @brief class for taking surface mesh and octree spec and making a 3d tet mesh
  */
-class SurfaceMesh
+class TetMesh
 {
 public:
-    friend class MemoryManager<SurfaceMesh>;
+    friend class MemoryManager<TetMesh>;
 
     /**
-     * @brief Default constructor, requires the cad and octree objects to
-     * begin
+     * @brief default constructor
      */
-    SurfaceMesh(MeshSharedPtr             m,
-                CADSystemSharedPtr        cad,
-                OctreeSharedPtr           octree)
-        : m_mesh(m), m_cad(cad), m_octree(octree)
-        {};
+    TetMesh(MeshSharedPtr m) : m_mesh(m)
+    {
+        m_usePSurface = false;
+    };
 
     /**
-     * @brief Run all linear meshing routines
+     *  @brief constructor for pseudo surface
+     */
+    TetMesh(MeshSharedPtr m, BLMeshSharedPtr b) : m_mesh(m), m_blmesh(b)
+    {
+        m_usePSurface = true;
+    };
+
+    /**
+     *@brief execute tet meshing
      */
     void Mesh();
 
-    /**
-     * @brief Validate the linear surface mesh
-     */
-    void Validate();
-
-    /**
-     * @brief Remesh the linear surfaces based on the addition of the bl
-     */
-    //void Remesh(BLMeshSharedPtr blmesh);
-
-    void Report();
-
 private:
 
-    /// mesh object
     MeshSharedPtr m_mesh;
-    /// CAD object
-    CADSystemSharedPtr m_cad;
-    /// Octree object
-    OctreeSharedPtr m_octree;
-    /// map of individual surface meshes from parametric surfaces
-    std::map<int, FaceMeshSharedPtr> m_facemeshes;
-    /// map of individual curve meshes of the curves in the domain
-    std::map<int, CurveMeshSharedPtr> m_curvemeshes;
+    /// bl mesh
+    BLMeshSharedPtr m_blmesh;
+    /// mesh the tets using the psuedosurface
+    bool m_usePSurface;
+    /// number of tetrahedra
+    int m_numtet;
+    /// conncetivity of the tets from the interface
+    std::vector<Array<OneD, int> > m_tetconnect;
+
+    TetGenInterfaceSharedPtr tetgen;
+
 };
 
-typedef boost::shared_ptr<SurfaceMesh> SurfaceMeshSharedPtr;
+typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;
+
 }
 }
 

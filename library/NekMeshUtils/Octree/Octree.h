@@ -36,10 +36,10 @@
 #ifndef NEKTAR_MESHUTILS_OCTREE_OCTREE
 #define NEKTAR_MESHUTILS_OCTREE_OCTREE
 
-#include <NekMeshUtils/Module/Module.h>
-
 #include "SourcePoint.hpp"
 #include "Octant.h"
+#include <NekMeshUtils/MeshElements/Mesh.h>
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -52,20 +52,14 @@ namespace NekMeshUtils
  * This class contains the routines to generate and query a automatically
  * generated set of mesh spacing parameters based on the CAD
  */
-class Octree : public ProcessModule
+class Octree
 {
 public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
-    {
-        return MemoryManager<Octree>::AllocateSharedPtr(m);
-    }
-    static ModuleKey className;
 
     Octree(MeshSharedPtr m);
     virtual ~Octree();
 
-    virtual void Process();
+    void Process();
 
     /**
      * @brief once constructed queryies the octree based on x,y,z location
@@ -84,6 +78,27 @@ public:
     NekDouble GetMinDelta()
     {
         return m_minDelta;
+    }
+
+    void RegisterConfig(std::string key, std::string val)
+    {
+        std::map<std::string, ConfigOption>::iterator it = m_config.find(key);
+        if (it == m_config.end())
+        {
+            std::cerr << "WARNING: Unrecognised config option " << key
+                 << ", proceeding anyway." << std::endl;
+        }
+
+        it->second.beenSet = true;
+
+        if (it->second.isBool)
+        {
+            it->second.value = "1";
+        }
+        else
+        {
+            it->second.value = val;
+        }
     }
 
 private:
@@ -158,6 +173,10 @@ private:
     OctantSharedPtr m_masteroct;
     /// number of octants made, used for id index
     int m_numoct;
+    /// Mesh object
+    MeshSharedPtr m_mesh;
+    /// List of configuration values.
+    std::map<std::string, ConfigOption> m_config;
 
     bool m_udsfileset;
     std::string m_udsfile;

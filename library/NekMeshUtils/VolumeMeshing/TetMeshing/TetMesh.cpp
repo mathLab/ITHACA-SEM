@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/TetMeshing/TetMesh.h>
+#include <NekMeshUtils/VolumeMeshing/TetMeshing/TetMesh.h>
 
 using namespace std;
 namespace Nektar
@@ -67,7 +67,7 @@ void TetMesh::Mesh()
         for(it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end(); it++)
         {
             IdToNode[(*it)->m_id] = *it;
-            IdToDelta[(*it)->m_id] = m_octree->Query((*it)->GetLoc());
+            IdToDelta[(*it)->m_id] = m_mesh->m_octree->Query((*it)->GetLoc());
         }
         // build surface mesh and node map from all surface elements
         for (int i = 0; i < m_mesh->m_element[2].size(); i++)
@@ -127,7 +127,7 @@ void TetMesh::Mesh()
                     tri[j] = cnt;
                     IdToNode[cnt] = n[j];
                     IdToNodeRev[n[j]] = cnt;
-                    IdToDelta[cnt] = m_octree->Query(n[j]->GetLoc());
+                    IdToDelta[cnt] = m_mesh->m_octree->Query(n[j]->GetLoc());
                     cnt++;
                 }
                 else
@@ -151,7 +151,7 @@ void TetMesh::Mesh()
                     tri[j] = cnt;
                     IdToNode[cnt] = n[j];
                     IdToNodeRev[n[j]] = cnt;
-                    IdToDelta[cnt] = m_octree->Query(n[j]->GetLoc());
+                    IdToDelta[cnt] = m_mesh->m_octree->Query(n[j]->GetLoc());
                     cnt++;
                 }
                 else
@@ -200,7 +200,7 @@ void TetMesh::Mesh()
         tetgen->GetNewPoints(ctbefore, newp);
         for (int i = 0; i < newp.size(); i++)
         {
-            NekDouble d                   = m_octree->Query(newp[i]);
+            NekDouble d                   = m_mesh->m_octree->Query(newp[i]);
             IdToDelta[ctbefore + i] = d;
         }
         tetgen->RefineMesh(IdToDelta);

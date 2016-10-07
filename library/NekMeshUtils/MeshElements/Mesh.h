@@ -48,6 +48,10 @@ namespace Nektar
 {
 namespace NekMeshUtils
 {
+
+class Octree;
+typedef boost::shared_ptr<Octree> OctreeSharedPtr;
+
 /**
  * Enumeration of condition types (Dirichlet, Neumann, etc).
  */
@@ -133,6 +137,7 @@ public:
     std::string                     m_CADId;
 #ifdef NEKTAR_USE_MESHGEN
     CADSystemSharedPtr              m_cad;
+    OctreeSharedPtr                 m_octree;
 #endif
 
     /// Returns the total number of elements in the mesh with

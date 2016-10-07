@@ -26,8 +26,9 @@ IF(NEKTAR_USE_MESHGEN)
         SurfaceMeshing/OptimiseFunctions.cpp
         ExtLibInterface/TriangleInterface.cpp
         ExtLibInterface/TetGenInterface.cpp
-        TetMeshing/TetMesh.cpp
-        BLMeshing/BLMesh.cpp
+        VolumeMeshing/VolumeMesh.cpp
+        VolumeMeshing/TetMeshing/TetMesh.cpp
+        VolumeMeshing/BLMeshing/BLMesh.cpp
         CADSystem/CADSystem.cpp
         CADSystem/CADCurve.cpp
         CADSystem/CADSurf.cpp
@@ -69,8 +70,9 @@ IF(NEKTAR_USE_MESHGEN)
         SurfaceMeshing/OptimiseFunctions.h
         ExtLibInterface/TriangleInterface.h
         ExtLibInterface/TetGenInterface.h
-        TetMeshing/TetMesh.h
-        BLMeshing/BLMesh.h
+        VolumeMeshing/VolumeMesh.h
+        VolumeMeshing/TetMeshing/TetMesh.h
+        VolumeMeshing/BLMeshing/BLMesh.h
         CADSystem/CADObj.h
         CADSystem/CADSystem.h
         CADSystem/CADVert.h

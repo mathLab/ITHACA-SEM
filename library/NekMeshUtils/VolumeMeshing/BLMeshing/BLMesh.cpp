@@ -34,7 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 
-#include <NekMeshUtils/BLMeshing/BLMesh.h>
+#include <NekMeshUtils/VolumeMeshing/BLMeshing/BLMesh.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 
 #include <ANN/ANN.h>

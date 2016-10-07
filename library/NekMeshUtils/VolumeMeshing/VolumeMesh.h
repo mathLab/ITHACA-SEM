@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: TetMesh.h
+//  File: ProcessJac.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,82 +29,35 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: class for tet meshing
+//  Description: Calculate jacobians of elements.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_MESHUTILS_TETMESHING_TETMESH_H
-#define NEKTAR_MESHUTILS_TETMESHING_TETMESH_H
+#ifndef NEKMESHUTILS_VOLUME
+#define NEKMESHUTILS_VOLUME
 
-#include <boost/shared_ptr.hpp>
-
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-
-#include <NekMeshUtils/MeshElements/Mesh.h>
-#include <NekMeshUtils/CADSystem/CADSystem.h>
-#include <NekMeshUtils/Octree/Octree.h>
-#include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
-#include <NekMeshUtils/BLMeshing/BLMesh.h>
-
-#include <NekMeshUtils/ExtLibInterface/TetGenInterface.h>
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-/**
- * @brief class for taking surface mesh and octree spec and making a 3d tet mesh
- */
-class TetMesh
+class VolumeMesh : public ProcessModule
 {
 public:
-    friend class MemoryManager<TetMesh>;
-
-    /**
-     * @brief default constructor
-     */
-    TetMesh(MeshSharedPtr m, OctreeSharedPtr oct)
-                : m_mesh(m), m_octree(oct)
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
-        m_usePSurface = false;
-    };
+        return MemoryManager<VolumeMesh>::AllocateSharedPtr(m);
+    }
+    static ModuleKey className;
 
-    /**
-     *  @brief constructor for pseudo surface
-     */
-    TetMesh(MeshSharedPtr m, OctreeSharedPtr oct, BLMeshSharedPtr b)
-                : m_mesh(m), m_octree(oct), m_blmesh(b)
-    {
-        m_usePSurface = true;
-    };
+    VolumeMesh(MeshSharedPtr m);
+    virtual ~VolumeMesh();
 
-    /**
-     *@brief execute tet meshing
-     */
-    void Mesh();
-
-private:
-
-    MeshSharedPtr m_mesh;
-    /// octree object
-    OctreeSharedPtr m_octree;
-    /// bl mesh
-    BLMeshSharedPtr m_blmesh;
-    /// mesh the tets using the psuedosurface
-    bool m_usePSurface;
-    /// number of tetrahedra
-    int m_numtet;
-    /// conncetivity of the tets from the interface
-    std::vector<Array<OneD, int> > m_tetconnect;
-
-    TetGenInterfaceSharedPtr tetgen;
-
+    virtual void Process();
 };
-
-typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;
-
 }
 }
 

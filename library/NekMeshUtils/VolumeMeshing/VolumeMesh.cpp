@@ -63,6 +63,15 @@ void VolumeMesh::Process()
     if (m_mesh->m_verbose)
         cout << endl << "Volume meshing" << endl;
 
+    /*if (m_makeBL)
+    {
+        m_mesh->m_numcomp = 2; // prisms and tets
+    }
+    else
+    {*/
+        m_mesh->m_numcomp = 1; // just tets
+    //}
+
     /*map<int, FaceSharedPtr> surftopriface;
     // map of surface element id to opposite prism
     // face for psudo surface in tetmesh

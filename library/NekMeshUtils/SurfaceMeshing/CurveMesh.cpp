@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
+#include <NekMeshUtils/Octree/Octree.h>
 
 using namespace std;
 namespace Nektar
@@ -45,7 +46,7 @@ void CurveMesh::Mesh()
 {
     m_bounds          = m_cadcurve->Bounds();
     m_curvelength     = m_cadcurve->GetTotLength();
-    m_numSamplePoints = int(m_curvelength / m_octree->GetMinDelta()) + 5;
+    m_numSamplePoints = int(m_curvelength / m_mesh->m_octree->GetMinDelta()) + 5;
     ds                = m_curvelength / (m_numSamplePoints - 1);
 
     GetSampleFunction();
@@ -341,7 +342,7 @@ void CurveMesh::GetSampleFunction()
     vector<NekDouble> dsti;
     dsti.resize(3);
 
-    dsti[0] = m_octree->Query(loc);
+    dsti[0] = m_mesh->m_octree->Query(loc);
     dsti[1] = 0.0;
     dsti[2] = m_bounds[0];
 
@@ -354,7 +355,7 @@ void CurveMesh::GetSampleFunction()
 
         loc = m_cadcurve->P(t);
 
-        dsti[0] = m_octree->Query(loc);
+        dsti[0] = m_mesh->m_octree->Query(loc);
         dsti[2] = t;
 
         m_dst[i] = dsti;

@@ -207,31 +207,13 @@ void InputCAD::Process()
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
     m_mesh->m_nummode = m_order + 1;
-    if (m_makeBL)
-    {
-        m_mesh->m_numcomp = 2; // prisms and tets
-    }
-    else
-    {
-        m_mesh->m_numcomp = 1; // just tets
-    }
 
     //create surface mesh
-    m_mesh->m_expDim--; //just to make it easier to surface mesh for now
-    SurfaceMeshSharedPtr m_surfacemesh = MemoryManager<SurfaceMesh>::
-                AllocateSharedPtr(m_mesh, m_mesh->m_cad, m_mesh->m_octree);
 
-    m_surfacemesh->Mesh();
+    ModuleSharedPtr sur = GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "surfacemesh"), m_mesh);
 
-    ProcessVertices();
-    ProcessEdges();
-    ProcessFaces();
-    ProcessElements();
-    ProcessComposites();
-
-    m_surfacemesh->Report();
-
-    //m_mesh->m_element[2].clear();
+    sur->Process();
 
     ModuleSharedPtr vol = GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "volumemesh"), m_mesh);

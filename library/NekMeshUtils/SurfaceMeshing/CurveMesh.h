@@ -41,7 +41,6 @@
 #include <NekMeshUtils/MeshElements/Mesh.h>
 #include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADCurve.h>
-#include <NekMeshUtils/Octree/Octree.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -62,8 +61,11 @@ public:
     /**
      * @brief default constructor
      */
-    CurveMesh(int id, MeshSharedPtr m, CADCurveSharedPtr c, OctreeSharedPtr o)
-        : m_cadcurve(c), m_octree(o), m_id(id), m_mesh(m){};
+    CurveMesh(int id, MeshSharedPtr m)
+        : m_id(id), m_mesh(m)
+    {
+        m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
+    };
 
     /**
      * @brief execute meshing
@@ -133,8 +135,6 @@ private:
 
     /// CAD curve
     CADCurveSharedPtr m_cadcurve;
-    /// Octree object
-    OctreeSharedPtr m_octree;
     /// length of the curve in real space
     NekDouble m_curvelength;
     /// number of sampling points used in algorithm

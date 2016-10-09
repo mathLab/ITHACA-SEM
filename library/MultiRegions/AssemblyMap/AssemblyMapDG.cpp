@@ -585,12 +585,11 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = locExpVector[i];
-                nDim = locExpansion->GetShapeDimension();
-
                 // Order list according to m_offset_elmt_id details in Exp
                 // so that triangules are listed first and then quads
                 eid = locExp.GetOffset_Elmt_Id(i);
+                locExpansion = locExpVector[eid];
+                nDim = locExpansion->GetShapeDimension();
 
                 // Populate mapping for each edge of the element.
                 if (nDim == 1)

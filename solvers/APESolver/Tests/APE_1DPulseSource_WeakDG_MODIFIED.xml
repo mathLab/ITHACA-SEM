@@ -75,7 +75,7 @@
       <E VAR="rho0" VALUE="Rho0"/>
     </FUNCTION>
     <FUNCTION NAME="Source">
-      <E VAR="S" VALUE="pmax*omega0*cos(omega0*t)*exp(-32*x^2)"/>
+      <E VAR="p" VALUE="pmax*omega0*cos(omega0*t)*exp(-32*x^2)"/>
     </FUNCTION>
     <FUNCTION NAME="ExactSolution"> <!-- Not really the exact solution -->
       <E VAR="p" VALUE="0"/>
@@ -86,4 +86,9 @@
       <E VAR="u" VALUE="0"/>
     </FUNCTION>
   </CONDITIONS>
+  <FORCING>
+    <FORCE TYPE="Field">
+        <FIELDFORCE> Source <FIELDFORCE/>
+    </FORCE>
+  </FORCING>
 </NEKTAR>

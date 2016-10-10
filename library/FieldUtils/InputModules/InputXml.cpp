@@ -273,8 +273,6 @@ void InputXml::Process(po::variables_map &vm)
     }
 
     m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session, rng);
-    m_f->m_fld   = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-        m_f->m_session->GetComm());
 
     if (m_f->m_verbose)
     {
@@ -326,8 +324,9 @@ void InputXml::Process(po::variables_map &vm)
         m_f->m_fielddef.clear();
         m_f->m_data.clear();
 
-        m_f->m_fld->Import(m_f->m_inputfiles[fldending][0], m_f->m_fielddef,
-                           m_f->m_data, m_f->m_fieldMetaDataMap, ElementGIDs);
+        m_f->FieldIOForFile(m_f->m_inputfiles[fldending][0])->Import(
+            m_f->m_inputfiles[fldending][0], m_f->m_fielddef, m_f->m_data,
+            m_f->m_fieldMetaDataMap, ElementGIDs);
         NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
 
         //----------------------------------------------

@@ -282,7 +282,7 @@ void CADSystemOCE::AddVert(int i, TopoDS_Shape in)
 {
     CADVertSharedPtr newVert = GetCADVertFactory().CreateInstance(key);
 
-    static_pointer_cast<CADVertOCE>(newVert)->Initialise(i, in);
+    boost::static_pointer_cast<CADVertOCE>(newVert)->Initialise(i, in);
 
     m_verts[i] = newVert;
 }
@@ -290,7 +290,7 @@ void CADSystemOCE::AddVert(int i, TopoDS_Shape in)
 void CADSystemOCE::AddCurve(int i, TopoDS_Shape in, int fv, int lv)
 {
     CADCurveSharedPtr newCurve = GetCADCurveFactory().CreateInstance(key);
-    static_pointer_cast<CADCurveOCE>(newCurve)->Initialise(i, in);
+    boost::static_pointer_cast<CADCurveOCE>(newCurve)->Initialise(i, in);
 
     vector<CADVertSharedPtr> vs;
     vs.push_back(m_verts[fv]);
@@ -302,7 +302,7 @@ void CADSystemOCE::AddCurve(int i, TopoDS_Shape in, int fv, int lv)
 void CADSystemOCE::AddSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
 {
     CADSurfSharedPtr newSurf = GetCADSurfFactory().CreateInstance(key);
-    static_pointer_cast<CADSurfOCE>(newSurf)->Initialise(i, in, ein);
+    boost::static_pointer_cast<CADSurfOCE>(newSurf)->Initialise(i, in, ein);
     m_surfs[i] = newSurf;
 
     if (in.Orientation() == 0)

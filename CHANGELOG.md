@@ -48,6 +48,7 @@ v4.4.0
   mesh (!669)
 - Improvements to mesh linearisation module (!659)
 - Add support for Gmsh high-order output (!679)
+- Move CAD classes to factory format (!676)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

@@ -542,17 +542,32 @@ The module parameters are:
 
 \subsection{Linearisation}
 
-The ability to remove all the high-order information in a mesh can be useful
-at times.
+The ability to remove all the high-order information in a mesh can be useful at
+times when mesh generation is tricky or impossible in the presence of curvature
 
 To do this in NekMesh use the command:
 
 \begin{lstlisting}[style=BashInputStyle]
-  NekMesh -m linearise high-order-mesh.xml linear-mesh.xml
+  NekMesh -m linearise:all high-order-mesh.xml linear-mesh.xml
 \end{lstlisting}
 
 The output will contain only the linear mesh information, all curved information
-is removed.
+is removed. Alternatively
+
+\begin{lstlisting}[style=BashInputStyle]
+  NekMesh -m linearise:invalid high-order-mesh.xml linear-mesh.xml
+\end{lstlisting}
+
+attempts to remove curvature from elements only where necessary. This is a
+simple algorithm that removes curvature from invalid elements and repeats until
+all elements are valid. Either \inlsh{all} or \inlsh{invalid} must be specified.
+
+\begin{itemize}
+  \item \inlsh{all}: remove curvature from all elements.
+  \item \inlsh{invalid}: remove curvature from invalid elements.
+  \item \inlsh{prismonly}: consider only prisms when removing curvature. This is
+  useful in the presence of a prismatic boundary layer.
+\end{itemize}
 
 \subsection{Extracting interface between tetrahedra and prismatic elements}
 

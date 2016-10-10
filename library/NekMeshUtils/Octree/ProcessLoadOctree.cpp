@@ -79,7 +79,7 @@ void ProcessLoadOctree::Process()
 
     if (m_mesh->m_verbose)
     {
-        cout << "Loading Octree with parameters:" << endl;
+        cout << endl << "Loading Octree with parameters:" << endl;
         cout << "\tmin delta: " << minDelta << endl
              << "\tmax delta: " << maxDelta << endl
              << "\tesp: " << eps << endl << endl;

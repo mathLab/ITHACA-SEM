@@ -34,18 +34,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
-#include <boost/filesystem.hpp>
-
-#include <NekMeshUtils/MeshElements/Element.h>
-
-#include <NekMeshUtils/Octree/Octree.h>
-#include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
-#include <NekMeshUtils/VolumeMeshing/VolumeMesh.h>
-
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/Communication/CommSerial.h>
+#include <tinyxml.h>
 
 #include "InputCAD.h"
 
@@ -73,39 +63,100 @@ InputCAD::~InputCAD()
 {
 }
 
-void InputCAD::Process()
+void InputCAD::ParseFile(string nm)
 {
     vector<string> filename;
-    filename.push_back(m_config["infile"].as<string>());
-    string fn = filename[0].substr(0, filename[0].find("."));
-
+    filename.push_back(nm);
     LibUtilities::SessionReaderSharedPtr pSession =
         LibUtilities::SessionReader::CreateInstance(0, NULL, filename);
 
-    // these parameters must be defined for any mesh generation to work
-    pSession->LoadParameter("MinDelta", m_minDelta);
-    pSession->LoadParameter("MaxDelta", m_maxDelta);
-    pSession->LoadParameter("EPS", m_eps);
-    pSession->LoadParameter("Order", m_order);
-    //m_mesh->m_CADId = pSession->GetSolverInfo("CADFile");
+    ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING"),"no meshing tag");
+
+    TiXmlElement *mcf = pSession->GetElement("NEKTAR/MESHING");
+
+    TiXmlElement *info = mcf->FirstChildElement("INFORMATION");
+    TiXmlElement *I = info->FirstChildElement("I");
+    map<string,string> information;
+    while(I)
+    {
+        string tmp1,tmp2;
+        I->QueryStringAttribute("PROPERTY",&tmp1);
+        I->QueryStringAttribute("VALUE",&tmp2);
+        information[tmp1] = tmp2;
+        I = I->NextSiblingElement("I");
+    }
+
+    TiXmlElement *param = mcf->FirstChildElement("PARAMETERS");
+    TiXmlElement *P = param->FirstChildElement("P");
+    map<string,string> parameters;
+    while(P)
+    {
+        string tmp1,tmp2;
+        P->QueryStringAttribute("PARAM",&tmp1);
+        P->QueryStringAttribute("VALUE",&tmp2);
+        parameters[tmp1] = tmp2;
+        P = P->NextSiblingElement("P");
+    }
+
+    TiXmlElement *bparam = mcf->FirstChildElement("BOOLPARAMETERS");
+    TiXmlElement *BP = bparam->FirstChildElement("P");
+    set<string> boolparameters;
+    while(BP)
+    {
+        string tmp;
+        BP->QueryStringAttribute("VALUE",&tmp);
+        boolparameters.insert(tmp);
+        BP = BP->NextSiblingElement("P");
+    }
+
+    map<string,string>::iterator it;
+
+    it = information.find("CADFile");
+    ASSERTL0(it != information.end(),"no cadfile defined");
+    m_cadfile = it->second;
+    it = information.find("MeshType");
+    ASSERTL0(it != information.end(),"no meshtype defined");
+    it->second == "BL" ? m_makeBL = true : m_makeBL = false;
+
+    it = parameters.find("MinDelta");
+    ASSERTL0(it != parameters.end(),"no mindelta defined");
+    m_minDelta = it->second;
+    it = parameters.find("MaxDelta");
+    ASSERTL0(it != parameters.end(),"no maxdelta defined");
+    m_maxDelta = it->second;
+    it = parameters.find("EPS");
+    ASSERTL0(it != parameters.end(),"no eps defined");
+    m_eps = it->second;
+    it = parameters.find("Order");
+    ASSERTL0(it != parameters.end(),"no order defined");
+    m_order = it->second;
+
+    set<string>::iterator sit;
+    sit = boolparameters.find("SurfOpti");
+    sit != boolparameters.end() ? m_surfopti = true : m_surfopti = false;
+}
+
+void InputCAD::Process()
+{
+    ParseFile(m_config["infile"].as<string>());
 
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
-    m_mesh->m_nummode = m_order + 1;
+    m_mesh->m_nummode = boost::lexical_cast<double>(m_order) + 1;
 
     vector<ModuleSharedPtr> mods;
 
     mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "loadcad"), m_mesh));
-    mods.back()->RegisterConfig("filename",pSession->GetSolverInfo("CADFile"));
+    mods.back()->RegisterConfig("filename", m_cadfile);
 
     mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "loadoctree"), m_mesh));
-    mods.back()->RegisterConfig("mindel",boost::lexical_cast<std::string>(m_minDelta));
-    mods.back()->RegisterConfig("maxdel",boost::lexical_cast<std::string>(m_maxDelta));
-    mods.back()->RegisterConfig("eps",boost::lexical_cast<std::string>(m_eps));
+    mods.back()->RegisterConfig("mindel", m_minDelta);
+    mods.back()->RegisterConfig("maxdel", m_maxDelta);
+    mods.back()->RegisterConfig("eps", m_eps);
 
-    if(pSession->DefinesSolverInfo("SourcePoints"))
+    /*if(pSession->DefinesSolverInfo("SourcePoints"))
     {
         ASSERTL0(boost::filesystem::exists(pSession->GetSolverInfo("SourcePoints").c_str()),
                  "sourcepoints file does not exist");
@@ -113,9 +164,9 @@ void InputCAD::Process()
         NekDouble sp;
         pSession->LoadParameter("SPSize", sp);
         mods.back()->RegisterConfig("sourcesize",boost::lexical_cast<std::string>(sp));
-    }
+    }*/
 
-    if (pSession->DefinesSolverInfo("UserDefinedSpacing"))
+    /*if (pSession->DefinesSolverInfo("UserDefinedSpacing"))
     {
         string udsName = pSession->GetSolverInfo("UserDefinedSpacing");
         ASSERTL0(boost::filesystem::exists(udsName.c_str()),
@@ -127,9 +178,7 @@ void InputCAD::Process()
     if (pSession->DefinesSolverInfo("WriteOctree"))
     {
         mods.back()->RegisterConfig("writeoctree",fn + "_oct.xml");
-    }
-
-    //create surface mesh
+    }*/
 
     mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "surfacemesh"), m_mesh));
@@ -139,7 +188,7 @@ void InputCAD::Process()
 
     mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh));
-    if(pSession->DefinesSolverInfo("SurfaceOpt"))
+    if(m_surfopti)
     {
         mods.back()->RegisterConfig("opti","");
     }

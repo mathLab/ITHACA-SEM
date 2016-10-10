@@ -58,10 +58,11 @@ public:
     /// %ModuleKey for class.
     static NekMeshUtils::ModuleKey className;
 
+    void ParseFile(std::string nm);
+
 private:
-    NekDouble m_minDelta, m_maxDelta, m_eps, m_blthick;
-    int m_order;
-    bool m_makeBL;
+    std::string m_minDelta, m_maxDelta, m_eps, m_blthick, m_cadfile, m_order;
+    bool m_makeBL, m_surfopti;
 };
 }
 }

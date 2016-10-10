@@ -56,7 +56,6 @@ string CADSystem::GetName()
 
 void CADSystem::Report()
 {
-    cout << endl << "CAD report:" << endl;
     cout << "\tCAD has: " << m_curves.size() << " curves." << endl;
     cout << "\tCAD has: " << m_surfs.size() << " surfaces." << endl;
 }

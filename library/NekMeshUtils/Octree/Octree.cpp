@@ -37,6 +37,8 @@
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 #include <NekMeshUtils/Module/Module.h>
 
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
+
 using namespace std;
 namespace Nektar
 {
@@ -46,9 +48,6 @@ namespace NekMeshUtils
 void Octree::Process()
 {
     Array<OneD, NekDouble> boundingBox = m_mesh->m_cad->GetBoundingBox();
-
-    if (m_mesh->m_verbose)
-        cout << endl << "Octree system" << endl;
 
     // build curvature samples
     CompileSourcePointList();
@@ -277,12 +276,14 @@ void Octree::SubDivide()
 
     do
     {
-        ct++;
         if (m_mesh->m_verbose)
         {
-            cout << ct << " ";
+            cout << "\r                                                       ";
+            cout << "\r";
+            cout << "\tSubdivide iteration: " << ct;
             cout.flush();
         }
+        ct++;
         repeat = false;
         m_octants.clear();
         // grab a list of the leaves curently in the octree
@@ -877,18 +878,13 @@ struct linesource
 
 void Octree::CompileSourcePointList()
 {
-    if(m_mesh->m_verbose)
-    {
-        cout << "\tCompiling source points" << endl;
-        cout << "\t\tSurface: ";
-    }
     //first sample surfaces
     for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {
         if(m_mesh->m_verbose)
         {
-            cout << i << " ";
-            cout.flush();
+            LibUtilities::PrintProgressbar(
+                i, m_mesh->m_cad->GetNumSurf(), "\tCompiling source points");
         }
 
         CADSurfSharedPtr surf         = m_mesh->m_cad->GetSurf(i);

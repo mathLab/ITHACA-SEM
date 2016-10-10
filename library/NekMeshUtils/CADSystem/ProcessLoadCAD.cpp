@@ -63,7 +63,7 @@ void ProcessLoadCAD::Process()
 
     if (m_mesh->m_verbose)
     {
-        cout << endl << "Loading CAD for " << m_mesh->m_CADId << endl;
+        cout << "Loading CAD for " << m_mesh->m_CADId << endl;
     }
 
     m_mesh->m_cad = MemoryManager<CADSystem>::AllocateSharedPtr(m_mesh->m_CADId);

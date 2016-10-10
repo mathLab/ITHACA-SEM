@@ -48,6 +48,7 @@ v4.4.0
   mesh (!669)
 - Improvements to mesh linearisation module (!659)
 - Add support for Gmsh high-order output (!679)
+- Add option to `linearise` module to linearise only prisms (!688)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

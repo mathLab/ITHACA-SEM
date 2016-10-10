@@ -35,6 +35,7 @@
 
 #include "Octree.h"
 #include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <NekMeshUtils/Module/Module.h>
 
 using namespace std;
 namespace Nektar
@@ -42,57 +43,8 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-Octree::Octree(MeshSharedPtr m) : m_mesh(m)
-{
-    m_config["mindel"] =
-        ConfigOption(false, "0", "mindelta.");
-    m_config["maxdel"] =
-        ConfigOption(false, "0", "mindelta.");
-    m_config["eps"] =
-        ConfigOption(false, "0", "mindelta.");
-    m_config["sourcefile"] =
-        ConfigOption(false, "", "mindelta.");
-    m_config["sourcesize"] =
-        ConfigOption(false, "", "mindelta.");
-    m_config["udsfile"] =
-        ConfigOption(false, "", "mindelta.");
-    m_config["writeoctree"] =
-        ConfigOption(false, "", "");
-}
-
-Octree::~Octree()
-{
-}
-
 void Octree::Process()
 {
-    m_minDelta = m_config["mindel"].as<NekDouble>();
-    m_maxDelta = m_config["maxdel"].as<NekDouble>();
-    m_eps = m_config["eps"].as<NekDouble>();
-
-    if(m_config["sourcefile"].beenSet)
-    {
-        m_sourcepointsset = true;
-        ifstream file;
-        file.open(m_config["sourcefile"].as<string>().c_str());
-        string line;
-
-        while (getline(file, line))
-        {
-            vector<NekDouble> point(3);
-            stringstream s(line);
-            s >> point[0] >> point[1] >> point[2];
-            m_sourcePoints.push_back(point);
-        }
-        m_sourcePointSize = m_config["sourcesize"].as<NekDouble>();
-    }
-
-    if(m_config["udsfile"].beenSet)
-    {
-        m_udsfile = m_config["udsfile"].as<string>();
-        m_udsfileset = true;
-    }
-
     Array<OneD, NekDouble> boundingBox = m_mesh->m_cad->GetBoundingBox();
 
     if (m_mesh->m_verbose)
@@ -139,11 +91,23 @@ void Octree::Process()
         int elem = CountElemt();
         cout << "\tPredicted mesh: " << elem << endl;
     }
+}
 
-    if(m_config["writeoctree"].beenSet)
+void Octree::SourceFile(std::string nm, NekDouble sz)
+{
+    m_sourcepointsset = true;
+    ifstream file;
+    file.open(nm.c_str());
+    string line;
+
+    while (getline(file, line))
     {
-        WriteOctree(m_config["writeoctree"].as<string>());
+        vector<NekDouble> point(3);
+        stringstream s(line);
+        s >> point[0] >> point[1] >> point[2];
+        m_sourcePoints.push_back(point);
     }
+    m_sourcePointSize = sz;
 }
 
 NekDouble Octree::Query(Array<OneD, NekDouble> loc)

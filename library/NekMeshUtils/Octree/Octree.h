@@ -39,7 +39,6 @@
 #include "SourcePoint.hpp"
 #include "Octant.h"
 #include <NekMeshUtils/MeshElements/Mesh.h>
-#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -56,8 +55,15 @@ class Octree
 {
 public:
 
-    Octree(MeshSharedPtr m);
-    virtual ~Octree();
+    Octree(MeshSharedPtr m) : m_mesh(m)
+    {
+
+    }
+
+    Octree()
+    {
+    }
+
 
     void Process();
 
@@ -80,33 +86,29 @@ public:
         return m_minDelta;
     }
 
-    void RegisterConfig(std::string key, std::string val)
+    void SetParameters(NekDouble &min, NekDouble &max, NekDouble &ep)
     {
-        std::map<std::string, ConfigOption>::iterator it = m_config.find(key);
-        if (it == m_config.end())
-        {
-            std::cerr << "WARNING: Unrecognised config option " << key
-                 << ", proceeding anyway." << std::endl;
-        }
-
-        it->second.beenSet = true;
-
-        if (it->second.isBool)
-        {
-            it->second.value = "1";
-        }
-        else
-        {
-            it->second.value = val;
-        }
+        m_minDelta = min;
+        m_maxDelta = max;
+        m_eps = ep;
     }
 
-private:
     /**
      * @brief populates the mesh m with a invalid hexahedral mesh based on the
      *        octree, used for visualisation
      */
     void WriteOctree(std::string nm);
+
+    void SourceFile(std::string nm, NekDouble sz);
+
+    void UDS(std::string nm)
+    {
+        m_udsfile = nm;
+        m_udsfileset = true;
+    }
+
+private:
+
 
     /**
      * @brief Smooths specification over all octants to a gradation criteria
@@ -175,8 +177,6 @@ private:
     int m_numoct;
     /// Mesh object
     MeshSharedPtr m_mesh;
-    /// List of configuration values.
-    std::map<std::string, ConfigOption> m_config;
 
     bool m_udsfileset;
     std::string m_udsfile;

@@ -40,7 +40,6 @@
 
 #include <NekMeshUtils/MeshElements/Element.h>
 
-#include <NekMeshUtils/CADSystem/CADSystem.h>
 #include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
 #include <NekMeshUtils/VolumeMeshing/VolumeMesh.h>
@@ -88,104 +87,32 @@ void InputCAD::Process()
     pSession->LoadParameter("MaxDelta", m_maxDelta);
     pSession->LoadParameter("EPS", m_eps);
     pSession->LoadParameter("Order", m_order);
-    m_mesh->m_CADId = pSession->GetSolverInfo("CADFile");
-    m_mesh->m_hasCAD = true;
+    //m_mesh->m_CADId = pSession->GetSolverInfo("CADFile");
 
-    if (pSession->DefinesSolverInfo("MeshType"))
-    {
-        if (pSession->GetSolverInfo("MeshType") == "BL")
-        {
-            m_makeBL = true;
-            pSession->LoadParameter("BLThick", m_blthick);
-        }
-        else
-        {
-            m_makeBL = false;
-        }
-    }
-    else
-    {
-        m_makeBL = false;
-    }
+    m_mesh->m_expDim   = 3;
+    m_mesh->m_spaceDim = 3;
+    m_mesh->m_nummode = m_order + 1;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "Building mesh for: " << m_mesh->m_CADId << endl;
-    }
-    m_mesh->m_cad = MemoryManager<CADSystem>::AllocateSharedPtr(m_mesh->m_CADId);
-    ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
+    vector<ModuleSharedPtr> mods;
 
+    mods.push_back(GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "loadcad"), m_mesh));
+    mods.back()->RegisterConfig("filename",pSession->GetSolverInfo("CADFile"));
 
-    vector<int> bs = m_mesh->m_cad->GetBoundarySurfs();
-
-    vector<unsigned int> symsurfs;
-    vector<unsigned int> blsurfs, blsurfst;
-    if (m_makeBL)
-    {
-        string sym, bl;
-        bl = pSession->GetSolverInfo("BLSurfs");
-        ParseUtils::GenerateSeqVector(bl.c_str(), blsurfst);
-        sort(blsurfst.begin(), blsurfst.end());
-        ASSERTL0(blsurfst.size() > 0,
-                 "No surfaces selected to make boundary layer on");
-        for(int i = 0; i < blsurfst.size(); i++)
-        {
-            bool add = true;
-            for(int j = 0; j < bs.size(); j++)
-            {
-                if(bs[j] == blsurfst[i])
-                {
-                    add = false;
-                    break;
-                }
-            }
-            if(add)
-            {
-                blsurfs.push_back(blsurfst[i]);
-            }
-        }
-    }
-
-    if (m_mesh->m_verbose)
-    {
-        cout << "With parameters:" << endl;
-        cout << "\tmin delta: " << m_minDelta << endl
-             << "\tmax delta: " << m_maxDelta << endl
-             << "\tesp: " << m_eps << endl
-             << "\torder: " << m_order << endl;
-        m_mesh->m_cad->Report();
-    }
-
-    if (m_makeBL && m_mesh->m_verbose)
-    {
-
-        cout << "\tWill make boundary layers on surfs: ";
-        for (int i = 0; i < blsurfs.size(); i++)
-        {
-            cout << blsurfs[i] << " ";
-        }
-        cout << endl << "\tWith the symmetry planes: ";
-        for (int i = 0; i < symsurfs.size(); i++)
-        {
-            cout << symsurfs[i] << " ";
-        }
-        cout << endl << "\tWith thickness " << m_blthick << endl;
-    }
-
-    m_mesh->m_octree = boost::shared_ptr<Octree>(new Octree(m_mesh));
-
-    m_mesh->m_octree->RegisterConfig("mindel",boost::lexical_cast<std::string>(m_minDelta));
-    m_mesh->m_octree->RegisterConfig("maxdel",boost::lexical_cast<std::string>(m_maxDelta));
-    m_mesh->m_octree->RegisterConfig("eps",boost::lexical_cast<std::string>(m_eps));
+    mods.push_back(GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "loadoctree"), m_mesh));
+    mods.back()->RegisterConfig("mindel",boost::lexical_cast<std::string>(m_minDelta));
+    mods.back()->RegisterConfig("maxdel",boost::lexical_cast<std::string>(m_maxDelta));
+    mods.back()->RegisterConfig("eps",boost::lexical_cast<std::string>(m_eps));
 
     if(pSession->DefinesSolverInfo("SourcePoints"))
     {
         ASSERTL0(boost::filesystem::exists(pSession->GetSolverInfo("SourcePoints").c_str()),
                  "sourcepoints file does not exist");
-        m_mesh->m_octree->RegisterConfig("sourcefile",pSession->GetSolverInfo("SourcePoints"));
+        mods.back()->RegisterConfig("sourcefile",pSession->GetSolverInfo("SourcePoints"));
         NekDouble sp;
         pSession->LoadParameter("SPSize", sp);
-        m_mesh->m_octree->RegisterConfig("sourcesize",boost::lexical_cast<std::string>(sp));
+        mods.back()->RegisterConfig("sourcesize",boost::lexical_cast<std::string>(sp));
     }
 
     if (pSession->DefinesSolverInfo("UserDefinedSpacing"))
@@ -194,49 +121,32 @@ void InputCAD::Process()
         ASSERTL0(boost::filesystem::exists(udsName.c_str()),
                  "UserDefinedSpacing file does not exist");
 
-        m_mesh->m_octree->RegisterConfig("udsfile",udsName);
+        mods.back()->RegisterConfig("udsfile",udsName);
     }
 
     if (pSession->DefinesSolverInfo("WriteOctree"))
     {
-        m_mesh->m_octree->RegisterConfig("writeoctree",fn + "_oct.xml");
+        mods.back()->RegisterConfig("writeoctree",fn + "_oct.xml");
     }
-
-    m_mesh->m_octree->Process();
-
-    m_mesh->m_expDim   = 3;
-    m_mesh->m_spaceDim = 3;
-    m_mesh->m_nummode = m_order + 1;
 
     //create surface mesh
 
-    ModuleSharedPtr sur = GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "surfacemesh"), m_mesh);
+    mods.push_back(GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "surfacemesh"), m_mesh));
 
-    sur->Process();
+    mods.push_back(GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "volumemesh"), m_mesh));
 
-    ModuleSharedPtr vol = GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "volumemesh"), m_mesh);
-    /*if(pSession->DefinesSolverInfo("SurfaceOpt"))
-    {
-        vol->RegisterConfig("opti","");
-    }*/
-
-    vol->Process();
-
-    ModuleSharedPtr hom = GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "hosurface"), m_mesh);
+    mods.push_back(GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "hosurface"), m_mesh));
     if(pSession->DefinesSolverInfo("SurfaceOpt"))
     {
-        hom->RegisterConfig("opti","");
+        mods.back()->RegisterConfig("opti","");
     }
 
-    hom->Process();
-
-    if (m_mesh->m_verbose)
+    for(int i = 0; i < mods.size(); i++)
     {
-        cout << endl;
-        cout << m_mesh->m_element[3].size() << endl;
+        mods[i]->Process();
     }
 }
 }

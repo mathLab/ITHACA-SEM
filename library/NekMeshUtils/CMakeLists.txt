@@ -20,6 +20,7 @@ IF(NEKTAR_USE_MESHGEN)
         SurfaceMeshing/CurveMesh.cpp
         Octree/Octant.cpp
         Octree/Octree.cpp
+        Octree/ProcessLoadOctree.cpp
         SurfaceMeshing/SurfaceMesh.cpp
         SurfaceMeshing/HOSurfaceMesh.cpp
         SurfaceMeshing/FaceMesh.cpp
@@ -32,6 +33,7 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/CADSystem.cpp
         CADSystem/CADCurve.cpp
         CADSystem/CADSurf.cpp
+        CADSystem/ProcessLoadCAD.cpp
         Optimisation/BGFS-B.cpp
         Triangle/Triangle.cpp
     )
@@ -64,6 +66,7 @@ IF(NEKTAR_USE_MESHGEN)
         SurfaceMeshing/CurveMesh.h
         Octree/Octant.h
         Octree/Octree.h
+        Octree/ProcessLoadOctree.h
         SurfaceMeshing/SurfaceMesh.h
         SurfaceMeshing/HOSurfaceMesh.h
         SurfaceMeshing/FaceMesh.h
@@ -79,6 +82,7 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/CADCurve.h
         CADSystem/CADSurf.h
         CADSystem/OpenCascade.h
+        CADSystem/ProcessLoadCAD.h
         Optimisation/BGFS-B.h
         Optimisation/OptimiseObj.h
         Triangle/Triangle.h

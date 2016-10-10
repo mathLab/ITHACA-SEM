@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADObj.h
+//  File: CADSystem.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,64 +29,54 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: CAD object curve.
+//  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_CADSYSTEM_CADOBJ
-#define NEKMESHUTILS_CADSYSTEM_CADOBJ
+#ifndef NekMeshUtils_CADSYSTEM_OCE_CADSYSTEMOCE
+#define NekMeshUtils_CADSYSTEM_OCE_CADSYSTEMOCE
 
-#include <boost/shared_ptr.hpp>
-
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <NekMeshUtils/CADSystem/CADSystem.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-enum cadType
-{
-    vert,
-    curve,
-    surf
-};
-
-class CADObj
+class CADSystemOCE : public CADSystem
 {
 public:
-    friend class MemoryManager<CADObj>;
+
+    static CADSystemSharedPtr create(std::string name)
+    {
+        return MemoryManager<CADSystemOCE>::AllocateSharedPtr(name);
+    }
+
+    static std::string key;
 
     /**
      * @brief Default constructor.
      */
-    CADObj()
-    {
-    }
+    CADSystemOCE(std::string name) : CADSystem(name) {}
+    ~CADSystemOCE(){};
 
-    virtual ~CADObj(){}
+    bool LoadCAD();
 
-    /**
-     * @brief Return ID of the vertex
-     */
-    int GetId()
-    {
-        return m_id;
-    }
+    Array<OneD, NekDouble> GetBoundingBox();
 
-    cadType GetType()
-    {
-        return m_type;
-    }
-
-protected:
-    /// ID of the vert.
-    int m_id;
-    /// type of the cad object
-    cadType m_type;
+private:
+    /// Function to add curve to CADSystem::m_verts.
+    void AddVert(int i, TopoDS_Shape in);
+    /// Function to add curve to CADSystem::m_curves.
+    void AddCurve(int i, TopoDS_Shape in, int fv, int lv);
+    /// Function to add surface to CADSystem::m_surfs.
+    void AddSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
+    /// OCC master object
+    TopoDS_Shape shape;
 };
 
-typedef boost::shared_ptr<CADObj> CADObjSharedPtr;
+
 }
 }
 

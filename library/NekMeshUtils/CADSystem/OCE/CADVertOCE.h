@@ -33,102 +33,45 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_CADSYSTEM_CADVERT
-#define NEKMESHUTILS_CADSYSTEM_CADVERT
+#ifndef NEKMESHUTILS_CADSYSTEM_OCE_CADVERTOCE
+#define NEKMESHUTILS_CADSYSTEM_OCE_CADVERTOCE
 
-#include <boost/shared_ptr.hpp>
-
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-
-#include <NekMeshUtils/CADSystem/CADObj.h>
-#include <NekMeshUtils/MeshElements/Node.h>
+#include <NekMeshUtils/CADSystem/CADVert.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-/**
- * @brief base class for CAD verticies.
- *
- */
-class CADVert : public CADObj
+class CADVertOCE : public CADVert
 {
 public:
-    friend class MemoryManager<CADVert>;
+
+    static CADVertSharedPtr create()
+    {
+        return MemoryManager<CADVertOCE>::AllocateSharedPtr();
+    }
+
+    static std::string key;
 
     /**
      * @brief Default constructor.
      */
-    CADVert()
+    CADVertOCE()
     {
     }
 
-    ~CADVert(){};
-
-    /**
-     * @brief Get x,y,z location of the vertex
-     */
-    Array<OneD, NekDouble> GetLoc()
+    ~CADVertOCE()
     {
-        Array<OneD, NekDouble> out(3);
-        out[0] = m_node->m_x;
-        out[1] = m_node->m_y;
-        out[2] = m_node->m_z;
-        return out;
     }
 
-    /**
-     * @brief returns a node object of the cad vertex
-     */
-    NodeSharedPtr GetNode()
-    {
-        return m_node;
-    }
+    void Initialise(int i, TopoDS_Shape in);
 
-    /**
-     * @brief if the vertex is degenerate manually set uv for that surface
-     */
-    void SetDegen(int s, CADSurfSharedPtr su, NekDouble u, NekDouble v)
-    {
-        degen     = true;
-        degensurf = s;
-        Array<OneD, NekDouble> uv(2);
-        uv[0] = u;
-        uv[1] = v;
-        m_node->SetCADSurf(s, su, uv);
-    }
-
-    /**
-     * @brief query is degenerate
-     */
-    int IsDegen()
-    {
-        if (degen)
-        {
-            return degensurf;
-        }
-        else
-        {
-            return -1;
-        }
-    }
-
-protected:
-    /// mesh convert object of vert
-    NodeSharedPtr m_node;
-    /// degen marker
-    bool degen;
-    /// degen surface
-    int degensurf;
+private:
+    /// OpenCascade object of the curve.
+    gp_Pnt m_occVert;
 };
-
-typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
-
-typedef LibUtilities::NekFactory<std::string, CADVert> CADVertFactory;
-
-CADVertFactory& GetCADVertFactory();
 
 }
 }

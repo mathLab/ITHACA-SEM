@@ -23,6 +23,7 @@ v4.4.0
   to boundary conditions (!615)
 - Allow expansions to be loaded directly from field file (!617)
 - New options for load balancing (DOF or BOUNDARY) in mesh partitioner (!617)
+- Rework nodal utilities to support nodal prismatic elements (!660)
 - Update Body/Field forces at each timestep (!665)
 
 **ADRSolver:**

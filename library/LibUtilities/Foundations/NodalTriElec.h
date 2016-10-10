@@ -37,6 +37,7 @@
 #define NODALTRIELEC_H
 
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
+#include <LibUtilities/Foundations/NodalUtil.h>
 #include <boost/shared_ptr.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
@@ -88,6 +89,8 @@ namespace Nektar
             }
 
         private:
+            boost::shared_ptr<NodalUtilTriangle> m_util;
+
             NodalTriElec():PointsBaseType(NullPointsKey)
             {
             }

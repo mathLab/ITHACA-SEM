@@ -71,13 +71,21 @@ Element::Element(ElmtConfig pConf, unsigned int pNumNodes,
  * searched and the corresponding edge/face nodes are updated to
  * maintain consistency.
  *
- * @param  p     Index of the vertex to replace.
- * @param  pNew  New vertex.
+ * @param  p        Index of the vertex to replace.
+ * @param  pNew     New vertex.
+ * @param  descend  If true, we loop over edges and faces and replace the
+ *                  corresponding vertices with @p pNew.
  */
-void Element::SetVertex(unsigned int p, NodeSharedPtr pNew)
+void Element::SetVertex(unsigned int p, NodeSharedPtr pNew, bool descend)
 {
     NodeSharedPtr vOld = m_vertex[p];
     m_vertex[p] = pNew;
+
+    if (!descend)
+    {
+        return;
+    }
+
     for (unsigned int i = 0; i < m_edge.size(); ++i)
     {
         if (m_edge[i]->m_n1 == vOld)
@@ -119,13 +127,21 @@ void Element::SetVertex(unsigned int p, NodeSharedPtr pNew)
  * When an edge is replaced, the element faces are also searched and
  * the corresponding face edges are updated to maintain consistency.
  *
- * @param  p     Index of the edge to replace.
- * @param  pNew  New edge.
+ * @param  p        Index of the edge to replace.
+ * @param  pNew     New edge.
+ * @param  descend  If true, we loop over faces and replace the corresponding
+ *                  face edge with @p pNew.
  */
-void Element::SetEdge(unsigned int p, EdgeSharedPtr pNew)
+void Element::SetEdge(unsigned int p, EdgeSharedPtr pNew, bool descend)
 {
     EdgeSharedPtr vOld = m_edge[p];
     m_edge[p] = pNew;
+
+    if (!descend)
+    {
+        return;
+    }
+
     for (unsigned int i = 0; i < m_face.size(); ++i)
     {
         for (unsigned int j = 0; j < m_face[i]->m_edgeList.size(); ++j)

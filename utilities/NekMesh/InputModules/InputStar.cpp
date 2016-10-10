@@ -81,7 +81,7 @@ void InputStar::Process()
 
     if (m_mesh->m_verbose)
     {
-        cout << "InputStarTec: Start reading file..." << endl;
+        cout << "InputCCM: Start reading file..." << endl;
     }
 
     InitCCM();
@@ -672,12 +672,12 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
     }
     else if (ElementFaces.size() == 5) // prism or pyramid
     {
-        int triface0, triface1;
+        int triface0, triface1, triface2, triface3;
         int quadface0, quadface1, quadface2;
         bool isPrism = true;
 
         // find ids of tri faces and first quad face
-        triface0 = triface1 = -1;
+        triface0 = triface1 = triface2 = triface3 = -1;
         quadface0 = quadface1 = quadface2 = -1;
         for (i = 0; i < 5; ++i)
         {
@@ -691,9 +691,14 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
                 {
                     triface1 = i;
                 }
-                else
+                else if (triface2 == -1)
                 {
+                    triface2 = i;
                     isPrism = false;
+                }
+                else if (triface3 == -1)
+                {
+                    triface3 = i;
                 }
             }
 
@@ -725,23 +730,12 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
         }
         else // Pyramid
         {
-            set<int> vertids;
-            set<int>::iterator it;
-            // get list of vert ids
-            cout << "Pyramid found with vertices: " << endl;
-            for (i = 0; i < 5; ++i)
-            {
-                for (j = 0; j < FaceNodes[ElementFaces[i]].size(); ++j)
-                {
-                    vertids.insert(FaceNodes[ElementFaces[i]][j]);
-                }
-            }
-            for (it = vertids.begin(); it != vertids.end(); ++it)
-            {
-                cout << Vnodes[*it] << endl;
-            }
-
-            ASSERTL0(false, "Not yet set up for pyramids");
+            ASSERTL1(quadface0 != -1, "Quad face 0 not found");
+            ASSERTL1(triface0 != -1, "Tri face 0 not found");
+            ASSERTL1(triface1 != -1, "Tri face 1 not found");
+            ASSERTL1(triface2 != -1, "Tri face 2 not found");
+            ASSERTL1(triface3 != -1, "Tri face 3 not found");
+            ASSERTL0(false,"Pyramids still not sorted");
             returnval = Array<OneD, int>(5);
         }
 

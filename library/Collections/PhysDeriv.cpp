@@ -105,6 +105,43 @@ class PhysDeriv_StdMat : public Operator
             }
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            int nPhys = m_stdExp->GetTotPoints();
+            int ntot = m_numElmt*nPhys;
+            Array<OneD, NekDouble> tmp0,tmp1,tmp2;
+            Array<OneD, Array<OneD, NekDouble> > Diff(3);
+
+            for(int i = 0; i < m_dim; ++i)
+            {
+                Diff[i] = wsp + i*ntot;
+            }
+
+            // calculate local derivatives
+            for(int i = 0; i < m_dim; ++i)
+            {
+                Blas::Dgemm('N', 'N', m_derivMat[i]->GetRows(), m_numElmt,
+                            m_derivMat[i]->GetColumns(), 1.0,
+                            m_derivMat[i]->GetRawPtr(),
+                            m_derivMat[i]->GetRows(), input.get(), nPhys,
+                            0.0, &Diff[i][0],nPhys);
+            }
+
+            // calculate full derivative
+            Vmath::Zero(ntot,output,1);
+            for(int j = 0; j < m_dim; ++j)
+            {
+                Vmath::Vvtvp (ntot, m_derivFac[dir*m_dim+j], 1,
+                                    Diff[j],               1,
+                                    output,                1,
+                                    output,                1);
+            }
+        }
+
     protected:
         Array<OneD, DNekMatSharedPtr>   m_derivMat;
         Array<TwoD, const NekDouble>    m_derivFac;
@@ -240,6 +277,42 @@ class PhysDeriv_IterPerExp : public Operator
             }
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            int nPhys = m_stdExp->GetTotPoints();
+            int ntot = m_numElmt*nPhys;
+            Array<OneD, NekDouble> tmp0,tmp1,tmp2;
+            Array<OneD, Array<OneD, NekDouble> > Diff(3);
+
+            for(int i = 0; i < m_dim; ++i)
+            {
+                Diff[i] = wsp + i*ntot;
+            }
+
+            // calculate local derivatives
+            for (int i = 0; i < m_numElmt; ++i)
+            {
+                m_stdExp->PhysDeriv(input + i*nPhys,
+                                    tmp0 = Diff[0] + i*nPhys,
+                                    tmp1 = Diff[1] + i*nPhys,
+                                    tmp2 = Diff[2] + i*nPhys);
+            }
+
+            // calculate full derivative
+            Vmath::Vmul(ntot,m_derivFac[dir*m_dim],1,Diff[0],1,output,1);
+            for(int j = 1; j < m_dim; ++j)
+            {
+                Vmath::Vvtvp (ntot, m_derivFac[dir*m_dim+j], 1,
+                                    Diff[j],               1,
+                                    output,                1,
+                                    output,                1);
+            }
+        }
+
     protected:
         Array<TwoD, const NekDouble>    m_derivFac;
         int                             m_dim;
@@ -361,6 +434,23 @@ class PhysDeriv_NoCollection : public Operator
             }
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            const int nPhys   = m_expList[0]->GetTotPoints();
+            Array<OneD, NekDouble> tmp;
+
+            // calculate local derivatives
+            for (int i = 0; i < m_numElmt; ++i)
+            {
+                m_expList[i]->PhysDeriv(dir, input + i*nPhys,
+                                             tmp = output + i*nPhys);
+            }
+        }
+
     protected:
         vector<StdRegions::StdExpansionSharedPtr> m_expList;
 
@@ -456,6 +546,29 @@ class PhysDeriv_SumFac_Seg : public Operator
             }
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            const int nqcol   = m_nquad0*m_numElmt;
+
+            ASSERTL1(wsp.num_elements() == m_wspSize,
+                     "Incorrect workspace size");
+            ASSERTL1(input.num_elements() >= nqcol,
+                     "Incorrect input size");
+
+            Array<OneD, NekDouble> diff0(nqcol, wsp);
+
+            Blas::Dgemm('N', 'N', m_nquad0, m_numElmt,
+                        m_nquad0, 1.0, m_Deriv0, m_nquad0,
+                        input.get(), m_nquad0, 0.0,
+                        diff0.get(), m_nquad0);
+
+            Vmath::Vmul(nqcol, m_derivFac[dir], 1, diff0, 1, output, 1);
+        }
+
     protected:
         int                             m_coordim;
         const int                       m_nquad0;
@@ -545,6 +658,42 @@ class PhysDeriv_SumFac_Quad : public Operator
                 Vmath::Vvtvp (nqcol, m_derivFac[5], 1, diff1, 1, output2, 1,
                                                                  output2, 1);
             }
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            const int nqtot   = m_nquad0 * m_nquad1;
+            const int nqcol   = nqtot*m_numElmt;
+
+            ASSERTL1(wsp.num_elements() == m_wspSize,
+                     "Incorrect workspace size");
+            ASSERTL1(input.num_elements() >= nqcol,
+                     "Incorrect input size");
+
+            Array<OneD, NekDouble> diff0(nqcol, wsp             );
+            Array<OneD, NekDouble> diff1(nqcol, wsp    +   nqcol);
+
+            Blas::Dgemm('N', 'N', m_nquad0, m_nquad1*m_numElmt,
+                        m_nquad0, 1.0, m_Deriv0, m_nquad0,
+                        input.get(), m_nquad0, 0.0,
+                        diff0.get(), m_nquad0);
+
+            int cnt = 0;
+            for (int i = 0; i < m_numElmt; ++i, cnt += nqtot)
+            {
+                Blas::Dgemm('N', 'T', m_nquad0, m_nquad1, m_nquad1, 1.0,
+                            input.get() + cnt, m_nquad0,
+                            m_Deriv1, m_nquad1, 0.0,
+                            diff1.get() + cnt, m_nquad0);
+            }
+
+            Vmath::Vmul  (nqcol, m_derivFac[2*dir]  , 1, diff0, 1, output, 1);
+            Vmath::Vvtvp (nqcol, m_derivFac[2*dir+1], 1, diff1, 1, output, 1,
+                                                                   output, 1);
         }
 
     protected:
@@ -649,6 +798,52 @@ class PhysDeriv_SumFac_Tri : public Operator
                 Vmath::Vvtvp (nqcol, m_derivFac[5], 1, diff1, 1,
                               output2, 1, output2, 1);
             }
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            const int nqtot   = m_nquad0 * m_nquad1;
+            const int nqcol   = nqtot*m_numElmt;
+
+            ASSERTL1(wsp.num_elements() == m_wspSize,
+                     "Incorrect workspace size");
+            ASSERTL1(input.num_elements() >= nqcol,
+                     "Incorrect input size");
+
+            Array<OneD, NekDouble> diff0(nqcol, wsp             );
+            Array<OneD, NekDouble> diff1(nqcol, wsp    +   nqcol);
+
+            // Tensor Product Derivative
+            Blas::Dgemm('N', 'N', m_nquad0, m_nquad1*m_numElmt,
+                        m_nquad0, 1.0, m_Deriv0, m_nquad0,
+                        input.get(), m_nquad0, 0.0,
+                        diff0.get(), m_nquad0);
+
+            int cnt = 0;
+            for (int i = 0; i < m_numElmt; ++i, cnt += nqtot)
+            {
+                // scale diff0 by geometric factor: 2/(1-z1)
+                Vmath::Vmul(nqtot,&m_fac1[0],1,diff0.get()+cnt,1,
+                            diff0.get()+cnt,1);
+
+                Blas::Dgemm('N', 'T', m_nquad0, m_nquad1, m_nquad1, 1.0,
+                            input.get() + cnt, m_nquad0,
+                            m_Deriv1, m_nquad1, 0.0,
+                            diff1.get() + cnt, m_nquad0);
+
+                // add to diff1 by diff0 scaled by: (1_z0)/(1-z1)
+                Vmath::Vvtvp(nqtot,m_fac0.get(),1,diff0.get()+cnt,1,
+                             diff1.get()+cnt,1,diff1.get()+cnt,1);
+            }
+
+
+            Vmath::Vmul  (nqcol, m_derivFac[2*dir]  , 1, diff0, 1, output, 1);
+            Vmath::Vvtvp (nqcol, m_derivFac[2*dir+1], 1, diff1, 1, output, 1,
+                                                                   output, 1);
         }
 
     protected:
@@ -780,6 +975,54 @@ class PhysDeriv_SumFac_Hex : public Operator
                                         out[i],                1,
                                         out[i],                1);
                 }
+            }
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            int nPhys = m_stdExp->GetTotPoints();
+            int ntot = m_numElmt*nPhys;
+            Array<OneD, NekDouble> tmp0,tmp1,tmp2;
+            Array<OneD, Array<OneD, NekDouble> > Diff(3);
+
+            for(int i = 0; i < m_dim; ++i)
+            {
+                Diff[i] = wsp + i*ntot;
+            }
+
+            Blas::Dgemm('N','N', m_nquad0,m_nquad1*m_nquad2*m_numElmt,
+                        m_nquad0,1.0, m_Deriv0,m_nquad0,&input[0],
+                        m_nquad0,0.0,&Diff[0][0],m_nquad0);
+
+            for(int  i = 0; i < m_numElmt; ++i)
+            {
+                for (int j = 0; j < m_nquad2; ++j)
+                {
+                    Blas::Dgemm('N', 'T', m_nquad0, m_nquad1, m_nquad1,
+                                1.0, &input[i*nPhys+j*m_nquad0*m_nquad1],
+                                m_nquad0, m_Deriv1, m_nquad1, 0.0,
+                                &Diff[1][i*nPhys+j*m_nquad0*m_nquad1],
+                                m_nquad0);
+                }
+
+                Blas::Dgemm('N','T',m_nquad0*m_nquad1,m_nquad2,m_nquad2,
+                            1.0, &input[i*nPhys],m_nquad0*m_nquad1,
+                            m_Deriv2,m_nquad2, 0.0,&Diff[2][i*nPhys],
+                            m_nquad0*m_nquad1);
+            }
+
+            // calculate full derivative
+            Vmath::Vmul(ntot,m_derivFac[dir*m_dim],1,Diff[0],1,output,1);
+            for(int j = 1; j < m_dim; ++j)
+            {
+                Vmath::Vvtvp (ntot, m_derivFac[dir*m_dim+j], 1,
+                                    Diff[j],               1,
+                                    output,                1,
+                                    output,                1);
             }
         }
 
@@ -924,6 +1167,88 @@ class PhysDeriv_SumFac_Tet : public Operator
                     Vmath::Vvtvp (ntot, m_derivFac[i*m_dim+j], 1,
                                         Diff[j], 1, out[i], 1, out[i], 1);
                 }
+            }
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            int nPhys = m_stdExp->GetTotPoints();
+            int ntot = m_numElmt*nPhys;
+            Array<OneD, NekDouble> tmp0,tmp1,tmp2;
+            Array<OneD, Array<OneD, NekDouble> > Diff(3);
+
+            for(int i = 0; i < m_dim; ++i)
+            {
+                Diff[i] = wsp + i*ntot;
+            }
+
+            // dEta0
+            Blas::Dgemm('N','N', m_nquad0,m_nquad1*m_nquad2*m_numElmt,
+                        m_nquad0,1.0, m_Deriv0,m_nquad0,&input[0],
+                        m_nquad0,0.0,&Diff[0][0],m_nquad0);
+
+            // dEta2
+            for(int  i = 0; i < m_numElmt; ++i)
+            {
+                Blas::Dgemm('N','T',m_nquad0*m_nquad1,m_nquad2,m_nquad2,
+                            1.0, &input[i*nPhys],m_nquad0*m_nquad1,
+                            m_Deriv2,m_nquad2, 0.0,&Diff[2][i*nPhys],
+                            m_nquad0*m_nquad1);
+            }
+
+            for(int  i = 0; i < m_numElmt; ++i)
+            {
+
+                // dEta1
+                for (int j = 0; j < m_nquad2; ++j)
+                {
+                    Blas::Dgemm('N', 'T', m_nquad0, m_nquad1, m_nquad1,
+                                1.0, &input[i*nPhys+j*m_nquad0*m_nquad1],
+                                m_nquad0, m_Deriv1, m_nquad1, 0.0,
+                                &Diff[1][i*nPhys+j*m_nquad0*m_nquad1],
+                                m_nquad0);
+                }
+
+                // dxi2 = (1 + eta_1)/(1 -eta_2)*dEta1 + dEta2
+                Vmath::Vvtvp(nPhys, m_fac3.get(),            1,
+                                    Diff[1].get() + i*nPhys, 1,
+                                    Diff[2].get() + i*nPhys, 1,
+                                    Diff[2].get() + i*nPhys, 1);
+
+                // dxi1 =  2/(1 - eta_2) dEta1
+                Vmath::Vmul(nPhys,  m_fac2.get(),            1,
+                                    Diff[1].get() + i*nPhys, 1,
+                                    Diff[1].get() + i*nPhys, 1);
+
+                // dxi1 = 2.0(1+eta_0)/((1-eta_1)(1-eta_2)) dEta0 + dxi1
+                Vmath::Vvtvp(nPhys, m_fac1.get(),            1,
+                                    Diff[0].get() + i*nPhys, 1,
+                                    Diff[1].get() + i*nPhys, 1,
+                                    Diff[1].get() + i*nPhys, 1);
+
+                // dxi2 = 2.0(1+eta_0)/((1-eta_1)(1-eta_2)) dEta0 + dxi2
+                Vmath::Vvtvp(nPhys, m_fac1.get(),            1,
+                                    Diff[0].get() + i*nPhys, 1,
+                                    Diff[2].get() + i*nPhys, 1,
+                                    Diff[2].get() + i*nPhys, 1);
+
+                // dxi0 = 4.0/((1-eta_1)(1-eta_2)) dEta0
+                Vmath::Vmul(nPhys,  m_fac0.get(),            1,
+                                    Diff[0].get() + i*nPhys, 1,
+                                    Diff[0].get() + i*nPhys, 1);
+
+            }
+
+            // calculate full derivative
+            Vmath::Vmul(ntot,m_derivFac[dir*m_dim],1,Diff[0],1,output,1);
+            for(int j = 1; j < m_dim; ++j)
+            {
+                Vmath::Vvtvp (ntot, m_derivFac[dir*m_dim+j], 1,
+                                    Diff[j], 1, output, 1, output, 1);
             }
         }
 
@@ -1082,6 +1407,66 @@ class PhysDeriv_SumFac_Prism : public Operator
                     Vmath::Vvtvp (ntot, m_derivFac[i*m_dim+j], 1,
                                         Diff[j], 1, out[i], 1, out[i], 1);
                 }
+            }
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            int nPhys = m_stdExp->GetTotPoints();
+            int ntot = m_numElmt*nPhys;
+            Array<OneD, NekDouble> tmp0,tmp1,tmp2;
+            Array<OneD, Array<OneD, NekDouble> > Diff(3);
+
+            for(int i = 0; i < m_dim; ++i)
+            {
+                Diff[i] = wsp + i*ntot;
+            }
+
+            // dEta0
+            Blas::Dgemm('N','N', m_nquad0,m_nquad1*m_nquad2*m_numElmt,
+                        m_nquad0,1.0, m_Deriv0,m_nquad0,&input[0],
+                        m_nquad0,0.0,&Diff[0][0],m_nquad0);
+
+            int cnt = 0;
+            for(int  i = 0; i < m_numElmt; ++i)
+            {
+
+                // dEta 1
+                for (int j = 0; j < m_nquad2; ++j)
+                {
+                    Blas::Dgemm('N', 'T', m_nquad0, m_nquad1, m_nquad1,
+                                1.0, &input[i*nPhys+j*m_nquad0*m_nquad1],
+                                m_nquad0, m_Deriv1, m_nquad1, 0.0,
+                                &Diff[1][i*nPhys+j*m_nquad0*m_nquad1],
+                                m_nquad0);
+                }
+
+                // dEta 2
+                Blas::Dgemm('N','T',m_nquad0*m_nquad1,m_nquad2,m_nquad2,
+                            1.0, &input[i*nPhys],m_nquad0*m_nquad1,
+                            m_Deriv2,m_nquad2, 0.0,&Diff[2][i*nPhys],
+                            m_nquad0*m_nquad1);
+
+                // dxi0 = 2/(1-eta_2) d Eta_0
+                Vmath::Vmul(nPhys,&m_fac0[0],1,Diff[0].get()+cnt,1,
+                            Diff[0].get()+cnt,1);
+
+                // dxi2 = (1+eta0)/(1-eta_2) d Eta_0 + d/dEta2;
+                Vmath::Vvtvp(nPhys,&m_fac1[0],1,Diff[0].get()+cnt,1,
+                             Diff[2].get()+cnt,1,Diff[2].get()+cnt,1);
+                cnt += nPhys;
+            }
+
+            // calculate full derivative
+            Vmath::Vmul(ntot,m_derivFac[dir*m_dim],1,Diff[0],1,output,1);
+            for(int j = 1; j < m_dim; ++j)
+            {
+                Vmath::Vvtvp (ntot, m_derivFac[dir*m_dim+j], 1,
+                                    Diff[j], 1, output, 1, output, 1);
             }
         }
 

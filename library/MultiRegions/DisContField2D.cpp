@@ -2262,7 +2262,9 @@ namespace Nektar
                         == SpatialDomains::eDirichlet)
                     {
                         SpatialDomains::DirichletBCShPtr bcPtr
-                            = boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(m_bndConditions[i]);
+                            = boost::static_pointer_cast<
+                                SpatialDomains::DirichletBoundaryCondition>(
+                                    m_bndConditions[i]);
                         string filebcs = bcPtr->m_filename;
                         
                         if (filebcs != "")

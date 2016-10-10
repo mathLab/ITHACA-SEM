@@ -202,6 +202,51 @@ namespace Nektar
 
         static unsigned int CalculateIndex(unsigned int curRow, unsigned int curColumn);
 
+        template<typename DataType>
+        static void Invert(unsigned int rows, unsigned int columns,
+                           Array<OneD, DataType>& data)
+        {
+#ifdef NEKTAR_USING_BLAS
+            ASSERTL0(rows==columns, "Only square matrices can be inverted.");
+
+            int n = columns;
+            int info = 0;
+            Array<OneD, int> ipivot(n);
+            Array<OneD, DataType> work(n);
+
+            Lapack::Dsptrf('U', n, data.get(), ipivot.get(), info);
+
+            if( info < 0 )
+            {
+                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dsptrf";
+                ASSERTL0(false, message.c_str());
+            }
+            else if( info > 0 )
+            {
+                std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dsptrf";
+                ASSERTL0(false, message.c_str());
+            }
+
+            Lapack::Dsptri('U', n, data.get(), ipivot.get(),
+                           work.get(), info);
+
+            if( info < 0 )
+            {
+                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dsptri";
+                ASSERTL0(false, message.c_str());
+            }
+            else if( info > 0 )
+            {
+                std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dsptri";
+                ASSERTL0(false, message.c_str());
+            }
+
+#else
+            // error Full matrix inversion not supported without blas.
+            BOOST_STATIC_ASSERT(sizeof(DataType) == 0);
+#endif
+        }
+
         static boost::tuples::tuple<unsigned int, unsigned int>
         Advance(const unsigned int totalRows, const unsigned int totalColumns,
                 const unsigned int curRow, const unsigned int curColumn);

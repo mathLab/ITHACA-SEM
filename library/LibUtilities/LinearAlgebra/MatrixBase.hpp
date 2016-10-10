@@ -64,8 +64,16 @@ namespace Nektar
             
             LIB_UTILITIES_EXPORT unsigned int GetStorageSize() const;
             
-            LIB_UTILITIES_EXPORT MatrixStorage GetStorageType() const ;
-            
+            LIB_UTILITIES_EXPORT inline MatrixStorage GetType() const
+            {
+                return m_storageType;
+            }
+
+            LIB_UTILITIES_EXPORT inline MatrixStorage GetStorageType() const
+            {
+                return m_storageType;
+            }
+
             LIB_UTILITIES_EXPORT unsigned int GetRows() const;
 
             LIB_UTILITIES_EXPORT unsigned int GetTransposedRows(char transpose) const ;
@@ -92,7 +100,8 @@ namespace Nektar
             
             // All constructors are private to enforce the abstract nature of ConstMatrix without
             // resorting to pure virtual functions.
-            LIB_UTILITIES_EXPORT ConstMatrix(unsigned int rows, unsigned int columns);
+            LIB_UTILITIES_EXPORT ConstMatrix(unsigned int rows, unsigned int columns,
+                                             MatrixStorage policy = eFULL);
             
             LIB_UTILITIES_EXPORT ConstMatrix(const ConstMatrix<DataType>& rhs);
 
@@ -103,17 +112,20 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void Resize(unsigned int rows, unsigned int columns);
 
             LIB_UTILITIES_EXPORT void SetTransposeFlag(char newValue);
-            LIB_UTILITIES_EXPORT char GetRawTransposeFlag() const;
+            LIB_UTILITIES_EXPORT inline char GetRawTransposeFlag() const
+            {
+                return m_transpose;
+            }
 
         private:
             
             virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const = 0;            
             virtual unsigned int v_GetStorageSize() const = 0;            
-            virtual MatrixStorage v_GetStorageType() const = 0;
             LIB_UTILITIES_EXPORT virtual void v_Transpose();
             LIB_UTILITIES_EXPORT virtual char v_GetTransposeFlag() const;
             unsigned int m_size[2];
             char m_transpose;
+            MatrixStorage m_storageType;
     };
     
     template<typename DataType>
@@ -127,7 +139,8 @@ namespace Nektar
         protected:            
             // All constructors are private to enforce the abstract nature of ConstMatrix without
             // resorting to pure virtual functions.
-            LIB_UTILITIES_EXPORT Matrix(unsigned int rows, unsigned int columns);
+            LIB_UTILITIES_EXPORT Matrix(unsigned int rows, unsigned int columns,
+                                        MatrixStorage policy = eFULL);
             
             LIB_UTILITIES_EXPORT Matrix(const Matrix<DataType>& rhs);
 

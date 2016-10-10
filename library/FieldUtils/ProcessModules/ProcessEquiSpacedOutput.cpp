@@ -105,7 +105,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
     {
         if (m_f->m_fielddef[0]->m_numHomogeneousDir == 1)
         {
-            ASSERTL0(shapedim == 2, "Homogeneous only implemented for 3DH1D");
             coordim++;
             shapedim++;
             homogeneous1D = true;
@@ -124,8 +123,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
             if ((HomoStr == "HOMOGENEOUS1D") || (HomoStr == "Homogeneous1D") ||
                 (HomoStr == "1D") || (HomoStr == "Homo1D"))
             {
-                ASSERTL0(shapedim == 2,
-                         "Homogeneous only implemented for 3DH1D");
                 coordim++;
                 shapedim++;
                 homogeneous1D = true;
@@ -441,6 +438,11 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
 
     m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
         coordim, fieldNames, pts);
+    if (shapedim == 1)
+    {
+        m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsSegBlock);
+    }
+
     if (shapedim == 2)
     {
         m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTriBlock);
@@ -463,6 +465,7 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
     int nPlanes      = m_f->m_exp[0]->GetZIDs().num_elements();
     int npts         = m_f->m_fieldPts->GetNpoints();
     int nptsPerPlane = npts / nPlanes;
+    int coordim      = 3;
 
     if (m_f->m_exp[0]->GetHomogeneousBasis()->GetBasisType() ==
             LibUtilities::eFourier &&
@@ -482,7 +485,7 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
             Array<OneD, NekDouble> extraPlane(nptsPerPlane, newPts[i] + npts);
             if (m_f->m_comm->GetColumnComm()->GetSize() == 1)
             {
-                if (i == 2)
+                if ( i == (coordim-1))
                 {
                     // z-coordinate
                     Vmath::Sadd(nptsPerPlane, m_f->m_exp[0]->GetHomoLen(),
@@ -505,7 +508,7 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
                 m_f->m_comm->GetColumnComm()->SendRecv(toRank, send, fromRank,
                                                        extraPlane);
                 // Adjust z-coordinate of last process
-                if (i == 2 && (rank == size - 1))
+                if (i == (coordim-1) && (rank == size - 1) )
                 {
                     Vmath::Sadd(nptsPerPlane, m_f->m_exp[0]->GetHomoLen(),
                                 extraPlane, 1, extraPlane, 1);
@@ -534,277 +537,311 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
         npts += nptsPerPlane;
     }
 
-    // Get maximum number of points per direction in the mesh
-    int maxN = 0;
-    for (int i = 0; i < nel; ++i)
-    {
-        e = m_f->m_exp[0]->GetPlane(0)->GetExp(i);
-
-        int np0 = e->GetBasis(0)->GetNumPoints();
-        int np1 = e->GetBasis(1)->GetNumPoints();
-        int np  = max(np0, np1);
-        maxN    = max(np, maxN);
-    }
-
-    // Create a global numbering for points in plane 0
-    Array<OneD, int> vId(nptsPerPlane);
-    int cnt1 = 0;
-    int cnt2 = 0;
-    for (int i = 0; i < nel; ++i)
-    {
-        e       = m_f->m_exp[0]->GetPlane(0)->GetExp(i);
-        int np0 = e->GetBasis(0)->GetNumPoints();
-        int np1 = e->GetBasis(1)->GetNumPoints();
-        int np  = max(np0, np1);
-        switch (e->DetShapeType())
-        {
-            case LibUtilities::eTriangle:
-            {
-                int newpoints =
-                    LibUtilities::StdTriData::getNumberOfCoefficients(np, np);
-
-                // Vertex numbering
-                vId[cnt1]                 = e->GetGeom()->GetVid(0);
-                vId[cnt1 + np - 1]        = e->GetGeom()->GetVid(1);
-                vId[cnt1 + newpoints - 1] = e->GetGeom()->GetVid(2);
-
-                // Edge numbering
-                StdRegions::Orientation edgeOrient;
-                int edge1 = 0;
-                int edge2 = 0;
-                for (int n = 1; n < np - 1; n++)
-                {
-                    // Edge 0
-                    edgeOrient = e->GetGeom()->GetEorient(0);
-                    if (edgeOrient == StdRegions::eForwards)
-                    {
-                        vId[cnt1 + n] =
-                            4 * nel + maxN * e->GetGeom()->GetEid(0) + n;
-                    }
-                    else
-                    {
-                        vId[cnt1 + np - 1 - n] =
-                            4 * nel + maxN * e->GetGeom()->GetEid(0) + n;
-                    }
-
-                    // Edge 1
-                    edgeOrient = e->GetGeom()->GetEorient(1);
-                    if (edgeOrient == StdRegions::eForwards)
-                    {
-                        edge1 += np - n;
-                        vId[cnt1 + np - 1 + edge1] =
-                            4 * nel + maxN * e->GetGeom()->GetEid(1) + n;
-                    }
-                    else
-                    {
-                        edge1 += n;
-                        vId[cnt1 + newpoints - 1 - edge1] =
-                            4 * nel + maxN * e->GetGeom()->GetEid(1) + n;
-                    }
-
-                    // Edge 2
-                    edgeOrient = e->GetGeom()->GetEorient(2);
-                    if (edgeOrient == StdRegions::eForwards)
-                    {
-                        edge2 += n + 1;
-                        vId[cnt1 + newpoints - 1 - edge2] =
-                            4 * nel + maxN * e->GetGeom()->GetEid(2) + n;
-                    }
-                    else
-                    {
-                        edge2 += np + 1 - n;
-                        vId[cnt1 + edge2] =
-                            4 * nel + maxN * e->GetGeom()->GetEid(2) + n;
-                    }
-                }
-
-                // Interior numbering
-                int mode = np + 1;
-                for (int n = 1; n < np - 1; n++)
-                {
-                    for (int m = 1; m < np - n - 1; m++)
-                    {
-                        vId[cnt1 + mode] = 4 * nel + maxN * 4 * nel + cnt2;
-                        cnt2++;
-                        mode++;
-                    }
-                }
-                cnt1 += newpoints;
-            }
-            break;
-            case LibUtilities::eQuadrilateral:
-            {
-                int newpoints =
-                    LibUtilities::StdQuadData::getNumberOfCoefficients(np, np);
-                // Vertex numbering
-                vId[cnt1]                 = e->GetGeom()->GetVid(0);
-                vId[cnt1 + np - 1]        = e->GetGeom()->GetVid(1);
-                vId[cnt1 + np * np - 1]   = e->GetGeom()->GetVid(2);
-                vId[cnt1 + np * (np - 1)] = e->GetGeom()->GetVid(3);
-
-                // Edge numbering
-                StdRegions::Orientation edgeOrient;
-                for (int n = 1; n < np - 1; n++)
-                {
-                    // Edge 0
-                    edgeOrient = e->GetGeom()->GetEorient(0);
-                    if (edgeOrient == StdRegions::eForwards)
-                    {
-                        vId[cnt1 + n] =
-                            4 * nel + maxN * e->GetGeom()->GetEid(0) + n;
-                    }
-                    else
-                    {
-                        vId[cnt1 + np - 1 - n] =
-                            4 * nel + maxN * e->GetGeom()->GetEid(0) + n;
-                    }
-
-                    // Edge 1
-                    edgeOrient = e->GetGeom()->GetEorient(1);
-                    if (edgeOrient == StdRegions::eForwards)
-                    {
-                        vId[cnt1 + np - 1 + n * np] =
-                            4 * nel + maxN * e->GetGeom()->GetEid(1) + n;
-                    }
-                    else
-                    {
-                        vId[cnt1 + np * np - 1 - n * np] =
-                            4 * nel + maxN * e->GetGeom()->GetEid(1) + n;
-                    }
-
-                    // Edge 2
-                    edgeOrient = e->GetGeom()->GetEorient(2);
-                    if (edgeOrient == StdRegions::eForwards)
-                    {
-                        vId[cnt1 + np * np - 1 - n] =
-                            4 * nel + maxN * e->GetGeom()->GetEid(2) + n;
-                    }
-                    else
-                    {
-                        vId[cnt1 + np * (np - 1) + n] =
-                            4 * nel + maxN * e->GetGeom()->GetEid(2) + n;
-                    }
-
-                    // Edge 3
-                    edgeOrient = e->GetGeom()->GetEorient(3);
-                    if (edgeOrient == StdRegions::eForwards)
-                    {
-                        vId[cnt1 + np * (np - 1) - n * np] =
-                            4 * nel + maxN * e->GetGeom()->GetEid(3) + n;
-                    }
-                    else
-                    {
-                        vId[cnt1 + n * np] =
-                            4 * nel + maxN * e->GetGeom()->GetEid(3) + n;
-                    }
-                }
-
-                // Interior numbering
-                for (int n = 1; n < np - 1; n++)
-                {
-                    for (int m = 1; m < np - 1; m++)
-                    {
-                        vId[cnt1 + m * np + n] =
-                            4 * nel + maxN * 4 * nel + cnt2;
-                        cnt2++;
-                    }
-                }
-                cnt1 += newpoints;
-            }
-            break;
-            default:
-            {
-                ASSERTL0(false, "Points not known");
-            }
-        }
-    }
-
-    // Crete new connectivity using homogeneous information
     vector<Array<OneD, int> > oldConn;
     vector<Array<OneD, int> > newConn;
-    Array<OneD, int> conn;
+    Array<OneD, int>          conn;
     m_f->m_fieldPts->GetConnectivity(oldConn);
 
-    for (int i = 0; i < nel; ++i)
+    // 2DH1D case
+    if (m_f->m_fieldPts->GetPtsType() == LibUtilities::ePtsTriBlock)
     {
-        int nTris = oldConn[i].num_elements() / 3;
-        // Create array for new connectivity
-        // (3 tetrahedra between each plane for each triangle)
-        conn = Array<OneD, int>(4 * 3 * nTris * (nPlanes - 1));
-        cnt2 = 0;
-        for (int n = 0; n < nTris; n++)
+        for(int i = 0; i < nel; ++i)
         {
-            // Get id of vertices in this triangle (on plane 0)
-            int vId0 = vId[oldConn[i][3 * n + 0]];
-            int vId1 = vId[oldConn[i][3 * n + 1]];
-            int vId2 = vId[oldConn[i][3 * n + 2]];
-
-            // Determine ordering based on global Id of pts
-            Array<OneD, int> rot(3);
-            if ((vId0 < vId1) && (vId0 < vId2))
+            int nLines = oldConn[i].num_elements()/2;
+            // Create array for new connectivity
+            // (2 triangles between each plane for each line)
+            conn = Array<OneD, int> (2*3*nLines*(nPlanes-1));
+            int cnt = 0;
+            for(int n = 0; n<nLines; n++)
             {
-                rot[0] = 0;
-                if (vId1 < vId2)
+                // Define new connectivity with triangles
+                for ( int p = 0; p<nPlanes-1; p++)
                 {
-                    rot[1] = 1;
-                    rot[2] = 2;
-                }
-                else
-                {
-                    rot[1] = 2;
-                    rot[2] = 1;
+                    conn[cnt++] = oldConn[i+  p  *nel][2*n+0];
+                    conn[cnt++] = oldConn[i+  p  *nel][2*n+1];
+                    conn[cnt++] = oldConn[i+(p+1)*nel][2*n+0];
+
+                    conn[cnt++] = oldConn[i+  p  *nel][2*n+1];
+                    conn[cnt++] = oldConn[i+(p+1)*nel][2*n+0];
+                    conn[cnt++] = oldConn[i+(p+1)*nel][2*n+1];
                 }
             }
-            else if ((vId1 < vId0) && (vId1 < vId2))
-            {
-                rot[0] = 1;
-                if (vId0 < vId2)
-                {
-                    rot[1] = 0;
-                    rot[2] = 2;
-                }
-                else
-                {
-                    rot[1] = 2;
-                    rot[2] = 0;
-                }
-            }
-            else
-            {
-                rot[0] = 2;
-                if (vId0 < vId1)
-                {
-                    rot[1] = 0;
-                    rot[2] = 1;
-                }
-                else
-                {
-                    rot[1] = 1;
-                    rot[2] = 0;
-                }
-            }
+            newConn.push_back(conn);
+        }
+    }
+    else if(m_f->m_fieldPts->GetPtsType() == LibUtilities::ePtsTetBlock)
+    {
+        // Get maximum number of points per direction in the mesh
+        int maxN = 0;
+        for(int i = 0; i < nel; ++i)
+        {
+            e = m_f->m_exp[0]->GetPlane(0)->GetExp(i);
 
-            // Define new connectivity with tetrahedra
-            for (int p = 0; p < nPlanes - 1; p++)
+            int np0 = e->GetBasis(0)->GetNumPoints();
+            int np1 = e->GetBasis(1)->GetNumPoints();
+            int np = max(np0,np1);
+            maxN = max(np, maxN);
+        }
+
+        // Create a global numbering for points in plane 0
+        Array<OneD, int> vId(nptsPerPlane);
+        int cnt1=0;
+        int cnt2=0;
+        for(int i = 0; i < nel; ++i)
+        {
+            e = m_f->m_exp[0]->GetPlane(0)->GetExp(i);
+            int np0 = e->GetBasis(0)->GetNumPoints();
+            int np1 = e->GetBasis(1)->GetNumPoints();
+            int np = max(np0,np1);
+            switch(e->DetShapeType())
             {
-                conn[cnt2++] = oldConn[i + p * nel][3 * n + rot[0]];
-                conn[cnt2++] = oldConn[i + p * nel][3 * n + rot[1]];
-                conn[cnt2++] = oldConn[i + p * nel][3 * n + rot[2]];
-                conn[cnt2++] = oldConn[i + (p + 1) * nel][3 * n + rot[2]];
+            case LibUtilities::eTriangle:
+                {
+                    int newpoints = LibUtilities::StdTriData::
+                                        getNumberOfCoefficients(np,np);
 
-                conn[cnt2++] = oldConn[i + p * nel][3 * n + rot[0]];
-                conn[cnt2++] = oldConn[i + p * nel][3 * n + rot[1]];
-                conn[cnt2++] = oldConn[i + (p + 1) * nel][3 * n + rot[2]];
-                conn[cnt2++] = oldConn[i + (p + 1) * nel][3 * n + rot[1]];
+                    // Vertex numbering
+                    vId[cnt1]                 = e->GetGeom()->GetVid(0);
+                    vId[cnt1+np-1]            = e->GetGeom()->GetVid(1);
+                    vId[cnt1+newpoints-1]     = e->GetGeom()->GetVid(2);
 
-                conn[cnt2++] = oldConn[i + p * nel][3 * n + rot[0]];
-                conn[cnt2++] = oldConn[i + (p + 1) * nel][3 * n + rot[1]];
-                conn[cnt2++] = oldConn[i + (p + 1) * nel][3 * n + rot[2]];
-                conn[cnt2++] = oldConn[i + (p + 1) * nel][3 * n + rot[0]];
+                    // Edge numbering
+                    StdRegions::Orientation             edgeOrient;
+                    int edge1 = 0;
+                    int edge2 = 0;
+                    for (int n = 1; n < np-1; n++)
+                    {
+                        // Edge 0
+                        edgeOrient          = e->GetGeom()->GetEorient(0);
+                        if (edgeOrient==StdRegions::eForwards)
+                        {
+                            vId[cnt1+n] = 4*nel +
+                                            maxN*e->GetGeom()->GetEid(0) + n;
+                        }
+                        else
+                        {
+                            vId[cnt1+np-1-n] = 4*nel +
+                                            maxN*e->GetGeom()->GetEid(0) + n;
+                        }
+
+                        // Edge 1
+                        edgeOrient          = e->GetGeom()->GetEorient(1);
+                        if (edgeOrient==StdRegions::eForwards)
+                        {
+                            edge1 += np-n;
+                            vId[cnt1+np-1+edge1] = 4*nel +
+                                            maxN*e->GetGeom()->GetEid(1) + n;
+                        }
+                        else
+                        {
+                            edge1 += n;
+                            vId[cnt1+newpoints-1-edge1] = 4*nel +
+                                            maxN*e->GetGeom()->GetEid(1) + n;
+                        }
+
+                        // Edge 2
+                        edgeOrient          = e->GetGeom()->GetEorient(2);
+                        if (edgeOrient==StdRegions::eForwards)
+                        {
+                            edge2 += n+1;
+                            vId[cnt1+newpoints-1-edge2] = 4*nel +
+                                            maxN*e->GetGeom()->GetEid(2) + n;
+                        }
+                        else
+                        {
+                            edge2 += np+1-n;
+                            vId[cnt1+edge2] = 4*nel +
+                                            maxN*e->GetGeom()->GetEid(2) + n;
+                        }
+                    }
+
+                    // Interior numbering
+                    int mode = np+1;
+                    for (int n = 1; n < np-1; n++)
+                    {
+                        for (int m = 1; m < np-n-1; m++)
+                        {
+                            vId[cnt1+mode] = 4*nel + maxN*4*nel + cnt2;
+                            cnt2++;
+                            mode++;
+                        }
+                    }
+                    cnt1+= newpoints;
+                }
+                break;
+            case LibUtilities::eQuadrilateral:
+                {
+                    int newpoints = LibUtilities::StdQuadData::
+                                        getNumberOfCoefficients(np,np);
+                    // Vertex numbering
+                    vId[cnt1]           = e->GetGeom()->GetVid(0);
+                    vId[cnt1+np-1]      = e->GetGeom()->GetVid(1);
+                    vId[cnt1+np*np-1]   = e->GetGeom()->GetVid(2);
+                    vId[cnt1+np*(np-1)] = e->GetGeom()->GetVid(3);
+
+                    // Edge numbering
+                    StdRegions::Orientation             edgeOrient;
+                    for (int n = 1; n < np-1; n++)
+                    {
+                        // Edge 0
+                        edgeOrient          = e->GetGeom()->GetEorient(0);
+                        if (edgeOrient==StdRegions::eForwards)
+                        {
+                            vId[cnt1+n] = 4*nel +
+                                            maxN*e->GetGeom()->GetEid(0) + n;
+                        }
+                        else
+                        {
+                            vId[cnt1+np-1-n] = 4*nel +
+                                            maxN*e->GetGeom()->GetEid(0) + n;
+                        }
+
+                        // Edge 1
+                        edgeOrient          = e->GetGeom()->GetEorient(1);
+                        if (edgeOrient==StdRegions::eForwards)
+                        {
+                            vId[cnt1+np-1+n*np] = 4*nel +
+                                            maxN*e->GetGeom()->GetEid(1) + n;
+                        }
+                        else
+                        {
+                            vId[cnt1+np*np-1-n*np] = 4*nel +
+                                            maxN*e->GetGeom()->GetEid(1) + n;
+                        }
+
+                        // Edge 2
+                        edgeOrient          = e->GetGeom()->GetEorient(2);
+                        if (edgeOrient==StdRegions::eForwards)
+                        {
+                            vId[cnt1+np*np-1-n] = 4*nel +
+                                            maxN*e->GetGeom()->GetEid(2) + n;
+                        }
+                        else
+                        {
+                            vId[cnt1+np*(np-1)+n] = 4*nel +
+                                            maxN*e->GetGeom()->GetEid(2) + n;
+                        }
+
+                        // Edge 3
+                        edgeOrient          = e->GetGeom()->GetEorient(3);
+                        if (edgeOrient==StdRegions::eForwards)
+                        {
+                            vId[cnt1+np*(np-1)-n*np] = 4*nel +
+                                            maxN*e->GetGeom()->GetEid(3) + n;
+                        }
+                        else
+                        {
+                            vId[cnt1+n*np] = 4*nel +
+                                            maxN*e->GetGeom()->GetEid(3) + n;
+                        }
+                    }
+
+                    // Interior numbering
+                    for (int n = 1; n < np-1; n++)
+                    {
+                        for (int m = 1; m < np-1; m++)
+                        {
+                            vId[cnt1+m*np+n] = 4*nel + maxN*4*nel + cnt2;
+                            cnt2++;
+                        }
+                    }
+                    cnt1+= newpoints;
+                }
+                break;
+            default:
+                {
+                    ASSERTL0(false,"Points not known");
+                }
             }
         }
-        newConn.push_back(conn);
+
+        // Crete new connectivity using homogeneous information
+        for(int i = 0; i < nel; ++i)
+        {
+            int nTris = oldConn[i].num_elements()/3;
+            // Create array for new connectivity
+            // (3 tetrahedra between each plane for each triangle)
+            conn = Array<OneD, int> (4*3*nTris*(nPlanes-1));
+            cnt2=0;
+            for(int n = 0; n<nTris; n++)
+            {
+                // Get id of vertices in this triangle (on plane 0)
+                int vId0 = vId[oldConn[i][3*n+0]];
+                int vId1 = vId[oldConn[i][3*n+1]];
+                int vId2 = vId[oldConn[i][3*n+2]];
+
+                // Determine ordering based on global Id of pts
+                Array<OneD, int> rot(3);
+                if ( (vId0<vId1) && (vId0<vId2))
+                {
+                    rot[0] = 0;
+                    if (vId1<vId2)
+                    {
+                        rot[1] = 1;
+                        rot[2] = 2;
+                    }
+                    else
+                    {
+                        rot[1] = 2;
+                        rot[2] = 1;
+                    }
+                }
+                else if ( (vId1<vId0) && (vId1<vId2))
+                {
+                    rot[0] = 1;
+                    if (vId0<vId2)
+                    {
+                        rot[1] = 0;
+                        rot[2] = 2;
+                    }
+                    else
+                    {
+                        rot[1] = 2;
+                        rot[2] = 0;
+                    }
+                }
+                else
+                {
+                    rot[0] = 2;
+                    if (vId0<vId1)
+                    {
+                        rot[1] = 0;
+                        rot[2] = 1;
+                    }
+                    else
+                    {
+                        rot[1] = 1;
+                        rot[2] = 0;
+                    }
+                }
+
+                // Define new connectivity with tetrahedra
+                for ( int p = 0; p<nPlanes-1; p++)
+                {
+                    conn[cnt2++] = oldConn[i+  p  *nel][3*n+rot[0]];
+                    conn[cnt2++] = oldConn[i+  p  *nel][3*n+rot[1]];
+                    conn[cnt2++] = oldConn[i+  p  *nel][3*n+rot[2]];
+                    conn[cnt2++] = oldConn[i+(p+1)*nel][3*n+rot[2]];
+
+                    conn[cnt2++] = oldConn[i+  p  *nel][3*n+rot[0]];
+                    conn[cnt2++] = oldConn[i+  p  *nel][3*n+rot[1]];
+                    conn[cnt2++] = oldConn[i+(p+1)*nel][3*n+rot[2]];
+                    conn[cnt2++] = oldConn[i+(p+1)*nel][3*n+rot[1]];
+
+                    conn[cnt2++] = oldConn[i+  p  *nel][3*n+rot[0]];
+                    conn[cnt2++] = oldConn[i+(p+1)*nel][3*n+rot[1]];
+                    conn[cnt2++] = oldConn[i+(p+1)*nel][3*n+rot[2]];
+                    conn[cnt2++] = oldConn[i+(p+1)*nel][3*n+rot[0]];
+                }
+            }
+            newConn.push_back(conn);
+        }
     }
+    else
+    {
+        ASSERTL0( false, "Points type not supported.");
+    }
+
     m_f->m_fieldPts->SetConnectivity(newConn);
 }
 

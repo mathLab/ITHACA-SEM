@@ -160,7 +160,14 @@ namespace Nektar
                     const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                     Array<OneD, Array<OneD, NekDouble> > &outarray,
                     const NekDouble time);
+
+        virtual bool v_RequireFwdTrans()
+        {
+            return false;
+        }
         
+        Array<OneD, Array< OneD, NekDouble> > m_F;
+
     private:
         
     };

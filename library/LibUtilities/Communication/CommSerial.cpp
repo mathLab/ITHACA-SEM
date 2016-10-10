@@ -41,165 +41,160 @@
 
 namespace Nektar
 {
-    namespace LibUtilities
-    {
-        std::string CommSerial::className
-            = GetCommFactory().RegisterCreatorFunction(
-                    "Serial",
-                    CommSerial::create,
-                    "Single-process serial communication.");
+namespace LibUtilities
+{
+std::string CommSerial::className = GetCommFactory().RegisterCreatorFunction(
+    "Serial", CommSerial::create, "Single-process serial communication.");
 
-        CommSerial::CommSerial(int argc, char* argv[]) :
-                Comm(argc, argv)
-        {
+CommSerial::CommSerial(int argc, char *argv[]) : Comm(argc, argv)
+{
 #ifdef NEKTAR_USING_PETSC
-            PetscInitializeNoArguments();
+    PetscInitializeNoArguments();
 #endif
-            m_size = 1;
-            m_type = "Serial";
-        }
+    m_size = 1;
+    m_type = "Serial";
+}
 
-        CommSerial::~CommSerial()
-        {
+CommSerial::~CommSerial()
+{
+}
 
-        }
-
-        /**
-         *
-         */
-        void CommSerial::v_Finalise()
-        {
+/**
+ *
+ */
+void CommSerial::v_Finalise()
+{
 #ifdef NEKTAR_USING_PETSC
-            PetscFinalize();
+    PetscFinalize();
 #endif
-        }
+}
 
-        /**
-         *
-         */
-        int CommSerial::v_GetRank()
-        {
-            return 0;
-        }
+/**
+ *
+ */
+int CommSerial::v_GetRank()
+{
+    return 0;
+}
 
+/**
+ *
+ */
+bool CommSerial::v_TreatAsRankZero(void)
+{
+    return true;
+}
 
-        /**
-         *
-         */
-        bool CommSerial::v_TreatAsRankZero(void)
-        {
-            return true;
-        }
+/**
+ *
+ */
+void CommSerial::v_Block()
+{
+}
 
+/**
+ *
+ */
+NekDouble CommSerial::v_Wtime()
+{
+    return 0;
+}
 
-        /**
-         *
-         */
-        void CommSerial::v_Block()
-        {
-        }
+/**
+ *
+ */
+void CommSerial::v_Send(void *buf, int count, CommDataType dt, int dest)
+{
+}
 
-        /**
-         *
-         */
-        NekDouble CommSerial::v_Wtime()
-        {
-            return 0;
-        }
+/**
+ *
+ */
+void CommSerial::v_Recv(void *buf, int count, CommDataType dt, int source)
+{
+}
 
-        /**
-         *
-         */
-        void CommSerial::v_Send(void* buf, int count, CommDataType dt, int dest)
-        {
-        }
+/**
+ *
+ */
+void CommSerial::v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype,
+                            int dest, void *recvbuf, int recvcount,
+                            CommDataType recvtype, int source)
+{
+}
 
+/**
+ *
+ */
+void CommSerial::v_SendRecvReplace(void *buf, int count, CommDataType dt,
+                                   int pSendProc, int pRecvProc)
+{
+}
 
-        /**
-         *
-         */
-        void CommSerial::v_Recv(void* buf, int count, CommDataType dt, int source)
-        {
-        }
+/**
+ *
+ */
+void CommSerial::v_AllReduce(void *buf, int count, CommDataType dt,
+                             enum ReduceOperator pOp)
+{
+}
 
-        /**
-         *
-         */
-        void CommSerial::v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype, int dest,
-                void *recvbuf, int recvcount, CommDataType recvtype, int source)
-        {
-        }
+/**
+ *
+ */
+void CommSerial::v_AlltoAll(void *sendbuf, int sendcount, CommDataType sendtype,
+                            void *recvbuf, int recvcount, CommDataType recvtype)
+{
+}
 
-        /**
-         *
-         */
-        void CommSerial::v_SendRecvReplace(void* buf, int count, CommDataType dt,
-                int pSendProc, int pRecvProc)
-        {
-        }
+/**
+ *
+ */
+void CommSerial::v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[],
+                             CommDataType sendtype, void *recvbuf,
+                             int recvcounts[], int rdispls[],
+                             CommDataType recvtype)
+{
+}
 
-        /**
-         *
-         */
-        void CommSerial::v_AllReduce(void* buf, int count, CommDataType dt, enum ReduceOperator pOp)
-        {
+void CommSerial::v_Bcast(void *buffer, int count, CommDataType dt, int root)
+{
+}
 
-        }
+void CommSerial::v_Exscan(Array<OneD, unsigned long long> &pData,
+                          const enum ReduceOperator pOp,
+                          Array<OneD, unsigned long long> &ans)
+{
+}
 
-        /**
-         *
-         */
-        void CommSerial::v_AlltoAll(void* sendbuf, int sendcount, CommDataType sendtype,
-                                    void* recvbuf, int recvcount, CommDataType recvtype)
-        {
+void CommSerial::v_Gather(void *sendbuf, int sendcount, CommDataType sendtype,
+                          void *recvbuf, int recvcount, CommDataType recvtype,
+                          int root)
+{
+    std::memcpy(recvbuf, sendbuf, sendcount * CommDataTypeGetSize(sendtype));
+}
 
-        }
+void CommSerial::v_Scatter(void *sendbuf, int sendcount, CommDataType sendtype,
+                           void *recvbuf, int recvcount, CommDataType recvtype,
+                           int root)
+{
+    std::memcpy(recvbuf, sendbuf, sendcount * CommDataTypeGetSize(sendtype));
+}
+/**
+ *
+ */
+void CommSerial::v_SplitComm(int pRows, int pColumns)
+{
+    ASSERTL0(false, "Cannot split a serial process.");
+}
 
-        /**
-         *
-         */
-        void CommSerial::v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[], CommDataType sendtype,
-                void *recvbuf, int recvcounts[], int rdispls[], CommDataType recvtype)
-        {
-
-        }
-
-        void CommSerial::v_Bcast(void* buffer, int count, CommDataType dt, int root)
-        {
-
-        }
-
-        void CommSerial::v_Exscan(Array<OneD, unsigned long long>& pData, const enum ReduceOperator pOp, Array<OneD, unsigned long long>& ans)
-        {
-
-        }
-
-        void CommSerial::v_Gather(void* sendbuf, int sendcount, CommDataType sendtype,
-                void *recvbuf, int recvcount, CommDataType recvtype, int root)
-        {
-            std::memcpy(recvbuf, sendbuf, sendcount*CommDataTypeGetSize(sendtype));
-        }
-
-        void CommSerial::v_Scatter(void *sendbuf, int sendcount, CommDataType sendtype,
-                void *recvbuf, int recvcount, CommDataType recvtype, int root)
-        {
-            std::memcpy(recvbuf, sendbuf, sendcount*CommDataTypeGetSize(sendtype));
-        }
-        /**
-         *
-         */
-        void CommSerial::v_SplitComm(int pRows, int pColumns)
-        {
-            ASSERTL0(false, "Cannot split a serial process.");
-        }
-
-        /**
-         *
-         */
-        CommSharedPtr CommSerial::v_CommCreateIf(int flag)
-        {
-            ASSERTL0(flag, "Serial process must always be split");
-            return shared_from_this();
-        }
-    }
+/**
+ *
+ */
+CommSharedPtr CommSerial::v_CommCreateIf(int flag)
+{
+    ASSERTL0(flag, "Serial process must always be split");
+    return shared_from_this();
+}
+}
 }

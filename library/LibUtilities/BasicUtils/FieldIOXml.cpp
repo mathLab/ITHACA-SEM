@@ -64,6 +64,26 @@ FieldIOXml::FieldIOXml(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem)
 {
 }
 
+/**
+ * @brief Write an XML file to @p outFile given the field definitions @p
+ * fielddefs, field data @p fielddata and metadata @p fieldmetadatamap.
+ *
+ * The writing strategy is as follows:
+ *
+ *   - Use FieldIO::SetUpOutput to construct the directory to contain each
+ *     partition.
+ *   - The root processor writes an `Info.xml` file containing the field
+ *     metadata and an index that describes which elements lie in which XML
+ *     file.
+ *   - Each processor then writes an XML file containing the field definitions
+ *     for that processor and output data in base64-encoded zlib-compressed
+ *     format.
+ *
+ * @param outFile           Output filename.
+ * @param fielddefs         Input field definitions.
+ * @param fielddata         Input field data.
+ * @param fieldmetadatamap  Field metadata.
+ */
 void FieldIOXml::v_Write(const std::string &outFile,
                          std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                          std::vector<std::vector<NekDouble> > &fielddata,
@@ -122,7 +142,9 @@ void FieldIOXml::v_Write(const std::string &outFile,
                  i++)
             {
                 if (!first)
+                {
                     fieldsStringStream << ",";
+                }
                 fieldsStringStream << fielddefs[f]->m_fields[i];
                 first = false;
             }
@@ -163,7 +185,9 @@ void FieldIOXml::v_Write(const std::string &outFile,
                  i++)
             {
                 if (!first)
+                {
                     basisStringStream << ",";
+                }
                 basisStringStream << BasisTypeMap[fielddefs[f]->m_basis[i]];
                 first = false;
             }
@@ -204,7 +228,9 @@ void FieldIOXml::v_Write(const std::string &outFile,
                          i++)
                     {
                         if (!first)
+                        {
                             homoYIDsStringStream << ",";
+                        }
                         homoYIDsStringStream
                             << fielddefs[f]->m_homogeneousYIDs[i];
                         first = false;
@@ -224,7 +250,9 @@ void FieldIOXml::v_Write(const std::string &outFile,
                          i++)
                     {
                         if (!first)
+                        {
                             homoZIDsStringStream << ",";
+                        }
                         homoZIDsStringStream
                             << fielddefs[f]->m_homogeneousZIDs[i];
                         first = false;
@@ -272,7 +300,9 @@ void FieldIOXml::v_Write(const std::string &outFile,
                      i++)
                 {
                     if (!first)
+                    {
                         numModesStringStream << ",";
+                    }
                     numModesStringStream << fielddefs[f]->m_numModes[i];
                     first = false;
                 }
@@ -286,7 +316,9 @@ void FieldIOXml::v_Write(const std::string &outFile,
                      i++)
                 {
                     if (!first)
+                    {
                         numModesStringStream << ",";
+                    }
                     numModesStringStream << fielddefs[f]->m_numModes[i];
                     first = false;
                 }
@@ -454,11 +486,23 @@ void FieldIOXml::ImportMultiFldFileIDs(
     }
 }
 
+/**
+ * @brief Import an XML format file.
+ *
+ * @param finfilename       Input filename
+ * @param fielddefs         Field definitions of resulting field
+ * @param fielddata         Field data of resulting field
+ * @param fieldinfomap      Field metadata of resulting field
+ * @param ElementIDs        If specified, contains the list of element IDs on
+ *                          this rank. The resulting field definitions will only
+ *                          contain data for the element IDs specified in this
+ *                          array.
+ */
 void FieldIOXml::v_Import(const std::string &infilename,
                           std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                           std::vector<std::vector<NekDouble> > &fielddata,
                           FieldMetaDataMap &fieldinfomap,
-                          const Array<OneD, int> ElementIDs)
+                          const Array<OneD, int> &ElementIDs)
 {
     std::string infile = infilename;
 
@@ -550,8 +594,15 @@ void FieldIOXml::v_Import(const std::string &infilename,
     }
 }
 
+/**
+ * @brief Import field metadata from @p filename and return the data source
+ * which wraps @p filename.
+ *
+ * @param filename          Input filename.
+ * @param fieldmetadatamap  Resulting field metadata from @p dataSource.
+ */
 DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(
-    std::string filename, FieldMetaDataMap &fieldmetadatamap)
+    const std::string &filename, FieldMetaDataMap &fieldmetadatamap)
 {
     DataSourceSharedPtr doc    = XmlDataSource::create(filename);
     XmlDataSourceSharedPtr xml = boost::static_pointer_cast<XmlDataSource>(doc);
@@ -636,7 +687,7 @@ DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(
  *                          `Info.xml` file.
  */
 void FieldIOXml::SetUpFieldMetaData(
-    const string outname,
+    const std::string &outname,
     const vector<FieldDefinitionsSharedPtr> &fielddefs,
     const FieldMetaDataMap &fieldmetadatamap)
 {
@@ -805,15 +856,12 @@ void FieldIOXml::ImportFieldDefs(
                 }
                 else if (attrName == "COMPRESSED")
                 {
-                    if (!boost::iequals(attr->Value(),
-                                        CompressData::GetCompressString()))
-                    {
-                        WARNINGL0(false,
-                                  "Compressed formats do not "
-                                  "match. Expected: " +
-                                      CompressData::GetCompressString() +
-                                      " but got " + string(attr->Value()));
-                    }
+                    WARNINGL0(boost::iequals(attr->Value(),
+                                             CompressData::GetCompressString()),
+                              "Compressed formats do not "
+                              "match. Expected: " +
+                              CompressData::GetCompressString() +
+                              " but got " + string(attr->Value()));
                 }
                 else if (attrName == "BITSIZE")
                 {
@@ -1091,15 +1139,12 @@ void FieldIOXml::ImportFieldData(
             const char *CompressStr = element->Attribute("COMPRESSED");
             if (CompressStr)
             {
-                if (!boost::iequals(CompressStr,
-                                    CompressData::GetCompressString()))
-                {
-                    WARNINGL0(false,
-                              "Compressed formats do not match. "
-                              "Expected: " +
-                                  CompressData::GetCompressString() +
-                                  " but got " + string(CompressStr));
-                }
+                WARNINGL0(boost::iequals(CompressStr,
+                                         CompressData::GetCompressString()),
+                          "Compressed formats do not match. "
+                          "Expected: " +
+                          CompressData::GetCompressString() +
+                          " but got " + string(CompressStr));
             }
 
             ASSERTL0(Z_OK == CompressData::ZlibDecodeFromBase64Str(

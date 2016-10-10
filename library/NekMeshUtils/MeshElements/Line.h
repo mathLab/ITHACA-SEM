@@ -68,7 +68,13 @@ public:
 
     NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
         int coordDim);
-
+    NEKMESHUTILS_EXPORT virtual void MakeOrder(
+        int                                order,
+        SpatialDomains::GeometrySharedPtr  geom,
+        LibUtilities::PointsType           pType,
+        int                                coordDim,
+        int                               &id,
+        bool                               justConfig = false);
     NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
 };
 }

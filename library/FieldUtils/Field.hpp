@@ -399,6 +399,17 @@ struct Field
         return exp;
     };
 
+    /**
+     * @brief Construct a FieldIO object for the file @p filename.
+     *
+     * This routine constructs an appropriate FieldIO object for a filename
+     * through the LibUtilities::FieldIO::GetFileType function to detect the
+     * file format. The result is then cached in Field::m_fld to avoid needing
+     * to repeatedly construct the object.
+     *
+     * @param filename  Filename to open.
+     * @return Reader for @p filename.
+     */
     FIELD_UTILS_EXPORT LibUtilities::FieldIOSharedPtr FieldIOForFile(
         string filename)
     {
@@ -714,6 +725,8 @@ struct Field
     }
 
 private:
+    /// Map to store FieldIO instances. Key is the reader type, value is the
+    /// FieldIO object.
     map<string, LibUtilities::FieldIOSharedPtr> m_fld;
 };
 

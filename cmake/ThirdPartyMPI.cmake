@@ -105,23 +105,23 @@ IF( NEKTAR_USE_MPI )
     ENDIF()
 
     EXTERNALPROJECT_ADD(
-        gsmpi-1.2
-        URL ${TPURL}/gsmpi-1.2.tar.bz2
-        URL_MD5 35901be16791bfdeafa9c4d0e06d189b
+        gsmpi-1.2.1
+        URL ${TPURL}/gsmpi-1.2.1.tar.bz2
+        URL_MD5 18dcb4cd1dcc7876173465c404b1142d
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
-        SOURCE_DIR ${TPSRC}/gsmpi-1.2
-        BINARY_DIR ${TPBUILD}/gsmpi-1.2
-        TMP_DIR ${TPBUILD}/gsmpi-1.2-tmp
+        SOURCE_DIR ${TPSRC}/gsmpi-1.2.1
+        BINARY_DIR ${TPBUILD}/gsmpi-1.2.1
+        TMP_DIR ${TPBUILD}/gsmpi-1.2.1-tmp
         INSTALL_DIR ${TPDIST}
-        CONFIGURE_COMMAND 
+        CONFIGURE_COMMAND
             ${CMAKE_COMMAND}
             -G ${CMAKE_GENERATOR}
             -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
             -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
             -DCMAKE_BUILD_TYPE:STRING=Debug
             -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
-            ${TPSRC}/gsmpi-1.2
+            ${TPSRC}/gsmpi-1.2.1
         )
     SET(GSMPI_LIBRARY gsmpi CACHE FILEPATH
         "GSMPI path" FORCE)
@@ -134,5 +134,5 @@ IF( NEKTAR_USE_MPI )
     MESSAGE(STATUS "Build GSMPI: ${GSMPI_LIBRARY}")
     MESSAGE(STATUS "Build XXT: ${XXT_LIBRARY}")
 
-    ADD_DEPENDENCIES(gsmpi-1.2 openmpi-1.10.3)
+    ADD_DEPENDENCIES(gsmpi-1.2.1 openmpi-1.10.3)
 ENDIF(NEKTAR_USE_MPI)

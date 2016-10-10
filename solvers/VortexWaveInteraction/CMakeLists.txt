@@ -5,66 +5,37 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_VORTEXWAVE
 IF( NEKTAR_SOLVER_VORTEXWAVE )
     SET(VortexWaveInteractionSolverSource
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusion.cpp
-        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.cpp
-       ../IncNavierStokesSolver/EquationSystems/CoupledLinearNS.cpp
-       ../IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
-       ../IncNavierStokesSolver/EquationSystems/IncNavierStokes.cpp
-       ../IncNavierStokesSolver/EquationSystems/VelocityCorrectionScheme.cpp
-       ../IncNavierStokesSolver/EquationSystems/Extrapolate.cpp
-       ../IncNavierStokesSolver/EquationSystems/StandardExtrapolate.cpp
-       ../IncNavierStokesSolver/EquationSystems/SubSteppingExtrapolate.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.cpp
+       ../ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.cpp
        ./VortexWaveInteraction.cpp 
        ./VortexWaveInteractionSolver.cpp 
+       $<TARGET_OBJECTS:IncNavierStokesSolver-obj>
        )
 
     SET(CalcL2ToLinfPressureSource
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusion.cpp
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.cpp
-       ../IncNavierStokesSolver/EquationSystems/CoupledLinearNS.cpp
-       ../IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
-       ../IncNavierStokesSolver/EquationSystems/IncNavierStokes.cpp
-       ../IncNavierStokesSolver/EquationSystems/VelocityCorrectionScheme.cpp
-       ../IncNavierStokesSolver/EquationSystems/Extrapolate.cpp
-       ../IncNavierStokesSolver/EquationSystems/StandardExtrapolate.cpp
-       ../IncNavierStokesSolver/EquationSystems/SubSteppingExtrapolate.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.cpp
        ./CalcL2ToLinfPressure.cpp
        ./VortexWaveInteraction.h
        ./VortexWaveInteraction.cpp 
+       $<TARGET_OBJECTS:IncNavierStokesSolver-obj>
        )
 
     SET(CalcVWIplusPressureSource
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusion.cpp
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.cpp
-       ../IncNavierStokesSolver/EquationSystems/CoupledLinearNS.cpp
-       ../IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
-       ../IncNavierStokesSolver/EquationSystems/IncNavierStokes.cpp
-       ../IncNavierStokesSolver/EquationSystems/VelocityCorrectionScheme.cpp
-       ../IncNavierStokesSolver/EquationSystems/Extrapolate.cpp
-       ../IncNavierStokesSolver/EquationSystems/StandardExtrapolate.cpp
-       ../IncNavierStokesSolver/EquationSystems/SubSteppingExtrapolate.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.cpp
        ./CalcVWIplusPressure.cpp
        ./VortexWaveInteraction.cpp 
+       $<TARGET_OBJECTS:IncNavierStokesSolver-obj>
        )
-
 
     SUBDIRS(utilities)
 
     ADD_SOLVER_EXECUTABLE(VortexWaveInteractionSolver SOURCES
-		     ${VortexWaveInteractionSolverSource})
+	${VortexWaveInteractionSolverSource})
+    ADD_SOLVER_UTILITY(CalcL2ToLinfPressure VortexWaveInteractionSolver SOURCES
+	${CalcL2ToLinfPressureSource})
+    ADD_SOLVER_UTILITY(CalcVWIplusPressure VortexWaveInteractionSolver SOURCES
+	${CalcVWIplusPressureSource})
 
-    ADD_SOLVER_EXECUTABLE(CalcL2ToLinfPressure SOURCES
-		     ${CalcL2ToLinfPressureSource})
-                        
-    ADD_SOLVER_EXECUTABLE(CalcVWIplusPressure SOURCES
-		     ${CalcVWIplusPressureSource})
-
-     ENDIF( NEKTAR_SOLVER_VORTEXWAVE )
+    FINALISE_CPACK_COMPONENT(vortexwaveinteractionsolver DESCRIPTION "Nektar++ vortex-wave interaction solver")
+ENDIF( NEKTAR_SOLVER_VORTEXWAVE )

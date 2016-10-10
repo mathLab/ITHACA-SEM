@@ -82,9 +82,13 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADSystem(std::string name) : m_name(name) {};
+    CADSystem(std::string name) : m_name(name)
+    {
+    }
 
-    ~CADSystem(){};
+    ~CADSystem()
+    {
+    }
 
     /**
      * @brief Return the name of the CAD system.
@@ -187,16 +191,8 @@ protected:
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;
-
-enum EngineType{
-  eOCE,
-  eCFI
-};
-
-typedef std::pair<EngineType,std::string> EngineKey;
-std::ostream& operator<<(std::ostream&os, const EngineKey& rhs);
-
-typedef LibUtilities::NekFactory<EngineKey,CADSystem,std::string> EngineFactory;
+typedef LibUtilities::NekFactory<std::string, CADSystem, std::string>
+    EngineFactory;
 
 EngineFactory& GetEngineFactory();
 

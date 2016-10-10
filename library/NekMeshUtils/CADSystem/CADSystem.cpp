@@ -33,10 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CADSystem.h"
-#include "CADVert.h"
-#include "CADCurve.h"
-#include "CADSurf.h"
+#include <NekMeshUtils/CADSystem/CADSystem.h>
+#include <NekMeshUtils/CADSystem/CADVert.h>
+#include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
 
 using namespace std;
 
@@ -44,11 +44,6 @@ namespace Nektar
 {
 namespace NekMeshUtils
 {
-
-std::ostream& operator<<(std::ostream&os, const EngineKey& rhs)
-{
-    return os << rhs.second;
-}
 
 EngineFactory& GetEngineFactory()
 {

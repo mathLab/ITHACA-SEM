@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CADSurfOCE.h"
+#include <NekMeshUtils/CADSystem/OCE/CADSurfOCE.h>
 
 using namespace std;
 
@@ -42,8 +42,8 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-EngineKey CADSurfOCE::key = GetCADSurfFactory().RegisterCreatorFunction(
-        EngineKey(eOCE,"oce"),CADSurfOCE::create,"CADSurfOCE");
+std::string CADSurfOCE::key = GetCADSurfFactory().RegisterCreatorFunction(
+    "oce", CADSurfOCE::create, "CADSurfOCE");
 
 void CADSurfOCE::Initialise(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
 {
@@ -60,6 +60,18 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
     m_correctNormal = true;
     m_id            = i;
     m_type          = surf;
+}
+
+Array<OneD, NekDouble> CADSurfOCE::GetBounds()
+{
+    Array<OneD,NekDouble> b(4);
+
+    b[0] = m_occSurface.FirstUParameter();
+    b[1] = m_occSurface.LastUParameter();
+    b[2] = m_occSurface.FirstVParameter();
+    b[3] = m_occSurface.LastVParameter();
+
+    return b;
 }
 
 Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p)

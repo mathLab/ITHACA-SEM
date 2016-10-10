@@ -59,7 +59,9 @@ public:
      */
     CADCurve(){};
 
-    ~CADCurve(){};
+    ~CADCurve()
+    {
+    }
 
     /**
      * @brief Returns the minimum and maximum parametric coords t of the curve.
@@ -90,7 +92,7 @@ public:
     /**
      * @brief Gets the second derivatives at t
      */
-     virtual Array<OneD, NekDouble> D2(NekDouble t) = 0;
+    virtual Array<OneD, NekDouble> D2(NekDouble t) = 0;
 
     /**
      * @brief Calculates the parametric coordinate and arclength location
@@ -162,7 +164,7 @@ protected:
 
 typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
 
-typedef LibUtilities::NekFactory<EngineKey,CADCurve> CADCurveFactory;
+typedef LibUtilities::NekFactory<std::string, CADCurve> CADCurveFactory;
 
 CADCurveFactory& GetCADCurveFactory();
 

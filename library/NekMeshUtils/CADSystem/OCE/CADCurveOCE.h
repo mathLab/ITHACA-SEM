@@ -36,8 +36,8 @@
 #ifndef NEKMESHUTILS_CADSYSTEM_OCE_CADCURVEOCE
 #define NEKMESHUTILS_CADSYSTEM_OCE_CADCURVEOCE
 
-#include "../CADCurve.h"
-#include "OpenCascade.h"
+#include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
 namespace Nektar
 {
@@ -53,23 +53,22 @@ public:
         return MemoryManager<CADCurveOCE>::AllocateSharedPtr();
     }
 
-    static EngineKey key;
+    static std::string key;
 
-    CADCurveOCE(){};
+    CADCurveOCE()
+    {
+    }
 
-    ~CADCurveOCE(){};
+    ~CADCurveOCE()
+    {
+    }
 
-    Array<OneD, NekDouble> Bounds();
-
-    NekDouble Length(NekDouble ti, NekDouble tf);
-
-    Array<OneD, NekDouble> P(NekDouble t);
-
-    Array<OneD, NekDouble> D2(NekDouble t);
-
-    NekDouble tAtArcLength(NekDouble s);
-
-    Array<OneD, NekDouble> GetMinMax();
+    virtual Array<OneD, NekDouble> Bounds();
+    virtual NekDouble Length(NekDouble ti, NekDouble tf);
+    virtual Array<OneD, NekDouble> P(NekDouble t);
+    virtual Array<OneD, NekDouble> D2(NekDouble t);
+    virtual NekDouble tAtArcLength(NekDouble s);
+    virtual Array<OneD, NekDouble> GetMinMax();
 
     void Initialise(int i, TopoDS_Shape in)
     {

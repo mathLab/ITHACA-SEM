@@ -122,7 +122,7 @@ void InputCAD::Process()
 
     if(boost::iequals(tmp1.back(), "STEP") || boost::iequals(tmp1.back(), "STP"))
     {
-        m_cad = GetEngineFactory().CreateInstance(EngineKey(eOCE,"oce"),m_CADName);
+        m_cad = GetEngineFactory().CreateInstance("oce", m_CADName);
     }
     else
     {

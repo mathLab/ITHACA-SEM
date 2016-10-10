@@ -33,11 +33,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CADSystemOCE.h"
-#include "CADVertOCE.h"
-#include "CADCurveOCE.h"
-#include "CADSurfOCE.h"
-#include "../CADCurve.h"
+#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
+#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
+#include <NekMeshUtils/CADSystem/OCE/CADCurveOCE.h>
+#include <NekMeshUtils/CADSystem/OCE/CADSurfOCE.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
 
 using namespace std;
 
@@ -46,8 +46,8 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-EngineKey CADSystemOCE::key = GetEngineFactory().RegisterCreatorFunction(
-        EngineKey(eOCE,"oce"),CADSystemOCE::create,"Uses OCE as cad engine");
+std::string CADSystemOCE::key = GetEngineFactory().RegisterCreatorFunction(
+    "oce", CADSystemOCE::create, "Uses OCE as cad engine");
 
 bool CADSystemOCE::LoadCAD()
 {

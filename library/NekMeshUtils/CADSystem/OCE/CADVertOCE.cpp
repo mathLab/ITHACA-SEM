@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CADSystemOCE.h"
-#include "CADVertOCE.h"
+#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
+#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
 
 using namespace std;
 
@@ -43,8 +43,8 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-EngineKey CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
-        EngineKey(eOCE,"oce"),CADVertOCE::create,"CAD vert oce");
+std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
+    "oce", CADVertOCE::create, "CAD vert oce");
 
 void CADVertOCE::Initialise(int i, TopoDS_Shape in)
 {

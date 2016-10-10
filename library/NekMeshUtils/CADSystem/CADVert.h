@@ -126,7 +126,7 @@ protected:
 
 typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
 
-typedef LibUtilities::NekFactory<EngineKey,CADVert> CADVertFactory;
+typedef LibUtilities::NekFactory<std::string, CADVert> CADVertFactory;
 
 CADVertFactory& GetCADVertFactory();
 

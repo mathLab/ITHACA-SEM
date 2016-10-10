@@ -60,9 +60,13 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADSurf(){};
+    CADSurf()
+    {
+    }
 
-    ~CADSurf(){};
+    ~CADSurf()
+    {
+    }
 
     /**
      * @brief Get the loop structures which bound the cad surface
@@ -158,15 +162,16 @@ public:
 protected:
     /// normal
     bool m_correctNormal;
-    /// Function which tests the the value of uv used is within the surface
-    virtual void Test(Array<OneD, NekDouble> uv) = 0;
     /// List of bounding edges in loops with orientation.
     std::vector<EdgeLoop> m_edges;
+
+    /// Function which tests the the value of uv used is within the surface
+    virtual void Test(Array<OneD, NekDouble> uv) = 0;
 };
 
 typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
 
-typedef LibUtilities::NekFactory<EngineKey,CADSurf> CADSurfFactory;
+typedef LibUtilities::NekFactory<std::string, CADSurf> CADSurfFactory;
 
 CADSurfFactory& GetCADSurfFactory();
 

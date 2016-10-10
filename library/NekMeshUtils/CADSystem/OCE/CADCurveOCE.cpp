@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CADCurveOCE.h"
+#include <NekMeshUtils/CADSystem/OCE/CADCurveOCE.h>
 
 using namespace std;
 
@@ -42,8 +42,8 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-EngineKey CADCurveOCE::key = GetCADCurveFactory().RegisterCreatorFunction(
-        EngineKey(eOCE,"oce"),CADCurveOCE::create,"CADCurveOCE");
+std::string CADCurveOCE::key = GetCADCurveFactory().RegisterCreatorFunction(
+    "oce", CADCurveOCE::create, "CADCurveOCE");
 
 NekDouble CADCurveOCE::tAtArcLength(NekDouble s)
 {

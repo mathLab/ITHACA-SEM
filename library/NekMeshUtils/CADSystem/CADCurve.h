@@ -156,7 +156,7 @@ public:
     /*
      * @brief locates a point in the parametric space
      */
-    NekDouble loct(Array<OneD, NekDouble> xyz);
+    virtual NekDouble loct(Array<OneD, NekDouble> xyz) = 0;
 
 protected:
 

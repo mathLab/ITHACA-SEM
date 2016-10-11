@@ -87,7 +87,7 @@ NekDouble CADCurveOCE::loct(Array<OneD, NekDouble> xyz)
 
     ShapeAnalysis_Curve sac;
     gp_Pnt p;
-    NekDouble d = sac.Project(m_c,loc,1e-8 ,p,t);
+    sac.Project(m_c,loc,1e-8 ,p,t);
 
     if(p.Distance(loc) > 1e-5)
     {

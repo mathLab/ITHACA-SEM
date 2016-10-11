@@ -69,6 +69,7 @@ public:
     virtual Array<OneD, NekDouble> D2(NekDouble t);
     virtual NekDouble tAtArcLength(NekDouble s);
     virtual Array<OneD, NekDouble> GetMinMax();
+    virtual NekDouble loct(Array<OneD, NekDouble> xyz);
 
     void Initialise(int i, TopoDS_Shape in)
     {

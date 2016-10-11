@@ -80,6 +80,19 @@ namespace Nektar
             ASSERTL0(false,"Need to set up pressure field definition");
         }
 
+        // Determine diffusion coefficients for each field
+        m_diffCoeff = Array<OneD, NekDouble> (m_nConvectiveFields, m_kinvis);
+        for (n = 0; n < m_nConvectiveFields; ++n)
+        {
+            std::string varName = m_session->GetVariable(n);
+            if ( m_session->DefinesFunction("DiffusionCoefficient", varName))
+            {
+                LibUtilities::EquationSharedPtr ffunc
+                    = m_session->GetFunction("DiffusionCoefficient", varName);
+                m_diffCoeff[n] = ffunc->Evaluate();
+            }
+        }
+
         // creation of the extrapolation object
         if(m_equationType == eUnsteadyNavierStokes)
         {

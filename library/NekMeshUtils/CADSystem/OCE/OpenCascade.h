@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessJacobianEnergy.h
+//  File: Opencascade.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,46 +29,46 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes energy of Jacobian.
+//  Description: occ headers.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSQUALITYMETRIC
-#define FIELDUTILS_PROCESSQUALITYMETRIC
+#ifndef NEKMESHUTILS_CADSYSTEM_OCC
+#define NEKMESHUTILS_CADSYSTEM_OCC
 
-#include "../Module.h"
+/// This is a list of OpenCascade headers required for use with nektar
 
-namespace Nektar
-{
-namespace FieldUtils
-{
-
-/// This processing module scales the input fld file
-class ProcessQualityMetric : public ProcessModule
-{
-public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
-    {
-        return MemoryManager<ProcessQualityMetric>::AllocateSharedPtr(f);
-    }
-    static ModuleKey className;
-
-    ProcessQualityMetric(FieldSharedPtr f);
-    virtual ~ProcessQualityMetric();
-
-    /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
-
-    virtual std::string GetModuleName()
-    {
-        return "ProcessQualityMetric";
-    }
-
-private:
-    Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e, bool s);
-};
-}
-}
+#include <STEPControl_Reader.hxx>
+#include <IGESControl_Reader.hxx>
+#include <TColStd_HSequenceOfTransient.hxx>
+#include <TopoDS.hxx>
+#include <TopExp.hxx>
+#include <TopoDS_Shape.hxx>
+#include <TopTools_IndexedMapOfShape.hxx>
+#include <BRepAdaptor_Curve.hxx>
+#include <BRepAdaptor_Surface.hxx>
+#include <GeomAPI_ProjectPointOnSurf.hxx>
+#include <GeomAPI_ProjectPointOnCurve.hxx>
+#include <GeomAbs_SurfaceType.hxx>
+#include <BRepTools.hxx>
+#include <BRep_Tool.hxx>
+#include <gp_Trsf.hxx>
+#include <TopLoc_Location.hxx>
+#include <BRepTools_WireExplorer.hxx>
+#include <GProp_GProps.hxx>
+#include <BRepGProp.hxx>
+#include <Geom_TrimmedCurve.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
+#include <GCPnts_AbscissaPoint.hxx>
+#include <TopAbs_State.hxx>
+#include <BRepClass3d_SolidClassifier.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <gp_Pnt2d.hxx>
+#include <BRepClass_FaceClassifier.hxx>
+#include <ShapeAnalysis_Wire.hxx>
+#include <TopoDS_Wire.hxx>
+#include <ShapeAnalysis_Surface.hxx>
+#include <ShapeAnalysis_Curve.hxx>
+#include <Standard_Macro.hxx>
 
 #endif

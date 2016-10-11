@@ -43,7 +43,7 @@ namespace NekMeshUtils
 
 void TetMesh::Mesh()
 {
-    if (m_mesh->m_verbose)
+    /*if (m_mesh->m_verbose)
         cout << endl << endl << "Tetrahdral mesh generation" << endl;
 
     tetgen = MemoryManager<TetGenInterface>::AllocateSharedPtr();
@@ -179,7 +179,7 @@ void TetMesh::Mesh()
                         CreateInstance(LibUtilities::eTriangle, tconf, tn, tags);
             m_mesh->m_element[2].push_back(E);
         }
-        return;*/
+        return;
     }
 
     if (m_mesh->m_verbose)
@@ -228,7 +228,7 @@ void TetMesh::Mesh()
     {
         nodes.push_back(boost::shared_ptr<Node>(
             new Node(i, newp[i][0], newp[i][1], newp[i][2])));
-    }*/
+    }
 
     // tetgen->freetet();
 
@@ -250,7 +250,7 @@ void TetMesh::Mesh()
     }
 
     if (m_mesh->m_verbose)
-        cout << "\tTets :" << m_tetconnect.size() << endl;
+        cout << "\tTets :" << m_tetconnect.size() << endl;*/
 }
 }
 }

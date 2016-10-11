@@ -33,9 +33,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+
+#include "VolumeMesh.h"
 #include <NekMeshUtils/VolumeMeshing/BLMeshing/BLMesh.h>
 #include <NekMeshUtils/VolumeMeshing/TetMeshing/TetMesh.h>
-#include <NekMeshUtils/VolumeMeshing/VolumeMesh.h>
 
 using namespace std;
 namespace Nektar
@@ -51,7 +53,9 @@ ModuleKey VolumeMesh::className = GetModuleFactory().RegisterCreatorFunction(
 VolumeMesh::VolumeMesh(MeshSharedPtr m) : ProcessModule(m)
 {
     m_config["blsurfs"] =
-        ConfigOption(true, "0", "Generate prisms on these surfs");
+        ConfigOption(false, "0", "Generate prisms on these surfs");
+    m_config["blthick"] =
+        ConfigOption(false, "0", "Prism layer thickness");
 }
 
 VolumeMesh::~VolumeMesh()
@@ -63,64 +67,41 @@ void VolumeMesh::Process()
     if (m_mesh->m_verbose)
         cout << endl << "Volume meshing" << endl;
 
-    /*if (m_makeBL)
+    bool makeBL;
+    string blt, bls;
+    NekDouble blThick;
+    vector<unsigned int> blSurfs;
+
+    if(m_config["blsurfs"].beenSet && m_config["blthick"].beenSet)
     {
-        m_mesh->m_numcomp = 2; // prisms and tets
+        makeBL = true;
+        m_mesh->m_numcomp = 2;
+        blThick = m_config["blthick"].as<NekDouble>();
+        ParseUtils::GenerateSeqVector(m_config["blsurfs"].as<string>().c_str(),
+                                      blSurfs);
     }
     else
-    {*/
-        m_mesh->m_numcomp = 1; // just tets
-    //}
+    {
+        makeBL = false;
+        m_mesh->m_numcomp = 1;
+    }
 
-    /*map<int, FaceSharedPtr> surftopriface;
-    // map of surface element id to opposite prism
-    // face for psudo surface in tetmesh
-*/
-    TetMeshSharedPtr tet;/*
-    if (m_makeBL)
+    TetMeshSharedPtr tet;
+    if (makeBL)
     {
         BLMeshSharedPtr blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(
-                                        m_mesh->m_cad, m_mesh, blsurfs, m_blthick);
+                                        m_mesh, blSurfs, blThick);
 
-        blmesh->Mesh();*/
+        blmesh->Mesh();
 
-        //m_mesh->m_element[2].clear();
-        //m_mesh->m_expDim = 3;
-        /*ClearElementLinks();
-        ProcessVertices();
-        ProcessEdges();
-        ProcessFaces();
-        ProcessElements();
-        ProcessComposites();
-        return;*/
-
-        //m_surfacemesh->Remesh(m_blmesh);
-
-        /*m_mesh->m_nummode = 2;
-        m_mesh->m_expDim = 3;
         m_mesh->m_element[2].clear();
-        ClearElementLinks();
-        ProcessVertices();
-        ProcessEdges();
-        ProcessFaces();
-        ProcessElements();
-        ProcessComposites();
-        return;*/
-
-        //create tet mesh
-        /*m_mesh->m_expDim = 3;
-
-        m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(
-            m_mesh, blmesh);
+        return;
     }
     else
-    {*/
-    m_mesh->m_expDim = 3;
-    tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh);
-
-    //}
-
-    tet->Mesh();
+    {
+        tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh);
+        tet->Mesh();
+    }
 
     ClearElementLinks();
     ProcessVertices();

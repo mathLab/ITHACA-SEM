@@ -63,7 +63,7 @@ ProcessInsertSurface::~ProcessInsertSurface()
 
 void ProcessInsertSurface::Process()
 {
-    if (m_mesh->m_verbose)
+    /*if (m_mesh->m_verbose)
     {
         cout << "ProcessInsertSurface: Inserting mesh... " << endl;
     }
@@ -174,7 +174,7 @@ void ProcessInsertSurface::Process()
         {
             reverse((*it)->m_edgeNodes.begin(),(*it)->m_edgeNodes.end());
         }
-    }
+    }*/
 }
 }
 }

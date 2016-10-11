@@ -64,9 +64,8 @@ public:
     /**
      *@brief default constructor
      */
-    BLMesh(CADSystemSharedPtr s, MeshSharedPtr m, std::vector<unsigned int> bls,
-           NekDouble b) :
-                        m_cad(s), m_mesh(m), m_blsurfs(bls), m_bl(b)
+    BLMesh(MeshSharedPtr m, std::vector<unsigned int> bls, NekDouble b) :
+                    m_mesh(m), m_blsurfs(bls), m_bl(b)
     {
     };
 
@@ -75,48 +74,11 @@ public:
      */
     void Mesh();
 
-    /**
-     * @brief Get the map of surface element id to pseudo surface prism face
-     */
-    std::vector<ElementSharedPtr> GetPsuedoSurf()
-    {
-        return m_psuedoSurface;
-    }
-
-    /**
-     * @brief Get the list of symetry surfaces
-     */
-    std::vector<int> GetSymSurfs()
-    {
-        return m_symSurfs;
-    }
-
-    /**
-     * @brief Get the map of boundary layer surface nodes to the prism top nodes
-     */
-    std::map<NodeSharedPtr, NodeSharedPtr> GetNodeMap(int s)
-    {
-        std::map<int, std::map<NodeSharedPtr, NodeSharedPtr> >::iterator f;
-        f = m_symNodes.find(s);
-        ASSERTL0(f != m_symNodes.end(), "surf not found");
-        return f->second;
-    }
-
-    /*
-     * @brief Get the list of surfaces to have a boundary layer generated
-     */
-    std::vector<unsigned int> GetBLSurfs()
-    {
-        return m_blsurfs;
-    }
-
 private:
 
     NekDouble Visability(std::vector<ElementSharedPtr> tris, Array<OneD, NekDouble> N);
     Array<OneD, NekDouble> GetNormal(std::vector<ElementSharedPtr> tris);
 
-    ///CAD
-    CADSystemSharedPtr m_cad;
     /// mesh object containing surface mesh
     MeshSharedPtr m_mesh;
     /// List of surfaces onto which boundary layers are placed

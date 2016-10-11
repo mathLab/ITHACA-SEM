@@ -130,6 +130,15 @@ void InputCAD::ParseFile(string nm)
     it = parameters.find("Order");
     ASSERTL0(it != parameters.end(),"no order defined");
     m_order = it->second;
+    if(m_makeBL)
+    {
+        it = parameters.find("BLSurfs");
+        ASSERTL0(it != parameters.end(), "no blsurfs defined");
+        m_blsurfs = it->second;
+        it = parameters.find("BLThick");
+        ASSERTL0(it != parameters.end(), "no blthick defined");
+        m_blthick = it->second;
+    }
 
     set<string>::iterator sit;
     sit = boolparameters.find("SurfOpti");
@@ -185,6 +194,11 @@ void InputCAD::Process()
 
     mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "volumemesh"), m_mesh));
+    if(m_makeBL)
+    {
+        mods.back()->RegisterConfig("blsurfs",m_blsurfs);
+        mods.back()->RegisterConfig("blthick",m_blthick);
+    }
 
     mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh));

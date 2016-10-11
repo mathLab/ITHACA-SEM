@@ -61,7 +61,8 @@ public:
     void ParseFile(std::string nm);
 
 private:
-    std::string m_minDelta, m_maxDelta, m_eps, m_blthick, m_cadfile, m_order;
+    std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order,
+                m_blsurfs, m_blthick;
     bool m_makeBL, m_surfopti;
 };
 }

@@ -110,6 +110,8 @@ void SurfaceMesh::Process()
     ProcessComposites();
 
     Report();
+
+    m_mesh->m_expDim++; //revert dim
 }
 
 void SurfaceMesh::Report()

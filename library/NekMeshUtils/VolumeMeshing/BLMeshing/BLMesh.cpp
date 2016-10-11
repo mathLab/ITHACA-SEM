@@ -37,177 +37,11 @@
 #include <NekMeshUtils/VolumeMeshing/BLMeshing/BLMesh.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 
-#include <ANN/ANN.h>
-
 using namespace std;
 namespace Nektar
 {
 namespace NekMeshUtils
 {
-
-NekDouble BLMesh::Visability(vector<ElementSharedPtr> tris, Array<OneD, NekDouble> N)
-{
-    NekDouble mn = numeric_limits<double>::max();
-
-    for(int i = 0; i < tris.size(); i++)
-    {
-        vector<NodeSharedPtr> ns = tris[i]->GetVertexList();
-
-        Array<OneD, NekDouble> tmp(3,0.0);
-        tmp[0] = (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
-                 (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y);
-        tmp[1] = (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x) -
-                 (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z);
-        tmp[2] = (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
-                 (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x);
-
-        NekDouble mt = tmp[0] * tmp[0] + tmp[1] * tmp[1] + tmp[2] * tmp[2];
-        mt = sqrt(mt);
-        NekDouble dt = tmp[0]*N[0]/mt + tmp[1]*N[1]/mt + tmp[2]*N[2]/mt;
-        mn = min(mn,dt);
-    }
-    return mn;
-}
-
-Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
-{
-    //compile list of normals
-    vector<Array<OneD, NekDouble> > N;
-    for(int i = 0; i < tris.size(); i++)
-    {
-        vector<NodeSharedPtr> ns = tris[i]->GetVertexList();
-
-        Array<OneD, NekDouble> tmp(3,0.0);
-        tmp[0] = (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
-                 (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y);
-        tmp[1] = (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x) -
-                 (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z);
-        tmp[2] = (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
-                 (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x);
-
-        NekDouble mt = tmp[0] * tmp[0] + tmp[1] * tmp[1] + tmp[2] * tmp[2];
-        mt = sqrt(mt);
-
-        tmp[0] /= mt;
-        tmp[1] /= mt;
-        tmp[2] /= mt;
-
-        N.push_back(tmp);
-    }
-
-    vector<NekDouble> w(N.size());
-    Array<OneD, NekDouble> Np(3,0.0);
-
-    for(int i = 0; i < N.size(); i++)
-    {
-        w[i] = 1.0/N.size();
-    }
-
-    for(int i = 0; i < N.size(); i++)
-    {
-        Np[0] += w[i] * N[i][0];
-        Np[1] += w[i] * N[i][1];
-        Np[2] += w[i] * N[i][2];
-    }
-    NekDouble mag = sqrt(Np[0]*Np[0] + Np[1]*Np[1] + Np[2]*Np[2]);
-    Np[0] /= mag;
-    Np[1] /= mag;
-    Np[2] /= mag;
-
-    Array<OneD, NekDouble> Ninital = Np;
-
-    NekDouble dot = 0.0;
-    int ct = 0;
-    while(fabs(dot - 1) > 1e-3)
-    {
-        ct++;
-        vector<NekDouble> a(N.size());
-        NekDouble aSum = 0.0;
-        for(int i = 0; i < N.size(); i++)
-        {
-            a[i] = acos(Np[0]*N[i][0] + Np[1]*N[i][1] + Np[2]*N[i][2]);
-
-            aSum += a[i];
-        }
-
-        NekDouble wSum = 0.0;
-        for(int i = 0; i < N.size(); i++)
-        {
-            w[i] = w[i] * a[i] / aSum;
-
-            wSum += w[i];
-        }
-
-        for(int i = 0; i < N.size(); i++)
-        {
-            w[i] /= wSum;
-        }
-
-        Array<OneD, NekDouble> NpN(3,0.0);
-        for(int i = 0; i < N.size(); i++)
-        {
-            NpN[0] += w[i] * N[i][0];
-            NpN[1] += w[i] * N[i][1];
-            NpN[2] += w[i] * N[i][2];
-        }
-        mag = sqrt(NpN[0]*NpN[0] + NpN[1]*NpN[1] + NpN[2]*NpN[2]);
-        NpN[0] /= mag;
-        NpN[1] /= mag;
-        NpN[2] /= mag;
-
-        Np[0] = 0.5* NpN[0] + (1.0-0.5)*Np[0];
-        Np[1] = 0.5* NpN[1] + (1.0-0.5)*Np[1];
-        Np[2] = 0.5* NpN[2] + (1.0-0.5)*Np[2];
-
-        dot = Np[0] * NpN[0] + Np[1] * NpN[1] + Np[2] * NpN[2];
-
-        if(ct > 100000)
-        {
-            Np = Ninital;
-            break;
-        }
-    }
-
-    Array<OneD, NekDouble> bestN = Np;
-
-    NekDouble val = -1.0*numeric_limits<double>::max();
-    NekDouble dtheta = M_PI/5.0;
-    NekDouble dphi = M_PI/5.0;
-    while(dtheta > M_PI/300.0)
-    {
-        NekDouble theta0 = acos(bestN[2]);
-        NekDouble phi0   = atan2(bestN[1],bestN[0]);
-
-        //sample grid
-        for(int i = -10; i <= 10; i++)
-        {
-            for(int j = -10; j <= 10; j++)
-            {
-                Array<OneD, NekDouble> tmp(3);
-                NekDouble theta = theta0 + i * dtheta;
-                NekDouble phi   = phi0 + j * dphi;
-                tmp[0] = sin(theta) * cos(phi);
-                tmp[1] = sin(theta) * sin(phi);
-                tmp[2] = cos(theta);
-
-                NekDouble valt = Visability(tris,tmp);
-
-                if(valt > val)
-                {
-                    val = valt;
-                    bestN = tmp;
-                }
-            }
-        }
-
-        dtheta /= 2.0;
-        dphi /= 2.0;
-    }
-
-    Np = bestN;
-
-    return Np;
-}
 
 void BLMesh::Mesh()
 {
@@ -221,12 +55,13 @@ void BLMesh::Mesh()
 
     //need a map from vertex idx to surface elements
     //but do not care about triangles which are not in the bl
-    map<int, vector<ElementSharedPtr> > nIdxToTri;
+    map<NodeSharedPtr, vector<ElementSharedPtr> > nToTri;
     map<NodeSharedPtr, blInfo> nodeToBL;
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
         //orientate the triangle
-        if(m_cad->GetSurf(m_mesh->m_element[2][i]->CADSurfId)->IsReversedNormal())
+        if(m_mesh->m_cad->GetSurf(m_mesh->m_element[2][i]->CADSurfId)
+                                                        ->IsReversedNormal())
         {
             m_mesh->m_element[2][i]->Flip();
         }
@@ -243,20 +78,8 @@ void BLMesh::Mesh()
         vector<NodeSharedPtr> ns = m_mesh->m_element[2][i]->GetVertexList();
         for(int j = 0; j < ns.size(); j++)
         {
-            nIdxToTri[ns[j]->m_id].push_back(m_mesh->m_element[2][i]);
+            nToTri[ns[j]].push_back(m_mesh->m_element[2][i]);
         }
-    }
-
-    int nlayers = 10;
-    NekDouble r = 1.05;
-    //NekDouble a = (1.0 - r) / (1.0 - pow(r,nlayers+1));
-    NekDouble a = 1.0/nlayers;
-
-    NekDouble blprog[nlayers+1];
-    blprog[0] = 0.0;
-    for(int i = 1; i <= nlayers; i++)
-    {
-        blprog[i] = blprog[i-1] + m_bl * a;// * pow(r,i);
     }
 
     set<int> symSurfs;
@@ -268,8 +91,8 @@ void BLMesh::Mesh()
     {
         if (m_mesh->m_verbose)
         {
-            LibUtilities::PrintProgressbar(
-                ct, m_mesh->m_vertexSet.size(), "Build info\t");
+            //LibUtilities::PrintProgressbar(
+            //    ct, m_mesh->m_vertexSet.size(), "Build info\t");
         }
 
         vector<pair<int, CADSurfSharedPtr> > ss = (*it)->GetCADSurfs();
@@ -297,45 +120,12 @@ void BLMesh::Mesh()
             bln.oNode = (*it);
             bln.symsurf = 0;
 
-            map<int, vector<ElementSharedPtr> >::iterator g = nIdxToTri.find((*it)->m_id);
-            ASSERTL0(g != nIdxToTri.end(),"failed to find");
+            map<NodeSharedPtr, vector<ElementSharedPtr> >::iterator g = nToTri.find((*it));
+            ASSERTL0(g != nToTri.end(),"failed to find");
 
-            //calculate mesh normal using normal average as first guess
-            bln.N = Array<OneD, NekDouble> (3,0.0);
-            for(int i = 0; i < g->second.size(); i++)
-            {
-                vector<NodeSharedPtr> ns = g->second[i]->GetVertexList();
+            //calculate mesh normal
+            bln.N = GetNormal(g->second);
 
-                Array<OneD, NekDouble> tmp(3,0.0);
-                tmp[0] = (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
-                         (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y);
-                tmp[1] = (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x) -
-                         (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z);
-                tmp[2] = (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
-                         (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x);
-
-                NekDouble mt = tmp[0] * tmp[0] + tmp[1] * tmp[1] + tmp[2] * tmp[2];
-                mt = sqrt(mt);
-
-                bln.N[0] += tmp[0] / mt;
-                bln.N[1] += tmp[1] / mt;
-                bln.N[2] += tmp[2] / mt;
-            }
-            NekDouble mag = 0.0;
-            for(int k = 0; k < 3; k++)
-            {
-                mag += bln.N[k]*bln.N[k];
-            }
-            mag = sqrt(mag);
-            for(int k = 0; k < 3; k++)
-            {
-                bln.N[k] /= mag;
-            }
-
-            if(Visability(g->second,bln.N) < 0.342)
-            {
-                bln.N = GetNormal(g->second);
-            }
 
             if(Visability(g->second,bln.N) < 0.0)
             {
@@ -348,7 +138,7 @@ void BLMesh::Mesh()
             Array<OneD, NekDouble> loc = (*it)->GetLoc();
             for(int k = 0; k < 3; k++)
             {
-                loc[k] += bln.N[k] * blprog[bln.bl];
+                loc[k] += bln.N[k] * m_bl;
             }
             bln.pNode = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
                                             loc[0], loc[1], loc[2]));
@@ -379,7 +169,22 @@ void BLMesh::Mesh()
         cout << endl;
     }
 
-    ASSERTL0(failed == 0, "some normals failed to generate");
+    ofstream file;
+    file.open("bl.lines");
+    map<NodeSharedPtr, blInfo>::iterator bit;
+    for(bit = blData.begin(); bit != blData.end(); bit++)
+    {
+        NekDouble l = 0.05;
+        file << bit->first->m_x << ", " << bit->first->m_y << ", " << bit->first->m_z << endl;
+        file << bit->first->m_x + bit->second.N[0]*l << ", "
+             << bit->first->m_y + bit->second.N[1]*l << ", "
+             << bit->first->m_z + bit->second.N[2]*l << endl;
+        file << endl;
+    }
+    exit(-1);
+
+
+    /*ASSERTL0(failed == 0, "some normals failed to generate");
 
     map<NodeSharedPtr, blInfo>::iterator bit;
 
@@ -1086,8 +891,152 @@ void BLMesh::Mesh()
         m_symNodes[s] = nmap;
     }
 
-    //m_mesh->m_element[2] = m_psuedoSurface;
+    //m_mesh->m_element[2] = m_psuedoSurface;*/
 
 }
+NekDouble BLMesh::Visability(vector<ElementSharedPtr> tris, Array<OneD, NekDouble> N)
+{
+    NekDouble mn = numeric_limits<double>::max();
+
+    for(int i = 0; i < tris.size(); i++)
+    {
+        vector<NodeSharedPtr> ns = tris[i]->GetVertexList();
+
+        Array<OneD, NekDouble> tmp(3,0.0);
+        tmp[0] = (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
+                 (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y);
+        tmp[1] = (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x) -
+                 (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z);
+        tmp[2] = (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
+                 (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x);
+
+        NekDouble mt = tmp[0] * tmp[0] + tmp[1] * tmp[1] + tmp[2] * tmp[2];
+        mt = sqrt(mt);
+        NekDouble dt = tmp[0]*N[0]/mt + tmp[1]*N[1]/mt + tmp[2]*N[2]/mt;
+        mn = min(mn,dt);
+    }
+    return mn;
+}
+
+Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
+{
+    //compile list of normals
+    vector<Array<OneD, NekDouble> > N;
+    for(int i = 0; i < tris.size(); i++)
+    {
+        vector<NodeSharedPtr> ns = tris[i]->GetVertexList();
+
+        Array<OneD, NekDouble> tmp(3,0.0);
+        tmp[0] = (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
+                 (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y);
+        tmp[1] = (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x) -
+                 (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z);
+        tmp[2] = (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
+                 (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x);
+
+        NekDouble mt = tmp[0] * tmp[0] + tmp[1] * tmp[1] + tmp[2] * tmp[2];
+        mt = sqrt(mt);
+
+        tmp[0] /= mt;
+        tmp[1] /= mt;
+        tmp[2] /= mt;
+
+        N.push_back(tmp);
+    }
+
+    vector<NekDouble> w(N.size());
+    Array<OneD, NekDouble> Np(3,0.0);
+
+    for(int i = 0; i < N.size(); i++)
+    {
+        w[i] = 1.0/N.size();
+    }
+
+    for(int i = 0; i < N.size(); i++)
+    {
+        Np[0] += w[i] * N[i][0];
+        Np[1] += w[i] * N[i][1];
+        Np[2] += w[i] * N[i][2];
+    }
+    NekDouble mag = sqrt(Np[0]*Np[0] + Np[1]*Np[1] + Np[2]*Np[2]);
+    cout << "mag " << mag << endl;
+    Np[0] /= mag;
+    Np[1] /= mag;
+    Np[2] /= mag;
+
+    Array<OneD, NekDouble> Ninital = Np;
+
+    NekDouble dot = 0.0;
+    int ct = 0;
+    vector<NekDouble> a(N.size());
+    while(fabs(dot - 1) > 1e-4)
+    {
+        ct++;
+
+        NekDouble aAvg = 0.0;
+        for(int i = 0; i < N.size(); i++)
+        {
+            a[i] = acos(Np[0]*N[i][0] + Np[1]*N[i][1] + Np[2]*N[i][2]);
+
+            aAvg += a[i];
+        }
+
+        aAvg /= N.size();
+
+        vector<NekDouble> wp(N.size());
+        NekDouble wpSum = 0.0;
+        for(int i = 0; i < N.size(); i++)
+        {
+            wp[i] = w[i] * (1.0 - fabs(a[i]-aAvg) / aAvg);
+
+            wpSum += wp[i];
+        }
+
+        for(int i = 0; i < N.size(); i++)
+        {
+            w[i] = wp[i] + w[i]*(1.0 - wpSum);
+        }
+
+        Array<OneD, NekDouble> NpN(3,0.0);
+        for(int i = 0; i < N.size(); i++)
+        {
+            NpN[0] += w[i] * N[i][0];
+            NpN[1] += w[i] * N[i][1];
+            NpN[2] += w[i] * N[i][2];
+        }
+        mag = sqrt(NpN[0]*NpN[0] + NpN[1]*NpN[1] + NpN[2]*NpN[2]);
+        NpN[0] /= mag;
+        NpN[1] /= mag;
+        NpN[2] /= mag;
+
+        Np[0] = 0.8* NpN[0] + (1.0-0.8)*Np[0];
+        Np[1] = 0.8* NpN[1] + (1.0-0.8)*Np[1];
+        Np[2] = 0.8* NpN[2] + (1.0-0.8)*Np[2];
+
+        dot = Np[0] * Ninital[0] + Np[1] * Ninital[1] + Np[2] * Ninital[2];
+
+        if(ct > 100000)
+        {
+            cout << "run out of iterations" << endl;
+            Np = Ninital;
+            break;
+        }
+    }
+
+    NekDouble mn = numeric_limits<double>::max();
+    NekDouble mx = numeric_limits<double>::max() * -1.0;
+    for(int i = 0; i < N.size(); i++)
+    {
+        mn = min(mn , Np[0]*N[i][0] + Np[1]*N[i][1] + Np[2]*N[i][2]);
+        mx = max(mx , Np[0]*N[i][0] + Np[1]*N[i][1] + Np[2]*N[i][2]);
+    }
+    if(mn / mx < 0.98)
+    {
+        cout << mn / mx << endl;
+    }
+
+    return Np;
+}
+
 }
 }

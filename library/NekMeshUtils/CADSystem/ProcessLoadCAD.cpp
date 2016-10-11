@@ -66,7 +66,7 @@ void ProcessLoadCAD::Process()
         cout << "Loading CAD for " << m_mesh->m_CADId << endl;
     }
 
-    m_mesh->m_cad = MemoryManager<CADSystem>::AllocateSharedPtr(m_mesh->m_CADId);
+    m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",m_mesh->m_CADId);
     ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
 
     m_mesh->m_hasCAD = true;

@@ -115,9 +115,10 @@ protected:
      * @brief Return the values of the orthogonal basis at the nodal points for
      * a given mode.
      *
-     * @param dir   Coordinate direction of derivative.
      * @param mode  Mode number, which is between 0 and NodalUtil::v_NumModes()
      *              - 1.
+     *
+     * @return Orthogonal mode @p mode evaluated at the nodal points.
      */
     virtual NekVector<NekDouble> v_OrthoBasis(const int mode) = 0;
 
@@ -140,6 +141,8 @@ protected:
      * the (potentially non-square) Vandermonde matrix can be constructed to
      * create the interpolation matrix at an arbitrary set of points in the
      * domain.
+     *
+     * @param xi  Distribution of nodal points to create utility with.
      */
     virtual boost::shared_ptr<NodalUtil> v_CreateUtil(
         Array<OneD, Array<OneD, NekDouble> > &xi) = 0;
@@ -323,9 +326,6 @@ protected:
     /// ordering.
     std::vector<std::pair<int, int> > m_ordering;
 
-    /// Collapsed coordinates \f$ (\eta_1, \eta_2) \f$ of the nodal points.
-    Array<OneD, Array<OneD, NekDouble> > m_eta;
-
     virtual NekVector<NekDouble> v_OrthoBasis(const int mode);
     virtual NekVector<NekDouble> v_OrthoBasisDeriv(
         const int dir, const int mode);
@@ -355,7 +355,7 @@ protected:
 class NodalUtilHex : public NodalUtil
 {
     typedef boost::tuple<int, int, int> Mode;
-    
+
 public:
     LIB_UTILITIES_EXPORT NodalUtilHex(int degree,
                                       Array<OneD, NekDouble> r,
@@ -370,9 +370,6 @@ protected:
     /// Mapping from the \f$ (i,j) \f$ indexing of the basis to a continuous
     /// ordering.
     std::vector<Mode> m_ordering;
-
-    /// Collapsed coordinates \f$ (\eta_1, \eta_2) \f$ of the nodal points.
-    Array<OneD, Array<OneD, NekDouble> > m_eta;
 
     virtual NekVector<NekDouble> v_OrthoBasis(const int mode);
     virtual NekVector<NekDouble> v_OrthoBasisDeriv(
@@ -395,6 +392,7 @@ protected:
         return (m_degree + 1) * (m_degree + 1) * (m_degree + 1);
     }
 };
+
 
 }
 }

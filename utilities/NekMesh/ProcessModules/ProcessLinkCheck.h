@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADObj.h
+//  File: ProcessJac.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,64 +29,42 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: CAD object curve.
+//  Description: Calculate jacobians of elements.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_CADSYSTEM_CADOBJ
-#define NEKMESHUTILS_CADSYSTEM_CADOBJ
+#ifndef UTILITIES_NEKMESH_PROCESSLINKCHECK
+#define UTILITIES_NEKMESH_PROCESSLINKCHECK
 
-#include <boost/shared_ptr.hpp>
-
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include "../Module.h"
 
 namespace Nektar
 {
-namespace NekMeshUtils
+namespace Utilities
 {
 
-enum cadType
-{
-    vert,
-    curve,
-    surf
-};
-
-class CADObj
+/**
+ * @brief This processing module calculates the Jacobian of elements
+ * using %SpatialDomains::GeomFactors and the %Element::GetGeom
+ * method. For now it simply prints a list of elements which have
+ * negative Jacobian.
+ */
+class ProcessLinkCheck : public ProcessModule
 {
 public:
-    friend class MemoryManager<CADObj>;
-
-    /**
-     * @brief Default constructor.
-     */
-    CADObj()
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
+        return MemoryManager<ProcessLinkCheck>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
 
-    virtual ~CADObj(){}
+    ProcessLinkCheck(MeshSharedPtr m);
+    virtual ~ProcessLinkCheck();
 
-    /**
-     * @brief Return ID of the vertex
-     */
-    int GetId()
-    {
-        return m_id;
-    }
-
-    cadType GetType()
-    {
-        return m_type;
-    }
-
-protected:
-    /// ID of the vert.
-    int m_id;
-    /// type of the cad object
-    cadType m_type;
+    /// Write mesh to output file.
+    virtual void Process();
 };
-
-typedef boost::shared_ptr<CADObj> CADObjSharedPtr;
 }
 }
 

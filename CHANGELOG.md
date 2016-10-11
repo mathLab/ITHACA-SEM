@@ -52,6 +52,7 @@ v4.4.0
 - Add support for Gmsh high-order output (!679)
 - Move CAD classes to factory format (!676)
 - Add option to `linearise` module to linearise only prisms (!688)
+- Add option to `linearise` to use element quality (!690)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

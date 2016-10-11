@@ -33,102 +33,74 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_CADSYSTEM_CADVERT
-#define NEKMESHUTILS_CADSYSTEM_CADVERT
+#ifndef NEKMESHUTILS_CADSYSTEM_OCE_CADCURVEOCE
+#define NEKMESHUTILS_CADSYSTEM_OCE_CADCURVEOCE
 
-#include <boost/shared_ptr.hpp>
-
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-
-#include <NekMeshUtils/CADSystem/CADObj.h>
-#include <NekMeshUtils/MeshElements/Node.h>
+#include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-/**
- * @brief base class for CAD verticies.
- *
- */
-class CADVert : public CADObj
+class CADCurveOCE : public CADCurve
 {
 public:
-    friend class MemoryManager<CADVert>;
 
-    /**
-     * @brief Default constructor.
-     */
-    CADVert()
+    static CADCurveSharedPtr create()
+    {
+        return MemoryManager<CADCurveOCE>::AllocateSharedPtr();
+    }
+
+    static std::string key;
+
+    CADCurveOCE()
     {
     }
 
-    ~CADVert(){};
-
-    /**
-     * @brief Get x,y,z location of the vertex
-     */
-    Array<OneD, NekDouble> GetLoc()
+    ~CADCurveOCE()
     {
-        Array<OneD, NekDouble> out(3);
-        out[0] = m_node->m_x;
-        out[1] = m_node->m_y;
-        out[2] = m_node->m_z;
-        return out;
     }
 
-    /**
-     * @brief returns a node object of the cad vertex
-     */
-    NodeSharedPtr GetNode()
+    virtual Array<OneD, NekDouble> Bounds();
+    virtual NekDouble Length(NekDouble ti, NekDouble tf);
+    virtual Array<OneD, NekDouble> P(NekDouble t);
+    virtual Array<OneD, NekDouble> D2(NekDouble t);
+    virtual NekDouble tAtArcLength(NekDouble s);
+    virtual Array<OneD, NekDouble> GetMinMax();
+
+    void Initialise(int i, TopoDS_Shape in)
     {
-        return m_node;
+        gp_Trsf transform;
+        gp_Pnt ori(0.0, 0.0, 0.0);
+        transform.SetScale(ori, 1.0 / 1000.0);
+        TopLoc_Location mv(transform);
+        TopoDS_Shape cp = in;
+        in.Move(mv);
+
+        m_occEdge  = TopoDS::Edge(in);
+        m_occCurve = BRepAdaptor_Curve(m_occEdge);
+
+        GProp_GProps System;
+        BRepGProp::LinearProperties(m_occEdge, System);
+        m_length = System.Mass();
+
+        Array<OneD, NekDouble> b = Bounds();
+        m_c = BRep_Tool::Curve(TopoDS::Edge(cp), b[0], b[1]);
+
+        m_id   = i;
+        m_type = curve;
     }
 
-    /**
-     * @brief if the vertex is degenerate manually set uv for that surface
-     */
-    void SetDegen(int s, CADSurfSharedPtr su, NekDouble u, NekDouble v)
-    {
-        degen     = true;
-        degensurf = s;
-        Array<OneD, NekDouble> uv(2);
-        uv[0] = u;
-        uv[1] = v;
-        m_node->SetCADSurf(s, su, uv);
-    }
-
-    /**
-     * @brief query is degenerate
-     */
-    int IsDegen()
-    {
-        if (degen)
-        {
-            return degensurf;
-        }
-        else
-        {
-            return -1;
-        }
-    }
-
-protected:
-    /// mesh convert object of vert
-    NodeSharedPtr m_node;
-    /// degen marker
-    bool degen;
-    /// degen surface
-    int degensurf;
+private:
+    /// OpenCascade object of the curve.
+    BRepAdaptor_Curve m_occCurve;
+    /// OpenCascade edge
+    TopoDS_Edge m_occEdge;
+    /// Alternate object used for reverse lookups
+    Handle(Geom_Curve) m_c;
 };
-
-typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
-
-typedef LibUtilities::NekFactory<std::string, CADVert> CADVertFactory;
-
-CADVertFactory& GetCADVertFactory();
 
 }
 }

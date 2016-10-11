@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/OCE/CADCurveOCE.h>
 
 using namespace std;
 
@@ -42,30 +42,10 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-CADCurve::CADCurve(int i, TopoDS_Shape in)
-{
-    gp_Trsf transform;
-    gp_Pnt ori(0.0, 0.0, 0.0);
-    transform.SetScale(ori, 1.0 / 1000.0);
-    TopLoc_Location mv(transform);
-    TopoDS_Shape cp = in;
-    in.Move(mv);
+std::string CADCurveOCE::key = GetCADCurveFactory().RegisterCreatorFunction(
+    "oce", CADCurveOCE::create, "CADCurveOCE");
 
-    m_occEdge  = TopoDS::Edge(in);
-    m_occCurve = BRepAdaptor_Curve(m_occEdge);
-
-    GProp_GProps System;
-    BRepGProp::LinearProperties(m_occEdge, System);
-    m_length = System.Mass();
-
-    Array<OneD, NekDouble> b = Bounds();
-    m_c = BRep_Tool::Curve(TopoDS::Edge(cp), b[0], b[1]);
-
-    m_id   = i;
-    m_type = curve;
-}
-
-NekDouble CADCurve::tAtArcLength(NekDouble s)
+NekDouble CADCurveOCE::tAtArcLength(NekDouble s)
 {
     NekDouble dt =
         (m_occCurve.LastParameter() - m_occCurve.FirstParameter()) / (5000);
@@ -88,7 +68,7 @@ NekDouble CADCurve::tAtArcLength(NekDouble s)
     return t - dt;
 }
 
-NekDouble CADCurve::Length(NekDouble ti, NekDouble tf)
+NekDouble CADCurveOCE::Length(NekDouble ti, NekDouble tf)
 {
     Array<OneD, NekDouble> b = Bounds();
     Handle(Geom_Curve) NewCurve = new Geom_TrimmedCurve(m_c, ti, tf);
@@ -98,7 +78,7 @@ NekDouble CADCurve::Length(NekDouble ti, NekDouble tf)
     return System.Mass() / 1000.0;
 }
 
-NekDouble CADCurve::loct(Array<OneD, NekDouble> xyz)
+NekDouble CADCurveOCE::loct(Array<OneD, NekDouble> xyz)
 {
     NekDouble t = 0.0;
     Array<OneD, NekDouble> b = Bounds();
@@ -116,7 +96,7 @@ NekDouble CADCurve::loct(Array<OneD, NekDouble> xyz)
     return t;
 }
 
-Array<OneD, NekDouble> CADCurve::P(NekDouble t)
+Array<OneD, NekDouble> CADCurveOCE::P(NekDouble t)
 {
     Array<OneD, NekDouble> location(3);
     gp_Pnt loc = m_occCurve.Value(t);
@@ -128,23 +108,7 @@ Array<OneD, NekDouble> CADCurve::P(NekDouble t)
     return location;
 }
 
-Array<OneD, NekDouble> CADCurve::D1(NekDouble t)
-{
-    Array<OneD, NekDouble> out(6);
-    gp_Pnt loc;
-    gp_Vec d1;
-    m_occCurve.D1(t, loc, d1);
-    out[0] = loc.X();
-    out[1] = loc.Y();
-    out[2] = loc.Z();
-    out[3] = d1.X();
-    out[4] = d1.Y();
-    out[5] = d1.Z();
-
-    return out;
-}
-
-Array<OneD, NekDouble> CADCurve::D2(NekDouble t)
+Array<OneD, NekDouble> CADCurveOCE::D2(NekDouble t)
 {
     Array<OneD, NekDouble> out(9);
     gp_Pnt loc;
@@ -164,7 +128,7 @@ Array<OneD, NekDouble> CADCurve::D2(NekDouble t)
     return out;
 }
 
-Array<OneD, NekDouble> CADCurve::Bounds()
+Array<OneD, NekDouble> CADCurveOCE::Bounds()
 {
     Array<OneD, NekDouble> t(2);
     t[0] = m_occCurve.FirstParameter();
@@ -173,7 +137,7 @@ Array<OneD, NekDouble> CADCurve::Bounds()
     return t;
 }
 
-Array<OneD, NekDouble> CADCurve::GetMinMax()
+Array<OneD, NekDouble> CADCurveOCE::GetMinMax()
 {
     Array<OneD, NekDouble> locs(6);
 
@@ -190,5 +154,6 @@ Array<OneD, NekDouble> CADCurve::GetMinMax()
 
     return locs;
 }
+
 }
 }

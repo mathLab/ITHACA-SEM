@@ -38,6 +38,7 @@
 
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <iostream>
 #include <boost/shared_ptr.hpp>
@@ -90,6 +91,8 @@ namespace Nektar
             }
 
         private:
+            boost::shared_ptr<NodalUtilTriangle> m_util;
+
             NodalTriFekete():PointsBaseType(NullPointsKey)
             {
             }

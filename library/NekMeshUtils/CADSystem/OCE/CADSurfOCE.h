@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADObj.h
+//  File: CADSurf.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,64 +29,64 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: CAD object curve.
+//  Description: CAD object surface.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_CADSYSTEM_CADOBJ
-#define NEKMESHUTILS_CADSYSTEM_CADOBJ
+#ifndef NekMeshUtils_CADSYSTEM_OCE_CADSURFOCE
+#define NekMeshUtils_CADSYSTEM_OCE_CADSURFOCE
 
-#include <boost/shared_ptr.hpp>
-
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-enum cadType
-{
-    vert,
-    curve,
-    surf
-};
-
-class CADObj
+class CADSurfOCE : public CADSurf
 {
 public:
-    friend class MemoryManager<CADObj>;
 
-    /**
-     * @brief Default constructor.
-     */
-    CADObj()
+    static CADSurfSharedPtr create()
+    {
+        return MemoryManager<CADSurfOCE>::AllocateSharedPtr();
+    }
+
+    static std::string key;
+
+    CADSurfOCE()
     {
     }
 
-    virtual ~CADObj(){}
-
-    /**
-     * @brief Return ID of the vertex
-     */
-    int GetId()
+    ~CADSurfOCE()
     {
-        return m_id;
     }
 
-    cadType GetType()
-    {
-        return m_type;
-    }
+    void Initialise(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
 
-protected:
-    /// ID of the vert.
-    int m_id;
-    /// type of the cad object
-    cadType m_type;
+    virtual Array<OneD, NekDouble> GetBounds();
+    virtual Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
+    virtual NekDouble DistanceTo(Array<OneD, NekDouble> p);
+    virtual void ProjectTo(Array<OneD, NekDouble> &tp,
+                           Array<OneD, NekDouble> &uv);
+    virtual NekDouble Curvature(Array<OneD, NekDouble> uv);
+
+private:
+    /// Function which tests the the value of uv used is within the surface
+    void Test(Array<OneD, NekDouble> uv);
+    /// OpenCascade object for surface.
+    BRepAdaptor_Surface m_occSurface;
+    /// Alternate OpenCascade object for surface. Used by reverse lookup.
+    Handle(Geom_Surface) m_s;
 };
 
-typedef boost::shared_ptr<CADObj> CADObjSharedPtr;
+typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+
 }
 }
 

@@ -62,7 +62,7 @@ void ProcessLinkCheck::Process()
 {
     if (m_mesh->m_verbose)
     {
-        cout << "ProcessJac: Checking links... " << endl;
+        cout << "ProcessLinkCheck: Checking links... " << endl;
     }
 
     //need to reset all links first to make sure there are no bugs!

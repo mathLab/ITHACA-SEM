@@ -50,6 +50,8 @@ v4.4.0
 - Improvements to mesh linearisation module (!659)
 - Add support for Gmsh high-order output (!679)
 - Move CAD classes to factory format (!676)
+- Add module to check topology of the mesh along with boundary connectivity
+  to detect problems such as hanging nodes (!691)
 - Add option to `linearise` module to linearise only prisms (!688)
 
 **FieldConvert:**

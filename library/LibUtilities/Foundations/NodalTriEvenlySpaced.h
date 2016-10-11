@@ -37,6 +37,7 @@
 #define NODALTRIEVENLYSPACED_H
 
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
+#include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <boost/shared_ptr.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -89,6 +90,8 @@ namespace Nektar
             }
 
         private:
+            boost::shared_ptr<NodalUtilTriangle> m_util;
+
             /// Deafult constructor should not be called except by Create matrix
             NodalTriEvenlySpaced():PointsBaseType(NullPointsKey)
             {

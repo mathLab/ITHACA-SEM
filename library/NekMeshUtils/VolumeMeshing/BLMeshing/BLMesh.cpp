@@ -84,6 +84,8 @@ void BLMesh::Mesh()
 
     set<int> symSurfs;
 
+    //this sets up all the boundary layer normals and gets an intial value for
+    //the vector
     NodeSet::iterator it;
     int ct = 0;
     int failed = 0;
@@ -91,8 +93,8 @@ void BLMesh::Mesh()
     {
         if (m_mesh->m_verbose)
         {
-            //LibUtilities::PrintProgressbar(
-            //    ct, m_mesh->m_vertexSet.size(), "Build info\t");
+            LibUtilities::PrintProgressbar(
+                ct, m_mesh->m_vertexSet.size(), "Build info\t");
         }
 
         vector<pair<int, CADSurfSharedPtr> > ss = (*it)->GetCADSurfs();
@@ -125,7 +127,6 @@ void BLMesh::Mesh()
 
             //calculate mesh normal
             bln.N = GetNormal(g->second);
-
 
             if(Visability(g->second,bln.N) < 0.0)
             {
@@ -169,9 +170,41 @@ void BLMesh::Mesh()
         cout << endl;
     }
 
+    //now need to enforce that all symmetry plane nodes have their normal
+    //forced onto the symmetry surface
+    map<NodeSharedPtr, blInfo>::iterator bit;
+    for(bit = blData.begin(); bit != blData.end(); bit++)
+    {
+        if(!bit->second.onSym)
+        {
+            continue;
+        }
+
+        Array<OneD, NekDouble> uv(2);
+        Array<OneD, NekDouble> loc = bit->second.pNode->GetLoc();
+        m_mesh->m_cad->GetSurf(bit->second.symsurf)->ProjectTo(loc, uv);
+
+        Array<OneD, NekDouble> nl = m_mesh->m_cad->
+                                        GetSurf(bit->second.symsurf)->P(uv);
+
+        Array<OneD, NekDouble> N(3);
+        N[0] = nl[0] - bit->first->m_x;
+        N[1] = nl[1] - bit->first->m_y;
+        N[2] = nl[2] - bit->first->m_z;
+
+        NekDouble mag = sqrt(N[0]*N[0] + N[1]*N[1] + N[2]*N[2]);
+        N[0] /= mag;
+        N[1] /= mag;
+        N[2] /= mag;
+
+        bit->second.N = N;
+        bit->second.pNode->m_x = bit->first->m_x + N[0];
+        bit->second.pNode->m_y = bit->first->m_y + N[1];
+        bit->second.pNode->m_z = bit->first->m_z + N[2];
+    }
+
     ofstream file;
     file.open("bl.lines");
-    map<NodeSharedPtr, blInfo>::iterator bit;
     for(bit = blData.begin(); bit != blData.end(); bit++)
     {
         NekDouble l = 0.05;
@@ -959,7 +992,6 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
         Np[2] += w[i] * N[i][2];
     }
     NekDouble mag = sqrt(Np[0]*Np[0] + Np[1]*Np[1] + Np[2]*Np[2]);
-    cout << "mag " << mag << endl;
     Np[0] /= mag;
     Np[1] /= mag;
     Np[2] /= mag;
@@ -969,32 +1001,33 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
     NekDouble dot = 0.0;
     int ct = 0;
     vector<NekDouble> a(N.size());
-    while(fabs(dot - 1) > 1e-4)
+    while(fabs(dot - 1) > 1e-8)
     {
         ct++;
+        Array<OneD, NekDouble> Nplast(3);
+        Nplast[0] = Np[0];
+        Nplast[1] = Np[1];
+        Nplast[2] = Np[2];
 
-        NekDouble aAvg = 0.0;
+        NekDouble aSum = 0.0;
         for(int i = 0; i < N.size(); i++)
         {
             a[i] = acos(Np[0]*N[i][0] + Np[1]*N[i][1] + Np[2]*N[i][2]);
 
-            aAvg += a[i];
+            aSum += a[i];
         }
 
-        aAvg /= N.size();
-
-        vector<NekDouble> wp(N.size());
-        NekDouble wpSum = 0.0;
+        NekDouble wSum = 0.0;
         for(int i = 0; i < N.size(); i++)
         {
-            wp[i] = w[i] * (1.0 - fabs(a[i]-aAvg) / aAvg);
+            w[i] = w[i] * a[i] / aSum;
 
-            wpSum += wp[i];
+            wSum += w[i];
         }
 
         for(int i = 0; i < N.size(); i++)
         {
-            w[i] = wp[i] + w[i]*(1.0 - wpSum);
+            w[i] = w[i] / wSum;
         }
 
         Array<OneD, NekDouble> NpN(3,0.0);
@@ -1012,8 +1045,12 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
         Np[0] = 0.8* NpN[0] + (1.0-0.8)*Np[0];
         Np[1] = 0.8* NpN[1] + (1.0-0.8)*Np[1];
         Np[2] = 0.8* NpN[2] + (1.0-0.8)*Np[2];
+        mag = sqrt(Np[0]*Np[0] + Np[1]*Np[1] + Np[2]*Np[2]);
+        Np[0] /= mag;
+        Np[1] /= mag;
+        Np[2] /= mag;
 
-        dot = Np[0] * Ninital[0] + Np[1] * Ninital[1] + Np[2] * Ninital[2];
+        dot = Np[0] * Nplast[0] + Np[1] * Nplast[1] + Np[2] * Nplast[2];
 
         if(ct > 100000)
         {
@@ -1023,17 +1060,21 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
         }
     }
 
-    NekDouble mn = numeric_limits<double>::max();
+    /*NekDouble mn = numeric_limits<double>::max();
     NekDouble mx = numeric_limits<double>::max() * -1.0;
     for(int i = 0; i < N.size(); i++)
     {
         mn = min(mn , Np[0]*N[i][0] + Np[1]*N[i][1] + Np[2]*N[i][2]);
         mx = max(mx , Np[0]*N[i][0] + Np[1]*N[i][1] + Np[2]*N[i][2]);
     }
-    if(mn / mx < 0.98)
+    if(mn / mx < 0.9)
     {
         cout << mn / mx << endl;
     }
+    else
+    {
+        return Array<OneD, NekDouble> (3,0.0);
+    }*/
 
     return Np;
 }

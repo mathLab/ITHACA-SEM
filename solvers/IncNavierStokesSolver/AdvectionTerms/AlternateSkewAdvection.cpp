@@ -63,6 +63,8 @@ void AlternateSkewAdvection::v_InitObject(
           LibUtilities::SessionReaderSharedPtr         pSession,
           Array<OneD, MultiRegions::ExpListSharedPtr>  fields)
 {
+    pSession->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
+    pSession->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
 }
 
 void AlternateSkewAdvection::v_Advect(
@@ -73,14 +75,25 @@ void AlternateSkewAdvection::v_Advect(
           Array<OneD, Array<OneD, NekDouble> >        &outarray,
     const NekDouble                                   &time)
 {
+    // use dimension of Velocity vector to dictate dimension of operation
+    int ndim       = advVel.num_elements();
+    int nPointsTot = fields[0]->GetNpoints();
+    Array<OneD, Array<OneD, NekDouble> > velocity(ndim);
+    for(int i = 0; i < ndim; ++i)
+    {
+        if(fields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode)
+        {
+            velocity[i] = Array<OneD, NekDouble>(nPointsTot,0.0);
+            fields[i]->HomogeneousBwdTrans(advVel[i],velocity[i]);
+        }
+        else
+        {
+            velocity[i] = advVel[i];
+        }
+    }
     for(int n = 0; n < nConvectiveFields; ++n)
     {
-        // use dimension of Velocity vector to dictate dimension of operation
-        int ndim       = advVel.num_elements();
-
         // ToDo: here we should add a check that V has right dimension
-
-        int nPointsTot = fields[0]->GetNpoints();
         Array<OneD, NekDouble> gradV0,gradV1,gradV2, tmp, Up;
 
         gradV0   = Array<OneD, NekDouble> (nPointsTot);
@@ -93,11 +106,11 @@ void AlternateSkewAdvection::v_Advect(
             if(m_advectioncalls % 2 == 0)
             {
                 fields[0]->PhysDeriv(inarray[n],gradV0);
-                Vmath::Vmul(nPointsTot,gradV0,1,advVel[0],1,outarray[n],1);
+                Vmath::Vmul(nPointsTot,gradV0,1,velocity[0],1,outarray[n],1);
             }
             else
             {
-                Vmath::Vmul(nPointsTot,inarray[n],1,advVel[0],1,gradV0,1);
+                Vmath::Vmul(nPointsTot,inarray[n],1,velocity[0],1,gradV0,1);
                 fields[0]->PhysDeriv(gradV0,outarray[n]);
             }
             Vmath::Smul(nPointsTot,0.5,outarray[n],1,outarray[n],1); //must be mult by 0.5????
@@ -107,13 +120,13 @@ void AlternateSkewAdvection::v_Advect(
             if(m_advectioncalls % 2 == 0)
             {
                 fields[0]->PhysDeriv(inarray[n],gradV0,gradV1);
-                Vmath::Vmul (nPointsTot,gradV0,1,advVel[0],1,outarray[n],1);
-                Vmath::Vvtvp(nPointsTot,gradV1,1,advVel[1],1,outarray[n],1,outarray[n],1);
+                Vmath::Vmul (nPointsTot,gradV0,1,velocity[0],1,outarray[n],1);
+                Vmath::Vvtvp(nPointsTot,gradV1,1,velocity[1],1,outarray[n],1,outarray[n],1);
             }
             else
             {
-                Vmath::Vmul(nPointsTot,inarray[n],1,advVel[0],1,gradV0,1);
-                Vmath::Vmul(nPointsTot,inarray[n],1,advVel[1],1,gradV1,1);
+                Vmath::Vmul(nPointsTot,inarray[n],1,velocity[0],1,gradV0,1);
+                Vmath::Vmul(nPointsTot,inarray[n],1,velocity[1],1,gradV1,1);
                 fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,outarray[n]);
                 fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,tmp);
                 Vmath::Vadd(nPointsTot,tmp,1,outarray[n],1,outarray[n],1);
@@ -134,19 +147,19 @@ void AlternateSkewAdvection::v_Advect(
                     //names may be misleading
                     fields[0]->PhysDeriv(inarray[n],gradV0,gradV1,gradV2);
                     fields[0]->HomogeneousBwdTrans(gradV0,tmp);
-                    Vmath::Vmul(nPointsTot,tmp,1,advVel[0],1,outarray[n],1); // + u*du/dx
+                    Vmath::Vmul(nPointsTot,tmp,1,velocity[0],1,outarray[n],1); // + u*du/dx
                     fields[0]->HomogeneousBwdTrans(gradV1,tmp);
-                    Vmath::Vvtvp(nPointsTot,tmp,1,advVel[1],1,outarray[n],1,outarray[n],1);// + v*du/dy
+                    Vmath::Vvtvp(nPointsTot,tmp,1,velocity[1],1,outarray[n],1,outarray[n],1);// + v*du/dy
                     fields[0]->HomogeneousBwdTrans(gradV2,tmp);
-                    Vmath::Vvtvp(nPointsTot,tmp,1,advVel[2],1,outarray[n],1,outarray[n],1);// + w*du/dz
+                    Vmath::Vvtvp(nPointsTot,tmp,1,velocity[2],1,outarray[n],1,outarray[n],1);// + w*du/dz
                 }
                 else
                 {
                     Up = Array<OneD, NekDouble> (nPointsTot);
                     fields[0]->HomogeneousBwdTrans(inarray[n],Up);
-                    Vmath::Vmul(nPointsTot,Up,1,advVel[0],1,gradV0,1);
-                    Vmath::Vmul(nPointsTot,Up,1,advVel[1],1,gradV1,1);
-                    Vmath::Vmul(nPointsTot,Up,1,advVel[2],1,gradV2,1);
+                    Vmath::Vmul(nPointsTot,Up,1,velocity[0],1,gradV0,1);
+                    Vmath::Vmul(nPointsTot,Up,1,velocity[1],1,gradV1,1);
+                    Vmath::Vmul(nPointsTot,Up,1,velocity[2],1,gradV2,1);
 
                     fields[0]->SetWaveSpace(false);
                     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,outarray[n]);//duu/dx
@@ -165,15 +178,15 @@ void AlternateSkewAdvection::v_Advect(
                 if(m_advectioncalls % 2 == 0)
                 {
                     fields[0]->PhysDeriv(inarray[n],gradV0,gradV1,gradV2);
-                    Vmath::Vmul(nPointsTot,gradV0,1,advVel[0],1,outarray[n],1);
-                    Vmath::Vvtvp(nPointsTot,gradV1,1,advVel[1],1,outarray[n],1,outarray[n],1);
-                    Vmath::Vvtvp(nPointsTot,gradV2,1,advVel[2],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vmul(nPointsTot,gradV0,1,velocity[0],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot,gradV1,1,velocity[1],1,outarray[n],1,outarray[n],1);
+                    Vmath::Vvtvp(nPointsTot,gradV2,1,velocity[2],1,outarray[n],1,outarray[n],1);
                 }
                 else
                 {
-                    Vmath::Vmul(nPointsTot,inarray[n],1,advVel[0],1,gradV0,1);
-                    Vmath::Vmul(nPointsTot,inarray[n],1,advVel[1],1,gradV1,1);
-                    Vmath::Vmul(nPointsTot,inarray[n],1,advVel[2],1,gradV2,1);
+                    Vmath::Vmul(nPointsTot,inarray[n],1,velocity[0],1,gradV0,1);
+                    Vmath::Vmul(nPointsTot,inarray[n],1,velocity[1],1,gradV1,1);
+                    Vmath::Vmul(nPointsTot,inarray[n],1,velocity[2],1,gradV2,1);
                     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,outarray[n]);
                     fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,tmp);
                     Vmath::Vadd(nPointsTot,tmp,1,outarray[n],1,outarray[n],1);

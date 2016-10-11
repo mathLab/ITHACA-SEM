@@ -96,11 +96,6 @@ namespace Nektar
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,       NekDouble> &outarray) const;
 
-            inline void LocalToGlobal(
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,       NekDouble> &outarra,
-                            bool useComm = true) const;
-
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
             inline void Assemble();
@@ -216,12 +211,20 @@ namespace Nektar
 
             /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray,
+                bool useComm);
+
             MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(bool useComm);
             
-
             /// Scatters from the global coefficients
             /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
             /// \f$\boldsymbol{\hat{u}}_l\f$.
+            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray);
+
             MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(void);
 
             /// Template method virtual forwarder for FwdTrans().
@@ -297,6 +300,7 @@ namespace Nektar
         typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;
 
 
+<<<<<<< HEAD
 
         /**
          * This operation is evaluated as:
@@ -369,6 +373,8 @@ namespace Nektar
             m_locToGloMap->LocalToGlobal(inarray, outarray, useComm);
         }
 
+=======
+>>>>>>> master
         /**
          * This operation is evaluated as:
          * \f{tabbing}

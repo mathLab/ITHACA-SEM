@@ -404,6 +404,11 @@ namespace Nektar
                                   m_periodicEdges,
                                   variable);
 
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                m_traceMap->PrintStats(std::cout, variable);
+            }
+
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
@@ -2282,13 +2287,15 @@ namespace Nektar
                     if (m_bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eDirichlet)
                     {
-                        string filebcs = boost::static_pointer_cast<
-                            SpatialDomains::DirichletBoundaryCondition>(
-                                m_bndConditions[i])->m_filename;
+                        SpatialDomains::DirichletBCShPtr bcPtr
+                            = boost::static_pointer_cast<
+                                SpatialDomains::DirichletBoundaryCondition>(
+                                    m_bndConditions[i]);
+                        string filebcs = bcPtr->m_filename;
                         
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
                         }
                         else
                         {
@@ -2309,13 +2316,13 @@ namespace Nektar
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eNeumann)
                     {
-                        string filebcs = boost::static_pointer_cast<
-                            SpatialDomains::NeumannBoundaryCondition>(
-                                m_bndConditions[i])->m_filename;
-
+                        SpatialDomains::NeumannBCShPtr bcPtr = boost::static_pointer_cast<
+                                SpatialDomains::NeumannBoundaryCondition>(
+                                        m_bndConditions[i]);
+                        string filebcs  = bcPtr->m_filename;
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
                         }
                         else
                         {
@@ -2335,13 +2342,14 @@ namespace Nektar
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eRobin)
                     {
-                        string filebcs = boost::static_pointer_cast<
+                        SpatialDomains::RobinBCShPtr bcPtr = boost::static_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition>
-                                (m_bndConditions[i])->m_filename;
+                                (m_bndConditions[i]);
+                        string filebcs = bcPtr->m_filename;
                         
                         if (filebcs != "")
                         {
-                            ExtractFileBCs(filebcs, varName, locExpList);
+                            ExtractFileBCs(filebcs, bcPtr->m_comm, varName, locExpList);
                         }
                         else
                         {

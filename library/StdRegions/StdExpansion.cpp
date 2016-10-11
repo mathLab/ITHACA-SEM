@@ -466,7 +466,6 @@ namespace Nektar
 
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(
                                                         m_ncoeffs,m_ncoeffs);
-                    int cnt = 0;
                     for(int i = 0; i < m_ncoeffs; ++i)
                     {
                         // Get mode at quadrature points
@@ -1422,7 +1421,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
-        int StdExpansion::v_GetVertexMap(const int localVertexId,
+            int StdExpansion::v_GetVertexMap(const int localVertexId,
                                          bool useCoeffPacking)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
@@ -1432,6 +1431,15 @@ namespace Nektar
             void StdExpansion::v_GetEdgeInteriorMap(const int eid, const Orientation edgeOrient,
                                               Array<OneD, unsigned int> &maparray,
                                               Array<OneD, int> &signarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+
+            void StdExpansion::v_GetFaceNumModes(
+                                              const int fid,
+                                              const Orientation faceOrient,
+                                              int &numModes0,
+                                              int &numModes1)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }

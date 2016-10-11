@@ -90,11 +90,6 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,NekDouble> &outarray);
 
-            inline void LocalToGlobal(
-                          const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,NekDouble> &outarray,
-                          bool useComm = true);
-
             inline void Assemble();
 
             inline void Assemble(
@@ -166,7 +161,18 @@ namespace Nektar
             virtual void v_LocalToGlobal(bool useComm);
 
 
+            virtual void v_LocalToGlobal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray,
+                bool useComm);
+
+
             virtual void v_GlobalToLocal(void);
+
+
+            virtual void v_GlobalToLocal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray);
 
 
             virtual void v_MultiplyByInvMassMatrix(
@@ -200,21 +206,11 @@ namespace Nektar
         }
 
 
-
         inline void ContField3D::GlobalToLocal(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,NekDouble> &outarray)
         {
             m_locToGloMap->GlobalToLocal(inarray, outarray);
-        }
-
-
-        inline void ContField3D::LocalToGlobal(
-                const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray,
-                bool useComm)
-        {
-            m_locToGloMap->LocalToGlobal(inarray, outarray, useComm);
         }
 
         inline void ContField3D::Assemble()

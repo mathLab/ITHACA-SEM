@@ -61,6 +61,8 @@ namespace Nektar
         protected:
             /// Number of time steps between outputting status information.
             int                                             m_infosteps;
+
+            int                                             m_nanSteps;
             /// Wrapper to the time integration scheme
             LibUtilities::TimeIntegrationWrapperSharedPtr   m_intScheme;
             /// The time integration scheme operators to use.
@@ -134,6 +136,11 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual bool v_PreIntegrate(int step);
             SOLVER_UTILS_EXPORT virtual bool v_PostIntegrate(int step);
             SOLVER_UTILS_EXPORT virtual bool v_SteadyStateCheck(int step);
+
+            SOLVER_UTILS_EXPORT virtual bool v_RequireFwdTrans()
+            {
+                return true;
+            }
 
             SOLVER_UTILS_EXPORT void CheckForRestartTime(NekDouble &time);
 

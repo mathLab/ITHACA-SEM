@@ -459,6 +459,15 @@ namespace Nektar
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
          */
+        void ContField1D::v_LocalToGlobal(
+            const Array<OneD, const NekDouble> &inarray,
+            Array<OneD,NekDouble> &outarray,
+                                          bool useComm)
+        {
+            m_locToGloMap->LocalToGlobal(inarray, outarray, useComm);
+        }
+
+
         void ContField1D::v_LocalToGlobal(bool useComm)
         {
             m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs, useComm);
@@ -484,6 +493,13 @@ namespace Nektar
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
          */
+        void ContField1D::v_GlobalToLocal(
+            const Array<OneD, const NekDouble> &inarray,
+            Array<OneD,NekDouble> &outarray)
+        {
+            m_locToGloMap->GlobalToLocal(inarray, outarray);
+        }
+
         void ContField1D::v_GlobalToLocal(void)
         {
             m_locToGloMap->GlobalToLocal(m_coeffs,m_coeffs);

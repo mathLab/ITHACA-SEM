@@ -35,140 +35,135 @@
 #ifndef NEKTAR_LIB_UTILITIES_HOMOGENEOUS1D_H
 #define NEKTAR_LIB_UTILITIES_HOMOGENEOUS1D_H
 
-#include <LibUtilities/Communication/Comm.h>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
-
-namespace Nektar { namespace LibUtilities { class BasisKey; } }
 
 namespace Nektar
 {
-    namespace LibUtilities
-    {
-        enum TranspositionDir
-        {
-            eXYtoZ,
-            eZtoXY,
-            eXtoYZ,
-            eYZtoX,
-            eYZtoZY,
-            eZYtoYZ,
-            eXtoY,
-            eYtoZ,
-            eZtoX,
-            eNoTrans
-        };
+namespace LibUtilities
+{
+class BasisKey;
+}
+}
 
-        class Transposition
-        {
-        public:
-            LIB_UTILITIES_EXPORT Transposition(
-                    const LibUtilities::BasisKey &HomoBasis0,
-                          LibUtilities::CommSharedPtr hcomm0,
-                          LibUtilities::CommSharedPtr hcomm1);
+namespace Nektar
+{
+namespace LibUtilities
+{
+enum TranspositionDir
+{
+    eXYtoZ,
+    eZtoXY,
+    eXtoYZ,
+    eYZtoX,
+    eYZtoZY,
+    eZYtoYZ,
+    eXtoY,
+    eYtoZ,
+    eZtoX,
+    eNoTrans
+};
 
-            LIB_UTILITIES_EXPORT Transposition(
-                    const LibUtilities::BasisKey &HomoBasis0,
-                    const LibUtilities::BasisKey &HomoBasis1,
-                          LibUtilities::CommSharedPtr hcomm);
+class Transposition
+{
+public:
+    LIB_UTILITIES_EXPORT Transposition(const LibUtilities::BasisKey &HomoBasis0,
+                                       LibUtilities::CommSharedPtr hcomm0,
+                                       LibUtilities::CommSharedPtr hcomm1);
 
-            LIB_UTILITIES_EXPORT Transposition(
-                    const LibUtilities::BasisKey &HomoBasis0,
-                    const LibUtilities::BasisKey &HomoBasis1,
-                    const LibUtilities::BasisKey &HomoBasis2,
-                          LibUtilities::CommSharedPtr hcomm);
+    LIB_UTILITIES_EXPORT Transposition(const LibUtilities::BasisKey &HomoBasis0,
+                                       const LibUtilities::BasisKey &HomoBasis1,
+                                       LibUtilities::CommSharedPtr hcomm);
 
-            LIB_UTILITIES_EXPORT ~Transposition();
+    LIB_UTILITIES_EXPORT Transposition(const LibUtilities::BasisKey &HomoBasis0,
+                                       const LibUtilities::BasisKey &HomoBasis1,
+                                       const LibUtilities::BasisKey &HomoBasis2,
+                                       LibUtilities::CommSharedPtr hcomm);
 
-            LIB_UTILITIES_EXPORT unsigned int GetK(int i);
+    LIB_UTILITIES_EXPORT ~Transposition();
 
-            LIB_UTILITIES_EXPORT Array<OneD, unsigned int> GetKs(void);
+    LIB_UTILITIES_EXPORT unsigned int GetK(int i);
 
-            LIB_UTILITIES_EXPORT unsigned int GetPlaneID(int i);
+    LIB_UTILITIES_EXPORT Array<OneD, unsigned int> GetKs(void);
 
-            LIB_UTILITIES_EXPORT unsigned int GetStripID(void);
+    LIB_UTILITIES_EXPORT unsigned int GetPlaneID(int i);
 
-            LIB_UTILITIES_EXPORT Array<OneD, unsigned int> GetPlanesIDs(void);
+    LIB_UTILITIES_EXPORT unsigned int GetStripID(void);
 
-            LIB_UTILITIES_EXPORT void Transpose(
-                    const Array<OneD,const NekDouble> &inarray,
-                          Array<OneD,      NekDouble> &outarray,
-                    bool UseNumMode = false,
-                    TranspositionDir dir = eNoTrans);
+    LIB_UTILITIES_EXPORT Array<OneD, unsigned int> GetPlanesIDs(void);
 
-            LIB_UTILITIES_EXPORT void SetSpecVanVisc(Array<OneD, NekDouble> visc);
-            
-            LIB_UTILITIES_EXPORT NekDouble GetSpecVanVisc(const int k);
+    LIB_UTILITIES_EXPORT void Transpose(
+        const Array<OneD, const NekDouble> &inarray,
+        Array<OneD, NekDouble> &outarray, bool UseNumMode = false,
+        TranspositionDir dir = eNoTrans);
 
-        protected:
-            CommSharedPtr         m_hcomm;
+    LIB_UTILITIES_EXPORT void SetSpecVanVisc(Array<OneD, NekDouble> visc);
 
-        private:
+    LIB_UTILITIES_EXPORT NekDouble GetSpecVanVisc(const int k);
 
-            LIB_UTILITIES_EXPORT void TransposeXYtoZ(
-                    const Array<OneD,const NekDouble> &inarray,
-                          Array<OneD,      NekDouble> &outarray,
-                    bool UseNumMode = false);
+protected:
+    CommSharedPtr m_hcomm;
 
-            LIB_UTILITIES_EXPORT void TransposeZtoXY(
-                    const Array<OneD,const NekDouble> &inarray,
-                          Array<OneD,      NekDouble> &outarray,
-                    bool UseNumMode = false);
+private:
+    LIB_UTILITIES_EXPORT void TransposeXYtoZ(
+        const Array<OneD, const NekDouble> &inarray,
+        Array<OneD, NekDouble> &outarray, bool UseNumMode = false);
 
-            LIB_UTILITIES_EXPORT void TransposeXtoYZ(
-                    const Array<OneD,const NekDouble> &inarray,
-                          Array<OneD,      NekDouble> &outarray,
-                    bool UseNumMode = false);
+    LIB_UTILITIES_EXPORT void TransposeZtoXY(
+        const Array<OneD, const NekDouble> &inarray,
+        Array<OneD, NekDouble> &outarray, bool UseNumMode = false);
 
-            LIB_UTILITIES_EXPORT void TransposeYZtoX(
-                    const Array<OneD,const NekDouble> &inarray,
-                          Array<OneD,      NekDouble> &outarray,
-                    bool UseNumMode = false);
+    LIB_UTILITIES_EXPORT void TransposeXtoYZ(
+        const Array<OneD, const NekDouble> &inarray,
+        Array<OneD, NekDouble> &outarray, bool UseNumMode = false);
 
-            LIB_UTILITIES_EXPORT void TransposeYZtoZY(
-                    const Array<OneD,const NekDouble> &inarray,
-                          Array<OneD,      NekDouble> &outarray,
-                    bool UseNumMode = false);
+    LIB_UTILITIES_EXPORT void TransposeYZtoX(
+        const Array<OneD, const NekDouble> &inarray,
+        Array<OneD, NekDouble> &outarray, bool UseNumMode = false);
 
-            LIB_UTILITIES_EXPORT void TransposeZYtoYZ(
-                    const Array<OneD,const NekDouble> &inarray,
-                          Array<OneD,      NekDouble> &outarray,
-                    bool UseNumMode = false);
+    LIB_UTILITIES_EXPORT void TransposeYZtoZY(
+        const Array<OneD, const NekDouble> &inarray,
+        Array<OneD, NekDouble> &outarray, bool UseNumMode = false);
 
-            int m_num_homogeneous_directions;
+    LIB_UTILITIES_EXPORT void TransposeZYtoYZ(
+        const Array<OneD, const NekDouble> &inarray,
+        Array<OneD, NekDouble> &outarray, bool UseNumMode = false);
 
-            /// Number of homogeneous points on each processor per direction.
-            Array<OneD,int> m_num_points_per_proc;
+    int m_num_homogeneous_directions;
 
-            /// Total homogeneous points per direction.
-            Array<OneD,int> m_num_homogeneous_points;
+    /// Number of homogeneous points on each processor per direction.
+    Array<OneD, int> m_num_points_per_proc;
 
-            /// Total number of homogeneous coefficients.
-            Array<OneD,int> m_num_homogeneous_coeffs;
+    /// Total homogeneous points per direction.
+    Array<OneD, int> m_num_homogeneous_points;
 
-            Array<OneD,int> m_num_processes;
+    /// Total number of homogeneous coefficients.
+    Array<OneD, int> m_num_homogeneous_coeffs;
 
-            /// Rank of process
-            int m_rank_id;
+    Array<OneD, int> m_num_processes;
 
-            /// IDs of the planes on the processes.
-            Array<OneD, unsigned int> m_planes_IDs;
+    /// Rank of process
+    int m_rank_id;
 
-            /// IDs of the strips on the processes.
-            unsigned int m_strip_ID;
+    /// IDs of the planes on the processes.
+    Array<OneD, unsigned int> m_planes_IDs;
 
-            /// Fourier wave numbers associated with the planes.
-            Array<OneD, unsigned int> m_K;
+    /// IDs of the strips on the processes.
+    unsigned int m_strip_ID;
 
-            /// MPI_Alltoallv map containing size of send/recv buffer.
-            Array<OneD,int> m_SizeMap;
+    /// Fourier wave numbers associated with the planes.
+    Array<OneD, unsigned int> m_K;
 
-            /// MPI_Alltoallv offset map of send/recv buffer in global vector.
-            Array<OneD,int> m_OffsetMap;
-        };
+    /// MPI_Alltoallv map containing size of send/recv buffer.
+    Array<OneD, int> m_SizeMap;
 
-        typedef boost::shared_ptr<Transposition>      TranspositionSharedPtr;
-    }
+    /// MPI_Alltoallv offset map of send/recv buffer in global vector.
+    Array<OneD, int> m_OffsetMap;
+};
+
+typedef boost::shared_ptr<Transposition> TranspositionSharedPtr;
+}
 }
 #endif

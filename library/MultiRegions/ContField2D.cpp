@@ -768,11 +768,18 @@ namespace Nektar
          * local coefficients \f$\boldsymbol{\hat{u}}_l\f$ will be stored in
          * #m_coeffs.
          */
+        void ContField2D::v_GlobalToLocal(
+            const Array<OneD, const NekDouble> &inarray,
+            Array<OneD,NekDouble> &outarray)
+        {
+            m_locToGloMap->GlobalToLocal(inarray, outarray);
+        }
+
+
         void ContField2D::v_GlobalToLocal(void)
         {
             m_locToGloMap->GlobalToLocal(m_coeffs,m_coeffs);
         }
-
 
 
         /**
@@ -802,9 +809,20 @@ namespace Nektar
          *          communication call will be made to check if all
          *          values are consistent over processors
          */
-        void ContField2D::v_LocalToGlobal(bool useComm)
+
+        void ContField2D::v_LocalToGlobal(
+            const Array<OneD, const NekDouble> &inarray,
+            Array<OneD,NekDouble> &outarray,
+            bool useComm)
         {
-            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs,useComm);
+            m_locToGloMap->LocalToGlobal(inarray, outarray, useComm);
+        }
+
+
+        void ContField2D::v_LocalToGlobal(bool useComm)
+
+        {
+            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs, useComm);
         }
 
         /**

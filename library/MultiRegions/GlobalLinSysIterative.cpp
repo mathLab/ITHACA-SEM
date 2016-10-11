@@ -61,16 +61,12 @@ namespace Nektar
                   m_useProjection(false),
                   m_numPrevSols(0)
         {
-            LibUtilities::SessionReaderSharedPtr vSession
-                                            = pExpList.lock()->GetSession();
-
             m_tolerance = pLocToGloMap->GetIterativeTolerance();
             m_maxiter   = pLocToGloMap->GetMaxIterations();
 
             LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm()->GetRowComm();
             m_root    = (vComm->GetRank())? false : true;
-            m_verbose = (vSession->DefinesCmdLineArgument("verbose"))? true :false;
-            
+
             int successiveRHS;
             
             if((successiveRHS = pLocToGloMap->GetSuccessiveRHS()))

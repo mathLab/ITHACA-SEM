@@ -842,6 +842,13 @@ namespace Nektar
                 v_GetEdgeInteriorMap(eid,edgeOrient,maparray,signarray);
             }
 
+            void GetFaceNumModes(const int fid, const Orientation faceOrient,
+                                    int &numModes0,
+                                    int &numModes1)
+            {
+                v_GetFaceNumModes(fid,faceOrient,numModes0,numModes1);
+            }
+
             void GetFaceInteriorMap(const int fid, const Orientation faceOrient,
                                     Array<OneD, unsigned int> &maparray,
                                     Array<OneD, int> &signarray)
@@ -1334,6 +1341,7 @@ namespace Nektar
             const LibUtilities::PointsKeyVector GetPointsKeys() const
             {
                 LibUtilities::PointsKeyVector p;
+                p.reserve(m_base.num_elements());
                 for (int i = 0; i < m_base.num_elements(); ++i)
                 {
                     p.push_back(m_base[i]->GetPointsKey());
@@ -1714,6 +1722,12 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(const int eid, const Orientation edgeOrient,
                                               Array<OneD, unsigned int> &maparray,
                                               Array<OneD, int> &signarray);
+
+            STD_REGIONS_EXPORT virtual void v_GetFaceNumModes(
+                                              const int fid,
+                                              const Orientation faceOrient,
+                                              int &numModes0,
+                                              int &numModes1);
 
             STD_REGIONS_EXPORT virtual void v_GetFaceInteriorMap(const int fid, const Orientation faceOrient,
                                               Array<OneD, unsigned int> &maparray,

@@ -81,6 +81,19 @@ namespace Nektar
             ASSERTL0(false,"Need to set up pressure field definition");
         }
 
+        // Determine diffusion coefficients for each field
+        m_diffCoeff = Array<OneD, NekDouble> (m_nConvectiveFields, m_kinvis);
+        for (n = 0; n < m_nConvectiveFields; ++n)
+        {
+            std::string varName = m_session->GetVariable(n);
+            if ( m_session->DefinesFunction("DiffusionCoefficient", varName))
+            {
+                LibUtilities::EquationSharedPtr ffunc
+                    = m_session->GetFunction("DiffusionCoefficient", varName);
+                m_diffCoeff[n] = ffunc->Evaluate();
+            }
+        }
+
         // creation of the extrapolation object
         if(m_equationType == eUnsteadyNavierStokes)
         {
@@ -238,6 +251,7 @@ namespace Nektar
         // field below
         SetBoundaryConditions(m_time);
 
+        m_F = Array<OneD, Array< OneD, NekDouble> > (m_nConvectiveFields);
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->LocalToGlobal();
@@ -245,6 +259,7 @@ namespace Nektar
             m_fields[i]->GlobalToLocal();
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
                                   m_fields[i]->UpdatePhys());
+            m_F[i] = Array< OneD, NekDouble> (m_fields[0]->GetTotPoints(), 0.0);
         }
     }
     
@@ -335,29 +350,23 @@ namespace Nektar
         const NekDouble time, 
         const NekDouble aii_Dt)
     {
-        int i;
-        int phystot = m_fields[0]->GetTotPoints();
-
-        Array<OneD, Array< OneD, NekDouble> > F(m_nConvectiveFields);
-        for(i = 0; i < m_nConvectiveFields; ++i)
-        {
-            F[i] = Array<OneD, NekDouble> (phystot);
-        }
+        // Enforcing boundary conditions on all fields
+        SetBoundaryConditions(time);
 
         // Substep the pressure boundary condition if using substepping
         m_extrapolation->SubStepSetPressureBCs(inarray,aii_Dt,m_kinvis);
-    
+
         // Set up forcing term for pressure Poisson equation
-        SetUpPressureForcing(inarray, F, aii_Dt);
+        SetUpPressureForcing(inarray, m_F, aii_Dt);
 
         // Solve Pressure System
-        SolvePressure (F[0]);
+        SolvePressure (m_F[0]);
 
         // Set up forcing term for Helmholtz problems
-        SetUpViscousForcing(inarray, F, aii_Dt);
-        
+        SetUpViscousForcing(inarray, m_F, aii_Dt);
+
         // Solve velocity system
-        SolveViscous( F, outarray, aii_Dt);
+        SolveViscous( m_F, outarray, aii_Dt);
     }
         
     /**
@@ -371,17 +380,17 @@ namespace Nektar
         int i;
         int physTot = m_fields[0]->GetTotPoints();
         int nvel = m_velocity.num_elements();
-        Array<OneD, NekDouble> wk(physTot, 0.0);
-        
-        Vmath::Zero(physTot,Forcing[0],1);
-        
-        for(i = 0; i < nvel; ++i)
+
+        m_fields[0]->PhysDeriv(0,fields[0],
+                               Forcing[0]);
+        for(i = 1; i < nvel; ++i)
         {
-            m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[i],fields[i], wk);
-            Vmath::Vadd(physTot,wk,1,Forcing[0],1,Forcing[0],1);
+            // Use Forcing[1] as storage since it is not needed for the pressure
+            m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[i],fields[i],Forcing[1]);
+            Vmath::Vadd(physTot,Forcing[1],1,Forcing[0],1,Forcing[0],1);
         }
 
-        Vmath::Smul(physTot,1.0/aii_Dt,Forcing[0],1,Forcing[0],1);        
+        Vmath::Smul(physTot,1.0/aii_Dt,Forcing[0],1,Forcing[0],1);
     }
     
     /**
@@ -397,7 +406,7 @@ namespace Nektar
 
         // Grad p
         m_pressure->BwdTrans(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
-        
+
         int nvel = m_velocity.num_elements();
         if(nvel == 2)
         {
@@ -408,13 +417,13 @@ namespace Nektar
             m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[0], 
                                   Forcing[1], Forcing[2]);
         }
-        
+
         // Subtract inarray/(aii_dt) and divide by kinvis. Kinvis will
         // need to be updated for the convected fields.
-        for(int i = 0; i < nvel; ++i)
+        for(int i = 0; i < m_nConvectiveFields; ++i)
         {
             Blas::Daxpy(phystot,-aii_dtinv,inarray[i],1,Forcing[i],1);
-            Blas::Dscal(phystot,1.0/m_kinvis,&(Forcing[i])[0],1);
+            Blas::Dscal(phystot,1.0/m_diffCoeff[i],&(Forcing[i])[0],1);
         }
     }
 
@@ -448,8 +457,7 @@ namespace Nektar
         const NekDouble aii_Dt)
     {
         StdRegions::ConstFactorMap factors;
-        // Setup coefficients for equation
-        factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_kinvis;
+
         if(m_useSpecVanVisc)
         {
             factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
@@ -459,6 +467,8 @@ namespace Nektar
         // Solve Helmholtz system and put in Physical space
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
+            // Setup coefficients for equation
+            factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_diffCoeff[i];
             m_fields[i]->HelmSolve(Forcing[i], m_fields[i]->UpdateCoeffs(),
                                    NullFlagList, factors);
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);

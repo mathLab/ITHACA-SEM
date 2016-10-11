@@ -31,11 +31,14 @@ IF(NEKTAR_USE_MESHGEN)
         VolumeMeshing/TetMeshing/TetMesh.cpp
         VolumeMeshing/BLMeshing/BLMesh.cpp
         CADSystem/CADSystem.cpp
-        CADSystem/CADCurve.cpp
-        CADSystem/CADSurf.cpp
         CADSystem/ProcessLoadCAD.cpp
         Optimisation/BGFS-B.cpp
         Triangle/Triangle.cpp
+        CADSystem/CADSystem.cpp
+        CADSystem/OCE/CADSystemOCE.cpp
+        CADSystem/OCE/CADVertOCE.cpp
+        CADSystem/OCE/CADCurveOCE.cpp
+        CADSystem/OCE/CADSurfOCE.cpp
     )
 ENDIF()
 
@@ -81,8 +84,12 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/CADVert.h
         CADSystem/CADCurve.h
         CADSystem/CADSurf.h
-        CADSystem/OpenCascade.h
         CADSystem/ProcessLoadCAD.h
+        CADSystem/OCE/OpenCascade.h
+        CADSystem/OCE/CADSystemOCE.h
+        CADSystem/OCE/CADVertOCE.h
+        CADSystem/OCE/CADCurveOCE.h
+        CADSystem/OCE/CADSurfOCE.h
         Optimisation/BGFS-B.h
         Optimisation/OptimiseObj.h
         Triangle/Triangle.h
@@ -106,6 +113,10 @@ IF(NEKTAR_USE_MESHGEN)
     #SET(OCC_DEF LIN LININTEL HAVE_WOK_CONFIG_H HAVE_CONFIG_H CSFDB)
     #SET_PROPERTY(TARGET NekMeshUtils APPEND PROPERTY COMPILE_DEFINITIONS ${OCC_DEF})
     ADD_DEPENDENCIES(NekMeshUtils opencascade-6.9 tetgen-1.5)
+ENDIF()
+
+IF(NEKTAR_USE_CFI)
+    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${CFI_LIBRARY})
 ENDIF()
 
 INSTALL(DIRECTORY ./

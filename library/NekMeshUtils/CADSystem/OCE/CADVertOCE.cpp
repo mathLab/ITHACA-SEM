@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADObj.h
+//  File: CADSystem.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,65 +29,40 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: CAD object curve.
+//  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_CADSYSTEM_CADOBJ
-#define NEKMESHUTILS_CADSYSTEM_CADOBJ
+#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
+#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
 
-#include <boost/shared_ptr.hpp>
-
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
+using namespace std;
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-enum cadType
+std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
+    "oce", CADVertOCE::create, "CAD vert oce");
+
+void CADVertOCE::Initialise(int i, TopoDS_Shape in)
 {
-    vert,
-    curve,
-    surf
-};
+    gp_Trsf transform;
+    gp_Pnt ori(0.0, 0.0, 0.0);
+    transform.SetScale(ori, 1.0 / 1000.0);
+    TopLoc_Location mv(transform);
+    in.Move(mv);
 
-class CADObj
-{
-public:
-    friend class MemoryManager<CADObj>;
+    m_id      = i;
+    m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
 
-    /**
-     * @brief Default constructor.
-     */
-    CADObj()
-    {
-    }
+    m_node = boost::shared_ptr<Node>(
+        new Node(i - 1, m_occVert.X(), m_occVert.Y(), m_occVert.Z()));
+    degen = false;
 
-    virtual ~CADObj(){}
-
-    /**
-     * @brief Return ID of the vertex
-     */
-    int GetId()
-    {
-        return m_id;
-    }
-
-    cadType GetType()
-    {
-        return m_type;
-    }
-
-protected:
-    /// ID of the vert.
-    int m_id;
-    /// type of the cad object
-    cadType m_type;
-};
-
-typedef boost::shared_ptr<CADObj> CADObjSharedPtr;
-}
+    m_type = vert;
 }
 
-#endif
+}
+}

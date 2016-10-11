@@ -1944,9 +1944,10 @@ namespace Nektar
 
         inline void ExpList::LocalToGlobal(
                 const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray)
+                Array<OneD,NekDouble> &outarray,
+                bool useComm)
         {
-            v_LocalToGlobal(inarray, outarray);
+            v_LocalToGlobal(inarray, outarray,useComm);
         }
         
         inline void ExpList::GlobalToLocal(void)

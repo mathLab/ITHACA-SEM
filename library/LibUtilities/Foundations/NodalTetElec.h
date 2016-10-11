@@ -36,13 +36,13 @@
 #ifndef NODALTETELEC_H
 #define NODALTETELEC_H
 
+#include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <boost/shared_ptr.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for ErrorUtils
 
 namespace Nektar
 {
@@ -91,6 +91,8 @@ namespace Nektar
             }
 
         private:
+            boost::shared_ptr<NodalUtilTetrahedron> m_util;
+
             NodalTetElec():PointsBaseType(NullPointsKey)
             {
               

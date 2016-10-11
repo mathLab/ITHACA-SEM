@@ -23,6 +23,7 @@ v4.4.0
   to boundary conditions (!615)
 - Allow expansions to be loaded directly from field file (!617)
 - New options for load balancing (DOF or BOUNDARY) in mesh partitioner (!617)
+- Rework nodal utilities to support nodal prismatic elements (!660)
 - Update Body/Field forces at each timestep (!665)
 
 **ADRSolver:**
@@ -46,8 +47,14 @@ v4.4.0
 - Add STL surface writer module (!668)
 - New module for inserting an alternate high-order surface into the working
   mesh (!669)
+- Add curve projection routines to CAD system (!697)
 - Improvements to mesh linearisation module (!659)
 - Add support for Gmsh high-order output (!679)
+- Move CAD classes to factory format (!676)
+- Add module to check topology of the mesh along with boundary connectivity
+  to detect problems such as hanging nodes (!691)
+- Add option to `linearise` module to linearise only prisms (!688)
+- Add option to `linearise` to use element quality (!690)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

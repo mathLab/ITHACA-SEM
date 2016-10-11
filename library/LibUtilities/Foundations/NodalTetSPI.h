@@ -63,8 +63,6 @@ namespace Nektar
             {
             }
 
-            int GetNumPointsAlt();
-
         private:
             NodalTetSPI():PointsBaseType(NullPointsKey)
             {

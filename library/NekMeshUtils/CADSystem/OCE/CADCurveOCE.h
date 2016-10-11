@@ -77,6 +77,7 @@ public:
         gp_Pnt ori(0.0, 0.0, 0.0);
         transform.SetScale(ori, 1.0 / 1000.0);
         TopLoc_Location mv(transform);
+        TopoDS_Shape cp = in;
         in.Move(mv);
 
         m_occEdge  = TopoDS::Edge(in);
@@ -85,6 +86,9 @@ public:
         GProp_GProps System;
         BRepGProp::LinearProperties(m_occEdge, System);
         m_length = System.Mass();
+
+        Array<OneD, NekDouble> b = Bounds();
+        m_c = BRep_Tool::Curve(TopoDS::Edge(cp), b[0], b[1]);
 
         m_id   = i;
         m_type = curve;

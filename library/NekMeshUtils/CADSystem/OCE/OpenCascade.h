@@ -48,6 +48,7 @@
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepAdaptor_Surface.hxx>
 #include <GeomAPI_ProjectPointOnSurf.hxx>
+#include <GeomAPI_ProjectPointOnCurve.hxx>
 #include <GeomAbs_SurfaceType.hxx>
 #include <BRepTools.hxx>
 #include <BRep_Tool.hxx>
@@ -67,6 +68,7 @@
 #include <ShapeAnalysis_Wire.hxx>
 #include <TopoDS_Wire.hxx>
 #include <ShapeAnalysis_Surface.hxx>
+#include <ShapeAnalysis_Curve.hxx>
 #include <Standard_Macro.hxx>
 
 #endif

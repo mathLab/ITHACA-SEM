@@ -153,7 +153,13 @@ public:
         return m_mainVerts;
     }
 
+    /*
+     * @brief locates a point in the parametric space
+     */
+    virtual NekDouble loct(Array<OneD, NekDouble> xyz) = 0;
+
 protected:
+
     /// Length of edge
     NekDouble m_length;
     /// List of surfaces which this curve belongs to.

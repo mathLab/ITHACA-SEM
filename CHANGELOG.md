@@ -47,6 +47,7 @@ v4.4.0
 - Add STL surface writer module (!668)
 - New module for inserting an alternate high-order surface into the working
   mesh (!669)
+- Add curve projection routines to CAD system (!697)
 - Improvements to mesh linearisation module (!659)
 - Add support for Gmsh high-order output (!679)
 - Move CAD classes to factory format (!676)

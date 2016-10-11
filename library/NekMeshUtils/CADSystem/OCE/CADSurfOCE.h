@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessJacobianEnergy.h
+//  File: CADSurf.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,45 +29,64 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes energy of Jacobian.
+//  Description: CAD object surface.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSQUALITYMETRIC
-#define FIELDUTILS_PROCESSQUALITYMETRIC
+#ifndef NekMeshUtils_CADSYSTEM_OCE_CADSURFOCE
+#define NekMeshUtils_CADSYSTEM_OCE_CADSURFOCE
 
-#include "../Module.h"
+#include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
 namespace Nektar
 {
-namespace FieldUtils
+namespace NekMeshUtils
 {
 
-/// This processing module scales the input fld file
-class ProcessQualityMetric : public ProcessModule
+class CADSurfOCE : public CADSurf
 {
 public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+
+    static CADSurfSharedPtr create()
     {
-        return MemoryManager<ProcessQualityMetric>::AllocateSharedPtr(f);
+        return MemoryManager<CADSurfOCE>::AllocateSharedPtr();
     }
-    static ModuleKey className;
 
-    ProcessQualityMetric(FieldSharedPtr f);
-    virtual ~ProcessQualityMetric();
+    static std::string key;
 
-    /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
-
-    virtual std::string GetModuleName()
+    CADSurfOCE()
     {
-        return "ProcessQualityMetric";
     }
+
+    ~CADSurfOCE()
+    {
+    }
+
+    void Initialise(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
+
+    virtual Array<OneD, NekDouble> GetBounds();
+    virtual Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
+    virtual NekDouble DistanceTo(Array<OneD, NekDouble> p);
+    virtual void ProjectTo(Array<OneD, NekDouble> &tp,
+                           Array<OneD, NekDouble> &uv);
+    virtual NekDouble Curvature(Array<OneD, NekDouble> uv);
 
 private:
-    Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e, bool s);
+    /// Function which tests the the value of uv used is within the surface
+    void Test(Array<OneD, NekDouble> uv);
+    /// OpenCascade object for surface.
+    BRepAdaptor_Surface m_occSurface;
+    /// Alternate OpenCascade object for surface. Used by reverse lookup.
+    Handle(Geom_Surface) m_s;
 };
+
+typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+
 }
 }
 

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessJacobianEnergy.h
+//  File: CADCurve.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,45 +29,50 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes energy of Jacobian.
+//  Description: CAD object curve.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSQUALITYMETRIC
-#define FIELDUTILS_PROCESSQUALITYMETRIC
+#ifndef NEKMESHUTILS_CADSYSTEM_OCE_CADVERTOCE
+#define NEKMESHUTILS_CADSYSTEM_OCE_CADVERTOCE
 
-#include "../Module.h"
+#include <NekMeshUtils/CADSystem/CADVert.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
 namespace Nektar
 {
-namespace FieldUtils
+namespace NekMeshUtils
 {
 
-/// This processing module scales the input fld file
-class ProcessQualityMetric : public ProcessModule
+class CADVertOCE : public CADVert
 {
 public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+
+    static CADVertSharedPtr create()
     {
-        return MemoryManager<ProcessQualityMetric>::AllocateSharedPtr(f);
+        return MemoryManager<CADVertOCE>::AllocateSharedPtr();
     }
-    static ModuleKey className;
 
-    ProcessQualityMetric(FieldSharedPtr f);
-    virtual ~ProcessQualityMetric();
+    static std::string key;
 
-    /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
-
-    virtual std::string GetModuleName()
+    /**
+     * @brief Default constructor.
+     */
+    CADVertOCE()
     {
-        return "ProcessQualityMetric";
     }
+
+    ~CADVertOCE()
+    {
+    }
+
+    void Initialise(int i, TopoDS_Shape in);
 
 private:
-    Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e, bool s);
+    /// OpenCascade object of the curve.
+    gp_Pnt m_occVert;
 };
+
 }
 }
 

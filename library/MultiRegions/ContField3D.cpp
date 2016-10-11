@@ -550,9 +550,10 @@ namespace Nektar
 
       void ContField3D::v_LocalToGlobal(
           const Array<OneD, const NekDouble> &inarray,
-          Array<OneD,NekDouble> &outarray)
+          Array<OneD,NekDouble> &outarray,
+          bool useComm)
       {
-          m_locToGloMap->LocalToGlobal(inarray, outarray);
+          m_locToGloMap->LocalToGlobal(inarray, outarray, useComm);
       }
 
 

@@ -54,6 +54,7 @@ struct blInfo
     Array<OneD, NekDouble> N;
     int symsurf;
     bool onSym;
+    std::vector<ElementSharedPtr> els;
 };
 
 typedef boost::shared_ptr<blInfo> blInfoSharedPtr;

@@ -53,49 +53,13 @@ void BLMesh::Mesh()
     // surface upon which it needs to mesh (top of the bl and the rest of the
     // surface).
 
-    //need a map from vertex idx to surface elements
-    //but do not care about triangles which are not in the bl
-    map<NodeSharedPtr, vector<ElementSharedPtr> > nToTri;
-    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
-    {
-        //orientate the triangle
-        if(m_mesh->m_cad->GetSurf(m_mesh->m_element[2][i]->CADSurfId)
-                                                        ->IsReversedNormal())
-        {
-            m_mesh->m_element[2][i]->Flip();
-        }
-
-        vector<unsigned int>::iterator f = find(m_blsurfs.begin(), m_blsurfs.end(),
-                                                m_mesh->m_element[2][i]->CADSurfId);
-
-        if(f == m_blsurfs.end())
-        {
-            //if this triangle is not in bl surfs continue
-            continue;
-        }
-
-        vector<NodeSharedPtr> ns = m_mesh->m_element[2][i]->GetVertexList();
-        for(int j = 0; j < ns.size(); j++)
-        {
-            nToTri[ns[j]].push_back(m_mesh->m_element[2][i]);
-        }
-    }
-
+    //this sets up all the boundary layer normals data holder
     set<int> symSurfs;
-
-    //this sets up all the boundary layer normals and gets an intial value for
-    //the vector
     NodeSet::iterator it;
     int ct = 0;
     int failed = 0;
     for(it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end(); it++, ct++)
     {
-        if (m_mesh->m_verbose)
-        {
-            LibUtilities::PrintProgressbar(
-                ct, m_mesh->m_vertexSet.size(), "Build info\t");
-        }
-
         vector<pair<int, CADSurfSharedPtr> > ss = (*it)->GetCADSurfs();
         vector<unsigned int> surfs;
         for(int i = 0; i < ss.size(); i++)
@@ -119,30 +83,6 @@ void BLMesh::Mesh()
             blInfoSharedPtr bln = boost::shared_ptr<blInfo>(new blInfo);
             bln->oNode = (*it);
 
-            map<NodeSharedPtr, vector<ElementSharedPtr> >::iterator g = nToTri.find((*it));
-            ASSERTL0(g != nToTri.end(),"failed to find");
-
-            //calculate mesh normal
-            bln->N = GetNormal(g->second);
-
-            if(Visability(g->second,bln->N) < 0.0)
-            {
-                cerr << "failed " << (*it)->m_x << " " << (*it)->m_y << " "
-                                  << (*it)->m_z << " "
-                                  << Visability(g->second,bln->N) << endl;
-                failed++;
-            }
-
-            Array<OneD, NekDouble> loc = (*it)->GetLoc();
-            for(int k = 0; k < 3; k++)
-            {
-                loc[k] += bln->N[k] * m_bl;
-            }
-            bln->pNode = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
-                                            loc[0], loc[1], loc[2]));
-
-            bln->bl = m_bl;
-
             if(diff.size() > 0)
             {
                 //if the diff size is greater than 1 there is a curve that needs remeshing
@@ -160,16 +100,64 @@ void BLMesh::Mesh()
         }
     }
 
-    m_symSurfs = vector<int>(symSurfs.begin(), symSurfs.end());
-
-    if(m_mesh->m_verbose)
+    //need a map from vertex idx to surface elements
+    //but do not care about triangles which are not in the bl
+    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
-        cout << endl;
+        //orientate the triangle
+        if(m_mesh->m_cad->GetSurf(m_mesh->m_element[2][i]->CADSurfId)
+                                                        ->IsReversedNormal())
+        {
+            m_mesh->m_element[2][i]->Flip();
+        }
+
+        vector<unsigned int>::iterator f = find(m_blsurfs.begin(), m_blsurfs.end(),
+                                                m_mesh->m_element[2][i]->CADSurfId);
+
+        if(f == m_blsurfs.end())
+        {
+            //if this triangle is not in bl surfs continue
+            continue;
+        }
+
+        vector<NodeSharedPtr> ns = m_mesh->m_element[2][i]->GetVertexList();
+        for(int j = 0; j < ns.size(); j++)
+        {
+            blData[ns[j]]->els.push_back(m_mesh->m_element[2][i]);
+        }
     }
+
+    map<NodeSharedPtr, blInfoSharedPtr>::iterator bit;
+    for(bit = blData.begin(); bit != blData.end(); bit++)
+    {
+        //calculate mesh normal
+        bit->second->N = GetNormal(bit->second->els);
+
+        if(Visability(bit->second->els,bit->second->N) < 0.0)
+        {
+            cerr << "failed " << bit->first->m_x << " " << bit->first->m_y << " "
+                              << bit->first->m_z << " "
+                              << Visability(bit->second->els,bit->second->N) << endl;
+            failed++;
+        }
+
+        Array<OneD, NekDouble> loc = bit->first->GetLoc();
+        for(int k = 0; k < 3; k++)
+        {
+            loc[k] += bit->second->N[k] * m_bl;
+        }
+        bit->second->pNode = boost::shared_ptr<Node>(new Node(
+                                        m_mesh->m_numNodes++,
+                                        loc[0], loc[1], loc[2]));
+
+        bit->second->bl = m_bl;
+    }
+
+    m_symSurfs = vector<int>(symSurfs.begin(), symSurfs.end());
 
     //now need to enforce that all symmetry plane nodes have their normal
     //forced onto the symmetry surface
-    map<NodeSharedPtr, blInfoSharedPtr>::iterator bit;
+
     for(bit = blData.begin(); bit != blData.end(); bit++)
     {
         if(!bit->second->onSym)
@@ -206,29 +194,23 @@ void BLMesh::Mesh()
     map<NodeSharedPtr, vector<blInfoSharedPtr> > nToNInfo; //node to neighbouring information
     for(bit = blData.begin(); bit != blData.end(); bit++)
     {
-        set<NodeSharedPtr> nds;
-        vector<ElementSharedPtr> el = nToTri[bit->first];
-        for(int i = 0; i < el.size(); i++)
+        set<int> added;
+        added.insert(bit->first->m_id);
+        for(int i = 0; i < bit->second->els.size(); i++)
         {
-            vector<NodeSharedPtr> ns = el[i]->GetVertexList();
+            vector<NodeSharedPtr> ns = bit->second->els[i]->GetVertexList();
             for(int j = 0; j < ns.size(); j++)
             {
-                if(ns[j] == bit->first)
+                set<int>::iterator t = added.find(ns[j]->m_id);
+                if(t == added.end())
                 {
-                    continue;
+                    nToNInfo[bit->first].push_back(blData[ns[j]]);
                 }
-                nds.insert(ns[j]);
             }
-        }
-
-        set<NodeSharedPtr>::iterator it;
-        for(it = nds.begin(); it != nds.end(); it++)
-        {
-            nToNInfo[bit->first].push_back(blData[(*it)]);
         }
     }
 
-    for(int l = 0; l < 5; l++)
+    for(int l = 0; l < 10; l++)
     {
         for(bit = blData.begin(); bit != blData.end(); bit++)
         {
@@ -239,20 +221,18 @@ void BLMesh::Mesh()
 
             Array<OneD, NekDouble> sumV(3,0.0);
             vector<blInfoSharedPtr> data = nToNInfo[bit->first];
-            int Dtotal = 0.0;
+            NekDouble Dtotal = 0.0;
             for(int i = 0; i < data.size(); i++)
             {
                 NekDouble d = bit->first->Distance(data[i]->oNode);
+                Dtotal += d;
                 sumV[0] += data[i]->N[0] / d;
                 sumV[1] += data[i]->N[1] / d;
                 sumV[2] += data[i]->N[2] / d;
-                Dtotal += d;
-                cout << data[i]->N[0] << " " << data[i]->N[1] << " " << data[i]->N[2] << endl;
             }
-            cout << sumV[0] << " " << sumV[1] << " " << sumV[2] << endl;
-            sumV[0] *= Dtotal / data.size();
-            sumV[1] *= Dtotal / data.size();
-            sumV[2] *= Dtotal / data.size();
+            sumV[0] *= Dtotal;
+            sumV[1] *= Dtotal;
+            sumV[2] *= Dtotal;
             NekDouble mag = sqrt(sumV[0]*sumV[0] + sumV[1]*sumV[1] + sumV[2]*sumV[2]);
             sumV[0] /= mag;
             sumV[1] /= mag;

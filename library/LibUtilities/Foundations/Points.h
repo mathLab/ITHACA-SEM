@@ -162,7 +162,6 @@ namespace Nektar
                 case eNodalTetEvenlySpaced:
                 case eNodalPrismEvenlySpaced:
                 case eNodalPrismElec:
-                case eNodalPrismSPI:
                     dimpoints = 3;
                     break;
 

@@ -2,7 +2,7 @@
 <test>
     <description>Nodal prism integration, evenly spaced points, P = 6</description>
     <executable>NodalDemo</executable>
-    <parameters>--order 6 --type 29 --integral</parameters>
+    <parameters>--order 6 --type 27 --integral</parameters>
     <metrics>
         <metric type="Linf" id="1">
             <value tolerance="1e-12">3.00544e-06</value>

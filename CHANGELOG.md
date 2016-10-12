@@ -43,6 +43,7 @@ v4.4.0
 
 **FieldConvert:**
 - Allow equi-spaced output for 1D and 2DH1D fields (!613)
+- Update quality metric to include scaled Jacobian output (!695)
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)

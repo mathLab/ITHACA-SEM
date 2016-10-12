@@ -53,6 +53,18 @@ in its compressed format \inltt{test.xml.gz}.
 %
 %
 %
+\section{Convert field files between XML and HDF5 format}
+%
+When \nekpp is compiled with HDF5 support, solvers can select the format used
+for output of \inltt{.fld} files. FieldConvert can be used to convert between
+these formats using an option on the \inltt{.fld} output module. For example, if
+\inltt{in.fld} is stored in the default XML format, it can be converted to HDF5
+format by issuing the command
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert in.fld out.fld:fld:format=Hdf5
+\end{lstlisting}
+% 
 \section{Range option \textit{-r}}
 The Fieldconvert range option \inltt{-r} allows the user to specify
 a sub-range of the mesh (computational domain) by using an
@@ -110,6 +122,7 @@ possibly also Reynolds stresses) into single file;
 \item \inltt{interppoints}: Interpolates a set of points to another, requires fromfld and fromxml to be defined, a line or plane of points can be defined;
 \item \inltt{isocontour}: Extract an isocontour of ``fieldid'' variable and at value ``fieldvalue''. Optionally ``fieldstr'' can be specified for a string defiition or ``smooth'' for smoothing;
 \item \inltt{jacobianenergy}: Shows high frequency energy of Jacobian;
+\item \inltt{qualitymetric}: Evaluate a quality metric of the underlying mesh to show mesh quality;
 \item \inltt{meanmode}: Extract mean mode (plane zero) of 3DH1D expansions;
 \item \inltt{pointdatatofld}: Given discrete data at quadrature points
   project them onto an expansion basis and output fld file; 
@@ -616,6 +629,38 @@ keep.
 The output file \inltt{jacenergy.fld} can be processed in a similar
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise the result either in Tecplot, Paraview or VisIt. 
+
+\subsection{Calculate mesh quality: \textit{qualitymetric} module}
+
+The \inltt{qualitymetric} module assesses the quality of the mesh by calculating
+a per-element quality metric and adding an additional field to any resulting
+output. This does not require any field input, therefore an example usage looks
+like
+
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m qualitymetric mesh.xml mesh-with-quality.dat
+\end{lstlisting}
+
+Two quality metrics are implemented that produce scalar fields $Q$:
+
+\begin{itemize}
+  \item By default a metric outlined in~\cite{GaRoPeSa15} is produced, where all
+  straight sided elements have quality $Q = 1$ and $Q < 1$ shows the deformation
+  between the curved element and the straight-sided element. If $Q = 0$ then the
+  element is invalid. Note that $Q$ varies over the volume of the element but is
+  not guaranteed to be continuous between elements.
+  \item Alternatively, if the \inlsh{scaled} option is passed through to the
+  module, then the scaled Jacobian
+  \[
+    J_s =
+    \frac{\min_{\xi\in\Omega_{\text{st}}}J(\xi)}{\max_{\xi\in\Omega_{\text{st}}}J(\xi)}
+  \]
+  (i.e. the ratio of the minimum to maximum Jacobian of each element) is
+  calculated. Again $Q = 1$ denotes an ideal element, but now invalid elements
+  are shown by $Q < 0$. Any elements with $Q$ near zero are determined to be low
+  quality.
+\end{itemize}
+
 
 %
 %

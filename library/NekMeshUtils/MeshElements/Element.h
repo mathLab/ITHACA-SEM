@@ -244,9 +244,11 @@ public:
         m_id = p;
     }
     /// Replace a vertex with another vertex object.
-    NEKMESHUTILS_EXPORT void SetVertex(unsigned int p, NodeSharedPtr pNew);
+    NEKMESHUTILS_EXPORT void SetVertex(
+        unsigned int p, NodeSharedPtr pNew, bool descend = true);
     /// Replace an edge with another edge object.
-    NEKMESHUTILS_EXPORT void SetEdge(unsigned int p, EdgeSharedPtr pNew);
+    NEKMESHUTILS_EXPORT void SetEdge(
+        unsigned int p, EdgeSharedPtr pNew, bool descend = true);
     /// Replace a face with another face object.
     NEKMESHUTILS_EXPORT void SetFace(unsigned int p, FaceSharedPtr pNew);
     /// Set a correspondence between this element and an edge
@@ -448,13 +450,60 @@ public:
                  "This function should be implemented at a shape level.");
         return boost::shared_ptr<SpatialDomains::Geometry>();
     }
+
     NEKMESHUTILS_EXPORT int GetMaxOrder();
-    /// Complete this object.
-    NEKMESHUTILS_EXPORT virtual void Complete(int order)
+
+    /**
+     * @brief Insert interior (i.e. volume) points into this element to make the
+     * geometry an order @p order representation.
+     *
+     * @param order          The desired polynomial order.
+     * @param geom           The geometry object used to describe the curvature
+     *                       mapping.
+     * @param edgeType       The points distribution to use on the volume.
+     * @param coordDim       The coordinate (i.e. space) dimension.
+     * @param id             Counter which should be incremented to supply
+     *                       consistent vertex IDs.
+     * @param justConfig     If true, then the configuration Element::m_conf
+     *                       will be updated but no nodes will be
+     *                       generated. This is used when considering boundary
+     *                       elements, which just require copying of face or
+     *                       edge interior nodes.
+     */
+    NEKMESHUTILS_EXPORT virtual void MakeOrder(
+        int                                order,
+        SpatialDomains::GeometrySharedPtr  geom,
+        LibUtilities::PointsType           edgeType,
+        int                                coordDim,
+        int                               &id,
+        bool                               justConfig = false)
     {
         ASSERTL0(false,
                  "This function should be implemented at a shape level.");
     }
+
+    /**
+     * @brief Get the edge orientation of @p edge with respect to the local
+     * element, which lies at edge index @p edgeId.
+     */
+    NEKMESHUTILS_EXPORT virtual StdRegions::Orientation GetEdgeOrient(
+        int edgeId, EdgeSharedPtr edge)
+    {
+        ASSERTL0(false,
+                 "This function should be implemented at a shape level.");
+        return StdRegions::eNoOrientation;
+    }
+
+    /**
+     * @brief Returns the local index of vertex @p j of face @p i.
+     */
+    NEKMESHUTILS_EXPORT virtual int GetFaceVertex(int i, int j)
+    {
+        ASSERTL0(false,
+                 "This function should be implemented at a shape level.");
+        return 0;
+    }
+
     NEKMESHUTILS_EXPORT void Print()
     {
         int i, j;

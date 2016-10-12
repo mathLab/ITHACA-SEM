@@ -64,6 +64,7 @@ namespace Nektar
         
         // 
         void ApplyIncNSMappingForcing (
+                const Array<OneD, const Array<OneD, NekDouble> >  &inarray,
                 Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
         virtual ~VCSMapping();
@@ -123,7 +124,7 @@ namespace Nektar
         // Correction needed for convective terms = N(u) - ( -(u \nabla) u)
         //     velPhys is the velocity field (transformed for physical space)
         void MappingAdvectionCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &velPhys,
+            const Array<OneD, const Array<OneD, NekDouble> >  &velPhys,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
         // Correction needed for time-derivative terms 
@@ -131,8 +132,8 @@ namespace Nektar
         //     vel     is the velocity field (can be in wavespace)
         //     velPhys is the velocity field (transformed for physical space)
         void MappingAccelerationCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &vel,
-            const Array<OneD, Array<OneD, NekDouble> >        &velPhys,
+            const Array<OneD, const Array<OneD, NekDouble> >  &vel,
+            const Array<OneD, const Array<OneD, NekDouble> >  &velPhys,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
 
         // Correction needed for pressure terms   
@@ -146,7 +147,7 @@ namespace Nektar
         //     vel     is the velocity field (can be in wavespace)
         //     velPhys is the velocity field (transformed for physical space)
         void MappingViscousCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &velPhys,
+            const Array<OneD, const Array<OneD, NekDouble> >  &velPhys,
             Array<OneD, Array<OneD, NekDouble> >              &outarray);
         
     };

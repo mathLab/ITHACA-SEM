@@ -39,6 +39,7 @@
 
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/Forcing/Forcing.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
 using namespace Nektar::SolverUtils;
@@ -72,12 +73,12 @@ class APE : public UnsteadySystem
     protected:
 
         SolverUtils::AdvectionSharedPtr                 m_advection;
+        std::vector<SolverUtils::ForcingSharedPtr>      m_forcing;
         SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
         Array<OneD, Array<OneD, NekDouble> >            m_traceBasefield;
         Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
         /// Isentropic coefficient, Ratio of specific heats (APE)
         NekDouble                                       m_gamma;
-        Array<OneD, NekDouble>                          m_sourceTerms;
         Array<OneD, Array<OneD, NekDouble> >            m_bf;
         MultiRegions::ExpListSharedPtr                  m_bfField;
         std::vector<std::string>                        m_bfNames;
@@ -101,9 +102,9 @@ class APE : public UnsteadySystem
                 const Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
-        virtual bool v_PostIntegrate(int step);
+        virtual bool v_PreIntegrate(int step);
 
-        void AddSource(Array< OneD, Array< OneD, NekDouble > >& outarray);
+        virtual bool v_PostIntegrate(int step);
 
         void GetStdVelocity(Array< OneD, NekDouble >& stdV);
 

@@ -18,6 +18,13 @@ v4.4.0
   operations during simulation using a new filter (!589)
 - Adjust CMake dependencies to reduce compile time (!671)
 - Homogeneous1D dealiasing improvements (!622)
+- Add support for HDF5 as an alternative output to XML-based output, including
+  refactoring of FieldIO, improvements to MPI interface and added communicators
+  to boundary conditions (!615)
+- Allow expansions to be loaded directly from field file (!617)
+- New options for load balancing (DOF or BOUNDARY) in mesh partitioner (!617)
+- Rework nodal utilities to support nodal prismatic elements (!660)
+- Update Body/Field forces at each timestep (!665)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)
@@ -26,6 +33,7 @@ v4.4.0
 - Use a continuous basefield projection and revert to constant c formulation (!664)
 - Added ability to compute CFL number (!664)
 - Output Sourceterm (!664)
+- Use the Forcing framework to define source terms (!665)
 
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
@@ -33,13 +41,21 @@ v4.4.0
 
 **FieldConvert:**
 - Allow equi-spaced output for 1D and 2DH1D fields (!613)
+- Update quality metric to include scaled Jacobian output (!695)
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
 - Add STL surface writer module (!668)
 - New module for inserting an alternate high-order surface into the working
   mesh (!669)
+- Add curve projection routines to CAD system (!697)
 - Improvements to mesh linearisation module (!659)
+- Add support for Gmsh high-order output (!679)
+- Move CAD classes to factory format (!676)
+- Add module to check topology of the mesh along with boundary connectivity
+  to detect problems such as hanging nodes (!691)
+- Add option to `linearise` module to linearise only prisms (!688)
+- Add option to `linearise` to use element quality (!690)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing
@@ -47,11 +63,24 @@ v4.4.0
 - Add module to stretch homogeneous direction (!609)
 - Add module to add composite ID of elements as a field (!674)
 
+v4.3.5
+------
+**Documentation**
+- Update build instructions in user guide for Windows (!692)
+
 v4.3.4
 ------
 **Library:**
-- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of large
-  simulations (!672)
+- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of
+  large simulations (!672)
+- Added additional assertions to ensure homogeneous simulations have an even
+  number of planes per process (!666)
+- Fix compilation with NEKTAR_USE_MESHGEN option
+- Fix IterativeFull solver in parallel (!685)
+- Fix error message for missing fld file (!689)
+
+**IncNavierStokesSolver:**
+- Fix 2nd order time-integration for VCSMapping (!687)
 
 v4.3.3
 ------

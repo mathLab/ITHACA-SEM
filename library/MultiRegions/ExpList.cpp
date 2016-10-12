@@ -495,9 +495,10 @@ namespace Nektar
             Array<OneD, NekDouble> e_out_d0;
             Array<OneD, NekDouble> e_out_d1;
             Array<OneD, NekDouble> e_out_d2;
+            int offset;
             for (int i = 0; i < m_collections.size(); ++i)
             {
-                int offset = m_coll_phys_offset[i];
+                offset   = m_coll_phys_offset[i];
                 e_out_d0 = out_d0  + offset;
                 e_out_d1 = out_d1  + offset;
                 e_out_d2 = out_d2  + offset;
@@ -544,12 +545,17 @@ namespace Nektar
                 // convert enum into int
                 int intdir= (int)edir;
                 Array<OneD, NekDouble> e_out_d;
-                for(i= 0; i < (*m_exp).size(); ++i)
+                int offset;
+                for (int i = 0; i < m_collections.size(); ++i)
                 {
-                    e_out_d = out_d + m_phys_offset[i];
-                    (*m_exp)[i]->PhysDeriv(intdir, inarray+m_phys_offset[i], e_out_d);
-                }
+                    offset   = m_coll_phys_offset[i];
+                    e_out_d  = out_d  + offset;
 
+                    m_collections[i].ApplyOperator(Collections::ePhysDeriv,
+                                                   intdir,
+                                                   inarray + offset,
+                                                   e_out_d);
+                }
             }
         }
 
@@ -1910,6 +1916,7 @@ namespace Nektar
         
         void ExpList::ExtractFileBCs(
             const std::string               &fileName,
+            LibUtilities::CommSharedPtr      comm,
             const std::string               &varName,
             const boost::shared_ptr<ExpList> locExpList)
         {
@@ -1920,8 +1927,11 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            LibUtilities::FieldIO f(m_session->GetComm());
-            f.Import(fileName, FieldDef, FieldData);
+            std::string ft = LibUtilities::FieldIO::GetFileType(fileName, comm);
+            LibUtilities::FieldIOSharedPtr f = LibUtilities::GetFieldIOFactory()
+                .CreateInstance(ft, comm, m_session->GetSharedFilesystem());
+
+            f->Import(fileName, FieldDef, FieldData);
 
             bool found = false;
             for (j = 0; j < FieldDef.size(); ++j)
@@ -2368,8 +2378,8 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            vector<bool> returnval;
-            return returnval;
+            static vector<bool> tmp;
+            return tmp;
         }
 
 

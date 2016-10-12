@@ -77,11 +77,18 @@ public:
     NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
         int coordDim);
     NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
+    NEKMESHUTILS_EXPORT virtual int GetFaceVertex(int i, int j)
+    {
+        return m_faceIds[i][j];
+    }
 
     /**
      * Orientation of pyramid.
      */
     int orientationMap[5];
+
+private:
+    static int m_faceIds[5][4];
 };
 }
 }

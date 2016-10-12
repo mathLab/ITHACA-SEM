@@ -18,6 +18,7 @@ SET(NekMeshHeaders
     ProcessModules/ProcessExtractSurf.h
     ProcessModules/ProcessExtractTetPrismInterface.h
     ProcessModules/ProcessJac.h
+    ProcessModules/ProcessLinkCheck.h
     ProcessModules/ProcessLinear.h
     ProcessModules/ProcessPerAlign.h
     ProcessModules/ProcessScalar.h
@@ -47,6 +48,7 @@ SET(NekMeshSources
     ProcessModules/ProcessExtractSurf.cpp
     ProcessModules/ProcessExtractTetPrismInterface.cpp
     ProcessModules/ProcessJac.cpp
+    ProcessModules/ProcessLinkCheck.cpp
     ProcessModules/ProcessLinear.cpp
     ProcessModules/ProcessPerAlign.cpp
     ProcessModules/ProcessScalar.cpp
@@ -105,15 +107,20 @@ ADD_NEKTAR_TEST        (Nektar++/CylQuadBl)
 # Gmsh tests
 ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)
 ADD_NEKTAR_TEST        (Gmsh/CubeHex)
+ADD_NEKTAR_TEST        (Gmsh/CubeHexLinear)
 ADD_NEKTAR_TEST        (Gmsh/CubePrism)
+ADD_NEKTAR_TEST        (Gmsh/CubePrismLinear)
 ADD_NEKTAR_TEST        (Gmsh/CubeTet)
+ADD_NEKTAR_TEST        (Gmsh/CubeTetLinear)
 IF (WIN32)
     ADD_NEKTAR_TEST    (Gmsh/Scalar_Windows)
 ELSE ()
     ADD_NEKTAR_TEST    (Gmsh/Scalar)
 ENDIF ()
 ADD_NEKTAR_TEST        (Gmsh/SquareQuad)
+ADD_NEKTAR_TEST        (Gmsh/SquareQuadLinear)
 ADD_NEKTAR_TEST        (Gmsh/SquareTri)
+ADD_NEKTAR_TEST        (Gmsh/SquareTriLinear)
 # Nektar tests
 ADD_NEKTAR_TEST        (Nektar/HexLinear)
 ADD_NEKTAR_TEST        (Nektar/Tube45)

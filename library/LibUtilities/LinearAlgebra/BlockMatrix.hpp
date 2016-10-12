@@ -167,8 +167,6 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT unsigned int GetStorageSize() const;
 
-            LIB_UTILITIES_EXPORT MatrixStorage GetType() const;
-
             LIB_UTILITIES_EXPORT unsigned int GetNumberOfBlockRows() const;
 
             LIB_UTILITIES_EXPORT unsigned int GetNumberOfBlockColumns() const;
@@ -176,6 +174,9 @@ namespace Nektar
             LIB_UTILITIES_EXPORT unsigned int GetNumberOfRowsInBlockRow(unsigned int blockRow) const;
 
             LIB_UTILITIES_EXPORT unsigned int GetNumberOfColumnsInBlockColumn(unsigned int blockCol) const;
+
+            LIB_UTILITIES_EXPORT void GetBlockSizes(Array<OneD, unsigned int>& rowSizes,
+                                                    Array<OneD, unsigned int>& colSizes) const;
 
             LIB_UTILITIES_EXPORT iterator begin();
             LIB_UTILITIES_EXPORT iterator end();
@@ -197,8 +198,6 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT virtual unsigned int v_GetStorageSize() const;
 
-            LIB_UTILITIES_EXPORT virtual MatrixStorage v_GetStorageType() const;
-
             LIB_UTILITIES_EXPORT virtual void v_Transpose();
 
             Array<OneD, boost::shared_ptr<InnerType> > m_data;
@@ -208,7 +207,6 @@ namespace Nektar
             unsigned int m_storageSize;
             unsigned int m_numberOfBlockRows;
             unsigned int m_numberOfBlockColumns;
-            MatrixStorage m_storageType;
             static NumberType m_zeroElement;
     };
 

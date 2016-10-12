@@ -56,6 +56,8 @@ struct blInfo
     bool onSym;
 };
 
+typedef boost::shared_ptr<blInfo> blInfoSharedPtr;
+
 class BLMesh
 {
 public:
@@ -88,7 +90,7 @@ private:
     /// list of surfaces to be remeshed due to the boundary layer
     std::vector<int> m_symSurfs;
     /// data structure used to store and develop bl information
-    std::map<NodeSharedPtr, blInfo> blData;
+    std::map<NodeSharedPtr, blInfoSharedPtr> blData;
     /// list of nodes which will lie of symtetry surfaces
     std::map<int, std::map<NodeSharedPtr, NodeSharedPtr> > m_symNodes;
     /// list of elements which form the psuedo surface from the top of prisms

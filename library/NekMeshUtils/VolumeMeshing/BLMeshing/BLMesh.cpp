@@ -56,7 +56,6 @@ void BLMesh::Mesh()
     //need a map from vertex idx to surface elements
     //but do not care about triangles which are not in the bl
     map<NodeSharedPtr, vector<ElementSharedPtr> > nToTri;
-    map<NodeSharedPtr, blInfo> nodeToBL;
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
         //orientate the triangle
@@ -117,46 +116,44 @@ void BLMesh::Mesh()
         if (inter.size() > 0)
         {
             //initialise a new bl boudnary node
-            blInfo bln;
-            bln.bl = 1;
-            bln.oNode = (*it);
-            bln.symsurf = 0;
+            blInfoSharedPtr bln = boost::shared_ptr<blInfo>(new blInfo);
+            bln->oNode = (*it);
 
             map<NodeSharedPtr, vector<ElementSharedPtr> >::iterator g = nToTri.find((*it));
             ASSERTL0(g != nToTri.end(),"failed to find");
 
             //calculate mesh normal
-            bln.N = GetNormal(g->second);
+            bln->N = GetNormal(g->second);
 
-            if(Visability(g->second,bln.N) < 0.0)
+            if(Visability(g->second,bln->N) < 0.0)
             {
                 cerr << "failed " << (*it)->m_x << " " << (*it)->m_y << " "
                                   << (*it)->m_z << " "
-                                  << Visability(g->second,bln.N) << endl;
+                                  << Visability(g->second,bln->N) << endl;
                 failed++;
             }
 
             Array<OneD, NekDouble> loc = (*it)->GetLoc();
             for(int k = 0; k < 3; k++)
             {
-                loc[k] += bln.N[k] * m_bl;
+                loc[k] += bln->N[k] * m_bl;
             }
-            bln.pNode = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
+            bln->pNode = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
                                             loc[0], loc[1], loc[2]));
 
-            nodeToBL[bln.pNode] = bln;
+            bln->bl = m_bl;
 
             if(diff.size() > 0)
             {
                 //if the diff size is greater than 1 there is a curve that needs remeshing
                 ASSERTL0(diff.size() <= 1,"not setup for curve bl refinement");
                 symSurfs.insert(diff[0]);
-                bln.symsurf = diff[0];
-                bln.onSym = true;
+                bln->symsurf = diff[0];
+                bln->onSym = true;
             }
             else
             {
-                bln.onSym = false;
+                bln->onSym = false;
             }
 
             blData[(*it)] = bln;
@@ -172,20 +169,20 @@ void BLMesh::Mesh()
 
     //now need to enforce that all symmetry plane nodes have their normal
     //forced onto the symmetry surface
-    map<NodeSharedPtr, blInfo>::iterator bit;
+    map<NodeSharedPtr, blInfoSharedPtr>::iterator bit;
     for(bit = blData.begin(); bit != blData.end(); bit++)
     {
-        if(!bit->second.onSym)
+        if(!bit->second->onSym)
         {
             continue;
         }
 
         Array<OneD, NekDouble> uv(2);
-        Array<OneD, NekDouble> loc = bit->second.pNode->GetLoc();
-        m_mesh->m_cad->GetSurf(bit->second.symsurf)->ProjectTo(loc, uv);
+        Array<OneD, NekDouble> loc = bit->second->pNode->GetLoc();
+        m_mesh->m_cad->GetSurf(bit->second->symsurf)->ProjectTo(loc, uv);
 
         Array<OneD, NekDouble> nl = m_mesh->m_cad->
-                                        GetSurf(bit->second.symsurf)->P(uv);
+                                        GetSurf(bit->second->symsurf)->P(uv);
 
         Array<OneD, NekDouble> N(3);
         N[0] = nl[0] - bit->first->m_x;
@@ -197,10 +194,79 @@ void BLMesh::Mesh()
         N[1] /= mag;
         N[2] /= mag;
 
-        bit->second.N = N;
-        bit->second.pNode->m_x = bit->first->m_x + N[0];
-        bit->second.pNode->m_y = bit->first->m_y + N[1];
-        bit->second.pNode->m_z = bit->first->m_z + N[2];
+        bit->second->N = N;
+        bit->second->pNode->m_x = bit->first->m_x + N[0];
+        bit->second->pNode->m_y = bit->first->m_y + N[1];
+        bit->second->pNode->m_z = bit->first->m_z + N[2];
+    }
+
+
+    //now smooth all the normals by distance weighted average
+    //keep normals on curves constant
+    map<NodeSharedPtr, vector<blInfoSharedPtr> > nToNInfo; //node to neighbouring information
+    for(bit = blData.begin(); bit != blData.end(); bit++)
+    {
+        set<NodeSharedPtr> nds;
+        vector<ElementSharedPtr> el = nToTri[bit->first];
+        for(int i = 0; i < el.size(); i++)
+        {
+            vector<NodeSharedPtr> ns = el[i]->GetVertexList();
+            for(int j = 0; j < ns.size(); j++)
+            {
+                if(ns[j] == bit->first)
+                {
+                    continue;
+                }
+                nds.insert(ns[j]);
+            }
+        }
+
+        set<NodeSharedPtr>::iterator it;
+        for(it = nds.begin(); it != nds.end(); it++)
+        {
+            nToNInfo[bit->first].push_back(blData[(*it)]);
+        }
+    }
+
+    for(int l = 0; l < 5; l++)
+    {
+        for(bit = blData.begin(); bit != blData.end(); bit++)
+        {
+            if(bit->first->GetNumCADSurf() > 1)
+            {
+                continue;
+            }
+
+            Array<OneD, NekDouble> sumV(3,0.0);
+            vector<blInfoSharedPtr> data = nToNInfo[bit->first];
+            int Dtotal = 0.0;
+            for(int i = 0; i < data.size(); i++)
+            {
+                NekDouble d = bit->first->Distance(data[i]->oNode);
+                sumV[0] += data[i]->N[0] / d;
+                sumV[1] += data[i]->N[1] / d;
+                sumV[2] += data[i]->N[2] / d;
+                Dtotal += d;
+                cout << data[i]->N[0] << " " << data[i]->N[1] << " " << data[i]->N[2] << endl;
+            }
+            cout << sumV[0] << " " << sumV[1] << " " << sumV[2] << endl;
+            sumV[0] *= Dtotal / data.size();
+            sumV[1] *= Dtotal / data.size();
+            sumV[2] *= Dtotal / data.size();
+            NekDouble mag = sqrt(sumV[0]*sumV[0] + sumV[1]*sumV[1] + sumV[2]*sumV[2]);
+            sumV[0] /= mag;
+            sumV[1] /= mag;
+            sumV[2] /= mag;
+
+            bit->second->N[0] = (1.0-0.8) * bit->second->N[0] + 0.8 * sumV[0];
+            bit->second->N[1] = (1.0-0.8) * bit->second->N[1] + 0.8 * sumV[1];
+            bit->second->N[2] = (1.0-0.8) * bit->second->N[2] + 0.8 * sumV[2];
+
+            mag = sqrt(bit->second->N[0]*bit->second->N[0] + bit->second->N[1]*bit->second->N[1] + bit->second->N[2]*bit->second->N[2]);
+            bit->second->N[0] /= mag;
+            bit->second->N[1] /= mag;
+            bit->second->N[2] /= mag;
+        }
     }
 
     ofstream file;
@@ -209,9 +275,9 @@ void BLMesh::Mesh()
     {
         NekDouble l = 0.05;
         file << bit->first->m_x << ", " << bit->first->m_y << ", " << bit->first->m_z << endl;
-        file << bit->first->m_x + bit->second.N[0]*l << ", "
-             << bit->first->m_y + bit->second.N[1]*l << ", "
-             << bit->first->m_z + bit->second.N[2]*l << endl;
+        file << bit->first->m_x + bit->second->N[0]*l << ", "
+             << bit->first->m_y + bit->second->N[1]*l << ", "
+             << bit->first->m_z + bit->second->N[2]*l << endl;
         file << endl;
     }
     exit(-1);

@@ -69,7 +69,9 @@ public:
                 : m_vertexList(pVertexList), m_edgeList(pEdgeList),
                   m_faceNodes(pFaceNodes), m_curveType(pCurveType), m_geom()
     {
+#ifdef NEKTAR_USE_MESHGEN
         onSurf = false;
+#endif
     }
 
     /// Copy an existing face.
@@ -78,7 +80,9 @@ public:
               m_faceNodes(pSrc.m_faceNodes), m_curveType(pSrc.m_curveType),
               m_geom(pSrc.m_geom)
     {
+#ifdef NEKTAR_USE_MESHGEN
         onSurf = false;
+#endif
     }
     NEKMESHUTILS_EXPORT ~Face()
     {

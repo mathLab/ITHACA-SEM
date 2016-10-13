@@ -200,12 +200,12 @@ void InputCAD::Process()
         mods.back()->RegisterConfig("blthick",m_blthick);
     }
 
-    mods.push_back(GetModuleFactory().CreateInstance(
+    /*mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh));
     if(m_surfopti)
     {
         mods.back()->RegisterConfig("opti","");
-    }
+    }*/
 
     for(int i = 0; i < mods.size(); i++)
     {

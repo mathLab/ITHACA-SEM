@@ -58,6 +58,10 @@ void BLMesh::Mesh()
     NodeSet::iterator it;
     int ct = 0;
     int failed = 0;
+
+    ofstream file1;
+    file1.open("pts.3D");
+    file1 << "X Y Z value" << endl;
     for(it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end(); it++, ct++)
     {
         vector<pair<int, CADSurfSharedPtr> > ss = (*it)->GetCADSurfs();
@@ -83,6 +87,8 @@ void BLMesh::Mesh()
             blInfoSharedPtr bln = boost::shared_ptr<blInfo>(new blInfo);
             bln->oNode = (*it);
 
+            file1 << (*it)->m_x << " " << (*it)->m_y << " " << (*it)->m_z << " " << ss.size() << endl;
+
             if(diff.size() > 0)
             {
                 //if the diff size is greater than 1 there is a curve that needs remeshing
@@ -99,6 +105,7 @@ void BLMesh::Mesh()
             blData[(*it)] = bln;
         }
     }
+    file1.close();
 
     //need a map from vertex idx to surface elements
     //but do not care about triangles which are not in the bl
@@ -127,8 +134,6 @@ void BLMesh::Mesh()
         }
     }
 
-    cout << m_mesh->m_numNodes << endl;
-
     map<NodeSharedPtr, blInfoSharedPtr>::iterator bit;
     for(bit = blData.begin(); bit != blData.end(); bit++)
     {
@@ -155,14 +160,11 @@ void BLMesh::Mesh()
         bit->second->bl = m_bl;
     }
 
-    cout << m_mesh->m_numNodes << endl << endl;
-
     m_symSurfs = vector<int>(symSurfs.begin(), symSurfs.end());
 
     //now need to enforce that all symmetry plane nodes have their normal
     //forced onto the symmetry surface
-
-    for(bit = blData.begin(); bit != blData.end(); bit++)
+    /*for(bit = blData.begin(); bit != blData.end(); bit++)
     {
         if(!bit->second->onSym)
         {
@@ -254,9 +256,9 @@ void BLMesh::Mesh()
             bit->second->N = N;
             bit->second->AlignNode();
         }
-    }
+    }*/
 
-    /*ofstream file;
+    ofstream file;
     file.open("bl.lines");
     for(bit = blData.begin(); bit != blData.end(); bit++)
     {
@@ -267,7 +269,7 @@ void BLMesh::Mesh()
              << bit->first->m_z + bit->second->N[2]*l << endl;
         file << endl;
     }
-    exit(-1);*/
+    file.close();
 
 
     ASSERTL0(failed == 0, "some normals failed to generate");

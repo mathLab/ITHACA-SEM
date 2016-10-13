@@ -190,7 +190,7 @@ void BLMesh::Mesh()
         bit->second->pNode->m_x = bit->first->m_x + bit->second->bl*N[0];
         bit->second->pNode->m_y = bit->first->m_y + bit->second->bl*N[1];
         bit->second->pNode->m_z = bit->first->m_z + bit->second->bl*N[2];
-    }
+    }*/
 
 
     //now smooth all the normals by distance weighted average

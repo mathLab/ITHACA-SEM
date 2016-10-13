@@ -50,11 +50,18 @@ struct blInfo
 {
     NodeSharedPtr pNode;
     NodeSharedPtr oNode;
-    int bl;
+    NekDouble bl;
     Array<OneD, NekDouble> N;
     int symsurf;
     bool onSym;
     std::vector<ElementSharedPtr> els;
+
+    void AlignNode()
+    {
+        pNode->m_x = oNode->m_x + bl * N[0];
+        pNode->m_y = oNode->m_y + bl * N[1];
+        pNode->m_z = oNode->m_z + bl * N[2];
+    }
 };
 
 typedef boost::shared_ptr<blInfo> blInfoSharedPtr;

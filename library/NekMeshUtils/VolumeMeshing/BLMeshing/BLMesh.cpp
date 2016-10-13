@@ -162,7 +162,7 @@ void BLMesh::Mesh()
     //now need to enforce that all symmetry plane nodes have their normal
     //forced onto the symmetry surface
 
-    /*for(bit = blData.begin(); bit != blData.end(); bit++)
+    for(bit = blData.begin(); bit != blData.end(); bit++)
     {
         if(!bit->second->onSym)
         {
@@ -187,10 +187,8 @@ void BLMesh::Mesh()
         N[2] /= mag;
 
         bit->second->N = N;
-        bit->second->pNode->m_x = bit->first->m_x + bit->second->bl*N[0];
-        bit->second->pNode->m_y = bit->first->m_y + bit->second->bl*N[1];
-        bit->second->pNode->m_z = bit->first->m_z + bit->second->bl*N[2];
-    }*/
+        bit->second->AlignNode();
+    }
 
 
     //now smooth all the normals by distance weighted average
@@ -242,14 +240,19 @@ void BLMesh::Mesh()
             sumV[1] /= mag;
             sumV[2] /= mag;
 
-            bit->second->N[0] = (1.0-0.8) * bit->second->N[0] + 0.8 * sumV[0];
-            bit->second->N[1] = (1.0-0.8) * bit->second->N[1] + 0.8 * sumV[1];
-            bit->second->N[2] = (1.0-0.8) * bit->second->N[2] + 0.8 * sumV[2];
+            Array<OneD, NekDouble> N(3);
 
-            mag = sqrt(bit->second->N[0]*bit->second->N[0] + bit->second->N[1]*bit->second->N[1] + bit->second->N[2]*bit->second->N[2]);
-            bit->second->N[0] /= mag;
-            bit->second->N[1] /= mag;
-            bit->second->N[2] /= mag;
+            N[0] = (1.0-0.8) * bit->second->N[0] + 0.8 * sumV[0];
+            N[1] = (1.0-0.8) * bit->second->N[1] + 0.8 * sumV[1];
+            N[2] = (1.0-0.8) * bit->second->N[2] + 0.8 * sumV[2];
+
+            mag = sqrt(N[0]*N[0] + N[1]*N[1] + N[2]*N[2]);
+            N[0] /= mag;
+            N[1] /= mag;
+            N[2] /= mag;
+
+            bit->second->N = N;
+            bit->second->AlignNode();
         }
     }
 

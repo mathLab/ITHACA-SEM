@@ -34,8 +34,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/MeshElements/Edge.h>
+
+#ifdef NEKTAR_USE_MESHGEN
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
+#endif
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
 

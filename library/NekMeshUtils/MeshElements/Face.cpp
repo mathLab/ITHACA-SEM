@@ -34,7 +34,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/MeshElements/Face.h>
+
+#ifdef NEKTAR_USE_MESHGEN
 #include <NekMeshUtils/CADSystem/CADSurf.h>
+#endif
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
 

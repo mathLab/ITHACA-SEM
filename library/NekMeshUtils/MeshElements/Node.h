@@ -38,6 +38,8 @@
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
+#include <iomanip>
+
 #ifdef NEKTAR_USE_MESHGEN
 #include <SpatialDomains/PointGeom.h>
 #include <NekMeshUtils/CADSystem/CADSystem.h>

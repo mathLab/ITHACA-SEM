@@ -127,6 +127,8 @@ void BLMesh::Mesh()
         }
     }
 
+    cout << m_mesh->m_numNodes << endl;
+
     map<NodeSharedPtr, blInfoSharedPtr>::iterator bit;
     for(bit = blData.begin(); bit != blData.end(); bit++)
     {
@@ -146,19 +148,21 @@ void BLMesh::Mesh()
         {
             loc[k] += bit->second->N[k] * m_bl;
         }
+
         bit->second->pNode = boost::shared_ptr<Node>(new Node(
                                         m_mesh->m_numNodes++,
                                         loc[0], loc[1], loc[2]));
-
         bit->second->bl = m_bl;
     }
+
+    cout << m_mesh->m_numNodes << endl << endl;
 
     m_symSurfs = vector<int>(symSurfs.begin(), symSurfs.end());
 
     //now need to enforce that all symmetry plane nodes have their normal
     //forced onto the symmetry surface
 
-    for(bit = blData.begin(); bit != blData.end(); bit++)
+    /*for(bit = blData.begin(); bit != blData.end(); bit++)
     {
         if(!bit->second->onSym)
         {
@@ -183,9 +187,9 @@ void BLMesh::Mesh()
         N[2] /= mag;
 
         bit->second->N = N;
-        bit->second->pNode->m_x = bit->first->m_x + N[0];
-        bit->second->pNode->m_y = bit->first->m_y + N[1];
-        bit->second->pNode->m_z = bit->first->m_z + N[2];
+        bit->second->pNode->m_x = bit->first->m_x + bit->second->bl*N[0];
+        bit->second->pNode->m_y = bit->first->m_y + bit->second->bl*N[1];
+        bit->second->pNode->m_z = bit->first->m_z + bit->second->bl*N[2];
     }
 
 
@@ -249,7 +253,7 @@ void BLMesh::Mesh()
         }
     }
 
-    ofstream file;
+    /*ofstream file;
     file.open("bl.lines");
     for(bit = blData.begin(); bit != blData.end(); bit++)
     {
@@ -260,16 +264,20 @@ void BLMesh::Mesh()
              << bit->first->m_z + bit->second->N[2]*l << endl;
         file << endl;
     }
-    exit(-1);
+    exit(-1);*/
 
 
-    /*ASSERTL0(failed == 0, "some normals failed to generate");
-
-    map<NodeSharedPtr, blInfo>::iterator bit;
+    ASSERTL0(failed == 0, "some normals failed to generate");
 
     //make prisms
-
     map<int,int> nm;
+    nm[0] = 0;
+    nm[1] = 3;
+    nm[2] = 4;
+    nm[3] = 5;
+    nm[4] = 1;
+    nm[5] = 2;
+
     map<ElementSharedPtr,ElementSharedPtr> priToTri;
     map<ElementSharedPtr,ElementSharedPtr> priToPsd;
 
@@ -279,7 +287,8 @@ void BLMesh::Mesh()
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[2][i];
-        vector<unsigned int>::iterator f = find(m_blsurfs.begin(), m_blsurfs.end(),
+        vector<unsigned int>::iterator f = find(m_blsurfs.begin(),
+                                                m_blsurfs.end(),
                                                 el->CADSurfId);
 
         if(f == m_blsurfs.end())
@@ -292,18 +301,11 @@ void BLMesh::Mesh()
         vector<NodeSharedPtr> pn(6); //all prism nodes
         vector<NodeSharedPtr> n = el->GetVertexList();
 
-        nm[0] = 0;
-        nm[1] = 3;
-        nm[2] = 4;
-        nm[3] = 5;
-        nm[4] = 1;
-        nm[5] = 2;
-
         for(int j = 0; j < 3; j++)
         {
             pn[nm[j*2+0]] = n[j];
-            pn[nm[j*2+1]] = blData[n[j]].pNode;
-            tn[j] = blData[n[j]].pNode;
+            pn[nm[j*2+1]] = blData[n[j]]->pNode;
+            tn[j] = blData[n[j]]->pNode;
         }
 
 
@@ -324,42 +326,12 @@ void BLMesh::Mesh()
         priToPsd[E] = T;
     }
 
-    vector<ElementSharedPtr> prisms = m_mesh->m_element[3];
+    /*vector<ElementSharedPtr> prisms = m_mesh->m_element[3];
     set<int> stopped; //ids of nodes to no longer grow
     //loop over all the prisms, grow them one step, if it becomes invalid or
     //intersects mark it for stepping back. Step back all the marked elements
     //and then remove them from consideration (but keep intersection testing
     //them)
-
-    //at this point the pseduo surface should be a connectivity fixed entity
-    //therefore can be processed for data structures
-    NodeSet pseduoNodes;
-    EdgeSet pseduoEdges;
-    for(int i = 0; i < m_psuedoSurface.size(); i++)
-    {
-        vector<NodeSharedPtr> ns = m_psuedoSurface[i]->GetVertexList();
-        for(int j = 0; j < ns.size(); j++)
-        {
-            pseduoNodes.insert(ns[j]);
-        }
-
-        vector<EdgeSharedPtr> es = m_psuedoSurface[i]->GetEdgeList();
-        for(int j = 0; j < es.size(); j++)
-        {
-            pair<EdgeSet::iterator,bool> testIns;
-            testIns = pseduoEdges.insert(es[j]);
-            if (testIns.second)
-            {
-                (*testIns.first)->m_elLink.push_back(pair<ElementSharedPtr,int>(m_psuedoSurface[i],j));
-            }
-            else
-            {
-                m_psuedoSurface[i]->SetEdge(j, (*testIns.first));
-                (*testIns.first)->m_elLink.push_back(pair<ElementSharedPtr,int>(m_psuedoSurface[i],j));
-            }
-        }
-        m_psuedoSurface[i]->SetId(i);
-    }
 
     //need to build a list of nodes to neigbours
     map<NodeSharedPtr, vector<ElementSharedPtr> > nodeToNearPri;

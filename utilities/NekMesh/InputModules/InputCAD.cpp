@@ -151,7 +151,7 @@ void InputCAD::Process()
 
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
-    m_mesh->m_nummode = boost::lexical_cast<double>(m_order) + 1;
+    m_mesh->m_nummode = boost::lexical_cast<int>(m_order) + 1;
 
     vector<ModuleSharedPtr> mods;
 

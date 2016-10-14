@@ -55,6 +55,8 @@ struct blInfo
     int symsurf;
     bool onSym;
     std::vector<ElementSharedPtr> els;
+    std::vector<ElementSharedPtr> pEls;
+    EdgeSet edges;
 
     void AlignNode()
     {

@@ -37,11 +37,46 @@
 #include <NekMeshUtils/VolumeMeshing/BLMeshing/BLMesh.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/index/rtree.hpp>
+
+namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
+
+typedef bg::model::point<double, 3, bg::cs::cartesian> point;
+typedef bg::model::box<point> box;
+typedef std::pair<box, unsigned int> boxI;
+
 using namespace std;
 namespace Nektar
 {
 namespace NekMeshUtils
 {
+
+inline box GetBox(ElementSharedPtr el)
+{
+    NekDouble xmin =        numeric_limits<double>::max(),
+              xmax = -1.0 * numeric_limits<double>::max(),
+              ymin =        numeric_limits<double>::max(),
+              ymax = -1.0 * numeric_limits<double>::max(),
+              zmin =        numeric_limits<double>::max(),
+              zmax = -1.0 * numeric_limits<double>::max();
+
+    vector<NodeSharedPtr> ns = el->GetVertexList();
+    for(int i = 0; i < ns.size(); i++)
+    {
+        min(xmin,ns[i]->m_x);
+        max(xmax,ns[i]->m_x);
+        min(ymin,ns[i]->m_y);
+        max(ymax,ns[i]->m_y);
+        min(zmin,ns[i]->m_z);
+        max(zmax,ns[i]->m_z);
+    }
+
+    return box(point(xmin,ymin,zmin),point(xmax,ymax,zmax));
+}
 
 void BLMesh::Mesh()
 {
@@ -335,627 +370,89 @@ void BLMesh::Mesh()
 
         priToTri[E] = el;
         priToPsd[E] = T;
-    }
 
-    /*vector<ElementSharedPtr> prisms = m_mesh->m_element[3];
-    set<int> stopped; //ids of nodes to no longer grow
-    //loop over all the prisms, grow them one step, if it becomes invalid or
-    //intersects mark it for stepping back. Step back all the marked elements
-    //and then remove them from consideration (but keep intersection testing
-    //them)
-
-    //need to build a list of nodes to neigbours
-    map<NodeSharedPtr, vector<ElementSharedPtr> > nodeToNearPri;
-    for(int i = 0; i < m_mesh->m_element[3].size(); i++)
-    {
-        ElementSharedPtr el = m_mesh->m_element[3][i];
-        vector<NodeSharedPtr> ns = el->GetVertexList();
-        for(int j = 0; j < ns.size(); j++)
+        for(int j = 0; j < 3; j++)
         {
-            nodeToNearPri[ns[j]].push_back(el);
+            blData[n[j]]->pEls.push_back(T);
         }
     }
 
-    map<int, EdgeSharedPtr> pedges;
-    int ect = 0;
-    EdgeSet::iterator et;
-    for(et = pseduoEdges.begin(); et != pseduoEdges.end(); et++, ect++)
+    //need to construct a updating tree of the psuedo surface
+    //and the reminaing surface mesh minus the symmetry plane
+    int sid = m_mesh->m_element[2].size();
+
+    for(int i = 0; i < m_psuedoSurface.size(); i++)
     {
-        pedges[ect] = (*et);
+        m_psuedoSurface[i]->SetId(sid++);
     }
-
+    for(bit = blData.begin(); bit != blData.end(); bit++)
     {
-        //before iterating over the layers, do an intial intersection test
-        ANNpointArray dataPts;
-        ANNpoint queryPt;
-        ANNidxArray nnIdx;
-        ANNdistArray dists;
-        ANNkd_tree* kdTree;
-        queryPt = annAllocPt(3);
-        dataPts = annAllocPts(pedges.size(), 3);
-
-        NekDouble maxsize = 0.0;
-
-        map<int, EdgeSharedPtr>::iterator etr;
-        for(etr = pedges.begin(); etr != pedges.end(); etr++)
+        for(int i = 0; i < bit->second->pEls.size(); i++)
         {
-            dataPts[etr->first][0] = (etr->second->m_n1->m_x + etr->second->m_n2->m_x) / 2.0;
-            dataPts[etr->first][1] = (etr->second->m_n1->m_y + etr->second->m_n2->m_y) / 2.0;
-            dataPts[etr->first][2] = (etr->second->m_n1->m_z + etr->second->m_n2->m_z) / 2.0;
-
-            NekDouble size = sqrt((etr->second->m_n1->m_x - etr->second->m_n2->m_x) *
-                                  (etr->second->m_n1->m_x - etr->second->m_n2->m_x) +
-                                  (etr->second->m_n1->m_y - etr->second->m_n2->m_y) *
-                                  (etr->second->m_n1->m_y - etr->second->m_n2->m_y) +
-                                  (etr->second->m_n1->m_z - etr->second->m_n2->m_z) *
-                                  (etr->second->m_n1->m_z - etr->second->m_n2->m_z));
-            maxsize = max(size,maxsize);
-        }
-
-        kdTree = new ANNkd_tree(dataPts, pedges.size(), 3);
-
-        for(int j = 0; j < m_mesh->m_element[3].size(); j++)
-        {
-            map<ElementSharedPtr,ElementSharedPtr>::iterator f = priToPsd.find(m_mesh->m_element[3][j]);
-            ASSERTL0(f != priToPsd.end(),"not found");
-            vector<NodeSharedPtr> ns = f->second->GetVertexList();
-
-            ElementSharedPtr el = m_mesh->m_element[3][j];
-            SpatialDomains::GeometrySharedPtr geom =
-                                                el->GetGeom(m_mesh->m_spaceDim);
-            SpatialDomains::GeomFactorsSharedPtr gfac =
-                                                geom->GetGeomFactors();
-
-            if(!gfac->IsValid())
+            vector<EdgeSharedPtr> es = bit->second->pEls[i]->GetEdgeList();
+            for(int j = 0; j < es.size(); j++)
             {
-                cout << "intial invalid element" << endl;
-                cout << ns[0]->m_x << " " << ns[0]->m_y << " " << ns[0]->m_z << endl;
-            }
-
-            queryPt[0] = (ns[0]->m_x + ns[1]->m_x + ns[2]->m_x) / 3.0;
-            queryPt[1] = (ns[0]->m_y + ns[1]->m_y + ns[2]->m_y) / 3.0;
-            queryPt[2] = (ns[0]->m_z + ns[1]->m_z + ns[2]->m_z) / 3.0;
-
-            int sample = 0;
-            sample = kdTree->annkFRSearch(queryPt, maxsize*maxsize*2, sample);
-            nnIdx = new ANNidx[sample];
-            dists = new ANNdist[sample];
-            kdTree->annkSearch(queryPt, sample, nnIdx, dists);
-
-            int tested = 0;
-            int hited = 0;
-            for(int s = 0; s < sample; s++)
-            {
-                EdgeSharedPtr e = pedges[nnIdx[s]];
-
-                if(ns[0] == e->m_n1 ||
-                   ns[0] == e->m_n2 ||
-                   ns[1] == e->m_n1 ||
-                   ns[1] == e->m_n2 ||
-                   ns[2] == e->m_n1 ||
-                   ns[2] == e->m_n2)
+                if(es[j]->m_n1 == bit->second->pNode ||
+                   es[j]->m_n2 == bit->second->pNode)
                 {
-                    continue;
-                }
-
-                NekDouble A0,A1,A2,A3,A4,A5,A6,A7,A8;
-                NekDouble B0,B1,B2;
-                A0 = (e->m_n2->m_x - e->m_n1->m_x) * -1.0;
-                A1 = (e->m_n2->m_y - e->m_n1->m_y) * -1.0;
-                A2 = (e->m_n2->m_z - e->m_n1->m_z) * -1.0;
-                A3 = ns[1]->m_x - ns[0]->m_x;
-                A4 = ns[1]->m_y - ns[0]->m_y;
-                A5 = ns[1]->m_z - ns[0]->m_z;
-                A6 = ns[2]->m_x - ns[0]->m_x;
-                A7 = ns[2]->m_y - ns[0]->m_y;
-                A8 = ns[2]->m_z - ns[0]->m_z;
-
-                NekDouble det = A0 * (A4*A8 - A7*A5)
-                               -A3 * (A1*A8 - A7*A2)
-                               +A6 * (A1*A5 - A4*A2);
-
-                if(fabs(det) < 1e-15)
-                {
-                    //no intersecton
-                    continue;
-                }
-                B0 = e->m_n1->m_x - ns[0]->m_x;
-                B1 = e->m_n1->m_y - ns[0]->m_y;
-                B2 = e->m_n1->m_z - ns[0]->m_z;
-
-                tested++;
-
-                NekDouble X0,X1,X2;
-
-                X0 = B0 * (A4*A8 - A7*A5)
-                    -A3 * (B1*A8 - A7*B2)
-                    +A6 * (B1*A5 - A4*B2);
-
-                X1 = A0 * (B1*A8 - A7*B2)
-                    -B0 * (A1*A8 - A7*A2)
-                    +A6 * (A1*B2 - B1*A2);
-
-                X2 = A0 * (A4*B2 - B1*A5)
-                    -A3 * (A1*B2 - B1*A2)
-                    +B0 * (A1*A5 - A4*A2);
-
-
-                X0 /= det;
-                X1 /= det;
-                X2 /= det;
-
-                //check triangle intersecton
-                if(X1 >= 0.0 && X2 >=0.0 && X1 + X2 <= 1.0
-                   && X0 >= 0.0 && X0 <= 1.0)
-                {
-                    cout << "initialy intersecting element" << endl;
-                    cout << ns[0]->m_x << " " << ns[0]->m_y << " " << ns[0]->m_z << endl;
+                    bit->second->edges.insert(es[j]);
                 }
             }
         }
     }
-
-    for(int i = 2; i <= nlayers; i++)
+    vector<ElementSharedPtr> elsInRtree;
+    for(int i = 0; i < m_psuedoSurface.size(); i++)
     {
-        if (m_mesh->m_verbose)
-        {
-            LibUtilities::PrintProgressbar(
-                i, nlayers, "layers\t");
-        }
+        elsInRtree.push_back(m_psuedoSurface[i]);
+    }
+    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+    {
+        ElementSharedPtr el = m_mesh->m_element[2][i];
+        vector<unsigned int>::iterator f = find(m_blsurfs.begin(),
+                                                m_blsurfs.end(),
+                                                el->CADSurfId);
 
-        cout << endl;
-        vector<ElementSharedPtr> revert;
+        if(f == m_blsurfs.end())
+        {
+            //if this triangle is not in bl surfs continue
+            continue;
+        }
+        elsInRtree.push_back(m_mesh->m_element[2][i]);
+    }
+    map<int,int> ElToBrtId;
+    vector<box> boxes;
+    for(int i = 0; i < elsInRtree.size(); i++)
+    {
+        ElToBrtId[elsInRtree[i]->GetId()] = i;
+        boxes.push_back(GetBox(elsInRtree[i]));
+    }
+
+    bgi::rtree<boxI, bgi::dynamic_quadratic> rtree(bgi::dynamic_quadratic(elsInRtree.size(),1));
+    for(int i = 0; i < elsInRtree.size(); i++)
+    {
+        cout << bg::wkt<point>(boxes[i].min_corner()) << " " << bg::wkt<point>(boxes[i].max_corner()) << endl;
+        rtree.insert(make_pair(boxes[i],i));
+    }
+
+    do
+    {
+
         for(bit = blData.begin(); bit != blData.end(); bit++)
         {
-            set<int>::iterator f = stopped.find(bit->first->m_id);
-            if(f != stopped.end())
+            vector<boxI> intersects;
+            for(int i = 0; i < bit->second->pEls.size(); i++)
             {
-                continue;
+                rtree.query(bgi::intersects(boxes[bit->second->pEls[i]->GetId()]), back_inserter(intersects));
             }
 
-            bit->second.bl = i;
-
-            Array<OneD, NekDouble> loc = bit->first->GetLoc();
-            for(int k = 0; k < 3; k++)
-            {
-                loc[k] += bit->second.N[k] * blprog[bit->second.bl];
-            }
-
-            bit->second.pNode->m_x = loc[0];
-            bit->second.pNode->m_y = loc[1];
-            bit->second.pNode->m_z = loc[2];
-
-            if(bit->second.onSym)
-            {
-                CADSurfSharedPtr s = m_cad->GetSurf(bit->second.symsurf);
-                Array<OneD, NekDouble> uv(2);
-                s->ProjectTo(loc,uv);
-                bit->second.pNode->m_x = loc[0];
-                bit->second.pNode->m_y = loc[1];
-                bit->second.pNode->m_z = loc[2];
-            }
+            cout << intersects.size() << endl;
         }
 
-        //this is where proximity goes
-        //build a ANN tree from the center point of triangles
-        ANNpointArray dataPts;
-        ANNpoint queryPt;
-        ANNidxArray nnIdx;
-        ANNdistArray dists;
-        ANNkd_tree* kdTree;
-        queryPt = annAllocPt(3);
-        dataPts = annAllocPts(pedges.size(), 3);
+    }while(false);
 
-        NekDouble maxsize = 0.0;
-
-        map<int, EdgeSharedPtr>::iterator etr;
-        for(etr = pedges.begin(); etr != pedges.end(); etr++)
-        {
-            dataPts[etr->first][0] = (etr->second->m_n1->m_x + etr->second->m_n2->m_x) / 2.0;
-            dataPts[etr->first][1] = (etr->second->m_n1->m_y + etr->second->m_n2->m_y) / 2.0;
-            dataPts[etr->first][2] = (etr->second->m_n1->m_z + etr->second->m_n2->m_z) / 2.0;
-
-            NekDouble size = sqrt((etr->second->m_n1->m_x - etr->second->m_n2->m_x) *
-                                  (etr->second->m_n1->m_x - etr->second->m_n2->m_x) +
-                                  (etr->second->m_n1->m_y - etr->second->m_n2->m_y) *
-                                  (etr->second->m_n1->m_y - etr->second->m_n2->m_y) +
-                                  (etr->second->m_n1->m_z - etr->second->m_n2->m_z) *
-                                  (etr->second->m_n1->m_z - etr->second->m_n2->m_z));
-            maxsize = max(size,maxsize);
-        }
-
-        kdTree = new ANNkd_tree(dataPts, pedges.size(), 3);
-
-        for(int j = 0; j < prisms.size(); j++)
-        {
-            ElementSharedPtr el = prisms[j];
-            SpatialDomains::GeometrySharedPtr geom =
-                                                el->GetGeom(m_mesh->m_spaceDim);
-            SpatialDomains::GeomFactorsSharedPtr gfac =
-                                                geom->GetGeomFactors();
-
-            if(!gfac->IsValid())
-            {
-                revert.push_back(prisms[j]);
-                continue;
-            }
-
-            map<ElementSharedPtr,ElementSharedPtr>::iterator f = priToPsd.find(prisms[j]);
-            ASSERTL0(f != priToPsd.end(),"not found");
-            vector<NodeSharedPtr> ns = f->second->GetVertexList();
-
-            queryPt[0] = (ns[0]->m_x + ns[1]->m_x + ns[2]->m_x) / 3.0;
-            queryPt[1] = (ns[0]->m_y + ns[1]->m_y + ns[2]->m_y) / 3.0;
-            queryPt[2] = (ns[0]->m_z + ns[1]->m_z + ns[2]->m_z) / 3.0;
-
-            int sample = 0;
-            sample = kdTree->annkFRSearch(queryPt, maxsize*maxsize*2, sample);
-            nnIdx = new ANNidx[sample];
-            dists = new ANNdist[sample];
-            kdTree->annkSearch(queryPt, sample, nnIdx, dists);
-
-            for(int s = 0; s < sample; s++)
-            {
-                EdgeSharedPtr e = pedges[nnIdx[s]];
-
-                if(ns[0] == e->m_n1 ||
-                   ns[0] == e->m_n2 ||
-                   ns[1] == e->m_n1 ||
-                   ns[1] == e->m_n2 ||
-                   ns[2] == e->m_n1 ||
-                   ns[2] == e->m_n2)
-                {
-                    continue;
-                }
-
-                NekDouble A0,A1,A2,A3,A4,A5,A6,A7,A8;
-                NekDouble B0,B1,B2;
-                A0 = (e->m_n2->m_x - e->m_n1->m_x) * -1.0;
-                A1 = (e->m_n2->m_y - e->m_n1->m_y) * -1.0;
-                A2 = (e->m_n2->m_z - e->m_n1->m_z) * -1.0;
-                A3 = ns[1]->m_x - ns[0]->m_x;
-                A4 = ns[1]->m_y - ns[0]->m_y;
-                A5 = ns[1]->m_z - ns[0]->m_z;
-                A6 = ns[2]->m_x - ns[0]->m_x;
-                A7 = ns[2]->m_y - ns[0]->m_y;
-                A8 = ns[2]->m_z - ns[0]->m_z;
-
-                NekDouble det = A0 * (A4*A8 - A7*A5)
-                               -A3 * (A1*A8 - A7*A2)
-                               +A6 * (A1*A5 - A4*A2);
-
-                if(fabs(det) < 1e-15)
-                {
-                    //no intersecton
-                    continue;
-                }
-                B0 = e->m_n1->m_x - ns[0]->m_x;
-                B1 = e->m_n1->m_y - ns[0]->m_y;
-                B2 = e->m_n1->m_z - ns[0]->m_z;
-
-                NekDouble X0,X1,X2;
-
-                X0 = B0 * (A4*A8 - A7*A5)
-                    -A3 * (B1*A8 - A7*B2)
-                    +A6 * (B1*A5 - A4*B2);
-
-                X1 = A0 * (B1*A8 - A7*B2)
-                    -B0 * (A1*A8 - A7*A2)
-                    +A6 * (A1*B2 - B1*A2);
-
-                X2 = A0 * (A4*B2 - B1*A5)
-                    -A3 * (A1*B2 - B1*A2)
-                    +B0 * (A1*A5 - A4*A2);
-
-
-                X0 /= det;
-                X1 /= det;
-                X2 /= det;
-
-                //check triangle intersecton
-                if(X1 > -1e-6 && X2 > 1e-6 && X1 + X2 < 1.000001
-                   && X0 > -1e-6 && X0 < 1.000001)
-                {
-                    //hit
-                    revert.push_back(prisms[j]);
-                    break;
-                }
-            }
-        }
-
-        delete [] nnIdx;
-        delete [] dists;
-        delete kdTree;
-
-        //at this point we have a list of elements which were made invalid
-        //by the advancement of the layer
-        //now we need to loop over these and revert their heights
-        //in doing so connecting elements may also be made invalid therefore
-        //this is a recursive process
-
-        cout << "initial reversion " << revert.size() << endl;
-
-        while(revert.size() > 0)
-        {
-            set<int> reverted;
-            vector<ElementSharedPtr> toCheck;
-            for(int j = 0; j < revert.size(); j++)
-            {
-                map<ElementSharedPtr, ElementSharedPtr>::iterator f = priToTri.find(revert[j]);
-                ASSERTL0(f != priToTri.end(), "not found");
-                vector<NodeSharedPtr> ns = f->second->GetVertexList();
-
-                for(int k = 0; k < ns.size(); k++)
-                {
-                    map<NodeSharedPtr, blInfo>::iterator bli = blData.find(ns[k]);
-                    if(bli->second.bl < i-1)
-                    {
-                        cout << "not smooth specification " << i << " " << bli->second.bl << endl;
-                    }
-                    if(bli->second.bl == i-1)
-                    {
-                        continue;
-                    }
-
-                    bli->second.bl = i-1;
-
-                    Array<OneD, NekDouble> loc = bli->first->GetLoc();
-                    for(int k = 0; k < 3; k++)
-                    {
-                        loc[k] += bli->second.N[k] * blprog[bli->second.bl];
-                    }
-
-                    bli->second.pNode->m_x = loc[0];
-                    bli->second.pNode->m_y = loc[1];
-                    bli->second.pNode->m_z = loc[2];
-
-                    if(bit->second.onSym)
-                    {
-                        CADSurfSharedPtr s = m_cad->GetSurf(bit->second.symsurf);
-                        Array<OneD, NekDouble> uv(2);
-                        s->ProjectTo(loc,uv);
-                        bit->second.pNode->m_x = loc[0];
-                        bit->second.pNode->m_y = loc[1];
-                        bit->second.pNode->m_z = loc[2];
-                    }
-
-                    stopped.insert(ns[k]->m_id);
-
-                    map<NodeSharedPtr, vector<ElementSharedPtr> >::iterator pit =
-                                            nodeToNearPri.find(ns[k]);
-                    for(int l = 0; l < pit->second.size(); l++)
-                    {
-                        if(pit->second[l]->GetId() == revert[j]->GetId())
-                        {
-                            continue;
-                        }
-                        toCheck.push_back(pit->second[l]);
-                    }
-                }
-                reverted.insert(revert[j]->GetId());
-            }
-
-            revert.clear();
-
-            set<int> ids;
-            vector<ElementSharedPtr> tmp = toCheck;
-            toCheck.clear();
-            for(int k = 0; k < tmp.size(); k++)
-            {
-                set<int>::iterator f2 = ids.find(tmp[k]->GetId());
-                set<int>::iterator f3 = reverted.find(tmp[k]->GetId());
-                if(f2 == ids.end() && f3 == reverted.end())
-                {
-                    toCheck.push_back(tmp[k]);
-                    ids.insert(tmp[k]->GetId());
-                }
-            }
-
-            for(int k = 0; k < toCheck.size(); k++)
-            {
-                SpatialDomains::GeometrySharedPtr geom =
-                                                    toCheck[k]->GetGeom(m_mesh->m_spaceDim);
-                SpatialDomains::GeomFactorsSharedPtr gfac =
-                                                    geom->GetGeomFactors();
-
-                if(!gfac->IsValid())
-                {
-                    revert.push_back(toCheck[k]);
-                }
-            }
-        }
-
-        vector<ElementSharedPtr> tmp = prisms;
-        prisms.clear();
-
-        set<int> toAdd;
-
-        for(int j = 0; j < tmp.size(); j++)
-        {
-            map<ElementSharedPtr, ElementSharedPtr>::iterator f = priToTri.find(tmp[j]);
-            ASSERTL0(f != priToTri.end(), "not found");
-            vector<NodeSharedPtr> ns = f->second->GetVertexList();
-
-            int stop = 0;
-            for(int k = 0; k < ns.size(); k++)
-            {
-                set<int>::iterator s = stopped.find(ns[k]->m_id);
-                if(s != stopped.end())
-                {
-                    stop++;
-                }
-            }
-
-            if(stop > 0 && stop < 3)
-            {
-                int mn = 1000, mx = 0;
-                for(int k = 0; k < ns.size(); k++)
-                {
-                    map<NodeSharedPtr, blInfo>::iterator bli = blData.find(ns[k]);
-                    mn = min(mn, bli->second.bl);
-                    mx = min(mx, bli->second.bl);
-                }
-                if(mx - mn > 1)
-                {
-                    cout << "error in smoothness" << endl;
-                }
-                for(int k = 0; k < ns.size(); k++)
-                {
-                    toAdd.insert(ns[k]->m_id);
-                }
-            }
-            else if(stop == 0)
-            {
-                prisms.push_back(tmp[j]);
-            }
-        }
-
-        set<int>::iterator iit;
-        for(iit = toAdd.begin(); iit != toAdd.end(); iit++)
-        {
-            stopped.insert((*iit));
-        }
-    }
-
-    if(m_mesh->m_verbose)
-    {
-        cout << endl;
-    }
-
-    for(int i = 0; i < m_mesh->m_element[3].size(); i++)
-    {
-        SpatialDomains::GeometrySharedPtr geom =
-                                            m_mesh->m_element[3][i]->GetGeom(m_mesh->m_spaceDim);
-        SpatialDomains::GeomFactorsSharedPtr gfac =
-                                            geom->GetGeomFactors();
-
-        if(!gfac->IsValid())
-        {
-            cout << "still got an invalid element" << endl;
-        }
-    }
-
-
-    ANNpointArray dataPts;
-    ANNpoint queryPt;
-    ANNidxArray nnIdx;
-    ANNdistArray dists;
-    ANNkd_tree* kdTree;
-    queryPt = annAllocPt(3);
-    dataPts = annAllocPts(pedges.size(), 3);
-
-    NekDouble maxsize = 0.0;
-
-    map<int, EdgeSharedPtr>::iterator etr;
-    for(etr = pedges.begin(); etr != pedges.end(); etr++)
-    {
-        dataPts[etr->first][0] = (etr->second->m_n1->m_x + etr->second->m_n2->m_x) / 2.0;
-        dataPts[etr->first][1] = (etr->second->m_n1->m_y + etr->second->m_n2->m_y) / 2.0;
-        dataPts[etr->first][2] = (etr->second->m_n1->m_z + etr->second->m_n2->m_z) / 2.0;
-
-        NekDouble size = sqrt((etr->second->m_n1->m_x - etr->second->m_n2->m_x) *
-                              (etr->second->m_n1->m_x - etr->second->m_n2->m_x) +
-                              (etr->second->m_n1->m_y - etr->second->m_n2->m_y) *
-                              (etr->second->m_n1->m_y - etr->second->m_n2->m_y) +
-                              (etr->second->m_n1->m_z - etr->second->m_n2->m_z) *
-                              (etr->second->m_n1->m_z - etr->second->m_n2->m_z));
-        maxsize = max(size,maxsize);
-    }
-
-    kdTree = new ANNkd_tree(dataPts, pedges.size(), 3);
-
-    for(int j = 0; j < m_mesh->m_element[3].size(); j++)
-    {
-        map<ElementSharedPtr,ElementSharedPtr>::iterator f = priToPsd.find(m_mesh->m_element[3][j]);
-        ASSERTL0(f != priToPsd.end(),"not found");
-        vector<NodeSharedPtr> ns = f->second->GetVertexList();
-
-        queryPt[0] = (ns[0]->m_x + ns[1]->m_x + ns[2]->m_x) / 3.0;
-        queryPt[1] = (ns[0]->m_y + ns[1]->m_y + ns[2]->m_y) / 3.0;
-        queryPt[2] = (ns[0]->m_z + ns[1]->m_z + ns[2]->m_z) / 3.0;
-
-        int sample = 0;
-        sample = kdTree->annkFRSearch(queryPt, maxsize*maxsize*2, sample);
-        nnIdx = new ANNidx[sample];
-        dists = new ANNdist[sample];
-        kdTree->annkSearch(queryPt, sample, nnIdx, dists);
-
-        int tested = 0;
-        int hited = 0;
-        for(int s = 0; s < sample; s++)
-        {
-            EdgeSharedPtr e = pedges[nnIdx[s]];
-
-            if(ns[0] == e->m_n1 ||
-               ns[0] == e->m_n2 ||
-               ns[1] == e->m_n1 ||
-               ns[1] == e->m_n2 ||
-               ns[2] == e->m_n1 ||
-               ns[2] == e->m_n2)
-            {
-                continue;
-            }
-
-            DNekMat A(3,3,0.0);
-            NekVector<NekDouble> B(3,0.0);
-            A(0,0) = (e->m_n2->m_x - e->m_n1->m_x) * -1.0;
-            A(1,0) = (e->m_n2->m_y - e->m_n1->m_y) * -1.0;
-            A(2,0) = (e->m_n2->m_z - e->m_n1->m_z) * -1.0;
-            A(0,1) = ns[1]->m_x - ns[0]->m_x;
-            A(1,1) = ns[1]->m_y - ns[0]->m_y;
-            A(2,1) = ns[1]->m_z - ns[0]->m_z;
-            A(0,2) = ns[2]->m_x - ns[0]->m_x;
-            A(1,2) = ns[2]->m_y - ns[0]->m_y;
-            A(2,2) = ns[2]->m_z - ns[0]->m_z;
-
-            NekDouble det = A(0,0) * (A(1,1)*A(2,2) - A(2,1)*A(1,2))
-                           -A(0,1) * (A(1,0)*A(2,2) - A(2,0)*A(1,2))
-                           +A(0,2) * (A(1,0)*A(2,1) - A(2,0)*A(1,1));
-
-            if(fabs(det) < 1e-15)
-            {
-                //no intersecton
-                continue;
-            }
-            B(0) = e->m_n1->m_x - ns[0]->m_x;
-            B(1) = e->m_n1->m_y - ns[0]->m_y;
-            B(2) = e->m_n1->m_z - ns[0]->m_z;
-
-            tested++;
-
-            A.Invert();
-
-            NekVector<NekDouble> X = A * B;
-
-            //check triangle intersecton
-            if(X(1) > -1e-6 && X(2) > 1e-6 && X(1) + X(2) < 1.000001
-               && X(0) > -1e-6 && X(0) < 1.000001)
-            {
-                //hit
-                cout << "still got an intersection" << endl;
-            }
-        }
-        //cout << sample << " " << tested << " " << hited << endl;
-    }
-
-    //compile a map of the nodes needed for systemetry surfs
-    for(int i = 0; i < m_symSurfs.size(); i++)
-    {
-        int s = m_symSurfs[i];
-        map<NodeSharedPtr, NodeSharedPtr> nmap;
-        for(bit = blData.begin(); bit != blData.end(); bit++)
-        {
-            if(bit->second.symsurf == s)
-            {
-                nmap[bit->first] = bit->second.pNode;
-            }
-        }
-        m_symNodes[s] = nmap;
-    }
-
-    //m_mesh->m_element[2] = m_psuedoSurface;*/
 
 }
+
 NekDouble BLMesh::Visability(vector<ElementSharedPtr> tris, Array<OneD, NekDouble> N)
 {
     NekDouble mn = numeric_limits<double>::max();

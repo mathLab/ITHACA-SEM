@@ -37,6 +37,8 @@
 #include <NekMeshUtils/VolumeMeshing/BLMeshing/BLMesh.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 
+#include <algorithm>
+
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
@@ -67,12 +69,12 @@ inline box GetBox(ElementSharedPtr el)
     vector<NodeSharedPtr> ns = el->GetVertexList();
     for(int i = 0; i < ns.size(); i++)
     {
-        min(xmin,ns[i]->m_x);
-        max(xmax,ns[i]->m_x);
-        min(ymin,ns[i]->m_y);
-        max(ymax,ns[i]->m_y);
-        min(zmin,ns[i]->m_z);
-        max(zmax,ns[i]->m_z);
+        xmin = min(xmin,ns[i]->m_x);
+        xmax = max(xmax,ns[i]->m_x);
+        ymin = min(ymin,ns[i]->m_y);
+        ymax = max(ymax,ns[i]->m_y);
+        zmin = min(zmin,ns[i]->m_z);
+        zmax = max(zmax,ns[i]->m_z);
     }
 
     return box(point(xmin,ymin,zmin),point(xmax,ymax,zmax));
@@ -201,7 +203,7 @@ void BLMesh::Mesh()
         bit->second->bl = m_bl;
     }
 
-    m_symSurfs = vector<int>(symSurfs.begin(), symSurfs.end());
+    m_symSurfs = vector<unsigned int>(symSurfs.begin(), symSurfs.end());
 
     //now need to enforce that all symmetry plane nodes have their normal
     //forced onto the symmetry surface
@@ -412,12 +414,14 @@ void BLMesh::Mesh()
                                                 m_blsurfs.end(),
                                                 el->CADSurfId);
 
-        if(f == m_blsurfs.end())
+        vector<unsigned int>::iterator s = find(m_symSurfs.begin(),
+                                                m_symSurfs.end(),
+                                                el->CADSurfId);
+
+        if(f == m_blsurfs.end() && s == m_symSurfs.end())
         {
-            //if this triangle is not in bl surfs continue
-            continue;
+            elsInRtree.push_back(m_mesh->m_element[2][i]);
         }
-        elsInRtree.push_back(m_mesh->m_element[2][i]);
     }
     map<int,int> ElToBrtId;
     vector<box> boxes;
@@ -427,12 +431,12 @@ void BLMesh::Mesh()
         boxes.push_back(GetBox(elsInRtree[i]));
     }
 
-    bgi::rtree<boxI, bgi::dynamic_quadratic> rtree(bgi::dynamic_quadratic(elsInRtree.size(),1));
+    vector<boxI> inserts;
     for(int i = 0; i < elsInRtree.size(); i++)
     {
-        cout << bg::wkt<point>(boxes[i].min_corner()) << " " << bg::wkt<point>(boxes[i].max_corner()) << endl;
-        rtree.insert(make_pair(boxes[i],i));
+        inserts.push_back(make_pair(boxes[i],i));
     }
+    bgi::rtree<boxI, bgi::quadratic<16> > rtree(inserts);
 
     do
     {

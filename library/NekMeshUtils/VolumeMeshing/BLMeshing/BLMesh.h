@@ -98,7 +98,7 @@ private:
     /// thickness of the boundary layer
     NekDouble m_bl;
     /// list of surfaces to be remeshed due to the boundary layer
-    std::vector<int> m_symSurfs;
+    std::vector<unsigned int> m_symSurfs;
     /// data structure used to store and develop bl information
     std::map<NodeSharedPtr, blInfoSharedPtr> blData;
     /// list of nodes which will lie of symtetry surfaces

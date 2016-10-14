@@ -140,6 +140,12 @@ void BLMesh::Mesh()
         //calculate mesh normal
         bit->second->N = GetNormal(bit->second->els);
 
+        if(bit->second->N[0] != bit->second->N[0])
+        {
+            cout << "nan in normal" << endl;
+            exit(-1);
+        }
+
         if(Visability(bit->second->els,bit->second->N) < 0.0)
         {
             cerr << "failed " << bit->first->m_x << " " << bit->first->m_y << " "
@@ -164,7 +170,7 @@ void BLMesh::Mesh()
 
     //now need to enforce that all symmetry plane nodes have their normal
     //forced onto the symmetry surface
-    /*for(bit = blData.begin(); bit != blData.end(); bit++)
+    for(bit = blData.begin(); bit != blData.end(); bit++)
     {
         if(!bit->second->onSym)
         {
@@ -256,7 +262,7 @@ void BLMesh::Mesh()
             bit->second->N = N;
             bit->second->AlignNode();
         }
-    }*/
+    }
 
     ofstream file;
     file.open("bl.lines");
@@ -1024,7 +1030,7 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
     NekDouble dot = 0.0;
     int ct = 0;
     vector<NekDouble> a(N.size());
-    while(fabs(dot - 1) > 1e-8)
+    while(fabs(dot - 1) > 1e-6)
     {
         ct++;
         Array<OneD, NekDouble> Nplast(3);
@@ -1035,7 +1041,15 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
         NekDouble aSum = 0.0;
         for(int i = 0; i < N.size(); i++)
         {
-            a[i] = acos(Np[0]*N[i][0] + Np[1]*N[i][1] + Np[2]*N[i][2]);
+            NekDouble dot2 = Np[0]*N[i][0] + Np[1]*N[i][1] + Np[2]*N[i][2];
+            if(fabs(dot2 - 1) < 1e-6)
+            {
+                a[i] = 1e-6;
+            }
+            else
+            {
+                a[i] = acos(dot2);
+            }
 
             aSum += a[i];
         }
@@ -1044,7 +1058,6 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
         for(int i = 0; i < N.size(); i++)
         {
             w[i] = w[i] * a[i] / aSum;
-
             wSum += w[i];
         }
 
@@ -1082,22 +1095,6 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
             break;
         }
     }
-
-    /*NekDouble mn = numeric_limits<double>::max();
-    NekDouble mx = numeric_limits<double>::max() * -1.0;
-    for(int i = 0; i < N.size(); i++)
-    {
-        mn = min(mn , Np[0]*N[i][0] + Np[1]*N[i][1] + Np[2]*N[i][2]);
-        mx = max(mx , Np[0]*N[i][0] + Np[1]*N[i][1] + Np[2]*N[i][2]);
-    }
-    if(mn / mx < 0.9)
-    {
-        cout << mn / mx << endl;
-    }
-    else
-    {
-        return Array<OneD, NekDouble> (3,0.0);
-    }*/
 
     return Np;
 }

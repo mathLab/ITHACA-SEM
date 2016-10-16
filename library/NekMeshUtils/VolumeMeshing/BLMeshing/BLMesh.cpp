@@ -381,11 +381,9 @@ void BLMesh::Mesh()
 
     //need to construct a updating tree of the psuedo surface
     //and the reminaing surface mesh minus the symmetry plane
-    int sid = m_mesh->m_element[2].size();
-
-    for(int i = 0; i < m_psuedoSurface.size(); i++)
+    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
-        m_psuedoSurface[i]->SetId(sid++);
+        m_mesh->m_element[2][i]->SetId(0);
     }
     for(bit = blData.begin(); bit != blData.end(); bit++)
     {
@@ -403,10 +401,6 @@ void BLMesh::Mesh()
         }
     }
     vector<ElementSharedPtr> elsInRtree;
-    for(int i = 0; i < m_psuedoSurface.size(); i++)
-    {
-        elsInRtree.push_back(m_psuedoSurface[i]);
-    }
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[2][i];
@@ -423,11 +417,14 @@ void BLMesh::Mesh()
             elsInRtree.push_back(m_mesh->m_element[2][i]);
         }
     }
-    map<int,int> ElToBrtId;
+    for(int i = 0; i < m_psuedoSurface.size(); i++)
+    {
+        elsInRtree.push_back(m_psuedoSurface[i]);
+    }
     vector<box> boxes;
     for(int i = 0; i < elsInRtree.size(); i++)
     {
-        ElToBrtId[elsInRtree[i]->GetId()] = i;
+        elsInRtree[i]->SetId(i);
         boxes.push_back(GetBox(elsInRtree[i]));
     }
 

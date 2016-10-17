@@ -26,13 +26,13 @@ through a basic example to show how a mesh can be converted from the widely-used
 mesh-generator \gmsh to the XML file format.
 
 \begin{notebox}
-  The default since Jan 2016 is to output the .xml files in a
+  The default since January 2016 is to output the \inltt{.xml} files in a
   compressed form where the VERTEX, EDGES, FACES, ELEMENTS and CURVED
-  information is compressed into binary format which is then
-  converted into base64. This is identified for each section by the attribute
-  \inltt{COMPRESSED="B64Z-LittleEndian''}.  To output
-  in ascii format add the module option ``:xml:uncompress'' to the .xml file,
-  i.e. \\ \inltt{ \mc file.msh newfile.xml:xml:uncompress}
+  information is compressed into binary format which is then converted into
+  base64. This is identified for each section by the attribute
+  \inltt{COMPRESSED="B64Z-LittleEndian''}.  To output in ascii format add the
+  module option ``:xml:uncompress'' to the \inltt{.xml} file, i.e. \\ \inltt{
+    \mc file.msh newfile.xml:xml:uncompress}
 \end{notebox}
 
 \section{Exporting a mesh from \gmsh}
@@ -274,7 +274,9 @@ The following output formats are supported:
     \toprule
     \textbf{Format} & \textbf{Extension} & \textbf{High-order} & \textbf{Notes}\\
     \midrule
-    Gmsh & \texttt{msh} & \cmark & Curvature output is highly experimental.\\
+    Gmsh & \texttt{msh} & \cmark & High-order hexes, quads, tetrahedra and
+    triangles are supported up to arbitrary order. Prisms supported up to order
+    4, pyramids up to order 1.\\
     Nektar++ & \texttt{xml} & \cmark & Most functionality supported. \\
     VTK & \texttt{vtk} & \xmark & Experimental. Only ASCII triangular data is supported. \\
     \bottomrule
@@ -288,28 +290,44 @@ meshes since robustness is not guaranteed.
 The default for \texttt{xml} is into binary data which has been
 converted into base64. If you wish to see an ascii output you need to
 specify the output module option \inltt{uncompress} by executing:
-
+%
 \begin{lstlisting}[style=BashInputStyle]
 NekMesh Mesh.msh output.xml:xml:uncompress
 \end{lstlisting}
-
-In the rest of these subsections, we discuss the various processing modules
-available within \mc.
+%
+Finally, both the Gmsh and Nektar++ output modules support an \inltt{order}
+parameter, which allows you to generate a mesh of a uniform polynomial
+order. This is used in the same manner as the above, so that the command
+%
+\begin{lstlisting}[style=BashInputStyle]
+NekMesh Mesh.msh output.msh:msh:order=7
+\end{lstlisting}
+%
+will generate an order 7 Gmsh mesh. In the rest of these subsections, we discuss
+the various processing modules available within \mc.
 
 \subsection{Extract surfaces from a mesh}
+\label{s:utilities:nekmesh:extract}
 
-To extract composite surfaces 2 and 3  from a mesh use the module \inltt{extract}
-module:
+Often one wants to visualise surfaces of a 3D mesh, or extract the values of
+variables on the surface and visualise them. To support this, \mc can extract
+two-dimensional surfaces which can be visualised using \inltt{FieldConvert} in
+order to extract the value of a 3D field on a given surface.
+
+As an example, we can extract composite surfaces 2 and 3-5 from a mesh using the
+\inltt{extract} module:
 %
 \begin{lstlisting}[style=BashInputStyle]
-NekMesh -m extract:surf=2,3 Mesh.xml output.xml
+NekMesh -m extract:surf=2,3-5 Mesh.xml output.xml
 \end{lstlisting}
 %
-If you also wish to have the boundaries of the extracted surface detected add the \inltt{detectbnd} option
+If you also wish to have the boundaries of the extracted surface detected add
+the \inltt{detectbnd} option
 %
 \begin{lstlisting}[style=BashInputStyle]
-NekMesh -m extract:surf=2,3:detectbnd Mesh.xml output.xml
+NekMesh -m extract:surf=2,3-5:detectbnd Mesh.xml output.xml
 \end{lstlisting}
+which will produce new composites for the extracted boundary.
 
 \subsection{Negative Jacobian detection}
 
@@ -522,37 +540,34 @@ The module parameters are:
   are not self-intersecting.
 \end{notebox}
 
-\subsection{Surface extraction}
-
-Often one wants to visualise a particular surface of a 3D mesh. \mc supports
-extraction of two-dimensional surfaces which can be converted using
-\inltt{XmlToVtk} or similar programs for visualisation purposes, or combined
-with \inltt{FieldConvert} in order to extract the value of a 3D field on a given
-surface.
-
-To extract a surface use the command:
-
-\begin{lstlisting}[style=BashInputStyle]
-  NekMesh -m extract:surf=12,3,4 volume-mesh.xml surface-mesh.xml
-\end{lstlisting}
-
-where the integers are surface IDs to be extracted.
-
-An optional arguemnt of \inltt{detectbnd} can be added to identify the boundary composites as part of the surface extraction.
-
 \subsection{Linearisation}
 
-The ability to remove all the high-order information in a mesh can be useful
-at times.
+The ability to remove all the high-order information in a mesh can be useful at
+times when mesh generation is tricky or impossible in the presence of curvature
 
 To do this in NekMesh use the command:
 
 \begin{lstlisting}[style=BashInputStyle]
-  NekMesh -m linearise high-order-mesh.xml linear-mesh.xml
+  NekMesh -m linearise:all high-order-mesh.xml linear-mesh.xml
 \end{lstlisting}
 
 The output will contain only the linear mesh information, all curved information
-is removed.
+is removed. Alternatively
+
+\begin{lstlisting}[style=BashInputStyle]
+  NekMesh -m linearise:invalid high-order-mesh.xml linear-mesh.xml
+\end{lstlisting}
+
+attempts to remove curvature from elements only where necessary. This is a
+simple algorithm that removes curvature from invalid elements and repeats until
+all elements are valid. Either \inlsh{all} or \inlsh{invalid} must be specified.
+
+\begin{itemize}
+  \item \inlsh{all}: remove curvature from all elements.
+  \item \inlsh{invalid}: remove curvature from invalid elements.
+  \item \inlsh{prismonly}: consider only prisms when removing curvature. This is
+  useful in the presence of a prismatic boundary layer.
+\end{itemize}
 
 \subsection{Extracting interface between tetrahedra and prismatic elements}
 

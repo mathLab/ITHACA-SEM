@@ -33,11 +33,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CADSystemOCE.h"
-#include "CADVertOCE.h"
-#include "CADCurveOCE.h"
-#include "CADSurfOCE.h"
-#include "../CADCurve.h"
+#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
+#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
+#include <NekMeshUtils/CADSystem/OCE/CADCurveOCE.h>
+#include <NekMeshUtils/CADSystem/OCE/CADSurfOCE.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
 
 using namespace std;
 
@@ -46,8 +46,8 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-EngineKey CADSystemOCE::key = GetEngineFactory().RegisterCreatorFunction(
-        EngineKey(eOCE,"oce"),CADSystemOCE::create,"Uses OCE as cad engine");
+std::string CADSystemOCE::key = GetEngineFactory().RegisterCreatorFunction(
+    "oce", CADSystemOCE::create, "Uses OCE as cad engine");
 
 bool CADSystemOCE::LoadCAD()
 {
@@ -282,7 +282,7 @@ void CADSystemOCE::AddVert(int i, TopoDS_Shape in)
 {
     CADVertSharedPtr newVert = GetCADVertFactory().CreateInstance(key);
 
-    static_pointer_cast<CADVertOCE>(newVert)->Initialise(i, in);
+    boost::static_pointer_cast<CADVertOCE>(newVert)->Initialise(i, in);
 
     m_verts[i] = newVert;
 }
@@ -290,7 +290,7 @@ void CADSystemOCE::AddVert(int i, TopoDS_Shape in)
 void CADSystemOCE::AddCurve(int i, TopoDS_Shape in, int fv, int lv)
 {
     CADCurveSharedPtr newCurve = GetCADCurveFactory().CreateInstance(key);
-    static_pointer_cast<CADCurveOCE>(newCurve)->Initialise(i, in);
+    boost::static_pointer_cast<CADCurveOCE>(newCurve)->Initialise(i, in);
 
     vector<CADVertSharedPtr> vs;
     vs.push_back(m_verts[fv]);
@@ -302,7 +302,7 @@ void CADSystemOCE::AddCurve(int i, TopoDS_Shape in, int fv, int lv)
 void CADSystemOCE::AddSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
 {
     CADSurfSharedPtr newSurf = GetCADSurfFactory().CreateInstance(key);
-    static_pointer_cast<CADSurfOCE>(newSurf)->Initialise(i, in, ein);
+    boost::static_pointer_cast<CADSurfOCE>(newSurf)->Initialise(i, in, ein);
     m_surfs[i] = newSurf;
 
     if (in.Orientation() == 0)

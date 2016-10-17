@@ -56,12 +56,6 @@ namespace Nektar
     }
 
     template<typename DataType>
-    MatrixStorage ConstMatrix<DataType>::GetStorageType() const
-    {
-        return v_GetStorageType();
-    }
-
-    template<typename DataType>
     unsigned int ConstMatrix<DataType>::GetRows() const
     {
         return GetTransposedRows(GetTransposeFlag());
@@ -229,9 +223,11 @@ namespace Nektar
     }
 
     template<typename DataType>
-    ConstMatrix<DataType>::ConstMatrix(unsigned int rows, unsigned int columns) :
+    ConstMatrix<DataType>::ConstMatrix(unsigned int rows, unsigned int columns,
+                                       MatrixStorage policy) :
         m_size(),
-        m_transpose('N')
+        m_transpose('N'),
+        m_storageType(policy)
     {
         m_size[0] = rows;
         m_size[1] = columns;
@@ -240,7 +236,8 @@ namespace Nektar
     template<typename DataType>
     ConstMatrix<DataType>::ConstMatrix(const ConstMatrix<DataType>& rhs) :
         m_size(),
-        m_transpose(rhs.m_transpose)
+        m_transpose(rhs.m_transpose),
+        m_storageType(rhs.m_storageType)
     {
         m_size[0] = rhs.m_size[0];
         m_size[1] = rhs.m_size[1];
@@ -252,6 +249,7 @@ namespace Nektar
         m_size[0] = rhs.m_size[0];
         m_size[1] = rhs.m_size[1];
         m_transpose = rhs.m_transpose;
+        m_storageType = m_storageType;
         return *this;
     }
 
@@ -268,9 +266,6 @@ namespace Nektar
     {
         m_transpose = newValue;
     }
-
-    template<typename DataType>
-    char ConstMatrix<DataType>::GetRawTransposeFlag() const { return m_transpose; }
 
     template<typename DataType>
     void ConstMatrix<DataType>::v_Transpose() {}
@@ -295,8 +290,9 @@ namespace Nektar
     }
 
     template<typename DataType>
-    Matrix<DataType>::Matrix(unsigned int rows, unsigned int columns) :
-        ConstMatrix<DataType>(rows, columns)
+    Matrix<DataType>::Matrix(unsigned int rows, unsigned int columns,
+                             MatrixStorage policy) :
+        ConstMatrix<DataType>(rows, columns,policy)
     {
     }
 

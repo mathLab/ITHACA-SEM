@@ -36,8 +36,8 @@
 #ifndef NekMeshUtils_CADSYSTEM_OCE_CADSURFOCE
 #define NekMeshUtils_CADSYSTEM_OCE_CADSURFOCE
 
-#include "../CADSurf.h"
-#include <NekMeshUtils/CADSystem/OpenCascade.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
 namespace Nektar
 {
@@ -53,41 +53,28 @@ public:
         return MemoryManager<CADSurfOCE>::AllocateSharedPtr();
     }
 
-    static EngineKey key;
+    static std::string key;
 
-    CADSurfOCE() {};
+    CADSurfOCE()
+    {
+    }
 
-    ~CADSurfOCE(){};
+    ~CADSurfOCE()
+    {
+    }
 
     void Initialise(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
 
-    Array<OneD, NekDouble> GetBounds()
-    {
-        Array<OneD,NekDouble> b(4);
-
-        b[0] = m_occSurface.FirstUParameter();
-        b[1] = m_occSurface.LastUParameter();
-        b[2] = m_occSurface.FirstVParameter();
-        b[3] = m_occSurface.LastVParameter();
-
-        return b;
-    }
-
-    Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
-
-    Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
-
-    Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
-
-    Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
-
-    Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
-
-    NekDouble DistanceTo(Array<OneD, NekDouble> p);
-
-    void ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv);
-
-    NekDouble Curvature(Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> GetBounds();
+    virtual Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
+    virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
+    virtual NekDouble DistanceTo(Array<OneD, NekDouble> p);
+    virtual void ProjectTo(Array<OneD, NekDouble> &tp,
+                           Array<OneD, NekDouble> &uv);
+    virtual NekDouble Curvature(Array<OneD, NekDouble> uv);
 
 private:
     /// Function which tests the the value of uv used is within the surface

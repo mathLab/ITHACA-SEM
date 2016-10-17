@@ -56,6 +56,8 @@ ModuleKey OutputFld::m_className[2] = {
 
 OutputFld::OutputFld(FieldSharedPtr f) : OutputModule(f)
 {
+    m_config["format"] = ConfigOption(
+        false, "Xml", "Output format of field file");
 }
 
 OutputFld::~OutputFld()
@@ -66,6 +68,13 @@ void OutputFld::Process(po::variables_map &vm)
 {
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
+
+    // Set up communicator and FieldIO object.
+    LibUtilities::CommSharedPtr c = m_f->m_session ? m_f->m_session->GetComm() :
+        LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+    LibUtilities::FieldIOSharedPtr fld =
+        LibUtilities::GetFieldIOFactory().CreateInstance(
+            m_config["format"].as<string>(), c, true);
 
     if (m_f->m_writeBndFld)
     {
@@ -220,8 +229,7 @@ void OutputFld::Process(po::variables_map &vm)
                 }
             }
 
-            m_f->m_fld->Write(outname, FieldDef, FieldData,
-                              m_f->m_fieldMetaDataMap);
+            fld->Write(outname, FieldDef, FieldData, m_f->m_fieldMetaDataMap);
         }
     }
     else
@@ -238,8 +246,20 @@ void OutputFld::Process(po::variables_map &vm)
         int writefld = 1;
         if (fs::exists(writefile) && (vm.count("forceoutput") == 0))
         {
-            LibUtilities::CommSharedPtr comm = m_f->m_session->GetComm();
-            int rank                         = comm->GetRank();
+            int rank = 0;
+            LibUtilities::CommSharedPtr comm;
+
+            if (m_f->m_session)
+            {
+                comm = m_f->m_session->GetComm();
+                rank = comm->GetRank();
+            }
+            else
+            {
+                comm = LibUtilities::GetCommFactory().CreateInstance(
+                    "Serial", 0, 0);
+            }
+
             writefld = 0; // set to zero for reduce all to be correct.
 
             if (rank == 0)
@@ -263,8 +283,8 @@ void OutputFld::Process(po::variables_map &vm)
 
         if (writefld)
         {
-            m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data,
-                              m_f->m_fieldMetaDataMap);
+            fld->Write(filename, m_f->m_fielddef, m_f->m_data,
+                       m_f->m_fieldMetaDataMap);
         }
 
         // output error for regression checking.

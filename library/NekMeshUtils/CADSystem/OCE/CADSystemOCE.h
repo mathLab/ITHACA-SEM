@@ -36,9 +36,8 @@
 #ifndef NekMeshUtils_CADSYSTEM_OCE_CADSYSTEMOCE
 #define NekMeshUtils_CADSYSTEM_OCE_CADSYSTEMOCE
 
-#include "../CADSystem.h"
-
-#include "OpenCascade.h"
+#include <NekMeshUtils/CADSystem/CADSystem.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
 namespace Nektar
 {
@@ -54,7 +53,7 @@ public:
         return MemoryManager<CADSystemOCE>::AllocateSharedPtr(name);
     }
 
-    static EngineKey key;
+    static std::string key;
 
     /**
      * @brief Default constructor.

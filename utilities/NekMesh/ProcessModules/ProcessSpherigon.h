@@ -37,7 +37,7 @@
 #define UTILITIES_NEKMESH_PROCESSJAC
 
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 #include "../InputModules/InputPly.h"
 
 namespace Nektar
@@ -45,31 +45,31 @@ namespace Nektar
 namespace Utilities
 {
 
-class ProcessSpherigon : public ProcessModule
+class ProcessSpherigon : public NekMeshUtils::ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessSpherigon>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    ProcessSpherigon(MeshSharedPtr m);
+    ProcessSpherigon(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessSpherigon();
 
     /// Write mesh to output file.
     virtual void Process();
 
 protected:
-    void   GenerateNormals(std::vector<ElementSharedPtr> &el,
-                           MeshSharedPtr &mesh);
-    double CrossProdMag   (Node &a, Node &b);
-    void   UnitCrossProd  (Node &a, Node &b, Node &c);
+    void   GenerateNormals(std::vector<NekMeshUtils::ElementSharedPtr> &el,
+                           NekMeshUtils::MeshSharedPtr &mesh);
+    double CrossProdMag   (NekMeshUtils::Node &a, NekMeshUtils::Node &b);
+    void   UnitCrossProd  (NekMeshUtils::Node &a, NekMeshUtils::Node &b, NekMeshUtils::Node &c);
     double Blend          (double r);
     void   SuperBlend     (std::vector<double> &r,
-                           std::vector<Node>   &Q,
-                           Node           &P,
+                           std::vector<NekMeshUtils::Node>   &Q,
+                           NekMeshUtils::Node           &P,
                            std::vector<double> &blend);
 };
 

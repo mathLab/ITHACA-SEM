@@ -36,20 +36,14 @@
 #ifndef NEKMESHUTILS_CADSYSTEM_OCE_CADCURVEOCE
 #define NEKMESHUTILS_CADSYSTEM_OCE_CADCURVEOCE
 
-#include "../CADCurve.h"
-#include "OpenCascade.h"
+#include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-/**
- * @brief class for CAD curves.
- *
- * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
- * Nektar++.
- */
 class CADCurveOCE : public CADCurve
 {
 public:
@@ -59,23 +53,23 @@ public:
         return MemoryManager<CADCurveOCE>::AllocateSharedPtr();
     }
 
-    static EngineKey key;
+    static std::string key;
 
-    CADCurveOCE(){};
+    CADCurveOCE()
+    {
+    }
 
-    ~CADCurveOCE(){};
+    ~CADCurveOCE()
+    {
+    }
 
-    Array<OneD, NekDouble> Bounds();
-
-    NekDouble Length(NekDouble ti, NekDouble tf);
-
-    Array<OneD, NekDouble> P(NekDouble t);
-
-    Array<OneD, NekDouble> D2(NekDouble t);
-
-    NekDouble tAtArcLength(NekDouble s);
-
-    Array<OneD, NekDouble> GetMinMax();
+    virtual Array<OneD, NekDouble> Bounds();
+    virtual NekDouble Length(NekDouble ti, NekDouble tf);
+    virtual Array<OneD, NekDouble> P(NekDouble t);
+    virtual Array<OneD, NekDouble> D2(NekDouble t);
+    virtual NekDouble tAtArcLength(NekDouble s);
+    virtual Array<OneD, NekDouble> GetMinMax();
+    virtual NekDouble loct(Array<OneD, NekDouble> xyz);
 
     void Initialise(int i, TopoDS_Shape in)
     {
@@ -83,6 +77,7 @@ public:
         gp_Pnt ori(0.0, 0.0, 0.0);
         transform.SetScale(ori, 1.0 / 1000.0);
         TopLoc_Location mv(transform);
+        TopoDS_Shape cp = in;
         in.Move(mv);
 
         m_occEdge  = TopoDS::Edge(in);
@@ -91,6 +86,9 @@ public:
         GProp_GProps System;
         BRepGProp::LinearProperties(m_occEdge, System);
         m_length = System.Mass();
+
+        Array<OneD, NekDouble> b = Bounds();
+        m_c = BRep_Tool::Curve(TopoDS::Edge(cp), b[0], b[1]);
 
         m_id   = i;
         m_type = curve;
@@ -101,6 +99,8 @@ private:
     BRepAdaptor_Curve m_occCurve;
     /// OpenCascade edge
     TopoDS_Edge m_occEdge;
+    /// Alternate object used for reverse lookups
+    Handle(Geom_Curve) m_c;
 };
 
 }

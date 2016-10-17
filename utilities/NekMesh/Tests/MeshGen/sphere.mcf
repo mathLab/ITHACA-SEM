@@ -4,6 +4,7 @@
         <SOLVERINFO>
             <I PROPERTY="CADFile" VALUE="sphere.STEP" />
             <I PROPERTY="MeshType" VALUE="Euler" />
+            <I PROPERTY="SurfaceOpt" VALUE="TRUE" />
         </SOLVERINFO>
 
         <PARAMETERS>

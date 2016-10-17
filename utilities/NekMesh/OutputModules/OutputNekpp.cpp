@@ -43,6 +43,7 @@ using namespace std;
 namespace io = boost::iostreams;
 
 #include <tinyxml.h>
+#include <LibUtilities/BasicUtils/CompressData.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/MeshEntities.hpp>
 #include <SpatialDomains/MeshGraph.h>
@@ -68,6 +69,7 @@ OutputNekpp::OutputNekpp(MeshSharedPtr m) : OutputModule(m)
     m_config["test"] = ConfigOption(
         true, "0", "Attempt to load resulting mesh and create meshgraph.");
     m_config["uncompress"] = ConfigOption(true, "0", "Uncompress xml sections");
+    m_config["order"] = ConfigOption(false, "-1", "Enforce a polynomial order");
 }
 
 OutputNekpp::~OutputNekpp()
@@ -96,6 +98,13 @@ void OutputNekpp::Process()
     if (m_mesh->m_verbose)
     {
         cout << "OutputNekpp: Writing file..." << endl;
+    }
+
+    int order = m_config["order"].as<int>();
+
+    if (order != -1)
+    {
+        m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
     }
 
     TiXmlDocument doc;
@@ -679,7 +688,8 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
             }
         }
         // 2D elements in 3-space, output face curvature information
-        else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
+        else if (m_mesh->m_expDim == 2 &&
+                 m_mesh->m_spaceDim >= 2)
         {
             vector<ElementSharedPtr>::iterator it;
             for (it = m_mesh->m_element[m_mesh->m_expDim].begin();

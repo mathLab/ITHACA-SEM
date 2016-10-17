@@ -293,7 +293,7 @@ GlobalMapping::MappingSharedPtr ProcessMapping::GetMapping(FieldSharedPtr f)
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            f->m_fld->Import(fileName, FieldDef, FieldData);
+            f->FieldIOForFile(fileName)->Import(fileName, FieldDef, FieldData);
 
             for (int j = 0; j < spacedim; ++j)
             {

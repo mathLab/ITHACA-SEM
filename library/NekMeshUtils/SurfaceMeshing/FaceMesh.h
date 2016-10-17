@@ -38,7 +38,6 @@
 
 #include <NekMeshUtils/MeshElements/Mesh.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
-#include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
 
 namespace Nektar
@@ -60,14 +59,12 @@ public:
      */
     FaceMesh(const int                                id,
              MeshSharedPtr                            m,
-             CADSurfSharedPtr                         cad,
-             OctreeSharedPtr                          oct,
              const std::map<int, CurveMeshSharedPtr> &cmeshes,
              bool ov)
-        : m_mesh(m), m_cadsurf(cad), m_octree(oct), m_curvemeshes(cmeshes),
-          m_id(id), over(ov)
+        : m_mesh(m), m_curvemeshes(cmeshes), m_id(id), over(ov)
 
     {
+        m_cadsurf = m_mesh->m_cad->GetSurf(m_id);
         m_edgeloops = m_cadsurf->GetEdges();
     };
 
@@ -130,8 +127,6 @@ private:
     MeshSharedPtr m_mesh;
     /// CAD surface
     CADSurfSharedPtr m_cadsurf;
-    /// Octree object
-    OctreeSharedPtr m_octree;
     /// Map of the curve meshes which bound the surfaces
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
     /// data structure containing the edges, their order and oreientation for

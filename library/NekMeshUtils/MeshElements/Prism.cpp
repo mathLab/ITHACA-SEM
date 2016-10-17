@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.cpp
+//  File: Prism.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh prism object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,6 +38,10 @@
 #include <SpatialDomains/PrismGeom.h>
 
 #include <NekMeshUtils/MeshElements/Prism.h>
+#include <NekMeshUtils/MeshElements/HOAlignment.h>
+
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 using namespace std;
 
 namespace Nektar
@@ -48,6 +52,11 @@ namespace NekMeshUtils
 LibUtilities::ShapeType Prism::m_type =
     GetElementFactory().RegisterCreatorFunction(
         LibUtilities::ePrism, Prism::create, "Prism");
+
+/// Vertex IDs that make up prism faces.
+int Prism::m_faceIds[5][4] = {
+    {0, 1, 2, 3}, {0, 1, 4, -1}, {1, 2, 5, 4}, {3, 2, 5, -1}, {0, 3, 5, 4}
+};
 
 /**
  * @brief Create a prism element.
@@ -114,8 +123,6 @@ Prism::Prism(ElmtConfig pConf,
     }
 
     // Create faces
-    int face_ids[5][4] = {
-        {0, 1, 2, 3}, {0, 1, 4, -1}, {1, 2, 5, 4}, {3, 2, 5, -1}, {0, 3, 5, 4}};
     int face_edges[5][4];
 
     int face_offset[5];
@@ -135,9 +142,9 @@ Prism::Prism(ElmtConfig pConf,
 
         for (int k = 0; k < nEdge; ++k)
         {
-            faceVertices.push_back(m_vertex[face_ids[j][k]]);
-            NodeSharedPtr a = m_vertex[face_ids[j][k]];
-            NodeSharedPtr b = m_vertex[face_ids[j][(k + 1) % nEdge]];
+            faceVertices.push_back(m_vertex[m_faceIds[j][k]]);
+            NodeSharedPtr a = m_vertex[m_faceIds[j][k]];
+            NodeSharedPtr b = m_vertex[m_faceIds[j][(k + 1) % nEdge]];
             unsigned int i;
             for (i = 0; i < m_edge.size(); ++i)
             {
@@ -185,8 +192,17 @@ Prism::Prism(ElmtConfig pConf,
                 faceNodes.push_back(pNodeList[face_offset[face] + i]);
             }
         }
-        m_face.push_back(FaceSharedPtr(new Face(
-            faceVertices, faceNodes, faceEdges, m_conf.m_faceCurveType)));
+
+        // Try to translate between common face curve types
+        LibUtilities::PointsType pType = m_conf.m_faceCurveType;
+
+        if (pType == LibUtilities::ePolyEvenlySpaced && (j == 1 || j == 3))
+        {
+            pType = LibUtilities::eNodalTriEvenlySpaced;
+        }
+
+        m_face.push_back(
+            FaceSharedPtr(new Face(faceVertices, faceNodes, faceEdges, pType)));
     }
 
     // Re-order edge array to be consistent with Nektar++ ordering.
@@ -242,124 +258,244 @@ SpatialDomains::GeometrySharedPtr Prism::GetGeom(int coordDim)
     return ret;
 }
 
-/**
- * @brief .
- */
-void Prism::Complete(int order)
+StdRegions::Orientation Prism::GetEdgeOrient(
+    int edgeId, EdgeSharedPtr edge)
 {
-    int i, j, pos;
+    static int edgeVerts[9][2] = {
+        {0,1}, {1,2}, {3,2}, {0,3}, {0,4}, {1,4}, {2,5}, {3,5}, {4,5}
+    };
 
-    // Create basis key for a nodal tetrahedron.
-    LibUtilities::BasisKey B0(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-    LibUtilities::BasisKey B1(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-    LibUtilities::BasisKey B2(
-        LibUtilities::eOrtho_B,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussRadauMAlpha1Beta0));
-
-    // Create a standard nodal prism in order to get the Vandermonde
-    // matrix to perform interpolation to nodal points.
-    StdRegions::StdNodalPrismExpSharedPtr nodalPrism =
-        MemoryManager<StdRegions::StdNodalPrismExp>::AllocateSharedPtr(
-            B0, B1, B2, LibUtilities::eNodalPrismEvenlySpaced);
-
-    Array<OneD, NekDouble> x, y, z;
-    nodalPrism->GetNodalPoints(x, y, z);
-
-    SpatialDomains::PrismGeomSharedPtr geom =
-        boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
-            this->GetGeom(3));
-
-    // Create basis key for a prism.
-    LibUtilities::BasisKey C0(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-    LibUtilities::BasisKey C1(
-        LibUtilities::eOrtho_A,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussLobattoLegendre));
-    LibUtilities::BasisKey C2(
-        LibUtilities::eOrtho_B,
-        order + 1,
-        LibUtilities::PointsKey(order + 1,
-                                LibUtilities::eGaussRadauMAlpha1Beta0));
-
-    // Create a prism.
-    LocalRegions::PrismExpSharedPtr prism =
-        MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(
-            C0, C1, C2, geom);
-
-    // Get coordinate array for tetrahedron.
-    int nqtot = prism->GetTotPoints();
-    Array<OneD, NekDouble> alloc(6 * nqtot);
-    Array<OneD, NekDouble> xi(alloc);
-    Array<OneD, NekDouble> yi(alloc + nqtot);
-    Array<OneD, NekDouble> zi(alloc + 2 * nqtot);
-    Array<OneD, NekDouble> xo(alloc + 3 * nqtot);
-    Array<OneD, NekDouble> yo(alloc + 4 * nqtot);
-    Array<OneD, NekDouble> zo(alloc + 5 * nqtot);
-    Array<OneD, NekDouble> tmp;
-
-    prism->GetCoords(xi, yi, zi);
-
-    for (i = 0; i < 3; ++i)
+    if (edge->m_n1 == m_vertex[edgeVerts[edgeId][0]])
     {
-        Array<OneD, NekDouble> coeffs(nodalPrism->GetNcoeffs());
-        prism->FwdTrans(alloc + i * nqtot, coeffs);
-        // Apply Vandermonde matrix to project onto nodal space.
-        nodalPrism->ModalToNodal(coeffs, tmp = alloc + (i + 3) * nqtot);
+        return StdRegions::eForwards;
+    }
+    else if (edge->m_n1 == m_vertex[edgeVerts[edgeId][1]])
+    {
+        return StdRegions::eBackwards;
+    }
+    else
+    {
+        ASSERTL1(false, "Edge is not connected to this quadrilateral.");
     }
 
-    // Now extract points from the co-ordinate arrays into the
-    // edge/face/volume nodes. First, extract edge-interior nodes.
-    for (i = 0; i < 9; ++i)
+    return StdRegions::eNoOrientation;
+}
+
+void Prism::MakeOrder(int                                order,
+                      SpatialDomains::GeometrySharedPtr  geom,
+                      LibUtilities::PointsType           pType,
+                      int                                coordDim,
+                      int                               &id,
+                      bool                               justConfig)
+{
+    m_conf.m_order = order;
+    m_curveType = pType;
+    m_volumeNodes.clear();
+
+    if (order == 1)
     {
-        pos = 6 + i * (order - 1);
-        m_edge[i]->m_edgeNodes.clear();
-        for (j = 0; j < order - 1; ++j)
-        {
-            m_edge[i]->m_edgeNodes.push_back(NodeSharedPtr(
-                new Node(0, xo[pos + j], yo[pos + j], zo[pos + j])));
-        }
+        m_conf.m_volumeNodes = m_conf.m_faceNodes = false;
+        return;
+    }
+    else if (order == 2)
+    {
+        m_conf.m_faceNodes   = true;
+        m_conf.m_volumeNodes = false;
+        return;
     }
 
-    // Now extract face-interior nodes.
-    pos = 6 + 9 * (order - 1);
-    for (i = 0; i < 5; ++i)
-    {
-        int facesize =
-            i % 2 ? (order - 2) * (order - 1) / 2 : (order - 1) * (order - 1);
-        m_face[i]->m_faceNodes.clear();
-        for (j = 0; j < facesize; ++j)
-        {
-            m_face[i]->m_faceNodes.push_back(NodeSharedPtr(
-                new Node(0, xo[pos + j], yo[pos + j], zo[pos + j])));
-        }
-        pos += facesize;
-    }
-
-    // Finally extract volume nodes.
-    for (i = pos; i < (order + 1) * (order + 1) * (order + 2) / 2; ++i)
-    {
-        m_volumeNodes.push_back(
-            NodeSharedPtr(new Node(0, xo[i], yo[i], zo[i])));
-    }
-
-    m_conf.m_order       = order;
     m_conf.m_faceNodes   = true;
     m_conf.m_volumeNodes = true;
+
+    if (justConfig)
+    {
+        return;
+    }
+
+    int nPoints = order + 1;
+    StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+
+    Array<OneD, NekDouble> px, py, pz;
+    LibUtilities::PointsKey pKey(nPoints, pType);
+    ASSERTL1(pKey.GetPointsDim() == 3, "Points distribution must be 3D");
+    LibUtilities::PointsManager()[pKey]->GetPoints(px, py, pz);
+
+    Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
+
+    for (int i = 0; i < coordDim; ++i)
+    {
+        phys[i] = Array<OneD, NekDouble>(xmap->GetTotPoints());
+        xmap->BwdTrans(geom->GetCoeffs(i), phys[i]);
+    }
+
+    const int nPrismPts  = nPoints * nPoints * (nPoints + 1) / 2;
+    const int nPrismIntPts = (nPoints - 2) * (nPoints - 3) * (nPoints - 2) / 2;
+    m_volumeNodes.resize(nPrismIntPts);
+
+    for (int i = nPrismPts - nPrismIntPts, cnt = 0; i < nPrismPts; ++i, ++cnt)
+    {
+        Array<OneD, NekDouble> xp(3);
+        xp[0] = px[i];
+        xp[1] = py[i];
+        xp[2] = pz[i];
+
+        Array<OneD, NekDouble> x(3, 0.0);
+        for (int j = 0; j < coordDim; ++j)
+        {
+            x[j] = xmap->PhysEvaluate(xp, phys[j]);
+        }
+
+        m_volumeNodes[cnt] = boost::shared_ptr<Node>(
+            new Node(id++, x[0], x[1], x[2]));
+    }
+}
+
+void Prism::GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+{
+    int n = m_edge[0]->GetNodeCount();
+    nodeList.resize(n*n*(n+1)/2);
+
+    nodeList[0] = m_vertex[0];
+    nodeList[1] = m_vertex[1];
+    nodeList[2] = m_vertex[2];
+    nodeList[3] = m_vertex[3];
+    nodeList[4] = m_vertex[4];
+    nodeList[5] = m_vertex[5];
+    int k = 6;
+
+    for(int i = 0; i < 4; i++)
+    {
+        bool reverseEdge = m_edge[i]->m_n1 == m_vertex[i];
+        if (reverseEdge)
+        {
+            for(int j = 0; j < n-2; j++)
+            {
+                nodeList[k++] = m_edge[i]->m_edgeNodes[j];
+            }
+        }
+        else
+        {
+            for(int j = n-3; j >= 0; j--)
+            {
+                nodeList[k++] = m_edge[i]->m_edgeNodes[j];
+            }
+        }
+    }
+
+    for(int i = 4; i < 8; i++)
+    {
+        bool reverseEdge = m_edge[i]->m_n1 == m_vertex[i-4];
+        if (reverseEdge)
+        {
+            for(int j = 0; j < n-2; j++)
+            {
+                nodeList[k++] = m_edge[i]->m_edgeNodes[j];
+            }
+        }
+        else
+        {
+            for(int j = n-3; j >= 0; j--)
+            {
+                nodeList[k++] = m_edge[i]->m_edgeNodes[j];
+            }
+        }
+    }
+    bool reverseEdge = m_edge[8]->m_n1 == m_vertex[4];
+    if (reverseEdge)
+    {
+        for(int j = 0; j < n-2; j++)
+        {
+            nodeList[k++] = m_edge[8]->m_edgeNodes[j];
+        }
+    }
+    else
+    {
+        for(int j = n-3; j >= 0; j--)
+        {
+            nodeList[k++] = m_edge[8]->m_edgeNodes[j];
+        }
+    }
+
+    vector<vector<int> > ts;
+    {
+        vector<int> t(4);
+        t[0] = m_vertex[0]->m_id;
+        t[1] = m_vertex[1]->m_id;
+        t[2] = m_vertex[2]->m_id;
+        t[3] = m_vertex[3]->m_id;
+        ts.push_back(t);
+    }
+    {
+        vector<int> t(3);
+        t[0] = m_vertex[0]->m_id;
+        t[1] = m_vertex[1]->m_id;
+        t[2] = m_vertex[4]->m_id;
+        ts.push_back(t);
+    }
+    {
+        vector<int> t(4);
+        t[0] = m_vertex[1]->m_id;
+        t[1] = m_vertex[2]->m_id;
+        t[2] = m_vertex[5]->m_id;
+        t[3] = m_vertex[4]->m_id;
+        ts.push_back(t);
+    }
+    {
+        vector<int> t(3);
+        t[0] = m_vertex[3]->m_id;
+        t[1] = m_vertex[2]->m_id;
+        t[2] = m_vertex[5]->m_id;
+        ts.push_back(t);
+    }
+    {
+        vector<int> t(4);
+        t[0] = m_vertex[0]->m_id;
+        t[1] = m_vertex[3]->m_id;
+        t[2] = m_vertex[5]->m_id;
+        t[3] = m_vertex[4]->m_id;
+        ts.push_back(t);
+    }
+
+    for(int i = 0; i < ts.size(); i++)
+    {
+        if(ts[i].size() == 3)
+        {
+            vector<int> fcid;
+            fcid.push_back(m_face[i]->m_vertexList[0]->m_id);
+            fcid.push_back(m_face[i]->m_vertexList[1]->m_id);
+            fcid.push_back(m_face[i]->m_vertexList[2]->m_id);
+
+            HOTriangle<NodeSharedPtr> hot(fcid, m_face[i]->m_faceNodes);
+
+            hot.Align(ts[i]);
+
+            std::copy(hot.surfVerts.begin(),
+                      hot.surfVerts.end(),
+                      nodeList.begin() + k);
+            k+= hot.surfVerts.size();
+        }
+        else
+        {
+            vector<int> fcid;
+            fcid.push_back(m_face[i]->m_vertexList[0]->m_id);
+            fcid.push_back(m_face[i]->m_vertexList[1]->m_id);
+            fcid.push_back(m_face[i]->m_vertexList[2]->m_id);
+            fcid.push_back(m_face[i]->m_vertexList[3]->m_id);
+
+            HOQuadrilateral<NodeSharedPtr> hoq(fcid, m_face[i]->m_faceNodes);
+
+            hoq.Align(ts[i]);
+
+            std::copy(hoq.surfVerts.begin(),
+                      hoq.surfVerts.end(),
+                      nodeList.begin() + k);
+            k+= hoq.surfVerts.size();
+        }
+    }
+
+    std::copy(m_volumeNodes.begin(),
+              m_volumeNodes.end(),
+              nodeList.begin() + k);
 }
 
 /**

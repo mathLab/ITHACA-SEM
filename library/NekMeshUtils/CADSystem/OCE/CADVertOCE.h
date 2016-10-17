@@ -36,8 +36,8 @@
 #ifndef NEKMESHUTILS_CADSYSTEM_OCE_CADVERTOCE
 #define NEKMESHUTILS_CADSYSTEM_OCE_CADVERTOCE
 
-#include "../CADVert.h"
-#include <NekMeshUtils/MeshElements/Node.h>
+#include <NekMeshUtils/CADSystem/CADVert.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
 namespace Nektar
 {
@@ -53,17 +53,18 @@ public:
         return MemoryManager<CADVertOCE>::AllocateSharedPtr();
     }
 
-    static EngineKey key;
+    static std::string key;
 
     /**
      * @brief Default constructor.
      */
     CADVertOCE()
     {
-
     }
 
-    ~CADVertOCE(){};
+    ~CADVertOCE()
+    {
+    }
 
     void Initialise(int i, TopoDS_Shape in);
 

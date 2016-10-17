@@ -105,7 +105,7 @@ void Write(const string &outFile, const PtsFieldSharedPtr &ptsField)
 }
 
 PtsIO::PtsIO(CommSharedPtr pComm, bool sharedFilesystem)
-    : FieldIO(pComm, sharedFilesystem)
+    : FieldIOXml(pComm, sharedFilesystem)
 {
 }
 
@@ -207,7 +207,7 @@ void PtsIO::Write(const string &outFile,
     int nTotvars = ptsField->GetNFields() + ptsField->GetDim();
     int np = ptsField->GetNpoints();
 
-    std::string filename = SetUpOutput(outFile);
+    std::string filename = SetUpOutput(outFile, true);
     SetUpFieldMetaData(outFile);
 
     // until tinyxml gains support for line break, write the xml manually

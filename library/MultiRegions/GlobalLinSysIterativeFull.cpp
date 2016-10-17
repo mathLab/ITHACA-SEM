@@ -136,7 +136,8 @@ namespace Nektar
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
             int nDirTotal = nDirDofs;
             
-            expList->GetComm()->AllReduce(nDirTotal, LibUtilities::ReduceSum);
+            expList->GetComm()->GetRowComm()
+                   ->AllReduce(nDirTotal, LibUtilities::ReduceSum);
             
             Array<OneD, NekDouble> tmp(nGlobDofs), tmp2;
 

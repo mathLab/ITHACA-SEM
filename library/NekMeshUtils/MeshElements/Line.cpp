@@ -29,11 +29,14 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh line object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/MeshElements/Line.h>
+
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 using namespace std;
 
 namespace Nektar
@@ -107,6 +110,77 @@ SpatialDomains::GeometrySharedPtr Line::GetGeom(int coordDim)
     }
 
     return ret;
+}
+
+
+void Line::GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+{
+    nodeList.push_back(m_vertex[0]);
+    for (int i = 0; i < m_volumeNodes.size(); ++i)
+    {
+        nodeList.push_back(m_volumeNodes[i]);
+    }
+    nodeList.push_back(m_vertex[1]);
+}
+void Line::MakeOrder(int                                order,
+                     SpatialDomains::GeometrySharedPtr  geom,
+                     LibUtilities::PointsType           pType,
+                     int                                coordDim,
+                     int                               &id,
+                     bool                               justConfig)
+{
+    m_conf.m_order       = order;
+    m_curveType          = pType;
+    m_conf.m_volumeNodes = false;
+    m_volumeNodes.clear();
+
+    // Lines of order == 1 have no interior volume points.
+    if (order == 1)
+    {
+        m_conf.m_faceNodes = false;
+        return;
+    }
+
+    m_conf.m_faceNodes = true;
+
+    if (justConfig)
+    {
+        return;
+    }
+
+    int nPoints = order + 1;
+    StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+
+    Array<OneD, NekDouble> px;
+    LibUtilities::PointsKey pKey(nPoints, pType);
+    ASSERTL1(pKey.GetPointsDim() == 1, "Points distribution must be 1D");
+    LibUtilities::PointsManager()[pKey]->GetPoints(px);
+
+    Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
+
+    for (int i = 0; i < coordDim; ++i)
+    {
+        phys[i] = Array<OneD, NekDouble>(xmap->GetTotPoints());
+        xmap->BwdTrans(geom->GetCoeffs(i), phys[i]);
+    }
+
+    int nQuadIntPts = (nPoints - 2) * (nPoints - 2);
+    m_volumeNodes.resize(nQuadIntPts);
+
+    for (int i = 1, cnt = 0; i < nPoints-1; ++i)
+    {
+        Array<OneD, NekDouble> xp(1);
+        xp[0] = px[i];
+
+        Array<OneD, NekDouble> x(3, 0.0);
+        for (int k = 0; k < coordDim; ++k)
+        {
+            x[k] = xmap->PhysEvaluate(xp, phys[k]);
+        }
+
+        m_volumeNodes[cnt] = boost::shared_ptr<Node>(
+            new Node(id++, x[0], x[1], x[2]));
+    }
 }
 
 /**

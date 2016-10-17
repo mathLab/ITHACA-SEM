@@ -35,6 +35,7 @@
 
 #include <limits>
 #include <NekMeshUtils/SurfaceMeshing/FaceMesh.h>
+#include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/ExtLibInterface/TriangleInterface.h>
 
 #include <LocalRegions/MatrixKey.h>
@@ -200,6 +201,7 @@ void FaceMesh::QuadRemesh(map<NodeSharedPtr, NodeSharedPtr> nmap)
             tags.push_back(m_id + (over ? 2000 : 200));
             ElementSharedPtr E = GetElementFactory().CreateInstance(
                                     LibUtilities::eQuadrilateral, conf, ns, tags);
+            E->CADSurfId = m_id;
             m_localElements.push_back(E);
 
         }
@@ -226,7 +228,8 @@ void FaceMesh::QuadRemesh(map<NodeSharedPtr, NodeSharedPtr> nmap)
             vector<int> tags;
             tags.push_back(m_id + (over ? 2000 : 200));
             ElementSharedPtr E = GetElementFactory().CreateInstance(
-                                    LibUtilities::eQuadrilateral, conf, ns, tags);;
+                                    LibUtilities::eQuadrilateral, conf, ns, tags);
+            E->CADSurfId = m_id;
             m_localElements.push_back(E);
 
         }
@@ -826,7 +829,7 @@ void FaceMesh::BuildLocalMesh()
             if (!(s == m_mesh->m_edgeSet.end()))
             {
                 edgs[j] = *s;
-                E->SetEdge(j, edgs[j]);
+                E->SetEdge(j, *s);
             }
 
             pair<EdgeSet::iterator, bool> test = m_localEdges.insert(edgs[j]);
@@ -912,9 +915,9 @@ bool FaceMesh::Validate()
         r[1] = m_connec[i][1]->Distance(m_connec[i][2]);
         r[2] = m_connec[i][2]->Distance(m_connec[i][0]);
 
-        triDelta[0] = m_octree->Query(m_connec[i][0]->GetLoc());
-        triDelta[1] = m_octree->Query(m_connec[i][1]->GetLoc());
-        triDelta[2] = m_octree->Query(m_connec[i][2]->GetLoc());
+        triDelta[0] = m_mesh->m_octree->Query(m_connec[i][0]->GetLoc());
+        triDelta[1] = m_mesh->m_octree->Query(m_connec[i][1]->GetLoc());
+        triDelta[2] = m_mesh->m_octree->Query(m_connec[i][2]->GetLoc());
 
         int numValid = 0;
 
@@ -955,7 +958,7 @@ void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
 {
     // adds a new point but checks that there are no other points nearby first
     Array<OneD, NekDouble> np = m_cadsurf->P(uv);
-    NekDouble npDelta         = m_octree->Query(np);
+    NekDouble npDelta         = m_mesh->m_octree->Query(np);
 
     NodeSharedPtr n = boost::shared_ptr<Node>(
         new Node(m_mesh->m_numNodes++, np[0], np[1], np[2]));

@@ -77,6 +77,9 @@ public:
 
         m_id   = i;
         m_type = curve;
+
+        cfi::ParametricRange1D rng = m_cfiEdge->getLnurbsTnBox();
+        std::cout << i << " " << rng.minT << " " << rng.maxT << endl;
     }
 
 private:

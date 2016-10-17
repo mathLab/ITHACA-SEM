@@ -47,7 +47,8 @@ EngineKey CADCurveCFI::key = GetCADCurveFactory().RegisterCreatorFunction(
 
 NekDouble CADCurveCFI::tAtArcLength(NekDouble s)
 {
-
+    NekDouble dt;
+    //cfi::ParametricRange1D rng = 
 }
 
 NekDouble CADCurveCFI::Length(NekDouble ti, NekDouble tf)
@@ -72,7 +73,7 @@ Array<OneD, NekDouble> CADCurveCFI::Bounds()
 
 Array<OneD, NekDouble> CADCurveCFI::GetMinMax()
 {
-    
+
 }
 
 }

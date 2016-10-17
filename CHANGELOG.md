@@ -65,6 +65,9 @@ v4.4.0
 
 v4.3.5
 ------
+**Library:**
+- Fix issue with parallel output (!699)
+
 **Documentation**
 - Update build instructions in user guide for Windows (!692)
 

@@ -33,56 +33,57 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_CADSYSTEM_OCE_CADSURFOCE
-#define NekMeshUtils_CADSYSTEM_OCE_CADSURFOCE
+#ifndef NekMeshUtils_CADSYSTEM_CFI_CADSURFCFI
+#define NekMeshUtils_CADSYSTEM_CFI_CADSURFCFI
 
-#include <NekMeshUtils/CADSystem/CADSurf.h>
-#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
+#include "../CADSurf.h"
+#include "CADSystemCFI.h"
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-class CADSurfOCE : public CADSurf
+class CADSurfCFI : public CADSurf
 {
 public:
 
     static CADSurfSharedPtr create()
     {
-        return MemoryManager<CADSurfOCE>::AllocateSharedPtr();
+        return MemoryManager<CADSurfCFI>::AllocateSharedPtr();
     }
 
     static std::string key;
 
-    CADSurfOCE()
-    {
-    }
+    CADSurfCFI() {};
 
-    ~CADSurfOCE()
-    {
-    }
+    ~CADSurfCFI(){};
 
-    void Initialise(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
+    void Initialise(int i, cfi::Face* in, std::vector<EdgeLoop> ein);
 
-    virtual Array<OneD, NekDouble> GetBounds();
-    virtual Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
-    virtual Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
-    virtual Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
-    virtual Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
-    virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
-    virtual NekDouble DistanceTo(Array<OneD, NekDouble> p);
-    virtual void ProjectTo(Array<OneD, NekDouble> &tp,
-                           Array<OneD, NekDouble> &uv);
-    virtual NekDouble Curvature(Array<OneD, NekDouble> uv);
+    Array<OneD, NekDouble> GetBounds();
+
+    Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
+
+    Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
+
+    Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
+
+    Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
+
+    Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
+
+    NekDouble DistanceTo(Array<OneD, NekDouble> p);
+
+    void ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv);
+
+    NekDouble Curvature(Array<OneD, NekDouble> uv);
 
 private:
     /// Function which tests the the value of uv used is within the surface
-    void Test(Array<OneD, NekDouble> uv);
-    /// OpenCascade object for surface.
-    BRepAdaptor_Surface m_occSurface;
-    /// Alternate OpenCascade object for surface. Used by reverse lookup.
-    Handle(Geom_Surface) m_s;
+    void Test(Array<OneD, NekDouble> uv){}
+    /// CFI object for surface.
+    cfi::Face* m_cfiSurface;
 };
 
 }

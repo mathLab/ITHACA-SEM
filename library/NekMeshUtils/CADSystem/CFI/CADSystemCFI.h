@@ -69,6 +69,7 @@ public:
 private:
     void AddVert(int i, cfi::Point* in);
     void AddCurve(int i, cfi::Line* in, int fv, int lv);
+    void AddSurf(int i, cfi::Face* in, std::vector<EdgeLoop> ein);
     cfi::Model *model;
     cfi::Body  *body;
 };

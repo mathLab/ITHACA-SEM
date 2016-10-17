@@ -36,6 +36,7 @@
 #include "CADSystemCFI.h"
 #include "CADVertCFI.h"
 #include "CADCurveCFI.h"
+#include "CADSurfCFI.h"
 
 using namespace std;
 
@@ -102,6 +103,7 @@ bool CADSystemCFI::LoadCAD()
     cout << "curves " << mapOfEdges.size() << endl;
 
     map<string,cfi::Line*>::iterator eit;
+    map<string,int>  nameToCurveId;
     i = 1;
     for(eit = mapOfEdges.begin(); eit != mapOfEdges.end(); eit++, i++)
     {
@@ -115,6 +117,69 @@ bool CADSystemCFI::LoadCAD()
         }
         ASSERTL0(ids.size()==2,"doesnt make sense");
         AddCurve(i, eit->second, ids[0], ids[1]);
+    }
+
+    map<int, vector<int> > adjsurfmap;
+    i = 1;
+    for(it = faceList->begin(); it != faceList->end(); it++, i++)
+    {
+        cfi::Oriented<cfi::TopoEntity*> orientatedFace = *it;
+        cfi::Face* face = static_cast<cfi::Face*>(orientatedFace.entity);
+
+        vector< cfi::Oriented<cfi::TopoEntity*> >* edgeList = face->getChildList();
+
+        vector<EdgeLoop> edgeloops;
+        int done = 0;
+        while(done != edgeList->size())
+        {
+            EdgeLoop edgeloop;
+            string firstVert;
+            vector< cfi::Oriented<cfi::TopoEntity*> >* vertList = edgeList->at(done).entity->getChildList();
+            if(edgeList->at(done).orientation == 1)
+            {
+                firstVert = vertList->at(0).entity->getName();
+
+            }
+            else
+            {
+                firstVert = vertList->at(1).entity->getName();
+            }
+            edgeloop.edges.push_back(m_curves[nameToCurveId[edgeList->at(done).entity->getName()]]);
+            edgeList->at(done).orientation == 1 ? edgeloop.edgeo.push_back(0) : edgeloop.edgeo.push_back(1);
+
+            for(done++; done < edgeList->size(); done++)
+            {
+                bool end = false;
+                vertList = edgeList->at(done).entity->getChildList();
+                if(edgeList->at(done).orientation == 1)
+                {
+                    if(vertList->at(1).entity->getName() == firstVert)
+                    {
+                        end = true;
+                    }
+                }
+                else
+                {
+                    if(vertList->at(0).entity->getName() == firstVert)
+                    {
+                        end = true;
+                    }
+                }
+
+                edgeloop.edges.push_back(m_curves[nameToCurveId[edgeList->at(done).entity->getName()]]);
+                edgeList->at(done).orientation == 1 ? edgeloop.edgeo.push_back(0) : edgeloop.edgeo.push_back(1);
+
+                if(end)
+                {
+                    done++;
+                    break;
+                }
+            }
+
+            edgeloops.push_back(edgeloop);
+        }
+
+        AddSurf(i, face, edgeloops);
     }
 
 
@@ -143,6 +208,26 @@ void CADSystemCFI::AddCurve(int i, cfi::Line* in, int fv, int lv)
     m_curves[i]->SetVert(vs);
 }
 
+void CADSystemCFI::AddSurf(int i, cfi::Face* in, std::vector<EdgeLoop> ein)
+{
+    CADSurfSharedPtr newSurf = GetCADSurfFactory().CreateInstance(key);
+    static_pointer_cast<CADSurfCFI>(newSurf)->Initialise(i, in, ein);
+    m_surfs[i] = newSurf;
+
+    //if (in.Orientation() == 0)
+    //{
+    //    m_surfs[i]->SetReverseNomral();
+    //}
+
+    int tote = 0;
+    for (int i = 0; i < ein.size(); i++)
+    {
+        tote += ein[i].edges.size();
+    }
+
+    ASSERTL0(tote != 1, "cannot handle periodic curves");
+}
+
 Array<OneD, NekDouble> CADSystemCFI::GetBoundingBox()
 {
     cfi::BoundingBox box = model->calcBoundingBox();
@@ -154,6 +239,8 @@ Array<OneD, NekDouble> CADSystemCFI::GetBoundingBox()
     ret[3] = box.yUpper;
     ret[4] = box.zLower;
     ret[5] = box.zUpper;
+
+    return ret;
 }
 
 }

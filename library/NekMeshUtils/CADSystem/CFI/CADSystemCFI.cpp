@@ -45,11 +45,13 @@ namespace NekMeshUtils
 {
 
 
-EngineKey CADSystemCFI::key = GetEngineFactory().RegisterCreatorFunction(
-        EngineKey(eCFI,"cfi"),CADSystemCFI::create,"Uses CFI as cad engine");
+std::string CADSystemCFI::key = GetEngineFactory().RegisterCreatorFunction(
+        "cfi", CADSystemCFI::create, "Uses CFI as cad engine");
 
 bool CADSystemCFI::LoadCAD()
 {
+    cout << "trying " << m_name << endl;
+
     cfi::Cfi cfi;
     model = cfi.openModelFile(m_name.c_str());
 
@@ -86,6 +88,8 @@ bool CADSystemCFI::LoadCAD()
         }
     }
 
+    cout << "verts " << mapOfVerts.size() << endl;
+
     map<string,int> nameToVertId;
     map<string,cfi::Point*>::iterator vit;
     int i = 1; //from one to be consistent with oce
@@ -94,6 +98,8 @@ bool CADSystemCFI::LoadCAD()
         AddVert(i, vit->second);
         nameToVertId[vit->second->getName()] = i;
     }
+
+    cout << "curves " << mapOfEdges.size() << endl;
 
     map<string,cfi::Line*>::iterator eit;
     i = 1;
@@ -111,6 +117,8 @@ bool CADSystemCFI::LoadCAD()
         AddCurve(i, eit->second, ids[0], ids[1]);
     }
 
+
+    exit(-1);
     return true;
 }
 

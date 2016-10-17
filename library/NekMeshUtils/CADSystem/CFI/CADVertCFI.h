@@ -53,7 +53,7 @@ public:
         return MemoryManager<CADVertCFI>::AllocateSharedPtr();
     }
 
-    static EngineKey key;
+    static std::string key;
 
     /**
      * @brief Default constructor.

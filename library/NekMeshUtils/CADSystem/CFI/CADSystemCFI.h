@@ -54,7 +54,7 @@ public:
         return MemoryManager<CADSystemCFI>::AllocateSharedPtr(name);
     }
 
-    static EngineKey key;
+    static std::string key;
 
     /**
      * @brief Default constructor.

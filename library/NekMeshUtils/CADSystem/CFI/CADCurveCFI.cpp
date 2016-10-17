@@ -42,38 +42,148 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-EngineKey CADCurveCFI::key = GetCADCurveFactory().RegisterCreatorFunction(
-        EngineKey(eCFI,"cfi"),CADCurveCFI::create,"CADCurveCFI");
+std::string CADCurveCFI::key = GetCADCurveFactory().RegisterCreatorFunction(
+        "cfi", CADCurveCFI::create, "CADCurveCFI");
+
+
+void CADCurveCFI::Initialise(int i, cfi::Line* in)
+{
+    m_cfiEdge = in;
+    m_length = m_cfiEdge->calcLength();
+
+    m_id   = i;
+    m_type = curve;
+}
 
 NekDouble CADCurveCFI::tAtArcLength(NekDouble s)
 {
-    NekDouble dt;
-    //cfi::ParametricRange1D rng = 
+    Array<OneD, NekDouble> bds = Bounds();
+    NekDouble dt = (bds[1] - bds[0]) / 5000;
+
+    NekDouble t = bds[0];
+    NekDouble len = 0.0;
+
+    while (len <= s)
+    {
+        Array<OneD, NekDouble> drdt1, drdt2;
+        drdt1 = D2(t);
+        t += dt;
+        drdt2 = D2(t);
+
+        NekDouble mag1 = sqrt(drdt1[3]*drdt1[3] + drdt1[4]*drdt1[4] + drdt1[5]*drdt1[5]);
+        NekDouble mag2 = sqrt(drdt2[3]*drdt2[3] + drdt2[4]*drdt2[4] + drdt2[5]*drdt2[5]);
+
+        len += (mag1 + mag2) / 2.0 * dt;
+    }
+
+    return t - dt;
+}
+
+NekDouble CADCurveCFI::loct(Array<OneD, NekDouble> xyz)
+{
+    cfi::Position p;
+    p.x = xyz[0];
+    p.y = xyz[1];
+    p.z = xyz[2];
+
+    boost::optional<cfi::Projected<double> > pj = m_cfiEdge->calcTnFromXYZ(p,-1);
+
+    if(pj.value().distance > 1e-5)
+    {
+        cerr << "large loct distance" << endl;
+    }
+
+    return pj.value().parameters;
 }
 
 NekDouble CADCurveCFI::Length(NekDouble ti, NekDouble tf)
 {
+    Array<OneD, NekDouble> bds = Bounds();
+    NekDouble dt = (bds[1] - bds[0]) / 5000;
 
+    NekDouble t = ti;
+    NekDouble len = 0.0;
+
+    while (t <= tf)
+    {
+        Array<OneD, NekDouble> drdt1, drdt2;
+        drdt1 = D2(t);
+        t += dt;
+        drdt2 = D2(t);
+
+        NekDouble mag1 = sqrt(drdt1[3]*drdt1[3] + drdt1[4]*drdt1[4] + drdt1[5]*drdt1[5]);
+        NekDouble mag2 = sqrt(drdt2[3]*drdt2[3] + drdt2[4]*drdt2[4] + drdt2[5]*drdt2[5]);
+
+        len += (mag1 + mag2) / 2.0 * dt;
+    }
+
+    return len;
 }
 
 Array<OneD, NekDouble> CADCurveCFI::P(NekDouble t)
 {
+    cfi::Position p = m_cfiEdge->calcXYZAtTn(t);
 
+    Array<OneD, NekDouble> out(3);
+
+    out[0] = p.x;
+    out[1] = p.y;
+    out[2] = p.z;
+
+    return out;
 }
 
 Array<OneD, NekDouble> CADCurveCFI::D2(NekDouble t)
 {
+    vector<cfi::DerivativeList>* d = m_cfiEdge->calcDerivAtTn(t);
+    cfi::Position p = m_cfiEdge->calcXYZAtTn(t);
 
+    Array<OneD, NekDouble> out(9);
+
+    out[0] = p.x;
+    out[1] = p.y;
+    out[2] = p.z;
+
+    cfi::DerivativeList d1 = d->at(0);
+    cfi::DerivativeList d2 = d->at(1);
+
+    out[3] = d1.getDeriv(0);
+    out[4] = d1.getDeriv(1);
+    out[5] = d1.getDeriv(2);
+    out[6] = d2.getDeriv(0);
+    out[7] = d2.getDeriv(1);
+    out[8] = d2.getDeriv(2);
+
+    return out;
 }
 
 Array<OneD, NekDouble> CADCurveCFI::Bounds()
 {
+    Array<OneD, NekDouble> t(2);
+    cfi::ParametricRange1D rng = m_cfiEdge->getLnurbsTnBox();
+    t[0] = rng.minT;
+    t[1] = rng.maxT;
 
+    return t;
 }
 
 Array<OneD, NekDouble> CADCurveCFI::GetMinMax()
 {
+    Array<OneD, NekDouble> bds = Bounds();
 
+    cfi::Position x1 = m_cfiEdge->calcXYZAtTn(bds[0]);
+    cfi::Position x2 = m_cfiEdge->calcXYZAtTn(bds[1]);
+
+    Array<OneD, NekDouble> locs(6);
+
+    locs[0] = x1.x;
+    locs[1] = x1.y;
+    locs[2] = x1.z;
+    locs[3] = x2.x;
+    locs[4] = x2.y;
+    locs[5] = x2.z;
+
+    return locs;
 }
 
 }

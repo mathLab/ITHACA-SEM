@@ -36,6 +36,9 @@
 #include "ProcessLoadCAD.h"
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 namespace Nektar
 {
@@ -66,7 +69,17 @@ void ProcessLoadCAD::Process()
         cout << "Loading CAD for " << m_mesh->m_CADId << endl;
     }
 
-    m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",m_mesh->m_CADId);
+    string ext = boost::filesystem::extension(m_mesh->m_CADId);
+
+    if(boost::iequals(ext,".fbm"))
+    {
+        m_mesh->m_cad = GetEngineFactory().CreateInstance("cfi",m_mesh->m_CADId);
+    }
+    else
+    {
+        m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",m_mesh->m_CADId);
+    }
+
     ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
 
     m_mesh->m_hasCAD = true;

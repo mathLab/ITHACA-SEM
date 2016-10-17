@@ -52,7 +52,7 @@ public:
         return MemoryManager<CADCurveCFI>::AllocateSharedPtr();
     }
 
-    static EngineKey key;
+    static std::string key;
 
     CADCurveCFI(){};
 
@@ -70,17 +70,9 @@ public:
 
     Array<OneD, NekDouble> GetMinMax();
 
-    void Initialise(int i, cfi::Line* in)
-    {
-        m_cfiEdge = in;
-        m_length = m_cfiEdge->calcLength();
+    NekDouble loct(Array<OneD, NekDouble> xyz);
 
-        m_id   = i;
-        m_type = curve;
-
-        cfi::ParametricRange1D rng = m_cfiEdge->getLnurbsTnBox();
-        std::cout << i << " " << rng.minT << " " << rng.maxT << endl;
-    }
+    void Initialise(int i, cfi::Line* in);
 
 private:
     ///cfi object

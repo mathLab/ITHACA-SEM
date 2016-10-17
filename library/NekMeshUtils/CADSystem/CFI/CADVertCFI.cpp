@@ -43,8 +43,8 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-EngineKey CADVertCFI::key = GetCADVertFactory().RegisterCreatorFunction(
-        EngineKey(eCFI,"cfi"),CADVertCFI::create,"CAD vert cfi");
+std::string CADVertCFI::key = GetCADVertFactory().RegisterCreatorFunction(
+        "cfi", CADVertCFI::create, "CAD vert cfi");
 
 void CADVertCFI::Initialise(int i, cfi::Point* in)
 {

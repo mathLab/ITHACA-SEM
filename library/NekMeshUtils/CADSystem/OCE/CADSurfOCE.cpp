@@ -112,7 +112,6 @@ Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p)
 
         if (projection.Distance(1) > 1.0)
         {
-            stringstream ss;
             cerr << "large locuv distance " << projection.Distance(1) / 1000.0
                  << endl;
         }

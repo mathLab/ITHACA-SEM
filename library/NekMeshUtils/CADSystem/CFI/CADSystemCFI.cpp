@@ -53,8 +53,34 @@ bool CADSystemCFI::LoadCAD()
 {
     cout << "trying " << m_name << endl;
 
-    cfi::Cfi cfi;
-    model = cfi.openModelFile(m_name.c_str());
+    cfiHandel.startServer();
+    cout << "cfi loaded in mode: ";
+    if(cfiHandel.info.mode == cfi::MODE_STANDALONE)
+    {
+        cout << "standalone" << endl;
+    }
+    else if(cfiHandel.info.mode == cfi::MODE_CLIENT)
+    {
+        cout << "client" << endl;
+    }
+    else if(cfiHandel.info.mode == cfi::MODE_SERVER)
+    {
+        cout << "server" << endl;
+    }
+    else if(cfiHandel.info.mode == cfi::MODE_BOTH)
+    {
+        cout << "both" << endl;
+    }
+    else if(cfiHandel.info.mode == cfi::MODE_PLUGIN)
+    {
+        cout << "plugin" << endl;
+    }
+    else
+    {
+        cout << "unknown" << endl;
+    }
+
+    model = cfiHandel.openModelFile(m_name.c_str());
 
     ASSERTL0(model->getEntityTotal(cfi::TYPE_BODY,cfi::SUBTYPE_ALL) == 1,
                     "cannot deal with multibodies");
@@ -89,8 +115,6 @@ bool CADSystemCFI::LoadCAD()
         }
     }
 
-    cout << "verts " << mapOfVerts.size() << endl;
-
     map<string,int> nameToVertId;
     map<string,cfi::Point*>::iterator vit;
     int i = 1; //from one to be consistent with oce
@@ -99,8 +123,6 @@ bool CADSystemCFI::LoadCAD()
         AddVert(i, vit->second);
         nameToVertId[vit->second->getName()] = i;
     }
-
-    cout << "curves " << mapOfEdges.size() << endl;
 
     map<string,cfi::Line*>::iterator eit;
     map<string,int>  nameToCurveId;
@@ -116,6 +138,7 @@ bool CADSystemCFI::LoadCAD()
             ids.push_back(nameToVertId[vert->getName()]);
         }
         ASSERTL0(ids.size()==2,"doesnt make sense");
+        nameToCurveId[eit->second->getName()] = i;
         AddCurve(i, eit->second, ids[0], ids[1]);
     }
 
@@ -129,10 +152,12 @@ bool CADSystemCFI::LoadCAD()
         vector< cfi::Oriented<cfi::TopoEntity*> >* edgeList = face->getChildList();
 
         vector<EdgeLoop> edgeloops;
+        vector<vector<cfi::Oriented<cfi::TopoEntity*> > > cfiloops;
         int done = 0;
         while(done != edgeList->size())
         {
             EdgeLoop edgeloop;
+            vector<cfi::Oriented<cfi::TopoEntity*> > cfiloop;
             string firstVert;
             vector< cfi::Oriented<cfi::TopoEntity*> >* vertList = edgeList->at(done).entity->getChildList();
             if(edgeList->at(done).orientation == 1)
@@ -145,6 +170,8 @@ bool CADSystemCFI::LoadCAD()
                 firstVert = vertList->at(1).entity->getName();
             }
             edgeloop.edges.push_back(m_curves[nameToCurveId[edgeList->at(done).entity->getName()]]);
+            cfiloop.push_back(edgeList->at(done));
+            adjsurfmap[nameToCurveId[edgeList->at(done).entity->getName()]].push_back(i);
             edgeList->at(done).orientation == 1 ? edgeloop.edgeo.push_back(0) : edgeloop.edgeo.push_back(1);
 
             for(done++; done < edgeList->size(); done++)
@@ -167,6 +194,8 @@ bool CADSystemCFI::LoadCAD()
                 }
 
                 edgeloop.edges.push_back(m_curves[nameToCurveId[edgeList->at(done).entity->getName()]]);
+                cfiloop.push_back(edgeList->at(done));
+                adjsurfmap[nameToCurveId[edgeList->at(done).entity->getName()]].push_back(i);
                 edgeList->at(done).orientation == 1 ? edgeloop.edgeo.push_back(0) : edgeloop.edgeo.push_back(1);
 
                 if(end)
@@ -175,15 +204,50 @@ bool CADSystemCFI::LoadCAD()
                     break;
                 }
             }
-
+            cfiloops.push_back(cfiloop);
             edgeloops.push_back(edgeloop);
         }
 
+        cfi::FaceMassProperties* fmp = face->calcMassProperties(5.0,5.0);
+        cfi::UVPosition uv = face->calcUVFromXYZ(fmp->centreOfMass);
+        edgeloops[0].center = Array<OneD, NekDouble>(2);
+        edgeloops[0].center[0] = uv.u;
+        edgeloops[0].center[1] = uv.v;
+        for(int i = 1; i < cfiloops.size(); i++)
+        {
+            for(int j = 0; j < cfiloops[i].size(); j++)
+            {
+                cfiloops[i][j].orientation == cfi::ORIENT_POSITIVE ?
+                            cfiloops[i][j].orientation = cfi::ORIENT_NEGATIVE :
+                            cfiloops[i][j].orientation = cfi::ORIENT_POSITIVE;
+            }
+            cfi::Face* tmpface = cfi::Face::createBasic(model, cfiloops[i],face->getTopoEmbedding().value());
+            cfi::FaceMassProperties* fmp = tmpface->calcMassProperties(5.0,5.0);
+            cfi::UVPosition uv = tmpface->calcUVFromXYZ(fmp->centreOfMass);
+            edgeloops[i].center = Array<OneD, NekDouble>(2);
+            edgeloops[i].center[0] = uv.u;
+            edgeloops[i].center[1] = uv.v;
+        }
         AddSurf(i, face, edgeloops);
     }
 
+    //TODO identify Degenerated faces and setdegen on vertices accordinaly
 
-    exit(-1);
+    ASSERTL0(adjsurfmap.size() == m_curves.size(),"incorrect curve info");
+
+    // This checks that all edges are bound by two surfaces, sanity check.
+    for (map<int, vector<int> >::iterator it = adjsurfmap.begin();
+         it != adjsurfmap.end(); it++)
+    {
+        ASSERTL0(it->second.size() == 2, "no three curve surfaces");
+        vector<CADSurfSharedPtr> sfs;
+        for (int i = 0; i < it->second.size(); i++)
+        {
+            sfs.push_back(m_surfs[it->second[i]]);
+        }
+        m_curves[it->first]->SetAdjSurf(sfs);
+    }
+
     return true;
 }
 

@@ -123,6 +123,7 @@ void BLMesh::Mesh()
             //initialise a new bl boudnary node
             blInfoSharedPtr bln = boost::shared_ptr<blInfo>(new blInfo);
             bln->oNode = (*it);
+            bln->shrink = false;
 
             file1 << (*it)->m_x << " " << (*it)->m_y << " " << (*it)->m_z << " " << ss.size() << endl;
 
@@ -435,9 +436,15 @@ void BLMesh::Mesh()
     }
     bgi::rtree<boxI, bgi::quadratic<16> > rtree(inserts);
 
+    //ofstream file3;
+    //file3.open("hit.3D");
+    //file3 << "X Y Z value" << endl;
+    int cthit = 0;
+    int cti = 0;
     do
     {
-
+        cti++;
+        cthit = 0;
         for(bit = blData.begin(); bit != blData.end(); bit++)
         {
             vector<boxI> intersects;
@@ -446,11 +453,157 @@ void BLMesh::Mesh()
                 rtree.query(bgi::intersects(boxes[bit->second->pEls[i]->GetId()]), back_inserter(intersects));
             }
 
-            //cout << intersects.size() << endl;
+            set<int> intersectsIds;
+
+            for(int i = 0; i < intersects.size(); i++)
+            {
+                intersectsIds.insert(intersects[i].second);
+            }
+
+            EdgeSet testEdges;
+            set<int>::iterator idit;
+            for(idit = intersectsIds.begin(); idit != intersectsIds.end(); idit++)
+            {
+                vector<EdgeSharedPtr> es = elsInRtree[(*idit)]->GetEdgeList();
+                for(int j = 0; j < es.size(); j++)
+                {
+                    //EdgeSet::iterator it = bit->second->edges.find(es[j]);
+                    //if(it == bit->second->edges.end())
+                    //{
+                        testEdges.insert(es[j]);
+                    //}
+                }
+            }
+
+            bool hit = false;
+            for(int i = 0; i < bit->second->pEls.size(); i++)
+            {
+                vector<NodeSharedPtr> ns = bit->second->pEls[i]->GetVertexList();
+                NekDouble A0,A1,A2,A3,A4,A5,A6,A7,A8;
+                NekDouble B0,B1,B2;
+
+                A3 = ns[1]->m_x - ns[0]->m_x;
+                A4 = ns[1]->m_y - ns[0]->m_y;
+                A5 = ns[1]->m_z - ns[0]->m_z;
+                A6 = ns[2]->m_x - ns[0]->m_x;
+                A7 = ns[2]->m_y - ns[0]->m_y;
+                A8 = ns[2]->m_z - ns[0]->m_z;
+                EdgeSet::iterator it;
+                for(it = testEdges.begin(); it != testEdges.end(); it++)
+                {
+                    A0 = ((*it)->m_n2->m_x - (*it)->m_n1->m_x) * -1.0;
+                    A1 = ((*it)->m_n2->m_y - (*it)->m_n1->m_y) * -1.0;
+                    A2 = ((*it)->m_n2->m_z - (*it)->m_n1->m_z) * -1.0;
+                    NekDouble det = A0 * (A4*A8 - A7*A5)
+                                   -A3 * (A1*A8 - A7*A2)
+                                   +A6 * (A1*A5 - A4*A2);
+
+                    if(fabs(det) < 1e-15)
+                    {
+                        //no intersecton
+                        continue;
+                    }
+                    B0 = (*it)->m_n1->m_x - ns[0]->m_x;
+                    B1 = (*it)->m_n1->m_y - ns[0]->m_y;
+                    B2 = (*it)->m_n1->m_z - ns[0]->m_z;
+
+                    NekDouble X0,X1,X2;
+
+                    X0 = B0 * (A4*A8 - A7*A5)
+                        -A3 * (B1*A8 - A7*B2)
+                        +A6 * (B1*A5 - A4*B2);
+
+                    X1 = A0 * (B1*A8 - A7*B2)
+                        -B0 * (A1*A8 - A7*A2)
+                        +A6 * (A1*B2 - B1*A2);
+
+                    X2 = A0 * (A4*B2 - B1*A5)
+                        -A3 * (A1*B2 - B1*A2)
+                        +B0 * (A1*A5 - A4*A2);
+
+                    X0 /= det;
+                    X1 /= det;
+                    X2 /= det;
+
+                    //check triangle intersecton
+                    if(X1 > 0.0 && X2 > 0.0 && X1 + X2 < 1.0
+                       && X0 > 0.0 && X0 < 1.0)
+                    {
+                        //file3 << bit->second->oNode->m_x << " " << bit->second->oNode->m_y << " " << bit->second->oNode->m_z << " " << 1 << endl;
+                        cthit++;
+                        hit = true;
+                        bit->second->shrink = true;
+                        break;
+                    }
+                }
+                if(hit) break;
+            }
+        }
+        cout << cthit << endl;
+        NekDouble shrinkFactor = 1.3;
+        bool shrinkSmooth = true;
+        while(shrinkSmooth)
+        {
+            shrinkSmooth = false;
+            for(bit = blData.begin(); bit != blData.end(); bit++)
+            {
+                if(bit->second->shrink)
+                {
+                    vector<blInfoSharedPtr> infos = nToNInfo[bit->first];
+                    for(int i = 0; i < infos.size(); i++)
+                    {
+                        if(infos[i]->shrink)
+                        {
+                            continue;
+                        }
+                        if(bit->second->bl / shrinkFactor< infos[i]->bl / shrinkFactor /2.0)
+                        {
+                            infos[i]->shrink = true;
+                            shrinkSmooth = true;
+                        }
+                    }
+                }
+            }
         }
 
-    }while(false);
+        set<int> boxesToAlign;
 
+        for(bit = blData.begin(); bit != blData.end(); bit++)
+        {
+            if(bit->second->shrink)
+            {
+                if(bit->second->bl < 1e-6)
+                {
+                    cout << "shrunk too far" << endl;
+                    continue;
+                }
+                bit->second->bl /= shrinkFactor;
+                bit->second->pNode->m_x = bit->second->oNode->m_x + bit->second->N[0] * bit->second->bl;
+                bit->second->pNode->m_y = bit->second->oNode->m_y + bit->second->N[1] * bit->second->bl;
+                bit->second->pNode->m_z = bit->second->oNode->m_z + bit->second->N[2] * bit->second->bl;
+
+                for(int i = 0; i < bit->second->pEls.size(); i++)
+                {
+                    boxesToAlign.insert(bit->second->pEls[i]->GetId());
+                }
+            }
+        }
+
+        set<int>::iterator it;
+        for(it = boxesToAlign.begin(); it != boxesToAlign.end(); it++)
+        {
+            rtree.remove(make_pair(boxes[(*it)],(*it)));
+            boxes[(*it)] = GetBox(elsInRtree[(*it)]);
+            rtree.insert(make_pair(boxes[(*it)],(*it)));
+        }
+
+        if(cti > 25)
+        {
+            cout << "boundary layer failed" << endl;
+            return;
+        }
+
+    }while(cthit > 0);
 
 }
 

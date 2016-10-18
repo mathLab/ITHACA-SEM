@@ -58,6 +58,8 @@ struct blInfo
     std::vector<ElementSharedPtr> pEls;
     EdgeSet edges;
 
+    bool shrink;
+
     void AlignNode()
     {
         pNode->m_x = oNode->m_x + bl * N[0];

@@ -446,7 +446,7 @@ void BLMesh::Mesh()
                 rtree.query(bgi::intersects(boxes[bit->second->pEls[i]->GetId()]), back_inserter(intersects));
             }
 
-            cout << intersects.size() << endl;
+            //cout << intersects.size() << endl;
         }
 
     }while(false);
@@ -540,9 +540,9 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
         for(int i = 0; i < N.size(); i++)
         {
             NekDouble dot2 = Np[0]*N[i][0] + Np[1]*N[i][1] + Np[2]*N[i][2];
-            if(fabs(dot2 - 1) < 1e-6)
+            if(fabs(dot2 - 1) < 1e-9)
             {
-                a[i] = 1e-6;
+                a[i] = dot2/fabs(dot2) * 1e-9;
             }
             else
             {

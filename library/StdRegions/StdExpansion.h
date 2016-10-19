@@ -1335,6 +1335,7 @@ namespace Nektar
             const LibUtilities::PointsKeyVector GetPointsKeys() const
             {
                 LibUtilities::PointsKeyVector p;
+                p.reserve(m_base.num_elements());
                 for (int i = 0; i < m_base.num_elements(); ++i)
                 {
                     p.push_back(m_base[i]->GetPointsKey());

@@ -39,7 +39,6 @@
 #include <boost/shared_ptr.hpp>
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <NekMeshUtils/CADSystem/OpenCascade.h>
 
 namespace Nektar
 {
@@ -53,12 +52,6 @@ enum cadType
     surf
 };
 
-/**
- * @brief class for CAD curves.
- *
- * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
- * Nektar++.
- */
 class CADObj
 {
 public:

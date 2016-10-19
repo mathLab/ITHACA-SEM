@@ -79,6 +79,12 @@ class Collection
                       Array<OneD,       NekDouble>           &output1,
                       Array<OneD,       NekDouble>           &output2);
 
+        inline void ApplyOperator(
+                const OperatorType                           &op,
+                      int                                     dir,
+                const Array<OneD, const NekDouble>           &inarray,
+                      Array<OneD,       NekDouble>           &output);
+
         inline bool HasOperator(const OperatorType &op);
 
     protected:
@@ -133,6 +139,19 @@ inline void Collection::ApplyOperator(
 {
     Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
     (*m_ops[op])(inarray, output0, output1, output2, wsp);
+}
+
+/**
+ *
+ */
+inline void Collection::ApplyOperator(
+        const OperatorType                 &op,
+              int                           dir,
+        const Array<OneD, const NekDouble> &inarray,
+              Array<OneD,       NekDouble> &output)
+{
+    Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
+    (*m_ops[op])(dir, inarray, output, wsp);
 }
 
 inline bool Collection::HasOperator(const OperatorType &op)

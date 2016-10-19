@@ -393,11 +393,11 @@ void BLMesh::Mesh()
             vector<EdgeSharedPtr> es = bit->second->pEls[i]->GetEdgeList();
             for(int j = 0; j < es.size(); j++)
             {
-                if(es[j]->m_n1 == bit->second->pNode ||
-                   es[j]->m_n2 == bit->second->pNode)
-                {
+                //if(es[j]->m_n1 == bit->second->pNode ||
+                //   es[j]->m_n2 == bit->second->pNode)
+                //{
                     bit->second->edges.insert(es[j]);
-                }
+                //}
             }
         }
     }
@@ -467,11 +467,11 @@ void BLMesh::Mesh()
                 vector<EdgeSharedPtr> es = elsInRtree[(*idit)]->GetEdgeList();
                 for(int j = 0; j < es.size(); j++)
                 {
-                    //EdgeSet::iterator it = bit->second->edges.find(es[j]);
-                    //if(it == bit->second->edges.end())
-                    //{
+                    EdgeSet::iterator it = bit->second->edges.find(es[j]);
+                    if(it == bit->second->edges.end())
+                    {
                         testEdges.insert(es[j]);
-                    //}
+                    }
                 }
             }
 
@@ -526,8 +526,8 @@ void BLMesh::Mesh()
                     X2 /= det;
 
                     //check triangle intersecton
-                    if(X1 > 0.0 && X2 > 0.0 && X1 + X2 < 1.0
-                       && X0 > 0.0 && X0 < 1.0)
+                    if(X1 > 1e-6 && X2 > 1e-6 && X1 + X2 < 0.999999
+                       && X0 > 1e-6 && X0 < 0.999999)
                     {
                         //file3 << bit->second->oNode->m_x << " " << bit->second->oNode->m_y << " " << bit->second->oNode->m_z << " " << 1 << endl;
                         cthit++;

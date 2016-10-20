@@ -8,13 +8,21 @@
 
 IF (NOT WIN32)
    OPTION(NEKTAR_USE_ANN
-         "Use ANN routines for performing the Approximate Nearest Neighbour searches." OFF)
+       "Use ANN routines for performing Approximate Nearest Neighbour searches." OFF)
 ENDIF(NOT WIN32)
 
+IF( NEKTAR_USE_MESHGEN )
+    SET(NEKTAR_USE_ANN ON CACHE BOOL "" FORCE)
+ENDIF()
+
 IF (NEKTAR_USE_ANN)
-    # First search for system ANN installs. Hint /opt/local for MacPorts.
-    FIND_LIBRARY(ANN_LIBRARY    NAMES ANN PATHS /opt/local/lib)
-    FIND_PATH   (ANN_INCLUDE_DIR ANN.h PATHS /opt/local/include)
+    # First search for system ANN installs. Hint /opt/local for MacPorts and
+    # /usr/local/opt/ann for Homebrew.
+    FIND_LIBRARY(ANN_LIBRARY NAMES ANN
+        PATHS /opt/local/lib /usr/local/opt/ann/lib $ENV{ANN_ROOT}/lib)
+    FIND_PATH   (ANN_INCLUDE_DIR ANN.h
+        PATHS /opt/local/include /usr/local/opt/ann/include $ENV{ANN_ROOT}/include
+        PATH_SUFFIXES ANN)
     GET_FILENAME_COMPONENT(ANN_LIBRARY_PATH ${ANN_LIBRARY} PATH)
 
     IF (ANN_LIBRARY AND ANN_INCLUDE_DIR)
@@ -23,22 +31,19 @@ IF (NEKTAR_USE_ANN)
         SET(BUILD_ANN ON)
     ENDIF ()
 
-    CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_ANN
-        "Build ANN library from ThirdParty" ${BUILD_ANN}
-        "NEKTAR_USE_ANN" OFF)
+    OPTION(THIRDPARTY_BUILD_ANN "Build ANN library from ThirdParty" ${BUILD_ANN})
 
     IF (THIRDPARTY_BUILD_ANN)
-
         # Note that ANN is compiled in the source-tree, so we unpack the
         # source code in the ThirdParty builds directory.
         SET(ANN_DIR ${TPBUILD}/ann-1.1.2)
         SET(ANN_SRC ${ANN_DIR}/src)
 
         IF (APPLE)
-            SET(ANN_CFLAGS "-O3")
+            SET(ANN_CFLAGS "-O3 -fPIC")
             SET(ANN_MAKELIB "libtool -static -o")
         ELSE ()
-            SET(ANN_CFLAGS "-O3")
+            SET(ANN_CFLAGS "-O3 -fPIC")
             SET(ANN_MAKELIB "ar ruv")
         ENDIF ()
 

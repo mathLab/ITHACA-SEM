@@ -57,11 +57,6 @@ public:
     {
         ElementSharedPtr e = boost::shared_ptr<Element>(
             new Tetrahedron(pConf, pNodeList, pTagList));
-        std::vector<FaceSharedPtr> faces = e->GetFaceList();
-        for (int i = 0; i < faces.size(); ++i)
-        {
-            faces[i]->m_elLink.push_back(std::pair<ElementSharedPtr, int>(e, i));
-        }
         return e;
     }
     /// Element type
@@ -77,15 +72,30 @@ public:
 
     NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
         int coordDim);
-    NEKMESHUTILS_EXPORT virtual void Complete(int order);
+    NEKMESHUTILS_EXPORT virtual StdRegions::Orientation GetEdgeOrient(
+        int edgeId, EdgeSharedPtr edge);
+    NEKMESHUTILS_EXPORT virtual void MakeOrder(
+        int                                order,
+        SpatialDomains::GeometrySharedPtr  geom,
+        LibUtilities::PointsType           pType,
+        int                                coordDim,
+        int                               &id,
+        bool                               justConfig = false);
 
     NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
+    NEKMESHUTILS_EXPORT virtual int GetFaceVertex(int i, int j)
+    {
+        return m_faceIds[i][j];
+    }
 
     int m_orientationMap[4];
     int m_origVertMap[4];
 
 protected:
     void OrientTet();
+
+private:
+    static int m_faceIds[4][3];
 };
 }
 }

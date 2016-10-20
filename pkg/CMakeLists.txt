@@ -54,6 +54,8 @@ if (NEKTAR_BUILD_UTILITIES)
 endif()
 
 if (NEKTAR_BUILD_LIBRARY AND DPKG)
+    set(NEK_DEP "openmpi-bin")
+
     ### DEBIAN PACKAGES ############################################
     # Note that the formatting of the DESCRIPTION field is VERY specific. It
     # must start with a new line, each line must start with a space, and there
@@ -65,8 +67,9 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
         DESCRIPTION "
  This library provides core routines including linear algebra and integration
  with ThirdParty libraries."
+        DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-utilities_LIBS}")
-    set(NEK_DEP "libnektar++-utilities (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-utilities (= ${NEKTAR_VERSION})")
 
     add_nektar_package(
         NAME libnektar++-stdregions
@@ -240,7 +243,7 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
             DESCRIPTION "
  This package contains the mesh conversion utility and other utilities for
  converting output files into common visualisation formats"
-            DEPENDS "${NEK_DEP}"
+            DEPENDS "${NEK_DEP}, libnektar++-nekmeshutils (= ${NEKTAR_VERSION})"
             INSTALL_BINS "${nektar++-utilities_BINS}")
     endif (NEKTAR_BUILD_UTILITIES)
 
@@ -473,6 +476,7 @@ set(CPACK_SOURCE_IGNORE_FILES
     "/\\\\.gitmodules"
     "/build/"
     "/builds/"
+    "/docs/tutorial"
     "/ThirdParty/"
     "/Testing/"
     "/library/Demos/MultiRegions/ExtraDemos/"

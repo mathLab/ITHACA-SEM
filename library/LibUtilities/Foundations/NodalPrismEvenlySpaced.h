@@ -38,6 +38,7 @@
 
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <boost/shared_ptr.hpp>
@@ -92,6 +93,8 @@ namespace Nektar
             }
 
         private:
+            boost::shared_ptr<NodalUtilPrism> m_util;
+
             /// Default constructor should not be called except by Create matrix
             NodalPrismEvenlySpaced():PointsBaseType(NullPointsKey)
             {

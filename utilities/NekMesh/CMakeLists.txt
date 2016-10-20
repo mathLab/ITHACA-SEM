@@ -9,6 +9,7 @@ SET(NekMeshHeaders
     Module.h
     OutputModules/OutputGmsh.h
     OutputModules/OutputNekpp.h
+    OutputModules/OutputSTL.h
     ProcessModules/ProcessBL.h
     ProcessModules/ProcessCurve.h
     ProcessModules/ProcessCurvedEdges.h
@@ -17,6 +18,7 @@ SET(NekMeshHeaders
     ProcessModules/ProcessExtractSurf.h
     ProcessModules/ProcessExtractTetPrismInterface.h
     ProcessModules/ProcessJac.h
+    ProcessModules/ProcessLinkCheck.h
     ProcessModules/ProcessLinear.h
     ProcessModules/ProcessPerAlign.h
     ProcessModules/ProcessScalar.h
@@ -37,6 +39,7 @@ SET(NekMeshSources
     Module.cpp
     OutputModules/OutputGmsh.cpp
     OutputModules/OutputNekpp.cpp
+    OutputModules/OutputSTL.cpp
     ProcessModules/ProcessBL.cpp
     ProcessModules/ProcessCurve.cpp
     ProcessModules/ProcessCurvedEdges.cpp
@@ -45,6 +48,7 @@ SET(NekMeshSources
     ProcessModules/ProcessExtractSurf.cpp
     ProcessModules/ProcessExtractTetPrismInterface.cpp
     ProcessModules/ProcessJac.cpp
+    ProcessModules/ProcessLinkCheck.cpp
     ProcessModules/ProcessLinear.cpp
     ProcessModules/ProcessPerAlign.cpp
     ProcessModules/ProcessScalar.cpp
@@ -69,26 +73,21 @@ IF (NEKTAR_USE_MESHGEN)
 ENDIF (NEKTAR_USE_MESHGEN)
 
 IF (NEKTAR_USE_ANN)
-   LIST(APPEND NekMeshSources ProcessModules/ProcessNormalFromPlyFileANN.cpp)
-ELSE (NEKTAR_USE_ANN)
-   LIST(APPEND NekMeshSources ProcessModules/ProcessNormalFromPlyFile.cpp)
+    SET(NekMeshHeaders ${NekMeshHeaders} ProcessModules/ProcessInsertSurface.h)
+    SET(NekMeshSources ${NekMeshSources} ProcessModules/ProcessInsertSurface.cpp)
 ENDIF (NEKTAR_USE_ANN)
 
 # Don't use macro -- this way we can just link against NekMeshUtils and
 # LocalRegions.
 ADD_EXECUTABLE(NekMesh ${NekMeshSources})
 SET_COMMON_PROPERTIES(NekMesh)
-TARGET_LINK_LIBRARIES(NekMesh NekMeshUtils LocalRegions)
+TARGET_LINK_LIBRARIES(NekMesh NekMeshUtils FieldUtils)
 SET_PROPERTY(TARGET NekMesh PROPERTY FOLDER util)
 INSTALL(TARGETS NekMesh
     RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT util)
 
 IF (NEKTAR_USE_CCM)
-   TARGET_LINK_LIBRARIES(NekMesh ccmio adf)
-   SET_TARGET_PROPERTIES(NekMesh PROPERTIES
-       IMPORTED_LOCATION ${CCMIO_LIBRARY_PATH}/libccmio.a)
-   INCLUDE_DIRECTORIES(NekMesh ${CCMIO_INCLUDE_DIR})
-   LINK_DIRECTORIES(${CCMIO_LIBRARY_PATH})
+   TARGET_LINK_LIBRARIES(NekMesh ${CCMIO_LIBRARIES})
 ENDIF (NEKTAR_USE_CCM)
 
 IF (NEKTAR_USE_VTK)
@@ -109,24 +108,37 @@ ENDIF (NEKTAR_USE_ANN)
 
 # Nektar++
 ADD_NEKTAR_TEST        (Nektar++/InvalidTetFace)
+ADD_NEKTAR_TEST        (Nektar++/InvalidQuads)
 ADD_NEKTAR_TEST        (Nektar++/Tube45Refinement)
 ADD_NEKTAR_TEST        (Nektar++/Tube45Refinement_extractsurf)
 ADD_NEKTAR_TEST        (Nektar++/CylQuadBl)
 # Gmsh tests
 ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)
 ADD_NEKTAR_TEST        (Gmsh/CubeHex)
+ADD_NEKTAR_TEST        (Gmsh/CubeHexLinear)
 ADD_NEKTAR_TEST        (Gmsh/CubePrism)
+ADD_NEKTAR_TEST        (Gmsh/CubePrismLinear)
 ADD_NEKTAR_TEST        (Gmsh/CubeTet)
+ADD_NEKTAR_TEST        (Gmsh/CubeTetLinear)
 IF (WIN32)
     ADD_NEKTAR_TEST    (Gmsh/Scalar_Windows)
 ELSE ()
     ADD_NEKTAR_TEST    (Gmsh/Scalar)
 ENDIF ()
 ADD_NEKTAR_TEST        (Gmsh/SquareQuad)
+ADD_NEKTAR_TEST        (Gmsh/SquareQuadLinear)
 ADD_NEKTAR_TEST        (Gmsh/SquareTri)
+ADD_NEKTAR_TEST        (Gmsh/SquareTriLinear)
 # Nektar tests
 ADD_NEKTAR_TEST        (Nektar/HexLinear)
 ADD_NEKTAR_TEST        (Nektar/Tube45)
 # StarCCM tests
 ADD_NEKTAR_TEST        (StarTec/CubePer)
 ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)
+
+# MeshGen test
+IF(NEKTAR_USE_MESHGEN)
+    ADD_NEKTAR_TEST        (MeshGen/cylinder)
+    ADD_NEKTAR_TEST        (MeshGen/sphere)
+    ADD_NEKTAR_TEST_LENGTHY(MeshGen/predator)
+ENDIF()

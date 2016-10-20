@@ -193,6 +193,9 @@ namespace Nektar
             NodalPointReorder3d();
 
             ASSERTL1((static_cast<unsigned int>(isum)==m_pointsKey.GetTotNumPoints()),"sum not equal to npts");
+
+            m_util = MemoryManager<NodalUtilTetrahedron>::AllocateSharedPtr(
+                numPoints - 1, m_points[0], m_points[1], m_points[2]);
         }
 
         void NodalTetElec::CalculateWeights()
@@ -203,8 +206,7 @@ namespace Nektar
             typedef DataType T;
             
             // Solve the Vandermonde system of integrals for the weight vector
-            NekVector<T> w = MakeTetWeights(NekVector<T>(m_points[0]), NekVector<T>(m_points[1]), NekVector<T>(m_points[2]));
-            
+            NekVector<T> w = m_util->GetWeights();
             m_weights = Array<OneD,T>( w.GetRows(), w.GetPtr() );
         }
 
@@ -214,39 +216,25 @@ namespace Nektar
                                                  const Array<OneD, const NekDouble>& zia, Array<OneD, NekDouble>& interp)
                                                    
         {
-             NekVector<NekDouble>  x( m_points[0] );
-             NekVector<NekDouble>  y( m_points[1] );
-             NekVector<NekDouble>  z( m_points[2] );
-             NekVector<NekDouble> xi( xia );
-             NekVector<NekDouble> yi( yia );
-             NekVector<NekDouble> zi( zia );
-             NekMatrix<NekDouble> interMat = GetTetInterpolationMatrix(x, y, z, xi, yi, zi);
+             Array<OneD, Array<OneD, NekDouble> > xi(3);
+             xi[0] = xia;
+             xi[1] = yia;
+             xi[2] = zia;
 
-             int rows = xi.GetRows(), cols = GetTotNumPoints();
-             for( int i = 0; i < rows; ++i ) {
-                for( int j = 0; j < cols; ++j ) {
-                    interp[j + i*cols] = interMat(i,j);
-                }
-             }             
+             boost::shared_ptr<NekMatrix<NekDouble> > mat =
+                 m_util->GetInterpolationMatrix(xi);
+             Vmath::Vcopy(mat->GetRows() * mat->GetColumns(), mat->GetRawPtr(),
+                          1, &interp[0], 1);
          }
 
         void NodalTetElec::CalculateDerivMatrix()
         {
-             // Allocate the derivative matrix.
+            // Allocate the derivative matrix.
             PointsBaseType::CalculateDerivMatrix();
 
-            NekVector<NekDouble> x( m_points[0] );
-            NekVector<NekDouble> y( m_points[1] );
-            NekVector<NekDouble> z( m_points[2] );
-            NekVector<NekDouble> xi = x;
-            NekVector<NekDouble> yi = y;
-            NekVector<NekDouble> zi = z;
-
-            *m_derivmatrix[0] = *GetTetXDerivativeMatrix(x,y,z,xi,yi,zi);
-
-            *m_derivmatrix[1] = *GetTetYDerivativeMatrix(x,y,z,xi,yi,zi);
-
-            *m_derivmatrix[2] = *GetTetZDerivativeMatrix(x,y,z,xi,yi,zi);
+            m_derivmatrix[0] = m_util->GetDerivMatrix(0);
+            m_derivmatrix[1] = m_util->GetDerivMatrix(1);
+            m_derivmatrix[2] = m_util->GetDerivMatrix(2);
         }
 
         boost::shared_ptr<PointsBaseType> NodalTetElec::Create(const PointsKey &key)

@@ -23,9 +23,13 @@ Override a parameter (or define a new one) specified in the XML file.
 \hangindent=1.5cm
 Override a solverinfo (or define a new one) specified in the XML file.
 
-\lstinline[style=BashInputStyle]{--shared-filesystem}\\
-\hangindent=1.5cm
-By default when running in parallel the complete mesh is loaded by all processes, although partitioning is done uniquely on the root process only and communicated to the other processes. Each process then writes out its own partition to the local working directory. This is the most robust approach in accounting for systems where the distributed nodes do not share a common filesystem. In the case that there is a common filesystem, this option forces only the root process to load the complete mesh, perform partitioning and write out the session files for all partitions. This avoids potential memory issues when multiple processes attempt to load the complete mesh on a single node.
+\lstinline[style=BashInputStyle]{--io-format [format]}\\
+\hangindent=1.5cm Determines the output format for writing \nekpp field files
+that are used to store, for example, checkpoint and solution field files. The
+default for \inlsh{format} is \inlsh{Xml}, which is an XML-based format, which
+is written as one file per process. If \nekpp is compiled with HDF5 support,
+then an alternative option is \inlsh{Hdf5}, which will write one file for all
+processes and can be more efficient for very large-scale parallel jobs.
 
 \lstinline[style=BashInputStyle]{--npx [int]}\\
 \hangindent=1.5cm

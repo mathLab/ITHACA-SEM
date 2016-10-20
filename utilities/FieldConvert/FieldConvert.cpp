@@ -36,15 +36,16 @@
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
-#include "Module.h"
+#include <FieldUtils/Module.h>
 
 using namespace std;
 using namespace Nektar;
-using namespace Nektar::Utilities;
+using namespace Nektar::FieldUtils;
 
 int main(int argc, char* argv[])
 {
     Timer     timer;
+    Timer     moduleTimer;
     timer.Start();
     po::options_description desc("Available options");
     desc.add_options()
@@ -67,6 +68,9 @@ int main(int argc, char* argv[])
         ("nprocs", po::value<int>(),
                 "Used to define nprocs if running serial problem to mimic "
                 "parallel run.")
+        ("npz", po::value<int>(),
+                "Used to define number of partitions in z for Homogeneous1D "
+                "expansions for parallel runs.")
         ("onlyshape", po::value<string>(),
                  "Only use element with defined shape type i.e. -onlyshape "
                  " Tetrahedron")
@@ -81,7 +85,6 @@ int main(int argc, char* argv[])
                 "Print options for a module.")
         ("module,m", po::value<vector<string> >(),
                 "Specify modules which are to be used.")
-        ("shared-filesystem,s", "Using shared filesystem.")
         ("useSessionVariables",
                 "Use variables defined in session for output")
         ("verbose,v",
@@ -376,24 +379,37 @@ int main(int argc, char* argv[])
     // Run field process.
     for (int i = 0; i < modules.size(); ++i)
     {
+        if(f->m_verbose && f->m_comm->TreatAsRankZero())
+        {
+            moduleTimer.Start();
+        }
         modules[i]->Process(vm);
         cout.flush();
+        if(f->m_verbose && f->m_comm->TreatAsRankZero())
+        {
+            moduleTimer.Stop();
+            NekDouble cpuTime = moduleTimer.TimePerTest(1);
+
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << modules[i]->GetModuleName()
+                 << " CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+        }
     }
 
     if(f->m_verbose)
     {
-        if(f->m_comm->GetRank() == 0)
+        if(f->m_comm->TreatAsRankZero())
         {
             timer.Stop();
             NekDouble cpuTime = timer.TimePerTest(1);
-            
+
             stringstream ss;
             ss << cpuTime << "s";
             cout << "Total CPU Time: " << setw(8) << left
                  << ss.str() << endl;
-            cpuTime = 0.0;
         }
-        
     }
     return 0;
 }

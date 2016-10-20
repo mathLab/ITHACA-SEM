@@ -61,7 +61,7 @@ PtsField::PtsField(const int dim,
  * m elements each, m_ptsConn is a vector of n arrays with 3*m (ePtsTriBlock) or
  * 4*m (ePtsTetBlock) entries.
  */
-void PtsField::GetConnectivity(vector<Array<OneD, int> > &conn) const
+void PtsField::GetConnectivity(vector< Array< OneD, int > > &conn) const
 {
     conn = m_ptsConn;
 }
@@ -74,9 +74,10 @@ void PtsField::GetConnectivity(vector<Array<OneD, int> > &conn) const
  * m elements each, m_ptsConn is a vector of n arrays with 3*m (ePtsTriBlock) or
  * 4*m (ePtsTetBlock) entries.
  */
-void PtsField::SetConnectivity(const vector<Array<OneD, int> > &conn)
+void PtsField::SetConnectivity(const vector< Array< OneD, int > > &conn)
 {
-    ASSERTL1((m_ptsType == ePtsTetBlock || m_ptsType == ePtsTriBlock),
+    ASSERTL1((m_ptsType == ePtsTetBlock || m_ptsType == ePtsTriBlock ||
+              m_ptsType == ePtsSegBlock),
              "ptsType must be set before connectivity");
 
     m_ptsConn = conn;
@@ -116,13 +117,13 @@ void PtsField::SetFieldNames(const vector<std::string> fieldNames)
     m_fieldNames = fieldNames;
 }
 
-void PtsField::AddField(const Array<OneD, NekDouble> &pts,
+void PtsField::AddField(const Array< OneD, NekDouble > &pts,
                         const string fieldName)
 {
     int nTotvars = m_pts.num_elements();
 
-    ASSERTL1(pts.num_elements() == m_pts[0].num_elements(),
-             "Field size mismatch");
+    ASSERTL1(pts.num_elements() ==  m_pts[0].num_elements(), 
+            "Field size mismatch");
 
     // redirect existing pts
     Array<OneD, Array<OneD, NekDouble> > newpts(nTotvars + 1);
@@ -135,6 +136,27 @@ void PtsField::AddField(const Array<OneD, NekDouble> &pts,
     m_pts = newpts;
 
     m_fieldNames.push_back(fieldName);
+}
+
+void PtsField::AddPoints(const Array<OneD, const Array<OneD, NekDouble> > &pts)
+{
+    ASSERTL1(pts.num_elements() == m_pts.num_elements(),
+             "number of variables mismatch");
+
+    // TODO: dont copy, dont iterate
+    for (int i = 0; i < m_pts.num_elements(); ++i)
+    {
+        Array<OneD, NekDouble> tmp(m_pts[i].num_elements() + pts[i].num_elements());
+        for (int j = 0; j < m_pts[i].num_elements(); ++j)
+        {
+            tmp[j] = m_pts[i][j];
+        }
+        for (int j = 0; j < pts[i].num_elements(); ++j)
+        {
+            tmp[m_pts[i].num_elements() + j] = pts[i][j];
+        }
+        m_pts[i] = tmp;
+    }
 }
 
 int PtsField::GetNpoints() const
@@ -154,19 +176,19 @@ void PtsField::SetPointVal(const int fieldInd,
     m_pts[fieldInd][ptInd] = val;
 }
 
-void PtsField::GetPts(Array<OneD, Array<OneD, NekDouble> > &pts) const
+void PtsField::GetPts(Array< OneD, Array< OneD, NekDouble > > &pts) const
 {
     pts = m_pts;
 }
 
-Array<OneD, NekDouble> PtsField::GetPts(const int fieldInd) const
+Array< OneD, NekDouble > PtsField::GetPts(const int fieldInd) const
 {
     return m_pts[fieldInd];
 }
 
-void PtsField::SetPts(Array<OneD, Array<OneD, NekDouble> > &pts)
+void PtsField::SetPts(Array< OneD, Array< OneD, NekDouble > > &pts)
 {
-    ASSERTL1(pts.num_elements() == m_pts.num_elements(),
+    ASSERTL1(pts.num_elements() ==  m_pts.num_elements(),
              "Pts field count mismatch");
 
     m_pts = pts;
@@ -189,11 +211,11 @@ int PtsField::GetPointsPerEdge(const int i) const
  * data has no specific shape (ePtsLine) or is a block (ePtsTetBlock,
  * ePtsTriBlock), size=1 for ePtsLine, 2 for ePtsPlane and 3 for ePtsBox
  */
-void PtsField::SetPointsPerEdge(const vector<int> nPtsPerEdge)
+void PtsField::SetPointsPerEdge(const vector< int > nPtsPerEdge)
 {
     ASSERTL0(
         m_ptsType == ePtsLine || m_ptsType == ePtsPlane || m_ptsType == ePtsBox,
-        "SetPointsPerEdge only supported for ePtsLine, ePtsPlane and ePtsBox.");
+             "SetPointsPerEdge only supported for ePtsLine, ePtsPlane and ePtsBox.");
 
     m_nPtsPerEdge = nPtsPerEdge;
 }
@@ -213,7 +235,7 @@ vector<NekDouble> PtsField::GetBoxSize() const
     return m_boxSize;
 }
 
-void PtsField::SetBoxSize(const vector<NekDouble> boxSize)
+void PtsField::SetBoxSize(const vector< NekDouble> boxSize)
 {
     m_boxSize = boxSize;
 }

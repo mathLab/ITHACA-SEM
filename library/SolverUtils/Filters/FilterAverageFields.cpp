@@ -46,27 +46,12 @@ std::string FilterAverageFields::className =
 FilterAverageFields::FilterAverageFields(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const ParamMap &pParams)
-    : FilterSampler(pSession, pParams)
+    : FilterFieldConvert(pSession, pParams)
 {
 }
 
 FilterAverageFields::~FilterAverageFields()
 {
-}
-
-void FilterAverageFields::v_Initialise(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
-{
-    int nfield = pFields.num_elements();
-    m_variables.resize(pFields.num_elements());
-    // Fill name of variables
-    for (int n = 0; n < nfield; ++n)
-    {
-        m_variables[n] = pFields[n]->GetSession()->GetVariable(n);
-    }
-    // Now let FilterSampler initialise the output
-    FilterSampler::v_Initialise(pFields, time);
 }
 
 void FilterAverageFields::v_ProcessSample(
@@ -89,12 +74,10 @@ void FilterAverageFields::v_PrepareOutput(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
+    m_fieldMetaData["NumberOfFieldDumps"] =
+        boost::lexical_cast<std::string>(m_numSamples);
     m_scale = 1.0 / m_numSamples;
 }
 
-bool FilterAverageFields::v_IsTimeDependent()
-{
-    return true;
-}
 }
 }

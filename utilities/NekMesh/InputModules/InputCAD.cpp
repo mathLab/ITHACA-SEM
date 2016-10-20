@@ -138,6 +138,12 @@ void InputCAD::ParseFile(string nm)
         it = parameters.find("BLThick");
         ASSERTL0(it != parameters.end(), "no blthick defined");
         m_blthick = it->second;
+        it = parameters.find("BLLayers");
+        ASSERTL0(it != parameters.end(), "no bllayer defined");
+        m_bllayers = it->second;
+        it = parameters.find("BLProg");
+        ASSERTL0(it != parameters.end(), "no blprog defined");
+        m_blprog = it->second;
     }
 
     set<string>::iterator sit;
@@ -198,6 +204,8 @@ void InputCAD::Process()
     {
         mods.back()->RegisterConfig("blsurfs",m_blsurfs);
         mods.back()->RegisterConfig("blthick",m_blthick);
+        mods.back()->RegisterConfig("bllayers",m_bllayers);
+        mods.back()->RegisterConfig("blprog",m_blprog);
     }
 
     /*mods.push_back(GetModuleFactory().CreateInstance(

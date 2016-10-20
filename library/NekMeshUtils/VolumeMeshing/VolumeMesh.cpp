@@ -56,6 +56,10 @@ VolumeMesh::VolumeMesh(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "0", "Generate prisms on these surfs");
     m_config["blthick"] =
         ConfigOption(false, "0", "Prism layer thickness");
+    m_config["bllayers"] =
+        ConfigOption(false, "0", "Prism layers");
+    m_config["blprog"] =
+        ConfigOption(false, "0", "Prism progression");
 }
 
 VolumeMesh::~VolumeMesh()
@@ -68,15 +72,12 @@ void VolumeMesh::Process()
         cout << endl << "Volume meshing" << endl;
 
     bool makeBL;
-    string blt, bls;
-    NekDouble blThick;
     vector<unsigned int> blSurfs;
 
-    if(m_config["blsurfs"].beenSet && m_config["blthick"].beenSet)
+    if(m_config["blsurfs"].beenSet)
     {
         makeBL = true;
         m_mesh->m_numcomp = 2;
-        blThick = m_config["blthick"].as<NekDouble>();
         ParseUtils::GenerateSeqVector(m_config["blsurfs"].as<string>().c_str(),
                                       blSurfs);
     }
@@ -90,7 +91,10 @@ void VolumeMesh::Process()
     if (makeBL)
     {
         BLMeshSharedPtr blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(
-                                        m_mesh, blSurfs, blThick);
+                                        m_mesh, blSurfs,
+                                        m_config["blthick"].as<NekDouble>(),
+                                        m_config["bllayers"].as<int>(),
+                                        m_config["blprog"].as<NekDouble>());
 
         blmesh->Mesh();
 

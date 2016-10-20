@@ -50,7 +50,7 @@ struct blInfo
 {
     NodeSharedPtr pNode;
     NodeSharedPtr oNode;
-    NekDouble bl;
+    int bl;
     Array<OneD, NekDouble> N;
     int symsurf;
     bool onSym;
@@ -58,13 +58,14 @@ struct blInfo
     std::vector<ElementSharedPtr> pEls;
     EdgeSet edges;
 
-    bool shrink;
+    bool stop;
+    bool stopped;
 
-    void AlignNode()
+    void AlignNode(NekDouble t)
     {
-        pNode->m_x = oNode->m_x + bl * N[0];
-        pNode->m_y = oNode->m_y + bl * N[1];
-        pNode->m_z = oNode->m_z + bl * N[2];
+        pNode->m_x = oNode->m_x + t * N[0];
+        pNode->m_y = oNode->m_y + t * N[1];
+        pNode->m_z = oNode->m_z + t * N[2];
     }
 };
 
@@ -78,8 +79,11 @@ public:
     /**
      *@brief default constructor
      */
-    BLMesh(MeshSharedPtr m, std::vector<unsigned int> bls, NekDouble b) :
-                    m_mesh(m), m_blsurfs(bls), m_bl(b)
+    BLMesh(MeshSharedPtr m, std::vector<unsigned int> bls,
+                            NekDouble b,
+                            int l,
+                            NekDouble p) :
+                    m_mesh(m), m_blsurfs(bls), m_bl(b), m_layer(l), m_prog(p)
     {
     };
 
@@ -99,6 +103,8 @@ private:
     std::vector<unsigned int> m_blsurfs;
     /// thickness of the boundary layer
     NekDouble m_bl;
+    NekDouble m_prog;
+    int m_layer;
     /// list of surfaces to be remeshed due to the boundary layer
     std::vector<unsigned int> m_symSurfs;
     /// data structure used to store and develop bl information

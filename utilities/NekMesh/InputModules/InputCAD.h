@@ -62,7 +62,7 @@ public:
 
 private:
     std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order,
-                m_blsurfs, m_blthick;
+                m_blsurfs, m_blthick, m_blprog, m_bllayers;
     bool m_makeBL, m_surfopti;
 };
 }

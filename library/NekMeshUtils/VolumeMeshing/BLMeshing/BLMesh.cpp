@@ -344,6 +344,8 @@ void BLMesh::Mesh()
     ElmtConfig pconf(LibUtilities::ePrism,1,false,false);
     ElmtConfig tconf(LibUtilities::eTriangle,1,false,false);
 
+    vector<boost::tuple<blInfoSharedPtr,blInfoSharedPtr,blInfoSharedPtr> > prisms;
+
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[2][i];
@@ -368,6 +370,9 @@ void BLMesh::Mesh()
             tn[j] = blData[n[j]]->pNode;
         }
 
+        prisms.push_back(make_tuple(blData[n[0]],
+                                    blData[n[1]],
+                                    blData[n[2]]));
 
         vector<int> tags;
         tags.push_back(1); //all prisms are comp 1
@@ -488,8 +493,39 @@ void BLMesh::Mesh()
                     bit->second->stop = true;
                 }
             }
+        }
 
-            if(!bit->second->stop)
+        /*for(int i = 0; i < m_mesh->m_element[3].size(); i++)
+        {
+            if(prisms[i].get<0>()->stopped &&
+               prisms[i].get<1>()->stopped &&
+               prisms[i].get<2>()->stopped)
+            {
+                continue;
+            }
+            ElementSharedPtr el = m_mesh->m_element[3][i];
+            SpatialDomains::GeometrySharedPtr geom = el->GetGeom(3);
+            SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
+            if(!gfac->IsValid())
+            {
+                if(!prisms[i].get<0>()->stopped)
+                {
+                    prisms[i].get<0>()->stop = true;
+                }
+                if(!prisms[i].get<1>()->stopped)
+                {
+                    prisms[i].get<1>()->stop = true;
+                }
+                if(!prisms[i].get<2>()->stopped)
+                {
+                    prisms[i].get<2>()->stop = true;
+                }
+            }
+        }*/
+
+        for(bit = blData.begin(); bit != blData.end(); bit++)
+        {
+            if(!bit->second->stop && !bit->second->stopped)
             {
                 vector<boxI> intersects;
                 for(int i = 0; i < bit->second->pEls.size(); i++)
@@ -512,10 +548,10 @@ void BLMesh::Mesh()
                     for(int j = 0; j < es.size(); j++)
                     {
                         EdgeSet::iterator it = bit->second->edges.find(es[j]);
-                        if(it == bit->second->edges.end())
-                        {
+                        //if(it == bit->second->edges.end())
+                        //{
                             testEdges.insert(es[j]);
-                        }
+                        //}
                     }
                 }
 
@@ -594,7 +630,30 @@ void BLMesh::Mesh()
                 bit->second->AlignNode(layerT[bit->second->bl]);
             }
         }
-    };
+    }
+
+    for(bit = blData.begin(); bit != blData.end(); bit++)
+    {
+        vector<blInfoSharedPtr> infos = nToNInfo[bit->first];
+        for(int i = 0; i < infos.size(); i++)
+        {
+            if(bit->second->bl > infos[i]->bl + 1)
+            {
+                cout << "non smooth error " << bit->second->bl << " " << infos[i]->bl << endl;
+            }
+        }
+    }
+
+    for(int i = 0; i < m_mesh->m_element[3].size(); i++)
+    {
+        ElementSharedPtr el = m_mesh->m_element[3][i];
+        SpatialDomains::GeometrySharedPtr geom = el->GetGeom(3);
+        SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
+        if(!gfac->IsValid())
+        {
+            cout << "validity error" << endl;
+        }
+    }
 
 }
 

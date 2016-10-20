@@ -46,31 +46,6 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-struct blInfo
-{
-    NodeSharedPtr pNode;
-    NodeSharedPtr oNode;
-    int bl;
-    Array<OneD, NekDouble> N;
-    int symsurf;
-    bool onSym;
-    std::vector<ElementSharedPtr> els;
-    std::vector<ElementSharedPtr> pEls;
-    EdgeSet edges;
-
-    bool stop;
-    bool stopped;
-
-    void AlignNode(NekDouble t)
-    {
-        pNode->m_x = oNode->m_x + t * N[0];
-        pNode->m_y = oNode->m_y + t * N[1];
-        pNode->m_z = oNode->m_z + t * N[2];
-    }
-};
-
-typedef boost::shared_ptr<blInfo> blInfoSharedPtr;
-
 class BLMesh
 {
 public:
@@ -94,6 +69,9 @@ public:
 
 private:
 
+    struct blInfo;
+    typedef boost::shared_ptr<blInfo> blInfoSharedPtr;
+
     NekDouble Visability(std::vector<ElementSharedPtr> tris, Array<OneD, NekDouble> N);
     Array<OneD, NekDouble> GetNormal(std::vector<ElementSharedPtr> tris);
 
@@ -113,6 +91,29 @@ private:
     std::map<int, std::map<NodeSharedPtr, NodeSharedPtr> > m_symNodes;
     /// list of elements which form the psuedo surface from the top of prisms
     std::vector<ElementSharedPtr> m_psuedoSurface;
+
+    struct blInfo
+    {
+        NodeSharedPtr pNode;
+        NodeSharedPtr oNode;
+        int bl;
+        Array<OneD, NekDouble> N;
+        int symsurf;
+        bool onSym;
+        std::vector<ElementSharedPtr> els;
+        std::vector<ElementSharedPtr> pEls;
+        EdgeSet edges;
+
+        bool stop;
+        bool stopped;
+
+        void AlignNode(NekDouble t)
+        {
+            pNode->m_x = oNode->m_x + t * N[0];
+            pNode->m_y = oNode->m_y + t * N[1];
+            pNode->m_z = oNode->m_z + t * N[2];
+        }
+    };
 };
 
 typedef boost::shared_ptr<BLMesh> BLMeshSharedPtr;

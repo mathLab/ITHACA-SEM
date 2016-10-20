@@ -570,8 +570,6 @@ void SurfaceMesh::HOSurf()
             }
         }
 
-        ASSERTL0(nq <= 5, "not setup for high-orders yet");
-
         vector<NodeSharedPtr> vertices = f->m_vertexList;
 
         SpatialDomains::Geometry2DSharedPtr geom = f->GetGeom(3);
@@ -589,100 +587,27 @@ void SurfaceMesh::HOSurf()
         xmap->BwdTrans(coeffs1,yc);
         xmap->BwdTrans(coeffs2,zc);
 
-
         //build an array of all uvs
-        Array<OneD, Array<OneD, NekDouble> > uvi(np);
-        int ctr = 0;
-        for(int j = 0; j < vertices.size(); j++)
-        {
-            uvi[ctr++] = vertices[j]->GetCADSurfInfo(surf);
-        }
-        for(int j = 0; j < edges.size(); j++)
-        {
-            vector<NodeSharedPtr> ns = edges[j]->m_edgeNodes;
-            if(!(edges[j]->m_n1 == vertices[j]))
-            {
-                reverse(ns.begin(),ns.end());
-            }
-            for(int k = 0; k < ns.size(); k++)
-            {
-                uvi[ctr++] = ns[k]->GetCADSurfInfo(surf);
-            }
-        }
+        vector<Array<OneD, NekDouble> > uvi;
         for(int j = np-ni; j < np; j++)
         {
             Array<OneD, NekDouble> xp(2);
             xp[0] = u[j];
             xp[1] = v[j];
 
-            Array<OneD, NekDouble> xyz(3);
-            xyz[0] = xmap->PhysEvaluate(xp, xc);
-            xyz[1] = xmap->PhysEvaluate(xp, yc);
-            xyz[2] = xmap->PhysEvaluate(xp, zc);
+            Array<OneD, NekDouble> loc(3);
+            loc[0] = xmap->PhysEvaluate(xp, xc);
+            loc[1] = xmap->PhysEvaluate(xp, yc);
+            loc[2] = xmap->PhysEvaluate(xp, zc);
 
             Array<OneD, NekDouble> uv(2);
-            s->ProjectTo(xyz,uv);
-            uvi[ctr++] = uv;
+            s->ProjectTo(loc,uv);
+            uvi.push_back(uv);
+
         }
-
-        /// TODO: face nodes should be optmised but will probably be done via
-        /// variational optimisation.
-        /*
-        OptiFaceSharedPtr opti = MemoryManager<OptiFace>::
-                                    AllocateSharedPtr(uvi, z, springs, s);
-
-        DNekMat B(2*ni,2*ni,0.0); //approximate hessian (I to start)
-        for(int k = 0; k < 2*ni; k++)
-        {
-            B(k,k) = 1.0;
-        }
-        DNekMat H(2*ni,2*ni,0.0); //approximate inverse hessian (I to start)
-        for(int k = 0; k < 2*ni; k++)
-        {
-            H(k,k) = 1.0;
-        }
-
-        Array<OneD,NekDouble> xi(ni*2);
-        for(int k = np - ni; k < np; k++)
-        {
-            xi[(k-np+ni)*2+0] = uvi[k][0];
-            xi[(k-np+ni)*2+1] = uvi[k][1];
-        }
-
-        DNekMat J = opti->dF(xi);
-
-        bool repeat = true;
-        int itct = 0;
-        while(repeat)
-        {
-            NekDouble Norm = 0;
-            for(int k = 0; k < nq - 2; k++)
-            {
-                Norm += J(k,0)*J(k,0);
-            }
-            Norm = sqrt(Norm);
-
-            if(Norm < 1E-8)
-            {
-                repeat = false;
-                break;
-            }
-            if(itct > 100)
-            {
-                cout << "failed to optimise on face " << s->GetId() << endl;
-                exit(-1);
-                break;
-            }
-            itct++;
-            cout << "Norm " << Norm << endl;
-
-            BGFSUpdate(opti, J, B, H); //all will be updated
-        }
-
-        uvi = opti->GetSolution();*/
 
         vector<NodeSharedPtr> honodes;
-        for(int j = np - ni; j < np; j++)
+        for(int j = 0; j < ni; j++)
         {
             Array<OneD, NekDouble> loc;
             loc = s->P(uvi[j]);
@@ -693,7 +618,7 @@ void SurfaceMesh::HOSurf()
         }
 
         f->m_faceNodes = honodes;
-        f->m_curveType = LibUtilities::eNodalTriFekete;
+        f->m_curveType = LibUtilities::eNodalTriElec;
     }
 
     if (m_mesh->m_verbose)

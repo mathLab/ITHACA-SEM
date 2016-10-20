@@ -327,7 +327,7 @@ void Module::ProcessFaces(bool ReprocessFaces)
         for (int j = 0; j < elmt->GetVertexCount(); ++j)
         {
             elmt->SetVertex(j, (*it)->m_vertexList[j], false);
-            elmt->SetEdge(j, (*it)->m_edgeList[j], false);
+            //elmt->SetEdge(j, (*it)->m_edgeList[j], false);
         }
 
         // Update 3D element boundary map.

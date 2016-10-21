@@ -69,6 +69,13 @@ public:
 
 private:
 
+    void Setup();
+    void GrowLayers();
+    void ShrinkValidity();
+    void BuildElements();
+    bool TestIntersection(EdgeSharedPtr edge, ElementSharedPtr el);
+    bool IsPrismValid(ElementSharedPtr el);
+
     struct blInfo;
     typedef boost::shared_ptr<blInfo> blInfoSharedPtr;
 
@@ -83,14 +90,15 @@ private:
     NekDouble m_bl;
     NekDouble m_prog;
     int m_layer;
+    Array<OneD, NekDouble> m_layerT;
     /// list of surfaces to be remeshed due to the boundary layer
     std::vector<unsigned int> m_symSurfs;
     /// data structure used to store and develop bl information
-    std::map<NodeSharedPtr, blInfoSharedPtr> blData;
-    /// list of nodes which will lie of symtetry surfaces
-    std::map<int, std::map<NodeSharedPtr, NodeSharedPtr> > m_symNodes;
-    /// list of elements which form the psuedo surface from the top of prisms
+    std::map<NodeSharedPtr, blInfoSharedPtr> m_blData;
+    std::map<NodeSharedPtr, std::vector<blInfoSharedPtr> > m_nToNInfo; //node to neighbouring information
+    std::map<ElementSharedPtr,ElementSharedPtr> m_priToTri;
     std::vector<ElementSharedPtr> m_psuedoSurface;
+    NekMatrix<NekDouble> m_deriv[3];
 
     struct blInfo
     {

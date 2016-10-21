@@ -41,10 +41,10 @@
 #include <string>
 
 namespace Nektar
-{    
+{
     namespace LibUtilities
-    {     
-        const char* const BasisTypeMap[] = 
+    {
+        const char* const BasisTypeMap[] =
         {
             "NoBasisType",
             "Ortho_A",
@@ -66,7 +66,7 @@ namespace Nektar
 
 
 
-        const std::string kPointsTypeStr[] = 
+        const std::string kPointsTypeStr[] =
         {
             "NoPointsType",
             "GaussGaussLegendre",
@@ -95,11 +95,14 @@ namespace Nektar
             "NodalTriEvenlySpaced",
             "NodalTetEvenlySpaced",
             "NodalTetElec",
-            "NodalPrismEvenlySpaced"
+            "NodalPrismEvenlySpaced",
+            "NodalPrismElec",
+            "NodalTriSPI",
+            "NodalTetSPI",
+            "NodalPrismSPI"
         };
 
     } // end of namespace
 } // end of namespace
 
 #endif //FOUNDATIONS_H
-

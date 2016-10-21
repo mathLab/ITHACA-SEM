@@ -60,6 +60,8 @@ ModuleKey ProcessQualityMetric::className =
 
 ProcessQualityMetric::ProcessQualityMetric(FieldSharedPtr f) : ProcessModule(f)
 {
+    m_config["scaled"] =
+        ConfigOption(true, "", "use scaled jacobian instead");
 }
 
 ProcessQualityMetric::~ProcessQualityMetric()
@@ -85,7 +87,7 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
         // copy Jacobian into field
         LocalRegions::ExpansionSharedPtr Elmt = m_f->m_exp[0]->GetExp(i);
         int offset = m_f->m_exp[0]->GetPhys_Offset(i);
-        Array<OneD, NekDouble> q   = GetQ(Elmt);
+        Array<OneD, NekDouble> q = GetQ(Elmt,m_config["scaled"].m_beenSet);
         Array<OneD, NekDouble> out = phys + offset;
 
         ASSERTL0(q.num_elements() == Elmt->GetTotPoints(),
@@ -301,8 +303,7 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
     return ret;
 }
 
-Array<OneD, NekDouble> ProcessQualityMetric::GetQ(
-    LocalRegions::ExpansionSharedPtr e)
+Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedPtr e, bool s)
 {
     SpatialDomains::GeometrySharedPtr geom    = e->GetGeom();
     StdRegions::StdExpansionSharedPtr chi     = e->GetGeom()->GetXmap();
@@ -407,18 +408,40 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(
             ASSERTL0(false, "silly exp dim");
         }
 
-        NekDouble frob = 0.0;
-
-        for (int i = 0; i < expDim; ++i)
+        if(s)
         {
-            for (int j = 0; j < expDim; ++j)
-            {
-                frob += jacIdeal(i, j) * jacIdeal(i, j);
-            }
+            eta[k] = jacDet;
         }
+        else
+        {
+            NekDouble frob = 0.0;
 
-        NekDouble sigma = 0.5 * (jacDet + sqrt(jacDet * jacDet));
-        eta[k]          = expDim * pow(sigma, 2.0 / expDim) / frob;
+            for (int i = 0; i < expDim; ++i)
+            {
+                for (int j = 0; j < expDim; ++j)
+                {
+                    frob += jacIdeal(i,j) * jacIdeal(i,j);
+                }
+            }
+
+            NekDouble sigma = 0.5*(jacDet + sqrt(jacDet*jacDet));
+            eta[k] = expDim * pow(sigma, 2.0/expDim) / frob;
+        }
+    }
+
+    if(s)
+    {
+        NekDouble mx = -1.0 * numeric_limits<double>::max();
+        NekDouble mn = numeric_limits<double>::max();
+        for(int k = 0; k < pts; k++)
+        {
+            mx = max(mx,eta[k]);
+            mn = min(mn,eta[k]);
+        }
+        for(int k = 0; k < pts; k++)
+        {
+            eta[k] = mn/mx;
+        }
     }
 
     // Project onto output stuff

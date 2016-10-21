@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NodalPrismEvenlySpaced.cpp
+// File NodalPrismEleccpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#include <LibUtilities/Foundations/NodalPrismEvenlySpaced.h>
+#include <LibUtilities/Foundations/NodalPrismElec.h>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -46,121 +46,124 @@ namespace Nektar
     {
         namespace
         {
-            bool isVertex(int x, int y, int z, int npts)
+            bool isVertex(int t, int y, int npts)
             {
-                return (x == 0        && y == 0        && z == 0       ) ||
-                       (x == (npts-1) && y == 0        && z == 0       ) ||
-                       (x == (npts-1) && y == (npts-1) && z == 0       ) ||
-                       (x == 0        && y == (npts-1) && z == 0       ) ||
-                       (x == 0        && y == 0        && z == (npts-1)) ||
-                       (x == 0        && y == (npts-1) && z == (npts-1));
+                return (t == 0        && y == 0       ) ||
+                       (t == 1        && y == 0       ) ||
+                       (t == 2        && y == 0       ) ||
+                       (t == 0        && y == (npts-1)) ||
+                       (t == 1        && y == (npts-1)) ||
+                       (t == 2        && y == (npts-1));
             }
 
-            bool isEdge_01(int x, int y, int z, int npts)
+            bool isEdge_01(int t, int y, int npts)
             {
-                return y == 0 && z == 0;
+                return y == 0 && t > 2 && t <=npts;
             }
 
-            bool isEdge_12(int x, int y, int z, int npts)
+            bool isEdge_12(int t, int y, int npts)
             {
-                return x == (npts-1) && z == 0;
+                return t == 1;
             }
 
-            bool isEdge_23(int x, int y, int z, int npts)
+            bool isEdge_23(int t, int y, int npts)
             {
-                return y == (npts-1) && z == 0;
+                return y == (npts-1) && t > 2 && t <=npts;
             }
 
-            bool isEdge_30(int x, int y, int z, int npts)
+            bool isEdge_30(int t, int y, int npts)
             {
-                return x == 0 && z == 0;
+                return t == 0;
             }
 
-            bool isEdge_04(int x, int y, int z, int npts)
+            bool isEdge_04(int t, int y, int npts)
             {
-                return x == 0 && y == 0;
+                return y == 0 && t >= 3+2*(npts-2) && t < 3+3*(npts-2);
             }
 
-            bool isEdge_14(int x, int y, int z, int npts)
+            bool isEdge_14(int t, int y, int npts)
             {
-                return x + z == (npts-1) && y == 0;
+                return y == 0 && t >= 3+(npts-2) && t < 3+2*(npts-2);
             }
 
-            bool isEdge_25(int x, int y, int z, int npts)
+            bool isEdge_25(int t, int y, int npts)
             {
-                return x + z == (npts-1) && y == (npts-1);
+                return y == npts-1 && t >= 3+(npts-2) && t < 3+2*(npts-2);
             }
 
-            bool isEdge_35(int x, int y, int z, int npts)
+            bool isEdge_35(int t, int y, int npts)
             {
-                return x == 0 && y == (npts-1);
+                return y == npts-1 && t >= 3+2*(npts-2) && t < 3+3*(npts-2);
             }
 
-            bool isEdge_45(int x, int y, int z, int npts)
+            bool isEdge_45(int t, int y, int npts)
             {
-                return x == 0 && z == (npts-1);
+                return t == 2;
             }
 
-            bool isEdge(int x, int y, int z, int npts){
-                return isEdge_01(x,y,z,npts) || isEdge_12(x,y,z,npts) ||
-                       isEdge_23(x,y,z,npts) || isEdge_30(x,y,z,npts) ||
-                       isEdge_04(x,y,z,npts) || isEdge_14(x,y,z,npts) ||
-                       isEdge_25(x,y,z,npts) || isEdge_35(x,y,z,npts) ||
-                       isEdge_45(x,y,z,npts);
+            bool isEdge(int t, int y, int npts){
+                return isEdge_01(t,y,npts) || isEdge_12(t,y,npts) ||
+                       isEdge_23(t,y,npts) || isEdge_30(t,y,npts) ||
+                       isEdge_04(t,y,npts) || isEdge_14(t,y,npts) ||
+                       isEdge_25(t,y,npts) || isEdge_35(t,y,npts) ||
+                       isEdge_45(t,y,npts);
             }
 
-            bool isFace_0123(int x, int y, int z, int npts)
+            bool isFace_0123(int t, int y, int npts)
             {
-                return z == 0;
+                return t < 3 + (npts-2);
             }
 
-            bool isFace_014(int x, int y, int z, int npts)
+            bool isFace_014(int t, int y, int npts)
             {
                 return y == 0;
             }
 
-            bool isFace_1254(int x, int y, int z, int npts)
+            bool isFace_1254(int t, int y, int npts)
             {
-                return x + z == npts-1;
+                return t < 3 + 2*(npts-2) && t >= 3 + (npts-2);
             }
 
-            bool isFace_325(int x, int y, int z, int npts)
+            bool isFace_325(int t, int y, int npts)
             {
                 return y == (npts-1);
             }
 
-            bool isFace_0354(int x, int y, int z, int npts)
+            bool isFace_0354(int t, int y, int npts)
             {
-                return x == 0;
+                return t < 3 + 3*(npts-2) && t >= 3 + 2*(npts-2);
             }
 
-            bool isFace(int x, int y, int z, int npts){
-                return isFace_0123(x,y,z,npts) || isFace_014(x,y,z,npts) ||
-                       isFace_1254(x,y,z,npts) || isFace_325(x,y,z,npts) ||
-                       isFace_0354(x,y,z,npts);
+            bool isFace(int t, int y, int npts){
+                return isFace_0123(t,y,npts) || isFace_014(t,y,npts) ||
+                       isFace_1254(t,y,npts) || isFace_325(t,y,npts) ||
+                       isFace_0354(t,y,npts);
             }
         }
 
         // Calculate evenly spaced number of points
-        void NodalPrismEvenlySpaced::CalculatePoints()
+        void NodalPrismElec::CalculatePoints()
         {
             // Allocate the storage for points
             PointsBaseType::CalculatePoints();
 
             // Populate m_points
             unsigned int npts = GetNumPoints();
-            NekDouble delta = 2.0/(npts - 1.0);
-            for(unsigned int z=0, index=0; z<npts; ++z){
-                for(int y=0; y<npts; ++y){
-                    for(int x=0; x<npts-z; ++x, ++index){
-                        NekDouble xi = -1.0 + x*delta;
-                        NekDouble yi = -1.0 + y*delta;
-                        NekDouble zi = -1.0 + z*delta;
 
-                        m_points[0][index] = xi;
-                        m_points[1][index] = yi;
-                        m_points[2][index] = zi;
-                    }
+            LibUtilities::PointsKey pkey1(npts, LibUtilities::eNodalTriElec);
+            Array<OneD, NekDouble> u1, v1;
+            LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
+            LibUtilities::PointsKey pkey2(npts, LibUtilities::eGaussLobattoLegendre);
+            Array<OneD, NekDouble> u;
+            LibUtilities::PointsManager()[pkey2]->GetPoints(u);
+
+            for(int y = 0, index = 0; y < npts; y++)
+            {
+                for(int t = 0; t < u1.num_elements(); t++, index++)
+                {
+                    m_points[0][index] = u1[t];
+                    m_points[1][index] = u[y];
+                    m_points[2][index] = v1[t];
                 }
             }
 
@@ -169,7 +172,7 @@ namespace Nektar
                 npts - 1, m_points[0], m_points[1], m_points[2]);
         }
 
-        void NodalPrismEvenlySpaced::NodalPointReorder3d()
+        void NodalPrismElec::NodalPointReorder3d()
         {
             unsigned int npts = GetNumPoints();
             using std::vector;
@@ -192,80 +195,108 @@ namespace Nektar
             vector<int> map;
 
             // Build the lattice prism left to right - bottom to top
-            for(int z=0, index=0; z<npts; ++z){
-                for(int y=0; y<npts; ++y){
-                    for(int x=0; x<npts-z; ++x, ++index){
-                        if (isVertex(x,y,z,npts))
+            for(int y = 0, index = 0; y < npts; y++)
+            {
+                for(int t = 0; t < npts*(npts+1)/2; t++, index++)
+                {
+                    if (isVertex(t,y,npts))
+                    {
+                        vertex.push_back(index);
+                    }
+                    else if (isEdge(t,y,npts))
+                    {
+                        if (isEdge_01(t,y,npts))
                         {
-                            vertex.push_back(index);
+                            iEdge_01.push_back(index);
                         }
-                        else if (isEdge(x,y,z,npts))
+                        else if (isEdge_12(t,y,npts))
                         {
-                            if (isEdge_01(x,y,z,npts))
-                            {
-                                iEdge_01.push_back(index);
-                            }
-                            else if (isEdge_12(x,y,z,npts))
-                            {
-                                iEdge_12.push_back(index);
-                            }
-                            else if (isEdge_23(x,y,z,npts))
-                            {
-                                iEdge_23.push_back(index);
-                            }
-                            else if (isEdge_30(x,y,z,npts))
-                            {
-                                iEdge_30.push_back(index);
-                            }
-                            else if (isEdge_04(x,y,z,npts))
-                            {
-                                iEdge_04.push_back(index);
-                            }
-                            else if (isEdge_14(x,y,z,npts))
-                            {
-                                iEdge_14.push_back(index);
-                            }
-                            else if (isEdge_25(x,y,z,npts))
-                            {
-                                iEdge_25.push_back(index);
-                            }
-                            else if (isEdge_35(x,y,z,npts))
-                            {
-                                iEdge_35.push_back(index);
-                            }
-                            else if (isEdge_45(x,y,z,npts))
-                            {
-                                iEdge_45.push_back(index);
-                            }
+                            iEdge_12.push_back(index);
                         }
-                        else if (isFace(x,y,z,npts))
+                        else if (isEdge_23(t,y,npts))
                         {
-                            if (isFace_0123(x,y,z,npts))
-                            {
-                                iFace_0123.push_back(index);
-                            }
-                            else if (isFace_014(x,y,z,npts))
-                            {
-                                iFace_014.push_back(index);
-                            }
-                            else if (isFace_1254(x,y,z,npts))
-                            {
-                                iFace_1254.push_back(index);
-                            }
-                            else if (isFace_325(x,y,z,npts))
-                            {
-                                iFace_325.push_back(index);
-                            }
-                            else if (isFace_0354(x,y,z,npts))
-                            {
-                                iFace_0354.push_back(index);
-                            }
+                            iEdge_23.push_back(index);
                         }
-                        else
+                        else if (isEdge_30(t,y,npts))
                         {
-                            interiorVolumePoints.push_back(index);
+                            iEdge_30.push_back(index);
+                        }
+                        else if (isEdge_04(t,y,npts))
+                        {
+                            iEdge_04.push_back(index);
+                        }
+                        else if (isEdge_14(t,y,npts))
+                        {
+                            iEdge_14.push_back(index);
+                        }
+                        else if (isEdge_25(t,y,npts))
+                        {
+                            iEdge_25.push_back(index);
+                        }
+                        else if (isEdge_35(t,y,npts))
+                        {
+                            iEdge_35.push_back(index);
+                        }
+                        else if (isEdge_45(t,y,npts))
+                        {
+                            iEdge_45.push_back(index);
                         }
                     }
+                    else if (isFace(t,y,npts))
+                    {
+                        if (isFace_0123(t,y,npts))
+                        {
+                            iFace_0123.push_back(index);
+                        }
+                        else if (isFace_014(t,y,npts))
+                        {
+                            iFace_014.push_back(index);
+                        }
+                        else if (isFace_1254(t,y,npts))
+                        {
+                            iFace_1254.push_back(index);
+                        }
+                        else if (isFace_325(t,y,npts))
+                        {
+                            iFace_325.push_back(index);
+                        }
+                        else if (isFace_0354(t,y,npts))
+                        {
+                            iFace_0354.push_back(index);
+                        }
+                    }
+                    else
+                    {
+                        interiorVolumePoints.push_back(index);
+                    }
+                }
+            }
+
+            //sort vertices
+            swap(vertex[2],vertex[4]);
+            //sort edges
+            reverse(iEdge_23.begin(),iEdge_23.end());
+            reverse(iEdge_30.begin(),iEdge_30.end());
+            reverse(iEdge_04.begin(),iEdge_04.end());
+            reverse(iEdge_35.begin(),iEdge_35.end());
+
+            //faces
+            for(int i = 0; i < npts-2; i++)
+            {
+                for(int j = i+1; j < npts-2; j++)
+                {
+                    swap(iFace_1254[i*(npts-2)+j],iFace_1254[j*(npts-2)+i]);
+                }
+            }
+            for(int i = 0; i < npts-2; i++)
+            {
+                reverse(iFace_0354.begin()+i*(npts-2), iFace_0354.begin()+i*(npts-2)+npts-2);
+            }
+            for(int i = 0; i < npts-2; i++)
+            {
+                for(int j = i+1; j < npts-2; j++)
+                {
+                    swap(iFace_0354[i*(npts-2)+j],iFace_0354[j*(npts-2)+i]);
                 }
             }
 
@@ -369,7 +400,7 @@ namespace Nektar
             }
         }
 
-        void NodalPrismEvenlySpaced::CalculateWeights()
+        void NodalPrismElec::CalculateWeights()
         {
             // Allocate the storage for points
             PointsBaseType::CalculateWeights();
@@ -385,7 +416,7 @@ namespace Nektar
 
         // ////////////////////////////////////////
         //        CalculateInterpMatrix()
-        void NodalPrismEvenlySpaced::CalculateInterpMatrix(const Array<OneD, const NekDouble>& xia,
+        void NodalPrismElec::CalculateInterpMatrix(const Array<OneD, const NekDouble>& xia,
                                                          const Array<OneD, const NekDouble>& yia,
                                                          const Array<OneD, const NekDouble>& zia,
                                                          Array<OneD, NekDouble>& interp)
@@ -393,7 +424,7 @@ namespace Nektar
              Array<OneD, Array<OneD, NekDouble> > xi(3);
              xi[0] = xia;
              xi[1] = yia;
-             xi[2] = zia;
+             xi[1] = zia;
 
              boost::shared_ptr<NekMatrix<NekDouble> > mat =
                  m_util->GetInterpolationMatrix(xi);
@@ -403,7 +434,7 @@ namespace Nektar
 
         // ////////////////////////////////////////
         //        CalculateDerivMatrix()
-        void NodalPrismEvenlySpaced::CalculateDerivMatrix()
+        void NodalPrismElec::CalculateDerivMatrix()
         {
             // Allocate the derivative matrix.
             PointsBaseType::CalculateDerivMatrix();
@@ -413,9 +444,9 @@ namespace Nektar
             m_derivmatrix[2] = m_util->GetDerivMatrix(2);
         }
 
-        boost::shared_ptr<PointsBaseType> NodalPrismEvenlySpaced::Create(const PointsKey &key)
+        boost::shared_ptr<PointsBaseType> NodalPrismElec::Create(const PointsKey &key)
         {
-            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalPrismEvenlySpaced>::AllocateSharedPtr(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalPrismElec>::AllocateSharedPtr(key));
 
             returnval->Initialize();
 

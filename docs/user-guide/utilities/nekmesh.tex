@@ -618,6 +618,19 @@ may issue the command
   module in combination with the splitting module described earlier.
 \end{notebox}
 
+\subsection{Link Checking}
+
+It is quite possible that a mesh contains some sort of hanging entity or
+element connectivity error. The check link module is a fast check that, a)
+elements are correctly connected and b) the boundary entities (composites)
+match the interior domain:
+
+\begin{lstlisting}[style=BashInputStyle]
+  NekMesh -m linkcheck mesh.xml mesh2.xml
+\end{lstlisting}
+
+This module should be added to the module chain for any complex if the user
+suspects there may be a mesh issue. The module will print a warning if there is.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NodalPrismEvenlySpaced.h
+// File NodalPrismElec.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Header file of 3D Nodal Prism Evenly Spaced Points
+// Description: Header file of 3D Nodal Prism Elec Points
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NODALPRISMEVENLYSPACED_H
-#define NODALPRISMEVENLYSPACED_H
+#ifndef NODALPRISMELEC_H
+#define NODALPRISMELEC_H
 
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Points.h>
@@ -50,15 +50,15 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-        class NodalPrismEvenlySpaced: public Points<NekDouble>
+        class NodalPrismElec: public Points<NekDouble>
         {
         public:
-            virtual ~NodalPrismEvenlySpaced()
+            virtual ~NodalPrismElec()
             {
 
             }
 
-            NodalPrismEvenlySpaced(const PointsKey &key):PointsBaseType(key)
+            NodalPrismElec(const PointsKey &key):PointsBaseType(key)
             {
 
             }
@@ -69,7 +69,7 @@ namespace Nektar
             const MatrixSharedPtrType GetI(const PointsKey &pkey)
             {
                 ASSERTL0(pkey.GetPointsDim() == 3,
-                         "NodalPrismEvenlySpaced Points can only interp to "
+                         "NodalPrismElec Points can only interp to "
                          "other 3d point distributions");
                 Array<OneD, const NekDouble> x, y, z;
                 PointsManager()[pkey]->GetPoints(x, y, z);
@@ -96,7 +96,7 @@ namespace Nektar
             boost::shared_ptr<NodalUtilPrism> m_util;
 
             /// Default constructor should not be called except by Create matrix
-            NodalPrismEvenlySpaced():PointsBaseType(NullPointsKey)
+            NodalPrismElec():PointsBaseType(NullPointsKey)
             {
             }
 
@@ -109,8 +109,8 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &yi,
                 const Array<OneD, const NekDouble> &zi,
                       Array<OneD,       NekDouble> &interp);
-        }; // end of NodalPrismEvenlySpaced
+        }; // end of NodalPrismElec
    } // end of namespace
 } // end of namespace
 
-#endif //NODALPRISMEVENLYSPACED_H
+#endif //NODALPRISMELEC_H

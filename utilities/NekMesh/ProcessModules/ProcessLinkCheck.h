@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessJacobianEnergy.h
+//  File: ProcessJac.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,44 +29,41 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes energy of Jacobian.
+//  Description: Calculate jacobians of elements.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSQUALITYMETRIC
-#define FIELDUTILS_PROCESSQUALITYMETRIC
+#ifndef UTILITIES_NEKMESH_PROCESSLINKCHECK
+#define UTILITIES_NEKMESH_PROCESSLINKCHECK
 
 #include "../Module.h"
 
 namespace Nektar
 {
-namespace FieldUtils
+namespace Utilities
 {
 
-/// This processing module scales the input fld file
-class ProcessQualityMetric : public ProcessModule
+/**
+ * @brief This processing module calculates the Jacobian of elements
+ * using %SpatialDomains::GeomFactors and the %Element::GetGeom
+ * method. For now it simply prints a list of elements which have
+ * negative Jacobian.
+ */
+class ProcessLinkCheck : public ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
-        return MemoryManager<ProcessQualityMetric>::AllocateSharedPtr(f);
+        return MemoryManager<ProcessLinkCheck>::AllocateSharedPtr(m);
     }
     static ModuleKey className;
 
-    ProcessQualityMetric(FieldSharedPtr f);
-    virtual ~ProcessQualityMetric();
+    ProcessLinkCheck(MeshSharedPtr m);
+    virtual ~ProcessLinkCheck();
 
     /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
-
-    virtual std::string GetModuleName()
-    {
-        return "ProcessQualityMetric";
-    }
-
-private:
-    Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e, bool s);
+    virtual void Process();
 };
 }
 }

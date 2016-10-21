@@ -98,38 +98,24 @@ void VolumeMesh::Process()
 
         blmesh->Mesh();
 
+        //remesh the correct surfaces
+        vector<unsigned int> symsurfs = blmesh->GetSymSurfs();
+        vector<ElementSharedPtr> els = m_mesh->m_element[2];
         m_mesh->m_element[2].clear();
-        /*m_mesh->m_vertexSet.clear();
-        m_mesh->m_edgeSet.clear();
-        int eid=0, fid=0, elid=0;
-        for(int i = 0; i < m_mesh->m_element[3].size(); i++)
+        for(int i = 0; i < els.size(); i++)
         {
-            vector<NodeSharedPtr> ns = m_mesh->m_element[3][i]->GetVertexList();
-            for(int j = 0; j < ns.size(); j++)
+            vector<unsigned int>::iterator f = find(symsurfs.begin(),
+                                                    symsurfs.end(),
+                                                    els[i]->CADSurfId);
+
+            if(f == symsurfs.end())
             {
-                m_mesh->m_vertexSet.insert(ns[j]);
+                m_mesh->m_element[2].push_back(els[i]);
             }
-            vector<EdgeSharedPtr> es = m_mesh->m_element[3][i]->GetEdgeList();
-            for(int j = 0; j < es.size(); j++)
-            {
-                es[j]->m_id = eid++;
-                m_mesh->m_edgeSet.insert(es[j]);
-            }
-            vector<FaceSharedPtr> fs = m_mesh->m_element[3][i]->GetFaceList();
-            for(int j = 0; j < fs.size(); j++)
-            {
-                fs[j]->m_id = fid++;
-                m_mesh->m_faceSet.insert(fs[j]);
-            }
-            m_mesh->m_element[3][i]->SetId(elid++);
         }
-        set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
-                               m_mesh->m_vertexSet.end());
-        set<NodeSharedPtr>::iterator it;
-        for(it = tmp.begin(); it != tmp.end(); it++)
-        {
-            cout << (*it)->m_id << endl;
-        }*/
+
+        m_mesh->m_element[3].clear();
+        m_mesh->m_expDim--;
         ClearElementLinks();
         ProcessVertices();
         ProcessEdges();
@@ -137,12 +123,15 @@ void VolumeMesh::Process()
         ProcessElements();
         ProcessComposites();
         return;
+
+        //tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh);
     }
     else
     {
         tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh);
-        tet->Mesh();
     }
+
+    tet->Mesh();
 
     ClearElementLinks();
     ProcessVertices();

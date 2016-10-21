@@ -67,6 +67,8 @@ public:
      */
     void Mesh();
 
+    std::vector<unsigned int> GetSymSurfs(){ return m_symSurfs;}
+
 private:
 
     void Setup();

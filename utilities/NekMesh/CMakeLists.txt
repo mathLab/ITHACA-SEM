@@ -75,7 +75,10 @@ ENDIF (NEKTAR_USE_MESHGEN)
 IF (NEKTAR_USE_ANN)
     SET(NekMeshHeaders ${NekMeshHeaders} ProcessModules/ProcessInsertSurface.h)
     SET(NekMeshSources ${NekMeshSources} ProcessModules/ProcessInsertSurface.cpp)
-ENDIF (NEKTAR_USE_ANN)
+    SET(NekMeshSources ${NekMeshSources} ProcessModules/ProcessNormalFromPlyFileANN.cpp)
+ELSE ()
+    SET(NekMeshSources ${NekMeshSources} ProcessModules/ProcessNormalFromPlyFile.cpp)
+ENDIF ()
 
 # Don't use macro -- this way we can just link against NekMeshUtils and
 # LocalRegions.
@@ -100,10 +103,10 @@ ENDIF (NEKTAR_USE_VTK)
 
 IF (NEKTAR_USE_ANN)
       TARGET_LINK_LIBRARIES(NekMesh ANN)
-   SET_TARGET_PROPERTIES(NekMesh PROPERTIES
-       IMPORTED_LOCATION ${ANN_LIBRARY_PATH}/libANN.a)
-   INCLUDE_DIRECTORIES(NekMesh ${ANN_INCLUDE_DIR})
-   LINK_DIRECTORIES(${ANN_LIBRARY_PATH})
+      SET_TARGET_PROPERTIES(NekMesh PROPERTIES
+      IMPORTED_LOCATION ${ANN_LIBRARY_PATH}/libANN.a)
+      INCLUDE_DIRECTORIES(NekMesh ${ANN_INCLUDE_DIR})
+      LINK_DIRECTORIES(${ANN_LIBRARY_PATH})
 ENDIF (NEKTAR_USE_ANN)
 
 # Nektar++

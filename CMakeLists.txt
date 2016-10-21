@@ -193,7 +193,6 @@ INCLUDE (ThirdPartyOCC)
 INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyANN)
 INCLUDE (ThirdPartyCCM)
-INCLUDE (ThirdPartyANN)
 
 INCLUDE (Doxygen)
 

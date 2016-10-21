@@ -110,9 +110,7 @@ void BLMesh::Mesh()
     for(int i = 0; i < m_mesh->m_element[3].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[3][i];
-        SpatialDomains::GeometrySharedPtr geom = el->GetGeom(3);
-        SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
-        if(!gfac->IsValid())
+        if(!IsPrismValid(el))
         {
             cout << "validity error " << el->GetId() << endl;
         }
@@ -417,6 +415,7 @@ void BLMesh::ShrinkValidity()
 bool BLMesh::IsPrismValid(ElementSharedPtr el)
 {
     NekDouble mn = numeric_limits<double>::max();
+    NekDouble mx = -1.0 * numeric_limits<double>::max();
     vector<NodeSharedPtr> ns = el->GetVertexList();
     NekVector<NekDouble> X(6),Y(6),Z(6);
     for(int j = 0; j < ns.size(); j++)
@@ -456,12 +455,13 @@ bool BLMesh::IsPrismValid(ElementSharedPtr el)
                           -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
                           +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
         mn = min(mn,jacDet);
+        mx = max(mx,jacDet);
     }
 
-    SpatialDomains::GeometrySharedPtr geom = el->GetGeom(3);
+    /*SpatialDomains::GeometrySharedPtr geom = el->GetGeom(3);
     SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
 
-    cout << mn << " " << (mn > 0) << " " << gfac->IsValid() << endl;
+    cout << mn << " " << mx << " " << (mn > 0) << " " << gfac->IsValid() << endl;*/
 
     return mn > 0;
 }
@@ -911,7 +911,7 @@ void BLMesh::Setup()
 
     ASSERTL0(failed == 0, "some normals failed to generate");
 
-    LibUtilities::PointsKey pkey1(2,LibUtilities::eNodalPrismEvenlySpaced);
+    LibUtilities::PointsKey pkey1(2,LibUtilities::eNodalPrismElec);
 
     Array<OneD, NekDouble> u1, v1, w1;
     LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);

@@ -472,6 +472,32 @@ namespace Nektar
             // inline
             MULTI_REGIONS_EXPORT inline void GlobalToLocal(void);
 
+            /**
+             * This operation is evaluated as:
+             * \f{tabbing}
+             * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \      \
+             * \> \> Do \= $i=$  $0,N_m^e-1$ \                          \
+             * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
+             * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \      \
+             * \> \> continue \                                 \
+             * \> continue
+             * \f}
+             * where \a map\f$[e][i]\f$ is the mapping array and \a
+             * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
+             * correct modal connectivity between the different elements (both
+             * these arrays are contained in the data member #m_locToGloMap). This
+             * operation is equivalent to the scatter operation
+             * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$,
+             * where \f$\mathcal{A}\f$ is the
+             * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
+             *
+             * @param   inarray     An array of size \f$N_\mathrm{dof}\f$
+             *                      containing the global degrees of freedom
+             *                      \f$\boldsymbol{x}_g\f$.
+             * @param   outarray    The resulting local degrees of freedom
+             *                      \f$\boldsymbol{x}_l\f$ will be stored in this
+             *                      array of size \f$N_\mathrm{eof}\f$.
+             */
             MULTI_REGIONS_EXPORT inline void GlobalToLocal(
                 const Array<OneD, const NekDouble> &inarray,
                 Array<OneD,NekDouble> &outarray);
@@ -1197,7 +1223,8 @@ namespace Nektar
 
             virtual void v_LocalToGlobal(
                 const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray);
+                Array<OneD,NekDouble> &outarray,
+                bool UseComm);
 
             virtual void v_GlobalToLocal(void);
 

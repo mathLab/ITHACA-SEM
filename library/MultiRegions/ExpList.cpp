@@ -2643,7 +2643,8 @@ namespace Nektar
 
 
         void ExpList::v_LocalToGlobal(const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,NekDouble> &outarray)
+                                      Array<OneD,NekDouble> &outarray,
+                                      bool useComm)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

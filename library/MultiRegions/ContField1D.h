@@ -102,12 +102,6 @@ namespace Nektar
             MULTI_REGIONS_EXPORT const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& GetBndConditions();
 
-            /// Scatters from the global coefficients
-            /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
-            /// \f$\boldsymbol{\hat{u}}_l\f$.
-            // inline
-            MULTI_REGIONS_EXPORT void GlobalToLocal( const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,NekDouble> &outarray);
 
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.

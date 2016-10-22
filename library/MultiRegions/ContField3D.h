@@ -86,10 +86,6 @@ namespace Nektar
                     Array<OneD, NekDouble> &inout,
                     Array<OneD, NekDouble> &outarray);
 
-            inline void GlobalToLocal(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,NekDouble> &outarray);
-
             inline void Assemble();
 
             inline void Assemble(
@@ -205,13 +201,6 @@ namespace Nektar
             return m_bndCondExpansions;
         }
 
-
-        inline void ContField3D::GlobalToLocal(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray)
-        {
-            m_locToGloMap->GlobalToLocal(inarray, outarray);
-        }
 
         inline void ContField3D::Assemble()
         {

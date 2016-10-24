@@ -65,13 +65,11 @@ public:
     virtual void Process();
 
 private:
-
+    void Report();
     /// map of individual surface meshes from parametric surfaces
     std::map<int, FaceMeshSharedPtr> m_facemeshes;
     /// map of individual curve meshes of the curves in the domain
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
-
-    void Report();
 };
 
 }

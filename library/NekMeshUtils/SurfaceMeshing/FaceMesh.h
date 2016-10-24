@@ -71,9 +71,7 @@ public:
     /**
      * @brief mesh exectuation command
      */
-    void Mesh(bool remesh = false);
-
-    void QuadRemesh(std::map<NodeSharedPtr, NodeSharedPtr> nmap);
+    void Mesh();
 
 private:
     /**
@@ -148,6 +146,8 @@ private:
     EdgeSet m_localEdges;
     /// local list of elements
     std::vector<ElementSharedPtr> m_localElements;
+
+    NodeSet m_inBoundary;
 
     bool over;
 };

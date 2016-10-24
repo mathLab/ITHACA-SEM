@@ -69,6 +69,8 @@ public:
 
     std::vector<unsigned int> GetSymSurfs(){ return m_symSurfs;}
 
+    std::map<NodeSharedPtr, NodeSharedPtr> GetSymNodes();
+
 private:
 
     void Setup();

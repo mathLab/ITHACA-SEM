@@ -47,18 +47,19 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-void FaceMesh::Mesh(bool remesh)
+void FaceMesh::Mesh()
 {
-    if(!remesh)
-    {
-        Stretching();
-        OrientateCurves();
-    }
+    Stretching();
+    OrientateCurves();
 
     int numPoints = 0;
     for (int i = 0; i < orderedLoops.size(); i++)
     {
         numPoints += orderedLoops[i].size();
+        for(int j = 0; j < orderedLoops[i].size(); j++)
+        {
+            m_inBoundary.insert(orderedLoops[i][j]);
+        }
     }
 
     stringstream ss;
@@ -145,119 +146,13 @@ void FaceMesh::Mesh(bool remesh)
     }
 }
 
-void FaceMesh::QuadRemesh(map<NodeSharedPtr, NodeSharedPtr> nmap)
-{
-    m_stienerpoints.clear();
-    m_connec.clear();
-    m_localNodes.clear();
-    m_localEdges.clear();
-    m_localElements.clear();
-
-    vector<ElementSharedPtr> el = m_mesh->m_element[2];
-    m_mesh->m_element[2].clear();
-    for(int i = 0; i < el.size(); i++)
-    {
-        if(el[i]->CADSurfId != m_id)
-        {
-            m_mesh->m_element[2].push_back(el[i]);
-        }
-    }
-
-    map<NodeSharedPtr, NodeSharedPtr>::iterator it;
-    for(it = nmap.begin(); it != nmap.end(); it++)
-    {
-        NodeSharedPtr n = it->second;
-        Array<OneD, NekDouble> loc = n->GetLoc();
-        Array<OneD, NekDouble> uv(2);
-        m_cadsurf->ProjectTo(loc,uv);
-        n->SetCADSurf(m_id,m_cadsurf,uv);
-        n->Move(loc,m_id,uv);
-    }
-
-    for(int i = 0; i < orderedLoops.size(); i++)
-    {
-        for(int j = 0; j < orderedLoops[i].size() - 1; j++)
-        {
-            map<NodeSharedPtr, NodeSharedPtr>::iterator f1 = nmap.find(orderedLoops[i][j]);
-            map<NodeSharedPtr, NodeSharedPtr>::iterator f2 = nmap.find(orderedLoops[i][j+1]);
-
-            if(f1 == nmap.end() || f2 == nmap.end())
-            {
-                continue;
-            }
-
-            NodeSharedPtr n1 = f1->second;
-            NodeSharedPtr n2 = f2->second;
-
-            vector<NodeSharedPtr> ns;
-            ns.push_back(orderedLoops[i][j]);
-            ns.push_back(n1);
-            ns.push_back(n2);
-            ns.push_back(orderedLoops[i][j+1]);
-
-            ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
-
-            vector<int> tags;
-            tags.push_back(m_id + (over ? 2000 : 200));
-            ElementSharedPtr E = GetElementFactory().CreateInstance(
-                                    LibUtilities::eQuadrilateral, conf, ns, tags);
-            E->CADSurfId = m_id;
-            m_localElements.push_back(E);
-
-        }
-        {
-            map<NodeSharedPtr, NodeSharedPtr>::iterator f1 = nmap.find(orderedLoops[i].back());
-            map<NodeSharedPtr, NodeSharedPtr>::iterator f2 = nmap.find(orderedLoops[i][0]);
-
-            if(f1 == nmap.end() || f2 == nmap.end())
-            {
-                continue;
-            }
-
-            NodeSharedPtr n1 = f1->second;
-            NodeSharedPtr n2 = f2->second;
-
-            vector<NodeSharedPtr> ns;
-            ns.push_back(orderedLoops[i].back());
-            ns.push_back(n1);
-            ns.push_back(n2);
-            ns.push_back(orderedLoops[i][0]);
-
-            ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
-
-            vector<int> tags;
-            tags.push_back(m_id + (over ? 2000 : 200));
-            ElementSharedPtr E = GetElementFactory().CreateInstance(
-                                    LibUtilities::eQuadrilateral, conf, ns, tags);
-            E->CADSurfId = m_id;
-            m_localElements.push_back(E);
-
-        }
-    }
-
-    for(int i = 0; i < orderedLoops.size(); i++)
-    {
-        for(int j = 0; j < orderedLoops[i].size(); j++)
-        {
-            map<NodeSharedPtr, NodeSharedPtr>::iterator f1 = nmap.find(orderedLoops[i][j]);
-            if(f1 == nmap.end())
-            {
-                continue;
-            }
-            orderedLoops[i][j] = f1->second;
-        }
-    }
-
-    Mesh(true);
-}
-
 void FaceMesh::OptimiseLocalMesh()
 {
-    DiagonalSwap();
+    //DiagonalSwap();
 
     Smoothing();
 
-    DiagonalSwap();
+    //DiagonalSwap();
 
     Smoothing();
 }
@@ -291,7 +186,8 @@ void FaceMesh::Smoothing()
     {
         for (nit = m_localNodes.begin(); nit != m_localNodes.end(); nit++)
         {
-            if ((*nit)->GetNumCadCurve() > 0) // node is on curve so skip
+            NodeSet::iterator f = m_inBoundary.find((*nit));
+            if (f != m_inBoundary.end()) // node is on curve so skip
                 continue;
 
             vector<NodeSharedPtr> connodes; // this can be real nodes or dummy
@@ -433,7 +329,8 @@ void FaceMesh::DiagonalSwap()
     for (nit = m_localNodes.begin(); nit != m_localNodes.end(); nit++)
     {
         //this routine is broken and needs looking at
-        if ((*nit)->GetNumCadCurve() == 0)
+        NodeSet::iterator f = m_inBoundary.find((*nit));
+        if (f == m_inBoundary.end()) // node is on curve so skip
         {
             // node is interior
             idealConnec[(*nit)->m_id] = 6;
@@ -442,7 +339,7 @@ void FaceMesh::DiagonalSwap()
         {
             // need to identify the two other nodes on the boundary to find
             // interior angle
-            vector<NodeSharedPtr> ns;
+            /*vector<NodeSharedPtr> ns;
             vector<EdgeSharedPtr> e = nodetoedge[(*nit)->m_id];
             for (int i = 0; i < e.size(); i++)
             {
@@ -459,7 +356,8 @@ void FaceMesh::DiagonalSwap()
                      "failed to find 2 nodes in the angle system");
 
             idealConnec[(*nit)->m_id] =
-                ceil((*nit)->Angle(ns[0], ns[1]) / 3.142 * 3) + 1;
+                ceil((*nit)->Angle(ns[0], ns[1]) / 3.142 * 3) + 1;*/
+            idealConnec[(*nit)->m_id] = 4;
         }
     }
     for (nit = m_localNodes.begin(); nit != m_localNodes.end(); nit++)
@@ -550,6 +448,7 @@ void FaceMesh::DiagonalSwap()
             }
 
             // determine signed area of alternate config
+            cout << A->GetNumCADSurf() << " " << B->GetNumCADSurf() << " " << C->GetNumCADSurf() << " " << D->GetNumCADSurf() << endl;
             Array<OneD, NekDouble> ai, bi, ci, di;
             ai = A->GetCADSurfInfo(m_id);
             bi = B->GetCADSurfInfo(m_id);

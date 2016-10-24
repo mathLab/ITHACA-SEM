@@ -117,6 +117,27 @@ void BLMesh::Mesh()
     }
 }
 
+map<NodeSharedPtr, NodeSharedPtr> BLMesh::GetSymNodes()
+{
+    map<NodeSharedPtr, NodeSharedPtr> ret;
+
+    map<NodeSharedPtr, blInfoSharedPtr>::iterator bit;
+    for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
+    {
+        if(!bit->second->onSym)
+        {
+            continue;
+        }
+        CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(bit->second->symsurf);
+        Array<OneD, NekDouble> loc = bit->second->pNode->GetLoc();
+        Array<OneD, NekDouble> uv(2);
+        uv = s->locuv(loc);
+        bit->second->pNode->SetCADSurf(bit->second->symsurf,s,uv);
+        ret[bit->first] = bit->second->pNode;
+    }
+    return ret;
+}
+
 void BLMesh::GrowLayers()
 {
     map<NodeSharedPtr, blInfoSharedPtr>::iterator bit;

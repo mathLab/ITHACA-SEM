@@ -148,13 +148,30 @@ void FaceMesh::Mesh()
 
 void FaceMesh::OptimiseLocalMesh()
 {
-    DiagonalSwap();
+    ofstream file;
+    file.open("pts.3D");
+    file << "x y z value" << endl;
+    NodeSet::iterator it;
+    for(it = m_localNodes.begin(); it != m_localNodes.end(); it++)
+    {
+        file << (*it)->m_x << " " << (*it)->m_y << " " << (*it)->m_z << " 0" << endl;
+    }
+    file.close();
+    file.open("bl.lines");
+    EdgeSet::iterator eit;
+    for(eit = m_localEdges.begin(); eit != m_localEdges.end(); eit++)
+    {
+        file << (*eit)->m_n1->m_x << ", " << (*eit)->m_n1->m_y << ", " << (*eit)->m_n1->m_z << endl;
+        file << (*eit)->m_n2->m_x << ", " << (*eit)->m_n2->m_y << ", " << (*eit)->m_n2->m_z << endl << endl;
+    }
+    file.close();
+    //DiagonalSwap();
 
-    Smoothing();
+    //Smoothing();
 
     //DiagonalSwap();
 
-    Smoothing();
+    //Smoothing();
 }
 
 void FaceMesh::Smoothing()
@@ -720,33 +737,40 @@ void FaceMesh::BuildLocalMesh()
             // nodes are already unique some will insert some wont
             m_localNodes.insert(nods[j]);
         }
-        vector<EdgeSharedPtr> edgs = E->GetEdgeList();
-        for (int j = 0; j < edgs.size(); j++)
+        E->SetId(m_localElements.size());
+        m_localElements.push_back(E);
+    }
+
+    for (int i = 0; i < m_localElements.size(); ++i)
+    {
+        for (int j = 0; j < m_localElements[i]->GetEdgeCount(); ++j)
         {
+            pair<EdgeSet::iterator,bool> testIns;
+            EdgeSharedPtr ed = m_localElements[i]->GetEdge(j);
             // look for edge in m_mesh edgeset from curves
-            EdgeSet::iterator s = m_mesh->m_edgeSet.find(edgs[j]);
+            EdgeSet::iterator s = m_mesh->m_edgeSet.find(ed);
             if (!(s == m_mesh->m_edgeSet.end()))
             {
-                edgs[j] = *s;
-                E->SetEdge(j, *s);
+                ed = *s;
+                m_localElements[i]->SetEdge(j, *s);
             }
 
-            pair<EdgeSet::iterator, bool> test = m_localEdges.insert(edgs[j]);
+            testIns = m_localEdges.insert(ed);
 
-            if (test.second)
+            if (testIns.second)
             {
-                (*test.first)
-                    ->m_elLink.push_back(pair<ElementSharedPtr, int>(E, j));
+                EdgeSharedPtr ed2 = *testIns.first;
+                ed2->m_elLink.push_back(
+                    pair<ElementSharedPtr,int>(m_localElements[i],j));
             }
             else
             {
-                E->SetEdge(j, *test.first);
-                (*test.first)
-                    ->m_elLink.push_back(pair<ElementSharedPtr, int>(E, j));
+                EdgeSharedPtr e2 = *(testIns.first);
+                m_localElements[i]->SetEdge(j, e2);
+                e2->m_elLink.push_back(
+                    pair<ElementSharedPtr,int>(m_localElements[i],j));
             }
         }
-        E->SetId(m_localElements.size());
-        m_localElements.push_back(E);
     }
 }
 

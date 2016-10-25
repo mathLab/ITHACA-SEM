@@ -88,7 +88,7 @@ void SurfaceMesh::Process()
         cout << endl << "\tFace meshing:" << endl << endl;
 
     // linear mesh all surfaces
-    for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
+    for (int i = 1; i <= 1; i++)
     {
         if (m_mesh->m_verbose)
         {
@@ -111,7 +111,7 @@ void SurfaceMesh::Process()
 
     Report();
 
-    m_mesh->m_expDim++; //revert dim
+    //m_mesh->m_expDim++; //revert dim
 }
 
 void SurfaceMesh::Report()

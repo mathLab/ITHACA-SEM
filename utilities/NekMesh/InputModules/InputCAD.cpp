@@ -198,7 +198,7 @@ void InputCAD::Process()
     mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "surfacemesh"), m_mesh));
 
-    mods.push_back(GetModuleFactory().CreateInstance(
+    /*mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "volumemesh"), m_mesh));
     if(m_makeBL)
     {
@@ -206,7 +206,7 @@ void InputCAD::Process()
         mods.back()->RegisterConfig("blthick",m_blthick);
         mods.back()->RegisterConfig("bllayers",m_bllayers);
         mods.back()->RegisterConfig("blprog",m_blprog);
-    }
+    }*/
 
     /*mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh));

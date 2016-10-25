@@ -148,7 +148,7 @@ void FaceMesh::Mesh()
 
 void FaceMesh::OptimiseLocalMesh()
 {
-    //DiagonalSwap();
+    DiagonalSwap();
 
     Smoothing();
 
@@ -367,7 +367,7 @@ void FaceMesh::DiagonalSwap()
 
     // edgeswapping fun times
     // perfrom edge swap based on node defect and then angle
-    for (int q = 0; q < 4; q++)
+    for (int q = 0; q < 1; q++)
     {
         int edgesStart = m_localEdges.size();
         EdgeSet edges = m_localEdges;
@@ -382,14 +382,6 @@ void FaceMesh::DiagonalSwap()
             EdgeSharedPtr e = *it;
 
             if (e->m_elLink.size() != 2)
-            {
-                m_localEdges.insert(e);
-                continue;
-            }
-            if (e->m_elLink[0].first->GetConf().m_e ==
-                    LibUtilities::eQuadrilateral ||
-                e->m_elLink[1].first->GetConf().m_e ==
-                    LibUtilities::eQuadrilateral)
             {
                 m_localEdges.insert(e);
                 continue;
@@ -448,7 +440,15 @@ void FaceMesh::DiagonalSwap()
             }
 
             // determine signed area of alternate config
-            cout << A->GetNumCADSurf() << " " << B->GetNumCADSurf() << " " << C->GetNumCADSurf() << " " << D->GetNumCADSurf() << endl;
+            //cout << A->GetNumCADSurf() << " " << B->GetNumCADSurf() << " " << C->GetNumCADSurf() << " " << D->GetNumCADSurf() << endl;
+            ofstream file;
+            file.open("pts.3D");
+            file << "x y z value" << endl;
+            file << A->m_x << " " << A->m_y << " " << A->m_z << endl;
+            file << B->m_x << " " << B->m_y << " " << B->m_z << endl;
+            file << C->m_x << " " << C->m_y << " " << C->m_z << endl;
+            file << D->m_x << " " << D->m_y << " " << D->m_z << endl;
+            file.close();
             Array<OneD, NekDouble> ai, bi, ci, di;
             ai = A->GetCADSurfInfo(m_id);
             bi = B->GetCADSurfInfo(m_id);

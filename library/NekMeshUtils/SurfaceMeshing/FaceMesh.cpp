@@ -721,15 +721,16 @@ void FaceMesh::BuildLocalMesh()
     file.open("bl.lines");
     for (int i = 0; i < m_connec.size(); i++)
     {
+        file << i << " a" << endl;
         file << m_connec[i][0]->m_x << ", " << m_connec[i][0]->m_y << ", " << m_connec[i][0]->m_z << endl;
-        file << m_connec[i][1]->m_x << ", " << m_connec[i][1]->m_y << ", " << m_connec[i][1]->m_z << endl << endl;
-
         file << m_connec[i][1]->m_x << ", " << m_connec[i][1]->m_y << ", " << m_connec[i][1]->m_z << endl;
-        file << m_connec[i][2]->m_x << ", " << m_connec[i][2]->m_y << ", " << m_connec[i][2]->m_z << endl << endl;
-
+        file << i << " b" << endl;
+        file << m_connec[i][1]->m_x << ", " << m_connec[i][1]->m_y << ", " << m_connec[i][1]->m_z << endl;
         file << m_connec[i][2]->m_x << ", " << m_connec[i][2]->m_y << ", " << m_connec[i][2]->m_z << endl;
-        file << m_connec[i][0]->m_x << ", " << m_connec[i][0]->m_y << ", " << m_connec[i][0]->m_z << endl << endl;
-        
+        file << i << " c" << endl;
+        file << m_connec[i][2]->m_x << ", " << m_connec[i][2]->m_y << ", " << m_connec[i][2]->m_z << endl;
+        file << m_connec[i][0]->m_x << ", " << m_connec[i][0]->m_y << ", " << m_connec[i][0]->m_z << endl;
+
     }
     file.flush();
     file.close();

@@ -36,6 +36,10 @@
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 #include "VolumeMesh.h"
+#include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
+#include <NekMeshUtils/SurfaceMeshing/FaceMesh.h>
 #include <NekMeshUtils/VolumeMeshing/BLMeshing/BLMesh.h>
 #include <NekMeshUtils/VolumeMeshing/TetMeshing/TetMesh.h>
 
@@ -187,8 +191,6 @@ void VolumeMesh::Process()
             }
         }
 
-        m_mesh->m_element[2].clear();
-
         //create quads
         map<NodeSharedPtr, NodeSharedPtr> nmap = blmesh->GetSymNodes();
         for(cit = curveNodeMap.begin(); cit != curveNodeMap.end(); cit++)
@@ -268,18 +270,21 @@ void VolumeMesh::Process()
             f->Mesh();
         }
 
-        m_mesh->m_element[3].clear();
-        m_mesh->m_expDim--;
-        ClearElementLinks();
-        ProcessVertices();
-        ProcessEdges();
-        ProcessFaces();
-        ProcessElements();
-        ProcessComposites();
+        //build the surface for tetgen to use.
+        vector<ElementSharedPtr> tetsurface = blmesh->GetPseudoSurface();
+        for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+        {
+            vector<unsigned int>::iterator f = find(symsurfs.begin(),
+                                                    symsurfs.end(),
+                                                    m_mesh->m_element[2][i]->CADSurfId);
 
-        return;
+            if(f == symsurfs.end())
+            {
+                tetsurface.push_back(m_mesh->m_element[2][i]);
+            }
+        }
 
-        //tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh);
+        tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, tetsurface);
     }
     else
     {

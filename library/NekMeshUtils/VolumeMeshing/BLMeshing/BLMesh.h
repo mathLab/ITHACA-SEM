@@ -71,6 +71,11 @@ public:
 
     std::map<NodeSharedPtr, NodeSharedPtr> GetSymNodes();
 
+    std::vector<ElementSharedPtr> GetPseudoSurface()
+    {
+        return m_psuedoSurface;
+    }
+
 private:
 
     void Setup();

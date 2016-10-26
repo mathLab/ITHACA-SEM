@@ -112,6 +112,24 @@ void VolumeMesh::Process()
             {
                 m_mesh->m_element[2].push_back(els[i]);
             }
+            else
+            {
+                //remove element from links
+                vector<EdgeSharedPtr> es = els[i]->GetEdgeList();
+                for(int j = 0; j < es.size(); j++)
+                {
+                    vector<pair<ElementSharedPtr,int> > lk = es[j]->m_elLink;
+                    es[j]->m_elLink.clear();
+                    for(int k = 0; k < lk.size(); k++)
+                    {
+                        if(lk[k].first == els[i])
+                        {
+                            continue;
+                        }
+                        es[j]->m_elLink.push_back(lk[k]);
+                    }
+                }
+            }
         }
 
         set<int> cIds;
@@ -169,6 +187,8 @@ void VolumeMesh::Process()
             }
         }
 
+        m_mesh->m_element[2].clear();
+
         //create quads
         map<NodeSharedPtr, NodeSharedPtr> nmap = blmesh->GetSymNodes();
         for(cit = curveNodeMap.begin(); cit != curveNodeMap.end(); cit++)
@@ -199,6 +219,28 @@ void VolumeMesh::Process()
                 ElementSharedPtr E = GetElementFactory().CreateInstance(
                                         LibUtilities::eQuadrilateral, conf, ns, tags);
                 m_mesh->m_element[2].push_back(E);
+
+                //need to dummy process the new elements
+                for (int k = 0; k < E->GetEdgeCount(); ++k)
+                {
+                    pair<EdgeSet::iterator,bool> testIns;
+                    EdgeSharedPtr ed = E->GetEdge(k);
+                    testIns = m_mesh->m_edgeSet.insert(ed);
+
+                    if (testIns.second)
+                    {
+                        EdgeSharedPtr ed2 = *testIns.first;
+                        ed2->m_elLink.push_back(
+                            pair<ElementSharedPtr,int>(E,k));
+                    }
+                    else
+                    {
+                        EdgeSharedPtr e2 = *(testIns.first);
+                        E->SetEdge(k, e2);
+                        e2->m_elLink.push_back(
+                            pair<ElementSharedPtr,int>(E,k));
+                    }
+                }
             }
         }
         //swap nodes
@@ -220,7 +262,6 @@ void VolumeMesh::Process()
             cm[cit->first] = MemoryManager<CurveMesh>::AllocateSharedPtr(cit->first,m_mesh,cit->second);
         }
 
-        m_mesh->m_element[2].clear();
         for(int i = 0; i < symsurfs.size(); i++)
         {
             FaceMeshSharedPtr f = MemoryManager<FaceMesh>::AllocateSharedPtr(symsurfs[i],m_mesh,cm,false);
@@ -235,6 +276,7 @@ void VolumeMesh::Process()
         ProcessFaces();
         ProcessElements();
         ProcessComposites();
+
         return;
 
         //tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh);

@@ -111,7 +111,7 @@ void FaceMesh::Mesh()
 
     BuildLocalMesh();
 
-    //OptimiseLocalMesh();
+    OptimiseLocalMesh();
 
     // make new elements and add to list from list of nodes and connectivity
     // from triangle
@@ -141,33 +141,13 @@ void FaceMesh::Mesh()
 
 void FaceMesh::OptimiseLocalMesh()
 {
-    ofstream file;
-    file.open("pts.3D");
-    file << "x y z value" << endl;
-    NodeSet::iterator it;
-    for(it = m_localNodes.begin(); it != m_localNodes.end(); it++)
-    {
-        file << (*it)->m_x << " " << (*it)->m_y << " " << (*it)->m_z << " " << (*it)->m_id << endl;
-    }
-    file.close();
-    // file.open("bl.lines");
-    // EdgeSet::iterator eit;
-    // for(eit = m_localEdges.begin(); eit != m_localEdges.end(); eit++)
-    // {
-    //     if((*eit)->m_elLink.size() != 2)
-    //     {
-    //         file << (*eit)->m_n1->m_x << ", " << (*eit)->m_n1->m_y << ", " << (*eit)->m_n1->m_z << endl;
-    //         file << (*eit)->m_n2->m_x << ", " << (*eit)->m_n2->m_y << ", " << (*eit)->m_n2->m_z << endl << endl;
-    //     }
-    // }
-    // file.close();
-    //DiagonalSwap();
+    DiagonalSwap();
 
-    //Smoothing();
+    Smoothing();
 
-    //DiagonalSwap();
+    DiagonalSwap();
 
-    //Smoothing();
+    Smoothing();
 }
 
 void FaceMesh::Smoothing()
@@ -208,19 +188,6 @@ void FaceMesh::Smoothing()
 
             vector<EdgeSharedPtr> edges  = connectingedges[(*nit)->m_id];
             vector<ElementSharedPtr> els = connectingelements[(*nit)->m_id];
-
-            bool perfrom = true;
-            for (int i = 0; i < els.size(); i++)
-            {
-                if (els[i]->GetConf().m_e == LibUtilities::eQuadrilateral)
-                {
-                    perfrom = false;
-                    break;
-                }
-            }
-
-            if (!perfrom)
-                continue;
 
             vector<NodeSharedPtr> nodesystem;
             vector<NekDouble> lamp;
@@ -380,7 +347,7 @@ void FaceMesh::DiagonalSwap()
 
     // edgeswapping fun times
     // perfrom edge swap based on node defect and then angle
-    for (int q = 0; q < 1; q++)
+    for (int q = 0; q < 4; q++)
     {
         int edgesStart = m_localEdges.size();
         EdgeSet edges = m_localEdges;
@@ -394,7 +361,9 @@ void FaceMesh::DiagonalSwap()
         {
             EdgeSharedPtr e = *it;
 
-            if (e->m_elLink.size() != 2)
+            NodeSet::iterator f1 = m_inBoundary.find((*it)->m_n1);
+            NodeSet::iterator f2 = m_inBoundary.find((*it)->m_n2);
+            if (f1 != m_inBoundary.end() && f2 != m_inBoundary.end())
             {
                 m_localEdges.insert(e);
                 continue;
@@ -453,15 +422,15 @@ void FaceMesh::DiagonalSwap()
             }
 
             // determine signed area of alternate config
-            //cout << A->GetNumCADSurf() << " " << B->GetNumCADSurf() << " " << C->GetNumCADSurf() << " " << D->GetNumCADSurf() << endl;
-            ofstream file;
-            file.open("pts.3D");
-            file << "x y z value" << endl;
-            file << A->m_x << " " << A->m_y << " " << A->m_z << endl;
-            file << B->m_x << " " << B->m_y << " " << B->m_z << endl;
-            file << C->m_x << " " << C->m_y << " " << C->m_z << endl;
-            file << D->m_x << " " << D->m_y << " " << D->m_z << endl;
-            file.close();
+            // //cout << A->GetNumCADSurf() << " " << B->GetNumCADSurf() << " " << C->GetNumCADSurf() << " " << D->GetNumCADSurf() << endl;
+            // ofstream file;
+            // file.open("pts.3D");
+            // file << "x y z value" << endl;
+            // file << A->m_x << " " << A->m_y << " " << A->m_z << endl;
+            // file << B->m_x << " " << B->m_y << " " << B->m_z << endl;
+            // file << C->m_x << " " << C->m_y << " " << C->m_z << endl;
+            // file << D->m_x << " " << D->m_y << " " << D->m_z << endl;
+            // file.close();
             Array<OneD, NekDouble> ai, bi, ci, di;
             ai = A->GetCADSurfInfo(m_id);
             bi = B->GetCADSurfInfo(m_id);
@@ -717,29 +686,10 @@ void FaceMesh::BuildLocalMesh()
     putting them into m_mesh
     */
 
-    ofstream file;
-    file.open("bl.lines");
-    for (int i = 0; i < m_connec.size(); i++)
-    {
-        file << i << " a" << endl;
-        file << m_connec[i][0]->m_x << ", " << m_connec[i][0]->m_y << ", " << m_connec[i][0]->m_z << endl;
-        file << m_connec[i][1]->m_x << ", " << m_connec[i][1]->m_y << ", " << m_connec[i][1]->m_z << endl;
-        file << i << " b" << endl;
-        file << m_connec[i][1]->m_x << ", " << m_connec[i][1]->m_y << ", " << m_connec[i][1]->m_z << endl;
-        file << m_connec[i][2]->m_x << ", " << m_connec[i][2]->m_y << ", " << m_connec[i][2]->m_z << endl;
-        file << i << " c" << endl;
-        file << m_connec[i][2]->m_x << ", " << m_connec[i][2]->m_y << ", " << m_connec[i][2]->m_z << endl;
-        file << m_connec[i][0]->m_x << ", " << m_connec[i][0]->m_y << ", " << m_connec[i][0]->m_z << endl;
-
-    }
-    file.flush();
-    file.close();
-    exit(-1);
-
     for (int i = 0; i < m_connec.size(); i++)
     {
 
-        /*ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
+        ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
 
         vector<int> tags;
         tags.push_back(m_id + (over ? 1000 : 100));
@@ -747,17 +697,17 @@ void FaceMesh::BuildLocalMesh()
             LibUtilities::eTriangle, conf, m_connec[i], tags);
         E->CADSurfId = m_id;
 
-        /*vector<NodeSharedPtr> nods = E->GetVertexList();
+        vector<NodeSharedPtr> nods = E->GetVertexList();
         for (int j = 0; j < nods.size(); j++)
         {
             // nodes are already unique some will insert some wont
             m_localNodes.insert(nods[j]);
-        }*/
-        //E->SetId(m_localElements.size());
-        //m_localElements.push_back(E);
+        }
+        E->SetId(m_localElements.size());
+        m_localElements.push_back(E);
     }
 
-    /*for (int i = 0; i < m_localElements.size(); ++i)
+    for (int i = 0; i < m_localElements.size(); ++i)
     {
         for (int j = 0; j < m_localElements[i]->GetEdgeCount(); ++j)
         {
@@ -787,7 +737,7 @@ void FaceMesh::BuildLocalMesh()
                     pair<ElementSharedPtr,int>(m_localElements[i],j));
             }
         }
-    }*/
+    }
 }
 
 void FaceMesh::Stretching()

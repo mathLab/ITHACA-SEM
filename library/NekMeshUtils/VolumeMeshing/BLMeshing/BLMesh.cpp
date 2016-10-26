@@ -710,9 +710,9 @@ void BLMesh::Setup()
     int ct = 0;
     int failed = 0;
 
-    ofstream file1;
-    file1.open("pts.3D");
-    file1 << "X Y Z value" << endl;
+    //ofstream file1;
+    //file1.open("pts.3D");
+    //file1 << "X Y Z value" << endl;
     for(it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end(); it++, ct++)
     {
         vector<pair<int, CADSurfSharedPtr> > ss = (*it)->GetCADSurfs();
@@ -740,7 +740,7 @@ void BLMesh::Setup()
             bln->stopped = false;
             bln->stop = false;
 
-            file1 << (*it)->m_x << " " << (*it)->m_y << " " << (*it)->m_z << " " << ss.size() << endl;
+            //file1 << (*it)->m_x << " " << (*it)->m_y << " " << (*it)->m_z << " " << ss.size() << endl;
 
             if(diff.size() > 0)
             {
@@ -758,7 +758,7 @@ void BLMesh::Setup()
             m_blData[(*it)] = bln;
         }
     }
-    file1.close();
+    //file1.close();
 
     //need a map from vertex idx to surface elements
     //but do not care about triangles which are not in the bl
@@ -916,18 +916,18 @@ void BLMesh::Setup()
         }
     }
 
-    ofstream file;
-    file.open("bl.lines");
-    for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
-    {
-        NekDouble l = 0.05;
-        file << bit->first->m_x << ", " << bit->first->m_y << ", " << bit->first->m_z << endl;
-        file << bit->first->m_x + bit->second->N[0]*l << ", "
-             << bit->first->m_y + bit->second->N[1]*l << ", "
-             << bit->first->m_z + bit->second->N[2]*l << endl;
-        file << endl;
-    }
-    file.close();
+    // ofstream file;
+    // file.open("bl.lines");
+    // for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
+    // {
+    //     NekDouble l = 0.05;
+    //     file << bit->first->m_x << ", " << bit->first->m_y << ", " << bit->first->m_z << endl;
+    //     file << bit->first->m_x + bit->second->N[0]*l << ", "
+    //          << bit->first->m_y + bit->second->N[1]*l << ", "
+    //          << bit->first->m_z + bit->second->N[2]*l << endl;
+    //     file << endl;
+    // }
+    // file.close();
 
 
     ASSERTL0(failed == 0, "some normals failed to generate");

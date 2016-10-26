@@ -88,7 +88,7 @@ void SurfaceMesh::Process()
         cout << endl << "\tFace meshing:" << endl << endl;
 
     // linear mesh all surfaces
-    for (int i = 1; i <= 1; i++)
+    for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {
         if (m_mesh->m_verbose)
         {
@@ -103,41 +103,15 @@ void SurfaceMesh::Process()
         m_facemeshes[i]->Mesh();
     }
 
-    //ProcessVertices();
-    //ProcessEdges();
-    //ProcessFaces();
-    //ProcessElements();
-    //ProcessComposites();
+    ProcessVertices();
+    ProcessEdges();
+    ProcessFaces();
+    ProcessElements();
+    ProcessComposites();
 
     Report();
 
-    ofstream file;
-    file.open("bl.lines");
-    EdgeSet::iterator eit;
-    /*for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
-    {
-        //if((*eit)->m_elLink.size() == 2)
-        //{
-            file << (*eit)->m_n1->m_x << ", " << (*eit)->m_n1->m_y << ", " << (*eit)->m_n1->m_z << endl;
-            file << (*eit)->m_n2->m_x << ", " << (*eit)->m_n2->m_y << ", " << (*eit)->m_n2->m_z << endl << endl;
-            file.flush();
-        //}
-    }*/
-    for (int i = 0; i < m_mesh->m_element[2].size(); i++)
-    {
-        vector<EdgeSharedPtr> e = m_mesh->m_element[2][i]->GetEdgeList();
-        for (int j = 0; j < e.size(); j++)
-        {
-            file << e[j]->m_n1->m_x << ", " << e[j]->m_n1->m_y << ", " << e[j]->m_n1->m_z << endl;
-            file << e[j]->m_n2->m_x << ", " << e[j]->m_n2->m_y << ", " << e[j]->m_n2->m_z << endl << endl;
-            file.flush();
-        }
-    }
-    file.flush();
-    file.close();
-    exit(-1);
-
-    //m_mesh->m_expDim++; //revert dim
+    m_mesh->m_expDim++; //revert dim
 }
 
 void SurfaceMesh::Report()
@@ -155,20 +129,6 @@ void SurfaceMesh::Report()
         cout << "\t\tEuler-Poincaré characteristic: " << ep << endl;
     }
 }
-
-/*void SurfaceMesh::Remesh(BLMeshSharedPtr blmesh)
-{
-    vector<int> surfs = blmesh->GetSymSurfs();
-    for(int i = 0; i < surfs.size(); i++)
-    {
-        map<NodeSharedPtr, NodeSharedPtr> nmap = blmesh->GetNodeMap(surfs[i]);
-        map<int, FaceMeshSharedPtr>::iterator f = m_facemeshes.find(surfs[i]);
-        ASSERTL0(f != m_facemeshes.end(), "surf not found");
-        f->second->QuadRemesh(nmap);
-    }
-
-
-}*/
 
 }
 }

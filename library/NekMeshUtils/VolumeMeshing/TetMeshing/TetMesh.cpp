@@ -89,6 +89,11 @@ void TetMesh::Mesh()
         surfacetris.push_back(tri);
     }
 
+    m_mesh->m_expDim--;
+    m_mesh->m_element[3].clear();
+    m_mesh->m_element[2] = m_surface;
+    return;
+
     if (m_mesh->m_verbose)
     {
         cout << "\tInital Node Count: " << IdToNode.size() << endl;

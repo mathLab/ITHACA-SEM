@@ -270,15 +270,23 @@ void VolumeMesh::Process()
             f->Mesh();
         }
 
+        vector<unsigned int> blsurfs = blmesh->GetBLSurfs();
+
         //build the surface for tetgen to use.
         vector<ElementSharedPtr> tetsurface = blmesh->GetPseudoSurface();
         for(int i = 0; i < m_mesh->m_element[2].size(); i++)
         {
-            vector<unsigned int>::iterator f = find(symsurfs.begin(),
-                                                    symsurfs.end(),
+            if(m_mesh->m_element[2][i]->GetConf().m_e ==
+                                LibUtilities::eQuadrilateral)
+            {
+                continue;
+            }
+
+            vector<unsigned int>::iterator f = find(blsurfs.begin(),
+                                                    blsurfs.end(),
                                                     m_mesh->m_element[2][i]->CADSurfId);
 
-            if(f == symsurfs.end())
+            if(f == blsurfs.end())
             {
                 tetsurface.push_back(m_mesh->m_element[2][i]);
             }

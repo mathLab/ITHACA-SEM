@@ -68,6 +68,7 @@ public:
     void Mesh();
 
     std::vector<unsigned int> GetSymSurfs(){ return m_symSurfs;}
+    std::vector<unsigned int> GetBLSurfs(){ return m_blsurfs;}
 
     std::map<NodeSharedPtr, NodeSharedPtr> GetSymNodes();
 

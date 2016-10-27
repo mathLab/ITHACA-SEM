@@ -77,17 +77,38 @@ public:
         return m_psuedoSurface;
     }
 
+    struct blInfo
+    {
+        NodeSharedPtr pNode;
+        NodeSharedPtr oNode;
+        int bl;
+        Array<OneD, NekDouble> N;
+        int symsurf;
+        bool onSym;
+        std::vector<ElementSharedPtr> els;
+        std::vector<ElementSharedPtr> pEls;
+        std::set<int> pId;
+
+        bool stop;
+        bool stopped;
+
+        void AlignNode(NekDouble t)
+        {
+            pNode->m_x = oNode->m_x + t * N[0];
+            pNode->m_y = oNode->m_y + t * N[1];
+            pNode->m_z = oNode->m_z + t * N[2];
+        }
+    };
+    typedef boost::shared_ptr<blInfo> blInfoSharedPtr;
+
 private:
 
     void Setup();
     void GrowLayers();
     void ShrinkValidity();
     void BuildElements();
-    bool TestIntersection(EdgeSharedPtr edge, ElementSharedPtr el);
+    bool TestIntersection(blInfoSharedPtr bl, ElementSharedPtr el);
     bool IsPrismValid(ElementSharedPtr el);
-
-    struct blInfo;
-    typedef boost::shared_ptr<blInfo> blInfoSharedPtr;
 
     NekDouble Visability(std::vector<ElementSharedPtr> tris, Array<OneD, NekDouble> N);
     Array<OneD, NekDouble> GetNormal(std::vector<ElementSharedPtr> tris);
@@ -110,28 +131,7 @@ private:
     std::vector<ElementSharedPtr> m_psuedoSurface;
     NekMatrix<NekDouble> m_deriv[3];
 
-    struct blInfo
-    {
-        NodeSharedPtr pNode;
-        NodeSharedPtr oNode;
-        int bl;
-        Array<OneD, NekDouble> N;
-        int symsurf;
-        bool onSym;
-        std::vector<ElementSharedPtr> els;
-        std::vector<ElementSharedPtr> pEls;
-        EdgeSet edges;
 
-        bool stop;
-        bool stopped;
-
-        void AlignNode(NekDouble t)
-        {
-            pNode->m_x = oNode->m_x + t * N[0];
-            pNode->m_y = oNode->m_y + t * N[1];
-            pNode->m_z = oNode->m_z + t * N[2];
-        }
-    };
 };
 
 typedef boost::shared_ptr<BLMesh> BLMeshSharedPtr;

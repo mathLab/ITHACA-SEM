@@ -75,6 +75,10 @@ void TetMesh::Mesh()
 
             if (testIns.second)
             {
+                if(cnt == 2114)
+                {
+                    //cout << n[j]->m_x << " " << n[j]->m_y << " " << n[j]->m_z << endl;
+                }
                 tri[j] = cnt;
                 IdToNode[cnt] = n[j];
                 IdToNodeRev[n[j]] = cnt;

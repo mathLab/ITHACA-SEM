@@ -84,6 +84,32 @@ inline box GetBox(ElementSharedPtr el)
     return box(point(xmin,ymin,zmin),point(xmax,ymax,zmax));
 }
 
+inline box GetBox(BLMesh::blInfoSharedPtr bl)
+{
+    NekDouble xmin =        numeric_limits<double>::max(),
+              xmax = -1.0 * numeric_limits<double>::max(),
+              ymin =        numeric_limits<double>::max(),
+              ymax = -1.0 * numeric_limits<double>::max(),
+              zmin =        numeric_limits<double>::max(),
+              zmax = -1.0 * numeric_limits<double>::max();
+
+    xmin = min(xmin,bl->oNode->m_x);
+    xmax = max(xmax,bl->oNode->m_x);
+    ymin = min(ymin,bl->oNode->m_y);
+    ymax = max(ymax,bl->oNode->m_y);
+    zmin = min(zmin,bl->oNode->m_z);
+    zmax = max(zmax,bl->oNode->m_z);
+
+    xmin = min(xmin,bl->pNode->m_x);
+    xmax = max(xmax,bl->pNode->m_x);
+    ymin = min(ymin,bl->pNode->m_y);
+    ymax = max(ymax,bl->pNode->m_y);
+    zmin = min(zmin,bl->pNode->m_z);
+    zmax = max(zmax,bl->pNode->m_z);
+
+    return box(point(xmin,ymin,zmin),point(xmax,ymax,zmax));
+}
+
 void BLMesh::Mesh()
 {
     Setup();
@@ -141,27 +167,6 @@ map<NodeSharedPtr, NodeSharedPtr> BLMesh::GetSymNodes()
 void BLMesh::GrowLayers()
 {
     map<NodeSharedPtr, blInfoSharedPtr>::iterator bit;
-    //need to construct a updating tree of the psuedo surface
-    //and the reminaing surface mesh minus the symmetry plane
-    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
-    {
-        m_mesh->m_element[2][i]->SetId(0);
-    }
-    for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
-    {
-        for(int i = 0; i < bit->second->pEls.size(); i++)
-        {
-            vector<EdgeSharedPtr> es = bit->second->pEls[i]->GetEdgeList();
-            for(int j = 0; j < es.size(); j++)
-            {
-                //if(es[j]->m_n1 == bit->second->pNode ||
-                //   es[j]->m_n2 == bit->second->pNode)
-                //{
-                    bit->second->edges.insert(es[j]);
-                //}
-            }
-        }
-    }
     vector<ElementSharedPtr> elsInRtree;
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
@@ -186,6 +191,13 @@ void BLMesh::GrowLayers()
     for(int i = 0; i < elsInRtree.size(); i++)
     {
         elsInRtree[i]->SetId(i);
+    }
+    for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
+    {
+        for(int i = 0; i < bit->second->pEls.size(); i++)
+        {
+            bit->second->pId.insert(bit->second->pEls[i]->GetId());
+        }
     }
 
     vector<boxI> inserts;
@@ -241,48 +253,21 @@ void BLMesh::GrowLayers()
             if(!bit->second->stop && !bit->second->stopped)
             {
                 vector<boxI> intersects;
-                for(int i = 0; i < bit->second->pEls.size(); i++)
-                {
-                    rtree.query(bgi::intersects(GetBox(bit->second->pEls[i])), back_inserter(intersects));
-                }
-
-                set<int> intersectsIds;
+                rtree.query(bgi::intersects(GetBox(bit->second)), back_inserter(intersects));
 
                 for(int i = 0; i < intersects.size(); i++)
                 {
-                    intersectsIds.insert(intersects[i].second);
-                }
-
-                EdgeSet testEdges;
-                set<int>::iterator idit;
-                for(idit = intersectsIds.begin(); idit != intersectsIds.end(); idit++)
-                {
-                    vector<EdgeSharedPtr> es = elsInRtree[(*idit)]->GetEdgeList();
-                    for(int j = 0; j < es.size(); j++)
+                    set<int>::iterator f = bit->second->pId.find(intersects[i].second);
+                    if(f != bit->second->pId.end())
                     {
-                        EdgeSet::iterator it = bit->second->edges.find(es[j]);
-                        //if(it == bit->second->edges.end())
-                        //{
-                            testEdges.insert(es[j]);
-                        //}
+                        continue;
                     }
-                }
-
-                bool hit = false;
-                for(int i = 0; i < bit->second->pEls.size(); i++)
-                {
-                    EdgeSet::iterator it;
-                    for(it = testEdges.begin(); it != testEdges.end(); it++)
+                    if(TestIntersection(bit->second,elsInRtree[intersects[i].second]))
                     {
-                        if(TestIntersection((*it),bit->second->pEls[i]))
-                        {
-                            //file3 << bit->second->oNode->m_x << " " << bit->second->oNode->m_y << " " << bit->second->oNode->m_z << " " << 1 << endl;
-                            hit = true;
-                            bit->second->stop = true;
-                            break;
-                        }
+                        //file3 << bit->second->oNode->m_x << " " << bit->second->oNode->m_y << " " << bit->second->oNode->m_z << " " << 1 << endl;
+                        bit->second->stop = true;
+                        break;
                     }
-                    if(hit) break;
                 }
             }
         }
@@ -300,7 +285,7 @@ void BLMesh::GrowLayers()
     }
 }
 
-bool BLMesh::TestIntersection(EdgeSharedPtr edge, ElementSharedPtr el)
+bool BLMesh::TestIntersection(blInfoSharedPtr bl, ElementSharedPtr el)
 {
     vector<NodeSharedPtr> ns = el->GetVertexList();
     NekDouble A0,A1,A2,A3,A4,A5,A6,A7,A8;
@@ -313,9 +298,9 @@ bool BLMesh::TestIntersection(EdgeSharedPtr edge, ElementSharedPtr el)
     A7 = ns[2]->m_y - ns[0]->m_y;
     A8 = ns[2]->m_z - ns[0]->m_z;
 
-    A0 = (edge->m_n2->m_x - edge->m_n1->m_x) * -1.0;
-    A1 = (edge->m_n2->m_y - edge->m_n1->m_y) * -1.0;
-    A2 = (edge->m_n2->m_z - edge->m_n1->m_z) * -1.0;
+    A0 = (bl->pNode->m_x - bl->oNode->m_x) * -1.0;
+    A1 = (bl->pNode->m_y - bl->oNode->m_y) * -1.0;
+    A2 = (bl->pNode->m_z - bl->oNode->m_z) * -1.0;
     NekDouble det = A0 * (A4*A8 - A7*A5)
                    -A3 * (A1*A8 - A7*A2)
                    +A6 * (A1*A5 - A4*A2);
@@ -325,9 +310,9 @@ bool BLMesh::TestIntersection(EdgeSharedPtr edge, ElementSharedPtr el)
         //no intersecton
         return false;
     }
-    B0 = edge->m_n1->m_x - ns[0]->m_x;
-    B1 = edge->m_n1->m_y - ns[0]->m_y;
-    B2 = edge->m_n1->m_z - ns[0]->m_z;
+    B0 = bl->oNode->m_x - ns[0]->m_x;
+    B1 = bl->oNode->m_y - ns[0]->m_y;
+    B2 = bl->oNode->m_z - ns[0]->m_z;
 
     NekDouble X0,X1,X2;
 
@@ -348,8 +333,8 @@ bool BLMesh::TestIntersection(EdgeSharedPtr edge, ElementSharedPtr el)
     X2 /= det;
 
     //check triangle intersecton
-    if(X1 > 1e-6 && X2 > 1e-6 && X1 + X2 < 0.999999
-       && X0 > 1e-6 && X0 < 0.999999)
+    if(X1 > 0.0 && X2 > 0.0 && X1 + X2 < 1.0
+       && X0 > 0.0 && X0 < 1.0)
     {
         return true;
     }

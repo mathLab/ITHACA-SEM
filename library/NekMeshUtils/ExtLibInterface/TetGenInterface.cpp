@@ -89,7 +89,7 @@ void TetGenInterface::InitialMesh(map<int, NodeSharedPtr>  tgidton,
         surface.facetmarkerlist[i] = 0;
     }
 
-    tetrahedralize("pYzqQ", &surface, &output);
+    tetrahedralize("pYzq", &surface, &output);
 }
 
 void TetGenInterface::GetNewPoints(int num,

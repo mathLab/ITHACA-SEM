@@ -118,7 +118,7 @@ void BLMesh::Mesh()
 
     GrowLayers();
 
-    ShrinkValidity();
+    Shrink();
 
     map<NodeSharedPtr, blInfoSharedPtr>::iterator bit;
     for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
@@ -342,7 +342,7 @@ bool BLMesh::TestIntersection(blInfoSharedPtr bl, ElementSharedPtr el)
     return false;
 }
 
-void BLMesh::ShrinkValidity()
+void BLMesh::Shrink()
 {
     map<NodeSharedPtr, blInfoSharedPtr>::iterator bit;
     bool smsh = true;
@@ -483,8 +483,6 @@ void BLMesh::BuildElements()
     nm[4] = 1;
     nm[5] = 2;
 
-    map<ElementSharedPtr,ElementSharedPtr> priToTri;
-
     ElmtConfig pconf(LibUtilities::ePrism,1,false,false);
     ElmtConfig tconf(LibUtilities::eTriangle,1,false,false);
 
@@ -526,6 +524,7 @@ void BLMesh::BuildElements()
         m_psuedoSurface.push_back(T);
 
         m_priToTri[E] = el;
+        m_priTopTri[E] = T;
 
         for(int j = 0; j < 3; j++)
         {

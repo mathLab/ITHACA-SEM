@@ -105,7 +105,7 @@ private:
 
     void Setup();
     void GrowLayers();
-    void ShrinkValidity();
+    void Shrink();
     void BuildElements();
     bool TestIntersection(blInfoSharedPtr bl, ElementSharedPtr el);
     bool IsPrismValid(ElementSharedPtr el);
@@ -128,6 +128,7 @@ private:
     std::map<NodeSharedPtr, blInfoSharedPtr> m_blData;
     std::map<NodeSharedPtr, std::vector<blInfoSharedPtr> > m_nToNInfo; //node to neighbouring information
     std::map<ElementSharedPtr,ElementSharedPtr> m_priToTri;
+    std::map<ElementSharedPtr,ElementSharedPtr> m_priTopTri;
     std::vector<ElementSharedPtr> m_psuedoSurface;
     NekMatrix<NekDouble> m_deriv[3];
 

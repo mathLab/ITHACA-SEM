@@ -110,6 +110,32 @@ inline box GetBox(BLMesh::blInfoSharedPtr bl)
     return box(point(xmin,ymin,zmin),point(xmax,ymax,zmax));
 }
 
+inline box GetBox(EdgeSharedPtr e)
+{
+    NekDouble xmin =        numeric_limits<double>::max(),
+              xmax = -1.0 * numeric_limits<double>::max(),
+              ymin =        numeric_limits<double>::max(),
+              ymax = -1.0 * numeric_limits<double>::max(),
+              zmin =        numeric_limits<double>::max(),
+              zmax = -1.0 * numeric_limits<double>::max();
+
+    xmin = min(xmin,e->m_n1->m_x);
+    xmax = max(xmax,e->m_n1->m_x);
+    ymin = min(ymin,e->m_n1->m_y);
+    ymax = max(ymax,e->m_n1->m_y);
+    zmin = min(zmin,e->m_n1->m_z);
+    zmax = max(zmax,e->m_n1->m_z);
+
+    xmin = min(xmin,e->m_n2->m_x);
+    xmax = max(xmax,e->m_n2->m_x);
+    ymin = min(ymin,e->m_n2->m_y);
+    ymax = max(ymax,e->m_n2->m_y);
+    zmin = min(zmin,e->m_n2->m_z);
+    zmax = max(zmax,e->m_n2->m_z);
+
+    return box(point(xmin,ymin,zmin),point(xmax,ymax,zmax));
+}
+
 void BLMesh::Mesh()
 {
     Setup();
@@ -119,6 +145,60 @@ void BLMesh::Mesh()
     GrowLayers();
 
     Shrink();
+
+    vector<ElementSharedPtr> elsInRtree;
+    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+    {
+        ElementSharedPtr el = m_mesh->m_element[2][i];
+        vector<unsigned int>::iterator f = find(m_blsurfs.begin(),
+                                                m_blsurfs.end(),
+                                                el->CADSurfId);
+
+        vector<unsigned int>::iterator s = find(m_symSurfs.begin(),
+                                                m_symSurfs.end(),
+                                                el->CADSurfId);
+
+        if(f == m_blsurfs.end() && s == m_symSurfs.end())
+        {
+            elsInRtree.push_back(m_mesh->m_element[2][i]);
+        }
+    }
+    for(int i = 0; i < m_psuedoSurface.size(); i++)
+    {
+        elsInRtree.push_back(m_psuedoSurface[i]);
+    }
+
+    bgi::rtree<boxI, bgi::quadratic<16> > rtree;
+
+    rtree.clear();
+    vector<boxI> inserts;
+    for(int i = 0; i < elsInRtree.size(); i++)
+    {
+        inserts.push_back(make_pair(GetBox(elsInRtree[i]),i));
+    }
+    rtree.insert(inserts.begin(), inserts.end());
+
+    m_mesh->m_element[2].clear();
+    vector<ElementSharedPtr> intr;
+    for(int i = 0; i < m_mesh->m_element[3].size(); i++)
+    {
+        ElementSharedPtr el = m_mesh->m_element[3][i];
+        ElementSharedPtr t = m_priToTri[el];
+        vector<boxI> intersects;
+        rtree.query(bgi::intersects(GetBox(t)),back_inserter(intersects));
+        for(int j = 0; j < intersects.size(); j++)
+        {
+            if(TestIntersectionEl(elsInRtree[intersects[j].second],t))
+            {
+                cout << "hit" << endl;
+                m_mesh->m_element[2].push_back(elsInRtree[intersects[j].second]);
+                m_mesh->m_element[2].push_back(t);
+
+            }
+        }
+    }
+    m_mesh->m_expDim--;
+    return;
 
     map<NodeSharedPtr, blInfoSharedPtr>::iterator bit;
     for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
@@ -262,7 +342,7 @@ void BLMesh::GrowLayers()
                     {
                         continue;
                     }
-                    if(TestIntersection(bit->second,elsInRtree[intersects[i].second]))
+                    if(TestIntersectionBl(bit->second,elsInRtree[intersects[i].second]))
                     {
                         //file3 << bit->second->oNode->m_x << " " << bit->second->oNode->m_y << " " << bit->second->oNode->m_z << " " << 1 << endl;
                         bit->second->stop = true;
@@ -285,48 +365,30 @@ void BLMesh::GrowLayers()
     }
 }
 
-bool BLMesh::TestIntersection(blInfoSharedPtr bl, ElementSharedPtr el)
+inline bool TestIntersection(Array<OneD, NekDouble> &A, Array<OneD, NekDouble> &B)
 {
-    vector<NodeSharedPtr> ns = el->GetVertexList();
-    NekDouble A0,A1,A2,A3,A4,A5,A6,A7,A8;
-    NekDouble B0,B1,B2;
+    NekDouble det = A[0] * (A[4]*A[8] - A[7]*A[5])
+                   -A[3] * (A[1]*A[8] - A[7]*A[2])
+                   +A[6] * (A[1]*A[5] - A[4]*A[2]);
 
-    A3 = ns[1]->m_x - ns[0]->m_x;
-    A4 = ns[1]->m_y - ns[0]->m_y;
-    A5 = ns[1]->m_z - ns[0]->m_z;
-    A6 = ns[2]->m_x - ns[0]->m_x;
-    A7 = ns[2]->m_y - ns[0]->m_y;
-    A8 = ns[2]->m_z - ns[0]->m_z;
-
-    A0 = (bl->pNode->m_x - bl->oNode->m_x) * -1.0;
-    A1 = (bl->pNode->m_y - bl->oNode->m_y) * -1.0;
-    A2 = (bl->pNode->m_z - bl->oNode->m_z) * -1.0;
-    NekDouble det = A0 * (A4*A8 - A7*A5)
-                   -A3 * (A1*A8 - A7*A2)
-                   +A6 * (A1*A5 - A4*A2);
-
-    if(fabs(det) < 1e-15)
+    if(fabs(det) < numeric_limits<double>::epsilon())
     {
-        //no intersecton
         return false;
     }
-    B0 = bl->oNode->m_x - ns[0]->m_x;
-    B1 = bl->oNode->m_y - ns[0]->m_y;
-    B2 = bl->oNode->m_z - ns[0]->m_z;
 
     NekDouble X0,X1,X2;
 
-    X0 = B0 * (A4*A8 - A7*A5)
-        -A3 * (B1*A8 - A7*B2)
-        +A6 * (B1*A5 - A4*B2);
+    X0 = B[0] * (A[4]*A[8] - A[7]*A[5])
+        -A[3] * (B[1]*A[8] - A[7]*B[2])
+        +A[6] * (B[1]*A[5] - A[4]*B[2]);
 
-    X1 = A0 * (B1*A8 - A7*B2)
-        -B0 * (A1*A8 - A7*A2)
-        +A6 * (A1*B2 - B1*A2);
+    X1 = A[0] * (B[1]*A[8] - A[7]*B[2])
+        -B[0] * (A[1]*A[8] - A[7]*A[2])
+        +A[6] * (A[1]*B[2] - B[1]*A[2]);
 
-    X2 = A0 * (A4*B2 - B1*A5)
-        -A3 * (A1*B2 - B1*A2)
-        +B0 * (A1*A5 - A4*A2);
+    X2 = A[0] * (A[4]*B[2] - B[1]*A[5])
+        -A[3] * (A[1]*B[2] - B[1]*A[2])
+        +B[0] * (A[1]*A[5] - A[4]*A[2]);
 
     X0 /= det;
     X1 /= det;
@@ -336,6 +398,197 @@ bool BLMesh::TestIntersection(blInfoSharedPtr bl, ElementSharedPtr el)
     if(X1 > 0.0 && X2 > 0.0 && X1 + X2 < 1.0
        && X0 > 0.0 && X0 < 1.0)
     {
+        return true;
+    }
+
+    return false;
+}
+
+bool BLMesh::TestIntersectionBl(blInfoSharedPtr bl, ElementSharedPtr el)
+{
+    vector<NodeSharedPtr> ns = el->GetVertexList();
+    Array<OneD, NekDouble> A(9), B(3);
+
+    A[3] = ns[1]->m_x - ns[0]->m_x;
+    A[4] = ns[1]->m_y - ns[0]->m_y;
+    A[5] = ns[1]->m_z - ns[0]->m_z;
+    A[6] = ns[2]->m_x - ns[0]->m_x;
+    A[7] = ns[2]->m_y - ns[0]->m_y;
+    A[8] = ns[2]->m_z - ns[0]->m_z;
+
+    A[0] = (bl->pNode->m_x - bl->oNode->m_x) * -1.0;
+    A[1] = (bl->pNode->m_y - bl->oNode->m_y) * -1.0;
+    A[2] = (bl->pNode->m_z - bl->oNode->m_z) * -1.0;
+
+    B[0] = bl->oNode->m_x - ns[0]->m_x;
+    B[1] = bl->oNode->m_y - ns[0]->m_y;
+    B[2] = bl->oNode->m_z - ns[0]->m_z;
+
+    return TestIntersection(A,B);
+}
+
+inline bool sign(NekDouble a, NekDouble b)
+{
+    return (a * b > 0.0);
+}
+
+bool BLMesh::TestIntersectionEl(ElementSharedPtr e1, ElementSharedPtr e2)
+{
+    vector<NodeSharedPtr> ns1 = e1->GetVertexList();
+    vector<NodeSharedPtr> ns2 = e2->GetVertexList();
+    if(ns1[0] == ns2[0] || ns1[0] == ns2[1] ||ns1[0] == ns2[2] ||
+       ns1[1] == ns2[0] || ns1[1] == ns2[1] ||ns1[1] == ns2[2] ||
+       ns1[2] == ns2[0] || ns1[2] == ns2[1] ||ns1[2] == ns2[2])
+    {
+        return false;
+    }
+
+    Array<OneD, NekDouble> N1(3),N2(3);
+    NekDouble d1,d2;
+
+    N1[0] = (ns1[1]->m_y -ns1[0]->m_y)*(ns1[2]->m_z -ns1[0]->m_z)-
+            (ns1[2]->m_y -ns1[0]->m_y)*(ns1[1]->m_z -ns1[0]->m_z);
+    N1[1] = -1.0*((ns1[1]->m_x -ns1[0]->m_x)*(ns1[2]->m_z -ns1[0]->m_z)-
+                  (ns1[2]->m_x -ns1[0]->m_x)*(ns1[1]->m_z -ns1[0]->m_z));
+    N1[2] = (ns1[1]->m_x -ns1[0]->m_x)*(ns1[2]->m_y -ns1[0]->m_y)-
+            (ns1[2]->m_x -ns1[0]->m_x)*(ns1[1]->m_y -ns1[0]->m_y);
+
+    N2[0] = (ns2[1]->m_y -ns2[0]->m_y)*(ns2[2]->m_z -ns2[0]->m_z)-
+            (ns2[2]->m_y -ns2[0]->m_y)*(ns2[1]->m_z -ns2[0]->m_z);
+    N2[1] = -1.0*((ns2[1]->m_x -ns2[0]->m_x)*(ns2[2]->m_z -ns2[0]->m_z)-
+                  (ns2[2]->m_x -ns2[0]->m_x)*(ns2[1]->m_z -ns2[0]->m_z));
+    N2[2] = (ns2[1]->m_x -ns2[0]->m_x)*(ns2[2]->m_y -ns2[0]->m_y)-
+            (ns2[2]->m_x -ns2[0]->m_x)*(ns2[1]->m_y -ns2[0]->m_y);
+
+    d1 = -1.0*(N1[0]*ns1[0]->m_x + N1[1]*ns1[0]->m_y + N1[2]*ns1[0]->m_z);
+    d2 = -1.0*(N2[0]*ns2[0]->m_x + N2[1]*ns2[0]->m_y + N2[2]*ns2[0]->m_z);
+
+    Array<OneD, NekDouble> dv1(3), dv2(3);
+
+    dv1[0] = N2[0]*ns1[0]->m_x + N2[1]*ns1[0]->m_y + N2[2]*ns1[0]->m_z +d2;
+    dv1[1] = N2[0]*ns1[1]->m_x + N2[1]*ns1[1]->m_y + N2[2]*ns1[1]->m_z +d2;
+    dv1[2] = N2[0]*ns1[2]->m_x + N2[1]*ns1[2]->m_y + N2[2]*ns1[2]->m_z +d2;
+
+    dv2[0] = N1[0]*ns2[0]->m_x + N1[1]*ns2[0]->m_y + N1[2]*ns2[0]->m_z +d1;
+    dv2[1] = N1[0]*ns2[1]->m_x + N1[1]*ns2[1]->m_y + N1[2]*ns2[1]->m_z +d1;
+    dv2[2] = N1[0]*ns2[2]->m_x + N1[1]*ns2[2]->m_y + N1[2]*ns2[2]->m_z +d1;
+
+    if(sign(dv1[0],dv1[1]) && sign(dv1[1],dv1[2]))
+    {
+        return false;
+    }
+    if(sign(dv2[0],dv2[1]) && sign(dv2[1],dv2[2]))
+    {
+        return false;
+    }
+
+    Array<OneD, NekDouble> D(3);
+    D[0] = N1[1]*N2[2] - N1[2]*N2[1];
+    D[1] = -1.0*(N1[0]*N2[2] - N1[2]*N2[0]);
+    D[2] = N1[0]*N2[1] - N1[0]*N2[1];
+
+    int base1=0, base2=0;
+    if(!sign(dv2[0],dv2[1]) && sign(dv2[1],dv2[2]))
+    {
+        base2 = 0;
+    }
+    else if(!sign(dv2[1],dv2[2]) && sign(dv2[2],dv2[0]))
+    {
+        base2 = 1;
+    }
+    else if(!sign(dv2[2],dv2[0]) && sign(dv2[0],dv2[1]))
+    {
+        base2 = 2;
+    }
+    else
+    {
+        cout << "base not set" << endl;
+    }
+
+    if(!sign(dv1[0],dv1[1]) && sign(dv1[1],dv1[2]))
+    {
+        base1 = 0;
+    }
+    else if(!sign(dv1[1],dv1[2]) && sign(dv1[2],dv1[0]))
+    {
+        base1 = 1;
+    }
+    else if(!sign(dv1[2],dv1[0]) && sign(dv1[0],dv1[1]))
+    {
+        base1 = 2;
+    }
+    else
+    {
+        cout << "base not set" << endl;
+    }
+
+    Array<OneD, NekDouble> p1(3),p2(3);
+
+    p1[0] = D[0]*ns1[0]->m_x + D[1]*ns1[0]->m_y + D[2]*ns1[0]->m_z;
+    p1[1] = D[0]*ns1[1]->m_x + D[1]*ns1[1]->m_y + D[2]*ns1[1]->m_z;
+    p1[2] = D[0]*ns1[2]->m_x + D[1]*ns1[2]->m_y + D[2]*ns1[2]->m_z;
+
+    p2[0] = D[0]*ns2[0]->m_x + D[1]*ns2[0]->m_y + D[2]*ns2[0]->m_z;
+    p2[1] = D[0]*ns2[1]->m_x + D[1]*ns2[1]->m_y + D[2]*ns2[1]->m_z;
+    p2[2] = D[0]*ns2[2]->m_x + D[1]*ns2[2]->m_y + D[2]*ns2[2]->m_z;
+
+    NekDouble t11, t12, t21, t22;
+    int o1=0, o2=0;
+    if(base1 == 0)
+    {
+        o1 = 1;
+        o2 = 2;
+    }
+    else if(base1 == 1)
+    {
+        o1 = 2;
+        o2 = 0;
+    }
+    else if(base1 == 2)
+    {
+        o1 = 0;
+        o2 = 1;
+    }
+
+    t11 = p1[o1] + (p1[base1] - p1[o1]) * dv1[o1] / (dv1[o1] - dv1[base1]);
+    t12 = p1[o2] + (p1[base1] - p1[o2]) * dv1[o2] / (dv1[o2] - dv1[base1]);
+
+    if(base2 == 0)
+    {
+        o1 = 1;
+        o2 = 2;
+    }
+    else if(base2 == 1)
+    {
+        o1 = 2;
+        o2 = 0;
+    }
+    else if(base2 == 2)
+    {
+        o1 = 0;
+        o2 = 1;
+    }
+
+    t21 = p2[o1] + (p2[base2] - p2[o1]) * dv2[o1] / (dv2[o1] - dv2[base1]);
+    t22 = p2[o2] + (p2[base2] - p2[o2]) * dv2[o2] / (dv2[o2] - dv2[base1]);
+
+    if(t11 > t12)
+    {
+        swap(t11,t12);
+    }
+    if(t21 > t22)
+    {
+        swap(t21,t22);
+    }
+
+    cout << endl;
+    cout << dv1[0] << " " << dv1[1] << " " << dv1[2] << " : " << dv2[0] << " " << dv2[1] << " " << dv2[2] << endl;
+    cout << base1 << " " << base2 << endl;
+    cout << t11 << " " << t12 << " : " << t21 << " " << t22 << endl;
+
+    if(!sign(t21-t11,t22-t11))
+    {
+        exit(-1);
         return true;
     }
 
@@ -416,6 +669,116 @@ void BLMesh::Shrink()
             }
         }
     }
+
+    /*vector<ElementSharedPtr> elsInRtree;
+    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
+    {
+        ElementSharedPtr el = m_mesh->m_element[2][i];
+        vector<unsigned int>::iterator f = find(m_blsurfs.begin(),
+                                                m_blsurfs.end(),
+                                                el->CADSurfId);
+
+        vector<unsigned int>::iterator s = find(m_symSurfs.begin(),
+                                                m_symSurfs.end(),
+                                                el->CADSurfId);
+
+        if(f == m_blsurfs.end() && s == m_symSurfs.end())
+        {
+            elsInRtree.push_back(m_mesh->m_element[2][i]);
+        }
+    }
+    for(int i = 0; i < m_psuedoSurface.size(); i++)
+    {
+        elsInRtree.push_back(m_psuedoSurface[i]);
+    }
+
+    bgi::rtree<boxI, bgi::quadratic<16> > rtree;
+    smsh = true;
+    m_mesh->m_element[2].clear();
+    while(smsh)
+    {
+        smsh = false;
+
+        rtree.clear();
+        vector<boxI> inserts;
+        for(int i = 0; i < elsInRtree.size(); i++)
+        {
+            inserts.push_back(make_pair(GetBox(elsInRtree[i]),i));
+        }
+        rtree.insert(inserts.begin(), inserts.end());
+
+        vector<ElementSharedPtr> intr;
+        for(int i = 0; i < m_mesh->m_element[3].size(); i++)
+        {
+            ElementSharedPtr el = m_mesh->m_element[3][i];
+            ElementSharedPtr t = m_priToTri[el];
+            vector<boxI> intersects;
+            rtree.query(bgi::intersects(GetBox(t)),back_inserter(intersects));
+            for(int j = 0; j < intersects.size(); j++)
+            {
+                if(TestIntersectionEl(elsInRtree[j].second],t))
+                {
+                    intr.push_back(el);
+                    m_mesh->m_element[2].push_back(elsInRtree[intersects[j].second]);
+                    m_mesh->m_element[2].push_back(t);
+                    m_mesh->m_element[3].clear();
+                    m_mesh->m_expDim--;
+                    return;
+                }
+            }
+        }
+
+        cout << intr.size() << endl;
+
+        /*smsh = (intr.size() > 0);
+
+        for(int i = 0; i < intr.size(); i++)
+        {
+            ElementSharedPtr t = m_priToTri[intr[i]];
+            vector<blInfoSharedPtr> bls;
+            vector<NodeSharedPtr> ns = t->GetVertexList();
+            for(int j = 0; j < ns.size(); j++)
+            {
+                bls.push_back(m_blData[ns[j]]);
+            }
+
+            int mx = 0;
+            for(int j = 0; j < 3; j++)
+            {
+                mx = max(mx,bls[j]->bl);
+            }
+            for(int j = 0; j < 3; j++)
+            {
+                if(bls[j]->bl < mx || bls[j]->bl == 0)
+                {
+                    continue;
+                }
+                bls[j]->bl--;
+                bls[j]->AlignNode(m_layerT[bls[j]->bl]);
+            }
+        }
+        bool repeat = true;
+        while(repeat)
+        {
+            repeat = false;
+            for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
+            {
+                vector<blInfoSharedPtr> infos = m_nToNInfo[bit->first];
+                for(int i = 0; i < infos.size(); i++)
+                {
+                    if(bit->second->bl > infos[i]->bl + 1)
+                    {
+                        bit->second->bl--;
+                        bit->second->AlignNode(m_layerT[bit->second->bl]);
+                        repeat = true;
+                    }
+                }
+            }
+        }
+        m_mesh->m_element[3].clear();
+        m_mesh->m_expDim--;
+        return;
+    }*/
 }
 
 bool BLMesh::IsPrismValid(ElementSharedPtr el)

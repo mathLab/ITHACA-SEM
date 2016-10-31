@@ -101,6 +101,13 @@ void VolumeMesh::Process()
                                         m_config["blprog"].as<NekDouble>());
 
         blmesh->Mesh();
+        ClearElementLinks();
+        ProcessVertices();
+        ProcessEdges();
+        ProcessFaces();
+        ProcessElements();
+        ProcessComposites();
+        return;
 
         //remesh the correct surfaces
         vector<unsigned int> symsurfs = blmesh->GetSymSurfs();

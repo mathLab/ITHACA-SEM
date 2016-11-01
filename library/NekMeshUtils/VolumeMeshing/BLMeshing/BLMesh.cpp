@@ -142,9 +142,9 @@ void BLMesh::Mesh()
 
     BuildElements();
 
-    GrowLayers();
+    //GrowLayers();
 
-    Shrink();
+    //Shrink();
 
     vector<ElementSharedPtr> elsInRtree;
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
@@ -569,26 +569,23 @@ bool BLMesh::TestIntersectionEl(ElementSharedPtr e1, ElementSharedPtr e2)
         o2 = 1;
     }
 
-    t21 = p2[o1] + (p2[base2] - p2[o1]) * dv2[o1] / (dv2[o1] - dv2[base1]);
-    t22 = p2[o2] + (p2[base2] - p2[o2]) * dv2[o2] / (dv2[o2] - dv2[base1]);
+    t21 = p2[o1] + (p2[base2] - p2[o1]) * dv2[o1] / (dv2[o1] - dv2[base2]);
+    t22 = p2[o2] + (p2[base2] - p2[o2]) * dv2[o2] / (dv2[o2] - dv2[base2]);
 
     if(t11 > t12)
     {
-        swap(t11,t12);
+       swap(t11,t12);
     }
     if(t21 > t22)
     {
         swap(t21,t22);
     }
 
-    cout << endl;
-    cout << dv1[0] << " " << dv1[1] << " " << dv1[2] << " : " << dv2[0] << " " << dv2[1] << " " << dv2[2] << endl;
-    cout << base1 << " " << base2 << endl;
-    cout << t11 << " " << t12 << " : " << t21 << " " << t22 << endl;
+    //cout << t11 << " " << t12 << " : " << t21 << " " << t22 << endl;
 
-    if(!sign(t21-t11,t22-t11))
+    if(!sign(t21-t11,t22-t11) || !sign(t21-t12,t22-t12))
     {
-        exit(-1);
+        //exit(-1);
         return true;
     }
 
@@ -1157,7 +1154,7 @@ void BLMesh::Setup()
         Array<OneD, NekDouble> loc = bit->first->GetLoc();
         for(int k = 0; k < 3; k++)
         {
-            loc[k] += bit->second->N[k] * m_layerT[0];
+            loc[k] += bit->second->N[k] * m_layerT[m_layer-1];
         }
 
         bit->second->pNode = boost::shared_ptr<Node>(new Node(
@@ -1195,7 +1192,7 @@ void BLMesh::Setup()
         N[2] /= mag;
 
         bit->second->N = N;
-        bit->second->AlignNode(m_layerT[0]);
+        bit->second->AlignNode(m_layerT[m_layer-1]);
     }
 
 
@@ -1259,7 +1256,7 @@ void BLMesh::Setup()
             N[2] /= mag;
 
             bit->second->N = N;
-            bit->second->AlignNode(m_layerT[0]);
+            bit->second->AlignNode(m_layerT[m_layer-1]);
         }
     }
 

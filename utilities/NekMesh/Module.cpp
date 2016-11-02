@@ -327,8 +327,24 @@ void Module::ProcessFaces(bool ReprocessFaces)
         for (int j = 0; j < elmt->GetVertexCount(); ++j)
         {
             elmt->SetVertex(j, (*it)->m_vertexList[j], false);
-            //elmt->SetEdge(j, (*it)->m_edgeList[j], false);
+            elmt->SetEdge(j, (*it)->m_edgeList[j], false);
         }
+#ifdef NEKTAR_USE_MESHGEN
+        EdgeSet tmp(edgeList.begin(),edgeList.end());
+
+        for (int j = 0; j < elmt->GetEdgeCount(); ++j)
+        {
+            EdgeSharedPtr e = elmt->GetEdge(j);
+            EdgeSet::iterator f = tmp.find(e);
+            ASSERTL0(f != tmp.end(), "edge not in element");
+            if((*f)->onCurve)
+            {
+                e->onCurve = (*f)->onCurve;
+                e->CADCurveId = (*f)->CADCurveId;
+                e->CADCurve = (*f)->CADCurve;
+            }
+        }
+#endif
 
         // Update 3D element boundary map.
         pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);

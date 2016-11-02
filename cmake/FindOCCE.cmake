@@ -2,13 +2,20 @@
 
 set(TEST_ENV $ENV{OCE_ROOT})
 set(TEST_ENV1 $ENV{OCE_DIR})
+
+# First try to find OpenCASCADE Community Edition if not instruction has been given
 if(NOT DEFINED TEST_ENV AND NOT DEFINED TEST_ENV1)
-    message(STATUS "manually scan for oce")
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-        set(ENV{OCE_DIR} "/opt/local/Library/Frameworks")
-    elseif(UNIX)
-        set(ENV{OCE_DIR} "/usr/local/share/cmake/")
+  # Check for OSX needs to come first because UNIX evaluates to true on OSX
+  MESSAGE(STATUS "OCE_DIR or OCE_ROOT not set, manually searching for OCE")
+  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    if(DEFINED MACPORTS_PREFIX)
+      find_package(OCE 0.17 QUIET HINTS ${MACPORTS_PREFIX}/Library/Frameworks)
+    elseif(DEFINED HOMEBREW_PREFIX)
+      find_package(OCE 0.17 QUIET HINTS ${HOMEBREW_PREFIX}/Cellar/oce/*)
     endif()
+  elseif(UNIX)
+      set(ENV{OCE_DIR} "/usr/local/share/cmake/")
+  endif()
 endif()
 
 find_package(OCE 0.17 QUIET)

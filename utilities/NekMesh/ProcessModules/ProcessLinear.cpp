@@ -229,7 +229,7 @@ void ProcessLinear::Process()
             oct->m_spaceDim   = 3;
             oct->m_nummode    = 2;
 
-            dmp->m_mesh->m_element[3] = dumpEls;
+            dmp->m_element[3] = dumpEls;
 
             ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
                 ModuleKey(eOutputModule, "xml"), dmp);

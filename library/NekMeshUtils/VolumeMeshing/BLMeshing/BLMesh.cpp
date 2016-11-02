@@ -142,63 +142,9 @@ void BLMesh::Mesh()
 
     BuildElements();
 
-    //GrowLayers();
+    GrowLayers();
 
     //Shrink();
-
-    vector<ElementSharedPtr> elsInRtree;
-    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
-    {
-        ElementSharedPtr el = m_mesh->m_element[2][i];
-        vector<unsigned int>::iterator f = find(m_blsurfs.begin(),
-                                                m_blsurfs.end(),
-                                                el->CADSurfId);
-
-        vector<unsigned int>::iterator s = find(m_symSurfs.begin(),
-                                                m_symSurfs.end(),
-                                                el->CADSurfId);
-
-        if(f == m_blsurfs.end() && s == m_symSurfs.end())
-        {
-            elsInRtree.push_back(m_mesh->m_element[2][i]);
-        }
-    }
-    for(int i = 0; i < m_psuedoSurface.size(); i++)
-    {
-        elsInRtree.push_back(m_psuedoSurface[i]);
-    }
-
-    bgi::rtree<boxI, bgi::quadratic<16> > rtree;
-
-    rtree.clear();
-    vector<boxI> inserts;
-    for(int i = 0; i < elsInRtree.size(); i++)
-    {
-        inserts.push_back(make_pair(GetBox(elsInRtree[i]),i));
-    }
-    rtree.insert(inserts.begin(), inserts.end());
-
-    m_mesh->m_element[2].clear();
-    vector<ElementSharedPtr> intr;
-    for(int i = 0; i < m_mesh->m_element[3].size(); i++)
-    {
-        ElementSharedPtr el = m_mesh->m_element[3][i];
-        ElementSharedPtr t = m_priToTri[el];
-        vector<boxI> intersects;
-        rtree.query(bgi::intersects(GetBox(t)),back_inserter(intersects));
-        for(int j = 0; j < intersects.size(); j++)
-        {
-            if(TestIntersectionEl(elsInRtree[intersects[j].second],t))
-            {
-                cout << "hit" << endl;
-                m_mesh->m_element[2].push_back(elsInRtree[intersects[j].second]);
-                m_mesh->m_element[2].push_back(t);
-
-            }
-        }
-    }
-    m_mesh->m_expDim--;
-    return;
 
     map<NodeSharedPtr, blInfoSharedPtr>::iterator bit;
     for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
@@ -581,13 +527,28 @@ bool BLMesh::TestIntersectionEl(ElementSharedPtr e1, ElementSharedPtr e2)
         swap(t21,t22);
     }
 
-    //cout << t11 << " " << t12 << " : " << t21 << " " << t22 << endl;
+    if(t21 < t11)
+    {
+        swap(t11,t21);
+        swap(t12,t22);
+    }
+
+    NekDouble sz = min(t22-t21,t12-t11);
 
     if(!sign(t21-t11,t22-t11) || !sign(t21-t12,t22-t12))
     {
         //exit(-1);
+        //cout << t11 << " " << t12 << " : " << t21 << " " << t22 << endl;
         return true;
     }
+
+    /*if(fabs(t21 - t12) < sz)
+    {
+        cout << t21 - t12 << " " << sz << endl;
+        //cout << "proximity" << endl;
+        //cout << t11 << " " << t12 << " : " << t21 << " " << t22 << endl;
+        return true;
+    }*/
 
     return false;
 }
@@ -667,7 +628,7 @@ void BLMesh::Shrink()
         }
     }
 
-    /*vector<ElementSharedPtr> elsInRtree;
+    vector<ElementSharedPtr> elsInRtree;
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[2][i];
@@ -713,21 +674,16 @@ void BLMesh::Shrink()
             rtree.query(bgi::intersects(GetBox(t)),back_inserter(intersects));
             for(int j = 0; j < intersects.size(); j++)
             {
-                if(TestIntersectionEl(elsInRtree[j].second],t))
+                if(TestIntersectionEl(elsInRtree[intersects[j].second],t))
                 {
                     intr.push_back(el);
-                    m_mesh->m_element[2].push_back(elsInRtree[intersects[j].second]);
-                    m_mesh->m_element[2].push_back(t);
-                    m_mesh->m_element[3].clear();
-                    m_mesh->m_expDim--;
-                    return;
                 }
             }
         }
 
         cout << intr.size() << endl;
 
-        /*smsh = (intr.size() > 0);
+        smsh = (intr.size() > 0);
 
         for(int i = 0; i < intr.size(); i++)
         {
@@ -744,9 +700,10 @@ void BLMesh::Shrink()
             {
                 mx = max(mx,bls[j]->bl);
             }
+            ASSERTL0(mx > 0,"shrinking to nothing");
             for(int j = 0; j < 3; j++)
             {
-                if(bls[j]->bl < mx || bls[j]->bl == 0)
+                if(bls[j]->bl < mx)
                 {
                     continue;
                 }
@@ -772,10 +729,8 @@ void BLMesh::Shrink()
                 }
             }
         }
-        m_mesh->m_element[3].clear();
-        m_mesh->m_expDim--;
         return;
-    }*/
+    }
 }
 
 bool BLMesh::IsPrismValid(ElementSharedPtr el)
@@ -1154,7 +1109,7 @@ void BLMesh::Setup()
         Array<OneD, NekDouble> loc = bit->first->GetLoc();
         for(int k = 0; k < 3; k++)
         {
-            loc[k] += bit->second->N[k] * m_layerT[m_layer-1];
+            loc[k] += bit->second->N[k] * m_layerT[0];
         }
 
         bit->second->pNode = boost::shared_ptr<Node>(new Node(
@@ -1192,7 +1147,7 @@ void BLMesh::Setup()
         N[2] /= mag;
 
         bit->second->N = N;
-        bit->second->AlignNode(m_layerT[m_layer-1]);
+        bit->second->AlignNode(m_layerT[0]);
     }
 
 
@@ -1256,7 +1211,7 @@ void BLMesh::Setup()
             N[2] /= mag;
 
             bit->second->N = N;
-            bit->second->AlignNode(m_layerT[m_layer-1]);
+            bit->second->AlignNode(m_layerT[0]);
         }
     }
 

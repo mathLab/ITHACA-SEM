@@ -336,12 +336,15 @@ void Module::ProcessFaces(bool ReprocessFaces)
         {
             EdgeSharedPtr e = elmt->GetEdge(j);
             EdgeSet::iterator f = tmp.find(e);
-            ASSERTL0(f != tmp.end(), "edge not in element");
-            if((*f)->onCurve)
+            if(f != tmp.end())
             {
-                e->onCurve = (*f)->onCurve;
-                e->CADCurveId = (*f)->CADCurveId;
-                e->CADCurve = (*f)->CADCurve;
+                if((*f)->onCurve)
+                {
+                    cout << "hit" << endl;
+                    e->onCurve = (*f)->onCurve;
+                    e->CADCurveId = (*f)->CADCurveId;
+                    e->CADCurve = (*f)->CADCurve;
+                }
             }
         }
 #endif

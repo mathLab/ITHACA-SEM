@@ -114,6 +114,14 @@ bool Dummy::v_PreIntegrate(int step)
 
     m_coupling->ReceiveInterp(step, m_time, m_recFields);
 
+    for (int i = 0; i < m_recFields.num_elements(); ++i)
+    {
+        NekDouble intVal = m_fields[0]->PhysIntegral(m_recFields[i]);
+        m_comm->AllReduce(intVal, LibUtilities::ReduceSum);
+        cout << "Integral of received field " << i;
+        cout << " = " << intVal << endl;
+    }
+
     return UnsteadySystem::v_PreIntegrate(step);
 }
 

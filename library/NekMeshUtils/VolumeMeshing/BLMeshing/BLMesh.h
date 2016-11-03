@@ -107,7 +107,6 @@ private:
     void GrowLayers();
     void Shrink();
     void BuildElements();
-    bool TestIntersectionBl(blInfoSharedPtr bl, ElementSharedPtr el);
     bool TestIntersectionEl(ElementSharedPtr e1, ElementSharedPtr e2);
     bool IsPrismValid(ElementSharedPtr el);
 

@@ -84,58 +84,6 @@ inline box GetBox(ElementSharedPtr el)
     return box(point(xmin,ymin,zmin),point(xmax,ymax,zmax));
 }
 
-inline box GetBox(BLMesh::blInfoSharedPtr bl)
-{
-    NekDouble xmin =        numeric_limits<double>::max(),
-              xmax = -1.0 * numeric_limits<double>::max(),
-              ymin =        numeric_limits<double>::max(),
-              ymax = -1.0 * numeric_limits<double>::max(),
-              zmin =        numeric_limits<double>::max(),
-              zmax = -1.0 * numeric_limits<double>::max();
-
-    xmin = min(xmin,bl->oNode->m_x);
-    xmax = max(xmax,bl->oNode->m_x);
-    ymin = min(ymin,bl->oNode->m_y);
-    ymax = max(ymax,bl->oNode->m_y);
-    zmin = min(zmin,bl->oNode->m_z);
-    zmax = max(zmax,bl->oNode->m_z);
-
-    xmin = min(xmin,bl->pNode->m_x);
-    xmax = max(xmax,bl->pNode->m_x);
-    ymin = min(ymin,bl->pNode->m_y);
-    ymax = max(ymax,bl->pNode->m_y);
-    zmin = min(zmin,bl->pNode->m_z);
-    zmax = max(zmax,bl->pNode->m_z);
-
-    return box(point(xmin,ymin,zmin),point(xmax,ymax,zmax));
-}
-
-inline box GetBox(EdgeSharedPtr e)
-{
-    NekDouble xmin =        numeric_limits<double>::max(),
-              xmax = -1.0 * numeric_limits<double>::max(),
-              ymin =        numeric_limits<double>::max(),
-              ymax = -1.0 * numeric_limits<double>::max(),
-              zmin =        numeric_limits<double>::max(),
-              zmax = -1.0 * numeric_limits<double>::max();
-
-    xmin = min(xmin,e->m_n1->m_x);
-    xmax = max(xmax,e->m_n1->m_x);
-    ymin = min(ymin,e->m_n1->m_y);
-    ymax = max(ymax,e->m_n1->m_y);
-    zmin = min(zmin,e->m_n1->m_z);
-    zmax = max(zmax,e->m_n1->m_z);
-
-    xmin = min(xmin,e->m_n2->m_x);
-    xmax = max(xmax,e->m_n2->m_x);
-    ymin = min(ymin,e->m_n2->m_y);
-    ymax = max(ymax,e->m_n2->m_y);
-    zmin = min(zmin,e->m_n2->m_z);
-    zmax = max(zmax,e->m_n2->m_z);
-
-    return box(point(xmin,ymin,zmin),point(xmax,ymax,zmax));
-}
-
 void BLMesh::Mesh()
 {
     Setup();
@@ -144,7 +92,7 @@ void BLMesh::Mesh()
 
     GrowLayers();
 
-    //Shrink();
+    Shrink();
 
     map<NodeSharedPtr, blInfoSharedPtr>::iterator bit;
     for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
@@ -227,10 +175,6 @@ void BLMesh::GrowLayers()
     }
 
     vector<boxI> inserts;
-    for(int i = 0; i < elsInRtree.size(); i++)
-    {
-        inserts.push_back(make_pair(GetBox(elsInRtree[i]),i));
-    }
     bgi::rtree<boxI, bgi::quadratic<16> > rtree;
 
     //ofstream file3;
@@ -278,22 +222,28 @@ void BLMesh::GrowLayers()
         {
             if(!bit->second->stop && !bit->second->stopped)
             {
-                vector<boxI> intersects;
-                rtree.query(bgi::intersects(GetBox(bit->second)), back_inserter(intersects));
-
-                for(int i = 0; i < intersects.size(); i++)
+                bool hit = false;
+                for(int i = 0; i < bit->second->pEls.size(); i++)
                 {
-                    set<int>::iterator f = bit->second->pId.find(intersects[i].second);
-                    if(f != bit->second->pId.end())
+                    vector<boxI> intersects;
+                    rtree.query(bgi::intersects(GetBox(bit->second->pEls[i])), back_inserter(intersects));
+
+                    for(int j = 0; j < intersects.size(); j++)
                     {
-                        continue;
+                        set<int>::iterator f = bit->second->pId.find(intersects[j].second);
+                        if(f != bit->second->pId.end())
+                        {
+                            continue;
+                        }
+                        if(TestIntersectionEl(bit->second->pEls[i],elsInRtree[intersects[i].second]))
+                        {
+                            hit = true;
+                            cout << "hit " << l << endl;
+                            bit->second->stop = true;
+                            break;
+                        }
                     }
-                    if(TestIntersectionBl(bit->second,elsInRtree[intersects[i].second]))
-                    {
-                        //file3 << bit->second->oNode->m_x << " " << bit->second->oNode->m_y << " " << bit->second->oNode->m_z << " " << 1 << endl;
-                        bit->second->stop = true;
-                        break;
-                    }
+                    if(hit) break;
                 }
             }
         }
@@ -309,68 +259,6 @@ void BLMesh::GrowLayers()
             }
         }
     }
-}
-
-inline bool TestIntersection(Array<OneD, NekDouble> &A, Array<OneD, NekDouble> &B)
-{
-    NekDouble det = A[0] * (A[4]*A[8] - A[7]*A[5])
-                   -A[3] * (A[1]*A[8] - A[7]*A[2])
-                   +A[6] * (A[1]*A[5] - A[4]*A[2]);
-
-    if(fabs(det) < numeric_limits<double>::epsilon())
-    {
-        return false;
-    }
-
-    NekDouble X0,X1,X2;
-
-    X0 = B[0] * (A[4]*A[8] - A[7]*A[5])
-        -A[3] * (B[1]*A[8] - A[7]*B[2])
-        +A[6] * (B[1]*A[5] - A[4]*B[2]);
-
-    X1 = A[0] * (B[1]*A[8] - A[7]*B[2])
-        -B[0] * (A[1]*A[8] - A[7]*A[2])
-        +A[6] * (A[1]*B[2] - B[1]*A[2]);
-
-    X2 = A[0] * (A[4]*B[2] - B[1]*A[5])
-        -A[3] * (A[1]*B[2] - B[1]*A[2])
-        +B[0] * (A[1]*A[5] - A[4]*A[2]);
-
-    X0 /= det;
-    X1 /= det;
-    X2 /= det;
-
-    //check triangle intersecton
-    if(X1 > 0.0 && X2 > 0.0 && X1 + X2 < 1.0
-       && X0 > 0.0 && X0 < 1.0)
-    {
-        return true;
-    }
-
-    return false;
-}
-
-bool BLMesh::TestIntersectionBl(blInfoSharedPtr bl, ElementSharedPtr el)
-{
-    vector<NodeSharedPtr> ns = el->GetVertexList();
-    Array<OneD, NekDouble> A(9), B(3);
-
-    A[3] = ns[1]->m_x - ns[0]->m_x;
-    A[4] = ns[1]->m_y - ns[0]->m_y;
-    A[5] = ns[1]->m_z - ns[0]->m_z;
-    A[6] = ns[2]->m_x - ns[0]->m_x;
-    A[7] = ns[2]->m_y - ns[0]->m_y;
-    A[8] = ns[2]->m_z - ns[0]->m_z;
-
-    A[0] = (bl->pNode->m_x - bl->oNode->m_x) * -1.0;
-    A[1] = (bl->pNode->m_y - bl->oNode->m_y) * -1.0;
-    A[2] = (bl->pNode->m_z - bl->oNode->m_z) * -1.0;
-
-    B[0] = bl->oNode->m_x - ns[0]->m_x;
-    B[1] = bl->oNode->m_y - ns[0]->m_y;
-    B[2] = bl->oNode->m_z - ns[0]->m_z;
-
-    return TestIntersection(A,B);
 }
 
 inline bool sign(NekDouble a, NekDouble b)
@@ -533,22 +421,10 @@ bool BLMesh::TestIntersectionEl(ElementSharedPtr e1, ElementSharedPtr e2)
         swap(t12,t22);
     }
 
-    NekDouble sz = min(t22-t21,t12-t11);
-
     if(!sign(t21-t11,t22-t11) || !sign(t21-t12,t22-t12))
     {
-        //exit(-1);
-        //cout << t11 << " " << t12 << " : " << t21 << " " << t22 << endl;
         return true;
     }
-
-    /*if(fabs(t21 - t12) < sz)
-    {
-        cout << t21 - t12 << " " << sz << endl;
-        //cout << "proximity" << endl;
-        //cout << t11 << " " << t12 << " : " << t21 << " " << t22 << endl;
-        return true;
-    }*/
 
     return false;
 }
@@ -626,110 +502,6 @@ void BLMesh::Shrink()
                 }
             }
         }
-    }
-
-    vector<ElementSharedPtr> elsInRtree;
-    for(int i = 0; i < m_mesh->m_element[2].size(); i++)
-    {
-        ElementSharedPtr el = m_mesh->m_element[2][i];
-        vector<unsigned int>::iterator f = find(m_blsurfs.begin(),
-                                                m_blsurfs.end(),
-                                                el->CADSurfId);
-
-        vector<unsigned int>::iterator s = find(m_symSurfs.begin(),
-                                                m_symSurfs.end(),
-                                                el->CADSurfId);
-
-        if(f == m_blsurfs.end() && s == m_symSurfs.end())
-        {
-            elsInRtree.push_back(m_mesh->m_element[2][i]);
-        }
-    }
-    for(int i = 0; i < m_psuedoSurface.size(); i++)
-    {
-        elsInRtree.push_back(m_psuedoSurface[i]);
-    }
-
-    bgi::rtree<boxI, bgi::quadratic<16> > rtree;
-    smsh = true;
-    m_mesh->m_element[2].clear();
-    while(smsh)
-    {
-        smsh = false;
-
-        rtree.clear();
-        vector<boxI> inserts;
-        for(int i = 0; i < elsInRtree.size(); i++)
-        {
-            inserts.push_back(make_pair(GetBox(elsInRtree[i]),i));
-        }
-        rtree.insert(inserts.begin(), inserts.end());
-
-        vector<ElementSharedPtr> intr;
-        for(int i = 0; i < m_mesh->m_element[3].size(); i++)
-        {
-            ElementSharedPtr el = m_mesh->m_element[3][i];
-            ElementSharedPtr t = m_priToTri[el];
-            vector<boxI> intersects;
-            rtree.query(bgi::intersects(GetBox(t)),back_inserter(intersects));
-            for(int j = 0; j < intersects.size(); j++)
-            {
-                if(TestIntersectionEl(elsInRtree[intersects[j].second],t))
-                {
-                    intr.push_back(el);
-                }
-            }
-        }
-
-        cout << intr.size() << endl;
-
-        smsh = (intr.size() > 0);
-
-        for(int i = 0; i < intr.size(); i++)
-        {
-            ElementSharedPtr t = m_priToTri[intr[i]];
-            vector<blInfoSharedPtr> bls;
-            vector<NodeSharedPtr> ns = t->GetVertexList();
-            for(int j = 0; j < ns.size(); j++)
-            {
-                bls.push_back(m_blData[ns[j]]);
-            }
-
-            int mx = 0;
-            for(int j = 0; j < 3; j++)
-            {
-                mx = max(mx,bls[j]->bl);
-            }
-            ASSERTL0(mx > 0,"shrinking to nothing");
-            for(int j = 0; j < 3; j++)
-            {
-                if(bls[j]->bl < mx)
-                {
-                    continue;
-                }
-                bls[j]->bl--;
-                bls[j]->AlignNode(m_layerT[bls[j]->bl]);
-            }
-        }
-        bool repeat = true;
-        while(repeat)
-        {
-            repeat = false;
-            for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
-            {
-                vector<blInfoSharedPtr> infos = m_nToNInfo[bit->first];
-                for(int i = 0; i < infos.size(); i++)
-                {
-                    if(bit->second->bl > infos[i]->bl + 1)
-                    {
-                        bit->second->bl--;
-                        bit->second->AlignNode(m_layerT[bit->second->bl]);
-                        repeat = true;
-                    }
-                }
-            }
-        }
-        return;
     }
 }
 

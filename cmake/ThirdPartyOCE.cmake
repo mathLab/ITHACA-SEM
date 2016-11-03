@@ -8,7 +8,7 @@
 
 IF(NEKTAR_USE_MESHGEN)
     # Try to find installed version of OpenCascade
-    INCLUDE(FindOCCE)
+    INCLUDE(FindOCC)
 
     IF (OCE_FOUND)
         SET(BUILD_OCE OFF)
@@ -57,10 +57,11 @@ IF(NEKTAR_USE_MESHGEN)
             )
 
         # Patch OS X libraries to fix install name problems.
-        EXTERNALPROJECT_ADD_STEP(oce-0.17 patch-install-path
-            COMMAND bash ${CMAKE_SOURCE_DIR}/cmake/scripts/patch-occ.sh ${TPDIST}/lib ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}
-            ALWAYS 1
-            DEPENDEES install)
+        IF(APPLE)
+            EXTERNALPROJECT_ADD_STEP(oce-0.17 patch-install-path
+                COMMAND bash ${CMAKE_SOURCE_DIR}/cmake/scripts/patch-occ.sh ${TPDIST}/lib ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}
+                DEPENDEES install)
+        ENDIF()
 
         MESSAGE(STATUS "Build OpenCascade community edition: ${TPDIST}/lib")
         LINK_DIRECTORIES(${TPDIST}/lib)

@@ -340,7 +340,6 @@ void Module::ProcessFaces(bool ReprocessFaces)
             {
                 if((*f)->onCurve)
                 {
-                    cout << "hit" << endl;
                     e->onCurve = (*f)->onCurve;
                     e->CADCurveId = (*f)->CADCurveId;
                     e->CADCurve = (*f)->CADCurve;

@@ -253,7 +253,7 @@ void SurfaceMesh::HOSurf()
     LibUtilities::PointsManager()[ekey]->GetPoints(gll);
 
     LibUtilities::PointsKey pkey(m_mesh->m_nummode,
-                                 LibUtilities::eNodalTriFekete);
+                                 LibUtilities::eNodalTriElec);
     Array<OneD, NekDouble> u, v;
 
     int nq = m_mesh->m_nummode;

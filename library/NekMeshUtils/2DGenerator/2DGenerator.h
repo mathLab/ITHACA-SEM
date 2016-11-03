@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SurfaceMeshing.cpp
+//  File: SurfaceMeshing.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,60 +29,42 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: surfacemeshing object methods.
+//  Description: class containing all surfacemeshing routines and classes.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "ProcessLoadCAD.h"
-#include <NekMeshUtils/CADSystem/CADSystem.h>
+#ifndef NEKMESHUTILS_2D_2D
+#define NEKMESHUTILS_2D_2D
 
-using namespace std;
+#include <NekMeshUtils/Module/Module.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-ModuleKey ProcessLoadCAD::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "loadcad"),
-    ProcessLoadCAD::create,
-    "Loads cad into m_mesh");
-
-ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
+/**
+ * @brief class containing all surface meshing routines methods and classes
+ */
+class Generator2D : public ProcessModule
 {
-    m_config["filename"] =
-        ConfigOption(false, "", "Generate prisms on these surfs");
-    m_config["2D"] =
-        ConfigOption(true, "", "allow 2d loading");
-}
+public:
 
-ProcessLoadCAD::~ProcessLoadCAD()
-{
-}
-
-void ProcessLoadCAD::Process()
-{
-    m_mesh->m_CADId = m_config["filename"].as<string>();
-
-    if (m_mesh->m_verbose)
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
-        cout << "Loading CAD for " << m_mesh->m_CADId << endl;
+        return MemoryManager<Generator2D>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
 
-    if(m_config["2D"].beenSet)
-    {
-        m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",m_mesh->m_CADId);
-    }
+    Generator2D(MeshSharedPtr m);
+    virtual ~Generator2D();
 
-    m_mesh->m_cad->Set2D();
+    virtual void Process();
 
-    ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
+};
 
-    m_mesh->m_hasCAD = true;
-
-    if (m_mesh->m_verbose)
-    {
-        m_mesh->m_cad->Report();
-    }
 }
 }
-}
+
+#endif

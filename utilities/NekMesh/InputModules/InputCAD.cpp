@@ -117,6 +117,7 @@ void InputCAD::ParseFile(string nm)
     it = information.find("MeshType");
     ASSERTL0(it != information.end(),"no meshtype defined");
     it->second == "BL" ? m_makeBL = true : m_makeBL = false;
+    it->second == "2D" ? m_2D = true : m_2D = false;
 
     it = parameters.find("MinDelta");
     ASSERTL0(it != parameters.end(),"no mindelta defined");
@@ -165,6 +166,11 @@ void InputCAD::Process()
         ModuleKey(eProcessModule, "loadcad"), m_mesh));
     mods.back()->RegisterConfig("filename", m_cadfile);
 
+    if(m_2D)
+    {
+        mods.back()->RegisterConfig("2D","");
+    }
+
     mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "loadoctree"), m_mesh));
     mods.back()->RegisterConfig("mindel", m_minDelta);
@@ -195,18 +201,28 @@ void InputCAD::Process()
         mods.back()->RegisterConfig("writeoctree",fn + "_oct.xml");
     }*/
 
-    mods.push_back(GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "surfacemesh"), m_mesh));
-
-    mods.push_back(GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "volumemesh"), m_mesh));
-    if(m_makeBL)
+    if(m_2D)
     {
-        mods.back()->RegisterConfig("blsurfs",m_blsurfs);
-        mods.back()->RegisterConfig("blthick",m_blthick);
-        mods.back()->RegisterConfig("bllayers",m_bllayers);
-        mods.back()->RegisterConfig("blprog",m_blprog);
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "2dgenerator"), m_mesh));
     }
+    else
+    {
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "surfacemesh"), m_mesh));
+
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "volumemesh"), m_mesh));
+        if(m_makeBL)
+        {
+            mods.back()->RegisterConfig("blsurfs",m_blsurfs);
+            mods.back()->RegisterConfig("blthick",m_blthick);
+            mods.back()->RegisterConfig("bllayers",m_bllayers);
+            mods.back()->RegisterConfig("blprog",m_blprog);
+        }
+    }
+
+
 
     /*mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh));

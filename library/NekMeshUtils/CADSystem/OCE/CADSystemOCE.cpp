@@ -267,7 +267,11 @@ bool CADSystemOCE::LoadCAD()
     for (map<int, vector<int> >::iterator it = adjsurfmap.begin();
          it != adjsurfmap.end(); it++)
     {
-        ASSERTL0(it->second.size() == 2, "no three curve surfaces");
+        if(!m_2d)
+        {
+            ASSERTL0(it->second.size() == 2, "no three curve surfaces");
+        }
+
         vector<CADSurfSharedPtr> sfs;
         for (int i = 0; i < it->second.size(); i++)
         {

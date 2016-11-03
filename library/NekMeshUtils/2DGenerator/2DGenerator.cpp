@@ -32,9 +32,10 @@
 //  Description: surfacemeshing object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
+#include <algorithm>
 
-#include "ProcessLoadCAD.h"
-#include <NekMeshUtils/CADSystem/CADSystem.h>
+#include <NekMeshUtils/2DGenerator/2DGenerator.h>
+
 
 using namespace std;
 namespace Nektar
@@ -42,47 +43,28 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-ModuleKey ProcessLoadCAD::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "loadcad"),
-    ProcessLoadCAD::create,
-    "Loads cad into m_mesh");
+ModuleKey Generator2D::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eProcessModule, "2dgenerator"),
+    Generator2D::create,
+    "Generates a 2D mesh");
 
-ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
+Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
 {
-    m_config["filename"] =
-        ConfigOption(false, "", "Generate prisms on these surfs");
-    m_config["2D"] =
-        ConfigOption(true, "", "allow 2d loading");
+
 }
 
-ProcessLoadCAD::~ProcessLoadCAD()
+Generator2D::~Generator2D()
 {
 }
 
-void ProcessLoadCAD::Process()
+void Generator2D::Process()
 {
-    m_mesh->m_CADId = m_config["filename"].as<string>();
+    cout << "hello julian" << endl;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "Loading CAD for " << m_mesh->m_CADId << endl;
-    }
-
-    if(m_config["2D"].beenSet)
-    {
-        m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",m_mesh->m_CADId);
-    }
-
-    m_mesh->m_cad->Set2D();
-
-    ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
-
-    m_mesh->m_hasCAD = true;
-
-    if (m_mesh->m_verbose)
-    {
-        m_mesh->m_cad->Report();
-    }
+    //a set of curvemeshes for the cad curve
+    //a set of facemeshes
 }
+
+
 }
 }

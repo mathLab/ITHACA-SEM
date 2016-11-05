@@ -86,8 +86,7 @@ public:
         int symsurf;
         bool onSym;
         std::vector<ElementSharedPtr> els;
-        std::vector<ElementSharedPtr> pEls;
-        std::set<int> pId;
+        std::set<int> surfs;
 
         bool stop;
         bool stopped;
@@ -109,6 +108,7 @@ private:
     void BuildElements();
     bool TestIntersectionEl(ElementSharedPtr e1, ElementSharedPtr e2);
     bool IsPrismValid(ElementSharedPtr el);
+    NekDouble Proximity(NodeSharedPtr n, ElementSharedPtr el);
 
     NekDouble Visability(std::vector<ElementSharedPtr> tris, Array<OneD, NekDouble> N);
     Array<OneD, NekDouble> GetNormal(std::vector<ElementSharedPtr> tris);
@@ -128,7 +128,6 @@ private:
     std::map<NodeSharedPtr, blInfoSharedPtr> m_blData;
     std::map<NodeSharedPtr, std::vector<blInfoSharedPtr> > m_nToNInfo; //node to neighbouring information
     std::map<ElementSharedPtr,ElementSharedPtr> m_priToTri;
-    std::map<ElementSharedPtr,ElementSharedPtr> m_priTopTri;
     std::vector<ElementSharedPtr> m_psuedoSurface;
     NekMatrix<NekDouble> m_deriv[3];
 

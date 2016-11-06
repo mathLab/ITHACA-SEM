@@ -146,6 +146,10 @@ void BLMesh::Mesh()
             cout << "validity error " << el->GetId() << endl;
         }
     }
+
+    /*m_mesh->m_element[2] = m_psuedoSurface;
+    m_mesh->m_element[3].clear();
+    m_mesh->m_expDim = 2;*/
 }
 
 map<NodeSharedPtr, NodeSharedPtr> BLMesh::GetSymNodes()
@@ -167,6 +171,25 @@ map<NodeSharedPtr, NodeSharedPtr> BLMesh::GetSymNodes()
         ret[bit->first] = bit->second->pNode;
     }
     return ret;
+}
+
+inline bool Infont(NodeSharedPtr n, ElementSharedPtr el)
+{
+    vector<NodeSharedPtr> ns1 = el->GetVertexList();
+    Array<OneD, NekDouble> N1(3);
+    N1[0] = (ns1[1]->m_y -ns1[0]->m_y)*(ns1[2]->m_z -ns1[0]->m_z)-
+            (ns1[2]->m_y -ns1[0]->m_y)*(ns1[1]->m_z -ns1[0]->m_z);
+    N1[1] = -1.0*((ns1[1]->m_x -ns1[0]->m_x)*(ns1[2]->m_z -ns1[0]->m_z)-
+                  (ns1[2]->m_x -ns1[0]->m_x)*(ns1[1]->m_z -ns1[0]->m_z));
+    N1[2] = (ns1[1]->m_x -ns1[0]->m_x)*(ns1[2]->m_y -ns1[0]->m_y)-
+            (ns1[2]->m_x -ns1[0]->m_x)*(ns1[1]->m_y -ns1[0]->m_y);
+
+    Array<OneD, NekDouble> V(3);
+    V[0] = n->m_x - ns1[0]->m_x;
+    V[1] = n->m_x - ns1[1]->m_x;
+    V[2] = n->m_x - ns1[2]->m_x;
+
+    return N1[0]*V[0] + N1[1]*V[1] + N1[2]*V[2] > 0.0;
 }
 
 void BLMesh::GrowLayers()
@@ -208,8 +231,13 @@ void BLMesh::GrowLayers()
     bgi::rtree<boxI, bgi::quadratic<16> > TopTree;
     map<int, bgi::rtree<boxI, bgi::quadratic<16> > > SubTrees;
 
-    for(int l = 1; l < m_layer; l++)
+    ofstream file;
+    file.open("pts.3D");
+    file << "x y z value" << endl;
+
+    for(int l = 1; l < 2; l++)
     {
+        NekDouble delta = (m_layerT[l] - m_layerT[l-1]);
         TopTree.clear();
         SubTrees.clear();
         map<int, vector<ElementSharedPtr> >::iterator it;
@@ -224,12 +252,13 @@ void BLMesh::GrowLayers()
             SubTrees[it->first].insert(toInsert.begin(),toInsert.end());
         }
 
-        ofstream file;
-        file.open("pts.3D");
-        file << "x y z value" << endl;
-
         for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
         {
+            if(bit->second->stopped)
+            {
+                continue;
+            }
+
             vector<boxI> results;
             TopTree.query(bgi::intersects(point(bit->second->pNode->m_x,
                                                 bit->second->pNode->m_y,
@@ -248,6 +277,7 @@ void BLMesh::GrowLayers()
 
             set<int>::iterator iit;
             NekDouble mn = numeric_limits<double>::max();
+            bool res = false;
             for(iit = surfs.begin(); iit != surfs.end(); iit++)
             {
                 results.clear();
@@ -255,21 +285,55 @@ void BLMesh::GrowLayers()
                                                 back_inserter(results));
                 for(int i = 0; i < results.size(); i++)
                 {
-                    cout << Proximity(bit->second->pNode,psElements[*iit][results[i].second]) << endl;
-                    mn = min(mn,Proximity(bit->second->pNode,psElements[*iit][results[i].second]));
+                    if(!Infont(bit->second->pNode,psElements[*iit][results[i].second]))
+                    {
+                        NekDouble prox = Proximity(bit->second->pNode,psElements[*iit][results[i].second]);
+                        if(prox < delta)
+                        {
+                            res = true;
+                            mn = min(mn,Proximity(bit->second->pNode,psElements[*iit][results[i].second]));
+                        }
+                    }
                 }
             }
-            if(surfs.size() > 0)
+            if(res)
             {
-                file << bit->first->m_x << " " << bit->first->m_y << " " << bit->first->m_z << " " << mn << endl;
+                cout << "hit" << endl;
+                bit->second->stopped = true;
+                file << bit->first->m_x << " " << bit->first->m_y << " " << bit->first->m_z << " " << l << endl;
             }
         }
 
-        file.close();
-        exit(-1);
+        //if after proximity scanning all is okay, advance the layer
+        for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
+        {
+            if(bit->second->stopped)
+            {
+                continue;
+            }
+
+            //test the smoothness
+            bool shouldStop = false;
+            vector<blInfoSharedPtr> ne = m_nToNInfo[bit->first];
+            for(int i = 0; i < ne.size(); i++)
+            {
+                if(ne[i]->bl < bit->second->bl)
+                {
+                    shouldStop = true;
+                    break;
+                }
+            }
+            if(shouldStop)
+            {
+                bit->second->stopped = true;
+                continue;
+            }
+
+            bit->second->AlignNode(m_layerT[l]);
+            bit->second->bl = l;
+        }
     }
-
-
+    file.close();
 }
 
 inline bool sign(NekDouble a, NekDouble b)
@@ -912,7 +976,6 @@ void BLMesh::Setup()
             blInfoSharedPtr bln = boost::shared_ptr<blInfo>(new blInfo);
             bln->oNode = (*it);
             bln->stopped = false;
-            bln->stop = false;
 
             //file1 << (*it)->m_x << " " << (*it)->m_y << " " << (*it)->m_z << " " << ss.size() << endl;
 

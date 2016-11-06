@@ -88,7 +88,6 @@ public:
         std::vector<ElementSharedPtr> els;
         std::set<int> surfs;
 
-        bool stop;
         bool stopped;
 
         void AlignNode(NekDouble t)

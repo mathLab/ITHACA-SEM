@@ -35,6 +35,7 @@
 
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/QuadExp.h>
@@ -44,6 +45,14 @@
 #include <NekMeshUtils/MeshElements/Element.h>
 
 #include "ProcessSpherigon.h"
+
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/index/rtree.hpp>
+
+namespace bg  = boost::geometry;
+namespace bgi = boost::geometry::index;
 
 using namespace std;
 using namespace Nektar::NekMeshUtils;
@@ -212,6 +221,70 @@ void ProcessSpherigon::SuperBlend(vector<double> &r,
     }
 }
 
+void ProcessSpherigon::FindNormalFromPlyFile(MeshSharedPtr &plymesh,
+                                             map<int,NodeSharedPtr> &surfverts)
+{
+    int      cnt = 0;
+    int      j;
+    int      prog,cntmin;
+    NodeSet::iterator it;
+    map<int, NodeSharedPtr>::iterator vIt;
+
+    typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> Point;
+    typedef pair<Point, unsigned int> PointI;
+
+    int n_neighbs = 5;
+
+    map<int,int>  TreeidtoPlyid;
+
+    //Fill vertex array into tree format
+    vector<PointI> dataPts;
+    for (j = 0, it = plymesh->m_vertexSet.begin();
+         it != plymesh->m_vertexSet.end();
+         ++it, ++j)
+    {
+        dataPts.push_back(make_pair(Point( (*it)->m_x,
+                                           (*it)->m_y,
+                                           (*it)->m_z), j));
+        TreeidtoPlyid[j] = (*it)->m_id;
+    }
+
+    //Build tree
+    bgi::rtree<PointI, bgi::rstar<16> > rtree;
+    rtree.insert(dataPts.begin(), dataPts.end());
+
+    //Find neipghbours
+    for (cnt = 0, vIt = surfverts.begin(); vIt != surfverts.end();
+         ++vIt, ++cnt)
+    {
+        if(m_mesh->m_verbose)
+        {
+            prog = LibUtilities::PrintProgressbar(cnt,surfverts.size(),
+                                                  "Nearest ply verts",prog);
+        }
+
+
+        //I dont know why 5 nearest points are searched for when
+        //only the nearest point is used for the data
+        //was left like this in the ann->boost rewrite (MT 6/11/16)
+        Point queryPt(vIt->second->m_x, vIt->second->m_y, vIt->second->m_z);
+        n_neighbs  = 5;
+        vector<PointI> result;
+        rtree.query(bgi::nearest(queryPt, n_neighbs), std::back_inserter(result));
+
+        ASSERTL1(bg::distance(result[0].first,queryPt) < bg::distance(result[1].first,queryPt),
+            "Assumption that dist values are ordered from smallest to largest is not correct");
+
+        cntmin = TreeidtoPlyid[result[0].second];
+
+        ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),
+                 "cntmin is out of range");
+
+        m_mesh->m_vertexNormals[vIt->first] =
+            plymesh->m_vertexNormals[cntmin];
+    }
+}
+
 /**
  * @brief Generate a set of approximate vertex normals to a surface
  * represented by line segments in 2D and a hybrid
@@ -251,7 +324,7 @@ void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
         }
 
         Node n;
-        
+
         if (mesh->m_spaceDim == 3)
         {
             // Create two tangent vectors and take unit cross product.
@@ -468,7 +541,7 @@ void ProcessSpherigon::Process()
     if (normalfile.compare("NoFile") != 0)
     {
         NekDouble scale = m_config["scalefile"].as<NekDouble>();
-        
+
         if (m_mesh->m_verbose)
         {
             cout << "Inputing normal file: " << normalfile

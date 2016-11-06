@@ -3,6 +3,15 @@ SET(FieldConvertSources FieldConvert.cpp)
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources})
 TARGET_LINK_LIBRARIES(FieldConvert FieldUtils)
 
+IF (NEKTAR_USE_ANN)
+   TARGET_LINK_LIBRARIES(FieldConvert ANN)
+   SET_TARGET_PROPERTIES(FieldConvert PROPERTIES
+       IMPORTED_LOCATION ${ANN_LIBRARY_PATH}/libANN.a)
+   INCLUDE_DIRECTORIES(NekMesh ${ANN_INCLUDE_DIR})
+   LINK_DIRECTORIES(${ANN_LIBRARY_PATH})
+   LIST(APPEND FieldConvertSources ProcessModules/ProcessIsoGlobalCondenseANN.cpp)
+ENDIF (NEKTAR_USE_ANN)
+
 #ADD_NEKTAR_TEST(chan3D_tec)  # This test is covered in bfs_tec
 #ADD_NEKTAR_TEST(chan3D_vtu)  # This does not currently work -- hash metric 
 #ADD_NEKTAR_TEST(chan3D_vort) # This is covered by bfs_vort

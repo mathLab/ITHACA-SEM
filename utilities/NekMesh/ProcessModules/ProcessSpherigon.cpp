@@ -54,7 +54,6 @@ namespace Nektar
 {
 namespace Utilities
 {
-
 ModuleKey ProcessSpherigon::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "spherigon"), ProcessSpherigon::create);
@@ -252,7 +251,7 @@ void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
         }
 
         Node n;
-
+        
         if (mesh->m_spaceDim == 3)
         {
             // Create two tangent vectors and take unit cross product.
@@ -264,7 +263,8 @@ void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
         {
             // Calculate gradient vector and invert.
             Node dx = *(node[1]) - *(node[0]);
-            dx /= sqrt(dx.abs2());
+            NekDouble diff = dx.abs2();
+            dx /= sqrt(diff);
             n.m_x = -dx.m_y;
             n.m_y = dx.m_x;
             n.m_z = 0;
@@ -294,6 +294,7 @@ void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
         Node &n = mesh->m_vertexNormals[nIt->first];
         n /= sqrt(n.abs2());
     }
+
 }
 
 /**
@@ -467,7 +468,7 @@ void ProcessSpherigon::Process()
     if (normalfile.compare("NoFile") != 0)
     {
         NekDouble scale = m_config["scalefile"].as<NekDouble>();
-
+        
         if (m_mesh->m_verbose)
         {
             cout << "Inputing normal file: " << normalfile
@@ -480,18 +481,20 @@ void ProcessSpherigon::Process()
         inply.open(normalfile.c_str());
         ASSERTL0(inply, string("Could not open input ply file: ") + normalfile);
 
-        int j;
         MeshSharedPtr m = boost::shared_ptr<Mesh>(new Mesh());
         plyfile = boost::shared_ptr<InputPly>(new InputPly(m));
         plyfile->ReadPly(inply, scale);
         plyfile->ProcessVertices();
 
         MeshSharedPtr plymesh = plyfile->GetMesh();
+        if (m_mesh->m_verbose)
+        {
+            cout << "\t Generating ply normals" << endl;
+        }
         GenerateNormals(plymesh->m_element[plymesh->m_expDim], plymesh);
 
         // finally find nearest vertex and set normal to mesh surface file
         // normal.  probably should have a hex tree search ?
-        Array<OneD, NekDouble> len2(plymesh->m_vertexSet.size());
         Node minx(0, 0.0, 0.0, 0.0), tmp, tmpsav;
         NodeSet::iterator it;
         map<int, NodeSharedPtr>::iterator vIt;
@@ -509,47 +512,16 @@ void ProcessSpherigon::Process()
             }
         }
 
-        // loop over all element in ply mesh and determine
-        // xmin,xmax,ymin,ymax as search criterion
-
-        NekDouble mindiff, diff;
-        int cntmin;
 
         if (m_mesh->m_verbose)
         {
             cout << "\t Processing surface normals " << endl;
         }
-        int cnt = 0;
-        map<int, int> locnorm;
-        for (vIt = surfverts.begin(); vIt != surfverts.end(); ++vIt, ++cnt)
-        {
-            mindiff = 1e12;
 
-            for (j = 0, it = plymesh->m_vertexSet.begin();
-                 it != plymesh->m_vertexSet.end();
-                 ++it, ++j)
-            {
-                tmp  = *(vIt->second) - *(*it);
-                diff = tmp.abs2();
+        // loop over all element in ply mesh and determine
+        // and set normal to nearest point in ply mesh
+        FindNormalFromPlyFile(plymesh,surfverts);
 
-                if (diff < mindiff)
-                {
-                    mindiff = diff;
-                    cntmin  = (*it)->m_id;
-                    tmpsav  = tmp;
-                }
-            }
-            locnorm[cntmin] = vIt->first;
-
-            ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),
-                     "cntmin is out of range");
-            m_mesh->m_vertexNormals[vIt->first] =
-                plymesh->m_vertexNormals[cntmin];
-        }
-        if (m_mesh->m_verbose)
-        {
-            cout << "\t end of processing surface normals " << endl;
-        }
         normalsGenerated = true;
     }
     else if (m_mesh->m_vertexNormals.size() == 0)
@@ -789,15 +761,15 @@ void ProcessSpherigon::Process()
         }
 
         vector<Node> tmp(nV);
-        vector<double> r(nV);
+        vector<NekDouble> r(nV);
         vector<Node> K(nV);
         vector<Node> Q(nV);
         vector<Node> Qp(nV);
-        vector<double> blend(nV);
+        vector<NekDouble> blend(nV);
         vector<Node> out(nquad);
 
         // Calculate segment length for 2D spherigon routine.
-        double segLength = sqrt((v[0] - v[1]).abs2());
+        NekDouble segLength = sqrt((v[0] - v[1]).abs2());
 
         // Perform Spherigon method to smooth manifold.
         for (int j = 0; j < nquad; ++j)
@@ -828,7 +800,7 @@ void ProcessSpherigon::Process()
 
                 // Calculate generalized barycentric coordinate system
                 // (see equation 6 of paper).
-                double weight = 0.0;
+                NekDouble weight = 0.0;
                 for (int k = 0; k < nV; ++k)
                 {
                     r[k] = 1.0;
@@ -855,7 +827,7 @@ void ProcessSpherigon::Process()
             {
                 // Perform steps denoted in equations 2, 3, 8 for C1
                 // smoothing.
-                double tmp1;
+                NekDouble tmp1;
                 K[k]  = P + N * ((v[k] - P).dot(N));
                 tmp1  = (v[k] - K[k]).dot(vN[k]) / (1.0 + N.dot(vN[k]));
                 Q[k]  = K[k] + N * tmp1;

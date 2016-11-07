@@ -189,7 +189,7 @@ inline bool Infont(NodeSharedPtr n, ElementSharedPtr el)
     V[1] = n->m_x - ns1[1]->m_x;
     V[2] = n->m_x - ns1[2]->m_x;
 
-    return N1[0]*V[0] + N1[1]*V[1] + N1[2]*V[2] > 0.0;
+    return N1[0]*V[0] + N1[1]*V[1] + N1[2]*V[2] > 0.17;
 }
 
 void BLMesh::GrowLayers()
@@ -288,7 +288,7 @@ void BLMesh::GrowLayers()
                     if(!Infont(bit->second->pNode,psElements[*iit][results[i].second]))
                     {
                         NekDouble prox = Proximity(bit->second->pNode,psElements[*iit][results[i].second]);
-                        if(prox < delta)
+                        if(prox < delta*2.5)
                         {
                             res = true;
                             mn = min(mn,Proximity(bit->second->pNode,psElements[*iit][results[i].second]));
@@ -301,6 +301,7 @@ void BLMesh::GrowLayers()
                 cout << "hit" << endl;
                 bit->second->stopped = true;
                 file << bit->first->m_x << " " << bit->first->m_y << " " << bit->first->m_z << " " << l << endl;
+                
             }
         }
 

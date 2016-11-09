@@ -111,6 +111,15 @@ void SurfaceMesh::Process()
 
     Report();
 
+    EdgeSet::iterator it;
+    for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+    {
+        if((*it)->m_elLink.size() != 2)
+        {
+            ASSERTL0(false,"mesh connectivity error");
+        }
+    }
+
     m_mesh->m_expDim++; //revert dim
 }
 

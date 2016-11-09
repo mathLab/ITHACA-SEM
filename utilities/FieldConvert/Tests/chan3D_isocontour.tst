@@ -10,13 +10,13 @@
 
      <metrics>
         <metric type="L2" id="1">
-            <value variable="x" tolerance="1e-4">0.624386</value>
-            <value variable="y" tolerance="1e-4">0.623558</value>
+            <value variable="x" tolerance="1e-4">0.606394</value>
+            <value variable="y" tolerance="1e-4">0.603399</value>
             <value variable="z" tolerance="1e-4">0.666667</value>
             <value variable="u" tolerance="1e-4">0.5</value>
             <value variable="v" tolerance="1e-4">0</value>
             <value variable="w" tolerance="1e-4">0</value>
-            <value variable="p" tolerance="1e-4">2.36834</value>
+            <value variable="p" tolerance="1e-4">2.35679</value>
             <value variable="UplusV" tolerance="1e-4">0.5</value>
         </metric>
     </metrics>

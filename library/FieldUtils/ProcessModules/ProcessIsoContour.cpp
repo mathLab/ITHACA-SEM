@@ -855,23 +855,26 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
 
         BPoint queryPoint = inPoints[i].first;
 
-        BPoint bbMin(bg::get<0>(queryPoint) - SQ_PNT_TOL,
-                     bg::get<1>(queryPoint) - SQ_PNT_TOL,
-                     bg::get<2>(queryPoint) - SQ_PNT_TOL);
-        BPoint bbMax(bg::get<0>(queryPoint) + SQ_PNT_TOL,
-                     bg::get<1>(queryPoint) + SQ_PNT_TOL,
-                     bg::get<2>(queryPoint) + SQ_PNT_TOL);
+        BPoint bbMin(bg::get<0>(queryPoint) - 2*SQ_PNT_TOL,
+                     bg::get<1>(queryPoint) - 2*SQ_PNT_TOL,
+                     bg::get<2>(queryPoint) - 2*SQ_PNT_TOL);
+        BPoint bbMax(bg::get<0>(queryPoint) + 2*SQ_PNT_TOL,
+                     bg::get<1>(queryPoint) + 2*SQ_PNT_TOL,
+                     bg::get<2>(queryPoint) + 2*SQ_PNT_TOL);
         bg::model::box<BPoint> bbox(bbMin, bbMax);
 
         // find points within the distance box
         std::vector<PointPair> result;
         rtree.query(bgi::within(bbox) && bgi::nearest(queryPoint, 100), std::back_inserter(result));
 
-        WARNINGL0(result.size() < 100,"Failed to find less than 100 neighbouring points");
+        WARNINGL1(result.size() < 100,"Failed to find less than 100 neighbouring points");
 
         id1 = 0;
         unique_index_found = false;
         int nptsfound = 0;
+
+        WARNINGL1(result.size() > 0,"Failed to find any nearest point");
+
         for(id1 = 0; id1 < result.size(); ++id1)
         {
             if(bg::distance(queryPoint, result[id1].first)<SQ_PNT_TOL)
@@ -891,6 +894,7 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
             }
         }
 
+        WARNINGL1(nptsfound > 0,"Failed to find any nearest point");
 
         if(unique_index_found)
         {

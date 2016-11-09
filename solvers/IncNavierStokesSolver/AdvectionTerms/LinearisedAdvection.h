@@ -76,6 +76,7 @@ protected:
 
     /// Storage for base flow
     Array<OneD, Array<OneD, NekDouble> >            m_baseflow;
+    Array<OneD, Array<OneD, NekDouble> >            m_gradBase;
 
     /// number of slices
     int                                             m_slices;
@@ -121,7 +122,8 @@ protected:
         const NekDouble                                   &time);
 
     virtual void v_SetBaseFlow(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray);
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
 
     void UpdateBase(
         const NekDouble                                    m_slices,
@@ -129,6 +131,10 @@ protected:
               Array<OneD, NekDouble>                      &outarray,
         const NekDouble                                    m_time,
         const NekDouble                                    m_period);
+
+    void UpdateGradBase(
+        const int                                          var,
+        const MultiRegions::ExpListSharedPtr              &field);
 
     void DFT(
         const std::string                                  file,

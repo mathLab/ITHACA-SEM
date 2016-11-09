@@ -166,6 +166,17 @@ void LinearisedAdvection::v_InitObject(
         m_baseflow[i] = Array<OneD, NekDouble>(pFields[i]->GetTotPoints(), 0.0);
     }
 
+    int nDerivs = (m_halfMode || m_singleMode) ? 2 : m_spacedim;
+    m_gradBase = Array<OneD, Array<OneD, NekDouble> >(nvar*nDerivs);
+    for (int i = 0; i < nvar; ++i)
+    {
+        for (int j = 0; j < nDerivs; ++j)
+        {
+            m_gradBase[i*nDerivs + j ] = Array<OneD, NekDouble>
+                                            (pFields[i]->GetTotPoints(), 0.0);
+        }
+    }
+
     ASSERTL0(m_session->DefinesFunction("BaseFlow"),
              "Base flow must be defined for linearised forms.");
     string file = m_session->GetFunctionFilename("BaseFlow", 0);
@@ -219,6 +230,11 @@ void LinearisedAdvection::v_InitObject(
         }
     }
 
+    for (int i = 0; i < nvar; ++i)
+    {
+        UpdateGradBase(i, pFields[i]);
+    }
+
     if(m_session->DefinesParameter("period"))
     {
         m_period=m_session->GetParameter("period");
@@ -250,6 +266,7 @@ void LinearisedAdvection::v_Advect(
 
     int nPointsTot = fields[0]->GetNpoints();
     int ndim       = advVel.num_elements();
+    int nDerivs = (m_halfMode || m_singleMode) ? 2 : m_spacedim;
 
     Array<OneD, Array<OneD, NekDouble> > velocity(ndim);
     for(int i = 0; i < ndim; ++i)
@@ -267,20 +284,7 @@ void LinearisedAdvection::v_Advect(
 
     Array<OneD, NekDouble> grad0,grad1,grad2;
 
-    // Evaluation of the gradient of each component of the base flow
-    // \nabla U
-    Array<OneD, NekDouble> grad_base_u0,grad_base_u1,grad_base_u2;
-
-    // \nabla V
-    Array<OneD, NekDouble> grad_base_v0,grad_base_v1,grad_base_v2;
-
-    // \nabla W
-    Array<OneD, NekDouble> grad_base_w0,grad_base_w1,grad_base_w2;
-
     grad0        = Array<OneD, NekDouble> (nPointsTot);
-    grad_base_u0 = Array<OneD, NekDouble> (nPointsTot);
-    grad_base_v0 = Array<OneD, NekDouble> (nPointsTot);
-    grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);
 
     // Evaluation of the base flow for periodic cases
     if (m_slices > 1)
@@ -293,6 +297,7 @@ void LinearisedAdvection::v_Advect(
         {
             UpdateBase(m_slices, m_interp[i], m_baseflow[i],
                        time, m_period);
+            UpdateGradBase(i, fields[i]);
         }
     }
 
@@ -306,12 +311,6 @@ void LinearisedAdvection::v_Advect(
         case 2:  //2D
         {
             grad1 = Array<OneD, NekDouble> (nPointsTot);
-            grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
-            grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
-
-            //Derivates of the base flow
-            fields[0]-> PhysDeriv(m_baseflow[0], grad_base_u0, grad_base_u1);
-            fields[0]-> PhysDeriv(m_baseflow[1], grad_base_v0, grad_base_v1);
 
             //x-equation
             fields[0]->PhysDeriv(inarray[0],grad0,grad1);
@@ -321,11 +320,15 @@ void LinearisedAdvection::v_Advect(
             Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[0],1,
                          outarray[0],1);
             //Evaluate (U du'/dx+ V du'/dy)+u' dU/dx
-            Vmath::Vvtvp(nPointsTot,grad_base_u0,1,velocity[0],1,outarray[0],1,
-                         outarray[0],1);
+            Vmath::Vvtvp(nPointsTot,m_gradBase[0*nDerivs + 0], 1,
+                                    velocity[0], 1,
+                                    outarray[0], 1,
+                                    outarray[0], 1);
             //Evaluate (U du'/dx+ V du'/dy +u' dU/dx)+v' dU/dy
-            Vmath::Vvtvp(nPointsTot,grad_base_u1,1,velocity[1],1,outarray[0],1,
-                         outarray[0],1);
+            Vmath::Vvtvp(nPointsTot,m_gradBase[0*nDerivs + 1], 1,
+                                    velocity[1], 1,
+                                    outarray[0], 1,
+                                    outarray[0],1);
             Vmath::Neg(nPointsTot,outarray[0],1);
 
             //y-equation
@@ -336,11 +339,15 @@ void LinearisedAdvection::v_Advect(
             Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[1],1,
                          outarray[1],1);
             //Evaluate (U dv'/dx+ V dv'/dy)+u' dV/dx
-            Vmath::Vvtvp(nPointsTot,grad_base_v0,1,velocity[0],1,outarray[1],1,
-                         outarray[1],1);
+            Vmath::Vvtvp(nPointsTot,m_gradBase[1*nDerivs + 0], 1,
+                                    velocity[0], 1,
+                                    outarray[1], 1,
+                                    outarray[1],1);
             //Evaluate (U dv'/dx+ V dv'/dy +u' dv/dx)+v' dV/dy
-            Vmath::Vvtvp(nPointsTot,grad_base_v1,1,velocity[1],1,outarray[1],1,
-                         outarray[1],1);
+            Vmath::Vvtvp(nPointsTot,m_gradBase[1*nDerivs + 1], 1,
+                                    velocity[1], 1,
+                                    outarray[1], 1,
+                                    outarray[1],1);
             Vmath::Neg(nPointsTot,outarray[1],1);
         }
         break;
@@ -348,50 +355,6 @@ void LinearisedAdvection::v_Advect(
         {
             grad1 = Array<OneD, NekDouble> (nPointsTot);
             grad2 = Array<OneD, NekDouble> (nPointsTot);
-
-            grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
-            grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
-            grad_base_w1 = Array<OneD, NekDouble> (nPointsTot,0.0);
-
-            grad_base_u2 = Array<OneD, NekDouble> (nPointsTot,0.0);
-            grad_base_v2 = Array<OneD, NekDouble> (nPointsTot,0.0);
-            grad_base_w2 = Array<OneD, NekDouble> (nPointsTot,0.0);
-
-            // note base flow should be moved to GetBaseFlow method
-            if(m_halfMode) // can assume W = 0 and  d/dz == 0
-            {
-                // note base flow should be moved to GetBaseFlow method
-                fields[0]->PhysDeriv(m_baseflow[0],
-                                     grad_base_u0, grad_base_u1);
-                fields[0]->PhysDeriv(m_baseflow[1],
-                                     grad_base_v0, grad_base_v1);
-            }
-            else if(m_singleMode) // single mode where d/dz = 0
-            {
-                fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0,
-                                     grad_base_u1);
-                fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0,
-                                     grad_base_v1);
-                fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0,
-                                     grad_base_w1);
-            }
-            else if(m_multipleModes)
-            {
-                // Differentiate base flow in physical space
-                bool oldwavespace = fields[0]->GetWaveSpace();
-                fields[0]->SetWaveSpace(false);
-                fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0,
-                                     grad_base_u1,  grad_base_u2);
-                fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0,
-                                     grad_base_v1,  grad_base_v2);
-                fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0,
-                                     grad_base_w1,  grad_base_w2);
-                fields[0]->SetWaveSpace(oldwavespace);
-            }
-            else
-            {
-                ASSERTL0(false, "ERROR: Must be one of half, single or multiple modes");
-            }
 
             //x-equation
             //
@@ -424,10 +387,10 @@ void LinearisedAdvection::v_Advect(
             Vmath::Vvtvp(nPointsTot, grad1,  1,  m_baseflow[1], 1,
                          outarray[0], 1,  outarray[0],   1);
             //Evaluate and add: u' dU/dx
-            Vmath::Vvtvp(nPointsTot,grad_base_u0,1,velocity[0],1,
+            Vmath::Vvtvp(nPointsTot,m_gradBase[0*nDerivs + 0],1,velocity[0],1,
                          outarray[0],1,outarray[0],1);
             //Evaluate and add: v' dU/dy
-            Vmath::Vvtvp(nPointsTot,grad_base_u1,1,velocity[1],1,
+            Vmath::Vvtvp(nPointsTot,m_gradBase[0*nDerivs + 1],1,velocity[1],1,
                          outarray[0],1,outarray[0],1);
 
             if(!m_halfMode)
@@ -440,7 +403,7 @@ void LinearisedAdvection::v_Advect(
             if(m_multipleModes)
             {
                 //Evaluate and add w' dU/dz
-                Vmath::Vvtvp(nPointsTot,grad_base_u2,1,
+                Vmath::Vvtvp(nPointsTot,m_gradBase[0*nDerivs + 2],1,
                              velocity[2],1,outarray[0],1,outarray[0],1);
                 fields[0]->HomogeneousFwdTrans(outarray[0],outarray[0]);
             }
@@ -474,10 +437,10 @@ void LinearisedAdvection::v_Advect(
             Vmath::Vvtvp(nPointsTot, grad1,     1,  m_baseflow[1], 1,
                          outarray[1], 1,  outarray[1],   1);
             //Evaluate u' dV/dx
-            Vmath::Vvtvp(nPointsTot,grad_base_v0,1,velocity[0],1
+            Vmath::Vvtvp(nPointsTot,m_gradBase[1*nDerivs + 0],1,velocity[0],1
                          ,outarray[1],1,outarray[1],1);
             //Evaluate v' dV/dy
-            Vmath::Vvtvp(nPointsTot,grad_base_v1,1,velocity[1],1,
+            Vmath::Vvtvp(nPointsTot,m_gradBase[1*nDerivs + 1],1,velocity[1],1,
                          outarray[1],1,outarray[1],1);
 
             if(!m_halfMode)
@@ -490,7 +453,7 @@ void LinearisedAdvection::v_Advect(
             if(m_multipleModes)
             {
                 //Evaluate  w' dV/dz
-                Vmath::Vvtvp(nPointsTot,grad_base_v2,1,velocity[2],1,
+                Vmath::Vvtvp(nPointsTot,m_gradBase[1*nDerivs + 2],1,velocity[2],1,
                              outarray[1],1,outarray[1],1);
                 fields[0]->HomogeneousFwdTrans(outarray[1],outarray[1]);
             }
@@ -528,10 +491,10 @@ void LinearisedAdvection::v_Advect(
             if(!m_halfMode) // since if halfmode W = 0
             {
                 //Evaluate u' dW/dx
-                Vmath::Vvtvp(nPointsTot,grad_base_w0,1,velocity[0],1,
+                Vmath::Vvtvp(nPointsTot,m_gradBase[2*nDerivs + 0],1,velocity[0],1,
                              outarray[2],1,outarray[2],1);
                 //Evaluate v' dW/dy
-                Vmath::Vvtvp(nPointsTot,grad_base_w1,1,velocity[1],1,
+                Vmath::Vvtvp(nPointsTot,m_gradBase[2*nDerivs + 1],1,velocity[1],1,
                              outarray[2],1,outarray[2],1);
 
                 //Evaluate W dw'/dz
@@ -542,7 +505,7 @@ void LinearisedAdvection::v_Advect(
             if(m_multipleModes)
             {
                 //Evaluate w' dW/dz
-                Vmath::Vvtvp(nPointsTot,grad_base_w2,1,velocity[2],1,
+                Vmath::Vvtvp(nPointsTot,m_gradBase[2*nDerivs + 2],1,velocity[2],1,
                              outarray[2],1,outarray[2],1);
                 fields[0]->HomogeneousFwdTrans(outarray[2],outarray[2]);
             }
@@ -552,7 +515,8 @@ void LinearisedAdvection::v_Advect(
 }
 
 void LinearisedAdvection::v_SetBaseFlow(
-        const Array<OneD, Array<OneD, NekDouble> >    &inarray)
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
 {
     if (m_session->GetSolverInfo("EqType") == "UnsteadyNavierStokes")
     {
@@ -575,6 +539,7 @@ void LinearisedAdvection::v_SetBaseFlow(
         ASSERTL1(npts == m_baseflow[i].num_elements(),
              "Size of base flow array does not match expected.");
         Vmath::Vcopy(npts, inarray[i], 1, m_baseflow[i], 1);
+        UpdateGradBase(i, fields[i]);
     }
 }
 
@@ -701,6 +666,57 @@ void LinearisedAdvection::UpdateBase(
         Vmath::Svtvp(npoints, -sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
     }
 
+}
+
+void LinearisedAdvection::UpdateGradBase(
+        const int                                var,
+        const MultiRegions::ExpListSharedPtr     &field)
+{
+    int nDerivs = (m_halfMode || m_singleMode) ? 2 : m_spacedim;
+    switch(m_spacedim)
+    {
+        case 1:         // 1D
+        {
+            field->PhysDeriv(m_baseflow[var], m_gradBase[var*nDerivs + 0]);
+        }
+        break;
+        case 2:  //2D
+        {
+            field->PhysDeriv(m_baseflow[var], m_gradBase[var*nDerivs + 0],
+                                              m_gradBase[var*nDerivs + 1]);
+        }
+        break;
+        case 3:
+        {
+            field->PhysDeriv(m_baseflow[var], m_gradBase[var*nDerivs + 0],
+                                              m_gradBase[var*nDerivs + 1]);
+            if(m_halfMode) // can assume W = 0 and  d/dz == 0
+            {
+                if( var < 2)
+                {
+                    field->PhysDeriv(m_baseflow[var],
+                                              m_gradBase[var*nDerivs + 0],
+                                              m_gradBase[var*nDerivs + 1]);
+                }
+            }
+            else if(m_singleMode) // single mode where d/dz = 0
+            {
+                field->PhysDeriv(m_baseflow[var], m_gradBase[var*nDerivs + 0],
+                                                  m_gradBase[var*nDerivs + 1]);
+            }
+            else
+            {
+                // Differentiate base flow in physical space
+                bool oldwavespace = field->GetWaveSpace();
+                field->SetWaveSpace(false);
+                field->PhysDeriv(m_baseflow[var], m_gradBase[var*nDerivs + 0],
+                                                  m_gradBase[var*nDerivs + 1],
+                                                  m_gradBase[var*nDerivs + 2]);
+                field->SetWaveSpace(oldwavespace);
+            }
+        }
+        break;
+    }
 }
 
 DNekBlkMatSharedPtr LinearisedAdvection::GetFloquetBlockMatrix(FloquetMatType mattype, bool UseContCoeffs) const

@@ -126,7 +126,8 @@ class AdjointAdvection: public SolverUtils::Advection
             const NekDouble                                   &time);
 
         virtual void v_SetBaseFlow(
-                const Array<OneD, Array<OneD, NekDouble> >    &inarray);
+                const Array<OneD, Array<OneD, NekDouble> >    &inarray,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
 
         void UpdateBase(
             const NekDouble m_slices,

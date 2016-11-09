@@ -226,7 +226,7 @@ void DriverSteadyState::v_Execute(ostream &out)
                     m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow);
                     m_Check_BaseFlow++;
 
-                    A->GetAdvObject()->SetBaseFlow(q0);
+                    A->GetAdvObject()->SetBaseFlow(q0,m_equ[0]->UpdateFields());
                     DriverModifiedArnoldi::v_Execute(out);
 
                     if (m_comm->GetRank() == 0)
@@ -262,7 +262,7 @@ void DriverSteadyState::v_Execute(ostream &out)
                     m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow);
                     m_Check_BaseFlow++;
 
-                    A->GetAdvObject()->SetBaseFlow(q0);
+                    A->GetAdvObject()->SetBaseFlow(q0,m_equ[0]->UpdateFields());
                     DriverModifiedArnoldi::v_Execute(out);
 
                     if (m_comm->GetRank() == 0)

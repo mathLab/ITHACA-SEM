@@ -485,7 +485,8 @@ void AdjointAdvection::v_Advect(
 
 
 void AdjointAdvection::v_SetBaseFlow(
-        const Array<OneD, Array<OneD, NekDouble> >    &inarray)
+        const Array<OneD, Array<OneD, NekDouble> >    &inarray,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
 {
     ASSERTL1(inarray.num_elements() == m_baseflow.num_elements(),
              "Number of base flow variables does not match what is"

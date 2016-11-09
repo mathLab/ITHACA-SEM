@@ -121,9 +121,11 @@ public:
      *
      * @param inarray   Vector to use as baseflow
      */
-    inline void SetBaseFlow(const Array<OneD, Array<OneD, NekDouble> >& inarray)
+    inline void SetBaseFlow(
+            const Array<OneD, Array<OneD, NekDouble> >& inarray,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
     {
-        v_SetBaseFlow(inarray);
+        v_SetBaseFlow(inarray, fields);
     }
 
 protected:
@@ -151,7 +153,8 @@ protected:
 
     /// Overrides the base flow used during linearised advection
     SOLVER_UTILS_EXPORT virtual void v_SetBaseFlow(
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray);
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
 };
 
 /// A shared pointer to an Advection object.

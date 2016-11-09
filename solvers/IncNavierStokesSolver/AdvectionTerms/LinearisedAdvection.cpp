@@ -188,6 +188,9 @@ void LinearisedAdvection::v_InitObject(
         m_session->LoadParameter("N_slices",m_slices);
         if(m_slices>1)
         {
+            ASSERTL0(m_session->GetFunctionType("BaseFlow", 0)
+                == LibUtilities::eFunctionTypeFile,
+                "Base flow should be a sequence of files.");
             DFT(file,pFields,m_slices);
         }
         else
@@ -292,10 +295,6 @@ void LinearisedAdvection::v_Advect(
     // Evaluation of the base flow for periodic cases
     if (m_slices > 1)
     {
-        ASSERTL0(m_session->GetFunctionType("BaseFlow", 0)
-                 == LibUtilities::eFunctionTypeFile,
-                 "Base flow should be a sequence of files.");
-
         for (int i = 0; i < ndim; ++i)
         {
             UpdateBase(m_slices, m_interp[i], m_baseflow[i],
@@ -480,7 +479,8 @@ void LinearisedAdvection::ImportFldBase(
     }
 
     // Zero unused fields (e.g. w in a 2D2C base flow).
-    for (int j = nFileConvVar; j < nSessionConvVar; ++j) {
+    for (int j = nFileConvVar; j < nSessionConvVar; ++j)
+    {
         Vmath::Fill(nqtot, 0.0, m_baseflow[j], 1);
     }
 

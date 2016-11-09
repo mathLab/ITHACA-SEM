@@ -43,7 +43,6 @@
 namespace Nektar
 {
 
-
 class LinearisedAdvection: public SolverUtils::Advection
 {
     enum FloquetMatType
@@ -62,7 +61,8 @@ public:
     friend class MemoryManager<LinearisedAdvection>;
 
     /// Creates an instance of this class
-    static SolverUtils::AdvectionSharedPtr create(std::string) {
+    static SolverUtils::AdvectionSharedPtr create(std::string)
+    {
         return MemoryManager<LinearisedAdvection>::AllocateSharedPtr();
     }
     /// Name of class

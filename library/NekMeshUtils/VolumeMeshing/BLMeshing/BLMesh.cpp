@@ -186,10 +186,15 @@ inline bool Infont(NodeSharedPtr n, ElementSharedPtr el)
 
     Array<OneD, NekDouble> V(3);
     V[0] = n->m_x - ns1[0]->m_x;
-    V[1] = n->m_x - ns1[1]->m_x;
-    V[2] = n->m_x - ns1[2]->m_x;
+    V[1] = n->m_y - ns1[0]->m_y;
+    V[2] = n->m_z - ns1[0]->m_z;
 
-    return N1[0]*V[0] + N1[1]*V[1] + N1[2]*V[2] > 0.17;
+    NekDouble Nmag = sqrt(N1[0]*N1[0] + N1[1]*N1[1] + N1[2]*N1[2]);
+    NekDouble Vmag = sqrt(V[0]*V[0] + V[1]*V[1] + V[2]*V[2]);
+
+    NekDouble ang = (N1[0]*V[0] + N1[1]*V[1] + N1[2]*V[2]) / Nmag / Vmag;
+
+    return ang > 0.17;
 }
 
 void BLMesh::GrowLayers()
@@ -235,7 +240,7 @@ void BLMesh::GrowLayers()
     file.open("pts.3D");
     file << "x y z value" << endl;
 
-    for(int l = 1; l < 2; l++)
+    for(int l = 1; l < m_layer; l++)
     {
         NekDouble delta = (m_layerT[l] - m_layerT[l-1]);
         TopTree.clear();
@@ -276,8 +281,7 @@ void BLMesh::GrowLayers()
             }
 
             set<int>::iterator iit;
-            NekDouble mn = numeric_limits<double>::max();
-            bool res = false;
+            bool hit = false;
             for(iit = surfs.begin(); iit != surfs.end(); iit++)
             {
                 results.clear();
@@ -285,23 +289,25 @@ void BLMesh::GrowLayers()
                                                 back_inserter(results));
                 for(int i = 0; i < results.size(); i++)
                 {
-                    if(!Infont(bit->second->pNode,psElements[*iit][results[i].second]))
+                    if(Infont(bit->second->pNode,psElements[*iit][results[i].second]))
                     {
                         NekDouble prox = Proximity(bit->second->pNode,psElements[*iit][results[i].second]);
                         if(prox < delta*2.5)
                         {
-                            res = true;
-                            mn = min(mn,Proximity(bit->second->pNode,psElements[*iit][results[i].second]));
+                            hit = true;
+                            //cout << "hit" << endl;
+                            bit->second->stopped = true;
+                            /*file << bit->first->m_x << " " << bit->first->m_y << " " << bit->first->m_z << " " << l << endl;
+                            file << bit->second->pNode->m_x << " " << bit->second->pNode->m_y << " " << bit->second->pNode->m_z << " " << l << endl;
+                            m_mesh->m_element[2].clear();
+                            m_mesh->m_expDim--;
+                            m_mesh->m_element[2].push_back(psElements[*iit][results[i].second]);*/
+                            break;
+                            //return;
                         }
                     }
                 }
-            }
-            if(res)
-            {
-                cout << "hit" << endl;
-                bit->second->stopped = true;
-                file << bit->first->m_x << " " << bit->first->m_y << " " << bit->first->m_z << " " << l << endl;
-                
+                if(hit) break;
             }
         }
 

@@ -100,7 +100,6 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
         {
             xci[i] = li[i];
             Fset.erase(i);
-            cout << "hit bounded" << endl;
             hitbounded = true;
             continue;
         }
@@ -113,7 +112,6 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
         {
             xci[i] = ui[i];
             Fset.erase(i);
-            cout << "hit bounded" << endl;
             hitbounded = true;
             continue;
         }

@@ -99,8 +99,6 @@ public:
      */
     void WriteOctree(std::string nm);
 
-    void SourceFile(std::string nm, NekDouble sz);
-
     void UDS(std::string nm)
     {
         m_udsfile = nm;
@@ -180,10 +178,6 @@ private:
 
     bool m_udsfileset;
     std::string m_udsfile;
-
-    bool m_sourcepointsset;
-    std::vector<std::vector<NekDouble> > m_sourcePoints;
-    NekDouble m_sourcePointSize;
 };
 typedef boost::shared_ptr<Octree> OctreeSharedPtr;
 

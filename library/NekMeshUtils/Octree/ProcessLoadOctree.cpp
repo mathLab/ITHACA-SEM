@@ -55,14 +55,10 @@ ProcessLoadOctree::ProcessLoadOctree(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "0", "mindelta.");
     m_config["eps"] =
         ConfigOption(false, "0", "mindelta.");
-    m_config["sourcefile"] =
-        ConfigOption(false, "", "mindelta.");
-    m_config["sourcesize"] =
-        ConfigOption(false, "0", "mindelta.");
     m_config["udsfile"] =
         ConfigOption(false, "", "mindelta.");
     m_config["writeoctree"] =
-        ConfigOption(false, "", "");
+        ConfigOption(true, "0", "dump octree as xml mesh");
 }
 
 ProcessLoadOctree::~ProcessLoadOctree()
@@ -90,12 +86,6 @@ void ProcessLoadOctree::Process()
     m_mesh->m_octree = MemoryManager<Octree>::AllocateSharedPtr(m_mesh);
 
     m_mesh->m_octree->SetParameters(minDelta, maxDelta, eps);
-
-    if(m_config["sourcefile"].beenSet)
-    {
-        m_mesh->m_octree->SourceFile(m_config["sourcefile"].as<string>(),
-                                     m_config["sourcesize"].as<NekDouble>());
-    }
 
     if(m_config["udsfile"].beenSet)
     {

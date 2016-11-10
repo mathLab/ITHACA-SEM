@@ -92,23 +92,6 @@ void Octree::Process()
     }
 }
 
-void Octree::SourceFile(std::string nm, NekDouble sz)
-{
-    m_sourcepointsset = true;
-    ifstream file;
-    file.open(nm.c_str());
-    string line;
-
-    while (getline(file, line))
-    {
-        vector<NekDouble> point(3);
-        stringstream s(line);
-        s >> point[0] >> point[1] >> point[2];
-        m_sourcePoints.push_back(point);
-    }
-    m_sourcePointSize = sz;
-}
-
 NekDouble Octree::Query(Array<OneD, NekDouble> loc)
 {
     // starting at master octant 0 move through succsesive m_octants which
@@ -1062,25 +1045,6 @@ void Octree::CompileSourcePointList()
                     m_SPList[i]->SetDelta(lsources[j].delta);
                 }
             }
-        }
-    }
-
-    if(m_sourcepointsset)
-    {
-        if(m_mesh->m_verbose)
-        {
-            cout << "\t\tAdding source points from flow solution" << endl;
-        }
-        for(int i = 0; i < m_sourcePoints.size(); i++)
-        {
-            Array<OneD, NekDouble> l(3);
-            l[0] = m_sourcePoints[i][0];
-            l[1] = m_sourcePoints[i][1];
-            l[2] = m_sourcePoints[i][2];
-
-            SrcPointSharedPtr newSpoint = MemoryManager<SrcPoint>::
-                                    AllocateSharedPtr(l, m_sourcePointSize);
-            m_SPList.push_back(newSpoint);
         }
     }
 }

@@ -160,12 +160,12 @@ private:
     int Ne;
     /// paramteric coordiates of the mesh nodes
     std::vector<NekDouble> meshsvalue;
-    /// ids of the mesh nodes
-    std::vector<NodeSharedPtr> m_meshpoints;
     /// id of the curvemesh
     int m_id;
     ///
     MeshSharedPtr m_mesh;
+    /// ids of the mesh nodes
+    std::vector<NodeSharedPtr> m_meshpoints;
 };
 
 typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;

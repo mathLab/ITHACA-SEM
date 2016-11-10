@@ -55,6 +55,7 @@ void Octree::Process()
     if (m_mesh->m_verbose)
         cout << "\tCurvature samples: " << m_SPList.size() << endl;
 
+    // make master octant based on the bounding box of the domain
     m_dim = max((boundingBox[1] - boundingBox[0]) / 2.0,
                 (boundingBox[3] - boundingBox[2]) / 2.0);
 
@@ -65,10 +66,11 @@ void Octree::Process()
     m_centroid[1] = (boundingBox[3] + boundingBox[2]) / 2.0;
     m_centroid[2] = (boundingBox[5] + boundingBox[4]) / 2.0;
 
-    // make master octant based on the bounding box of the domain
     m_masteroct = MemoryManager<Octant>::AllocateSharedPtr(
         0, m_centroid[0], m_centroid[1], m_centroid[2], m_dim, m_SPList);
 
+
+    //begin recersive subdivision
     SubDivide();
 
     m_octants.clear();
@@ -95,8 +97,7 @@ void Octree::Process()
 NekDouble Octree::Query(Array<OneD, NekDouble> loc)
 {
     // starting at master octant 0 move through succsesive m_octants which
-    // contain
-    // the point loc until a leaf is found
+    // contain the point loc until a leaf is found
     OctantSharedPtr n = m_masteroct;
     int quad;
 
@@ -358,7 +359,10 @@ void Octree::SubDivide()
 
 bool Octree::VerifyNeigbours()
 {
-    // check all neibours
+    // check all octant links to their neighbours
+    // at all times in the subdivision the set of neigbours must
+    // conform to a set of criteria such as smoothness in size
+    // this checks that
     bool error = false;
     for (int i = 0; i < m_octants.size(); i++)
     {
@@ -807,6 +811,7 @@ int Octree::CountElemt()
     return int(total);
 }
 
+//struct to assist in the creation of linesources in the code
 struct linesource
 {
     Array<OneD, NekDouble> x1, x2;
@@ -877,11 +882,10 @@ void Octree::CompileSourcePointList()
         // each parameter plane the surface is first sampled with a 40x40 grid
         // the real space lengths of this grid are analysed to find the largest
         // strecthing in the u and v directions
-        // this stretching this then cosnidered with the mindelta user input
+        // this stretching is then cosnidered with the mindelta user input
         // to find a number of sampling points in each direction which
         // enures that in the final octree each surface octant will have at
-        // least
-        // one sample point within its volume.
+        // least one sample point within its volume.
         // the 40x40 grid is used to ensure each surface has a minimum of 40x40
         // samples.
         NekDouble du = (bounds[1] - bounds[0]) / (40 - 1);
@@ -1013,20 +1017,18 @@ void Octree::CompileSourcePointList()
             stringstream s(fileline);
             string word;
             s >> word;
-            if (word == "#")
+            if (word == "L")
             {
-                continue;
+                Array<OneD, NekDouble> x1(3), x2(3);
+                NekDouble r, d;
+                s >> x1[0] >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2] >> r >> d;
+                lsources.push_back(linesource(x1, x2, r, d));
             }
-
-            Array<OneD, NekDouble> x1(3), x2(3);
-            NekDouble r, d;
-            x1[0] = boost::lexical_cast<double>(word);
-            s >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2] >> r >> d;
-
-            lsources.push_back(linesource(x1, x2, r, d));
         }
         fle.close();
 
+        //this takes any existing sourcepoints within the influence range
+        //and modifys them
         for (int i = 0; i < m_SPList.size(); i++)
         {
             for (int j = 0; j < lsources.size(); j++)
@@ -1046,6 +1048,7 @@ void Octree::CompileSourcePointList()
                 }
             }
         }
+        ///TODO add extra source points from the line souce to the octree
     }
 }
 

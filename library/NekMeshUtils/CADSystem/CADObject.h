@@ -47,24 +47,24 @@ namespace NekMeshUtils
 
 enum cadType
 {
-    vert,
-    curve,
-    surf
+    eVert,
+    eCurve,
+    eSurf
 };
 
-class CADObj
+class CADObject
 {
 public:
-    friend class MemoryManager<CADObj>;
+    friend class MemoryManager<CADObject>;
 
     /**
      * @brief Default constructor.
      */
-    CADObj()
+    CADObject()
     {
     }
 
-    virtual ~CADObj(){}
+    virtual ~CADObject(){}
 
     /**
      * @brief Return ID of the vertex
@@ -86,7 +86,7 @@ protected:
     cadType m_type;
 };
 
-typedef boost::shared_ptr<CADObj> CADObjSharedPtr;
+typedef boost::shared_ptr<CADObject> CADObjectSharedPtr;
 }
 }
 

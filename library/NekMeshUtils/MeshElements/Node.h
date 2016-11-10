@@ -40,10 +40,8 @@
 
 #include <iomanip>
 
-#ifdef NEKTAR_USE_MESHGEN
 #include <SpatialDomains/PointGeom.h>
 #include <NekMeshUtils/CADSystem/CADSystem.h>
-#endif
 
 namespace Nektar
 {
@@ -230,7 +228,7 @@ public:
         return an;
     }
 
-#ifdef NEKTAR_USE_MESHGEN // fucntions for cad information
+// fucntions for cad information
 
     void SetCADCurve(int i, CADCurveSharedPtr c, NekDouble t)
     {
@@ -363,26 +361,6 @@ public:
         }
         return ret;
     }
-#else
-    int GetNumCadCurve()
-    {
-        return 0;
-    }
-
-    int GetNumCADSurf()
-    {
-        return 0;
-    }
-
-    std::vector<std::pair<int,std::string> > GetCADCurveInfoVector()
-    {
-        return std::vector<std::pair<int,std::string> >();
-    }
-    std::vector<std::pair<int,std::string> > GetCADSurfInfoVector()
-    {
-        return std::vector<std::pair<int,std::string> >();
-    }
-#endif
 
     /// ID of node.
     int m_id;
@@ -393,14 +371,11 @@ public:
     /// Z-coordinate.
     NekDouble m_z;
 
-#ifdef NEKTAR_USE_MESHGEN // tag to tell the meshelemnets to include cad
-                          // information
     /// list of cadcurves the node lies on
     std::map<int, std::pair<CADCurveSharedPtr, NekDouble> > CADCurveList;
     /// list of cadsurfs the node lies on
     std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >
         CADSurfList;
-#endif
 
 private:
     SpatialDomains::PointGeomSharedPtr m_geom;

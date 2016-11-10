@@ -36,7 +36,7 @@
 #ifndef NekMeshUtils_CADSYSTEM_CADSURF
 #define NekMeshUtils_CADSYSTEM_CADSURF
 
-#include <NekMeshUtils/CADSystem/CADObj.h>
+#include <NekMeshUtils/CADSystem/CADObject.h>
 #include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 
@@ -52,7 +52,7 @@ typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
  * @brief base class for a cad surface
  */
 
-class CADSurf : public CADObj
+class CADSurf : public CADObject
 {
 public:
     friend class MemoryManager<CADSurf>;

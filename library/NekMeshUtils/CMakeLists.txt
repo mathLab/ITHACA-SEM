@@ -13,6 +13,8 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Pyramid.cpp
     MeshElements/Prism.cpp
     MeshElements/Hexahedron.cpp
+    CADSystem/CADSystem.cpp
+    CADSystem/ProcessLoadCAD.cpp
     )
 
 IF(NEKTAR_USE_MESHGEN)
@@ -30,11 +32,8 @@ IF(NEKTAR_USE_MESHGEN)
         VolumeMeshing/VolumeMesh.cpp
         VolumeMeshing/TetMeshing/TetMesh.cpp
         VolumeMeshing/BLMeshing/BLMesh.cpp
-        CADSystem/CADSystem.cpp
-        CADSystem/ProcessLoadCAD.cpp
         Optimisation/BGFS-B.cpp
         Triangle/Triangle.cpp
-        CADSystem/CADSystem.cpp
         CADSystem/OCE/CADSystemOCE.cpp
         CADSystem/OCE/CADVertOCE.cpp
         CADSystem/OCE/CADCurveOCE.cpp
@@ -61,6 +60,12 @@ SET(NEKMESHUTILS_HEADERS
     MeshElements/Hexahedron.h
     MeshElements/HOAlignment.h
     MeshElements/ElementConfig.h
+    CADSystem/CADObject.h
+    CADSystem/CADSystem.h
+    CADSystem/CADVert.h
+    CADSystem/CADCurve.h
+    CADSystem/CADSurf.h
+    CADSystem/ProcessLoadCAD.h
     )
 
 IF(NEKTAR_USE_MESHGEN)
@@ -79,12 +84,6 @@ IF(NEKTAR_USE_MESHGEN)
         VolumeMeshing/VolumeMesh.h
         VolumeMeshing/TetMeshing/TetMesh.h
         VolumeMeshing/BLMeshing/BLMesh.h
-        CADSystem/CADObj.h
-        CADSystem/CADSystem.h
-        CADSystem/CADVert.h
-        CADSystem/CADCurve.h
-        CADSystem/CADSurf.h
-        CADSystem/ProcessLoadCAD.h
         CADSystem/OCE/OpenCascade.h
         CADSystem/OCE/CADSystemOCE.h
         CADSystem/OCE/CADVertOCE.h

@@ -157,7 +157,6 @@ void Module::ProcessEdges(bool ReprocessEdges)
         vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
 
         m_mesh->m_edgeSet.clear();
-        int ct=0;
 
         // Clear all edge links
 

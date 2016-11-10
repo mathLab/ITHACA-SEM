@@ -67,19 +67,14 @@ public:
                              std::vector<EdgeSharedPtr> pEdgeList,
                               LibUtilities::PointsType pCurveType)
                 : m_vertexList(pVertexList), m_edgeList(pEdgeList),
-                  m_faceNodes(pFaceNodes), m_curveType(pCurveType), m_geom()
-    {
-        onSurf = false;
-    }
+                  m_faceNodes(pFaceNodes), m_curveType(pCurveType), m_geom(){}
 
     /// Copy an existing face.
     NEKMESHUTILS_EXPORT Face(const Face &pSrc)
             : m_vertexList(pSrc.m_vertexList), m_edgeList(pSrc.m_edgeList),
               m_faceNodes(pSrc.m_faceNodes), m_curveType(pSrc.m_curveType),
-              m_geom(pSrc.m_geom)
-    {
-        onSurf = false;
-    }
+              m_geom(pSrc.m_geom){}
+              
     NEKMESHUTILS_EXPORT ~Face()
     {
     }
@@ -147,12 +142,7 @@ public:
     /// Nektar++ representation of geometry
     SpatialDomains::Geometry2DSharedPtr  m_geom;
 
-#ifdef NEKTAR_USE_MESHGEN
-    bool onSurf;
-    int CADSurfId;
-    CADSurfSharedPtr CADSurf;
-#endif
-
+    CADObjectSharedPtr parentCAD;
 };
 
 typedef boost::shared_ptr<Face> FaceSharedPtr;

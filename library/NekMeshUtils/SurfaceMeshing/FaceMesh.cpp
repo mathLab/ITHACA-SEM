@@ -692,7 +692,7 @@ void FaceMesh::BuildLocalMesh()
         ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
 
         vector<int> tags;
-        tags.push_back(m_id + (over ? 1000 : 100));
+        tags.push_back(m_compId);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eTriangle, conf, m_connec[i], tags);
         E->m_parentCAD = m_cadsurf;

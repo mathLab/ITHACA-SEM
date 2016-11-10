@@ -91,6 +91,12 @@ void VolumeMesh::Process()
         m_mesh->m_numcomp = 1;
     }
 
+    NekDouble prefix = 100;
+    if(m_mesh->m_cad->GetNumSurf() > 100)
+    {
+        prefix*=10;
+    }
+
     TetMeshSharedPtr tet;
     if (makeBL)
     {
@@ -224,7 +230,7 @@ void VolumeMesh::Process()
                 ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
 
                 vector<int> tags;
-                tags.push_back(2000);
+                tags.push_back(prefix*2 +);
                 ElementSharedPtr E = GetElementFactory().CreateInstance(
                                         LibUtilities::eQuadrilateral, conf, ns, tags);
                 m_mesh->m_element[2].push_back(E);
@@ -273,7 +279,7 @@ void VolumeMesh::Process()
 
         for(int i = 0; i < symsurfs.size(); i++)
         {
-            FaceMeshSharedPtr f = MemoryManager<FaceMesh>::AllocateSharedPtr(symsurfs[i],m_mesh,cm,false);
+            FaceMeshSharedPtr f = MemoryManager<FaceMesh>::AllocateSharedPtr(symsurfs[i],m_mesh,cm,prefix+symsurfs[i]);
             f->Mesh();
         }
 

@@ -67,6 +67,9 @@ public:
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
     };
 
+    /**
+     * @brief alternative constructor with mesh points already created
+     */
     CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> n)
         : m_id(id), m_mesh(m), m_meshpoints(n)
     {

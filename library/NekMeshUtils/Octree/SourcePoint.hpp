@@ -230,7 +230,7 @@ private:
 typedef boost::shared_ptr<BPoint> BPointSharedPtr;
 
 /**
- * @brief class for a planar boundary based samlping Point
+ * @brief class for a general source point 
  */
 class SrcPoint : public SPBase
 {

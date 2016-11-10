@@ -328,7 +328,15 @@ void HOSurfaceMesh::Process()
             // able to identify how to make it high-order
             EdgeSet::iterator it = surfaceEdges.find(e);
             ASSERTL0(it != surfaceEdges.end(),"could not find edge in surface");
-            e->m_parentCAD   = (*it)->m_parentCAD;
+
+            if((*it)->m_parentCAD)
+            {
+                e->m_parentCAD = (*it)->m_parentCAD;
+            }
+            else
+            {
+                e->m_parentCAD = s;
+            }
 
             vector<NodeSharedPtr> honodes(m_mesh->m_nummode - 2);
 

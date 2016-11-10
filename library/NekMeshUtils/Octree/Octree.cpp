@@ -35,6 +35,7 @@
 
 #include "Octree.h"
 #include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/Module/Module.h>
 
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
@@ -878,7 +879,48 @@ struct linesource
 
 void Octree::CompileSourcePointList()
 {
-    //first sample surfaces
+
+    for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
+    {
+        CADCurveSharedPtr curve = m_mesh->m_cad->GetCurve(i);
+        Array<OneD, NekDouble> bds = curve->Bounds();
+        int samples = 100;
+        int dt      = (bds[1] - bds[0]) / (samples + 1);
+        for (int j = 0; j < samples; j++)
+        {
+            NekDouble t = bds[0] + dt * j;
+            NekDouble C = curve->Curvature(t);
+
+            if (C != 0.0)
+            {
+                NekDouble del = 2.0 * (1.0 / C) * sqrt(m_eps * (2.0 - m_eps));
+
+                if (del > m_maxDelta)
+                {
+                    del = m_maxDelta;
+                }
+                if (del < m_minDelta)
+                {
+                    del = m_minDelta;
+                }
+
+                CPointSharedPtr newCPoint =
+                    MemoryManager<CPoint>::AllocateSharedPtr(curve->GetId(), t,
+                                                             curve->P(t), del);
+
+                m_SPList.push_back(newCPoint);
+            }
+            else
+            {
+                BPointSharedPtr newBPoint =
+                    MemoryManager<BPoint>::AllocateSharedPtr(curve->GetId(), t,
+                                                             curve->P(t));
+
+                m_SPList.push_back(newBPoint);
+            }
+        }
+    }
+
     for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {
         if(m_mesh->m_verbose)

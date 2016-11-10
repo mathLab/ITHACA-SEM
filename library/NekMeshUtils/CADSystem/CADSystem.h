@@ -104,6 +104,11 @@ public:
         m_2d = true;
     }
 
+    bool Is2D()
+    {
+        return m_2d;
+    }
+
     /**
      * @brief Initialises CAD and makes surface, curve and vertex maps.
      *

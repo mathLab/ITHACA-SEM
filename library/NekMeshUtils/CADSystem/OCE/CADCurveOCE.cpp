@@ -128,6 +128,13 @@ Array<OneD, NekDouble> CADCurveOCE::D2(NekDouble t)
     return out;
 }
 
+NekDouble CADCurveOCE::Curvature(NekDouble t)
+{
+    Array<OneD, NekDouble> der = D2(t);
+
+    return der[6] * der[6] + der[7] * der[7] + der[8] * der[8];
+}
+
 Array<OneD, NekDouble> CADCurveOCE::Bounds()
 {
     Array<OneD, NekDouble> t(2);

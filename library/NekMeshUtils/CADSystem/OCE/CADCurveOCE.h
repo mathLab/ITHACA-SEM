@@ -70,6 +70,7 @@ public:
     virtual NekDouble tAtArcLength(NekDouble s);
     virtual Array<OneD, NekDouble> GetMinMax();
     virtual NekDouble loct(Array<OneD, NekDouble> xyz);
+    virtual NekDouble Curvature(NekDouble t);
 
     void Initialise(int i, TopoDS_Shape in)
     {

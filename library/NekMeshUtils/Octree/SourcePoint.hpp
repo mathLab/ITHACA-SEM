@@ -141,6 +141,13 @@ public:
         m_type = eCBoundary;
     }
 
+    CPoint(int i, NekDouble t, Array<OneD, NekDouble> l,
+           NekDouble d)
+        : SPBase(l), sid(i), m_ti(t), m_delta(d)
+    {
+        m_type = eCBoundary;
+    }
+
     ~CPoint(){};
 
     /**
@@ -170,6 +177,7 @@ private:
     int sid;
     /// uv coord on surf
     Array<OneD, NekDouble> m_uv;
+    NekDouble m_ti;
     /// delta parameter
     NekDouble m_delta;
 };
@@ -188,6 +196,12 @@ public:
      */
     BPoint(int i, Array<OneD, NekDouble> uv, Array<OneD, NekDouble> l)
         : SPBase(l), sid(i), m_uv(uv)
+    {
+        m_type = ePBoundary;
+    }
+
+    BPoint(int i, NekDouble t, Array<OneD, NekDouble> l)
+        : SPBase(l), sid(i), m_ti(t)
     {
         m_type = ePBoundary;
     }
@@ -226,6 +240,7 @@ private:
     int sid;
     /// uv coord on surf
     Array<OneD, NekDouble> m_uv;
+    NekDouble m_ti;
 };
 typedef boost::shared_ptr<BPoint> BPointSharedPtr;
 

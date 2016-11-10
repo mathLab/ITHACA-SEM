@@ -64,7 +64,10 @@ public:
     {
     }
 
-
+    /**
+     * @brief builds the octree based on curvature sampling and user defined
+     * spacing
+     */
     void Process();
 
     /**
@@ -86,6 +89,13 @@ public:
         return m_minDelta;
     }
 
+    /**
+     * @brief sets the parameters used for curvature sampling
+     *
+     * @param min minimum spacing to be found in the mesh
+     * @param max maximum spacing to be found in the mesh
+     * @param eps curvature sensivity relating radius of curvature to spacing
+     */
     void SetParameters(NekDouble &min, NekDouble &max, NekDouble &ep)
     {
         m_minDelta = min;
@@ -96,9 +106,15 @@ public:
     /**
      * @brief populates the mesh m with a invalid hexahedral mesh based on the
      *        octree, used for visualisation
+     * @param nm name of the mesh file to be made
      */
     void WriteOctree(std::string nm);
 
+    /**
+     * @brief informs the octree there is a user defined spacing file
+     *
+     * @param nm name of the user defined spacing file
+     */
     void UDS(std::string nm)
     {
         m_udsfile = nm;
@@ -106,7 +122,6 @@ public:
     }
 
 private:
-
 
     /**
      * @brief Smooths specification over all octants to a gradation criteria
@@ -175,8 +190,9 @@ private:
     int m_numoct;
     /// Mesh object
     MeshSharedPtr m_mesh;
-
+    /// user defined spacing has been set
     bool m_udsfileset;
+    /// name of the user defined spacing file
     std::string m_udsfile;
 };
 typedef boost::shared_ptr<Octree> OctreeSharedPtr;

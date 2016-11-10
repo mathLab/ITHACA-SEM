@@ -45,12 +45,15 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+namespace CADType
+{
 enum cadType
 {
     eVert,
     eCurve,
     eSurf
 };
+}
 
 class CADObject
 {
@@ -74,7 +77,7 @@ public:
         return m_id;
     }
 
-    cadType GetType()
+    CADType::cadType GetType()
     {
         return m_type;
     }
@@ -83,7 +86,7 @@ protected:
     /// ID of the vert.
     int m_id;
     /// type of the cad object
-    cadType m_type;
+    CADType::cadType m_type;
 };
 
 typedef boost::shared_ptr<CADObject> CADObjectSharedPtr;

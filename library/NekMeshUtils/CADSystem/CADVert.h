@@ -63,6 +63,7 @@ public:
      */
     CADVert()
     {
+        m_type = CADType::eVert;
     }
 
     ~CADVert(){};

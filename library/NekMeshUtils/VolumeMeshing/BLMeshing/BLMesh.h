@@ -58,7 +58,7 @@ public:
                             NekDouble b,
                             int l,
                             NekDouble p) :
-                    m_mesh(m), m_blsurfs(bls), m_bl(b), m_layer(l), m_prog(p)
+                    m_mesh(m), m_blsurfs(bls), m_bl(b), m_prog(p), m_layer(l) 
     {
     };
 

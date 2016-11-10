@@ -212,9 +212,7 @@ void CurveMesh::Mesh()
     {
         EdgeSharedPtr e = boost::shared_ptr<Edge>(
             new Edge(m_meshpoints[i], m_meshpoints[i + 1]));
-        e->CADCurveId = m_id;
-        e->CADCurve   = m_cadcurve;
-        e->onCurve    = true;
+        e->m_parentCAD = m_cadcurve;
         m_mesh->m_edgeSet.insert(e);
     }
 

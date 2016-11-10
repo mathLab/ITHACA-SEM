@@ -606,8 +606,8 @@ void FaceMesh::DiagonalSwap()
 
                 ntri1->SetId(id1);
                 ntri2->SetId(id2);
-                ntri1->CADSurfId = m_id;
-                ntri2->CADSurfId = m_id;
+                ntri1->m_parentCAD = m_cadsurf;
+                ntri2->m_parentCAD = m_cadsurf;
 
                 vector<EdgeSharedPtr> t1es = ntri1->GetEdgeList();
                 for (int i = 0; i < 3; i++)
@@ -695,7 +695,7 @@ void FaceMesh::BuildLocalMesh()
         tags.push_back(m_id + (over ? 1000 : 100));
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eTriangle, conf, m_connec[i], tags);
-        E->CADSurfId = m_id;
+        E->m_parentCAD = m_cadsurf;
 
         vector<NodeSharedPtr> nods = E->GetVertexList();
         for (int j = 0; j < nods.size(); j++)

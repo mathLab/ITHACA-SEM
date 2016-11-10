@@ -57,7 +57,10 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADCurve(){};
+    CADCurve()
+    {
+        m_type = CADType::eCurve;
+    }
 
     ~CADCurve()
     {

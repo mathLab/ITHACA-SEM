@@ -126,7 +126,7 @@ public:
     /// Element(s) which are linked to this edge.
     std::vector<std::pair<ElementSharedPtr, int> > m_elLink;
 
-    CADObjectSharedPtr parentCAD;
+    CADObjectSharedPtr m_parentCAD;
 
 private:
     SpatialDomains::SegGeomSharedPtr m_geom;

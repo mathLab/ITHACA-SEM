@@ -298,14 +298,13 @@ void HOSurfaceMesh::Process()
                 i, m_mesh->m_element[2].size(), "\t\tSurface elements");
         }
 
-        int surf           = m_mesh->m_element[2][i]->CADSurfId;
-        CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(surf);
+        CADObjectSharedPtr o = m_mesh->m_element[2][i]->m_parentCAD;
+        CADSurfSharedPtr s = boost::dynamic_pointer_cast<CADSurf>(o);
+        int surf = s->GetId();
 
         FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
 
-        f->onSurf = true;
-        f->CADSurfId = surf;
-        f->CADSurf = s;
+        f->m_parentCAD = s;
 
         vector<EdgeSharedPtr> edges = f->m_edgeList;
         for (int j = 0; j < edges.size(); j++)
@@ -329,16 +328,14 @@ void HOSurfaceMesh::Process()
             // able to identify how to make it high-order
             EdgeSet::iterator it = surfaceEdges.find(e);
             ASSERTL0(it != surfaceEdges.end(),"could not find edge in surface");
-            e->onCurve       = (*it)->onCurve;
-            e->CADCurveId    = (*it)->CADCurveId;
-            e->CADCurve      = (*it)->CADCurve;
+            e->m_parentCAD   = (*it)->m_parentCAD;
 
             vector<NodeSharedPtr> honodes(m_mesh->m_nummode - 2);
 
-            if (e->onCurve)
+            if (e->m_parentCAD->GetType() == CADType::eCurve)
             {
-                int cid             = e->CADCurveId;
-                CADCurveSharedPtr c = e->CADCurve;
+                int cid             = e->m_parentCAD->GetId();
+                CADCurveSharedPtr c = boost::dynamic_pointer_cast<CADCurve>(e->m_parentCAD);
                 NekDouble tb        = e->m_n1->GetCADCurveInfo(cid);
                 NekDouble te        = e->m_n2->GetCADCurveInfo(cid);
 
@@ -443,13 +440,10 @@ void HOSurfaceMesh::Process()
             else
             {
                 // edge is on surface and needs 2d optimisation
-                CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(surf);
                 Array<OneD, NekDouble> uvb, uve;
                 uvb = e->m_n1->GetCADSurfInfo(surf);
                 uve = e->m_n2->GetCADSurfInfo(surf);
-                e->onSurf = true;
-                e->CADSurf = s;
-                e->CADSurfId = surf;
+                e->m_parentCAD = s;
                 Array<OneD, Array<OneD, NekDouble> > uvi(nq);
                 for (int k = 0; k < nq; k++)
                 {

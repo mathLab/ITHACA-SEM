@@ -117,7 +117,7 @@ void VolumeMesh::Process()
         {
             vector<unsigned int>::iterator f = find(symsurfs.begin(),
                                                     symsurfs.end(),
-                                                    els[i]->CADSurfId);
+                                                    els[i]->m_parentCAD->GetId());
 
             if(f == symsurfs.end())
             {
@@ -291,7 +291,7 @@ void VolumeMesh::Process()
 
             vector<unsigned int>::iterator f = find(blsurfs.begin(),
                                                     blsurfs.end(),
-                                                    m_mesh->m_element[2][i]->CADSurfId);
+                                                    m_mesh->m_element[2][i]->m_parentCAD->GetId());
 
             if(f == blsurfs.end())
             {

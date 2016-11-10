@@ -77,7 +77,7 @@ Array<OneD, NekDouble> OptiEdge::Getxi()
 
     switch (o->GetType())
     {
-        case curve:
+        case CADType::eCurve:
             xi = Array<OneD, NekDouble>(all.num_elements() - 2);
             for (int i = 1; i < all.num_elements() - 1; i++)
             {
@@ -85,7 +85,7 @@ Array<OneD, NekDouble> OptiEdge::Getxi()
             }
             break;
 
-        case surf:
+        case CADType::eSurf:
             xi = Array<OneD, NekDouble>(all.num_elements() - 4);
             for (int i = 2; i < all.num_elements() - 2; i++)
             {
@@ -93,7 +93,7 @@ Array<OneD, NekDouble> OptiEdge::Getxi()
             }
             break;
 
-        case vert:
+        case CADType::eVert:
             ASSERTL0(false, "Should not be able to pass vert");
     }
     return xi;
@@ -105,7 +105,7 @@ Array<OneD, NekDouble> OptiEdge::Getli()
     Array<OneD, NekDouble> bnds;
     switch (o->GetType())
     {
-        case curve:
+        case CADType::eCurve:
             li   = Array<OneD, NekDouble>(all.num_elements() - 2);
             bnds = boost::dynamic_pointer_cast<CADCurve>(o)->Bounds();
             for (int i = 1; i < all.num_elements() - 1; i++)
@@ -114,7 +114,7 @@ Array<OneD, NekDouble> OptiEdge::Getli()
             }
             break;
 
-        case surf:
+        case CADType::eSurf:
             li   = Array<OneD, NekDouble>(all.num_elements() - 4);
             bnds = boost::dynamic_pointer_cast<CADSurf>(o)->GetBounds();
             for (int i = 2; i < all.num_elements() - 2; i++)
@@ -130,7 +130,7 @@ Array<OneD, NekDouble> OptiEdge::Getli()
             }
             break;
 
-        case vert:
+        case CADType::eVert:
             ASSERTL0(false, "Should not be able to pass vert");
     }
     return li;
@@ -142,7 +142,7 @@ Array<OneD, NekDouble> OptiEdge::Getui()
     Array<OneD, NekDouble> bnds;
     switch (o->GetType())
     {
-        case curve:
+        case CADType::eCurve:
             ui   = Array<OneD, NekDouble>(all.num_elements() - 2);
             bnds = boost::dynamic_pointer_cast<CADCurve>(o)->Bounds();
             for (int i = 1; i < all.num_elements() - 1; i++)
@@ -151,7 +151,7 @@ Array<OneD, NekDouble> OptiEdge::Getui()
             }
             break;
 
-        case surf:
+        case CADType::eSurf:
             ui   = Array<OneD, NekDouble>(all.num_elements() - 4);
             bnds = boost::dynamic_pointer_cast<CADSurf>(o)->GetBounds();
             for (int i = 2; i < all.num_elements() - 2; i++)
@@ -167,7 +167,7 @@ Array<OneD, NekDouble> OptiEdge::Getui()
             }
             break;
 
-        case vert:
+        case CADType::eVert:
             ASSERTL0(false, "Should not be able to pass vert");
     }
     return ui;
@@ -177,7 +177,7 @@ NekDouble OptiEdge::F(Array<OneD, NekDouble> xitst)
 {
     Array<OneD, NekDouble> val(all.num_elements());
 
-    if (o->GetType() == curve)
+    if (o->GetType() == CADType::eCurve)
     {
         val[0] = all[0];
         for (int i = 0; i < xitst.num_elements(); i++)
@@ -186,7 +186,7 @@ NekDouble OptiEdge::F(Array<OneD, NekDouble> xitst)
         }
         val[all.num_elements() - 1] = all[all.num_elements() - 1];
     }
-    else if (o->GetType() == surf)
+    else if (o->GetType() == CADType::eSurf)
     {
         val[0] = all[0];
         val[1] = all[1];
@@ -199,7 +199,7 @@ NekDouble OptiEdge::F(Array<OneD, NekDouble> xitst)
     }
 
     NekDouble ret = 0.0;
-    if (o->GetType() == curve)
+    if (o->GetType() == CADType::eCurve)
     {
         CADCurveSharedPtr c = boost::dynamic_pointer_cast<CADCurve>(o);
 
@@ -211,7 +211,7 @@ NekDouble OptiEdge::F(Array<OneD, NekDouble> xitst)
             ret += norm / (z[i + 1] - z[i]);
         }
     }
-    else if (o->GetType() == surf)
+    else if (o->GetType() == CADType::eSurf)
     {
         CADSurfSharedPtr s = boost::dynamic_pointer_cast<CADSurf>(o);
         // need to organise the val array
@@ -237,7 +237,7 @@ DNekMat OptiEdge::dF(Array<OneD, NekDouble> xitst)
 {
     Array<OneD, NekDouble> val(all.num_elements());
 
-    if (o->GetType() == curve)
+    if (o->GetType() == CADType::eCurve)
     {
         val[0] = all[0];
         for (int i = 0; i < xitst.num_elements(); i++)
@@ -246,7 +246,7 @@ DNekMat OptiEdge::dF(Array<OneD, NekDouble> xitst)
         }
         val[all.num_elements() - 1] = all[all.num_elements() - 1];
     }
-    else if (o->GetType() == surf)
+    else if (o->GetType() == CADType::eSurf)
     {
         val[0] = all[0];
         val[1] = all[1];
@@ -260,7 +260,7 @@ DNekMat OptiEdge::dF(Array<OneD, NekDouble> xitst)
 
     DNekMat ret;
 
-    if (o->GetType() == curve)
+    if (o->GetType() == CADType::eCurve)
     {
         CADCurveSharedPtr c = boost::dynamic_pointer_cast<CADCurve>(o);
         vector<Array<OneD, NekDouble> > r;
@@ -290,7 +290,7 @@ DNekMat OptiEdge::dF(Array<OneD, NekDouble> xitst)
 
         ret = J;
     }
-    else if (o->GetType() == surf)
+    else if (o->GetType() == CADType::eSurf)
     {
         CADSurfSharedPtr s = boost::dynamic_pointer_cast<CADSurf>(o);
         // need to organise the all array
@@ -341,14 +341,14 @@ DNekMat OptiEdge::dF(Array<OneD, NekDouble> xitst)
 
 void OptiEdge::Update(Array<OneD, NekDouble> xinew)
 {
-    if (o->GetType() == curve)
+    if (o->GetType() == CADType::eCurve)
     {
         for (int i = 0; i < xinew.num_elements(); i++)
         {
             all[i + 1] = xinew[i];
         }
     }
-    else if (o->GetType() == surf)
+    else if (o->GetType() == CADType::eSurf)
     {
         for (int i = 0; i < xinew.num_elements(); i++)
         {

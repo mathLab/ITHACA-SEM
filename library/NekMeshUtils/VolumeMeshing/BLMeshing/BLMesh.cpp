@@ -217,20 +217,20 @@ void BLMesh::GrowLayers()
         ElementSharedPtr el = m_mesh->m_element[2][i];
         vector<unsigned int>::iterator f = find(m_blsurfs.begin(),
                                                 m_blsurfs.end(),
-                                                el->CADSurfId);
+                                                el->m_parentCAD->GetId());
 
         vector<unsigned int>::iterator s = find(m_symSurfs.begin(),
                                                 m_symSurfs.end(),
-                                                el->CADSurfId);
+                                                el->m_parentCAD->GetId());
 
         if(f == m_blsurfs.end() && s == m_symSurfs.end())
         {
-            psElements[el->CADSurfId].push_back(el);
+            psElements[el->m_parentCAD->GetId()].push_back(el);
         }
     }
     for(int i = 0; i < m_psuedoSurface.size(); i++)
     {
-        psElements[m_psuedoSurface[i]->CADSurfId].push_back(m_psuedoSurface[i]);
+        psElements[m_psuedoSurface[i]->m_parentCAD->GetId()].push_back(m_psuedoSurface[i]);
     }
 
     bgi::rtree<boxI, bgi::quadratic<16> > TopTree;
@@ -376,7 +376,6 @@ NekDouble BLMesh::Proximity(NodeSharedPtr n, ElementSharedPtr el)
 
     NekDouble d = Dot(E0,BP);
     NekDouble e = Dot(E1,BP);
-    NekDouble f = Dot(BP,BP);
 
     NekDouble det = a*c - b*b;
     NekDouble s = b*e-c*d, t = b*d-a*e;
@@ -756,7 +755,7 @@ void BLMesh::BuildElements()
         ElementSharedPtr el = m_mesh->m_element[2][i];
         vector<unsigned int>::iterator f = find(m_blsurfs.begin(),
                                                 m_blsurfs.end(),
-                                                el->CADSurfId);
+                                                el->m_parentCAD->GetId());
 
         if(f == m_blsurfs.end())
         {
@@ -788,7 +787,7 @@ void BLMesh::BuildElements()
                     CreateInstance(LibUtilities::eTriangle, tconf, tn, tags);
         m_psuedoSurface.push_back(T);
 
-        T->CADSurfId = el->CADSurfId;
+        T->m_parentCAD = el->m_parentCAD;
 
         m_priToTri[E] = el;
     }
@@ -1009,14 +1008,14 @@ void BLMesh::Setup()
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
         //orientate the triangle
-        if(m_mesh->m_cad->GetSurf(m_mesh->m_element[2][i]->CADSurfId)
+        if(m_mesh->m_cad->GetSurf(m_mesh->m_element[2][i]->m_parentCAD->GetId())
                                                         ->IsReversedNormal())
         {
             m_mesh->m_element[2][i]->Flip();
         }
 
         vector<unsigned int>::iterator f = find(m_blsurfs.begin(), m_blsurfs.end(),
-                                                m_mesh->m_element[2][i]->CADSurfId);
+                                                m_mesh->m_element[2][i]->m_parentCAD->GetId());
 
         if(f == m_blsurfs.end())
         {
@@ -1028,7 +1027,7 @@ void BLMesh::Setup()
         for(int j = 0; j < ns.size(); j++)
         {
             m_blData[ns[j]]->els.push_back(m_mesh->m_element[2][i]);
-            m_blData[ns[j]]->surfs.insert(m_mesh->m_element[2][i]->CADSurfId);
+            m_blData[ns[j]]->surfs.insert(m_mesh->m_element[2][i]->m_parentCAD->GetId());
         }
     }
 

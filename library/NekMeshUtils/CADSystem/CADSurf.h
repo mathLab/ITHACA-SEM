@@ -62,6 +62,7 @@ public:
      */
     CADSurf()
     {
+        m_type = CADType::eSurf;
     }
 
     ~CADSurf()

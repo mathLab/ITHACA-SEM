@@ -37,7 +37,7 @@
 #define NEKTAR_MESHUTILS_SURFACEMESH_OPTIMISEFUNCTIONS_H
 
 #include <LocalRegions/MatrixKey.h>
-#include <NekMeshUtils/CADSystem/CADObj.h>
+#include <NekMeshUtils/CADSystem/CADObject.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 #include <NekMeshUtils/Optimisation/OptimiseObj.h>
 
@@ -53,7 +53,7 @@ public:
 
     OptiEdge(Array<OneD, NekDouble> a,
              Array<OneD, NekDouble> dis,
-             CADObjSharedPtr ob)
+             CADObjectSharedPtr ob)
     {
         all = a;
         z   = dis;
@@ -75,7 +75,7 @@ public:
     };
 
 private:
-    CADObjSharedPtr o;
+    CADObjectSharedPtr o;
     Array<OneD, NekDouble> z;
     Array<OneD, NekDouble> all;
 };

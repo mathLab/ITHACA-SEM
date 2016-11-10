@@ -74,7 +74,7 @@ public:
             : m_vertexList(pSrc.m_vertexList), m_edgeList(pSrc.m_edgeList),
               m_faceNodes(pSrc.m_faceNodes), m_curveType(pSrc.m_curveType),
               m_geom(pSrc.m_geom){}
-              
+
     NEKMESHUTILS_EXPORT ~Face()
     {
     }
@@ -142,7 +142,7 @@ public:
     /// Nektar++ representation of geometry
     SpatialDomains::Geometry2DSharedPtr  m_geom;
 
-    CADObjectSharedPtr parentCAD;
+    CADObjectSharedPtr m_parentCAD;
 };
 
 typedef boost::shared_ptr<Face> FaceSharedPtr;

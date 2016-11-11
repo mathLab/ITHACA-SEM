@@ -69,6 +69,7 @@ v4.3.5
 ------
 **Library:**
 - Fix issue with parallel output (!699)
+- Fix performance issue with iterative full solver (!693)
 
 **Documentation**
 - Update build instructions in user guide for Windows (!692)

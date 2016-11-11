@@ -23,6 +23,7 @@ v4.4.0
   to boundary conditions (!615)
 - Allow expansions to be loaded directly from field file (!617)
 - New options for load balancing (DOF or BOUNDARY) in mesh partitioner (!617)
+- Update Body/Field forces at each timestep (!665)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)
@@ -31,6 +32,7 @@ v4.4.0
 - Use a continuous basefield projection and revert to constant c formulation (!664)
 - Added ability to compute CFL number (!664)
 - Output Sourceterm (!664)
+- Use the Forcing framework to define source terms (!665)
 
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
@@ -46,6 +48,7 @@ v4.4.0
   mesh (!669)
 - Improvements to mesh linearisation module (!659)
 - Add support for Gmsh high-order output (!679)
+- Add option to `linearise` module to linearise only prisms (!688)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing
@@ -53,11 +56,24 @@ v4.4.0
 - Add module to stretch homogeneous direction (!609)
 - Add module to add composite ID of elements as a field (!674)
 
+v4.3.5
+------
+**Documentation**
+- Update build instructions in user guide for Windows (!692)
+
 v4.3.4
 ------
 **Library:**
-- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of large
-  simulations (!672)
+- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of
+  large simulations (!672)
+- Added additional assertions to ensure homogeneous simulations have an even
+  number of planes per process (!666)
+- Fix compilation with NEKTAR_USE_MESHGEN option
+- Fix IterativeFull solver in parallel (!685)
+- Fix error message for missing fld file (!689)
+
+**IncNavierStokesSolver:**
+- Fix 2nd order time-integration for VCSMapping (!687)
 
 v4.3.3
 ------

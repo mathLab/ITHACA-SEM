@@ -53,6 +53,8 @@ ProcessLinear::ProcessLinear(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(true, "0", "remove curve nodes for all elements.");
     m_config["invalid"] =
         ConfigOption(true, "0", "remove curve nodes if element is invalid.");
+    m_config["prismonly"] =
+        ConfigOption(false, "", "only acts on prims");
 }
 
 ProcessLinear::~ProcessLinear()
@@ -139,6 +141,14 @@ void ProcessLinear::Process()
         {
             for (int i = 0; i < el.size(); ++i)
             {
+                if(m_config["prismonly"].beenSet)
+                {
+                    if(el[i]->GetConf().m_e != LibUtilities::ePrism)
+                    {
+                        continue;
+                    }
+                }
+
                 // Create elemental geometry.
                 SpatialDomains::GeometrySharedPtr geom =
                     el[i]->GetGeom(m_mesh->m_spaceDim);

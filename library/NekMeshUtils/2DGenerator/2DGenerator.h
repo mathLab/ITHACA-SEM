@@ -37,6 +37,9 @@
 #define NEKMESHUTILS_2D_2D
 
 #include <NekMeshUtils/Module/Module.h>
+#include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
+#include <NekMeshUtils/SurfaceMeshing/FaceMesh.h>
+
 
 namespace Nektar
 {
@@ -49,7 +52,6 @@ namespace NekMeshUtils
 class Generator2D : public ProcessModule
 {
 public:
-
     /// Creates an instance of this class
     static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
@@ -62,8 +64,13 @@ public:
 
     virtual void Process();
 
+private:
+    void Report();
+    /// map of individual surface meshes from parametric surfaces
+    std::map<int, FaceMeshSharedPtr> m_facemeshes;
+    /// map of individual curve meshes of the curves in the domain
+    std::map<int, CurveMeshSharedPtr> m_curvemeshes;
 };
-
 }
 }
 

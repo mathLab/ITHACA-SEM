@@ -55,6 +55,8 @@ ProcessInsertSurface::ProcessInsertSurface(MeshSharedPtr m) : ProcessModule(m)
 {
     m_config["mesh"] =
         ConfigOption(false, "", "Mesh to be inserted.");
+    m_config["nonconforming"] =
+        ConfigOption(false,"", "Relax tests for nonconforming boundries");
 }
 
 ProcessInsertSurface::~ProcessInsertSurface()
@@ -69,6 +71,8 @@ void ProcessInsertSurface::Process()
     }
 
     string file = m_config["mesh"].as<string>();
+    bool nonconform = m_config["nonconforming"].beenSet;
+
     if (m_mesh->m_verbose)
     {
         cout << "inserting surface from " << file << endl;
@@ -130,8 +134,11 @@ void ProcessInsertSurface::Process()
         }
     }
 
-    ASSERTL0(surfaceNodes.size() == inMshnodeList.size(),
-             "surface mesh node count mismatch, will not work");
+    if(!nonconform)
+    {
+        ASSERTL0(surfaceNodes.size() == inMshnodeList.size(),
+                 "surface mesh node count mismatch, will not work");
+    }
 
     EdgeSet surfEdges;
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
@@ -151,14 +158,31 @@ void ProcessInsertSurface::Process()
         queryPt[1] = (*it)->m_n1->m_y;
         queryPt[2] = (*it)->m_n1->m_z;
         kdTree->annkSearch(queryPt,sample,nnIdx,dists);
-        ASSERTL0(sqrt(dists[0]) < tol, "cannot locate point accurately enough");
+        if(nonconform)
+        {
+            if(sqrt(dists[0]) > tol)
+                continue;
+        }
+        else
+        {
+            ASSERTL0(sqrt(dists[0]) < tol, "cannot locate point accurately enough");
+        }
+
         NodeSharedPtr inN1 = inMshnodeList[nnIdx[0]];
 
         queryPt[0] = (*it)->m_n2->m_x;
         queryPt[1] = (*it)->m_n2->m_y;
         queryPt[2] = (*it)->m_n2->m_z;
         kdTree->annkSearch(queryPt,sample,nnIdx,dists);
-        ASSERTL0(sqrt(dists[0]) < tol, "cannot locate point accurately enough");
+        if(nonconform)
+        {
+            if(sqrt(dists[0]) > tol)
+                continue;
+        }
+        else
+        {
+            ASSERTL0(sqrt(dists[0]) < tol, "cannot locate point accurately enough");
+        }
         NodeSharedPtr inN2 = inMshnodeList[nnIdx[0]];
 
         EdgeSharedPtr tst = boost::shared_ptr<Edge>(new Edge(inN1,inN2));

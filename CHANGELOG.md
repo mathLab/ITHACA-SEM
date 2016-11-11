@@ -56,6 +56,8 @@ v4.4.0
   to detect problems such as hanging nodes (!691)
 - Add option to `linearise` module to linearise only prisms (!688)
 - Add option to `linearise` to use element quality (!690)
+- Add flag to `insertsurface` process for non-conforming geometries (!700)
+- Bug fix to get two meshgen regression tests working (!700)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing
@@ -65,6 +67,10 @@ v4.4.0
 
 v4.3.5
 ------
+**Library:**
+- Fix issue with parallel output (!699)
+- Fix performance issue with iterative full solver (!693)
+
 **Documentation**
 - Update build instructions in user guide for Windows (!692)
 

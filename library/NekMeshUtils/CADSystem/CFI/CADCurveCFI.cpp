@@ -86,7 +86,7 @@ NekDouble CADCurveCFI::loct(Array<OneD, NekDouble> xyz)
     p.y = xyz[1];
     p.z = xyz[2];
 
-    boost::optional<cfi::Projected<double> > pj = m_cfiEdge->calcTnFromXYZ(p,-1);
+    boost::optional<cfi::Projected<double> > pj = m_cfiEdge->calcTFromXYZ(p,-1);
 
     if(pj.value().distance > 1e-5)
     {
@@ -122,7 +122,7 @@ NekDouble CADCurveCFI::Length(NekDouble ti, NekDouble tf)
 
 Array<OneD, NekDouble> CADCurveCFI::P(NekDouble t)
 {
-    cfi::Position p = m_cfiEdge->calcXYZAtTn(t);
+    cfi::Position p = m_cfiEdge->calcXYZAtT(t);
 
     Array<OneD, NekDouble> out(3);
 
@@ -135,8 +135,8 @@ Array<OneD, NekDouble> CADCurveCFI::P(NekDouble t)
 
 Array<OneD, NekDouble> CADCurveCFI::D2(NekDouble t)
 {
-    vector<cfi::DerivativeList>* d = m_cfiEdge->calcDerivAtTn(t);
-    cfi::Position p = m_cfiEdge->calcXYZAtTn(t);
+    vector<cfi::DerivativeList>* d = m_cfiEdge->calcDerivAtT(t);
+    cfi::Position p = m_cfiEdge->calcXYZAtT(t);
 
     Array<OneD, NekDouble> out(9);
 
@@ -160,9 +160,8 @@ Array<OneD, NekDouble> CADCurveCFI::D2(NekDouble t)
 Array<OneD, NekDouble> CADCurveCFI::Bounds()
 {
     Array<OneD, NekDouble> t(2);
-    cfi::ParametricRange1D rng = m_cfiEdge->getLnurbsTnBox();
-    t[0] = rng.minT;
-    t[1] = rng.maxT;
+    t[0] = 0.0;
+    t[1] = 1.0;
 
     return t;
 }
@@ -171,8 +170,8 @@ Array<OneD, NekDouble> CADCurveCFI::GetMinMax()
 {
     Array<OneD, NekDouble> bds = Bounds();
 
-    cfi::Position x1 = m_cfiEdge->calcXYZAtTn(bds[0]);
-    cfi::Position x2 = m_cfiEdge->calcXYZAtTn(bds[1]);
+    cfi::Position x1 = m_cfiEdge->calcXYZAtT(bds[0]);
+    cfi::Position x2 = m_cfiEdge->calcXYZAtT(bds[1]);
 
     Array<OneD, NekDouble> locs(6);
 

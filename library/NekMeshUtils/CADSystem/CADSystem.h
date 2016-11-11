@@ -43,6 +43,8 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
+#include <LibUtilities/BasicUtils/ShapeType.hpp>
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -178,6 +180,10 @@ public:
     {
         return m_verts.size();
     }
+
+    virtual std::map<int,Array<OneD, NekDouble> > GetNodes() = 0;
+    virtual std::vector<std::pair<LibUtilities::ShapeType,std::vector<int> > > GetElements() = 0;
+    virtual std::map<int,std::vector<std::pair<int,int> > > GetCADInfo() = 0;
 
 protected:
     /// Name of cad file

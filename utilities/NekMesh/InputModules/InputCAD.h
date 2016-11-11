@@ -63,7 +63,7 @@ public:
 private:
     std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order,
                 m_blsurfs, m_blthick;
-    bool m_makeBL, m_surfopti;
+    bool m_makeBL, m_surfopti, m_cfiMesh;
 };
 }
 }

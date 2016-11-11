@@ -54,6 +54,8 @@ ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
 {
     m_config["filename"] =
         ConfigOption(false, "", "Generate prisms on these surfs");
+    m_config["cfimesh"] =
+        ConfigOption(true, "0", "load existing mesh from cfi");
 }
 
 ProcessLoadCAD::~ProcessLoadCAD()
@@ -81,6 +83,27 @@ void ProcessLoadCAD::Process()
     }
 
     ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
+
+    if(boost::iequals(ext,".fbm") && m_config["cfimesh"].beenSet)
+    {
+        m_mesh->LoadMeshFromCAD();
+        //vertices already done
+        ProcessEdges();
+        ProcessFaces();
+        ProcessElements();
+        ProcessComposites();
+        m_mesh->BuildComps();
+        ProcessEdges();
+        ProcessFaces();
+        ProcessElements();
+        ProcessComposites();
+        m_mesh->ReconstructSurfaceAndCADInfo();
+        ProcessVertices();
+        ProcessEdges();
+        ProcessFaces();
+        ProcessElements();
+        ProcessComposites();
+    }
 
     m_mesh->m_hasCAD = true;
 

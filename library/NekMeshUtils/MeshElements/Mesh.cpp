@@ -36,6 +36,9 @@
 #include <NekMeshUtils/MeshElements/Mesh.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
+#include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
+
 using namespace std;
 
 namespace Nektar
@@ -244,6 +247,187 @@ void Mesh::MakeOrder(int                      order,
                       m_spaceDim, id);
     }
 }
+
+#ifdef NEKTAR_USE_MESHGEN
+void Mesh::LoadMeshFromCAD()
+{
+    map<int,Array<OneD, NekDouble> > ns = m_cad->GetNodes();
+    map<int,NodeSharedPtr> nodes;
+    vector<NodeSharedPtr> nds;
+    map<int,Array<OneD, NekDouble> >::iterator it;
+    for(it = ns.begin(); it != ns.end(); it++)
+    {
+        Array<OneD, NekDouble> xy = it->second;
+        nodes[it->first] = boost::shared_ptr<Node>(new Node(it->first,xy[0],xy[1],xy[2]));
+        nds.push_back(nodes[it->first]);
+    }
+
+    vector<pair<LibUtilities::ShapeType,vector<int> > > es = m_cad->GetElements();
+
+    vector<int> tags;
+    tags.push_back(0);
+
+    for(int i = 0; i < es.size(); i++)
+    {
+        ElmtConfig conf(es[i].first,1,false,false);
+        vector<NodeSharedPtr> ns;
+        for(int j = 0; j < es[i].second.size(); j++)
+        {
+            ns.push_back(nodes[es[i].second[j]]);
+        }
+        ElementSharedPtr E = GetElementFactory().CreateInstance(
+                es[i].first,conf,ns,tags);
+
+        m_element[3].push_back(E);
+    }
+
+    m_vertexSet = NodeSet(nds.begin(), nds.end());
+}
+
+void Mesh::BuildComps()
+{
+    vector<int> tags;
+    tags.push_back(1);
+    FaceSet::iterator it;
+    for(it = m_faceSet.begin(); it != m_faceSet.end(); it++)
+    {
+        if((*it)->m_elLink.size() == 1)
+        {
+            //make a face from the
+            vector<NodeSharedPtr> ns = (*it)->m_vertexList;
+            ElmtConfig conf(LibUtilities::eTriangle,1,false,false);
+            ElementSharedPtr E = GetElementFactory().CreateInstance(
+                    LibUtilities::eTriangle,conf,ns,tags);
+            m_element[2].push_back(E);
+        }
+    }
+}
+
+void Mesh::ReconstructSurfaceAndCADInfo()
+{
+    map<int,vector<pair<int,int> > > cadinfo = m_cad->GetCADInfo();
+    NodeSet::iterator nit;
+    for(nit = m_vertexSet.begin(); nit != m_vertexSet.end(); nit++)
+    {
+        map<int,vector<pair<int,int> > >::iterator f = cadinfo.find((*nit)->m_id);
+        if(f != cadinfo.end())
+        {
+            Array<OneD, NekDouble> xyz = (*nit)->GetLoc();
+            for(int i = 0; i < f->second.size(); i++)
+            {
+                if(f->second[i].first == 0)
+                {
+                    CADCurveSharedPtr c = m_cad->GetCurve(f->second[i].second);
+                    NekDouble t = c->loct(xyz);
+                    (*nit)->SetCADCurve(f->second[i].second, c, t);
+                    vector<CADSurfSharedPtr> ss = c->GetAdjSurf();
+                    for(int j = 0; j < ss.size(); j++)
+                    {
+                        Array<OneD, NekDouble> uv = ss[j]->locuv(xyz);
+                        (*nit)->SetCADSurf(ss[j]->GetId(), ss[j], uv);
+                    }
+                }
+                else
+                {
+                    CADSurfSharedPtr s = m_cad->GetSurf(f->second[i].second);
+                    Array<OneD, NekDouble> uv = s->locuv(xyz);
+                    (*nit)->SetCADSurf(f->second[i].second, s, uv);
+                }
+            }
+        }
+    }
+
+    EdgeSet::iterator eit;
+    for(eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++)
+    {
+        vector<int> c1, c2;
+        vector<int> s1, s2;
+
+        vector<pair<int, CADCurveSharedPtr> > c = (*eit)->m_n1->GetCADCurves();
+        for(int i = 0; i < c.size(); i++)
+        {
+            c1.push_back(c[i].first);
+        }
+        vector<pair<int, CADSurfSharedPtr> > s = (*eit)->m_n1->GetCADSurfs();
+        for(int i = 0; i < s.size(); i++)
+        {
+            s1.push_back(s[i].first);
+        }
+        c = (*eit)->m_n2->GetCADCurves();
+        for(int i = 0; i < c.size(); i++)
+        {
+            c2.push_back(c[i].first);
+        }
+        s = (*eit)->m_n2->GetCADSurfs();
+        for(int i = 0; i < s.size(); i++)
+        {
+            s2.push_back(s[i].first);
+        }
+
+        vector<int> ci, si;
+
+        set_intersection(c1.begin(), c1.end(),
+                         c2.begin(), c2.end(),
+                         back_inserter(ci));
+        set_intersection(s1.begin(), s1.end(),
+                         s2.begin(), s2.end(),
+                         back_inserter(si));
+
+        if(ci.size() != 0)
+        {
+            ASSERTL0(ci.size() == 1, "multi curve");
+            (*eit)->onCurve = true;
+            (*eit)->CADCurveId = ci[0];
+            (*eit)->CADCurve = m_cad->GetCurve(ci[0]);
+        }
+        else if (si.size() != 0)
+        {
+            ASSERTL0(si.size() == 1, "multi surf");
+            (*eit)->onSurf = true;
+            (*eit)->CADSurfId = si[0];
+            (*eit)->CADSurf = m_cad->GetSurf(si[0]);
+        }
+    }
+
+    for(int e = 0; e < m_element[2].size(); e++)
+    {
+        vector<NodeSharedPtr> ns = m_element[2][e]->GetVertexList();
+        Array<OneD, vector<int> > s(3);
+        for(int i = 0; i < ns.size(); i++)
+        {
+            vector<pair<int, CADSurfSharedPtr> > ss = ns[i]->GetCADSurfs();
+            for(int j = 0; j < ss.size(); j++)
+            {
+                s[i].push_back(ss[j].first);
+            }
+        }
+
+        vector<int> st,si;
+        set_intersection(s[0].begin(), s[0].end(),
+                         s[1].begin(), s[1].end(),
+                         back_inserter(st));
+        set_intersection(st.begin(), st.end(),
+                         s[2].begin(), s[2].end(),
+                         back_inserter(si));
+
+        if(si.size() == 1)
+        {
+            m_element[2][e]->CADSurfId = si[0];
+            vector<int> tags;
+            tags.push_back(si[0]);
+            m_element[2][e]->SetTagList(tags);
+        }
+        else if(si.size() == 2)
+        {
+            //hack!
+            m_element[2][e]->CADSurfId = 9;
+            vector<int> tags;
+            tags.push_back(9);
+            m_element[2][e]->SetTagList(tags);
+        }
+    }
+}
+#endif
 
 }
 }

@@ -117,6 +117,7 @@ void InputCAD::ParseFile(string nm)
     it = information.find("MeshType");
     ASSERTL0(it != information.end(),"no meshtype defined");
     it->second == "BL" ? m_makeBL = true : m_makeBL = false;
+    it->second == "CFI" ? m_cfiMesh = true : m_cfiMesh = false;
 
     it = parameters.find("MinDelta");
     ASSERTL0(it != parameters.end(),"no mindelta defined");
@@ -159,53 +160,60 @@ void InputCAD::Process()
         ModuleKey(eProcessModule, "loadcad"), m_mesh));
     mods.back()->RegisterConfig("filename", m_cadfile);
 
-    mods.push_back(GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "loadoctree"), m_mesh));
-    mods.back()->RegisterConfig("mindel", m_minDelta);
-    mods.back()->RegisterConfig("maxdel", m_maxDelta);
-    mods.back()->RegisterConfig("eps", m_eps);
-
-    /*if(pSession->DefinesSolverInfo("SourcePoints"))
+    if(m_cfiMesh)
     {
-        ASSERTL0(boost::filesystem::exists(pSession->GetSolverInfo("SourcePoints").c_str()),
-                 "sourcepoints file does not exist");
-        mods.back()->RegisterConfig("sourcefile",pSession->GetSolverInfo("SourcePoints"));
-        NekDouble sp;
-        pSession->LoadParameter("SPSize", sp);
-        mods.back()->RegisterConfig("sourcesize",boost::lexical_cast<std::string>(sp));
-    }*/
-
-    /*if (pSession->DefinesSolverInfo("UserDefinedSpacing"))
+        mods.back()->RegisterConfig("cfimesh","");
+    }
+    else
     {
-        string udsName = pSession->GetSolverInfo("UserDefinedSpacing");
-        ASSERTL0(boost::filesystem::exists(udsName.c_str()),
-                 "UserDefinedSpacing file does not exist");
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "loadoctree"), m_mesh));
+        mods.back()->RegisterConfig("mindel", m_minDelta);
+        mods.back()->RegisterConfig("maxdel", m_maxDelta);
+        mods.back()->RegisterConfig("eps", m_eps);
 
-        mods.back()->RegisterConfig("udsfile",udsName);
+        /*if(pSession->DefinesSolverInfo("SourcePoints"))
+        {
+            ASSERTL0(boost::filesystem::exists(pSession->GetSolverInfo("SourcePoints").c_str()),
+                     "sourcepoints file does not exist");
+            mods.back()->RegisterConfig("sourcefile",pSession->GetSolverInfo("SourcePoints"));
+            NekDouble sp;
+            pSession->LoadParameter("SPSize", sp);
+            mods.back()->RegisterConfig("sourcesize",boost::lexical_cast<std::string>(sp));
+        }*/
+
+        /*if (pSession->DefinesSolverInfo("UserDefinedSpacing"))
+        {
+            string udsName = pSession->GetSolverInfo("UserDefinedSpacing");
+            ASSERTL0(boost::filesystem::exists(udsName.c_str()),
+                     "UserDefinedSpacing file does not exist");
+
+            mods.back()->RegisterConfig("udsfile",udsName);
+        }
+
+        if (pSession->DefinesSolverInfo("WriteOctree"))
+        {
+            mods.back()->RegisterConfig("writeoctree",fn + "_oct.xml");
+        }*/
+
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "surfacemesh"), m_mesh));
+
+        /*mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "volumemesh"), m_mesh));
+        if(m_makeBL)
+        {
+            mods.back()->RegisterConfig("blsurfs",m_blsurfs);
+            mods.back()->RegisterConfig("blthick",m_blthick);
+        }*/
     }
 
-    if (pSession->DefinesSolverInfo("WriteOctree"))
-    {
-        mods.back()->RegisterConfig("writeoctree",fn + "_oct.xml");
-    }*/
-
     mods.push_back(GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "surfacemesh"), m_mesh));
-
-    /*mods.push_back(GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "volumemesh"), m_mesh));
-    if(m_makeBL)
-    {
-        mods.back()->RegisterConfig("blsurfs",m_blsurfs);
-        mods.back()->RegisterConfig("blthick",m_blthick);
-    }*/
-
-    /*mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh));
     if(m_surfopti)
     {
         mods.back()->RegisterConfig("opti","");
-    }*/
+    }
 
     for(int i = 0; i < mods.size(); i++)
     {

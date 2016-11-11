@@ -138,6 +138,9 @@ public:
 #ifdef NEKTAR_USE_MESHGEN
     CADSystemSharedPtr              m_cad;
     OctreeSharedPtr                 m_octree;
+    void                            LoadMeshFromCAD();
+    void ReconstructSurfaceAndCADInfo();
+    void BuildComps();
 #endif
 
     /// Returns the total number of elements in the mesh with

@@ -66,6 +66,10 @@ public:
 
     Array<OneD, NekDouble> GetBoundingBox();
 
+    std::map<int, Array<OneD, NekDouble> > GetNodes();
+    std::vector<std::pair<LibUtilities::ShapeType,std::vector<int> > > GetElements();
+    std::map<int,std::vector<std::pair<int,int> > > GetCADInfo();
+
 private:
     void AddVert(int i, cfi::Point* in);
     void AddCurve(int i, cfi::Line* in, int fv, int lv);
@@ -73,6 +77,9 @@ private:
     cfi::Cfi cfiHandel;
     cfi::Model *model;
     cfi::Body  *body;
+    std::map<std::string,int>  nameToCurveId;
+    std::map<std::string,int>  nameToFaceId;
+    std::map<std::string,std::vector<std::string> > mapVertToListEdge;
 };
 
 

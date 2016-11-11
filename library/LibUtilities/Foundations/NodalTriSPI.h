@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NodalTriElec.h
+// File NodalTriSPI.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,51 +29,50 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Header file of 2D Nodal Triangle Fekete Points
+// Description: 2D Nodal Triangle SPI points
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef NODALTRISPI_H
 #define NODALTRISPI_H
 
-#include <LibUtilities/Foundations/FoundationsFwd.hpp>
-#include <boost/shared_ptr.hpp>
-#include <LibUtilities/Foundations/ManagerAccess.h>
-#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+
+class NodalTriSPI : public Points<NekDouble>
+{
+public:
+    virtual ~NodalTriSPI()
     {
+    }
 
-        class NodalTriSPI: public Points<NekDouble>
-        {
-        public:
+    LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> Create(
+        const PointsKey &key);
 
-            virtual ~NodalTriSPI()
-            {
-            }
+    NodalTriSPI(const PointsKey &key) : PointsBaseType(key)
+    {
+    }
 
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType>
-                Create(const PointsKey &key);
+private:
+    NodalTriSPI() : PointsBaseType(NullPointsKey)
+    {
+    }
 
-            NodalTriSPI(const PointsKey &key):PointsBaseType(key)
-            {
-            }
+    void CalculatePoints();
+    void CalculateWeights();
+    void CalculateDerivMatrix();
+};
 
-        private:
-            NodalTriSPI():PointsBaseType(NullPointsKey)
-            {
-            }
+}
+}
 
-            void CalculatePoints();
-            void CalculateWeights();
-            void CalculateDerivMatrix();
-
-        };
-   } // end of namespace
-} // end of namespace
-
-#endif //NODALTRIELEC_H
+#endif // NODALTRIELEC_H

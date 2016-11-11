@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NodalTriElec.cpp
+// File NodalTriSPI.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,85 +29,80 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 2D Nodal Triangle Fekete Point Definitions
+// Description: 2D Nodal Triangle SPI point definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Foundations/NodalTriSPI.h>
-#include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
-#include <LibUtilities/Foundations/NodalTriSPIData.h>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Foundations/NodalTriSPI.h>
+#include <LibUtilities/Foundations/NodalTriSPIData.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
+#include <LibUtilities/Foundations/Points.h>
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+void NodalTriSPI::CalculatePoints()
+{
+    // Allocate the storage for points
+    unsigned int numPoints = GetNumPoints();
+
+    for (int i = 0; i < 2; i++)
     {
-        void NodalTriSPI::CalculatePoints()
-        {
-            // Allocate the storage for points
-            unsigned int numPoints = GetNumPoints();
+        m_points[i] = Array<OneD, DataType>(NodalTriSPINPTS[numPoints - 2]);
+    }
 
-            for(int i = 0; i < 2; i++)
-            {
-                m_points[i] = Array<OneD, DataType>(NodalTriSPINPTS[numPoints-2]);
-            }
+    int index = 0;
 
-            int index=0;
+    // initialize values
+    for (unsigned int i = 0; i < numPoints - 2; ++i)
+    {
+        index += NodalTriSPINPTS[i];
+    }
 
-            // initialize values
-            for(unsigned int i=0; i < numPoints-2; ++i)
-            {
-                index += NodalTriSPINPTS[i];
-            }
+    for (int i = 0; i < NodalTriSPINPTS[numPoints - 2]; i++)
+    {
+        m_points[0][i] = NodalTriSPIData[index][0];
+        m_points[1][i] = NodalTriSPIData[index][1];
+        index++;
+    }
+}
 
-            for(int i = 0; i < NodalTriSPINPTS[numPoints-2]; i++)
-            {
-                m_points[0][i] = NodalTriSPIData[index][0];
-                m_points[1][i] = NodalTriSPIData[index][1];
-                index++;
-            }
+void NodalTriSPI::CalculateWeights()
+{
+    unsigned int numPoints = GetNumPoints();
 
+    m_weights = Array<OneD, DataType>(NodalTriSPINPTS[numPoints - 2]);
 
-           //exit(0);
-        }
+    int index = 0;
 
-        void NodalTriSPI::CalculateWeights()
-        {
-            unsigned int numPoints = GetNumPoints();
+    // initialize values
+    for (unsigned int i = 0; i < numPoints - 2; ++i)
+    {
+        index += NodalTriSPINPTS[i];
+    }
 
-            m_weights = Array<OneD, DataType>(NodalTriSPINPTS[numPoints-2]);
+    for (int i = 0; i < NodalTriSPINPTS[numPoints - 2]; i++)
+    {
+        m_weights[i] = NodalTriSPIData[index][2];
+        index++;
+    }
+}
 
-            int index=0;
+void NodalTriSPI::CalculateDerivMatrix()
+{
+}
 
-            // initialize values
-            for(unsigned int i=0; i < numPoints-2; ++i)
-            {
-                index += NodalTriSPINPTS[i];
-            }
+boost::shared_ptr<PointsBaseType> NodalTriSPI::Create(const PointsKey &key)
+{
+    boost::shared_ptr<PointsBaseType> returnval(
+        MemoryManager<NodalTriSPI>::AllocateSharedPtr(key));
+    returnval->Initialize();
+    return returnval;
+}
 
-            for(int i = 0; i < NodalTriSPINPTS[numPoints-2]; i++)
-            {
-                m_weights[i] = NodalTriSPIData[index][2];
-                index++;
-            }
-        }
-
-        void NodalTriSPI::CalculateDerivMatrix()
-        {
-
-        }
-
-        boost::shared_ptr<PointsBaseType> NodalTriSPI::Create(const PointsKey &key)
-        {
-            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTriSPI>::AllocateSharedPtr(key));
-            returnval->Initialize();
-            return returnval;
-        }
-
-    } // end of namespace stdregion
 } // end of namespace stdregion
-
-
+} // end of namespace stdregion

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NodalTriElec.cpp
+// File NodalTetSPI.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,83 +29,81 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 2D Nodal Triangle Fekete Point Definitions
+// Description: 3D nodal tetrahedral SPI points
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Foundations/NodalTetSPI.h>
-#include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
-#include <LibUtilities/Foundations/NodalTetSPIData.h>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Foundations/NodalTetSPI.h>
+#include <LibUtilities/Foundations/NodalTetSPIData.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
+#include <LibUtilities/Foundations/Points.h>
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+void NodalTetSPI::CalculatePoints()
+{
+    // Allocate the storage for points
+    unsigned int numPoints = GetNumPoints();
+
+    for (int i = 0; i < 3; i++)
     {
-        void NodalTetSPI::CalculatePoints()
-        {
-            // Allocate the storage for points
-            unsigned int numPoints = GetNumPoints();
+        m_points[i] = Array<OneD, DataType>(NodalTetSPINPTS[numPoints - 2]);
+    }
 
-            for(int i = 0; i < 3; i++)
-            {
-                m_points[i] = Array<OneD, DataType>(NodalTetSPINPTS[numPoints-2]);
-            }
+    int index = 0;
 
-            int index=0;
+    // initialize values
+    for (unsigned int i = 0; i < numPoints - 2; ++i)
+    {
+        index += NodalTetSPINPTS[i];
+    }
 
-            // initialize values
-            for(unsigned int i=0; i < numPoints-2; ++i)
-            {
-                index += NodalTetSPINPTS[i];
-            }
+    for (int i = 0; i < NodalTetSPINPTS[numPoints - 2]; i++)
+    {
+        m_points[0][i] = NodalTetSPIData[index][0];
+        m_points[1][i] = NodalTetSPIData[index][1];
+        m_points[2][i] = NodalTetSPIData[index][2];
+        index++;
+    }
+}
 
-            for(int i = 0; i < NodalTetSPINPTS[numPoints-2]; i++)
-            {
-                m_points[0][i] = NodalTetSPIData[index][0];
-                m_points[1][i] = NodalTetSPIData[index][1];
-                m_points[2][i] = NodalTetSPIData[index][2];
-                index++;
-            }
+void NodalTetSPI::CalculateWeights()
+{
+    unsigned int numPoints = GetNumPoints();
 
+    m_weights = Array<OneD, DataType>(NodalTetSPINPTS[numPoints - 2]);
 
-           //exit(0);
-        }
+    int index = 0;
 
-        void NodalTetSPI::CalculateWeights()
-        {
-            unsigned int numPoints = GetNumPoints();
+    // initialize values
+    for (unsigned int i = 0; i < numPoints - 2; ++i)
+    {
+        index += NodalTetSPINPTS[i];
+    }
 
-            m_weights = Array<OneD, DataType>(NodalTetSPINPTS[numPoints-2]);
+    for (int i = 0; i < NodalTetSPINPTS[numPoints - 2]; i++)
+    {
+        m_weights[i] = NodalTetSPIData[index][3];
+        index++;
+    }
+}
 
-            int index=0;
+void NodalTetSPI::CalculateDerivMatrix()
+{
+}
 
-            // initialize values
-            for(unsigned int i=0; i < numPoints-2; ++i)
-            {
-                index += NodalTetSPINPTS[i];
-            }
+boost::shared_ptr<PointsBaseType> NodalTetSPI::Create(const PointsKey &key)
+{
+    boost::shared_ptr<PointsBaseType> returnval(
+        MemoryManager<NodalTetSPI>::AllocateSharedPtr(key));
+    returnval->Initialize();
+    return returnval;
+}
 
-            for(int i = 0; i < NodalTetSPINPTS[numPoints-2]; i++)
-            {
-                m_weights[i] = NodalTetSPIData[index][3];
-                index++;
-            }
-        }
-
-        void NodalTetSPI::CalculateDerivMatrix()
-        {
-
-        }
-
-        boost::shared_ptr<PointsBaseType> NodalTetSPI::Create(const PointsKey &key)
-        {
-            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTetSPI>::AllocateSharedPtr(key));
-            returnval->Initialize();
-            return returnval;
-        }
-    } // end of namespace stdregion
-} // end of namespace stdregion
+}
+}

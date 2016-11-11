@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NodalTriElec.h
+// File NodalPrismSPI.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,54 +29,52 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Header file of 2D Nodal Triangle Fekete Points
+// Description: Header file of 3D Nodal prism SPI points
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef NODALPRISMSPI_H
 #define NODALPRISMSPI_H
 
-#include <LibUtilities/Foundations/FoundationsFwd.hpp>
-#include <boost/shared_ptr.hpp>
-#include <LibUtilities/Foundations/ManagerAccess.h>
-#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+
+class NodalPrismSPI : public Points<NekDouble>
+{
+public:
+    virtual ~NodalPrismSPI()
     {
+    }
 
-        class NodalPrismSPI: public Points<NekDouble>
-        {
-        public:
+    LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> Create(
+        const PointsKey &key);
 
-            virtual ~NodalPrismSPI()
-            {
-            }
+    NodalPrismSPI(const PointsKey &key) : PointsBaseType(key)
+    {
+    }
 
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType>
-                Create(const PointsKey &key);
+private:
+    NodalPrismSPI() : PointsBaseType(NullPointsKey)
+    {
+    }
 
-            NodalPrismSPI(const PointsKey &key):PointsBaseType(key)
-            {
-            }
+    Array<OneD, NekDouble> m_t0, m_t1, m_tw, m_e0, m_ew;
+    int m_numtri;
 
-        private:
-            NodalPrismSPI():PointsBaseType(NullPointsKey)
-            {
-            }
-
-            Array<OneD, NekDouble> t0,t1,tw,e0,ew;
-            int numtri;
-
-            void CalculatePoints();
-            void CalculateWeights();
-            void CalculateDerivMatrix();
-
-        };
-   } // end of namespace
+    void CalculatePoints();
+    void CalculateWeights();
+    void CalculateDerivMatrix();
+};
+} // end of namespace
 } // end of namespace
 
-#endif //NODALTRIELEC_H
+#endif // NODALTRIELEC_H

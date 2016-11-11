@@ -891,6 +891,11 @@ void Octree::CompileSourcePointList()
             NekDouble t = bds[0] + dt * j;
             NekDouble C = curve->Curvature(t);
 
+            Array<OneD, NekDouble> loc = curve->P(t);
+
+            vector<CADSurfSharedPtr> ss = curve->GetAdjSurf();
+            Array<OneD, NekDouble> uv = ss[0]->locuv(loc);
+
             if (C != 0.0)
             {
                 NekDouble del = 2.0 * (1.0 / C) * sqrt(m_eps * (2.0 - m_eps));
@@ -905,16 +910,16 @@ void Octree::CompileSourcePointList()
                 }
 
                 CPointSharedPtr newCPoint =
-                    MemoryManager<CPoint>::AllocateSharedPtr(curve->GetId(), t,
-                                                             curve->P(t), del);
+                    MemoryManager<CPoint>::AllocateSharedPtr(ss[0]->GetId(), uv,
+                                                             loc, del);
 
                 m_SPList.push_back(newCPoint);
             }
             else
             {
                 BPointSharedPtr newBPoint =
-                    MemoryManager<BPoint>::AllocateSharedPtr(curve->GetId(), t,
-                                                             curve->P(t));
+                    MemoryManager<BPoint>::AllocateSharedPtr(ss[0]->GetId(), uv,
+                                                             loc);
 
                 m_SPList.push_back(newBPoint);
             }

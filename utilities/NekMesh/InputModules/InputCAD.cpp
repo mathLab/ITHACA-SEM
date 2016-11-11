@@ -113,8 +113,21 @@ void InputCAD::Process()
         m_writeoctree = pSession->GetSolverInfo("WriteOctree") == "TRUE";
     }
 
-    CADSystemSharedPtr m_cad =
-        MemoryManager<CADSystem>::AllocateSharedPtr(m_CADName);
+    ASSERTL0(boost::filesystem::exists(m_CADName.c_str()),"file does not exist");
+
+    vector<string> tmp1;
+    boost::split(tmp1,m_CADName,boost::is_any_of("."));
+
+    CADSystemSharedPtr m_cad;
+
+    if(boost::iequals(tmp1.back(), "STEP") || boost::iequals(tmp1.back(), "STP"))
+    {
+        m_cad = GetEngineFactory().CreateInstance("oce", m_CADName);
+    }
+    else
+    {
+        ASSERTL0(false,"not loaded any CAD engine");
+    }
 
     if (m_mesh->m_verbose)
     {
@@ -123,35 +136,16 @@ void InputCAD::Process()
 
     ASSERTL0(m_cad->LoadCAD(), "Failed to load CAD");
 
-
-    vector<int> bs = m_cad->GetBoundarySurfs();
-
     vector<unsigned int> symsurfs;
-    vector<unsigned int> blsurfs, blsurfst;
+    vector<unsigned int> blsurfs;
     if (m_makeBL)
     {
         string sym, bl;
         bl = pSession->GetSolverInfo("BLSurfs");
-        ParseUtils::GenerateSeqVector(bl.c_str(), blsurfst);
-        sort(blsurfst.begin(), blsurfst.end());
-        ASSERTL0(blsurfst.size() > 0,
+        ParseUtils::GenerateSeqVector(bl.c_str(), blsurfs);
+        sort(blsurfs.begin(), blsurfs.end());
+        ASSERTL0(blsurfs.size() > 0,
                  "No surfaces selected to make boundary layer on");
-        for(int i = 0; i < blsurfst.size(); i++)
-        {
-            bool add = true;
-            for(int j = 0; j < bs.size(); j++)
-            {
-                if(bs[j] == blsurfst[i])
-                {
-                    add = false;
-                    break;
-                }
-            }
-            if(add)
-            {
-                blsurfs.push_back(blsurfst[i]);
-            }
-        }
     }
 
     if (m_mesh->m_verbose)

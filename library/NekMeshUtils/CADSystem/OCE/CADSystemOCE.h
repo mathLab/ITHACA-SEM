@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessJacobianEnergy.h
+//  File: CADSystem.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,45 +29,54 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes energy of Jacobian.
+//  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSQUALITYMETRIC
-#define FIELDUTILS_PROCESSQUALITYMETRIC
+#ifndef NekMeshUtils_CADSYSTEM_OCE_CADSYSTEMOCE
+#define NekMeshUtils_CADSYSTEM_OCE_CADSYSTEMOCE
 
-#include "../Module.h"
+#include <NekMeshUtils/CADSystem/CADSystem.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
 namespace Nektar
 {
-namespace FieldUtils
+namespace NekMeshUtils
 {
 
-/// This processing module scales the input fld file
-class ProcessQualityMetric : public ProcessModule
+class CADSystemOCE : public CADSystem
 {
 public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+
+    static CADSystemSharedPtr create(std::string name)
     {
-        return MemoryManager<ProcessQualityMetric>::AllocateSharedPtr(f);
+        return MemoryManager<CADSystemOCE>::AllocateSharedPtr(name);
     }
-    static ModuleKey className;
 
-    ProcessQualityMetric(FieldSharedPtr f);
-    virtual ~ProcessQualityMetric();
+    static std::string key;
 
-    /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
+    /**
+     * @brief Default constructor.
+     */
+    CADSystemOCE(std::string name) : CADSystem(name) {}
+    ~CADSystemOCE(){};
 
-    virtual std::string GetModuleName()
-    {
-        return "ProcessQualityMetric";
-    }
+    bool LoadCAD();
+
+    Array<OneD, NekDouble> GetBoundingBox();
 
 private:
-    Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e, bool s);
+    /// Function to add curve to CADSystem::m_verts.
+    void AddVert(int i, TopoDS_Shape in);
+    /// Function to add curve to CADSystem::m_curves.
+    void AddCurve(int i, TopoDS_Shape in, int fv, int lv);
+    /// Function to add surface to CADSystem::m_surfs.
+    void AddSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
+    /// OCC master object
+    TopoDS_Shape shape;
 };
+
+
 }
 }
 

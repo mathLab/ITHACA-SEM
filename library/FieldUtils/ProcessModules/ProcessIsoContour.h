@@ -53,7 +53,7 @@ namespace Nektar
 namespace FieldUtils
 {
 
-const NekDouble SQ_PNT_TOL=1e-16;
+const NekDouble SQ_PNT_TOL=numeric_limits<double>::epsilon();
 
 class Iso
 {

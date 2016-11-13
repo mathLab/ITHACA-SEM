@@ -203,6 +203,7 @@ void InputCAD::Process()
 
     if(m_2D)
     {
+        m_mesh->m_expDim = 2;
         mods.push_back(GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "2dgenerator"), m_mesh));
     }

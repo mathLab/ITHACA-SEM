@@ -58,8 +58,6 @@ Generator2D::~Generator2D()
 
 void Generator2D::Process()
 {
-    --m_mesh->m_expDim;
-
     if (m_mesh->m_verbose)
     {
         cout << endl << "2D meshing" << endl;
@@ -110,8 +108,6 @@ void Generator2D::Process()
     ProcessComposites();
 
     Report();
-
-    m_mesh->m_expDim++; // revert dim
 }
 
 void Generator2D::Report()

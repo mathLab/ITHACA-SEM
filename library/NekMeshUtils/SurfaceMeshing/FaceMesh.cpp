@@ -38,9 +38,6 @@
 #include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/ExtLibInterface/TriangleInterface.h>
 
-#include <LocalRegions/MatrixKey.h>
-#include <LibUtilities/Foundations/ManagerAccess.h>
-
 using namespace std;
 namespace Nektar
 {
@@ -95,6 +92,8 @@ void FaceMesh::Mesh()
     bool repeat     = true;
     int meshcounter = 1;
 
+    //continuously remesh until all triangles conform to the spacing in the
+    //octree
     while (repeat)
     {
         repeat = Validate();
@@ -109,12 +108,14 @@ void FaceMesh::Mesh()
         meshcounter++;
     }
 
+    //build a local version of the mesh (one set of triangles)
+    //this is done so edge connectivity infomration can be used for optimisation
     BuildLocalMesh();
 
     OptimiseLocalMesh();
 
     // make new elements and add to list from list of nodes and connectivity
-    // from triangle
+    // from triangle removing unnesercary infomration from the elements
     for (int i = 0; i < m_localElements.size(); i++)
     {
         vector<EdgeSharedPtr> e = m_localElements[i]->GetEdgeList();
@@ -141,6 +142,7 @@ void FaceMesh::Mesh()
 
 void FaceMesh::OptimiseLocalMesh()
 {
+    //each optimisation algorithm is based on the work in chapeter 19
     DiagonalSwap();
 
     Smoothing();

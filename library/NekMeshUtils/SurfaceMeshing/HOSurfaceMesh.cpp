@@ -72,9 +72,6 @@ void HOSurfaceMesh::Process()
     if (m_mesh->m_verbose)
         cout << endl << "\tHigh-Order Surface meshing" << endl;
 
-    // this bit of code sets up information for the standard edge and face.
-    // and a mapping for node ordering for spring optimistaion
-
     LibUtilities::PointsKey ekey(m_mesh->m_nummode,
                                  LibUtilities::eGaussLobattoLegendre);
     Array<OneD, NekDouble> gll;

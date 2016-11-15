@@ -103,6 +103,11 @@ void Generator2D::Process()
         m_mesh->m_element[1].push_back(E2);
     }
 
+    if(bl)
+    {
+        MakeBL();
+    }    
+
     if (m_mesh->m_verbose)
     {
         cout << endl << "\tFace meshing:" << endl << endl;
@@ -130,6 +135,15 @@ void Generator2D::Process()
     ProcessComposites();
 
     Report();
+}
+
+Generator2D::MakeBL()
+{
+    // identify the ndoes which will become the boundary layer.
+
+    //on each node calculate a normal
+
+    //create quadrilerals
 }
 
 void Generator2D::Report()

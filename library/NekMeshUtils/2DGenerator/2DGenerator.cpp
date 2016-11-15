@@ -95,79 +95,12 @@ void Generator2D::Process()
         ElmtConfig conf(LibUtilities::eSegment, 1, false, false);
 
         vector<int> tags;
-        tags.push_back((*it)->m_id);
+        tags.push_back((*it)->CADCurveId);
 
         ElementSharedPtr E2 = GetElementFactory().CreateInstance(
             LibUtilities::eSegment, conf, ns, tags);
-        
-        E->CADSurfId = (*it)->m_id;
 
-        vector<NodeSharedPtr> nods = E->GetVertexList();
-        for (int j = 0; j < nods.size(); j++)
-        {
-            // nodes are already unique some will insert some wont
-            m_localNodes.insert(nods[j]);
-        }
-        E->SetId(m_localElements.size());
-        m_localElements.push_back(E);
-    }
-
-    for (int i = 0; i < m_localElements.size(); ++i)
-    {
-        for (int j = 0; j < m_localElements[i]->GetEdgeCount(); ++j)
-        {
-            pair<EdgeSet::iterator, bool> testIns;
-            EdgeSharedPtr ed = m_localElements[i]->GetEdge(j);
-            // look for edge in m_mesh edgeset from curves
-            EdgeSet::iterator s = m_mesh->m_edgeSet.find(ed);
-            if (!(s == m_mesh->m_edgeSet.end()))
-            {
-                ed = *s;
-                m_localElements[i]->SetEdge(j, *s);
-            }
-
-            testIns = m_localEdges.insert(ed);
-
-            if (testIns.second)
-            {
-                EdgeSharedPtr ed2 = *testIns.first;
-                ed2->m_elLink.push_back(
-                    pair<ElementSharedPtr, int>(m_localElements[i], j));
-            }
-            else
-            {
-                EdgeSharedPtr e2 = *(testIns.first);
-                m_localElements[i]->SetEdge(j, e2);
-                e2->m_elLink.push_back(
-                    pair<ElementSharedPtr, int>(m_localElements[i], j));
-            }
-        }
-    }
-
-    // make new elements and add to list from list of nodes and connectivity
-    // from triangle
-    for (int i = 0; i < m_localElements.size(); i++)
-    {
-        vector<EdgeSharedPtr> e = m_localElements[i]->GetEdgeList();
-        for (int j = 0; j < e.size(); j++)
-        {
-            e[j]->m_elLink.clear();
-        }
-        m_mesh->m_element[2].push_back(m_localElements[i]);
-    }
-
-    if (m_mesh->m_verbose)
-    {
-        cout << "\r                                                            "
-                "    "
-                "                             ";
-        cout << scientific /*<< "\r\t\tFace " << m_id << endl*/
-             << "\t\t\tNodes: " << m_localNodes.size() << endl
-             << "\t\t\tEdges: " << m_localEdges.size() << endl
-             << "\t\t\tTriangles: " << m_localElements.size() << endl
-             // << "\t\t\tLoops: " << m_edgeloops.size() << endl
-             // << "\t\t\tSTR: " << m_str << endl
-             << endl;
+        m_mesh->m_element[1].push_back(E2);
     }
 
     if (m_mesh->m_verbose)

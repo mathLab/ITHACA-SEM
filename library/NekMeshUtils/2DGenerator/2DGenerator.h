@@ -69,12 +69,6 @@ private:
     std::map<int, FaceMeshSharedPtr> m_facemeshes;
     /// map of individual curve meshes of the curves in the domain
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
-    /// local set of nodes
-    NodeSet m_localNodes;
-    /// local set of edges
-    EdgeSet m_localEdges;
-    /// local list of elements
-    std::vector<ElementSharedPtr> m_localElements;
 };
 }
 }

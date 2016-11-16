@@ -45,7 +45,7 @@ namespace NekMeshUtils
 void CurveMesh::Mesh()
 {
     //this algorithm is mostly based on the work in chapter 19
-    
+
     m_bounds          = m_cadcurve->Bounds();
     m_curvelength     = m_cadcurve->GetTotLength();
     m_numSamplePoints = int(m_curvelength / m_mesh->m_octree->GetMinDelta()) + 5;
@@ -169,6 +169,7 @@ void CurveMesh::Mesh()
             new Edge(m_meshpoints[i], m_meshpoints[i + 1]));
         e->m_parentCAD = m_cadcurve;
         m_mesh->m_edgeSet.insert(e);
+        m_meshedges.push_back(e);
     }
 
     if(m_mesh->m_verbose)

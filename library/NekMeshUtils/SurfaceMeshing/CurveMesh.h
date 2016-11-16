@@ -105,6 +105,11 @@ public:
         return m_meshpoints;
     }
 
+    std::vector<EdgeSharedPtr> GetMeshEdges()
+    {
+        return m_meshedges;
+    }
+
     /**
      * @brief get the number of points in the curve
      */
@@ -163,6 +168,8 @@ private:
     int Ne;
     /// paramteric coordiates of the mesh nodes
     std::vector<NekDouble> meshsvalue;
+    /// list of mesh edges in the curvemesh
+    std::vector<EdgeSharedPtr> m_meshedges;
     /// id of the curvemesh
     int m_id;
     ///

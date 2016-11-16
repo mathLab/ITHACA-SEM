@@ -73,6 +73,11 @@ public:
      */
     void Mesh();
 
+    /**
+     * @brief validate the curve meshes
+     */
+    bool ValidateCurves();
+
 private:
     /**
      * @brief Calculate the paramter plane streching factor

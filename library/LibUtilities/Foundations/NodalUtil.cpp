@@ -28,15 +28,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: 2D Nodal Triangle Fekete Utilities --
-//              Basis function, Interpolation, Integral, Derivation, etc.                
+//              Basis function, Interpolation, Integral, Derivation, etc
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iomanip>
 #include <limits>
 
+#include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
 #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
@@ -46,1563 +47,787 @@
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+
+/**
+ * @brief Obtain the integration weights for the given nodal distribution.
+ *
+ * This routine constructs the integration weights for the given nodal
+ * distribution inside NodalUtil::m_xi. To do this we solve the linear system
+ * \f$ \mathbf{V}^\top \mathbf{w} = \mathbf{g} \f$ where \f$ \mathbf{g}_i =
+ * \int_\Omega \psi_i(x)\, dx \f$, and we use the fact that under the definition
+ * of the orthogonal basis for each element type, \f$ \mathbf{g}_i = 0 \f$ for
+ * \f$ i > 0 \f$. We use NodalUtil::v_ModeZeroIntegral to return the analytic
+ * value of \f$ \mathbf{g}_0 \f$.
+ *
+ * @return Vector of integration weights for the integration points.
+ */
+NekVector<NekDouble> NodalUtil::GetWeights()
+{
+    // Get number of modes in orthogonal basis
+    int numModes = v_NumModes();
+
+    // If we have the same number of nodes as modes, then we can solve the
+    // linear system V^T w = (1,0,...)
+    if (numModes == m_numPoints)
     {
+        NekVector<NekDouble> g(m_numPoints, 0.0);
+        g(0) = v_ModeZeroIntegral();
 
-        template< typename T > NekVector<T> GetColumn(const NekMatrix<T> & matA, int n)
-        {
-            NekVector<T> v(matA.GetRows());
-            for( int i=0; i<matA.GetRows(); ++i )
-            {
-                v[i] = matA(i,n);
-            }
-            return v;
-        }
-    
-        NekMatrix<NekDouble> & SetColumn(NekMatrix<NekDouble> & matA, int n, const NekVector<NekDouble> & x)
-        {
-            for( int i=0; i<int(matA.GetRows()); ++i )
-            {
-                matA(i,n) = x[i];
-            }
-            return matA;
-        }
-    
-        // Standard basis vector in R^M
-        NekVector<NekDouble> GetE(int rows, int n)
-        {
-            NekVector<NekDouble> e(rows, 0.0);
-            e(n) = 1;
-            return e;
-        }
-    
-        NekMatrix<NekDouble> Invert(const NekMatrix<NekDouble> & matA)
-        {
-            int rows = matA.GetRows(), columns = matA.GetColumns();
-            NekMatrix<NekDouble> matX(rows,columns);
-    
-            // The linear system solver
-            LinearSystem matL( SharedNekMatrixPtr(new NekMatrix<NekDouble>(matA)) );
-    
-            // Solve each column for the identity matrix
-            for( int j=0; j<columns; ++j )
-            {
-                SetColumn( matX, j, matL.Solve( GetE(rows,j) ) );
-            }
-            
-            return matX;
-        }
-        
-        NekMatrix<NekDouble> GetTranspose(const NekMatrix<NekDouble> & matA)
-        {
-            int rows = matA.GetRows(), columns = matA.GetColumns();
-            NekMatrix<NekDouble> matX(rows,columns);
-        
-            for( int i=0; i<rows; ++i )
-            {
-                for( int j=0; j<columns; ++j )
-                {
-                    matX(j,i) = matA(i,j);
-                }
-            }
-            return matX;
-        }
-    
-        int GetSize(const Array<OneD, const NekDouble> & x)
-        {
-            return x.num_elements();
-        }
-        
-        int GetSize(const NekVector<NekDouble> & x)
-        {
-            return x.GetRows();
-        }
-                
-        NekVector<NekDouble> ToVector( const Array<OneD, const NekDouble> & x )
-        {
-            return NekVector<NekDouble>( GetSize(x), x.data() );
-        }
-        
-        Array<OneD, NekDouble> ToArray( const NekVector<NekDouble> & x )
-        {
-            return Array<OneD, NekDouble>( GetSize(x), x.GetPtr() );
-        }
-    
-        NekVector<NekDouble> Hadamard( const NekVector<NekDouble> & x, const NekVector<NekDouble> & y )
-        {
-            int size = GetSize(x);
-            NekVector<NekDouble> z(size);
-    
-            for( int i=0; i<size; ++i )
-            {
-                z[i] = x[i] * y[i];
-            }
-            return z;
-        }
+        SharedMatrix V = GetVandermonde();
 
-        NekVector<NekDouble> VectorPower( const NekVector<NekDouble> & x, NekDouble p )
-        {
-            int size = GetSize(x);
-            NekVector<NekDouble> z(size);
-    
-            for( int i=0; i<size; ++i )
-            {
-                z[i] = pow( x[i], p );
-            }
-            
-            return z;
-        }
-
-        // Formatted version of matrix ostream output
-        std::string MatrixToString( const NekMatrix<NekDouble> & A, int precision, NekDouble expSigFigs )
-        {
-            stringstream s;
-            s << setprecision(precision);
-            int M = int(A.GetRows()), N = int(A.GetColumns());
-            
-            for(int i=0; i<M; ++i )
-            {
-                for(int j=0; j<N; ++j)
-                {
-                    NekDouble a = MakeRound(expSigFigs * A(i, j)) / expSigFigs;
-                    s << setw(7) << right << a;
-                    if( j < N-1 )
-                    {
-                        s << ", ";
-                    }
-                }
-                if( i < M-1 )
-                {
-                    s << "\n";
-                }
-            }
-            return s.str();
-        }
-
-        // Formatted version of vector ostream output
-        std::string VectorToString( const NekVector<NekDouble> & v, int precision, NekDouble expSigFigs )
-        {
-            stringstream s;
-            s << setprecision(precision) << "[ ";
-            int N = int(v.GetRows());
-            for(int j=0; j<N; ++j )
-            {
-                NekDouble x = MakeRound(expSigFigs * v(j)) / expSigFigs;
-                s << setw(7) << right << x;
-                if( j < N-1 )
-                {
-                    s << ", ";
-                }
-            }
-            s << " ]";
-            return s.str();
-        }
-                    
-
-        int GetTriNumPoints(int degree)
-        {
-            return (degree+1) * (degree+2) / 2;
-        }
-        
-        int GetDegree(int nBasisFunctions)
-        {
-            int degree = int(MakeRound((-3.0 + sqrt(1.0 + 8.0*nBasisFunctions))/2.0));
-
-            // TODO: Find out why ASSERTL0 and ASSERTL1 don't work
-            ASSERTL1( GetTriNumPoints(degree) == nBasisFunctions, "The number of points defines an expansion of fractional degree, which is not supported." );
-            return degree;
-        }
-        
-        int GetTetNumPoints(int degree)
-        {
-            return (degree+1) * (degree+2) * (degree+3) / 6;
-        }
-
-        // Get Tetrahedral number, where Tn = (d+1)(d+2)(d+3)/6
-        int GetTetDegree(int nBasisFunc)
-        {
-            NekDouble eq = pow( 81.0 * nBasisFunc + 3.0 * sqrt(-3.0 + 729.0 * nBasisFunc * nBasisFunc), 1.0/3.0);
-            int degree = int(MakeRound(eq/3.0 + 1.0/eq - 1.0)) - 1;
-
-            ASSERTL1( GetTetNumPoints(degree) == nBasisFunc, "The number of points defines an expansion of fractional degree, which is not supported." );
-            return degree;
-        }
-        
-        NekDouble MakeRound(NekDouble x)
-        {
-            return floor(x + 0.5);
-        }
-        
-        NekVector<NekDouble> MakeDubinerQuadratureSystem(int nBasisFunctions)
-        {
-            // Make the vector of integrals: note that each modal basis function integrates to zero except for the 0th degree
-            NekVector<NekDouble> g(nBasisFunctions, 0.0);
-            g(0) = sqrt(2.0);
-    
-            return g;
-        }
-
-        NekVector<NekDouble> MakeTetQuadratureSystem(int nBasisFunctions)
-        {
-            NekVector<NekDouble> g(nBasisFunctions, 0.0);
-            g(0) = 1.0;
-            return g;
-        }
-    
-    
-        NekVector<NekDouble> JacobiPoly(int degree, const NekVector<NekDouble>& x, NekDouble alpha, NekDouble beta)
-        {
-            int size = GetSize(x);
-            NekVector<NekDouble> y(size);
-            
-            if(degree == 0)
-            {
-                // Set y to ones
-                y = NekVector<NekDouble>(size, 1.0);
-    
-            }
-            else if (degree == 1)
-            {           
-                for(int el=0; el<size; ++el)
-                {
-                    y[el] = 0.5*(alpha - beta + (alpha + beta + 2.0) * x[el]);
-                }
-                
-            }
-            else if (degree > 1)
-            {           
-                NekDouble degm1 = degree - 1.0;
-                NekDouble tmp = 2.0 * degm1 + alpha + beta;
-                NekDouble a1 = 2.0 * (degm1 + 1.0) * (degm1 + alpha + beta + 1.0) * tmp;
-                NekDouble a2 = (tmp + 1.0) * (alpha * alpha - beta * beta);
-                NekDouble a3 = tmp * (tmp + 1.0) * (tmp + 2.0);
-                NekDouble a4 = 2.0 * (degm1 + alpha) * (degm1 + beta) * (tmp + 2.0);
-    
-                // TODO: Make this efficient: Reuse the degree-2 for the degree-1 call.
-                // This can be done in linear time, but it is currently implemented to run in exponential time.
-                NekVector<NekDouble> z2 = JacobiPoly(degree-2, x, alpha, beta);
-                NekVector<NekDouble> z1 = JacobiPoly(degree-1, x, alpha, beta);
-
-                for (int el=0; el<size; ++el)
-                {
-                    y[el] = ((a2 + a3 * x[el]) * z1[el] - a4 * z2[el])/a1;
-                }
-                
-            }
-            else
-            {
-                cerr << "Bad degree" << endl;
-            }
-    
-            return y;
-        }
-        
-        NekDouble JacobiPoly(int degree, NekDouble x, NekDouble alpha, NekDouble beta)
-        {
-            NekDouble y = 0.0;
-            
-            if(degree == 0)
-            {
-                y = 1.0;
-            }
-            
-            else if (degree == 1)
-            {           
-                y = 0.5*(alpha - beta + (alpha + beta + 2.0) * x);
-            }
-            
-            else if (degree > 1)
-            {           
-                NekDouble degm1 = degree - 1.0;
-                NekDouble tmp = 2.0 * degm1 + alpha + beta;
-                NekDouble a1 = 2.0 * (degm1 + 1.0) * (degm1 + alpha + beta + 1.0) * tmp;
-                NekDouble a2 = (tmp + 1.0) * (alpha * alpha - beta * beta);
-                NekDouble a3 = tmp * (tmp + 1.0) * (tmp + 2.0);
-                NekDouble a4 = 2.0 * (degm1 + alpha) * (degm1 + beta) * (tmp + 2.0);
-
-                // TODO: Make this efficient: Reuse the degree-2 for the degree-1 call.
-                // This can be done in linear time, but it is currently implemented to run in exponential time.
-                NekDouble z2 = JacobiPoly(degree-2, x, alpha, beta);
-                NekDouble z1 = JacobiPoly(degree-1, x, alpha, beta);
-
-                y = ((a2 + a3 * x) * z1 - a4 * z2)/a1;
-            }
-            
-            else
-            {
-                cerr << "Bad degree" << endl;
-            }
-    
-            return y;
-        }
-    
-    
-        NekVector<NekDouble> LegendrePoly(int degree, const NekVector<NekDouble>& x)
-        {
-            int size = GetSize(x);
-            NekVector<NekDouble> y(size);
-            
-            if(degree > 1)
-            {
-                NekVector<NekDouble> a0(size, 1.0);
-                NekVector<NekDouble> a1 = x;
-                NekVector<NekDouble> a2(size);
-    
-                for(int i=2; i<=degree; ++i)
-                {
-                    NekDouble b = NekDouble(2.0*i-1.0)/i;
-                    NekDouble c = NekDouble(i-1.0)/i;
-    
-                    // multiply each elements in matrix
-                    a2 = b * Hadamard(a1, x)  -  c * a0;
-                    a0 = a1;
-                    a1 = a2;
-                }
-                y = a2;    
-            }
-            else if( degree == 1 )
-            {
-                y = x;                
-            }
-            else
-            {
-                y = NekVector<NekDouble>(size, 1.0);
-            }
-            return y;
-        }
-
-        // Triangle orthonormal basis expansion
-        NekVector<NekDouble> DubinerPoly(int p, int q, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y)
-        {
-            // Get the coordinate transform
-            int size = GetSize(x);
-            NekVector<NekDouble> eta_1(size);
-    
-            // Initialize the horizontal coordinate of the triangle (beta in Barycentric coordinates)
-            for(int el=0; el<size; ++el)
-            {
-                if( y[el] < 1.0 - 1e-16 )
-                {
-                    eta_1[el] = 2.0*(1.0 + x[el]) / (1.0 - y[el]) - 1.0;
-                }
-                else
-                {
-                    eta_1[el] = -1.0; // When y is close to 1, then we have a removeable singularity
-                }
-            }
-    
-            // Initialize the vertical coordinate of the triangle (gamma in Barycentric coordinates)
-            NekVector<NekDouble> eta_2 = y;
-    
-            // Orthogonal Dubiner polynomial
-            int alpha = 2*p + 1; int beta = 0;
-            NekVector<NekDouble> phi(size);
-            NekVector<NekDouble> psi_a = LegendrePoly(p, eta_1);
-            NekVector<NekDouble> upsilon = JacobiPoly(q, eta_2, alpha, beta);
-            NekDouble w = sqrt((2.0 * p + 1.0) * (p + q + 1.0) / 2.0); // Normalizing Orthonormal weight
-    
-            for(int el=0; el<size; ++el)
-            {
-                NekDouble zeta   = pow((1.0 - eta_2[el])/2.0, p);
-                NekDouble psi_b  = zeta * upsilon[el];
-                phi[el]          = w * psi_a[el] * psi_b;
-            }
-            return phi;
-        }
-
-
-        // Tetrahedral orthogonal basis expansion
-        NekVector<NekDouble> TetrahedralBasis(int p, int q, int r, const NekVector<NekDouble>& x,
-                                              const NekVector<NekDouble>& y, const NekVector<NekDouble>& z)
-        {
-            // Get the coordinate transform
-            int size = GetSize(x);
-            NekVector<NekDouble> eta_1(size), eta_2(size);
-  
-            // Initialize the horizontal coordinate of the Tetrahedral 
-            for(int el=0; el<size; ++el)
-            {
-                if( z[el] < -y[el] - numeric_limits<NekDouble>::epsilon() )
-                {
-                    eta_1[el] = 2.0*(1.0 + x[el])/(-y[el]-z[el]) - 1.0;
-                }
-                else
-                {
-                    eta_1[el] = -1.0;
-                }
-            }
-
-             // Initialize the  coordinate of the Tetrahedral 
-            for(int el=0; el<size; ++el)
-            {
-                if( z[el] < 1.0 - numeric_limits<NekDouble>::epsilon())
-                {
-                    eta_2[el] = 2.0*(1.0 + y[el]) / (1.0 - z[el]) - 1.0;
-                }
-                else
-                {
-                    eta_2[el] = -1.0;  // When z is close to 1, then we have a removeable singularity
-                    eta_1[el] = -1.0;  // When z is close to 1, then we have a removeable singularity
-                }
-            }
-            
-            // Initialize the vertical coordinate of the Tetrahedral 
-            NekVector<NekDouble> eta_3 = z;
-
-            // Orthogonal basis polynomial
-            int alpha = 2*p + 1; int beta = 0;
-            int alpha_r = 2*p + 2*q + 2; int beta_r = 0;
-            NekVector<NekDouble> phi(size);
-            NekVector<NekDouble> psi_a    = LegendrePoly(p,eta_1);
-            NekVector<NekDouble> psi_bpq  = JacobiPoly(q, eta_2, alpha, beta);
-            NekVector<NekDouble> psi_cpqr = JacobiPoly(r, eta_3, alpha_r, beta_r);
-            NekDouble w = 1.0;
-
-            for(int el=0; el<size; ++el)
-            {
-                NekDouble zeta_1 = pow((1.0 - eta_2[el])/2.0, p);                
-                NekDouble zeta_2 = pow((1.0 - eta_3[el])/2.0, p+q);
-                
-                NekDouble psi_b = zeta_1 * psi_bpq[el];
-                NekDouble psi_c = zeta_2 * psi_cpqr[el];
-
-                phi[el]         = w * psi_a[el] * psi_b * psi_c;
-
-            }
-               
-            return phi;
-
-        }
-
-        NekMatrix<NekDouble> GetTetVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z, int degree)
-        {
-           //cout << "Begin  GetTetVandermonde" << endl;
-            int rows = GetSize(x);
-            int cols = (degree + 1) * (degree + 2) * (degree + 3)/6;
-            
-            NekMatrix<NekDouble> matV(rows, cols, 0.0);
-
-            for(int d=0, n=0; d<=degree; ++d)
-            {
-                for(int p=0; p <= d; ++p)
-                {
-                    for(int q=0; q <= d - p; ++q, ++n)
-                    {
-                        int r = d - p - q;
-                        NekVector<NekDouble> columnVector = TetrahedralBasis(p, q, r, x, y, z);
-
-                       //  cout << "degree = " << degree << ", (d,p,q,r) = (" << d << ", " << p << ", " << q << ", " << r << ")" << endl;
-                        // Set n-th column of V to the TetrahedralBasis vector
-                        for(int i=0; i<rows; ++i)
-                        {
-                            matV(i,n) = columnVector[i];
-                        }
-                    }
-                }
-            }
-            return matV;
-        }
-
-
-        NekMatrix<NekDouble> GetTetVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z)
-        {
-            int rows = GetSize(x);
-            int degree = GetTetDegree(rows);
-            return GetTetVandermonde(x, y, z, degree);
-        }
-
-        
-        NekMatrix<NekDouble> GetVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree)
-        {
-            int rows = GetSize(x);
-            int cols = (degree + 1) * (degree + 2) / 2;
-            
-            NekMatrix<NekDouble> matV(rows, cols, 0.0);
-    
-            for(int d=0, n=0; d<=degree; ++d)
-            {
-                for(int p=0; p<=d; ++p, ++n)
-                {
-                    int q = d - p;
-                    NekVector<NekDouble> columnVector = DubinerPoly(p, q, x, y);
-    
-                    // Set n-th column of V to the DubinerPoly vector
-                    for(int i=0; i<rows; ++i)
-                    {
-                            matV(i,n) = columnVector[i];
-                    }
-                }
-            }
-    
-            return matV;
-        }
-    
-        NekMatrix<NekDouble> GetVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y)
-        {
-            int rows = GetSize(x);
-            int degree = GetDegree(rows);
-            return GetVandermonde( x, y, degree );
-        }
-    
-        SharedNekMatrixPtr MakeVmatrixOfTet(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z)
-        {
-            // Construct the Vandermonde matrix of Tetrahedron
-            SharedNekMatrixPtr vMat(new NekMatrix<NekDouble>( GetTetVandermonde(x, y, z)));
-            return vMat;
-        }
-        
-        SharedNekMatrixPtr MakeVmatrixOfDubinerPolynomial(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y)
-        {
-            // Construct the Vandermonde matrix of DubinerPolynomials
-            SharedNekMatrixPtr vandermonde(new NekMatrix<NekDouble>( GetVandermonde(x, y) ));
-    
-            return vandermonde;
-        }
-
-        NekVector<NekDouble> MakeTetWeights(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z)
-        {
-
-            NekVector<NekDouble> g = MakeTetQuadratureSystem(x.GetRows());
-          
-            SharedNekMatrixPtr matV = MakeVmatrixOfTet(x, y, z);
-
-            // Initialize the linear system solver
-            LinearSystem matL(matV);
-
-
-            // Deduce the quadrature weights
-            NekVector<NekDouble> w = matL.SolveTranspose(g);
-            
-            return w;
-        }
-    
-        NekVector<NekDouble> MakeQuadratureWeights(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y)
-        {
-    
-            NekVector<NekDouble> g = MakeDubinerQuadratureSystem(x.GetRows());
-            
-            SharedNekMatrixPtr   matV =  MakeVmatrixOfDubinerPolynomial( x, y);
-
-            // Initialize the linear system solver
-            LinearSystem matL(matV);
-
-            // Deduce the quadrature weights
-            return matL.SolveTranspose(g);
-    
-        }
-
-         NekMatrix<NekDouble> GetTetInterpolationMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z,
-                                                       const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi, const NekVector<NekDouble>& zi)
-        {
-            int nNodes = GetSize(x);
-            int degree = GetTetDegree(nNodes);
-
-            NekMatrix<NekDouble> matS = GetTetVandermonde(x, y, z); // Square 'short' matrix
-            NekMatrix<NekDouble> matT = GetTetVandermonde(xi, yi, zi, degree); // Coefficient interpolation matrix (tall)
-
-            NekMatrix<NekDouble> invertMatrix = Invert(matS);
-
-            // Get the interpolation matrix
-            return matT*invertMatrix;
-        }
-            
-        NekMatrix<NekDouble> GetInterpolationMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                    const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi)
-        {
-            int nNodes = GetSize(x);
-            int degree = GetDegree(nNodes);
-    
-            NekMatrix<NekDouble> matS = GetVandermonde(x, y); // Square 'short' matrix
-            NekMatrix<NekDouble> matT = GetVandermonde(xi, yi, degree); // Coefficient interpolation matrix (tall)
-    
-            NekMatrix<NekDouble> invertMatrix = Invert(matS);
-
-            // Get the interpolation matrix
-            return matT*invertMatrix;
-        }
-    
-        NekVector<NekDouble> LegendrePolyDerivative(int degree, const NekVector<NekDouble>& x)
-        {
-            int size = GetSize(x);
-            NekVector<NekDouble> y(size), b3(size), a2(size);
-            
-            if(degree >= 3)
-            {
-                NekVector<NekDouble> b0(size, 0.0), b1(size, 1.0), b2 = 3.0 * x;
-                NekVector<NekDouble> a0(size, 1.0), a1 = x;
-    
-                for(int n=3; n<=degree; ++n)
-                {
-                    a2 = ((2.0*n - 3.0)/(n - 1.0)) * Hadamard(x, a1) - (n - 2.0)/(n - 1.0) * a0;
-                    a0 = a1;
-                    a1 = a2;
-    
-                    b3 = (2.0*n - 1.0)/n * (Hadamard(b2, x) + a2) - (n - 1.0)/n * b1;
-                    b1 = b2;
-                    b2 = b3;
-                }
-                y = b3;
-                
-            }
-            else if(degree == 2)
-            {
-                y = 3.0 * x;                
-            }
-            else if(degree == 1)
-            {
-                y = NekVector<NekDouble>(size, 1.0);
-                
-            }
-            else
-            {
-                y = NekVector<NekDouble>(size, 0.0);
-            }
-            return y;
-        }
-    
-    
-        NekVector<NekDouble> DubinerPolyXDerivative(int p, int q, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y)
-        {            
-            // Get the coordinate transform
-            int size = GetSize(y);
-            NekVector<NekDouble> eta_1(size);
-            NekVector<NekDouble> psi_x(x.GetRows());
-            if(p>0)
-            {
-                    // Initialize the horizontal coordinate of the triangle (beta in Barycentric coordinates)
-                for(int el=0; el<size; ++el)
-                {
-                    if(y[el] < 1.0 - 1e-16)
-                    {
-                        eta_1[el] = 2.0*(1.0 + x[el]) / (1.0 - y[el]) - 1.0;
-                    }
-                    else
-                    {
-                        eta_1[el] = -1.0; // When y is close to 1, then we have a removeable singularity
-                    }
-                }
-                // Initialize the vertical coordinate of the triangle (gamma in Barycentric coordinates)
-                NekVector<NekDouble> eta_2 = y;
-    
-                // Orthogonal Dubiner polynomial x-derivative
-                int alpha = 2*p + 1; int beta = 0;
-                NekVector<NekDouble> psi_a_x = LegendrePolyDerivative(p, eta_1);
-                NekVector<NekDouble> upsilon = JacobiPoly(q, eta_2, alpha, beta);
-                NekDouble w = sqrt((2.0*p + 1.0) * (p + q + 1.0) / 2.0); // Normalizing Orthonormal weight
-    
-                for(int i=0; i<size; ++i)
-                {
-                    NekDouble zeta = pow((1.0 -  eta_2[i])/2.0, (p-1.0));
-                    NekDouble psi_b = zeta*upsilon[i];
-                    psi_x[i] = w * psi_a_x[i] * psi_b;
-                }
-            }
-            else
-            {
-                for(int i=0; i<int(x.GetRows()); ++i)
-                {
-                    psi_x[i] = 0.0;
-                }
-            }
-    
-            return psi_x;
-        }
-
-        NekVector<NekDouble> TetXDerivative(int p, int q, int r, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                            const NekVector<NekDouble>& z)
-        {
-            // Get the coordinate transform
-            int size = GetSize(y);
-            NekVector<NekDouble> eta_1(size), eta_2(size);
-            NekVector<NekDouble> psi_x(x.GetRows());
-            if(p > 0){
-                // Initialize the horizontal coordinate of the Tetrahedral (beta in Barycentric coordinate)
-                for(int el=0; el<size; ++el)
-                {
-                    if( y[el] < -z[el] - numeric_limits<NekDouble>::epsilon())
-                    {
-                        eta_1[el] = 2.0*(1.0 + x[el])/(-y[el]-z[el]) - 1.0;
-                    } else
-                    {
-                        eta_1[el] = -1.0;
-                    }
-                }
-                
-                    // Initialize the  coordinate of the Tetrahedral (gamma in Barycentric coordinate)
-                for(int el=0; el<size; ++el)
-                {
-                    if( z[el] < 1.0 - numeric_limits<NekDouble>::epsilon())
-                    {
-                        eta_2[el] = 2.0*(1.0 + y[el]) / (1.0 - z[el]) - 1.0;
-                    }
-                    else
-                    {
-                        eta_2[el] = -1.0;  // When z is close to 1, then we have a removeable singularity
-                    }
-                }
-                // Initialize the vertical coordinate of the Tetrahedral (delta in Barycentric coordinate)
-                NekVector<NekDouble> eta_3 = z;
-                            
-                // Orthogonal basis polynomial x-derivative
-                int alpha = 2*p + 1; int beta = 0;
-                int alpha_r = 2*p + 2*q + 2; int beta_r = 0;
-                NekVector<NekDouble> psi_a_x    = LegendrePolyDerivative(p,eta_1);
-                NekVector<NekDouble> psi_bpq  = JacobiPoly(q, eta_2, alpha, beta);
-                NekVector<NekDouble> psi_cpqr = JacobiPoly(r, eta_3, alpha_r, beta_r);
-
-                for(int el=0; el<size; ++el)
-                {
-                    NekDouble jacobi_b =  pow((1.0-eta_2[el])/2.0, p-1.0);
-                    NekDouble jacobi_c =  pow((1.0-eta_3[el])/2.0,p+q-1.0);
-                    NekDouble psi_b = jacobi_b * psi_bpq[el];
-                    NekDouble psi_c = jacobi_c * psi_cpqr[el];
-                    psi_x[el] = psi_a_x[el] * psi_b * psi_c;
-                }
-            }
-            else
-            {
-                for(int el=0; el<int(x.GetRows()); ++el)
-                {
-                    psi_x[el] = 0.0;
-                }
-            }
-            return psi_x;
-        }
-
-        NekMatrix<NekDouble> GetVandermondeForTetXDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                             const NekVector<NekDouble>& z, int degree)
-        {
-            int rows = GetSize(x);
-            int cols = (degree + 1) * (degree + 2) * (degree + 3)/6;
-            NekMatrix<NekDouble> matVx(rows, cols, 0.0);
-            
-            for(int d=0, n=0; d<=degree; ++d)
-            {
-                for(int p=0; p <= d; ++p)
-                {
-                    for(int q=0; q <= d - p; ++q, ++n)
-                    {
-                        int r = d - p - q;
-                        NekVector<NekDouble> columnVector = TetXDerivative(p, q, r, x, y, z);
-
-                        // Set n-th column of V to the TetrahedralBasis vector
-                        for(int i=0; i<rows; ++i)
-                        {
-                            matVx(i,n) = columnVector[i];
-                        }
-                    }
-                }
-            }
-            return matVx;
-        }
-
-        NekMatrix<NekDouble> GetVandermondeForTetXDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z)
-        {
-            int rows = GetSize(x);
-            int degree = GetTetDegree(rows);
-            return GetVandermondeForTetXDerivative(x, y, z, degree);
-        }
-
-        Points<NekDouble>::MatrixSharedPtrType GetTetXDerivativeMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-        const NekVector<NekDouble>& z, const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi, const NekVector<NekDouble>& zi)
-        {
-            int nNodes = GetSize(x);
-            int degree = GetTetDegree(nNodes);
-            NekMatrix<NekDouble> matS  = GetTetVandermonde(x, y, z); // Square 'short' matrix
-            NekMatrix<NekDouble> matTx = GetVandermondeForTetXDerivative(xi, yi, zi, degree); // Tall matrix
-    
-            NekMatrix<NekDouble> invertMatrix = Invert(matS);
-    
-            // Get the Derivation matrix    
-            return Points<NekDouble>::MatrixSharedPtrType( new NekMatrix<NekDouble>(matTx*invertMatrix) );
-        }
-    
-        
-        NekMatrix<NekDouble> GetVandermondeForXDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree)
-        {
-            int rows = GetSize(x);
-            int cols = (degree + 1) * (degree + 2)/2;
-            NekMatrix<NekDouble> matVx(rows, cols, 0.0);
-            for(int d=0, n=0; d<=degree; ++d)
-            {
-                for(int p=0; p<=d; ++p, ++n)
-                {
-                    int q = d - p;
-                    NekVector<NekDouble> columnVector = DubinerPolyXDerivative(p, q, x, y);
-    
-                    // Set n-th column of Vx to the DubinerPolyXDerivative vector
-                    for(int i=0; i<rows; ++i)
-                    {
-                        matVx(i, n) = columnVector[i];
-                    }
-                }
-            }
-            
-            return matVx;
-        }
-    
-            
-        NekMatrix<NekDouble> GetVandermondeForXDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y)
-        {
-            int rows = GetSize(x);
-            int degree = GetDegree(rows);
-            return GetVandermondeForXDerivative(x, y, degree);
-        }
-            
-        Points<NekDouble>::MatrixSharedPtrType GetXDerivativeMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                                    const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi)
-        {
-            int nNodes = GetSize(x);
-            int degree = GetDegree(nNodes);
-            NekMatrix<NekDouble> matS  = GetVandermonde(x, y); // Square 'short' matrix
-            NekMatrix<NekDouble> matTx = GetVandermondeForXDerivative(xi, yi, degree); // Tall matrix
-    
-            NekMatrix<NekDouble> invertMatrix = Invert(matS);
-    
-            // Get the Derivation matrix    
-            return Points<NekDouble>::MatrixSharedPtrType( new NekMatrix<NekDouble>(matTx*invertMatrix) );
-        }
-    
-    
-        NekVector<NekDouble> JacobiPolyDerivative(int degree, const NekVector<NekDouble>& x, int alpha, int beta)
-        {
-            int size = GetSize(x);
-            NekVector<NekDouble> y(size);
-    
-            if(degree == 0)
-            {
-                y = NekVector<NekDouble>(size, 0.0);
-    
-            }
-             else
-             {
-                y = 0.5 * (alpha + beta + degree + 1) * JacobiPoly(degree - 1, x, alpha + 1, beta + 1);
-            }
-            return y;
-        }
-
-
-
-         NekVector<NekDouble> TetYDerivative(int p, int q, int r, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                            const NekVector<NekDouble>& z)
-         {
-            // Get the coordinate transform
-            int size = GetSize(y);
-            NekVector<NekDouble> eta_1(size), eta_2(size);
-            NekVector<NekDouble> eta_1_dy(size), eta_2_dy(size);
-    
-            // Initialize the collapsed horizontal coordinate of the Tetrahedral
-            for(int el=0; el<size; ++el)
-            {
-                if( y[el] < -z[el] - numeric_limits<NekDouble>::epsilon())
-                {
-                    eta_1[el]       = 2.0*(1.0 + x[el])/(-y[el]-z[el]) - 1.0;
-                    eta_1_dy[el]    = 2.0*(1.0 + x[el])/((y[el]+z[el])*(y[el]+z[el]));
-                }
-                else
-                {
-                    eta_1[el]       = -1.0;
-                    eta_1_dy[el]    =  0.0; // No change in the squeeze direction
-                }
-            }
-    
-            // Initialize the collapsed depth coordinate of the Tetrahedral
-            for(int el=0; el<size; ++el)
-            {
-                if( z[el] < 1.0 - numeric_limits<NekDouble>::epsilon())
-                {
-                    eta_2[el]       = 2.0*(1.0 + y[el]) / (1.0 - z[el]) - 1.0;
-                    eta_2_dy[el]    = 2.0/(1.0 - z[el]);
-                }
-                else
-                {
-                        // When z is close to 1, then we have a removeable singularity
-                    eta_2[el]       = -1.0;
-                    eta_2_dy[el]    =  0.0; // No change in the squeeze direction
-                }
-            }
-            // Initialize the collapsed vertical coordinate of the Tetrahedral
-            NekVector<NekDouble> eta_3 = z;
-    
-            // Orthogonal basis expansion polynomials and their y-derivatives for the tetrahedron
-            // phi(vec xi) = psi_a(eta_1(xi)) * psi_b(eta_2(xi)) * psi_c(eta_3(xi))
-            int alpha_b = 2*p + 1; int beta_b = 0;
-            int alpha_c = 2*p + 2*q + 2; int beta_c = 0;
-            NekVector<NekDouble> ones( size, 1.0 );
-    
-            NekVector<NekDouble> jacobi_b   = VectorPower( (ones - eta_2)/2.0, p );
-            NekVector<NekDouble> jacobi_c   = VectorPower( (ones - eta_3)/2.0, p+q );
-    
-            NekVector<NekDouble> J_q        = JacobiPoly(q, eta_2, alpha_b, beta_b);
-            NekVector<NekDouble> J_r        = JacobiPoly(r, eta_3, alpha_c, beta_c);
-    
-            NekVector<NekDouble> psi_a      = LegendrePoly(p, eta_1);
-            NekVector<NekDouble> LD         = LegendrePolyDerivative(p, eta_1);
-            NekVector<NekDouble> JD         = JacobiPolyDerivative(q, eta_2, alpha_b, beta_b);
-            NekVector<NekDouble> psi_b      = Hadamard( J_q, jacobi_b );
-            NekVector<NekDouble> psi_c      = Hadamard( J_r, jacobi_c );
-    
-            // Compute the partials wrt y (psi_c_dy = 0)
-            NekVector<NekDouble> secondComponentOfPsi_b_dy( size, 0.0 );
-
-            if(p > 0)
-            {
-                for(int i=0; i<size; ++i)
-                {
-                    NekDouble jacobi_b_dy = -p / 2.0 * pow( (1.0 - eta_2[i])/2.0, p-1.0 );
-                    secondComponentOfPsi_b_dy[i] = J_q[i] * jacobi_b_dy;
-                }
-            }
-             else
-            {
-                for(int i=0; i<size; ++i)
-                {
-                    secondComponentOfPsi_b_dy[i] = 0.0;
-                }
-            }
-
-            NekVector<NekDouble> psi_a_dy   = Hadamard( LegendrePolyDerivative(p, eta_1), eta_1_dy );
-            NekVector<NekDouble> psi_b_dy   = Hadamard( Hadamard( JacobiPolyDerivative(q, eta_2, alpha_b, beta_b), jacobi_b)
-                                              + secondComponentOfPsi_b_dy, eta_2_dy );
-
-            NekVector<NekDouble> psi_dy(size);
-            for(int k=0; k<size; ++k)
-            {
-                psi_dy[k] = (psi_a_dy[k]*psi_b[k]*psi_c[k])  +  (psi_a[k]*psi_b_dy[k]*psi_c[k]);
-            }
-
-            // Fix singularity at z=1
-            for(int k=0; k<size; ++k)
-            {
-                if( z[k] >= 1.0 - numeric_limits<NekDouble>::epsilon() )
-                {
-                    if( p + q > 0 )
-                    {
-                        psi_dy[k] = ((2.0*p+q+2.0)*JacobiPoly(q, eta_2[k], alpha_b, 1) - (p+q+2.0)*J_q[k]) *
-                        psi_a[k] * pow( (1.0-eta_3[k])/2.0, p+q-1 ) / 2.0 * ((p+q+r+3.0)*J_r[k] - (2.0*p+2.0*q+r+3.0)*JacobiPoly(r, eta_3[k], alpha_c, 1));
-                    }
-                    else
-                    {
-                        psi_dy[k] = 0.0;
-                    }
-                }
-            }
-
-//             cout << "(p,q,r) = (" << p << ", " << q << ", " << r << ")" << endl;
-// 
-//             cout << "psi_a    = " << VectorToString(psi_a) << endl;
-//             cout << "psi_b    = " << VectorToString(psi_b) << endl;
-//             cout << "psi_c    = " << VectorToString(psi_c) << endl;
-//             cout << "psi_a_dy = " << VectorToString(psi_a_dy) << endl;
-//             cout << "psi_b_dy = " << VectorToString(psi_b_dy) << endl;
-//             cout << "(psi_a_dy*psi_b*psi_c)          = " << VectorToString(Hadamard(Hadamard(psi_a_dy,psi_b), psi_c)) << endl;
-//             cout << "(psi_a*jacobi_b*psi_b_dy*psi_c) = " << VectorToString(Hadamard(Hadamard(psi_a,jacobi_b),Hadamard(psi_b_dy,psi_c))) << endl;
-//             cout << "secondComponentOfPsi_b_dy = " << VectorToString(secondComponentOfPsi_b_dy) << endl;
-//             
-//             cout << "psi_dy   = " << VectorToString(psi_dy) << endl;
-// // //            cout << "jacobi_c = " << VectorToString(jacobi_c) << endl;
-// // //             cout << "eta_3 = " << VectorToString(eta_3) << endl;
-// // //             cout << "ones - eta_3 = " << VectorToString(ones - eta_3) << endl;
-// // //             cout << "(ones - eta_3)/2.0 = " << VectorToString((ones - eta_3)/2.0) << endl;
-
-
-            return psi_dy;
-        }
-
-        
-        NekMatrix<NekDouble> GetVandermondeForTetYDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                              const NekVector<NekDouble>& z, int degree){
-            int rows = GetSize(y);
-            int cols = (degree + 1) * (degree + 2) * (degree + 3)/6;
-            NekMatrix<NekDouble> matVy(rows, cols, 0.0);
-            
-            for(int d=0, n=0; d<=degree; ++d)
-            {
-                for(int p=0; p <= d; ++p)
-                {
-                    for(int q=0; q <= d - p; ++q, ++n)
-                    {
-                        int r = d - p - q;
-                        NekVector<NekDouble> columnVector = TetYDerivative(p, q, r, x, y, z);
-
-                        // Set n-th column of V to the TetrahedralBasis vector
-                        for(int i=0; i<rows; ++i)
-                        {
-                            matVy(i,n) = columnVector[i];
-                        }
-                    }
-                }
-            }
-            return matVy;
-        }
-
-        NekMatrix<NekDouble> GetVandermondeForTetYDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                             const NekVector<NekDouble>& z)
-        {
-            int rows = GetSize(y);
-            int degree = GetTetDegree(rows);
-            return GetVandermondeForTetYDerivative(x, y, z, degree);
-        }
-
-        Points<NekDouble>::MatrixSharedPtrType GetTetYDerivativeMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-            const NekVector<NekDouble>& z, const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi, const NekVector<NekDouble>& zi)
-        {
-            // int nNodes = GetSize(y);
-            
-            NekMatrix<NekDouble> matS  = GetTetVandermonde(x, y, z); // Square 'short' matrix
-
-            NekMatrix<NekDouble> matTy = GetVandermondeForTetYDerivative(xi, yi, zi); // Tall matrix
-
-            NekMatrix<NekDouble> invertMatrix = Invert(matS);
-            
-            NekMatrix<NekDouble> makeDerivativeMatrix = matTy*invertMatrix;
-
-            return Points<NekDouble>::MatrixSharedPtrType(new NekMatrix<NekDouble>(makeDerivativeMatrix));
-
-        }
-    
-         NekVector<NekDouble> TetZDerivative(int p, int q, int r, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                            const NekVector<NekDouble>& z)
-         {
-            int size = GetSize(z);
-            NekVector<NekDouble> eta_1(size), eta_2(size);
-            NekVector<NekDouble> eta_1_dz(size), eta_2_dz(size);
-            
-             // Initialize the collapsed horizontal coordinate of the Tetrahedral 
-            for(int el=0; el<size; ++el)
-            {
-                if( y[el] < -z[el] - numeric_limits<NekDouble>::epsilon())
-                {
-                    eta_1[el]       = 2.0*(1.0 + x[el]) / (-y[el]-z[el]) - 1.0;
-                    eta_1_dz[el]    = 2.0*(1.0 + x[el]) / ((y[el]+z[el])*(y[el]+z[el]));
-                }
-                else
-                {
-                    eta_1[el]       = -1.0;
-                    eta_1_dz[el]    =  0.0; // No change in the squeeze direction
-                }
-            }
-
-            // Initialize the collapsed depth coordinate of the Tetrahedral
-            for(int el=0; el<size; ++el)
-            {
-                if( z[el] < 1.0 - numeric_limits<NekDouble>::epsilon())
-                {
-                    eta_2[el]       = 2.0*(1.0 + y[el]) / (1.0 - z[el])  -  1.0;
-                    eta_2_dz[el]    = 2.0*(1.0 + y[el]) / ((1.0 - z[el])*(1.0 - z[el]));
-                }
-                else
-                {    // When z is close to 1, then we have a removeable singularity
-                    eta_2[el]       = -1.0;
-                    eta_2_dz[el]    =  0.0; // No change in the squeeze direction
-                }
-            }
-
-
-            // Initialize the collapsed vertical coordinate of the Tetrahedral 
-            NekVector<NekDouble> eta_3 = z;
-            NekVector<NekDouble> eta_3_dz(size, 1.0);
-
-            
-            // Orthogonal basis expansion polynomials and their z-derivatives for the tetrahedron
-            // phi(vec xi) = psi_a(eta_1(xi)) * psi_b(eta_2(xi)) * psi_c(eta_3(xi))
-            int alpha_b = 2*p + 1; int beta_b = 0;
-            int alpha_c = 2*p + 2*q + 2; int beta_c = 0;
-            NekVector<NekDouble> ones( size, 1.0 );
-
-            NekVector<NekDouble> jacobi_b   = VectorPower( (ones - eta_2)/2.0, p );
-            NekVector<NekDouble> jacobi_c   = VectorPower( (ones - eta_3)/2.0, p+q );
-            
-            NekVector<NekDouble> J_q        = JacobiPoly(q, eta_2, alpha_b, beta_b);
-            NekVector<NekDouble> J_r        = JacobiPoly(r, eta_3, alpha_c, beta_c);
-            
-            NekVector<NekDouble> psi_a      = LegendrePoly(p, eta_1);
-            NekVector<NekDouble> psi_b      = Hadamard( J_q, jacobi_b );
-            NekVector<NekDouble> psi_c      = Hadamard( J_r, jacobi_c );
-
-                        
-            // Compute the partials wrt y and z (psi_c_dy = 0)
-            NekVector<NekDouble> secondComponentOfPsi_b_dz( size, 0.0 );            
-            NekVector<NekDouble> secondComponentOfPsi_c_dz( size, 0.0 );
-            if(p > 0)
-            {
-                for(int i=0; i<size; ++i)
-                {
-                    NekDouble jacobi_b_dz = -p / 2.0 * pow( (1.0 - eta_2[i])/2.0, p-1.0 );
-                    secondComponentOfPsi_b_dz[i] = J_q[i] * jacobi_b_dz;
-                }
-            }
-            
-            if(p + q > 0)
-            {
-                for(int i=0; i<size; ++i)
-                {
-                    NekDouble jacobi_c_dz = -(p+q)/2.0*pow( (1.0 - eta_3[i])/2.0, p+q-1.0);
-                    secondComponentOfPsi_c_dz[i] = J_r[i] * jacobi_c_dz;
-                }
-            }
-            
-            NekVector<NekDouble> psi_a_dz   = Hadamard( LegendrePolyDerivative(p, eta_1), eta_1_dz );
-            NekVector<NekDouble> psi_b_dz   = Hadamard( Hadamard(JacobiPolyDerivative(q, eta_2, alpha_b, beta_b), jacobi_b)
-                                              + secondComponentOfPsi_b_dz, eta_2_dz );
-            NekVector<NekDouble> psi_c_dz   = Hadamard( Hadamard(JacobiPolyDerivative(r, eta_3, alpha_c, beta_c), jacobi_c)
-                                              + secondComponentOfPsi_c_dz, eta_3_dz );
-
-            NekVector<NekDouble> psi_dz(size);
-            
-            for(int k=0; k<size; ++k)
-            {
-               psi_dz[k] = psi_a_dz[k] * psi_b[k] * psi_c[k]  +  psi_a[k] * psi_b_dz[k] * psi_c[k]  +  psi_a[k] * psi_b[k] * psi_c_dz[k];
-            }
-            
-            return psi_dz;                                                                    
-        }
-
-        NekMatrix<NekDouble> GetVandermondeForTetZDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                              const NekVector<NekDouble>& z, int degree){
-            int rows = GetSize(z);
-            int cols = (degree + 1) * (degree + 2) * (degree + 3)/6;
-            NekMatrix<NekDouble> matVz(rows, cols, 0.0);
-            
-            for(int d=0, n=0; d<=degree; ++d)
-            {
-                for(int p=0; p <= d; ++p)
-                {
-                    for(int q=0; q <= d - p; ++q, ++n)
-                    {
-                        int r = d - p - q;
-                        NekVector<NekDouble> columnVector = TetZDerivative(p, q, r, x, y, z);
-
-                        // Set n-th column of V to the TetrahedralBasis vector
-                        for(int i=0; i<rows; ++i)
-                        {
-                            matVz(i,n) = columnVector[i];
-                        }
-                    }
-                }
-            }
-            return matVz;
-        }
-
-        NekMatrix<NekDouble> GetVandermondeForTetZDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                             const NekVector<NekDouble>& z)
-        {
-            int rows = GetSize(z);
-            int degree = GetTetDegree(rows);
-            return GetVandermondeForTetZDerivative(x, y, z, degree);
-        }
-
-       Points<NekDouble>::MatrixSharedPtrType GetTetZDerivativeMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-            const NekVector<NekDouble>& z, const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi, const NekVector<NekDouble>& zi)
-        {
-            int nNodes = GetSize(z);
-            int degree = GetTetDegree(nNodes);
-
-
-            NekMatrix<NekDouble> matS  = GetTetVandermonde(x, y, z); // Square 'short' matrix
-
-            NekMatrix<NekDouble> matTz = GetVandermondeForTetZDerivative(xi, yi, zi, degree); // Tall matrix
-
-            NekMatrix<NekDouble> invertMatrix = Invert(matS);
-
-            NekMatrix<NekDouble> makeDerivativeMatrix = matTz*invertMatrix;
-
-            Points<NekDouble>::MatrixSharedPtrType TetZDerivative;
-            TetZDerivative = Points<NekDouble>::MatrixSharedPtrType(new  NekMatrix<NekDouble>(makeDerivativeMatrix));
-
-           return TetZDerivative;
-
-        }
-        
-        NekVector<NekDouble> DubinerPolyYDerivative(int p, int q, const NekVector<NekDouble>& x, const NekVector<NekDouble>& y)
-        {
-            // Get the coordinate transform
-            int size = GetSize(y);
-            NekVector<NekDouble> eta_1(size);
-    
-            // Initialize the horizontal coordinate of the triangle (beta in Barycentric coordinates)
-            for(int el=0; el<size; ++el)
-            {
-                if(y[el] < 1.0 - 1e-16)
-                {
-                    eta_1[el] = 2.0*(1.0 + x[el]) / (1.0 - y[el]) - 1.0;
-                }
-                 else
-                 {
-                    eta_1[el] = -1.0; // When y is close to 1, then we have a removeable singularity
-                }
-            }
-            // Initialize the vertical coordinate of the triangle (gamma in Barycentric coordinates)
-            NekVector<NekDouble> eta_2 = y;
-    
-            // Orthogonal Dubiner y-polynomial
-            int alpha = 2*p + 1; int beta = 0;
-            
-            NekVector<NekDouble> psi_a = LegendrePoly(p, eta_1);
-            NekVector<NekDouble> psi_a_y = LegendrePolyDerivative(p, eta_1);
-            NekVector<NekDouble> psi_b = JacobiPoly(q, eta_2, alpha, beta);
-            NekVector<NekDouble> psi_b_y = JacobiPolyDerivative(q, eta_2, alpha, beta);
-            NekVector<NekDouble> secondComponentOf_psi_b(size);
-            NekVector<NekDouble> psi_y(size);
-            
-            NekVector<NekDouble> first_part_derivative(size);
-
-            if(p > 0)
-            {
-                for(int i=0; i<size; ++i)
-                {
-                     
-                     first_part_derivative[i] = (1.0 + eta_1[i])/2.0 * psi_a_y[i] * pow((1.0 - eta_2[i])/2.0, p-1.0) * psi_b[i];
-                     secondComponentOf_psi_b[i] = -p/2.0 * pow(((1.0 - eta_2[i]) / 2.0), p - 1.0) * psi_b[i];
-
-                }                
-            }
-            else
-            {
-                for(int i=0; i<size; ++i)
-                {
-                    secondComponentOf_psi_b[i] = 0.0;
-                    first_part_derivative[i] = 0.0;
-                }
-            }
-            for(int k=0; k<size; ++k)
-            {
-                     psi_y[k] = first_part_derivative[k] + psi_a[k] * ( pow((1.0 -  eta_2[k])/2.0, p) * psi_b_y[k] + secondComponentOf_psi_b[k] );
-
-            }
-            NekDouble w = sqrt((2.0*p + 1.0)*(p + q + 1.0)/2.0); // Normalizing Orthonormal weight
-    
-            return w * psi_y;
-        }
-
-
-        
-        NekMatrix<NekDouble> GetVandermondeForYDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree)
-        {
-            int rows = GetSize(y);
-            int cols = (degree + 1) * (degree + 2)/2;
-            NekMatrix<NekDouble> matVy(rows, cols, 0.0);
-            
-            for(int d=0, n=0; d<=degree; ++d)
-            {
-                for(int p=0; p<=d; ++p, ++n)
-                {
-                    int q = d - p;
-                    NekVector<NekDouble> columnVector = DubinerPolyYDerivative(p, q, x, y);
-    
-                    for(int i=0; i<rows; ++i)
-                    {
-                        matVy(i, n) = columnVector[i];
-                    }
-                }
-            }
-            return matVy;
-        }
-    
-        
-        Points<NekDouble>::MatrixSharedPtrType GetYDerivativeMatrix(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                                    const NekVector<NekDouble>& xi, const NekVector<NekDouble>& yi)
-        {
-            int nNodes = GetSize(y);
-            int degree = GetDegree(nNodes);
-    
-            NekMatrix<NekDouble> matS  = GetVandermonde(x, y); // Square 'short' matrix
-            NekMatrix<NekDouble> matTy = GetVandermondeForYDerivative(xi, yi, degree); // Tall matrix
-    
-            NekMatrix<NekDouble> invertMatrix = Invert(matS);
-
-
-            // Get the Derivation matrix
-            return Points<NekDouble>::MatrixSharedPtrType( new NekMatrix<NekDouble>(matTy*invertMatrix) );
-        }
-        
-    
-        NekMatrix<NekDouble> GetVandermondeForYDerivative(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y)
-        {
-            int rows = GetSize(y);
-            int degree = GetDegree(rows);
-            return GetVandermondeForYDerivative(x, y, degree);
-        }
-    
-        NekMatrix<NekDouble> GetMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree)
-        {
-            int rows = GetSize(x);
-            int cols = (degree + 1)*(degree + 2)/2;
-            NekMatrix<NekDouble>matV(rows,cols, 0.0);
-
-            for(int d=0, n=0; d <= degree; ++d)
-            {
-                for(int p=0; p <= d; ++p, ++n)
-                {
-                    int q = d - p;
-                    
-                    for(int i=0; i<rows; ++i)
-                    {
-                            matV(i, n) = pow(x[i], p) * pow(y[i], q);
-                    }
-                }
-            }
-            return matV;
-        }
-        
-        NekMatrix<NekDouble> GetMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                    const NekVector<NekDouble>& z, int degree)
-        {            
-            int rows = GetSize(x);
-            int cols = (degree + 1) * (degree + 2) * (degree + 3)/6;
-
-            NekMatrix<NekDouble> matV(rows, cols, 0.0);
-
-            for(int d=0, n=0; d<=degree; ++d)
-            {
-                for(int p=0; p <= d; ++p)
-                {
-                    for(int q=0; q <= d - p; ++q, ++n)
-                    {
-                        int r = d - p - q;
-
-                        // Set n-th column of V to the monomial vector
-                        for(int i=0; i<rows; ++i)
-                        {
-                            matV(i,n) = pow(x[i],p) * pow(y[i],q) * pow(z[i],r);
-                        }
-                    }
-                }
-            }
-            return matV;
-        }
-        
-        NekMatrix<NekDouble> GetMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, const NekVector<NekDouble>& z)
-        {
-            int rows = GetSize(x);
-            int degree = GetTetDegree(rows);
-            return GetMonomialVandermonde(x, y, z, degree);
-        }
-        
-        NekMatrix<NekDouble> GetMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y)
-        {
-            int rows = GetSize(x);
-            int degree = GetDegree(rows);
-            return GetMonomialVandermonde(x, y, degree);
-        }
-        
-        NekMatrix<NekDouble> GetXDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree)
-        {
-            int rows = GetSize(x);
-            int cols = (degree + 1) * (degree + 2) / 2;
-            NekMatrix<NekDouble> matVx(rows, cols, 0.0);
-
-            for(int d=0, n=0; d <= degree; ++d)
-            {
-                for(int p=0; p <= d; ++p, ++n)
-                {
-                    int q = d - p;
-
-                    if(p > 0)
-                    {
-                        for(int i=0; i<rows; ++i)
-                        {
-                            matVx(i, n) = p * pow(x[i], p-1.0) * pow(y[i],q);
-                        }
-                    }
-                    else
-                    {
-                        for(int j=0; j<rows; ++j)
-                        {
-                            matVx(j, n) = 0.0;
-                        }
-                    }
-                }
-            }
-            return matVx;
-        }
-        
-        NekMatrix<NekDouble> GetXDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y)
-        {
-            int rows = GetSize(x);
-            int degree = GetDegree(rows);
-            return GetXDerivativeOfMonomialVandermonde(x, y, degree);
-        }
-
-        NekMatrix<NekDouble> GetTetXDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                                    const NekVector<NekDouble>& z, int degree)
-        {
-            int rows = GetSize(x);
-            int cols = (degree + 1) * (degree + 2) * (degree + 3) / 6;
-            NekMatrix<NekDouble> matVx(rows, cols, 0.0);
-            for(int d=0, n=0; d<=degree; ++d)
-            {
-                for(int p=0; p <= d; ++p)
-                {
-                    for(int q=0; q <= d - p; ++q, ++n)
-                    {
-                        int r = d - p - q;
-                        if(p > 0)
-                        {
-                            // Set n-th column of V to the monomial vector
-                            for(int i=0; i<rows; ++i)
-                            {
-                                matVx(i,n) = p * pow(x[i],p-1.0) * pow(y[i],q) * pow(z[i],r);
-                            }
-                        }
-                        else{
-                            for(int j=0; j<rows; ++j)
-                            {
-                                matVx(j, n) = 0.0;
-                            }
-                        }
-                    }
-                }
-            }
-            return matVx;
-        }
-        
-        NekMatrix<NekDouble> GetTetXDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                                    const NekVector<NekDouble>& z)
-        {
-            int rows = GetSize(x);
-            int degree = GetTetDegree(rows);
-            return GetTetXDerivativeOfMonomialVandermonde(x, y, z, degree);
-        }
-        
-        NekMatrix<NekDouble> GetTetYDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                                    const NekVector<NekDouble>& z, int degree)
-        {
-            int rows = GetSize(x);
-            int cols = (degree + 1) * (degree + 2) * (degree + 3) / 6;
-            NekMatrix<NekDouble> matVy(rows, cols, 0.0);
-            for(int d=0, n=0; d<=degree; ++d)
-            {
-                for(int p=0; p <= d; ++p)
-                {
-                    for(int q=0; q <= d - p; ++q, ++n)
-                    {
-                        int r = d - p - q;
-                        if(q > 0)
-                        {
-                            // Set n-th column of V to the monomial vector
-                            for(int i=0; i<rows; ++i)
-                            {
-                                matVy(i,n) = q * pow(x[i],p) * pow(y[i],q-1.0) * pow(z[i],r);
-                            }
-                        }
-                        else
-                        {
-                            for(int j=0; j<rows; ++j)
-                            {
-                                matVy(j, n) = 0.0;
-                            }
-                        }
-                    }
-                }
-            }
-            return matVy;
-        }
-        
-        NekMatrix<NekDouble> GetTetYDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                                    const NekVector<NekDouble>& z)
-        {
-            int rows = GetSize(x);
-            int degree = GetTetDegree(rows);
-            return GetTetYDerivativeOfMonomialVandermonde(x, y, z, degree);
-        }
-        
-        NekMatrix<NekDouble> GetTetZDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                                    const NekVector<NekDouble>& z, int degree)
-        {
-            int rows = GetSize(x);
-            int cols = (degree + 1) * (degree + 2) * (degree + 3) / 6;
-            NekMatrix<NekDouble> matVz(rows, cols, 0.0);
-             for(int d=0, n=0; d<=degree; ++d)
-            {
-                for(int p=0; p <= d; ++p)
-                {
-                    for(int q=0; q <= d - p; ++q, ++n)
-                    {
-                        int r = d - p - q;
-                        if(r > 0)
-                        {
-                            // Set n-th column of V to the monomial vector
-                            for(int i=0; i<rows; ++i)
-                            {
-                                matVz(i,n) = r * pow(x[i],p) * pow(y[i],q) * pow(z[i],r-1.0);
-                            }
-                        }
-                        else{
-                            for(int j=0; j<rows; ++j)
-                            {
-                                matVz(j, n) = 0.0;
-                            }
-                        }
-                    }
-                }
-            }
-            return matVz;
-        }
-        
-        NekMatrix<NekDouble> GetTetZDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y,
-                                                                    const NekVector<NekDouble>& z)
-        {
-            int rows = GetSize(x);
-            int degree = GetTetDegree(rows);
-            return GetTetZDerivativeOfMonomialVandermonde(x, y, z, degree);
-        }
-        
-        NekMatrix<NekDouble> GetYDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y, int degree)
-        {
-            int rows = GetSize(x);
-            int cols = (degree + 1) * (degree + 2) / 2;
-            NekMatrix<NekDouble> matVy(rows, cols, 0.0);
-            
-            for(int d=0, n=0; d <= degree; ++d)
-            {
-                for(int p=0; p <= d; ++p, ++n)
-                {
-                    int q = d - p;
-                    if(q > 0)
-                    {
-                        for(int i=0; i<rows; ++i)
-                        {
-                            matVy(i, n) = q * pow(x[i], p) * pow(y[i], q-1.0);
-                        }
-                     }
-                     else
-                     {
-                        for(int j=0; j<rows; ++j)
-                        {
-                            matVy(j, n) = 0.0;
-                        }
-                    }
-                }
-            }
-            return matVy;
-        }
-    
-        NekMatrix<NekDouble> GetYDerivativeOfMonomialVandermonde(const NekVector<NekDouble>& x, const NekVector<NekDouble>& y)
-        {
-            int rows = GetSize(x);
-            int degree = GetDegree(rows);
-            return GetYDerivativeOfMonomialVandermonde(x, y, degree);
-        }
-        
-        NekVector<NekDouble> GetIntegralOfMonomialVandermonde(int degree)
-        {
-            int cols = (degree + 1) * (degree + 2) / 2;
-            NekVector<NekDouble>integralMVandermonde(cols, 0.0);
-            
-            for(int d=0, n=0; d <= degree; ++d)
-            {
-                for(int p=0; p <= d; ++p, ++n)
-                {
-                    int q = d - p;       
-                    int sp = 1 - 2 * (p % 2);
-                    int sq = 1 - 2 * (q % 2);
-        
-                    integralMVandermonde(n) = NekDouble(sp * (p+1) + sq * (q+1) + sp * sq * (p+q+2)) / ((p+1) * (q+1) * (p+q+2));
-                }
-            }
-            return integralMVandermonde;
-        }        
+        // Solve the system V^T w = g to obtain weights.
+        LinearSystem matL(V);
+        return matL.SolveTranspose(g);
     }
+    else
+    {
+        // System is either over- or under-determined. Need to do least squares
+        // here using SVD.
+        return NekVector<NekDouble>();
+    }
+}
+
+/**
+ * @brief Return the Vandermonde matrix for the nodal distribution.
+ *
+ * This routine constructs and returns the Vandermonde matrix \f$\mathbf{V}\f$,
+ * with each entry as \f$\mathbf{V}_{ij} = (\psi_i(\xi_j))\f$ where \f$ \psi_i
+ * \f$ is the orthogonal basis obtained through the abstract function
+ * NodalUtil::v_OrthoBasis.
+ *
+ * @return The Vandermonde matrix.
+ */
+SharedMatrix NodalUtil::GetVandermonde()
+{
+    int rows = m_numPoints, cols = v_NumModes();
+    SharedMatrix matV = MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(
+        rows, cols, 0.0);
+
+    for (int j = 0; j < cols; ++j)
+    {
+        NekVector<NekDouble> col = v_OrthoBasis(j);
+        for (int i = 0; i < rows; ++i)
+        {
+            (*matV)(i, j) = col[i];
+        }
+    }
+
+    return matV;
+}
+/**
+ * @brief Return the Vandermonde matrix of the derivative of the basis functions
+ * for the nodal distribution.
+ *
+ * This routine constructs and returns the Vandermonde matrix for the derivative
+ * of the basis functions \f$\mathbf{V}_d\f$ for coordinate directions \f$ 0
+ * \leq d \leq 2 \f$, with each entry as \f$\mathbf{V}_{ij} = (\partial_d
+ * \psi_i(\xi_j))\f$ where \f$ \partial_d\psi_i \f$ is the derivative of the
+ * orthogonal basis obtained through the abstract function
+ * NodalUtil::v_OrthoBasisDeriv.
+ *
+ * @param dir  Direction of derivative in the standard element.
+ *
+ * @return Vandermonde matrix corresponding with derivative of the basis
+ *         functions in direction @p dir.
+ */
+SharedMatrix NodalUtil::GetVandermondeForDeriv(int dir)
+{
+    int rows = m_numPoints, cols = v_NumModes();
+    SharedMatrix matV = MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(
+        rows, cols, 0.0);
+
+    for (int j = 0; j < cols; ++j)
+    {
+        NekVector<NekDouble> col = v_OrthoBasisDeriv(dir, j);
+        for (int i = 0; i < rows; ++i)
+        {
+            (*matV)(i, j) = col[i];
+        }
+    }
+
+    return matV;
+}
+
+/**
+ * @brief Return the derivative matrix for the nodal distribution.
+ *
+ * This routine constructs and returns the derivative matrices
+ * \f$\mathbf{D}_d\f$ for coordinate directions \f$ 0 \leq d \leq 2 \f$, which
+ * can be used to evaluate the derivative of a nodal expansion at the points
+ * defined by NodalUtil::m_xi. These are calculated as \f$ \mathbf{D}_d =
+ * \mathbf{V}_d \mathbf{V}^{-1} \f$, where \f$ \mathbf{V}_d \f$ is the
+ * derivative Vandermonde matrix and \f$ \mathbf{V} \f$ is the Vandermonde
+ * matrix.
+ *
+ * @param dir  Coordinate direction in which to evaluate the derivative.
+ *
+ * @return The derivative matrix for direction @p dir.
+ */
+SharedMatrix NodalUtil::GetDerivMatrix(int dir)
+{
+    SharedMatrix V  = GetVandermonde();
+    SharedMatrix Vd = GetVandermondeForDeriv(dir);
+    SharedMatrix D = MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(
+        V->GetRows(), V->GetColumns(), 0.0);
+
+    V->Invert();
+
+    *D = (*Vd) * (*V);
+
+    return D;
+}
+
+/**
+ * @brief Construct the interpolation matrix used to evaluate the basis at the
+ * points @p xi inside the element.
+ *
+ * This routine returns a matrix \f$ \mathbf{I}(\mathbf{a}) \f$ that can be used
+ * to evaluate the nodal basis at the points defined by the parameter @p xi,
+ * which is denoted by \f$ \mathbf{a} = (a_1, \dots, a_N) \f$ and \f$ N \f$ is
+ * the number of points in @p xi.
+ *
+ * In particular, if the array \f$ \mathbf{u} \f$ with components \f$
+ * \mathbf{u}_i = u^\delta(\xi_i) \f$ represents the polynomial approximation of
+ * a function \f$ u \f$ evaluated at the nodal points NodalUtil::m_xi, then the
+ * evaluation of \f$ u^\delta \f$ evaluated at the input points \f$ \mathbf{a}
+ * \f$ is given by \f$ \mathbf{I}(\mathbf{a})\mathbf{u} \f$.
+ *
+ * @param xi  An array of first size number of spatial dimensions \f$ d \f$ and
+ *            secondary size the number of points to interpolate.
+ *
+ * @return The interpolation matrix for the points @p xi.
+ */
+SharedMatrix NodalUtil::GetInterpolationMatrix(
+    Array<OneD, Array<OneD, NekDouble> > &xi)
+{
+    boost::shared_ptr<NodalUtil> subUtil = v_CreateUtil(xi);
+    SharedMatrix matS = GetVandermonde();
+    SharedMatrix matT = subUtil->GetVandermonde();
+    SharedMatrix D = MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(
+        matT->GetRows(), matS->GetColumns(), 0.0);
+
+    matS->Invert();
+
+    *D = (*matT) * (*matS);
+    return D;
+}
+
+/**
+ * @brief Construct the nodal utility class for a triangle.
+ *
+ * The constructor of this class sets up two member variables used in the
+ * evaluation of the orthogonal basis:
+ *
+ * - NodalUtilTriangle::m_eta is used to construct the collapsed coordinate
+ *   locations of the nodal points \f$ (\eta_1, \eta_2) \f$ inside the square
+ *   \f$[-1,1]^2\f$ on which the orthogonal basis functions are defined.
+ * - NodalUtilTriangle::m_ordering constructs a mapping from the index set \f$ I
+ *   = \{ (i,j)\ |\ 0\leq i,j \leq P, i+j \leq P \}\f$ to an ordering \f$ 0 \leq
+ *   m(ij) \leq (P+1)(P+2)/2 \f$ that defines the monomials \f$ \xi_1^i \xi_2^j
+ *   \f$ that span the triangular space. This is then used to calculate which
+ *   \f$ (i,j) \f$ pair corresponding to a column of the Vandermonde matrix when
+ *   calculating the orthogonal polynomials.
+ *
+ * @param degree  Polynomial order of this nodal triangle.
+ * @param r       \f$ \xi_1 \f$-coordinates of nodal points in the standard
+ *                element.
+ * @param s       \f$ \xi_2 \f$-coordinates of nodal points in the standard
+ *                element.
+ */
+NodalUtilTriangle::NodalUtilTriangle(int                    degree,
+                                     Array<OneD, NekDouble> r,
+                                     Array<OneD, NekDouble> s)
+    : NodalUtil(degree, 2), m_eta(2)
+{
+    // Set up parent variables.
+    m_numPoints = r.num_elements();
+    m_xi[0] = r;
+    m_xi[1] = s;
+
+    // Construct a mapping (i,j) -> m from the triangular tensor product space
+    // (i,j) to a single ordering m.
+    for (int i = 0; i <= m_degree; ++i)
+    {
+        for (int j = 0; j <= m_degree - i; ++j)
+        {
+            m_ordering.push_back(std::make_pair(i,j));
+        }
+    }
+
+    // Calculate collapsed coordinates from r/s values
+    m_eta[0] = Array<OneD, NekDouble>(m_numPoints);
+    m_eta[1] = Array<OneD, NekDouble>(m_numPoints);
+
+    for (int i = 0; i < m_numPoints; ++i)
+    {
+        if (fabs(m_xi[1][i]-1.0) < NekConstants::kNekZeroTol)
+        {
+            m_eta[0][i] = -1.0;
+            m_eta[1][i] =  1.0;
+        }
+        else
+        {
+            m_eta[0][i] = 2*(1+m_xi[0][i])/(1-m_xi[1][i])-1.0;
+            m_eta[1][i] = m_xi[1][i];
+        }
+    }
+}
+
+/**
+ * @brief Return the value of the modal functions for the triangular element at
+ * the nodal points #m_xi for a given mode.
+ *
+ * In a triangle, we use the orthogonal basis
+ *
+ * \f[
+ * \psi_{m(ij)} = \sqrt{2} P^{(0,0)}_i(\xi_1) P_j^{(2i+1,0)}(\xi_2) (1-\xi_2)^i
+ * \f]
+ *
+ * where \f$ m(ij) \f$ is the mapping defined in NodalUtilTriangle::m_ordering
+ * and \f$ J_n^{(\alpha,\beta)}(z) \f$ denotes the standard Jacobi polynomial.
+ *
+ * @param mode  The mode of the orthogonal basis to evaluate.
+ *
+ * @return Vector containing orthogonal basis evaluated at the points #m_xi.
+ */
+NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasis(const int mode)
+{
+    std::vector<NekDouble> jacobi_i(m_numPoints), jacobi_j(m_numPoints);
+    std::pair<int, int> modes = m_ordering[mode];
+
+    // Calculate Jacobi polynomials
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[0][0], &jacobi_i[0], NULL, modes.first, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[1][0], &jacobi_j[0], NULL, modes.second,
+        2.0 * modes.first + 1.0, 0.0);
+
+    NekVector<NekDouble> ret(m_numPoints);
+    NekDouble sqrt2 = sqrt(2.0);
+
+    for (int i = 0; i < m_numPoints; ++i)
+    {
+        ret[i] = sqrt2 * jacobi_i[i] * jacobi_j[i] *
+            pow(1.0 - m_eta[1][i], modes.first);
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Return the value of the derivative of the modal functions for the
+ * triangular element at the nodal points #m_xi for a given mode.
+ *
+ * Note that this routine must use the chain rule combined with the collapsed
+ * coordinate derivatives as described in Sherwin & Karniadakis (2nd edition),
+ * pg 150.
+ *
+ * @param dir   Coordinate direction in which to evaluate the derivative.
+ * @param mode  The mode of the orthogonal basis to evaluate.
+ *
+ * @return Vector containing the derivative of the orthogonal basis evaluated at
+ *         the points #m_xi.
+ */
+NekVector<NekDouble> NodalUtilTriangle::v_OrthoBasisDeriv(
+    const int dir, const int mode)
+{
+    std::vector<NekDouble> jacobi_i(m_numPoints), jacobi_j(m_numPoints);
+    std::vector<NekDouble> jacobi_di(m_numPoints), jacobi_dj(m_numPoints);
+    std::pair<int, int> modes = m_ordering[mode];
+
+    // Calculate Jacobi polynomials and their derivatives. Note that we use both
+    // jacobfd and jacobd since jacobfd is only valid for derivatives in the
+    // open interval (-1,1).
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[0][0], &jacobi_i[0], NULL, modes.first, 0.0,
+        0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[1][0], &jacobi_j[0], NULL, modes.second,
+        2.0*modes.first + 1.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_eta[0][0], &jacobi_di[0], modes.first, 0.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_eta[1][0], &jacobi_dj[0], modes.second,
+        2.0*modes.first + 1.0, 0.0);
+
+    NekVector<NekDouble> ret(m_numPoints);
+    NekDouble sqrt2 = sqrt(2.0);
+
+    if (dir == 0)
+    {
+        // d/d(\xi_1) = 2/(1-\eta_2) d/d(\eta_1)
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] = 2.0 * sqrt2 * jacobi_di[i] * jacobi_j[i];
+            if (modes.first > 0)
+            {
+                ret[i] *= pow(1.0 - m_eta[1][i], modes.first - 1.0);
+            }
+        }
+    }
+    else
+    {
+        // d/d(\xi_2) = 2(1+\eta_1)/(1-\eta_2) d/d(\eta_1) + d/d(eta_2)
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] = (1 + m_eta[0][i]) * sqrt2 * jacobi_di[i] * jacobi_j[i];
+            if (modes.first > 0)
+            {
+                ret[i] *= pow(1.0 - m_eta[1][i], modes.first - 1.0);
+            }
+
+            NekDouble tmp = jacobi_dj[i] * pow(1.0 - m_eta[1][i], modes.first);
+            if (modes.first > 0)
+            {
+                tmp -= modes.first * jacobi_j[i] *
+                    pow(1.0 - m_eta[1][i], modes.first-1);
+            }
+
+            ret[i] += sqrt2 * jacobi_i[i] * tmp;
+        }
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Construct the nodal utility class for a tetrahedron.
+ *
+ * The constructor of this class sets up two member variables used in the
+ * evaluation of the orthogonal basis:
+ *
+ * - NodalUtilTetrahedron::m_eta is used to construct the collapsed coordinate
+ *   locations of the nodal points \f$ (\eta_1, \eta_2, \eta_3) \f$ inside the
+ *   cube \f$[-1,1]^3\f$ on which the orthogonal basis functions are defined.
+ * - NodalUtilTetrahedron::m_ordering constructs a mapping from the index set
+ *   \f$ I = \{ (i,j,k)\ |\ 0\leq i,j,k \leq P, i+j \leq P, i+j+k \leq P \}\f$
+ *   to an ordering \f$ 0 \leq m(ijk) \leq (P+1)(P+2)(P+3)/6 \f$ that defines
+ *   the monomials \f$ \xi_1^i \xi_2^j \xi_3^k \f$ that span the tetrahedral
+ *   space. This is then used to calculate which \f$ (i,j,k) \f$ triple
+ *   (represented as a boost tuple) corresponding to a column of the Vandermonde
+ *   matrix when calculating the orthogonal polynomials.
+ *
+ * @param degree  Polynomial order of this nodal tetrahedron
+ * @param r       \f$ \xi_1 \f$-coordinates of nodal points in the standard
+ *                element.
+ * @param s       \f$ \xi_2 \f$-coordinates of nodal points in the standard
+ *                element.
+ * @param t       \f$ \xi_3 \f$-coordinates of nodal points in the standard
+ *                element.
+ */
+NodalUtilTetrahedron::NodalUtilTetrahedron(int                    degree,
+                                           Array<OneD, NekDouble> r,
+                                           Array<OneD, NekDouble> s,
+                                           Array<OneD, NekDouble> t)
+    : NodalUtil(degree, 3), m_eta(3)
+{
+    m_numPoints = r.num_elements();
+    m_xi[0] = r;
+    m_xi[1] = s;
+    m_xi[2] = t;
+
+    for (int i = 0; i <= m_degree; ++i)
+    {
+        for (int j = 0; j <= m_degree - i; ++j)
+        {
+            for (int k = 0; k <= m_degree - i - j; ++k)
+            {
+                m_ordering.push_back(Mode(i, j, k));
+            }
+        }
+    }
+
+    // Calculate collapsed coordinates from r/s values
+    m_eta[0] = Array<OneD, NekDouble>(m_numPoints);
+    m_eta[1] = Array<OneD, NekDouble>(m_numPoints);
+    m_eta[2] = Array<OneD, NekDouble>(m_numPoints);
+
+    for (int i = 0; i < m_numPoints; ++i)
+    {
+        if (fabs(m_xi[2][i] - 1.0) < NekConstants::kNekZeroTol)
+        {
+            // Very top point of the tetrahedron
+            m_eta[0][i] = -1.0;
+            m_eta[1][i] = -1.0;
+            m_eta[2][i] = m_xi[2][i];
+        }
+        else
+        {
+            if (fabs(m_xi[1][i] - 1.0) <  NekConstants::kNekZeroTol)
+            {
+                // Distant diagonal edge shared by all eta_x coordinate planes:
+                // the xi_y == -xi_z line
+                m_eta[0][i] = -1.0;
+            }
+            else if (fabs(m_xi[1][i] + m_xi[2][i]) < NekConstants::kNekZeroTol)
+            {
+                m_eta[0][i] = -1.0;
+            }
+            else
+            {
+                m_eta[0][i] = 2.0 * (1.0 + m_xi[0][i]) /
+                    (-m_xi[1][i] - m_xi[2][i]) - 1.0;
+            }
+            m_eta[1][i] = 2.0 * (1.0 + m_xi[1][i]) / (1.0 - m_xi[2][i]) - 1.0;
+            m_eta[2][i] = m_xi[2][i];
+        }
+    }
+}
+
+/**
+ * @brief Return the value of the modal functions for the tetrahedral element at
+ * the nodal points #m_xi for a given mode.
+ *
+ * In a tetrahedron, we use the orthogonal basis
+ *
+ * \f[ \psi_{m(ijk)} = \sqrt{8} P^{(0,0)}_i(\xi_1) P_j^{(2i+1,0)}(\xi_2)
+ * P_k^{(2i+2j+2,0)}(\xi_3) (1-\xi_2)^i (1-\xi_3)^{i+j} \f]
+ *
+ * where \f$ m(ijk) \f$ is the mapping defined in #m_ordering and \f$
+ * J_n^{(\alpha,\beta)}(z) \f$ denotes the standard Jacobi polynomial.
+ *
+ * @param mode  The mode of the orthogonal basis to evaluate.
+ *
+ * @return Vector containing orthogonal basis evaluated at the points #m_xi.
+ */
+NekVector<NekDouble> NodalUtilTetrahedron::v_OrthoBasis(const int mode)
+{
+    std::vector<NekDouble> jacA(m_numPoints), jacB(m_numPoints);
+    std::vector<NekDouble> jacC(m_numPoints);
+    Mode modes = m_ordering[mode];
+
+    const int I = modes.get<0>(), J = modes.get<1>(), K = modes.get<2>();
+
+    // Calculate Jacobi polynomials
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[0][0], &jacA[0], NULL, I, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[1][0], &jacB[0], NULL, J, 2.0 * I + 1.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[2][0], &jacC[0], NULL, K, 2.0 * (I+J) + 2.0, 0.0);
+
+    NekVector<NekDouble> ret(m_numPoints);
+    NekDouble sqrt8 = sqrt(8.0);
+
+    for (int i = 0; i < m_numPoints; ++i)
+    {
+        ret[i] = sqrt8 * jacA[i] * jacB[i] * jacC[i] *
+            pow(1.0 - m_eta[1][i], I) * pow(1.0 - m_eta[2][i], I + J);
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Return the value of the derivative of the modal functions for the
+ * tetrahedral element at the nodal points #m_xi for a given mode.
+ *
+ * Note that this routine must use the chain rule combined with the collapsed
+ * coordinate derivatives as described in Sherwin & Karniadakis (2nd edition),
+ * pg 152.
+ *
+ * @param dir   Coordinate direction in which to evaluate the derivative.
+ * @param mode  The mode of the orthogonal basis to evaluate.
+ *
+ * @return Vector containing the derivative of the orthogonal basis evaluated at
+ *         the points #m_xi.
+ */
+NekVector<NekDouble> NodalUtilTetrahedron::v_OrthoBasisDeriv(
+    const int dir, const int mode)
+{
+    std::vector<NekDouble> jacA(m_numPoints), jacB(m_numPoints);
+    std::vector<NekDouble> jacC(m_numPoints);
+    std::vector<NekDouble> jacDerivA(m_numPoints), jacDerivB(m_numPoints);
+    std::vector<NekDouble> jacDerivC(m_numPoints);
+    Mode modes = m_ordering[mode];
+
+    const int I = modes.get<0>(), J = modes.get<1>(), K = modes.get<2>();
+
+    // Calculate Jacobi polynomials
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[0][0], &jacA[0], NULL, I, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[1][0], &jacB[0], NULL, J, 2.0 * I + 1.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[2][0], &jacC[0], NULL, K, 2.0 * (I+J) + 2.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_eta[0][0], &jacDerivA[0], I, 0.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_eta[1][0], &jacDerivB[0], J, 2.0 * I + 1.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_eta[2][0], &jacDerivC[0], K, 2.0 * (I+J) + 2.0, 0.0);
+
+    NekVector<NekDouble> ret(m_numPoints);
+    NekDouble sqrt8 = sqrt(8.0);
+
+    // Always compute x-derivative since this term appears in the latter two
+    // terms.
+    for (int i = 0; i < m_numPoints; ++i)
+    {
+        ret[i] = 4.0 * sqrt8 * jacDerivA[i] * jacB[i] * jacC[i];
+
+        if (I > 0)
+        {
+            ret[i] *= pow(1 - m_eta[1][i], I - 1);
+        }
+
+        if (I + J > 0)
+        {
+            ret[i] *= pow(1 - m_eta[2][i], I + J - 1);
+        }
+    }
+
+    if (dir >= 1)
+    {
+        // Multiply by (1+a)/2
+        NekVector<NekDouble> tmp(m_numPoints);
+
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] *= 0.5 * (m_eta[0][i] + 1.0);
+
+            tmp[i] = 2.0 * sqrt8 * jacA[i] * jacC[i];
+            if (I + J > 0)
+            {
+                tmp[i] *= pow(1.0 - m_eta[2][i], I + J - 1);
+            }
+
+            NekDouble tmp2 = jacDerivB[i] * pow(1.0 - m_eta[1][i], I);
+            if (I > 0)
+            {
+                tmp2 -= I * jacB[i] * pow(1.0 - m_eta[1][i], I - 1);
+            }
+
+            tmp[i] *= tmp2;
+        }
+
+        if (dir == 1)
+        {
+            ret += tmp;
+            return ret;
+        }
+
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] += 0.5 * (1.0 + m_eta[1][i]) * tmp[i];
+
+            NekDouble tmp2 = jacDerivC[i] * pow(1.0 - m_eta[2][i], I + J);
+            if (I + J > 0)
+            {
+                tmp2 -= jacC[i] * (I + J) * pow(1.0 - m_eta[2][i], I + J - 1);
+            }
+
+            ret[i] += sqrt8 * jacA[i] * jacB[i] * pow(1.0 - m_eta[1][i], I) *
+                tmp2;
+        }
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Construct the nodal utility class for a prism.
+ *
+ * The constructor of this class sets up two member variables used in the
+ * evaluation of the orthogonal basis:
+ *
+ * - NodalUtilPrism::m_eta is used to construct the collapsed coordinate
+ *   locations of the nodal points \f$ (\eta_1, \eta_2, \eta_3) \f$ inside the
+ *   cube \f$[-1,1]^3\f$ on which the orthogonal basis functions are defined.
+ * - NodalUtilPrism::m_ordering constructs a mapping from the index set
+ *   \f$ I = \{ (i,j,k)\ |\ 0\leq i,j,k \leq P, i+k \leq P \}\f$ to an ordering
+ *   \f$ 0 \leq m(ijk) \leq (P+1)(P+1)(P+2)/2 \f$ that defines the monomials \f$
+ *   \xi_1^i \xi_2^j \xi_3^k \f$ that span the prismatic space. This is then
+ *   used to calculate which \f$ (i,j,k) \f$ triple (represented as a boost
+ *   tuple) corresponding to a column of the Vandermonde matrix when calculating
+ *   the orthogonal polynomials.
+ *
+ * @param degree  Polynomial order of this nodal tetrahedron
+ * @param r       \f$ \xi_1 \f$-coordinates of nodal points in the standard
+ *                element.
+ * @param s       \f$ \xi_2 \f$-coordinates of nodal points in the standard
+ *                element.
+ * @param t       \f$ \xi_3 \f$-coordinates of nodal points in the standard
+ *                element.
+ */
+NodalUtilPrism::NodalUtilPrism(int                    degree,
+                               Array<OneD, NekDouble> r,
+                               Array<OneD, NekDouble> s,
+                               Array<OneD, NekDouble> t)
+    : NodalUtil(degree, 3), m_eta(3)
+{
+    m_numPoints = r.num_elements();
+    m_xi[0] = r;
+    m_xi[1] = s;
+    m_xi[2] = t;
+
+    for (int i = 0; i <= m_degree; ++i)
+    {
+        for (int j = 0; j <= m_degree; ++j)
+        {
+            for (int k = 0; k <= m_degree - i; ++k)
+            {
+                m_ordering.push_back(Mode(i, j, k));
+            }
+        }
+    }
+
+    // Calculate collapsed coordinates from r/s values
+    m_eta[0] = Array<OneD, NekDouble>(m_numPoints);
+    m_eta[1] = Array<OneD, NekDouble>(m_numPoints);
+    m_eta[2] = Array<OneD, NekDouble>(m_numPoints);
+
+    for (int i = 0; i < m_numPoints; ++i)
+    {
+        if (fabs(m_xi[2][i] - 1.0) < NekConstants::kNekZeroTol)
+        {
+            // Very top point of the prism
+            m_eta[0][i] = -1.0;
+            m_eta[1][i] = m_xi[1][i];
+            m_eta[2][i] = 1.0;
+        }
+        else
+        {
+            // Third basis function collapsed to "pr" direction instead of "qr"
+            // direction
+            m_eta[0][i] = 2.0*(1.0 + m_xi[0][i])/(1.0 - m_xi[2][i]) - 1.0;
+            m_eta[1][i] = m_xi[1][i];
+            m_eta[2][i] = m_xi[2][i];
+        }
+    }
+}
+
+/**
+ * @brief Return the value of the modal functions for the prismatic element at
+ * the nodal points #m_xi for a given mode.
+ *
+ * In a prism, we use the orthogonal basis
+ *
+ * \f[ \psi_{m(ijk)} = \sqrt{2} P^{(0,0)}_i(\xi_1) P_j^{(0,0)}(\xi_2)
+ * P_k^{(2i+1,0)}(\xi_3) (1-\xi_3)^i \f]
+ *
+ * where \f$ m(ijk) \f$ is the mapping defined in #m_ordering and \f$
+ * J_n^{(\alpha,\beta)}(z) \f$ denotes the standard Jacobi polynomial.
+ *
+ * @param mode  The mode of the orthogonal basis to evaluate.
+ *
+ * @return Vector containing orthogonal basis evaluated at the points #m_xi.
+ */
+NekVector<NekDouble> NodalUtilPrism::v_OrthoBasis(const int mode)
+{
+    std::vector<NekDouble> jacA(m_numPoints), jacB(m_numPoints);
+    std::vector<NekDouble> jacC(m_numPoints);
+    Mode modes = m_ordering[mode];
+
+    const int I = modes.get<0>(), J = modes.get<1>(), K = modes.get<2>();
+
+    // Calculate Jacobi polynomials
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[0][0], &jacA[0], NULL, I, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[1][0], &jacB[0], NULL, J, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[2][0], &jacC[0], NULL, K, 2.0 * I + 1.0, 0.0);
+
+    NekVector<NekDouble> ret(m_numPoints);
+    NekDouble sqrt2 = sqrt(2.0);
+
+    for (int i = 0; i < m_numPoints; ++i)
+    {
+        ret[i] = sqrt2 * jacA[i] * jacB[i] * jacC[i] *
+            pow(1.0 - m_eta[2][i], I);
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Return the value of the derivative of the modal functions for the
+ * prismatic element at the nodal points #m_xi for a given mode.
+ *
+ * Note that this routine must use the chain rule combined with the collapsed
+ * coordinate derivatives as described in Sherwin & Karniadakis (2nd edition),
+ * pg 152.
+ *
+ * @param mode  The mode of the orthogonal basis to evaluate.
+ * @param dir   Coordinate direction in which to evaluate the derivative.
+ *
+ * @return Vector containing the derivative of the orthogonal basis evaluated at
+ *         the points #m_xi.
+ */
+NekVector<NekDouble> NodalUtilPrism::v_OrthoBasisDeriv(
+    const int dir, const int mode)
+{
+    std::vector<NekDouble> jacA(m_numPoints), jacB(m_numPoints);
+    std::vector<NekDouble> jacC(m_numPoints);
+    std::vector<NekDouble> jacDerivA(m_numPoints), jacDerivB(m_numPoints);
+    std::vector<NekDouble> jacDerivC(m_numPoints);
+    Mode modes = m_ordering[mode];
+
+    const int I = modes.get<0>(), J = modes.get<1>(), K = modes.get<2>();
+
+    // Calculate Jacobi polynomials
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[0][0], &jacA[0], NULL, I, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[1][0], &jacB[0], NULL, J, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_eta[2][0], &jacC[0], NULL, K, 2.0 * I + 1.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_eta[0][0], &jacDerivA[0], I, 0.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_eta[1][0], &jacDerivB[0], J, 0.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_eta[2][0], &jacDerivC[0], K, 2.0 * I + 1.0, 0.0);
+
+    NekVector<NekDouble> ret(m_numPoints);
+    NekDouble sqrt2 = sqrt(2.0);
+
+    if (dir == 1)
+    {
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] = sqrt2 * jacA[i] * jacDerivB[i] * jacC[i] *
+                pow(1.0 - m_eta[2][i], I);
+        }
+    }
+    else
+    {
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] = 2.0 * sqrt2 * jacDerivA[i] * jacB[i] * jacC[i];
+
+            if (I > 0)
+            {
+                ret[i] *= pow(1.0 - m_eta[2][i], I - 1);
+            }
+        }
+
+        if (dir == 0)
+        {
+            return ret;
+        }
+
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] *= 0.5 * (1.0 + m_eta[0][i]);
+
+            NekDouble tmp = jacDerivC[i] * pow(1.0 - m_eta[2][i], I);
+
+            if (I > 0)
+            {
+                tmp -= jacC[i] * I * pow(1.0 - m_eta[2][i], I - 1);
+            }
+
+            ret[i] += sqrt2 * jacA[i] * jacB[i] * tmp;
+        }
+    }
+
+    return ret;
+}
+
+}
 }
 

@@ -74,6 +74,9 @@ v4.3.5
 **Documentation**
 - Update build instructions in user guide for Windows (!692)
 
+**Tester**
+- Fix bug in tester when no parameters specified for test executable (!701)
+
 v4.3.4
 ------
 **Library:**

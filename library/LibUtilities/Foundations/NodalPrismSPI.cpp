@@ -60,7 +60,7 @@ void NodalPrismSPI::CalculatePoints()
 
     for (int i = 0; i < 3; i++)
     {
-        m_points[i] = Array<OneD, DataType>(numtri * numPoints);
+        m_points[i] = Array<OneD, DataType>(m_numtri * numPoints);
     }
 
     for (int j = 0, ct = 0; j < numPoints; j++)
@@ -85,7 +85,7 @@ void NodalPrismSPI::CalculateWeights()
     {
         for (int i = 0; i < m_numtri; i++, ct++)
         {
-            m_weights[ct] = tw[i] * ew[j];
+            m_weights[ct] = m_tw[i] * m_ew[j];
         }
     }
 }

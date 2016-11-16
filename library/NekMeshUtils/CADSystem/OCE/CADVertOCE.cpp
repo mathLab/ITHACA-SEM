@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessJacobianEnergy.h
+//  File: CADSystem.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,46 +29,40 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes energy of Jacobian.
+//  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSQUALITYMETRIC
-#define FIELDUTILS_PROCESSQUALITYMETRIC
+#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
+#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
 
-#include "../Module.h"
+using namespace std;
 
 namespace Nektar
 {
-namespace FieldUtils
+namespace NekMeshUtils
 {
 
-/// This processing module scales the input fld file
-class ProcessQualityMetric : public ProcessModule
+std::string CADVertOCE::key = GetCADVertFactory().RegisterCreatorFunction(
+    "oce", CADVertOCE::create, "CAD vert oce");
+
+void CADVertOCE::Initialise(int i, TopoDS_Shape in)
 {
-public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
-    {
-        return MemoryManager<ProcessQualityMetric>::AllocateSharedPtr(f);
-    }
-    static ModuleKey className;
+    gp_Trsf transform;
+    gp_Pnt ori(0.0, 0.0, 0.0);
+    transform.SetScale(ori, 1.0 / 1000.0);
+    TopLoc_Location mv(transform);
+    in.Move(mv);
 
-    ProcessQualityMetric(FieldSharedPtr f);
-    virtual ~ProcessQualityMetric();
+    m_id      = i;
+    m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
 
-    /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
+    m_node = boost::shared_ptr<Node>(
+        new Node(i - 1, m_occVert.X(), m_occVert.Y(), m_occVert.Z()));
+    degen = false;
 
-    virtual std::string GetModuleName()
-    {
-        return "ProcessQualityMetric";
-    }
-
-private:
-    Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e, bool s);
-};
-}
+    m_type = vert;
 }
 
-#endif
+}
+}

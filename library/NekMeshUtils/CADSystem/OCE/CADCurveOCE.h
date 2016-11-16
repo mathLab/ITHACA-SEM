@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessJacobianEnergy.h
+//  File: CADCurve.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,45 +29,80 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes energy of Jacobian.
+//  Description: CAD object curve.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSQUALITYMETRIC
-#define FIELDUTILS_PROCESSQUALITYMETRIC
+#ifndef NEKMESHUTILS_CADSYSTEM_OCE_CADCURVEOCE
+#define NEKMESHUTILS_CADSYSTEM_OCE_CADCURVEOCE
 
-#include "../Module.h"
+#include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
 namespace Nektar
 {
-namespace FieldUtils
+namespace NekMeshUtils
 {
 
-/// This processing module scales the input fld file
-class ProcessQualityMetric : public ProcessModule
+class CADCurveOCE : public CADCurve
 {
 public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+
+    static CADCurveSharedPtr create()
     {
-        return MemoryManager<ProcessQualityMetric>::AllocateSharedPtr(f);
+        return MemoryManager<CADCurveOCE>::AllocateSharedPtr();
     }
-    static ModuleKey className;
 
-    ProcessQualityMetric(FieldSharedPtr f);
-    virtual ~ProcessQualityMetric();
+    static std::string key;
 
-    /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
-
-    virtual std::string GetModuleName()
+    CADCurveOCE()
     {
-        return "ProcessQualityMetric";
+    }
+
+    ~CADCurveOCE()
+    {
+    }
+
+    virtual Array<OneD, NekDouble> Bounds();
+    virtual NekDouble Length(NekDouble ti, NekDouble tf);
+    virtual Array<OneD, NekDouble> P(NekDouble t);
+    virtual Array<OneD, NekDouble> D2(NekDouble t);
+    virtual NekDouble tAtArcLength(NekDouble s);
+    virtual Array<OneD, NekDouble> GetMinMax();
+    virtual NekDouble loct(Array<OneD, NekDouble> xyz);
+
+    void Initialise(int i, TopoDS_Shape in)
+    {
+        gp_Trsf transform;
+        gp_Pnt ori(0.0, 0.0, 0.0);
+        transform.SetScale(ori, 1.0 / 1000.0);
+        TopLoc_Location mv(transform);
+        TopoDS_Shape cp = in;
+        in.Move(mv);
+
+        m_occEdge  = TopoDS::Edge(in);
+        m_occCurve = BRepAdaptor_Curve(m_occEdge);
+
+        GProp_GProps System;
+        BRepGProp::LinearProperties(m_occEdge, System);
+        m_length = System.Mass();
+
+        Array<OneD, NekDouble> b = Bounds();
+        m_c = BRep_Tool::Curve(TopoDS::Edge(cp), b[0], b[1]);
+
+        m_id   = i;
+        m_type = curve;
     }
 
 private:
-    Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e, bool s);
+    /// OpenCascade object of the curve.
+    BRepAdaptor_Curve m_occCurve;
+    /// OpenCascade edge
+    TopoDS_Edge m_occEdge;
+    /// Alternate object used for reverse lookups
+    Handle(Geom_Curve) m_c;
 };
+
 }
 }
 

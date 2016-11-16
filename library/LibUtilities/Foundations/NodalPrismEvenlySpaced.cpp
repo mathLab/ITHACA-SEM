@@ -164,6 +164,8 @@ namespace Nektar
                 }                
             }
             
+            m_util = MemoryManager<NodalUtilPrism>::AllocateSharedPtr(
+                npts - 1, m_points[0], m_points[1], m_points[2]);
             NodalPointReorder3d();            
         }
 
@@ -369,7 +371,15 @@ namespace Nektar
 
         void NodalPrismEvenlySpaced::CalculateWeights()
         {            
+            // Allocate the storage for points
+            PointsBaseType::CalculateWeights();
 
+            typedef DataType T;
+            
+            // Solve the Vandermonde system of integrals for the weight vector
+            NekVector<T> w = m_util->GetWeights();
+            
+            m_weights = Array<OneD,T>( w.GetRows(), w.GetPtr() );
         }
 
 
@@ -380,15 +390,27 @@ namespace Nektar
                                                          const Array<OneD, const NekDouble>& zia,
                                                          Array<OneD, NekDouble>& interp)
         {
-            ASSERTL0(false, "Not yet implemented");
+             Array<OneD, Array<OneD, NekDouble> > xi(3);
+             xi[0] = xia;
+             xi[1] = yia;
+             xi[2] = zia;
+
+             boost::shared_ptr<NekMatrix<NekDouble> > mat =
+                 m_util->GetInterpolationMatrix(xi);
+             Vmath::Vcopy(mat->GetRows() * mat->GetColumns(), mat->GetRawPtr(),
+                          1, &interp[0], 1);
         }
 
         // ////////////////////////////////////////
         //        CalculateDerivMatrix()
         void NodalPrismEvenlySpaced::CalculateDerivMatrix()
         {
+            // Allocate the derivative matrix.
+            PointsBaseType::CalculateDerivMatrix();
 
-        } 
+            m_derivmatrix[0] = m_util->GetDerivMatrix(0);
+            m_derivmatrix[1] = m_util->GetDerivMatrix(1);
+        }
 
         boost::shared_ptr<PointsBaseType> NodalPrismEvenlySpaced::Create(const PointsKey &key)
         {

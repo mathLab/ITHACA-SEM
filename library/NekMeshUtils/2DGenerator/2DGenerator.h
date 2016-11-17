@@ -63,6 +63,8 @@ public:
 
     virtual void Process();
 
+    void MakeBL();
+
 private:
     void Report();
     /// map of individual surface meshes from parametric surfaces

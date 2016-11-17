@@ -118,6 +118,11 @@ void InputCAD::ParseFile(string nm)
     ASSERTL0(it != information.end(),"no meshtype defined");
     it->second == "BL" ? m_makeBL = true : m_makeBL = false;
     it->second == "2D" ? m_2D = true : m_2D = false;
+    if (it->second == "2DBL")
+    {
+        m_makeBL = true;
+        m_2D = true;
+    }
 
     it = parameters.find("MinDelta");
     ASSERTL0(it != parameters.end(),"no mindelta defined");
@@ -207,6 +212,11 @@ void InputCAD::Process()
         m_mesh->m_spaceDim = 2;
         mods.push_back(GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "2dgenerator"), m_mesh));
+        if (m_makeBL)
+        {
+            mods.back()->RegisterConfig("blcurves", m_blsurfs);
+            mods.back()->RegisterConfig("blthick", m_blthick);
+        }
     }
     else
     {
@@ -225,13 +235,14 @@ void InputCAD::Process()
     }
 
 
-
+    /*
     mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh));
     if(m_surfopti)
     {
         mods.back()->RegisterConfig("opti","");
     }
+    */
 
     for(int i = 0; i < mods.size(); i++)
     {

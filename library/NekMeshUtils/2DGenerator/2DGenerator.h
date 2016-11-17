@@ -63,14 +63,21 @@ public:
 
     virtual void Process();
 
-    void MakeBL();
-
 private:
+
+    void MakeBLPrep();
+
+    void MakeBL(int i, std::vector<EdgeLoop> e);
+
     void Report();
     /// map of individual surface meshes from parametric surfaces
     std::map<int, FaceMeshSharedPtr> m_facemeshes;
     /// map of individual curve meshes of the curves in the domain
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
+
+    std::vector<unsigned int> m_blCurves;
+    NekDouble m_thickness;
+    std::map<NodeSharedPtr, std::vector<EdgeSharedPtr> > m_nodesToEdge;
 };
 }
 }

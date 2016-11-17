@@ -110,7 +110,22 @@ void Generator2D::Process()
 
     if (m_config["blcurves"].beenSet)
     {
-        MakeBL();
+        //we need to do the boundary layer generation in a face by face basis
+        MakeBLPrep();
+
+        //Im going to do a horrendous trick to get the edge orientaion.
+        //Going to activate the first routine of facemeshing without actually face
+        //meshing, this will orientate the edgeloop objects (hopefully);
+        //which can be used by the makebl command to know the normal
+        //orienation
+        for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
+        {
+            m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
+                i, m_mesh, m_curvemeshes, m_mesh->m_cad->GetNumSurf() > 100);
+
+            m_facemeshes[i]->OrientateCurves();
+            MakeBL(i, m_facemeshes[i]->GetEdges());
+        }
     }
 
     m_mesh->m_element[1].clear();
@@ -148,7 +163,7 @@ void Generator2D::Process()
     Report();
 }
 
-void Generator2D::MakeBL()
+void Generator2D::MakeBLPrep()
 {
     if (m_mesh->m_verbose)
     {
@@ -156,35 +171,25 @@ void Generator2D::MakeBL()
     }
 
     // identify the nodes which will become the boundary layer.
-
-    vector<unsigned int> blCurves;
     ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
-                                  blCurves);
-    NekDouble thickness = m_config["blthick"].as<NekDouble>();
+                                  m_blCurves);
+    m_thickness = m_config["blthick"].as<NekDouble>();
 
-    map<NodeSharedPtr, set<NodeSharedPtr> > nodesAdjacent;
-
-    for (vector<unsigned int>::iterator it = blCurves.begin();
-         it != blCurves.end(); ++it)
+    map<int, CurveMeshSharedPtr>::iterator it;
+    for(it = m_curvemeshes.begin(); it != m_curvemeshes.end(); it++)
     {
-        vector<NodeSharedPtr> localNodes = m_curvemeshes[*it]->GetMeshPoints();
-
-        for (vector<NodeSharedPtr>::iterator it2 = localNodes.begin();
-             it2 != localNodes.end(); ++it2)
+        vector<EdgeSharedPtr> localedges = it->second->GetMeshEdges();
+        for(int i = 0; i < localedges.size(); i++)
         {
-            if (it2 != localNodes.begin())
-            {
-                nodesAdjacent[*it2].insert(*(it2 - 1));
-            }
-            if (it2 != localNodes.end() - 1)
-            {
-                nodesAdjacent[*it2].insert(*(it2 + 1));
-            }
+            m_nodesToEdge[localedges[i]->m_n1].push_back(localedges[i]);
+            m_nodesToEdge[localedges[i]->m_n2].push_back(localedges[i]);
         }
     }
+}
 
-    // on each node calculate a normal
-
+void Generator2D::MakeBL(int i, std::vector<EdgeLoop> e)
+{
+    /*// on each node calculate a normal
     map<NodeSharedPtr, NodeSharedPtr> nodesNormal;
 
     for (map<NodeSharedPtr, set<NodeSharedPtr> >::iterator it =
@@ -233,7 +238,7 @@ void Generator2D::MakeBL()
             LibUtilities::eQuadrilateral, conf, ns, tags);
 
         m_mesh->m_element[2].push_back(E);
-    }
+    }*/
 }
 
 void Generator2D::Report()

@@ -78,6 +78,17 @@ public:
      */
     bool ValidateCurves();
 
+    /**
+     * @brief Get the boundries of the surface and extracts the nodes from
+     * the curve meshes in the correct order
+     */
+    void OrientateCurves();
+
+    std::vector<EdgeLoop> GetEdges()
+    {
+        return m_edgeloops;
+    }
+
 private:
     /**
      * @brief Calculate the paramter plane streching factor
@@ -109,12 +120,6 @@ private:
      * dimensions of the edges
      */
     bool Validate();
-
-    /**
-     * @brief Get the boundries of the surface and extracts the nodes from
-     * the curve meshes in the correct order
-     */
-    void OrientateCurves();
 
     /**
      * @brief adds a new stiener point to the triangulation for meshing

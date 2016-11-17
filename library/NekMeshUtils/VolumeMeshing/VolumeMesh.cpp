@@ -91,6 +91,12 @@ void VolumeMesh::Process()
         m_mesh->m_numcomp = 1;
     }
 
+    NekDouble prefix = 100;
+    if(m_mesh->m_cad->GetNumSurf() > 100)
+    {
+        prefix*=10;
+    }
+
     TetMeshSharedPtr tet;
     if (makeBL)
     {
@@ -117,7 +123,7 @@ void VolumeMesh::Process()
         {
             vector<unsigned int>::iterator f = find(symsurfs.begin(),
                                                     symsurfs.end(),
-                                                    els[i]->CADSurfId);
+                                                    els[i]->m_parentCAD->GetId());
 
             if(f == symsurfs.end())
             {
@@ -143,9 +149,10 @@ void VolumeMesh::Process()
             }
         }
 
-        set<int> cIds;
+
         for(int i = 0; i < symsurfs.size(); i++)
         {
+            set<int> cIds;
             vector<EdgeLoop> e = m_mesh->m_cad->GetSurf(symsurfs[i])->GetEdges();
             for(int i = 0; i < e.size(); i++)
             {
@@ -154,126 +161,125 @@ void VolumeMesh::Process()
                     cIds.insert(e[i].edges[j]->GetId());
                 }
             }
-        }
 
-        map<int,vector<NodeSharedPtr> > curveNodeMap;
-        NodeSet::iterator it;
-        for(it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end(); it++)
-        {
-            vector<pair<int,CADCurveSharedPtr> > cc = (*it)->GetCADCurves();
-            vector<int> ids;
-            for(int j = 0; j < cc.size(); j++)
+            //find the curve nodes which are on this symsurf
+            map<int,vector<NodeSharedPtr> > curveNodeMap;
+            NodeSet::iterator it;
+            for(it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end(); it++)
             {
-                set<int>::iterator f = cIds.find(cc[j].first);
-                if(f != cIds.end())
+                vector<pair<int,CADCurveSharedPtr> > cc = (*it)->GetCADCurves();
+                for(int j = 0; j < cc.size(); j++)
                 {
-                    curveNodeMap[cc[j].first].push_back((*it));
-                }
-            }
-        }
-
-        //need to bubble sort the vectors
-        map<int,vector<NodeSharedPtr> >::iterator cit;
-        for(cit = curveNodeMap.begin(); cit != curveNodeMap.end(); cit++)
-        {
-            vector<NekDouble> ts;
-            for(int i = 0; i < cit->second.size(); i++)
-            {
-                ts.push_back(cit->second[i]->GetCADCurveInfo(cit->first));
-            }
-            bool repeat = true;
-            while(repeat)
-            {
-                repeat = false;
-                for(int i = 0; i < ts.size() - 1; i++)
-                {
-                    if(ts[i] > ts[i+1])
+                    set<int>::iterator f = cIds.find(cc[j].first);
+                    if(f != cIds.end())
                     {
-                        swap(ts[i],ts[i+1]);
-                        swap(cit->second[i],cit->second[i+1]);
-                        repeat = true;
-                        break;
+                        curveNodeMap[cc[j].first].push_back((*it));
                     }
                 }
             }
-        }
 
-        //create quads
-        map<NodeSharedPtr, NodeSharedPtr> nmap = blmesh->GetSymNodes();
-        for(cit = curveNodeMap.begin(); cit != curveNodeMap.end(); cit++)
-        {
-            for(int j = 0; j < cit->second.size() - 1; j++)
+            //need to bubble sort the vectors
+            map<int,vector<NodeSharedPtr> >::iterator cit;
+            for(cit = curveNodeMap.begin(); cit != curveNodeMap.end(); cit++)
             {
-                map<NodeSharedPtr, NodeSharedPtr>::iterator f1 = nmap.find(cit->second[j]);
-                map<NodeSharedPtr, NodeSharedPtr>::iterator f2 = nmap.find(cit->second[j+1]);
-
-                if(f1 == nmap.end() || f2 == nmap.end())
+                vector<NekDouble> ts;
+                for(int i = 0; i < cit->second.size(); i++)
                 {
-                    continue;
+                    ts.push_back(cit->second[i]->GetCADCurveInfo(cit->first));
                 }
-
-                NodeSharedPtr n1 = f1->second;
-                NodeSharedPtr n2 = f2->second;
-
-                vector<NodeSharedPtr> ns;
-                ns.push_back(cit->second[j]);
-                ns.push_back(n1);
-                ns.push_back(n2);
-                ns.push_back(cit->second[j+1]);
-
-                ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
-
-                vector<int> tags;
-                tags.push_back(2000);
-                ElementSharedPtr E = GetElementFactory().CreateInstance(
-                                        LibUtilities::eQuadrilateral, conf, ns, tags);
-                m_mesh->m_element[2].push_back(E);
-
-                //need to dummy process the new elements
-                for (int k = 0; k < E->GetEdgeCount(); ++k)
+                bool repeat = true;
+                while(repeat)
                 {
-                    pair<EdgeSet::iterator,bool> testIns;
-                    EdgeSharedPtr ed = E->GetEdge(k);
-                    testIns = m_mesh->m_edgeSet.insert(ed);
-
-                    if (testIns.second)
+                    repeat = false;
+                    for(int i = 0; i < ts.size() - 1; i++)
                     {
-                        EdgeSharedPtr ed2 = *testIns.first;
-                        ed2->m_elLink.push_back(
-                            pair<ElementSharedPtr,int>(E,k));
-                    }
-                    else
-                    {
-                        EdgeSharedPtr e2 = *(testIns.first);
-                        E->SetEdge(k, e2);
-                        e2->m_elLink.push_back(
-                            pair<ElementSharedPtr,int>(E,k));
+                        if(ts[i] > ts[i+1])
+                        {
+                            swap(ts[i],ts[i+1]);
+                            swap(cit->second[i],cit->second[i+1]);
+                            repeat = true;
+                            break;
+                        }
                     }
                 }
             }
-        }
-        //swap nodes
-        for(cit = curveNodeMap.begin(); cit != curveNodeMap.end(); cit++)
-        {
-            for(int j = 0; j < cit->second.size(); j++)
-            {
-                map<NodeSharedPtr, NodeSharedPtr>::iterator f1 = nmap.find(cit->second[j]);
-                if(f1 == nmap.end())
-                {
-                    continue;
-                }
-                cit->second[j] = f1->second;
-            }
-        }
-        map<int, CurveMeshSharedPtr> cm;
-        for(cit = curveNodeMap.begin(); cit != curveNodeMap.end(); cit++)
-        {
-            cm[cit->first] = MemoryManager<CurveMesh>::AllocateSharedPtr(cit->first,m_mesh,cit->second);
-        }
 
-        for(int i = 0; i < symsurfs.size(); i++)
-        {
-            FaceMeshSharedPtr f = MemoryManager<FaceMesh>::AllocateSharedPtr(symsurfs[i],m_mesh,cm,false);
+            //create quads
+            map<NodeSharedPtr, NodeSharedPtr> nmap = blmesh->GetSymNodes();
+            for(cit = curveNodeMap.begin(); cit != curveNodeMap.end(); cit++)
+            {
+                for(int j = 0; j < cit->second.size() - 1; j++)
+                {
+                    map<NodeSharedPtr, NodeSharedPtr>::iterator f1 = nmap.find(cit->second[j]);
+                    map<NodeSharedPtr, NodeSharedPtr>::iterator f2 = nmap.find(cit->second[j+1]);
+
+                    if(f1 == nmap.end() || f2 == nmap.end())
+                    {
+                        continue;
+                    }
+
+                    NodeSharedPtr n1 = f1->second;
+                    NodeSharedPtr n2 = f2->second;
+
+                    vector<NodeSharedPtr> ns;
+                    ns.push_back(cit->second[j]);
+                    ns.push_back(n1);
+                    ns.push_back(n2);
+                    ns.push_back(cit->second[j+1]);
+
+                    ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
+
+                    vector<int> tags;
+                    tags.push_back(prefix*2 + symsurfs[i]);
+                    ElementSharedPtr E = GetElementFactory().CreateInstance(
+                                            LibUtilities::eQuadrilateral, conf, ns, tags);
+                    E->m_parentCAD = m_mesh->m_cad->GetSurf(symsurfs[i]);
+                    m_mesh->m_element[2].push_back(E);
+
+                    //need to dummy process the new elements
+                    for (int k = 0; k < E->GetEdgeCount(); ++k)
+                    {
+                        pair<EdgeSet::iterator,bool> testIns;
+                        EdgeSharedPtr ed = E->GetEdge(k);
+                        testIns = m_mesh->m_edgeSet.insert(ed);
+
+                        if (testIns.second)
+                        {
+                            EdgeSharedPtr ed2 = *testIns.first;
+                            ed2->m_elLink.push_back(
+                                pair<ElementSharedPtr,int>(E,k));
+                        }
+                        else
+                        {
+                            EdgeSharedPtr e2 = *(testIns.first);
+                            E->SetEdge(k, e2);
+                            e2->m_elLink.push_back(
+                                pair<ElementSharedPtr,int>(E,k));
+                        }
+                    }
+                }
+            }
+
+            //swap nodes
+            for(cit = curveNodeMap.begin(); cit != curveNodeMap.end(); cit++)
+            {
+                for(int j = 0; j < cit->second.size(); j++)
+                {
+                    map<NodeSharedPtr, NodeSharedPtr>::iterator f1 = nmap.find(cit->second[j]);
+                    if(f1 == nmap.end())
+                    {
+                        continue;
+                    }
+                    cit->second[j] = f1->second;
+                }
+            }
+            map<int, CurveMeshSharedPtr> cm;
+            for(cit = curveNodeMap.begin(); cit != curveNodeMap.end(); cit++)
+            {
+                cm[cit->first] = MemoryManager<CurveMesh>::AllocateSharedPtr(cit->first,m_mesh,cit->second);
+            }
+
+            FaceMeshSharedPtr f = MemoryManager<FaceMesh>::AllocateSharedPtr(symsurfs[i],m_mesh,cm,prefix+symsurfs[i]);
             f->Mesh();
         }
 
@@ -291,7 +297,7 @@ void VolumeMesh::Process()
 
             vector<unsigned int>::iterator f = find(blsurfs.begin(),
                                                     blsurfs.end(),
-                                                    m_mesh->m_element[2][i]->CADSurfId);
+                                                    m_mesh->m_element[2][i]->m_parentCAD->GetId());
 
             if(f == blsurfs.end())
             {

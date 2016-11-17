@@ -100,7 +100,7 @@ void Generator2D::Process()
         ElmtConfig conf(LibUtilities::eSegment, 1, false, false);
 
         vector<int> tags;
-        tags.push_back((*it)->CADCurveId);
+        tags.push_back((*it)->m_parentCAD->GetId());
 
         ElementSharedPtr E2 = GetElementFactory().CreateInstance(
             LibUtilities::eSegment, conf, ns, tags);

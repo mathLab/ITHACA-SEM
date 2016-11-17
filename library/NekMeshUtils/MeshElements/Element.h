@@ -365,9 +365,7 @@ public:
         std::swap(m_vertex[0],m_vertex[1]);
     }
 
-#ifdef NEKTAR_USE_MESHGEN
-    int CADSurfId;
-#endif
+    CADObjectSharedPtr m_parentCAD;
 
 protected:
     /// ID of the element.

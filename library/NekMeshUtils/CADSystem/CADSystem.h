@@ -43,6 +43,8 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
+#include "CADObject.h"
+
 namespace Nektar
 {
 namespace NekMeshUtils

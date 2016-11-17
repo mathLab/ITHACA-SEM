@@ -67,6 +67,9 @@ public:
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
     };
 
+    /**
+     * @brief alternative constructor with mesh points already created
+     */
     CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> n)
         : m_id(id), m_mesh(m), m_meshpoints(n)
     {
@@ -100,6 +103,11 @@ public:
     std::vector<NodeSharedPtr> GetMeshPoints()
     {
         return m_meshpoints;
+    }
+
+    std::vector<EdgeSharedPtr> GetMeshEdges()
+    {
+        return m_meshedges;
     }
 
     /**
@@ -160,12 +168,14 @@ private:
     int Ne;
     /// paramteric coordiates of the mesh nodes
     std::vector<NekDouble> meshsvalue;
-    /// ids of the mesh nodes
-    std::vector<NodeSharedPtr> m_meshpoints;
+    /// list of mesh edges in the curvemesh
+    std::vector<EdgeSharedPtr> m_meshedges;
     /// id of the curvemesh
     int m_id;
     ///
     MeshSharedPtr m_mesh;
+    /// ids of the mesh nodes
+    std::vector<NodeSharedPtr> m_meshpoints;
 };
 
 typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;

@@ -61,7 +61,7 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-inline box GetBox(ElementSharedPtr el)
+inline box GetBox(ElementSharedPtr el, NekDouble ov)
 {
     NekDouble xmin =        numeric_limits<double>::max(),
               xmax = -1.0 * numeric_limits<double>::max(),
@@ -81,7 +81,38 @@ inline box GetBox(ElementSharedPtr el)
         zmax = max(zmax,ns[i]->m_z);
     }
 
-    return box(point(xmin,ymin,zmin),point(xmax,ymax,zmax));
+    return box(point(xmin-ov,ymin-ov,zmin-ov),point(xmax+ov,ymax+ov,zmax+ov));
+}
+
+inline box GetBox(vector<ElementSharedPtr> els, NekDouble ov)
+{
+    NekDouble xmin =        numeric_limits<double>::max(),
+              xmax = -1.0 * numeric_limits<double>::max(),
+              ymin =        numeric_limits<double>::max(),
+              ymax = -1.0 * numeric_limits<double>::max(),
+              zmin =        numeric_limits<double>::max(),
+              zmax = -1.0 * numeric_limits<double>::max();
+
+    for(int j = 0; j < els.size(); j++)
+    {
+        vector<NodeSharedPtr> ns = els[j]->GetVertexList();
+        for(int i = 0; i < ns.size(); i++)
+        {
+            xmin = min(xmin,ns[i]->m_x);
+            xmax = max(xmax,ns[i]->m_x);
+            ymin = min(ymin,ns[i]->m_y);
+            ymax = max(ymax,ns[i]->m_y);
+            zmin = min(zmin,ns[i]->m_z);
+            zmax = max(zmax,ns[i]->m_z);
+        }
+    }
+
+    return box(point(xmin-ov,ymin-ov,zmin-ov),point(xmax+ov,ymax+ov,zmax+ov));
+}
+
+inline box GetBox(NodeSharedPtr n, NekDouble ov)
+{
+    return box(point(n->m_x-ov,n->m_y-ov,n->m_z-ov),point(n->m_x+ov,n->m_y+ov,n->m_z+ov));
 }
 
 void BLMesh::Mesh()
@@ -115,6 +146,10 @@ void BLMesh::Mesh()
             cout << "validity error " << el->GetId() << endl;
         }
     }
+
+    /*m_mesh->m_element[2] = m_psuedoSurface;
+    m_mesh->m_element[3].clear();
+    m_mesh->m_expDim = 2;*/
 }
 
 map<NodeSharedPtr, NodeSharedPtr> BLMesh::GetSymNodes()
@@ -138,50 +173,90 @@ map<NodeSharedPtr, NodeSharedPtr> BLMesh::GetSymNodes()
     return ret;
 }
 
+inline bool Infont(NodeSharedPtr n, ElementSharedPtr el)
+{
+    vector<NodeSharedPtr> ns1 = el->GetVertexList();
+    Array<OneD, NekDouble> N1(3);
+    N1[0] = (ns1[1]->m_y -ns1[0]->m_y)*(ns1[2]->m_z -ns1[0]->m_z)-
+            (ns1[2]->m_y -ns1[0]->m_y)*(ns1[1]->m_z -ns1[0]->m_z);
+    N1[1] = -1.0*((ns1[1]->m_x -ns1[0]->m_x)*(ns1[2]->m_z -ns1[0]->m_z)-
+                  (ns1[2]->m_x -ns1[0]->m_x)*(ns1[1]->m_z -ns1[0]->m_z));
+    N1[2] = (ns1[1]->m_x -ns1[0]->m_x)*(ns1[2]->m_y -ns1[0]->m_y)-
+            (ns1[2]->m_x -ns1[0]->m_x)*(ns1[1]->m_y -ns1[0]->m_y);
+
+    Array<OneD, NekDouble> V(3);
+    V[0] = n->m_x - ns1[0]->m_x;
+    V[1] = n->m_y - ns1[0]->m_y;
+    V[2] = n->m_z - ns1[0]->m_z;
+
+    NekDouble Nmag = sqrt(N1[0]*N1[0] + N1[1]*N1[1] + N1[2]*N1[2]);
+    NekDouble Vmag = sqrt(V[0]*V[0] + V[1]*V[1] + V[2]*V[2]);
+
+    NekDouble ang = (N1[0]*V[0] + N1[1]*V[1] + N1[2]*V[2]) / Nmag / Vmag;
+
+    return ang > 0.17;
+}
+
 void BLMesh::GrowLayers()
 {
     map<NodeSharedPtr, blInfoSharedPtr>::iterator bit;
-    vector<ElementSharedPtr> elsInRtree;
+
+    //setup up a tree which is formed of boxes of each surface plus some
+    //extra room (ideal bl thick)
+
+    //in each iteration a tree is made for all the triangles in each surface
+    //when considering to stop a bounary layer growing, it first
+    //looks at the top tree to find surfaces which are canditates
+    //it then searches the subtrees for each triangle canditate
+    //it then does a distance calcation.
+    //if a boundary layer should be close to that from another surface, it should stop
+
+    map<int,vector<ElementSharedPtr> > psElements;
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[2][i];
         vector<unsigned int>::iterator f = find(m_blsurfs.begin(),
                                                 m_blsurfs.end(),
-                                                el->CADSurfId);
+                                                el->m_parentCAD->GetId());
 
         vector<unsigned int>::iterator s = find(m_symSurfs.begin(),
                                                 m_symSurfs.end(),
-                                                el->CADSurfId);
+                                                el->m_parentCAD->GetId());
 
         if(f == m_blsurfs.end() && s == m_symSurfs.end())
         {
-            elsInRtree.push_back(m_mesh->m_element[2][i]);
+            psElements[el->m_parentCAD->GetId()].push_back(el);
         }
     }
     for(int i = 0; i < m_psuedoSurface.size(); i++)
     {
-        elsInRtree.push_back(m_psuedoSurface[i]);
-    }
-    for(int i = 0; i < elsInRtree.size(); i++)
-    {
-        elsInRtree[i]->SetId(i);
-    }
-    for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
-    {
-        for(int i = 0; i < bit->second->pEls.size(); i++)
-        {
-            bit->second->pId.insert(bit->second->pEls[i]->GetId());
-        }
+        psElements[m_psuedoSurface[i]->m_parentCAD->GetId()].push_back(m_psuedoSurface[i]);
     }
 
-    vector<boxI> inserts;
-    bgi::rtree<boxI, bgi::quadratic<16> > rtree;
+    bgi::rtree<boxI, bgi::quadratic<16> > TopTree;
+    map<int, bgi::rtree<boxI, bgi::quadratic<16> > > SubTrees;
 
-    //ofstream file3;
-    //file3.open("hit.3D");
-    //file3 << "X Y Z value" << endl;
+    ofstream file;
+    file.open("pts.3D");
+    file << "x y z value" << endl;
+
     for(int l = 1; l < m_layer; l++)
     {
+        NekDouble delta = (m_layerT[l] - m_layerT[l-1]);
+        TopTree.clear();
+        SubTrees.clear();
+        map<int, vector<ElementSharedPtr> >::iterator it;
+        for(it = psElements.begin(); it != psElements.end(); it++)
+        {
+            TopTree.insert(make_pair(GetBox(it->second,m_bl),it->first));
+            vector<boxI> toInsert;
+            for(int i = 0; i < it->second.size(); i++)
+            {
+                toInsert.push_back(make_pair(GetBox(it->second[i],m_bl),i));
+            }
+            SubTrees[it->first].insert(toInsert.begin(),toInsert.end());
+        }
+
         for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
         {
             if(bit->second->stopped)
@@ -189,81 +264,183 @@ void BLMesh::GrowLayers()
                 continue;
             }
 
-            bit->second->bl = l;
-            bit->second->AlignNode(m_layerT[bit->second->bl]);
-        }
-
-        rtree.clear();
-        inserts.clear();
-        for(int i = 0; i < elsInRtree.size(); i++)
-        {
-            inserts.push_back(make_pair(GetBox(elsInRtree[i]),i));
-        }
-        rtree.insert(inserts.begin(), inserts.end());
-
-        for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
-        {
-            if(bit->second->stopped)
+            vector<boxI> results;
+            TopTree.query(bgi::intersects(point(bit->second->pNode->m_x,
+                                                bit->second->pNode->m_y,
+                                                bit->second->pNode->m_z)),
+                                            back_inserter(results));
+            set<int> surfs;
+            for(int i = 0; i < results.size(); i++)
             {
-                continue;
-            }
-
-            vector<blInfoSharedPtr> infos = m_nToNInfo[bit->first];
-            for(int i = 0; i < infos.size(); i++)
-            {
-                if(bit->second->bl > infos[i]->bl + 1)
+                set<int>::iterator f = bit->second->surfs.find(results[i].second);
+                if(f == bit->second->surfs.end())
                 {
-                    bit->second->stop = true;
+                    //hit
+                    surfs.insert(results[i].second);
                 }
             }
-        }
 
-        for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
-        {
-            if(!bit->second->stop && !bit->second->stopped)
+            set<int>::iterator iit;
+            bool hit = false;
+            for(iit = surfs.begin(); iit != surfs.end(); iit++)
             {
-                bool hit = false;
-                for(int i = 0; i < bit->second->pEls.size(); i++)
+                results.clear();
+                SubTrees[*iit].query(bgi::intersects(GetBox(bit->second->pNode,m_bl)),
+                                                back_inserter(results));
+                for(int i = 0; i < results.size(); i++)
                 {
-                    vector<boxI> intersects;
-                    rtree.query(bgi::intersects(GetBox(bit->second->pEls[i])), back_inserter(intersects));
-
-                    for(int j = 0; j < intersects.size(); j++)
+                    if(Infont(bit->second->pNode,psElements[*iit][results[i].second]))
                     {
-                        set<int>::iterator f = bit->second->pId.find(intersects[j].second);
-                        if(f != bit->second->pId.end())
-                        {
-                            continue;
-                        }
-                        if(TestIntersectionEl(bit->second->pEls[i],elsInRtree[intersects[i].second]))
+                        NekDouble prox = Proximity(bit->second->pNode,psElements[*iit][results[i].second]);
+                        if(prox < delta*2.5)
                         {
                             hit = true;
-                            cout << "hit " << l << endl;
-                            bit->second->stop = true;
+                            //cout << "hit" << endl;
+                            bit->second->stopped = true;
+                            /*file << bit->first->m_x << " " << bit->first->m_y << " " << bit->first->m_z << " " << l << endl;
+                            file << bit->second->pNode->m_x << " " << bit->second->pNode->m_y << " " << bit->second->pNode->m_z << " " << l << endl;
+                            m_mesh->m_element[2].clear();
+                            m_mesh->m_expDim--;
+                            m_mesh->m_element[2].push_back(psElements[*iit][results[i].second]);*/
                             break;
+                            //return;
                         }
                     }
-                    if(hit) break;
                 }
+                if(hit) break;
             }
         }
 
+        //if after proximity scanning all is okay, advance the layer
         for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
         {
-            if(bit->second->stop)
+            if(bit->second->stopped)
+            {
+                continue;
+            }
+
+            //test the smoothness
+            bool shouldStop = false;
+            vector<blInfoSharedPtr> ne = m_nToNInfo[bit->first];
+            for(int i = 0; i < ne.size(); i++)
+            {
+                if(ne[i]->bl < bit->second->bl)
+                {
+                    shouldStop = true;
+                    break;
+                }
+            }
+            if(shouldStop)
             {
                 bit->second->stopped = true;
-                bit->second->stop = false;
-                bit->second->bl = l-1;
-                bit->second->AlignNode(m_layerT[bit->second->bl]);
+                continue;
             }
+
+            bit->second->AlignNode(m_layerT[l]);
+            bit->second->bl = l;
         }
     }
+    file.close();
 }
 
 inline bool sign(NekDouble a, NekDouble b)
 {
     return (a * b > 0.0);
+}
+
+inline NekDouble Dot(Array<OneD, NekDouble> a, Array<OneD, NekDouble> b)
+{
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+NekDouble BLMesh::Proximity(NodeSharedPtr n, ElementSharedPtr el)
+{
+    vector<NodeSharedPtr> ns = el->GetVertexList();
+    Array<OneD, NekDouble> B = ns[0]->GetLoc();
+    Array<OneD, NekDouble> E0(3);
+    E0[0] = ns[1]->m_x - ns[0]->m_x;
+    E0[1] = ns[1]->m_y - ns[0]->m_y;
+    E0[2] = ns[1]->m_z - ns[0]->m_z;
+    Array<OneD, NekDouble> E1(3);
+    E1[0] = ns[2]->m_x - ns[0]->m_x;
+    E1[1] = ns[2]->m_y - ns[0]->m_y;
+    E1[2] = ns[2]->m_z - ns[0]->m_z;
+    Array<OneD, NekDouble> P = n->GetLoc();
+
+    NekDouble a = Dot(E0,E0);
+    NekDouble b = Dot(E0,E1);
+    NekDouble c = Dot(E1,E1);
+
+    Array<OneD, NekDouble> BP(3);
+    Vmath::Vsub(3,B,1,P,1,BP,1);
+
+    NekDouble d = Dot(E0,BP);
+    NekDouble e = Dot(E1,BP);
+
+    NekDouble det = a*c - b*b;
+    NekDouble s = b*e-c*d, t = b*d-a*e;
+
+    if ( s+t <= det )
+    {
+        if ( s < 0 )
+        {
+            if ( t < 0 )
+            {
+                t = 0;
+                s = 0;
+            }
+            else
+            {
+                s = 0;
+                t = ( e >= 0 ? 0 : ( -e >= c ? 1 : -e / c ) );
+            }
+        }
+        else if ( t < 0 )
+        {
+            t = 0 ;
+            s = ( d >= 0 ? 0 : ( -d >= a ? 1 : -d / a ) ) ;
+        }
+        else
+        {
+            NekDouble invDet = 1.0 / det;
+            s *= invDet;
+            t *= invDet;
+        }
+    }
+    else
+    {
+        if ( s < 0 )
+        {
+            s = 0;
+            t = 1;
+        }
+        else if ( t < 0 )
+        {
+            s = 1;
+            t = 0;
+        }
+        else
+        {
+            NekDouble numer = c+e-b-d;
+            if(numer <= 0)
+            {
+                s = 0;
+            }
+            else
+            {
+                NekDouble denom = a-2*b+c;
+                s = (numer >= denom ? 1 : numer/denom);
+            }
+            t = 1 - s;
+        }
+    }
+
+    NodeSharedPtr point = boost::shared_ptr<Node>(new Node(0,
+                    B[0] + s*E0[0] + t*E1[0],
+                    B[1] + s*E0[1] + t*E1[1],
+                    B[2] + s*E0[2] + t*E1[2]));
+
+    return n->Distance(point);
 }
 
 bool BLMesh::TestIntersectionEl(ElementSharedPtr e1, ElementSharedPtr e2)
@@ -578,7 +755,7 @@ void BLMesh::BuildElements()
         ElementSharedPtr el = m_mesh->m_element[2][i];
         vector<unsigned int>::iterator f = find(m_blsurfs.begin(),
                                                 m_blsurfs.end(),
-                                                el->CADSurfId);
+                                                el->m_parentCAD->GetId());
 
         if(f == m_blsurfs.end())
         {
@@ -610,13 +787,9 @@ void BLMesh::BuildElements()
                     CreateInstance(LibUtilities::eTriangle, tconf, tn, tags);
         m_psuedoSurface.push_back(T);
 
-        m_priToTri[E] = el;
-        m_priTopTri[E] = T;
+        T->m_parentCAD = el->m_parentCAD;
 
-        for(int j = 0; j < 3; j++)
-        {
-            m_blData[n[j]]->pEls.push_back(T);
-        }
+        m_priToTri[E] = el;
     }
 }
 
@@ -809,7 +982,6 @@ void BLMesh::Setup()
             blInfoSharedPtr bln = boost::shared_ptr<blInfo>(new blInfo);
             bln->oNode = (*it);
             bln->stopped = false;
-            bln->stop = false;
 
             //file1 << (*it)->m_x << " " << (*it)->m_y << " " << (*it)->m_z << " " << ss.size() << endl;
 
@@ -836,14 +1008,14 @@ void BLMesh::Setup()
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
         //orientate the triangle
-        if(m_mesh->m_cad->GetSurf(m_mesh->m_element[2][i]->CADSurfId)
+        if(m_mesh->m_cad->GetSurf(m_mesh->m_element[2][i]->m_parentCAD->GetId())
                                                         ->IsReversedNormal())
         {
             m_mesh->m_element[2][i]->Flip();
         }
 
         vector<unsigned int>::iterator f = find(m_blsurfs.begin(), m_blsurfs.end(),
-                                                m_mesh->m_element[2][i]->CADSurfId);
+                                                m_mesh->m_element[2][i]->m_parentCAD->GetId());
 
         if(f == m_blsurfs.end())
         {
@@ -855,6 +1027,7 @@ void BLMesh::Setup()
         for(int j = 0; j < ns.size(); j++)
         {
             m_blData[ns[j]]->els.push_back(m_mesh->m_element[2][i]);
+            m_blData[ns[j]]->surfs.insert(m_mesh->m_element[2][i]->m_parentCAD->GetId());
         }
     }
 

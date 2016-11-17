@@ -87,20 +87,41 @@ void SurfaceMesh::Process()
     if (m_mesh->m_verbose)
         cout << endl << "\tFace meshing:" << endl << endl;
 
-    // linear mesh all surfaces
+    int prefix = 100;
+    if(m_mesh->m_cad->GetNumSurf() > 1000)
+    {
+        prefix *= 10;
+    }
+
+    bool validError = false;
     for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
+    {
+        if (m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(
+                i, m_mesh->m_cad->GetNumSurf(), "Validating curve meshes");
+        }
+        m_facemeshes[i] =
+            MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
+                m_curvemeshes, prefix + i);
+
+        validError = validError ? true : m_facemeshes[i]->ValidateCurves();
+    }
+
+    ASSERTL0(!validError,"valdity error in curve meshes");
+
+    // linear mesh all surfaces
+    map<int,FaceMeshSharedPtr>::iterator fit;
+    int i = 1;
+    for(fit = m_facemeshes.begin(); fit != m_facemeshes.end(); fit++)
     {
         if (m_mesh->m_verbose)
         {
             LibUtilities::PrintProgressbar(
                 i, m_mesh->m_cad->GetNumSurf(), "Face progress");
         }
-
-        m_facemeshes[i] =
-            MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                m_curvemeshes, m_mesh->m_cad->GetNumSurf() > 100);
-
-        m_facemeshes[i]->Mesh();
+        fit->second->Mesh();
+        i++;
     }
 
     ProcessVertices();
@@ -110,6 +131,15 @@ void SurfaceMesh::Process()
     ProcessComposites();
 
     Report();
+
+    EdgeSet::iterator it;
+    for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+    {
+        if((*it)->m_elLink.size() != 2)
+        {
+            ASSERTL0(false,"mesh connectivity error");
+        }
+    }
 
     m_mesh->m_expDim++; //revert dim
 }

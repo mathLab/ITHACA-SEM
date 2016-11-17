@@ -52,180 +52,6 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-inline set<pair<int, int> > ListOfFaceSpings(int nq)
-{
-    map<pair<int, int>, int> nodeorder;
-    map<int, pair<int, int> > nodeorderRev;
-    pair<int, int> id;
-
-    id.first        = 0;
-    id.second       = 0;
-    nodeorder[id]   = 0;
-    nodeorderRev[0] = id;
-
-    id.first        = nq - 1;
-    id.second       = 0;
-    nodeorder[id]   = 1;
-    nodeorderRev[1] = id;
-
-    id.first        = 0;
-    id.second       = nq - 1;
-    nodeorder[id]   = 2;
-    nodeorderRev[2] = id;
-
-    for (int i = 0; i < nq - 2; i++)
-    {
-        id.second           = 0;
-        id.first            = i + 1;
-        nodeorder[id]       = i + 3;
-        nodeorderRev[i + 3] = id;
-    }
-    for (int i = 0; i < nq - 2; i++)
-    {
-        id.first                 = nq - 2 - i;
-        id.second                = 1 + i;
-        nodeorder[id]            = nq + 1 + i;
-        nodeorderRev[nq + 1 + i] = id;
-    }
-    for (int i = 0; i < nq - 2; i++)
-    {
-        id.first                      = 0;
-        id.second                     = nq - 2 - i;
-        nodeorder[id]                 = nq + nq - 1 + i;
-        nodeorderRev[nq + nq - 1 + i] = id;
-    }
-
-    int i     = 1;
-    int j     = 1;
-    int limit = nq - 3;
-    for (int k = 0; k < (nq - 3) * (nq - 2) / 2; k++)
-    {
-        id.first      = i;
-        id.second     = j;
-        nodeorder[id] = 3 * (nq - 1) + k;
-        nodeorderRev[3 * (nq - 1) + k] = id;
-        i++;
-        if (i > limit)
-        {
-            limit--;
-            j++;
-            i = 1;
-        }
-    }
-
-    map<int, vector<int> > nodetosix;
-
-    for (int i = (nq + 1) * nq / 2 - (nq - 3) * (nq - 2) / 2;
-         i < (nq + 1) * nq / 2;
-         i++)
-    {
-        vector<int> ids;
-        int pr;
-
-        pair<int, int> p = nodeorderRev[i];
-        p.first -= 1;
-        pr = nodeorder[p];
-
-        ids.push_back(pr);
-
-        p = nodeorderRev[i];
-        p.second -= 1;
-        pr = nodeorder[p];
-
-        ids.push_back(pr);
-
-        p = nodeorderRev[i];
-        p.first += 1;
-        pr = nodeorder[p];
-
-        ids.push_back(pr);
-
-        p = nodeorderRev[i];
-        p.second += 1;
-        pr = nodeorder[p];
-
-        ids.push_back(pr);
-
-        p = nodeorderRev[i];
-        p.first += 1;
-        p.second -= 1;
-        pr = nodeorder[p];
-
-        ids.push_back(pr);
-
-        p = nodeorderRev[i];
-        p.first -= 1;
-        p.second += 1;
-        pr = nodeorder[p];
-
-        ids.push_back(pr);
-
-        nodetosix[i] = ids;
-    }
-
-    set<pair<int, int> > ret;
-    map<int, vector<int> >::iterator it;
-    for (it = nodetosix.begin(); it != nodetosix.end(); it++)
-    {
-        vector<int> ns = it->second;
-        for (int i = 0; i < ns.size(); i++)
-        {
-            pair<int, int> sp(min(it->first, ns[i]), max(it->first, ns[i]));
-            ret.insert(sp);
-        }
-    }
-
-    return ret;
-}
-
-inline map<pair<int, int>, NekDouble> weights(set<pair<int, int> > springs,
-                                              Array<OneD, NekDouble> u,
-                                              Array<OneD, NekDouble> v)
-{
-    map<pair<int, int>, NekDouble> ret;
-
-    // setup map from right angled reference triangle to equilateral reference
-    // triangle
-    DNekMat A(3, 3, 1.0);
-    A(0, 0) = -1.0;
-    A(1, 0) = -1.0;
-    A(0, 1) = 1.0;
-    A(1, 1) = -1.0;
-    A(0, 2) = 0.0;
-    A(1, 2) = -1.0 + sqrt(3.0);
-
-    DNekMat B(3, 3, 1.0);
-    B(0, 0) = -1.0;
-    B(1, 0) = -1.0;
-    B(0, 1) = 1.0;
-    B(1, 1) = -1.0;
-    B(0, 2) = -1.0;
-    B(1, 2) = 1.0;
-
-    B.Invert();
-
-    DNekMat M = A * B;
-
-    DNekMat C(3, u.num_elements(), 1.0);
-    for (int i = 0; i < u.num_elements(); i++)
-    {
-        C(0, i) = u[i];
-        C(1, i) = v[i];
-    }
-
-    DNekMat pts = M * C;
-
-    set<pair<int, int> >::iterator it;
-    for (it = springs.begin(); it != springs.end(); it++)
-    {
-        ret[(*it)] = sqrt((pts(0, (*it).first) - pts(0, (*it).second)) *
-                              (pts(0, (*it).first) - pts(0, (*it).second)) +
-                          (pts(1, (*it).first) - pts(1, (*it).second)) *
-                              (pts(1, (*it).first) - pts(1, (*it).second)));
-    }
-    return ret;
-}
-
 ModuleKey HOSurfaceMesh::className = GetModuleFactory().RegisterCreatorFunction(
     ModuleKey(eProcessModule, "hosurface"),
     HOSurfaceMesh::create,
@@ -245,9 +71,6 @@ void HOSurfaceMesh::Process()
 {
     if (m_mesh->m_verbose)
         cout << endl << "\tHigh-Order Surface meshing" << endl;
-
-    // this bit of code sets up information for the standard edge and face.
-    // and a mapping for node ordering for spring optimistaion
 
     LibUtilities::PointsKey ekey(m_mesh->m_nummode,
                                  LibUtilities::eGaussLobattoLegendre);
@@ -272,9 +95,6 @@ void HOSurfaceMesh::Process()
 
     LibUtilities::PointsManager()[pkey]->GetPoints(u, v);
 
-    set<pair<int, int> > springs     = ListOfFaceSpings(nq);
-    map<pair<int, int>, NekDouble> z = weights(springs, u, v);
-
     bool qOpti = m_config["opti"].beenSet;
 
     // loop over all the faces in the surface mesh, check all three edges for
@@ -298,8 +118,9 @@ void HOSurfaceMesh::Process()
                 i, m_mesh->m_element[2].size(), "\t\tSurface elements");
         }
 
-        int surf           = m_mesh->m_element[2][i]->CADSurfId;
-        CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(surf);
+        CADObjectSharedPtr o = m_mesh->m_element[2][i]->m_parentCAD;
+        CADSurfSharedPtr s = boost::dynamic_pointer_cast<CADSurf>(o);
+        int surf = s->GetId();
 
         FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
 
@@ -314,9 +135,7 @@ void HOSurfaceMesh::Process()
                                                  LibUtilities::ePolyEvenlySpaced));
         }
 
-        f->onSurf = true;
-        f->CADSurfId = surf;
-        f->CADSurf = s;
+        f->m_parentCAD = s;
 
         vector<EdgeSharedPtr> edges = f->m_edgeList;
         for (int j = 0; j < edges.size(); j++)
@@ -340,16 +159,22 @@ void HOSurfaceMesh::Process()
             // able to identify how to make it high-order
             EdgeSet::iterator it = surfaceEdges.find(e);
             ASSERTL0(it != surfaceEdges.end(),"could not find edge in surface");
-            e->onCurve       = (*it)->onCurve;
-            e->CADCurveId    = (*it)->CADCurveId;
-            e->CADCurve      = (*it)->CADCurve;
+
+            if((*it)->m_parentCAD)
+            {
+                e->m_parentCAD = (*it)->m_parentCAD;
+            }
+            else
+            {
+                e->m_parentCAD = s;
+            }
 
             vector<NodeSharedPtr> honodes(m_mesh->m_nummode - 2);
 
-            if (e->onCurve)
+            if (e->m_parentCAD->GetType() == CADType::eCurve)
             {
-                int cid             = e->CADCurveId;
-                CADCurveSharedPtr c = e->CADCurve;
+                int cid             = e->m_parentCAD->GetId();
+                CADCurveSharedPtr c = boost::dynamic_pointer_cast<CADCurve>(e->m_parentCAD);
                 NekDouble tb        = e->m_n1->GetCADCurveInfo(cid);
                 NekDouble te        = e->m_n2->GetCADCurveInfo(cid);
 
@@ -454,13 +279,10 @@ void HOSurfaceMesh::Process()
             else
             {
                 // edge is on surface and needs 2d optimisation
-                CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(surf);
                 Array<OneD, NekDouble> uvb, uve;
                 uvb = e->m_n1->GetCADSurfInfo(surf);
                 uve = e->m_n2->GetCADSurfInfo(surf);
-                e->onSurf = true;
-                e->CADSurf = s;
-                e->CADSurfId = surf;
+                e->m_parentCAD = s;
                 Array<OneD, Array<OneD, NekDouble> > uvi(nq);
                 for (int k = 0; k < nq; k++)
                 {
@@ -590,7 +412,6 @@ void HOSurfaceMesh::Process()
         }
 
         //just add the face interior nodes through interp and project
-
         vector<NodeSharedPtr> vertices = f->m_vertexList;
 
         SpatialDomains::GeometrySharedPtr geom = f->GetGeom(3);
@@ -681,7 +502,6 @@ void HOSurfaceMesh::Process()
             f->m_faceNodes = honodes;
             f->m_curveType = LibUtilities::eGaussLobattoLegendre;
         }
-
     }
 
     if (m_mesh->m_verbose)

@@ -64,23 +64,12 @@ public:
                              std::vector<NodeSharedPtr> pEdgeNodes,
                              LibUtilities::PointsType   pCurveType)
         : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(pEdgeNodes),
-          m_curveType(pCurveType), m_geom()
-    {
-#ifdef NEKTAR_USE_MESHGEN
-        onCurve = false;
-        onSurf = false;
-#endif
-    }
+          m_curveType(pCurveType), m_geom(){}
 
     /// Creates a new linear edge.
     NEKMESHUTILS_EXPORT Edge(NodeSharedPtr pVertex1, NodeSharedPtr pVertex2)
         : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(), m_curveType(), m_geom()
-    {
-#ifdef NEKTAR_USE_MESHGEN
-        onCurve = false;
-        onSurf = false;
-#endif
-    }
+    {}
 
     /// Copies an existing edge.
     NEKMESHUTILS_EXPORT Edge(const Edge &pSrc)
@@ -137,14 +126,7 @@ public:
     /// Element(s) which are linked to this edge.
     std::vector<std::pair<ElementSharedPtr, int> > m_elLink;
 
-#ifdef NEKTAR_USE_MESHGEN
-    bool onCurve;
-    int CADCurveId;
-    CADCurveSharedPtr CADCurve;
-    bool onSurf;
-    int CADSurfId;
-    CADSurfSharedPtr CADSurf;
-#endif
+    CADObjectSharedPtr m_parentCAD;
 
 private:
     SpatialDomains::SegGeomSharedPtr m_geom;

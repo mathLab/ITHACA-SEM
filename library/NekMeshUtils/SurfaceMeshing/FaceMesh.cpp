@@ -38,14 +38,77 @@
 #include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/ExtLibInterface/TriangleInterface.h>
 
-#include <LocalRegions/MatrixKey.h>
-#include <LibUtilities/Foundations/ManagerAccess.h>
-
 using namespace std;
 namespace Nektar
 {
 namespace NekMeshUtils
 {
+
+bool FaceMesh::ValidateCurves()
+{
+    vector<int> curvesInSurface;
+    for(int i = 0; i < m_edgeloops.size(); i++)
+    {
+        for(int j = 0; j < m_edgeloops[i].edges.size(); j++)
+        {
+            curvesInSurface.push_back(m_edgeloops[i].edges[j]->GetId());
+        }
+    }
+
+    bool error = false;
+
+    for(int i = 0; i < curvesInSurface.size(); i++)
+    {
+        vector<EdgeSharedPtr> es = m_curvemeshes[curvesInSurface[i]]->GetMeshEdges();
+        for(int j = i; j < curvesInSurface.size(); j++)
+        {
+            if(i == j)
+            {
+                continue;
+            }
+
+            vector<EdgeSharedPtr> es2 = m_curvemeshes[curvesInSurface[j]]->GetMeshEdges();
+
+            for(int l = 0; l < es.size(); l++)
+            {
+                Array<OneD, NekDouble> P1 = es[l]->m_n1->GetCADSurfInfo(m_id);
+                Array<OneD, NekDouble> P2 = es[l]->m_n2->GetCADSurfInfo(m_id);
+                for(int k = 0; k < es2.size(); k++)
+                {
+                    if(es[l]->m_n1 == es2[k]->m_n1 ||
+                       es[l]->m_n1 == es2[k]->m_n2 ||
+                       es[l]->m_n2 == es2[k]->m_n1 ||
+                       es[l]->m_n2 == es2[k]->m_n2)
+                    {
+                        continue;
+                    }
+
+                    Array<OneD, NekDouble> P3 = es2[k]->m_n1->GetCADSurfInfo(m_id);
+                    Array<OneD, NekDouble> P4 = es2[k]->m_n2->GetCADSurfInfo(m_id);
+
+                    NekDouble den = (P4[0]-P3[0])*(P2[1]-P1[1]) - (P2[0]-P1[0])*(P4[1]-P3[1]);
+                    if(fabs(den) < 1e-8)
+                    {
+                        continue;
+                    }
+                    NekDouble t = ((P1[0]-P3[0])*(P4[1]-P3[1]) - (P4[0]-P3[0])*(P1[1]-P3[1]))/den;
+                    NekDouble u = (P1[0] - P3[0] + t*(P2[0]-P1[0])) / (P4[0] - P3[0]);
+
+                    if(t < 1.0 && t > 0.0 && u < 1.0 && u > 0.0)
+                    {
+                        Array<OneD, NekDouble> uv(2);
+                        uv[0] = P1[0] + t * (P2[0] - P1[0]);
+                        uv[1] = P1[1] + t * (P2[1] - P1[1]);
+                        Array<OneD, NekDouble> loc = m_cadsurf->P(uv);
+                        cout << endl << "Curve mesh error at " << loc[0] << " " << loc[1] << " " << loc[2] << " on face " << m_id << endl;
+                        error = true;
+                    }
+                }
+            }
+        }
+    }
+    return error;
+}
 
 void FaceMesh::Mesh()
 {
@@ -95,6 +158,8 @@ void FaceMesh::Mesh()
     bool repeat     = true;
     int meshcounter = 1;
 
+    //continuously remesh until all triangles conform to the spacing in the
+    //octree
     while (repeat)
     {
         repeat = Validate();
@@ -109,12 +174,14 @@ void FaceMesh::Mesh()
         meshcounter++;
     }
 
+    //build a local version of the mesh (one set of triangles)
+    //this is done so edge connectivity infomration can be used for optimisation
     BuildLocalMesh();
 
     OptimiseLocalMesh();
 
     // make new elements and add to list from list of nodes and connectivity
-    // from triangle
+    // from triangle removing unnesercary infomration from the elements
     for (int i = 0; i < m_localElements.size(); i++)
     {
         vector<EdgeSharedPtr> e = m_localElements[i]->GetEdgeList();
@@ -141,6 +208,7 @@ void FaceMesh::Mesh()
 
 void FaceMesh::OptimiseLocalMesh()
 {
+    //each optimisation algorithm is based on the work in chapeter 19
     DiagonalSwap();
 
     Smoothing();
@@ -606,8 +674,8 @@ void FaceMesh::DiagonalSwap()
 
                 ntri1->SetId(id1);
                 ntri2->SetId(id2);
-                ntri1->CADSurfId = m_id;
-                ntri2->CADSurfId = m_id;
+                ntri1->m_parentCAD = m_cadsurf;
+                ntri2->m_parentCAD = m_cadsurf;
 
                 vector<EdgeSharedPtr> t1es = ntri1->GetEdgeList();
                 for (int i = 0; i < 3; i++)
@@ -692,10 +760,10 @@ void FaceMesh::BuildLocalMesh()
         ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
 
         vector<int> tags;
-        tags.push_back(m_id + (over ? 1000 : 100));
+        tags.push_back(m_compId);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eTriangle, conf, m_connec[i], tags);
-        E->CADSurfId = m_id;
+        E->m_parentCAD = m_cadsurf;
 
         vector<NodeSharedPtr> nods = E->GetVertexList();
         for (int j = 0; j < nods.size(); j++)

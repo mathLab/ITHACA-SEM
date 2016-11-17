@@ -45,26 +45,29 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+namespace CADType
+{
 enum cadType
 {
-    vert,
-    curve,
-    surf
+    eVert,
+    eCurve,
+    eSurf
 };
+}
 
-class CADObj
+class CADObject
 {
 public:
-    friend class MemoryManager<CADObj>;
+    friend class MemoryManager<CADObject>;
 
     /**
      * @brief Default constructor.
      */
-    CADObj()
+    CADObject()
     {
     }
 
-    virtual ~CADObj(){}
+    virtual ~CADObject(){}
 
     /**
      * @brief Return ID of the vertex
@@ -74,7 +77,7 @@ public:
         return m_id;
     }
 
-    cadType GetType()
+    CADType::cadType GetType()
     {
         return m_type;
     }
@@ -83,10 +86,10 @@ protected:
     /// ID of the vert.
     int m_id;
     /// type of the cad object
-    cadType m_type;
+    CADType::cadType m_type;
 };
 
-typedef boost::shared_ptr<CADObj> CADObjSharedPtr;
+typedef boost::shared_ptr<CADObject> CADObjectSharedPtr;
 }
 }
 

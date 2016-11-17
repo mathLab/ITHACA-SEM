@@ -38,11 +38,7 @@
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 #include <NekMeshUtils/MeshElements/Element.h>
-#include <NekMeshUtils/MeshElements/Composite.h>
-
-#ifdef NEKTAR_USE_MESHGEN
-#include <NekMeshUtils/CADSystem/CADSystem.h>
-#endif
+#include <NekMeshUtils/MeshElements/Composite.h> 
 
 namespace Nektar
 {
@@ -135,10 +131,10 @@ public:
     bool                            m_hasCAD;
     /// CAD file ID
     std::string                     m_CADId;
-#ifdef NEKTAR_USE_MESHGEN
+
     CADSystemSharedPtr              m_cad;
     OctreeSharedPtr                 m_octree;
-#endif
+
 
     /// Returns the total number of elements in the mesh with
     /// dimension expDim.

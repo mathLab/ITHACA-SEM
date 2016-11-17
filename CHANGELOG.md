@@ -70,6 +70,7 @@ v4.4.0
 v4.3.5
 ------
 **Library:**
+- Fix bug in DG with hybrid meshes (!694)
 - Fix issue with parallel output (!699)
 - Fix performance issue with iterative full solver (!693)
 

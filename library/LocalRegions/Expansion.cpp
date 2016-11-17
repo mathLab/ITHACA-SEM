@@ -101,6 +101,17 @@ namespace Nektar
             return v_BuildVertexMatrix(r_bnd);
         }
 
+
+        void Expansion::ExtractDataToCoeffs(
+            const NekDouble *data,
+            const std::vector<unsigned int > &nummodes,
+            const int nmodes_offset,
+            NekDouble *coeffs,
+            std::vector<LibUtilities::BasisType> &fromType)
+        {
+            v_ExtractDataToCoeffs(data,nummodes,nmodes_offset,coeffs,fromType);
+        }
+
         void Expansion::AddEdgeNormBoundaryInt(
             const int                           edge,
             const boost::shared_ptr<Expansion> &EdgeExp,
@@ -304,6 +315,16 @@ namespace Nektar
         {
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return NullDNekMatSharedPtr;
+        }
+
+        void Expansion::v_ExtractDataToCoeffs(
+            const NekDouble *data,
+            const std::vector<unsigned int > &nummodes,
+            const int nmodes_offset,
+            NekDouble *coeffs,
+            std::vector<LibUtilities::BasisType> &fromType)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
         }
 
         void Expansion::v_AddEdgeNormBoundaryInt(

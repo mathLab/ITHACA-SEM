@@ -454,7 +454,7 @@ void ElUtil::Evaluate()
     {
         res->startInv++;
     }
-    res->worstJac = min(res->worstJac,mn2/mx2);
+    res->worstJac = min(res->worstJac,mn2 / mx2);
     mtx2.unlock();
 
     //maps = MappingIdealToRef();

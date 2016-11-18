@@ -1065,13 +1065,14 @@ void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
                 continue;
             }
 
-            if((*it)->m_edgeNodes[0]->GetNumCadCurve() > 0 ||
-               (*it)->m_edgeNodes[0]->GetNumCADSurf() > 0)
+            if((*it)->m_parentCAD)
             {
                 TiXmlElement *e = new TiXmlElement("E");
                 e->SetAttribute("ID", edgecnt++);
                 e->SetAttribute("EDGEID", (*it)->m_id);
-                e->SetAttribute("ONCURVE", ((*it)->onCurve ? (*it)->CADCurveId : 0));
+                e->SetAttribute("ONCURVE",
+                    ((*it)->m_parentCAD->GetType() == CADType::eCurve ?
+                                (*it)->m_parentCAD->GetId() : 0));
                 for(int j = 0; j < (*it)->m_edgeNodes.size(); j++)
                 {
                     TiXmlElement *n = new TiXmlElement("N");
@@ -1119,12 +1120,12 @@ void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
                 continue;
             }
 
-            if((*it)->m_faceNodes[0]->GetNumCADSurf() > 0)
+            if((*it)->m_parentCAD)
             {
                 TiXmlElement *f = new TiXmlElement("F");
                 f->SetAttribute("ID", facecnt++);
                 f->SetAttribute("FACEID", (*it)->m_id);
-                f->SetAttribute("ONSURF", (*it)->m_faceNodes[0]->GetCADSurfInfoVector()[0].first);
+                f->SetAttribute("ONSURF", (*it)->m_parentCAD->GetId());
 
                 for(int j = 0; j < (*it)->m_faceNodes.size(); j++)
                 {

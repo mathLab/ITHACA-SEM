@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSVAROPTI
 #define UTILITIES_NEKMESH_PROCESSVAROPTI
 
-#include "../../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 #include "ElUtil.h"
 

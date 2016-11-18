@@ -529,7 +529,7 @@ void NodeOpti3D3D::Optimise()
             node->m_z = zc;
 
             mtx.lock();
-            res->nReset[3]++;
+            res->nReset[2]++;
             mtx.unlock();
         }
         else

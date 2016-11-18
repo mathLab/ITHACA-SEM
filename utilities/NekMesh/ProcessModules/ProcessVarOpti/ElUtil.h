@@ -36,14 +36,16 @@
 #ifndef UTILITIES_NEKMESH_PROCESSVAROPTI_ELUTIL
 #define UTILITIES_NEKMESH_PROCESSVAROPTI_ELUTIL
 
-#include "../../Module.h"
-
 #include <LibUtilities/BasicUtils/Thread.h>
+
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
 namespace Utilities
 {
+
+using namespace NekMeshUtils;
 
 struct DerivUtil;
 struct Residual;

@@ -38,10 +38,9 @@
 
 #include <ostream>
 
-#include "../../Module.h"
-#include "ProcessVarOpti.h"
-
 #include <LibUtilities/BasicUtils/Thread.h>
+
+#include "ProcessVarOpti.h"
 
 namespace Nektar
 {

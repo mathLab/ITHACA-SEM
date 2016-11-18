@@ -55,8 +55,6 @@ void NodeOpti1D3D::Optimise()
     NekDouble currentW = GetFunctional<3>(minJacNew);
     NekDouble newVal = currentW;
 
-    //cout << "curve " << sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) << endl;
-
     if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
         //modify the gradient to be on the cad system
@@ -71,23 +69,13 @@ void NodeOpti1D3D::Optimise()
         Array<OneD, NekDouble> p;
 
         Array<OneD, NekDouble> sk(1), dk(1), pk(1);
-        bool DNC = false;
 
-        if(G[1] < 0.0)
+        if (G[1] < 1e-6)
         {
-            dk[0] = G[0];
-
-            DNC = true;
+            G[1] = 1e-6 - G[1];
         }
 
-        if(G[1] < 0.00001)
-        {
-            sk[0] = G[0] * -1.0;
-        }
-        else
-        {
-            sk[0] = G[0] / G[1] * -1.0;
-        }
+        sk[0] = G[0] / G[1] * -1.0;
 
         Array<OneD, NekDouble> bd = curve->Bounds();
 
@@ -95,148 +83,37 @@ void NodeOpti1D3D::Optimise()
 
         NekDouble pg = G[0]*sk[0];
 
-        if(!DNC || true)
+        //normal gradient line Search
+        NekDouble alpha    = 1.0;
+
+        while (alpha > alphaTol())
         {
-            //normal gradient line Search
-            NekDouble alpha    = 1.0;
-
-            while (alpha > alphaTol())
-            {
-                // Update node
-                nt = tc + alpha * sk[0];
-                if(nt < bd[0] || nt > bd[1])
-                {
-                    alpha /= 2.0;
-                    continue;
-                }
-                p = curve->P(nt);
-                node->m_x = p[0];
-                node->m_y = p[1];
-                node->m_z = p[2];
-
-                newVal = GetFunctional<3>(minJacNew,false,false);
-                //
-                // Wolfe conditions
-                if (newVal <= currentW + c1() * (
-                    alpha*pg))
-                {
-                    found = true;
-                    break;
-                }
-
-                alpha /= 2.0;
-            }
-        }
-        else
-        {
-            NekDouble sig = 1.0;  //small inital step size
-            NekDouble beta = 0.5;
-            int l = 0;
-            NekDouble alpha = pow(beta,l);
-
-            pg = G[0]*dk[0];
-
-            //choose whether to do forward or reverse line search
-            nt = tc + alpha * dk[0];
-
+            // Update node
+            nt = tc + alpha * sk[0];
             if(nt < bd[0] || nt > bd[1])
             {
-                //because its out of the parameter plane
-                newVal = numeric_limits<double>::max();
+                alpha /= 2.0;
+                continue;
             }
-            else
+
+            p = curve->P(nt);
+            node->m_x = p[0];
+            node->m_y = p[1];
+            node->m_z = p[2];
+
+            newVal = GetFunctional<3>(minJacNew, false, false);
+
+            // Wolfe conditions
+            if (newVal <= currentW + c1() * alpha * pg)
             {
-                //can try out the vector step
-                p = curve->P(nt);
-                node->m_x = p[0];
-                node->m_y = p[1];
-                node->m_z = p[2];
-
-                newVal = GetFunctional<3>(minJacNew,false,false);
+                found = true;
+                break;
             }
 
-            if(newVal <= currentW + c1() * (
-                pg))
-            {
-
-                //this is a minimser so see if we can extend further
-                while (l > -10)
-                {
-                    // Update node
-                    //
-                    nt = tc + alpha/beta * dk[0];
-                    if(nt < bd[0] || nt > bd[1])
-                    {
-                        //we could possibly find a optimiser but the point has
-                        //gone out of the parameter plane
-                        found = true;
-                        nt = tc + alpha * dk[0];
-                        break;
-                    }
-
-                    p = curve->P(nt);
-                    node->m_x = p[0];
-                    node->m_y = p[1];
-                    node->m_z = p[2];
-                    NekDouble dbVal = GetFunctional<3>(minJacNew,false,false);
-
-                    nt = tc + alpha/beta * dk[0];
-                    //dont acutally need to check this point
-                    //because it was checked previously above
-
-                    p = curve->P(nt);
-                    node->m_x = p[0];
-                    node->m_y = p[1];
-                    node->m_z = p[2];
-
-                    newVal = GetFunctional<3>(minJacNew,false,false);
-
-                    if (newVal <= currentW + c1() * (
-                        alpha*pg) &&
-                        dbVal > currentW + c1() *(
-                        alpha/beta*pg))
-                    {
-                        found = true;
-                        break;
-                    }
-
-                    l--;
-                    alpha = pow(beta,l);
-                }
-            }
-            else
-            {
-                while (alpha > alphaTol())
-                {
-                    // Update node
-                    nt = tc + alpha * dk[0];
-                    if(nt < bd[0] || nt > bd[1])
-                    {
-                        alpha /= 2.0;
-                        continue;
-                    }
-                    p = curve->P(nt);
-                    node->m_x = p[0];
-                    node->m_y = p[1];
-                    node->m_z = p[2];
-                    node->MoveCurve(p,curve->GetId(),nt);
-
-                    newVal = GetFunctional<3>(minJacNew,false,false);
-                    //
-                    // Wolfe conditions
-                    if (newVal <= currentW + c1() * (
-                        alpha*pg))
-                    {
-                        found = true;
-                        break;
-                    }
-
-                    alpha /= 2.0;
-                }
-            }
+            alpha /= 2.0;
         }
 
-        if(!found)
+        if (!found)
         {
             //reset the node
             nt = tc;
@@ -255,7 +132,8 @@ void NodeOpti1D3D::Optimise()
             node->MoveCurve(p,curve->GetId(),nt);
         }
         mtx.lock();
-        res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
+        res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+
+                            (node->m_y-yc)*(node->m_y-yc)+
                             (node->m_z-zc)*(node->m_z-zc)),res->val);
         mtx.unlock();
     }
@@ -274,8 +152,6 @@ void NodeOpti2D3D::Optimise()
     NekDouble currentW = GetFunctional<3>(minJacNew);
     NekDouble newVal = currentW;
 
-    //cout << "curve " << sqrt(G[0]*G[0] + G[1]*G[1] + G[2]*G[2]) << endl;
-
     if (G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
         //modify the gradient to be on the cad system
@@ -283,218 +159,65 @@ void NodeOpti2D3D::Optimise()
 
         //needs to optimise
         Array<OneD, NekDouble> uvc = node->GetCADSurfInfo(surf->GetId());
-        NekDouble xc       = node->m_x;
-        NekDouble yc       = node->m_y;
-        NekDouble zc       = node->m_z;
+        NekDouble xc = node->m_x;
+        NekDouble yc = node->m_y;
+        NekDouble zc = node->m_z;
         Array<OneD, NekDouble> uvt(2);
         Array<OneD, NekDouble> p;
         Array<OneD, NekDouble> bd = surf->GetBounds();
 
         Array<OneD, NekDouble> sk(2), dk(2);
-        bool DNC = false;
-        NekDouble lhs;
+        NekDouble lhs, val;
 
-        int def = IsIndefinite<2>();
-        if(def)
+        // Calculate minimum eigenvalue
+        MinEigen<2>(val, dk);
+
+        if (val < 1e-6)
         {
-            //the dk vector needs calculating
-            NekDouble val;
-            MinEigen<2>(val,dk);
-
-            if(dk[0]*G[0] + dk[1]*G[1] > 0.0)
-            {
-                for(int i = 0; i < 2; i++)
-                {
-                    dk[i] *= -1.0;
-                }
-            }
-
-            lhs = dk[0] * (dk[0]*G[2] + dk[1]*G[3]) +
-                  dk[1] * (dk[0]*G[3] + dk[1]*G[4]);
-
-            ASSERTL0(lhs < 0.0 , "weirdness");
-
-            DNC = true;
+            // Add constant identity to Hessian matrix.
+            G[2] += 1e-6 - val;
+            G[4] += 1e-6 - val;
         }
 
         sk[0] = -1.0/(G[2]*G[4]-G[3]*G[3])*(G[4]*G[0] - G[3]*G[1]);
         sk[1] = -1.0/(G[2]*G[4]-G[3]*G[3])*(G[2]*G[1] - G[3]*G[0]);
 
-        bool runDNC = false; //so want to make this varible runDMC
         bool found  = false;
-
         NekDouble skmag = sqrt(sk[0]*sk[0] + sk[1]*sk[1]);
-
-        if(DNC)
-        {
-            runDNC = !((G[0]*sk[0]+G[1]*sk[1])/skmag <=
-                        2.0*(0.5*lhs + G[0]*dk[0]+G[1]*dk[1]));
-        }
-
         NekDouble pg = (G[0]*sk[0]+G[1]*sk[1]);
 
-        if(!runDNC)
+        //normal gradient line Search
+        NekDouble alpha    = 1.0;
+        NekDouble hes = sk[0] * (sk[0]*G[2] + sk[1]*G[3]) +
+                        sk[1] * (sk[0]*G[3] + sk[1]*G[4]);
+        hes = min(hes,0.0);
+        while(alpha > alphaTol())
         {
-            //normal gradient line Search
-            NekDouble alpha    = 1.0;
-            NekDouble hes = sk[0] * (sk[0]*G[2] + sk[1]*G[3]) +
-                            sk[1] * (sk[0]*G[3] + sk[1]*G[4]);
-            hes = min(hes,0.0);
-            while(alpha > alphaTol())
-            {
-                uvt[0] = uvc[0] + alpha * sk[0];
-                uvt[1] = uvc[1] + alpha * sk[1];
-
-                if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
-                   uvt[1] < bd[2] || uvt[1] > bd[3])
-                {
-                    alpha /= 2.0;
-                    continue;
-                }
-
-                p = surf->P(uvt);
-                node->m_x = p[0];
-                node->m_y = p[1];
-                node->m_z = p[2];
-
-                newVal = GetFunctional<3>(minJacNew,false,false);
-
-                //cout << currentW << " " <<  newVal << endl;
-
-                // Wolfe conditions
-                if (newVal <= currentW + c1() * (
-                    alpha*pg+ 0.5*alpha*alpha*hes))
-                {
-                    found = true;
-                    break;
-                }
-
-                alpha /= 2.0;
-            }
-        }
-        else
-        {
-            NekDouble sig = 1.0;    //small inital step size
-            NekDouble beta = 0.5;
-            int l = 0;
-            NekDouble alpha = pow(beta,l);
-
-            NekDouble hes = lhs;
-
-            pg = (G[0]*dk[0]+G[1]*dk[1]);
-
-            //choose whether to do forward or reverse line search
-            uvt[0] = uvc[0] + dk[0];
-            uvt[1] = uvc[1] + dk[1];
+            uvt[0] = uvc[0] + alpha * sk[0];
+            uvt[1] = uvc[1] + alpha * sk[1];
 
             if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
                uvt[1] < bd[2] || uvt[1] > bd[3])
             {
-                //because its out of the parameter plane
-                newVal = numeric_limits<double>::max();
+                alpha /= 2.0;
+                continue;
             }
-            else
+
+            p = surf->P(uvt);
+            node->m_x = p[0];
+            node->m_y = p[1];
+            node->m_z = p[2];
+
+            newVal = GetFunctional<3>(minJacNew,false,false);
+
+            // Wolfe conditions
+            if (newVal <= currentW + c1() * (alpha*pg+ 0.5*alpha*alpha*hes))
             {
-                //can try out the vector step
-                p = surf->P(uvt);
-                node->m_x = p[0];
-                node->m_y = p[1];
-                node->m_z = p[2];
-
-                newVal = GetFunctional<3>(minJacNew,false,false);
+                found = true;
+                break;
             }
 
-            if(newVal <= currentW + c1() * (
-                pg + 0.5*hes))
-            {
-                //this is a minimser so see if we can extend further
-                while (l > -10)
-                {
-                    // Update node
-                    //
-                    uvt[0] = uvc[0] + alpha/beta * dk[0];
-                    uvt[1] = uvc[1] + alpha/beta * dk[1];
-                    if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
-                       uvt[1] < bd[2] || uvt[1] > bd[3])
-                    {
-                        //we could possibly find a optimiser but the point has
-                        //gone out of the parameter plane
-                        found = true;
-                        uvt[0] = uvc[0] + alpha * dk[0];
-                        uvt[1] = uvc[1] + alpha * dk[1];
-                        break;
-                    }
-
-                    p = surf->P(uvt);
-                    node->m_x = p[0];
-                    node->m_y = p[1];
-                    node->m_z = p[2];
-                    NekDouble dbVal = GetFunctional<3>(minJacNew,false,false);
-
-                    uvt[0] = uvc[0] + alpha * dk[0];
-                    uvt[1] = uvc[1] + alpha * dk[1];
-                    //dont acutally need to check this point
-                    //because it was checked previously above
-
-                    p = surf->P(uvt);
-                    node->m_x = p[0];
-                    node->m_y = p[1];
-                    node->m_z = p[2];
-
-                    newVal = GetFunctional<3>(minJacNew,false,false);
-
-                    if (newVal <= currentW + c1() * (
-                        alpha*pg + 0.5*alpha*alpha*hes) &&
-                        dbVal > currentW + c1() *(
-                        alpha/beta*pg + 0.5*alpha*alpha*hes/beta/beta))
-                    {
-                        found = true;
-                        break;
-                    }
-
-                    l--;
-                    alpha = pow(beta,l);
-                }
-                if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
-                   uvt[1] < bd[2] || uvt[1] > bd[3])
-                {
-                    cout << "out of bound" << endl;
-                }
-            }
-            else
-            {
-                //this is not a minimser so reverse line search
-                while(alpha > alphaTol())
-                {
-                    uvt[0] = uvc[0] + alpha * dk[0];
-                    uvt[1] = uvc[1] + alpha * dk[1];
-
-                    if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
-                       uvt[1] < bd[2] || uvt[1] > bd[3])
-                    {
-                        alpha /= 2.0;
-                        continue;
-                    }
-
-                    p = surf->P(uvt);
-                    node->m_x = p[0];
-                    node->m_y = p[1];
-                    node->m_z = p[2];
-
-                    newVal = GetFunctional<3>(minJacNew,false,false);
-
-                    // Wolfe conditions
-                    if (newVal <= currentW + c1() * (
-                        alpha*pg+ 0.5*alpha*alpha*hes))
-                    {
-                        found = true;
-                        break;
-                    }
-
-                    l++;
-                    alpha = pow(beta,l);
-                }
-            }
+            alpha /= 2.0;
         }
 
         if(!found)

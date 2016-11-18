@@ -288,7 +288,8 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient, bool hess
     NekDouble integral = 0.0;
     //NekDouble ep = minJac < 0.0 ? sqrt(1e-12 + 0.04*minJac*minJac) : 1e-6;
     //NekDouble ep = minJac < 0.0 ? sqrt(gam*(gam-minJac)) : gam;
-    NekDouble ep = minJac < 0.0 ? sqrt(gam*gam + minJac*minJac) : gam;
+    //NekDouble ep = minJac < 0.0 ? sqrt(gam*gam + minJac*minJac) : gam;
+    NekDouble ep = 1e-2;
     NekDouble jacIdeal[DIM][DIM], jacDet;
     G = Array<OneD, NekDouble>(DIM == 2 ? 5 : 9, 0.0);
 
@@ -468,12 +469,23 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient, bool hess
                         NekDouble sigma =
                             0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*ep*ep));
 
-
                         if(sigma < numeric_limits<double>::min() && !gradient)
                         {
                             return numeric_limits<double>::max();
                         }
-                        ASSERTL0(sigma > numeric_limits<double>::min(),"dividing by zero");
+
+                        /*
+                        if (!(sigma > numeric_limits<double>::min()))
+                        {
+                            return numeric_limits<double>::max();
+                        }
+                        */
+
+                        ASSERTL0(sigma > numeric_limits<double>::min(),
+                                 std::string("dividing by zero ") +
+                                 boost::lexical_cast<string>(sigma) + " " +
+                                 boost::lexical_cast<string>(jacDet) + " " +
+                                 boost::lexical_cast<string>(ep));
 
                         NekDouble lsigma = log(sigma);
                         integral += derivUtil[typeIt->first]->quadW[k]*

@@ -88,34 +88,6 @@ void NodeOpti2D2D::Optimise()
     NekDouble currentW = GetFunctional<2>(minJacNew);
     NekDouble newVal = currentW;
 
-    /*cout << endl;
-    cout << G[0] << " " << G[1] << " " << G[2] << " " << G[3] << " " << G[4] << endl;
-
-    Array<OneD, NekDouble> Gt = G;
-
-    NekDouble xc       = node->m_x;
-    NekDouble yc       = node->m_y;
-
-    vector<NekDouble> d;
-    for(int i = 0; i < 6; i++)
-    {
-        node->m_x = xc + 1e-8*dir[i][0];
-        node->m_y = yc + 1e-8*dir[i][1];
-
-        d.push_back(GetFunctional<2>(false,false));
-    }
-
-    G = Array<OneD, NekDouble>(5);
-    G[0] = (d[1] - d[3]) / 2e-8;
-    G[1] = (d[2] - d[4]) / 2e-8;
-    G[2] = (d[1] + d[3] - 2*currentW) / 1e-16;
-    G[3] = (d[0] - d[1] - d[2] + 2*currentW - d[3] - d[4] + d[5]) / 2e-16;
-    G[4] = (d[2] + d[4] - 2*currentW) / 1e-16;
-
-    cout << G[0] << " " << G[1] << " " << G[2] << " " << G[3] << " " << G[4] << endl;
-
-    G = Gt;*/
-
     // Gradient already zero
     if (G[0]*G[0] + G[1]*G[1] > gradTol())
     {
@@ -124,147 +96,49 @@ void NodeOpti2D2D::Optimise()
         NekDouble yc       = node->m_y;
 
         Array<OneD, NekDouble> sk(2), dk(2);
-        bool DNC = false;
-        NekDouble lhs;
+        NekDouble lhs, val;
 
-        int def = IsIndefinite<2>();
-        if(def)
+        // Calculate minimum eigenvalue
+        MinEigen<2>(val, dk);
+
+        if (val < 1e-6)
         {
-            //the dk vector needs calculating
-            NekDouble val;
-            MinEigen<2>(val,dk);
-
-            if(dk[0]*G[0] + dk[1]*G[1]> 0.0)
-            {
-                for(int i = 0; i < 2; i++)
-                {
-                    dk[i] *= -1.0;
-                }
-            }
-
-            lhs = dk[0] * (dk[0]*G[2] + dk[1]*G[3]) +
-                  dk[1] * (dk[0]*G[3] + dk[1]*G[4]);
-
-            ASSERTL0(lhs < 0.0 , "weirdness");
-
-            DNC = true;
+            // Add constant identity to Hessian matrix.
+            G[2] += 1e-6 - val;
+            G[4] += 1e-6 - val;
         }
 
         sk[0] = -1.0/(G[2]*G[4]-G[3]*G[3])*(G[4]*G[0] - G[3]*G[1]);
         sk[1] = -1.0/(G[2]*G[4]-G[3]*G[3])*(G[2]*G[1] - G[3]*G[0]);
 
-        bool runDNC = false; //so want to make this varible runDMC
         bool found  = false;
-
-        NekDouble skmag = sqrt(sk[0]*sk[0] + sk[1]*sk[1]);
-
-        if(DNC)
-        {
-            runDNC = !((G[0]*sk[0]+G[1]*sk[1])/skmag <=
-                        2.0*(0.5*lhs + G[0]*dk[0]+G[1]*dk[1]));
-        }
-
         NekDouble pg = (G[0]*sk[0]+G[1]*sk[1]);
+        //normal gradient line Search
+        NekDouble alpha    = 1.0;
+        NekDouble hes = sk[0] * (sk[0]*G[2] + sk[1]*G[3]) +
+                        sk[1] * (sk[0]*G[3] + sk[1]*G[4]);
+        hes = min(hes,0.0);
 
-        if(!runDNC)
+        while (alpha > alphaTol())
         {
-            //normal gradient line Search
-            NekDouble alpha    = 1.0;
-            NekDouble hes = sk[0] * (sk[0]*G[2] + sk[1]*G[3]) +
-                            sk[1] * (sk[0]*G[3] + sk[1]*G[4]);
-            hes = min(hes,0.0);
-
-            while (alpha > alphaTol())
-            {
-                // Update node
-                node->m_x = xc + alpha * sk[0];
-                node->m_y = yc + alpha * sk[1];
-
-                newVal = GetFunctional<2>(minJacNew,false,false);
-                //dont need the hessian again this function updates G to be the new
-                //location
-                //
-                // Wolfe conditions
-                if (newVal <= currentW + c1() * (
-                    alpha*pg+ 0.5*alpha*alpha*hes))
-                {
-                    found = true;
-                    break;
-                }
-
-                alpha /= 2.0;
-            }
-        }
-        else
-        {
-            NekDouble sig = 1.0;
-            NekDouble beta = 0.5;
-            int l = 0;
-            NekDouble alpha = pow(beta,l);
-
-            NekDouble hes = lhs;
-
-            pg = (G[0]*dk[0]+G[1]*dk[1]);
-
-            //choose whether to do forward or reverse line search
-            node->m_x = xc + dk[0];
-            node->m_y = yc + dk[1];
+            // Update node
+            node->m_x = xc + alpha * sk[0];
+            node->m_y = yc + alpha * sk[1];
 
             newVal = GetFunctional<2>(minJacNew,false,false);
-
-            if(newVal <= currentW + c1() * (
-                pg + 0.5*hes))
+            //dont need the hessian again this function updates G to be the new
+            //location
+            //
+            // Wolfe conditions
+            if (newVal <= currentW + c1() * (alpha*pg+ 0.5*alpha*alpha*hes))
             {
-                //this is a minimser so see if we can extend further
-                while (l > -10)
-                {
-                    // Update node
-                    node->m_x = xc + alpha * dk[0];
-                    node->m_y = yc + alpha * dk[1];
-
-                    newVal = GetFunctional<2>(minJacNew,false,false);
-
-                    node->m_x = xc + alpha/beta * dk[0];
-                    node->m_y = yc + alpha/beta * dk[1];
-
-                    NekDouble dbVal = GetFunctional<2>(minJacNew,false,false);
-
-                    if (newVal <= currentW + c1() * (
-                        alpha*pg + 0.5*alpha*alpha*hes) &&
-                        dbVal > currentW + c1() *(
-                        alpha/beta*pg + 0.5*alpha*alpha*hes/beta/beta))
-                    {
-                        found = true;
-                        break;
-                    }
-
-                    l--;
-                    alpha = pow(beta,l);
-                }
+                found = true;
+                break;
             }
-            else
-            {
-                //this is not a minimser so reverse line search
-                while (alpha > alphaTol())
-                {
-                    // Update node
-                    node->m_x = xc + alpha * dk[0];
-                    node->m_y = yc + alpha * dk[1];
 
-                    newVal = GetFunctional<2>(minJacNew,false,false);
-
-                    if (newVal <= currentW + c1() * (
-                        alpha*pg + 0.5*alpha*alpha*hes))
-                    {
-                        found = true;
-                        break;
-                    }
-
-                    l++;
-                    alpha = pow(beta,l);
-                }
-            }
+            alpha /= 2.0;
         }
+
         if (!found)
         {
             //reset the node
@@ -315,42 +189,6 @@ void NodeOpti3D3D::Optimise()
     NekDouble currentW = GetFunctional<3>(minJacNew);
     NekDouble newVal = currentW;
 
-    /*//cout << endl;
-    //cout << G[0] << " " << G[1] << " " << G[2] << " " << G[3] << " " << G[4] << " " << G[5] << " " << G[6] << " " << G[7] << " " << G[8] << endl;
-
-    Array<OneD, NekDouble> Gt = G;
-
-    NekDouble xc       = node->m_x;
-    NekDouble yc       = node->m_y;
-    NekDouble zc       = node->m_z;
-
-    vector<NekDouble> d;
-    for(int i = 0; i < 12; i++)
-    {
-        node->m_x = xc + 1e-6*dir[i][0];
-        node->m_y = yc + 1e-6*dir[i][1];
-        node->m_z = zc + 1e-6*dir[i][2];
-
-        d.push_back(GetFunctional<3>(false,false));
-    }
-
-    G = Array<OneD, NekDouble>(9);
-    G[0] = (d[0] - d[1]) / 2e-6;
-    G[1] = (d[2] - d[3]) / 2e-6;
-    G[2] = (d[4] - d[5]) / 2e-6;
-
-    G[3] = (d[0] + d[1] - 2*currentW) / 1e-12;
-    G[6] = (d[2] + d[3] - 2*currentW) / 1e-12;
-    G[8] = (d[4] + d[5] - 2*currentW) / 1e-12;
-
-    G[4] = (d[6] - d[0] - d[2] + 2*currentW - d[1] - d[3] + d[7]) / 2e-12;
-    G[5] = (d[8] - d[0] - d[4] + 2*currentW - d[1] - d[5] + d[9]) / 2e-12;
-    G[7] = (d[10] - d[2] - d[4] + 2*currentW - d[3] - d[5] + d[11]) / 2e-12;
-
-    //cout << G[0] << " " << G[1] << " " << G[2] << " " << G[3] << " " << G[4] << " " << G[5] << " " << G[6] << " " << G[7] << " " << G[8] << endl;
-
-    //G = Gt;*/
-
     if(G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
     {
         //needs to optimise
@@ -359,31 +197,17 @@ void NodeOpti3D3D::Optimise()
         NekDouble zc       = node->m_z;
 
         Array<OneD, NekDouble> sk(3), dk(3);
-        bool DNC = false;
-        NekDouble lhs;
+        NekDouble lhs, val;
 
-        int def = IsIndefinite<3>();
-        if(def)
+        // Calculate minimum eigenvalue
+        MinEigen<3>(val, dk);
+
+        if (val < 1e-4)
         {
-            //the dk vector needs calculating
-            NekDouble val;
-            MinEigen<3>(val,dk);
-
-            if(dk[0]*G[0] + dk[1]*G[1] + dk[2]*G[2] > 0.0)
-            {
-                for(int i = 0; i < 3; i++)
-                {
-                    dk[i] *= -1.0;
-                }
-            }
-
-            lhs = dk[0] * (dk[0]*G[3] + dk[1]*G[4] + dk[2]*G[5]) +
-                  dk[1] * (dk[0]*G[4] + dk[1]*G[6] + dk[2]*G[7]) +
-                  dk[2] * (dk[0]*G[5] + dk[1]*G[7] + dk[2]*G[8]);
-
-            ASSERTL0(lhs < 0.0 , "weirdness");
-
-            DNC = true;
+            // Add constant identity to Hessian matrix.
+            G[3] += 1e-4 - val;
+            G[6] += 1e-4 - val;
+            G[8] += 1e-4 - val;
         }
 
         //calculate sk
@@ -405,121 +229,39 @@ void NodeOpti3D3D::Optimise()
         sk[1] /= det * -1.0;
         sk[2] /= det * -1.0;
 
-        bool runDNC = false; //so want to make this varible runDMC
         bool found  = false;
 
         NekDouble skmag = sqrt(sk[0]*sk[0] + sk[1]*sk[1] + sk[2]*sk[2]);
-        if(DNC)
-        {
-            runDNC = !((G[0]*sk[0]+G[1]*sk[1]+G[2]*sk[2])/skmag <=
-                        2.0*(0.5*lhs + G[0]*dk[0]+G[1]*dk[1]+G[2]*dk[2]));
-        }
 
         NekDouble pg = (G[0]*sk[0]+G[1]*sk[1]+G[2]*sk[2]);
 
-        if(!runDNC)
+        //normal gradient line Search
+        NekDouble alpha    = 1.0;
+        NekDouble hes = sk[0] * (sk[0]*G[3] + sk[1]*G[4] + sk[2]*G[5]) +
+                        sk[1] * (sk[0]*G[4] + sk[1]*G[6] + sk[2]*G[7]) +
+                        sk[2] * (sk[0]*G[5] + sk[1]*G[7] + sk[2]*G[8]);
+        hes = min(hes,0.0);
+
+        while (alpha > alphaTol())
         {
-            //normal gradient line Search
-            NekDouble alpha    = 1.0;
-            NekDouble hes = sk[0] * (sk[0]*G[3] + sk[1]*G[4] + sk[2]*G[5]) +
-                            sk[1] * (sk[0]*G[4] + sk[1]*G[6] + sk[2]*G[7]) +
-                            sk[2] * (sk[0]*G[5] + sk[1]*G[7] + sk[2]*G[8]);
-            hes = min(hes,0.0);
+            // Update node
+            node->m_x = xc + alpha * sk[0];
+            node->m_y = yc + alpha * sk[1];
+            node->m_z = zc + alpha * sk[2];
 
-            while (alpha > alphaTol())
-            {
-                // Update node
-                node->m_x = xc + alpha * sk[0];
-                node->m_y = yc + alpha * sk[1];
-                node->m_z = zc + alpha * sk[2];
-
-                newVal = GetFunctional<3>(minJacNew,false,false);
-                //dont need the hessian again this function updates G to be the new
-                //location
-                //
-                // Wolfe conditions
-                if (newVal <= currentW + c1() * (
-                    alpha*pg+ 0.5*alpha*alpha*hes))
-                {
-                    found = true;
-                    break;
-                }
-
-                alpha /= 2.0;
-            }
-        }
-        else
-        {
-            NekDouble sig = 1.0;
-            NekDouble beta = 0.5;
-            int l = 0;
-            NekDouble alpha = pow(beta,l);
-
-            NekDouble hes = lhs;
-
-            pg = (G[0]*dk[0]+G[1]*dk[1]+G[2]*dk[2]);
-
-            //choose whether to do forward or reverse line search
-            node->m_x = xc + dk[0];
-            node->m_y = yc + dk[1];
-            node->m_z = zc + dk[2];
             newVal = GetFunctional<3>(minJacNew,false,false);
-
-            if(newVal <= currentW + c1() * (
-                pg + 0.5*hes))
+            //dont need the hessian again this function updates G to be the new
+            //location
+            //
+            // Wolfe conditions
+            if (newVal <= currentW + c1() * (
+                    alpha*pg+ 0.5*alpha*alpha*hes))
             {
-                //this is a minimser so see if we can extend further
-                while (l > -10)
-                {
-                    // Update node
-                    node->m_x = xc + alpha * dk[0];
-                    node->m_y = yc + alpha * dk[1];
-                    node->m_z = zc + alpha * dk[2];
-
-                    newVal = GetFunctional<3>(minJacNew,false,false);
-
-                    node->m_x = xc + alpha/beta * dk[0];
-                    node->m_y = yc + alpha/beta * dk[1];
-                    node->m_z = zc + alpha/beta * dk[2];
-
-                    NekDouble dbVal = GetFunctional<3>(minJacNew,false,false);
-
-                    if (newVal <= currentW + c1() * (
-                        alpha*pg + 0.5*alpha*alpha*hes) &&
-                        dbVal > currentW + c1() *(
-                        alpha/beta*pg + 0.5*alpha*alpha*hes/beta/beta))
-                    {
-                        found = true;
-                        break;
-                    }
-
-                    l--;
-                    alpha = pow(beta,l);
-                }
+                found = true;
+                break;
             }
-            else
-            {
-                //this is not a minimser so reverse line search
-                while (alpha > alphaTol())
-                {
-                    // Update node
-                    node->m_x = xc + alpha * dk[0];
-                    node->m_y = yc + alpha * dk[1];
-                    node->m_z = zc + alpha * dk[2];
 
-                    newVal = GetFunctional<3>(minJacNew,false,false);
-
-                    if (newVal <= currentW + c1() * (
-                        alpha*pg + 0.5*alpha*alpha*hes))
-                    {
-                        found = true;
-                        break;
-                    }
-
-                    l++;
-                    alpha = pow(beta,l);
-                }
-            }
+            alpha /= 2.0;
         }
 
         if(!found)

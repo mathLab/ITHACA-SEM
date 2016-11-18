@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -126,7 +126,7 @@ void Mesh::MakeOrder(int                      order,
         pTypes[LibUtilities::eSegment]  = LibUtilities::eGaussLobattoLegendre;
         pTypes[LibUtilities::eTriangle] = LibUtilities::eNodalTriElec;
         pTypes[LibUtilities::eQuadrilateral] = LibUtilities::eGaussLobattoLegendre;
-        pTypes[LibUtilities::ePrism] = LibUtilities::eNodalPrismElec;
+        pTypes[LibUtilities::ePrism] = LibUtilities::eGaussLobattoLegendre;
         pTypes[LibUtilities::eTetrahedron] = LibUtilities::eNodalTetElec;
         pTypes[LibUtilities::eHexahedron] = LibUtilities::eGaussLobattoLegendre;
     }

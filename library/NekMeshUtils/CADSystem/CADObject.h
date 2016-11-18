@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Opencascade.h
+//  File: CADObj.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,46 +29,68 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: occ headers.
+//  Description: CAD object curve.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_CADSYSTEM_OCC
-#define NEKMESHUTILS_CADSYSTEM_OCC
+#ifndef NEKMESHUTILS_CADSYSTEM_CADOBJ
+#define NEKMESHUTILS_CADSYSTEM_CADOBJ
 
-/// This is a list of OpenCascade headers required for use with nektar
+#include <boost/shared_ptr.hpp>
 
-#include <STEPControl_Reader.hxx>
-#include <IGESControl_Reader.hxx>
-#include <TColStd_HSequenceOfTransient.hxx>
-#include <TopoDS.hxx>
-#include <TopExp.hxx>
-#include <TopoDS_Shape.hxx>
-#include <TopTools_IndexedMapOfShape.hxx>
-#include <BRepAdaptor_Curve.hxx>
-#include <BRepAdaptor_Surface.hxx>
-#include <GeomAPI_ProjectPointOnSurf.hxx>
-#include <GeomAPI_ProjectPointOnCurve.hxx>
-#include <GeomAbs_SurfaceType.hxx>
-#include <BRepTools.hxx>
-#include <BRep_Tool.hxx>
-#include <gp_Trsf.hxx>
-#include <TopLoc_Location.hxx>
-#include <BRepTools_WireExplorer.hxx>
-#include <GProp_GProps.hxx>
-#include <BRepGProp.hxx>
-#include <Geom_TrimmedCurve.hxx>
-#include <BRepBuilderAPI_MakeEdge.hxx>
-#include <GCPnts_AbscissaPoint.hxx>
-#include <TopAbs_State.hxx>
-#include <BRepClass3d_SolidClassifier.hxx>
-#include <BRepBuilderAPI_MakeFace.hxx>
-#include <gp_Pnt2d.hxx>
-#include <BRepClass_FaceClassifier.hxx>
-#include <ShapeAnalysis_Wire.hxx>
-#include <TopoDS_Wire.hxx>
-#include <ShapeAnalysis_Surface.hxx>
-#include <ShapeAnalysis_Curve.hxx>
-#include <Standard_Macro.hxx>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+
+namespace Nektar
+{
+namespace NekMeshUtils
+{
+
+namespace CADType
+{
+enum cadType
+{
+    eVert,
+    eCurve,
+    eSurf
+};
+}
+
+class CADObject
+{
+public:
+    friend class MemoryManager<CADObject>;
+
+    /**
+     * @brief Default constructor.
+     */
+    CADObject()
+    {
+    }
+
+    virtual ~CADObject(){}
+
+    /**
+     * @brief Return ID of the vertex
+     */
+    int GetId()
+    {
+        return m_id;
+    }
+
+    CADType::cadType GetType()
+    {
+        return m_type;
+    }
+
+protected:
+    /// ID of the vert.
+    int m_id;
+    /// type of the cad object
+    CADType::cadType m_type;
+};
+
+typedef boost::shared_ptr<CADObject> CADObjectSharedPtr;
+}
+}
 
 #endif

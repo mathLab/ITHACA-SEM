@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
+#include <NekMeshUtils/Octree/Octree.h>
 
 using namespace std;
 namespace Nektar
@@ -43,9 +44,11 @@ namespace NekMeshUtils
 
 void CurveMesh::Mesh()
 {
+    //this algorithm is mostly based on the work in chapter 19
+
     m_bounds          = m_cadcurve->Bounds();
     m_curvelength     = m_cadcurve->GetTotLength();
-    m_numSamplePoints = int(m_curvelength / m_octree->GetMinDelta()) + 5;
+    m_numSamplePoints = int(m_curvelength / m_mesh->m_octree->GetMinDelta()) + 5;
     ds                = m_curvelength / (m_numSamplePoints - 1);
 
     GetSampleFunction();
@@ -88,7 +91,7 @@ void CurveMesh::Mesh()
                 NekDouble rhs = EvaluateDS(ski) / Ae * (EvaluatePS(ski) - k);
                 lastSki       = ski;
                 ski = ski - rhs;
-                if (abs(lastSki - ski) < 1E-10)
+                if (abs(lastSki - ski) < 1E-8)
                 {
                     iterate = false;
                 }
@@ -159,62 +162,14 @@ void CurveMesh::Mesh()
     ASSERTL0(Ne + 1 == m_meshpoints.size(),
              "incorrect number of points in curve mesh");
 
-    /*//post process the curve mesh to analyse for bad segments based on
-    high-order normals and split if needed
-    int ct = 1;
-    while(ct > 0)
-    {
-        ct = 0;
-        for(int i = 0; i < m_meshpoints.size() - 1; i++)
-        {
-            bool split = false;
-            for(int j = 0; j < 2; j++)
-            {
-                Array<OneD, NekDouble> uv1, uv2;
-                uv1 = m_meshpoints[i]->GetCADSurfInfo(s[j]->GetId());
-                uv2 = m_meshpoints[i+1]->GetCADSurfInfo(s[j]->GetId());
-                Array<OneD, NekDouble> N1, N2;
-                N1 = s[j]->N(uv1);
-                N2 = s[j]->N(uv2);
-                NekDouble dot = N1[0]*N2[0] + N1[1]*N2[1] + N1[2]*N2[2];
-                if(acos(dot) > 3.142/2.0-0.1)
-                {
-                    split = true;
-                }
-            }
-
-            if(split)
-            {
-                ct++;
-                NekDouble t1, t2;
-                t1 = m_meshpoints[i]->GetCADCurveInfo(m_id);
-                t2 = m_meshpoints[i+1]->GetCADCurveInfo(m_id);
-                NekDouble tn = (t1 + t2)/2.0;
-                Array<OneD, NekDouble> loc = m_cadcurve->P(tn);
-                NodeSharedPtr nn = boost::shared_ptr<Node>(new
-    Node(m_mesh->m_numNodes++,
-                                                            loc[0],loc[1],loc[2]));
-                nn->SetCADCurve(m_id, m_cadcurve, tn);
-                for(int j = 0; j < 2; j++)
-                {
-                    Array<OneD, NekDouble> uv = s[j]->locuv(loc);
-                    nn->SetCADSurf(s[j]->GetId(), s[j], uv);
-                }
-                m_meshpoints.insert(m_meshpoints.begin() + i+1, nn);
-                break;
-            }
-        }
-    }*/
-
     // make edges and add them to the edgeset for the face mesher to use
     for (int i = 0; i < m_meshpoints.size() - 1; i++)
     {
         EdgeSharedPtr e = boost::shared_ptr<Edge>(
             new Edge(m_meshpoints[i], m_meshpoints[i + 1]));
-        e->CADCurveId = m_id;
-        e->CADCurve   = m_cadcurve;
-        e->onCurve = true;
+        e->m_parentCAD = m_cadcurve;
         m_mesh->m_edgeSet.insert(e);
+        m_meshedges.push_back(e);
     }
 
     if(m_mesh->m_verbose)
@@ -341,7 +296,7 @@ void CurveMesh::GetSampleFunction()
     vector<NekDouble> dsti;
     dsti.resize(3);
 
-    dsti[0] = m_octree->Query(loc);
+    dsti[0] = m_mesh->m_octree->Query(loc);
     dsti[1] = 0.0;
     dsti[2] = m_bounds[0];
 
@@ -354,7 +309,7 @@ void CurveMesh::GetSampleFunction()
 
         loc = m_cadcurve->P(t);
 
-        dsti[0] = m_octree->Query(loc);
+        dsti[0] = m_mesh->m_octree->Query(loc);
         dsti[2] = t;
 
         m_dst[i] = dsti;

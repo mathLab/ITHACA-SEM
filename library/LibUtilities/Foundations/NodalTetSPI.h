@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NodalTriElec.h
+// File NodalTetSPI.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,53 +29,50 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Header file of 2D Nodal Triangle Fekete Points
+// Description: Nodal tetrahedron SPI points
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef NODALTETSPI_H
 #define NODALTETSPI_H
 
-#include <LibUtilities/Foundations/FoundationsFwd.hpp>
-#include <boost/shared_ptr.hpp>
-#include <LibUtilities/Foundations/ManagerAccess.h>
-#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+
+class NodalTetSPI : public Points<NekDouble>
+{
+public:
+    virtual ~NodalTetSPI()
     {
+    }
 
-        class NodalTetSPI: public Points<NekDouble>
-        {
-        public:
+    LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> Create(
+        const PointsKey &key);
 
-            virtual ~NodalTetSPI()
-            {
-            }
+    NodalTetSPI(const PointsKey &key) : PointsBaseType(key)
+    {
+    }
 
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType>
-                Create(const PointsKey &key);
+private:
+    NodalTetSPI() : PointsBaseType(NullPointsKey)
+    {
+    }
 
-            NodalTetSPI(const PointsKey &key):PointsBaseType(key)
-            {
-            }
+    void CalculatePoints();
+    void CalculateWeights();
+    void CalculateDerivMatrix();
+};
 
-            int GetNumPointsAlt();
-
-        private:
-            NodalTetSPI():PointsBaseType(NullPointsKey)
-            {
-            }
-
-            void CalculatePoints();
-            void CalculateWeights();
-            void CalculateDerivMatrix();
-
-        };
-   } // end of namespace
+} // end of namespace
 } // end of namespace
 
-#endif //NODALTRIELEC_H
+#endif // NODALTRIELEC_H

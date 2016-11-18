@@ -41,25 +41,39 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-#include <NekMeshUtils/CADSystem/OpenCascade.h>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+
+#include "CADObject.h"
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
+//forward declorators
 class CADVert;
 typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
 class CADCurve;
 typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
 class CADSurf;
 typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
-struct EdgeLoop;
+
+/**
+ * @brief struct which descibes a collection of cad edges which are a
+ *        loop on the cad surface
+ */
+struct EdgeLoop
+{
+    std::vector<CADCurveSharedPtr> edges;
+    std::vector<int> edgeo; //0 is forward 1 is backward
+    Array<OneD, NekDouble> center;
+    NekDouble area;
+};
 
 /**
  * @brief Base class for CAD interface system.
  *
- * A class which can load and interact with CAD for Nektar++ using OpenCascade.
+ * A class which can load and interact with CAD for Nektar++.
  * This class contains maps to subclasses surface and curves.
  */
 class CADSystem
@@ -70,26 +84,38 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADSystem(const std::string &name) : m_name(name)
+    CADSystem(std::string name) : m_name(name)
+    {
+    }
+
+    ~CADSystem()
     {
     }
 
     /**
      * @brief Return the name of the CAD system.
      */
-    std::string GetName();
+    std::string GetName()
+    {
+        return m_name;
+    }
 
     /**
      * @brief Initialises CAD and makes surface, curve and vertex maps.
      *
      * @return true if completed successfully
      */
-    bool LoadCAD();
+    virtual bool LoadCAD() = 0;
 
     /**
      * @brief Reports basic properties to screen.
      */
-    void Report();
+    void Report()
+    {
+        std::cout << std::endl << "CAD report:" << std::endl;
+        std::cout << "\tCAD has: " << m_curves.size() << " curves." << std::endl;
+        std::cout << "\tCAD has: " << m_surfs.size() << " surfaces." << std::endl;
+    }
 
     /**
      * @brief Returns bounding box of the domain.
@@ -99,7 +125,7 @@ public:
      *
      * @return Array with 6 entries: xmin, xmax, ymin, ymax, zmin and zmax.
      */
-    Array<OneD, NekDouble> GetBoundingBox();
+    virtual Array<OneD, NekDouble> GetBoundingBox() = 0;
 
     /**
      * @brief Get the number of surfaces.
@@ -155,24 +181,8 @@ public:
         return m_verts.size();
     }
 
-    /**
-     * @brief based on location in space, uses opencascade routines to
-     * determin if the point is within the domain. This routine is slow
-     * and should be used sparingly, it is smart enough to take and form
-     * of geometry
-     */
-    bool InsideShape(Array<OneD, NekDouble> loc);
-
-    std::vector<int> GetBoundarySurfs();
-
-private:
-    /// Function to add curve to CADSystem::m_verts.
-    void AddVert(int i, TopoDS_Shape in);
-    /// Function to add curve to CADSystem::m_curves.
-    void AddCurve(int i, TopoDS_Shape in, int fv, int lv);
-    /// Function to add surface to CADSystem::m_surfs.
-    void AddSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
-    /// Name of cad file to be opened, including file extension.
+protected:
+    /// Name of cad file
     std::string m_name;
     /// Map of curves
     std::map<int, CADCurveSharedPtr> m_curves;
@@ -180,11 +190,14 @@ private:
     std::map<int, CADSurfSharedPtr> m_surfs;
     /// Map of vertices
     std::map<int, CADVertSharedPtr> m_verts;
-    /// OCC master object
-    TopoDS_Shape shape;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;
+typedef LibUtilities::NekFactory<std::string, CADSystem, std::string>
+    EngineFactory;
+
+EngineFactory& GetEngineFactory();
+
 }
 }
 

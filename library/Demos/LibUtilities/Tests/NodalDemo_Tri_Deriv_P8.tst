@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>Nodal triangle integration, electrostatic points, P = 8</description>
+    <description>Nodal triangle derivative, electrostatic points, P = 8</description>
     <executable>NodalDemo</executable>
     <parameters>--order 8 --type 22 --deriv</parameters>
     <metrics>

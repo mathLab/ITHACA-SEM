@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADObj.h
+//  File: ProcessJac.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,71 +29,35 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: CAD object curve.
+//  Description: Calculate jacobians of elements.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_CADSYSTEM_CADOBJ
-#define NEKMESHUTILS_CADSYSTEM_CADOBJ
+#ifndef NEKMESHUTILS_SURFACE_HO
+#define NEKMESHUTILS_SURFACE_HO
 
-#include <boost/shared_ptr.hpp>
-
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <NekMeshUtils/CADSystem/OpenCascade.h>
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-enum cadType
-{
-    vert,
-    curve,
-    surf
-};
-
-/**
- * @brief class for CAD curves.
- *
- * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
- * Nektar++.
- */
-class CADObj
+class HOSurfaceMesh : public ProcessModule
 {
 public:
-    friend class MemoryManager<CADObj>;
-
-    /**
-     * @brief Default constructor.
-     */
-    CADObj()
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
+        return MemoryManager<HOSurfaceMesh>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
 
-    virtual ~CADObj(){}
+    HOSurfaceMesh(MeshSharedPtr m);
+    virtual ~HOSurfaceMesh();
 
-    /**
-     * @brief Return ID of the vertex
-     */
-    int GetId()
-    {
-        return m_id;
-    }
-
-    cadType GetType()
-    {
-        return m_type;
-    }
-
-protected:
-    /// ID of the vert.
-    int m_id;
-    /// type of the cad object
-    cadType m_type;
+    virtual void Process();
 };
-
-typedef boost::shared_ptr<CADObj> CADObjSharedPtr;
 }
 }
 

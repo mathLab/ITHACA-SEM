@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_INPUTNEKPP
 #define UTILITIES_NEKMESH_INPUTNEKPP
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -46,20 +46,20 @@ namespace Utilities
 /**
  * Converter for Gmsh files.
  */
-class InputNekpp : public InputModule
+class InputNekpp : public NekMeshUtils::InputModule
 {
 public:
-    InputNekpp(MeshSharedPtr m);
+    InputNekpp(NekMeshUtils::MeshSharedPtr m);
     virtual ~InputNekpp();
     virtual void Process();
 
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m)
+    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<InputNekpp>::AllocateSharedPtr(m);
     }
     /// %ModuleKey for class.
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 };
 }
 }

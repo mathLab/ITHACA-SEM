@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>Nodal tetrahedron integration, electrostatic points, P = 8</description>
+    <description>Nodal tetrahedron derivative, electrostatic points, P = 8</description>
     <executable>NodalDemo</executable>
     <parameters>--order 8 --type 27 --deriv</parameters>
     <metrics>

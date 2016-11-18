@@ -50,4 +50,3 @@ IF(NEKTAR_USE_HDF5)
     ADD_NEKTAR_EXECUTABLE(FieldIOBenchmarker demos FieldIOBenchmarkerSources)
     TARGET_LINK_LIBRARIES(FieldIOBenchmarker LibUtilities)
 ENDIF()
-

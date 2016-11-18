@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.cpp
+//  File: Tetrahedron.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh tet object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,6 +39,8 @@
 
 #include <NekMeshUtils/MeshElements/Tetrahedron.h>
 #include <NekMeshUtils/MeshElements/Triangle.h>
+
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 using namespace std;
 

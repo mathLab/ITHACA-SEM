@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.cpp
+//  File: Prism.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh prism object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +38,10 @@
 #include <SpatialDomains/PrismGeom.h>
 
 #include <NekMeshUtils/MeshElements/Prism.h>
-#include <NekMeshUtils/MeshElements/Quadrilateral.h>
+#include <NekMeshUtils/MeshElements/HOAlignment.h>
+
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 using namespace std;
 
 namespace Nektar

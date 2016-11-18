@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.cpp
+//  File: Quadrilateral.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,14 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh quad object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LocalRegions/QuadExp.h>
 #include <NekMeshUtils/MeshElements/Quadrilateral.h>
+
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 using namespace std;
 

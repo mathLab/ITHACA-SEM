@@ -29,11 +29,14 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh line object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/MeshElements/Line.h>
+
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 using namespace std;
 
 namespace Nektar

@@ -96,9 +96,10 @@ namespace Nektar
             "NodalTriEvenlySpaced",
             "NodalTetEvenlySpaced",
             "NodalTetElec",
-            "NodalTetSPI",
             "NodalPrismEvenlySpaced",
             "NodalPrismElec",
+            "NodalTriSPI",
+            "NodalTetSPI",
             "NodalPrismSPI"
         };
 

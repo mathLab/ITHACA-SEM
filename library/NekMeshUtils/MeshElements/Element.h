@@ -29,14 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh element.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_ELEMENT
-#define NekMeshUtils_MESHELEMENTS_ELEMENT
-
-#include <iomanip>
+#ifndef NEKMESHUTILS_MESHELEMENTS_ELEMENT
+#define NEKMESHUTILS_MESHELEMENTS_ELEMENT
 
 #include <LibUtilities/Foundations/PointsType.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
@@ -44,201 +42,12 @@
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 #include <NekMeshUtils/MeshElements/Face.h>
+#include <NekMeshUtils/MeshElements/ElementConfig.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
-/**
- * @brief A lightweight struct for dealing with high-order triangle
- * alignment.
- *
- * The logic underlying these routines is taken from the original Nektar
- * code.
- */
-template <typename T> struct HOTriangle
-{
-    HOTriangle(std::vector<int> pVertId, std::vector<T> pSurfVerts)
-        : vertId(pVertId), surfVerts(pSurfVerts)
-    {
-    }
-    HOTriangle(std::vector<int> pVertId) : vertId(pVertId)
-    {
-    }
-
-    /// The triangle vertex IDs
-    std::vector<int> vertId;
-
-    /// The triangle surface vertices -- templated so that this can
-    /// either be nodes or IDs.
-    std::vector<T> surfVerts;
-
-    /**
-     * @brief Rotates the triangle of data points inside #surfVerts
-     * counter-clockwise nrot times.
-     *
-     * @param nrot Number of times to rotate triangle.
-     */
-    void Rotate(int nrot)
-    {
-        int n, i, j, cnt;
-        int np = ((int)sqrt(8.0 * surfVerts.size() + 1.0) - 1) / 2;
-        std::vector<T> tmp(np * np);
-
-        for (n = 0; n < nrot; ++n)
-        {
-            for (cnt = i = 0; i < np; ++i)
-            {
-                for (j = 0; j < np - i; ++j, cnt++)
-                {
-                    tmp[i * np + j] = surfVerts[cnt];
-                }
-            }
-            for (cnt = i = 0; i < np; ++i)
-            {
-                for (j = 0; j < np - i; ++j, cnt++)
-                {
-                    surfVerts[cnt] = tmp[(np - 1 - i - j) * np + i];
-                }
-            }
-        }
-    }
-
-    /**
-     * @brief Reflect data points inside #surfVerts.
-     *
-     * This applies a mapping essentially doing the following
-     * reordering:
-     *
-     * 9          9
-     * 7 8    ->  8 7
-     * 4 5 6      6 5 4
-     * 0 1 2 3    3 2 1 0
-     */
-    void Reflect()
-    {
-        int i, j, cnt;
-        int np = ((int)sqrt(8.0 * surfVerts.size() + 1.0) - 1) / 2;
-        std::vector<T> tmp(np * np);
-
-        for (cnt = i = 0; i < np; ++i)
-        {
-            for (j = 0; j < np - i; ++j, cnt++)
-            {
-                tmp[i * np + np - i - 1 - j] = surfVerts[cnt];
-            }
-        }
-
-        for (cnt = i = 0; i < np; ++i)
-        {
-            for (j = 0; j < np - i; ++j, cnt++)
-            {
-                surfVerts[cnt] = tmp[i * np + j];
-            }
-        }
-    }
-
-    /**
-     * @brief Align this surface to a given vertex ID.
-     */
-    void Align(std::vector<int> vertId)
-    {
-        if (vertId[0] == this->vertId[0])
-        {
-            if (vertId[1] == this->vertId[1] || vertId[1] == this->vertId[2])
-            {
-                if (vertId[1] == this->vertId[2])
-                {
-                    Rotate(1);
-                    Reflect();
-                }
-            }
-        }
-        else if (vertId[0] == this->vertId[1])
-        {
-            if (vertId[1] == this->vertId[0] || vertId[1] == this->vertId[2])
-            {
-                if (vertId[1] == this->vertId[0])
-                {
-                    Reflect();
-                }
-                else
-                {
-                    Rotate(2);
-                }
-            }
-        }
-        else if (vertId[0] == this->vertId[2])
-        {
-            if (vertId[1] == this->vertId[0] || vertId[1] == this->vertId[1])
-            {
-                if (vertId[1] == this->vertId[1])
-                {
-                    Rotate(2);
-                    Reflect();
-                }
-                else
-                {
-                    Rotate(1);
-                }
-            }
-        }
-    }
-};
-/**
- * @brief Basic information about an element.
- *
- * ElmtConfig contains four member variables which denote the
- * properties of an element when it is created.
- */
-struct ElmtConfig
-{
-    ElmtConfig(LibUtilities::ShapeType  pE,
-               unsigned int             pOrder,
-               bool                     pFn,
-               bool                     pVn,
-               bool                     pReorient = true,
-               LibUtilities::PointsType pECt = LibUtilities::ePolyEvenlySpaced,
-               LibUtilities::PointsType pFCt = LibUtilities::ePolyEvenlySpaced)
-        : m_e(pE), m_faceNodes(pFn), m_volumeNodes(pVn), m_order(pOrder),
-          m_reorient(pReorient), m_edgeCurveType(pECt), m_faceCurveType(pFCt)
-    {
-    }
-
-    ElmtConfig(ElmtConfig const &p)
-        : m_e(p.m_e), m_faceNodes(p.m_faceNodes),
-          m_volumeNodes(p.m_volumeNodes), m_order(p.m_order),
-          m_reorient(p.m_reorient), m_edgeCurveType(p.m_edgeCurveType),
-          m_faceCurveType(p.m_faceCurveType)
-    {
-    }
-
-    ElmtConfig()
-    {
-    }
-
-    /// Element type (e.g. triangle, quad, etc).
-    LibUtilities::ShapeType m_e;
-    /// Denotes whether the element contains face nodes. For 2D elements, if
-    /// this is true then the element contains interior nodes.
-    bool m_faceNodes;
-    /// Denotes whether the element contains volume (i.e. interior) nodes. These
-    /// are not supported by either the mesh converter or Nektar++ but are
-    /// included for completeness and are required for some output modules
-    /// (e.g. Gmsh).
-    bool m_volumeNodes;
-    /// Order of the element.
-    unsigned int m_order;
-    /// Denotes whether the element needs to be re-orientated for a spectral
-    /// element framework.
-    bool m_reorient;
-    /// Distribution of points in edges.
-    LibUtilities::PointsType m_edgeCurveType;
-    /// Distribution of points in faces.
-    LibUtilities::PointsType m_faceCurveType;
-};
-
-NEKMESHUTILS_EXPORT bool operator==(ElmtConfig const &c1, ElmtConfig const &c2);
 
 /**
  * @brief Base class for element definitions.
@@ -336,37 +145,7 @@ public:
     }
     /// Returns the total number of nodes (vertices, edge nodes and
     /// face nodes and volume nodes).
-    NEKMESHUTILS_EXPORT unsigned int GetNodeCount() const
-    {
-        unsigned int n = m_volumeNodes.size();
-        if (m_dim == 1)
-        {
-            n += 2;
-        }
-        else if (m_dim == 2)
-        {
-            for (int i = 0; i < m_edge.size(); ++i)
-            {
-                n += m_edge[i]->GetNodeCount();
-            }
-            n -= m_vertex.size();
-        }
-        else
-        {
-            for (int i = 0; i < m_face.size(); ++i)
-            {
-                n += m_face[i]->GetNodeCount();
-            }
-            for (int i = 0; i < m_edge.size(); ++i)
-            {
-                n -= m_edge[i]->GetNodeCount();
-            }
-            n += m_vertex.size();
-            std::cerr << "Not supported." << std::endl;
-            exit(1);
-        }
-        return n;
-    }
+    NEKMESHUTILS_EXPORT unsigned int GetNodeCount();
     /// Access the list of tags associated with this element.
     NEKMESHUTILS_EXPORT std::vector<int> GetTagList() const
     {
@@ -392,13 +171,41 @@ public:
     {
         m_id = p;
     }
-    /// Replace a vertex with another vertex object.
+    /**
+     * @brief Replace a vertex in the element.
+     *
+     * When a vertex is replaced, the element edges and faces are also
+     * searched and the corresponding edge/face nodes are updated to
+     * maintain consistency.
+     *
+     * @param  p        Index of the vertex to replace.
+     * @param  pNew     New vertex.
+     * @param  descend  If true, we loop over edges and faces and replace the
+     *                  corresponding vertices with @p pNew.
+     */
     NEKMESHUTILS_EXPORT void SetVertex(
         unsigned int p, NodeSharedPtr pNew, bool descend = true);
-    /// Replace an edge with another edge object.
+    /**
+     * @brief Replace an edge in the element.
+     *
+     * When an edge is replaced, the element faces are also searched and
+     * the corresponding face edges are updated to maintain consistency.
+     *
+     * @param  p        Index of the edge to replace.
+     * @param  pNew     New edge.
+     * @param  descend  If true, we loop over faces and replace the corresponding
+     *                  face edge with @p pNew.
+     */
     NEKMESHUTILS_EXPORT void SetEdge(
         unsigned int p, EdgeSharedPtr pNew, bool descend = true);
-    /// Replace a face with another face object.
+    /**
+     * @brief Replace a face in the element.
+     *
+     * When a face is replaced, no other consistency checks are required.
+     *
+     * @param  p     Index of the face to replace.
+     * @param  pNew  New face.
+     */
     NEKMESHUTILS_EXPORT void SetFace(unsigned int p, FaceSharedPtr pNew);
     /// Set a correspondence between this element and an edge
     /// (2D boundary element).
@@ -447,154 +254,18 @@ public:
         m_taglist = tags;
     }
     /// Generate a list of vertices (1D), edges (2D), or faces (3D).
-    NEKMESHUTILS_EXPORT virtual std::string GetXmlString() const
-    {
-        std::stringstream s;
-        switch (m_dim)
-        {
-            case 1:
-                for (int j = 0; j < m_vertex.size(); ++j)
-                {
-                    s << std::setw(5) << m_vertex[j]->m_id << " ";
-                }
-                break;
-            case 2:
-                for (int j = 0; j < m_edge.size(); ++j)
-                {
-                    s << std::setw(5) << m_edge[j]->m_id << " ";
-                }
-                break;
-            case 3:
-                for (int j = 0; j < m_face.size(); ++j)
-                {
-                    s << std::setw(5) << m_face[j]->m_id << " ";
-                }
-                break;
-        }
-        return s.str();
-    }
-
+    NEKMESHUTILS_EXPORT virtual std::string GetXmlString();
+    /// get list of volume interior nodes
     NEKMESHUTILS_EXPORT virtual void GetCurvedNodes(
         std::vector<NodeSharedPtr> &nodeList) const
     {
         ASSERTL0(false,
                  "This function should be implemented at a shape level.");
-        /*std::cerr << "WARNING: Unsupported curvature for a " << m_vertex.size()
-                  << "-vertex element is not yet implemented." << std::endl;
-        // Node orderings are different for different elements.
-        // Triangle
-        if (m_vertex.size() == 2)
-        {
-            nodeList.push_back(m_vertex[0]);
-            for (int i = 0; i < m_volumeNodes.size(); ++i)
-            {
-                nodeList.push_back(m_volumeNodes[i]);
-            }
-            nodeList.push_back(m_vertex[1]);
-        }
-        else if (m_vertex.size() == 3)
-        {
-            int n = m_edge[0]->GetNodeCount();
-            nodeList.resize(n * (n + 1) / 2);
-
-            // Populate nodelist
-            std::copy(m_vertex.begin(), m_vertex.end(), nodeList.begin());
-            for (int i = 0; i < 3; ++i)
-            {
-                std::copy(m_edge[i]->m_edgeNodes.begin(),
-                          m_edge[i]->m_edgeNodes.end(),
-                          nodeList.begin() + 3 + i * (n - 2));
-                if (m_edge[i]->m_n1 != m_vertex[i])
-                {
-                    // If edge orientation is reversed relative to node
-                    // ordering, we need to reverse order of nodes.
-                    std::reverse(nodeList.begin() + 3 + i * (n - 2),
-                                 nodeList.begin() + 3 + (i + 1) * (n - 2));
-                }
-            }
-
-            // Copy volume nodes.
-            std::copy(m_volumeNodes.begin(),
-                      m_volumeNodes.end(),
-                      nodeList.begin() + 3 * (n - 1));
-        }
-        // Quad
-        else if (m_dim == 2 && m_vertex.size() == 4)
-        {
-            int n = m_edge[0]->GetNodeCount();
-            nodeList.resize(n * n);
-
-            // Write vertices
-            nodeList[0]         = m_vertex[0];
-            nodeList[n - 1]     = m_vertex[1];
-            nodeList[n * n - 1] = m_vertex[2];
-            nodeList[n * (n - 1)] = m_vertex[3];
-
-            // Write edge-interior
-            int skips[4][2] = {
-                {0, 1}, {n - 1, n}, {n * n - 1, -1}, {n * (n - 1), -n}};
-            for (int i = 0; i < 4; ++i)
-            {
-                bool reverseEdge = m_edge[i]->m_n1 == m_vertex[i];
-
-                if (!reverseEdge)
-                {
-                    for (int j = 1; j < n - 1; ++j)
-                    {
-                        nodeList[skips[i][0] + j * skips[i][1]] =
-                            m_edge[i]->m_edgeNodes[n - 2 - j];
-                    }
-                }
-                else
-                {
-                    for (int j = 1; j < n - 1; ++j)
-                    {
-                        nodeList[skips[i][0] + j * skips[i][1]] =
-                            m_edge[i]->m_edgeNodes[j - 1];
-                    }
-                }
-            }
-
-            // Write interior
-            for (int i = 1; i < n - 1; ++i)
-            {
-                for (int j = 1; j < n - 1; ++j)
-                {
-                    nodeList[i * n + j] =
-                        m_volumeNodes[(i - 1) * (n - 2) + (j - 1)];
-                }
-            }
-        }
-        else
-        {
-            std::cerr << "GetXmlCurveString for a " << m_vertex.size()
-                      << "-vertex element is not yet implemented."
-                      << std::endl;
-        }*/
     }
 
     /// Generates a string listing the coordinates of all nodes
     /// associated with this element.
-    NEKMESHUTILS_EXPORT std::string GetXmlCurveString() const
-    {
-        // Temporary node list for reordering
-        std::vector<NodeSharedPtr> nodeList;
-
-        GetCurvedNodes(nodeList);
-
-        // Finally generate the XML string corresponding to our new
-        // node reordering.
-        std::stringstream s;
-        std::string str;
-        for (int k = 0; k < nodeList.size(); ++k)
-        {
-            s << std::scientific << std::setprecision(8) << "    "
-              << nodeList[k]->m_x << "  " << nodeList[k]->m_y << "  "
-              << nodeList[k]->m_z << "    ";
-        }
-        return s.str();
-    }
-
+    NEKMESHUTILS_EXPORT std::string GetXmlCurveString();
     /// Generate a Nektar++ geometry object for this element.
     NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
         int coordDim)
@@ -604,6 +275,9 @@ public:
         return boost::shared_ptr<SpatialDomains::Geometry>();
     }
 
+    /**
+     * @brief Obtain the order of an element by looking at edges.
+     */
     NEKMESHUTILS_EXPORT int GetMaxOrder();
 
     /**
@@ -691,9 +365,7 @@ public:
         std::swap(m_vertex[0],m_vertex[1]);
     }
 
-#ifdef NEKTAR_USE_MESHGEN
-    int CADSurfId;
-#endif
+    CADObjectSharedPtr m_parentCAD;
 
 protected:
     /// ID of the element.

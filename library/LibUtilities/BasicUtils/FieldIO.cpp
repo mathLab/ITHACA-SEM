@@ -486,6 +486,14 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank)
         }
 
         m_comm->Block();
+
+        // Sit in a loop and make sure target directory has been created
+        int created = 0;
+        while (!created)
+        {
+            created = fs::is_directory(specPath);
+            m_comm->AllReduce(created, ReduceMin);
+        }
     }
     else
     {

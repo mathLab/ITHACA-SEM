@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +38,7 @@
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 #include <NekMeshUtils/MeshElements/Element.h>
-#include <NekMeshUtils/MeshElements/Composite.h>
+#include <NekMeshUtils/MeshElements/Composite.h> 
 
 #ifdef NEKTAR_USE_MESHGEN
 #include <NekMeshUtils/CADSystem/CADSystem.h>
@@ -48,6 +48,10 @@ namespace Nektar
 {
 namespace NekMeshUtils
 {
+
+class Octree;
+typedef boost::shared_ptr<Octree> OctreeSharedPtr;
+
 /**
  * Enumeration of condition types (Dirichlet, Neumann, etc).
  */
@@ -126,14 +130,15 @@ public:
     /// apply spherigon surface smoothing.
     std::set<std::pair<int, int> >  m_spherigonSurfs;
     /// List of face labels for composite annotation
-    std::map<int, std::string>           m_faceLabels;
+    std::map<int, std::string>      m_faceLabels;
     /// Whether the mesh has CAD
     bool                            m_hasCAD;
     /// CAD file ID
     std::string                     m_CADId;
-#ifdef NEKTAR_USE_MESHGEN
+
     CADSystemSharedPtr              m_cad;
-#endif
+    OctreeSharedPtr                 m_octree;
+
 
     /// Returns the total number of elements in the mesh with
     /// dimension expDim.

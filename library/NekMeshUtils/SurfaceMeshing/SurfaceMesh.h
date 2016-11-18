@@ -36,12 +36,9 @@
 #ifndef NEKMESHUTILS_SURFACEMESHING_SURFACEMESH
 #define NEKMESHUTILS_SURFACEMESHING_SURFACEMESH
 
-#include <NekMeshUtils/MeshElements/Mesh.h>
-#include <NekMeshUtils/CADSystem/CADSystem.h>
-#include <NekMeshUtils/Octree/Octree.h>
+#include <NekMeshUtils/Module/Module.h>
 #include <NekMeshUtils/SurfaceMeshing/FaceMesh.h>
 #include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
-#include <NekMeshUtils/BLMeshing/BLMesh.h>
 
 namespace Nektar
 {
@@ -51,58 +48,30 @@ namespace NekMeshUtils
 /**
  * @brief class containing all surface meshing routines methods and classes
  */
-class SurfaceMesh
+class SurfaceMesh : public ProcessModule
 {
 public:
-    friend class MemoryManager<SurfaceMesh>;
 
-    /**
-     * @brief Default constructor, requires the cad and octree objects to
-     * begin
-     */
-    SurfaceMesh(MeshSharedPtr             m,
-                CADSystemSharedPtr        cad,
-                OctreeSharedPtr           octree)
-        : m_mesh(m), m_cad(cad), m_octree(octree)
-        {};
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    {
+        return MemoryManager<SurfaceMesh>::AllocateSharedPtr(m);
+    }
+    static ModuleKey className;
 
-    /**
-     * @brief Run all linear meshing routines
-     */
-    void Mesh();
+    SurfaceMesh(MeshSharedPtr m);
+    virtual ~SurfaceMesh();
 
-    /**
-     * @brief run all high-order surface meshing routines
-     */
-    void HOSurf();
-
-    /**
-     * @brief Validate the linear surface mesh
-     */
-    void Validate();
-
-    /**
-     * @brief Remesh the linear surfaces based on the addition of the bl
-     */
-    void Remesh(BLMeshSharedPtr blmesh);
-
-    void Report();
+    virtual void Process();
 
 private:
-
-    /// mesh object
-    MeshSharedPtr m_mesh;
-    /// CAD object
-    CADSystemSharedPtr m_cad;
-    /// Octree object
-    OctreeSharedPtr m_octree;
+    void Report();
     /// map of individual surface meshes from parametric surfaces
     std::map<int, FaceMeshSharedPtr> m_facemeshes;
     /// map of individual curve meshes of the curves in the domain
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
 };
 
-typedef boost::shared_ptr<SurfaceMesh> SurfaceMeshSharedPtr;
 }
 }
 

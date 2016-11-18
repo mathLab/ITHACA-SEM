@@ -41,7 +41,7 @@
 #include <boost/unordered_map.hpp>
 
 #include <NekMeshUtils/MeshElements/Triangle.h>
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -57,20 +57,20 @@ enum NekCurve
 /**
  * Converter class for Nektar session files.
  */
-class InputNek : public InputModule
+class InputNek : public NekMeshUtils::InputModule
 {
 public:
-    InputNek(MeshSharedPtr p_m);
+    InputNek(NekMeshUtils::MeshSharedPtr p_m);
     virtual ~InputNek();
     virtual void Process();
 
     /// Creates an instance of this class.
-    static ModuleSharedPtr create(MeshSharedPtr m)
+    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<InputNek>::AllocateSharedPtr(m);
     }
     /// %ModuleKey for class.
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
 private:
     void LoadHOSurfaces();
@@ -84,7 +84,7 @@ private:
     /**
      * Maps a curve tag to the high-order surface data for that tag.
      */
-    std::map<std::string, HOSurfSet> hoData;
+    std::map<std::string, NekMeshUtils::HOSurfSet> hoData;
 
     /**
      * Maps ordering of hsf standard element to Nektar++ ordering.

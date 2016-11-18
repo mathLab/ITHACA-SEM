@@ -29,16 +29,13 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh Edge.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_EDGE
-#define NekMeshUtils_MESHELEMENTS_EDGE
+#ifndef NEKMESHUTILS_MESHELEMENTS_EDGE
+#define NEKMESHUTILS_MESHELEMENTS_EDGE
 
-#include <iomanip>
-
-#include <LibUtilities/Foundations/ManagerAccess.h>
 #include <SpatialDomains/SegGeom.h>
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
@@ -67,23 +64,12 @@ public:
                              std::vector<NodeSharedPtr> pEdgeNodes,
                              LibUtilities::PointsType   pCurveType)
         : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(pEdgeNodes),
-          m_curveType(pCurveType), m_geom()
-    {
-#ifdef NEKTAR_USE_MESHGEN
-        onCurve = false;
-        onSurf = false;
-#endif
-    }
+          m_curveType(pCurveType), m_geom(){}
 
     /// Creates a new linear edge.
     NEKMESHUTILS_EXPORT Edge(NodeSharedPtr pVertex1, NodeSharedPtr pVertex2)
         : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(), m_curveType(), m_geom()
-    {
-#ifdef NEKTAR_USE_MESHGEN
-        onCurve = false;
-        onSurf = false;
-#endif
-    }
+    {}
 
     /// Copies an existing edge.
     NEKMESHUTILS_EXPORT Edge(const Edge &pSrc)
@@ -140,15 +126,7 @@ public:
     /// Element(s) which are linked to this edge.
     std::vector<std::pair<ElementSharedPtr, int> > m_elLink;
 
-#ifdef NEKTAR_USE_MESHGEN
-    bool onCurve;
-    /// id of cad curve which edge lies on
-    int CADCurveId;
-    CADCurveSharedPtr CADCurve;
-    bool onSurf;
-    int CADSurfId;
-    CADSurfSharedPtr CADSurf;
-#endif
+    CADObjectSharedPtr m_parentCAD;
 
 private:
     SpatialDomains::SegGeomSharedPtr m_geom;

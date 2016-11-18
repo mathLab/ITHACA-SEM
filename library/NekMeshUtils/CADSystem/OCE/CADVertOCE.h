@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: TetMesh.h
+//  File: CADCurve.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,81 +29,49 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: class for tet meshing
+//  Description: CAD object curve.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_MESHUTILS_TETMESHING_TETMESH_H
-#define NEKTAR_MESHUTILS_TETMESHING_TETMESH_H
+#ifndef NEKMESHUTILS_CADSYSTEM_OCE_CADVERTOCE
+#define NEKMESHUTILS_CADSYSTEM_OCE_CADVERTOCE
 
-#include <boost/shared_ptr.hpp>
-
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-
-#include <NekMeshUtils/MeshElements/Mesh.h>
-#include <NekMeshUtils/CADSystem/CADSystem.h>
-#include <NekMeshUtils/Octree/Octree.h>
-#include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
-#include <NekMeshUtils/BLMeshing/BLMesh.h>
-
-#include <NekMeshUtils/ExtLibInterface/TetGenInterface.h>
+#include <NekMeshUtils/CADSystem/CADVert.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-/**
- * @brief class for taking surface mesh and octree spec and making a 3d tet mesh
- */
-class TetMesh
+class CADVertOCE : public CADVert
 {
 public:
-    friend class MemoryManager<TetMesh>;
 
-    /**
-     * @brief default constructor
-     */
-    TetMesh(MeshSharedPtr m, OctreeSharedPtr oct)
-                : m_mesh(m), m_octree(oct)
+    static CADVertSharedPtr create()
     {
-        m_usePSurface = false;
-    };
+        return MemoryManager<CADVertOCE>::AllocateSharedPtr();
+    }
+
+    static std::string key;
 
     /**
-     *  @brief constructor for pseudo surface
+     * @brief Default constructor.
      */
-    TetMesh(MeshSharedPtr m, OctreeSharedPtr oct, BLMeshSharedPtr b)
-                : m_mesh(m), m_octree(oct), m_blmesh(b)
+    CADVertOCE()
     {
-        m_usePSurface = true;
-    };
+    }
 
-    /**
-     *@brief execute tet meshing
-     */
-    void Mesh();
+    ~CADVertOCE()
+    {
+    }
+
+    void Initialise(int i, TopoDS_Shape in);
 
 private:
-
-    MeshSharedPtr m_mesh;
-    /// octree object
-    OctreeSharedPtr m_octree;
-    /// bl mesh
-    BLMeshSharedPtr m_blmesh;
-    /// mesh the tets using the psuedosurface
-    bool m_usePSurface;
-    /// number of tetrahedra
-    int m_numtet;
-    /// conncetivity of the tets from the interface
-    std::vector<Array<OneD, int> > m_tetconnect;
-
-    TetGenInterfaceSharedPtr tetgen;
-
+    /// OpenCascade object of the curve.
+    gp_Pnt m_occVert;
 };
-
-typedef boost::shared_ptr<TetMesh> TetMeshSharedPtr;
 
 }
 }

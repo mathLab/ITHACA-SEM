@@ -40,10 +40,6 @@
 #include <NekMeshUtils/MeshElements/Element.h>
 #include <NekMeshUtils/MeshElements/Composite.h> 
 
-#ifdef NEKTAR_USE_MESHGEN
-#include <NekMeshUtils/CADSystem/CADSystem.h>
-#endif
-
 namespace Nektar
 {
 namespace NekMeshUtils

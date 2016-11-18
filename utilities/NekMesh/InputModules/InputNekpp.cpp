@@ -40,10 +40,6 @@ using namespace std;
 #include <tinyxml.h>
 #include <boost/algorithm/string.hpp>
 
-#ifdef NEKTAR_USE_MESHGEN
-#include <NekMeshUtils/CADSystem/CADSystem.h>
-#endif
-
 #include <SpatialDomains/MeshGraph.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 #include "InputNekpp.h"
@@ -354,9 +350,7 @@ void InputNekpp::Process()
 
     m_mesh->m_hasCAD = false;
 
-#ifdef NEKTAR_USE_MESHGEN
-
-    if(pSession->DefinesElement("NEKTAR/GEOMETRY/CADID") && !(m_config["nocad"].beenSet))
+    /*if(pSession->DefinesElement("NEKTAR/GEOMETRY/CADID") && !(m_config["nocad"].beenSet))
     {
         m_mesh->m_hasCAD = true;
         TiXmlElement* id = pSession->GetElement("NEKTAR/GEOMETRY/CADID");
@@ -544,13 +538,10 @@ void InputNekpp::Process()
         }
     }
 
-#endif
-
     ProcessEdges(false);
     ProcessFaces(false);
     ProcessComposites();
 
-#ifdef NEKTAR_USE_MESHGEN
 
     map<int, vector<cadVar> >::iterator vsit;
     map<int, pair<int,map<int,vector<cadVar> > > >::iterator esit;
@@ -602,9 +593,7 @@ void InputNekpp::Process()
             {
                 if(esit->second.first != 0)
                 {
-                    (*it)->onCurve = true;
-                    (*it)->CADCurveId = esit->second.first;
-                    (*it)->CADCurve = m_mesh->m_cad->GetCurve(esit->second.first);
+                    (*it)->m_parentCAD = m_mesh->m_cad->GetCurve(esit->second.first);
                 }
 
                 int surf = 0;
@@ -639,13 +628,10 @@ void InputNekpp::Process()
                 }
                 if(surf > 0 && esit->second.first == 0)
                 {
-                    (*it)->onSurf = true;
-                    (*it)->CADSurfId = surf;
-                    (*it)->CADSurf = m_mesh->m_cad->GetSurf(surf);
+                    (*it)->m_parentCAD = m_mesh->m_cad->GetSurf(surf);
                 }
 
-                ASSERTL0((*it)->onSurf || (*it)->onCurve,"must be part of some cad enity");
-                ASSERTL0(!((*it)->onSurf && (*it)->onCurve),"cant be part of both");
+                ASSERTL0((*it)->m_parentCAD,"must be part of some cad enity");
             }
         }
     }
@@ -658,9 +644,7 @@ void InputNekpp::Process()
             fsit = faceToString.find((*it)->m_id);
             if(fsit != faceToString.end())
             {
-                (*it)->onSurf = true;
-                (*it)->CADSurfId = fsit->second.first;
-                (*it)->CADSurf = m_mesh->m_cad->GetSurf(fsit->second.first);
+                (*it)->m_parentCAD = m_mesh->m_cad->GetSurf(fsit->second.first);
 
                 for(int j = 0; j < (*it)->m_faceNodes.size(); j++)
                 {
@@ -676,8 +660,7 @@ void InputNekpp::Process()
                 }
             }
         }
-    }
-#endif
+    }*/
 }
 }
 }

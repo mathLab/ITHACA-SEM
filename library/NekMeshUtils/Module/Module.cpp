@@ -194,14 +194,7 @@ void Module::ProcessEdges(bool ReprocessEdges)
                         }
                     }
 
-#ifdef NEKTAR_USE_MESHGEN
-                    if(ed->onCurve)
-                    {
-                        e2->onCurve = ed->onCurve;
-                        e2->CADCurveId = ed->CADCurveId;
-                        e2->CADCurve = ed->CADCurve;
-                    }
-#endif
+                    e2->m_parentCAD = ed->m_parentCAD;
 
                     // Update edge to element map.
                     e2->m_elLink.push_back(
@@ -323,15 +316,13 @@ void Module::ProcessFaces(bool ReprocessFaces)
 
         elmt->SetFaceLink(*it);
 
-        //Im not sure why but this little bit of code breaks the high-order
-        //surface generator. M.T 31/8/16
         // Set edges/vertices
-        /*for (int j = 0; j < elmt->GetVertexCount(); ++j)
+        for (int j = 0; j < elmt->GetVertexCount(); ++j)
         {
             elmt->SetVertex(j, (*it)->m_vertexList[j], false);
-            //elmt->SetEdge(j, (*it)->m_edgeList[j], false);
+            elmt->SetEdge(j, (*it)->m_edgeList[j], false);
         }
-#ifdef NEKTAR_USE_MESHGEN
+
         EdgeSet tmp(edgeList.begin(),edgeList.end());
 
         for (int j = 0; j < elmt->GetEdgeCount(); ++j)
@@ -340,26 +331,20 @@ void Module::ProcessFaces(bool ReprocessFaces)
             EdgeSet::iterator f = tmp.find(e);
             if(f != tmp.end())
             {
-                if((*f)->onCurve)
-                {
-                    e->onCurve = (*f)->onCurve;
-                    e->CADCurveId = (*f)->CADCurveId;
-                    e->CADCurve = (*f)->CADCurve;
-                }
+                e->m_parentCAD = (*f)->m_parentCAD;
             }
         }
-#endif
 
         // Update 3D element boundary map.
         pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);
         eMap.first->SetBoundaryLink(eMap.second, i);
 
         // Copy face curvature
-        /*if ((*it)->m_faceNodes.size() > 0)
+        if ((*it)->m_faceNodes.size() > 0)
         {
             elmt->SetVolumeNodes((*it)->m_faceNodes);
             elmt->SetCurveType((*it)->m_curveType);
-        }*/
+        }
     }
 }
 

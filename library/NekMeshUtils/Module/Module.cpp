@@ -194,14 +194,7 @@ void Module::ProcessEdges(bool ReprocessEdges)
                         }
                     }
 
-#ifdef NEKTAR_USE_MESHGEN
-                    if(ed->onCurve)
-                    {
-                        e2->onCurve = ed->onCurve;
-                        e2->CADCurveId = ed->CADCurveId;
-                        e2->CADCurve = ed->CADCurve;
-                    }
-#endif
+                    e2->m_parentCAD = ed->m_parentCAD;
 
                     // Update edge to element map.
                     e2->m_elLink.push_back(
@@ -327,9 +320,9 @@ void Module::ProcessFaces(bool ReprocessFaces)
         for (int j = 0; j < elmt->GetVertexCount(); ++j)
         {
             elmt->SetVertex(j, (*it)->m_vertexList[j], false);
-            //elmt->SetEdge(j, (*it)->m_edgeList[j], false);
+            elmt->SetEdge(j, (*it)->m_edgeList[j], false);
         }
-#ifdef NEKTAR_USE_MESHGEN
+
         EdgeSet tmp(edgeList.begin(),edgeList.end());
 
         for (int j = 0; j < elmt->GetEdgeCount(); ++j)
@@ -338,15 +331,9 @@ void Module::ProcessFaces(bool ReprocessFaces)
             EdgeSet::iterator f = tmp.find(e);
             if(f != tmp.end())
             {
-                if((*f)->onCurve)
-                {
-                    e->onCurve = (*f)->onCurve;
-                    e->CADCurveId = (*f)->CADCurveId;
-                    e->CADCurve = (*f)->CADCurve;
-                }
+                e->m_parentCAD = (*f)->m_parentCAD;
             }
         }
-#endif
 
         // Update 3D element boundary map.
         pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);

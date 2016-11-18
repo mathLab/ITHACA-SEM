@@ -109,6 +109,7 @@ namespace Nektar
                 string sessionname = "SessionName";
                 sessionname += boost::lexical_cast<std::string>(i);
                 m_fieldMetaDataMap[sessionname] = filenames[i];
+                m_fieldMetaDataMap["ChkFileNum"] = boost::lexical_cast<std::string>(0);
             }
             
         }
@@ -661,7 +662,7 @@ namespace Nektar
             m_session->LoadParameter("NumQuadPointsError",
                                      m_NumQuadPointsError, 0);
 
-            m_nchk = 1;
+            m_nchk = 0;
 
             // Zero all physical fields initially
             ZeroPhysFields();
@@ -1237,10 +1238,10 @@ namespace Nektar
 
             if (dumpInitialConditions && m_checksteps)
             {
-                Checkpoint_Output(0);
+                Checkpoint_Output(m_nchk);
+                m_nchk++;
             }
         }
-    
     
         void EquationSystem::v_EvaluateExactSolution(
             unsigned int field,
@@ -1986,6 +1987,13 @@ namespace Nektar
         {
             std::string outname =  m_sessionName +  "_" + 
                 boost::lexical_cast<std::string>(n);
+            int cnt = 0;
+            while (std::ifstream(std::string(outname + ".chk").c_str()))
+            {
+                outname =  m_sessionName +  "_" +
+                    boost::lexical_cast<std::string>(n) + "_" +
+                    boost::lexical_cast<std::string>(cnt);
+            }
 
             WriteFld(outname + ".chk");
         }
@@ -2000,9 +2008,15 @@ namespace Nektar
             std::vector<Array<OneD, NekDouble> > &fieldcoeffs, 
             std::vector<std::string> &variables)
         {
-            char chkout[16] = "";
-            sprintf(chkout, "%d", n);
-            std::string outname = m_sessionName + "_" + chkout + ".chk";
+            std::string outname =  m_sessionName +  "_" +
+                boost::lexical_cast<std::string>(n);
+            int cnt = 0;
+            while (std::ifstream(std::string(outname + ".chk").c_str()))
+            {
+                outname =  m_sessionName +  "_" +
+                    boost::lexical_cast<std::string>(n) + "_" +
+                    boost::lexical_cast<std::string>(cnt);
+            }
             WriteFld(outname, field, fieldcoeffs, variables);
         }
         
@@ -2085,6 +2099,12 @@ namespace Nektar
             if(m_fieldMetaDataMap.find("Time") != m_fieldMetaDataMap.end())
             {
                 m_fieldMetaDataMap["Time"] = boost::lexical_cast<std::string>(m_time);
+            }
+
+            // Update step in field info if required
+            if(m_fieldMetaDataMap.find("ChkFileNum") != m_fieldMetaDataMap.end())
+            {
+                m_fieldMetaDataMap["ChkFileNum"] = boost::lexical_cast<std::string>(m_nchk);
             }
             
             // If necessary, add mapping information to metadata

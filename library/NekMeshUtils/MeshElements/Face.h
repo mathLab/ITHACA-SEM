@@ -111,7 +111,8 @@ public:
     }
 
     /// Assemble a list of nodes on curved face
-    NEKMESHUTILS_EXPORT void GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+    NEKMESHUTILS_EXPORT void GetCurvedNodes(
+        std::vector<NodeSharedPtr> &nodeList) const
     {
         // Treat 2D point distributions differently to 3D.
         if (m_curveType == LibUtilities::eNodalTriFekete ||
@@ -213,6 +214,114 @@ public:
         }
 
         return s.str();
+    }
+
+    /// Make this face an order @p order face. @see Element::MakeOrder.
+    void MakeOrder(int                                order,
+                   SpatialDomains::GeometrySharedPtr  geom,
+                   LibUtilities::PointsType           pType,
+                   int                                coordDim,
+                   int                               &id)
+    {
+        if (m_vertexList.size() == 3)
+        {
+            // Triangles of order < 3 have no interior volume points.
+            if (order < 3)
+            {
+                m_faceNodes.clear();
+                return;
+            }
+
+            int nPoints = order + 1;
+            StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+
+            Array<OneD, NekDouble> px, py;
+            LibUtilities::PointsKey pKey(nPoints, pType);
+            ASSERTL1(pKey.GetPointsDim() == 2, "Points distribution must be 2D");
+            LibUtilities::PointsManager()[pKey]->GetPoints(px, py);
+
+            Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
+
+            for (int i = 0; i < coordDim; ++i)
+            {
+                phys[i] = Array<OneD, NekDouble>(xmap->GetTotPoints());
+                xmap->BwdTrans(geom->GetCoeffs(i), phys[i]);
+            }
+
+            const int nTriPts = nPoints * (nPoints + 1) / 2;
+            const int nTriIntPts = (nPoints - 3) * (nPoints - 2) / 2;
+            m_faceNodes.resize(nTriIntPts);
+
+            for (int i = 3 + 3*(nPoints-2), cnt = 0; i < nTriPts; ++i, ++cnt)
+            {
+                Array<OneD, NekDouble> xp(2);
+                xp[0] = px[i];
+                xp[1] = py[i];
+
+                Array<OneD, NekDouble> x(3, 0.0);
+                for (int j = 0; j < coordDim; ++j)
+                {
+                    x[j] = xmap->PhysEvaluate(xp, phys[j]);
+                }
+
+                m_faceNodes[cnt] = boost::shared_ptr<Node>(
+                    new Node(id++, x[0], x[1], x[2]));
+            }
+            m_curveType = pType;
+        }
+        else if (m_vertexList.size() == 4)
+        {
+            // Quads of order < 2 have no interior volume points.
+            if (order < 2)
+            {
+                m_faceNodes.clear();
+                return;
+            }
+
+            int nPoints = order + 1;
+            StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
+
+            Array<OneD, NekDouble> px;
+            LibUtilities::PointsKey pKey(nPoints, pType);
+            ASSERTL1(pKey.GetPointsDim() == 1, "Points distribution must be 1D");
+            LibUtilities::PointsManager()[pKey]->GetPoints(px);
+
+            Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
+
+            for (int i = 0; i < coordDim; ++i)
+            {
+                phys[i] = Array<OneD, NekDouble>(xmap->GetTotPoints());
+                xmap->BwdTrans(geom->GetCoeffs(i), phys[i]);
+            }
+
+            int nQuadIntPts = (nPoints - 2) * (nPoints - 2);
+            m_faceNodes.resize(nQuadIntPts);
+
+            for (int i = 1, cnt = 0; i < nPoints-1; ++i)
+            {
+                for (int j = 1; j < nPoints-1; ++j, ++cnt)
+                {
+                    Array<OneD, NekDouble> xp(2);
+                    xp[0] = px[j];
+                    xp[1] = px[i];
+
+                    Array<OneD, NekDouble> x(3, 0.0);
+                    for (int k = 0; k < coordDim; ++k)
+                    {
+                        x[k] = xmap->PhysEvaluate(xp, phys[k]);
+                    }
+
+                    m_faceNodes[cnt] = boost::shared_ptr<Node>(
+                        new Node(id++, x[0], x[1], x[2]));
+                }
+            }
+
+            m_curveType = pType;
+        }
+        else
+        {
+            ASSERTL0(false, "Unknown number of vertices");
+        }
     }
 
     /// Generate either SpatialDomains::TriGeom or

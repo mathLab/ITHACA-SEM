@@ -48,6 +48,10 @@ namespace Lapack
                   const int& nrhs, const double* ap,
                   const int  *ipiv, double* b,
                   const int& ldb, int& info);
+        void F77NAME(dsptri) (const char& uplo, const int& n,
+                  const double* ap,
+                  const int  *ipiv, double* work,
+                  int& info);
         void F77NAME(dtrtrs) (const char& uplo, const char& trans, const char& diag,
                               const int& n, const int& nrhs, const double* a,
                               const int& lda, double* b, const int& ldb, int& info);
@@ -116,6 +120,14 @@ namespace Lapack
               const int& ldb, int& info)
     {
         F77NAME(dsptrs) (uplo,n,nrhs,ap,ipiv,b,ldb,info);
+    }
+
+    /// \brief Invert a real symmetric matrix problem
+    static inline void Dsptri (const char& uplo, const int& n,
+              const double* ap, const int  *ipiv, double* work,
+              int& info)
+    {
+        F77NAME(dsptri) (uplo,n,ap,ipiv,work,info);
     }
 
     /// \brief Cholesky factor a real Positive Definite packed-symmetric matrix.

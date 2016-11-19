@@ -118,6 +118,16 @@ namespace Nektar
             return vForceList;
         }
 
+        Nektar::Array<OneD, Array<OneD, NekDouble> > &Forcing::UpdateForces()
+        {
+            return m_Forcing;
+        }
+
+        const Nektar::Array<OneD, const Array<OneD, NekDouble> > &Forcing::GetForces()
+        {
+            return m_Forcing;
+        }
+
         void Forcing::EvaluateTimeFunction(
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 std::string                                       pFieldName,

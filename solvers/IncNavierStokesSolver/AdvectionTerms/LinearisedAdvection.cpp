@@ -540,8 +540,6 @@ void LinearisedAdvection::UpdateGradBase(
         break;
         case 3:
         {
-            field->PhysDeriv(m_baseflow[var], m_gradBase[var*nBaseDerivs + 0],
-                                              m_gradBase[var*nBaseDerivs + 1]);
             if(m_halfMode) // can assume W = 0 and  d/dz == 0
             {
                 if( var < 2)

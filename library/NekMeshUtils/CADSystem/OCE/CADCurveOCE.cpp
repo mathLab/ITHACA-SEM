@@ -71,12 +71,29 @@ NekDouble CADCurveOCE::tAtArcLength(NekDouble s)
 NekDouble CADCurveOCE::Length(NekDouble ti, NekDouble tf)
 {
     Array<OneD, NekDouble> b = Bounds();
-    Handle(Geom_Curve) m_c = BRep_Tool::Curve(m_occEdge, b[0], b[1]);
     Handle(Geom_Curve) NewCurve = new Geom_TrimmedCurve(m_c, ti, tf);
     TopoDS_Edge NewEdge = BRepBuilderAPI_MakeEdge(NewCurve);
     GProp_GProps System;
     BRepGProp::LinearProperties(NewEdge, System);
     return System.Mass() / 1000.0;
+}
+
+NekDouble CADCurveOCE::loct(Array<OneD, NekDouble> xyz)
+{
+    NekDouble t = 0.0;
+    Array<OneD, NekDouble> b = Bounds();
+
+    gp_Pnt loc(xyz[0]*1000.0, xyz[1]*1000.0, xyz[2]*1000.0);
+
+    ShapeAnalysis_Curve sac;
+    gp_Pnt p;
+    sac.Project(m_c,loc,1e-8 ,p,t);
+
+    if(p.Distance(loc) > 1e-5)
+    {
+        cerr << "large loct distance" << endl;
+    }
+    return t;
 }
 
 Array<OneD, NekDouble> CADCurveOCE::P(NekDouble t)

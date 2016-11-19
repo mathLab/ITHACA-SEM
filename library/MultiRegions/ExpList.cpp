@@ -577,10 +577,10 @@ namespace Nektar
 
             switch(GetExpType())
             {
-                case e2D:
+            case e2D:
                 {
-                    PhysDeriv(DirCartesianMap[0], Vel[1], Vx);
-                    PhysDeriv(DirCartesianMap[1], Vel[0], Uy);
+                    PhysDeriv(eX, Vel[eY], Vx);
+                    PhysDeriv(eY, Vel[eX], Uy);
 
                     Vmath::Vsub(nq, Vx, 1, Uy, 1, Dummy, 1);
 

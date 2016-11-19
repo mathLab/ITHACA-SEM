@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADCurve.h
+//  File: ProcessJac.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,81 +29,87 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: CAD object curve.
+//  Description: Calculate Jacobians of elements.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_CADSYSTEM_OCE_CADCURVEOCE
-#define NEKMESHUTILS_CADSYSTEM_OCE_CADCURVEOCE
+#include <NekMeshUtils/MeshElements/Element.h>
+#include "ProcessLinkCheck.h"
 
-#include <NekMeshUtils/CADSystem/CADCurve.h>
-#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
+using namespace std;
+using namespace Nektar::NekMeshUtils;
 
 namespace Nektar
 {
-namespace NekMeshUtils
+namespace Utilities
 {
 
-class CADCurveOCE : public CADCurve
+ModuleKey ProcessLinkCheck::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eProcessModule, "linkcheck"),
+    ProcessLinkCheck::create,
+    "Checks elemental links within elements.");
+
+ProcessLinkCheck::ProcessLinkCheck(MeshSharedPtr m) : ProcessModule(m)
 {
-public:
 
-    static CADCurveSharedPtr create()
+}
+
+ProcessLinkCheck::~ProcessLinkCheck()
+{
+}
+
+void ProcessLinkCheck::Process()
+{
+    if (m_mesh->m_verbose)
     {
-        return MemoryManager<CADCurveOCE>::AllocateSharedPtr();
+        cout << "ProcessLinkCheck: Checking links... " << endl;
     }
 
-    static std::string key;
+    //need to reset all links first to make sure there are no bugs!
+    ClearElementLinks();
+    ProcessVertices();
+    ProcessEdges();
+    ProcessFaces();
+    ProcessElements();
+    ProcessComposites();
 
-    CADCurveOCE()
+    int count = 0;
+
+    if(m_mesh->m_expDim == 2)
     {
+        EdgeSet::iterator eit;
+        for(eit = m_mesh->m_edgeSet.begin();
+            eit != m_mesh->m_edgeSet.end(); eit++)
+        {
+            if((*eit)->m_elLink.size() != 2)
+            {
+                count++;
+            }
+        }
+    }
+    else
+    {
+        FaceSet::iterator fit;
+        for(fit = m_mesh->m_faceSet.begin();
+            fit != m_mesh->m_faceSet.end(); fit++)
+        {
+            if((*fit)->m_elLink.size() != 2)
+            {
+                count++;
+            }
+        }
     }
 
-    ~CADCurveOCE()
+
+
+    if (count - m_mesh->m_element[m_mesh->m_expDim-1].size() != 0)
     {
+        cout << "Link Check Error: mesh contains incorrectly connected"
+             << " entities and is not valid: "
+             << count - m_mesh->m_element[m_mesh->m_expDim-1].size()
+             << endl;
     }
-
-    virtual Array<OneD, NekDouble> Bounds();
-    virtual NekDouble Length(NekDouble ti, NekDouble tf);
-    virtual Array<OneD, NekDouble> P(NekDouble t);
-    virtual Array<OneD, NekDouble> D2(NekDouble t);
-    virtual NekDouble tAtArcLength(NekDouble s);
-    virtual Array<OneD, NekDouble> GetMinMax();
-    virtual NekDouble loct(Array<OneD, NekDouble> xyz);
-
-    void Initialise(int i, TopoDS_Shape in)
-    {
-        gp_Trsf transform;
-        gp_Pnt ori(0.0, 0.0, 0.0);
-        transform.SetScale(ori, 1.0 / 1000.0);
-        TopLoc_Location mv(transform);
-        TopoDS_Shape cp = in;
-        in.Move(mv);
-
-        m_occEdge  = TopoDS::Edge(in);
-        m_occCurve = BRepAdaptor_Curve(m_occEdge);
-
-        GProp_GProps System;
-        BRepGProp::LinearProperties(m_occEdge, System);
-        m_length = System.Mass();
-
-        Array<OneD, NekDouble> b = Bounds();
-        m_c = BRep_Tool::Curve(TopoDS::Edge(cp), b[0], b[1]);
-
-        m_id   = i;
-        m_type = curve;
-    }
-
-private:
-    /// OpenCascade object of the curve.
-    BRepAdaptor_Curve m_occCurve;
-    /// OpenCascade edge
-    TopoDS_Edge m_occEdge;
-    /// Alternate object used for reverse lookups
-    Handle(Geom_Curve) m_c;
-};
+}
 
 }
 }
-
-#endif

@@ -40,10 +40,11 @@
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
-using namespace MultiRegions;
 
 namespace Nektar
 {
+    using namespace MultiRegions;
+
     string VelocityCorrectionScheme::className = 
         SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
             "VelocityCorrectionScheme", 

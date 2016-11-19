@@ -111,6 +111,21 @@ namespace Nektar
                  std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
                  std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR);
 
+            void ReSetTetMaxRMat(int nummodesmax,
+                 LocalRegions::TetExpSharedPtr &TetExp,
+                 std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr> &maxRmat,
+                 std::map<LibUtilities::ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
+                 std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
+                 std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR);
+
+            void ReSetPrismMaxRMat(int nummodesmax,
+                   LocalRegions::PrismExpSharedPtr &PirsmExp,
+                   std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr> &maxRmat,
+                   std::map<LibUtilities::ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
+                   std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
+                   std::map<LibUtilities::ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR,
+                   bool UseTetOnly);
+            
             DNekMatSharedPtr ExtractLocMat(StdRegions::StdExpansionSharedPtr &locExp,
                                            DNekScalMatSharedPtr              &maxRmat,
                                            LocalRegions::ExpansionSharedPtr  &expMax,
@@ -119,16 +134,6 @@ namespace Nektar
 
             void CreateMultiplicityMap(void);
             
-            void ModifyPrismTransformationMatrix(
-                LocalRegions::TetExpSharedPtr TetExp,
-                LocalRegions::PrismExpSharedPtr PrismExp,
-                DNekMatSharedPtr Rmodprism,
-                DNekMatSharedPtr RTmodprism);
-
-            void LocalTransformToLowEnergy(
-                DNekScalMatSharedPtr RTmat,
-                LocalRegions::HexExpSharedPtr maxTetExp);
-
             SpatialDomains::TetGeomSharedPtr   CreateRefTetGeom(void);
             SpatialDomains::PyrGeomSharedPtr   CreateRefPyrGeom(void);
             SpatialDomains::PrismGeomSharedPtr CreateRefPrismGeom(void);

@@ -422,7 +422,6 @@ namespace Nektar
                 }
             }
 
-
             for(cnt=n=0; n < n_exp; ++n)
             {
                 eid = expList->GetOffset_Elmt_Id(n);
@@ -920,7 +919,6 @@ namespace Nektar
                 ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
             m_InvRBlk      = MemoryManager<DNekBlkMat>
                 ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
-
            
             DNekMatSharedPtr rmat, invrmat;
            
@@ -955,7 +953,6 @@ namespace Nektar
                    
                     m_sameBlock.push_back(pair<int,int>(1,nbndcoeffs));
                     locExpSav = locExp; 
-
                 }
                 else
                 {
@@ -986,6 +983,7 @@ namespace Nektar
                                              maxElmt[eltype],
                                              vertMapMaxR[eltype],
                                              edgeMapMaxR[eltype]);
+
                         //Block R matrix
                         m_RBlk->SetBlock(n, n, rmat);
 
@@ -1478,9 +1476,10 @@ namespace Nektar
             ////////////////////////
             
             const int nFaces = 5;
-            //quad-edge connectivity base-face0, vertical-quadface2, vertical-quadface4
-            const int quadEdgeConnectivity[][4] = { {0,1,2,3}, {1,6,8,5}, {3,7,8,4} }; 
-            const bool   isQuadEdgeFlipped[][4] = { {0,0,1,1}, {0,0,1,1}, {0,0,1,1} };
+            //quad-edge connectivity base-face0, vertical-quadface2,
+            //vertical-quadface4
+            const int quadEdgeConnectivity[][4] = { {0,1,2,3}, {1,6,8,5}, {3,7,8,4}}; 
+            const bool   isQuadEdgeFlipped[][4] = { {0,0,1,1}, {0,0,1,1}, {0,0,1,1}};
             // QuadId ordered as 0, 1, 2, otherwise return false
             const int                  quadId[] = { 0,-1,1,-1,2 }; 
             
@@ -1499,7 +1498,8 @@ namespace Nektar
 		    StdRegions::Orientation eorientArray[3];
                     for(int j = 0; j < 3; ++j){
                         edgeArray[j] = edges[triEdgeConnectivity[i][j]];
-                        eorientArray[j] = isTriEdgeFlipped[i][j] ? StdRegions::eBackwards : StdRegions::eForwards;
+                        eorientArray[j] = isTriEdgeFlipped[i][j] ?
+                            StdRegions::eBackwards : StdRegions::eForwards;
                     }
                     faces[f] = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(f, edgeArray, eorientArray);
                 }            
@@ -1811,113 +1811,39 @@ namespace Nektar
         {
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
-            GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
-            StdRegions::StdExpansionSharedPtr locExpansion;
-            locExpansion = expList->GetExp(0);
+            GlobalLinSysKey linSysKey=(m_linsys.lock())->GetKey();
 
-            DNekScalBlkMatSharedPtr RtetBlk, RprismBlk;
-            DNekScalBlkMatSharedPtr RTtetBlk, RTprismBlk;
-
-            DNekScalMatSharedPtr Rprismoriginal;
-            DNekScalMatSharedPtr RTprismoriginal;
-            DNekMatSharedPtr Rtettmp, RTtettmp, Rhextmp, RThextmp, Rprismtmp, RTprismtmp ;
+            StdRegions::StdExpansionSharedPtr locExp;
 
             // face maps for pyramid and hybrid meshes - not need to return. 
             map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > faceMapMaxR;
             
-            /*
-             * The building block for all of hte new basis are the Tet
-             * and Hex howver if Hex elements are not available then
-             * we can use the Tet and Prism expansiosn so set up tet,
-             * Prism and Hex elements
-             */
-            SpatialDomains::TetGeomSharedPtr   tetgeom   = CreateRefTetGeom();
-            SpatialDomains::PyrGeomSharedPtr   pyrgeom   = CreateRefPyrGeom();
-            SpatialDomains::PrismGeomSharedPtr prismgeom = CreateRefPrismGeom();
-            SpatialDomains::HexGeomSharedPtr   hexgeom   = CreateRefHexGeom();
-
             /* Determine the maximum expansion order for all elements */
             int nummodesmax = 0; 
+            Array<OneD, int> Shapes(LibUtilities::SIZE_ShapeType);
             for(int n = 0; n < expList->GetNumElmts(); ++n)
             {
-                nummodesmax = max(nummodesmax,expList->GetExp(n)->GetBasisNumModes(0));
-                nummodesmax = max(nummodesmax,expList->GetExp(n)->GetBasisNumModes(1));
-                nummodesmax = max(nummodesmax,expList->GetExp(n)->GetBasisNumModes(2));
+                locExp = expList->GetExp(n);
+
+                nummodesmax = max(nummodesmax, locExp->GetBasisNumModes(0));
+                nummodesmax = max(nummodesmax, locExp->GetBasisNumModes(1));
+                nummodesmax = max(nummodesmax, locExp->GetBasisNumModes(2));
+
+                Shapes[locExp->DetShapeType()] = 1;
             }
+
+
             m_comm->AllReduce(nummodesmax, ReduceMax);
+            m_comm->AllReduce(Shapes, ReduceMax);
             
-            /*
-             * Set up a transformation matrices for equal max order
-             * polynomial meshes
-             */
-
-            //Bases for Tetrahedral element
-            const BasisKey TetBa(eModified_A, nummodesmax,
-                                 PointsKey(nummodesmax+1, eGaussLobattoLegendre));
-            const BasisKey TetBb(eModified_B, nummodesmax,
-                                 PointsKey(nummodesmax,  eGaussRadauMAlpha1Beta0));
-            const BasisKey TetBc(eModified_C, nummodesmax,
-                                 PointsKey(nummodesmax,  eGaussRadauMAlpha2Beta0));
-
-            //Create reference tetrahedral expansion
-            LocalRegions::TetExpSharedPtr TetExp;
-
-            TetExp = MemoryManager<LocalRegions::TetExp>
-                ::AllocateSharedPtr(TetBa,TetBb,TetBc,tetgeom);
-
-            maxElmt[eTetrahedron] = TetExp; 
-            
-            //Bases for Pyramid element
-            const BasisKey PyrBa(eModified_A, nummodesmax,
-                                 PointsKey(nummodesmax+1, eGaussLobattoLegendre));
-            const BasisKey PyrBb(eModified_A, nummodesmax,
-                                 PointsKey(nummodesmax+1, eGaussLobattoLegendre));
-            const BasisKey PyrBc(eModified_C, nummodesmax,
-                                 PointsKey(nummodesmax,  eGaussRadauMAlpha2Beta0));
-
-            //Create reference pyramid expansion
-            LocalRegions::PyrExpSharedPtr PyrExp;
-            
-            PyrExp = MemoryManager<LocalRegions::PyrExp>
-                ::AllocateSharedPtr(PyrBa,PyrBb,PyrBc,pyrgeom);
- 
-            maxElmt[ePyramid] = PyrExp; 
-
-            //Bases for Prism element
-            const BasisKey PrismBa(eModified_A, nummodesmax,
-                                   PointsKey(nummodesmax+1, eGaussLobattoLegendre));
-            const BasisKey PrismBb(eModified_A, nummodesmax,
-                                   PointsKey(nummodesmax+1, eGaussLobattoLegendre));
-            const BasisKey PrismBc(eModified_B, nummodesmax,
-                                   PointsKey(nummodesmax,   eGaussRadauMAlpha1Beta0));
-
-            //Create reference prismatic expansion
-            LocalRegions::PrismExpSharedPtr PrismExp;
-
-            PrismExp = MemoryManager<LocalRegions::PrismExp>
-                ::AllocateSharedPtr(PrismBa,PrismBb,PrismBc,prismgeom);
-            maxElmt[ePrism] = PrismExp; 
-
-           
-            //Bases for Hex element
-            const BasisKey HexBa(eModified_A, nummodesmax,
-                                  PointsKey(nummodesmax+1, eGaussLobattoLegendre));
-            const BasisKey HexBb(eModified_A, nummodesmax,
-                                 PointsKey(nummodesmax+1,  eGaussLobattoLegendre));
-            const BasisKey HexBc(eModified_A, nummodesmax,
-                                 PointsKey(nummodesmax+1,  eGaussLobattoLegendre));
-            
-            //Create reference Hexahdedral expansion
-            LocalRegions::HexExpSharedPtr HexExp;
-            
-            HexExp = MemoryManager<LocalRegions::HexExp>
-                ::AllocateSharedPtr(HexBa,HexBb,HexBc,
-                                    hexgeom);
-            maxElmt[eHexahedron] = HexExp; 
-            
+            if(Shapes[ePyramid]) // if Pyramids used then need Tet and Hex expansion
+            {
+                Shapes[eTetrahedron] = 1;
+                Shapes[eHexahedron]  = 1;
+            }
+                
             StdRegions::MatrixType PreconR;
-
-            if(m_linSysKey.GetMatrixType() == StdRegions::eMass)
+            if(linSysKey.GetMatrixType() == StdRegions::eMass)
             {
                 PreconR  = StdRegions::ePreconRMass;
             }
@@ -1926,63 +1852,166 @@ namespace Nektar
                 PreconR  = StdRegions::ePreconR;
             }
 
-
-            // Obtain mapping arrays to vertices edges and faces for extracting R matrix details as requried
             Array<OneD, unsigned int>  vmap; 
             Array<OneD, Array<OneD, unsigned int> > emap;
             Array<OneD, Array<OneD, unsigned int> > fmap;
-           
-            
-            // Tet:
-            TetExp->GetInverseBoundaryMaps(vmap,emap,fmap);
-            vertMapMaxR[eTetrahedron] = vmap; 
-            edgeMapMaxR[eTetrahedron] = emap; 
-            faceMapMaxR[eTetrahedron] = fmap;
-
-            // Prism:
-            PrismExp->GetInverseBoundaryMaps(vmap,emap,fmap);
-            vertMapMaxR[ePrism] = vmap; 
-            edgeMapMaxR[ePrism] = emap;
-            faceMapMaxR[ePrism] = fmap;
-
-            // Pyramid:
-            PyrExp->GetInverseBoundaryMaps(vmap,emap,fmap);
-            vertMapMaxR[ePyramid] = vmap; 
-            edgeMapMaxR[ePyramid] = emap;
-            faceMapMaxR[ePyramid] = fmap;
-
-            // Hex: 
-            HexExp->GetInverseBoundaryMaps(vmap,emap,fmap);
-            vertMapMaxR[eHexahedron] = vmap; 
-            edgeMapMaxR[eHexahedron] = emap;
-            faceMapMaxR[eHexahedron] = fmap;
 
             /*
-             * Create transformation matrices 
+             * Set up a transformation matrices for equal max order
+             * polynomial meshes
              */
-            
-            //Get tetrahedral transformation matrix
-            LocalRegions::MatrixKey TetR
-                (PreconR, eTetrahedron,
-                 *TetExp, m_linSysKey.GetConstFactors());
-            maxRmat[eTetrahedron] = TetExp->GetLocMatrix(TetR);
-            
-            //Get hexahedral transformation matrix
-            LocalRegions::MatrixKey HexR
-                (PreconR, eHexahedron,
-                 *HexExp, m_linSysKey.GetConstFactors());
-            maxRmat[eHexahedron] = HexExp->GetLocMatrix(HexR);
 
-            //Get prismatic transformation matrix
-            LocalRegions::MatrixKey PrismR
-                (PreconR, ePrism,
-                 *PrismExp, m_linSysKey.GetConstFactors());
-            maxRmat[ePrism] =
-                PrismExp->GetLocMatrix(PrismR);
+            if(Shapes[eHexahedron])
+            {
+                SpatialDomains::HexGeomSharedPtr   hexgeom   = CreateRefHexGeom();
+                //Bases for Hex element
+                const BasisKey HexBa(eModified_A, nummodesmax,
+                                 PointsKey(nummodesmax+1, eGaussLobattoLegendre));
+                const BasisKey HexBb(eModified_A, nummodesmax,
+                                 PointsKey(nummodesmax+1,  eGaussLobattoLegendre));
+                const BasisKey HexBc(eModified_A, nummodesmax,
+                               PointsKey(nummodesmax+1,  eGaussLobattoLegendre));
             
-            // Set up Pyramid Transformation Matrix based on Tet and Hex expansion
-            SetUpPyrMaxRMat(nummodesmax,PyrExp,maxRmat,vertMapMaxR,edgeMapMaxR,faceMapMaxR);
+                //Create reference Hexahdedral expansion
+                LocalRegions::HexExpSharedPtr HexExp;
+            
+                HexExp = MemoryManager<LocalRegions::HexExp>
+                    ::AllocateSharedPtr(HexBa,HexBb,HexBc,
+                                        hexgeom);
 
+                maxElmt[eHexahedron] = HexExp; 
+                
+                // Hex: 
+                HexExp->GetInverseBoundaryMaps(vmap,emap,fmap);
+                vertMapMaxR[eHexahedron] = vmap; 
+                edgeMapMaxR[eHexahedron] = emap;
+                faceMapMaxR[eHexahedron] = fmap;
+
+                //Get hexahedral transformation matrix
+                LocalRegions::MatrixKey HexR
+                    (PreconR, eHexahedron,
+                     *HexExp, linSysKey.GetConstFactors());
+                maxRmat[eHexahedron] = HexExp->GetLocMatrix(HexR);
+            }
+
+            if(Shapes[eTetrahedron])
+            {
+                SpatialDomains::TetGeomSharedPtr   tetgeom   = CreateRefTetGeom();
+                //Bases for Tetrahedral element
+                const BasisKey TetBa(eModified_A, nummodesmax,
+                                     PointsKey(nummodesmax+1, eGaussLobattoLegendre));
+                const BasisKey TetBb(eModified_B, nummodesmax,
+                                     PointsKey(nummodesmax,  eGaussRadauMAlpha1Beta0));
+                const BasisKey TetBc(eModified_C, nummodesmax,
+                                     PointsKey(nummodesmax,  eGaussRadauMAlpha2Beta0));
+                
+                //Create reference tetrahedral expansion
+                LocalRegions::TetExpSharedPtr TetExp;
+                
+                TetExp = MemoryManager<LocalRegions::TetExp>
+                    ::AllocateSharedPtr(TetBa,TetBb,TetBc,tetgeom);
+                
+                maxElmt[eTetrahedron] = TetExp;
+
+                TetExp->GetInverseBoundaryMaps(vmap,emap,fmap);
+                vertMapMaxR[eTetrahedron] = vmap; 
+                edgeMapMaxR[eTetrahedron] = emap; 
+                faceMapMaxR[eTetrahedron] = fmap;
+
+                //Get tetrahedral transformation matrix
+                LocalRegions::MatrixKey TetR
+                    (PreconR, eTetrahedron,
+                     *TetExp, linSysKey.GetConstFactors());
+                maxRmat[eTetrahedron] = TetExp->GetLocMatrix(TetR);
+
+                if((Shapes[ePyramid])||(Shapes[eHexahedron]))
+                {
+                    ReSetTetMaxRMat(nummodesmax, TetExp, maxRmat,
+                                    vertMapMaxR, edgeMapMaxR, faceMapMaxR);
+                }
+            }
+            
+            if(Shapes[ePyramid])
+            {
+                SpatialDomains::PyrGeomSharedPtr   pyrgeom   = CreateRefPyrGeom();
+                
+                //Bases for Pyramid element
+                const BasisKey PyrBa(eModified_A, nummodesmax,
+                                     PointsKey(nummodesmax+1, eGaussLobattoLegendre));
+                const BasisKey PyrBb(eModified_A, nummodesmax,
+                                     PointsKey(nummodesmax+1, eGaussLobattoLegendre));
+                const BasisKey PyrBc(eModified_C, nummodesmax,
+                                     PointsKey(nummodesmax,  eGaussRadauMAlpha2Beta0));
+                
+                //Create reference pyramid expansion
+                LocalRegions::PyrExpSharedPtr PyrExp;
+                
+                PyrExp = MemoryManager<LocalRegions::PyrExp>
+                    ::AllocateSharedPtr(PyrBa,PyrBb,PyrBc,pyrgeom);
+                
+                maxElmt[ePyramid] = PyrExp;
+
+                // Pyramid:
+                PyrExp->GetInverseBoundaryMaps(vmap,emap,fmap);
+                vertMapMaxR[ePyramid] = vmap; 
+                edgeMapMaxR[ePyramid] = emap;
+                faceMapMaxR[ePyramid] = fmap;
+
+                // Set up Pyramid Transformation Matrix based on Tet
+                // and Hex expansion
+                SetUpPyrMaxRMat(nummodesmax,PyrExp,maxRmat,vertMapMaxR,
+                                edgeMapMaxR,faceMapMaxR);
+            }
+
+            if(Shapes[ePrism])
+            {
+                SpatialDomains::PrismGeomSharedPtr prismgeom = CreateRefPrismGeom();
+                //Bases for Prism element
+                const BasisKey PrismBa(eModified_A, nummodesmax,
+                                  PointsKey(nummodesmax+1, eGaussLobattoLegendre));
+                const BasisKey PrismBb(eModified_A, nummodesmax,
+                                  PointsKey(nummodesmax+1, eGaussLobattoLegendre));
+                const BasisKey PrismBc(eModified_B, nummodesmax,
+                                  PointsKey(nummodesmax,   eGaussRadauMAlpha1Beta0));
+
+                //Create reference prismatic expansion
+                LocalRegions::PrismExpSharedPtr PrismExp;
+                
+                PrismExp = MemoryManager<LocalRegions::PrismExp>
+                    ::AllocateSharedPtr(PrismBa,PrismBb,PrismBc,prismgeom);
+                maxElmt[ePrism] = PrismExp; 
+
+                // Prism:
+                PrismExp->GetInverseBoundaryMaps(vmap,emap,fmap);
+                vertMapMaxR[ePrism] = vmap; 
+                edgeMapMaxR[ePrism] = emap;
+                
+                faceMapMaxR[ePrism] = fmap;
+                
+                if((Shapes[ePyramid])||(Shapes[eHexahedron]))
+                {
+                    ReSetPrismMaxRMat(nummodesmax, PrismExp, maxRmat,
+                                      vertMapMaxR, edgeMapMaxR,
+                                      faceMapMaxR, false);
+                }
+                else
+                {
+
+                    //Get prismatic transformation matrix
+                    LocalRegions::MatrixKey PrismR
+                        (PreconR, ePrism,
+                         *PrismExp, linSysKey.GetConstFactors());
+                    maxRmat[ePrism] =
+                        PrismExp->GetLocMatrix(PrismR);
+
+                    if(Shapes[eTetrahedron]) // reset triangular faces from Tet
+                    {
+                        ReSetPrismMaxRMat(nummodesmax, PrismExp, maxRmat,
+                                          vertMapMaxR, edgeMapMaxR,
+                                          faceMapMaxR, true);
+                    }
+                }
+            }
         }
         
         void PreconditionerLowEnergy::SetUpPyrMaxRMat(int nummodesmax,
@@ -2120,71 +2149,271 @@ namespace Nektar
             maxRmat[ePyramid] =PyrR;
         }
 
-        /**
-         * \brief transform the solution vector from low energy back to the
-         * original basis.
-         *
-         * After the conjugate gradient routine the output vector is in the low
-         * energy basis and must be trasnformed back to the original basis in
-         * order to get the correct solution out. the solution vector
-         * i.e. \f$\mathbf{x}=\mathbf{R^{T}}\mathbf{\overline{x}}\f$.
-         */
-        void PreconditionerLowEnergy::LocalTransformToLowEnergy(
-                                                                DNekScalMatSharedPtr RTmat,
-                                                                LocalRegions::HexExpSharedPtr maxTetExp)
+
+        void PreconditionerLowEnergy::ReSetTetMaxRMat(int nummodesmax,
+                             LocalRegions::TetExpSharedPtr &TetExp,
+                             std::map<ShapeType, DNekScalMatSharedPtr> &maxRmat,
+                             std::map<ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
+                             std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
+                             std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR)
         {
-            int mode;
+            int nRows = TetExp->NumBndryCoeffs();
+            NekDouble val; 
+            NekDouble zero = 0.0;
+            DNekMatSharedPtr newmat = MemoryManager<DNekMat>::
+                AllocateSharedPtr(nRows,nRows,zero,eFULL);
 
-            boost::shared_ptr<MultiRegions::ExpList> 
-                expList=((m_linsys.lock())->GetLocMat()).lock();
-
-            SessionReaderSharedPtr vSession
-                = expList->GetSession();
-
-            vSession->LoadParameter("mode", mode);
-
-            int nRows=RTmat->GetRows();
-
-            Array<OneD, NekDouble> u1(nRows,0.0);
-            Array<OneD, NekDouble> u2(nRows,0.0);
-            Array<OneD, NekDouble> u2phys;
-
-            NekVector<NekDouble> u1vec(nRows,u1,eWrapper);
-            NekVector<NekDouble> u2vec(nRows,u2,eWrapper);
-
-            u1[mode]=1.0;
-
-            DNekScalMat RT=(*RTmat);
-            //Multiply by the transposed transformation matrix
-            u2vec=RT*u1vec;
-            //zero the modes that are not in the lower order solution
-            u2phys=expList->UpdatePhys();
-            expList->BwdTrans(u2,u2phys);
-
-            int npoints = expList->GetNpoints();
-
-            //------------------------------------------------
-            //Coordinate arrays
-            Array<OneD, NekDouble> x1(npoints,0.0);
-            Array<OneD, NekDouble> y1(npoints,0.0);
-            Array<OneD, NekDouble> z1(npoints,0.0);
-            expList->GetCoords(x1,y1,z1);
-
-            int nCoeffs=expList->GetNcoeffs();
-
-            std::vector<FieldDefinitionsSharedPtr> FieldDef
-                = expList->GetFieldDefinitions();
-            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-            for(int i = 0; i < FieldDef.size(); ++i)
+            // copy existing system 
+            for(int i = 0; i < nRows; ++i)
             {
-                FieldDef[i]->m_fields.push_back("u");
-                expList->AppendFieldData(FieldDef[i], FieldData[i], u2);
+                for(int j = 0; j < nRows; ++j)
+                {
+                    val = (*maxRmat[eTetrahedron])(i,j);
+                    newmat->SetValue(i,j,val);
+                }
             }
-            Write("out.fld", FieldDef, FieldData);
 
+            // The following lists specify the number of adjacent
+            // edges to each vertex (nadj) then the Hex vert to
+            // use for each pyramid ver in the vert-edge map (VEVert)
+            // followed by the hex edge to use for each Tet edge
+            // in the vert-edge map (VEEdge)
+            const int VEHexVert[][4] = {{0,0,0},{1,1,1},{2,2,2},{4,5,6}};
+            const int VEHexEdge[][4] = {{0,3,4},{0,1,5},{1,2,6},{4,5,6}};
+            const int VETetEdge[][4] = {{0,2,3},{0,1,4},{1,2,5},{3,4,5}};
+            
+            // fill vertex to edge coupling               
+            for(int v = 0; v < 4; ++v)
+            {
+                for(int e = 0; e < 3; ++e)
+                {
+                    for(int i = 0; i < nummodesmax-2; ++i)
+                    {
+                        // Note this is using wrong shape but gives
+                        // answer that seems to have correct error!
+                        val = (*maxRmat[eHexahedron])(
+                                    vertMapMaxR[eHexahedron][VEHexVert[v][e]],
+                                    edgeMapMaxR[eHexahedron][VEHexEdge[v][e]][i]);
+                        newmat->SetValue(vertMapMaxR[eTetrahedron][v],
+                                    edgeMapMaxR[eTetrahedron][VETetEdge[v][e]][i],
+                                                        val);
+                    }
+                }
+            }
+
+            DNekScalMatSharedPtr TetR =
+                MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0, newmat);
+
+            maxRmat[eTetrahedron] = TetR;
         }
 
+        void PreconditionerLowEnergy::ReSetPrismMaxRMat(int nummodesmax,
+                             LocalRegions::PrismExpSharedPtr &PrismExp,
+                             std::map<ShapeType, DNekScalMatSharedPtr> &maxRmat,
+                             std::map<ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
+                             std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
+                             std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR,
+                             bool UseTetOnly)
+        {
+            int nRows = PrismExp->NumBndryCoeffs();
+            NekDouble val; 
+            NekDouble zero = 0.0;
+            DNekMatSharedPtr newmat = MemoryManager<DNekMat>::
+                AllocateSharedPtr(nRows,nRows,zero,eFULL);
+
+            
+            int nfacemodes;
+            
+            if(UseTetOnly)
+            {
+                // copy existing system 
+                for(int i = 0; i < nRows; ++i)
+                {
+                    for(int j = 0; j < nRows; ++j)
+                    {
+                        val = (*maxRmat[ePrism])(i,j);
+                        newmat->SetValue(i,j,val);
+                    }
+                }
+
+                // Reset vertex to edge mapping from tet. 
+                const int VETetVert[][2]   = {{0,0},{1,1},{1,1},{0,0},{3,3},{3,3}};
+                const int VETetEdge[][2]   = {{0,3},{0,4},{0,4},{0,3},{3,4},{4,3}};
+                const int VEPrismEdge[][2] = {{0,4},{0,5},{2,6},{2,7},{4,5},{6,7}};
+                
+                // fill vertex to edge coupling                 
+                for(int v = 0; v < 6; ++v)
+                {
+                    for(int e = 0; e < 2; ++e)
+                    {
+                        for(int i = 0; i < nummodesmax-2; ++i)
+                        {
+                            // Note this is using wrong shape but gives
+                            // answer that seems to have correct error!
+                            val = (*maxRmat[eTetrahedron])(
+                                   vertMapMaxR[eTetrahedron][VETetVert[v][e]],
+                                   edgeMapMaxR[eTetrahedron][VETetEdge[v][e]][i]);
+                            newmat->
+                                SetValue(vertMapMaxR[ePrism][v],
+                                         edgeMapMaxR[ePrism][VEPrismEdge[v][e]][i],
+                                         val);
+                        }
+                    }
+                }
+            }
+            else
+            {
+
+                // set diagonal to 1
+                for(int i = 0; i < nRows; ++i)
+                {
+                    newmat->SetValue(i,i,1.0);
+                }
+
+
+                // Set vertex to edge mapping from Hex. 
+
+                // The following lists specify the number of adjacent
+                // edges to each vertex (nadj) then the Hex vert to
+                // use for each prism ver in the vert-edge map (VEVert)
+                // followed by the hex edge to use for each prism edge
+                // in the vert-edge map (VEEdge)
+                const int VEHexVert[][3]   = {{0,0,0},{1,1,1},{2,2,2},{3,3,3},
+                                              {4,5,5},{6,7,7}};
+                const int VEHexEdge[][3]   = {{0,3,4},{0,1,5},{1,2,6},{2,3,7},
+                                              {4,5,9},{6,7,11}};
+                const int VEPrismEdge[][3] = {{0,3,4},{0,1,5},{1,2,6},{2,3,7},
+                                              {4,5,8},{6,7,8}};
+                
+                // fill vertex to edge coupling                 
+                for(int v = 0; v < 6; ++v)
+                {
+                    for(int e = 0; e < 3; ++e)
+                    {
+                        for(int i = 0; i < nummodesmax-2; ++i)
+                        {
+                            // Note this is using wrong shape but gives
+                            // answer that seems to have correct error!
+                            val = (*maxRmat[eHexahedron])(
+                                    vertMapMaxR[eHexahedron][VEHexVert[v][e]],
+                                    edgeMapMaxR[eHexahedron][VEHexEdge[v][e]][i]);
+                            newmat->SetValue(vertMapMaxR[ePrism][v],
+                                             edgeMapMaxR[ePrism][VEPrismEdge[v][e]][i],
+                                             val);
+                        }
+                    }
+                }
+                
+
+                // Setup vertex to face mapping from Hex 
+                const int VFHexVert[][2]   = {{0,0},{1,1},{4,5},{2,2},{3,3},{6,7}};
+                const int VFHexFace[][2]   = {{0,4},{0,2},{4,2},{0,2},{0,4},{2,4}};
+
+                const int VQFPrismVert[][2] = {{0,0},{1,1},{4,4},{2,2},{3,3},{5,5}};
+                const int VQFPrismFace[][2] = {{0,4},{0,2},{4,2},{0,2},{0,4},{2,4}};
+
+                nfacemodes = (nummodesmax-2)*(nummodesmax-2);
+                // Replace two Quad faces  on every vertex
+                for(int v = 0; v < 6; ++v)
+                {
+                    for(int f = 0; f < 2; ++f)
+                    {
+                        for(int i = 0; i < nfacemodes; ++i)
+                        {
+                            val = (*maxRmat[eHexahedron])(
+                                             vertMapMaxR[eHexahedron][VFHexVert[v][f]],
+                                             faceMapMaxR[eHexahedron][VFHexFace[v][f]][i]);
+                            newmat->SetValue(vertMapMaxR[ePrism][VQFPrismVert[v][f]],
+                                             faceMapMaxR[ePrism][VQFPrismFace[v][f]][i],val);
+                        }
+                    }
+                }
+                
+                // Mapping of Hex Edge-Face mappings to Prism Edge-Face Mappings
+                const int nadjface[] = {1,2,1,2,1,1,1,1,2};
+                const int EFHexEdge[][2]    = {{0,-1},{1,1},{2,-1},{3,3},{4,-1},{5,-1},{6,-1},{7,-1},{9,11}};
+                const int EFHexFace[][2]    = {{0,-1},{0,2},{0,-1},{0,4},{4,-1},{2,-1},{2,-1},{4,-1},{2,4}};
+                const int EQFPrismEdge[][2] = {{0,-1},{1,1},{2,-1},{3,3},{4,-1},{5,-1},{6,-1},{7,-1},{8,8}};
+                const int EQFPrismFace[][2] = {{0,-1},{0,2},{0,-1},{0,4},{4,-1},{2,-1},{2,-1},{4,-1},{2,4}};
+                
+                // all base edges are coupled to face 0 
+                nfacemodes = (nummodesmax-2)*(nummodesmax-2);
+                for(int e = 0; e < 9; ++e)
+                {
+                    for(int f = 0; f < nadjface[e]; ++f)
+                    {
+                        for(int i = 0; i < nummodesmax-2; ++i)
+                        {
+                            for(int j = 0; j < nfacemodes; ++j)
+                            {
+                                int edgemapid = edgeMapMaxR[eHexahedron][EFHexEdge[e][f]][i];
+                                int facemapid = faceMapMaxR[eHexahedron][EFHexFace[e][f]][j];
+                                
+                                val = (*maxRmat[eHexahedron])(edgemapid,facemapid);
+
+                                int edgemapid1 = edgeMapMaxR[ePrism][EQFPrismEdge[e][f]][i];
+                                int facemapid1 = faceMapMaxR[ePrism][EQFPrismFace[e][f]][j];
+                                newmat->SetValue(edgemapid1, facemapid1, val);
+                            }
+                        }
+                    }
+                }
+            }
+
+            const int VFTetVert[]    = {0,1,3,1,0,3};
+            const int VFTetFace[]    = {1,1,1,1,1,1};
+            const int VTFPrismVert[] = {0,1,4,2,3,5};
+            const int VTFPrismFace[] = {1,1,1,3,3,3};
+            
+            //  Handle all triangular faces from tetrahedron
+            nfacemodes = (nummodesmax-3)*(nummodesmax-2)/2;
+            for(int v = 0; v < 6; ++v)
+            {
+                for(int i = 0; i < nfacemodes; ++i)
+                {
+                    val = (*maxRmat[eTetrahedron])
+                        (vertMapMaxR[eTetrahedron][VFTetVert[v]],
+                         faceMapMaxR[eTetrahedron][VFTetFace[v]][i]);
+                    
+                    newmat->SetValue(vertMapMaxR[ePrism][VTFPrismVert[v]],
+                                     faceMapMaxR[ePrism][VTFPrismFace[v]][i],val);
+                }
+            }
+                     
+            // Mapping of Tet Edge-Face mappings to Prism Edge-Face Mappings
+            const int EFTetEdge[]    = {0,3,4,0,4,3};
+            const int EFTetFace[]    = {1,1,1,1,1,1};
+            const int ETFPrismEdge[] = {0,4,5,2,6,7};
+            const int ETFPrismFace[] = {1,1,1,3,3,3};
+            
+            // handle all edge to triangular faces from tetrahedron
+            // (only 6 this time)
+            nfacemodes = (nummodesmax-3)*(nummodesmax-2)/2;
+            for(int e = 0; e < 6; ++e)
+            {
+                for(int i = 0; i < nummodesmax-2; ++i)
+                {
+                    for(int j = 0; j < nfacemodes; ++j)
+                    {
+                        int edgemapid = edgeMapMaxR[eTetrahedron][EFTetEdge[e]][i];
+                        int facemapid = faceMapMaxR[eTetrahedron][EFTetFace[e]][j];
+                        val = (*maxRmat[eTetrahedron])(edgemapid,facemapid);
+                        
+                        newmat->SetValue(edgeMapMaxR[ePrism][ETFPrismEdge[e]][i],
+                                         faceMapMaxR[ePrism][ETFPrismFace[e]][j],val);
+                    }
+                }
+            }
+            
+                
+            DNekScalMatSharedPtr PrismR
+                = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0, newmat);
+            maxRmat[ePrism] = PrismR;
+            //cout << "PrismR"<< endl;
+            //cout << *PrismR << endl;
+            //exit(1);
+        }
+        
         DNekMatSharedPtr PreconditionerLowEnergy::
         ExtractLocMat(StdRegions::StdExpansionSharedPtr &locExp,
                       DNekScalMatSharedPtr              &maxRmat,

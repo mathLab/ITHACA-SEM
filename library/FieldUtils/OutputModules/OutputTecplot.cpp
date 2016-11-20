@@ -152,14 +152,6 @@ void OutputTecplot::Process(po::variables_map &vm)
         return;
     }
 
-    if(m_config["writemultiplefiles"].as<bool>())
-    {
-        m_oneOutputFile = false; 
-    }
-    else
-    {
-        m_oneOutputFile = m_binary && m_f->m_comm->GetType() == "Parallel MPI";
-    }
 
     if (m_f->m_verbose)
     {
@@ -174,6 +166,16 @@ void OutputTecplot::Process(po::variables_map &vm)
 
     int nprocs = m_f->m_comm->GetSize();
     int rank   = m_f->m_comm->GetRank();
+
+    if(m_config["writemultiplefiles"].as<bool>())
+    {
+        m_oneOutputFile = false; 
+    }
+    else
+    {
+        m_oneOutputFile = (nprocs > 1)? true:false;
+        //m_binary && m_f->m_comm->GetType() == "Parallel MPI";
+    }
 
     // Amend for parallel output if required
     if (nprocs != 1 && !m_oneOutputFile)
@@ -506,23 +508,72 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
     // Write either points or finite element block
     if (m_zoneType != eOrdered)
     {
-        outfile << "Zone, N=" << m_fields[0].num_elements() << ", E="
-                << m_numBlocks << ", F=FEBlock, ET="
-                << TecplotZoneTypeMap[m_zoneType] << std::endl;
-
-        // Write out coordinates and field data: ordered by field and then its
-        // data.
-        for (int j = 0; j < m_fields.num_elements(); ++j)
+        if ((m_oneOutputFile && m_f->m_comm->GetRank() == 0) || !m_oneOutputFile)
         {
-            for (int i = 0; i < m_fields[j].num_elements(); ++i)
+            // Number of points in zone
+            int nPoints = m_oneOutputFile ?
+                Vmath::Vsum(m_f->m_comm->GetSize(), m_rankFieldSizes, 1) :
+                m_fields[0].num_elements();
+            
+            outfile << "Zone, N=" << nPoints << ", E="
+                    << m_numBlocks << ", F=FEBlock, ET="
+                    << TecplotZoneTypeMap[m_zoneType] << std::endl;
+        }
+        
+        
+        if (m_oneOutputFile && m_f->m_comm->GetRank() == 0)
+        {
+            for (int j = 0; j < m_fields.num_elements(); ++j)
             {
-                if ((!(i % 1000)) && i)
+                for (int i = 0; i < m_fields[j].num_elements(); ++i)
                 {
-                    outfile << std::endl;
+                    if ((!(i % 1000)) && i)
+                    {
+                        outfile << std::endl;
+                    }
+                    outfile << m_fields[j][i] << " ";
                 }
-                outfile << m_fields[j][i] << " ";
+
+                for (int n = 1; n < m_f->m_comm->GetSize(); ++n)
+                {
+                    Array<OneD, NekDouble> tmp(m_rankFieldSizes[n]);
+                    m_f->m_comm->Recv(n, tmp);
+                    
+                    for (int i = 0; i < m_rankFieldSizes[n]; ++i)
+                    {
+                        if ((!(i % 1000)) && i)
+                        {
+                            outfile << std::endl;
+                        }
+                        outfile << tmp[i] << " ";
+                    }
+                }
+                outfile << std::endl;
             }
-            outfile << std::endl;
+        }
+        else if (m_oneOutputFile && m_f->m_comm->GetRank() > 0)
+        {
+            for (int i = 0; i < m_fields.num_elements(); ++i)
+            {
+                m_f->m_comm->Send(0, m_fields[i]);
+            }
+        }
+        else
+        {
+            // Write out coordinates and field data: ordered by field
+            // and then its data.
+            for (int j = 0; j < m_fields.num_elements(); ++j)
+            {
+                for (int i = 0; i < m_fields[j].num_elements(); ++i)
+                {
+                    if ((!(i % 1000)) && i)
+                    {
+                        outfile << std::endl;
+                    }
+                    outfile << m_fields[j][i] << " ";
+                }
+                outfile << std::endl;
+            }
         }
     }
     else
@@ -583,7 +634,8 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
         WriteStream(outfile, 299.0f); // Zone marker
 
         // Write same name as preplot
-        std::string zonename = "ZONE 001";
+        int rank   = m_f->m_comm->GetRank();
+        string zonename = "ZONE " + boost::lexical_cast<string>(rank);
         WriteStream(outfile, zonename);
 
         WriteStream(outfile, -1); // No parent zone
@@ -704,14 +756,51 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
         return;
     }
 
-    for (int i = 0; i < m_conn.size(); ++i)
+    if (m_oneOutputFile && m_f->m_comm->GetRank() > 0)
     {
-        const int nConn = m_conn[i].num_elements();
-        for (int j = 0; j < nConn - 1; ++j)
+        // Need to amalgamate connectivity information
+        Array<OneD, int> conn(m_totConn);
+        for (int i = 0, cnt = 0; i < m_conn.size(); ++i)
         {
-            outfile << m_conn[i][j] + 1 << " ";
+            Vmath::Vcopy(m_conn[i].num_elements(), &m_conn[i][0], 1,
+                         &conn[cnt], 1);
+            cnt += m_conn[i].num_elements();
         }
-        outfile << m_conn[i][nConn-1] + 1 << endl;
+        m_f->m_comm->Send(0, conn);
+    }
+    else
+    {
+
+        for (int i = 0; i < m_conn.size(); ++i)
+        {
+            const int nConn = m_conn[i].num_elements();
+            for (int j = 0; j < nConn; ++j)
+            {
+                outfile << m_conn[i][j] + 1 << " ";
+            }
+            outfile <<  endl;
+        }
+
+        if (m_oneOutputFile && m_f->m_comm->GetRank() == 0)
+        {
+            int offset = m_rankFieldSizes[0];
+
+            for (int n = 1; n < m_f->m_comm->GetSize(); ++n)
+            {
+                Array<OneD, int> conn(m_rankConnSizes[n]);
+                m_f->m_comm->Recv(n, conn);
+
+                for (int j = 0; j < conn.num_elements(); ++j)
+                {
+                    outfile << conn[j] + offset + 1 << " ";
+                    if ((!(j % 1000)) && j)
+                    {
+                        outfile << std::endl;
+                    }
+                }
+                offset += m_rankFieldSizes[n];
+            }
+        }
     }
 }
 

@@ -72,12 +72,14 @@ ModuleKey OutputTecplotBinary::m_className =
 
 OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f),
                                                  m_binary(false),
-                                                 m_parallel(false)
+                                                 m_oneOutputFile(false)
 {
     if (!f->m_setUpEquiSpacedFields)
     {
         m_requireEquiSpaced = true;
     }
+    m_config["writemultiplefiles"] =
+        ConfigOption(true,"0","Write multiple files in parallel");
 }
 
 OutputTecplot::~OutputTecplot()
@@ -150,7 +152,14 @@ void OutputTecplot::Process(po::variables_map &vm)
         return;
     }
 
-    m_parallel = m_binary && m_f->m_comm->GetType() == "Parallel MPI";
+    if(m_config["writemultiplefiles"].as<bool>())
+    {
+        m_oneOutputFile = false; 
+    }
+    else
+    {
+        m_oneOutputFile = m_binary && m_f->m_comm->GetType() == "Parallel MPI";
+    }
 
     if (m_f->m_verbose)
     {
@@ -167,7 +176,7 @@ void OutputTecplot::Process(po::variables_map &vm)
     int rank   = m_f->m_comm->GetRank();
 
     // Amend for parallel output if required
-    if (nprocs != 1 && !m_parallel)
+    if (nprocs != 1 && !m_oneOutputFile)
     {
         int dot       = filename.find_last_of('.');
         string ext    = filename.substr(dot, filename.length() - dot);
@@ -182,7 +191,7 @@ void OutputTecplot::Process(po::variables_map &vm)
     // Open output file
     ofstream outfile;
 
-    if ((m_parallel && rank == 0) || !m_parallel)
+    if ((m_oneOutputFile && rank == 0) || !m_oneOutputFile)
     {
         outfile.open(filename.c_str(), m_binary ? ios::binary : ios::out);
     }
@@ -393,7 +402,7 @@ void OutputTecplot::Process(po::variables_map &vm)
         }
     }
 
-    if (m_parallel)
+    if (m_oneOutputFile)
     {
         // Reduce on number of blocks and number of points.
         m_f->m_comm->AllReduce(m_numBlocks, LibUtilities::ReduceSum);
@@ -432,7 +441,7 @@ void OutputTecplot::Process(po::variables_map &vm)
     // point data).
     WriteTecplotConnectivity(outfile);
 
-    if ((m_parallel && rank == 0) || !m_parallel)
+    if ((m_oneOutputFile && rank == 0) || !m_oneOutputFile)
     {
         cout << "Written file: " << filename << endl;
     }
@@ -459,7 +468,7 @@ void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
 void OutputTecplotBinary::WriteTecplotHeader(std::ofstream &outfile,
                                              std::vector<std::string> &var)
 {
-    if (m_parallel && m_f->m_comm->GetRank() > 0)
+    if (m_oneOutputFile && m_f->m_comm->GetRank() > 0)
     {
         return;
     }
@@ -568,7 +577,7 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
     // Data format: either double or single depending on user options
     bool useDoubles = m_config["double"].m_beenSet;
 
-    if ((m_parallel && m_f->m_comm->GetRank() == 0) || !m_parallel)
+    if ((m_oneOutputFile && m_f->m_comm->GetRank() == 0) || !m_oneOutputFile)
     {
         // Don't bother naming zone
         WriteStream(outfile, 299.0f); // Zone marker
@@ -604,7 +613,7 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
         else
         {
             // Number of points in zone
-            int nPoints = m_parallel ?
+            int nPoints = m_oneOutputFile ?
                 Vmath::Vsum(m_f->m_comm->GetSize(), m_rankFieldSizes, 1) :
                 m_fields[0].num_elements();
 
@@ -648,7 +657,7 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
     m_f->m_comm->AllReduce(fieldMax, LibUtilities::ReduceMax);
 
     // Write out min/max of field data
-    if ((m_parallel && m_f->m_comm->GetRank() == 0) || !m_parallel)
+    if ((m_oneOutputFile && m_f->m_comm->GetRank() == 0) || !m_oneOutputFile)
     {
         for (int i = 0; i < m_fields.num_elements(); ++i)
         {
@@ -657,7 +666,7 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
         }
     }
 
-    if (m_parallel && m_f->m_comm->GetRank() == 0)
+    if (m_oneOutputFile && m_f->m_comm->GetRank() == 0)
     {
         for (int i = 0; i < m_fields.num_elements(); ++i)
         {
@@ -671,7 +680,7 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
             }
         }
     }
-    else if (m_parallel && m_f->m_comm->GetRank() > 0)
+    else if (m_oneOutputFile && m_f->m_comm->GetRank() > 0)
     {
         for (int i = 0; i < m_fields.num_elements(); ++i)
         {
@@ -708,7 +717,7 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
 
 void OutputTecplotBinary::WriteTecplotConnectivity(std::ofstream &outfile)
 {
-    if (m_parallel && m_f->m_comm->GetRank() > 0)
+    if (m_oneOutputFile && m_f->m_comm->GetRank() > 0)
     {
         // Need to amalgamate connectivity information
         Array<OneD, int> conn(m_totConn);
@@ -727,7 +736,7 @@ void OutputTecplotBinary::WriteTecplotConnectivity(std::ofstream &outfile)
             WriteStream(outfile, m_conn[i]);
         }
 
-        if (m_parallel && m_f->m_comm->GetRank() == 0)
+        if (m_oneOutputFile && m_f->m_comm->GetRank() == 0)
         {
             int offset = m_rankFieldSizes[0];
 

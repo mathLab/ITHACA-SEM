@@ -74,7 +74,7 @@ public:
 
 protected:
     bool            m_binary;
-    bool            m_parallel;
+    bool            m_oneOutputFile; /// True if writing a single output file
     TecplotZoneType m_zoneType;
     vector<int>     m_numPoints;
     int             m_numBlocks;

@@ -374,6 +374,8 @@ void ElUtil::Evaluate()
 {
     NekDouble mx2 = -1.0 * numeric_limits<double>::max();
     NekDouble mn2 =  numeric_limits<double>::max();
+    NekDouble mx1 = -1.0 * numeric_limits<double>::max();
+    NekDouble mn1 =  numeric_limits<double>::max();
 
     ASSERTL0(nodes.size() == derivUtil->ptsLow,"node count wrong");
 
@@ -444,8 +446,11 @@ void ElUtil::Evaluate()
             {
                 cout << jacDet << " " << jacs[j] << endl;
             }*/
-            mx2 = max(mx2,jacDet);
-            mn2 = min(mn2,jacDet);
+            mx2 = max(mx2,jacDet );
+            mn2 = min(mn2,jacDet );
+            
+            mx1 = max(mx1,maps[j][9]);
+            mn1 = min(mn1,maps[j][9]);
         }
     }
 
@@ -454,12 +459,12 @@ void ElUtil::Evaluate()
     {
         res->startInv++;
     }
-    res->worstJac = min(res->worstJac,mn2 / mx2);
+    res->worstJac = min(res->worstJac,(mn2 / mx2) / (mn1 / mx1));
     mtx2.unlock();
 
     //maps = MappingIdealToRef();
 
-    scaledJac = mn2/mx2;
+    scaledJac = (mn2/mx2) / (mn1 / mx1);
 }
 
 void ElUtil::InitialMinJac()

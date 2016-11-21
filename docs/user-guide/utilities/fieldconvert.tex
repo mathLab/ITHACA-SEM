@@ -1,16 +1,16 @@
 \chapter{FieldConvert}
 \label{s:utilities:fieldconvert}
-FieldConvert is a utility embedded in \nekpp with the primary
-aim of allowing the user to convert the \nekpp output binary files
-(.chk and .fld) into a format which can be read by two common
-visualisation softwares: Paraview (.vtu format) or Tecplot (.dat
-format). FieldConvert also allows the user to manipulate the
-\nekpp output binary files by using some additional modules
-which can be called with the option \inltt{-m} which stands
-for \inltt{m}odule. Note that another flag, \inltt{-r} (which stand for
-\inltt{r}ange) allows the user to specify a sub-range of the domain
-on which the conversion or manipulation of the \nekpp output binary
-files will be performed.
+FieldConvert is a utility embedded in \nekpp with the primary aim of
+allowing the user to convert the \nekpp output binary files (.chk and
+.fld) into a format which can be read by two common visualisation
+softwares: Paraview/VisIt (.vtu format) or Tecplot/VisIt (.dat or .plt
+formats). FieldConvert also allows the user to manipulate the \nekpp
+output binary files by using some additional modules which can be
+called with the option \inltt{-m} which stands for
+\inltt{m}odule. Note that another flag, \inltt{-r} (which stand for
+\inltt{r}ange) allows the user to specify a sub-range of the domain on
+which the conversion or manipulation of the \nekpp output binary files
+will be performed.
 
 Almost all of the FieldConvert functionalities can be run in parallel if \nekpp
 is compiled using MPI (see the installation documentation for additional info on
@@ -23,7 +23,7 @@ how to implement \nekpp using MPI). \footnote{Modules that do not have parallel
 \label{s:utilities:fieldconvert:sub:convert}
 To convert the \nekpp output binary files (.chk and .fld) into a
 format which can be read by two common visualisation softwares:
-Paraview (.vtu format), VisIt (.vtu format) or Tecplot (.dat format)
+Paraview (.vtu format), VisIt (.vtu format) or Tecplot (.dat or .plt format)
 the user can run the following commands:
 %
 \begin{itemize}
@@ -39,12 +39,17 @@ FieldConvert test.xml test.fld test.vtu
 FieldConvert test.xml test.fld test.dat
 \end{lstlisting}
 %
+\item Tecplot or VisIt(.plt format)
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert test.xml test.fld test.plt
+\end{lstlisting}
 \end{itemize}
 %
 where \inltt{FieldConvert} is the executable associated to the utility
-FieldConvert, \inltt{test.xml} is the session file and \inltt{test.dat},
-\inltt{test.vtu} are the desired format outputs, either Tecplot or
-Paraview format respectively.
+FieldConvert, \inltt{test.xml} is the session file and
+\inltt{test.vtu}, \inltt{test.dat},  \inltt{test.plt} are the desired
+format outputs, either Paraview, VisIt or Tecplot formats.
 %
 \begin{tipbox}
 Note that the session file is also supported
@@ -904,21 +909,38 @@ command
 \begin{lstlisting}[style=BashInputStyle]
 mpirun -np <nprocs> FieldConvert test.xml test.fld test.dat
 \end{lstlisting}
+\begin{lstlisting}[style=BashInputStyle]
+mpirun -np <nprocs> FieldConvert test.xml test.fld test.plt
+\end{lstlisting}
 or
 \begin{lstlisting}[style=BashInputStyle]
 mpirun -np <nprocs> FieldConvert test.xml test.fld test.vtu
 \end{lstlisting}
-replacing \inltt{<nprocs>} with the number of processors.  This will
-produce multiple \inltt{.dat} or \inltt{.vtu} files of the form
-\inltt{test\_P0.dat}, \inltt{test\_P1.dat}, \inltt{test\_P2.dat} or
-\inltt{test\_P0.vtu}, \inltt{test\_P1.vtu}, \inltt{test\_P2.vtu}. Note
-when producing a parallel \inltt{.vtu} file an additional file called
+replacing \inltt{<nprocs>} with the number of processors. For the
+\inltt{.dat} and \inltt{.plt} outputs the current version will proudce
+a single output file.  However it is also sometimes useful to produce
+multiple output files, one for each partition, and this
+can be done by using the \inltt{writemultiplefiles} option, i.e. 
+\begin{lstlisting}[style=BashInputStyle]
+  mpirun -np <nprocs> FieldConvert test.xml test.fld \
+                  test.dat:dat:writemultiplefiles
+\end{lstlisting}
+\begin{lstlisting}[style=BashInputStyle]
+  mpirun -np <nprocs> FieldConvert test.xml test.fld \
+                  test.plt:plt:writemultiplefiles
+\end{lstlisting}
+
+For the \inltt{.vtu} format multiple files will by default be produced
+of the form \inltt{test\_P0.vtu}, \inltt{test\_P1.vtu},
+\inltt{test\_P2.vtu}. For this format an additional file called
 \inltt{.pvtu} is written out which allows for parallel reading of the
-individual \inltt{.vtu} files. Similarly functions that produce a
-\inltt{.fld} file output can be processed in this manner. In the case
-when producing a .fld file a directory called \inltt{test.fld} (or the
-specified output name) will be produced with the standard parallel
-field files placed within the directory.
+individual \inltt{.vtu} files.
+
+FieldConvert functions that produce a \inltt{.fld} file output will
+also be created when running in parallel. In this case when producing
+a .fld file a directory called \inltt{test.fld} (or the specified
+output name) is created with the standard parallel field files placed
+within the directory.
 %
 %
 %

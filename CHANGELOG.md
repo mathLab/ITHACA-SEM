@@ -25,6 +25,10 @@ v4.4.0
 - New options for load balancing (DOF or BOUNDARY) in mesh partitioner (!617)
 - Rework nodal utilities to support nodal prismatic elements (!660)
 - Update Body/Field forces at each timestep (!665)
+- Update nodalutil to include quad and hex elements and introduce SPI nodal
+  points (!696)
+- Extend ExtractDataToCoeffs to support interpolation between basis types for
+  quads and hexahedra (!682)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)
@@ -58,6 +62,8 @@ v4.4.0
   to detect problems such as hanging nodes (!691)
 - Add option to `linearise` module to linearise only prisms (!688)
 - Add option to `linearise` to use element quality (!690)
+- Add flag to `insertsurface` process for non-conforming geometries (!700)
+- Bug fix to get two meshgen regression tests working (!700)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing
@@ -67,8 +73,16 @@ v4.4.0
 
 v4.3.5
 ------
+**Library:**
+- Fix bug in DG with hybrid meshes (!694)
+- Fix issue with parallel output (!699)
+- Fix performance issue with iterative full solver (!693)
+
 **Documentation**
 - Update build instructions in user guide for Windows (!692)
+
+**Tester**
+- Fix bug in tester when no parameters specified for test executable (!701)
 
 v4.3.4
 ------

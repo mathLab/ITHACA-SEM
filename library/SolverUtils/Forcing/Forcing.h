@@ -90,6 +90,11 @@ namespace SolverUtils
                         const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                         const unsigned int& pNumForcingFields = 0);
 
+            SOLVER_UTILS_EXPORT const Array<OneD, const Array<OneD, NekDouble> >
+                &GetForces();
+
+            SOLVER_UTILS_EXPORT Array<OneD, Array<OneD, NekDouble> > &UpdateForces();
+
         protected:
             /// Session reader
             LibUtilities::SessionReaderSharedPtr m_session;

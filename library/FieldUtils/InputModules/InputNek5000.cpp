@@ -176,7 +176,7 @@ void InputNek5000::Process(po::variables_map &vm)
     }
 
     // Major limitation: we don't read out of multiple directories
-    ASSERTL0(nDir == 1, "Number of directories must be one");
+    ASSERTL0(nDirs == 1, "Number of directories must be one");
 
     // We also don't read partial files.
     ASSERTL0(nBlocks == nTotBlocks, "Partial field output not supported");

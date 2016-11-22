@@ -2409,6 +2409,7 @@ namespace Nektar
 
                 for (j = 0; j < fielddef[i]->m_elementIDs.size(); ++j)
                 {
+
                     LibUtilities::BasisKeyVector bkeyvec;
                     id = fielddef[i]->m_elementIDs[j];
 
@@ -2786,9 +2787,7 @@ namespace Nektar
                         case LibUtilities::eHexahedron:
                         {
                             k = fielddef[i]->m_elementIDs[j];
-                            HexGeomMap::iterator hIt = m_hexGeoms.find(k);
-
-                            if(hIt == m_hexGeoms.end())
+                            if(m_hexGeoms.count(k) == 0)
                             {
                                 if(!UniOrder)
                                 {
@@ -2797,7 +2796,7 @@ namespace Nektar
                                 continue;
                             }
 
-                            geom = hIt->second;
+                            geom = m_hexGeoms[k];
 
                             for(int b = 0; b < 3; ++b)
                             {
@@ -2832,13 +2831,17 @@ namespace Nektar
                         default:
                             ASSERTL0(false,"Need to set up for pyramid and prism 3D Expansions");
                             break;
-                    }
+                        }
 
-                    for(k = 0; k < fields.size(); ++k)
-                    {
-                        expansionMap = m_expansionMapShPtrMap[fields[k]];
-                        (*expansionMap)[id] = MemoryManager<Expansion>::AllocateSharedPtr(geom, bkeyvec);
-                    }
+                        for(k = 0; k < fields.size(); ++k)
+                        {
+                            expansionMap = m_expansionMapShPtrMap.find(fields[k])->second;
+                            if((*expansionMap).find(id) != (*expansionMap).end())
+                            {
+                                (*expansionMap)[id]->m_geomShPtr = geom;
+                                (*expansionMap)[id]->m_basisKeyVector = bkeyvec;
+                            }
+                        }
                 }
             }
         }

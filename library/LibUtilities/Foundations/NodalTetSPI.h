@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FoundationsFwd.hpp
+// File NodalTetSPI.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,63 +29,50 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Forward declarations of Foundation classes and typedefs
+// Description: Nodal tetrahedron SPI points
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef FOUNDATIONS_FWD_H
-#define FOUNDATIONS_FWD_H
+#ifndef NODALTETSPI_H
+#define NODALTETSPI_H
 
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <vector>
-#include <boost/smart_ptr/shared_ptr.hpp>
-//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp> // for NekManager
-#include <LibUtilities/BasicUtils/NekManager.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
+#include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+
+class NodalTetSPI : public Points<NekDouble>
+{
+public:
+    virtual ~NodalTetSPI()
     {
+    }
 
-        class BLPoints;
-        class Basis;
-        class BasisKey;
-        class FourierPoints;
-        class FourierSingleModePoints;
-        class GaussPoints;
-        class GraphVertexObject;
-        class GraphEdgeObject;
-        class Graph;
-        class NodalTetEvenlySpaced;
-        class NodalTetElec;
-        class NodalPrismEvenlySpaced;
-        class NodalPrismElec;
-        class NodalTriElec;
-        class NodalTriEvenlySpaced;
-        class NodalTriFekete;
-        class PointsKey;
-        class PolyEPoints;
+    LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> Create(
+        const PointsKey &key);
 
-        template<typename DataT>
-        class Points;
+    NodalTetSPI(const PointsKey &key) : PointsBaseType(key)
+    {
+    }
 
+private:
+    NodalTetSPI() : PointsBaseType(NullPointsKey)
+    {
+    }
 
+    void CalculatePoints();
+    void CalculateWeights();
+    void CalculateDerivMatrix();
+};
 
-        /// Name for a vector of BasisKeys.
-        typedef std::vector< BasisKey > BasisKeyVector;
-        /// Name for an iterator over a BasisKeyVector.
-        typedef std::vector< BasisKey >::iterator BasisKeyVectorIter;
-
-
-        typedef boost::shared_ptr<Basis> BasisSharedPtr;
-        typedef std::vector< BasisSharedPtr > BasisVector;
-        typedef std::vector< BasisSharedPtr >::iterator BasisVectorIter;
-
-        typedef Points<NekDouble> PointsBaseType;
-        typedef boost::shared_ptr<Points<NekDouble> > PointsSharedPtr;
-        typedef int GraphVertexID;
-
-    } // end of namespace
+} // end of namespace
 } // end of namespace
 
-#endif // FOUNDATIONS_FWD_H
+#endif // NODALTRIELEC_H

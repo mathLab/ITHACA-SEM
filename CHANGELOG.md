@@ -25,6 +25,8 @@ v4.4.0
 - New options for load balancing (DOF or BOUNDARY) in mesh partitioner (!617)
 - Rework nodal utilities to support nodal prismatic elements (!660)
 - Update Body/Field forces at each timestep (!665)
+- Update nodalutil to include quad and hex elements and introduce SPI nodal
+  points (!696)
 - Extend ExtractDataToCoeffs to support interpolation between basis types for
   quads and hexahedra (!682)
 

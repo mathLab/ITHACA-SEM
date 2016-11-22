@@ -41,7 +41,6 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-#include <NekMeshUtils/CADSystem/OpenCascade.h>
 #include <NekMeshUtils/CADSystem/CADObj.h>
 #include <NekMeshUtils/MeshElements/Node.h>
 
@@ -51,10 +50,8 @@ namespace NekMeshUtils
 {
 
 /**
- * @brief class for CAD curves.
+ * @brief base class for CAD verticies.
  *
- * This class wraps the OpenCascade BRepAdaptor_Curve class for use with
- * Nektar++.
  */
 class CADVert : public CADObj
 {
@@ -64,22 +61,8 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADVert(int i, TopoDS_Shape in)
+    CADVert()
     {
-        gp_Trsf transform;
-        gp_Pnt ori(0.0, 0.0, 0.0);
-        transform.SetScale(ori, 1.0 / 1000.0);
-        TopLoc_Location mv(transform);
-        in.Move(mv);
-
-        m_id      = i;
-        m_occVert = BRep_Tool::Pnt(TopoDS::Vertex(in));
-
-        m_node = boost::shared_ptr<Node>(
-            new Node(i - 1, m_occVert.X(), m_occVert.Y(), m_occVert.Z()));
-        degen = false;
-
-        m_type = vert;
     }
 
     ~CADVert(){};
@@ -90,9 +73,9 @@ public:
     Array<OneD, NekDouble> GetLoc()
     {
         Array<OneD, NekDouble> out(3);
-        out[0] = m_occVert.X();
-        out[1] = m_occVert.Y();
-        out[2] = m_occVert.Z();
+        out[0] = m_node->m_x;
+        out[1] = m_node->m_y;
+        out[2] = m_node->m_z;
         return out;
     }
 
@@ -132,18 +115,21 @@ public:
         }
     }
 
-private:
-    /// OpenCascade object of the curve.
-    gp_Pnt m_occVert;
+protected:
     /// mesh convert object of vert
     NodeSharedPtr m_node;
     /// degen marker
     bool degen;
-    // degen surface
+    /// degen surface
     int degensurf;
 };
 
 typedef boost::shared_ptr<CADVert> CADVertSharedPtr;
+
+typedef LibUtilities::NekFactory<std::string, CADVert> CADVertFactory;
+
+CADVertFactory& GetCADVertFactory();
+
 }
 }
 

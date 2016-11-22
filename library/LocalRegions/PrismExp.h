@@ -140,7 +140,8 @@ namespace Nektar
                 const NekDouble *data,
                 const std::vector<unsigned int > &nummodes,
                 const int mode_offset,
-                NekDouble * coeffs);
+                NekDouble * coeffs,
+                std::vector<LibUtilities::BasisType> &fromType);
 
             LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysMap( 
                  const int  face,

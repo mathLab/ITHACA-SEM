@@ -66,7 +66,7 @@ public:
     }
 
 private:
-    Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e);
+    Array<OneD, NekDouble> GetQ(LocalRegions::ExpansionSharedPtr e, bool s);
 };
 }
 }

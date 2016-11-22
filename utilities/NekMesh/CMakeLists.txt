@@ -19,6 +19,7 @@ SET(NekMeshHeaders
     ProcessModules/ProcessExtractSurf.h
     ProcessModules/ProcessExtractTetPrismInterface.h
     ProcessModules/ProcessJac.h
+    ProcessModules/ProcessLinkCheck.h
     ProcessModules/ProcessLinear.h
     ProcessModules/ProcessPerAlign.h
     ProcessModules/ProcessScalar.h
@@ -49,6 +50,7 @@ SET(NekMeshSources
     ProcessModules/ProcessExtractSurf.cpp
     ProcessModules/ProcessExtractTetPrismInterface.cpp
     ProcessModules/ProcessJac.cpp
+    ProcessModules/ProcessLinkCheck.cpp
     ProcessModules/ProcessLinear.cpp
     ProcessModules/ProcessPerAlign.cpp
     ProcessModules/ProcessScalar.cpp
@@ -135,5 +137,5 @@ ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)
 IF(NEKTAR_USE_MESHGEN)
     ADD_NEKTAR_TEST        (MeshGen/cylinder)
     ADD_NEKTAR_TEST        (MeshGen/sphere)
-    ADD_NEKTAR_TEST_LENGTHY(MeshGen/predator)
+#    ADD_NEKTAR_TEST_LENGTHY(MeshGen/predator) disabled for now
 ENDIF()

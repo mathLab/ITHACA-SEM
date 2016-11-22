@@ -42,7 +42,6 @@ using namespace std;
 #include <boost/algorithm/string.hpp>
 
 #include "InputNek5000.h"
-using namespace Nektar;
 
 namespace Nektar
 {
@@ -55,6 +54,9 @@ ModuleKey InputNek5000::m_className[1] = {
         "Reads Nek5000 field file.")
 };
 
+/**
+ * @brief Swap endian ordering of the input variable.
+ */
 template <typename T>
 void swap_endian(T &u)
 {
@@ -67,7 +69,9 @@ void swap_endian(T &u)
     source.u = u;
 
     for (size_t k = 0; k < sizeof(T); k++)
+    {
         dest.u8[k] = source.u8[sizeof(T) - k - 1];
+    }
 
     u = dest.u;
 }
@@ -89,7 +93,15 @@ InputNek5000::~InputNek5000()
 }
 
 /**
+ * @brief Process Nek5000 input file.
  *
+ * This routine reads a binary-format Nek5000 field file, loads the data into
+ * memory and populates the field definitions to match the data format. Nek5000
+ * is a classic nodal-Lagrangian spectral element code at a single polynomial
+ * order, meaning that the field data are set up according to this structure.
+ *
+ * This module is adapted from the VisIt visualisation software, which supports
+ * a number of Nek5000 inputs.
  */
 void InputNek5000::Process(po::variables_map &vm)
 {
@@ -108,15 +120,11 @@ void InputNek5000::Process(po::variables_map &vm)
     vector<char> data(132);
     file.read(&data[0], 132);
 
-    // Check header
+    // Check header: should be the four characters #std
     string check(&data[0], 4);
     string header(&data[4], 128);
 
-    if (check != "#std")
-    {
-        cerr << "Unable to read file" << endl;
-        abort();
-    }
+    ASSERTL0(check == "#std", "Unable to read file");
 
     // Determine whether we need to byte-swap data: 4-byte float at byte 80
     // should be 6.54321.
@@ -131,11 +139,8 @@ void InputNek5000::Process(po::variables_map &vm)
     else
     {
         swap_endian(test);
-        if (test < 6.5 || test > 6.6)
-        {
-            cerr << "Unable to determine endian-ness of file" << endl;
-            abort();
-        }
+        ASSERTL0(test > 6.5 && test < 6.6,
+                 "Unable to determine endian-ness of input file");
         byteSwap = true;
     }
 
@@ -145,6 +150,7 @@ void InputNek5000::Process(po::variables_map &vm)
     int nBytes, nBlocksXYZ[3], nBlocks, nTotBlocks, dir, nDirs, nCycle, nDim;
     NekDouble time;
 
+    // Read header information (this is written as ASCII)
     string remain;
     ss >> nBytes >> nBlocksXYZ[0] >> nBlocksXYZ[1] >> nBlocksXYZ[2]
        >> nBlocks >> nTotBlocks >> time >> nCycle >> dir >> nDirs >> remain;
@@ -152,6 +158,7 @@ void InputNek5000::Process(po::variables_map &vm)
 
     nDim = nBlocksXYZ[2] == 1 ? 2 : 3;
 
+    // Print some basic information for input if in verbose mode.
     if (m_f->m_verbose)
     {
         cout << "Found header information:" << endl;
@@ -169,24 +176,13 @@ void InputNek5000::Process(po::variables_map &vm)
     }
 
     // Major limitation: we don't read out of multiple directories
-    if (nDirs != 1)
-    {
-        cout << "Number of directories must be one" << endl;
-        abort();
-    }
+    ASSERTL0(nDir == 1, "Number of directories must be one");
 
-    if (nBlocks != nTotBlocks)
-    {
-        cout << "Partial field output not supported" << endl;
-        abort();
-    }
+    // We also don't read partial files.
+    ASSERTL0(nBlocks == nTotBlocks, "Partial field output not supported");
 
     // We don't support non-double data
-    if (nBytes != 8)
-    {
-        cout << "Data file must contain double-precision data" << endl;
-        abort();
-    }
+    ASSERTL0(nBytes == 8, "Data file must contain double-precision data");
 
     // Set up a field definition
     LibUtilities::FieldDefinitionsSharedPtr fielddef = MemoryManager<

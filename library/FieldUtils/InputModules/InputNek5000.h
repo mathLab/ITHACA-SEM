@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: FLD converter.
+//  Description: Reads a Nek5000 checkpoint file.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_INPUTFLD
-#define FIELDUTILS_INPUTFLD
+#ifndef FIELDUTILS_INPUTNEK5000
+#define FIELDUTILS_INPUTNEK5000
 
 #include "../Module.h"
 

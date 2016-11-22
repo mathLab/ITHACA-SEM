@@ -49,12 +49,14 @@ v4.4.0
 - Improvements to mesh linearisation module (!659)
 - Add support for Gmsh high-order output (!679)
 - Add option to `linearise` module to linearise only prisms (!688)
+- Add reader for Nek5000 mesh files (!680)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing
   during simulations (!589)
 - Add module to stretch homogeneous direction (!609)
 - Add module to add composite ID of elements as a field (!674)
+- Add reader for Nek5000 field files (!680)
 
 v4.3.5
 ------

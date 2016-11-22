@@ -55,7 +55,9 @@ enum TecplotZoneType{
     eFEPolyhedron
 };
 
-/// Converter from fld to dat.
+/**
+ * @brief Tecplot output class.
+ */
 class OutputTecplot : public OutputModule
 {
 public:
@@ -69,20 +71,30 @@ public:
     OutputTecplot(FieldSharedPtr f);
     virtual ~OutputTecplot();
 
-    /// Write fld to output file.
     virtual void Process(po::variables_map &vm);
 
 protected:
+    /// True if writing binary field output
     bool            m_binary;
-    bool            m_oneOutputFile; /// True if writing a single output file
+    /// True if writing a single output file
+    bool            m_oneOutputFile;
+    /// Tecplot zone type of output
     TecplotZoneType m_zoneType;
+    /// Number of points per block in Tecplot file
     vector<int>     m_numPoints;
+    /// Number of blocks in Tecplot file
     int             m_numBlocks;
+    /// Coordinate dimension of output
     int             m_coordim;
+    /// Total number of connectivity entries
     int             m_totConn;
+    /// Connectivty for each block: one per element
     vector<Array<OneD, int> > m_conn;
+    /// Each rank's field sizes
     Array<OneD, int> m_rankFieldSizes;
+    /// Each rank's connectivity sizes
     Array<OneD, int> m_rankConnSizes;
+    /// Field data to output
     Array<OneD, Array<OneD, NekDouble> > m_fields;
 
     virtual void WriteTecplotHeader(std::ofstream &outfile,
@@ -93,12 +105,16 @@ protected:
     int GetNumTecplotBlocks();
     void CalculateConnectivity();
 
+    /// Returns this module's name.
     virtual std::string GetModuleName()
     {
         return "OutputTecplot";
     }
 };
 
+/**
+ * @brief Tecplot output class, specifically for binary field output.
+ */
 class OutputTecplotBinary : public OutputTecplot
 {
 public:

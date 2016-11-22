@@ -169,12 +169,11 @@ void OutputTecplot::Process(po::variables_map &vm)
 
     if(m_config["writemultiplefiles"].as<bool>())
     {
-        m_oneOutputFile = false; 
+        m_oneOutputFile = false;
     }
     else
     {
-        m_oneOutputFile = (nprocs > 1)? true:false;
-        //m_binary && m_f->m_comm->GetType() == "Parallel MPI";
+        m_oneOutputFile = nprocs > 1;
     }
 
     // Amend for parallel output if required
@@ -450,9 +449,10 @@ void OutputTecplot::Process(po::variables_map &vm)
 }
 
 /**
- * Write Tecplot Files Header
- * @param   outfile Output file name.
- * @param   var                 variables names
+ * @brief Write Tecplot files header
+ *
+ * @param   outfile   Output file name
+ * @param   var       Variables names
  */
 void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
                                        std::vector<std::string> &var)
@@ -467,6 +467,12 @@ void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
     outfile << std::endl << std::endl;
 }
 
+/**
+ * @brief Write Tecplot files header in binary format
+ *
+ * @param   outfile   Output file name
+ * @param   var       Variables names
+ */
 void OutputTecplotBinary::WriteTecplotHeader(std::ofstream &outfile,
                                              std::vector<std::string> &var)
 {
@@ -499,7 +505,8 @@ void OutputTecplotBinary::WriteTecplotHeader(std::ofstream &outfile,
 
 
 /**
- * Write Tecplot Files Zone
+ * Write Tecplot zone output in ASCII
+ *
  * @param   outfile    Output file name.
  * @param   expansion  Expansion that is considered
  */
@@ -514,13 +521,13 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
             int nPoints = m_oneOutputFile ?
                 Vmath::Vsum(m_f->m_comm->GetSize(), m_rankFieldSizes, 1) :
                 m_fields[0].num_elements();
-            
+
             outfile << "Zone, N=" << nPoints << ", E="
                     << m_numBlocks << ", F=FEBlock, ET="
                     << TecplotZoneTypeMap[m_zoneType] << std::endl;
         }
-        
-        
+
+
         if (m_oneOutputFile && m_f->m_comm->GetRank() == 0)
         {
             for (int j = 0; j < m_fields.num_elements(); ++j)
@@ -538,7 +545,7 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
                 {
                     Array<OneD, NekDouble> tmp(m_rankFieldSizes[n]);
                     m_f->m_comm->Recv(n, tmp);
-                    
+
                     for (int i = 0; i < m_rankFieldSizes[n]; ++i)
                     {
                         if ((!(i % 1000)) && i)
@@ -599,6 +606,13 @@ void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
     }
 }
 
+/**
+ * @brief Write either double-precision or single-precision output of field
+ * data.
+ *
+ * @param   outfile    Output file name.
+ * @param   expansion  Expansion that is considered
+ */
 void OutputTecplotBinary::WriteDoubleOrFloat(std::ofstream          &outfile,
                                              Array<OneD, NekDouble> &data)
 {
@@ -620,6 +634,12 @@ void OutputTecplotBinary::WriteDoubleOrFloat(std::ofstream          &outfile,
     }
 }
 
+/**
+ * Write Tecplot zone output in binary
+ *
+ * @param   outfile    Output file name.
+ * @param   expansion  Expansion that is considered
+ */
 void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
 {
     Array<OneD, NekDouble> fieldMin(m_fields.num_elements());
@@ -748,6 +768,11 @@ void OutputTecplotBinary::WriteTecplotZone(std::ofstream &outfile)
     }
 }
 
+/**
+ * @brief Write Tecplot connectivity information (ASCII)
+ *
+ * @param   outfile    Output file
+ */
 void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
 {
     // Ordered data have no connectivity information.
@@ -778,7 +803,7 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
             {
                 outfile << m_conn[i][j] + 1 << " ";
             }
-            outfile <<  endl;
+            outfile << endl;
         }
 
         if (m_oneOutputFile && m_f->m_comm->GetRank() == 0)
@@ -846,6 +871,11 @@ void OutputTecplotBinary::WriteTecplotConnectivity(std::ofstream &outfile)
     }
 }
 
+/**
+ * @brief Calculate number of Tecplot blocks.
+ *
+ * @param   outfile    Output file
+ */
 int OutputTecplot::GetNumTecplotBlocks()
 {
     int returnval = 0;
@@ -878,6 +908,11 @@ int OutputTecplot::GetNumTecplotBlocks()
     return returnval;
 }
 
+/**
+ * @brief Calculate connectivity information for each expansion dimension.
+ *
+ * @param   outfile    Output file
+ */
 void OutputTecplot::CalculateConnectivity()
 {
     int i, j, k, l;

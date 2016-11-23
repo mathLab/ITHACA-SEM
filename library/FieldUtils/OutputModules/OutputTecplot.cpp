@@ -41,6 +41,8 @@ using namespace std;
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 
+#include <boost/cstdint.hpp>
+
 #include "OutputTecplot.h"
 
 namespace Nektar

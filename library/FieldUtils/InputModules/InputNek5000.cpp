@@ -40,6 +40,7 @@
 using namespace std;
 
 #include <boost/algorithm/string.hpp>
+#include <boost/cstdint.hpp>
 
 #include "InputNek5000.h"
 

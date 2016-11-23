@@ -412,7 +412,7 @@ namespace Nektar
                     {
                         m_fields[0]->ExtractElmtToBndPhys(n,
                                         m_houtflow->
-                                        m_outflowVel[cnt][i][m_intSteps-1],
+                                        m_outflowVel[cnt][i][0],
                                         m_houtflow->
                                         m_outflowVelBnd[cnt][i][m_intSteps-1]);
 

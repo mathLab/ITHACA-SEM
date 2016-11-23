@@ -48,15 +48,13 @@ namespace Utilities
 struct DerivUtil
 {
     NekMatrix<NekDouble> VdmD[3];
-    NekMatrix<NekDouble> VdmDL[3]; //deriv matrix without interp
+    NekMatrix<NekDouble> VdmDStd[3]; //deriv matrix without interp
     NekVector<NekDouble> quadW;
 
     Array<OneD, Array<OneD, NekDouble> > basisDeriv;
 
-    int ptsHigh;
-    int ptsLow;
-
-    Array<OneD, NekDouble> ptx, pty, ptz, ptxLow, ptyLow, ptzLow;
+    int pts;
+    int ptsStd;
 };
 typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
 

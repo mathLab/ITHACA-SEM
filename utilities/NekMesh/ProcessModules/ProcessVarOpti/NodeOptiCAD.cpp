@@ -167,7 +167,7 @@ void NodeOpti2D3D::Optimise()
         Array<OneD, NekDouble> bd = surf->GetBounds();
 
         Array<OneD, NekDouble> sk(2), dk(2);
-        NekDouble lhs, val;
+        NekDouble val;
 
         // Calculate minimum eigenvalue
         MinEigen<2>(val, dk);
@@ -183,7 +183,6 @@ void NodeOpti2D3D::Optimise()
         sk[1] = -1.0/(G[2]*G[4]-G[3]*G[3])*(G[2]*G[1] - G[3]*G[0]);
 
         bool found  = false;
-        NekDouble skmag = sqrt(sk[0]*sk[0] + sk[1]*sk[1]);
         NekDouble pg = (G[0]*sk[0]+G[1]*sk[1]);
 
         //normal gradient line Search

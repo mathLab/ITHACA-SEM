@@ -69,7 +69,7 @@ public:
     }
 
     std::vector<std::vector<NekDouble *> > nodes;
-    std::vector<Array<OneD, NekDouble> > maps, mapsLow;
+    std::vector<Array<OneD, NekDouble> > maps, mapsStd;
     NekDouble minJac;
     NekDouble scaledJac;
 
@@ -94,10 +94,10 @@ private:
     int m_dim;
     int m_mode;
     std::map<int,int> m_idmap;
-    std::vector<std::vector<std::vector<Array<OneD, NekDouble> > > > mapder;
+    std::vector<std::vector<std::vector<Array<OneD, NekDouble> > > > m_mapder;
 
-    DerivUtilSharedPtr derivUtil;
-    ResidualSharedPtr res;
+    DerivUtilSharedPtr m_derivUtil;
+    ResidualSharedPtr m_res;
 };
 typedef boost::shared_ptr<ElUtil> ElUtilSharedPtr;
 

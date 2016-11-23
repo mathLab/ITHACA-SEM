@@ -96,7 +96,7 @@ void NodeOpti2D2D::Optimise()
         NekDouble yc       = node->m_y;
 
         Array<OneD, NekDouble> sk(2), dk(2);
-        NekDouble lhs, val;
+        NekDouble val;
 
         // Calculate minimum eigenvalue
         MinEigen<2>(val, dk);
@@ -197,7 +197,7 @@ void NodeOpti3D3D::Optimise()
         NekDouble zc       = node->m_z;
 
         Array<OneD, NekDouble> sk(3), dk(3);
-        NekDouble lhs, val;
+        NekDouble val;
 
         // Calculate minimum eigenvalue
         MinEigen<3>(val, dk);
@@ -230,8 +230,6 @@ void NodeOpti3D3D::Optimise()
         sk[2] /= det * -1.0;
 
         bool found  = false;
-
-        NekDouble skmag = sqrt(sk[0]*sk[0] + sk[1]*sk[1] + sk[2]*sk[2]);
 
         NekDouble pg = (G[0]*sk[0]+G[1]*sk[1]+G[2]*sk[2]);
 

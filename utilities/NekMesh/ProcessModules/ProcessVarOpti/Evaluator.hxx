@@ -217,8 +217,6 @@ inline NekDouble CalcIdealJac(int elmt,
         }
     }
 
-    //this matrix multiplier has been checked MT 14/9
-
     return Determinant(jacIdeal);
 }
 
@@ -242,24 +240,24 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient, bool hess
     for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
     {
         const int nElmt  = typeIt->second.size();
-        const int totpts = derivUtil[typeIt->first]->ptsLow * nElmt;
+        const int totpts = derivUtil[typeIt->first]->ptsStd * nElmt;
         NekDouble X[DIM * totpts];
 
         // Store x/y components of each element sequentially in memory
         for (int i = 0, cnt = 0; i < nElmt; ++i)
         {
-            for (int j = 0; j < derivUtil[typeIt->first]->ptsLow; ++j)
+            for (int j = 0; j < derivUtil[typeIt->first]->ptsStd; ++j)
             {
                 for (int d = 0; d < DIM; ++d)
                 {
-                    X[cnt + d*derivUtil[typeIt->first]->ptsLow + j] =
+                    X[cnt + d*derivUtil[typeIt->first]->ptsStd + j] =
                                         *(typeIt->second[i]->nodes[j][d]);
                 }
             }
 
             //ASSERTL0(typeIt->second[i]->GetEl()->GetShapeType() == typeIt->first,"shape mismatch");
 
-            cnt += DIM*derivUtil[typeIt->first]->ptsLow;
+            cnt += DIM*derivUtil[typeIt->first]->ptsStd;
         }
 
         // Storage for derivatives, ordered by:
@@ -270,15 +268,15 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient, bool hess
         //DerivArray deriv(boost::extents[DIM][nElmt][DIM][derivUtil[typeIt->first]->ptsHigh]);
         derivs.insert(std::make_pair(
                           typeIt->first,
-                          DerivArray(boost::extents[DIM][nElmt][DIM][derivUtil[typeIt->first]->ptsHigh])));
+                          DerivArray(boost::extents[DIM][nElmt][DIM][derivUtil[typeIt->first]->pts])));
 
         // Calculate x- and y-gradients
         for (int d = 0; d < DIM; ++d)
         {
             Blas::Dgemm(
-                'N', 'N', derivUtil[typeIt->first]->ptsHigh, DIM * nElmt, derivUtil[typeIt->first]->ptsLow, 1.0,
-                derivUtil[typeIt->first]->VdmD[d].GetRawPtr(), derivUtil[typeIt->first]->ptsHigh, X,
-                derivUtil[typeIt->first]->ptsLow, 0.0, &derivs[typeIt->first][d][0][0][0], derivUtil[typeIt->first]->ptsHigh);
+                'N', 'N', derivUtil[typeIt->first]->pts, DIM * nElmt, derivUtil[typeIt->first]->ptsStd, 1.0,
+                derivUtil[typeIt->first]->VdmD[d].GetRawPtr(), derivUtil[typeIt->first]->pts, X,
+                derivUtil[typeIt->first]->ptsStd, 0.0, &derivs[typeIt->first][d][0][0][0], derivUtil[typeIt->first]->pts);
         }
 
         //derivs[typeIt->first] = deriv;
@@ -305,7 +303,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient, bool hess
             {
                 for (int i = 0; i < typeIt->second.size(); ++i)
                 {
-                    for(int k = 0; k < derivUtil[typeIt->first]->ptsHigh; ++k)
+                    for(int k = 0; k < derivUtil[typeIt->first]->pts; ++k)
                     {
                         jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
                         minJacNew = min(minJacNew,jacDet);
@@ -452,7 +450,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient, bool hess
             {
                 for (int i = 0; i < typeIt->second.size(); ++i)
                 {
-                    for(int k = 0; k < derivUtil[typeIt->first]->ptsHigh; ++k)
+                    for(int k = 0; k < derivUtil[typeIt->first]->pts; ++k)
                     {
                         jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
                         minJacNew = min(minJacNew,jacDet);
@@ -608,7 +606,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient, bool hess
             {
                 for (int i = 0; i < typeIt->second.size(); ++i)
                 {
-                    for(int k = 0; k < derivUtil[typeIt->first]->ptsHigh; ++k)
+                    for(int k = 0; k < derivUtil[typeIt->first]->pts; ++k)
                     {
                         jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
                         minJacNew = min(minJacNew,jacDet);
@@ -738,7 +736,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient, bool hess
             {
                 for (int i = 0; i < typeIt->second.size(); ++i)
                 {
-                    for(int k = 0; k < derivUtil[typeIt->first]->ptsHigh; ++k)
+                    for(int k = 0; k < derivUtil[typeIt->first]->pts; ++k)
                     {
                         jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
                         minJacNew = min(minJacNew,jacDet);

@@ -69,7 +69,7 @@ public:
     }
 
     std::vector<std::vector<NekDouble *> > nodes;
-    std::vector<Array<OneD, NekDouble> > maps;
+    std::vector<Array<OneD, NekDouble> > maps, mapsLow;
     NekDouble minJac;
     NekDouble scaledJac;
 
@@ -88,7 +88,7 @@ public:
 
 private:
 
-    std::vector<Array<OneD, NekDouble> > MappingIdealToRef();
+    void MappingIdealToRef();
 
     ElementSharedPtr m_el;
     int m_dim;

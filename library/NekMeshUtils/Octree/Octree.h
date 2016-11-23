@@ -57,7 +57,7 @@ public:
 
     Octree(MeshSharedPtr m) : m_mesh(m)
     {
-
+        m_udsfileset = false;
     }
 
     Octree()

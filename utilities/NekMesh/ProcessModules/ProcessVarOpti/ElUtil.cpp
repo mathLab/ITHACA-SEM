@@ -75,13 +75,11 @@ ElUtil::ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d,
 
         m_idmap[ns[i]->m_id] = i;
     }
-    maps = MappingIdealToRef();
+    MappingIdealToRef();
 }
 
-vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
+void ElUtil::MappingIdealToRef()
 {
-    vector<Array<OneD, NekDouble> > ret;
-
     LibUtilities::ShapeType st = m_el->GetConf().m_e;
 
     if(m_el->GetConf().m_e == LibUtilities::eQuadrilateral)
@@ -131,7 +129,7 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             r[6] = 0.0;
             r[7] = 0.0;
             r[8] = 0.0;
-            ret.push_back(r);
+            maps.push_back(r);
         }
     }
     else if(m_el->GetConf().m_e == LibUtilities::eTriangle)
@@ -164,7 +162,7 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             r[6] = 0.0;
             r[7] = 0.0;
             r[8] = 0.0;
-            ret.push_back(r);
+            maps.push_back(r);
         }
     }
     else if(m_el->GetConf().m_e == LibUtilities::eTetrahedron)
@@ -206,7 +204,7 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             r[6] = J(0,2);
             r[7] = J(1,2);
             r[8] = J(2,2);
-            ret.push_back(r);
+            maps.push_back(r);
         }
     }
     else if(m_el->GetConf().m_e == LibUtilities::ePrism)
@@ -273,7 +271,61 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             r[6] = J(0,2);
             r[7] = J(1,2);
             r[8] = J(2,2);
-            ret.push_back(r);
+            maps.push_back(r);
+        }
+        for (int i = 0; i < derivUtil->ptsLow; ++i)
+        {
+            cout << derivUtil->ptxLow[i] << " " << derivUtil->ptyLow[i] << " " << derivUtil->ptzLow[i] << endl;
+            NekDouble a2  = 0.5 * (1 + derivUtil->ptxLow[i]);
+            NekDouble b1  = 0.5 * (1 - derivUtil->ptyLow[i]);
+            NekDouble b2  = 0.5 * (1 + derivUtil->ptyLow[i]);
+            NekDouble c2  = 0.5 * (1 + derivUtil->ptzLow[i]);
+            NekDouble d   = 0.5 * (derivUtil->ptxLow[i] + derivUtil->ptzLow[i]);
+
+            DNekMat J(3, 3, 1.0, eFULL);
+
+            J(0,0) = - 0.5 * b1 * xyz[0][0] + 0.5 * b1 * xyz[1][0]
+                     + 0.5 * b2 * xyz[2][0] - 0.5 * b2 * xyz[3][0];
+            J(1,0) = - 0.5 * b1 * xyz[0][1] + 0.5 * b1 * xyz[1][1]
+                     + 0.5 * b2 * xyz[2][1] - 0.5 * b2 * xyz[3][1];
+            J(2,0) = - 0.5 * b1 * xyz[0][2] + 0.5 * b1 * xyz[1][2]
+                     + 0.5 * b2 * xyz[2][2] - 0.5 * b2 * xyz[3][2];
+
+            J(0,1) =   0.5 * d  * xyz[0][0] - 0.5 * a2 * xyz[1][0]
+                     + 0.5 * a2 * xyz[2][0] - 0.5 * d  * xyz[3][0]
+                     - 0.5 * c2 * xyz[4][0] + 0.5 * c2 * xyz[5][0];
+            J(1,1) =   0.5 * d  * xyz[0][1] - 0.5 * a2 * xyz[1][1]
+                     + 0.5 * a2 * xyz[2][1] - 0.5 * d  * xyz[3][1]
+                     - 0.5 * c2 * xyz[4][1] + 0.5 * c2 * xyz[5][1];
+            J(2,1) =   0.5 * d  * xyz[0][2] - 0.5 * a2 * xyz[1][2]
+                     + 0.5 * a2 * xyz[2][2] - 0.5 * d  * xyz[3][2]
+                     - 0.5 * c2 * xyz[4][2] + 0.5 * c2 * xyz[5][2];
+
+            J(0,2) = - 0.5 * b1 * xyz[0][0] - 0.5 * b2 * xyz[3][0]
+                     + 0.5 * b1 * xyz[4][0] + 0.5 * b2 * xyz[5][0];
+            J(1,2) = - 0.5 * b1 * xyz[0][1] - 0.5 * b2 * xyz[3][1]
+                     + 0.5 * b1 * xyz[4][1] + 0.5 * b2 * xyz[5][1];
+            J(2,2) = - 0.5 * b1 * xyz[0][2] - 0.5 * b2 * xyz[3][2]
+                     + 0.5 * b1 * xyz[4][2] + 0.5 * b2 * xyz[5][2];
+
+            J.Invert();
+
+            Array<OneD, NekDouble> r(10,0.0); //store det in 10th entry
+
+            r[9] = 1.0/(J(0,0)*(J(1,1)*J(2,2)-J(2,1)*J(1,2))
+                       -J(0,1)*(J(1,0)*J(2,2)-J(2,0)*J(1,2))
+                       +J(0,2)*(J(1,0)*J(2,1)-J(2,0)*J(1,1)));
+
+            r[0] = J(0,0);
+            r[1] = J(1,0);
+            r[2] = J(2,0);
+            r[3] = J(0,1);
+            r[4] = J(1,1);
+            r[5] = J(2,1);
+            r[6] = J(0,2);
+            r[7] = J(1,2);
+            r[8] = J(2,2);
+            mapsLow.push_back(r);
         }
 
     }
@@ -357,8 +409,9 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
             r[6] = J(0,2);
             r[7] = J(1,2);
             r[8] = J(2,2);
-            ret.push_back(r);
+            maps.push_back(r);
         }
+    
 
         exit(-1);
     }
@@ -366,8 +419,7 @@ vector<Array<OneD, NekDouble> > ElUtil::MappingIdealToRef()
     {
         ASSERTL0(false,"not coded");
     }
-
-    return ret;
+    
 }
 
 void ElUtil::Evaluate()
@@ -451,20 +503,26 @@ void ElUtil::Evaluate()
             
             mx1 = max(mx1,maps[j][9]);
             mn1 = min(mn1,maps[j][9]);
+            
+            cout << jacDet << " " << mapsLow[j][9] << endl;
         }
     }
+    
+    exit(-1);
 
     mtx2.lock();
     if(mn2 < 0)
     {
         res->startInv++;
     }
-    res->worstJac = min(res->worstJac,(mn2 / mx2) / (mn1 / mx1));
+    res->worstJac = min(res->worstJac,(mn2 / mx2));
     mtx2.unlock();
 
     //maps = MappingIdealToRef();
 
-    scaledJac = (mn2/mx2) / (mn1 / mx1);
+    scaledJac = (mn2/mx2) ;
+    
+   // cout << scaledJac << " " << mn1/mx1 << endl;
 }
 
 void ElUtil::InitialMinJac()

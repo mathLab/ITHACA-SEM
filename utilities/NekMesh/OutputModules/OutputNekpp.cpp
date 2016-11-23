@@ -70,7 +70,6 @@ OutputNekpp::OutputNekpp(MeshSharedPtr m) : OutputModule(m)
         true, "0", "Attempt to load resulting mesh and create meshgraph.");
     m_config["uncompress"] = ConfigOption(true, "0", "Uncompress xml sections");
     m_config["order"] = ConfigOption(false, "-1", "Enforce a polynomial order");
-    m_config["nocad"] = ConfigOption(false,"","Don't write CAD info");
 }
 
 OutputNekpp::~OutputNekpp()
@@ -125,11 +124,6 @@ void OutputNekpp::Process()
     WriteXmlEdges(geomTag);
     WriteXmlFaces(geomTag);
     WriteXmlElements(geomTag);
-    if(m_mesh->m_hasCAD && !m_config["nocad"].beenSet)
-    {
-        WriteXmlCADId(geomTag);
-        WriteXmlCAD(geomTag);
-    }
     WriteXmlCurves(geomTag);
     WriteXmlComposites(geomTag);
     WriteXmlDomain(geomTag);
@@ -1000,165 +994,6 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
         }
     }
     pRoot->LinkEndChild(curved);
-}
-
-void OutputNekpp::WriteXmlCAD(TiXmlElement *pRoot)
-{
-    int vertcnt = 0;
-    int edgecnt = 0;
-    int facecnt = 0;
-
-    TiXmlElement *cad = new TiXmlElement("CAD");
-
-    {
-        std::set<NodeSharedPtr>::iterator it;
-
-        std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
-                                    m_mesh->m_vertexSet.end());
-
-        for (it = tmp.begin(); it != tmp.end(); ++it)
-        {
-            if((*it)->GetNumCadCurve() > 0 || (*it)->GetNumCADSurf() > 0)
-            {
-                TiXmlElement *v = new TiXmlElement("V");
-                v->SetAttribute("ID", vertcnt++);
-                v->SetAttribute("VERTID", (*it)->m_id);
-
-                if((*it)->GetNumCadCurve() > 0)
-                {
-                    vector<pair<int,string> > info = (*it)->GetCADCurveInfoVector();
-                    for(int i = 0; i < info.size(); i++)
-                    {
-                        TiXmlElement *c = new TiXmlElement("C");
-                        c->SetAttribute("CADID", info[i].first);
-                        TiXmlText *t = new TiXmlText(info[i].second);
-                        c->LinkEndChild(t);
-                        v->LinkEndChild(c);
-                    }
-                }
-
-                if((*it)->GetNumCADSurf() > 0)
-                {
-                    vector<pair<int,string> > info = (*it)->GetCADSurfInfoVector();
-                    for(int i = 0; i < info.size(); i++)
-                    {
-                        TiXmlElement *c = new TiXmlElement("S");
-                        c->SetAttribute("CADID", info[i].first);
-                        TiXmlText *t = new TiXmlText(info[i].second);
-                        c->LinkEndChild(t);
-                        v->LinkEndChild(c);
-                    }
-                }
-
-                cad->LinkEndChild(v);
-            }
-        }
-    }
-
-    {
-        EdgeSet::iterator it;
-        for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end();
-             ++it)
-        {
-            if((*it)->m_edgeNodes.size() == 0)
-            {
-                continue;
-            }
-
-            if((*it)->m_parentCAD)
-            {
-                TiXmlElement *e = new TiXmlElement("E");
-                e->SetAttribute("ID", edgecnt++);
-                e->SetAttribute("EDGEID", (*it)->m_id);
-                e->SetAttribute("ONCURVE",
-                    ((*it)->m_parentCAD->GetType() == CADType::eCurve ?
-                                (*it)->m_parentCAD->GetId() : 0));
-                for(int j = 0; j < (*it)->m_edgeNodes.size(); j++)
-                {
-                    TiXmlElement *n = new TiXmlElement("N");
-                    n->SetAttribute("NODEID", j);
-
-                    if((*it)->m_edgeNodes[j]->GetNumCadCurve() > 0)
-                    {
-                        vector<pair<int,string> > info = (*it)->m_edgeNodes[j]->GetCADCurveInfoVector();
-                        for(int i = 0; i < info.size(); i++)
-                        {
-                            TiXmlElement *c = new TiXmlElement("C");
-                            c->SetAttribute("CADID", info[i].first);
-                            TiXmlText *t = new TiXmlText(info[i].second);
-                            c->LinkEndChild(t);
-                            n->LinkEndChild(c);
-                        }
-                    }
-
-                    if((*it)->m_edgeNodes[j]->GetNumCADSurf() > 0)
-                    {
-                        vector<pair<int,string> > info = (*it)->m_edgeNodes[j]->GetCADSurfInfoVector();
-                        for(int i = 0; i < info.size(); i++)
-                        {
-                            TiXmlElement *c = new TiXmlElement("S");
-                            c->SetAttribute("CADID", info[i].first);
-                            TiXmlText *t = new TiXmlText(info[i].second);
-                            c->LinkEndChild(t);
-                            n->LinkEndChild(c);
-                        }
-                    }
-                    e->LinkEndChild(n);
-                }
-                cad->LinkEndChild(e);
-            }
-        }
-    }
-
-    {
-        FaceSet::iterator it;
-        for (it = m_mesh->m_faceSet.begin(); it != m_mesh->m_faceSet.end();
-             ++it)
-        {
-            if((*it)->m_faceNodes.size() == 0)
-            {
-                continue;
-            }
-
-            if((*it)->m_parentCAD)
-            {
-                TiXmlElement *f = new TiXmlElement("F");
-                f->SetAttribute("ID", facecnt++);
-                f->SetAttribute("FACEID", (*it)->m_id);
-                f->SetAttribute("ONSURF", (*it)->m_parentCAD->GetId());
-
-                for(int j = 0; j < (*it)->m_faceNodes.size(); j++)
-                {
-                    TiXmlElement *n = new TiXmlElement("N");
-                    n->SetAttribute("NODEID", j);
-
-                    vector<pair<int,string> > info = (*it)->m_faceNodes[j]->GetCADSurfInfoVector();
-                    for(int i = 0; i < info.size(); i++)
-                    {
-                        TiXmlElement *s = new TiXmlElement("S");
-                        s->SetAttribute("CADID", info[i].first);
-                        TiXmlText *t = new TiXmlText(info[i].second);
-                        s->LinkEndChild(t);
-                        n->LinkEndChild(s);
-                    }
-                    f->LinkEndChild(n);
-                }
-                cad->LinkEndChild(f);
-            }
-        }
-    }
-
-    if (cad->FirstChild())
-    {
-        pRoot->LinkEndChild(cad);
-    }
-}
-
-void OutputNekpp::WriteXmlCADId(TiXmlElement *pRoot)
-{
-    TiXmlElement *cadTag = new TiXmlElement("CADID");
-    cadTag->SetAttribute("NAME", m_mesh->m_CADId);
-    pRoot->LinkEndChild(cadTag);
 }
 
 void OutputNekpp::WriteXmlComposites(TiXmlElement *pRoot)

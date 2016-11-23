@@ -249,6 +249,8 @@ void ProcessVarOpti::Process()
         }
         histFile.close();
     }
+    
+    exit(-1);
 
     cout << scientific << endl;
     cout << "N elements:\t\t" << m_mesh->m_element[m_mesh->m_expDim].size() - elLock.size() << endl

@@ -56,7 +56,7 @@ ProcessLoadOctree::ProcessLoadOctree(MeshSharedPtr m) : ProcessModule(m)
     m_config["eps"] =
         ConfigOption(false, "0", "mindelta.");
     m_config["udsfile"] =
-        ConfigOption(false, "", "mindelta.");
+        ConfigOption(false, "0", "mindelta.");
     m_config["writeoctree"] =
         ConfigOption(true, "0", "dump octree as xml mesh");
 }

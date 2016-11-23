@@ -1038,7 +1038,7 @@ namespace Nektar
                         }
                         else // unpack data to new order
                         {
-                            (*m_exp)[eid]->ExtractDataToCoeffs(&fielddata[offset], fielddef->m_numModes,modes_offset,&coeffs[m_coeff_offset[eid] + planes_offset*ncoeffs_per_plane]);
+                            (*m_exp)[eid]->ExtractDataToCoeffs(&fielddata[offset], fielddef->m_numModes,modes_offset,&coeffs[m_coeff_offset[eid] + planes_offset*ncoeffs_per_plane], fielddef->m_basis);
                         }
                     }
                     modes_offset += (*m_exp)[0]->GetNumBases() + fielddef->m_numHomogeneousDir;

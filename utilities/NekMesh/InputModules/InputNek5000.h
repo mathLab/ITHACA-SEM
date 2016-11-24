@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputPly.h
+//  File: InputNek5000.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,13 +29,18 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: PLY converter.
+//  Description: Nektar file format converter.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTPLY
-#define UTILITIES_NEKMESH_INPUTPLY
+#ifndef UTILITIES_NEKMESH_INPUTNEK
+#define UTILITIES_NEKMESH_INPUTNEK
 
+#include <algorithm>
+#include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
+
+#include <NekMeshUtils/MeshElements/Triangle.h>
 #include "../Module.h"
 
 namespace Nektar
@@ -43,29 +48,27 @@ namespace Nektar
 namespace Utilities
 {
 
-/// Converter for Ply files.
-class InputPly : public InputModule
+/**
+ * Converter class for Nektar session files.
+ */
+class InputNek5000 : public InputModule
 {
 public:
-    /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m)
-    {
-        return MemoryManager<InputPly>::AllocateSharedPtr(m);
-    }
-    static ModuleKey className;
-
-    InputPly(MeshSharedPtr m);
-    virtual ~InputPly();
-
-    /// Populate and validate required data structures.
+    InputNek5000(MeshSharedPtr p_m);
+    virtual ~InputNek5000();
     virtual void Process();
 
-    void ReadPly(io::filtering_istream &mshFile, NekDouble scale = 1.0);
+    /// Creates an instance of this class.
+    static ModuleSharedPtr create(MeshSharedPtr m)
+    {
+        return MemoryManager<InputNek5000>::AllocateSharedPtr(m);
+    }
+    /// %ModuleKey for class.
+    static ModuleKey className;
 
 private:
+    void LoadHOSurfaces();
 };
-
-typedef boost::shared_ptr<InputPly> InputPlySharedPtr;
 }
 }
 

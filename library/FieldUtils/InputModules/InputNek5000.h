@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputPly.h
+//  File: InputNek5000.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,43 +29,45 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: PLY converter.
+//  Description: Reads a Nek5000 checkpoint file.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTPLY
-#define UTILITIES_NEKMESH_INPUTPLY
+#ifndef FIELDUTILS_INPUTNEK5000
+#define FIELDUTILS_INPUTNEK5000
 
 #include "../Module.h"
 
 namespace Nektar
 {
-namespace Utilities
+namespace FieldUtils
 {
 
-/// Converter for Ply files.
-class InputPly : public InputModule
+/**
+ * Converter for Fld files.
+ */
+class InputNek5000 : public InputModule
 {
 public:
+    InputNek5000(FieldSharedPtr f);
+    virtual ~InputNek5000();
+    virtual void Process(po::variables_map &vm);
+
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m)
+    static ModuleSharedPtr create(FieldSharedPtr f)
     {
-        return MemoryManager<InputPly>::AllocateSharedPtr(m);
+        return MemoryManager<InputNek5000>::AllocateSharedPtr(f);
     }
-    static ModuleKey className;
+    /// %ModuleKey for class.
+    static ModuleKey m_className[];
 
-    InputPly(MeshSharedPtr m);
-    virtual ~InputPly();
-
-    /// Populate and validate required data structures.
-    virtual void Process();
-
-    void ReadPly(io::filtering_istream &mshFile, NekDouble scale = 1.0);
+    virtual std::string GetModuleName()
+    {
+        return "InputNek5000";
+    }
 
 private:
 };
-
-typedef boost::shared_ptr<InputPly> InputPlySharedPtr;
 }
 }
 

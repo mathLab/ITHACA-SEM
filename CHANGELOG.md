@@ -63,6 +63,7 @@ v4.4.0
 - Add module to check topology of the mesh along with boundary connectivity
   to detect problems such as hanging nodes (!691)
 - Add option to `linearise` module to linearise only prisms (!688)
+- Add reader for Nek5000 mesh files (!680)
 - Add option to `linearise` to use element quality (!690)
 - Add flag to `insertsurface` process for non-conforming geometries (!700)
 - Bug fix to get two meshgen regression tests working (!700)
@@ -72,6 +73,7 @@ v4.4.0
   during simulations (!589)
 - Add module to stretch homogeneous direction (!609)
 - Add module to add composite ID of elements as a field (!674)
+- Add reader for Nek5000 field files (!680)
 
 v4.3.5
 ------

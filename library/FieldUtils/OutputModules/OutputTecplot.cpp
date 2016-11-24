@@ -110,7 +110,7 @@ template<> void WriteStream(std::ostream &outfile, std::string data)
     for (std::string::size_type i = 0; i < data.size(); ++i)
     {
         char strChar = data[i];
-        int32_t strCharInt = strChar;
+        boost::int32_t strCharInt = strChar;
         WriteStream(outfile, strCharInt);
     }
 

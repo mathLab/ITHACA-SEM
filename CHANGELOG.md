@@ -27,6 +27,8 @@ v4.4.0
 - Update Body/Field forces at each timestep (!665)
 - Update nodalutil to include quad and hex elements and introduce SPI nodal
   points (!696)
+- Add ability to restart time-averaging and Reynolds stresses from checkpoint
+  file (!678)
 - Extend ExtractDataToCoeffs to support interpolation between basis types for
   quads and hexahedra (!682)
 

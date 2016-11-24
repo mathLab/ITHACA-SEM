@@ -90,6 +90,10 @@ protected:
     SOLVER_UTILS_EXPORT virtual void v_PrepareOutput(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
+    SOLVER_UTILS_EXPORT virtual NekDouble v_GetScale()
+    {
+        return 1.0;
+    }
     SOLVER_UTILS_EXPORT virtual std::string v_GetFileSuffix()
     {
         return "_fc";
@@ -108,11 +112,11 @@ protected:
 
     void ClearFields();
 
-    NekDouble m_scale;
     unsigned int m_numSamples;
     unsigned int m_outputFrequency;
     unsigned int m_sampleFrequency;
     std::string  m_outputFile;
+    std::string  m_restartFile;
     unsigned int m_index;
     unsigned int m_outputIndex;
     vector<ModuleSharedPtr> m_modules;

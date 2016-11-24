@@ -1,6 +1,8 @@
 SET(NEKMESHUTILS_SOURCES
     MeshElements/Mesh.cpp
     MeshElements/Element.cpp
+    MeshElements/Edge.cpp
+    MeshElements/Face.cpp
     MeshElements/BooleanOperators.cpp
     MeshElements/Point.cpp
     MeshElements/Line.cpp
@@ -25,11 +27,13 @@ IF(NEKTAR_USE_MESHGEN)
         ExtLibInterface/TetGenInterface.cpp
         TetMeshing/TetMesh.cpp
         BLMeshing/BLMesh.cpp
-        CADSystem/CADSystem.cpp
-        CADSystem/CADCurve.cpp
-        CADSystem/CADSurf.cpp
         Optimisation/BGFS-B.cpp
         Triangle/Triangle.cpp
+        CADSystem/CADSystem.cpp
+        CADSystem/OCE/CADSystemOCE.cpp
+        CADSystem/OCE/CADVertOCE.cpp
+        CADSystem/OCE/CADCurveOCE.cpp
+        CADSystem/OCE/CADSurfOCE.cpp
     )
 ENDIF()
 
@@ -49,6 +53,8 @@ SET(NEKMESHUTILS_HEADERS
     MeshElements/Pyramid.h
     MeshElements/Prism.h
     MeshElements/Hexahedron.h
+    MeshElements/HOAlignment.h
+    MeshElements/ElementConfig.h
     )
 
 IF(NEKTAR_USE_MESHGEN)
@@ -69,7 +75,11 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/CADVert.h
         CADSystem/CADCurve.h
         CADSystem/CADSurf.h
-        CADSystem/OpenCascade.h
+        CADSystem/OCE/OpenCascade.h
+        CADSystem/OCE/CADSystemOCE.h
+        CADSystem/OCE/CADVertOCE.h
+        CADSystem/OCE/CADCurveOCE.h
+        CADSystem/OCE/CADSurfOCE.h
         Optimisation/BGFS-B.h
         Optimisation/OptimiseObj.h
         Triangle/Triangle.h
@@ -83,16 +93,18 @@ ADD_NEKTAR_LIBRARY(NekMeshUtils lib ${NEKTAR_LIBRARY_TYPE}
 TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC LocalRegions)
 
 IF(NEKTAR_USE_ANN)
-    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${ANN_LIBRARY})
+    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${ANN_LIBRARY})
 ENDIF()
 
 IF(NEKTAR_USE_MESHGEN)
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TETGEN_LIBRARY})
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${OCC_LIBRARIES})
 
-    SET(OCC_DEF LIN LININTEL HAVE_WOK_CONFIG_H HAVE_CONFIG_H CSFDB)
-    SET_PROPERTY(TARGET NekMeshUtils APPEND PROPERTY COMPILE_DEFINITIONS ${OCC_DEF})
-    ADD_DEPENDENCIES(NekMeshUtils opencascade-6.9 tetgen-1.5)
+    ADD_DEPENDENCIES(NekMeshUtils oce-0.17 tetgen-1.5 ann-1.1.2)
+ENDIF()
+
+IF(NEKTAR_USE_CFI)
+    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${CFI_LIBRARY})
 ENDIF()
 
 INSTALL(DIRECTORY ./

@@ -61,6 +61,8 @@ public:
 
     /// Write mesh to output file.
     virtual void Process();
+private:
+    bool Invalid(ElementSharedPtr el, NekDouble thr);
 };
 }
 }

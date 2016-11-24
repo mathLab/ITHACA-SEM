@@ -474,11 +474,15 @@ void ProcessSpherigon::Process()
                  << " with scaling of " << scale << endl;
         }
 
-        ifstream inply;
+        ifstream inplyTmp;
+        io::filtering_istream inply;
         InputPlySharedPtr plyfile;
 
-        inply.open(normalfile.c_str());
-        ASSERTL0(inply, string("Could not open input ply file: ") + normalfile);
+        inplyTmp.open(normalfile.c_str());
+        ASSERTL0(inplyTmp,
+                 string("Could not open input ply file: ") + normalfile);
+
+        inply.push(inplyTmp);
 
         int j;
         MeshSharedPtr m = boost::shared_ptr<Mesh>(new Mesh());

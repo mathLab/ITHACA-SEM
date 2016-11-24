@@ -1,6 +1,8 @@
 SET(NEKMESHUTILS_SOURCES
     MeshElements/Mesh.cpp
     MeshElements/Element.cpp
+    MeshElements/Edge.cpp
+    MeshElements/Face.cpp
     MeshElements/BooleanOperators.cpp
     MeshElements/Point.cpp
     MeshElements/Line.cpp
@@ -51,6 +53,8 @@ SET(NEKMESHUTILS_HEADERS
     MeshElements/Pyramid.h
     MeshElements/Prism.h
     MeshElements/Hexahedron.h
+    MeshElements/HOAlignment.h
+    MeshElements/ElementConfig.h
     )
 
 IF(NEKTAR_USE_MESHGEN)

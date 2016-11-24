@@ -82,7 +82,8 @@ namespace SolverUtils
         bool singleMode, halfMode;
         m_session->MatchSolverInfo("ModeType","SingleMode",singleMode,false);
         m_session->MatchSolverInfo("ModeType","HalfMode",  halfMode,  false);
-        bool homogeneous = pFields[0]->GetExpType() == MultiRegions::e3DH1D;
+        bool homogeneous = pFields[0]->GetExpType() == MultiRegions::e3DH1D ||
+                           pFields[0]->GetExpType() == MultiRegions::e3DH2D;
         m_transform = (singleMode || halfMode || homogeneous);
 
         // Time function is optional

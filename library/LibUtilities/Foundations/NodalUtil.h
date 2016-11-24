@@ -306,6 +306,92 @@ protected:
     }
 };
 
+/**
+ * @brief Specialisation of the NodalUtil class to support nodal quad elements.
+ */
+class NodalUtilQuad : public NodalUtil
+{
+public:
+    LIB_UTILITIES_EXPORT NodalUtilQuad(int degree,
+                                       Array<OneD, NekDouble> r,
+                                       Array<OneD, NekDouble> s);
+
+    LIB_UTILITIES_EXPORT virtual ~NodalUtilQuad()
+    {
+    }
+
+protected:
+    /// Mapping from the \f$ (i,j) \f$ indexing of the basis to a continuous
+    /// ordering.
+    std::vector<std::pair<int, int> > m_ordering;
+
+    virtual NekVector<NekDouble> v_OrthoBasis(const int mode);
+    virtual NekVector<NekDouble> v_OrthoBasisDeriv(
+        const int dir, const int mode);
+
+    virtual boost::shared_ptr<NodalUtil> v_CreateUtil(
+        Array<OneD, Array<OneD, NekDouble> > &xi)
+    {
+        return MemoryManager<NodalUtilQuad>::AllocateSharedPtr(
+            m_degree, xi[0], xi[1]);
+    }
+
+    virtual NekDouble v_ModeZeroIntegral()
+    {
+        return 4.0;
+    }
+
+    virtual int v_NumModes()
+    {
+        return (m_degree + 1) * (m_degree + 1);
+    }
+};
+
+/**
+ * @brief Specialisation of the NodalUtil class to support nodal hex elements.
+ */
+class NodalUtilHex : public NodalUtil
+{
+    typedef boost::tuple<int, int, int> Mode;
+
+public:
+    LIB_UTILITIES_EXPORT NodalUtilHex(int degree,
+                                      Array<OneD, NekDouble> r,
+                                      Array<OneD, NekDouble> s,
+                                      Array<OneD, NekDouble> t);
+
+    LIB_UTILITIES_EXPORT virtual ~NodalUtilHex()
+    {
+    }
+
+protected:
+    /// Mapping from the \f$ (i,j,k) \f$ indexing of the basis to a continuous
+    /// ordering.
+    std::vector<Mode> m_ordering;
+
+    virtual NekVector<NekDouble> v_OrthoBasis(const int mode);
+    virtual NekVector<NekDouble> v_OrthoBasisDeriv(
+        const int dir, const int mode);
+
+    virtual boost::shared_ptr<NodalUtil> v_CreateUtil(
+        Array<OneD, Array<OneD, NekDouble> > &xi)
+    {
+        return MemoryManager<NodalUtilHex>::AllocateSharedPtr(
+            m_degree, xi[0], xi[1], xi[2]);
+    }
+
+    virtual NekDouble v_ModeZeroIntegral()
+    {
+        return 8.0;
+    }
+
+    virtual int v_NumModes()
+    {
+        return (m_degree + 1) * (m_degree + 1) * (m_degree + 1);
+    }
+};
+
+
 }
 }
 

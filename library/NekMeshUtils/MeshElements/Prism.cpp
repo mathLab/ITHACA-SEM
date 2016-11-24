@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.cpp
+//  File: Prism.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh prism object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,6 +38,10 @@
 #include <SpatialDomains/PrismGeom.h>
 
 #include <NekMeshUtils/MeshElements/Prism.h>
+#include <NekMeshUtils/MeshElements/HOAlignment.h>
+
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 using namespace std;
 
 namespace Nektar
@@ -344,6 +348,154 @@ void Prism::MakeOrder(int                                order,
         m_volumeNodes[cnt] = boost::shared_ptr<Node>(
             new Node(id++, x[0], x[1], x[2]));
     }
+}
+
+void Prism::GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+{
+    int n = m_edge[0]->GetNodeCount();
+    nodeList.resize(n*n*(n+1)/2);
+
+    nodeList[0] = m_vertex[0];
+    nodeList[1] = m_vertex[1];
+    nodeList[2] = m_vertex[2];
+    nodeList[3] = m_vertex[3];
+    nodeList[4] = m_vertex[4];
+    nodeList[5] = m_vertex[5];
+    int k = 6;
+
+    for(int i = 0; i < 4; i++)
+    {
+        bool reverseEdge = m_edge[i]->m_n1 == m_vertex[i];
+        if (reverseEdge)
+        {
+            for(int j = 0; j < n-2; j++)
+            {
+                nodeList[k++] = m_edge[i]->m_edgeNodes[j];
+            }
+        }
+        else
+        {
+            for(int j = n-3; j >= 0; j--)
+            {
+                nodeList[k++] = m_edge[i]->m_edgeNodes[j];
+            }
+        }
+    }
+
+    for(int i = 4; i < 8; i++)
+    {
+        bool reverseEdge = m_edge[i]->m_n1 == m_vertex[i-4];
+        if (reverseEdge)
+        {
+            for(int j = 0; j < n-2; j++)
+            {
+                nodeList[k++] = m_edge[i]->m_edgeNodes[j];
+            }
+        }
+        else
+        {
+            for(int j = n-3; j >= 0; j--)
+            {
+                nodeList[k++] = m_edge[i]->m_edgeNodes[j];
+            }
+        }
+    }
+    bool reverseEdge = m_edge[8]->m_n1 == m_vertex[4];
+    if (reverseEdge)
+    {
+        for(int j = 0; j < n-2; j++)
+        {
+            nodeList[k++] = m_edge[8]->m_edgeNodes[j];
+        }
+    }
+    else
+    {
+        for(int j = n-3; j >= 0; j--)
+        {
+            nodeList[k++] = m_edge[8]->m_edgeNodes[j];
+        }
+    }
+
+    vector<vector<int> > ts;
+    {
+        vector<int> t(4);
+        t[0] = m_vertex[0]->m_id;
+        t[1] = m_vertex[1]->m_id;
+        t[2] = m_vertex[2]->m_id;
+        t[3] = m_vertex[3]->m_id;
+        ts.push_back(t);
+    }
+    {
+        vector<int> t(3);
+        t[0] = m_vertex[0]->m_id;
+        t[1] = m_vertex[1]->m_id;
+        t[2] = m_vertex[4]->m_id;
+        ts.push_back(t);
+    }
+    {
+        vector<int> t(4);
+        t[0] = m_vertex[1]->m_id;
+        t[1] = m_vertex[2]->m_id;
+        t[2] = m_vertex[5]->m_id;
+        t[3] = m_vertex[4]->m_id;
+        ts.push_back(t);
+    }
+    {
+        vector<int> t(3);
+        t[0] = m_vertex[3]->m_id;
+        t[1] = m_vertex[2]->m_id;
+        t[2] = m_vertex[5]->m_id;
+        ts.push_back(t);
+    }
+    {
+        vector<int> t(4);
+        t[0] = m_vertex[0]->m_id;
+        t[1] = m_vertex[3]->m_id;
+        t[2] = m_vertex[5]->m_id;
+        t[3] = m_vertex[4]->m_id;
+        ts.push_back(t);
+    }
+
+    for(int i = 0; i < ts.size(); i++)
+    {
+        if(ts[i].size() == 3)
+        {
+            vector<int> fcid;
+            fcid.push_back(m_face[i]->m_vertexList[0]->m_id);
+            fcid.push_back(m_face[i]->m_vertexList[1]->m_id);
+            fcid.push_back(m_face[i]->m_vertexList[2]->m_id);
+
+            HOTriangle<NodeSharedPtr> hot(fcid, m_face[i]->m_faceNodes);
+
+            hot.Align(ts[i]);
+
+            std::copy(hot.surfVerts.begin(),
+                      hot.surfVerts.end(),
+                      nodeList.begin() + k);
+            k+= hot.surfVerts.size();
+        }
+        else
+        {
+            vector<int> fcid;
+            fcid.push_back(m_face[i]->m_vertexList[0]->m_id);
+            fcid.push_back(m_face[i]->m_vertexList[1]->m_id);
+            fcid.push_back(m_face[i]->m_vertexList[2]->m_id);
+            fcid.push_back(m_face[i]->m_vertexList[3]->m_id);
+
+            HOQuadrilateral<NodeSharedPtr> hoq(fcid, m_face[i]->m_faceNodes);
+
+            hoq.Align(ts[i]);
+
+            std::copy(hoq.surfVerts.begin(),
+                      hoq.surfVerts.end(),
+                      nodeList.begin() + k);
+            k+= hoq.surfVerts.size();
+        }
+    }
+
+    std::copy(m_volumeNodes.begin(),
+              m_volumeNodes.end(),
+              nodeList.begin() + k);
 }
 
 /**

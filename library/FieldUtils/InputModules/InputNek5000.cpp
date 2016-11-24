@@ -40,7 +40,6 @@
 using namespace std;
 
 #include <boost/algorithm/string.hpp>
-#include <boost/cstdint.hpp>
 
 #include "InputNek5000.h"
 
@@ -202,10 +201,10 @@ void InputNek5000::Process(po::variables_map &vm)
     }
 
     // Read element IDs
-    boost::uint32_t maxID = 0, minID = numeric_limits<boost::uint32_t>::max();
-    for (boost::uint32_t i = 0; i < nBlocks; ++i)
+    NekUInt32 maxID = 0, minID = numeric_limits<NekUInt32>::max();
+    for (NekUInt32 i = 0; i < nBlocks; ++i)
     {
-        boost::uint32_t blockNum;
+        NekUInt32 blockNum;
         file.read((char *)&blockNum, 4);
         if (byteSwap)
         {

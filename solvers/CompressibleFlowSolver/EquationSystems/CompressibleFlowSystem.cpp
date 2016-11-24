@@ -375,18 +375,18 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >             &physarray,
             NekDouble                                         time)
     {
+        int nTracePts  = GetTraceTotPoints();
+        int nvariables = physarray.num_elements();
+
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+        for (int i = 0; i < nvariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+        }
+
         if (m_bndConds.size())
         {
-            int nTracePts  = GetTraceTotPoints();
-            int nvariables = physarray.num_elements();
-
-            Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-            for (int i = 0; i < nvariables; ++i)
-            {
-                Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-                m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-            }
-
             // Loop over user-defined boundary conditions
             std::vector<CFSBndCondSharedPtr>::iterator x;
             for (x = m_bndConds.begin(); x != m_bndConds.end(); ++x)

@@ -495,9 +495,10 @@ namespace Nektar
             Array<OneD, NekDouble> e_out_d0;
             Array<OneD, NekDouble> e_out_d1;
             Array<OneD, NekDouble> e_out_d2;
+            int offset;
             for (int i = 0; i < m_collections.size(); ++i)
             {
-                int offset = m_coll_phys_offset[i];
+                offset   = m_coll_phys_offset[i];
                 e_out_d0 = out_d0  + offset;
                 e_out_d1 = out_d1  + offset;
                 e_out_d2 = out_d2  + offset;
@@ -544,12 +545,17 @@ namespace Nektar
                 // convert enum into int
                 int intdir= (int)edir;
                 Array<OneD, NekDouble> e_out_d;
-                for(i= 0; i < (*m_exp).size(); ++i)
+                int offset;
+                for (int i = 0; i < m_collections.size(); ++i)
                 {
-                    e_out_d = out_d + m_phys_offset[i];
-                    (*m_exp)[i]->PhysDeriv(intdir, inarray+m_phys_offset[i], e_out_d);
-                }
+                    offset   = m_coll_phys_offset[i];
+                    e_out_d  = out_d  + offset;
 
+                    m_collections[i].ApplyOperator(Collections::ePhysDeriv,
+                                                   intdir,
+                                                   inarray + offset,
+                                                   e_out_d);
+                }
             }
         }
 
@@ -2220,7 +2226,17 @@ namespace Nektar
 
                 expId = eIt->second;
 
-                if (datalen == (*m_exp)[expId]->GetNcoeffs())
+                bool sameBasis = true;
+                for (int j = 0; j < fielddef->m_basis.size(); ++j)
+                {
+                    if (fielddef->m_basis[j] != (*m_exp)[expId]->GetBasisType(j))
+                    {
+                        sameBasis = false;
+                        break;
+                    }
+                }
+
+                if (datalen == (*m_exp)[expId]->GetNcoeffs() && sameBasis)
                 {
                     Vmath::Vcopy(datalen, &fielddata[offset], 1,
                                  &coeffs[m_coeff_offset[expId]], 1);
@@ -2229,7 +2245,8 @@ namespace Nektar
                 {
                     (*m_exp)[expId]->ExtractDataToCoeffs(
                         &fielddata[offset], fielddef->m_numModes,
-                        modes_offset, &coeffs[m_coeff_offset[expId]]);
+                        modes_offset, &coeffs[m_coeff_offset[expId]],
+                        fielddef->m_basis);
                 }
 
                 offset += datalen;
@@ -2247,14 +2264,17 @@ namespace Nektar
             for(i = 0; i < (*m_exp).size(); ++i)
             {
                 std::vector<unsigned int> nummodes;
+                vector<LibUtilities::BasisType> basisTypes;
                 int eid = m_offset_elmt_id[i];
                 for(int j= 0; j < fromExpList->GetExp(eid)->GetNumBases(); ++j)
                 {
                     nummodes.push_back(fromExpList->GetExp(eid)->GetBasisNumModes(j));
+                    basisTypes.push_back(fromExpList->GetExp(eid)->GetBasisType(j));
                 }
 
                 (*m_exp)[eid]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0,
-                                                   &toCoeffs[m_coeff_offset[eid]]);
+                                                   &toCoeffs[m_coeff_offset[eid]],
+                                                   basisTypes);
 
                 offset += fromExpList->GetExp(eid)->GetNcoeffs();
             }

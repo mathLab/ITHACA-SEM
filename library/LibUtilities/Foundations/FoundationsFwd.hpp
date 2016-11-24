@@ -59,6 +59,7 @@ namespace Nektar
         class NodalTetEvenlySpaced;
         class NodalTetElec;
         class NodalPrismEvenlySpaced;
+        class NodalPrismElec;
         class NodalTriElec;
         class NodalTriEvenlySpaced;
         class NodalTriFekete;

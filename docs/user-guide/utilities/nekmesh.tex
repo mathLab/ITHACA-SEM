@@ -26,13 +26,13 @@ through a basic example to show how a mesh can be converted from the widely-used
 mesh-generator \gmsh to the XML file format.
 
 \begin{notebox}
-  The default since Jan 2016 is to output the .xml files in a
+  The default since January 2016 is to output the \inltt{.xml} files in a
   compressed form where the VERTEX, EDGES, FACES, ELEMENTS and CURVED
-  information is compressed into binary format which is then
-  converted into base64. This is identified for each section by the attribute
-  \inltt{COMPRESSED="B64Z-LittleEndian''}.  To output
-  in ascii format add the module option ``:xml:uncompress'' to the .xml file,
-  i.e. \\ \inltt{ \mc file.msh newfile.xml:xml:uncompress}
+  information is compressed into binary format which is then converted into
+  base64. This is identified for each section by the attribute
+  \inltt{COMPRESSED="B64Z-LittleEndian''}.  To output in ascii format add the
+  module option ``:xml:uncompress'' to the \inltt{.xml} file, i.e. \\ \inltt{
+    \mc file.msh newfile.xml:xml:uncompress}
 \end{notebox}
 
 \section{Exporting a mesh from \gmsh}
@@ -274,7 +274,9 @@ The following output formats are supported:
     \toprule
     \textbf{Format} & \textbf{Extension} & \textbf{High-order} & \textbf{Notes}\\
     \midrule
-    Gmsh & \texttt{msh} & \cmark & Curvature output is highly experimental.\\
+    Gmsh & \texttt{msh} & \cmark & High-order hexes, quads, tetrahedra and
+    triangles are supported up to arbitrary order. Prisms supported up to order
+    4, pyramids up to order 1.\\
     Nektar++ & \texttt{xml} & \cmark & Most functionality supported. \\
     VTK & \texttt{vtk} & \xmark & Experimental. Only ASCII triangular data is supported. \\
     \bottomrule
@@ -288,13 +290,21 @@ meshes since robustness is not guaranteed.
 The default for \texttt{xml} is into binary data which has been
 converted into base64. If you wish to see an ascii output you need to
 specify the output module option \inltt{uncompress} by executing:
-
+%
 \begin{lstlisting}[style=BashInputStyle]
 NekMesh Mesh.msh output.xml:xml:uncompress
 \end{lstlisting}
-
-In the rest of these subsections, we discuss the various processing modules
-available within \mc.
+%
+Finally, both the Gmsh and Nektar++ output modules support an \inltt{order}
+parameter, which allows you to generate a mesh of a uniform polynomial
+order. This is used in the same manner as the above, so that the command
+%
+\begin{lstlisting}[style=BashInputStyle]
+NekMesh Mesh.msh output.msh:msh:order=7
+\end{lstlisting}
+%
+will generate an order 7 Gmsh mesh. In the rest of these subsections, we discuss
+the various processing modules available within \mc.
 
 \subsection{Extract surfaces from a mesh}
 \label{s:utilities:nekmesh:extract}
@@ -532,17 +542,32 @@ The module parameters are:
 
 \subsection{Linearisation}
 
-The ability to remove all the high-order information in a mesh can be useful
-at times.
+The ability to remove all the high-order information in a mesh can be useful at
+times when mesh generation is tricky or impossible in the presence of curvature
 
 To do this in NekMesh use the command:
 
 \begin{lstlisting}[style=BashInputStyle]
-  NekMesh -m linearise high-order-mesh.xml linear-mesh.xml
+  NekMesh -m linearise:all high-order-mesh.xml linear-mesh.xml
 \end{lstlisting}
 
 The output will contain only the linear mesh information, all curved information
-is removed.
+is removed. Alternatively
+
+\begin{lstlisting}[style=BashInputStyle]
+  NekMesh -m linearise:invalid high-order-mesh.xml linear-mesh.xml
+\end{lstlisting}
+
+attempts to remove curvature from elements only where necessary. This is a
+simple algorithm that removes curvature from invalid elements and repeats until
+all elements are valid. Either \inlsh{all} or \inlsh{invalid} must be specified.
+
+\begin{itemize}
+  \item \inlsh{all}: remove curvature from all elements.
+  \item \inlsh{invalid}: remove curvature from invalid elements.
+  \item \inlsh{prismonly}: consider only prisms when removing curvature. This is
+  useful in the presence of a prismatic boundary layer.
+\end{itemize}
 
 \subsection{Extracting interface between tetrahedra and prismatic elements}
 
@@ -593,6 +618,19 @@ may issue the command
   module in combination with the splitting module described earlier.
 \end{notebox}
 
+\subsection{Link Checking}
+
+It is quite possible that a mesh contains some sort of hanging entity or
+element connectivity error. The check link module is a fast check that, a)
+elements are correctly connected and b) the boundary entities (composites)
+match the interior domain:
+
+\begin{lstlisting}[style=BashInputStyle]
+  NekMesh -m linkcheck mesh.xml mesh2.xml
+\end{lstlisting}
+
+This module should be added to the module chain for any complex if the user
+suspects there may be a mesh issue. The module will print a warning if there is.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

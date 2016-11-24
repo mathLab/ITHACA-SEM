@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: 3D Nodal Tetrahedron Evenly Spaced Point Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -51,7 +51,7 @@ namespace Nektar
         {
            // construct the geometory and set the coordinate of tetrahedron
            // edges and vertices are ordered as anticlockwise
-           
+
             bool isVertex(int x, int y, int z, int npts){
                 return (x==0 && y==0 && z==0) || (x==(npts-1) && y==0 && z==0) || (x==0 && y==(npts-1) && z==0) || (x==0 && y==0 && z==(npts-1));
             }
@@ -112,7 +112,7 @@ namespace Nektar
         {
             // Allocate the storage for points
             PointsBaseType::CalculatePoints();
-            
+
             // Populate m_points
             unsigned int npts = GetNumPoints();
             NekDouble delta = 2.0/(npts - 1.0);
@@ -125,12 +125,14 @@ namespace Nektar
 
                         m_points[0][index] = xi;
                         m_points[1][index] = yi;
-                        m_points[2][index] = zi;                        
+                        m_points[2][index] = zi;
                     }
-                }                
+                }
             }
 
-            NodalPointReorder3d();            
+            NodalPointReorder3d();
+            m_util = MemoryManager<NodalUtilTetrahedron>::AllocateSharedPtr(
+                npts - 1, m_points[0], m_points[1], m_points[2]);
         }
 
         void NodalTetEvenlySpaced::NodalPointReorder3d()
@@ -145,7 +147,7 @@ namespace Nektar
             vector<int> iEdge_13;  // interior edge 4
             vector<int> iEdge_23;  // interior edge 5
             vector<int> iFace_012; // interior face 0
-            vector<int> iFace_013; // interior face 1 
+            vector<int> iFace_013; // interior face 1
             vector<int> iFace_123; // interior face 2
             vector<int> iFace_203; // interior face 3
             vector<int> interiorVolumePoints; // interior volume points
@@ -157,47 +159,47 @@ namespace Nektar
                     for(int x=0; x<npts-z-y; ++x, ++index){
 
                         if( isVertex(x,y,z,npts) ){ // vertex
-                        
+
                             vertex.push_back(index);
-                            
+
                         } else if( isEdge(x,y,z,npts) ){ // interior edge
-                        
+
                             if( isEdge_01(x,y,z,npts) ){  // interior edge 0
-                            
+
                                 iEdge_01.push_back(index);
-                                
+
                             } else if( isEdge_12(x,y,z,npts) ){  // interior edge 1
 
                                 iEdge_12.push_back(index);
-                                
+
                             } else if( isEdge_20(x,y,z,npts) ){  // interior edge 2
 
                                 iEdge_20.insert(iEdge_20.begin(), index);
-                                
+
                             } else if( isEdge_03(x,y,z,npts) ){ // interior edge 3
 
                                     iEdge_03.push_back(index);
-                                
+
                             } else if( isEdge_13(x,y,z,npts) ){ // interior edge 4
 
                                 iEdge_13.push_back(index);
-                                
+
                             } else if( isEdge_23(x,y,z,npts) ){ // interior edge 5
 
                                   iEdge_23.push_back(index);
-                                
+
                             }
-                            
+
                         } else if( isFace(x,y,z,npts) ) {  // interior face
 
                             if( isFace_012(x,y,z,npts) ){  // interior face 0
 
                                 iFace_012.push_back(index);
-                            
+
                             } else if( isFace_013(x,y,z,npts) ){  // interior face 1
 
                                 iFace_013.push_back(index);
-                            
+
                             } else if( isFace_123(x,y,z,npts) ){ // interior face 2
 
                                 iFace_123.push_back(index);
@@ -209,12 +211,12 @@ namespace Nektar
                             }
                         } else {  // interior volume points
 
-                            interiorVolumePoints.push_back(index);                            
+                            interiorVolumePoints.push_back(index);
                         }
                     }
                 }
             }
-           
+
             // Mapping the vertex, edges, faces, interior volume points using the permutation matrix,
             // so the points are ordered anticlockwise.
             for(unsigned int n=0; n<vertex.size(); ++n){
@@ -297,23 +299,21 @@ namespace Nektar
                 m_points[2][index] = points[2][map[index]];
 
             }
-                                   
+
         }
 
-        
+
 
         void NodalTetEvenlySpaced::CalculateWeights()
-        {            
+        {
             // Allocate storage for points
             PointsBaseType::CalculateWeights();
 
             typedef DataType T;
 
             // Solve the Vandermonde system of integrals for the weight vector
-            NekVector<T> w = MakeTetWeights(NekVector<T>(m_points[0]), NekVector<T>(m_points[1]), NekVector<T>(m_points[2]));
-            
+            NekVector<T> w = m_util->GetWeights();
             m_weights = Array<OneD,T>( w.GetRows(), w.GetPtr() );
-
         }
 
 
@@ -324,45 +324,28 @@ namespace Nektar
                                                          const Array<OneD, const NekDouble>& zia,
                                                          Array<OneD, NekDouble>& interp)
         {
-             NekVector<NekDouble>  x( m_points[0] );
-             NekVector<NekDouble>  y( m_points[1] );
-             NekVector<NekDouble>  z( m_points[2] );
-             NekVector<NekDouble> xi( xia );
-             NekVector<NekDouble> yi( yia );
-             NekVector<NekDouble> zi( zia );
-             NekMatrix<NekDouble> interMat = GetTetInterpolationMatrix(x, y, z, xi, yi, zi);
+             Array<OneD, Array<OneD, NekDouble> > xi(3);
+             xi[0] = xia;
+             xi[1] = yia;
+             xi[2] = zia;
 
-             int rows = xi.GetRows(), cols = GetTotNumPoints();
-             for( int i = 0; i < rows; ++i ) {
-                for( int j = 0; j < cols; ++j ) {
-                    interp[j + i*cols] = interMat(i,j);
-                }
-             }             
-
+             boost::shared_ptr<NekMatrix<NekDouble> > mat =
+                 m_util->GetInterpolationMatrix(xi);
+             Vmath::Vcopy(mat->GetRows() * mat->GetColumns(), mat->GetRawPtr(),
+                          1, &interp[0], 1);
         }
 
         // ////////////////////////////////////////
         //        CalculateDerivMatrix()
         void NodalTetEvenlySpaced::CalculateDerivMatrix()
         {
-
-           // Allocate the derivative matrix.
+            // Allocate the derivative matrix.
             PointsBaseType::CalculateDerivMatrix();
 
-            NekVector<NekDouble> x( m_points[0] );
-            NekVector<NekDouble> y( m_points[1] );
-            NekVector<NekDouble> z( m_points[2] );
-            NekVector<NekDouble> xi = x;
-            NekVector<NekDouble> yi = y;
-            NekVector<NekDouble> zi = z;
-
-            *m_derivmatrix[0] = *GetTetXDerivativeMatrix(x,y,z,xi,yi,zi);
-
-            *m_derivmatrix[1] = *GetTetYDerivativeMatrix(x,y,z,xi,yi,zi);
-
-            *m_derivmatrix[2] = *GetTetZDerivativeMatrix(x,y,z,xi,yi,zi);
-
-        } 
+            m_derivmatrix[0] = m_util->GetDerivMatrix(0);
+            m_derivmatrix[1] = m_util->GetDerivMatrix(1);
+            m_derivmatrix[2] = m_util->GetDerivMatrix(2);
+        }
 
         boost::shared_ptr<PointsBaseType> NodalTetEvenlySpaced::Create(const PointsKey &key)
         {
@@ -372,9 +355,8 @@ namespace Nektar
 
             return returnval;
         }
-        
 
 
-    } // end of namespace 
-} // end of namespace 
 
+    } // end of namespace
+} // end of namespace

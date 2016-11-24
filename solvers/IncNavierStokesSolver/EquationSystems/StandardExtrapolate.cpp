@@ -75,10 +75,9 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
     {
+        m_pressureCalls++;
         if(m_HBCdata.num_elements()>0)
         {
-            m_pressureCalls++;
-
             // Rotate HOPBCs storage
             RollOver(m_pressureHBCs);
             

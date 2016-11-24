@@ -1107,6 +1107,20 @@ element is taken as the average of the function in the quadrature
 points of the element. If these functions are defined, the values set
 for the tolerances in the \texttt{PARAMETERS} section are ignored.
 
+\subsection{Restarting the simulation}
+
+The simulation can be restarted using the final distribution of
+polynomial orders obtained from the adaptive procedure by setting
+the expansions as
+\begin{lstlisting}[style=XMLStyle]
+<EXPANSIONS>
+  <F FILE="restartfile.fld" />
+</EXPANSIONS>
+\end{lstlisting}
+note that this will only affect the polynomial order. The initial condition
+still needs to be set correctly, and does not need to come from the same file
+used for the expansions.
+
 \section{Advecting extra passive scalar fields}
 
 In some cases, it might be useful to advect passive scalar fields with the velocity obtained from the

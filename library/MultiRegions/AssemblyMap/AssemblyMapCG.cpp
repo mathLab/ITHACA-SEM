@@ -1523,12 +1523,15 @@ namespace Nektar
             // needs to be set so that the coupled solver in
             // IncNavierStokesSolver can work.
             int nExtraDirichlet;
+            int mdswitch;
+            m_session->LoadParameter(
+                "MDSwitch", mdswitch, 10);
             int nGraphVerts =
                 CreateGraph(locExp, bndCondExp, bndCondVec,
                             checkIfSystemSingular, periodicVerts, periodicEdges,
                             periodicFaces, graph, bottomUpGraph, extraDirVerts,
                             extraDirEdges, firstNonDirGraphVertId,
-                            nExtraDirichlet);
+                            nExtraDirichlet, mdswitch);
 
             /*
              * Set up an array which contains the offset information of the

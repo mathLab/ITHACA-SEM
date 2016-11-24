@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Opencascade.h
+//  File: CADCurve.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,44 +29,51 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: occ headers.
+//  Description: CAD object curve.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_CADSYSTEM_OCC
-#define NEKMESHUTILS_CADSYSTEM_OCC
+#ifndef NEKMESHUTILS_CADSYSTEM_OCE_CADVERTOCE
+#define NEKMESHUTILS_CADSYSTEM_OCE_CADVERTOCE
 
-/// This is a list of OpenCascade headers required for use with nektar
+#include <NekMeshUtils/CADSystem/CADVert.h>
+#include <NekMeshUtils/CADSystem/OCE/OpenCascade.h>
 
-#include <STEPControl_Reader.hxx>
-#include <IGESControl_Reader.hxx>
-#include <TColStd_HSequenceOfTransient.hxx>
-#include <TopoDS.hxx>
-#include <TopExp.hxx>
-#include <TopoDS_Shape.hxx>
-#include <TopTools_IndexedMapOfShape.hxx>
-#include <BRepAdaptor_Curve.hxx>
-#include <BRepAdaptor_Surface.hxx>
-#include <GeomAPI_ProjectPointOnSurf.hxx>
-#include <GeomAbs_SurfaceType.hxx>
-#include <BRepTools.hxx>
-#include <BRep_Tool.hxx>
-#include <gp_Trsf.hxx>
-#include <TopLoc_Location.hxx>
-#include <BRepTools_WireExplorer.hxx>
-#include <GProp_GProps.hxx>
-#include <BRepGProp.hxx>
-#include <Geom_TrimmedCurve.hxx>
-#include <BRepBuilderAPI_MakeEdge.hxx>
-#include <GCPnts_AbscissaPoint.hxx>
-#include <TopAbs_State.hxx>
-#include <BRepClass3d_SolidClassifier.hxx>
-#include <BRepBuilderAPI_MakeFace.hxx>
-#include <gp_Pnt2d.hxx>
-#include <BRepClass_FaceClassifier.hxx>
-#include <ShapeAnalysis_Wire.hxx>
-#include <TopoDS_Wire.hxx>
-#include <ShapeAnalysis_Surface.hxx>
-#include <Standard_Macro.hxx>
+namespace Nektar
+{
+namespace NekMeshUtils
+{
+
+class CADVertOCE : public CADVert
+{
+public:
+
+    static CADVertSharedPtr create()
+    {
+        return MemoryManager<CADVertOCE>::AllocateSharedPtr();
+    }
+
+    static std::string key;
+
+    /**
+     * @brief Default constructor.
+     */
+    CADVertOCE()
+    {
+    }
+
+    ~CADVertOCE()
+    {
+    }
+
+    void Initialise(int i, TopoDS_Shape in);
+
+private:
+    /// OpenCascade object of the curve.
+    gp_Pnt m_occVert;
+};
+
+}
+}
 
 #endif

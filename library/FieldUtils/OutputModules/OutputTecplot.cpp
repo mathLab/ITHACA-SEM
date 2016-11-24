@@ -41,8 +41,6 @@ using namespace std;
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 
-#include <boost/cstdint.hpp>
-
 #include "OutputTecplot.h"
 
 namespace Nektar
@@ -110,7 +108,7 @@ template<> void WriteStream(std::ostream &outfile, std::string data)
     for (std::string::size_type i = 0; i < data.size(); ++i)
     {
         char strChar = data[i];
-        boost::int32_t strCharInt = strChar;
+        NekInt32 strCharInt = strChar;
         WriteStream(outfile, strCharInt);
     }
 

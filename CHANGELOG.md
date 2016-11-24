@@ -53,6 +53,8 @@ v4.4.0
 - New module for inserting an alternate high-order surface into the working
   mesh (!669)
 - Add curve projection routines to CAD system (!697)
+- Extensive clean-up of NekMeshUtils/MeshElements and extension of makeorder to
+  consider CAD information (!698)
 - Improvements to mesh linearisation module (!659)
 - Add support for Gmsh high-order output (!679)
 - Move CAD classes to factory format (!676)

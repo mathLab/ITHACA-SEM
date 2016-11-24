@@ -55,21 +55,19 @@ public:
         std::vector<NodeSharedPtr> pNodeList,
         std::vector<int>           pTagList)
     {
-        ElementSharedPtr e = boost::shared_ptr<Element>(
+        return boost::shared_ptr<Element>(
             new Hexahedron(pConf, pNodeList, pTagList));
-        std::vector<FaceSharedPtr> faces = e->GetFaceList();
-        for (int i = 0; i < faces.size(); ++i)
-        {
-            faces[i]->m_elLink.push_back(std::pair<ElementSharedPtr, int>(e, i));
-        }
-        return e;
     }
     /// Element type
     static LibUtilities::ShapeType m_type;
 
+    /**
+     * @brief Create a hexahedral element.
+     */
     NEKMESHUTILS_EXPORT Hexahedron(ElmtConfig pConf,
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList);
+    /// copy hex element
     NEKMESHUTILS_EXPORT Hexahedron(const Hexahedron &pSrc);
     NEKMESHUTILS_EXPORT virtual ~Hexahedron()
     {

@@ -60,8 +60,8 @@ public:
     FaceMesh(const int                                id,
              MeshSharedPtr                            m,
              const std::map<int, CurveMeshSharedPtr> &cmeshes,
-             bool ov)
-        : m_mesh(m), m_curvemeshes(cmeshes), m_id(id), over(ov)
+             const int                                comp)
+        : m_mesh(m), m_curvemeshes(cmeshes), m_id(id), m_compId(comp)
 
     {
         m_cadsurf = m_mesh->m_cad->GetSurf(m_id);
@@ -71,9 +71,12 @@ public:
     /**
      * @brief mesh exectuation command
      */
-    void Mesh(bool remesh = false);
+    void Mesh();
 
-    void QuadRemesh(std::map<NodeSharedPtr, NodeSharedPtr> nmap);
+    /**
+     * @brief validate the curve meshes
+     */
+    bool ValidateCurves();
 
 private:
     /**
@@ -148,8 +151,10 @@ private:
     EdgeSet m_localEdges;
     /// local list of elements
     std::vector<ElementSharedPtr> m_localElements;
-
-    bool over;
+    /// set of nodes which are in the boundary (easier to identify conflicts with)
+    NodeSet m_inBoundary;
+    /// identity to put into element tags
+    int m_compId;
 };
 
 typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;

@@ -65,9 +65,6 @@ public:
 
     Array<OneD, NekDouble> GetBoundingBox();
 
-    std::map<int, Array<OneD, NekDouble> > GetNodes() {ASSERTL0(false,"not implemented in oce");}
-    std::vector<std::pair<LibUtilities::ShapeType,std::vector<int> > > GetElements() {ASSERTL0(false,"not implemented in oce");}
-    std::map<int,std::vector<std::pair<int,int> > > GetCADInfo(){};
 
 private:
     /// Function to add curve to CADSystem::m_verts.

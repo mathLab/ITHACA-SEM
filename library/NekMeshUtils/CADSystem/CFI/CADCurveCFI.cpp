@@ -52,7 +52,6 @@ void CADCurveCFI::Initialise(int i, cfi::Line* in)
     m_length = m_cfiEdge->calcLength();
 
     m_id   = i;
-    m_type = curve;
 }
 
 NekDouble CADCurveCFI::tAtArcLength(NekDouble s)

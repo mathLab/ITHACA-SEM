@@ -51,7 +51,6 @@ void CADSurfCFI::Initialise(int i, cfi::Face* in, vector<EdgeLoop> ein)
     m_cfiSurface = in;
     m_correctNormal = true;
     m_id            = i;
-    m_type          = surf;
 }
 
 Array<OneD, NekDouble> CADSurfCFI::GetBounds()

@@ -56,8 +56,6 @@ void CADVertCFI::Initialise(int i, cfi::Point* in)
     m_node = boost::shared_ptr<Node>(
         new Node(i - 1, pos.x, pos.y, pos.z));
     degen = false;
-
-    m_type = vert;
 }
 
 }

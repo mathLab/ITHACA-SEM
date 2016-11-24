@@ -59,7 +59,6 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
     m_occSurface    = BRepAdaptor_Surface(TopoDS::Face(in));
     m_correctNormal = true;
     m_id            = i;
-    m_type          = surf;
 }
 
 Array<OneD, NekDouble> CADSurfOCE::GetBounds()

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADObj.h
+//  File: SurfaceMeshing.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,64 +29,43 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: CAD object curve.
+//  Description: class containing all surfacemeshing routines and classes.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKMESHUTILS_CADSYSTEM_CADOBJ
-#define NEKMESHUTILS_CADSYSTEM_CADOBJ
+#ifndef NEKMESHUTILS_CFIMESH_CFIMESH
+#define NEKMESHUTILS_CFIMESH_CFIMESH
 
-#include <boost/shared_ptr.hpp>
-
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-enum cadType
-{
-    vert,
-    curve,
-    surf
-};
-
-class CADObj
+/**
+ * @brief class containing all surface meshing routines methods and classes
+ */
+class CFIMesh : public ProcessModule
 {
 public:
-    friend class MemoryManager<CADObj>;
 
-    /**
-     * @brief Default constructor.
-     */
-    CADObj()
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
+        return MemoryManager<CFIMesh>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
 
-    virtual ~CADObj(){}
+    CFIMesh(MeshSharedPtr m);
+    virtual ~CFIMesh();
 
-    /**
-     * @brief Return ID of the vertex
-     */
-    int GetId()
-    {
-        return m_id;
-    }
+    virtual void Process();
 
-    cadType GetType()
-    {
-        return m_type;
-    }
+private:
 
-protected:
-    /// ID of the vert.
-    int m_id;
-    /// type of the cad object
-    cadType m_type;
 };
 
-typedef boost::shared_ptr<CADObj> CADObjSharedPtr;
 }
 }
 

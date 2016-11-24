@@ -13,6 +13,8 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Pyramid.cpp
     MeshElements/Prism.cpp
     MeshElements/Hexahedron.cpp
+    CADSystem/CADSystem.cpp
+    CADSystem/ProcessLoadCAD.cpp
     )
 
 IF(NEKTAR_USE_MESHGEN)
@@ -30,11 +32,8 @@ IF(NEKTAR_USE_MESHGEN)
         VolumeMeshing/VolumeMesh.cpp
         VolumeMeshing/TetMeshing/TetMesh.cpp
         VolumeMeshing/BLMeshing/BLMesh.cpp
-        CADSystem/CADSystem.cpp
-        CADSystem/ProcessLoadCAD.cpp
         Optimisation/BGFS-B.cpp
         Triangle/Triangle.cpp
-        CADSystem/CADSystem.cpp
         CADSystem/OCE/CADSystemOCE.cpp
         CADSystem/OCE/CADVertOCE.cpp
         CADSystem/OCE/CADCurveOCE.cpp
@@ -61,6 +60,12 @@ SET(NEKMESHUTILS_HEADERS
     MeshElements/Hexahedron.h
     MeshElements/HOAlignment.h
     MeshElements/ElementConfig.h
+    CADSystem/CADObject.h
+    CADSystem/CADSystem.h
+    CADSystem/CADVert.h
+    CADSystem/CADCurve.h
+    CADSystem/CADSurf.h
+    CADSystem/ProcessLoadCAD.h
     )
 
 IF(NEKTAR_USE_MESHGEN)
@@ -79,12 +84,6 @@ IF(NEKTAR_USE_MESHGEN)
         VolumeMeshing/VolumeMesh.h
         VolumeMeshing/TetMeshing/TetMesh.h
         VolumeMeshing/BLMeshing/BLMesh.h
-        CADSystem/CADObj.h
-        CADSystem/CADSystem.h
-        CADSystem/CADVert.h
-        CADSystem/CADCurve.h
-        CADSystem/CADSurf.h
-        CADSystem/ProcessLoadCAD.h
         CADSystem/OCE/OpenCascade.h
         CADSystem/OCE/CADSystemOCE.h
         CADSystem/OCE/CADVertOCE.h
@@ -102,12 +101,14 @@ IF(NEKTAR_USE_CFI)
         CADSystem/CFI/CADVertCFI.h
         CADSystem/CFI/CADCurveCFI.h
         CADSystem/CFI/CADSurfCFI.h
+        CFIMesh/CFIMesh.h
     )
     SET(NEKMESHUTILS_SOURCES ${NEKMESHUTILS_SOURCES}
         CADSystem/CFI/CADSystemCFI.cpp
         CADSystem/CFI/CADVertCFI.cpp
         CADSystem/CFI/CADCurveCFI.cpp
         CADSystem/CFI/CADSurfCFI.cpp
+        CFIMesh/CFIMesh.cpp
     )
 ENDIF()
 
@@ -118,16 +119,14 @@ ADD_NEKTAR_LIBRARY(NekMeshUtils lib ${NEKTAR_LIBRARY_TYPE}
 TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC LocalRegions)
 
 IF(NEKTAR_USE_ANN)
-    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${ANN_LIBRARY})
+    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${ANN_LIBRARY})
 ENDIF()
 
 IF(NEKTAR_USE_MESHGEN)
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TETGEN_LIBRARY})
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${OCC_LIBRARIES})
 
-    #SET(OCC_DEF LIN LININTEL HAVE_WOK_CONFIG_H HAVE_CONFIG_H CSFDB)
-    #SET_PROPERTY(TARGET NekMeshUtils APPEND PROPERTY COMPILE_DEFINITIONS ${OCC_DEF})
-    ADD_DEPENDENCIES(NekMeshUtils opencascade-6.9 tetgen-1.5)
+    ADD_DEPENDENCIES(NekMeshUtils oce-0.17 tetgen-1.5)
 ENDIF()
 
 IF(NEKTAR_USE_CFI)

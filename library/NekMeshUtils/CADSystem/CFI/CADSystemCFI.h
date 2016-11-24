@@ -66,9 +66,10 @@ public:
 
     Array<OneD, NekDouble> GetBoundingBox();
 
-    std::map<int, Array<OneD, NekDouble> > GetNodes();
-    std::vector<std::pair<LibUtilities::ShapeType,std::vector<int> > > GetElements();
-    std::map<int,std::vector<std::pair<int,int> > > GetCADInfo();
+    cfi::Model* GetCFIModel() {return model;}
+    std::map<std::string,int>  GetCFICurveId() {return nameToCurveId;}
+    std::map<std::string,int>  GetCFIFaceId() {return nameToFaceId;}
+    std::map<std::string,std::vector<std::string> > GetVertId() {return mapVertToListEdge;}
 
 private:
     void AddVert(int i, cfi::Point* in);
@@ -82,6 +83,7 @@ private:
     std::map<std::string,std::vector<std::string> > mapVertToListEdge;
 };
 
+typedef boost::shared_ptr<CADSystemCFI> CADSystemCFISharedPtr;
 
 }
 }

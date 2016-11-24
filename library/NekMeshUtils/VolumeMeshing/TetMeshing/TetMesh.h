@@ -42,10 +42,6 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <NekMeshUtils/MeshElements/Mesh.h>
-#include <NekMeshUtils/CADSystem/CADSystem.h>
-#include <NekMeshUtils/Octree/Octree.h>
-#include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
-#include <NekMeshUtils/VolumeMeshing/BLMeshing/BLMesh.h>
 
 #include <NekMeshUtils/ExtLibInterface/TetGenInterface.h>
 
@@ -65,17 +61,10 @@ public:
     /**
      * @brief default constructor
      */
-    TetMesh(MeshSharedPtr m) : m_mesh(m)
+    TetMesh(MeshSharedPtr m,
+            std::vector<ElementSharedPtr> e = std::vector<ElementSharedPtr>())
+                : m_mesh(m), m_surface(e)
     {
-        m_usePSurface = false;
-    };
-
-    /**
-     *  @brief constructor for pseudo surface
-     */
-    TetMesh(MeshSharedPtr m, BLMeshSharedPtr b) : m_mesh(m), m_blmesh(b)
-    {
-        m_usePSurface = true;
     };
 
     /**
@@ -86,10 +75,7 @@ public:
 private:
 
     MeshSharedPtr m_mesh;
-    /// bl mesh
-    BLMeshSharedPtr m_blmesh;
-    /// mesh the tets using the psuedosurface
-    bool m_usePSurface;
+    std::vector<ElementSharedPtr> m_surface;
     /// number of tetrahedra
     int m_numtet;
     /// conncetivity of the tets from the interface

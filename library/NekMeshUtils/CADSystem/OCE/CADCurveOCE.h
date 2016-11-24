@@ -91,7 +91,6 @@ public:
         m_c = BRep_Tool::Curve(TopoDS::Edge(cp), b[0], b[1]);
 
         m_id   = i;
-        m_type = curve;
     }
 
 private:

@@ -36,7 +36,7 @@
 #ifndef NEKMESHUTILS_CADSYSTEM_CADCURVE
 #define NEKMESHUTILS_CADSYSTEM_CADCURVE
 
-#include <NekMeshUtils/CADSystem/CADObj.h>
+#include <NekMeshUtils/CADSystem/CADObject.h>
 #include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 
@@ -49,7 +49,7 @@ namespace NekMeshUtils
  * @brief base class for CAD curves.
  *
  */
-class CADCurve : public CADObj
+class CADCurve : public CADObject
 {
 public:
     friend class MemoryManager<CADCurve>;
@@ -57,7 +57,10 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADCurve(){};
+    CADCurve()
+    {
+        m_type = CADType::eCurve;
+    }
 
     ~CADCurve()
     {

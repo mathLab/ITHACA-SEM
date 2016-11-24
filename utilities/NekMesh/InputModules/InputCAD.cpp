@@ -71,6 +71,8 @@ void InputCAD::ParseFile(string nm)
         LibUtilities::SessionReader::CreateInstance(0, NULL, filename);
 
     ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING"),"no meshing tag");
+    ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING/INFORMATION"),"no information tag");
+    ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING/PARAMETERS"),"no parameters tag");
 
     TiXmlElement *mcf = pSession->GetElement("NEKTAR/MESHING");
 
@@ -98,15 +100,20 @@ void InputCAD::ParseFile(string nm)
         P = P->NextSiblingElement("P");
     }
 
-    TiXmlElement *bparam = mcf->FirstChildElement("BOOLPARAMETERS");
-    TiXmlElement *BP = bparam->FirstChildElement("P");
     set<string> boolparameters;
-    while(BP)
+
+    if(pSession->DefinesElement("NEKTAR/MESHING/BOOLPARAMETERS"))
     {
-        string tmp;
-        BP->QueryStringAttribute("VALUE",&tmp);
-        boolparameters.insert(tmp);
-        BP = BP->NextSiblingElement("P");
+        TiXmlElement *bparam = mcf->FirstChildElement("BOOLPARAMETERS");
+        TiXmlElement *BP = bparam->FirstChildElement("P");
+
+        while(BP)
+        {
+            string tmp;
+            BP->QueryStringAttribute("VALUE",&tmp);
+            boolparameters.insert(tmp);
+            BP = BP->NextSiblingElement("P");
+        }
     }
 
     map<string,string>::iterator it;
@@ -116,8 +123,15 @@ void InputCAD::ParseFile(string nm)
     m_cadfile = it->second;
     it = information.find("MeshType");
     ASSERTL0(it != information.end(),"no meshtype defined");
-    it->second == "BL" ? m_makeBL = true : m_makeBL = false;
-    it->second == "CFI" ? m_cfiMesh = true : m_cfiMesh = false;
+    m_makeBL = it->second == "BL";
+    m_cfiMesh = it->second == "CFI";
+
+    it = information.find("UDSFile");
+    if(it != information.end())
+    {
+        m_udsfile = it->second;
+        m_uds = true;
+    }
 
     it = parameters.find("MinDelta");
     ASSERTL0(it != parameters.end(),"no mindelta defined");
@@ -139,11 +153,19 @@ void InputCAD::ParseFile(string nm)
         it = parameters.find("BLThick");
         ASSERTL0(it != parameters.end(), "no blthick defined");
         m_blthick = it->second;
+        it = parameters.find("BLLayers");
+        ASSERTL0(it != parameters.end(), "no bllayer defined");
+        m_bllayers = it->second;
+        it = parameters.find("BLProg");
+        ASSERTL0(it != parameters.end(), "no blprog defined");
+        m_blprog = it->second;
     }
 
     set<string>::iterator sit;
     sit = boolparameters.find("SurfOpti");
-    sit != boolparameters.end() ? m_surfopti = true : m_surfopti = false;
+    m_surfopti = sit != boolparameters.end();
+    sit = boolparameters.find("WriteOctree");
+    m_woct = sit != boolparameters.end();
 }
 
 void InputCAD::Process()
@@ -156,58 +178,53 @@ void InputCAD::Process()
 
     vector<ModuleSharedPtr> mods;
 
+    ////**** CAD ****////
     mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "loadcad"), m_mesh));
     mods.back()->RegisterConfig("filename", m_cadfile);
 
+    if(m_uds)
+    {
+        mods.back()->RegisterConfig("udsfile", m_udsfile);
+    }
+    if(m_woct)
+    {
+        mods.back()->RegisterConfig("writeoctree", "");
+    }
+
+    ////**** Possible Mesh Sources ****////
     if(m_cfiMesh)
     {
-        mods.back()->RegisterConfig("cfimesh","");
+        ////**** CFI mesh ****////
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "cfimesh"), m_mesh));
     }
     else
     {
+        ////**** Octree ****////
         mods.push_back(GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "loadoctree"), m_mesh));
         mods.back()->RegisterConfig("mindel", m_minDelta);
         mods.back()->RegisterConfig("maxdel", m_maxDelta);
         mods.back()->RegisterConfig("eps", m_eps);
 
-        /*if(pSession->DefinesSolverInfo("SourcePoints"))
-        {
-            ASSERTL0(boost::filesystem::exists(pSession->GetSolverInfo("SourcePoints").c_str()),
-                     "sourcepoints file does not exist");
-            mods.back()->RegisterConfig("sourcefile",pSession->GetSolverInfo("SourcePoints"));
-            NekDouble sp;
-            pSession->LoadParameter("SPSize", sp);
-            mods.back()->RegisterConfig("sourcesize",boost::lexical_cast<std::string>(sp));
-        }*/
-
-        /*if (pSession->DefinesSolverInfo("UserDefinedSpacing"))
-        {
-            string udsName = pSession->GetSolverInfo("UserDefinedSpacing");
-            ASSERTL0(boost::filesystem::exists(udsName.c_str()),
-                     "UserDefinedSpacing file does not exist");
-
-            mods.back()->RegisterConfig("udsfile",udsName);
-        }
-
-        if (pSession->DefinesSolverInfo("WriteOctree"))
-        {
-            mods.back()->RegisterConfig("writeoctree",fn + "_oct.xml");
-        }*/
-
+        ////**** SurfaceMesh ****////
         mods.push_back(GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "surfacemesh"), m_mesh));
 
-        /*mods.push_back(GetModuleFactory().CreateInstance(
+        ////**** VolumeMesh ****////
+        mods.push_back(GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "volumemesh"), m_mesh));
         if(m_makeBL)
         {
             mods.back()->RegisterConfig("blsurfs",m_blsurfs);
             mods.back()->RegisterConfig("blthick",m_blthick);
-        }*/
+            mods.back()->RegisterConfig("bllayers",m_bllayers);
+            mods.back()->RegisterConfig("blprog",m_blprog);
+        }
     }
 
+    ////**** HOSurface ****////
     mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh));
     if(m_surfopti)

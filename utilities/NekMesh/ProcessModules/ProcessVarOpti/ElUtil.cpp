@@ -347,7 +347,7 @@ void ElUtil::MappingIdealToRef()
             r[8] = J(2,2);
             mapsStd.push_back(r);
         }
-        for (int i = 0; i < m_derivUtil->ptsStd; ++i)
+        for (int i = 0; i < m_derivUtil->pts; ++i)
         {
             NekDouble a2  = 0.5 * (1 + u2[i]);
             NekDouble b1  = 0.5 * (1 - v2[i]);

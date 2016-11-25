@@ -851,7 +851,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 const NekDouble *data, 
                 const std::vector<unsigned int > &nummodes, 
                 const int mode_offset,
-                NekDouble *coeffs)
+                NekDouble *coeffs,
+                std::vector<LibUtilities::BasisType> &fromType)
         {
             switch(m_base[0]->GetBasisType())
             { 

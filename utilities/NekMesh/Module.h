@@ -36,6 +36,9 @@
 #ifndef UTILITIES_NEKMESH_MODULE
 #define UTILITIES_NEKMESH_MODULE
 
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+
 #include <map>
 #include <vector>
 #include <sstream>
@@ -46,6 +49,8 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <NekMeshUtils/MeshElements/Mesh.h>
+
+namespace io = boost::iostreams;
 
 namespace Nektar
 {
@@ -209,9 +214,11 @@ namespace Nektar
 
         protected:
             /// Print summary of elements.
-            void         PrintSummary();
+            void PrintSummary();
             /// Input stream
-            std::ifstream m_mshFile;
+            io::filtering_istream m_mshFile;
+            /// Input stream
+            std::ifstream m_mshFileStream;
         };
 
         /**
@@ -243,7 +250,9 @@ namespace Nektar
 
         protected:
             /// Output stream
-            std::ofstream m_mshFile;
+            io::filtering_ostream m_mshFile;
+            /// Input stream
+            std::ofstream m_mshFileStream;
         };
 
         typedef std::pair<ModuleType,std::string> ModuleKey;

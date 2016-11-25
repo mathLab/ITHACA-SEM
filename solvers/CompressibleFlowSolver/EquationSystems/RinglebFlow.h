@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File EulerArtificialDiffusionCFE.h
+// File RinglebFlow.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,82 +29,53 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in conservative variables with artificial
-// diffusion
+// Description: Euler equations for Ringleb flow
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERADCFE_H
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERADCFE_H
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_RINGLEBFLOW_H
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_RINGLEBFLOW_H
 
-#include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
+#include <CompressibleFlowSolver/EquationSystems/EulerCFE.h>
 
 namespace Nektar
-{  
-    enum ProblemType
-    {           
-        eGeneral,          ///< No problem defined - Default Inital data
-        SIZE_ProblemType   ///< Length of enum list
-    };
-  
-    const char* const ProblemTypeMap[] =
-    {
-        "General"
-    };
-  
-    /**
-     * 
-     * 
-     **/
-    class EulerADCFE : public CompressibleFlowSystem
+{
+
+    class RinglebFlow : public EulerCFE
     {
     public:
-        friend class MemoryManager<EulerADCFE>;
+        friend class MemoryManager<RinglebFlow>;
 
-        /// Creates an instance of this class
+        /// Creates an instance of this class.
         static SolverUtils::EquationSystemSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            SolverUtils::EquationSystemSharedPtr p = MemoryManager<
-                EulerADCFE>::AllocateSharedPtr(pSession);
+            SolverUtils::EquationSystemSharedPtr p = MemoryManager<RinglebFlow>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
         }
-        /// Name of class
+        /// Name of class.
         static std::string className;
-    
-        virtual ~EulerADCFE();
 
-        ///< problem type selector
-        ProblemType m_problemType;
-    
+        virtual ~RinglebFlow();
+
     protected:
-        EulerADCFE(
-            const LibUtilities::SessionReaderSharedPtr& pSession);
 
-        virtual void v_InitObject();
+        RinglebFlow(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         /// Print a summary of time stepping parameters.
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
-        void DoOdeRhs(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time);
-    
-        void DoOdeProjection(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time);
-
-        virtual void v_SetInitialConditions(
-            NekDouble initialtime = 0.0,
-            bool dumpInitialConditions = true,
-            const int domain = 0);
+        virtual void v_EvaluateExactSolution(
+            unsigned int            field,
+            Array<OneD, NekDouble> &outfield,
+            const NekDouble         time = 0.0);
 
     private:
-        void SetBoundaryConditions(
-            Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
+        /// Ringleb Flow Test Case.
+        void GetExactRinglebFlow(
+            int                                             field,
+            Array<OneD, NekDouble>                         &outarray);
     };
 }
 #endif

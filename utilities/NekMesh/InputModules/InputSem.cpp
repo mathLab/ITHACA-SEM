@@ -649,7 +649,7 @@ void InputSem::Process()
     }
 
     PrintSummary();
-    m_mshFile.close();
+    m_mshFile.reset();
 
     // Process rest of mesh.
     ProcessVertices();

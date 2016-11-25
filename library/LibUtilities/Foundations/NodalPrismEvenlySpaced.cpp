@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: 3D Nodal Prism Evenly Spaced Point Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,14 +48,14 @@ namespace Nektar
         {
             bool isVertex(int x, int y, int z, int npts)
             {
-                return (x == 0        && y == 0        && z == 0       ) || 
-                       (x == (npts-1) && y == 0        && z == 0       ) || 
-                       (x == (npts-1) && y == (npts-1) && z == 0       ) || 
-                       (x == 0        && y == (npts-1) && z == 0       ) || 
-                       (x == 0        && y == 0        && z == (npts-1)) || 
+                return (x == 0        && y == 0        && z == 0       ) ||
+                       (x == (npts-1) && y == 0        && z == 0       ) ||
+                       (x == (npts-1) && y == (npts-1) && z == 0       ) ||
+                       (x == 0        && y == (npts-1) && z == 0       ) ||
+                       (x == 0        && y == 0        && z == (npts-1)) ||
                        (x == 0        && y == (npts-1) && z == (npts-1));
             }
-            
+
             bool isEdge_01(int x, int y, int z, int npts)
             {
                 return y == 0 && z == 0;
@@ -70,7 +70,7 @@ namespace Nektar
             {
                 return y == (npts-1) && z == 0;
             }
-            
+
             bool isEdge_30(int x, int y, int z, int npts)
             {
                 return x == 0 && z == 0;
@@ -80,29 +80,29 @@ namespace Nektar
             {
                 return x == 0 && y == 0;
             }
-            
+
             bool isEdge_14(int x, int y, int z, int npts)
             {
                 return x + z == (npts-1) && y == 0;
             }
-            
+
             bool isEdge_25(int x, int y, int z, int npts)
             {
                 return x + z == (npts-1) && y == (npts-1);
             }
-            
+
             bool isEdge_35(int x, int y, int z, int npts)
             {
                 return x == 0 && y == (npts-1);
             }
-            
+
             bool isEdge_45(int x, int y, int z, int npts)
             {
                 return x == 0 && z == (npts-1);
             }
 
             bool isEdge(int x, int y, int z, int npts){
-                return isEdge_01(x,y,z,npts) || isEdge_12(x,y,z,npts) || 
+                return isEdge_01(x,y,z,npts) || isEdge_12(x,y,z,npts) ||
                        isEdge_23(x,y,z,npts) || isEdge_30(x,y,z,npts) ||
                        isEdge_04(x,y,z,npts) || isEdge_14(x,y,z,npts) ||
                        isEdge_25(x,y,z,npts) || isEdge_35(x,y,z,npts) ||
@@ -128,7 +128,7 @@ namespace Nektar
             {
                 return y == (npts-1);
             }
-            
+
             bool isFace_0354(int x, int y, int z, int npts)
             {
                 return x == 0;
@@ -146,7 +146,7 @@ namespace Nektar
         {
             // Allocate the storage for points
             PointsBaseType::CalculatePoints();
-            
+
             // Populate m_points
             unsigned int npts = GetNumPoints();
             NekDouble delta = 2.0/(npts - 1.0);
@@ -161,12 +161,12 @@ namespace Nektar
                         m_points[1][index] = yi;
                         m_points[2][index] = zi;
                     }
-                }                
+                }
             }
-            
+
+            NodalPointReorder3d();
             m_util = MemoryManager<NodalUtilPrism>::AllocateSharedPtr(
                 npts - 1, m_points[0], m_points[1], m_points[2]);
-            NodalPointReorder3d();            
         }
 
         void NodalPrismEvenlySpaced::NodalPointReorder3d()
@@ -184,7 +184,7 @@ namespace Nektar
             vector<int> iEdge_35;   // interior edge 7
             vector<int> iEdge_45;   // interior edge 8
             vector<int> iFace_0123; // interior face 0
-            vector<int> iFace_014;  // interior face 1 
+            vector<int> iFace_014;  // interior face 1
             vector<int> iFace_1254; // interior face 2
             vector<int> iFace_325;  // interior face 3
             vector<int> iFace_0354; // interior face 4
@@ -198,7 +198,7 @@ namespace Nektar
                         if (isVertex(x,y,z,npts))
                         {
                             vertex.push_back(index);
-                        } 
+                        }
                         else if (isEdge(x,y,z,npts))
                         {
                             if (isEdge_01(x,y,z,npts))
@@ -208,7 +208,7 @@ namespace Nektar
                             else if (isEdge_12(x,y,z,npts))
                             {
                                 iEdge_12.push_back(index);
-                            } 
+                            }
                             else if (isEdge_23(x,y,z,npts))
                             {
                                 iEdge_23.push_back(index);
@@ -237,21 +237,21 @@ namespace Nektar
                             {
                                 iEdge_45.push_back(index);
                             }
-                        } 
-                        else if (isFace(x,y,z,npts)) 
+                        }
+                        else if (isFace(x,y,z,npts))
                         {
                             if (isFace_0123(x,y,z,npts))
                             {
                                 iFace_0123.push_back(index);
-                            } 
+                            }
                             else if (isFace_014(x,y,z,npts))
                             {
                                 iFace_014.push_back(index);
-                            } 
+                            }
                             else if (isFace_1254(x,y,z,npts))
                             {
                                 iFace_1254.push_back(index);
-                            } 
+                            }
                             else if (isFace_325(x,y,z,npts))
                             {
                                 iFace_325.push_back(index);
@@ -260,20 +260,20 @@ namespace Nektar
                             {
                                 iFace_0354.push_back(index);
                             }
-                        } 
-                        else 
+                        }
+                        else
                         {
                             interiorVolumePoints.push_back(index);
                         }
                     }
                 }
             }
-           
+
             for (unsigned int n=0; n<vertex.size(); ++n)
             {
                 map.push_back(vertex[n]);
             }
-            
+
             for (unsigned int n=0; n<iEdge_01.size(); ++n)
             {
                 map.push_back(iEdge_01[n]);
@@ -353,7 +353,7 @@ namespace Nektar
             points[0] = Array<OneD, NekDouble>(GetTotNumPoints());
             points[1] = Array<OneD, NekDouble>(GetTotNumPoints());
             points[2] = Array<OneD, NekDouble>(GetTotNumPoints());
-            
+
             for(unsigned int index=0; index<map.size(); ++index)
             {
                 points[0][index] = m_points[0][index];
@@ -370,15 +370,15 @@ namespace Nektar
         }
 
         void NodalPrismEvenlySpaced::CalculateWeights()
-        {            
+        {
             // Allocate the storage for points
             PointsBaseType::CalculateWeights();
 
             typedef DataType T;
-            
+
             // Solve the Vandermonde system of integrals for the weight vector
             NekVector<T> w = m_util->GetWeights();
-            
+
             m_weights = Array<OneD,T>( w.GetRows(), w.GetPtr() );
         }
 
@@ -410,6 +410,7 @@ namespace Nektar
 
             m_derivmatrix[0] = m_util->GetDerivMatrix(0);
             m_derivmatrix[1] = m_util->GetDerivMatrix(1);
+            m_derivmatrix[2] = m_util->GetDerivMatrix(2);
         }
 
         boost::shared_ptr<PointsBaseType> NodalPrismEvenlySpaced::Create(const PointsKey &key)
@@ -420,6 +421,5 @@ namespace Nektar
 
             return returnval;
         }
-    } // end of namespace 
-} // end of namespace 
-
+    } // end of namespace
+} // end of namespace

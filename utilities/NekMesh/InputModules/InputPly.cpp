@@ -70,7 +70,7 @@ void InputPly::Process()
 
     ReadPly(m_mshFile);
 
-    m_mshFile.close();
+    m_mshFile.reset();
 
     ProcessVertices();
     ProcessEdges();
@@ -79,7 +79,7 @@ void InputPly::Process()
     ProcessComposites();
 }
 
-void InputPly::ReadPly(std::ifstream &mshFile, NekDouble scale)
+void InputPly::ReadPly(io::filtering_istream &mshFile, NekDouble scale)
 {
     m_mesh->m_expDim = 0;
     string line;

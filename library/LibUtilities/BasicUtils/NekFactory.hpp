@@ -55,7 +55,7 @@
     #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
     #ifndef MAX_PARAM
-    #define MAX_PARAM 5  // default maximum number of parameters to support
+    #define MAX_PARAM 6  // default maximum number of parameters to support
     #endif
 
 namespace Nektar

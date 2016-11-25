@@ -283,7 +283,8 @@ void Interpolator::Interpolate(const LibUtilities::PtsFieldSharedPtr ptsInField,
  */
 void Interpolator::Interpolate(
     const vector<MultiRegions::ExpListSharedPtr> expInField,
-    vector<MultiRegions::ExpListSharedPtr> &expOutField)
+    vector<MultiRegions::ExpListSharedPtr> &expOutField,
+    NekDouble def_value)
 {
     ASSERTL0(expInField.size() == expOutField.size(),
              "number of fields does not match");
@@ -357,6 +358,13 @@ void Interpolator::Interpolate(
                 }
             }
         }
+        else
+        {
+            for (int f = 0; f < m_expInField.size(); ++f)
+            {
+                m_expOutField[f]->UpdatePhys()[i] = def_value;
+            }
+        }
 
         int progress = int(100 * i / nOutPts);
         if (m_progressCallback && progress > lastProg)
@@ -380,7 +388,8 @@ void Interpolator::Interpolate(
  */
 void Interpolator::Interpolate(
     const vector<MultiRegions::ExpListSharedPtr> expInField,
-    LibUtilities::PtsFieldSharedPtr &ptsOutField)
+    LibUtilities::PtsFieldSharedPtr &ptsOutField,
+    NekDouble def_value)
 {
     ASSERTL0(expInField.size() == ptsOutField->GetNFields(),
              "number of fields does not match");
@@ -433,6 +442,14 @@ void Interpolator::Interpolate(
                     m_ptsOutField->SetPointVal(m_ptsOutField->GetDim() + f, i,
                                                value);
                 }
+            }
+        }
+        else
+        {
+            for (int f = 0; f < m_expInField.size(); ++f)
+            {
+                m_ptsOutField->SetPointVal(m_ptsOutField->GetDim() + f, i,
+                                           def_value);
             }
         }
 

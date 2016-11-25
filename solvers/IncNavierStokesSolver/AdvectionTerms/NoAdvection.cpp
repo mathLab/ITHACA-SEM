@@ -82,7 +82,9 @@ void NoAdvection::v_Advect(
     const Array<OneD, Array<OneD, NekDouble> >        &advVel,
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
           Array<OneD, Array<OneD, NekDouble> >        &outarray,
-    const NekDouble                                   &time)
+    const NekDouble                                   &time,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
     int nPointsTot = fields[0]->GetNpoints();
     for (int i = 0; i < inarray.num_elements(); ++i)

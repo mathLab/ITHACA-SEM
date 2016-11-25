@@ -60,10 +60,6 @@ public:
         m_udsfileset = false;
     }
 
-    Octree()
-    {
-    }
-
     /**
      * @brief builds the octree based on curvature sampling and user defined
      * spacing

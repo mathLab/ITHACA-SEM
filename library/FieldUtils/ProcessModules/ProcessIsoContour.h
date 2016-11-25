@@ -58,33 +58,33 @@ const NekDouble SQ_PNT_TOL=1e-6;
 class Iso
 {
     public:
-        void  condense(void);
-        void  globalcondense(vector<boost::shared_ptr<Iso> > &iso, bool verbose);
-        void  separate_regions(vector<boost::shared_ptr<Iso> > &iso, int minsize, bool verbose);
+        void  Condense(void);
+        void  GlobalCondense(vector<boost::shared_ptr<Iso> > &iso, bool verbose);
+        void  SeparateRegions(vector<boost::shared_ptr<Iso> > &iso, int minsize, bool verbose);
 
-        void  smooth(int n_iter, NekDouble lambda, NekDouble mu);
+        void  Smooth(int n_iter, NekDouble lambda, NekDouble mu);
 
-        int  get_nvert(void)
+        int  GetNVert(void)
         {
             return m_nvert;
         }
 
-        void set_nvert(int n)
+        void SetNVert(int n)
         {
             m_nvert = n;
         }
 
-        int  get_ntris(void)
+        int  GetNTris(void)
         {
             return m_ntris;
         }
 
-        void set_ntris(int n)
+        void SetNTris(int n)
         {
             m_ntris = n;
         }
 
-        void set_fields(const int loc,
+        void SetFields(const int loc,
                         const Array<OneD,Array<OneD, NekDouble> > &intfields,
                         const int j)
         {
@@ -98,57 +98,57 @@ class Iso
             }
         }
 
-        NekDouble get_fields(const int i, const int j)
+        NekDouble GetFields(const int i, const int j)
         {
             return m_fields[i][j];
         }
 
-        void set_x(int loc, NekDouble val)
+        void SetX(int loc, NekDouble val)
         {
             m_x[loc] = val;
         }
 
-        void set_y(int loc, NekDouble val)
+        void SetY(int loc, NekDouble val)
         {
             m_y[loc] = val;
         }
 
-        void set_z(int loc, NekDouble val)
+        void SetZ(int loc, NekDouble val)
         {
             m_z[loc] = val;
         }
 
-        NekDouble get_x(int loc)
+        NekDouble GetX(int loc)
         {
             return m_x[loc];
         }
 
-        NekDouble get_y(int loc)
+        NekDouble GetY(int loc)
         {
             return m_y[loc];
         }
 
-        NekDouble get_z(int loc)
+        NekDouble GetZ(int loc)
         {
             return m_z[loc];
         }
 
-        int  get_vid(int i)
+        int  GetVId(int i)
         {
             return m_vid[i];
         }
 
-        void resize_vid(int nconn)
+        void ResizeVId(int nconn)
         {
             m_vid = Array<OneD, int>(nconn);
         }
 
-        void set_vid(int i, int j)
+        void SetVId(int i, int j)
         {
             m_vid[i] = j;
         }
 
-        void resize_fields(int size)
+        void ResizeFields(int size)
         {
             if(size > m_x.size()) // add 1000 element to vectors
             {

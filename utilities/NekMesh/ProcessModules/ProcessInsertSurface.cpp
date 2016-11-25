@@ -161,7 +161,9 @@ void ProcessInsertSurface::Process()
         if(nonconform)
         {
             if(dist1 > tol)
+            {
                 continue;
+            }
         }
         else
         {
@@ -178,7 +180,9 @@ void ProcessInsertSurface::Process()
         if(nonconform)
         {
             if(dist2 > tol)
+            {
                 continue;
+            }
         }
         else
         {

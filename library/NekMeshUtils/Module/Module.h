@@ -33,8 +33,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_MODULE
-#define UTILITIES_NEKMESH_MODULE
+#ifndef NEKMESHUTILS_MODULE
+#define NEKMESHUTILS_MODULE
+
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
 
 #include <map>
 #include <vector>
@@ -47,210 +50,216 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <NekMeshUtils/MeshElements/Mesh.h>
 
+namespace io = boost::iostreams;
+
 namespace Nektar
 {
 namespace NekMeshUtils
 {
-/**
- * Denotes different types of mesh converter modules: so far only
- * input, output and process modules are defined.
- */
-enum ModuleType {
-    eInputModule,
-    eProcessModule,
-    eOutputModule,
-    SIZE_ModuleType
-};
-
-const char* const ModuleTypeMap[] =
-{
-    "Input",
-    "Process",
-    "Output"
-};
-
-typedef std::map<int, std::pair<FaceSharedPtr, std::vector<int> > > PerMap;
-
-/**
- * @brief Represents a command-line configuration option.
- */
-struct ConfigOption
-{
     /**
-     * @brief Construct a new configuration option.
+     * Denotes different types of mesh converter modules: so far only
+     * input, output and process modules are defined.
+     */
+    enum ModuleType {
+        eInputModule,
+        eProcessModule,
+        eOutputModule,
+        SIZE_ModuleType
+    };
+
+    const char* const ModuleTypeMap[] =
+    {
+        "Input",
+        "Process",
+        "Output"
+    };
+
+    typedef std::map<int, std::pair<FaceSharedPtr, std::vector<int> > > PerMap;
+
+    /**
+     * @brief Represents a command-line configuration option.
+     */
+    struct ConfigOption
+    {
+        /**
+         * @brief Construct a new configuration option.
+         *
+         * @param isBool    True if the option is boolean type.
+         * @param defValue  Default value of the option.
+         * @param desc      Description of the option.
+         */
+        ConfigOption(bool isBool, std::string defValue, std::string desc) :
+            isBool(isBool), beenSet(false), value(), defValue(defValue),
+            desc(desc) {}
+        ConfigOption() :
+            isBool(false), beenSet(false), value(), defValue(), desc() {}
+
+        /**
+         * @brief Re-interpret the value stored in #value as some type using
+         * boost::lexical_cast.
+         */
+        template<typename T>
+        T as()
+        {
+            try
+            {
+                return boost::lexical_cast<T>(value);
+            }
+            catch(const std::exception &e)
+            {
+                std::cerr << e.what() << std::endl;
+                abort();
+            }
+        }
+
+        /**
+         * @brief Interpret the value stored in #value as some type using
+         * boost::lexical_cast and return true of false depending on cast
+         */
+        template<typename T>
+        bool isType()
+        {
+            bool returnval = true;
+            try
+            {
+                boost::lexical_cast<T>(value);
+            }
+            catch(const std::exception &e)
+            {
+                returnval = false;
+            }
+
+            return returnval;
+        }
+
+
+        /// True if the configuration option is a boolean (thus does not
+        /// need additional arguments).
+        bool   isBool;
+        /// True if the configuration option has been set at command
+        /// line. If false, the default value will be put into #value.
+        bool   beenSet;
+        /// The value of the configuration option.
+        std::string value;
+        /// Default value of the configuration option.
+        std::string defValue;
+        /// Description of the configuration option.
+        std::string desc;
+    };
+
+
+    /**
+     * Abstract base class for mesh converter modules. Each subclass
+     * implements the Process() function, which in some way alters the
+     * mesh #m.
+     */
+    class Module
+    {
+    public:
+    Module(MeshSharedPtr p_m) : m_mesh(p_m) {}
+        virtual void Process() = 0;
+
+        void RegisterConfig(std::string key, std::string value);
+        void PrintConfig();
+        void SetDefaults();
+        MeshSharedPtr GetMesh()
+        {
+            return m_mesh;
+        }
+
+        /// Extract element vertices
+        virtual void ProcessVertices();
+        /// Extract element edges
+        virtual void ProcessEdges(bool ReprocessEdges = true);
+        /// Extract element faces
+        virtual void ProcessFaces(bool ReprocessFaces = true);
+        /// Generate element IDs
+        virtual void ProcessElements();
+        /// Generate composites
+        virtual void ProcessComposites();
+
+        virtual void ClearElementLinks();
+
+    protected:
+        /// Mesh object
+        MeshSharedPtr m_mesh;
+        /// List of configuration values.
+        std::map<std::string, ConfigOption> m_config;
+
+
+
+        void ReorderPrisms(PerMap                        &perFaces);
+        void PrismLines   (int                            prism,
+                           PerMap                        &perFaces,
+                           std::set<int>                 &prismsDone,
+                           std::vector<ElementSharedPtr> &line);
+    };
+
+    /**
+     * @brief Abstract base class for input modules.
      *
-     * @param isBool    True if the option is boolean type.
-     * @param defValue  Default value of the option.
-     * @param desc      Description of the option.
+     * Input modules should read the contents of #m_mshFile in the Process()
+     * function and populate the members of #m. Typically any given module
+     * should populate Mesh::expDim, Mesh::spaceDim, Mesh::node and
+     * Mesh::element, then call the protected ProcessX functions to
+     * generate edges, faces, etc.
      */
-    ConfigOption(bool isBool, std::string defValue, std::string desc) :
-        isBool(isBool), beenSet(false), value(), defValue(defValue),
-        desc(desc) {}
-    ConfigOption() :
-        isBool(false), beenSet(false), value(), defValue(), desc() {}
+    class InputModule : public Module
+    {
+    public:
+        InputModule(MeshSharedPtr p_m);
+        void OpenStream();
+
+    protected:
+        /// Print summary of elements.
+        void PrintSummary();
+        /// Input stream
+        io::filtering_istream m_mshFile;
+        /// Input stream
+        std::ifstream m_mshFileStream;
+    };
 
     /**
-     * @brief Re-interpret the value stored in #value as some type using
-     * boost::lexical_cast.
+     * @brief Abstract base class for processing modules.
+     *
+     * Processing modules take a populated %Mesh object and process it in
+     * some fashion; for example the %ProcessJac module calculates the
+     * Jacobian of each element and prints warnings for non-positive
+     * elements.
      */
-    template<typename T>
-    T as()
+    class ProcessModule : public Module
     {
-        try
-        {
-            return boost::lexical_cast<T>(value);
-        }
-        catch(const std::exception &e)
-        {
-            std::cerr << e.what() << std::endl;
-            abort();
-        }
-    }
+    public:
+        ProcessModule(MeshSharedPtr p_m) : Module(p_m) {}
+    };
 
     /**
-     * @brief Interpret the value stored in #value as some type using
-     * boost::lexical_cast and return true of false depending on cast
+     * @brief Abstract base class for output modules.
+     *
+     * Output modules take the mesh #m and write to the file specified by
+     * the stream #m_mshFile.
      */
-    template<typename T>
-    bool isType()
+    class OutputModule : public Module
     {
-        bool returnval = true;
-        try
-        {
-            boost::lexical_cast<T>(value);
-        }
-        catch(const std::exception &e)
-        {
-            returnval = false;
-        }
-
-        return returnval;
-    }
+    public:
+        OutputModule(MeshSharedPtr p_m);
+        void OpenStream();
 
 
-    /// True if the configuration option is a boolean (thus does not
-    /// need additional arguments).
-    bool   isBool;
-    /// True if the configuration option has been set at command
-    /// line. If false, the default value will be put into #value.
-    bool   beenSet;
-    /// The value of the configuration option.
-    std::string value;
-    /// Default value of the configuration option.
-    std::string defValue;
-    /// Description of the configuration option.
-    std::string desc;
-};
+    protected:
+        /// Output stream
+        io::filtering_ostream m_mshFile;
+        /// Input stream
+        std::ofstream m_mshFileStream;
+    };
 
+    typedef std::pair<ModuleType,std::string> ModuleKey;
+    std::ostream& operator<<(std::ostream& os, const ModuleKey& rhs);
 
-/**
- * Abstract base class for mesh converter modules. Each subclass
- * implements the Process() function, which in some way alters the
- * mesh #m.
- */
-class Module
-{
-public:
-Module(MeshSharedPtr p_m) : m_mesh(p_m) {}
-    virtual void Process() = 0;
+    typedef boost::shared_ptr<Module> ModuleSharedPtr;
+    typedef LibUtilities::NekFactory< ModuleKey, Module, MeshSharedPtr > ModuleFactory;
 
-    void RegisterConfig(std::string key, std::string value);
-    void PrintConfig();
-    void SetDefaults();
-    MeshSharedPtr GetMesh()
-    {
-        return m_mesh;
-    }
-
-    /// Extract element vertices
-    virtual void ProcessVertices();
-    /// Extract element edges
-    virtual void ProcessEdges(bool ReprocessEdges = true);
-    /// Extract element faces
-    virtual void ProcessFaces(bool ReprocessFaces = true);
-    /// Generate element IDs
-    virtual void ProcessElements();
-    /// Generate composites
-    virtual void ProcessComposites();
-
-    virtual void ClearElementLinks();
-
-protected:
-    /// Mesh object
-    MeshSharedPtr m_mesh;
-    /// List of configuration values.
-    std::map<std::string, ConfigOption> m_config;
-
-
-
-    void ReorderPrisms(PerMap                        &perFaces);
-    void PrismLines   (int                            prism,
-                       PerMap                        &perFaces,
-                       std::set<int>                 &prismsDone,
-                       std::vector<ElementSharedPtr> &line);
-};
-
-/**
- * @brief Abstract base class for input modules.
- *
- * Input modules should read the contents of #m_mshFile in the Process()
- * function and populate the members of #m. Typically any given module
- * should populate Mesh::expDim, Mesh::spaceDim, Mesh::node and
- * Mesh::element, then call the protected ProcessX functions to
- * generate edges, faces, etc.
- */
-class InputModule : public Module
-{
-public:
-    InputModule(MeshSharedPtr p_m);
-    void OpenStream();
-
-protected:
-    /// Print summary of elements.
-    void         PrintSummary();
-    /// Input stream
-    std::ifstream m_mshFile;
-};
-
-/**
- * @brief Abstract base class for processing modules.
- *
- * Processing modules take a populated %Mesh object and process it in
- * some fashion; for example the %ProcessJac module calculates the
- * Jacobian of each element and prints warnings for non-positive
- * elements.
- */
-class ProcessModule : public Module
-{
-public:
-    ProcessModule(MeshSharedPtr p_m) : Module(p_m) {}
-};
-
-/**
- * @brief Abstract base class for output modules.
- *
- * Output modules take the mesh #m and write to the file specified by
- * the stream #m_mshFile.
- */
-class OutputModule : public Module
-{
-public:
-    OutputModule(MeshSharedPtr p_m);
-    void OpenStream();
-
-
-protected:
-    /// Output stream
-    std::ofstream m_mshFile;
-};
-
-typedef std::pair<ModuleType,std::string> ModuleKey;
-std::ostream& operator<<(std::ostream& os, const ModuleKey& rhs);
-
-typedef boost::shared_ptr<Module> ModuleSharedPtr;
-typedef LibUtilities::NekFactory< ModuleKey, Module, MeshSharedPtr > ModuleFactory;
-
-ModuleFactory& GetModuleFactory();
+    ModuleFactory& GetModuleFactory();
 }
 }
 

@@ -184,21 +184,24 @@ namespace Nektar
                 case eNodalTriEvenlySpaced:
                     totpoints = m_numpoints*(m_numpoints+1)/2;
                     break;
-                case eNodalTriSPI: ASSERTL0(false,"this method cannot be implemented");
+                case eNodalTriSPI:
+                    ASSERTL0(false,"this method cannot be implemented");
                     break;
 
                 case eNodalTetElec:
                 case eNodalTetEvenlySpaced:
                     totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
                     break;
-                case eNodalTetSPI: ASSERTL0(false,"this method cannot be implemented");
+                case eNodalTetSPI:
+                    ASSERTL0(false,"this method cannot be implemented");
                     break;
 
                 case eNodalPrismEvenlySpaced:
                 case eNodalPrismElec:
                     totpoints = m_numpoints*m_numpoints*(m_numpoints+1)/2;
                     break;
-                case eNodalPrismSPI: ASSERTL0(false,"this method cannot be implemented");
+                case eNodalPrismSPI:
+                    ASSERTL0(false,"this method cannot be implemented");
                     break;
 
                 default:

@@ -43,6 +43,8 @@ using namespace std;
 
 namespace Nektar
 {
+    using namespace MultiRegions;
+
     string VelocityCorrectionScheme::className = 
         SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
             "VelocityCorrectionScheme", 
@@ -349,9 +351,6 @@ namespace Nektar
         const NekDouble time, 
         const NekDouble aii_Dt)
     {
-        // Enforcing boundary conditions on all fields
-        SetBoundaryConditions(time);
-
         // Substep the pressure boundary condition if using substepping
         m_extrapolation->SubStepSetPressureBCs(inarray,aii_Dt,m_kinvis);
 
@@ -380,12 +379,12 @@ namespace Nektar
         int physTot = m_fields[0]->GetTotPoints();
         int nvel = m_velocity.num_elements();
 
-        m_fields[0]->PhysDeriv(0,fields[0],
-                               Forcing[0]);
+        m_fields[0]->PhysDeriv(eX,fields[0], Forcing[0]);
+        
         for(i = 1; i < nvel; ++i)
         {
             // Use Forcing[1] as storage since it is not needed for the pressure
-            m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[i],fields[i],Forcing[1]);
+            m_fields[i]->PhysDeriv(DirCartesianMap[i],fields[i],Forcing[1]);
             Vmath::Vadd(physTot,Forcing[1],1,Forcing[0],1,Forcing[0],1);
         }
 

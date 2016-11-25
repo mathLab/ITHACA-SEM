@@ -97,7 +97,12 @@ namespace Nektar
 
                 LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildVertexMatrix(
                     const DNekScalMatSharedPtr &r_bnd);
-			
+                LOCAL_REGIONS_EXPORT void ExtractDataToCoeffs(
+                    const NekDouble *data,
+                    const std::vector<unsigned int > &nummodes,
+                    const int nmodes_offset,
+                    NekDouble *coeffs,
+                    std::vector<LibUtilities::BasisType> &fromType);
                 LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryInt(
                     const int                           edge,
                     const boost::shared_ptr<Expansion> &EdgeExp,
@@ -147,7 +152,12 @@ namespace Nektar
 
                 virtual DNekMatSharedPtr v_BuildVertexMatrix(
                     const DNekScalMatSharedPtr &r_bnd); 
-
+                virtual void v_ExtractDataToCoeffs(
+                    const NekDouble *data,
+                    const std::vector<unsigned int > &nummodes,
+                    const int nmodes_offset,
+                    NekDouble *coeffs,
+                    std::vector<LibUtilities::BasisType> &fromType);
                 virtual void v_AddEdgeNormBoundaryInt(
                     const int                           edge,
                     const boost::shared_ptr<Expansion> &EdgeExp,

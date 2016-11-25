@@ -116,12 +116,14 @@ public:
     /// Interpolate from an expansion to an expansion
     FIELD_UTILS_EXPORT void Interpolate(
         const std::vector<MultiRegions::ExpListSharedPtr> expInField,
-        std::vector<MultiRegions::ExpListSharedPtr> &expOutField);
+        std::vector<MultiRegions::ExpListSharedPtr> &expOutField,
+        NekDouble def_value = 0.0);
 
     /// Interpolate from an expansion to a pts field
     FIELD_UTILS_EXPORT void Interpolate(
         const std::vector<MultiRegions::ExpListSharedPtr> expInField,
-        LibUtilities::PtsFieldSharedPtr &ptsOutField);
+        LibUtilities::PtsFieldSharedPtr &ptsOutField,
+        NekDouble def_value = 0.0);
 
     /// Interpolate from a pts field to an expansion
     FIELD_UTILS_EXPORT void Interpolate(

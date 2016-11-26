@@ -436,7 +436,6 @@ namespace Nektar
                 }
                 
                 // Calculate velocity boundary conditions
-#if ImplicitPressure
                 if(m_hbcType[n] == eOBC)
                 {
                     //    = (pbc n - kinvis divU n)
@@ -450,11 +449,6 @@ namespace Nektar
 
                     // pbc  needs to be added after pressure solve
                 }
-#else
-                //    = (pbc n - kinvis divU n)
-                Vmath::Smul(nqb, kinvis, divU, 1, divU, 1);
-                Vmath::Vsub(nqb, pbc, 1, divU, 1, bndVal, 1);
-#endif
                 
                 for(int i = 0; i < m_curl_dim; ++i)
                 {

@@ -271,10 +271,8 @@ namespace Nektar
                               factors, StdRegions::NullVarCoeffMap,
                               NullNekDouble1DArray, false);
 
-#if ImplicitPressure
         // Add presure to outflow bc if using convective like BCs
         m_extrapolation->AddPressureToOutflowBCs(m_kinvis);
-#endif
     }
     
 } //end of namespace

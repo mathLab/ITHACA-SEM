@@ -444,10 +444,8 @@ namespace Nektar
         m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(),
                               NullFlagList, factors);
 
-#if ImplicitPressure
         // Add presure to outflow bc if using convective like BCs
         m_extrapolation->AddPressureToOutflowBCs(m_kinvis);
-#endif
     }
     
     /**

@@ -579,8 +579,9 @@ namespace Nektar
             {
             case e2D:
                 {
-                    PhysDeriv(eX, Vel[eY], Vx);
-                    PhysDeriv(eY, Vel[eX], Uy);
+                    PhysDeriv(xDir, Vel[yDir], Vx);
+                    PhysDeriv(yDir, Vel[xDir], Uy);
+                    
 
                     Vmath::Vsub(nq, Vx, 1, Uy, 1, Dummy, 1);
 
@@ -599,9 +600,9 @@ namespace Nektar
                     Array<OneD,NekDouble> Wx(nq);
                     Array<OneD,NekDouble> Wy(nq);
 
-                    PhysDeriv(Vel[0], Dummy, Uy, Uz);
-                    PhysDeriv(Vel[1], Vx, Dummy, Vz);
-                    PhysDeriv(Vel[2], Wx, Wy, Dummy);
+                    PhysDeriv(Vel[xDir], Dummy, Uy, Uz);
+                    PhysDeriv(Vel[yDir], Vx, Dummy, Vz);
+                    PhysDeriv(Vel[zDir], Wx, Wy, Dummy);
 
                     Vmath::Vsub(nq, Wy, 1, Vz, 1, Q[0], 1);
                     Vmath::Vsub(nq, Uz, 1, Wx, 1, Q[1], 1);

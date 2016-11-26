@@ -141,13 +141,13 @@ namespace Nektar
             /// This operator performs range checking.
             typename boost::call_traits<DataType>::reference operator()(unsigned int i)
             {
-                ASSERTL0( (i>=0) && (i<dim::Value), "Invalid access to NekPoint data via parenthesis operator: index out of range");
+                ASSERTL1( (i>=0) && (i<dim::Value), "Invalid access to NekPoint data via parenthesis operator: index out of range");
                 return m_data[i];
             }
 
             typename boost::call_traits<DataType>::const_reference operator()(unsigned int i) const
             {
-                ASSERTL0( (i>=0) && (i<dim::Value), "Invalid access to NekPoint data via parenthesis operator: index out of range");
+                ASSERTL1( (i>=0) && (i<dim::Value), "Invalid access to NekPoint data via parenthesis operator: index out of range");
                 return m_data[i];
             }
 
@@ -163,91 +163,76 @@ namespace Nektar
 
             typename boost::call_traits<DataType>::const_reference x() const
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 1);
                 return m_data[0];
             }
 
             typename boost::call_traits<DataType>::const_reference y() const
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 return (*this)[1];
             }
 
             typename boost::call_traits<DataType>::const_reference z() const
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 3);
                 return (*this)[2];
             }
 
             typename boost::call_traits<DataType>::const_reference a() const
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 1);
                 return m_data[0];
             }
 
             typename boost::call_traits<DataType>::const_reference b() const
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 return (*this)[1];
             }
 
             typename boost::call_traits<DataType>::const_reference c() const
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 3);
                 return (*this)[2];
             }
 
             typename boost::call_traits<DataType>::const_reference r() const
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 1);
                 return m_data[0];
             }
 
             typename boost::call_traits<DataType>::const_reference s() const
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 return (*this)[1];
             }
 
             typename boost::call_traits<DataType>::const_reference t() const
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 3);
                 return (*this)[2];
             }
 
             void SetX(typename boost::call_traits<DataType>::const_reference val)
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 1);
                 m_data[0] = val;
             }
 
             void SetY(typename boost::call_traits<DataType>::const_reference val)
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 m_data[1] = val;
             }
 
             void SetZ(typename boost::call_traits<DataType>::const_reference val)
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 m_data[2] = val;
             }
 
             typename boost::call_traits<DataType>::reference x()
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 1);
                 return (*this)(0);
             }
 
             typename boost::call_traits<DataType>::reference y()
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 2);
                 return (*this)(1);
             }
 
             typename boost::call_traits<DataType>::reference z()
             {
-                BOOST_STATIC_ASSERT(dim::Value >= 3);
                 return (*this)(2);
             }
 

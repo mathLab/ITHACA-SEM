@@ -152,6 +152,11 @@ void NodeOpti2D2D::Optimise()
         else
         {
             minJac = minJacNew;
+
+            mtx.lock();
+            res->alphaAvg += alpha;
+            res->alphaI++;
+            mtx.unlock();
         }
 
         mtx.lock();
@@ -275,6 +280,11 @@ void NodeOpti3D3D::Optimise()
         else
         {
             minJac = minJacNew;
+
+            mtx.lock();
+            res->alphaAvg += alpha;
+            res->alphaI++;
+            mtx.unlock();
         }
 
         mtx.lock();

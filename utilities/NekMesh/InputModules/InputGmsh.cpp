@@ -869,7 +869,7 @@ void InputGmsh::Process()
             }
         }
     }
-    m_mshFile.close();
+    m_mshFile.reset();
 
     // Go through element and remap tags if necessary.
     map<int, map<LibUtilities::ShapeType, int> > compMap;

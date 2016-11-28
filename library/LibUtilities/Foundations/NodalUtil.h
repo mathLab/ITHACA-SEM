@@ -307,8 +307,7 @@ protected:
 };
 
 /**
- * @brief Specialisation of the NodalUtil class to support nodal quad
- * elements.
+ * @brief Specialisation of the NodalUtil class to support nodal quad elements.
  */
 class NodalUtilQuad : public NodalUtil
 {
@@ -349,8 +348,7 @@ protected:
 };
 
 /**
- * @brief Specialisation of the NodalUtil class to support nodal hex
- * elements.
+ * @brief Specialisation of the NodalUtil class to support nodal hex elements.
  */
 class NodalUtilHex : public NodalUtil
 {
@@ -367,7 +365,7 @@ public:
     }
 
 protected:
-    /// Mapping from the \f$ (i,j) \f$ indexing of the basis to a continuous
+    /// Mapping from the \f$ (i,j,k) \f$ indexing of the basis to a continuous
     /// ordering.
     std::vector<Mode> m_ordering;
 

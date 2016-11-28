@@ -1,6 +1,7 @@
 SET(NekMeshHeaders
     InputModules/InputGmsh.h
     InputModules/InputNek.h
+    InputModules/InputNek5000.h
     InputModules/InputNekpp.h
     InputModules/InputPly.h
     InputModules/InputSem.h
@@ -34,6 +35,7 @@ SET(NekMeshHeaders
 SET(NekMeshSources
     InputModules/InputGmsh.cpp
     InputModules/InputNek.cpp
+    InputModules/InputNek5000.cpp
     InputModules/InputNekpp.cpp
     InputModules/InputPly.cpp
     InputModules/InputSem.cpp
@@ -135,6 +137,9 @@ ADD_NEKTAR_TEST        (Gmsh/SquareTriLinear)
 # Nektar tests
 ADD_NEKTAR_TEST        (Nektar/HexLinear)
 ADD_NEKTAR_TEST        (Nektar/Tube45)
+# Nek5000 tests
+ADD_NEKTAR_TEST        (Nek5000/3da)
+ADD_NEKTAR_TEST        (Nek5000/r1854a)
 # StarCCM tests
 ADD_NEKTAR_TEST        (StarTec/CubePer)
 ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)

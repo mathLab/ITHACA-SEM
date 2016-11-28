@@ -68,6 +68,7 @@ namespace Nektar
             for(n = 0; n < points.num_elements(); ++n)
             {
                 m_lines[n] = points[n];
+                (*m_exp).push_back(points[n]->GetExp(0));
             }
 
             // Setup Default optimisation information.

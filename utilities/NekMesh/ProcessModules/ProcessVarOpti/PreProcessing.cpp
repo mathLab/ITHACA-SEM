@@ -420,12 +420,9 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
         }
     }
 
-    cout << boundaryNodes.size() << endl;
-
     vector<NodeSharedPtr> remain;
     res->nDoF = 0;
 
-    int vertex = 0, edge = 0, face = 0;
     NodeSet::iterator nit;
     for (nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end(); ++nit)
     {
@@ -437,12 +434,10 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
             if((*nit)->GetNumCadCurve() == 1)
             {
                 res->nDoF++;
-                vertex++;
             }
             else if((*nit)->GetNumCADSurf() == 1)
             {
                 res->nDoF += 2;
-                vertex++;
             }
             else
             {
@@ -450,8 +445,6 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
             }
         }
     }
-
-
 
     EdgeSet::iterator eit;
     for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
@@ -467,12 +460,10 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
                 if(n[j]->GetNumCadCurve() == 1)
                 {
                     res->nDoF++;
-                    edge++;
                 }
                 else if(n[j]->GetNumCADSurf() == 1)
                 {
                     res->nDoF += 2;
-                    edge++;
                 }
                 else
                 {
@@ -495,18 +486,14 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
                 if((*fit)->m_faceNodes[j]->GetNumCADSurf() == 1)
                 {
                     res->nDoF += 2;
-                    face++;
                 }
                 else
                 {
                     res->nDoF += 3;
-                    face++;
                 }
             }
         }
     }
-
-    cout << vertex << " " << edge << " " << face << endl;
 
     for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {

@@ -75,7 +75,6 @@ struct Residual
     int nReset[3];
     NekDouble worstJac;
     NekDouble func;
-    NekDouble alphaAvg;
     int alphaI;
 };
 

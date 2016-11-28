@@ -125,7 +125,7 @@ void NodeOpti2D2D::Optimise()
             node->m_x = xc + alpha * sk[0];
             node->m_y = yc + alpha * sk[1];
 
-            newVal = GetFunctional<2>(minJacNew,false,false);
+            newVal = GetFunctional<2>(minJacNew,false);
             //dont need the hessian again this function updates G to be the new
             //location
             //
@@ -154,8 +154,10 @@ void NodeOpti2D2D::Optimise()
             minJac = minJacNew;
 
             mtx.lock();
-            res->alphaAvg += alpha;
-            res->alphaI++;
+            if(alpha < 1.0)
+            {
+                res->alphaI++;
+            }
             mtx.unlock();
         }
 
@@ -252,7 +254,7 @@ void NodeOpti3D3D::Optimise()
             node->m_y = yc + alpha * sk[1];
             node->m_z = zc + alpha * sk[2];
 
-            newVal = GetFunctional<3>(minJacNew,false,false);
+            newVal = GetFunctional<3>(minJacNew,false);
             //dont need the hessian again this function updates G to be the new
             //location
             //
@@ -282,8 +284,10 @@ void NodeOpti3D3D::Optimise()
             minJac = minJacNew;
 
             mtx.lock();
-            res->alphaAvg += alpha;
-            res->alphaI++;
+            if(alpha < 1.0)
+            {
+                res->alphaI++;
+            }
             mtx.unlock();
         }
 

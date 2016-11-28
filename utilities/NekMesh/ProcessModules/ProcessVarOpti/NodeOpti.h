@@ -75,8 +75,7 @@ public:
 protected:
 
     template<int DIM> NekDouble GetFunctional(NekDouble &minJacNew,
-                                              bool gradient = true,
-                                              bool hessian = true);
+                                              bool gradient = true);
     NodeSharedPtr node;
     boost::mutex mtx;
     std::map<LibUtilities::ShapeType,std::vector<ElUtilSharedPtr> > data;

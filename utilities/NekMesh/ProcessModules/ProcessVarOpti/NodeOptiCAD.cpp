@@ -101,7 +101,7 @@ void NodeOpti1D3D::Optimise()
             node->m_y = p[1];
             node->m_z = p[2];
 
-            newVal = GetFunctional<3>(minJacNew, false, false);
+            newVal = GetFunctional<3>(minJacNew, false);
 
             // Wolfe conditions
             if (newVal <= currentW + c1() * alpha * pg)
@@ -207,7 +207,7 @@ void NodeOpti2D3D::Optimise()
             node->m_y = p[1];
             node->m_z = p[2];
 
-            newVal = GetFunctional<3>(minJacNew,false,false);
+            newVal = GetFunctional<3>(minJacNew,false);
 
             // Wolfe conditions
             if (newVal <= currentW + c1() * (alpha*pg+ 0.5*alpha*alpha*hes))

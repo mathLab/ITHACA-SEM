@@ -298,7 +298,6 @@ void ProcessVarOpti::Process()
         res->nReset[0] = 0;
         res->nReset[1] = 0;
         res->nReset[2] = 0;
-        res->alphaAvg = 0;
         res->alphaI = 0;
         for(int i = 0; i < optiNodes.size(); i++)
         {
@@ -342,7 +341,7 @@ void ProcessVarOpti::Process()
                     << "\tInvalid: " << res->startInv
                     << "\tReset nodes: " << res->nReset[0] << "/" << res->nReset[1] << "/" << res->nReset[2]
                     << "\tFunctional: " << res->func
-                    << "\tAlphaAvg: " << res->alphaAvg/res->alphaI
+                    << "\tAlphaNotOne: " << res->alphaI
                     << endl;
         if(ctr >= maxIter)
             break;

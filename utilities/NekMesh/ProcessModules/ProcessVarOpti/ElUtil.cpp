@@ -48,12 +48,13 @@ namespace Utilities
 boost::mutex mtx2;
 
 ElUtil::ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d,
-               ResidualSharedPtr r, int n)
+               ResidualSharedPtr r, int n, int o)
 {
     m_el = e;
     m_derivUtil = d;
     m_res = r;
     m_mode = n;
+    m_order = o;
     m_dim = m_el->GetDim();
     vector<NodeSharedPtr> ns;
     m_el->GetCurvedNodes(ns);
@@ -84,7 +85,7 @@ void ElUtil::MappingIdealToRef()
     {
         LibUtilities::PointsKey pkey1(m_mode,
                                       LibUtilities::eGaussLobattoLegendre);
-        LibUtilities::PointsKey pkey2(m_mode + 6,
+        LibUtilities::PointsKey pkey2(m_mode + m_order,
                                       LibUtilities::eGaussLobattoLegendre);
 
         Array<OneD, NekDouble> u1(m_derivUtil->ptsStd), v1(m_derivUtil->ptsStd),
@@ -102,9 +103,9 @@ void ElUtil::MappingIdealToRef()
             }
         }
 
-        for(int i = 0, ct = 0; i < m_mode+6; i++)
+        for(int i = 0, ct = 0; i < m_mode+m_order; i++)
         {
-            for(int j = 0; j < m_mode+6; j++, ct++)
+            for(int j = 0; j < m_mode+m_order; j++, ct++)
             {
                 u2[ct] = tmp2[j];
                 v2[ct] = tmp2[i];
@@ -277,7 +278,7 @@ void ElUtil::MappingIdealToRef()
     {
         LibUtilities::PointsKey pkey1(m_mode,
                                       LibUtilities::eNodalPrismElec);
-        LibUtilities::PointsKey pkey2(m_mode+4,
+        LibUtilities::PointsKey pkey2(m_mode+m_order,
                                       LibUtilities::eNodalPrismSPI);
         Array<OneD, NekDouble> u1, v1, u2, v2, w1, w2;
         LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
@@ -405,7 +406,7 @@ void ElUtil::MappingIdealToRef()
     {
         LibUtilities::PointsKey pkey1(m_mode,
                                       LibUtilities::eGaussLobattoLegendre);
-        LibUtilities::PointsKey pkey2(m_mode+6,
+        LibUtilities::PointsKey pkey2(m_mode+m_order,
                                       LibUtilities::eGaussLobattoLegendre);
         Array<OneD, NekDouble> u1(m_derivUtil->ptsStd), v1(m_derivUtil->ptsStd), w1(m_derivUtil->ptsStd),
                                u2(m_derivUtil->pts),    v2(m_derivUtil->pts),  w2(m_derivUtil->pts),
@@ -427,11 +428,11 @@ void ElUtil::MappingIdealToRef()
             }
         }
 
-        for(int i = 0, ct = 0; i < m_mode+6; i++)
+        for(int i = 0, ct = 0; i < m_mode+m_order; i++)
         {
-            for(int j = 0; j < m_mode+6; j++)
+            for(int j = 0; j < m_mode+m_order; j++)
             {
-                for(int k = 0; k < m_mode+6; k++, ct++)
+                for(int k = 0; k < m_mode+m_order; k++, ct++)
                 {
                     u1[ct] = tmp2[k];
                     v1[ct] = tmp2[j];

@@ -87,6 +87,8 @@ ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "", "writes residual values to file");
     m_config["histfile"] =
         ConfigOption(false, "", "histogram of scaled jac");
+    m_config["overint"] =
+        ConfigOption(false, "6", "over integration order");
 }
 
 ProcessVarOpti::~ProcessVarOpti()
@@ -154,6 +156,8 @@ void ProcessVarOpti::Process()
         ASSERTL0(fd,"failed to find order of mesh");
     }
 
+    int intOrder = m_config["overint"].as<NekDouble>();
+
     if(m_mesh->m_verbose)
     {
         cout << "Identified mesh order as: " << m_mesh->m_nummode - 1 << endl;
@@ -168,8 +172,8 @@ void ProcessVarOpti::Process()
     res->val = 1.0;
 
     m_mesh->MakeOrder(m_mesh->m_nummode-1,LibUtilities::eGaussLobattoLegendre);
-    BuildDerivUtil();
-    GetElementMap();
+    BuildDerivUtil(intOrder);
+    GetElementMap(intOrder);
 
     vector<ElementSharedPtr> elLock;
 
@@ -341,7 +345,7 @@ void ProcessVarOpti::Process()
                     << "\tInvalid: " << res->startInv
                     << "\tReset nodes: " << res->nReset[0] << "/" << res->nReset[1] << "/" << res->nReset[2]
                     << "\tFunctional: " << res->func
-                    << "\tAlphaNotOne: " << res->alphaI
+                    //<< "\tAlphaNotOne: " << res->alphaI
                     << endl;
         if(ctr >= maxIter)
             break;

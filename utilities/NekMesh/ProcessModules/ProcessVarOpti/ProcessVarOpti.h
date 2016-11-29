@@ -98,8 +98,8 @@ public:
 private:
     typedef std::map<int, std::vector<ElUtilSharedPtr> > NodeElMap;
 
-    void BuildDerivUtil();
-    void GetElementMap();
+    void BuildDerivUtil(int o);
+    void GetElementMap(int o);
     std::vector<ElementSharedPtr> GetLockedElements(NekDouble thres);
     std::vector<Array<OneD, NekDouble> > MappingIdealToRef(ElementSharedPtr el);
     std::vector<std::vector<NodeSharedPtr> > GetColouredNodes(std::vector<ElementSharedPtr> elLock);

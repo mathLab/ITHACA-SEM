@@ -59,7 +59,7 @@ class ElUtil : public boost::enable_shared_from_this<ElUtil>
 {
 public:
     ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d,
-           ResidualSharedPtr, int n);
+           ResidualSharedPtr, int n, int o);
 
     ElUtilJob *GetJob();
 
@@ -93,6 +93,7 @@ private:
     ElementSharedPtr m_el;
     int m_dim;
     int m_mode;
+    int m_order;
     std::map<int,int> m_idmap;
     std::vector<std::vector<std::vector<Array<OneD, NekDouble> > > > m_mapder;
 

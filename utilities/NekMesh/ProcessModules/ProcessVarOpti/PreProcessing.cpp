@@ -45,7 +45,7 @@ namespace Nektar
 namespace Utilities
 {
 
-void ProcessVarOpti::BuildDerivUtil()
+void ProcessVarOpti::BuildDerivUtil(int o)
 {
     //build Vandermonde information
     switch (m_mesh->m_spaceDim)
@@ -59,7 +59,7 @@ void ProcessVarOpti::BuildDerivUtil()
 
                 LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                               LibUtilities::eNodalTriElec);
-                LibUtilities::PointsKey pkey2(m_mesh->m_nummode + 6,
+                LibUtilities::PointsKey pkey2(m_mesh->m_nummode + o,
                                               LibUtilities::eNodalTriSPI);
                 Array<OneD, NekDouble> u1, v1, u2, v2;
 
@@ -96,11 +96,11 @@ void ProcessVarOpti::BuildDerivUtil()
                 LibUtilities::ShapeType st = LibUtilities::eQuadrilateral;
                 derivUtil[st] = boost::shared_ptr<DerivUtil>(new DerivUtil);
                 derivUtil[st]->ptsStd  = m_mesh->m_nummode*m_mesh->m_nummode;
-                derivUtil[st]->pts = (m_mesh->m_nummode+6)*(m_mesh->m_nummode+6);
+                derivUtil[st]->pts = (m_mesh->m_nummode+o)*(m_mesh->m_nummode+o);
 
                 LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                               LibUtilities::eGaussLobattoLegendre);
-                LibUtilities::PointsKey pkey2(m_mesh->m_nummode + 6,
+                LibUtilities::PointsKey pkey2(m_mesh->m_nummode + o,
                                               LibUtilities::eGaussLobattoLegendre);
                 Array<OneD, NekDouble> u1(derivUtil[st]->ptsStd), v1(derivUtil[st]->ptsStd),
                                        u2(derivUtil[st]->pts), v2(derivUtil[st]->pts), tmp, tmp2;
@@ -119,9 +119,9 @@ void ProcessVarOpti::BuildDerivUtil()
                     }
                 }
 
-                for(int i = 0, ct = 0; i < m_mesh->m_nummode+6; i++)
+                for(int i = 0, ct = 0; i < m_mesh->m_nummode+o; i++)
                 {
-                    for(int j = 0; j < m_mesh->m_nummode+6; j++, ct++)
+                    for(int j = 0; j < m_mesh->m_nummode+o; j++, ct++)
                     {
                         u2[ct] = tmp2[j];
                         v2[ct] = tmp2[i];
@@ -130,9 +130,9 @@ void ProcessVarOpti::BuildDerivUtil()
 
                 Array<OneD, NekDouble> qtmp = LibUtilities::PointsManager()[pkey2]->GetW();
                 Array<OneD, NekDouble> qds(derivUtil[st]->pts);
-                for(int i = 0, ct = 0; i < m_mesh->m_nummode+6; i++)
+                for(int i = 0, ct = 0; i < m_mesh->m_nummode+o; i++)
                 {
-                    for(int j = 0; j < m_mesh->m_nummode+6; j++, ct++)
+                    for(int j = 0; j < m_mesh->m_nummode+o; j++, ct++)
                     {
                         qds[ct] = qtmp[i]*qtmp[j];
                     }
@@ -170,7 +170,7 @@ void ProcessVarOpti::BuildDerivUtil()
                 derivUtil[st]->ptsStd  = m_mesh->m_nummode*(m_mesh->m_nummode+1)*(m_mesh->m_nummode+2)/6;
                 LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                               LibUtilities::eNodalTetElec);
-                LibUtilities::PointsKey pkey2(m_mesh->m_nummode+6,
+                LibUtilities::PointsKey pkey2(m_mesh->m_nummode+o,
                                               LibUtilities::eNodalTetSPI);
                 Array<OneD, NekDouble> u1, v1, u2, v2, w1, w2;
                 LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
@@ -212,7 +212,7 @@ void ProcessVarOpti::BuildDerivUtil()
                 derivUtil[st]->ptsStd = m_mesh->m_nummode*m_mesh->m_nummode*(m_mesh->m_nummode+1)/2;
                 LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                               LibUtilities::eNodalPrismElec);
-                LibUtilities::PointsKey pkey2(m_mesh->m_nummode+4,
+                LibUtilities::PointsKey pkey2(m_mesh->m_nummode+o,
                                               LibUtilities::eNodalPrismSPI);
                 Array<OneD, NekDouble> u1, v1, u2, v2, w1, w2;
                 LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
@@ -563,7 +563,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
     return ret;
 }
 
-void ProcessVarOpti::GetElementMap()
+void ProcessVarOpti::GetElementMap(int o)
 {
     for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
@@ -572,7 +572,7 @@ void ProcessVarOpti::GetElementMap()
         el->GetCurvedNodes(ns);
         ElUtilSharedPtr d = boost::shared_ptr<ElUtil>(new ElUtil(el,
                                     derivUtil[el->GetShapeType()],
-                                    res, m_mesh->m_nummode));
+                                    res, m_mesh->m_nummode, o));
         dataSet.push_back(d);
     }
 

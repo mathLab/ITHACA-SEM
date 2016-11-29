@@ -118,33 +118,6 @@ inline void EMatrix<3>(NekDouble in[3][3], NekDouble out[3][3])
     out[2][2] =  0.5*(in[0][2]*in[0][2] + in[1][2]*in[1][2] + in[2][2]*in[2][2]- 1.0);
 }
 
-/*template<int DIM> inline void GetPhiIInv(Array<OneD, NekDouble> &map, NekDouble out[DIM][DIM])
-{
-}
-
-template<>
-inline void GetPhiIInv<2>(Array<OneD, NekDouble> &map, NekDouble out[2][2])
-{
-    out[0][0] = map[0];
-    out[1][0] = map[1];
-    out[0][1] = map[3];
-    out[1][1] = map[4];
-}
-
-template<>
-inline void GetPhiIInv<3>(Array<OneD, NekDouble> &map, NekDouble out[3][3])
-{
-    out[0][0] = map[0];
-    out[1][0] = map[1];
-    out[2][0] = map[2];
-    out[0][1] = map[3];
-    out[1][1] = map[4];
-    out[2][1] = map[5];
-    out[0][2] = map[6];
-    out[1][2] = map[7];
-    out[2][2] = map[8];
-}*/
-
 template<int DIM> inline void LEM2(NekDouble jacIdeal[DIM][DIM],
                                    NekDouble jacDerivPhi[DIM][DIM][DIM],
                                    NekDouble ret[DIM][DIM][DIM])
@@ -192,8 +165,8 @@ template<int DIM> inline void LEM3(NekDouble jacDerivPhi[DIM][DIM][DIM],
                     part2[m][n] = 0.0;
                     for (int l = 0; l < DIM; ++l)
                     {
-                        part1[m][n] += jacDerivPhi[j][l][m] * jacDerivPhi[k][n][l];
-                        part2[m][n] += jacDerivPhi[k][l][m] * jacDerivPhi[j][n][l];
+                        part1[m][n] += jacDerivPhi[j][l][m] * jacDerivPhi[k][l][n];
+                        part2[m][n] += jacDerivPhi[k][l][m] * jacDerivPhi[j][l][n];
                     }
                 }
             }
@@ -202,7 +175,7 @@ template<int DIM> inline void LEM3(NekDouble jacDerivPhi[DIM][DIM][DIM],
             {
                 for (int n = 0; n < DIM; ++n)
                 {
-                    ret[k][j][m][n] = 0.5*(part1[m][n] + part2[m][n]);
+                    ret[j][k][m][n] = 0.5*(part1[m][n] + part2[m][n]);
                 }
             }
         }
@@ -325,7 +298,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
     {
         case eLinEl:
         {
-            const NekDouble nu = 0.4;
+            const NekDouble nu = 0.45;
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
@@ -481,7 +454,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
 
         case eHypEl:
         {
-            const NekDouble nu = 0.4;
+            const NekDouble nu = 0.45;
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 

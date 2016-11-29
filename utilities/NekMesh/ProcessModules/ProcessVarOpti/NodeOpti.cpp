@@ -79,6 +79,20 @@ void NodeOpti::CalcMinJac()
     }
 }
 
+NekDouble dir[12][3] = {{1,0,0},
+                       {-1,0,0},
+                       {0,1,0},
+                       {0,-1,0},
+                       {0,0,1},
+                       {0,0,-1},
+                       {1,1,0},
+                       {-1,-1,0},
+                       {1,0,1},
+                       {-1,0,-1},
+                       {0,1,1},
+                       {0,-1,-1}};
+
+
 int NodeOpti2D2D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
     22, NodeOpti2D2D::create, "2D2D");
 
@@ -94,6 +108,41 @@ void NodeOpti2D2D::Optimise()
         //needs to optimise
         NekDouble xc       = node->m_x;
         NekDouble yc       = node->m_y;
+
+        /*Array<OneD, NekDouble> tmp = G;
+        //cout << endl;
+        //cout << G[0] << " " << G[1] << " " << G[2] << " " << G[3] << " " << G[4] << endl;
+
+        Array<OneD, NekDouble> GW(6);
+        NekDouble dx = 1e-8;
+        for(int i = 0; i < 4; i++)
+        {
+            node->m_x = xc + dir[i][0] * dx;
+            node->m_y = yc + dir[i][1] * dx;
+            //node->m_z = zc + dir[i][2] * dx;
+            GW[i] = GetFunctional<2>(minJacNew,false);
+        }
+        node->m_x = xc + dir[6][0] * dx;
+        node->m_y = yc + dir[6][1] * dx;
+        //node->m_z = zc + dir[i][2] * dx;
+        GW[4] = GetFunctional<2>(minJacNew,false);
+        node->m_x = xc + dir[7][0] * dx;
+        node->m_y = yc + dir[7][1] * dx;
+        //node->m_z = zc + dir[i][2] * dx;
+        GW[5] = GetFunctional<2>(minJacNew,false);
+
+        Array<OneD, NekDouble> grad(5);
+        grad[0] = (GW[0] - GW[1]) /dx/2.0;
+        grad[1] = (GW[2] - GW[3]) /dx/2.0;
+        grad[2] = (GW[0] + GW[1] - 2*currentW) / dx / dx;
+        grad[3] = (GW[4] + GW[5] - GW[0] - GW[1] - GW[2] - GW[3] + 2*currentW) / 2 / dx / dx;
+        grad[4] = (GW[2] + GW[3] - 2*currentW) / dx / dx;
+
+        //cout << grad[0] << " " << grad[1] << " " << grad[2] << " " << grad[3] << " " << grad[4] << endl;
+        node->m_x = xc;
+        node->m_y = yc;
+        //node->m_z = zc;
+        G = tmp;*/
 
         Array<OneD, NekDouble> sk(2), dk(2);
         NekDouble val;
@@ -175,20 +224,6 @@ void NodeOpti2D2D::Optimise()
 
 int NodeOpti3D3D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
     33, NodeOpti3D3D::create, "3D3D");
-
-NekDouble dir[12][3] = {{1,0,0},
-                       {-1,0,0},
-                       {0,1,0},
-                       {0,-1,0},
-                       {0,0,1},
-                       {0,0,-1},
-                       {1,1,0},
-                       {-1,-1,0},
-                       {1,0,1},
-                       {-1,0,-1},
-                       {0,1,1},
-                       {0,-1,-1}};
-
 
 void NodeOpti3D3D::Optimise()
 {

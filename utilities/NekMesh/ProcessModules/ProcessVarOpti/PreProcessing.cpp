@@ -248,10 +248,11 @@ void ProcessVarOpti::BuildDerivUtil(int o)
                 derivUtil[st]->quadW = quadWi;
             }
 
-            {
+            /*{
                 LibUtilities::ShapeType st = LibUtilities::eHexahedron;
                 derivUtil[st] = boost::shared_ptr<DerivUtil>(new DerivUtil);
                 derivUtil[st]->ptsStd  = m_mesh->m_nummode*m_mesh->m_nummode*m_mesh->m_nummode;
+                derivUtil[st]->pts = (m_mesh->m_nummode+o)*(m_mesh->m_nummode+o)*(m_mesh->m_nummode+o);
                 LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
                                               LibUtilities::eGaussLobattoLegendre);
                 LibUtilities::PointsKey pkey2(m_mesh->m_nummode+6,
@@ -327,7 +328,7 @@ void ProcessVarOpti::BuildDerivUtil(int o)
                 derivUtil[st]->VdmD[2] = interp * derivUtil[st]->VdmDStd[2];
                 NekVector<NekDouble> quadWi(qds);
                 derivUtil[st]->quadW = quadWi;
-            }
+            }*/
         }
     }
 }

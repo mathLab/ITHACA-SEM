@@ -92,7 +92,7 @@ Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p)
             m_occSurface.FirstUParameter(), m_occSurface.LastUParameter(),
             m_occSurface.FirstVParameter(), m_occSurface.LastVParameter());
 
-        gp_Pnt2d p2 = sas.ValueOfUV(loc, 1e-7);
+        gp_Pnt2d p2 = sas.ValueOfUV(loc, 1e-3);
         uvr[0]      = p2.X();
         uvr[1]      = p2.Y();
 
@@ -217,7 +217,7 @@ void CADSurfOCE::ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &u
                   m_occSurface.FirstVParameter(),
                   m_occSurface.LastVParameter());
 
-    gp_Pnt2d p2 = sas.ValueOfUV(loc, 1e-7);
+    gp_Pnt2d p2 = sas.ValueOfUV(loc, 1e-3);
 
     gp_Pnt p3 = sas.Value(p2);
 

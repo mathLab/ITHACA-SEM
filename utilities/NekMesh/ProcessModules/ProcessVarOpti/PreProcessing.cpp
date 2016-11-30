@@ -248,7 +248,7 @@ void ProcessVarOpti::BuildDerivUtil(int o)
                 derivUtil[st]->quadW = quadWi;
             }
 
-            /*{
+            {
                 LibUtilities::ShapeType st = LibUtilities::eHexahedron;
                 derivUtil[st] = boost::shared_ptr<DerivUtil>(new DerivUtil);
                 derivUtil[st]->ptsStd  = m_mesh->m_nummode*m_mesh->m_nummode*m_mesh->m_nummode;
@@ -327,7 +327,7 @@ void ProcessVarOpti::BuildDerivUtil(int o)
                 derivUtil[st]->VdmD[2] = interp * derivUtil[st]->VdmDStd[2];
                 NekVector<NekDouble> quadWi(qds);
                 derivUtil[st]->quadW = quadWi;
-            }*/
+            }
         }
     }
 }
@@ -703,7 +703,7 @@ vector<ElementSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
         }
     }
 
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 6; i++)
     {
         vector<ElementSharedPtr> tmp = totest;
         totest.clear();

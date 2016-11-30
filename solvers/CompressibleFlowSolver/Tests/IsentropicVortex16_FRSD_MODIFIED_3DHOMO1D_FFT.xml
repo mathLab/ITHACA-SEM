@@ -1134,13 +1134,12 @@
         </PARAMETERS>
 
         <SOLVERINFO>
-            <I PROPERTY="EQType"                VALUE="EulerCFE"                    />
+            <I PROPERTY="EQType"                VALUE="IsentropicVortex"                    />
             <I PROPERTY="Projection"            VALUE="DisContinuous"               />
             <I PROPERTY="HOMOGENEOUS"           VALUE="1D"                          />
             <I PROPERTY="AdvectionType"         VALUE="FRSD3DHomogeneous1D"       />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"        />
             <I PROPERTY="UpwindType"            VALUE="ExactToro"                   />
-            <I PROPERTY="ProblemType"           VALUE="IsentropicVortex"            />
             <I PROPERTY="USEFFT"                VALUE="FFTW"                        />
         </SOLVERINFO>
 

@@ -115,9 +115,6 @@ namespace Nektar
         
         virtual LibUtilities::TimeIntegrationMethod v_GetSubStepIntegrationMethod(void);
 
-        void AddDuDt(void);
-
-
         void SubStepAdvection(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
             Array<OneD, Array<OneD,NekDouble> > &outarray,

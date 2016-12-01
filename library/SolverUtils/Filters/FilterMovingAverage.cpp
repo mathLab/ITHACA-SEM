@@ -119,12 +119,5 @@ void FilterMovingAverage::v_ProcessSample(
     }
 }
 
-void FilterMovingAverage::v_PrepareOutput(
-    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-    const NekDouble &time)
-{
-    m_scale = 1.0;
-}
-
 }
 }

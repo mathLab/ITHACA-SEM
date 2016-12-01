@@ -29,11 +29,14 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh line object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/MeshElements/Line.h>
+
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 using namespace std;
 
 namespace Nektar
@@ -109,6 +112,16 @@ SpatialDomains::GeometrySharedPtr Line::GetGeom(int coordDim)
     return ret;
 }
 
+
+void Line::GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+{
+    nodeList.push_back(m_vertex[0]);
+    for (int i = 0; i < m_volumeNodes.size(); ++i)
+    {
+        nodeList.push_back(m_volumeNodes[i]);
+    }
+    nodeList.push_back(m_vertex[1]);
+}
 void Line::MakeOrder(int                                order,
                      SpatialDomains::GeometrySharedPtr  geom,
                      LibUtilities::PointsType           pType,

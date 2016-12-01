@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Mesh.h
+//  File: Pyramid.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh pyramid object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,14 +54,8 @@ public:
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList)
     {
-        ElementSharedPtr e =
-            boost::shared_ptr<Element>(new Pyramid(pConf, pNodeList, pTagList));
-        std::vector<FaceSharedPtr> faces = e->GetFaceList();
-        for (int i = 0; i < faces.size(); ++i)
-        {
-            faces[i]->m_elLink.push_back(std::pair<ElementSharedPtr, int>(e, i));
-        }
-        return e;
+        return boost::shared_ptr<Element>(
+            new Pyramid(pConf, pNodeList, pTagList));
     }
     /// Element type
     static LibUtilities::ShapeType type;

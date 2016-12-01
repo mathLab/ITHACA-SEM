@@ -778,6 +778,7 @@ namespace Nektar
     {
         m_extrapolation->SubStepSaveFields(step);
         m_extrapolation->SubStepAdvance(m_intSoln,step,m_time);
+        SetBoundaryConditions(m_time+m_timestep);
         return false;
     }
 

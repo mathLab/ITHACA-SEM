@@ -94,6 +94,8 @@ namespace Nektar
                 return m_trace;
             }
 
+            Array<OneD, int> m_BCtoElmMap;
+            Array<OneD, int> m_BCtoEdgMap;
 
         protected:
 
@@ -239,7 +241,8 @@ namespace Nektar
                 Array<OneD, int> &ElmtID,
                 Array<OneD, int> &EdgeID);
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result);
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays);
             virtual void v_Reset();
 
             /**

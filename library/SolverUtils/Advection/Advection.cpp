@@ -79,9 +79,12 @@ void Advection::Advect(
     const Array<OneD, Array<OneD, NekDouble> >        &pAdvVel,
     const Array<OneD, Array<OneD, NekDouble> >        &pInarray,
     Array<OneD, Array<OneD, NekDouble> >              &pOutarray,
-    const NekDouble                                   &pTime)
+    const NekDouble                                   &pTime,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
-    v_Advect(nConvectiveFields, pFields, pAdvVel, pInarray, pOutarray, pTime);
+    v_Advect(nConvectiveFields, pFields, pAdvVel, pInarray,
+            pOutarray, pTime, pFwd, pBwd);
 }
 
 

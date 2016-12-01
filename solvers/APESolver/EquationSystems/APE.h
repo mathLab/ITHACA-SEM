@@ -82,7 +82,6 @@ class APE : public AdvectionSystem
         /// Isentropic coefficient, Ratio of specific heats (APE)
         NekDouble                                       m_gamma;
         Array<OneD, Array<OneD, NekDouble> >            m_bf;
-        MultiRegions::ExpListSharedPtr                  m_bfField;
         std::vector<std::string>                        m_bfNames;
         /// dump cfl estimate
         int                                             m_cflsteps;

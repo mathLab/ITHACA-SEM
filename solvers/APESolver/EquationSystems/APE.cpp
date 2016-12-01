@@ -83,47 +83,7 @@ void APE::v_InitObject()
 
     // Load isentropic coefficient, Ratio of specific heats
     m_session->LoadParameter("Gamma", m_gamma, 1.4);
-
-    // Define Baseflow and source term fields
-    switch (m_spacedim)
-    {
-        case 1:
-        {
-            for (int i = 0; i < m_spacedim + 2; ++i)
-            {
-                m_bfField = MemoryManager<MultiRegions::ContField1D>::
-                    AllocateSharedPtr(m_session, m_graph);
-            }
-            break;
-        }
-
-        case 2:
-        {
-            for (int i = 0; i < m_spacedim + 2; ++i)
-            {
-                m_bfField = MemoryManager<MultiRegions::ContField2D>::
-                    AllocateSharedPtr(m_session, m_graph);
-            }
-            break;
-        }
-
-        case 3:
-        {
-            for (int i = 0; i < m_spacedim + 2; ++i)
-            {
-                m_bfField = MemoryManager < MultiRegions::ContField3D >::
-                    AllocateSharedPtr(m_session, m_graph);
-            }
-            break;
-        }
-
-        default:
-        {
-
-            ASSERTL0(false, "Expansion dimension not recognised");
-            break;
-        }
-    }
+    m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
 
     m_bfNames.push_back("p0");
     m_bfNames.push_back("rho0");
@@ -140,7 +100,7 @@ void APE::v_InitObject()
     {
         m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
     }
-    GetFunction("Baseflow", m_bfField, true)->Evaluate(m_bfNames, m_bf, m_time);
+    GetFunction("Baseflow", m_fields[0], true)->Evaluate(m_bfNames, m_bf, m_time);
 
     m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, m_spacedim + 1);
 
@@ -276,32 +236,9 @@ void APE::GetFluxVector(
  */
 bool APE::v_PreIntegrate(int step)
 {
-    GetFunction("Baseflow", m_bfField, true)->Evaluate(m_bfNames, m_bf, m_time);
+    GetFunction("Baseflow", m_fields[0], true)->Evaluate(m_bfNames, m_bf, m_time);
 
-    Array<OneD, NekDouble> tmpC(GetNcoeffs());
-    for (auto &x : m_forcing)
-    {
-        for (int i = 0; i < x->GetForces().num_elements(); ++i)
-        {
-            m_bfField->IProductWRTBase(x->GetForces()[i], tmpC);
-            m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
-            m_bfField->LocalToGlobal(tmpC, tmpC);
-            m_bfField->GlobalToLocal(tmpC, tmpC);
-            m_bfField->BwdTrans(tmpC, x->UpdateForces()[i]);
-        }
-    }
-
-    for (int i = 0; i < m_spacedim + 2; ++i)
-    {
-        // ensure the field is C0-continuous
-        m_bfField->IProductWRTBase(m_bf[i], tmpC);
-        m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
-        m_bfField->LocalToGlobal(tmpC, tmpC);
-        m_bfField->GlobalToLocal(tmpC, tmpC);
-        m_bfField->BwdTrans(tmpC, m_bf[i]);
-    }
-
-    return AdvectionSystem::v_PreIntegrate(step);
+    return UnsteadySystem::v_PreIntegrate(step);
 }
 
 /**
@@ -781,10 +718,10 @@ void APE::v_ExtraFldOutput(
         Array<OneD, NekDouble> tmpC(GetNcoeffs());
 
         // ensure the field is C0-continuous
-        m_bfField->IProductWRTBase(m_bf[i], tmpC);
-        m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
-        m_bfField->LocalToGlobal(tmpC, tmpC);
-        m_bfField->GlobalToLocal(tmpC, tmpC);
+        m_fields[0]->IProductWRTBase(m_bf[i], tmpC);
+        m_fields[0]->MultiplyByElmtInvMass(tmpC, tmpC);
+        m_fields[0]->LocalToGlobal(tmpC, tmpC);
+        m_fields[0]->GlobalToLocal(tmpC, tmpC);
 
         variables.push_back(m_bfNames[i]);
         fieldcoeffs.push_back(tmpC);
@@ -797,10 +734,10 @@ void APE::v_ExtraFldOutput(
         {
             Array<OneD, NekDouble> tmpC(GetNcoeffs());
 
-            m_bfField->IProductWRTBase(x->GetForces()[i], tmpC);
-            m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
-            m_bfField->LocalToGlobal(tmpC, tmpC);
-            m_bfField->GlobalToLocal(tmpC, tmpC);
+            m_fields[0]->IProductWRTBase((*x)->GetForces()[i], tmpC);
+            m_fields[0]->MultiplyByElmtInvMass(tmpC, tmpC);
+            m_fields[0]->LocalToGlobal(tmpC, tmpC);
+            m_fields[0]->GlobalToLocal(tmpC, tmpC);
 
             variables.push_back("F_" + boost::lexical_cast<string>(f) +
                                 "_" + m_session->GetVariable(i));
@@ -829,6 +766,7 @@ const Array<OneD, const Array<OneD, NekDouble> > &APE::GetVecLocs()
 }
 
 
+// TODO: turn this into GetBasefieldFwBwd() so we dont need to call GetFwdBwdTracePhys twice
 /**
  * @brief Get the baseflow field.
  */

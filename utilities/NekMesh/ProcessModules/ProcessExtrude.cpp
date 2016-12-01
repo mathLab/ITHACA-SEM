@@ -180,14 +180,14 @@ void ProcessExtrude::Process()
                 EdgeSet::iterator f = m_mesh->m_edgeSet.find(e);
                 ASSERTL0(f != m_mesh->m_edgeSet.end(), "could not find edge");
 
-                if((*f)->m_n1 == (*eit)->m_n1)
+                if((*f)->m_n1 == e->m_n1)
                 {
                     (*f)->m_edgeNodes = ns;
                 }
                 else
                 {
-                    //reverse(ns.begin(), ns.end());
-                    //(*f)->m_edgeNodes = ns;
+                    reverse(ns.begin(), ns.end());
+                    (*f)->m_edgeNodes = ns;
                 }
 
             }

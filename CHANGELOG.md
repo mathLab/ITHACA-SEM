@@ -68,6 +68,7 @@ v4.4.0
 - Add flag to `insertsurface` process for non-conforming geometries (!700)
 - Bug fix to get two meshgen regression tests working (!700)
 - Remove libANN in deference to boost::geometry (!703)
+- 2D to 3D mesh extrusion module (!715)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

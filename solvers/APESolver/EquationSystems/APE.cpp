@@ -711,15 +711,9 @@ void APE::v_ExtraFldOutput(
 {
     for (int i = 0; i < m_spacedim + 2; i++)
     {
-        Array<OneD, NekDouble> tmpC(GetNcoeffs());
-
-        // ensure the field is C0-continuous
-        m_fields[0]->IProductWRTBase(m_bf[i], tmpC);
-        m_fields[0]->MultiplyByElmtInvMass(tmpC, tmpC);
-        m_fields[0]->LocalToGlobal(tmpC, tmpC);
-        m_fields[0]->GlobalToLocal(tmpC, tmpC);
-
         variables.push_back(m_bfNames[i]);
+        Array<OneD, NekDouble> tmpC(GetNcoeffs());
+        m_fields[0]->FwdTrans(m_bf[i], tmpC);
         fieldcoeffs.push_back(tmpC);
     }
 
@@ -728,15 +722,10 @@ void APE::v_ExtraFldOutput(
     {
         for (int i = 0; i < x->GetForces().num_elements(); ++i)
         {
-            Array<OneD, NekDouble> tmpC(GetNcoeffs());
-
-            m_fields[0]->IProductWRTBase((*x)->GetForces()[i], tmpC);
-            m_fields[0]->MultiplyByElmtInvMass(tmpC, tmpC);
-            m_fields[0]->LocalToGlobal(tmpC, tmpC);
-            m_fields[0]->GlobalToLocal(tmpC, tmpC);
-
             variables.push_back("F_" + boost::lexical_cast<string>(f) +
                                 "_" + m_session->GetVariable(i));
+            Array<OneD, NekDouble> tmpC(GetNcoeffs());
+            m_fields[0]->FwdTrans(x->GetForces()[i], tmpC);
             fieldcoeffs.push_back(tmpC);
         }
         f++;

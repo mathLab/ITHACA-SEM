@@ -42,6 +42,33 @@ IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE PATH "" FORCE)
 ENDIF()
 
+# Find default search paths for OS X; adapted from Stack Overflow question
+# 1487752
+IF (APPLE)
+    EXECUTE_PROCESS(COMMAND which port
+        RESULT_VARIABLE DETECT_MACPORTS
+        OUTPUT_VARIABLE MACPORTS_PREFIX
+        ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+    EXECUTE_PROCESS(COMMAND brew --prefix
+        RESULT_VARIABLE DETECT_HOMEBREW
+        OUTPUT_VARIABLE HOMEBREW_PREFIX
+        ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    IF (${DETECT_MACPORTS} EQUAL 0)
+        GET_FILENAME_COMPONENT(MACPORTS_PREFIX ${MACPORTS_PREFIX} DIRECTORY)
+        GET_FILENAME_COMPONENT(MACPORTS_PREFIX ${MACPORTS_PREFIX} DIRECTORY)
+        SET(CMAKE_LIBRARY_PATH ${MACPORTS_PREFIX}/lib ${CMAKE_LIBRARY_PATH})
+        SET(CMAKE_INCLUDE_PATH ${MACPORTS_PREFIX}/include ${CMAKE_INCLUDE_PATH})
+        MESSAGE(STATUS "Detected MacPorts installation: ${MACPORTS_PREFIX}")
+    ENDIF()
+
+    IF (${DETECT_HOMEBREW} EQUAL 0)
+        SET(CMAKE_LIBRARY_PATH ${HOMEBREW_PREFIX}/lib ${CMAKE_LIBRARY_PATH})
+        SET(CMAKE_INCLUDE_PATH ${HOMEBREW_PREFIX}/include ${CMAKE_INCLUDE_PATH})
+        MESSAGE(STATUS "Detected Homebrew installation: ${HOMEBREW_PREFIX}")
+    ENDIF()
+ENDIF()
+
 # Attempt to retrieve git branch and SHA1 hash of current changeset.
 INCLUDE(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
@@ -96,16 +123,21 @@ MARK_AS_ADVANCED(NEKTAR_BUILD_PACKAGES)
 
 OPTION(NEKTAR_TEST_ALL "Include full set of regression tests to this build." OFF)
 
+# Meshing utilities and library
+IF (NOT WIN32)
+    OPTION(NEKTAR_USE_MESHGEN "Build mesh generation utilities." OFF)
+ENDIF()
+
 # Build options
 OPTION(NEKTAR_FULL_DEBUG "Enable Full Debugging." OFF)
 MARK_AS_ADVANCED(NEKTAR_FULL_DEBUG)
 
-IF (${CMAKE_COMPILER_IS_GNUCXX}) 
+IF (${CMAKE_COMPILER_IS_GNUCXX})
     OPTION(NEKTAR_ENABLE_PROFILE "Uses -pg compiler flag" OFF)
     MARK_AS_ADVANCED(NEKTAR_ENABLE_PROFILE)
-ENDIF (${CMAKE_COMPILER_IS_GNUCXX}) 
+ENDIF (${CMAKE_COMPILER_IS_GNUCXX})
 
-OPTION(NEKTAR_USE_EXPRESSION_TEMPLATES 
+OPTION(NEKTAR_USE_EXPRESSION_TEMPLATES
     "Use Expression templates." OFF)
 MARK_AS_ADVANCED(NEKTAR_USE_EXPRESSION_TEMPLATES)
 
@@ -141,7 +173,7 @@ MARK_AS_ADVANCED(NEKTAR_USE_MEMORY_POOLS)
 IF (MSVC)
     # Needed for M_PI to be visible in visual studio.
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
-    
+
     # Removes the warnings about unsafe methods such as strcpy, std::copy,
     # memcmp, etc.
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_DEPRECATE)
@@ -151,7 +183,13 @@ ENDIF()
 INCLUDE (NektarCommon)
 
 # Set various ThirdParty locations
-SET(TPURL   http://www.nektar.info/thirdparty)
+OPTION(THIRDPARTY_USE_SSL "Use secure HTTP connection to download third-party files." OFF)
+IF (THIRDPARTY_USE_SSL)
+    SET(TPURL https://www.nektar.info/thirdparty)
+ELSE()
+    SET(TPURL http://www.nektar.info/thirdparty)
+ENDIF()
+
 SET(TPSRC   ${CMAKE_SOURCE_DIR}/ThirdParty)
 SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
 SET(TPDIST  ${CMAKE_BINARY_DIR}/ThirdParty/dist)
@@ -167,6 +205,7 @@ ENDIF ()
 INCLUDE (ThirdPartyTinyxml)
 INCLUDE (ThirdPartyLoki)
 INCLUDE (ThirdPartyMetis)
+INCLUDE (ThirdPartyHDF5)
 INCLUDE (ThirdPartyScotch)
 INCLUDE (ThirdPartyZlib)
 INCLUDE (ThirdPartyBoost)
@@ -177,6 +216,8 @@ INCLUDE (ThirdPartyPETSc)
 INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
+INCLUDE (ThirdPartyOCE)
+INCLUDE (ThirdPartyTetGen)
 INCLUDE (ThirdPartyCCM)
 
 INCLUDE (Doxygen)
@@ -196,7 +237,7 @@ ENDIF( NEKTAR_USE_OPENBLAS )
 IF( NEKTAR_USE_SMV )
     INCLUDE (FindSMV)
     SET(NEKTAR_USING_SMV TRUE)
-    ADD_DEFINITIONS(-DNEKTAR_USING_SMV)	
+    ADD_DEFINITIONS(-DNEKTAR_USING_SMV)
 ENDIF( NEKTAR_USE_SMV )
 
 IF( NEKTAR_USE_ACCELERATE_FRAMEWORK )
@@ -231,7 +272,7 @@ IF( NEKTAR_USE_TINYXML_STL )
     ADD_DEFINITIONS( -DTIXML_USE_STL)
 ENDIF( NEKTAR_USE_TINYXML_STL )
 
-IF( NEKTAR_USE_DIRECT_BLAS_CALLS )    
+IF( NEKTAR_USE_DIRECT_BLAS_CALLS )
     ADD_DEFINITIONS(-DNEKTAR_USING_DIRECT_BLAS_CALLS)
 ENDIF( NEKTAR_USE_DIRECT_BLAS_CALLS )
 
@@ -244,6 +285,10 @@ IF( NEKTAR_USE_MEMORY_POOLS )
 ELSE( NEKTAR_USE_MEMORY_POOLS )
     REMOVE_DEFINITIONS(-DNEKTAR_MEMORY_POOL_ENABLED)
 ENDIF( NEKTAR_USE_MEMORY_POOLS )
+
+IF (NEKTAR_USE_MESHGEN)
+    ADD_DEFINITIONS(-DNEKTAR_USE_MESHGEN)
+ENDIF()
 
 SET(Boost_USE_STATIC_LIBS OFF)
 IF( WIN32 )
@@ -258,8 +303,8 @@ ENDIF( )
 # Set up include directories. Include work-around for -isystem for CMake (see
 # bug 0010837) to avoid unnecessary compiler warnings for third-party libs.
 IF (APPLE)
-  SET(CMAKE_INCLUDE_SYSTEM_FLAG_C   "-isystem ") 
-  SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ") 
+  SET(CMAKE_INCLUDE_SYSTEM_FLAG_C   "-isystem ")
+  SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 ENDIF (APPLE)
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
@@ -267,10 +312,10 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 # Build active components
 IF (NEKTAR_BUILD_LIBRARY)
     SET(NEKTAR++_LIBRARIES SolverUtils LibUtilities StdRegions SpatialDomains LocalRegions
-        MultiRegions Collections)
+        MultiRegions Collections GlobalMapping FieldUtils NekMeshUtils)
     INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)
-    INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake)
+    INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake COMPONENT dev)
 ENDIF (NEKTAR_BUILD_LIBRARY)
 
 IF (NEKTAR_BUILD_SOLVERS)
@@ -291,11 +336,15 @@ IF (NEKTAR_BUILD_TESTS)
     ENDIF (NEKTAR_USE_MPI)
 ENDIF (NEKTAR_BUILD_TESTS)
 
+# Compile list of definitions for Nektar++Config.cmake input file. We exclude
+# vtk definitions which should not be required for external builds.
 SET(NEKTAR_DEFINITIONS "")
 GET_DIRECTORY_PROPERTY(
     NEKTAR_DEFINITIONS_LIST DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS)
 FOREACH(def ${NEKTAR_DEFINITIONS_LIST})
-    SET(NEKTAR_DEFINITIONS "${NEKTAR_DEFINITIONS} -D${def}")
+    IF (NOT def MATCHES "^vtk")
+        SET(NEKTAR_DEFINITIONS "${NEKTAR_DEFINITIONS} -D${def}")
+    ENDIF()
 ENDFOREACH()
 
 # Write out Nektar++ build configuration
@@ -304,7 +353,8 @@ CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/Nektar++Config.cmake.in
 
 # Install Nektar++ CMake configuration file
 INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
-    DESTINATION ${NEKTAR_LIB_DIR}/cmake/)
+    DESTINATION ${NEKTAR_LIB_DIR}/cmake/
+    COMPONENT dev)
 
 # Install ThirdParty headers to subdirectory of ${NEKTAR_INCLUDE_DIR}
 INSTALL(DIRECTORY ${TPDIST}/include/

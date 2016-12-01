@@ -65,8 +65,7 @@
 
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
-// #include <SolverUtils/Filters/Filter.h>
-
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])
@@ -120,7 +119,6 @@ int main(int argc, char *argv[])
     NekDouble                           m_gasConstant;
     NekDouble                           m_Twall;
     NekDouble                           m_mu;
-    NekDouble                           m_thermalConductivity;
 
     int m_spacedim = 2;
     int nDimensions = m_spacedim;
@@ -168,8 +166,6 @@ int main(int argc, char *argv[])
     vSession->LoadParameter ("Twall",         m_Twall,         300.15);
     vSession->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
     vSession->LoadParameter ("mu",            m_mu,            1.78e-05);
-    vSession->LoadParameter ("thermalConductivity",
-                             m_thermalConductivity, 0.0257);
 
     //--------------------------------------------------------------------------
     // Read in mesh from input file
@@ -727,9 +723,11 @@ int main(int argc, char *argv[])
                                    GetBndCondTraceToGlobalTraceMap(cnt++));
 
                 if (pFields[0]->GetBndConditions()[b]->
-                    GetUserDefined() == "WallViscous" ||
+                        GetUserDefined() == "WallViscous" ||
                     pFields[0]->GetBndConditions()[b]->
-                    GetUserDefined() == "Wall")
+                        GetUserDefined() == "WallAdiabatic" ||
+                    pFields[0]->GetBndConditions()[b]->
+                        GetUserDefined() == "Wall")
                 {
                     Vmath::Vcopy(nBndEdgePts, &traceX[id2], 1,
                                  &surfaceX[id1], 1);
@@ -767,9 +765,11 @@ int main(int argc, char *argv[])
                                        GetBndCondTraceToGlobalTraceMap(cnt++));
 
                     if (pFields[j]->GetBndConditions()[b]->
-                        GetUserDefined() == "WallViscous" ||
+                            GetUserDefined() == "WallViscous" ||
                         pFields[j]->GetBndConditions()[b]->
-                        GetUserDefined() == "Wall")
+                            GetUserDefined() == "WallAdiabatic" ||
+                        pFields[j]->GetBndConditions()[b]->
+                            GetUserDefined() == "Wall")
                     {
                         Vmath::Vcopy(nBndEdgePts, &traceFields[j][id2], 1,
                                      &surfaceFields[j][id1], 1);
@@ -802,9 +802,11 @@ int main(int argc, char *argv[])
                                        GetBndCondTraceToGlobalTraceMap(cnt++));
 
                     if (pFields[0]->GetBndConditions()[b]->
-                        GetUserDefined() == "WallViscous" ||
+                            GetUserDefined() == "WallViscous" ||
                         pFields[0]->GetBndConditions()[b]->
-                        GetUserDefined() == "Wall")
+                            GetUserDefined() == "WallAdiabatic" ||
+                        pFields[0]->GetBndConditions()[b]->
+                            GetUserDefined() == "Wall")
                     {
                         Vmath::Vcopy(nBndEdgePts, &traceFieldsAdded[j][id2], 1,
                                      &surfaceFieldsAdded[j][id1], 1);

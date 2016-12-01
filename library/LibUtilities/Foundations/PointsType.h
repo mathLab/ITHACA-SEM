@@ -36,10 +36,12 @@
 #ifndef NEKTAR_LIB_UTILITIES_POINTS_TYPE_H
 #define NEKTAR_LIB_UTILITIES_POINTS_TYPE_H
 
+#include <vector>
+
 namespace Nektar
-{    
+{
     namespace LibUtilities
-    {     
+    {
 
         enum PointsType
         {
@@ -66,13 +68,19 @@ namespace Nektar
             eBoundaryLayerPoints,           //!<  1D power law distribution for boundary layer points
             eBoundaryLayerPointsRev,        //!<  1D power law distribution for boundary layer points
             eNodalTriElec,                  //!<  2D Nodal Electrostatic Points on a Triangle
-            eNodalTriFekete,                //!<  2D Nodal Fekete Points on a Triangle
+            eNodalTriFekete,                //!<  2D Nodal Fekete Points on a Triangle        
             eNodalTriEvenlySpaced,          //!<  2D Evenly-spaced points on a Triangle
             eNodalTetEvenlySpaced,          //!<  3D Evenly-spaced points on a Tetrahedron
             eNodalTetElec,                  //!<  3D Nodal Electrostatic Points on a Tetrahedron
             eNodalPrismEvenlySpaced,        //!<  3D Evenly-spaced points on a Prism
+            eNodalPrismElec,                //!<  3D electrostatically spaced points on a Prism
+            eNodalTriSPI,                   //!<  2D Nodal Symmetric positive internal triangle (Whitherden, Vincent)
+            eNodalTetSPI,                   //!<  3D Nodal Symmetric positive internal tet (Whitherden, Vincent)
+            eNodalPrismSPI,                 //!<  3D prism SPI
             SIZE_PointsType                 //!<  Length of enum list
         };
+
+        static std::vector<LibUtilities::PointsType> NullPointsTypeVector;
     }
 }
 

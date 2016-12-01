@@ -124,7 +124,8 @@ namespace Nektar
 
             virtual void v_WriteVtkPieceHeader(
                 std::ostream &outfile,
-                int expansion);
+                int expansion,
+                int istrip);
 
             virtual void v_GetNormals(
                 Array<OneD, Array<OneD, NekDouble> > &normals);

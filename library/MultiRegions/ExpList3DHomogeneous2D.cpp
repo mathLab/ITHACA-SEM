@@ -37,6 +37,8 @@
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 #include <MultiRegions/ExpList1D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -122,6 +124,42 @@ namespace Nektar
             {
                 bool False = false;
                 ExpList1DSharedPtr zero_line = boost::dynamic_pointer_cast<ExpList1D> (In.m_lines[0]);
+
+                for(int n = 0; n < m_lines.num_elements(); ++n)
+                {
+                    m_lines[n] = MemoryManager<ExpList1D>::AllocateSharedPtr(*zero_line,False);
+                }
+
+                SetCoeffPhys();
+            }
+        }
+        
+        /**
+         * 
+         */
+        ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In,
+                const std::vector<unsigned int> &eIDs,
+                const bool DeclareLinesSetCoeffPhys):
+            ExpListHomogeneous2D(In, eIDs)
+        {
+            SetExpType(e3DH2D);
+
+            if(DeclareLinesSetCoeffPhys)
+            {
+                bool False = false;
+                std::vector<unsigned int> eIDsLine;
+                int nel = eIDs.size()/m_lines.num_elements();
+                
+                for (int i = 0; i < nel; ++i)
+                {
+                    eIDsLine.push_back(eIDs[i]);
+                }
+                
+                ExpList1DSharedPtr zero_line_old =
+                        boost::dynamic_pointer_cast<ExpList1D> (In.m_lines[0]);
+                
+                ExpList1DSharedPtr zero_line = 
+                        MemoryManager<ExpList1D>::AllocateSharedPtr(*(zero_line_old), eIDsLine);
 
                 for(int n = 0; n < m_lines.num_elements(); ++n)
                 {
@@ -310,7 +348,7 @@ namespace Nektar
         }
 
 
-        void ExpList3DHomogeneous2D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
+        void ExpList3DHomogeneous2D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int)
         {
             int i,j,k;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
@@ -329,7 +367,7 @@ namespace Nektar
                     << ntot << "\" NumberOfCells=\""
                     << ntotminus << "\">" << endl;
             outfile << "      <Points>" << endl;
-            outfile << "        <DataArray type=\"Float32\" "
+            outfile << "        <DataArray type=\"Float64\" "
                     << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
             outfile << "          ";
             for (i = 0; i < ntot; ++i)

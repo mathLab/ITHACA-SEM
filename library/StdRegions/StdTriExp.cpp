@@ -37,6 +37,8 @@
 #include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdSegExp.h>       // for StdSegExp, etc
 
+using namespace std;
+
 namespace Nektar
 {
     namespace StdRegions
@@ -134,16 +136,14 @@ namespace Nektar
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD, NekDouble> wsp(nquad0*nquad1);
+            Array<OneD, NekDouble> wsp(std::max(nquad0, nquad1));
 
             const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
             const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
 
             // set up geometric factor: 2/(1-z1)
-            for (i = 0; i < nquad1; ++i)
-            {
-                wsp[i] = 2.0/(1-z1[i]);
-            }
+            Vmath::Sadd(nquad1, -1.0, z1, 1, wsp, 1);
+            Vmath::Sdiv(nquad1, -2.0, wsp, 1, wsp, 1);
 
             if (out_d0.num_elements() > 0)
             {
@@ -158,10 +158,8 @@ namespace Nektar
                 if (out_d1.num_elements() > 0)
                 {
                     // set up geometric factor: (1_z0)/(1-z1)
-                    for (i = 0; i < nquad0; ++i)
-                    {
-                        wsp[i] = 0.5*(1+z0[i]);
-                    }
+                    Vmath::Sadd(nquad0, 1.0, z0, 1, wsp, 1);
+                    Vmath::Smul(nquad0, 0.5, wsp, 1, wsp, 1);
 
                     for (i = 0; i < nquad1; ++i)
                     {
@@ -181,10 +179,8 @@ namespace Nektar
                     Blas::Dscal(nquad0,wsp[i],&diff0[0]+i*nquad0,1);
                 }
 
-                for (i = 0; i < nquad0; ++i)
-                {
-                    wsp[i] = 0.5*(1+z0[i]);
-                }
+                Vmath::Sadd(nquad0, 1.0, z0, 1, wsp, 1);
+                Vmath::Smul(nquad0, 0.5, wsp, 1, wsp, 1);
 
                 for (i = 0; i < nquad1; ++i)
                 {
@@ -911,28 +907,52 @@ namespace Nektar
             const int                  eid,
             const Orientation      edgeOrient,
             Array<OneD, unsigned int>& maparray,
-            Array<OneD,          int>& signarray)
+            Array<OneD,          int>& signarray,
+            int P)
         {
-            ASSERTL0(GetEdgeBasisType(eid) == LibUtilities::eModified_A ||
+            ASSERTL1(GetEdgeBasisType(eid) == LibUtilities::eModified_A ||
                      GetEdgeBasisType(eid) == LibUtilities::eModified_B,
                      "Mapping not defined for this type of basis");
 
             int i;
-            const int nummodes1 = m_base[1]->GetNumModes();
-            const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
+            int numModes;
+            int order0 = m_base[0]->GetNumModes();
+            int order1 = m_base[1]->GetNumModes();
 
-            if(maparray.num_elements() != nEdgeCoeffs)
+            switch (eid)
             {
-                maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
+            case 0:
+                numModes = order0;
+                break;
+            case 1:
+            case 2:
+                numModes = order1;
+                break;
             }
 
-            if(signarray.num_elements() != nEdgeCoeffs)
+            bool checkForZeroedModes = false;
+            if (P == -1)
             {
-                signarray = Array<OneD, int>(nEdgeCoeffs,1);
+                P = numModes;
+            }
+            else if(P != numModes)
+            {
+                checkForZeroedModes = true;
+            }
+
+
+            if(maparray.num_elements() != P)
+            {
+                maparray = Array<OneD, unsigned int>(P);
+            }
+
+            if(signarray.num_elements() != P)
+            {
+                signarray = Array<OneD, int>(P,1);
             }
             else
             {
-                fill(signarray.get() , signarray.get()+nEdgeCoeffs, 1);
+                fill(signarray.get() , signarray.get()+P, 1);
             }
 
             switch(eid)
@@ -940,7 +960,7 @@ namespace Nektar
                 case 0:
                 {
                     int cnt = 0;
-                    for(i = 0; i < nEdgeCoeffs; cnt+=nummodes1-i, ++i)
+                    for(i = 0; i < P; cnt+=order1-i, ++i)
                     {
                         maparray[i] = cnt;
                     }
@@ -949,7 +969,7 @@ namespace Nektar
                     {
                         swap( maparray[0] , maparray[1] );
 
-                        for(i = 3; i < nEdgeCoeffs; i+=2)
+                        for(i = 3; i < P; i+=2)
                         {
                             signarray[i] = -1;
                         }
@@ -958,18 +978,18 @@ namespace Nektar
                 }
                 case 1:
                 {
-                    maparray[0] = nummodes1;
+                    maparray[0] = order1;
                     maparray[1] = 1;
-                    for(i = 2; i < nEdgeCoeffs; i++)
+                    for(i = 2; i < P; i++)
                     {
-                        maparray[i] = nummodes1-1+i;
+                        maparray[i] = order1-1+i;
                     }
 
                     if(edgeOrient==eBackwards)
                     {
                         swap( maparray[0] , maparray[1] );
 
-                        for(i = 3; i < nEdgeCoeffs; i+=2)
+                        for(i = 3; i < P; i+=2)
                         {
                             signarray[i] = -1;
                         }
@@ -978,7 +998,7 @@ namespace Nektar
                 }
                 case 2:
                 {
-                    for(i = 0; i < nEdgeCoeffs; i++)
+                    for(i = 0; i < P; i++)
                     {
                         maparray[i] = i;
                     }
@@ -987,7 +1007,7 @@ namespace Nektar
                     {
                         swap( maparray[0] , maparray[1] );
 
-                        for(i = 3; i < nEdgeCoeffs; i+=2)
+                        for(i = 3; i < P; i+=2)
                         {
                             signarray[i] = -1;
                         }
@@ -997,6 +1017,18 @@ namespace Nektar
             default:
                 ASSERTL0(false,"eid must be between 0 and 2");
                 break;
+            }
+
+
+            if (checkForZeroedModes)
+            {
+                // Zero signmap and set maparray to zero if
+                // elemental modes are not as large as face modes
+                for (int j = numModes; j < P; j++)
+                {
+                    signarray[j] = 0.0;
+                    maparray[j]  = maparray[0];
+                }
             }
         }
 
@@ -1228,15 +1260,28 @@ namespace Nektar
             {
                 case ePhysInterpToEquiSpaced:
                 {
-                    int nq0 = m_base[0]->GetNumPoints();
-                    int nq1 = m_base[1]->GetNumPoints();
-                    int nq = max(nq0,nq1);
+                    int nq0, nq1, nq;
+
+                    nq0 = m_base[0]->GetNumPoints();
+                    nq1 = m_base[1]->GetNumPoints();
+
+                    // take definition from key
+                    if(mkey.ConstFactorExists(eFactorConst))
+                    {
+                        nq = (int) mkey.GetConstFactor(eFactorConst);
+                    }
+                    else
+                    {
+                        nq = max(nq0,nq1);
+                    }
+
                     int neq = LibUtilities::StdTriData::
                                                 getNumberOfCoefficients(nq,nq);
                     Array<OneD, Array<OneD, NekDouble> > coords(neq);
                     Array<OneD, NekDouble>               coll  (2);
                     Array<OneD, DNekMatSharedPtr>        I     (2);
                     Array<OneD, NekDouble>               tmp   (nq0);
+
 
                     Mat = MemoryManager<DNekMat>::AllocateSharedPtr(neq,nq0*nq1);
                     int cnt = 0;
@@ -1343,6 +1388,7 @@ namespace Nektar
             int qb = m_base[1]->GetNumPoints();
             int nmodes_a = m_base[0]->GetNumModes();
             int nmodes_b = m_base[1]->GetNumModes();
+            int nmodes = min(nmodes_a,nmodes_b);
 
             // Declare orthogonal basis.
             LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
@@ -1352,41 +1398,79 @@ namespace Nektar
             LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B,nmodes_b,pb);
             StdTriExp OrthoExp(Ba,Bb);
 
-            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
-            int j, k , cnt = 0;
-
-            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
             NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
 
-            NekDouble epsilon = 1.0;
-            int nmodes = min(nmodes_a,nmodes_b);
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
 
-            //To avoid the fac[j] from blowing up
-            //NekDouble epsilon = 0.001;
 
-            // project onto physical space.
-            OrthoExp.FwdTrans(array,orthocoeffs);
-
-            //cout << "nmodes_a = " << nmodes_a << " and nmodes_b = " << nmodes_b << "and and orthocoeffs is of size " << sizeof(orthocoeffs) << endl;
-            // apply SVV filter (JEL)
-            for(j = 0; j < nmodes_a; ++j)
+            if(mkey.HasVarCoeff(eVarCoeffLaplacian)) // Rodrigo's svv mapping 
             {
-                for(k = 0; k < nmodes_b-j; ++k)
-                {
-                    if(j + k >= cutoff)
-                    {
-                        orthocoeffs[cnt] *= (SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+epsilon)*(j+k-cutoff+epsilon)))));
-                    }
-                    else
-                    {
-                        orthocoeffs[cnt] *= 0.0;
-                    }
-                    cnt++;
-                }
-            }
+                Array<OneD, NekDouble> sqrt_varcoeff(qa*qb);
+                Array<OneD, NekDouble> tmp(qa*qb);
 
-            // backward transform to physical space
-            OrthoExp.BwdTrans(orthocoeffs,array);
+                Vmath::Vsqrt(qa * qb,
+                             mkey.GetVarCoeff(eVarCoeffLaplacian), 1,
+                             sqrt_varcoeff,                        1);
+
+                // multiply by sqrt(Variable Coefficient) containing h v /p
+                Vmath::Vmul(qa*qb,sqrt_varcoeff,1,array,1,tmp,1);
+
+                // project onto modal  space.
+                OrthoExp.FwdTrans(tmp,orthocoeffs);
+
+                int cnt = 0;
+                for(int j = 0; j < nmodes_a; ++j)
+                {
+                    for(int k = 0; k < nmodes_b-j; ++k, ++cnt)
+                    {
+                        orthocoeffs[cnt] *=
+                            (1.0 + SvvDiffCoeff
+                                *pow(j/(nmodes_a-1)+k/(nmodes_b-1),0.5*nmodes));
+                    }
+                }
+
+                // backward transform to physical space
+                OrthoExp.BwdTrans(orthocoeffs,tmp);
+
+                // multiply by sqrt(Variable Coefficient) containing h v /p
+                // - split to keep symmetry
+                Vmath::Vmul(qa*qb,sqrt_varcoeff,1,tmp,1,array,1);
+            }
+            else
+            {
+                int j, k , cnt = 0;
+                int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*
+                                                        min(nmodes_a,nmodes_b));
+
+                NekDouble epsilon = 1.0;
+                int nmodes = min(nmodes_a,nmodes_b);
+
+                // project onto physical space.
+                OrthoExp.FwdTrans(array,orthocoeffs);
+
+                // apply SVV filter (JEL)
+                for(j = 0; j < nmodes_a; ++j)
+                {
+                    for(k = 0; k < nmodes_b-j; ++k)
+                    {
+                        if(j + k >= cutoff)
+                        {
+                            orthocoeffs[cnt] *= (SvvDiffCoeff
+                                *exp(-(j+k-nmodes)*(j+k-nmodes)
+                                    /((NekDouble)((j+k-cutoff+epsilon)
+                                            *(j+k-cutoff+epsilon)))));
+                        }
+                        else
+                        {
+                            orthocoeffs[cnt] *= 0.0;
+                        }
+                        cnt++;
+                    }
+                }
+
+                // backward transform to physical space
+                OrthoExp.BwdTrans(orthocoeffs,array);
+            }
         }
 
         void StdTriExp::v_ReduceOrderCoeffs(

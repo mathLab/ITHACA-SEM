@@ -41,6 +41,8 @@
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/SparseUtils.hpp>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -152,12 +154,7 @@ namespace Nektar
 
         void GlobalLinSysIterativeStaticCond::v_InitObject()
         {
-            MultiRegions::PreconditionerType pType
-                = m_locToGloMap->GetPreconType();
-            std::string PreconType
-                = MultiRegions::PreconditionerTypeMap[pType];
-            m_precon = GetPreconFactory().CreateInstance(
-                PreconType,GetSharedThisPtr(),m_locToGloMap);
+            m_precon = CreatePrecon(m_locToGloMap);
 
             // Allocate memory for top-level structure
             SetupTopLevel(m_locToGloMap);
@@ -170,7 +167,7 @@ namespace Nektar
                     = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
 
             m_S1Blk      = MemoryManager<DNekScalBlkMat>
-                ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+                ::AllocateSharedPtr(nbdry_size, nbdry_size, blkmatStorage);
 
             // Preserve original matrix in m_S1Blk
             for (n = 0; n < n_exp; ++n)
@@ -244,14 +241,10 @@ namespace Nektar
 
             // Build precon again if we in multi-level static condensation (a
             // bit of a hack)
-            if (m_linSysKey.GetGlobalSysSolnType()==eIterativeMultiLevelStaticCond)
+            if (m_linSysKey.GetGlobalSysSolnType() ==
+                    eIterativeMultiLevelStaticCond)
             {
-                MultiRegions::PreconditionerType pType
-                    = m_locToGloMap->GetPreconType();
-                std::string PreconType
-                    = MultiRegions::PreconditionerTypeMap[pType];
-                m_precon = GetPreconFactory().CreateInstance(
-                    PreconType,GetSharedThisPtr(),m_locToGloMap);
+                m_precon = CreatePrecon(m_locToGloMap);
                 m_precon->BuildPreconditioner();
             }
 
@@ -442,8 +435,19 @@ namespace Nektar
                                      " matrix block in Schur complement has "
                                      "unexpected rank");
 
-                            partMat[make_pair(k,k)] = BCOEntryType(
+                            NekDouble scale = loc_mat->Scale();
+                            if(fabs(scale-1.0) > NekConstants::kNekZeroTol)
+                            {
+                                Array<OneD, NekDouble>  matarray(loc_lda*loc_lda);
+                                Vmath::Smul(loc_lda*loc_lda,scale,
+                                            loc_mat->GetRawPtr(),1,&matarray[0],1);
+                                partMat[make_pair(k,k)] = BCOEntryType(matarray);
+                            }
+                            else // scale factor is 1.0
+                            {
+                                partMat[make_pair(k,k)] = BCOEntryType(
                                 loc_lda*loc_lda, loc_mat->GetRawPtr());
+                            }
 
                             GlobalLinSys::v_DropStaticCondBlock(
                                 m_expList.lock()->GetOffset_Elmt_Id(n));
@@ -509,8 +513,8 @@ namespace Nektar
                 {
                     const int rows = m_rows[i];
                     Blas::Dgemv('N', rows, rows,
-                                m_scale[i], m_denseBlocks[i], rows, 
-                                m_wsp.get()+cnt, 1, 
+                                m_scale[i], m_denseBlocks[i], rows,
+                                m_wsp.get()+cnt, 1,
                                 0.0, tmpout.get()+cnt, 1);
                 }
                 m_locToGloMap->AssembleBnd(tmpout, pOutput);
@@ -532,20 +536,20 @@ namespace Nektar
                 // level, the preconditioner is never set up.
                 if (!m_precon)
                 {
-                    MultiRegions::PreconditionerType pType
-                        = m_locToGloMap->GetPreconType();
-                    std::string PreconType
-                        = MultiRegions::PreconditionerTypeMap[pType];
-                    m_precon = GetPreconFactory().CreateInstance(
-                        PreconType, GetSharedThisPtr(), m_locToGloMap);
+                    m_precon = CreatePrecon(m_locToGloMap);
                     m_precon->BuildPreconditioner();
                 }
-
+                
                 Set_Rhs_Magnitude(F_GlobBnd);
+
                 return m_S1Blk;
             }
             else
             {
+                // for multilevel iterative solver always use rhs
+                // vector value with no weighting
+                m_rhs_magnitude = NekConstants::kNekUnsetDouble;
+
                 return m_schurCompl;
             }
         }

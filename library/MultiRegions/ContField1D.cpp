@@ -344,15 +344,6 @@ namespace Nektar
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
             //         IN THE SOLUTION ARRAY
             v_ImposeDirichletConditions(inout);
-
-            for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-            {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                {
-                    inout[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(i)]
-                        = m_bndCondExpansions[i]->GetCoeff(0);
-                }
-            }
             
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
             if(contNcoeffs - NumDirBcs > 0)
@@ -468,6 +459,14 @@ namespace Nektar
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
          */
+        void ContField1D::v_LocalToGlobal(
+            const Array<OneD, const NekDouble> &inarray,
+            Array<OneD,NekDouble> &outarray)
+        {
+            m_locToGloMap->LocalToGlobal(inarray, outarray);
+        }
+
+
         void ContField1D::v_LocalToGlobal(void)
         {
             m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs);
@@ -493,6 +492,13 @@ namespace Nektar
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
          */
+        void ContField1D::v_GlobalToLocal(
+            const Array<OneD, const NekDouble> &inarray,
+            Array<OneD,NekDouble> &outarray)
+        {
+            m_locToGloMap->GlobalToLocal(inarray, outarray);
+        }
+
         void ContField1D::v_GlobalToLocal(void)
         {
             m_locToGloMap->GlobalToLocal(m_coeffs,m_coeffs);
@@ -627,6 +633,16 @@ namespace Nektar
             {
                 GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
             }
+        }
+
+
+
+        /**
+         * Reset the GlobalLinSys Manager 
+         */
+        void ContField1D::v_ClearGlobalLinSysManager(void)
+        {
+            m_globalLinSysManager.ClearManager("GlobalLinSys");
         }
 
     } // end of namespace

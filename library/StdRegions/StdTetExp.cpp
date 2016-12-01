@@ -38,6 +38,8 @@
 
 #include <StdRegions/StdTetExp.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace StdRegions
@@ -329,7 +331,7 @@ namespace Nektar
             int  order0 = m_base[0]->GetNumModes();
             int  order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> wsp(nquad2*order0*order1*(order1+1)/2+
+            Array<OneD, NekDouble> wsp(nquad2*order0*(2*order1-order0+1)/2+
                                        nquad2*nquad1*order0);
 
             BwdTrans_SumFacKernel(m_base[0]->GetBdata(),
@@ -373,7 +375,7 @@ namespace Nektar
             int  order2 = m_base[2]->GetNumModes();
 
             Array<OneD, NekDouble > tmp  = wsp;
-            Array<OneD, NekDouble > tmp1 = tmp + nquad2*order0*order1*(order1+1)/2;
+            Array<OneD, NekDouble > tmp1 = tmp + nquad2*order0*(2*order1-order0+1)/2;
 
             int i, j, mode, mode1, cnt;
 
@@ -904,6 +906,38 @@ namespace Nektar
             StdTetExp::v_BwdTrans(tmp, outarray);
         }
 
+        void StdTetExp::v_GetFaceNumModes(
+                    const int                  fid,
+                    const Orientation          faceOrient,
+                    int &numModes0,
+                    int &numModes1)
+        {
+            int nummodes [3] = {m_base[0]->GetNumModes(),
+                                m_base[1]->GetNumModes(),
+                                m_base[2]->GetNumModes()};
+            switch(fid)
+            {
+            case 0:
+                {
+                    numModes0 = nummodes[0];
+                    numModes1 = nummodes[1];
+                }
+                break;
+            case 1:
+                {
+                    numModes0 = nummodes[0];
+                    numModes1 = nummodes[2];
+                }
+                break;
+            case 2:
+            case 3:
+                {
+                    numModes0 = nummodes[1];
+                    numModes1 = nummodes[2];
+                }
+                break;
+            }
+        }
 
         //---------------------------
         // Helper functions
@@ -1205,13 +1239,13 @@ namespace Nektar
          */
         void StdTetExp::v_GetFaceToElementMap(
             const int                  fid,
-            const Orientation      faceOrient,
+            const Orientation          faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
-            int                        nummodesA,
-            int                        nummodesB)
+            int                        P,
+            int                        Q)
         {
-            int P, Q, i, j, k, idx;
+            int nummodesA,nummodesB, i, j, k, idx;
 
             ASSERTL1(v_IsBoundaryInteriorExpansion(),
                      "Method only implemented for Modified_A BasisType (x "
@@ -1219,32 +1253,37 @@ namespace Nektar
                      "Modified_C BasisType(z direction)");
 
             int nFaceCoeffs = 0;
-
-            if (nummodesA == -1)
+            
+            switch(fid)
             {
-                switch(fid)
-                {
-                    case 0:
-                        nummodesA = m_base[0]->GetNumModes();
-                        nummodesB = m_base[1]->GetNumModes();
+            case 0:
+                nummodesA = m_base[0]->GetNumModes();
+                nummodesB = m_base[1]->GetNumModes();
+                break;
+            case 1:
+                nummodesA = m_base[0]->GetNumModes();
+                nummodesB = m_base[2]->GetNumModes();
                         break;
-                    case 1:
-                        nummodesA = m_base[0]->GetNumModes();
-                        nummodesB = m_base[2]->GetNumModes();
-                        break;
-                    case 2:
-                    case 3:
-                        nummodesA = m_base[1]->GetNumModes();
-                        nummodesB = m_base[2]->GetNumModes();
-                        break;
-                }
+            case 2:
+            case 3:
+                nummodesA = m_base[1]->GetNumModes();
+                nummodesB = m_base[2]->GetNumModes();
+                break;
             }
-
-            P = nummodesA;
-            Q = nummodesB;
-
-            nFaceCoeffs = Q + ((P-1)*(1 + 2*(Q-1) - (P-1)))/2;
-
+            
+            bool CheckForZeroedModes = false;
+            if(P == -1)
+            {
+                P = nummodesA;
+                Q = nummodesB;
+            }
+            else
+            {
+                CheckForZeroedModes = true;
+            }
+            
+            nFaceCoeffs = P*(2*Q-P+1)/2; 
+            
             // Allocate the map array and sign array; set sign array to ones (+)
             if(maparray.num_elements() != nFaceCoeffs)
             {
@@ -1257,87 +1296,115 @@ namespace Nektar
             }
             else
             {
-                fill( signarray.get() , signarray.get()+nFaceCoeffs, 1 );
+                fill(signarray.get(),signarray.get()+nFaceCoeffs, 1 );
             }
 
             switch (fid)
             {
-                case 0:
-                    idx = 0;
-                    for (i = 0; i < P; ++i)
+            case 0:
+                idx = 0;
+                for (i = 0; i < P; ++i)
+                {
+                    for (j = 0; j < Q-i; ++j)
                     {
-                        for (j = 0; j < Q-i; ++j)
+                        if ((int)faceOrient == 7 && i > 1)
                         {
-                            if ((int)faceOrient == 7 && i > 1)
+                            signarray[idx] = (i%2 ? -1 : 1);
+                        }
+                        maparray[idx++] = GetMode(i,j,0);
+                    }
+                }
+                break;
+            case 1:
+                idx = 0;
+                for (i = 0; i < P; ++i)
+                {
+                    for (k = 0; k < Q-i; ++k)
+                    {
+                        if ((int)faceOrient == 7 && i > 1)
+                        {
+                            signarray[idx] = (i%2 ? -1: 1);
+                        }
+                        maparray[idx++] = GetMode(i,0,k);
+                    }
+                }
+                break;
+            case 2:
+                idx = 0;
+                for (j = 0; j < P-1; ++j)
+                {
+                    for (k = 0; k < Q-1-j; ++k)
+                    {
+                        if ((int)faceOrient == 7 && j > 1)
+                        {
+                            signarray[idx] = ((j+1)%2 ? -1: 1);
+                        }
+                        maparray[idx++] = GetMode(1,j,k);
+                        // Incorporate modes from zeroth plane where needed.
+                        if (j == 0 && k == 0) 
+                        {
+                            maparray[idx++] = GetMode(0,0,1);
+                        }
+                        if (j == 0 && k == Q-2) 
+                        {
+                            for (int r = 0; r < Q-1; ++r) 
                             {
-                                signarray[idx] = (i%2 ? -1 : 1);
+                                maparray[idx++] = GetMode(0,1,r);
                             }
-                            maparray[idx++] = GetMode(i,j,0);
                         }
                     }
-                    break;
-                case 1:
-                    idx = 0;
-                    for (i = 0; i < P; ++i)
+                }
+                break;
+            case 3:
+                idx = 0;
+                for (j = 0; j < P; ++j)
+                {
+                    for (k = 0; k < Q-j; ++k)
                     {
-                        for (k = 0; k < Q-i; ++k)
+                        if ((int)faceOrient == 7 && j > 1)
                         {
-                            if ((int)faceOrient == 7 && i > 1)
-                            {
-                                signarray[idx] = (i%2 ? -1: 1);
-                            }
-                            maparray[idx++] = GetMode(i,0,k);
+                            signarray[idx] = (j%2 ? -1: 1);
                         }
+                        maparray[idx++] = GetMode(0,j,k);
                     }
-                    break;
-                case 2:
-                    idx = 0;
-                    for (j = 0; j < P-1; ++j)
-                    {
-                        for (k = 0; k < Q-1-j; ++k)
-                        {
-                            if ((int)faceOrient == 7 && j > 1)
-                            {
-                                signarray[idx] = ((j+1)%2 ? -1: 1);
-                            }
-                            maparray[idx++] = GetMode(1,j,k);
-                            // Incorporate modes from zeroth plane where needed.
-                            if (j == 0 && k == 0) {
-                                maparray[idx++] = GetMode(0,0,1);
-                            }
-                            if (j == 0 && k == Q-2) {
-                                for (int r = 0; r < Q-1; ++r) {
-                                    maparray[idx++] = GetMode(0,1,r);
-                                }
-                            }
-                        }
-                    }
-                    break;
-                case 3:
-                    idx = 0;
-                    for (j = 0; j < P; ++j)
-                    {
-                        for (k = 0; k < Q-j; ++k)
-                        {
-                            if ((int)faceOrient == 7 && j > 1)
-                            {
-                                signarray[idx] = (j%2 ? -1: 1);
-                            }
-                            maparray[idx++] = GetMode(0,j,k);
-                        }
-                    }
-                    break;
-                default:
-                    ASSERTL0(false, "Element map not available.");
+                }
+                break;
+            default:
+                ASSERTL0(false, "Element map not available.");
             }
-
+            
             if ((int)faceOrient == 7)
             {
                 swap(maparray[0], maparray[Q]);
-
+                
                 for (i = 1; i < Q-1; ++i)
                 {
                     swap(maparray[i+1], maparray[Q+i]);
+                }
+            }
+
+            if(CheckForZeroedModes)
+            {
+                // zero signmap and set maparray to zero if elemental
+                // modes are not as large as face modesl
+                idx = 0; 
+                for (j = 0; j < nummodesA; ++j)
+                {
+                    idx += nummodesB-j;
+                    for (k = nummodesB-j; k < Q-j; ++k)
+                    {
+                        signarray[idx]  = 0.0;
+                        maparray[idx++] = maparray[0];
+                    }
+                }
+                
+                for (j = nummodesA; j < P; ++j)
+                {
+                    for (k = 0; k < Q-j; ++k)
+                    {
+                        signarray[idx]  = 0.0;
+                        maparray[idx++] = maparray[0];
+                    }
                 }
             }
         }
@@ -1743,7 +1810,18 @@ namespace Nektar
                     int nq0 = m_base[0]->GetNumPoints();
                     int nq1 = m_base[1]->GetNumPoints();
                     int nq2 = m_base[2]->GetNumPoints();
-                    int nq = max(nq0,max(nq1,nq2));
+                    int nq;
+
+                    // take definition from key 
+                    if(mkey.ConstFactorExists(eFactorConst))
+                    {
+                        nq = (int) mkey.GetConstFactor(eFactorConst);
+                    }
+                    else
+                    {
+                        nq = max(nq0,max(nq1,nq2));
+                    }
+
                     int neq = LibUtilities::StdTetData::
                                             getNumberOfCoefficients(nq,nq,nq);
                     Array<OneD, Array<OneD, NekDouble> > coords(neq);
@@ -1924,21 +2002,28 @@ namespace Nektar
             switch(m_base[2]->GetPointsType())
             {
                 // (2,0) Jacobi inner product.
-                case LibUtilities::eGaussRadauMAlpha2Beta0:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1, 0.25*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1, 1);
-                    }
-                    break;
-
-                default:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1,1);
-                    }
-                    break;
+            case LibUtilities::eGaussRadauMAlpha2Beta0:
+                for(i = 0; i < nquad2; ++i)
+                {
+                    Blas::Dscal(nquad0*nquad1, 0.25*w2[i],
+                                &outarray[0]+i*nquad0*nquad1, 1);
+                }
+                break;
+                // (1,0) Jacobi inner product.
+            case LibUtilities::eGaussRadauMAlpha1Beta0:
+                for(i = 0; i < nquad2; ++i)
+                {
+                    Blas::Dscal(nquad0*nquad1, 0.25*(1-z2[i])*w2[i],
+                                &outarray[0]+i*nquad0*nquad1, 1);
+                }
+                break;
+            default:
+                for(i = 0; i < nquad2; ++i)
+                {
+                    Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
+                                &outarray[0]+i*nquad0*nquad1,1);
+                }
+                break;
             }
         }
 

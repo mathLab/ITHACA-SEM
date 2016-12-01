@@ -321,9 +321,11 @@
           <I PROPERTY="SolverType"            VALUE="VelocityCorrectionScheme" />
           <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes" />
           <I PROPERTY="AdvectionForm"         VALUE="Convective" />
-          <I PROPERTY="Projection"            VALUE="Mixed_CG_Discontinuous" />  
-          <I PROPERTY="TimeIntegrationMethod" VALUE="BackwardEuler" />
-          <I PROPERTY="Extrapolation"         VALUE="SubStepping" />
+          <I PROPERTY="Projection"            VALUE="Mixed_CG_Discontinuous" />
+          <I PROPERTY="Extrapolation" VALUE="SubStepping"   />
+          <I PROPERTY="TimeIntegrationMethod" VALUE="BDFImplicitOrder1" />
+          <--!I PROPERTY="CollectionOptions" VALUE="AutoTuning" /-->
+          <I PROPERTY="GlobalSysSoln" VALUE="IterativeStaticCond" />
         </SOLVERINFO>
         
         <PARAMETERS>
@@ -332,7 +334,7 @@
           <P> IO_CheckSteps = 10    </P>
           <P> IO_InfoSteps  = 1    </P>
           <P> Kinvis        = 0.025        </P>
-          <P> MinSubSteps  = 4        </P>
+          <P> MinSubSteps   = 4       </P>
         </PARAMETERS>
         
         <VARIABLES>

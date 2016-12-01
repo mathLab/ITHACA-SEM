@@ -7,6 +7,7 @@
 #include <MultiRegions/ContField1D.h>
 #include <SpatialDomains/MeshGraph1D.h>
 
+using namespace std;
 using namespace Nektar;
 
 int NoCaseStringCompare(const string & s1, const string& s2);
@@ -33,7 +34,7 @@ int main(int argc, char *argv[])
     try
     {
         LibUtilities::FieldIOSharedPtr fld =
-            MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(vComm);
+            LibUtilities::FieldIO::CreateDefault(vSession);
 
         //----------------------------------------------
         // Read in mesh from input file

@@ -35,6 +35,8 @@
 
 #include <PulseWaveSolver/EquationSystems/LymphaticPressureArea.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

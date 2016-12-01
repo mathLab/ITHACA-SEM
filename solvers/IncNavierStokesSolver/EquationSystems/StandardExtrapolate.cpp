@@ -59,6 +59,41 @@ namespace Nektar
     StandardExtrapolate::~StandardExtrapolate()
     {
     }
+
+
+	
+    /** 
+     * Function to extrapolate the new pressure boundary condition.
+     * Based on the velocity field and on the advection term.
+     * Acceleration term is also computed.
+     * This routine is a general one for 2d and 3D application and it can be called
+     * directly from velocity correction scheme. Specialisation on dimensionality is
+     * redirected to the CalcNeumannPressureBCs method.
+     */
+    void StandardExtrapolate::v_EvaluatePressureBCs(
+        const Array<OneD, const Array<OneD, NekDouble> > &fields,
+        const Array<OneD, const Array<OneD, NekDouble> >  &N,
+        NekDouble kinvis)
+    {
+        m_pressureCalls++;
+        if(m_HBCnumber > 0)
+        {
+            // Calculate Neumann BCs at current level
+            CalcNeumannPressureBCs(fields, N, kinvis);
+
+            // Extrapolate to n+1
+            ExtrapolateArray(m_pressureHBCs);
+
+            // Add (phi,Du/Dt) term to m_presureHBC
+            AddDuDt();
+
+            // Copy m_pressureHBCs to m_PbndExp
+            CopyPressureHBCsToPbndExp();
+        }
+
+        CalcOutflowBCs(fields, kinvis);
+    }
+
     
     /** 
      * 
@@ -125,8 +160,8 @@ namespace Nektar
         NekDouble kinvis, 
         Array<OneD, NekDouble> &Q, 
         Array<OneD, const NekDouble> &Advection)
-	{
-            Vmath::Svtvp(HBCdata,-kinvis,Q,1,Advection,1,Q,1);
-	}
+    {
+        Vmath::Svtvp(HBCdata,-kinvis,Q,1,Advection,1,Q,1);
+    }
 }
 

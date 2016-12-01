@@ -40,37 +40,36 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-        class FilterEnergy : public FilterEnergyBase
-        {
-        public:
-            friend class MemoryManager<FilterEnergy>;
 
-            /// Creates an instance of this class
-            static FilterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams) {
-                FilterSharedPtr p = MemoryManager<FilterEnergy>
-                    ::AllocateSharedPtr(pSession, pParams);
-                return p;
-            }
+class FilterEnergy : public SolverUtils::FilterEnergyBase
+{
+public:
+    friend class MemoryManager<FilterEnergy>;
 
-            ///Name of the class
-            static std::string className;
-
-            SOLVER_UTILS_EXPORT FilterEnergy(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
-            SOLVER_UTILS_EXPORT ~FilterEnergy();
-
-        protected:
-            virtual void v_GetVelocity(
-                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-                const int i,
-                Array<OneD, NekDouble> &velocity);
-        };
+    /// Creates an instance of this class
+    static SolverUtils::FilterSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const ParamMap &pParams) {
+        SolverUtils::FilterSharedPtr p = MemoryManager<FilterEnergy>
+                                        ::AllocateSharedPtr(pSession, pParams);
+        return p;
     }
+
+    ///Name of the class
+    static std::string className;
+
+    SOLVER_UTILS_EXPORT FilterEnergy(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const ParamMap &pParams);
+    SOLVER_UTILS_EXPORT ~FilterEnergy();
+
+protected:
+    virtual void v_GetVelocity(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const int i,
+        Array<OneD, NekDouble> &velocity);
+};
+
 }
 
 #endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */

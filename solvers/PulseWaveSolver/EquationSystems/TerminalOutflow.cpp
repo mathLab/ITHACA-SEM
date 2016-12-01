@@ -35,6 +35,8 @@
 
 #include <PulseWaveSolver/EquationSystems/TerminalOutflow.h>
 
+using namespace std;
+
 namespace Nektar
 {
 

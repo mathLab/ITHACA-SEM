@@ -86,6 +86,10 @@ namespace SolverUtils
             ForcingNoise(const LibUtilities::SessionReaderSharedPtr& pSession);
             virtual ~ForcingNoise(void){};
 
+            int             m_index;
+            int             m_updateFreq;
+            int             m_numSteps;
+            NekDouble       m_noise;
     };
 
 }

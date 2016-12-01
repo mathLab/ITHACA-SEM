@@ -468,6 +468,52 @@ namespace LibUtilities {
     };
 
 
+    class TimeIntegrationMidpoint : public TimeIntegrationWrapper
+    {
+    public:
+        friend class MemoryManager<TimeIntegrationMidpoint>;
+
+        /// Creates an instance of this class
+        static TimeIntegrationWrapperSharedPtr create()
+        {
+            TimeIntegrationWrapperSharedPtr p =
+                MemoryManager<TimeIntegrationMidpoint>::AllocateSharedPtr();
+            p->InitObject();
+            return p;
+        }
+        /// Name of class
+        static std::string className;
+
+        virtual ~TimeIntegrationMidpoint() {}
+
+    protected:
+        virtual void v_InitObject();
+    };
+
+
+    class TimeIntegrationRungeKutta2 : public TimeIntegrationWrapper
+    {
+    public:
+        friend class MemoryManager<TimeIntegrationRungeKutta2>;
+
+        /// Creates an instance of this class
+        static TimeIntegrationWrapperSharedPtr create()
+        {
+            TimeIntegrationWrapperSharedPtr p =
+                MemoryManager<TimeIntegrationRungeKutta2>::AllocateSharedPtr();
+            p->InitObject();
+            return p;
+        }
+        /// Name of class
+        static std::string className;
+
+        virtual ~TimeIntegrationRungeKutta2() {}
+
+    protected:
+        virtual void v_InitObject();
+    };
+
+
     class TimeIntegrationRungeKutta2_ImprovedEuler :
           public TimeIntegrationWrapper
     {
@@ -492,17 +538,17 @@ namespace LibUtilities {
         virtual void v_InitObject();
     };
 
-    class TimeIntegrationRungeKutta2_ModifiedEuler :
-          public TimeIntegrationWrapper
+
+    class TimeIntegrationRungeKutta2_SSP : public TimeIntegrationWrapper
     {
     public:
-        friend class MemoryManager<TimeIntegrationRungeKutta2_ModifiedEuler>;
+        friend class MemoryManager<TimeIntegrationRungeKutta2_SSP>;
 
         /// Creates an instance of this class
         static TimeIntegrationWrapperSharedPtr create()
         {
             TimeIntegrationWrapperSharedPtr p =
-                MemoryManager<TimeIntegrationRungeKutta2_ModifiedEuler>
+                MemoryManager<TimeIntegrationRungeKutta2_SSP>
                     ::AllocateSharedPtr();
             p->InitObject();
             return p;
@@ -510,11 +556,36 @@ namespace LibUtilities {
         /// Name of class
         static std::string className;
 
-        virtual ~TimeIntegrationRungeKutta2_ModifiedEuler() {}
+        virtual ~TimeIntegrationRungeKutta2_SSP() {}
 
     protected:
         virtual void v_InitObject();
     };
+
+
+    class TimeIntegrationRungeKutta3_SSP : public TimeIntegrationWrapper
+    {
+    public:
+        friend class MemoryManager<TimeIntegrationRungeKutta3_SSP>;
+
+        /// Creates an instance of this class
+        static TimeIntegrationWrapperSharedPtr create()
+        {
+            TimeIntegrationWrapperSharedPtr p =
+                MemoryManager<TimeIntegrationRungeKutta3_SSP>
+                    ::AllocateSharedPtr();
+            p->InitObject();
+            return p;
+        }
+        /// Name of class
+        static std::string className;
+
+        virtual ~TimeIntegrationRungeKutta3_SSP() {}
+
+    protected:
+        virtual void v_InitObject();
+    };
+
 
     class TimeIntegrationClassicalRungeKutta4 : public TimeIntegrationWrapper
     {
@@ -538,6 +609,31 @@ namespace LibUtilities {
     protected:
         virtual void v_InitObject();
     };
+
+
+    class TimeIntegrationRungeKutta4 : public TimeIntegrationWrapper
+    {
+    public:
+        friend class MemoryManager<TimeIntegrationRungeKutta4>;
+
+        /// Creates an instance of this class
+        static TimeIntegrationWrapperSharedPtr create()
+        {
+            TimeIntegrationWrapperSharedPtr p =
+                MemoryManager<TimeIntegrationRungeKutta4>
+                    ::AllocateSharedPtr();
+            p->InitObject();
+            return p;
+        }
+        /// Name of class
+        static std::string className;
+
+        virtual ~TimeIntegrationRungeKutta4() {}
+
+    protected:
+        virtual void v_InitObject();
+    };
+
 
     class TimeIntegrationDIRKOrder2 : public TimeIntegrationWrapper
     {
@@ -583,27 +679,6 @@ namespace LibUtilities {
         virtual void v_InitObject();
     };
 
-    class TimeIntegrationMidpoint : public TimeIntegrationWrapper
-    {
-    public:
-        friend class MemoryManager<TimeIntegrationMidpoint>;
-
-        /// Creates an instance of this class
-        static TimeIntegrationWrapperSharedPtr create()
-        {
-            TimeIntegrationWrapperSharedPtr p =
-                MemoryManager<TimeIntegrationMidpoint>::AllocateSharedPtr();
-            p->InitObject();
-            return p;
-        }
-        /// Name of class
-        static std::string className;
-
-        virtual ~TimeIntegrationMidpoint() {}
-
-    protected:
-        virtual void v_InitObject();
-    };
 
     class TimeIntegrationAdamsBashforthOrder2 : public TimeIntegrationWrapper
     {
@@ -628,6 +703,7 @@ namespace LibUtilities {
         virtual void v_InitObject();
     };
 
+
     class TimeIntegrationAdamsBashforthOrder3 : public TimeIntegrationWrapper
     {
     public:
@@ -650,6 +726,7 @@ namespace LibUtilities {
     protected:
         virtual void v_InitObject();
     };
+
 
     class TimeIntegrationAdamsMoultonOrder2 : public TimeIntegrationWrapper
     {
@@ -674,6 +751,7 @@ namespace LibUtilities {
         virtual void v_InitObject();
     };
 
+
     class TimeIntegrationIMEXGear : public TimeIntegrationWrapper
     {
     public:
@@ -696,6 +774,7 @@ namespace LibUtilities {
         virtual void v_InitObject();
     };
 
+
     class TimeIntegrationCNAB : public TimeIntegrationWrapper
     {
     public:
@@ -717,6 +796,7 @@ namespace LibUtilities {
     protected:
         virtual void v_InitObject();
     };
+
 
     class TimeIntegrationMCNAB : public TimeIntegrationWrapper
     {

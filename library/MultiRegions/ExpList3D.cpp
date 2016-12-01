@@ -44,6 +44,8 @@
 #include <LibUtilities/Foundations/Interp.h>
 #include <LibUtilities/Foundations/PhysGalerkinProject.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -57,6 +59,24 @@ namespace Nektar
         ExpList3D::ExpList3D(const ExpList3D &In): ExpList(In)
         {
             SetExpType(e3D);
+        }
+        
+        ExpList3D::ExpList3D(const ExpList3D &In,
+                const std::vector<unsigned int> &eIDs,
+                const bool DeclareCoeffPhysArrays)
+                : ExpList(In, eIDs, DeclareCoeffPhysArrays)
+        {
+            SetExpType(e3D);
+            
+            // Setup Default optimisation information.
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
+            SetCoeffPhys();
+
+            ReadGlobalOptimizationParameters();
+            CreateCollections();
         }
 
         ExpList3D::~ExpList3D()

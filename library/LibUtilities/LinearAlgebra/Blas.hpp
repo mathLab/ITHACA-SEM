@@ -79,7 +79,7 @@ namespace Blas
         void F77NAME(dtpmv) (const char& uplo, const char& trans, const char& diag,
                  const int& n, const double* ap, double* x, const int& incx);
 
-        void F77NAME(dspmv) (const char& trans, const int& n,    const double& alpha,
+        void F77NAME(dspmv) (const char& uplo, const int& n,    const double& alpha,
                  const double* a,   const double* x, const int& incx,
                  const double& beta,      double* y, const int& incy);
 
@@ -192,11 +192,11 @@ namespace Blas
 
     /// \brief BLAS level 2: Matrix vector multiply y = A \e x where A
     /// is symmetric packed
-    static inline void Dspmv (const char& trans,  const int& n,    const double& alpha,
+    static inline void Dspmv (const char& uplo,  const int& n,    const double& alpha,
              const double* a,    const double* x, const int& incx,
              const double& beta,       double* y, const int& incy)
     {
-        F77NAME(dspmv) (trans,n,alpha,a,x,incx,beta,y,incy);
+        F77NAME(dspmv) (uplo,n,alpha,a,x,incx,beta,y,incy);
     }  
 
     static inline void Dsbmv (const char& uplo,   const int& m,    const int& k,

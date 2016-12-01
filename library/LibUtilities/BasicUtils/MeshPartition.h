@@ -39,6 +39,7 @@
 #include <boost/graph/subgraph.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/MeshEntities.hpp>
 
 class TiXmlElement;
 
@@ -65,7 +66,7 @@ namespace Nektar
             LIB_UTILITIES_EXPORT MeshPartition(const SessionReaderSharedPtr& pSession);
             LIB_UTILITIES_EXPORT virtual ~MeshPartition();
 
-            LIB_UTILITIES_EXPORT void PartitionMesh(int nParts, bool shared = false);
+            LIB_UTILITIES_EXPORT void PartitionMesh(int nParts, bool shared = false, bool overlapping = false);
             LIB_UTILITIES_EXPORT void WriteLocalPartition(
                     SessionReaderSharedPtr& pSession);
             LIB_UTILITIES_EXPORT void WriteAllPartitions(
@@ -87,35 +88,20 @@ namespace Nektar
                 char type;
                 std::vector<unsigned int> list;
             };
-
-            struct MeshVertex
-            {
-                int id;
-                NekDouble x;
-                NekDouble y;
-                NekDouble z;
-            };
-
-            struct MeshEdge
-            {
-                int id;
-                int v0;
-                int v1;
-            };
-
+            
             struct MeshFace
             {
                 int id;
                 std::vector<int> edgeList;
             };
-
+            
             struct MeshElement
             {
                 int id;
                 char type;
                 std::vector<int> list;
             };
-
+            
             struct MeshCurved
             {
                 int id;
@@ -124,9 +110,10 @@ namespace Nektar
                 std::string type;
                 int npoints;
                 std::string data;
+                int ptid;
+                int ptoffset;
             };
-            typedef std::pair<std::string, int> MeshCurvedKey;
-            
+
             struct MeshComposite
             {
                 int id;
@@ -134,6 +121,8 @@ namespace Nektar
                 std::vector<int> list;
             };
 
+            bool m_isCompressed; // Idenfity if input is compressed and if so set output to be compressed
+            typedef std::pair<std::string, int> MeshCurvedKey;
             typedef std::vector<unsigned int>   MultiWeight;
 
             // Element in a mesh
@@ -142,6 +131,8 @@ namespace Nektar
                 int id;             ///< Universal ID of the vertex
                 int partition;      ///< Index of the partition to which it belongs
                 MultiWeight weight; ///< Weightings to this graph vertex
+                MultiWeight bndWeight;
+                MultiWeight edgeWeight;
             };
 
             // Face/Edge/Vertex between two adjacent elements
@@ -195,16 +186,22 @@ namespace Nektar
             std::map<int, MeshEntity>           m_meshFaces;
             std::map<int, MeshEntity>           m_meshElements;
             std::map<MeshCurvedKey, MeshCurved> m_meshCurved;
+            std::map<int, MeshCurvedPts>        m_meshCurvedPts;
             std::map<int, MeshEntity>           m_meshComposites;
             std::vector<unsigned int>           m_domain;
             std::map<std::string, std::string>  m_vertexAttributes;
 
-            // hierarchial mapping: composite id -> field name -> integer list
+            // hierarchial mapping: elmt id -> field name -> integer list
             // of directional nummodes described by expansion type clause.
             std::map<int, NummodesPerField>     m_expansions;
 
+            // map of each elements shape
+            std::map<int, char>                 m_shape;
+
             std::map<std::string, int>          m_fieldNameToId;
             std::map<int, MultiWeight>          m_vertWeights;
+            std::map<int, MultiWeight>          m_vertBndWeights;
+            std::map<int, MultiWeight>          m_edgeWeights;
 
             BndRegionOrdering                   m_bndRegOrder;
 
@@ -214,6 +211,8 @@ namespace Nektar
             CommSharedPtr                       m_comm;
 
             bool                                m_weightingRequired;
+            bool                                m_weightBnd;
+            bool                                m_weightDofs;
             bool                                m_shared;
 
             void ReadExpansions(const SessionReaderSharedPtr& pSession);
@@ -223,7 +222,8 @@ namespace Nektar
             void CreateGraph(BoostSubGraph& pGraph);
             void PartitionGraph(BoostSubGraph& pGraph,
                                 int nParts,
-                                std::vector<BoostSubGraph>& pLocalPartition);
+                                std::vector<BoostSubGraph>& pLocalPartition,
+                                bool overlapping = false);
 
             virtual void PartitionGraphImpl(
                     int&                              nVerts,
@@ -232,6 +232,7 @@ namespace Nektar
                     Nektar::Array<Nektar::OneD, int>& adjcy,
                     Nektar::Array<Nektar::OneD, int>& vertWgt,
                     Nektar::Array<Nektar::OneD, int>& vertSize,
+                    Nektar::Array<Nektar::OneD, int>& edgeWgt,
                     int&                              nparts,
                     int&                              volume,
                     Nektar::Array<Nektar::OneD, int>& part) = 0;
@@ -239,6 +240,7 @@ namespace Nektar
             void OutputPartition(SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
             void CheckPartitions(int nParts, Array<OneD, int> &pPart);
             int CalculateElementWeight(char elmtType, bool bndWeight, int na, int nb, int nc);
+            int CalculateEdgeWeight(char elmtType, int na, int nb, int nc);
         };
 
         typedef boost::shared_ptr<MeshPartition> MeshPartitionSharedPtr;

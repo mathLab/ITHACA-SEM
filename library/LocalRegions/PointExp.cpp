@@ -80,6 +80,17 @@ namespace Nektar
                     break;
             }
         }
+        
+        void PointExp::v_NormVectorIProductWRTBase(
+            const Array<OneD, const NekDouble> &Fx,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            const Array<OneD, const Array<OneD, NekDouble> >
+                 &normals =
+                    GetLeftAdjacentElementExp()->
+                        GetVertexNormal(GetLeftAdjacentElementVertex());
+            outarray[0] = Fx[0]*normals[0][0];
+        }
 
     }
 }

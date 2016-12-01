@@ -109,7 +109,7 @@ namespace Nektar
                                             int expansion);
 
 
-            virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion);
+            virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip);
 
         private:
         };

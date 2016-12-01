@@ -37,6 +37,8 @@
 #include <MultiRegions/GlobalLinSysIterativeFull.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -134,7 +136,8 @@ namespace Nektar
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
             int nDirTotal = nDirDofs;
             
-            expList->GetComm()->AllReduce(nDirTotal, LibUtilities::ReduceSum);
+            expList->GetComm()->GetRowComm()
+                   ->AllReduce(nDirTotal, LibUtilities::ReduceSum);
             
             Array<OneD, NekDouble> tmp(nGlobDofs), tmp2;
 
@@ -193,11 +196,8 @@ namespace Nektar
             expList->GeneralMatrixOp(m_linSysKey,
                                      pInput, pOutput, eGlobal);
 
-            // retrieve robin boundary condition information and apply robin
-            // boundary conditions to the solution.
-            const std::map<int, RobinBCInfoSharedPtr> vRobinBCInfo
-                                                = expList->GetRobinBCInfo();
-            if(vRobinBCInfo.size() > 0)
+            // Apply robin boundary conditions to the solution.
+            if(m_robinBCInfo.size() > 0)
             {
                 ASSERTL0(false,
                         "Robin boundaries not set up in IterativeFull solver.");
@@ -223,14 +223,14 @@ namespace Nektar
                     int offset = expList->GetCoeff_Offset(n);
                     int ncoeffs = expList->GetExp(nel)->GetNcoeffs();
 
-                    if(vRobinBCInfo.count(nel) != 0) // add robin mass matrix
+                    if(m_robinBCInfo.count(nel) != 0) // add robin mass matrix
                     {
                         RobinBCInfoSharedPtr rBC;
                         Array<OneD, NekDouble> tmp;
                         StdRegions::StdExpansionSharedPtr vExp = expList->GetExp(nel);
 
                         // add local matrix contribution
-                        for(rBC = vRobinBCInfo.find(nel)->second;rBC; rBC = rBC->next)
+                        for(rBC = m_robinBCInfo.find(nel)->second;rBC; rBC = rBC->next)
                         {
                             vExp->AddRobinEdgeContribution(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs, tmp = robin_l + offset);
                         }

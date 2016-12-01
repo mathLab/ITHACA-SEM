@@ -36,6 +36,8 @@
 #include <StdRegions/StdPrismExp.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace StdRegions
@@ -726,6 +728,47 @@ namespace Nektar
             StdPrismExp::v_BwdTrans(tmp, outarray);
         }
 
+        void StdPrismExp::v_GetFaceNumModes(
+                    const int                  fid,
+                    const Orientation          faceOrient,
+                    int &numModes0,
+                    int &numModes1)
+        {
+            int nummodes [3] = {m_base[0]->GetNumModes(),
+                                m_base[1]->GetNumModes(),
+                                m_base[2]->GetNumModes()};
+            switch(fid)
+            {
+            // base quad
+            case 0:
+                {
+                    numModes0 = nummodes[0];
+                    numModes1 = nummodes[1];
+                }
+                break;
+            // front and back quad
+            case 2:
+            case 4:
+                {
+                    numModes0 = nummodes[1];
+                    numModes1 = nummodes[2];
+                }
+                break;
+            // triangles
+            case 1:
+            case 3:
+                {
+                    numModes0 = nummodes[0];
+                    numModes1 = nummodes[2];
+                }
+                break;
+            }
+
+            if ( faceOrient >= 9 )
+            {
+                std::swap(numModes0, numModes1);
+            }
+        }
 
         //---------------------------------------
         // Helper functions
@@ -1000,8 +1043,8 @@ namespace Nektar
             const Orientation      faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
-            int                        nummodesA,
-            int                        nummodesB)
+            int                        P,
+            int                        Q)
         {
             ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1),
                      "Method only implemented if BasisType is identical"
@@ -1012,36 +1055,44 @@ namespace Nektar
                      "(x and y direction) and Modified_B BasisType (z "
                      "direction)");
 
-            int i, j, p, q, r, nFaceCoeffs, idx = 0;
+            int i, j, k, p, q, r, nFaceCoeffs, idx = 0;
+            int nummodesA, nummodesB;
 
-            if (nummodesA == -1)
+            switch (fid)
             {
-                switch (fid)
-                {
-                    case 0:
-                        nummodesA = m_base[0]->GetNumModes();
-                        nummodesB = m_base[1]->GetNumModes();
-                        break;
-                    case 1:
-                    case 3:
-                        nummodesA = m_base[0]->GetNumModes();
-                        nummodesB = m_base[2]->GetNumModes();
-                        break;
-                    case 2:
-                    case 4:
-                        nummodesA = m_base[1]->GetNumModes();
-                        nummodesB = m_base[2]->GetNumModes();
-                        break;
-                }
+            case 0:
+                nummodesA = m_base[0]->GetNumModes();
+                nummodesB = m_base[1]->GetNumModes();
+                break;
+            case 1:
+            case 3:
+                nummodesA = m_base[0]->GetNumModes();
+                nummodesB = m_base[2]->GetNumModes();
+                break;
+            case 2:
+            case 4:
+                nummodesA = m_base[1]->GetNumModes();
+                nummodesB = m_base[2]->GetNumModes();
+                break;
+            }
+            
+            bool CheckForZeroedModes = false;
+
+            if (P == -1)
+            {
+                P = nummodesA;
+                Q = nummodesB;
                 nFaceCoeffs = GetFaceNcoeffs(fid);
             }
             else if (fid == 1 || fid == 3)
             {
-                nFaceCoeffs = nummodesB + (nummodesA-1)*(1+2*(nummodesB-1)-(nummodesA-1))/2;
+                nFaceCoeffs = P*(2*Q-P+1)/2;
+                CheckForZeroedModes = true;
             }
             else
             {
-                nFaceCoeffs = nummodesA*nummodesB;
+                nFaceCoeffs = P*Q;
+                CheckForZeroedModes = true;
             }
 
             // Allocate the map array and sign array; set sign array to ones (+)
@@ -1065,19 +1116,19 @@ namespace Nektar
 
             if (fid != 1 && fid != 3)
             {
-                for (i = 0; i < nummodesB; i++)
+                for (i = 0; i < Q; i++)
                 {
-                    for (j = 0; j < nummodesA; j++)
+                    for (j = 0; j < P; j++)
                     {
                         if (faceOrient < 9)
                         {
-                            arrayindx[i*nummodesA+j] = i*nummodesA+j;
+                            arrayindx[i*P+j] = i*P+j;
                         }
                         else
                         {
-                            arrayindx[i*nummodesA+j] = j*nummodesB+i;
+                            arrayindx[i*P+j] = j*Q+i;
                         }
-                    }
+                   }
                 }
             }
 
@@ -1086,19 +1137,19 @@ namespace Nektar
             switch (fid)
             {
                 case 0: // Bottom quad
-                    for (q = 0; q < nummodesB; ++q)
+                    for (q = 0; q < Q; ++q)
                     {
-                        for (p = 0; p < nummodesA; ++p)
+                        for (p = 0; p < P; ++p)
                         {
-                            maparray[arrayindx[q*nummodesA+p]] = GetMode(p,q,0);
+                            maparray[arrayindx[q*P+p]] = GetMode(p,q,0);
                         }
                     }
                     break;
 
                 case 1: // Left triangle
-                    for (p = 0; p < nummodesA; ++p)
+                    for (p = 0; p < P; ++p)
                     {
-                        for (r = 0; r < nummodesB-p; ++r)
+                        for (r = 0; r < Q-p; ++r)
                         {
                             if ((int)faceOrient == 7 && p > 1)
                             {
@@ -1110,27 +1161,27 @@ namespace Nektar
                     break;
 
                 case 2: // Slanted quad
-                    for (q = 0; q < nummodesA; ++q)
+                    for (q = 0; q < P; ++q)
                     {
                         maparray[arrayindx[q]] = GetMode(1,q,0);
                     }
-                    for (q = 0; q < nummodesA; ++q)
+                    for (q = 0; q < P; ++q)
                     {
-                        maparray[arrayindx[nummodesA+q]] = GetMode(0,q,1);
+                        maparray[arrayindx[P+q]] = GetMode(0,q,1);
                     }
-                    for (r = 1; r < nummodesB-1; ++r)
+                    for (r = 1; r < Q-1; ++r)
                     {
-                        for (q = 0; q < nummodesA; ++q)
+                        for (q = 0; q < P; ++q)
                         {
-                            maparray[arrayindx[(r+1)*nummodesA+q]] = GetMode(1,q,r);
+                            maparray[arrayindx[(r+1)*P+q]] = GetMode(1,q,r);
                         }
                     }
                     break;
 
                 case 3: // Right triangle
-                    for (p = 0; p < nummodesA; ++p)
+                    for (p = 0; p < P; ++p)
                     {
-                        for (r = 0; r < nummodesB-p; ++r)
+                        for (r = 0; r < Q-p; ++r)
                         {
                             if ((int)faceOrient == 7 && p > 1)
                             {
@@ -1142,11 +1193,11 @@ namespace Nektar
                     break;
 
                 case 4: // Rear quad
-                    for (r = 0; r < nummodesB; ++r)
+                    for (r = 0; r < Q; ++r)
                     {
-                        for (q = 0; q < nummodesA; ++q)
+                        for (q = 0; q < P; ++q)
                         {
-                            maparray[arrayindx[r*nummodesA+q]] = GetMode(0, q, r);
+                            maparray[arrayindx[r*P+q]] = GetMode(0, q, r);
                         }
                     }
                     break;
@@ -1157,19 +1208,69 @@ namespace Nektar
 
             if (fid == 1 || fid == 3)
             {
+                if(CheckForZeroedModes)
+                {
+                    // zero signmap and set maparray to zero if elemental
+                    // modes are not as large as face modesl
+                    idx = 0; 
+                    for (j = 0; j < nummodesA; ++j)
+                    {
+                        idx += nummodesB-j;
+                        for (k = nummodesB-j; k < Q-j; ++k)
+                        {
+                            signarray[idx]  = 0.0;
+                            maparray[idx++] = maparray[0];
+                        }
+                    }
+                    
+                    for (j = nummodesA; j < P; ++j)
+                    {
+                        for (k = 0; k < Q-j; ++k)
+                        {
+                            signarray[idx]  = 0.0;
+                            maparray[idx++] = maparray[0];
+                        }
+                    }
+                }
+                
+
                 // Triangles only have one possible orientation (base
                 // direction reversed); swap edge modes.
                 if ((int)faceOrient == 7)
                 {
-                    swap(maparray[0], maparray[nummodesA]);
-                    for (i = 1; i < nummodesA-1; ++i)
+                    swap(maparray[0], maparray[P]);
+                    for (i = 1; i < P-1; ++i)
                     {
-                        swap(maparray[i+1], maparray[nummodesA+i]);
+                        swap(maparray[i+1], maparray[P+i]);
                     }
                 }
             }
             else
             {
+
+                if(CheckForZeroedModes)
+                {
+                    // zero signmap and set maparray to zero if elemental
+                    // modes are not as large as face modesl
+                    for (j = 0; j < nummodesA; ++j)
+                    {
+                        for (k = nummodesB; k < Q; ++k)
+                        {
+                            signarray[arrayindx[j+k*P]] = 0.0;
+                            maparray[arrayindx[j+k*P]]  = maparray[0];
+                        }
+                    }
+
+                    for (j = nummodesA; j < P; ++j)
+                    {
+                        for (k = 0; k < Q; ++k)
+                        {
+                            signarray[arrayindx[j+k*P]] = 0.0;
+                            maparray[arrayindx[j+k*P]]  = maparray[0];
+                        }
+                    }                    
+                }
+
                 // The code below is exactly the same as that taken from
                 // StdHexExp and reverses the 'b' and 'a' directions as
                 // appropriate (1st and 2nd if statements respectively) in
@@ -1179,34 +1280,34 @@ namespace Nektar
                 {
                     if (faceOrient < 9)
                     {
-                        for (i = 3; i < nummodesB; i += 2)
+                        for (i = 3; i < Q; i += 2)
                         {
-                            for (j = 0; j < nummodesA; j++)
+                            for (j = 0; j < P; j++)
                             {
-                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                                signarray[arrayindx[i*P+j]] *= -1;
                             }
                         }
 
-                        for (i = 0; i < nummodesA; i++)
+                        for (i = 0; i < P; i++)
                         {
-                            swap(maparray [i], maparray [i+nummodesA]);
-                            swap(signarray[i], signarray[i+nummodesA]);
+                            swap(maparray [i], maparray [i+P]);
+                            swap(signarray[i], signarray[i+P]);
                         }
                     }
                     else
                     {
-                        for (i = 0; i < nummodesB; i++)
+                        for (i = 0; i < Q; i++)
                         {
-                            for (j = 3; j < nummodesA; j += 2)
+                            for (j = 3; j < P; j += 2)
                             {
-                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                                signarray[arrayindx[i*P+j]] *= -1;
                             }
                         }
 
-                        for (i = 0; i < nummodesB; i++)
+                        for (i = 0; i < Q; i++)
                         {
-                            swap (maparray [i], maparray [i+nummodesB]);
-                            swap (signarray[i], signarray[i+nummodesB]);
+                            swap (maparray [i], maparray [i+Q]);
+                            swap (signarray[i], signarray[i+Q]);
                         }
                     }
                 }
@@ -1216,34 +1317,34 @@ namespace Nektar
                 {
                     if (faceOrient < 9)
                     {
-                        for (i = 0; i < nummodesB; i++)
+                        for (i = 0; i < Q; i++)
                         {
-                            for (j = 3; j < nummodesA; j += 2)
+                            for (j = 3; j < P; j += 2)
                             {
-                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                                signarray[arrayindx[i*P+j]] *= -1;
                             }
                         }
 
-                        for(i = 0; i < nummodesB; i++)
+                        for(i = 0; i < Q; i++)
                         {
-                            swap(maparray [i*nummodesA], maparray [i*nummodesA+1]);
-                            swap(signarray[i*nummodesA], signarray[i*nummodesA+1]);
+                            swap(maparray [i*P], maparray [i*P+1]);
+                            swap(signarray[i*P], signarray[i*P+1]);
                         }
                     }
                     else
                     {
-                        for (i = 3; i < nummodesB; i += 2)
+                        for (i = 3; i < Q; i += 2)
                         {
-                            for (j = 0; j < nummodesA; j++)
+                            for (j = 0; j < P; j++)
                             {
-                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                                signarray[arrayindx[i*P+j]] *= -1;
                             }
                         }
 
-                        for (i = 0; i < nummodesA; i++)
+                        for (i = 0; i < P; i++)
                         {
-                            swap(maparray [i*nummodesB], maparray [i*nummodesB+1]);
-                            swap(signarray[i*nummodesB], signarray[i*nummodesB+1]);
+                            swap(maparray [i*Q], maparray [i*Q+1]);
+                            swap(signarray[i*Q], signarray[i*Q+1]);
                         }
                     }
                 }
@@ -1729,7 +1830,18 @@ namespace Nektar
                     int nq0 = m_base[0]->GetNumPoints();
                     int nq1 = m_base[1]->GetNumPoints();
                     int nq2 = m_base[2]->GetNumPoints();
-                    int nq = max(nq0,max(nq1,nq2));
+                    int nq;
+
+                    // take definition from key 
+                    if(mkey.ConstFactorExists(eFactorConst))
+                    {
+                        nq = (int) mkey.GetConstFactor(eFactorConst);
+                    }
+                    else
+                    {
+                        nq = max(nq0,max(nq1,nq2));
+                    }
+
                     int neq = LibUtilities::StdPrismData::
                                             getNumberOfCoefficients (nq,nq,nq);
                     Array<OneD, Array<OneD, NekDouble> > coords (neq);

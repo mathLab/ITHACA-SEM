@@ -32,8 +32,9 @@
 // Description: GlobalLinSysIterativeStaticCond header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSITERATIVESTATICCOND_H
-#define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSITERATIVESTATICCOND_H
+
+#ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSXXTSTATICCOND_H
+#define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSXXTSTATICCOND_H
 
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalLinSysKey.h>

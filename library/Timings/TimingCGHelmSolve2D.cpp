@@ -6,6 +6,7 @@
 #include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/ContField2D.h>
 
+using namespace std;
 using namespace Nektar;
 
 std::string PortablePath(const boost::filesystem::path& path);

@@ -142,7 +142,7 @@ class CollectionOptimisation
 
         // Get Map by doing autotuning testing.
         COLLECTIONS_EXPORT OperatorImpMap SetWithTimings(
-                vector<StdRegions::StdExpansionSharedPtr> pGeom,
+                std::vector<StdRegions::StdExpansionSharedPtr> pGeom,
                 OperatorImpMap &impTypes,
                 bool verbose = true);
 
@@ -152,10 +152,10 @@ class CollectionOptimisation
         }
 
     private:
-        typedef pair<LibUtilities::ShapeType, int> ElmtOrder;
+        typedef std::pair<LibUtilities::ShapeType, int> ElmtOrder;
 
-        static map<OpImpTimingKey,OperatorImpMap> m_opImpMap;
-        map<OperatorType, map<ElmtOrder, ImplementationType> > m_global;
+        static std::map<OpImpTimingKey,OperatorImpMap> m_opImpMap;
+        std::map<OperatorType, std::map<ElmtOrder, ImplementationType> > m_global;
         bool m_setByXml;
         bool m_autotune;
         ImplementationType m_defaultType;

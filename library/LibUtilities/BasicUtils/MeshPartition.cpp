@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //
 //  File: MeshPartition.cpp
 //
@@ -51,6 +51,11 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/BasicUtils/CompressData.h>
+#include <LibUtilities/BasicUtils/FieldIO.h>
+
+#include <LibUtilities/Foundations/Foundations.hpp>
+
 
 #include <boost/algorithm/string.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -72,10 +77,13 @@ namespace Nektar
         }
 
         MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr& pSession) :
+                m_isCompressed(false),
                 m_numFields(0),
                 m_fieldNameToId(),
                 m_comm(pSession->GetComm()),
-                m_weightingRequired(false)
+                m_weightingRequired(false),
+                m_weightBnd(false),
+                m_weightDofs(false)
         {
             ReadConditions(pSession);
             ReadGeometry(pSession);
@@ -87,7 +95,8 @@ namespace Nektar
 
         }
 
-        void MeshPartition::PartitionMesh(int nParts, bool shared)
+        void MeshPartition::PartitionMesh(int nParts, bool shared,
+                                          bool overlapping)
         {
             ASSERTL0(m_meshElements.size() >= nParts,
                      "Too few elements for this many processes.");
@@ -98,7 +107,7 @@ namespace Nektar
                 WeightElements();
             }
             CreateGraph(m_mesh);
-            PartitionGraph(m_mesh, nParts, m_localPartition);
+            PartitionGraph(m_mesh, nParts, m_localPartition, overlapping);
         }
 
         void MeshPartition::WriteLocalPartition(LibUtilities::SessionReaderSharedPtr& pSession)
@@ -189,12 +198,6 @@ namespace Nektar
             TiXmlElement *expansion = expansionTypes->FirstChildElement();
             std::string   expType   = expansion->Value();
 
-
-            if(expType != "E")
-            {
-                ASSERTL0(false,"Expansion type not defined or not supported at the moment");
-            }
-
             /// Expansiontypes will contain plenty of data,
             /// where relevant at this stage are composite
             /// ID(s) that this expansion type describes,
@@ -202,81 +205,199 @@ namespace Nektar
             /// expansion relates to. If this does not exist
             /// the variable is only set to "DefaultVar".
 
-            while (expansion)
+            if(expType == "E")
             {
-                std::vector<unsigned int> composite;
-                std::vector<unsigned int> nummodes;
-                std::vector<std::string>  fieldName;
-
-                const char *nModesStr = expansion->Attribute("NUMMODES");
-                ASSERTL0(nModesStr,"NUMMODES was not defined in EXPANSION section of input");
-                std::string numModesStr = nModesStr;
-                bool valid = ParseUtils::GenerateOrderedVector(numModesStr.c_str(), nummodes);
-                ASSERTL0(valid, "Unable to correctly parse the number of modes.");
-
-                if (nummodes.size() == 1)
+                while (expansion)
                 {
-                    for (int i = 1; i < m_dim; i++)
+                    std::vector<unsigned int> composite;
+                    std::vector<unsigned int> nummodes;
+                    std::vector<std::string>  fieldName;
+
+                    const char *nModesStr = expansion->Attribute("NUMMODES");
+                    ASSERTL0(nModesStr,"NUMMODES was not defined in EXPANSION section of input");
+                    std::string numModesStr = nModesStr;
+                    bool valid = ParseUtils::GenerateOrderedVector(numModesStr.c_str(), nummodes);
+                    ASSERTL0(valid, "Unable to correctly parse the number of modes.");
+
+                    if (nummodes.size() == 1)
                     {
-                        nummodes.push_back( nummodes[0] );
-                    }
-                }
-                ASSERTL0(nummodes.size() == m_dim,"Number of modes should match mesh dimension");
-
-
-                const char *fStr = expansion->Attribute("FIELDS");
-                if(fStr)
-                {
-                    std::string fieldStr = fStr;
-                    bool  valid = ParseUtils::GenerateOrderedStringVector(fieldStr.c_str(),fieldName);
-                    ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");
-
-                    for (int i = 0; i < fieldName.size(); ++i)
-                    {
-                        if (m_fieldNameToId.count(fieldName[i]) == 0)
+                        for (int i = 1; i < m_dim; i++)
                         {
-                            int k = m_fieldNameToId.size();
-                            m_fieldNameToId[ fieldName[i] ] = k;
+                            nummodes.push_back( nummodes[0] );
+                        }
+                    }
+                    ASSERTL0(nummodes.size() == m_dim,"Number of modes should match mesh dimension");
+
+
+                    const char *fStr = expansion->Attribute("FIELDS");
+                    if(fStr)
+                    {
+                        std::string fieldStr = fStr;
+                        bool  valid = ParseUtils::GenerateOrderedStringVector(fieldStr.c_str(),fieldName);
+                        ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");
+
+                        for (int i = 0; i < fieldName.size(); ++i)
+                        {
+                            if (m_fieldNameToId.count(fieldName[i]) == 0)
+                            {
+                                int k = m_fieldNameToId.size();
+                                m_fieldNameToId[ fieldName[i] ] = k;
+                                m_numFields++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        fieldName.push_back("DefaultVar");
+                        int k = m_fieldNameToId.size();
+
+                        if (m_fieldNameToId.count("DefaultVar") == 0)
+                        {
+                            ASSERTL0(k == 0,
+                                     "Omitting field variables and explicitly listing " \
+                                     "them in different ExpansionTypes is wrong practise");
+
+                            m_fieldNameToId[ "DefaultVar" ] = k;
                             m_numFields++;
                         }
                     }
-                }
-                else
-                {
-                    fieldName.push_back("DefaultVar");
-                    int k = m_fieldNameToId.size();
 
-                    if (m_fieldNameToId.count("DefaultVar") == 0)
+                    std::string compositeStr = expansion->Attribute("COMPOSITE");
+                    ASSERTL0(compositeStr.length() > 3, "COMPOSITE must be specified in expansion definition");
+                    int beg = compositeStr.find_first_of("[");
+                    int end = compositeStr.find_first_of("]");
+                    std::string compositeListStr = compositeStr.substr(beg+1,end-beg-1);
+                    bool parseGood = ParseUtils::GenerateSeqVector(compositeListStr.c_str(), composite);
+                    ASSERTL0(parseGood && !composite.empty(),
+                        (std::string("Unable to read composite index range: ") + compositeListStr).c_str());
+
+
+                    // construct mapping (elmt id, field name) -> nummodes
+                    for (int i = 0; i < composite.size(); ++i)
                     {
-                        ASSERTL0(k == 0,
-                                 "Omitting field variables and explicitly listing " \
-                                 "them in different ExpansionTypes is wrong practise");
-
-                        m_fieldNameToId[ "DefaultVar" ] = k;
-                        m_numFields++;
+                        for (int j = 0; j < fieldName.size(); j++)
+                        {
+                            for (unsigned int k = 0; k < m_meshComposites[composite[i]].list.size(); ++k)
+                            {
+                                int elid = m_meshComposites[composite[i]].list[k];
+                                m_expansions[elid][fieldName[j]] = nummodes;
+                                m_shape[elid] = m_meshComposites[composite[i]].type;
+                            }
+                        }
                     }
+
+                    expansion = expansion->NextSiblingElement("E");
                 }
+            }
+            else if(expType == "F")
+            {
+                    ASSERTL0(expansion->Attribute("FILE"),
+                                "Attribute FILE expected for type F expansion");
+                    std::string filenameStr = expansion->Attribute("FILE");
+                    ASSERTL0(!filenameStr.empty(),
+                                "A filename must be specified for the FILE "
+                                "attribute of expansion");
 
-                std::string compositeStr = expansion->Attribute("COMPOSITE");
-                ASSERTL0(compositeStr.length() > 3, "COMPOSITE must be specified in expansion definition");
-                int beg = compositeStr.find_first_of("[");
-                int end = compositeStr.find_first_of("]");
-                std::string compositeListStr = compositeStr.substr(beg+1,end-beg-1);
-                bool parseGood = ParseUtils::GenerateSeqVector(compositeListStr.c_str(), composite);
-                ASSERTL0(parseGood && !composite.empty(),
-                    (std::string("Unable to read composite index range: ") + compositeListStr).c_str());
+                    // Create fieldIO object to load file
+                    //    need a serial communicator to avoid problems with
+                    //    shared file system
+                    CommSharedPtr comm=
+                            GetCommFactory().CreateInstance("Serial", 0, 0);
+                    std::string iofmt = FieldIO::GetFileType(
+                                filenameStr, comm);
+                    FieldIOSharedPtr f = GetFieldIOFactory().CreateInstance(
+                                iofmt,
+                                comm,
+                                pSession->GetSharedFilesystem());
+                    // Load field definitions from file
+                    std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
+                    f->Import(filenameStr, fielddefs);
 
-
-                // construct mapping (field name, CompositeID) -> nummodes
-                for (int i = 0; i < composite.size(); ++i)
-                {
-                    for (int j = 0; j < fieldName.size(); j++)
+                    // Parse field definitions
+                    for (int i = 0; i < fielddefs.size(); ++i)
                     {
-                        m_expansions[composite[i]][fieldName[j]] = nummodes;
+                        // Name of fields
+                        for (int j = 0; j < fielddefs[i]->m_fields.size(); ++j)
+                        {
+                            std::string fieldName = fielddefs[i]->m_fields[j];
+                            if (m_fieldNameToId.count(fieldName) == 0)
+                            {
+                                int k = m_fieldNameToId.size();
+                                m_fieldNameToId[ fieldName ] = k;
+                                m_numFields++;
+                            }
+                        }
+                        // Number of modes and shape for each element
+                        int numHomoDir = fielddefs[i]->m_numHomogeneousDir;
+                        int cnt = 0;
+                        for (int j = 0; j < fielddefs[i]->m_elementIDs.size(); ++j)
+                        {
+                            int elid = fielddefs[i]->m_elementIDs[j];
+                            std::vector<unsigned int> nummodes;
+                            for (int k = 0; k < m_dim; k++)
+                            {
+                                nummodes.push_back(fielddefs[i]->m_numModes[cnt++]);
+                            }
+                            if (fielddefs[i]->m_uniOrder)
+                            {
+                                cnt = 0;
+                            }
+                            else
+                            {
+                                cnt += numHomoDir;
+                            }
+                            for (int k = 0; k < fielddefs[i]->m_fields.size(); k++)
+                            {
+                                std::string fieldName = fielddefs[i]->m_fields[k];
+                                m_expansions[elid][fieldName] = nummodes;
+                            }
+                            switch (fielddefs[i]->m_shapeType)
+                            {
+                                case eSegment:
+                                {
+                                    m_shape[elid] = 'S';
+                                    break;
+                                }
+                                case eTriangle:
+                                {
+                                    m_shape[elid] = 'T';
+                                    break;
+                                }
+                                case eQuadrilateral:
+                                {
+                                    m_shape[elid] = 'Q';
+                                    break;
+                                }
+                                case eTetrahedron:
+                                {
+                                    m_shape[elid] = 'A';
+                                    break;
+                                }
+                                case ePyramid:
+                                {
+                                    m_shape[elid] = 'R';
+                                    break;
+                                }
+                                case ePrism:
+                                {
+                                    m_shape[elid] = 'P';
+                                    break;
+                                }
+                                case eHexahedron:
+                                {
+                                    m_shape[elid] = 'H';
+                                    break;
+                                }
+                                default:
+                                    ASSERTL0 (false, "Shape not recognized.");
+                                    break;
+                            }
+                        }
                     }
-                }
-
-                expansion = expansion->NextSiblingElement("E");
+            }
+            else
+            {
+                ASSERTL0(false,"Expansion type not defined or not supported at the moment");
             }
         }
 
@@ -306,22 +427,58 @@ namespace Nektar
                 }
             }
 
-            x = vSubElement->FirstChildElement();
+            // check to see if compressed
+            std::string IsCompressed;
+            vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
 
-            while(x)
+            if(IsCompressed.size()) 
             {
-                TiXmlAttribute* y = x->FirstAttribute();
-                ASSERTL0(y, "Failed to get attribute.");
-                MeshVertex v;
-                v.id = y->IntValue();
-                std::vector<std::string> vCoords;
-                std::string vCoordStr = x->FirstChild()->ToText()->Value();
-                boost::split(vCoords, vCoordStr, boost::is_any_of("\t "));
-                v.x = atof(vCoords[0].c_str());
-                v.y = atof(vCoords[1].c_str());
-                v.z = atof(vCoords[2].c_str());
-                m_meshVertices[v.id] = v;
-                x = x->NextSiblingElement();
+                ASSERTL0(boost::iequals(IsCompressed,
+                                        CompressData::GetCompressString()),
+                        "Compressed formats do not match. Expected :"
+                             + CompressData::GetCompressString()
+                             + "but got "+ std::string(IsCompressed));
+
+                m_isCompressed = true;
+
+                // Extract the vertex body
+                TiXmlNode* vertexChild = vSubElement->FirstChild();
+                ASSERTL0(vertexChild, "Unable to extract the data "
+                         "from the compressed vertex tag.");
+
+                std::string vertexStr;
+                if (vertexChild->Type() == TiXmlNode::TINYXML_TEXT)
+                {
+                    vertexStr += vertexChild->ToText()->ValueStr();
+                }
+
+                std::vector<MeshVertex> vertData;
+                CompressData::ZlibDecodeFromBase64Str(vertexStr,vertData);
+
+                for(int i = 0; i < vertData.size(); ++i)
+                {
+                    m_meshVertices[vertData[i].id] = vertData[i];
+                }
+            }
+            else
+            {
+                x = vSubElement->FirstChildElement();
+
+                while(x)
+                {
+                    TiXmlAttribute* y = x->FirstAttribute();
+                    ASSERTL0(y, "Failed to get attribute.");
+                    MeshVertex v;
+                    v.id = y->IntValue();
+                    std::vector<std::string> vCoords;
+                    std::string vCoordStr = x->FirstChild()->ToText()->Value();
+                    boost::split(vCoords, vCoordStr, boost::is_any_of("\t "));
+                    v.x = atof(vCoords[0].c_str());
+                    v.y = atof(vCoords[1].c_str());
+                    v.z = atof(vCoords[2].c_str());
+                    m_meshVertices[v.id] = v;
+                    x = x->NextSiblingElement();
+                }
             }
 
             // Read mesh edges
@@ -329,45 +486,166 @@ namespace Nektar
             {
                 vSubElement = pSession->GetElement("Nektar/Geometry/Edge");
                 ASSERTL0(vSubElement, "Cannot read edges");
-                x = vSubElement->FirstChildElement();
-                while(x)
+
+                // check to see if compressed
+                std::string IsCompressed;
+                vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+                if(IsCompressed.size()) 
                 {
-                    TiXmlAttribute* y = x->FirstAttribute();
-                    ASSERTL0(y, "Failed to get attribute.");
-                    MeshEntity e;
-                    e.id = y->IntValue();
-                    e.type = 'E';
-                    std::vector<std::string> vVertices;
-                    std::string vVerticesString = x->FirstChild()->ToText()->Value();
-                    boost::split(vVertices, vVerticesString, boost::is_any_of("\t "));
-                    e.list.push_back(atoi(vVertices[0].c_str()));
-                    e.list.push_back(atoi(vVertices[1].c_str()));
-                    m_meshEdges[e.id] = e;
-                    x = x->NextSiblingElement();
+                    ASSERTL0(boost::iequals(IsCompressed,
+                                        CompressData::GetCompressString()),
+                            "Compressed formats do not match. Expected :"
+                            + CompressData::GetCompressString()
+                            + " but got "
+                            + boost::lexical_cast<std::string>(IsCompressed));
+
+                    m_isCompressed = true;
+
+                    // Extract the edge body
+                    TiXmlNode* edgeChild = vSubElement->FirstChild();
+                    ASSERTL0(edgeChild,
+                             "Unable to extract the data from the compressed "
+                             "edge tag.");
+
+                    std::string edgeStr;
+
+                    if (edgeChild->Type() == TiXmlNode::TINYXML_TEXT)
+                    {
+                        edgeStr += edgeChild->ToText()->ValueStr();
+                    }
+
+                    std::vector<MeshEdge> edgeData;
+                    CompressData::ZlibDecodeFromBase64Str(edgeStr,edgeData);
+
+                    for(int i = 0; i < edgeData.size(); ++i)
+                    {
+                        MeshEntity e;
+                        e.id = edgeData[i].id;
+                        e.list.push_back(edgeData[i].v0);
+                        e.list.push_back(edgeData[i].v1);
+                        m_meshEdges[e.id] = e;
+                    }
+                }
+                else
+                {
+                    x = vSubElement->FirstChildElement();
+
+                    while(x)
+                    {
+                        TiXmlAttribute* y = x->FirstAttribute();
+                        ASSERTL0(y, "Failed to get attribute.");
+                        MeshEntity e;
+                        e.id = y->IntValue();
+                        e.type = 'E';
+                        std::vector<std::string> vVertices;
+                        std::string vVerticesString = x->FirstChild()->ToText()->Value();
+                        boost::split(vVertices, vVerticesString, boost::is_any_of("\t "));
+                        e.list.push_back(atoi(vVertices[0].c_str()));
+                        e.list.push_back(atoi(vVertices[1].c_str()));
+                        m_meshEdges[e.id] = e;
+                        x = x->NextSiblingElement();
+                    }
                 }
             }
-
+            
             // Read mesh faces
             if (m_dim == 3)
             {
                 vSubElement = pSession->GetElement("Nektar/Geometry/Face");
                 ASSERTL0(vSubElement, "Cannot read faces.");
                 x = vSubElement->FirstChildElement();
+
                 while(x)
                 {
-                    TiXmlAttribute* y = x->FirstAttribute();
-                    ASSERTL0(y, "Failed to get attribute.");
-                    MeshEntity f;
-                    f.id = y->IntValue();
-                    f.type = x->Value()[0];
-                    std::vector<std::string> vEdges;
-                    std::string vEdgeStr = x->FirstChild()->ToText()->Value();
-                    boost::split(vEdges, vEdgeStr, boost::is_any_of("\t "));
-                    for (int i = 0; i < vEdges.size(); ++i)
+                    // check to see if compressed
+                    std::string IsCompressed;
+                    x->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+                    if(IsCompressed.size()) 
                     {
-                        f.list.push_back(atoi(vEdges[i].c_str()));
+                        ASSERTL0(boost::iequals(IsCompressed,
+                                        CompressData::GetCompressString()),
+                                 "Compressed formats do not match. Expected :"
+                                 + CompressData::GetCompressString()
+                                 + " but got "
+                                 + boost::lexical_cast<std::string>(
+                                                                IsCompressed));
+                        m_isCompressed = true;
+
+                        // Extract the edge body
+                        TiXmlNode* faceChild = x->FirstChild();
+                        ASSERTL0(faceChild, "Unable to extract the data from "
+                                            "the compressed edge tag.");
+
+                        std::string faceStr;
+                        if (faceChild->Type() == TiXmlNode::TINYXML_TEXT)
+                        {
+                            faceStr += faceChild->ToText()->ValueStr();
+                        }
+
+                        // uncompress and fill in values.
+                        const std::string val= x->Value();
+
+                        if(boost::iequals(val,"T")) // triangle
+                        {
+                            std::vector<MeshTri> faceData;
+                            CompressData::ZlibDecodeFromBase64Str(faceStr,
+                                                                  faceData);
+
+                            for(int i= 0; i < faceData.size(); ++i)
+                            {
+                                MeshEntity f;
+
+                                f.id = faceData[i].id;
+                                f.type = 'T';
+                                for (int j = 0; j < 3; ++j)
+                                {
+                                    f.list.push_back(faceData[i].e[j]);
+                                }
+                                m_meshFaces[f.id] = f;
+                            }
+                        }
+                        else if (boost::iequals(val,"Q"))
+                        {
+                            std::vector<MeshQuad> faceData;
+                            CompressData::ZlibDecodeFromBase64Str(faceStr,
+                                                                  faceData);
+
+                            for(int i= 0; i < faceData.size(); ++i)
+                            {
+                                MeshEntity f;
+
+                                f.id = faceData[i].id;
+                                f.type = 'Q';
+                                for (int j = 0; j < 4; ++j)
+                                {
+                                    f.list.push_back(faceData[i].e[j]);
+                                }
+                                m_meshFaces[f.id] = f;
+                            }
+                        }
+                        else
+                        {
+                            ASSERTL0(false,"Unrecognised face tag");
+                        }
                     }
-                    m_meshFaces[f.id] = f;
+                    else
+                    {
+                        TiXmlAttribute* y = x->FirstAttribute();
+                        ASSERTL0(y, "Failed to get attribute.");
+                        MeshEntity f;
+                        f.id = y->IntValue();
+                        f.type = x->Value()[0];
+                        std::vector<std::string> vEdges;
+                        std::string vEdgeStr = x->FirstChild()->ToText()->Value();
+                        boost::split(vEdges, vEdgeStr, boost::is_any_of("\t "));
+                        for (int i = 0; i < vEdges.size(); ++i)
+                        {
+                            f.list.push_back(atoi(vEdges[i].c_str()));
+                        }
+                        m_meshFaces[f.id] = f;
+                    }
                     x = x->NextSiblingElement();
                 }
             }
@@ -378,19 +656,180 @@ namespace Nektar
             x = vSubElement->FirstChildElement();
             while(x)
             {
-                TiXmlAttribute* y = x->FirstAttribute();
-                ASSERTL0(y, "Failed to get attribute.");
-                MeshEntity e;
-                e.id = y->IntValue();
-                std::vector<std::string> vItems;
-                std::string vItemStr = x->FirstChild()->ToText()->Value();
-                boost::split(vItems, vItemStr, boost::is_any_of("\t "));
-                for (int i = 0; i < vItems.size(); ++i)
+                // check to see if compressed
+                std::string IsCompressed;
+                x->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+                if(IsCompressed.size()) 
                 {
-                    e.list.push_back(atoi(vItems[i].c_str()));
+                    ASSERTL0(boost::iequals(IsCompressed,
+                                        CompressData::GetCompressString()),
+                             "Compressed formats do not match. Expected :"
+                             + CompressData::GetCompressString()
+                             + " but got "
+                             + boost::lexical_cast<std::string>(IsCompressed));
+                    m_isCompressed = true;
+
+                    // Extract the body
+                    TiXmlNode* child = x->FirstChild();
+                    ASSERTL0(child, "Unable to extract the data from the "
+                                    "compressed element tag.");
+
+                    std::string elmtStr;
+                    if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                    {
+                        elmtStr += child->ToText()->ValueStr();
+                    }
+
+                    // uncompress and fill in values.
+                    const std::string val= x->Value();
+
+                    switch(val[0])
+                    {
+                        case 'S': // segment
+                        {
+                            std::vector<MeshEdge> data;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
+
+                            for(int i= 0; i < data.size(); ++i)
+                            {
+                                MeshEntity e;
+                                e.id = data[i].id;
+                                e.type = 'S';
+                                e.list.push_back(data[i].v0);
+                                e.list.push_back(data[i].v1);
+                                m_meshElements[e.id] = e;
+                            }
+                        }
+                        break;
+                        case 'T': // triangle
+                        {
+                            std::vector<MeshTri> data;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
+
+                            for(int i= 0; i < data.size(); ++i)
+                            {
+                                MeshEntity f;
+                                f.id = data[i].id;
+                                f.type = 'T';
+                                for (int j = 0; j < 3; ++j)
+                                {
+                                    f.list.push_back(data[i].e[j]);
+                                }
+                                m_meshElements[f.id] = f;
+                            }
+                        }
+                        break;
+                        case 'Q': // quadrilateral
+                        {
+                            std::vector<MeshQuad> data;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
+
+                            for(int i= 0; i < data.size(); ++i)
+                            {
+                                MeshEntity f;
+                                f.id = data[i].id;
+                                f.type = 'Q';
+                                for (int j = 0; j < 4; ++j)
+                                {
+                                    f.list.push_back(data[i].e[j]);
+                                }
+                                m_meshElements[f.id] = f;
+                            }
+                        }
+                        break;
+                        case 'A': // tetrahedron
+                        {
+                            std::vector<MeshTet> data;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
+
+                            for(int i= 0; i < data.size(); ++i)
+                            {
+                                MeshEntity f;
+                                f.id = data[i].id;
+                                f.type = 'A';
+                                for (int j = 0; j < 4; ++j)
+                                {
+                                    f.list.push_back(data[i].f[j]);
+                                }
+                                m_meshElements[f.id] = f;
+                            }
+                        }
+                        break;
+                        case 'P': // prism
+                        {
+                            std::vector<MeshPyr> data;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
+
+                            for(int i= 0; i < data.size(); ++i)
+                            {
+                                MeshEntity f;
+                                f.id = data[i].id;
+                                f.type = 'P';
+                                for (int j = 0; j < 5; ++j)
+                                {
+                                    f.list.push_back(data[i].f[j]);
+                                }
+                                m_meshElements[f.id] = f;
+                            }
+                        }
+                        break;
+                        case 'R': // pyramid
+                        {
+                            std::vector<MeshPrism> data;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
+
+                            for(int i= 0; i < data.size(); ++i)
+                            {
+                                MeshEntity f;
+                                f.id = data[i].id;
+                                f.type = 'R';
+                                for (int j = 0; j < 5; ++j)
+                                {
+                                    f.list.push_back(data[i].f[j]);
+                                }
+                                m_meshElements[f.id] = f;
+                            }
+                        }
+                        break;
+                        case 'H': // hexahedron
+                        {
+                            std::vector<MeshHex> data;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,data);
+
+                            for(int i= 0; i < data.size(); ++i)
+                            {
+                                MeshEntity f;
+                                f.id = data[i].id;
+                                f.type = 'H';
+                                for (int j = 0; j < 6; ++j)
+                                {
+                                    f.list.push_back(data[i].f[j]);
+                                }
+                                m_meshElements[f.id] = f;
+                            }
+                        }
+                        break;
+                        default:
+                            ASSERTL0(false,"Unrecognised element tag");
+                    }
                 }
-                e.type = x->Value()[0];
-                m_meshElements[e.id] = e;
+                else
+                {
+                    TiXmlAttribute* y = x->FirstAttribute();
+                    ASSERTL0(y, "Failed to get attribute.");
+                    MeshEntity e;
+                    e.id = y->IntValue();
+                    std::vector<std::string> vItems;
+                    std::string vItemStr = x->FirstChild()->ToText()->Value();
+                    boost::split(vItems, vItemStr, boost::is_any_of("\t "));
+                    for (int i = 0; i < vItems.size(); ++i)
+                    {
+                        e.list.push_back(atoi(vItems[i].c_str()));
+                    }
+                    e.type = x->Value()[0];
+                    m_meshElements[e.id] = e;
+                }
                 x = x->NextSiblingElement();
             }
 
@@ -398,35 +837,157 @@ namespace Nektar
             if (pSession->DefinesElement("Nektar/Geometry/Curved"))
             {
                 vSubElement = pSession->GetElement("Nektar/Geometry/Curved");
+
+                // check to see if compressed
+                std::string IsCompressed;
+                vSubElement->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
                 x = vSubElement->FirstChildElement();
                 while(x)
                 {
-                    MeshCurved c;
-                    ASSERTL0(x->Attribute("ID", &c.id),
-                             "Failed to get attribute ID");
-                    c.type = std::string(x->Attribute("TYPE"));
-                    ASSERTL0(!c.type.empty(),
-                             "Failed to get attribute TYPE");
-                    ASSERTL0(x->Attribute("NUMPOINTS", &c.npoints),
-                             "Failed to get attribute NUMPOINTS");
-                    c.data = x->FirstChild()->ToText()->Value();
-                    c.entitytype = x->Value()[0];
-                    if (c.entitytype == "E")
+                    if(IsCompressed.size()) 
                     {
-                        ASSERTL0(x->Attribute("EDGEID", &c.entityid),
-                             "Failed to get attribute EDGEID");
-                    }
-                    else if (c.entitytype == "F")
-                    {
-                        ASSERTL0(x->Attribute("FACEID", &c.entityid),
-                             "Failed to get attribute FACEID");
+                        ASSERTL0(boost::iequals(IsCompressed,
+                                            CompressData::GetCompressString()),
+                                "Compressed formats do not match. Expected :"
+                                + CompressData::GetCompressString()
+                                + " but got "
+                                + boost::lexical_cast<std::string>(
+                                                            IsCompressed));
+
+                        m_isCompressed = true;
+
+                        const char *entitytype = x->Value();
+                        // The compressed curved information is stored
+                        // in two parts: MeshCurvedInfo and
+                        // MeshCurvedPts.  MeshCurvedPts is just a
+                        // list of MeshVertex values of unique vertex
+                        // values from which we can make edges and
+                        // faces.
+                        //
+                        // Then there is a list of NekInt64 pieces of
+                        // information which make a MeshCurvedInfo
+                        // struct. This contains information such as
+                        // the curve id, the entity id, the number of
+                        // curved points and the offset of where these
+                        // points are stored in the pts vector of
+                        // MeshVertex values. Finally the point type
+                        // is also stored but in NekInt64 format
+                        // rather than an enum for binary stride
+                        // compatibility.
+                        if(boost::iequals(entitytype,"E")||
+                           boost::iequals(entitytype,"F"))
+                        {
+                            // read in data
+                            std::string elmtStr;
+                            TiXmlNode* child = x->FirstChild();
+
+                            if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                            {
+                                elmtStr = child->ToText()->ValueStr();
+                            }
+
+                            std::vector<MeshCurvedInfo> cinfo;
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,
+                                                                  cinfo);
+
+                            // unpack list of curved edge or faces
+                            for(int i = 0; i < cinfo.size(); ++i)
+                            {
+                                MeshCurved c;
+                                c.id         = cinfo[i].id;
+                                c.entitytype = entitytype[0];
+                                c.entityid   = cinfo[i].entityid;
+                                c.npoints    = cinfo[i].npoints;
+                                c.type       = kPointsTypeStr[cinfo[i].ptype];
+                                c.ptid       = cinfo[i].ptid;
+                                c.ptoffset   = cinfo[i].ptoffset;
+                                m_meshCurved[std::make_pair(c.entitytype,
+                                                            c.id)] = c;
+                            }
+                        }
+                        else if(boost::iequals(entitytype,"DATAPOINTS"))
+                        {
+                            MeshCurvedPts cpts;
+                            NekInt id;
+
+                            ASSERTL0(x->Attribute("ID", &id),
+                                     "Failed to get ID from PTS section");
+                            cpts.id = id;
+
+                            // read in data
+                            std::string elmtStr;
+
+                            TiXmlElement* DataIdx =
+                                x->FirstChildElement("INDEX");
+                            ASSERTL0(DataIdx,
+                                     "Cannot read data index tag in compressed "
+                                     "curved section");
+
+                            TiXmlNode* child = DataIdx->FirstChild();
+                            if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                            {
+                                elmtStr = child->ToText()->ValueStr();
+                            }
+
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,
+                                                                  cpts.index);
+
+                            TiXmlElement* DataPts
+                                    = x->FirstChildElement("POINTS");
+                            ASSERTL0(DataPts,
+                                     "Cannot read data pts tag in compressed "
+                                     "curved section");
+
+                            child = DataPts->FirstChild();
+                            if (child->Type() == TiXmlNode::TINYXML_TEXT)
+                            {
+                                elmtStr = child->ToText()->ValueStr();
+                            }
+
+                            CompressData::ZlibDecodeFromBase64Str(elmtStr,
+                                                                  cpts.pts);
+
+                            m_meshCurvedPts[cpts.id] = cpts;
+                        }
+                        else
+                        {
+                            ASSERTL0(false, "Unknown tag in curved section");
+                        }
+
+                        x = x->NextSiblingElement();
                     }
                     else
                     {
-                        ASSERTL0(false, "Unknown curve type.");
+                        MeshCurved c;
+                        ASSERTL0(x->Attribute("ID", &c.id),
+                                 "Failed to get attribute ID");
+                        c.type = std::string(x->Attribute("TYPE"));
+                        ASSERTL0(!c.type.empty(),
+                                 "Failed to get attribute TYPE");
+                        ASSERTL0(x->Attribute("NUMPOINTS", &c.npoints),
+                                 "Failed to get attribute NUMPOINTS");
+                        c.data = x->FirstChild()->ToText()->Value();
+                        c.entitytype = x->Value()[0];
+
+                        if (c.entitytype == "E")
+                        {
+                            ASSERTL0(x->Attribute("EDGEID", &c.entityid),
+                                     "Failed to get attribute EDGEID");
+                        }
+                        else if (c.entitytype == "F")
+                        {
+                            ASSERTL0(x->Attribute("FACEID", &c.entityid),
+                                     "Failed to get attribute FACEID");
+                        }
+                        else
+                        {
+                            ASSERTL0(false, "Unknown curve type.");
+                        }
+
+                        m_meshCurved[std::make_pair(c.entitytype, c.id)] = c;
+                        x = x->NextSiblingElement();
                     }
-                    m_meshCurved[std::make_pair(c.entitytype, c.id)] = c;
-                    x = x->NextSiblingElement();
                 }
             }
 
@@ -485,40 +1046,38 @@ namespace Nektar
             std::map<int, int> elmtSizes;
             std::map<int, int> elmtBndSizes;
 
-            for (unsigned int i = 0; i < m_domain.size(); ++i)
+            for (std::map<int, NummodesPerField>::iterator expIt =
+                    m_expansions.begin(); expIt != m_expansions.end(); ++expIt)
             {
-                int cId = m_domain[i];
-                NummodesPerField npf = m_expansions[cId];
+                int elid = expIt->first;
+                NummodesPerField npf = expIt->second;
 
                 for (NummodesPerField::iterator it = npf.begin(); it != npf.end(); ++it)
                 {
                     ASSERTL0(it->second.size() == m_dim,
                         " Number of directional" \
-                        " modes in expansion spec for composite id = " + 
-                        boost::lexical_cast<std::string>(cId) +
+                        " modes in expansion spec for element id = " +
+                        boost::lexical_cast<std::string>(elid) +
                         " and field " +
                         boost::lexical_cast<std::string>(it->first) +
                         " does not correspond to mesh dimension");
 
                     int na = it->second[0];
-                    int nb = it->second[1];
+                    int nb = 0;
                     int nc = 0;
+                    if (m_dim >= 2)
+                    {
+                        nb = it->second[1];
+                    }
                     if (m_dim == 3)
                     {
                         nc = it->second[2];
                     }
 
-                    int weight    = CalculateElementWeight(
-                        m_meshComposites[cId].type, false, na, nb, nc);
-                    int bndWeight = CalculateElementWeight(
-                        m_meshComposites[cId].type, true,  na, nb, nc);
-
-                    for (unsigned int j = 0; j < m_meshComposites[cId].list.size(); ++j)
-                    {
-                        int elid = m_meshComposites[cId].list[j];
-                        elmtSizes[elid] = weight;
-                        elmtBndSizes[elid] = bndWeight;
-                    }
+                    elmtSizes[elid]    = CalculateElementWeight(
+                        m_shape[elid], false, na, nb, nc);
+                    elmtBndSizes[elid] = CalculateElementWeight(
+                        m_shape[elid], true,  na, nb, nc);
                 }
             }
 
@@ -581,9 +1140,21 @@ namespace Nektar
 
                 if (solverPropertyUpper == "WEIGHTPARTITIONS") 
                 {
-                    if (propertyValueUpper != "UNIFORM")
+                    if (propertyValueUpper == "DOF")
                     {
                         m_weightingRequired = true;
+                        m_weightDofs        = true;
+                    }
+                    else if (propertyValueUpper == "BOUNDARY")
+                    {
+                        m_weightingRequired = true;
+                        m_weightBnd        = true;
+                    }
+                    else if (propertyValueUpper == "BOTH")
+                    {
+                        m_weightingRequired = true;
+                        m_weightDofs        = true;
+                        m_weightBnd        = true;
                     }
                     return;
                 }
@@ -613,19 +1184,22 @@ namespace Nektar
             for (eIt = m_meshElements.begin(); eIt != m_meshElements.end(); ++eIt)
             {
                 m_vertWeights[eIt->first] = weight;
+                m_vertBndWeights[eIt->first] = weight;
+                m_edgeWeights[eIt->first] = weight;
             }
 
-            for (unsigned int i = 0; i < m_domain.size(); ++i)
+            for (std::map<int, NummodesPerField>::iterator expIt =
+                    m_expansions.begin(); expIt != m_expansions.end(); ++expIt)
             {
-                int cId = m_domain[i];
-                NummodesPerField npf = m_expansions[cId];
+                int elid = expIt->first;
+                NummodesPerField npf = expIt->second;
 
                 for (NummodesPerField::iterator it = npf.begin(); it != npf.end(); ++it)
                 {
                     ASSERTL0(it->second.size() == m_dim,
                         " Number of directional" \
-                        " modes in expansion spec for composite id = " + 
-                        boost::lexical_cast<std::string>(cId) +
+                        " modes in expansion spec for element id = " +
+                        boost::lexical_cast<std::string>(elid) +
                         " and field " +
                         boost::lexical_cast<std::string>(it->first) +
                         " does not correspond to mesh dimension");
@@ -642,14 +1216,15 @@ namespace Nektar
                         nc = it->second[2];
                     }
 
-                    int bndWeight = CalculateElementWeight(
-                        m_meshComposites[cId].type, true, na, nb, nc);
-
-                    for (unsigned int j = 0; j < m_meshComposites[cId].list.size(); ++j)
-                    {
-                        int elmtId = m_meshComposites[cId].list[j];
-                        m_vertWeights[elmtId][m_fieldNameToId[it->first]] = bndWeight;
-                    }
+                    m_vertWeights[elid][m_fieldNameToId[it->first]] =
+                            CalculateElementWeight(m_shape[elid], false,
+                                                   na, nb, nc);
+                    m_vertBndWeights[elid][m_fieldNameToId[it->first]] =
+                            CalculateElementWeight(m_shape[elid], true,
+                                                   na, nb, nc);
+                    m_edgeWeights[elid][m_fieldNameToId[it->first]] =
+                            CalculateEdgeWeight(m_shape[elid],
+                                                   na, nb, nc);
                 }
             } // for i
         }
@@ -671,7 +1246,9 @@ namespace Nektar
 
                 if (m_weightingRequired)
                 {
-                    pGraph[v].weight = m_vertWeights[eIt->first];
+                    pGraph[v].weight     = m_vertWeights[eIt->first];
+                    pGraph[v].bndWeight  = m_vertBndWeights[eIt->first];
+                    pGraph[v].edgeWeight = m_edgeWeights[eIt->first];
                 }
 
                 // Process element entries and add graph edges
@@ -694,26 +1271,50 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Partition the graph.
+         *
+         * This routine partitions the graph @p pGraph into @p nParts, producing
+         * subgraphs that are populated in @p pLocalPartition. If the @p
+         * overlapping option is set (which is used for post-processing
+         * purposes), the resulting partitions are extended to cover
+         * neighbouring elements by additional vertex on the dual graph, which
+         * produces overlapping partitions (i.e. the intersection of two
+         * connected partitions is non-empty).
+         *
+         * @param pGraph           Graph to be partitioned.
+         * @param nParts           Number of partitions.
+         * @param pLocalPartition  Vector of sub-graphs representing each
+         *                         partition.
+         * @param overlapping      True if resulting partitions should overlap.
+         */
         void MeshPartition::PartitionGraph(BoostSubGraph& pGraph,
                                            int nParts,
-                                           std::vector<BoostSubGraph>& pLocalPartition)
+                                           std::vector<BoostSubGraph>& pLocalPartition,
+                                           bool overlapping)
         {
             int i;
             int nGraphVerts = boost::num_vertices(pGraph);
             int nGraphEdges = boost::num_edges(pGraph);
 
+            int ncon = 1;
+            if (m_weightDofs && m_weightBnd)
+            {
+                ncon = 2;
+            }
             // Convert boost graph into CSR format
             BoostVertexIterator    vertit, vertit_end;
+            BoostAdjacencyIterator adjvertit, adjvertit_end;
             Array<OneD, int> part(nGraphVerts,0);
 
             if (m_comm->GetRowComm()->TreatAsRankZero())
             {
                 int acnt = 0;
                 int vcnt = 0;
-                int nWeight = nGraphVerts;
-                BoostAdjacencyIterator adjvertit, adjvertit_end;
+                int nWeight = ncon*nGraphVerts;
                 Array<OneD, int> xadj(nGraphVerts+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
+                Array<OneD, int> adjwgt(2*nGraphEdges, 1);
                 Array<OneD, int> vwgt(nWeight, 1);
                 Array<OneD, int> vsize(nGraphVerts, 1);
 
@@ -726,17 +1327,26 @@ namespace Nektar
                           ++adjvertit)
                     {
                         adjncy[acnt++] = *adjvertit;
+                        if (m_weightingRequired)
+                        {
+                            adjwgt[acnt-1] = pGraph[*vertit].edgeWeight[0];
+                        }
                     }
 
                     xadj[++vcnt] = acnt;
 
                     if (m_weightingRequired)
                     {
-                        vwgt[vcnt-1] = pGraph[*vertit].weight[0];
-                    }
-                    else
-                    {
-                        vwgt[vcnt-1] = 1;
+                        int ccnt = 0;
+                        if (m_weightDofs)
+                        {
+                            vwgt[ncon*(vcnt-1)+ccnt] = pGraph[*vertit].weight[0];
+                            ccnt++;
+                        }
+                        if (m_weightBnd)
+                        {
+                            vwgt[ncon*(vcnt-1)+ccnt] = pGraph[*vertit].bndWeight[0];
+                        }
                     }
                 }
 
@@ -751,8 +1361,7 @@ namespace Nektar
                     if(m_comm->GetColumnComm()->GetRank() == 0)
                     {
                         // Attempt partitioning using METIS.
-                        int ncon = 1;
-                        PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, nParts, vol, part);
+                        PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, adjwgt, nParts, vol, part);
 
                         // Check METIS produced a valid partition and fix if not.
                         CheckPartitions(nParts, part);
@@ -808,6 +1417,25 @@ namespace Nektar
             {
                 pGraph[*vertit].partition = part[i];
                 boost::add_vertex(i, pLocalPartition[part[i]]);
+            }
+
+            // If the overlapping option is set (for post-processing purposes),
+            // add vertices that correspond to the neighbouring elements.
+            if (overlapping)
+            {
+                for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
+                      vertit != vertit_end;
+                      ++vertit)
+                {
+                    for (boost::tie(adjvertit, adjvertit_end) = boost::adjacent_vertices(*vertit,pGraph);
+                         adjvertit != adjvertit_end; ++adjvertit)
+                    {
+                        if(part[*adjvertit] != part[*vertit])
+                        {
+                            boost::add_vertex(*adjvertit, pLocalPartition[part[*vertit]]);
+                        }
+                    }
+                }
             }
         }
 
@@ -880,10 +1508,12 @@ namespace Nektar
             std::map<int, MeshVertex>::iterator vVertIt;
             std::map<std::string, std::string>::iterator vAttrIt;
 
+            std::vector<unsigned int> idxList;
+
             // Populate lists of elements, edges and vertices required.
-            for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
-                  vertit != vertit_end;
-                  ++vertit)
+            for (boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
+                 vertit != vertit_end;
+                 ++vertit)
             {
                 id = pGraph[*vertit].id;
                 vElements[id] = m_meshElements[pGraph[*vertit].id];
@@ -933,18 +1563,42 @@ namespace Nektar
             }
 
             // Generate XML data for these mesh entities
-            for (vVertIt = vVertices.begin(); vVertIt != vVertices.end(); vVertIt++)
+            if(m_isCompressed)
             {
-                x = new TiXmlElement("V");
-                x->SetAttribute("ID", vVertIt->first);
-                std::stringstream vCoords;
-                vCoords.precision(12);
-                vCoords << std::setw(15) << vVertIt->second.x << " "
-                        << std::setw(15) << vVertIt->second.y << " "
-                        << std::setw(15) << vVertIt->second.z << " ";
-                y = new TiXmlText(vCoords.str());
-                x->LinkEndChild(y);
-                vVertex->LinkEndChild(x);
+                std::vector<MeshVertex> vertInfo;
+                for (vVertIt = vVertices.begin();
+                     vVertIt != vVertices.end(); vVertIt++)
+                {
+                    MeshVertex v;
+                    v.id = vVertIt->first;
+                    v.x = vVertIt->second.x;
+                    v.y = vVertIt->second.y;
+                    v.z = vVertIt->second.z;
+                    vertInfo.push_back(v);
+                }
+                std::string vertStr;
+                CompressData::ZlibEncodeToBase64Str(vertInfo,vertStr);
+                vVertex->SetAttribute("COMPRESSED",
+                                      CompressData::GetCompressString());
+                vVertex->SetAttribute("BITSIZE",
+                                      CompressData::GetBitSizeStr());
+                vVertex->LinkEndChild(new TiXmlText(vertStr));
+            }
+            else
+            {
+                for (vVertIt = vVertices.begin(); vVertIt != vVertices.end(); vVertIt++)
+                {
+                    x = new TiXmlElement("V");
+                    x->SetAttribute("ID", vVertIt->first);
+                    std::stringstream vCoords;
+                    vCoords.precision(12);
+                    vCoords << std::setw(15) << vVertIt->second.x << " "
+                            << std::setw(15) << vVertIt->second.y << " "
+                            << std::setw(15) << vVertIt->second.z << " ";
+                    y = new TiXmlText(vCoords.str());
+                    x->LinkEndChild(y);
+                    vVertex->LinkEndChild(x);
+                }
             }
 
             // Apply transformation attributes to VERTEX section
@@ -957,83 +1611,507 @@ namespace Nektar
 
             if (m_dim >= 2)
             {
-                for (vIt = vEdges.begin(); vIt != vEdges.end(); vIt++)
+                if(m_isCompressed)
                 {
-                    x = new TiXmlElement("E");
-                    x->SetAttribute("ID", vIt->first);
-                    std::stringstream vVertices;
-                    vVertices << std::setw(10) << vIt->second.list[0]
-                            << std::setw(10) << vIt->second.list[1] << " ";
-                    y = new TiXmlText(vVertices.str());
-                    x->LinkEndChild(y);
-                    vEdge->LinkEndChild(x);
+                    std::vector<MeshEdge> edgeInfo;
+                    for (vIt = vEdges.begin(); vIt != vEdges.end(); vIt++)
+                    {
+                        MeshEdge e;
+                        e.id = vIt->first;
+                        e.v0 = vIt->second.list[0];
+                        e.v1 = vIt->second.list[1];
+                        edgeInfo.push_back(e);
+                    }
+                    std::string edgeStr;
+                    CompressData::ZlibEncodeToBase64Str(edgeInfo,edgeStr);
+                    vEdge->SetAttribute("COMPRESSED",
+                                        CompressData::GetCompressString());
+                    vEdge->SetAttribute("BITSIZE",
+                                        CompressData::GetBitSizeStr());
+                    vEdge->LinkEndChild(new TiXmlText(edgeStr));
+                }
+                else
+                {
+                    for (vIt = vEdges.begin(); vIt != vEdges.end(); vIt++)
+                    {
+                        x = new TiXmlElement("E");
+                        x->SetAttribute("ID", vIt->first);
+                        std::stringstream vVertices;
+                        vVertices << std::setw(10) << vIt->second.list[0]
+                                  << std::setw(10) << vIt->second.list[1]
+                                  << " ";
+                        y = new TiXmlText(vVertices.str());
+                        x->LinkEndChild(y);
+                        vEdge->LinkEndChild(x);
+                    }
                 }
             }
 
             if (m_dim >= 3)
             {
-                for (vIt = vFaces.begin(); vIt != vFaces.end(); vIt++)
+
+                if(m_isCompressed)
                 {
-                    std::string vType("F");
-                    vType[0] = vIt->second.type;
-                    x = new TiXmlElement(vType);
-                    x->SetAttribute("ID", vIt->first);
-                    std::stringstream vListStr;
-                    for (unsigned int i = 0; i < vIt->second.list.size(); ++i)
+                    std::vector<MeshTri>  TriFaceInfo;
+                    std::vector<MeshQuad> QuadFaceInfo;
+
+                    for (vIt = vFaces.begin(); vIt != vFaces.end(); vIt++)
                     {
-                        vListStr << std::setw(10) << vIt->second.list[i];
+                        switch(vIt->second.list.size())
+                        {
+                            case 3:
+                            {
+                                MeshTri f;
+                                f.id = vIt->first;
+                                for(int i = 0; i < 3; ++i)
+                                {
+                                    f.e[i] = vIt->second.list[i];
+                                }
+                                TriFaceInfo.push_back(f);
+                            }
+                            break;
+                            case 4:
+                            {
+                                MeshQuad f;
+                                f.id = vIt->first;
+                                for(int i = 0; i < 4; ++i)
+                                {
+                                    f.e[i] = vIt->second.list[i];
+                                }
+                                QuadFaceInfo.push_back(f);
+                            }
+                            break;
+                            default:
+                                ASSERTL0(false,"Unknown face type.");
+                        }
                     }
-                    vListStr << " ";
-                    y = new TiXmlText(vListStr.str());
-                    x->LinkEndChild(y);
-                    vFace->LinkEndChild(x);
+
+                    if(TriFaceInfo.size())
+                    {
+                        std::string vType("T");
+                        x = new TiXmlElement(vType);
+
+                        std::string faceStr;
+                        CompressData::ZlibEncodeToBase64Str(TriFaceInfo,
+                                                            faceStr);
+                        x->SetAttribute("COMPRESSED",
+                                        CompressData::GetCompressString());
+                        x->SetAttribute("BITSIZE",
+                                        CompressData::GetBitSizeStr());
+                        x->LinkEndChild(new TiXmlText(faceStr));
+                        vFace->LinkEndChild(x);
+                    }
+
+                    if(QuadFaceInfo.size())
+                    {
+                        std::string vType("Q");
+                        x = new TiXmlElement(vType);
+                        std::string faceStr;
+                        CompressData::ZlibEncodeToBase64Str(QuadFaceInfo,
+                                                            faceStr);
+                        x->SetAttribute("COMPRESSED",
+                                        CompressData::GetCompressString());
+                        x->SetAttribute("BITSIZE",
+                                        CompressData::GetBitSizeStr());
+                        x->LinkEndChild(new TiXmlText(faceStr));
+                        vFace->LinkEndChild(x);
+                    }
+                }
+                else
+                {
+                    for (vIt = vFaces.begin(); vIt != vFaces.end(); vIt++)
+                    {
+                        std::string vType("F");
+                        vType[0] = vIt->second.type;
+                        x = new TiXmlElement(vType);
+                        x->SetAttribute("ID", vIt->first);
+                        std::stringstream vListStr;
+                        for (unsigned int i = 0; i < vIt->second.list.size(); ++i)
+                        {
+                            vListStr << std::setw(10) << vIt->second.list[i];
+                        }
+                        vListStr << " ";
+                        y = new TiXmlText(vListStr.str());
+                        x->LinkEndChild(y);
+                        vFace->LinkEndChild(x);
+                    }
                 }
             }
 
-            for (vIt = vElements.begin(); vIt != vElements.end(); vIt++)
+
+            if(m_isCompressed)
             {
-                std::string vType("T");
-                vType[0] = vIt->second.type;
-                x = new TiXmlElement(vType.c_str());
-                x->SetAttribute("ID", vIt->first);
-                std::stringstream vEdges;
-                for (unsigned i = 0; i < vIt->second.list.size(); ++i)
+                std::vector<MeshEdge>  SegInfo;
+                std::vector<MeshTri>   TriInfo;
+                std::vector<MeshQuad>  QuadInfo;
+                std::vector<MeshTet>   TetInfo;
+                std::vector<MeshPyr>   PyrInfo;
+                std::vector<MeshPrism> PrismInfo;
+                std::vector<MeshHex>   HexInfo;
+
+                //gather elemements in groups.
+                for (vIt = vElements.begin(); vIt != vElements.end(); vIt++)
                 {
-                    vEdges << std::setw(10) << vIt->second.list[i];
+                    switch(vIt->second.type)
+                    {
+                        case 'S':
+                        {
+                            MeshEdge e;
+                            e.id = vIt->first;
+                            e.v0 = vIt->second.list[0];
+                            e.v1 = vIt->second.list[1];
+                            SegInfo.push_back(e);
+                        }
+                        break;
+                        case 'T':
+                        {
+                            MeshTri f;
+                            f.id = vIt->first;
+                            for(int i = 0; i < 3; ++i)
+                            {
+                                f.e[i] = vIt->second.list[i];
+                            }
+                            TriInfo.push_back(f);
+                        }
+                        break;
+                        case 'Q':
+                        {
+                            MeshQuad f;
+                            f.id = vIt->first;
+                            for(int i = 0; i < 4; ++i)
+                            {
+                                f.e[i] = vIt->second.list[i];
+                            }
+                            QuadInfo.push_back(f);
+                        }
+                        break;
+                        case 'A':
+                        {
+                            MeshTet vol;
+                            vol.id = vIt->first;
+                            for(int i = 0; i < 4; ++i)
+                            {
+                                vol.f[i] = vIt->second.list[i];
+                            }
+                            TetInfo.push_back(vol);
+                        }
+                        break;
+                        case 'P':
+                        {
+                            MeshPyr vol;
+                            vol.id = vIt->first;
+                            for(int i = 0; i < 5; ++i)
+                            {
+                                vol.f[i] = vIt->second.list[i];
+                            }
+                            PyrInfo.push_back(vol);
+                        }
+                        break;
+                        case 'R':
+                        {
+                            MeshPrism vol;
+                            vol.id = vIt->first;
+                            for(int i = 0; i < 5; ++i)
+                            {
+                                vol.f[i] = vIt->second.list[i];
+                            }
+                            PrismInfo.push_back(vol);
+                        }
+                        break;
+                        case 'H':
+                        {
+                            MeshHex vol;
+                            vol.id = vIt->first;
+                            for(int i = 0; i < 6; ++i)
+                            {
+                                vol.f[i] = vIt->second.list[i];
+                            }
+                            HexInfo.push_back(vol);
+                        }
+                        break;
+                        default:
+                            ASSERTL0(false,"Unknown element type");
+                    }
                 }
-                vEdges << " ";
-                y = new TiXmlText(vEdges.str());
-                x->LinkEndChild(y);
-                vElement->LinkEndChild(x);
+
+                if(SegInfo.size())
+                {
+                    std::string vType("S");
+                    x = new TiXmlElement(vType);
+
+                    std::string segStr;
+                    CompressData::ZlibEncodeToBase64Str(SegInfo,segStr);
+                    x->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
+                    x->LinkEndChild(new TiXmlText(segStr));
+                    vElement->LinkEndChild(x);
+                }
+
+                if(TriInfo.size())
+                {
+                    std::string vType("T");
+                    x = new TiXmlElement(vType);
+
+                    std::string faceStr;
+                    CompressData::ZlibEncodeToBase64Str(TriInfo,faceStr);
+                    x->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
+                    x->LinkEndChild(new TiXmlText(faceStr));
+                    vElement->LinkEndChild(x);
+                }
+
+                if(QuadInfo.size())
+                {
+                    std::string vType("Q");
+                    x = new TiXmlElement(vType);
+                    std::string faceStr;
+                    CompressData::ZlibEncodeToBase64Str(QuadInfo,faceStr);
+                    x->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
+                    x->LinkEndChild(new TiXmlText(faceStr));
+                    vElement->LinkEndChild(x);
+                }
+
+                if(TetInfo.size())
+                {
+                    std::string vType("A");
+                    x = new TiXmlElement(vType);
+                    std::string volStr;
+                    CompressData::ZlibEncodeToBase64Str(TetInfo,volStr);
+                    x->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
+                    x->LinkEndChild(new TiXmlText(volStr));
+                    vElement->LinkEndChild(x);
+                }
+
+                if(PyrInfo.size())
+                {
+                    std::string vType("P");
+                    x = new TiXmlElement(vType);
+                    std::string volStr;
+                    CompressData::ZlibEncodeToBase64Str(PyrInfo,volStr);
+                    x->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
+                    x->LinkEndChild(new TiXmlText(volStr));
+                    vElement->LinkEndChild(x);
+                }
+
+                if(PrismInfo.size())
+                {
+                    std::string vType("R");
+                    x = new TiXmlElement(vType);
+                    std::string volStr;
+                    CompressData::ZlibEncodeToBase64Str(PrismInfo,volStr);
+                    x->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
+                    x->LinkEndChild(new TiXmlText(volStr));
+                    vElement->LinkEndChild(x);
+                }
+
+                if(HexInfo.size())
+                {
+                    std::string vType("H");
+                    x = new TiXmlElement(vType);
+                    std::string volStr;
+                    CompressData::ZlibEncodeToBase64Str(HexInfo,volStr);
+                    x->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                    x->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
+                    x->LinkEndChild(new TiXmlText(volStr));
+                    vElement->LinkEndChild(x);
+                }
+
+            }
+            else
+            {
+                for (vIt = vElements.begin(); vIt != vElements.end(); vIt++)
+                {
+                    std::string vType("T");
+                    vType[0] = vIt->second.type;
+                    x = new TiXmlElement(vType.c_str());
+                    x->SetAttribute("ID", vIt->first);
+                    std::stringstream vEdges;
+                    for (unsigned i = 0; i < vIt->second.list.size(); ++i)
+                    {
+                        vEdges << std::setw(10) << vIt->second.list[i];
+                    }
+                    vEdges << " ";
+                    y = new TiXmlText(vEdges.str());
+                    x->LinkEndChild(y);
+                    vElement->LinkEndChild(x);
+                }
             }
 
             if (m_dim >= 2)
             {
                 std::map<MeshCurvedKey, MeshCurved>::const_iterator vItCurve;
-                for (vItCurve  = m_meshCurved.begin(); 
-                     vItCurve != m_meshCurved.end(); 
-                     ++vItCurve)
+
+                if(m_isCompressed)
                 {
-                    MeshCurved c = vItCurve->second;
-                    
-                    if (vEdges.find(c.entityid) != vEdges.end() || 
-                        vFaces.find(c.entityid) != vFaces.end())
+                    std::vector<MeshCurvedInfo> edgeinfo;
+                    std::vector<MeshCurvedInfo> faceinfo;
+                    MeshCurvedPts  curvedpts;
+                    curvedpts.id = 0; // assume all points are going in here
+                    int ptoffset = 0;
+                    int newidx   = 0;
+                    std::map<int,int> idxmap;
+
+                    for (vItCurve  = m_meshCurved.begin();
+                         vItCurve != m_meshCurved.end();
+                         ++vItCurve)
                     {
-                        x = new TiXmlElement(c.entitytype);
-                        x->SetAttribute("ID", c.id);
-                        if (c.entitytype == "E")
+                        MeshCurved c = vItCurve->second;
+
+                        bool IsEdge = boost::iequals(c.entitytype,"E");
+                        bool IsFace = boost::iequals(c.entitytype,"F");
+
+                        if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
+                           (IsFace&&vFaces.find(c.entityid) != vFaces.end()))
                         {
-                            x->SetAttribute("EDGEID", c.entityid);
+                            MeshCurvedInfo cinfo;
+                            // add in
+                            cinfo.id       = c.id;
+                            cinfo.entityid = c.entityid;
+                            cinfo.npoints  = c.npoints;
+                            for(int i = 0; i < SIZE_PointsType; ++i)
+                            {
+                                if(c.type.compare(kPointsTypeStr[i]) == 0)
+                                {
+                                    cinfo.ptype = (PointsType) i;
+                                    break;
+                                }
+                            }
+                            cinfo.ptid   = 0; // set to just one point set
+                            cinfo.ptoffset = ptoffset;
+                            ptoffset += c.npoints;
+
+                            if (IsEdge)
+                            {
+                                edgeinfo.push_back(cinfo);
+                            }
+                            else
+                            {
+                                faceinfo.push_back(cinfo);
+                            }
+
+                            // fill in points to list.
+                            for(int i =0; i < c.npoints; ++i)
+                            {
+                                // get index from full list;
+                                int idx = m_meshCurvedPts[c.ptid]
+                                    .index[c.ptoffset+i];
+
+                                // if index is not already in curved
+                                // points add it or set index to location
+                                if(idxmap.count(idx) == 0)
+                                {
+                                    idxmap[idx] = newidx;
+                                    curvedpts.index.push_back(newidx);
+                                    curvedpts.pts.push_back(
+                                            m_meshCurvedPts[c.ptid].pts[idx]);
+                                    newidx++;
+                                }
+                                else
+                                {
+                                    curvedpts.index.push_back(idxmap[idx]);
+                                }
+                            }
                         }
-                        else
-                        {
-                            x->SetAttribute("FACEID", c.entityid);
-                        }
-                        x->SetAttribute("TYPE", c.type);
-                        x->SetAttribute("NUMPOINTS", c.npoints);
-                        y = new TiXmlText(c.data);
-                        x->LinkEndChild(y);
+                    }
+
+                    // add xml information
+                    if(edgeinfo.size())
+                    {
+                        vCurved->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                        vCurved->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
+
+                        x = new TiXmlElement("E");
+                        std::string dataStr;
+                        CompressData::ZlibEncodeToBase64Str(edgeinfo,dataStr);
+                        x->LinkEndChild(new TiXmlText(dataStr));
                         vCurved->LinkEndChild(x);
+                    }
+
+                    if(faceinfo.size())
+                    {
+                        vCurved->SetAttribute("COMPRESSED",
+                                    CompressData::GetCompressString());
+                        vCurved->SetAttribute("BITSIZE",
+                                    CompressData::GetBitSizeStr());
+
+                        x = new TiXmlElement("F");
+                        std::string dataStr;
+                        CompressData::ZlibEncodeToBase64Str(faceinfo,dataStr);
+                        x->LinkEndChild(new TiXmlText(dataStr));
+                        vCurved->LinkEndChild(x);
+                    }
+
+                    if(edgeinfo.size()||faceinfo.size())
+                    {
+                        x = new TiXmlElement("DATAPOINTS");
+                        x->SetAttribute("ID", curvedpts.id);
+
+                        TiXmlElement *subx = new TiXmlElement("INDEX");
+                        std::string dataStr;
+                        CompressData::ZlibEncodeToBase64Str(curvedpts.index,
+                                                            dataStr);
+                        subx->LinkEndChild(new TiXmlText(dataStr));
+                        x->LinkEndChild(subx);
+
+                        subx = new TiXmlElement("POINTS");
+                        CompressData::ZlibEncodeToBase64Str(curvedpts.pts,
+                                                            dataStr);
+                        subx->LinkEndChild(new TiXmlText(dataStr));
+                        x->LinkEndChild(subx);
+
+                        vCurved->LinkEndChild(x);
+                    }
+                }
+                else
+                {
+                    for (vItCurve  = m_meshCurved.begin();
+                         vItCurve != m_meshCurved.end();
+                         ++vItCurve)
+                    {
+                        MeshCurved c = vItCurve->second;
+
+                        bool IsEdge = boost::iequals(c.entitytype,"E");
+                        bool IsFace = boost::iequals(c.entitytype,"F");
+
+                        if((IsEdge&&vEdges.find(c.entityid) != vEdges.end())||
+                           (IsFace&&vFaces.find(c.entityid) != vFaces.end()))
+                        {
+                            x = new TiXmlElement(c.entitytype);
+                            x->SetAttribute("ID", c.id);
+                            if (IsEdge)
+                            {
+                                x->SetAttribute("EDGEID", c.entityid);
+                            }
+                            else
+                            {
+                                x->SetAttribute("FACEID", c.entityid);
+                            }
+                            x->SetAttribute("TYPE", c.type);
+                            x->SetAttribute("NUMPOINTS", c.npoints);
+                            y = new TiXmlText(c.data);
+                            x->LinkEndChild(y);
+                            vCurved->LinkEndChild(x);
+                        }
                     }
                 }
             }
@@ -1042,10 +2120,8 @@ namespace Nektar
             // which belong to this partition.
             for (vIt = m_meshComposites.begin(); vIt != m_meshComposites.end(); ++vIt)
             {
-                bool comma = false; // Set to true after first entity output
-                bool range = false; // True when entity IDs form a range
-                int last_idx = -2;  // Last entity ID output
-                std::string vCompositeStr = "";
+                idxList.clear();
+
                 for (unsigned int j = 0; j < vIt->second.list.size(); ++j)
                 {
                     // Based on entity type, check if in this partition
@@ -1077,33 +2153,10 @@ namespace Nektar
                         break;
                     }
 
-                    // Condense consecutive entity IDs into ranges
-                    // last_idx initially -2 to avoid error for ID=0
-                    if (last_idx + 1 == vIt->second.list[j])
-                    {
-                        last_idx++;
-                        range = true;
-                        continue;
-                    }
-                    // This entity is not in range, so close previous range with
-                    // last_idx
-                    if (range)
-                    {
-                        vCompositeStr += "-" + boost::lexical_cast<std::string>(last_idx);
-                        range = false;
-                    }
-                    // Output ID, which is either standalone, or will start a
-                    // range.
-                    vCompositeStr += comma ? "," : "";
-                    vCompositeStr += boost::lexical_cast<std::string>(vIt->second.list[j]);
-                    last_idx = vIt->second.list[j];
-                    comma = true;
+                    idxList.push_back(vIt->second.list[j]);
                 }
-                // If last entity is part of a range, it must be output now
-                if (range)
-                {
-                    vCompositeStr += "-" + boost::lexical_cast<std::string>(last_idx);
-                }
+
+                std::string vCompositeStr = ParseUtils::GenerateSeqString(idxList);
 
                 if (vCompositeStr.length() > 0)
                 {
@@ -1118,18 +2171,16 @@ namespace Nektar
                 }
             }
 
+            idxList.clear();
             std::string vDomainListStr;
-            bool comma = false;
             for (unsigned int i = 0; i < m_domain.size(); ++i)
             {
                 if (vComposites.find(m_domain[i]) != vComposites.end())
                 {
-                    vDomainListStr += comma ? "," : "";
-                    comma = true;
-                    vDomainListStr += boost::lexical_cast<std::string>(m_domain[i]);
+                    idxList.push_back(m_domain[i]);
                 }
             }
-            vDomainListStr = "C[" + vDomainListStr + "]";
+            vDomainListStr = "C[" + ParseUtils::GenerateSeqString(idxList) + "]";
             TiXmlText* vDomainList = new TiXmlText(vDomainListStr);
             vDomain->LinkEndChild(vDomainList);
 
@@ -1172,18 +2223,19 @@ namespace Nektar
                         vSeqStr = vSeqStr.substr(indxBeg, indxEnd - indxBeg + 1);
                         std::vector<unsigned int> vSeq;
                         ParseUtils::GenerateSeqVector(vSeqStr.c_str(), vSeq);
-                        std::string vListStr;
-                        bool comma = false;
+
+                        idxList.clear();
+
                         for (unsigned int i = 0; i < vSeq.size(); ++i)
                         {
                             if (vComposites.find(vSeq[i]) != vComposites.end())
                             {
-                                vListStr += comma ? "," : "";
-                                comma = true;
-                                vListStr += boost::lexical_cast<std::string>(vSeq[i]);
+                                idxList.push_back(vSeq[i]);
                             }
                         }
                         int p = atoi(vItem->Attribute("ID"));
+
+                        std::string vListStr = ParseUtils::GenerateSeqString(idxList);
 
                         if (vListStr.length() == 0)
                         {
@@ -1308,6 +2360,52 @@ namespace Nektar
                         StdSegData  ::getNumberOfCoefficients   (na);
                     break;
                 case 'V':
+                    weight = 1;
+                    break;
+                default:
+                    break;
+            }
+
+            return weight;
+        }
+
+        /**
+         *     Calculate the number of modes needed for communication when
+         *        in partition boundary, to be used as weighting for edges.
+         *     Since we do not know exactly which face this refers to, assume
+         *        the max order and quad face (for prisms) as arbitrary choices
+         */
+        int MeshPartition::CalculateEdgeWeight(
+            char elmtType,
+            int  na,
+            int  nb,
+            int  nc)
+        {
+            int weight = 0;
+            int n = std::max ( na, std::max(nb, nc));
+            switch (elmtType)
+            {
+                case 'A':
+                    weight =
+                        StdTriData ::getNumberOfCoefficients   (n, n);
+                    break;
+                case 'R':
+                    weight =
+                        StdQuadData ::getNumberOfCoefficients   (n, n);
+                    break;
+                case 'H':
+                    weight =
+                        StdQuadData ::getNumberOfCoefficients   (n, n);
+                    break;
+                case 'P':
+                    weight =
+                        StdQuadData ::getNumberOfCoefficients   (n, n);
+                    break;
+                case 'Q':
+                case 'T':
+                    weight = n;
+                    break;
+                case 'S':
                     weight = 1;
                     break;
                 default:

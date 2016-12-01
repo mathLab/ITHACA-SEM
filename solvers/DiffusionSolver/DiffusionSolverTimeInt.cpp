@@ -41,6 +41,7 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ContField2D.h>
 
+using namespace std;
 using namespace Nektar;
 
 class Diffusion
@@ -86,8 +87,7 @@ Diffusion::Diffusion(int argc, char* argv[])
     session     = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     // Create Field I/O object.
-    fld         = MemoryManager<LibUtilities::FieldIO>::
-                    AllocateSharedPtr(session->GetComm());
+    fld         = LibUtilities::FieldIO::CreateDefault(session);
 
     // Get some information from the session
     sessionName = session->GetSessionName();

@@ -55,6 +55,12 @@ IF (THIRDPARTY_BUILD_ZLIB)
             ${TPSRC}/zlib-1.2.7
         )
 
+    IF (APPLE)
+        EXTERNALPROJECT_ADD_STEP(zlib-1.2.7 patch-install-path
+            COMMAND ${CMAKE_INSTALL_NAME_TOOL} -id ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}/libz.1.2.7.dylib ${TPDIST}/lib/libz.1.2.7.dylib
+            DEPENDEES install)
+    ENDIF ()
+
     IF (WIN32)
         SET(ZLIB_LIBRARY zlib CACHE FILEPATH
             "Zlib library" FORCE)

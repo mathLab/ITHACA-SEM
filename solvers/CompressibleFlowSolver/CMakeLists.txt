@@ -4,12 +4,30 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_COMPRESSIBLE_FLOW
 
 IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     SET(CompressibleFlowSolverSource 
+       ./ArtificialDiffusion/ArtificialDiffusion.cpp
+       ./ArtificialDiffusion/NonSmoothShockCapture.cpp
+       ./ArtificialDiffusion/SmoothShockCapture.cpp
+       ./BoundaryConditions/CFSBndCond.cpp
+       ./BoundaryConditions/ExtrapOrder0BC.cpp
+       ./BoundaryConditions/IsentropicVortexBC.cpp
+       ./BoundaryConditions/PressureInflowFileBC.cpp
+       ./BoundaryConditions/PressureOutflowBC.cpp
+       ./BoundaryConditions/PressureOutflowFileBC.cpp
+       ./BoundaryConditions/PressureOutflowNonReflectiveBC.cpp
+       ./BoundaryConditions/RiemannInvariantBC.cpp
+       ./BoundaryConditions/RinglebFlowBC.cpp
+       ./BoundaryConditions/SymmetryBC.cpp
+       ./BoundaryConditions/TimeDependentBC.cpp
+       ./BoundaryConditions/WallBC.cpp
+       ./BoundaryConditions/WallViscousBC.cpp
        ./CompressibleFlowSolver.cpp 
        ./EquationSystems/CompressibleFlowSystem.cpp
        ./EquationSystems/EulerCFE.cpp
-       ./EquationSystems/EulerADCFE.cpp
+       ./EquationSystems/IsentropicVortex.cpp
        ./EquationSystems/NavierStokesCFE.cpp
+       ./EquationSystems/RinglebFlow.cpp
        ./Filters/FilterEnergy.cpp
+       ./Misc/VariableConverter.cpp
        ./RiemannSolvers/AverageSolver.cpp
        ./RiemannSolvers/AUSM0Solver.cpp
        ./RiemannSolvers/AUSM1Solver.cpp
@@ -34,6 +52,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     ADD_NEKTAR_TEST        (CylinderSubsonicMix)
     ADD_NEKTAR_TEST        (CylinderSubsonic_P3)
     ADD_NEKTAR_TEST_LENGTHY(CylinderSubsonic_P8)
+    ADD_NEKTAR_TEST        (Euler1D)
     ADD_NEKTAR_TEST        (IsentropicVortex16_P3)
     ADD_NEKTAR_TEST        (IsentropicVortex_FRDG_SEM)
     ADD_NEKTAR_TEST_LENGTHY(IsentropicVortex_FRSD_SEM)
@@ -53,6 +72,9 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     ADD_NEKTAR_TEST_LENGTHY(Couette_FRHU_LDG_SEM)
     ADD_NEKTAR_TEST        (Couette_WeakDG_LFRHU_SEM)
     ADD_NEKTAR_TEST_LENGTHY(Couette_FRHU_LFRHU_SEM)
+    ADD_NEKTAR_TEST        (Couette_WeakDG_LDG_adiabatic)
+    # disabled as fails on 32-bit linux  -- cc
+    #ADD_NEKTAR_TEST        (Couette_FRDG_LFRDG_adiabatic)
     # disabled as fails on 32-bit linux  -- cc
     #ADD_NEKTAR_TEST_LENGTHY(CylinderSubsonic_NS_WeakDG_LDG_SEM)
     ADD_NEKTAR_TEST_LENGTHY(CylinderSubsonic_NS_WeakDG_LDG_GAUSS) 

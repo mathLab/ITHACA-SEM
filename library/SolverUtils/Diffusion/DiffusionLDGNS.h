@@ -82,17 +82,22 @@ namespace Nektar
                 const int                                          nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray);
+                      Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
             
             virtual void v_NumericalFluxO1(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>      &fields,
                 const Array<OneD, Array<OneD, NekDouble> >             &inarray,
                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                                            &numericalFluxO1);
+                                                            &numericalFluxO1,
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
             
             virtual void v_WeakPenaltyO1(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                const Array<OneD, Array<OneD, NekDouble> >        &uplus,
                       Array<OneD, Array<OneD, NekDouble> >      &penaltyfluxO1);
             
             virtual void v_NumericalFluxO2(
@@ -106,6 +111,7 @@ namespace Nektar
                 const int                                          var,
                 const int                                          dir,
                 const Array<OneD, const NekDouble>                &qfield,
+                const Array<OneD, const NekDouble>                &qtemp,
                       Array<OneD,       NekDouble>                &penaltyflux);
 
             virtual void v_SetHomoDerivs(

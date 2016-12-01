@@ -37,13 +37,13 @@
 #include <iomanip>
 #include <CardiacEPSolver/Filters/FilterCellHistoryPoints.h>
 
+using namespace std;
+
 namespace Nektar
-{
-namespace SolverUtils
 {
 
 std::string FilterCellHistoryPoints::className
-    = GetFilterFactory().RegisterCreatorFunction(
+    = SolverUtils::GetFilterFactory().RegisterCreatorFunction(
             "CellHistoryPoints", FilterCellHistoryPoints::create);
 
 /**
@@ -51,7 +51,7 @@ std::string FilterCellHistoryPoints::className
  */
 FilterCellHistoryPoints::FilterCellHistoryPoints(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const std::map<std::string, std::string> &pParams) :
+    const ParamMap &pParams) :
     FilterHistoryPoints(pSession, pParams)
 {
 }
@@ -159,5 +159,4 @@ void FilterCellHistoryPoints::v_Update(
     }
 }
 
-}
 }

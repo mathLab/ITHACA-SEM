@@ -38,6 +38,8 @@
 #include <Collections/Collection.h>
 #include <Collections/IProduct.h>
 
+using namespace std;
+
 namespace Nektar {
 namespace Collections {
 
@@ -120,6 +122,15 @@ class IProductWRTDerivBase_StdMat : public Operator
                             tmp[i].get(), nPhys, 1.0,
                             output.get(), nmodes);
             }
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -282,6 +293,15 @@ class IProductWRTDerivBase_IterPerExp : public Operator
             }
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         Array<TwoD, const NekDouble>    m_derivFac;
         Array<OneD, const NekDouble>    m_jac;
@@ -401,6 +421,15 @@ class IProductWRTDerivBase_NoCollection : public Operator
             }
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         int                                         m_dim;
         int                                         m_coordim;
@@ -496,6 +525,15 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
                         &output[0], m_nmodes0);
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         const int                       m_nquad0;
         const int                       m_nmodes0;
@@ -587,6 +625,15 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
                          m_jac, tmp[1],  tmp[0], wsp1);
 
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -726,6 +773,15 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
                         m_jac, tmp[1], tmp[0], wsp1);
 
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -886,6 +942,15 @@ class IProductWRTDerivBase_SumFac_Hex : public Operator
                         m_base0,   m_base1,   m_derbase2,
                         m_jac,tmp[2],tmp[0],wsp1);
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -1073,6 +1138,15 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
                         m_base0,   m_base1,   m_derbase2,
                         m_jac,tmp[2],tmp[0],wsp1);
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -1280,6 +1354,15 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
                         m_base0,   m_base1,   m_derbase2,
                         m_jac,tmp[2],tmp[0],wsp1);
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
 

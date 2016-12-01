@@ -38,6 +38,8 @@
 #include <CardiacEPSolver/EquationSystems/BidomainRoth.h>
 #include <CardiacEPSolver/Filters/FilterCheckpointCellModel.h>
 
+using namespace std;
+
 namespace Nektar
 {
 
@@ -45,7 +47,7 @@ namespace Nektar
  * Registers the class with the Factory.
  */
 string BidomainRoth::className
-        = GetEquationSystemFactory().RegisterCreatorFunction(
+        = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
             "BidomainRoth",
             BidomainRoth::create,
             "Bidomain Roth model of cardiac electrophysiology.");
@@ -344,7 +346,7 @@ void BidomainRoth::DoImplicitSolve(
 
     StdRegions::ConstFactorMap factorsHelmholtz;
     // lambda = \Delta t
-    factorsHelmholtz[StdRegions::eFactorLambda] 
+    factorsHelmholtz[StdRegions::eFactorLambda]
                     = 1.0/lambda*m_chi*m_capMembrane;
 
     // ------------------------------

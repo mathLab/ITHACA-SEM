@@ -36,6 +36,8 @@
 
 #include <MultiRegions/ExpList1DHomogeneous2D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -66,6 +68,7 @@ namespace Nektar
             for(n = 0; n < points.num_elements(); ++n)
             {
                 m_lines[n] = points[n];
+                (*m_exp).push_back(points[n]->GetExp(0));
             }
 
             // Setup Default optimisation information.
@@ -282,7 +285,7 @@ namespace Nektar
         }
 
 
-        void ExpList1DHomogeneous2D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
+        void ExpList1DHomogeneous2D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion, int istrip)
         {
             int i,j;
             

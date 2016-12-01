@@ -191,6 +191,11 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_FillMode(
                 const int mode, 
                 Array<OneD, NekDouble> &outarray);  
+            STD_REGIONS_EXPORT virtual void v_GetFaceNumModes(
+                    const int                  fid,
+                    const Orientation          faceOrient,
+                    int &numModes0,
+                    int &numModes1);
 
             //---------------------------------------
             // Helper functions
@@ -252,8 +257,8 @@ namespace Nektar
             //---------------------------------------
             // Private helper functions
             //---------------------------------------
-            map<Mode, unsigned int, cmpop> m_map;
-            map<int, map<int, map<int, pair<int, int> > > > m_idxMap;
+            std::map<Mode, unsigned int, cmpop> m_map;
+            std::map<int, std::map<int, std::map<int, std::pair<int, int> > > > m_idxMap;
         };    
         typedef boost::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
     } //end of namespace

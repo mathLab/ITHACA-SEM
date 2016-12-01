@@ -387,6 +387,14 @@
             return Vmin(n,&x[0],incx);
         }
 
+        /// \brief Return number of NaN elements of x
+        template<class T>  int Nnan(int n, const Array<OneD, const T> &x, const int incx)
+        {
+            ASSERTL1(n * incx <= x.num_elements() + x.GetOffset(), "Array out of bounds");
+
+            return Nnan(n, &x[0], incx);
+        }
+
         /// \brief
         template<class T> T Dot(int n,
                                   const Array<OneD, const T> &w,

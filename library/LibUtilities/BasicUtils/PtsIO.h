@@ -44,16 +44,22 @@
 
 #include <tinyxml.h>
 
+#include <LibUtilities/Communication/Comm.h>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
+#include <LibUtilities/BasicUtils/FieldIOXml.h>
 
-using namespace std;
 namespace Nektar
 {
 namespace LibUtilities
 {
+using namespace std;
+
+typedef std::map<std::string, std::string> PtsMetaDataMap;
+static PtsMetaDataMap NullPtsMetaDataMap;
 
 LIB_UTILITIES_EXPORT void Import(const string &inFile,
                                  PtsFieldSharedPtr &ptsField);
@@ -61,24 +67,37 @@ LIB_UTILITIES_EXPORT void Import(const string &inFile,
 LIB_UTILITIES_EXPORT void Write(const string &outFile,
                                 const PtsFieldSharedPtr &ptsField);
 
-class PtsIO
+class PtsIO : public FieldIOXml
 {
-    public:
+public:
+    LIB_UTILITIES_EXPORT PtsIO(LibUtilities::CommSharedPtr pComm,
+                               bool sharedFilesystem = false);
 
-        LIB_UTILITIES_EXPORT PtsIO()
-        {
-        };
+    LIB_UTILITIES_EXPORT virtual ~PtsIO()
+    {
+    }
 
-        LIB_UTILITIES_EXPORT void Import(const string &inFile,
-                                         LibUtilities::PtsFieldSharedPtr &ptsField);
+    LIB_UTILITIES_EXPORT void Import(
+        const string &inFile,
+        PtsFieldSharedPtr &ptsField,
+        FieldMetaDataMap &fieldmetadatamap = NullFieldMetaDataMap);
 
-        LIB_UTILITIES_EXPORT void Write(
-            const string &outFile,
-            const LibUtilities::PtsFieldSharedPtr &ptsField);
+    LIB_UTILITIES_EXPORT void Write(const string &outFile,
+                                    const PtsFieldSharedPtr &ptsField);
+
+    LIB_UTILITIES_EXPORT void ImportFieldData(TiXmlDocument docInput,
+                                              PtsFieldSharedPtr &ptsField);
+
+protected:
+    LIB_UTILITIES_EXPORT void SetUpFieldMetaData(const std::string outname);
+
+    LIB_UTILITIES_EXPORT virtual std::string GetFileEnding() const
+    {
+        return "pts";
+    };
 };
 
 typedef boost::shared_ptr<PtsIO> PtsIOSharedPtr;
-
 }
 }
 #endif

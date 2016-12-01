@@ -1,0 +1,68 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% memoir.4ht                           2009-05-21-09:32 %
+% Copyright (C) 2003--2009      Eitan M. Gurari         %
+%                                                        %
+% This work may be distributed and/or modified under the %
+% conditions of the LaTeX Project Public License, either %
+% version 1.3c of this license or (at your option) any   %
+% later version. The latest version of this license is   %
+% in                                                     %
+%   http://www.latex-project.org/lppl.txt                %
+% and version 1.3c or later is part of all distributions %
+% of LaTeX version 2005/12/01 or later.                  %
+%                                                        %
+% This work has the LPPL maintenance status "maintained".%
+%                                                        %
+% This Current Maintainer of this work                   %
+% is Eitan M. Gurari.                                    %
+%                                                        %
+% If you modify this program your changing its signature %
+% with a directive of the following form will be         %
+% appreciated.                                           %
+%            \message{signature}                         %
+%                                                        %
+%                             gurari@cse.ohio-state.edu  %
+%                 http://www.cse.ohio-state.edu/~gurari  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\immediate\write-1{version 2009-05-21-09:32}
+
+\input book.4ht
+\input verse.4ht
+% Tables Handling
+\input array.4ht
+\input dcolumn.4ht
+\input tabularx.4ht
+\input booktabs.4ht
+\let\rm\empty
+\let\sf\empty
+\let\tt\empty
+\let\bf\empty
+\let\it\empty
+
+\def\@chapter[#1]#2{%
+   \gHAdvance\:mpNum by 1
+\HAssign\minipageNum=\:mpNum \relax
+%
+   {\SkipRefstepAnchor \let\addcontentsline\:gobbleIII\no@chapter[#1]{}%
+    \global\let\f@rtoc\f@rtoc
+    \global\let\f@rhdr\f@rhdr  }%
+   \HtmlEnv   \Toc:Title{#1}\:chapter{#2}}
+\NewConfigure{poemline}{2}
+
+\ifx \memgobble\:UnDef
+   \pend:defI\getthelinenumber{%
+   \let\sv:thepoemline\thepoemline
+   \pend:def\thepoemline{\a:poemline}%
+   \append:def\thepoemline{\b:poemline}}
+\append:defI\getthelinenumber{\let\thepoemline\sv:thepoemline}
+
+\else
+   \pend:defII\getthelinenumber{%
+   \let\sv:thepoemline\thepoemline
+   \pend:def\thepoemline{\a:poemline}%
+   \append:def\thepoemline{\b:poemline}}
+\append:defII\getthelinenumber{\let\thepoemline\sv:thepoemline}
+
+\fi
+\Hinput{memoir}
+\endinput

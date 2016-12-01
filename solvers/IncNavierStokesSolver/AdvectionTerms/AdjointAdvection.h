@@ -53,7 +53,7 @@ class AdjointAdvection: public SolverUtils::Advection
         };
 
         /// A map between  matrix keys and their associated block matrices.
-        typedef map< FloquetMatType, DNekBlkMatSharedPtr> FloquetBlockMatrixMap;
+        typedef std::map< FloquetMatType, DNekBlkMatSharedPtr> FloquetBlockMatrixMap;
         /// A shared pointer to a BlockMatrixMap.
         typedef boost::shared_ptr<FloquetBlockMatrixMap> FloquetBlockMatrixMapShPtr;
 
@@ -123,7 +123,9 @@ class AdjointAdvection: public SolverUtils::Advection
             const Array<OneD, Array<OneD, NekDouble> >        &advVel,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray,
-            const NekDouble                                   &time);
+            const NekDouble                                   &time,
+            const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
+            const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
 
         virtual void v_SetBaseFlow(
                 const Array<OneD, Array<OneD, NekDouble> >    &inarray);
@@ -136,7 +138,7 @@ class AdjointAdvection: public SolverUtils::Advection
             const NekDouble                                    m_period);
 
         void DFT(
-            const string                                       file,
+            const std::string                                  file,
                   Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble                                    m_slices);
 

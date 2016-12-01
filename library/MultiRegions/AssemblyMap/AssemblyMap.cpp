@@ -35,6 +35,8 @@
 
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -143,6 +145,21 @@ namespace Nektar
             }
 
 
+            if(pSession->DefinesGlobalSysSolnInfo(variable,
+                                                  "MaxIterations"))
+            {
+                m_maxIterations = boost::lexical_cast<int>(
+                        pSession->GetGlobalSysSolnInfo(variable,
+                                "MaxIterations").c_str());
+            }
+            else
+            {
+                pSession->LoadParameter("MaxIterations",
+                                        m_maxIterations,
+                                        5000);
+            }
+
+
             if(pSession->DefinesGlobalSysSolnInfo(variable,"SuccessiveRHS"))
             {
                 m_successiveRHS = boost::lexical_cast<int>(
@@ -169,6 +186,7 @@ namespace Nektar
             m_hash(0),
             m_solnType(oldLevelMap->m_solnType),
             m_preconType(oldLevelMap->m_preconType),
+            m_maxIterations(oldLevelMap->m_maxIterations),
             m_iterativeTolerance(oldLevelMap->m_iterativeTolerance),
             m_successiveRHS(oldLevelMap->m_successiveRHS),
             m_gsh(oldLevelMap->m_gsh),
@@ -239,7 +257,7 @@ namespace Nektar
             
             // Allocate memory to store the number of local dofs associated to
             // each of elemental boundaries of these patches
-            map<int, int> numLocalBndCoeffsPerPatchNew;
+            std::map<int, int> numLocalBndCoeffsPerPatchNew;
             for(int i = 0; i < numPatchesNew; i++)
             {
                 numLocalBndCoeffsPerPatchNew[i] = 0;
@@ -1193,6 +1211,11 @@ namespace Nektar
             return m_iterativeTolerance;
         }
 
+        int AssemblyMap::GetMaxIterations() const
+        {
+            return m_maxIterations;
+        }
+
         int AssemblyMap::GetSuccessiveRHS() const
         {
             return m_successiveRHS;
@@ -1209,7 +1232,7 @@ namespace Nektar
         }
 
         void AssemblyMap::PrintStats(
-            std::ostream &out, std::string variable) const
+            std::ostream &out, std::string variable, bool printHeader) const
         {
             LibUtilities::CommSharedPtr vRowComm
                 = m_session->GetComm()->GetRowComm();
@@ -1239,7 +1262,9 @@ namespace Nektar
             Array<OneD, NekDouble> tmpLoc (m_numLocalBndCoeffs,  1.0);
             Array<OneD, NekDouble> tmpGlob(m_numGlobalBndCoeffs, 0.0);
 
-            Vmath::Assmb(m_numLocalBndCoeffs, tmpLoc.get(), m_localToGlobalBndMap.get(), tmpGlob.get());
+            Vmath::Assmb(
+                m_numLocalBndCoeffs, tmpLoc.get(),
+                m_localToGlobalBndMap.get(), tmpGlob.get());
             UniversalAssembleBnd(tmpGlob);
 
             int totGlobDof     = globCnt;
@@ -1284,8 +1309,12 @@ namespace Nektar
 
             if (isRoot)
             {
-                out << "Assembly map statistics for field " << variable << ":"
-                    << endl;
+                if (printHeader)
+                {
+                    out << "Assembly map statistics for field " << variable
+                        << ":" << endl;
+                }
+
                 out << "  - Number of local/global dof             : "
                     << totLocalDof << " " << totGlobDof << endl;
                 out << "  - Number of local/global boundary dof    : "
@@ -1318,9 +1347,12 @@ namespace Nektar
                         }
                     }
 
-                    out << "  - Local dof dist. (min/max/mean/dev)     : "
-                        << minval << " " << maxval << " " << (mean / n) << " "
-                        << sqrt(mean2/n - mean*mean/n/n) << endl;
+                    if (maxval > 0.1)
+                    {
+                        out << "  - Local dof dist. (min/max/mean/dev)     : "
+                            << minval << " " << maxval << " " << (mean / n)
+                            << " " << sqrt(mean2/n - mean*mean/n/n) << endl;
+                    }
 
                     vRowComm->Block();
 
@@ -1357,6 +1389,69 @@ namespace Nektar
                 tmp[0] = m_numLocalBndCoeffs;
                 vRowComm->Send(0, tmp);
             }
+
+            // Either we have no more levels in the static condensation, or we
+            // are not multi-level.
+            if (!m_nextLevelLocalToGlobalMap)
+            {
+                return;
+            }
+
+            int level = 2;
+            AssemblyMapSharedPtr tmp = m_nextLevelLocalToGlobalMap;
+            while (tmp->m_nextLevelLocalToGlobalMap)
+            {
+                tmp = tmp->m_nextLevelLocalToGlobalMap;
+                ++level;
+            }
+
+            // Print out multi-level static condensation information.
+            if (n > 1)
+            {
+                if (isRoot)
+                {
+                    NekDouble mean = level, mean2 = mean * mean;
+                    int minval = level, maxval = level;
+
+                    Array<OneD, NekDouble> tmpRecv(1);
+                    for (i = 1; i < n; ++i)
+                    {
+                        vRowComm->Recv(i, tmpRecv);
+                        mean  += tmpRecv[0];
+                        mean2 += tmpRecv[0]*tmpRecv[0];
+
+                        if (tmpRecv[0] > maxval)
+                        {
+                            maxval = (int)(tmpRecv[0] + 0.5);
+                        }
+                        if (tmpRecv[0] < minval)
+                        {
+                            minval = (int)(tmpRecv[0] + 0.5);
+                        }
+                    }
+
+                    out << "  - M-level sc. dist. (min/max/mean/dev)   : "
+                        << minval << " " << maxval << " " << (mean / n) << " "
+                        << sqrt(mean2/n - mean*mean/n/n) << endl;
+                }
+                else
+                {
+                    Array<OneD, NekDouble> tmpSend(1);
+                    tmpSend[0] = level;
+                    vRowComm->Send(0, tmpSend);
+                }
+            }
+            else
+            {
+                out << "  - Number of static cond. levels          : "
+                    << level << endl;
+            }
+
+            if (isRoot)
+            {
+                out << "Stats at lowest static cond. level:" << endl;
+            }
+            tmp->PrintStats(out, variable, false);
         }
     } // namespace
 } // namespace

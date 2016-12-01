@@ -27,7 +27,18 @@ EXTERNALPROJECT_ADD(
         -DCMAKE_C_FLAGS:STRING=-fPIC\ -w
         -DGKLIB_PATH:PATH=${TPSRC}/modmetis-5.1.0/GKlib
         ${TPSRC}/modmetis-5.1.0
-)
+    )
+
+IF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # Clang 7.3 has a lovely bug that needs to be patched in order for it to
+    # compile.
+    IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "7.3")
+        EXTERNALPROJECT_ADD_STEP(modmetis-5.1.0 patch-install-path
+            COMMAND sed -i ".bak" "s|#define MAX_JBUFS 128|#define MAX_JBUFS 24|" ${TPSRC}/modmetis-5.1.0/GKlib/error.c
+            DEPENDERS build
+            DEPENDEES download)
+    ENDIF()
+ENDIF()
 
 SET(METIS_LIB metis CACHE FILEPATH "METIS library" FORCE)
 MARK_AS_ADVANCED(METIS_LIB)

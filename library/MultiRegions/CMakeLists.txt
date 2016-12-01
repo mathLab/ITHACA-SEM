@@ -2,6 +2,7 @@ SET(MULTI_REGIONS_SOURCES
 ./AssemblyMap/AssemblyMap.cpp
 ./AssemblyMap/AssemblyMapCG.cpp
 ./AssemblyMap/AssemblyMapDG.cpp
+./AssemblyMap/LocTraceToTraceMap.cpp
 ContField1D.cpp
 ContField2D.cpp
 ContField3D.cpp
@@ -89,6 +90,7 @@ SET(ASSEMBLY_MAP_HEADERS
 ./AssemblyMap/AssemblyMap.h
 ./AssemblyMap/AssemblyMapCG.h
 ./AssemblyMap/AssemblyMapDG.h
+./AssemblyMap/LocTraceToTraceMap.h
 )
 
 IF(NEKTAR_USE_MPI)
@@ -142,7 +144,7 @@ ENDIF( NEKTAR_USE_MPI )
 
 IF( NEKTAR_USE_PETSC )
     TARGET_LINK_LIBRARIES(MultiRegions LINK_PRIVATE ${PETSC_LIBRARIES})
-    ADD_DEPENDENCIES(MultiRegions petsc-3.5.2)
+    ADD_DEPENDENCIES(MultiRegions petsc-3.7.2)
 ENDIF( NEKTAR_USE_PETSC )
 
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/MultiRegions COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

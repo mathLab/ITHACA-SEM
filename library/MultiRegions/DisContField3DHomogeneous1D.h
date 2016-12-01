@@ -137,6 +137,10 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(
                 Array<OneD, int> &ElmtID,
                 Array<OneD,int> &EdgeID);
+            
+            virtual void v_GetBndElmtExpansion(int i,
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays);
 
             /// This funtion extract form a vector containing a full
             /// 3D-homogenous-1D field the value associated with a
@@ -248,9 +252,9 @@ namespace Nektar
            }
 
            /// @todo Fix Robin BCs for homogeneous case
-           virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
+           virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
            {
-               return map<int, RobinBCInfoSharedPtr>();
+               return std::map<int, RobinBCInfoSharedPtr>();
            }
 
            virtual void v_ExtractTracePhys(
@@ -259,6 +263,9 @@ namespace Nektar
 
            virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
+           
+           virtual void v_GetBoundaryNormals(int i,
+                            Array<OneD, Array<OneD, NekDouble> > &normals);
 
         private:
             // virtual functions

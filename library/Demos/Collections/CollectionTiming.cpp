@@ -46,6 +46,7 @@
 #include <Collections/Collection.h>
 #include <SpatialDomains/MeshGraph.h>
 
+using namespace std;
 using namespace Nektar;
 
 using boost::timer::cpu_timer;

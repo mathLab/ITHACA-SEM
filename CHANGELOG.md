@@ -25,6 +25,8 @@ v4.4.0
 - New options for load balancing (DOF or BOUNDARY) in mesh partitioner (!617)
 - Rework nodal utilities to support nodal prismatic elements (!660)
 - Update Body/Field forces at each timestep (!665)
+- Extend ExtractDataToCoeffs to support interpolation between basis types for
+  quads and hexahedra (!682)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)
@@ -67,7 +69,9 @@ v4.4.0
 
 v4.3.5
 ------
-**Library**
+**Library:**
+- Fix issue with parallel output (!699)
+- Fix performance issue with iterative full solver (!693)
 - Enforced precision on history point output (!706)
 
 **Documentation**

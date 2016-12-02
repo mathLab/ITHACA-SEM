@@ -45,10 +45,19 @@ namespace Nektar
 namespace Utilities
 {
 
-void ProcessVarOpti::BuildDerivUtil(int o)
+map<LibUtilities::ShapeType, DerivUtilSharedPtr> ProcessVarOpti::BuildDerivUtil(int o)
 {
     //build Vandermonde information
-    switch (m_mesh->m_spaceDim)
+    map<LibUtilities::ShapeType, DerivUtilSharedPtr> ret;
+
+    map<LibUtilities::ShapeType, LibUtilities::PointsType> typeMap;
+    typeMap[LibUtilities::eTriangle] = LibUtilities::eNodalTriSPI;
+    typeMap[LibUtilities::eQuadrilateral] = LibUtilities::eNodalQuadElec;
+    typeMap[LibUtilities::eTetrahedron] = LibUtilities::eNodalTetSPI;
+    typeMap[LibUtilities::ePrism] = LibUtilities::eNodalPrismSPI;
+    typeMap[LibUtilities::eHexahedron] = LibUtilities::eNodalHexElec;
+
+    /*switch (m_mesh->m_spaceDim)
     {
         case 2:
         {
@@ -328,14 +337,15 @@ void ProcessVarOpti::BuildDerivUtil(int o)
                 derivUtil[st]->VdmD[2] = interp * derivUtil[st]->VdmDStd[2];
                 NekVector<NekDouble> quadWi(qds);
                 derivUtil[st]->quadW = quadWi;
-            }*/
+            }
         }
-    }
+    }*/
+    return ret;
 }
 
 vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSharedPtr> elLock)
 {
-    NodeSet ignoredNodes;
+    /*NodeSet ignoredNodes;
     for(int i = 0; i < elLock.size(); i++)
     {
         vector<NodeSharedPtr> nodes;
@@ -561,12 +571,12 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
         }
         ret.push_back(layer);
     }
-    return ret;
+    return ret;*/
 }
 
 void ProcessVarOpti::GetElementMap(int o)
 {
-    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+    /*for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
         vector<NodeSharedPtr> ns;
@@ -589,12 +599,12 @@ void ProcessVarOpti::GetElementMap(int o)
         }
 
         ASSERTL0(derivUtil[dataSet[i]->GetEl()->GetShapeType()]->ptsStd == ns.size(), "mismatch node count");
-    }
+    }*/
 }
 
 vector<ElementSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
 {
-    vector<ElementSharedPtr> elBelowThres;
+    /*vector<ElementSharedPtr> elBelowThres;
     for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
     {
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
@@ -740,7 +750,7 @@ vector<ElementSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
         }
     }
 
-    return ret;
+    return ret;*/
 }
 
 }

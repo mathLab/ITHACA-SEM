@@ -51,7 +51,7 @@ public:
     NodeOpti1D3D(NodeSharedPtr n,
                  std::vector<ElUtilSharedPtr> e,
                  ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
-                 optimiser o, CADCurveSharedPtr c)
+                 optiType o, CADCurveSharedPtr c)
         : NodeOpti(n,e,r,d,o), curve(c)
     {
     }
@@ -65,7 +65,7 @@ public:
         NodeSharedPtr n,
         std::vector<ElUtilSharedPtr> e,
         ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
-        optimiser o)
+        optiType o)
     {
         std::vector<std::pair<int, CADCurveSharedPtr> > cs = n->GetCADCurves();
         return NodeOptiSharedPtr(new NodeOpti1D3D(n, e, r, d, o, cs[0].second));
@@ -82,7 +82,7 @@ public:
     NodeOpti2D3D(NodeSharedPtr n,
                  std::vector<ElUtilSharedPtr> e,
                  ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
-                 optimiser o, CADSurfSharedPtr s)
+                 optiType o, CADSurfSharedPtr s)
         : NodeOpti(n,e,r,d,o), surf(s)
     {
     }
@@ -96,7 +96,7 @@ public:
         NodeSharedPtr n,
         std::vector<ElUtilSharedPtr> e,
         ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
-        optimiser o)
+        optiType o)
     {
         std::vector<std::pair<int, CADSurfSharedPtr> > ss = n->GetCADSurfs();
         return NodeOptiSharedPtr(new NodeOpti2D3D(n, e, r, d, o, ss[0].second));

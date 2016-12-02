@@ -104,19 +104,19 @@ void ProcessVarOpti::Process()
 
     if(m_config["linearelastic"].beenSet)
     {
-        opti = eLinEl;
+        m_opti = eLinEl;
     }
     else if(m_config["winslow"].beenSet)
     {
-        opti = eWins;
+        m_opti = eWins;
     }
     else if(m_config["roca"].beenSet)
     {
-        opti = eRoca;
+        m_opti = eRoca;
     }
     else if(m_config["hyperelastic"].beenSet)
     {
-        opti = eHypEl;
+        m_opti = eHypEl;
     }
     else
     {
@@ -129,32 +129,27 @@ void ProcessVarOpti::Process()
     //m_mesh->m_nummode = m_config["nq"].as<int>();
 
     EdgeSet::iterator eit;
-    m_mesh->m_nummode = -1;
-    if (m_mesh->m_nummode == -1)
+    bool fd = false;
+
+    if(m_config["nq"].beenSet)
     {
-        bool fd = false;
+        m_mesh->m_nummode = m_config["nq"].as<int>();
+        fd = true;
+    }
 
-        if(m_config["nq"].beenSet)
+    if(!fd)
+    {
+        for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
         {
-            m_mesh->m_nummode = m_config["nq"].as<int>();
-            fd = true;
-        }
-
-        if(!fd)
-        {
-            for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+            if((*eit)->m_edgeNodes.size() > 0)
             {
-                if((*eit)->m_edgeNodes.size() > 0)
-                {
-                    m_mesh->m_nummode = (*eit)->m_edgeNodes.size() + 2;
-                    fd = true;
-                    break;
-                }
+                m_mesh->m_nummode = (*eit)->m_edgeNodes.size() + 2;
+                fd = true;
+                break;
             }
         }
-
-        ASSERTL0(fd,"failed to find order of mesh");
     }
+    ASSERTL0(fd,"failed to find order of mesh");
 
     int intOrder = m_config["overint"].as<NekDouble>();
 
@@ -168,12 +163,13 @@ void ProcessVarOpti::Process()
         ASSERTL0(false,"cannot deal with manifolds");
     }
 
-    res = boost::shared_ptr<Residual>(new Residual);
-    res->val = 1.0;
+    m_res = boost::shared_ptr<Residual>(new Residual);
+    m_res->val = 1.0;
 
     m_mesh->MakeOrder(m_mesh->m_nummode-1,LibUtilities::eGaussLobattoLegendre);
-    BuildDerivUtil(intOrder);
-    GetElementMap(intOrder);
+    map<LibUtilities::ShapeType, DerivUtilSharedPtr> derivUtils =
+                                                    BuildDerivUtil(intOrder);
+    /*GetElementMap(intOrder);
 
     vector<ElementSharedPtr> elLock;
 
@@ -372,7 +368,7 @@ void ProcessVarOpti::Process()
     cout << "Time to compute: " << t.TimePerTest(1) << endl;
 
     cout << "Invalid at end:\t\t" << res->startInv << endl;
-    cout << "Worst at end:\t\t" << res->worstJac << endl;
+    cout << "Worst at end:\t\t" << res->worstJac << endl;*/
 }
 
 }

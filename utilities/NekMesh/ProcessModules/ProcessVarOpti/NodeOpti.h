@@ -55,7 +55,7 @@ public:
     NodeOpti(NodeSharedPtr n,
              std::vector<ElUtilSharedPtr> e,
              ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
-             optimiser o)
+             optiType o)
         : node(n), res(r), derivUtil(d), opti(o)
     {
         //filter element types within d vector
@@ -91,7 +91,7 @@ protected:
     NekDouble minJac;
     ResidualSharedPtr res;
     std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> derivUtil;
-    optimiser opti;
+    optiType opti;
 
     static const NekDouble gam;
 
@@ -108,7 +108,7 @@ typedef LibUtilities::NekFactory<int,
                                  std::vector<ElUtilSharedPtr>,
                                  ResidualSharedPtr,
                                  std::map<LibUtilities::ShapeType,DerivUtilSharedPtr>,
-                                 optimiser> NodeOptiFactory;
+                                 optiType> NodeOptiFactory;
 
 NodeOptiFactory &GetNodeOptiFactory();
 
@@ -119,7 +119,7 @@ public:
     NodeOpti3D3D(NodeSharedPtr n,
                  std::vector<ElUtilSharedPtr> e,
                  ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
-                 optimiser o)
+                 optiType o)
                  : NodeOpti(n,e,r,d,o)
     {
     }
@@ -133,7 +133,7 @@ public:
         NodeSharedPtr n,
         std::vector<ElUtilSharedPtr> e,
         ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
-        optimiser o)
+        optiType o)
     {
         return NodeOptiSharedPtr(new NodeOpti3D3D(n, e, r, d, o));
     }
@@ -148,7 +148,7 @@ public:
     NodeOpti2D2D(NodeSharedPtr n,
                  std::vector<ElUtilSharedPtr> e,
                  ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
-                 optimiser o)
+                 optiType o)
                  : NodeOpti(n,e,r,d,o)
     {
     }
@@ -161,7 +161,7 @@ public:
     static NodeOptiSharedPtr create(
         NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
         ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
-        optimiser o)
+        optiType o)
     {
         return NodeOptiSharedPtr(new NodeOpti2D2D(n, e, r, d, o));
     }

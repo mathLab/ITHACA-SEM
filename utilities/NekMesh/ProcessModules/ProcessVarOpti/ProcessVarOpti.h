@@ -58,7 +58,7 @@ struct DerivUtil
 };
 typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
 
-enum optimiser
+enum optiType
 {
     eLinEl,
     eWins,
@@ -98,18 +98,17 @@ public:
 private:
     typedef std::map<int, std::vector<ElUtilSharedPtr> > NodeElMap;
 
-    void BuildDerivUtil(int o);
+    std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> BuildDerivUtil(int o);
     void GetElementMap(int o);
     std::vector<ElementSharedPtr> GetLockedElements(NekDouble thres);
     std::vector<Array<OneD, NekDouble> > MappingIdealToRef(ElementSharedPtr el);
     std::vector<std::vector<NodeSharedPtr> > GetColouredNodes(std::vector<ElementSharedPtr> elLock);
 
-    NodeElMap nodeElMap;
-    std::vector<ElUtilSharedPtr> dataSet;
+    NodeElMap m_nodeElMap;
+    std::vector<ElUtilSharedPtr> m_dataSet;
 
-    ResidualSharedPtr res;
-    std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> derivUtil;
-    optimiser opti;
+    ResidualSharedPtr m_res;
+    optiType m_opti;
 };
 
 }

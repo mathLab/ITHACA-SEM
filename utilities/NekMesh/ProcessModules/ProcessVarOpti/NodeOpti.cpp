@@ -74,7 +74,7 @@ void NodeOpti::CalcMinJac()
     {
         for(int i = 0; i < typeIt->second.size(); i++)
         {
-            minJac = min(minJac,typeIt->second[i]->minJac);
+            minJac = min(minJac,typeIt->second[i]->GetMinJac());
         }
     }
 }
@@ -91,7 +91,6 @@ NekDouble dir[12][3] = {{1,0,0},
                        {-1,0,-1},
                        {0,1,1},
                        {0,-1,-1}};
-
 
 int NodeOpti2D2D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
     22, NodeOpti2D2D::create, "2D2D");

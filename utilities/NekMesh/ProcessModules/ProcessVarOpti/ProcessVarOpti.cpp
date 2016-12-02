@@ -245,7 +245,7 @@ void ProcessVarOpti::Process()
 
         for(int i = 0; i < m_dataSet.size(); i++)
         {
-            histFile << m_dataSet[i]->scaledJac << endl;
+            histFile << m_dataSet[i]->GetScaledJac() << endl;
         }
         histFile.close();
     }
@@ -355,7 +355,7 @@ void ProcessVarOpti::Process()
 
         for(int i = 0; i < m_dataSet.size(); i++)
         {
-            histFile << m_dataSet[i]->scaledJac << endl;
+            histFile << m_dataSet[i]->GetScaledJac() << endl;
         }
         histFile.close();
     }

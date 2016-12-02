@@ -84,33 +84,15 @@ void ElUtil::MappingIdealToRef()
     if(m_el->GetConf().m_e == LibUtilities::eQuadrilateral)
     {
         LibUtilities::PointsKey pkey1(m_mode,
-                                      LibUtilities::eGaussLobattoLegendre);
+                                      LibUtilities::eNodalQuadElec);
         LibUtilities::PointsKey pkey2(m_mode + m_order,
-                                      LibUtilities::eGaussLobattoLegendre);
+                                      LibUtilities::eNodalQuadElec);
 
         Array<OneD, NekDouble> u1(m_derivUtil->ptsStd), v1(m_derivUtil->ptsStd),
-                               u2(m_derivUtil->pts), v2(m_derivUtil->pts), tmp, tmp2;
+                               u2(m_derivUtil->pts), v2(m_derivUtil->pts);
 
-        LibUtilities::PointsManager()[pkey1]->GetPoints(tmp);
-        LibUtilities::PointsManager()[pkey2]->GetPoints(tmp2);
-
-        for(int i = 0, ct = 0; i < m_mode; i++)
-        {
-            for(int j = 0; j < m_mode; j++, ct++)
-            {
-                u1[ct] = tmp[j];
-                v1[ct] = tmp[i];
-            }
-        }
-
-        for(int i = 0, ct = 0; i < m_mode+m_order; i++)
-        {
-            for(int j = 0; j < m_mode+m_order; j++, ct++)
-            {
-                u2[ct] = tmp2[j];
-                v2[ct] = tmp2[i];
-            }
-        }
+        LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1);
+        LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2);
 
         vector<Array<OneD, NekDouble> > xyz(4);
         vector<NodeSharedPtr> ns = m_el->GetVertexList();
@@ -405,41 +387,14 @@ void ElUtil::MappingIdealToRef()
     else if (m_el->GetConf().m_e == LibUtilities::eHexahedron)
     {
         LibUtilities::PointsKey pkey1(m_mode,
-                                      LibUtilities::eGaussLobattoLegendre);
+                                      LibUtilities::eNodalHexElec);
         LibUtilities::PointsKey pkey2(m_mode+m_order,
-                                      LibUtilities::eGaussLobattoLegendre);
+                                      LibUtilities::eNodalHexElec);
         Array<OneD, NekDouble> u1(m_derivUtil->ptsStd), v1(m_derivUtil->ptsStd), w1(m_derivUtil->ptsStd),
-                               u2(m_derivUtil->pts),    v2(m_derivUtil->pts),  w2(m_derivUtil->pts),
-                               tmp, tmp2;
+                               u2(m_derivUtil->pts),    v2(m_derivUtil->pts),  w2(m_derivUtil->pts);
 
-        LibUtilities::PointsManager()[pkey1]->GetPoints(tmp);
-        LibUtilities::PointsManager()[pkey2]->GetPoints(tmp2);
-
-        for(int i = 0, ct = 0; i < m_mode; i++)
-        {
-            for(int j = 0; j < m_mode; j++)
-            {
-                for(int k = 0; k < m_mode; k++, ct++)
-                {
-                    u1[ct] = tmp[k];
-                    v1[ct] = tmp[j];
-                    w1[ct] = tmp[i];
-                }
-            }
-        }
-
-        for(int i = 0, ct = 0; i < m_mode+m_order; i++)
-        {
-            for(int j = 0; j < m_mode+m_order; j++)
-            {
-                for(int k = 0; k < m_mode+m_order; k++, ct++)
-                {
-                    u1[ct] = tmp2[k];
-                    v1[ct] = tmp2[j];
-                    w1[ct] = tmp2[i];
-                }
-            }
-        }
+        LibUtilities::PointsManager()[pkey1]->GetPoints(u1, v1, w1);
+        LibUtilities::PointsManager()[pkey2]->GetPoints(u2, v2, w2);
 
         vector<Array<OneD, NekDouble> > xyz(8);
         vector<NodeSharedPtr> ns = m_el->GetVertexList();
@@ -683,7 +638,7 @@ void ElUtil::Evaluate()
     m_res->worstJac = min(m_res->worstJac,(mn2 / mx2));
     mtx2.unlock();
 
-    scaledJac = (mn2/mx2) ;
+    m_scaledJac = (mn2/mx2) ;
 }
 
 void ElUtil::InitialMinJac()
@@ -764,7 +719,7 @@ void ElUtil::InitialMinJac()
         }
     }
 
-    minJac = mn;
+    m_minJac = mn;
 }
 
 ElUtilJob* ElUtil::GetJob()

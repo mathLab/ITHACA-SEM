@@ -68,10 +68,9 @@ public:
         return m_el->GetId();
     }
 
+    //leaving these varibles as public for sake of efficency 
     std::vector<std::vector<NekDouble *> > nodes;
     std::vector<Array<OneD, NekDouble> > maps, mapsStd;
-    NekDouble minJac;
-    NekDouble scaledJac;
 
     void Evaluate();
     void InitialMinJac();
@@ -86,6 +85,16 @@ public:
         return m_idmap[in];
     }
 
+    NekDouble GetScaledJac()
+    {
+        return m_scaledJac;
+    }
+
+    NekDouble &GetMinJac()
+    {
+        return m_minJac;
+    }
+
 private:
 
     void MappingIdealToRef();
@@ -95,7 +104,9 @@ private:
     int m_mode;
     int m_order;
     std::map<int,int> m_idmap;
-    std::vector<std::vector<std::vector<Array<OneD, NekDouble> > > > m_mapder;
+
+    NekDouble m_scaledJac;
+    NekDouble m_minJac;
 
     DerivUtilSharedPtr m_derivUtil;
     ResidualSharedPtr m_res;

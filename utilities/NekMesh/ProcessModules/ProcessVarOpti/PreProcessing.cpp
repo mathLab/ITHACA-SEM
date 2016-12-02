@@ -446,7 +446,7 @@ vector<ElUtilSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
     vector<ElUtilSharedPtr> elBelowThres;
     for (int i = 0; i < m_dataSet.size(); ++i)
     {
-        if(m_dataSet[i]->scaledJac < thres)
+        if(m_dataSet[i]->GetScaledJac() < thres)
         {
             elBelowThres.push_back(m_dataSet[i]);
         }
@@ -458,14 +458,14 @@ vector<ElUtilSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
 
     for (int i = 0; i < elBelowThres.size(); i++)
     {
-        t = inmesh.insert(elBelowThres[i]->GetEl()->GetId());
+        t = inmesh.insert(elBelowThres[i]->GetId());
 
         vector<FaceSharedPtr> f = elBelowThres[i]->GetEl()->GetFaceList();
         for (int j = 0; j < f.size(); j++)
         {
             for (int k = 0; k < f[j]->m_elLink.size(); k++)
             {
-                if (f[j]->m_elLink[k].first->GetId() == elBelowThres[i]->GetEl()->GetId())
+                if (f[j]->m_elLink[k].first->GetId() == elBelowThres[i]->GetId())
                     continue;
 
                 t = inmesh.insert(f[j]->m_elLink[k].first->GetId());
@@ -488,7 +488,7 @@ vector<ElUtilSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
             {
                 for (int l = 0; l < f[k]->m_elLink.size(); l++)
                 {
-                    if (f[k]->m_elLink[l].first->GetId() == tmp[j]->GetEl()->GetId())
+                    if (f[k]->m_elLink[l].first->GetId() == tmp[j]->GetId())
                         continue;
 
                     t = inmesh.insert(f[k]->m_elLink[l].first->GetId());
@@ -505,7 +505,7 @@ vector<ElUtilSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
     vector<ElUtilSharedPtr> ret;
     for (int i = 0; i < m_dataSet.size(); ++i)
     {
-        boost::unordered_set<int>::iterator s = inmesh.find(m_dataSet[i]->GetEl()->GetId());
+        boost::unordered_set<int>::iterator s = inmesh.find(m_dataSet[i]->GetId());
         if(s == inmesh.end())
         {
             ret.push_back(m_dataSet[i]);

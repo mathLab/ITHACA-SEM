@@ -63,18 +63,18 @@ public:
 
 protected:
 
-    void  GenerateNormals(std::vector<ElementSharedPtr> &el,
-                            MeshSharedPtr &mesh);
-    NekDouble CrossProdMag (Node &a, Node &b);
-    void   UnitCrossProd   (Node &a, Node &b, Node &c);
+    void  GenerateNormals(std::vector<NekMeshUtils::ElementSharedPtr> &el,
+                            NekMeshUtils::MeshSharedPtr &mesh);
+    NekDouble CrossProdMag (NekMeshUtils::Node &a, NekMeshUtils::Node &b);
+    void   UnitCrossProd   (NekMeshUtils::Node &a, NekMeshUtils::Node &b, NekMeshUtils::Node &c);
     NekDouble Blend        (NekDouble r);
     void   SuperBlend      (std::vector<NekDouble> &r,
-                            std::vector<Node>   &Q,
-                            Node           &P,
+                            std::vector<NekMeshUtils::Node>   &Q,
+                            NekMeshUtils::Node           &P,
                             std::vector<NekDouble> &blend);
 
-    void  FindNormalFromPlyFile(MeshSharedPtr &plymesh,
-                                std::map<int,NodeSharedPtr> &surfverts);
+    void  FindNormalFromPlyFile(NekMeshUtils::MeshSharedPtr &plymesh,
+                                std::map<int,NekMeshUtils::NodeSharedPtr> &surfverts);
 };
 
 }

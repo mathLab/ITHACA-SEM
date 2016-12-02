@@ -67,6 +67,9 @@ v4.4.0
 
 v4.3.5
 ------
+**Library**
+- Enforced precision on history point output (!706)
+
 **Documentation**
 - Update build instructions in user guide for Windows (!692)
 

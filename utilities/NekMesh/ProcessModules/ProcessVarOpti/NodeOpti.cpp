@@ -51,15 +51,6 @@ namespace Utilities
 
 NodeOptiFactory &GetNodeOptiFactory()
 {
-    /*
-    typedef Loki::SingletonHolder<NodeOptiFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::ClassLevelLockable> Type;
-    return Type::Instance();
-    */
-    //typedef Loki::SingletonHolder<NodeOptiFactory, Loki::CreateUsingNew,
-    //                              Loki::NoDestroy, Loki::ClassLevelLockable> Type;
-    //return Type::Instance();
-
     static NodeOptiFactory asd;
     return asd;
 }
@@ -70,11 +61,11 @@ void NodeOpti::CalcMinJac()
 {
     m_minJac = numeric_limits<double>::max();
     map<LibUtilities::ShapeType,vector<ElUtilSharedPtr> >::iterator typeIt;
-    for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
+    for(typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
     {
         for(int i = 0; i < typeIt->second.size(); i++)
         {
-            m_minJac = min(minJac,typeIt->second[i]->GetMinJac());
+            m_minJac = min(m_minJac,typeIt->second[i]->GetMinJac());
         }
     }
 }
@@ -105,14 +96,14 @@ void NodeOpti2D2D::Optimise()
     if (m_grad[0]*m_grad[0] + m_grad[1]*m_grad[1] > gradTol())
     {
         //needs to optimise
-        NekDouble xc       = node->m_x;
-        NekDouble yc       = node->m_y;
+        NekDouble xc       = m_node->m_x;
+        NekDouble yc       = m_node->m_y;
 
-        Array<OneD, NekDouble> sk(2), dk(2);
+        Array<OneD, NekDouble> sk(2);
         NekDouble val;
 
         // Calculate minimum eigenvalue
-        MinEigen<2>(val, dk);
+        MinEigen<2>(val);
 
         if (val < 1e-6)
         {
@@ -132,8 +123,8 @@ void NodeOpti2D2D::Optimise()
         while (alpha > alphaTol())
         {
             // Update node
-            node->m_x = xc + alpha * sk[0];
-            node->m_y = yc + alpha * sk[1];
+            m_node->m_x = xc + alpha * sk[0];
+            m_node->m_y = yc + alpha * sk[1];
 
             newVal = GetFunctional<2>(minJacNew,false);
 
@@ -150,34 +141,34 @@ void NodeOpti2D2D::Optimise()
         if (!found)
         {
             //reset the node
-            node->m_x = xc;
-            node->m_y = yc;
+            m_node->m_x = xc;
+            m_node->m_y = yc;
 
             mtx.lock();
-            res->nReset[2]++;
+            m_res->nReset[2]++;
             mtx.unlock();
         }
         else
         {
-            minJac = minJacNew;
+            m_minJac = minJacNew;
 
             mtx.lock();
             if(alpha < 1.0)
             {
-                res->alphaI++;
+                m_res->alphaI++;
             }
             mtx.unlock();
         }
 
         mtx.lock();
-        res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+
-                            (node->m_y-yc)*(node->m_y-yc)),
-                       res->val);
+        m_res->val = max(sqrt((m_node->m_x-xc)*(m_node->m_x-xc)+
+                              (m_node->m_y-yc)*(m_node->m_y-yc)),
+                              m_res->val);
         mtx.unlock();
     }
 
     mtx.lock();
-    res->func += newVal;
+    m_res->func += newVal;
     mtx.unlock();
 }
 
@@ -190,41 +181,41 @@ void NodeOpti3D3D::Optimise()
     NekDouble currentW = GetFunctional<3>(minJacNew);
     NekDouble newVal = currentW;
 
-    if(G[0]*G[0] + G[1]*G[1] + G[2]*G[2] > gradTol())
+    if(m_grad[0]*m_grad[0] + m_grad[1]*m_grad[1] + m_grad[2]*m_grad[2] > gradTol())
     {
         //needs to optimise
-        NekDouble xc       = node->m_x;
-        NekDouble yc       = node->m_y;
-        NekDouble zc       = node->m_z;
+        NekDouble xc       = m_node->m_x;
+        NekDouble yc       = m_node->m_y;
+        NekDouble zc       = m_node->m_z;
 
-        Array<OneD, NekDouble> sk(3), dk(3);
+        Array<OneD, NekDouble> sk(3);
         NekDouble val;
 
         // Calculate minimum eigenvalue
-        MinEigen<3>(val, dk);
+        MinEigen<3>(val);
 
-        if (val < 1e-4)
+        if (val < 1e-6)
         {
             // Add constant identity to Hessian matrix.
-            G[3] += 1e-4 - val;
-            G[6] += 1e-4 - val;
-            G[8] += 1e-4 - val;
+            m_grad[3] += 1e-6 - val;
+            m_grad[6] += 1e-6 - val;
+            m_grad[8] += 1e-6 - val;
         }
 
         //calculate sk
-        NekDouble det = G[3]*(G[6]*G[8]-G[7]*G[7])
-                       -G[4]*(G[4]*G[8]-G[5]*G[7])
-                       +G[5]*(G[4]*G[7]-G[5]*G[6]);
+        NekDouble det = m_grad[3]*(m_grad[6]*m_grad[8]-m_grad[7]*m_grad[7])
+                       -m_grad[4]*(m_grad[4]*m_grad[8]-m_grad[5]*m_grad[7])
+                       +m_grad[5]*(m_grad[4]*m_grad[7]-m_grad[5]*m_grad[6]);
 
-        sk[0] = G[0]*(G[6]*G[8]-G[7]*G[7]) +
-                G[1]*(G[5]*G[7]-G[4]*G[8]) +
-                G[2]*(G[4]*G[7]-G[3]*G[7]);
-        sk[1] = G[0]*(G[7]*G[5]-G[4]*G[5]) +
-                G[1]*(G[3]*G[8]-G[5]*G[5]) +
-                G[2]*(G[4]*G[5]-G[3]*G[7]);
-        sk[2] = G[0]*(G[4]*G[7]-G[6]*G[5]) +
-                G[1]*(G[4]*G[5]-G[3]*G[7]) +
-                G[2]*(G[3]*G[6]-G[4]*G[4]);
+        sk[0] = m_grad[0]*(m_grad[6]*m_grad[8]-m_grad[7]*m_grad[7]) +
+                m_grad[1]*(m_grad[5]*m_grad[7]-m_grad[4]*m_grad[8]) +
+                m_grad[2]*(m_grad[4]*m_grad[7]-m_grad[3]*m_grad[7]);
+        sk[1] = m_grad[0]*(m_grad[7]*m_grad[5]-m_grad[4]*m_grad[5]) +
+                m_grad[1]*(m_grad[3]*m_grad[8]-m_grad[5]*m_grad[5]) +
+                m_grad[2]*(m_grad[4]*m_grad[5]-m_grad[3]*m_grad[7]);
+        sk[2] = m_grad[0]*(m_grad[4]*m_grad[7]-m_grad[6]*m_grad[5]) +
+                m_grad[1]*(m_grad[4]*m_grad[5]-m_grad[3]*m_grad[7]) +
+                m_grad[2]*(m_grad[3]*m_grad[6]-m_grad[4]*m_grad[4]);
 
         sk[0] /= det * -1.0;
         sk[1] /= det * -1.0;
@@ -232,29 +223,24 @@ void NodeOpti3D3D::Optimise()
 
         bool found  = false;
 
-        NekDouble pg = (G[0]*sk[0]+G[1]*sk[1]+G[2]*sk[2]);
+        NekDouble pg = (m_grad[0]*sk[0]+m_grad[1]*sk[1]+m_grad[2]*sk[2]);
 
         //normal gradient line Search
         NekDouble alpha    = 1.0;
-        NekDouble hes = sk[0] * (sk[0]*G[3] + sk[1]*G[4] + sk[2]*G[5]) +
-                        sk[1] * (sk[0]*G[4] + sk[1]*G[6] + sk[2]*G[7]) +
-                        sk[2] * (sk[0]*G[5] + sk[1]*G[7] + sk[2]*G[8]);
-        hes = min(hes,0.0);
 
         while (alpha > alphaTol())
         {
             // Update node
-            node->m_x = xc + alpha * sk[0];
-            node->m_y = yc + alpha * sk[1];
-            node->m_z = zc + alpha * sk[2];
+            m_node->m_x = xc + alpha * sk[0];
+            m_node->m_y = yc + alpha * sk[1];
+            m_node->m_z = zc + alpha * sk[2];
 
             newVal = GetFunctional<3>(minJacNew,false);
             //dont need the hessian again this function updates G to be the new
             //location
             //
             // Wolfe conditions
-            if (newVal <= currentW + c1() * (
-                    alpha*pg+ 0.5*alpha*alpha*hes))
+            if (newVal <= currentW + c1() * alpha*pg)
             {
                 found = true;
                 break;
@@ -265,33 +251,34 @@ void NodeOpti3D3D::Optimise()
 
         if(!found)
         {
-            node->m_x = xc;
-            node->m_y = yc;
-            node->m_z = zc;
+            m_node->m_x = xc;
+            m_node->m_y = yc;
+            m_node->m_z = zc;
 
             mtx.lock();
-            res->nReset[2]++;
+            m_res->nReset[2]++;
             mtx.unlock();
         }
         else
         {
-            minJac = minJacNew;
+            m_minJac = minJacNew;
 
             mtx.lock();
             if(alpha < 1.0)
             {
-                res->alphaI++;
+                m_res->alphaI++;
             }
             mtx.unlock();
         }
 
         mtx.lock();
-        res->val = max(sqrt((node->m_x-xc)*(node->m_x-xc)+(node->m_y-yc)*(node->m_y-yc)+
-                            (node->m_z-zc)*(node->m_z-zc)),res->val);
+        m_res->val = max(sqrt((m_node->m_x-xc)*(m_node->m_x-xc)+
+                              (m_node->m_y-yc)*(m_node->m_y-yc)+
+                              (m_node->m_z-zc)*(m_node->m_z-zc)),m_res->val);
         mtx.unlock();
     }
     mtx.lock();
-    res->func += newVal;
+    m_res->func += newVal;
     mtx.unlock();
 }
 

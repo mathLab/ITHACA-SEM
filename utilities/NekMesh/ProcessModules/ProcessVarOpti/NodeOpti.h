@@ -82,7 +82,7 @@ protected:
     Array<OneD, NekDouble> m_grad;
 
     template<int DIM> int IsIndefinite();
-    template<int DIM> void MinEigen(NekDouble &val, Array<OneD, NekDouble> &vec);
+    template<int DIM> void MinEigen(NekDouble &val);
 
     NekDouble m_minJac;
     ResidualSharedPtr m_res;

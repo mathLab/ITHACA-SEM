@@ -52,10 +52,10 @@ template<> int NodeOpti::IsIndefinite<2>()
     Array<OneD, NekDouble> eigR(2);
     Array<OneD, NekDouble> eigI(2);
     NekMatrix<NekDouble> H(2,2);
-    H(0,0) = G[2];
-    H(1,0) = G[3];
+    H(0,0) = m_grad[2];
+    H(1,0) = m_grad[3];
     H(0,1) = H(1,0);
-    H(1,1) = G[4];
+    H(1,1) = m_grad[4];
 
     //cout << H << endl << endl;
 
@@ -96,15 +96,15 @@ template<> int NodeOpti::IsIndefinite<3>()
     Array<OneD, NekDouble> eigR(3);
     Array<OneD, NekDouble> eigI(3);
     NekMatrix<NekDouble> H(3,3);
-    H(0,0) = G[3];
-    H(1,0) = G[4];
+    H(0,0) = m_grad[3];
+    H(1,0) = m_grad[4];
     H(0,1) = H(1,0);
-    H(2,0) = G[5];
+    H(2,0) = m_grad[5];
     H(0,2) = H(2,0);
-    H(1,1) = G[6];
-    H(2,1) = G[7];
+    H(1,1) = m_grad[6];
+    H(2,1) = m_grad[7];
     H(1,2) = H(2,1);
-    H(2,2) = G[8];
+    H(2,2) = m_grad[8];
 
     int nVel = 3;
     char jobvl = 'N', jobvr = 'N';
@@ -138,20 +138,20 @@ template<> int NodeOpti::IsIndefinite<3>()
     return 0;
 }
 
-template<int DIM> void NodeOpti::MinEigen(NekDouble &val, Array<OneD, NekDouble> &vec)
+template<int DIM> void NodeOpti::MinEigen(NekDouble &val)
 {
     ASSERTL0(false,"DIM error");
 }
 
-template<> void NodeOpti::MinEigen<2>(NekDouble &val, Array<OneD, NekDouble> &vec)
+template<> void NodeOpti::MinEigen<2>(NekDouble &val)
 {
     Array<OneD, NekDouble> eigR(2);
     Array<OneD, NekDouble> eigI(2);
     NekMatrix<NekDouble> H(2,2);
-    H(0,0) = G[2];
-    H(1,0) = G[3];
+    H(0,0) = m_grad[2];
+    H(1,0) = m_grad[3];
     H(0,1) = H(1,0);
-    H(1,1) = G[4];
+    H(1,1) = m_grad[4];
 
     int nVel = 2;
     char jobvl = 'N', jobvr = 'V';
@@ -182,24 +182,22 @@ template<> void NodeOpti::MinEigen<2>(NekDouble &val, Array<OneD, NekDouble> &ve
     }
 
     val = eval(minI,minI);
-    vec[0] = evec(0,minI);
-    vec[1] = evec(1,minI);
 }
 
-template<> void NodeOpti::MinEigen<3>(NekDouble &val, Array<OneD, NekDouble> &vec)
+template<> void NodeOpti::MinEigen<3>(NekDouble &val)
 {
     Array<OneD, NekDouble> eigR(3);
     Array<OneD, NekDouble> eigI(3);
     NekMatrix<NekDouble> H(3,3);
-    H(0,0) = G[3];
-    H(1,0) = G[4];
+    H(0,0) = m_grad[3];
+    H(1,0) = m_grad[4];
     H(0,1) = H(1,0);
-    H(2,0) = G[5];
+    H(2,0) = m_grad[5];
     H(0,2) = H(2,0);
-    H(1,1) = G[6];
-    H(2,1) = G[7];
+    H(1,1) = m_grad[6];
+    H(2,1) = m_grad[7];
     H(1,2) = H(2,1);
-    H(2,2) = G[8];
+    H(2,2) = m_grad[8];
 
     int nVel = 3;
     char jobvl = 'N', jobvr = 'V';
@@ -230,10 +228,6 @@ template<> void NodeOpti::MinEigen<3>(NekDouble &val, Array<OneD, NekDouble> &ve
     }
 
     val = eval(minI,minI);
-    vec[0] = evec(0,minI);
-    vec[1] = evec(1,minI);
-    vec[2] = evec(2,minI);
-
 }
 
 }

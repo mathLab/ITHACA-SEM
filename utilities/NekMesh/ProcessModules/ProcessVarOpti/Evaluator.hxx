@@ -240,27 +240,24 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
     map<LibUtilities::ShapeType,vector<ElUtilSharedPtr> >::iterator typeIt;
     map<LibUtilities::ShapeType,DerivArray> derivs;
 
-    for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
+    for(typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
     {
         const int nElmt  = typeIt->second.size();
-        const int totpts = derivUtil[typeIt->first]->ptsStd * nElmt;
+        const int totpts = m_derivUtils[typeIt->first]->ptsStd * nElmt;
         NekDouble X[DIM * totpts];
 
         // Store x/y components of each element sequentially in memory
         for (int i = 0, cnt = 0; i < nElmt; ++i)
         {
-            for (int j = 0; j < derivUtil[typeIt->first]->ptsStd; ++j)
+            for (int j = 0; j < m_derivUtils[typeIt->first]->ptsStd; ++j)
             {
                 for (int d = 0; d < DIM; ++d)
                 {
-                    X[cnt + d*derivUtil[typeIt->first]->ptsStd + j] =
+                    X[cnt + d*m_derivUtils[typeIt->first]->ptsStd + j] =
                                         *(typeIt->second[i]->nodes[j][d]);
                 }
             }
-
-            //ASSERTL0(typeIt->second[i]->GetEl()->GetShapeType() == typeIt->first,"shape mismatch");
-
-            cnt += DIM*derivUtil[typeIt->first]->ptsStd;
+            cnt += DIM*m_derivUtils[typeIt->first]->ptsStd;
         }
 
         // Storage for derivatives, ordered by:
@@ -271,18 +268,21 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
         //DerivArray deriv(boost::extents[DIM][nElmt][DIM][derivUtil[typeIt->first]->ptsHigh]);
         derivs.insert(std::make_pair(
                           typeIt->first,
-                          DerivArray(boost::extents[DIM][nElmt][DIM][derivUtil[typeIt->first]->pts])));
+                          DerivArray(boost::extents[DIM][nElmt][DIM][m_derivUtils[typeIt->first]->pts])));
 
         // Calculate x- and y-gradients
         for (int d = 0; d < DIM; ++d)
         {
             Blas::Dgemm(
-                'N', 'N', derivUtil[typeIt->first]->pts, DIM * nElmt, derivUtil[typeIt->first]->ptsStd, 1.0,
-                derivUtil[typeIt->first]->VdmD[d].GetRawPtr(), derivUtil[typeIt->first]->pts, X,
-                derivUtil[typeIt->first]->ptsStd, 0.0, &derivs[typeIt->first][d][0][0][0], derivUtil[typeIt->first]->pts);
+                'N', 'N',
+                m_derivUtils[typeIt->first]->pts, DIM * nElmt,
+                m_derivUtils[typeIt->first]->ptsStd, 1.0,
+                m_derivUtils[typeIt->first]->VdmD[d].GetRawPtr(),
+                m_derivUtils[typeIt->first]->pts, X,
+                m_derivUtils[typeIt->first]->ptsStd, 0.0,
+                &derivs[typeIt->first][d][0][0][0],
+                m_derivUtils[typeIt->first]->pts);
         }
-
-        //derivs[typeIt->first] = deriv;
     }
 
     minJacNew = std::numeric_limits<double>::max();
@@ -292,9 +292,9 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
     //NekDouble ep = minJac < 0.0 ? sqrt(gam*gam + minJac*minJac) : gam;
     NekDouble ep = 1e-2;
     NekDouble jacIdeal[DIM][DIM], jacDet;
-    G = Array<OneD, NekDouble>(DIM == 2 ? 5 : 9, 0.0);
+    m_grad = Array<OneD, NekDouble>(DIM == 2 ? 5 : 9, 0.0);
 
-    switch(opti)
+    switch(m_opti)
     {
         case eLinEl:
         {
@@ -302,11 +302,12 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
-            for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
+            for(typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
             {
+                NekVector<NekDouble> &quadW = m_derivUtils[typeIt->first]->quadW;
                 for (int i = 0; i < typeIt->second.size(); ++i)
                 {
-                    for(int k = 0; k < derivUtil[typeIt->first]->pts; ++k)
+                    for(int k = 0; k < m_derivUtils[typeIt->first]->pts; ++k)
                     {
                         jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
                         minJacNew = min(minJacNew,jacDet);
@@ -322,13 +323,16 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                         {
                             return numeric_limits<double>::max();
                         }
-                        ASSERTL0(sigma > numeric_limits<double>::min(),"dividing by zero");
+                        ASSERTL0(sigma > numeric_limits<double>::min(),
+                                 std::string("dividing by zero ") +
+                                 boost::lexical_cast<string>(sigma) + " " +
+                                 boost::lexical_cast<string>(jacDet) + " " +
+                                 boost::lexical_cast<string>(ep));
 
                         NekDouble lsigma = log(sigma);
-                        integral += derivUtil[typeIt->first]->quadW[k] *
-                                    fabs(typeIt->second[i]->maps[k][9]) *
+                        integral += quadW[k] * fabs(typeIt->second[i]->maps[k][9]) *
                                     (K * 0.5 * lsigma * lsigma + mu * trEtE);
-                            // Derivative of basis function in each direction
+
                         if(gradient)
                         {
                             NekDouble jacInvTrans[DIM][DIM];
@@ -349,7 +353,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             NekDouble basisDeriv[DIM];
                             for (int m = 0; m < DIM; ++m)
                             {
-                                basisDeriv[m] = *(derivUtil[typeIt->first]->VdmD[m])(k,typeIt->second[i]->NodeId(node->m_id));
+                                basisDeriv[m] = *(m_derivUtils[typeIt->first]->VdmD[m])(k,typeIt->second[i]->NodeId(m_node->m_id));
                             }
 
                             for (int m = 0; m < DIM; ++m)
@@ -414,7 +418,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
 
                             for (int j = 0; j < DIM; ++j)
                             {
-                                G[j] += derivUtil[typeIt->first]->quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
+                                m_grad[j] += quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
                                         2.0 * mu * frobProdA[j] + K * lsigma * jacDetDeriv[j] / (2.0*sigma - jacDet));
                             }
 
@@ -423,28 +427,12 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             {
                                 for(int l = m; l < DIM; ++l, ct++)
                                 {
-                                    G[ct+DIM] += derivUtil[typeIt->first]->quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
+                                    m_grad[ct+DIM] += quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
                                         2.0 * mu * frobProdB[m][l] + 2.0 * mu * frobProdC[m][l] +
                                         jacDetDeriv[m]*jacDetDeriv[l]*K/(2.0*sigma-jacDet)/(2.0*sigma-jacDet)*(
                                             1.0 - jacDet*lsigma/(2.0*sigma-jacDet)));
                                 }
                             }
-                            /*int ct = 0;
-                            for (int m = 0; m < DIM; ++m)
-                            {
-                                for(int l = m; l < DIM; ++l, ct++)
-                                {
-                                    if(l == m)
-                                    {
-                                        G[ct+DIM] = 1.0;
-                                    }
-                                    else
-                                    {
-                                        G[ct+DIM] = 0.0;
-                                    }
-                                }
-                            }*/
-
                         }
                     }
                 }
@@ -458,24 +446,17 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
             const NekDouble mu = 1.0 / 2.0 / (1.0+nu);
             const NekDouble K  = 1.0 / 3.0 / (1.0 - 2.0 * nu);
 
-            for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
+            for(typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
             {
+                NekVector<NekDouble> &quadW = m_derivUtils[typeIt->first]->quadW;
                 for (int i = 0; i < typeIt->second.size(); ++i)
                 {
-                    for(int k = 0; k < derivUtil[typeIt->first]->pts; ++k)
+                    for(int k = 0; k < m_derivUtils[typeIt->first]->pts; ++k)
                     {
                         jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
                         minJacNew = min(minJacNew,jacDet);
                         NekDouble I1 = FrobeniusNorm(jacIdeal);
 
-                        //if(gradient && minJac > 0.0 && jacDet < 0.0)
-                        //{
-                        //    ASSERTL0(false,"minjac is positive but jacdet is negative");
-                        //    return numeric_limits<double>::max();
-                        //}
-
-                        //ep = minJac < 0.0 ? sqrt(gam*jacDet*(gam*jacDet-minJac)) : gam*jacDet;
-                        //ep *= fabs(jacDet);
                         NekDouble sigma =
                             0.5*(jacDet + sqrt(jacDet*jacDet + 4.0*ep*ep));
 
@@ -484,13 +465,6 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             return numeric_limits<double>::max();
                         }
 
-                        /*
-                        if (!(sigma > numeric_limits<double>::min()))
-                        {
-                            return numeric_limits<double>::max();
-                        }
-                        */
-
                         ASSERTL0(sigma > numeric_limits<double>::min(),
                                  std::string("dividing by zero ") +
                                  boost::lexical_cast<string>(sigma) + " " +
@@ -498,8 +472,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                  boost::lexical_cast<string>(ep));
 
                         NekDouble lsigma = log(sigma);
-                        integral += derivUtil[typeIt->first]->quadW[k]*
-                                    fabs(typeIt->second[i]->maps[k][9]) *
+                        integral += quadW[k] * fabs(typeIt->second[i]->maps[k][9]) *
                                     (0.5 * mu * (I1 - 3.0 - 2.0*lsigma) +
                                      0.5 * K * lsigma * lsigma);
 
@@ -524,7 +497,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             NekDouble basisDeriv[DIM];
                             for (int m = 0; m < DIM; ++m)
                             {
-                                basisDeriv[m] = *(derivUtil[typeIt->first]->VdmD[m])(k,typeIt->second[i]->NodeId(node->m_id));
+                                basisDeriv[m] = *(m_derivUtils[typeIt->first]->VdmD[m])(k,typeIt->second[i]->NodeId(m_node->m_id));
                             }
 
                             for (int m = 0; m < DIM; ++m)
@@ -576,7 +549,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
 
                             for (int j = 0; j < DIM; ++j)
                             {
-                                G[j] += derivUtil[typeIt->first]->quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
+                                m_grad[j] += quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
                                     mu * frobProd[j] + (jacDetDeriv[j] / (2.0*sigma - jacDet)
                                                         * (K * lsigma - mu)));
                             }
@@ -591,13 +564,12 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                 }
                             }
 
-
                             int ct = 0;
                             for (int m = 0; m < DIM; ++m)
                             {
                                 for(int l = m; l < DIM; ++l, ct++)
                                 {
-                                    G[ct+DIM] += derivUtil[typeIt->first]->quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
+                                    m_grad[ct+DIM] += quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
                                         mu * frobProdHes[m][l] +
                                         jacDetDeriv[m]*jacDetDeriv[l]/(2.0*sigma-jacDet)/(2.0*sigma-jacDet)*(
                                             K- jacDet*(K*lsigma-mu)/(2.0*sigma-jacDet)));
@@ -612,24 +584,32 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
 
         case eRoca:
         {
-            for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
+            for(typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
             {
+                NekVector<NekDouble> &quadW = m_derivUtils[typeIt->first]->quadW;
                 for (int i = 0; i < typeIt->second.size(); ++i)
                 {
-                    for(int k = 0; k < derivUtil[typeIt->first]->pts; ++k)
+                    for(int k = 0; k < m_derivUtils[typeIt->first]->pts; ++k)
                     {
                         jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
                         minJacNew = min(minJacNew,jacDet);
                         NekDouble frob = FrobeniusNorm(jacIdeal);
                         NekDouble sigma = 0.5*(jacDet +
                                         sqrt(jacDet*jacDet + 4.0*ep*ep));
+
                         if(sigma < numeric_limits<double>::min() && !gradient)
                         {
                             return numeric_limits<double>::max();
                         }
-                        ASSERTL0(sigma > numeric_limits<double>::min(),"dividing by zero");
+
+                        ASSERTL0(sigma > numeric_limits<double>::min(),
+                                 std::string("dividing by zero ") +
+                                 boost::lexical_cast<string>(sigma) + " " +
+                                 boost::lexical_cast<string>(jacDet) + " " +
+                                 boost::lexical_cast<string>(ep));
+
                         NekDouble W = frob / DIM / pow(fabs(sigma), 2.0/DIM);
-                        integral += derivUtil[typeIt->first]->quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * W;
+                        integral += quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * W;
 
                         // Derivative of basis function in each direction
                         if(gradient)
@@ -652,7 +632,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             NekDouble basisDeriv[DIM];
                             for (int m = 0; m < DIM; ++m)
                             {
-                                basisDeriv[m] = *(derivUtil[typeIt->first]->VdmD[m])(k,typeIt->second[i]->NodeId(node->m_id));
+                                basisDeriv[m] = *(m_derivUtils[typeIt->first]->VdmD[m])(k,typeIt->second[i]->NodeId(m_node->m_id));
                             }
 
                             for (int m = 0; m < DIM; ++m)
@@ -704,8 +684,8 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
 
                             for (int j = 0; j < DIM; ++j)
                             {
-                                G[j] += derivUtil[typeIt->first]->quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
-                                        2.0*W*(frobProd[j]/frob -
+                                m_grad[j] += quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
+                                                2.0*W*(frobProd[j]/frob -
                                                 jacDetDeriv[j]/DIM/(2.0*sigma-jacDet)));
                             }
 
@@ -724,8 +704,8 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             {
                                 for(int l = m; l < DIM; ++l, ct++)
                                 {
-                                    G[ct+DIM] += derivUtil[typeIt->first]->quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
-                                        G[m]*G[l]/W + 2.0*W*(frobProdHes[m][l]/frob
+                                    m_grad[ct+DIM] += quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
+                                            m_grad[m]*m_grad[l]/W + 2.0*W*(frobProdHes[m][l]/frob
                                             - 2.0 * frobProd[m]*frobProd[l]/frob/frob
                                             + jacDetDeriv[m]*jacDetDeriv[l] * jacDet/(2.0*sigma-jacDet)/(2.0*sigma-jacDet)/(2.0*sigma-jacDet)/DIM));
                                 }
@@ -739,25 +719,32 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
 
         case eWins:
         {
-            for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
+            for(typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
             {
+                NekVector<NekDouble> &quadW = m_derivUtils[typeIt->first]->quadW;
                 for (int i = 0; i < typeIt->second.size(); ++i)
                 {
-                    for(int k = 0; k < derivUtil[typeIt->first]->pts; ++k)
+                    for(int k = 0; k < m_derivUtils[typeIt->first]->pts; ++k)
                     {
                         jacDet = CalcIdealJac(i, k, derivs[typeIt->first], typeIt->second, jacIdeal);
                         minJacNew = min(minJacNew,jacDet);
                         NekDouble frob = FrobeniusNorm(jacIdeal);
                         NekDouble sigma = 0.5*(jacDet +
                                         sqrt(jacDet*jacDet + 4.0*ep*ep));
+
                         if(sigma < numeric_limits<double>::min() && !gradient)
                         {
                             return numeric_limits<double>::max();
                         }
-                        ASSERTL0(sigma > numeric_limits<double>::min(),"dividing by zero");
+
+                        ASSERTL0(sigma > numeric_limits<double>::min(),
+                                 std::string("dividing by zero ") +
+                                 boost::lexical_cast<string>(sigma) + " " +
+                                 boost::lexical_cast<string>(jacDet) + " " +
+                                 boost::lexical_cast<string>(ep));
+
                         NekDouble W = frob / sigma;
-                        integral += derivUtil[typeIt->first]->quadW[k]*
-                                    fabs(typeIt->second[i]->maps[k][9])* W;
+                        integral += quadW[k]* fabs(typeIt->second[i]->maps[k][9]) * W;
 
                         // Derivative of basis function in each direction
                         if(gradient)
@@ -780,7 +767,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             NekDouble basisDeriv[DIM];
                             for (int m = 0; m < DIM; ++m)
                             {
-                                basisDeriv[m] = *(derivUtil[typeIt->first]->VdmD[m])(k,typeIt->second[i]->NodeId(node->m_id));
+                                basisDeriv[m] = *(m_derivUtils[typeIt->first]->VdmD[m])(k,typeIt->second[i]->NodeId(m_node->m_id));
                             }
 
                             for (int m = 0; m < DIM; ++m)
@@ -832,7 +819,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
 
                             for (int j = 0; j < DIM; ++j)
                             {
-                                G[j] += derivUtil[typeIt->first]->quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
+                                m_grad[j] += quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
                                         W*(2.0*frobProd[j]/frob -
                                                 jacDetDeriv[j]/(2.0*sigma-jacDet)));
                             }
@@ -852,8 +839,8 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                             {
                                 for(int l = m; l < DIM; ++l, ct++)
                                 {
-                                    G[ct+DIM] += derivUtil[typeIt->first]->quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
-                                        G[m]*G[l]/W + 2.0*W*(frobProdHes[m][l]/frob
+                                    m_grad[ct+DIM] += quadW[k] * fabs(typeIt->second[i]->maps[k][9]) * (
+                                        m_grad[m]*m_grad[l]/W + 2.0*W*(frobProdHes[m][l]/frob
                                             - 2.0 * frobProd[m]*frobProd[l]/frob/frob
                                             + 0.5*jacDetDeriv[m]*jacDetDeriv[l] * jacDet/(2.0*sigma-jacDet)/(2.0*sigma-jacDet)/(2.0*sigma-jacDet)));
                                 }

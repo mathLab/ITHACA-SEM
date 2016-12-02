@@ -82,6 +82,7 @@ v4.3.5
 - Fix bug in DG with hybrid meshes (!694)
 - Fix issue with parallel output (!699)
 - Fix performance issue with iterative full solver (!693)
+- Enforced precision on history point output (!706)
 
 **Documentation**
 - Update build instructions in user guide for Windows (!692)

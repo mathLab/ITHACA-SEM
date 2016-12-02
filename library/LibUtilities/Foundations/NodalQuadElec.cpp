@@ -55,7 +55,7 @@ void NodalQuadElec::CalculatePoints()
 
     for (int i = 0; i < 2; i++)
     {
-        m_points[i] = Array<OneD, DataType>(numPoints);
+        m_points[i] = Array<OneD, DataType>(numPoints*numPoints);
     }
 
     for (int j = 0, ct = 0; j < numPoints; j++)
@@ -72,7 +72,7 @@ void NodalQuadElec::CalculateWeights()
 {
     unsigned int numPoints = GetNumPoints();
 
-    m_weights = Array<OneD, DataType>(numPoints);
+    m_weights = Array<OneD, DataType>(numPoints*numPoints);
 
     for (int j = 0, ct = 0; j < numPoints; j++)
     {

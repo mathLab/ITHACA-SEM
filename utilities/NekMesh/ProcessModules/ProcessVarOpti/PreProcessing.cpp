@@ -37,6 +37,7 @@
 
 #include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 using namespace std;
 
@@ -55,7 +56,14 @@ map<LibUtilities::ShapeType, DerivUtilSharedPtr> ProcessVarOpti::BuildDerivUtil(
     typeMap[LibUtilities::eQuadrilateral] = LibUtilities::eNodalQuadElec;
     typeMap[LibUtilities::eTetrahedron] = LibUtilities::eNodalTetSPI;
     typeMap[LibUtilities::ePrism] = LibUtilities::eNodalPrismSPI;
-    typeMap[LibUtilities::eHexahedron] = LibUtilities::eNodalHexElec;
+    //typeMap[LibUtilities::eHexahedron] = LibUtilities::eNodalHexElec;
+
+    map<LibUtilities::ShapeType, LibUtilities::PointsType> typeMap2;
+    typeMap2[LibUtilities::eTriangle] = LibUtilities::eNodalTriElec;
+    typeMap2[LibUtilities::eQuadrilateral] = LibUtilities::eNodalQuadElec;
+    typeMap2[LibUtilities::eTetrahedron] = LibUtilities::eNodalTetElec;
+    typeMap2[LibUtilities::ePrism] = LibUtilities::eNodalPrismElec;
+    //typeMap2[LibUtilities::eHexahedron] = LibUtilities::eNodalHexElec;
 
     map<LibUtilities::ShapeType, LibUtilities::PointsType>::iterator it;
 
@@ -63,25 +71,25 @@ map<LibUtilities::ShapeType, DerivUtilSharedPtr> ProcessVarOpti::BuildDerivUtil(
     {
         DerivUtilSharedPtr der = boost::shared_ptr<DerivUtil>(new DerivUtil());
 
-        LibUtilities::PointsKey pkey1(m_mesh->m_nummode,
-                                        LibUtilities::eNodalTriElec);
-        LibUtilities::PointsKey pkey2(m_mesh->m_nummode + o,
-                                        it->second);
+        map<LibUtilities::ShapeType, LibUtilities::PointsType>::iterator f = typeMap2.find(it->first);
+        ASSERTL0(f != typeMap2.end(), "not found");
+        LibUtilities::PointsKey pkey1(m_mesh->m_nummode, f->second);
+        LibUtilities::PointsKey pkey2(m_mesh->m_nummode + o, it->second);
 
-        Array<OneD, Array<OneD, NekDouble> > u1(m_mesh->m_spaceDim),
-                                             u2(m_mesh->m_spaceDim);
-        switch (m_mesh->m_spaceDim)
+        Array<OneD, Array<OneD, NekDouble> > u1(pkey1.GetPointsDim()),
+                                             u2(pkey1.GetPointsDim());
+        switch (pkey1.GetPointsDim())
         {
             case 2:
             {
-                LibUtilities::PointsManager()[pkey1]->GetPoints(u1[0], u1[0]);
+                LibUtilities::PointsManager()[pkey1]->GetPoints(u1[0], u1[1]);
                 LibUtilities::PointsManager()[pkey2]->GetPoints(u2[0], u2[1]);
             }
             break;
 
             case 3:
             {
-                LibUtilities::PointsManager()[pkey1]->GetPoints(u1[0], u1[0], u1[2]);
+                LibUtilities::PointsManager()[pkey1]->GetPoints(u1[0], u1[1], u1[2]);
                 LibUtilities::PointsManager()[pkey2]->GetPoints(u2[0], u2[1], u2[2]);
             }
             break;
@@ -171,13 +179,13 @@ map<LibUtilities::ShapeType, DerivUtilSharedPtr> ProcessVarOpti::BuildDerivUtil(
     return ret;
 }
 
-vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSharedPtr> elLock)
+vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElUtilSharedPtr> elLock)
 {
-    /*NodeSet ignoredNodes;
+    NodeSet ignoredNodes;
     for(int i = 0; i < elLock.size(); i++)
     {
         vector<NodeSharedPtr> nodes;
-        elLock[i]->GetCurvedNodes(nodes);
+        elLock[i]->GetEl()->GetCurvedNodes(nodes);
         for(int j = 0; j < nodes.size(); j++)
         {
             ignoredNodes.insert(nodes[j]);
@@ -260,7 +268,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
     }
 
     vector<NodeSharedPtr> remain;
-    res->nDoF = 0;
+    m_res->nDoF = 0;
 
     NodeSet::iterator nit;
     for (nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end(); ++nit)
@@ -272,15 +280,15 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
             remain.push_back(*nit);
             if((*nit)->GetNumCadCurve() == 1)
             {
-                res->nDoF++;
+                m_res->nDoF++;
             }
             else if((*nit)->GetNumCADSurf() == 1)
             {
-                res->nDoF += 2;
+                m_res->nDoF += 2;
             }
             else
             {
-                res->nDoF += 3;
+                m_res->nDoF += 3;
             }
         }
     }
@@ -298,15 +306,15 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
                 remain.push_back(n[j]);
                 if(n[j]->GetNumCadCurve() == 1)
                 {
-                    res->nDoF++;
+                    m_res->nDoF++;
                 }
                 else if(n[j]->GetNumCADSurf() == 1)
                 {
-                    res->nDoF += 2;
+                    m_res->nDoF += 2;
                 }
                 else
                 {
-                    res->nDoF += 3;
+                    m_res->nDoF += 3;
                 }
             }
         }
@@ -324,11 +332,11 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
                 remain.push_back((*fit)->m_faceNodes[j]);
                 if((*fit)->m_faceNodes[j]->GetNumCADSurf() == 1)
                 {
-                    res->nDoF += 2;
+                    m_res->nDoF += 2;
                 }
                 else
                 {
-                    res->nDoF += 3;
+                    m_res->nDoF += 3;
                 }
             }
         }
@@ -345,12 +353,12 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
             if(nit2 == boundaryNodes.end() && nit3 == ignoredNodes.end())
             {
                 remain.push_back(ns[j]);
-                res->nDoF += 3;
+                m_res->nDoF += 3;
             }
         }
     }
 
-    res->n = remain.size();
+    m_res->n = remain.size();
 
     vector<vector<NodeSharedPtr> > ret;
 
@@ -361,8 +369,8 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
         set<int> completed;
         for(int i = 0; i < remain.size(); i++)
         {
-            NodeElMap::iterator it = nodeElMap.find(remain[i]->m_id);
-            ASSERTL0(it != nodeElMap.end(),"could not find");
+            NodeElMap::iterator it = m_nodeElMap.find(remain[i]->m_id);
+            ASSERTL0(it != m_nodeElMap.end(),"could not find");
 
             vector<ElUtilSharedPtr> &elUtils = it->second;
 
@@ -398,21 +406,24 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElementSh
             }
         }
         ret.push_back(layer);
+
+        LibUtilities::PrintProgressbar(m_res->n - remain.size(), m_res->n, "Node Coloring");
     }
-    return ret;*/
+    cout << endl;
+    return ret;
 }
 
-void ProcessVarOpti::GetElementMap(int o)
+void ProcessVarOpti::GetElementMap(int o, map<LibUtilities::ShapeType, DerivUtilSharedPtr> derMap)
 {
-    /*for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
+    for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
     {
         ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
         vector<NodeSharedPtr> ns;
         el->GetCurvedNodes(ns);
         ElUtilSharedPtr d = boost::shared_ptr<ElUtil>(new ElUtil(el,
-                                    derivUtil[el->GetShapeType()],
-                                    res, m_mesh->m_nummode, o));
-        dataSet.push_back(d);
+                                    derMap[el->GetShapeType()],
+                                    m_res, m_mesh->m_nummode, o));
+        m_dataSet.push_back(d);
     }
 
     for(int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); i++)
@@ -423,120 +434,44 @@ void ProcessVarOpti::GetElementMap(int o)
 
         for(int j = 0; j < ns.size(); j++)
         {
-            nodeElMap[ns[j]->m_id].push_back(dataSet[i]);
+            m_nodeElMap[ns[j]->m_id].push_back(m_dataSet[i]);
         }
 
-        ASSERTL0(derivUtil[dataSet[i]->GetEl()->GetShapeType()]->ptsStd == ns.size(), "mismatch node count");
-    }*/
+        ASSERTL0(derMap[el->GetShapeType()]->ptsStd == ns.size(), "mismatch node count");
+    }
 }
 
-vector<ElementSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
+vector<ElUtilSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
 {
-    /*vector<ElementSharedPtr> elBelowThres;
-    for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
+    vector<ElUtilSharedPtr> elBelowThres;
+    for (int i = 0; i < m_dataSet.size(); ++i)
     {
-        ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
-        vector<NodeSharedPtr> nodes;
-        el->GetCurvedNodes(nodes);
-        NekDouble mx = -1.0 * numeric_limits<double>::max();
-        NekDouble mn =  numeric_limits<double>::max();
-
-        if(m_mesh->m_expDim == 2)
+        if(m_dataSet[i]->scaledJac < thres)
         {
-            NekVector<NekDouble> X(nodes.size()),Y(nodes.size());
-            for(int j = 0; j < nodes.size(); j++)
-            {
-                X(j) = nodes[j]->m_x;
-                Y(j) = nodes[j]->m_y;
-            }
-
-            NekVector<NekDouble> x1i(nodes.size()),y1i(nodes.size()),
-                                 x2i(nodes.size()),y2i(nodes.size());
-
-            x1i = derivUtil[el->GetShapeType()]->VdmDStd[0]*X;
-            y1i = derivUtil[el->GetShapeType()]->VdmDStd[0]*Y;
-            x2i = derivUtil[el->GetShapeType()]->VdmDStd[1]*X;
-            y2i = derivUtil[el->GetShapeType()]->VdmDStd[1]*Y;
-
-            for(int j = 0; j < nodes.size(); j++)
-            {
-                NekDouble jacDet = x1i(j) * y2i(j) - x2i(j)*y1i(j);
-                mx = max(mx,jacDet);
-                mn = min(mn,jacDet);
-            }
-        }
-        else if(m_mesh->m_expDim == 3)
-        {
-            NekVector<NekDouble> X(nodes.size()),Y(nodes.size()),Z(nodes.size());
-            for(int j = 0; j < nodes.size(); j++)
-            {
-                X(j) = nodes[j]->m_x;
-                Y(j) = nodes[j]->m_y;
-                Z(j) = nodes[j]->m_z;
-            }
-
-            NekVector<NekDouble> x1i(nodes.size()),y1i(nodes.size()),z1i(nodes.size()),
-                                 x2i(nodes.size()),y2i(nodes.size()),z2i(nodes.size()),
-                                 x3i(nodes.size()),y3i(nodes.size()),z3i(nodes.size());
-
-            x1i = derivUtil[el->GetShapeType()]->VdmDStd[0]*X;
-            y1i = derivUtil[el->GetShapeType()]->VdmDStd[0]*Y;
-            z1i = derivUtil[el->GetShapeType()]->VdmDStd[0]*Z;
-            x2i = derivUtil[el->GetShapeType()]->VdmDStd[1]*X;
-            y2i = derivUtil[el->GetShapeType()]->VdmDStd[1]*Y;
-            z2i = derivUtil[el->GetShapeType()]->VdmDStd[1]*Z;
-            x3i = derivUtil[el->GetShapeType()]->VdmDStd[2]*X;
-            y3i = derivUtil[el->GetShapeType()]->VdmDStd[2]*Y;
-            z3i = derivUtil[el->GetShapeType()]->VdmDStd[2]*Z;
-
-            for(int j = 0; j < nodes.size(); j++)
-            {
-                DNekMat dxdz(3,3,1.0,eFULL);
-                dxdz(0,0) = x1i(j);
-                dxdz(0,1) = x2i(j);
-                dxdz(0,2) = x3i(j);
-                dxdz(1,0) = y1i(j);
-                dxdz(1,1) = y2i(j);
-                dxdz(1,2) = y3i(j);
-                dxdz(2,0) = z1i(j);
-                dxdz(2,1) = z2i(j);
-                dxdz(2,2) = z3i(j);
-
-                NekDouble jacDet = dxdz(0,0)*(dxdz(1,1)*dxdz(2,2)-dxdz(2,1)*dxdz(1,2))
-                                  -dxdz(0,1)*(dxdz(1,0)*dxdz(2,2)-dxdz(2,0)*dxdz(1,2))
-                                  +dxdz(0,2)*(dxdz(1,0)*dxdz(2,1)-dxdz(2,0)*dxdz(1,1));
-
-                mx = max(mx,jacDet);
-                mn = min(mn,jacDet);
-            }
-        }
-
-        if(mn/mx < thres)
-        {
-            elBelowThres.push_back(el);
+            elBelowThres.push_back(m_dataSet[i]);
         }
     }
 
     boost::unordered_set<int> inmesh;
     pair<boost::unordered_set<int>::iterator, bool> t;
-    vector<ElementSharedPtr> totest;
+    vector<ElUtilSharedPtr> totest;
 
     for (int i = 0; i < elBelowThres.size(); i++)
     {
-        t = inmesh.insert(elBelowThres[i]->GetId());
+        t = inmesh.insert(elBelowThres[i]->GetEl()->GetId());
 
-        vector<FaceSharedPtr> f = elBelowThres[i]->GetFaceList();
+        vector<FaceSharedPtr> f = elBelowThres[i]->GetEl()->GetFaceList();
         for (int j = 0; j < f.size(); j++)
         {
             for (int k = 0; k < f[j]->m_elLink.size(); k++)
             {
-                if (f[j]->m_elLink[k].first->GetId() == elBelowThres[i]->GetId())
+                if (f[j]->m_elLink[k].first->GetId() == elBelowThres[i]->GetEl()->GetId())
                     continue;
 
                 t = inmesh.insert(f[j]->m_elLink[k].first->GetId());
                 if (t.second)
                 {
-                    totest.push_back(f[j]->m_elLink[k].first);
+                    totest.push_back(m_dataSet[f[j]->m_elLink[k].first->GetId()]);
                 }
             }
         }
@@ -544,22 +479,22 @@ vector<ElementSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
 
     for (int i = 0; i < 6; i++)
     {
-        vector<ElementSharedPtr> tmp = totest;
+        vector<ElUtilSharedPtr> tmp = totest;
         totest.clear();
         for (int j = 0; j < tmp.size(); j++)
         {
-            vector<FaceSharedPtr> f = tmp[j]->GetFaceList();
+            vector<FaceSharedPtr> f = tmp[j]->GetEl()->GetFaceList();
             for (int k = 0; k < f.size(); k++)
             {
                 for (int l = 0; l < f[k]->m_elLink.size(); l++)
                 {
-                    if (f[k]->m_elLink[l].first->GetId() == tmp[j]->GetId())
+                    if (f[k]->m_elLink[l].first->GetId() == tmp[j]->GetEl()->GetId())
                         continue;
 
                     t = inmesh.insert(f[k]->m_elLink[l].first->GetId());
                     if (t.second)
                     {
-                        totest.push_back(f[k]->m_elLink[l].first);
+                        totest.push_back(m_dataSet[f[k]->m_elLink[l].first->GetId()]);
                     }
                 }
             }
@@ -567,18 +502,17 @@ vector<ElementSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
     }
 
     //now need to invert the list
-    vector<ElementSharedPtr> ret;
-    for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
+    vector<ElUtilSharedPtr> ret;
+    for (int i = 0; i < m_dataSet.size(); ++i)
     {
-        ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
-        boost::unordered_set<int>::iterator s = inmesh.find(el->GetId());
+        boost::unordered_set<int>::iterator s = inmesh.find(m_dataSet[i]->GetEl()->GetId());
         if(s == inmesh.end())
         {
-            ret.push_back(el);
+            ret.push_back(m_dataSet[i]);
         }
     }
 
-    return ret;*/
+    return ret;
 }
 
 }

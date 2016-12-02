@@ -169,9 +169,17 @@ void ProcessVarOpti::Process()
     m_mesh->MakeOrder(m_mesh->m_nummode-1,LibUtilities::eGaussLobattoLegendre);
     map<LibUtilities::ShapeType, DerivUtilSharedPtr> derivUtils =
                                                     BuildDerivUtil(intOrder);
-    /*GetElementMap(intOrder);
+    GetElementMap(intOrder, derivUtils);
 
-    vector<ElementSharedPtr> elLock;
+    m_res->startInv =0;
+    m_res->worstJac = numeric_limits<double>::max();
+    for(int i = 0; i < m_dataSet.size(); i++)
+    {
+        m_dataSet[i]->Evaluate();
+        m_dataSet[i]->InitialMinJac();
+    }
+
+    vector<ElUtilSharedPtr> elLock;
 
     if(m_config["region"].beenSet)
     {
@@ -188,23 +196,23 @@ void ProcessVarOpti::Process()
         vector<NodeOptiSharedPtr> ns;
         for(int j = 0; j < freenodes[i].size(); j++)
         {
-            NodeElMap::iterator it = nodeElMap.find(freenodes[i][j]->m_id);
-            ASSERTL0(it != nodeElMap.end(), "could not find");
+            NodeElMap::iterator it = m_nodeElMap.find(freenodes[i][j]->m_id);
+            ASSERTL0(it != m_nodeElMap.end(), "could not find");
 
-            int optiType = m_mesh->m_spaceDim;
+            int optiKind = m_mesh->m_spaceDim;
 
             if (freenodes[i][j]->GetNumCadCurve() == 1)
             {
                 //continue;
-                optiType += 10;
+                optiKind += 10;
             }
             else if (freenodes[i][j]->GetNumCADSurf() == 1)
             {
-                optiType += 20;
+                optiKind += 20;
             }
             else
             {
-                optiType += 10*m_mesh->m_expDim;
+                optiKind += 10*m_mesh->m_expDim;
             }
 
             set<int>::iterator c = check.find(freenodes[i][j]->m_id);
@@ -213,7 +221,7 @@ void ProcessVarOpti::Process()
 
             ns.push_back(
                 GetNodeOptiFactory().CreateInstance(
-                    optiType, freenodes[i][j], it->second, res, derivUtil, opti));
+                    optiKind, freenodes[i][j], it->second, m_res, derivUtils, m_opti));
         }
         optiNodes.push_back(ns);
     }
@@ -229,33 +237,25 @@ void ProcessVarOpti::Process()
         mx = max(mx, int(optiNodes[i].size()));
     }
 
-    res->startInv =0;
-    res->worstJac = numeric_limits<double>::max();
-    for(int i = 0; i < dataSet.size(); i++)
-    {
-        dataSet[i]->Evaluate();
-        dataSet[i]->InitialMinJac();
-    }
-
     if(m_config["histfile"].beenSet)
     {
         ofstream histFile;
         string name = m_config["histfile"].as<string>() + "_start.txt";
         histFile.open(name.c_str());
 
-        for(int i = 0; i < dataSet.size(); i++)
+        for(int i = 0; i < m_dataSet.size(); i++)
         {
-            histFile << dataSet[i]->scaledJac << endl;
+            histFile << m_dataSet[i]->scaledJac << endl;
         }
         histFile.close();
     }
 
     cout << scientific << endl;
     cout << "N elements:\t\t" << m_mesh->m_element[m_mesh->m_expDim].size() - elLock.size() << endl
-         << "N elements invalid:\t" << res->startInv << endl
-         << "Worst jacobian:\t\t" << res->worstJac << endl
-         << "N free nodes:\t\t" << res->n << endl
-         << "N Dof:\t\t\t" << res->nDoF << endl
+         << "N elements invalid:\t" << m_res->startInv << endl
+         << "Worst jacobian:\t\t" << m_res->worstJac << endl
+         << "N free nodes:\t\t" << m_res->n << endl
+         << "N Dof:\t\t\t" << m_res->nDoF << endl
          << "N color sets:\t\t" << nset << endl
          << "Avg set colors:\t\t" << p/nset << endl
          << "Min set:\t\t" << mn << endl
@@ -290,15 +290,15 @@ void ProcessVarOpti::Process()
         }
     }
 
-    while (res->val > restol)
+    while (m_res->val > restol)
     {
         ctr++;
-        res->val = 0.0;
-        res->func = 0.0;
-        res->nReset[0] = 0;
-        res->nReset[1] = 0;
-        res->nReset[2] = 0;
-        res->alphaI = 0;
+        m_res->val = 0.0;
+        m_res->func = 0.0;
+        m_res->nReset[0] = 0;
+        m_res->nReset[1] = 0;
+        m_res->nReset[2] = 0;
+        m_res->alphaI = 0;
         for(int i = 0; i < optiNodes.size(); i++)
         {
             vector<Thread::ThreadJob*> jobs(optiNodes[i].size());
@@ -317,13 +317,13 @@ void ProcessVarOpti::Process()
             //}
         }
 
-        res->startInv = 0;
-        res->worstJac = numeric_limits<double>::max();
+        m_res->startInv = 0;
+        m_res->worstJac = numeric_limits<double>::max();
 
-        vector<Thread::ThreadJob*> elJobs(dataSet.size());
-        for(int i = 0; i < dataSet.size(); i++)
+        vector<Thread::ThreadJob*> elJobs(m_dataSet.size());
+        for(int i = 0; i < m_dataSet.size(); i++)
         {
-            elJobs[i] = dataSet[i]->GetJob();
+            elJobs[i] = m_dataSet[i]->GetJob();
         }
 
         tm->SetNumWorkers(0);
@@ -333,15 +333,15 @@ void ProcessVarOpti::Process()
 
         if(m_config["resfile"].beenSet)
         {
-            resFile << res->val << " " << res->worstJac << " " << res->func << endl;
+            resFile << m_res->val << " " << m_res->worstJac << " " << m_res->func << endl;
         }
 
-        cout << ctr << "\tResidual: " << res->val
-                    << "\tMin Jac: " << res->worstJac
-                    << "\tInvalid: " << res->startInv
-                    << "\tReset nodes: " << res->nReset[0] << "/" << res->nReset[1] << "/" << res->nReset[2]
-                    << "\tFunctional: " << res->func
-                    //<< "\tAlphaNotOne: " << res->alphaI
+        cout << ctr << "\tResidual: " << m_res->val
+                    << "\tMin Jac: " << m_res->worstJac
+                    << "\tInvalid: " << m_res->startInv
+                    << "\tReset nodes: " << m_res->nReset[0] << "/" << m_res->nReset[1] << "/" << m_res->nReset[2]
+                    << "\tFunctional: " << m_res->func
+                    //<< "\tAlphaNotOne: " << m_res->alphaI
                     << endl;
         if(ctr >= maxIter)
             break;
@@ -353,9 +353,9 @@ void ProcessVarOpti::Process()
         string name = m_config["histfile"].as<string>() + "_end.txt";
         histFile.open(name.c_str());
 
-        for(int i = 0; i < dataSet.size(); i++)
+        for(int i = 0; i < m_dataSet.size(); i++)
         {
-            histFile << dataSet[i]->scaledJac << endl;
+            histFile << m_dataSet[i]->scaledJac << endl;
         }
         histFile.close();
     }
@@ -367,8 +367,8 @@ void ProcessVarOpti::Process()
     t.Stop();
     cout << "Time to compute: " << t.TimePerTest(1) << endl;
 
-    cout << "Invalid at end:\t\t" << res->startInv << endl;
-    cout << "Worst at end:\t\t" << res->worstJac << endl;*/
+    cout << "Invalid at end:\t\t" << m_res->startInv << endl;
+    cout << "Worst at end:\t\t" << m_res->worstJac << endl;
 }
 
 }

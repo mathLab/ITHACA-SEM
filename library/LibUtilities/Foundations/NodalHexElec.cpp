@@ -55,7 +55,7 @@ void NodalHexElec::CalculatePoints()
 
     for (int i = 0; i < 3; i++)
     {
-        m_points[i] = Array<OneD, DataType>(numPoints);
+        m_points[i] = Array<OneD, DataType>(numPoints*numPoints*numPoints);
     }
 
     for (int k = 0, ct = 0; k < numPoints; k++)
@@ -76,7 +76,7 @@ void NodalHexElec::CalculateWeights()
 {
     unsigned int numPoints = GetNumPoints();
 
-    m_weights = Array<OneD, DataType>(numPoints);
+    m_weights = Array<OneD, DataType>(numPoints*numPoints*numPoints);
 
     for (int k = 0, ct = 0; k < numPoints; k++)
     {

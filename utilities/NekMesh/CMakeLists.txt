@@ -30,6 +30,7 @@ SET(NekMeshHeaders
     ProcessModules/ProcessVarOpti/ElUtil.h
     ProcessModules/ProcessVarOpti/Evaluator.hxx
     ProcessModules/ProcessVarOpti/Hessian.hxx
+    ProcessModules/ProcessInsertSurface.h
 )
 
 SET(NekMeshSources
@@ -64,6 +65,7 @@ SET(NekMeshSources
     ProcessModules/ProcessVarOpti/PreProcessing.cpp
     ProcessModules/ProcessVarOpti/NodeOpti.cpp
     ProcessModules/ProcessVarOpti/ElUtil.cpp
+    ProcessModules/ProcessInsertSurface.cpp
 )
 
 IF (NEKTAR_USE_CCM)
@@ -84,11 +86,6 @@ IF (NEKTAR_USE_MESHGEN)
             ProcessModules/ProcessVarOpti/NodeOptiCAD.cpp
             InputModules/InputCAD.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
-
-IF (NEKTAR_USE_ANN)
-    SET(NekMeshHeaders ${NekMeshHeaders} ProcessModules/ProcessInsertSurface.h)
-    SET(NekMeshSources ${NekMeshSources} ProcessModules/ProcessInsertSurface.cpp)
-ENDIF (NEKTAR_USE_ANN)
 
 # Don't use macro -- this way we can just link against NekMeshUtils and
 # LocalRegions.

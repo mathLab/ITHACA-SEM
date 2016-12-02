@@ -102,46 +102,11 @@ void NodeOpti2D2D::Optimise()
     NekDouble newVal = currentW;
 
     // Gradient already zero
-    if (G[0]*G[0] + G[1]*G[1] > gradTol())
+    if (m_grad[0]*m_grad[0] + m_grad[1]*m_grad[1] > gradTol())
     {
         //needs to optimise
         NekDouble xc       = node->m_x;
         NekDouble yc       = node->m_y;
-
-        /*Array<OneD, NekDouble> tmp = G;
-        //cout << endl;
-        //cout << G[0] << " " << G[1] << " " << G[2] << " " << G[3] << " " << G[4] << endl;
-
-        Array<OneD, NekDouble> GW(6);
-        NekDouble dx = 1e-8;
-        for(int i = 0; i < 4; i++)
-        {
-            node->m_x = xc + dir[i][0] * dx;
-            node->m_y = yc + dir[i][1] * dx;
-            //node->m_z = zc + dir[i][2] * dx;
-            GW[i] = GetFunctional<2>(minJacNew,false);
-        }
-        node->m_x = xc + dir[6][0] * dx;
-        node->m_y = yc + dir[6][1] * dx;
-        //node->m_z = zc + dir[i][2] * dx;
-        GW[4] = GetFunctional<2>(minJacNew,false);
-        node->m_x = xc + dir[7][0] * dx;
-        node->m_y = yc + dir[7][1] * dx;
-        //node->m_z = zc + dir[i][2] * dx;
-        GW[5] = GetFunctional<2>(minJacNew,false);
-
-        Array<OneD, NekDouble> grad(5);
-        grad[0] = (GW[0] - GW[1]) /dx/2.0;
-        grad[1] = (GW[2] - GW[3]) /dx/2.0;
-        grad[2] = (GW[0] + GW[1] - 2*currentW) / dx / dx;
-        grad[3] = (GW[4] + GW[5] - GW[0] - GW[1] - GW[2] - GW[3] + 2*currentW) / 2 / dx / dx;
-        grad[4] = (GW[2] + GW[3] - 2*currentW) / dx / dx;
-
-        //cout << grad[0] << " " << grad[1] << " " << grad[2] << " " << grad[3] << " " << grad[4] << endl;
-        node->m_x = xc;
-        node->m_y = yc;
-        //node->m_z = zc;
-        G = tmp;*/
 
         Array<OneD, NekDouble> sk(2), dk(2);
         NekDouble val;
@@ -152,20 +117,17 @@ void NodeOpti2D2D::Optimise()
         if (val < 1e-6)
         {
             // Add constant identity to Hessian matrix.
-            G[2] += 1e-6 - val;
-            G[4] += 1e-6 - val;
+            m_grad[2] += 1e-6 - val;
+            m_grad[4] += 1e-6 - val;
         }
 
-        sk[0] = -1.0/(G[2]*G[4]-G[3]*G[3])*(G[4]*G[0] - G[3]*G[1]);
-        sk[1] = -1.0/(G[2]*G[4]-G[3]*G[3])*(G[2]*G[1] - G[3]*G[0]);
+        sk[0] = -1.0/(m_grad[2]*m_grad[4]-m_grad[3]*m_grad[3])*(m_grad[4]*m_grad[0] - m_grad[3]*m_grad[1]);
+        sk[1] = -1.0/(m_grad[2]*m_grad[4]-m_grad[3]*m_grad[3])*(m_grad[2]*m_grad[1] - m_grad[3]*m_grad[0]);
 
         bool found  = false;
-        NekDouble pg = (G[0]*sk[0]+G[1]*sk[1]);
+        NekDouble pg = (m_grad[0]*sk[0]+m_grad[1]*sk[1]);
         //normal gradient line Search
         NekDouble alpha    = 1.0;
-        NekDouble hes = sk[0] * (sk[0]*G[2] + sk[1]*G[3]) +
-                        sk[1] * (sk[0]*G[3] + sk[1]*G[4]);
-        hes = min(hes,0.0);
 
         while (alpha > alphaTol())
         {
@@ -174,11 +136,9 @@ void NodeOpti2D2D::Optimise()
             node->m_y = yc + alpha * sk[1];
 
             newVal = GetFunctional<2>(minJacNew,false);
-            //dont need the hessian again this function updates G to be the new
-            //location
-            //
+
             // Wolfe conditions
-            if (newVal <= currentW + c1() * (alpha*pg+ 0.5*alpha*alpha*hes))
+            if (newVal <= currentW + c1() * (alpha*pg))
             {
                 found = true;
                 break;

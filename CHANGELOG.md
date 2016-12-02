@@ -67,6 +67,7 @@ v4.4.0
 - Add option to `linearise` to use element quality (!690)
 - Add flag to `insertsurface` process for non-conforming geometries (!700)
 - Bug fix to get two meshgen regression tests working (!700)
+- Remove libANN in deference to boost::geometry (!703)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing
@@ -81,6 +82,7 @@ v4.3.5
 - Fix bug in DG with hybrid meshes (!694)
 - Fix issue with parallel output (!699)
 - Fix performance issue with iterative full solver (!693)
+- Enforced precision on history point output (!706)
 
 **Documentation**
 - Update build instructions in user guide for Windows (!692)

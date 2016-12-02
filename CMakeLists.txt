@@ -218,7 +218,6 @@ INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
 INCLUDE (ThirdPartyOCE)
 INCLUDE (ThirdPartyTetGen)
-INCLUDE (ThirdPartyANN)
 INCLUDE (ThirdPartyCCM)
 
 INCLUDE (Doxygen)

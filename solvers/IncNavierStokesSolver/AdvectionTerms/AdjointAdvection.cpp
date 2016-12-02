@@ -267,7 +267,9 @@ void AdjointAdvection::v_Advect(
     const Array<OneD, Array<OneD, NekDouble> >        &advVel,
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
     Array<OneD, Array<OneD, NekDouble> >              &outarray,
-    const NekDouble                                   &time)
+    const NekDouble                                   &time,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
     int nqtot            = fields[0]->GetTotPoints();
     int ndim             = advVel.num_elements();

@@ -73,7 +73,9 @@ void AlternateSkewAdvection::v_Advect(
     const Array<OneD, Array<OneD, NekDouble> >        &advVel,
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
           Array<OneD, Array<OneD, NekDouble> >        &outarray,
-    const NekDouble                                   &time)
+    const NekDouble                                   &time,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
     // use dimension of Velocity vector to dictate dimension of operation
     int ndim       = advVel.num_elements();

@@ -114,13 +114,16 @@ namespace Nektar
                 m_advObject->InitObject      (m_session, m_fields);
                 
                 // Diffusion term
-                std::string diffName;
-                m_session->LoadSolverInfo("DiffusionType", diffName, "LDG");
-                m_diffusion = SolverUtils::GetDiffusionFactory().
-                    CreateInstance(diffName, diffName);
-                m_diffusion->SetFluxVector(&UnsteadyAdvectionDiffusion::
-                                           GetFluxVectorDiff, this);
-                m_diffusion->InitObject(m_session, m_fields);
+                if (m_explicitDiffusion)
+                {
+                    std::string diffName;
+                    m_session->LoadSolverInfo("DiffusionType", diffName, "LDG");
+                    m_diffusion = SolverUtils::GetDiffusionFactory().
+                        CreateInstance(diffName, diffName);
+                    m_diffusion->SetFluxVector(&UnsteadyAdvectionDiffusion::
+                                               GetFluxVectorDiff, this);
+                    m_diffusion->InitObject(m_session, m_fields);
+                }
 
                 ASSERTL0(m_subSteppingScheme == false,"SubSteppingScheme is not set up for DG projection");
                 break;
@@ -168,6 +171,9 @@ namespace Nektar
 
         m_ode.DefineImplicitSolve (
             &UnsteadyAdvectionDiffusion::DoImplicitSolve, this);
+        m_ode.DefineProjection(
+            &UnsteadyAdvectionDiffusion::DoOdeProjection, this);
+        m_ode.DefineOdeRhs(&UnsteadyAdvectionDiffusion::DoOdeRhs, this);
 
         if(m_subSteppingScheme) // Substepping
         {
@@ -176,17 +182,6 @@ namespace Nektar
                      "substepping");
             SetUpSubSteppingTimeIntegration(
                     m_intScheme->GetIntegrationMethod(), m_intScheme);
-
-        }
-        else // Standard velocity correction scheme
-        {
-            m_ode.DefineOdeRhs(&UnsteadyAdvectionDiffusion::DoOdeRhs, this);
-        }
-
-        if (m_projectionType == MultiRegions::eDiscontinuous &&
-            m_explicitDiffusion == 1)
-        {
-            m_ode.DefineProjection(&UnsteadyAdvectionDiffusion::DoOdeProjection, this);
         }
     }
 
@@ -250,17 +245,10 @@ namespace Nektar
     {
         // Number of fields (variables of the problem)
         int nVariables = inarray.num_elements();
-        
+
         // Number of solution points
         int nSolutionPts = GetNpoints();
-        
-        Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nVariables);
-        
-        for (int i = 0; i < nVariables; ++i)
-        {
-            outarrayDiff[i] = Array<OneD, NekDouble>(nSolutionPts, 0.0);
-        }
-        
+
         // RHS computation using the new advection base class
         m_advObject->Advect(nVariables, m_fields, m_velocity,
                             inarray, outarray, time);
@@ -270,10 +258,15 @@ namespace Nektar
         {
             Vmath::Neg(nSolutionPts, outarray[i], 1);
         }
-        
-        // No explicit diffusion for CG
-        if (m_projectionType == MultiRegions::eDiscontinuous)
+
+        if (m_explicitDiffusion)
         {
+            Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nVariables);
+            for (int i = 0; i < nVariables; ++i)
+            {
+                outarrayDiff[i] = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+            }
+
             m_diffusion->Diffuse(nVariables, m_fields, inarray, outarrayDiff);
 
             for (int i = 0; i < nVariables; ++i)
@@ -359,15 +352,17 @@ namespace Nektar
             factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
             factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_epsilon;
         }
+        if(m_projectionType == MultiRegions::eDiscontinuous)
+        {
+            factors[StdRegions::eFactorTau] = 1.0;
+        }
 
         Array<OneD, Array< OneD, NekDouble> > F(nvariables);
-        F[0] = Array<OneD, NekDouble> (nq*nvariables);
-        
-        for (int n = 1; n < nvariables; ++n)
+        for (int n = 0; n < nvariables; ++n)
         {
-            F[n] = F[n-1] + nq;
+            F[n] = Array<OneD, NekDouble> (nq);
         }
-        
+
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}
         // outarray = output: nabla^2 \hat{Y}

@@ -124,7 +124,7 @@ void InputCAD::ParseFile(string nm)
     it = information.find("MeshType");
     ASSERTL0(it != information.end(),"no meshtype defined");
     m_makeBL = it->second == "BL";
-    it->second == "2D" ? m_2D = true : m_2D = false;
+    m_2D = it->second == "2D";
     if (it->second == "2DBL")
     {
         m_makeBL = true;

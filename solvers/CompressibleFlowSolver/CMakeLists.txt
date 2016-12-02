@@ -4,24 +4,42 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_COMPRESSIBLE_FLOW
 
 IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     SET(CompressibleFlowSolverSource 
-        ./CompressibleFlowSolver.cpp 
-        ./EquationSystems/CompressibleFlowSystem.cpp
-        ./EquationSystems/EulerCFE.cpp
-        ./EquationSystems/EulerADCFE.cpp
-        ./EquationSystems/NavierStokesCFE.cpp
-        ./Filters/FilterEnergy.cpp
-        ./RiemannSolvers/AverageSolver.cpp
-        ./RiemannSolvers/AUSM0Solver.cpp
-        ./RiemannSolvers/AUSM1Solver.cpp
-        ./RiemannSolvers/AUSM2Solver.cpp
-        ./RiemannSolvers/AUSM3Solver.cpp
-        ./RiemannSolvers/CompressibleSolver.cpp
-        ./RiemannSolvers/ExactSolverToro.cpp
-        ./RiemannSolvers/HLLSolver.cpp
-        ./RiemannSolvers/HLLCSolver.cpp
-        ./RiemannSolvers/LaxFriedrichsSolver.cpp
-        ./RiemannSolvers/RoeSolver.cpp
-        )
+       ./ArtificialDiffusion/ArtificialDiffusion.cpp
+       ./ArtificialDiffusion/NonSmoothShockCapture.cpp
+       ./ArtificialDiffusion/SmoothShockCapture.cpp
+       ./BoundaryConditions/CFSBndCond.cpp
+       ./BoundaryConditions/ExtrapOrder0BC.cpp
+       ./BoundaryConditions/IsentropicVortexBC.cpp
+       ./BoundaryConditions/PressureInflowFileBC.cpp
+       ./BoundaryConditions/PressureOutflowBC.cpp
+       ./BoundaryConditions/PressureOutflowFileBC.cpp
+       ./BoundaryConditions/PressureOutflowNonReflectiveBC.cpp
+       ./BoundaryConditions/RiemannInvariantBC.cpp
+       ./BoundaryConditions/RinglebFlowBC.cpp
+       ./BoundaryConditions/SymmetryBC.cpp
+       ./BoundaryConditions/TimeDependentBC.cpp
+       ./BoundaryConditions/WallBC.cpp
+       ./BoundaryConditions/WallViscousBC.cpp
+       ./CompressibleFlowSolver.cpp 
+       ./EquationSystems/CompressibleFlowSystem.cpp
+       ./EquationSystems/EulerCFE.cpp
+       ./EquationSystems/IsentropicVortex.cpp
+       ./EquationSystems/NavierStokesCFE.cpp
+       ./EquationSystems/RinglebFlow.cpp
+       ./Filters/FilterEnergy.cpp
+       ./Misc/VariableConverter.cpp
+       ./RiemannSolvers/AverageSolver.cpp
+       ./RiemannSolvers/AUSM0Solver.cpp
+       ./RiemannSolvers/AUSM1Solver.cpp
+       ./RiemannSolvers/AUSM2Solver.cpp
+       ./RiemannSolvers/AUSM3Solver.cpp
+       ./RiemannSolvers/CompressibleSolver.cpp
+       ./RiemannSolvers/ExactSolverToro.cpp
+       ./RiemannSolvers/HLLSolver.cpp
+       ./RiemannSolvers/HLLCSolver.cpp
+       ./RiemannSolvers/LaxFriedrichsSolver.cpp
+       ./RiemannSolvers/RoeSolver.cpp
+       )
 
     ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver SOURCES ${CompressibleFlowSolverSource})
 

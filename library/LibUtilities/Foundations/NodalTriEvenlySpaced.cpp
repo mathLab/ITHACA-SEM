@@ -88,7 +88,8 @@ namespace Nektar
 
             NodalPointReorder2d();
 
-          
+            m_util = MemoryManager<NodalUtilTriangle>::AllocateSharedPtr(
+                npts - 1, m_points[0], m_points[1]);
         }
 
 
@@ -100,7 +101,7 @@ namespace Nektar
             typedef DataType T;
             
             // Solve the Vandermonde system of integrals for the weight vector
-            NekVector<T> w = MakeQuadratureWeights(NekVector<T>(m_points[0]), NekVector<T>(m_points[1]));
+            NekVector<T> w = m_util->GetWeights();
 
             m_weights = Array<OneD,T>( w.GetRows(), w.GetPtr() );
 
@@ -113,18 +114,14 @@ namespace Nektar
                                                          const Array<OneD, const NekDouble>& yia,
                                                          Array<OneD, NekDouble>& interp)
         {
-            NekVector<NekDouble>  x( m_points[0] );
-            NekVector<NekDouble>  y( m_points[1] );
-            NekVector<NekDouble> xi( xia );
-            NekVector<NekDouble> yi( yia );
-            NekMatrix<NekDouble> interMat = GetInterpolationMatrix(x, y, xi, yi);
+            Array<OneD, Array<OneD, NekDouble> > xi(2);
+            xi[0] = xia;
+            xi[1] = yia;
 
-            int rows = xi.GetRows(), cols = GetTotNumPoints();
-            for( int i = 0; i < rows; ++i ) {
-                for( int j = 0; j < cols; ++j ) {
-                    interp[j + i*cols] = interMat(i,j);
-                }
-            }
+            boost::shared_ptr<NekMatrix<NekDouble> > mat =
+                m_util->GetInterpolationMatrix(xi);
+            Vmath::Vcopy(mat->GetRows() * mat->GetColumns(), mat->GetRawPtr(),
+                         1, &interp[0], 1);
         }
 
         // ////////////////////////////////////////
@@ -135,14 +132,8 @@ namespace Nektar
             // Allocate the derivative matrix.
             PointsBaseType::CalculateDerivMatrix();
 
-            NekVector<NekDouble> x( m_points[0] );
-            NekVector<NekDouble> y( m_points[1] );
-            NekVector<NekDouble> xi = x;
-            NekVector<NekDouble> yi = y;
-
-            m_derivmatrix[0] = GetXDerivativeMatrix(x,y,xi,yi);
-            m_derivmatrix[1] = GetYDerivativeMatrix(x,y,xi,yi);
-
+            m_derivmatrix[0] = m_util->GetDerivMatrix(0);
+            m_derivmatrix[1] = m_util->GetDerivMatrix(1);
         } 
 
         boost::shared_ptr<PointsBaseType> NodalTriEvenlySpaced::Create(const PointsKey &key)

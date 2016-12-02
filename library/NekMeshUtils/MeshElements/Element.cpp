@@ -64,18 +64,6 @@ Element::Element(ElmtConfig pConf, unsigned int pNumNodes,
     }
 }
 
-/**
- * @brief Replace a vertex in the element.
- *
- * When a vertex is replaced, the element edges and faces are also
- * searched and the corresponding edge/face nodes are updated to
- * maintain consistency.
- *
- * @param  p        Index of the vertex to replace.
- * @param  pNew     New vertex.
- * @param  descend  If true, we loop over edges and faces and replace the
- *                  corresponding vertices with @p pNew.
- */
 void Element::SetVertex(unsigned int p, NodeSharedPtr pNew, bool descend)
 {
     NodeSharedPtr vOld = m_vertex[p];
@@ -121,17 +109,6 @@ void Element::SetVertex(unsigned int p, NodeSharedPtr pNew, bool descend)
     }
 }
 
-/**
- * @brief Replace an edge in the element.
- *
- * When an edge is replaced, the element faces are also searched and
- * the corresponding face edges are updated to maintain consistency.
- *
- * @param  p        Index of the edge to replace.
- * @param  pNew     New edge.
- * @param  descend  If true, we loop over faces and replace the corresponding
- *                  face edge with @p pNew.
- */
 void Element::SetEdge(unsigned int p, EdgeSharedPtr pNew, bool descend)
 {
     EdgeSharedPtr vOld = m_edge[p];
@@ -154,22 +131,11 @@ void Element::SetEdge(unsigned int p, EdgeSharedPtr pNew, bool descend)
     }
 }
 
-/**
- * @brief Replace a face in the element.
- *
- * When a face is replaced, no other consistency checks are required.
- *
- * @param  p     Index of the face to replace.
- * @param  pNew  New face.
- */
 void Element::SetFace(unsigned int p, FaceSharedPtr pNew)
 {
     m_face[p] = pNew;
 }
 
-/**
- * @brief Obtain the order of an element by looking at edges.
- */
 int Element::GetMaxOrder()
 {
     int i, ret = 1;
@@ -185,5 +151,85 @@ int Element::GetMaxOrder()
 
     return ret;
 }
+
+unsigned int Element::GetNodeCount()
+{
+    unsigned int n = m_volumeNodes.size();
+    if (m_dim == 1)
+    {
+        n += 2;
+    }
+    else if (m_dim == 2)
+    {
+        for (int i = 0; i < m_edge.size(); ++i)
+        {
+            n += m_edge[i]->GetNodeCount();
+        }
+        n -= m_vertex.size();
+    }
+    else
+    {
+        for (int i = 0; i < m_face.size(); ++i)
+        {
+            n += m_face[i]->GetNodeCount();
+        }
+        for (int i = 0; i < m_edge.size(); ++i)
+        {
+            n -= m_edge[i]->GetNodeCount();
+        }
+        n += m_vertex.size();
+        std::cerr << "Not supported." << std::endl;
+        exit(1);
+    }
+    return n;
+}
+
+string Element::GetXmlString()
+{
+    std::stringstream s;
+    switch (m_dim)
+    {
+        case 1:
+            for (int j = 0; j < m_vertex.size(); ++j)
+            {
+                s << std::setw(5) << m_vertex[j]->m_id << " ";
+            }
+            break;
+        case 2:
+            for (int j = 0; j < m_edge.size(); ++j)
+            {
+                s << std::setw(5) << m_edge[j]->m_id << " ";
+            }
+            break;
+        case 3:
+            for (int j = 0; j < m_face.size(); ++j)
+            {
+                s << std::setw(5) << m_face[j]->m_id << " ";
+            }
+            break;
+    }
+    return s.str();
+}
+
+string Element::GetXmlCurveString()
+{
+    // Temporary node list for reordering
+    std::vector<NodeSharedPtr> nodeList;
+
+    GetCurvedNodes(nodeList);
+
+    // Finally generate the XML string corresponding to our new
+    // node reordering.
+    std::stringstream s;
+    std::string str;
+    for (int k = 0; k < nodeList.size(); ++k)
+    {
+        s << std::scientific << std::setprecision(8) << "    "
+          << nodeList[k]->m_x << "  " << nodeList[k]->m_y << "  "
+          << nodeList[k]->m_z << "    ";
+    }
+    return s.str();
+}
+
 }
 }

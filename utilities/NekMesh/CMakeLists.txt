@@ -1,6 +1,7 @@
 SET(NekMeshSources
     InputModules/InputGmsh.cpp
     InputModules/InputNek.cpp
+    InputModules/InputNek5000.cpp
     InputModules/InputNekpp.cpp
     InputModules/InputPly.cpp
     InputModules/InputSem.cpp
@@ -19,12 +20,14 @@ SET(NekMeshSources
     ProcessModules/ProcessExtractSurf.cpp
     ProcessModules/ProcessExtractTetPrismInterface.cpp
     ProcessModules/ProcessJac.cpp
+    ProcessModules/ProcessLinkCheck.cpp
     ProcessModules/ProcessLinear.cpp
     ProcessModules/ProcessPerAlign.cpp
     ProcessModules/ProcessScalar.cpp
     ProcessModules/ProcessSpherigon.cpp
     ProcessModules/ProcessTetSplit.cpp
     ProcessModules/ProcessOptiExtract.cpp
+    ProcessModules/ProcessInsertSurface.cpp
 )
 
 IF (NEKTAR_USE_CCM)
@@ -38,11 +41,6 @@ ENDIF (NEKTAR_USE_VTK)
 IF (NEKTAR_USE_MESHGEN)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputCAD.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
-
-IF (NEKTAR_USE_ANN)
-    SET(NekMeshHeaders ${NekMeshHeaders} ProcessModules/ProcessInsertSurface.h)
-    SET(NekMeshSources ${NekMeshSources} ProcessModules/ProcessInsertSurface.cpp)
-ENDIF (NEKTAR_USE_ANN)
 
 # Don't use macro -- this way we can just link against NekMeshUtils and
 # LocalRegions.
@@ -88,6 +86,9 @@ ADD_NEKTAR_TEST        (Gmsh/SquareTriLinear)
 # Nektar tests
 ADD_NEKTAR_TEST        (Nektar/HexLinear)
 ADD_NEKTAR_TEST        (Nektar/Tube45)
+# Nek5000 tests
+ADD_NEKTAR_TEST        (Nek5000/3da)
+ADD_NEKTAR_TEST        (Nek5000/r1854a)
 # StarCCM tests
 ADD_NEKTAR_TEST        (StarTec/CubePer)
 ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)
@@ -96,5 +97,5 @@ ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)
 IF(NEKTAR_USE_MESHGEN)
     ADD_NEKTAR_TEST        (MeshGen/cylinder)
     ADD_NEKTAR_TEST        (MeshGen/sphere)
-    ADD_NEKTAR_TEST_LENGTHY(MeshGen/predator)
+#    ADD_NEKTAR_TEST_LENGTHY(MeshGen/predator) disabled for now
 ENDIF()

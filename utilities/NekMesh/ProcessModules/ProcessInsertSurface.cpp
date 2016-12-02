@@ -36,7 +36,13 @@
 #include <NekMeshUtils/MeshElements/Element.h>
 #include "ProcessInsertSurface.h"
 
-#include <ANN/ANN.h>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/index/rtree.hpp>
+
+namespace bg  = boost::geometry;
+namespace bgi = boost::geometry::index;
 
 using namespace std;
 using namespace Nektar::NekMeshUtils;
@@ -55,6 +61,8 @@ ProcessInsertSurface::ProcessInsertSurface(MeshSharedPtr m) : ProcessModule(m)
 {
     m_config["mesh"] =
         ConfigOption(false, "", "Mesh to be inserted.");
+    m_config["nonconforming"] =
+        ConfigOption(false,"", "Relax tests for nonconforming boundries");
 }
 
 ProcessInsertSurface::~ProcessInsertSurface()
@@ -63,12 +71,17 @@ ProcessInsertSurface::~ProcessInsertSurface()
 
 void ProcessInsertSurface::Process()
 {
+    typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> Point;
+    typedef pair<Point, unsigned int> PointI;
+
     if (m_mesh->m_verbose)
     {
         cout << "ProcessInsertSurface: Inserting mesh... " << endl;
     }
 
     string file = m_config["mesh"].as<string>();
+    bool nonconform = m_config["nonconforming"].beenSet;
+
     if (m_mesh->m_verbose)
     {
         cout << "inserting surface from " << file << endl;
@@ -98,27 +111,17 @@ void ProcessInsertSurface::Process()
 
     vector<NodeSharedPtr> inMshnodeList(surfaceNodes.begin(), surfaceNodes.end());
 
-    ANNpointArray dataPts;
-    ANNpoint queryPt;
-    ANNidxArray nnIdx;
-    ANNdistArray dists;
-    ANNkd_tree* kdTree;
-
-    queryPt = annAllocPt(3);
-    dataPts = annAllocPts(inMshnodeList.size(),3);
-
+    vector<PointI> dataPts;
     for(int i = 0; i < inMshnodeList.size(); i++)
     {
-        dataPts[i][0] = inMshnodeList[i]->m_x;
-        dataPts[i][1] = inMshnodeList[i]->m_y;
-        dataPts[i][2] = inMshnodeList[i]->m_z;
+         dataPts.push_back(make_pair(Point( inMshnodeList[i]->m_x,
+                                            inMshnodeList[i]->m_y,
+                                            inMshnodeList[i]->m_z), i));
     }
 
-    kdTree = new ANNkd_tree(dataPts, inMshnodeList.size(), 3);
-
-    int sample = 1;
-    nnIdx = new ANNidx[sample];
-    dists = new ANNdist[sample];
+    //Build tree
+    bgi::rtree<PointI, bgi::rstar<16> > rtree;
+    rtree.insert(dataPts.begin(), dataPts.end());
 
     surfaceNodes.clear();
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
@@ -130,8 +133,11 @@ void ProcessInsertSurface::Process()
         }
     }
 
-    ASSERTL0(surfaceNodes.size() == inMshnodeList.size(),
-             "surface mesh node count mismatch, will not work");
+    if(!nonconform)
+    {
+        ASSERTL0(surfaceNodes.size() == inMshnodeList.size(),
+                 "surface mesh node count mismatch, will not work");
+    }
 
     EdgeSet surfEdges;
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
@@ -147,19 +153,42 @@ void ProcessInsertSurface::Process()
     EdgeSet::iterator it;
     for(it = surfEdges.begin(); it != surfEdges.end(); it++)
     {
-        queryPt[0] = (*it)->m_n1->m_x;
-        queryPt[1] = (*it)->m_n1->m_y;
-        queryPt[2] = (*it)->m_n1->m_z;
-        kdTree->annkSearch(queryPt,sample,nnIdx,dists);
-        ASSERTL0(sqrt(dists[0]) < tol, "cannot locate point accurately enough");
-        NodeSharedPtr inN1 = inMshnodeList[nnIdx[0]];
+        Point queryPt1((*it)->m_n1->m_x, (*it)->m_n1->m_y, (*it)->m_n1->m_z);
+        vector<PointI> result;
+        rtree.query(bgi::nearest(queryPt1, 1), std::back_inserter(result));
 
-        queryPt[0] = (*it)->m_n2->m_x;
-        queryPt[1] = (*it)->m_n2->m_y;
-        queryPt[2] = (*it)->m_n2->m_z;
-        kdTree->annkSearch(queryPt,sample,nnIdx,dists);
-        ASSERTL0(sqrt(dists[0]) < tol, "cannot locate point accurately enough");
-        NodeSharedPtr inN2 = inMshnodeList[nnIdx[0]];
+        NekDouble dist1 = bg::distance(result[0].first, queryPt1);
+        if(nonconform)
+        {
+            if(dist1 > tol)
+            {
+                continue;
+            }
+        }
+        else
+        {
+            ASSERTL0(dist1 < tol, "cannot locate point accurately enough");
+        }
+
+        NodeSharedPtr inN1 = inMshnodeList[result[0].second];
+
+        Point queryPt2((*it)->m_n2->m_x, (*it)->m_n2->m_y, (*it)->m_n2->m_z);
+        result.clear();
+        rtree.query(bgi::nearest(queryPt2, 1), std::back_inserter(result));
+
+        NekDouble dist2 = bg::distance(result[0].first, queryPt2);
+        if(nonconform)
+        {
+            if(dist2 > tol)
+            {
+                continue;
+            }
+        }
+        else
+        {
+            ASSERTL0(dist2 < tol, "cannot locate point accurately enough");
+        }
+        NodeSharedPtr inN2 = inMshnodeList[result[0].second];
 
         EdgeSharedPtr tst = boost::shared_ptr<Edge>(new Edge(inN1,inN2));
 

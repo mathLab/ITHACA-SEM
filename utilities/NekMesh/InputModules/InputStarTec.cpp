@@ -109,7 +109,7 @@ void InputTec::Process()
     }
 
     PrintSummary();
-    m_mshFile.close();
+    m_mshFile.reset();
 
     ProcessEdges();
     ProcessFaces();
@@ -125,15 +125,12 @@ void InputTec::ReadZone(int &nComposite)
     int start, end;
     stringstream s;
     NekDouble value;
-    streampos pos;
     static int zcnt = 1;
 
     // Read Zone Header
     nnodes = nfaces = nelements = 0;
     while (!m_mshFile.eof())
     {
-        pos = m_mshFile.tellg();
-
         getline(m_mshFile, line);
 
         boost::to_upper(line);
@@ -141,7 +138,6 @@ void InputTec::ReadZone(int &nComposite)
         // cehck to see if readable data.
         if (sscanf(line.c_str(), "%lf", &value) == 1)
         {
-            m_mshFile.seekg(pos);
             break;
         }
 
@@ -200,31 +196,34 @@ void InputTec::ReadZone(int &nComposite)
 
     cout << "Setting up zone " << zcnt++;
 
-    vector<NekDouble> x, y, z;
+    int nodeCount = 3 * nnodes;
+    vector<NekDouble> nodeLocs;
 
-    // Read in Nodes
-    for (i = 0; i < nnodes; ++i)
+    while (nodeCount > 0 && !m_mshFile.eof())
     {
-        m_mshFile >> value;
-        x.push_back(value);
+        s.clear();
+        s.str(line);
+        while (s >> value)
+        {
+            nodeLocs.push_back(value);
+            nodeCount--;
+        }
+        if (nodeCount > 0)
+        {
+            getline(m_mshFile, line);
+        }
     }
 
-    for (i = 0; i < nnodes; ++i)
-    {
-        m_mshFile >> value;
-        y.push_back(value);
-    }
-
-    for (i = 0; i < nnodes; ++i)
-    {
-        m_mshFile >> value;
-        z.push_back(value);
-    }
+    ASSERTL0(nodeLocs.size() == 3*nnodes, "Unable to read correct number of "
+             "nodes from Tecplot file");
 
     std::vector<NodeSharedPtr> Nodes;
     for (i = 0; i < nnodes; ++i)
     {
-        Nodes.push_back(boost::shared_ptr<Node>(new Node(i, x[i], y[i], z[i])));
+        Nodes.push_back(
+            boost::shared_ptr<Node>(
+                new Node(i, nodeLocs[i], nodeLocs[i+nnodes],
+                         nodeLocs[i+2*nnodes])));
     }
 
     // Read Node count per face

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.cpp
+//  File: Tetrahedron.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh tet object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,6 +39,8 @@
 
 #include <NekMeshUtils/MeshElements/Tetrahedron.h>
 #include <NekMeshUtils/MeshElements/Triangle.h>
+
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 using namespace std;
 
@@ -204,6 +206,15 @@ Tetrahedron::Tetrahedron(ElmtConfig pConf,
 
         m_face.push_back(FaceSharedPtr(new Face(
             faceVertices, faceNodes, faceEdges, m_conf.m_faceCurveType)));
+    }
+
+    if (m_conf.m_volumeNodes)
+    {
+        const int nFaceNodes = n * (n - 1) / 2;
+        for (int i = 4 + 6 * n + 4 * nFaceNodes; i < pNodeList.size(); ++i)
+        {
+            m_volumeNodes.push_back(pNodeList[i]);
+        }
     }
 
     vector<EdgeSharedPtr> tmp(6);
@@ -375,6 +386,86 @@ bool operator==(const struct TetOrient &a, const struct TetOrient &b)
     }
 
     return true;
+}
+
+void Tetrahedron::GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+{
+    int n = m_edge[0]->GetNodeCount();
+    nodeList.resize(n*(n+1)*(n+2)/6);
+
+    nodeList[0] = m_vertex[0];
+    nodeList[1] = m_vertex[1];
+    nodeList[2] = m_vertex[2];
+    nodeList[3] = m_vertex[3];
+    int k = 4;
+
+    for(int i = 0; i < 6; i++)
+    {
+        bool reverseEdge = false;
+        if(i < 3)
+        {
+            reverseEdge = m_edge[i]->m_n1 == m_vertex[i];
+        }
+        else
+        {
+            reverseEdge = m_edge[i]->m_n1 == m_vertex[i-3];
+        }
+
+        if (reverseEdge)
+        {
+            for(int j = 0; j < n-2; j++)
+            {
+                nodeList[k++] = m_edge[i]->m_edgeNodes[j];
+            }
+        }
+        else
+        {
+            for(int j = n-3; j >= 0; j--)
+            {
+                nodeList[k++] = m_edge[i]->m_edgeNodes[j];
+            }
+        }
+    }
+
+    vector<vector<int> > ts;
+    vector<int> t(3);
+    t[0] = m_vertex[0]->m_id;
+    t[1] = m_vertex[1]->m_id;
+    t[2] = m_vertex[2]->m_id;
+    ts.push_back(t);
+    t[0] = m_vertex[0]->m_id;
+    t[1] = m_vertex[1]->m_id;
+    t[2] = m_vertex[3]->m_id;
+    ts.push_back(t);
+    t[0] = m_vertex[1]->m_id;
+    t[1] = m_vertex[2]->m_id;
+    t[2] = m_vertex[3]->m_id;
+    ts.push_back(t);
+    t[0] = m_vertex[0]->m_id;
+    t[1] = m_vertex[2]->m_id;
+    t[2] = m_vertex[3]->m_id;
+    ts.push_back(t);
+
+    for(int i = 0; i < 4; i++)
+    {
+        vector<int> fcid;
+        fcid.push_back(m_face[i]->m_vertexList[0]->m_id);
+        fcid.push_back(m_face[i]->m_vertexList[1]->m_id);
+        fcid.push_back(m_face[i]->m_vertexList[2]->m_id);
+
+        HOTriangle<NodeSharedPtr> hot(fcid, m_face[i]->m_faceNodes);
+
+        hot.Align(ts[i]);
+
+        std::copy(hot.surfVerts.begin(),
+                  hot.surfVerts.end(),
+                  nodeList.begin() + k);
+        k+= hot.surfVerts.size();
+    }
+
+    std::copy(m_volumeNodes.begin(),
+              m_volumeNodes.end(),
+              nodeList.begin() + k);
 }
 
 /**

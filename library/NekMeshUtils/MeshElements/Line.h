@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh line object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_LINE
-#define NekMeshUtils_MESHELEMENTS_LINE
+#ifndef NEKMESHUTILS_MESHELEMENTS_LINE
+#define NEKMESHUTILS_MESHELEMENTS_LINE
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 #include <NekMeshUtils/MeshElements/Element.h>
@@ -65,6 +65,9 @@ public:
     NEKMESHUTILS_EXPORT virtual ~Line()
     {
     }
+
+    NEKMESHUTILS_EXPORT virtual void GetCurvedNodes(
+        std::vector<NodeSharedPtr> &nodeList) const;
 
     NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
         int coordDim);

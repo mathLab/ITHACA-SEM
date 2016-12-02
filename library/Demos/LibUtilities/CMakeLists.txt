@@ -2,19 +2,22 @@ ADD_NEKTAR_EXECUTABLE(PartitionAnalyse
     COMPONENT demos DEPENDS LibUtilities SOURCES PartitionAnalyse.cpp)
 ADD_NEKTAR_EXECUTABLE(FoundationDemo
     COMPONENT demos DEPENDS LibUtilities SOURCES FoundationDemo.cpp)
-ADD_NEKTAR_EXECUTABLE(NodalTriFeketeDemo
-    COMPONENT demos DEPENDS LibUtilities SOURCES NodalTriFeketeDemo.cpp)
-ADD_NEKTAR_EXECUTABLE(NodalTriElecDemo
-    COMPONENT demos DEPENDS LibUtilities SOURCES NodalTriElecDemo.cpp)
-ADD_NEKTAR_EXECUTABLE(NodalTriEvenlySpacedDemo
-    COMPONENT demos DEPENDS LibUtilities SOURCES NodalTriEvenlySpacedDemo.cpp)
-ADD_NEKTAR_EXECUTABLE(NodalTetEvenlySpacedDemo
-    COMPONENT demos DEPENDS LibUtilities SOURCES NodalTetEvenlySpacedDemo.cpp)
-ADD_NEKTAR_EXECUTABLE(NodalTetElecDemo
-    COMPONENT demos DEPENDS LibUtilities SOURCES NodalTetElecDemo.cpp)
+ADD_NEKTAR_EXECUTABLE(NodalDemo
+    COMPONENT demos DEPENDS LibUtilities SOURCES NodalDemo.cpp)
 ADD_NEKTAR_EXECUTABLE(TimeIntegrationDemo
     COMPONENT demos DEPENDS LibUtilities SOURCES TimeIntegrationDemo.cpp)
+
 IF(NEKTAR_USE_MPI)
     ADD_NEKTAR_EXECUTABLE(FieldIOBenchmarker
         COMPONENT demos DEPENDS LibUtilities SOURCES FieldIOBenchmarker.cpp)
 ENDIF()
+
+ADD_NEKTAR_TEST(NodalDemo_Tri_Deriv_P8)
+ADD_NEKTAR_TEST(NodalDemo_Tri_Integral_P6)
+ADD_NEKTAR_TEST(NodalDemo_Tri_Interp_P7)
+ADD_NEKTAR_TEST(NodalDemo_Prism_Deriv_P8)
+ADD_NEKTAR_TEST(NodalDemo_Prism_Integral_P6)
+ADD_NEKTAR_TEST(NodalDemo_Prism_Interp_P7)
+ADD_NEKTAR_TEST(NodalDemo_Tet_Deriv_P8)
+ADD_NEKTAR_TEST(NodalDemo_Tet_Integral_P6)
+ADD_NEKTAR_TEST(NodalDemo_Tet_Interp_P7)

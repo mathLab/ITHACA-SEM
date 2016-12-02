@@ -2,9 +2,9 @@ ADD_UTILITIES_EXECUTABLE(FieldConvert
     COMPONENT fieldconvert DEPENDS FieldUtils SOURCES FieldConvert.cpp)
 
 #ADD_NEKTAR_TEST(chan3D_tec)  # This test is covered in bfs_tec
-#ADD_NEKTAR_TEST(chan3D_vtu)  # This does not currently work -- hash metric 
+#ADD_NEKTAR_TEST(chan3D_vtu)  # This does not currently work -- hash metric
 #ADD_NEKTAR_TEST(chan3D_vort) # This is covered by bfs_vort
-#ADD_NEKTAR_TEST(chan3D_pts)  # This does not currently work -- hash metric 
+#ADD_NEKTAR_TEST(chan3D_pts)  # This does not currently work -- hash metric
 
 ADD_NEKTAR_TEST(chan3D_tec_n10)
 ADD_NEKTAR_TEST(chan3D_interppointsplane)

@@ -75,6 +75,9 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST        (Advection_m12_Order2)
     ADD_NEKTAR_TEST        (Advection_m14_Order4)
 
+    # 2D advection diffusion (Imex DG)
+    ADD_NEKTAR_TEST        (UnsteadyAdvectionDiffusion_2D_ImexDG)
+
     # 3D discontinous advection
     ADD_NEKTAR_TEST_LENGTHY(Advection3D_m12_DG_hex_periodic_nodal)
     ADD_NEKTAR_TEST        (Advection3D_m12_DG_hex_nodal)

@@ -56,12 +56,12 @@ public:
              std::vector<ElUtilSharedPtr> e,
              ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
              optiType o)
-        : node(n), res(r), derivUtil(d), opti(o)
+        : m_node(n), m_res(r), m_derivUtils(d), m_opti(o)
     {
         //filter element types within d vector
         for(int i = 0; i < e.size(); i++)
         {
-            data[e[i]->GetEl()->GetShapeType()].push_back(e[i]);
+            m_data[e[i]->GetEl()->GetShapeType()].push_back(e[i]);
         }
     }
 
@@ -76,22 +76,18 @@ protected:
 
     template<int DIM> NekDouble GetFunctional(NekDouble &minJacNew,
                                               bool gradient = true);
-    NodeSharedPtr node;
+    NodeSharedPtr m_node;
     boost::mutex mtx;
-    std::map<LibUtilities::ShapeType,std::vector<ElUtilSharedPtr> > data;
-    Array<OneD, NekDouble> G;
-
-
-    bool Linear();
+    std::map<LibUtilities::ShapeType,std::vector<ElUtilSharedPtr> > m_data;
+    Array<OneD, NekDouble> m_grad;
 
     template<int DIM> int IsIndefinite();
     template<int DIM> void MinEigen(NekDouble &val, Array<OneD, NekDouble> &vec);
 
-    NekDouble dx;
-    NekDouble minJac;
-    ResidualSharedPtr res;
-    std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> derivUtil;
-    optiType opti;
+    NekDouble m_minJac;
+    ResidualSharedPtr m_res;
+    std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> m_derivUtils;
+    optiType m_opti;
 
     static const NekDouble gam;
 

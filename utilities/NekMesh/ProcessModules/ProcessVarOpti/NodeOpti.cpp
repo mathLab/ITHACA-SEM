@@ -68,13 +68,13 @@ const NekDouble NodeOpti::gam = numeric_limits<float>::epsilon();
 
 void NodeOpti::CalcMinJac()
 {
-    minJac = numeric_limits<double>::max();
+    m_minJac = numeric_limits<double>::max();
     map<LibUtilities::ShapeType,vector<ElUtilSharedPtr> >::iterator typeIt;
     for(typeIt = data.begin(); typeIt != data.end(); typeIt++)
     {
         for(int i = 0; i < typeIt->second.size(); i++)
         {
-            minJac = min(minJac,typeIt->second[i]->GetMinJac());
+            m_minJac = min(minJac,typeIt->second[i]->GetMinJac());
         }
     }
 }

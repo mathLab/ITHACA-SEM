@@ -445,8 +445,8 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
 
     std::vector<std::string> files;
+    ParseUtils::GenerateOrderedStringVector(m_config["fromxml"].as<string>().c_str(), files);
     // set up session file for from field
-    files.push_back(m_config["fromxml"].as<string>());
     fromField->m_session =
         LibUtilities::SessionReader::CreateInstance(0, 0, files);
 

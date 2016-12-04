@@ -210,12 +210,13 @@ $p=0$ which can be specified as
 
 However when energetic vortices pass through an outflow region one can
 experience instabilities as identified by the work of Dong, Karnidakis
-and Chryssostomidis \cite{DoKa14}. In this work one impose a pressure
-Dirichlet outflow condition of the form
+and Chryssostomidis \cite{DoKa14}. In this paper they suggest to
+impose a pressure Dirichlet outflow condition of the form
 
 \begin{equation}
  p^{n+1}= \nu \nabla\mathbf{u}^{*,n+1}\cdot \mathbf{n}-\frac{1}{2}
-\mid \mathbf{u}^{*,n+1} \mid^2 S_o(\mathbf{n}\cdot \mathbf{u}^{*,n+1})-\mathbf{f}_b^{n+1}\cdot \mathbf{n}
+ \mid \mathbf{u}^{*,n+1} \mid^2 S_o(\mathbf{n}\cdot
+ \mathbf{u}^{*,n+1})+\mathbf{f}_b^{n+1}\cdot \mathbf{n}
 \end{equation}
 
 with a step function defined by $S_o(n\cdot
@@ -225,13 +226,19 @@ is a non-dimensional positive constant chosen to be sufficiently
 small. $\mathbf{f}_b$ is the forcing term in this case the analytical
 conditions can be given but if these are not known explicitly, it is
 set to zero, i.e. $\mathbf{f}_b=0$. (see the test
-KovaFlow\_m8\_short\_HOBC.xml for a non-zero example). For the
-velocity component one can specify
+KovaFlow\_m8\_short\_HOBC.xml for a non-zero example). Note that in
+the paper \cite{DoKa14} they define this term as the negative of what
+is shown here so that it could be use used to impose a default
+pressure values. This does however mean that the forcing term is
+imposed through the velocity components $u,v$ by specifying the entry
+\inltt{VALUE} (An example can be found in
+ChanFlow\_m3\_VCSWeakPress\_ConOBC.xml). For the velocity component
+one can specify
 
  \begin{equation}
  \nabla\mathbf{u}^{n+1}\cdot\mathbf{n}=\frac{1}{\nu}\Bigl[p^{n+1}\mathbf{n}+\frac{1}{2}
    \mid \mathbf{u}^{*,n+1} \mid^2 S_o(\mathbf{n}\cdot
-   \mathbf{u}^{*,n+1})-\nu(\nabla\cdot\mathbf{u}^{*,n+1})\mathbf{n}+\mathbf{f}_b^{n+1}\Bigr]
+   \mathbf{u}^{*,n+1})-\nu(\nabla\cdot\mathbf{u}^{*,n+1})\mathbf{n}-\mathbf{f}_b^{n+1}\Bigr]
  \end{equation}
 
 This condition can be enforced using the \inltt{USERDEFINEDTYPE} ``HOutflow'', i.e. 
@@ -245,7 +252,28 @@ This condition can be enforced using the \inltt{USERDEFINEDTYPE} ``HOutflow'', i
   </BOUNDARYCONDITIONS>
 \end{lstlisting}
 
-Dong has more also suggested convective like outflow conditions in \cite{Dong15} which can be enforced through a Robin type  specification of the form
+Note that in the moving body work of Bao et al. \cite{BaPlGrSh16}
+some care must be made to identify when the flow over the boundary is
+incoming or outgoing and so a modification of the term
+\[
+\frac{1}{2}
+   \mid \mathbf{u}^{*,n+1} \mid^2 S_o(\mathbf{n}\cdot
+   \mathbf{u}^{*,n+1})
+\]
+is replaced with
+\[
+   \frac{1}{2} \left ( (\theta + \alpha_2)
+   \mid \mathbf{u}^{*,n+1} \mid^2 + (1-\theta + \alpha_1) 
+( \mathbf{u}^{*,n+1} \cdot \mathbf{n})  \mathbf{u}^{*,n+1} \right )
+   S_o(\mathbf{n}\cdot
+   \mathbf{u}^{*,n+1})
+\]
+where the default values are given by $\theta = 1,\alpha_1 = 0,\alpha_2 = 0$ and these values can be set through the parameters \inltt{OutflowBC\_theta},
+\inltt{OutflowBC\_alpha1} and \inltt{OutflowBC\_alpha2}. 
+
+Dong has also suggested convective like outflow conditions in
+\cite{Dong15} which can be enforced through a Robin type specification
+of the form
 
 \begin{equation}
   \frac{\partial \mathbf{u}^{n+1}}{\partial n} + \frac{\gamma_0 D_0}{\Delta t} \mathbf{u}^{n+1} = \frac{1}{\nu}\Bigl[\mathbf{f}^{n+1} + \mathbf{E}(\mathbf{n},\mathbf{u}^{*,n+1}) + p^{n+1}\mathbf{n} -\nu(\nabla\cdot \mathbf{u}^{*,n+1}) \mathbf{n}

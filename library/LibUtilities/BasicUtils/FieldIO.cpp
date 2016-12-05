@@ -423,7 +423,15 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
             bakPath += specPath.extension();
         }
         std::cout << "renaming " << specPath << " -> " << bakPath << std::endl;
-        fs::rename(specPath, bakPath);
+        try
+        {
+            fs::rename(specPath, bakPath);
+        }
+        catch (fs::filesystem_error &e)
+        {
+            ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                        "Filesystem error: " + string(e.what()));
+        }
     }
     // wait until rank 0 has backed up the old specPath
     if (backup)

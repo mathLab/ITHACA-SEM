@@ -56,7 +56,7 @@ ProcessLinear::ProcessLinear(MeshSharedPtr m) : ProcessModule(m)
     m_config["prismonly"] =
         ConfigOption(false, "", "only acts on prims");
     m_config["extract"] =
-        ConfigOption(true, "0", "dump a mesh of the extracted elements");
+        ConfigOption(false, "", "dump a mesh of the extracted elements");
 }
 
 ProcessLinear::~ProcessLinear()
@@ -225,15 +225,15 @@ void ProcessLinear::Process()
         if(m_config["extract"].beenSet)
         {
             MeshSharedPtr dmp = boost::shared_ptr<Mesh>(new Mesh());
-            oct->m_expDim     = 3;
-            oct->m_spaceDim   = 3;
-            oct->m_nummode    = 2;
+            dmp->m_expDim     = 3;
+            dmp->m_spaceDim   = 3;
+            dmp->m_nummode    = 2;
 
             dmp->m_element[3] = dumpEls;
 
             ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
                 ModuleKey(eOutputModule, "xml"), dmp);
-            mod->RegisterConfig("outfile", "linearised.xml");
+            mod->RegisterConfig("outfile", m_config["extract"].as<string>().c_str());
             mod->ProcessVertices();
             mod->ProcessEdges();
             mod->ProcessFaces();

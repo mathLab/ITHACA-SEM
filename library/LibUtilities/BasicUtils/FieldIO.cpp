@@ -421,6 +421,10 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         }
         specPath = newPath;
     }
+    if (backup)
+    {
+        m_comm->Block();
+    }
 
     if (nprocs == 1)
     {

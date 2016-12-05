@@ -36,13 +36,14 @@
 #ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_COMPRESSIBLEFLOWSYSTEM_H
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_COMPRESSIBLEFLOWSYSTEM_H
 
+#include <CompressibleFlowSolver/ArtificialDiffusion/ArtificialDiffusion.h>
+#include <CompressibleFlowSolver/Misc/VariableConverter.h>
+#include <CompressibleFlowSolver/BoundaryConditions/CFSBndCond.h>
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 #include <SolverUtils/Forcing/Forcing.h>
-#include <StdRegions/StdQuadExp.h>
-#include <StdRegions/StdHexExp.h>
 
 namespace Nektar
 {
@@ -55,16 +56,6 @@ namespace Nektar
 
         friend class MemoryManager<CompressibleFlowSystem>;
 
-        /// Creates an instance of this class
-        static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            return MemoryManager<CompressibleFlowSystem>::
-                AllocateSharedPtr(pSession);
-        }
-        /// Name of class
-        static std::string className;
-
         virtual ~CompressibleFlowSystem();
 
         /// Function to calculate the stability limit for DG/CG.
@@ -76,60 +67,35 @@ namespace Nektar
             const Array<OneD,int> &ExpOrder);
 
     protected:
-        SolverUtils::RiemannSolverSharedPtr m_riemannSolver;
-        SolverUtils::RiemannSolverSharedPtr m_riemannSolverLDG;
         SolverUtils::AdvectionSharedPtr     m_advection;
         SolverUtils::DiffusionSharedPtr     m_diffusion;
+        ArtificialDiffusionSharedPtr        m_artificialDiffusion;
         Array<OneD, Array<OneD, NekDouble> >m_vecLocs;
         NekDouble                           m_gamma;
         NekDouble                           m_pInf;
         NekDouble                           m_rhoInf;
-        NekDouble                           m_uInf;
-        NekDouble                           m_vInf;
-        NekDouble                           m_wInf;
         NekDouble                           m_UInf;
-        NekDouble                           m_gasConstant;
-        NekDouble                           m_Twall;
         std::string                         m_ViscosityType;
         std::string                         m_shockCaptureType;
-        std::string                         m_EqTypeStr;
         NekDouble                           m_mu;
-        NekDouble                           m_Skappa;
-        NekDouble                           m_Kappa;
-        NekDouble                           m_mu0;
-        NekDouble                           m_FacL;
-        NekDouble                           m_FacH;
-        NekDouble                           m_eps_max;
         NekDouble                           m_thermalConductivity;
         NekDouble                           m_Cp;
-        NekDouble                           m_C1;
-        NekDouble                           m_C2;
-        NekDouble                           m_hFactor;
         NekDouble                           m_Prandtl;
-        NekDouble                           m_amplitude;
-        NekDouble                           m_omega;
+
+        // Auxiliary object to convert variables
+        VariableConverterSharedPtr          m_varConv;
+
+        // User defined boundary conditions
+        std::vector<CFSBndCondSharedPtr>    m_bndConds;
 
         // L2 error file
         std::ofstream m_errFile;
-
-        // Check for steady state at step interval
-        int m_steadyStateSteps;
 
         // Tolerance to which steady state should be evaluated at
         NekDouble m_steadyStateTol;
 
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
-        StdRegions::StdQuadExpSharedPtr            m_OrthoQuadExp;
-        StdRegions::StdHexExpSharedPtr             m_OrthoHexExp;
-        bool                                       m_smoothDiffusion;
-
-
-        // Pressure storage for PressureOutflowFileBC
-        Array<OneD, NekDouble> m_pressureStorage;
-
-        // Field storage for PressureInflowFileBC
-        Array<OneD, Array<OneD, NekDouble> > m_fieldStorage;
 
         // Storage for L2 norm error
         Array<OneD, Array<OneD, NekDouble> > m_un;
@@ -139,8 +105,31 @@ namespace Nektar
 
         virtual void v_InitObject();
 
-        /// Print a summary of time stepping parameters.
-        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
+        void InitialiseParameters();
+
+        void InitAdvection();
+
+        void DoOdeRhs(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const NekDouble                                   time);
+        void DoOdeProjection(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const NekDouble                                   time);
+
+        void DoAdvection(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const NekDouble                                   time,
+            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
+
+        void DoDiffusion(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
 
         void GetFluxVector(
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
@@ -148,106 +137,13 @@ namespace Nektar
         void GetFluxVectorDeAlias(
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
-        void GetViscousFluxVector(
-            const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
-        void GetFluxVectorPDESC(
-            const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
-        void GetViscousFluxVectorDeAlias(
-            const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
 
-        void SetCommonBC(const std::string &userDefStr,
-                         const int n,
-                         const NekDouble time,
-                         int &cnt,
-                         Array<OneD, Array<OneD, NekDouble> > &Fwd,
-                         Array<OneD, Array<OneD, NekDouble> > &inarray);
-        void WallBC(
-            int                                                 bcRegion,
-            int                                                 cnt,
-            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
-            Array<OneD, Array<OneD, NekDouble> >               &physarray);
-        void WallViscousBC(
-            int                                                 bcRegion,
-            int                                                 cnt,
-            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
-            Array<OneD, Array<OneD, NekDouble> >               &physarray);
-        void SymmetryBC(
-            int                                                 bcRegion,
-            int                                                 cnt,
-            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
-            Array<OneD, Array<OneD, NekDouble> >               &physarray);
-        void RiemannInvariantBC(
-            int                                                 bcRegion,
-            int                                                 cnt,
-            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
-            Array<OneD, Array<OneD, NekDouble> >               &physarray);
-        void PressureOutflowNonReflectiveBC(
-            int                                                 bcRegion,
-            int                                                 cnt,
-            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
-            Array<OneD, Array<OneD, NekDouble> >               &physarray);
-        void PressureOutflowBC(
-            int                                                 bcRegion,
-            int                                                 cnt,
-            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
-            Array<OneD, Array<OneD, NekDouble> >               &physarray);
-        void PressureOutflowFileBC(
-            int                                                 bcRegion,
-            int                                                 cnt,
-            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
-            Array<OneD, Array<OneD, NekDouble> >               &physarray);
-        void PressureInflowFileBC(
-            int                                                 bcRegion,
-            int                                                 cnt,
-            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
-            Array<OneD, Array<OneD, NekDouble> >               &physarray);
-        void ExtrapOrder0BC(
-            int                                                 bcRegion,
-            int                                                 cnt,
-            Array<OneD, Array<OneD, NekDouble> >               &Fwd,
-            Array<OneD, Array<OneD, NekDouble> >               &physarray);
-        void GetVelocityVector(
-            const Array<OneD,       Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,       Array<OneD, NekDouble> > &velocity);
-        void GetSoundSpeed(
-            const Array<OneD,       Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure,
-                  Array<OneD,                   NekDouble>   &soundspeed);
-        void GetMach(
-                  Array<OneD,       Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &soundspeed,
-                  Array<OneD,                   NekDouble>   &mach);
-        void GetTemperature(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure,
-                  Array<OneD,                   NekDouble>   &temperature);
-        void GetPressure(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure);
-        void GetPressure(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-            const Array<OneD, const Array<OneD, NekDouble> > &velocity,
-                  Array<OneD,                   NekDouble>   &pressure);
-        void GetEnthalpy(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure,
-                  Array<OneD,                   NekDouble>   &enthalpy);
-        void GetEntropy(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-            const Array<OneD, const             NekDouble>   &pressure,
-            const Array<OneD, const             NekDouble>   &temperature,
-                  Array<OneD,                   NekDouble>   &entropy);
-        void GetSmoothArtificialViscosity(
-            const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,             NekDouble  > &eps_bar);
-        void GetDynamicViscosity(
-            const Array<OneD, const NekDouble> &temperature,
-                  Array<OneD,       NekDouble> &mu);
+        void InitializeSteadyState();
+
+        void SetBoundaryConditions(
+            Array<OneD, Array<OneD, NekDouble> >             &physarray,
+            NekDouble                                         time);
+
         void GetStdVelocity(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,                   NekDouble>   &stdV);
@@ -255,36 +151,12 @@ namespace Nektar
         virtual bool v_PostIntegrate(int step);
         bool CalcSteadyState(bool output);
 
-        void GetSensor(
-            const Array<OneD, const Array<OneD, NekDouble> > &physarray,
-                  Array<OneD,                   NekDouble>   &Sensor,
-                  Array<OneD,                   NekDouble>   &SensorKappa);
-        void GetElementDimensions(
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-                  Array<OneD,                   NekDouble >  &hmin);
-        void GetAbsoluteVelocity(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,                   NekDouble>   &Vtot);
-        void GetArtificialDynamicViscosity(
-            const Array<OneD,  Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,              NekDouble>   &mu_var);
-        void SetVarPOrderElmt(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &PolyOrder);
-        void GetForcingTerm(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > outarrayForcing);
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
         virtual void v_SetInitialConditions(
             NekDouble initialtime           = 0.0,
             bool      dumpInitialConditions = true,
             const int domain                = 0);
-
-        NekDouble GetGasConstant()
-        {
-            return m_gasConstant;
-        }
 
         NekDouble GetGamma()
         {
@@ -304,6 +176,15 @@ namespace Nektar
         virtual void v_ExtraFldOutput(
             std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
             std::vector<std::string>             &variables);
+
+        virtual void v_DoDiffusion(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+        {
+            // Do nothing by default
+        }
     };
 }
 #endif

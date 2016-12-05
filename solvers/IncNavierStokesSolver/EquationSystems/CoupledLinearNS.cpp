@@ -1383,8 +1383,6 @@ namespace Nektar
             lambda_store = lambda;
         }
         
-        SetBoundaryConditions(time);		
-        
         // Forcing for advection solve 
         for(i = 0; i < m_velocity.num_elements(); ++i)
         {

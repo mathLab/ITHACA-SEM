@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Mesh.h
+//  File: Tetrahedron.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh tet object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,9 +55,8 @@ public:
                                    std::vector<NodeSharedPtr> pNodeList,
                                    std::vector<int> pTagList)
     {
-        ElementSharedPtr e = boost::shared_ptr<Element>(
+        return boost::shared_ptr<Element>(
             new Tetrahedron(pConf, pNodeList, pTagList));
-        return e;
     }
     /// Element type
     static LibUtilities::ShapeType m_type;
@@ -72,6 +71,8 @@ public:
 
     NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
         int coordDim);
+    NEKMESHUTILS_EXPORT virtual void GetCurvedNodes(
+        std::vector<NodeSharedPtr> &nodeList) const;
     NEKMESHUTILS_EXPORT virtual StdRegions::Orientation GetEdgeOrient(
         int edgeId, EdgeSharedPtr edge);
     NEKMESHUTILS_EXPORT virtual void MakeOrder(

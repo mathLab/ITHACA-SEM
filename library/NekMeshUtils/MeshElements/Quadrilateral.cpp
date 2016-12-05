@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.cpp
+//  File: Quadrilateral.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,14 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh quad object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LocalRegions/QuadExp.h>
 #include <NekMeshUtils/MeshElements/Quadrilateral.h>
+
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 using namespace std;
 
@@ -222,6 +224,54 @@ SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)
 
     return ret;
 }
+
+void Quadrilateral::GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+{
+    int n = m_edge[0]->GetNodeCount();
+    nodeList.resize(n * n);
+
+    // Write vertices
+    nodeList[0]         = m_vertex[0];
+    nodeList[n - 1]     = m_vertex[1];
+    nodeList[n * n - 1] = m_vertex[2];
+    nodeList[n * (n - 1)] = m_vertex[3];
+
+    // Write edge-interior
+    int skips[4][2] = {
+        {0, 1}, {n - 1, n}, {n * n - 1, -1}, {n * (n - 1), -n}};
+    for (int i = 0; i < 4; ++i)
+    {
+        bool reverseEdge = m_edge[i]->m_n1 == m_vertex[i];
+
+        if (!reverseEdge)
+        {
+            for (int j = 1; j < n - 1; ++j)
+            {
+                nodeList[skips[i][0] + j * skips[i][1]] =
+                    m_edge[i]->m_edgeNodes[n - 2 - j];
+            }
+        }
+        else
+        {
+            for (int j = 1; j < n - 1; ++j)
+            {
+                nodeList[skips[i][0] + j * skips[i][1]] =
+                    m_edge[i]->m_edgeNodes[j - 1];
+            }
+        }
+    }
+
+    // Write interior
+    for (int i = 1; i < n - 1; ++i)
+    {
+        for (int j = 1; j < n - 1; ++j)
+        {
+            nodeList[i * n + j] =
+                m_volumeNodes[(i - 1) * (n - 2) + (j - 1)];
+        }
+    }
+}
+
 
 /**
  * @brief Return the number of nodes defining a quadrilateral.

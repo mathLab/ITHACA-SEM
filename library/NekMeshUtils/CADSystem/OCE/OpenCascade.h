@@ -39,7 +39,6 @@
 /// This is a list of OpenCascade headers required for use with nektar
 
 #include <STEPControl_Reader.hxx>
-#include <IGESControl_Reader.hxx>
 #include <TColStd_HSequenceOfTransient.hxx>
 #include <TopoDS.hxx>
 #include <TopExp.hxx>

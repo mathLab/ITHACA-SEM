@@ -1,6 +1,8 @@
 SET(NEKMESHUTILS_SOURCES
     MeshElements/Mesh.cpp
     MeshElements/Element.cpp
+    MeshElements/Edge.cpp
+    MeshElements/Face.cpp
     MeshElements/BooleanOperators.cpp
     MeshElements/Point.cpp
     MeshElements/Line.cpp
@@ -51,6 +53,8 @@ SET(NEKMESHUTILS_HEADERS
     MeshElements/Pyramid.h
     MeshElements/Prism.h
     MeshElements/Hexahedron.h
+    MeshElements/HOAlignment.h
+    MeshElements/ElementConfig.h
     )
 
 IF(NEKTAR_USE_MESHGEN)
@@ -88,17 +92,11 @@ ADD_NEKTAR_LIBRARY(NekMeshUtils lib ${NEKTAR_LIBRARY_TYPE}
     ${NEKMESHUTILS_SOURCES} ${NEKMESHUTILS_HEADERS})
 TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC LocalRegions)
 
-IF(NEKTAR_USE_ANN)
-    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${ANN_LIBRARY})
-ENDIF()
-
 IF(NEKTAR_USE_MESHGEN)
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TETGEN_LIBRARY})
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${OCC_LIBRARIES})
 
-    SET(OCC_DEF LIN LININTEL HAVE_WOK_CONFIG_H HAVE_CONFIG_H CSFDB)
-    SET_PROPERTY(TARGET NekMeshUtils APPEND PROPERTY COMPILE_DEFINITIONS ${OCC_DEF})
-    ADD_DEPENDENCIES(NekMeshUtils opencascade-6.9 tetgen-1.5)
+    ADD_DEPENDENCIES(NekMeshUtils oce-0.17 tetgen-1.5)
 ENDIF()
 
 IF(NEKTAR_USE_CFI)

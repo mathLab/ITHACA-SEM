@@ -79,7 +79,9 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &advVel,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray,
-            const NekDouble                                   &time)
+            const NekDouble                                   &time,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
             int nPointsTot      = fields[0]->GetTotPoints();
             int nCoeffs         = fields[0]->GetNcoeffs();
@@ -119,12 +121,25 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > Bwd    (nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> > numflux(nConvectiveFields);
 
-            for(i = 0; i < nConvectiveFields; ++i)
+            if (pFwd == NullNekDoubleArrayofArray ||
+                pBwd == NullNekDoubleArrayofArray)
             {
-                Fwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
-                Bwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
-                numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
-                fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
+                for(i = 0; i < nConvectiveFields; ++i)
+                {
+                    Fwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                    Bwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                    numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                    fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
+                }
+            }
+            else
+            {
+                for(i = 0; i < nConvectiveFields; ++i)
+                {
+                    Fwd[i]     = pFwd[i];
+                    Bwd[i]     = pBwd[i];
+                    numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                }
             }
 
             m_riemann->Solve(m_spaceDim, Fwd, Bwd, numflux);

@@ -408,18 +408,21 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
     // serial.
     fs::path specPath(outname), fulloutname;
 
-    if (backup && (rank == 0 || !m_sharedFilesystem))
+    if (backup && (rank == 0 || !m_sharedFilesystem) && fs::exists(specPath))
     {
-        fs::path newPath = specPath;
+        // rename. foo/bar_123.chk -> foo/bar_123_bak0.chk and in case
+        // foo/bar_123_bak0.chk already exists, foo/bar_123.chk -> foo/bar_123_bak1.chk
+        fs::path bakPath = specPath;
         int cnt = 0;
-        while (fs::exists(newPath))
+        while (fs::exists(bakPath))
         {
-            newPath = specPath.parent_path();
-            newPath += specPath.stem();
-            newPath += fs::path("_" + boost::lexical_cast<std::string>(cnt++));
-            newPath += specPath.extension();
+            bakPath = specPath.parent_path();
+            bakPath += specPath.stem();
+            bakPath += fs::path("_bak" + boost::lexical_cast<std::string>(cnt++));
+            bakPath += specPath.extension();
         }
-        specPath = newPath;
+        std::cout << "renaming " << specPath << " -> " << bakPath << std::endl;
+        fs::rename(specPath, bakPath);
     }
     if (backup)
     {

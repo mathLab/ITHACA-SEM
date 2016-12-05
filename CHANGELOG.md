@@ -44,6 +44,8 @@ v4.4.0
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
 - Improve performance when using homogeneous dealiasing (!622)
+- Added a weak pressure formulation following Guermond & Shen (!713)
+- Added a convective like outflow boundary condition from Dong (!713)
 
 **FieldConvert:**
 - Allow equi-spaced output for 1D and 2DH1D fields (!613)

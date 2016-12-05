@@ -48,7 +48,7 @@
 namespace Nektar
 {
     //--------
-    // Standard Extrapolate
+    // Weak Pressure Extrapolate
     // --------
     
     class WeakPressureExtrapolate;

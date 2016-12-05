@@ -1164,7 +1164,6 @@ namespace Nektar
             const StdRegions::VarCoeffMap &varcoeff,
             const Array<OneD, const NekDouble> &dirForcing,
             const bool PhysSpaceForcing)
-
         {
             int i,n,cnt,nbndry;
             int nexp = GetExpSize();

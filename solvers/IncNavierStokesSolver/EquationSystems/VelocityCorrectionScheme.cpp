@@ -99,11 +99,12 @@ namespace Nektar
         // creation of the extrapolation object
         if(m_equationType == eUnsteadyNavierStokes)
         {
-            std::string vExtrapolation = "Standard";
+            std::string vExtrapolation = v_GetExtrapolateStr();
 
             if (m_session->DefinesSolverInfo("Extrapolation"))
             {
-                vExtrapolation = m_session->GetSolverInfo("Extrapolation");
+                vExtrapolation = v_GetSubSteppingExtrapolateStr(
+                                 m_session->GetSolverInfo("Extrapolation"));
             }
 
             m_extrapolation = GetExtrapolateFactory().CreateInstance(
@@ -121,9 +122,6 @@ namespace Nektar
             m_intVariables.push_back(n);
         }
         
-        m_saved_aii_Dt = Array<OneD, NekDouble>(m_nConvectiveFields,
-                                                NekConstants::kNekUnsetDouble);
-
         // Load parameters for Spectral Vanishing Viscosity
         m_session->MatchSolverInfo("SpectralVanishingViscosity","True",
                                    m_useSpecVanVisc, false);
@@ -352,9 +350,6 @@ namespace Nektar
         const NekDouble time, 
         const NekDouble aii_Dt)
     {
-        // Enforcing boundary conditions on all fields
-        SetBoundaryConditions(time);
-
         // Substep the pressure boundary condition if using substepping
         m_extrapolation->SubStepSetPressureBCs(inarray,aii_Dt,m_kinvis);
 

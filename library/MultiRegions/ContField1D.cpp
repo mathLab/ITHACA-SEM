@@ -461,8 +461,7 @@ namespace Nektar
          */
         void ContField1D::v_LocalToGlobal(
             const Array<OneD, const NekDouble> &inarray,
-            Array<OneD,NekDouble> &outarray,
-                                          bool useComm)
+            Array<OneD,NekDouble> &outarray, bool useComm)
         {
             m_locToGloMap->LocalToGlobal(inarray, outarray, useComm);
         }

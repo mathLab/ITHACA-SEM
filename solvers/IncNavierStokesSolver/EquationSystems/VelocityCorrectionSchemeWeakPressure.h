@@ -63,8 +63,6 @@ namespace Nektar
 
         virtual ~VCSWeakPressure();
 
-        virtual void v_InitObject();
-
     protected:
         // Virtual functions
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
@@ -76,6 +74,23 @@ namespace Nektar
         
         virtual void v_SolvePressure( const Array<OneD, NekDouble>  &Forcing);
         
+        virtual std::string v_GetExtrapolateStr(void)
+        {
+            return "WeakPressure";
+        }
+        
+        virtual std::string v_GetSubSteppingExtrapolateStr(const std::string &instr)
+        {
+            if(boost::iequals(instr,"SubStepping"))
+            {
+                return  "SubSteppingWeakPressure";
+            }
+            else
+            {
+                return instr;
+            }
+        }
+
     private:
         
     };

@@ -278,10 +278,27 @@ namespace Nektar
     
     struct HighOrderOutflow
     {
-        HighOrderOutflow(const int numHOpts, const int outHBCnumber):
-            m_numOutHBCPts(numHOpts),
+    HighOrderOutflow(const int numHOpts, const int outHBCnumber,const int curldim, const LibUtilities::SessionReaderSharedPtr &pSession):
+        m_numOutHBCPts(numHOpts),
             m_outHBCnumber(outHBCnumber)
         {
+            m_outflowVel = Array<OneD,
+                Array<OneD, Array<OneD,
+                Array<OneD, NekDouble> > > > (outHBCnumber);
+            
+            m_outflowVelBnd = Array<OneD,
+                Array<OneD, Array<OneD,
+                Array<OneD, NekDouble> > > > (outHBCnumber);
+            
+            m_UBndExp  = Array<OneD,
+                Array<OneD, MultiRegions::ExpListSharedPtr> >(curldim);
+            
+            pSession->LoadParameter("OutflowBC_theta",  m_obcTheta,  1.0);
+            pSession->LoadParameter("OutflowBC_alpha1", m_obcAlpha1, 0.0);
+            pSession->LoadParameter("OutflowBC_alpha2", m_obcAlpha2, 0.0);
+            
+            pSession->LoadParameter("U0_HighOrderBC",    m_U0,1.0);
+            pSession->LoadParameter("Delta_HighOrderBC", m_delta,1/20.0);
         }
 
         virtual ~HighOrderOutflow()

@@ -327,7 +327,6 @@ namespace Nektar
                 for( int i = 0; i < nqb; i++)
                 {
                     S0[i] = 0.5*(1.0-tanh(un[i]/(m_houtflow->m_U0*m_houtflow->m_delta)));
-                    //S0[i] = 0.0; //debugging
                 }
 
                 // Calculate E(n,u) = ((theta+alpha2)*0.5*(u^2)n +
@@ -354,8 +353,8 @@ namespace Nektar
                 // value if we want to interpret values as being the
                 // desired pressure value. This is now precribed from
                 // the velocity forcing to be consistent with the
-                // paper except f_b = - f_b
-
+                // paper except f_b = -f_b
+                
                 // Calculate (E(n,u) + f_b).n
                 Array<OneD, NekDouble> En (nqb, 0.0);
                 for( int i = 0; i < m_bnd_dim; i++)
@@ -421,10 +420,6 @@ namespace Nektar
                         // point u[i] to BDF evalauted value \hat{u}
                         u[i] = m_houtflow->m_outflowVelBnd[cnt][i]
                             [m_intSteps-1];
-                        
-                        // For Fourier code might have needed a
-                        // transform but since terms are linear here
-                        // we may get away with just the mean mode
                     }
                     
                     // Add normal velocity if weak pressure
@@ -543,8 +538,8 @@ namespace Nektar
     
 
     void Extrapolate::IProductNormVelocityOnHBC(
-                                                const Array<OneD, const Array<OneD, NekDouble> >  &Vel, 
-                                                Array<OneD, NekDouble> &IProdVn)
+                       const Array<OneD, const Array<OneD, NekDouble> >  &Vel, 
+                       Array<OneD, NekDouble> &IProdVn)
     {
         int i,n,cnt;
         Array<OneD, NekDouble> IProdVnTmp; 
@@ -602,8 +597,9 @@ namespace Nektar
                 m_PBndExp[n]->NormVectorIProductWRTBase(velbc, IProdVnTmp);
                 cnt += m_PBndExp[n]->GetNcoeffs();
             }
-            else if(m_hbcType[n] == eConvectiveOBC) // skip over conective OBC
+            else if(m_hbcType[n] == eConvectiveOBC)
             {
+                // skip over convective OBC
                 cnt += m_PBndExp[n]->GetNcoeffs();
             }
         }
@@ -729,49 +725,40 @@ namespace Nektar
         // Initialise storage for outflow HOBCs
         if(numOutHBCPts > 0)
         {
-            m_houtflow  = MemoryManager<HighOrderOutflow>::AllocateSharedPtr(numOutHBCPts,  outHBCnumber);
+            m_houtflow  = MemoryManager<HighOrderOutflow>::AllocateSharedPtr(numOutHBCPts,  outHBCnumber, m_curl_dim, pSession);
                         
             MultiRegions::ExpListSharedPtr BndElmtExp;
-            m_houtflow->m_outflowVel = Array<OneD,
-                                          Array<OneD,
-                                             Array<OneD,
-                                                Array<OneD, NekDouble> > > > (outHBCnumber);
 
-            m_houtflow->m_outflowVelBnd = Array<OneD,
-                                            Array<OneD,
-                                               Array<OneD,
-                                                  Array<OneD, NekDouble> > > > (outHBCnumber);
-
-            m_houtflow->m_UBndExp  = Array<OneD,
-                                           Array<OneD, MultiRegions::ExpListSharedPtr> >(m_curl_dim);
-            
+            // set up boundary expansions link 
             for (int i = 0; i < m_curl_dim; ++i)
             {
-                m_houtflow->m_UBndExp[i]  = m_fields[m_velocity[i]]->GetBndCondExpansions();
+                m_houtflow->m_UBndExp[i] =
+                    m_fields[m_velocity[i]]->GetBndCondExpansions();
             }
 
             for(n = 0, cnt = 0; n < m_PBndConds.num_elements(); ++n)
             {
                 if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
                 {
-                    m_houtflow->m_outflowVel[cnt] = Array<OneD,
-                                                          Array<OneD,
-                                                                Array<OneD, NekDouble> > > (m_curl_dim);
+                    m_houtflow->m_outflowVel[cnt] =
+                        Array<OneD, Array<OneD,
+                             Array<OneD, NekDouble> > > (m_curl_dim);
 
-                    m_houtflow->m_outflowVelBnd[cnt] = Array<OneD,
-                                                          Array<OneD,
-                                                                Array<OneD, NekDouble> > > (m_curl_dim);
+                    m_houtflow->m_outflowVelBnd[cnt] =
+                        Array<OneD, Array<OneD,
+                                 Array<OneD, NekDouble> > > (m_curl_dim);
                     
                     m_fields[0]->GetBndElmtExpansion(n, BndElmtExp, false);
                     int nqb = m_PBndExp[n]->GetTotPoints();
                     int nq  = BndElmtExp->GetTotPoints();
                     for(int j = 0; j < m_curl_dim; ++j)
                     {
-                        m_houtflow->m_outflowVel[cnt][j] = Array<OneD,
-                                                                 Array<OneD, NekDouble> > (m_intSteps);
+                        m_houtflow->m_outflowVel[cnt][j] =
+                            Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
 
-                        m_houtflow->m_outflowVelBnd[cnt][j] = Array<OneD,
-                                                                    Array<OneD, NekDouble> > (m_intSteps);
+                        m_houtflow->m_outflowVelBnd[cnt][j] =
+                            Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
+
                         for(int k = 0; k < m_intSteps; ++k)
                         {
                             m_houtflow->m_outflowVel[cnt][j][k] =
@@ -838,14 +825,7 @@ namespace Nektar
                     }
                 }                
             }
-            
-            pSession->LoadParameter("OutflowBC_theta", m_houtflow->m_obcTheta,   1.0);
-            pSession->LoadParameter("OutflowBC_alpha1", m_houtflow->m_obcAlpha1, 0.0);
-            pSession->LoadParameter("OutflowBC_alpha2", m_houtflow->m_obcAlpha2, 0.0);
-            
-            pSession->LoadParameter("U0_HighOrderBC",m_houtflow->m_U0,1.0);
-            pSession->LoadParameter("Delta_HighOrderBC",m_houtflow->m_delta,1/20.0);
-            
+                        
         }
     }
 

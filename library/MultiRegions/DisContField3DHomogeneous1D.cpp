@@ -293,7 +293,6 @@ namespace Nektar
             {
                 if (n != 1 || m_transposition->GetK(n) != 0)
                 {
-
                     beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
                     new_factors = factors;
                     // add in Homogeneous Fourier direction and SVV if turned on

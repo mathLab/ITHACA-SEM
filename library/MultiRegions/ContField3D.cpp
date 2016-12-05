@@ -524,7 +524,9 @@ namespace Nektar
           Array<OneD, NekDouble> tmp(m_locToGloMap->GetNumGlobalCoeffs());
           LocalToGlobal(m_coeffs,tmp,false);
                     
-          ASSERTL1(nreg < m_bndCondExpansions.num_elements(),"nreg is out or range since this many boundary regions to not exist");
+          ASSERTL1(nreg < m_bndCondExpansions.num_elements(),
+                   "nreg is out or range since this many boundary "
+                   "regions to not exist");
 
             // Now fill in all other Dirichlet coefficients.
           Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[nreg]->UpdateCoeffs();

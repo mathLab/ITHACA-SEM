@@ -124,6 +124,7 @@ namespace Nektar
 
             // Instantiate a field reader/writer
             m_fld = LibUtilities::FieldIO::CreateDefault(m_session);
+            m_fld->SetDoBackup(true);
 
             // Read the geometry and the expansion information
             m_graph = SpatialDomains::MeshGraph::Read(m_session);
@@ -1987,14 +1988,6 @@ namespace Nektar
         {
             std::string outname =  m_sessionName +  "_" + 
                 boost::lexical_cast<std::string>(n);
-            int cnt = 0;
-            while (boost::filesystem::exists(outname + ".chk"))
-            {
-                outname =  m_sessionName +  "_" +
-                    boost::lexical_cast<std::string>(n) + "_" +
-                    boost::lexical_cast<std::string>(cnt++);
-            }
-
             WriteFld(outname + ".chk");
         }
 
@@ -2010,13 +2003,6 @@ namespace Nektar
         {
             std::string outname =  m_sessionName +  "_" +
                 boost::lexical_cast<std::string>(n);
-            int cnt = 0;
-            while (boost::filesystem::exists(outname + ".chk"))
-            {
-                outname =  m_sessionName +  "_" +
-                    boost::lexical_cast<std::string>(n) + "_" +
-                    boost::lexical_cast<std::string>(cnt++);
-            }
             WriteFld(outname, field, fieldcoeffs, variables);
         }
         

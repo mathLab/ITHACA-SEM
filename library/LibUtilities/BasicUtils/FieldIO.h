@@ -248,6 +248,9 @@ public:
         const std::string &filename,
         FieldMetaDataMap  &fieldmetadatamap);
 
+    LIB_UTILITIES_EXPORT bool GetDoBackup();
+    LIB_UTILITIES_EXPORT void SetDoBackup(bool backup);
+
     LIB_UTILITIES_EXPORT static const std::string GetFileType(
         const std::string &filename, CommSharedPtr comm);
     LIB_UTILITIES_EXPORT virtual const std::string &GetClassName() const = 0;
@@ -263,6 +266,8 @@ protected:
     LibUtilities::CommSharedPtr m_comm;
     /// Boolean dictating whether we are on a shared filesystem.
     bool                        m_sharedFilesystem;
+    /// Boolean dictating whether we should backup existing files
+    bool                        m_backup;
 
     LIB_UTILITIES_EXPORT void AddInfoTag(
         TagWriterSharedPtr      root,

@@ -85,6 +85,7 @@ enum FieldIOType {
     eHDF5
 };
 
+
 /**
  * @brief Determine file type of given input file.
  *
@@ -309,7 +310,7 @@ LIB_UTILITIES_EXPORT void Import(
  * @brief Constructor for FieldIO base class.
  */
 FieldIO::FieldIO(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem)
-    : m_comm(pComm), m_sharedFilesystem(sharedFilesystem)
+    : m_comm(pComm), m_sharedFilesystem(sharedFilesystem), m_backup(false)
 {
 }
 
@@ -405,6 +406,20 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank)
     // Path to output: will be directory if parallel, normal file if
     // serial.
     fs::path specPath(outname), fulloutname;
+
+    if (m_backup && (rank == 0 || !m_sharedFilesystem))
+    {
+        fs::path newPath = specPath;
+        int cnt = 0;
+        while (fs::exists(newPath))
+        {
+            newPath = specPath.parent_path();
+            newPath += specPath.stem();
+            newPath += fs::path("_" + boost::lexical_cast<std::string>(cnt++));
+            newPath += specPath.extension();
+        }
+        specPath = newPath;
+    }
 
     if (nprocs == 1)
     {

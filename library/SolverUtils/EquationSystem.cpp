@@ -1988,11 +1988,11 @@ namespace Nektar
             std::string outname =  m_sessionName +  "_" + 
                 boost::lexical_cast<std::string>(n);
             int cnt = 0;
-            while (std::ifstream(std::string(outname + ".chk").c_str()))
+            while (boost::filesystem::exists(outname + ".chk"))
             {
                 outname =  m_sessionName +  "_" +
                     boost::lexical_cast<std::string>(n) + "_" +
-                    boost::lexical_cast<std::string>(cnt);
+                    boost::lexical_cast<std::string>(cnt++);
             }
 
             WriteFld(outname + ".chk");
@@ -2011,11 +2011,11 @@ namespace Nektar
             std::string outname =  m_sessionName +  "_" +
                 boost::lexical_cast<std::string>(n);
             int cnt = 0;
-            while (std::ifstream(std::string(outname + ".chk").c_str()))
+            while (boost::filesystem::exists(outname + ".chk"))
             {
                 outname =  m_sessionName +  "_" +
                     boost::lexical_cast<std::string>(n) + "_" +
-                    boost::lexical_cast<std::string>(cnt);
+                    boost::lexical_cast<std::string>(cnt++);
             }
             WriteFld(outname, field, fieldcoeffs, variables);
         }

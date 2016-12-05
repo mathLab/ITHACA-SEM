@@ -408,6 +408,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
     // serial.
     fs::path specPath(outname), fulloutname;
 
+    // in case we are rank 0 or not on a shared filesystem, check if the specPath already exists
     if (backup && (rank == 0 || !m_sharedFilesystem) && fs::exists(specPath))
     {
         // rename. foo/bar_123.chk -> foo/bar_123_bak0.chk and in case
@@ -424,6 +425,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         std::cout << "renaming " << specPath << " -> " << bakPath << std::endl;
         fs::rename(specPath, bakPath);
     }
+    // wait until rank 0 has backed up the old specPath
     if (backup)
     {
         m_comm->Block();

@@ -411,15 +411,15 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
     // in case we are rank 0 or not on a shared filesystem, check if the specPath already exists
     if (backup && (rank == 0 || !m_sharedFilesystem) && fs::exists(specPath))
     {
-        // rename. foo/bar_123.chk -> foo/bar_123_bak0.chk and in case
-        // foo/bar_123_bak0.chk already exists, foo/bar_123.chk -> foo/bar_123_bak1.chk
+        // rename. foo/bar_123.chk -> foo/bar_123.bak0.chk and in case
+        // foo/bar_123.bak0.chk already exists, foo/bar_123.chk -> foo/bar_123.bak1.chk
         fs::path bakPath = specPath;
         int cnt = 0;
         while (fs::exists(bakPath))
         {
             bakPath = specPath.parent_path();
             bakPath += specPath.stem();
-            bakPath += fs::path("_bak" + boost::lexical_cast<std::string>(cnt++));
+            bakPath += fs::path(".bak" + boost::lexical_cast<std::string>(cnt++));
             bakPath += specPath.extension();
         }
         std::cout << "renaming " << specPath << " -> " << bakPath << std::endl;

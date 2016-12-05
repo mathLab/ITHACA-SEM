@@ -153,12 +153,13 @@ void PtsIO::Import(const string &inFile,
  * @param ptsField  the pts field
  */
 void PtsIO::Write(const string &outFile,
-                  const Nektar::LibUtilities::PtsFieldSharedPtr &ptsField)
+                  const Nektar::LibUtilities::PtsFieldSharedPtr &ptsField,
+                  const bool backup)
 {
     int nTotvars = ptsField->GetNFields() + ptsField->GetDim();
     int np = ptsField->GetNpoints();
 
-    std::string filename = SetUpOutput(outFile, true);
+    std::string filename = SetUpOutput(outFile, true, backup);
     SetUpFieldMetaData(outFile);
 
     // until tinyxml gains support for line break, write the xml manually

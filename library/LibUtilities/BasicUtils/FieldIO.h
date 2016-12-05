@@ -184,7 +184,8 @@ LIB_UTILITIES_EXPORT void Write(
     const std::string &outFile,
     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
     std::vector<std::vector<NekDouble> > &fielddata,
-    const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap);
+    const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
+    const bool backup = false);
 LIB_UTILITIES_EXPORT void Import(
     const std::string &infilename,
     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
@@ -234,7 +235,8 @@ public:
         const std::string &outFile,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         std::vector<std::vector<NekDouble> > &fielddata,
-        const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap);
+        const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
+        const bool backup = false);
 
     LIB_UTILITIES_EXPORT inline void Import(
         const std::string &infilename,
@@ -247,9 +249,6 @@ public:
     LIB_UTILITIES_EXPORT DataSourceSharedPtr ImportFieldMetaData(
         const std::string &filename,
         FieldMetaDataMap  &fieldmetadatamap);
-
-    LIB_UTILITIES_EXPORT bool GetDoBackup();
-    LIB_UTILITIES_EXPORT void SetDoBackup(bool backup);
 
     LIB_UTILITIES_EXPORT static const std::string GetFileType(
         const std::string &filename, CommSharedPtr comm);
@@ -266,8 +265,6 @@ protected:
     LibUtilities::CommSharedPtr m_comm;
     /// Boolean dictating whether we are on a shared filesystem.
     bool                        m_sharedFilesystem;
-    /// Boolean dictating whether we should backup existing files
-    bool                        m_backup;
 
     LIB_UTILITIES_EXPORT void AddInfoTag(
         TagWriterSharedPtr      root,
@@ -285,14 +282,15 @@ protected:
     }
 
     LIB_UTILITIES_EXPORT std::string SetUpOutput(
-        const std::string outname, bool perRank);
+        const std::string outname, bool perRank, bool backup = false);
 
     /// @copydoc FieldIO::Write
     LIB_UTILITIES_EXPORT virtual void v_Write(
         const std::string                      &outFile,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         std::vector<std::vector<NekDouble> >   &fielddata,
-        const FieldMetaDataMap                 &fieldinfomap) = 0;
+        const FieldMetaDataMap                 &fieldinfomap,
+        const bool                              backup = false) = 0;
 
     /// @copydoc FieldIO::Import
     LIB_UTILITIES_EXPORT virtual void v_Import(
@@ -322,9 +320,10 @@ typedef boost::shared_ptr<FieldIO> FieldIOSharedPtr;
 inline void FieldIO::Write(const std::string                      &outFile,
                            std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                            std::vector<std::vector<NekDouble> > &fielddata,
-                           const FieldMetaDataMap                 &fieldinfomap)
+                           const FieldMetaDataMap                 &fieldinfomap,
+                           const bool                              backup)
 {
-    v_Write(outFile, fielddefs, fielddata, fieldinfomap);
+    v_Write(outFile, fielddefs, fielddata, fieldinfomap, backup);
 }
 
 /**

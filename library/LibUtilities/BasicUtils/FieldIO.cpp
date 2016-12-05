@@ -235,7 +235,8 @@ FieldIOSharedPtr FieldIO::CreateForFile(
 void Write(const std::string &outFile,
            std::vector<FieldDefinitionsSharedPtr> &fielddefs,
            std::vector<std::vector<NekDouble> > &fielddata,
-           const FieldMetaDataMap &fieldinfomap)
+           const FieldMetaDataMap &fieldinfomap,
+           const bool backup)
 {
 #ifdef NEKTAR_USE_MPI
     int size;
@@ -257,7 +258,7 @@ void Write(const std::string &outFile,
 #endif
     CommSharedPtr c    = GetCommFactory().CreateInstance("Serial", 0, 0);
     FieldIOSharedPtr f = GetFieldIOFactory().CreateInstance("Xml", c, false);
-    f->Write(outFile, fielddefs, fielddata, fieldinfomap);
+    f->Write(outFile, fielddefs, fielddata, fieldinfomap, backup);
 }
 
 /**
@@ -310,7 +311,7 @@ LIB_UTILITIES_EXPORT void Import(
  * @brief Constructor for FieldIO base class.
  */
 FieldIO::FieldIO(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem)
-    : m_comm(pComm), m_sharedFilesystem(sharedFilesystem), m_backup(false)
+    : m_comm(pComm), m_sharedFilesystem(sharedFilesystem)
 {
 }
 
@@ -396,7 +397,7 @@ void FieldIO::AddInfoTag(TagWriterSharedPtr root,
  *
  * @return Absolute path to resulting file.
  */
-std::string FieldIO::SetUpOutput(const std::string outname, bool perRank)
+std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool backup)
 {
     ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
 
@@ -407,7 +408,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank)
     // serial.
     fs::path specPath(outname), fulloutname;
 
-    if (m_backup && (rank == 0 || !m_sharedFilesystem))
+    if (backup && (rank == 0 || !m_sharedFilesystem))
     {
         fs::path newPath = specPath;
         int cnt = 0;

@@ -124,7 +124,6 @@ namespace Nektar
 
             // Instantiate a field reader/writer
             m_fld = LibUtilities::FieldIO::CreateDefault(m_session);
-            m_fld->SetDoBackup(true);
 
             // Read the geometry and the expansion information
             m_graph = SpatialDomains::MeshGraph::Read(m_session);
@@ -2102,7 +2101,7 @@ namespace Nektar
             LibUtilities::FieldMetaDataMap fieldMetaDataMap(m_fieldMetaDataMap);
             mapping->Output( fieldMetaDataMap, outname);
 
-            m_fld->Write(outname, FieldDef, FieldData, fieldMetaDataMap);
+            m_fld->Write(outname, FieldDef, FieldData, fieldMetaDataMap, true);
         }
 
 

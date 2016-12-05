@@ -77,7 +77,8 @@ public:
         FieldMetaDataMap &fieldmetadatamap = NullFieldMetaDataMap);
 
     LIB_UTILITIES_EXPORT void Write(const string &outFile,
-                                    const PtsFieldSharedPtr &ptsField);
+                                    const PtsFieldSharedPtr &ptsField,
+                                    const bool backup = false);
 
     LIB_UTILITIES_EXPORT void ImportFieldData(TiXmlDocument docInput,
                                               PtsFieldSharedPtr &ptsField);

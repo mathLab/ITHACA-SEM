@@ -61,12 +61,6 @@ using namespace std;
 typedef std::map<std::string, std::string> PtsMetaDataMap;
 static PtsMetaDataMap NullPtsMetaDataMap;
 
-LIB_UTILITIES_EXPORT void Import(const string &inFile,
-                                 PtsFieldSharedPtr &ptsField);
-
-LIB_UTILITIES_EXPORT void Write(const string &outFile,
-                                const PtsFieldSharedPtr &ptsField);
-
 class PtsIO : public FieldIOXml
 {
 public:

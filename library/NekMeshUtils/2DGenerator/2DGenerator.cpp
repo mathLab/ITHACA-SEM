@@ -110,14 +110,14 @@ void Generator2D::Process()
 
     if (m_config["blcurves"].beenSet)
     {
-        //we need to do the boundary layer generation in a face by face basis
+        // we need to do the boundary layer generation in a face by face basis
         MakeBLPrep();
 
-        //Im going to do a horrendous trick to get the edge orientaion.
-        //Going to activate the first routine of facemeshing without actually face
-        //meshing, this will orientate the edgeloop objects (hopefully);
-        //which can be used by the makebl command to know the normal
-        //orienation
+        // Im going to do a horrendous trick to get the edge orientaion.
+        // Going to activate the first routine of facemeshing without actually
+        // face meshing, this will orientate the edgeloop objects (hopefully);
+        // which can be used by the makebl command to know the normal
+        // orienation
         for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
         {
             m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
@@ -175,11 +175,11 @@ void Generator2D::MakeBLPrep()
                                   m_blCurves);
     m_thickness = m_config["blthick"].as<NekDouble>();
 
-    map<int, CurveMeshSharedPtr>::iterator it;
-    for(it = m_curvemeshes.begin(); it != m_curvemeshes.end(); it++)
+    for (vector<unsigned>::iterator it = m_blCurves.begin();
+         it != m_blCurves.end(); ++it)
     {
-        vector<EdgeSharedPtr> localedges = it->second->GetMeshEdges();
-        for(int i = 0; i < localedges.size(); i++)
+        vector<EdgeSharedPtr> localedges = m_curvemeshes[*it]->GetMeshEdges();
+        for (int i = 0; i < localedges.size(); i++)
         {
             m_nodesToEdge[localedges[i]->m_n1].push_back(localedges[i]);
             m_nodesToEdge[localedges[i]->m_n2].push_back(localedges[i]);
@@ -189,19 +189,29 @@ void Generator2D::MakeBLPrep()
 
 void Generator2D::MakeBL(int i, std::vector<EdgeLoop> e)
 {
-    /*// on each node calculate a normal
+    // on each node calculate a normal
     map<NodeSharedPtr, NodeSharedPtr> nodesNormal;
 
-    for (map<NodeSharedPtr, set<NodeSharedPtr> >::iterator it =
-             nodesAdjacent.begin();
-         it != nodesAdjacent.end(); ++it)
+    for (map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it =
+             m_nodesToEdge.begin();
+         it != m_nodesToEdge.end(); ++it)
     {
         size_t n = it->second.size();
         ASSERTL0(n == 2, "node not properly connected");
 
-        Array<OneD, NekDouble> p1 = (*(it->second.begin()))->GetLoc();
+        Array<OneD, NekDouble> p1 = it->second[0]->m_n1->GetLoc();
         Array<OneD, NekDouble> p2 = it->first->GetLoc();
-        Array<OneD, NekDouble> p3 = (*(it->second.rbegin()))->GetLoc();
+        Array<OneD, NekDouble> p3 = it->second[1]->m_n2->GetLoc();
+
+        if (p1 == p2)
+        {
+            p1 = it->second[0]->m_n2->GetLoc();
+        }
+
+        if (p3 == p2)
+        {
+            p3 = it->second[1]->m_n1->GetLoc();
+        }
 
         Node N12(0, p1[1] - p2[1], p2[0] - p1[0], 0);
         N12 /= sqrt(N12.abs2());
@@ -209,9 +219,8 @@ void Generator2D::MakeBL(int i, std::vector<EdgeLoop> e)
         Node N23(0, p2[1] - p3[1], p3[0] - p2[0], 0);
         N23 /= sqrt(N23.abs2());
 
-        // NodeSharedPtr Nmean (new Node(N12 + N23));
         NodeSharedPtr Nmean = MemoryManager<Node>::AllocateSharedPtr(N12 + N23);
-        *Nmean *= thickness / sqrt(Nmean->abs2());
+        *Nmean *= m_thickness / sqrt(Nmean->abs2());
         *Nmean += *(it->first);
 
         nodesNormal[it->first] = Nmean;
@@ -219,14 +228,25 @@ void Generator2D::MakeBL(int i, std::vector<EdgeLoop> e)
 
     // create quadrilerals
 
-    for (map<NodeSharedPtr, set<NodeSharedPtr> >::iterator it =
-             nodesAdjacent.begin();
-         it != nodesAdjacent.end(); ++it)
+    for (map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it =
+             m_nodesToEdge.begin();
+         it != m_nodesToEdge.end(); ++it)
     {
         vector<NodeSharedPtr> ns;
+
         ns.push_back(it->first);
-        ns.push_back(*(it->second.begin()));
-        ns.push_back(nodesNormal[*(it->second.begin())]);
+
+        if (it->second[0]->m_n1 == it->first)
+        {
+            ns.push_back(it->second[0]->m_n2);
+            ns.push_back(nodesNormal[it->second[0]->m_n2]);
+        }
+        else
+        {
+            ns.push_back(it->second[0]->m_n1);
+            ns.push_back(nodesNormal[it->second[0]->m_n1]);
+        }
+
         ns.push_back(nodesNormal[it->first]);
 
         ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
@@ -238,7 +258,7 @@ void Generator2D::MakeBL(int i, std::vector<EdgeLoop> e)
             LibUtilities::eQuadrilateral, conf, ns, tags);
 
         m_mesh->m_element[2].push_back(E);
-    }*/
+    }
 }
 
 void Generator2D::Report()

@@ -92,7 +92,6 @@ namespace Nektar
             "BoundaryLayerPointsRev",
             "NodalTriElec",
             "NodalTriFekete",
-            "NodalTriSPI",
             "NodalTriEvenlySpaced",
             "NodalTetEvenlySpaced",
             "NodalTetElec",

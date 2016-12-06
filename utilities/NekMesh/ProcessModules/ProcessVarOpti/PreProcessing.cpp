@@ -288,7 +288,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElUtilSha
             }
             else
             {
-                m_res->nDoF += 3;
+                m_res->nDoF += m_mesh->m_spaceDim;
             }
         }
     }
@@ -314,7 +314,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElUtilSha
                 }
                 else
                 {
-                    m_res->nDoF += 3;
+                    m_res->nDoF += m_mesh->m_spaceDim;
                 }
             }
         }
@@ -336,7 +336,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElUtilSha
                 }
                 else
                 {
-                    m_res->nDoF += 3;
+                    m_res->nDoF += m_mesh->m_spaceDim;
                 }
             }
         }
@@ -353,7 +353,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElUtilSha
             if(nit2 == boundaryNodes.end() && nit3 == ignoredNodes.end())
             {
                 remain.push_back(ns[j]);
-                m_res->nDoF += 3;
+                m_res->nDoF += m_mesh->m_spaceDim;
             }
         }
     }

@@ -57,8 +57,7 @@ set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_BINARY_DIR}/NektarCPackConfig.cmake)
 include(CPack)
 
 if(APPLE)
-    foreach (component ${CPACK_COMPONENTS_ALL})
-        install(CODE "
+    install(CODE "
     include(GetPrerequisites)
     include(BundleUtilities)
     file(GLOB apps \"\${CMAKE_INSTALL_PREFIX}/bin/*\")
@@ -141,6 +140,5 @@ if(APPLE)
         endforeach()
         set(rpath_changes \${rpath_changes} -add_rpath @executable_path)
         execute_process(COMMAND install_name_tool \${rpath_changes} \"\${app}\")
-    endforeach()" COMPONENT ${component})
-    endforeach()
+    endforeach()")
 endif()

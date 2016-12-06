@@ -14,6 +14,7 @@ elseif(CPACK_GENERATOR STREQUAL "RPM")
         "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-1.${CPACK_RPM_PACKAGE_ARCHITECTURE}")
 elseif(CPACK_GENERATOR STREQUAL "PackageMaker")
     # OS X .pkg installer -- set install location
+    set(CPACK_MONOLITHIC_INSTALL ON)
     set(CPACK_PACKAGE_DEFAULT_LOCATION "/")
     set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/nektar++")
     set(CPACK_RESOURCE_FILE_WELCOME "@CMAKE_SOURCE_DIR@/pkg/osx-installer.html")
@@ -21,6 +22,8 @@ elseif(CPACK_GENERATOR STREQUAL "PackageMaker")
 
     # This is used as part of the identifier, so make it without spaces
     set(CPACK_PACKAGE_VENDOR "imperialcollegelondon")
+elseif(CPACK_GENERATOR STREQUAL "TGZ" OR CPACK_GENERATOR STREQUAL "TXZ" OR CPACK_GENERATOR STREQUAL "ZIP")
+    set(CPACK_MONOLITHIC_INSTALL ON)
 endif()
 
 # Determine architecture if not detected by rpm/dpkg above

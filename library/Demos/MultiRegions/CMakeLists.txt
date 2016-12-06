@@ -29,13 +29,12 @@ ADD_NEKTAR_EXECUTABLE(Deriv3DHomo2D
 ADD_NEKTAR_EXECUTABLE(SteadyAdvectionDiffusionReaction2D
     COMPONENT demos DEPENDS MultiRegions SOURCES SteadyAdvectionDiffusionReaction2D.cpp)
 
-# Generate list of available subdirectories
-FILE(GLOB dir_list "*")
-FOREACH(dir ${dir_list})
-    IF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
-        ADD_SUBDIRECTORY(${dir})
-    ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
-ENDFOREACH(dir ${dir_list})
+# Add ExtraDemos subdirectory.
+ADD_SUBDIRECTORY(ExtraDemos)
+
+# Finalise demos package here, since this is the last subdirectory to be
+# processed by CMake from the upper level CMakeLists.txt
+FINALISE_CPACK_COMPONENT(demos DESCRIPTION "Nektar++ Demos")
 
 ADD_NEKTAR_TEST(Helmholtz1D_CG_P8)
 ADD_NEKTAR_TEST(Helmholtz1D_CG_P8_periodic)

@@ -17,6 +17,8 @@ ADD_NEKTAR_EXECUTABLE(SteadyLinearAdvectionReaction2D
 ADD_NEKTAR_EXECUTABLE(PostProcessing
     COMPONENT demos-extra DEPENDS MultiRegions SOURCES PostProcessing.cpp)
 
+FINALISE_CPACK_COMPONENT(demos-extra DESCRIPTION "Nektar++ extra demos")
+
 ADD_NEKTAR_TEST(ProjectionCont2D_P7)
 IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST(ProjectionCont2D_P7_par)

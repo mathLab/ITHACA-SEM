@@ -1,5 +1,24 @@
+##
+## NektarCommon.cmake
+##
+## Frequently used Nektar++ CMake configuration macros and functions
+##
+
+#
+# CONSTRUCT_DEBIAN_DEPS(depends outvar)
+#
+# This macro converts a list of component names to a string containing the
+# Debian package dependencies for use by the CPack DEB generator, and stores
+# this in an output variable. It assumes that packages will be named
+# nektar++-<component>.
+#
+# Arguments:
+#   - `depends`: List of packages.
+#   - `outvar`: Name of output variable.
+#
 MACRO(CONSTRUCT_DEBIAN_DEPS depends outvar)
     SET(${outvar} "")
+
     FOREACH (pkg ${depends})
         STRING(TOLOWER ${pkg} pkg_lower)
         SET(${outvar} "${DEB_DEPS}, nektar++-${pkg_lower} (>= ${NEKTAR_VERSION})")
@@ -7,27 +26,68 @@ MACRO(CONSTRUCT_DEBIAN_DEPS depends outvar)
 
     # Remove starting ", "
     STRING(SUBSTRING ${${outvar}} 2 -1 ${outvar})
+    UNSET(pkg)
+    UNSET(pkg_lower)
 ENDMACRO()
 
+#
+# FINALISE_CPACK_COMPONENT(name DESCRIPTION <description>)
+#
+# Finalises the variables needed for a component in order to be packaged by
+# CPack. This should be called once all executables and libraries have been
+# added to the component. This routine will:
+#
+# - setup the component's name and description
+# - compile a unique list of dependencies
+# - construct a Debian dependency string using CONSTRUCT_DEBIAN_DEPS to be used
+#   in the resulting `.deb` file.
+#
+# Arguments:
+#   - `name`: component name.
+#   - `DESCRIPTION`: a brief summary of the package, which is used to describe
+#     the package when it is generated
+#
 MACRO(FINALISE_CPACK_COMPONENT name)
+    # Don't both doing anything if we aren't building packages.
     IF (NEKTAR_BUILD_PACKAGES)
         CMAKE_PARSE_ARGUMENTS(COMP "" "DESCRIPTION" "" ${ARGN})
 
+        # Component names are stored as upper ase in the CPack variable names.
         STRING(TOUPPER ${name} COMPVAR)
 
+        # Set the component name to `nektar++-<name>`
         SET(CPACK_COMPONENT_${COMPVAR}_DISPLAY_NAME nektar++-${name}
             CACHE INTERNAL "")
         SET(CPACK_COMPONENT_${COMPVAR}_DESCRIPTION ${COMP_DESCRIPTION} CACHE INTERNAL "")
 
+        # Remove any duplicates from the existing CPack component dependencies
+        # which are set by NEKTAR_ADD_EXECUTABLE and NEKTAR_ADD_LIBRARY
         SET(tmp ${CPACK_COMPONENT_${COMPVAR}_DEPENDS})
         LIST(REMOVE_DUPLICATES tmp)
         SET(CPACK_COMPONENT_${COMPVAR}_DEPENDS ${tmp} CACHE INTERNAL "")
 
+        # Construct list of Debian dependencies
         CONSTRUCT_DEBIAN_DEPS(${CPACK_COMPONENT_${COMPVAR}_DEPENDS} "tmp")
         SET(CPACK_DEBIAN_${COMPVAR}_PACKAGE_DEPENDS ${tmp} CACHE INTERNAL "")
     ENDIF()
 ENDMACRO()
 
+#
+# THIRDPARTY_LIBRARY(varname DESCRIPTION <description> [STATIC|SHARED])
+#
+# Updates a variable containing the name of a third-party shared or static
+# library to point to an absolute path defining its location instead of adding
+# `-llibname` to the linker flags. This avoids the issue of e.g. linking against
+# an outdated system zlib installation.
+#
+# Arguments:
+#   - `varname`: variable name containing the third-party library name. On
+#     output will be altered to update the correct path.
+#   - `DESCRIPTION`: a brief description of the variable (used in the SET
+#     command).
+#   - `SHARED`: if the library will be built as a shared library
+#   - `STATIC`: if the library will be built as a static library
+#
 MACRO(THIRDPARTY_LIBRARY varname)
     CMAKE_PARSE_ARGUMENTS(TPLIB "" "DESCRIPTION" "STATIC;SHARED" ${ARGN})
 
@@ -45,8 +105,29 @@ MACRO(THIRDPARTY_LIBRARY varname)
 
     SET(${varname} ${tmplist} CACHE FILEPATH ${TPLIB_DESCRIPTION} FORCE)
     UNSET(tmplist)
+    UNSET(LIBTYPE)
+    UNSET(TPLIBS)
+    UNSET(lib)
 ENDMACRO()
 
+#
+# SET_COMMON_PROPERTIES(target)
+#
+# Sets properties that are common to either library or executable targets. This
+# includes:
+#
+# - Name suffixes: -g for debug, -ms for minsize, -rg for release w/debug.
+# - Disable some MSVC compiler warnings
+# - Add -pg flag if NEKTAR_ENABLE_PROFILE is switched on and we're using gcc
+# - Add compiler definitions and appropriate warning levels to gcc-like
+#   compilers (e.g. clang)
+# - Define versions for the target
+# - Make sure that -fPIC is enabled for library code if building shared
+#   libraries.
+#
+# Arguments:
+#   - `target`: target name
+#
 MACRO(SET_COMMON_PROPERTIES name)
     SET_TARGET_PROPERTIES(${name} PROPERTIES DEBUG_POSTFIX -g)
     SET_TARGET_PROPERTIES(${name} PROPERTIES MINSIZEREL_POSTFIX -ms)
@@ -118,6 +199,18 @@ MACRO(SET_COMMON_PROPERTIES name)
     ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
 ENDMACRO(SET_COMMON_PROPERTIES name)
 
+#
+# ADD_NEKTAR_EXECUTABLE(name COMPONENT <component> [DEPENDS dep1 ...] [SOURCES src1 ...])
+#
+# Adds a new executable to a component with the supplied component dependencies
+# and sources files.
+#
+# Arguments:
+#   - `name`: target name to construct
+#   - `COMPONENT`: component name in which this target will live (e.g. demos)
+#   - `DEPENDS`: a list of components on which this target depends on
+#   - `SOURCES`: a list of source files for this target
+#
 MACRO(ADD_NEKTAR_EXECUTABLE name)
     CMAKE_PARSE_ARGUMENTS(NEKEXE "" "COMPONENT" "DEPENDS;SOURCES" ${ARGN})
     ADD_EXECUTABLE(${name} ${NEKEXE_SOURCES})
@@ -148,6 +241,26 @@ MACRO(ADD_NEKTAR_EXECUTABLE name)
     SET(CPACK_COMPONENT_${NEKEXE_COMPVAR}_DEPENDS ${tmp} CACHE INTERNAL "")
 ENDMACRO()
 
+#
+# ADD_NEKTAR_LIBRARY(name
+#                    DESCRIPTION <description>
+#                    DEPENDS dep1 dep2 ...
+#                    SOURCES src1 src2 ...
+#                    HEADERS head1 head2 ...)
+#
+# Adds a new library to a component with the supplied component dependencies and
+# sources files. A new component will be set up automatically with a lower-case
+# name: e.g. if the supplied library name is `LibUtilities` the corresponding
+# component is `libutilities`.
+#
+# Arguments:
+#   - `name`: target name to construct
+#   - `DESCRIPTION`: a description of the library
+#   - `DEPENDS`: a list of components on which this target depends on
+#   - `SOURCES`: a list of source files for this target
+#   - `HEADERS`: a list of header files for this target. These will be
+#     automatically put into a `dev` package.
+#
 MACRO(ADD_NEKTAR_LIBRARY name)
     CMAKE_PARSE_ARGUMENTS(NEKLIB "" "DESCRIPTION" "DEPENDS;SOURCES;HEADERS" ${ARGN})
 
@@ -197,20 +310,25 @@ MACRO(ADD_NEKTAR_LIBRARY name)
     ENDIF()
 ENDMACRO()
 
-# Adds a test with a given name.
-# The Test Definition File should be in a subdirectory called Tests relative
-# to the CMakeLists.txt file calling this macros. The test file should be called
-# NAME.tst, where NAME is given as a parameter to this macro.
+#
+# ADD_NEKTAR_TEST(name [LENGTHY])
+#
+# Adds a test with a given name.  The Test Definition File should be in a
+# subdirectory called Tests relative to the CMakeLists.txt file calling this
+# macros. The test file should be called NAME.tst, where NAME is given as a
+# parameter to this macro. If the LENGTHY flag is given, the test will only be
+# run if `NEKTAR_TEST_ALL` is enabled.
+#
+# Arguments:
+#   - `name`: name of the test file
+#   - `LENGTHY`: denotes a test that requires extended runtime.
+#
 MACRO(ADD_NEKTAR_TEST name)
-    GET_FILENAME_COMPONENT(dir ${CMAKE_CURRENT_SOURCE_DIR} NAME)
-    ADD_TEST(NAME ${dir}_${name}
-         COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/${name}.tst)
-ENDMACRO(ADD_NEKTAR_TEST)
+    CMAKE_PARSE_ARGUMENTS(NEKTEST "LENGTHY" "" "" ${ARGN})
 
-MACRO(ADD_NEKTAR_TEST_LENGTHY name)
-    IF (NEKTAR_TEST_ALL)
+    IF (NOT NEKTEST_LENGTHY OR NEKTAR_TEST_ALL)
         GET_FILENAME_COMPONENT(dir ${CMAKE_CURRENT_SOURCE_DIR} NAME)
         ADD_TEST(NAME ${dir}_${name}
-             COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/${name}.tst)
-    ENDIF(NEKTAR_TEST_ALL)
-ENDMACRO(ADD_NEKTAR_TEST_LENGTHY)
+            COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/${name}.tst)
+    ENDIF()
+ENDMACRO(ADD_NEKTAR_TEST)

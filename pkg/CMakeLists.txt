@@ -22,12 +22,16 @@ set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 set(CPACK_RPM_PACKAGE_GROUP "Development/Libraries")
 set(CPACK_RPM_PACKAGE_LICENSE "MIT")
 set(CPACK_RPM_PACKAGE_DEBUG 0)
+set(CPACK_RPM_COMPONENT_INSTALL ON)
 
 # Set up generator-specific logic (i.e. that may change the above depending on
 # generator) using additional CPack configuration file.
 configure_file(${CMAKE_SOURCE_DIR}/cmake/NektarCPackConfig.cmake.in
                ${CMAKE_BINARY_DIR}/NektarCPackConfig.cmake @ONLY)
 set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_BINARY_DIR}/NektarCPackConfig.cmake)
+
+# Finally, include the CPack module
+include(CPack)
 
 # This lovely block of code is designed to patch up our executables ready for OS
 # X deployment. The strategy is to create a piece of INSTALL code that will
@@ -52,9 +56,6 @@ set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_BINARY_DIR}/NektarCPackConfig.cmake)
 #
 # All of this makes an entirely self-contained version of Nektar++ that can be
 # extracted anywhere on the system and still retain its dependencies.
-
-# Finally, include the CPack module
-include(CPack)
 
 if(APPLE)
     install(CODE "

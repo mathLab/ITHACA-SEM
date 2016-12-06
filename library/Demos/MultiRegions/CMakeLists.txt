@@ -59,7 +59,7 @@ ADD_NEKTAR_TEST(Helmholtz2D_HDG_P7_Modes_AllBCs)
 ADD_NEKTAR_TEST(Helmholtz2D_CG_varP_Modes)
 
 
-ADD_NEKTAR_TEST_LENGTHY(Helmholtz3D_CG_Hex)
+ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex LENGTHY)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_Heterogeneous)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_iter_ml)
@@ -71,9 +71,9 @@ ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_Deformed)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Pyr)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Pyr_Deformed)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Homo1D)
-ADD_NEKTAR_TEST_LENGTHY(Helmholtz3D_HDG_Homo1D)
+ADD_NEKTAR_TEST(Helmholtz3D_HDG_Homo1D LENGTHY)
 ADD_NEKTAR_TEST(Helmholtz3D_HDG_Prism)
-ADD_NEKTAR_TEST_LENGTHY(Helmholtz3D_HDG_Hex_AllBCs)
+ADD_NEKTAR_TEST(Helmholtz3D_HDG_Hex_AllBCs LENGTHY)
 ADD_NEKTAR_TEST(Helmholtz3D_HDG_Tet)
 
 ADD_NEKTAR_TEST(LinearAdvDiffReact2D_P7_Modes)
@@ -97,7 +97,7 @@ IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_xxt_ml)
     ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_iter_ml_par3)
     ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_iter_ml_par3)
-    ADD_NEKTAR_TEST_LENGTHY(Helmholtz3D_CG_Hex_AllBCs_xxt_sc_par3)
+    ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_xxt_sc_par3 LENGTHY)
     ADD_NEKTAR_TEST(Helmholtz2D_CG_P14_xxt_per)
     ADD_NEKTAR_TEST(Helmholtz2D_CG_varP_Modes_par)
 
@@ -105,7 +105,7 @@ IF (NEKTAR_USE_MPI)
     #       To be resolved in a separate branch.
     # ADD_NEKTAR_TEST(Helmholtz3D_CG_Tet_iter_global_par3)
 
-    ADD_NEKTAR_TEST_LENGTHY(Helmholtz2D_HDG_P7_Modes_AllBCs_par2)
+    ADD_NEKTAR_TEST(Helmholtz2D_HDG_P7_Modes_AllBCs_par2 LENGTHY)
     ADD_NEKTAR_TEST(Helmholtz3D_HDG_Prism_par2)
     ADD_NEKTAR_TEST(Helmholtz3D_HDG_Hex_AllBCs_par2)
 

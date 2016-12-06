@@ -48,6 +48,7 @@ v4.4.0
 **FieldConvert:**
 - Allow equi-spaced output for 1D and 2DH1D fields (!613)
 - Update quality metric to include scaled Jacobian output (!695)
+- Allow multiple XML files to be specified in InterpField module (!705)
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
@@ -68,6 +69,7 @@ v4.4.0
 - Add flag to `insertsurface` process for non-conforming geometries (!700)
 - Bug fix to get two meshgen regression tests working (!700)
 - Remove libANN in deference to boost::geometry (!703)
+- Add a mesh extract option to the linearise module to visualise the result (!712)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

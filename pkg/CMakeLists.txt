@@ -30,9 +30,6 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/NektarCPackConfig.cmake.in
                ${CMAKE_BINARY_DIR}/NektarCPackConfig.cmake @ONLY)
 set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_BINARY_DIR}/NektarCPackConfig.cmake)
 
-# Finally, include the CPack module
-include(CPack)
-
 # This lovely block of code is designed to patch up our executables ready for OS
 # X deployment. The strategy is to create a piece of INSTALL code that will
 # patch up each executable and copy any libraries that we depend on, so that
@@ -61,8 +58,8 @@ if(APPLE)
     install(CODE "
     include(GetPrerequisites)
     include(BundleUtilities)
+
     file(GLOB apps \"\${CMAKE_INSTALL_PREFIX}/bin/*\")
-    message(STATUS \"APPLIST: \${CMAKE_INSTALL_PREFIX}/bin/*\")
     foreach (app \${apps})
         get_filename_component(exepath \${app} DIRECTORY)
         get_prerequisites(\"\${app}\" prereqs 1 1 \"\${exepath}\" \"\" \"\" 1)
@@ -75,19 +72,16 @@ if(APPLE)
         # at every library.
         unset(changes)
         unset(changes_lib)
-
-        # Check if thirdparty component has been set up yet
         foreach(req \${prereqs})
-            message(STATUS \"asdf: \${req}\")
             get_filename_component(reqname \${req} NAME)
-            set(libdest \${CMAKE_INSTALL_PREFIX}/lib/nektar++-${NEKTAR_VERSION}/\${reqname})
-            set(changes \${changes} \"-change\" \"\${req}\" \"@executable_path/../lib/nektar++-${NEKTAR_VERSION}/\${reqname}\")
-            set(changes_lib \${changes_lib} \"-change\" \"\${req}\" \"@loader_path/../lib/nektar++-${NEKTAR_VERSION}/\${reqname}\")
+            set(libdest \${CMAKE_INSTALL_PREFIX}/lib/\${reqname})
+            set(changes \${changes} \"-change\" \"\${req}\" \"@executable_path/../lib/\${reqname}\")
+            set(changes_lib \${changes_lib} \"-change\" \"\${req}\" \"@loader_path/../lib/\${reqname}\")
 
             # Copy this library
             if (NOT EXISTS \${libdest})
                 file(COPY \${req}
-                     DESTINATION \${CMAKE_INSTALL_PREFIX}/lib/nektar++-${NEKTAR_VERSION}
+                     DESTINATION \${CMAKE_INSTALL_PREFIX}/lib
                      FILE_PERMISSIONS OWNER_WRITE OWNER_READ)
 
                 # If the library was symlinked, we follow the symlink and then 
@@ -96,13 +90,13 @@ if(APPLE)
                     # resolve symlink
                     get_filename_component(req_abs \${req} REALPATH)
                     file(COPY \${req_abs}
-                         DESTINATION \${CMAKE_INSTALL_PREFIX}/lib/nektar++-${NEKTAR_VERSION}
+                         DESTINATION \${CMAKE_INSTALL_PREFIX}/lib
                          FILE_PERMISSIONS OWNER_WRITE OWNER_READ)
                 endif()
             endif()
         endforeach()
 
-        # Second pass -- fix up library to use @loader_path/../lib/nektar++-${NEKTAR_VERSION}/libName.dylib
+        # Second pass -- fix up library to use @loader_path/../lib/libName.dylib
         foreach(req \${prereqs})
             set(searchname \${req})
 
@@ -112,12 +106,12 @@ if(APPLE)
             endif()
 
             get_filename_component(reqname \${req} NAME)
-            set(libdest \${CMAKE_INSTALL_PREFIX}/lib/nektar++-${NEKTAR_VERSION}/\${reqname})
+            set(libdest \${CMAKE_INSTALL_PREFIX}/lib/\${reqname})
             set(cmd install_name_tool \${changes_lib} \"\${libdest}\")
             execute_process(COMMAND \${cmd} RESULT_VARIABLE install_name_tool_result)
 
             # change library install name ID
-            execute_process(COMMAND install_name_tool -id @loader_path/../lib/nektar++-${NEKTAR_VERSION}/\${reqname} \${libdest})
+            execute_process(COMMAND install_name_tool -id @loader_path/../lib/\${reqname} \${libdest})
 
             # change @loader_path (used by some boost libs through homebrew)
         endforeach()
@@ -143,3 +137,6 @@ if(APPLE)
         execute_process(COMMAND install_name_tool \${rpath_changes} \"\${app}\")
     endforeach()")
 endif()
+
+# Finally, include the CPack module
+include(CPack)

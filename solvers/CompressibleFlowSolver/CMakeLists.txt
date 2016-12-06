@@ -4,12 +4,30 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_COMPRESSIBLE_FLOW
 
 IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     SET(CompressibleFlowSolverSource 
+       ./ArtificialDiffusion/ArtificialDiffusion.cpp
+       ./ArtificialDiffusion/NonSmoothShockCapture.cpp
+       ./ArtificialDiffusion/SmoothShockCapture.cpp
+       ./BoundaryConditions/CFSBndCond.cpp
+       ./BoundaryConditions/ExtrapOrder0BC.cpp
+       ./BoundaryConditions/IsentropicVortexBC.cpp
+       ./BoundaryConditions/PressureInflowFileBC.cpp
+       ./BoundaryConditions/PressureOutflowBC.cpp
+       ./BoundaryConditions/PressureOutflowFileBC.cpp
+       ./BoundaryConditions/PressureOutflowNonReflectiveBC.cpp
+       ./BoundaryConditions/RiemannInvariantBC.cpp
+       ./BoundaryConditions/RinglebFlowBC.cpp
+       ./BoundaryConditions/SymmetryBC.cpp
+       ./BoundaryConditions/TimeDependentBC.cpp
+       ./BoundaryConditions/WallBC.cpp
+       ./BoundaryConditions/WallViscousBC.cpp
        ./CompressibleFlowSolver.cpp 
        ./EquationSystems/CompressibleFlowSystem.cpp
        ./EquationSystems/EulerCFE.cpp
-       ./EquationSystems/EulerADCFE.cpp
+       ./EquationSystems/IsentropicVortex.cpp
        ./EquationSystems/NavierStokesCFE.cpp
+       ./EquationSystems/RinglebFlow.cpp
        ./Filters/FilterEnergy.cpp
+       ./Misc/VariableConverter.cpp
        ./RiemannSolvers/AverageSolver.cpp
        ./RiemannSolvers/AUSM0Solver.cpp
        ./RiemannSolvers/AUSM1Solver.cpp

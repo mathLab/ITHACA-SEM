@@ -50,222 +50,358 @@ namespace Nektar
     {
     }
 
-    void NavierStokesCFE::v_InitObject()
-    {
-        CompressibleFlowSystem::v_InitObject();
-
-        if(m_session->DefinesSolverInfo("PROBLEMTYPE"))
-        {
-
-            std::string ProblemTypeStr = m_session->GetSolverInfo("PROBLEMTYPE");
-            for(int i = 0; i < (int) SIZE_ProblemType; ++i)
-            {
-                if(NoCaseStringCompare(ProblemTypeMap[i],ProblemTypeStr) == 0)
-                {
-                    m_problemType = (ProblemType)i;
-                    break;
-                }
-            }
-        }
-        else
-        {
-            m_problemType = (ProblemType)0;
-        }
-
-        if (m_explicitAdvection)
-        {
-            m_ode.DefineOdeRhs     (&NavierStokesCFE::DoOdeRhs,        this);
-            m_ode.DefineProjection (&NavierStokesCFE::DoOdeProjection, this);
-        }
-        else
-        {
-            ASSERTL0(false, "Implicit CFE not set up.");
-        }
-    }
-
     NavierStokesCFE::~NavierStokesCFE()
     {
 
     }
 
-    void NavierStokesCFE::v_GenerateSummary(SolverUtils::SummaryList& s)
+    /**
+     * @brief Initialization object for CompressibleFlowSystem class.
+     */
+    void NavierStokesCFE::v_InitObject()
     {
-        CompressibleFlowSystem::v_GenerateSummary(s);
-        SolverUtils::AddSummaryItem(s, "Problem Type",
-                                    ProblemTypeMap[m_problemType]);
-    }
+        CompressibleFlowSystem::v_InitObject();
 
-    void NavierStokesCFE::v_SetInitialConditions(
-        NekDouble initialtime,
-        bool dumpInitialConditions,
-        const int domain)
-    {
-        EquationSystem::v_SetInitialConditions(initialtime, false);
+        string diffName;
+        m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
 
-        // insert white noise in initial condition
-        NekDouble Noise;
-        int phystot = m_fields[0]->GetTotPoints();
-        Array<OneD, NekDouble> noise(phystot);
+        m_diffusion = SolverUtils::GetDiffusionFactory()
+                                    .CreateInstance(diffName, diffName);
 
-        m_session->LoadParameter("Noise", Noise,0.0);
-        int m_nConvectiveFields =  m_fields.num_elements();
-
-        if (Noise > 0.0)
+        if (m_specHP_dealiasing)
         {
-            for (int i = 0; i < m_nConvectiveFields; i++)
-            {
-                Vmath::FillWhiteNoise(phystot, Noise, noise, 1,
-                                      m_comm->GetColumnComm()->GetRank()+1);
-                Vmath::Vadd(phystot, m_fields[i]->GetPhys(), 1,
-                            noise, 1, m_fields[i]->UpdatePhys(), 1);
-                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
-                                                 m_fields[i]->UpdateCoeffs());
-            }
+            m_diffusion->SetFluxVectorNS(
+                &NavierStokesCFE::GetViscousFluxVectorDeAlias,
+                this);
+        }
+        else
+        {
+            m_diffusion->SetFluxVectorNS(&NavierStokesCFE::
+                                          GetViscousFluxVector, this);
         }
 
-        CompressibleFlowSystem::v_SetInitialConditions();
-
-        if (dumpInitialConditions)
-        {
-            // Dump initial conditions to file
-            Checkpoint_Output(0);
-        }
+        // Concluding initialisation of diffusion operator
+        m_diffusion->InitObject         (m_session, m_fields);
     }
 
-    void NavierStokesCFE::DoOdeRhs(
+    void NavierStokesCFE::v_DoDiffusion(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time)
+            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
     {
         int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
+        int nTracePts  = GetTraceTotPoints();
 
-
-        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
-        Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
 
-        Array<OneD, Array<OneD, NekDouble> > inarrayTemp(nvariables-1);
         Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables-1);
+        Array<OneD, Array<OneD, NekDouble> > inFwd(nvariables-1);
+        Array<OneD, Array<OneD, NekDouble> > inBwd(nvariables-1);
 
         for (i = 0; i < nvariables; ++i)
         {
-            outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);
-            outarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
+            outarrayDiff[i] = Array<OneD, NekDouble>(npoints);
         }
 
         for (i = 0; i < nvariables-1; ++i)
         {
-            inarrayTemp[i] = Array<OneD, NekDouble>(npoints, 0.0);
-            inarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
+            inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
+            inFwd[i]       = Array<OneD, NekDouble>(nTracePts);
+            inBwd[i]       = Array<OneD, NekDouble>(nTracePts);
         }
 
-        // Advection term in physical rhs form
-        m_advection->Advect(nvariables, m_fields, advVel, inarray,
-                            outarrayAdv, time);
+        // Extract pressure
+        //    (use inarrayDiff[0] as a temporary storage for the pressure)
+        m_varConv->GetPressure(inarray, inarrayDiff[0]);
 
-        // Extract pressure and temperature
-        Array<OneD, NekDouble > pressure   (npoints, 0.0);
-        Array<OneD, NekDouble > temperature(npoints, 0.0);
-        GetPressure(inarray, pressure);
-        GetTemperature(inarray, pressure, temperature);
+        // Extract temperature
+        m_varConv->GetTemperature(inarray, inarrayDiff[0],
+                inarrayDiff[nvariables-2]);
 
         // Extract velocities
-        for (i = 1; i < nvariables-1; ++i)
-        {
-            Vmath::Vdiv(npoints,
-                        inarray[i], 1,
-                        inarray[0], 1,
-                        inarrayTemp[i-1], 1);
-        }
+        m_varConv->GetVelocityVector(inarray, inarrayDiff);
 
-        // Copy velocities into new inarrayDiff
-        for (i = 0; i < nvariables-2; ++i)
+        // Repeat calculation for trace space
+        if (pFwd == NullNekDoubleArrayofArray || 
+            pBwd == NullNekDoubleArrayofArray)
         {
-            Vmath::Vcopy(npoints, inarrayTemp[i], 1, inarrayDiff[i], 1);
+            inFwd = NullNekDoubleArrayofArray;
+            inBwd = NullNekDoubleArrayofArray;
         }
+        else
+        {
+            m_varConv->GetPressure(pFwd,    inFwd[0]);
+            m_varConv->GetPressure(pBwd,    inBwd[0]);
 
-        // Copy temperature into new inarrayDiffusion
-        Vmath::Vcopy(npoints,
-                     temperature, 1,
-                     inarrayDiff[nvariables-2], 1);
+            m_varConv->GetTemperature(pFwd,    inFwd[0],
+                inFwd[nvariables-2]);
+            m_varConv->GetTemperature(pBwd,    inBwd[0],
+                inBwd[nvariables-2]);
+
+            m_varConv->GetVelocityVector(pFwd, inFwd);
+            m_varConv->GetVelocityVector(pBwd, inBwd);
+        }
 
         // Diffusion term in physical rhs form
-        m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff);
+        m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff,
+                             inFwd, inBwd);
 
         for (i = 0; i < nvariables; ++i)
         {
-            Vmath::Vsub(npoints,
+            Vmath::Vadd(npoints,
                         outarrayDiff[i], 1,
-                        outarrayAdv[i], 1,
+                        outarray[i], 1,
                         outarray[i], 1);
         }
-
-        // Add sponge layer if defined in the session file
-        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
-        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
-        {
-            (*x)->Apply(m_fields, inarray, outarray, time);
-        }
     }
 
-    void NavierStokesCFE::DoOdeProjection(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time)
+    /**
+     * @brief Return the flux vector for the LDG diffusion problem.
+     * \todo Complete the viscous flux vector
+     */
+    void NavierStokesCFE::GetViscousFluxVector(
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
-        int i;
-        int nvariables = inarray.num_elements();
+        int i, j;
+        int nVariables = m_fields.num_elements();
+        int nPts       = physfield[0].num_elements();
 
-        switch(m_projectionType)
+        // Stokes hypothesis
+        const NekDouble lambda = -2.0/3.0;
+
+        // Auxiliary variables
+        Array<OneD, NekDouble > mu                 (nPts, 0.0);
+        Array<OneD, NekDouble > thermalConductivity(nPts, 0.0);
+        Array<OneD, NekDouble > divVel             (nPts, 0.0);
+
+        // Variable viscosity through the Sutherland's law
+        if (m_ViscosityType == "Variable")
         {
-            case MultiRegions::eDiscontinuous:
-            {
-                // Just copy over array
-                int npoints = GetNpoints();
+            m_varConv->GetDynamicViscosity(physfield[nVariables-2], mu);
+            NekDouble tRa = m_Cp / m_Prandtl;
+            Vmath::Smul(nPts, tRa, mu, 1, thermalConductivity, 1);
+        }
+        else
+        {
+            Vmath::Fill(nPts, m_mu, mu, 1);
+            Vmath::Fill(nPts, m_thermalConductivity,
+                        thermalConductivity, 1);
+        }
 
-                for(i = 0; i < nvariables; ++i)
+        // Velocity divergence
+        for (j = 0; j < m_spacedim; ++j)
+        {
+            Vmath::Vadd(nPts, divVel, 1, derivativesO1[j][j], 1,
+                        divVel, 1);
+        }
+
+        // Velocity divergence scaled by lambda * mu
+        Vmath::Smul(nPts, lambda, divVel, 1, divVel, 1);
+        Vmath::Vmul(nPts, mu,  1, divVel, 1, divVel, 1);
+
+        // Viscous flux vector for the rho equation = 0
+        for (i = 0; i < m_spacedim; ++i)
+        {
+            Vmath::Zero(nPts, viscousTensor[i][0], 1);
+        }
+
+        // Viscous stress tensor (for the momentum equations)
+        for (i = 0; i < m_spacedim; ++i)
+        {
+            for (j = i; j < m_spacedim; ++j)
+            {
+                Vmath::Vadd(nPts, derivativesO1[i][j], 1,
+                                  derivativesO1[j][i], 1,
+                                  viscousTensor[i][j+1], 1);
+
+                Vmath::Vmul(nPts, mu, 1,
+                                  viscousTensor[i][j+1], 1,
+                                  viscousTensor[i][j+1], 1);
+
+                if (i == j)
                 {
-                    Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
+                    // Add divergence term to diagonal
+                    Vmath::Vadd(nPts, viscousTensor[i][j+1], 1,
+                                  divVel, 1,
+                                  viscousTensor[i][j+1], 1);
                 }
-                SetBoundaryConditions(outarray, time);
-                break;
+                else
+                {
+                    // Copy to make symmetric
+                    Vmath::Vcopy(nPts, viscousTensor[i][j+1], 1,
+                                       viscousTensor[j][i+1], 1);
+                }
             }
-            case MultiRegions::eGalerkin:
-            case MultiRegions::eMixed_CG_Discontinuous:
+        }
+
+        // Terms for the energy equation
+        for (i = 0; i < m_spacedim; ++i)
+        {
+            Vmath::Zero(nPts, viscousTensor[i][m_spacedim+1], 1);
+            // u_j * tau_ij
+            for (j = 0; j < m_spacedim; ++j)
             {
-                ASSERTL0(false, "No Continuous Galerkin for full compressible "
-                                "Navier-Stokes equations");
-                break;
+                Vmath::Vvtvp(nPts, physfield[j], 1,
+                               viscousTensor[i][j+1], 1,
+                               viscousTensor[i][m_spacedim+1], 1,
+                               viscousTensor[i][m_spacedim+1], 1);
             }
-            default:
-                ASSERTL0(false, "Unknown projection scheme");
-                break;
+            // Add k*T_i
+            Vmath::Vvtvp(nPts, thermalConductivity, 1,
+                               derivativesO1[i][m_spacedim], 1,
+                               viscousTensor[i][m_spacedim+1], 1,
+                               viscousTensor[i][m_spacedim+1], 1);
         }
     }
 
-    void NavierStokesCFE::SetBoundaryConditions(
-        Array<OneD, Array<OneD, NekDouble> > &inarray,
-        NekDouble                             time)
+    /**
+     * @brief Return the flux vector for the LDG diffusion problem.
+     * \todo Complete the viscous flux vector
+     */
+    void NavierStokesCFE::GetViscousFluxVectorDeAlias(
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
-        std::string varName;
-        int cnt        = 0;
-        int nTracePts  = GetTraceTotPoints();
-        int nvariables = inarray.num_elements();
+        int i, j;
+        int nVariables = m_fields.num_elements();
+        // Factor to rescale 1d points in dealiasing.
+        NekDouble OneDptscale = 2;
+        // Get number of points to dealias a cubic non-linearity
+        int nPts      = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
+        int nPts_orig = physfield[0].num_elements();
 
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        for (int i = 0; i < nvariables; ++i)
+        // Stokes hypothesis
+        const NekDouble lambda = -2.0/3.0;
+
+        // Auxiliary variables
+        Array<OneD, NekDouble > mu                 (nPts, 0.0);
+        Array<OneD, NekDouble > thermalConductivity(nPts, 0.0);
+        Array<OneD, NekDouble > divVel             (nPts, 0.0);
+
+        // Variable viscosity through the Sutherland's law
+        if (m_ViscosityType == "Variable")
         {
-            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-            m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
+            m_varConv->GetDynamicViscosity(physfield[nVariables-2], mu);
+            NekDouble tRa = m_Cp / m_Prandtl;
+            Vmath::Smul(nPts, tRa, mu, 1, thermalConductivity, 1);
+        }
+        else
+        {
+            Vmath::Fill(nPts, m_mu, mu, 1);
+            Vmath::Fill(nPts, m_thermalConductivity,
+                        thermalConductivity, 1);
         }
 
-        // loop over Boundary Regions
-        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+        // Interpolate inputs and initialise interpolated output
+        Array<OneD, Array<OneD, NekDouble> > vel_interp(m_spacedim);
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                             deriv_interp(m_spacedim);
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                             out_interp(m_spacedim);
+        for (i = 0; i < m_spacedim; ++i)
         {
-            std::string type = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
-            SetCommonBC(type, n, time, cnt, Fwd, inarray);
+            // Interpolate velocity
+            vel_interp[i]   = Array<OneD, NekDouble> (nPts);
+            m_fields[0]->PhysInterp1DScaled(
+                OneDptscale, physfield[i], vel_interp[i]);
+
+            // Interpolate derivatives
+            deriv_interp[i] = Array<OneD,Array<OneD,NekDouble> > (m_spacedim+1);
+            for (j = 0; j < m_spacedim+1; ++j)
+            {
+                deriv_interp[i][j] = Array<OneD, NekDouble> (nPts);
+                m_fields[0]->PhysInterp1DScaled(
+                    OneDptscale, derivativesO1[i][j], deriv_interp[i][j]);
+            }
+
+            // Output (start from j=1 since flux is zero for rho)
+            out_interp[i] = Array<OneD,Array<OneD,NekDouble> > (m_spacedim+2);
+            for (j = 1; j < m_spacedim+2; ++j)
+            {
+                out_interp[i][j] = Array<OneD, NekDouble> (nPts);
+            }
+        }
+
+        // Velocity divergence
+        for (j = 0; j < m_spacedim; ++j)
+        {
+            Vmath::Vadd(nPts, divVel, 1, deriv_interp[j][j], 1,
+                        divVel, 1);
+        }
+
+        // Velocity divergence scaled by lambda * mu
+        Vmath::Smul(nPts, lambda, divVel, 1, divVel, 1);
+        Vmath::Vmul(nPts, mu,  1, divVel, 1, divVel, 1);
+
+        // Viscous flux vector for the rho equation = 0 (no need to dealias)
+        for (i = 0; i < m_spacedim; ++i)
+        {
+            Vmath::Zero(nPts_orig, viscousTensor[i][0], 1);
+        }
+
+        // Viscous stress tensor (for the momentum equations)
+        for (i = 0; i < m_spacedim; ++i)
+        {
+            for (j = i; j < m_spacedim; ++j)
+            {
+                Vmath::Vadd(nPts, deriv_interp[i][j], 1,
+                                  deriv_interp[j][i], 1,
+                                  out_interp[i][j+1], 1);
+
+                Vmath::Vmul(nPts, mu, 1,
+                                  out_interp[i][j+1], 1,
+                                  out_interp[i][j+1], 1);
+
+                if (i == j)
+                {
+                    // Add divergence term to diagonal
+                    Vmath::Vadd(nPts, out_interp[i][j+1], 1,
+                                  divVel, 1,
+                                  out_interp[i][j+1], 1);
+                }
+                else
+                {
+                    // Make symmetric
+                    out_interp[j][i+1] = out_interp[i][j+1];
+                }
+            }
+        }
+
+        // Terms for the energy equation
+        for (i = 0; i < m_spacedim; ++i)
+        {
+            Vmath::Zero(nPts, out_interp[i][m_spacedim+1], 1);
+            // u_j * tau_ij
+            for (j = 0; j < m_spacedim; ++j)
+            {
+                Vmath::Vvtvp(nPts, vel_interp[j], 1,
+                               out_interp[i][j+1], 1,
+                               out_interp[i][m_spacedim+1], 1,
+                               out_interp[i][m_spacedim+1], 1);
+            }
+            // Add k*T_i
+            Vmath::Vvtvp(nPts, thermalConductivity, 1,
+                               deriv_interp[i][m_spacedim], 1,
+                               out_interp[i][m_spacedim+1], 1,
+                               out_interp[i][m_spacedim+1], 1);
+        }
+
+        // Project to original space
+        for (i = 0; i < m_spacedim; ++i)
+        {
+            for (j = 1; j < m_spacedim+2; ++j)
+            {
+                m_fields[0]->PhysGalerkinProjection1DScaled(
+                    OneDptscale,
+                    out_interp[i][j],
+                    viscousTensor[i][j]);
+            }
         }
     }
 }

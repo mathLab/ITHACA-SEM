@@ -712,15 +712,12 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr vert;
 
             cnt = 0;
-            // list Dirichlet boundaries first
             for (it = bregions.begin(); it != bregions.end(); ++it)
             {
-                locBCond = GetBoundaryCondition(
-                    bconditions, it->first, variable);
+                locBCond = GetBoundaryCondition(bconditions, it->first, variable);
 
-                if (locBCond->GetBoundaryConditionType() ==
-                    SpatialDomains::eDirichlet)
-
+                if (locBCond->GetBoundaryConditionType() !=
+                    SpatialDomains::ePeriodic)
                 {
                     SpatialDomains::BoundaryRegion::iterator bregionIt;
                     for (bregionIt  = it->second->begin();
@@ -728,13 +725,13 @@ namespace Nektar
                     {
                         for (k = 0; k < bregionIt->second->size(); k++)
                         {
-                            if ((vert = boost::dynamic_pointer_cast
+                            if((vert = boost::dynamic_pointer_cast
                                     <SpatialDomains::PointGeom>(
-                                         (*bregionIt->second)[k])))
+                                        (*bregionIt->second)[k])))
                             {
                                 locPointExp
                                     = MemoryManager<MultiRegions::ExpList0D>
-                                                ::AllocateSharedPtr(vert);
+                                        ::AllocateSharedPtr(vert);
                                 bndCondExpansions[cnt]  = locPointExp;
                                 bndConditions[cnt++]    = locBCond;
                             }
@@ -745,51 +742,6 @@ namespace Nektar
                             }
                         }
                     }
-                }
-            } // end if Dirichlet
-
-            // then, list the other (non-periodic) boundaries
-            for (it = bregions.begin(); it != bregions.end(); ++it)
-            {
-                locBCond = GetBoundaryCondition(bconditions, it->first, variable);
-                
-                switch(locBCond->GetBoundaryConditionType())
-                {
-                case SpatialDomains::eNeumann:
-                case SpatialDomains::eRobin:
-                case SpatialDomains::eNotDefined: // presume this will be reused as Neuman, Robin or Dirichlet later
-                    {
-                        SpatialDomains::BoundaryRegion::iterator bregionIt;
-                        for (bregionIt  = it->second->begin();
-                             bregionIt != it->second->end(); bregionIt++)
-                        {
-                            for (k = 0; k < bregionIt->second->size(); k++)
-                            {
-                                if((vert = boost::dynamic_pointer_cast
-                                        <SpatialDomains::PointGeom>(
-                                            (*bregionIt->second)[k])))
-                                {
-                                    locPointExp
-                                        = MemoryManager<MultiRegions::ExpList0D>
-                                            ::AllocateSharedPtr(vert);
-                                    bndCondExpansions[cnt]  = locPointExp;
-                                    bndConditions[cnt++]    = locBCond;
-                                }
-                                else
-                                {
-                                    ASSERTL0(false,
-                                        "dynamic cast to a vertex failed");
-                                }
-                            }
-                        }
-                    }
-                    // do nothing for these types
-                case SpatialDomains::eDirichlet:
-                case SpatialDomains::ePeriodic:
-                    break;
-                default:
-                    ASSERTL0(false,"This type of BC not implemented yet");
-                    break;
                 }
             }
         }
@@ -1456,11 +1408,11 @@ namespace Nektar
         }
         
         void DisContField1D::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result)
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays)
         {
             int n, cnt, nq;
             int offsetOld, offsetNew;
-            Array<OneD, NekDouble> tmp1, tmp2;
             std::vector<unsigned int> eIDs;
             
             Array<OneD, int> ElmtID,EdgeID;
@@ -1480,24 +1432,29 @@ namespace Nektar
             
             // Create expansion list
             result = 
-                MemoryManager<ExpList1D>::AllocateSharedPtr(*this, eIDs);
+                MemoryManager<ExpList1D>::AllocateSharedPtr
+                    (*this, eIDs, DeclareCoeffPhysArrays);
             
             // Copy phys and coeffs to new explist
-            for (n = 0; n < result->GetExpSize(); ++n)
+            if( DeclareCoeffPhysArrays)
             {
-                nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
-                offsetOld = GetPhys_Offset(ElmtID[cnt+n]);
-                offsetNew = result->GetPhys_Offset(n);
-                Vmath::Vcopy(nq, tmp1 = GetPhys()+ offsetOld, 1,
-                                 tmp2 = result->UpdatePhys()+ offsetNew, 1);
-                
-                nq = GetExp(ElmtID[cnt+n])->GetNcoeffs();
-                offsetOld = GetCoeff_Offset(ElmtID[cnt+n]);
-                offsetNew = result->GetCoeff_Offset(n);
-                Vmath::Vcopy(nq, tmp1 = GetCoeffs()+ offsetOld, 1,
-                                 tmp2 = result->UpdateCoeffs()+ offsetNew, 1);
+                Array<OneD, NekDouble> tmp1, tmp2;
+                for (n = 0; n < result->GetExpSize(); ++n)
+                {
+                    nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
+                    offsetOld = GetPhys_Offset(ElmtID[cnt+n]);
+                    offsetNew = result->GetPhys_Offset(n);
+                    Vmath::Vcopy(nq, tmp1 = GetPhys()+ offsetOld, 1,
+                                tmp2 = result->UpdatePhys()+ offsetNew, 1);
+
+                    nq = GetExp(ElmtID[cnt+n])->GetNcoeffs();
+                    offsetOld = GetCoeff_Offset(ElmtID[cnt+n]);
+                    offsetNew = result->GetCoeff_Offset(n);
+                    Vmath::Vcopy(nq, tmp1 = GetCoeffs()+ offsetOld, 1,
+                                tmp2 = result->UpdateCoeffs()+ offsetNew, 1);
+                }
             }
-        }        
+        }
 
         /**
          * @brief Reset this field, so that geometry information can be updated.

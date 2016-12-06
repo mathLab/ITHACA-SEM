@@ -11862,7 +11862,6 @@
             <P> mu                  = rhoInf * L * uInf / Re            </P>
             <P> Pr                  = 0.72                              </P>
             <P> Cp                  = (Gamma / (Gamma - 1))*GasConstant </P>
-            <P> thermalConductivity = Cp * mu / Pr                      </P>
             <P> sigma               = 0.001                             </P>
         </PARAMETERS>
         

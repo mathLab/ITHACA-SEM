@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshElements.cpp
+//  File: BooleanOperators.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Boolean operators for comparison of mesh objects.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,11 +43,17 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+/**
+ * @brief Compares two element config structs
+ */
 bool operator==(ElmtConfig const &c1, ElmtConfig const &c2)
 {
     return (c1.m_e == c2.m_e && c1.m_order == c2.m_order);
 }
 
+/**
+ * @brief Compares two element shared pointers
+ */
 bool operator==(ElementSharedPtr const &e1, ElementSharedPtr const &e2)
 {
     return e1->GetId() == e2->GetId();
@@ -117,9 +123,12 @@ bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2)
     return *p1 == *p2;
 }
 
+/**
+ * @brief Compares two nodes for inequality based on IDs
+ */
 bool operator!=(NodeSharedPtr const &p1, NodeSharedPtr const &p2)
 {
-    if(p1->m_id != p2->m_id)
+    if (p1->m_id != p2->m_id)
     {
         return true;
     }
@@ -137,6 +146,9 @@ bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2)
     return *p1 < *p2;
 }
 
+/**
+ * @brief Print description of node to given ostream.
+ */
 std::ostream &operator<<(std::ostream &os, const NodeSharedPtr &n)
 {
     os << n->m_x << " " << n->m_y << " " << n->m_z;

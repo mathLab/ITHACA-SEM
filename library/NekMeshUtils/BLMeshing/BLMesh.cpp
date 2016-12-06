@@ -37,7 +37,7 @@
 #include <NekMeshUtils/BLMeshing/BLMesh.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 
-#include <ANN/ANN.h>
+//#include <ANN/ANN.h>
 
 using namespace std;
 namespace Nektar
@@ -497,7 +497,7 @@ void BLMesh::Mesh()
         pedges[ect] = (*et);
     }
 
-    {
+    /*{
         //before iterating over the layers, do an intial intersection test
         ANNpointArray dataPts;
         ANNpoint queryPt;
@@ -626,9 +626,9 @@ void BLMesh::Mesh()
                 }
             }
         }
-    }
+    }*/
 
-    for(int i = 2; i <= nlayers; i++)
+    /*for(int i = 2; i <= nlayers; i++)
     {
         if (m_mesh->m_verbose)
         {
@@ -948,7 +948,7 @@ void BLMesh::Mesh()
         {
             stopped.insert((*iit));
         }
-    }
+    }*/
 
     if(m_mesh->m_verbose)
     {
@@ -969,7 +969,7 @@ void BLMesh::Mesh()
     }
 
 
-    ANNpointArray dataPts;
+    /*ANNpointArray dataPts;
     ANNpoint queryPt;
     ANNidxArray nnIdx;
     ANNdistArray dists;
@@ -1069,7 +1069,7 @@ void BLMesh::Mesh()
             }
         }
         //cout << sample << " " << tested << " " << hited << endl;
-    }
+    }*/
 
     //compile a map of the nodes needed for systemetry surfs
     for(int i = 0; i < m_symSurfs.size(); i++)

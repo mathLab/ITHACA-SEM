@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Add scalar function curvature to a given surface.
+//  Description: extrude a 2d mesh.
 //
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -55,7 +55,7 @@ NodeOptiFactory &GetNodeOptiFactory()
     return asd;
 }
 
-const NekDouble NodeOpti::gam = numeric_limits<float>::epsilon();
+const NekDouble NodeOpti::gam = numeric_limits<float>::epsilon()*10;
 
 void NodeOpti::CalcMinJac()
 {

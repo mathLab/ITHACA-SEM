@@ -638,7 +638,7 @@ void ElUtil::Evaluate()
     m_res->worstJac = min(m_res->worstJac,(mn2 / mx2));
     mtx2.unlock();
 
-    m_scaledJac = (mn2/mx2) ;
+    m_scaledJac = (mn2/mx2);
 }
 
 void ElUtil::InitialMinJac()

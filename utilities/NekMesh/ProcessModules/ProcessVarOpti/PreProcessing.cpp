@@ -52,10 +52,14 @@ map<LibUtilities::ShapeType, DerivUtilSharedPtr> ProcessVarOpti::BuildDerivUtil(
     map<LibUtilities::ShapeType, DerivUtilSharedPtr> ret;
 
     map<LibUtilities::ShapeType, LibUtilities::PointsType> typeMap;
-    typeMap[LibUtilities::eTriangle] = LibUtilities::eNodalTriSPI;
+    if(m_mesh->m_nummode + o <= 11)
+    {
+        typeMap[LibUtilities::eTriangle] = LibUtilities::eNodalTriSPI;
+        typeMap[LibUtilities::eTetrahedron] = LibUtilities::eNodalTetSPI;
+        typeMap[LibUtilities::ePrism] = LibUtilities::eNodalPrismSPI;
+    }
+
     typeMap[LibUtilities::eQuadrilateral] = LibUtilities::eNodalQuadElec;
-    typeMap[LibUtilities::eTetrahedron] = LibUtilities::eNodalTetSPI;
-    typeMap[LibUtilities::ePrism] = LibUtilities::eNodalPrismSPI;
     //typeMap[LibUtilities::eHexahedron] = LibUtilities::eNodalHexElec;
 
     map<LibUtilities::ShapeType, LibUtilities::PointsType> typeMap2;

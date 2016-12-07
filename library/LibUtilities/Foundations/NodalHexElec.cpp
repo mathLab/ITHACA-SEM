@@ -64,9 +64,9 @@ void NodalHexElec::CalculatePoints()
         {
             for (int i = 0; i < numPoints; i++, ct++)
             {
-                m_points[0][ct] = m_e0[k];
+                m_points[0][ct] = m_e0[i];
                 m_points[1][ct] = m_e0[j];
-                m_points[2][ct] = m_e0[i];
+                m_points[2][ct] = m_e0[k];
             }
         }
     }

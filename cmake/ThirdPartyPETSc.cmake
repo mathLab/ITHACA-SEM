@@ -46,9 +46,8 @@ IF (NEKTAR_USE_PETSC)
             IF(NEKTAR_USE_MPI AND NOT MPI_Fortran_COMPILER)
                 MESSAGE(ERROR "MPI_Fortran_COMPILER not set")
             ENDIF()
-            # we use a separate ptscotch here because the one compiled if
-            # NEKTAR_USE_SCOTCH=true is version 6.0.0 which is incompatible
-            # with MUMPS
+            # we use a MUMPS build in ordering here, in the future it might make
+            # sense to hook it up with metis/scotch since this MIGHT be faster
             SET(PETSC_MUMPS --download-scalapack --download-mumps)
         ELSE()
             MESSAGE(WARNING "No Fortran support. Building PETSc without MUMPS support")

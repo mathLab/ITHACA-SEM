@@ -96,6 +96,8 @@ public:
     virtual void Process();
 
 private:
+    void Analytics();
+
     typedef std::map<int, std::vector<ElUtilSharedPtr> > NodeElMap;
 
     std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> BuildDerivUtil(int o);

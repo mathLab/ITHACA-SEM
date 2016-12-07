@@ -45,6 +45,7 @@ namespace Utilities
 template<int DIM> int NodeOpti::IsIndefinite()
 {
     ASSERTL0(false,"DIM error");
+    return 0;
 }
 
 template<> int NodeOpti::IsIndefinite<2>()
@@ -76,7 +77,7 @@ template<> int NodeOpti::IsIndefinite<2>()
 
     ASSERTL0(!info,"dgeev failed");
 
-    if(eval(0,0) < 0.0 || eval(1,1) < 0.0 < 0.0)
+    if(eval(0,0) < 0.0 || eval(1,1) < 0.0)
     {
         if(eval(0,0) < 0.0 && eval(1,1) < 0.0)
         {

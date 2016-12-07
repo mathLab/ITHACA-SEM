@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/Foundations/NodalUtil.h>
 
 #include <NekMeshUtils/MeshElements/Element.h>
 #include "ProcessVarOpti.h"
@@ -89,6 +90,8 @@ ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "", "histogram of scaled jac");
     m_config["overint"] =
         ConfigOption(false, "6", "over integration order");
+    m_config["analytics"] =
+        ConfigOption(false, "", "basic analytics module");
 }
 
 ProcessVarOpti::~ProcessVarOpti()
@@ -167,6 +170,13 @@ void ProcessVarOpti::Process()
     m_res->val = 1.0;
 
     m_mesh->MakeOrder(m_mesh->m_nummode-1,LibUtilities::eGaussLobattoLegendre);
+
+    if (m_config["analytics"].beenSet)
+    {
+        Analytics();
+        return;
+    }
+
     map<LibUtilities::ShapeType, DerivUtilSharedPtr> derivUtils =
                                                     BuildDerivUtil(intOrder);
     GetElementMap(intOrder, derivUtils);
@@ -203,7 +213,6 @@ void ProcessVarOpti::Process()
 
             if (freenodes[i][j]->GetNumCadCurve() == 1)
             {
-                //continue;
                 optiKind += 10;
             }
             else if (freenodes[i][j]->GetNumCADSurf() == 1)
@@ -367,6 +376,81 @@ void ProcessVarOpti::Process()
 
     cout << "Invalid at end:\t\t" << m_res->startInv << endl;
     cout << "Worst at end:\t\t" << m_res->worstJac << endl;
+}
+
+class NodalUtilTriMonomial : public LibUtilities::NodalUtilTriangle
+{
+public:
+    NodalUtilTriMonomial(int degree,
+                         Array<OneD, NekDouble> r,
+                         Array<OneD, NekDouble> s)
+        : NodalUtilTriangle(degree, r, s)
+    {
+    }
+
+    virtual ~NodalUtilTriMonomial()
+    {
+    }
+
+protected:
+    virtual NekVector<NekDouble> v_OrthoBasis(const int mode)
+    {
+        // Monomial basis.
+        std::pair<int, int> modes = m_ordering[mode];
+        NekVector<NekDouble> ret(m_numPoints);
+
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret(i) = pow(m_xi[0][i], modes.first) * pow(m_xi[1][i], modes.second);
+        }
+
+        return ret;
+    }
+
+    virtual NekVector<NekDouble> v_OrthoBasisDeriv(
+        const int dir, const int mode)
+    {
+        ASSERTL0(false, "not supported");
+        return NekVector<NekDouble>();
+    }
+
+    virtual boost::shared_ptr<NodalUtil> v_CreateUtil(
+        Array<OneD, Array<OneD, NekDouble> > &xi)
+    {
+        return MemoryManager<NodalUtilTriMonomial>::AllocateSharedPtr(
+            m_degree, xi[0], xi[1]);
+    }
+};
+
+void ProcessVarOpti::Analytics()
+{
+    // Grab the first element from the list
+    ElementSharedPtr elmt = m_mesh->m_element[m_mesh->m_expDim][0];
+
+    // Get curved nodes
+    vector<NodeSharedPtr> nodes;
+    elmt->GetCurvedNodes(nodes);
+
+    int nNodes = nodes.size();
+
+    // Construct vectors of curved nodes.
+    vector<NekVector<NekDouble> > xyz(m_mesh->m_spaceDim);
+
+    for (int i = 0; i < m_mesh->m_spaceDim; ++i)
+    {
+        xyz[i] = NekVector<NekDouble>(nNodes);
+    }
+
+    for (int i = 0; i < nNodes; ++i)
+    {
+        xyz[0](i) = nodes[i]->m_x;
+        xyz[1](i) = nodes[i]->m_y;
+    }
+
+    // Grab vandermonde matrix
+    NodalUtilTriMonomial ntMono(
+        m_mesh->m_nummode, xyz[0].GetPtr(), xyz[1].GetPtr());
+    cout << *ntMono.GetVandermonde() << endl;
 }
 
 }

@@ -175,14 +175,60 @@ void Generator2D::MakeBLPrep()
                                   m_blCurves);
     m_thickness = m_config["blthick"].as<NekDouble>();
 
+    vector<NodeSharedPtr> lastNode(2);
+
     for (vector<unsigned>::iterator it = m_blCurves.begin();
          it != m_blCurves.end(); ++it)
     {
         vector<EdgeSharedPtr> localedges = m_curvemeshes[*it]->GetMeshEdges();
         for (int i = 0; i < localedges.size(); i++)
         {
+            bool exists[2];
+            localedges[i]->m_n1;
+            exists[0] = m_nodesToEdge.count(localedges[i]->m_n1);
+            exists[1] = m_nodesToEdge.count(localedges[i]->m_n2);
+
+            if (!exists[0] && !exists[1])
+            {
+                lastNode[0] = localedges[i]->m_n1;
+                lastNode[1] = localedges[i]->m_n2;
+            }
+            else if (exists[0] && exists[1])
+            {
+                if (m_nodesToEdge.count(lastNode[0]))
+                {
+                    lastNode[1].reset();
+                }
+                else
+                {
+                    lastNode[0].reset();
+                }
+            }
+
             m_nodesToEdge[localedges[i]->m_n1].push_back(localedges[i]);
             m_nodesToEdge[localedges[i]->m_n2].push_back(localedges[i]);
+
+            if (exists[0] && exists[1])
+            {
+                if (lastNode[0])
+                {
+                    m_nodesToEdge[lastNode[0]].push_back(
+                        m_nodesToEdge[lastNode[0]][0]);
+                    m_nodesToEdge[lastNode[0]].erase(
+                        m_nodesToEdge[lastNode[0]].begin());
+
+                    lastNode[0].reset();
+                }
+                else if (lastNode[1])
+                {
+                    m_nodesToEdge[lastNode[1]].push_back(
+                        m_nodesToEdge[lastNode[1]][0]);
+                    m_nodesToEdge[lastNode[1]].erase(
+                        m_nodesToEdge[lastNode[1]].begin());
+
+                    lastNode[1].reset();
+                }
+            }
         }
     }
 }
@@ -190,7 +236,7 @@ void Generator2D::MakeBLPrep()
 void Generator2D::MakeBL(int i, std::vector<EdgeLoop> e)
 {
     // on each node calculate a normal
-    map<NodeSharedPtr, NodeSharedPtr> nodesNormal;
+    map<NodeSharedPtr, NodeSharedPtr> nodeNormals;
 
     for (map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it =
              m_nodesToEdge.begin();
@@ -223,7 +269,7 @@ void Generator2D::MakeBL(int i, std::vector<EdgeLoop> e)
         *Nmean *= m_thickness / sqrt(Nmean->abs2());
         *Nmean += *(it->first);
 
-        nodesNormal[it->first] = Nmean;
+        nodeNormals[it->first] = Nmean;
     }
 
     // create quadrilerals
@@ -239,15 +285,15 @@ void Generator2D::MakeBL(int i, std::vector<EdgeLoop> e)
         if (it->second[0]->m_n1 == it->first)
         {
             ns.push_back(it->second[0]->m_n2);
-            ns.push_back(nodesNormal[it->second[0]->m_n2]);
+            ns.push_back(nodeNormals[it->second[0]->m_n2]);
         }
         else
         {
             ns.push_back(it->second[0]->m_n1);
-            ns.push_back(nodesNormal[it->second[0]->m_n1]);
+            ns.push_back(nodeNormals[it->second[0]->m_n1]);
         }
 
-        ns.push_back(nodesNormal[it->first]);
+        ns.push_back(nodeNormals[it->first]);
 
         ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
 

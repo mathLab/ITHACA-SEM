@@ -39,20 +39,19 @@
 using namespace std;
 using namespace Nektar::NekMeshUtils;
 
-
 namespace Nektar
 {
 namespace Utilities
 {
-ModuleKey ProcessExtrude::className = GetModuleFactory().RegisterCreatorFunction(
+ModuleKey ProcessExtrude::className =
+    GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "extrude"), ProcessExtrude::create);
 
 ProcessExtrude::ProcessExtrude(MeshSharedPtr m) : ProcessModule(m)
 {
-    m_config["layers"] = ConfigOption(
-        false, "5", "Number of layers to extrude");
-    m_config["length"] = ConfigOption(
-        false, "1.0", "Length of extrusion");
+    m_config["layers"] =
+        ConfigOption(false, "5", "Number of layers to extrude");
+    m_config["length"] = ConfigOption(false, "1.0", "Length of extrusion");
 }
 
 ProcessExtrude::~ProcessExtrude()
@@ -61,7 +60,7 @@ ProcessExtrude::~ProcessExtrude()
 
 void ProcessExtrude::Process()
 {
-    int nLayers = m_config["layers"].as<int>();
+    int nLayers      = m_config["layers"].as<int>();
     NekDouble length = m_config["length"].as<NekDouble>();
 
     NekDouble dz = length / nLayers;
@@ -98,56 +97,57 @@ void ProcessExtrude::Process()
         for (it = nodes.begin(); it != nodes.end(); ++it)
         {
             NodeSharedPtr n = *it;
-            NodeSharedPtr newNode(new Node(i*nodes.size()+n->m_id, n->m_x, n->m_y, i*dz));
+            NodeSharedPtr newNode(
+                new Node(i * nodes.size() + n->m_id, n->m_x, n->m_y, i * dz));
             m_mesh->m_vertexSet.insert(newNode);
-            id2node[i*nodes.size()+n->m_id] = newNode;
+            id2node[i * nodes.size() + n->m_id] = newNode;
         }
     }
 
-    EdgeSet es = m_mesh->m_edgeSet; //copy edges for curvature
+    EdgeSet es = m_mesh->m_edgeSet; // copy edges for curvature
 
     for (int j = 0; j < nLayers; ++j)
     {
         for (int i = 0; i < el.size(); ++i)
         {
             vector<NodeSharedPtr> verts = el[i]->GetVertexList();
-            if(verts.size() == 4)
+            if (verts.size() == 4)
             {
                 vector<NodeSharedPtr> nodeList(8);
-                nodeList[0] = id2node[verts[0]->m_id + j*nodes.size()];
-                nodeList[1] = id2node[verts[1]->m_id + j*nodes.size()];
-                nodeList[2] = id2node[verts[1]->m_id + (j+1)*nodes.size()];
-                nodeList[3] = id2node[verts[0]->m_id + (j+1)*nodes.size()];
-                nodeList[4] = id2node[verts[3]->m_id + j*nodes.size()];
-                nodeList[5] = id2node[verts[2]->m_id + j*nodes.size()];
-                nodeList[6] = id2node[verts[2]->m_id + (j+1)*nodes.size()];
-                nodeList[7] = id2node[verts[3]->m_id + (j+1)*nodes.size()];
+                nodeList[0] = id2node[verts[0]->m_id + j * nodes.size()];
+                nodeList[1] = id2node[verts[1]->m_id + j * nodes.size()];
+                nodeList[2] = id2node[verts[1]->m_id + (j + 1) * nodes.size()];
+                nodeList[3] = id2node[verts[0]->m_id + (j + 1) * nodes.size()];
+                nodeList[4] = id2node[verts[3]->m_id + j * nodes.size()];
+                nodeList[5] = id2node[verts[2]->m_id + j * nodes.size()];
+                nodeList[6] = id2node[verts[2]->m_id + (j + 1) * nodes.size()];
+                nodeList[7] = id2node[verts[3]->m_id + (j + 1) * nodes.size()];
 
                 vector<int> tags(1);
                 tags[0] = 0;
 
-                ElmtConfig conf(LibUtilities::eHexahedron,1,false,false);
-                ElementSharedPtr E = GetElementFactory().
-                    CreateInstance(LibUtilities::eHexahedron,conf,nodeList,tags);
+                ElmtConfig conf(LibUtilities::eHexahedron, 1, false, false);
+                ElementSharedPtr E = GetElementFactory().CreateInstance(
+                    LibUtilities::eHexahedron, conf, nodeList, tags);
 
                 m_mesh->m_element[3].push_back(E);
             }
             else
             {
                 vector<NodeSharedPtr> nodeList(6);
-                nodeList[0] = id2node[verts[0]->m_id + (j+1)*nodes.size()];
-                nodeList[1] = id2node[verts[1]->m_id + (j+1)*nodes.size()];
-                nodeList[2] = id2node[verts[1]->m_id + j*nodes.size()];
-                nodeList[3] = id2node[verts[0]->m_id + j*nodes.size()];
-                nodeList[4] = id2node[verts[2]->m_id + (j+1)*nodes.size()];
-                nodeList[5] = id2node[verts[2]->m_id + j*nodes.size()];
+                nodeList[0] = id2node[verts[0]->m_id + (j + 1) * nodes.size()];
+                nodeList[1] = id2node[verts[1]->m_id + (j + 1) * nodes.size()];
+                nodeList[2] = id2node[verts[1]->m_id + j * nodes.size()];
+                nodeList[3] = id2node[verts[0]->m_id + j * nodes.size()];
+                nodeList[4] = id2node[verts[2]->m_id + (j + 1) * nodes.size()];
+                nodeList[5] = id2node[verts[2]->m_id + j * nodes.size()];
 
                 vector<int> tags(1);
                 tags[0] = 1;
 
-                ElmtConfig conf(LibUtilities::ePrism,1,false,false);
-                ElementSharedPtr E = GetElementFactory().
-                    CreateInstance(LibUtilities::ePrism,conf,nodeList,tags);
+                ElmtConfig conf(LibUtilities::ePrism, 1, false, false);
+                ElementSharedPtr E = GetElementFactory().CreateInstance(
+                    LibUtilities::ePrism, conf, nodeList, tags);
 
                 m_mesh->m_element[3].push_back(E);
             }
@@ -160,27 +160,28 @@ void ProcessExtrude::Process()
     ProcessComposites();
 
     EdgeSet::iterator eit;
-    for(eit = es.begin(); eit != es.end(); eit++)
+    for (eit = es.begin(); eit != es.end(); eit++)
     {
-        if((*eit)->m_edgeNodes.size() > 0)
+        if ((*eit)->m_edgeNodes.size() > 0)
         {
-            for (int j = 0; j < nLayers+1; ++j)
+            for (int j = 0; j < nLayers + 1; ++j)
             {
                 vector<NodeSharedPtr> ns((*eit)->m_edgeNodes.size());
-                for(int i = 0; i < ns.size(); i++)
+                for (int i = 0; i < ns.size(); i++)
                 {
                     NodeSharedPtr n = (*eit)->m_edgeNodes[i];
-                    ns[i] = boost::shared_ptr<Node>(new Node(0, n->m_x, n->m_y, j*dz));
+                    ns[i]           = boost::shared_ptr<Node>(
+                        new Node(0, n->m_x, n->m_y, j * dz));
                 }
 
-                EdgeSharedPtr e = boost::shared_ptr<Edge>(new Edge(
-                        id2node[(*eit)->m_n1->m_id + j*nodes.size()],
-                        id2node[(*eit)->m_n2->m_id + j*nodes.size()]));
+                EdgeSharedPtr e = boost::shared_ptr<Edge>(
+                    new Edge(id2node[(*eit)->m_n1->m_id + j * nodes.size()],
+                             id2node[(*eit)->m_n2->m_id + j * nodes.size()]));
 
                 EdgeSet::iterator f = m_mesh->m_edgeSet.find(e);
                 ASSERTL0(f != m_mesh->m_edgeSet.end(), "could not find edge");
 
-                if((*f)->m_n1 == e->m_n1)
+                if ((*f)->m_n1 == e->m_n1)
                 {
                     (*f)->m_edgeNodes = ns;
                 }
@@ -189,7 +190,6 @@ void ProcessExtrude::Process()
                     reverse(ns.begin(), ns.end());
                     (*f)->m_edgeNodes = ns;
                 }
-
             }
         }
     }

@@ -40,26 +40,27 @@
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+/**
+ * @brief This processing module extrudes a 2d mesh in the z direction
+ */
+class ProcessExtrude : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
-        /**
-         * @brief This processing module extrudes a 2d mesh in the z direction
-         */
-        class ProcessExtrude : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(MeshSharedPtr m) {
-                return MemoryManager<ProcessExtrude>::AllocateSharedPtr(m);
-            }
-            static ModuleKey className;
-
-            ProcessExtrude(MeshSharedPtr m);
-            virtual ~ProcessExtrude();
-
-            virtual void Process();
-        };
+        return MemoryManager<ProcessExtrude>::AllocateSharedPtr(m);
     }
+    static ModuleKey className;
+
+    ProcessExtrude(MeshSharedPtr m);
+    virtual ~ProcessExtrude();
+
+    virtual void Process();
+};
+}
 }
 
 #endif

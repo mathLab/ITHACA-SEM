@@ -632,6 +632,20 @@ match the interior domain:
 This module should be added to the module chain for any complex if the user
 suspects there may be a mesh issue. The module will print a warning if there is.
 
+\subsection{2D mesh extrusion}
+
+This module allows a 2D mesh, quads, triangles or both, to be extruded in the
+$z$ direction to make a simple 3D mesh made of prisms and hexahedra. It is also
+capable of extruding the high-order curvature within the 2D mesh. The module
+requires two parameters:
+
+\begin{lstlisting}[style=BashInputStyle]
+  NekMesh -m extrude:layers=n:length=l 2D.xml 3D.xml
+\end{lstlisting}
+
+length which determines how long the $z$ extrusion will be and layers, the
+number of elements in the $z$ direction.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

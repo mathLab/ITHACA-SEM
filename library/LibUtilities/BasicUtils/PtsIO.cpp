@@ -54,55 +54,6 @@ namespace Nektar
 namespace LibUtilities
 {
 
-void Import(const string &inFile, PtsFieldSharedPtr &ptsField)
-{
-#ifdef NEKTAR_USE_MPI
-    int size;
-    int init;
-    MPI_Initialized(&init);
-
-    // If MPI has been initialised we can check the number of processes
-    // and, if > 1, tell the user he should not be running this
-    // function in parallel. If it is not initialised, we do not
-    // initialise it here, and assume the user knows what they are
-    // doing.
-    if (init)
-    {
-        MPI_Comm_size(MPI_COMM_WORLD, &size);
-        ASSERTL0(size == 1,
-                 "This static function is not available in parallel. Please "
-                 "instantiate a FieldIO object for parallel use.");
-    }
-#endif
-    CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
-    PtsIO p(c);
-    p.Import(inFile, ptsField);
-}
-
-void Write(const string &outFile, const PtsFieldSharedPtr &ptsField)
-{
-#ifdef NEKTAR_USE_MPI
-    int size;
-    int init;
-    MPI_Initialized(&init);
-
-    // If MPI has been initialised we can check the number of processes
-    // and, if > 1, tell the user he should not be running this
-    // function in parallel. If it is not initialised, we do not
-    // initialise it here, and assume the user knows what they are
-    // doing.
-    if (init)
-    {
-        MPI_Comm_size(MPI_COMM_WORLD, &size);
-        ASSERTL0(size == 1,
-                 "This static function is not available in parallel. Please "
-                 "instantiate a FieldIO object for parallel use.");
-    }
-#endif
-    CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
-    PtsIO p(c);
-    p.Write(outFile, ptsField);
-}
 
 PtsIO::PtsIO(CommSharedPtr pComm, bool sharedFilesystem)
     : FieldIOXml(pComm, sharedFilesystem)
@@ -202,12 +153,13 @@ void PtsIO::Import(const string &inFile,
  * @param ptsField  the pts field
  */
 void PtsIO::Write(const string &outFile,
-                  const Nektar::LibUtilities::PtsFieldSharedPtr &ptsField)
+                  const Nektar::LibUtilities::PtsFieldSharedPtr &ptsField,
+                  const bool backup)
 {
     int nTotvars = ptsField->GetNFields() + ptsField->GetDim();
     int np = ptsField->GetNpoints();
 
-    std::string filename = SetUpOutput(outFile, true);
+    std::string filename = SetUpOutput(outFile, true, backup);
     SetUpFieldMetaData(outFile);
 
     // until tinyxml gains support for line break, write the xml manually

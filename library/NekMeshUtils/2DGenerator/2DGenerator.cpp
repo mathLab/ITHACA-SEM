@@ -130,8 +130,6 @@ void Generator2D::Process()
 
     m_mesh->m_element[1].clear();
 
-    /*
-
     if (m_mesh->m_verbose)
     {
         cout << endl << "\tFace meshing:" << endl << endl;
@@ -151,8 +149,6 @@ void Generator2D::Process()
 
         m_facemeshes[i]->Mesh();
     }
-
-    */
 
     ProcessVertices();
     ProcessEdges();
@@ -269,6 +265,14 @@ void Generator2D::MakeBL(int i, std::vector<EdgeLoop> e)
         *Nmean *= m_thickness / sqrt(Nmean->abs2());
         *Nmean += *(it->first);
 
+        vector<pair<int, CADSurfSharedPtr> > surfs = it->first->GetCADSurfs();
+        for (vector<pair<int, CADSurfSharedPtr> >::iterator it2 = surfs.begin();
+             it2 != surfs.end(); ++it2)
+        {
+            Nmean->SetCADSurf(it2->first, it2->second,
+                              it->first->GetCADSurfInfo(it2->first));
+        }
+
         nodeNormals[it->first] = Nmean;
     }
 
@@ -304,6 +308,22 @@ void Generator2D::MakeBL(int i, std::vector<EdgeLoop> e)
             LibUtilities::eQuadrilateral, conf, ns, tags);
 
         m_mesh->m_element[2].push_back(E);
+    }
+
+    for (vector<unsigned>::iterator it = m_blCurves.begin();
+         it != m_blCurves.end(); ++it)
+    {
+        vector<NodeSharedPtr> oldNodes = m_curvemeshes[*it]->GetMeshPoints();
+        vector<NodeSharedPtr> newNodes;
+
+        for (vector<NodeSharedPtr>::iterator it2 = oldNodes.begin();
+             it2 != oldNodes.end(); ++it2)
+        {
+            newNodes.push_back(nodeNormals[*it2]);
+        }
+
+        m_curvemeshes[*it] =
+            MemoryManager<CurveMesh>::AllocateSharedPtr(*it, m_mesh, newNodes);
     }
 }
 

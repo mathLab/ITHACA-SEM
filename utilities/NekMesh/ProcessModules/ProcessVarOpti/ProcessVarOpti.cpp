@@ -454,6 +454,7 @@ void ProcessVarOpti::Analytics()
         {
             node->m_x = originX + j * dx;
             cout << node->m_x << " " << node->m_y << " ";
+
             NekDouble minJacNew;
 
             for (int i = 0; i < overInt; ++i)
@@ -477,6 +478,7 @@ void ProcessVarOpti::Analytics()
                 minJacNew = 0.0;
 
                 // Evaluate functional.
+                nodeOpti->CalcMinJac();
                 cout << nodeOpti->GetFunctional<2>(minJacNew, false) << " ";
             }
 

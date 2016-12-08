@@ -72,10 +72,10 @@ public:
     virtual void Optimise() = 0;
     NodeOptiJob *GetJob();
 
-protected:
-
     template<int DIM> NekDouble GetFunctional(NekDouble &minJacNew,
                                               bool gradient = true);
+protected:
+
     NodeSharedPtr m_node;
     boost::mutex mtx;
     std::map<LibUtilities::ShapeType,std::vector<ElUtilSharedPtr> > m_data;

@@ -431,26 +431,58 @@ void ProcessVarOpti::Analytics()
     vector<NodeSharedPtr> nodes;
     elmt->GetCurvedNodes(nodes);
 
-    int nNodes = nodes.size();
+    // We're going to investigate only the first node (corner node)
+    NodeSharedPtr node = nodes[4];
 
-    // Construct vectors of curved nodes.
-    vector<NekVector<NekDouble> > xyz(m_mesh->m_spaceDim);
+    // Loop over overintegration orders
+    const int       nPoints = 50;
+    const int       overInt = 40;
+    const NekDouble originX = -1.0;
+    const NekDouble originY = -1.0;
+    const NekDouble length  = 2.0;
+    const NekDouble dx      = length / (nPoints-1);
 
-    for (int i = 0; i < m_mesh->m_spaceDim; ++i)
+    cout << "# overint = " << overInt << endl;
+    cout << "# Columns: x, y, over-integration orders (0 -> " << overInt-1
+         << "), " << " min(scaledJac)" << endl;
+
+    // Loop over square defined by (originX, originY), length
+    for (int k = 0; k < nPoints; ++k)
     {
-        xyz[i] = NekVector<NekDouble>(nNodes);
-    }
+        node->m_y = originY + k * dx;
+        for (int j = 0; j < nPoints; ++j)
+        {
+            node->m_x = originX + j * dx;
+            cout << node->m_x << " " << node->m_y << " ";
+            NekDouble minJacNew;
 
-    for (int i = 0; i < nNodes; ++i)
-    {
-        xyz[0](i) = nodes[i]->m_x;
-        xyz[1](i) = nodes[i]->m_y;
-    }
+            for (int i = 0; i < overInt; ++i)
+            {
+                // Clear any existing node to element mapping.
+                m_dataSet.clear();
+                m_nodeElMap.clear();
 
-    // Grab vandermonde matrix
-    NodalUtilTriMonomial ntMono(
-        m_mesh->m_nummode, xyz[0].GetPtr(), xyz[1].GetPtr());
-    cout << *ntMono.GetVandermonde() << endl;
+                // Build deriv utils and element map.
+                map<LibUtilities::ShapeType, DerivUtilSharedPtr> derivUtils =
+                    BuildDerivUtil(i);
+
+                // Reconstruct element map
+                GetElementMap(i, derivUtils);
+
+                // Create NodeOpti object.
+                NodeOptiSharedPtr nodeOpti = GetNodeOptiFactory().CreateInstance(
+                    m_mesh->m_spaceDim * 11, node, m_nodeElMap.find(node->m_id)->second,
+                    m_res, derivUtils, m_opti);
+
+                minJacNew = 0.0;
+
+                // Evaluate functional.
+                cout << nodeOpti->GetFunctional<2>(minJacNew, false) << " ";
+            }
+
+            cout << minJacNew << endl;
+        }
+    }
 }
 
 }

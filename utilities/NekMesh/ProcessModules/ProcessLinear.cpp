@@ -55,6 +55,8 @@ ProcessLinear::ProcessLinear(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "0", "remove curve nodes if element is invalid.");
     m_config["prismonly"] =
         ConfigOption(true, "0", "only acts on prims");
+    m_config["extract"] =
+        ConfigOption(false, "", "dump a mesh of the extracted elements");
 }
 
 ProcessLinear::~ProcessLinear()
@@ -138,6 +140,8 @@ void ProcessLinear::Process()
         vector<NodeSharedPtr> zeroNodes;
         boost::unordered_set<int> clearedEdges, clearedFaces, clearedElmts;
 
+        vector<ElementSharedPtr> dumpEls;
+
         // Iterate over list of elements of expansion dimension.
         while(el.size() > 0)
         {
@@ -153,6 +157,7 @@ void ProcessLinear::Process()
 
                 if (Invalid(el[i],thr))//(!gfac->IsValid())
                 {
+                    dumpEls.push_back(el[i]);
                     clearedElmts.insert(el[i]->GetId());;
                     el[i]->SetVolumeNodes(zeroNodes);
 
@@ -215,6 +220,26 @@ void ProcessLinear::Process()
             cerr << "Removed curvature from " << clearedElmts.size()
                  << " elements (" << clearedEdges.size() << " edges, "
                  << clearedFaces.size() << " faces)" << endl;
+        }
+
+        if(m_config["extract"].beenSet)
+        {
+            MeshSharedPtr dmp = boost::shared_ptr<Mesh>(new Mesh());
+            dmp->m_expDim     = 3;
+            dmp->m_spaceDim   = 3;
+            dmp->m_nummode    = 2;
+
+            dmp->m_element[3] = dumpEls;
+
+            ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
+                ModuleKey(eOutputModule, "xml"), dmp);
+            mod->RegisterConfig("outfile", m_config["extract"].as<string>().c_str());
+            mod->ProcessVertices();
+            mod->ProcessEdges();
+            mod->ProcessFaces();
+            mod->ProcessElements();
+            mod->ProcessComposites();
+            mod->Process();
         }
     }
 }

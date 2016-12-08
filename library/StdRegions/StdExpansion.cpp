@@ -897,7 +897,7 @@ namespace Nektar
 
             v_BwdTrans(inarray,tmp);
 
-            VarCoeffType varcoefftypes[] = {eVarCoeffVelX, eVarCoeffVelY};
+            VarCoeffType varcoefftypes[] = {eVarCoeffVelX, eVarCoeffVelY, eVarCoeffVelZ};
 
             //calculate u dx + v dy + ..
             Vmath::Zero(totpts,tmp_adv,1);

@@ -152,12 +152,15 @@ namespace Nektar
 
             virtual void v_FillBndCondFromField();
 
-            virtual void v_LocalToGlobal(void);
+            virtual void v_FillBndCondFromField(const int nreg);
+
+            virtual void v_LocalToGlobal(bool useComm);
 
 
             virtual void v_LocalToGlobal(
                 const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray);
+                Array<OneD,NekDouble> &outarray,
+                bool useComm);
 
 
             virtual void v_GlobalToLocal(void);
@@ -179,8 +182,8 @@ namespace Nektar
                     const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
-                    const Array<OneD, const NekDouble> &dirForcing);
-
+                    const Array<OneD, const NekDouble> &dirForcing,
+                    const bool PhysSpaceForcing);
             virtual void v_GeneralMatrixOp(
                     const GlobalMatrixKey             &gkey,
                     const Array<OneD,const NekDouble> &inarray,
@@ -207,6 +210,7 @@ namespace Nektar
         {
             return m_bndCondExpansions;
         }
+
 
         inline void ContField3D::Assemble()
         {

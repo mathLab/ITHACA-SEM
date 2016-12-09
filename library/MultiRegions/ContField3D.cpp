@@ -499,7 +499,7 @@ namespace Nektar
               m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
 
           Array<OneD, NekDouble> tmp(m_locToGloMap->GetNumGlobalCoeffs());
-          LocalToGlobal(m_coeffs,tmp);
+          LocalToGlobal(m_coeffs,tmp,false);
                     
           // Now fill in all other Dirichlet coefficients.
           for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
@@ -514,17 +514,48 @@ namespace Nektar
           }
       }
 
-      void ContField3D::v_LocalToGlobal(void)
+      void ContField3D::v_FillBndCondFromField(const int nreg)
       {
-          m_locToGloMap->LocalToGlobal(m_coeffs, m_coeffs);
+          NekDouble sign;
+          int bndcnt = 0;
+          const Array<OneD,const int> &bndMap = 
+              m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+
+          Array<OneD, NekDouble> tmp(m_locToGloMap->GetNumGlobalCoeffs());
+          LocalToGlobal(m_coeffs,tmp,false);
+                    
+          ASSERTL1(nreg < m_bndCondExpansions.num_elements(),
+                   "nreg is out or range since this many boundary "
+                   "regions to not exist");
+
+            // Now fill in all other Dirichlet coefficients.
+          Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[nreg]->UpdateCoeffs();
+          
+          for(int j = 0; j < nreg; ++j)
+          {
+              bndcnt += m_bndCondExpansions[j]->GetNcoeffs();
+          }
+          
+          for(int j = 0; j < (m_bndCondExpansions[nreg])->GetNcoeffs(); ++j)
+          {
+              sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+              coeffs[j] = sign * tmp[bndMap[bndcnt++]];
+          }
+      }
+
+      
+      void ContField3D::v_LocalToGlobal(bool useComm)
+      {
+          m_locToGloMap->LocalToGlobal(m_coeffs, m_coeffs,useComm);
       }
 
 
       void ContField3D::v_LocalToGlobal(
           const Array<OneD, const NekDouble> &inarray,
-          Array<OneD,NekDouble> &outarray)
+          Array<OneD,NekDouble> &outarray,
+          bool useComm)
       {
-          m_locToGloMap->LocalToGlobal(inarray, outarray);
+          m_locToGloMap->LocalToGlobal(inarray, outarray, useComm);
       }
 
 
@@ -548,12 +579,20 @@ namespace Nektar
                                     const FlagList &flags,
                                     const StdRegions::ConstFactorMap &factors,
                                     const StdRegions::VarCoeffMap &varcoeff,
-                                    const Array<OneD, const NekDouble> &dirForcing)
+                                    const Array<OneD, const NekDouble> &dirForcing,
+                                    const bool PhysSpaceForcing)
       {
           // Inner product of forcing
           int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
           Array<OneD,NekDouble> wsp(contNcoeffs);
-          IProductWRTBase(inarray,wsp,eGlobal);
+          if(PhysSpaceForcing)
+          {
+              IProductWRTBase(inarray,wsp,eGlobal);
+          }
+          else
+          {
+              Assemble(inarray,wsp);
+          }
 
           // Note -1.0 term necessary to invert forcing function to
           // be consistent with matrix definition

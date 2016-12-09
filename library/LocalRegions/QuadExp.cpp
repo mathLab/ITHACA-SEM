@@ -616,6 +616,18 @@ namespace Nektar
                                     m_base[1]->GetBasisKey());
         }
 
+
+        StdRegions::StdExpansionSharedPtr QuadExp::v_GetLinStdExp(void) const
+        {
+            LibUtilities::BasisKey bkey0(m_base[0]->GetBasisType(),
+                           2, m_base[0]->GetPointsKey());
+            LibUtilities::BasisKey bkey1(m_base[1]->GetBasisType(),
+                           2, m_base[1]->GetPointsKey());
+
+            return MemoryManager<StdRegions::StdQuadExp>
+                ::AllocateSharedPtr( bkey0, bkey1);
+        }
+
         void QuadExp::v_GetCoords(
             Array<OneD, NekDouble> &coords_0,
             Array<OneD, NekDouble> &coords_1,

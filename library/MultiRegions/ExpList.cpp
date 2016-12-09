@@ -579,8 +579,9 @@ namespace Nektar
             {
             case e2D:
                 {
-                    PhysDeriv(eX, Vel[eY], Vx);
-                    PhysDeriv(eY, Vel[eX], Uy);
+                    PhysDeriv(xDir, Vel[yDir], Vx);
+                    PhysDeriv(yDir, Vel[xDir], Uy);
+                    
 
                     Vmath::Vsub(nq, Vx, 1, Uy, 1, Dummy, 1);
 
@@ -599,9 +600,9 @@ namespace Nektar
                     Array<OneD,NekDouble> Wx(nq);
                     Array<OneD,NekDouble> Wy(nq);
 
-                    PhysDeriv(Vel[0], Dummy, Uy, Uz);
-                    PhysDeriv(Vel[1], Vx, Dummy, Vz);
-                    PhysDeriv(Vel[2], Wx, Wy, Dummy);
+                    PhysDeriv(Vel[xDir], Dummy, Uy, Uz);
+                    PhysDeriv(Vel[yDir], Vx, Dummy, Vz);
+                    PhysDeriv(Vel[zDir], Wx, Wy, Dummy);
 
                     Vmath::Vsub(nq, Wy, 1, Vz, 1, Q[0], 1);
                     Vmath::Vsub(nq, Uz, 1, Wx, 1, Q[1], 1);
@@ -2495,7 +2496,8 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing)
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool PhysSpaceForcing)
         {
             ASSERTL0(false, "HelmSolve not implemented.");
         }
@@ -2640,7 +2642,15 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        void ExpList::v_LocalToGlobal(void)
+        /**
+         */
+        void ExpList::v_FillBndCondFromField(const int nreg)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_LocalToGlobal(bool useComm)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2648,7 +2658,8 @@ namespace Nektar
 
 
         void ExpList::v_LocalToGlobal(const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,NekDouble> &outarray)
+                                      Array<OneD,NekDouble> &outarray,
+                                      bool useComm)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

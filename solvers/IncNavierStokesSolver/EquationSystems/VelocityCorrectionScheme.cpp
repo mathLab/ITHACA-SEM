@@ -99,11 +99,12 @@ namespace Nektar
         // creation of the extrapolation object
         if(m_equationType == eUnsteadyNavierStokes)
         {
-            std::string vExtrapolation = "Standard";
+            std::string vExtrapolation = v_GetExtrapolateStr();
 
             if (m_session->DefinesSolverInfo("Extrapolation"))
             {
-                vExtrapolation = m_session->GetSolverInfo("Extrapolation");
+                vExtrapolation = v_GetSubSteppingExtrapolateStr(
+                                 m_session->GetSolverInfo("Extrapolation"));
             }
 
             m_extrapolation = GetExtrapolateFactory().CreateInstance(
@@ -121,9 +122,6 @@ namespace Nektar
             m_intVariables.push_back(n);
         }
         
-        m_saved_aii_Dt = Array<OneD, NekDouble>(m_nConvectiveFields,
-                                                NekConstants::kNekUnsetDouble);
-
         // Load parameters for Spectral Vanishing Viscosity
         m_session->MatchSolverInfo("SpectralVanishingViscosity","True",
                                    m_useSpecVanVisc, false);
@@ -182,7 +180,7 @@ namespace Nektar
         m_ode.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
 
         m_extrapolation->SubSteppingTimeIntegration(m_intScheme->GetIntegrationMethod(), m_intScheme);
-        m_extrapolation->GenerateHOPBCMap();
+        m_extrapolation->GenerateHOPBCMap(m_session);
         
         // set implicit time-intregration class operators
         m_ode.DefineImplicitSolve(&VelocityCorrectionScheme::SolveUnsteadyStokesSystem,this);
@@ -201,6 +199,7 @@ namespace Nektar
     void VelocityCorrectionScheme::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         UnsteadySystem::v_GenerateSummary(s);
+        SolverUtils::AddSummaryItem(s, "Splitting Scheme", "Velocity correction (strong press. form)");
 
         if (m_extrapolation->GetSubStepIntegrationMethod() !=
             LibUtilities::eNoTimeIntegrationMethod)
@@ -437,8 +436,11 @@ namespace Nektar
         factors[StdRegions::eFactorLambda] = 0.0;
 
         // Solver Pressure Poisson Equation
-        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(), NullFlagList,
-                              factors);
+        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(),
+                              NullFlagList, factors);
+
+        // Add presure to outflow bc if using convective like BCs
+        m_extrapolation->AddPressureToOutflowBCs(m_kinvis);
     }
     
     /**

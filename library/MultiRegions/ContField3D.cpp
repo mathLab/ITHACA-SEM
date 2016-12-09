@@ -670,7 +670,83 @@ namespace Nektar
               GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
           }
       }
+
+    /**
+    * First compute the inner product of forcing function with respect to
+    * base, and then solve the system with the linear advection operator.
+    * @param   velocity    Array of advection velocities in physical space
+    * @param   inarray     Forcing function.
+    * @param   outarray    Result.
+    * @param   lambda      reaction coefficient
+    * @param   coeffstate  State of Coefficients, Local or Global
+    * @param   dirForcing  Dirichlet Forcing.
+    */
+    // could combine this with HelmholtzCG.
+    void ContField3D::v_LinearAdvectionDiffusionReactionSolve(
+        const Array<OneD, Array<OneD, NekDouble> > &velocity,
+        const Array<OneD, const NekDouble> &inarray,
+        Array<OneD, NekDouble> &outarray,
+        const NekDouble lambda,
+        CoeffState coeffstate,
+        const Array<OneD, const NekDouble> &dirForcing)
+    {
+        // Inner product of forcing
+        int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+        Array<OneD, NekDouble> wsp(contNcoeffs);
+        IProductWRTBase(inarray, wsp, eGlobal);
+        // Note -1.0 term necessary to invert forcing function to
+        // be consistent with matrix definition
+        Vmath::Neg(contNcoeffs, wsp, 1);
+
+        // Forcing function with weak boundary conditions
+        int i, j;
+        int bndcnt = 0;
+        Array<OneD, NekDouble> gamma(contNcoeffs, 0.0);
+        for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+        {
+            if (m_bndConditions[i]->GetBoundaryConditionType() !=
+                SpatialDomains::eDirichlet)
+            {
+                for (j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                {
+                    gamma[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(
+                        bndcnt++)] += (m_bndCondExpansions[i]->GetCoeffs())[j];
+                }
+            }
+            else
+            {
+                bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
+            }
+        }
+        m_locToGloMap->UniversalAssemble(gamma);
+        // Add weak boundary conditions to forcing
+        Vmath::Vadd(contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
+
+        // Solve the system
+        StdRegions::ConstFactorMap factors;
+        factors[StdRegions::eFactorLambda] = lambda;
+        StdRegions::VarCoeffMap varcoeffs;
+        varcoeffs[StdRegions::eVarCoeffVelX] = velocity[0];
+        varcoeffs[StdRegions::eVarCoeffVelY] = velocity[1];
+        varcoeffs[StdRegions::eVarCoeffVelZ] = velocity[2];
+        GlobalLinSysKey key(StdRegions::eLinearAdvectionDiffusionReaction,
+                            m_locToGloMap,
+                            factors,
+                            varcoeffs);
+
+        if (coeffstate == eGlobal)
+        {
+            GlobalSolve(key, wsp, outarray, dirForcing);
+        }
+        else
+        {
+            Array<OneD, NekDouble> tmp(contNcoeffs, 0.0);
+            GlobalSolve(key, wsp, tmp, dirForcing);
+            GlobalToLocal(tmp, outarray);
+        }
+    }
       
+
       int ContField3D::GetGlobalMatrixNnz(const GlobalMatrixKey &gkey)
       {
           ASSERTL1(gkey.LocToGloMapIsDefined(),

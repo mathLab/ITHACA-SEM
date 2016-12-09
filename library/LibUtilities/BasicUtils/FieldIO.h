@@ -184,7 +184,8 @@ LIB_UTILITIES_EXPORT void Write(
     const std::string &outFile,
     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
     std::vector<std::vector<NekDouble> > &fielddata,
-    const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap);
+    const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
+    const bool backup = false);
 LIB_UTILITIES_EXPORT void Import(
     const std::string &infilename,
     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
@@ -234,7 +235,8 @@ public:
         const std::string &outFile,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         std::vector<std::vector<NekDouble> > &fielddata,
-        const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap);
+        const FieldMetaDataMap &fieldinfomap = NullFieldMetaDataMap,
+        const bool backup = false);
 
     LIB_UTILITIES_EXPORT inline void Import(
         const std::string &infilename,
@@ -280,14 +282,15 @@ protected:
     }
 
     LIB_UTILITIES_EXPORT std::string SetUpOutput(
-        const std::string outname, bool perRank);
+        const std::string outname, bool perRank, bool backup = false);
 
     /// @copydoc FieldIO::Write
     LIB_UTILITIES_EXPORT virtual void v_Write(
         const std::string                      &outFile,
         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
         std::vector<std::vector<NekDouble> >   &fielddata,
-        const FieldMetaDataMap                 &fieldinfomap) = 0;
+        const FieldMetaDataMap                 &fieldinfomap,
+        const bool                              backup = false) = 0;
 
     /// @copydoc FieldIO::Import
     LIB_UTILITIES_EXPORT virtual void v_Import(
@@ -317,9 +320,10 @@ typedef boost::shared_ptr<FieldIO> FieldIOSharedPtr;
 inline void FieldIO::Write(const std::string                      &outFile,
                            std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                            std::vector<std::vector<NekDouble> > &fielddata,
-                           const FieldMetaDataMap                 &fieldinfomap)
+                           const FieldMetaDataMap                 &fieldinfomap,
+                           const bool                              backup)
 {
-    v_Write(outFile, fielddefs, fielddata, fieldinfomap);
+    v_Write(outFile, fielddefs, fielddata, fieldinfomap, backup);
 }
 
 /**

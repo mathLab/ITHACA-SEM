@@ -1032,7 +1032,7 @@ namespace Nektar
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
-            m_locToGloMap->UniversalAssemble(wsp);
+            m_locToGloMap->UniversalAssemble(gamma);
             // Add weak boundary conditions to forcing
             Vmath::Vadd(contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
 

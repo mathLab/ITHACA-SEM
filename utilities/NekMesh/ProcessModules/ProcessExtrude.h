@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessSpherigon.h
+//  File: ProcessExtrude.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,53 +29,37 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Refine boundary layer of elements.
+//  Description: extrude a 2d mesh.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_PROCESSJAC
-#define UTILITIES_NEKMESH_PROCESSJAC
-
+#ifndef UTILITIES_NEKMESH_PROCESSEXTRUDE
+#define UTILITIES_NEKMESH_PROCESSEXTRUDE
 
 #include "../Module.h"
-#include "../InputModules/InputPly.h"
 
 namespace Nektar
 {
 namespace Utilities
 {
-
-class ProcessSpherigon : public ProcessModule
+/**
+ * @brief This processing module extrudes a 2d mesh in the z direction
+ */
+class ProcessExtrude : public ProcessModule
 {
 public:
     /// Creates an instance of this class
     static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
-        return MemoryManager<ProcessSpherigon>::AllocateSharedPtr(m);
+        return MemoryManager<ProcessExtrude>::AllocateSharedPtr(m);
     }
     static ModuleKey className;
 
-    ProcessSpherigon(MeshSharedPtr m);
-    virtual ~ProcessSpherigon();
+    ProcessExtrude(MeshSharedPtr m);
+    virtual ~ProcessExtrude();
 
-    /// Write mesh to output file.
     virtual void Process();
-
-protected:
-    void  GenerateNormals(std::vector<ElementSharedPtr> &el,
-                            MeshSharedPtr &mesh);
-    NekDouble CrossProdMag (Node &a, Node &b);
-    void   UnitCrossProd   (Node &a, Node &b, Node &c);
-    NekDouble Blend        (NekDouble r);
-    void   SuperBlend      (std::vector<NekDouble> &r,
-                            std::vector<Node>   &Q,
-                            Node           &P,
-                            std::vector<NekDouble> &blend);
-
-    void  FindNormalFromPlyFile(MeshSharedPtr &plymesh,
-                                std::map<int,NodeSharedPtr> &surfverts);
 };
-
 }
 }
 

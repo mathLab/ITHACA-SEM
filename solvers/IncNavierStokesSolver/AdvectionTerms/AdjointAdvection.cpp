@@ -57,12 +57,14 @@ AdjointAdvection::~AdjointAdvection()
 }
 
 void AdjointAdvection::v_Advect(
-        const int nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, NekDouble> >              &outarray,
-        const NekDouble                                   &time)
+    const int nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+    const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray,
+    const NekDouble                                   &time,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
     ASSERTL1(nConvectiveFields == inarray.num_elements(),
              "Number of convective fields and Inarray are not compatible");

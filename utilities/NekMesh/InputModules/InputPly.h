@@ -60,7 +60,7 @@ public:
     /// Populate and validate required data structures.
     virtual void Process();
 
-    void ReadPly(std::ifstream &mshFile, NekDouble scale = 1.0);
+    void ReadPly(io::filtering_istream &mshFile, NekDouble scale = 1.0);
 
 private:
 };

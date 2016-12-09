@@ -142,7 +142,7 @@ namespace Nektar
                 return true;
             }
 
-            SOLVER_UTILS_EXPORT void CheckForRestartTime(NekDouble &time);
+            SOLVER_UTILS_EXPORT void CheckForRestartTime(NekDouble &time, int &nchk);
 
             /// \brief Evaluate the SVV diffusion coefficient
             /// according to Moura's paper where it should

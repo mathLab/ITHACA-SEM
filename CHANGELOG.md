@@ -47,6 +47,7 @@ v4.4.0
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
 - Improve performance when using homogeneous dealiasing (!622)
+- Fix linearised advection for full 3D cases (!708)
 
 **FieldConvert:**
 - Allow equi-spaced output for 1D and 2DH1D fields (!613)

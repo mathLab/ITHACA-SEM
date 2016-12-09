@@ -171,60 +171,14 @@ void Generator2D::MakeBLPrep()
                                   m_blCurves);
     m_thickness = m_config["blthick"].as<NekDouble>();
 
-    vector<NodeSharedPtr> lastNode(2);
-
     for (vector<unsigned>::iterator it = m_blCurves.begin();
          it != m_blCurves.end(); ++it)
     {
         vector<EdgeSharedPtr> localedges = m_curvemeshes[*it]->GetMeshEdges();
         for (int i = 0; i < localedges.size(); i++)
         {
-            bool exists[2];
-            localedges[i]->m_n1;
-            exists[0] = m_nodesToEdge.count(localedges[i]->m_n1);
-            exists[1] = m_nodesToEdge.count(localedges[i]->m_n2);
-
-            if (!exists[0] && !exists[1])
-            {
-                lastNode[0] = localedges[i]->m_n1;
-                lastNode[1] = localedges[i]->m_n2;
-            }
-            else if (exists[0] && exists[1])
-            {
-                if (m_nodesToEdge.count(lastNode[0]))
-                {
-                    lastNode[1].reset();
-                }
-                else
-                {
-                    lastNode[0].reset();
-                }
-            }
-
             m_nodesToEdge[localedges[i]->m_n1].push_back(localedges[i]);
             m_nodesToEdge[localedges[i]->m_n2].push_back(localedges[i]);
-
-            if (exists[0] && exists[1])
-            {
-                if (lastNode[0])
-                {
-                    m_nodesToEdge[lastNode[0]].push_back(
-                        m_nodesToEdge[lastNode[0]][0]);
-                    m_nodesToEdge[lastNode[0]].erase(
-                        m_nodesToEdge[lastNode[0]].begin());
-
-                    lastNode[0].reset();
-                }
-                else if (lastNode[1])
-                {
-                    m_nodesToEdge[lastNode[1]].push_back(
-                        m_nodesToEdge[lastNode[1]][0]);
-                    m_nodesToEdge[lastNode[1]].erase(
-                        m_nodesToEdge[lastNode[1]].begin());
-
-                    lastNode[1].reset();
-                }
-            }
         }
     }
 }
@@ -239,6 +193,7 @@ void Generator2D::MakeBL(int i, std::vector<EdgeLoop> e)
          it != m_nodesToEdge.end(); ++it)
     {
         size_t n = it->second.size();
+        cout << n << endl;
         ASSERTL0(n == 2, "node not properly connected");
 
         Array<OneD, NekDouble> p1 = it->second[0]->m_n1->GetLoc();
@@ -261,7 +216,11 @@ void Generator2D::MakeBL(int i, std::vector<EdgeLoop> e)
         Node N23(0, p2[1] - p3[1], p3[0] - p2[0], 0);
         N23 /= sqrt(N23.abs2());
 
-        NodeSharedPtr Nmean = MemoryManager<Node>::AllocateSharedPtr(N12 + N23);
+        NodeSharedPtr Nmean = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
+                        (N12.m_x+N23.m_x)/2.0,
+                        (N12.m_y+N23.m_y)/2.0,
+                        (N12.m_z+N23.m_z)/2.0));
+        //NodeSharedPtr Nmean = MemoryManager<Node>::AllocateSharedPtr(N12 + N23);
         *Nmean *= m_thickness / sqrt(Nmean->abs2());
         *Nmean += *(it->first);
 

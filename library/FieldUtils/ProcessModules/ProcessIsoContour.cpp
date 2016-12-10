@@ -856,11 +856,10 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
 
         BPoint queryPoint = inPoints[i].first;
 
-        // find points within the distance box
+        // find nearest 10 points within the distance box
         std::vector<PointPair> result;
-        rtree.query(bgi::nearest(queryPoint, 100), std::back_inserter(result));
+        rtree.query(bgi::nearest(queryPoint, 10), std::back_inserter(result));
 
-        WARNINGL1(result.size() < 100,"Failed to find less than 100 neighbouring points");
 
         id1 = 0;
         unique_index_found = false;

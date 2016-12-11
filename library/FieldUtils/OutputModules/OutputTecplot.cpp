@@ -801,6 +801,10 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
             for (int j = 0; j < nConn; ++j)
             {
                 outfile << m_conn[i][j] + 1 << " ";
+                if ((!(j % 1000)) && j)
+                {
+                    outfile << std::endl;
+                }
             }
             outfile << endl;
         }
@@ -817,12 +821,10 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
                 for (int j = 0; j < conn.num_elements(); ++j)
                 {
                     outfile << conn[j] + offset + 1 << " ";
-#if 0 
                     if ((!(j % 1000)) && j)
                     {
                         outfile << std::endl;
                     }
-#endif
                 }
                 offset += m_rankFieldSizes[n];
             }

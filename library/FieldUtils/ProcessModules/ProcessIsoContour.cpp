@@ -832,7 +832,9 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
     {
         for(id1 = 0; id1 < iso[i]->m_nvert; ++id1)
         {
-            inPoints.push_back(PointPair(BPoint( iso[i]->m_x[id1],  iso[i]->m_y[id1],  iso[i]->m_z[id1]), id2));
+            inPoints.push_back(PointPair(BPoint( iso[i]->m_x[id1],
+                                                 iso[i]->m_y[id1],
+                                                 iso[i]->m_z[id1]), id2));
             global_to_unique_map[id2]=id2;
             global_to_iso_map[id2] = make_pair(i,id1);
             id2++;
@@ -851,15 +853,15 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
     {
         if(verbose)
         {
-            prog = LibUtilities::PrintProgressbar(i,m_nvert,"Nearest verts",prog);
+            prog = LibUtilities::PrintProgressbar(i,m_nvert,
+                                                  "Nearest verts",prog);
         }
-
+        
         BPoint queryPoint = inPoints[i].first;
 
         // find nearest 10 points within the distance box
         std::vector<PointPair> result;
         rtree.query(bgi::nearest(queryPoint, 10), std::back_inserter(result));
-
 
         id1 = 0;
         unique_index_found = false;
@@ -869,7 +871,8 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
 
         for(id1 = 0; id1 < result.size(); ++id1)
         {
-            if(bg::distance(queryPoint, result[id1].first)<SQ_PNT_TOL)
+            NekDouble dist = bg::distance(queryPoint, result[id1].first);
+            if(dist*dist<SQ_PNT_TOL)
             {
                 id2 = result[id1].second;
                 nptsfound ++;

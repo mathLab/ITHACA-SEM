@@ -896,9 +896,9 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
                 NekDouble dist = bg::distance(queryPoint, result[id1].first);
                 if(dist*dist<SQ_PNT_TOL) // same point
                 {
-                    samept.insert(id1);
-
                     id2 = result[id1].second;
+                    samept.insert(id2);
+                    
                     if(global_to_unique_map[id2] <unique_index)
                     {
                         new_index = global_to_unique_map[id2];

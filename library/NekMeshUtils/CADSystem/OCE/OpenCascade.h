@@ -70,4 +70,11 @@
 #include <ShapeAnalysis_Curve.hxx>
 #include <Standard_Macro.hxx>
 
+#include <GeomAPI_Interpolate.hxx>
+#include <TColgp_HArray1OfPnt.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeWire.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <STEPControl_Writer.hxx>
+
 #endif

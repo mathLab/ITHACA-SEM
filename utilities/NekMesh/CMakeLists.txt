@@ -48,15 +48,17 @@ ADD_UTILITIES_EXECUTABLE(NekMesh COMPONENT nekmesh
     SOURCES ${NekMeshSources}
     DEPENDS NekMeshUtils FieldUtils)
 
+FINALISE_CPACK_COMPONENT(nekmesh DESCRIPTION "Nektar++ NekMesh utility")
+
 IF (NEKTAR_USE_CCM)
    TARGET_LINK_LIBRARIES(NekMesh ${CCMIO_LIBRARIES})
 ENDIF (NEKTAR_USE_CCM)
 
 IF (NEKTAR_USE_VTK)
     IF (VTK_MAJOR_VERSION LESS 6)
-        TARGET_LINK_LIBRARIES(NekMesh vtkCommon vtkIO vtkGraphics)
+        TARGET_LINK_LIBRARIES(NekMesh LINK_PUBLIC vtkCommon vtkIO vtkGraphics)
     ELSE ()
-        TARGET_LINK_LIBRARIES(NekMesh vtkCommonCore vtkIOLegacy)
+        TARGET_LINK_LIBRARIES(NekMesh LINK_PUBLIC vtkCommonCore vtkIOLegacy)
     ENDIF ()
 ENDIF (NEKTAR_USE_VTK)
 

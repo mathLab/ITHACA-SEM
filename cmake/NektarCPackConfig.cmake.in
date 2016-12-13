@@ -39,9 +39,3 @@ if(NOT DEFINED ARCHITECTURE)
         OUTPUT_VARIABLE ARCHITECTURE
         OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
-
-# Override the output filename to comply with Debian naming policy
-if(NOT DEFINED CPACK_PACKAGE_FILE_NAME)
-    set(CPACK_PACKAGE_FILE_NAME
-        "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${ARCHITECTURE}")
-endif()

@@ -4,6 +4,14 @@
 ## Frequently used Nektar++ CMake configuration macros and functions
 ##
 
+# Attempt to determine architecture for debian/RPM packages
+execute_process(COMMAND dpkg --print-architecture 
+    OUTPUT_VARIABLE DPKG_ARCHITECTURE
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND rpm --eval %{_arch}
+    OUTPUT_VARIABLE RPM_ARCHITECTURE
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 #
 # CONSTRUCT_DEBIAN_DEPS(depends outvar)
 #
@@ -19,9 +27,17 @@
 MACRO(CONSTRUCT_DEBIAN_DEPS depends outvar)
     SET(${outvar} "")
 
+    #MESSAGE(STATUS ${NEKTAR_LIBS})
+
     FOREACH (pkg ${depends})
         STRING(TOLOWER ${pkg} pkg_lower)
-        SET(${outvar} "${DEB_DEPS}, nektar++-${pkg_lower} (>= ${NEKTAR_VERSION})")
+
+        LIST(FIND NEKTAR_LIBS ${pkg_lower} islib)
+        IF(islib EQUAL -1)
+            SET(${outvar} "${DEB_DEPS}, nektar++-${pkg_lower} (>= ${NEKTAR_VERSION})")
+        ELSE()
+            SET(${outvar} "${DEB_DEPS}, libnektar++-${pkg_lower} (>= ${NEKTAR_VERSION})")
+        ENDIF()
     ENDFOREACH()
 
     # Remove starting ", "
@@ -33,9 +49,10 @@ ENDMACRO()
 #
 # FINALISE_CPACK_COMPONENT(name DESCRIPTION <description>)
 #
-# Finalises the variables needed for a component in order to be packaged by
-# CPack. This should be called once all executables and libraries have been
-# added to the component. This routine will:
+# Finalises the variables needed for a component (and only really a component
+# containing executables) in order to be packaged by CPack. This should be
+# called once all executables and libraries have been added to the
+# component. This routine will:
 #
 # - setup the component's name and description
 # - compile a unique list of dependencies
@@ -52,7 +69,7 @@ MACRO(FINALISE_CPACK_COMPONENT name)
     IF (NEKTAR_BUILD_PACKAGES)
         CMAKE_PARSE_ARGUMENTS(COMP "" "DESCRIPTION" "" ${ARGN})
 
-        # Component names are stored as upper ase in the CPack variable names.
+        # Component names are stored as upper case in the CPack variable names.
         STRING(TOUPPER ${name} COMPVAR)
 
         # Set the component name to `nektar++-<name>`
@@ -69,6 +86,12 @@ MACRO(FINALISE_CPACK_COMPONENT name)
         # Construct list of Debian dependencies
         CONSTRUCT_DEBIAN_DEPS(${CPACK_COMPONENT_${COMPVAR}_DEPENDS} "tmp")
         SET(CPACK_DEBIAN_${COMPVAR}_PACKAGE_DEPENDS ${tmp} CACHE INTERNAL "")
+
+        # Other Debian details
+        SET(CPACK_DEBIAN_${COMPVAR}_FILE_NAME
+            "nektar++-${name}-${NEKTAR_VERSION}-${DPKG_ARCHITECTURE}.deb"
+            CACHE INTERNAL "")
+
     ENDIF()
 ENDMACRO()
 
@@ -238,6 +261,7 @@ MACRO(ADD_NEKTAR_EXECUTABLE name)
         STRING(TOLOWER ${dep} tmp2)
         LIST(APPEND tmp ${tmp2})
     ENDFOREACH()
+    LIST(REMOVE_DUPLICATES tmp)
     SET(CPACK_COMPONENT_${NEKEXE_COMPVAR}_DEPENDS ${tmp} CACHE INTERNAL "")
 ENDMACRO()
 
@@ -271,6 +295,9 @@ MACRO(ADD_NEKTAR_LIBRARY name)
     STRING(TOLOWER ${name} NEKLIB_COMPONENT)
     STRING(TOUPPER ${name} NEKLIB_COMPVAR)
 
+    # Add name to a list so that we know for constructing dependencies.
+    SET(NEKTAR_LIBS ${NEKTAR_LIBS} ${NEKLIB_COMPONENT} CACHE INTERNAL "")
+
     SET_PROPERTY(TARGET ${name} PROPERTY FOLDER ${NEKLIB_COMPONENT})
     SET_PROPERTY(TARGET ${name} PROPERTY VERSION ${NEKTAR_VERSION})
 
@@ -290,11 +317,18 @@ MACRO(ADD_NEKTAR_LIBRARY name)
     ENDFOREACH()
 
     # Add CPack information
-    SET(CPACK_COMPONENT_${NEKLIB_COMPVAR}_DISPLAY_NAME nektar++-${NEKLIB_COMPONENT}
+    SET(CPACK_COMPONENT_${NEKLIB_COMPVAR}_DISPLAY_NAME libnektar++-${NEKLIB_COMPONENT}
         CACHE INTERNAL "")
     SET(CPACK_COMPONENT_${NEKLIB_COMPVAR}_DISPLAY_GROUP lib CACHE INTERNAL "")
     SET(CPACK_COMPONENT_${NEKLIB_COMPVAR}_DESCRIPTION ${NEKLIB_DESCRIPTION}
         CACHE INTERNAL "")
+
+    # Debian specific information
+    SET(CPACK_DEBIAN_${NEKLIB_COMPVAR}_FILE_NAME
+        "libnektar++-${NEKLIB_COMPONENT}-${NEKTAR_VERSION}-${DPKG_ARCHITECTURE}.deb"
+        CACHE INTERNAL "")
+    SET(CPACK_DEBIAN_${NEKLIB_COMPVAR}_PACKAGE_NAME
+        "libnektar++-${NEKLIB_COMPONENT}" CACHE INTERNAL "")
 
     # If we have dependencies then link against them, and also configure CPack
     # Debian dependencies, which are a special case for some reason. Then set up

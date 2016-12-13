@@ -30,6 +30,19 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/NektarCPackConfig.cmake.in
                ${CMAKE_BINARY_DIR}/NektarCPackConfig.cmake @ONLY)
 set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_BINARY_DIR}/NektarCPackConfig.cmake)
 
+# Finalise the -dev package
+SET(CPACK_COMPONENT_DEV_DISPLAY_NAME libnektar++-dev CACHE INTERNAL "")
+SET(CPACK_COMPONENT_DEV_DISPLAY_GROUP lib CACHE INTERNAL "")
+SET(CPACK_COMPONENT_DEV_DESCRIPTION "Nektar++ development libraries"
+    CACHE INTERNAL "")
+
+# Debian specific information
+SET(CPACK_DEBIAN_DEV_FILE_NAME
+    "libnektar++-dev-${NEKTAR_VERSION}-${DPKG_ARCHITECTURE}.deb"
+    CACHE INTERNAL "")
+SET(CPACK_DEBIAN_DEV_PACKAGE_NAME "libnektar++-dev" CACHE INTERNAL "")
+
+
 # This lovely block of code is designed to patch up our executables ready for OS
 # X deployment. The strategy is to create a piece of INSTALL code that will
 # patch up each executable and copy any libraries that we depend on, so that

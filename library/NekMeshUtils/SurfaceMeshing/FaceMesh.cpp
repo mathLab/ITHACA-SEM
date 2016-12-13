@@ -178,7 +178,7 @@ void FaceMesh::Mesh()
     //this is done so edge connectivity infomration can be used for optimisation
     BuildLocalMesh();
 
-    OptimiseLocalMesh();
+    //OptimiseLocalMesh();
 
     // make new elements and add to list from list of nodes and connectivity
     // from triangle removing unnesercary infomration from the elements

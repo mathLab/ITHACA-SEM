@@ -130,7 +130,7 @@ void InputCAD::ParseFile(string nm)
         m_makeBL = true;
         m_2D = true;
     }
-    
+
     it = information.find("UDSFile");
     if(it != information.end())
     {
@@ -240,12 +240,12 @@ void InputCAD::Process()
 
 
     ////**** HOSurface ****////
-    /*mods.push_back(GetModuleFactory().CreateInstance(
+    mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh));
     if(m_surfopti)
     {
         mods.back()->RegisterConfig("opti","");
-    }*/
+    }
 
     for(int i = 0; i < mods.size(); i++)
     {

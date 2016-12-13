@@ -183,106 +183,139 @@ void Generator2D::MakeBLPrep()
     }
 }
 
-void Generator2D::MakeBL(int i, std::vector<EdgeLoop> e)
+void Generator2D::MakeBL(int faceid, vector<EdgeLoop> e)
 {
-    // on each node calculate a normal
     map<NodeSharedPtr, NodeSharedPtr> nodeNormals;
 
-    for (map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it =
-             m_nodesToEdge.begin();
-         it != m_nodesToEdge.end(); ++it)
+    for (vector<EdgeLoop>::iterator lit = e.begin(); lit != e.end(); ++lit)
     {
-        size_t n = it->second.size();
-        cout << n << endl;
-        ASSERTL0(n == 2, "node not properly connected");
-
-        Array<OneD, NekDouble> p1 = it->second[0]->m_n1->GetLoc();
-        Array<OneD, NekDouble> p2 = it->first->GetLoc();
-        Array<OneD, NekDouble> p3 = it->second[1]->m_n2->GetLoc();
-
-        if (p1 == p2)
+        for (int i = 0; i < lit->edges.size(); ++i)
         {
-            p1 = it->second[0]->m_n2->GetLoc();
+            int id    = lit->edges[i]->GetId();
+            int edgeo = lit->edgeo[i];
+
+            bool isBl = false;
+            for (vector<unsigned>::iterator it = m_blCurves.begin();
+                 it != m_blCurves.end(); ++it)
+            {
+                if (*it == id)
+                {
+                    isBl = true;
+                    break;
+                }
+            }
+
+            if (!isBl)
+            {
+                continue;
+            }
+
+            vector<NodeSharedPtr> nodes = m_curvemeshes[id]->GetMeshPoints();
+
+            // on each node calculate a normal
+
+            for (int ni = 0; ni < nodes.size(); ++ni)
+            {
+                NodeSharedPtr node = nodes[ni];
+
+                if (nodeNormals.count(node))
+                {
+                    continue;
+                }
+
+                vector<EdgeSharedPtr> edges = m_nodesToEdge[node];
+
+                Array<OneD, NekDouble> p2 = node->GetLoc();
+
+                Array<OneD, NekDouble> p1 = (node == edges[0]->m_n1)
+                                                ? edges[0]->m_n2->GetLoc()
+                                                : edges[0]->m_n1->GetLoc();
+                Array<OneD, NekDouble> p3 = (node == edges[1]->m_n1)
+                                                ? edges[1]->m_n2->GetLoc()
+                                                : edges[1]->m_n1->GetLoc();
+
+                Node N12(0, p1[1] - p2[1], p2[0] - p1[0], 0);
+                N12 /= sqrt(N12.abs2());
+
+                Node N23(0, p2[1] - p3[1], p3[0] - p2[0], 0);
+                N23 /= sqrt(N23.abs2());
+
+                NodeSharedPtr Nmean = boost::shared_ptr<Node>(
+                    new Node(m_mesh->m_numNodes++, N12.m_x + N23.m_x,
+                             N12.m_y + N23.m_y, N12.m_z + N23.m_z));
+                *Nmean *= m_thickness / sqrt(Nmean->abs2());
+
+                if (i == 0 && ni == (edgeo ? nodes.size() - 1 : 0))
+                {
+                    *Nmean *= -1;
+                }
+
+                *Nmean += *node;
+
+                Nmean->SetCADSurf(faceid, node->GetCADSurf(faceid),
+                                  node->GetCADSurfInfo(faceid));
+
+                nodeNormals[node] = Nmean;
+            }
+
+            // create quadrilerals
+
+            for (int ni = 0; ni < nodes.size() - 1; ++ni)
+            {
+                NodeSharedPtr node = nodes[ni];
+
+                vector<NodeSharedPtr> ns;
+
+                ns.push_back(node);
+
+                EdgeSharedPtr edge;
+
+                if (i == 0 && ni == 0)
+                {
+                    edge = m_nodesToEdge[node][edgeo ? 1 : 0];
+                }
+                else
+                {
+                    edge = m_nodesToEdge[node][edgeo ? 0 : 1];
+                }
+
+                if (edge->m_n1 == node)
+                {
+                    ns.push_back(edge->m_n2);
+                    ns.push_back(nodeNormals[edge->m_n2]);
+                }
+                else
+                {
+                    ns.push_back(edge->m_n1);
+                    ns.push_back(nodeNormals[edge->m_n1]);
+                }
+
+                ns.push_back(nodeNormals[node]);
+
+                ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
+
+                vector<int> tags;
+                tags.push_back(102);
+
+                ElementSharedPtr E = GetElementFactory().CreateInstance(
+                    LibUtilities::eQuadrilateral, conf, ns, tags);
+
+                m_mesh->m_element[2].push_back(E);
+            }
+
+            // replace old curvemesh with offset
+
+            vector<NodeSharedPtr> newNodes;
+
+            for (vector<NodeSharedPtr>::iterator nit = nodes.begin();
+                 nit != nodes.end(); ++nit)
+            {
+                newNodes.push_back(nodeNormals[*nit]);
+            }
+
+            m_curvemeshes[id] = MemoryManager<CurveMesh>::AllocateSharedPtr(
+                id, m_mesh, newNodes);
         }
-
-        if (p3 == p2)
-        {
-            p3 = it->second[1]->m_n1->GetLoc();
-        }
-
-        Node N12(0, p1[1] - p2[1], p2[0] - p1[0], 0);
-        N12 /= sqrt(N12.abs2());
-
-        Node N23(0, p2[1] - p3[1], p3[0] - p2[0], 0);
-        N23 /= sqrt(N23.abs2());
-
-        NodeSharedPtr Nmean = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,
-                        (N12.m_x+N23.m_x)/2.0,
-                        (N12.m_y+N23.m_y)/2.0,
-                        (N12.m_z+N23.m_z)/2.0));
-        //NodeSharedPtr Nmean = MemoryManager<Node>::AllocateSharedPtr(N12 + N23);
-        *Nmean *= m_thickness / sqrt(Nmean->abs2());
-        *Nmean += *(it->first);
-
-        vector<pair<int, CADSurfSharedPtr> > surfs = it->first->GetCADSurfs();
-        for (vector<pair<int, CADSurfSharedPtr> >::iterator it2 = surfs.begin();
-             it2 != surfs.end(); ++it2)
-        {
-            Nmean->SetCADSurf(it2->first, it2->second,
-                              it->first->GetCADSurfInfo(it2->first));
-        }
-
-        nodeNormals[it->first] = Nmean;
-    }
-
-    // create quadrilerals
-
-    for (map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it =
-             m_nodesToEdge.begin();
-         it != m_nodesToEdge.end(); ++it)
-    {
-        vector<NodeSharedPtr> ns;
-
-        ns.push_back(it->first);
-
-        if (it->second[0]->m_n1 == it->first)
-        {
-            ns.push_back(it->second[0]->m_n2);
-            ns.push_back(nodeNormals[it->second[0]->m_n2]);
-        }
-        else
-        {
-            ns.push_back(it->second[0]->m_n1);
-            ns.push_back(nodeNormals[it->second[0]->m_n1]);
-        }
-
-        ns.push_back(nodeNormals[it->first]);
-
-        ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
-
-        vector<int> tags;
-        tags.push_back(102);
-
-        ElementSharedPtr E = GetElementFactory().CreateInstance(
-            LibUtilities::eQuadrilateral, conf, ns, tags);
-
-        m_mesh->m_element[2].push_back(E);
-    }
-
-    for (vector<unsigned>::iterator it = m_blCurves.begin();
-         it != m_blCurves.end(); ++it)
-    {
-        vector<NodeSharedPtr> oldNodes = m_curvemeshes[*it]->GetMeshPoints();
-        vector<NodeSharedPtr> newNodes;
-
-        for (vector<NodeSharedPtr>::iterator it2 = oldNodes.begin();
-             it2 != oldNodes.end(); ++it2)
-        {
-            newNodes.push_back(nodeNormals[*it2]);
-        }
-
-        m_curvemeshes[*it] =
-            MemoryManager<CurveMesh>::AllocateSharedPtr(*it, m_mesh, newNodes);
     }
 }
 

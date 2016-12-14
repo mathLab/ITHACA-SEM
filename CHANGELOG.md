@@ -34,6 +34,8 @@ v4.4.0
 - Enabled MUMPS support in PETSc if a Fortran compiler was found and added 3D
   support to the Helmholtz smoother used e.g. in FieldConverts C0Projection
   module (!714)
+- Fix bug in `Vmath::FillWhiteNoise` which caused `ForcingNoise` to have
+  a repeated pattern (!718)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)

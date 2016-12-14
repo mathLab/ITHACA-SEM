@@ -243,7 +243,7 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoop> e)
         n[1] = n[1] * m_thickness + it->first->m_y;
         n[2] = 0.0;
 
-        NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(0,n[0],n[1],0.0));
+        NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,n[0],n[1],0.0));
         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(faceid);
         Array<OneD, NekDouble> uv = s->locuv(n);
         nn->SetCADSurf(faceid,s,uv);

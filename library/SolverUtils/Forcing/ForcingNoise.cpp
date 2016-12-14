@@ -97,11 +97,14 @@ namespace SolverUtils
 
         m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
 
-        // Fill forcing: use -i as seed to avoid repeated results
+        // Fill forcing: use i and rank in seed to avoid repeated results
+        int rank = m_session->GetComm()->GetRank();
+        int seed = - (rank * m_NumVariable);
         for (int i = 0; i < m_NumVariable; ++i)
         {
             m_Forcing[i] = Array<OneD, NekDouble> (nq, 0.0);
-            Vmath::FillWhiteNoise(nq,m_noise,&m_Forcing[i][0],1,-i);
+            Vmath::FillWhiteNoise(nq,m_noise,&m_Forcing[i][0],1,seed);
+            --seed;
         }
 
         m_index = 0;
@@ -122,11 +125,15 @@ namespace SolverUtils
         // Update forcing (change seed to avoid getting same result)
         if(m_updateFreq && m_index && !((m_index)%m_updateFreq))
         {
+            int rank   = m_session->GetComm()->GetRank();
+            int nProcs = m_session->GetComm()->GetSize();
+            int seed   = - (rank* m_NumVariable + m_index*m_NumVariable*nProcs);
             for (int i = 0; i < m_NumVariable; ++i)
             {
                 Vmath::FillWhiteNoise(outarray[i].num_elements(),
                                       m_noise,&m_Forcing[i][0],1,
-                                     -m_index*m_NumVariable-i);
+                                      seed);
+                --seed;
             }
         }
 

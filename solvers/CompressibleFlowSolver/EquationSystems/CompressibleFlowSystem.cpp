@@ -709,13 +709,10 @@ namespace Nektar
 
         if (Noise > 0.0)
         {
-            int seed = - (m_comm->GetRank() * m_nConvectiveFields);
             for (int i = 0; i < m_nConvectiveFields; i++)
             {
                 Vmath::FillWhiteNoise(phystot, Noise, noise, 1,
-                                      seed);
-                --seed;
-
+                                      m_comm->GetColumnComm()->GetRank()+1);
                 Vmath::Vadd(phystot, m_fields[i]->GetPhys(), 1,
                             noise, 1, m_fields[i]->UpdatePhys(), 1);
                 m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),

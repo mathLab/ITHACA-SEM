@@ -139,11 +139,11 @@ namespace Vmath
     {
         // Protect the static vars here and in ran2
         boost::mutex::scoped_lock l(mutex);
+        long    seed = long(outseed);
         while( n-- )
         {
             static int     iset = 0;
             static T       gset;
-            long    seed = long(outseed);
             T              fac, rsq, v1, v2;
 
             if (iset == 0) {

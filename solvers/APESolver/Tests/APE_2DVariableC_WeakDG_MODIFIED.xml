@@ -125,8 +125,8 @@
       </REGION>
     </BOUNDARYCONDITIONS>
     <FUNCTION NAME="Baseflow"> <!-- Incompressible base flow -->
-      <E VAR="p0"   VALUE="Pinfinity" />
-      <E VAR="rho0" VALUE="Rho0 * (1+0.1*x)"/>
+      <E VAR="p0"   VALUE="Pinfinity * (1 + 0.25 * tanh(3*(x-5)))" />
+      <E VAR="rho0" VALUE="Rho0"/>
       <E VAR="u0"   VALUE="100" />
       <E VAR="v0"   VALUE="0" />
     </FUNCTION>

@@ -760,8 +760,42 @@ const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefieldFwdBwd()
     {
         int j = (m_spacedim + 2) + i;
         m_fields[0]->GetFwdBwdTracePhys(m_bf[i], m_bfFwdBwd[i], m_bfFwdBwd[j]);
+        CopyBoundaryTrace(m_bfFwdBwd[i], m_bfFwdBwd[j]);
     }
     return m_bfFwdBwd;
+}
+
+
+void APE::CopyBoundaryTrace(const Array<OneD, NekDouble> &Fwd,
+                                  Array<OneD, NekDouble> &Bwd)
+{
+    int cnt = 0;
+    // loop over Boundary Regions
+    for (int bcRegion = 0;
+         bcRegion < m_fields[0]->GetBndConditions().num_elements();
+         ++bcRegion)
+    {
+
+        // Copy the forward trace of the field to the backward trace
+        int e, id2, npts;
+
+        for (e = 0;
+             e < m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+             ++e)
+        {
+            npts = m_fields[0]
+                       ->GetBndCondExpansions()[bcRegion]
+                       ->GetExp(e)
+                       ->GetTotPoints();
+            id2 = m_fields[0]->GetTrace()->GetPhys_Offset(
+                m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(
+                    cnt + e));
+
+            Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
+        }
+
+        cnt += m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+    }
 }
 
 

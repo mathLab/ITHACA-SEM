@@ -72,10 +72,10 @@ bool CADSystemOCE::LoadCAD()
         cout << "assuming " << m_name << " is a 4 digit naca code" << endl;
         shape = BuildNACA(m_name);
 
-        STEPControl_Writer writer;
+        /*STEPControl_Writer writer;
         writer.Transfer(shape,STEPControl_ShellBasedSurfaceModel);
         writer.Write("test.stp");
-        exit(-1);
+        exit(-1);*/
     }
 
     // faces and verts can be extracted straight from shape
@@ -375,15 +375,17 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
     n/=10;
     NekDouble M = (n%10)/100.0;
 
-    Array<OneD, NekDouble> xc(100);
-    NekDouble dtheta = M_PI/99;
-    for(int i = 0; i < 100; i++)
+    int np = 25;
+
+    Array<OneD, NekDouble> xc(np);
+    NekDouble dtheta = M_PI/(np-1);
+    for(int i = 0; i < np; i++)
     {
         xc[i] = (1.0 - cos(i*dtheta)) / 2.0;
     }
 
-    Array<OneD, NekDouble> yc(100), dyc(100);
-    for(int i = 0; i < 100; i++)
+    Array<OneD, NekDouble> yc(np), dyc(np);
+    for(int i = 0; i < np; i++)
     {
         if(xc[i] < P)
         {
@@ -397,8 +399,8 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
         }
     }
 
-    Array<OneD, NekDouble> yt(100);
-    for(int i = 0; i < 100; i++)
+    Array<OneD, NekDouble> yt(np);
+    for(int i = 0; i < np; i++)
     {
         yt[i] = T / 0.2 * ( 0.2969 * sqrt(xc[i])
                            -0.1260 * xc[i]
@@ -407,9 +409,9 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
                            -0.1015 * xc[i] * xc[i] * xc[i] * xc[i]);
     }
 
-    Array<OneD, NekDouble> x(199), y(199);
+    Array<OneD, NekDouble> x(2*np-1), y(2*np-1);
     int l = 0;
-    for(int i = 99; i >= 0; i--, l++)
+    for(int i = np-1; i >= 0; i--, l++)
     {
         NekDouble theta = atan(dyc[i]);
 
@@ -417,41 +419,39 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
         y[l] = yc[i] + yt[i] * cos(theta);
 
     }
-    for(int i = 1; i < 100; i++)
+    for(int i = 1; i < np; i++)
     {
         NekDouble theta = atan(dyc[i]);
 
-        x[i+99] = xc[i] + yt[i] * sin(theta);
-        y[i+99] = yc[i] - yt[i] * cos(theta);
+        x[i+np-1] = xc[i] + yt[i] * sin(theta);
+        y[i+np-1] = yc[i] - yt[i] * cos(theta);
     }
 
-    Handle(TColgp_HArray1OfPnt) pointArray = new TColgp_HArray1OfPnt(0,198);
+    TColgp_Array1OfPnt pointArray(0,2*np-2);
 
-    for(int i = 0; i < 199; i++)
+    for(int i = 0; i < 2*np-1; i++)
     {
-        pointArray->SetValue(i,gp_Pnt(x[i],y[i],0.0));
+        pointArray.SetValue(i,gp_Pnt(x[i]*1000.0,y[i]*1000.0,0.0));
     }
 
-    TopLoc_Location loc;
-
-    GeomAPI_Interpolate spline(pointArray,false,1e-8);
+    GeomAPI_PointsToBSpline spline(pointArray);
     Handle(Geom_BSplineCurve) curve = spline.Curve();
 
     BRepBuilderAPI_MakeEdge areoEdgeBuilder(curve);
     TopoDS_Edge aeroEdge = areoEdgeBuilder.Edge();
-    BRepBuilderAPI_MakeEdge aeroTEBuilder(gp_Pnt(x[0],y[0],0.0), gp_Pnt(x[198],y[198],0.0));
+    BRepBuilderAPI_MakeEdge aeroTEBuilder(gp_Pnt(x[0]*1000.0,y[0]*1000.0,0.0), gp_Pnt(x[2*np-2]*1000.0,y[2*np-2]*1000.0,0.0));
     TopoDS_Edge TeEdge = aeroTEBuilder.Edge();
 
     BRepBuilderAPI_MakeWire aeroWireBuilder(aeroEdge, TeEdge);
     TopoDS_Wire aeroWire = aeroWireBuilder.Wire();
 
-    BRepBuilderAPI_MakeEdge domInlBuilder(gp_Pnt(-2.0,-2.0,0.0), gp_Pnt(-2.0,2.0,0.0));
+    BRepBuilderAPI_MakeEdge domInlBuilder(gp_Pnt(-2000.0,-2000.0,0.0), gp_Pnt(-2000.0,2000.0,0.0));
     TopoDS_Edge inlEdge = domInlBuilder.Edge();
-    BRepBuilderAPI_MakeEdge domTopBuilder(gp_Pnt(-2.0,2.0,0.0), gp_Pnt(5.0,2.0,0.0));
+    BRepBuilderAPI_MakeEdge domTopBuilder(gp_Pnt(-2000.0,2000.0,0.0), gp_Pnt(5000.0,2000.0,0.0));
     TopoDS_Edge topEdge = domTopBuilder.Edge();
-    BRepBuilderAPI_MakeEdge domOutBuilder(gp_Pnt(5.0,2.0,0.0), gp_Pnt(5.0,-2.0,0.0));
+    BRepBuilderAPI_MakeEdge domOutBuilder(gp_Pnt(5000.0,2000.0,0.0), gp_Pnt(5000.0,-2000.0,0.0));
     TopoDS_Edge outEdge = domOutBuilder.Edge();
-    BRepBuilderAPI_MakeEdge domBotBuilder(gp_Pnt(5.0,-2.0,0.0), gp_Pnt(-2.0,-2.0,0.0));
+    BRepBuilderAPI_MakeEdge domBotBuilder(gp_Pnt(5000.0,-2000.0,0.0), gp_Pnt(-2000.0,-2000.0,0.0));
     TopoDS_Edge botEdge = domBotBuilder.Edge();
 
     BRepBuilderAPI_MakeWire domWireBuilder(inlEdge, topEdge, outEdge, botEdge);

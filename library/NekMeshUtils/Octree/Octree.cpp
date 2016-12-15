@@ -873,10 +873,10 @@ void Octree::CompileSourcePointList()
         CADCurveSharedPtr curve = m_mesh->m_cad->GetCurve(i);
         Array<OneD, NekDouble> bds = curve->Bounds();
         int samples = 100;
-        int dt      = (bds[1] - bds[0]) / (samples + 1);
+        NekDouble dt      = (bds[1] - bds[0]) / (samples + 1);
         for (int j = 0; j < samples; j++)
         {
-            NekDouble t = bds[0] + dt * j;
+            NekDouble t = bds[0] +  dt * j;
             NekDouble C = curve->Curvature(t);
 
             Array<OneD, NekDouble> loc = curve->P(t);
@@ -886,6 +886,8 @@ void Octree::CompileSourcePointList()
 
             if (C != 0.0)
             {
+                cout << 1.0 / C << endl;
+
                 NekDouble del = 2.0 * (1.0 / C) * sqrt(m_eps * (2.0 - m_eps));
 
                 if (del > m_maxDelta)

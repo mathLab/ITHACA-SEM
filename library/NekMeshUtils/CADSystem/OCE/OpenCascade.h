@@ -57,6 +57,7 @@
 #include <GProp_GProps.hxx>
 #include <BRepGProp.hxx>
 #include <Geom_TrimmedCurve.hxx>
+#include <GeomLProp_CLProps.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <GCPnts_AbscissaPoint.hxx>
 #include <TopAbs_State.hxx>
@@ -70,8 +71,9 @@
 #include <ShapeAnalysis_Curve.hxx>
 #include <Standard_Macro.hxx>
 
-#include <GeomAPI_Interpolate.hxx>
-#include <TColgp_HArray1OfPnt.hxx>
+#include <GeomAPI_PointsToBSpline.hxx>
+#include <Geom_BSplineCurve.hxx>
+#include <TColgp_Array1OfPnt.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>

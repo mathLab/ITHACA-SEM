@@ -286,6 +286,19 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoop> e)
                 LibUtilities::eQuadrilateral, conf, qns, tags);
 
             E->m_parentCAD = m_mesh->m_cad->GetSurf(faceid);
+
+            for (int j = 0; j < E->GetEdgeCount(); ++j)
+            {
+                pair<EdgeSet::iterator,bool> testIns;
+                EdgeSharedPtr ed = E->GetEdge(j);
+                // look for edge in m_mesh edgeset from curves
+                EdgeSet::iterator s = m_mesh->m_edgeSet.find(ed);
+                if (!(s == m_mesh->m_edgeSet.end()))
+                {
+                    ed = *s;
+                    E->SetEdge(j, *s);
+                }
+            }
             m_mesh->m_element[2].push_back(E);
         }
     }

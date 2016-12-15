@@ -886,8 +886,6 @@ void Octree::CompileSourcePointList()
 
             if (C != 0.0)
             {
-                cout << 1.0 / C << endl;
-
                 NekDouble del = 2.0 * (1.0 / C) * sqrt(m_eps * (2.0 - m_eps));
 
                 if (del > m_maxDelta)

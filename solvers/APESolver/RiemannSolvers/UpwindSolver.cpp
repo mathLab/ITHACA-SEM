@@ -78,57 +78,61 @@ UpwindSolver::UpwindSolver(
  * @param wF     Computed Riemann flux for z perturbation velocity component
  */
 void UpwindSolver::v_PointSolve(
-    NekDouble  pL, NekDouble  rhoL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
-    NekDouble  pR, NekDouble  rhoR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
-    NekDouble  p0, NekDouble  rho0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
-    NekDouble &pF, NekDouble &rhoF, NekDouble &uF, NekDouble &vF, NekDouble &wF)
+    NekDouble  pL,  NekDouble  rhoL,  NekDouble  uL,  NekDouble  vL,  NekDouble  wL,
+    NekDouble  pR,  NekDouble  rhoR,  NekDouble  uR,  NekDouble  vR,  NekDouble  wR,
+    NekDouble  p0L, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
+    NekDouble  p0R, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
+    NekDouble &pF,  NekDouble &rhoF,  NekDouble &uF,  NekDouble &vF,  NekDouble &wF)
 {
     // fetch params
     ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
     const NekDouble &gamma = m_params["Gamma"]();
 
     // Speed of sound
-    NekDouble c = sqrt(gamma * p0 / rho0);
+    NekDouble cL = sqrt(gamma * p0L / rho0L);
+    NekDouble cR = sqrt(gamma * p0R / rho0R);
 
     Array<OneD, NekDouble> characteristic(4);
     Array<OneD, NekDouble> W(2);
     Array<OneD, NekDouble> lambda(2);
 
     // compute the wave speeds
-    lambda[0] = u0 + c;
-    lambda[1] = u0 - c;
+    lambda[0] = (u0L + u0R) / 2 + (cL + cR) / 2;
+    lambda[1] = (u0L + u0R) / 2 - (cL + cR) / 2;
 
     // calculate the caracteristic variables
-    //left characteristics
-    characteristic[0] = pL/2 + uL*c*rho0/2;
-    characteristic[1] = pL/2 - uL*c*rho0/2;
-    //right characteristics
-    characteristic[2] = pR/2 + uR*c*rho0/2;
-    characteristic[3] = pR/2 - uR*c*rho0/2;
+    // left characteristics
+    characteristic[0] = pL / 2 + uL * cL * rho0L / 2;
+    characteristic[1] = pL / 2 - uL * cL * rho0L / 2;
+    // right characteristics
+    characteristic[2] = pR / 2 + uR * cR * rho0R / 2;
+    characteristic[3] = pR / 2 - uR * cR * rho0R / 2;
 
-    //take left or right value of characteristic variable
+    // take left or right value of characteristic variable
     for (int j = 0; j < 2; j++)
     {
         if (lambda[j] >= 0)
         {
             W[j] = characteristic[j];
         }
-        if (lambda[j] < 0)
+        else
         {
-            W[j] = characteristic[j+2];
+            W[j] = characteristic[j + 2];
         }
     }
 
-    //calculate conservative variables from characteristics
+    // calculate conservative variables from characteristics
     NekDouble p = W[0] + W[1];
-    NekDouble u = (W[0] - W[1])/(c*rho0);
+    NekDouble u = (W[0] - W[1]) / (cL * rho0L); // TODO
 
     // assemble the fluxes
-    pF = gamma*p0*u + u0*p;
-    uF = p/rho0 + u0*u + v0*vL + w0*wL;
+    pF = gamma * p0L * u + u0L * p; // TODO
+    uF =
+        p / rho0L + u0L * u + v0L * (vL + vR) / 2 + w0L * (wL + wR) / 2; // TODO
     vF = 0.0;
     wF = 0.0;
 }
 
 }
+
 

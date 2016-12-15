@@ -82,35 +82,42 @@ LaxFriedrichsSolver::LaxFriedrichsSolver(
  * @param wF     Computed Riemann flux for z perturbation velocity component
  */
 void LaxFriedrichsSolver::v_PointSolve(
-    NekDouble  pL, NekDouble  rhoL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
-    NekDouble  pR, NekDouble  rhoR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
-    NekDouble  p0, NekDouble  rho0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
-    NekDouble &pF, NekDouble &rhoF, NekDouble &uF, NekDouble &vF, NekDouble &wF)
+    NekDouble  pL,  NekDouble  rhoL,  NekDouble  uL,  NekDouble  vL,  NekDouble  wL,
+    NekDouble  pR,  NekDouble  rhoR,  NekDouble  uR,  NekDouble  vR,  NekDouble  wR,
+    NekDouble  p0L, NekDouble  rho0L, NekDouble  u0L, NekDouble  v0L, NekDouble  w0L,
+    NekDouble  p0R, NekDouble  rho0R, NekDouble  u0R, NekDouble  v0R, NekDouble  w0R,
+    NekDouble &pF,  NekDouble &rhoF,  NekDouble &uF,  NekDouble &vF,  NekDouble &wF)
 {
     ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
     const NekDouble &gamma = m_params["Gamma"]();
 
     // Speed of sound
-    NekDouble c = sqrt(gamma * p0 / rho0);
+    NekDouble cL = sqrt(gamma * p0L / rho0L);
+    NekDouble cR = sqrt(gamma * p0R / rho0R);
 
     // max absolute eigenvalue of the jacobian of F_n1
-    NekDouble a_1_max = std::max(std::abs(u0 - c), std::abs(u0 + c));
+    NekDouble a_1_max = 0;
+    a_1_max = std::max(a_1_max, std::abs(u0L - cL));
+    a_1_max = std::max(a_1_max, std::abs(u0R - cR));
+    a_1_max = std::max(a_1_max, std::abs(u0L + cL));
+    a_1_max = std::max(a_1_max, std::abs(u0R + cR));
 
-    NekDouble pFL = gamma*p0*uL + pL*u0;
-    NekDouble uFL = pL/rho0 + u0*uL + v0*vL + w0*wL;
+    NekDouble pFL = gamma * p0L * uL + pL * u0L;
+    NekDouble uFL = pL / rho0L + u0L * uL + v0L * vL + w0L * wL;
     NekDouble vFL = 0;
     NekDouble wFL = 0;
 
-    NekDouble pFR = gamma*p0*uR + pR*u0;
-    NekDouble uFR = pR/rho0 + u0*uR + v0*vR + w0*wR;
+    NekDouble pFR = gamma * p0R * uR + pR * u0R;
+    NekDouble uFR = pR / rho0R + u0R * uR + v0R * vR + w0R * wR;
     NekDouble vFR = 0;
     NekDouble wFR = 0;
 
     // assemble the face-normal fluxes
-    pF = 0.5*(pFL + pFR - a_1_max*(pR - pL));
-    uF = 0.5*(uFL + uFR - a_1_max*(uR - uL));
-    vF = 0.5*(vFL + vFR - a_1_max*(vR - vL));
-    wF = 0.5*(wFL + wFR - a_1_max*(wR - wL));
+    pF = 0.5 * (pFL + pFR - a_1_max * (pR - pL));
+    uF = 0.5 * (uFL + uFR - a_1_max * (uR - uL));
+    vF = 0.5 * (vFL + vFR - a_1_max * (vR - vL));
+    wF = 0.5 * (wFL + wFR - a_1_max * (wR - wL));
 }
 
 }
+

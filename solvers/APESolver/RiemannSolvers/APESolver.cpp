@@ -61,42 +61,54 @@ void APESolver::v_Solve(
     const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
           Array<OneD,       Array<OneD, NekDouble> > &flux)
 {
-    Array< OneD, Array< OneD, NekDouble > > bf = GetRotBasefield();
+    int nTracePts = Fwd[0].num_elements();
+
+    Array< OneD, Array< OneD, NekDouble > > bfFwd(nDim+2);
+    Array< OneD, Array< OneD, NekDouble > > bfBwd(nDim+2);
+    for (int i = 0; i < nDim + 2; i++)
+    {
+        bfFwd[i] = Array<OneD, NekDouble>(nTracePts);
+        bfBwd[i] = Array<OneD, NekDouble>(nTracePts);
+    }
+
+
+    GetRotBasefield(bfFwd, bfBwd);
 
     int expDim = nDim;
     NekDouble vF, wF,  rhoF;
 
     if (expDim == 1)
     {
-        for (int i = 0; i < Fwd[0].num_elements(); ++i)
+        for (int i = 0; i < nTracePts; ++i)
         {
             v_PointSolve(
-                 Fwd[0][i],      0.0,  Fwd[1][i], 0.0,  0.0,
-                 Bwd[0][i],      0.0,  Bwd[1][i], 0.0,  0.0,
-                  bf[0][i], bf[1][i],   bf[2][i], 0.0,  0.0,
-                flux[0][i],     rhoF, flux[1][i],  vF,   wF);
+
+                  Fwd[0][i],         0.0,   Fwd[1][i], 0.0,  0.0,
+                  Bwd[0][i],         0.0,   Bwd[1][i], 0.0,  0.0,
+                bfFwd[0][i], bfFwd[1][i], bfFwd[2][i], 0.0,  0.0,
+                 flux[0][i],        rhoF,  flux[1][i],  vF,   wF);
         }
     }
     else if (expDim == 2)
     {
-        for (int i = 0; i < Fwd[0].num_elements(); ++i)
+        for (int i = 0; i < nTracePts; ++i)
         {
             v_PointSolve(
-                 Fwd[0][i],      0.0,  Fwd[1][i],  Fwd[2][i],  0.0,
-                 Bwd[0][i],      0.0,  Bwd[1][i],  Bwd[2][i],  0.0,
-                  bf[0][i], bf[1][i],   bf[2][i],   bf[3][i],  0.0,
-                flux[0][i],     rhoF, flux[1][i], flux[2][i],   wF);
+                  Fwd[0][i],         0.0,   Fwd[1][i],   Fwd[2][i],  0.0,
+                  Bwd[0][i],         0.0,   Bwd[1][i],   Bwd[2][i],  0.0,
+                bfFwd[0][i], bfFwd[1][i], bfFwd[2][i], bfFwd[3][i],  0.0,
+                 flux[0][i],        rhoF,  flux[1][i],  flux[2][i],   wF);
         }
     }
     else if (expDim == 3)
     {
-        for (int i = 0; i < Fwd[0].num_elements(); ++i)
+        for (int i = 0; i < nTracePts; ++i)
         {
             v_PointSolve(
-                 Fwd[0][i],      0.0,  Fwd[1][i],  Fwd[2][i],  Fwd[3][i],
-                 Bwd[0][i],      0.0,  Bwd[1][i],  Bwd[2][i],  Bwd[3][i],
-                  bf[0][i], bf[1][i],   bf[2][i],   bf[3][i],   bf[4][i],
-                flux[0][i],     rhoF, flux[1][i], flux[2][i], flux[3][i]);
+                  Fwd[0][i],         0.0,   Fwd[1][i],   Fwd[2][i],   Fwd[3][i],
+                  Bwd[0][i],         0.0,   Bwd[1][i],   Bwd[2][i],   Bwd[3][i],
+                bfFwd[0][i], bfFwd[1][i], bfFwd[2][i], bfFwd[3][i], bfFwd[4][i],
+                 flux[0][i],        rhoF,  flux[1][i],  flux[2][i],  flux[3][i]);
         }
     }
 }
@@ -105,31 +117,29 @@ void APESolver::v_Solve(
 /**
 *
 */
-Array< OneD, Array< OneD, NekDouble > > APESolver::GetRotBasefield()
+void APESolver::GetRotBasefield(Array< OneD, Array< OneD, NekDouble > > &bfFwd, Array< OneD, Array< OneD, NekDouble > > &bfBwd)
 {
     ASSERTL1(CheckVectors("N"), "N not defined.");
-    ASSERTL1(CheckVectors("basefield"), "basefield not defined.");
+    ASSERTL1(CheckVectors("basefieldFwd"), "basefieldFwd not defined.");
+    ASSERTL1(CheckVectors("basefieldBwd"), "basefieldBwd not defined.");
     const Array<OneD, const Array<OneD, NekDouble> > normals = m_vectors["N"]();
-    const Array<OneD, const Array<OneD, NekDouble> > basefield =
-        m_vectors["basefield"]();
+    const Array<OneD, const Array<OneD, NekDouble> > basefieldFwd =
+        m_vectors["basefieldFwd"]();
+    const Array<OneD, const Array<OneD, NekDouble> > basefieldBwd =
+        m_vectors["basefieldBwd"]();
 
-    int nTracePts = normals[0].num_elements();
     int nDim = normals.num_elements();
 
-    Array< OneD, Array< OneD, NekDouble > > rotBasefield(nDim+2);
-    for (int i = 0; i < nDim + 2; i++)
-    {
-        rotBasefield[i] = Array<OneD, NekDouble>(nTracePts);
-    }
     Array<OneD, Array<OneD, NekDouble> > baseVecLocs(1);
     baseVecLocs[0] = Array<OneD, NekDouble>(nDim);
     for (int i = 0; i < nDim; ++i)
     {
         baseVecLocs[0][i] = i + 2;
     }
-    rotateToNormal(basefield, normals, baseVecLocs, rotBasefield);
+    rotateToNormal(basefieldFwd, normals, baseVecLocs, bfFwd);
+    rotateToNormal(basefieldBwd, normals, baseVecLocs, bfBwd);
 
-    return rotBasefield;
+
 }
 
 }

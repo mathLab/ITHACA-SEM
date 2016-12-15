@@ -171,7 +171,8 @@ void APE::v_InitObject()
     m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(
                           riemName, m_session);
     m_riemannSolver->SetVector("N",         &APE::GetNormals,   this);
-    m_riemannSolver->SetVector("basefield", &APE::GetBfTrace,   this);
+    m_riemannSolver->SetVector("basefieldFwd", &APE::GetBasefieldFwd, this);
+    m_riemannSolver->SetVector("basefieldBwd", &APE::GetBasefieldBwd, this);
     m_riemannSolver->SetAuxVec("vecLocs",   &APE::GetVecLocs,   this);
     m_riemannSolver->SetParam("Gamma",      &APE::GetGamma,     this);
 
@@ -831,11 +832,26 @@ const Array<OneD, const Array<OneD, NekDouble> > &APE::GetVecLocs()
 /**
  * @brief Get the baseflow field.
  */
-const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBfTrace()
+const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefieldFwd()
 {
     for (int i = 0; i < m_spacedim + 2; i++)
     {
-        m_fields[0]->ExtractTracePhys(m_bf[i], m_bfTrace[i]);
+        Array<OneD, NekDouble> Fwd(GetTraceNpoints(), 0.0);
+        Array<OneD, NekDouble> Bwd(GetTraceNpoints(), 0.0);
+        m_fields[0]->GetFwdBwdTracePhys(m_bf[i], Fwd, Bwd);
+        Vmath::Vcopy(GetTraceNpoints(), Fwd, 1, m_traceBasefield[i], 1);
+    }
+    return m_traceBasefield;
+}
+
+const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefieldBwd()
+{
+    for (int i = 0; i < m_spacedim + 2; i++)
+    {
+        Array<OneD, NekDouble> Fwd(GetTraceNpoints(), 0.0);
+        Array<OneD, NekDouble> Bwd(GetTraceNpoints(), 0.0);
+        m_fields[0]->GetFwdBwdTracePhys(m_bf[i], Fwd, Bwd);
+        Vmath::Vcopy(GetTraceNpoints(), Bwd, 1, m_traceBasefield[i], 1);
     }
     return m_bfTrace;
 }

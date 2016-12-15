@@ -116,7 +116,9 @@ class APE : public AdvectionSystem
 
         const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs();
 
-        const Array<OneD, const Array<OneD, NekDouble> > &GetBfTrace();
+        const Array<OneD, const Array<OneD, NekDouble> > &GetBasefieldFwd();
+
+        const Array<OneD, const Array<OneD, NekDouble> > &GetBasefieldBwd();
 
         NekDouble GetGamma();
 

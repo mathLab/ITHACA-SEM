@@ -66,7 +66,7 @@ class APESolver : public RiemannSolver
             ASSERTL0(false, "This function should be defined by subclasses.");
         }
 
-        Array<OneD, Array<OneD, NekDouble> > GetRotBasefield();
+        void GetRotBasefield(Array<OneD, Array<OneD, NekDouble> > &bfFwd, Array<OneD, Array<OneD, NekDouble> > &bfBwd);
 };
 
 }

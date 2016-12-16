@@ -120,15 +120,21 @@ void APESolver::v_Solve(
 void APESolver::GetRotBasefield(Array< OneD, Array< OneD, NekDouble > > &bfFwd, Array< OneD, Array< OneD, NekDouble > > &bfBwd)
 {
     ASSERTL1(CheckVectors("N"), "N not defined.");
-    ASSERTL1(CheckVectors("basefieldFwd"), "basefieldFwd not defined.");
-    ASSERTL1(CheckVectors("basefieldBwd"), "basefieldBwd not defined.");
+    ASSERTL1(CheckVectors("basefieldFwdBwd"), "basefieldFwdBwd not defined.");
     const Array<OneD, const Array<OneD, NekDouble> > normals = m_vectors["N"]();
-    const Array<OneD, const Array<OneD, NekDouble> > basefieldFwd =
-        m_vectors["basefieldFwd"]();
-    const Array<OneD, const Array<OneD, NekDouble> > basefieldBwd =
-        m_vectors["basefieldBwd"]();
+    const Array<OneD, const Array<OneD, NekDouble> > basefieldFwdBwd = m_vectors["basefieldFwdBwd"]();
 
     int nDim = normals.num_elements();
+
+    Array<OneD, Array<OneD, NekDouble> > basefieldFwd(nDim + 2);
+    Array<OneD, Array<OneD, NekDouble> > basefieldBwd(nDim + 2);
+
+    for (int i = 0; i < nDim + 2; i++)
+    {
+        int j = (nDim + 2) + i;
+        basefieldFwd[i] = basefieldFwdBwd[i];
+        basefieldBwd[i] = basefieldFwdBwd[j];
+    }
 
     Array<OneD, Array<OneD, NekDouble> > baseVecLocs(1);
     baseVecLocs[0] = Array<OneD, NekDouble>(nDim);

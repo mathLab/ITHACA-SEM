@@ -108,13 +108,10 @@ void APE::v_InitObject()
     m_homoInitialFwd = false;
 
     // Define the normal velocity fields
-    if (m_fields[0]->GetTrace())
+    m_bfFwdBwd = Array<OneD, Array<OneD, NekDouble> > (2*(m_spacedim + 2));
+    for (int i = 0; i < m_bfFwdBwd.num_elements(); i++)
     {
-        m_bfTrace = Array<OneD, Array<OneD, NekDouble> > (m_spacedim + 2);
-        for (int i = 0; i < m_spacedim + 2; ++i)
-        {
-            m_bfTrace[i] = Array<OneD, NekDouble>(GetTraceNpoints(), 0.0);
-        }
+        m_bfFwdBwd[i] = Array<OneD, NekDouble>(GetTraceNpoints(), 0.0);
     }
 
     // Set up locations of velocity and base velocity vectors.
@@ -131,8 +128,7 @@ void APE::v_InitObject()
     m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(
                           riemName, m_session);
     m_riemannSolver->SetVector("N",         &APE::GetNormals,   this);
-    m_riemannSolver->SetVector("basefieldFwd", &APE::GetBasefieldFwd, this);
-    m_riemannSolver->SetVector("basefieldBwd", &APE::GetBasefieldBwd, this);
+    m_riemannSolver->SetVector("basefieldFwdBwd", &APE::GetBasefieldFwdBwd, this);
     m_riemannSolver->SetAuxVec("vecLocs",   &APE::GetVecLocs,   this);
     m_riemannSolver->SetParam("Gamma",      &APE::GetGamma,     this);
 
@@ -308,7 +304,7 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
         Fwd[i] = Array<OneD, NekDouble>(nTracePts);
         m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
     }
-    Array<OneD, Array<OneD, NekDouble> > bfFwd = GetBfTrace();
+    Array<OneD, Array<OneD, NekDouble> > bfFwd = GetBasefieldFwdBwd();
 
     // loop over Boundary Regions
     for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
@@ -766,32 +762,17 @@ const Array<OneD, const Array<OneD, NekDouble> > &APE::GetVecLocs()
 }
 
 
-// TODO: turn this into GetBasefieldFwBwd() so we dont need to call GetFwdBwdTracePhys twice
 /**
  * @brief Get the baseflow field.
  */
-const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefieldFwd()
+const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefieldFwdBwd()
 {
     for (int i = 0; i < m_spacedim + 2; i++)
     {
-        Array<OneD, NekDouble> Fwd(GetTraceNpoints(), 0.0);
-        Array<OneD, NekDouble> Bwd(GetTraceNpoints(), 0.0);
-        m_fields[0]->GetFwdBwdTracePhys(m_bf[i], Fwd, Bwd);
-        Vmath::Vcopy(GetTraceNpoints(), Fwd, 1, m_traceBasefield[i], 1);
+        int j = (m_spacedim + 2) + i;
+        m_fields[0]->GetFwdBwdTracePhys(m_bf[i], m_bfFwdBwd[i], m_bfFwdBwd[j]);
     }
-    return m_traceBasefield;
-}
-
-const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefieldBwd()
-{
-    for (int i = 0; i < m_spacedim + 2; i++)
-    {
-        Array<OneD, NekDouble> Fwd(GetTraceNpoints(), 0.0);
-        Array<OneD, NekDouble> Bwd(GetTraceNpoints(), 0.0);
-        m_fields[0]->GetFwdBwdTracePhys(m_bf[i], Fwd, Bwd);
-        Vmath::Vcopy(GetTraceNpoints(), Bwd, 1, m_traceBasefield[i], 1);
-    }
-    return m_bfTrace;
+    return m_bfFwdBwd;
 }
 
 

@@ -77,7 +77,7 @@ class APE : public AdvectionSystem
         SolverUtils::AdvectionSharedPtr                 m_advection;
         std::vector<SolverUtils::ForcingSharedPtr>      m_forcing;
         SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
-        Array<OneD, Array<OneD, NekDouble> >            m_bfTrace;
+        Array<OneD, Array<OneD, NekDouble> >            m_bfFwdBwd;
         Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
         /// Isentropic coefficient, Ratio of specific heats (APE)
         NekDouble                                       m_gamma;
@@ -115,9 +115,7 @@ class APE : public AdvectionSystem
 
         const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs();
 
-        const Array<OneD, const Array<OneD, NekDouble> > &GetBasefieldFwd();
-
-        const Array<OneD, const Array<OneD, NekDouble> > &GetBasefieldBwd();
+        const Array<OneD, const Array<OneD, NekDouble> > &GetBasefieldFwdBwd();
 
         NekDouble GetGamma();
 

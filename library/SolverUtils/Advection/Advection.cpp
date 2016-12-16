@@ -125,7 +125,8 @@ void Advection::v_InitObject(
  *
  */
 void Advection::v_SetBaseFlow(
-        const Array<OneD, Array<OneD, NekDouble> >    &inarray)
+        const Array<OneD, Array<OneD, NekDouble> >    &inarray,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
 {
     ASSERTL0(false,
             "A baseflow is not appropriate for this advection type.");

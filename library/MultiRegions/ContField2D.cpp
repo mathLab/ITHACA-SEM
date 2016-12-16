@@ -713,6 +713,37 @@ namespace Nektar
             }
         }
 
+
+        void ContField2D::v_FillBndCondFromField(const int nreg)
+        {
+            NekDouble sign;
+            int bndcnt = 0;
+            const Array<OneD,const int> &bndMap = 
+                m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+            
+            Array<OneD, NekDouble> tmp(m_locToGloMap->GetNumGlobalCoeffs());
+            LocalToGlobal(m_coeffs,tmp,false);
+
+            ASSERTL1(nreg < m_bndCondExpansions.num_elements(),
+                     "nreg is out or range since this many boundary "
+                     "regions to not exist");
+            
+            // Now fill in all other Dirichlet coefficients.
+            Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[nreg]->UpdateCoeffs();
+                
+            for(int j = 0; j < nreg; ++j)
+            {
+                bndcnt += m_bndCondExpansions[j]->GetNcoeffs();
+            }
+            
+            for(int j = 0; j < (m_bndCondExpansions[nreg])->GetNcoeffs(); ++j)
+            {
+                sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                coeffs[j] = sign * tmp[bndMap[bndcnt++]];
+            }
+        }
+
+        
         /**
          * This operation is evaluated as:
          * \f{tabbing}
@@ -770,22 +801,28 @@ namespace Nektar
          * where \f$\mathcal{A}\f$ is the
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
-         * @note    The array #m_coeffs should be filled with the local
-         *          coefficients \f$\boldsymbol{\hat{u}}_l\f$ and that the
-         *          resulting global coefficients \f$\boldsymbol{\hat{u}}_g\f$
-         *          will be stored in #m_coeffs.
+         * @note The array #m_coeffs should be filled with the local
+         *          coefficients \f$\boldsymbol{\hat{u}}_l\f$ and that
+         *          the resulting global coefficients
+         *          \f$\boldsymbol{\hat{u}}_g\f$ will be stored in
+         *          #m_coeffs. Also if useComm is set to false then no
+         *          communication call will be made to check if all
+         *          values are consistent over processors
          */
+
         void ContField2D::v_LocalToGlobal(
             const Array<OneD, const NekDouble> &inarray,
-            Array<OneD,NekDouble> &outarray)
+            Array<OneD,NekDouble> &outarray,
+            bool useComm)
         {
-            m_locToGloMap->LocalToGlobal(inarray, outarray);
+            m_locToGloMap->LocalToGlobal(inarray, outarray, useComm);
         }
 
 
-        void ContField2D::v_LocalToGlobal(void)
+        void ContField2D::v_LocalToGlobal(bool useComm)
+
         {
-            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs);
+            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs, useComm);
         }
 
         /**
@@ -835,7 +872,9 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing)
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool PhysSpaceForcing)
+
         {
             //----------------------------------
             //  Setup RHS Inner product
@@ -843,7 +882,14 @@ namespace Nektar
             // Inner product of forcing
             int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             Array<OneD,NekDouble> wsp(contNcoeffs);
-            IProductWRTBase(inarray,wsp,eGlobal);
+            if(PhysSpaceForcing)
+            {
+                IProductWRTBase(inarray,wsp,eGlobal);
+            }
+            else
+            {
+                Assemble(inarray,wsp);
+            }
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
             Vmath::Neg(contNcoeffs, wsp, 1);
@@ -986,7 +1032,7 @@ namespace Nektar
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
-            m_locToGloMap->UniversalAssemble(wsp);
+            m_locToGloMap->UniversalAssemble(gamma);
             // Add weak boundary conditions to forcing
             Vmath::Vadd(contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
 
@@ -1020,12 +1066,13 @@ namespace Nektar
          * @param   coeffstate  State of Coefficients, Local or Global
          * @param   dirForcing  Dirichlet Forcing.
          */
-        void ContField2D::v_LinearAdvectionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity,
-                                                       const Array<OneD, const NekDouble> &inarray,
-                                                       Array<OneD, NekDouble> &outarray,
-                                                       const NekDouble lambda,
-                                                       CoeffState coeffstate,
-                                                       const Array<OneD, const NekDouble>& dirForcing)
+        void ContField2D::v_LinearAdvectionReactionSolve(
+                            const Array<OneD, Array<OneD, NekDouble> > &velocity,
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD, NekDouble> &outarray,
+                            const NekDouble lambda,
+                            CoeffState coeffstate,
+                            const Array<OneD, const NekDouble>& dirForcing)
         {
             // Inner product of forcing
             int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();

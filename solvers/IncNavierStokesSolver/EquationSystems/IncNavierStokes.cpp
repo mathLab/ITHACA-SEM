@@ -580,6 +580,7 @@ namespace Nektar
 
         std::complex<NekDouble> z1 (1.0,0.0);
         std::complex<NekDouble> zi (0.0,1.0);
+        std::complex<NekDouble> comp_conj (-1.0,1.0); //complex conjugate
 
 
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
@@ -621,23 +622,27 @@ namespace Nektar
 
             // Add edge values (trace) into the wbc
             elmt->GetTracePhysVals(boundary,bc,w,wbc);
+
+
             //Compute womersley solution
             for (j=0;j<nfq;j++)
             {
+                //NOTE: only need to calculate these two once, could be stored or precomputed?
                 r = sqrt((x[j]-x0)*(x[j]-x0) + (y[j]-y0)*(y[j]-y0) + (z[j]-z0)*(z[j]-z0))/R;
 
                 wbc[j] = wom_vel_r[0]*(1. - r*r); // Compute Poiseulle Flow
+
                 for (k=1; k<M; k++)
                 {
-                    kt = 2.0*M_PI*k*m_time/T;
-                    za = alpha*sqrt(k)/sqrt(2.0)*std::complex<NekDouble>(-1.0,1.0);
-                    zar = r*za;
+                    kt = 2.0 * M_PI * k * m_time / T;
+                    za = alpha * sqrt(k) / sqrt(2.0) * comp_conj;
+                    zar = r * za;
                     zJ0 = Polylib::ImagBesselComp(0,za);
                     zJ0r = Polylib::ImagBesselComp(0,zar);
-                    zJ0rJ0 = zJ0r/zJ0;
-                    zq = std::exp(zi*kt)*std::complex<NekDouble>(wom_vel_r[k],wom_vel_i[k]);
-                    zvel = zq*(z1-zJ0rJ0);
-                    wbc[j] = wbc[j]+zvel.real();
+                    zJ0rJ0 = zJ0r / zJ0;
+                    zq = std::exp(zi * kt) * std::complex<NekDouble>(wom_vel_r[k],wom_vel_i[k]);
+                    zvel = zq * (z1 - zJ0rJ0);
+                    wbc[j] = wbc[j] + zvel.real();
                 }
             }
 

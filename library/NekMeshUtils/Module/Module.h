@@ -187,13 +187,11 @@ namespace NekMeshUtils
         /// List of configuration values.
         std::map<std::string, ConfigOption> m_config;
 
-
-
-        void ReorderPrisms(PerMap                        &perFaces);
-        void PrismLines   (int                            prism,
-                           PerMap                        &perFaces,
-                           std::set<int>                 &prismsDone,
-                           std::vector<ElementSharedPtr> &line);
+        NEKMESHUTILS_EXPORT void ReorderPrisms(PerMap &perFaces);
+        NEKMESHUTILS_EXPORT void PrismLines(int                     prism,
+                                            PerMap                  &perFaces,
+                                            std::set<int>           &prismsDone,
+                                            std::vector<ElementSharedPtr> &line);
     };
 
     /**
@@ -213,7 +211,7 @@ namespace NekMeshUtils
 
     protected:
         /// Print summary of elements.
-        void PrintSummary();
+        NEKMESHUTILS_EXPORT void PrintSummary();
         /// Input stream
         io::filtering_istream m_mshFile;
         /// Input stream

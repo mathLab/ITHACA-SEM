@@ -260,7 +260,7 @@ namespace NekMeshUtils
     typedef boost::shared_ptr<Module> ModuleSharedPtr;
     typedef LibUtilities::NekFactory< ModuleKey, Module, MeshSharedPtr > ModuleFactory;
 
-    ModuleFactory& GetModuleFactory();
+    NEKMESHUTILS_EXPORT ModuleFactory& GetModuleFactory();
 }
 }
 

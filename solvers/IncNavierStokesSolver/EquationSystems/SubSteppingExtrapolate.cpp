@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: SubSteppingExtrapolate.cpp
-//a
+// 
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
@@ -240,18 +240,13 @@ namespace Nektar
         NekDouble kinvis)
     {
         int nConvectiveFields =m_fields.num_elements()-1;
-        Array<OneD, Array<OneD, NekDouble> > velfields(nConvectiveFields);
+        Array<OneD, Array<OneD, NekDouble> > nullvelfields;
         
-        for(int i = 0; i < nConvectiveFields; ++i)
-        {
-            velfields[i] = m_fields[m_velocity[i]]->GetPhys(); 
-        }
-
         m_pressureCalls++;
 
         // Calculate non-linear and viscous BCs at current level and
         // put in m_pressureHBCs[0]
-        CalcNeumannPressureBCs(inarray,velfields,kinvis);
+        CalcNeumannPressureBCs(inarray,nullvelfields,kinvis);
 
         // Extrapolate to m_pressureHBCs to n+1
         ExtrapolateArray(m_pressureHBCs);
@@ -265,6 +260,7 @@ namespace Nektar
         // Evaluate High order outflow conditiosn if required. 
         CalcOutflowBCs(inarray, kinvis);
     }
+
 
     /** 
      * 
@@ -372,7 +368,7 @@ namespace Nektar
             }
             
             // set up HBC m_acceleration field for Pressure BCs
-            IProductNormVelocityOnHBC(fields,m_acceleration[m]);
+            IProductNormVelocityOnHBC(fields,m_iprodnormvel[m]);
 
             // Reset time integrated solution in m_integrationSoln 
             integrationSoln->SetSolVector(m,fields);

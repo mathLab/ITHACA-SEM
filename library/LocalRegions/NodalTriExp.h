@@ -178,6 +178,8 @@ namespace Nektar
                                        const StdRegions::StdMatrixKey &mkey); 
             
             virtual StdRegions::StdExpansionSharedPtr v_GetStdExp(void) const;
+
+            virtual StdRegions::StdExpansionSharedPtr v_GetLinStdExp(void) const;
             
             virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
 

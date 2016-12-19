@@ -53,7 +53,9 @@ void Octree::Process()
     CompileSourcePointList();
 
     if (m_mesh->m_verbose)
+    {
         cout << "\tCurvature samples: " << m_SPList.size() << endl;
+    }
 
     // make master octant based on the bounding box of the domain
     m_dim = max((boundingBox[1] - boundingBox[0]) / 2.0,
@@ -1021,14 +1023,15 @@ void Octree::CompileSourcePointList()
             {
                 Array<OneD, NekDouble> x1(3), x2(3);
                 NekDouble r, d;
-                s >> x1[0] >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2] >> r >> d;
+                s >> x1[0] >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2]
+                  >> r >> d;
                 lsources.push_back(linesource(x1, x2, r, d));
             }
         }
         fle.close();
 
-        //this takes any existing sourcepoints within the influence range
-        //and modifys them
+        // this takes any existing sourcepoints within the influence range
+        // and modifies them
         for (int i = 0; i < m_SPList.size(); i++)
         {
             for (int j = 0; j < lsources.size(); j++)

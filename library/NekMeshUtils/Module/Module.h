@@ -49,6 +49,7 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <NekMeshUtils/MeshElements/Mesh.h>
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
 namespace io = boost::iostreams;
 
@@ -156,29 +157,29 @@ namespace NekMeshUtils
     class Module
     {
     public:
-    Module(MeshSharedPtr p_m) : m_mesh(p_m) {}
-        virtual void Process() = 0;
+        NEKMESHUTILS_EXPORT Module(MeshSharedPtr p_m) : m_mesh(p_m) {}
+        NEKMESHUTILS_EXPORT virtual void Process() = 0;
 
-        void RegisterConfig(std::string key, std::string value);
-        void PrintConfig();
-        void SetDefaults();
-        MeshSharedPtr GetMesh()
+        NEKMESHUTILS_EXPORT void RegisterConfig(std::string key, std::string value);
+        NEKMESHUTILS_EXPORT void PrintConfig();
+        NEKMESHUTILS_EXPORT void SetDefaults();
+        NEKMESHUTILS_EXPORT MeshSharedPtr GetMesh()
         {
             return m_mesh;
         }
 
         /// Extract element vertices
-        virtual void ProcessVertices();
+        NEKMESHUTILS_EXPORT virtual void ProcessVertices();
         /// Extract element edges
-        virtual void ProcessEdges(bool ReprocessEdges = true);
+        NEKMESHUTILS_EXPORT virtual void ProcessEdges(bool ReprocessEdges = true);
         /// Extract element faces
-        virtual void ProcessFaces(bool ReprocessFaces = true);
+        NEKMESHUTILS_EXPORT virtual void ProcessFaces(bool ReprocessFaces = true);
         /// Generate element IDs
-        virtual void ProcessElements();
+        NEKMESHUTILS_EXPORT virtual void ProcessElements();
         /// Generate composites
-        virtual void ProcessComposites();
+        NEKMESHUTILS_EXPORT virtual void ProcessComposites();
 
-        virtual void ClearElementLinks();
+        NEKMESHUTILS_EXPORT virtual void ClearElementLinks();
 
     protected:
         /// Mesh object
@@ -207,8 +208,8 @@ namespace NekMeshUtils
     class InputModule : public Module
     {
     public:
-        InputModule(MeshSharedPtr p_m);
-        void OpenStream();
+        NEKMESHUTILS_EXPORT InputModule(MeshSharedPtr p_m);
+        NEKMESHUTILS_EXPORT void OpenStream();
 
     protected:
         /// Print summary of elements.
@@ -230,7 +231,7 @@ namespace NekMeshUtils
     class ProcessModule : public Module
     {
     public:
-        ProcessModule(MeshSharedPtr p_m) : Module(p_m) {}
+        NEKMESHUTILS_EXPORT ProcessModule(MeshSharedPtr p_m) : Module(p_m) {}
     };
 
     /**
@@ -242,8 +243,8 @@ namespace NekMeshUtils
     class OutputModule : public Module
     {
     public:
-        OutputModule(MeshSharedPtr p_m);
-        void OpenStream();
+        NEKMESHUTILS_EXPORT OutputModule(MeshSharedPtr p_m);
+        NEKMESHUTILS_EXPORT void OpenStream();
 
 
     protected:

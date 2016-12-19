@@ -60,6 +60,7 @@ v4.4.0
 - Add option to `linearise` to use element quality (!690)
 - Add flag to `insertsurface` process for non-conforming geometries (!700)
 - Bug fix to get two meshgen regression tests working (!700)
+- Add new two-dimensional mesher from NACA code or step file (!720)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

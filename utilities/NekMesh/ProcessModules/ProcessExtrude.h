@@ -45,17 +45,17 @@ namespace Utilities
 /**
  * @brief This processing module extrudes a 2d mesh in the z direction
  */
-class ProcessExtrude : public ProcessModule
+class ProcessExtrude : public NekMeshUtils::ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessExtrude>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    ProcessExtrude(MeshSharedPtr m);
+    ProcessExtrude(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessExtrude();
 
     virtual void Process();

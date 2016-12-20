@@ -92,8 +92,6 @@ public:
      */
     virtual Array<OneD, NekDouble> P(NekDouble t) = 0;
 
-    Array<OneD, NekDouble> D1(NekDouble t);
-
     /**
      * @brief Gets the second derivatives at t
      */

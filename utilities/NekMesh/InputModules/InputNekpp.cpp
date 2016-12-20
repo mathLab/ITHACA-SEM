@@ -37,9 +37,6 @@
 #include <iostream>
 using namespace std;
 
-#include <tinyxml.h>
-#include <boost/algorithm/string.hpp>
-
 #include <SpatialDomains/MeshGraph.h>
 #include <NekMeshUtils/MeshElements/Element.h>
 #include "InputNekpp.h"
@@ -60,19 +57,11 @@ ModuleKey InputNekpp::className =
  */
 InputNekpp::InputNekpp(MeshSharedPtr m) : InputModule(m)
 {
-
 }
 
 InputNekpp::~InputNekpp()
 {
 }
-
-struct cadVar
-{
-    string type;
-    int id;
-    NekDouble u,v;
-};
 
 /**
  *
@@ -350,7 +339,6 @@ void InputNekpp::Process()
     ProcessEdges(false);
     ProcessFaces(false);
     ProcessComposites();
-
 }
 }
 }

@@ -57,12 +57,10 @@ namespace Nektar
             m_shapeType = LibUtilities::eTetrahedron;
         }
 
-        TetGeom::TetGeom(const TriGeomSharedPtr faces[],
-                         CurveSharedPtr curve) :
+        TetGeom::TetGeom(const TriGeomSharedPtr faces[]) :
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
             m_shapeType = LibUtilities::eTetrahedron;
-            m_curve = curve;
 
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+TetGeom::kNfaces);

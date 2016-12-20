@@ -33,12 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Foundations/ManagerAccess.h>
-#include <LibUtilities/Foundations/Interp.h>
-
-#include <StdRegions/StdNodalTetExp.h>
-
 #include <SpatialDomains/Geometry3D.h>
+
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/PointGeom.h>
@@ -254,76 +250,6 @@ namespace SpatialDomains
           return;
 
       int i,j,k;
-
-      if (m_curve)
-      {
-          int pdim = LibUtilities::PointsManager()[
-              LibUtilities::PointsKey(3, m_curve->m_ptype)]
-              ->GetPointsDim();
-
-          // Deal with 2D points type separately
-          // (e.g. electrostatic or Fekete points) to 1D tensor
-          // product.
-          if (pdim == 3)
-          {
-              int N = m_curve->m_points.size();
-
-              // Need the cubic formula to solve for nEdgePts
-              NekDouble tmp1 = pow(sqrt(3.0*(243.0*N*N - 1.0)) + 27.0*N, 1.0/3.0);
-              int nEdgePts = round(tmp1 / pow(3.0, 2.0/3.0) +
-                                   1.0 / tmp1 / pow(3.0, 1.0/3.0) - 2.0) + 1;
-
-              ASSERTL0(nEdgePts*(nEdgePts+1)*(nEdgePts+2) / 6 == N,
-                       "NUMPOINTS should be a tetrahedral number for"
-                       " tetrahedron "
-                       + boost::lexical_cast<string>(m_globalID));
-
-              const LibUtilities::PointsKey P0(
-                  nEdgePts, LibUtilities::eGaussLobattoLegendre);
-              const LibUtilities::PointsKey P1(
-                  nEdgePts, LibUtilities::eGaussRadauMAlpha1Beta0);
-              const LibUtilities::PointsKey P2(
-                  nEdgePts, LibUtilities::eGaussRadauMAlpha2Beta0);
-              const LibUtilities::BasisKey  T0(
-                  LibUtilities::eOrtho_A, nEdgePts, P0);
-              const LibUtilities::BasisKey  T1(
-                  LibUtilities::eOrtho_B, nEdgePts, P1);
-              const LibUtilities::BasisKey  T2(
-                  LibUtilities::eOrtho_C, nEdgePts, P2);
-              Array<OneD, NekDouble> phys(max(N, m_xmap->GetTotPoints()));
-              Array<OneD, NekDouble> tmp(m_xmap->GetTotPoints());
-
-              for(i = 0; i < m_coordim; ++i)
-              {
-                  // Create a StdNodalTetExp.
-                  StdRegions::StdNodalTetExpSharedPtr t =
-                      MemoryManager<StdRegions::StdNodalTetExp>
-                      ::AllocateSharedPtr(T0, T1, T2, m_curve->m_ptype);
-
-                  for (j = 0; j < N; ++j)
-                  {
-                      phys[j] = (m_curve->m_points[j]->GetPtr())[i];
-                  }
-
-                  t->BwdTrans(phys, tmp);
-
-                  // Interpolate points to standard region.
-                  LibUtilities::Interp3D(
-                      P0, P1, P2, tmp,
-                      m_xmap->GetBasis(0)->GetPointsKey(),
-                      m_xmap->GetBasis(1)->GetPointsKey(),
-                      m_xmap->GetBasis(2)->GetPointsKey(),
-                      phys);
-
-                  // Forwards transform to get coefficient space.
-                  m_xmap->FwdTrans(phys, m_coeffs[i]);
-              }
-          }
-          else
-          {
-              ASSERTL0(false, "Only 3D points distributions supported.");
-          }
-      }
 
       for(i = 0; i < m_forient.size(); i++)
       {

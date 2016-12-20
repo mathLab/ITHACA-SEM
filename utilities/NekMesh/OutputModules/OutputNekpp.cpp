@@ -637,11 +637,8 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
             }
         }
     }
-
     if (!curve)
-    {
         return;
-    }
 
     TiXmlElement *curved = new TiXmlElement("CURVED");
 
@@ -695,32 +692,28 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
                  m_mesh->m_spaceDim >= 2)
         {
             vector<ElementSharedPtr>::iterator it;
-            int d = m_mesh->m_expDim;
-            std::string tag  = d == 2 ? "F"      : "V";
-            std::string attr = d == 2 ? "FACEID" : "VOLID";
-
-            for (it  = m_mesh->m_element[d].begin();
-                 it != m_mesh->m_element[d].end();
+            for (it = m_mesh->m_element[m_mesh->m_expDim].begin();
+                 it != m_mesh->m_element[m_mesh->m_expDim].end();
                  ++it)
             {
                 // Only generate face curve if there are volume nodes
                 if ((*it)->GetVolumeNodes().size() > 0)
                 {
-                    TiXmlElement *e = new TiXmlElement(tag);
+                    TiXmlElement *e = new TiXmlElement("F");
                     e->SetAttribute("ID", facecnt++);
-                    e->SetAttribute(attr, (*it)->GetId());
+                    e->SetAttribute("FACEID", (*it)->GetId());
                     e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
                     e->SetAttribute(
                         "TYPE",
                         LibUtilities::kPointsTypeStr[(*it)->GetCurveType()]);
+
                     TiXmlText *t0 = new TiXmlText((*it)->GetXmlCurveString());
                     e->LinkEndChild(t0);
                     curved->LinkEndChild(e);
                 }
             }
         }
-
-        if (m_mesh->m_expDim == 3)
+        else if (m_mesh->m_expDim == 3)
         {
             FaceSet::iterator it2;
             for (it2 = m_mesh->m_faceSet.begin();
@@ -848,7 +841,7 @@ void OutputNekpp::WriteXmlCurves(TiXmlElement *pRoot)
             }
         }
         // 2D elements in 3-space, output face curvature information
-        else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim >= 2)
+        else if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
         {
             vector<ElementSharedPtr>::iterator it;
             for (it = m_mesh->m_element[m_mesh->m_expDim].begin();
@@ -1098,7 +1091,7 @@ void OutputNekpp::WriteXmlExpansions(TiXmlElement *pRoot)
 
             if (m_mesh->m_fields.size() == 0)
             {
-                exp->SetAttribute("FIELDS", "u,v,w");
+                exp->SetAttribute("FIELDS", "u");
             }
             else
             {

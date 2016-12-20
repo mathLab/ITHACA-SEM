@@ -44,16 +44,15 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        class TetGeom: public LibUtilities::GraphVertexObject,
+
+        class TetGeom: public LibUtilities::GraphVertexObject, 
                        public Geometry3D
         {
         public:
-            SPATIAL_DOMAINS_EXPORT TetGeom();
-            SPATIAL_DOMAINS_EXPORT TetGeom(
-                const TriGeomSharedPtr faces[],
-                CurveSharedPtr curve = CurveSharedPtr());
+            SPATIAL_DOMAINS_EXPORT TetGeom ();
+            SPATIAL_DOMAINS_EXPORT TetGeom (const TriGeomSharedPtr faces[]);
             SPATIAL_DOMAINS_EXPORT ~TetGeom();
-
+            
             SPATIAL_DOMAINS_EXPORT static const int         kNverts  = 4;
             SPATIAL_DOMAINS_EXPORT static const int         kNedges  = 6;
             SPATIAL_DOMAINS_EXPORT static const int         kNqfaces = 0;

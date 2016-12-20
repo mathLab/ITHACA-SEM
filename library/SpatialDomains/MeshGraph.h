@@ -390,7 +390,6 @@ namespace Nektar
 
                 SPATIAL_DOMAINS_EXPORT CurveMap& GetCurvedEdges() { return m_curvedEdges; }
                 SPATIAL_DOMAINS_EXPORT CurveMap& GetCurvedFaces() { return m_curvedFaces; }
-                SPATIAL_DOMAINS_EXPORT CurveMap& GetCurvedVolumes() { return m_curvedVolumes; }
 
                 // void AddExpansion(ExpansionShPtr expansion) { m_expansions[expansion->m_geomShPtr->GetGlobalID()] = expansion; }
                 SPATIAL_DOMAINS_EXPORT const PointGeomMap& GetAllPointGeoms() const { return m_vertSet; }
@@ -413,7 +412,6 @@ namespace Nektar
 
                 CurveMap                                m_curvedEdges;
                 CurveMap                                m_curvedFaces;
-                CurveMap                                m_curvedVolumes;
 
                 SegGeomMap                              m_segGeoms;
 

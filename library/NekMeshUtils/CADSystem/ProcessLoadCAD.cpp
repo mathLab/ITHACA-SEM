@@ -59,17 +59,15 @@ ProcessLoadCAD::~ProcessLoadCAD()
 
 void ProcessLoadCAD::Process()
 {
-    m_mesh->m_CADId = m_config["filename"].as<string>();
+    string name = m_config["filename"].as<string>();
 
     if (m_mesh->m_verbose)
     {
-        cout << "Loading CAD for " << m_mesh->m_CADId << endl;
+        cout << "Loading CAD for " << name << endl;
     }
 
-    m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",m_mesh->m_CADId);
+    m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",name);
     ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
-
-    m_mesh->m_hasCAD = true;
 
     if (m_mesh->m_verbose)
     {

@@ -176,7 +176,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElUtilSha
     //this figures out the dirclet nodes and colors the others into paralell sets
     NodeSet boundaryNodes;
 
-    if(!m_mesh->m_hasCAD)
+    if(!m_mesh->m_cad)
     {
         switch (m_mesh->m_spaceDim)
         {

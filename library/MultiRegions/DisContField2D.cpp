@@ -1479,10 +1479,6 @@ namespace Nektar
             m_traceMap->UniversalTraceAssemble(Bwd);
         }
         
-        void DisContField2D::v_FillBndCondFromField(void)
-        {
-            
-        }        
 
         void DisContField2D::v_ExtractTracePhys(
             Array<OneD, NekDouble> &outarray)
@@ -1682,64 +1678,62 @@ namespace Nektar
             Array<OneD, int> &ElmtID, 
             Array<OneD, int> &EdgeID)
         {
-            map<int, int> globalIdMap;
-            int i,n;
-            int cnt;
-            int nbcs = 0;
-
-            SpatialDomains::MeshGraph2DSharedPtr graph2D =
-                boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(
-                    m_graph);
-
-            // Populate global ID map (takes global geometry ID to local
-            // expansion list ID).
-            for (i = 0; i < GetExpSize(); ++i)
+            if (m_BCtoElmMap.num_elements() == 0)
             {
-                globalIdMap[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
-            }
-            
-            // Determine number of boundary condition expansions.
-            for(i = 0; i < m_bndConditions.num_elements(); ++i)
-            {
-                nbcs += m_bndCondExpansions[i]->GetExpSize();
-            }
+                map<int, int> globalIdMap;
+                int i,n;
+                int cnt;
+                int nbcs = 0;
 
-            // make sure arrays are of sufficient length
-            if(ElmtID.num_elements() != nbcs)
-            {
-                ElmtID = Array<OneD, int>(nbcs);
-            }
+                SpatialDomains::MeshGraph2DSharedPtr graph2D =
+                    boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(
+                        m_graph);
 
-            if(EdgeID.num_elements() != nbcs)
-            {
-                EdgeID = Array<OneD, int>(nbcs);
-            }
-
-            LocalRegions::Expansion1DSharedPtr exp1d;
-            for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-            {
-                for (i = 0; i < m_bndCondExpansions[n]->GetExpSize(); 
-                     ++i, ++cnt)
+                // Populate global ID map (takes global geometry ID to local
+                // expansion list ID).
+                for (i = 0; i < GetExpSize(); ++i)
                 {
-                    exp1d = m_bndCondExpansions[n]->GetExp(i)->
-                                        as<LocalRegions::Expansion1D>();
-                    // Use edge to element map from MeshGraph2D.
-                    SpatialDomains::ElementEdgeVectorSharedPtr tmp =
-                        graph2D->GetElementsFromEdge(exp1d->GetGeom1D());
+                    globalIdMap[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+                }
 
-                    ElmtID[cnt] = globalIdMap[(*tmp)[0]->
-                        m_Element->GetGlobalID()];
-                    EdgeID[cnt] = (*tmp)[0]->m_EdgeIndx;
+                // Determine number of boundary condition expansions.
+                for(i = 0; i < m_bndConditions.num_elements(); ++i)
+                {
+                    nbcs += m_bndCondExpansions[i]->GetExpSize();
+                }
+
+                // Initialize arrays
+                m_BCtoElmMap = Array<OneD, int>(nbcs);
+                m_BCtoEdgMap = Array<OneD, int>(nbcs);
+
+                LocalRegions::Expansion1DSharedPtr exp1d;
+                for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+                {
+                    for (i = 0; i < m_bndCondExpansions[n]->GetExpSize(); 
+                         ++i, ++cnt)
+                    {
+                        exp1d = m_bndCondExpansions[n]->GetExp(i)->
+                                            as<LocalRegions::Expansion1D>();
+                        // Use edge to element map from MeshGraph2D.
+                        SpatialDomains::ElementEdgeVectorSharedPtr tmp =
+                            graph2D->GetElementsFromEdge(exp1d->GetGeom1D());
+
+                        m_BCtoElmMap[cnt] = globalIdMap[(*tmp)[0]->
+                            m_Element->GetGlobalID()];
+                        m_BCtoEdgMap[cnt] = (*tmp)[0]->m_EdgeIndx;
+                    }
                 }
             }
+            ElmtID = m_BCtoElmMap;
+            EdgeID = m_BCtoEdgMap;
         }
         
         void DisContField2D::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result)
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays)
         {
             int n, cnt, nq;
             int offsetOld, offsetNew;
-            Array<OneD, NekDouble> tmp1, tmp2;
             std::vector<unsigned int> eIDs;
             
             Array<OneD, int> ElmtID,EdgeID;
@@ -1759,22 +1753,27 @@ namespace Nektar
             
             // Create expansion list
             result = 
-                MemoryManager<ExpList2D>::AllocateSharedPtr(*this, eIDs);
+                MemoryManager<ExpList2D>::AllocateSharedPtr
+                    (*this, eIDs, DeclareCoeffPhysArrays);
             
             // Copy phys and coeffs to new explist
-            for (n = 0; n < result->GetExpSize(); ++n)
+            if( DeclareCoeffPhysArrays)
             {
-                nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
-                offsetOld = GetPhys_Offset(ElmtID[cnt+n]);
-                offsetNew = result->GetPhys_Offset(n);
-                Vmath::Vcopy(nq, tmp1 = GetPhys()+ offsetOld, 1,
-                                 tmp2 = result->UpdatePhys()+ offsetNew, 1);
-                
-                nq = GetExp(ElmtID[cnt+n])->GetNcoeffs();
-                offsetOld = GetCoeff_Offset(ElmtID[cnt+n]);
-                offsetNew = result->GetCoeff_Offset(n);
-                Vmath::Vcopy(nq, tmp1 = GetCoeffs()+ offsetOld, 1,
-                                 tmp2 = result->UpdateCoeffs()+ offsetNew, 1);
+                Array<OneD, NekDouble> tmp1, tmp2;
+                for (n = 0; n < result->GetExpSize(); ++n)
+                {
+                    nq = GetExp(ElmtID[cnt+n])->GetTotPoints();
+                    offsetOld = GetPhys_Offset(ElmtID[cnt+n]);
+                    offsetNew = result->GetPhys_Offset(n);
+                    Vmath::Vcopy(nq, tmp1 = GetPhys()+ offsetOld, 1,
+                                tmp2 = result->UpdatePhys()+ offsetNew, 1);
+
+                    nq = GetExp(ElmtID[cnt+n])->GetNcoeffs();
+                    offsetOld = GetCoeff_Offset(ElmtID[cnt+n]);
+                    offsetNew = result->GetCoeff_Offset(n);
+                    Vmath::Vcopy(nq, tmp1 = GetCoeffs()+ offsetOld, 1,
+                                tmp2 = result->UpdateCoeffs()+ offsetNew, 1);
+                }
             }
         }
 
@@ -1863,7 +1862,9 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing)
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool  PhysSpaceForcing)
+
         {
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
@@ -1876,8 +1877,15 @@ namespace Nektar
             //----------------------------------
             //  Setup RHS Inner product
             //----------------------------------
-            IProductWRTBase(inarray,f);
-            Vmath::Neg(m_ncoeffs,f,1);
+            if(PhysSpaceForcing)
+            {
+                IProductWRTBase(inarray,f);
+                Vmath::Neg(m_ncoeffs,f,1);
+            }
+            else
+            {
+                Vmath::Smul(m_ncoeffs,-1.0,inarray,1,f,1);
+            }
 
             //----------------------------------
             //  Solve continuous flux System
@@ -2045,13 +2053,31 @@ namespace Nektar
 
                     locExpList = m_bndCondExpansions[i];
 
+                    int npoints    = locExpList->GetNpoints();
+                    Array<OneD, NekDouble> x0(npoints, 0.0);
+                    Array<OneD, NekDouble> x1(npoints, 0.0);
+                    Array<OneD, NekDouble> x2(npoints, 0.0);
+                    Array<OneD, NekDouble> coeffphys(npoints);
+
+                    locExpList->GetCoords(x0, x1, x2);
+
+                    LibUtilities::Equation coeffeqn =
+                        boost::static_pointer_cast<
+                            SpatialDomains::RobinBoundaryCondition>
+                        (m_bndConditions[i])->m_robinPrimitiveCoeff;
+
+                    // evalaute coefficient 
+                    coeffeqn.Evaluate(x0, x1, x2, 0.0, coeffphys);
+
                     for(e = 0; e < locExpList->GetExpSize(); ++e)
                     {
-                        RobinBCInfoSharedPtr rInfo = MemoryManager<RobinBCInfo>
+                        RobinBCInfoSharedPtr rInfo =
+                            MemoryManager<RobinBCInfo>
                             ::AllocateSharedPtr(
                                 EdgeID[cnt+e],
-                                Array_tmp = locExpList->GetPhys() + 
-                                            locExpList->GetPhys_Offset(e));
+                                Array_tmp = coeffphys + 
+                                locExpList->GetPhys_Offset(e));
+                        
                         elmtid = ElmtID[cnt+e];
                         // make link list if necessary
                         if(returnval.count(elmtid) != 0)
@@ -2336,18 +2362,9 @@ namespace Nektar
                                                locExpList->UpdatePhys());
                         }
 
-                        LibUtilities::Equation coeff =
-                            boost::static_pointer_cast<
-                                SpatialDomains::RobinBoundaryCondition>(
-                                    m_bndConditions[i])->m_robinPrimitiveCoeff;
                         locExpList->IProductWRTBase(
                             locExpList->GetPhys(),
                             locExpList->UpdateCoeffs());
-
-                        // put primitive coefficient into the physical 
-                        // space storage
-                        coeff.Evaluate(x0, x1, x2, time,
-                                       locExpList->UpdatePhys());
                     }    
                     else
                     {

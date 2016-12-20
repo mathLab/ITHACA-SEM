@@ -68,7 +68,9 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &advVel,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray,
-            const NekDouble                                   &time)
+            const NekDouble                                   &time,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
             int nDim       = advVel.num_elements();
             int nPointsTot = fields[0]->GetNpoints();

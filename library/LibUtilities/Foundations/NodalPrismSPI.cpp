@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NodalTriElec.cpp
+// File NodalPrismSPI.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,78 +29,78 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 2D Nodal Triangle Fekete Point Definitions
+// Description: 3D Nodal prism SPI points distribution
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Foundations/NodalPrismSPI.h>
-#include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Foundations/NodalPrismSPI.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
+#include <LibUtilities/Foundations/Points.h>
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+void NodalPrismSPI::CalculatePoints()
+{
+    // Allocate the storage for points
+    unsigned int numPoints = GetNumPoints();
+
+    PointsKey e(numPoints, eGaussLobattoLegendre);
+    PointsManager()[e]->GetPoints(m_e0);
+    m_ew = PointsManager()[e]->GetW();
+
+    PointsKey t(numPoints, eNodalTriSPI);
+    PointsManager()[t]->GetPoints(m_t0, m_t1);
+    m_tw     = PointsManager()[t]->GetW();
+    m_numtri = m_tw.num_elements();
+
+    for (int i = 0; i < 3; i++)
     {
-        void NodalPrismSPI::CalculatePoints()
+        m_points[i] = Array<OneD, DataType>(m_numtri * numPoints);
+    }
+
+    for (int j = 0, ct = 0; j < numPoints; j++)
+    {
+        for (int i = 0; i < m_numtri; i++, ct++)
         {
-            // Allocate the storage for points
-            unsigned int numPoints = GetNumPoints();
-
-            PointsKey e(numPoints,eGaussLobattoLegendre);
-            PointsManager()[e]->GetPoints(e0);
-            ew = PointsManager()[e]->GetW();
-
-            PointsKey t(numPoints,eNodalTriSPI);
-            PointsManager()[t]->GetPoints(t0,t1);
-            tw = PointsManager()[t]->GetW();
-            numtri = tw.num_elements();
-
-            for(int i = 0; i < 3; i++)
-            {
-                m_points[i] = Array<OneD, DataType>(numtri*numPoints);
-            }
-
-            for(int j = 0, ct = 0; j < numPoints; j++)
-            {
-                for(int i = 0; i < numtri; i++, ct++)
-                {
-                    //need to flip y and z because of quad orientation
-                    m_points[0][ct] = t0[i];
-                    m_points[1][ct] = e0[j];
-                    m_points[2][ct] = t1[i];
-                }
-            }
-// exit(0);
+            // need to flip y and z because of quad orientation
+            m_points[0][ct] = m_t0[i];
+            m_points[1][ct] = m_e0[j];
+            m_points[2][ct] = m_t1[i];
         }
+    }
+}
 
-        void NodalPrismSPI::CalculateWeights()
+void NodalPrismSPI::CalculateWeights()
+{
+    unsigned int numPoints = GetNumPoints();
+
+    m_weights = Array<OneD, DataType>(m_numtri * numPoints);
+
+    for (int j = 0, ct = 0; j < numPoints; j++)
+    {
+        for (int i = 0; i < m_numtri; i++, ct++)
         {
-            unsigned int numPoints = GetNumPoints();
-
-            m_weights = Array<OneD, DataType>(numtri*numPoints);
-
-            for(int j = 0, ct = 0; j < numPoints; j++)
-            {
-                for(int i = 0; i < numtri; i++, ct++)
-                {
-                    m_weights[ct] = tw[i] * ew[j];
-                }
-            }
+            m_weights[ct] = m_tw[i] * m_ew[j];
         }
+    }
+}
 
-        void NodalPrismSPI::CalculateDerivMatrix()
-        {
+void NodalPrismSPI::CalculateDerivMatrix()
+{
+}
 
-        }
+boost::shared_ptr<PointsBaseType> NodalPrismSPI::Create(const PointsKey &key)
+{
+    boost::shared_ptr<PointsBaseType> returnval(
+        MemoryManager<NodalPrismSPI>::AllocateSharedPtr(key));
+    returnval->Initialize();
+    return returnval;
+}
 
-        boost::shared_ptr<PointsBaseType> NodalPrismSPI::Create(const PointsKey &key)
-        {
-            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalPrismSPI>::AllocateSharedPtr(key));
-            returnval->Initialize();
-            return returnval;
-        }
-    } // end of namespace stdregion
-} // end of namespace stdregion
+}
+}

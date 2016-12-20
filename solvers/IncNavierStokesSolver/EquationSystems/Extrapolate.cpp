@@ -80,83 +80,50 @@ namespace Nektar
         LibUtilities::SessionReader::RegisterDefaultSolverInfo(
             "StandardExtrapolate", "StandardExtrapolate");
 
-    void Extrapolate::CalcExplicitDuDt(const Array<OneD, const Array<OneD, NekDouble> > &fields)    
+    /**
+     *
+     */
+    void Extrapolate::AddDuDt(void)
     {
-        int nHBCs = m_acceleration[0].num_elements();
-        
-        // Adding extrapolated acceleration term to HOPBCs
-        Array<OneD, NekDouble> accelerationTerm(nHBCs, 0.0);
-        
-        // Rotate acceleration term
-        RollOver(m_acceleration);
-        
-        // update current normal of field on bc  to m_acceleration[0]; 
-        IProductNormVelocityOnHBC(fields,m_acceleration[0]);
-        
-        //Calculate acceleration term at level n based on previous steps
-        if (m_pressureCalls > 2)
+        if(m_numHBCDof)
         {
-            int acc_order = min(m_pressureCalls-2,m_intSteps);
-            Vmath::Smul(nHBCs, StifflyStable_Gamma0_Coeffs[acc_order-1],
-                        m_acceleration[0], 1,
-                        accelerationTerm,  1);
+            // Update velocity BF at n+1 (actually only needs doing if
+            // velocity is time dependent on HBCs)
+            IProductNormVelocityBCOnHBC(m_iprodnormvel[m_intSteps]);
             
-            for(int i = 0; i < acc_order; i++)
-            {
-                Vmath::Svtvp(nHBCs, 
-                             -1*StifflyStable_Alpha_Coeffs[acc_order-1][i],
-                             m_acceleration[i+1], 1,
-                             accelerationTerm,    1,
-                             accelerationTerm,    1);
-            }
+            //Calculate acceleration term at level n based on previous steps
+            AccelerationBDF(m_iprodnormvel);
+            
+            // Subtract acceleration term off m_pressureHBCs[nlevels-1]
+            Vmath::Svtvp(m_numHBCDof, -1.0/m_timestep,
+                         m_iprodnormvel[m_intSteps],  1,
+                         m_pressureHBCs[m_intSteps-1], 1,
+                         m_pressureHBCs[m_intSteps-1], 1);
         }
-        
-        Vmath::Svtvp(nHBCs, -1.0/m_timestep,
-                     accelerationTerm,  1,
-                     m_pressureHBCs[0], 1,
-                     m_pressureHBCs[0], 1);
     }
-        
-        
-    // Extrapolate to n+1
-    void Extrapolate::ExtrapolatePressureHBCs(void)
+
+    /**
+     *
+     */
+    void Extrapolate::AddVelBC(void)
     {
-        int  nint    = min(m_pressureCalls,m_intSteps);
-        int  nlevels = m_pressureHBCs.num_elements();
-        int  nHBCs = m_pressureHBCs[0].num_elements();
-        Vmath::Smul(nHBCs, StifflyStable_Betaq_Coeffs[nint-1][nint-1],
-                    m_pressureHBCs[nint-1],    1,
-                    m_pressureHBCs[nlevels-1], 1);
-        
-        for(int n = 0; n < nint-1; ++n)
+        if(m_numHBCDof)
         {
-            Vmath::Svtvp(nHBCs, StifflyStable_Betaq_Coeffs[nint-1][n],
-                         m_pressureHBCs[n],1,m_pressureHBCs[nlevels-1],1,
-                         m_pressureHBCs[nlevels-1],1);
+            int order = std::min(m_pressureCalls,m_intSteps);
+            
+            // Update velocity BF at n+1 (actually only needs doing if
+            // velocity is time dependent on HBCs)
+            IProductNormVelocityBCOnHBC(m_iprodnormvel[0]);
+            
+            // Subtract acceleration term off m_pressureHBCs[nlevels-1]
+            Vmath::Svtvp(m_numHBCDof,
+                         -1.0*StifflyStable_Gamma0_Coeffs[order-1]/m_timestep,
+                         m_iprodnormvel[0],  1,
+                         m_pressureHBCs[m_intSteps-1], 1,
+                         m_pressureHBCs[m_intSteps-1], 1);
         }
     }
-
-    // Copy values of [dP/dn]^{n+1} in the pressure bcs storage.
-    // m_pressureHBCS[nlevels-1] will be cancelled at next time step
-    void Extrapolate::CopyPressureHBCsToPbndExp(void)
-    {
-        int n,cnt;
-        int nlevels = m_pressureHBCs.num_elements();
-
-        for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
-        {
-            // High order boundary condition;
-            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
-            {
-                int nq = m_PBndExp[n]->GetNcoeffs();
-                Vmath::Vcopy(nq, &(m_pressureHBCs[nlevels-1])[cnt],  1,
-                                 &(m_PBndExp[n]->UpdateCoeffs()[0]), 1);
-                cnt += nq;
-            }
-
-        }
-    }
-
+ 
     /**
      * Unified routine for calculation high-oder terms
      */
@@ -164,100 +131,73 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
-    {    
+    {
+        int n, cnt;
+
         Array<OneD, NekDouble> Pvals;
-        StdRegions::StdExpansionSharedPtr Pbc;
-        StdRegions::StdExpansionSharedPtr elmt;
 
-        int pindex=N.num_elements();
+        Array<OneD, Array<OneD, NekDouble> > Velocity(m_curl_dim);
+        Array<OneD, Array<OneD, NekDouble> > Advection(m_bnd_dim);
 
-        Array<OneD, Array<OneD, const NekDouble> > Velocity(m_curl_dim);
-        Array<OneD, Array<OneD, const NekDouble> > Advection(m_bnd_dim);
-        
         Array<OneD, Array<OneD, NekDouble> > BndValues(m_bnd_dim);
-        Array<OneD, Array<OneD, NekDouble> > Q(m_bnd_dim);
-        
-        for(int i = 0; i < m_bnd_dim; i++)
+        Array<OneD, Array<OneD, NekDouble> > Q(m_curl_dim);
+
+        MultiRegions::ExpListSharedPtr BndElmtExp;
+        for(n = cnt = 0; n < m_PBndConds.num_elements(); ++n)
         {
-            BndValues[i] = Array<OneD, NekDouble> (m_pressureBCsMaxPts,0.0);
-            Q[i]         = Array<OneD, NekDouble> (m_pressureBCsElmtMaxPts,0.0);
-        }
-        
-        for(int j = 0 ; j < m_HBCdata.num_elements() ; j++)
-        {
-            /// Casting the boundary expansion to the specific case
-            Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
-                (m_PBndExp[m_HBCdata[j].m_bndryID]->GetExp(m_HBCdata[j].m_bndElmtID));
-
-            /// Picking up the element where the HOPBc is located
-            elmt = m_pressure->GetExp(m_HBCdata[j].m_globalElmtID);
-
-            /// Assigning
-            for(int i = 0; i < m_bnd_dim; i++)
+            // High order boundary condition;
+            if((m_hbcType[n] == eHBCNeumann)||(m_hbcType[n] == eConvectiveOBC))
             {
-                Velocity[i]  = fields[i] + m_HBCdata[j].m_physOffset;
-                Advection[i] = N[i]      + m_HBCdata[j].m_physOffset;
-            }
+                m_fields[0]->GetBndElmtExpansion(n, BndElmtExp, false);
+                int nqb = m_PBndExp[n]->GetTotPoints();
+                int nq  = BndElmtExp->GetTotPoints();
 
-            // for the 3DH1D case we need to grab the conjugate mode
-            if(m_pressure->GetExpType() == MultiRegions::e3DH1D)
-            {
-                Velocity[2]  = fields[2] + m_HBCdata[j].m_assPhysOffset;
-            }
-
-            /// Calculating the curl-curl and storing it in Q
-            CurlCurl(Velocity,Q,j);
-
-            // Mounting advection component into the high-order condition
-            for(int i = 0; i < m_bnd_dim; i++)
-            {
-                MountHOPBCs(m_HBCdata[j].m_ptsInElmt,kinvis,Q[i],Advection[i]);
-            }
-            
-            // put in m_pressureBCs[0]
-            Pvals = m_pressureHBCs[0] + m_HBCdata[j].m_coeffOffset; 
-                        
-            // Getting values on the edge and filling the pressure boundary expansion
-            // and the acceleration term. Multiplication by the normal is required
-            switch(m_fields[pindex]->GetExpType())
-            {
-            case MultiRegions::e2D:
-            case MultiRegions::e3DH1D:
+                for(int i = 0; i < m_bnd_dim; i++)
                 {
-                    elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[0],BndValues[0]);
-                    elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[1],BndValues[1]);
-                    Pbc->NormVectorIProductWRTBase(BndValues[0],BndValues[1],Pvals);
+                    BndValues[i] = Array<OneD, NekDouble> (nqb,0.0);
                 }
-                break;
-            case MultiRegions::e3DH2D:
+
+                for(int i = 0; i < m_curl_dim; i++)
                 {
-                    if(m_HBCdata[j].m_elmtTraceID == 0)
+                    Q[i] = Array<OneD, NekDouble> (nq,0.0);
+                }
+
+                // Obtaining fields on BndElmtExp
+                for(int i = 0; i < m_curl_dim; i++)
+                {
+                    m_fields[0]->ExtractPhysToBndElmt(n, fields[i],Velocity[i]);
+                }
+                
+                if(N.num_elements()) // not required for some extrapolation
+                {
+                    for(int i = 0; i < m_bnd_dim; i++)
                     {
-                        Pvals[0] = -1.0*Q[0][0];
-                    }
-                    else if (m_HBCdata[j].m_elmtTraceID == 1)
-                    {
-                        Pvals[0] = Q[0][m_HBCdata[j].m_ptsInElmt-1];
-                    }
-                    else
-                    {
-                        ASSERTL0(false,
-                                 "In the 3D homogeneous 2D approach BCs edge "
-                                 "ID can be just 0 or 1 ");
+                        m_fields[0]->ExtractPhysToBndElmt(n, N[i], Advection[i]);
                     }
                 }
-                break;
-            case MultiRegions::e3D:
+
+                // CurlCurl
+                BndElmtExp->CurlCurl(Velocity, Q);
+
+                // Mounting advection component into the high-order condition
+                for(int i = 0; i < m_bnd_dim; i++)
                 {
-                    elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[0],BndValues[0]);
-                    elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[1],BndValues[1]);
-                    elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[2],BndValues[2]);
-                    Pbc->NormVectorIProductWRTBase(BndValues[0],BndValues[1],BndValues[2],Pvals);
+                    MountHOPBCs(nq, kinvis,Q[i],Advection[i]);
                 }
-                break;
-            default:
-                ASSERTL0(0,"Dimension not supported");
-                break;
+
+                Pvals = (m_pressureHBCs[m_intSteps-1]) + cnt;
+
+                // Getting values on the boundary and filling the pressure bnd
+                // expansion. Multiplication by the normal is required
+                for(int i = 0; i < m_bnd_dim; i++)
+                {
+                    m_fields[0]->ExtractElmtToBndPhys(n, Q[i],BndValues[i]);
+                }
+                
+                m_PBndExp[n]->NormVectorIProductWRTBase(BndValues, Pvals);
+
+                // Get offset for next terms
+                cnt += m_PBndExp[n]->GetNcoeffs();
             }
         }
     }
@@ -267,739 +207,401 @@ namespace Nektar
     {    
     } 
 
-   void Extrapolate::CalcOutflowBCs(
+    // do nothing unless otherwise defined. 
+    void  Extrapolate::v_AddNormVelOnOBC(const int nbcoeffs, const int nreg,
+                                         Array<OneD, Array<OneD, NekDouble> > &u)
+    {    
+    } 
+    
+    void Extrapolate::CalcOutflowBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
         NekDouble kinvis)
     {
-        static bool init = true;
-        static bool noHOBC = false;
-
-        if(noHOBC == true)
+        if(!m_houtflow.get())
         {
            return;
         }
+
+        Array<OneD, Array<OneD, NekDouble> > Velocity(m_curl_dim);
+
+        MultiRegions::ExpListSharedPtr BndElmtExp;
+        int cnt    = 0;
+
+        // Evaluate robin primitive coefficient here so they can be
+        // updated whem m_int > 1 Currently not using this update
+        // since we only using u^n at outflow instead of BDF rule.
+        UpdateRobinPrimCoeff();
         
-        if(init) // set up storage for boundary velocity at outflow
+        for(int n  = 0; n < m_PBndConds.num_elements(); ++n)
         {
-            init = false;
-            int totbndpts = 0;
-            for(int n = 0; n < m_PBndConds.num_elements(); ++n)
+            if((m_hbcType[n] == eOBC)||(m_hbcType[n] == eConvectiveOBC))
             {
-                if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
-                {
-                    totbndpts += m_PBndExp[n]->GetTotPoints();
-                }
-            }
-          
-            if(totbndpts == 0)
-            {
-                noHOBC = true;
-                return;
-            }
-  
-            m_outflowVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
-            for(int i = 0; i < m_curl_dim; ++i)
-            {
-                m_outflowVel[i] = Array<OneD, Array<OneD, NekDouble> >(m_curl_dim);
-                for(int j = 0; j < m_curl_dim; ++j)
-                {             
-                    // currently just set up for 2nd order extrapolation 
-                    m_outflowVel[i][j] = Array<OneD, NekDouble>(totbndpts,0.0);
-                }
-            }
+                // Get expansion with element on this boundary
+                m_fields[0]->GetBndElmtExpansion(n, BndElmtExp, false);
+                int nqb = m_PBndExp[n]->GetTotPoints();
+                int nq  = BndElmtExp->GetTotPoints();
 
-            if (m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
-            {
-                m_PhyoutfVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_curl_dim);
-
-                for(int i = 0; i < m_curl_dim; ++i)
+                // Get velocity and extrapolate
+                for(int i = 0; i < m_curl_dim; i++)
                 {
-                    m_PhyoutfVel[i] = Array<OneD, Array<OneD, NekDouble> > (m_curl_dim);
-                    for(int j = 0; j < m_curl_dim; ++j)
+                    m_fields[0]->ExtractPhysToBndElmt(n, fields[i],
+                            m_houtflow->m_outflowVel[cnt][i][m_intSteps-1]);
+                    ExtrapolateArray(m_houtflow->m_outflowVel[cnt][i]);
+                    Velocity[i] = m_houtflow->m_outflowVel[cnt][i][m_intSteps-1];
+
+                }
+
+                // Homogeneous case needs conversion to physical space
+                if ( m_fields[0]->GetWaveSpace())
+                {
+                    for(int i = 0; i < m_curl_dim; i++)
                     {
-                        // currently just set up for 2nd order extrapolation
-                        m_PhyoutfVel[i][j] = Array<OneD, NekDouble> (totbndpts,0.0);
+                        BndElmtExp->HomogeneousBwdTrans(Velocity[i],
+                                                        Velocity[i]);
                     }
+                    BndElmtExp->SetWaveSpace(false);
                 }
 
-                m_nonlinearterm_phys   = Array<OneD, NekDouble> (totbndpts,0.0);
-                m_nonlinearterm_coeffs = Array<OneD, NekDouble> (totbndpts,0.0);
+                // Get normal vector
+                Array<OneD, Array<OneD, NekDouble> > normals;
+                m_fields[0]->GetBoundaryNormals(n, normals);
 
-                m_PBndCoeffs = Array<OneD, NekDouble> (totbndpts,0.0);
-                m_UBndCoeffs = Array<OneD, Array<OneD, NekDouble> > (m_curl_dim);
-                for(int i = 0; i < m_curl_dim; ++i)
+                // Calculate n.gradU.n, div(U)
+                Array<OneD, NekDouble> nGradUn (nqb, 0.0);
+                Array<OneD, NekDouble> divU (nqb, 0.0);
+                Array<OneD, Array<OneD, NekDouble> > grad(m_curl_dim);
+                Array<OneD, NekDouble> bndVal (nqb, 0.0);
+                for( int i = 0; i < m_curl_dim; i++)
                 {
-                    m_UBndCoeffs[i] = Array<OneD, NekDouble> (totbndpts);   
+                    grad[i] = Array<OneD, NekDouble> (nq, 0.0);
                 }
-                Array<OneD, unsigned int> planes;
-                planes = m_pressure->GetZIDs();
-                int num_planes = planes.num_elements();
-                m_expsize_per_plane = Array<OneD, unsigned int> (m_PBndConds.num_elements());
-                for(int n = 0; n < m_PBndConds.num_elements(); ++n)
+                for( int i = 0; i < m_curl_dim; i++)
                 {
-                    int exp_size = m_PBndExp[n]->GetExpSize();
-                    m_expsize_per_plane[n] = exp_size/num_planes;
-                }
-                m_totexps_per_plane = 0;
-                for(int n = 0; n < m_PBndConds.num_elements(); ++n)
-                {
-                    m_totexps_per_plane += m_PBndExp[n]->GetExpSize()/num_planes;
-                }
-            }
-        }
-        
-        StdRegions::StdExpansionSharedPtr Bc,Pbc; 
-        Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >
-                                                        UBndConds(m_curl_dim);
-        Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
-                                                        UBndExp(m_curl_dim);
-
-        for (int i = 0; i < m_curl_dim; ++i)
-        {
-            UBndConds[i] = m_fields[m_velocity[i]]->GetBndConditions();
-            UBndExp[i]   = m_fields[m_velocity[i]]->GetBndCondExpansions();
-        }
-
-        Array<OneD, Array<OneD, NekDouble> > BndValues(m_curl_dim);
-        Array<OneD, Array<OneD, NekDouble> > BndElmt  (m_curl_dim);
-        Array<OneD, Array<OneD, NekDouble> > nGradu   (m_curl_dim);
-        Array<OneD, NekDouble > gradtmp (m_pressureBCsElmtMaxPts),
-                                fgradtmp(m_pressureBCsElmtMaxPts);
-        
-        nGradu[0] = Array<OneD, NekDouble>(m_curl_dim*m_pressureBCsMaxPts);
-        for(int i = 0; i < m_curl_dim; ++i)
-        {
-            BndElmt[i]   = Array<OneD, NekDouble> (m_pressureBCsElmtMaxPts,
-                                                   0.0);
-            BndValues[i] = Array<OneD, NekDouble> (m_pressureBCsMaxPts,0.0);
-            nGradu[i]  = nGradu[0] + i*m_pressureBCsMaxPts;
-            RollOver(m_outflowVel[i]);
-
-            if (m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
-            {
-                RollOver(m_PhyoutfVel[i]);
-            }
-        }
-            
-        int nbc,cnt,cnt_start;
-        int veloffset = 0;
-        int  nint    = min(m_pressureCalls,m_intSteps);
-
-        StdRegions::StdExpansionSharedPtr elmt;
-        Array<OneD, NekDouble> PBCvals, UBCvals;
-        Array<OneD, Array<OneD, NekDouble> > ubc(m_curl_dim);
-        Array<OneD, Array<OneD, NekDouble> > normals;
-
-        cnt = 0;
-        for(int n = 0; n < m_PBndConds.num_elements(); ++n)
-        {
-            // Do outflow boundary conditions if they exist
-            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
-            {
-                for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i,cnt++)
-                {
-                    cnt = max(cnt,m_PBndExp[n]->GetTotPoints());
-                }
-            }
-        }
-
-        for(int i =0; i < m_curl_dim; ++i)
-        {
-            ubc[i] = Array<OneD, NekDouble>(cnt);
-        }
-
-        NekDouble U0,delta;
-        m_session->LoadParameter("U0_HighOrderBC",U0,1.0);
-        m_session->LoadParameter("Delta_HighOrderBC",delta,1/20.0);
-
-        cnt = 0;
-        for(int n = 0; n < m_PBndConds.num_elements(); ++n)
-        {
-            cnt_start = cnt;
-
-            // Do outflow boundary conditions if they exist
-            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
-            {
-
-                if (m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
-                {
-                    int veloffset = 0;
-                    for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i, cnt++)
+                    if( m_curl_dim == 2)
                     {
-                        // find element and edge of this expansion.
-                        Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion>
-                            (m_PBndExp[n]->GetExp(i));
-
-                        int elmtid = m_pressureBCtoElmtID[cnt];
-                        elmt       = m_fields[0]->GetExp(elmtid);
-                        int offset = m_fields[0]->GetPhys_Offset(elmtid);
-
-                        int boundary = m_pressureBCtoTraceID[cnt];
-
-                        // Determine extrapolated U,V values
-                        int nq = elmt->GetTotPoints();
-                        int nbc = m_PBndExp[n]->GetExp(i)->GetTotPoints();
-                        // currently just using first order approximation here.
-                        // previously have obtained value from m_integrationSoln
-                        Array<OneD, NekDouble> veltmp;
-
-                        for(int j = 0; j < m_curl_dim; ++j)
-                        {
-                            Vmath::Vcopy(nq, &fields[m_velocity[j]][offset], 1,
-                                         &BndElmt[j][0],                 1);
-                            elmt->GetTracePhysVals(boundary,Bc,BndElmt[j],
-                                         veltmp = m_outflowVel[j][0] + veloffset);
-                        }
-                        veloffset += nbc;
-                    }
-
-                    // for velocity on the outflow boundary in e3DH1D,
-                    // we need to make a backward fourier transformation
-                    // to get the physical coeffs at the outflow BCs.
-                    for(int j = 0; j < m_curl_dim; ++j)
-                    {
-                        m_PBndExp[n]->HomogeneousBwdTrans(
-                                m_outflowVel[j][0],
-                                m_PhyoutfVel[j][0]);
-                    }
-
-                    cnt = cnt_start;
-                    veloffset = 0;
-                    for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i, cnt++)
-                    {
-
-                        int elmtid = m_pressureBCtoElmtID[cnt];
-                        elmt       = m_fields[0]->GetExp(elmtid);
-                        int nbc = m_PBndExp[n]->GetExp(i)->GetTotPoints();
-
-                        Array<OneD, NekDouble>  veltmp(nbc,0.0),
-                                                normDotu(nbc,0.0), utot(nbc,0.0);
-                        int boundary = m_pressureBCtoTraceID[cnt];
-                        normals=elmt->GetSurfaceNormal(boundary);
-
-                        // extrapolate velocity
-                        if(nint <= 1)
-                        {
-                            for(int j = 0; j < m_curl_dim; ++j)
-                            {
-                                Vmath::Vcopy(nbc,
-                                        veltmp = m_PhyoutfVel[j][0] +veloffset, 1,
-                                        BndValues[j],                           1);
-                            }
-                        }
-                        else // only set up for 2nd order extrapolation
-                        {
-                            for(int j = 0; j < m_curl_dim; ++j)
-                            {
-                                Vmath::Smul(nbc, 2.0,
-                                        veltmp = m_PhyoutfVel[j][0] + veloffset, 1,
-                                        BndValues[j],                            1);
-                                Vmath::Svtvp(nbc, -1.0,
-                                        veltmp = m_PhyoutfVel[j][1] + veloffset, 1,
-                                        BndValues[j],                            1,
-                                        BndValues[j],                            1);
-                            }    
-                        }
-
-                        // Set up |u|^2, n.u in physical space
-                        for(int j = 0; j < m_curl_dim; ++j)
-                        {
-                            Vmath::Vvtvp(nbc, BndValues[j], 1, BndValues[j], 1,
-                                              utot,         1, utot,         1);
-                        }
-                        for(int j = 0; j < m_bnd_dim; ++j)
-                        {
-                            Vmath::Vvtvp(nbc, normals[j],   1, BndValues[j], 1,
-                                              normDotu,     1, normDotu,     1);
-                        }
-                        
-                        int Offset = m_PBndExp[n]->GetPhys_Offset(i);
-
-                        for(int k = 0; k < nbc; ++k)
-                        {
-                            // calculate the nonlinear term (kinetic energy
-                            //  multiplies step function) in physical space
-                            NekDouble fac = 0.5*(1.0-tanh(normDotu[k]/(U0*delta)));
-                            m_nonlinearterm_phys[k + Offset] =  0.5 * utot[k] * fac;
-                        }
-
-                        veloffset += nbc;
-                    }
-
-                    // for e3DH1D, we need to make a forward fourier transformation
-                    // for the kinetic energy term (nonlinear)
-                    UBndExp[0][n]->HomogeneousFwdTrans(
-                            m_nonlinearterm_phys,
-                            m_nonlinearterm_coeffs);
-
-                    // for e3DH1D, we need to make a forward fourier transformation
-                    // for Dirichlet pressure boundary condition that is from input file
-                    m_PBndExp[n]->HomogeneousFwdTrans(
-                            m_PBndExp[n]->UpdatePhys(),
-                            m_PBndCoeffs);
-                    // for e3DH1D, we need to make a forward fourier transformation
-                    // for Neumann velocity boundary condition that is from input file
-                    for (int j = 0; j < m_curl_dim; ++j)
-                    {
-                        UBndExp[j][n]->HomogeneousFwdTrans(
-                            UBndExp[j][n]->UpdatePhys(),
-                            m_UBndCoeffs[j]);
-                    }
-                }
-
-                cnt = cnt_start;
-                veloffset = 0;
-                for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i,cnt++)
-                {
-                    // find element and edge of this expansion. 
-                    Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
-                        (m_PBndExp[n]->GetExp(i));
-
-                    int elmtid = m_pressureBCtoElmtID[cnt];
-                    elmt       = m_fields[0]->GetExp(elmtid);
-                    int offset = m_fields[0]->GetPhys_Offset(elmtid);
-
-                    // Determine extrapolated U,V values
-                    int nq = elmt->GetTotPoints();
-
-                    // currently just using first order approximation here. 
-                    // previously have obtained value from m_integrationSoln
-                    for(int j = 0; j < m_bnd_dim; ++j)
-                    {
-                        Vmath::Vcopy(nq, &fields[m_velocity[j]][offset], 1,
-                                         &BndElmt[j][0],                 1);
-                    }
-
-                    int nbc      = m_PBndExp[n]->GetExp(i)->GetTotPoints();
-                    int boundary = m_pressureBCtoTraceID[cnt];
-
-                    Array<OneD, NekDouble>  ptmp(nbc,0.0),
-                                            divU(nbc,0.0);
-
-                    normals=elmt->GetSurfaceNormal(boundary);
-                    Vmath::Zero(m_bnd_dim*m_pressureBCsMaxPts,nGradu[0],1);
-
-                    for (int j = 0; j < m_bnd_dim; j++)
-                    {
-                        // Calculate Grad u =  du/dx, du/dy, du/dz, etc. 
-                        for (int k = 0; k< m_bnd_dim; k++)
-                        {
-                            elmt->PhysDeriv(MultiRegions::DirCartesianMap[k],
-                                            BndElmt[j], gradtmp);
-                            elmt->GetTracePhysVals(boundary, Bc, gradtmp,
-                                                   fgradtmp);
-                            Vmath::Vvtvp(nbc,normals[k], 1, fgradtmp, 1,
-                                             nGradu[j],  1, nGradu[j],1);
-                            if(j == k)
-                            {
-                                Vmath::Vadd(nbc,fgradtmp, 1, divU, 1, divU, 1);
-                            }
-                        }
-                    }
-
-                    if (m_fields[0]->GetExpType() == MultiRegions::e3DH1D)
-                    {
-                        // Set up |u|^2, n.u, div(u), and (n.grad(u) . n) for
-                        // pressure condition
-                        for(int j = 0; j < m_bnd_dim; ++j)
-                        {
-                            Vmath::Vvtvp(nbc, normals[j],   1, nGradu[j],    1,
-                                              ptmp,         1, ptmp,         1);
-                        }
-                        int p_offset = m_PBndExp[n]->GetPhys_Offset(i);
-
-                        for(int k = 0; k < nbc; ++k)
-                        {
-                            // Set up Dirichlet pressure condition and
-                            // store in ptmp (m_UBndCoeffs contains Fourier Coeffs of the
-                            // function from the input file )
-
-                            ptmp[k] =  kinvis * ptmp[k] 
-                                        - m_nonlinearterm_coeffs[k + p_offset]
-                                                  - m_PBndCoeffs[k + p_offset];
-                        }
-
-                        int u_offset = UBndExp[0][n]->GetPhys_Offset(i);
-
-                        for(int j = 0; j < m_bnd_dim; ++j)
-                        {
-                            for(int k = 0; k < nbc; ++k)
-                            {
-                                ubc[j][k + u_offset] = (1.0 / kinvis)
-                                                * (m_UBndCoeffs[j][k + u_offset]
-                                          + m_nonlinearterm_coeffs[k + u_offset]
-                                                                * normals[j][k]);
-                            }
-                        }
-
-                        // boundary condition for velocity in homogenous direction
-                        for(int k = 0; k < nbc; ++k)
-                        {
-                            ubc[m_bnd_dim][k + u_offset] = (1.0 / kinvis)
-                                                * m_UBndCoeffs[m_bnd_dim][k + u_offset];
-                        }
-
-                        u_offset = UBndExp[m_bnd_dim][n]->GetPhys_Offset(i);
-                        UBCvals  = UBndExp[m_bnd_dim][n]->UpdateCoeffs()
-                                    + UBndExp[m_bnd_dim][n]->GetCoeff_Offset(i);
-                        Bc->IProductWRTBase(ubc[m_bnd_dim] + u_offset, UBCvals);
+                        BndElmtExp->PhysDeriv(Velocity[i], grad[0], grad[1]);
                     }
                     else
                     {
-
-                        Array<OneD, NekDouble>  veltmp, utot(nbc,0.0),
-                                                normDotu(nbc,0.0);
-                        // extract velocity and store
-                        for(int j = 0; j < m_bnd_dim; ++j)
-                        {
-                            elmt->GetTracePhysVals(boundary,Bc,BndElmt[j],
-                                           veltmp = m_outflowVel[j][0] + veloffset);
-                        }
-
-                        // extrapolate velocity
-                        if(nint <= 1)
-                        {
-                            for(int j = 0; j < m_bnd_dim; ++j)
-                            {
-                                Vmath::Vcopy(nbc,
-                                             veltmp = m_outflowVel[j][0]
-                                             +veloffset, 1,
-                                             BndValues[j],1);
-                            }
-                        }
-                        else // only set up for 2nd order extrapolation
-                        {
-                            for(int j = 0; j < m_bnd_dim; ++j)
-                            {
-                                Vmath::Smul(nbc, 2.0,
-                                        veltmp = m_outflowVel[j][0]
-                                            + veloffset,  1,
-                                            BndValues[j], 1);
-                                Vmath::Svtvp(nbc, -1.0,
-                                             veltmp = m_outflowVel[j][1]
-                                             + veloffset,  1,
-                                             BndValues[j], 1,
-                                             BndValues[j], 1);
-                            }
-                        }
-
-                        // Set up |u|^2, n.u, div(u), and (n.grad(u) . n) for
-                        // pressure condition
-                        for(int j = 0; j < m_bnd_dim; ++j)
-                        {
-                            Vmath::Vvtvp(nbc, BndValues[j], 1, BndValues[j], 1,
-                                              utot,         1, utot,         1);
-                            Vmath::Vvtvp(nbc, normals[j],   1, BndValues[j], 1,
-                                              normDotu,     1, normDotu,     1);
-                            Vmath::Vvtvp(nbc, normals[j],   1, nGradu[j],    1,
-                                              ptmp,         1, ptmp,         1);
-                        }
-
-                        PBCvals = m_PBndExp[n]->GetPhys() +
-                                        m_PBndExp[n]->GetPhys_Offset(i);
-
-                        for(int k = 0; k < nbc; ++k)
-                        {
-                            NekDouble fac = 0.5*(1.0-tanh(normDotu[k]/(U0*delta)));
-
-                            // Set up Dirichlet pressure condition and
-                            // store in ptmp (PBCvals contains a
-                            // function from the input file )
-                            ptmp[k] =  kinvis * ptmp[k] - 0.5 * utot[k] * fac
-                                                        + PBCvals[k];
-                        }
-
-                        int u_offset = UBndExp[0][n]->GetPhys_Offset(i);
-
-                        for(int j = 0; j < m_bnd_dim; ++j)
-                        {
-                            UBCvals = UBndExp[j][n]->GetPhys()
-                                        + UBndExp[j][n]->GetPhys_Offset(i);
-
-                            for(int k = 0; k < nbc; ++k)
-                            {
-                                NekDouble fac        = 0.5 * (1.0 - tanh(normDotu[k]
-                                                                / (U0 * delta)));
-                                ubc[j][k + u_offset] = (1.0 / kinvis)
-                                                * (UBCvals[k] + 0.5 * utot[k] * fac
-                                                                * normals[j][k]);
-                            }
-                        }
+                        BndElmtExp->PhysDeriv(Velocity[i], grad[0], grad[1],
+                                                                    grad[2]);
                     }
-
-                    // set up pressure boundary condition
-                    PBCvals = m_PBndExp[n]->UpdateCoeffs()
-                            + m_PBndExp[n]->GetCoeff_Offset(i);
-                    m_PBndExp[n]->GetExp(i)->FwdTrans(ptmp,PBCvals);
-
-                    veloffset += nbc;
-                }
-
-                // Now set up Velocity conditions.
-                for(int j = 0; j < m_bnd_dim; j++)
-                {
-                    if(boost::iequals(UBndConds[j][n]->GetUserDefined(),"HOutflow"))
+                    
+                    for( int j = 0; j < m_curl_dim; j++)
                     {
-                        cnt = cnt_start;
-                        for(int i = 0; i < UBndExp[0][n]->GetExpSize();
-                                       ++i, cnt++)
+                        m_fields[0]->ExtractElmtToBndPhys(n, grad[j],bndVal);
+                        // div(U) = gradU_ii
+                        if ( i == j)
                         {
-                            Pbc =  StdRegions::StdExpansionSharedPtr
-                                            (m_PBndExp[n]->GetExp(i));
-                            Bc  =  StdRegions::StdExpansionSharedPtr
-                                            (UBndExp[0][n]->GetExp(i));
-
-                            nbc = UBndExp[0][n]->GetExp(i)->GetTotPoints();
-                            int boundary = m_pressureBCtoTraceID[cnt];
-
-                            Array<OneD, NekDouble> pb(nbc), ub(nbc);
-                            int elmtid = m_pressureBCtoElmtID[cnt];
-
-                            elmt   = m_fields[0]->GetExp(elmtid);
-
-                            normals = elmt->GetSurfaceNormal(boundary);
-
-                            // Get p from projected boundary condition
-                            PBCvals = m_PBndExp[n]->UpdateCoeffs()
-                                    + m_PBndExp[n]->GetCoeff_Offset(i);
-                            Pbc->BwdTrans(PBCvals,pb);
-
-                            int u_offset = UBndExp[j][n]->GetPhys_Offset(i);
-
-                            for(int k = 0; k < nbc; ++k)
-                            {
-                                ub[k] = ubc[j][k + u_offset]
-                                      + pb[k] * normals[j][k] / kinvis;
-                            }
-
-                            UBCvals = UBndExp[j][n]->UpdateCoeffs()
-                                    + UBndExp[j][n]->GetCoeff_Offset(i);
-                            Bc->IProductWRTBase(ub,UBCvals);
+                            Vmath::Vadd(nqb , divU, 1, bndVal, 1, divU, 1);
                         }
+                        // n.gradU.n = gradU_ij n_i n_j
+                        Vmath::Vmul(nqb , normals[i], 1, bndVal, 1,
+                                                       bndVal, 1);
+                        Vmath::Vvtvp(nqb , normals[j], 1, bndVal, 1,
+                                         nGradUn, 1, nGradUn, 1);
                     }
                 }
-            }
-            else
-            {
-                cnt += m_PBndExp[n]->GetExpSize();
+
+                // Obtain u at the boundary
+                Array<OneD, Array<OneD, NekDouble> > u (m_curl_dim);
+                for( int i = 0; i < m_curl_dim; i++)
+                {
+                    u[i] = Array<OneD, NekDouble> (nqb, 0.0);
+                    m_fields[0]->ExtractElmtToBndPhys(n, Velocity[i],u[i]);
+                }
+
+                // Calculate u.n and u^2
+                Array<OneD, NekDouble> un (nqb, 0.0);
+                Array<OneD, NekDouble> u2 (nqb, 0.0);
+                for( int i = 0; i < m_curl_dim; i++)
+                {
+                    Vmath::Vvtvp(nqb, normals[i], 1, u[i], 1,
+                                 un, 1, un, 1);
+                    Vmath::Vvtvp(nqb, u[i], 1, u[i], 1,
+                                 u2, 1, u2, 1);
+                }
+
+                // Calculate S_0(u.n) = 0.5*(1-tanh(u.n/*U0*delta))
+                Array<OneD, NekDouble> S0 (nqb, 0.0);
+                for( int i = 0; i < nqb; i++)
+                {
+                    S0[i] = 0.5*(1.0-tanh(un[i]/(m_houtflow->m_U0*m_houtflow->m_delta)));
+                }
+
+                // Calculate E(n,u) = ((theta+alpha2)*0.5*(u^2)n +
+                //                    (1-theta+alpha1)*0.5*(n.u)u ) * S_0(u.n)
+                NekDouble k1 = 0.5*(m_houtflow->m_obcTheta +
+                                    m_houtflow->m_obcAlpha2);
+                NekDouble k2 = 0.5*(1-m_houtflow->m_obcTheta +
+                                    m_houtflow->m_obcAlpha1);
+
+                Array<OneD, Array<OneD, NekDouble> > E (m_curl_dim);
+                for( int i = 0; i < m_curl_dim; i++)
+                {
+                    E[i] = Array<OneD, NekDouble> (nqb, 0.0);
+
+                    Vmath::Smul(nqb, k1, u2, 1, E[i], 1);
+                    Vmath::Vmul(nqb, E[i], 1, normals[i], 1, E[i], 1);
+                    // Use bndVal as a temporary storage
+                    Vmath::Smul(nqb, k2, un, 1, bndVal, 1);
+                    Vmath::Vvtvp(nqb, u[i], 1, bndVal, 1, E[i], 1, E[i], 1);
+                    Vmath::Vmul(nqb, E[i], 1, S0, 1, E[i], 1);
+                }
+
+                // if non-zero forcing is provided we want to subtract
+                // value if we want to interpret values as being the
+                // desired pressure value. This is now precribed from
+                // the velocity forcing to be consistent with the
+                // paper except f_b = -f_b
+                
+                // Calculate (E(n,u) + f_b).n
+                Array<OneD, NekDouble> En (nqb, 0.0);
+                for( int i = 0; i < m_bnd_dim; i++)
+                {
+                    // Use bndVal as temporary
+                    Vmath::Vsub(nqb,E[i],1,m_houtflow->
+                                m_UBndExp[i][n]->GetPhys(),
+                                1,  bndVal, 1);
+
+                    Vmath::Vvtvp(nqb, normals[i], 1, bndVal, 1,
+                                 En, 1, En, 1);
+
+                }
+
+                // Calculate pressure bc = kinvis*n.gradU.n - E.n + f_b.n
+                Array<OneD, NekDouble> pbc (nqb, 0.0);
+                Vmath::Svtvm( nqb, kinvis, nGradUn, 1, En, 1, pbc, 1);
+
+                if(m_hbcType[n] == eOBC)
+                {
+                    
+                    if ( m_PBndExp[n]->GetWaveSpace())
+                    {
+                        m_PBndExp[n]->HomogeneousFwdTrans(pbc, bndVal);
+                        m_PBndExp[n]->FwdTrans(bndVal,
+                                               m_PBndExp[n]->UpdateCoeffs());
+                    }
+                    else
+                    {
+                        m_PBndExp[n]->FwdTrans(pbc,
+                                               m_PBndExp[n]->UpdateCoeffs());
+                    }
+                }
+                else if(m_hbcType[n] == eConvectiveOBC) // add outflow values to calculation from HBC
+                {
+                    int nbcoeffs = m_PBndExp[n]->GetNcoeffs();
+                    Array<OneD, NekDouble> bndCoeffs (nbcoeffs, 0.0);
+                    if ( m_PBndExp[n]->GetWaveSpace())
+                    {
+                        m_PBndExp[n]->HomogeneousFwdTrans(pbc, bndVal);
+                        m_PBndExp[n]->IProductWRTBase(bndVal,bndCoeffs);
+                    }
+                    else
+                    {
+                        m_PBndExp[n]->IProductWRTBase(pbc,bndCoeffs);
+                    }
+                    // Note we have the negative of what is in the Dong paper in bndVal
+                    Vmath::Svtvp(nbcoeffs,m_houtflow->m_pressurePrimCoeff[n],
+                                 bndCoeffs, 1,m_PBndExp[n]->UpdateCoeffs(),1,
+                                 m_PBndExp[n]->UpdateCoeffs(),1);
+
+                    // evaluate u^n at outflow boundary for velocity BC
+                    for( int i = 0; i < m_curl_dim; i++)
+                    {
+                        m_fields[0]->ExtractElmtToBndPhys(n,
+                                        m_houtflow->
+                                        m_outflowVel[cnt][i][0],
+                                        m_houtflow->
+                                        m_outflowVelBnd[cnt][i][m_intSteps-1]);
+
+                        EvaluateBDFArray(m_houtflow->m_outflowVelBnd[cnt][i]);
+                        
+                        // point u[i] to BDF evalauted value \hat{u}
+                        u[i] = m_houtflow->m_outflowVelBnd[cnt][i]
+                            [m_intSteps-1];
+                    }
+                    
+                    // Add normal velocity if weak pressure
+                    // formulation. In this case there is an
+                    // additional \int \hat{u}.n ds on the outflow
+                    // boundary since we use the inner product wrt
+                    // deriv of basis in pressure solve.  
+                    AddNormVelOnOBC(cnt, n, u);
+                }
+                
+                // Calculate velocity boundary conditions
+                if(m_hbcType[n] == eOBC)
+                {
+                    //    = (pbc n - kinvis divU n)
+                    Vmath::Smul(nqb, kinvis, divU, 1, divU, 1);
+                    Vmath::Vsub(nqb, pbc, 1, divU, 1, bndVal, 1);
+                }
+                else if (m_hbcType[n] == eConvectiveOBC)
+                {
+                    //    = (-kinvis divU n)
+                    Vmath::Smul(nqb, -1.0*kinvis, divU, 1, bndVal, 1);
+
+                    // pbc  needs to be added after pressure solve
+                }
+                
+                for(int i = 0; i < m_curl_dim; ++i)
+                {
+                    // Reuse divU  -> En
+                    Vmath::Vvtvp( nqb, normals[i], 1, bndVal, 1, E[i], 1,
+                                  divU, 1);
+                    // - f_b
+                    Vmath::Vsub( nqb, divU, 1,
+                                 m_houtflow->m_UBndExp[i][n]->GetPhys(),
+                                 1, divU, 1);
+                    // * 1/kinvis
+                    Vmath::Smul(nqb, 1.0/kinvis, divU, 1, divU, 1);
+                    
+                    if(m_hbcType[n] == eConvectiveOBC) 
+                    {
+                        Vmath::Svtvp(nqb,m_houtflow->m_velocityPrimCoeff[i][n],
+                                     u[i], 1,divU,1,divU,1);
+                    }
+
+                    if ( m_houtflow->m_UBndExp[i][n]->GetWaveSpace())
+                    {
+                        m_houtflow->m_UBndExp[i][n]->HomogeneousFwdTrans(divU,
+                                                                         divU);
+                    }
+
+                    m_houtflow->m_UBndExp[i][n]->IProductWRTBase(divU,
+                                 m_houtflow->m_UBndExp[i][n]->UpdateCoeffs());
+
+                }
+
+                // Get offset for next terms
+                cnt++;
             }
         }
     }
 
-    /**
-     * Curl Curl routine - dimension dependent
-     */
-    void Extrapolate::CurlCurl(
-        Array<OneD, Array<OneD, const NekDouble> > &Vel,
-        Array<OneD, Array<OneD, NekDouble> > &Q,
-        const int j)
+
+    void Extrapolate::AddPressureToOutflowBCs(NekDouble kinvis)
     {
-        StdRegions::StdExpansionSharedPtr elmt
-                        = m_fields[0]->GetExp(m_HBCdata[j].m_globalElmtID);
-
-        Array<OneD,NekDouble> Vx(m_pressureBCsElmtMaxPts);
-        Array<OneD,NekDouble> Uy(m_pressureBCsElmtMaxPts);
-
-        switch(m_fields[0]->GetExpType())
+        if(!m_houtflow.get())
         {
-            case MultiRegions::e2D:
-            {
-                Array<OneD,NekDouble> Dummy(m_pressureBCsElmtMaxPts);
-
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0], Vel[1], Vx);
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[1], Vel[0], Uy);
-
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Vx, 1, Uy, 1, Dummy, 1);
-
-                elmt->PhysDeriv(Dummy,Q[1],Q[0]);
-
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, -1.0, Q[1], 1, Q[1], 1);
-            }
-            break;
-
-            case MultiRegions::e3DH1D:
-            {
-                Array<OneD,NekDouble> Wz(m_pressureBCsElmtMaxPts);
-
-                Array<OneD,NekDouble> Dummy1(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> Dummy2(m_pressureBCsElmtMaxPts);
-
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0], Vel[1], Vx);
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[1], Vel[0], Uy);
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, m_wavenumber[j],
-                                                      Vel[2], 1, Wz,     1);
-
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[1], Vx, Dummy1);
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[1], Uy, Dummy2);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Dummy1, 1, Dummy2, 1,
-                                                      Q[0],   1);
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, m_negWavenumberSq[j],
-                                                      Vel[0], 1, Dummy1, 1);
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0], Wz, Dummy2);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Q[0],   1, Dummy1, 1,
-                                                      Q[0],   1);
-                Vmath::Vadd(m_HBCdata[j].m_ptsInElmt, Q[0],   1, Dummy2, 1,
-                                                      Q[0],   1);
-
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[1], Wz, Dummy1);
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, m_negWavenumberSq[j],
-                                                      Vel[1], 1, Dummy2, 1);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Dummy1, 1, Dummy2, 1,
-                                                      Q[1],   1);
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0], Vx, Dummy1);
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0], Uy, Dummy2);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Q[1],   1, Dummy1, 1,
-                                                      Q[1],   1);
-                Vmath::Vadd(m_HBCdata[j].m_ptsInElmt, Q[1],   1, Dummy2, 1,
-                                                      Q[1],   1);
-            }
-            break;
-            case MultiRegions::e3DH2D:
-            {
-                Array<OneD,NekDouble> Wx(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> Wz(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> Uz(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> qz(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> qy(m_pressureBCsElmtMaxPts);
-
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0], Vel[2], Wx);
-                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0], Vel[1], Vx);
-
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, m_negWavenumberSq[j],
-                                                      Vel[0], 1, Uy, 1);
-
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, m_wavenumber[j],
-                                                      Vel[0], 1, Uz, 1);
-
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Wz,     1, Wx, 1,
-                                                      qy,     1);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Vx,     1, Uy, 1,
-                                                      qz,     1);
-
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, m_negWavenumberSq[j],
-                                                      qz,     1, Uy, 1);
-
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt, m_wavenumber[j],
-                                                      qy,     1, Uz, 1);
-
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Uy,     1, Uz, 1,
-                                                      Q[0],   1);
-            }
-            break;
-            case MultiRegions::e3D:
-            {
-                Array<OneD,NekDouble> Dummy(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> Vz(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> Uz(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> Wx(m_pressureBCsElmtMaxPts);
-                Array<OneD,NekDouble> Wy(m_pressureBCsElmtMaxPts);
-
-                elmt->PhysDeriv(Vel[0], Dummy, Uy, Uz);
-                elmt->PhysDeriv(Vel[1], Vx, Dummy, Vz);
-                elmt->PhysDeriv(Vel[2], Wx, Wy, Dummy);
-
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Wy, 1, Vz, 1, Q[0], 1);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Uz, 1, Wx, 1, Q[1], 1);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Vx, 1, Uy, 1, Q[2], 1);
-
-                elmt->PhysDeriv(Q[0], Dummy, Wy, Vx);
-                elmt->PhysDeriv(Q[1], Wx, Dummy, Uz);
-                elmt->PhysDeriv(Q[2], Vz, Uy, Dummy);
-
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Uy, 1, Uz, 1, Q[0], 1);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Vx, 1, Vz, 1, Q[1], 1);
-                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt, Wx, 1, Wy, 1, Q[2], 1);
-            }
-            break;
-            default:
-                ASSERTL0(0,"Dimension not supported");
-                break;
+            return;
         }
-    }
-
-    
-    void Extrapolate::IProductNormVelocityOnHBC(
-                                     const Array<OneD, const Array<OneD, NekDouble> >  &Vel, 
-                                     Array<OneD, NekDouble> &IProdVn)
-    {
         
-        int i,j,n;
-
-        int pindex=m_fields.num_elements()-1;                
-        StdRegions::StdExpansionSharedPtr  Pbc,elmt;
-
-        Array<OneD, Array<OneD, NekDouble> > velbc(m_bnd_dim);
-        velbc[0] = Array<OneD, NekDouble>(m_bnd_dim*m_pressureBCsMaxPts);
-        for(i = 1; i < m_bnd_dim; ++i)
+        
+        for(int n  = 0; n < m_PBndConds.num_elements(); ++n)
         {
-            velbc[i] = velbc[i-1] + m_pressureBCsMaxPts;
-        }
-
-        Array<OneD, NekDouble> Velmt,IProdVnTmp; 
-
-        for(n = 0; n < m_HBCdata.num_elements(); ++n)
-        {            
-            Pbc = m_PBndExp[m_HBCdata[n].m_bndryID]->GetExp(m_HBCdata[n].m_bndElmtID);
-            
-            /// Picking up the element where the HOPBc is located
-            elmt = m_fields[pindex]->GetExp(m_HBCdata[n].m_globalElmtID);
-
-            // Get velocity bc
-            for(j = 0; j < m_bnd_dim; ++j)
+            if(m_hbcType[n] == eConvectiveOBC)
             {
-                // Get edge values and put into velbc
-                Velmt = Vel[j] + m_HBCdata[n].m_physOffset;
-                elmt->GetTracePhysVals(m_HBCdata[n].m_elmtTraceID,Pbc,Velmt,velbc[j]);
-            }
-            
-            IProdVnTmp = IProdVn + m_HBCdata[n].m_coeffOffset; 
+                int nqb = m_PBndExp[n]->GetTotPoints();
+                int ncb = m_PBndExp[n]->GetNcoeffs();
+                
+                m_pressure->FillBndCondFromField(n);
+                Array<OneD, NekDouble> pbc(nqb);
 
-            // Evaluate Iproduct wrt norm term 
-            Pbc->NormVectorIProductWRTBase(velbc,IProdVnTmp); 
+                m_PBndExp[n]->BwdTrans(m_PBndExp[n]->GetCoeffs(), pbc);
+
+                if (m_PBndExp[n]->GetWaveSpace())
+                {
+                    m_PBndExp[n]->HomogeneousBwdTrans(pbc, pbc);
+                }
+
+                Array<OneD, NekDouble> wk(nqb);
+                Array<OneD, NekDouble> wk1(ncb);
+           
+                // Get normal vector
+                Array<OneD, Array<OneD, NekDouble> > normals;
+                m_fields[0]->GetBoundaryNormals(n, normals);
+
+                //  Add  1/kinvis * (pbc n ) 
+                for(int i = 0; i < m_curl_dim; ++i)
+                {
+                    Vmath::Vmul(nqb, normals[i], 1, pbc, 1, wk, 1);
+                    
+                    Vmath::Smul(nqb, 1.0/kinvis, wk, 1, wk, 1);
+
+                    if (m_houtflow->m_UBndExp[i][n]->GetWaveSpace())
+                    {
+                        m_houtflow->m_UBndExp[i][n]->
+                                    HomogeneousFwdTrans(wk, wk);
+                    }
+                    m_houtflow->m_UBndExp[i][n]->IProductWRTBase(wk,wk1);
+
+                    Vmath::Vadd(ncb, wk1,1,
+                                m_houtflow->m_UBndExp[i][n]->GetCoeffs(), 1,
+                                m_houtflow->m_UBndExp[i][n]->UpdateCoeffs(),1);
+
+                }
+            }
         }
     }
+    
 
+    void Extrapolate::IProductNormVelocityOnHBC(
+                       const Array<OneD, const Array<OneD, NekDouble> >  &Vel, 
+                       Array<OneD, NekDouble> &IProdVn)
+    {
+        int i,n,cnt;
+        Array<OneD, NekDouble> IProdVnTmp; 
+        Array<OneD, Array<OneD, NekDouble> > velbc(m_bnd_dim);
+
+        for(n = cnt = 0; n < m_PBndConds.num_elements(); ++n)
+        {
+            // High order boundary condition;
+            if(m_hbcType[n] == eHBCNeumann)
+            {
+                for(i = 0; i < m_bnd_dim; ++i)
+                {
+                    m_fields[0]->ExtractPhysToBnd(n, Vel[i], velbc[i]);
+                }
+                IProdVnTmp = IProdVn + cnt;
+                m_PBndExp[n]->NormVectorIProductWRTBase(velbc, IProdVnTmp);
+                cnt += m_PBndExp[n]->GetNcoeffs();
+            }
+            else if(m_hbcType[n] == eConvectiveOBC) // skip over conective OBC
+            {
+                cnt += m_PBndExp[n]->GetNcoeffs();
+            }
+        }
+    }
+    
     void Extrapolate::IProductNormVelocityBCOnHBC(Array<OneD, NekDouble> &IProdVn)
     {
-        
-        int i,j,n;
 
-        StdRegions::StdExpansionSharedPtr  Pbc;
-
+        if(!m_HBCnumber)
+        {
+            return;
+        }
+        int i,n,cnt;
+        Array<OneD, NekDouble> IProdVnTmp; 
+        Array<OneD, Array<OneD, NekDouble> > velbc(m_bnd_dim);
         Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> > VelBndExp(m_bnd_dim);
-        
         for(i = 0; i < m_bnd_dim; ++i)
         {
             VelBndExp[i] = m_fields[m_velocity[i]]->GetBndCondExpansions();
         }
-        
-        Array<OneD, Array<OneD, NekDouble> > velbc(m_bnd_dim);
-        velbc[0] = Array<OneD, NekDouble>(m_bnd_dim*m_pressureBCsMaxPts);
-        for(i = 1; i < m_bnd_dim; ++i)
-        {
-            velbc[i] = velbc[i-1] + m_pressureBCsMaxPts;
-        }
-        
-        Array<OneD, NekDouble> Velmt,IProdVnTmp; 
-        int bndid,elmtid;
 
-        for(n = 0; n < m_HBCdata.num_elements(); ++n)
-        {            
-            bndid  = m_HBCdata[n].m_bndryID;
-            elmtid = m_HBCdata[n].m_bndElmtID;
-                      
-            // Get velocity bc
-            for(j = 0; j < m_bnd_dim; ++j)
-            {                
-                VelBndExp[j][bndid]->GetExp(elmtid)->BwdTrans(VelBndExp[j][bndid]->GetCoeffs() + 
-                                                              VelBndExp[j][bndid]->GetCoeff_Offset(elmtid),
-                                                              velbc[j]);
+        for(n = cnt = 0; n < m_PBndConds.num_elements(); ++n)
+        {
+            // High order boundary condition;
+            if(m_hbcType[n] == eHBCNeumann)
+            {
+                for(i = 0; i < m_bnd_dim; ++i)
+                {
+                    velbc[i] = Array<OneD, NekDouble> 
+                        (VelBndExp[i][n]->GetTotPoints(), 0.0);
+                    VelBndExp[i][n]->BwdTrans(VelBndExp[i][n]->GetCoeffs(),
+                                              velbc[i]);
+                }
+                IProdVnTmp = IProdVn + cnt;
+                m_PBndExp[n]->NormVectorIProductWRTBase(velbc, IProdVnTmp);
+                cnt += m_PBndExp[n]->GetNcoeffs();
             }
-                      
-            IProdVnTmp = IProdVn + m_HBCdata[n].m_coeffOffset; 
-            // Evaluate Iproduct wrt norm term 
-            Pbc = m_PBndExp[m_HBCdata[n].m_bndryID]->GetExp(m_HBCdata[n].m_bndElmtID);
-            Pbc->NormVectorIProductWRTBase(velbc,IProdVnTmp); 
+            else if(m_hbcType[n] == eConvectiveOBC)
+            {
+                // skip over convective OBC
+                cnt += m_PBndExp[n]->GetNcoeffs();
+            }
         }
     }
     
@@ -1027,307 +629,246 @@ namespace Nektar
     
     
     /**
-     * Map to directly locate HOPBCs position and offsets in all scenarios
+     * Initialize HOBCs
      */
-    void Extrapolate::GenerateHOPBCMap()
+    void Extrapolate::GenerateHOPBCMap(const LibUtilities::SessionReaderSharedPtr& pSession)
     {
-
-        int pindex=m_fields.num_elements()-1;
-
         m_PBndConds   = m_pressure->GetBndConditions();
         m_PBndExp     = m_pressure->GetBndCondExpansions();
-    
-        // Set up mapping from pressure boundary condition to pressure element
-        // details.
-        m_pressure->GetBoundaryToElmtMap(m_pressureBCtoElmtID,
-                                         m_pressureBCtoTraceID);
 
-        // find the maximum values of points  for pressure BC evaluation
-        m_pressureBCsMaxPts = 0; 
-        m_pressureBCsElmtMaxPts = 0; 
         int cnt, n;
-        for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
-        {
-            for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i)
-            {
-                m_pressureBCsMaxPts = max(m_pressureBCsMaxPts,
-                                m_PBndExp[n]->GetExp(i)->GetTotPoints());
-                m_pressureBCsElmtMaxPts = max(m_pressureBCsElmtMaxPts,
-                                m_pressure->GetExp(m_pressureBCtoElmtID[cnt++])
-                                                            ->GetTotPoints());
-            }
-        }
     
         // Storage array for high order pressure BCs
         m_pressureHBCs = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
-        m_acceleration = Array<OneD, Array<OneD, NekDouble> > (m_intSteps + 1);
-    
-        int HBCnumber = 0;
-        for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
+        m_iprodnormvel = Array<OneD, Array<OneD, NekDouble> > (m_intSteps + 1);
+
+        // Get useful values for HOBCs
+        m_HBCnumber = 0;
+        m_numHBCDof = 0;
+
+        int outHBCnumber = 0;
+        int numOutHBCPts = 0;
+
+        m_hbcType = Array<OneD, HBCType> (m_PBndConds.num_elements(),eNOHBC);
+        for( n = 0; n < m_PBndConds.num_elements(); ++n)
         {
-            // High order boundary condition;
+            // High order boundary Neumann Condiiton 
             if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
             {
-                cnt += m_PBndExp[n]->GetNcoeffs();
-                HBCnumber += m_PBndExp[n]->GetExpSize();
+                m_hbcType[n] = eHBCNeumann;
+                m_numHBCDof += m_PBndExp[n]->GetNcoeffs();
+                m_HBCnumber += m_PBndExp[n]->GetExpSize();
+            }
+                       
+            // High order outflow convective condition
+            if(m_PBndConds[n]->GetBoundaryConditionType() ==
+               SpatialDomains::eRobin &&
+               boost::iequals(m_PBndConds[n]->GetUserDefined(),
+                              "HOutflow"))
+            {
+                m_hbcType[n]  = eConvectiveOBC;
+                m_numHBCDof  += m_PBndExp[n]->GetNcoeffs();
+                m_HBCnumber  += m_PBndExp[n]->GetExpSize();
+                numOutHBCPts += m_PBndExp[n]->GetTotPoints();
+                outHBCnumber++;
+            }
+            // High order outflow boundary condition;
+            else if(boost::iequals(m_PBndConds[n]->GetUserDefined(),
+                                   "HOutflow"))
+            {
+                m_hbcType[n] = eOBC;
+                numOutHBCPts += m_PBndExp[n]->GetTotPoints();
+                outHBCnumber++;
             }
         }
-    
-        int checkHBC = HBCnumber;
-        m_comm->AllReduce(checkHBC,LibUtilities::ReduceSum);
-        //ASSERTL0(checkHBC > 0 ,"At least one high-order pressure boundary "
-        //"condition is required for scheme "
-        //"consistency");
 
-        m_acceleration[0] = Array<OneD, NekDouble>(cnt, 0.0);
+        m_iprodnormvel[0] = Array<OneD, NekDouble>(m_numHBCDof, 0.0);
         for(n = 0; n < m_intSteps; ++n)
         {
-            m_pressureHBCs[n]   = Array<OneD, NekDouble>(cnt, 0.0);
-            m_acceleration[n+1] = Array<OneD, NekDouble>(cnt, 0.0);
+            m_pressureHBCs[n]   = Array<OneD, NekDouble>(m_numHBCDof, 0.0);
+            m_iprodnormvel[n+1] = Array<OneD, NekDouble>(m_numHBCDof, 0.0);
         }
-		
+
         m_pressureCalls = 0;
         
         switch(m_pressure->GetExpType())
         {
-            case MultiRegions::e2D:
+        case MultiRegions::e2D:
             {
                 m_curl_dim = 2;
                 m_bnd_dim  = 2;
             }
             break;
-            case MultiRegions::e3DH1D:
+        case MultiRegions::e3DH1D:
             {
                 m_curl_dim = 3;
                 m_bnd_dim  = 2;
             }
             break;
-            case MultiRegions::e3DH2D:
+        case MultiRegions::e3DH2D:
             {
                 m_curl_dim = 3;
                 m_bnd_dim  = 1;
             }
             break;
-            case MultiRegions::e3D:
+        case MultiRegions::e3D:
             {
                 m_curl_dim = 3;
                 m_bnd_dim  = 3;
             }
             break;
-            default:
-                ASSERTL0(0,"Dimension not supported");
-                break;
+        default:
+            ASSERTL0(0,"Dimension not supported");
+            break;
         }
-    
-        
-        m_HBCdata = Array<OneD, HBCInfo>(HBCnumber);
-        StdRegions::StdExpansionSharedPtr elmt;
-    
-        switch(m_pressure->GetExpType())
+
+        // Initialise storage for outflow HOBCs
+        if(numOutHBCPts > 0)
         {
-            case MultiRegions::e2D:
-            case MultiRegions::e3D:
-            {
-                int coeff_count = 0;
-                int exp_size;
-                int j=0;
-                int cnt = 0;
-                for(int n = 0 ; n < m_PBndConds.num_elements(); ++n)
-                {
-                    exp_size = m_PBndExp[n]->GetExpSize();
+            m_houtflow  = MemoryManager<HighOrderOutflow>::AllocateSharedPtr(numOutHBCPts,  outHBCnumber, m_curl_dim, pSession);
+                        
+            MultiRegions::ExpListSharedPtr BndElmtExp;
 
-                    if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
+            // set up boundary expansions link 
+            for (int i = 0; i < m_curl_dim; ++i)
+            {
+                m_houtflow->m_UBndExp[i] =
+                    m_fields[m_velocity[i]]->GetBndCondExpansions();
+            }
+
+            for(n = 0, cnt = 0; n < m_PBndConds.num_elements(); ++n)
+            {
+                if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
+                {
+                    m_houtflow->m_outflowVel[cnt] =
+                        Array<OneD, Array<OneD,
+                             Array<OneD, NekDouble> > > (m_curl_dim);
+
+                    m_houtflow->m_outflowVelBnd[cnt] =
+                        Array<OneD, Array<OneD,
+                                 Array<OneD, NekDouble> > > (m_curl_dim);
+                    
+                    m_fields[0]->GetBndElmtExpansion(n, BndElmtExp, false);
+                    int nqb = m_PBndExp[n]->GetTotPoints();
+                    int nq  = BndElmtExp->GetTotPoints();
+                    for(int j = 0; j < m_curl_dim; ++j)
                     {
-                        for(int i = 0; i < exp_size; ++i,cnt++)
+                        m_houtflow->m_outflowVel[cnt][j] =
+                            Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
+
+                        m_houtflow->m_outflowVelBnd[cnt][j] =
+                            Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
+
+                        for(int k = 0; k < m_intSteps; ++k)
                         {
-                            m_HBCdata[j].m_globalElmtID = m_pressureBCtoElmtID[cnt];   
-                            elmt      = m_fields[pindex]->GetExp(m_HBCdata[j].m_globalElmtID);
-                            m_HBCdata[j].m_ptsInElmt = elmt->GetTotPoints();         
-                            m_HBCdata[j].m_physOffset = m_fields[pindex]->GetPhys_Offset(m_HBCdata[j].m_globalElmtID);
-                            m_HBCdata[j].m_bndElmtID = i;       
-                            m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];      
-                            m_HBCdata[j].m_bndryID = n;
-                            m_HBCdata[j].m_coeffOffset = coeff_count;
-                            coeff_count += elmt->GetTraceNcoeffs(m_HBCdata[j].m_elmtTraceID);
-                            j = j+1;
+                            m_houtflow->m_outflowVel[cnt][j][k] =
+                                Array<OneD, NekDouble>(nq,0.0);
+                            m_houtflow->m_outflowVelBnd[cnt][j][k] =
+                                Array<OneD, NekDouble>(nqb,0.0);
                         }
                     }
-                    else // setting if just standard BC no High order
-                    {
-                        cnt += exp_size;
-                    }
+                    cnt++;
                 }
-            }
-            break;
-            
-            case MultiRegions::e3DH1D:
-            {
-                Array<OneD, unsigned int> planes;
-                planes = m_pressure->GetZIDs();
-                int num_planes = planes.num_elements();            
-                int num_elm_per_plane = (m_pressure->GetExpSize())/num_planes;
+
+                // evaluate convective primitive coefficient if
+                // convective OBCs are used
+                if(m_hbcType[n] == eConvectiveOBC)
+                {
+                    // initialise convective members of
+                    // HighOrderOutflow struct
+                    if(m_houtflow->m_pressurePrimCoeff.num_elements() == 0)
+                    {
+                        m_houtflow->m_pressurePrimCoeff =
+                            Array<OneD, NekDouble>
+                            (m_PBndConds.num_elements(),0.0);
+                        m_houtflow->m_velocityPrimCoeff =
+                            Array<OneD, Array< OneD, NekDouble> >(m_curl_dim);
+                        
+                    
+                        for(int i = 0; i < m_curl_dim; ++i)
+                        {
+                            m_houtflow->m_velocityPrimCoeff[i] =
+                                Array<OneD, NekDouble> (m_PBndConds.
+                                                        num_elements(),0.0);
+                        }
+                    }
+                    
+                    LibUtilities::Equation coeff = 
+                        boost::static_pointer_cast<
+                            SpatialDomains::RobinBoundaryCondition
+                        >(m_PBndConds[n])->m_robinPrimitiveCoeff;
+                    
+                    // checkout equation evaluation options!!
+                    m_houtflow->m_pressurePrimCoeff[n] = coeff.Evaluate();
                 
-                m_wavenumber      = Array<OneD, NekDouble>(HBCnumber);
-                m_negWavenumberSq = Array<OneD, NekDouble>(HBCnumber);
-
-                int exp_size, exp_size_per_plane;
-                int i, j, k, n;
-                int K;
-                NekDouble sign = -1.0;
-                int cnt = 0;
-                
-                m_session->MatchSolverInfo("ModeType", "SingleMode", 
-                                           m_SingleMode, false);
-                m_session->MatchSolverInfo("ModeType", "HalfMode", 
-                                           m_HalfMode, false);
-                m_session->MatchSolverInfo("ModeType", "MultipleModes", 
-                                           m_MultipleModes, false);
-                m_session->LoadParameter("LZ", m_LhomZ);
-
-                // Stability Analysis flags
-                if(m_session->DefinesSolverInfo("ModeType"))
-                {
-                    if(m_SingleMode)
+                    for (int i = 0; i < m_curl_dim; ++i)
                     {
-                        m_npointsZ = 2;
+                        Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
+                            UBndConds = m_fields[m_velocity[i]]->GetBndConditions();
+                        
+                        LibUtilities::Equation coeff1 = 
+                            boost::static_pointer_cast<
+                                SpatialDomains::RobinBoundaryCondition
+                            >(UBndConds[n])->m_robinPrimitiveCoeff;
+
+                        
+                        m_houtflow->m_defVelPrimCoeff[i] = coeff1.GetExpression(); 
+                        
+                        ASSERTL1(UBndConds[n]->GetBoundaryConditionType()
+                                 == SpatialDomains::eRobin,"Require Velocity "
+                                 "conditions to be of Robin type when pressure"
+                                 "outflow is specticied as Robin Boundary type");
+                        
+                        
+                        // checkout equation evaluation options!!
+                        m_houtflow->m_velocityPrimCoeff[i][n] = coeff1.Evaluate();
                     }
-                    else if(m_HalfMode)
-                    {
-                        m_npointsZ = 1;
-                    }
-                    else if(m_MultipleModes)
-                    {
-                        m_npointsZ = m_session->GetParameter("HomModesZ");
-                    }
-                    else
-                    {
-                        ASSERTL0(false, "SolverInfo ModeType not valid");
-                    }
-                }
-                else 
-                {
-                    m_npointsZ = m_session->GetParameter("HomModesZ");
-                }
-
-                int coeff_count = 0;
-
-                for(n = 0, j= 0, cnt = 0; n < m_PBndConds.num_elements(); ++n)
-                {
-                    exp_size = m_PBndExp[n]->GetExpSize();
-                    exp_size_per_plane = exp_size/num_planes;
-
-                    if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
-                    {
-                        for(k = 0; k < num_planes; k++)
-                        {
-                            K = planes[k]/2;
-                            for(i = 0; i < exp_size_per_plane; ++i, ++j, ++cnt)
-                            {
-                                m_HBCdata[j].m_globalElmtID = m_pressureBCtoElmtID[cnt];   
-                                elmt      = m_fields[pindex]->GetExp(m_HBCdata[j].m_globalElmtID);
-                                m_HBCdata[j].m_ptsInElmt = elmt->GetTotPoints();         
-                                m_HBCdata[j].m_physOffset = m_fields[pindex]->GetPhys_Offset(m_HBCdata[j].m_globalElmtID);
-                                m_HBCdata[j].m_bndElmtID = i+k*exp_size_per_plane;       
-                                m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];      
-                                m_HBCdata[j].m_bndryID = n;
-                                m_HBCdata[j].m_coeffOffset = coeff_count;
-                                coeff_count += elmt->GetEdgeNcoeffs(m_HBCdata[j].m_elmtTraceID);
-    
-                                if(m_SingleMode)
-                                {
-                                    m_wavenumber[j]      = -2*M_PI/m_LhomZ;       
-                                    m_negWavenumberSq[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
-                                }
-                                else if(m_HalfMode || m_MultipleModes)
-                                {
-                                    m_wavenumber[j]      = 2*M_PI/m_LhomZ;       
-                                    m_negWavenumberSq[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
-                                }
-                                else
-                                {
-                                    m_wavenumber[j]     = 2*M_PI*sign*(NekDouble(K))/m_LhomZ; 
-                                    m_negWavenumberSq[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
-                                }
-
-                                int assElmtID;
-
-                                if(k%2==0)
-                                {
-                                    if(m_HalfMode)
-                                    {
-                                        assElmtID = m_HBCdata[j].m_globalElmtID;
-
-                                    }
-                                    else
-                                    {
-                                        assElmtID = m_HBCdata[j].m_globalElmtID + num_elm_per_plane;
-                                    }
-                                }
-                                else 
-                                {
-                                    assElmtID = m_HBCdata[j].m_globalElmtID - num_elm_per_plane;
-                                }
-
-                                m_HBCdata[j].m_assPhysOffset = m_pressure->GetPhys_Offset(assElmtID);
-                            }
-                            sign = -1.0*sign;
-                        }
-                    }
-                    else
-                    {
-                        cnt += exp_size;
-                    }
-                }
+                }                
             }
-            break;
-            
-            case MultiRegions::e3DH2D:
-            {
-                int cnt = 0;
-                int exp_size, exp_size_per_line;
-                int j=0;
-        
-                for(int k1 = 0; k1 < m_npointsZ; k1++)
-                {
-                    for(int k2 = 0; k2 < m_npointsY; k2++)
-                    {
-                        for(int n = 0 ; n < m_PBndConds.num_elements(); ++n)
-                        {
-                            exp_size = m_PBndExp[n]->GetExpSize();
-                            
-                            exp_size_per_line = exp_size/(m_npointsZ*m_npointsY);
-                            
-                            if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
-                            {
-                                for(int i = 0; i < exp_size_per_line; ++i,cnt++)
-                                {
-                                    // find element and edge of this expansion. 
-                                    m_HBCdata[j].m_globalElmtID = m_pressureBCtoElmtID[cnt];
-                                    elmt      = m_fields[pindex]->GetExp(m_HBCdata[j].m_globalElmtID);
-                                    m_HBCdata[j].m_ptsInElmt = elmt->GetTotPoints();
-                                    m_HBCdata[j].m_physOffset = m_fields[pindex]->GetPhys_Offset(m_HBCdata[j].m_globalElmtID);
-                                    m_HBCdata[j].m_bndElmtID = i+(k1*m_npointsY+k2)*exp_size_per_line;
-                                    m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];                
-                                    m_HBCdata[j].m_bndryID = n;
-                                    //m_wavenumber[j] = 2*M_PI*sign*(NekDouble(k1))/m_LhomZ;
-                                    //m_negWavenumberSq[j] = 2*M_PI*sign*(NekDouble(k2))/m_LhomY;
-                                }
-                            }
-                            else
-                            {
-                                cnt += exp_size_per_line;
-                            }
-                        }
-                    }
-                }
-            }
-            break;
-            default:
-                ASSERTL0(0,"Dimension not supported");
-                break;
+                        
         }
     }
 
+    void Extrapolate::UpdateRobinPrimCoeff(void)
+    {
+        
+        if((m_pressureCalls == 1) || (m_pressureCalls > m_intSteps))
+        {
+            return;
+        }
+        
+        for(int n  = 0; n < m_PBndConds.num_elements(); ++n)
+        {
+            // Get expansion with element on this boundary
+            if(m_hbcType[n] == eConvectiveOBC)
+            {
+                for (int i = 0; i < m_curl_dim; ++i)
+                {
+                    Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                        UBndConds = m_fields[m_velocity[i]]->UpdateBndConditions();
+                    
+                    std::string primcoeff = m_houtflow->m_defVelPrimCoeff[i] + "*" +
+                        boost::lexical_cast<std::string>(StifflyStable_Gamma0_Coeffs
+                                                         [m_pressureCalls-1]);
+                    
+                    SpatialDomains::RobinBCShPtr rcond = 
+                        boost::dynamic_pointer_cast<
+                            SpatialDomains::RobinBoundaryCondition >(UBndConds[n]);
+                    
+                    SpatialDomains::BoundaryConditionShPtr bcond =
+                        MemoryManager<SpatialDomains::RobinBoundaryCondition>::AllocateSharedPtr(
+                                             m_session,rcond->m_robinFunction.GetExpression(),
+                                             primcoeff,
+                                             rcond->GetUserDefined(),
+                                             rcond->m_filename);
+                    
+                    UBndConds[n] = bcond;
+                }
+                
+            }
+        }
+    }
+    
     /**
      *
      */
@@ -1336,161 +877,94 @@ namespace Nektar
     {
         // Checking if the problem is 2D
         ASSERTL0(m_curl_dim >= 2, "Method not implemented for 1D");
-        
+
         int n_points_0      = m_fields[0]->GetExp(0)->GetTotPoints();
-        int n_element       = m_fields[0]->GetExpSize();       
+        int n_element       = m_fields[0]->GetExpSize();
         int nvel            = inarray.num_elements();
-        int cnt; 
-        
+        int cnt;
+
         NekDouble pntVelocity;
-        
-        // Getting the standard velocity vector on the 2D normal space
+
+        // Getting the standard velocity vector
         Array<OneD, Array<OneD, NekDouble> > stdVelocity(nvel);
+        Array<OneD, NekDouble> tmp;
         Array<OneD, NekDouble> maxV(n_element, 0.0);
         LibUtilities::PointsKeyVector ptsKeys;
-        
+
         for (int i = 0; i < nvel; ++i)
         {
             stdVelocity[i] = Array<OneD, NekDouble>(n_points_0);
         }
-        
-        if (nvel == 2)
-        {
-            cnt = 0.0;
-            for (int el = 0; el < n_element; ++el)
-            { 
-                int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
-                ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
-                
-                // reset local space if necessary
-                if(n_points != n_points_0)
-                {
-                    for (int j = 0; j < nvel; ++j)
-                    {
-                        stdVelocity[j] = Array<OneD, NekDouble>(n_points);
-                    }
-                    n_points_0 = n_points;
-                }        
-                
-                Array<TwoD, const NekDouble> gmat = 
-                    m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetDerivFactors(ptsKeys);
-                
-                if (m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGtype()
-                    == SpatialDomains::eDeformed)
-                {
-                    for (int i = 0; i < n_points; i++)
-                    {
-                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i+cnt] 
-                            + gmat[2][i]*inarray[1][i+cnt];
-                        
-                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i+cnt] 
-                            + gmat[3][i]*inarray[1][i+cnt];
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < n_points; i++)
-                    {
-                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i+cnt] 
-                            + gmat[2][0]*inarray[1][i+cnt];
-                        
-                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i+cnt] 
-                            + gmat[3][0]*inarray[1][i+cnt];
-                    }
-                }
-                
-                cnt += n_points;
-                
-                
-                for (int i = 0; i < n_points; i++)
-                {
-                    pntVelocity = stdVelocity[0][i]*stdVelocity[0][i] 
-                        + stdVelocity[1][i]*stdVelocity[1][i];
-                    
-                    if (pntVelocity>maxV[el])
-                    {
-                        maxV[el] = pntVelocity;
-                    }
-                }
-                maxV[el] = sqrt(maxV[el]);
-            }
-        }
-        else
-        {
-            cnt = 0;
-            for (int el = 0; el < n_element; ++el)
-            { 
-                
-                int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
-                ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
-                
-                // reset local space if necessary
-                if(n_points != n_points_0)
-                {
-                    for (int j = 0; j < nvel; ++j)
-                    {
-                        stdVelocity[j] = Array<OneD, NekDouble>(n_points);
-                    }
-                    n_points_0 = n_points;
-                }        
-                
-                Array<TwoD, const NekDouble> gmat =
-                    m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetDerivFactors(ptsKeys);
-                
-                if (m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGtype()
-                    == SpatialDomains::eDeformed)
-                {
-                    for (int i = 0; i < n_points; i++)
-                    {
-                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i+cnt] 
-                            + gmat[3][i]*inarray[1][i+cnt] 
-                            + gmat[6][i]*inarray[2][i+cnt];
-                        
-                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i+cnt] 
-                            + gmat[4][i]*inarray[1][i+cnt] 
-                            + gmat[7][i]*inarray[2][i+cnt];
-                        
-                        stdVelocity[2][i] = gmat[2][i]*inarray[0][i+cnt] 
-                            + gmat[5][i]*inarray[1][i+cnt] 
-                            + gmat[8][i]*inarray[2][i+cnt];
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < n_points; i++)
-                    {
-                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i+cnt] 
-                            + gmat[3][0]*inarray[1][i+cnt] 
-                            + gmat[6][0]*inarray[2][i+cnt];
-                        
-                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i+cnt] 
-                            + gmat[4][0]*inarray[1][i+cnt] 
-                            + gmat[7][0]*inarray[2][i+cnt];
-                        
-                        stdVelocity[2][i] = gmat[2][0]*inarray[0][i+cnt] 
-                            + gmat[5][0]*inarray[1][i+cnt] 
-                            + gmat[8][0]*inarray[2][i+cnt];
-                    }
-                }
-                
-                cnt += n_points;
-                
-                for (int i = 0; i < n_points; i++)
-                {
-                    pntVelocity = stdVelocity[0][i]*stdVelocity[0][i] 
-                        + stdVelocity[1][i]*stdVelocity[1][i] 
-                        + stdVelocity[2][i]*stdVelocity[2][i];
-                    
-                    if (pntVelocity > maxV[el])
-                    {
-                        maxV[el] = pntVelocity;
-                    }
-                }
 
-                maxV[el] = sqrt(maxV[el]);
+        cnt = 0.0;
+        for (int el = 0; el < n_element; ++el)
+        {
+            int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
+            ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
+
+            // reset local space
+            if(n_points != n_points_0)
+            {
+                for (int j = 0; j < nvel; ++j)
+                {
+                    stdVelocity[j] = Array<OneD, NekDouble>(n_points, 0.0);
+                }
+                n_points_0 = n_points;
             }
+            else
+            {
+                for (int j = 0; j < nvel; ++j)
+                {
+                    Vmath::Zero( n_points, stdVelocity[j], 1);
+                }
+            }
+
+            Array<TwoD, const NekDouble> gmat =
+                m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetDerivFactors(ptsKeys);
+
+            if (m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGtype()
+                == SpatialDomains::eDeformed)
+            {
+                for(int j = 0; j < nvel; ++j)
+                {
+                    for(int k = 0; k < nvel; ++k)
+                    {
+                        Vmath::Vvtvp( n_points,  gmat[k*nvel + j], 1,
+                                                 tmp = inarray[k] + cnt, 1,
+                                                 stdVelocity[j], 1,
+                                                 stdVelocity[j], 1);
+                    }
+                }
+            }
+            else
+            {
+                for(int j = 0; j < nvel; ++j)
+                {
+                    for(int k = 0; k < nvel; ++k)
+                    {
+                        Vmath::Svtvp( n_points,  gmat[k*nvel + j][0],
+                                                 tmp = inarray[k] + cnt, 1,
+                                                 stdVelocity[j], 1,
+                                                 stdVelocity[j], 1);
+                    }
+                }
+            }
+            cnt += n_points;
+
+            // Calculate total velocity in stdVelocity[0]
+            Vmath::Vmul( n_points, stdVelocity[0], 1, stdVelocity[0], 1,
+                                                      stdVelocity[0], 1);
+            for(int k = 1; k < nvel; ++k)
+            {
+                Vmath::Vvtvp( n_points,  stdVelocity[k], 1,
+                                         stdVelocity[k], 1,
+                                         stdVelocity[0], 1,
+                                         stdVelocity[0], 1);
+            }
+            pntVelocity = Vmath::Vmax( n_points, stdVelocity[0], 1);
+            maxV[el] = sqrt(pntVelocity);
         }
-        
+
         return maxV;
     }
 
@@ -1501,32 +975,117 @@ namespace Nektar
     }
 
     /**
-     *    Update oldarrays to include newarray and 
-     *          extrapolate result to outarray
+     *    At the start, the newest value is stored in array[nlevels-1]
+     *        and the previous values in the first positions
+     *    At the end, the extrapolated value is stored in array[nlevels-1]
+     *        and the storage has been updated to included the new value
      */    
     void Extrapolate::ExtrapolateArray(
-            Array<OneD, Array<OneD, NekDouble> > &oldarrays,
-            Array<OneD, NekDouble>  &newarray,
-            Array<OneD, NekDouble>  &outarray)
+            Array<OneD, Array<OneD, NekDouble> > &array)
     {
-        int  nint    = min(m_pressureCalls,m_intSteps);
-        int nPts = newarray.num_elements();
-        
-        // Update oldarrays
-        RollOver(oldarrays);
-        Vmath::Vcopy(nPts, newarray, 1, oldarrays[0], 1);
-        
+        int nint     = min(m_pressureCalls,m_intSteps);
+        int nlevels  = array.num_elements();
+        int nPts     = array[0].num_elements();
+
+        // Update array
+        RollOver(array);
+
         // Extrapolate to outarray
         Vmath::Smul(nPts, StifflyStable_Betaq_Coeffs[nint-1][nint-1],
-                         oldarrays[nint-1],    1,
-                         outarray, 1);
+                         array[nint-1],    1,
+                         array[nlevels-1], 1);
 
         for(int n = 0; n < nint-1; ++n)
         {
             Vmath::Svtvp(nPts, StifflyStable_Betaq_Coeffs[nint-1][n],
-                         oldarrays[n],1,outarray,1,
-                         outarray,1);
-        }        
+                         array[n],1, array[nlevels-1],1,
+                         array[nlevels-1],1);
+        }
+    }
+
+
+    /**
+     *    At the start, the newest value is stored in array[nlevels-1]
+     *        and the previous values in the first positions
+     *    At the end, the value of the bdf explicit part is stored in array[nlevels-1]
+     *        and the storage has been updated to included the new value
+     */    
+    void Extrapolate::EvaluateBDFArray(
+            Array<OneD, Array<OneD, NekDouble> > &array)
+    {
+        int nint     = min(m_pressureCalls,m_intSteps);
+        int nlevels  = array.num_elements();
+        int nPts     = array[0].num_elements();
+
+        // Update array
+        RollOver(array);
+
+        // Extrapolate to outarray
+        Vmath::Smul(nPts, StifflyStable_Alpha_Coeffs[nint-1][nint-1],
+                         array[nint-1],    1,
+                         array[nlevels-1], 1);
+
+        for(int n = 0; n < nint-1; ++n)
+        {
+            Vmath::Svtvp(nPts, StifflyStable_Alpha_Coeffs[nint-1][n],
+                         array[n],1, array[nlevels-1],1,
+                         array[nlevels-1],1);
+        }
+    }
+    
+    /**
+     *    At the start, the newest value is stored in array[nlevels-1]
+     *        and the previous values in the first positions
+     *    At the end, the acceleration from BDF is stored in array[nlevels-1]
+     *        and the storage has been updated to included the new value
+     */
+    void Extrapolate::AccelerationBDF(
+            Array<OneD, Array<OneD, NekDouble> > &array)
+    {
+        int nlevels  = array.num_elements();
+        int nPts     = array[0].num_elements();
+
+
+        if(nPts)
+        {
+            // Update array
+            RollOver(array);
+            
+            // Calculate acceleration using Backward Differentiation Formula
+            Array<OneD, NekDouble> accelerationTerm (nPts, 0.0);
+            if (m_pressureCalls > 2)
+            {
+                int acc_order = min(m_pressureCalls-2,m_intSteps);
+                Vmath::Smul(nPts,
+                            StifflyStable_Gamma0_Coeffs[acc_order-1],
+                            array[0], 1,
+                             accelerationTerm,  1);
+                
+                for(int i = 0; i < acc_order; i++)
+                {
+                    Vmath::Svtvp(nPts,
+                                 -1*StifflyStable_Alpha_Coeffs[acc_order-1][i],
+                                 array[i+1], 1,
+                                 accelerationTerm,    1,
+                                 accelerationTerm,    1);
+                }
+            }
+            array[nlevels-1] = accelerationTerm;
+        }
+    }
+    
+    void Extrapolate::CopyPressureHBCsToPbndExp(void)
+    {
+        int n, cnt;
+        for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
+        {
+            if((m_hbcType[n] == eHBCNeumann)||(m_hbcType[n] == eConvectiveOBC))
+            {
+                int nq = m_PBndExp[n]->GetNcoeffs();
+                Vmath::Vcopy(nq, &(m_pressureHBCs[m_intSteps-1])[cnt],  1,
+                                 &(m_PBndExp[n]->UpdateCoeffs()[0]), 1);
+                cnt += nq;
+            }
+        }
     }
 }
-

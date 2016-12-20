@@ -75,6 +75,27 @@ FilterFieldConvert::FilterFieldConvert(
         }
     }
 
+    // Restart file
+    it = pParams.find("RestartFile");
+    if (it == pParams.end())
+    {
+        m_restartFile = "";
+    }
+    else
+    {
+        ASSERTL0(it->second.length() > 0, "Missing parameter 'RestartFile'.");
+        if ( it->second.find_last_of('.') != string::npos)
+        {
+            m_restartFile = it->second;
+        }
+        else
+        {
+            std::stringstream outname;
+            outname << it->second << ".fld";
+            m_restartFile = outname.str();
+        }
+    }
+
     // SampleFrequency
     it = pParams.find("SampleFrequency");
     if (it == pParams.end())
@@ -99,7 +120,6 @@ FilterFieldConvert::FilterFieldConvert(
         m_outputFrequency = floor(equ.Evaluate());
     }
 
-    m_scale       = 1.0;
     m_numSamples  = 0;
     m_index       = 0;
     m_outputIndex = 0;
@@ -156,6 +176,53 @@ void FilterFieldConvert::v_Initialise(
     m_f->m_session = m_session;
     m_f->m_graph = pFields[0]->GetGraph();
     m_f->m_comm = m_f->m_session->GetComm();
+
+    // Load restart file if necessary
+    if (m_restartFile != "")
+    {
+        // Load file
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> fieldDef;
+        std::vector<std::vector<NekDouble> > fieldData;
+        LibUtilities::FieldMetaDataMap fieldMetaData;
+        LibUtilities::FieldIOSharedPtr fld =
+            LibUtilities::FieldIO::CreateForFile(m_session, m_restartFile);
+        fld->Import(m_restartFile, fieldDef, fieldData, fieldMetaData);
+
+        // Extract fields to output
+        for (int j = 0; j < m_variables.size(); ++j)
+        {
+            for (int i = 0; i < fieldData.size(); ++i)
+            {
+                pFields[0]->ExtractDataToCoeffs(
+                    fieldDef[i],
+                    fieldData[i],
+                    m_variables[j],
+                    m_outFields[j]);
+            }
+        }
+
+        // Load information for numSamples
+        if (fieldMetaData.count("NumberOfFieldDumps"))
+        {
+            m_numSamples = atoi(fieldMetaData["NumberOfFieldDumps"].c_str());
+        }
+        else
+        {
+            m_numSamples = 1;
+        }
+
+        // Divide by scale
+        NekDouble scale = v_GetScale();
+        for (int n = 0; n < m_outFields.size(); ++n)
+        {
+            Vmath::Smul(m_outFields[n].num_elements(),
+                        1.0/scale,
+                        m_outFields[n],
+                        1,
+                        m_outFields[n],
+                        1);
+        }
+    }
 }
 
 void FilterFieldConvert::v_FillVariablesName(
@@ -216,10 +283,11 @@ void FilterFieldConvert::v_PrepareOutput(
 void FilterFieldConvert::OutputField(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, int dump)
 {
+    NekDouble scale = v_GetScale();
     for (int n = 0; n < m_outFields.size(); ++n)
     {
         Vmath::Smul(m_outFields[n].num_elements(),
-                    m_scale,
+                    scale,
                     m_outFields[n],
                     1,
                     m_outFields[n],
@@ -266,7 +334,7 @@ void FilterFieldConvert::OutputField(
         for (int n = 0; n < m_outFields.size(); ++n)
         {
             Vmath::Smul(m_outFields[n].num_elements(),
-                        1.0 / m_scale,
+                        1.0 / scale,
                         m_outFields[n],
                         1,
                         m_outFields[n],

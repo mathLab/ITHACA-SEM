@@ -850,9 +850,8 @@ NodalUtilQuad::NodalUtilQuad(int                    degree,
     m_xi[0] = r;
     m_xi[1] = s;
 
-    // Construct a mapping (i,j) -> m from the triangular tensor product space
-    // (i,j) to a single ordering m.
-    //
+    // Construct a mapping (i,j) -> m from the tensor product space (i,j) to a
+    // single ordering m.
     for (int j = 0; j <= m_degree; ++j)
     {
         for (int i = 0; i <= m_degree; ++i)
@@ -898,7 +897,7 @@ NekVector<NekDouble> NodalUtilQuad::v_OrthoBasis(const int mode)
 
 /**
  * @brief Return the value of the derivative of the modal functions for the
- * triangular element at the nodal points #m_xi for a given mode.
+ * quadrilateral element at the nodal points #m_xi for a given mode.
  *
  * @param mode  The mode of the orthogonal basis to evaluate.
  */
@@ -966,9 +965,8 @@ NodalUtilHex::NodalUtilHex(int degree,
     m_xi[1] = s;
     m_xi[2] = t;
 
-    // Construct a mapping (i,j) -> m from the triangular tensor product space
-    // (i,j) to a single ordering m.
-    //
+    // Construct a mapping (i,j,k) -> m from the tensor product space (i,j,k) to
+    // a single ordering m.
     for (int i = 0; i <= m_degree; ++i)
     {
         for (int j = 0; j <= m_degree; ++j)

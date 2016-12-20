@@ -194,13 +194,16 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual void v_FillBndCondFromField();
 
+            MULTI_REGIONS_EXPORT virtual void v_FillBndCondFromField(const int nreg);
+
             /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
             MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(
                 const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray);
+                Array<OneD,NekDouble> &outarray,
+                bool useComm);
 
-            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(void);
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(bool useComm);
             
             /// Scatters from the global coefficients
             /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
@@ -242,7 +245,8 @@ namespace Nektar
                     const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
-                    const Array<OneD, const NekDouble> &dirForcing);
+                    const Array<OneD, const NekDouble> &dirForcing,
+                    const bool PhysSpaceForcing);
 
             /// Calculates the result of the multiplication of a global
             /// matrix of type specified by \a mkey with a vector given by \a
@@ -281,7 +285,6 @@ namespace Nektar
         };
 
         typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;
-
 
         /**
          * This operation is evaluated as:

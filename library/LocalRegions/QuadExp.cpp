@@ -616,6 +616,18 @@ namespace Nektar
                                     m_base[1]->GetBasisKey());
         }
 
+
+        StdRegions::StdExpansionSharedPtr QuadExp::v_GetLinStdExp(void) const
+        {
+            LibUtilities::BasisKey bkey0(m_base[0]->GetBasisType(),
+                           2, m_base[0]->GetPointsKey());
+            LibUtilities::BasisKey bkey1(m_base[1]->GetBasisType(),
+                           2, m_base[1]->GetPointsKey());
+
+            return MemoryManager<StdRegions::StdQuadExp>
+                ::AllocateSharedPtr( bkey0, bkey1);
+        }
+
         void QuadExp::v_GetCoords(
             Array<OneD, NekDouble> &coords_0,
             Array<OneD, NekDouble> &coords_1,
@@ -1492,7 +1504,8 @@ namespace Nektar
             const NekDouble *data,
             const std::vector<unsigned int > &nummodes,
             int mode_offset,
-                NekDouble *coeffs)
+            NekDouble *coeffs,
+            std::vector<LibUtilities::BasisType> &fromType)
         {
             int data_order0 = nummodes[mode_offset];
             int fillorder0  = std::min(m_base[0]->GetNumModes(),data_order0);
@@ -1500,6 +1513,32 @@ namespace Nektar
             int data_order1 = nummodes[mode_offset + 1];
             int order1      = m_base[1]->GetNumModes();
             int fillorder1  = min(order1,data_order1);
+
+            // Check if same basis
+            if (fromType[0] != m_base[0]->GetBasisType() ||
+                fromType[1] != m_base[1]->GetBasisType())
+            {
+                // Construct a quad with the appropriate basis type at our
+                // quadrature points, and one more to do a forwards
+                // transform. We can then copy the output to coeffs.
+                StdRegions::StdQuadExp tmpQuad(
+                    LibUtilities::BasisKey(
+                        fromType[0], data_order0, m_base[0]->GetPointsKey()),
+                    LibUtilities::BasisKey(
+                        fromType[1], data_order1, m_base[1]->GetPointsKey()));
+                StdRegions::StdQuadExp tmpQuad2(m_base[0]->GetBasisKey(),
+                                                m_base[1]->GetBasisKey());
+
+                Array<OneD, const NekDouble> tmpData(tmpQuad.GetNcoeffs(), data);
+                Array<OneD, NekDouble> tmpBwd(tmpQuad2.GetTotPoints());
+                Array<OneD, NekDouble> tmpOut(tmpQuad2.GetNcoeffs());
+
+                tmpQuad.BwdTrans(tmpData, tmpBwd);
+                tmpQuad2.FwdTrans(tmpBwd, tmpOut);
+                Vmath::Vcopy(tmpOut.num_elements(), &tmpOut[0], 1, coeffs, 1);
+
+                return;
+            }
 
             switch (m_base[0]->GetBasisType())
             {

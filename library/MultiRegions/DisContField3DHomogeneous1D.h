@@ -139,7 +139,8 @@ namespace Nektar
                 Array<OneD,int> &EdgeID);
             
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result);
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays);
 
             /// This funtion extract form a vector containing a full
             /// 3D-homogenous-1D field the value associated with a
@@ -274,7 +275,8 @@ namespace Nektar
                 const FlagList                     &flags,
                 const StdRegions::ConstFactorMap   &factors,
                 const StdRegions::VarCoeffMap      &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing);
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool PhysSpaceForcing);
 
             virtual void v_EvaluateBoundaryConditions(
                 const NekDouble   time    = 0.0,

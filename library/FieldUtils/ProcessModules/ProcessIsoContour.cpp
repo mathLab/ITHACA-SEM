@@ -32,16 +32,25 @@
 //  Description: Generate isocontours from field data.
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <iostream>
 #include <string>
-using namespace std;
+#include <iostream>
 
 #include "ProcessIsoContour.h"
 
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
+
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/index/rtree.hpp>
+
+namespace bg  = boost::geometry;
+namespace bgi = boost::geometry::index;
+
+using namespace std;
 
 namespace Nektar
 {
@@ -50,52 +59,54 @@ namespace FieldUtils
 
 ModuleKey ProcessIsoContour::className =
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "isocontour"),
-        ProcessIsoContour::create,
-        "Extract an isocontour of fieldid variable and at "
-        "value fieldvalue, Optionally fieldstr can be "
-        "specified for a string defiition or smooth for "
-        "smoothing");
+                        ModuleKey(eProcessModule, "isocontour"),
+                        ProcessIsoContour::create,
+                        "Extract an isocontour of fieldid variable and at "
+                        "value fieldvalue, Optionally fieldstr can be "
+                        "specified for a string defiition or smooth for "
+                        "smoothing");
 
-ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f)
-    : ProcessEquiSpacedOutput(f)
+ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
+    ProcessEquiSpacedOutput(f)
 {
 
-    m_config["fieldstr"] =
-        ConfigOption(false, "NotSet", "string of isocontour to be extracted");
-    m_config["fieldname"] =
-        ConfigOption(false, "isocon", "name for isocontour if fieldstr "
-                                      "specified, default is isocon");
+    m_config["fieldstr"]           = ConfigOption(false, "NotSet",
+                                        "string of isocontour to be extracted");
+    m_config["fieldname"]          = ConfigOption(false, "isocon",
+                                        "name for isocontour if fieldstr "
+                                        "specified, default is isocon");
 
-    m_config["fieldid"] = ConfigOption(false, "NotSet", "field id to extract");
+    m_config["fieldid"]            = ConfigOption(false, "NotSet",
+                                        "field id to extract");
 
-    m_config["fieldvalue"] =
-        ConfigOption(false, "NotSet", "field value to extract");
+    m_config["fieldvalue"]         = ConfigOption(false, "NotSet",
+                                        "field value to extract");
 
-    m_config["globalcondense"] =
-        ConfigOption(true, "NotSet", "Globally condense contour to unique "
-                                     "values");
+    m_config["globalcondense"]     = ConfigOption(true, "NotSet",
+                                        "Globally condense contour to unique "
+                                        "values");
 
-    m_config["smooth"] =
-        ConfigOption(true, "NotSet", "Smooth isocontour (might require "
-                                     "globalcondense)");
+    m_config["smooth"]             = ConfigOption(true, "NotSet",
+                                        "Smooth isocontour (might require "
+                                                  "globalcondense)");
 
-    m_config["smoothiter"] =
-        ConfigOption(false, "100", "Number of smoothing cycle, default = "
-                                   "100");
+    m_config["smoothiter"]         = ConfigOption(false, "100",
+                                        "Number of smoothing cycle, default = "
+                                        "100");
 
-    m_config["smoothposdiffusion"] =
-        ConfigOption(false, "0.5", "Postive diffusion coefficient "
-                                   "(0 < lambda < 1), default = 0.5");
+    m_config["smoothposdiffusion"] = ConfigOption(false,"0.5",
+                                        "Postive diffusion coefficient "
+                                        "(0 < lambda < 1), default = 0.5");
 
-    m_config["smoothnegdiffusion"] =
-        ConfigOption(false, "0.495", "Negative diffusion coefficient "
-                                     "(0 < mu < 1), default = 0.495");
+    m_config["smoothnegdiffusion"] = ConfigOption(false,"0.505",
+                                        "Negative diffusion coefficient "
+                                        "(0 < mu < 1), default = 0.505");
 
-    m_config["removesmallcontour"] = ConfigOption(
-        false, "0",
-        "Remove contours with less than specified number of triangles."
-        "Only valid with GlobalCondense or Smooth options.");
+    m_config["removesmallcontour"] = ConfigOption(false,"0",
+                                        "Remove contours with less than specified number of triangles."
+                                         "Only valid with GlobalCondense or Smooth options.");
+
+
 }
 
 ProcessIsoContour::~ProcessIsoContour(void)
@@ -104,24 +115,27 @@ ProcessIsoContour::~ProcessIsoContour(void)
 
 void ProcessIsoContour::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
+    Timer timer;
+    int rank = m_f->m_comm->GetRank();
+
+    if(m_f->m_verbose)
     {
-        if (m_f->m_comm->TreatAsRankZero())
+        if(rank == 0)
         {
-            cout << "ProcessIsoContour: Extracting contours..." << endl;
+            cout << "Process Contour extraction..." << endl;
+            timer.Start();
         }
     }
 
     vector<IsoSharedPtr> iso;
 
-    if (m_f->m_fieldPts
-            .get()) // assume we have read .dat file to directly input dat file.
+    if(m_f->m_fieldPts.get()) // assume we have read .dat file to directly input dat file.
     {
         SetupIsoFromFieldPts(iso);
     }
     else // extract isocontour from field
     {
-        if (m_f->m_exp.size() == 0)
+        if(m_f->m_exp.size() == 0)
         {
             return;
         }
@@ -129,10 +143,10 @@ void ProcessIsoContour::Process(po::variables_map &vm)
         // extract all fields to equi-spaced
         SetupEquiSpacedField();
 
-        int fieldid;
+        int     fieldid;
         NekDouble value;
 
-        if (m_config["fieldstr"].m_beenSet) // generate field of interest
+        if(m_config["fieldstr"].m_beenSet) //generate field of interest
         {
             fieldid = m_f->m_fieldPts->GetNFields();
 
@@ -143,84 +157,109 @@ void ProcessIsoContour::Process(po::variables_map &vm)
             string varstr = "x y z";
             vector<Array<OneD, const NekDouble> > interpfields;
 
-            for (int i = 0; i < m_f->m_fieldPts->GetDim(); ++i)
+            for(int i = 0; i < m_f->m_fieldPts->GetDim(); ++i)
             {
                 interpfields.push_back(m_f->m_fieldPts->GetPts(i));
             }
-            for (int i = 0; i < m_f->m_fieldPts->GetNFields(); ++i)
+            for(int i = 0; i < m_f->m_fieldPts->GetNFields(); ++i)
             {
                 varstr += " " + m_f->m_fieldPts->GetFieldName(i);
-                interpfields.push_back(m_f->m_fieldPts->GetPts(i + 3));
+                interpfields.push_back(m_f->m_fieldPts->GetPts(i+3));
             }
 
-            int ExprId      = -1;
+            int ExprId  = -1;
             std::string str = m_config["fieldstr"].as<string>();
-            ExprId          = strEval.DefineFunction(varstr.c_str(), str);
+            ExprId = strEval.DefineFunction(varstr.c_str(), str);
 
             strEval.Evaluate(ExprId, interpfields, pts);
 
-            // set up field name if provided otherwise called "isocon" from
-            // default
+            // set up field name if provided otherwise called "isocon" from default
             string fieldName = m_config["fieldname"].as<string>();
 
             m_f->m_fieldPts->AddField(pts, fieldName);
         }
         else
         {
-            ASSERTL0(m_config["fieldid"].as<string>() != "NotSet",
-                     "fieldid must be specified");
+            ASSERTL0(m_config["fieldid"].as<string>() != "NotSet", "fieldid must be specified");
             fieldid = m_config["fieldid"].as<int>();
         }
 
-        ASSERTL0(m_config["fieldvalue"].as<string>() != "NotSet",
-                 "fieldvalue must be specified");
-        value = m_config["fieldvalue"].as<NekDouble>();
+        ASSERTL0(m_config["fieldvalue"].as<string>() != "NotSet", "fieldvalue must be specified");
+        value   = m_config["fieldvalue"].as<NekDouble>();
 
-        iso = ExtractContour(fieldid, value);
+        iso = ExtractContour(fieldid,value);
+
     }
 
     // Process isocontour
     bool smoothing      = m_config["smooth"].m_beenSet;
     bool globalcondense = m_config["globalcondense"].m_beenSet;
-    if (globalcondense)
+    if(globalcondense)
     {
         int nfields = m_f->m_fieldPts->GetNFields() + m_f->m_fieldPts->GetDim();
-        IsoSharedPtr g_iso = MemoryManager<Iso>::AllocateSharedPtr(nfields - 3);
+        IsoSharedPtr g_iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
 
-        g_iso->globalcondense(iso, m_f->m_verbose);
+        g_iso->GlobalCondense(iso,m_f->m_verbose);
+
 
         iso.clear();
         iso.push_back(g_iso);
     }
 
-    if (smoothing)
+    if(smoothing)
     {
-        int niter        = m_config["smoothiter"].as<int>();
+        Timer timersm;
+
+        if(m_f->m_verbose)
+        {
+            if(rank == 0)
+            {
+                cout << "Process Contour smoothing ..." << endl;
+                timersm.Start();
+            }
+        }
+
+        int  niter = m_config["smoothiter"].as<int>();
         NekDouble lambda = m_config["smoothposdiffusion"].as<NekDouble>();
         NekDouble mu     = m_config["smoothnegdiffusion"].as<NekDouble>();
-        for (int i = 0; i < iso.size(); ++i)
+        for(int i =0 ; i < iso.size(); ++i)
         {
-            iso[i]->smooth(niter, lambda, -mu);
+            iso[i]->Smooth(niter,lambda,-mu);
+        }
+
+        if(m_f->m_verbose)
+        {
+            if(rank == 0)
+            {
+                timersm.Stop();
+                NekDouble cpuTime = timersm.TimePerTest(1);
+
+                stringstream ss;
+                ss << cpuTime << "s";
+                cout << "Process smooth CPU Time: " << setw(8) << left
+                     << ss.str() << endl;
+                cpuTime = 0.0;
+            }
         }
     }
 
     int mincontour = 0;
-    if ((mincontour = m_config["removesmallcontour"].as<int>()))
+    if((mincontour = m_config["removesmallcontour"].as<int>()))
     {
         vector<IsoSharedPtr> new_iso;
 
-        if (m_f->m_comm->TreatAsRankZero())
+        if(rank == 0)
         {
-            cout << "Identifying separate regions [." << flush;
+            cout << "Identifying separate regions [." << flush ;
         }
-        for (int i = 0; i < iso.size(); ++i)
+        for(int i =0 ; i < iso.size(); ++i)
         {
-            iso[i]->separate_regions(new_iso, mincontour, m_f->m_verbose);
+            iso[i]->SeparateRegions(new_iso,mincontour,m_f->m_verbose);
         }
 
-        if (m_f->m_comm->TreatAsRankZero())
+        if(rank == 0)
         {
-            cout << "]" << endl << flush;
+            cout << "]" << endl <<  flush ;
         }
 
         // reset iso to new_iso;
@@ -228,42 +267,63 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     }
 
     ResetFieldPts(iso);
+
+
+    if(m_f->m_verbose)
+    {
+        if(rank == 0)
+        {
+            timer.Stop();
+            NekDouble cpuTime = timer.TimePerTest(1);
+
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "Process Isocontour CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            cpuTime = 0.0;
+        }
+    }
 }
+
 
 /*********************/
 /* Function TwoPairs */
 /*********************/
 
-void TwoPairs(Array<OneD, NekDouble> &cx,
-              Array<OneD, NekDouble> &cy,
-              Array<OneD, NekDouble> &cz,
-              int &pr)
+void TwoPairs (Array<OneD, NekDouble> &cx,
+               Array<OneD, NekDouble> &cy,
+               Array<OneD, NekDouble> &cz,
+               int &pr)
 /*  The logic of the following SWITCH statement may only be
     understood with a "peusdo truth-table" */
 {
-    if (((cx[0] - cx[1]) == 0.0) && ((cy[0] - cy[1]) == 0.0) &&
-        ((cz[0] - cz[1]) == 0.0))
+    if (((cx[0]-cx[1])==0.0)&&
+        ((cy[0]-cy[1])==0.0)&&
+        ((cz[0]-cz[1])==0.0))
     {
-        if (((cx[2] - cx[3]) == 0.0) && ((cy[2] - cy[3]) == 0.0) &&
-            ((cz[2] - cz[3]) == 0.0))
+        if (((cx[2]-cx[3])==0.0)&&
+            ((cy[2]-cy[3])==0.0)&&
+            ((cz[2]-cz[3])==0.0))
         {
-            pr = 4;
+            pr=4;
         }
         else
         {
-            pr = 3;
+            pr=3;
         }
     }
     else
     {
-        pr = 1;
+        pr=1;
     }
 }
+
 
 /*************************/
 /* Function ThreeSimilar */
 /*************************/
-void ThreeSimilar(const int i, const int j, const int k, int &pr, int &ps)
+void ThreeSimilar (const int i, const int j, const int k,
+                   int &pr, int &ps)
 /*  The logic of the following SWITCH statement may be
     understood with a "peusdo truth-table" */
 {
@@ -322,13 +382,14 @@ void ThreeSimilar(const int i, const int j, const int k, int &pr, int &ps)
             ps = 1;
             break;
         default:
-            ASSERTL0(false, "Error in 5-point triangulation in ThreeSimilar");
+            ASSERTL0(false,"Error in 5-point triangulation in ThreeSimilar");
             break;
     }
 }
 
-vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(const int fieldid,
-                                                       const NekDouble val)
+vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(
+        const int fieldid,
+        const NekDouble val)
 {
     vector<IsoSharedPtr> returnval;
 
@@ -346,10 +407,10 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(const int fieldid,
 
     int i, j, k, ii, jj, kk, r, s, n, counter, boolean;
     Array<OneD, Array<OneD, NekDouble> > intfields(nfields);
-    intfields[0] = Array<OneD, NekDouble>(5 * nfields);
-    for (i = 1; i < nfields; ++i)
+    intfields[0] = Array<OneD, NekDouble>(5*nfields);
+    for(i = 1; i < nfields; ++i)
     {
-        intfields[i] = intfields[i - 1] + 5;
+        intfields[i] = intfields[i-1] + 5;
     }
     Array<OneD, NekDouble> cx = intfields[0];
     Array<OneD, NekDouble> cy = intfields[1];
@@ -357,55 +418,56 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(const int fieldid,
 
     vector<Array<OneD, int> > ptsConn;
     m_f->m_fieldPts->GetConnectivity(ptsConn);
-    for (int zone = 0; zone < ptsConn.size(); ++zone)
+    for(int zone = 0; zone < ptsConn.size(); ++zone)
     {
         IsoSharedPtr iso;
 
-        iso = MemoryManager<Iso>::AllocateSharedPtr(nfields - 3);
+        iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
 
-        int nelmt = ptsConn[zone].num_elements() / (coordim + 1);
+        int nelmt = ptsConn[zone].num_elements()
+            /(coordim+1);
 
         Array<OneD, int> conn = ptsConn[zone];
 
         for (n = 0, i = 0; i < nelmt; ++i)
         {
             // check to see if val is between vertex values
-            if (!(((c[conn[i * 4]] > val) && (c[conn[i * 4 + 1]] > val) &&
-                   (c[conn[i * 4 + 2]] > val) && (c[conn[i * 4 + 3]] > val)) ||
-                  ((c[conn[i * 4]] < val) && (c[conn[i * 4 + 1]] < val) &&
-                   (c[conn[i * 4 + 2]] < val) && (c[conn[i * 4 + 3]] < val))))
+            if(!(((c[conn[i*4]]  >val)&&(c[conn[i*4+1]]>val)&&
+                  (c[conn[i*4+2]]>val)&&(c[conn[i*4+3]]>val))||
+                 ((c[conn[i*4  ]]<val)&&(c[conn[i*4+1]]<val)&&
+                  (c[conn[i*4+2]]<val)&&(c[conn[i*4+3]]<val))))
             {
 
                 // loop over all edges and interpolate if
                 // contour is between vertex values
-                for (counter = 0, j = 0; j <= 2; j++)
+                for (counter = 0, j=0; j<=2; j++)
                 {
-                    for (k = j + 1; k <= 3; k++)
+                    for (k=j+1; k<=3; k++)
                     {
-                        if (((c[conn[i * 4 + j]] >= val) &&
-                             (val >= c[conn[i * 4 + k]])) ||
-                            ((c[conn[i * 4 + j]] <= val) &&
-                             (val <= c[conn[i * 4 + k]])))
+                        if (((c[conn[i*4+j]]>=val)&&
+                             (val>=c[conn[i*4+k]]))||
+                            ((c[conn[i*4+j]]<=val)&&
+                             (val<=c[conn[i*4+k]])))
                         {
                             // linear interpolation of fields
                             // (and coords).
-                            NekDouble cj     = c[conn[i * 4 + j]];
-                            NekDouble ck     = c[conn[i * 4 + k]];
-                            NekDouble factor = (val - cj) / (ck - cj);
+                            NekDouble cj = c[conn[i*4+j]];
+                            NekDouble ck = c[conn[i*4+k]];
+                            NekDouble factor =  (val-cj)/(ck-cj);
 
-                            if (fabs(cj - ck) > 1e-12)
+                            if(fabs(cj-ck) > 1e-12)
                             {
                                 // interpolate coordinates and fields
-                                for (int f = 0; f < nfields; ++f)
+                                for(int f = 0; f < nfields; ++f)
                                 {
-                                    if (counter == 5)
+                                    if(counter == 5)
                                     {
-                                        ASSERTL0(false, "Counter is 5");
+                                        ASSERTL0(false,"Counter is 5");
                                     }
                                     intfields[f][counter] =
-                                        fields[f][conn[4 * i + j]] +
-                                        factor * (fields[f][conn[4 * i + k]] -
-                                                  fields[f][conn[4 * i + j]]);
+                                        fields[f][conn[4*i+j]] +
+                                        factor*(fields[f][conn[4*i+k]] -
+                                                fields[f][conn[4*i+j]]);
                                 }
                                 ++counter;
                             }
@@ -413,79 +475,76 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(const int fieldid,
                     }
                 }
 
-                switch (counter)
+                switch(counter)
                 {
-                    case 3:
-                        n += 1;
-                        iso->resize_fields(3 * n);
+                case 3:
+                    n+=1;
+                    iso->ResizeFields(3*n);
 
-                        for (j = 0; j < 3; ++j)
-                        {
-                            iso->set_fields(3 * (n - 1) + j, intfields, j);
-                        }
-                        break;
-                    case 4:
-                        n += 2;
-                        iso->resize_fields(3 * n);
+                    for(j = 0; j < 3; ++j)
+                    {
+                        iso->SetFields(3*(n-1)+j,intfields,j);
+                    }
+                    break;
+                case 4:
+                    n+=2;
+                    iso->ResizeFields(3*n);
 
-                        for (j = 0; j < 3; ++j)
-                        {
-                            iso->set_fields(3 * (n - 2) + j, intfields, j);
-                            iso->set_fields(3 * (n - 1) + j, intfields, j + 1);
-                        }
-                        break;
-                    case 5:
-                        n += 1;
-                        iso->resize_fields(3 * n);
+                    for(j = 0; j < 3; ++j)
+                    {
+                        iso->SetFields(3*(n-2)+j,intfields,j);
+                        iso->SetFields(3*(n-1)+j,intfields,j+1);
+                    }
+                    break;
+                case 5:
+                    n+=1;
+                    iso->ResizeFields(3*n);
 
-                        boolean = 0;
-                        for (ii = 0; ii <= 2; ii++)
+                    boolean=0;
+                    for (ii=0;ii<=2;ii++)
+                    {
+                        for (jj=ii+1;jj<=3;jj++)
                         {
-                            for (jj = ii + 1; jj <= 3; jj++)
+                            for (kk=jj+1;kk<=4;kk++)
                             {
-                                for (kk = jj + 1; kk <= 4; kk++)
+                                if((((cx[ii]-cx[jj])==0.0)&&
+                                    ((cy[ii]-cy[jj])==0.0)&&
+                                    ((cz[ii]-cz[jj])==0.0))&&
+                                   (((cx[ii]-cx[kk])==0.0)&&
+                                    ((cy[ii]-cy[kk])==0.0)&&
+                                    ((cz[ii]-cz[kk])==0.0)))
                                 {
-                                    if ((((cx[ii] - cx[jj]) == 0.0) &&
-                                         ((cy[ii] - cy[jj]) == 0.0) &&
-                                         ((cz[ii] - cz[jj]) == 0.0)) &&
-                                        (((cx[ii] - cx[kk]) == 0.0) &&
-                                         ((cy[ii] - cy[kk]) == 0.0) &&
-                                         ((cz[ii] - cz[kk]) == 0.0)))
-                                    {
-                                        boolean += 1;
-                                        ThreeSimilar(ii, jj, kk, r, s);
+                                    boolean+=1;
+                                    ThreeSimilar (ii,jj,kk,r,s);
 
-                                        iso->set_fields(3 * (n - 1), intfields,
-                                                        ii);
-                                        iso->set_fields(3 * (n - 1) + 1,
-                                                        intfields, r);
-                                        iso->set_fields(3 * (n - 1) + 2,
-                                                        intfields, s);
-                                    }
-                                    else
-                                    {
-                                        boolean += 0;
-                                    }
+                                    iso->SetFields(3*(n-1)  ,intfields,ii);
+                                    iso->SetFields(3*(n-1)+1,intfields,r);
+                                    iso->SetFields(3*(n-1)+2,intfields,s);
+                                }
+                                else
+                                {
+                                    boolean+=0;
                                 }
                             }
                         }
+                    }
 
-                        if (boolean == 0)
-                        {
-                            TwoPairs(cx, cy, cz, r);
+                    if (boolean==0)
+                    {
+                        TwoPairs (cx,cy,cz,r);
 
-                            iso->set_fields(3 * (n - 1), intfields, 0);
-                            iso->set_fields(3 * (n - 1) + 1, intfields, 2);
-                            iso->set_fields(3 * (n - 1) + 2, intfields, r);
-                        }
-                        break;
+                        iso->SetFields(3*(n-1)  ,intfields,0);
+                        iso->SetFields(3*(n-1)+1,intfields,2);
+                        iso->SetFields(3*(n-1)+2,intfields,r);
+                    }
+                    break;
                 }
             }
         }
-        iso->set_ntris(n);
+        iso->SetNTris(n);
 
         // condense the information in this elemental extraction.
-        iso->condense();
+        iso->Condense();
         returnval.push_back(iso);
     }
 
@@ -504,9 +563,9 @@ void ProcessIsoContour::ResetFieldPts(vector<IsoSharedPtr> &iso)
 
     // count up number of points
     int npts = 0;
-    for (int i = 0; i < iso.size(); ++i)
+    for(int i =0; i < iso.size(); ++i)
     {
-        npts += iso[i]->get_nvert();
+        npts += iso[i]->GetNVert();
     }
 
     // set up coordinate in new field
@@ -515,27 +574,28 @@ void ProcessIsoContour::ResetFieldPts(vector<IsoSharedPtr> &iso)
     newfields[2] = Array<OneD, NekDouble>(npts);
 
     int cnt = 0;
-    for (int i = 0; i < iso.size(); ++i)
+    for(int i =0; i < iso.size(); ++i)
     {
-        for (int j = 0; j < iso[i]->get_nvert(); ++j, ++cnt)
+        for(int j = 0; j < iso[i]->GetNVert(); ++j,++cnt)
         {
-            newfields[0][cnt] = iso[i]->get_x(j);
-            newfields[1][cnt] = iso[i]->get_y(j);
-            newfields[2][cnt] = iso[i]->get_z(j);
+            newfields[0][cnt] = iso[i]->GetX(j);
+            newfields[1][cnt] = iso[i]->GetY(j);
+            newfields[2][cnt] = iso[i]->GetZ(j);
         }
     }
 
+
     // set up fields
-    for (int f = 0; f < nfields - 3; ++f)
+    for(int f = 0; f < nfields-3; ++f)
     {
-        newfields[f + 3] = Array<OneD, NekDouble>(npts);
+        newfields[f+3] = Array<OneD, NekDouble>(npts);
 
         cnt = 0;
-        for (int i = 0; i < iso.size(); ++i)
+        for(int i =0; i < iso.size(); ++i)
         {
-            for (int j = 0; j < iso[i]->get_nvert(); ++j, ++cnt)
+            for(int j = 0; j < iso[i]->GetNVert(); ++j,++cnt)
             {
-                newfields[f + 3][cnt] = iso[i]->get_fields(f, j);
+                newfields[f+3][cnt] = iso[i]->GetFields(f,j);
             }
         }
     }
@@ -547,17 +607,17 @@ void ProcessIsoContour::ResetFieldPts(vector<IsoSharedPtr> &iso)
     m_f->m_fieldPts->GetConnectivity(ptsConn);
     cnt = 0;
     ptsConn.clear();
-    for (int i = 0; i < iso.size(); ++i)
+    for(int i =0; i < iso.size(); ++i)
     {
-        int ntris = iso[i]->get_ntris();
-        Array<OneD, int> conn(ntris * 3);
+        int ntris = iso[i]->GetNTris();
+        Array<OneD, int> conn(ntris*3);
 
-        for (int j = 0; j < 3 * ntris; ++j)
+        for(int j = 0; j < 3*ntris; ++j)
         {
-            conn[j] = cnt + iso[i]->get_vid(j);
+            conn[j] = cnt + iso[i]->GetVId(j);
         }
         ptsConn.push_back(conn);
-        cnt += iso[i]->get_nvert();
+        cnt += iso[i]->GetNVert();
     }
     m_f->m_fieldPts->SetConnectivity(ptsConn);
 }
@@ -576,67 +636,68 @@ void ProcessIsoContour::SetupIsoFromFieldPts(vector<IsoSharedPtr> &isovec)
     vector<Array<OneD, int> > ptsConn;
     m_f->m_fieldPts->GetConnectivity(ptsConn);
 
+
     int cnt = 0;
-    for (int c = 0; c < ptsConn.size(); ++c)
+    for(int c = 0; c < ptsConn.size(); ++c)
     {
         // set up single iso with all the information from PtsField
-        IsoSharedPtr iso = MemoryManager<Iso>::AllocateSharedPtr(nfields - dim);
+        IsoSharedPtr iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-dim);
 
         int nelmt = 0;
-        nelmt     = ptsConn[c].num_elements() / 3;
+        nelmt = ptsConn[c].num_elements()/3;
 
-        iso->set_ntris(nelmt);
-        iso->resize_vid(3 * nelmt);
+        iso->SetNTris(nelmt);
+        iso->ResizeVId(3*nelmt);
 
         // fill in connectivity values.
         int nvert = 0;
-        for (int i = 0; i < ptsConn[c].num_elements(); ++i)
+        for(int i = 0; i < ptsConn[c].num_elements(); ++i)
         {
-            int cid = ptsConn[c][i] - cnt;
-            iso->set_vid(i, cid);
-            nvert = max(cid, nvert);
+            int cid = ptsConn[c][i]-cnt;
+            iso->SetVId(i,cid);
+            nvert = max(cid,nvert);
         }
         nvert++;
 
-        iso->set_nvert(nvert);
-        iso->resize_fields(nvert);
+        iso->SetNVert(nvert);
+        iso->ResizeFields(nvert);
 
         // fill in points values (including coordinates)
-        for (int i = 0; i < nvert; ++i)
+        for(int i = 0; i < nvert; ++i)
         {
-            iso->set_fields(i, fieldpts, i + cnt);
+            iso->SetFields(i,fieldpts,i+cnt);
         }
         cnt += nvert;
         isovec.push_back(iso);
     }
+
 }
 
-void Iso::condense(void)
+
+void Iso::Condense(void)
 {
-    register int i, j, cnt;
+    register int i,j,cnt;
     IsoVertex v;
     vector<IsoVertex> vert;
     vector<IsoVertex>::iterator pt;
 
-    if (!m_ntris)
-        return;
+    if(!m_ntris) return;
 
-    if (m_condensed)
-        return;
+    if(m_condensed) return;
     m_condensed = true;
 
-    vert.reserve(m_ntris / 6);
+    vert.reserve(m_ntris/6);
 
-    m_vid = Array<OneD, int>(3 * m_ntris);
+    m_vid = Array<OneD, int>(3*m_ntris);
 
     // fill first 3 points and initialise fields
     v.m_fields.resize(m_fields.size());
-    for (cnt = 0, i = 0; i < 3; ++i)
+    for(cnt =0, i = 0; i < 3; ++i)
     {
         v.m_x = m_x[i];
         v.m_y = m_y[i];
         v.m_z = m_z[i];
-        for (int f = 0; f < m_fields.size(); ++f)
+        for(int f = 0; f < m_fields.size(); ++f)
         {
             v.m_fields[f] = m_fields[f][i];
         }
@@ -646,47 +707,47 @@ void Iso::condense(void)
         ++cnt;
     }
 
-    for (i = 1; i < m_ntris; ++i)
+    for(i = 1; i < m_ntris; ++i)
     {
-        for (j = 0; j < 3; ++j)
+        for(j = 0; j < 3; ++j)
         {
-            v.m_x = m_x[3 * i + j];
-            v.m_y = m_y[3 * i + j];
-            v.m_z = m_z[3 * i + j];
+            v.m_x = m_x[3*i+j];
+            v.m_y = m_y[3*i+j];
+            v.m_z = m_z[3*i+j];
 
-            pt = find(vert.begin(), vert.end(), v);
-            if (pt != vert.end())
+            pt = find(vert.begin(),vert.end(),v);
+            if(pt != vert.end())
             {
-                m_vid[3 * i + j] = pt[0].m_id;
+                m_vid[3*i+j] = pt[0].m_id;
             }
             else
             {
                 v.m_id = cnt;
 
-                for (int f = 0; f < m_fields.size(); ++f)
+                for(int f = 0; f < m_fields.size(); ++f)
                 {
-                    v.m_fields[f] = m_fields[f][3 * i + j];
+                    v.m_fields[f] = m_fields[f][3*i+j];
                 }
 
                 vert.push_back(v);
 
-                m_vid[3 * i + j] = v.m_id;
+                m_vid[3*i+j] = v.m_id;
                 ++cnt;
-            }
+           }
         }
     }
 
     // remove elements with multiple vertices
-    for (i = 0, cnt = 0; i < m_ntris;)
+    for(i = 0,cnt=0; i < m_ntris;)
     {
-        if ((m_vid[3 * i] == m_vid[3 * i + 1]) ||
-            (m_vid[3 * i] == m_vid[3 * i + 2]) ||
-            (m_vid[3 * i + 1] == m_vid[3 * i + 2]))
+        if((m_vid[3*i]  ==m_vid[3*i+1])||
+           (m_vid[3*i]  ==m_vid[3*i+2])||
+           (m_vid[3*i+1]==m_vid[3*i+2]))
         {
             cnt++;
-            for (j = 3 * i; j < 3 * (m_ntris - 1); ++j)
+            for(j = 3*i; j < 3*(m_ntris-1); ++j)
             {
-                m_vid[j] = m_vid[j + 3];
+                m_vid[j] = m_vid[j+3];
             }
             m_ntris--;
         }
@@ -696,254 +757,163 @@ void Iso::condense(void)
         }
     }
 
-    m_nvert = vert.size();
+    m_nvert  = vert.size();
 
     m_x.resize(m_nvert);
     m_y.resize(m_nvert);
     m_z.resize(m_nvert);
 
-    for (int f = 0; f < m_fields.size(); ++f)
+    for(int f = 0; f < m_fields.size(); ++f)
     {
         m_fields[f].resize(m_nvert);
     }
 
-    for (i = 0; i < m_nvert; ++i)
+    for(i = 0; i < m_nvert; ++i)
     {
         m_x[i] = vert[i].m_x;
         m_y[i] = vert[i].m_y;
         m_z[i] = vert[i].m_z;
-        for (int f = 0; f < m_fields.size(); ++f)
+        for(int f = 0; f < m_fields.size(); ++f)
         {
             m_fields[f][i] = vert[i].m_fields[f];
         }
     }
 }
 
-NekDouble SQ_PNT_TOL = 1e-16;
 
-// define == if point is within 1e-4
-bool operator==(const IsoVertex &x, const IsoVertex &y)
+void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
 {
-    return ((x.m_x - y.m_x) * (x.m_x - y.m_x) +
-                (x.m_y - y.m_y) * (x.m_y - y.m_y) +
-                (x.m_z - y.m_z) * (x.m_z - y.m_z) <
-            SQ_PNT_TOL)
-               ? true
-               : false;
-}
+    typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> BPoint;
+    typedef std::pair<BPoint, unsigned int> PointPair;
 
-// define != if point is outside 1e-4
-bool operator!=(const IsoVertex &x, const IsoVertex &y)
-{
-    return ((x.m_x - y.m_x) * (x.m_x - y.m_x) +
-                (x.m_y - y.m_y) * (x.m_y - y.m_y) +
-                (x.m_z - y.m_z) * (x.m_z - y.m_z) <
-            SQ_PNT_TOL)
-               ? 0
-               : 1;
-}
-
-bool same(NekDouble x1,
-          NekDouble y1,
-          NekDouble z1,
-          NekDouble x2,
-          NekDouble y2,
-          NekDouble z2)
-{
-    if ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) + (z1 - z2) * (z1 - z2) <
-        SQ_PNT_TOL)
-    {
-        return true;
-    }
-
-    return false;
-}
-
-void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
-{
-    int i, j, n;
-    int nvert, nelmt;
-    int niso = iso.size();
-    int id1, id2;
+    int    i,j,n;
+    int    nelmt;
+    int    niso=iso.size();
+    int    id1,id2;
     Array<OneD, Array<OneD, int> > vidmap;
 
-    if (m_condensed)
-        return;
+    if(m_condensed) return;
     m_condensed = true;
 
-    vidmap = Array<OneD, Array<OneD, int> >(niso);
+    vidmap = Array<OneD, Array<OneD, int> > (niso);
 
     m_ntris = 0;
-    for (i = 0; i < niso; ++i)
+    for(i = 0; i < niso; ++i)
     {
-        if (iso[i]->m_ntris)
+        if(iso[i]->m_ntris)
         {
             m_ntris += iso[i]->m_ntris;
         }
     }
 
-    m_vid = Array<OneD, int>(3 * m_ntris);
+    m_vid = Array<OneD, int>(3*m_ntris);
 
     m_nvert = 0;
-    for (i = 0; i < niso; ++i)
+    for(i = 0; i < niso; ++i)
     {
-        if (iso[i]->m_ntris)
+        if(iso[i]->m_ntris)
         {
             m_nvert += iso[i]->m_nvert;
         }
     }
 
-    vector<vector<int> > isocon;
+    vector< vector<int> > isocon;
     isocon.resize(niso);
+    vector<int> global_to_unique_map;
+    global_to_unique_map.resize(m_nvert);
 
-    // identify which iso are connected by at least one point;
-    // find min x,y,z and max x,y,z and see if overlap to select
-    // which zones should be connected
+    vector< pair<int,int> > global_to_iso_map;
+    global_to_iso_map.resize(m_nvert);
+
+    //Fill vertex array into rtree format
+    id2 = 0;
+    std::vector<PointPair> inPoints;
+    for(i = 0; i < niso; ++i)
     {
-        vector<Array<OneD, NekDouble> > sph(niso);
-        Array<OneD, NekDouble> rng(6);
-        for (i = 0; i < niso; ++i)
+        for(id1 = 0; id1 < iso[i]->m_nvert; ++id1)
         {
-            sph[i] = Array<OneD, NekDouble>(4);
-
-            // find max and min of isocontour
-            rng[0] = rng[3] = iso[i]->m_x[0];
-            rng[1] = rng[4] = iso[i]->m_x[1];
-            rng[2] = rng[5] = iso[i]->m_x[2];
-
-            for (id1 = 1; id1 < iso[i]->m_nvert; ++id1)
-            {
-                rng[0] = min(rng[0], iso[i]->m_x[i]);
-                rng[1] = min(rng[1], iso[i]->m_y[i]);
-                rng[2] = min(rng[2], iso[i]->m_z[i]);
-
-                rng[3] = max(rng[3], iso[i]->m_x[i]);
-                rng[4] = max(rng[4], iso[i]->m_y[i]);
-                rng[5] = max(rng[5], iso[i]->m_z[i]);
-            }
-
-            // centroid
-            sph[i][0] = (rng[3] + rng[0]) / 2.0;
-            sph[i][1] = (rng[4] + rng[1]) / 2.0;
-            sph[i][2] = (rng[5] + rng[2]) / 2.0;
-
-            // radius;
-            sph[i][3] = sqrt((rng[3] - rng[0]) * (rng[3] - rng[0]) +
-                             (rng[4] - rng[1]) * (rng[4] - rng[1]) +
-                             (rng[5] - rng[2]) * (rng[5] - rng[2]));
-        }
-
-        for (i = 0; i < niso; ++i)
-        {
-            for (j = i; j < niso; ++j)
-            {
-                NekDouble diff =
-                    sqrt((sph[i][0] - sph[j][0]) * (sph[i][0] - sph[j][0]) +
-                         (sph[i][1] - sph[j][1]) * (sph[i][1] - sph[j][1]) +
-                         (sph[i][2] - sph[j][2]) * (sph[i][2] - sph[j][2]));
-
-                // if centroid is closer than added radii
-                if (diff < sph[i][3] + sph[j][3])
-                {
-                    isocon[i].push_back(j);
-                }
-            }
+            inPoints.push_back(PointPair(BPoint( iso[i]->m_x[id1],  iso[i]->m_y[id1],  iso[i]->m_z[id1]), id2));
+            global_to_unique_map[id2]=id2;
+            global_to_iso_map[id2] = make_pair(i,id1);
+            id2++;
         }
     }
 
-    for (i = 0; i < niso; ++i)
-    {
-        vidmap[i] = Array<OneD, int>(iso[i]->m_nvert, -1);
-    }
-    nvert   = 0;
-    int cnt = 0;
-    // count up amount of checking to be done
-    NekDouble totiso = 0;
-    for (i = 0; i < niso; ++i)
-    {
-        totiso += isocon[i].size();
-    }
+    //Build tree
+    bgi::rtree<PointPair, bgi::rstar<16> > rtree;
+    rtree.insert(inPoints.begin(), inPoints.end());
 
-    if (verbose)
+    //Find neipghbours
+    int      unique_index = 0;
+    bool     unique_index_found = false;
+    int      prog;
+    for(i = 0; i < m_nvert; ++i)
     {
-        cout << "Progress Bar totiso: " << totiso << endl;
-    }
-    for (i = 0; i < niso; ++i)
-    {
-        for (n = 0; n < isocon[i].size(); ++n, ++cnt)
+        if(verbose)
         {
+            prog = LibUtilities::PrintProgressbar(i,m_nvert,"Nearest verts",prog);
+        }
 
-            if (verbose && totiso >= 40)
+        BPoint queryPoint = inPoints[i].first;
+
+        // find points within the distance box
+        std::vector<PointPair> result;
+        rtree.query(bgi::nearest(queryPoint, 100), std::back_inserter(result));
+
+        WARNINGL1(result.size() < 100,"Failed to find less than 100 neighbouring points");
+
+        id1 = 0;
+        unique_index_found = false;
+        int nptsfound = 0;
+
+        WARNINGL1(result.size() > 0,"Failed to find any nearest point");
+
+        for(id1 = 0; id1 < result.size(); ++id1)
+        {
+            if(bg::distance(queryPoint, result[id1].first)<SQ_PNT_TOL)
             {
-                LibUtilities::PrintProgressbar(cnt, totiso, "Condensing verts");
-            }
-
-            int con = isocon[i][n];
-            for (id1 = 0; id1 < iso[i]->m_nvert; ++id1)
-            {
-
-                if (verbose && totiso < 40)
+                id2 = result[id1].second;
+                nptsfound ++;
+                if(global_to_unique_map[id2] <unique_index)
                 {
-                    LibUtilities::PrintProgressbar(id1, iso[i]->m_nvert,
-                                                   "isocon");
+                    // point has already been defined
+                    continue;
                 }
-
-                int start = 0;
-                if (con == i)
+                else
                 {
-                    start = id1 + 1;
-                }
-                for (id2 = start; id2 < iso[con]->m_nvert; ++id2)
-                {
-
-                    if ((vidmap[con][id2] == -1) || (vidmap[i][id1] == -1))
-                    {
-                        if (same(iso[i]->m_x[id1], iso[i]->m_y[id1],
-                                 iso[i]->m_z[id1], iso[con]->m_x[id2],
-                                 iso[con]->m_y[id2], iso[con]->m_z[id2]))
-                        {
-                            if ((vidmap[i][id1] == -1) &&
-                                (vidmap[con][id2] != -1))
-                            {
-                                vidmap[i][id1] = vidmap[con][id2];
-                            }
-                            else if ((vidmap[con][id2] == -1) &&
-                                     (vidmap[i][id1] != -1))
-                            {
-                                vidmap[con][id2] = vidmap[i][id1];
-                            }
-                            else if ((vidmap[con][id2] == -1) &&
-                                     (vidmap[i][id1] == -1))
-                            {
-                                vidmap[i][id1] = vidmap[con][id2] = nvert++;
-                            }
-                        }
-                    }
+                    global_to_unique_map[id2] = unique_index;
+                    unique_index_found = true;
                 }
             }
         }
 
-        for (id1 = 0; id1 < iso[i]->m_nvert; ++id1)
+        WARNINGL1(nptsfound > 0,"Failed to find any nearest point");
+
+        if(unique_index_found)
         {
-            if (vidmap[i][id1] == -1)
-            {
-                vidmap[i][id1] = nvert++;
-            }
+            unique_index++;
         }
     }
-    m_nvert = nvert;
+    if(verbose)
+    {
+        cout << endl;
+    }
+
+    m_nvert = unique_index;
 
     nelmt = 0;
     // reset m_vid;
-    for (n = 0; n < niso; ++n)
+    int cnt = 0;
+    for(n = 0; n < niso; ++n)
     {
-        for (i = 0; i < iso[n]->m_ntris; ++i, nelmt++)
+        for(i = 0; i < iso[n]->m_ntris; ++i,nelmt++)
         {
-            for (j = 0; j < 3; ++j)
+            for(j=0; j < 3;++j)
             {
-                m_vid[3 * nelmt + j] = vidmap[n][iso[n]->m_vid[3 * i + j]];
+                m_vid[3*nelmt+j] = global_to_unique_map[iso[n]->m_vid[3*i+j]+cnt];
             }
         }
+        cnt += iso[n]->m_nvert;
     }
 
     m_ntris = nelmt;
@@ -953,96 +923,123 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso, bool verbose)
     m_z.resize(m_nvert);
 
     m_fields.resize(iso[0]->m_fields.size());
-    for (i = 0; i < iso[0]->m_fields.size(); ++i)
+    for(i = 0; i < iso[0]->m_fields.size(); ++i)
     {
         m_fields[i].resize(m_nvert);
     }
 
-    // reset coordinate and fields.
-    for (n = 0; n < niso; ++n)
+    for(n = 0; n < global_to_unique_map.size(); ++n)
     {
-        for (i = 0; i < iso[n]->m_nvert; ++i)
-        {
-            m_x[vidmap[n][i]] = iso[n]->m_x[i];
-            m_y[vidmap[n][i]] = iso[n]->m_y[i];
-            m_z[vidmap[n][i]] = iso[n]->m_z[i];
 
-            for (j = 0; j < m_fields.size(); ++j)
-            {
-                m_fields[j][vidmap[n][i]] = iso[n]->m_fields[j][i];
-            }
+        m_x[global_to_unique_map[n]] = bg::get<0>(inPoints[n].first);
+        m_y[global_to_unique_map[n]] = bg::get<1>(inPoints[n].first);
+        m_z[global_to_unique_map[n]] = bg::get<2>(inPoints[n].first);
+
+        int isoid = global_to_iso_map[n].first;
+        int ptid  = global_to_iso_map[n].second;
+        for(j = 0; j < m_fields.size(); ++j)
+        {
+            m_fields[j][global_to_unique_map[n]] = iso[isoid]->
+                m_fields[j][ptid];
         }
     }
-    cout << endl;
 }
 
-void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
+
+// define == if point is within 1e-4
+bool operator == (const IsoVertex& x, const IsoVertex& y)
 {
-    int iter, i, j;
+    return ((x.m_x-y.m_x)*(x.m_x-y.m_x) + (x.m_y-y.m_y)*(x.m_y-y.m_y) +
+            (x.m_z-y.m_z)*(x.m_z-y.m_z) < SQ_PNT_TOL)? true:false;
+}
+
+// define != if point is outside 1e-4
+bool operator != (const IsoVertex& x, const IsoVertex& y)
+{
+    return ((x.m_x-y.m_x)*(x.m_x-y.m_x) + (x.m_y-y.m_y)*(x.m_y-y.m_y) +
+            (x.m_z-y.m_z)*(x.m_z-y.m_z) < SQ_PNT_TOL)? 0:1;
+}
+
+void Iso::Smooth(int n_iter, NekDouble lambda, NekDouble mu)
+{
+    int   iter,i,j,k;
     NekDouble del_v[3];
     NekDouble w;
-    Array<OneD, NekDouble> xtemp, ytemp, ztemp;
-    vector<vector<int> > adj, vertcon;
+    Array<OneD, NekDouble>  xtemp, ytemp, ztemp;
+    vector< vector<int> > adj,vertcon;
+    vector< vector<NekDouble > >  wght;
     vector<int>::iterator iad;
     vector<int>::iterator ipt;
 
     // determine elements around each vertex
     vertcon.resize(m_nvert);
-    for (i = 0; i < m_ntris; ++i)
+    for(i = 0; i < m_ntris; ++i)
     {
-        for (j = 0; j < 3; ++j)
+        for(j = 0; j < 3; ++j)
         {
-            vertcon[m_vid[3 * i + j]].push_back(i);
+            vertcon[m_vid[3*i+j]].push_back(i);
         }
     }
 
-    // determine vertices around each vertex
+    // determine vertices and weights around each vertex
     adj.resize(m_nvert);
+    wght.resize(m_nvert);
 
-    for (i = 0; i < m_nvert; ++i)
+    for(i =0; i < m_nvert; ++i)
     {
-        for (ipt = vertcon[i].begin(); ipt != vertcon[i].end(); ++ipt)
+        // loop over surrounding elements
+        for(ipt = vertcon[i].begin(); ipt != vertcon[i].end(); ++ipt)
         {
-            for (j = 0; j < 3; ++j)
+            for(j = 0; j < 3; ++j)
             {
                 // make sure not adding own vertex
-                if (m_vid[3 * (*ipt) + j] != i)
+                if(m_vid[3*(*ipt)+j] != i)
                 {
                     // check to see if vertex has already been added
-                    for (iad = adj[i].begin(); iad != adj[i].end(); ++iad)
+                    for(k = 0; k < adj[i].size(); ++k)
                     {
-                        if (*iad == (m_vid[3 * (*ipt) + j]))
+                        if(adj[i][k] == m_vid[3*(*ipt)+j])
+                        {
                             break;
+                        }
                     }
 
-                    if (iad == adj[i].end())
+                    if(k == adj[i].size())
                     {
-                        adj[i].push_back(m_vid[3 * (*ipt) + j]);
+                        adj[i].push_back(m_vid[3*(*ipt)+j]);
                     }
                 }
             }
         }
     }
 
+    // Currently set weights up as even distribution
+    for(i =0; i < m_nvert; ++i)
+    {
+        w = 1.0/((NekDouble)adj[i].size());
+        for(j = 0; j < adj[i].size(); ++j)
+        {
+            wght[i].push_back(w);
+        }
+    }
+
+
     xtemp = Array<OneD, NekDouble>(m_nvert);
     ytemp = Array<OneD, NekDouble>(m_nvert);
     ztemp = Array<OneD, NekDouble>(m_nvert);
 
     // smooth each point
-    for (iter = 0; iter < n_iter; iter++)
+    for (iter=0;iter<n_iter;iter++)
     {
         // compute first weighted average
-        for (i = 0; i < m_nvert; ++i)
+        for(i=0;i< m_nvert;++i)
         {
-            w = 1.0 / (NekDouble)(adj[i].size());
-
             del_v[0] = del_v[1] = del_v[2] = 0.0;
-
-            for (iad = adj[i].begin(); iad != adj[i].end(); ++iad)
+            for(j = 0; j < adj[i].size(); ++j)
             {
-                del_v[0] = del_v[0] + (m_x[*iad] - m_x[i]) * w;
-                del_v[1] = del_v[1] + (m_y[*iad] - m_y[i]) * w;
-                del_v[2] = del_v[2] + (m_z[*iad] - m_z[i]) * w;
+                del_v[0] =  del_v[0] + (m_x[adj[i][j]]-m_x[i])*wght[i][j];
+                del_v[1] =  del_v[1] + (m_y[adj[i][j]]-m_y[i])*wght[i][j];
+                del_v[2] =  del_v[2] + (m_z[adj[i][j]]-m_z[i])*wght[i][j];
             }
 
             xtemp[i] = m_x[i] + del_v[0] * lambda;
@@ -1051,17 +1048,14 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
         }
 
         // compute second weighted average
-        for (i = 0; i < m_nvert; ++i)
+        for(i=0;i< m_nvert;++i)
         {
-
-            w        = 1.0 / (NekDouble)(adj[i].size());
             del_v[0] = del_v[1] = del_v[2] = 0;
-
-            for (iad = adj[i].begin(); iad != adj[i].end(); ++iad)
+            for(j = 0; j < adj[i].size(); ++j)
             {
-                del_v[0] = del_v[0] + (m_x[*iad] - m_x[i]) * w;
-                del_v[1] = del_v[1] + (m_y[*iad] - m_y[i]) * w;
-                del_v[2] = del_v[2] + (m_z[*iad] - m_z[i]) * w;
+                del_v[0] =  del_v[0] + (xtemp[adj[i][j]]-xtemp[i])*wght[i][j];
+                del_v[1] =  del_v[1] + (ytemp[adj[i][j]]-ytemp[i])*wght[i][j];
+                del_v[2] =  del_v[2] + (ztemp[adj[i][j]]-ztemp[i])*wght[i][j];
             }
 
             m_x[i] = xtemp[i] + del_v[0] * mu;
@@ -1071,49 +1065,50 @@ void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
     }
 }
 
-void Iso::separate_regions(vector<IsoSharedPtr> &sep_iso,
-                           int minsize,
-                           bool verbose)
+
+void Iso::SeparateRegions(vector<IsoSharedPtr> &sep_iso, int minsize, bool verbose)
 {
-    int i, j, k, id;
-    Array<OneD, vector<int> > vertcon(m_nvert);
+    int i,j,k,id;
+    Array<OneD, vector<int> >vertcon(m_nvert);
     vector<int>::iterator ipt;
     list<int> tocheck;
     list<int>::iterator cid;
 
-    Array<OneD, bool> viddone(m_nvert, false);
+    Array<OneD, bool> viddone(m_nvert,false);
 
     // make list of connecting tris around each vertex
-    for (i = 0; i < m_ntris; ++i)
+    for(i = 0; i < m_ntris; ++i)
     {
-        for (j = 0; j < 3; ++j)
+        for(j = 0; j < 3; ++j)
         {
-            vertcon[m_vid[3 * i + j]].push_back(i);
+            vertcon[m_vid[3*i+j]].push_back(i);
         }
     }
 
-    Array<OneD, int> vidregion(m_nvert, -1);
+    Array<OneD, int> vidregion(m_nvert,-1);
 
     int nregions = -1;
 
+
     // check all points are assigned to a region
-    for (k = 0; k < m_nvert; ++k)
+    int progcnt  = -1;
+    for(k = 0; k < m_nvert; ++k)
     {
-        if (verbose)
+        if(verbose)
         {
-            LibUtilities::PrintProgressbar(k, m_nvert, "Separating regions");
+            progcnt = LibUtilities::PrintProgressbar(k,m_nvert,"Separating regions",progcnt);
         }
 
-        if (vidregion[k] == -1)
+        if(vidregion[k] == -1)
         {
             vidregion[k] = ++nregions;
 
             // find all elmts around this.. vertex  that need to be checked
-            for (ipt = vertcon[k].begin(); ipt != vertcon[k].end(); ++ipt)
+            for(ipt = vertcon[k].begin(); ipt != vertcon[k].end(); ++ipt)
             {
-                for (i = 0; i < 3; ++i)
+                for(i = 0; i < 3; ++i)
                 {
-                    if (vidregion[id = m_vid[3 * (ipt[0]) + i]] == -1)
+                    if(vidregion[id = m_vid[3*(ipt[0])+i]] == -1)
                     {
                         tocheck.push_back(id);
                         vidregion[id] = nregions;
@@ -1123,20 +1118,18 @@ void Iso::separate_regions(vector<IsoSharedPtr> &sep_iso,
             viddone[k] = 1;
 
             // check all other neighbouring vertices
-            while (tocheck.size())
+            while(tocheck.size())
             {
                 cid = tocheck.begin();
-                while (cid != tocheck.end())
+                while(cid != tocheck.end())
                 {
-                    if (!viddone[*cid])
+                    if(!viddone[*cid])
                     {
-                        for (ipt = vertcon[*cid].begin();
-                             ipt != vertcon[*cid].end(); ++ipt)
+                        for(ipt = vertcon[*cid].begin(); ipt != vertcon[*cid].end(); ++ipt)
                         {
-                            for (i = 0; i < 3; ++i)
+                            for(i = 0; i < 3; ++i)
                             {
-                                if (vidregion[id = m_vid[3 * (ipt[0]) + i]] ==
-                                    -1)
+                                if(vidregion[id = m_vid[3*(ipt[0])+i]] == -1)
                                 {
                                     tocheck.push_back(id);
                                     vidregion[id] = nregions;
@@ -1153,32 +1146,33 @@ void Iso::separate_regions(vector<IsoSharedPtr> &sep_iso,
     }
     nregions++;
 
-    Array<OneD, int> nvert(nregions, 0);
-    Array<OneD, int> nelmt(nregions, 0);
+
+    Array<OneD, int> nvert(nregions,0);
+    Array<OneD, int> nelmt(nregions,0);
 
     // count nverts
-    for (i = 0; i < m_nvert; ++i)
+    for(i = 0; i < m_nvert; ++i)
     {
-        nvert[vidregion[i]] += 1;
+        nvert[vidregion[i]] +=1;
     }
 
     // count nelmts
-    for (i = 0; i < m_ntris; ++i)
+    for(i = 0; i < m_ntris; ++i)
     {
-        nelmt[vidregion[m_vid[3 * i]]] += 1;
+        nelmt[vidregion[m_vid[3*i]]] +=1;
     }
 
     Array<OneD, int> vidmap(m_nvert);
     // generate new list of isocontour
-    for (int n = 0; n < nregions; ++n)
+    for(int n = 0; n < nregions; ++n)
     {
-        if (nelmt[n] > minsize)
+        if(nelmt[n] > minsize)
         {
-            int nfields      = m_fields.size();
+            int nfields = m_fields.size();
             IsoSharedPtr iso = MemoryManager<Iso>::AllocateSharedPtr(nfields);
 
             iso->m_ntris = nelmt[n];
-            iso->m_vid   = Array<OneD, int>(3 * nelmt[n]);
+            iso->m_vid = Array<OneD, int>(3*nelmt[n]);
 
             iso->m_nvert = nvert[n];
             iso->m_x.resize(nvert[n]);
@@ -1186,52 +1180,50 @@ void Iso::separate_regions(vector<IsoSharedPtr> &sep_iso,
             iso->m_z.resize(nvert[n]);
 
             iso->m_fields.resize(nfields);
-            for (i = 0; i < nfields; ++i)
+            for(i = 0; i < nfields; ++i)
             {
                 iso->m_fields[i].resize(nvert[n]);
             }
 
+
             int cnt = 0;
             // generate vid map;
-            Vmath::Zero(m_nvert, vidmap, 1);
-            for (i = 0; i < m_nvert; ++i)
+            Vmath::Zero(m_nvert,vidmap,1);
+            for(i = 0; i < m_nvert; ++i)
             {
-                if (vidregion[i] == n)
+                if(vidregion[i] == n)
                 {
                     vidmap[i] = cnt++;
                 }
             }
 
             cnt = 0;
-            for (i = 0; i < m_ntris; ++i)
+            for(i = 0; i < m_ntris; ++i)
             {
-                if (vidregion[m_vid[3 * i]] == n)
+                if(vidregion[m_vid[3*i]] == n)
                 {
-                    for (j = 0; j < 3; ++j)
+                    for(j = 0; j < 3; ++j)
                     {
-                        iso->m_vid[3 * cnt + j] = vidmap[m_vid[3 * i + j]];
+                        iso->m_vid[3*cnt+j] = vidmap[m_vid[3*i+j]];
 
-                        iso->m_x[vidmap[m_vid[3 * i + j]]] =
-                            m_x[m_vid[3 * i + j]];
-                        iso->m_y[vidmap[m_vid[3 * i + j]]] =
-                            m_y[m_vid[3 * i + j]];
-                        iso->m_z[vidmap[m_vid[3 * i + j]]] =
-                            m_z[m_vid[3 * i + j]];
+                        iso->m_x[vidmap[m_vid[3*i+j]]] = m_x[m_vid[3*i+j]];
+                        iso->m_y[vidmap[m_vid[3*i+j]]] = m_y[m_vid[3*i+j]];
+                        iso->m_z[vidmap[m_vid[3*i+j]]] = m_z[m_vid[3*i+j]];
 
-                        for (k = 0; k < nfields; ++k)
+                        for(k = 0; k < nfields; ++k)
                         {
-                            iso->m_fields[k][vidmap[m_vid[3 * i + j]]] =
-                                m_fields[k][m_vid[3 * i + j]];
+                            iso->m_fields[k][vidmap[m_vid[3*i+j]]] = m_fields[k][m_vid[3*i+j]];
                         }
                     }
                     cnt++;
                 }
             }
 
-            WARNINGL0(cnt == nelmt[n], "Number of elements do not match");
+            WARNINGL0(cnt == nelmt[n],"Number of elements do not match");
             sep_iso.push_back(iso);
         }
     }
 }
+
 }
 }

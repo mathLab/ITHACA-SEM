@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: boolean evaluations of mesh objects.
+//  Description: Boolean operators for comparison of mesh objects.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +44,7 @@ namespace NekMeshUtils
 {
 
 /**
- * @brief compares two element config structs
+ * @brief Compares two element config structs
  */
 bool operator==(ElmtConfig const &c1, ElmtConfig const &c2)
 {
@@ -52,7 +52,7 @@ bool operator==(ElmtConfig const &c1, ElmtConfig const &c2)
 }
 
 /**
- * @brief compares two element sharedptrs
+ * @brief Compares two element shared pointers
  */
 bool operator==(ElementSharedPtr const &e1, ElementSharedPtr const &e2)
 {
@@ -124,11 +124,11 @@ bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2)
 }
 
 /**
- * @brief compares two nodes for inequality
+ * @brief Compares two nodes for inequality based on IDs
  */
 bool operator!=(NodeSharedPtr const &p1, NodeSharedPtr const &p2)
 {
-    if(p1->m_id != p2->m_id)
+    if (p1->m_id != p2->m_id)
     {
         return true;
     }
@@ -147,7 +147,7 @@ bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2)
 }
 
 /**
- * @brief ostream operator for nodes
+ * @brief Print description of node to given ostream.
  */
 std::ostream &operator<<(std::ostream &os, const NodeSharedPtr &n)
 {

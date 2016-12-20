@@ -94,6 +94,8 @@ namespace Nektar
                 return m_trace;
             }
 
+            Array<OneD, int> m_BCtoElmMap;
+            Array<OneD, int> m_BCtoEdgMap;
 
         protected:
 
@@ -222,14 +224,14 @@ namespace Nektar
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
-            virtual void v_FillBndCondFromField();
             virtual void v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap   &factors,
                 const StdRegions::VarCoeffMap      &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing);
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool  PhysSpaceForcing);
             virtual void v_GeneralMatrixOp(
                 const GlobalMatrixKey             &gkey,
                 const Array<OneD,const NekDouble> &inarray,
@@ -239,7 +241,8 @@ namespace Nektar
                 Array<OneD, int> &ElmtID,
                 Array<OneD, int> &EdgeID);
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result);
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays);
             virtual void v_Reset();
 
             /**

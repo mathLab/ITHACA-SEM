@@ -62,15 +62,19 @@ public:
     virtual void Process();
 
 protected:
-    void   GenerateNormals(std::vector<NekMeshUtils::ElementSharedPtr> &el,
-                           NekMeshUtils::MeshSharedPtr &mesh);
-    double CrossProdMag   (NekMeshUtils::Node &a, NekMeshUtils::Node &b);
-    void   UnitCrossProd  (NekMeshUtils::Node &a, NekMeshUtils::Node &b, NekMeshUtils::Node &c);
-    double Blend          (double r);
-    void   SuperBlend     (std::vector<double> &r,
-                           std::vector<NekMeshUtils::Node>   &Q,
-                           NekMeshUtils::Node           &P,
-                           std::vector<double> &blend);
+
+    void  GenerateNormals(std::vector<NekMeshUtils::ElementSharedPtr> &el,
+                            NekMeshUtils::MeshSharedPtr &mesh);
+    NekDouble CrossProdMag (NekMeshUtils::Node &a, NekMeshUtils::Node &b);
+    void   UnitCrossProd   (NekMeshUtils::Node &a, NekMeshUtils::Node &b, NekMeshUtils::Node &c);
+    NekDouble Blend        (NekDouble r);
+    void   SuperBlend      (std::vector<NekDouble> &r,
+                            std::vector<NekMeshUtils::Node>   &Q,
+                            NekMeshUtils::Node           &P,
+                            std::vector<NekDouble> &blend);
+
+    void  FindNormalFromPlyFile(NekMeshUtils::MeshSharedPtr &plymesh,
+                                std::map<int,NekMeshUtils::NodeSharedPtr> &surfverts);
 };
 
 }

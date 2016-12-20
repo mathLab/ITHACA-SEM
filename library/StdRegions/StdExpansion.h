@@ -478,6 +478,12 @@ namespace Nektar
             }
 
 
+            boost::shared_ptr<StdExpansion> GetLinStdExp(void) const
+            {
+                return v_GetLinStdExp();
+            }
+            
+
             int GetShapeDimension() const
             {
                 return v_GetShapeDimension();
@@ -792,14 +798,6 @@ namespace Nektar
             int CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset)
             {
                 return v_CalcNumberOfCoefficients(nummodes,modes_offset);
-            }
-
-            void ExtractDataToCoeffs(const NekDouble *data,
-                                     const std::vector<unsigned int > &nummodes,
-                                     const int nmodes_offset,
-                                     NekDouble *coeffs)
-            {
-                v_ExtractDataToCoeffs(data,nummodes,nmodes_offset,coeffs);
             }
 
             // virtual functions related to LocalRegions
@@ -1200,16 +1198,6 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset);
 
-            /**
-             * @brief Unpack data from input file assuming it comes from the
-             * same expansion type.
-             * @see StdExpansion::ExtractDataToCoeffs
-             */
-            STD_REGIONS_EXPORT virtual  void v_ExtractDataToCoeffs(const NekDouble *data,
-                                                const std::vector<unsigned int > &nummodes,
-                                                const int nmode_offset,
-                                                NekDouble *coeffs);
-            
             STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, Array< OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(
@@ -1604,6 +1592,9 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual boost::shared_ptr<StdExpansion> 
                 v_GetStdExp(void) const;
 
+            STD_REGIONS_EXPORT virtual boost::shared_ptr<StdExpansion> 
+                v_GetLinStdExp(void) const;
+            
             STD_REGIONS_EXPORT virtual int v_GetShapeDimension() const;
 
             STD_REGIONS_EXPORT virtual bool  v_IsBoundaryInteriorExpansion();

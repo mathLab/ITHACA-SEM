@@ -86,7 +86,9 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >        &advVel,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray,
-        const NekDouble                                   &time)
+        const NekDouble                                   &time,
+        const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
     {
         int nqtot            = fields[0]->GetTotPoints();
         ASSERTL1(nConvectiveFields == inarray.num_elements(),"Number of convective fields and Inarray are not compatible");
@@ -253,7 +255,8 @@ namespace Nektar
                 grad2 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
                 for(int n = 0; n < nConvectiveFields; ++n)
                 {
-                    if(fields[0]->GetWaveSpace() == true)
+                    if (fields[0]->GetWaveSpace() == true &&
+                        fields[0]->GetExpType() == MultiRegions::e3DH1D)
                     {
                         if (n < ndim)
                         {
@@ -266,6 +269,29 @@ namespace Nektar
                             fields[0]->PhysDeriv(wkSp,grad0,grad1);
                         }
                         // Take d/dz derivative using wave space field
+                        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
+                                              inarray[n],
+                                              outarray[n]);
+                        fields[0]->HomogeneousBwdTrans(outarray[n],grad2);
+                    }
+                    else if (fields[0]->GetWaveSpace() == true &&
+                             fields[0]->GetExpType() == MultiRegions::e3DH2D)
+                    {
+                        if (n < ndim)
+                        {
+                            // take d/dx,  gradients in physical Fourier space
+                            fields[0]->PhysDeriv(velocity[n],grad0);
+                        }
+                        else
+                        {
+                            fields[0]->HomogeneousBwdTrans(inarray[n],wkSp);
+                            fields[0]->PhysDeriv(wkSp,grad0);
+                        }
+                        // Take d/dy derivative using wave space field
+                        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],inarray[n],
+                                              outarray[n]);
+                        fields[0]->HomogeneousBwdTrans(outarray[n],grad1);
+                        // Take d/dz derivative using wave space field
                         fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],inarray[n],
                                               outarray[n]);
                         fields[0]->HomogeneousBwdTrans(outarray[n],grad2);
@@ -274,7 +300,6 @@ namespace Nektar
                     {
                         fields[0]->PhysDeriv(inarray[n],grad0,grad1,grad2);
                     }
-
                     if(m_specHP_dealiasing) //interpolate spectral/hp gradient field
                     {
                         Array<OneD, NekDouble> Outarray(nPointsTot);

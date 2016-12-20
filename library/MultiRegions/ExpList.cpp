@@ -559,6 +559,76 @@ namespace Nektar
             }
         }
 
+        void ExpList::v_CurlCurl(
+                Array<OneD, Array<OneD, NekDouble> > &Vel,
+                Array<OneD, Array<OneD, NekDouble> > &Q)
+        {
+            int nq = GetTotPoints();
+            Array<OneD,NekDouble> Vx(nq);
+            Array<OneD,NekDouble> Uy(nq);
+            Array<OneD,NekDouble> Dummy(nq);
+
+            bool halfMode = false;
+            if ( GetExpType() == e3DH1D)
+            {
+                m_session->MatchSolverInfo("ModeType", "HalfMode",
+                                           halfMode, false);
+            }
+
+            switch(GetExpType())
+            {
+            case e2D:
+                {
+                    PhysDeriv(xDir, Vel[yDir], Vx);
+                    PhysDeriv(yDir, Vel[xDir], Uy);
+                    
+
+                    Vmath::Vsub(nq, Vx, 1, Uy, 1, Dummy, 1);
+
+                    PhysDeriv(Dummy,Q[1],Q[0]);
+
+                    Vmath::Smul(nq, -1.0, Q[1], 1, Q[1], 1);
+                }
+                break;
+
+                case e3D:
+                case e3DH1D:
+                case e3DH2D:
+                {
+                    Array<OneD,NekDouble> Vz(nq);
+                    Array<OneD,NekDouble> Uz(nq);
+                    Array<OneD,NekDouble> Wx(nq);
+                    Array<OneD,NekDouble> Wy(nq);
+
+                    PhysDeriv(Vel[xDir], Dummy, Uy, Uz);
+                    PhysDeriv(Vel[yDir], Vx, Dummy, Vz);
+                    PhysDeriv(Vel[zDir], Wx, Wy, Dummy);
+
+                    Vmath::Vsub(nq, Wy, 1, Vz, 1, Q[0], 1);
+                    Vmath::Vsub(nq, Uz, 1, Wx, 1, Q[1], 1);
+                    Vmath::Vsub(nq, Vx, 1, Uy, 1, Q[2], 1);
+
+                    PhysDeriv(Q[0], Dummy, Uy, Uz);
+                    PhysDeriv(Q[1], Vx, Dummy, Vz);
+                    PhysDeriv(Q[2], Wx, Wy, Dummy);
+
+                    // For halfmode, need to change the sign of z derivatives
+                    if (halfMode)
+                    {
+                        Vmath::Neg(nq, Uz, 1);
+                        Vmath::Neg(nq, Vz, 1);
+                    }
+
+                    Vmath::Vsub(nq, Wy, 1, Vz, 1, Q[0], 1);
+                    Vmath::Vsub(nq, Uz, 1, Wx, 1, Q[1], 1);
+                    Vmath::Vsub(nq, Vx, 1, Uy, 1, Q[2], 1);
+                }
+                break;
+                default:
+                    ASSERTL0(0,"Dimension not supported");
+                    break;
+            }
+        }
 
         /**
          * The coefficients of the function to be acted upon
@@ -2226,7 +2296,17 @@ namespace Nektar
 
                 expId = eIt->second;
 
-                if (datalen == (*m_exp)[expId]->GetNcoeffs())
+                bool sameBasis = true;
+                for (int j = 0; j < fielddef->m_basis.size(); ++j)
+                {
+                    if (fielddef->m_basis[j] != (*m_exp)[expId]->GetBasisType(j))
+                    {
+                        sameBasis = false;
+                        break;
+                    }
+                }
+
+                if (datalen == (*m_exp)[expId]->GetNcoeffs() && sameBasis)
                 {
                     Vmath::Vcopy(datalen, &fielddata[offset], 1,
                                  &coeffs[m_coeff_offset[expId]], 1);
@@ -2235,7 +2315,8 @@ namespace Nektar
                 {
                     (*m_exp)[expId]->ExtractDataToCoeffs(
                         &fielddata[offset], fielddef->m_numModes,
-                        modes_offset, &coeffs[m_coeff_offset[expId]]);
+                        modes_offset, &coeffs[m_coeff_offset[expId]],
+                        fielddef->m_basis);
                 }
 
                 offset += datalen;
@@ -2253,14 +2334,17 @@ namespace Nektar
             for(i = 0; i < (*m_exp).size(); ++i)
             {
                 std::vector<unsigned int> nummodes;
+                vector<LibUtilities::BasisType> basisTypes;
                 int eid = m_offset_elmt_id[i];
                 for(int j= 0; j < fromExpList->GetExp(eid)->GetNumBases(); ++j)
                 {
                     nummodes.push_back(fromExpList->GetExp(eid)->GetBasisNumModes(j));
+                    basisTypes.push_back(fromExpList->GetExp(eid)->GetBasisType(j));
                 }
 
                 (*m_exp)[eid]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0,
-                                                   &toCoeffs[m_coeff_offset[eid]]);
+                                                   &toCoeffs[m_coeff_offset[eid]],
+                                                   basisTypes);
 
                 offset += fromExpList->GetExp(eid)->GetNcoeffs();
             }
@@ -2412,7 +2496,8 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing)
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool PhysSpaceForcing)
         {
             ASSERTL0(false, "HelmSolve not implemented.");
         }
@@ -2557,7 +2642,15 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        void ExpList::v_LocalToGlobal(void)
+        /**
+         */
+        void ExpList::v_FillBndCondFromField(const int nreg)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_LocalToGlobal(bool useComm)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2565,7 +2658,8 @@ namespace Nektar
 
 
         void ExpList::v_LocalToGlobal(const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,NekDouble> &outarray)
+                                      Array<OneD,NekDouble> &outarray,
+                                      bool useComm)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2698,7 +2792,8 @@ namespace Nektar
         /**
          */
         void ExpList::v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result)
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2783,7 +2878,45 @@ namespace Nektar
                 offsetElmt += nq;
             }
         }
-        
+
+        /**
+         */
+        void ExpList::v_ExtractPhysToBnd(int i,
+                            const Array<OneD, const NekDouble> &phys,
+                            Array<OneD, NekDouble> &bnd)
+        {
+            int n, cnt;
+            Array<OneD, NekDouble> tmp1, tmp2;
+            StdRegions::StdExpansionSharedPtr elmt;
+
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+
+            // Initialise result
+            bnd = Array<OneD, NekDouble>
+                            (GetBndCondExpansions()[i]->GetTotPoints(), 0.0);
+
+            // Skip other boundary regions
+            for (cnt = n = 0; n < i; ++n)
+            {
+                cnt += GetBndCondExpansions()[n]->GetExpSize();
+            }
+
+            int offsetBnd;
+            int offsetPhys;
+            for (n = 0; n < GetBndCondExpansions()[i]->GetExpSize(); ++n)
+            {
+                offsetPhys = GetPhys_Offset(ElmtID[cnt+n]);
+                offsetBnd = GetBndCondExpansions()[i]->GetPhys_Offset(n);
+
+                elmt   = GetExp(ElmtID[cnt+n]);
+                elmt->GetTracePhysVals(EdgeID[cnt+n],
+                                      GetBndCondExpansions()[i]->GetExp(n),
+                                      tmp1 = phys + offsetPhys,
+                                      tmp2 = bnd + offsetBnd);
+            }
+        }
+
         /**
          */
         void ExpList::v_GetBoundaryNormals(int i,

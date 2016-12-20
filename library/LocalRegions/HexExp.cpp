@@ -567,6 +567,19 @@ namespace Nektar
         }
 
 
+        StdRegions::StdExpansionSharedPtr HexExp::v_GetLinStdExp(void) const
+        {
+            LibUtilities::BasisKey bkey0(m_base[0]->GetBasisType(),
+                           2, m_base[0]->GetPointsKey());
+            LibUtilities::BasisKey bkey1(m_base[1]->GetBasisType(),
+                           2, m_base[1]->GetPointsKey());
+            LibUtilities::BasisKey bkey2(m_base[2]->GetBasisType(),
+                           2, m_base[2]->GetPointsKey());
+            
+            return MemoryManager<StdRegions::StdHexExp>
+                ::AllocateSharedPtr( bkey0, bkey1, bkey2);
+        }
+
         /**
 	 * \brief Retrieves the physical coordinates of a given set of 
          * reference coordinates.
@@ -616,7 +629,8 @@ namespace Nektar
                 const NekDouble *data,
                 const std::vector<unsigned int > &nummodes,
                 const int mode_offset,
-                NekDouble * coeffs)
+                NekDouble * coeffs,
+                std::vector<LibUtilities::BasisType> &fromType)
         {
             int data_order0 = nummodes[mode_offset];
             int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
@@ -626,6 +640,36 @@ namespace Nektar
             int data_order2 = nummodes[mode_offset+2];
             int order2      = m_base[2]->GetNumModes();
             int fillorder2  = min(order2,data_order2);
+
+            // Check if same basis
+            if (fromType[0] != m_base[0]->GetBasisType() ||
+                fromType[1] != m_base[1]->GetBasisType() ||
+                fromType[2] != m_base[2]->GetBasisType())
+            {
+                // Construct a hex with the appropriate basis type at our
+                // quadrature points, and one more to do a forwards
+                // transform. We can then copy the output to coeffs.
+                StdRegions::StdHexExp tmpHex(
+                    LibUtilities::BasisKey(
+                        fromType[0], data_order0, m_base[0]->GetPointsKey()),
+                    LibUtilities::BasisKey(
+                        fromType[1], data_order1, m_base[1]->GetPointsKey()),
+                    LibUtilities::BasisKey(
+                        fromType[2], data_order2, m_base[2]->GetPointsKey()));
+                StdRegions::StdHexExp tmpHex2(m_base[0]->GetBasisKey(),
+                                              m_base[1]->GetBasisKey(),
+                                              m_base[2]->GetBasisKey());
+
+                Array<OneD, const NekDouble> tmpData(tmpHex.GetNcoeffs(), data);
+                Array<OneD, NekDouble> tmpBwd(tmpHex2.GetTotPoints());
+                Array<OneD, NekDouble> tmpOut(tmpHex2.GetNcoeffs());
+
+                tmpHex.BwdTrans(tmpData, tmpBwd);
+                tmpHex2.FwdTrans(tmpBwd, tmpOut);
+                Vmath::Vcopy(tmpOut.num_elements(), &tmpOut[0], 1, coeffs, 1);
+
+                return;
+            }
 
             switch(m_base[0]->GetBasisType())
             {
@@ -664,8 +708,8 @@ namespace Nektar
                             cnt1 += order2;
                         }
                     }
+                    break;
                 }
-                break;
             default:
                 ASSERTL0(false, "basis is either not set up or not "
                                 "hierarchicial");

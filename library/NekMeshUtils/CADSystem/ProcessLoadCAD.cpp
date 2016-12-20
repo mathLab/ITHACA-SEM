@@ -68,12 +68,12 @@ void ProcessLoadCAD::Process()
         cout << "Loading CAD for " << m_mesh->m_CADId << endl;
     }
 
+    m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",m_mesh->m_CADId);
+
     if(m_config["2D"].beenSet)
     {
-        m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",m_mesh->m_CADId);
+        m_mesh->m_cad->Set2D();
     }
-
-    m_mesh->m_cad->Set2D();
 
     ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
 

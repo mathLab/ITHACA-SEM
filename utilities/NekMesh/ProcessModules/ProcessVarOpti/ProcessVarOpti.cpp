@@ -374,8 +374,8 @@ void ProcessVarOpti::Process()
     t.Stop();
     cout << "Time to compute: " << t.TimePerTest(1) << endl;
 
-    cout << "Invalid at end:\t\t" << m_res->startInv << endl;
-    cout << "Worst at end:\t\t" << m_res->worstJac << endl;
+    cout << "Invalid at end: " << m_res->startInv << endl;
+    cout << "Worst at end: " << m_res->worstJac << endl;
 }
 
 class NodalUtilTriMonomial : public LibUtilities::NodalUtilTriangle

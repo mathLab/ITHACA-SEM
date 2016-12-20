@@ -37,10 +37,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
 
-#include "Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 using namespace std;
-using namespace Nektar::Utilities;
 using namespace Nektar::NekMeshUtils;
 
 namespace po = boost::program_options;

@@ -41,7 +41,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-#include <NekMeshUtils/CADSystem/CADObj.h>
+#include <NekMeshUtils/CADSystem/CADObject.h>
 #include <NekMeshUtils/MeshElements/Node.h>
 
 namespace Nektar
@@ -53,7 +53,7 @@ namespace NekMeshUtils
  * @brief base class for CAD verticies.
  *
  */
-class CADVert : public CADObj
+class CADVert : public CADObject
 {
 public:
     friend class MemoryManager<CADVert>;
@@ -63,6 +63,7 @@ public:
      */
     CADVert()
     {
+        m_type = CADType::eVert;
     }
 
     ~CADVert(){};

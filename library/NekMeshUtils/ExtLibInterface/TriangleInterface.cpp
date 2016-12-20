@@ -43,7 +43,7 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-void TriangleInterface::Mesh(bool Quiet, bool Quality)
+void TriangleInterface::Mesh(bool Quality)
 {
     SetUp();
 
@@ -116,11 +116,11 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
 
     if (Quality)
     {
-        dt.triangulate("pqYY");
+        dt.triangulate("pqY");
     }
     else if (!Quality)
     {
-        dt.triangulate("pYY");
+        dt.triangulate("pY");
     }
 }
 

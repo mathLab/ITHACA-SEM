@@ -7,7 +7,6 @@ SET(NekMeshHeaders
     InputModules/InputSem.h
     InputModules/InputSwan.h
     InputModules/InputStarTec.h
-    Module.h
     OutputModules/OutputGmsh.h
     OutputModules/OutputNekpp.h
     OutputModules/OutputSTL.h
@@ -40,7 +39,6 @@ SET(NekMeshSources
     InputModules/InputSwan.cpp
     InputModules/InputStarTec.cpp
     NekMesh.cpp
-    Module.cpp
     OutputModules/OutputGmsh.cpp
     OutputModules/OutputNekpp.cpp
     OutputModules/OutputSTL.cpp

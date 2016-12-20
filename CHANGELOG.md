@@ -78,6 +78,7 @@ v4.4.0
 - 2D to 3D mesh extrusion module (!715)
 - Add a mesh extract option to the linearise module to visualise the result 
   (!712)
+- Refactor library to use NekMesh modules for CAD generation (!704)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

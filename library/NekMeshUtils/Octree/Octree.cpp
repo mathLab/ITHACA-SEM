@@ -33,8 +33,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/Octree/Octree.h>
+#include "Octree.h"
 #include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <NekMeshUtils/Module/Module.h>
+
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 using namespace std;
 namespace Nektar
@@ -42,11 +45,61 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+void Octree::Process()
+{
+    Array<OneD, NekDouble> boundingBox = m_mesh->m_cad->GetBoundingBox();
+
+    // build curvature samples
+    CompileSourcePointList();
+
+    if (m_mesh->m_verbose)
+    {
+        cout << "\tCurvature samples: " << m_SPList.size() << endl;
+    }
+
+    // make master octant based on the bounding box of the domain
+    m_dim = max((boundingBox[1] - boundingBox[0]) / 2.0,
+                (boundingBox[3] - boundingBox[2]) / 2.0);
+
+    m_dim = max(m_dim, (boundingBox[5] - boundingBox[4]) / 2.0);
+
+    m_centroid    = Array<OneD, NekDouble>(3);
+    m_centroid[0] = (boundingBox[1] + boundingBox[0]) / 2.0;
+    m_centroid[1] = (boundingBox[3] + boundingBox[2]) / 2.0;
+    m_centroid[2] = (boundingBox[5] + boundingBox[4]) / 2.0;
+
+    m_masteroct = MemoryManager<Octant>::AllocateSharedPtr(
+        0, m_centroid[0], m_centroid[1], m_centroid[2], m_dim, m_SPList);
+
+
+    //begin recersive subdivision
+    SubDivide();
+
+    m_octants.clear();
+    m_masteroct->CompileLeaves(m_octants);
+
+    if (m_mesh->m_verbose)
+    {
+        cout << "\tOctants: " << m_octants.size() << endl;
+    }
+
+    SmoothSurfaceOctants();
+
+    PropagateDomain();
+
+    SmoothAllOctants();
+
+    if (m_mesh->m_verbose)
+    {
+        int elem = CountElemt();
+        cout << "\tPredicted mesh: " << elem << endl;
+    }
+}
+
 NekDouble Octree::Query(Array<OneD, NekDouble> loc)
 {
     // starting at master octant 0 move through succsesive m_octants which
-    // contain
-    // the point loc until a leaf is found
+    // contain the point loc until a leaf is found
     OctantSharedPtr n = m_masteroct;
     int quad;
 
@@ -119,8 +172,13 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     return n->GetDelta();
 }
 
-void Octree::GetOctreeMesh(MeshSharedPtr m)
+void Octree::WriteOctree(string nm)
 {
+    MeshSharedPtr oct = boost::shared_ptr<Mesh>(new Mesh());
+    oct->m_expDim     = 3;
+    oct->m_spaceDim   = 3;
+    oct->m_nummode    = 2;
+
     for (int i = 0; i < m_octants.size(); i++)
     {
         /*if(m_octants[i]->GetLocation() != eOnBoundary)
@@ -175,58 +233,18 @@ void Octree::GetOctreeMesh(MeshSharedPtr m)
         ElmtConfig conf(LibUtilities::eHexahedron, 1, false, false);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eHexahedron, conf, ns, tags);
-        m->m_element[3].push_back(E);
-    }
-}
-
-void Octree::Build()
-{
-    Array<OneD, NekDouble> boundingBox = m_cad->GetBoundingBox();
-
-    if (m_verbose)
-        cout << endl << "Octree system" << endl;
-
-    // build curvature samples
-    CompileSourcePointList();
-
-    if (m_verbose)
-        cout << "\tCurvature samples: " << m_SPList.size() << endl;
-
-    m_dim = max((boundingBox[1] - boundingBox[0]) / 2.0,
-                (boundingBox[3] - boundingBox[2]) / 2.0);
-
-    m_dim = max(m_dim, (boundingBox[5] - boundingBox[4]) / 2.0);
-
-    m_centroid    = Array<OneD, NekDouble>(3);
-    m_centroid[0] = (boundingBox[1] + boundingBox[0]) / 2.0;
-    m_centroid[1] = (boundingBox[3] + boundingBox[2]) / 2.0;
-    m_centroid[2] = (boundingBox[5] + boundingBox[4]) / 2.0;
-
-    // make master octant based on the bounding box of the domain
-    m_masteroct = MemoryManager<Octant>::AllocateSharedPtr(
-        0, m_centroid[0], m_centroid[1], m_centroid[2], m_dim, m_SPList);
-
-    SubDivide();
-
-    m_octants.clear();
-    m_masteroct->CompileLeaves(m_octants);
-
-    if (m_verbose)
-    {
-        cout << "\tOctants: " << m_octants.size() << endl;
+        oct->m_element[3].push_back(E);
     }
 
-    SmoothSurfaceOctants();
-
-    PropagateDomain();
-
-    SmoothAllOctants();
-
-    if (m_verbose)
-    {
-        int elem = CountElemt();
-        cout << "\tPredicted mesh: " << elem << endl;
-    }
+    ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
+        ModuleKey(eOutputModule, "xml"), oct);
+    mod->RegisterConfig("outfile", nm);
+    mod->ProcessVertices();
+    mod->ProcessEdges();
+    mod->ProcessFaces();
+    mod->ProcessElements();
+    mod->ProcessComposites();
+    mod->Process();
 }
 
 void Octree::SubDivide()
@@ -237,19 +255,21 @@ void Octree::SubDivide()
     m_numoct = 1;
     m_masteroct->Subdivide(m_masteroct, m_numoct);
 
-    if (m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << "\tSubdivide iteration: ";
     }
 
     do
     {
-        ct++;
-        if (m_verbose)
+        if (m_mesh->m_verbose)
         {
-            cout << ct << " ";
+            cout << "\r                                                       ";
+            cout << "\r";
+            cout << "\tSubdivide iteration: " << ct;
             cout.flush();
         }
+        ct++;
         repeat = false;
         m_octants.clear();
         // grab a list of the leaves curently in the octree
@@ -333,7 +353,7 @@ void Octree::SubDivide()
         }
     } while (repeat);
 
-    if (m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << endl;
     }
@@ -341,7 +361,10 @@ void Octree::SubDivide()
 
 bool Octree::VerifyNeigbours()
 {
-    // check all neibours
+    // check all octant links to their neighbours
+    // at all times in the subdivision the set of neigbours must
+    // conform to a set of criteria such as smoothness in size
+    // this checks that
     bool error = false;
     for (int i = 0; i < m_octants.size(); i++)
     {
@@ -592,7 +615,7 @@ void Octree::PropagateDomain()
                         Array<OneD, NekDouble> octloc, sploc, vec(3), uv, N;
                         int surf;
                         sp->GetCAD(surf, uv);
-                        N = m_cad->GetSurf(surf)->N(uv);
+                        N = m_mesh->m_cad->GetSurf(surf)->N(uv);
 
                         octloc = oct->GetLoc();
                         sploc  = sp->GetLoc();
@@ -685,7 +708,7 @@ int Octree::CountElemt()
 
     NekDouble total = 0.0;
 
-    Array<OneD, NekDouble> boundingBox = m_cad->GetBoundingBox();
+    Array<OneD, NekDouble> boundingBox = m_mesh->m_cad->GetBoundingBox();
 
     for (int i = 0; i < m_octants.size(); i++)
     {
@@ -790,6 +813,7 @@ int Octree::CountElemt()
     return int(total);
 }
 
+//struct to assist in the creation of linesources in the code
 struct linesource
 {
     Array<OneD, NekDouble> x1, x2;
@@ -844,32 +868,26 @@ struct linesource
 
 void Octree::CompileSourcePointList()
 {
-    if(m_verbose)
-    {
-        cout << "\tCompiling source points" << endl;
-        cout << "\t\tSurface: ";
-    }
     //first sample surfaces
-    for (int i = 1; i <= m_cad->GetNumSurf(); i++)
+    for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {
-        if(m_verbose)
+        if(m_mesh->m_verbose)
         {
-            cout << i << " ";
-            cout.flush();
+            LibUtilities::PrintProgressbar(
+                i, m_mesh->m_cad->GetNumSurf(), "\tCompiling source points");
         }
 
-        CADSurfSharedPtr surf         = m_cad->GetSurf(i);
+        CADSurfSharedPtr surf         = m_mesh->m_cad->GetSurf(i);
         Array<OneD, NekDouble> bounds = surf->GetBounds();
 
         // to figure out the amount of curvature sampling to be conducted on
         // each parameter plane the surface is first sampled with a 40x40 grid
         // the real space lengths of this grid are analysed to find the largest
         // strecthing in the u and v directions
-        // this stretching this then cosnidered with the mindelta user input
+        // this stretching is then cosnidered with the mindelta user input
         // to find a number of sampling points in each direction which
         // enures that in the final octree each surface octant will have at
-        // least
-        // one sample point within its volume.
+        // least one sample point within its volume.
         // the 40x40 grid is used to ensure each surface has a minimum of 40x40
         // samples.
         NekDouble du = (bounds[1] - bounds[0]) / (40 - 1);
@@ -977,14 +995,14 @@ void Octree::CompileSourcePointList()
         }
 
     }
-    if(m_verbose)
+    if(m_mesh->m_verbose)
     {
         cout << endl;
     }
 
     if (m_udsfileset)
     {
-        if(m_verbose)
+        if(m_mesh->m_verbose)
         {
             cout << "\t\tModifying based on uds files" << endl;
         }
@@ -1001,20 +1019,19 @@ void Octree::CompileSourcePointList()
             stringstream s(fileline);
             string word;
             s >> word;
-            if (word == "#")
+            if (word == "L")
             {
-                continue;
+                Array<OneD, NekDouble> x1(3), x2(3);
+                NekDouble r, d;
+                s >> x1[0] >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2]
+                  >> r >> d;
+                lsources.push_back(linesource(x1, x2, r, d));
             }
-
-            Array<OneD, NekDouble> x1(3), x2(3);
-            NekDouble r, d;
-            x1[0] = boost::lexical_cast<double>(word);
-            s >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2] >> r >> d;
-
-            lsources.push_back(linesource(x1, x2, r, d));
         }
         fle.close();
 
+        // this takes any existing sourcepoints within the influence range
+        // and modifies them
         for (int i = 0; i < m_SPList.size(); i++)
         {
             for (int j = 0; j < lsources.size(); j++)
@@ -1034,25 +1051,7 @@ void Octree::CompileSourcePointList()
                 }
             }
         }
-    }
-
-    if(m_sourcepointsset)
-    {
-        if(m_verbose)
-        {
-            cout << "\t\tAdding source points from flow solution" << endl;
-        }
-        for(int i = 0; i < m_sourcePoints.size(); i++)
-        {
-            Array<OneD, NekDouble> l(3);
-            l[0] = m_sourcePoints[i][0];
-            l[1] = m_sourcePoints[i][1];
-            l[2] = m_sourcePoints[i][2];
-
-            SrcPointSharedPtr newSpoint = MemoryManager<SrcPoint>::
-                                    AllocateSharedPtr(l, m_sourcePointSize);
-            m_SPList.push_back(newSpoint);
-        }
+        ///TODO add extra source points from the line souce to the octree
     }
 }
 

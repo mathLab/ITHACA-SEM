@@ -38,7 +38,7 @@
 
 #include <tinyxml.h>
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -46,17 +46,17 @@ namespace Utilities
 {
 
 /// Converter for Gmsh files.
-class OutputNekpp : public OutputModule
+class OutputNekpp : public NekMeshUtils::OutputModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<OutputNekpp>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    OutputNekpp(MeshSharedPtr m);
+    OutputNekpp(NekMeshUtils::MeshSharedPtr m);
     virtual ~OutputNekpp();
 
     /// Write mesh to output file.

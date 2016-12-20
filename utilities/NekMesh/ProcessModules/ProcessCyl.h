@@ -47,17 +47,17 @@ class ProcessCyl : public ProcessCurvedEdges
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessCyl>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    ProcessCyl(MeshSharedPtr m);
+    ProcessCyl(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessCyl();
 
 protected:
-    void v_GenerateEdgeNodes(EdgeSharedPtr edge);
+    void v_GenerateEdgeNodes(NekMeshUtils::EdgeSharedPtr edge);
 };
 }
 }

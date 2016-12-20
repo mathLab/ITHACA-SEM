@@ -40,6 +40,8 @@
 #include "Octant.h"
 #include <NekMeshUtils/MeshElements/Mesh.h>
 
+#include <string>
+
 namespace Nektar
 {
 namespace NekMeshUtils

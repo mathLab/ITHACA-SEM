@@ -44,8 +44,18 @@
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <SolverUtils/AdvectionSystem.h>
 
+
 namespace Nektar
 {
+
+    enum HBCType
+    {
+        eNOHBC,
+        eHBCNeumann,    // Standard High Order BC
+        eOBC,           // High Order outflow BC (Neumann-Dirichlet) from Dong et al JCP 2014
+        eConvectiveOBC  // Convective High Order (Robin type) BC from Dong JCP 2015
+    };
+    
     // Forward declaration
     class Extrapolate;
     typedef boost::shared_ptr<Extrapolate> ExtrapolateSharedPtr;
@@ -55,6 +65,10 @@ namespace Nektar
         MultiRegions::ExpListSharedPtr& ,
         const Array<OneD, int>& ,
         const SolverUtils::AdvectionSharedPtr& > ExtrapolateFactory;
+
+    struct HighOrderOutflow;
+    typedef boost::shared_ptr<HighOrderOutflow> HighOrderOutflowSharedPtr;
+
 
     ExtrapolateFactory& GetExtrapolateFactory();
 
@@ -70,7 +84,9 @@ namespace Nektar
         
         virtual ~Extrapolate();
 
-        void GenerateHOPBCMap();
+        void GenerateHOPBCMap(const LibUtilities::SessionReaderSharedPtr& pSsession);
+        
+        void UpdateRobinPrimCoeff(void);
 
         inline void SubSteppingTimeIntegration(
             const int intMethod,
@@ -100,7 +116,10 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
             NekDouble kinvis);
 
+        
         void AddDuDt(void);
+
+        void AddVelBC(void);
 
         void ExtrapolatePressureHBCs(void);
         void CopyPressureHBCsToPbndExp(void);
@@ -120,12 +139,19 @@ namespace Nektar
 
         void ExtrapolateArray( Array<OneD, Array<OneD, NekDouble> > &array);
 
+        void EvaluateBDFArray(Array<OneD, Array<OneD, NekDouble> > &array);
+
         void AccelerationBDF( Array<OneD, Array<OneD, NekDouble> > &array);
 
         void ExtrapolateArray(
             Array<OneD, Array<OneD, NekDouble> > &oldarrays,
             Array<OneD, NekDouble>  &newarray,
             Array<OneD, NekDouble>  &outarray);
+        
+        void AddNormVelOnOBC(const int nbcoeffs, const int nreg,
+                             Array<OneD, Array<OneD, NekDouble> > &u);
+
+        void AddPressureToOutflowBCs(NekDouble kinvis);
         
     protected: 
         virtual void v_EvaluatePressureBCs(
@@ -173,18 +199,23 @@ namespace Nektar
             NekDouble kinvis);
             
         virtual void v_CorrectPressureBCs( const Array<OneD, NekDouble>  &pressure);
-        
+
+        virtual void v_AddNormVelOnOBC(const int nbcoeffs, const int nreg,
+                                       Array<OneD, Array<OneD, NekDouble> > &u);
         void CalcOutflowBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             NekDouble kinvis);
 
-        void RollOver(
-            Array<OneD, Array<OneD, NekDouble> > &input);
+        void RollOver(Array<OneD, Array<OneD, NekDouble> > &input);
 
         LibUtilities::SessionReaderSharedPtr m_session;
 
         LibUtilities::CommSharedPtr m_comm;
 
+        /// Array of type of high order BCs for splitting shemes
+        Array<OneD, HBCType> m_hbcType; 
+        
+        /// Velocity fields 
         Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
 
         /// Pointer to field holding pressure field
@@ -219,30 +250,16 @@ namespace Nektar
         // Number of HOPbcs
         int m_HBCnumber;
 
-        // Number of quadrature points for Outflow HOBC
-        int m_numOutHBCPts;
-
-        // Number of Outflow HOBcs
-        int m_outHBCnumber;
-
-        // Parameters for outflow boundary condition
-        NekDouble   m_obcTheta;
-        NekDouble   m_obcAlpha1;
-        NekDouble   m_obcAlpha2;
-
         /// Maximum points used in pressure BC evaluation
         int m_intSteps;
 
         NekDouble m_timestep;
 
         /// Storage for current and previous levels of high order pressure boundary conditions.
-        Array<OneD, Array<OneD, NekDouble> >  m_pressureHBCs;
+        Array<OneD, Array<OneD, NekDouble> > m_pressureHBCs;
 
-        /// Storage for current and previous levels of the acceleration term.
-        Array<OneD, Array<OneD, NekDouble> >  m_acceleration;
-
-        /// Storage for current and previous velocity fields at the outflow for high order outflow BCs
-        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble > > > > m_outflowVel;
+        /// Storage for current and previous levels of the inner product of normal velocity
+        Array<OneD, Array<OneD, NekDouble> > m_iprodnormvel;
 
         Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
 
@@ -251,9 +268,70 @@ namespace Nektar
         static NekDouble StifflyStable_Alpha_Coeffs[3][3];
         static NekDouble StifflyStable_Gamma0_Coeffs[3];
 
+        // data related to high order outflow. 
+        HighOrderOutflowSharedPtr m_houtflow; 
+        
     private:
         static std::string def;
+    };
+    
+    
+    struct HighOrderOutflow
+    {
+    HighOrderOutflow(const int numHOpts, const int outHBCnumber,const int curldim, const LibUtilities::SessionReaderSharedPtr &pSession):
+        m_numOutHBCPts(numHOpts),
+            m_outHBCnumber(outHBCnumber)
+        {
+            m_outflowVel = Array<OneD,
+                Array<OneD, Array<OneD,
+                Array<OneD, NekDouble> > > > (outHBCnumber);
+            
+            m_outflowVelBnd = Array<OneD,
+                Array<OneD, Array<OneD,
+                Array<OneD, NekDouble> > > > (outHBCnumber);
+            
+            m_UBndExp  = Array<OneD,
+                Array<OneD, MultiRegions::ExpListSharedPtr> >(curldim);
+            
+            pSession->LoadParameter("OutflowBC_theta",  m_obcTheta,  1.0);
+            pSession->LoadParameter("OutflowBC_alpha1", m_obcAlpha1, 0.0);
+            pSession->LoadParameter("OutflowBC_alpha2", m_obcAlpha2, 0.0);
+            
+            pSession->LoadParameter("U0_HighOrderBC",    m_U0,1.0);
+            pSession->LoadParameter("Delta_HighOrderBC", m_delta,1/20.0);
+        }
 
+        virtual ~HighOrderOutflow()
+        {};
+        
+        /// Number of quadrature points for Outflow HOBC
+        int m_numOutHBCPts;
+
+        /// Number of Outflow HOBCs
+        int m_outHBCnumber;
+
+        /// Parameters for outflow boundary condition
+        NekDouble   m_obcTheta;
+        NekDouble   m_obcAlpha1;
+        NekDouble   m_obcAlpha2;
+        NekDouble   m_U0;
+        NekDouble   m_delta;
+        std::string m_defVelPrimCoeff[3]; 
+        
+        /// Storage for current and previous velocity fields along the outflow 
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble > > > > m_outflowVel;
+
+        /// Storage for current and previous velocities along the outflow boundary
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble > > > > m_outflowVelBnd;
+        
+        /// Velocity boundary condition expansions on high order boundaries. 
+        Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >  m_UBndExp;
+
+        /// primitive coefficient for pressure  when using convetive like OBCs
+        Array<OneD, NekDouble> m_pressurePrimCoeff; 
+
+        /// primitive coefficient for velocities when using convetive like OBCs
+        Array<OneD, Array<OneD, NekDouble> > m_velocityPrimCoeff; 
     };
 
     /**
@@ -337,6 +415,17 @@ namespace Nektar
     {
         v_CorrectPressureBCs(pressure);
     }
+
+    
+    /**
+     *
+     */
+    inline void Extrapolate::AddNormVelOnOBC(const int nbcoeffs, const int nreg,
+                                             Array<OneD, Array<OneD, NekDouble> > &u)
+    {
+        v_AddNormVelOnOBC(nbcoeffs,nreg,u);
+    }
+
 }
 
 #endif

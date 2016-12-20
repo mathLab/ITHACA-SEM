@@ -70,11 +70,11 @@ public:
 
 private:
     int GetNnodes(unsigned int InputGmshEntity);
-    static std::vector<int> TriReordering(  NekMeshUtils::ElmtConfig conf);
-    static std::vector<int> QuadReordering( NekMeshUtils::ElmtConfig conf);
-    static std::vector<int> HexReordering(  NekMeshUtils::ElmtConfig conf);
+    static std::vector<int> TriReordering  (NekMeshUtils::ElmtConfig conf);
+    static std::vector<int> QuadReordering (NekMeshUtils::ElmtConfig conf);
+    static std::vector<int> HexReordering  (NekMeshUtils::ElmtConfig conf);
     static std::vector<int> PrismReordering(NekMeshUtils::ElmtConfig conf);
-    static std::vector<int> TetReordering(  NekMeshUtils::ElmtConfig conf);
+    static std::vector<int> TetReordering  (NekMeshUtils::ElmtConfig conf);
 };
 }
 }

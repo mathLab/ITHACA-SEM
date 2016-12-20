@@ -31,6 +31,7 @@ SET(NekMeshHeaders
     ProcessModules/ProcessVarOpti/Evaluator.hxx
     ProcessModules/ProcessVarOpti/Hessian.hxx
     ProcessModules/ProcessInsertSurface.h
+    ProcessModules/ProcessExtrude.h
 )
 
 SET(NekMeshSources
@@ -66,6 +67,7 @@ SET(NekMeshSources
     ProcessModules/ProcessVarOpti/NodeOpti.cpp
     ProcessModules/ProcessVarOpti/ElUtil.cpp
     ProcessModules/ProcessInsertSurface.cpp
+    ProcessModules/ProcessExtrude.cpp
 )
 
 IF (NEKTAR_USE_CCM)

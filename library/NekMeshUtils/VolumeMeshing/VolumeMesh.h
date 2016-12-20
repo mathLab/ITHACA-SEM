@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Calculate jacobians of elements.
+//  Description: Process volume meshing.
 //
 ////////////////////////////////////////////////////////////////////////////////
 

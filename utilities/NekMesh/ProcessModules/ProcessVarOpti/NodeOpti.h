@@ -92,8 +92,8 @@ protected:
     static const NekDouble gam;
 
     static NekDouble c1() {return 1e-3;}
-    static NekDouble gradTol() {return 1e-20;}
-    static NekDouble alphaTol() {return 1e-10;}
+    static NekDouble gradTol() {return 1e-8;}
+    static NekDouble alphaTol() {return 1e-8;}
 };
 
 typedef boost::shared_ptr<NodeOpti> NodeOptiSharedPtr;

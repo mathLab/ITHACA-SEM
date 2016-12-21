@@ -25,11 +25,6 @@ SET(NekMeshHeaders
     ProcessModules/ProcessSpherigon.h
     ProcessModules/ProcessTetSplit.h
     ProcessModules/ProcessOptiExtract.h
-    ProcessModules/ProcessVarOpti/ProcessVarOpti.h
-    ProcessModules/ProcessVarOpti/NodeOpti.h
-    ProcessModules/ProcessVarOpti/ElUtil.h
-    ProcessModules/ProcessVarOpti/Evaluator.hxx
-    ProcessModules/ProcessVarOpti/Hessian.hxx
     ProcessModules/ProcessInsertSurface.h
     ProcessModules/ProcessExtrude.h
 )
@@ -62,10 +57,6 @@ SET(NekMeshSources
     ProcessModules/ProcessSpherigon.cpp
     ProcessModules/ProcessTetSplit.cpp
     ProcessModules/ProcessOptiExtract.cpp
-    ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
-    ProcessModules/ProcessVarOpti/PreProcessing.cpp
-    ProcessModules/ProcessVarOpti/NodeOpti.cpp
-    ProcessModules/ProcessVarOpti/ElUtil.cpp
     ProcessModules/ProcessInsertSurface.cpp
     ProcessModules/ProcessExtrude.cpp
 )
@@ -83,9 +74,18 @@ ENDIF (NEKTAR_USE_VTK)
 IF (NEKTAR_USE_MESHGEN)
     SET(NekMeshHeaders ${NekMeshHeaders}
             ProcessModules/ProcessVarOpti/NodeOptiCAD.h
+            ProcessModules/ProcessVarOpti/ProcessVarOpti.h
+            ProcessModules/ProcessVarOpti/NodeOpti.h
+            ProcessModules/ProcessVarOpti/ElUtil.h
+            ProcessModules/ProcessVarOpti/Evaluator.hxx
+            ProcessModules/ProcessVarOpti/Hessian.hxx
             InputModules/InputCAD.h)
     SET(NekMeshSources ${NekMeshSources}
             ProcessModules/ProcessVarOpti/NodeOptiCAD.cpp
+            ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
+            ProcessModules/ProcessVarOpti/PreProcessing.cpp
+            ProcessModules/ProcessVarOpti/NodeOpti.cpp
+            ProcessModules/ProcessVarOpti/ElUtil.cpp
             InputModules/InputCAD.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
 

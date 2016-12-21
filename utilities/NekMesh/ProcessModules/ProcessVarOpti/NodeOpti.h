@@ -92,7 +92,6 @@ protected:
     static const NekDouble gam;
 
     static NekDouble c1() {return 1e-3;}
-    static NekDouble c2() {return 0.9;}
     static NekDouble gradTol() {return 1e-20;}
     static NekDouble alphaTol() {return 1e-10;}
 };

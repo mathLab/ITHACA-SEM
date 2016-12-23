@@ -40,20 +40,6 @@
 
 namespace Nektar
 {
-    enum ProblemType
-    {
-        eGeneral,          ///< No problem defined - Default Inital data
-        eIsentropicVortex, ///< Isentropic Vortex
-        eRinglebFlow,      ///< Ringleb Flow
-        SIZE_ProblemType   ///< Length of enum list
-    };
-
-    const char* const ProblemTypeMap[] =
-    {
-        "General",
-        "IsentropicVortex",
-        "RinglebFlow"
-    };
 
     class EulerCFE : public CompressibleFlowSystem
     {
@@ -69,76 +55,14 @@ namespace Nektar
             return p;
         }
         /// Name of class.
-        static std::string className;
+        static std::string className, className2;
 
         virtual ~EulerCFE();
-
-        ///< problem type selector
-        ProblemType     m_problemType;
 
     protected:
 
         EulerCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
 
-        virtual void v_InitObject();
-
-        /// Print a summary of time stepping parameters.
-        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-
-        void DoOdeRhs(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time);
-        void DoOdeProjection(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time);
-        virtual void v_SetInitialConditions(
-            NekDouble               initialtime = 0.0,
-            bool                    dumpInitialConditions = true,
-            const int domain = 0);
-
-        virtual void v_EvaluateExactSolution(
-            unsigned int            field,
-            Array<OneD, NekDouble> &outfield,
-            const NekDouble         time = 0.0);
-
-    private:
-        void SetBoundaryConditions(
-            Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
-        /// Isentropic Vortex Test Case.
-        void EvaluateIsentropicVortex(
-            const Array<OneD, NekDouble>                    &x,
-            const Array<OneD, NekDouble>                    &y,
-            const Array<OneD, NekDouble>                    &z,
-                  Array<OneD, Array<OneD, NekDouble> >      &u,
-                  NekDouble                                  time,
-            const int                                        o = 0);
-        void GetExactIsentropicVortex(
-            int                                              field,
-            Array<OneD, NekDouble>                          &outarray,
-            NekDouble                                        time);
-        void SetInitialIsentropicVortex(
-            NekDouble                                        initialtime);
-        void SetBoundaryIsentropicVortex(
-            int                                              bcRegion,
-            NekDouble                                        time,
-            int                                              cnt,
-            Array<OneD, Array<OneD, NekDouble> >            &Fwd,
-            Array<OneD, Array<OneD, NekDouble> >            &physarray);
-
-        /// Ringleb Flow Test Case.
-        void GetExactRinglebFlow(
-            int                                             field,
-            Array<OneD, NekDouble>                         &outarray);
-        void SetInitialRinglebFlow(
-            void);
-        void SetBoundaryRinglebFlow(
-            int                                              bcRegion,
-            NekDouble                                        time,
-            int                                              cnt,
-            Array<OneD, Array<OneD, NekDouble> >            &Fwd,
-            Array<OneD, Array<OneD, NekDouble> >            &physarray);
     };
 }
 #endif

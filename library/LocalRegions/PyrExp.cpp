@@ -309,6 +309,19 @@ namespace Nektar
                                     m_base[2]->GetBasisKey());
         }
 
+        StdRegions::StdExpansionSharedPtr PyrExp::v_GetLinStdExp(void) const
+        {
+            LibUtilities::BasisKey bkey0(m_base[0]->GetBasisType(),
+                           2, m_base[0]->GetPointsKey());
+            LibUtilities::BasisKey bkey1(m_base[1]->GetBasisType(),
+                           2, m_base[1]->GetPointsKey());
+            LibUtilities::BasisKey bkey2(m_base[2]->GetBasisType(),
+                           2, m_base[2]->GetPointsKey());
+            
+            return MemoryManager<StdRegions::StdPyrExp>
+                ::AllocateSharedPtr( bkey0, bkey1, bkey2);
+        }
+
         /*
          * @brief Get the coordinates #coords at the local coordinates
          * #Lcoords

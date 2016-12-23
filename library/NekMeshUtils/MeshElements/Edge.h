@@ -29,20 +29,16 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh Edge.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_EDGE
-#define NekMeshUtils_MESHELEMENTS_EDGE
+#ifndef NEKMESHUTILS_MESHELEMENTS_EDGE
+#define NEKMESHUTILS_MESHELEMENTS_EDGE
 
-#include <iomanip>
-
-#include <LibUtilities/Foundations/ManagerAccess.h>
 #include <SpatialDomains/SegGeom.h>
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
-#include <NekMeshUtils/MeshElements/Element.h>
 #include <NekMeshUtils/MeshElements/Node.h>
 
 namespace Nektar
@@ -68,21 +64,12 @@ public:
                              std::vector<NodeSharedPtr> pEdgeNodes,
                              LibUtilities::PointsType   pCurveType)
         : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(pEdgeNodes),
-          m_curveType(pCurveType), m_geom()
-    {
-#ifdef NEKTAR_USE_MESHGEN
-        onCurve = false;
-#endif
-    }
+          m_curveType(pCurveType), m_geom(){}
 
     /// Creates a new linear edge.
     NEKMESHUTILS_EXPORT Edge(NodeSharedPtr pVertex1, NodeSharedPtr pVertex2)
         : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(), m_curveType(), m_geom()
-    {
-#ifdef NEKTAR_USE_MESHGEN
-        onCurve = false;
-#endif
-    }
+    {}
 
     /// Copies an existing edge.
     NEKMESHUTILS_EXPORT Edge(const Edge &pSrc)
@@ -114,100 +101,17 @@ public:
 
     /// Creates a Nektar++ string listing the coordinates of all the
     /// nodes.
-    NEKMESHUTILS_EXPORT std::string GetXmlCurveString() const
-    {
-        std::vector<NodeSharedPtr> nodeList;
-
-        GetCurvedNodes(nodeList);
-
-        std::stringstream s;
-        std::string str;
-
-        // put them into a string and return
-        for (int k = 0; k < nodeList.size(); ++k)
-        {
-            s << std::scientific << std::setprecision(8) << "    "
-              << nodeList[k]->m_x << "  " << nodeList[k]->m_y << "  "
-              << nodeList[k]->m_z << "    ";
-        }
-
-        return s.str();
-    }
+    NEKMESHUTILS_EXPORT std::string GetXmlCurveString();
 
     /// Generate a SpatialDomains::SegGeom object for this edge.
-    NEKMESHUTILS_EXPORT SpatialDomains::SegGeomSharedPtr GetGeom(int coordDim)
-    {
-        // Create edge vertices.
-        SpatialDomains::PointGeomSharedPtr p[2];
-        SpatialDomains::SegGeomSharedPtr ret;
-
-        p[0] = m_n1->GetGeom(coordDim);
-        p[1] = m_n2->GetGeom(coordDim);
-
-        // Create a curve if high-order information exists.
-        if (m_edgeNodes.size() > 0)
-        {
-            SpatialDomains::CurveSharedPtr c =
-                MemoryManager<SpatialDomains::Curve>::AllocateSharedPtr(
-                    m_id, m_curveType);
-
-            c->m_points.push_back(p[0]);
-            for (int i = 0; i < m_edgeNodes.size(); ++i)
-            {
-                c->m_points.push_back(m_edgeNodes[i]->GetGeom(coordDim));
-            }
-            c->m_points.push_back(p[1]);
-
-            ret = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(
-                m_id, coordDim, p, c);
-        }
-        else
-        {
-            ret = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(
-                m_id, coordDim, p);
-        }
-
-        return ret;
-    }
+    NEKMESHUTILS_EXPORT SpatialDomains::SegGeomSharedPtr GetGeom(int coordDim);
 
     /// Make this edge an order @p order edge. @see Element::MakeOrder.
     void MakeOrder(int                                order,
                    SpatialDomains::GeometrySharedPtr  geom,
                    LibUtilities::PointsType           edgeType,
                    int                                coordDim,
-                   int                               &id)
-    {
-        int nPoints = order + 1;
-        StdRegions::StdExpansionSharedPtr xmap = geom->GetXmap();
-
-        Array<OneD, NekDouble> edgePoints;
-        LibUtilities::PointsKey edgeKey(nPoints, edgeType);
-        LibUtilities::PointsManager()[edgeKey]->GetPoints(edgePoints);
-
-        Array<OneD, Array<OneD, NekDouble> > phys(coordDim);
-
-        for (int i = 0; i < coordDim; ++i)
-        {
-            phys[i] = Array<OneD, NekDouble>(xmap->GetTotPoints());
-            xmap->BwdTrans(geom->GetCoeffs(i), phys[i]);
-        }
-
-        m_edgeNodes.resize(nPoints - 2);
-
-        for (int i = 1; i < nPoints - 1; ++i)
-        {
-            Array<OneD, NekDouble> x(3, 0.0);
-            for (int j = 0; j < coordDim; ++j)
-            {
-                x[j] = xmap->PhysEvaluate(edgePoints + i, phys[j]);
-            }
-
-            m_edgeNodes[i-1] = boost::shared_ptr<Node>(
-                new Node(id++, x[0], x[1], x[2]));
-        }
-
-        m_curveType = edgeType;
-    }
+                   int                               &id);
 
     /// ID of edge.
     unsigned int m_id;
@@ -222,12 +126,7 @@ public:
     /// Element(s) which are linked to this edge.
     std::vector<std::pair<ElementSharedPtr, int> > m_elLink;
 
-#ifdef NEKTAR_USE_MESHGEN
-    bool onCurve;
-    /// id of cad curve which edge lies on
-    int CADCurveId;
-    CADCurveSharedPtr CADCurve;
-#endif
+    CADObjectSharedPtr m_parentCAD;
 
 private:
     SpatialDomains::SegGeomSharedPtr m_geom;

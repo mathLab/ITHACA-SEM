@@ -36,24 +36,24 @@
 #ifndef UTILITIES_NEKMESH_PROCESSOPTIEXTRACT
 #define UTILITIES_NEKMESH_PROCESSOPTIEXTRACT
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
 namespace Utilities
 {
 
-class ProcessOptiExtract : public ProcessModule
+class ProcessOptiExtract : public NekMeshUtils::ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessOptiExtract>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    ProcessOptiExtract(MeshSharedPtr m);
+    ProcessOptiExtract(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessOptiExtract();
 
     /// Write mesh to output file.

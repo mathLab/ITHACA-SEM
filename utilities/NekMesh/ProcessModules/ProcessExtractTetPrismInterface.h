@@ -37,7 +37,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSEXTRACTTETPRISMINTERFACE
 #define UTILITIES_NEKMESH_PROCESSEXTRACTTETPRISMINTERFACE
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -48,18 +48,18 @@ namespace Utilities
  * @brief Module to extract interface between prismatic and tetrahedral
  * elements.
  */
-class ProcessExtractTetPrismInterface : public ProcessModule
+class ProcessExtractTetPrismInterface : public NekMeshUtils::ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<
             ProcessExtractTetPrismInterface>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    ProcessExtractTetPrismInterface(MeshSharedPtr m);
+    ProcessExtractTetPrismInterface(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessExtractTetPrismInterface();
 
     /// Write mesh to output file.

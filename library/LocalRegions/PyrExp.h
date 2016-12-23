@@ -104,6 +104,9 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual
                 StdRegions::StdExpansionSharedPtr v_GetStdExp(void) const;
 
+            LOCAL_REGIONS_EXPORT virtual
+                StdRegions::StdExpansionSharedPtr v_GetLinStdExp(void) const;
+            
             LOCAL_REGIONS_EXPORT virtual void v_GetCoord(
                 const Array<OneD, const NekDouble> &Lcoords, 
                       Array<OneD,       NekDouble> &coords);

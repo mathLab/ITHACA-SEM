@@ -194,7 +194,9 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &advVel,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray,
-            const NekDouble                                   &time)
+            const NekDouble                                   &time,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
             Array<OneD, NekDouble> tmp(m_numPoints), tmp2;
             int nVel = advVel.num_elements();

@@ -36,6 +36,8 @@
 #include <SpatialDomains/HexGeom.h>
 #include <NekMeshUtils/MeshElements/Hexahedron.h>
 
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 using namespace std;
 
 namespace Nektar
@@ -53,9 +55,6 @@ int Hexahedron::m_faceIds[6][4] = {
     {3, 2, 6, 7}, {0, 3, 7, 4}, {4, 5, 6, 7}
 };
 
-/**
- * @brief Create a hexahedral element.
- */
 Hexahedron::Hexahedron(ElmtConfig pConf,
                        vector<NodeSharedPtr> pNodeList,
                        vector<int> pTagList)

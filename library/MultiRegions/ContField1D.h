@@ -102,6 +102,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& GetBndConditions();
 
+
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
             // inline
@@ -194,9 +195,10 @@ namespace Nektar
             // inline
             MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(
                 const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray);
+                Array<OneD,NekDouble> &outarray,
+                bool useComm);
 
-            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(void);
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(bool useComm);
 
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
@@ -204,7 +206,8 @@ namespace Nektar
                     const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
-                    const Array<OneD, const NekDouble> &dirForcing);
+                    const Array<OneD, const NekDouble> &dirForcing,
+                    const bool PhysSpaceForcing);
 
             virtual const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& v_GetBndConditions();

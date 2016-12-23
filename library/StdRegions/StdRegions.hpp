@@ -205,7 +205,8 @@ namespace Nektar
             eVarCoeffD02,
             eVarCoeffD12,
             eVarCoeffVelX,
-            eVarCoeffVelY
+            eVarCoeffVelY,
+            eVarCoeffVelZ
         };
 
         const char* const VarCoeffTypeMap[] = {

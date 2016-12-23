@@ -87,7 +87,8 @@ FieldIOXml::FieldIOXml(LibUtilities::CommSharedPtr pComm, bool sharedFilesystem)
 void FieldIOXml::v_Write(const std::string &outFile,
                          std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                          std::vector<std::vector<NekDouble> > &fielddata,
-                         const FieldMetaDataMap &fieldmetadatamap)
+                         const FieldMetaDataMap &fieldmetadatamap,
+                         const bool backup)
 {
     double tm0 = 0.0, tm1 = 0.0;
     if (m_comm->GetRank() == 0)
@@ -112,7 +113,7 @@ void FieldIOXml::v_Write(const std::string &outFile,
     // Prepare to write out data. In parallel, we must create directory and
     // determine the full pathname to the file to write out.  Any existing
     // file/directory which is in the way is removed.
-    std::string filename = SetUpOutput(outFile, true);
+    std::string filename = SetUpOutput(outFile, true, backup);
     SetUpFieldMetaData(outFile, fielddefs, fieldmetadatamap);
 
     // Create the file (partition)

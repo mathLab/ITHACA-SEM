@@ -80,7 +80,7 @@ namespace Nektar
             m_advObject); 
         m_extrapolation->SubSteppingTimeIntegration(
                             m_intScheme->GetIntegrationMethod(), m_intScheme);
-        m_extrapolation->GenerateHOPBCMap();        
+        m_extrapolation->GenerateHOPBCMap(m_session);        
 
        // Storage to extrapolate pressure forcing
         int physTot = m_fields[0]->GetTotPoints();
@@ -329,17 +329,24 @@ namespace Nektar
                 // Add two parts
                 Vmath::Vadd(physTot, velocity[0], 1, wk, 1, wk, 1);
 
-                // Multiply by kinvis
-                Vmath::Smul(physTot, m_kinvis, wk, 1, wk, 1);
+                // Multiply by kinvis and prepare to extrapolate
+                int nlevels = m_presForcingCorrection.num_elements();
+                Vmath::Smul(physTot, m_kinvis, wk, 1,
+                                     m_presForcingCorrection[nlevels-1], 1);
 
                 // Extrapolate correction
-                m_extrapolation->ExtrapolateArray(m_presForcingCorrection, 
-                                                    wk, wk);
+                m_extrapolation->ExtrapolateArray(m_presForcingCorrection);
 
                 // Put in wavespace
                 if (wavespace)
                 {
-                    m_fields[0]->HomogeneousFwdTrans(wk,wk);
+                    m_fields[0]->HomogeneousFwdTrans(
+                                   m_presForcingCorrection[nlevels-1],wk);
+                }
+                else
+                {
+                    Vmath::Vcopy(physTot, m_presForcingCorrection[nlevels-1], 1,
+                                          wk, 1);
                 }
                 // Apply correction: Forcing = Forcing - correction
                 Vmath::Vsub(physTot, Forcing[0], 1, wk, 1, Forcing[0], 1);

@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_INPUTSEM
 #define UTILITIES_NEKMESH_INPUTSEM
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -46,20 +46,20 @@ namespace Utilities
 /**
  * Converter for Semtex session files.
  */
-class InputSem : public InputModule
+class InputSem : public NekMeshUtils::InputModule
 {
 public:
-    InputSem(MeshSharedPtr m);
+    InputSem(NekMeshUtils::MeshSharedPtr m);
     virtual ~InputSem();
     virtual void Process();
 
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m)
+    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<InputSem>::AllocateSharedPtr(m);
     }
     /// %ModuleKey for class.
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
 private:
     void insertEdge(int elmt, int side, int tagId);

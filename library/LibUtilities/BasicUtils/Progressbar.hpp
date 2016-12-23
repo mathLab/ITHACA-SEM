@@ -66,26 +66,37 @@ using namespace std;
  * calling this routine. Ideally, this should be called only when the
  * percentage is increased by an integer.
  */
-inline void PrintProgressbar(const int position, const int goal, const string message)
+inline int PrintProgressbar(const int position, const int goal, const string message,
+                                 int lastprogress = -1)
 {
     std::cout.unsetf ( std::ios::floatfield );
     if (ISTTY)
     {
-        // carriage return
-        cout << "\r";
-
-        cout << message << ": ";
         float progress = position / float(goal);
-        cout << setw(3) << ceil(100 * progress) << "% [";
-        for (int j = 0; j < ceil(progress * 49); j++)
+        int  numeq = ceil(progress *49); 
+        if(lastprogress == numeq)
         {
-            cout << "=";
+            return numeq;
         }
-        for (int j = ceil(progress * 49); j < 49; j++)
+        else
         {
-            cout << " ";
+            // carriage return
+            cout << "\r";
+
+            cout << message << ": ";
+
+            cout << setw(3) << ceil(100 * progress) << "% [";
+            for (int j = 0; j < numeq; j++)
+            {
+                cout << "=";
+            }
+            for (int j = numeq; j < 49; j++)
+            {
+                cout << " ";
+            }
+            cout << "]" << flush;
+            return numeq;
         }
-        cout << "]" << flush;
     }
     else
     {
@@ -94,6 +105,7 @@ inline void PrintProgressbar(const int position, const int goal, const string me
         {
             cout << "." <<  flush;
         }
+        return -1;
     }
 }
 

@@ -76,7 +76,11 @@ void FilterAverageFields::v_PrepareOutput(
 {
     m_fieldMetaData["NumberOfFieldDumps"] =
         boost::lexical_cast<std::string>(m_numSamples);
-    m_scale = 1.0 / m_numSamples;
+}
+
+NekDouble FilterAverageFields::v_GetScale()
+{
+    return 1.0 / m_numSamples;
 }
 
 }

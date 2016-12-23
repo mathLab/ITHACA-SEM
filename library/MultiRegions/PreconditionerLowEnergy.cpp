@@ -283,11 +283,53 @@ namespace Nektar
                 }
             }
 
-            // Will need a global communication here for edges and
-            // faces over partitionsor a check in the edge map to see
-            // if sign has been modified.  Could check if edge order
-            // is stored in assembly map?
+            bool verbose =
+                expList->GetSession()->DefinesCmdLineArgument("verbose");
 
+            // For parallel runs need to check have minimum of edges and faces over
+            // partition boundaries 
+            if(m_comm->GetSize() > 1)
+            {
+                int EdgeSizeLen = EdgeSize.size(); 
+                int FaceSizeLen = FaceSize.size(); 
+                Array<OneD, long>      FacetMap(EdgeSizeLen+FaceSizeLen,-1);
+                Array<OneD, NekDouble> FacetLen(EdgeSizeLen+FaceSizeLen,-1);
+                
+                map<int,int>::iterator it;
+                
+                cnt = 0;
+                int maxid = 0; 
+                for(it = EdgeSize.begin(); it!=EdgeSize.end(); ++it,++cnt)
+                {
+                    FacetMap[cnt] = it->first;
+                    maxid = max(it->first,maxid);
+                    FacetLen[cnt] = it->second;
+                }
+                maxid++;
+
+                m_comm->AllReduce(maxid,ReduceMax);
+                
+                for(it = FaceSize.begin(); it!=FaceSize.end(); ++it,++cnt)
+                {
+                    FacetMap[cnt] = it->first + maxid;
+                    FacetLen[cnt] = it->second;
+                }
+                
+                //Exchange vertex data over different processes
+                Gs::gs_data *tmp = Gs::Init(FacetMap, m_comm, verbose);
+                Gs::Gather(FacetLen, Gs::gs_min, tmp);
+
+                cnt = 0; 
+                for(it = EdgeSize.begin(); it!=EdgeSize.end(); ++it,++cnt)
+                {
+                    it->second = (int) FacetLen[cnt];
+                }
+
+                for(it = FaceSize.begin(); it!=FaceSize.end(); ++it,++cnt)
+                {
+                    it->second = (int)FacetLen[cnt];
+                }
+            }
             
             // Loop over all the elements in the domain and compute total edge
             // DOF and set up unique ordering. 
@@ -430,7 +472,8 @@ namespace Nektar
 
                 for (j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
-                    meshFaceId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetFid(j);
+                    meshFaceId = locExpansion->as<LocalRegions::Expansion3D>()->
+                        GetGeom3D()->GetFid(j);
 
                     dof        = FaceSize[meshFaceId];
                     maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
@@ -455,15 +498,34 @@ namespace Nektar
 
             //Allocate arrays for block to universal map (number of expansions * p^2)
             Array<OneD, long> BlockToUniversalMap(ntotalentries,-1);
-            
-            Array<OneD, int> localToGlobalMatrixMap(nlocalNonDirEdges + nlocalNonDirFaces,-1);
+            Array<OneD, int> localToGlobalMatrixMap(nlocalNonDirEdges +
+                                                    nlocalNonDirFaces,-1);
 
             //Allocate arrays to store matrices (number of expansions * p^2)
-            Array<OneD, NekDouble> BlockArray(nlocalNonDirEdges + nlocalNonDirFaces,0.0);
+            Array<OneD, NekDouble> BlockArray(nlocalNonDirEdges +
+                                              nlocalNonDirFaces,0.0);
 
             int matrixoffset=0;
             int vGlobal;
+            int uniEdgeOffset = 0;
             
+            // Need to obtain a fixed offset for the universal number
+            // of the faces which come after the edge numbering
+            for(n=0; n < n_exp; ++n)
+            {
+                for(j = 0; j < locExpansion->GetNedges(); ++j)
+                {
+                    meshEdgeId = locExpansion->as<LocalRegions::Expansion3D>()
+                        ->GetGeom3D()->GetEid(j);
+                    
+                    uniEdgeOffset = max(meshEdgeId, uniEdgeOffset);
+                }
+            }
+            uniEdgeOffset++;
+            
+            m_comm->AllReduce(uniEdgeOffset,ReduceMax);
+            uniEdgeOffset = uniEdgeOffset*maxEdgeDof*maxEdgeDof; 
+
             for(n=0; n < n_exp; ++n)
             {
                 eid = expList->GetOffset_Elmt_Id(n);
@@ -504,7 +566,7 @@ namespace Nektar
                         matrixoffset+=nedgemodes*nedgemodes;
                     }
                 }
-                
+
                 Array<OneD, unsigned int>           faceInteriorMap;
                 Array<OneD, int>                    faceInteriorSign;
                 //loop over the faces of the expansion
@@ -538,7 +600,8 @@ namespace Nektar
                             localToGlobalMatrixMap[matrixoffset+k]
                                 = vGlobal;
                             
-                            BlockToUniversalMap[vGlobal] = uniOffset + k + 1;
+                            BlockToUniversalMap[vGlobal] = uniOffset +
+                                uniEdgeOffset + k + 1;
                         }
                         matrixoffset+=nfacemodes*nfacemodes;
                     }
@@ -735,18 +798,22 @@ namespace Nektar
                         if(faceDirMap.count(meshFaceId)==0)
                         {
                             Array<OneD, unsigned int> facemodearray;
-                            StdRegions::Orientation faceOrient = locExpansion->GetForient(fid);
+                            StdRegions::Orientation faceOrient =
+                                locExpansion->GetForient(fid);
                             
                             pIt = periodicFaces.find(meshFaceId);
                             if (pIt != periodicFaces.end())
                             {
                                 if(meshFaceId == min(meshFaceId, pIt->second[0].id))
                                 {
-                                faceOrient = DeterminePeriodicFaceOrient(faceOrient,pIt->second[0].orient);
+                                    faceOrient = DeterminePeriodicFaceOrient
+                                        (faceOrient,pIt->second[0].orient);
                                 }
                             }
                             
-                            facemodearray = locExpansion->GetFaceInverseBoundaryMap(fid,faceOrient,FaceModes[meshFaceId].first,FaceModes[meshFaceId].second);
+                            facemodearray = locExpansion->GetFaceInverseBoundaryMap
+                                (fid,faceOrient,FaceModes[meshFaceId].first,
+                                 FaceModes[meshFaceId].second);
                             
                             for (v=0; v<nfacemodes; ++v)
                             {
@@ -755,7 +822,9 @@ namespace Nektar
                                 sign1 = m_locToGloMap->
                                     GetLocalToGlobalBndSign(cnt + fMap1);
                                 
-                                ASSERTL1(sign1 != 0,"Something is wrong since we shoudl only be extracting modes for lowest order expansion");
+                                ASSERTL1(sign1 != 0,"Something is wrong since we "
+                                         "shoudl only be extracting modes for "
+                                         "lowest order expansion");
                                 
                                 for (m=0; m<nfacemodes; ++m)
                                 {
@@ -765,15 +834,19 @@ namespace Nektar
                                     sign2 = m_locToGloMap->
                                         GetLocalToGlobalBndSign(cnt + fMap2);
                                     
-                                    ASSERTL1(sign2 != 0,"Something is wrong since we shoudl only be extracting modes for lowest order expansion");
+                                    ASSERTL1(sign2 != 0,"Something is wrong since "
+                                             "we shoudl only be extracting modes for "
+                                             "lowest order expansion");
                                     
                                     // Get the face-face value from the
                                     // low energy matrix (S2)
-                                    NekDouble globalFaceValue = sign1*sign2*RSRT(fMap1,fMap2);
+                                    NekDouble globalFaceValue = sign1*sign2*
+                                        RSRT(fMap1,fMap2);
                                     
                                     //local face value to global face value
                                     //if(fMap1 == fMap2)
-                                    BlockArray[matrixoffset+v*nfacemodes+m]=globalFaceValue;
+                                    BlockArray[matrixoffset+v*nfacemodes+m]=
+                                        globalFaceValue;
                                 }
                             }
                             matrixoffset+=nfacemodes*nfacemodes;
@@ -784,9 +857,6 @@ namespace Nektar
                 //offset for the expansion
                 cnt+=nCoeffs;
             }
-
-            bool verbose =
-                expList->GetSession()->DefinesCmdLineArgument("verbose");
 
             if(nNonDirVerts!=0)
             {
@@ -806,7 +876,7 @@ namespace Nektar
                              GlobalBlock);
             }
 
-            //Exchange edge data over different processes
+            //Exchange edge & face data over different processes
             Gs::gs_data *tmp1 = Gs::Init(BlockToUniversalMap, m_comm, verbose);
             Gs::Gather(GlobalBlock, Gs::gs_add, tmp1);
 
@@ -823,7 +893,8 @@ namespace Nektar
             DNekMatSharedPtr gmat;
 
             offset=0;
-            for(int loc=0; loc<n_blks.num_elements()-1; ++loc) // -1 since we ignore vert block 
+            // -1 since we ignore vert block
+            for(int loc=0; loc<n_blks.num_elements()-1; ++loc) 
             {
                 nmodes = n_blks[1+loc];
                 gmat = MemoryManager<DNekMat>::AllocateSharedPtr
@@ -2409,9 +2480,6 @@ namespace Nektar
             DNekScalMatSharedPtr PrismR
                 = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0, newmat);
             maxRmat[ePrism] = PrismR;
-            //cout << "PrismR"<< endl;
-            //cout << *PrismR << endl;
-            //exit(1);
         }
         
         DNekMatSharedPtr PreconditionerLowEnergy::

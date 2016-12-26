@@ -656,19 +656,24 @@ namespace Nektar
                 DNekMat Sloc(nCoeffs,nCoeffs);
 
                 // For variable p we need to just use the active modes
-                if(m_signChange)
+                NekDouble mask1 = 1.0;
+                NekDouble mask2 = 1.0;
+                NekDouble val;
+                
+                for(int i = 0; i < nCoeffs; ++i)
                 {
-
-                    NekDouble mask1,mask2,val;
-                    for(int i = 0; i < nCoeffs; ++i)
+                    if(m_signChange)
                     {
                         mask1 = (m_locToGloSignMult[cnt+i] == 0.0)? 0.0:1.0;
-                        for(int j = 0; j < nCoeffs; ++j)
+                    }
+                    for(int j = 0; j < nCoeffs; ++j)
+                    {
+                        if(m_signChange)
                         {
                             mask2 = (m_locToGloSignMult[cnt+j] == 0.0)? 0.0:1.0;
-                            val = S(i,j)*mask1*mask2;
-                            Sloc.SetValue(i,j,val);
                         }
+                        val = S(i,j)*mask1*mask2;
+                        Sloc.SetValue(i,j,val);
                     }
                 }
                 
@@ -1402,18 +1407,24 @@ namespace Nektar
             DNekMat Sloc(nbnd,nbnd);
             
             // For variable p we need to just use the active modes 
-            if(m_signChange)
+            NekDouble mask1 = 1.0;
+            NekDouble mask2 = 1.0;
+            NekDouble val;
+            
+            for(int i = 0; i < nbnd; ++i)
             {
-                NekDouble mask1,mask2,val;
-                for(int i = 0; i < nbnd; ++i)
+                if(m_signChange)
                 {
                     mask1 = (m_locToGloSignMult[bndoffset+i] == 0.0)? 0.0:1.0;
-                    for(int j = 0; j < nbnd; ++j)
+                }
+                for(int j = 0; j < nbnd; ++j)
+                {
+                    if(m_signChange)
                     {
                         mask2 = (m_locToGloSignMult[bndoffset+j] == 0.0)? 0.0:1.0;
-                        val = S1(i,j)*mask1*mask2;
-                        Sloc.SetValue(i,j,val);
                     }
+                    val = S1(i,j)*mask1*mask2;
+                    Sloc.SetValue(i,j,val);
                 }
             }
             

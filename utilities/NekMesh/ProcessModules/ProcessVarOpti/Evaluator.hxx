@@ -856,6 +856,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
     //ASSERTL0(std::isfinite(integral),"inf in integral");
 
     return integral;
+    //return sqrt(m_grad[0]*m_grad[0] + m_grad[1]*m_grad[1]);
 }
 
 }

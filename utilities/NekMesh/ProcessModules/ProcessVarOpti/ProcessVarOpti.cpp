@@ -435,7 +435,7 @@ void ProcessVarOpti::Analytics()
     NodeSharedPtr node = nodes[4];
 
     // Loop over overintegration orders
-    const int       nPoints = 50;
+    const int       nPoints = 200;
     const int       overInt = 40;
     const NekDouble originX = -1.0;
     const NekDouble originY = -1.0;
@@ -470,6 +470,12 @@ void ProcessVarOpti::Analytics()
                 // Reconstruct element map
                 GetElementMap(i, derivUtils);
 
+                for(int j = 0; j < m_dataSet.size(); j++)
+                {
+                    m_dataSet[j]->Evaluate();
+                    m_dataSet[j]->InitialMinJac();
+                }
+
                 // Create NodeOpti object.
                 NodeOptiSharedPtr nodeOpti = GetNodeOptiFactory().CreateInstance(
                     m_mesh->m_spaceDim * 11, node, m_nodeElMap.find(node->m_id)->second,
@@ -479,7 +485,11 @@ void ProcessVarOpti::Analytics()
 
                 // Evaluate functional.
                 nodeOpti->CalcMinJac();
-                cout << nodeOpti->GetFunctional<2>(minJacNew, false) << " ";
+                cout << nodeOpti->GetFunctional<2>(minJacNew) << " ";
+                //NekDouble eigen;
+                //nodeOpti->GetFunctional<2>(minJacNew);
+                //nodeOpti->MinEigen<2>(eigen);
+                //cout << eigen << " ";
             }
 
             cout << minJacNew << endl;

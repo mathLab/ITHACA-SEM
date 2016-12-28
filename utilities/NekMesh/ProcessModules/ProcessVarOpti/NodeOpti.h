@@ -74,6 +74,9 @@ public:
 
     template<int DIM> NekDouble GetFunctional(NekDouble &minJacNew,
                                               bool gradient = true);
+
+    template<int DIM> void MinEigen(NekDouble &val);
+    
 protected:
 
     NodeSharedPtr m_node;
@@ -82,7 +85,7 @@ protected:
     Array<OneD, NekDouble> m_grad;
 
     template<int DIM> int IsIndefinite();
-    template<int DIM> void MinEigen(NekDouble &val);
+
 
     NekDouble m_minJac;
     ResidualSharedPtr m_res;

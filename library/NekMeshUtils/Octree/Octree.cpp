@@ -1047,6 +1047,9 @@ void Octree::CompileSourcePointList()
         cout << endl;
     }
 
+    //vector<unsigned int> surfs;
+    //ParseUtils::GenerateSeqVector(surf.c_str(), surfs);
+
     if (m_udsfileset)
     {
         if(m_mesh->m_verbose)

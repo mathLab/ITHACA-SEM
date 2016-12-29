@@ -117,7 +117,13 @@ void InputCAD::ParseFile(string nm)
         }
     }
 
+<<<<<<< HEAD
     map<string, string>::iterator it;
+=======
+    set<string>
+
+    map<string,string>::iterator it;
+>>>>>>> start refinment lines
 
     it = information.find("CADFile");
     ASSERTL0(it != information.end(), "no cadfile defined");
@@ -256,10 +262,6 @@ void InputCAD::Process()
         mods.back()->RegisterConfig("opti", "");
     }
 
-<<<<<<< HEAD
-    for (int i = 0; i < mods.size(); i++)
-=======
-
     ////**** SPLIT BL ****////
     if(m_splitBL)
     {
@@ -272,7 +274,6 @@ void InputCAD::Process()
     }
 
     for(int i = 0; i < mods.size(); i++)
->>>>>>> automatically split bl
     {
         mods[i]->Process();
     }

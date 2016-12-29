@@ -167,12 +167,13 @@ void InputCAD::ParseFile(string nm)
         m_blthick = it->second;
 
         it = parameters.find("BLLayers");
-        ASSERTL0(it != parameters.end(), "no bllayer defined");
-        m_bllayers = it->second;
-
-        it = parameters.find("BLProg");
-        ASSERTL0(it != parameters.end(), "no blprog defined");
-        m_blprog = it->second;
+        m_splitBL = it != parameters.end();
+        if(m_splitBL)
+        {
+            m_bllayers = it->second;
+            it = parameters.find("BLProg");
+            m_blprog = it != parameters.end() ? it->second : "2.0";
+        }
     }
 
     set<string>::iterator sit;
@@ -255,7 +256,23 @@ void InputCAD::Process()
         mods.back()->RegisterConfig("opti", "");
     }
 
+<<<<<<< HEAD
     for (int i = 0; i < mods.size(); i++)
+=======
+
+    ////**** SPLIT BL ****////
+    if(m_splitBL)
+    {
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "bl"), m_mesh));
+        mods.back()->RegisterConfig("layers",m_bllayers);
+        mods.back()->RegisterConfig("surf",m_blsurfs);
+        mods.back()->RegisterConfig("nq",boost::lexical_cast<string>(m_mesh->m_nummode));
+        mods.back()->RegisterConfig("r",m_blprog);
+    }
+
+    for(int i = 0; i < mods.size(); i++)
+>>>>>>> automatically split bl
     {
         mods[i]->Process();
     }

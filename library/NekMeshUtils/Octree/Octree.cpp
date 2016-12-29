@@ -876,7 +876,7 @@ void Octree::CompileSourcePointList()
         Array<OneD, NekDouble> bds = curve->Bounds();
         int samples = 100;
         NekDouble dt      = (bds[1] - bds[0]) / (samples + 1);
-        for (int j = 0; j < samples; j++)
+        for (int j = 1; j < samples -1; j++) //dont want first and last point
         {
             NekDouble t = bds[0] +  dt * j;
             NekDouble C = curve->Curvature(t);

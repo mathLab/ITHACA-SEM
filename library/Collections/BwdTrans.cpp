@@ -131,6 +131,9 @@ OperatorKey BwdTrans_StdMat::m_typeArr[] = {
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eHexahedron,    eBwdTrans, eStdMat,false),
         BwdTrans_StdMat::create, "BwdTrans_StdMat_Hex"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(ePyramid, eBwdTrans, eSumFac, false),
+        BwdTrans_StdMat::create, "BwdTrans_SumFac_Pyr")
 };
 
 

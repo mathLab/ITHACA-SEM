@@ -36,6 +36,8 @@
 #include <LocalRegions/PyrExp.h>
 #include <LibUtilities/Foundations/Interp.h>
 
+using namespace std;
+
 namespace Nektar 
 {
     namespace LocalRegions 
@@ -352,6 +354,63 @@ namespace Nektar
             Expansion::v_GetCoords(coords_1, coords_2, coords_3);
         }
 
+
+        void PyrExp::v_ExtractDataToCoeffs(
+                const NekDouble *data,
+                const std::vector<unsigned int > &nummodes,
+                const int mode_offset,
+                NekDouble * coeffs,
+                std::vector<LibUtilities::BasisType> &fromType)
+        {
+            int data_order0 = nummodes[mode_offset];
+            int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
+            int data_order1 = nummodes[mode_offset+1];
+            int order1      = m_base[1]->GetNumModes();
+            int fillorder1  = min(order1,data_order1);
+            int data_order2 = nummodes[mode_offset+2];
+            int order2      = m_base[2]->GetNumModes();
+            int fillorder2  = min(order2,data_order2);
+
+            // Check if not same order or basis and if not make temp
+            // element to read in data
+            if (fromType[0] != m_base[0]->GetBasisType() ||
+                fromType[1] != m_base[1]->GetBasisType() ||
+                fromType[2] != m_base[2]->GetBasisType() || 
+                data_order0 != fillorder0 ||
+                data_order1 != fillorder1 ||
+                data_order2 != fillorder2)
+            {
+                // Construct a pyr with the appropriate basis type at our
+                // quadrature points, and one more to do a forwards
+                // transform. We can then copy the output to coeffs.
+                StdRegions::StdPyrExp tmpPyr(
+                    LibUtilities::BasisKey(
+                        fromType[0], data_order0, m_base[0]->GetPointsKey()),
+                    LibUtilities::BasisKey(
+                        fromType[1], data_order1, m_base[1]->GetPointsKey()),
+                    LibUtilities::BasisKey(
+                        fromType[2], data_order2, m_base[2]->GetPointsKey()));
+
+                StdRegions::StdPyrExp tmpPyr2(m_base[0]->GetBasisKey(),
+                                              m_base[1]->GetBasisKey(),
+                                              m_base[2]->GetBasisKey());
+
+                Array<OneD, const NekDouble> tmpData(tmpPyr.GetNcoeffs(), data);
+                Array<OneD, NekDouble> tmpBwd(tmpPyr2.GetTotPoints());
+                Array<OneD, NekDouble> tmpOut(tmpPyr2.GetNcoeffs());
+
+                tmpPyr.BwdTrans(tmpData, tmpBwd);
+                tmpPyr2.FwdTrans(tmpBwd, tmpOut);
+                Vmath::Vcopy(tmpOut.num_elements(), &tmpOut[0], 1, coeffs, 1);
+
+            }
+            else
+            {
+                Vmath::Vcopy(m_ncoeffs,&data[0],1,coeffs,1);
+            }
+        }
+
+            
         NekDouble PyrExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord,
                                          const Array<OneD, const NekDouble>& physvals)
         {

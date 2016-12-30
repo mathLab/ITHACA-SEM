@@ -143,11 +143,10 @@ ADD_NEKTAR_TEST        (Nek5000/r1854a)
 ADD_NEKTAR_TEST        (StarTec/CubePer)
 ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)
 
-# varopti tests
-ADD_NEKTAR_TEST         (MeshGen/varopti_cubesphere)
-
 # MeshGen test
 IF(NEKTAR_USE_MESHGEN)
     ADD_NEKTAR_TEST        (MeshGen/cylinder)
     ADD_NEKTAR_TEST        (MeshGen/sphere)
+    # varopti tests
+    ADD_NEKTAR_TEST        (MeshGen/varopti_cubesphere)
 ENDIF()

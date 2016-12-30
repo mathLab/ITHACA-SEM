@@ -38,7 +38,10 @@
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/Module/Module.h>
 
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
+
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 namespace Nektar
@@ -1047,38 +1050,34 @@ void Octree::CompileSourcePointList()
         cout << endl;
     }
 
-    //vector<unsigned int> surfs;
-    //ParseUtils::GenerateSeqVector(surf.c_str(), surfs);
-
-    if (m_udsfileset)
+    if (m_refinement.size() > 0)
     {
         if(m_mesh->m_verbose)
         {
-            cout << "\t\tModifying based on uds files" << endl;
+            cout << "\t\tModifying based on refinement lines" << endl;
         }
         // now deal with the user defined spacing
         vector<linesource> lsources;
-        fstream fle;
-        fle.open(m_udsfile.c_str());
+        vector<string> lines;
 
-        string fileline;
+        boost::split(lines, m_refinement, boost::is_any_of(":"));
 
-        while (!fle.eof())
+        for(int i = 0; i < lines.size(); i++)
         {
-            getline(fle, fileline);
-            stringstream s(fileline);
-            string word;
-            s >> word;
-            if (word == "L")
-            {
-                Array<OneD, NekDouble> x1(3), x2(3);
-                NekDouble r, d;
-                s >> x1[0] >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2]
-                  >> r >> d;
-                lsources.push_back(linesource(x1, x2, r, d));
-            }
+            vector<NekDouble> data;
+            ParseUtils::GenerateUnOrderedVector(lines[i].c_str(), data);
+
+            Array<OneD, NekDouble> x1(3), x2(3);
+
+            x1[0] = data[0];
+            x1[1] = data[1];
+            x1[2] = data[2];
+            x2[0] = data[3];
+            x2[1] = data[4];
+            x2[2] = data[5];
+
+            lsources.push_back(linesource(x1, x2, data[6], data[7]));
         }
-        fle.close();
 
         // this takes any existing sourcepoints within the influence range
         // and modifies them

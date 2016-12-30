@@ -51,8 +51,6 @@ std::string CADSystemOCE::key = GetEngineFactory().RegisterCreatorFunction(
 
 bool CADSystemOCE::LoadCAD()
 {
-    cout << "trying " << m_name << endl;
-
     if (m_name.find('.') != std::string::npos)
     {
         // Takes step file and makes OpenCascade shape
@@ -69,7 +67,7 @@ bool CADSystemOCE::LoadCAD()
     }
     else
     {
-        cout << "assuming " << m_name << " is a 4 digit naca code" << endl;
+        cout << m_name << " is not a step file, assuming it is a 4 digit naca code" << endl;
         shape = BuildNACA(m_name);
 
         /*STEPControl_Writer writer;

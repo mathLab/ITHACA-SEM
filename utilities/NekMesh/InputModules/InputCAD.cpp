@@ -117,13 +117,22 @@ void InputCAD::ParseFile(string nm)
         }
     }
 
-<<<<<<< HEAD
-    map<string, string>::iterator it;
-=======
-    set<string>
+    set<string> refinement;
+    if(pSession->DefinesElement("NEKTAR/MESHING/REFINEMENT"))
+    {
+        TiXmlElement *refine = mcf->FirstChildElement("REFINEMENT");
+        TiXmlElement *L     = refine->FirstChildElement("L");
+
+        while (L)
+        {
+            string tmp;
+            L->QueryStringAttribute("VALUE", &tmp);
+            refinement.insert(tmp);
+            L = L->NextSiblingElement("L");
+        }
+    }
 
     map<string,string>::iterator it;
->>>>>>> start refinment lines
 
     it = information.find("CADFile");
     ASSERTL0(it != information.end(), "no cadfile defined");
@@ -139,12 +148,6 @@ void InputCAD::ParseFile(string nm)
         m_2D = true;
     }
 
-    it = information.find("UDSFile");
-    if (it != information.end())
-    {
-        m_udsfile = it->second;
-        m_uds     = true;
-    }
 
     it = parameters.find("MinDelta");
     ASSERTL0(it != parameters.end(), "no mindelta defined");
@@ -187,6 +190,19 @@ void InputCAD::ParseFile(string nm)
     m_surfopti = sit != boolparameters.end();
     sit        = boolparameters.find("WriteOctree");
     m_woct     = sit != boolparameters.end();
+
+    m_refine = refinement.size() > 0;
+    if(m_refine)
+    {
+        stringstream ss;
+        for(sit = refinement.begin(); sit != refinement.end(); sit++)
+        {
+            ss << *sit;
+            ss << ":";
+        }
+        m_refinement = ss.str();
+        m_refinement.erase(m_refinement.end()-1);
+    }
 }
 
 void InputCAD::Process()
@@ -215,9 +231,9 @@ void InputCAD::Process()
     mods.back()->RegisterConfig("mindel", m_minDelta);
     mods.back()->RegisterConfig("maxdel", m_maxDelta);
     mods.back()->RegisterConfig("eps", m_eps);
-    if (m_uds)
+    if (m_refine)
     {
-        mods.back()->RegisterConfig("udsfile", m_udsfile);
+        mods.back()->RegisterConfig("refinement", m_refinement);
     }
     if (m_woct)
     {

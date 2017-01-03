@@ -40,6 +40,8 @@
 #include "Octant.h"
 #include <NekMeshUtils/MeshElements/Mesh.h>
 
+#include <string>
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -56,10 +58,6 @@ class Octree
 public:
 
     Octree(MeshSharedPtr m) : m_mesh(m)
-    {
-    }
-
-    Octree()
     {
     }
 

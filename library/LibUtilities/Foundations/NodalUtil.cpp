@@ -967,11 +967,11 @@ NodalUtilHex::NodalUtilHex(int degree,
 
     // Construct a mapping (i,j,k) -> m from the tensor product space (i,j,k) to
     // a single ordering m.
-    for (int i = 0; i <= m_degree; ++i)
+    for (int k = 0; k <= m_degree; ++k)
     {
         for (int j = 0; j <= m_degree; ++j)
         {
-            for (int k = 0; k <= m_degree - i; ++k)
+            for (int i = 0; i <= m_degree; ++i)
             {
                 m_ordering.push_back(Mode(i, j, k));
             }
@@ -1053,11 +1053,18 @@ NekVector<NekDouble> NodalUtilHex::v_OrthoBasisDeriv(
             ret[i] = jacobi_di[i] * jacobi_j[i] * jacobi_k[i];
         }
     }
+    else if (dir == 1)
+    {
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] = jacobi_dj[i] * jacobi_i[i] * jacobi_k[i];
+        }
+    }
     else
     {
         for (int i = 0; i < m_numPoints; ++i)
         {
-            ret[i] = jacobi_i[i] * jacobi_dj[i] * jacobi_dk[i];
+            ret[i] = jacobi_i[i] * jacobi_j[i] * jacobi_dk[i];
         }
     }
 

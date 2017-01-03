@@ -128,6 +128,14 @@ Array<OneD, NekDouble> CADCurveOCE::D2(NekDouble t)
     return out;
 }
 
+NekDouble CADCurveOCE::Curvature(NekDouble t)
+{
+    GeomLProp_CLProps d(m_c,2,1e-8);
+    d.SetParameter(t);
+
+    return d.Curvature() * 1000.0;
+}
+
 Array<OneD, NekDouble> CADCurveOCE::Bounds()
 {
     Array<OneD, NekDouble> t(2);

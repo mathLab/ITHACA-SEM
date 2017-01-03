@@ -1195,6 +1195,18 @@ void FaceMesh::OrientateCurves()
         vector<NodeSharedPtr> tmp = orderedLoops[0];
         reverse(tmp.begin(), tmp.end());
         orderedLoops[0] = tmp;
+        //need to flip edgeo
+        for(int i = 0; i < m_edgeloops[0].edgeo.size(); i++)
+        {
+            if(m_edgeloops[0].edgeo[i] == 0)
+            {
+                m_edgeloops[0].edgeo[i] = 1;
+            }
+            else
+            {
+                m_edgeloops[0].edgeo[i] = 0;
+            }
+        }
     }
 
     for (int i = 1; i < orderedLoops.size(); i++)
@@ -1204,6 +1216,19 @@ void FaceMesh::OrientateCurves()
             vector<NodeSharedPtr> tmp = orderedLoops[i];
             reverse(tmp.begin(), tmp.end());
             orderedLoops[i] = tmp;
+
+            //need to flip edgeo
+            for(int j = 0; j < m_edgeloops[i].edgeo.size(); j++)
+            {
+                if(m_edgeloops[i].edgeo[j] == 0)
+                {
+                    m_edgeloops[i].edgeo[j] = 1;
+                }
+                else
+                {
+                    m_edgeloops[i].edgeo[j] = 0;
+                }
+            }
         }
     }
 }

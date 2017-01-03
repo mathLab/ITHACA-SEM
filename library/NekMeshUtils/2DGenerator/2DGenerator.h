@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputCAD.h
+//  File: SurfaceMeshing.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,42 +29,55 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Create mesh from CAD.
+//  Description: class containing all surfacemeshing routines and classes.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTCAD
-#define UTILITIES_NEKMESH_INPUTCAD
+#ifndef NEKMESHUTILS_2D_2D
+#define NEKMESHUTILS_2D_2D
 
 #include <NekMeshUtils/Module/Module.h>
+#include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
+#include <NekMeshUtils/SurfaceMeshing/FaceMesh.h>
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMeshUtils
 {
 
-class InputCAD : public NekMeshUtils::InputModule
+/**
+ * @brief class containing all surface meshing routines methods and classes
+ */
+class Generator2D : public ProcessModule
 {
 public:
-    InputCAD(NekMeshUtils::MeshSharedPtr m);
-    virtual ~InputCAD();
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    {
+        return MemoryManager<Generator2D>::AllocateSharedPtr(m);
+    }
+    static ModuleKey className;
+
+    Generator2D(MeshSharedPtr m);
+    virtual ~Generator2D();
+
     virtual void Process();
 
-    /// Creates an instance of this class
-    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
-    {
-        return MemoryManager<InputCAD>::AllocateSharedPtr(m);
-    }
-    /// %ModuleKey for class.
-    static NekMeshUtils::ModuleKey className;
-
-    void ParseFile(std::string nm);
-
 private:
-    std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order,
-                m_blsurfs, m_blthick, m_blprog, m_bllayers, m_refinement;
-    bool m_makeBL, m_surfopti, m_refine, m_woct, m_2D, m_splitBL;
 
+    void MakeBLPrep();
+
+    void MakeBL(int faceid, std::vector<EdgeLoop> e);
+
+    void Report();
+    /// map of individual surface meshes from parametric surfaces
+    std::map<int, FaceMeshSharedPtr> m_facemeshes;
+    /// map of individual curve meshes of the curves in the domain
+    std::map<int, CurveMeshSharedPtr> m_curvemeshes;
+
+    std::vector<unsigned int> m_blCurves;
+    NekDouble m_thickness;
+    std::map<NodeSharedPtr, std::vector<EdgeSharedPtr> > m_nodesToEdge;
 };
 }
 }

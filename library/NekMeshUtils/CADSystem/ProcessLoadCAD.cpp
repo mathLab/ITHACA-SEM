@@ -51,6 +51,8 @@ ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
 {
     m_config["filename"] =
         ConfigOption(false, "", "Generate prisms on these surfs");
+    m_config["2D"] =
+        ConfigOption(true, "", "allow 2d loading");
 }
 
 ProcessLoadCAD::~ProcessLoadCAD()
@@ -67,6 +69,12 @@ void ProcessLoadCAD::Process()
     }
 
     m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",name);
+
+    if(m_config["2D"].beenSet)
+    {
+        m_mesh->m_cad->Set2D();
+    }
+
     ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
 
     if (m_mesh->m_verbose)

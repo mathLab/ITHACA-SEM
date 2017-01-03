@@ -35,9 +35,13 @@
 
 #include "Octree.h"
 #include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/Module/Module.h>
 
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
+
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 namespace Nektar
@@ -868,7 +872,53 @@ struct linesource
 
 void Octree::CompileSourcePointList()
 {
-    //first sample surfaces
+
+    for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
+    {
+        CADCurveSharedPtr curve = m_mesh->m_cad->GetCurve(i);
+        Array<OneD, NekDouble> bds = curve->Bounds();
+        int samples = 100;
+        NekDouble dt      = (bds[1] - bds[0]) / (samples + 1);
+        for (int j = 1; j < samples -1; j++) //dont want first and last point
+        {
+            NekDouble t = bds[0] +  dt * j;
+            NekDouble C = curve->Curvature(t);
+
+            Array<OneD, NekDouble> loc = curve->P(t);
+
+            vector<CADSurfSharedPtr> ss = curve->GetAdjSurf();
+            Array<OneD, NekDouble> uv = ss[0]->locuv(loc);
+
+            if (C != 0.0)
+            {
+                NekDouble del = 2.0 * (1.0 / C) * sqrt(m_eps * (2.0 - m_eps));
+
+                if (del > m_maxDelta)
+                {
+                    del = m_maxDelta;
+                }
+                if (del < m_minDelta)
+                {
+                    del = m_minDelta;
+                }
+
+                CPointSharedPtr newCPoint =
+                    MemoryManager<CPoint>::AllocateSharedPtr(ss[0]->GetId(), uv,
+                                                             loc, del);
+
+                m_SPList.push_back(newCPoint);
+            }
+            else
+            {
+                BPointSharedPtr newBPoint =
+                    MemoryManager<BPoint>::AllocateSharedPtr(ss[0]->GetId(), uv,
+                                                             loc);
+
+                m_SPList.push_back(newBPoint);
+            }
+        }
+    }
+
     for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {
         if(m_mesh->m_verbose)
@@ -1000,35 +1050,34 @@ void Octree::CompileSourcePointList()
         cout << endl;
     }
 
-    if (m_udsfileset)
+    if (m_refinement.size() > 0)
     {
         if(m_mesh->m_verbose)
         {
-            cout << "\t\tModifying based on uds files" << endl;
+            cout << "\t\tModifying based on refinement lines" << endl;
         }
         // now deal with the user defined spacing
         vector<linesource> lsources;
-        fstream fle;
-        fle.open(m_udsfile.c_str());
+        vector<string> lines;
 
-        string fileline;
+        boost::split(lines, m_refinement, boost::is_any_of(":"));
 
-        while (!fle.eof())
+        for(int i = 0; i < lines.size(); i++)
         {
-            getline(fle, fileline);
-            stringstream s(fileline);
-            string word;
-            s >> word;
-            if (word == "L")
-            {
-                Array<OneD, NekDouble> x1(3), x2(3);
-                NekDouble r, d;
-                s >> x1[0] >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2]
-                  >> r >> d;
-                lsources.push_back(linesource(x1, x2, r, d));
-            }
+            vector<NekDouble> data;
+            ParseUtils::GenerateUnOrderedVector(lines[i].c_str(), data);
+
+            Array<OneD, NekDouble> x1(3), x2(3);
+
+            x1[0] = data[0];
+            x1[1] = data[1];
+            x1[2] = data[2];
+            x2[0] = data[3];
+            x2[1] = data[4];
+            x2[2] = data[5];
+
+            lsources.push_back(linesource(x1, x2, data[6], data[7]));
         }
-        fle.close();
 
         // this takes any existing sourcepoints within the influence range
         // and modifies them

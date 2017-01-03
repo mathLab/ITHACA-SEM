@@ -97,6 +97,8 @@ public:
      */
     virtual Array<OneD, NekDouble> D2(NekDouble t) = 0;
 
+    virtual NekDouble Curvature(NekDouble t) = 0;
+
     /**
      * @brief Calculates the parametric coordinate and arclength location
      * defined by \p s.

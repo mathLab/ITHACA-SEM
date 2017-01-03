@@ -67,7 +67,7 @@ bool CADSystemOCE::LoadCAD()
     }
     else
     {
-        cout << m_name << " is not a step file, assuming it is a 4 digit naca code" << endl;
+        //cout << m_name << " is not a step file, assuming it is a 4 digit naca code" << endl;
         shape = BuildNACA(m_name);
 
         /*STEPControl_Writer writer;

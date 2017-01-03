@@ -259,17 +259,20 @@ void ProcessVarOpti::Process()
         histFile.close();
     }
 
-    cout << scientific << endl;
-    cout << "N elements:\t\t" << m_mesh->m_element[m_mesh->m_expDim].size() - elLock.size() << endl
-         << "N elements invalid:\t" << m_res->startInv << endl
-         << "Worst jacobian:\t\t" << m_res->worstJac << endl
-         << "N free nodes:\t\t" << m_res->n << endl
-         << "N Dof:\t\t\t" << m_res->nDoF << endl
-         << "N color sets:\t\t" << nset << endl
-         << "Avg set colors:\t\t" << p/nset << endl
-         << "Min set:\t\t" << mn << endl
-         << "Max set:\t\t" << mx << endl
-         << "Residual tolerance:\t" << restol << endl;
+    if(m_mesh->m_verbose)
+    {
+        cout << scientific << endl;
+        cout << "N elements:\t\t" << m_mesh->m_element[m_mesh->m_expDim].size() - elLock.size() << endl
+             << "N elements invalid:\t" << m_res->startInv << endl
+             << "Worst jacobian:\t\t" << m_res->worstJac << endl
+             << "N free nodes:\t\t" << m_res->n << endl
+             << "N Dof:\t\t\t" << m_res->nDoF << endl
+             << "N color sets:\t\t" << nset << endl
+             << "Avg set colors:\t\t" << p/nset << endl
+             << "Min set:\t\t" << mn << endl
+             << "Max set:\t\t" << mx << endl
+             << "Residual tolerance:\t" << restol << endl;
+    }
 
     int nThreads = m_config["numthreads"].as<int>();
 
@@ -343,13 +346,17 @@ void ProcessVarOpti::Process()
             resFile << m_res->val << " " << m_res->worstJac << " " << m_res->func << endl;
         }
 
-        cout << ctr << "\tResidual: " << m_res->val
-                    << "\tMin Jac: " << m_res->worstJac
-                    << "\tInvalid: " << m_res->startInv
-                    << "\tReset nodes: " << m_res->nReset[0] << "/" << m_res->nReset[1] << "/" << m_res->nReset[2]
-                    << "\tFunctional: " << m_res->func
-                    //<< "\tAlphaNotOne: " << m_res->alphaI
-                    << endl;
+        if(m_mesh->m_verbose)
+        {
+            cout << ctr << "\tResidual: " << m_res->val
+                        << "\tMin Jac: " << m_res->worstJac
+                        << "\tInvalid: " << m_res->startInv
+                        << "\tReset nodes: " << m_res->nReset[0] << "/" << m_res->nReset[1] << "/" << m_res->nReset[2]
+                        << "\tFunctional: " << m_res->func
+                        //<< "\tAlphaNotOne: " << m_res->alphaI
+                        << endl;
+        }
+
         if(ctr >= maxIter)
             break;
     }
@@ -372,10 +379,13 @@ void ProcessVarOpti::Process()
     }
 
     t.Stop();
-    cout << "Time to compute: " << t.TimePerTest(1) << endl;
 
-    cout << "Invalid at end: " << m_res->startInv << endl;
-    cout << "Worst at end: " << m_res->worstJac << endl;
+    if(m_mesh->m_verbose)
+    {
+        cout << "Time to compute: " << t.TimePerTest(1) << endl;
+        cout << "Invalid at end: " << m_res->startInv << endl;
+        cout << "Worst at end: " << m_res->worstJac << endl;
+    }
 }
 
 class NodalUtilTriMonomial : public LibUtilities::NodalUtilTriangle

@@ -35,6 +35,8 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
+#include <boost/thread.hpp>
+
 #include <tinyxml.h>
 
 #include "InputCAD.h"
@@ -190,6 +192,8 @@ void InputCAD::ParseFile(string nm)
     m_surfopti = sit != boolparameters.end();
     sit        = boolparameters.find("WriteOctree");
     m_woct     = sit != boolparameters.end();
+    sit        = boolparameters.find("VarOpti");
+    m_varopti  = sit != boolparameters.end();
 
     m_refine = refinement.size() > 0;
     if(m_refine)
@@ -276,6 +280,24 @@ void InputCAD::Process()
     if (m_surfopti)
     {
         mods.back()->RegisterConfig("opti", "");
+    }
+
+    ////*** VARIATIONAL OPTIMISATION ****////
+    if(m_varopti)
+    {
+        unsigned int np = boost::thread::physical_concurrency();
+        if(m_mesh->m_verbose)
+        {
+            cout << "Detecting 4 cores, will attempt to run in parrallel" << endl;
+        }
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "varopti"), m_mesh));
+        mods.back()->RegisterConfig("nq",boost::lexical_cast<string>(m_mesh->m_nummode));
+        mods.back()->RegisterConfig("hyperelastic","");
+        mods.back()->RegisterConfig("maxiter","10");
+        mods.back()->RegisterConfig("restol","1e-6");
+        mods.back()->RegisterConfig("overint","6");
+        mods.back()->RegisterConfig("numthreads",boost::lexical_cast<string>(np));
     }
 
     ////**** SPLIT BL ****////

@@ -176,30 +176,31 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElUtilSha
     //this figures out the dirclet nodes and colors the others into paralell sets
     NodeSet boundaryNodes;
 
-    if(!m_mesh->m_cad)
-    {
-        switch (m_mesh->m_spaceDim)
-        {
-            case 2:
-            {
-                EdgeSet::iterator it;
-                for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
-                {
-                    if((*it)->m_elLink.size() == 2)
-                    {
-                        continue;
-                    }
 
-                    boundaryNodes.insert((*it)->m_n1);
-                    boundaryNodes.insert((*it)->m_n2);
-                    for(int i = 0; i < (*it)->m_edgeNodes.size(); i++)
-                    {
-                        boundaryNodes.insert((*it)->m_edgeNodes[i]);
-                    }
+    switch (m_mesh->m_spaceDim)
+    {
+        case 2:
+        {
+            EdgeSet::iterator it;
+            for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+            {
+                if((*it)->m_elLink.size() == 2)
+                {
+                    continue;
                 }
-                break;
+
+                boundaryNodes.insert((*it)->m_n1);
+                boundaryNodes.insert((*it)->m_n2);
+                for(int i = 0; i < (*it)->m_edgeNodes.size(); i++)
+                {
+                    boundaryNodes.insert((*it)->m_edgeNodes[i]);
+                }
             }
-            case 3:
+            break;
+        }
+        case 3:
+        {
+            if(!m_mesh->m_cad)
             {
                 FaceSet::iterator it;
                 for(it = m_mesh->m_faceSet.begin(); it != m_mesh->m_faceSet.end(); it++)
@@ -229,23 +230,23 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElUtilSha
                         boundaryNodes.insert((*it)->m_faceNodes[i]);
                     }
                 }
-                break;
             }
-            default:
-                ASSERTL0(false,"space dim issue");
-        }
-    }
-    else
-    {
-        //if we have CAD we are 3D and therefore the only fixed nodes exist on vertices only
-        NodeSet::iterator nit;
-        for (nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end(); ++nit)
-        {
-            if((*nit)->GetNumCadCurve() > 1)
+            else
             {
-                boundaryNodes.insert((*nit));
+                //if we have CAD therefore the only fixed nodes exist on vertices only
+                NodeSet::iterator nit;
+                for (nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end(); ++nit)
+                {
+                    if((*nit)->GetNumCadCurve() > 1)
+                    {
+                        boundaryNodes.insert((*nit));
+                    }
+                }
             }
+            break;
         }
+        default:
+            ASSERTL0(false,"space dim issue");
     }
 
     vector<NodeSharedPtr> remain;
@@ -388,9 +389,17 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(vector<ElUtilSha
         }
         ret.push_back(layer);
 
-        LibUtilities::PrintProgressbar(m_res->n - remain.size(), m_res->n, "Node Coloring");
+        if(m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(m_res->n - remain.size(), m_res->n, "Node Coloring");
+        }
+
     }
-    cout << endl;
+    if(m_mesh->m_verbose)
+    {
+        cout << endl;
+    }
+
     return ret;
 }
 

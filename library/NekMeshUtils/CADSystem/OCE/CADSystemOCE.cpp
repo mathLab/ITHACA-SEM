@@ -67,13 +67,9 @@ bool CADSystemOCE::LoadCAD()
     }
     else
     {
-        cout << m_name << " is not a step file, assuming it is a 4 digit naca code" << endl;
+        cout << m_name << " is not a STEP file, assuming it is "
+             << "a 4 digit NACA code" << endl;
         shape = BuildNACA(m_name);
-
-        /*STEPControl_Writer writer;
-        writer.Transfer(shape,STEPControl_ShellBasedSurfaceModel);
-        writer.Write("test.stp");
-        exit(-1);*/
     }
 
     // faces and verts can be extracted straight from shape
@@ -116,8 +112,8 @@ bool CADSystemOCE::LoadCAD()
         }
     }
 
-    map<int, vector<int> > adjsurfmap; // from id of curve to list of ids of
-                                       // surfs
+    // from id of curve to list of ids of surfs
+    map<int, vector<int> > adjsurfmap;
 
     // Adds edges to our type and map
     for (int i = 1; i <= mapOfEdges.Extent(); i++)
@@ -392,7 +388,8 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
         }
         else
         {
-            yc[i] = M / (1.0 - P) / (1.0 - P) * (1.0 - 2.0 * P + 2.0 * P * xc[i] - xc[i] * xc[i]);
+            yc[i]  = M / (1.0 - P) / (1.0 - P) * (
+                         1.0 - 2.0 * P + 2.0 * P * xc[i] - xc[i] * xc[i]);
             dyc[i] = 2.0 * M / (1.0 - P) / (1.0 - P) * (P - xc[i]);
         }
     }
@@ -437,19 +434,25 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
 
     BRepBuilderAPI_MakeEdge areoEdgeBuilder(curve);
     TopoDS_Edge aeroEdge = areoEdgeBuilder.Edge();
-    BRepBuilderAPI_MakeEdge aeroTEBuilder(gp_Pnt(x[0]*1000.0,y[0]*1000.0,0.0), gp_Pnt(x[2*np-2]*1000.0,y[2*np-2]*1000.0,0.0));
+    BRepBuilderAPI_MakeEdge aeroTEBuilder(
+        gp_Pnt(x[0]*1000.0, y[0]*1000.0, 0.0),
+        gp_Pnt(x[2*np-2]*1000.0, y[2*np-2]*1000.0, 0.0));
     TopoDS_Edge TeEdge = aeroTEBuilder.Edge();
 
     BRepBuilderAPI_MakeWire aeroWireBuilder(aeroEdge, TeEdge);
     TopoDS_Wire aeroWire = aeroWireBuilder.Wire();
 
-    BRepBuilderAPI_MakeEdge domInlBuilder(gp_Pnt(-2000.0,-2000.0,0.0), gp_Pnt(-2000.0,2000.0,0.0));
+    BRepBuilderAPI_MakeEdge domInlBuilder(gp_Pnt(-2000.0,-2000.0,0.0),
+                                          gp_Pnt(-2000.0,2000.0,0.0));
     TopoDS_Edge inlEdge = domInlBuilder.Edge();
-    BRepBuilderAPI_MakeEdge domTopBuilder(gp_Pnt(-2000.0,2000.0,0.0), gp_Pnt(5000.0,2000.0,0.0));
+    BRepBuilderAPI_MakeEdge domTopBuilder(gp_Pnt(-2000.0,2000.0,0.0),
+                                          gp_Pnt(5000.0,2000.0,0.0));
     TopoDS_Edge topEdge = domTopBuilder.Edge();
-    BRepBuilderAPI_MakeEdge domOutBuilder(gp_Pnt(5000.0,2000.0,0.0), gp_Pnt(5000.0,-2000.0,0.0));
+    BRepBuilderAPI_MakeEdge domOutBuilder(gp_Pnt(5000.0,2000.0,0.0),
+                                          gp_Pnt(5000.0,-2000.0,0.0));
     TopoDS_Edge outEdge = domOutBuilder.Edge();
-    BRepBuilderAPI_MakeEdge domBotBuilder(gp_Pnt(5000.0,-2000.0,0.0), gp_Pnt(-2000.0,-2000.0,0.0));
+    BRepBuilderAPI_MakeEdge domBotBuilder(gp_Pnt(5000.0,-2000.0,0.0),
+                                          gp_Pnt(-2000.0,-2000.0,0.0));
     TopoDS_Edge botEdge = domBotBuilder.Edge();
 
     BRepBuilderAPI_MakeWire domWireBuilder(inlEdge, topEdge, outEdge, botEdge);

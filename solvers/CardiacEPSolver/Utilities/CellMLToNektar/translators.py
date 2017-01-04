@@ -2088,7 +2088,7 @@ class ConfigurationStore(object):
         if self.i_stim_var:
             current_units = [self.i_stim_var.component.get_units_by_name(self.i_stim_var.units)]
         else:
-            from CellMLToNektar import CellMLToNektarTranslator
+            from CellMLToNektarTranslator import CellMLToNektarTranslator
             current_units = CellMLToNektarTranslator.get_current_units_options(self.doc.model)
         ionic_vars = []
         
@@ -2954,7 +2954,7 @@ def run():
             initargs['omit_constants'] = options.omit_constants
             initargs['compute_full_jacobian'] = options.compute_full_jacobian
         el"""
-        from CellMLToNektar import CellMLToNektarTranslator
+        from CellMLToNektarTranslator import CellMLToNektarTranslator
         if issubclass(translator_klass, CellMLToNektarTranslator):
             solver_info.add_membrane_ionic_current()
             transargs['use_chaste_stimulus'] = options.use_chaste_stimulus

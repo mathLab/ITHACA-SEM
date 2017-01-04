@@ -15,10 +15,10 @@ import processors
 import validator
 
 #Importing functions from modified_translators.py
-import modified_translators
+import translators
 #from modified_translators import CellMLTranslator
 
-class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
+class CellMLToNektarTranslator(translators.CellMLTranslator):
     """
     As CellMLTranslator, but targets more recent Chaste style.
 
@@ -86,7 +86,7 @@ class CellMLToNektarTranslator(modified_translators.CellMLTranslator):
         """
 
         
-        from modified_translators import version_comment
+        from translators import version_comment
         for sub in [False, True]:
             self.output_doxygen('@file\n\n',
                                 'This source file was generated from CellML.\n\n',

@@ -44,21 +44,21 @@ import sys #importing functions related to system (e.g. path directory etc)
 pycml_path = os.path.dirname(os.path.realpath(__file__))
 sys.path[0:0] = [pycml_path]
 
-import modified_translators #importing the main translator class
-from modified_translators import CellMLTranslator #again, just to make sure
-import CellMLToNektar #importing the nektar sub-class
+import translators #importing the main translator class
+from translators import CellMLTranslator #again, just to make sure
+import CellMLToNektarTranslator #importing the nektar sub-class
 
 #This part actually runs the code
 
-if __name__ == '__main__': #this part of the code is only run when modified_translate.py is run directly, not imported
+if __name__ == '__main__': #this part of the code is only run when CellMLToNektar.py is run directly, not imported
     CellMLTranslator.register(CellMLTranslator, 'C++') #this registers the main translator and it's name when called as an option in modified_translators
-    CellMLTranslator.register(CellMLToNektar.CellMLToNektarTranslator, 'Nektar') #this registers the nektar subclass and it's name when called as an option in modified_translators
+    CellMLTranslator.register(CellMLToNektarTranslator.CellMLToNektarTranslator, 'Nektar') #this registers the nektar subclass and it's name when called as an option in modified_translators
     if '--profile' in sys.argv: #sys.argv is the list of command line items passed to the script, this checks if a specific translator is requested
         import time, cProfile
         profile_name = '/tmp/pycml-profile-%f-%d' % (time.time(), os.getpid())
         cProfile.run('modified_translators.run()', profile_name) #the requested translator is run
     else:
-        modified_translators.run() #if no specific translator is requested, the default run function in modified_translators is run
+        translators.run() #if no specific translator is requested, the default run function in modified_translators is run
 
 #Below here seem to be variables that do some form of testing
 

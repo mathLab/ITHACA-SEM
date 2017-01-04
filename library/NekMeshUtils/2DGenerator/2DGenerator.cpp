@@ -121,7 +121,7 @@ void Generator2D::Process()
         for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
         {
             m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
-                i, m_mesh, m_curvemeshes, m_mesh->m_cad->GetNumSurf() > 100);
+                i, m_mesh, m_curvemeshes, 100);
 
             m_facemeshes[i]->OrientateCurves();
             MakeBL(i, m_facemeshes[i]->GetEdges());
@@ -145,7 +145,7 @@ void Generator2D::Process()
         }
 
         m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
-            i, m_mesh, m_curvemeshes, m_mesh->m_cad->GetNumSurf() > 100);
+            i, m_mesh, m_curvemeshes, 100);
 
         m_facemeshes[i]->Mesh();
     }
@@ -280,7 +280,7 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoop> e)
             ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
 
             vector<int> tags;
-            tags.push_back(102);
+            tags.push_back(101);
 
             ElementSharedPtr E = GetElementFactory().CreateInstance(
                 LibUtilities::eQuadrilateral, conf, qns, tags);

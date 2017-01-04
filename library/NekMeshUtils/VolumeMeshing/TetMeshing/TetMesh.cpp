@@ -145,7 +145,7 @@ void TetMesh::Mesh()
         n.push_back(IdToNode[m_tetconnect[i][3]]);
         ElmtConfig conf(LibUtilities::eTetrahedron, 1, false, false);
         vector<int> tags;
-        tags.push_back(0);
+        tags.push_back(m_mesh->m_cad->GetNumSurf() < 100 ? 100 : 1000);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
             LibUtilities::eTetrahedron, conf, n, tags);
 

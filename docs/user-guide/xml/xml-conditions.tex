@@ -104,9 +104,21 @@ the velocity variables using
 
 \subsection{Global System Solution Information}
 
-This section allows you to specify the global system solution parameters which
-is particularly useful when using an iterative solver. An example of this
-section is as follows:
+Many \nekpp solvers use an implicit formulation of their equations to, for
+instance, improve timestep restrictions. This means that a large matrix system
+must be constructed and a global system set up to solve for the unknown
+coefficients. There are several approaches in the spectral/$hp$ element method
+that can be used in order to improve efficiency in these methods, as well as
+considerations as to whether the simulation is run in parallel or serial. \nekpp
+opts for `sensible' default choices, but these may or may not be optimal
+depending on the problem under consideration.
+
+This section of the XML file therefore allows the user to specify the global
+system solution parameters, which dictates the type of solver to be used for any
+implicit systems that are constructed. This section is particularly useful when
+using a multi-variable solver such as the incompressible Navier-Stokes solver,
+as it allows us to select different preconditioning and residual convergence
+options for each variable. As an example, consider the block defined by:
 
 \begin{lstlisting}[style=XMLStyle]
 <GLOBALSYSSOLNINFO>
@@ -123,15 +135,156 @@ section is as follows:
 </GLOBALSYSSOLNINFO>
 \end{lstlisting}
 
-The above section specifies that the global solution system for the variables
-"u,v,w" should use the iIerativeStaticCond approach with the LowEnergyBlock
-preconditioned and an iterative tolerance of 1e-6.  Where as the variable "p"
-which also is solved with the IterativeStaticCond approach should use the
-FullLinearSpaceWithLowEnergyBlock and an iterative tolerance of 1e-8.
+The above section specifies that the variables \texttt{u,v,w} should use the
+\texttt{IterativeStaticCond} global solver alongside the \texttt{LowEnergyBlock}
+preconditioner and an iterative tolerance of $10^{-8}$ on the residuals. However
+the pressure variable \texttt{p} is generally stiffer: we therefore opt for a
+more expensive \texttt{FullLinearSpaceWithLowEnergyBlock} preconditioner and a
+larger residual of $10^{-6}$. We now outline the choices that one can use for
+each of these parameters and give a brief description of what they mean.
 
-Other parameters which can be specified include SuccessiveRHS. 
+\begin{notebox}
+  Defaults for all fields can be defined by setting the equivalent property in
+  the \texttt{SOLVERINFO} section. Parameters defined in this section will
+  override any options specificed there.
+\end{notebox}
 
-The parameters in this section override those specified in the Parameters section. 
+\subsubsection{\texttt{GlobalSysSoln} options}
+
+\nekpp presently implements four methods of solving a global system:
+
+\begin{itemize}
+  \item \textbf{Direct} solvers construct the full global matrix and directly
+  invert it using an appropriate matrix technique, such as Cholesky
+  factorisation, depending on the properties of the matrix. Direct solvers
+  \textbf{only} run in serial.
+  \item \textbf{Iterative} solvers instead apply matrix-vector multiplications
+  repeatedly, using the conjugate gradient method, to converge to a solution to
+  the system. For smaller problems, this is typically slower than a direct
+  solve. However, for larger problems it can be used to solve the system in
+  parallel execution.
+  \item \textbf{Xxt} solvers use the $XX^T$ library to perform a parallel direct
+  solve. This option is only available if the \texttt{NEKTAR\_USE\_MPI} option
+  is enabled in the CMake configuration.
+  \item \textbf{PETSc} solvers use the PETSc library, giving access to a wide
+  range of solvers and preconditioners. See section~\ref{sec:petsc} below for
+  some additional information on how to use the PETSc solvers. This option is
+  only available if the \texttt{NEKTAR\_USE\_PETSC} option is enabled in the
+  CMake configuration.
+\end{itemize}
+
+Both the \textbf{Xxt} and \textbf{PETSc} solvers are considered advanced and are
+under development -- either the direct or iterative solvers are recommended in
+most scenarios.
+
+These solvers can be run in one of three approaches:
+
+\begin{itemize}
+  \item The \textbf{Full} approach constructs the global system based on all of
+  the degrees of freedom contained within an element. For most of the \nekpp
+  solvers, this technique is not recommended.
+  \item The \textbf{StaticCond} approach applies a technique called \emph{static
+    condensation} to instead construct the system using only the degrees of
+  freedom on the boundaries of the elements, which reduces the system size
+  considerably. This is the \textbf{default option in parallel}.
+  \item \textbf{MultiLevelStaticCond} methods apply the static condensation
+  technique repeatedly to further reduce the system size, which can improve
+  performance by 25-30\% over the normal static condensation method. It is
+  therefore the \textbf{default option in serial}. Note that whilst parallel
+  execution technically works, this is under development and is likely to be
+  slower than single-level static condensation: this is therefore not
+  recommended.
+\end{itemize}
+
+The \texttt{GlobalSysSoln} option is formed by combining the method of solution
+with the approach: for example \texttt{IterativeStaticCond} or
+\texttt{PETScMultiLevelStaticCond}.
+
+\subsubsection{Preconditioner options}
+
+Preconditioners can be used in the iterative and PETSc solvers to reduce the
+number of iterations needed to converge to the solution. There are a number of
+preconditioner choices, the default being a simple Jacobi (or diagonal)
+preconditioner, which is enabled by default. There are a number of choices that
+can be enabled through this parameter, which are all generally discretisation
+and dimension-dependent:
+
+\begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Name}  & \textbf{Dimensions} & \textbf{Discretisations} \\
+    \midrule
+    \inltt{Null}                              & All  & All \\
+    \inltt{Diagonal}                          & All  & All \\
+    \inltt{FullLinearSpace}                   & 2/3D & CG  \\
+    \inltt{LowEnergyBlock}                    & 3D   & CG  \\
+    \inltt{Block}                             & 2/3D & All \\
+    \midrule
+    \inltt{FullLinearSpaceWithDiagonal}       & All  & CG  \\
+    \inltt{FullLinearSpaceWithLowEnergyBlock} & 2/3D & CG  \\
+    \inltt{FullLinearSpaceWithBlock}          & 2/3D & CG  \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+
+For a detailed discussion of the mathematical formulation of these options, see
+the developer guide.
+
+\subsubsection{SuccessiveRHS options}
+
+The \texttt{SuccessiveRHS} option can be used in the iterative solver only, to
+attempt to reduce the number of iterations taken to converge to a solution. It
+stores a number of previous solutions, dictated by the setting of the
+\texttt{SuccessiveRHS} option, to give a better initial guess for the iterative
+process.
+
+\subsubsection{PETSc options and configuration}
+\label{sec:petsc}
+
+The PETSc solvers, although currently experimental, are operational both in
+serial and parallel. PETSc gives access to a wide range of alternative solver
+options such as GMRES, as well as any packages that PETSc can link against, such
+as the direct multi-frontal solver MUMPS.
+
+Configuration of PETSc options using its command-line interface dictates what
+matrix storage, solver type and preconditioner should be used. This should be
+specified in a \texttt{.petscrc} file inside your working directory, as command
+line options are not currently passed through to PETSc to avoid conflict with
+\nekpp options. As an example, to select a GMRES solver using an algebraic
+multigrid preconditioner, and view the residual convergence, one can use the
+configuration:
+
+\begin{lstlisting}[style=BashInputStyle]
+-ksp_monitor
+-ksp_view
+-ksp_type gmres
+-pc_type gamg
+\end{lstlisting}
+
+Or to use MUMPS, one could use the options:
+
+\begin{lstlisting}[style=BashInputStyle]
+-ksp_type preonly
+-pc_type lu
+-pc_factor_mat_solver_package mumps
+-mat_mumps_icntl_7 2
+\end{lstlisting}
+
+A final choice that can be specified is whether to use a \emph{shell}
+approach. By default, \nekpp will construct a PETSc sparse matrix (or whatever
+matrix is specified on the command line). This may, however, prove suboptimal
+for higher order discretisations. In this case, you may choose to use the \nekpp
+matrix-vector operators, which by default use an assembly approach that can
+prove faster, by setting the \texttt{PETScMatMult} \texttt{SOLVERINFO} option to
+\texttt{Shell}:
+
+\begin{lstlisting}[style=XMLStyle]
+<I PROPERTY="PETScMatMult" VALUE="Shell" />
+\end{lstlisting}
+
+The downside to this approach is that you are now constrained to using one of
+the \nekpp preconditioners. However, this does give access to a wider range of
+Krylov methods than are available inside \nekpp for more advanced users.
 
 \subsection{Boundary Regions and Conditions}
 

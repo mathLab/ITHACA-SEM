@@ -186,7 +186,7 @@
                 <D VAR="u" VALUE="cos(PI*x)*cos(PI*y)*cos(PI*z)" />
             </REGION>
             <REGION REF="4">
-                <D VAR="u" VALUE="cos(PI*x)*cos(PI*y)*cos(PI*z)" />
+              <R VAR="u"  VALUE="10*cos(PI*x)*cos(PI*y)*cos(PI*z) + PI*sin(PI*x)*cos(PI*y)*cos(PI*z)"  PRIMCOEFF="10.0"/>
             </REGION>
             <REGION REF="5">
                 <D VAR="u" VALUE="cos(PI*x)*cos(PI*y)*cos(PI*z)" />

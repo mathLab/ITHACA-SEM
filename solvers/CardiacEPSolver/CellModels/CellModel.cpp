@@ -40,6 +40,8 @@
 #include <StdRegions/StdNodalTriExp.h>
 //#include <LibUtilities/LinearAlgebra/Blas.hpp>
 
+using namespace std;
+
 namespace Nektar
 {
     CellModelFactory& GetCellModelFactory()
@@ -362,9 +364,7 @@ namespace Nektar
         LibUtilities::FieldMetaDataMap fieldMetaDataMap;
         LibUtilities::FieldMetaDataMap::iterator iter;
         std::set<std::string>::const_iterator setIt;
-        LibUtilities::FieldIOSharedPtr fld =
-                MemoryManager<LibUtilities::FieldIO>::
-                                AllocateSharedPtr(m_session->GetComm());
+	
         for (setIt = filelist.begin(); setIt != filelist.end(); ++setIt)
         {
             if (root)
@@ -373,6 +373,8 @@ namespace Nektar
             }
             FieldDef[*setIt] = FDef(0);
             FieldData[*setIt] = FData(0);
+            LibUtilities::FieldIOSharedPtr fld =
+                LibUtilities::FieldIO::CreateForFile(m_session, *setIt);
             fld->Import(*setIt, FieldDef[*setIt], FieldData[*setIt],
                         fieldMetaDataMap);
         }

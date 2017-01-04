@@ -88,7 +88,7 @@ namespace Nektar
         /// Shared pointer to a GlobalMatrix object.
         typedef boost::shared_ptr<GlobalMatrix> GlobalMatrixSharedPtr;
         /// Mapping from global matrix keys to global matrices.
-        typedef map<GlobalMatrixKey,GlobalMatrixSharedPtr> GlobalMatrixMap;
+        typedef std::map<GlobalMatrixKey,GlobalMatrixSharedPtr> GlobalMatrixMap;
         /// Shared pointer to a global matrix map.
         typedef boost::shared_ptr<GlobalMatrixMap> GlobalMatrixMapShPtr;
 

@@ -39,6 +39,8 @@
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <math.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -72,14 +74,16 @@ namespace Nektar
 
         void PreconditionerDiagonal::v_BuildPreconditioner()
         {
-            GlobalSysSolnType solvertype = 
+            GlobalSysSolnType solvertype =
                 m_locToGloMap->GetGlobalSysSolnType();
             if (solvertype == eIterativeFull)
             {
                 DiagonalPreconditionerSum();
             }
             else if(solvertype == eIterativeStaticCond ||
-                    solvertype == eIterativeMultiLevelStaticCond)
+                    solvertype == eIterativeMultiLevelStaticCond ||
+                    solvertype == ePETScStaticCond ||
+                    solvertype == ePETScMultiLevelStaticCond)
             {
                 StaticCondDiagonalPreconditionerSum();
             }

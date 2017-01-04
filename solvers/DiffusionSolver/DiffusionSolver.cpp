@@ -38,6 +38,7 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ContField2D.h>
 
+using namespace std;
 using namespace Nektar;
 
 int main(int argc, char *argv[])
@@ -55,8 +56,7 @@ int main(int argc, char *argv[])
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
         // Create Field I/O object.
-        fld     = MemoryManager<LibUtilities::FieldIO>::
-                    AllocateSharedPtr(session->GetComm());
+        fld     = LibUtilities::FieldIO::CreateDefault(session);
 
         // Get some information about the session
         string       sessionName = session->GetSessionName();

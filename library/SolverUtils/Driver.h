@@ -69,10 +69,10 @@ public:
     virtual ~Driver();
 
     /// Initialise Object
-    SOLVER_UTILS_EXPORT inline void InitObject(ostream &out = cout);
+    SOLVER_UTILS_EXPORT inline void InitObject(std::ostream &out = std::cout);
 
     /// Execute driver
-    SOLVER_UTILS_EXPORT inline void Execute(ostream &out = cout);
+    SOLVER_UTILS_EXPORT inline void Execute(std::ostream &out = std::cout);
 
     SOLVER_UTILS_EXPORT inline Array<OneD, EquationSystemSharedPtr> GetEqu();
 
@@ -102,10 +102,10 @@ protected:
     /// Initialises EquationSystem class members.
     Driver(const LibUtilities::SessionReaderSharedPtr pSession);
 
-    SOLVER_UTILS_EXPORT virtual void v_InitObject(ostream &out = cout);
+    SOLVER_UTILS_EXPORT virtual void v_InitObject(std::ostream &out = std::cout);
 
     /// Virtual function for solve implementation.
-    SOLVER_UTILS_EXPORT virtual void v_Execute(ostream &out = cout) = 0;
+    SOLVER_UTILS_EXPORT virtual void v_Execute(std::ostream &out = std::cout) = 0;
 
 
     SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetRealEvl(void);
@@ -118,12 +118,12 @@ protected:
 
 };
 
-inline void Driver::InitObject(ostream &out)
+inline void Driver::InitObject(std::ostream &out)
 {
     v_InitObject(out);
 }
 
-inline void Driver::Execute(ostream &out)
+inline void Driver::Execute(std::ostream &out)
 {
     v_Execute(out);
 }

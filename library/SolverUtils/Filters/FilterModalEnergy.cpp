@@ -38,6 +38,8 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <SolverUtils/Filters/FilterModalEnergy.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils
@@ -109,9 +111,7 @@ FilterModalEnergy::FilterModalEnergy(
         }
     }
 
-    m_fld = MemoryManager<LibUtilities::FieldIO>::
-                AllocateSharedPtr(pSession->GetComm());
-
+    m_fld = LibUtilities::FieldIO::CreateDefault(pSession);
 }
 
 /**
@@ -134,15 +134,24 @@ void FilterModalEnergy::v_Initialise(
     if (vComm->GetRank() == 0)
     {
         // Open output stream
-        if(m_isHomogeneous1D)
+        bool adaptive;
+        m_session->MatchSolverInfo("Driver", "Adaptive",
+                                    adaptive, false);
+        if (adaptive)
+        {
+            m_outputStream.open(m_outputFile.c_str(), ofstream::app);
+        }
+        else
         {
             m_outputStream.open(m_outputFile.c_str());
+        }
+        if(m_isHomogeneous1D)
+        {
             m_outputStream << "# Time,  Fourier Mode, Energy ";
             m_outputStream << endl;
         }
         else
         {
-            m_outputStream.open(m_outputFile.c_str());
             m_outputStream << "# Time, Energy ";
             m_outputStream << endl;
         }

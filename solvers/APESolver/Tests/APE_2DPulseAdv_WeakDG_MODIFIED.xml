@@ -317,7 +317,7 @@
       <I PROPERTY="UpwindType" VALUE="LaxFriedrichs"/>
     </SOLVERINFO>
     <PARAMETERS>
-      <P> TimeStep       = 0.00001            </P>
+      <P> TimeStep       = 1e-05            </P>
       <P> NumSteps       = 10                 </P>
       <P> FinTime        = TimeStep*NumSteps  </P>
       <P> IO_CheckSteps  = 10                 </P>
@@ -347,18 +347,25 @@
       <E VAR="p0" VALUE="Pinfinity"/>
       <E VAR="rho0" VALUE="Rho0"/>
     </FUNCTION>
-    <FUNCTION NAME="Source">
-      <E VAR="S" VALUE="0"/>
-    </FUNCTION>
     <FUNCTION NAME="ExactSolution"> <!-- Not really the exact solution -->
       <E VAR="p" VALUE="0"/>
       <E VAR="u" VALUE="0"/>
       <E VAR="v" VALUE="0"/>
     </FUNCTION>
     <FUNCTION NAME="InitialConditions">
-      <E VAR="p" VALUE="100*exp(-32*(x^2+y^2))"/> <!-- Gaussian pulse located at the origin -->
+      <E VAR="p" VALUE="0"/> <!-- Gaussian pulse located at the origin -->
+      <E VAR="u" VALUE="0"/>
+      <E VAR="v" VALUE="0"/>
+    </FUNCTION>
+    <FUNCTION NAME="Source">
+      <E VAR="p" VALUE="100 * 2*PI*5E2 * cos(2*PI*5E2 * t) * exp(-32*(x^2+y^2))"/>
       <E VAR="u" VALUE="0"/>
       <E VAR="v" VALUE="0"/>
     </FUNCTION>
   </CONDITIONS>
+  <FORCING>
+    <FORCE TYPE="Field">
+        <FIELDFORCE> Source <FIELDFORCE/>
+    </FORCE>
+  </FORCING>
 </NEKTAR>

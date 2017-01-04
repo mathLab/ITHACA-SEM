@@ -7,6 +7,7 @@
 #include <MultiRegions/ContField2D.h>
 #include <SpatialDomains/MeshGraph2D.h>
 
+using namespace std;
 using namespace Nektar;
 
 //#define TIMING
@@ -44,7 +45,7 @@ int main(int argc, char *argv[])
     try
     {
         LibUtilities::FieldIOSharedPtr fld =
-            MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(vSession->GetComm());
+            LibUtilities::FieldIO::CreateDefault(vSession);
 
         //----------------------------------------------
         // Read in mesh from input file

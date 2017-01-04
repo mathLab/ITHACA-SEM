@@ -42,6 +42,8 @@
 #include <iostream>
 #include <iomanip>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace SolverUtils
@@ -848,7 +850,9 @@ namespace Nektar
             const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                  Array<OneD, Array<OneD, NekDouble> >        &outarray)
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
             int i, j, n;
             int phys_offset;

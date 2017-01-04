@@ -36,8 +36,11 @@
 
 #include <SpatialDomains/MeshGraph3D.h>
 #include <SpatialDomains/TriGeom.h>
+#include <LibUtilities/BasicUtils/CompressData.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <tinyxml.h>
+
+using namespace std;
 
 namespace Nektar
 {
@@ -109,8 +112,10 @@ namespace Nektar
 
             ASSERTL0(field, "Unable to find EDGE tag in file.");
 
-            const char *IsCompressed = field->Attribute("COMPRESSED");
-            if(IsCompressed)
+            string IsCompressed;
+            field->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+            if(IsCompressed.size()) 
             {
                 ASSERTL0(boost::iequals(IsCompressed,
                             LibUtilities::CompressData::GetCompressString()),
@@ -256,8 +261,10 @@ namespace Nektar
                     (std::string("Unknown 3D face type: ") + elementType).c_str());
 
 
-                const char *IsCompressed = element->Attribute("COMPRESSED");
-                if(IsCompressed)
+                string IsCompressed;
+                element->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+                
+                if(IsCompressed.size()) 
                 {
                     ASSERTL0(boost::iequals(IsCompressed,
                             LibUtilities::CompressData:: GetCompressString()),
@@ -526,8 +533,10 @@ namespace Nektar
                     (std::string("Unknown 3D element type: ") + elementType).c_str());
 
                 
-                const char *IsCompressed = element->Attribute("COMPRESSED");
-                if(IsCompressed)
+                string IsCompressed;
+                element->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+                
+                if(IsCompressed.size()) 
                 {
                     ASSERTL0(boost::iequals(IsCompressed,
                              LibUtilities::CompressData:: GetCompressString()),
@@ -1002,8 +1011,15 @@ namespace Nektar
                 int indx;
                 int err = composite->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-//                ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
 
+                // read and store label if they exist
+                string labelstr;
+                err = composite->QueryStringAttribute("LABEL", &labelstr);
+                if(err == TIXML_SUCCESS)
+                {
+                    m_compositesLabels[indx] = labelstr;
+                }
+                
                 TiXmlNode* compositeChild = composite->FirstChild();
                 // This is primarily to skip comments that may be present.
                 // Comments appear as nodes just like elements.

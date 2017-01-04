@@ -41,6 +41,8 @@
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/GeomFactors.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -51,7 +53,7 @@ namespace Nektar
             {0,1,4},{0,1,2},{0,2,3},{0,3,4},{1,2,4},{2,3,4}};
         const unsigned int PrismGeom::EdgeFaceConnectivity  [9][2] = {
             {0,1},{0,2},{0,3},{0,4},{1,4},{1,2},{2,3},{3,4},{2,4}};
-        
+
         PrismGeom::PrismGeom()
         {
             m_shapeType = LibUtilities::ePrism;
@@ -61,20 +63,20 @@ namespace Nektar
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
             m_shapeType = LibUtilities::ePrism;
-            
+
             /// Copy the face shared pointers.
             m_faces.insert(m_faces.begin(), faces, faces+PrismGeom::kNfaces);
 
             /// Set up orientation vectors with correct amount of elements.
             m_eorient.resize(kNedges);
             m_forient.resize(kNfaces);
-            
+
             /// Set up local objects.
             SetUpLocalEdges();
             SetUpLocalVertices();
             SetUpEdgeOrientation();
             SetUpFaceOrientation();
-            
+
             /// Determine necessary order for standard region.
             SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
@@ -83,12 +85,12 @@ namespace Nektar
         PrismGeom::~PrismGeom()
         {
         }
-        
+
         int PrismGeom::v_GetNumVerts() const
         {
             return 6;
         }
-        
+
         int PrismGeom::v_GetNumEdges() const
         {
             return 9;
@@ -114,7 +116,7 @@ namespace Nektar
                 return 1 + facedir;
             }
         }
-        
+
         /**
          * @brief Determines if a point specified in global coordinates is
          * located within this tetrahedral geometry.
@@ -123,11 +125,11 @@ namespace Nektar
             const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
         {
             Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
-            return v_ContainsPoint(gloCoord,locCoord,tol);            
+            return v_ContainsPoint(gloCoord,locCoord,tol);
         }
 
         bool PrismGeom::v_ContainsPoint(
-            const Array<OneD, const NekDouble> &gloCoord, 
+            const Array<OneD, const NekDouble> &gloCoord,
             Array<OneD, NekDouble> &locCoord,
             NekDouble tol)
         {
@@ -140,7 +142,7 @@ namespace Nektar
          * located within this tetrahedral geometry.
          */
         bool PrismGeom::v_ContainsPoint(
-            const Array<OneD, const NekDouble> &gloCoord, 
+            const Array<OneD, const NekDouble> &gloCoord,
             Array<OneD, NekDouble> &locCoord,
             NekDouble tol,
             NekDouble &resid)
@@ -169,8 +171,8 @@ namespace Nektar
 
                     mincoord[i] = Vmath::Vmin(pts.num_elements(),pts,1);
                     maxcoord[i] = Vmath::Vmax(pts.num_elements(),pts,1);
-                    
-                    diff = max(maxcoord[i] - mincoord[i],diff); 
+
+                    diff = max(maxcoord[i] - mincoord[i],diff);
                 }
 
                 for(i = 0; i < 3; ++i)
@@ -185,7 +187,7 @@ namespace Nektar
 
             // Convert to the local Cartesian coordinates.
             resid = v_GetLocCoords(gloCoord, locCoord);
-            
+
             // Check local coordinate is within std region bounds.
             if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol) &&
                 locCoord[2] >= -(1+tol) && locCoord[1] <=  (1+tol) &&
@@ -193,7 +195,7 @@ namespace Nektar
             {
                 return true;
             }
-            
+
             // If out of range clamp locCoord to be within [-1,1]^3
             // since any larger value will be very oscillatory if
             // called by 'returnNearestElmt' option in
@@ -210,7 +212,7 @@ namespace Nektar
                     locCoord[i] = 1+tol;
                 }
             }
-            
+
             return false;
         }
 
@@ -274,10 +276,10 @@ namespace Nektar
 
 
         NekDouble PrismGeom::v_GetLocCoords(
-            const Array<OneD, const NekDouble> &coords, 
+            const Array<OneD, const NekDouble> &coords,
                   Array<OneD,       NekDouble> &Lcoords)
         {
-            NekDouble ptdist = 1e6; 
+            NekDouble ptdist = 1e6;
 
             // calculate local coordinate for coord
             if(GetMetricInfo()->GetGtype() == eRegular)
@@ -309,7 +311,7 @@ namespace Nektar
                 Lcoords[1] = 2.0*gamma - 1.0;
                 Lcoords[2] = 2.0*delta - 1.0;
 
-                // Set ptdist to distance to nearest vertex 
+                // Set ptdist to distance to nearest vertex
                 for(int i = 0; i < 6; ++i)
                 {
                     ptdist = min(ptdist,r.dist(*m_verts[i]));
@@ -318,7 +320,7 @@ namespace Nektar
             else
             {
                 v_FillGeom();
-            
+
                 // Determine nearest point of coords  to values in m_xmap
                 int npts = m_xmap->GetTotPoints();
                 Array<OneD, NekDouble> ptsx(npts), ptsy(npts), ptsz(npts);
@@ -331,7 +333,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> za = m_xmap->GetPoints(0);
                 const Array<OneD, const NekDouble> zb = m_xmap->GetPoints(1);
                 const Array<OneD, const NekDouble> zc = m_xmap->GetPoints(2);
-                
+
                 //guess the first local coords based on nearest point
                 Vmath::Sadd(npts, -coords[0], ptsx,1,tmp1,1);
                 Vmath::Vmul (npts, tmp1,1,tmp1,1,tmp1,1);
@@ -339,10 +341,10 @@ namespace Nektar
                 Vmath::Vvtvp(npts, tmp2,1,tmp2,1,tmp1,1,tmp1,1);
                 Vmath::Sadd(npts, -coords[2], ptsz,1,tmp2,1);
                 Vmath::Vvtvp(npts, tmp2,1,tmp2,1,tmp1,1,tmp1,1);
-                          
+
                 int min_i = Vmath::Imin(npts,tmp1,1);
-                
-                // distance from coordinate to nearest point for return value. 
+
+                // distance from coordinate to nearest point for return value.
                 ptdist = sqrt(tmp1[min_i]);
 
                 // Get collapsed coordinate
@@ -352,26 +354,26 @@ namespace Nektar
                 Lcoords[1] = zb[min_i/qa];
                 Lcoords[0] = za[min_i%qa];
 
-                // recover cartesian coordinate from collapsed coordinate. 
+                // recover cartesian coordinate from collapsed coordinate.
                 Lcoords[0] = (1.0+Lcoords[0])*(1.0-Lcoords[2])/2 - 1.0;
 
-                // Perform newton iteration to find local coordinates 
+                // Perform newton iteration to find local coordinates
                 NekDouble resid = 0.0;
                 NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords,resid);
             }
-            return ptdist; 
+            return ptdist;
         }
-        
+
         int PrismGeom::v_GetVertexEdgeMap(const int i, const int j) const
 	{
 	    return VertexEdgeConnectivity[i][j];
 	}
-        
+
         int PrismGeom::v_GetVertexFaceMap(const int i, const int j) const
 	{
 	    return VertexFaceConnectivity[i][j];
 	}
-        
+
         int PrismGeom::v_GetEdgeFaceMap(const int i, const int j) const
 	{
 	    return EdgeFaceConnectivity[i][j];
@@ -831,7 +833,7 @@ namespace Nektar
                         orientation++;
                     }
                 }
-				
+
 				orientation = orientation + 5;
 				// Fill the m_forient array
                 m_forient[f] = (StdRegions::Orientation) orientation;
@@ -852,7 +854,7 @@ namespace Nektar
             SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
-        
+
         /**
          * @brief Set up the #m_xmap object by determining the order of each
          * direction from derived faces.
@@ -860,32 +862,22 @@ namespace Nektar
         void PrismGeom::SetUpXmap()
         {
             vector<int> tmp;
-            
-            int order0, points0, order1, points1;
-            
+
+            int order0, order1;
+
             if (m_forient[0] < 9)
             {
                 tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(0));
                 tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
                 order0 = *max_element(tmp.begin(), tmp.end());
-
-                tmp.clear();
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(0));
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(2));
-                points0 = *max_element(tmp.begin(), tmp.end());
             }
             else
             {
                 tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
                 tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(3));
                 order0 = *max_element(tmp.begin(), tmp.end());
-
-                tmp.clear();
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(1));
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(3));
-                points0 = *max_element(tmp.begin(), tmp.end());
             }
-            
+
             if (m_forient[0] < 9)
             {
                 tmp.clear();
@@ -893,12 +885,6 @@ namespace Nektar
                 tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(3));
                 tmp.push_back(m_faces[2]->GetXmap()->GetEdgeNcoeffs(2));
                 order1 = *max_element(tmp.begin(), tmp.end());
-                
-                tmp.clear();
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(1));
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(3));
-                tmp.push_back(m_faces[2]->GetXmap()->GetEdgeNumPoints(2));
-                points1 = *max_element(tmp.begin(), tmp.end());
             }
             else
             {
@@ -907,14 +893,8 @@ namespace Nektar
                 tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
                 tmp.push_back(m_faces[2]->GetXmap()->GetEdgeNcoeffs(2));
                 order1 = *max_element(tmp.begin(), tmp.end());
-                
-                tmp.clear();
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(0));
-                tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNumPoints(2));
-                tmp.push_back(m_faces[2]->GetXmap()->GetEdgeNumPoints(2));
-                points1 = *max_element(tmp.begin(), tmp.end());
             }
-            
+
             tmp.clear();
             tmp.push_back(order0);
             tmp.push_back(order1);
@@ -923,32 +903,19 @@ namespace Nektar
             tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(1));
             tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(2));
             int order2 = *max_element(tmp.begin(), tmp.end());
-            
-            tmp.clear();
-            tmp.push_back(points0);
-            tmp.push_back(points1);
-            tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNumPoints(1));
-            tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNumPoints(2));
-            tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNumPoints(1));
-            tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNumPoints(2));
-            tmp.push_back(m_faces[1]->GetEdge(1)->GetBasis(0)->GetNumPoints());
-            tmp.push_back(m_faces[1]->GetEdge(2)->GetBasis(0)->GetNumPoints());
-            tmp.push_back(m_faces[3]->GetEdge(1)->GetBasis(0)->GetNumPoints());
-            tmp.push_back(m_faces[3]->GetEdge(2)->GetBasis(0)->GetNumPoints());
-            int points2 = *max_element(tmp.begin(), tmp.end());
-            
+
             const LibUtilities::BasisKey A(
                 LibUtilities::eModified_A, order0,
                 LibUtilities::PointsKey(
-                    points0, LibUtilities::eGaussLobattoLegendre));
+                    order0+1, LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey B(
                 LibUtilities::eModified_A, order1,
                 LibUtilities::PointsKey(
-                    points1, LibUtilities::eGaussLobattoLegendre));
+                    order1+1, LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey C(
                 LibUtilities::eModified_B, order2,
                 LibUtilities::PointsKey(
-                    points2, LibUtilities::eGaussRadauMAlpha1Beta0));
+                    order2, LibUtilities::eGaussRadauMAlpha1Beta0));
 
             m_xmap = MemoryManager<StdRegions::StdPrismExp>::AllocateSharedPtr(
                 A, B, C);

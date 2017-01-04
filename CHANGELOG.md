@@ -1,37 +1,268 @@
 Changelog
 =========
 
+v4.4.0
+------
+**Library**:
+- Add support for variable polynomial order for 3D simulations with continuous
+  Galerkin discretisation (!604)
+- Bump version of gsmpi to suppress autotuning output unless `--verbose` is
+  specified (!652)
+- Add support for variable polynomial order with periodic boundary conditions
+  (!658)
+- Statistics are now printed for lowest level of multi-level static condensation
+  (!656)
+- Sped up interpolataion from pts files and fixed parallel pts import (!584)
+- Increased required boost version to 1.56.0 (!584)
+- New FieldUtils library allows support for most `FieldConvert` post-processing
+  operations during simulation using a new filter (!589)
+- Adjust CMake dependencies to reduce compile time (!671)
+- Homogeneous1D dealiasing improvements (!622)
+- Add support for HDF5 as an alternative output to XML-based output, including
+  refactoring of FieldIO, improvements to MPI interface and added communicators
+  to boundary conditions (!615)
+- Allow expansions to be loaded directly from field file (!617)
+- New options for load balancing (DOF or BOUNDARY) in mesh partitioner (!617)
+- Rework nodal utilities to support nodal prismatic elements (!660)
+- Update Body/Field forces at each timestep (!665)
+- Update nodalutil to include quad and hex elements and introduce SPI nodal
+  points (!696)
+- Add ability to restart time-averaging and Reynolds stresses from checkpoint
+  file (!678)
+- Extend ExtractDataToCoeffs to support interpolation between basis types for
+  quads and hexahedra (!682)
+- Enabled MUMPS support in PETSc if a Fortran compiler was found and added 3D
+  support to the Helmholtz smoother used e.g. in FieldConverts C0Projection
+  module (!714)
+
+**ADRSolver:**
+- Add a projection equation system for C^0 projections (!675)
+
+**APESolver:**
+- Use a continuous basefield projection and revert to constant c formulation (!664)
+- Added ability to compute CFL number (!664)
+- Output Sourceterm (!664)
+- Use the Forcing framework to define source terms (!665)
+
+**IncNavierStokesSolver:**
+- Add ability to simulate additional scalar fields (!624)
+- Improve performance when using homogeneous dealiasing (!622)
+- Fix linearised advection for full 3D cases (!708)
+- Added a weak pressure formulation following Guermond & Shen (!713)
+- Added a convective like outflow boundary condition from Dong (!713)
+
+**FieldConvert:**
+- Allow equi-spaced output for 1D and 2DH1D fields (!613)
+- Update quality metric to include scaled Jacobian output (!695)
+- Allow multiple XML files to be specified in InterpField module (!705)
+
+**NekMesh:**
+- Modify curve module to allow for spline input (!628)
+- Add STL surface writer module (!668)
+- New module for inserting an alternate high-order surface into the working
+  mesh (!669)
+- Add curve projection routines to CAD system (!697)
+- Extensive clean-up of NekMeshUtils/MeshElements and extension of makeorder to
+  consider CAD information (!698)
+- Improvements to mesh linearisation module (!659)
+- Add support for Gmsh high-order output (!679)
+- Move CAD classes to factory format (!676)
+- Add module to check topology of the mesh along with boundary connectivity
+  to detect problems such as hanging nodes (!691)
+- Add option to `linearise` module to linearise only prisms (!688)
+- Add reader for Nek5000 mesh files (!680)
+- Add option to `linearise` to use element quality (!690)
+- Add flag to `insertsurface` process for non-conforming geometries (!700)
+- Bug fix to get two meshgen regression tests working (!700)
+- Remove libANN in deference to boost::geometry (!703)
+- Refactor library to use NekMesh modules for CAD generation (!704)
+- Add a mesh extract option to the linearise module to visualise the result
+  (!712)
+- 2D to 3D mesh extrusion module (!715)
+- Add new two-dimensional mesher from NACA code or step file (!720)
+
+**FieldConvert:**
+- Move all modules to a new library, FieldUtils, to support post-processing
+  during simulations (!589)
+- Add module to stretch homogeneous direction (!609)
+- Add module to add composite ID of elements as a field (!674)
+- Add reader for Nek5000 field files (!680)
+
+v4.3.5
+------
+**Library:**
+- Fix bug in DG with hybrid meshes (!694)
+- Fix issue with parallel output (!699)
+- Fix performance issue with iterative full solver (!693)
+- Enforced precision on history point output (!706)
+
+**Documentation**
+- Update build instructions in user guide for Windows (!692)
+
+**Tester**
+- Fix bug in tester when no parameters specified for test executable (!701)
+
+v4.3.4
+------
+**Library:**
+- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of
+  large simulations (!672)
+- Added additional assertions to ensure homogeneous simulations have an even
+  number of planes per process (!666)
+- Fix compilation with NEKTAR_USE_MESHGEN option
+- Fix IterativeFull solver in parallel (!685)
+- Fix error message for missing fld file (!689)
+
+**IncNavierStokesSolver:**
+- Fix 2nd order time-integration for VCSMapping (!687)
+
+v4.3.3
+------
+**Library**:
+- Auto-detect a shared filesystem and removed --shared-filesystem option (!654)
+- Fix filters when using adaptive driver to avoid output being overwritten after
+  each adaptive update (!588)
+- Minor fix to suppress Xxt output unless `--verbose` is specified (!642)
+- Fix of DirectFull solver in case where only Neumann boundary conditions
+  are imposed. (!655)
+
+**FieldConvert**:
+- Fix to avoid repeated import of field file (!649)
+- Fix issue with C^0 projection (!644)
+- Fix verbose output when using --procid (!648)
+
+**NekMesh:**
+- Fix namespace issue in Star-CCM+ input header in NekMesh (!661)
+
+**CompressibleFlowSolver**:
+- Fix issue with residual output (!647)
+- Issues with 1D Euler solver fixed (!565)
+- Fix deadlocking issue with boundary conditions (!657)
+
+**Packaging**:
+- Fix NekMesh dependencies for DEB package (!650)
+- Fix PETSc build on newer linux distributions (!646)
+
+v4.3.2
+------
+**Library**:
+- Add small optimisation for DriverAdaptive (!618)
+- Updated FFTW build to use the compiler used for building Nektar++ (!629)
+- Fix numbering bug in periodic boundary conditions (!631)
+- Print error message for invalid equation also in release version (!634)
+- HistoryPoints filter now uses closest plane to requested z-coordinate and
+  output is produced in physical space (!621).
+- Fix minor performance issue with time integration schemes (!632)
+- Fix FilterCheckpoint filter to be consistent with `IO_CheckSteps` (!633)
+- Fix CMake configuration for building on Windows 10 with VS 2015 (!641)
+- Fix `IO_CheckSteps` to avoid missing first checkpoint (!639)
+- Fix bug in iterative solver where only root process would ASSERT when
+  exceeding the maximum number of iterations (!636)
+
+**FieldConvert**:
+- Fix appearence of duplicate messages when running in parallel (!626)
+- Fix issue with efficiency when using large number of 3DH1D planes (!627)
+- Add module for combining average fields (!620)
+- Fix wall shear stress processing module for parallel execution (!635)
+
+**Packaging**:
+- Fixes for DEB package dependencies (!630)
+
+v4.3.1
+------
+**Library**:
+- Add `THIRDPARTY_USE_SSL` option to disable use of SSL on systems where CMake
+  is not compiled with SSL support. (!602)
+- Fixed a number of documentation issues (!586, !593, !596)
+- Fix Homogeneous transform when unshuffling is not used. (!599)
+- Fix namespace pollution in library header files. (!601)
+- Fix issue with METIS compilation on clang 7.3 (!603)
+- Fix issue with heterogeneous quadrilaterals (!607)
+- Fix bug in modified Arnoldi algorithm causing convergence to be reported when
+  number of vectors is less than `nvec` (!608)
+- Fix uninitialised array bug in AssemblyMap (!598)
+- Fix issue with LAPACK call in eigenvalue calculation (!610)
+- Fix FieldConvert processing of partitions in serial (!612)
+- Fix use of multi-level static condensation in parallel with periodic
+  boundary conditions (!614)
+- Fix NaN detection to work in parallel (!605)
+- Add additional constructor to ContField3DHomogeneous1D for FieldConvert
+  extract module. (!590)
+
+**NekMesh**:
+- Fix incorrect link directory on CCMIO library.
+
+**FieldConvert**:
+- Fix to FLD input to update the field definitions always, not just when a range
+  is specified. (!611)
+
+**Tester**:
+- Remove requirement for executable to be specified in .tst file if it is
+  overridden on the command-line (!595)
+
+**Packaging**:
+- Fix dependency resolution on generation of DEB packages. (!616)
+
 v4.3.0
 ------
 **Library:**
-- Changed default XML format to compress mesh data (!533)
+- Changed default XML format to compress mesh data (!533, !547)
 - Various fixes for 3D homogeneous post-processing (!531, !529, !528, !526, !521)
+- Fix boundary condition imposition for 3D homogeneous 2D HelmSolve (!545)
 - Fix range with variable p option (!522)
 - Fix bug with hexahedra of heterogeneous order (!520) and reading files (!522)
 - Fix history point output formatting (!518)
 - Fix for OS X 10.11 (!512)
 - Fix `HexGeom::v_GetDir` to support heterogeneous basis functions (!520)
+- Added new `NekMeshUtils` library to support new `NekMesh` executable and
+  associated CAD routines. Old CAD wrappers in LibUtilities now moved to
+  `NekMeshUtils` (!527)
 - Fix initialisation bug in ExpList2DH1D and ExpListHomogeneous2D (!528, !529)
 - Fix bug in ExpList1D which may lead to invalid .vtu files (!531)
 - Make `GetBoundaryToElmtMap` consistent for 3DH1D (!526)
+- Add support for PETSc matrix shell to use Nektar++ operations/preconditioners
+  (!537)
 - Fix bug with initial conditions of CG simulations using variable P (!543)
+- Fix bug in 3DH2D with non-zero Dirichlet boundary conditions (!545)
+- Added in a method to convert equispaced interpolated points back to
+  coefficients which requires the introduction of a new StdRegions matrix.(!561)
+- Empty XML tags which would override non-empty XML tags are now ignored (!581)
+- Add contribution guide (!551)
+- Add a filter to calculate exponential moving averages (!566)
 
 **APESolver:**
 - Fix restarting from checkpoint file (!517)
+
+**IncNavierStokesSolver**
+- Fix floquet stability analysis for HalfMode case (!536)
+- Add a filter to calculate Reynolds stresses (!566)
 
 **FieldConvert:**
 - Extended surface distance module to support hexahedra and quads (!524)
 - Small fixes in interpolation routine (!515)
 - Add support for surface extraction in 3DH1D case (!521)
 - Add support for isocontour extraction for 3DH1D (!525)
+- Add process module to calculate high-order mesh quality metric (!527).
+- Add module to extract one of the planes of 3DH1D (!542)
 - Add module to enable mean mode of 3DH1D to be extracted (!530)
 - Fix bug in C^0 projection (!541))
 - Add command line option to set number of homogeneous planes (!540)
+- Add module to project set of points to a fld file(!561)
+- Add support for interpolating to a box of points and fix ability to run
+  interppointstofld module in parallel when using a plane or box option (!561)
+- Add option to output equi-spaced points in VTU format (!550)
+- Add module innerproduct (!568)
+- Add command line option of `--part-only` and `--part-only-overlapping` (!569)
 
-**MeshConvert:**
+**NekMesh:**
+- `MeshConvert` is now renamed to `NekMesh` to reflect new mesh generation
+  functionality (!527).
 - Enable face curvature inside core MeshConvert objects (!511)
 - Add linearise processing module to remove all curvature from high order
   elements (!509)
+
+**Documentation:**
+- Added git submodule for including Nektar++ tutorials in the source tree (!507)
 
 v4.2.0
 ------

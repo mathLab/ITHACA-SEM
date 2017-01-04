@@ -90,6 +90,11 @@ namespace SolverUtils
                         const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                         const unsigned int& pNumForcingFields = 0);
 
+            SOLVER_UTILS_EXPORT const Array<OneD, const Array<OneD, NekDouble> >
+                &GetForces();
+
+            SOLVER_UTILS_EXPORT Array<OneD, Array<OneD, NekDouble> > &UpdateForces();
+
         protected:
             /// Session reader
             LibUtilities::SessionReaderSharedPtr m_session;
@@ -128,6 +133,11 @@ namespace SolverUtils
                     const std::string&                          pFunctionName,
                     NekDouble pTime = NekDouble(0));
 
+
+            SOLVER_UTILS_EXPORT void EvaluateTimeFunction(
+                    const NekDouble                          pTime,
+                    const LibUtilities::EquationSharedPtr   &pEqn,
+                    Array<OneD, NekDouble>&                  pArray);
     };
 }
 }

@@ -148,11 +148,13 @@ private:
     void WallBoundary2D(
             int bcRegion,
             int cnt,
+            Array<OneD, Array<OneD, NekDouble> > &Fwd,
             Array<OneD, Array<OneD, NekDouble> > &physarray);
 
     void WallBoundary(
             int bcRegion,
             int cnt,
+            Array<OneD, Array<OneD, NekDouble> > &Fwd,
             Array<OneD, Array<OneD, NekDouble> > &physarray);
 
     void AddCoriolis(

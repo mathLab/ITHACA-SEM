@@ -41,6 +41,8 @@
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/SparseUtils.hpp>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -119,7 +121,7 @@ namespace Nektar
             int nIntDofs           = pLocToGloMap->GetNumGlobalCoeffs()
                 - nGlobBndDofs;
 
-            Array<OneD, NekDouble> F = m_wsp + 2*nLocBndDofs;
+            Array<OneD, NekDouble> F = m_wsp + 2*nLocBndDofs + nGlobHomBndDofs;
             Array<OneD, NekDouble> tmp;
             if(nDirBndDofs && dirForcCalculated)
             {
@@ -133,7 +135,6 @@ namespace Nektar
             NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,tmp=F+nDirBndDofs,
                                           eWrapper);
             NekVector<NekDouble> F_GlobBnd(nGlobBndDofs,F,eWrapper);
-            NekVector<NekDouble> F_LocBnd(nLocBndDofs,0.0);
             NekVector<NekDouble> F_Int(nIntDofs,tmp=F+nGlobBndDofs,eWrapper);
             
             NekVector<NekDouble> V_GlobBnd(nGlobBndDofs,out,eWrapper);
@@ -143,7 +144,8 @@ namespace Nektar
             NekVector<NekDouble> V_Int(nIntDofs,tmp=out+nGlobBndDofs,eWrapper);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,m_wsp,eWrapper);
             
-            NekVector<NekDouble> V_GlobHomBndTmp(nGlobHomBndDofs,0.0);
+            NekVector<NekDouble> V_GlobHomBndTmp(
+                nGlobHomBndDofs,tmp = m_wsp + 2*nLocBndDofs,eWrapper);
 
             // set up normalisation factor for right hand side on first SC level
             DNekScalBlkMatSharedPtr sc = v_PreSolve(scLevel, F_GlobBnd);
@@ -170,12 +172,12 @@ namespace Nektar
                 else
                 {
                     DNekScalBlkMat &BinvD      = *m_BinvD;
-                    V_LocBnd = BinvD*F_Int;
+                    DiagonalBlockFullScalMatrixMultiply( V_LocBnd, BinvD, F_Int);
                 }
                 
                 pLocToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndTmp,
                                           nDirBndDofs);
-                F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
+                Subtract(F_HomBnd, F_HomBnd, V_GlobHomBndTmp);
 
                 // Transform from original basis to low energy
                 v_BasisTransform(F, nDirBndDofs);
@@ -200,7 +202,7 @@ namespace Nektar
                         Vmath::Vcopy(nGlobHomBndDofs,
                                      tmp.get()+nDirBndDofs,          1,
                                      V_GlobHomBndTmp.GetPtr().get(), 1);
-                        F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
+                        Subtract( F_HomBnd, F_HomBnd, V_GlobHomBndTmp);
                     }
                 }
 
@@ -208,7 +210,6 @@ namespace Nektar
                 if(atLastLevel)
                 {
                     Array<OneD, NekDouble> pert(nGlobBndDofs,0.0);
-                    NekVector<NekDouble>   Pert(nGlobBndDofs,pert,eWrapper);
 
                     // Solve for difference from initial solution given inout;
                     SolveLinearSystem(
@@ -249,8 +250,7 @@ namespace Nektar
                     }
                     F_Int = F_Int - C*V_LocBnd;
                 }
-
-                V_Int = invD*F_Int;
+                Multiply( V_Int, invD, F_Int);
             }
         }
 
@@ -267,7 +267,11 @@ namespace Nektar
         {
             int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-            m_wsp = Array<OneD, NekDouble>(2*nLocalBnd + nGlobal, 0.0);
+            int nGlobBndDofs       = pLocToGloMap->GetNumGlobalBndCoeffs();
+            int nDirBndDofs        = pLocToGloMap->GetNumGlobalDirBndCoeffs();
+            int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
+            m_wsp = Array<OneD, NekDouble>
+                    (2*nLocalBnd + nGlobal + nGlobHomBndDofs, 0.0);
 
             if (pLocToGloMap->AtLastLevel())
             {
@@ -411,6 +415,15 @@ namespace Nektar
                 int cntC = 0;
                 int cntD = 0;
 
+                // Use symmetric storage for invD if possible
+                MatrixStorage storageTypeD = eFULL;
+                if ( (m_linSysKey.GetMatrixType() == StdRegions::eMass)      ||
+                     (m_linSysKey.GetMatrixType() == StdRegions::eLaplacian) ||
+                     (m_linSysKey.GetMatrixType() == StdRegions::eHelmholtz))
+                {
+                    storageTypeD = eSYMMETRIC;
+                }
+
                 for(i = 0; i < nPatches; i++)
                 {
                     // Matrix A
@@ -436,7 +449,8 @@ namespace Nektar
                     substructuredMat[3][i] = MemoryManager<DNekMat>
                                     ::AllocateSharedPtr(nIntDofsPerPatch[i],
                                                         nIntDofsPerPatch[i],
-                                                        tmparray, wType);
+                                                        tmparray, wType,
+                                                        storageTypeD);
 
                     cntA += nBndDofsPerPatch[i] * nBndDofsPerPatch[i];
                     cntB += nBndDofsPerPatch[i] * nIntDofsPerPatch[i];
@@ -452,17 +466,12 @@ namespace Nektar
                 Array<OneD, const int>       patchId, dofId;
                 Array<OneD, const unsigned int>      isBndDof;
                 Array<OneD, const NekDouble> sign;
-                NekDouble scale;
 
                 for(n = cnt = 0; n < SchurCompl->GetNumberOfBlockRows(); ++n)
                 {
                     schurComplSubMat      = SchurCompl->GetBlock(n,n);
                     schurComplSubMatnRows = schurComplSubMat->GetRows();
-                    
-                    scale = SchurCompl->GetBlock(n,n)->Scale();
-                    Array<OneD, NekDouble> schurSubMat
-                        = SchurCompl->GetBlock(n,n)->GetOwnedMatrix()->GetPtr();
-                    
+
                     patchId  = pLocToGloMap->GetPatchMapFromPrevLevel()
                                ->GetPatchId() + cnt;
                     dofId    = pLocToGloMap->GetPatchMapFromPrevLevel()
@@ -482,13 +491,12 @@ namespace Nektar
                             = substructuredMat[1][patchId[i]]->GetPtr();
                         Array<OneD, NekDouble> subMat2
                             = substructuredMat[2][patchId[i]]->GetPtr();
-                        Array<OneD, NekDouble> subMat3
-                            = substructuredMat[3][patchId[i]]->GetPtr();
+                        DNekMatSharedPtr subMat3
+                            = substructuredMat[3][patchId[i]];
                         int subMat0rows = substructuredMat[0][pId]->GetRows();
                         int subMat1rows = substructuredMat[1][pId]->GetRows();
                         int subMat2rows = substructuredMat[2][pId]->GetRows();
-                        int subMat3rows = substructuredMat[3][pId]->GetRows();
-                        
+
                         if(isBndDof[i])
                         {
                             for(j = 0; j < schurComplSubMatnRows; ++j)
@@ -499,16 +507,14 @@ namespace Nektar
                                 if(isBndDof[j])
                                 {
                                     subMat0[dofId[i]+dofId[j]*subMat0rows] +=
-                                        sign[i]*sign[j]*(
-                                            scale*schurSubMat[
-                                                i+j*schurComplSubMatnRows]);
+                                        sign[i]*sign[j]*
+                                            (*schurComplSubMat)(i,j);
                                 }
                                 else
                                 {
                                     subMat1[dofId[i]+dofId[j]*subMat1rows] +=
-                                        sign[i]*sign[j]*(
-                                            scale*schurSubMat[
-                                                i+j*schurComplSubMatnRows]);
+                                        sign[i]*sign[j]*
+                                            (*schurComplSubMat)(i,j);
                                 }
                             }
                         }
@@ -522,16 +528,26 @@ namespace Nektar
                                 if(isBndDof[j])
                                 {
                                     subMat2[dofId[i]+dofId[j]*subMat2rows] +=
-                                        sign[i]*sign[j]*(
-                                            scale*schurSubMat[
-                                                i+j*schurComplSubMatnRows]);
+                                        sign[i]*sign[j]*
+                                            (*schurComplSubMat)(i,j);
                                 }
                                 else
                                 {
-                                    subMat3[dofId[i]+dofId[j]*subMat3rows] +=
-                                        sign[i]*sign[j]*(
-                                            scale*schurSubMat[
-                                                i+j*schurComplSubMatnRows]);
+                                    if (storageTypeD == eSYMMETRIC)
+                                    {
+                                        if (dofId[i] <= dofId[j])
+                                        {
+                                            (*subMat3)(dofId[i],dofId[j]) +=
+                                                sign[i]*sign[j]*
+                                                (*schurComplSubMat)(i,j);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        (*subMat3)(dofId[i],dofId[j]) +=
+                                            sign[i]*sign[j]*
+                                            (*schurComplSubMat)(i,j);
+                                    }
                                 }
                             }
                         }

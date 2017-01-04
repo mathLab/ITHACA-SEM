@@ -65,7 +65,7 @@ namespace Nektar
                 const Array<OneD,const NekDouble> &pInput,
                       Array<OneD,      NekDouble> &pOutput,
                 const AssemblyMapSharedPtr &locToGloMap,
-                const int pNumDir = 0);
+                const int pNumDir);
         };
     }
 }

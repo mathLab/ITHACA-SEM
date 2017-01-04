@@ -31,6 +31,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/LinearAlgebra/MatrixType.h>
 #include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/StandardMatrix.hpp>
 
@@ -38,7 +39,7 @@ namespace Nektar
 {
     template<typename DataType, typename InnerMatrixType>
     NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::NekMatrix() :
-        NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::BaseType(0,0),
+        NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::BaseType(0,0,m_matrix->GetStorageType()),
         m_matrix(new typename NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::InnerType()),
         m_scale(0)
     {
@@ -47,7 +48,7 @@ namespace Nektar
     template<typename DataType, typename InnerMatrixType>
     NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::NekMatrix(typename boost::call_traits<NumberType>::const_reference scale,
               boost::shared_ptr<const InnerType> m) :
-        NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::BaseType(m->GetRows(), m->GetColumns()),
+        NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::BaseType(m->GetRows(), m->GetColumns(),m->GetStorageType()),
         m_matrix(m),
         m_scale(scale)
     {
@@ -83,9 +84,6 @@ namespace Nektar
     {
         return m_matrix->GetStorageSize();
     }
-
-    template<typename DataType, typename InnerMatrixType>
-    MatrixStorage NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::GetType() const { return m_matrix->GetStorageType(); }
 
     template<typename DataType, typename InnerMatrixType>
     typename NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::NumberType
@@ -151,12 +149,6 @@ namespace Nektar
     unsigned int NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::v_GetStorageSize() const
     {
         return ThisType::GetStorageSize();
-    }
-
-    template<typename DataType, typename InnerMatrixType>
-    MatrixStorage NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::v_GetStorageType() const
-    {
-        return ThisType::GetType();
     }
 
     template<typename DataType, typename InnerMatrixType>

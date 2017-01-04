@@ -98,7 +98,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,Array<OneD,int> &EdgeID);
             
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result);
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays);
 			
 			/// Storage space for the boundary to element and boundary to trace map.
             /// This member variable is really allocated just in case a boundary expansion
@@ -120,9 +121,9 @@ namespace Nektar
             }
 
            /// @todo Fix Robin BCs for homogeneous case
-           virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
+           virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
            {
-               return map<int, RobinBCInfoSharedPtr>();
+               return std::map<int, RobinBCInfoSharedPtr>();
            }
 
         private:
@@ -133,7 +134,8 @@ namespace Nektar
                     const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
-                    const Array<OneD, const NekDouble> &dirForcing);
+                    const Array<OneD, const NekDouble> &dirForcing,
+                    const bool PhysSpaceForcing);
             
             virtual void v_EvaluateBoundaryConditions(
                 const NekDouble   time    = 0.0,

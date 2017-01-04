@@ -1,0 +1,104 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# $Id: Portfile 121028 2014-06-14 22:03:19Z mf2k@macports.org $
+
+PortSystem          1.0
+PortGroup           cmake 1.0
+PortGroup           mpi 1.0
+
+name                nektarpp
+conflicts           nektarpp-devel
+version             4.3.2
+categories          science
+platforms           darwin
+license             MIT
+maintainers         nomaintainers
+description         spectral/hp element framework for CFD
+long_description    \
+	Nektar++ is a spectral/hp element framework which aims to be easy \
+	to use and support a wide range of features, including 1D, 2D and \
+	3D element support, hybrid shaped elements and continuous and     \
+	discontinuous implementations. As well as a modern C++ API, it    \
+	ships with a range of solvers including CFD, advection-diffusion  \
+	equations and cardiac electrophysiology.
+
+homepage            http://www.nektar.info/
+master_sites        http://www.nektar.info/downloads/file/
+distname            nektar++-${version}
+extract.suffix      .tar.gz
+
+checksums           rmd160  fbacd4e2ca2d514f936fe200fcc5c1c31345423d \
+                    sha256  afa20b74ed19165c9356f5ec5e33dac7de9bf48e7f2076db6488c7c03d331dd0
+
+mpi.setup
+
+# Don't build demos and tests by default.
+configure.args-append \
+    -DNEKTAR_BUILD_DEMOS=OFF \
+    -DNEKTAR_BUILD_TESTS=OFF \
+    -DNEKTAR_BUILD_UNIT_TESTS=OFF
+
+depends_lib  \
+    port:cmake \
+    port:boost \
+    port:zlib \
+    port:tinyxml
+
+variant demos description {
+    Build additional Nektar++ demos
+} {
+    configure.args-append -DNEKTAR_BUILD_DEMOS=ON
+}
+
+variant vtk description {
+    Enable VTK support for post-processing.
+} {
+    configure.args-append -DNEKTAR_USE_VTK=ON
+    depends_lib-append port:vtk
+}
+
+variant fftw description {
+    Enable FFTW support for fast Fourier transform.
+} {
+    configure.args-append -DNEKTAR_USE_FFTW=ON
+    depends_lib-append port:fftw-3
+}
+
+variant arpack description {
+    Enable ARPACK support for eigenvalue calculation.
+} {
+    configure.args-append -DNEKTAR_USE_ARPACK=ON
+    depends_lib-append port:arpack
+}
+
+variant petsc description {
+    Enable PETSc support for linear algebra solvers.
+} {
+    configure.args-append -DNEKTAR_USE_PETSC=ON
+    depends_lib-append port:petsc
+}
+
+variant scotch description {
+    Enable SCOTCH partitioner support.
+} {
+    configure.args-append -DNEKTAR_USE_SCOTCH=ON
+    depends_lib-append port:scotch
+}
+
+if {[ mpi_variant_isset ]} {
+    configure.args-append -DNEKTAR_USE_MPI=ON
+}
+
+destroot {
+    system "cd ${worksrcpath} && DESTDIR=${destroot} cmake -DCOMPONENT=\"ThirdParty\" -P cmake_install.cmake"
+    system "cd ${worksrcpath} && DESTDIR=${destroot} cmake -DCOMPONENT=\"lib\" -P cmake_install.cmake"
+    system "cd ${worksrcpath} && DESTDIR=${destroot} cmake -DCOMPONENT=\"solvers\" -P cmake_install.cmake"
+    system "cd ${worksrcpath} && DESTDIR=${destroot} cmake -DCOMPONENT=\"util\" -P cmake_install.cmake"
+    system "cd ${worksrcpath} && DESTDIR=${destroot} cmake -DCOMPONENT=\"dev\" -P cmake_install.cmake"
+}
+
+subport nektarpp-devel {
+    conflicts           nektarpp
+    fetch.type          git
+    git.url             https://gitlab.nektar.info/nektar/nektar.git
+    git.branch          origin/master
+}

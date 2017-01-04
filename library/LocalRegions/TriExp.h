@@ -122,6 +122,7 @@ namespace Nektar
                             const int dir,
                             const Array<OneD, const NekDouble>& inarray,
                                   Array<OneD, NekDouble> & outarray);
+
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTDerivBase_MatOp(
                             const int dir,
                             const Array<OneD, const NekDouble>& inarray,
@@ -133,12 +134,19 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &Fz, 
                     Array< OneD, NekDouble> &outarray);
 
+            LOCAL_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(
+                    const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                          Array<OneD,       NekDouble> &outarray);
+
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
             LOCAL_REGIONS_EXPORT virtual
                 StdRegions::StdExpansionSharedPtr v_GetStdExp(void) const;
 
+            LOCAL_REGIONS_EXPORT virtual
+                StdRegions::StdExpansionSharedPtr v_GetLinStdExp(void) const;
+            
             LOCAL_REGIONS_EXPORT virtual void v_GetCoord(
                             const Array<OneD, const NekDouble>& Lcoords,
                                   Array<OneD,NekDouble> &coords);
@@ -185,7 +193,8 @@ namespace Nektar
                             const NekDouble *data,
                             const std::vector<unsigned int > &nummodes,
                             const int mode_offset,
-                            NekDouble *coeffs);
+                            NekDouble *coeffs,
+                            std::vector<LibUtilities::BasisType> &fromType);
             LOCAL_REGIONS_EXPORT virtual
                 StdRegions::Orientation v_GetEorient(int edge);
             LOCAL_REGIONS_EXPORT virtual
@@ -193,7 +202,10 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual const
                 LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const;
             LOCAL_REGIONS_EXPORT virtual int v_GetNumPoints(
-                            const int dir) const;
+                const int dir) const;
+            LOCAL_REGIONS_EXPORT virtual void v_GetEdgePhysMap(
+                const int                edge,
+                Array<OneD, int>        &outarray);
 
 
             //---------------------------------------

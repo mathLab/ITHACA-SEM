@@ -63,15 +63,12 @@ FilterCheckpoint::FilterCheckpoint(
     }
 
     // OutputFrequency
+    it = pParams.find("OutputFrequency");
     ASSERTL0(it != pParams.end(), "Missing parameter 'OutputFrequency'.");
     LibUtilities::Equation equ(m_session, it->second);
     m_outputFrequency = floor(equ.Evaluate());
 
-    m_outputIndex = 0;
-    m_index       = 0;
-    m_fld         = MemoryManager<LibUtilities::FieldIO>
-                        ::AllocateSharedPtr(pSession->GetComm());
-
+    m_fld = LibUtilities::FieldIO::CreateDefault(pSession);
 }
 
 FilterCheckpoint::~FilterCheckpoint()
@@ -85,14 +82,14 @@ void FilterCheckpoint::v_Initialise(
 {
     m_index = 0;
     m_outputIndex = 0;
+    v_Update(pFields, time);
 }
 
 void FilterCheckpoint::v_Update(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
-    m_index++;
-    if (m_index % m_outputFrequency > 0)
+    if (m_index++ % m_outputFrequency > 0)
     {
         return;
     }

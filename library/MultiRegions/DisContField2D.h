@@ -42,6 +42,7 @@
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
 #include <SpatialDomains/Conditions.h>
 
 namespace Nektar
@@ -93,8 +94,38 @@ namespace Nektar
                 return m_trace;
             }
 
+            Array<OneD, int> m_BCtoElmMap;
+            Array<OneD, int> m_BCtoEdgMap;
 
         protected:
+
+            Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
+
+            /** \brief This function gets the shared point to basis
+             *
+             *  \return returns the shared pointer to the bases
+             */
+            inline const Array<OneD, const LibUtilities::BasisSharedPtr>& GetBase() const
+            {
+                return(m_base);
+            }
+
+            /** \brief This function returns the type of basis used in the \a dir
+             *  direction
+             *
+             *  The different types of bases implemented in the code are defined
+             *  in the LibUtilities::BasisType enumeration list. As a result, the
+             *  function will return one of the types of this enumeration list.
+             *
+             *  \param dir the direction
+             *  \return returns the type of basis used in the \a dir direction
+             */
+            inline  LibUtilities::BasisType GetBasisType(const int dir) const
+            {
+                ASSERTL1(dir < m_base.num_elements(), "dir is larger than m_numbases");
+                return(m_base[dir]->GetBasisType());
+            }
+
             /**
              * @brief An object which contains the discretised boundary
              * conditions.
@@ -113,13 +144,19 @@ namespace Nektar
              */
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
 
-            GlobalLinSysMapShPtr        m_globalBndMat;
-            ExpListSharedPtr            m_trace;
-            AssemblyMapDGSharedPtr      m_traceMap;
+            GlobalLinSysMapShPtr   m_globalBndMat;
+            ExpListSharedPtr       m_trace;
+            AssemblyMapDGSharedPtr m_traceMap;
             
-            Array<OneD, Array<OneD, unsigned int> >     m_mapEdgeToElmn;
-            Array<OneD, Array<OneD, unsigned int> >     m_signEdgeToElmn;
-            Array<OneD,StdRegions::Orientation>         m_edgedir;
+            /**
+             * Map of local trace (the points at the face of
+             * the element) to the trace space discretisation
+             */
+            LocTraceToTraceMapSharedPtr m_locTraceToTraceMap;
+
+            Array<OneD, Array<OneD, unsigned int> > m_mapEdgeToElmn;
+            Array<OneD, Array<OneD, unsigned int> > m_signEdgeToElmn;
+            Array<OneD,StdRegions::Orientation>     m_edgedir;
 
             /**
              * @brief A set storing the global IDs of any boundary edges.
@@ -142,14 +179,14 @@ namespace Nektar
              * copied from forwards to backwards space in case of a periodic
              * boundary condition.
              */
-            vector<int> m_periodicFwdCopy;
-            vector<int> m_periodicBwdCopy;
+            std::vector<int> m_periodicFwdCopy;
+            std::vector<int> m_periodicBwdCopy;
 
             /*
              * @brief A map identifying which edges are left- and right-adjacent
              * for DG.
              */
-            vector<bool> m_leftAdjacentEdges;
+            std::vector<bool> m_leftAdjacentEdges;
 
             void SetUpDG(const std::string  = "DefaultVar");
             bool SameTypeOfBoundaryConditions(const DisContField2D &In);
@@ -187,14 +224,14 @@ namespace Nektar
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
-            virtual void v_FillBndCondFromField();
             virtual void v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap   &factors,
                 const StdRegions::VarCoeffMap      &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing);
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool  PhysSpaceForcing);
             virtual void v_GeneralMatrixOp(
                 const GlobalMatrixKey             &gkey,
                 const Array<OneD,const NekDouble> &inarray,
@@ -204,7 +241,8 @@ namespace Nektar
                 Array<OneD, int> &ElmtID,
                 Array<OneD, int> &EdgeID);
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result);
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays);
             virtual void v_Reset();
 
             /**
@@ -257,7 +295,7 @@ namespace Nektar
                 const NekDouble   x2_in   = NekConstants::kNekUnsetDouble,
                 const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
 
-            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
+            virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
         };
         
         typedef boost::shared_ptr<DisContField2D>   DisContField2DSharedPtr;

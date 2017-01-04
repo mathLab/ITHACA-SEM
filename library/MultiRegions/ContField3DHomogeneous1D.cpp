@@ -64,7 +64,38 @@ namespace Nektar
             
             SetCoeffPhys();
         }
-        
+
+        ContField3DHomogeneous1D::ContField3DHomogeneous1D(
+                                const ContField3DHomogeneous1D &In,
+                                const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                const std::string                        &variable):
+                                DisContField3DHomogeneous1D (In, false)
+        {
+            ContField2DSharedPtr zero_plane_old =
+                    boost::dynamic_pointer_cast<ContField2D> (In.m_planes[0]);
+
+            ContField2DSharedPtr zero_plane =
+                        MemoryManager<ContField2D>::
+                                    AllocateSharedPtr(*zero_plane_old,graph2D,
+                                                            variable);
+
+            for(int n = 0; n < m_planes.num_elements(); ++n)
+            {
+                m_planes[n] =   MemoryManager<ContField2D>::
+                                        AllocateSharedPtr(*zero_plane,graph2D,
+                                                            variable);
+            }
+
+            SetCoeffPhys();
+
+            if(variable.compare("DefaultVar") != 0)
+            {
+                SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
+                SetupBoundaryConditions(m_homogeneousBasis->GetBasisKey(),
+                                        m_lhom, bcs,variable);
+            }
+        }
+
         ContField3DHomogeneous1D::~ContField3DHomogeneous1D()
         {
         }
@@ -165,14 +196,22 @@ namespace Nektar
             }
         }
 
-        /**
-         * 
-         */
-        void  ContField3DHomogeneous1D::v_LocalToGlobal(void) 
+        void ContField3DHomogeneous1D::v_FillBndCondFromField(const int nreg)
         {
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
-                m_planes[n]->LocalToGlobal();
+                m_planes[n]->FillBndCondFromField(nreg);
+            }
+        }
+        
+        /**
+         * 
+         */
+        void  ContField3DHomogeneous1D::v_LocalToGlobal(bool useComm) 
+        {
+            for(int n = 0; n < m_planes.num_elements(); ++n)
+            {
+                m_planes[n]->LocalToGlobal(useComm);
             }
         };
 
@@ -213,7 +252,8 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing)
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool PhysSpaceForcing)
         {
 			
             int n;
@@ -224,7 +264,8 @@ namespace Nektar
 			
             Array<OneD, NekDouble> e_out;
             Array<OneD, NekDouble> fce(inarray.num_elements());
-
+            Array<OneD, const NekDouble> wfce;
+            
             // Fourier transform forcing function
             if(m_WaveSpace)
             {
@@ -250,21 +291,36 @@ namespace Nektar
             {
                 if(n != 1 || m_transposition->GetK(n) != 0 || smode)
                 {
+                    
                     beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
                     new_factors = factors;
                     // add in Homogeneous Fourier direction and SVV if turned on
                     new_factors[StdRegions::eFactorLambda] +=
                                                 beta*beta*(1+GetSpecVanVisc(n));
                     
-                    m_planes[n]->HelmSolve(fce + cnt,
+                    wfce = (PhysSpaceForcing)? fce+cnt:fce+cnt1;
+                    m_planes[n]->HelmSolve(wfce,
                                            e_out = outarray + cnt1,
                                            flags, new_factors, varcoeff,
-                                           dirForcing);
+                                           dirForcing,
+                                           PhysSpaceForcing);
                 }
                 
                 cnt  += m_planes[n]->GetTotPoints();
                 cnt1 += m_planes[n]->GetNcoeffs();
             }
         }
+        
+        /**
+         * Reset the GlobalLinSys Manager 
+         */
+        void ContField3DHomogeneous1D::v_ClearGlobalLinSysManager(void)
+        {
+            for(int n = 0; n < m_planes.num_elements(); ++n)
+            {
+                m_planes[n]->ClearGlobalLinSysManager();
+            }
+        }
+
     } // end of namespace
 } //end of namespace

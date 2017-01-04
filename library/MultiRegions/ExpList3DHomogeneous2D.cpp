@@ -37,6 +37,8 @@
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 #include <MultiRegions/ExpList1D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -138,7 +140,7 @@ namespace Nektar
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In,
                 const std::vector<unsigned int> &eIDs,
                 const bool DeclareLinesSetCoeffPhys):
-            ExpListHomogeneous2D(In)
+            ExpListHomogeneous2D(In, eIDs)
         {
             SetExpType(e3DH2D);
 
@@ -365,7 +367,7 @@ namespace Nektar
                     << ntot << "\" NumberOfCells=\""
                     << ntotminus << "\">" << endl;
             outfile << "      <Points>" << endl;
-            outfile << "        <DataArray type=\"Float32\" "
+            outfile << "        <DataArray type=\"Float64\" "
                     << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
             outfile << "          ";
             for (i = 0; i < ntot; ++i)

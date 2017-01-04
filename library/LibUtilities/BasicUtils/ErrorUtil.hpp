@@ -41,6 +41,10 @@
 #include <boost/optional.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
+#if defined(NEKTAR_USE_MPI)
+#include <mpi.h>
+#endif
+
 #ifndef _WIN32
 #include <execinfo.h>
 #endif
@@ -63,7 +67,7 @@ namespace ErrorUtil
     {
         efatal,
         ewarning
-    };
+    }; 
 
     class NekError : public std::runtime_error
     {
@@ -71,7 +75,7 @@ namespace ErrorUtil
         NekError(const std::string& message) : std::runtime_error(message) {}
     };
         
-    inline static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
+    inline static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level, bool DoComm = false)
     {
         // The user of outStream is primarily for the unit tests.
         // The unit tests often generate errors on purpose to make sure
@@ -85,6 +89,21 @@ namespace ErrorUtil
             std::string("Where   : ") + boost::lexical_cast<std::string>(routine) +  std::string("[") +  boost::lexical_cast<std::string>(lineNumber) +  std::string("]\n") + std::string("Message : ") +
 #endif
             msg;
+
+        // Default rank is zero. If MPI used and initialised, populate with
+        // the correct rank. Messages are only printed on rank zero.
+        int rank = 0;
+#if defined(NEKTAR_USE_MPI)
+        int flag = 0;
+        if(DoComm)
+        {
+            MPI_Initialized(&flag);
+            if(flag)
+            {
+                MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+            }
+        }
+#endif
 
         std::string btMessage("");
 #if defined(NEKTAR_FULLDEBUG)
@@ -103,10 +122,13 @@ namespace ErrorUtil
         free(btStrings);
 #endif
 #endif
-        switch(type)
+
+        switch (type)
         {
-            case efatal:
-                if( outStream )
+        case efatal:
+            if (!rank)
+            {
+                if (outStream)
                 {
                     (*outStream) << btMessage;
                     (*outStream) << "Fatal   : " << baseMsg << std::endl;
@@ -114,14 +136,25 @@ namespace ErrorUtil
                 else
                 {
                     std::cerr << btMessage;
-                    std::cerr << std::endl << "Fatal   : " << baseMsg << std::endl;
+                    std::cerr << std::endl << "Fatal   : " << baseMsg
+                              << std::endl;
                 }
-
-                throw NekError(baseMsg);
-                break;
-
-            case ewarning:
-                if( outStream )
+            }
+#if defined(NEKTAR_USE_MPI)
+            if(DoComm)
+            {
+                if (flag)
+                {
+                    MPI_Barrier(MPI_COMM_WORLD);
+                }
+            }
+#endif
+            throw NekError(baseMsg);
+            break;
+        case ewarning:
+            if (!rank)
+            {
+                if (outStream)
                 {
                     (*outStream) << btMessage;
                     (*outStream) << "Warning: " << baseMsg << std::endl;
@@ -131,10 +164,10 @@ namespace ErrorUtil
                     std::cerr << btMessage;
                     std::cerr << "Warning: " << baseMsg << std::endl;
                 }
-                break;
-
-            default:
-                std::cerr << "Unknown warning type: " << baseMsg << std::endl;
+            }
+            break;
+        default:
+            std::cerr << "Unknown warning type: " << baseMsg << std::endl;
         }
     }
 
@@ -157,6 +190,10 @@ namespace ErrorUtil
 
 #define NEKERROR(type, msg) \
     ErrorUtil::Error(type, __FILE__, __LINE__, msg, 0);
+
+
+#define ROOTONLY_NEKERROR(type, msg)                                     \
+    ErrorUtil::Error(type, __FILE__, __LINE__, msg, 0,true);
 
 #define ASSERTL0(condition,msg) \
     if(!(condition)) \
@@ -184,7 +221,7 @@ namespace ErrorUtil
 #define WARNINGL1(condition,msg) \
     if(!(condition)) \
 { \
-    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 0); \
+    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 1); \
 }
 
 #else //defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
@@ -206,7 +243,7 @@ namespace ErrorUtil
 #define WARNINGL2(condition,msg) \
     if(!(condition)) \
 { \
-    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 0); \
+    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 2); \
 }
 
 #else //NEKTAR_FULLDEBUG

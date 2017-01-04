@@ -35,8 +35,10 @@
 
 
 #include <SpatialDomains/MeshGraph.h>
+#include <LibUtilities/BasicUtils/CompressData.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
+#include <LibUtilities/BasicUtils/FieldIOXml.h>
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdTetExp.h>
 #include <StdRegions/StdPyrExp.h>
@@ -63,6 +65,9 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+#include <boost/make_shared.hpp>
+
+using namespace std;
 
 namespace Nektar
 {
@@ -390,8 +395,10 @@ namespace Nektar
                 zmove = expEvaluator.Evaluate(expr_id);
             }
 
-            const char *IsCompressed = element->Attribute("COMPRESSED");
-            if(IsCompressed)
+            string IsCompressed;
+            element->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+
+            if(IsCompressed.size()) 
             {
                 if(boost::iequals(IsCompressed,
                             LibUtilities::CompressData::GetCompressString()))
@@ -1043,9 +1050,27 @@ namespace Nektar
                 else if(expType == "ELEMENTS")  // Reading a file with the expansion definition
                 {
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
-                    LibUtilities::FieldIO f(m_session->GetComm());
-                    f.ImportFieldDefs(doc, fielddefs, true);
+
+                    // This has to use the XML reader since we are treating the already parsed XML as a standard FLD file.
+                    boost::shared_ptr<LibUtilities::FieldIOXml> f = boost::make_shared<LibUtilities::FieldIOXml>(m_session->GetComm(), false);
+                    f->ImportFieldDefs(LibUtilities::XmlDataSource::create(doc), fielddefs, true);
                     cout << "    Number of elements: " << fielddefs.size() << endl;
+                    SetExpansions(fielddefs);
+                }
+                else if(expType == "F")
+                {
+                    ASSERTL0(expansion->Attribute("FILE"),
+                                "Attribute FILE expected for type F expansion");
+                    std::string filenameStr = expansion->Attribute("FILE");
+                    ASSERTL0(!filenameStr.empty(),
+                                "A filename must be specified for the FILE "
+                                "attribute of expansion");
+
+                    std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
+                    LibUtilities::FieldIOSharedPtr f =
+                            LibUtilities::FieldIO::CreateForFile(
+                            m_session, filenameStr);
+                    f->Import(filenameStr, fielddefs);
                     SetExpansions(fielddefs);
                 }
                 else
@@ -1256,9 +1281,10 @@ namespace Nektar
                 return;
             }
 
-            const char *IsCompressed = field->Attribute("COMPRESSED");
-
-            if(IsCompressed)
+            string IsCompressed;
+            field->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+            
+            if(IsCompressed.size()) 
             {
                 ASSERTL0(boost::iequals(IsCompressed,
                             LibUtilities::CompressData::GetCompressString()),
@@ -1511,7 +1537,11 @@ namespace Nektar
                             
                         }
                         
-                        ASSERTL0(curve->m_points.size() == numPts,"Number of points specificed by attribute NUMPOINTS is different from number of points in list");
+                        ASSERTL0(curve->m_points.size() == numPts,
+                                 "Number of points specificed by attribute "
+                                 "NUMPOINTS is different from number of points "
+                                 "in list (edgeid = " +
+                                 boost::lexical_cast<string>(edgeid));
 
                         m_curvedEdges[edgeid] = curve;
                         
@@ -2316,19 +2346,14 @@ namespace Nektar
         ExpansionShPtr MeshGraph::GetExpansion(GeometrySharedPtr geom, const std::string variable)
         {
             ExpansionMapIter iter;
-            ExpansionShPtr returnval;
-
             ExpansionMapShPtr expansionMap = m_expansionMapShPtrMap.find(variable)->second;
 
-            for (iter = expansionMap->begin(); iter!=expansionMap->end(); ++iter)
-            {
-                if ((iter->second)->m_geomShPtr == geom)
-                {
-                    returnval = iter->second;
-                    break;
-                }
-            }
-            return returnval;
+            iter = expansionMap->find(geom->GetGlobalID());
+            ASSERTL1(iter != expansionMap->end(),
+                     "Could not find expansion " +
+                     boost::lexical_cast<string>(geom->GetGlobalID()) +
+                     " in expansion for variable " + variable);
+            return iter->second;
         }
 
 
@@ -2352,37 +2377,14 @@ namespace Nektar
                     std::string field = fielddef[i]->m_fields[j];
                     if(m_expansionMapShPtrMap.count(field) == 0)
                     {
-                        expansionMap = MemoryManager<ExpansionMap>::AllocateSharedPtr();
+                        expansionMap = SetUpExpansionMap();
                         m_expansionMapShPtrMap[field] = expansionMap;
 
-                        // check to see if DefaultVar also not set and if so assign it to this expansion
+                        // check to see if DefaultVar also not set and
+                        // if so assign it to this expansion
                         if(m_expansionMapShPtrMap.count("DefaultVar") == 0)
                         {
                             m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
-                        }
-                    }
-
-                    // loop over all elements in partition and set expansion
-                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
-                    LibUtilities::BasisKeyVector def;
-
-                    for(int d = 0; d < m_domain.size(); ++d)
-                    {
-                        CompositeMap::const_iterator compIter;
-
-                        for (compIter = m_domain[d].begin();
-                             compIter != m_domain[d].end(); ++compIter)
-                        {
-                            GeometryVector::const_iterator x;
-                            for (x = compIter->second->begin();
-                                 x != compIter->second->end(); ++x)
-                            {
-                                ExpansionShPtr expansionElementShPtr =
-                                            MemoryManager<Expansion>::
-                                                    AllocateSharedPtr(*x, def);
-                                int id = (*x)->GetGlobalID();
-                                (*expansionMap)[id] = expansionElementShPtr;
-                            }
                         }
                     }
                 }
@@ -2405,41 +2407,24 @@ namespace Nektar
 
                 bool UniOrder =  fielddef[i]->m_uniOrder;
 
-                int check = 0;
-                for (j=0; j< basis.size(); ++j)
+                for (j = 0; j < fielddef[i]->m_elementIDs.size(); ++j)
                 {
-                    if ( (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "GLL_Lagrange") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Gauss_Lagrange") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Fourier") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierSingleMode") == 0)||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeRe") == 0) ||
-                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeIm") == 0))
+
+                    LibUtilities::BasisKeyVector bkeyvec;
+                    id = fielddef[i]->m_elementIDs[j];
+
+                    switch (fielddef[i]->m_shapeType)
                     {
-                        check++;
-                    }
-                }
-
-                if (check==basis.size())
-                {
-                    for (j = 0; j < fielddef[i]->m_elementIDs.size(); ++j)
-                    {
-
-                        LibUtilities::BasisKeyVector bkeyvec;
-                        id = fielddef[i]->m_elementIDs[j];
-
-                        switch (fielddef[i]->m_shapeType)
-                        {
-                        case LibUtilities::eSegment:
+                    case LibUtilities::eSegment:
                         {
                             if(m_segGeoms.count(fielddef[i]->m_elementIDs[j]) == 0)
                             {
                                 // skip element likely from parallel read
+                                if(!UniOrder)
+                                {
+                                    cnt++;
+                                    cnt += fielddef[i]->m_numHomogeneousDir;
+                                }
                                 continue;
                             }
                             geom = m_segGeoms[fielddef[i]->m_elementIDs[j]];
@@ -2472,11 +2457,16 @@ namespace Nektar
                             bkeyvec.push_back(bkey);
                         }
                         break;
-                        case LibUtilities::eTriangle:
+                    case LibUtilities::eTriangle:
                         {
                             if(m_triGeoms.count(fielddef[i]->m_elementIDs[j]) == 0)
                             {
                                 // skip element likely from parallel read
+                                if(!UniOrder)
+                                {
+                                    cnt += 2;
+                                    cnt += fielddef[i]->m_numHomogeneousDir;
+                                }
                                 continue;
                             }
                             geom = m_triGeoms[fielddef[i]->m_elementIDs[j]];
@@ -2527,11 +2517,16 @@ namespace Nektar
                             }
                         }
                         break;
-                        case LibUtilities::eQuadrilateral:
+                    case LibUtilities::eQuadrilateral:
                         {
                             if(m_quadGeoms.count(fielddef[i]->m_elementIDs[j]) == 0)
                             {
                                 // skip element likely from parallel read
+                                if(!UniOrder)
+                                {
+                                    cnt += 2;
+                                    cnt += fielddef[i]->m_numHomogeneousDir;
+                                }
                                 continue;
                             }
 
@@ -2577,12 +2572,16 @@ namespace Nektar
                             // parallel runs
                             if(m_tetGeoms.count(k) == 0)
                             {
+                                if(!UniOrder)
+                                {
+                                    cnt += 3;
+                                }
                                 continue;
                             }
                             geom = m_tetGeoms[k];
 
                             {
-                                LibUtilities::PointsKey pkey(nmodes[cnt], LibUtilities::eGaussLobattoLegendre);
+                                LibUtilities::PointsKey pkey(nmodes[cnt]+1, LibUtilities::eGaussLobattoLegendre);
 
                                 if(numPointDef&&pointDef)
                                 {
@@ -2663,6 +2662,10 @@ namespace Nektar
                             k = fielddef[i]->m_elementIDs[j];
                             if(m_prismGeoms.count(k) == 0)
                             {
+                                if(!UniOrder)
+                                {
+                                    cnt += 3;
+                                }
                                 continue;
                             }
                             geom = m_prismGeoms[k];
@@ -2786,6 +2789,10 @@ namespace Nektar
                             k = fielddef[i]->m_elementIDs[j];
                             if(m_hexGeoms.count(k) == 0)
                             {
+                                if(!UniOrder)
+                                {
+                                    cnt += 3;
+                                }
                                 continue;
                             }
 
@@ -2835,11 +2842,6 @@ namespace Nektar
                                 (*expansionMap)[id]->m_basisKeyVector = bkeyvec;
                             }
                         }
-                    }
-                }
-                else
-                {
-                    ASSERTL0(false,"Need to set up for non Modified basis");
                 }
             }
         }
@@ -2852,7 +2854,7 @@ namespace Nektar
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
                 std::vector< std::vector<LibUtilities::PointsType> > &pointstype)
         {
-            int i,j,k,g,h,cnt,id;
+            int i,j,k,cnt,id;
             GeometrySharedPtr geom;
 
             ExpansionMapShPtr expansionMap;
@@ -2866,33 +2868,14 @@ namespace Nektar
                     std::string field = fielddef[i]->m_fields[j];
                     if(m_expansionMapShPtrMap.count(field) == 0)
                     {
-                        expansionMap = MemoryManager<ExpansionMap>::AllocateSharedPtr();
+                        expansionMap = SetUpExpansionMap();
                         m_expansionMapShPtrMap[field] = expansionMap;
 
-                        // check to see if DefaultVar also not set and if so assign it to this expansion
+                        // check to see if DefaultVar also not set and
+                        // if so assign it to this expansion
                         if(m_expansionMapShPtrMap.count("DefaultVar") == 0)
                         {
                             m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
-                        }
-
-                        // loop over all elements and set expansion
-                        for(k = 0; k < fielddef.size(); ++k)
-                        {
-                            for(h = 0; h < fielddef[k]->m_fields.size(); ++h)
-                            {
-                                if(fielddef[k]->m_fields[h] == field)
-                                {
-                                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
-                                    LibUtilities::BasisKeyVector def;
-
-                                    for(g = 0; g < fielddef[k]->m_elementIDs.size(); ++g)
-                                    {
-                                        ExpansionShPtr tmpexp =
-                                                MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
-                                        (*expansionMap)[fielddef[k]->m_elementIDs[g]] = tmpexp;
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -2911,7 +2894,6 @@ namespace Nektar
 
                 for(j = 0; j < fielddef[i]->m_elementIDs.size(); ++j)
                 {
-
                     LibUtilities::BasisKeyVector bkeyvec;
                     id = fielddef[i]->m_elementIDs[j];
 
@@ -2929,6 +2911,7 @@ namespace Nektar
                         if(!UniOrder)
                         {
                             cnt++;
+                            cnt += fielddef[i]->m_numHomogeneousDir;
                         }
                         bkeyvec.push_back(bkey);
                     }
@@ -2949,6 +2932,7 @@ namespace Nektar
                         if(!UniOrder)
                         {
                             cnt += 2;
+                            cnt += fielddef[i]->m_numHomogeneousDir;
                         }
                     }
                     break;
@@ -2969,6 +2953,7 @@ namespace Nektar
                         if(!UniOrder)
                         {
                             cnt += 2;
+                            cnt += fielddef[i]->m_numHomogeneousDir;
                         }
                     }
                     break;
@@ -2988,7 +2973,7 @@ namespace Nektar
 
                         if(!UniOrder)
                         {
-                            cnt += 2;
+                            cnt += 3;
                         }
                     }
                     break;
@@ -3008,7 +2993,7 @@ namespace Nektar
 
                         if(!UniOrder)
                         {
-                            cnt += 2;
+                            cnt += 3;
                         }
                     }
                     break;
@@ -3028,7 +3013,7 @@ namespace Nektar
 
                         if(!UniOrder)
                         {
-                            cnt += 2;
+                            cnt += 3;
                         }
                     }
                     break;
@@ -3048,7 +3033,7 @@ namespace Nektar
 
                         if(!UniOrder)
                         {
-                            cnt += 2;
+                            cnt += 3;
                         }
                     }
                     break;
@@ -3072,7 +3057,7 @@ namespace Nektar
 
         /**
          * \brief Reset all points keys to have equispaced points with
-         * optional arguemtn of \a npoints which redefines how many
+         * optional arguemt of \a npoints which redefines how many
          * points are to be used.
          */
         void MeshGraph::SetExpansionsToEvenlySpacedPoints(int npoints)
@@ -3143,6 +3128,48 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * \brief Reset all points keys to have expansion order of \a
+         *  nmodes.  we keep the point distribution the same and make
+         *  the number of points the same difference from the number
+         *  of modes as the original expansion definition
+         */
+        void MeshGraph::SetExpansionsToPointOrder(int npts)
+        {
+            ExpansionMapShPtrMapIter   it;
+
+            // iterate over all defined expansions
+            for (it = m_expansionMapShPtrMap.begin();
+                 it != m_expansionMapShPtrMap.end();
+                 ++it)
+            {
+                ExpansionMapIter expIt;
+
+                for (expIt = it->second->begin();
+                     expIt != it->second->end();
+                     ++expIt)
+                {
+                    for(int i = 0;
+                        i < expIt->second->m_basisKeyVector.size();
+                        ++i)
+                    {
+                        LibUtilities::BasisKey  bkeyold =
+                            expIt->second->m_basisKeyVector[i];
+
+                        const LibUtilities::PointsKey pkey(
+                            npts, bkeyold.GetPointsType());
+
+                        LibUtilities::BasisKey bkeynew(bkeyold.GetBasisType(),
+                                                       bkeyold.GetNumModes(),
+                                                       pkey);
+                        expIt->second->m_basisKeyVector[i] = bkeynew;
+                    }
+                }
+            }
+        }
+
+
         /**
          * For each element of shape given by \a shape in field \a
          * var, replace the current BasisKeyVector describing the
@@ -3189,6 +3216,7 @@ namespace Nektar
             switch(type)
             {
             case eModified:
+            case eModifiedGLLRadau10:
                 quadoffset = 1;
                 break;
             case eModifiedQuadPlus1:
@@ -3206,6 +3234,7 @@ namespace Nektar
             case eModified:
             case eModifiedQuadPlus1:
             case eModifiedQuadPlus2:
+            case eModifiedGLLRadau10:
                 {
                     switch (shape)
                     {
@@ -3255,9 +3284,18 @@ namespace Nektar
                             LibUtilities::BasisKey bkey1(LibUtilities::eModified_B, nummodes, pkey1);
                             returnval.push_back(bkey1);
 
-                            const LibUtilities::PointsKey pkey2(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha2Beta0);
-                            LibUtilities::BasisKey bkey2(LibUtilities::eModified_C, nummodes, pkey2);
-                            returnval.push_back(bkey2);
+                            if(type == eModifiedGLLRadau10)
+                            {
+                                const LibUtilities::PointsKey pkey2(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha1Beta0);
+                                LibUtilities::BasisKey bkey2(LibUtilities::eModified_C, nummodes, pkey2); 
+                                returnval.push_back(bkey2);
+                            }
+                            else
+                            {
+                                const LibUtilities::PointsKey pkey2(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha2Beta0);
+                                LibUtilities::BasisKey bkey2(LibUtilities::eModified_C, nummodes, pkey2);
+                                returnval.push_back(bkey2);
+                            }
                         }
                         break;
                     case LibUtilities::ePyramid:

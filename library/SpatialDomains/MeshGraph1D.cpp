@@ -35,8 +35,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <SpatialDomains/MeshGraph1D.h>
+#include <LibUtilities/BasicUtils/CompressData.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <tinyxml.h>
+
+using namespace std;
 
 namespace Nektar
 {
@@ -114,8 +117,10 @@ namespace Nektar
 
             while (segment)
             {
-                const char *IsCompressed = segment->Attribute("COMPRESSED");
-                if(IsCompressed)
+                string IsCompressed;
+                segment->QueryStringAttribute("COMPRESSED",&IsCompressed); 
+                
+                if(IsCompressed.size()) 
                 {
                     ASSERTL0(boost::iequals(IsCompressed,
                                LibUtilities::CompressData::GetCompressString()),
@@ -145,7 +150,7 @@ namespace Nektar
                         indx = data[i].id;
 
                         /// See if this face has curves.
-                        it = m_curvedFaces.find(indx);
+                        it = m_curvedEdges.find(indx);
 
                         PointGeomSharedPtr vertices[2] = {
                                 GetVertex(data[i].v0), GetVertex(data[i].v1)};

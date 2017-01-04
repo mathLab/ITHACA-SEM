@@ -43,6 +43,8 @@
 #include <LocalRegions/SegExp.h>
 #include <math.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -75,7 +77,8 @@ namespace Nektar
         void PreconditionerBlock::v_InitObject()
         {
             GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
-            ASSERTL0(solvertype == MultiRegions::eIterativeStaticCond,
+            ASSERTL0(solvertype == MultiRegions::eIterativeStaticCond ||
+                     solvertype == MultiRegions::ePETScStaticCond,
                      "Solver type not valid");
         }
 
@@ -101,8 +104,9 @@ namespace Nektar
          * The preconditioner is defined as:
          *
          * \f[\mathbf{M}^{-1}=\left[\begin{array}{ccc}
-         *  Diag[(\mathbf{S_{1}})_{vv}] & & \\ & (\mathbf{S}_{1})_{eb} & \\ & &
-         *  (\mathbf{S}_{1})_{fb} \end{array}\right] \f]
+         *  \mathrm{Diag}[(\mathbf{S_{1}})_{vv}] & & \\
+         *  & (\mathbf{S}_{1})_{eb} & \\
+         *  & & (\mathbf{S}_{1})_{fb} \end{array}\right] \f]
          *
          * where \f$\mathbf{S}_{1}\f$ is the local Schur complement matrix for
          * each element and the subscript denotes the portion of the Schur
@@ -449,7 +453,9 @@ namespace Nektar
                 globalToUniversal.size(), &globalToUniversal[0]);
 
             // Use GS to assemble data between processors.
-            Gs::gs_data *tmpGs = Gs::Init(globalToUniversalMap, m_comm);
+            Gs::gs_data *tmpGs = Gs::Init(
+                globalToUniversalMap, m_comm,
+                expList->GetSession()->DefinesCmdLineArgument("verbose"));
             Gs::Gather(storageData, Gs::gs_add, tmpGs);
 
             // Figure out what storage we need in the block matrix.
@@ -531,7 +537,7 @@ namespace Nektar
          * found in PreconditionerBlock::BlockPreconditionerCG. In this setting
          * however, the matrix is constructed as:
          *
-         * \f[ M^{-1} = \diag[ (\mathbf{S_{1}})_{f}^{-1} ] \f]
+         * \f[ M^{-1} = \mathrm{Diag}[ (\mathbf{S_{1}})_{f}^{-1} ] \f]
          *
          * where each matrix is the Schur complement system restricted to a
          * single face of the trace system.
@@ -656,7 +662,9 @@ namespace Nektar
             }
 
             // Assemble matrices across partitions.
-            Gs::gs_data *gsh = Gs::Init(uniIds, m_comm);
+            Gs::gs_data *gsh = Gs::Init(
+                uniIds, m_comm,
+                expList->GetSession()->DefinesCmdLineArgument("verbose"));
             Gs::Gather(tmpStore, Gs::gs_add, gsh);
 
             // Set up diagonal block matrix

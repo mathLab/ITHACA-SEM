@@ -24,6 +24,8 @@ see the table below.
 \textbf{Equation to solve} & \textbf{EquationType} & \textbf{Dimensions}   &
 \textbf{Projections} \\
 \midrule
+$u = f$ &
+    \inltt{Projection} & All & Continuous/Discontinuous \\
 $\nabla^2 u = 0$ & 
     \inltt{Laplace} & All &  Continuous/Discontinuous	\\
 $\nabla^2 u  =  f$ & 
@@ -34,7 +36,7 @@ $\epsilon \nabla^2 u + \mathbf{V}\nabla u = f$ &
     \inltt{SteadyAdvectionDiffusion} & 2D only & Continuous/Discontinuous \\
 $\epsilon \nabla^2 u +  \lambda u = f$ & 
     \inltt{SteadyDiffusionReaction} & 2D only &  Continuous/Discontinuous \\
-$\epsilon \nabla^2 u  \mathbf{V}\nabla u + \lambda u = f$ & 
+$\epsilon \nabla^2 u + \mathbf{V}\nabla u + \lambda u = f$ & 
     \inltt{SteadyAdvectionDiffusionReaction} & 2D only & 
     Continuous/Discontinuous \\
 $ \dfrac{\partial u}{\partial t} + \mathbf{V}\nabla u = f$ &
@@ -161,7 +163,7 @@ We consider the hyperbolic partial differential equation:
 \begin{equation}
 \dfrac{\partial u}{\partial t} + \dfrac{\partial f}{\partial x} = 0,
 \end{equation}
-where $f =  a u$ i s the advection flux.
+where $f =  a u$ is the advection flux.
 
 \subsubsection{Input file}
 The input for this example is given in the example file \inlsh{Advection1D.xml}

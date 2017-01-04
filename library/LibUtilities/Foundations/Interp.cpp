@@ -141,6 +141,14 @@ namespace Nektar
                       const PointsKey &tpoints1,
                       NekDouble *to)
         {
+            // default interpolation
+            if((fpoints0 == tpoints0)&&(fpoints1 == tpoints1))
+            {
+                Vmath::Vcopy(tpoints0.GetNumPoints()*tpoints1.GetNumPoints(),
+                             from,1,to,1);
+                return;
+            }
+
             DNekMatSharedPtr I0,I1;
             Array<OneD, NekDouble> wsp(tpoints1.GetNumPoints()*fpoints0.GetNumPoints()); // fnp0*tnp1
 

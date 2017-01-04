@@ -35,6 +35,8 @@
 
 #include <PulseWaveSolver/EquationSystems/UndefinedInOutflow.h>
 
+using namespace std;
+
 namespace Nektar
 {
     std::string UndefinedInOutflow::className

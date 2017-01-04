@@ -37,6 +37,8 @@
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 
+using namespace std;
+
 namespace Nektar {
 namespace Collections {
 
@@ -71,6 +73,15 @@ class BwdTrans_StdMat : public Operator
                         m_mat->GetColumns(), 1.0, m_mat->GetRawPtr(),
                         m_mat->GetRows(), input.get(), m_stdExp->GetNcoeffs(),
                         0.0, output.get(), m_stdExp->GetTotPoints());
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -153,6 +164,15 @@ class BwdTrans_IterPerExp : public Operator
             }
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     private:
         BwdTrans_IterPerExp(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
@@ -225,6 +245,15 @@ class BwdTrans_NoCollection : public Operator
                 m_expList[i]->BwdTrans(input + i*nCoeffs,
                                        tmp = output + i*nPhys);
             }
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -306,6 +335,15 @@ class BwdTrans_SumFac_Seg : public Operator
                                  &input[0],     m_nmodes0, 0.0,
                                  &output[0],    m_nquad0);
             }
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
 
@@ -404,6 +442,15 @@ class BwdTrans_SumFac_Quad : public Operator
             }
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         const int                       m_nquad0;
         const int                       m_nquad1;
@@ -491,6 +538,15 @@ class BwdTrans_SumFac_Tri : public Operator
                         1.0, m_base0.get(), m_nquad0,
                         &wsp[0], m_nquad1*m_numElmt, 0.0,
                         &output[0], m_nquad0);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
 
@@ -592,6 +648,15 @@ class BwdTrans_SumFac_Hex : public Operator
                             wsp2.get(), m_nquad1*m_nquad2*m_numElmt, 0.0,
                             output.get(), m_nquad0);
             }
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -753,6 +818,15 @@ class BwdTrans_SumFac_Tet : public Operator
 
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         const int                       m_nquad0;
         const int                       m_nquad1;
@@ -883,6 +957,15 @@ class BwdTrans_SumFac_Prism : public Operator
                         m_nmodes0, 1.0, m_base0.get(),  m_nquad0,
                         wsp2.get(), m_nquad1*m_nquad2*m_numElmt,
                         0.0, output.get(), m_nquad0);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
 

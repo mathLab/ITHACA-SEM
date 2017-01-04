@@ -62,6 +62,11 @@ namespace Nektar
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ContField3DHomogeneous1D(const ContField3DHomogeneous1D &In);
 
+            MULTI_REGIONS_EXPORT ContField3DHomogeneous1D(
+                            const ContField3DHomogeneous1D &In,
+                            const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                            const std::string                        &variable);
+
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ContField3DHomogeneous1D();
 
@@ -75,8 +80,9 @@ namespace Nektar
             virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
             virtual void v_FillBndCondFromField();
+            virtual void v_FillBndCondFromField(const int nreg);
             /// Template method virtual forwarded for LocalToGlobal()
-            virtual void v_LocalToGlobal(void);
+            virtual void v_LocalToGlobal(bool useComm);
 
             /// Template method virtual forwarded for GlobalToLocal()
             virtual void v_GlobalToLocal(void);
@@ -89,7 +95,11 @@ namespace Nektar
                     const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
-                    const Array<OneD, const NekDouble> &dirForcing);
+                    const Array<OneD, const NekDouble> &dirForcing,
+                    const bool PhysSpaceForcing);
+                    
+            
+            virtual void v_ClearGlobalLinSysManager(void);
         };
 
         typedef boost::shared_ptr<ContField3DHomogeneous1D>  

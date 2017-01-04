@@ -35,6 +35,8 @@
 
 #include <LocalRegions/Expansion1D.h>
 
+using namespace std;
+
 namespace Nektar
 {
     namespace LocalRegions 

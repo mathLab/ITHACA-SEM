@@ -36,6 +36,8 @@
 #include <SolverUtils/DriverSteadyState.h>
 #include <SolverUtils/AdvectionSystem.h>
 
+using namespace std;
+
 namespace Nektar
 {
 namespace SolverUtils
@@ -83,7 +85,6 @@ void DriverSteadyState::v_Execute(ostream &out)
     // to find the steady state of a flow above the critical Reynolds
     // number.
     m_equ[m_nequ - 1]->PrintSummary(out);
-    m_equ[m_nequ - 1]->DoInitialise();
 
     m_session->LoadParameter("IO_InfoSteps", m_infosteps, 1000);
     m_session->LoadParameter("IO_CheckSteps", m_checksteps, 100000);
@@ -225,7 +226,7 @@ void DriverSteadyState::v_Execute(ostream &out)
                     m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow);
                     m_Check_BaseFlow++;
 
-                    A->GetAdvObject()->SetBaseFlow(q0);
+                    A->GetAdvObject()->SetBaseFlow(q0,m_equ[0]->UpdateFields());
                     DriverModifiedArnoldi::v_Execute(out);
 
                     if (m_comm->GetRank() == 0)
@@ -261,7 +262,7 @@ void DriverSteadyState::v_Execute(ostream &out)
                     m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow);
                     m_Check_BaseFlow++;
 
-                    A->GetAdvObject()->SetBaseFlow(q0);
+                    A->GetAdvObject()->SetBaseFlow(q0,m_equ[0]->UpdateFields());
                     DriverModifiedArnoldi::v_Execute(out);
 
                     if (m_comm->GetRank() == 0)

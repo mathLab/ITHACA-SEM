@@ -49,16 +49,18 @@ namespace Utilities
 class NodeOptiJob : public Thread::ThreadJob
 {
 public:
-    NodeOptiJob(NodeOpti* no) : node(no) {}
+    NodeOptiJob(NodeOpti *no) : node(no)
+    {
+    }
 
     void Run()
     {
         node->Optimise();
     }
-private:
-    NodeOpti* node;
-};
 
+private:
+    NodeOpti *node;
+};
 }
 }
 

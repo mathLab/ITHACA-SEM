@@ -48,7 +48,7 @@ namespace Utilities
 struct DerivUtil
 {
     NekMatrix<NekDouble> VdmD[3];
-    NekMatrix<NekDouble> VdmDStd[3]; //deriv matrix without interp
+    NekMatrix<NekDouble> VdmDStd[3]; // deriv matrix without interp
     NekVector<NekDouble> quadW;
 
     Array<OneD, Array<OneD, NekDouble> > basisDeriv;
@@ -101,9 +101,11 @@ private:
     typedef std::map<int, std::vector<ElUtilSharedPtr> > NodeElMap;
 
     std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> BuildDerivUtil(int o);
-    void GetElementMap(int o, std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> derMap);
+    void GetElementMap(
+        int o, std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> derMap);
     std::vector<ElUtilSharedPtr> GetLockedElements(NekDouble thres);
-    std::vector<std::vector<NodeSharedPtr> > GetColouredNodes(std::vector<ElUtilSharedPtr> elLock);
+    std::vector<std::vector<NodeSharedPtr> > GetColouredNodes(
+        std::vector<ElUtilSharedPtr> elLock);
 
     NodeElMap m_nodeElMap;
     std::vector<ElUtilSharedPtr> m_dataSet;
@@ -111,7 +113,6 @@ private:
     ResidualSharedPtr m_res;
     optiType m_opti;
 };
-
 }
 }
 

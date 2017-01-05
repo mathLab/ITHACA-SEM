@@ -53,18 +53,19 @@ void NodeOpti1D3D::Optimise()
 {
     NekDouble minJacNew;
     NekDouble currentW = GetFunctional<3>(minJacNew);
-    NekDouble newVal = currentW;
+    NekDouble newVal   = currentW;
 
-    if (m_grad[0]*m_grad[0] + m_grad[1]*m_grad[1] + m_grad[2]*m_grad[2] > gradTol())
+    if (m_grad[0] * m_grad[0] + m_grad[1] * m_grad[1] + m_grad[2] * m_grad[2] >
+        gradTol())
     {
-        //modify the gradient to be on the cad system
+        // modify the gradient to be on the cad system
         ProcessGradient();
 
-        //needs to optimise
+        // needs to optimise
         NekDouble tc = m_node->GetCADCurveInfo(curve->GetId());
-        NekDouble xc       = m_node->m_x;
-        NekDouble yc       = m_node->m_y;
-        NekDouble zc       = m_node->m_z;
+        NekDouble xc = m_node->m_x;
+        NekDouble yc = m_node->m_y;
+        NekDouble zc = m_node->m_z;
         NekDouble nt;
         Array<OneD, NekDouble> p;
 
@@ -79,24 +80,24 @@ void NodeOpti1D3D::Optimise()
 
         Array<OneD, NekDouble> bd = curve->Bounds();
 
-        bool found  = false;
+        bool found = false;
 
-        NekDouble pg = m_grad[0]*sk[0];
+        NekDouble pg = m_grad[0] * sk[0];
 
-        //normal gradient line Search
-        NekDouble alpha    = 1.0;
+        // normal gradient line Search
+        NekDouble alpha = 1.0;
 
         while (alpha > alphaTol())
         {
             // Update node
             nt = tc + alpha * sk[0];
-            if(nt < bd[0] || nt > bd[1])
+            if (nt < bd[0] || nt > bd[1])
             {
                 alpha /= 2.0;
                 continue;
             }
 
-            p = curve->P(nt);
+            p           = curve->P(nt);
             m_node->m_x = p[0];
             m_node->m_y = p[1];
             m_node->m_z = p[2];
@@ -115,9 +116,9 @@ void NodeOpti1D3D::Optimise()
 
         if (!found)
         {
-            //reset the node
-            nt = tc;
-            p = curve->P(nt);
+            // reset the node
+            nt          = tc;
+            p           = curve->P(nt);
             m_node->m_x = p[0];
             m_node->m_y = p[1];
             m_node->m_z = p[2];
@@ -129,12 +130,13 @@ void NodeOpti1D3D::Optimise()
         else
         {
             m_minJac = minJacNew;
-            m_node->MoveCurve(p,curve->GetId(),nt);
+            m_node->MoveCurve(p, curve->GetId(), nt);
         }
         mtx.lock();
-        m_res->val = max(sqrt((m_node->m_x-xc)*(m_node->m_x-xc)+
-                              (m_node->m_y-yc)*(m_node->m_y-yc)+
-                              (m_node->m_z-zc)*(m_node->m_z-zc)),m_res->val);
+        m_res->val = max(sqrt((m_node->m_x - xc) * (m_node->m_x - xc) +
+                              (m_node->m_y - yc) * (m_node->m_y - yc) +
+                              (m_node->m_z - zc) * (m_node->m_z - zc)),
+                         m_res->val);
         mtx.unlock();
     }
 
@@ -150,14 +152,15 @@ void NodeOpti2D3D::Optimise()
 {
     NekDouble minJacNew;
     NekDouble currentW = GetFunctional<3>(minJacNew);
-    NekDouble newVal = currentW;
+    NekDouble newVal   = currentW;
 
-    if (m_grad[0]*m_grad[0] + m_grad[1]*m_grad[1] + m_grad[2]*m_grad[2] > gradTol())
+    if (m_grad[0] * m_grad[0] + m_grad[1] * m_grad[1] + m_grad[2] * m_grad[2] >
+        gradTol())
     {
-        //modify the gradient to be on the cad system
+        // modify the gradient to be on the cad system
         ProcessGradient();
 
-        //needs to optimise
+        // needs to optimise
         Array<OneD, NekDouble> uvc = m_node->GetCADSurfInfo(surf->GetId());
         NekDouble xc = m_node->m_x;
         NekDouble yc = m_node->m_y;
@@ -179,35 +182,37 @@ void NodeOpti2D3D::Optimise()
             m_grad[4] += 1e-6 - val;
         }
 
-        sk[0] = -1.0/(m_grad[2]*m_grad[4]-m_grad[3]*m_grad[3])*(m_grad[4]*m_grad[0] - m_grad[3]*m_grad[1]);
-        sk[1] = -1.0/(m_grad[2]*m_grad[4]-m_grad[3]*m_grad[3])*(m_grad[2]*m_grad[1] - m_grad[3]*m_grad[0]);
+        sk[0] = -1.0 / (m_grad[2] * m_grad[4] - m_grad[3] * m_grad[3]) *
+                (m_grad[4] * m_grad[0] - m_grad[3] * m_grad[1]);
+        sk[1] = -1.0 / (m_grad[2] * m_grad[4] - m_grad[3] * m_grad[3]) *
+                (m_grad[2] * m_grad[1] - m_grad[3] * m_grad[0]);
 
-        bool found  = false;
-        NekDouble pg = (m_grad[0]*sk[0]+m_grad[1]*sk[1]);
+        bool found   = false;
+        NekDouble pg = (m_grad[0] * sk[0] + m_grad[1] * sk[1]);
 
-        //normal gradient line Search
-        NekDouble alpha    = 1.0;
-        while(alpha > alphaTol())
+        // normal gradient line Search
+        NekDouble alpha = 1.0;
+        while (alpha > alphaTol())
         {
             uvt[0] = uvc[0] + alpha * sk[0];
             uvt[1] = uvc[1] + alpha * sk[1];
 
-            if(uvt[0] < bd[0] || uvt[0] > bd[1] ||
-               uvt[1] < bd[2] || uvt[1] > bd[3])
+            if (uvt[0] < bd[0] || uvt[0] > bd[1] || uvt[1] < bd[2] ||
+                uvt[1] > bd[3])
             {
                 alpha /= 2.0;
                 continue;
             }
 
-            p = surf->P(uvt);
+            p           = surf->P(uvt);
             m_node->m_x = p[0];
             m_node->m_y = p[1];
             m_node->m_z = p[2];
 
-            newVal = GetFunctional<3>(minJacNew,false);
+            newVal = GetFunctional<3>(minJacNew, false);
 
             // Wolfe conditions
-            if (newVal <= currentW + c1() * (alpha*pg))
+            if (newVal <= currentW + c1() * (alpha * pg))
             {
                 found = true;
                 break;
@@ -216,10 +221,10 @@ void NodeOpti2D3D::Optimise()
             alpha /= 2.0;
         }
 
-        if(!found)
+        if (!found)
         {
-            //reset the node
-            p = surf->P(uvc);
+            // reset the node
+            p           = surf->P(uvc);
             m_node->m_x = p[0];
             m_node->m_y = p[1];
             m_node->m_z = p[2];
@@ -231,19 +236,22 @@ void NodeOpti2D3D::Optimise()
         else
         {
             m_minJac = minJacNew;
-            m_node->Move(p,surf->GetId(),uvt);
+            m_node->Move(p, surf->GetId(), uvt);
         }
 
         mtx.lock();
-        m_res->val = max(sqrt((m_node->m_x-xc)*(m_node->m_x-xc)+(m_node->m_y-yc)*(m_node->m_y-yc)+
-                              (m_node->m_z-zc)*(m_node->m_z-zc)),m_res->val);
+        m_res->val = max(sqrt((m_node->m_x - xc) * (m_node->m_x - xc) +
+                              (m_node->m_y - yc) * (m_node->m_y - yc) +
+                              (m_node->m_z - zc) * (m_node->m_z - zc)),
+                         m_res->val);
         mtx.unlock();
 
         Array<OneD, NekDouble> uva = m_node->GetCADSurfInfo(surf->GetId());
-        if(uva[0] < bd[0] || uva[0] > bd[1] ||
-           uva[1] < bd[2] || uva[1] > bd[3])
+        if (uva[0] < bd[0] || uva[0] > bd[1] || uva[1] < bd[2] ||
+            uva[1] > bd[3])
         {
-            ASSERTL0(false,"something when very wrong and the node finished out of its parameter plane");
+            ASSERTL0(false, "something when very wrong and the node finished "
+                            "out of its parameter plane");
         }
     }
 
@@ -256,7 +264,7 @@ void NodeOpti1D3D::ProcessGradient()
 {
     NekDouble tc = m_node->GetCADCurveInfo(curve->GetId());
     Array<OneD, NekDouble> grad = m_grad;
-    m_grad = Array<OneD, NekDouble>(2,0.0);
+    m_grad = Array<OneD, NekDouble>(2, 0.0);
 
     // Grab first and second order CAD derivatives
     Array<OneD, NekDouble> d2 = curve->D2(tc);
@@ -266,10 +274,10 @@ void NodeOpti1D3D::ProcessGradient()
 
     // Second order: product rule of above, so multiply gradient by second
     // order CAD derivatives and Hessian by gradient of CAD
-    m_grad[1] = grad[0] * d2[6] + grad[1] * d2[7] + grad[2] * d2[8]
-            + d2[3] * (grad[3] * d2[3] + grad[4] * d2[4] + grad[5] * d2[5])
-            + d2[4] * (grad[4] * d2[3] + grad[6] * d2[4] + grad[7] * d2[5])
-            + d2[5] * (grad[5] * d2[3] + grad[7] * d2[4] + grad[8] * d2[5]);
+    m_grad[1] = grad[0] * d2[6] + grad[1] * d2[7] + grad[2] * d2[8] +
+                d2[3] * (grad[3] * d2[3] + grad[4] * d2[4] + grad[5] * d2[5]) +
+                d2[4] * (grad[4] * d2[3] + grad[6] * d2[4] + grad[7] * d2[5]) +
+                d2[5] * (grad[5] * d2[3] + grad[7] * d2[4] + grad[8] * d2[5]);
 }
 
 void NodeOpti2D3D::ProcessGradient()
@@ -277,56 +285,58 @@ void NodeOpti2D3D::ProcessGradient()
     Array<OneD, NekDouble> uvc = m_node->GetCADSurfInfo(surf->GetId());
 
     Array<OneD, NekDouble> grad = m_grad;
-    m_grad = Array<OneD, NekDouble>(5,0.0);
+    m_grad = Array<OneD, NekDouble>(5, 0.0);
 
     Array<OneD, NekDouble> d2 = surf->D2(uvc);
-    //r[0]   x
-    //r[1]   y
-    //r[2]   z
-    //r[3]   dx/du a
-    //r[4]   dy/du b
-    //r[5]   dz/du c
-    //r[6]   dx/dv d
-    //r[7]   dy/dv e
-    //r[8]   dz/dv f
-    //r[9]   d2x/du2
-    //r[10]  d2y/du2
-    //r[11]  d2z/du2
-    //r[12]  d2x/dv2
-    //r[13]  d2y/dv2
-    //r[14]  d2z/dv2
-    //r[15]  d2x/dudv
-    //r[16]  d2y/dudv
-    //r[17]  d2z/dudv
+    // r[0]   x
+    // r[1]   y
+    // r[2]   z
+    // r[3]   dx/du a
+    // r[4]   dy/du b
+    // r[5]   dz/du c
+    // r[6]   dx/dv d
+    // r[7]   dy/dv e
+    // r[8]   dz/dv f
+    // r[9]   d2x/du2
+    // r[10]  d2y/du2
+    // r[11]  d2z/du2
+    // r[12]  d2x/dv2
+    // r[13]  d2y/dv2
+    // r[14]  d2z/dv2
+    // r[15]  d2x/dudv
+    // r[16]  d2y/dudv
+    // r[17]  d2z/dudv
     //
-    //grad[0] d/dx
-    //grad[1] d/dy
-    //grad[2] d/dz
-    //grad[3] d2/dx2
-    //grad[4] d2/dxdy
-    //grad[5] d2/dxdz
-    //grad[6] d2/dy2
-    //grad[7] d2/dydz
-    //grad[8] d2/dz2
+    // grad[0] d/dx
+    // grad[1] d/dy
+    // grad[2] d/dz
+    // grad[3] d2/dx2
+    // grad[4] d2/dxdy
+    // grad[5] d2/dxdz
+    // grad[6] d2/dy2
+    // grad[7] d2/dydz
+    // grad[8] d2/dz2
 
     // Gradients
     m_grad[0] = d2[3] * grad[0] + d2[4] * grad[1] + d2[5] * grad[2];
     m_grad[1] = d2[6] * grad[0] + d2[7] * grad[1] + d2[8] * grad[2];
 
-    m_grad[2]  = grad[0] * d2[9] + grad[1] * d2[10] + grad[2] * d2[11]
-          + grad[3]*d2[3]*d2[3] + grad[6]*d2[4]*d2[4] + grad[8]*d2[5]*d2[5]
-          + 2.0*grad[4]*d2[3]*d2[4] + 2.0*grad[5]*d2[3]*d2[5] + 2.0*grad[7]*d2[4]*d2[5];
+    m_grad[2] = grad[0] * d2[9] + grad[1] * d2[10] + grad[2] * d2[11] +
+                grad[3] * d2[3] * d2[3] + grad[6] * d2[4] * d2[4] +
+                grad[8] * d2[5] * d2[5] + 2.0 * grad[4] * d2[3] * d2[4] +
+                2.0 * grad[5] * d2[3] * d2[5] + 2.0 * grad[7] * d2[4] * d2[5];
 
-    m_grad[4]  = grad[0] * d2[12] + grad[1] * d2[13] + grad[2] * d2[14]
-          + grad[3]*d2[6]*d2[6] + grad[6]*d2[7]*d2[7] + grad[8]*d2[8]*d2[8]
-          + 2.0*grad[4]*d2[6]*d2[7] + 2.0*grad[5]*d2[6]*d2[8] + 2.0*grad[7]*d2[7]*d2[8];
+    m_grad[4] = grad[0] * d2[12] + grad[1] * d2[13] + grad[2] * d2[14] +
+                grad[3] * d2[6] * d2[6] + grad[6] * d2[7] * d2[7] +
+                grad[8] * d2[8] * d2[8] + 2.0 * grad[4] * d2[6] * d2[7] +
+                2.0 * grad[5] * d2[6] * d2[8] + 2.0 * grad[7] * d2[7] * d2[8];
 
-    m_grad[3]  = grad[0] * d2[15] + grad[1] * d2[16] + grad[2] * d2[17]
-          + grad[3]*d2[3]*d2[6] + grad[6]*d2[4]*d2[7] + grad[8]*d2[5]*d2[8]
-          + grad[4]*(d2[3]*d2[7] + d2[4]*d2[6])
-          + grad[5]*(d2[3]*d2[8] + d2[5]*d2[6])
-          + grad[7]*(d2[4]*d2[8] + d2[5]*d2[7]);
+    m_grad[3] = grad[0] * d2[15] + grad[1] * d2[16] + grad[2] * d2[17] +
+                grad[3] * d2[3] * d2[6] + grad[6] * d2[4] * d2[7] +
+                grad[8] * d2[5] * d2[8] +
+                grad[4] * (d2[3] * d2[7] + d2[4] * d2[6]) +
+                grad[5] * (d2[3] * d2[8] + d2[5] * d2[6]) +
+                grad[7] * (d2[4] * d2[8] + d2[5] * d2[7]);
 }
-
 }
 }

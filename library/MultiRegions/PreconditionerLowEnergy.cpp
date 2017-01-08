@@ -1350,7 +1350,7 @@ namespace Nektar
             m_map = m_locToGloMap->GetLocalToGlobalBndMap();
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
 
-            m_locToGloMap->GlobalToLocalBnd(pInput,pLocal, nDirBndDofs);
+            m_locToGloMap->GlobalToLocalBnd(pInput,pLocalIn, nDirBndDofs);
 
 
             //Multiply by the transpose of block transformation matrix
@@ -2075,6 +2075,7 @@ namespace Nektar
                     ReSetPrismMaxRMat(nummodesmax, PrismExp, maxRmat,
                                       vertMapMaxR, edgeMapMaxR,
                                       faceMapMaxR, false);
+
                 }
                 else
                 {

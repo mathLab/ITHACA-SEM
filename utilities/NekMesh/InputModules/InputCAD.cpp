@@ -204,6 +204,31 @@ void InputCAD::ParseFile(string nm)
         }
     }
 
+    m_naca = false;
+    if(m_2D && m_cadfile.find('.') == std::string::npos)
+    {
+        m_naca = true;
+
+        stringstream ss;
+        it = parameters.find("Xmin");
+        ASSERTL0(it != parameters.end(), "no xmin defined");
+        ss << it->second << ",";
+        it = parameters.find("Ymin");
+        ASSERTL0(it != parameters.end(), "no ymin defined");
+        ss << it->second << ",";
+        it = parameters.find("Xmax");
+        ASSERTL0(it != parameters.end(), "no xmax defined");
+        ss << it->second << ",";
+        it = parameters.find("Ymax");
+        ASSERTL0(it != parameters.end(), "no zmax defined");
+        ss << it->second << ",";
+        it = parameters.find("AOA");
+        ASSERTL0(it != parameters.end(), "no aoa defined");
+        ss << it->second;
+
+        m_nacadomain = ss.str();
+    }
+
     set<string>::iterator sit;
     sit        = boolparameters.find("SurfOpti");
     m_surfopti = sit != boolparameters.end();
@@ -244,6 +269,10 @@ void InputCAD::Process()
     if(m_2D)
     {
         mods.back()->RegisterConfig("2D","");
+    }
+    if(m_naca)
+    {
+        mods.back()->RegisterConfig("NACA",m_nacadomain);
     }
 
     ////**** Octree ****////

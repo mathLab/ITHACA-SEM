@@ -32,6 +32,7 @@
 //  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 #include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
 #include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
@@ -51,8 +52,9 @@ std::string CADSystemOCE::key = GetEngineFactory().RegisterCreatorFunction(
 
 bool CADSystemOCE::LoadCAD()
 {
-    if (m_name.find('.') != std::string::npos)
+    if (m_naca.size() == 0)
     {
+        //not a naca profile behave normally
         // Takes step file and makes OpenCascade shape
         STEPControl_Reader reader;
         reader = STEPControl_Reader();
@@ -67,13 +69,7 @@ bool CADSystemOCE::LoadCAD()
     }
     else
     {
-        //cout << m_name << " is not a step file, assuming it is a 4 digit naca code" << endl;
         shape = BuildNACA(m_name);
-
-        /*STEPControl_Writer writer;
-        writer.Transfer(shape,STEPControl_ShellBasedSurfaceModel);
-        writer.Write("test.stp");
-        exit(-1);*/
     }
 
     // faces and verts can be extracted straight from shape
@@ -365,6 +361,9 @@ Array<OneD, NekDouble> CADSystemOCE::GetBoundingBox()
 TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
 {
     ASSERTL0(naca.length() == 4, "not a 4 digit code");
+    vector<NekDouble> data;
+    ParseUtils::GenerateUnOrderedVector(m_naca.c_str(), data);
+    ASSERTL0(data.size() == 5, "not a vaild domain");
 
     int n = boost::lexical_cast<int>(naca);
     NekDouble T = (n%100) / 100.0;
@@ -443,13 +442,25 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
     BRepBuilderAPI_MakeWire aeroWireBuilder(aeroEdge, TeEdge);
     TopoDS_Wire aeroWire = aeroWireBuilder.Wire();
 
-    BRepBuilderAPI_MakeEdge domInlBuilder(gp_Pnt(-2000.0,-2000.0,0.0), gp_Pnt(-2000.0,2000.0,0.0));
+    gp_Trsf transform;
+    gp_Ax1 rotAx(gp_Pnt(500.0,0.0,0.0),gp_Dir(gp_Vec(0.0,0.0,-1.0)));
+    transform.SetRotation(rotAx, data[4]/180.0*M_PI);
+    TopLoc_Location mv(transform);
+    aeroWire.Move(mv);
+
+    BRepBuilderAPI_MakeEdge domInlBuilder(gp_Pnt(data[0]*1000.0,data[1]*1000.0,0.0),
+                                          gp_Pnt(data[0]*1000.0,data[3]*1000.0,0.0));
     TopoDS_Edge inlEdge = domInlBuilder.Edge();
-    BRepBuilderAPI_MakeEdge domTopBuilder(gp_Pnt(-2000.0,2000.0,0.0), gp_Pnt(5000.0,2000.0,0.0));
+
+    BRepBuilderAPI_MakeEdge domTopBuilder(gp_Pnt(data[0]*1000.0,data[3]*1000.0,0.0),
+                                          gp_Pnt(data[2]*1000.0,data[3]*1000.0,0.0));
     TopoDS_Edge topEdge = domTopBuilder.Edge();
-    BRepBuilderAPI_MakeEdge domOutBuilder(gp_Pnt(5000.0,2000.0,0.0), gp_Pnt(5000.0,-2000.0,0.0));
+
+    BRepBuilderAPI_MakeEdge domOutBuilder(gp_Pnt(data[2]*1000.0,data[3]*1000.0,0.0),
+                                          gp_Pnt(data[2]*1000.0,data[1]*1000.0,0.0));
     TopoDS_Edge outEdge = domOutBuilder.Edge();
-    BRepBuilderAPI_MakeEdge domBotBuilder(gp_Pnt(5000.0,-2000.0,0.0), gp_Pnt(-2000.0,-2000.0,0.0));
+    BRepBuilderAPI_MakeEdge domBotBuilder(gp_Pnt(data[2]*1000.0,data[1]*1000.0,0.0),
+                                          gp_Pnt(data[0]*1000.0,data[1]*1000.0,0.0));
     TopoDS_Edge botEdge = domBotBuilder.Edge();
 
     BRepBuilderAPI_MakeWire domWireBuilder(inlEdge, topEdge, outEdge, botEdge);

@@ -106,11 +106,13 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     // contain the point loc until a leaf is found
     //first search through sourcepoints
 
+    NekDouble tmp = numeric_limits<double>::max();
+
     for(int i = 0; i < m_lsources.size(); i++)
     {
         if(m_lsources[i].withinRange(loc))
         {
-            return m_lsources[i].delta;
+            tmp = min(m_lsources[i].delta,tmp);
         }
     }
 
@@ -183,7 +185,7 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
             found = true;
         }
     }
-    return n->GetDelta();
+    return min(n->GetDelta(),tmp);
 }
 
 void Octree::WriteOctree(string nm)

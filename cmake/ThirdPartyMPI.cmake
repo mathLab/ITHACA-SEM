@@ -13,7 +13,8 @@ CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_GSMPI
     "NEKTAR_USE_MPI" OFF)
 
 IF( NEKTAR_USE_MPI )
-    # First check to see if our compiler has MPI built in to avoid linking libraries etc.
+    # First check to see if our compiler has MPI built in to avoid linking
+    # libraries etc.
     INCLUDE (CheckIncludeFiles)
     INCLUDE (CheckFunctionExists)
     CHECK_INCLUDE_FILES  (mpi.h    HAVE_MPI_H)
@@ -23,11 +24,13 @@ IF( NEKTAR_USE_MPI )
         "Determines whether MPI is built into the compiler")
     IF (NOT "${HAVE_MPI_H}" OR NOT "${HAVE_MPI_SEND}")
         INCLUDE (FindMPI)
-        MARK_AS_ADVANCED(MPI_LIBRARY)
-        MARK_AS_ADVANCED(MPI_EXTRA_LIBRARY)
-        MARK_AS_ADVANCED(file_cmd)
-        INCLUDE_DIRECTORIES( ${MPI_INCLUDE_PATH} )
-        MESSAGE(STATUS "Found MPI: ${MPI_LIBRARY}")
+
+        IF (MPI_C_FOUND)
+            INCLUDE_DIRECTORIES( ${MPI_C_INCLUDE_PATH} )
+            MESSAGE(STATUS "Found MPI: ${MPI_C_LIBRARIES}")
+        ELSE()
+            MESSAGE(FATAL_ERROR "Unable to find MPI installation")
+        ENDIF()
     ELSE()
         SET(MPI_BUILTIN ON)
         MESSAGE(STATUS "Found MPI: built in")
@@ -52,8 +55,8 @@ IF( NEKTAR_USE_MPI )
     IF (THIRDPARTY_BUILD_GSMPI)
         EXTERNALPROJECT_ADD(
             gsmpi-1.2.1
-            URL ${TPURL}/gsmpi-1.2.1.tar.bz2
-            URL_MD5 18dcb4cd1dcc7876173465c404b1142d
+            URL ${TPURL}/gsmpi-1.2.1-1.tar.bz2
+            URL_MD5 5a4ee99acca40939903fb23de3ca05e6
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/gsmpi-1.2.1

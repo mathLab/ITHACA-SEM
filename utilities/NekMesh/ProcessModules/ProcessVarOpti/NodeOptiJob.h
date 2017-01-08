@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessLoadCAD.cpp
+//  File: ProcessJac.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,58 +29,39 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Load CAD module
+//  Description: Calculate jacobians of elements.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "ProcessLoadCAD.h"
-#include <NekMeshUtils/CADSystem/CADSystem.h>
+#ifndef UTILITIES_NEKMESH_NODEOPTIJOB
+#define UTILITIES_NEKMESH_NODEOPTIJOB
 
-using namespace std;
+#include "../../Module.h"
+#include "NodeOpti.h"
+
+#include <LibUtilities/BasicUtils/Thread.h>
+
 namespace Nektar
 {
-namespace NekMeshUtils
+namespace Utilities
 {
 
-ModuleKey ProcessLoadCAD::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "loadcad"),
-    ProcessLoadCAD::create,
-    "Loads cad into m_mesh");
-
-ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
+class NodeOptiJob : public Thread::ThreadJob
 {
-    m_config["filename"] =
-        ConfigOption(false, "", "Generate prisms on these surfs");
-    m_config["2D"] =
-        ConfigOption(true, "", "allow 2d loading");
-}
-
-ProcessLoadCAD::~ProcessLoadCAD()
-{
-}
-
-void ProcessLoadCAD::Process()
-{
-    string name = m_config["filename"].as<string>();
-
-    if (m_mesh->m_verbose)
+public:
+    NodeOptiJob(NodeOpti *no) : node(no)
     {
-        cout << "Loading CAD for " << name << endl;
     }
 
-    m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",name);
-
-    if(m_config["2D"].beenSet)
+    void Run()
     {
-        m_mesh->m_cad->Set2D();
+        node->Optimise();
     }
 
-    ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
+private:
+    NodeOpti *node;
+};
+}
+}
 
-    if (m_mesh->m_verbose)
-    {
-        m_mesh->m_cad->Report();
-    }
-}
-}
-}
+#endif

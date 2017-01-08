@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessLoadCAD.cpp
+//  File: ProcessJac.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,58 +29,104 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Load CAD module
+//  Description: Calculate jacobians of elements.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "ProcessLoadCAD.h"
-#include <NekMeshUtils/CADSystem/CADSystem.h>
+#ifndef UTILITIES_NEKMESH_PROCESSVAROPTI_ELUTIL
+#define UTILITIES_NEKMESH_PROCESSVAROPTI_ELUTIL
 
-using namespace std;
+#include <LibUtilities/BasicUtils/Thread.h>
+
+#include <NekMeshUtils/Module/Module.h>
+
 namespace Nektar
 {
-namespace NekMeshUtils
+namespace Utilities
 {
 
-ModuleKey ProcessLoadCAD::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "loadcad"),
-    ProcessLoadCAD::create,
-    "Loads cad into m_mesh");
+using namespace NekMeshUtils;
 
-ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
+struct DerivUtil;
+struct Residual;
+
+typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
+typedef boost::shared_ptr<Residual> ResidualSharedPtr;
+
+class ElUtilJob;
+
+class ElUtil : public boost::enable_shared_from_this<ElUtil>
 {
-    m_config["filename"] =
-        ConfigOption(false, "", "Generate prisms on these surfs");
-    m_config["2D"] =
-        ConfigOption(true, "", "allow 2d loading");
-}
+public:
+    ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d,
+           ResidualSharedPtr, int n, int o);
 
-ProcessLoadCAD::~ProcessLoadCAD()
-{
-}
+    ElUtilJob *GetJob();
 
-void ProcessLoadCAD::Process()
-{
-    string name = m_config["filename"].as<string>();
-
-    if (m_mesh->m_verbose)
+    int GetId()
     {
-        cout << "Loading CAD for " << name << endl;
+        return m_el->GetId();
     }
 
-    m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",name);
+    //leaving these varibles as public for sake of efficency 
+    std::vector<std::vector<NekDouble *> > nodes;
+    std::vector<Array<OneD, NekDouble> > maps, mapsStd;
 
-    if(m_config["2D"].beenSet)
+    void Evaluate();
+    void InitialMinJac();
+
+    ElementSharedPtr GetEl()
     {
-        m_mesh->m_cad->Set2D();
+        return m_el;
     }
 
-    ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
-
-    if (m_mesh->m_verbose)
+    int NodeId(int in)
     {
-        m_mesh->m_cad->Report();
+        return m_idmap[in];
     }
+
+    NekDouble GetScaledJac()
+    {
+        return m_scaledJac;
+    }
+
+    NekDouble &GetMinJac()
+    {
+        return m_minJac;
+    }
+
+private:
+
+    void MappingIdealToRef();
+
+    ElementSharedPtr m_el;
+    int m_dim;
+    int m_mode;
+    int m_order;
+    std::map<int,int> m_idmap;
+
+    NekDouble m_scaledJac;
+    NekDouble m_minJac;
+
+    DerivUtilSharedPtr m_derivUtil;
+    ResidualSharedPtr m_res;
+};
+typedef boost::shared_ptr<ElUtil> ElUtilSharedPtr;
+
+class ElUtilJob : public Thread::ThreadJob
+{
+public:
+    ElUtilJob(ElUtil* e) : el(e) {}
+
+    void Run()
+    {
+        el->Evaluate();
+    }
+private:
+    ElUtil* el;
+};
+
 }
 }
-}
+
+#endif

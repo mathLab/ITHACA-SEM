@@ -35,6 +35,7 @@
 
 #include <NekMeshUtils/MeshElements/Mesh.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 using namespace std;
 
@@ -122,11 +123,11 @@ void Mesh::MakeOrder(int                      order,
     }
     else if (distType == LibUtilities::eGaussLobattoLegendre)
     {
-        // Prism still to do.
         pTypes[LibUtilities::eSegment]  = LibUtilities::eGaussLobattoLegendre;
         pTypes[LibUtilities::eTriangle] = LibUtilities::eNodalTriElec;
-        pTypes[LibUtilities::eQuadrilateral] = LibUtilities::eGaussLobattoLegendre;
-        pTypes[LibUtilities::ePrism] = LibUtilities::eGaussLobattoLegendre;
+        pTypes[LibUtilities::eQuadrilateral] =
+            LibUtilities::eGaussLobattoLegendre;
+        pTypes[LibUtilities::ePrism] = LibUtilities::eNodalPrismElec;
         pTypes[LibUtilities::eTetrahedron] = LibUtilities::eNodalTetElec;
         pTypes[LibUtilities::eHexahedron] = LibUtilities::eGaussLobattoLegendre;
     }
@@ -165,13 +166,19 @@ void Mesh::MakeOrder(int                      order,
 
     boost::unordered_set<int> processedEdges, processedFaces, processedVolumes;
 
-    //note if CAD previously existed on the face or edge, the new points need
-    //to be projected onto the CAD entity.
+    // note if CAD previously existed on the face or edge, the new points need
+    // to be projected onto the CAD entity.
 
     // Call MakeOrder with our generated geometries on each edge to fill in edge
     // interior nodes.
-    for(eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++)
+    int ct = 0;
+    for (eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++, ct++)
     {
+        if (m_verbose)
+        {
+            LibUtilities::PrintProgressbar(
+                ct, m_edgeSet.size(), "MakeOrder: Edges: ");
+        }
         int edgeId = (*eit)->m_id;
 
         if (processedEdges.find(edgeId) != processedEdges.end())
@@ -186,8 +193,14 @@ void Mesh::MakeOrder(int                      order,
 
     // Call MakeOrder with our generated geometries on each face to fill in face
     // interior nodes.
-    for(fit = m_faceSet.begin(); fit != m_faceSet.end(); fit++)
+    ct = 0;
+    for (fit = m_faceSet.begin(); fit != m_faceSet.end(); fit++, ct++)
     {
+        if (m_verbose)
+        {
+            LibUtilities::PrintProgressbar(
+                ct, m_faceSet.size(), "MakeOrder: Faces: ");
+        }
         int faceId = (*fit)->m_id;
 
         if (processedFaces.find(faceId) != processedFaces.end())
@@ -239,9 +252,18 @@ void Mesh::MakeOrder(int                      order,
     const int nElmt = m_element[m_expDim].size();
     for (int i = 0; i < nElmt; ++i)
     {
+        if (m_verbose)
+        {
+            LibUtilities::PrintProgressbar(i, nElmt, "MakeOrder: Elements: ");
+        }
         ElementSharedPtr el = m_element[m_expDim][i];
         el->MakeOrder(order, volGeoms[el->GetId()], pTypes[el->GetConf().m_e],
                       m_spaceDim, id);
+    }
+
+    if (m_verbose)
+    {
+        cout << endl;
     }
 }
 

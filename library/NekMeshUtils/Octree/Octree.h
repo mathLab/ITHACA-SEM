@@ -36,15 +36,11 @@
 #ifndef NEKTAR_MESHUTILS_OCTREE_OCTREE
 #define NEKTAR_MESHUTILS_OCTREE_OCTREE
 
-#include <boost/shared_ptr.hpp>
-
-#include <NekMeshUtils/CADSystem/CADSystem.h>
-#include <NekMeshUtils/Octree/SourcePoint.hpp>
-#include <NekMeshUtils/Octree/Octant.h>
+#include "SourcePoint.hpp"
+#include "Octant.h"
 #include <NekMeshUtils/MeshElements/Mesh.h>
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <string>
 
 namespace Nektar
 {
@@ -60,30 +56,16 @@ namespace NekMeshUtils
 class Octree
 {
 public:
-    friend class MemoryManager<Octree>;
 
-    /**
-     * @brief Defualt constructor
-     *
-     * @param cad CAD object
-     * @param ver bool verbose
-     */
-    Octree(CADSystemSharedPtr cad,
-           const bool ver,
-           const NekDouble min,
-           const NekDouble max,
-           const NekDouble eps)
-        : m_minDelta(min), m_maxDelta(max), m_eps(eps), m_cad(cad),
-          m_verbose(ver)
+    Octree(MeshSharedPtr m) : m_mesh(m)
     {
-        m_udsfileset = false;
-        m_sourcepointsset = false;
     }
 
     /**
-     * @brief executes octree building routines
+     * @brief builds the octree based on curvature sampling and user defined
+     * spacing
      */
-    void Build();
+    void Process();
 
     /**
      * @brief once constructed queryies the octree based on x,y,z location
@@ -105,25 +87,38 @@ public:
     }
 
     /**
-     * @brief populates the mesh m with a invalid hexahedral mesh based on the
-     *        octree, used for visualisation
+     * @brief sets the parameters used for curvature sampling
+     *
+     * @param min minimum spacing to be found in the mesh
+     * @param max maximum spacing to be found in the mesh
+     * @param eps curvature sensivity relating radius of curvature to spacing
      */
-    void GetOctreeMesh(MeshSharedPtr m);
-
-    void SetUDSFile(std::string n)
+    void SetParameters(NekDouble &min, NekDouble &max, NekDouble &ep)
     {
-        m_udsfile = n;
-        m_udsfileset = true;
+        m_minDelta = min;
+        m_maxDelta = max;
+        m_eps = ep;
     }
 
-    void SetSourcePoints(std::vector<std::vector<NekDouble> > pts, NekDouble size)
+    /**
+     * @brief populates the mesh m with a invalid hexahedral mesh based on the
+     *        octree, used for visualisation
+     * @param nm name of the mesh file to be made
+     */
+    void WriteOctree(std::string nm);
+
+    /**
+     * @brief informs the octree there is a user defined spacing file
+     *
+     * @param nm name of the user defined spacing file
+     */
+    void Refinement(std::string nm)
     {
-        m_sourcepointsset = true;
-        m_sourcePoints = pts;
-        m_sourcePointSize = size;
+        m_refinement = nm;
     }
 
 private:
+
     /**
      * @brief Smooths specification over all octants to a gradation criteria
      */
@@ -177,10 +172,6 @@ private:
     NekDouble m_maxDelta;
     /// curavture sensivity paramter
     NekDouble m_eps;
-    /// cad object
-    CADSystemSharedPtr m_cad;
-    /// verbose output
-    bool m_verbose;
     /// x,y,z location of the center of the octree
     Array<OneD, NekDouble> m_centroid;
     /// physical size of the octree
@@ -193,16 +184,13 @@ private:
     OctantSharedPtr m_masteroct;
     /// number of octants made, used for id index
     int m_numoct;
+    /// Mesh object
+    MeshSharedPtr m_mesh;
 
-    bool m_udsfileset;
-    std::string m_udsfile;
-
-    bool m_sourcepointsset;
-    std::vector<std::vector<NekDouble> > m_sourcePoints;
-    NekDouble m_sourcePointSize;
+    std::string m_refinement;
 };
-
 typedef boost::shared_ptr<Octree> OctreeSharedPtr;
+
 }
 }
 

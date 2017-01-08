@@ -68,7 +68,7 @@ namespace Nektar
             eBoundaryLayerPoints,           //!<  1D power law distribution for boundary layer points
             eBoundaryLayerPointsRev,        //!<  1D power law distribution for boundary layer points
             eNodalTriElec,                  //!<  2D Nodal Electrostatic Points on a Triangle
-            eNodalTriFekete,                //!<  2D Nodal Fekete Points on a Triangle        
+            eNodalTriFekete,                //!<  2D Nodal Fekete Points on a Triangle
             eNodalTriEvenlySpaced,          //!<  2D Evenly-spaced points on a Triangle
             eNodalTetEvenlySpaced,          //!<  3D Evenly-spaced points on a Tetrahedron
             eNodalTetElec,                  //!<  3D Nodal Electrostatic Points on a Tetrahedron
@@ -77,6 +77,8 @@ namespace Nektar
             eNodalTriSPI,                   //!<  2D Nodal Symmetric positive internal triangle (Whitherden, Vincent)
             eNodalTetSPI,                   //!<  3D Nodal Symmetric positive internal tet (Whitherden, Vincent)
             eNodalPrismSPI,                 //!<  3D prism SPI
+            eNodalQuadElec,                 //!<  2D GLL for quad
+            eNodalHexElec,                  //!<  3D GLL for hex
             SIZE_PointsType                 //!<  Length of enum list
         };
 

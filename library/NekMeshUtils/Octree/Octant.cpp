@@ -41,7 +41,7 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-OctantFace GetReverseFace(OctantFace f)
+inline OctantFace GetReverseFace(OctantFace f)
 {
     switch (f)
     {
@@ -513,9 +513,11 @@ void Octant::RemoveNeigbour(int id, OctantFace f)
 bool operator==(OctantSharedPtr const &p1, OctantSharedPtr const &p2)
 {
     if (p1->GetId() == p2->GetId())
+    {
         return true;
-    else
-        return false;
+    }
+
+    return false;
 }
 }
 }

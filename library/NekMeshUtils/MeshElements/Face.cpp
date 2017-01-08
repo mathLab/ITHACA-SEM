@@ -35,9 +35,7 @@
 
 #include <NekMeshUtils/MeshElements/Face.h>
 
-#ifdef NEKTAR_USE_MESHGEN
 #include <NekMeshUtils/CADSystem/CADSurf.h>
-#endif
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
@@ -255,24 +253,25 @@ void Face::MakeOrder(int                                order,
     {
         ASSERTL0(false, "Unknown number of vertices");
     }
-#ifdef NEKTAR_USE_MESHGEN
-    if(onSurf)
+
+    if(m_parentCAD)
     {
+        CADSurfSharedPtr s = boost::dynamic_pointer_cast<CADSurf>(m_parentCAD);
         for(int i = 0; i < m_faceNodes.size(); i++)
         {
             Array<OneD, NekDouble> loc(3);
             loc[0] = m_faceNodes[i]->m_x;
             loc[1] = m_faceNodes[i]->m_y;
             loc[2] = m_faceNodes[i]->m_z;
-            Array<OneD, NekDouble> uv = CADSurf->locuv(loc);
-            loc = CADSurf->P(uv);
+            Array<OneD, NekDouble> uv(2);
+            s->ProjectTo(loc,uv);
+            loc = s->P(uv);
             m_faceNodes[i]->m_x = loc[0];
             m_faceNodes[i]->m_y = loc[1];
             m_faceNodes[i]->m_z = loc[2];
-            m_faceNodes[i]->SetCADSurf(CADSurfId,CADSurf,uv);
+            m_faceNodes[i]->SetCADSurf(s->GetId(),s,uv);
         }
     }
-#endif
 }
 
 SpatialDomains::Geometry2DSharedPtr Face::GetGeom(int coordDim)

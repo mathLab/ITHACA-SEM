@@ -43,6 +43,8 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
+#include "CADObject.h"
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -84,6 +86,7 @@ public:
      */
     CADSystem(std::string name) : m_name(name)
     {
+        m_2d = false;
     }
 
     ~CADSystem()
@@ -96,6 +99,16 @@ public:
     std::string GetName()
     {
         return m_name;
+    }
+
+    void Set2D()
+    {
+        m_2d = true;
+    }
+
+    bool Is2D()
+    {
+        return m_2d;
     }
 
     /**
@@ -188,6 +201,8 @@ protected:
     std::map<int, CADSurfSharedPtr> m_surfs;
     /// Map of vertices
     std::map<int, CADVertSharedPtr> m_verts;
+
+    bool m_2d;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

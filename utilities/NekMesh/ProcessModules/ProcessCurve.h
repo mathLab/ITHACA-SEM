@@ -49,17 +49,17 @@ class ProcessCurve : public ProcessCurvedEdges
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessCurve>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    ProcessCurve(MeshSharedPtr m);
+    ProcessCurve(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessCurve();
 
 protected:
-    void v_GenerateEdgeNodes(EdgeSharedPtr edge);
+    void v_GenerateEdgeNodes(NekMeshUtils::EdgeSharedPtr edge);
 
 private:
     NekDouble EvaluateCoordinate(NekDouble xCoord);

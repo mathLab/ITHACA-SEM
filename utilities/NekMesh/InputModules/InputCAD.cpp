@@ -123,14 +123,31 @@ void InputCAD::ParseFile(string nm)
     if(pSession->DefinesElement("NEKTAR/MESHING/REFINEMENT"))
     {
         TiXmlElement *refine = mcf->FirstChildElement("REFINEMENT");
-        TiXmlElement *L     = refine->FirstChildElement("L");
+        TiXmlElement *L     = refine->FirstChildElement("LINE");
 
         while (L)
         {
-            string tmp;
-            L->QueryStringAttribute("VALUE", &tmp);
-            refinement.insert(tmp);
-            L = L->NextSiblingElement("L");
+            stringstream ss;
+            TiXmlElement *T = L->FirstChildElement("X1");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("Y1");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("Z1");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("X2");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("Y2");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("Z2");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("R");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("D");
+            ss << T->GetText();
+
+            refinement.insert(ss.str());
+
+            L = L->NextSiblingElement("LINE");
         }
     }
 

@@ -484,6 +484,7 @@ set(CPACK_SOURCE_IGNORE_FILES
     "/library/Demos/LocalRegions/XmlFiles/"
     "/solvers/ImageWarpingSolver/"
     "/solvers/VortexWaveInteraction/"
+    "/solvers/CardiacEPSolver/Utilities/CellMLToNektar/"
     "/utilities/Extras/"
 )
 

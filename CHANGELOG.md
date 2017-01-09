@@ -51,6 +51,9 @@ v4.4.0
 - Added a weak pressure formulation following Guermond & Shen (!713)
 - Added a convective like outflow boundary condition from Dong (!713)
 
+**CardiacEPSolver:**
+- Added a Python translator utility to generate cell models from CellML (!723)
+
 **FieldConvert:**
 - Allow equi-spaced output for 1D and 2DH1D fields (!613)
 - Update quality metric to include scaled Jacobian output (!695)

@@ -2,7 +2,7 @@
 <test>
     <description>Variational optimiser test on all tet cube/sphere</description>
     <executable>NekMesh</executable>
-    <parameters>cube-sphere.msh test.xml:xml:test -m varopti:hyperelastic:maxiter=5</parameters>
+    <parameters>cube-sphere.msh test.xml:xml:test -v -m varopti:hyperelastic:maxiter=5</parameters>
     <files>
         <file description="Input File">cube-sphere.msh</file>
     </files>

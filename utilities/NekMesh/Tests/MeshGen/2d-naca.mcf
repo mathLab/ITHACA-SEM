@@ -15,8 +15,12 @@
 
             <P PARAM="BLSurfs"  VALUE="5-6"		/>
             <P PARAM="BLThick"  VALUE="0.05"	/>
-            <P PARAM="BLLayers" VALUE="6"		/>
-            <P PARAM="BLProg"   VALUE="1.5"		/>
+
+            <P PARAM="Xmin"     VALUE="-1.0"    />
+            <P PARAM="Ymin"     VALUE="-2.0"    />
+            <P PARAM="Xmax"     VALUE="3.0"     />
+            <P PARAM="Ymax"     VALUE="2.0"     />
+            <P PARAM="AOA"      VALUE="15.0"    />
         </PARAMETERS>
 
         <BOOLPARAMETERS>

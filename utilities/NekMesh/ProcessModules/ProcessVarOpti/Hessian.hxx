@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessJac.h
+//  File: Hessian.hxx
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Calculate jacobians of elements.
+//  Description: Utility functions for Hessian matrices
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -41,45 +41,47 @@ namespace Nektar
 namespace Utilities
 {
 
-//returns zero if hessian is good, 1 if indefinite
-template<int DIM> int NodeOpti::IsIndefinite()
+/**
+ * @brief Returns 1 if Hessian matrix is indefinite and 0 otherwise.
+ *
+ * Specialised versions of this function exist only for 2x2 and 3x3 matrices.
+ */
+template <int DIM> int NodeOpti::IsIndefinite()
 {
-    ASSERTL0(false,"DIM error");
+    ASSERTL0(false, "DIM error");
     return 0;
 }
 
-template<> int NodeOpti::IsIndefinite<2>()
+template <> int NodeOpti::IsIndefinite<2>()
 {
     Array<OneD, NekDouble> eigR(2);
     Array<OneD, NekDouble> eigI(2);
-    NekMatrix<NekDouble> H(2,2);
-    H(0,0) = m_grad[2];
-    H(1,0) = m_grad[3];
-    H(0,1) = H(1,0);
-    H(1,1) = m_grad[4];
+    NekMatrix<NekDouble> H(2, 2);
+    H(0, 0) = m_grad[2];
+    H(1, 0) = m_grad[3];
+    H(0, 1) = H(1, 0);
+    H(1, 1) = m_grad[4];
 
-    //cout << H << endl << endl;
+    // cout << H << endl << endl;
 
-    int nVel = 2;
+    int nVel   = 2;
     char jobvl = 'N', jobvr = 'N';
-    int worklen = 8*nVel, info;
+    int worklen = 8 * nVel, info;
     NekDouble dum;
 
-    DNekMat eval   (nVel, nVel, 0.0, eDIAGONAL);
-    Array<OneD, NekDouble> vl  (nVel*nVel);
+    DNekMat eval(nVel, nVel, 0.0, eDIAGONAL);
+    Array<OneD, NekDouble> vl(nVel * nVel);
     Array<OneD, NekDouble> work(worklen);
-    Array<OneD, NekDouble> wi  (nVel);
+    Array<OneD, NekDouble> wi(nVel);
 
-    Lapack::Dgeev(jobvl, jobvr, nVel, H.GetRawPtr(), nVel,
-                  &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
-                  &dum, nVel,
-                  &work[0], worklen, info);
+    Lapack::Dgeev(jobvl, jobvr, nVel, H.GetRawPtr(), nVel, &(eval.GetPtr())[0],
+                  &wi[0], &vl[0], nVel, &dum, nVel, &work[0], worklen, info);
 
-    ASSERTL0(!info,"dgeev failed");
+    ASSERTL0(!info, "dgeev failed");
 
-    if(eval(0,0) < 0.0 || eval(1,1) < 0.0)
+    if (eval(0, 0) < 0.0 || eval(1, 1) < 0.0)
     {
-        if(eval(0,0) < 0.0 && eval(1,1) < 0.0)
+        if (eval(0, 0) < 0.0 && eval(1, 1) < 0.0)
         {
             return 2;
         }
@@ -92,41 +94,39 @@ template<> int NodeOpti::IsIndefinite<2>()
     return 0;
 }
 
-template<> int NodeOpti::IsIndefinite<3>()
+template <> int NodeOpti::IsIndefinite<3>()
 {
     Array<OneD, NekDouble> eigR(3);
     Array<OneD, NekDouble> eigI(3);
-    NekMatrix<NekDouble> H(3,3);
-    H(0,0) = m_grad[3];
-    H(1,0) = m_grad[4];
-    H(0,1) = H(1,0);
-    H(2,0) = m_grad[5];
-    H(0,2) = H(2,0);
-    H(1,1) = m_grad[6];
-    H(2,1) = m_grad[7];
-    H(1,2) = H(2,1);
-    H(2,2) = m_grad[8];
+    NekMatrix<NekDouble> H(3, 3);
+    H(0, 0) = m_grad[3];
+    H(1, 0) = m_grad[4];
+    H(0, 1) = H(1, 0);
+    H(2, 0) = m_grad[5];
+    H(0, 2) = H(2, 0);
+    H(1, 1) = m_grad[6];
+    H(2, 1) = m_grad[7];
+    H(1, 2) = H(2, 1);
+    H(2, 2) = m_grad[8];
 
-    int nVel = 3;
+    int nVel   = 3;
     char jobvl = 'N', jobvr = 'N';
-    int worklen = 8*nVel, info;
+    int worklen = 8 * nVel, info;
     NekDouble dum;
 
-    DNekMat eval   (nVel, nVel, 0.0, eDIAGONAL);
-    Array<OneD, NekDouble> vl  (nVel*nVel);
+    DNekMat eval(nVel, nVel, 0.0, eDIAGONAL);
+    Array<OneD, NekDouble> vl(nVel * nVel);
     Array<OneD, NekDouble> work(worklen);
-    Array<OneD, NekDouble> wi  (nVel);
+    Array<OneD, NekDouble> wi(nVel);
 
-    Lapack::Dgeev(jobvl, jobvr, nVel, H.GetRawPtr(), nVel,
-                  &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
-                  &dum, nVel,
-                  &work[0], worklen, info);
+    Lapack::Dgeev(jobvl, jobvr, nVel, H.GetRawPtr(), nVel, &(eval.GetPtr())[0],
+                  &wi[0], &vl[0], nVel, &dum, nVel, &work[0], worklen, info);
 
-    ASSERTL0(!info,"dgeev failed");
+    ASSERTL0(!info, "dgeev failed");
 
-    if(eval(0,0) < 0.0 || eval(1,1) < 0.0 || eval(2,2) < 0.0)
+    if (eval(0, 0) < 0.0 || eval(1, 1) < 0.0 || eval(2, 2) < 0.0)
     {
-        if(eval(0,0) < 0.0 && eval(1,1) < 0.0 && eval(2,2))
+        if (eval(0, 0) < 0.0 && eval(1, 1) < 0.0 && eval(2, 2))
         {
             return 2;
         }
@@ -139,96 +139,99 @@ template<> int NodeOpti::IsIndefinite<3>()
     return 0;
 }
 
-template<int DIM> void NodeOpti::MinEigen(NekDouble &val)
+/**
+ * @brief Calculates minimum eigenvalue of Hessian matrix.
+ *
+ * Specialised versions of this function exist only for 2x2 and 3x3 matrices.
+ */
+template <int DIM> void NodeOpti::MinEigen(NekDouble &val)
 {
-    ASSERTL0(false,"DIM error");
+    ASSERTL0(false, "DIM error");
 }
 
-template<> void NodeOpti::MinEigen<2>(NekDouble &val)
+template <> void NodeOpti::MinEigen<2>(NekDouble &val)
 {
     Array<OneD, NekDouble> eigR(2);
     Array<OneD, NekDouble> eigI(2);
-    NekMatrix<NekDouble> H(2,2);
-    H(0,0) = m_grad[2];
-    H(1,0) = m_grad[3];
-    H(0,1) = H(1,0);
-    H(1,1) = m_grad[4];
+    NekMatrix<NekDouble> H(2, 2);
+    H(0, 0) = m_grad[2];
+    H(1, 0) = m_grad[3];
+    H(0, 1) = H(1, 0);
+    H(1, 1) = m_grad[4];
 
-    int nVel = 2;
+    int nVel   = 2;
     char jobvl = 'N', jobvr = 'V';
-    int worklen = 8*nVel, info;
+    int worklen = 8 * nVel, info;
 
-    DNekMat eval   (nVel, nVel, 0.0, eDIAGONAL);
-    DNekMat evec   (nVel, nVel, 0.0, eFULL);
-    Array<OneD, NekDouble> vl  (nVel*nVel);
+    DNekMat eval(nVel, nVel, 0.0, eDIAGONAL);
+    DNekMat evec(nVel, nVel, 0.0, eFULL);
+    Array<OneD, NekDouble> vl(nVel * nVel);
     Array<OneD, NekDouble> work(worklen);
-    Array<OneD, NekDouble> wi  (nVel);
+    Array<OneD, NekDouble> wi(nVel);
 
-    Lapack::Dgeev(jobvl, jobvr, nVel, H.GetRawPtr(), nVel,
-                  &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
-                  &(evec.GetPtr())[0], nVel,
-                  &work[0], worklen, info);
+    Lapack::Dgeev(jobvl, jobvr, nVel, H.GetRawPtr(), nVel, &(eval.GetPtr())[0],
+                  &wi[0], &vl[0], nVel, &(evec.GetPtr())[0], nVel, &work[0],
+                  worklen, info);
 
-    ASSERTL0(!info,"dgeev failed");
+    ASSERTL0(!info, "dgeev failed");
 
     int minI;
     NekDouble tmp = std::numeric_limits<double>::max();
-    for(int i = 0; i < 2; i++)
+    for (int i = 0; i < 2; i++)
     {
-        if(eval(i,i) < tmp)
+        if (eval(i, i) < tmp)
         {
             minI = i;
-            tmp = eval(i,i);
+            tmp  = eval(i, i);
         }
     }
 
-    val = eval(minI,minI);
+    val = eval(minI, minI);
 }
 
-template<> void NodeOpti::MinEigen<3>(NekDouble &val)
+template <> void NodeOpti::MinEigen<3>(NekDouble &val)
 {
     Array<OneD, NekDouble> eigR(3);
     Array<OneD, NekDouble> eigI(3);
-    NekMatrix<NekDouble> H(3,3);
-    H(0,0) = m_grad[3];
-    H(1,0) = m_grad[4];
-    H(0,1) = H(1,0);
-    H(2,0) = m_grad[5];
-    H(0,2) = H(2,0);
-    H(1,1) = m_grad[6];
-    H(2,1) = m_grad[7];
-    H(1,2) = H(2,1);
-    H(2,2) = m_grad[8];
+    NekMatrix<NekDouble> H(3, 3);
+    H(0, 0) = m_grad[3];
+    H(1, 0) = m_grad[4];
+    H(0, 1) = H(1, 0);
+    H(2, 0) = m_grad[5];
+    H(0, 2) = H(2, 0);
+    H(1, 1) = m_grad[6];
+    H(2, 1) = m_grad[7];
+    H(1, 2) = H(2, 1);
+    H(2, 2) = m_grad[8];
 
-    int nVel = 3;
+    int nVel   = 3;
     char jobvl = 'N', jobvr = 'V';
-    int worklen = 8*nVel, info;
+    int worklen = 8 * nVel, info;
 
-    DNekMat eval   (nVel, nVel, 0.0, eDIAGONAL);
-    DNekMat evec   (nVel, nVel, 0.0, eFULL);
-    Array<OneD, NekDouble> vl  (nVel*nVel);
+    DNekMat eval(nVel, nVel, 0.0, eDIAGONAL);
+    DNekMat evec(nVel, nVel, 0.0, eFULL);
+    Array<OneD, NekDouble> vl(nVel * nVel);
     Array<OneD, NekDouble> work(worklen);
-    Array<OneD, NekDouble> wi  (nVel);
+    Array<OneD, NekDouble> wi(nVel);
 
-    Lapack::Dgeev(jobvl, jobvr, nVel, H.GetRawPtr(), nVel,
-                  &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
-                  &(evec.GetPtr())[0], nVel,
-                  &work[0], worklen, info);
+    Lapack::Dgeev(jobvl, jobvr, nVel, H.GetRawPtr(), nVel, &(eval.GetPtr())[0],
+                  &wi[0], &vl[0], nVel, &(evec.GetPtr())[0], nVel, &work[0],
+                  worklen, info);
 
-    ASSERTL0(!info,"dgeev failed");
+    ASSERTL0(!info, "dgeev failed");
 
     int minI;
     NekDouble tmp = std::numeric_limits<double>::max();
-    for(int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; i++)
     {
-        if(eval(i,i) < tmp)
+        if (eval(i, i) < tmp)
         {
             minI = i;
-            tmp = eval(i,i);
+            tmp  = eval(i, i);
         }
     }
 
-    val = eval(minI,minI);
+    val = eval(minI, minI);
 }
 
 }

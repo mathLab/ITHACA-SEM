@@ -36,17 +36,17 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
-#include <NekMeshUtils/MeshElements/Element.h>
-#include "ProcessVarOpti.h"
-#include "NodeOpti.h"
 #include "ElUtil.h"
+#include "NodeOpti.h"
+#include "ProcessVarOpti.h"
+#include <NekMeshUtils/MeshElements/Element.h>
 
 #include <boost/thread/mutex.hpp>
 
-#include <StdRegions/StdTriExp.h>
+#include <StdRegions/StdPrismExp.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdTetExp.h>
-#include <StdRegions/StdPrismExp.h>
+#include <StdRegions/StdTriExp.h>
 
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
@@ -59,13 +59,14 @@ namespace Nektar
 namespace Utilities
 {
 
-ModuleKey ProcessVarOpti::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "varopti"),
-    ProcessVarOpti::create,
-    "Optimise mesh locations.");
+ModuleKey ProcessVarOpti::className =
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eProcessModule, "varopti"), ProcessVarOpti::create,
+        "Optimise mesh locations.");
 
 ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
 {
+    // clang-format off
     m_config["linearelastic"] =
         ConfigOption(true, "", "Optimise for linear elasticity");
     m_config["winslow"] =
@@ -92,6 +93,7 @@ ProcessVarOpti::ProcessVarOpti(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "6", "over integration order");
     m_config["analytics"] =
         ConfigOption(false, "", "basic analytics module");
+    // clang-format on
 }
 
 ProcessVarOpti::~ProcessVarOpti()
@@ -105,71 +107,73 @@ void ProcessVarOpti::Process()
         cout << "ProcessVarOpti: Optimising... " << endl;
     }
 
-    if(m_config["linearelastic"].beenSet)
+    if (m_config["linearelastic"].beenSet)
     {
         m_opti = eLinEl;
     }
-    else if(m_config["winslow"].beenSet)
+    else if (m_config["winslow"].beenSet)
     {
         m_opti = eWins;
     }
-    else if(m_config["roca"].beenSet)
+    else if (m_config["roca"].beenSet)
     {
         m_opti = eRoca;
     }
-    else if(m_config["hyperelastic"].beenSet)
+    else if (m_config["hyperelastic"].beenSet)
     {
         m_opti = eHypEl;
     }
     else
     {
-        ASSERTL0(false,"not opti type set");
+        ASSERTL0(false, "not opti type set");
     }
 
-    const int maxIter = m_config["maxiter"].as<int>();
+    const int maxIter      = m_config["maxiter"].as<int>();
     const NekDouble restol = m_config["restol"].as<NekDouble>();
 
-    //m_mesh->m_nummode = m_config["nq"].as<int>();
+    // m_mesh->m_nummode = m_config["nq"].as<int>();
 
     EdgeSet::iterator eit;
     bool fd = false;
 
-    if(m_config["nq"].beenSet)
+    if (m_config["nq"].beenSet)
     {
         m_mesh->m_nummode = m_config["nq"].as<int>();
-        fd = true;
+        fd                = true;
     }
 
-    if(!fd)
+    if (!fd)
     {
-        for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+        for (eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end();
+             eit++)
         {
-            if((*eit)->m_edgeNodes.size() > 0)
+            if ((*eit)->m_edgeNodes.size() > 0)
             {
                 m_mesh->m_nummode = (*eit)->m_edgeNodes.size() + 2;
-                fd = true;
+                fd                = true;
                 break;
             }
         }
     }
-    ASSERTL0(fd,"failed to find order of mesh");
+    ASSERTL0(fd, "failed to find order of mesh");
 
     int intOrder = m_config["overint"].as<NekDouble>();
 
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << "Identified mesh order as: " << m_mesh->m_nummode - 1 << endl;
     }
 
     if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
     {
-        ASSERTL0(false,"cannot deal with manifolds");
+        ASSERTL0(false, "cannot deal with manifolds");
     }
 
-    m_res = boost::shared_ptr<Residual>(new Residual);
+    m_res      = boost::shared_ptr<Residual>(new Residual);
     m_res->val = 1.0;
 
-    m_mesh->MakeOrder(m_mesh->m_nummode-1,LibUtilities::eGaussLobattoLegendre);
+    m_mesh->MakeOrder(m_mesh->m_nummode - 1,
+                      LibUtilities::eGaussLobattoLegendre);
 
     if (m_config["analytics"].beenSet)
     {
@@ -178,12 +182,12 @@ void ProcessVarOpti::Process()
     }
 
     map<LibUtilities::ShapeType, DerivUtilSharedPtr> derivUtils =
-                                                    BuildDerivUtil(intOrder);
+        BuildDerivUtil(intOrder);
     GetElementMap(intOrder, derivUtils);
 
-    m_res->startInv =0;
+    m_res->startInv = 0;
     m_res->worstJac = numeric_limits<double>::max();
-    for(int i = 0; i < m_dataSet.size(); i++)
+    for (int i = 0; i < m_dataSet.size(); i++)
     {
         m_dataSet[i]->Evaluate();
         m_dataSet[i]->InitialMinJac();
@@ -191,7 +195,7 @@ void ProcessVarOpti::Process()
 
     vector<ElUtilSharedPtr> elLock;
 
-    if(m_config["region"].beenSet)
+    if (m_config["region"].beenSet)
     {
         elLock = GetLockedElements(m_config["region"].as<NekDouble>());
     }
@@ -199,12 +203,12 @@ void ProcessVarOpti::Process()
     vector<vector<NodeSharedPtr> > freenodes = GetColouredNodes(elLock);
     vector<vector<NodeOptiSharedPtr> > optiNodes;
 
-    //turn the free nodes into optimisable objects with all required data
+    // turn the free nodes into optimisable objects with all required data
     set<int> check;
-    for(int i = 0; i < freenodes.size(); i++)
+    for (int i = 0; i < freenodes.size(); i++)
     {
         vector<NodeOptiSharedPtr> ns;
-        for(int j = 0; j < freenodes[i].size(); j++)
+        for (int j = 0; j < freenodes[i].size(); j++)
         {
             NodeElMap::iterator it = m_nodeElMap.find(freenodes[i][j]->m_id);
             ASSERTL0(it != m_nodeElMap.end(), "could not find");
@@ -221,38 +225,38 @@ void ProcessVarOpti::Process()
             }
             else
             {
-                optiKind += 10*m_mesh->m_expDim;
+                optiKind += 10 * m_mesh->m_expDim;
             }
 
             set<int>::iterator c = check.find(freenodes[i][j]->m_id);
-            ASSERTL0(c == check.end(),"duplicate node");
+            ASSERTL0(c == check.end(), "duplicate node");
             check.insert(freenodes[i][j]->m_id);
 
-            ns.push_back(
-                GetNodeOptiFactory().CreateInstance(
-                    optiKind, freenodes[i][j], it->second, m_res, derivUtils, m_opti));
+            ns.push_back(GetNodeOptiFactory().CreateInstance(
+                optiKind, freenodes[i][j], it->second, m_res, derivUtils,
+                m_opti));
         }
         optiNodes.push_back(ns);
     }
 
     int nset = optiNodes.size();
-    int p = 0;
-    int mn = numeric_limits<int>::max();
-    int mx = 0;
-    for(int i = 0; i < nset; i++)
+    int p    = 0;
+    int mn   = numeric_limits<int>::max();
+    int mx   = 0;
+    for (int i = 0; i < nset; i++)
     {
         p += optiNodes[i].size();
         mn = min(mn, int(optiNodes[i].size()));
         mx = max(mx, int(optiNodes[i].size()));
     }
 
-    if(m_config["histfile"].beenSet)
+    if (m_config["histfile"].beenSet)
     {
         ofstream histFile;
         string name = m_config["histfile"].as<string>() + "_start.txt";
         histFile.open(name.c_str());
 
-        for(int i = 0; i < m_dataSet.size(); i++)
+        for (int i = 0; i < m_dataSet.size(); i++)
         {
             histFile << m_dataSet[i]->GetScaledJac() << endl;
         }
@@ -280,21 +284,21 @@ void ProcessVarOpti::Process()
     Thread::ThreadMaster tms;
     tms.SetThreadingType("ThreadManagerBoost");
     Thread::ThreadManagerSharedPtr tm =
-                tms.CreateInstance(Thread::ThreadMaster::SessionJob, nThreads);
+        tms.CreateInstance(Thread::ThreadMaster::SessionJob, nThreads);
 
     Timer t;
     t.Start();
 
     ofstream resFile;
-    if(m_config["resfile"].beenSet)
+    if (m_config["resfile"].beenSet)
     {
         resFile.open(m_config["resfile"].as<string>().c_str());
     }
 
-    for(int i = 0; i < optiNodes.size(); i++)
+    for (int i = 0; i < optiNodes.size(); i++)
     {
-        vector<Thread::ThreadJob*> jobs(optiNodes[i].size());
-        for(int j = 0; j < optiNodes[i].size(); j++)
+        vector<Thread::ThreadJob *> jobs(optiNodes[i].size());
+        for (int j = 0; j < optiNodes[i].size(); j++)
         {
             optiNodes[i][j]->CalcMinJac();
         }
@@ -303,16 +307,16 @@ void ProcessVarOpti::Process()
     while (m_res->val > restol)
     {
         ctr++;
-        m_res->val = 0.0;
-        m_res->func = 0.0;
+        m_res->val       = 0.0;
+        m_res->func      = 0.0;
         m_res->nReset[0] = 0;
         m_res->nReset[1] = 0;
         m_res->nReset[2] = 0;
-        m_res->alphaI = 0;
-        for(int i = 0; i < optiNodes.size(); i++)
+        m_res->alphaI    = 0;
+        for (int i = 0; i < optiNodes.size(); i++)
         {
-            vector<Thread::ThreadJob*> jobs(optiNodes[i].size());
-            for(int j = 0; j < optiNodes[i].size(); j++)
+            vector<Thread::ThreadJob *> jobs(optiNodes[i].size());
+            for (int j = 0; j < optiNodes[i].size(); j++)
             {
                 jobs[j] = optiNodes[i][j]->GetJob();
             }
@@ -321,17 +325,13 @@ void ProcessVarOpti::Process()
             tm->QueueJobs(jobs);
             tm->SetNumWorkers(nThreads);
             tm->Wait();
-            //for(int j = 0; j < jobs.size(); j++)
-            //{
-            //    jobs[j]->Run();
-            //}
         }
 
         m_res->startInv = 0;
         m_res->worstJac = numeric_limits<double>::max();
 
-        vector<Thread::ThreadJob*> elJobs(m_dataSet.size());
-        for(int i = 0; i < m_dataSet.size(); i++)
+        vector<Thread::ThreadJob *> elJobs(m_dataSet.size());
+        for (int i = 0; i < m_dataSet.size(); i++)
         {
             elJobs[i] = m_dataSet[i]->GetJob();
         }
@@ -341,39 +341,42 @@ void ProcessVarOpti::Process()
         tm->SetNumWorkers(nThreads);
         tm->Wait();
 
-        if(m_config["resfile"].beenSet)
+        if (m_config["resfile"].beenSet)
         {
-            resFile << m_res->val << " " << m_res->worstJac << " " << m_res->func << endl;
+            resFile << m_res->val << " " << m_res->worstJac << " "
+                    << m_res->func << endl;
         }
 
         if(m_mesh->m_verbose)
         {
-            cout << ctr << "\tResidual: " << m_res->val
-                        << "\tMin Jac: " << m_res->worstJac
-                        << "\tInvalid: " << m_res->startInv
-                        << "\tReset nodes: " << m_res->nReset[0] << "/" << m_res->nReset[1] << "/" << m_res->nReset[2]
-                        << "\tFunctional: " << m_res->func
-                        //<< "\tAlphaNotOne: " << m_res->alphaI
-                        << endl;
+            cout << ctr
+                 << "\tResidual: " << m_res->val
+                 << "\tMin Jac: " << m_res->worstJac
+                 << "\tInvalid: " << m_res->startInv
+                 << "\tReset nodes: " << m_res->nReset[0] << "/" << m_res->nReset[1]
+                 << "/" << m_res->nReset[2] << "\tFunctional: " << m_res->func
+                 << endl;
         }
 
         if(ctr >= maxIter)
+        {
             break;
+        }
     }
 
-    if(m_config["histfile"].beenSet)
+    if (m_config["histfile"].beenSet)
     {
         ofstream histFile;
         string name = m_config["histfile"].as<string>() + "_end.txt";
         histFile.open(name.c_str());
 
-        for(int i = 0; i < m_dataSet.size(); i++)
+        for (int i = 0; i < m_dataSet.size(); i++)
         {
             histFile << m_dataSet[i]->GetScaledJac() << endl;
         }
         histFile.close();
     }
-    if(m_config["resfile"].beenSet)
+    if (m_config["resfile"].beenSet)
     {
         resFile.close();
     }
@@ -391,8 +394,7 @@ void ProcessVarOpti::Process()
 class NodalUtilTriMonomial : public LibUtilities::NodalUtilTriangle
 {
 public:
-    NodalUtilTriMonomial(int degree,
-                         Array<OneD, NekDouble> r,
+    NodalUtilTriMonomial(int degree, Array<OneD, NekDouble> r,
                          Array<OneD, NekDouble> s)
         : NodalUtilTriangle(degree, r, s)
     {
@@ -411,14 +413,15 @@ protected:
 
         for (int i = 0; i < m_numPoints; ++i)
         {
-            ret(i) = pow(m_xi[0][i], modes.first) * pow(m_xi[1][i], modes.second);
+            ret(i) =
+                pow(m_xi[0][i], modes.first) * pow(m_xi[1][i], modes.second);
         }
 
         return ret;
     }
 
-    virtual NekVector<NekDouble> v_OrthoBasisDeriv(
-        const int dir, const int mode)
+    virtual NekVector<NekDouble> v_OrthoBasisDeriv(const int dir,
+                                                   const int mode)
     {
         ASSERTL0(false, "not supported");
         return NekVector<NekDouble>();
@@ -445,16 +448,17 @@ void ProcessVarOpti::Analytics()
     NodeSharedPtr node = nodes[4];
 
     // Loop over overintegration orders
-    const int       nPoints = 200;
-    const int       overInt = 40;
+    const int nPoints       = 200;
+    const int overInt       = 40;
     const NekDouble originX = -1.0;
     const NekDouble originY = -1.0;
     const NekDouble length  = 2.0;
-    const NekDouble dx      = length / (nPoints-1);
+    const NekDouble dx      = length / (nPoints - 1);
 
     cout << "# overint = " << overInt << endl;
-    cout << "# Columns: x, y, over-integration orders (0 -> " << overInt-1
-         << "), " << " min(scaledJac)" << endl;
+    cout << "# Columns: x, y, over-integration orders (0 -> " << overInt - 1
+         << "), "
+         << " min(scaledJac)" << endl;
 
     // Loop over square defined by (originX, originY), length
     for (int k = 0; k < nPoints; ++k)
@@ -480,32 +484,33 @@ void ProcessVarOpti::Analytics()
                 // Reconstruct element map
                 GetElementMap(i, derivUtils);
 
-                for(int j = 0; j < m_dataSet.size(); j++)
+                for (int j = 0; j < m_dataSet.size(); j++)
                 {
                     m_dataSet[j]->Evaluate();
                     m_dataSet[j]->InitialMinJac();
                 }
 
                 // Create NodeOpti object.
-                NodeOptiSharedPtr nodeOpti = GetNodeOptiFactory().CreateInstance(
-                    m_mesh->m_spaceDim * 11, node, m_nodeElMap.find(node->m_id)->second,
-                    m_res, derivUtils, m_opti);
+                NodeOptiSharedPtr nodeOpti =
+                    GetNodeOptiFactory().CreateInstance(
+                        m_mesh->m_spaceDim * 11, node,
+                        m_nodeElMap.find(node->m_id)->second, m_res, derivUtils,
+                        m_opti);
 
                 minJacNew = 0.0;
 
                 // Evaluate functional.
                 nodeOpti->CalcMinJac();
                 cout << nodeOpti->GetFunctional<2>(minJacNew) << " ";
-                //NekDouble eigen;
-                //nodeOpti->GetFunctional<2>(minJacNew);
-                //nodeOpti->MinEigen<2>(eigen);
-                //cout << eigen << " ";
+                // NekDouble eigen;
+                // nodeOpti->GetFunctional<2>(minJacNew);
+                // nodeOpti->MinEigen<2>(eigen);
+                // cout << eigen << " ";
             }
 
             cout << minJacNew << endl;
         }
     }
 }
-
 }
 }

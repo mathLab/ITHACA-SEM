@@ -296,7 +296,7 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
             }
         }
     }
-    else if(geom->GetShapeType() == LibUtilities::eHexahedron)
+    else if (geom->GetShapeType() == LibUtilities::eHexahedron)
     {
         vector<Array<OneD, NekDouble> > xyz;
         for (int i = 0; i < geom->GetNumVerts(); i++)
@@ -318,53 +318,62 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
             {
                 for (int i = 0; i < b[0]->GetNumPoints(); i++)
                 {
-                    NekDouble a1  = 0.5 * (1 - eta1[i]);
-                    NekDouble a2  = 0.5 * (1 + eta1[i]);
-                    NekDouble b1  = 0.5 * (1 - eta2[j]),
-                              b2  = 0.5 * (1 + eta2[j]);
-                    NekDouble c1  = 0.5 * (1 - eta3[k]),
-                              c2  = 0.5 * (1 + eta3[k]);
+                    NekDouble a1 = 0.5 * (1 - eta1[i]);
+                    NekDouble a2 = 0.5 * (1 + eta1[i]);
+                    NekDouble b1 = 0.5 * (1 - eta2[j]),
+                              b2 = 0.5 * (1 + eta2[j]);
+                    NekDouble c1 = 0.5 * (1 - eta3[k]),
+                              c2 = 0.5 * (1 + eta3[k]);
 
                     DNekMat dxdz(3, 3, 1.0, eFULL);
 
-                    dxdz(0,0) = - 0.5 * b1 * c1 * xyz[0][0] + 0.5 * b1 * c1 * xyz[1][0]
-                             + 0.5 * b2 * c1 * xyz[2][0] - 0.5 * b2 * c1 * xyz[3][0]
-                             - 0.5 * b1 * c2 * xyz[5][0] + 0.5 * b1 * c2 * xyz[5][0]
-                             + 0.5 * b2 * c2 * xyz[6][0] - 0.5 * b2 * c2 * xyz[7][0];
-                    dxdz(1,0) = - 0.5 * b1 * c1 * xyz[0][1] + 0.5 * b1 * c1 * xyz[1][1]
-                             + 0.5 * b2 * c1 * xyz[2][1] - 0.5 * b2 * c1 * xyz[3][1]
-                             - 0.5 * b1 * c2 * xyz[5][1] + 0.5 * b1 * c2 * xyz[5][1]
-                             + 0.5 * b2 * c2 * xyz[6][1] - 0.5 * b2 * c2 * xyz[7][1];
-                    dxdz(2,0) = - 0.5 * b1 * c1 * xyz[0][2] + 0.5 * b1 * c1 * xyz[1][2]
-                             + 0.5 * b2 * c1 * xyz[2][2] - 0.5 * b2 * c1 * xyz[3][2]
-                             - 0.5 * b1 * c2 * xyz[5][2] + 0.5 * b1 * c2 * xyz[5][2]
-                             + 0.5 * b2 * c2 * xyz[6][2] - 0.5 * b2 * c2 * xyz[7][2];
+                    dxdz(0, 0) =
+                        -0.5 * b1 * c1 * xyz[0][0] + 0.5 * b1 * c1 * xyz[1][0] +
+                        0.5 * b2 * c1 * xyz[2][0] - 0.5 * b2 * c1 * xyz[3][0] -
+                        0.5 * b1 * c2 * xyz[5][0] + 0.5 * b1 * c2 * xyz[5][0] +
+                        0.5 * b2 * c2 * xyz[6][0] - 0.5 * b2 * c2 * xyz[7][0];
+                    dxdz(1, 0) =
+                        -0.5 * b1 * c1 * xyz[0][1] + 0.5 * b1 * c1 * xyz[1][1] +
+                        0.5 * b2 * c1 * xyz[2][1] - 0.5 * b2 * c1 * xyz[3][1] -
+                        0.5 * b1 * c2 * xyz[5][1] + 0.5 * b1 * c2 * xyz[5][1] +
+                        0.5 * b2 * c2 * xyz[6][1] - 0.5 * b2 * c2 * xyz[7][1];
+                    dxdz(2, 0) =
+                        -0.5 * b1 * c1 * xyz[0][2] + 0.5 * b1 * c1 * xyz[1][2] +
+                        0.5 * b2 * c1 * xyz[2][2] - 0.5 * b2 * c1 * xyz[3][2] -
+                        0.5 * b1 * c2 * xyz[5][2] + 0.5 * b1 * c2 * xyz[5][2] +
+                        0.5 * b2 * c2 * xyz[6][2] - 0.5 * b2 * c2 * xyz[7][2];
 
-                    dxdz(0,1) = - 0.5 * a1 * c1 * xyz[0][0] - 0.5 * a2 * c1 * xyz[1][0]
-                             + 0.5 * a2 * c1 * xyz[2][0] + 0.5 * a1 * c1 * xyz[3][0]
-                             - 0.5 * a1 * c2 * xyz[5][0] - 0.5 * a2 * c2 * xyz[5][0]
-                             + 0.5 * a2 * c2 * xyz[6][0] + 0.5 * a1 * c2 * xyz[7][0];
-                    dxdz(1,1) = - 0.5 * a1 * c1 * xyz[0][1] - 0.5 * a2 * c1 * xyz[1][1]
-                             + 0.5 * a2 * c1 * xyz[2][1] + 0.5 * a1 * c1 * xyz[3][1]
-                             - 0.5 * a1 * c2 * xyz[5][1] - 0.5 * a2 * c2 * xyz[5][1]
-                             + 0.5 * a2 * c2 * xyz[6][1] + 0.5 * a1 * c2 * xyz[7][1];
-                    dxdz(2,1) = - 0.5 * a1 * c1 * xyz[0][2] - 0.5 * a2 * c1 * xyz[1][2]
-                             + 0.5 * a2 * c1 * xyz[2][2] + 0.5 * a1 * c1 * xyz[3][2]
-                             - 0.5 * a1 * c2 * xyz[5][2] - 0.5 * a2 * c2 * xyz[5][2]
-                             + 0.5 * a2 * c2 * xyz[6][2] + 0.5 * a1 * c2 * xyz[7][2];
+                    dxdz(0, 1) =
+                        -0.5 * a1 * c1 * xyz[0][0] - 0.5 * a2 * c1 * xyz[1][0] +
+                        0.5 * a2 * c1 * xyz[2][0] + 0.5 * a1 * c1 * xyz[3][0] -
+                        0.5 * a1 * c2 * xyz[5][0] - 0.5 * a2 * c2 * xyz[5][0] +
+                        0.5 * a2 * c2 * xyz[6][0] + 0.5 * a1 * c2 * xyz[7][0];
+                    dxdz(1, 1) =
+                        -0.5 * a1 * c1 * xyz[0][1] - 0.5 * a2 * c1 * xyz[1][1] +
+                        0.5 * a2 * c1 * xyz[2][1] + 0.5 * a1 * c1 * xyz[3][1] -
+                        0.5 * a1 * c2 * xyz[5][1] - 0.5 * a2 * c2 * xyz[5][1] +
+                        0.5 * a2 * c2 * xyz[6][1] + 0.5 * a1 * c2 * xyz[7][1];
+                    dxdz(2, 1) =
+                        -0.5 * a1 * c1 * xyz[0][2] - 0.5 * a2 * c1 * xyz[1][2] +
+                        0.5 * a2 * c1 * xyz[2][2] + 0.5 * a1 * c1 * xyz[3][2] -
+                        0.5 * a1 * c2 * xyz[5][2] - 0.5 * a2 * c2 * xyz[5][2] +
+                        0.5 * a2 * c2 * xyz[6][2] + 0.5 * a1 * c2 * xyz[7][2];
 
-                    dxdz(0,0) = - 0.5 * b1 * a1 * xyz[0][0] - 0.5 * b1 * a2 * xyz[1][0]
-                             - 0.5 * b2 * a2 * xyz[2][0] - 0.5 * b2 * a1 * xyz[3][0]
-                             + 0.5 * b1 * a1 * xyz[5][0] + 0.5 * b1 * a2 * xyz[5][0]
-                             + 0.5 * b2 * a2 * xyz[6][0] + 0.5 * b2 * a1 * xyz[7][0];
-                    dxdz(1,0) = - 0.5 * b1 * a1 * xyz[0][1] - 0.5 * b1 * a2 * xyz[1][1]
-                             - 0.5 * b2 * a2 * xyz[2][1] - 0.5 * b2 * a1 * xyz[3][1]
-                             + 0.5 * b1 * a1 * xyz[5][1] + 0.5 * b1 * a2 * xyz[5][1]
-                             + 0.5 * b2 * a2 * xyz[6][1] + 0.5 * b2 * a1 * xyz[7][1];
-                    dxdz(2,0) = - 0.5 * b1 * a1 * xyz[0][2] - 0.5 * b1 * a2 * xyz[1][2]
-                             - 0.5 * b2 * a2 * xyz[2][2] - 0.5 * b2 * a1 * xyz[3][2]
-                             + 0.5 * b1 * a1 * xyz[5][2] + 0.5 * b1 * a2 * xyz[5][2]
-                             + 0.5 * b2 * a2 * xyz[6][2] + 0.5 * b2 * a1 * xyz[7][2];
+                    dxdz(0, 0) =
+                        -0.5 * b1 * a1 * xyz[0][0] - 0.5 * b1 * a2 * xyz[1][0] -
+                        0.5 * b2 * a2 * xyz[2][0] - 0.5 * b2 * a1 * xyz[3][0] +
+                        0.5 * b1 * a1 * xyz[5][0] + 0.5 * b1 * a2 * xyz[5][0] +
+                        0.5 * b2 * a2 * xyz[6][0] + 0.5 * b2 * a1 * xyz[7][0];
+                    dxdz(1, 0) =
+                        -0.5 * b1 * a1 * xyz[0][1] - 0.5 * b1 * a2 * xyz[1][1] -
+                        0.5 * b2 * a2 * xyz[2][1] - 0.5 * b2 * a1 * xyz[3][1] +
+                        0.5 * b1 * a1 * xyz[5][1] + 0.5 * b1 * a2 * xyz[5][1] +
+                        0.5 * b2 * a2 * xyz[6][1] + 0.5 * b2 * a1 * xyz[7][1];
+                    dxdz(2, 0) =
+                        -0.5 * b1 * a1 * xyz[0][2] - 0.5 * b1 * a2 * xyz[1][2] -
+                        0.5 * b2 * a2 * xyz[2][2] - 0.5 * b2 * a1 * xyz[3][2] +
+                        0.5 * b1 * a1 * xyz[5][2] + 0.5 * b1 * a2 * xyz[5][2] +
+                        0.5 * b2 * a2 * xyz[6][2] + 0.5 * b2 * a1 * xyz[7][2];
 
                     dxdz.Invert();
                     ret.push_back(dxdz);
@@ -380,7 +389,9 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
     return ret;
 }
 
-Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedPtr e, bool s)
+Array<OneD, NekDouble> ProcessQualityMetric::GetQ(
+    LocalRegions::ExpansionSharedPtr e,
+    bool                             s)
 {
     SpatialDomains::GeometrySharedPtr geom    = e->GetGeom();
     StdRegions::StdExpansionSharedPtr chi     = e->GetGeom()->GetXmap();

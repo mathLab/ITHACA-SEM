@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: NodalHexElec
+// Description: Nodal hexahedron with 3D GLL distribution
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -55,7 +55,7 @@ void NodalHexElec::CalculatePoints()
 
     for (int i = 0; i < 3; i++)
     {
-        m_points[i] = Array<OneD, DataType>(numPoints*numPoints*numPoints);
+        m_points[i] = Array<OneD, DataType>(numPoints * numPoints * numPoints);
     }
 
     for (int k = 0, ct = 0; k < numPoints; k++)
@@ -76,7 +76,7 @@ void NodalHexElec::CalculateWeights()
 {
     unsigned int numPoints = GetNumPoints();
 
-    m_weights = Array<OneD, DataType>(numPoints*numPoints*numPoints);
+    m_weights = Array<OneD, DataType>(numPoints * numPoints * numPoints);
 
     for (int k = 0, ct = 0; k < numPoints; k++)
     {
@@ -101,6 +101,5 @@ boost::shared_ptr<PointsBaseType> NodalHexElec::Create(const PointsKey &key)
     returnval->Initialize();
     return returnval;
 }
-
 }
 }

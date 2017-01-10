@@ -45,14 +45,14 @@ namespace Nektar
 namespace Utilities
 {
 
-class NodeOpti1D3D : public NodeOpti //1D optimsation in 3D space
+class NodeOpti1D3D : public NodeOpti // 1D optimsation in 3D space
 {
 public:
-    NodeOpti1D3D(NodeSharedPtr n,
-                 std::vector<ElUtilSharedPtr> e,
-                 ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
+    NodeOpti1D3D(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
+                 ResidualSharedPtr r,
+                 std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
                  optiType o, CADCurveSharedPtr c)
-        : NodeOpti(n,e,r,d,o), curve(c)
+        : NodeOpti(n, e, r, d, o), curve(c)
     {
     }
 
@@ -62,10 +62,8 @@ public:
 
     static int m_type;
     static NodeOptiSharedPtr create(
-        NodeSharedPtr n,
-        std::vector<ElUtilSharedPtr> e,
-        ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
-        optiType o)
+        NodeSharedPtr n, std::vector<ElUtilSharedPtr> e, ResidualSharedPtr r,
+        std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d, optiType o)
     {
         std::vector<std::pair<int, CADCurveSharedPtr> > cs = n->GetCADCurves();
         return NodeOptiSharedPtr(new NodeOpti1D3D(n, e, r, d, o, cs[0].second));
@@ -76,14 +74,14 @@ private:
     CADCurveSharedPtr curve;
 };
 
-class NodeOpti2D3D : public NodeOpti //1D optimsation in 3D space
+class NodeOpti2D3D : public NodeOpti // 1D optimsation in 3D space
 {
 public:
-    NodeOpti2D3D(NodeSharedPtr n,
-                 std::vector<ElUtilSharedPtr> e,
-                 ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
+    NodeOpti2D3D(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
+                 ResidualSharedPtr r,
+                 std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
                  optiType o, CADSurfSharedPtr s)
-        : NodeOpti(n,e,r,d,o), surf(s)
+        : NodeOpti(n, e, r, d, o), surf(s)
     {
     }
 
@@ -93,10 +91,8 @@ public:
 
     static int m_type;
     static NodeOptiSharedPtr create(
-        NodeSharedPtr n,
-        std::vector<ElUtilSharedPtr> e,
-        ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
-        optiType o)
+        NodeSharedPtr n, std::vector<ElUtilSharedPtr> e, ResidualSharedPtr r,
+        std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d, optiType o)
     {
         std::vector<std::pair<int, CADSurfSharedPtr> > ss = n->GetCADSurfs();
         return NodeOptiSharedPtr(new NodeOpti2D3D(n, e, r, d, o, ss[0].second));
@@ -106,7 +102,6 @@ private:
     void ProcessGradient();
     CADSurfSharedPtr surf;
 };
-
 }
 }
 

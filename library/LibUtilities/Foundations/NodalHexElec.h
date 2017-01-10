@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: NodalHexElec
+// Description: Nodal hexahedron with 3D GLL distribution
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -67,7 +67,10 @@ private:
     {
     }
 
-    Array<OneD, NekDouble> m_e0, m_ew;
+    /// 1D GLL points.
+    Array<OneD, NekDouble> m_e0;
+    /// 1D GLL weights.
+    Array<OneD, NekDouble> m_ew;
 
     void CalculatePoints();
     void CalculateWeights();

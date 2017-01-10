@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: NodalQuadElec
+// Description: Nodal quadrilateral with 2D GLL distribution
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -55,7 +55,7 @@ void NodalQuadElec::CalculatePoints()
 
     for (int i = 0; i < 2; i++)
     {
-        m_points[i] = Array<OneD, DataType>(numPoints*numPoints);
+        m_points[i] = Array<OneD, DataType>(numPoints * numPoints);
     }
 
     for (int j = 0, ct = 0; j < numPoints; j++)
@@ -72,7 +72,7 @@ void NodalQuadElec::CalculateWeights()
 {
     unsigned int numPoints = GetNumPoints();
 
-    m_weights = Array<OneD, DataType>(numPoints*numPoints);
+    m_weights = Array<OneD, DataType>(numPoints * numPoints);
 
     for (int j = 0, ct = 0; j < numPoints; j++)
     {
@@ -94,6 +94,5 @@ boost::shared_ptr<PointsBaseType> NodalQuadElec::Create(const PointsKey &key)
     returnval->Initialize();
     return returnval;
 }
-
 }
 }

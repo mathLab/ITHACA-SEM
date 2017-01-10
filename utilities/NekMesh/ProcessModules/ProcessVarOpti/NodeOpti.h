@@ -52,14 +52,14 @@ class NodeOptiJob;
 class NodeOpti
 {
 public:
-    NodeOpti(NodeSharedPtr n,
-             std::vector<ElUtilSharedPtr> e,
-             ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
+    NodeOpti(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
+             ResidualSharedPtr r,
+             std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
              optiType o)
         : m_node(n), m_res(r), m_derivUtils(d), m_opti(o)
     {
-        //filter element types within d vector
-        for(int i = 0; i < e.size(); i++)
+        // filter element types within d vector
+        for (int i = 0; i < e.size(); i++)
         {
             m_data[e[i]->GetEl()->GetShapeType()].push_back(e[i]);
         }
@@ -72,53 +72,55 @@ public:
     virtual void Optimise() = 0;
     NodeOptiJob *GetJob();
 
-    template<int DIM> NekDouble GetFunctional(NekDouble &minJacNew,
-                                              bool gradient = true);
+    template <int DIM>
+    NekDouble GetFunctional(NekDouble &minJacNew, bool gradient = true);
 
-    template<int DIM> void MinEigen(NekDouble &val);
-    
+    template <int DIM> void MinEigen(NekDouble &val);
+
 protected:
-
     NodeSharedPtr m_node;
     boost::mutex mtx;
-    std::map<LibUtilities::ShapeType,std::vector<ElUtilSharedPtr> > m_data;
+    std::map<LibUtilities::ShapeType, std::vector<ElUtilSharedPtr> > m_data;
     Array<OneD, NekDouble> m_grad;
 
-    template<int DIM> int IsIndefinite();
-
+    template <int DIM> int IsIndefinite();
 
     NekDouble m_minJac;
     ResidualSharedPtr m_res;
-    std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> m_derivUtils;
+    std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> m_derivUtils;
     optiType m_opti;
 
-    static const NekDouble gam;
-
-    static NekDouble c1() {return 1e-3;}
-    static NekDouble gradTol() {return 1e-8;}
-    static NekDouble alphaTol() {return 1e-8;}
+    static NekDouble c1()
+    {
+        return 1e-3;
+    }
+    static NekDouble gradTol()
+    {
+        return 1e-8;
+    }
+    static NekDouble alphaTol()
+    {
+        return 1e-8;
+    }
 };
 
 typedef boost::shared_ptr<NodeOpti> NodeOptiSharedPtr;
-typedef LibUtilities::NekFactory<int,
-                                 NodeOpti,
-                                 NodeSharedPtr,
-                                 std::vector<ElUtilSharedPtr>,
-                                 ResidualSharedPtr,
-                                 std::map<LibUtilities::ShapeType,DerivUtilSharedPtr>,
-                                 optiType> NodeOptiFactory;
+typedef LibUtilities::NekFactory<
+    int, NodeOpti, NodeSharedPtr, std::vector<ElUtilSharedPtr>,
+    ResidualSharedPtr, std::map<LibUtilities::ShapeType, DerivUtilSharedPtr>,
+    optiType>
+    NodeOptiFactory;
 
 NodeOptiFactory &GetNodeOptiFactory();
 
-
-class NodeOpti3D3D : public NodeOpti //1D optimsation in 3D space
+class NodeOpti3D3D : public NodeOpti // 1D optimsation in 3D space
 {
 public:
-    NodeOpti3D3D(NodeSharedPtr n,
-                 std::vector<ElUtilSharedPtr> e,
-                 ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
+    NodeOpti3D3D(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
+                 ResidualSharedPtr r,
+                 std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
                  optiType o)
-                 : NodeOpti(n,e,r,d,o)
+        : NodeOpti(n, e, r, d, o)
     {
     }
 
@@ -128,26 +130,23 @@ public:
 
     static int m_type;
     static NodeOptiSharedPtr create(
-        NodeSharedPtr n,
-        std::vector<ElUtilSharedPtr> e,
-        ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
-        optiType o)
+        NodeSharedPtr n, std::vector<ElUtilSharedPtr> e, ResidualSharedPtr r,
+        std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d, optiType o)
     {
         return NodeOptiSharedPtr(new NodeOpti3D3D(n, e, r, d, o));
     }
 
 private:
-
 };
 
-class NodeOpti2D2D : public NodeOpti //1D optimsation in 3D space
+class NodeOpti2D2D : public NodeOpti // 1D optimsation in 3D space
 {
 public:
-    NodeOpti2D2D(NodeSharedPtr n,
-                 std::vector<ElUtilSharedPtr> e,
-                 ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
+    NodeOpti2D2D(NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
+                 ResidualSharedPtr r,
+                 std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d,
                  optiType o)
-                 : NodeOpti(n,e,r,d,o)
+        : NodeOpti(n, e, r, d, o)
     {
     }
 
@@ -157,30 +156,30 @@ public:
 
     static int m_type;
     static NodeOptiSharedPtr create(
-        NodeSharedPtr n, std::vector<ElUtilSharedPtr> e,
-        ResidualSharedPtr r, std::map<LibUtilities::ShapeType,DerivUtilSharedPtr> d,
-        optiType o)
+        NodeSharedPtr n, std::vector<ElUtilSharedPtr> e, ResidualSharedPtr r,
+        std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> d, optiType o)
     {
         return NodeOptiSharedPtr(new NodeOpti2D2D(n, e, r, d, o));
     }
 
 private:
-
 };
 
 class NodeOptiJob : public Thread::ThreadJob
 {
 public:
-    NodeOptiJob(NodeOpti* no) : node(no) {}
+    NodeOptiJob(NodeOpti *no) : node(no)
+    {
+    }
 
     void Run()
     {
         node->Optimise();
     }
-private:
-    NodeOpti* node;
-};
 
+private:
+    NodeOpti *node;
+};
 }
 }
 

@@ -229,7 +229,8 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoop> e)
     for(it = m_nodesToEdge.begin(); it != m_nodesToEdge.end(); it++)
     {
         Array<OneD, NekDouble> n(3);
-        ASSERTL0(it->second.size()==2,"weridness, most likely bl_surfs are incorrect");
+        ASSERTL0(it->second.size() == 2,
+                 "wierdness, most likely bl_surfs are incorrect");
         Array<OneD, NekDouble> n1 = edgeNormals[it->second[0]->m_id];
         Array<OneD, NekDouble> n2 = edgeNormals[it->second[1]->m_id];
 
@@ -243,7 +244,8 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoop> e)
         n[1] = n[1] * m_thickness + it->first->m_y;
         n[2] = 0.0;
 
-        NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(m_mesh->m_numNodes++,n[0],n[1],0.0));
+        NodeSharedPtr nn = boost::shared_ptr<Node>(
+            new Node(m_mesh->m_numNodes++, n[0], n[1], 0.0));
         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(faceid);
         Array<OneD, NekDouble> uv = s->locuv(n);
         nn->SetCADSurf(faceid,s,uv);

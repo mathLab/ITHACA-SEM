@@ -55,6 +55,7 @@ v4.4.0
 - Allow equi-spaced output for 1D and 2DH1D fields (!613)
 - Update quality metric to include scaled Jacobian output (!695)
 - Allow multiple XML files to be specified in InterpField module (!705)
+- Fix issues with isocontour module (!719)
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
@@ -76,6 +77,7 @@ v4.4.0
 - Bug fix to get two meshgen regression tests working (!700)
 - Remove libANN in deference to boost::geometry (!703)
 - Refactor library to use NekMesh modules for CAD generation (!704)
+- Add `varopti` process module to optimise meshes (!711)
 - Add a mesh extract option to the linearise module to visualise the result
   (!712)
 - 2D to 3D mesh extrusion module (!715)

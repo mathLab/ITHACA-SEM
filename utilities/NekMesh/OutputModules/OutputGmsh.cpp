@@ -157,11 +157,7 @@ void OutputGmsh::Process()
         {
             ElementSharedPtr e = m_mesh->m_element[d][i];
             vector<NodeSharedPtr> volList = e->GetVolumeNodes();
-
-            for (int j = 0; j < volList.size(); ++j)
-            {
-                m_mesh->m_vertexSet.insert(volList[j]);
-            }
+            m_mesh->m_vertexSet.insert(volList.begin(), volList.end());
         }
     }
 

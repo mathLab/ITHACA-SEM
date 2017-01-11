@@ -1,9 +1,19 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
 SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build,
 options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release
 RelWithDebInfo MinSizeRel.")
 
-PROJECT(Nektar++)
+PROJECT(Nektar++ C CXX)
+
+
+INCLUDE(CheckLanguage)
+
+CHECK_LANGUAGE(Fortran)
+IF(CMAKE_Fortran_COMPILER)
+  ENABLE_LANGUAGE(Fortran)
+ELSE()
+  MESSAGE(STATUS "No Fortran support")
+ENDIF()
 
 # Helps organize projects in IDEs.
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -218,7 +228,6 @@ INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
 INCLUDE (ThirdPartyOCE)
 INCLUDE (ThirdPartyTetGen)
-INCLUDE (ThirdPartyANN)
 INCLUDE (ThirdPartyCCM)
 INCLUDE (ThirdPartyCFI)
 

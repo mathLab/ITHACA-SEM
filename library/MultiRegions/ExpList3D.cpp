@@ -62,7 +62,9 @@ namespace Nektar
         }
         
         ExpList3D::ExpList3D(const ExpList3D &In,
-                const std::vector<unsigned int> &eIDs): ExpList(In, eIDs)
+                const std::vector<unsigned int> &eIDs,
+                const bool DeclareCoeffPhysArrays)
+                : ExpList(In, eIDs, DeclareCoeffPhysArrays)
         {
             SetExpType(e3D);
             

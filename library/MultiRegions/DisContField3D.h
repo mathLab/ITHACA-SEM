@@ -82,13 +82,15 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void EvaluateHDGPostProcessing(
                 Array<OneD, NekDouble> &outarray);
-            
+
             MULTI_REGIONS_EXPORT bool GetLeftAdjacentFaces(int cnt)
             {
                 return m_leftAdjacentFaces[cnt];
             }
 
-                        
+            Array<OneD, int> m_BCtoElmMap;
+            Array<OneD, int> m_BCtoFaceMap;
+
         protected:
             /**
              * @brief An object which contains the discretised boundary
@@ -187,7 +189,9 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap   &factors,
                 const StdRegions::VarCoeffMap      &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing);
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool PhysSpaceForcing);
+
             virtual void v_GeneralMatrixOp(
                 const GlobalMatrixKey             &gkey,
                 const Array<OneD,const NekDouble> &inarray,
@@ -197,7 +201,8 @@ namespace Nektar
                 Array<OneD, int> &ElmtID,
                 Array<OneD, int> &FaceID);
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result);
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays);
             virtual void v_Reset();
 
             /*

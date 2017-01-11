@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: SurfaceMeshing.cpp
+//  File: ProcessLoadCAD.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: surfacemeshing object methods.
+//  Description: Load CAD module
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,6 +54,8 @@ ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
 {
     m_config["filename"] =
         ConfigOption(false, "", "Generate prisms on these surfs");
+    m_config["2D"] =
+        ConfigOption(true, "", "allow 2d loading");
 }
 
 ProcessLoadCAD::~ProcessLoadCAD()
@@ -62,27 +64,30 @@ ProcessLoadCAD::~ProcessLoadCAD()
 
 void ProcessLoadCAD::Process()
 {
-    m_mesh->m_CADId = m_config["filename"].as<string>();
+    string name = m_config["filename"].as<string>();
 
     if (m_mesh->m_verbose)
     {
-        cout << "Loading CAD for " << m_mesh->m_CADId << endl;
+        cout << "Loading CAD for " << name << endl;
     }
 
-    string ext = boost::filesystem::extension(m_mesh->m_CADId);
+    string ext = boost::filesystem::extension(name);
 
     if(boost::iequals(ext,".fbm"))
     {
-        m_mesh->m_cad = GetEngineFactory().CreateInstance("cfi",m_mesh->m_CADId);
+        m_mesh->m_cad = GetEngineFactory().CreateInstance("cfi",name);
     }
     else
     {
-        m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",m_mesh->m_CADId);
+        m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",name);
+    }
+
+    if(m_config["2D"].beenSet)
+    {
+        m_mesh->m_cad->Set2D();
     }
 
     ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
-
-    m_mesh->m_hasCAD = true;
 
     if (m_mesh->m_verbose)
     {

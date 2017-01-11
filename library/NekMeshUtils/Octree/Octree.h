@@ -40,6 +40,8 @@
 #include "Octant.h"
 #include <NekMeshUtils/MeshElements/Mesh.h>
 
+#include <string>
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -56,11 +58,6 @@ class Octree
 public:
 
     Octree(MeshSharedPtr m) : m_mesh(m)
-    {
-
-    }
-
-    Octree()
     {
     }
 
@@ -115,10 +112,9 @@ public:
      *
      * @param nm name of the user defined spacing file
      */
-    void UDS(std::string nm)
+    void Refinement(std::string nm)
     {
-        m_udsfile = nm;
-        m_udsfileset = true;
+        m_refinement = nm;
     }
 
 private:
@@ -190,10 +186,8 @@ private:
     int m_numoct;
     /// Mesh object
     MeshSharedPtr m_mesh;
-    /// user defined spacing has been set
-    bool m_udsfileset;
-    /// name of the user defined spacing file
-    std::string m_udsfile;
+
+    std::string m_refinement;
 };
 typedef boost::shared_ptr<Octree> OctreeSharedPtr;
 

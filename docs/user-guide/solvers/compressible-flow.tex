@@ -226,7 +226,9 @@ conditions are employed (i.e. $T_{w}$). Default value = 300.15$K$;
 \item \inltt{wInf} farfield $Z$-component of the velocity (i.e. $w_{\infty}$). Default value = 0.0 $m/s$;
 \item \inltt{mu} dynamic viscosity (i.e. $\mu_{\infty}$). Default value = 1.78e-05 $Pa s$;
 \item \inltt{Pr} Prandtl number. Default value = 0.72;
-\item \inltt{thermalConductivity} thermal conductivity (i.e. $\kappa_{\infty}$). Default value = 0.0257 $W / (K m)$;
+\item \inltt{thermalConductivity} thermal conductivity (i.e. $\kappa_{\infty}$). This can be set as an
+ alternative to \inltt{Pr}, in which case the Prandtl number is calculated from $\kappa_{\infty}$ 
+ (it is only possible to set one of them). By default, this is obtained from the Prandtl number;
 \end{itemize}
 
 \subsection*{Solver info}
@@ -248,6 +250,8 @@ Under this section it is possible to set the solver information.
 \begin{itemize}
 \item \inltt{NavierStokesCFE} (Compressible Navier-Stokes equations);
 \item \inltt{EulerCFE} (Compressible Euler equations).
+\item \inltt{IsentropicVortex} (Isentropic vortex test case).
+\item \inltt{RinglebFlow} (Ringleb flow test case).
 \end{itemize}
 \item \inltt{Projection} is the type of projection we want to use:
 \begin{itemize}
@@ -263,14 +267,15 @@ Note that the Continuous projection is not supported in the Compressible Flow So
 \item \inltt{FRcmin} (Flux-Reconstruction with $c = c_{min}$);
 \item \inltt{FRcinf} (Flux-Reconstruction with $c = \infty$).
 \end{itemize}
-\item \inltt{DiffusionType} is the diffusion operator we want to use:
+\item \inltt{DiffusionType} is the diffusion operator we want to use
+for the Navier-Stokes equations:
 \begin{itemize}
-\item \inltt{WeakDG} (classical DG in weak form);
-\item \inltt{FRDG} (Flux-Reconstruction recovering nodal DG scheme);
-\item \inltt{FRSD} (Flux-Reconstruction recovering a spectral difference (SD) scheme);
-\item \inltt{FRHU} (Flux-Reconstruction recovering Huynh (G2) scheme);
-\item \inltt{FRcmin} (Flux-Reconstruction with $c = c_{min}$);
-\item \inltt{FRcinf} (Flux-Reconstruction with $c = \infty$).
+\item \inltt{LDGNS} (LDG);
+\item \inltt{LFRDGNS} (Flux-Reconstruction recovering nodal DG scheme);
+\item \inltt{LFRSDNS} (Flux-Reconstruction recovering a spectral difference (SD) scheme);
+\item \inltt{LFRHUNS} (Flux-Reconstruction recovering Huynh (G2) scheme);
+\item \inltt{LFRcminNS} (Flux-Reconstruction with $c = c_{min}$);
+\item \inltt{LFRcinfNS} (Flux-Reconstruction with $c = \infty$).
 \end{itemize}
 \item \inltt{TimeIntegrationMethod} is the time-integration scheme we want to use. 
 Note that only an explicit discretisation is supported:
@@ -292,14 +297,6 @@ we want to use for the advection operator:
 \item \inltt{HLLC};
 \item \inltt{LaxFriedrichs};
 \item \inltt{Roe}.
-\end{itemize}
-\item \inltt{ProblemType} is the problem type we want to solve. 
-This tag is supported for solving ad hoc problems such as the 
-isentropic vortex or the Ringleb flow.
-\begin{itemize}
-\item \inltt{General};
-\item \inltt{IsentropicVortex};
-\item \inltt{RinglebFlow};\\[0.2em]
 \end{itemize}
 \item \inltt{ViscosityType} is the viscosity type we want to use:
 \begin{itemize}

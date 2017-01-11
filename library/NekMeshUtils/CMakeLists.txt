@@ -38,6 +38,7 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/OCE/CADVertOCE.cpp
         CADSystem/OCE/CADCurveOCE.cpp
         CADSystem/OCE/CADSurfOCE.cpp
+        2DGenerator/2DGenerator.cpp
     )
 ENDIF()
 
@@ -92,6 +93,7 @@ IF(NEKTAR_USE_MESHGEN)
         Optimisation/BGFS-B.h
         Optimisation/OptimiseObj.h
         Triangle/Triangle.h
+        2DGenerator/2DGenerator.h
     )
 ENDIF()
 
@@ -118,15 +120,11 @@ ADD_NEKTAR_LIBRARY(NekMeshUtils lib ${NEKTAR_LIBRARY_TYPE}
     ${NEKMESHUTILS_SOURCES} ${NEKMESHUTILS_HEADERS})
 TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC LocalRegions)
 
-IF(NEKTAR_USE_ANN)
-    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${ANN_LIBRARY})
-ENDIF()
-
 IF(NEKTAR_USE_MESHGEN)
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TETGEN_LIBRARY})
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${OCC_LIBRARIES})
 
-    ADD_DEPENDENCIES(NekMeshUtils oce-0.17 tetgen-1.5 ann-1.1.2)
+    ADD_DEPENDENCIES(NekMeshUtils oce-0.17 tetgen-1.5)
 ENDIF()
 
 IF(NEKTAR_USE_CFI)

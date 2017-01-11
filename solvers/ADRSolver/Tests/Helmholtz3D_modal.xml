@@ -3,8 +3,7 @@
     xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
 
     <GEOMETRY DIM="3" SPACE="3">
-
-        <VERTEX>
+        <VERTEX XSCALE="1.25" YSCALE="1.25" ZSCALE="1.25">
             <V ID="0">0.000e+00 0.000e+00 0.000e+00</V>
             <V ID="1">1.000e+00 0.000e+00 0.000e+00</V>
             <V ID="2">0.000e+00 1.000e+00 0.000e+00</V>
@@ -175,12 +174,32 @@
         </VARIABLES>
 
         <BOUNDARYREGIONS>
-            <B ID="0"> C[1-6] </B>
+          <B ID="0"> C[1] </B>  <!-- z=0 !-->
+          <B ID="1"> C[2] </B>  <!-- y=0 !-->
+          <B ID="2"> C[3] </B>  <!-- x=1.25 !-->
+          <B ID="3"> C[4] </B>  <!-- y=1.25 !-->
+          <B ID="4"> C[5] </B>  <!-- x=0 !-->
+          <B ID="5"> C[6] </B>  <!-- z=1.25 !-->
         </BOUNDARYREGIONS>
 
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
                 <D VAR="w" VALUE="sin(PI*x)*sin(PI*y)*sin(PI*z)" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="w" VALUE="sin(PI*x)*sin(PI*y)*sin(PI*z)" />
+            </REGION>
+            <REGION REF="2">
+                <N VAR="w" VALUE="PI*cos(PI*x)*sin(PI*y)*sin(PI*z)" />
+            </REGION>
+            <REGION REF="3">
+                <N VAR="w" VALUE="PI*sin(PI*x)*cos(PI*y)*sin(PI*z)" />
+            </REGION>
+            <REGION REF="4">
+                <D VAR="w" VALUE="sin(PI*x)*sin(PI*y)*sin(PI*z)" />
+            </REGION>
+            <REGION REF="5">
+                <R VAR="w" VALUE="PI*sin(PI*x)*sin(PI*y)*cos(PI*z) + 0.5*sin(PI*x)*sin(PI*y)*sin(PI*z)" PRIMCOEFF="0.5" />
             </REGION>
         </BOUNDARYCONDITIONS>
 

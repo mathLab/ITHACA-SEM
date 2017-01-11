@@ -116,7 +116,6 @@ int main(int argc, char *argv[])
     NekDouble                           m_gasConstant;
     NekDouble                           m_Twall;
     NekDouble                           m_mu;
-    NekDouble                           m_thermalConductivity;
 
     int m_spacedim = 3;
     int nDimensions = m_spacedim;
@@ -164,8 +163,6 @@ int main(int argc, char *argv[])
     vSession->LoadParameter ("Twall",         m_Twall,         300.15);
     vSession->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
     vSession->LoadParameter ("mu",            m_mu,            1.78e-05);
-    vSession->LoadParameter ("thermalConductivity",
-                             m_thermalConductivity, 0.0257);
 
     //--------------------------------------------------------------------------
     // Read in mesh from input file

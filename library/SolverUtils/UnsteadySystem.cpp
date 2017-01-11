@@ -196,7 +196,7 @@ namespace Nektar
             }
 
             // Integrate in wave-space if using homogeneous1D
-            if(m_HomogeneousType == eHomogeneous1D && m_homoInitialFwd)
+            if(m_HomogeneousType != eNotHomogeneous && m_homoInitialFwd)
             {
                 for(i = 0; i < nfields; ++i)
                 {
@@ -362,7 +362,7 @@ namespace Nektar
                 if ((m_checksteps && !((step + 1) % m_checksteps)) ||
                      doCheckTime)
                 {
-                    if(m_HomogeneousType == eHomogeneous1D)
+                    if(m_HomogeneousType != eNotHomogeneous)
                     {
                         vector<bool> transformed(nfields, false);
                         for(i = 0; i < nfields; i++)
@@ -376,7 +376,8 @@ namespace Nektar
                                 transformed[i] = true;
                             }
                         }
-                        Checkpoint_Output(m_nchk++);
+                        Checkpoint_Output(m_nchk);
+                        m_nchk++;
                         for(i = 0; i < nfields; i++)
                         {
                             if (transformed[i])
@@ -391,7 +392,8 @@ namespace Nektar
                     }
                     else
                     {
-                        Checkpoint_Output(m_nchk++);
+                        Checkpoint_Output(m_nchk);
+                        m_nchk++;
                     }
                     doCheckTime = false;
                 }
@@ -416,7 +418,7 @@ namespace Nektar
             }
             
             // If homogeneous, transform back into physical space if necessary.
-            if(m_HomogeneousType == eHomogeneous1D)
+            if(m_HomogeneousType != eNotHomogeneous)
             {
                 for(i = 0; i < nfields; i++)
                 {
@@ -456,7 +458,7 @@ namespace Nektar
          */
         void UnsteadySystem::v_DoInitialise()
         {
-            CheckForRestartTime(m_time);
+            CheckForRestartTime(m_time, m_nchk);
             SetBoundaryConditions(m_time);
             SetInitialConditions(m_time);
         }
@@ -695,7 +697,7 @@ namespace Nektar
             }
         }
 
-        void UnsteadySystem::CheckForRestartTime(NekDouble &time)
+        void UnsteadySystem::CheckForRestartTime(NekDouble &time, int &nchk)
         {
             if (m_session->DefinesFunction("InitialConditions"))
             {
@@ -736,6 +738,13 @@ namespace Nektar
                             if (iter != m_fieldMetaDataMap.end())
                             {
                                 time = boost::lexical_cast<NekDouble>(
+                                    iter->second);
+                            }
+
+                            iter = m_fieldMetaDataMap.find("ChkFileNum");
+                            if (iter != m_fieldMetaDataMap.end())
+                            {
+                                nchk = boost::lexical_cast<NekDouble>(
                                     iter->second);
                             }
                         }

@@ -66,6 +66,11 @@ public:
 
     Array<OneD, NekDouble> D2(NekDouble t);
 
+    NekDouble Curvature(NekDouble t)
+    {
+        ASSERTL0(false,"not implemented in CFI engine");
+    }
+
     NekDouble tAtArcLength(NekDouble s);
 
     Array<OneD, NekDouble> GetMinMax();

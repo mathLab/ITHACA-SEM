@@ -59,7 +59,9 @@ bool FaceMesh::ValidateCurves()
 
     for(int i = 0; i < curvesInSurface.size(); i++)
     {
-        vector<EdgeSharedPtr> es = m_curvemeshes[curvesInSurface[i]]->GetMeshEdges();
+        vector<EdgeSharedPtr> es =
+            m_curvemeshes[curvesInSurface[i]]->GetMeshEdges();
+
         for(int j = i; j < curvesInSurface.size(); j++)
         {
             if(i == j)
@@ -67,7 +69,8 @@ bool FaceMesh::ValidateCurves()
                 continue;
             }
 
-            vector<EdgeSharedPtr> es2 = m_curvemeshes[curvesInSurface[j]]->GetMeshEdges();
+            vector<EdgeSharedPtr> es2 =
+                m_curvemeshes[curvesInSurface[j]]->GetMeshEdges();
 
             for(int l = 0; l < es.size(); l++)
             {
@@ -83,16 +86,23 @@ bool FaceMesh::ValidateCurves()
                         continue;
                     }
 
-                    Array<OneD, NekDouble> P3 = es2[k]->m_n1->GetCADSurfInfo(m_id);
-                    Array<OneD, NekDouble> P4 = es2[k]->m_n2->GetCADSurfInfo(m_id);
+                    Array<OneD, NekDouble> P3 =
+                        es2[k]->m_n1->GetCADSurfInfo(m_id);
+                    Array<OneD, NekDouble> P4 =
+                        es2[k]->m_n2->GetCADSurfInfo(m_id);
 
-                    NekDouble den = (P4[0]-P3[0])*(P2[1]-P1[1]) - (P2[0]-P1[0])*(P4[1]-P3[1]);
+                    NekDouble den = (P4[0]-P3[0])*(P2[1]-P1[1])
+                                  - (P2[0]-P1[0])*(P4[1]-P3[1]);
+
                     if(fabs(den) < 1e-8)
                     {
                         continue;
                     }
-                    NekDouble t = ((P1[0]-P3[0])*(P4[1]-P3[1]) - (P4[0]-P3[0])*(P1[1]-P3[1]))/den;
-                    NekDouble u = (P1[0] - P3[0] + t*(P2[0]-P1[0])) / (P4[0] - P3[0]);
+
+                    NekDouble t = ((P1[0]-P3[0])*(P4[1]-P3[1]) -
+                                   (P4[0]-P3[0])*(P1[1]-P3[1]))/den;
+                    NekDouble u = (P1[0] - P3[0] + t*(P2[0]-P1[0])) /
+                                  (P4[0] - P3[0]);
 
                     if(t < 1.0 && t > 0.0 && u < 1.0 && u > 0.0)
                     {
@@ -100,7 +110,9 @@ bool FaceMesh::ValidateCurves()
                         uv[0] = P1[0] + t * (P2[0] - P1[0]);
                         uv[1] = P1[1] + t * (P2[1] - P1[1]);
                         Array<OneD, NekDouble> loc = m_cadsurf->P(uv);
-                        cout << endl << "Curve mesh error at " << loc[0] << " " << loc[1] << " " << loc[2] << " on face " << m_id << endl;
+                        cout << endl << "Curve mesh error at " << loc[0] << " "
+                             << loc[1] << " " << loc[2] << " on face "
+                             << m_id << endl;
                         error = true;
                     }
                 }
@@ -158,8 +170,8 @@ void FaceMesh::Mesh()
     bool repeat     = true;
     int meshcounter = 1;
 
-    //continuously remesh until all triangles conform to the spacing in the
-    //octree
+    // continuously remesh until all triangles conform to the spacing in the
+    // octree
     while (repeat)
     {
         repeat = Validate();
@@ -174,8 +186,8 @@ void FaceMesh::Mesh()
         meshcounter++;
     }
 
-    //build a local version of the mesh (one set of triangles)
-    //this is done so edge connectivity infomration can be used for optimisation
+    // build a local version of the mesh (one set of triangles).  this is done
+    // so edge connectivity infomration can be used for optimisation
     BuildLocalMesh();
 
     OptimiseLocalMesh();
@@ -194,7 +206,8 @@ void FaceMesh::Mesh()
 
     if(m_mesh->m_verbose)
     {
-        cout << "\r                                                                "
+        cout << "\r                               "
+                "                                 "
                 "                             ";
         cout << scientific << "\r\t\tFace " << m_id << endl
              << "\t\t\tNodes: " << m_localNodes.size() << endl
@@ -208,7 +221,7 @@ void FaceMesh::Mesh()
 
 void FaceMesh::OptimiseLocalMesh()
 {
-    //each optimisation algorithm is based on the work in chapeter 19
+    // each optimisation algorithm is based on the work in chapter 19
     DiagonalSwap();
 
     Smoothing();
@@ -248,11 +261,15 @@ void FaceMesh::Smoothing()
         for (nit = m_localNodes.begin(); nit != m_localNodes.end(); nit++)
         {
             NodeSet::iterator f = m_inBoundary.find((*nit));
-            if (f != m_inBoundary.end()) // node is on curve so skip
-                continue;
 
-            vector<NodeSharedPtr> connodes; // this can be real nodes or dummy
-                                            // nodes depending on the system
+            // node is on curve so skip
+            if (f != m_inBoundary.end())
+            {
+                continue;
+            }
+
+            // this can be real nodes or dummy nodes depending on the system
+            vector<NodeSharedPtr> connodes;
 
             vector<EdgeSharedPtr> edges  = connectingedges[(*nit)->m_id];
             vector<ElementSharedPtr> els = connectingelements[(*nit)->m_id];
@@ -266,11 +283,17 @@ void FaceMesh::Smoothing()
 
                 NodeSharedPtr J;
                 if (*nit == edges[i]->m_n1)
+                {
                     J = edges[i]->m_n2;
+                }
                 else if (*nit == edges[i]->m_n2)
+                {
                     J = edges[i]->m_n1;
+                }
                 else
+                {
                     ASSERTL0(false, "could not find node");
+                }
 
                 Array<OneD, NekDouble> ui = (*nit)->GetCADSurfInfo(m_id);
                 Array<OneD, NekDouble> uj = J->GetCADSurfInfo(m_id);
@@ -278,9 +301,12 @@ void FaceMesh::Smoothing()
                 for (int j = 0; j < els.size(); j++)
                 {
                     vector<NodeSharedPtr> v = els[j]->GetVertexList();
+
+                    // elememt is adjacent to J therefore no intersection on IJ
                     if (v[0] == J || v[1] == J || v[2] == J)
-                        continue; // elememt is adjacent to J therefore no
-                                  // intersection on IJ
+                    {
+                        continue;
+                    }
 
                     // need to find other edge
                     EdgeSharedPtr AtoB;
@@ -314,8 +340,8 @@ void FaceMesh::Smoothing()
                     sort(lambda.begin(), lambda.end());
                     // make a new dummy node based on the system
                     Array<OneD, NekDouble> ud(2);
-                    ud[0]                       = uj[0] + lambda[0] * (ui[0] - uj[0]);
-                    ud[1]                       = uj[1] + lambda[0] * (ui[1] - uj[1]);
+                    ud[0] = uj[0] + lambda[0] * (ui[0] - uj[0]);
+                    ud[1] = uj[1] + lambda[0] * (ui[1] - uj[1]);
                     Array<OneD, NekDouble> locd = m_cadsurf->P(ud);
                     NodeSharedPtr dn = boost::shared_ptr<Node>(
                         new Node(0, locd[0], locd[1], locd[2]));
@@ -490,7 +516,8 @@ void FaceMesh::DiagonalSwap()
             }
 
             // determine signed area of alternate config
-            // //cout << A->GetNumCADSurf() << " " << B->GetNumCADSurf() << " " << C->GetNumCADSurf() << " " << D->GetNumCADSurf() << endl;
+            // //cout<< A->GetNumCADSurf() << " " << B->GetNumCADSurf() << " "
+            // //    << C->GetNumCADSurf() << " " << D->GetNumCADSurf() << endl;
             // ofstream file;
             // file.open("pts.3D");
             // file << "x y z value" << endl;
@@ -619,7 +646,9 @@ void FaceMesh::DiagonalSwap()
                 for (int i = 0; i < links.size(); i++)
                 {
                     if (links[i].first->GetId() == tri1->GetId())
+                    {
                         continue;
+                    }
                     CA->m_elLink.push_back(links[i]);
                 }
 
@@ -628,7 +657,9 @@ void FaceMesh::DiagonalSwap()
                 for (int i = 0; i < links.size(); i++)
                 {
                     if (links[i].first->GetId() == tri1->GetId())
+                    {
                         continue;
+                    }
                     BC->m_elLink.push_back(links[i]);
                 }
 
@@ -637,7 +668,9 @@ void FaceMesh::DiagonalSwap()
                 for (int i = 0; i < links.size(); i++)
                 {
                     if (links[i].first->GetId() == tri2->GetId())
+                    {
                         continue;
+                    }
                     AD->m_elLink.push_back(links[i]);
                 }
 
@@ -646,7 +679,9 @@ void FaceMesh::DiagonalSwap()
                 for (int i = 0; i < links.size(); i++)
                 {
                     if (links[i].first->GetId() == tri2->GetId())
+                    {
                         continue;
+                    }
                     DB->m_elLink.push_back(links[i]);
                 }
 
@@ -756,7 +791,6 @@ void FaceMesh::BuildLocalMesh()
 
     for (int i = 0; i < m_connec.size(); i++)
     {
-
         ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
 
         vector<int> tags;
@@ -834,9 +868,13 @@ void FaceMesh::Stretching()
             uv[0] = bnds[0] + i * du;
             uv[1] = bnds[2] + j * dv;
             if (i == dxu - 1)
+            {
                 uv[0] = bnds[1];
+            }
             if (j == dxv - 1)
-                uv[1]                = bnds[3];
+            {
+                uv[1] = bnds[3];
+            }
             Array<OneD, NekDouble> r = m_cadsurf->D1(uv);
 
             NekDouble ru = sqrt(r[3] * r[3] + r[4] * r[4] + r[5] * r[5]);
@@ -846,7 +884,9 @@ void FaceMesh::Stretching()
             rv *= dv;
 
             if (rv < 1E-8)
+            {
                 continue;
+            }
 
             m_str += ru / rv;
             ct++;
@@ -879,13 +919,19 @@ bool FaceMesh::Validate()
         int numValid = 0;
 
         if (r[0] < triDelta[0] && r[2] < triDelta[0])
+        {
             numValid++;
+        }
 
         if (r[1] < triDelta[1] && r[0] < triDelta[1])
+        {
             numValid++;
+        }
 
         if (r[2] < triDelta[2] && r[1] < triDelta[2])
+        {
             numValid++;
+        }
 
         if (numValid != 3)
         {
@@ -1063,7 +1109,9 @@ void FaceMesh::OrientateCurves()
             nt2 = orderedLoops[i][j + 1]->GetCADSurfInfo(m_id);
 
             if (fabs(nt2[1] - nt1[1]) < 1e-30)
+            {
                 continue;
+            }
 
             NekDouble lam = (P[1] - nt1[1]) / (nt2[1] - nt1[1]);
             NekDouble S   = nt1[0] - P[0] + (nt2[0] - nt1[0]) * lam;
@@ -1079,7 +1127,9 @@ void FaceMesh::OrientateCurves()
             nt2 = orderedLoops[i][0]->GetCADSurfInfo(m_id);
 
             if (fabs(nt2[1] - nt1[1]) < 1e-30)
+            {
                 continue;
+            }
 
             NekDouble lam = (P[1] - nt1[1]) / (nt2[1] - nt1[1]);
             NekDouble S   = nt1[0] - P[0] + (nt2[0] - nt1[0]) * lam;
@@ -1101,7 +1151,9 @@ void FaceMesh::OrientateCurves()
                 nt2 = orderedLoops[i][j + 1]->GetCADSurfInfo(m_id);
 
                 if (fabs(nt2[1] - nt1[1]) < 1e-30)
+                {
                     continue;
+                }
 
                 NekDouble lam = (P[1] - nt1[1]) / (nt2[1] - nt1[1]);
                 NekDouble S   = nt1[0] - P[0] + (nt2[0] - nt1[0]) * lam;
@@ -1117,7 +1169,9 @@ void FaceMesh::OrientateCurves()
                 nt2 = orderedLoops[i][0]->GetCADSurfInfo(m_id);
 
                 if (fabs(nt2[1] - nt1[1]) < 1e-30)
+                {
                     continue;
+                }
 
                 NekDouble lam = (P[1] - nt1[1]) / (nt2[1] - nt1[1]);
                 NekDouble S   = nt1[0] - P[0] + (nt2[0] - nt1[0]) * lam;
@@ -1141,6 +1195,18 @@ void FaceMesh::OrientateCurves()
         vector<NodeSharedPtr> tmp = orderedLoops[0];
         reverse(tmp.begin(), tmp.end());
         orderedLoops[0] = tmp;
+        //need to flip edgeo
+        for(int i = 0; i < m_edgeloops[0].edgeo.size(); i++)
+        {
+            if(m_edgeloops[0].edgeo[i] == 0)
+            {
+                m_edgeloops[0].edgeo[i] = 1;
+            }
+            else
+            {
+                m_edgeloops[0].edgeo[i] = 0;
+            }
+        }
     }
 
     for (int i = 1; i < orderedLoops.size(); i++)
@@ -1150,6 +1216,19 @@ void FaceMesh::OrientateCurves()
             vector<NodeSharedPtr> tmp = orderedLoops[i];
             reverse(tmp.begin(), tmp.end());
             orderedLoops[i] = tmp;
+
+            //need to flip edgeo
+            for(int j = 0; j < m_edgeloops[i].edgeo.size(); j++)
+            {
+                if(m_edgeloops[i].edgeo[j] == 0)
+                {
+                    m_edgeloops[i].edgeo[j] = 1;
+                }
+                else
+                {
+                    m_edgeloops[i].edgeo[j] = 0;
+                }
+            }
         }
     }
 }

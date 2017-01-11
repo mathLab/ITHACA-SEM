@@ -1383,12 +1383,13 @@ namespace Nektar
             lambda_store = lambda;
         }
         
-        SetBoundaryConditions(time);		
-        
         // Forcing for advection solve 
         for(i = 0; i < m_velocity.num_elements(); ++i)
         {
+            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+            m_fields[m_velocity[i]]->SetWaveSpace(true);
             m_fields[m_velocity[i]]->IProductWRTBase(inarray[i],m_fields[m_velocity[i]]->UpdateCoeffs());
+            m_fields[m_velocity[i]]->SetWaveSpace(waveSpace);
             Vmath::Smul(m_fields[m_velocity[i]]->GetNcoeffs(),lambda,m_fields[m_velocity[i]]->GetCoeffs(), 1,m_fields[m_velocity[i]]->UpdateCoeffs(),1);
             forcing[i] = m_fields[m_velocity[i]]->GetCoeffs();
         }
@@ -1520,7 +1521,10 @@ namespace Nektar
         }
         for (unsigned int i = 0; i < ncmpt; ++i)
         {
+            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+            m_fields[i]->SetWaveSpace(true);
             m_fields[i]->IProductWRTBase(forcing_phys[i], forcing[i]);
+            m_fields[i]->SetWaveSpace(waveSpace);
         }
 
         SolveLinearNS(forcing);
@@ -1674,7 +1678,10 @@ namespace Nektar
             m_fields[m_velocity[i]]->PhysDeriv(i, u_N[i], tmp_RHS[i]);
             Vmath::Smul(tmp_RHS[i].num_elements(), m_kinvis, tmp_RHS[i], 1, tmp_RHS[i], 1);
             
+            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+            m_fields[m_velocity[i]]->SetWaveSpace(true);
             m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_RHS[i], RHS[i]);
+            m_fields[m_velocity[i]]->SetWaveSpace(waveSpace);
         }
         
         SetUpCoupledMatrix(0.0, u_N, true);
@@ -1757,9 +1764,12 @@ namespace Nektar
         
         for(int i = 0; i < m_velocity.num_elements(); ++i)
         {
+            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+            m_fields[m_velocity[i]]->SetWaveSpace(true);
             m_fields[m_velocity[i]]->IProductWRTBase(Eval_Adv[i], AdvTerm[i]); //(w, (u.grad)u)
             m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_DerVel[i], ViscTerm[i]); //(grad w, grad u)
             m_fields[m_velocity[i]]->IProductWRTBase(m_ForcingTerm[i], Forc[i]); //(w, f)
+            m_fields[m_velocity[i]]->SetWaveSpace(waveSpace);
             
             Vmath::Vsub(outarray[i].num_elements(), outarray[i], 1, AdvTerm[i], 1, outarray[i], 1);
             Vmath::Vsub(outarray[i].num_elements(), outarray[i], 1, ViscTerm[i], 1, outarray[i], 1);

@@ -399,7 +399,7 @@ namespace Nektar
                     elmt->GetTracePhysVals(boundary,Bc,U,ubc);
                     
                     Vmath::Vmul(nq,&m_fieldsRadiationFactor[fieldid][cnt1 + 
-                                                                     BndExp[n]->GetPhys_Offset(i)],1,&ubc[0],1,&ubc[0],1);
+                                BndExp[n]->GetPhys_Offset(i)],1,&ubc[0],1,&ubc[0],1);
 
                     Bvals = BndExp[n]->UpdateCoeffs()+BndExp[n]->GetCoeff_Offset(i);
 
@@ -625,6 +625,7 @@ namespace Nektar
     {
         m_extrapolation->SubStepSaveFields(step);
         m_extrapolation->SubStepAdvance(m_intSoln,step,m_time);
+        SetBoundaryConditions(m_time+m_timestep);
         return false;
     }
 

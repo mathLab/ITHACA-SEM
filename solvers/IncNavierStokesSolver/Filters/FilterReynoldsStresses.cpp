@@ -154,6 +154,19 @@ void FilterReynoldsStresses::v_Initialise(
 
     // Initialise output arrays
     FilterFieldConvert::v_Initialise(pFields, time);
+
+    // Update m_fields if using restart file
+    if (m_numSamples)
+    {
+        for (int j = 0; j < m_fields.size(); ++j)
+        {
+            pFields[0]->BwdTrans(m_outFields[j], m_fields[j]);
+            if (pFields[0]->GetWaveSpace())
+            {
+                pFields[0]->HomogeneousBwdTrans(m_fields[j], m_fields[j]);
+            }
+        }
+    }
 }
 
 void FilterReynoldsStresses::v_FillVariablesName(
@@ -278,15 +291,6 @@ void FilterReynoldsStresses::v_PrepareOutput(
     m_fieldMetaData["NumberOfFieldDumps"] =
         boost::lexical_cast<std::string>(m_numSamples);
 
-    if (m_movAvg)
-    {
-        m_scale = 1.0;
-    }
-    else
-    {
-        m_scale = 1.0 / m_numSamples;
-    }
-
     // Set wavespace to false, as calculations were performed in physical space
     bool waveSpace = pFields[0]->GetWaveSpace();
     pFields[0]->SetWaveSpace(false);
@@ -302,6 +306,18 @@ void FilterReynoldsStresses::v_PrepareOutput(
 
     // Restore waveSpace
     pFields[0]->SetWaveSpace(waveSpace);
+}
+
+NekDouble FilterReynoldsStresses::v_GetScale()
+{
+    if (m_movAvg)
+    {
+        return 1.0;
+    }
+    else
+    {
+        return 1.0 / m_numSamples;
+    }
 }
 
 }

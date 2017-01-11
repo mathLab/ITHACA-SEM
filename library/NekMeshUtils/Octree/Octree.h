@@ -71,16 +71,14 @@ struct linesource
         }
         Array<OneD, NekDouble> dev(3);
         dev[0] = Le[1] * Re[2] - Re[1] * Le[2];
-        dev[1] = Le[0] * Re[2] - Re[0] * Le[2];
+        dev[1] = Le[2] * Re[0] - Re[2] * Le[0];
         dev[2] = Le[0] * Re[1] - Re[0] * Le[1];
 
         NekDouble dist =
-            sqrt(dev[0] * dev[0] + dev[1] * dev[1] + dev[2] * dev[2]) /
-            sqrt(s[0] * s[0] + s[1] * s[1] + s[2] * s[2]);
+            sqrt(dev[0] * dev[0] + dev[1] * dev[1] + dev[2] * dev[2]) / Length();
 
         NekDouble t = -1.0 * ((x1[0] - p[0]) * s[0] + (x1[1] - p[1]) * s[1] +
-                              (x1[1] - p[1]) * s[1]) /
-                      Length() / Length();
+                              (x1[2] - p[2]) * s[2]) / Length() / Length();
 
         if (dist < R && !(t > 1) && !(t < 0))
         {

@@ -303,7 +303,7 @@ void OutputGmsh::Process()
                 vector<int> inv(tags.size());
 
                 ASSERTL1(tags.size() == reordering.size(),
-                         "Reordering map size not equal to element tags.");
+                         "Reordering map size not equal to element tags 1.");
 
                 for (int j = 0; j < tags.size(); ++j)
                 {
@@ -314,7 +314,7 @@ void OutputGmsh::Process()
             }
 
             ASSERTL1(tags.size() == oIt->second.size(),
-                     "Reordering map size not equal to element tags.");
+                     "Reordering map size not equal to element tags 2.");
 
             // Finally write element nodes.
             for (int j = 0; j < tags.size(); ++j)

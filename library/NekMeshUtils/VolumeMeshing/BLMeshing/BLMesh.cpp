@@ -775,7 +775,7 @@ void BLMesh::BuildElements()
         }
 
         vector<int> tags;
-        tags.push_back(1); //all prisms are comp 1
+        tags.push_back(m_mesh->m_cad->GetNumSurf() < 100 ? 101 : 1001); 
         ElementSharedPtr E = GetElementFactory().
                     CreateInstance(LibUtilities::ePrism, pconf, pn, tags);
         E->SetId(i);

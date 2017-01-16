@@ -75,6 +75,7 @@ private:
     static std::vector<int> HexReordering  (NekMeshUtils::ElmtConfig conf);
     static std::vector<int> PrismReordering(NekMeshUtils::ElmtConfig conf);
     static std::vector<int> TetReordering  (NekMeshUtils::ElmtConfig conf);
+    static std::vector<int> LineReordering (NekMeshUtils::ElmtConfig conf);
 };
 }
 }

@@ -933,7 +933,12 @@ bool FaceMesh::Validate()
             numValid++;
         }
 
-        if (numValid != 3)
+        NekDouble rmin = min(r[0],r[1]);
+        rmin = min(rmin,r[2]);
+        NekDouble rmax = max(r[0],r[1]);
+        rmax = min(rmax,r[2]);
+
+        if (numValid != 3 || rmax / rmin > 1.1)
         {
             Array<OneD, NekDouble> ainfo, binfo, cinfo;
             ainfo = m_connec[i][0]->GetCADSurfInfo(m_id);

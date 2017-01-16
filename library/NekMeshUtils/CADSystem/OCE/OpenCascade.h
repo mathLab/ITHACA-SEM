@@ -78,5 +78,6 @@
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <STEPControl_Writer.hxx>
+#include <gp_Ax1.hxx>
 
 #endif

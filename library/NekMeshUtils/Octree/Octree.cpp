@@ -185,7 +185,19 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
             found = true;
         }
     }
+
     return min(n->GetDelta(),tmp);
+}
+
+NekDouble Octree::GetMinDelta()
+{
+    NekDouble tmp = numeric_limits<double>::max();
+
+    for(int i = 0; i < m_lsources.size(); i++)
+    {
+        tmp = min(m_lsources[i].delta,tmp);
+    }
+    return min(m_minDelta,tmp);
 }
 
 void Octree::WriteOctree(string nm)

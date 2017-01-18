@@ -918,17 +918,17 @@ bool FaceMesh::Validate()
 
         int numValid = 0;
 
-        if (r[0] < triDelta[0] && r[2] < triDelta[0])
+        if (r[0] < (triDelta[0] + triDelta[1]) / 2.0 *1.41)
         {
             numValid++;
         }
 
-        if (r[1] < triDelta[1] && r[0] < triDelta[1])
+        if (r[1] < (triDelta[1] + triDelta[2]) / 2.0 *1.41)
         {
             numValid++;
         }
 
-        if (r[2] < triDelta[2] && r[1] < triDelta[2])
+        if (r[2] < (triDelta[2] + triDelta[0]) / 2.0 *1.41)
         {
             numValid++;
         }

@@ -132,10 +132,7 @@ public:
      *
      * @return miminum delta in octree
      */
-    NekDouble GetMinDelta()
-    {
-        return m_minDelta;
-    }
+    NekDouble GetMinDelta();
 
     /**
      * @brief sets the parameters used for curvature sampling

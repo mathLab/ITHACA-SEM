@@ -71,6 +71,13 @@ void Generator2D::Process()
 
     m_mesh->m_numNodes = m_mesh->m_cad->GetNumVerts();
 
+    if(m_config["blcurves"].beenSet)
+    {
+        ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
+                                      m_blCurves);
+        m_thickness = m_config["blthick"].as<NekDouble>();
+    }
+
     // linear mesh all curves
     for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
     {
@@ -80,8 +87,19 @@ void Generator2D::Process()
                                            "Curve progress");
         }
 
-        m_curvemeshes[i] =
-            MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
+        vector<unsigned int>::iterator f = find(m_blCurves.begin(),
+                                                m_blCurves.end(), i);
+
+        if(f == m_blCurves.end())
+        {
+            m_curvemeshes[i] =
+                MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
+        }
+        else
+        {
+            m_curvemeshes[i] =
+                MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh, m_thickness);
+        }
 
         m_curvemeshes[i]->Mesh();
     }
@@ -165,11 +183,6 @@ void Generator2D::MakeBLPrep()
     {
         cout << endl << "\tBoundary layer meshing:" << endl << endl;
     }
-
-    // identify the nodes which will become the boundary layer.
-    ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
-                                  m_blCurves);
-    m_thickness = m_config["blthick"].as<NekDouble>();
 
     for (vector<unsigned>::iterator it = m_blCurves.begin();
          it != m_blCurves.end(); ++it)

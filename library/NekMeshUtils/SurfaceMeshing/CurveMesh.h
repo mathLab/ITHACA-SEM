@@ -64,6 +64,7 @@ public:
     CurveMesh(int id, MeshSharedPtr m)
         : m_id(id), m_mesh(m)
     {
+        m_bl = 0.0;
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
     }
 
@@ -72,6 +73,16 @@ public:
      */
     CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> n)
         : m_id(id), m_mesh(m), m_meshpoints(n)
+    {
+        m_bl = 0.0;
+        m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
+    }
+
+    /**
+     * @brief alternative constructor which use the octree in a different way
+     */
+    CurveMesh(int id, MeshSharedPtr m, NekDouble n)
+        : m_id(id), m_mesh(m), m_bl(n)
     {
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
     }
@@ -176,6 +187,7 @@ private:
     MeshSharedPtr m_mesh;
     /// ids of the mesh nodes
     std::vector<NodeSharedPtr> m_meshpoints;
+    NekDouble m_bl;
 };
 
 typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;

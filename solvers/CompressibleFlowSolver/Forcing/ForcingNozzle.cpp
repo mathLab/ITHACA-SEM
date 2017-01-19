@@ -55,7 +55,43 @@ void ForcingNozzle::v_InitObject(
         const unsigned int& pNumForcingFields,
         const TiXmlElement* pForce)
 {
+    m_NumVariable = pNumForcingFields;
+    m_varConv     = MemoryManager<VariableConverter>::AllocateSharedPtr(
+                    m_session, 1);
 
+    ASSERTL0( pNumForcingFields == 3, "NozzleForcing requires a 1D problem.");
+
+    const TiXmlElement* funcNameElmt = pForce->FirstChildElement("AREAFCN");
+    if(!funcNameElmt)
+    {
+        ASSERTL0(funcNameElmt, "Requires AREAFCN tag "
+                 "specifying function name which prescribes nozzle area.");
+    }
+
+    string    funcName = funcNameElmt->GetText();
+    ASSERTL0(m_session->DefinesFunction(funcName),
+             "Function '" + funcName + "' not defined.");
+
+    // Evaluate geometrical term -Ax/A for forcing
+    m_geomFactor = Array<OneD, NekDouble> (pFields[0]->GetTotPoints(), 0.0);
+    Array<OneD, NekDouble> tmp (pFields[0]->GetTotPoints(), 0.0);
+
+    std::string  sFieldStr   = m_session->GetVariable(0);
+    ASSERTL0(m_session->DefinesFunction(funcName, sFieldStr),
+             "Variable '" + sFieldStr + "' not defined.");
+    EvaluateFunction(pFields, m_session, sFieldStr,
+                     m_geomFactor, funcName, 0.0);
+    pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0], m_geomFactor, tmp);
+    Vmath::Vdiv(pFields[0]->GetTotPoints(), tmp, 1,
+                                            m_geomFactor, 1,
+                                            m_geomFactor, 1);
+    Vmath::Neg(pFields[0]->GetTotPoints(), m_geomFactor, 1);
+
+    m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
+    for (int i = 0; i < m_NumVariable; ++i)
+    {
+        m_Forcing[i] = Array<OneD, NekDouble> (pFields[0]->GetTotPoints(), 0.0);
+    }
 }
 
 void ForcingNozzle::v_Apply(
@@ -64,7 +100,40 @@ void ForcingNozzle::v_Apply(
               Array<OneD, Array<OneD, NekDouble> >&         outarray,
         const NekDouble&                                    time)
 {
+    int nPoints = pFields[0]->GetTotPoints();
 
+    // Get (E+p)
+    Array<OneD, NekDouble> tmp (nPoints, 0.0);
+    m_varConv->GetPressure(inarray, tmp);
+    Vmath::Vadd(nPoints, tmp, 1,
+                    inarray[2], 1, tmp, 1);
+
+    // F-rho = -Ax/A *rhou
+    Vmath::Vmul(nPoints, m_geomFactor, 1,
+                         inarray[1], 1, m_Forcing[0], 1);
+
+    // F-rhou = -Ax/A *rhou*u
+    Vmath::Vmul(nPoints, m_geomFactor, 1,
+                         inarray[1], 1, m_Forcing[1], 1);
+    Vmath::Vmul(nPoints, m_Forcing[1], 1,
+                         inarray[1], 1, m_Forcing[1], 1);
+    Vmath::Vdiv(nPoints, m_Forcing[1], 1,
+                         inarray[0], 1, m_Forcing[1], 1);
+
+    // F-E = -Ax/A *(E+p)*u
+    Vmath::Vmul(nPoints, m_geomFactor, 1,
+                         inarray[1], 1, m_Forcing[2], 1);
+    Vmath::Vmul(nPoints, m_Forcing[2], 1,
+                         tmp, 1, m_Forcing[2], 1);
+    Vmath::Vdiv(nPoints, m_Forcing[2], 1,
+                         inarray[0], 1, m_Forcing[2], 1);
+
+    // Apply forcing
+    for (int i = 0; i < m_NumVariable; i++)
+    {
+        Vmath::Vadd(nPoints, outarray[i], 1,
+                    m_Forcing[i], 1, outarray[i], 1);
+    }
 }
 
 }

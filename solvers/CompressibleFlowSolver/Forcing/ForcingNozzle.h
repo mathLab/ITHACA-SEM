@@ -37,6 +37,7 @@
 #define NEKTAR_SOLVERUTILS_FORCINGNOZZLE
 
 #include <SolverUtils/Forcing/Forcing.h>
+#include <CompressibleFlowSolver/Misc/VariableConverter.h>
 
 namespace Nektar
 {
@@ -80,6 +81,9 @@ class ForcingNozzle : public SolverUtils::Forcing
 
         ForcingNozzle(
             const LibUtilities::SessionReaderSharedPtr& pSession);
+
+        Array<OneD, NekDouble>               m_geomFactor;
+        VariableConverterSharedPtr           m_varConv;
 };
 
 }

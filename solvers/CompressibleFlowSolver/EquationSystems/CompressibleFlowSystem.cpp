@@ -910,9 +910,10 @@ namespace Nektar
         return returnval;
     }
 
-    void CompressibleFlowSystem::v_ExtraFldOutput(
+    void CompressibleFlowSystem::v_AuxFields(
         std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-        std::vector<std::string>             &variables)
+        std::vector<MultiRegions::ExpListSharedPtr> &expansions,
+        std::vector<std::string> &variables)
     {
         bool extraFields;
         m_session->MatchSolverInfo("OutputExtraFields","True",
@@ -952,6 +953,10 @@ namespace Nektar
             fieldcoeffs.push_back(sFwd);
             fieldcoeffs.push_back(mFwd);
             fieldcoeffs.push_back(sensFwd);
+            expansions.push_back(m_fields[0]);
+            expansions.push_back(m_fields[0]);
+            expansions.push_back(m_fields[0]);
+            expansions.push_back(m_fields[0]);
 
             if (m_artificialDiffusion)
             {
@@ -961,6 +966,7 @@ namespace Nektar
 
                 variables.push_back  ("ArtificialVisc");
                 fieldcoeffs.push_back(pFwd);
+                expansions.push_back(m_fields[0]);
             }
         }
     }

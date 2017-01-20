@@ -2032,30 +2032,32 @@ namespace Nektar
          */
         void EquationSystem::WriteFld(const std::string &outname)
         {
-            std::vector<Array<OneD, NekDouble> > fieldcoeffs(
-                m_fields.num_elements());
-            std::vector<std::string> variables(m_fields.num_elements());
+            Array<OneD, Array<OneD, NekDouble> > coeffs;
+            Array<OneD, MultiRegions::ExpListSharedPtr> pFields;
+            GetAllFields(m_fieldMetaDataMap, coeffs, pFields);
 
-            for (int i = 0; i < m_fields.num_elements(); ++i)
+            std::vector<std::string> variables;
+            std::string allVars = m_fieldMetaDataMap["Variables"] + m_fieldMetaDataMap["AuxVariables"];
+            ParseUtils::GenerateOrderedStringVector(allVars.c_str(), variables);
+
+            std::vector<Array<OneD, NekDouble> > fieldcoeffs(
+                pFields.num_elements());
+            for (int i = 0; i < pFields.num_elements(); ++i)
             {
-                if (m_fields[i]->GetNcoeffs() == m_fields[0]->GetNcoeffs())
+                if (pFields[i]->GetNcoeffs() == pFields[0]->GetNcoeffs())
                 {
-                    fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
+                    fieldcoeffs[i] = coeffs[i];
                 }
                 else
                 {
-                    fieldcoeffs[i] = Array<OneD,NekDouble>(m_fields[0]->
-                                                           GetNcoeffs());
-                    m_fields[0]->ExtractCoeffsToCoeffs(m_fields[i],
-                                                       m_fields[i]->GetCoeffs(),
-                                                       fieldcoeffs[i]);
+                    fieldcoeffs[i] = Array<OneD,NekDouble>(pFields[0]->GetNcoeffs());
+                    pFields[0]->ExtractCoeffsToCoeffs(pFields[i],
+                                                      coeffs[i],
+                                                      fieldcoeffs[i]);
                 }
-                variables[i] = m_boundaryConditions->GetVariable(i);
             }
 
-            v_ExtraFldOutput(fieldcoeffs, variables);
-
-            WriteFld(outname, m_fields[0], fieldcoeffs, variables);
+            WriteFld(outname, pFields[0], fieldcoeffs, variables);
         }
 
 
@@ -2477,12 +2479,6 @@ namespace Nektar
             ASSERTL0(false, "This function is not valid for the Base class");
             MultiRegions::ExpListSharedPtr null;
             return null;
-        }
-
-        void EquationSystem::v_ExtraFldOutput(
-            std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-            std::vector<std::string>             &variables)
-        {
         }
 
         void EquationSystem::v_AuxFields(

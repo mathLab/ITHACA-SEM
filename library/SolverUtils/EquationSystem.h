@@ -611,10 +611,6 @@ namespace Nektar
             // Get pressure field if available
             SOLVER_UTILS_EXPORT virtual MultiRegions::ExpListSharedPtr v_GetPressure(void); 
 
-            SOLVER_UTILS_EXPORT virtual void v_ExtraFldOutput(
-                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-                std::vector<std::string>             &variables);
-
             SOLVER_UTILS_EXPORT virtual void v_AuxFields(
                 std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                 std::vector<MultiRegions::ExpListSharedPtr>        &expansions,

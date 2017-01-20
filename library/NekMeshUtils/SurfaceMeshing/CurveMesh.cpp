@@ -311,7 +311,8 @@ void CurveMesh::GetSampleFunction()
 
         if(m_bl > 0.0)
         {
-            dsti[0] = m_mesh->m_octree->QueryR(loc);
+            NekDouble R = m_mesh->m_octree->QueryR(loc);
+            dsti[0] = R/(R+m_bl)*m_mesh->m_octree->Query(loc);
         }
         else
         {

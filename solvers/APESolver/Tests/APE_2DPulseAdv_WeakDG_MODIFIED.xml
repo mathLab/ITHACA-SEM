@@ -320,7 +320,7 @@
       <P> TimeStep       = 1e-05            </P>
       <P> NumSteps       = 10                 </P>
       <P> FinTime        = TimeStep*NumSteps  </P>
-      <P> IO_CheckSteps  = 10                 </P>
+      <P> IO_CheckSteps  = 1                 </P>
       <P> IO_InfoSteps   = 1                 </P>
       <P> Rho0           = 1.204              </P> <!-- Incompressible density -->
       <P> Gamma          = 1.4                </P> <!-- Ratio of specific heats -->
@@ -373,6 +373,10 @@
            0.7 -0.8 0
       </PARAM>
     </FILTER>
+        <FILTER TYPE="Checkpoint">
+            <PARAM NAME="OutputFile">IntermediateFields</PARAM>
+            <PARAM NAME="OutputFrequency">1</PARAM>
+        </FILTER>
   </FILTERS>
   <FORCING>
     <FORCE TYPE="Field">

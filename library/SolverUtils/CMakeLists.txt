@@ -22,7 +22,7 @@ SET(SOLVER_UTILS_SOURCES
   Filters/Filter.cpp
 #   Filters/FilterAeroForces.cpp
 #   Filters/FilterAverageFields.cpp
-#   Filters/FilterCheckpoint.cpp
+  Filters/FilterCheckpoint.cpp
 #   Filters/FilterEnergy1D.cpp
 #   Filters/FilterEnergyBase.cpp
   Filters/FilterHistoryPoints.cpp
@@ -66,7 +66,7 @@ SET(SOLVER_UTILS_HEADERS
   Filters/Filter.h
 #   Filters/FilterAeroForces.h
 #   Filters/FilterAverageFields.h
-#   Filters/FilterCheckpoint.h
+  Filters/FilterCheckpoint.h
 #   Filters/FilterEnergy1D.h
 #   Filters/FilterEnergyBase.h
   Filters/FilterHistoryPoints.h

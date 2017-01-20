@@ -904,31 +904,43 @@ bool FaceMesh::Validate()
     int pointBefore = m_stienerpoints.size();
     for (int i = 0; i < m_connec.size(); i++)
     {
-        Array<OneD, NekDouble> triDelta(3);
-
         Array<OneD, NekDouble> r(3);
 
         r[0] = m_connec[i][0]->Distance(m_connec[i][1]);
         r[1] = m_connec[i][1]->Distance(m_connec[i][2]);
         r[2] = m_connec[i][2]->Distance(m_connec[i][0]);
 
-        triDelta[0] = m_mesh->m_octree->Query(m_connec[i][0]->GetLoc());
-        triDelta[1] = m_mesh->m_octree->Query(m_connec[i][1]->GetLoc());
-        triDelta[2] = m_mesh->m_octree->Query(m_connec[i][2]->GetLoc());
+        NekDouble d1 = m_mesh->m_octree->Query(m_connec[i][0]->GetLoc());
+        NekDouble d2 = m_mesh->m_octree->Query(m_connec[i][1]->GetLoc());
+        NekDouble d3 = m_mesh->m_octree->Query(m_connec[i][2]->GetLoc());
+
+        Array<OneD, NekDouble> ainfo, binfo, cinfo;
+        ainfo = m_connec[i][0]->GetCADSurfInfo(m_id);
+        binfo = m_connec[i][1]->GetCADSurfInfo(m_id);
+        cinfo = m_connec[i][2]->GetCADSurfInfo(m_id);
+
+        Array<OneD, NekDouble> uvc(2);
+        uvc[0] = (ainfo[0] + binfo[0] + cinfo[0]) / 3.0;
+        uvc[1] = (ainfo[1] + binfo[1] + cinfo[1]) / 3.0;
+
+        Array<OneD, NekDouble> locc = m_cadsurf->P(uvc);
+        NekDouble d4 = m_mesh->m_octree->Query(locc);
+
+        NekDouble d = (d1 + d2 + d3 + d4) / 4.0;
 
         int numValid = 0;
 
-        if (r[0] < (triDelta[0] + triDelta[1]) / 2.0 *1.41)
+        if (r[0] < d * 1.41)
         {
             numValid++;
         }
 
-        if (r[1] < (triDelta[1] + triDelta[2]) / 2.0 *1.41)
+        if (r[1] < d * 1.41)
         {
             numValid++;
         }
 
-        if (r[2] < (triDelta[2] + triDelta[0]) / 2.0 *1.41)
+        if (r[2] < d * 1.41)
         {
             numValid++;
         }
@@ -936,9 +948,9 @@ bool FaceMesh::Validate()
         NekDouble rmin = min(r[0],r[1]);
         rmin = min(rmin,r[2]);
         NekDouble rmax = max(r[0],r[1]);
-        rmax = min(rmax,r[2]);
+        rmax = max(rmax,r[2]);
 
-        if (numValid != 3 || rmax / rmin > 1.1)
+        if (numValid != 3 || rmax / rmin > 1.05)
         {
             Array<OneD, NekDouble> ainfo, binfo, cinfo;
             ainfo = m_connec[i][0]->GetCADSurfInfo(m_id);

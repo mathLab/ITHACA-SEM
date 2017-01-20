@@ -109,9 +109,18 @@ namespace Nektar
                 string sessionname = "SessionName";
                 sessionname += boost::lexical_cast<std::string>(i);
                 m_fieldMetaDataMap[sessionname] = filenames[i];
-                m_fieldMetaDataMap["ChkFileNum"] = boost::lexical_cast<std::string>(0);
             }
-            
+            m_fieldMetaDataMap["ChkFileNum"] = boost::lexical_cast<std::string>(0);
+            std::ostringstream varNames;
+            std::vector<std::string> vars = m_session->GetVariables();
+            for (std::vector<std::string>::iterator it = vars.begin(); it < vars.end(); ++it)
+            {
+                varNames << *it << ",";
+            }
+            m_fieldMetaDataMap["Variables"] = varNames.str();
+            m_fieldMetaDataMap["NumVariables"] = boost::lexical_cast<std::string>(m_session->GetVariables().size());
+            m_fieldMetaDataMap["AuxVariables"] = "";
+            m_fieldMetaDataMap["NumAuxVariables"] = "0";
         }
         
         /**

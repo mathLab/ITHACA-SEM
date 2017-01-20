@@ -70,50 +70,68 @@ public:
     SOLVER_UTILS_EXPORT virtual ~Filter();
 
     SOLVER_UTILS_EXPORT inline void Initialise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
+        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
+        const Array<OneD, const Array<OneD, NekDouble> > &coeffs,
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
     SOLVER_UTILS_EXPORT inline void Update(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
+        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
+        const Array<OneD, const Array<OneD, NekDouble> > &coeffs,
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
     SOLVER_UTILS_EXPORT inline void Finalise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
+        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
+        const Array<OneD, const Array<OneD, NekDouble> > &coeffs,
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
     SOLVER_UTILS_EXPORT inline bool IsTimeDependent();
 
 protected:
     LibUtilities::SessionReaderSharedPtr m_session;
 
     virtual void v_Initialise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time) = 0;
+        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
+        const Array<OneD, const Array<OneD, NekDouble> > &coeffs,
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time) = 0;
     virtual void v_Update(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time) = 0;
+        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
+        const Array<OneD, const Array<OneD, NekDouble> > &coeffs,
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time) = 0;
     virtual void v_Finalise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time) = 0;
+        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
+        const Array<OneD, const Array<OneD, NekDouble> > &coeffs,
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time)       = 0;
     virtual bool v_IsTimeDependent() = 0;
 };
 
 inline void Filter::Initialise(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
+    const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
+    const Array<OneD, const Array<OneD, NekDouble> > &coeffs,
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
 {
-    v_Initialise(pFields, time);
+    v_Initialise(fieldMetaDataMap, coeffs, pFields, time);
 }
 
 inline void Filter::Update(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
+    const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
+    const Array<OneD, const Array<OneD, NekDouble> > &coeffs,
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
 {
-    v_Update(pFields, time);
+    v_Update(fieldMetaDataMap, coeffs, pFields, time);
 }
 
 inline void Filter::Finalise(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
+    const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
+    const Array<OneD, const Array<OneD, NekDouble> > &coeffs,
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
 {
-    v_Finalise(pFields, time);
+    v_Finalise(fieldMetaDataMap, coeffs, pFields, time);
 }
 
 inline bool Filter::IsTimeDependent()

@@ -223,10 +223,17 @@ namespace Nektar
                 m_timestep, fields, m_time, m_ode);
 
             // Initialise filters
+            Array<OneD, Array<OneD, NekDouble> > coeffs(m_fields.num_elements());
+            Array<OneD, MultiRegions::ExpListSharedPtr> expansions(m_fields.num_elements());
+            for (int i = 0; i < m_session->GetVariables().size(); ++i)
+            {
+                coeffs[i] = m_fields[i]->GetCoeffs();
+                expansions[i] = m_fields[i];
+            }
             std::vector<FilterSharedPtr>::iterator x;
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
-                (*x)->Initialise(m_fields, m_time);
+                (*x)->Initialise(m_fieldMetaDataMap, coeffs, expansions, m_time);
             }
 
             // Ensure that there is no conflict of parameters
@@ -352,10 +359,16 @@ namespace Nektar
                                 "NaN found during time integration.");
                 }
                 // Update filters
+                for (int i = 0; i < m_session->GetVariables().size(); ++i)
+                {
+                    coeffs[i] = m_fields[i]->GetCoeffs();
+                    expansions[i] = m_fields[i];
+                }
+
                 std::vector<FilterSharedPtr>::iterator x;
                 for (x = m_filters.begin(); x != m_filters.end(); ++x)
                 {
-                    (*x)->Update(m_fields, m_time);
+                    (*x)->Update(m_fieldMetaDataMap, coeffs, expansions, m_time);
                 }
 
                 // Write out checkpoint files
@@ -441,9 +454,14 @@ namespace Nektar
             }
 
             // Finalise filters
+            for (int i = 0; i < m_session->GetVariables().size(); ++i)
+            {
+                coeffs[i] = m_fields[i]->GetCoeffs();
+                expansions[i] = m_fields[i];
+            }
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
-                (*x)->Finalise(m_fields, m_time);
+                (*x)->Finalise(m_fieldMetaDataMap, coeffs, expansions, m_time);
             }
             
             // Print for 1D problems

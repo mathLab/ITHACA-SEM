@@ -223,13 +223,10 @@ namespace Nektar
                 m_timestep, fields, m_time, m_ode);
 
             // Initialise filters
-            Array<OneD, Array<OneD, NekDouble> > coeffs(m_fields.num_elements());
-            Array<OneD, MultiRegions::ExpListSharedPtr> expansions(m_fields.num_elements());
-            for (int i = 0; i < m_session->GetVariables().size(); ++i)
-            {
-                coeffs[i] = m_fields[i]->GetCoeffs();
-                expansions[i] = m_fields[i];
-            }
+            Array<OneD, Array<OneD, NekDouble> > coeffs;
+            Array<OneD, MultiRegions::ExpListSharedPtr> expansions;
+            GetAllFields(m_fieldMetaDataMap, coeffs, expansions);
+
             std::vector<FilterSharedPtr>::iterator x;
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
@@ -359,12 +356,7 @@ namespace Nektar
                                 "NaN found during time integration.");
                 }
                 // Update filters
-                for (int i = 0; i < m_session->GetVariables().size(); ++i)
-                {
-                    coeffs[i] = m_fields[i]->GetCoeffs();
-                    expansions[i] = m_fields[i];
-                }
-
+                GetAllFields(m_fieldMetaDataMap, coeffs, expansions);
                 std::vector<FilterSharedPtr>::iterator x;
                 for (x = m_filters.begin(); x != m_filters.end(); ++x)
                 {
@@ -923,7 +915,8 @@ namespace Nektar
                 }
             }
         }
-	
+
+
         /**
          * @brief Return the timestep to be used for the next step in the
          * time-marching loop.

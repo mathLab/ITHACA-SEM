@@ -2485,5 +2485,44 @@ namespace Nektar
         {
         }
 
+        void EquationSystem::v_AuxFields(
+            std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+            std::vector<MultiRegions::ExpListSharedPtr>        &expansions,
+            std::vector<std::string>             &variables)
+        {
+        }
+
+
+        void EquationSystem::GetAllFields(
+            LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
+            Array<OneD, Array<OneD, NekDouble> > &coeffs,
+            Array<OneD, MultiRegions::ExpListSharedPtr> &expansions)
+        {
+            std::vector<Array<OneD, NekDouble> > auxCoeffs;
+            std::vector<MultiRegions::ExpListSharedPtr> auxExpansions;
+            std::vector<std::string> auxVars;
+            v_AuxFields(auxCoeffs, auxExpansions, auxVars);
+
+            coeffs = Array<OneD, Array<OneD, NekDouble> >(m_fields.num_elements() + auxCoeffs.size());
+            expansions = Array<OneD, MultiRegions::ExpListSharedPtr> (m_fields.num_elements() + auxExpansions.size());
+            for (int i = 0; i < m_session->GetVariables().size(); ++i)
+            {
+                coeffs[i] = m_fields[i]->GetCoeffs();
+                expansions[i] = m_fields[i];
+            }
+            for (int i = 0; i < auxVars.size(); ++i)
+            {
+                coeffs[m_session->GetVariables().size() + i] = auxCoeffs[i];
+                expansions[m_session->GetVariables().size() + i] = auxExpansions[i];
+            }
+
+            std::ostringstream varNames;
+            for (std::vector<std::string>::iterator it = auxVars.begin(); it < auxVars.end(); ++it)
+            {
+                varNames << *it << ",";
+            }
+            fieldMetaDataMap["AuxVariables"] = varNames.str();
+        }
+
     }
 }

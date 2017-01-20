@@ -614,6 +614,16 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual void v_ExtraFldOutput(
                 std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                 std::vector<std::string>             &variables);
+
+            SOLVER_UTILS_EXPORT virtual void v_AuxFields(
+                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<MultiRegions::ExpListSharedPtr>        &expansions,
+                std::vector<std::string>             &variables);
+
+            SOLVER_UTILS_EXPORT void GetAllFields(
+                LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
+                Array<OneD, Array<OneD, NekDouble> > &coeffs,
+                Array<OneD, MultiRegions::ExpListSharedPtr> &expansions);
             
         private:
             

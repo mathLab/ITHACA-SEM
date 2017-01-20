@@ -111,6 +111,11 @@ class APE : public UnsteadySystem
         virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                                       std::vector<std::string>             &variables);
 
+        virtual void v_AuxFields(
+                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<MultiRegions::ExpListSharedPtr> &expansions,
+                std::vector<std::string>             &variables);
+
         const Array<OneD, const Array<OneD, NekDouble> > &GetNormals();
 
         const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs();

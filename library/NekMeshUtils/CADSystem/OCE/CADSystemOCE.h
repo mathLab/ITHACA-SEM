@@ -72,6 +72,8 @@ private:
     void AddCurve(int i, TopoDS_Shape in, int fv, int lv);
     /// Function to add surface to CADSystem::m_surfs.
     void AddSurf(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
+
+    TopoDS_Shape BuildNACA(std::string naca);
     /// OCC master object
     TopoDS_Shape shape;
 };

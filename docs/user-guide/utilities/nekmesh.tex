@@ -1,10 +1,10 @@
 \chapter{NekMesh}
 \label{s:utilities:nekmesh}
 
-\newcommand{\mc}{\texttt{NekMesh}\xspace}
+\newcommand{\nm}{\texttt{NekMesh}\xspace}
 \newcommand{\gmsh}{\texttt{Gmsh}\xspace}
 
-\mc is a utility bundled with \nekpp which has two purposes:
+\nm is a utility bundled with \nekpp which has two purposes:
 \begin{itemize}
   \item allow foreign mesh file formats to be converted into \nekpp's XML
   format;
@@ -13,11 +13,11 @@
 \end{itemize}
 
 \begin{notebox}
-  \mc replaces a previous utility called MeshConvert. This change is to reflect
+  \nm replaces a previous utility called MeshConvert. This change is to reflect
   the fact that the program no longer only converts and manipulates meshes but
   can now also generate them from a CAD definition. This mesh generator is in
-  a early beta stage of development and as such is disabled by default. For the
-  time being those not using the beta mesh generator can use \mc as they would
+  an early stage of development and as such is disabled by default. For the
+  time being those not using the mesh generator can use \nm as they would
   have used MeshConvert, none of the functionality or methodology has changed.
 \end{notebox}
 
@@ -32,12 +32,12 @@ mesh-generator \gmsh to the XML file format.
   base64. This is identified for each section by the attribute
   \inltt{COMPRESSED="B64Z-LittleEndian''}.  To output in ascii format add the
   module option ``:xml:uncompress'' to the \inltt{.xml} file, i.e. \\ \inltt{
-    \mc file.msh newfile.xml:xml:uncompress}
+    \nm file.msh newfile.xml:xml:uncompress}
 \end{notebox}
 
 \section{Exporting a mesh from \gmsh}
 
-To demonstrate how \mc works, we will define a simple channel-like 3D geometry.
+To demonstrate how \nm works, we will define a simple channel-like 3D geometry.
 First, we must define the \gmsh geometry to be used. The \gmsh definition is
 given below, and is visualised in figure~\ref{fig:util:mc:gmsh-example}.
 
@@ -150,7 +150,7 @@ solve the resulting linear system.
 
 \section{NekMesh modules}
 
-\mc is designed to provide a pipeline approach to mesh generation. To do this,
+\nm is designed to provide a pipeline approach to mesh generation. To do this,
 we break up tasks into three different types. Each task is called a
 \emph{module} and a chain of modules specifies the pipeline.
 %
@@ -176,7 +176,7 @@ The figure below depicts how these might be coupled together to form a pipeline:
       \draw[-latex,thick] (C) -- (D);
     \end{tikzpicture}
   \end{center}
-  \caption{Illustrative pipeline of the \mc process.}
+  \caption{Illustrative pipeline of the \nm process.}
   \label{fig:util:mc:pipeline}
 \end{figure}
 %
@@ -304,13 +304,13 @@ NekMesh Mesh.msh output.msh:msh:order=7
 \end{lstlisting}
 %
 will generate an order 7 Gmsh mesh. In the rest of these subsections, we discuss
-the various processing modules available within \mc.
+the various processing modules available within \nm.
 
 \subsection{Extract surfaces from a mesh}
 \label{s:utilities:nekmesh:extract}
 
 Often one wants to visualise surfaces of a 3D mesh, or extract the values of
-variables on the surface and visualise them. To support this, \mc can extract
+variables on the surface and visualise them. To support this, \nm can extract
 two-dimensional surfaces which can be visualised using \inltt{FieldConvert} in
 order to extract the value of a 3D field on a given surface.
 
@@ -352,26 +352,25 @@ use the \inltt{extract} boolean parameter:
 NekMesh -m jac:extract Mesh.xml MeshWithNegativeElements.xml
 \end{lstlisting}
 
-To turn off curvature associated with negative jacobians one can try to use the \inltt{removecurveifsingular} boolean parameter:
+To turn off curvature associated with negative jacobians one can try to use the
+\inltt{linearise} module:
 \begin{lstlisting}[style=BashInputStyle]
-NekMesh -m jac:removecurveifsingular  Mesh.xml output.xml
+NekMesh -m linerise:invalid  Mesh.xml output.xml
 \end{lstlisting}
-This option will remove the high order curvature on prismatic faces
-with singular jacobians. This does not guarantee a non-singular mesh
-since it is possible for neighbouring element then to have singular
-jacobians. Multiple calls to the module might help with this scenario.
+This option will remove all high order curvature on all element types
+with singular jacobians.
 
 \subsection{Spherigon patches}
 
 Where high-order information is not available (e.g. when using meshes from
 imaging software), various techniques can be used to apply a smoothing to the
-high-order element. In \mc we use \emph{spherigons}, a kind of patch used in the
+high-order element. In \nm we use \emph{spherigons}, a kind of patch used in the
 computer graphics community used for efficiently smoothing polygon surfaces.
 
 Spherigons work through the use of surface normals, where in this sense
 `surface' refers to the underlying geometry. If we have either the exact or
 approximate surface normal at each given vertex, spherigon patches approximate
-the edges connecting two vertices by arcs of a circle. In \mc we can either
+the edges connecting two vertices by arcs of a circle. In \nm we can either
 approximate the surface normals from the linear elements which connect to each
 vertex (this is done by default), or supply a file which gives the surface
 normals.
@@ -421,7 +420,7 @@ When using periodic boundary conditions, the order of the elements within the
 boundary composite determines which element edges are periodic with the
 corresponding boundary composite.
 
-To counteract this issue, \mc has a periodic alignment module which attempts to
+To counteract this issue, \nm has a periodic alignment module which attempts to
 identify pairs of mutually periodic edges. Given two surfaces \inltt{surf1} and
 \inltt{surf2}, which for example correspond to the physical surface IDs
 specified in \gmsh, and an axis which defines the periodicity direction, the
@@ -459,7 +458,7 @@ NekMesh -m peralign:surf1=11:surf2=12:dir=y:orient input.dat output.xml
 \subsection{Boundary layer splitting}
 
 Often it is the case that one can generate a coarse boundary layer grid of a
-mesh. \mc has a method for splitting prismatic and hexahedral elements into
+mesh. \nm has a method for splitting prismatic and hexahedral elements into
 finer elements based on the work presented in~\cite{MoHaPeSh14}
 and~\cite{MoHaPeSh14b}. You must have a prismatic mesh that is $O$-type -- that
 is, you can modify the boundary layer without modifying the rest of the mesh.
@@ -591,7 +590,7 @@ a certain class of meshes.
 \subsection{Boundary identification}
 
 Some mesh formats lack the ability to identify boundaries of the domain they
-discretise. \mc has a rudimentary boundary identification routine for conformal
+discretise. \nm has a rudimentary boundary identification routine for conformal
 meshes, which will create a composite of edges (2D) or faces (3D) which are
 connected to precisely one element. This can be done using the \inltt{detect}
 module:
@@ -629,8 +628,9 @@ match the interior domain:
   NekMesh -m linkcheck mesh.xml mesh2.xml
 \end{lstlisting}
 
-This module should be added to the module chain for any complex if the user
-suspects there may be a mesh issue. The module will print a warning if there is.
+This module should be added to the module chain if the user suspects there may
+be a mesh issue. The module will print a warning if there is a connectivity
+error.
 
 \subsection{2D mesh extrusion}
 
@@ -646,33 +646,66 @@ requires two parameters:
 length which determines how long the $z$ extrusion will be and layers, the
 number of elements in the $z$ direction.
 
+\subsection{Variational Optimisation}
+\label{sec:varopti}
+This module can correct invalid and improve the quality of elements in
+high-order meshes by applying curvilinear deformation to the interiors of
+domains. It achieves this by solving a solid mechanics system which, using
+variational calculus has been cast is a non-linear energy optimsation problem.
+It is basis of the work in \cite{TuPeMo16}.
+
+It works by considering the boundary (curved) mesh entities to be fixed and
+moving the interior nodes to a lower  energy configuration. This new
+configuration in most scenarios is a higher quality mesh. The energy is
+evaluated depending on which functional is chosen. We find hyperleastic to be
+the most reliable but it can also model the mesh and a linearelastic solid as
+well as functionals based on the Winslow equation and the distortion method
+proposed by Roca et al. \cite{GaRoPeSa15}.
+
+There are a large number of options which can be viewed using the help function
+but the basic usage is:
+\begin{lstlisting}[style=BashInputStyle]
+  NekMesh -m varopti:type inital.xml optimised.xml
+\end{lstlisting}
+
+where type can be \texttt{hyperelastic}, \texttt{linearelastic},
+\texttt{winslow} or \texttt{roca}.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Mesh generation}
 
-In addition to the functionality described previously, \mc is capable of
-generating high-order meshes directly from a CAD definition.
-By default this functionality is not activated, a user wishing to utilise the
-mesh generation capability of \mc must compile \nekpp with the MESHGEN option
-on. As well as compiling the relevant routines into \mc it will also download
-a number of other packages which are required.
+In addition to the functionality described previously, \nm is capable of
+generating high-order meshes directly from a CAD definition. By default this
+functionality is not activated, a user wishing to utilise the mesh generation
+capability of \nm must compile \nekpp with the \texttt{NEKTAR\_USE\_MESHGEN}
+option on. As well as compiling the relevant routines into \nm it will also
+download a number of other packages which are required.
 
-As with all tasks within \mc the new mesh generation capability exists as its
+The most critical dependancy of the mesh generation routines is
+\texttt{OpenCascade} which powers the CAD engine. \nm is capable of finding and
+using existing installations of \texttt{OpenCascade 6.8} or \texttt{OCE 0.17}.
+If either are not present on the installation machine \nm will install
+\texttt{OCE 0.17} from source. This is a very big installation and will take
+some time so it is advised that the user ensures \texttt{OpenCascade} is
+availble on the machine.
+
+As with all tasks within \nm the mesh generation capability exists as its
 own separate module which is of type Input. Due to the vast amount of code
 associated with the generation of high-order meshes and the comparatively small
-nature of modules in the \mc program a new library has been created for \nekpp
+nature of modules in the \nm program a new library has been created for \nekpp
 called {\em NekMeshUtils}, which contains all the core routines and classes for
-the \mc mesh format as well as a series of classes for the generation of meshes.
+the \nm mesh format as well as a series of classes for the generation of meshes.
 This library also contains the CAD API for \nekpp which is used to generate the
 meshes.
 
 \subsection{Methodology}
 
-This section outlines the approach taken by \mc to generate high-order meshes.
+This section outlines the approach taken by \nm to generate high-order meshes.
 %
 To simplify the sometimes very complicated high-order mesh generation processes
-in other programs, \mc executes all the stages required to produce a high-order
+in other programs, \nm executes all the stages required to produce a high-order
 mesh in one single pipeline which once started requires no interaction from the
 user. In broad terms these stages are:
 \begin{itemize}
@@ -685,31 +718,31 @@ and are outlined in more detail in the following sections.
 
 \subsubsection{CAD Interaction}
 
-At the core of all the ideas in the \mc generator is that the final mesh is a
+At the core of all the ideas in the \nm generator is that the final mesh is a
 high quality representation of the underlying geometry. As such all of the
 entities in the mesh must know where they are located with respect to the CAD
 and the system to be able to query any geometric information at any point in the
-domain easily and with accuracy. To handle this \mc has been interfaced with the
+domain easily and with accuracy. To handle this \nm has been interfaced with the
 third-party suite of CAD libraries called OpenCascade. In its normal state
 OpenCascade is a very large collection of libraries with tens of thousands of
 functions which are simply not needed for our purposes, because of this its
 installation is a very arduous and long process. Combine this with the fact that
 there are dozens of versions and types of OpenCascade, such as OpenCascade
-Community Edition, it is simply impossible for \mc to use already existing
+Community Edition, it is simply impossible for \nm to use already existing
 OpenCascade installations on a given machine. To solve these issues, when
 installing \nekpp with the mesh generator it will download pre-compiled binaries
 for the relevant OS and link against those, any previously installed versions of
 OpenCascade will not be searched for and therefore ignored.
 %
 To reduce the massively complex libraries in OpenCascade down to a manageable
-set of functions to be used in \mc a set of interface classes have been created
+set of functions to be used in \nm a set of interface classes have been created
 which act as buffer between it and \nekpp. These CAD classes mean that
 development of mesh generation routines is significantly easier and in the
 future \nekpp developers will be able to utilise CAD information in all aspects
 of the framework without having to learn OpenCascade. Another advantage with
 this approach is that adding support for other CAD engines, as well as
 OpenCascade, in the future should be relativity simple and will not require the
-rewriting of any of the \mc code.
+rewriting of any of the \nm code.
 
 \subsubsection{Automatic specification of the mesh}
 
@@ -717,7 +750,7 @@ One of the key challenges of generating a high-order mesh is the creation of a
 suitable coarse linear mesh. It is
 quite difficult for a user to define a full set spacings over a whole domain
 which will produce a good quality especially when aiming for coarseness. This
-is tackled in \mc with a system for automatically defining a
+is tackled in \nm with a system for automatically defining a
 set of smooth and coarse mesh spacings throughout the whole domain. This is
 achieved using an octree description of the domain. The domain is recursively
 subdivided into octants which each describe a small portion of the domain. The
@@ -731,7 +764,7 @@ best to think of it as a non-conforming hexahedral mesh
 \subsubsection{Linear Mesh Generation}
 
 The first challenge mentioned in the previous section is addressed with the
-\mc approach to linear mesh generation. Primarily because of the
+\nm approach to linear mesh generation. Primarily because of the
 difficulties in interfacing existing linear mesh generators for high-order
 applications the decision was made to include a bespoke linear mesh generator
 within the program. Compared with the mesh generators included in commercial
@@ -743,7 +776,7 @@ coarseness. In this approach, first mesh nodes are placed on the vertices of
 the CAD model (0D), then the curves in the CAD are meshed in 1D using the
 vertex nodes as boundaries, then the surfaces are meshed in their 2D parameter
 plane using the curve meshes as boundaries and finally the 3D volume is meshed
-using the surface mesh as the boundary to complete the linear mesh. In \mc, to
+using the surface mesh as the boundary to complete the linear mesh. In \nm, to
 achieve greater robustness, the 2D mesh generation library Triangle is used and
 the TetGen library for the 3D. Both of which are highly developed Delaunay based
 mesh generators. As with all additional libraies in \nekpp these are
@@ -753,7 +786,7 @@ automatically downloaded and installed if needed.
 
 Addition of the high-order nodes to and the curving of the mesh is very open
 problem, no high-order mesh generator has solved this and while the methods
-used in \mc are not 100\% full-proof, the system currently in place can create
+used in \nm are not 100\% full-proof, the system currently in place can create
 good quality high-order curved meshes with a reasonable robustness. This area
 will receive the greatest level of development in the future. The most critical
 part of defining the high-order mesh is the addition of high-order nodes on the
@@ -763,7 +796,7 @@ solutions. If the linear surface triangulation is taken to be fixed during this
 process, the problem can be addressed in a element by element fashion. If the
 high-order nodes are placed by simply using an affine mapping to the CAD surface
 and back the resulting high-order triangle will inherit the same distortions as
-the CAD surface. To solve this \mc uses a system node location optimisation in
+the CAD surface. To solve this \nm uses a system node location optimisation in
 the parameter plane of the CAD surface to ensure the high-order triangles have
 as little distortion as possible while remaining exactly on the geometric
 surface. To do this the system models the high-order edges and triangles as a
@@ -774,22 +807,26 @@ solver.
 \subsubsection{Mesh Correction}
 
 Due to the fact that, for the time being, no consideration is given to the
-curving of mesh interior entities, the curving the geometric surface can
-produce meshes with invalid elements, especially in the case of Euler
-type (Tetrahedra only) meshes. Two strategies exist within \nekpp to
-correct these elements. Firstly killing the curvature, by removing the
-curvature of invalid elements they become valid. However this has the
-massive downside of compromising the geometric accuracy of the mesh but
+curving of mesh interior entities explicitly in the mesh generation process, the
+curving the geometric surface can produce meshes with invalid elements,
+especially in the case of Euler type (Tetrahedra only) meshes. Three strategies
+exist within \nekpp to correct these elements. Firstly removing the curvature,
+by removing the curvature of invalid elements they become valid. However this
+has the massive downside of compromising the geometric accuracy of the mesh but
 is quick and effective, this can be enacted using the command:
 \begin{lstlisting}[style=BashInputStyle]
     NekMesh -m linearise:invalid invalidMesh.xml validMesh.xml
 \end{lstlisting}
 %
-The alternative to this is to use the linear elastic solver within \nekpp to
+An alternative to this is to use the linear elastic solver within \nekpp to
 deform the mesh interior entities. Its use is very computationally expensive,
 as with all PDE solvers, and is also not particularly robust. It can be used
 with the set of commands outlined in the FieldConvert deform and displacement
-modules and the section on the Linear Elastic Solver
+modules and the section on the Linear Elastic Solver.
+
+The final and possibly most useful approach is to use the Variational
+Optimsation module to curve the interior of the domain. This is explained in
+\ref{sec:varopti}.
 
 \subsection{Mesh generation manual}
 
@@ -798,80 +835,92 @@ The mesh generation is executed with the command:
     NekMesh session.mcf mesh.xml
 \end{lstlisting}
 where session.mcf is a mesh configuration file which contains all the options
-and parameters needed for mesh generation. At present this .mcf format is a
-modified version conditions tag as used by the solvers. In the future this will
-be updated to a more logical system. Below is a simple
-example.
+and parameters needed for mesh generation. Below is an example of a simple
+example which generates a 2D NACA wing.
 \begin{lstlisting}[style=XmlStyle]
-<NEKTAR>
-    <CONDITIONS>
-        <SOLVERINFO>
-            <I PROPERTY="CADFile" VALUE="CAD.STEP" />
-            <I PROPERTY="MeshType" VALUE="EULER" />
-        </SOLVERINFO>
+    <NEKTAR>
+        <MESHING>
 
-        <PARAMETERS>
-            <P> MinDelta = 0.02 </P>
-            <P> MaxDelta = 1.0 </P>
-            <P> EPS = 0.4 </P>
-            <P> Order = 4 </P>
-        </PARAMETERS>
-    </CONDITIONS>
-</NEKTAR>
+            <INFORMATION>
+                <I PROPERTY="CADFile" VALUE="6412"  />
+                <I PROPERTY="MeshType" VALUE="2D" />
+            </INFORMATION>
+
+            <PARAMETERS>
+                <P PARAM="MinDelta" VALUE="0.01"    />
+                <P PARAM="MaxDelta" VALUE="1.0"     />
+                <P PARAM="EPS"      VALUE="0.1"     />
+                <P PARAM="Order"    VALUE="4"       />
+
+                <!-- 2D Domain !-->
+                <P PARAM="Xmin"     VALUE="-1.0"    />
+                <P PARAM="Ymin"     VALUE="-2.0"    />
+                <P PARAM="Xmax"     VALUE="3.0"     />
+                <P PARAM="Ymax"     VALUE="2.0"     />
+                <P PARAM="AOA"      VALUE="15.0"    />
+            </PARAMETERS>
+
+        </MESHING>
+    </NEKTAR>
 \end{lstlisting}
 In all cases the mesh generator needs two pieces of information and four
-parameters. It firstly needs to know the CAD file with which to work. Secondly,
-what type of mesh to make, the options are \inltt{EULER} and \inltt{BL}. In the
-case of \inltt{EULER} the mesh will be made with only tetrahedra. For \inltt{BL}
-the mesh generator will attempt to insert a single macro prism layer onto the
-geometry surface. This option requires additional parameters. The automatic
-mesh specification system requires three parameters to build the specification
-of a smooth, curvature refined mesh. Firstly \inltt{MinDelta} which is the size
-of the smallest element to be found in the final mesh. Secondly \inltt{MaxDelta}
+parameters. It firstly needs to know the CAD file with which to work. In the
+example above this is listed as a 4 digit number, this is because the mesh
+generator is equiped with a NACA wing generator. In all other cases this
+parameter would be a STEP file. Secondly, what type of mesh to make, the options
+are \inltt{EULER} and \inltt{BL} for 3D meshes and \inltt{2D} and \inltt{2DBL}
+for 2D meshes. In the case of \inltt{EULER} the mesh will be made with only
+tetrahedra. For \inltt{BL} the mesh generator will attempt to insert a single
+macro prism layer onto the geometry surface. This option requires additional
+parameters. This is similar for the 2D scenarios. The automatic mesh
+specification system requires three parameters to build the specification of a
+smooth, curvature refined mesh. Firstly \inltt{MinDelta} which is the size of
+the smallest element to be found in the final mesh. Secondly \inltt{MaxDelta}
 which is the maximum size of an element in the mesh and lastly \inltt{EPS} which
 is a sensitivity to curvature parameter with a range $1 \geq \varepsilon > 0$
 which heuristically controls the size of the elements for a given degree of
-curvature on the geometric surface. \inltt{Order} is the polynomial order of
-the mesh to be generated. At present there is a maximum of 4 on this parameter
-this will be fixed in the near future at which point it will only be limited
-by \nekpp at 16.
+curvature on the geometric surface. \inltt{Order} is the polynomial order of the
+mesh to be generated.
 %
 When generating a boundary layer mesh a few additional parameters must be given.
 An example is shown.
 \begin{lstlisting}[style=XmlStyle]
-<NEKTAR>
-    <CONDITIONS>
-        <SOLVERINFO>
-            <I PROPERTY="CADFile" VALUE="CAD.STEP" />
-            <I PROPERTY="MeshType" VALUE="BL" />
-	        <I PROPERTY="BLSurfs" VALUE="7-32" />
-        </SOLVERINFO>
+    <NEKTAR>
+        <MESHING>
 
-        <PARAMETERS>
-            <P> MinDelta = 0.02 </P>
-            <P> MaxDelta = 1.0 </P>
-            <P> EPS = 0.4 </P>
-            <P> Order = 4 </P>
-            <P> BLThick = 0.03 </P>
-        </PARAMETERS>
-    </CONDITIONS>
-</NEKTAR>
+            <INFORMATION>
+                <I PROPERTY="CADFile" VALUE="6412"  />
+                <I PROPERTY="MeshType" VALUE="2DBL" />
+            </INFORMATION>
+
+            <PARAMETERS>
+                <P PARAM="MinDelta" VALUE="0.01"    />
+                <P PARAM="MaxDelta" VALUE="1.0"     />
+                <P PARAM="EPS"      VALUE="0.1"     />
+                <P PARAM="Order"    VALUE="4"       />
+
+                <!-- Boundary layer !-->
+                <P PARAM="BLSurfs"  VALUE="5,6"     />
+                <P PARAM="BLThick"  VALUE="0.03"    />
+                <P PARAM="BLLayers" VALUE="4"       />
+                <P PARAM="BLProg"   VALUE="2.0"     />
+
+                <!-- 2D Domain !-->
+                <P PARAM="Xmin"     VALUE="-1.0"    />
+                <P PARAM="Ymin"     VALUE="-2.0"    />
+                <P PARAM="Xmax"     VALUE="3.0"     />
+                <P PARAM="Ymax"     VALUE="2.0"     />
+                <P PARAM="AOA"      VALUE="15.0"    />
+            </PARAMETERS>
+
+        </MESHING>
+    </NEKTAR>
 \end{lstlisting}
 A list of the CAD surfaces which will have a prism generated on is described by
 \inltt{BLSurfs} and the thickness of the boundary to aim for is \inltt{BLThick}.
 %
-An important point to note is the identity of surfaces is given by their order
-in the CAD file. Not necessarily in the order they were created or index in
-CAD software. The output in XML format will flow a similar logic in composite
-numbering. Composite 0 will be the tetrahedral volume, 1 the prisms. Surface
-composites will be numbered 1xx where xx is the surface number in CAD. If
-the geometry has more than 100 surfaces, the numbering 1xxx will be used.
-Because \nekpp meshes cannot have more that one element type in a composite,
-boundary composites which make up symmetry planes, which have quad elements,
-will be numbered such that 1xx is the triangular elements and 2xx are the quads.
-%
 The mesh generator has been created with a range of error messages to aid in
-debugging. If you encounter an error and the mesh generator fails, run \mc with
+debugging. If you encounter an error and the mesh generator fails, run \nm with
 the verbose \inltt{-v} flag and send the stdout with the .mcf and .step files
 to \inltt{m.turner14@imperial.ac.uk}. Without the feedback this functionality
 cannot improve.

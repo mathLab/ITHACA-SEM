@@ -36,28 +36,28 @@
 #ifndef UTILITIES_NEKMESH_PROCESSCURVEDEDGES
 #define UTILITIES_NEKMESH_PROCESSCURVEDEDGES
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
 namespace Utilities
 {
 
-class ProcessCurvedEdges : public ProcessModule
+class ProcessCurvedEdges : public NekMeshUtils::ProcessModule
 {
 public:
-    ProcessCurvedEdges(MeshSharedPtr m);
+    ProcessCurvedEdges(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessCurvedEdges();
 
     /// Write mesh to output file.
     virtual void Process();
-    void GenerateEdgeNodes(EdgeSharedPtr edge)
+    void GenerateEdgeNodes(NekMeshUtils::EdgeSharedPtr edge)
     {
         v_GenerateEdgeNodes( edge);
     }
 
 protected:
-    virtual void v_GenerateEdgeNodes(EdgeSharedPtr edge) = 0;
+    virtual void v_GenerateEdgeNodes(NekMeshUtils::EdgeSharedPtr edge) = 0;
 };
 }
 }

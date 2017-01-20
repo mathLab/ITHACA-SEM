@@ -46,16 +46,6 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-struct blInfo
-{
-    NodeSharedPtr pNode;
-    NodeSharedPtr oNode;
-    int bl;
-    Array<OneD, NekDouble> N;
-    int symsurf;
-    bool onSym;
-};
-
 class BLMesh
 {
 public:
@@ -64,9 +54,11 @@ public:
     /**
      *@brief default constructor
      */
-    BLMesh(CADSystemSharedPtr s, MeshSharedPtr m, std::vector<unsigned int> bls,
-           NekDouble b) :
-                        m_cad(s), m_mesh(m), m_blsurfs(bls), m_bl(b)
+    BLMesh(MeshSharedPtr m, std::vector<unsigned int> bls,
+                            NekDouble b,
+                            int l,
+                            NekDouble p) :
+                    m_mesh(m), m_blsurfs(bls), m_bl(b), m_prog(p), m_layer(l) 
     {
     };
 
@@ -75,62 +67,70 @@ public:
      */
     void Mesh();
 
-    /**
-     * @brief Get the map of surface element id to pseudo surface prism face
-     */
-    std::vector<ElementSharedPtr> GetPsuedoSurf()
+    std::vector<unsigned int> GetSymSurfs(){ return m_symSurfs;}
+    std::vector<unsigned int> GetBLSurfs(){ return m_blsurfs;}
+
+    std::map<NodeSharedPtr, NodeSharedPtr> GetSymNodes();
+
+    std::vector<ElementSharedPtr> GetPseudoSurface()
     {
         return m_psuedoSurface;
     }
 
-    /**
-     * @brief Get the list of symetry surfaces
-     */
-    std::vector<int> GetSymSurfs()
+    struct blInfo
     {
-        return m_symSurfs;
-    }
+        NodeSharedPtr pNode;
+        NodeSharedPtr oNode;
+        int bl;
+        Array<OneD, NekDouble> N;
+        int symsurf;
+        bool onSym;
+        std::vector<ElementSharedPtr> els;
+        std::set<int> surfs;
 
-    /**
-     * @brief Get the map of boundary layer surface nodes to the prism top nodes
-     */
-    std::map<NodeSharedPtr, NodeSharedPtr> GetNodeMap(int s)
-    {
-        std::map<int, std::map<NodeSharedPtr, NodeSharedPtr> >::iterator f;
-        f = m_symNodes.find(s);
-        ASSERTL0(f != m_symNodes.end(), "surf not found");
-        return f->second;
-    }
+        bool stopped;
 
-    /*
-     * @brief Get the list of surfaces to have a boundary layer generated
-     */
-    std::vector<unsigned int> GetBLSurfs()
-    {
-        return m_blsurfs;
-    }
+        void AlignNode(NekDouble t)
+        {
+            pNode->m_x = oNode->m_x + t * N[0];
+            pNode->m_y = oNode->m_y + t * N[1];
+            pNode->m_z = oNode->m_z + t * N[2];
+        }
+    };
+    typedef boost::shared_ptr<blInfo> blInfoSharedPtr;
 
 private:
+
+    void Setup();
+    void GrowLayers();
+    void Shrink();
+    void BuildElements();
+    bool TestIntersectionEl(ElementSharedPtr e1, ElementSharedPtr e2);
+    bool IsPrismValid(ElementSharedPtr el);
+    NekDouble Proximity(NodeSharedPtr n, ElementSharedPtr el);
 
     NekDouble Visability(std::vector<ElementSharedPtr> tris, Array<OneD, NekDouble> N);
     Array<OneD, NekDouble> GetNormal(std::vector<ElementSharedPtr> tris);
 
-    ///CAD
-    CADSystemSharedPtr m_cad;
     /// mesh object containing surface mesh
     MeshSharedPtr m_mesh;
     /// List of surfaces onto which boundary layers are placed
     std::vector<unsigned int> m_blsurfs;
     /// thickness of the boundary layer
     NekDouble m_bl;
+    NekDouble m_prog;
+    int m_layer;
+    Array<OneD, NekDouble> m_layerT;
     /// list of surfaces to be remeshed due to the boundary layer
-    std::vector<int> m_symSurfs;
+    std::vector<unsigned int> m_symSurfs;
     /// data structure used to store and develop bl information
-    std::map<NodeSharedPtr, blInfo> blData;
-    /// list of nodes which will lie of symtetry surfaces
-    std::map<int, std::map<NodeSharedPtr, NodeSharedPtr> > m_symNodes;
-    /// list of elements which form the psuedo surface from the top of prisms
+    std::map<NodeSharedPtr, blInfoSharedPtr> m_blData;
+    std::map<NodeSharedPtr, std::vector<blInfoSharedPtr> > m_nToNInfo; //node to neighbouring information
+    std::map<ElementSharedPtr,ElementSharedPtr> m_priToTri;
     std::vector<ElementSharedPtr> m_psuedoSurface;
+    NekMatrix<NekDouble> m_deriv[3];
+
+
 };
 
 typedef boost::shared_ptr<BLMesh> BLMeshSharedPtr;

@@ -32,6 +32,7 @@
 //  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 #include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
 #include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
@@ -51,18 +52,24 @@ std::string CADSystemOCE::key = GetEngineFactory().RegisterCreatorFunction(
 
 bool CADSystemOCE::LoadCAD()
 {
-    cout << "trying " << m_name << endl;
-
-    // Takes step file and makes OpenCascade shape
-    STEPControl_Reader reader;
-    reader = STEPControl_Reader();
-    reader.ReadFile(m_name.c_str());
-    reader.NbRootsForTransfer();
-    reader.TransferRoots();
-    shape = reader.OneShape();
-    if (shape.IsNull())
+    if (m_naca.size() == 0)
     {
-        return false;
+        //not a naca profile behave normally
+        // Takes step file and makes OpenCascade shape
+        STEPControl_Reader reader;
+        reader = STEPControl_Reader();
+        reader.ReadFile(m_name.c_str());
+        reader.NbRootsForTransfer();
+        reader.TransferRoots();
+        shape = reader.OneShape();
+        if (shape.IsNull())
+        {
+            return false;
+        }
+    }
+    else
+    {
+        shape = BuildNACA(m_name);
     }
 
     // faces and verts can be extracted straight from shape
@@ -105,8 +112,8 @@ bool CADSystemOCE::LoadCAD()
         }
     }
 
-    map<int, vector<int> > adjsurfmap; // from id of curve to list of ids of
-                                       // surfs
+    // from id of curve to list of ids of surfs
+    map<int, vector<int> > adjsurfmap;
 
     // Adds edges to our type and map
     for (int i = 1; i <= mapOfEdges.Extent(); i++)
@@ -267,7 +274,11 @@ bool CADSystemOCE::LoadCAD()
     for (map<int, vector<int> >::iterator it = adjsurfmap.begin();
          it != adjsurfmap.end(); it++)
     {
-        ASSERTL0(it->second.size() == 2, "no three curve surfaces");
+        if(!m_2d)
+        {
+            ASSERTL0(it->second.size() == 2, "no three curve surfaces");
+        }
+
         vector<CADSurfSharedPtr> sfs;
         for (int i = 0; i < it->second.size(); i++)
         {
@@ -345,6 +356,124 @@ Array<OneD, NekDouble> CADSystemOCE::GetBoundingBox()
     }
 
     return bound;
+}
+
+TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
+{
+    ASSERTL0(naca.length() == 4, "not a 4 digit code");
+    vector<NekDouble> data;
+    ParseUtils::GenerateUnOrderedVector(m_naca.c_str(), data);
+    ASSERTL0(data.size() == 5, "not a vaild domain");
+
+    int n = boost::lexical_cast<int>(naca);
+    NekDouble T = (n%100) / 100.0;
+    n/=100;
+    NekDouble P = (n%10)/10.0;
+    n/=10;
+    NekDouble M = (n%10)/100.0;
+
+    int np = 25;
+
+    Array<OneD, NekDouble> xc(np);
+    NekDouble dtheta = M_PI/(np-1);
+    for(int i = 0; i < np; i++)
+    {
+        xc[i] = (1.0 - cos(i*dtheta)) / 2.0;
+    }
+
+    Array<OneD, NekDouble> yc(np), dyc(np);
+    for(int i = 0; i < np; i++)
+    {
+        if(xc[i] < P)
+        {
+            yc[i] = M / P / P * (2.0 * P * xc[i] - xc[i] * xc[i]);
+            dyc[i] = 2.0 * M / P / P * (P - xc[i]);
+        }
+        else
+        {
+            yc[i]  = M / (1.0 - P) / (1.0 - P) * (
+                         1.0 - 2.0 * P + 2.0 * P * xc[i] - xc[i] * xc[i]);
+            dyc[i] = 2.0 * M / (1.0 - P) / (1.0 - P) * (P - xc[i]);
+        }
+    }
+
+    Array<OneD, NekDouble> yt(np);
+    for(int i = 0; i < np; i++)
+    {
+        yt[i] = T / 0.2 * ( 0.2969 * sqrt(xc[i])
+                           -0.1260 * xc[i]
+                           -0.3516 * xc[i] * xc[i]
+                           +0.2843 * xc[i] * xc[i] * xc[i]
+                           -0.1015 * xc[i] * xc[i] * xc[i] * xc[i]);
+    }
+
+    Array<OneD, NekDouble> x(2*np-1), y(2*np-1);
+    int l = 0;
+    for(int i = np-1; i >= 0; i--, l++)
+    {
+        NekDouble theta = atan(dyc[i]);
+
+        x[l] = xc[i] - yt[i] * sin(theta);
+        y[l] = yc[i] + yt[i] * cos(theta);
+
+    }
+    for(int i = 1; i < np; i++)
+    {
+        NekDouble theta = atan(dyc[i]);
+
+        x[i+np-1] = xc[i] + yt[i] * sin(theta);
+        y[i+np-1] = yc[i] - yt[i] * cos(theta);
+    }
+
+    TColgp_Array1OfPnt pointArray(0,2*np-2);
+
+    for(int i = 0; i < 2*np-1; i++)
+    {
+        pointArray.SetValue(i,gp_Pnt(x[i]*1000.0,y[i]*1000.0,0.0));
+    }
+
+    GeomAPI_PointsToBSpline spline(pointArray);
+    Handle(Geom_BSplineCurve) curve = spline.Curve();
+
+    BRepBuilderAPI_MakeEdge areoEdgeBuilder(curve);
+    TopoDS_Edge aeroEdge = areoEdgeBuilder.Edge();
+    BRepBuilderAPI_MakeEdge aeroTEBuilder(
+        gp_Pnt(x[0]*1000.0, y[0]*1000.0, 0.0),
+        gp_Pnt(x[2*np-2]*1000.0, y[2*np-2]*1000.0, 0.0));
+    TopoDS_Edge TeEdge = aeroTEBuilder.Edge();
+
+    BRepBuilderAPI_MakeWire aeroWireBuilder(aeroEdge, TeEdge);
+    TopoDS_Wire aeroWire = aeroWireBuilder.Wire();
+
+    gp_Trsf transform;
+    gp_Ax1 rotAx(gp_Pnt(500.0,0.0,0.0),gp_Dir(gp_Vec(0.0,0.0,-1.0)));
+    transform.SetRotation(rotAx, data[4]/180.0*M_PI);
+    TopLoc_Location mv(transform);
+    aeroWire.Move(mv);
+
+    BRepBuilderAPI_MakeEdge domInlBuilder(gp_Pnt(data[0]*1000.0,data[1]*1000.0,0.0),
+                                          gp_Pnt(data[0]*1000.0,data[3]*1000.0,0.0));
+    TopoDS_Edge inlEdge = domInlBuilder.Edge();
+
+    BRepBuilderAPI_MakeEdge domTopBuilder(gp_Pnt(data[0]*1000.0,data[3]*1000.0,0.0),
+                                          gp_Pnt(data[2]*1000.0,data[3]*1000.0,0.0));
+    TopoDS_Edge topEdge = domTopBuilder.Edge();
+
+    BRepBuilderAPI_MakeEdge domOutBuilder(gp_Pnt(data[2]*1000.0,data[3]*1000.0,0.0),
+                                          gp_Pnt(data[2]*1000.0,data[1]*1000.0,0.0));
+    TopoDS_Edge outEdge = domOutBuilder.Edge();
+
+    BRepBuilderAPI_MakeEdge domBotBuilder(gp_Pnt(data[2]*1000.0,data[1]*1000.0,0.0),
+                                          gp_Pnt(data[0]*1000.0,data[1]*1000.0,0.0));
+    TopoDS_Edge botEdge = domBotBuilder.Edge();
+
+    BRepBuilderAPI_MakeWire domWireBuilder(inlEdge, topEdge, outEdge, botEdge);
+    TopoDS_Wire domWire = domWireBuilder.Wire();
+
+    BRepBuilderAPI_MakeFace face(domWire, true);
+    face.Add(aeroWire);
+
+    return face.Face();
 }
 
 }

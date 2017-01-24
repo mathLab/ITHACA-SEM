@@ -107,7 +107,9 @@ namespace Nektar
                 const int                                     nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray);
+                      Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
                         
             virtual void v_NumFluxforScalar(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,

@@ -466,7 +466,6 @@ namespace Nektar
 
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(
                                                         m_ncoeffs,m_ncoeffs);
-                    int cnt = 0;
                     for(int i = 0; i < m_ncoeffs; ++i)
                     {
                         // Get mode at quadrature points
@@ -898,7 +897,7 @@ namespace Nektar
 
             v_BwdTrans(inarray,tmp);
 
-            VarCoeffType varcoefftypes[] = {eVarCoeffVelX, eVarCoeffVelY};
+            VarCoeffType varcoefftypes[] = {eVarCoeffVelX, eVarCoeffVelY, eVarCoeffVelZ};
 
             //calculate u dx + v dy + ..
             Vmath::Zero(totpts,tmp_adv,1);
@@ -997,14 +996,6 @@ namespace Nektar
         {
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this class");
             return 0;
-        }
-
-        void StdExpansion::v_ExtractDataToCoeffs(const NekDouble *data,
-                                                 const std::vector<unsigned int > &nummodes,
-                                                 const int nmode_offset,
-                                                 NekDouble *coeffs)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is not defined for this class");
         }
 
         void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, Array< OneD, NekDouble> &outarray)
@@ -1222,6 +1213,14 @@ namespace Nektar
             return returnval;
         }
 
+        boost::shared_ptr<StdExpansion> 
+        StdExpansion::v_GetLinStdExp(void) const
+        {
+            ASSERTL0(false,"This method is not defined for this expansion");
+            StdExpansionSharedPtr returnval;
+            return returnval;
+        }
+        
         int StdExpansion::v_GetShapeDimension() const
         {
             ASSERTL0(false, "This function is not valid or not defined");

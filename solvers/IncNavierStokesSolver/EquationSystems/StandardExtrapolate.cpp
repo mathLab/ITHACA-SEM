@@ -75,30 +75,24 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
     {
-        if(m_HBCdata.num_elements()>0)
+        m_pressureCalls++;
+        if(m_HBCnumber>0)
         {
-            m_pressureCalls++;
-
-            // Rotate HOPBCs storage
-            RollOver(m_pressureHBCs);
-            
             // Calculate non-linear and viscous BCs at current level
             // and put in m_pressureHBCs[0]
             CalcNeumannPressureBCs(fields,N,kinvis);
             
-            // calculate (phi,du/dt) and level n which will then be
-            // extrpolated.
-            CalcExplicitDuDt(fields);
+            // Extrapolate to n+1
+            ExtrapolateArray(m_pressureHBCs);
             
-            // Extrapolate to m_pressureHBCs to n+1
-            ExtrapolatePressureHBCs();
-            
+            // Add (phi,Du/Dt) term to m_presureHBC
+            AddDuDt();
+
             // Copy m_pressureHBCs to m_PbndExp
             CopyPressureHBCsToPbndExp();            
-
-            // Evaluate High order outflow conditiosn if required. 
-            CalcOutflowBCs(fields, kinvis);
         }
+
+        CalcOutflowBCs(fields, kinvis);
     }
 
     

@@ -44,14 +44,20 @@ namespace Nektar
 namespace FieldUtils
 {
 
-enum TecOutType
-{
-    eFullBlockZone,
-    eFullBlockZoneEquiSpaced,
-    eSeperateZones
+enum TecplotZoneType{
+    eOrdered = 0,
+    eFELineSeg,
+    eFETriangle,
+    eFEQuadrilateral,
+    eFETetrahedron,
+    eFEBrick,
+    eFEPolygon,
+    eFEPolyhedron
 };
 
-/// Converter from fld to dat.
+/**
+ * @brief Tecplot output class.
+ */
 class OutputTecplot : public OutputModule
 {
 public:
@@ -60,32 +66,86 @@ public:
     {
         return MemoryManager<OutputTecplot>::AllocateSharedPtr(f);
     }
+
     static ModuleKey m_className;
     OutputTecplot(FieldSharedPtr f);
     virtual ~OutputTecplot();
 
-    /// Write fld to output file.
     virtual void Process(po::variables_map &vm);
 
-private:
-    bool m_doError;
-    TecOutType m_outputType;
+protected:
+    /// True if writing binary field output
+    bool            m_binary;
+    /// True if writing a single output file
+    bool            m_oneOutputFile;
+    /// Tecplot zone type of output
+    TecplotZoneType m_zoneType;
+    /// Number of points per block in Tecplot file
+    vector<int>     m_numPoints;
+    /// Number of blocks in Tecplot file
+    int             m_numBlocks;
+    /// Coordinate dimension of output
+    int             m_coordim;
+    /// Total number of connectivity entries
+    int             m_totConn;
+    /// Connectivty for each block: one per element
+    vector<Array<OneD, int> > m_conn;
+    /// Each rank's field sizes
+    Array<OneD, int> m_rankFieldSizes;
+    /// Each rank's connectivity sizes
+    Array<OneD, int> m_rankConnSizes;
+    /// Field data to output
+    Array<OneD, Array<OneD, NekDouble> > m_fields;
 
-    void WriteTecplotHeader(std::ofstream &outfile, std::string var);
+    virtual void WriteTecplotHeader(std::ofstream &outfile,
+                                    std::vector<std::string> &var);
+    virtual void WriteTecplotZone(std::ofstream &outfile);
+    virtual void WriteTecplotConnectivity(std::ofstream &outfile);
 
-    void WriteTecplotZone(std::ofstream &outfile);
+    int GetNumTecplotBlocks();
+    void CalculateConnectivity();
 
-    int GetNumTecplotBlocks(void);
-
-    void WriteTecplotField(const int field, std::ofstream &outfile);
-
-    void WriteTecplotConnectivity(std::ofstream &outfile);
-
+    /// Returns this module's name.
     virtual std::string GetModuleName()
     {
         return "OutputTecplot";
     }
 };
+
+/**
+ * @brief Tecplot output class, specifically for binary field output.
+ */
+class OutputTecplotBinary : public OutputTecplot
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
+    {
+        return MemoryManager<OutputTecplotBinary>::AllocateSharedPtr(f);
+    }
+
+    static ModuleKey m_className;
+    OutputTecplotBinary(FieldSharedPtr f) : OutputTecplot(f)
+    {
+        m_binary = true;
+        m_config["double"] =
+            ConfigOption(true, "0", "Write double-precision data: more "
+                                    "accurate but more disk space required");
+    }
+
+    virtual ~OutputTecplotBinary()
+    {
+    }
+
+protected:
+    void WriteDoubleOrFloat(std::ofstream          &outfile,
+                            Array<OneD, NekDouble> &data);
+    virtual void WriteTecplotHeader(std::ofstream &outfile,
+                                    std::vector<std::string> &var);
+    virtual void WriteTecplotZone(std::ofstream &outfile);
+    virtual void WriteTecplotConnectivity(std::ofstream &outfile);
+};
+
 }
 }
 

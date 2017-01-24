@@ -39,9 +39,9 @@
 #include <vector>
 
 namespace Nektar
-{    
+{
     namespace LibUtilities
-    {     
+    {
 
         enum PointsType
         {
@@ -73,6 +73,12 @@ namespace Nektar
             eNodalTetEvenlySpaced,          //!<  3D Evenly-spaced points on a Tetrahedron
             eNodalTetElec,                  //!<  3D Nodal Electrostatic Points on a Tetrahedron
             eNodalPrismEvenlySpaced,        //!<  3D Evenly-spaced points on a Prism
+            eNodalPrismElec,                //!<  3D electrostatically spaced points on a Prism
+            eNodalTriSPI,                   //!<  2D Nodal Symmetric positive internal triangle (Whitherden, Vincent)
+            eNodalTetSPI,                   //!<  3D Nodal Symmetric positive internal tet (Whitherden, Vincent)
+            eNodalPrismSPI,                 //!<  3D prism SPI
+            eNodalQuadElec,                 //!<  2D GLL for quad
+            eNodalHexElec,                  //!<  3D GLL for hex
             SIZE_PointsType                 //!<  Length of enum list
         };
 

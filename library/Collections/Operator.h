@@ -127,6 +127,13 @@ class Operator
                       Array<OneD,       NekDouble> &wsp
                                                     = NullNekDouble1DArray) = 0;
 
+        COLLECTIONS_EXPORT virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp
+                                                    = NullNekDouble1DArray) = 0;
+
         COLLECTIONS_EXPORT virtual ~Operator();
 
         /// Get the size of the required workspace

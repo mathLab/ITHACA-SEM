@@ -160,11 +160,16 @@ namespace Nektar
     
             LOCAL_REGIONS_EXPORT virtual
                 StdRegions::StdExpansionSharedPtr v_GetStdExp(void) const;
+
+            LOCAL_REGIONS_EXPORT virtual
+                StdRegions::StdExpansionSharedPtr v_GetLinStdExp(void) const;
             
-            LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(const NekDouble *data,
-                                           const std::vector<unsigned int > &nummodes,  
-                                           const int mode_offset,   
-                                                                    NekDouble * coeffs);
+            LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
+                const NekDouble *data,
+                const std::vector<unsigned int > &nummodes,  
+                const int mode_offset,
+                NekDouble * coeffs,
+                std::vector<LibUtilities::BasisType> &fromType);
 
             LOCAL_REGIONS_EXPORT virtual 
                 bool v_GetFaceDGForwards(const int i) const;

@@ -558,6 +558,21 @@ namespace Nektar
                                     m_base[2]->GetBasisKey());
         }
 
+
+        StdRegions::StdExpansionSharedPtr TetExp::v_GetLinStdExp(void) const
+        {
+            LibUtilities::BasisKey bkey0(m_base[0]->GetBasisType(),
+                           2, m_base[0]->GetPointsKey());
+            LibUtilities::BasisKey bkey1(m_base[1]->GetBasisType(),
+                           2, m_base[1]->GetPointsKey());
+            LibUtilities::BasisKey bkey2(m_base[2]->GetBasisType(),
+                           2, m_base[2]->GetPointsKey());
+            
+            return MemoryManager<StdRegions::StdTetExp>
+                ::AllocateSharedPtr( bkey0, bkey1, bkey2);
+        }
+
+        
         int TetExp::v_GetCoordim()
         {
             return m_geom->GetCoordim();
@@ -567,7 +582,8 @@ namespace Nektar
                                            const NekDouble *data,
                                            const std::vector<unsigned int > &nummodes,
                                            const int mode_offset,
-                                           NekDouble * coeffs)
+                                           NekDouble * coeffs,
+                                           std::vector<LibUtilities::BasisType> &fromType)
         {
             int data_order0 = nummodes[mode_offset];
             int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);

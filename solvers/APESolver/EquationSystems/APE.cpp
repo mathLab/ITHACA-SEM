@@ -138,22 +138,8 @@ void APE::v_InitObject()
         m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
     }
     EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
-    Array<OneD, NekDouble> tmpC(GetNcoeffs());
-    for (int i = 0; i < m_spacedim + 2; ++i)
-    {
-        m_bfField->IProductWRTBase(m_bf[i], tmpC);
-        m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
-        m_bfField->LocalToGlobal(tmpC, tmpC);
-        m_bfField->GlobalToLocal(tmpC, tmpC);
-        m_bfField->BwdTrans(tmpC, m_bf[i]);
-    }
 
-    //  Initialize the sourceterm
-    m_sourceTerms = Array<OneD, NekDouble>(GetTotPoints(), 0.0);
-
-    EvaluateFunction("S", m_sourceTerms, "Source", m_time);
-    m_fields[0]->FwdTrans(m_sourceTerms, tmpC);
-    m_fields[0]->BwdTrans(tmpC, m_sourceTerms);
+    m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, m_spacedim + 1);
 
     // Do not forwards transform initial condition
     m_homoInitialFwd = false;
@@ -313,23 +299,23 @@ void APE::GetFluxVector(
 /**
  * @brief v_PostIntegrate
  */
-bool APE::v_PostIntegrate(int step)
+bool APE::v_PreIntegrate(int step)
 {
-    if (m_cflsteps && !((step + 1) % m_cflsteps))
-    {
-        NekDouble cfl = GetCFLEstimate();
-        if (m_comm->GetRank() == 0)
-        {
-            cout << "CFL: " << cfl << endl;
-        }
-    }
-
-    EvaluateFunction("S", m_sourceTerms, "Source", m_time);
     EvaluateFunction(m_bfNames, m_bf, "Baseflow", m_time);
 
     Array<OneD, NekDouble> tmpC(GetNcoeffs());
-    m_fields[0]->FwdTrans(m_sourceTerms, tmpC);
-    m_fields[0]->BwdTrans(tmpC, m_sourceTerms);
+    std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+    for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+    {
+        for (int i = 0; i < (*x)->GetForces().num_elements(); ++i)
+        {
+            m_bfField->IProductWRTBase((*x)->GetForces()[i], tmpC);
+            m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
+            m_bfField->LocalToGlobal(tmpC, tmpC);
+            m_bfField->GlobalToLocal(tmpC, tmpC);
+            m_bfField->BwdTrans(tmpC, (*x)->UpdateForces()[i]);
+        }
+    }
 
     for (int i = 0; i < m_spacedim + 2; ++i)
     {
@@ -339,6 +325,24 @@ bool APE::v_PostIntegrate(int step)
         m_bfField->LocalToGlobal(tmpC, tmpC);
         m_bfField->GlobalToLocal(tmpC, tmpC);
         m_bfField->BwdTrans(tmpC, m_bf[i]);
+    }
+
+    return UnsteadySystem::v_PreIntegrate(step);
+}
+
+
+/**
+ * @brief v_PostIntegrate
+ */
+bool APE::v_PostIntegrate(int step)
+{
+    if (m_cflsteps && !((step + 1) % m_cflsteps))
+    {
+        NekDouble cfl = GetCFLEstimate();
+        if (m_comm->GetRank() == 0)
+        {
+            cout << "CFL: " << cfl << endl;
+        }
     }
 
     return UnsteadySystem::v_PostIntegrate(step);
@@ -365,7 +369,11 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
         Vmath::Neg(nq, outarray[i], 1);
     }
 
-    AddSource(outarray);
+    std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+    for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+    {
+        (*x)->Apply(m_fields, outarray, outarray, m_time);
+    }
 }
 
 
@@ -494,15 +502,6 @@ void APE::WallBC(int bcRegion, int cnt,
 
 
 /**
- * @brief sourceterm for p' equation obtained from GetSource
- */
-void APE::AddSource(Array< OneD, Array< OneD, NekDouble > > &outarray)
-{
-    Vmath::Vadd(GetTotPoints(), m_sourceTerms, 1, outarray[0], 1, outarray[0], 1);
-}
-
-
-/**
  * @brief Compute the advection velocity in the standard space
  * for each element of the expansion.
  *
@@ -602,8 +601,6 @@ void APE::v_ExtraFldOutput(
     std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     std::vector<std::string>             &variables)
 {
-    const int nCoeffs = m_fields[0]->GetNcoeffs();
-
     for (int i = 0; i < m_spacedim + 2; i++)
     {
         Array<OneD, NekDouble> tmpC(GetNcoeffs());
@@ -613,16 +610,30 @@ void APE::v_ExtraFldOutput(
         m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
         m_bfField->LocalToGlobal(tmpC, tmpC);
         m_bfField->GlobalToLocal(tmpC, tmpC);
-        m_bfField->BwdTrans(tmpC, m_bf[i]);
 
         variables.push_back(m_bfNames[i]);
         fieldcoeffs.push_back(tmpC);
     }
 
-    variables.push_back("S");
-    Array<OneD, NekDouble> FwdS(nCoeffs);
-    m_fields[0]->FwdTrans(m_sourceTerms, FwdS);
-    fieldcoeffs.push_back(FwdS);
+    int f = 0;
+    std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+    for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+    {
+        for (int i = 0; i < (*x)->GetForces().num_elements(); ++i)
+        {
+            Array<OneD, NekDouble> tmpC(GetNcoeffs());
+
+            m_bfField->IProductWRTBase((*x)->GetForces()[i], tmpC);
+            m_bfField->MultiplyByElmtInvMass(tmpC, tmpC);
+            m_bfField->LocalToGlobal(tmpC, tmpC);
+            m_bfField->GlobalToLocal(tmpC, tmpC);
+
+            variables.push_back("F_" + boost::lexical_cast<string>(f) +
+                                "_" + m_session->GetVariable(i));
+            fieldcoeffs.push_back(tmpC);
+        }
+        f++;
+    }
 }
 
 

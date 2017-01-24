@@ -43,6 +43,8 @@ using namespace std;
 
 namespace Nektar
 {
+    using namespace MultiRegions;
+
     string VelocityCorrectionScheme::className = 
         SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
             "VelocityCorrectionScheme", 
@@ -97,11 +99,12 @@ namespace Nektar
         // creation of the extrapolation object
         if(m_equationType == eUnsteadyNavierStokes)
         {
-            std::string vExtrapolation = "Standard";
+            std::string vExtrapolation = v_GetExtrapolateStr();
 
             if (m_session->DefinesSolverInfo("Extrapolation"))
             {
-                vExtrapolation = m_session->GetSolverInfo("Extrapolation");
+                vExtrapolation = v_GetSubSteppingExtrapolateStr(
+                                 m_session->GetSolverInfo("Extrapolation"));
             }
 
             m_extrapolation = GetExtrapolateFactory().CreateInstance(
@@ -119,9 +122,6 @@ namespace Nektar
             m_intVariables.push_back(n);
         }
         
-        m_saved_aii_Dt = Array<OneD, NekDouble>(m_nConvectiveFields,
-                                                NekConstants::kNekUnsetDouble);
-
         // Load parameters for Spectral Vanishing Viscosity
         m_session->MatchSolverInfo("SpectralVanishingViscosity","True",
                                    m_useSpecVanVisc, false);
@@ -180,7 +180,7 @@ namespace Nektar
         m_ode.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
 
         m_extrapolation->SubSteppingTimeIntegration(m_intScheme->GetIntegrationMethod(), m_intScheme);
-        m_extrapolation->GenerateHOPBCMap();
+        m_extrapolation->GenerateHOPBCMap(m_session);
         
         // set implicit time-intregration class operators
         m_ode.DefineImplicitSolve(&VelocityCorrectionScheme::SolveUnsteadyStokesSystem,this);
@@ -420,6 +420,7 @@ namespace Nektar
     void VelocityCorrectionScheme::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         UnsteadySystem::v_GenerateSummary(s);
+        SolverUtils::AddSummaryItem(s, "Splitting Scheme", "Velocity correction (strong press. form)");
 
         if (m_extrapolation->GetSubStepIntegrationMethod() !=
             LibUtilities::eNoTimeIntegrationMethod)
@@ -476,6 +477,7 @@ namespace Nektar
         // field below
         SetBoundaryConditions(m_time);
 
+        m_F = Array<OneD, Array< OneD, NekDouble> > (m_nConvectiveFields);
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->LocalToGlobal();
@@ -483,6 +485,7 @@ namespace Nektar
             m_fields[i]->GlobalToLocal();
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
                                   m_fields[i]->UpdatePhys());
+            m_F[i] = Array< OneD, NekDouble> (m_fields[0]->GetTotPoints(), 0.0);
         }
     }
     
@@ -573,32 +576,20 @@ namespace Nektar
         const NekDouble time, 
         const NekDouble aii_Dt)
     {
-        int i;
-        int phystot = m_fields[0]->GetTotPoints();
-
-        Array<OneD, Array< OneD, NekDouble> > F(m_nConvectiveFields);
-        for(i = 0; i < m_nConvectiveFields; ++i)
-        {
-            F[i] = Array<OneD, NekDouble> (phystot, 0.0);
-        }
-
-        // Enforcing boundary conditions on all fields
-        SetBoundaryConditions(time);
-        
         // Substep the pressure boundary condition if using substepping
         m_extrapolation->SubStepSetPressureBCs(inarray,aii_Dt,m_kinvis);
-    
+
         // Set up forcing term for pressure Poisson equation
-        SetUpPressureForcing(inarray, F, aii_Dt);
+        SetUpPressureForcing(inarray, m_F, aii_Dt);
 
         // Solve Pressure System
-        SolvePressure (F[0]);
+        SolvePressure (m_F[0]);
 
         // Set up forcing term for Helmholtz problems
-        SetUpViscousForcing(inarray, F, aii_Dt);
-        
+        SetUpViscousForcing(inarray, m_F, aii_Dt);
+
         // Solve velocity system
-        SolveViscous( F, outarray, aii_Dt);
+        SolveViscous( m_F, outarray, aii_Dt);
 
         // Apply flowrate correction
         if (m_flowrate > 0.0 && m_greenFlux != numeric_limits<NekDouble>::max())
@@ -625,17 +616,17 @@ namespace Nektar
         int i;
         int physTot = m_fields[0]->GetTotPoints();
         int nvel = m_velocity.num_elements();
-        Array<OneD, NekDouble> wk(physTot, 0.0);
+
+        m_fields[0]->PhysDeriv(eX,fields[0], Forcing[0]);
         
-        Vmath::Zero(physTot,Forcing[0],1);
-        
-        for(i = 0; i < nvel; ++i)
+        for(i = 1; i < nvel; ++i)
         {
-            m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[i],fields[i], wk);
-            Vmath::Vadd(physTot,wk,1,Forcing[0],1,Forcing[0],1);
+            // Use Forcing[1] as storage since it is not needed for the pressure
+            m_fields[i]->PhysDeriv(DirCartesianMap[i],fields[i],Forcing[1]);
+            Vmath::Vadd(physTot,Forcing[1],1,Forcing[0],1,Forcing[0],1);
         }
 
-        Vmath::Smul(physTot,1.0/aii_Dt,Forcing[0],1,Forcing[0],1);        
+        Vmath::Smul(physTot,1.0/aii_Dt,Forcing[0],1,Forcing[0],1);
     }
     
     /**
@@ -651,7 +642,7 @@ namespace Nektar
 
         // Grad p
         m_pressure->BwdTrans(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
-        
+
         int nvel = m_velocity.num_elements();
         if(nvel == 2)
         {
@@ -662,7 +653,7 @@ namespace Nektar
             m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[0], 
                                   Forcing[1], Forcing[2]);
         }
-        
+
         // Subtract inarray/(aii_dt) and divide by kinvis. Kinvis will
         // need to be updated for the convected fields.
         for(int i = 0; i < m_nConvectiveFields; ++i)
@@ -684,8 +675,11 @@ namespace Nektar
         factors[StdRegions::eFactorLambda] = 0.0;
 
         // Solver Pressure Poisson Equation
-        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(), NullFlagList,
-                              factors);
+        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(),
+                              NullFlagList, factors);
+
+        // Add presure to outflow bc if using convective like BCs
+        m_extrapolation->AddPressureToOutflowBCs(m_kinvis);
     }
     
     /**

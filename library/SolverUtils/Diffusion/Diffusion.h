@@ -79,7 +79,9 @@ namespace Nektar
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray);
+                      Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
             
             SOLVER_UTILS_EXPORT void FluxVec(
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
@@ -113,11 +115,6 @@ namespace Nektar
                 m_fluxVectorNS = fluxVector;
             }
 
-            inline void SetRiemannSolver(RiemannSolverSharedPtr riemann)
-            {
-                m_riemann = riemann;
-            }
-
             inline void SetHomoDerivs(Array<OneD, Array<OneD, NekDouble> > &deriv)
             {
                 v_SetHomoDerivs(deriv);
@@ -131,7 +128,6 @@ namespace Nektar
         protected:
             DiffusionFluxVecCB              m_fluxVector;
             DiffusionFluxVecCBNS            m_fluxVectorNS;
-            RiemannSolverSharedPtr          m_riemann;
             DiffusionArtificialDiffusion    m_ArtificialDiffusionVector;
 
             virtual void v_InitObject(
@@ -145,7 +141,9 @@ namespace Nektar
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray)=0;
+                      Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray)=0;
 
             virtual void v_SetHomoDerivs(
                 Array<OneD, Array<OneD, NekDouble> > &deriv)

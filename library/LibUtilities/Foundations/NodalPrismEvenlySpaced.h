@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Header file of 3D Nodal Prism Evenly Spaced Points
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,6 +38,7 @@
 
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <boost/shared_ptr.hpp>
@@ -47,27 +48,27 @@
 
 namespace Nektar
 {
-    namespace LibUtilities 
+    namespace LibUtilities
     {
         class NodalPrismEvenlySpaced: public Points<NekDouble>
         {
         public:
             virtual ~NodalPrismEvenlySpaced()
             {
-                
+
             }
 
             NodalPrismEvenlySpaced(const PointsKey &key):PointsBaseType(key)
             {
 
             }
-            
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> 
+
+            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType>
                 Create(const PointsKey &key);
 
             const MatrixSharedPtrType GetI(const PointsKey &pkey)
             {
-                ASSERTL0(pkey.GetPointsDim() == 3, 
+                ASSERTL0(pkey.GetPointsDim() == 3,
                          "NodalPrismEvenlySpaced Points can only interp to "
                          "other 3d point distributions");
                 Array<OneD, const NekDouble> x, y, z;
@@ -85,13 +86,15 @@ namespace Nektar
 
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
                 CalculateInterpMatrix(x, y, z, interp);
-                
+
                 NekDouble* d = interp.data();
                 return MemoryManager<NekMatrix<NekDouble> >
                     ::AllocateSharedPtr(numpoints, np, d);
             }
 
         private:
+            boost::shared_ptr<NodalUtilPrism> m_util;
+
             /// Default constructor should not be called except by Create matrix
             NodalPrismEvenlySpaced():PointsBaseType(NullPointsKey)
             {
@@ -108,6 +111,6 @@ namespace Nektar
                       Array<OneD,       NekDouble> &interp);
         }; // end of NodalPrismEvenlySpaced
    } // end of namespace
-} // end of namespace 
+} // end of namespace
 
 #endif //NODALPRISMEVENLYSPACED_H

@@ -96,8 +96,15 @@ namespace Nektar
         int cnt = 0;
         for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
-            std::string type = 
-                    m_fields[0]->GetBndConditions()[n]->GetUserDefined();
+            std::string type =
+                m_fields[0]->GetBndConditions()[n]->GetUserDefined();
+
+            if (m_fields[0]->GetBndConditions()[n]->GetBoundaryConditionType()
+                == SpatialDomains::ePeriodic)
+            {
+                continue;
+            }
+
             if(!type.empty())
             {
                 m_bndConds.push_back(GetCFSBndCondFactory().CreateInstance(

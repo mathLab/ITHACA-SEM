@@ -75,11 +75,28 @@ void Generator2D::Process()
 
     m_mesh->m_numNodes = m_mesh->m_cad->GetNumVerts();
 
+    // linear mesh all curves
+    for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
+    {
+        if (m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumCurve(),
+                                           "Curve progress");
+        }
+
+        m_curvemeshes[i] =
+            MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
+
+        m_curvemeshes[i]->Mesh();
+    }
+
     if (m_config["periodic"].beenSet)
     {
         m_periodicPairs.clear();
         set<unsigned> alreadyPeriodic;
-        
+
+        // Create periodic curve pairs
+
         string s = m_config["periodic"].as<string>();
         vector<string> lines;
 
@@ -97,7 +114,17 @@ void Generator2D::Process()
             m_periodicPairs[data[0]] = data[1];
             alreadyPeriodic.insert(data[0]);
             alreadyPeriodic.insert(data[1]);
-        }            
+        }
+
+        // Check compatibility
+
+        for (map<unsigned, unsigned>::iterator it = m_periodicPairs.begin();
+             it != m_periodicPairs.end(); ++it)
+        {
+            ASSERTL0(m_curvemeshes[it->first]->GetLength() ==
+                         m_curvemeshes[it->second]->GetLength(),
+                     "periodic curves of different length");
+        }
         
         if (m_mesh->m_verbose)
         {
@@ -105,25 +132,11 @@ void Generator2D::Process()
             for (map<unsigned, unsigned>::iterator it = m_periodicPairs.begin();
                  it != m_periodicPairs.end(); ++it)
             {
-                cout << "\t\t\tCurves " << it->first << " => " << it->second << endl;
+                cout << "\t\t\tCurves " << it->first << " => " << it->second
+                     << endl;
             }
             cout << endl;
         }
-    }
-
-    // linear mesh all curves
-    for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
-    {
-        if (m_mesh->m_verbose)
-        {
-            LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumCurve(),
-                                           "Curve progress");
-        }
-
-        m_curvemeshes[i] =
-            MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
-
-        m_curvemeshes[i]->Mesh();
     }
 
     EdgeSet::iterator it;

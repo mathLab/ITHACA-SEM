@@ -151,6 +151,21 @@ void InputCAD::ParseFile(string nm)
         }
     }
 
+    set<string> periodic;
+    if (pSession->DefinesElement("NEKTAR/MESHING/PERIODIC"))
+    {
+        TiXmlElement *per  = mcf->FirstChildElement("PERIODIC");
+        TiXmlElement *pair = per->FirstChildElement("P");
+
+        while (pair)
+        {
+            string tmp;
+            pair->QueryStringAttribute("PAIR", &tmp);
+            periodic.insert(tmp);
+            pair = pair->NextSiblingElement("P");
+        }
+    }
+
     map<string,string>::iterator it;
 
     it = information.find("CADFile");
@@ -249,6 +264,18 @@ void InputCAD::ParseFile(string nm)
         m_refinement = ss.str();
         m_refinement.erase(m_refinement.end()-1);
     }
+
+    if (periodic.size() > 0)
+    {
+        stringstream ss;
+        for (sit = periodic.begin(); sit != periodic.end(); ++sit)
+        {
+            ss << *sit;
+            ss << ":";
+        }
+        m_periodic = ss.str();
+        m_periodic.erase(m_periodic.end() - 1);
+    }
 }
 
 void InputCAD::Process()
@@ -300,6 +327,10 @@ void InputCAD::Process()
         {
             mods.back()->RegisterConfig("blcurves", m_blsurfs);
             mods.back()->RegisterConfig("blthick", m_blthick);
+        }
+        if (m_periodic.size())
+        {
+            mods.back()->RegisterConfig("periodic", m_periodic);
         }
     }
     else

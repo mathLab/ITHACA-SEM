@@ -74,6 +74,8 @@ private:
     std::map<int, FaceMeshSharedPtr> m_facemeshes;
     /// map of individual curve meshes of the curves in the domain
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
+    /// map of periodic curve pairs
+    std::map<unsigned, unsigned> m_periodicPairs;
 
     std::vector<unsigned int> m_blCurves;
     NekDouble m_thickness;

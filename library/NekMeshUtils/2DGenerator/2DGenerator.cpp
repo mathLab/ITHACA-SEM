@@ -39,6 +39,8 @@
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 namespace Nektar
 {
@@ -55,6 +57,8 @@ Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "0", "Generate parallelograms on these curves");
     m_config["blthick"] =
         ConfigOption(false, "0", "Parallelogram layer thickness");
+    m_config["periodic"] =
+        ConfigOption(false, "0", "Set of pairs of periodic curves");
 }
 
 Generator2D::~Generator2D()
@@ -70,6 +74,42 @@ void Generator2D::Process()
     }
 
     m_mesh->m_numNodes = m_mesh->m_cad->GetNumVerts();
+
+    if (m_config["periodic"].beenSet)
+    {
+        m_periodicPairs.clear();
+        set<unsigned> alreadyPeriodic;
+        
+        string s = m_config["periodic"].as<string>();
+        vector<string> lines;
+
+        boost::split(lines, s, boost::is_any_of(":"));
+
+        for (int i = 0; i < lines.size(); i++)
+        {
+            vector<unsigned> data;
+            ParseUtils::GenerateOrderedVector(lines[i].c_str(), data);
+
+            ASSERTL0(data.size() == 2, "periodic pairs ill-defined");
+            ASSERTL0(!alreadyPeriodic.count(data[0]), "curve already periodic");
+            ASSERTL0(!alreadyPeriodic.count(data[1]), "curve already periodic");
+
+            m_periodicPairs[data[0]] = data[1];
+            alreadyPeriodic.insert(data[0]);
+            alreadyPeriodic.insert(data[1]);
+        }            
+        
+        if (m_mesh->m_verbose)
+        {
+            cout << "\t\tPeriodic boundary conditions" << endl;
+            for (map<unsigned, unsigned>::iterator it = m_periodicPairs.begin();
+                 it != m_periodicPairs.end(); ++it)
+            {
+                cout << "\t\t\tCurves " << it->first << " => " << it->second << endl;
+            }
+            cout << endl;
+        }
+    }
 
     // linear mesh all curves
     for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)

@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSSCALAR
 #define UTILITIES_NEKMESH_PROCESSSCALAR
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -49,17 +49,17 @@ namespace Utilities
  * method. For now it simply prints a list of elements which have
  * negative Jacobian.
  */
-class ProcessScalar : public ProcessModule
+class ProcessScalar : public NekMeshUtils::ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessScalar>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    ProcessScalar(MeshSharedPtr m);
+    ProcessScalar(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessScalar();
 
     /// Write mesh to output file.

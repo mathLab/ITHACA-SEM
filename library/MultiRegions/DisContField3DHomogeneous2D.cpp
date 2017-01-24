@@ -211,7 +211,8 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing)
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool PhysSpaceForcing)
         {
             int n,m;
             int cnt = 0;
@@ -224,34 +225,39 @@ namespace Nektar
 			
             Array<OneD, NekDouble> e_out;
             Array<OneD, NekDouble> fce(inarray.num_elements());
+            Array<OneD, const NekDouble> wfce;
 
             // Fourier transform forcing function
-			if(m_WaveSpace)
-			{
-				fce = inarray;
-			}
-			else 
-			{
-				HomogeneousFwdTrans(inarray,fce);
-			}
+            if(m_WaveSpace)
+            {
+                fce = inarray;
+            }
+            else 
+            {
+                HomogeneousFwdTrans(inarray,fce);
+            }
 
             for(n = 0; n < nhom_modes_z; ++n)
             {
-				for(m = 0; m < nhom_modes_y; ++m)
-				{
-					beta_z = 2*M_PI*(n/2)/m_lhom_z;
-					beta_y = 2*M_PI*(m/2)/m_lhom_y;
-					new_factors = factors;
-					new_factors[StdRegions::eFactorLambda] += beta_y*beta_y + beta_z*beta_z;
-					
-					m_lines[n]->HelmSolve(fce + cnt,
-                                         e_out = outarray + cnt1,
-                                         flags, new_factors, varcoeff, dirForcing);
-                
-					cnt  += m_lines[n]->GetTotPoints();
-					cnt1 += m_lines[n]->GetNcoeffs();
-				}
-			}
+                for(m = 0; m < nhom_modes_y; ++m)
+                {
+                    beta_z = 2*M_PI*(n/2)/m_lhom_z;
+                    beta_y = 2*M_PI*(m/2)/m_lhom_y;
+                    new_factors = factors;
+                    new_factors[StdRegions::eFactorLambda] +=
+                        beta_y*beta_y + beta_z*beta_z;
+                    
+                    wfce = (PhysSpaceForcing)? fce+cnt:fce+cnt1;
+                    m_lines[n]->HelmSolve(wfce,
+                                          e_out = outarray + cnt1,
+                                          flags, new_factors,
+                                          varcoeff, dirForcing,
+                                          PhysSpaceForcing);
+                    
+                    cnt  += m_lines[n]->GetTotPoints();
+                    cnt1 += m_lines[n]->GetNcoeffs();
+                }
+            }
         }
 		
         void DisContField3DHomogeneous2D::v_EvaluateBoundaryConditions(

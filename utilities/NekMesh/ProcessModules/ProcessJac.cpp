@@ -52,9 +52,9 @@ ModuleKey ProcessJac::className = GetModuleFactory().RegisterCreatorFunction(
 ProcessJac::ProcessJac(MeshSharedPtr m) : ProcessModule(m)
 {
     m_config["extract"] =
-        ConfigOption(true, "0", "Extract non-valid elements from mesh.");
+        ConfigOption(false, "0.0", "Extract non-valid elements from mesh.");
     m_config["list"] = ConfigOption(
-        true, "0", "Print list of elements having negative Jacobian.");
+        false, "0", "Print list of elements having negative Jacobian.");
 }
 
 ProcessJac::~ProcessJac()
@@ -68,8 +68,9 @@ void ProcessJac::Process()
         cout << "ProcessJac: Calculating Jacobians... " << endl;
     }
 
-    bool extract   = m_config["extract"].as<bool>();
+    bool extract   = m_config["extract"].beenSet;
     bool printList = m_config["list"].as<bool>();
+    NekDouble thres = m_config["extract"].as<NekDouble>();
 
     vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
 
@@ -97,9 +98,47 @@ void ProcessJac::Process()
         // Generate geometric factors.
         SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
 
+        LibUtilities::PointsKeyVector p = geom->GetPointsKeys();
+        SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
+        const int pts = deriv[0][0].num_elements();
+        Array<OneD,NekDouble> jc(pts);
+        for (int k = 0; k < pts; ++k)
+        {
+            DNekMat jac(m_mesh->m_expDim, m_mesh->m_expDim, 0.0, eFULL);
+
+            for (int l = 0; l < m_mesh->m_expDim; ++l)
+            {
+                for (int j = 0; j < m_mesh->m_expDim; ++j)
+                {
+                    jac(j,l) = deriv[l][j][k];
+                }
+            }
+
+            if(m_mesh->m_expDim == 2)
+            {
+                jc[k] = jac(0,0) * jac(1,1) - jac(0,1)*jac(1,0);
+            }
+            else if(m_mesh->m_expDim == 3)
+            {
+                jc[k] =  jac(0,0) * (jac(1,1)*jac(2,2) - jac(2,1)*jac(1,2)) -
+                         jac(0,1) * (jac(1,0)*jac(2,2) - jac(2,0)*jac(1,2)) +
+                         jac(0,2) * (jac(1,0)*jac(2,1) - jac(2,0)*jac(1,1));
+            }
+        }
+
+        NekDouble scaledJac = Vmath::Vmin(jc.num_elements(),jc,1) /
+                              Vmath::Vmax(jc.num_elements(),jc,1);
+
+        bool valid = gfac->IsValid();
+
+        if (extract && (scaledJac < thres || !valid))
+        {
+            m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
+        }
+
         // Get the Jacobian and, if it is negative, print a warning
         // message.
-        if (!gfac->IsValid())
+        if (!valid)
         {
             nNeg++;
 
@@ -107,12 +146,8 @@ void ProcessJac::Process()
             {
                 cout << "  - " << el[i]->GetId() << " ("
                      << LibUtilities::ShapeTypeMap[el[i]->GetConf().m_e] << ")"
+                     << "  " << scaledJac
                      << endl;
-            }
-
-            if (extract)
-            {
-                m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
             }
         }
     }

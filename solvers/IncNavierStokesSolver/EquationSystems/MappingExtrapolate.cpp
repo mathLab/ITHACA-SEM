@@ -348,7 +348,7 @@ void MappingExtrapolate::v_CalcNeumannPressureBCs(
                 }
 
                 Pvals = (m_pressureHBCs[m_intSteps - 1]) + cnt;
-                Uvals = (m_acceleration[m_intSteps]) + cnt;
+                Uvals = (m_iprodnormvel[m_intSteps]) + cnt;
 
                 // Getting values on the edge and filling the pressure boundary
                 // expansion and the acceleration term. Multiplication by the

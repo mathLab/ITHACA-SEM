@@ -140,6 +140,8 @@ SET(FoundationHeaders
     ./Foundations/NodalTetSPI.h
     ./Foundations/NodalPrismSPI.h
     ./Foundations/NodalTetSPIData.h
+    ./Foundations/NodalQuadElec.h
+    ./Foundations/NodalHexElec.h
     ./Foundations/NodalUtil.h
     ./Foundations/PhysGalerkinProject.h
     ./Foundations/Points.h
@@ -166,6 +168,8 @@ SET(FoundationSources
     ./Foundations/NodalTriFekete.cpp
     ./Foundations/NodalTriSPI.cpp
     ./Foundations/NodalTetSPI.cpp
+    ./Foundations/NodalQuadElec.cpp
+    ./Foundations/NodalHexElec.cpp
     ./Foundations/NodalPrismSPI.cpp
     ./Foundations/NodalUtil.cpp
     ./Foundations/PhysGalerkinProject.cpp

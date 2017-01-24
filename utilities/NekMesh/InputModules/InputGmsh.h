@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_INPUTGMSH
 #define UTILITIES_NEKMESH_INPUTGMSH
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -46,35 +46,36 @@ namespace Utilities
 /**
  * Converter for Gmsh files.
  */
-class InputGmsh : public InputModule
+class InputGmsh : public NekMeshUtils::InputModule
 {
 public:
-    InputGmsh(MeshSharedPtr m);
+    InputGmsh(NekMeshUtils::MeshSharedPtr m);
     virtual ~InputGmsh();
     virtual void Process();
 
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m)
+    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<InputGmsh>::AllocateSharedPtr(m);
     }
     /// %ModuleKey for class.
-    static ModuleKey className;
-    static std::map<unsigned int, ElmtConfig> GenElmMap();
+    static NekMeshUtils::ModuleKey className;
+    static std::map<unsigned int, NekMeshUtils::ElmtConfig> GenElmMap();
 
     /**
      * Element map; takes a msh id to an %ElmtConfig object.
      */
-    static std::map<unsigned int, ElmtConfig> elmMap;
+    static std::map<unsigned int, NekMeshUtils::ElmtConfig> elmMap;
     static std::vector<int> CreateReordering(unsigned int InputGmshEntity);
 
 private:
     int GetNnodes(unsigned int InputGmshEntity);
-    static std::vector<int> TriReordering(ElmtConfig conf);
-    static std::vector<int> QuadReordering(ElmtConfig conf);
-    static std::vector<int> HexReordering(ElmtConfig conf);
-    static std::vector<int> PrismReordering(ElmtConfig conf);
-    static std::vector<int> TetReordering(ElmtConfig conf);
+    static std::vector<int> TriReordering  (NekMeshUtils::ElmtConfig conf);
+    static std::vector<int> QuadReordering (NekMeshUtils::ElmtConfig conf);
+    static std::vector<int> HexReordering  (NekMeshUtils::ElmtConfig conf);
+    static std::vector<int> PrismReordering(NekMeshUtils::ElmtConfig conf);
+    static std::vector<int> TetReordering  (NekMeshUtils::ElmtConfig conf);
+    static std::vector<int> LineReordering (NekMeshUtils::ElmtConfig conf);
 };
 }
 }

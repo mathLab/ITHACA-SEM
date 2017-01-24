@@ -31,6 +31,10 @@ v4.4.0
   file (!678)
 - Extend ExtractDataToCoeffs to support interpolation between basis types for
   quads and hexahedra (!682)
+- Enabled MUMPS support in PETSc if a Fortran compiler was found and added 3D
+  support to the Helmholtz smoother used e.g. in FieldConverts C0Projection
+  module (!714)
+- Fix bug in CMake Homebrew and MacPorts detection for OS X (!729)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)
@@ -44,11 +48,15 @@ v4.4.0
 **IncNavierStokesSolver:**
 - Add ability to simulate additional scalar fields (!624)
 - Improve performance when using homogeneous dealiasing (!622)
+- Fix linearised advection for full 3D cases (!708)
+- Added a weak pressure formulation following Guermond & Shen (!713)
+- Added a convective like outflow boundary condition from Dong (!713)
 
 **FieldConvert:**
 - Allow equi-spaced output for 1D and 2DH1D fields (!613)
 - Update quality metric to include scaled Jacobian output (!695)
 - Allow multiple XML files to be specified in InterpField module (!705)
+- Fix issues with isocontour module (!719)
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
@@ -69,7 +77,12 @@ v4.4.0
 - Add flag to `insertsurface` process for non-conforming geometries (!700)
 - Bug fix to get two meshgen regression tests working (!700)
 - Remove libANN in deference to boost::geometry (!703)
-- Add a mesh extract option to the linearise module to visualise the result (!712)
+- Refactor library to use NekMesh modules for CAD generation (!704)
+- Add `varopti` process module to optimise meshes (!711)
+- Add a mesh extract option to the linearise module to visualise the result
+  (!712)
+- 2D to 3D mesh extrusion module (!715)
+- Add new two-dimensional mesher from NACA code or step file (!720)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSEXTRACTSURF
 #define UTILITIES_NEKMESH_PROCESSEXTRACTSURF
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -49,26 +49,26 @@ namespace Utilities
  * method. For now it simply prints a list of elements which have
  * negative Jacobian.
  */
-class ProcessDetectSurf : public ProcessModule
+class ProcessDetectSurf : public NekMeshUtils::ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessDetectSurf>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    ProcessDetectSurf(MeshSharedPtr m);
+    ProcessDetectSurf(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessDetectSurf();
 
     /// Write mesh to output file.
     virtual void Process();
 
 private:
-    void FindContiguousSurface(ElementSharedPtr start,
+    void FindContiguousSurface(NekMeshUtils::ElementSharedPtr start,
                                std::set<int> &doneIds,
-                               std::vector<ElementSharedPtr> &block);
+                               std::vector<NekMeshUtils::ElementSharedPtr> &block);
 };
 }
 }

@@ -806,14 +806,16 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                     FrobProd<DIM>(jacIdeal, jacDerivPhi[m]);
                             }
 
+                            NekDouble inc[DIM];
                             for (int j = 0; j < DIM; ++j)
                             {
-                                m_grad[j] +=
+                                inc[j] =
                                     quadW[k] *
                                     fabs(typeIt->second[i]->maps[k][9]) *
                                     (2.0 * W * (frobProd[j] / frob -
                                                 jacDetDeriv[j] / DIM /
                                                     (2.0 * sigma - jacDet)));
+                                m_grad[j] += inc[j];
                             }
 
                             NekDouble frobProdHes[DIM][DIM]; // holder for the
@@ -836,7 +838,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                     m_grad[ct + DIM] +=
                                         quadW[k] *
                                         fabs(typeIt->second[i]->maps[k][9]) *
-                                        (m_grad[m] * m_grad[l] / W +
+                                        (inc[m] * inc[l] / W +
                                          2.0 * W *
                                              (frobProdHes[m][l] / frob -
                                               2.0 * frobProd[m] * frobProd[l] /
@@ -970,14 +972,16 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                     FrobProd<DIM>(jacIdeal, jacDerivPhi[m]);
                             }
 
+                            NekDouble inc[DIM];
                             for (int j = 0; j < DIM; ++j)
                             {
-                                m_grad[j] +=
+                                inc[j] =
                                     quadW[k] *
                                     fabs(typeIt->second[i]->maps[k][9]) *
                                     (W *
                                      (2.0 * frobProd[j] / frob -
                                       jacDetDeriv[j] / (2.0 * sigma - jacDet)));
+                                m_grad[j] += inc[j];
                             }
 
                             NekDouble frobProdHes[DIM][DIM]; // holder for the
@@ -1000,7 +1004,7 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
                                     m_grad[ct + DIM] +=
                                         quadW[k] *
                                         fabs(typeIt->second[i]->maps[k][9]) *
-                                        (m_grad[m] * m_grad[l] / W +
+                                        (inc[m] * inc[l] / W +
                                          2.0 * W *
                                              (frobProdHes[m][l] / frob -
                                               2.0 * frobProd[m] * frobProd[l] /

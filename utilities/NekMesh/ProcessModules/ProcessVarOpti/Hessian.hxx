@@ -36,6 +36,8 @@
 #ifndef UTILITIES_NEKMESH_NODEOPTI_HESSIAN
 #define UTILITIES_NEKMESH_NODEOPTI_HESSIAN
 
+#define     PI   3.14159265358979323846
+
 namespace Nektar
 {
 namespace Utilities
@@ -151,87 +153,107 @@ template <int DIM> void NodeOpti::MinEigen(NekDouble &val)
 
 template <> void NodeOpti::MinEigen<2>(NekDouble &val)
 {
-    Array<OneD, NekDouble> eigR(2);
-    Array<OneD, NekDouble> eigI(2);
-    NekMatrix<NekDouble> H(2, 2);
-    H(0, 0) = m_grad[2];
-    H(1, 0) = m_grad[3];
-    H(0, 1) = H(1, 0);
-    H(1, 1) = m_grad[4];
+    NekDouble H[2][2];
+    H[0][0] = m_grad[2];
+    H[1][0] = m_grad[3];
+    //H[0][1] = H[1][0];
+    H[1][1] = m_grad[4];
 
-    int nVel   = 2;
-    char jobvl = 'N', jobvr = 'V';
-    int worklen = 8 * nVel, info;
+    //double eval[2]; // the eigenvalues
 
-    DNekMat eval(nVel, nVel, 0.0, eDIAGONAL);
-    DNekMat evec(nVel, nVel, 0.0, eFULL);
-    Array<OneD, NekDouble> vl(nVel * nVel);
-    Array<OneD, NekDouble> work(worklen);
-    Array<OneD, NekDouble> wi(nVel);
+    NekDouble D = (H[0][0] - H[1][1]) * (H[0][0] - H[1][1]) + 4.0 * H[1][0] * H[1][0];
+    NekDouble Dsqrt = sqrt(D);
 
-    Lapack::Dgeev(jobvl, jobvr, nVel, H.GetRawPtr(), nVel, &(eval.GetPtr())[0],
-                  &wi[0], &vl[0], nVel, &(evec.GetPtr())[0], nVel, &work[0],
-                  worklen, info);
-
-    ASSERTL0(!info, "dgeev failed");
-
-    int minI;
-    NekDouble tmp = std::numeric_limits<double>::max();
-    for (int i = 0; i < 2; i++)
-    {
-        if (eval(i, i) < tmp)
-        {
-            minI = i;
-            tmp  = eval(i, i);
-        }
-    }
-
-    val = eval(minI, minI);
+    //eval[0] = (H[0][0] + H[1][1] + Dsqrt ) / 2.0;
+    val = (H[0][0] + H[1][1] - Dsqrt ) / 2.0; // the minimum Eigenvalue
 }
 
 template <> void NodeOpti::MinEigen<3>(NekDouble &val)
 {
-    Array<OneD, NekDouble> eigR(3);
-    Array<OneD, NekDouble> eigI(3);
-    NekMatrix<NekDouble> H(3, 3);
-    H(0, 0) = m_grad[3];
-    H(1, 0) = m_grad[4];
-    H(0, 1) = H(1, 0);
-    H(2, 0) = m_grad[5];
-    H(0, 2) = H(2, 0);
-    H(1, 1) = m_grad[6];
-    H(2, 1) = m_grad[7];
-    H(1, 2) = H(2, 1);
-    H(2, 2) = m_grad[8];
+    NekDouble H[3][3];
+    H[0][0] = m_grad[3];
+    H[1][0] = m_grad[4];
+    H[0][1] = H[1][0];
+    H[2][0] = m_grad[5];
+    H[0][2] = H[2][0];
+    H[1][1] = m_grad[6];
+    H[2][1] = m_grad[7];
+    H[1][2] = H[2][1];
+    H[2][2] = m_grad[8];
 
-    int nVel   = 3;
-    char jobvl = 'N', jobvr = 'V';
-    int worklen = 8 * nVel, info;
+    //double eval[3]; // the eigenvalues
 
-    DNekMat eval(nVel, nVel, 0.0, eDIAGONAL);
-    DNekMat evec(nVel, nVel, 0.0, eFULL);
-    Array<OneD, NekDouble> vl(nVel * nVel);
-    Array<OneD, NekDouble> work(worklen);
-    Array<OneD, NekDouble> wi(nVel);
-
-    Lapack::Dgeev(jobvl, jobvr, nVel, H.GetRawPtr(), nVel, &(eval.GetPtr())[0],
-                  &wi[0], &vl[0], nVel, &(evec.GetPtr())[0], nVel, &work[0],
-                  worklen, info);
-
-    ASSERTL0(!info, "dgeev failed");
-
-    int minI;
-    NekDouble tmp = std::numeric_limits<double>::max();
-    for (int i = 0; i < 3; i++)
-    {
-        if (eval(i, i) < tmp)
+    NekDouble p1 = H[0][1] * H[0][1] + H[0][2] * H[0][2] + H[1][2] * H[1][2];
+    if (p1 == 0.0) // H is diagonal
+    {  
+        // find the minimum Eigenvalue
+        if(H[0][0] < H[1][1])
         {
-            minI = i;
-            tmp  = eval(i, i);
+            if(H[0][0] < H[2][2])
+            {
+                val = H[0][0];                
+            }
+            else
+            {
+                val = H[2][2];
+            }
         }
+        else
+        {
+            if(H[1][1] < H[2][2])
+            {
+                val = H[1][1];               
+            }
+            else
+            {
+                val = H[2][2];
+            }
+        }    
     }
+    else
+    {
+        NekDouble q  = (H[0][0] + H[1][1] + H[2][2]) / 3.0;
+        NekDouble p2 =    (H[0][0] - q)*(H[0][0] - q)
+                     + (H[1][1] - q)*(H[1][1] - q)
+                     + (H[2][2] - q)*(H[2][2] - q)
+                     + 2.0 * p1;
+        NekDouble p = sqrt(p2 / 6.0);
 
-    val = eval(minI, minI);
+        NekDouble B[3][3];   // B = (1.0 / p) * (H - q * I)   with I being the identity matrix
+        NekDouble pinv = 1.0 / p;
+        B[0][0] = pinv * (H[0][0] - q);
+        B[1][1] = pinv * (H[1][1] - q);
+        B[2][2] = pinv * (H[2][2] - q);
+        B[0][1] = pinv * H[0][1];
+        B[1][0] = B[0][1];
+        B[0][2] = pinv * H[0][2];
+        B[2][0] = B[0][2];
+        B[1][2] = pinv * H[1][2];
+        B[2][1] = B[1][2];
+
+        NekDouble r = Determinant<3>(B) / 2.0;
+
+        // In exact arithmetic for h symmetric matrix  -1 <= r <= 1
+        // but computation error can leave it slightly outside this range.
+        NekDouble phi;
+        if (r <= -1)
+        { 
+            phi = PI / 3.0;
+        }
+        else if (r >= 1)
+        {
+            phi = 0.0;
+        }
+        else
+        {
+            phi = acos(r) / 3.0;
+        }    
+
+        // the eigenvalues satisfy eval[2] <= eval[1] <= eval[0]
+        //eval[0] = q + 2.0 * p * cos(phi);
+        val = q + 2.0 * p * cos(phi + (2.0*PI/3.0));
+        //eval[1] = 3.0 * q - eval[0] - eval[2];     // since trace(H) = eval[0] + eval[1] + eval[2]
+    }
 }
 
 }

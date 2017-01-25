@@ -227,18 +227,34 @@ inline void LEM3(NekDouble jacDerivPhi[DIM][DIM][DIM],
 /**
  * @brief Calculate Frobenius inner product of input matrices.
  */
-template <int DIM>
-inline NekDouble FrobProd(NekDouble in1[DIM][DIM], NekDouble in2[DIM][DIM])
+template<int DIM>
+inline NekDouble FrobProd(NekDouble in1[DIM][DIM],
+                          NekDouble in2[DIM][DIM])
 {
-    NekDouble ret = 0;
-    for (int n = 0; n < DIM; ++n)
-    {
-        for (int l = 0; l < DIM; ++l)
-        {
-            ret += in1[n][l] * in2[n][l];
-        }
-    }
-    return ret;
+    return 0.0;
+}
+
+template<>
+inline NekDouble FrobProd<2>(NekDouble in1[2][2], NekDouble in2[2][2])
+{
+    return    in1[0][0] * in2[0][0]
+            + in1[0][1] * in2[0][1]
+            + in1[1][0] * in2[1][0]
+            + in1[1][1] * in2[1][1] ;
+}
+
+template<>
+inline NekDouble FrobProd<3>(NekDouble in1[3][3], NekDouble in2[3][3])
+{
+    return    in1[0][0] * in2[0][0]
+            + in1[0][1] * in2[0][1]
+            + in1[0][2] * in2[0][2]
+            + in1[1][0] * in2[1][0]
+            + in1[1][1] * in2[1][1]
+            + in1[1][2] * in2[1][2]
+            + in1[2][0] * in2[2][0]
+            + in1[2][1] * in2[2][1]
+            + in1[2][2] * in2[2][2] ;
 }
 
 // Typedef for derivative storage, we use boost::multi_array so we can pass this
@@ -255,6 +271,7 @@ typedef boost::multi_array<NekDouble, 4> DerivArray;
  * @param data       Data array containing \f$ \nabla\phi_I^{-1} \f$
  * @param jacIdeal   Output Jacobian matrix
  */
+ 
 template <int DIM>
 inline NekDouble CalcIdealJac(int elmt, int point, DerivArray &deriv,
                               std::vector<ElUtilSharedPtr> &data,
@@ -281,14 +298,33 @@ inline NekDouble CalcIdealJac(int elmt, int point, DerivArray &deriv,
  *
  * @param inarray   Input matrix \f$ A \f$
  */
-template <int DIM> inline NekDouble FrobeniusNorm(NekDouble inarray[DIM][DIM])
+template<int DIM>
+inline NekDouble FrobeniusNorm(NekDouble inarray[DIM][DIM])
 {
-    NekDouble ret = 0.0, *start = &inarray[0][0];
-    for (int i = 0; i < DIM * DIM; ++i, ++start)
-    {
-        ret += (*start) * (*start);
-    }
-    return ret;
+    return 0.0;
+}
+
+template<>
+inline NekDouble FrobeniusNorm<2>(NekDouble inarray[2][2])
+{
+    return    inarray[0][0] * inarray[0][0]
+            + inarray[0][1] * inarray[0][1]
+            + inarray[1][0] * inarray[1][0]
+            + inarray[1][1] * inarray[1][1] ;
+}
+
+template<>
+inline NekDouble FrobeniusNorm<3>(NekDouble inarray[3][3])
+{
+    return    inarray[0][0] * inarray[0][0]
+            + inarray[0][1] * inarray[0][1]
+            + inarray[0][2] * inarray[0][2]
+            + inarray[1][0] * inarray[1][0]
+            + inarray[1][1] * inarray[1][1]
+            + inarray[1][2] * inarray[1][2]
+            + inarray[2][0] * inarray[2][0]
+            + inarray[2][1] * inarray[2][1]
+            + inarray[2][2] * inarray[2][2] ;
 }
 
 /**

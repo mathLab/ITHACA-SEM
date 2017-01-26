@@ -45,7 +45,6 @@
 
 namespace Nektar
 {     
-
     enum EquationType
     {
         eNoEquationType,
@@ -96,6 +95,34 @@ namespace Nektar
         "SkewSymmetric"
         "NoAdvection"
     };
+
+
+    struct WomersleyParams
+    {
+        WomersleyParams(int dim)
+        {
+            m_axisnormal = Array<OneD, NekDouble>(dim,0.0);
+            m_axispoint  = Array<OneD, NekDouble>(dim,0.0);
+        };
+
+        virtual ~WomersleyParams()
+        {};
+        
+        /// Real and imaginary velocity comp. of wom
+        Array<OneD, NekDouble> m_wom_vel_r;
+        Array<OneD, NekDouble> m_wom_vel_i;
+
+        /// Womersley  BC constants
+        NekDouble m_radius;
+        NekDouble m_period;
+        Array<OneD, NekDouble> m_axisnormal;
+        // currently this needs to be the point in the middle of the
+        // axis but shoudl be generalised to be any point on the axis
+        Array<OneD, NekDouble> m_axispoint;
+
+        int  m_modes;
+    };
+    typedef boost::shared_ptr<WomersleyParams> WomersleyParamsSharedPtr;
 
     /**
      * \brief This class is the base class for Navier Stokes problems
@@ -207,24 +234,17 @@ namespace Nektar
         /// Set Normal Velocity Component to Zero
         void SetZeroNormalVelocity();
 
-        /// Set Womersley Profile If specified
-        void SetWomersleyBoundary(int fieldid,int bndid);
+        /// Set Womersley Profile if specified
+        void SetWomersleyBoundary(const int fldid, const int bndid);
 
+        /// Set Up Womersley details
+        void SetUpWomersley(const int bndid, std::string womstr);
+        
         /// evaluate steady state
         bool CalcSteadyState(void);
 
-        /// Evaluate Bessels for Wom
-        std::complex<NekDouble> CompBessel(int n, std::complex<NekDouble> y);
-
-        /// Real and imaginary velocity comp. of wom
-        Array<OneD, NekDouble> wom_vel_r;
-        Array<OneD, NekDouble> wom_vel_i;
-
-        /// Womersley  BC constants
-        // Note: Should make these longer names to reduce confusion
-        NekDouble R,M,n0,n1,n2,x0,y0,z0;
-        NekDouble T;
-
+        /// Womersley parameters if required 
+        std::map<int,WomersleyParamsSharedPtr> m_womersleyParams;
 
         virtual MultiRegions::ExpListSharedPtr v_GetPressure()
         {

@@ -14,8 +14,8 @@ IF(NATIVE_BLAS_LAPACK_FOUND)
 ELSE()
     IF(CMAKE_Fortran_COMPILER)
         SET(BUILD_BLAS_LAPACK ON)
-    ELSE
-        MESSAGE(ERROR "no blas installation for fortran compiler found")
+    ELSE()
+        MESSAGE(SEND_ERROR "no blas installation for fortran compiler found")
     ENDIF()
 ENDIF()
 
@@ -29,7 +29,7 @@ IF(THIRDPARTY_BUILD_BLAS_LAPACK)
         lapack-3.7.0
         PREFIX ${TPSRC}
         URL http://www.netlib.org/lapack/lapack-3.7.0.tgz
-        URL_MD5 "6794d3ea34b4205dc4999fe013a9a412"
+        URL_MD5 "697bb8d67c7d336a0f339cc9dd0fa72f"
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/lapack-3.7.0

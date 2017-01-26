@@ -59,7 +59,8 @@ void ForcingNozzle::v_InitObject(
     m_varConv     = MemoryManager<VariableConverter>::AllocateSharedPtr(
                     m_session, 1);
 
-    ASSERTL0( pNumForcingFields == 3, "NozzleForcing requires a 1D problem.");
+    ASSERTL0( pFields[0]->GetGraph()->GetSpaceDimension() == 1,
+              "NozzleForcing requires a 1D problem.");
 
     const TiXmlElement* funcNameElmt = pForce->FirstChildElement("AREAFCN");
     if(!funcNameElmt)

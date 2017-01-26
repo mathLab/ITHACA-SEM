@@ -16,6 +16,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./BoundaryConditions/PressureOutflowNonReflectiveBC.cpp
        ./BoundaryConditions/RiemannInvariantBC.cpp
        ./BoundaryConditions/RinglebFlowBC.cpp
+       ./BoundaryConditions/StagnationInflowBC.cpp
        ./BoundaryConditions/SymmetryBC.cpp
        ./BoundaryConditions/TimeDependentBC.cpp
        ./BoundaryConditions/WallBC.cpp

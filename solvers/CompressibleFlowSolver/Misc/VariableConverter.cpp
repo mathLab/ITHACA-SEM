@@ -415,17 +415,24 @@ namespace Nektar
             for (int i = 0; i < nQuadPointsElement; i++)
             {
                 SolPmeanNumerator   += SolNorm[i];
-                SolPmeanDenumerator += SolPElementPhys[i];
             }
 
-            for (int i = 0; i < nQuadPointsElement; ++i)
+            Vmath::Vmul(nQuadPointsElement,
+                        SolPElementPhys, 1,
+                        SolPElementPhys, 1,
+                        SolNorm, 1);
+
+            for (int i = 0; i < nQuadPointsElement; i++)
             {
-                Sensor[CoeffsCount+i] =
-                    sqrt(SolPmeanNumerator / nQuadPointsElement) /
-                    sqrt(SolPmeanDenumerator / nQuadPointsElement);
-
-                Sensor[CoeffsCount+i] = log10(Sensor[CoeffsCount+i]);
+                SolPmeanDenumerator += SolNorm[i];
             }
+
+            NekDouble elmtSensor =
+                    sqrt(SolPmeanNumerator) / sqrt(SolPmeanDenumerator);
+            elmtSensor = log10(elmtSensor);
+            Vmath::Fill(nQuadPointsElement, elmtSensor,
+                            (&Sensor[CoeffsCount]), 1);
+
             CoeffsCount += nQuadPointsElement;
         }
 

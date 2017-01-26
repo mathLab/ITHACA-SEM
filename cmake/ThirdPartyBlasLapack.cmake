@@ -12,7 +12,11 @@ INCLUDE(FindNativeBlasLapack)
 IF(NATIVE_BLAS_LAPACK_FOUND)
     SET(BUILD_BLAS_LAPACK OFF)
 ELSE()
-    SET(BUILD_BLAS_LAPACK ON)
+    IF(CMAKE_Fortran_COMPILER)
+        SET(BUILD_BLAS_LAPACK ON)
+    ELSE
+        MESSAGE(ERROR "no blas installation for fortran compiler found")
+    ENDIF()
 ENDIF()
 
 OPTION(THIRDPARTY_BUILD_BLAS_LAPACK "Build blas and lapack libraries from ThirdParty."

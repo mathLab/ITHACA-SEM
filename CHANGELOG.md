@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v4.5.0
+------
+**NekMesh:**
+- Add basic gmsh cad (.geo) reader to the meshing system (!731)
+
 v4.4.0
 ------
 **Library**:

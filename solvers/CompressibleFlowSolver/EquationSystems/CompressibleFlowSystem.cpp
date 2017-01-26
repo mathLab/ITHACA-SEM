@@ -955,12 +955,13 @@ namespace Nektar
 
             if (m_artificialDiffusion)
             {
+                Array<OneD, NekDouble> sensorFwd(nCoeffs);
                 // reuse pressure
                 m_artificialDiffusion->GetArtificialViscosity(tmp, pressure);
-                m_fields[0]->FwdTrans_IterPerExp(pressure,   pFwd);
+                m_fields[0]->FwdTrans_IterPerExp(pressure,   sensorFwd);
 
                 variables.push_back  ("ArtificialVisc");
-                fieldcoeffs.push_back(pFwd);
+                fieldcoeffs.push_back(sensorFwd);
             }
         }
     }

@@ -87,17 +87,15 @@ void NonSmoothShockCapture::v_GetArtificialViscosity(
             {
                 mu[n+PointCount] = 0;
             }
-            else if (Sensor[n+PointCount] >= (m_Skappa-m_Kappa)
-                    && Sensor[n+PointCount] <= (m_Skappa+m_Kappa))
-            {
-                mu[n+PointCount] = mu_0 * (0.5 * (1 + sin(
-                                       M_PI * (Sensor[n+PointCount] -
-                                               m_Skappa - m_Kappa) /
-                                                        (2*m_Kappa))));
-            }
             else if (Sensor[n+PointCount] > (m_Skappa+m_Kappa))
             {
                 mu[n+PointCount] = mu_0;
+            }
+            else
+            {
+                mu[n+PointCount] = mu_0 * (0.5 * (1 + sin(
+                                       M_PI * (Sensor[n+PointCount] -
+                                               m_Skappa) / (2*m_Kappa))));
             }
         }
 

@@ -75,25 +75,11 @@ void Generator2D::Process()
 
     m_mesh->m_numNodes = m_mesh->m_cad->GetNumVerts();
 
-    // linear mesh all curves
-    for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
-    {
-        if (m_mesh->m_verbose)
-        {
-            LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumCurve(),
-                                           "Curve progress");
-        }
-
-        m_curvemeshes[i] =
-            MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
-
-        m_curvemeshes[i]->Mesh();
-    }
+    set<unsigned> periodic;
 
     if (m_config["periodic"].beenSet)
     {
         m_periodicPairs.clear();
-        set<unsigned> alreadyPeriodic;
 
         // Create periodic curve pairs
 
@@ -108,12 +94,12 @@ void Generator2D::Process()
             ParseUtils::GenerateOrderedVector(lines[i].c_str(), data);
 
             ASSERTL0(data.size() == 2, "periodic pairs ill-defined");
-            ASSERTL0(!alreadyPeriodic.count(data[0]), "curve already periodic");
-            ASSERTL0(!alreadyPeriodic.count(data[1]), "curve already periodic");
+            ASSERTL0(!periodic.count(data[0]), "curve already periodic");
+            ASSERTL0(!periodic.count(data[1]), "curve already periodic");
 
             m_periodicPairs[data[0]] = data[1];
-            alreadyPeriodic.insert(data[0]);
-            alreadyPeriodic.insert(data[1]);
+            periodic.insert(data[0]);
+            periodic.insert(data[1]);
         }
 
         // Check compatibility
@@ -121,9 +107,143 @@ void Generator2D::Process()
         for (map<unsigned, unsigned>::iterator it = m_periodicPairs.begin();
              it != m_periodicPairs.end(); ++it)
         {
-            ASSERTL0(m_curvemeshes[it->first]->GetLength() ==
-                         m_curvemeshes[it->second]->GetLength(),
+            ASSERTL0(m_mesh->m_cad->GetCurve(it->first)->GetTotLength() ==
+                         m_mesh->m_cad->GetCurve(it->second)->GetTotLength(),
                      "periodic curves of different length");
+        }
+    }
+
+    // linear mesh all curves
+    for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
+    {
+        if (m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumCurve(),
+                                           "Curve progress");
+        }
+
+        /*
+        if (periodic.count(i))
+        {
+            if (!m_periodicPairs.count(i))
+            {
+                continue;
+            }
+        }
+        */
+
+        m_curvemeshes[i] =
+            MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
+
+        m_curvemeshes[i]->Mesh();
+    }
+
+    if (m_config["periodic"].beenSet)
+    {
+        // Override slave curves
+
+        for (map<unsigned, unsigned>::iterator ip = m_periodicPairs.begin();
+             ip != m_periodicPairs.end(); ++ip)
+        {
+            Array<OneD, NekDouble> A1 =
+                m_curvemeshes[ip->first]->GetFirstPoint()->GetLoc();
+            Array<OneD, NekDouble> A2 =
+                m_curvemeshes[ip->first]->GetLastPoint()->GetLoc();
+            Array<OneD, NekDouble> B1 =
+                m_curvemeshes[ip->second]->GetFirstPoint()->GetLoc();
+            Array<OneD, NekDouble> B2 =
+                m_curvemeshes[ip->second]->GetLastPoint()->GetLoc();
+
+            Array<OneD, NekDouble> T1(2);
+            Array<OneD, NekDouble> T2(2);
+
+            T1[0] = B1[0] - A1[0];
+            T1[1] = B1[1] - A1[1];
+            
+            T2[0] = B2[0] - A2[0];
+            T2[1] = B2[1] - A2[1];
+
+            bool reverse = false;
+
+            if (T1 != T2)
+            {
+                reverse = true;
+
+                T1[0] = B1[0] - A2[0];
+                T1[1] = B1[1] - A2[1];
+                
+                T2[0] = B2[0] - A1[0];
+                T2[1] = B2[1] - A1[1];
+
+                ASSERTL0(T1 == T2, "curve cannot be translated");
+            }
+
+            vector<NodeSharedPtr> nodes =
+                m_curvemeshes[ip->first]->GetMeshPoints();
+            vector<NodeSharedPtr> nnodes;
+
+            std::vector<std::pair<int, CADSurfSharedPtr> > surfs1 =
+                nodes.front()->GetCADSurfs();
+            std::vector<std::pair<int, CADSurfSharedPtr> > surfs2 =
+                nodes.back()->GetCADSurfs();
+            std::vector<std::pair<int, CADSurfSharedPtr> > surfs3;
+
+            for (std::vector<std::pair<int, CADSurfSharedPtr> >::iterator is1 =
+                     surfs1.begin();
+                 is1 != surfs1.end(); ++is1)
+            {
+                for (std::vector<std::pair<int, CADSurfSharedPtr> >::iterator
+                         is2 = surfs2.begin();
+                     is2 != surfs2.end(); ++is2)
+                {
+                    if (is1->first == is2->first)
+                    {
+                        surfs3.push_back(*is1);
+                    }
+                }
+            }
+
+            nnodes.push_back(m_curvemeshes[ip->second]->GetFirstPoint());
+
+            for (vector<NodeSharedPtr>::iterator in = nodes.begin() + 1;
+                 in != nodes.end() - 1; ++in)
+            {
+                Array<OneD, NekDouble> loc = (*in)->GetLoc();
+                NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(
+                    m_mesh->m_numNodes++, loc[0] + T1[0], loc[0] + T1[1], 0.0));
+
+                for (std::vector<std::pair<int, CADSurfSharedPtr> >::iterator
+                         is = surfs3.begin();
+                     is != surfs3.end(); ++is)
+                {
+                    nn->SetCADSurf(is->first, is->second,
+                                   is->second->locuv(nn->GetLoc()));
+                }
+
+                nnodes.push_back(nn);
+            }
+
+            nnodes.push_back(m_curvemeshes[ip->second]->GetLastPoint());
+
+            if (reverse)
+            {
+                vector<NodeSharedPtr> tmp;
+
+                tmp.push_back(nnodes[0]);
+
+                for (vector<NodeSharedPtr>::reverse_iterator rin =
+                         nnodes.rbegin() + 1;
+                     rin != nnodes.rend() - 1; ++rin)
+                {
+                    tmp.push_back(*rin);
+                }
+
+                tmp.push_back(nnodes.back());
+            }
+
+            m_curvemeshes[ip->second] =
+                MemoryManager<CurveMesh>::AllocateSharedPtr(ip->second, m_mesh,
+                                                            nnodes);
         }
         
         if (m_mesh->m_verbose)

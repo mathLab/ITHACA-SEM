@@ -59,12 +59,12 @@ public:
     static ModuleKey className;
 
     Generator2D(MeshSharedPtr m);
+    
     virtual ~Generator2D();
 
     virtual void Process();
 
 private:
-
     void MakeBLPrep();
 
     void MakeBL(int faceid, std::vector<EdgeLoop> e);

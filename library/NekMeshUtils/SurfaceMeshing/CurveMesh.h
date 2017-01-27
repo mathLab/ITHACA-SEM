@@ -70,11 +70,16 @@ public:
     /**
      * @brief alternative constructor with mesh points already created
      */
-    CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> n)
+    CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> n,
+              bool createEdges = false)
         : m_id(id), m_mesh(m), m_meshpoints(n)
     {
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
-        CreateEdges();
+        
+        if (createEdges)
+        {
+            CreateEdges();
+        }
     }
 
     /**

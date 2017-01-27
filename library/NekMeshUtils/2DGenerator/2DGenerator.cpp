@@ -255,7 +255,7 @@ void Generator2D::Process()
 
             m_curvemeshes[ip->second] =
                 MemoryManager<CurveMesh>::AllocateSharedPtr(ip->second, m_mesh,
-                                                            nnodes);
+                                                            nnodes, true);
         }
 
         if (m_mesh->m_verbose)

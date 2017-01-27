@@ -88,10 +88,11 @@ void Generator2D::Process()
 
         boost::split(lines, s, boost::is_any_of(":"));
 
-        for (int i = 0; i < lines.size(); i++)
+        for (vector<string>::iterator il = lines.begin(); il != lines.end();
+             ++il)
         {
             vector<unsigned> data;
-            ParseUtils::GenerateOrderedVector(lines[i].c_str(), data);
+            ParseUtils::GenerateOrderedVector(il->c_str(), data);
 
             ASSERTL0(data.size() == 2, "periodic pairs ill-defined");
             ASSERTL0(!periodic.count(data[0]), "curve already periodic");
@@ -107,8 +108,10 @@ void Generator2D::Process()
         for (map<unsigned, unsigned>::iterator it = m_periodicPairs.begin();
              it != m_periodicPairs.end(); ++it)
         {
-            ASSERTL0(m_mesh->m_cad->GetCurve(it->first)->GetTotLength() ==
-                         m_mesh->m_cad->GetCurve(it->second)->GetTotLength(),
+            NekDouble L1 = m_mesh->m_cad->GetCurve(it->first)->GetTotLength();
+            NekDouble L2 = m_mesh->m_cad->GetCurve(it->second)->GetTotLength();
+            
+            ASSERTL0(abs((L1 - L2) / L1) < 1.0e-3,
                      "periodic curves of different length");
         }
     }
@@ -121,16 +124,6 @@ void Generator2D::Process()
             LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumCurve(),
                                            "Curve progress");
         }
-
-        /*
-        if (periodic.count(i))
-        {
-            if (!m_periodicPairs.count(i))
-            {
-                continue;
-            }
-        }
-        */
 
         m_curvemeshes[i] =
             MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
@@ -156,6 +149,7 @@ void Generator2D::Process()
 
             Array<OneD, NekDouble> T1(2);
             Array<OneD, NekDouble> T2(2);
+            Array<OneD, NekDouble> dT(2);
 
             T1[0] = B1[0] - A1[0];
             T1[1] = B1[1] - A1[1];
@@ -163,9 +157,15 @@ void Generator2D::Process()
             T2[0] = B2[0] - A2[0];
             T2[1] = B2[1] - A2[1];
 
+            dT[0] = T2[0] - T1[0];
+            dT[1] = T2[1] - T1[1];
+
+            NekDouble dTmag = (dT[0] * dT[0] + dT[1] * dT[1]) /
+                              (T1[0] * T1[0] + T1[1] * T1[1]);
+
             bool reverse = false;
 
-            if (T1 != T2)
+            if (dTmag > 1.0e-3)
             {
                 reverse = true;
 
@@ -175,33 +175,21 @@ void Generator2D::Process()
                 T2[0] = B2[0] - A1[0];
                 T2[1] = B2[1] - A1[1];
 
-                ASSERTL0(T1 == T2, "curve cannot be translated");
+                dT[0] = T2[0] - T1[0];
+                dT[1] = T2[1] - T1[1];
+
+                dTmag = (dT[0] * dT[0] + dT[1] * dT[1]) /
+                        (T1[0] * T1[0] + T1[1] * T1[1]);
+
+                ASSERTL0(dTmag < 1.0e-3, "curve cannot be translated");
             }
 
             vector<NodeSharedPtr> nodes =
                 m_curvemeshes[ip->first]->GetMeshPoints();
             vector<NodeSharedPtr> nnodes;
 
-            std::vector<std::pair<int, CADSurfSharedPtr> > surfs1 =
-                nodes.front()->GetCADSurfs();
-            std::vector<std::pair<int, CADSurfSharedPtr> > surfs2 =
-                nodes.back()->GetCADSurfs();
-            std::vector<std::pair<int, CADSurfSharedPtr> > surfs3;
-
-            for (std::vector<std::pair<int, CADSurfSharedPtr> >::iterator is1 =
-                     surfs1.begin();
-                 is1 != surfs1.end(); ++is1)
-            {
-                for (std::vector<std::pair<int, CADSurfSharedPtr> >::iterator
-                         is2 = surfs2.begin();
-                     is2 != surfs2.end(); ++is2)
-                {
-                    if (is1->first == is2->first)
-                    {
-                        surfs3.push_back(*is1);
-                    }
-                }
-            }
+            vector<CADSurfSharedPtr> surfs =
+                m_curvemeshes[ip->second]->GetCADCurve()->GetAdjSurf();
 
             nnodes.push_back(m_curvemeshes[ip->second]->GetFirstPoint());
 
@@ -210,15 +198,19 @@ void Generator2D::Process()
             {
                 Array<OneD, NekDouble> loc = (*in)->GetLoc();
                 NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(
-                    m_mesh->m_numNodes++, loc[0] + T1[0], loc[0] + T1[1], 0.0));
+                    m_mesh->m_numNodes++, loc[0] + T1[0], loc[1] + T1[1], 0.0));
 
-                for (std::vector<std::pair<int, CADSurfSharedPtr> >::iterator
-                         is = surfs3.begin();
-                     is != surfs3.end(); ++is)
+                for (vector<CADSurfSharedPtr>::iterator is = surfs.begin();
+                     is != surfs.end(); ++is)
                 {
-                    nn->SetCADSurf(is->first, is->second,
-                                   is->second->locuv(nn->GetLoc()));
+                    nn->SetCADSurf((*is)->GetId(), *is,
+                                   (*is)->locuv(nn->GetLoc()));
                 }
+
+                nn->SetCADCurve(ip->second,
+                                m_curvemeshes[ip->second]->GetCADCurve(),
+                                m_curvemeshes[ip->second]->GetCADCurve()->loct(
+                                    nn->GetLoc()));
 
                 nnodes.push_back(nn);
             }
@@ -229,7 +221,7 @@ void Generator2D::Process()
             {
                 vector<NodeSharedPtr> tmp;
 
-                tmp.push_back(nnodes[0]);
+                tmp.push_back(nnodes.front());
 
                 for (vector<NodeSharedPtr>::reverse_iterator rin =
                          nnodes.rbegin() + 1;
@@ -239,6 +231,16 @@ void Generator2D::Process()
                 }
 
                 tmp.push_back(nnodes.back());
+
+                nnodes.swap(tmp);
+            }
+
+            vector<EdgeSharedPtr> edges =
+                m_curvemeshes[ip->second]->GetMeshEdges();
+            for (vector<EdgeSharedPtr>::iterator ie = edges.begin();
+                 ie != edges.end(); ++ie)
+            {
+                m_mesh->m_edgeSet.erase(*ie);
             }
 
             m_curvemeshes[ip->second] =

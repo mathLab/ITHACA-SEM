@@ -162,15 +162,7 @@ void CurveMesh::Mesh()
     ASSERTL0(Ne + 1 == m_meshpoints.size(),
              "incorrect number of points in curve mesh");
 
-    // make edges and add them to the edgeset for the face mesher to use
-    for (int i = 0; i < m_meshpoints.size() - 1; i++)
-    {
-        EdgeSharedPtr e = boost::shared_ptr<Edge>(
-            new Edge(m_meshpoints[i], m_meshpoints[i + 1]));
-        e->m_parentCAD = m_cadcurve;
-        m_mesh->m_edgeSet.insert(e);
-        m_meshedges.push_back(e);
-    }
+    CreateEdges();
 
     if(m_mesh->m_verbose)
     {
@@ -313,6 +305,19 @@ void CurveMesh::GetSampleFunction()
         dsti[2] = t;
 
         m_dst[i] = dsti;
+    }
+}
+
+void CurveMesh::CreateEdges()
+{
+    // make edges and add them to the edgeset for the face mesher to use
+    for (int i = 0; i < m_meshpoints.size() - 1; i++)
+    {
+        EdgeSharedPtr e = boost::shared_ptr<Edge>(
+            new Edge(m_meshpoints[i], m_meshpoints[i + 1]));
+        e->m_parentCAD = m_cadcurve;
+        m_mesh->m_edgeSet.insert(e);
+        m_meshedges.push_back(e);
     }
 }
 }

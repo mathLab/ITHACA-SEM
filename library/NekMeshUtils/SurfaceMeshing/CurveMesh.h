@@ -74,6 +74,7 @@ public:
         : m_id(id), m_mesh(m), m_meshpoints(n)
     {
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
+        CreateEdges();
     }
 
     /**
@@ -126,6 +127,14 @@ public:
         return m_curvelength;
     }
 
+    /**
+     * @brief get the CAD curve
+     */
+    CADCurveSharedPtr GetCADCurve()
+    {
+        return m_cadcurve;
+    }
+
 private:
     /**
      * @brief get node spacing sampling function
@@ -146,6 +155,11 @@ private:
      * @brief evaluate paramter ps at curve location s
      */
     NekDouble EvaluatePS(NekDouble s);
+
+    /**
+     * @brief create edges using m_meshpoints and fill m_edgeSet
+     */
+    void CreateEdges();
 
     /// CAD curve
     CADCurveSharedPtr m_cadcurve;

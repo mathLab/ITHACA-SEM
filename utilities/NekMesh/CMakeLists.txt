@@ -149,6 +149,7 @@ IF(NEKTAR_USE_MESHGEN)
     ADD_NEKTAR_TEST        (MeshGen/sphere)
     ADD_NEKTAR_TEST        (MeshGen/2d-cad)
     ADD_NEKTAR_TEST        (MeshGen/2d-naca)
+    ADD_NEKTAR_TEST        (MeshGen/2d-periodic)
     # varopti tests
     ADD_NEKTAR_TEST        (MeshGen/varopti_cubesphere)
 ENDIF()

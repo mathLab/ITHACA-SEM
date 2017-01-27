@@ -83,6 +83,7 @@ v4.4.0
   (!712)
 - 2D to 3D mesh extrusion module (!715)
 - Add new two-dimensional mesher from NACA code or step file (!720)
+- Add periodic boundary condition meshing in 2D (!733)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

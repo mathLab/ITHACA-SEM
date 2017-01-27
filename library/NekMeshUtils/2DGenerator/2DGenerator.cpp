@@ -81,7 +81,7 @@ void Generator2D::Process()
     {
         m_periodicPairs.clear();
 
-        // Create periodic curve pairs
+        // Build periodic curve pairs
 
         string s = m_config["periodic"].as<string>();
         vector<string> lines;
@@ -151,6 +151,8 @@ void Generator2D::Process()
             Array<OneD, NekDouble> T2(2);
             Array<OneD, NekDouble> dT(2);
 
+            // Compute translation vector
+
             T1[0] = B1[0] - A1[0];
             T1[1] = B1[1] - A1[1];
 
@@ -162,6 +164,8 @@ void Generator2D::Process()
 
             NekDouble dTmag = (dT[0] * dT[0] + dT[1] * dT[1]) /
                               (T1[0] * T1[0] + T1[1] * T1[1]);
+
+            // Check if slave vector is reverse oriented
 
             bool reverse = false;
 
@@ -183,6 +187,8 @@ void Generator2D::Process()
 
                 ASSERTL0(dTmag < 1.0e-3, "curve cannot be translated");
             }
+
+            // Build vector of translated nodes
 
             vector<NodeSharedPtr> nodes =
                 m_curvemeshes[ip->first]->GetMeshPoints();
@@ -217,6 +223,8 @@ void Generator2D::Process()
 
             nnodes.push_back(m_curvemeshes[ip->second]->GetLastPoint());
 
+            // Reverse internal nodes of the vector if necessary
+
             if (reverse)
             {
                 vector<NodeSharedPtr> tmp;
@@ -234,6 +242,8 @@ void Generator2D::Process()
 
                 nnodes.swap(tmp);
             }
+
+            // Clean m_edgeSet and build new CurveMesh
 
             vector<EdgeSharedPtr> edges =
                 m_curvemeshes[ip->second]->GetMeshEdges();

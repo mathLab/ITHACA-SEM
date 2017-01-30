@@ -104,8 +104,11 @@ private:
     void GetElementMap(
         int o, std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> derMap);
     std::vector<ElUtilSharedPtr> GetLockedElements(NekDouble thres);
+    std::vector<std::vector<NodeSharedPtr> > CreateColoursets(
+        std::vector<NodeSharedPtr> remain);
     std::vector<std::vector<NodeSharedPtr> > GetColouredNodes(
         std::vector<ElUtilSharedPtr> elLock);
+    
 
     NodeElMap m_nodeElMap;
     std::vector<ElUtilSharedPtr> m_dataSet;

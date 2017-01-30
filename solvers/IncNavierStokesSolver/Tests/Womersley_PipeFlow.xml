@@ -3138,17 +3138,7 @@
             <P> IO_InfoSteps  = 1   </P>
             <P> IO_CFLSteps   = 10   </P>
             <P> Kinvis        = 1e-1 </P>
-            <P> x0            = 0.0 </P>
-            <P> x1            = 0.0 </P>
-	        <P> x2            = 0.0 </P>
-            <P> T             = 1.0 </P>
- 	        <P> IterativeSolverTolerance = 1e-8</P> 
-	        <P> Period        = 1.0 </P>
-            <P> Radius        = 0.5 </P>
-            <P> Modes 	      = 10  </P>
-            <P> n0            = 0.0 </P>
-            <P> n1            = 0.0 </P>
-            <P> n2            = 1.0 </P>
+ 	    <P> IterativeSolverTolerance = 1e-8</P> 
 	</PARAMETERS>
         <VARIABLES>
             <V ID="0"> u </V>
@@ -3163,9 +3153,9 @@
         </BOUNDARYREGIONS>
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="u" USERDEFINEDTYPE="Womersley" VALUE="0" />
-                <D VAR="v" USERDEFINEDTYPE="Womersley" VALUE="0" />
-                <D VAR="w" USERDEFINEDTYPE="Womersley" VALUE="0" />
+                <D VAR="u" USERDEFINEDTYPE="Womersley:WomParams.xml" VALUE="0" />
+                <D VAR="v" USERDEFINEDTYPE="Womersley:WomParams.xml" VALUE="0" />
+                <D VAR="w" USERDEFINEDTYPE="Womersley:WomParams.xml" VALUE="0" />
                 <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
             </REGION>
             <REGION REF="1">

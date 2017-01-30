@@ -47,10 +47,14 @@
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/PtsIO.h>
+#include <algorithm>
 #include <complex>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+
+#include <tinyxml.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 using namespace std;
 
@@ -249,14 +253,14 @@ namespace Nektar
             {
                 if(boost::istarts_with(m_fields[i]->GetBndConditions()[n]->GetUserDefined(),"Womersley"))
                 {
-
-                    //m_womersleyParams[n] = SetWomersley(m_fields[i]->GetBndConditions()[n]->GetUSerDefined());
-
+                    
                     m_womersleyParams[n] = MemoryManager<WomersleyParams>::AllocateSharedPtr(m_spacedim);
                     
+
+#if 0 
                     m_session->LoadParameter("Period",m_womersleyParams[n]->m_period);
                     m_session->LoadParameter("Radius",m_womersleyParams[n]->m_radius);
-                    m_session->LoadParameter("Modes",m_womersleyParams[n]->m_modes);
+
                     NekDouble n0,n1,n2;
                     m_session->LoadParameter("n0",n0);
                     m_session->LoadParameter("n1",n1);
@@ -272,15 +276,9 @@ namespace Nektar
                     m_womersleyParams[n]->m_axispoint[0] = x0;
                     m_womersleyParams[n]->m_axispoint[1] = x1;
                     m_womersleyParams[n]->m_axispoint[2] = x2;
-
-                    int M = m_womersleyParams[n]->m_modes;
+#endif
                     
                     // Read in fourier coeffs
-                    m_womersleyParams[n]->m_wom_vel_r =
-                        Array<OneD, NekDouble> (M,0.0);
-                    m_womersleyParams[n]->m_wom_vel_i =
-                        Array<OneD, NekDouble> (M,0.0);
-
                     SetUpWomersley(n,
                                    m_fields[i]->GetBndConditions()[n]->GetUserDefined());
                     
@@ -569,7 +567,7 @@ namespace Nektar
         std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
         int  i,j,k;
 
-        int M = WomParam->m_modes; 
+        int M = WomParam->m_wom_vel_r.size(); 
 
         NekDouble R = WomParam->m_radius;
         NekDouble T = WomParam->m_period;
@@ -655,33 +653,152 @@ namespace Nektar
             // Push back to Coeff space
             bc->FwdTrans(wbc,Bvals);
         }
-
     }
+    
 
-
-    SetUpWomersley(const int bndid, std::string womStr)
+    void IncNavierStokes::SetUpWomersley(const int bndid, std::string womStr)
     {
         std::string::size_type indxBeg = womStr.find_first_of(':') + 1;
-        string filename = womStr.substr(indxBeg,womStr.end());
+        string filename = womStr.substr(indxBeg,string::npos);
 
         std::complex<NekDouble> coef;
         
+#if 1
+        TiXmlDocument doc(filename);
+
+        bool loadOkay = doc.LoadFile();
+        ASSERTL0(loadOkay,(std::string("Failed to load file: ") +
+                           filename).c_str());
+
+        TiXmlHandle docHandle(&doc);
+        
+        int err;    /// Error value returned by TinyXML.
+
+        TiXmlElement *nektar = doc.FirstChildElement("NEKTAR");
+        ASSERTL0(nektar, "Unable to find NEKTAR tag in file.");
+
+        TiXmlElement *wombc = nektar->FirstChildElement("WOMERSLEYBC");
+        ASSERTL0(wombc, "Unable to find WOMERSLEYBC tag in file.");
+        
+        // read womersley parameters 
+        TiXmlElement *womparam = wombc->FirstChildElement("WOMPARAMS");
+        ASSERTL0(womparam, "Unable to find WOMPARAMS tag in file.");
+
+        // Input coefficients
+        TiXmlElement *params = womparam->FirstChildElement("W");
+        map<std::string,std::string> Wparams;
+        
+        // read parameter list
+        while (params)
+        {
+
+            std::string propstr;
+            propstr = params->Attribute("PROPERTY"); 
+
+            ASSERTL0(!propstr.empty(),"Failed to read PROPERTY value Womersley BC Parameter");
+            
+            
+            std::string valstr;
+            valstr = params->Attribute("VALUE");
+            
+            ASSERTL0(!valstr.empty(),"Failed to read VALUE value Womersley BC Parameter");
+
+            std::transform(propstr.begin(),propstr.end(),propstr.begin(),
+                           ::toupper);
+            Wparams[propstr] = valstr;
+            
+            params = params->NextSiblingElement("W");
+        }
+        bool parseGood; 
+        
+        // Read parameters
+
+        ASSERTL0(Wparams.count("RADIUS") == 1,
+          "Failed to find Radius parameter in Womersley boundary conditions");
+        std::vector<NekDouble> rad;
+        parseGood = ParseUtils::GenerateUnOrderedVector(
+                                         Wparams["RADIUS"].c_str(),rad);  
+        m_womersleyParams[bndid]->m_radius = rad[0];
+
+        ASSERTL0(Wparams.count("PERIOD") == 1,
+          "Failed to find period parameter in Womersley boundary conditions");
+        std::vector<NekDouble> period;
+        parseGood = ParseUtils::GenerateUnOrderedVector(
+                                         Wparams["PERIOD"].c_str(),period);  
+        m_womersleyParams[bndid]->m_period = period[0];
+
+
+        ASSERTL0(Wparams.count("AXISNORMAL") == 1,
+          "Failed to find axisnormal parameter in Womersley boundary conditions");
+        std::vector<NekDouble> anorm;
+        parseGood = ParseUtils::GenerateUnOrderedVector(
+                                         Wparams["AXISNORMAL"].c_str(),anorm);  
+        m_womersleyParams[bndid]->m_axisnormal[0] = anorm[0];
+        m_womersleyParams[bndid]->m_axisnormal[1] = anorm[1];
+        m_womersleyParams[bndid]->m_axisnormal[2] = anorm[2];
+
+
+        ASSERTL0(Wparams.count("AXISPOINT") == 1,
+          "Failed to find axispoint parameter in Womersley boundary conditions");
+        std::vector<NekDouble> apt;
+        parseGood = ParseUtils::GenerateUnOrderedVector(
+                                         Wparams["AXISPOINT"].c_str(),apt);  
+        m_womersleyParams[bndid]->m_axispoint[0] = apt[0];
+        m_womersleyParams[bndid]->m_axispoint[1] = apt[1];
+        m_womersleyParams[bndid]->m_axispoint[2] = apt[2];
+                
+        // Read Temporal Foruier Coefficients. 
+
+        // Find the FourierCoeff tag 
+        TiXmlElement *coeff = wombc->FirstChildElement("FOURIERCOEFFS");
+
+        // Input coefficients
+        TiXmlElement *fval = coeff->FirstChildElement("F");
+                
+        int indx;
+        int nextFourierCoeff = -1;
+                
+        while (fval)
+        {
+            nextFourierCoeff++;
+            
+            TiXmlAttribute *fvalAttr = fval->FirstAttribute();
+            std::string attrName(fvalAttr->Name());
+                    
+            ASSERTL0(attrName == "ID", (std::string("Unknown attribute name: ") + attrName).c_str());
+                    
+            err = fvalAttr->QueryIntValue(&indx);
+            ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
+            
+            std::string coeffStr = fval->FirstChild()->ToText()->ValueStr();
+            vector<NekDouble> coeffvals;
+            bool parseGood = ParseUtils::GenerateUnOrderedVector(coeffStr.c_str(),
+                                                               coeffvals);
+            ASSERTL0(parseGood,(std::string("Problem reading value of fourier coefficient, ID=") + boost::lexical_cast<string>(indx)).c_str());
+            ASSERTL1(coeffvals.size() == 2,(std::string("Have not read two entries of Fourier coefficicent from ID="+ boost::lexical_cast<string>(indx)).c_str()));
+            m_womersleyParams[bndid]->m_wom_vel_r.push_back(coeffvals[0]);
+            m_womersleyParams[bndid]->m_wom_vel_i.push_back(coeffvals[1]);
+
+            fval = fval->NextSiblingElement("F");
+        }
+
+#else
         std::ifstream file(filename);
         std::string line;
         
-        ASSERTL1(file.is_open(),"Missing file " + filename.c_str());
-                    
+        ASSERTL1(file.is_open(),(std::string("Missing file ") + filename).c_str());
         int count = 0;
         while(std::getline(file,line))
         {
             std::stringstream stream(line);
-            while((stream>>coef) && (count<M))
+            while(stream>>coef)
             {
-                m_womersleyParams[n]->m_wom_vel_r[count] = coef.real();
-                m_womersleyParams[n]->m_wom_vel_i[count] = coef.imag();
+                m_womersleyParams[bndid]->m_wom_vel_r.push_back(coef.real());
+                m_womersleyParams[bndid]->m_wom_vel_i.push_back(coef.imag());
                 count++;
             }
         }
+#endif
     }
 
     /**

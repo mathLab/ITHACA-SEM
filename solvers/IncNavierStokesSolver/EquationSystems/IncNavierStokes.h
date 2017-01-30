@@ -109,8 +109,8 @@ namespace Nektar
         {};
         
         /// Real and imaginary velocity comp. of wom
-        Array<OneD, NekDouble> m_wom_vel_r;
-        Array<OneD, NekDouble> m_wom_vel_i;
+        std::vector<NekDouble> m_wom_vel_r;
+        std::vector<NekDouble> m_wom_vel_i;
 
         /// Womersley  BC constants
         NekDouble m_radius;
@@ -120,7 +120,6 @@ namespace Nektar
         // axis but shoudl be generalised to be any point on the axis
         Array<OneD, NekDouble> m_axispoint;
 
-        int  m_modes;
     };
     typedef boost::shared_ptr<WomersleyParams> WomersleyParamsSharedPtr;
 

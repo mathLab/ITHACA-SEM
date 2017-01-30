@@ -5,7 +5,7 @@
     <parameters>Womersley_PipeFlow.xml</parameters>
     <files>
         <file description="Session File">Womersley_PipeFlow.xml</file>
-        <file description="Session File">fourier_coef.txt</file>
+        <file description="Session File">WomParams.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

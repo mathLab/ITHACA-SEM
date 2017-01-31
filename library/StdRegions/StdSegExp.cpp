@@ -567,7 +567,7 @@ namespace Nektar
         void StdSegExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
                                             const StdMatrixKey &mkey)
         {
-            // Generate an orthonogal expansion
+            // Generate an orthogonal expansion
             int nq = m_base[0]->GetNumPoints();
             int nmodes = m_base[0]->GetNumModes();
             // Declare orthogonal basis.
@@ -599,6 +599,46 @@ namespace Nektar
                 {
                      orthocoeffs[j] *= 0.0;
                 }
+            }
+
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
+        }
+
+        void StdSegExp::v_ExponentialFilter(
+                                          Array<OneD, NekDouble> &array,
+                                    const NekDouble        alpha,
+                                    const NekDouble        exponent,
+                                    const NekDouble        cutoff)
+        {
+            // Generate an orthogonal expansion
+            int nq     = m_base[0]->GetNumPoints();
+            int nmodes = m_base[0]->GetNumModes();
+            int P  = nmodes - 1;
+            // Declare orthogonal basis.
+            LibUtilities::PointsKey pKey(nq,m_base[0]->GetPointsType());
+
+            LibUtilities::BasisKey B(LibUtilities::eOrtho_A, nmodes, pKey);
+            StdSegExp OrthoExp(B);
+
+            // Cutoff
+            int Pcut = cutoff*P;
+
+            // Project onto orthogonal space.
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
+            OrthoExp.FwdTrans(array,orthocoeffs);
+
+            //
+            NekDouble fac;
+            for(int j = 0; j < nmodes; ++j)
+            {
+                //to filter out only the "high-modes"
+                if(j > Pcut)
+                {
+                    fac = (NekDouble) (j - Pcut) / ( (NekDouble) (P - Pcut) );
+                    fac = pow(fac, exponent);
+                    orthocoeffs[j] *= exp(-alpha*fac);
+                 }
             }
 
             // backward transform to physical space

@@ -168,6 +168,12 @@ namespace Nektar
                     Array<OneD, NekDouble> &array,
                     const StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT virtual void v_ExponentialFilter(
+                          Array<OneD, NekDouble> &array,
+                    const NekDouble        alpha,
+                    const NekDouble        exponent,
+                    const NekDouble        cutoff);
+
             STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD,       NekDouble> &outarray);

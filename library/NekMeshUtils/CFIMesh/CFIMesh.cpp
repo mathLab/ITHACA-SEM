@@ -72,8 +72,8 @@ void CFIMesh::Process()
     cfi::Model* model = cad->GetCFIModel();
 
     map<int,NodeSharedPtr> nodes;
-    vector<NodeSharedPtr> nds;
     vector<cfi::NodeDefinition>* cfinodes = model->getFenodes();
+
     for(vector<cfi::NodeDefinition>::iterator it = cfinodes->begin();
                                                 it != cfinodes->end(); it++)
     {
@@ -86,9 +86,9 @@ void CFIMesh::Process()
 
         NodeSharedPtr n = boost::shared_ptr<Node>(new Node(id,xyz[0],xyz[1],xyz[2]));
         nodes[id] = n;
-        nds.push_back(n);
 
         //point built now add cad if needed
+        /*
         cfi::MeshableEntity* p = (*it).parent;
         if(p->type == cfi::TYPE_LINE)
         {
@@ -131,33 +131,58 @@ void CFIMesh::Process()
         {
             ASSERTL0(p->type == cfi::TYPE_BODY,"unsure on point type");
         }
+        */
     }
 
     int prefix = m_mesh->m_cad->GetNumSurf() > 100 ? 1000:100;
 
     vector<cfi::ElementDefinition>::iterator it;
 
-
     vector<cfi::ElementDefinition>* tets = model->getElements(cfi::SUBTYPE_TE4,4);
-    for(it = tets->begin(); it != tets->end(); it++)
+    cout << "tets " << tets->size() << endl;
+    int i = 0;
+
+    for(it = tets->begin(); it != tets->end(); it++, i++)
     {
-        cfi::ElementDefinition el = *it;
+        cout << i << endl;
+
         vector<NodeSharedPtr> n;
-        vector<cfi::Node*> ns = el.nodes;
+        vector<cfi::Node*> ns = (*it).nodes;
+
         for(int j = 0; j < ns.size(); j++)
         {
-            n.push_back(nodes[ns[j]->number]);
+            map<int, NodeSharedPtr>::iterator f = nodes.find(ns[j]->number);
+            ASSERTL0(f != nodes.end(),"could not find");
+            n.push_back(f->second);
         }
 
         vector<int> tags;
         tags.push_back(0);
-        ElmtConfig conf(LibUtilities::eTetrahedron,1,false,false);
+        ElmtConfig conf(LibUtilities::eTetrahedron,1,false,false,false);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
                 LibUtilities::eTetrahedron,conf,n,tags);
-        m_mesh->m_element[3].push_back(E);
+
+        bool okay = true;
+        try
+        {
+            SpatialDomains::GeometrySharedPtr geom = E->GetGeom(3);
+        }
+        catch (const std::exception& e)
+        {
+            okay = false;
+            cout << "crappy" << endl;
+        }
+
+        if(okay)
+        {
+            m_mesh->m_element[3].push_back(E);
+        }
+
+        //cout << "worked" << endl;
     }
 
-    vector<cfi::ElementDefinition>* tris = model->getElements(cfi::SUBTYPE_TR3,3);
+    /*vector<cfi::ElementDefinition>* tris = model->getElements(cfi::SUBTYPE_TR3,3);
+    cout << "tris " << tris->size() << endl;
     for(it = tris->begin(); it != tris->end(); it++)
     {
         cfi::ElementDefinition el = *it;
@@ -202,6 +227,7 @@ void CFIMesh::Process()
     //first look at the beams and add cad info, then if cad info is missing
     //edge belongs to same surface as the host triangle
     vector<cfi::ElementDefinition>* es = model->getElements(cfi::SUBTYPE_BE2,2);
+    cout << "beams " << es->size() << endl;
     for(it = es->begin(); it != es->end(); it++)
     {
         cfi::ElementDefinition el = *it;
@@ -231,7 +257,7 @@ void CFIMesh::Process()
                 ed->m_parentCAD = m_mesh->m_element[2][i]->m_parentCAD;
             }
         }
-    }
+    }*/
 
     ProcessVertices();
     ProcessEdges();

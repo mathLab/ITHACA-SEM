@@ -226,19 +226,22 @@ void InputCAD::Process()
         mods.back()->RegisterConfig("2D","");
     }
 
-    ////**** Octree ****////
-    mods.push_back(GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "loadoctree"), m_mesh));
-    mods.back()->RegisterConfig("mindel", m_minDelta);
-    mods.back()->RegisterConfig("maxdel", m_maxDelta);
-    mods.back()->RegisterConfig("eps", m_eps);
-    if (m_refine)
+    if(!m_cfiMesh)
     {
-        mods.back()->RegisterConfig("refinement", m_refinement);
-    }
-    if (m_woct)
-    {
-        mods.back()->RegisterConfig("writeoctree", "");
+        ////**** Octree ****////
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "loadoctree"), m_mesh));
+        mods.back()->RegisterConfig("mindel", m_minDelta);
+        mods.back()->RegisterConfig("maxdel", m_maxDelta);
+        mods.back()->RegisterConfig("eps", m_eps);
+        if (m_refine)
+        {
+            mods.back()->RegisterConfig("refinement", m_refinement);
+        }
+        if (m_woct)
+        {
+            mods.back()->RegisterConfig("writeoctree", "");
+        }
     }
 
     if(m_2D)
@@ -264,13 +267,6 @@ void InputCAD::Process()
         }
         else
         {
-            ////**** Octree ****////
-            mods.push_back(GetModuleFactory().CreateInstance(
-                ModuleKey(eProcessModule, "loadoctree"), m_mesh));
-            mods.back()->RegisterConfig("mindel", m_minDelta);
-            mods.back()->RegisterConfig("maxdel", m_maxDelta);
-            mods.back()->RegisterConfig("eps", m_eps);
-
             ////**** SurfaceMesh ****////
             mods.push_back(GetModuleFactory().CreateInstance(
                 ModuleKey(eProcessModule, "surfacemesh"), m_mesh));

@@ -87,11 +87,6 @@ NekDouble CADCurveCFI::loct(Array<OneD, NekDouble> xyz)
 
     boost::optional<cfi::Projected<double> > pj = m_cfiEdge->calcTFromXYZ(p,-1);
 
-    if(pj.value().distance > 1e-5)
-    {
-        cerr << "large loct distance" << endl;
-    }
-
     return pj.value().parameters;
 }
 

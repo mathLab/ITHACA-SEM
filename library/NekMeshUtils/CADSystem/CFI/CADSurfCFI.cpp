@@ -84,12 +84,6 @@ Array<OneD, NekDouble> CADSurfCFI::locuv(Array<OneD, NekDouble> p)
     NekDouble dist = sqrt((p[0]-p2[0])*(p[0]-p2[0]) +
                           (p[1]-p2[1])*(p[1]-p2[1]) +
                           (p[2]-p2[2])*(p[2]-p2[2]));
-
-    if(dist > 1e-3)
-    {
-        cerr << "large locuv disance " << dist << endl;
-    }
-
     return uv;
 }
 

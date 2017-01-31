@@ -85,7 +85,7 @@ bool CADSystemCFI::LoadCAD()
     ASSERTL0(model->getEntityTotal(cfi::TYPE_BODY,cfi::SUBTYPE_ALL) == 1,
                     "cannot deal with multibodies");
 
-    body = static_cast<cfi::Body*>(model->getEntity("W1"));
+    body = model->getBodyEntity(1);
 
     map<string,cfi::Point*> mapOfVerts;
     map<string,cfi::Line*> mapOfEdges;

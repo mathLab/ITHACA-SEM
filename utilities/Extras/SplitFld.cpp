@@ -167,13 +167,13 @@ int main(int argc, char *argv[])
 	{		
 		// Setting parameteres for homogenous problems
 		//NekDouble LhomX;           ///< physical length in X direction (if homogeneous) 
-		NekDouble LhomY;           ///< physical length in Y direction (if homogeneous)
-		NekDouble LhomZ;           ///< physical length in Z direction (if homogeneous)
+		NekDouble LhomY = 0;           ///< physical length in Y direction (if homogeneous)
+		NekDouble LhomZ = 0;           ///< physical length in Z direction (if homogeneous)
 		
 		bool DeclareCoeffPhysArrays = true;		
 		//int npointsX;              ///< number of points in X direction (if homogeneous)
-		int npointsY;              ///< number of points in Y direction (if homogeneous)
-                int npointsZ;              ///< number of points in Z direction (if homogeneous)	
+		int npointsY = 0;              ///< number of points in Y direction (if homogeneous)
+        int npointsZ = 0;              ///< number of points in Z direction (if homogeneous)	
 		bool useFFT = false;	
 		bool deal = false;        
 		///Parameter for homogeneous expansions		

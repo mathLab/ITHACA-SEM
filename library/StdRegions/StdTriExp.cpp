@@ -928,6 +928,8 @@ namespace Nektar
             case 2:
                 numModes = order1;
                 break;
+            default:
+                ASSERTL0(false,"eid must be between 0 and 2");
             }
 
             bool checkForZeroedModes = false;

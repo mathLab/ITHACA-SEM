@@ -248,7 +248,6 @@ namespace Nektar
             Array<OneD, NekDouble> tmp2;
 
             int       nmodes0 = m_base[0]->GetNumModes();
-            int       numMax  = nmodes0;
 
             Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp,1);
 

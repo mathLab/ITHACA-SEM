@@ -1,11 +1,6 @@
 Changelog
 =========
 
-v4.5.0
-------
-**NekMesh:**
-- Add basic gmsh cad (.geo) reader to the meshing system (!731)
-
 v4.4.0
 ------
 **Library**:
@@ -88,6 +83,7 @@ v4.4.0
   (!712)
 - 2D to 3D mesh extrusion module (!715)
 - Add new two-dimensional mesher from NACA code or step file (!720)
+- Add basic gmsh cad (.geo) reader to the meshing system (!731)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

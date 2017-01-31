@@ -45,6 +45,7 @@ using namespace std;
 #include <StdRegions/StdPrismExp.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdTetExp.h>
+#include <StdRegions/StdHexExp.h>
 #include <StdRegions/StdTriExp.h>
 
 namespace Nektar
@@ -295,6 +296,91 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
             }
         }
     }
+    else if (geom->GetShapeType() == LibUtilities::eHexahedron)
+    {
+        vector<Array<OneD, NekDouble> > xyz;
+        for (int i = 0; i < geom->GetNumVerts(); i++)
+        {
+            Array<OneD, NekDouble> loc(3);
+            SpatialDomains::PointGeomSharedPtr p = geom->GetVertex(i);
+            p->GetCoords(loc);
+            xyz.push_back(loc);
+        }
+
+        Array<OneD, const LibUtilities::BasisSharedPtr> b = chi->GetBase();
+        Array<OneD, NekDouble> eta1                       = b[0]->GetZ();
+        Array<OneD, NekDouble> eta2                       = b[1]->GetZ();
+        Array<OneD, NekDouble> eta3                       = b[2]->GetZ();
+
+        for (int k = 0; k < b[2]->GetNumPoints(); k++)
+        {
+            for (int j = 0; j < b[1]->GetNumPoints(); j++)
+            {
+                for (int i = 0; i < b[0]->GetNumPoints(); i++)
+                {
+                    NekDouble a1 = 0.5 * (1 - eta1[i]);
+                    NekDouble a2 = 0.5 * (1 + eta1[i]);
+                    NekDouble b1 = 0.5 * (1 - eta2[j]),
+                              b2 = 0.5 * (1 + eta2[j]);
+                    NekDouble c1 = 0.5 * (1 - eta3[k]),
+                              c2 = 0.5 * (1 + eta3[k]);
+
+                    DNekMat dxdz(3, 3, 1.0, eFULL);
+
+                    dxdz(0, 0) =
+                        -0.5 * b1 * c1 * xyz[0][0] + 0.5 * b1 * c1 * xyz[1][0] +
+                        0.5 * b2 * c1 * xyz[2][0] - 0.5 * b2 * c1 * xyz[3][0] -
+                        0.5 * b1 * c2 * xyz[5][0] + 0.5 * b1 * c2 * xyz[5][0] +
+                        0.5 * b2 * c2 * xyz[6][0] - 0.5 * b2 * c2 * xyz[7][0];
+                    dxdz(1, 0) =
+                        -0.5 * b1 * c1 * xyz[0][1] + 0.5 * b1 * c1 * xyz[1][1] +
+                        0.5 * b2 * c1 * xyz[2][1] - 0.5 * b2 * c1 * xyz[3][1] -
+                        0.5 * b1 * c2 * xyz[5][1] + 0.5 * b1 * c2 * xyz[5][1] +
+                        0.5 * b2 * c2 * xyz[6][1] - 0.5 * b2 * c2 * xyz[7][1];
+                    dxdz(2, 0) =
+                        -0.5 * b1 * c1 * xyz[0][2] + 0.5 * b1 * c1 * xyz[1][2] +
+                        0.5 * b2 * c1 * xyz[2][2] - 0.5 * b2 * c1 * xyz[3][2] -
+                        0.5 * b1 * c2 * xyz[5][2] + 0.5 * b1 * c2 * xyz[5][2] +
+                        0.5 * b2 * c2 * xyz[6][2] - 0.5 * b2 * c2 * xyz[7][2];
+
+                    dxdz(0, 1) =
+                        -0.5 * a1 * c1 * xyz[0][0] - 0.5 * a2 * c1 * xyz[1][0] +
+                        0.5 * a2 * c1 * xyz[2][0] + 0.5 * a1 * c1 * xyz[3][0] -
+                        0.5 * a1 * c2 * xyz[5][0] - 0.5 * a2 * c2 * xyz[5][0] +
+                        0.5 * a2 * c2 * xyz[6][0] + 0.5 * a1 * c2 * xyz[7][0];
+                    dxdz(1, 1) =
+                        -0.5 * a1 * c1 * xyz[0][1] - 0.5 * a2 * c1 * xyz[1][1] +
+                        0.5 * a2 * c1 * xyz[2][1] + 0.5 * a1 * c1 * xyz[3][1] -
+                        0.5 * a1 * c2 * xyz[5][1] - 0.5 * a2 * c2 * xyz[5][1] +
+                        0.5 * a2 * c2 * xyz[6][1] + 0.5 * a1 * c2 * xyz[7][1];
+                    dxdz(2, 1) =
+                        -0.5 * a1 * c1 * xyz[0][2] - 0.5 * a2 * c1 * xyz[1][2] +
+                        0.5 * a2 * c1 * xyz[2][2] + 0.5 * a1 * c1 * xyz[3][2] -
+                        0.5 * a1 * c2 * xyz[5][2] - 0.5 * a2 * c2 * xyz[5][2] +
+                        0.5 * a2 * c2 * xyz[6][2] + 0.5 * a1 * c2 * xyz[7][2];
+
+                    dxdz(0, 0) =
+                        -0.5 * b1 * a1 * xyz[0][0] - 0.5 * b1 * a2 * xyz[1][0] -
+                        0.5 * b2 * a2 * xyz[2][0] - 0.5 * b2 * a1 * xyz[3][0] +
+                        0.5 * b1 * a1 * xyz[5][0] + 0.5 * b1 * a2 * xyz[5][0] +
+                        0.5 * b2 * a2 * xyz[6][0] + 0.5 * b2 * a1 * xyz[7][0];
+                    dxdz(1, 0) =
+                        -0.5 * b1 * a1 * xyz[0][1] - 0.5 * b1 * a2 * xyz[1][1] -
+                        0.5 * b2 * a2 * xyz[2][1] - 0.5 * b2 * a1 * xyz[3][1] +
+                        0.5 * b1 * a1 * xyz[5][1] + 0.5 * b1 * a2 * xyz[5][1] +
+                        0.5 * b2 * a2 * xyz[6][1] + 0.5 * b2 * a1 * xyz[7][1];
+                    dxdz(2, 0) =
+                        -0.5 * b1 * a1 * xyz[0][2] - 0.5 * b1 * a2 * xyz[1][2] -
+                        0.5 * b2 * a2 * xyz[2][2] - 0.5 * b2 * a1 * xyz[3][2] +
+                        0.5 * b1 * a1 * xyz[5][2] + 0.5 * b1 * a2 * xyz[5][2] +
+                        0.5 * b2 * a2 * xyz[6][2] + 0.5 * b2 * a1 * xyz[7][2];
+
+                    dxdz.Invert();
+                    ret.push_back(dxdz);
+                }
+            }
+        }
+    }
     else
     {
         ASSERTL0(false, "not coded");
@@ -303,7 +389,9 @@ inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,
     return ret;
 }
 
-Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedPtr e, bool s)
+Array<OneD, NekDouble> ProcessQualityMetric::GetQ(
+    LocalRegions::ExpansionSharedPtr e,
+    bool                             s)
 {
     SpatialDomains::GeometrySharedPtr geom    = e->GetGeom();
     StdRegions::StdExpansionSharedPtr chi     = e->GetGeom()->GetXmap();
@@ -357,6 +445,10 @@ Array<OneD, NekDouble> ProcessQualityMetric::GetQ(LocalRegions::ExpansionSharedP
             break;
         case LibUtilities::ePrism:
             chiMod = MemoryManager<StdRegions::StdPrismExp>::AllocateSharedPtr(
+                basisKeys[0], basisKeys[1], basisKeys[2]);
+            break;
+        case LibUtilities::eHexahedron:
+            chiMod = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(
                 basisKeys[0], basisKeys[1], basisKeys[2]);
             break;
         default:

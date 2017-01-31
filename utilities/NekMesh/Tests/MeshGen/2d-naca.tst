@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>High AoA naca0012 wing with bl</description>
+    <description>Simple 2D NACA mesh</description>
     <executable>NekMesh</executable>
-    <parameters>-m jac:list rev.mcf rev.xml:xml:test</parameters>
+    <parameters>-m jac:list 2d-naca.mcf 2d-naca.xml:xml:test</parameters>
     <files>
-        <file description="Input File">rev.mcf</file>
-        <file description="Input File 2">rev-rotated.STEP</file>
+        <file description="Input File">2d-naca.mcf</file>
     </files>
     <metrics>
         <metric type="regex" id="1">

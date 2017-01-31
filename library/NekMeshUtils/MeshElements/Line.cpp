@@ -66,16 +66,14 @@ Line::Line(ElmtConfig pConf,
     {
         m_vertex.push_back(pNodeList[i]);
     }
-    vector<NodeSharedPtr> edgeNodes;
+
     if (m_conf.m_order > 1)
     {
         for (int j = 0; j < n; ++j)
         {
-            edgeNodes.push_back(pNodeList[2 + j]);
+            m_volumeNodes.push_back(pNodeList[2 + j]);
         }
     }
-    m_edge.push_back(boost::shared_ptr<Edge>(new Edge(
-        pNodeList[0], pNodeList[1], edgeNodes, m_conf.m_edgeCurveType)));
 }
 
 SpatialDomains::GeometrySharedPtr Line::GetGeom(int coordDim)

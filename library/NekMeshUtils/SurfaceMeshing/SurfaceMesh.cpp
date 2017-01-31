@@ -87,12 +87,6 @@ void SurfaceMesh::Process()
     if (m_mesh->m_verbose)
         cout << endl << "\tFace meshing:" << endl << endl;
 
-    int prefix = 100;
-    if(m_mesh->m_cad->GetNumSurf() > 1000)
-    {
-        prefix *= 10;
-    }
-
     bool validError = false;
     for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {
@@ -103,7 +97,7 @@ void SurfaceMesh::Process()
         }
         m_facemeshes[i] =
             MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                m_curvemeshes, prefix + i);
+                m_curvemeshes, i);
 
         validError = validError ? true : m_facemeshes[i]->ValidateCurves();
     }

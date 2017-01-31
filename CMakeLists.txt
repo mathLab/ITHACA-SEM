@@ -70,13 +70,20 @@ IF (APPLE)
         SET(CMAKE_LIBRARY_PATH ${MACPORTS_PREFIX}/lib ${CMAKE_LIBRARY_PATH})
         SET(CMAKE_INCLUDE_PATH ${MACPORTS_PREFIX}/include ${CMAKE_INCLUDE_PATH})
         MESSAGE(STATUS "Detected MacPorts installation: ${MACPORTS_PREFIX}")
+    ELSE()
+        UNSET(MACPORTS_PREFIX)
     ENDIF()
 
     IF (${DETECT_HOMEBREW} EQUAL 0)
         SET(CMAKE_LIBRARY_PATH ${HOMEBREW_PREFIX}/lib ${CMAKE_LIBRARY_PATH})
         SET(CMAKE_INCLUDE_PATH ${HOMEBREW_PREFIX}/include ${CMAKE_INCLUDE_PATH})
         MESSAGE(STATUS "Detected Homebrew installation: ${HOMEBREW_PREFIX}")
+    ELSE()
+        UNSET(HOMEBREW_PREFIX)
     ENDIF()
+
+    UNSET(DETECT_HOMEBREW)
+    UNSET(DETECT_MACPORTS)
 ENDIF()
 
 # Attempt to retrieve git branch and SHA1 hash of current changeset.

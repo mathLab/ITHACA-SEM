@@ -542,7 +542,6 @@ void Tetrahedron::OrientTet()
 
     if (dist < 0)
     {
-        cout << "swapping vertices" << endl;
         swap(m_vertex[0], m_vertex[1]);
     }
 

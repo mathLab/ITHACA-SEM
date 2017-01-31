@@ -82,6 +82,12 @@ namespace Nektar
         NekDouble                           m_Cp;
         NekDouble                           m_Prandtl;
 
+        // Parameters for exponential filtering
+        NekDouble                           m_filterAlpha;
+        NekDouble                           m_filterExponent;
+        NekDouble                           m_filterCutoff;
+        bool                                m_useFiltering;
+
         // Auxiliary object to convert variables
         VariableConverterSharedPtr          m_varConv;
 

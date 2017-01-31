@@ -198,6 +198,16 @@ namespace Nektar
         // Shock capture
         m_session->LoadSolverInfo("ShockCaptureType",
                                   m_shockCaptureType,    "Off");
+
+        // Load parameters for exponential filtering
+        m_session->MatchSolverInfo("ExponentialFiltering","True",
+                                   m_useFiltering, false);
+        if(m_useFiltering)
+        {
+            m_session->LoadParameter ("FilterAlpha", m_filterAlpha, 36);
+            m_session->LoadParameter ("FilterExponent", m_filterExponent, 16);
+            m_session->LoadParameter ("FilterCutoff", m_filterCutoff, 0);
+        }
     }
 
     /**
@@ -320,6 +330,11 @@ namespace Nektar
                 for(i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
+                    if(m_useFiltering)
+                    {
+                        m_fields[i]->ExponentialFilter(outarray[i], m_filterAlpha,
+                                              m_filterExponent, m_filterCutoff);
+                    }
                 }
                 SetBoundaryConditions(outarray, time);
                 break;

@@ -111,6 +111,11 @@ public:
         return m_2d;
     }
 
+    void SetNACA(std::string i)
+    {
+        m_naca = i;
+    }
+
     /**
      * @brief Initialises CAD and makes surface, curve and vertex maps.
      *
@@ -203,6 +208,7 @@ protected:
     std::map<int, CADVertSharedPtr> m_verts;
 
     bool m_2d;
+    std::string m_naca;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

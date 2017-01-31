@@ -35,6 +35,7 @@ v4.4.0
   support to the Helmholtz smoother used e.g. in FieldConverts C0Projection
   module (!714)
 - Fix bug in MPI detection for recent CMake on OS X (!725)
+- Fix bug in CMake Homebrew and MacPorts detection for OS X (!729)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)

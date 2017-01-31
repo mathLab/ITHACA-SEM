@@ -164,6 +164,10 @@ namespace Nektar
                     Array<OneD,NekDouble> &outarray,
                     const StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdMatrixKey &mkey);
+
             STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD,       NekDouble> &outarray);

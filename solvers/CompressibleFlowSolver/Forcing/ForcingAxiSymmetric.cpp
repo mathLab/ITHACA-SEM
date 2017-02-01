@@ -109,8 +109,8 @@ void ForcingAxiSymmetric::v_Apply(
     Vmath::Vmul(nPoints, m_geomFactor, 1,
                          inarray[1], 1, m_Forcing[0], 1);
 
-    // F-rhou_i = -1/r *rhou_i * u_r
-    for (int i = 1; i < m_NumVariable-1; ++i)
+    // F-rhou_r = -1/r *rhou_r * u_r and F-rhou_y = -1/r *rhou_y * u_r
+    for (int i = 1; i < 3; ++i)
     {
         Vmath::Vmul(nPoints, inarray[1], 1,
                              inarray[i], 1, m_Forcing[i], 1);
@@ -127,6 +127,30 @@ void ForcingAxiSymmetric::v_Apply(
                          inarray[0], 1, m_Forcing[m_NumVariable-1], 1);
     Vmath::Vmul(nPoints, m_Forcing[m_NumVariable-1], 1,
                          m_geomFactor, 1, m_Forcing[m_NumVariable-1], 1);
+
+    // Swirl
+    if (m_NumVariable == 5)
+    {
+        // F-rhou_r -= (-1/r) * -rhou_r * u_theta
+        Vmath::Vmul(nPoints, inarray[1], 1,
+                             inarray[3], 1, tmp, 1);
+        Vmath::Vdiv(nPoints, tmp, 1,
+                             inarray[0], 1, tmp, 1);
+        Vmath::Vmul(nPoints, tmp, 1,
+                             m_geomFactor, 1, tmp, 1);
+        Vmath::Vsub(nPoints, m_Forcing[1], 1,
+                             tmp, 1, m_Forcing[1], 1);
+
+        // F-rhou_theta = 2 * (-1/r *rhou_y * u_r)
+        Vmath::Vmul(nPoints, inarray[1], 1,
+                             inarray[3], 1, m_Forcing[3], 1);
+        Vmath::Vdiv(nPoints, m_Forcing[3], 1,
+                             inarray[0], 1, m_Forcing[3], 1);
+        Vmath::Vmul(nPoints, m_Forcing[3], 1,
+                             m_geomFactor, 1, m_Forcing[3], 1);
+        Vmath::Smul(nPoints, 2.0,
+                             m_Forcing[3], 1, m_Forcing[3], 1);
+    }
 
     // Apply forcing
     for (int i = 0; i < m_NumVariable; i++)

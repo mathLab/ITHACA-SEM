@@ -103,7 +103,7 @@ void ForcingAxiSymmetric::v_Apply(
     Array<OneD, NekDouble> tmp (nPoints, 0.0);
     m_varConv->GetPressure(inarray, tmp);
     Vmath::Vadd(nPoints, tmp, 1,
-                    inarray[2], 1, tmp, 1);
+                    inarray[m_NumVariable-1], 1, tmp, 1);
 
     // F-rho = -1/r *rhou
     Vmath::Vmul(nPoints, m_geomFactor, 1,

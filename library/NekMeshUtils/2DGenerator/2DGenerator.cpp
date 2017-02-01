@@ -106,7 +106,7 @@ void Generator2D::Process()
 
     ////////////////////////////////////////
 
-    /*EdgeSet::iterator it;
+    EdgeSet::iterator it;
     for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
     {
         vector<NodeSharedPtr> ns;
@@ -126,7 +126,7 @@ void Generator2D::Process()
             LibUtilities::eSegment, conf, ns, tags);
 
         m_mesh->m_element[1].push_back(E2);
-    }*/
+    }
 
     for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {

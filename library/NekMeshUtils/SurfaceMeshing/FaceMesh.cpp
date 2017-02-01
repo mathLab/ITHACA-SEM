@@ -1023,7 +1023,7 @@ void FaceMesh::OrientateCurves()
 {
     //this could be a second run on orentate so clear some info
     orderedLoops.clear();
-    
+
     // create list of bounding loop nodes
     for (int i = 0; i < m_edgeloops.size(); i++)
     {
@@ -1058,23 +1058,37 @@ void FaceMesh::OrientateCurves()
     for (int i = 0; i < orderedLoops.size(); i++)
     {
         NekDouble area = 0.0;
-        vector<Array<OneD, NekDouble> > info;
+        vector<vector<NekDouble> > info;
+        NekDouble mn = numeric_limits<double>::max();
+
+        info.resize(orderedLoops[i].size());
 
         for (int j = 0; j < orderedLoops[i].size(); j++)
         {
-            info.push_back(orderedLoops[i][j]->GetCADSurfInfo(m_id));
+            info[j].resize(2);
+            Array<OneD, NekDouble> uv = orderedLoops[i][j]->GetCADSurfInfo(m_id);
+            info[j][0] = uv[0];
+            info[j][1] = uv[1];
+            mn = min(info[j][1],mn);
+        }
+
+        for (int j = 0; j < info.size(); j++)
+        {
+            info[j][1] -= mn;
         }
 
         for (int j = 0; j < info.size() - 1; j++)
         {
-            area += -info[j+1][1] * (info[j+1][0] - info[j][0]) +
-                    info[j][0] * (info[j+1][1] - info[j][1]);
+            area += (info[j+1][0] - info[j][0])*(info[j][1]+info[j+1][1]) /2.0;
         }
-        area += -info[0][1] * (info[0][0] - info[info.size() - 1][0]) +
-                 info[info.size() - 1][0] * (info[0][1] - info[info.size() - 1][1]);
-        area *= 0.5;
+        area += (info[0][0] - info[info.size()-1][0])*(info[info.size()-1][1]+info[0][1]) /2.0;
 
         m_edgeloops[i]->area = area;
+
+        if(m_cadsurf->IsReversedNormal())
+        {
+            m_edgeloops[i]->area*=-1.0;
+        }
     }
 
     int ct = 0;

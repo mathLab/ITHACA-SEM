@@ -72,7 +72,7 @@ public:
     /**
      * @brief Get the loop structures which bound the cad surface
      */
-    std::vector<EdgeLoop> GetEdges()
+    std::vector<EdgeLoopSharedPtr> GetEdges()
     {
         return m_edges;
     }
@@ -164,7 +164,7 @@ protected:
     /// normal
     bool m_correctNormal;
     /// List of bounding edges in loops with orientation.
-    std::vector<EdgeLoop> m_edges;
+    std::vector<EdgeLoopSharedPtr> m_edges;
 
     /// Function which tests the the value of uv used is within the surface
     virtual void Test(Array<OneD, NekDouble> uv) = 0;

@@ -190,12 +190,12 @@ bool CADSystemOCE::LoadCAD()
             }
         }
 
-        vector<EdgeLoop> edgeloops;
+        vector<EdgeLoopSharedPtr> edgeloops;
 
         // now we acutally analyse the loops for cad building
         for (int j = 1; j <= mapOfWires.Extent(); j++)
         {
-            EdgeLoop edgeloop;
+            EdgeLoopSharedPtr edgeloop = boost::shared_ptr<EdgeLoop>(new EdgeLoop);
 
             TopoDS_Shape wire = mapOfWires.FindKey(j);
 
@@ -217,7 +217,7 @@ bool CADSystemOCE::LoadCAD()
             Array<OneD, NekDouble> cen(2);
             cen[0]          = p2.X();
             cen[1]          = p2.Y();
-            edgeloop.center = cen;
+            edgeloop->center = cen;
 
             BRepTools_WireExplorer exp;
 
@@ -230,8 +230,8 @@ bool CADSystemOCE::LoadCAD()
                 if (mapOfEdges.Contains(edge))
                 {
                     int e = mapOfEdges.FindIndex(edge);
-                    edgeloop.edges.push_back(m_curves[e]);
-                    edgeloop.edgeo.push_back(exp.Orientation());
+                    edgeloop->edges.push_back(m_curves[e]);
+                    edgeloop->edgeo.push_back(exp.Orientation());
                     adjsurfmap[e].push_back(i);
                 }
 
@@ -310,7 +310,8 @@ void CADSystemOCE::AddCurve(int i, TopoDS_Shape in, int fv, int lv)
     m_curves[i]->SetVert(vs);
 }
 
-void CADSystemOCE::AddSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
+void CADSystemOCE::AddSurf(int i, TopoDS_Shape in,
+                           vector<EdgeLoopSharedPtr> ein)
 {
     CADSurfSharedPtr newSurf = GetCADSurfFactory().CreateInstance(key);
     boost::static_pointer_cast<CADSurfOCE>(newSurf)->Initialise(i, in, ein);
@@ -324,7 +325,7 @@ void CADSystemOCE::AddSurf(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
     int tote = 0;
     for (int i = 0; i < ein.size(); i++)
     {
-        tote += ein[i].edges.size();
+        tote += ein[i]->edges.size();
     }
 
     ASSERTL0(tote != 1, "cannot handle periodic curves");

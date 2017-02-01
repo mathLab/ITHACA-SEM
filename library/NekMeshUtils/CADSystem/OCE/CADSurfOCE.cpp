@@ -45,7 +45,8 @@ namespace NekMeshUtils
 std::string CADSurfOCE::key = GetCADSurfFactory().RegisterCreatorFunction(
     "oce", CADSurfOCE::create, "CADSurfOCE");
 
-void CADSurfOCE::Initialise(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
+void CADSurfOCE::Initialise(int i, TopoDS_Shape in,
+                            vector<EdgeLoopSharedPtr> ein)
 {
     // this bit of code changes the units of the cad from mm opencascade
     // defualt to m

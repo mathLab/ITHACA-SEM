@@ -1635,6 +1635,58 @@ namespace Nektar
             }
         }
 
+        void StdQuadExp::v_ExponentialFilter(
+                                          Array<OneD, NekDouble> &array,
+                                    const NekDouble        alpha,
+                                    const NekDouble        exponent,
+                                    const NekDouble        cutoff)
+        {
+            // Generate an orthogonal expansion
+            int qa      = m_base[0]->GetNumPoints();
+            int qb      = m_base[1]->GetNumPoints();
+            int nmodesA = m_base[0]->GetNumModes();
+            int nmodesB = m_base[1]->GetNumModes();
+            int P  = nmodesA - 1;
+            int Q  = nmodesB - 1;
+
+            // Declare orthogonal basis.
+            LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
+            LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
+
+            LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A, nmodesA, pa);
+            LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A, nmodesB, pb);
+            StdQuadExp OrthoExp(Ba,Bb);
+
+            // Cutoff
+            int Pcut = cutoff*P;
+            int Qcut = cutoff*Q;
+
+            // Project onto orthogonal space.
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
+            OrthoExp.FwdTrans(array,orthocoeffs);
+
+            //
+            NekDouble fac, fac1, fac2;
+            for(int i = 0; i < nmodesA; ++i)
+            {
+                for(int j = 0; j < nmodesB; ++j)
+                {
+                    //to filter out only the "high-modes"
+                    if(i > Pcut || j > Qcut)
+                    {
+                        fac1 = (NekDouble) (i - Pcut)/( (NekDouble)(P - Pcut) );
+                        fac2 = (NekDouble) (j - Qcut)/( (NekDouble)(Q - Qcut) );
+                        fac  = max(fac1, fac2);
+                        fac  = pow(fac, exponent);
+                        orthocoeffs[i*nmodesB+j] *= exp(-alpha*fac);
+                    }
+                }
+            }
+
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
+        }
+
         void StdQuadExp::v_ReduceOrderCoeffs(
             int                                 numMin,
             const Array<OneD, const NekDouble> &inarray,

@@ -638,7 +638,7 @@ namespace Nektar
                     fac = (NekDouble) (j - Pcut) / ( (NekDouble) (P - Pcut) );
                     fac = pow(fac, exponent);
                     orthocoeffs[j] *= exp(-alpha*fac);
-                 }
+                }
             }
 
             // backward transform to physical space

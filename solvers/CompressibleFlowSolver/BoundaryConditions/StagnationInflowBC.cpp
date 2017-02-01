@@ -76,6 +76,8 @@ void StagnationInflowBC::v_Apply(
 {
     int i, j;
     int nTracePts = m_fields[0]->GetTrace()->GetNpoints();
+    int numBCPts = m_fields[0]->
+        GetBndCondExpansions()[m_bcRegion]->GetNpoints();
     int nVariables = physarray.num_elements();
 
     const Array<OneD, const int> &traceBndMap
@@ -85,7 +87,7 @@ void StagnationInflowBC::v_Apply(
 
     // Get pressure
     Array<OneD, NekDouble > pressure  (nTracePts);
-    Array<OneD, NekDouble > pRef      (nTracePts);
+    Array<OneD, NekDouble > pRef      (numBCPts);
 
     m_varConv->GetPressure(Fwd, pressure);
     m_varConv->GetPressure(m_fieldStorage, pRef);
@@ -110,7 +112,7 @@ void StagnationInflowBC::v_Apply(
             pnt = id2 + i;
             // Density from isentropic relation: rho = rhoRef *(p/pRef)^1/Gamma
             rho = m_fieldStorage[0][id1+i] * 
-                    pow(pressure[pnt]/pRef[pnt],gammaInv);
+                    pow(pressure[pnt]/pRef[id1+i],gammaInv);
             (m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
                 UpdatePhys())[id1+i] = rho;
 

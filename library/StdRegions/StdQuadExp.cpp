@@ -1177,6 +1177,7 @@ namespace Nektar
             case 1:
             case 3:
                 numModes = order1;
+                break;
             default:
                 ASSERTL0(false,"eid must be between 0 and 3");
             }

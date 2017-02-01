@@ -39,6 +39,17 @@
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/index/rtree.hpp>
+
+namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
+
+typedef bg::model::point<double, 3, bg::cs::cartesian> point;
+typedef std::pair<point, unsigned int> pointI;
+
 using namespace std;
 namespace Nektar
 {
@@ -65,11 +76,15 @@ void CFIMesh::Process()
         cout << endl << "Loading mesh from CFI" << endl;
     }
 
+    m_mesh->m_expDim = 3;
+    m_mesh->m_spaceDim = 3;
+
     CADSystemCFISharedPtr cad = boost::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad);
     map<string,int> nameToCurveId = cad->GetCFICurveId();
     map<string,int> nameToFaceId = cad->GetCFIFaceId();
     map<string,vector<string> > nameVertToListEdge = cad->GetVertId();
     cfi::Model* model = cad->GetCFIModel();
+    NekDouble scal = cad->GetScaling();
 
     map<int,NodeSharedPtr> nodes;
     vector<cfi::NodeDefinition>* cfinodes = model->getFenodes();
@@ -79,16 +94,16 @@ void CFIMesh::Process()
     {
         Array<OneD, NekDouble> xyz(3);
         cfi::Position ps = (*it).node->getXYZ();
-        xyz[0] = ps.x;
-        xyz[1] = ps.y;
-        xyz[2] = ps.z;
+        xyz[0] = ps.x*scal;
+        xyz[1] = ps.y*scal;
+        xyz[2] = ps.z*scal;
         int id = (*it).node->number;
 
         NodeSharedPtr n = boost::shared_ptr<Node>(new Node(id,xyz[0],xyz[1],xyz[2]));
-        nodes[id] = n;
+        nodes.insert(pair<int,NodeSharedPtr>(id,n));
 
         //point built now add cad if needed
-        /*
+
         cfi::MeshableEntity* p = (*it).parent;
         if(p->type == cfi::TYPE_LINE)
         {
@@ -131,7 +146,7 @@ void CFIMesh::Process()
         {
             ASSERTL0(p->type == cfi::TYPE_BODY,"unsure on point type");
         }
-        */
+
     }
 
     int prefix = m_mesh->m_cad->GetNumSurf() > 100 ? 1000:100;
@@ -144,44 +159,24 @@ void CFIMesh::Process()
 
     for(it = tets->begin(); it != tets->end(); it++, i++)
     {
-        cout << i << endl;
-
         vector<NodeSharedPtr> n;
         vector<cfi::Node*> ns = (*it).nodes;
 
         for(int j = 0; j < ns.size(); j++)
         {
-            map<int, NodeSharedPtr>::iterator f = nodes.find(ns[j]->number);
-            ASSERTL0(f != nodes.end(),"could not find");
-            n.push_back(f->second);
+            n.push_back(nodes[ns[j]->number]);
         }
 
         vector<int> tags;
-        tags.push_back(0);
-        ElmtConfig conf(LibUtilities::eTetrahedron,1,false,false,false);
+        tags.push_back(prefix);
+        ElmtConfig conf(LibUtilities::eTetrahedron,1,false,false);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
                 LibUtilities::eTetrahedron,conf,n,tags);
 
-        bool okay = true;
-        try
-        {
-            SpatialDomains::GeometrySharedPtr geom = E->GetGeom(3);
-        }
-        catch (const std::exception& e)
-        {
-            okay = false;
-            cout << "crappy" << endl;
-        }
-
-        if(okay)
-        {
-            m_mesh->m_element[3].push_back(E);
-        }
-
-        //cout << "worked" << endl;
+        m_mesh->m_element[3].push_back(E);
     }
 
-    /*vector<cfi::ElementDefinition>* tris = model->getElements(cfi::SUBTYPE_TR3,3);
+    vector<cfi::ElementDefinition>* tris = model->getElements(cfi::SUBTYPE_TR3,3);
     cout << "tris " << tris->size() << endl;
     for(it = tris->begin(); it != tris->end(); it++)
     {
@@ -196,7 +191,7 @@ void CFIMesh::Process()
         vector<int> tags;
 
         cfi::MeshableEntity* p = el.parent;
-        tags.push_back(prefix + nameToFaceId[p->getName()]);
+        tags.push_back(nameToFaceId[p->getName()]);
 
         ElmtConfig conf(LibUtilities::eTriangle,1,false,false);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
@@ -257,7 +252,7 @@ void CFIMesh::Process()
                 ed->m_parentCAD = m_mesh->m_element[2][i]->m_parentCAD;
             }
         }
-    }*/
+    }
 
     ProcessVertices();
     ProcessEdges();

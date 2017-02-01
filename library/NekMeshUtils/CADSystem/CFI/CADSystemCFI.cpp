@@ -85,6 +85,13 @@ bool CADSystemCFI::LoadCAD()
     ASSERTL0(model->getEntityTotal(cfi::TYPE_BODY,cfi::SUBTYPE_ALL) == 1,
                     "cannot deal with multibodies");
 
+    m_scal = 1.0;
+    if(model->getUnits() == cfi::UNIT_INCHES)
+    {
+        cout << "Model is in inches, scaling accordingly" << endl;
+        m_scal = 0.0254;
+    }
+
     body = model->getBodyEntity(1);
 
     map<string,cfi::Point*> mapOfVerts;
@@ -255,7 +262,7 @@ void CADSystemCFI::AddVert(int i, cfi::Point* in)
 {
     CADVertSharedPtr newVert = GetCADVertFactory().CreateInstance(key);
 
-    static_pointer_cast<CADVertCFI>(newVert)->Initialise(i,in);
+    static_pointer_cast<CADVertCFI>(newVert)->Initialise(i,in,m_scal);
 
     m_verts[i] = newVert;
 }
@@ -263,7 +270,7 @@ void CADSystemCFI::AddVert(int i, cfi::Point* in)
 void CADSystemCFI::AddCurve(int i, cfi::Line* in, int fv, int lv)
 {
     CADCurveSharedPtr newCurve = GetCADCurveFactory().CreateInstance(key);
-    static_pointer_cast<CADCurveCFI>(newCurve)->Initialise(i, in);
+    static_pointer_cast<CADCurveCFI>(newCurve)->Initialise(i, in, m_scal);
 
     vector<CADVertSharedPtr> vs;
     vs.push_back(m_verts[fv]);
@@ -276,6 +283,7 @@ void CADSystemCFI::AddSurf(int i, cfi::Face* in, std::vector<EdgeLoop> ein)
 {
     CADSurfSharedPtr newSurf = GetCADSurfFactory().CreateInstance(key);
     static_pointer_cast<CADSurfCFI>(newSurf)->Initialise(i, in, ein);
+    static_pointer_cast<CADSurfCFI>(newSurf)->SetScaling(m_scal);
     m_surfs[i] = newSurf;
 
     //if (in.Orientation() == 0)

@@ -46,15 +46,16 @@ namespace NekMeshUtils
 std::string CADVertCFI::key = GetCADVertFactory().RegisterCreatorFunction(
         "cfi", CADVertCFI::create, "CAD vert cfi");
 
-void CADVertCFI::Initialise(int i, cfi::Point* in)
+void CADVertCFI::Initialise(int i, cfi::Point* in, NekDouble s)
 {
     m_id      = i;
     m_cfipoint = in;
+    m_scal = s;
 
     cfi::Position pos = m_cfipoint->getGeometry();
 
     m_node = boost::shared_ptr<Node>(
-        new Node(i - 1, pos.x, pos.y, pos.z));
+        new Node(i - 1, pos.x*m_scal, pos.y*m_scal, pos.z*m_scal));
     degen = false;
 }
 

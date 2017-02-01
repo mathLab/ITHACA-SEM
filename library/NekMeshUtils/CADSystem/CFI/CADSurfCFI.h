@@ -60,6 +60,10 @@ public:
     ~CADSurfCFI(){};
 
     void Initialise(int i, cfi::Face* in, std::vector<EdgeLoop> ein);
+    void SetScaling(NekDouble i)
+    {
+        m_scal = i;
+    }
 
     Array<OneD, NekDouble> GetBounds();
 
@@ -84,6 +88,7 @@ private:
     void Test(Array<OneD, NekDouble> uv){}
     /// CFI object for surface.
     cfi::Face* m_cfiSurface;
+    NekDouble m_scal;
 };
 
 }

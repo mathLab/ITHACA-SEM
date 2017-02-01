@@ -69,6 +69,7 @@ public:
     NekDouble Curvature(NekDouble t)
     {
         ASSERTL0(false,"not implemented in CFI engine");
+        return 0;
     }
 
     NekDouble tAtArcLength(NekDouble s);
@@ -77,11 +78,12 @@ public:
 
     NekDouble loct(Array<OneD, NekDouble> xyz);
 
-    void Initialise(int i, cfi::Line* in);
+    void Initialise(int i, cfi::Line* in, NekDouble s);
 
 private:
     ///cfi object
     cfi::Line* m_cfiEdge;
+    NekDouble m_scal;
 };
 
 }

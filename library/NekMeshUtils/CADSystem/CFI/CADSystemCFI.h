@@ -70,6 +70,7 @@ public:
     std::map<std::string,int>  GetCFICurveId() {return nameToCurveId;}
     std::map<std::string,int>  GetCFIFaceId() {return nameToFaceId;}
     std::map<std::string,std::vector<std::string> > GetVertId() {return mapVertToListEdge;}
+    NekDouble GetScaling() {return m_scal;}
 
 private:
     void AddVert(int i, cfi::Point* in);
@@ -81,6 +82,7 @@ private:
     std::map<std::string,int>  nameToCurveId;
     std::map<std::string,int>  nameToFaceId;
     std::map<std::string,std::vector<std::string> > mapVertToListEdge;
+    NekDouble m_scal;
 };
 
 typedef boost::shared_ptr<CADSystemCFI> CADSystemCFISharedPtr;

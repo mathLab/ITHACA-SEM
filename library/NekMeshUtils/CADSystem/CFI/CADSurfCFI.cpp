@@ -58,10 +58,10 @@ Array<OneD, NekDouble> CADSurfCFI::GetBounds()
     Array<OneD, NekDouble> b(4);
 
     cfi::UVBox bx = m_cfiSurface->calcUVBox();
-    b[0] = bx.uLower;
-    b[1] = bx.uUpper;
-    b[2] = bx.vLower;
-    b[3] = bx.vUpper;
+    b[0] = bx.uLower*m_scal;
+    b[1] = bx.uUpper*m_scal;
+    b[2] = bx.vLower*m_scal;
+    b[3] = bx.vUpper*m_scal;
 
     return b;
 }
@@ -69,9 +69,9 @@ Array<OneD, NekDouble> CADSurfCFI::GetBounds()
 Array<OneD, NekDouble> CADSurfCFI::locuv(Array<OneD, NekDouble> p)
 {
     cfi::Position px;
-    px.x = p[0];
-    px.y = p[1];
-    px.z = p[2];
+    px.x = p[0]/m_scal;
+    px.y = p[1]/m_scal;
+    px.z = p[2]/m_scal;
 
     boost::optional<cfi::UVPosition> r = m_cfiSurface->calcUVFromXYZ(px);
 
@@ -92,15 +92,15 @@ NekDouble CADSurfCFI::Curvature(Array<OneD, NekDouble> uv)
     cfi::UVPosition uvp(uv[0],uv[1]);
     cfi::MaxMinCurvaturePair mxp = m_cfiSurface->calcCurvAtUV(uvp);
 
-    return mxp.maxCurv.curvature;
+    return mxp.maxCurv.curvature*m_scal;
 }
 
 NekDouble CADSurfCFI::DistanceTo(Array<OneD, NekDouble> p)
 {
     cfi::Position px;
-    px.x = p[0];
-    px.y = p[1];
-    px.z = p[2];
+    px.x = p[0]/m_scal;
+    px.y = p[1]/m_scal;
+    px.z = p[2]/m_scal;
 
     boost::optional<cfi::UVPosition> r = m_cfiSurface->calcUVFromXYZ(px);
 
@@ -114,15 +114,15 @@ NekDouble CADSurfCFI::DistanceTo(Array<OneD, NekDouble> p)
                           (p[1]-p2[1])*(p[1]-p2[1]) +
                           (p[2]-p2[2])*(p[2]-p2[2]));
 
-    return dist;
+    return dist*m_scal;
 }
 
 void CADSurfCFI::ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv)
 {
     cfi::Position px;
-    px.x = tp[0];
-    px.y = tp[1];
-    px.z = tp[2];
+    px.x = tp[0]/m_scal;
+    px.y = tp[1]/m_scal;
+    px.z = tp[2]/m_scal;
 
     boost::optional<cfi::UVPosition> r = m_cfiSurface->calcUVFromXYZ(px);
 
@@ -135,9 +135,9 @@ Array<OneD, NekDouble> CADSurfCFI::P(Array<OneD, NekDouble> uv)
     cfi::UVPosition uvp(uv[0],uv[1]);
     cfi::Position p = m_cfiSurface->calcXYZAtUV(uvp);
     Array<OneD, NekDouble> out(3);
-    out[0] = p.x;
-    out[1] = p.y;
-    out[2] = p.z;
+    out[0] = p.x*m_scal;
+    out[1] = p.y*m_scal;
+    out[2] = p.z*m_scal;
 
     return out;
 }
@@ -161,15 +161,15 @@ Array<OneD, NekDouble> CADSurfCFI::D1(Array<OneD, NekDouble> uv)
     cfi::UVPosition uvp(uv[0],uv[1]);
     vector<cfi::DerivativeList>* l = m_cfiSurface->calcDerivAtUV(uvp);
     Array<OneD, NekDouble> r(9);
-    r[0]  = p[0]; // x
-    r[1]  = p[1]; // y
-    r[2]  = p[2]; // z
-    r[3]  = l->at(0).derivatives[0]; // dx/dx
-    r[4]  = l->at(0).derivatives[1]; // dy/dy
-    r[5]  = l->at(0).derivatives[2]; // dz/dz
-    r[6]  = l->at(0).derivatives[3]; // dx/dx
-    r[7]  = l->at(0).derivatives[4]; // dy/dy
-    r[8]  = l->at(0).derivatives[5]; // dz/dz
+    r[0]  = p[0]*m_scal; // x
+    r[1]  = p[1]*m_scal; // y
+    r[2]  = p[2]*m_scal; // z
+    r[3]  = l->at(0).derivatives[0]*m_scal; // dx/dx
+    r[4]  = l->at(0).derivatives[1]*m_scal; // dy/dy
+    r[5]  = l->at(0).derivatives[2]*m_scal; // dz/dz
+    r[6]  = l->at(0).derivatives[3]*m_scal; // dx/dx
+    r[7]  = l->at(0).derivatives[4]*m_scal; // dy/dy
+    r[8]  = l->at(0).derivatives[5]*m_scal; // dz/dz
 
     return r;
 }
@@ -180,24 +180,24 @@ Array<OneD, NekDouble> CADSurfCFI::D2(Array<OneD, NekDouble> uv)
     cfi::UVPosition uvp(uv[0],uv[1]);
     vector<cfi::DerivativeList>* l = m_cfiSurface->calcDerivAtUV(uvp);
     Array<OneD, NekDouble> r(18);
-    r[0]  = p[0]; // x
-    r[1]  = p[1]; // y
-    r[2]  = p[2]; // z
-    r[3]  = l->at(0).derivatives[0]; // dx/dx
-    r[4]  = l->at(0).derivatives[1]; // dy/dy
-    r[5]  = l->at(0).derivatives[2]; // dz/dz
-    r[6]  = l->at(0).derivatives[3]; // dx/dx
-    r[7]  = l->at(0).derivatives[4]; // dy/dy
-    r[8]  = l->at(0).derivatives[5]; // dz/dz
-    r[9]  = l->at(1).derivatives[0]; // d2x/du2
-    r[10] = l->at(1).derivatives[1]; // d2y/du2
-    r[11] = l->at(1).derivatives[2]; // d2z/du2
-    r[12] = l->at(1).derivatives[6]; // d2x/dv2
-    r[13] = l->at(1).derivatives[7]; // d2y/dv2
-    r[14] = l->at(1).derivatives[8]; // d2z/dv2
-    r[15] = l->at(1).derivatives[3]; // d2x/dudv
-    r[16] = l->at(1).derivatives[4]; // d2y/dudv
-    r[17] = l->at(1).derivatives[5]; // d2z/dudv
+    r[0]  = p[0]*m_scal; // x
+    r[1]  = p[1]*m_scal; // y
+    r[2]  = p[2]*m_scal; // z
+    r[3]  = l->at(0).derivatives[0]*m_scal; // dx/dx
+    r[4]  = l->at(0).derivatives[1]*m_scal; // dy/dy
+    r[5]  = l->at(0).derivatives[2]*m_scal; // dz/dz
+    r[6]  = l->at(0).derivatives[3]*m_scal; // dx/dx
+    r[7]  = l->at(0).derivatives[4]*m_scal; // dy/dy
+    r[8]  = l->at(0).derivatives[5]*m_scal; // dz/dz
+    r[9]  = l->at(1).derivatives[0]*m_scal; // d2x/du2
+    r[10] = l->at(1).derivatives[1]*m_scal; // d2y/du2
+    r[11] = l->at(1).derivatives[2]*m_scal; // d2z/du2
+    r[12] = l->at(1).derivatives[6]*m_scal; // d2x/dv2
+    r[13] = l->at(1).derivatives[7]*m_scal; // d2y/dv2
+    r[14] = l->at(1).derivatives[8]*m_scal; // d2z/dv2
+    r[15] = l->at(1).derivatives[3]*m_scal; // d2x/dudv
+    r[16] = l->at(1).derivatives[4]*m_scal; // d2y/dudv
+    r[17] = l->at(1).derivatives[5]*m_scal; // d2z/dudv
 
     return r;
 }

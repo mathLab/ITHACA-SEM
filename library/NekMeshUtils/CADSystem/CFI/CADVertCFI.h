@@ -65,11 +65,13 @@ public:
 
     ~CADVertCFI(){};
 
-    void Initialise(int i, cfi::Point* in);
+    void Initialise(int i, cfi::Point* in, NekDouble s);
+
 
 private:
     /// cfi object
     cfi::Point* m_cfipoint;
+    NekDouble m_scal;
 };
 
 }

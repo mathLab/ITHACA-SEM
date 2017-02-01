@@ -1729,6 +1729,17 @@ namespace Nektar
             ASSERTL0(false, "Cannot compute vertex normal for this expansion.");
         }
 
+        void StdExpansion::v_NegateVertexNormal(const int vertex)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
+
+        bool StdExpansion::v_VertexNormalNegated(const int vertex)
+        {
+            ASSERTL0(false, "Not implemented.");
+            return false;
+        }
+
         const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const
         {
             ASSERTL0(false, "Cannot get face normals for this expansion.");

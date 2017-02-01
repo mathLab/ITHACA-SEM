@@ -1313,6 +1313,16 @@ namespace Nektar
                 v_ComputeVertexNormal(vertex);
             }
 
+            void NegateVertexNormal(const int vertex)
+            {
+                v_NegateVertexNormal(vertex);
+            }
+
+            bool VertexNormalNegated(const int vertex)
+            {
+                return v_VertexNormalNegated(vertex);
+            }
+
             const NormalVector & GetFaceNormal(const int face) const
             {
                 return v_GetFaceNormal(face);
@@ -1870,6 +1880,10 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetVertexNormal(const int vertex) const;
 
             STD_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
+
+            STD_REGIONS_EXPORT virtual void v_NegateVertexNormal(const int vertex);
+
+            STD_REGIONS_EXPORT virtual bool v_VertexNormalNegated(const int vertex);
 
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector &

@@ -116,6 +116,13 @@ void Generator2D::Process()
         }
     }
 
+    if(m_config["blcurves"].beenSet)
+    {
+        ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
+                                      m_blCurves);
+        m_thickness = m_config["blthick"].as<NekDouble>();
+    }
+
     // linear mesh all curves
     for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
     {
@@ -125,8 +132,19 @@ void Generator2D::Process()
                                            "Curve progress");
         }
 
-        m_curvemeshes[i] =
-            MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
+        vector<unsigned int>::iterator f = find(m_blCurves.begin(),
+                                                m_blCurves.end(), i);
+
+        if(f == m_blCurves.end())
+        {
+            m_curvemeshes[i] =
+                MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
+        }
+        else
+        {
+            m_curvemeshes[i] =
+                MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh, m_thickness);
+        }
 
         m_curvemeshes[i]->Mesh();
     }
@@ -271,6 +289,8 @@ void Generator2D::Process()
         }
     }
 
+    ////////////////////////////////////////
+
     EdgeSet::iterator it;
     for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
     {
@@ -293,6 +313,15 @@ void Generator2D::Process()
         m_mesh->m_element[1].push_back(E2);
     }
 
+    for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
+    {
+        m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
+            i, m_mesh, m_curvemeshes, 100);
+
+        m_facemeshes[i]->OrientateCurves();
+    }
+
+
     if (m_config["blcurves"].beenSet)
     {
         // we need to do the boundary layer generation in a face by face basis
@@ -305,10 +334,6 @@ void Generator2D::Process()
         // orienation
         for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
         {
-            m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
-                i, m_mesh, m_curvemeshes, 100);
-
-            m_facemeshes[i]->OrientateCurves();
             MakeBL(i, m_facemeshes[i]->GetEdges());
         }
     }
@@ -321,18 +346,26 @@ void Generator2D::Process()
     }
 
     // linear mesh all surfaces
-    for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
+    map<int,FaceMeshSharedPtr>::iterator fit;
+    int i = 1;
+    for(fit = m_facemeshes.begin(); fit != m_facemeshes.end(); fit++)
     {
         if (m_mesh->m_verbose)
         {
-            LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumSurf(),
-                                           "Face progress");
+            LibUtilities::PrintProgressbar(
+                i, m_mesh->m_cad->GetNumSurf(), "Face progress");
         }
 
-        m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
-            i, m_mesh, m_curvemeshes, 100);
+        if (m_config["blcurves"].beenSet)
+        {
+            //for bl surfaces orientate curves needs to be run again to
+            //push nodes to the edges of the system
+            fit->second->ResetCurvemeshes(m_curvemeshes);
+            fit->second->OrientateCurves();
+        }
 
-        m_facemeshes[i]->Mesh();
+        fit->second->Mesh();
+        i++;
     }
 
     ProcessVertices();
@@ -351,11 +384,6 @@ void Generator2D::MakeBLPrep()
         cout << endl << "\tBoundary layer meshing:" << endl << endl;
     }
 
-    // identify the nodes which will become the boundary layer.
-    ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
-                                  m_blCurves);
-    m_thickness = m_config["blthick"].as<NekDouble>();
-
     for (vector<unsigned>::iterator it = m_blCurves.begin();
          it != m_blCurves.end(); ++it)
     {
@@ -368,14 +396,14 @@ void Generator2D::MakeBLPrep()
     }
 }
 
-void Generator2D::MakeBL(int faceid, vector<EdgeLoop> e)
+void Generator2D::MakeBL(int faceid, vector<EdgeLoopSharedPtr> e)
 {
     map<int, int> edgeToOrient;
-    for (vector<EdgeLoop>::iterator lit = e.begin(); lit != e.end(); ++lit)
+    for (int j = 0; j < e.size(); j++)
     {
-        for (int i = 0; i < lit->edges.size(); ++i)
+        for (int i = 0; i < e[j]->edges.size(); ++i)
         {
-            edgeToOrient[lit->edges[i]->GetId()] = lit->edgeo[i];
+            edgeToOrient[e[j]->edges[i]->GetId()] = e[j]->edgeo[i];
         }
     }
 

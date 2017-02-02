@@ -49,9 +49,9 @@ bool FaceMesh::ValidateCurves()
     vector<int> curvesInSurface;
     for(int i = 0; i < m_edgeloops.size(); i++)
     {
-        for(int j = 0; j < m_edgeloops[i].edges.size(); j++)
+        for(int j = 0; j < m_edgeloops[i]->edges.size(); j++)
         {
-            curvesInSurface.push_back(m_edgeloops[i].edges[j]->GetId());
+            curvesInSurface.push_back(m_edgeloops[i]->edges[j]->GetId());
         }
     }
 
@@ -125,7 +125,6 @@ bool FaceMesh::ValidateCurves()
 void FaceMesh::Mesh()
 {
     Stretching();
-    OrientateCurves();
 
     int numPoints = 0;
     for (int i = 0; i < orderedLoops.size(); i++)
@@ -143,9 +142,9 @@ void FaceMesh::Mesh()
     ss << "curves: ";
     for (int i = 0; i < m_edgeloops.size(); i++)
     {
-        for (int j = 0; j < m_edgeloops[i].edges.size(); j++)
+        for (int j = 0; j < m_edgeloops[i]->edges.size(); j++)
         {
-            ss << m_edgeloops[i].edges[j]->GetId() << " ";
+            ss << m_edgeloops[i]->edges[j]->GetId() << " ";
         }
     }
 
@@ -158,7 +157,7 @@ void FaceMesh::Mesh()
     vector<Array<OneD, NekDouble> > centers;
     for (int i = 0; i < m_edgeloops.size(); i++)
     {
-        centers.push_back(m_edgeloops[i].center);
+        centers.push_back(m_edgeloops[i]->center);
     }
 
     pplanemesh->Assign(orderedLoops, centers, m_id, m_str);
@@ -904,31 +903,43 @@ bool FaceMesh::Validate()
     int pointBefore = m_stienerpoints.size();
     for (int i = 0; i < m_connec.size(); i++)
     {
-        Array<OneD, NekDouble> triDelta(3);
-
         Array<OneD, NekDouble> r(3);
 
         r[0] = m_connec[i][0]->Distance(m_connec[i][1]);
         r[1] = m_connec[i][1]->Distance(m_connec[i][2]);
         r[2] = m_connec[i][2]->Distance(m_connec[i][0]);
 
-        triDelta[0] = m_mesh->m_octree->Query(m_connec[i][0]->GetLoc());
-        triDelta[1] = m_mesh->m_octree->Query(m_connec[i][1]->GetLoc());
-        triDelta[2] = m_mesh->m_octree->Query(m_connec[i][2]->GetLoc());
+        NekDouble d1 = m_mesh->m_octree->Query(m_connec[i][0]->GetLoc());
+        NekDouble d2 = m_mesh->m_octree->Query(m_connec[i][1]->GetLoc());
+        NekDouble d3 = m_mesh->m_octree->Query(m_connec[i][2]->GetLoc());
+
+        Array<OneD, NekDouble> ainfo, binfo, cinfo;
+        ainfo = m_connec[i][0]->GetCADSurfInfo(m_id);
+        binfo = m_connec[i][1]->GetCADSurfInfo(m_id);
+        cinfo = m_connec[i][2]->GetCADSurfInfo(m_id);
+
+        Array<OneD, NekDouble> uvc(2);
+        uvc[0] = (ainfo[0] + binfo[0] + cinfo[0]) / 3.0;
+        uvc[1] = (ainfo[1] + binfo[1] + cinfo[1]) / 3.0;
+
+        Array<OneD, NekDouble> locc = m_cadsurf->P(uvc);
+        NekDouble d4 = m_mesh->m_octree->Query(locc);
+
+        NekDouble d = (d1 + d2 + d3 + d4) / 4.0;
 
         int numValid = 0;
 
-        if (r[0] < (triDelta[0] + triDelta[1]) / 2.0 *1.41)
+        if (r[0] < d * 1.41)
         {
             numValid++;
         }
 
-        if (r[1] < (triDelta[1] + triDelta[2]) / 2.0 *1.41)
+        if (r[1] < d * 1.41)
         {
             numValid++;
         }
 
-        if (r[2] < (triDelta[2] + triDelta[0]) / 2.0 *1.41)
+        if (r[2] < d * 1.41)
         {
             numValid++;
         }
@@ -936,9 +947,9 @@ bool FaceMesh::Validate()
         NekDouble rmin = min(r[0],r[1]);
         rmin = min(rmin,r[2]);
         NekDouble rmax = max(r[0],r[1]);
-        rmax = min(rmax,r[2]);
+        rmax = max(rmax,r[2]);
 
-        if (numValid != 3 || rmax / rmin > 1.1)
+        if (numValid != 3 || rmax / rmin > 1.05)
         {
             Array<OneD, NekDouble> ainfo, binfo, cinfo;
             ainfo = m_connec[i][0]->GetCADSurfInfo(m_id);
@@ -1010,19 +1021,22 @@ void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
 
 void FaceMesh::OrientateCurves()
 {
+    //this could be a second run on orentate so clear some info
+    orderedLoops.clear();
+
     // create list of bounding loop nodes
     for (int i = 0; i < m_edgeloops.size(); i++)
     {
         vector<NodeSharedPtr> cE;
-        for (int j = 0; j < m_edgeloops[i].edges.size(); j++)
+        for (int j = 0; j < m_edgeloops[i]->edges.size(); j++)
         {
-            int cid = m_edgeloops[i].edges[j]->GetId();
+            int cid = m_edgeloops[i]->edges[j]->GetId();
             vector<NodeSharedPtr> edgePoints =
                 m_curvemeshes[cid]->GetMeshPoints();
 
             int numPoints = m_curvemeshes[cid]->GetNumPoints();
 
-            if (m_edgeloops[i].edgeo[j] == 0)
+            if (m_edgeloops[i]->edgeo[j] == 0)
             {
                 for (int k = 0; k < numPoints - 1; k++)
                 {
@@ -1044,17 +1058,37 @@ void FaceMesh::OrientateCurves()
     for (int i = 0; i < orderedLoops.size(); i++)
     {
         NekDouble area = 0.0;
-        for (int j = 0; j < orderedLoops[i].size() - 1; j++)
-        {
-            Array<OneD, NekDouble> n1info, n2info;
-            n1info = orderedLoops[i][j]->GetCADSurfInfo(m_id);
-            n2info = orderedLoops[i][j + 1]->GetCADSurfInfo(m_id);
+        vector<vector<NekDouble> > info;
+        NekDouble mn = numeric_limits<double>::max();
 
-            area += -n2info[1] * (n2info[0] - n1info[0]) +
-                    n1info[0] * (n2info[1] - n1info[1]);
+        info.resize(orderedLoops[i].size());
+
+        for (int j = 0; j < orderedLoops[i].size(); j++)
+        {
+            info[j].resize(2);
+            Array<OneD, NekDouble> uv = orderedLoops[i][j]->GetCADSurfInfo(m_id);
+            info[j][0] = uv[0];
+            info[j][1] = uv[1];
+            mn = min(info[j][1],mn);
         }
-        area *= 0.5;
-        m_edgeloops[i].area = area;
+
+        for (int j = 0; j < info.size(); j++)
+        {
+            info[j][1] -= mn;
+        }
+
+        for (int j = 0; j < info.size() - 1; j++)
+        {
+            area += (info[j+1][0] - info[j][0])*(info[j][1]+info[j+1][1]) /2.0;
+        }
+        area += (info[0][0] - info[info.size()-1][0])*(info[info.size()-1][1]+info[0][1]) /2.0;
+
+        m_edgeloops[i]->area = area;
+
+        if(m_cadsurf->IsReversedNormal())
+        {
+            m_edgeloops[i]->area*=-1.0;
+        }
     }
 
     int ct = 0;
@@ -1064,18 +1098,11 @@ void FaceMesh::OrientateCurves()
         ct = 0;
         for (int i = 0; i < m_edgeloops.size() - 1; i++)
         {
-            if (fabs(m_edgeloops[i].area) < fabs(m_edgeloops[i + 1].area))
+            if (fabs(m_edgeloops[i]->area) < fabs(m_edgeloops[i + 1]->area))
             {
                 // swap
-                vector<NodeSharedPtr> orderedlooptmp = orderedLoops[i];
-                EdgeLoop edgeLoopstmp                = m_edgeloops[i];
-
-                orderedLoops[i] = orderedLoops[i + 1];
-                m_edgeloops[i]  = m_edgeloops[i + 1];
-
-                orderedLoops[i + 1] = orderedlooptmp;
-                m_edgeloops[i + 1]  = edgeLoopstmp;
-
+                swap(orderedLoops[i],orderedLoops[i+1]);
+                swap(m_edgeloops[i],m_edgeloops[i+1]);
                 ct += 1;
             }
         }
@@ -1192,46 +1219,47 @@ void FaceMesh::OrientateCurves()
             }
         }
 
-        m_edgeloops[i].center = P;
+        m_edgeloops[i]->center = P;
     }
 
-    if (m_edgeloops[0].area < 0) // reverse the first uvLoop
+    if (m_edgeloops[0]->area < 0) // reverse the first uvLoop
     {
-        vector<NodeSharedPtr> tmp = orderedLoops[0];
-        reverse(tmp.begin(), tmp.end());
-        orderedLoops[0] = tmp;
+        reverse(m_edgeloops[0]->edgeo.begin(),m_edgeloops[0]->edgeo.end());
+        reverse(m_edgeloops[0]->edges.begin(),m_edgeloops[0]->edges.end());
+        reverse(orderedLoops[0].begin(), orderedLoops[0].end());
         //need to flip edgeo
-        for(int i = 0; i < m_edgeloops[0].edgeo.size(); i++)
+        for(int i = 0; i < m_edgeloops[0]->edgeo.size(); i++)
         {
-            if(m_edgeloops[0].edgeo[i] == 0)
+            if(m_edgeloops[0]->edgeo[i] == 0)
             {
-                m_edgeloops[0].edgeo[i] = 1;
+                m_edgeloops[0]->edgeo[i] = 1;
             }
             else
             {
-                m_edgeloops[0].edgeo[i] = 0;
+                m_edgeloops[0]->edgeo[i] = 0;
             }
         }
     }
 
     for (int i = 1; i < orderedLoops.size(); i++)
     {
-        if (m_edgeloops[i].area > 0) // reverse the loop
+        if (m_edgeloops[i]->area > 0) // reverse the loop
         {
-            vector<NodeSharedPtr> tmp = orderedLoops[i];
-            reverse(tmp.begin(), tmp.end());
-            orderedLoops[i] = tmp;
+            m_edgeloops[i]->area*=-1.0;
+            reverse(m_edgeloops[i]->edgeo.begin(),m_edgeloops[i]->edgeo.end());
+            reverse(m_edgeloops[i]->edges.begin(),m_edgeloops[i]->edges.end());
+            reverse(orderedLoops[i].begin(), orderedLoops[i].end());
 
             //need to flip edgeo
-            for(int j = 0; j < m_edgeloops[i].edgeo.size(); j++)
+            for(int j = 0; j < m_edgeloops[i]->edgeo.size(); j++)
             {
-                if(m_edgeloops[i].edgeo[j] == 0)
+                if(m_edgeloops[i]->edgeo[j] == 0)
                 {
-                    m_edgeloops[i].edgeo[j] = 1;
+                    m_edgeloops[i]->edgeo[j] = 1;
                 }
                 else
                 {
-                    m_edgeloops[i].edgeo[j] = 0;
+                    m_edgeloops[i]->edgeo[j] = 0;
                 }
             }
         }

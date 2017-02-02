@@ -301,7 +301,16 @@ void CurveMesh::GetSampleFunction()
 
         loc = m_cadcurve->P(t);
 
-        dsti[0] = m_mesh->m_octree->Query(loc);
+        if(m_bl > 0.0)
+        {
+            NekDouble R = m_mesh->m_octree->QueryR(loc);
+            dsti[0] = R/(R+m_bl)*m_mesh->m_octree->Query(loc);
+        }
+        else
+        {
+            dsti[0] = m_mesh->m_octree->Query(loc);
+        }
+
         dsti[2] = t;
 
         m_dst[i] = dsti;

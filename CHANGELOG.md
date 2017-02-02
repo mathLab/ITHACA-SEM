@@ -35,6 +35,7 @@ v4.4.0
   support to the Helmholtz smoother used e.g. in FieldConverts C0Projection
   module (!714)
 - Fix bug in CMake Homebrew and MacPorts detection for OS X (!729)
+- Fix bug in CMake PETSc detection for Ubuntu 16.04/Debian 9 (!735)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)

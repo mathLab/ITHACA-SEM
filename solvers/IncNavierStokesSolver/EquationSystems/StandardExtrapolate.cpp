@@ -76,19 +76,20 @@ namespace Nektar
         NekDouble kinvis)
     {
         m_pressureCalls++;
-        if(m_HBCnumber > 0)
+        if(m_HBCnumber>0)
         {
-            // Calculate Neumann BCs at current level
-            CalcNeumannPressureBCs(fields, N, kinvis);
-
+            // Calculate non-linear and viscous BCs at current level
+            // and put in m_pressureHBCs[0]
+            CalcNeumannPressureBCs(fields,N,kinvis);
+            
             // Extrapolate to n+1
             ExtrapolateArray(m_pressureHBCs);
-
+            
             // Add (phi,Du/Dt) term to m_presureHBC
             AddDuDt();
 
             // Copy m_pressureHBCs to m_PbndExp
-            CopyPressureHBCsToPbndExp();
+            CopyPressureHBCsToPbndExp();            
         }
 
         CalcOutflowBCs(fields, kinvis);

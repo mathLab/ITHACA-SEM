@@ -85,6 +85,7 @@ enum FieldIOType {
     eHDF5
 };
 
+
 /**
  * @brief Determine file type of given input file.
  *
@@ -234,7 +235,8 @@ FieldIOSharedPtr FieldIO::CreateForFile(
 void Write(const std::string &outFile,
            std::vector<FieldDefinitionsSharedPtr> &fielddefs,
            std::vector<std::vector<NekDouble> > &fielddata,
-           const FieldMetaDataMap &fieldinfomap)
+           const FieldMetaDataMap &fieldinfomap,
+           const bool backup)
 {
 #ifdef NEKTAR_USE_MPI
     int size;
@@ -256,7 +258,7 @@ void Write(const std::string &outFile,
 #endif
     CommSharedPtr c    = GetCommFactory().CreateInstance("Serial", 0, 0);
     FieldIOSharedPtr f = GetFieldIOFactory().CreateInstance("Xml", c, false);
-    f->Write(outFile, fielddefs, fielddata, fieldinfomap);
+    f->Write(outFile, fielddefs, fielddata, fieldinfomap, backup);
 }
 
 /**
@@ -395,7 +397,7 @@ void FieldIO::AddInfoTag(TagWriterSharedPtr root,
  *
  * @return Absolute path to resulting file.
  */
-std::string FieldIO::SetUpOutput(const std::string outname, bool perRank)
+std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool backup)
 {
     ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
 
@@ -405,6 +407,37 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank)
     // Path to output: will be directory if parallel, normal file if
     // serial.
     fs::path specPath(outname), fulloutname;
+
+    // in case we are rank 0 or not on a shared filesystem, check if the specPath already exists
+    if (backup && (rank == 0 || !m_sharedFilesystem) && fs::exists(specPath))
+    {
+        // rename. foo/bar_123.chk -> foo/bar_123.bak0.chk and in case
+        // foo/bar_123.bak0.chk already exists, foo/bar_123.chk -> foo/bar_123.bak1.chk
+        fs::path bakPath = specPath;
+        int cnt = 0;
+        while (fs::exists(bakPath))
+        {
+            bakPath = specPath.parent_path();
+            bakPath += specPath.stem();
+            bakPath += fs::path(".bak" + boost::lexical_cast<std::string>(cnt++));
+            bakPath += specPath.extension();
+        }
+        std::cout << "renaming " << specPath << " -> " << bakPath << std::endl;
+        try
+        {
+            fs::rename(specPath, bakPath);
+        }
+        catch (fs::filesystem_error &e)
+        {
+            ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                        "Filesystem error: " + string(e.what()));
+        }
+    }
+    // wait until rank 0 has backed up the old specPath
+    if (backup)
+    {
+        m_comm->Block();
+    }
 
     if (nprocs == 1)
     {

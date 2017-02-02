@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSINSERTSURFACE
 #define UTILITIES_NEKMESH_PROCESSINSERTSURFACE
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -49,17 +49,17 @@ namespace Utilities
  * method. For now it simply prints a list of elements which have
  * negative Jacobian.
  */
-class ProcessInsertSurface : public ProcessModule
+class ProcessInsertSurface : public NekMeshUtils::ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessInsertSurface>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    ProcessInsertSurface(MeshSharedPtr m);
+    ProcessInsertSurface(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessInsertSurface();
 
     /// Write mesh to output file.

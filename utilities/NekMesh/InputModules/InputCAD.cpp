@@ -34,20 +34,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
-#include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
 
-#include <NekMeshUtils/MeshElements/Element.h>
-
-#include <NekMeshUtils/CADSystem/CADSystem.h>
-#include <NekMeshUtils/Octree/Octree.h>
-#include <NekMeshUtils/SurfaceMeshing/SurfaceMesh.h>
-#include <NekMeshUtils/BLMeshing/BLMesh.h>
-#include <NekMeshUtils/TetMeshing/TetMesh.h>
-
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/Communication/CommSerial.h>
+#include <tinyxml.h>
 
 #include "InputCAD.h"
 
@@ -60,8 +50,7 @@ namespace Utilities
 {
 
 ModuleKey InputCAD::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eInputModule, "mcf"),
-    InputCAD::create,
+    ModuleKey(eInputModule, "mcf"), InputCAD::create,
     "Reads CAD geometry and will generate the mesh file.");
 
 /**
@@ -75,291 +64,302 @@ InputCAD::~InputCAD()
 {
 }
 
-void InputCAD::Process()
+void InputCAD::ParseFile(string nm)
 {
     vector<string> filename;
-    filename.push_back(m_config["infile"].as<string>());
-    string fn = filename[0].substr(0, filename[0].find("."));
-
+    filename.push_back(nm);
     LibUtilities::SessionReaderSharedPtr pSession =
         LibUtilities::SessionReader::CreateInstance(0, NULL, filename);
 
-    // these parameters must be defined for any mesh generation to work
-    pSession->LoadParameter("MinDelta", m_minDelta);
-    pSession->LoadParameter("MaxDelta", m_maxDelta);
-    pSession->LoadParameter("EPS", m_eps);
-    pSession->LoadParameter("Order", m_order);
-    m_CADName = pSession->GetSolverInfo("CADFile");
+    ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING"), "no meshing tag");
+    ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING/INFORMATION"),
+             "no information tag");
+    ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING/PARAMETERS"),
+             "no parameters tag");
 
-    if (pSession->DefinesSolverInfo("MeshType"))
+    TiXmlElement *mcf = pSession->GetElement("NEKTAR/MESHING");
+
+    TiXmlElement *info = mcf->FirstChildElement("INFORMATION");
+    TiXmlElement *I    = info->FirstChildElement("I");
+    map<string, string> information;
+    while (I)
     {
-        if (pSession->GetSolverInfo("MeshType") == "BL")
+        string tmp1, tmp2;
+        I->QueryStringAttribute("PROPERTY", &tmp1);
+        I->QueryStringAttribute("VALUE", &tmp2);
+        information[tmp1] = tmp2;
+        I                 = I->NextSiblingElement("I");
+    }
+
+    TiXmlElement *param = mcf->FirstChildElement("PARAMETERS");
+    TiXmlElement *P     = param->FirstChildElement("P");
+    map<string, string> parameters;
+    while (P)
+    {
+        string tmp1, tmp2;
+        P->QueryStringAttribute("PARAM", &tmp1);
+        P->QueryStringAttribute("VALUE", &tmp2);
+        parameters[tmp1] = tmp2;
+        P                = P->NextSiblingElement("P");
+    }
+
+    set<string> boolparameters;
+
+    if (pSession->DefinesElement("NEKTAR/MESHING/BOOLPARAMETERS"))
+    {
+        TiXmlElement *bparam = mcf->FirstChildElement("BOOLPARAMETERS");
+        TiXmlElement *BP     = bparam->FirstChildElement("P");
+
+        while (BP)
         {
-            m_makeBL = true;
-            pSession->LoadParameter("BLThick", m_blthick);
+            string tmp;
+            BP->QueryStringAttribute("VALUE", &tmp);
+            boolparameters.insert(tmp);
+            BP = BP->NextSiblingElement("P");
         }
-        else
+    }
+
+    set<string> refinement;
+    if(pSession->DefinesElement("NEKTAR/MESHING/REFINEMENT"))
+    {
+        TiXmlElement *refine = mcf->FirstChildElement("REFINEMENT");
+        TiXmlElement *L     = refine->FirstChildElement("LINE");
+
+        while (L)
         {
-            m_makeBL = false;
+            stringstream ss;
+            TiXmlElement *T = L->FirstChildElement("X1");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("Y1");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("Z1");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("X2");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("Y2");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("Z2");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("R");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("D");
+            ss << T->GetText();
+
+            refinement.insert(ss.str());
+
+            L = L->NextSiblingElement("LINE");
         }
     }
-    else
+
+    map<string,string>::iterator it;
+
+    it = information.find("CADFile");
+    ASSERTL0(it != information.end(), "no cadfile defined");
+    m_cadfile = it->second;
+
+    it = information.find("MeshType");
+    ASSERTL0(it != information.end(), "no meshtype defined");
+    m_makeBL = it->second == "BL";
+    m_2D = it->second == "2D";
+    if (it->second == "2DBL")
     {
-        m_makeBL = false;
+        m_makeBL = true;
+        m_2D = true;
     }
 
-    if (pSession->DefinesSolverInfo("WriteOctree"))
-    {
-        m_writeoctree = pSession->GetSolverInfo("WriteOctree") == "TRUE";
-    }
 
-    ASSERTL0(boost::filesystem::exists(m_CADName.c_str()),"file does not exist");
+    it = parameters.find("MinDelta");
+    ASSERTL0(it != parameters.end(), "no mindelta defined");
+    m_minDelta = it->second;
 
-    vector<string> tmp1;
-    boost::split(tmp1,m_CADName,boost::is_any_of("."));
+    it = parameters.find("MaxDelta");
+    ASSERTL0(it != parameters.end(), "no maxdelta defined");
+    m_maxDelta = it->second;
 
-    CADSystemSharedPtr m_cad;
+    it = parameters.find("EPS");
+    ASSERTL0(it != parameters.end(), "no eps defined");
+    m_eps = it->second;
 
-    if(boost::iequals(tmp1.back(), "STEP") || boost::iequals(tmp1.back(), "STP"))
-    {
-        m_cad = GetEngineFactory().CreateInstance("oce", m_CADName);
-    }
-    else
-    {
-        ASSERTL0(false,"not loaded any CAD engine");
-    }
+    it = parameters.find("Order");
+    ASSERTL0(it != parameters.end(), "no order defined");
+    m_order = it->second;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "Building mesh for: " << m_CADName << endl;
-    }
-
-    ASSERTL0(m_cad->LoadCAD(), "Failed to load CAD");
-
-    vector<unsigned int> symsurfs;
-    vector<unsigned int> blsurfs;
     if (m_makeBL)
     {
-        string sym, bl;
-        bl = pSession->GetSolverInfo("BLSurfs");
-        ParseUtils::GenerateSeqVector(bl.c_str(), blsurfs);
-        sort(blsurfs.begin(), blsurfs.end());
-        ASSERTL0(blsurfs.size() > 0,
-                 "No surfaces selected to make boundary layer on");
-    }
+        it = parameters.find("BLSurfs");
+        ASSERTL0(it != parameters.end(), "no blsurfs defined");
+        m_blsurfs = it->second;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "With parameters:" << endl;
-        cout << "\tmin delta: " << m_minDelta << endl
-             << "\tmax delta: " << m_maxDelta << endl
-             << "\tesp: " << m_eps << endl
-             << "\torder: " << m_order << endl;
-        m_cad->Report();
-    }
+        it = parameters.find("BLThick");
+        ASSERTL0(it != parameters.end(), "no blthick defined");
+        m_blthick = it->second;
 
-    if (m_makeBL && m_mesh->m_verbose)
-    {
-
-        cout << "\tWill make boundary layers on surfs: ";
-        for (int i = 0; i < blsurfs.size(); i++)
+        it = parameters.find("BLLayers");
+        m_splitBL = it != parameters.end();
+        if(m_splitBL)
         {
-            cout << blsurfs[i] << " ";
+            m_bllayers = it->second;
+            it = parameters.find("BLProg");
+            m_blprog = it != parameters.end() ? it->second : "2.0";
         }
-        cout << endl << "\tWith the symmetry planes: ";
-        for (int i = 0; i < symsurfs.size(); i++)
+    }
+
+    m_naca = false;
+    if(m_2D && m_cadfile.find('.') == std::string::npos)
+    {
+        m_naca = true;
+
+        stringstream ss;
+        it = parameters.find("Xmin");
+        ASSERTL0(it != parameters.end(), "no xmin defined");
+        ss << it->second << ",";
+        it = parameters.find("Ymin");
+        ASSERTL0(it != parameters.end(), "no ymin defined");
+        ss << it->second << ",";
+        it = parameters.find("Xmax");
+        ASSERTL0(it != parameters.end(), "no xmax defined");
+        ss << it->second << ",";
+        it = parameters.find("Ymax");
+        ASSERTL0(it != parameters.end(), "no zmax defined");
+        ss << it->second << ",";
+        it = parameters.find("AOA");
+        ASSERTL0(it != parameters.end(), "no aoa defined");
+        ss << it->second;
+
+        m_nacadomain = ss.str();
+    }
+
+    set<string>::iterator sit;
+    sit        = boolparameters.find("SurfOpti");
+    m_surfopti = sit != boolparameters.end();
+    sit        = boolparameters.find("WriteOctree");
+    m_woct     = sit != boolparameters.end();
+    sit        = boolparameters.find("VarOpti");
+    m_varopti  = sit != boolparameters.end();
+
+    m_refine = refinement.size() > 0;
+    if(m_refine)
+    {
+        stringstream ss;
+        for(sit = refinement.begin(); sit != refinement.end(); sit++)
         {
-            cout << symsurfs[i] << " ";
+            ss << *sit;
+            ss << ":";
         }
-        cout << endl << "\tWith thickness " << m_blthick << endl;
+        m_refinement = ss.str();
+        m_refinement.erase(m_refinement.end()-1);
     }
+}
 
-    // create octree
-    OctreeSharedPtr m_octree = MemoryManager<Octree>::AllocateSharedPtr(
-        m_cad, m_mesh->m_verbose, m_minDelta, m_maxDelta, m_eps);
-
-    if(pSession->DefinesSolverInfo("SourcePoints"))
-    {
-        ASSERTL0(boost::filesystem::exists(pSession->GetSolverInfo("SourcePoints").c_str()),
-                 "sourcepoints file does not exist");
-        vector<vector<NekDouble> > points;
-        ifstream file;
-        file.open(pSession->GetSolverInfo("SourcePoints").c_str());
-        string line;
-
-        while (getline(file, line))
-        {
-            vector<NekDouble> point(3);
-            stringstream s(line);
-            s >> point[0] >> point[1] >> point[2];
-            points.push_back(point);
-        }
-        NekDouble sp;
-        pSession->LoadParameter("SPSize", sp);
-        m_octree->SetSourcePoints(points, sp);
-
-    }
-
-    if (pSession->DefinesSolverInfo("UserDefinedSpacing"))
-    {
-        string udsName = pSession->GetSolverInfo("UserDefinedSpacing");
-        ASSERTL0(boost::filesystem::exists(udsName.c_str()),
-                 "UserDefinedSpacing file does not exist");
-
-        m_octree->SetUDSFile(udsName);
-    }
-
-    m_octree->Build();
-
-    if (m_writeoctree)
-    {
-        MeshSharedPtr oct = boost::shared_ptr<Mesh>(new Mesh());
-        oct->m_expDim     = 3;
-        oct->m_spaceDim   = 3;
-        oct->m_nummode    = 2;
-
-        m_octree->GetOctreeMesh(oct);
-
-        ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
-            ModuleKey(eOutputModule, "xml"), oct);
-        mod->RegisterConfig("outfile", fn + "_oct.xml");
-        mod->ProcessVertices();
-        mod->ProcessEdges();
-        mod->ProcessFaces();
-        mod->ProcessElements();
-        mod->ProcessComposites();
-        mod->Process();
-    }
+void InputCAD::Process()
+{
+    ParseFile(m_config["infile"].as<string>());
 
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
-    m_mesh->m_nummode = m_order + 1;
-    if (m_makeBL)
+    m_mesh->m_nummode  = boost::lexical_cast<int>(m_order) + 1;
+
+    vector<ModuleSharedPtr> mods;
+
+    ////**** CAD ****////
+    mods.push_back(GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "loadcad"), m_mesh));
+    mods.back()->RegisterConfig("filename", m_cadfile);
+
+    if(m_2D)
     {
-        m_mesh->m_numcomp = 2; // prisms and tets
+        mods.back()->RegisterConfig("2D","");
+    }
+    if(m_naca)
+    {
+        mods.back()->RegisterConfig("NACA",m_nacadomain);
+    }
+
+    ////**** Octree ****////
+    mods.push_back(GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "loadoctree"), m_mesh));
+    mods.back()->RegisterConfig("mindel", m_minDelta);
+    mods.back()->RegisterConfig("maxdel", m_maxDelta);
+    mods.back()->RegisterConfig("eps", m_eps);
+    if (m_refine)
+    {
+        mods.back()->RegisterConfig("refinement", m_refinement);
+    }
+    if (m_woct)
+    {
+        mods.back()->RegisterConfig("writeoctree", "");
+    }
+
+    if(m_2D)
+    {
+        m_mesh->m_expDim = 2;
+        m_mesh->m_spaceDim = 2;
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "2dgenerator"), m_mesh));
+        if (m_makeBL)
+        {
+            mods.back()->RegisterConfig("blcurves", m_blsurfs);
+            mods.back()->RegisterConfig("blthick", m_blthick);
+        }
     }
     else
     {
-        m_mesh->m_numcomp = 1; // just tets
-    }
+        ////**** SurfaceMesh ****////
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "surfacemesh"), m_mesh));
 
-    //create surface mesh
-    m_mesh->m_expDim--; //just to make it easier to surface mesh for now
-    SurfaceMeshSharedPtr m_surfacemesh = MemoryManager<SurfaceMesh>::
-                AllocateSharedPtr(m_mesh, m_cad, m_octree);
-
-    m_surfacemesh->Mesh();
-
-    ProcessVertices();
-    ProcessEdges();
-    ProcessFaces();
-    ProcessElements();
-    ProcessComposites();
-
-    m_surfacemesh->Report();
-
-    EdgeSet::iterator eit;
-    int count = 0;
-    for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
-    {
-        if((*eit)->m_elLink.size() != 2)
+        ////**** VolumeMesh ****////
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "volumemesh"), m_mesh));
+        if(m_makeBL)
         {
-            count++;
+            mods.back()->RegisterConfig("blsurfs",m_blsurfs);
+            mods.back()->RegisterConfig("blthick",m_blthick);
+            mods.back()->RegisterConfig("bllayers",m_bllayers);
+            mods.back()->RegisterConfig("blprog",m_blprog);
         }
     }
 
-    if (count > 0)
+    ////**** HOSurface ****////
+    mods.push_back(GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "hosurface"), m_mesh));
+    if (m_surfopti)
     {
-        cerr << "Error: mesh contains unconnected edges and is not valid"
-             << endl;
-        abort();
+        mods.back()->RegisterConfig("opti", "");
     }
 
-    map<int, FaceSharedPtr> surftopriface;
-    // map of surface element id to opposite prism
-    // face for psudo surface in tetmesh
-
-    TetMeshSharedPtr m_tet;
-    if (m_makeBL)
+    ////*** VARIATIONAL OPTIMISATION ****////
+    if(m_varopti)
     {
-        BLMeshSharedPtr m_blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(
-                                        m_cad, m_mesh, blsurfs, m_blthick);
-
-        m_blmesh->Mesh();
-
-        //m_mesh->m_element[2].clear();
-        //m_mesh->m_expDim = 3;
-        /*ClearElementLinks();
-        ProcessVertices();
-        ProcessEdges();
-        ProcessFaces();
-        ProcessElements();
-        ProcessComposites();
-        return;*/
-
-        m_surfacemesh->Remesh(m_blmesh);
-
-        /*m_mesh->m_nummode = 2;
-        m_mesh->m_expDim = 3;
-        m_mesh->m_element[2].clear();
-        ClearElementLinks();
-        ProcessVertices();
-        ProcessEdges();
-        ProcessFaces();
-        ProcessElements();
-        ProcessComposites();
-        return;*/
-
-        //create tet mesh
-        m_mesh->m_expDim = 3;
-
-        m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(
-            m_mesh, m_octree, m_blmesh);
-    }
-    else
-    {
-        m_mesh->m_expDim = 3;
-        m_tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, m_octree);
-
-    }
-
-    m_tet->Mesh();
-
-    //m_mesh->m_element[2].clear();
-
-    ClearElementLinks();
-    ProcessVertices();
-    ProcessEdges();
-    ProcessFaces();
-    ProcessElements();
-    ProcessComposites();
-
-    FaceSet::iterator fit;
-    count = 0;
-    for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
-    {
-        if((*fit)->m_elLink.size() != 2)
+        unsigned int np = boost::thread::physical_concurrency();
+        if(m_mesh->m_verbose)
         {
-            count++;
+            cout << "Detecting 4 cores, will attempt to run in parrallel" << endl;
         }
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "varopti"), m_mesh));
+        mods.back()->RegisterConfig("nq",boost::lexical_cast<string>(m_mesh->m_nummode));
+        mods.back()->RegisterConfig("hyperelastic","");
+        mods.back()->RegisterConfig("maxiter","10");
+        mods.back()->RegisterConfig("restol","1e-6");
+        mods.back()->RegisterConfig("overint","6");
+        mods.back()->RegisterConfig("numthreads",boost::lexical_cast<string>(np));
     }
 
-    if (count - m_mesh->m_element[2].size() > 0)
+    ////**** SPLIT BL ****////
+    if(m_splitBL)
     {
-        cerr << "Error: mesh contains unconnected faces and is not valid "
-             << count - m_mesh->m_element[2].size()
-             << endl;
-        abort();
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "bl"), m_mesh));
+        mods.back()->RegisterConfig("layers",m_bllayers);
+        mods.back()->RegisterConfig("surf",m_blsurfs);
+        mods.back()->RegisterConfig("nq",boost::lexical_cast<string>(m_mesh->m_nummode));
+        mods.back()->RegisterConfig("r",m_blprog);
     }
 
-    //return;
-
-    m_surfacemesh->HOSurf();
-
-    if (m_mesh->m_verbose)
+    for(int i = 0; i < mods.size(); i++)
     {
-        cout << endl;
-        cout << m_mesh->m_element[3].size() << endl;
+        mods[i]->Process();
     }
 }
 }

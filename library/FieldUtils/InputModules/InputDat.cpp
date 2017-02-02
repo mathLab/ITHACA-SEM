@@ -107,8 +107,9 @@ void InputDat::Process(po::variables_map &vm)
     while (!datFile.eof())
     {
         getline(datFile, line);
-
-        if (line.find("VARIABLES") != string::npos)
+        string linetest = line;
+        boost::to_upper(linetest);
+        if (linetest.find("VARIABLES") != string::npos)
         {
             std::size_t pos = line.find('=');
             pos++;
@@ -138,10 +139,9 @@ void InputDat::Process(po::variables_map &vm)
     while (!datFile.eof())
     {
         getline(datFile, line);
-
-        if ((line.find("ZONE") != string::npos) ||
-            (line.find("Zone") != string::npos) ||
-            (line.find("zone") != string::npos))
+        string linetest = line;
+        boost::to_upper(linetest);
+        if ((linetest.find("ZONE") != string::npos))
         {
             ReadTecplotFEBlockZone(datFile, line, pts, ptsConn);
         }

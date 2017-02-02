@@ -1479,10 +1479,6 @@ namespace Nektar
             m_traceMap->UniversalTraceAssemble(Bwd);
         }
         
-        void DisContField2D::v_FillBndCondFromField(void)
-        {
-            
-        }        
 
         void DisContField2D::v_ExtractTracePhys(
             Array<OneD, NekDouble> &outarray)
@@ -1866,7 +1862,9 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing)
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool  PhysSpaceForcing)
+
         {
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
@@ -1879,8 +1877,15 @@ namespace Nektar
             //----------------------------------
             //  Setup RHS Inner product
             //----------------------------------
-            IProductWRTBase(inarray,f);
-            Vmath::Neg(m_ncoeffs,f,1);
+            if(PhysSpaceForcing)
+            {
+                IProductWRTBase(inarray,f);
+                Vmath::Neg(m_ncoeffs,f,1);
+            }
+            else
+            {
+                Vmath::Smul(m_ncoeffs,-1.0,inarray,1,f,1);
+            }
 
             //----------------------------------
             //  Solve continuous flux System
@@ -2048,13 +2053,31 @@ namespace Nektar
 
                     locExpList = m_bndCondExpansions[i];
 
+                    int npoints    = locExpList->GetNpoints();
+                    Array<OneD, NekDouble> x0(npoints, 0.0);
+                    Array<OneD, NekDouble> x1(npoints, 0.0);
+                    Array<OneD, NekDouble> x2(npoints, 0.0);
+                    Array<OneD, NekDouble> coeffphys(npoints);
+
+                    locExpList->GetCoords(x0, x1, x2);
+
+                    LibUtilities::Equation coeffeqn =
+                        boost::static_pointer_cast<
+                            SpatialDomains::RobinBoundaryCondition>
+                        (m_bndConditions[i])->m_robinPrimitiveCoeff;
+
+                    // evalaute coefficient 
+                    coeffeqn.Evaluate(x0, x1, x2, 0.0, coeffphys);
+
                     for(e = 0; e < locExpList->GetExpSize(); ++e)
                     {
-                        RobinBCInfoSharedPtr rInfo = MemoryManager<RobinBCInfo>
+                        RobinBCInfoSharedPtr rInfo =
+                            MemoryManager<RobinBCInfo>
                             ::AllocateSharedPtr(
                                 EdgeID[cnt+e],
-                                Array_tmp = locExpList->GetPhys() + 
-                                            locExpList->GetPhys_Offset(e));
+                                Array_tmp = coeffphys + 
+                                locExpList->GetPhys_Offset(e));
+                        
                         elmtid = ElmtID[cnt+e];
                         // make link list if necessary
                         if(returnval.count(elmtid) != 0)
@@ -2339,18 +2362,9 @@ namespace Nektar
                                                locExpList->UpdatePhys());
                         }
 
-                        LibUtilities::Equation coeff =
-                            boost::static_pointer_cast<
-                                SpatialDomains::RobinBoundaryCondition>(
-                                    m_bndConditions[i])->m_robinPrimitiveCoeff;
                         locExpList->IProductWRTBase(
                             locExpList->GetPhys(),
                             locExpList->UpdateCoeffs());
-
-                        // put primitive coefficient into the physical 
-                        // space storage
-                        coeff.Evaluate(x0, x1, x2, time,
-                                       locExpList->UpdatePhys());
                     }    
                     else
                     {

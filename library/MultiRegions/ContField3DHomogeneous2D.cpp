@@ -131,11 +131,11 @@ namespace Nektar
         /**
          * 
          */
-        void  ContField3DHomogeneous2D::v_LocalToGlobal(void) 
+        void  ContField3DHomogeneous2D::v_LocalToGlobal(bool useComm) 
         {
             for(int n = 0; n < m_lines.num_elements(); ++n)
             {
-                m_lines[n]->LocalToGlobal();
+                m_lines[n]->LocalToGlobal(useComm);
             }
         };
 
@@ -158,7 +158,8 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing)
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool PhysSpaceForcing)
         {
             int n,m;
             int cnt = 0;
@@ -172,6 +173,7 @@ namespace Nektar
 
             Array<OneD, NekDouble> e_out;
             Array<OneD, NekDouble> fce(inarray.num_elements());
+            Array<OneD, const NekDouble> wfce;
 			
             if(m_WaveSpace)
             {
@@ -194,14 +196,14 @@ namespace Nektar
                     new_factors = factors;
                     new_factors[StdRegions::eFactorLambda] += beta;
                     
-                    m_lines[l]->HelmSolve(fce + cnt,
-                                          e_out = outarray + cnt1,
-                                          flags, new_factors, varcoeff, dirForcing);
+                    wfce = (PhysSpaceForcing)? fce+cnt:fce+cnt1;
+                    m_lines[l]->HelmSolve(wfce,
+                              e_out = outarray + cnt1,
+                              flags, new_factors, varcoeff, dirForcing,
+                              PhysSpaceForcing);
                     
                     cnt  += m_lines[l]->GetTotPoints();
-                    
                     cnt1 += m_lines[l]->GetNcoeffs();
-                    
                 }
             }
         }

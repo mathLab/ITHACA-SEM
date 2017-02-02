@@ -79,14 +79,14 @@ IF (NEKTAR_USE_MESHGEN)
             ProcessModules/ProcessVarOpti/ElUtil.h
             ProcessModules/ProcessVarOpti/Evaluator.hxx
             ProcessModules/ProcessVarOpti/Hessian.hxx
-            InputModules/InputCAD.h)
+            InputModules/InputMCF.h)
     SET(NekMeshSources ${NekMeshSources}
             ProcessModules/ProcessVarOpti/NodeOptiCAD.cpp
             ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
             ProcessModules/ProcessVarOpti/PreProcessing.cpp
             ProcessModules/ProcessVarOpti/NodeOpti.cpp
             ProcessModules/ProcessVarOpti/ElUtil.cpp
-            InputModules/InputCAD.cpp)
+            InputModules/InputMCF.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
 
 # Don't use macro -- this way we can just link against NekMeshUtils and
@@ -150,5 +150,5 @@ IF(NEKTAR_USE_MESHGEN)
     ADD_NEKTAR_TEST        (MeshGen/2d-cad)
     ADD_NEKTAR_TEST        (MeshGen/2d-naca)
     # varopti tests
-    ADD_NEKTAR_TEST        (MeshGen/varopti_cubesphere)
+    ADD_NEKTAR_TEST_LENGTHY       (MeshGen/varopti_cubesphere)
 ENDIF()

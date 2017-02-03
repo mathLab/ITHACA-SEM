@@ -47,7 +47,7 @@ FilterEnergyBase::FilterEnergyBase(
     const LibUtilities::SessionReaderSharedPtr &pSession,
     const ParamMap &pParams,
     const bool pConstDensity)
-    : Filter        (pSession),
+    : LegacyFilter (pSession),
       m_index       (-1),
       m_homogeneous (false),
       m_planes      (),

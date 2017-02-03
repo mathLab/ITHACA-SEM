@@ -109,7 +109,8 @@ void FilterCheckpoint::v_Update(
     }
 
     std::vector<std::string> variables;
-    std::string allVars = fieldMetaDataMap["Variables"] + fieldMetaDataMap["AuxVariables"];
+    LibUtilities::FieldMetaDataMap tmp = fieldMetaDataMap;
+    std::string allVars = tmp["Variables"] + tmp["AuxVariables"];
     ParseUtils::GenerateOrderedStringVector(allVars.c_str(), variables);
 
     std::string outname =  m_outputFile +  "_" +

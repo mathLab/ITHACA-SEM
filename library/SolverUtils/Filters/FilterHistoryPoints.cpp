@@ -384,7 +384,8 @@ void FilterHistoryPoints::v_Initialise(
         m_outputStream << "# History data for variables (:";
 
         std::vector<std::string> variables;
-        std::string allVars = fieldMetaDataMap["Variables"] + fieldMetaDataMap["AuxVariables"];
+        LibUtilities::FieldMetaDataMap tmp = fieldMetaDataMap;
+        std::string allVars = tmp["Variables"] + tmp["AuxVariables"];
         ParseUtils::GenerateOrderedStringVector(allVars.c_str(), variables);
 
         for (i = 0; i < variables.size(); ++i)
@@ -442,7 +443,8 @@ void FilterHistoryPoints::v_Update(
     }
 
     std::vector<std::string> variables;
-    std::string allVars = fieldMetaDataMap["Variables"] + fieldMetaDataMap["AuxVariables"];
+    LibUtilities::FieldMetaDataMap tmp = fieldMetaDataMap;
+    std::string allVars = tmp["Variables"] + tmp["AuxVariables"];
     ParseUtils::GenerateOrderedStringVector(allVars.c_str(), variables);
 
     int j         = 0;

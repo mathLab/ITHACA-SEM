@@ -38,7 +38,7 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <SolverUtils/Filters/Filter.h>
+#include <SolverUtils/Filters/LegacyFilter.h>
 
 namespace Nektar
 {
@@ -48,7 +48,7 @@ typedef boost::shared_ptr<FilterMovingBody>  FilterMovingBodySharedPtr;
 typedef std::map<std::string, std::string>   FilterParams;
 typedef std::pair<std::string, FilterParams> FilterMap;
 
-class FilterMovingBody : public SolverUtils::Filter
+class FilterMovingBody : public SolverUtils::LegacyFilter
 {
     public:
         friend class MemoryManager<FilterMovingBody>;

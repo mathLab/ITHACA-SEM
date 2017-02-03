@@ -36,13 +36,13 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERENERGYBASE_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERENERGYBASE_H
 
-#include <SolverUtils/Filters/Filter.h>
+#include <SolverUtils/Filters/LegacyFilter.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterEnergyBase : public Filter
+class FilterEnergyBase : public LegacyFilter
 {
 public:
     SOLVER_UTILS_EXPORT FilterEnergyBase(

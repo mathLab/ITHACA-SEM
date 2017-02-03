@@ -36,14 +36,14 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERTHRESHOLDMAX_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERTHRESHOLDMAX_H
 
-#include <SolverUtils/Filters/Filter.h>
+#include <SolverUtils/Filters/LegacyFilter.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
 
-class FilterThresholdMax : public Filter
+class FilterThresholdMax : public LegacyFilter
 {
 public:
     friend class MemoryManager<FilterThresholdMax>;

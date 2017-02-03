@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERFORCES_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERFORCES_H
 
-#include <SolverUtils/Filters/Filter.h>
+#include <SolverUtils/Filters/LegacyFilter.h>
 #include <LocalRegions/Expansion3D.h>
 #include <GlobalMapping/Mapping.h>
 
@@ -44,7 +44,7 @@ namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterAeroForces : public Filter
+class FilterAeroForces : public LegacyFilter
 {
 public:
     friend class MemoryManager<FilterAeroForces>;

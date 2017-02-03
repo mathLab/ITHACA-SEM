@@ -359,13 +359,14 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
 # Install ThirdParty headers to subdirectory of ${NEKTAR_INCLUDE_DIR}
 INSTALL(DIRECTORY ${TPDIST}/include/
     DESTINATION ${NEKTAR_INCLUDE_DIR}/ThirdParty
-    COMPONENT ThirdParty
+    COMPONENT dev
 )
 
-# Install ThirdParty libraries into ${NEKTAR_LIB_DIR}
+# Install ThirdParty libraries into ${NEKTAR_LIB_DIR}. These are shipped with
+# the LibUtilities library.
 INSTALL(DIRECTORY ${TPDIST}/lib/
     DESTINATION ${NEKTAR_LIB_DIR}
-    COMPONENT ThirdParty
+    COMPONENT libutilities
 )
 
 ADD_SUBDIRECTORY(docs)

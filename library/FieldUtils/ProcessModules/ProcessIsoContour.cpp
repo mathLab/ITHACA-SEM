@@ -131,6 +131,11 @@ void ProcessIsoContour::Process(po::variables_map &vm)
 
     if(m_f->m_fieldPts.get()) // assume we have read .dat file to directly input dat file.
     {
+        if(rank == 0)
+        {
+            cout << "Process read iso from Field Pts" << endl;
+        }
+
         SetupIsoFromFieldPts(iso);
     }
     else // extract isocontour from field
@@ -196,6 +201,10 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     bool globalcondense = m_config["globalcondense"].m_beenSet;
     if(globalcondense)
     {
+        if(rank == 0)
+        {
+            cout << "Process global condense ..." << endl;
+        }
         int nfields = m_f->m_fieldPts->GetNFields() + m_f->m_fieldPts->GetDim();
         IsoSharedPtr g_iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
 
@@ -832,11 +841,19 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
     {
         for(id1 = 0; id1 < iso[i]->m_nvert; ++id1)
         {
-            inPoints.push_back(PointPair(BPoint( iso[i]->m_x[id1],  iso[i]->m_y[id1],  iso[i]->m_z[id1]), id2));
+            inPoints.push_back(PointPair(BPoint( iso[i]->m_x[id1],
+                                                 iso[i]->m_y[id1],
+                                                 iso[i]->m_z[id1]), id2));
             global_to_unique_map[id2]=id2;
             global_to_iso_map[id2] = make_pair(i,id1);
             id2++;
         }
+    }
+
+
+    if(verbose)
+    {
+        cout << "Process building tree ..." << endl;
     }
 
     //Build tree
@@ -851,49 +868,58 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
     {
         if(verbose)
         {
-            prog = LibUtilities::PrintProgressbar(i,m_nvert,"Nearest verts",prog);
+            prog = LibUtilities::PrintProgressbar(i,m_nvert,
+                                                  "Nearest verts",prog);
         }
-
+        
         BPoint queryPoint = inPoints[i].first;
 
-        // find points within the distance box
-        std::vector<PointPair> result;
-        rtree.query(bgi::nearest(queryPoint, 100), std::back_inserter(result));
 
-        WARNINGL1(result.size() < 100,"Failed to find less than 100 neighbouring points");
-
-        id1 = 0;
-        unique_index_found = false;
-        int nptsfound = 0;
-
-        WARNINGL1(result.size() > 0,"Failed to find any nearest point");
-
-        for(id1 = 0; id1 < result.size(); ++id1)
+        // check to see if point has been already reset to lower than
+        // unique value
+        if(global_to_unique_map[i] < unique_index) // do nothing
         {
-            if(bg::distance(queryPoint, result[id1].first)<SQ_PNT_TOL)
+        }
+        else
+        {
+            
+            // find nearest 10 points within the distance box
+            std::vector<PointPair> result;
+            rtree.query(bgi::nearest(queryPoint, 10), std::back_inserter(result));
+
+            //see if any values have unique value  already
+            set<int> samept;
+            set<int>::iterator it;
+            int new_index = -1;
+            for(id1 = 0; id1 < result.size(); ++id1)
             {
-                id2 = result[id1].second;
-                nptsfound ++;
-                if(global_to_unique_map[id2] <unique_index)
+                NekDouble dist = bg::distance(queryPoint, result[id1].first);
+                if(dist*dist<SQ_PNT_TOL) // same point
                 {
-                    // point has already been defined
-                    continue;
-                }
-                else
-                {
-                    global_to_unique_map[id2] = unique_index;
-                    unique_index_found = true;
+                    id2 = result[id1].second;
+                    samept.insert(id2);
+                    
+                    if(global_to_unique_map[id2] <unique_index)
+                    {
+                        new_index = global_to_unique_map[id2];
+                    }
                 }
             }
-        }
+            if(new_index == -1)
+            {
+                new_index = unique_index;
+                unique_index++;
+            }
 
-        WARNINGL1(nptsfound > 0,"Failed to find any nearest point");
-
-        if(unique_index_found)
-        {
-            unique_index++;
+            // reset all same values to new_index
+            global_to_unique_map[i] = new_index;
+            for(it = samept.begin(); it != samept.end(); ++it)
+            {
+                global_to_unique_map[*it] = new_index;
+            }
         }
     }
+    
     if(verbose)
     {
         cout << endl;
@@ -946,14 +972,14 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
 }
 
 
-// define == if point is within 1e-4
+// define == if point is within 1e-8
 bool operator == (const IsoVertex& x, const IsoVertex& y)
 {
     return ((x.m_x-y.m_x)*(x.m_x-y.m_x) + (x.m_y-y.m_y)*(x.m_y-y.m_y) +
             (x.m_z-y.m_z)*(x.m_z-y.m_z) < SQ_PNT_TOL)? true:false;
 }
 
-// define != if point is outside 1e-4
+// define != if point is outside 1e-8
 bool operator != (const IsoVertex& x, const IsoVertex& y)
 {
     return ((x.m_x-y.m_x)*(x.m_x-y.m_x) + (x.m_y-y.m_y)*(x.m_y-y.m_y) +

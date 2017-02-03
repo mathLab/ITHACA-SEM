@@ -8,7 +8,6 @@ SET(NekMeshSources
     InputModules/InputSwan.cpp
     InputModules/InputStarTec.cpp
     NekMesh.cpp
-    Module.cpp
     OutputModules/OutputGmsh.cpp
     OutputModules/OutputNekpp.cpp
     OutputModules/OutputSTL.cpp
@@ -28,6 +27,7 @@ SET(NekMeshSources
     ProcessModules/ProcessTetSplit.cpp
     ProcessModules/ProcessOptiExtract.cpp
     ProcessModules/ProcessInsertSurface.cpp
+    ProcessModules/ProcessExtrude.cpp
 )
 
 IF (NEKTAR_USE_CCM)
@@ -39,7 +39,13 @@ IF (NEKTAR_USE_VTK)
 ENDIF (NEKTAR_USE_VTK)
 
 IF (NEKTAR_USE_MESHGEN)
-    SET(NekMeshSources ${NekMeshSources} InputModules/InputCAD.cpp)
+    SET(NekMeshSources ${NekMeshSources}
+            ProcessModules/ProcessVarOpti/NodeOptiCAD.cpp
+            ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
+            ProcessModules/ProcessVarOpti/PreProcessing.cpp
+            ProcessModules/ProcessVarOpti/NodeOpti.cpp
+            ProcessModules/ProcessVarOpti/ElUtil.cpp
+            InputModules/InputCAD.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
 
 # Don't use macro -- this way we can just link against NekMeshUtils and
@@ -94,9 +100,10 @@ ADD_NEKTAR_TEST(StarTec/StraightRW LENGTHY)
 IF(NEKTAR_USE_MESHGEN)
     ADD_NEKTAR_TEST(MeshGen/cylinder)
     ADD_NEKTAR_TEST(MeshGen/sphere)
-
-    # Below test is disabled for now until BL generation is better
-    # ADD_NEKTAR_TEST(MeshGen/predator LENGTHY)
+    ADD_NEKTAR_TEST(MeshGen/2d-cad)
+    ADD_NEKTAR_TEST(MeshGen/2d-naca)
+    # varopti tests
+    ADD_NEKTAR_TEST(MeshGen/varopti_cubesphere)
 ENDIF()
 
 # This has some issues due to hashing

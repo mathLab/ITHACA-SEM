@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSLINKCHECK
 #define UTILITIES_NEKMESH_PROCESSLINKCHECK
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -49,17 +49,17 @@ namespace Utilities
  * method. For now it simply prints a list of elements which have
  * negative Jacobian.
  */
-class ProcessLinkCheck : public ProcessModule
+class ProcessLinkCheck : public NekMeshUtils::ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessLinkCheck>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    ProcessLinkCheck(MeshSharedPtr m);
+    ProcessLinkCheck(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessLinkCheck();
 
     /// Write mesh to output file.

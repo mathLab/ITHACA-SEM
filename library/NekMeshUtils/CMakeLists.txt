@@ -1,4 +1,5 @@
 SET(NEKMESHUTILS_SOURCES
+    Module/Module.cpp
     MeshElements/Mesh.cpp
     MeshElements/Element.cpp
     MeshElements/Edge.cpp
@@ -12,6 +13,8 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Pyramid.cpp
     MeshElements/Prism.cpp
     MeshElements/Hexahedron.cpp
+    CADSystem/CADSystem.cpp
+    CADSystem/ProcessLoadCAD.cpp
     )
 
 IF(NEKTAR_USE_MESHGEN)
@@ -19,26 +22,29 @@ IF(NEKTAR_USE_MESHGEN)
         SurfaceMeshing/CurveMesh.cpp
         Octree/Octant.cpp
         Octree/Octree.cpp
+        Octree/ProcessLoadOctree.cpp
         SurfaceMeshing/SurfaceMesh.cpp
-        SurfaceMeshing/SurfaceMeshHOMesh.cpp
+        SurfaceMeshing/HOSurfaceMesh.cpp
         SurfaceMeshing/FaceMesh.cpp
         SurfaceMeshing/OptimiseFunctions.cpp
         ExtLibInterface/TriangleInterface.cpp
         ExtLibInterface/TetGenInterface.cpp
-        TetMeshing/TetMesh.cpp
-        BLMeshing/BLMesh.cpp
+        VolumeMeshing/VolumeMesh.cpp
+        VolumeMeshing/TetMeshing/TetMesh.cpp
+        VolumeMeshing/BLMeshing/BLMesh.cpp
         Optimisation/BGFS-B.cpp
         Triangle/Triangle.cpp
-        CADSystem/CADSystem.cpp
         CADSystem/OCE/CADSystemOCE.cpp
         CADSystem/OCE/CADVertOCE.cpp
         CADSystem/OCE/CADCurveOCE.cpp
         CADSystem/OCE/CADSurfOCE.cpp
+        2DGenerator/2DGenerator.cpp
     )
 ENDIF()
 
 SET(NEKMESHUTILS_HEADERS
     NekMeshUtilsDeclspec.h
+    Module/Module.h
     MeshElements/Node.h
     MeshElements/Edge.h
     MeshElements/Face.h
@@ -55,6 +61,12 @@ SET(NEKMESHUTILS_HEADERS
     MeshElements/Hexahedron.h
     MeshElements/HOAlignment.h
     MeshElements/ElementConfig.h
+    CADSystem/CADObject.h
+    CADSystem/CADSystem.h
+    CADSystem/CADVert.h
+    CADSystem/CADCurve.h
+    CADSystem/CADSurf.h
+    CADSystem/ProcessLoadCAD.h
     )
 
 IF(NEKTAR_USE_MESHGEN)
@@ -63,18 +75,16 @@ IF(NEKTAR_USE_MESHGEN)
         SurfaceMeshing/CurveMesh.h
         Octree/Octant.h
         Octree/Octree.h
+        Octree/ProcessLoadOctree.h
         SurfaceMeshing/SurfaceMesh.h
+        SurfaceMeshing/HOSurfaceMesh.h
         SurfaceMeshing/FaceMesh.h
         SurfaceMeshing/OptimiseFunctions.h
         ExtLibInterface/TriangleInterface.h
         ExtLibInterface/TetGenInterface.h
-        TetMeshing/TetMesh.h
-        BLMeshing/BLMesh.h
-        CADSystem/CADObj.h
-        CADSystem/CADSystem.h
-        CADSystem/CADVert.h
-        CADSystem/CADCurve.h
-        CADSystem/CADSurf.h
+        VolumeMeshing/VolumeMesh.h
+        VolumeMeshing/TetMeshing/TetMesh.h
+        VolumeMeshing/BLMeshing/BLMesh.h
         CADSystem/OCE/OpenCascade.h
         CADSystem/OCE/CADSystemOCE.h
         CADSystem/OCE/CADVertOCE.h
@@ -83,6 +93,7 @@ IF(NEKTAR_USE_MESHGEN)
         Optimisation/BGFS-B.h
         Optimisation/OptimiseObj.h
         Triangle/Triangle.h
+        2DGenerator/2DGenerator.h
     )
 ENDIF()
 
@@ -99,6 +110,7 @@ IF(NEKTAR_USE_MESHGEN)
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${OCC_LIBRARIES})
 
     ADD_DEPENDENCIES(NekMeshUtils oce-0.17 tetgen-1.5)
+
 ENDIF()
 
 IF(NEKTAR_USE_CFI)

@@ -81,6 +81,17 @@ namespace Nektar
             PetscInitialized(&isInitialized);
             if (!isInitialized)
             {
+#ifdef NEKTAR_USE_MPI
+                std::string commType =
+                    m_expList.lock()->GetSession()->GetComm()->GetType();
+                if (commType.find("MPI") != std::string::npos)
+                {
+                    LibUtilities::CommMpiSharedPtr comm =
+                        boost::static_pointer_cast<LibUtilities::CommMpi>(
+                            m_expList.lock()->GetSession()->GetComm());
+                    PETSC_COMM_WORLD = comm->GetComm();
+                }
+#endif
                 PetscInitializeNoArguments();
             }
 
@@ -158,6 +169,13 @@ namespace Nektar
 
             // Do system solve
             KSPSolve(m_ksp, m_b, m_x);
+
+            KSPConvergedReason reason;
+            KSPGetConvergedReason(m_ksp, &reason);
+            ASSERTL0(reason > 0,
+                    "PETSc solver diverged, reason is: " +
+                        std::string(KSPConvergedReasons[reason]));
+
 
             // Scatter results to local vector
             VecScatterBegin(m_ctx, m_x, m_locVec,

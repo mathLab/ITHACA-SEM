@@ -1162,7 +1162,8 @@ namespace Nektar
             const FlagList &flags,
             const StdRegions::ConstFactorMap &factors,
             const StdRegions::VarCoeffMap &varcoeff,
-            const Array<OneD, const NekDouble> &dirForcing)
+            const Array<OneD, const NekDouble> &dirForcing,
+            const bool PhysSpaceForcing)
         {
             int i,n,cnt,nbndry;
             int nexp = GetExpSize();
@@ -1171,10 +1172,17 @@ namespace Nektar
             Array<OneD,NekDouble> e_f, e_l;
 
             //----------------------------------
-            // Setup RHS Inner product
+            // Setup RHS Inner product if required
             //----------------------------------
-            IProductWRTBase(inarray,f);
-            Vmath::Neg(m_ncoeffs,f,1);
+            if(PhysSpaceForcing)
+            {
+                IProductWRTBase(inarray,f);
+                Vmath::Neg(m_ncoeffs,f,1);
+            }
+            else
+            {
+                Vmath::Smul(m_ncoeffs,-1.0,inarray,1,f,1);
+            }
 
             //----------------------------------
             // Solve continuous Boundary System
@@ -1334,11 +1342,6 @@ namespace Nektar
                              ::RobinBoundaryCondition>(m_bndConditions[i])
                              ->m_robinFunction).Evaluate(x0[0],x1[0],x2[0],time));
                         
-                        m_bndCondExpansions[i]->SetPhys(0,
-                            (boost::static_pointer_cast<SpatialDomains
-                             ::RobinBoundaryCondition>(m_bndConditions[i])
-                             ->m_robinPrimitiveCoeff).Evaluate(x0[0],x1[0],x2[0],time));
-                        
                     }
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eNotDefined)
@@ -1493,20 +1496,25 @@ namespace Nektar
 
             for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                MultiRegions::ExpListSharedPtr locExpList;
-
                 if (m_bndConditions[i]->GetBoundaryConditionType() ==
-                   SpatialDomains::eRobin)
+                    SpatialDomains::eRobin)
                 {
                     int elmtid;
-                    Array<OneD, NekDouble> Array_tmp;
 
-                    locExpList = m_bndCondExpansions[i];
+                    Array<OneD, NekDouble> x0(1);
+                    Array<OneD, NekDouble> x1(1);
+                    Array<OneD, NekDouble> x2(1);
+                    Array<OneD, NekDouble> coeffphys(1);
+                    
+                    m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
 
+                    coeffphys[0]  = (boost::static_pointer_cast<SpatialDomains
+                         ::RobinBoundaryCondition>(m_bndConditions[i])
+                         ->m_robinPrimitiveCoeff).Evaluate(x0[0],x1[0],x2[0],0.0);
+                        
                     RobinBCInfoSharedPtr rInfo =
                         MemoryManager<RobinBCInfo>::
-                            AllocateSharedPtr(
-                                VertID[i],Array_tmp = locExpList->GetPhys());
+                            AllocateSharedPtr(VertID[i],coeffphys);
 
                     elmtid = ElmtID[i];
                     // make link list if necessary (not likely in

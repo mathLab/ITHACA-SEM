@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_PROCESSBL
 #define UTILITIES_NEKMESH_PROCESSBL
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -49,17 +49,17 @@ namespace Utilities
  * method. For now it simply prints a list of elements which have
  * negative Jacobian.
  */
-class ProcessBL : public ProcessModule
+class ProcessBL : public NekMeshUtils::ProcessModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<ProcessBL>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    ProcessBL(MeshSharedPtr m);
+    ProcessBL(NekMeshUtils::MeshSharedPtr m);
     virtual ~ProcessBL();
 
     // Create the boundary layer in 2D

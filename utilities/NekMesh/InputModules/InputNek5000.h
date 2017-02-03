@@ -41,7 +41,7 @@
 #include <boost/unordered_map.hpp>
 
 #include <NekMeshUtils/MeshElements/Triangle.h>
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -51,20 +51,20 @@ namespace Utilities
 /**
  * Converter class for Nektar session files.
  */
-class InputNek5000 : public InputModule
+class InputNek5000 : public NekMeshUtils::InputModule
 {
 public:
-    InputNek5000(MeshSharedPtr p_m);
+    InputNek5000(NekMeshUtils::MeshSharedPtr p_m);
     virtual ~InputNek5000();
     virtual void Process();
 
     /// Creates an instance of this class.
-    static ModuleSharedPtr create(MeshSharedPtr m)
+    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<InputNek5000>::AllocateSharedPtr(m);
     }
     /// %ModuleKey for class.
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
 private:
     void LoadHOSurfaces();

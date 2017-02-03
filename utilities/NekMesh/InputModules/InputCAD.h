@@ -36,33 +36,37 @@
 #ifndef UTILITIES_NEKMESH_INPUTCAD
 #define UTILITIES_NEKMESH_INPUTCAD
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
 namespace Utilities
 {
 
-class InputCAD : public InputModule
+class InputCAD : public NekMeshUtils::InputModule
 {
 public:
-    InputCAD(MeshSharedPtr m);
+    InputCAD(NekMeshUtils::MeshSharedPtr m);
     virtual ~InputCAD();
     virtual void Process();
 
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m)
+    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<InputCAD>::AllocateSharedPtr(m);
     }
     /// %ModuleKey for class.
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
+
+    void ParseFile(std::string nm);
 
 private:
-    NekDouble m_minDelta, m_maxDelta, m_eps, m_blthick;
-    int m_order;
-    std::string m_CADName;
-    bool m_makeBL, m_writeoctree;
+    std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order,
+                m_blsurfs, m_blthick, m_blprog, m_bllayers, m_refinement,
+                m_nacadomain;
+    bool m_makeBL, m_surfopti, m_varopti, m_refine, m_woct, m_2D, m_splitBL,
+         m_naca;
+
 };
 }
 }

@@ -795,16 +795,20 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
     }
     else
     {
-
+        int cnt = 1; 
         for (int i = 0; i < m_conn.size(); ++i)
         {
             const int nConn = m_conn[i].num_elements();
-            for (int j = 0; j < nConn; ++j)
+            for (int j = 0; j < nConn; ++j,++cnt)
             {
                 outfile << m_conn[i][j] + 1 << " ";
+                if (!(cnt % 1000))
+                {
+                    outfile << std::endl;
+                }
             }
-            outfile << endl;
         }
+        outfile << endl;
 
         if (m_oneOutputFile && m_f->m_comm->GetRank() == 0)
         {
@@ -814,7 +818,6 @@ void OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
             {
                 Array<OneD, int> conn(m_rankConnSizes[n]);
                 m_f->m_comm->Recv(n, conn);
-
                 for (int j = 0; j < conn.num_elements(); ++j)
                 {
                     outfile << conn[j] + offset + 1 << " ";

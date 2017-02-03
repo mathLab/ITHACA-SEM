@@ -151,10 +151,14 @@ int main(int argc, char *argv[])
     {
         util = new NodalUtilPrism(order, r, s, t);
     }
+    else if(shape == eQuadrilateral)
+    {
+        util = new NodalUtilQuad(order, r, s);
+    }
 
     ASSERTL1(util, "Unknown shape type!");
     const int nPoints = r.num_elements();
-    const int dim = shape == eTriangle ? 2 : 3;
+    const int dim = (shape == eTriangle || shape == eQuadrilateral) ? 2 : 3;
 
     if (vm.count("integral"))
     {
@@ -174,6 +178,9 @@ int main(int argc, char *argv[])
             case eTriangle:
                 exact = -0.5 * (sin(1.0) + cos(1.0) + M_E * M_E *
                                 (sin(1.0) - cos(1.0))) / M_E;
+                break;
+            case eQuadrilateral:
+                exact = 2.0 * (M_E - 1.0 / M_E) * sin(1.0);
                 break;
             case eTetrahedron:
                 exact = 1.0 / M_E - 1.0 / M_E / M_E / M_E;

@@ -20,17 +20,17 @@ SET(SOLVER_UTILS_SOURCES
   DriverSteadyState.cpp	
   EquationSystem.cpp
   Filters/Filter.cpp
-#   Filters/FilterAeroForces.cpp
-#   Filters/FilterAverageFields.cpp
+  Filters/FilterAeroForces.cpp
+  Filters/FilterAverageFields.cpp
   Filters/FilterCheckpoint.cpp
-#   Filters/FilterEnergy1D.cpp
-#   Filters/FilterEnergyBase.cpp
+  Filters/FilterEnergy1D.cpp
+  Filters/FilterEnergyBase.cpp
   Filters/FilterHistoryPoints.cpp
-#   Filters/FilterModalEnergy.cpp
-#   Filters/FilterMovingAverage.cpp
-#   Filters/FilterFieldConvert.cpp
-#   Filters/FilterThresholdMax.cpp
-#   Filters/FilterThresholdMin.cpp
+  Filters/FilterModalEnergy.cpp
+  Filters/FilterMovingAverage.cpp
+  Filters/FilterFieldConvert.cpp
+  Filters/FilterThresholdMax.cpp
+  Filters/FilterThresholdMin.cpp
   RiemannSolvers/RiemannSolver.cpp
   RiemannSolvers/UpwindSolver.cpp
   RiemannSolvers/UpwindLDGSolver.cpp
@@ -64,17 +64,17 @@ SET(SOLVER_UTILS_HEADERS
   DriverSteadyState.h
   EquationSystem.h
   Filters/Filter.h
-#   Filters/FilterAeroForces.h
-#   Filters/FilterAverageFields.h
+  Filters/FilterAeroForces.h
+  Filters/FilterAverageFields.h
   Filters/FilterCheckpoint.h
-#   Filters/FilterEnergy1D.h
-#   Filters/FilterEnergyBase.h
+  Filters/FilterEnergy1D.h
+  Filters/FilterEnergyBase.h
   Filters/FilterHistoryPoints.h
-#   Filters/FilterModalEnergy.h
-#   Filters/FilterMovingAverage.h
-#   Filters/FilterFieldConvert.h
-#   Filters/FilterThresholdMax.h
-#   Filters/FilterThresholdMin.h
+  Filters/FilterModalEnergy.h
+  Filters/FilterMovingAverage.h
+  Filters/FilterFieldConvert.h
+  Filters/FilterThresholdMax.h
+  Filters/FilterThresholdMin.h
   RiemannSolvers/RiemannSolver.h
   RiemannSolvers/UpwindSolver.h
   RiemannSolvers/UpwindLDGSolver.h

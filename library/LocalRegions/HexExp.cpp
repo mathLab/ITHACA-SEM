@@ -272,6 +272,33 @@ namespace Nektar
             }
         }
 
+        
+        void HexExp::v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
+                                            const Array<OneD, const NekDouble>& direction,
+                                            Array<OneD, NekDouble> & outarray)
+        {
+            cout << "Hello World" <<endl;
+            int    shapedim = 3;
+            
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
+            int    ntot   = nquad0 * nquad1 * nquad2;
+            
+            Array<TwoD, const NekDouble> df = m_metricinfo->GetDerivFactors(GetPointsKeys());
+            Array<OneD,NekDouble> Diff0 = Array<OneD,NekDouble>(ntot);
+            Array<OneD,NekDouble> Diff1 = Array<OneD,NekDouble>(ntot);
+            Array<OneD,NekDouble> Diff2 = Array<OneD,NekDouble>(ntot);
+            
+            StdHexExp::v_PhysDeriv(inarray, Diff0, Diff1, Diff2);
+            
+            Array<OneD, Array<OneD, NekDouble> > dfdir(shapedim);
+            v_ComputeGmatcdotMF(df,direction,dfdir);
+            
+            Vmath::Vmul (ntot,&dfdir[0][0],1,&Diff0[0],1, &outarray[0], 1);
+            Vmath::Vvtvp(ntot,&dfdir[1][0],1,&Diff1[0],1, &outarray[0], 1, &outarray[0],1);
+            Vmath::Vvtvp(ntot,&dfdir[2][0],1,&Diff2[0],1, &outarray[0], 1, &outarray[0],1);
+        }
 
         //-----------------------------
         // Transforms

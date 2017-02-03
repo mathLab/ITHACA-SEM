@@ -94,6 +94,11 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv(const int dir,
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray);
+            
+            LOCAL_REGIONS_EXPORT void v_PhysDirectionalDeriv(
+                                                             const Array<OneD, const NekDouble> &inarray,
+                                                             const Array<OneD, const NekDouble> &direction,
+                                                             Array<OneD,       NekDouble> &out);
 
 
             //---------------------------------------

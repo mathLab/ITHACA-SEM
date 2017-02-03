@@ -71,21 +71,15 @@ public:
 
 protected:
     SOLVER_UTILS_EXPORT virtual void v_Initialise(
-        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
-        const Array<OneD, const Array<OneD, NekDouble > > &coeffs,
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &allFields,
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
     SOLVER_UTILS_EXPORT virtual void v_FillVariablesName(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
     SOLVER_UTILS_EXPORT virtual void v_Update(
-        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
-        const Array<OneD, const Array<OneD, NekDouble > > &coeffs,
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &allFields,
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
     SOLVER_UTILS_EXPORT virtual void v_Finalise(
-        const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
-        const Array<OneD, const Array<OneD, NekDouble > > &coeffs,
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &allFields,
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
     SOLVER_UTILS_EXPORT virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,

@@ -28,7 +28,7 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterHistoryPoints.cpp
 #   Filters/FilterModalEnergy.cpp
 #   Filters/FilterMovingAverage.cpp
-  Filters/FilterFieldConvert.cpp
+#   Filters/FilterFieldConvert.cpp
 #   Filters/FilterThresholdMax.cpp
 #   Filters/FilterThresholdMin.cpp
   RiemannSolvers/RiemannSolver.cpp
@@ -72,7 +72,7 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterHistoryPoints.h
 #   Filters/FilterModalEnergy.h
 #   Filters/FilterMovingAverage.h
-  Filters/FilterFieldConvert.h
+#   Filters/FilterFieldConvert.h
 #   Filters/FilterThresholdMax.h
 #   Filters/FilterThresholdMin.h
   RiemannSolvers/RiemannSolver.h

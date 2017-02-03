@@ -156,20 +156,9 @@ FilterFieldConvert::~FilterFieldConvert()
 }
 
 void FilterFieldConvert::v_Initialise(
-            const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
-            const Array<OneD, const Array<OneD, NekDouble > > &coeffs,
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &allFields,
-            const NekDouble &time)
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
 {
-    std::vector<std::string> variables;
-    ParseUtils::GenerateOrderedStringVector(fieldMetaDataMap["Variables"].c_str(), variables);
-
-    Array<OneD, MultiRegions::ExpListSharedPtr> pFields(variables.size());
-    for (int i = 0; i < variables.size(); ++i)
-    {
-        pFields[i] = allFields[i];
-    }
-
     v_FillVariablesName(pFields);
 
     int ncoeff = pFields[0]->GetNcoeffs();
@@ -248,21 +237,9 @@ void FilterFieldConvert::v_FillVariablesName(
 }
 
 void FilterFieldConvert::v_Update(
-            const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
-            const Array<OneD, const Array<OneD, NekDouble > > &coeffs,
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &allFields,
-            const NekDouble &time)
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
 {
-    std::vector<std::string> variables;
-    ParseUtils::GenerateOrderedStringVector(fieldMetaDataMap["Variables"].c_str(), variables);
-
-    Array<OneD, MultiRegions::ExpListSharedPtr> pFields(variables.size());
-    for (int i = 0; i < variables.size(); ++i)
-    {
-        pFields[i] = allFields[i];
-    }
-
-
     m_index++;
     if (m_index % m_sampleFrequency > 0)
     {
@@ -281,21 +258,9 @@ void FilterFieldConvert::v_Update(
 }
 
 void FilterFieldConvert::v_Finalise(
-            const LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
-            const Array<OneD, const Array<OneD, NekDouble > > &coeffs,
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &allFields,
-            const NekDouble &time)
+    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    const NekDouble &time)
 {
-    std::vector<std::string> variables;
-    ParseUtils::GenerateOrderedStringVector(fieldMetaDataMap["Variables"].c_str(), variables);
-
-    Array<OneD, MultiRegions::ExpListSharedPtr> pFields(variables.size());
-    for (int i = 0; i < variables.size(); ++i)
-    {
-        pFields[i] = allFields[i];
-    }
-
-
     m_fieldMetaData["FinalTime"] = boost::lexical_cast<std::string>(time);
     v_PrepareOutput(pFields, time);
     OutputField(pFields);

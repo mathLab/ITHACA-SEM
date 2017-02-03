@@ -33,7 +33,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+
+
+#include <NekMeshUtils/CADSystem/CADCurve.h>
 
 #include <boost/thread.hpp>
 
@@ -395,6 +399,56 @@ void InputMCF::Process()
     for(int i = 0; i < mods.size(); i++)
     {
         mods[i]->Process();
+    }
+
+    // Run peralign
+    
+    if (m_periodic.size())
+    {
+        mods.clear();
+        
+        vector<string> lines;
+        boost::split(lines, m_periodic, boost::is_any_of(":"));
+
+        for (vector<string>::iterator il = lines.begin(); il != lines.end();
+             ++il)
+        {
+            vector<unsigned> data;
+            ParseUtils::GenerateOrderedVector(il->c_str(), data);
+
+            mods.push_back(GetModuleFactory().CreateInstance(
+                ModuleKey(eProcessModule, "peralign"), m_mesh));
+            mods.back()->RegisterConfig("surf1",
+                                        boost::lexical_cast<string>(data[0]));
+            mods.back()->RegisterConfig("surf2",
+                                        boost::lexical_cast<string>(data[1]));
+            mods.back()->RegisterConfig("orient", "false");
+
+            Array<OneD, NekDouble> P11 =
+                m_mesh->m_cad->GetCurve(data[0])->GetVertex()[0]->GetLoc();
+            Array<OneD, NekDouble> P12 =
+                m_mesh->m_cad->GetCurve(data[0])->GetVertex()[1]->GetLoc();
+            Array<OneD, NekDouble> P21 =
+                m_mesh->m_cad->GetCurve(data[1])->GetVertex()[0]->GetLoc();
+            Array<OneD, NekDouble> P22 =
+                m_mesh->m_cad->GetCurve(data[1])->GetVertex()[1]->GetLoc();
+
+            Array<OneD, NekDouble> T(2);
+
+            T[0] = (P21[0] + P22[0] - P11[0] - P12[0]) / 2;
+            T[1] = (P21[1] + P22[1] - P11[1] - P12[1]) / 2;
+
+            NekDouble mag = T[0] * T[0] + T[1] * T[1];
+
+            stringstream ss;
+            ss << T[0] / mag << "," << T[1] / mag << "," << 0.0;
+            mods.back()->RegisterConfig("dir", ss.str());
+        }
+
+        for(int i = 0; i < mods.size(); i++)
+        {
+            mods[i]->Process();
+        }
     }
 }
 }

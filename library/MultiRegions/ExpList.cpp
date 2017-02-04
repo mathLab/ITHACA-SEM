@@ -2447,7 +2447,7 @@ namespace Nektar
                 }
                 
                 // MF from LOCALREGIONS
-              //  (*m_exp)[i]->GetMovingFrames(MMFdir, CircCentre, MFloc);
+                (*m_exp)[i]->GetMovingFrames(MMFdir, CircCentre, MFloc);
                 
                 // Get the physical data offset for this expansion.
                 for (int j = 0; j < MFdim; ++j)

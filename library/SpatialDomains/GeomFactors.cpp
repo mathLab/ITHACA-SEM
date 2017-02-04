@@ -563,7 +563,7 @@ namespace Nektar
             
             // Normalizing MF3
             VectorNormalise(MFtmp[2]);
-            /* for (i = 0; i < nq-1; ++i)
+           /*  for (i = 0; i < nq-1; ++i)
              {
              for (k = 0; k < m_coordDim; ++k)
              {
@@ -572,6 +572,7 @@ namespace Nektar
              
              }
              }*/
+            
             
             if(!(MMFdir==eLOCAL))
             {

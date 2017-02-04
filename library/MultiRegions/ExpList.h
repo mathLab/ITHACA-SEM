@@ -1816,6 +1816,7 @@ namespace Nektar
                                              const Array<OneD, const NekDouble> &CircCentre,
                                              Array<OneD, Array<OneD, NekDouble> > &outarray)
         {
+            Gs::cout << "Hello1" <<Gs::endl;
             v_GetMovingFrames(MMFdir,CircCentre,outarray);
         }
 

@@ -801,7 +801,7 @@ namespace Nektar
             v_IProductWRTBase(tmp, outarray);
         }
 
-        void StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
+       /* void StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                                 Array<OneD,NekDouble> &outarray,
                                                                 const StdMatrixKey &mkey)
         {
@@ -823,6 +823,29 @@ namespace Nektar
             //            }
 
             v_IProductWRTBase(tmp, outarray);
+        }*/
+        void StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
+                                                                Array<OneD,NekDouble> &outarray,
+                                                                const StdMatrixKey &mkey)
+        {
+            int nq = GetTotPoints();
+            
+            Array<OneD, NekDouble> tmp(nq), Dtmp(nq);
+            Array<OneD, NekDouble> Mtmp(nq), Mout(m_ncoeffs);
+            
+            v_BwdTrans(inarray,tmp);
+            //v_PhysDirectionalDeriv(mkey.GetVarCoeff(eVarCoeffMF), tmp, Dtmp);
+            v_PhysDirectionalDeriv(tmp, mkey.GetVarCoeff(eVarCoeffMF), Dtmp);
+            
+            v_IProductWRTBase(Dtmp, outarray);
+            
+            // Compte M_{div tv}
+            Vmath::Vmul(nq, &(mkey.GetVarCoeff(eVarCoeffMFDiv))[0], 1, &tmp[0], 1, &Mtmp[0], 1);
+            
+            v_IProductWRTBase(Mtmp, Mout);
+            
+            // Add D_tv + M_{div tv}
+            Vmath::Vadd(m_ncoeffs, &Mout[0], 1, &outarray[0], 1, &outarray[0], 1);
         }
 
         void StdExpansion::MassLevelCurvatureMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
@@ -1245,6 +1268,13 @@ namespace Nektar
         {
             NEKERROR(ErrorUtil::efatal, "This method has not been defined");
         }
+        
+        void  StdExpansion::v_IProductWRTDirectionalDerivBase (const Array<OneD, const NekDouble>& direction,
+                                                               const Array<OneD, const NekDouble>& inarray,
+                                                               Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This method has not been defined");
+        }
 
         /**
          *
@@ -1278,6 +1308,14 @@ namespace Nektar
         {
             NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                      "specific element types");
+        }
+        
+        void StdExpansion::v_GetMovingFrames(const SpatialDomains::GeomMMF MMFdir,
+                                             const Array<OneD, const NekDouble> &CircCentre,
+                                             Array<OneD, Array<OneD, NekDouble> > &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                     "local expansions");
         }
 
         /**
@@ -1550,6 +1588,13 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
+        
+          void StdExpansion::v_IProductWRTDirectionalDerivBase_SumFac(const Array<OneD, const NekDouble>& direction,
+                                                                    const Array<OneD, const NekDouble>& inarray,
+                                                                    Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+        }
 
             void StdExpansion::v_IProductWRTDerivBase_SumFac(const int dir,
                                                        const Array<OneD, const NekDouble>& inarray,

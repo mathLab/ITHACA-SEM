@@ -58,6 +58,73 @@ namespace Nektar
             ePeriodic,
             eNotDefined
         };
+        enum BndUserDefinedType
+        {
+            eI,
+            eMG,
+            eHigh,
+            eHighOutflow,
+            eWall_Forces,
+            eWall,
+            eWallViscous,
+            eArtificialViscosity,
+            eSymmetry,
+            eRinglebFlow,
+            eTimeDependent,
+            eRadiation,
+            eIsentropicVortex,
+            eCalcBC,
+            eQinflow,
+            eTerminal,
+            eRterminal,
+            eCRterminal,
+            eRCRterminal,
+            eInflowCFS,
+            eOutflowCFS,
+            eRiemannInvariant,
+            eExtrapOrder0,
+            ePEC,
+            ePMC,
+            ePEC_Forces,
+            ePMC_Forces,
+            eAbsorbingBoundary,
+            eNoUserDefined
+        };
+        
+        const char* const BndUserDefinedTypeMap[] =
+        {
+            "I",
+            "MG",
+            "High",
+            "HighOutflow",
+            "Wall_Forces",
+            "Wall",
+            "WallViscous",
+            "ArtificialVisc",
+            "Symmetry",
+            "RinglebFlow",
+            "TimeDependent",
+            "Radiation",
+            "IsentropicVortex",
+            "CalcBC",
+            "Qinflow",
+            "Terminal",
+            "Rterminal",
+            "CRterminal",
+            "RCRterminal",
+            "InflowCFS",
+            "OutflowCFS",
+            "RiemannInvariant",
+            "ExtrapOrder0",
+            "ePEC",
+            "ePMC",
+            "ePEC_Forces",
+            "ePMC_Forces",
+            "AbsorbingBoundary",
+            "NoUserDefined"
+        };
+        
+
 
         struct BoundaryConditionBase
         {

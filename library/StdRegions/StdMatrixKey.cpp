@@ -67,6 +67,33 @@ namespace Nektar
                 i++;
             }
         }
+        StdMatrixKey::StdMatrixKey(const int matrixID,
+                                   const MatrixType matrixType,
+                                   const LibUtilities::ShapeType shapeType,
+                                   const StdExpansion &stdExpansion,
+                                   const ConstFactorMap &factorMap,
+                                   const VarCoeffMap &varCoeffMap,
+                                   LibUtilities::PointsType nodalType) :
+        m_matrixID(matrixID),
+        m_shapeType(shapeType),
+        m_base(stdExpansion.GetBase()),
+        m_ncoeffs(stdExpansion.GetNcoeffs()),
+        m_matrixType(matrixType),
+        m_nodalPointsType(nodalType),
+        m_factors(factorMap),
+        m_varcoeffs(varCoeffMap),
+        m_varcoeff_hashes(varCoeffMap.size())
+        {
+            // Create hash
+            int i = 0;
+            for (VarCoeffMap::const_iterator x = varCoeffMap.begin(); x != varCoeffMap.end(); ++x)
+            {
+                m_varcoeff_hashes[i] = boost::hash_range(x->second.begin(), x->second.begin() + stdExpansion.GetTotPoints());
+                boost::hash_combine(m_varcoeff_hashes[i], (int)x->first);
+                i++;
+            }
+        }
+
 
         StdMatrixKey::StdMatrixKey(const StdMatrixKey& rhs,
                       const StdRegions::MatrixType matrixType) :

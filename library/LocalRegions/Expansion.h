@@ -143,6 +143,18 @@ namespace Nektar
                 virtual void v_GetCoords(Array<OneD,NekDouble> &coords_1,
                                          Array<OneD,NekDouble> &coords_2,
                                          Array<OneD,NekDouble> &coords_3);
+            void v_ComputeGmatcdotMF(const Array<TwoD, const NekDouble> &df,
+                                     const Array<OneD, const NekDouble> &direction,
+                                     Array<OneD, Array<OneD, NekDouble> > &dfdir);
+            Array<OneD, NekDouble> v_GetMF(const int dir,
+                                           const int shapedim,
+                                           const StdRegions::VarCoeffMap   &varcoeffs);
+            
+            Array<OneD, NekDouble> v_GetMFDiv(const int dir,
+                                              const StdRegions::VarCoeffMap   &varcoeffs);
+            
+            Array<OneD, NekDouble> v_GetMFMag(const int dir,
+                                              const StdRegions::VarCoeffMap   &varcoeffs);
 
                 virtual DNekScalMatSharedPtr v_GetLocMatrix(const LocalRegions::MatrixKey &mkey);
 
@@ -180,6 +192,9 @@ namespace Nektar
                           Array<OneD, ExpansionSharedPtr>      &EdgeExp,
                           Array<OneD, Array<OneD, NekDouble> > &coeffs,
                           Array<OneD,             NekDouble>   &outarray);
+            virtual  void v_GetMovingFrames(const SpatialDomains::GeomMMF MMFdir,
+                                           const Array<OneD, const NekDouble> &CircCentre,
+                                           Array<OneD, Array<OneD, NekDouble> > &outarray);
 
             private:
 

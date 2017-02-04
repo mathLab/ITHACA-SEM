@@ -45,6 +45,7 @@
 #include <StdRegions/SpatialDomainsDeclarations.hpp>
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/IndexMapKey.h>
+#include <SpatialDomains/SpatialDomains.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <boost/enable_shared_from_this.hpp>
 namespace Nektar { namespace LocalRegions { class MatrixKey; class Expansion; } }
@@ -654,6 +655,13 @@ namespace Nektar
             {
                 v_IProductWRTDerivBase(dir,inarray, outarray);
             }
+            
+            void   IProductWRTDirectionalDerivBase(const Array<OneD, const NekDouble>& direction,
+                                                   const Array<OneD, const NekDouble>& inarray,
+                                                   Array<OneD, NekDouble> &outarray)
+            {
+                v_IProductWRTDirectionalDerivBase(direction, inarray, outarray);
+            }
 
             /// \brief Get the element id of this expansion when used
             /// in a list by returning value of #m_elmt_id
@@ -1055,6 +1063,14 @@ namespace Nektar
             {
                 return v_GenMatrix(mkey);
             }
+            
+            void GetMovingFrames(const SpatialDomains::GeomMMF MMFdir,
+                                 const Array<OneD, const NekDouble> &CircCentre,
+                                 Array<OneD, Array<OneD, NekDouble> > &outarray)
+            {
+                v_GetMovingFrames(MMFdir, CircCentre, outarray);
+            }
+            
 
             void PhysDeriv (const Array<OneD, const NekDouble>& inarray,
                             Array<OneD, NekDouble> &out_d0,
@@ -1466,6 +1482,14 @@ namespace Nektar
             {
                 v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             }
+            
+            void IProductWRTDirectionalDerivBase_SumFac(const Array<OneD, const NekDouble>& direction,
+                                                        const Array<OneD, const NekDouble>& inarray,
+                                                        Array<OneD, NekDouble> &outarray)
+            {
+                v_IProductWRTDirectionalDerivBase_SumFac(direction,inarray,outarray);
+            }
+
 
             // The term _MatFree denotes that the action of the MatrixOperation
             // is done withouth actually using the matrix (which then needs to be stored/calculated).
@@ -1633,11 +1657,17 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void  v_IProductWRTDerivBase (const int dir,
                                                    const Array<OneD, const NekDouble>& inarray,
                                                    Array<OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void  v_IProductWRTDirectionalDerivBase (const Array<OneD, const NekDouble>& direction,
+                                                                                const Array<OneD, const NekDouble>& inarray,
+                                                                                Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                                    Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray );
+            STD_REGIONS_EXPORT virtual void v_GetMovingFrames (const SpatialDomains::GeomMMF MMFdir,
+                                                               const Array<OneD, const NekDouble> &CircCentre,
+                                                               Array<OneD, Array<OneD, NekDouble> > &outarray);
 
             STD_REGIONS_EXPORT virtual void   v_PhysDeriv (const Array<OneD, const NekDouble>& inarray,
                                         Array<OneD, NekDouble> &out_d1,
@@ -1781,6 +1811,10 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase_SumFac(const int dir,
                                                        const Array<OneD, const NekDouble>& inarray,
                                                        Array<OneD, NekDouble> &outarray);
+            
+            STD_REGIONS_EXPORT  virtual void v_IProductWRTDirectionalDerivBase_SumFac(const Array<OneD, const NekDouble>& direction,
+                                                                                      const Array<OneD, const NekDouble>& inarray,
+                                                                                      Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                         Array<OneD,NekDouble> &outarray,

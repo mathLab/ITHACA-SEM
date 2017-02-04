@@ -127,6 +127,16 @@ namespace Nektar
                             const int dir,
                             const Array<OneD, const NekDouble>& inarray,
                                   Array<OneD, NekDouble> & outarray);
+            LOCAL_REGIONS_EXPORT  virtual void v_IProductWRTDirectionalDerivBase(const Array<OneD, const NekDouble>& direction,
+                                                                                 const Array<OneD, const NekDouble>& inarray,
+                                                                                 Array<OneD, NekDouble> & outarray){
+                IProductWRTDirectionalDerivBase_SumFac(direction,inarray,outarray);
+            }
+            
+            LOCAL_REGIONS_EXPORT  virtual void v_IProductWRTDirectionalDerivBase_SumFac(const Array<OneD, const NekDouble>& direction,
+                                                                                        const Array<OneD, const NekDouble>& inarray,
+                                                                                        Array<OneD, NekDouble> & outarray);
+
 
             LOCAL_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(
                     const Array<OneD, const NekDouble> &Fx,
@@ -154,6 +164,11 @@ namespace Nektar
                                   Array<OneD,       NekDouble> &coords_1,
                                   Array<OneD,       NekDouble> &coords_2,
                                   Array<OneD,       NekDouble> &coords_3);
+            
+            LOCAL_REGIONS_EXPORT void v_ComputeGmatcdotMF(
+                                                          const Array<TwoD, const NekDouble> &df,
+                                                          const Array<OneD, const NekDouble> &direction,
+                                                          Array<OneD, Array<OneD, NekDouble> > &dfdir);
             LOCAL_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
                             const Array<OneD, const NekDouble> &Lcoord,
                             const Array<OneD, const NekDouble> &physvals);

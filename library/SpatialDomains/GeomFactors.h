@@ -115,6 +115,16 @@ namespace SpatialDomains
             /// to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
             inline const Array<TwoD, const NekDouble> GetDerivFactors(
                     const LibUtilities::PointsKeyVector &keyTgt);
+        
+           /// Returns moving frames
+           inline void GetMovingFrames(const LibUtilities::PointsKeyVector &keyTgt,
+                                    const SpatialDomains::GeomMMF MMFdir,
+                                    const Array<OneD, const NekDouble> &CircCentre,
+                                    Array<OneD, Array<OneD, NekDouble> > &outarray);
+        /// Set tangent orientation
+        inline void SetMFOrient(std::string conn);
+        
+        inline void SetMFCircularCentre(Array<OneD,NekDouble> &centre);
 
             /// Returns whether the geometry is regular or deformed.
             inline GeomType GetGtype();
@@ -137,6 +147,12 @@ namespace SpatialDomains
             int m_coordDim;
             /// Validity of element (Jacobian positive)
             bool m_valid;
+        
+            /// Principle tangent direction.
+           enum GeomMMF m_MMFDir;
+        
+        /// Principle tangent circular dir coords
+        Array<OneD,NekDouble> m_MMFCircCentre;
             /// Stores information about the expansion.
             StdRegions::StdExpansionSharedPtr m_xmap;
             /// Stores coordinates of the geometry.
@@ -169,6 +185,10 @@ namespace SpatialDomains
             /// to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
             SPATIAL_DOMAINS_EXPORT Array<TwoD, NekDouble> ComputeDerivFactors(
                     const LibUtilities::PointsKeyVector &keyTgt) const;
+           SPATIAL_DOMAINS_EXPORT void ComputeMovingFrames(const LibUtilities::PointsKeyVector &keyTgt,
+                                                        const SpatialDomains::GeomMMF MMFdir,
+                                                        const Array<OneD, const NekDouble> &CircCentre,
+                                                        Array<OneD, Array<OneD, NekDouble> > &movingframes);
 
             /// Perform interpolation of data between two point
             /// distributions.
@@ -183,7 +203,18 @@ namespace SpatialDomains
                     const Array<TwoD, const NekDouble>& src,
                     Array<TwoD, NekDouble>& tgt) const;
 
-    };
+    void ComputePrincipleDirection(const LibUtilities::PointsKeyVector& keyTgt,
+                                   const SpatialDomains::GeomMMF MMFdir,
+                                   const Array<OneD, const NekDouble> &CircCentre,
+                                   Array<OneD,Array<OneD,NekDouble> > &output);
+    
+    void VectorNormalise(Array<OneD, Array<OneD, NekDouble> > &array);
+
+    void VectorCrossProd(const Array<OneD, const Array<OneD, NekDouble> > &v1,
+                         const Array<OneD, const Array<OneD, NekDouble> > &v2,
+                         Array<OneD,       Array<OneD, NekDouble> > &v3);
+    
+};
 
 
     /// A hash functor for geometric factors. Utilises
@@ -275,7 +306,36 @@ namespace SpatialDomains
         return m_derivFactorCache[keyTgt];
 
     }
+    
+    inline void GeomFactors::GetMovingFrames(const LibUtilities::PointsKeyVector &keyTgt,
+                                             const SpatialDomains::GeomMMF MMFdir,
+                                             const Array<OneD, const NekDouble> &CircCentre,
+                                             Array<OneD, Array<OneD, NekDouble> > &outarray)
+    {
+        ComputeMovingFrames(keyTgt,MMFdir,CircCentre,outarray);
+    }
 
+
+    /// Set tangent orientation
+    inline void GeomFactors::SetMFOrient(std::string conn)
+    {
+        if (conn == "TangentX")         m_MMFDir = eTangentX;
+        if (conn == "TangentY")         m_MMFDir = eTangentY;
+        if (conn == "TangentXY")        m_MMFDir = eTangentXY;
+        if (conn == "TangentZ")         m_MMFDir = eTangentZ;
+        if (conn == "TangentCircular")  m_MMFDir = eTangentCircular;
+        if (conn == "TangentIrregular")  m_MMFDir = eTangentIrregular;
+        if (conn == "TangentNonconvex")  m_MMFDir = eTangentNonconvex;
+        if (conn == "LOCAL")            m_MMFDir = eLOCAL;
+    }
+    /**
+     * Sets the centre point for circular tangent vectors.
+     * @param   centre      Array holding coordinates of centre point.
+     */
+    inline void GeomFactors::SetMFCircularCentre(Array<OneD,NekDouble> &centre)
+    {
+        m_MMFCircCentre = centre;
+    }
 
     /**
      * A geometric shape is considered regular if it has constant geometric

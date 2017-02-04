@@ -6,6 +6,7 @@ IF( NEKTAR_SOLVER_MMF )
     SET(MMFSolverSource 
        ./MMFSolver.cpp 
        ./EquationSystems/MMFAdvection.cpp 
+       ./EquationSystems/MMFShallowWater.cpp
        )		
 
     ADD_SOLVER_EXECUTABLE(MMFSolver solvers 

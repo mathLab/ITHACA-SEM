@@ -212,12 +212,13 @@ int main(int argc, char *argv[])
 
 #ifdef NEKTAR_TEST_FORCEMPIEXEC
 #else
-	if (file.GetNProcesses() > 1)
+	    if (file.GetNProcesses() > 1)
 #endif
         {
+            system("echo 'localhost slots=12' > hostfile");
             command += "@MPIEXEC@ @MPIEXEC_NUMPROC_FLAG@ "
                     + boost::lexical_cast<string>(file.GetNProcesses())
-                    + " ";
+                    + " -hostfile hostfile ";
         }
 
         fs::path execPath = startDir / file.GetExecutable();

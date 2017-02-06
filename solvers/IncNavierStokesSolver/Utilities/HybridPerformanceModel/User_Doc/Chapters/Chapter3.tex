@@ -1,0 +1,179 @@
+% Chapter 3 
+
+\chapter{\code{serial.py}} % Main chapter title
+
+\label{Chapter3} % For referencing the chapter elsewhere, use \ref{Chapter1} 
+
+%----------------------------------------------------------------------------------------
+Here we detail the functions of \code{serial.py}.
+
+\section{\code{Serial Computation}}
+This function is to predict the length of an average time step used when we already know our fitting constant. 
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{P}: The degree of the polynomial.
+\item \code{Num\_Elements}: The total number of elements.
+\item \code{N\_P}: The CG counts for the pressure.
+\item \code{N\_V\_1}: The CG counts for velocity 1.
+\item \code{N\_V\_2}: The CG counts for velocity 2.
+\item \code{N\_V\_3}: The CG counts for velocity 3.
+\item \code{Num\_Constants}: The number of constants that were used in the model calibration.
+\item \code{constants}: A vector containing the calibration constants.
+\item \code{Scheme}: A string containing the method name. (e.g. \code{IterativeFull})
+
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{Time}: The predicted length of an average time step.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+\section{\code{Operation\_Count}}
+This function is to predict the length of an average time step used when we already know our fitting constant. 
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{P}: The degree of the polynomial.
+\item \code{Num\_Elements}: The total number of elements.
+\item \code{N\_P}: The CG counts for the pressure.
+\item \code{N\_V\_1}: The CG counts for velocity 1.
+\item \code{N\_V\_2}: The CG counts for velocity 2.
+\item \code{N\_V\_3}: The CG counts for velocity 3.
+\item \code{Scheme}: A string containing the method name. (e.g. \code{IterativeFull})
+
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{T\_A}: The operation count for the advection term.
+\item \code{T\_E}: The operation count for the elliptic term.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+\section{\code{compare\_data}}
+This is used in the calibration step. This function finds the L2 norm of the difference between the data and the model. 
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{constants}: A vector containing the calibration constants.
+\item \code{Num\_Constants}: The number of constants that were used in the model calibration.
+\item \code{Data}: A list containing the user's data of the average time step.
+\item \code{T\_A}: The operation count for the advection term.
+\item \code{T\_E}: The operation count for the elliptic term.
+
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{L\_2\_norm}: The L2 norm of the difference between the model and the data.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+\section{\code{Fit\_Model}}
+This function runs the calibration fitting of the model. It uses Python's \code{fmin} function to minimise the difference between the model and the data. 
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Num\_Constants}: The number of constants that were used in the model calibration.
+\item \code{Data}: A list containing the user's data of the average time step.
+\item \code{T\_A}: The operation count for the advection term.
+\item \code{T\_E}: The operation count for the elliptic term.
+
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{Fit}: The values for the constants in the calibration, measured in FLOPs.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+\section{\code{Run\_Serial\_Fit}}
+This function runs the entirety of the serial model calibration. It produces plots in addition to providing the user with the estimated FLOPs of their system.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Compare\_Serial}: Boolean true/false if the user would like to compare the model prediction to their data.
+\item \code{Consider\_Modes}: The values of \(N_Z\) the user would like to use in order to calibrate the model. 
+\item \code{P}: The degree of the polynomial.
+\item \code{Num\_Elements}: The total number of elements.
+\item \code{Nektar\_Modes}: The values of \(N_Z\) in the data that the model will be compared to.
+\item \code{Timings}: The average time step values for Nektar\_Modes.
+\item \code{Pressure}: Dictionary containing the CG iteration counts for the pressure.
+\item \code{Velocity\_1}: Dictionary containing the CG iteration counts for the velocity 1.
+\item \code{Velocity\_2}: Dictionary containing the CG iteration counts for the velocity 2.
+\item \code{Velocity\_3}: Dictionary containing the CG iteration counts for the velocity 3.
+\item \code{Scheme}: A string containing the method name. (e.g. \code{IterativeFull})
+
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{Fit}: The values for the constants in the calibration, measured in FLOPs.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item The results of \code{fmin}
+\item The values for the fitted constants in FLOPs.
+\item The mean of the difference between the data and the model.
+\item The standard deviation of the differences.
+\item The variance of the difference.
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item Plot of data vs. model in \code{Output/Figures/Model\_vs\_Data.png}
+\end{itemize}

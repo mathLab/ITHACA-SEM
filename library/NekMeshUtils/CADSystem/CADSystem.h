@@ -86,6 +86,7 @@ public:
      */
     CADSystem(std::string name) : m_name(name)
     {
+        m_2d = false;
     }
 
     ~CADSystem()
@@ -98,6 +99,21 @@ public:
     std::string GetName()
     {
         return m_name;
+    }
+
+    void Set2D()
+    {
+        m_2d = true;
+    }
+
+    bool Is2D()
+    {
+        return m_2d;
+    }
+
+    void SetNACA(std::string i)
+    {
+        m_naca = i;
     }
 
     /**
@@ -190,6 +206,9 @@ protected:
     std::map<int, CADSurfSharedPtr> m_surfs;
     /// Map of vertices
     std::map<int, CADVertSharedPtr> m_verts;
+
+    bool m_2d;
+    std::string m_naca;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

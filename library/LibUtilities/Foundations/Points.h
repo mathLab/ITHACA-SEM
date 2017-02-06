@@ -155,6 +155,8 @@ namespace Nektar
                 case eNodalTriElec:
                 case eNodalTriFekete:
                 case eNodalTriEvenlySpaced:
+                case eNodalTriSPI:
+                case eNodalQuadElec:
                     dimpoints = 2;
                     break;
 
@@ -162,6 +164,7 @@ namespace Nektar
                 case eNodalTetEvenlySpaced:
                 case eNodalPrismEvenlySpaced:
                 case eNodalPrismElec:
+                case eNodalHexElec:
                     dimpoints = 3;
                     break;
 
@@ -188,6 +191,10 @@ namespace Nektar
                     ASSERTL0(false,"this method cannot be implemented");
                     break;
 
+                case eNodalQuadElec:
+                    totpoints = m_numpoints*m_numpoints;
+                    break;
+
                 case eNodalTetElec:
                 case eNodalTetEvenlySpaced:
                     totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
@@ -202,6 +209,10 @@ namespace Nektar
                     break;
                 case eNodalPrismSPI:
                     ASSERTL0(false,"this method cannot be implemented");
+                    break;
+
+                case eNodalHexElec:
+                    totpoints = m_numpoints*m_numpoints*m_numpoints;
                     break;
 
                 default:

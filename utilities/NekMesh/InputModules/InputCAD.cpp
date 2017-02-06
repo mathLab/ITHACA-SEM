@@ -35,6 +35,8 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
+#include <boost/thread.hpp>
+
 #include <tinyxml.h>
 
 #include "InputCAD.h"
@@ -117,7 +119,39 @@ void InputCAD::ParseFile(string nm)
         }
     }
 
-    map<string, string>::iterator it;
+    set<string> refinement;
+    if(pSession->DefinesElement("NEKTAR/MESHING/REFINEMENT"))
+    {
+        TiXmlElement *refine = mcf->FirstChildElement("REFINEMENT");
+        TiXmlElement *L     = refine->FirstChildElement("LINE");
+
+        while (L)
+        {
+            stringstream ss;
+            TiXmlElement *T = L->FirstChildElement("X1");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("Y1");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("Z1");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("X2");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("Y2");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("Z2");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("R");
+            ss << T->GetText() << ",";
+            T = L->FirstChildElement("D");
+            ss << T->GetText();
+
+            refinement.insert(ss.str());
+
+            L = L->NextSiblingElement("LINE");
+        }
+    }
+
+    map<string,string>::iterator it;
 
     it = information.find("CADFile");
     ASSERTL0(it != information.end(), "no cadfile defined");
@@ -126,13 +160,13 @@ void InputCAD::ParseFile(string nm)
     it = information.find("MeshType");
     ASSERTL0(it != information.end(), "no meshtype defined");
     m_makeBL = it->second == "BL";
-
-    it = information.find("UDSFile");
-    if (it != information.end())
+    m_2D = it->second == "2D";
+    if (it->second == "2DBL")
     {
-        m_udsfile = it->second;
-        m_uds     = true;
+        m_makeBL = true;
+        m_2D = true;
     }
+
 
     it = parameters.find("MinDelta");
     ASSERTL0(it != parameters.end(), "no mindelta defined");
@@ -161,12 +195,38 @@ void InputCAD::ParseFile(string nm)
         m_blthick = it->second;
 
         it = parameters.find("BLLayers");
-        ASSERTL0(it != parameters.end(), "no bllayer defined");
-        m_bllayers = it->second;
+        m_splitBL = it != parameters.end();
+        if(m_splitBL)
+        {
+            m_bllayers = it->second;
+            it = parameters.find("BLProg");
+            m_blprog = it != parameters.end() ? it->second : "2.0";
+        }
+    }
 
-        it = parameters.find("BLProg");
-        ASSERTL0(it != parameters.end(), "no blprog defined");
-        m_blprog = it->second;
+    m_naca = false;
+    if(m_2D && m_cadfile.find('.') == std::string::npos)
+    {
+        m_naca = true;
+
+        stringstream ss;
+        it = parameters.find("Xmin");
+        ASSERTL0(it != parameters.end(), "no xmin defined");
+        ss << it->second << ",";
+        it = parameters.find("Ymin");
+        ASSERTL0(it != parameters.end(), "no ymin defined");
+        ss << it->second << ",";
+        it = parameters.find("Xmax");
+        ASSERTL0(it != parameters.end(), "no xmax defined");
+        ss << it->second << ",";
+        it = parameters.find("Ymax");
+        ASSERTL0(it != parameters.end(), "no zmax defined");
+        ss << it->second << ",";
+        it = parameters.find("AOA");
+        ASSERTL0(it != parameters.end(), "no aoa defined");
+        ss << it->second;
+
+        m_nacadomain = ss.str();
     }
 
     set<string>::iterator sit;
@@ -174,6 +234,21 @@ void InputCAD::ParseFile(string nm)
     m_surfopti = sit != boolparameters.end();
     sit        = boolparameters.find("WriteOctree");
     m_woct     = sit != boolparameters.end();
+    sit        = boolparameters.find("VarOpti");
+    m_varopti  = sit != boolparameters.end();
+
+    m_refine = refinement.size() > 0;
+    if(m_refine)
+    {
+        stringstream ss;
+        for(sit = refinement.begin(); sit != refinement.end(); sit++)
+        {
+            ss << *sit;
+            ss << ":";
+        }
+        m_refinement = ss.str();
+        m_refinement.erase(m_refinement.end()-1);
+    }
 }
 
 void InputCAD::Process()
@@ -191,34 +266,58 @@ void InputCAD::Process()
         ModuleKey(eProcessModule, "loadcad"), m_mesh));
     mods.back()->RegisterConfig("filename", m_cadfile);
 
+    if(m_2D)
+    {
+        mods.back()->RegisterConfig("2D","");
+    }
+    if(m_naca)
+    {
+        mods.back()->RegisterConfig("NACA",m_nacadomain);
+    }
+
     ////**** Octree ****////
     mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "loadoctree"), m_mesh));
     mods.back()->RegisterConfig("mindel", m_minDelta);
     mods.back()->RegisterConfig("maxdel", m_maxDelta);
     mods.back()->RegisterConfig("eps", m_eps);
-    if (m_uds)
+    if (m_refine)
     {
-        mods.back()->RegisterConfig("udsfile", m_udsfile);
+        mods.back()->RegisterConfig("refinement", m_refinement);
     }
     if (m_woct)
     {
         mods.back()->RegisterConfig("writeoctree", "");
     }
 
-    ////**** SurfaceMesh ****////
-    mods.push_back(GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "surfacemesh"), m_mesh));
-
-    ////**** VolumeMesh ****////
-    mods.push_back(GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "volumemesh"), m_mesh));
-    if (m_makeBL)
+    if(m_2D)
     {
-        mods.back()->RegisterConfig("blsurfs", m_blsurfs);
-        mods.back()->RegisterConfig("blthick", m_blthick);
-        mods.back()->RegisterConfig("bllayers", m_bllayers);
-        mods.back()->RegisterConfig("blprog", m_blprog);
+        m_mesh->m_expDim = 2;
+        m_mesh->m_spaceDim = 2;
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "2dgenerator"), m_mesh));
+        if (m_makeBL)
+        {
+            mods.back()->RegisterConfig("blcurves", m_blsurfs);
+            mods.back()->RegisterConfig("blthick", m_blthick);
+        }
+    }
+    else
+    {
+        ////**** SurfaceMesh ****////
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "surfacemesh"), m_mesh));
+
+        ////**** VolumeMesh ****////
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "volumemesh"), m_mesh));
+        if(m_makeBL)
+        {
+            mods.back()->RegisterConfig("blsurfs",m_blsurfs);
+            mods.back()->RegisterConfig("blthick",m_blthick);
+            mods.back()->RegisterConfig("bllayers",m_bllayers);
+            mods.back()->RegisterConfig("blprog",m_blprog);
+        }
     }
 
     ////**** HOSurface ****////
@@ -229,7 +328,36 @@ void InputCAD::Process()
         mods.back()->RegisterConfig("opti", "");
     }
 
-    for (int i = 0; i < mods.size(); i++)
+    ////*** VARIATIONAL OPTIMISATION ****////
+    if(m_varopti)
+    {
+        unsigned int np = boost::thread::physical_concurrency();
+        if(m_mesh->m_verbose)
+        {
+            cout << "Detecting 4 cores, will attempt to run in parrallel" << endl;
+        }
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "varopti"), m_mesh));
+        mods.back()->RegisterConfig("nq",boost::lexical_cast<string>(m_mesh->m_nummode));
+        mods.back()->RegisterConfig("hyperelastic","");
+        mods.back()->RegisterConfig("maxiter","10");
+        mods.back()->RegisterConfig("restol","1e-6");
+        mods.back()->RegisterConfig("overint","6");
+        mods.back()->RegisterConfig("numthreads",boost::lexical_cast<string>(np));
+    }
+
+    ////**** SPLIT BL ****////
+    if(m_splitBL)
+    {
+        mods.push_back(GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "bl"), m_mesh));
+        mods.back()->RegisterConfig("layers",m_bllayers);
+        mods.back()->RegisterConfig("surf",m_blsurfs);
+        mods.back()->RegisterConfig("nq",boost::lexical_cast<string>(m_mesh->m_nummode));
+        mods.back()->RegisterConfig("r",m_blprog);
+    }
+
+    for(int i = 0; i < mods.size(); i++)
     {
         mods[i]->Process();
     }

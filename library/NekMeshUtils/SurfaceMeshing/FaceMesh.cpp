@@ -918,22 +918,27 @@ bool FaceMesh::Validate()
 
         int numValid = 0;
 
-        if (r[0] < triDelta[0] && r[2] < triDelta[0])
+        if (r[0] < (triDelta[0] + triDelta[1]) / 2.0 *1.41)
         {
             numValid++;
         }
 
-        if (r[1] < triDelta[1] && r[0] < triDelta[1])
+        if (r[1] < (triDelta[1] + triDelta[2]) / 2.0 *1.41)
         {
             numValid++;
         }
 
-        if (r[2] < triDelta[2] && r[1] < triDelta[2])
+        if (r[2] < (triDelta[2] + triDelta[0]) / 2.0 *1.41)
         {
             numValid++;
         }
 
-        if (numValid != 3)
+        NekDouble rmin = min(r[0],r[1]);
+        rmin = min(rmin,r[2]);
+        NekDouble rmax = max(r[0],r[1]);
+        rmax = min(rmax,r[2]);
+
+        if (numValid != 3 || rmax / rmin > 1.1)
         {
             Array<OneD, NekDouble> ainfo, binfo, cinfo;
             ainfo = m_connec[i][0]->GetCADSurfInfo(m_id);
@@ -1195,6 +1200,18 @@ void FaceMesh::OrientateCurves()
         vector<NodeSharedPtr> tmp = orderedLoops[0];
         reverse(tmp.begin(), tmp.end());
         orderedLoops[0] = tmp;
+        //need to flip edgeo
+        for(int i = 0; i < m_edgeloops[0].edgeo.size(); i++)
+        {
+            if(m_edgeloops[0].edgeo[i] == 0)
+            {
+                m_edgeloops[0].edgeo[i] = 1;
+            }
+            else
+            {
+                m_edgeloops[0].edgeo[i] = 0;
+            }
+        }
     }
 
     for (int i = 1; i < orderedLoops.size(); i++)
@@ -1204,6 +1221,19 @@ void FaceMesh::OrientateCurves()
             vector<NodeSharedPtr> tmp = orderedLoops[i];
             reverse(tmp.begin(), tmp.end());
             orderedLoops[i] = tmp;
+
+            //need to flip edgeo
+            for(int j = 0; j < m_edgeloops[i].edgeo.size(); j++)
+            {
+                if(m_edgeloops[i].edgeo[j] == 0)
+                {
+                    m_edgeloops[i].edgeo[j] = 1;
+                }
+                else
+                {
+                    m_edgeloops[i].edgeo[j] = 0;
+                }
+            }
         }
     }
 }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADSurf.h
+//  File: CADSurfCFI.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_CADSYSTEM_CFI_CADSURFCFI
-#define NekMeshUtils_CADSYSTEM_CFI_CADSURFCFI
+#ifndef NEKMESHUTILS_CADSYSTEM_CFI_CADSURFCFI
+#define NEKMESHUTILS_CADSYSTEM_CFI_CADSURFCFI
 
 #include "../CADSurf.h"
 #include "CADSystemCFI.h"
@@ -47,7 +47,6 @@ namespace NekMeshUtils
 class CADSurfCFI : public CADSurf
 {
 public:
-
     static CADSurfSharedPtr create()
     {
         return MemoryManager<CADSurfCFI>::AllocateSharedPtr();
@@ -55,11 +54,11 @@ public:
 
     static std::string key;
 
-    CADSurfCFI() {};
+    CADSurfCFI(){};
 
     ~CADSurfCFI(){};
 
-    void Initialise(int i, cfi::Face* in, std::vector<EdgeLoop> ein);
+    void Initialise(int i, cfi::Face *in, std::vector<EdgeLoop> ein);
     void SetScaling(NekDouble i)
     {
         m_scal = i;
@@ -67,13 +66,13 @@ public:
 
     Array<OneD, NekDouble> GetBounds();
 
-    Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);
+    Array<OneD, NekDouble> N(Array<OneD, NekDouble> uv);
 
-    Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv);
+    Array<OneD, NekDouble> D1(Array<OneD, NekDouble> uv);
 
-    Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv);
+    Array<OneD, NekDouble> D2(Array<OneD, NekDouble> uv);
 
-    Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv);
+    Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv);
 
     Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p);
 
@@ -85,12 +84,13 @@ public:
 
 private:
     /// Function which tests the the value of uv used is within the surface
-    void Test(Array<OneD, NekDouble> uv){}
+    void Test(Array<OneD, NekDouble> uv)
+    {
+    }
     /// CFI object for surface.
-    cfi::Face* m_cfiSurface;
+    cfi::Face *m_cfiSurface;
     NekDouble m_scal;
 };
-
 }
 }
 

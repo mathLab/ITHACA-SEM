@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADSystem.cpp
+//  File: CADSystemCFI.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -34,9 +34,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "CADSystemCFI.h"
-#include "CADVertCFI.h"
 #include "CADCurveCFI.h"
 #include "CADSurfCFI.h"
+#include "CADVertCFI.h"
 
 using namespace std;
 
@@ -45,33 +45,32 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-
 std::string CADSystemCFI::key = GetEngineFactory().RegisterCreatorFunction(
-        "cfi", CADSystemCFI::create, "Uses CFI as cad engine");
+    "cfi", CADSystemCFI::create, "Uses CFI as cad engine");
 
 bool CADSystemCFI::LoadCAD()
 {
-    cout << "trying " << m_name << endl;
-
+    //it is possible to get CFI to lock on to a open gui session
+    //not sure it ever will with this code
     cfiHandel.startServer();
     cout << "cfi loaded in mode: ";
-    if(cfiHandel.info.mode == cfi::MODE_STANDALONE)
+    if (cfiHandel.info.mode == cfi::MODE_STANDALONE)
     {
         cout << "standalone" << endl;
     }
-    else if(cfiHandel.info.mode == cfi::MODE_CLIENT)
+    else if (cfiHandel.info.mode == cfi::MODE_CLIENT)
     {
         cout << "client" << endl;
     }
-    else if(cfiHandel.info.mode == cfi::MODE_SERVER)
+    else if (cfiHandel.info.mode == cfi::MODE_SERVER)
     {
         cout << "server" << endl;
     }
-    else if(cfiHandel.info.mode == cfi::MODE_BOTH)
+    else if (cfiHandel.info.mode == cfi::MODE_BOTH)
     {
         cout << "both" << endl;
     }
-    else if(cfiHandel.info.mode == cfi::MODE_PLUGIN)
+    else if (cfiHandel.info.mode == cfi::MODE_PLUGIN)
     {
         cout << "plugin" << endl;
     }
@@ -82,11 +81,16 @@ bool CADSystemCFI::LoadCAD()
 
     model = cfiHandel.openModelFile(m_name.c_str());
 
-    ASSERTL0(model->getEntityTotal(cfi::TYPE_BODY,cfi::SUBTYPE_ALL) == 1,
-                    "cannot deal with multibodies");
+    //make an assumption there are not multiple bodies in the solid
+    ASSERTL0(model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) == 1,
+             "cannot deal with multibodies");
 
+    //cfi doesnt mind stupid units so this scales everything back to meters
+    //which is what nekmesh assumes its in
+    //the m_scal object is passed to all cad entities and scales any operation
+    //before running it.
     m_scal = 1.0;
-    if(model->getUnits() == cfi::UNIT_INCHES)
+    if (model->getUnits() == cfi::UNIT_INCHES)
     {
         cout << "Model is in inches, scaling accordingly" << endl;
         m_scal = 0.0254;
@@ -94,118 +98,141 @@ bool CADSystemCFI::LoadCAD()
 
     body = model->getBodyEntity(1);
 
-    map<string,cfi::Point*> mapOfVerts;
-    map<string,cfi::Line*> mapOfEdges;
+    //CFI does everything by string identifers
+    //currently nekmesh cad system uses integer ids.
+    //it really should use strings but doesnt currently
+    map<string, cfi::Point *> mapOfVerts;
+    map<string, cfi::Line *> mapOfEdges;
 
-    vector< cfi::Oriented<cfi::TopoEntity*> >* faceList = body->getChildList();
+    //nothing is unique in cfi, there can list of verts that arnt used
+    //or are listed twice. This block gets all the real unique vertices in the
+    //cad by cascading down from the faces
+    //also builds a list on unique edges in the process
+    vector<cfi::Oriented<cfi::TopoEntity *> > *faceList = body->getChildList();
 
-    vector< cfi::Oriented<cfi::TopoEntity*> >::iterator it,it2,it3;
-    for(it = faceList->begin(); it != faceList->end(); it++)
+    vector<cfi::Oriented<cfi::TopoEntity *> >::iterator it, it2, it3;
+    for (it = faceList->begin(); it != faceList->end(); it++)
     {
-        cfi::Oriented<cfi::TopoEntity*> orientatedFace = *it;
-        cfi::Face* face = static_cast<cfi::Face*>(orientatedFace.entity);
+        cfi::Oriented<cfi::TopoEntity *> orientatedFace = *it;
+        cfi::Face *face = static_cast<cfi::Face *>(orientatedFace.entity);
 
-        vector< cfi::Oriented<cfi::TopoEntity*> >* edgeList = face->getChildList();
-        for(it2 = edgeList->begin(); it2 != edgeList->end(); it2++)
+        vector<cfi::Oriented<cfi::TopoEntity *> > *edgeList =
+            face->getChildList();
+        for (it2 = edgeList->begin(); it2 != edgeList->end(); it2++)
         {
-            cfi::Oriented<cfi::TopoEntity*> orientatedEdge = *it2;
-            cfi::Line* edge = static_cast<cfi::Line*>(orientatedEdge.entity);
+            cfi::Oriented<cfi::TopoEntity *> orientatedEdge = *it2;
+            cfi::Line *edge = static_cast<cfi::Line *>(orientatedEdge.entity);
             mapOfEdges[edge->getName()] = edge;
 
-            vector< cfi::Oriented<cfi::TopoEntity*> >* vertList = edge->getChildList();
-            for(it3 = vertList->begin(); it3 != vertList->end(); it3++)
+            vector<cfi::Oriented<cfi::TopoEntity *> > *vertList =
+                edge->getChildList();
+            for (it3 = vertList->begin(); it3 != vertList->end(); it3++)
             {
-                cfi::Oriented<cfi::TopoEntity*> orientatedVert = *it3;
-                cfi::Point* vert = static_cast<cfi::Point*>(orientatedVert.entity);
+                cfi::Oriented<cfi::TopoEntity *> orientatedVert = *it3;
+                cfi::Point *vert =
+                    static_cast<cfi::Point *>(orientatedVert.entity);
                 mapOfVerts[vert->getName()] = vert;
                 mapVertToListEdge[vert->getName()].push_back(edge->getName());
             }
         }
     }
 
-    map<string,int> nameToVertId;
-    map<string,cfi::Point*>::iterator vit;
-    int i = 1; //from one to be consistent with oce
-    for(vit = mapOfVerts.begin(); vit != mapOfVerts.end(); vit++, i++)
+    //make the vertices and build a map of name to id
+    map<string, int> nameToVertId;
+    map<string, cfi::Point *>::iterator vit;
+    int i = 1; // from one to be consistent with oce
+    for (vit = mapOfVerts.begin(); vit != mapOfVerts.end(); vit++, i++)
     {
         AddVert(i, vit->second);
         nameToVertId[vit->second->getName()] = i;
     }
 
-    map<string,cfi::Line*>::iterator eit;
+    //build curves
+    map<string, cfi::Line *>::iterator eit;
     i = 1;
-    for(eit = mapOfEdges.begin(); eit != mapOfEdges.end(); eit++, i++)
+    for (eit = mapOfEdges.begin(); eit != mapOfEdges.end(); eit++, i++)
     {
-        vector< cfi::Oriented<cfi::TopoEntity*> >* vertList = eit->second->getChildList();
+        vector<cfi::Oriented<cfi::TopoEntity *> > *vertList =
+            eit->second->getChildList();
         vector<int> ids;
-        for(it3 = vertList->begin(); it3 != vertList->end(); it3++)
+        for (it3 = vertList->begin(); it3 != vertList->end(); it3++)
         {
-            cfi::Oriented<cfi::TopoEntity*> orientatedVert = *it3;
-            cfi::Point* vert = static_cast<cfi::Point*>(orientatedVert.entity);
+            cfi::Oriented<cfi::TopoEntity *> orientatedVert = *it3;
+            cfi::Point *vert = static_cast<cfi::Point *>(orientatedVert.entity);
             ids.push_back(nameToVertId[vert->getName()]);
         }
-        ASSERTL0(ids.size()==2,"doesnt make sense");
+        ASSERTL0(ids.size() == 2, "doesnt make sense");
         nameToCurveId[eit->second->getName()] = i;
         AddCurve(i, eit->second, ids[0], ids[1]);
     }
 
+    //build surfaces
     map<int, vector<int> > adjsurfmap;
     i = 1;
-    for(it = faceList->begin(); it != faceList->end(); it++, i++)
+    for (it = faceList->begin(); it != faceList->end(); it++, i++)
     {
-        cfi::Oriented<cfi::TopoEntity*> orientatedFace = *it;
-        cfi::Face* face = static_cast<cfi::Face*>(orientatedFace.entity);
+        cfi::Oriented<cfi::TopoEntity *> orientatedFace = *it;
+        cfi::Face *face = static_cast<cfi::Face *>(orientatedFace.entity);
         nameToFaceId[face->getName()] = i;
-        vector< cfi::Oriented<cfi::TopoEntity*> >* edgeList = face->getChildList();
+        vector<cfi::Oriented<cfi::TopoEntity *> > *edgeList =
+            face->getChildList();
 
         vector<EdgeLoop> edgeloops;
-        vector<vector<cfi::Oriented<cfi::TopoEntity*> > > cfiloops;
+        vector<vector<cfi::Oriented<cfi::TopoEntity *> > > cfiloops;
         int done = 0;
-        while(done != edgeList->size())
+        while (done != edgeList->size())
         {
             EdgeLoop edgeloop;
-            vector<cfi::Oriented<cfi::TopoEntity*> > cfiloop;
+            vector<cfi::Oriented<cfi::TopoEntity *> > cfiloop;
             string firstVert;
-            vector< cfi::Oriented<cfi::TopoEntity*> >* vertList = edgeList->at(done).entity->getChildList();
-            if(edgeList->at(done).orientation == 1)
+            vector<cfi::Oriented<cfi::TopoEntity *> > *vertList =
+                edgeList->at(done).entity->getChildList();
+            if (edgeList->at(done).orientation == 1)
             {
                 firstVert = vertList->at(0).entity->getName();
-
             }
             else
             {
                 firstVert = vertList->at(1).entity->getName();
             }
-            edgeloop.edges.push_back(m_curves[nameToCurveId[edgeList->at(done).entity->getName()]]);
+            edgeloop.edges.push_back(
+                m_curves[nameToCurveId[edgeList->at(done).entity->getName()]]);
             cfiloop.push_back(edgeList->at(done));
-            adjsurfmap[nameToCurveId[edgeList->at(done).entity->getName()]].push_back(i);
-            edgeList->at(done).orientation == 1 ? edgeloop.edgeo.push_back(0) : edgeloop.edgeo.push_back(1);
+            adjsurfmap[nameToCurveId[edgeList->at(done).entity->getName()]]
+                .push_back(i);
+            edgeList->at(done).orientation == 1 ? edgeloop.edgeo.push_back(0)
+                                                : edgeloop.edgeo.push_back(1);
 
-            for(done++; done < edgeList->size(); done++)
+            for (done++; done < edgeList->size(); done++)
             {
                 bool end = false;
                 vertList = edgeList->at(done).entity->getChildList();
-                if(edgeList->at(done).orientation == 1)
+                if (edgeList->at(done).orientation == 1)
                 {
-                    if(vertList->at(1).entity->getName() == firstVert)
+                    if (vertList->at(1).entity->getName() == firstVert)
                     {
                         end = true;
                     }
                 }
                 else
                 {
-                    if(vertList->at(0).entity->getName() == firstVert)
+                    if (vertList->at(0).entity->getName() == firstVert)
                     {
                         end = true;
                     }
                 }
 
-                edgeloop.edges.push_back(m_curves[nameToCurveId[edgeList->at(done).entity->getName()]]);
+                edgeloop.edges.push_back(
+                    m_curves
+                        [nameToCurveId[edgeList->at(done).entity->getName()]]);
                 cfiloop.push_back(edgeList->at(done));
-                adjsurfmap[nameToCurveId[edgeList->at(done).entity->getName()]].push_back(i);
-                edgeList->at(done).orientation == 1 ? edgeloop.edgeo.push_back(0) : edgeloop.edgeo.push_back(1);
+                adjsurfmap[nameToCurveId[edgeList->at(done).entity->getName()]]
+                    .push_back(i);
+                edgeList->at(done).orientation == 1
+                    ? edgeloop.edgeo.push_back(0)
+                    : edgeloop.edgeo.push_back(1);
 
-                if(end)
+                if (end)
                 {
                     done++;
                     break;
@@ -215,32 +242,37 @@ bool CADSystemCFI::LoadCAD()
             edgeloops.push_back(edgeloop);
         }
 
-        cfi::FaceMassProperties* fmp = face->calcMassProperties(5.0,5.0);
-        cfi::UVPosition uv = face->calcUVFromXYZ(fmp->centreOfMass);
-        edgeloops[0].center = Array<OneD, NekDouble>(2);
-        edgeloops[0].center[0] = uv.u;
-        edgeloops[0].center[1] = uv.v;
-        for(int i = 1; i < cfiloops.size(); i++)
+        //this will accuratly calculate centers of surfaces but isnt really
+        //needed because the facemesh routines do it on their own
+
+        /*cfi::FaceMassProperties *fmp = face->calcMassProperties(5.0, 5.0);
+        cfi::UVPosition uv           = face->calcUVFromXYZ(fmp->centreOfMass);
+        edgeloops[0].center          = Array<OneD, NekDouble>(2);
+        edgeloops[0].center[0]       = uv.u;
+        edgeloops[0].center[1]       = uv.v;
+        for (int i = 1; i < cfiloops.size(); i++)
         {
-            for(int j = 0; j < cfiloops[i].size(); j++)
+            for (int j = 0; j < cfiloops[i].size(); j++)
             {
-                cfiloops[i][j].orientation == cfi::ORIENT_POSITIVE ?
-                            cfiloops[i][j].orientation = cfi::ORIENT_NEGATIVE :
-                            cfiloops[i][j].orientation = cfi::ORIENT_POSITIVE;
+                cfiloops[i][j].orientation == cfi::ORIENT_POSITIVE
+                    ? cfiloops[i][j].orientation = cfi::ORIENT_NEGATIVE
+                    : cfiloops[i][j].orientation = cfi::ORIENT_POSITIVE;
             }
-            cfi::Face* tmpface = cfi::Face::createBasic(model, cfiloops[i],face->getTopoEmbedding().value());
-            cfi::FaceMassProperties* fmp = tmpface->calcMassProperties(5.0,5.0);
-            cfi::UVPosition uv = tmpface->calcUVFromXYZ(fmp->centreOfMass);
-            edgeloops[i].center = Array<OneD, NekDouble>(2);
+            cfi::Face *tmpface = cfi::Face::createBasic(
+                model, cfiloops[i], face->getTopoEmbedding().value());
+            cfi::FaceMassProperties *fmp =
+                tmpface->calcMassProperties(5.0, 5.0);
+            cfi::UVPosition uv     = tmpface->calcUVFromXYZ(fmp->centreOfMass);
+            edgeloops[i].center    = Array<OneD, NekDouble>(2);
             edgeloops[i].center[0] = uv.u;
-            edgeloops[i].center[1] = uv.v;
+            edgeloops[i].center[1] = uv.v;*/
         }
         AddSurf(i, face, edgeloops);
     }
 
-    //TODO identify Degenerated faces and setdegen on vertices accordinaly
+    // TODO identify Degenerated faces and setdegen on vertices accordinaly
 
-    ASSERTL0(adjsurfmap.size() == m_curves.size(),"incorrect curve info");
+    ASSERTL0(adjsurfmap.size() == m_curves.size(), "incorrect curve info");
 
     // This checks that all edges are bound by two surfaces, sanity check.
     for (map<int, vector<int> >::iterator it = adjsurfmap.begin();
@@ -258,16 +290,16 @@ bool CADSystemCFI::LoadCAD()
     return true;
 }
 
-void CADSystemCFI::AddVert(int i, cfi::Point* in)
+void CADSystemCFI::AddVert(int i, cfi::Point *in)
 {
     CADVertSharedPtr newVert = GetCADVertFactory().CreateInstance(key);
 
-    static_pointer_cast<CADVertCFI>(newVert)->Initialise(i,in,m_scal);
+    static_pointer_cast<CADVertCFI>(newVert)->Initialise(i, in, m_scal);
 
     m_verts[i] = newVert;
 }
 
-void CADSystemCFI::AddCurve(int i, cfi::Line* in, int fv, int lv)
+void CADSystemCFI::AddCurve(int i, cfi::Line *in, int fv, int lv)
 {
     CADCurveSharedPtr newCurve = GetCADCurveFactory().CreateInstance(key);
     static_pointer_cast<CADCurveCFI>(newCurve)->Initialise(i, in, m_scal);
@@ -279,17 +311,14 @@ void CADSystemCFI::AddCurve(int i, cfi::Line* in, int fv, int lv)
     m_curves[i]->SetVert(vs);
 }
 
-void CADSystemCFI::AddSurf(int i, cfi::Face* in, std::vector<EdgeLoop> ein)
+void CADSystemCFI::AddSurf(int i, cfi::Face *in, std::vector<EdgeLoop> ein)
 {
     CADSurfSharedPtr newSurf = GetCADSurfFactory().CreateInstance(key);
     static_pointer_cast<CADSurfCFI>(newSurf)->Initialise(i, in, ein);
     static_pointer_cast<CADSurfCFI>(newSurf)->SetScaling(m_scal);
     m_surfs[i] = newSurf;
 
-    //if (in.Orientation() == 0)
-    //{
-    //    m_surfs[i]->SetReverseNomral();
-    //}
+    // TODO find if surface has reversed normal or not
 
     int tote = 0;
     for (int i = 0; i < ein.size(); i++)
@@ -314,6 +343,5 @@ Array<OneD, NekDouble> CADSystemCFI::GetBoundingBox()
 
     return ret;
 }
-
 }
 }

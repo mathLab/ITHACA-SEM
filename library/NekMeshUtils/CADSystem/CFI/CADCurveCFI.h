@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADCurve.h
+//  File: CADCurveCFI.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -46,7 +46,6 @@ namespace NekMeshUtils
 class CADCurveCFI : public CADCurve
 {
 public:
-
     static CADCurveSharedPtr create()
     {
         return MemoryManager<CADCurveCFI>::AllocateSharedPtr();
@@ -68,7 +67,7 @@ public:
 
     NekDouble Curvature(NekDouble t)
     {
-        ASSERTL0(false,"not implemented in CFI engine");
+        ASSERTL0(false, "not implemented in CFI engine");
         return 0;
     }
 
@@ -78,14 +77,13 @@ public:
 
     NekDouble loct(Array<OneD, NekDouble> xyz);
 
-    void Initialise(int i, cfi::Line* in, NekDouble s);
+    void Initialise(int i, cfi::Line *in, NekDouble s);
 
 private:
-    ///cfi object
-    cfi::Line* m_cfiEdge;
+    /// cfi object
+    cfi::Line *m_cfiEdge;
     NekDouble m_scal;
 };
-
 }
 }
 

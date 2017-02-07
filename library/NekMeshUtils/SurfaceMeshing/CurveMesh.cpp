@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
 #include <NekMeshUtils/Octree/Octree.h>
+#include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
 
 using namespace std;
 namespace Nektar
@@ -44,12 +44,13 @@ namespace NekMeshUtils
 
 void CurveMesh::Mesh()
 {
-    //this algorithm is mostly based on the work in chapter 19
+    // this algorithm is mostly based on the work in chapter 19
 
-    m_bounds          = m_cadcurve->Bounds();
-    m_curvelength     = m_cadcurve->GetTotLength();
-    m_numSamplePoints = int(m_curvelength / m_mesh->m_octree->GetMinDelta()) + 5;
-    ds                = m_curvelength / (m_numSamplePoints - 1);
+    m_bounds      = m_cadcurve->Bounds();
+    m_curvelength = m_cadcurve->GetTotLength();
+    m_numSamplePoints =
+        int(m_curvelength / m_mesh->m_octree->GetMinDelta()) + 5;
+    ds = m_curvelength / (m_numSamplePoints - 1);
 
     GetSampleFunction();
 
@@ -90,7 +91,7 @@ void CurveMesh::Mesh()
                 iterationcounter++;
                 NekDouble rhs = EvaluateDS(ski) / Ae * (EvaluatePS(ski) - k);
                 lastSki       = ski;
-                ski = ski - rhs;
+                ski           = ski - rhs;
                 if (abs(lastSki - ski) < 1E-8)
                 {
                     iterate = false;
@@ -107,11 +108,11 @@ void CurveMesh::Mesh()
     Array<OneD, NekDouble> loc;
 
     vector<CADVertSharedPtr> verts = m_cadcurve->GetVertex();
-    vector<CADSurfSharedPtr> s = m_cadcurve->GetAdjSurf();
+    vector<CADSurfSharedPtr> s     = m_cadcurve->GetAdjSurf();
     ASSERTL0(s.size() == (m_mesh->m_cad->Is2D()) ? 1 : 2, "invalid curve");
 
     NodeSharedPtr n = verts[0]->GetNode();
-    t = m_bounds[0];
+    t               = m_bounds[0];
     n->SetCADCurve(m_id, m_cadcurve, t);
     loc = n->GetLoc();
     for (int j = 0; j < s.size(); j++)
@@ -164,9 +165,10 @@ void CurveMesh::Mesh()
 
     CreateEdges();
 
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
-        cout << "\r                                                                "
+        cout << "\r                                                            "
+                "    "
                 "                             ";
         cout << scientific << "\r\t\tCurve " << m_id << endl
              << "\t\t\tLength: " << m_curvelength << endl
@@ -301,10 +303,13 @@ void CurveMesh::GetSampleFunction()
 
         loc = m_cadcurve->P(t);
 
-        if(m_bl > 0.0)
+        NekDouble ts =
+            m_bl.Evaluate(m_blID, loc[0], loc[1], loc[2], 0.0);
+
+        if (ts > 0.0)
         {
             NekDouble R = m_mesh->m_octree->QueryR(loc);
-            dsti[0] = R/(R+m_bl)*m_mesh->m_octree->Query(loc);
+            dsti[0]     = R / (R + ts) * m_mesh->m_octree->Query(loc);
         }
         else
         {

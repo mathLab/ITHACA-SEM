@@ -56,7 +56,7 @@ Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
     m_config["blcurves"] =
         ConfigOption(false, "0", "Generate parallelograms on these curves");
     m_config["blthick"] =
-        ConfigOption(false, "0", "Parallelogram layer thickness");
+        ConfigOption(false, "0.0", "Parallelogram layer thickness");
     m_config["periodic"] =
         ConfigOption(false, "0", "Set of pairs of periodic curves");
 }
@@ -125,7 +125,8 @@ void Generator2D::Process()
     {
         ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
                                       m_blCurves);
-        m_thickness = m_config["blthick"].as<NekDouble>();
+        m_thickness_ID =
+            m_thickness.DefineFunction("x y z", m_config["blthick"].as<string>());
     }
 
     // linear mesh all curves
@@ -137,18 +138,18 @@ void Generator2D::Process()
                                            "Curve progress");
         }
 
-        vector<unsigned int>::iterator f = find(m_blCurves.begin(),
-                                                m_blCurves.end(), i);
+        vector<unsigned int>::iterator f =
+            find(m_blCurves.begin(), m_blCurves.end(), i);
 
-        if(f == m_blCurves.end())
+        if (f == m_blCurves.end())
         {
             m_curvemeshes[i] =
                 MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
         }
         else
         {
-            m_curvemeshes[i] =
-                MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh, m_thickness);
+            m_curvemeshes[i] = MemoryManager<CurveMesh>::AllocateSharedPtr(
+                i, m_mesh, m_config["blthick"].as<string>());
         }
 
         m_curvemeshes[i]->Mesh();
@@ -326,7 +327,6 @@ void Generator2D::Process()
         m_facemeshes[i]->OrientateCurves();
     }
 
-
     if (m_config["blcurves"].beenSet)
     {
         // we need to do the boundary layer generation in a face by face basis
@@ -351,20 +351,20 @@ void Generator2D::Process()
     }
 
     // linear mesh all surfaces
-    map<int,FaceMeshSharedPtr>::iterator fit;
+    map<int, FaceMeshSharedPtr>::iterator fit;
     int i = 1;
-    for(fit = m_facemeshes.begin(); fit != m_facemeshes.end(); fit++)
+    for (fit = m_facemeshes.begin(); fit != m_facemeshes.end(); fit++)
     {
         if (m_mesh->m_verbose)
         {
-            LibUtilities::PrintProgressbar(
-                i, m_mesh->m_cad->GetNumSurf(), "Face progress");
+            LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumSurf(),
+                                           "Face progress");
         }
 
         if (m_config["blcurves"].beenSet)
         {
-            //for bl surfaces orientate curves needs to be run again to
-            //push nodes to the edges of the system
+            // for bl surfaces orientate curves needs to be run again to
+            // push nodes to the edges of the system
             fit->second->ResetCurvemeshes(m_curvemeshes);
             fit->second->OrientateCurves();
         }
@@ -388,6 +388,10 @@ void Generator2D::MakeBLPrep()
     {
         cout << endl << "\tBoundary layer meshing:" << endl << endl;
     }
+
+    // identify the nodes which will become the boundary layer.
+    ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
+                                  m_blCurves);
 
     for (vector<unsigned>::iterator it = m_blCurves.begin();
          it != m_blCurves.end(); ++it)
@@ -458,8 +462,11 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoopSharedPtr> e)
         n[0] /= mag;
         n[1] /= mag;
 
-        n[0] = n[0] * m_thickness + it->first->m_x;
-        n[1] = n[1] * m_thickness + it->first->m_y;
+        NekDouble t = m_thickness.Evaluate(m_thickness_ID, it->first->m_x,
+                                           it->first->m_y, 0.0, 0.0);
+
+        n[0] = n[0] * t + it->first->m_x;
+        n[1] = n[1] * t + it->first->m_y;
         n[2] = 0.0;
 
         NodeSharedPtr nn = boost::shared_ptr<Node>(

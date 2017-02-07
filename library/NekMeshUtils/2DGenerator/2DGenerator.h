@@ -40,6 +40,8 @@
 #include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
 #include <NekMeshUtils/SurfaceMeshing/FaceMesh.h>
 
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -76,7 +78,8 @@ private:
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
 
     std::vector<unsigned int> m_blCurves;
-    NekDouble m_thickness;
+    LibUtilities::AnalyticExpressionEvaluator m_thickness;
+    int m_thickness_ID;
     std::map<NodeSharedPtr, std::vector<EdgeSharedPtr> > m_nodesToEdge;
 };
 }

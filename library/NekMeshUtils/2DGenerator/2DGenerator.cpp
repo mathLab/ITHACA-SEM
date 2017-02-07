@@ -91,10 +91,15 @@ void Generator2D::Process()
         for (vector<string>::iterator il = lines.begin(); il != lines.end();
              ++il)
         {
-            vector<unsigned> data;
-            ParseUtils::GenerateOrderedVector(il->c_str(), data);
+            vector<string> tmp;
+            boost::split(tmp, *il, boost::is_any_of(","));
 
-            ASSERTL0(data.size() == 2, "periodic pairs ill-defined");
+            ASSERTL0(tmp.size() == 2, "periodic pairs ill-defined");
+
+            vector<unsigned> data(2);
+            data[0] = boost::lexical_cast<unsigned>(tmp[0]);
+            data[1] = boost::lexical_cast<unsigned>(tmp[1]);
+
             ASSERTL0(!periodic.count(data[0]), "curve already periodic");
             ASSERTL0(!periodic.count(data[1]), "curve already periodic");
 

@@ -413,15 +413,16 @@ void InputMCF::Process()
         for (vector<string>::iterator il = lines.begin(); il != lines.end();
              ++il)
         {
-            vector<unsigned> data;
-            ParseUtils::GenerateOrderedVector(il->c_str(), data);
+            vector<string> tmp(2);
+            vector<unsigned> data(2);
+            boost::split(tmp, *il, boost::is_any_of(","));
+            data[0] = boost::lexical_cast<unsigned>(tmp[0]);
+            data[1] = boost::lexical_cast<unsigned>(tmp[1]);
 
             mods.push_back(GetModuleFactory().CreateInstance(
                 ModuleKey(eProcessModule, "peralign"), m_mesh));
-            mods.back()->RegisterConfig("surf1",
-                                        boost::lexical_cast<string>(data[0]));
-            mods.back()->RegisterConfig("surf2",
-                                        boost::lexical_cast<string>(data[1]));
+            mods.back()->RegisterConfig("surf1", tmp[0]);
+            mods.back()->RegisterConfig("surf2", tmp[1]);
             mods.back()->RegisterConfig("orient", "false");
 
             Array<OneD, NekDouble> P11 =

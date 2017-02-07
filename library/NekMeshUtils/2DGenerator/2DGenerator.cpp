@@ -389,10 +389,6 @@ void Generator2D::MakeBLPrep()
         cout << endl << "\tBoundary layer meshing:" << endl << endl;
     }
 
-    // identify the nodes which will become the boundary layer.
-    ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
-                                  m_blCurves);
-
     for (vector<unsigned>::iterator it = m_blCurves.begin();
          it != m_blCurves.end(); ++it)
     {

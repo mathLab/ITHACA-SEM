@@ -236,6 +236,8 @@ void FaceMesh::Smoothing()
     EdgeSet::iterator eit;
     NodeSet::iterator nit;
 
+    Array<OneD, NekDouble> bounds = m_cadsurf->GetBounds();
+
     map<int, vector<EdgeSharedPtr> > connectingedges;
 
     map<int, vector<ElementSharedPtr> > connectingelements;
@@ -357,30 +359,102 @@ void FaceMesh::Smoothing()
                 }
             }
 
-            Array<OneD, NekDouble> ui(2);
-            ui[0] = 0.0;
-            ui[1] = 0.0;
+            Array<OneD, NekDouble> u0(2);
+            u0[0] = 0.0;
+            u0[1] = 0.0;
 
             for (int i = 0; i < nodesystem.size(); i++)
             {
                 Array<OneD, NekDouble> uj = nodesystem[i]->GetCADSurfInfo(m_id);
-                ui[0] += uj[0] / nodesystem.size();
-                ui[1] += uj[1] / nodesystem.size();
+                u0[0] += uj[0] / nodesystem.size();
+                u0[1] += uj[1] / nodesystem.size();
             }
 
-            Array<OneD, NekDouble> bounds = m_cadsurf->GetBounds();
-
-            Array<OneD, NekDouble> uvn(2);
-
-            uvn[0] = ui[0];
-            uvn[1] = ui[1];
-
-            if (!(uvn[0] < bounds[0] || uvn[0] > bounds[1] ||
-                  uvn[1] < bounds[2] || uvn[1] > bounds[3]))
+            Array<OneD, NekDouble> pu0 = m_cadsurf->P(u0);
+            NekDouble di = m_mesh->m_octree->Query(pu0);
+            Array<OneD, NekDouble> F(2,0.0), dF(4,0.0);
+            for (int i = 0; i < nodesystem.size(); i++)
             {
-                Array<OneD, NekDouble> l2 = m_cadsurf->P(uvn);
-                (*nit)->Move(l2, m_id, uvn);
+                Array<OneD, NekDouble> rj = nodesystem[i]->GetLoc();
+                Array<OneD, NekDouble> uj = nodesystem[i]->GetCADSurfInfo(m_id);
+                NekDouble dj = m_mesh->m_octree->Query(rj);
+                NekDouble d = (di + dj) / 2.0;
+                NekDouble wij = sqrt((rj[0] - pu0[0]) * (rj[0] - pu0[0]) +
+                                     (rj[1] - pu0[1]) * (rj[1] - pu0[1]) +
+                                     (rj[2] - pu0[2]) * (rj[2] - pu0[2])) - d;
+
+                NekDouble umag = sqrt((uj[0] - u0[0]) * (uj[0] - u0[0]) +
+                                      (uj[1] - u0[1]) * (uj[1] - u0[1]));
+
+                F[0] += wij*(uj[0] - u0[0]) / umag;
+                F[1] += wij*(uj[1] - u0[1]) / umag;
+
+                Array<OneD, NekDouble> d1 = m_cadsurf->D1(u0);
+
+                Array<OneD, NekDouble> dw(2,0.0);
+                dw[0] = -2.0 * ((rj[0] - pu0[0]) * d1[3] + (rj[1] - pu0[1]) * d1[4] +
+                                 (rj[2] - pu0[2]) * d1[5]);
+                dw[1] = -2.0 * ((rj[0] - pu0[0]) * d1[6] + (rj[1] - pu0[1]) * d1[7] +
+                                 (rj[2] - pu0[2]) * d1[8]);
+
+                Array<OneD, NekDouble> drhs(4,0.0);
+                drhs[0] = 2.0*((uj[0] - u0[0])*(uj[0] - u0[0])-umag)/umag/umag;
+                drhs[1] = 2.0*((uj[0] - u0[0])*(uj[1] - u0[1]))/umag/umag;
+                drhs[2] = drhs[1];
+                drhs[3] = 2.0*((uj[1] - u0[1])*(uj[1] - u0[1])-umag)/umag/umag;
+
+                dF[0] += dw[0] * (uj[0] - u0[0]) / umag + wij * drhs[0];
+
+                dF[1] += dw[0] * (uj[1] - u0[1]) / umag + wij * drhs[1];
+
+                dF[2] += dw[1] * (uj[0] - u0[0]) / umag + wij * drhs[2];
+
+                dF[3] += dw[1] * (uj[1] - u0[1]) / umag + wij * drhs[3];
             }
+
+            NekDouble det = dF[0] * dF[3] - dF[1] * dF[2];
+            NekDouble tmp = dF[0];
+            dF[0] = dF[3] / det;
+            dF[3] = tmp / det;
+            dF[1] *= -1.0 / det;
+            dF[2] *= -1.0 / det;
+
+            u0[0] -= (dF[0] * F[0] + dF[2] * F[1]);
+            u0[1] -= (dF[1] * F[0] + dF[3] * F[1]);
+
+            if (!(u0[0] < bounds[0] || u0[0] > bounds[1] ||
+                  u0[1] < bounds[2] || u0[1] > bounds[3]))
+            {
+                continue;
+            }
+
+            Array<OneD, NekDouble> FN(2,0.0);
+            pu0 = m_cadsurf->P(u0);
+            di = m_mesh->m_octree->Query(pu0);
+            for (int i = 0; i < nodesystem.size(); i++)
+            {
+                Array<OneD, NekDouble> rj = nodesystem[i]->GetLoc();
+                Array<OneD, NekDouble> uj = nodesystem[i]->GetCADSurfInfo(m_id);
+                NekDouble dj = m_mesh->m_octree->Query(rj);
+                NekDouble d = (di + dj) / 2.0;
+                NekDouble wij = sqrt((rj[0] - pu0[0]) * (rj[0] - pu0[0]) +
+                                     (rj[1] - pu0[1]) * (rj[1] - pu0[1]) +
+                                     (rj[2] - pu0[2]) * (rj[2] - pu0[2])) - d;
+
+                NekDouble umag = sqrt((uj[0] - u0[0]) * (uj[0] - u0[0]) +
+                                      (uj[1] - u0[1]) * (uj[1] - u0[1]));
+
+                FN[0] += wij*(uj[0] - u0[0]) / umag;
+                FN[1] += wij*(uj[1] - u0[1]) / umag;
+            }
+
+            if(F[0]*F[0] + F[1]*F[1] < FN[0]*FN[0] + FN[1]*FN[1])
+            {
+                continue;
+            }
+
+            Array<OneD, NekDouble> l2 = m_cadsurf->P(u0);
+            (*nit)->Move(l2, m_id, u0);
         }
     }
 }

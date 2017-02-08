@@ -183,14 +183,14 @@ void FaceMesh::Mesh()
         pplanemesh->Mesh();
         pplanemesh->Extract(m_connec);
         meshcounter++;
-        break;
+    //    break;
     }
 
     // build a local version of the mesh (one set of triangles).  this is done
     // so edge connectivity infomration can be used for optimisation
     BuildLocalMesh();
 
-    //OptimiseLocalMesh();
+    OptimiseLocalMesh();
 
     // make new elements and add to list from list of nodes and connectivity
     // from triangle removing unnesercary infomration from the elements
@@ -904,15 +904,7 @@ bool FaceMesh::Validate()
     int pointBefore = m_stienerpoints.size();
     for (int i = 0; i < m_connec.size(); i++)
     {
-        Array<OneD, NekDouble> r(3);
-
-        r[0] = m_connec[i][0]->Distance(m_connec[i][1]);
-        r[1] = m_connec[i][1]->Distance(m_connec[i][2]);
-        r[2] = m_connec[i][2]->Distance(m_connec[i][0]);
-
-        NekDouble d1 = m_mesh->m_octree->Query(m_connec[i][0]->GetLoc());
-        NekDouble d2 = m_mesh->m_octree->Query(m_connec[i][1]->GetLoc());
-        NekDouble d3 = m_mesh->m_octree->Query(m_connec[i][2]->GetLoc());
+        Array<OneD, NekDouble> r(3), a(3);
 
         vector<Array<OneD, NekDouble> > info;
 
@@ -920,6 +912,23 @@ bool FaceMesh::Validate()
         {
             info.push_back(m_connec[i][j]->GetCADSurfInfo(m_id));
         }
+
+        r[0] = m_connec[i][0]->Distance(m_connec[i][1]);
+        r[1] = m_connec[i][1]->Distance(m_connec[i][2]);
+        r[2] = m_connec[i][2]->Distance(m_connec[i][0]);
+
+        a[0] = m_connec[i][0]->Angle(m_connec[i][1]->GetLoc(),
+                                     m_connec[i][2]->GetLoc(), m_cadsurf->N(info[0]), m_id);
+        a[1] = m_connec[i][1]->Angle(m_connec[i][2]->GetLoc(),
+                                     m_connec[i][0]->GetLoc(), m_cadsurf->N(info[1]), m_id);
+        a[2] = m_connec[i][2]->Angle(m_connec[i][0]->GetLoc(),
+                                     m_connec[i][1]->GetLoc(), m_cadsurf->N(info[2]), m_id);
+
+        NekDouble d1 = m_mesh->m_octree->Query(m_connec[i][0]->GetLoc());
+        NekDouble d2 = m_mesh->m_octree->Query(m_connec[i][1]->GetLoc());
+        NekDouble d3 = m_mesh->m_octree->Query(m_connec[i][2]->GetLoc());
+
+
 
         Array<OneD, NekDouble> uvc(2);
         uvc[0] = (info[0][0] + info[1][0] + info[2][0]) / 3.0;
@@ -931,18 +940,28 @@ bool FaceMesh::Validate()
         NekDouble d = (d1 + d2 + d3 + d4) / 4.0;
 
         vector<bool> valid(3);
-        valid[0] = r[0] < d * 1.41;
-        valid[1] = r[1] < d * 1.41;
-        valid[2] = r[2] < d * 1.41;
+        valid[0] = r[0] < d * 1.5;
+        valid[1] = r[1] < d * 1.5;
+        valid[2] = r[2] < d * 1.5;
+
+        vector<bool> angValid(3);
+        angValid[0] = a[0]/M_PI*180.0 > 20.0 && a[0]/M_PI*180.0 < 120.0;
+        angValid[1] = a[1]/M_PI*180.0 > 20.0 && a[1]/M_PI*180.0 < 120.0;
+        angValid[2] = a[2]/M_PI*180.0 > 20.0 && a[2]/M_PI*180.0 < 120.0;
 
         int numValid = 0;
+        int numAngValid = 0;
         for(int j = 0; j < 3; j++)
         {
             if(valid[j])
+            {
                 numValid++;
+            }
+            if(angValid[j])
+            {
+                numAngValid++;
+            }
         }
-
-        cout << numValid << endl;
 
         //if numvalid is zero no work to be done
         /*if (numValid != 3)
@@ -950,10 +969,10 @@ bool FaceMesh::Validate()
             AddNewPoint(uvc);
         }*/
 
-        if(numValid != 3)
+        if(numValid != 3 || numAngValid != 3)
         {
             //break the bad edge
-            int a=0, b=0;
+            /*int a=0, b=0;
             if(!valid[0])
             {
                 a = 0;
@@ -972,7 +991,7 @@ bool FaceMesh::Validate()
 
             Array<OneD, NekDouble> uvn(2);
             uvn[0] = (info[a][0] + info[b][0]) / 2.0;
-            uvn[1] = (info[a][1] + info[b][1]) / 2.0;
+            uvn[1] = (info[a][1] + info[b][1]) / 2.0;*/
             AddNewPoint(uvc);
         }
     }

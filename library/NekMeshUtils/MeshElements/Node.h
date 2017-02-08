@@ -360,7 +360,7 @@ public:
     }
 
     NekDouble Angle(Array<OneD, NekDouble> locA, Array<OneD, NekDouble> locB,
-                    Array<OneD, NekDouble> N, int sid)
+                    Array<OneD, NekDouble> N)
     {
         // calculates the angle between this node to a to this node to b
         // Uses the CAD surface to orientate the angle
@@ -380,10 +380,6 @@ public:
 
         ang /= sqrt(A[0] * A[0] + A[1] * A[1] + A[2] * A[2]);
         ang /= sqrt(B[0] * B[0] + B[1] * B[1] + B[2] * B[2]);
-
-        std::map<int, std::pair<CADSurfSharedPtr,
-                                Array<OneD, NekDouble> > >::iterator it;
-        it = CADSurfList.find(sid);
 
         NekDouble dot = N[0] * CP[0] + N[1] * CP[1] + N[2] * CP[2];
 

@@ -183,13 +183,14 @@ void FaceMesh::Mesh()
         pplanemesh->Mesh();
         pplanemesh->Extract(m_connec);
         meshcounter++;
+        break;
     }
 
     // build a local version of the mesh (one set of triangles).  this is done
     // so edge connectivity infomration can be used for optimisation
     BuildLocalMesh();
 
-    OptimiseLocalMesh();
+    //OptimiseLocalMesh();
 
     // make new elements and add to list from list of nodes and connectivity
     // from triangle removing unnesercary infomration from the elements
@@ -913,52 +914,65 @@ bool FaceMesh::Validate()
         NekDouble d2 = m_mesh->m_octree->Query(m_connec[i][1]->GetLoc());
         NekDouble d3 = m_mesh->m_octree->Query(m_connec[i][2]->GetLoc());
 
-        Array<OneD, NekDouble> ainfo, binfo, cinfo;
-        ainfo = m_connec[i][0]->GetCADSurfInfo(m_id);
-        binfo = m_connec[i][1]->GetCADSurfInfo(m_id);
-        cinfo = m_connec[i][2]->GetCADSurfInfo(m_id);
+        vector<Array<OneD, NekDouble> > info;
+
+        for(int j = 0; j < 3; j++)
+        {
+            info.push_back(m_connec[i][j]->GetCADSurfInfo(m_id));
+        }
 
         Array<OneD, NekDouble> uvc(2);
-        uvc[0] = (ainfo[0] + binfo[0] + cinfo[0]) / 3.0;
-        uvc[1] = (ainfo[1] + binfo[1] + cinfo[1]) / 3.0;
+        uvc[0] = (info[0][0] + info[1][0] + info[2][0]) / 3.0;
+        uvc[1] = (info[0][1] + info[1][1] + info[2][1]) / 3.0;
 
         Array<OneD, NekDouble> locc = m_cadsurf->P(uvc);
         NekDouble d4 = m_mesh->m_octree->Query(locc);
 
         NekDouble d = (d1 + d2 + d3 + d4) / 4.0;
 
+        vector<bool> valid(3);
+        valid[0] = r[0] < d * 1.41;
+        valid[1] = r[1] < d * 1.41;
+        valid[2] = r[2] < d * 1.41;
+
         int numValid = 0;
-
-        if (r[0] < d * 1.41)
+        for(int j = 0; j < 3; j++)
         {
-            numValid++;
+            if(valid[j])
+                numValid++;
         }
 
-        if (r[1] < d * 1.41)
+        cout << numValid << endl;
+
+        //if numvalid is zero no work to be done
+        /*if (numValid != 3)
         {
-            numValid++;
-        }
+            AddNewPoint(uvc);
+        }*/
 
-        if (r[2] < d * 1.41)
+        if(numValid != 3)
         {
-            numValid++;
-        }
+            //break the bad edge
+            int a=0, b=0;
+            if(!valid[0])
+            {
+                a = 0;
+                b = 1;
+            }
+            else if(!valid[1])
+            {
+                a = 1;
+                b = 2;
+            }
+            else if(!valid[2])
+            {
+                a = 2;
+                b = 0;
+            }
 
-        NekDouble rmin = min(r[0],r[1]);
-        rmin = min(rmin,r[2]);
-        NekDouble rmax = max(r[0],r[1]);
-        rmax = max(rmax,r[2]);
-
-        if (numValid != 3 || rmax / rmin > 1.05)
-        {
-            Array<OneD, NekDouble> ainfo, binfo, cinfo;
-            ainfo = m_connec[i][0]->GetCADSurfInfo(m_id);
-            binfo = m_connec[i][1]->GetCADSurfInfo(m_id);
-            cinfo = m_connec[i][2]->GetCADSurfInfo(m_id);
-
-            Array<OneD, NekDouble> uvc(2);
-            uvc[0] = (ainfo[0] + binfo[0] + cinfo[0]) / 3.0;
-            uvc[1] = (ainfo[1] + binfo[1] + cinfo[1]) / 3.0;
+            Array<OneD, NekDouble> uvn(2);
+            uvn[0] = (info[a][0] + info[b][0]) / 2.0;
+            uvn[1] = (info[a][1] + info[b][1]) / 2.0;
             AddNewPoint(uvc);
         }
     }
@@ -1084,11 +1098,6 @@ void FaceMesh::OrientateCurves()
         area += (info[0][0] - info[info.size()-1][0])*(info[info.size()-1][1]+info[0][1]) /2.0;
 
         m_edgeloops[i]->area = area;
-
-        if(m_cadsurf->IsReversedNormal())
-        {
-            m_edgeloops[i]->area*=-1.0;
-        }
     }
 
     int ct = 0;

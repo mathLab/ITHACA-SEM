@@ -439,7 +439,7 @@ void InputMCF::Process()
             T[0] = (P21[0] + P22[0] - P11[0] - P12[0]) / 2;
             T[1] = (P21[1] + P22[1] - P11[1] - P12[1]) / 2;
 
-            NekDouble mag = T[0] * T[0] + T[1] * T[1];
+            NekDouble mag = sqrt(T[0] * T[0] + T[1] * T[1]);
 
             stringstream ss;
             ss << T[0] / mag << "," << T[1] / mag << "," << 0.0;

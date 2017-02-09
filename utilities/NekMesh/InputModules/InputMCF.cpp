@@ -342,11 +342,8 @@ void InputMCF::Process()
         }
         mods.push_back(GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "varopti"), m_mesh));
-        mods.back()->RegisterConfig("nq",boost::lexical_cast<string>(m_mesh->m_nummode));
         mods.back()->RegisterConfig("hyperelastic","");
         mods.back()->RegisterConfig("maxiter","10");
-        mods.back()->RegisterConfig("restol","1e-6");
-        mods.back()->RegisterConfig("overint","6");
         mods.back()->RegisterConfig("numthreads",boost::lexical_cast<string>(np));
     }
 
@@ -363,6 +360,7 @@ void InputMCF::Process()
 
     for(int i = 0; i < mods.size(); i++)
     {
+        mods[i]->SetDefaults();
         mods[i]->Process();
     }
 }

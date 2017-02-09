@@ -398,6 +398,7 @@ void InputMCF::Process()
 
     for(int i = 0; i < mods.size(); i++)
     {
+        mods[i]->SetDefaults();
         mods[i]->Process();
     }
 
@@ -423,7 +424,6 @@ void InputMCF::Process()
                 ModuleKey(eProcessModule, "peralign"), m_mesh));
             mods.back()->RegisterConfig("surf1", tmp[0]);
             mods.back()->RegisterConfig("surf2", tmp[1]);
-            mods.back()->RegisterConfig("orient", "false");
 
             Array<OneD, NekDouble> P11 =
                 m_mesh->m_cad->GetCurve(data[0])->GetVertex()[0]->GetLoc();
@@ -448,6 +448,7 @@ void InputMCF::Process()
 
         for(int i = 0; i < mods.size(); i++)
         {
+            mods[i]->SetDefaults();
             mods[i]->Process();
         }
     }

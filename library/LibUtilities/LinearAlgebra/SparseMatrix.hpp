@@ -73,15 +73,15 @@ namespace Nektar
         LIB_UTILITIES_EXPORT NekSparseMatrix(const NekSparseMatrix& src);
         LIB_UTILITIES_EXPORT ~NekSparseMatrix();
 
-        LIB_UTILITIES_EXPORT const IndexType GetRows() const;
-        LIB_UTILITIES_EXPORT const IndexType GetColumns() const;
-        LIB_UTILITIES_EXPORT const IndexType GetNumNonZeroEntries() const;
+        LIB_UTILITIES_EXPORT IndexType GetRows() const;
+        LIB_UTILITIES_EXPORT IndexType GetColumns() const;
+        LIB_UTILITIES_EXPORT IndexType GetNumNonZeroEntries() const;
 
         LIB_UTILITIES_EXPORT const DataType  GetFillInRatio() const;
-        LIB_UTILITIES_EXPORT const size_t    GetMemoryFootprint() const;
-        LIB_UTILITIES_EXPORT const unsigned long GetMulCallsCounter() const;
+        LIB_UTILITIES_EXPORT size_t          GetMemoryFootprint() const;
+        LIB_UTILITIES_EXPORT unsigned long   GetMulCallsCounter() const;
         LIB_UTILITIES_EXPORT const DataType  GetAvgRowDensity() const;
-        LIB_UTILITIES_EXPORT const IndexType GetBandwidth();
+        LIB_UTILITIES_EXPORT IndexType       GetBandwidth();
         LIB_UTILITIES_EXPORT COOMatTypeSharedPtr GetCooStorage();
 
 

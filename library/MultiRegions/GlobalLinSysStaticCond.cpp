@@ -84,10 +84,10 @@ namespace Nektar
         void GlobalLinSysStaticCond::v_InitObject()
         {
             // Allocate memory for top-level structure
-            SetupTopLevel(m_locToGloMap);
+            SetupTopLevel(m_locToGloMap.lock());
 
             // Construct this level
-            Initialise(m_locToGloMap);
+            Initialise(m_locToGloMap.lock());
         }
         
         /**

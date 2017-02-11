@@ -648,6 +648,8 @@ GeometrySharedPtr CreateGeom(vector<NekDouble> coords, ShapeType shapeType)
             volume = MemoryManager<HexGeom>::AllocateSharedPtr(0, &tmp2[0]);
             break;
         }
+        default:
+            break;
     }
 
     return volume;

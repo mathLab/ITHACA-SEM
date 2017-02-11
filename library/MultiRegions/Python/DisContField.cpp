@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: StdSegExp.cpp
+// File: DisContField.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,21 +29,45 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Python wrapper for StdSegExp.
+// Description: Python wrapper for DisContField.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <MultiRegions/DisContField1D.h>
+#include <MultiRegions/DisContField2D.h>
+#include <MultiRegions/DisContField3D.h>
 #include <LibUtilities/Python/NekPyConfig.hpp>
-#include <StdRegions/StdSegExp.h>
 
 using namespace Nektar;
-using namespace Nektar::StdRegions;
+using namespace Nektar::MultiRegions;
 
-void export_StdSegExp()
+template<class T>
+std::shared_ptr<T> CreateDisContField(
+    const LibUtilities::SessionReaderSharedPtr &session,
+    const SpatialDomains::MeshGraphSharedPtr &graph,
+    const std::string &var,
+    const bool setupDG)
 {
-    py::class_<StdSegExp, py::bases<StdExpansion>,
-               std::shared_ptr<StdSegExp> >(
-                   "StdSegExp", py::init<const LibUtilities::BasisKey&>());
+    return std::make_shared<T>(session, graph, var, setupDG);
+}
 
-    NEKPY_SHPTR_FIX(StdSegExp, StdExpansion);
+template<class T, class S>
+void export_DisContField_Helper(const char *name)
+{
+    py::class_<T, py::bases<S>, std::shared_ptr<T> >(name, py::no_init)
+        .def("__init__", py::make_constructor(
+                 &CreateDisContField<T>,
+                 py::default_call_policies(),
+                 (py::arg("session"), py::arg("graph"), py::arg("var"),
+                  py::arg("setupDG") = true)));
+
+    NEKPY_SHPTR_FIX(T, ExpList);
+    NEKPY_SHPTR_FIX(T, S);
+}
+
+void export_DisContField()
+{
+    export_DisContField_Helper<DisContField1D, ExpList1D>("DisContField1D");
+    export_DisContField_Helper<DisContField2D, ExpList2D>("DisContField2D");
+    export_DisContField_Helper<DisContField3D, ExpList3D>("DisContField3D");
 }

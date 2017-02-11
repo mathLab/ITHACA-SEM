@@ -74,6 +74,9 @@ v5.0.0
 - Fixed bug in ReOrientQuadFacePhysMap (!1003)
 - Add NekPy Python interface (!962, !990, !989, !1004)
 - Fix edge case for ThirdPartyScotch and FindScoth (!1009)
+- Fix to populate m_elmtToExpId map if not already set up in GetExpIndex (!1019)
+- Added flag to skip periodic BCs while filling Dirichlet BCs in
+  ContField3D.cpp (!1018)
 
 **NekMesh**:
 - Add feature to read basic 2D geo files as CAD (!731)
@@ -110,6 +113,7 @@ v5.0.0
 - Add support for Gmsh 4.0 mesh file format (!964)
 - Fix issue with extracting 1D curved surface from 2D file (!984)
 - Fix surface extraction, added regression test (!994)
+- Fix 2D meshing running out of memory due to missing else (!1012)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -151,6 +155,7 @@ v5.0.0
 - Made Sutherland's law non-dimensional (!972)
 - Modified pressure outlet BCs to allow for the reference static pressure to be
   set from the VALUE fields (!981)
+- hp scaling for Laplacian AV (!1013)
 
 **AcousticSolver:**
 - Added two new boundary conditions to the APE system: RiemannInvariantBC

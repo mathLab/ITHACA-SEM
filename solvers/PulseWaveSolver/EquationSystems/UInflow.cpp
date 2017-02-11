@@ -69,8 +69,6 @@ void UInflow::v_DoBoundary(
 {
     NekDouble A;
     NekDouble u;
-    NekDouble A_u;
-    NekDouble u_u;
     NekDouble A_r;
     NekDouble u_r;
     NekDouble A_l;

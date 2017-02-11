@@ -116,13 +116,13 @@ namespace Nektar
         {
             std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             bool vCG;
-            if ((m_locToGloMap = std::dynamic_pointer_cast<AssemblyMapCG>(
-                     pLocToGloMap)))
+            m_locToGloMap = pLocToGloMap;
+
+            if (std::dynamic_pointer_cast<AssemblyMapCG>(pLocToGloMap))
             {
                 vCG = true;
             }
-            else if ((m_locToGloMap = std::dynamic_pointer_cast<
-                          AssemblyMapDG>(pLocToGloMap)))
+            else if (std::dynamic_pointer_cast<AssemblyMapDG>(pLocToGloMap))
             {
                 vCG = false;
             }
@@ -230,6 +230,8 @@ namespace Nektar
             expList->GeneralMatrixOp(m_linSysKey,
                                      InputLoc, OutputLoc);
 
+            AssemblyMapSharedPtr asmMap = m_locToGloMap.lock();
+
             // Apply robin boundary conditions to the solution.
             for(auto &r : m_robinBCInfo) // add robin mass matrix
             {
@@ -260,7 +262,7 @@ namespace Nektar
          */
         void GlobalLinSysIterativeFull::v_UniqueMap()
         {
-            m_map = m_locToGloMap->GetGlobalToUniversalMapUnique();
+            m_map = m_locToGloMap.lock()->GetGlobalToUniversalMapUnique();
         }
 
     }

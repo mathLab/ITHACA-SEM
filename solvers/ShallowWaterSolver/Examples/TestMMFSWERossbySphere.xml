@@ -2624,39 +2624,41 @@
 </GEOMETRY>
 
 <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="5" TYPE="MODIFIED" FIELDS="u" />
+    <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="eta, u, v" TYPE="MODIFIED" />
   </EXPANSIONS>
 
   <CONDITIONS>
 
-    <PARAMETERS>
-      <P> TimeStep       = 0.001            </P>
-      <P> NumSteps       = 100            </P>
-      <P> FinTime        = TimeStep*NumSteps </P>
-      <P> IO_CheckSteps  = 20              </P>
-      <P> IO_InfoSteps   = 20              </P>
-      <P> epsu0 = 0.001                 </P>
-      <P> epsu1 = 0.002                 </P>
-      <P> MMFCircCentreX  = -2.0   </P>
-      <P> MMFCircCentreY  = -2.0   </P>
-    </PARAMETERS>
+        <SOLVERINFO>
+            <I PROPERTY="EQType" VALUE="MMFSWE" />
+            <I PROPERTY="Projection" VALUE="DisContinuous" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
+            <I PROPERTY="UpwindType" VALUE="LaxFriedrich" />
+	    <I PROPERTY="SurfaceType" VALUE="Sphere" />
+	    <I PROPERTY="TestType" VALUE="TestRossbyWave" /> 
+	    <I PROPERTY="MMFDir" VALUE="LOCAL" /> <!-- TangentX, TangentY, TangentXY, TangentZ, TangentCircular, LOCAL-->   
+        </SOLVERINFO>
 
-    <SOLVERINFO>
-      <I PROPERTY="EQTYPE" VALUE="MMFDiffusion" />
-      <I PROPERTY="Projection" VALUE="DisContinuous"/>
-      <I PROPERTY="DiffusionAdvancement" VALUE="Implicit" />
-      <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXdirk_3_4_3" />
-      <I PROPERTY="TestType" VALUE="TestLinearSphere" />
-      <I PROPERTY="SurfaceType" VALUE="Sphere" />
-      <!-- TangentX, TangentY, TangentXY, TangentZ, TangentCircular, LOCAL-->   
-      <I PROPERTY="MMFDir" VALUE="LOCAL" />
-    </SOLVERINFO>  
+        <PARAMETERS>
+            <P> TimeStep       = 0.001             </P>
+            <P> NumSteps       = 100             </P>
+            <P> FinTime        = TimeStep*NumSteps </P>
+            <P> IO_CheckSteps  = 20               </P>
+            <P> IO_InfoSteps   = 20             </P>
+	    <P> RotationAngle  = 0.0*PI     </P>
+	    <P> AddRossbyDisturbance   = 0    </P>
+        </PARAMETERS>
 
-    <VARIABLES>
-      <V ID="0"> u </V> 
-      <V ID="1"> v </V> 
-    </VARIABLES>  
-  
-  </CONDITIONS>
-  
+        <VARIABLES>
+            <V ID="0"> eta  </V>
+            <V ID="1"> u </V>
+            <V ID="2"> v </V>
+        </VARIABLES>
+
+	<FUNCTION NAME="WaterDepth">
+          <E VAR="d" VALUE="0" />
+        </FUNCTION>
+
+    </CONDITIONS>
+    
 </NEKTAR>

@@ -37,7 +37,7 @@
 #include <iomanip>
 #include <boost/algorithm/string.hpp>
 
-#include <MMFSolver/EquationSystems/MMFAdvection.h>
+#include <ADRSolver/EquationSystems/MMFAdvection.h>
 
 namespace Nektar
 {

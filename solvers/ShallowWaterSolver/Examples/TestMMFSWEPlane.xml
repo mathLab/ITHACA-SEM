@@ -342,7 +342,7 @@
     <CONDITIONS>
 
         <SOLVERINFO>
-            <I PROPERTY="EQType" VALUE="MMFShallowWater" />
+            <I PROPERTY="EQType" VALUE="MMFSWE" />
             <I PROPERTY="Projection" VALUE="DisContinuous" />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
             <I PROPERTY="UpwindType" VALUE="LaxFriedrich" />

@@ -237,7 +237,22 @@ namespace Nektar
             }
             else
             {
-                ASSERTL1(m_metricinfo->GetGtype() == SpatialDomains::eDeformed,"Wrong route");
+                Array<OneD, Array<OneD, NekDouble> > tangmat(2);
+                
+                for (int i=0; i< 2; ++i)
+                {
+                    tangmat[i] = Array<OneD, NekDouble>(nqtot,0.0);
+                    for (int k=0; k<(m_geom->GetCoordim()); ++k)
+                    {
+                        
+                        Vmath::Svtvp(nqtot, df[2*k+i][0], &direction[k*nqtot], 1, &tangmat[i][0], 1, &tangmat[i][0], 1);
+                    }
+                }
+                
+                /// D_v = D^v_xi * du/d_xi + D^v_eta * du/d_eta
+                Vmath::Vmul  (nqtot,&tangmat[0][0],1,&diff0[0],1, &out[0], 1);
+                Vmath::Vvtvp (nqtot,&tangmat[1][0],1,&diff1[0],1, &out[0], 1, &out[0],1);
+               // ASSERTL1(m_metricinfo->GetGtype() == SpatialDomains::eDeformed,"Wrong route");
             }
         }
 

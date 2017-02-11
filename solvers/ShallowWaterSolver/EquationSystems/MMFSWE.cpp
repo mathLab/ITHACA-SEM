@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////
 //
-// File MMFShallowWater.cpp
+// File MMFSWE.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -37,18 +37,18 @@
 #include <iomanip>
 #include <boost/algorithm/string.hpp>
 
-#include <MMFSolver/EquationSystems/MMFShallowWater.h>
+#include <ShallowWaterSolver/EquationSystems/MMFSWE.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
 
 namespace Nektar
 {
-    Gs::string MMFShallowWater::className = SolverUtils::GetEquationSystemFactory().
-        RegisterCreatorFunction("MMFShallowWater",
-                                MMFShallowWater::create,
-                                "MMFShallowWater equation.");
+    Gs::string MMFSWE::className = SolverUtils::GetEquationSystemFactory().
+        RegisterCreatorFunction("MMFSWE",
+                                MMFSWE::create,
+                                "MMFSWE equation.");
 
-    MMFShallowWater::MMFShallowWater(
+    MMFSWE::MMFSWE(
             const LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pSession),
           MMFSystem(pSession)
@@ -59,7 +59,7 @@ namespace Nektar
     /**
      * @brief Initialisation object for the unsteady linear advection equation.
      */
-    void MMFShallowWater::v_InitObject()
+    void MMFSWE::v_InitObject()
     {
       // Call to the initialisation object
       UnsteadySystem::v_InitObject();
@@ -227,8 +227,8 @@ namespace Nektar
         // If explicit it computes RHS and PROJECTION for the time integration
         if (m_explicitAdvection)
         {
-            m_ode.DefineOdeRhs     (&MMFShallowWater::DoOdeRhs,        this);
-            m_ode.DefineProjection (&MMFShallowWater::DoOdeProjection, this);
+            m_ode.DefineOdeRhs     (&MMFSWE::DoOdeRhs,        this);
+            m_ode.DefineProjection (&MMFSWE::DoOdeProjection, this);
         }
         // Otherwise it gives an error (no implicit integration)
         else
@@ -240,12 +240,12 @@ namespace Nektar
     /**
      * @brief Unsteady linear advection equation destructor.
      */
-    MMFShallowWater::~MMFShallowWater()
+    MMFSWE::~MMFSWE()
     {
     }
 
 
-  void MMFShallowWater::v_DoSolve()
+  void MMFSWE::v_DoSolve()
   {
     ASSERTL0(m_intScheme != 0, "No time integration scheme.");
     
@@ -404,7 +404,7 @@ namespace Nektar
       }
   } 
   
-  void MMFShallowWater::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+  void MMFSWE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
 			      Array<OneD, Array<OneD, NekDouble> >&outarray, 
 			      const NekDouble time) 
   {
@@ -459,7 +459,7 @@ namespace Nektar
   }
 
 
-  void MMFShallowWater::WeakDGSWEDirDeriv(const Array<OneD, Array<OneD, NekDouble> >& InField,
+  void MMFSWE::WeakDGSWEDirDeriv(const Array<OneD, Array<OneD, NekDouble> >& InField,
 					  Array<OneD, Array<OneD, NekDouble> >& OutField)
   {
     int i;
@@ -526,7 +526,7 @@ namespace Nektar
   
 
   // Substract 0.5 * g * H * H  / || e^m ||^2 \nalba \cdot e^m
-  void MMFShallowWater::AddDivForGradient(Array<OneD, Array<OneD, NekDouble> > &physarray,
+  void MMFSWE::AddDivForGradient(Array<OneD, Array<OneD, NekDouble> > &physarray,
 					  Array<OneD, Array<OneD, NekDouble> > &outarray)
   {    
     // routine works for both primitive and conservative formulations
@@ -557,7 +557,7 @@ namespace Nektar
   }
 
   
-  void MMFShallowWater::GetSWEFluxVector(const int i, 
+  void MMFSWE::GetSWEFluxVector(const int i, 
 					 const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
 					 Array<OneD, Array<OneD, NekDouble> > &flux)
   {
@@ -654,7 +654,7 @@ namespace Nektar
       }
   }
 
-  void MMFShallowWater::NumericalSWEFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+  void MMFSWE::NumericalSWEFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
 					 Array<OneD, Array<OneD, NekDouble> > &numfluxFwd,
 					 Array<OneD, Array<OneD, NekDouble> > &numfluxBwd)
   {
@@ -811,7 +811,7 @@ namespace Nektar
   
 
   
-  void MMFShallowWater::RiemannSolverHLLC(const int index, 
+  void MMFSWE::RiemannSolverHLLC(const int index, 
 					  NekDouble hL, NekDouble uL, NekDouble vL,
 					  NekDouble hR, NekDouble uR, NekDouble vR, 
 					  Array<OneD, NekDouble> &numfluxF,
@@ -855,7 +855,7 @@ namespace Nektar
     numfluxB[2] = hvfluxB;
   }
 
-  void MMFShallowWater::Computehhuhvflux(NekDouble hL, NekDouble uL, NekDouble vL, NekDouble hR, NekDouble uR, NekDouble vR, 
+  void MMFSWE::Computehhuhvflux(NekDouble hL, NekDouble uL, NekDouble vL, NekDouble hR, NekDouble uR, NekDouble vR, 
 					 NekDouble hstar, NekDouble &hflux, NekDouble &huflux,NekDouble &hvflux)
   {
     NekDouble g = m_g;
@@ -918,7 +918,7 @@ namespace Nektar
       }
   }
 
-  void MMFShallowWater::AverageFlux(const int index,
+  void MMFSWE::AverageFlux(const int index,
 				    NekDouble hL,NekDouble uL,NekDouble vL,
 				    NekDouble hR,NekDouble uR,NekDouble vR, 
 				    Array<OneD, NekDouble> &numfluxF, 
@@ -969,7 +969,7 @@ namespace Nektar
     numfluxB[8]  = 0.0;
   }
 
-  void MMFShallowWater::LaxFriedrichFlux(const int index,
+  void MMFSWE::LaxFriedrichFlux(const int index,
 					 NekDouble hL,NekDouble uL,NekDouble vL,
 					 NekDouble hR,NekDouble uR,NekDouble vR, 
 					 Array<OneD, NekDouble> &numfluxF, 
@@ -1041,7 +1041,7 @@ namespace Nektar
     numfluxB[8] =  0.5*lambdaB*(vLB*hL - vR*hR);
   }
 
-  void MMFShallowWater::RusanovFlux(const int index,
+  void MMFSWE::RusanovFlux(const int index,
 				 NekDouble hL,NekDouble uL,NekDouble vL,
 				 NekDouble hR,NekDouble uR,NekDouble vR, 
 				 Array<OneD, NekDouble> &numfluxF, 
@@ -1113,7 +1113,7 @@ namespace Nektar
   }
 
 
-  void MMFShallowWater::ComputeMagAndDot(const int index, 
+  void MMFSWE::ComputeMagAndDot(const int index, 
 					 NekDouble &MageF1, NekDouble &MageF2, NekDouble &MageB1, NekDouble &MageB2,
 					 NekDouble &eF1_cdot_eB1, NekDouble &eF1_cdot_eB2, NekDouble &eF2_cdot_eB1, NekDouble &eF2_cdot_eB2)
   {
@@ -1150,7 +1150,7 @@ namespace Nektar
 
 
   // Add Coriolis factors
-  void MMFShallowWater::AddCoriolis(Array<OneD, Array<OneD, NekDouble> > &physarray,
+  void MMFSWE::AddCoriolis(Array<OneD, Array<OneD, NekDouble> > &physarray,
 				    Array<OneD, Array<OneD, NekDouble> > &outarray)
   {
     int ncoeffs = outarray[0].num_elements();
@@ -1196,7 +1196,7 @@ namespace Nektar
 
 
   // Compuate g H \nabla m_depth
-  void MMFShallowWater::AddElevationEffect(Array<OneD, Array<OneD, NekDouble> > &physarray,
+  void MMFSWE::AddElevationEffect(Array<OneD, Array<OneD, NekDouble> > &physarray,
 					   Array<OneD, Array<OneD, NekDouble> > &outarray)
   {
     int ncoeffs = outarray[0].num_elements();
@@ -1226,7 +1226,7 @@ namespace Nektar
   // =================================================
   // Add rotational factors
   // =================================================
-  void MMFShallowWater::AddRotation(Array<OneD, Array<OneD, NekDouble> > &physarray,
+  void MMFSWE::AddRotation(Array<OneD, Array<OneD, NekDouble> > &physarray,
 				    Array<OneD, Array<OneD, NekDouble> > &outarray)
   {
     // routine works for both primitive and conservative formulations
@@ -1272,7 +1272,7 @@ namespace Nektar
  // =====================================================================
   // Compute \frac{d e^{indm}}{dt} \cdot e^{indk}  / \| e^{indk} \|
   // Equivalently, [ \frac{d e^{indm}}{d \xi_1} \frac{ d \xi_1}{d \phi} + \frac{d e^{indm}}{d \xi_2} \frac{ d \xi_2}{d \phi} ] \frac{d \phi}{dt}
-  void MMFShallowWater::Compute_demdt_cdot_ek(const int indm, 
+  void MMFSWE::Compute_demdt_cdot_ek(const int indm, 
 					      const int indk, 
 					      const Array<OneD, const Array<OneD, NekDouble> > &physarray,
 					      Array<OneD, NekDouble> &outarray)
@@ -1306,7 +1306,7 @@ namespace Nektar
      * @param outarray   Calculated solution.
      * @param time       Time.
      */
-    void MMFShallowWater::DoOdeProjection(
+    void MMFSWE::DoOdeProjection(
         const Array<OneD, const Array<OneD, NekDouble> >&inarray,
               Array<OneD,       Array<OneD, NekDouble> >&outarray,
         const NekDouble time)
@@ -1326,7 +1326,7 @@ namespace Nektar
       }
     }
 
-  void MMFShallowWater::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray, NekDouble time)
+  void MMFSWE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray, NekDouble time)
   {
     
     int nvariables = m_fields.num_elements();
@@ -1374,7 +1374,7 @@ namespace Nektar
       }
   }
 
-  void MMFShallowWater::WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray)
+  void MMFSWE::WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray)
   { 
 
     int i;
@@ -1465,7 +1465,7 @@ namespace Nektar
     /**
      *
      */
-  void MMFShallowWater::v_DoInitialise()
+  void MMFSWE::v_DoInitialise()
   {
     // Compute m_depth and m_Derivdepth
     EvaluateWaterDepth();
@@ -1475,7 +1475,7 @@ namespace Nektar
   }
 
 
-  void MMFShallowWater::EvaluateWaterDepth(void)
+  void MMFSWE::EvaluateWaterDepth(void)
   {
     int nq  = GetTotPoints();
 
@@ -1604,7 +1604,7 @@ namespace Nektar
   }
 
 
-  void MMFShallowWater::EvaluateCoriolis(void)
+  void MMFSWE::EvaluateCoriolis(void)
   {
     switch(m_TestType)
       {
@@ -1635,7 +1635,7 @@ namespace Nektar
   }
 
 
-  void MMFShallowWater::EvaluateCoriolisForZonalFlow(Array<OneD, NekDouble> &outarray)
+  void MMFSWE::EvaluateCoriolisForZonalFlow(Array<OneD, NekDouble> &outarray)
     {
         int nq  = GetTotPoints();
         NekDouble sin_theta, cos_theta, sin_varphi, cos_varphi;
@@ -1665,7 +1665,7 @@ namespace Nektar
     }
 
 
-  void MMFShallowWater::EvaluateStandardCoriolis(Array<OneD, NekDouble> &outarray)
+  void MMFSWE::EvaluateStandardCoriolis(Array<OneD, NekDouble> &outarray)
     {
         int nq  = GetTotPoints();
 
@@ -1691,7 +1691,7 @@ namespace Nektar
 	  }
     }
   
-  void MMFShallowWater::v_SetInitialConditions(const NekDouble initialtime, 
+  void MMFSWE::v_SetInitialConditions(const NekDouble initialtime, 
 					       bool dumpInitialConditions,
 					       const int domain)
     {
@@ -1884,7 +1884,7 @@ namespace Nektar
 
 
   
-  void MMFShallowWater::TestSWE2Dproblem(const NekDouble time, 
+  void MMFSWE::TestSWE2Dproblem(const NekDouble time, 
 					 unsigned int field,
 					 Array<OneD, NekDouble> &outfield)
   {
@@ -1939,7 +1939,7 @@ namespace Nektar
 	}
   }
 
-  void MMFShallowWater::SteadyZonalFlow(unsigned int field, Array<OneD, NekDouble> &outfield)
+  void MMFSWE::SteadyZonalFlow(unsigned int field, Array<OneD, NekDouble> &outfield)
   {
         int nq  = GetTotPoints();
 	NekDouble uhat, vhat;
@@ -2023,7 +2023,7 @@ namespace Nektar
 	  }
   }
 
-  NekDouble MMFShallowWater::ComputeMass(const Array<OneD, const NekDouble> &eta)
+  NekDouble MMFSWE::ComputeMass(const Array<OneD, const NekDouble> &eta)
   {
     int nq = m_fields[0]->GetTotPoints();
   
@@ -2033,7 +2033,7 @@ namespace Nektar
     return m_fields[0]->PhysIntegral(tmp);
   }
 
-  NekDouble MMFShallowWater::ComputeEnergy(const Array<OneD, const NekDouble> &eta,
+  NekDouble MMFSWE::ComputeEnergy(const Array<OneD, const NekDouble> &eta,
 					const Array<OneD, const NekDouble> &u,
 					const Array<OneD, const NekDouble> &v)
   {
@@ -2063,7 +2063,7 @@ namespace Nektar
   }
 
 
-  NekDouble MMFShallowWater::ComputeEnstrophy(const Array<OneD, const NekDouble> &eta,
+  NekDouble MMFSWE::ComputeEnstrophy(const Array<OneD, const NekDouble> &eta,
 					      const Array<OneD, const NekDouble> &u,
 					      const Array<OneD, const NekDouble> &v)
   {
@@ -2094,7 +2094,7 @@ namespace Nektar
 
 
   // Vorticity = \nabla v \cdot e^1 + v \nabla \cdot e^1 - ( \nabla u \cdot e^2 + u \nabla \cdot e^2 )
-  void MMFShallowWater::ComputeVorticity(const Array<OneD, const NekDouble> &u,
+  void MMFSWE::ComputeVorticity(const Array<OneD, const NekDouble> &u,
 					 const Array<OneD, const NekDouble> &v,
 					 Array<OneD, NekDouble> &Vorticity)
   {
@@ -2115,7 +2115,7 @@ namespace Nektar
   }
 
  
-  void MMFShallowWater::ComputeNablaCdotVelocity(Array<OneD, NekDouble> &vellc)
+  void MMFSWE::ComputeNablaCdotVelocity(Array<OneD, NekDouble> &vellc)
   {
     int nq = m_fields[0]->GetNpoints();
 
@@ -2173,7 +2173,7 @@ namespace Nektar
   }
 
 
-  void MMFShallowWater::UnsteadyZonalFlow(unsigned int field, const NekDouble time, 
+  void MMFSWE::UnsteadyZonalFlow(unsigned int field, const NekDouble time, 
 					  Array<OneD, NekDouble> &outfield)
   {
         int nq  = GetTotPoints();
@@ -2266,7 +2266,7 @@ namespace Nektar
   }
 
 
-  void MMFShallowWater::IsolatedMountainFlow(unsigned int field, 
+  void MMFSWE::IsolatedMountainFlow(unsigned int field, 
 					  const NekDouble time, 
 					  Array<OneD, NekDouble> &outfield)
   {
@@ -2352,7 +2352,7 @@ namespace Nektar
   }
 
 
-  void MMFShallowWater::UnstableJetFlow(unsigned int field, 
+  void MMFSWE::UnstableJetFlow(unsigned int field, 
 				     const NekDouble time, 
 				     Array<OneD, NekDouble> &outfield)
   {
@@ -2456,7 +2456,7 @@ namespace Nektar
       }
   }
 
-  void MMFShallowWater::RossbyWave(unsigned int field, Array<OneD, NekDouble> &outfield)
+  void MMFSWE::RossbyWave(unsigned int field, Array<OneD, NekDouble> &outfield)
   {
         int nq  = GetTotPoints();
 	NekDouble uhat, vhat;
@@ -2590,7 +2590,7 @@ namespace Nektar
   }
 
 
-  NekDouble MMFShallowWater::ComputeUnstableJetEta(const NekDouble theta)
+  NekDouble MMFSWE::ComputeUnstableJetEta(const NekDouble theta)
   {
     NekDouble uphi, f, dh;
 
@@ -2603,7 +2603,7 @@ namespace Nektar
   }
   
   
-  NekDouble MMFShallowWater::ComputeUnstableJetuphi(const NekDouble theta)
+  NekDouble MMFSWE::ComputeUnstableJetuphi(const NekDouble theta)
   {
     NekDouble uphi;
     
@@ -2621,7 +2621,7 @@ namespace Nektar
   }
 
 
-    void MMFShallowWater::Checkpoint_Output_Cartesian(std::string outname)
+    void MMFSWE::Checkpoint_Output_Cartesian(std::string outname)
   {
     int nq = m_fields[0]->GetTotPoints();
     int ncoeffs = m_fields[0]->GetNcoeffs();
@@ -2683,7 +2683,7 @@ namespace Nektar
 
 
   // (h, hu, hv) -> (\eta, u, v)
-    void MMFShallowWater::ConservativeToPrimitive(const Array<OneD, const Array<OneD, NekDouble> >&physin,
+    void MMFSWE::ConservativeToPrimitive(const Array<OneD, const Array<OneD, NekDouble> >&physin,
 						  Array<OneD, Array<OneD, NekDouble> >&physout)
   {
     int nq = GetTotPoints();
@@ -2721,7 +2721,7 @@ namespace Nektar
       }
   }
 
-  void MMFShallowWater::PrimitiveToConservative(const Array<OneD, const Array<OneD, NekDouble> >&physin,
+  void MMFSWE::PrimitiveToConservative(const Array<OneD, const Array<OneD, NekDouble> >&physin,
 						Array<OneD, Array<OneD, NekDouble> >&physout)
   {
     
@@ -2764,7 +2764,7 @@ namespace Nektar
   }
 
     // To obtain [eta, u, v ] from [H, Hu, Hv]
-   void MMFShallowWater::ConservativeToPrimitive(void)
+   void MMFSWE::ConservativeToPrimitive(void)
   {
     int nq = GetTotPoints();
     
@@ -2778,7 +2778,7 @@ namespace Nektar
     Vmath::Vsub(nq,m_fields[0]->GetPhys(),1,m_depth,1,m_fields[0]->UpdatePhys(),1);
   }
 
-  void MMFShallowWater::PrimitiveToConservative(void)
+  void MMFSWE::PrimitiveToConservative(void)
   {
     int nq = GetTotPoints();
     
@@ -2792,7 +2792,7 @@ namespace Nektar
     Vmath::Vmul(nq,m_fields[0]->GetPhys(),1,m_fields[2]->GetPhys(),1,m_fields[2]->UpdatePhys(),1);
   }
 
- void MMFShallowWater::TestVorticityComputation(void)
+ void MMFSWE::TestVorticityComputation(void)
   {
     // Construct beta
     int i, k;
@@ -2887,7 +2887,7 @@ namespace Nektar
   }
 
   
-  NekDouble MMFShallowWater::v_L2Error(unsigned int field,
+  NekDouble MMFSWE::v_L2Error(unsigned int field,
 				       const Array<OneD, NekDouble> &exactsoln,
 				       bool Normalised)
   {
@@ -2980,7 +2980,7 @@ namespace Nektar
   
   
   
-  NekDouble MMFShallowWater::v_LinfError(unsigned int field,
+  NekDouble MMFSWE::v_LinfError(unsigned int field,
 					 const Array<OneD, NekDouble> &exactsoln)
      {    	
          int indx;
@@ -3073,7 +3073,7 @@ namespace Nektar
          return LinfError;
      }
   
-  void MMFShallowWater::v_EvaluateExactSolution(unsigned int field,
+  void MMFSWE::v_EvaluateExactSolution(unsigned int field,
 						Array<OneD, NekDouble> &outfield,
 						const NekDouble time)
   {
@@ -3120,7 +3120,7 @@ namespace Nektar
       }
   }
   
-    void MMFShallowWater::v_GenerateSummary(SolverUtils::SummaryList& s)
+    void MMFSWE::v_GenerateSummary(SolverUtils::SummaryList& s)
     { 
         MMFSystem::v_GenerateSummary(s);
 	SolverUtils::AddSummaryItem(s, "TestType", TestTypeMap[m_TestType]);

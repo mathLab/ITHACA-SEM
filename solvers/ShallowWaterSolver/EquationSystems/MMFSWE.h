@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File MMFShallowWater.h
+// File MMFSWE.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,10 +33,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_MMFADVECTION_H
-#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_MMFADVECTION_H
+#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_MMFSWE_H
+#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_MMFSWE_H
 
-#include <SolverUtils/UnsteadySystem.h>
+#include <ShallowWaterSolver/EquationSystems/ShallowWaterSystem.h>
 #include <SolverUtils/MMFSystem.h>
 
 namespace Nektar
@@ -63,16 +63,16 @@ namespace Nektar
       "TestRossbyWave",
     };
   
-    class MMFShallowWater : public SolverUtils::MMFSystem
+    class MMFSWE : public SolverUtils::MMFSystem
     {
     public:
-        friend class MemoryManager<MMFShallowWater>;
+        friend class MemoryManager<MMFSWE>;
 
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr& pSession) {
             SolverUtils::EquationSystemSharedPtr p
-                = MemoryManager<MMFShallowWater>::AllocateSharedPtr(pSession);
+                = MemoryManager<MMFSWE>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
         }
@@ -82,7 +82,7 @@ namespace Nektar
 	TestType                                        m_TestType; 
 
         /// Destructor
-        virtual ~MMFShallowWater();
+        virtual ~MMFSWE();
 
     protected:
 	/// Still water depth
@@ -118,7 +118,7 @@ namespace Nektar
         int                                     m_planeNumber;
 
         /// Session reader
-        MMFShallowWater(const LibUtilities::SessionReaderSharedPtr& pSession);
+        MMFSWE(const LibUtilities::SessionReaderSharedPtr& pSession);
        
 
         /// Compute the RHS

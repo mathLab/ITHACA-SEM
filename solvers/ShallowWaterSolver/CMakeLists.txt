@@ -7,6 +7,7 @@ IF( NEKTAR_SOLVER_SHALLOW_WATER )
        ./ShallowWaterSolver.cpp
        ./EquationSystems/ShallowWaterSystem.cpp
        ./EquationSystems/LinearSWE.cpp
+       ./EquationSystems/MMFSWE.cpp
        ./EquationSystems/NonlinearSWE.cpp
        ./EquationSystems/NonlinearPeregrine.cpp
        ./RiemannSolvers/LinearSWESolver.cpp

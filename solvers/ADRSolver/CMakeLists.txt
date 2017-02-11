@@ -12,6 +12,7 @@ IF( NEKTAR_SOLVER_ADR )
        ./EquationSystems/SteadyAdvectionDiffusion.cpp
        ./EquationSystems/SteadyAdvectionDiffusionReaction.cpp
        ./EquationSystems/UnsteadyAdvection.cpp
+       ./EquationSystems/MMFAdvection.cpp
        ./EquationSystems/UnsteadyDiffusion.cpp
        ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
        ./EquationSystems/UnsteadyInviscidBurger.cpp

@@ -50,8 +50,8 @@ std::string CADSystemCFI::key = GetEngineFactory().RegisterCreatorFunction(
 
 bool CADSystemCFI::LoadCAD()
 {
-    //it is possible to get CFI to lock on to a open gui session
-    //not sure it ever will with this code
+    // it is possible to get CFI to lock on to a open gui session
+    // not sure it ever will with this code
     cfiHandel.startServer();
     cout << "cfi loaded in mode: ";
     if (cfiHandel.info.mode == cfi::MODE_STANDALONE)
@@ -81,14 +81,14 @@ bool CADSystemCFI::LoadCAD()
 
     model = cfiHandel.openModelFile(m_name.c_str());
 
-    //make an assumption there are not multiple bodies in the solid
+    // make an assumption there are not multiple bodies in the solid
     ASSERTL0(model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) == 1,
              "cannot deal with multibodies");
 
-    //cfi doesnt mind stupid units so this scales everything back to meters
-    //which is what nekmesh assumes its in
-    //the m_scal object is passed to all cad entities and scales any operation
-    //before running it.
+    // cfi doesnt mind stupid units so this scales everything back to meters
+    // which is what nekmesh assumes its in
+    // the m_scal object is passed to all cad entities and scales any operation
+    // before running it.
     m_scal = 1.0;
     if (model->getUnits() == cfi::UNIT_INCHES)
     {
@@ -98,16 +98,16 @@ bool CADSystemCFI::LoadCAD()
 
     body = model->getBodyEntity(1);
 
-    //CFI does everything by string identifers
-    //currently nekmesh cad system uses integer ids.
-    //it really should use strings but doesnt currently
+    // CFI does everything by string identifers
+    // currently nekmesh cad system uses integer ids.
+    // it really should use strings but doesnt currently
     map<string, cfi::Point *> mapOfVerts;
     map<string, cfi::Line *> mapOfEdges;
 
-    //nothing is unique in cfi, there can list of verts that arnt used
-    //or are listed twice. This block gets all the real unique vertices in the
-    //cad by cascading down from the faces
-    //also builds a list on unique edges in the process
+    // nothing is unique in cfi, there can list of verts that arnt used
+    // or are listed twice. This block gets all the real unique vertices in the
+    // cad by cascading down from the faces
+    // also builds a list on unique edges in the process
     vector<cfi::Oriented<cfi::TopoEntity *> > *faceList = body->getChildList();
 
     vector<cfi::Oriented<cfi::TopoEntity *> >::iterator it, it2, it3;
@@ -137,7 +137,7 @@ bool CADSystemCFI::LoadCAD()
         }
     }
 
-    //make the vertices and build a map of name to id
+    // make the vertices and build a map of name to id
     map<string, int> nameToVertId;
     map<string, cfi::Point *>::iterator vit;
     int i = 1; // from one to be consistent with oce
@@ -147,7 +147,7 @@ bool CADSystemCFI::LoadCAD()
         nameToVertId[vit->second->getName()] = i;
     }
 
-    //build curves
+    // build curves
     map<string, cfi::Line *>::iterator eit;
     i = 1;
     for (eit = mapOfEdges.begin(); eit != mapOfEdges.end(); eit++, i++)
@@ -166,7 +166,7 @@ bool CADSystemCFI::LoadCAD()
         AddCurve(i, eit->second, ids[0], ids[1]);
     }
 
-    //build surfaces
+    // build surfaces
     map<int, vector<int> > adjsurfmap;
     i = 1;
     for (it = faceList->begin(); it != faceList->end(); it++, i++)
@@ -177,12 +177,12 @@ bool CADSystemCFI::LoadCAD()
         vector<cfi::Oriented<cfi::TopoEntity *> > *edgeList =
             face->getChildList();
 
-        vector<EdgeLoop> edgeloops;
+        vector<EdgeLoopSharedPtr> edgeloops;
         vector<vector<cfi::Oriented<cfi::TopoEntity *> > > cfiloops;
         int done = 0;
         while (done != edgeList->size())
         {
-            EdgeLoop edgeloop;
+            EdgeLoopSharedPtr edgeloop = EdgeLoopSharedPtr(new EdgeLoop);
             vector<cfi::Oriented<cfi::TopoEntity *> > cfiloop;
             string firstVert;
             vector<cfi::Oriented<cfi::TopoEntity *> > *vertList =
@@ -195,13 +195,14 @@ bool CADSystemCFI::LoadCAD()
             {
                 firstVert = vertList->at(1).entity->getName();
             }
-            edgeloop.edges.push_back(
+
+            edgeloop->edges.push_back(
                 m_curves[nameToCurveId[edgeList->at(done).entity->getName()]]);
             cfiloop.push_back(edgeList->at(done));
             adjsurfmap[nameToCurveId[edgeList->at(done).entity->getName()]]
                 .push_back(i);
-            edgeList->at(done).orientation == 1 ? edgeloop.edgeo.push_back(0)
-                                                : edgeloop.edgeo.push_back(1);
+            edgeList->at(done).orientation == 1 ? edgeloop->edgeo.push_back(0)
+                                                : edgeloop->edgeo.push_back(1);
 
             for (done++; done < edgeList->size(); done++)
             {
@@ -222,15 +223,15 @@ bool CADSystemCFI::LoadCAD()
                     }
                 }
 
-                edgeloop.edges.push_back(
+                edgeloop->edges.push_back(
                     m_curves
                         [nameToCurveId[edgeList->at(done).entity->getName()]]);
                 cfiloop.push_back(edgeList->at(done));
                 adjsurfmap[nameToCurveId[edgeList->at(done).entity->getName()]]
                     .push_back(i);
                 edgeList->at(done).orientation == 1
-                    ? edgeloop.edgeo.push_back(0)
-                    : edgeloop.edgeo.push_back(1);
+                    ? edgeloop->edgeo.push_back(0)
+                    : edgeloop->edgeo.push_back(1);
 
                 if (end)
                 {
@@ -242,8 +243,8 @@ bool CADSystemCFI::LoadCAD()
             edgeloops.push_back(edgeloop);
         }
 
-        //this will accuratly calculate centers of surfaces but isnt really
-        //needed because the facemesh routines do it on their own
+        // this will accuratly calculate centers of surfaces but isnt really
+        // needed because the facemesh routines do it on their own
 
         /*cfi::FaceMassProperties *fmp = face->calcMassProperties(5.0, 5.0);
         cfi::UVPosition uv           = face->calcUVFromXYZ(fmp->centreOfMass);
@@ -311,7 +312,8 @@ void CADSystemCFI::AddCurve(int i, cfi::Line *in, int fv, int lv)
     m_curves[i]->SetVert(vs);
 }
 
-void CADSystemCFI::AddSurf(int i, cfi::Face *in, std::vector<EdgeLoop> ein)
+void CADSystemCFI::AddSurf(int i, cfi::Face *in,
+                           std::vector<EdgeLoopSharedPtr> ein)
 {
     CADSurfSharedPtr newSurf = GetCADSurfFactory().CreateInstance(key);
     static_pointer_cast<CADSurfCFI>(newSurf)->Initialise(i, in, ein);
@@ -323,7 +325,7 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in, std::vector<EdgeLoop> ein)
     int tote = 0;
     for (int i = 0; i < ein.size(); i++)
     {
-        tote += ein[i].edges.size();
+        tote += ein[i]->edges.size();
     }
 
     ASSERTL0(tote != 1, "cannot handle periodic curves");

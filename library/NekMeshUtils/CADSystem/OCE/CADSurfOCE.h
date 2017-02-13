@@ -63,7 +63,7 @@ public:
     {
     }
 
-    void Initialise(int i, TopoDS_Shape in, std::vector<EdgeLoop> ein);
+    void Initialise(int i, TopoDS_Shape in, std::vector<EdgeLoopSharedPtr> ein);
 
     virtual Array<OneD, NekDouble> GetBounds();
     virtual Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv);

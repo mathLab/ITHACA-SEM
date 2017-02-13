@@ -45,7 +45,7 @@ namespace NekMeshUtils
 std::string CADSurfCFI::key = GetCADSurfFactory().RegisterCreatorFunction(
     "cfi", CADSurfCFI::create, "CADSurfCFI");
 
-void CADSurfCFI::Initialise(int i, cfi::Face *in, vector<EdgeLoop> ein)
+void CADSurfCFI::Initialise(int i, cfi::Face *in, vector<EdgeLoopSharedPtr> ein)
 {
     m_edges         = ein;
     m_cfiSurface    = in;

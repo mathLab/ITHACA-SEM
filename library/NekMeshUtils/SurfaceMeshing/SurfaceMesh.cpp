@@ -99,6 +99,7 @@ void SurfaceMesh::Process()
             MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
                 m_curvemeshes, i);
 
+        m_facemeshes[i]->OrientateCurves();
         validError = validError ? true : m_facemeshes[i]->ValidateCurves();
     }
 

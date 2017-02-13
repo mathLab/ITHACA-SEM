@@ -571,5 +571,67 @@ vector<ElUtilSharedPtr> ProcessVarOpti::GetLockedElements(NekDouble thres)
 
     return ret;
 }
+
+void ProcessVarOpti::RemoveLinearCurvature()
+{
+    for(int i = 0; i < m_dataSet.size(); i++)
+    {
+        if(m_dataSet[i]->GetScaledJac() > 0.999)
+        {
+            ElementSharedPtr el = m_dataSet[i]->GetEl();
+            vector<NodeSharedPtr> ns;
+            el->SetVolumeNodes(ns);
+        }
+    }
+
+    map<int, vector<FaceSharedPtr> > edgeToFace;
+
+    FaceSet::iterator fit;
+    for(fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
+    {
+        bool rm = true;
+        for(int i = 0; i < (*fit)->m_elLink.size(); i++)
+        {
+            int id = (*fit)->m_elLink[i].first->GetId();
+            if(m_dataSet[id]->GetScaledJac() <= 0.999)
+            {
+                rm = false;
+                break;
+            }
+        }
+        if(rm)
+        {
+            (*fit)->m_faceNodes.clear();
+        }
+
+        vector<EdgeSharedPtr> es = (*fit)->m_edgeList;
+        for(int i = 0; i < es.size(); i++)
+        {
+            edgeToFace[es[i]->m_id].push_back(*fit);
+        }
+    }
+
+    EdgeSet::iterator eit;
+    for(eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
+    {
+        map<int, vector<FaceSharedPtr> >::iterator it;
+        it = edgeToFace.find((*eit)->m_id);
+        ASSERTL0(it != edgeToFace.end(),"not found");
+        bool rm = true;
+        for(int i = 0; i < it->second.size(); i++)
+        {
+            if(it->second[i]->m_faceNodes.size() > 0)
+            {
+                rm = false;
+                break;
+            }
+        }
+        if(rm)
+        {
+            (*eit)->m_edgeNodes.clear();
+        }
+    }
+}
+
 }
 }

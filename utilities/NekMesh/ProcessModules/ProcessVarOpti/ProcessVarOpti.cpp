@@ -383,6 +383,8 @@ void ProcessVarOpti::Process()
 
     t.Stop();
 
+    RemoveLinearCurvature();
+
     if(m_mesh->m_verbose)
     {
         cout << "Time to compute: " << t.TimePerTest(1) << endl;

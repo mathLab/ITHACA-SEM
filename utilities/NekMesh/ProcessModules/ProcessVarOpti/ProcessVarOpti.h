@@ -108,8 +108,9 @@ private:
         std::vector<NodeSharedPtr> remain);
     std::vector<std::vector<NodeSharedPtr> > GetColouredNodes(
         std::vector<ElUtilSharedPtr> elLock);
-    
 
+    void RemoveLinearCurvature();
+    
     NodeElMap m_nodeElMap;
     std::vector<ElUtilSharedPtr> m_dataSet;
 

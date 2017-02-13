@@ -263,13 +263,13 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
 
     
     //create vector of free nodes which "remain", hence will be included in the coloursets
-    vector<NodeSharedPtr> remain_vertex;
+    //vector<NodeSharedPtr> remain_vertex;
     vector<NodeSharedPtr> remain_edge;
     vector<NodeSharedPtr> remain_face;
     vector<NodeSharedPtr> remain_volume;
     m_res->nDoF = 0;
 
-    // check if vertex nodes are in boundary or ignored nodes, otherwise add to remain nodes
+    // check if vertex nodes are in boundary or ignored nodes, otherwise add to EDGE-VERTEX remain nodes
     NodeSet::iterator nit;
     for (nit = m_mesh->m_vertexSet.begin(); nit != m_mesh->m_vertexSet.end();
          ++nit)
@@ -278,7 +278,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
         NodeSet::iterator nit3 = ignoredNodes.find(*nit);
         if (nit2 == boundaryNodes.end() && nit3 == ignoredNodes.end())
         {
-            remain_vertex.push_back(*nit);
+            remain_edge.push_back(*nit);
             if ((*nit)->GetNumCadCurve() == 1)
             {
                 m_res->nDoF++;
@@ -363,32 +363,83 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
     }
 
     // size of all free nodes to be included in the coloursets
-    m_res->n = remain_vertex.size() + remain_edge.size()
+    m_res->n = remain_edge.size() // + remain_vertex.size()
                 + remain_face.size() + remain_volume.size();
 
     // data structure for coloursets, that will ultimately contain all free nodes
     vector<vector<NodeSharedPtr> > ret;
     vector<vector<NodeSharedPtr> > ret_part;
 
-    ret_part = CreateColoursets(remain_volume);
+// edge and vertex nodes
+    // create vector el of number of associated elements
+    vector<int> ele(remain_edge.size());
+    for (int i = 0; i < remain_edge.size(); i++)
+    {
+        NodeElMap::iterator it = m_nodeElMap.find(remain_edge[i]->m_id); //try to find node within all elements       
+        vector<ElUtilSharedPtr> &elUtils = it->second;       
+        ele[i] = elUtils.size();
+    }
+    // finding the permutation according to el
+    vector<int> pe(remain_edge.size());
+    for (int i = 0; i < remain_edge.size(); ++i)
+    {
+        pe[i] = i;
+    }
+    
+    std::sort(pe.begin(),pe.end(),[&] (int i, int j){return (ele[i] > ele[j]); }); // sort in descending order    
+    
+    // applying the permutation to remain_edge
+    vector<NodeSharedPtr> remain_edge_sort(remain_edge.size());    
+    //std::transform(pe.begin(), pe.end(), remain_edge_sort.begin(),[&](int i){ return remain_edge[i]; });    
+    for (int i = 0; i < remain_edge.size(); ++i)
+    {
+        int j = pe[i];
+        remain_edge_sort[i] = remain_edge[j];
+    }
+
+    ret_part = CreateColoursets(remain_edge_sort);
+    if(m_mesh->m_verbose)
+    {
+        printf("\nNumber of Edge/Vertex Coloursets: %i\n", ret_part.size());
+    }
     for (int i = 0; i < ret_part.size(); i++)
     {
+        if(m_mesh->m_verbose)
+        {
+            printf("Size of Edge/Vertex-Colourset %i: %i\n", i, ret_part[i].size());
+        }
         ret.push_back(ret_part[i]);
-    }
+    } 
+
+
+// face nodes
     ret_part = CreateColoursets(remain_face);
+    if(m_mesh->m_verbose)
+    {
+        printf("\nNumber of Face Coloursets: %i\n" ,ret_part.size());
+    }
     for (int i = 0; i < ret_part.size(); i++)
     {
+        if(m_mesh->m_verbose)
+        {
+            printf("Size of Face-Colourset %i: %i\n", i, ret_part[i].size());
+        }
         ret.push_back(ret_part[i]);
     }
-    ret_part = CreateColoursets(remain_edge);
+
+// volume nodes
+    ret_part = CreateColoursets(remain_volume);
+    if(m_mesh->m_verbose)
+    {
+        printf("\nNumber of Volume Coloursets: %i\n", ret_part.size());
+    }
     for (int i = 0; i < ret_part.size(); i++)
     {
-        ret.push_back(ret_part[i]);
-    }    
-    ret_part = CreateColoursets(remain_vertex);
-    for (int i = 0; i < ret_part.size(); i++)
-    {
-        ret.push_back(ret_part[i]);
+        if(m_mesh->m_verbose)
+        {
+            printf("Size of Volume-Colourset %i: %i\n", i, ret_part[i].size());
+        }
+        ret.push_back(ret_part[i]);        
     }
 
 

@@ -662,7 +662,7 @@ namespace Nektar
                 orientation = 0;
                 // if the innerproduct is equal to the (absolute value of the ) products of the lengths
                 // of both vectors, then, the coordinate systems will NOT be transposed
-                if( fabs(elementAaxis_length*faceAaxis_length - fabs(dotproduct1)) < NekConstants::kNekZeroTol )
+                if( fabs(elementAaxis_length*faceAaxis_length - fabs(dotproduct1)) < NekConstants::kGeomFactorsTol )
                 {
                     // if the inner product is negative, both A-axis point
                     // in reverse direction
@@ -679,7 +679,7 @@ namespace Nektar
 
                     // check that both these axis are indeed parallel
                     ASSERTL1(fabs(elementBaxis_length*faceBaxis_length - fabs(dotproduct2)) <
-                             NekConstants::kNekZeroTol,
+                             NekConstants::kGeomFactorsTol,
                              "These vectors should be parallel");
 
                     // if the inner product is negative, both B-axis point
@@ -704,7 +704,7 @@ namespace Nektar
 
                     // check that both these axis are indeed parallel
                     ASSERTL1(fabs(elementAaxis_length*faceBaxis_length - fabs(dotproduct1)) <
-                             NekConstants::kNekZeroTol,
+                             NekConstants::kGeomFactorsTol,
                              "These vectors should be parallel");
 
                     // if the result is negative, both axis point in reverse
@@ -723,7 +723,7 @@ namespace Nektar
 
                     // check that both these axis are indeed parallel
                     ASSERTL1(fabs(elementBaxis_length*faceAaxis_length - fabs(dotproduct2)) <
-                             NekConstants::kNekZeroTol,
+                             NekConstants::kGeomFactorsTol,
                              "These vectors should be parallel");
 
                     if( dotproduct2 < 0.0 )

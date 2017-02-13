@@ -106,7 +106,8 @@ private:
     std::vector<ElUtilSharedPtr> GetLockedElements(NekDouble thres);
     std::vector<std::vector<NodeSharedPtr> > GetColouredNodes(
         std::vector<ElUtilSharedPtr> elLock);
-
+    void RemoveLinearCurvature();
+    
     NodeElMap m_nodeElMap;
     std::vector<ElUtilSharedPtr> m_dataSet;
 

@@ -53,6 +53,11 @@ void Face::GetCurvedNodes(
         m_curveType == LibUtilities::eNodalTriElec)
     {
         int n = m_edgeList[0]->GetNodeCount();
+        int n2 = m_edgeList[1]->GetNodeCount();
+        int n3 = m_edgeList[2]->GetNodeCount();
+
+        bool same = (n == n2 ? (n2==n3) : false);
+        ASSERTL0(same, "Edges are not consistent");
 
         nodeList.insert(
             nodeList.end(), m_vertexList.begin(), m_vertexList.end());

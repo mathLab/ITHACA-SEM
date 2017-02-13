@@ -78,6 +78,8 @@ void CFIMesh::Process()
     map<int, NodeSharedPtr> nodes;
     vector<cfi::NodeDefinition> *cfinodes = model->getFenodes();
 
+    cout << "Nodes " << cfinodes->size() << endl;
+
     // filter all mesh nodes into a indexed map and project to CAD
     for (vector<cfi::NodeDefinition>::iterator it = cfinodes->begin();
          it != cfinodes->end(); it++)

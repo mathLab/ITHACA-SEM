@@ -265,8 +265,8 @@ bool CADSystemCFI::LoadCAD()
             cfi::UVPosition uv     = tmpface->calcUVFromXYZ(fmp->centreOfMass);
             edgeloops[i].center    = Array<OneD, NekDouble>(2);
             edgeloops[i].center[0] = uv.u;
-            edgeloops[i].center[1] = uv.v;*/
-        }
+            edgeloops[i].center[1] = uv.v;
+        }*/
         AddSurf(i, face, edgeloops);
     }
 

@@ -770,8 +770,8 @@ MMFSystem::~MMFSystem()
 	    id1 = m_fields[var]->GetBndCondExpansions()[n]->GetPhys_Offset(e);
 	    id2 = m_fields[var]->GetTrace()->GetPhys_Offset(m_fields[var]->GetTraceMap()->GetBndCondTraceToGlobalTraceMap(cnt+e));
 	    
-	    //if ( (m_fields[var]->GetBndConditions()[n]->GetUserDefined() == BDtype) || (BDtype == SpatialDomains::eNoUserDefined) )
-          if (BDtype == SpatialDomains::eNoUserDefined)
+          // if ( (m_fields[var]->GetBndConditions()[n]->GetUserDefined2() == BDtype) || (BDtype == SpatialDomains::eNoUserDefined) )
+          if (m_fields[var]->GetBndConditions()[n]->GetUserDefined() == m_fields[var]->GetBndConditions()[n]->GetBndTypeAsString(BDtype) ||BDtype == SpatialDomains::eNoUserDefined)
 	      {
 		switch(BDCopyType)
 		  {

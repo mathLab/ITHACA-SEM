@@ -270,6 +270,9 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoopSharedPtr> e)
         NekDouble t = m_thickness.Evaluate(m_thickness_ID, it->first->m_x,
                                            it->first->m_y, 0.0, 0.0);
 
+        NekDouble angle = acos(n1[0] * n2[0] + n1[1] * n2[1]);
+        t /= cos(angle / 2);
+
         n[0] = n[0] * t + it->first->m_x;
         n[1] = n[1] * t + it->first->m_y;
         n[2] = 0.0;

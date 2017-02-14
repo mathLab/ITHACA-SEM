@@ -88,6 +88,7 @@ v4.4.0
 - Change variable names in mcf file to make more sense (!736)
 - Fix issues in varopti module so that in can be compiled without meshgen on
   (!736)
+- Adjust boundary layer thickness in corners in 2D (!736)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

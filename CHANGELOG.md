@@ -87,7 +87,7 @@ v4.4.0
 - More sensible element sizing with boudnary layers in 2D (!736)
 - Change variable names in mcf file to make more sense (!736)
 - Fix issues in varopti module so that in can be compiled without meshgen on
-  (!739)
+  (!736)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

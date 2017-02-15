@@ -49,6 +49,23 @@ IF (NEKTAR_USE_PETSC)
             # we use a MUMPS build in ordering here, in the future it might make
             # sense to hook it up with metis/scotch since this MIGHT be faster
             SET(PETSC_MUMPS --download-scalapack --download-mumps)
+
+            IF( NEKTAR_USE_BLAS_LAPACK )
+                IF( NEKTAR_USE_MKL AND MKL_FOUND )
+                    SET(PETSC_MUMPS ${PETSC_MUMPS} --with-blas-lapack-dir=${MKL_LIB_DIR})
+                ELSEIF( NEKTAR_USE_WIN32_LAPACK )
+                    SET(PETSC_MUMPS ${PETSC_MUMPS} --with-blas-lapack-dir=${LAPACK_DIR})
+                ELSEIF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
+                    SET(PETSC_MUMPS ${PETSC_MUMPS} --with-blas-lapack-dir=${NATIVE_BLAS_LIB_DIR},${NATIVE_LAPACK_LIB_DIR})
+                ELSE()
+                    MESSAGE(STATUS "No suitable blas/lapack found, downloading")
+                    SET(PETSC_MUMPS ${PETSC_MUMPS} --download-fblaslapack)
+                ENDIF()
+            ELSE()
+                MESSAGE(STATUS "No suitable blas/lapack found, downloading")
+                SET(PETSC_MUMPS ${PETSC_MUMPS} --download-fblaslapack)
+            ENDIF()
+
         ELSE()
             MESSAGE(WARNING "No Fortran support. Building PETSc without MUMPS support")
             SET(PETSC_Fortran_COMPILER "0")

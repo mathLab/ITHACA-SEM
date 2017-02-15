@@ -272,9 +272,11 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoopSharedPtr> e)
                                            it->first->m_y, 0.0, 0.0);
 
         // Adjust thickness according to anlge between normals
-        NekDouble angle = acos(n1[0] * n2[0] + n1[1] * n2[1]);
-        angle           = (angle > M_PI) ? 2 * M_PI - angle : angle;
-        t /= cos(angle / 2);
+        NekDouble angle   = acos(n1[0] * n2[0] + n1[1] * n2[1]);
+        angle             = (angle > M_PI) ? 2 * M_PI - angle : angle;
+        NekDouble divider = 2.0; // Exact solution with 2.0; Higher values will
+                                 // smooth the thickness at sharp angles.
+        t /= cos(angle / divider);
 
         n[0] = n[0] * t + it->first->m_x;
         n[1] = n[1] * t + it->first->m_y;

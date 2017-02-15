@@ -33,6 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 #include <algorithm>
+#include <math.h>
 
 #include <NekMeshUtils/2DGenerator/2DGenerator.h>
 
@@ -270,7 +271,9 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoopSharedPtr> e)
         NekDouble t = m_thickness.Evaluate(m_thickness_ID, it->first->m_x,
                                            it->first->m_y, 0.0, 0.0);
 
+        // Adjust thickness according to anlge between normals
         NekDouble angle = acos(n1[0] * n2[0] + n1[1] * n2[1]);
+        angle           = (angle > M_PI) ? 2 * M_PI - angle : angle;
         t /= cos(angle / 2);
 
         n[0] = n[0] * t + it->first->m_x;

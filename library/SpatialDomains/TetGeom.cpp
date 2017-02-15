@@ -677,9 +677,11 @@ namespace Nektar
                         dotproduct2 += elementBaxis[i]*faceBaxis[i];
                     }
 
+                    NekDouble norm = dotproduct2 / elementBaxis_length / faceBaxis_length;
+
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementBaxis_length*faceBaxis_length - fabs(dotproduct2)) <
-                             NekConstants::kGeomFactorsTol,
+                    ASSERTL1(fabs(norm - 1.0) <
+                             NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
 
                     // if the inner product is negative, both B-axis point
@@ -702,9 +704,11 @@ namespace Nektar
                         dotproduct1 += elementAaxis[i]*faceBaxis[i];
                     }
 
+                    NekDouble norm = dotproduct1 / elementAaxis_length / faceBaxis_length;
+
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementAaxis_length*faceBaxis_length - fabs(dotproduct1)) <
-                             NekConstants::kGeomFactorsTol,
+                    ASSERTL1(fabs(norm - 1.0) <
+                             NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
 
                     // if the result is negative, both axis point in reverse
@@ -721,9 +725,11 @@ namespace Nektar
                         dotproduct2 += elementBaxis[i]*faceAaxis[i];
                     }
 
+                    norm = dotproduct2 / elementBaxis_length / faceAaxis_length;
+
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementBaxis_length*faceAaxis_length - fabs(dotproduct2)) <
-                             NekConstants::kGeomFactorsTol,
+                    ASSERTL1(fabs(norm - 1.0) <
+                             NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
 
                     if( dotproduct2 < 0.0 )

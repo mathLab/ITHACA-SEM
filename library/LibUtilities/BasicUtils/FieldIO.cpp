@@ -440,9 +440,9 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
     {
         m_comm->Block();
         int exists = 1;
-        while (exists)
+        while (exists && perRank)
         {
-            exists = fs::is_directory(specPath);
+            exists = fs::exists(specPath);
             m_comm->AllReduce(exists, ReduceMax);
         }
     }
@@ -501,9 +501,9 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
         // have propagated through the filesystem
         m_comm->Block();
         int exists = 1;
-        while (exists)
+        while (exists && perRank)
         {
-            exists = fs::is_directory(specPath);
+            exists = fs::exists(specPath);
             m_comm->AllReduce(exists, ReduceMax);
         }
     }

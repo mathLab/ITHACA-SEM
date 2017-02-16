@@ -433,10 +433,18 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
                         "Filesystem error: " + string(e.what()));
         }
     }
-    // wait until rank 0 has backed up the old specPath
+
+    // wait until rank 0 has moved the old specPath and the changes
+    // have propagated through the filesystem
     if (backup)
     {
         m_comm->Block();
+        int exists = 1;
+        while (exists)
+        {
+            exists = fs::is_directory(specPath);
+            m_comm->AllReduce(exists, ReduceMax);
+        }
     }
 
     if (nprocs == 1)
@@ -489,7 +497,15 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
             }
         }
 
+        // wait until rank 0 has removed specPath and the changes
+        // have propagated through the filesystem
         m_comm->Block();
+        int exists = 1;
+        while (exists)
+        {
+            exists = fs::is_directory(specPath);
+            m_comm->AllReduce(exists, ReduceMax);
+        }
     }
 
     if (rank == 0)

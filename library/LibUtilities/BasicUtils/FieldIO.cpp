@@ -463,7 +463,7 @@ std::string FieldIO::SetUpOutput(const std::string outname, bool perRank, bool b
     }
 
     // Remove any existing file which is in the way
-    if (m_comm->RemoveExistingFiles())
+    if (m_comm->RemoveExistingFiles() && !backup)
     {
         if (m_sharedFilesystem)
         {

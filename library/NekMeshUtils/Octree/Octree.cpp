@@ -681,8 +681,10 @@ void Octree::PropagateDomain()
 
     for (int i = 0; i < m_octants.size(); i++)
     {
-        ASSERTL0(m_octants[i]->IsDeltaKnown(),
-                 "does not know delta after propergation");
+        if (!m_octants[i]->IsDeltaKnown())
+        {
+            m_octants[i]->SetDelta(m_maxDelta);
+        }
     }
 }
 

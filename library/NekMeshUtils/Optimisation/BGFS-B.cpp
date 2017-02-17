@@ -92,7 +92,7 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
 
     Array<OneD, NekDouble> xci(xi.num_elements());
 
-    bool hitbounded = false;
+    //bool hitbounded = false;
 
     for (int i = 0; i < xci.num_elements(); i++)
     {
@@ -100,7 +100,7 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
         {
             xci[i] = li[i];
             Fset.erase(i);
-            hitbounded = true;
+            //hitbounded = true;
             continue;
         }
         else
@@ -112,7 +112,7 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
         {
             xci[i] = ui[i];
             Fset.erase(i);
-            hitbounded = true;
+            //hitbounded = true;
             continue;
         }
         else

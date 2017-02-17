@@ -862,7 +862,6 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
 
     //Find neipghbours
     int      unique_index = 0;
-    bool     unique_index_found = false;
     int      prog;
     for(i = 0; i < m_nvert; ++i)
     {
@@ -871,7 +870,7 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
             prog = LibUtilities::PrintProgressbar(i,m_nvert,
                                                   "Nearest verts",prog);
         }
-        
+
         BPoint queryPoint = inPoints[i].first;
 
 
@@ -882,7 +881,7 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
         }
         else
         {
-            
+
             // find nearest 10 points within the distance box
             std::vector<PointPair> result;
             rtree.query(bgi::nearest(queryPoint, 10), std::back_inserter(result));
@@ -898,7 +897,7 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
                 {
                     id2 = result[id1].second;
                     samept.insert(id2);
-                    
+
                     if(global_to_unique_map[id2] <unique_index)
                     {
                         new_index = global_to_unique_map[id2];
@@ -919,7 +918,7 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
             }
         }
     }
-    
+
     if(verbose)
     {
         cout << endl;

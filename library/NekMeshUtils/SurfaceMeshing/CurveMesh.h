@@ -66,6 +66,10 @@ public:
     {
         m_blID = m_bl.DefineFunction("x y z", "0.0");
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
+
+        m_bloffset.resize(2);
+        m_bloffset[0] = 0.0;
+        m_bloffset[1] = 0.0;
     }
 
     /**
@@ -91,6 +95,20 @@ public:
         : m_id(id), m_mesh(m)
     {
         m_blID = m_bl.DefineFunction("x y z", expr);
+        m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
+
+        m_bloffset.resize(2);
+        m_bloffset[0] = 0.0;
+        m_bloffset[1] = 0.0;
+    }
+
+    /**
+     * @brief alternative constructor with adjacent boundary layer curves
+     */
+    CurveMesh(int id, MeshSharedPtr m, std::vector<NekDouble> bloffset)
+        : m_id(id), m_mesh(m), m_bloffset(bloffset)
+    {
+        m_blID = m_bl.DefineFunction("x y z", "0.0");
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
     }
 
@@ -152,6 +170,14 @@ public:
         return m_cadcurve;
     }
 
+    /**
+     * @brief get the boundary layer offsets
+     */
+    std::vector<NekDouble> GetBLOffset()
+    {
+        return m_bloffset;
+    }
+
 private:
     /**
      * @brief get node spacing sampling function
@@ -209,6 +235,8 @@ private:
     std::vector<NodeSharedPtr> m_meshpoints;
     LibUtilities::AnalyticExpressionEvaluator m_bl;
     int m_blID;
+    /// boundary layer offset on vertices
+    std::vector<NekDouble> m_bloffset;
 };
 
 typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;

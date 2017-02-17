@@ -85,6 +85,7 @@ v4.4.0
 - Add new two-dimensional mesher from NACA code or step file (!720)
 - Add periodic boundary condition meshing in 2D (!733)
 - Automatic peralign call if periodic boundary conditions present (!733)
+- Support non-O BL meshing in 2D (!733)
 - Fix inverted boundary layer in 2D (!736)
 - More sensible element sizing with boudnary layers in 2D (!736)
 - Change variable names in mcf file to make more sense (!736)

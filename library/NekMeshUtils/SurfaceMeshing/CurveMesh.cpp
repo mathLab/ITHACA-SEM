@@ -48,9 +48,15 @@ void CurveMesh::Mesh()
 
     m_bounds      = m_cadcurve->Bounds();
     m_curvelength = m_cadcurve->GetTotLength();
-    m_numSamplePoints =
-        int(m_curvelength / m_mesh->m_octree->GetMinDelta()) + 5;
-    ds = m_curvelength / (m_numSamplePoints - 1);
+
+    ASSERTL0(m_curvelength > m_bloffset[0] + m_bloffset[1],
+             "Boundary layers too thick for adjacent curve");
+
+    m_numSamplePoints = int((m_curvelength - m_bloffset[0] - m_bloffset[1]) /
+                            m_mesh->m_octree->GetMinDelta()) +
+                        5;
+    ds = (m_curvelength - m_bloffset[0] - m_bloffset[1]) /
+         (m_numSamplePoints - 1);
 
     GetSampleFunction();
 
@@ -63,28 +69,24 @@ void CurveMesh::Mesh()
 
     Ne = round(Ae);
 
-    if (Ne + 1 < 2)
+    meshsvalue.clear();
+    meshsvalue.push_back(0.0);
+
+    if (m_bloffset[0] > 0.0)
     {
-        meshsvalue.resize(2);
-        meshsvalue[0] = 0.0;
-        meshsvalue[1] = m_curvelength;
-        Ne            = 1;
+        meshsvalue.push_back(m_bloffset[0]);
     }
-    else
+
+    if (Ne > 1)
     {
-
         GetPhiFunction();
-
-        meshsvalue.resize(Ne + 1);
-        meshsvalue[0]  = 0.0;
-        meshsvalue[Ne] = m_curvelength;
 
         for (int i = 1; i < Ne; i++)
         {
             int iterationcounter = 0;
             bool iterate         = true;
             int k                = i;
-            NekDouble ski        = meshsvalue[i - 1];
+            NekDouble ski        = meshsvalue.back();
             NekDouble lastSki;
             while (iterate)
             {
@@ -100,9 +102,18 @@ void CurveMesh::Mesh()
                 ASSERTL0(iterationcounter < 1000000, "iteration failed");
             }
 
-            meshsvalue[i] = ski;
+            meshsvalue.push_back(ski);
         }
     }
+
+    if (m_bloffset[1] > 0.0)
+    {
+        meshsvalue.push_back(m_bloffset[1]);
+    }
+
+    meshsvalue.push_back(m_curvelength);
+
+    Ne = meshsvalue.size() - 1;
 
     NekDouble t;
     Array<OneD, NekDouble> loc;
@@ -205,11 +216,11 @@ NekDouble CurveMesh::EvaluateDS(NekDouble s)
     int a = 0;
     int b = 0;
 
-    if (s == 0)
+    if (s <= m_bloffset[0])
     {
         return m_dst[0][0];
     }
-    else if (s == m_curvelength)
+    else if (s >= m_curvelength - m_bloffset[1])
     {
         return m_dst[m_numSamplePoints - 1][0];
     }
@@ -285,26 +296,19 @@ NekDouble CurveMesh::EvaluatePS(NekDouble s)
 void CurveMesh::GetSampleFunction()
 {
     m_dst.resize(m_numSamplePoints);
-    Array<OneD, NekDouble> loc = m_cadcurve->P(m_bounds[0]);
+    Array<OneD, NekDouble> loc(3);
+    vector<NekDouble> dsti(3);
 
-    vector<NekDouble> dsti;
-    dsti.resize(3);
-
-    dsti[0] = m_mesh->m_octree->Query(loc);
-    dsti[1] = 0.0;
-    dsti[2] = m_bounds[0];
-
-    m_dst[0] = dsti;
-
-    for (int i = 1; i < m_numSamplePoints; i++)
+    for (int i = 0; i < m_numSamplePoints; i++)
     {
-        dsti[1]     = i * ds;
-        NekDouble t = m_cadcurve->tAtArcLength(dsti[1]);
+        dsti[1]     = i * ds + m_bloffset[0];
+        NekDouble t = (i > 0 || m_bloffset[0] > 0.0)
+                          ? m_cadcurve->tAtArcLength(dsti[1])
+                          : m_bounds[0];
 
         loc = m_cadcurve->P(t);
 
-        NekDouble ts =
-            m_bl.Evaluate(m_blID, loc[0], loc[1], loc[2], 0.0);
+        NekDouble ts = m_bl.Evaluate(m_blID, loc[0], loc[1], loc[2], 0.0);
 
         if (ts > 0.0)
         {

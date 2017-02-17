@@ -121,35 +121,85 @@ void Generator2D::Process()
         }
     }
 
-    if(m_config["blcurves"].beenSet)
+    if (m_config["blcurves"].beenSet)
     {
         ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
                                       m_blCurves);
-        m_thickness_ID =
-            m_thickness.DefineFunction("x y z", m_config["blthick"].as<string>());
+        m_thickness_ID = m_thickness.DefineFunction(
+            "x y z", m_config["blthick"].as<string>());
     }
 
-    // linear mesh all curves
+    // linear mesh all curves with a BL
+    for (int i = 0; i < m_blCurves.size(); i++)
+    {
+        ASSERTL0(m_blCurves[i] <= m_mesh->m_cad->GetNumCurve(),
+                 "Invalid curve defined with boundary layer");
+
+        if (m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(i + 1, m_mesh->m_cad->GetNumCurve(),
+                                           "Curve progress");
+        }
+
+        m_curvemeshes[m_blCurves[i]] =
+            MemoryManager<CurveMesh>::AllocateSharedPtr(
+                m_blCurves[i], m_mesh, m_config["blthick"].as<string>());
+
+        m_curvemeshes[m_blCurves[i]]->Mesh();
+    }
+
+    LibUtilities::AnalyticExpressionEvaluator bl;
+    int blID = bl.DefineFunction("x y z", m_config["blthick"].as<string>());
+
+    // check curves with adjacent BLs
+    for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
+    {
+        vector<unsigned int>::iterator f =
+            find(m_blCurves.begin(), m_blCurves.end(), i);
+
+        if (f != m_blCurves.end())
+        {
+            continue;
+        }
+
+        vector<CADVertSharedPtr> verts =
+            m_mesh->m_cad->GetCurve(i)->GetVertex();
+
+        vector<NekDouble> offset(2);
+        offset[0] = 0.0;
+        offset[1] = 0.0;
+
+        for (int j = 0; j < 2; ++j)
+        {
+            NodeSharedPtr node = verts[j]->GetNode();
+
+            if (node->GetNumCadCurve())
+            {
+                Array<OneD, NekDouble> loc = node->GetLoc();
+                offset[j] = bl.Evaluate(blID, loc[0], loc[1], loc[2], 0.0);
+            }
+        }
+
+        m_curvemeshes[i] =
+            MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh, offset);
+    }
+
+    // linear mesh all other curves
     for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
     {
         if (m_mesh->m_verbose)
         {
-            LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumCurve(),
+            LibUtilities::PrintProgressbar(i + m_blCurves.size(),
+                                           m_mesh->m_cad->GetNumCurve(),
                                            "Curve progress");
         }
 
         vector<unsigned int>::iterator f =
             find(m_blCurves.begin(), m_blCurves.end(), i);
 
-        if (f == m_blCurves.end())
+        if (f != m_blCurves.end())
         {
-            m_curvemeshes[i] =
-                MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
-        }
-        else
-        {
-            m_curvemeshes[i] = MemoryManager<CurveMesh>::AllocateSharedPtr(
-                i, m_mesh, m_config["blthick"].as<string>());
+            continue;
         }
 
         m_curvemeshes[i]->Mesh();
@@ -446,9 +496,30 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoopSharedPtr> e)
     map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it;
     for (it = m_nodesToEdge.begin(); it != m_nodesToEdge.end(); it++)
     {
+        ASSERTL0(it->second.size() > 0 && it->second.size() < 3,
+                 "weirdness, most likely bl_surfs are incorrect");
+
+        if (it->second.size() < 2)
+        {
+            vector<pair<int, CADCurveSharedPtr> > curves =
+                it->first->GetCADCurves();
+
+            vector<EdgeSharedPtr> edges =
+                m_curvemeshes[curves[0].first]->GetMeshEdges();
+            vector<EdgeSharedPtr>::iterator ie =
+                find(edges.begin(), edges.end(), it->second[0]);
+            int rightCurve =
+                (ie == edges.end()) ? curves[0].first : curves[1].first;
+
+            vector<NodeSharedPtr> nodes =
+                m_curvemeshes[rightCurve]->GetMeshPoints();
+            nodeNormals[it->first] =
+                (nodes[0] == it->first) ? nodes[1] : nodes[nodes.size() - 2];
+
+            continue;
+        }
+
         Array<OneD, NekDouble> n(3);
-        ASSERTL0(it->second.size() == 2,
-                 "wierdness, most likely bl_surfs are incorrect");
         Array<OneD, NekDouble> n1 = edgeNormals[it->second[0]->m_id];
         Array<OneD, NekDouble> n2 = edgeNormals[it->second[1]->m_id];
 
@@ -524,6 +595,34 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoopSharedPtr> e)
             }
             m_mesh->m_element[2].push_back(E);
         }
+    }
+
+    for (map<int, CurveMeshSharedPtr>::iterator ic = m_curvemeshes.begin();
+         ic != m_curvemeshes.end(); ++ic)
+    {
+        vector<unsigned>::iterator ib =
+            find(m_blCurves.begin(), m_blCurves.end(), ic->first);
+
+        if (ib != m_blCurves.end())
+        {
+            continue;
+        }
+
+        vector<NekDouble> bloffset  = ic->second->GetBLOffset();
+        vector<NodeSharedPtr> nodes = ic->second->GetMeshPoints();
+
+        if (bloffset[0] != 0.0)
+        {
+            nodes.erase(nodes.begin());
+        }
+
+        if (bloffset[1] != 0.0)
+        {
+            nodes.erase(nodes.end() - 1);
+        }
+
+        ic->second = MemoryManager<CurveMesh>::AllocateSharedPtr(ic->first,
+                                                                 m_mesh, nodes);
     }
 }
 

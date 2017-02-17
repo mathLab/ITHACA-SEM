@@ -39,7 +39,7 @@
 
 #include <tinyxml.h>
 
-#include "InputCAD.h"
+#include "InputMCF.h"
 
 using namespace std;
 using namespace Nektar::NekMeshUtils;
@@ -49,22 +49,22 @@ namespace Nektar
 namespace Utilities
 {
 
-ModuleKey InputCAD::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eInputModule, "mcf"), InputCAD::create,
-    "Reads CAD geometry and will generate the mesh file.");
+ModuleKey InputMCF::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eInputModule, "mcf"), InputMCF::create,
+    "Reads mesh configuration and will generate the mesh file.");
 
 /**
  * @brief Set up InputCAD object.
  */
-InputCAD::InputCAD(MeshSharedPtr m) : InputModule(m)
+InputMCF::InputMCF(MeshSharedPtr m) : InputModule(m)
 {
 }
 
-InputCAD::~InputCAD()
+InputMCF::~InputMCF()
 {
 }
 
-void InputCAD::ParseFile(string nm)
+void InputMCF::ParseFile(string nm)
 {
     vector<string> filename;
     filename.push_back(nm);
@@ -159,12 +159,16 @@ void InputCAD::ParseFile(string nm)
 
     it = information.find("MeshType");
     ASSERTL0(it != information.end(), "no meshtype defined");
-    m_makeBL = it->second == "BL";
+    m_makeBL = it->second == "3DBndLayer";
     m_2D = it->second == "2D";
-    if (it->second == "2DBL")
+    if (it->second == "2DBndLayer")
     {
         m_makeBL = true;
         m_2D = true;
+    }
+    if(!m_makeBL && !m_2D)
+    {
+        ASSERTL0(it->second == "3D", "unsure on MeshType")
     }
 
 
@@ -186,20 +190,20 @@ void InputCAD::ParseFile(string nm)
 
     if (m_makeBL)
     {
-        it = parameters.find("BLSurfs");
-        ASSERTL0(it != parameters.end(), "no blsurfs defined");
+        it = parameters.find("BndLayerSurfaces");
+        ASSERTL0(it != parameters.end(), "no BndLayersurfs defined");
         m_blsurfs = it->second;
 
-        it = parameters.find("BLThick");
-        ASSERTL0(it != parameters.end(), "no blthick defined");
+        it = parameters.find("BndLayerThickness");
+        ASSERTL0(it != parameters.end(), "no BndLayerthick defined");
         m_blthick = it->second;
 
-        it = parameters.find("BLLayers");
+        it = parameters.find("BndLayerLayers");
         m_splitBL = it != parameters.end();
         if(m_splitBL)
         {
             m_bllayers = it->second;
-            it = parameters.find("BLProg");
+            it = parameters.find("BndLayerProgression");
             m_blprog = it != parameters.end() ? it->second : "2.0";
         }
     }
@@ -230,11 +234,11 @@ void InputCAD::ParseFile(string nm)
     }
 
     set<string>::iterator sit;
-    sit        = boolparameters.find("SurfOpti");
+    sit        = boolparameters.find("SurfaceOptimiser");
     m_surfopti = sit != boolparameters.end();
     sit        = boolparameters.find("WriteOctree");
     m_woct     = sit != boolparameters.end();
-    sit        = boolparameters.find("VarOpti");
+    sit        = boolparameters.find("VariationalOptimiser");
     m_varopti  = sit != boolparameters.end();
 
     m_refine = refinement.size() > 0;
@@ -251,7 +255,7 @@ void InputCAD::ParseFile(string nm)
     }
 }
 
-void InputCAD::Process()
+void InputMCF::Process()
 {
     ParseFile(m_config["infile"].as<string>());
 
@@ -338,11 +342,8 @@ void InputCAD::Process()
         }
         mods.push_back(GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "varopti"), m_mesh));
-        mods.back()->RegisterConfig("nq",boost::lexical_cast<string>(m_mesh->m_nummode));
         mods.back()->RegisterConfig("hyperelastic","");
         mods.back()->RegisterConfig("maxiter","10");
-        mods.back()->RegisterConfig("restol","1e-6");
-        mods.back()->RegisterConfig("overint","6");
         mods.back()->RegisterConfig("numthreads",boost::lexical_cast<string>(np));
     }
 
@@ -359,6 +360,7 @@ void InputCAD::Process()
 
     for(int i = 0; i < mods.size(); i++)
     {
+        mods[i]->SetDefaults();
         mods[i]->Process();
     }
 }

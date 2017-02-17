@@ -135,30 +135,44 @@ namespace Vmath
     template LIB_UTILITIES_EXPORT Nektar::NekDouble ran2 (long* idum);
 
     /// \brief Fills a vector with white noise.
-    template<class T>  void FillWhiteNoise( int n, const T eps, T *x, const int incx, int outseed)
+    template<class T>  void FillWhiteNoise( int n, const T eps, T *x,
+                                      const int incx, int outseed)
     {
         // Protect the static vars here and in ran2
         boost::mutex::scoped_lock l(mutex);
+
+        // Define static variables for generating random numbers
+        static int     iset = 0;
+        static T       gset;
+        static long    seed = 0;
+
+        // Bypass seed if outseed was specified
+        if( outseed != 9999)
+        {
+            seed = long(outseed);
+        }
+
         while( n-- )
         {
-            static int     iset = 0;
-            static T       gset;
-            long    seed = long(outseed);
             T              fac, rsq, v1, v2;
 
-            if (iset == 0) {
-              do {
-                v1 = 2.0 * ran2<T> (&seed) - 1.0;
-                v2 = 2.0 * ran2<T> (&seed) - 1.0;
-                rsq = v1*v1 + v2*v2;
-              } while (rsq >= 1.0 || rsq == 0.0);
-              fac = sqrt(-2.0 * log (rsq) / rsq);
-              gset = v1 * fac;
-              iset = 1;
-              *x = eps * v2 * fac;
-            } else {
-              iset = 0;
-              *x = eps * gset;
+            if (iset == 0)
+            {
+                do
+                {
+                    v1 = 2.0 * ran2<T> (&seed) - 1.0;
+                    v2 = 2.0 * ran2<T> (&seed) - 1.0;
+                    rsq = v1*v1 + v2*v2;
+                } while (rsq >= 1.0 || rsq == 0.0);
+                fac = sqrt(-2.0 * log (rsq) / rsq);
+                gset = v1 * fac;
+                iset = 1;
+                *x = eps * v2 * fac;
+            }
+            else
+            {
+                iset = 0;
+                *x = eps * gset;
             }
             x += incx;
         }

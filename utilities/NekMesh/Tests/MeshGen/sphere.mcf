@@ -3,7 +3,7 @@
 
         <INFORMATION>
             <I PROPERTY="CADFile" VALUE="sphere.STEP" />
-            <I PROPERTY="MeshType" VALUE="Euler" />
+            <I PROPERTY="MeshType" VALUE="3D" />
         </INFORMATION>
 
         <PARAMETERS>
@@ -15,7 +15,7 @@
         </PARAMETERS>
 
         <BOOLPARAMETERS>
-            <P VALUE="SurfOpti" />
+            <P VALUE="SurfaceOptimiser" />
         </BOOLPARAMETERS>
 
     </MESHING>

@@ -52,17 +52,17 @@ using namespace std;
  *
  * @return Jacobian of @p jac.
  */
-template <int DIM> inline NekDouble Determinant(NekDouble jac[DIM][DIM])
+template <int DIM> inline NekDouble Determinant(NekDouble jac[][DIM])
 {
     return 0.0;
 }
 
-template <> inline NekDouble Determinant<2>(NekDouble jac[2][2])
+template <> inline NekDouble Determinant<2>(NekDouble jac[][2])
 {
     return jac[0][0] * jac[1][1] - jac[0][1] * jac[1][0];
 }
 
-template <> inline NekDouble Determinant<3>(NekDouble jac[3][3])
+template <> inline NekDouble Determinant<3>(NekDouble jac[][3])
 {
     return jac[0][0] * (jac[1][1] * jac[2][2] - jac[2][1] * jac[1][2]) -
            jac[0][1] * (jac[1][0] * jac[2][2] - jac[1][2] * jac[2][0]) +
@@ -78,13 +78,13 @@ template <> inline NekDouble Determinant<3>(NekDouble jac[3][3])
  * @param out  Output matrix \f$ A^{-\top} \f$
  */
 template <int DIM>
-inline void InvTrans(NekDouble in[DIM][DIM], NekDouble out[DIM][DIM])
+inline void InvTrans(NekDouble in[][DIM], NekDouble out[][DIM])
 {
 }
 
-template <> inline void InvTrans<2>(NekDouble in[2][2], NekDouble out[2][2])
+template <> inline void InvTrans<2>(NekDouble in[][2], NekDouble out[][2])
 {
-    NekDouble invDet = 1.0 / Determinant(in);
+    NekDouble invDet = 1.0 / Determinant<2>(in);
 
     out[0][0] =  in[1][1] * invDet;
     out[1][0] = -in[0][1] * invDet;
@@ -92,9 +92,9 @@ template <> inline void InvTrans<2>(NekDouble in[2][2], NekDouble out[2][2])
     out[1][1] =  in[0][0] * invDet;
 }
 
-template <> inline void InvTrans<3>(NekDouble in[3][3], NekDouble out[3][3])
+template <> inline void InvTrans<3>(NekDouble in[][3], NekDouble out[][3])
 {
-    NekDouble invdet = 1.0 / Determinant(in);
+    NekDouble invdet = 1.0 / Determinant<3>(in);
 
     out[0][0] =  (in[1][1] * in[2][2] - in[2][1] * in[1][2]) * invdet;
     out[1][0] = -(in[0][1] * in[2][2] - in[0][2] * in[2][1]) * invdet;
@@ -117,11 +117,11 @@ template <> inline void InvTrans<3>(NekDouble in[3][3], NekDouble out[3][3])
  * @param out  Output matrix \f$ F^\top F - I \f$
  */
 template <int DIM>
-inline void EMatrix(NekDouble in[DIM][DIM], NekDouble out[DIM][DIM])
+inline void EMatrix(NekDouble in[][DIM], NekDouble out[][DIM])
 {
 }
 
-template <> inline void EMatrix<2>(NekDouble in[2][2], NekDouble out[2][2])
+template <> inline void EMatrix<2>(NekDouble in[][2], NekDouble out[][2])
 {
     out[0][0] = 0.5 * (in[0][0] * in[0][0] + in[1][0] * in[1][0] - 1.0);
     out[1][0] = 0.5 * (in[0][0] * in[0][1] + in[1][0] * in[1][1]);
@@ -129,7 +129,7 @@ template <> inline void EMatrix<2>(NekDouble in[2][2], NekDouble out[2][2])
     out[1][1] = 0.5 * (in[1][1] * in[1][1] + in[0][1] * in[0][1] - 1.0);
 }
 
-template <> inline void EMatrix<3>(NekDouble in[3][3], NekDouble out[3][3])
+template <> inline void EMatrix<3>(NekDouble in[][3], NekDouble out[][3])
 {
     out[0][0] = 0.5 * (in[0][0] * in[0][0] + in[1][0] * in[1][0] +
                        in[2][0] * in[2][0] - 1.0);
@@ -228,7 +228,7 @@ inline void LEM3(NekDouble jacDerivPhi[DIM][DIM][DIM],
  * @brief Calculate Frobenius inner product of input matrices.
  */
 template <int DIM>
-inline NekDouble FrobProd(NekDouble in1[DIM][DIM], NekDouble in2[DIM][DIM])
+inline NekDouble FrobProd(NekDouble in1[][DIM], NekDouble in2[][DIM])
 {
     NekDouble ret = 0;
     for (int n = 0; n < DIM; ++n)
@@ -258,7 +258,7 @@ typedef boost::multi_array<NekDouble, 4> DerivArray;
 template <int DIM>
 inline NekDouble CalcIdealJac(int elmt, int point, DerivArray &deriv,
                               std::vector<ElUtilSharedPtr> &data,
-                              NekDouble jacIdeal[DIM][DIM])
+                              NekDouble jacIdeal[][DIM])
 {
     for (int m = 0; m < DIM; ++m)
     {
@@ -281,7 +281,7 @@ inline NekDouble CalcIdealJac(int elmt, int point, DerivArray &deriv,
  *
  * @param inarray   Input matrix \f$ A \f$
  */
-template <int DIM> inline NekDouble FrobeniusNorm(NekDouble inarray[DIM][DIM])
+template <int DIM> inline NekDouble FrobeniusNorm(NekDouble inarray[][DIM])
 {
     NekDouble ret = 0.0, *start = &inarray[0][0];
     for (int i = 0; i < DIM * DIM; ++i, ++start)
@@ -305,9 +305,9 @@ NekDouble NodeOpti::GetFunctional(NekDouble &minJacNew, bool gradient)
 
     for (typeIt = m_data.begin(); typeIt != m_data.end(); typeIt++)
     {
-        const int nElmt  = typeIt->second.size();
-        const int totpts = m_derivUtils[typeIt->first]->ptsStd * nElmt;
-        NekDouble X[DIM * totpts];
+        int nElmt  = typeIt->second.size();
+        int totpts = m_derivUtils[typeIt->first]->ptsStd * nElmt;
+        NekDouble* X = new NekDouble[DIM*totpts];
 
         // Store x/y components of each element sequentially in memory
         for (int i = 0, cnt = 0; i < nElmt; ++i)

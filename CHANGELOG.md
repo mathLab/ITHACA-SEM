@@ -34,6 +34,8 @@ v4.4.0
 - Enabled MUMPS support in PETSc if a Fortran compiler was found and added 3D
   support to the Helmholtz smoother used e.g. in FieldConverts C0Projection
   module (!714)
+- Fix bug in `Vmath::FillWhiteNoise` which caused `ForcingNoise` to have
+  a repeated pattern (!718)
 - Fix bug in the calculation of the RHS magnitude in CG solver (!721)
 - Fix bug in CMake Homebrew and MacPorts detection for OS X (!729)
 - Fix bug in FieldUtils when using half mode expansions (!734)

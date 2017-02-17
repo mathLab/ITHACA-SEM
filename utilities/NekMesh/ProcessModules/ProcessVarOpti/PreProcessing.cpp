@@ -160,7 +160,7 @@ map<LibUtilities::ShapeType, DerivUtilSharedPtr> ProcessVarOpti::BuildDerivUtil(
         der->quadW = quadWi;
 
         ret[it->first] = der;
-        delete nodalUtil;
+        //delete nodalUtil;
     }
 
     return ret;

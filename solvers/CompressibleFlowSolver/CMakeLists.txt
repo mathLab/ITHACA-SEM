@@ -44,7 +44,6 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver SOURCES ${CompressibleFlowSolverSource})
 
     SUBDIRS(Utilities)
-    FINALISE_CPACK_COMPONENT(compressibleflowsolver DESCRIPTION "Nektar++ Compressible Flow Solver")
    
     ADD_NEKTAR_TEST(CylinderSubsonic_FRDG_SEM)
     ADD_NEKTAR_TEST(CylinderSubsonic_FRDG_GAUSS)

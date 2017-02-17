@@ -32,8 +32,7 @@ IF( NEKTAR_SOLVER_PULSEWAVE )
         EquationSystems/ArterialPressureArea.cpp
         )
 
-    SUBDIRS(Utilities)      
-    FINALISE_CPACK_COMPONENT(pulsewavesolver DESCRIPTION "Nektar++ pulse wave solver")
+    SUBDIRS(Utilities)
 
     ADD_NEKTAR_TEST(55_Artery_Network)
     ADD_NEKTAR_TEST(Bifurcation)

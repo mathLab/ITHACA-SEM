@@ -8,9 +8,11 @@ IF( NEKTAR_SOLVER_DIFFUSION )
     SET(DiffusionSolverTimeIntSource
         ./DiffusionSolverTimeInt.cpp)
         
-    ADD_SOLVER_EXECUTABLE(DiffusionSolver SOURCES DiffusionSolver.cpp COMPONENT diffusionsolver)
+    ADD_SOLVER_EXECUTABLE(DiffusionSolver SOURCES DiffusionSolver.cpp)
     ADD_SOLVER_EXECUTABLE(DiffusionSolverTimeInt SOURCES DiffusionSolverTimeInt COMPONENT diffusionsolver)
-    FINALISE_CPACK_COMPONENT(diffusionsolver DESCRIPTION "Nektar++ Diffusion Solver")
+    FINALISE_CPACK_COMPONENT(diffusion-solver
+        SUMMARY "Nektar++ Diffusion Solver"
+        DESCRIPTION "Solves the multi-dimensional diffusion equation and serves as a sample of writing a simple Nektar++ solver.")
 
     ADD_NEKTAR_TEST(ImDiffusion_m6)
     ADD_NEKTAR_TEST(ImDiffusion_m6_time_int)

@@ -96,7 +96,8 @@ SET(FieldUtilsSources
 )
 
 ADD_NEKTAR_LIBRARY(FieldUtils
-    DESCRIPTION "Nektar++ FieldUtils library"
+    SUMMARY "Nektar++ FieldUtils library"
+    DESCRIPTION "Collection of post-processing modules for the FieldConvert utility and filter"
     SOURCES ${FieldUtilsSources}
     HEADERS ${FieldUtilsHeaders}
     DEPENDS GlobalMapping)

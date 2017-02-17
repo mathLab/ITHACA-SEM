@@ -389,9 +389,10 @@ SET(LibUtilitySources
 ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(LibUtilities
-    DESCRIPTION "Nektar++ LibUtilities library"
     SOURCES ${LibUtilitySources}
-    HEADERS ${LibUtilityHeaders})
+    HEADERS ${LibUtilityHeaders}
+    SUMMARY "Nektar++ LibUtilities library"
+    DESCRIPTION "This library provides core routines including linear algebra and integration with ThirdParty libraries.")
 
 ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7)
 

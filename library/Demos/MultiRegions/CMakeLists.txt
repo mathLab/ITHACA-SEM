@@ -34,7 +34,9 @@ ADD_SUBDIRECTORY(ExtraDemos)
 
 # Finalise demos package here, since this is the last subdirectory to be
 # processed by CMake from the upper level CMakeLists.txt
-FINALISE_CPACK_COMPONENT(demos DESCRIPTION "Nektar++ Demos")
+FINALISE_CPACK_COMPONENT(demos
+    SUMMARY "Nektar++ demonstration applications"
+    DESCRIPTION "This package contains a number of example programs for solving simple problems using the spectral/hp element method.")
 
 ADD_NEKTAR_TEST(Helmholtz1D_CG_P8)
 ADD_NEKTAR_TEST(Helmholtz1D_CG_P8_periodic)

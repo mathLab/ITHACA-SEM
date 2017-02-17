@@ -32,7 +32,6 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         )
 
     SUBDIRS(Utilities)      
-    FINALISE_CPACK_COMPONENT(incnavierstokessolver DESCRIPTION "Nektar++ Incompressible Navier-Stokes solver")
 
     ADD_NEKTAR_TEST(Kovasznay_Flow_3modes)
     ADD_NEKTAR_TEST(ChanStability)

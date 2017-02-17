@@ -19,10 +19,11 @@ SET(COLLECTIONS_HEADERS
 )
 
 ADD_NEKTAR_LIBRARY(Collections
-    DESCRIPTION "Nektar++ Collections library"
     SOURCES ${COLLECTIONS_SOURCES}
     HEADERS ${COLLECTIONS_HEADERS}
-    DEPENDS LocalRegions)
+    DEPENDS LocalRegions
+    SUMMARY "Nektar++ Collections library"
+    DESCRIPTION "This library provides efficient multi-expansion implementations of operators on the various supported regions.")
 
 INSTALL(DIRECTORY ./ 
         DESTINATION ${NEKTAR_INCLUDE_DIR}/Collections 

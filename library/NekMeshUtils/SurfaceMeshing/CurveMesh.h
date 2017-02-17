@@ -38,11 +38,12 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <NekMeshUtils/MeshElements/Mesh.h>
-#include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADCurve.h>
+#include <NekMeshUtils/CADSystem/CADVert.h>
+#include <NekMeshUtils/MeshElements/Mesh.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 /**
@@ -61,9 +62,9 @@ public:
     /**
      * @brief default constructor
      */
-    CurveMesh(int id, MeshSharedPtr m)
-        : m_id(id), m_mesh(m)
+    CurveMesh(int id, MeshSharedPtr m) : m_id(id), m_mesh(m)
     {
+        m_blID = m_bl.DefineFunction("x y z", "0.0");
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
     }
 
@@ -73,6 +74,17 @@ public:
     CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> n)
         : m_id(id), m_mesh(m), m_meshpoints(n)
     {
+        m_blID = m_bl.DefineFunction("x y z", "0.0");
+        m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
+    }
+
+    /**
+     * @brief alternative constructor which use the octree in a different way
+     */
+    CurveMesh(int id, MeshSharedPtr m, std::string expr)
+        : m_id(id), m_mesh(m)
+    {
+        m_blID = m_bl.DefineFunction("x y z", expr);
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
     }
 
@@ -176,6 +188,8 @@ private:
     MeshSharedPtr m_mesh;
     /// ids of the mesh nodes
     std::vector<NodeSharedPtr> m_meshpoints;
+    LibUtilities::AnalyticExpressionEvaluator m_bl;
+    int m_blID;
 };
 
 typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;

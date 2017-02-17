@@ -63,7 +63,7 @@ namespace Nektar
         StdQuadExp::StdQuadExp(const StdQuadExp &T):
             StdExpansion(T),
             StdExpansion2D(T)
-        {            
+        {
         }
 
         /** \brief Destructor */
@@ -1164,7 +1164,7 @@ namespace Nektar
              int                        P)
         {
             int i;
-            int numModes;
+            int numModes=0;
             int order0 = m_base[0]->GetNumModes();
             int order1 = m_base[1]->GetNumModes();
 
@@ -1215,11 +1215,11 @@ namespace Nektar
                         {
                             maparray[i] = i;
                         }
-                        
+
                         if (edgeOrient == eBackwards)
                         {
                             swap(maparray[0], maparray[1]);
-                            
+
                             for(i = 3; i < P; i+=2)
                             {
                                 signarray[i] = -1;
@@ -1381,7 +1381,7 @@ namespace Nektar
                     int nq1 = m_base[1]->GetNumPoints();
                     int nq;
 
-                    // take definition from key 
+                    // take definition from key
                     if(mkey.ConstFactorExists(eFactorConst))
                     {
                         nq = (int) mkey.GetConstFactor(eFactorConst);

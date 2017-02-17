@@ -1,0 +1,49 @@
+% Chapter 6 
+
+\chapter{Communication Model} % Main chapter title
+
+\label{Chapter6} % For referencing the chapter elsewhere, use \ref{Chapter1} 
+
+%----------------------------------------------------------------------------------------
+Here we discuss the communication models for the three methods of communication, Alltoall, Allreduce and pairwise exchange.
+
+\section{\code{Alltoall}}
+
+\begin{equation}
+C_A = 18\max_{i \in (0, R_{XY} R_Z)}\left(\sum_{j \equiv i \pmod{R_{XY}}} \left(\tau_{L(i,j)} + \frac{8N_{el(i)}N_{Z(i)}(P+1)^2}{R_Z \tau_{B(i,j)}}\right) \right)
+\end{equation}
+
+Where \(\tau_{L(i,j)}\) is the latency and \(\tau_{B(i,j)}\) are the latencies and bandwidths for communication between process i and process j. \(N_{el(i)}\) is the number of elements assigned to process i by METIS. Similarly \(N_{Z(i)}\) is the number of planes assigned to process i, a factor missing in the original model. We divide by \(R_Z\) and multiply by 18 as before. The factor of 8 accounts for the fact that each double precision floating point number contains 8 bytes and our bandwidth is measured in bytes. We sum over the processes neighbouring process i in its column of the topology. We are assuming the processes communicate simultaneously thus the time taken for the communication for one time step is constrained by the slowest process. Hence we look for the maximum. 
+
+\section{Allreduce}
+\begin{equation}
+C_{E_1}  =  \max_{i \in (0, R_{Z} - 1)} \left( \left( \sum_{j = i \cdot R_{XY}}^{i \cdot R_{XY} + R_{XY}} \left(\tau_{L(i,j)} + \frac{8 \cdot 3}{\tau_{B(i,j)}} \right) + \max_{j \in (i \cdot R_{XY}, i \cdot R_{XY} + R_{XY})} \left(\tau_{L(i,j)} + \frac{8 \cdot 3}{\tau_{B(i,j)}} \right) \right) CG_{Row(i)}  \right)
+\end{equation}
+
+Assuming each row communicates simultaneously we look for the row that takes the longest to perform the communication. We sum over all the processes in the row to account for the message being sent from one process to the next. The factor of 8 accounts for data being measured in bytes. The factor of 3 accounts for the fact that only 3 numbers need to be communicated. \(CG_{Row(i)}\) accounts for the number of CG iteration required to solve row i. The second term is to account for the final process broadcasting the answer back to the rest of the row. We account for this by assuming it can broadcast all the messages at the same time and thus the time taken will be given by the slowest message to send.
+
+\section{\code{Pairwise Exchange}}
+\begin{equation}
+C_{E_2} =\max_{i \in (0, R_{XY} R_Z)} \left( \sum_{j \in Row(i)} \left(\tau_{L(i,j)} + \frac{8N_{el(i,j)}(P+1)}{\tau_{B(i,j)}} \right) CG_{Row(i)}\right)
+\end{equation}
+
+We look for the process that takes the longest to exchange all its data other processes on which neighbouring elements are located. Where \(N_{el(i,j)}\) is the number of elements need to be sent from process i to process j as detailed by the output from METIS. 
+
+\section{Total Elemental Communication}
+The total communication to solve the elemental portion of the simulations is: 
+
+\begin{equation}
+C_E = C_{E_1} + C_{E_2}
+\end{equation}
+
+\section{Full Model}
+For the full hybrid model we simply put together the modal and elemental communication times with the distributed serial time to give:
+
+\begin{equation}
+T = S + C_A + C_E
+\end{equation}
+
+
+
+
+

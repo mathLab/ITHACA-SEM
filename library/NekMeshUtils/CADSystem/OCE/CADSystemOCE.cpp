@@ -317,11 +317,6 @@ void CADSystemOCE::AddSurf(int i, TopoDS_Shape in,
     boost::static_pointer_cast<CADSurfOCE>(newSurf)->Initialise(i, in, ein);
     m_surfs[i] = newSurf;
 
-    if (in.Orientation() == 0)
-    {
-        m_surfs[i]->SetReverseNomral();
-    }
-
     int tote = 0;
     for (int i = 0; i < ein.size(); i++)
     {

@@ -34,7 +34,11 @@ v4.4.0
 - Enabled MUMPS support in PETSc if a Fortran compiler was found and added 3D
   support to the Helmholtz smoother used e.g. in FieldConverts C0Projection
   module (!714)
+- Fix bug in `Vmath::FillWhiteNoise` which caused `ForcingNoise` to have
+  a repeated pattern (!718)
+- Fix bug in the calculation of the RHS magnitude in CG solver (!721)
 - Fix bug in CMake Homebrew and MacPorts detection for OS X (!729)
+- Fix bug in FieldUtils when using half mode expansions (!734)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)
@@ -87,7 +91,7 @@ v4.4.0
 - Automatic peralign call if periodic boundary conditions present (!733)
 - Support non-O BL meshing in 2D (!733)
 - Fix inverted boundary layer in 2D (!736)
-- More sensible element sizing with boudnary layers in 2D (!736)
+- More sensible element sizing with boundary layers in 2D (!736)
 - Change variable names in mcf file to make more sense (!736)
 - Fix issues in varopti module so that in can be compiled without meshgen on
   (!736)

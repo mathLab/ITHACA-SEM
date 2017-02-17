@@ -484,6 +484,7 @@ set(CPACK_SOURCE_IGNORE_FILES
     "/library/Demos/LocalRegions/XmlFiles/"
     "/solvers/ImageWarpingSolver/"
     "/solvers/VortexWaveInteraction/"
+    "/solvers/IncNavierStokesSolver/Utilities/HybridPerformanceModel/"
     "/utilities/Extras/"
 )
 

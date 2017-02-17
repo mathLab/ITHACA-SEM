@@ -85,6 +85,11 @@ v4.4.0
   (!712)
 - 2D to 3D mesh extrusion module (!715)
 - Add new two-dimensional mesher from NACA code or step file (!720)
+- Fix inverted boundary layer in 2D (!736)
+- More sensible element sizing with boundary layers in 2D (!736)
+- Change variable names in mcf file to make more sense (!736)
+- Fix issues in varopti module so that in can be compiled without meshgen on
+  (!736)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

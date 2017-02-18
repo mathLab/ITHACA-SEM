@@ -410,7 +410,7 @@ bool Octree::VerifyNeigbours()
         {
             if (it->second.size() == 0)
             {
-                NekDouble expectedfx;
+                NekDouble expectedfx = 0.0;
                 switch (it->first)
                 {
                     case eUp:

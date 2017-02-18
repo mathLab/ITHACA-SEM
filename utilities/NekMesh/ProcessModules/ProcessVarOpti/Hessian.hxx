@@ -175,7 +175,7 @@ template <> void NodeOpti::MinEigen<2>(NekDouble &val)
 
     ASSERTL0(!info, "dgeev failed");
 
-    int minI;
+    int minI=0;
     NekDouble tmp = std::numeric_limits<double>::max();
     for (int i = 0; i < 2; i++)
     {
@@ -220,7 +220,7 @@ template <> void NodeOpti::MinEigen<3>(NekDouble &val)
 
     ASSERTL0(!info, "dgeev failed");
 
-    int minI;
+    int minI=0;
     NekDouble tmp = std::numeric_limits<double>::max();
     for (int i = 0; i < 3; i++)
     {

@@ -862,7 +862,7 @@ void Iso::GlobalCondense(vector<IsoSharedPtr> &iso, bool verbose)
 
     //Find neipghbours
     int      unique_index = 0;
-    int      prog;
+    int      prog=0;
     for(i = 0; i < m_nvert; ++i)
     {
         if(verbose)

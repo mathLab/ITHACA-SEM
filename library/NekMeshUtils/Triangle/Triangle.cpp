@@ -5570,7 +5570,7 @@ void DelaunayTriangle::undovertex(struct mesh *m, struct behavior *b)
 /*                                                                           */
 /*****************************************************************************/
 
-void DelaunayTriangle::vertexsort(vertex *sortarray, int arraysize)
+void DelaunayTriangle::vertexsort(vertex *sortarray, unsigned int arraysize)
 {
     int left, right;
     int pivot;

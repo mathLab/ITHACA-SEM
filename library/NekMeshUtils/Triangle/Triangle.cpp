@@ -8565,7 +8565,7 @@ void DelaunayTriangle::writenodes(struct mesh *m,
             (int)(outvertices * m->nextras * sizeof(double)));
     }
     /* Allocate memory for output vertex markers if necessary. */
-    if ((*pointmarkerlist == (int *)NULL))
+    if (*pointmarkerlist == (int *)NULL)
     {
         *pointmarkerlist = (int *)trimalloc((int)(outvertices * sizeof(int)));
     }
@@ -8719,7 +8719,7 @@ void DelaunayTriangle::writepoly(struct mesh *m,
             (int *)trimalloc((int)(m->subsegs.items * 2 * sizeof(int)));
     }
     /* Allocate memory for output segment markers if necessary. */
-    if ((*segmentmarkerlist == (int *)NULL))
+    if (*segmentmarkerlist == (int *)NULL)
     {
         *segmentmarkerlist =
             (int *)trimalloc((int)(m->subsegs.items * sizeof(int)));

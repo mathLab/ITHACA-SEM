@@ -110,7 +110,7 @@ map<LibUtilities::ShapeType, DerivUtilSharedPtr> ProcessVarOpti::BuildDerivUtil(
         der->ptsStd = u1[0].num_elements();
         der->pts    = u2[0].num_elements();
 
-        LibUtilities::NodalUtil *nodalUtil;
+        LibUtilities::NodalUtil *nodalUtil = NULL;
 
         if (it->first == LibUtilities::eTriangle)
         {

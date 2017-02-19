@@ -46,7 +46,7 @@ void CurveMesh::Mesh()
 {
     // this algorithm is mostly based on the work in chapter 19
 
-    m_bounds      = m_cadcurve->Bounds();
+    m_bounds      = m_cadcurve->GetBounds();
     m_curvelength = m_cadcurve->GetTotLength();
     m_numSamplePoints =
         int(m_curvelength / m_mesh->m_octree->GetMinDelta()) + 5;
@@ -108,8 +108,7 @@ void CurveMesh::Mesh()
     Array<OneD, NekDouble> loc;
 
     vector<CADVertSharedPtr> verts = m_cadcurve->GetVertex();
-    vector<CADSurfSharedPtr> s     = m_cadcurve->GetAdjSurf();
-    ASSERTL0(s.size() == (m_mesh->m_cad->Is2D()) ? 1 : 2, "invalid curve");
+    vector<pair<CADSurfSharedPtr, Orientation> > s = m_cadcurve->GetAdjSurf();
 
     NodeSharedPtr n = verts[0]->GetNode();
     t               = m_bounds[0];
@@ -117,14 +116,15 @@ void CurveMesh::Mesh()
     loc = n->GetLoc();
     for (int j = 0; j < s.size(); j++)
     {
-        if (verts[0]->IsDegen() == s[j]->GetId()) // if the degen has been set
-                                                  // for this node the node
-                                                  // already knows its corrected
-                                                  // location
+        if (verts[0]->IsDegen() == s[j].first->GetId())
+        {
+            // if the degen has been set for this node the node
+            // already knows its corrected location
             continue;
+        }
 
-        Array<OneD, NekDouble> uv = s[j]->locuv(loc);
-        n->SetCADSurf(s[j]->GetId(), s[j], uv);
+        Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
+        n->SetCADSurf(s[j].first->GetId(), s[j].first, uv);
     }
     m_meshpoints.push_back(n);
 
@@ -137,8 +137,8 @@ void CurveMesh::Mesh()
         n2->SetCADCurve(m_id, m_cadcurve, t);
         for (int j = 0; j < s.size(); j++)
         {
-            Array<OneD, NekDouble> uv = s[j]->locuv(loc);
-            n2->SetCADSurf(s[j]->GetId(), s[j], uv);
+            Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
+            n2->SetCADSurf(s[j].first->GetId(), s[j].first, uv);
         }
         m_meshpoints.push_back(n2);
     }
@@ -149,14 +149,15 @@ void CurveMesh::Mesh()
     loc = n->GetLoc();
     for (int j = 0; j < s.size(); j++)
     {
-        if (verts[1]->IsDegen() == s[j]->GetId()) // if the degen has been set
-                                                  // for this node the node
-                                                  // already knows its corrected
-                                                  // location
+        if (verts[1]->IsDegen() == s[j].first->GetId())
+        {
+            // if the degen has been set for this node the node
+            // already knows its corrected location
             continue;
+        }
 
-        Array<OneD, NekDouble> uv = s[j]->locuv(loc);
-        n->SetCADSurf(s[j]->GetId(), s[j], uv);
+        Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
+        n->SetCADSurf(s[j].first->GetId(), s[j].first, uv);
     }
     m_meshpoints.push_back(n);
 

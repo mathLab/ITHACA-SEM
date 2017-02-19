@@ -71,7 +71,7 @@ public:
      *
      * @return Array of two entries, min and max parametric coordinate.
      */
-    virtual Array<OneD, NekDouble> Bounds() = 0;
+    virtual Array<OneD, NekDouble> GetBounds() = 0;
 
     /**
      * @brief Calculates the arclength between the two paremetric points \p ti
@@ -120,15 +120,15 @@ public:
     /**
      * @brief set the ids of the surfaces either side of the curve
      */
-    void SetAdjSurf(std::vector<CADSurfSharedPtr> i)
+    void SetAdjSurf(std::pair<CADSurfSharedPtr, Orientation> i)
     {
-        m_adjSurfs = i;
+        m_adjSurfs.push_back(i);
     }
 
     /*
      * @brief returns the ids of neigbouring surfaces
      */
-    std::vector<CADSurfSharedPtr> GetAdjSurf()
+    std::vector<std::pair<CADSurfSharedPtr, Orientation> > GetAdjSurf()
     {
         return m_adjSurfs;
     }
@@ -168,7 +168,7 @@ protected:
     /// Length of edge
     NekDouble m_length;
     /// List of surfaces which this curve belongs to.
-    std::vector<CADSurfSharedPtr> m_adjSurfs;
+    std::vector<std::pair<CADSurfSharedPtr, Orientation> > m_adjSurfs;
     /// list of end vertices
     std::vector<CADVertSharedPtr> m_mainVerts;
 };

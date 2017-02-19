@@ -70,7 +70,7 @@ NekDouble CADCurveOCE::tAtArcLength(NekDouble s)
 
 NekDouble CADCurveOCE::Length(NekDouble ti, NekDouble tf)
 {
-    Array<OneD, NekDouble> b = Bounds();
+    Array<OneD, NekDouble> b = GetBounds();
     Handle(Geom_Curve) NewCurve = new Geom_TrimmedCurve(m_c, ti, tf);
     TopoDS_Edge NewEdge = BRepBuilderAPI_MakeEdge(NewCurve);
     GProp_GProps System;
@@ -81,7 +81,7 @@ NekDouble CADCurveOCE::Length(NekDouble ti, NekDouble tf)
 NekDouble CADCurveOCE::loct(Array<OneD, NekDouble> xyz)
 {
     NekDouble t = 0.0;
-    Array<OneD, NekDouble> b = Bounds();
+    Array<OneD, NekDouble> b = GetBounds();
 
     gp_Pnt loc(xyz[0]*1000.0, xyz[1]*1000.0, xyz[2]*1000.0);
 
@@ -136,7 +136,7 @@ NekDouble CADCurveOCE::Curvature(NekDouble t)
     return d.Curvature() * 1000.0;
 }
 
-Array<OneD, NekDouble> CADCurveOCE::Bounds()
+Array<OneD, NekDouble> CADCurveOCE::GetBounds()
 {
     Array<OneD, NekDouble> t(2);
     t[0] = m_occCurve.FirstParameter();

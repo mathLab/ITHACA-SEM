@@ -127,6 +127,7 @@ bool FaceMesh::ValidateCurves()
 void FaceMesh::Mesh()
 {
     Stretching();
+    OrientateCurves();
 
     int numPoints = 0;
     for (int i = 0; i < orderedLoops.size(); i++)

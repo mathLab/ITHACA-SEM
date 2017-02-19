@@ -632,7 +632,7 @@ namespace Nektar
                 for (k=1; k<M; k++)
                 {
                     kt = 2.0 * M_PI * k * m_time / T;
-                    za = alpha * sqrt(k) / sqrt(2.0) * comp_conj;
+                    za = alpha * sqrt((NekDouble)k/2.0) * comp_conj;
                     zar = r * za;
                     zJ0  = Polylib::ImagBesselComp(0,za);
                     zJ0r = Polylib::ImagBesselComp(0,zar);

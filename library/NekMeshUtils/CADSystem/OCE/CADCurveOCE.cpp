@@ -138,8 +138,8 @@ Array<OneD, NekDouble> CADCurveOCE::NormalWRT(NekDouble t, int surf)
     Array<OneD, NekDouble> uv = surface.first->locuv(p);
     Array<OneD, NekDouble> d1 = surface.first->D1(uv);
 
-    NekDouble t1 = t - 1e-6;
-    NekDouble t2 = t + 1e-6;
+    NekDouble t1 = t - 1e-8;
+    NekDouble t2 = t + 1e-8;
 
     if(surface.second == CADSystem::eBackwards)
     {
@@ -149,8 +149,8 @@ Array<OneD, NekDouble> CADCurveOCE::NormalWRT(NekDouble t, int surf)
     Array<OneD, NekDouble> uv1 = surface.first->locuv(P(t1));
     Array<OneD, NekDouble> uv2 = surface.first->locuv(P(t2));
 
-    NekDouble du = uv2[0] - uv1[0];
-    NekDouble dv = uv2[1] - uv1[1];
+    NekDouble du = uv2[1] - uv1[1];
+    NekDouble dv = -1.0*(uv2[0] - uv1[0]);
 
     Array<OneD, NekDouble> N(3,0.0);
     N[0] = (d1[3] * du + d1[6] * dv) / 2.0;
@@ -168,7 +168,7 @@ Array<OneD, NekDouble> CADCurveOCE::NormalWRT(NekDouble t, int surf)
 Array<OneD, NekDouble> CADCurveOCE::N(NekDouble t)
 {
     GeomLProp_CLProps d(m_c,2,1e-8);
-    d.SetParameter(t);
+    d.SetParameter(t+1e-8);
 
     gp_Vec d2 = d.D2();
     if(d2.Magnitude() < 1e-8)

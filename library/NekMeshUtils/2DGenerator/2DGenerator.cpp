@@ -52,7 +52,7 @@ ModuleKey Generator2D::className = GetModuleFactory().RegisterCreatorFunction(
 Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
 {
     m_config["blcurves"] =
-        ConfigOption(false, "0", "Generate parallelograms on these curves");
+        ConfigOption(false, "", "Generate parallelograms on these curves");
     m_config["blthick"] =
         ConfigOption(false, "0.0", "Parallelogram layer thickness");
 }
@@ -73,6 +73,9 @@ void Generator2D::Process()
 
     m_thickness_ID =
         m_thickness.DefineFunction("x y z", m_config["blthick"].as<string>());
+
+    ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
+                                  m_blCurves);
 
     // linear mesh all curves
     for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
@@ -98,6 +101,7 @@ void Generator2D::Process()
         }
 
         m_curvemeshes[i]->Mesh();
+
     }
 
     ////////////////////////////////////////
@@ -107,14 +111,9 @@ void Generator2D::Process()
         // we need to do the boundary layer generation in a face by face basis
         MakeBLPrep();
 
-        // Im going to do a horrendous trick to get the edge orientaion.
-        // Going to activate the first routine of facemeshing without actually
-        // face meshing, this will orientate the edgeloop objects (hopefully);
-        // which can be used by the makebl command to know the normal
-        // orienation
         for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
         {
-            MakeBL(i);
+            //MakeBL(i);
         }
     }
 
@@ -179,8 +178,6 @@ void Generator2D::MakeBLPrep()
     }
 
     // identify the nodes which will become the boundary layer.
-    ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
-                                  m_blCurves);
 
     for (vector<unsigned>::iterator it = m_blCurves.begin();
          it != m_blCurves.end(); ++it)

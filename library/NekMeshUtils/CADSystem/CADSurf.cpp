@@ -36,6 +36,14 @@
 #include "CADSurf.h"
 #include "CADCurve.h"
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/algorithms/assign.hpp>
+
+namespace bg = boost::geometry;
+typedef bg::model::d2::point_xy<double> point_xy;
+
 using namespace std;
 
 namespace Nektar
@@ -48,6 +56,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
 {
     // this piece of code orientates the surface,
     // it used to be face mesh but its easier to have it here
+    int np = 40;
     vector<vector<Array<OneD, NekDouble> > > loopt;
     for (int i = 0; i < ein.size(); i++)
     {
@@ -55,10 +64,10 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
         for (int j = 0; j < ein[i]->edges.size(); j++)
         {
             Array<OneD, NekDouble> bnds = ein[i]->edges[j]->GetBounds();
-            NekDouble dt = (bnds[1] - bnds[0]) / (20 - 1);
+            NekDouble dt = (bnds[1] - bnds[0]) / (np - 1);
             if (ein[i]->edgeo[j] == CADSystem::eForwards)
             {
-                for (int k = 0; k < 20; k++)
+                for (int k = 0; k < np-1; k++)
                 {
                     NekDouble t = bnds[0] + dt * k;
                     Array<OneD, NekDouble> l  = ein[i]->edges[j]->P(t);
@@ -68,7 +77,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
             }
             else
             {
-                for (int k = 19; k >= 0; k--)
+                for (int k = np-1; k > 0; k--)
                 {
                     NekDouble t = bnds[0] + dt * k;
                     Array<OneD, NekDouble> l  = ein[i]->edges[j]->P(t);
@@ -76,32 +85,24 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
                     loop.push_back(uv);
                 }
             }
-            loopt.push_back(loop);
         }
+        loopt.push_back(loop);
     }
 
     for (int i = 0; i < loopt.size(); i++)
     {
         NekDouble area = 0.0;
-        NekDouble mn   = numeric_limits<double>::max();
 
-        for (int j = 0; j < loopt[i].size(); j++)
+        bg::model::polygon<point_xy> polygon;
+        vector<point_xy> points;
+        for(int j = 0; j < loopt[i].size(); j++)
         {
-            mn = min(loopt[i][j][1], mn);
+            points.push_back(point_xy(loopt[i][j][0], loopt[i][j][1]));
         }
 
-        for (int j = 0; j < loopt[i].size(); j++)
-        {
-            loopt[i][j][1] -= mn;
-        }
+        bg::assign_points(polygon,points);
 
-        for (int j = 0; j < loopt[i].size() - 1; j++)
-        {
-            area += (loopt[i][j + 1][0] - loopt[i][j][0]) *
-                    (loopt[i][j][1] + loopt[i][j + 1][1]) / 2.0;
-        }
-        area += (loopt[i][0][0] - loopt[i][loopt[i].size() - 1][0]) *
-                (loopt[i][loopt[i].size() - 1][1] + loopt[i][0][1]) / 2.0;
+        area = bg::area(polygon);
 
         ein[i]->area = area;
     }
@@ -117,124 +118,19 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
             {
                 // swap
                 swap(ein[i], ein[i + 1]);
+                swap(loopt[i], loopt[i + 1]);
                 ct += 1;
             }
         }
 
     } while (ct > 0);
 
-    for (int i = 0; i < ein.size(); i++)
-    {
-        Array<OneD, NekDouble> n1info, n2info;
-        n1info = loopt[i][0];
-        n2info = loopt[i][1];
-
-        Array<OneD, NekDouble> N(2);
-        NekDouble mag = sqrt((n1info[0] - n2info[0]) * (n1info[0] - n2info[0]) +
-                             (n1info[1] - n2info[1]) * (n1info[1] - n2info[1]));
-        ASSERTL0(mag > 1e-30, "infinity");
-        N[0] = -1.0 * (n2info[1] - n1info[1]) / mag;
-        N[1] = (n2info[0] - n1info[0]) / mag;
-
-        Array<OneD, NekDouble> P(2);
-        P[0] = (n1info[0] + n2info[0]) / 2.0 + 1e-8 * N[0];
-        P[1] = (n1info[1] + n2info[1]) / 2.0 + 1e-8 * N[1];
-
-        // now test to see if p is inside or outside the shape
-        // vector to the right
-        int intercepts = 0;
-        for (int j = 0; j < loopt[i].size() - 1; j++)
-        {
-            Array<OneD, NekDouble> nt1, nt2;
-            nt1 = loopt[i][j];
-            nt2 = loopt[i][j + 1];
-
-            if (fabs(nt2[1] - nt1[1]) < 1e-30)
-            {
-                continue;
-            }
-
-            NekDouble lam = (P[1] - nt1[1]) / (nt2[1] - nt1[1]);
-            NekDouble S   = nt1[0] - P[0] + (nt2[0] - nt1[0]) * lam;
-
-            if (!(lam < 0) && !(lam > 1) && S > 0)
-            {
-                intercepts++;
-            }
-        }
-        {
-            Array<OneD, NekDouble> nt1, nt2;
-            nt1 = loopt[i].back();
-            nt2 = loopt[i][0];
-
-            if (fabs(nt2[1] - nt1[1]) < 1e-30)
-            {
-                continue;
-            }
-
-            NekDouble lam = (P[1] - nt1[1]) / (nt2[1] - nt1[1]);
-            NekDouble S   = nt1[0] - P[0] + (nt2[0] - nt1[0]) * lam;
-
-            if (!(lam < 0) && !(lam > 1) && S > 0)
-            {
-                intercepts++;
-            }
-        }
-        if (intercepts % 2 == 0)
-        {
-            P[0]       = (n1info[0] + n2info[0]) / 2.0 - 1e-6 * N[0];
-            P[1]       = (n1info[1] + n2info[1]) / 2.0 - 1e-6 * N[1];
-            intercepts = 0;
-            for (int j = 0; j < loopt[i].size() - 1; j++)
-            {
-                Array<OneD, NekDouble> nt1, nt2;
-                nt1 = loopt[i][j];
-                nt2 = loopt[i][j + 1];
-
-                if (fabs(nt2[1] - nt1[1]) < 1e-30)
-                {
-                    continue;
-                }
-
-                NekDouble lam = (P[1] - nt1[1]) / (nt2[1] - nt1[1]);
-                NekDouble S   = nt1[0] - P[0] + (nt2[0] - nt1[0]) * lam;
-
-                if (!(lam < 0) && !(lam > 1) && S > 0)
-                {
-                    intercepts++;
-                }
-            }
-            {
-                Array<OneD, NekDouble> nt1, nt2;
-                nt1 = loopt[i].back();
-                nt2 = loopt[i][0];
-
-                if (fabs(nt2[1] - nt1[1]) < 1e-30)
-                {
-                    continue;
-                }
-
-                NekDouble lam = (P[1] - nt1[1]) / (nt2[1] - nt1[1]);
-                NekDouble S   = nt1[0] - P[0] + (nt2[0] - nt1[0]) * lam;
-
-                if (!(lam < 0) && !(lam > 1) && S > 0)
-                {
-                    intercepts++;
-                }
-            }
-            if (intercepts % 2 == 0)
-            {
-                cerr << "still failed to find point inside loop" << endl;
-            }
-        }
-
-        ein[i]->center = P;
-    }
-
     if (ein[0]->area < 0) // reverse the first uvLoop
     {
+        ein[0]->area *= -1.0;
         reverse(ein[0]->edgeo.begin(), ein[0]->edgeo.end());
         reverse(ein[0]->edges.begin(), ein[0]->edges.end());
+        reverse(loopt[0].begin(), loopt[0].end());
         // need to flip edgeo
         for (int i = 0; i < ein[0]->edgeo.size(); i++)
         {
@@ -256,7 +152,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
             ein[i]->area *= -1.0;
             reverse(ein[i]->edgeo.begin(), ein[i]->edgeo.end());
             reverse(ein[i]->edges.begin(), ein[i]->edges.end());
-
+            reverse(loopt[i].begin(), loopt[i].end());
             // need to flip edgeo
             for (int j = 0; j < ein[i]->edgeo.size(); j++)
             {
@@ -270,6 +166,42 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
                 }
             }
         }
+    }
+
+    for(int i = 0; i < ein.size(); i++)
+    {
+        Array<OneD, NekDouble> n1 = loopt[i][0];
+        Array<OneD, NekDouble> n2 = loopt[i][1];
+
+        if(ein[i]->edgeo[i] == CADSystem::eForwards)
+        {
+            swap(n1, n2);
+        }
+
+        Array<OneD, NekDouble> N(2);
+        NekDouble mag = sqrt((n1[0] - n2[0]) * (n1[0] - n2[0]) +
+                             (n1[1] - n2[1]) * (n1[1] - n2[1]));
+
+        N[0] = -1.0 * (n2[1] - n1[1]) / mag;
+        N[1] = (n2[0] - n1[0]) / mag;
+        Array<OneD, NekDouble> P(2);
+        P[0] = (n1[0] + n2[0]) / 2.0 + 1e-6 * N[0];
+        P[1] = (n1[1] + n2[1]) / 2.0 + 1e-6 * N[1];
+
+        ein[i]->center = P;
+
+        bg::model::polygon<point_xy> polygon;
+        vector<point_xy> points;
+        for(int j = 0; j < loopt[i].size(); j++)
+        {
+            points.push_back(point_xy(loopt[i][j][0], loopt[i][j][1]));
+        }
+
+        point_xy p(P[0],P[1]);
+
+        bg::assign_points(polygon,points);
+
+        ASSERTL0(boost::geometry::within(p, polygon), "point is not side loop");
     }
 }
 

@@ -317,8 +317,35 @@ void CurveMesh::GetSampleFunction()
 
         if (ts > 0.0)
         {
-            NekDouble R = m_mesh->m_octree->QueryR(loc);
-            dsti[0]     = R / (R + ts) * m_mesh->m_octree->Query(loc);
+            Array<OneD, NekDouble> N = m_cadcurve->N(t);
+            if(N[0]*N[0] + N[1]*N[1] + N[2]*N[2] < 1e-6)
+            {
+                dsti[0] = m_mesh->m_octree->Query(loc);
+            }
+
+            Array<OneD, NekDouble> Nwrt = m_cadcurve->NormalWRT(t, 0);
+            NekDouble R = 1.0 / m_cadcurve->Curvature(t);
+            NekDouble dot = N[0]*Nwrt[0] + N[1]*Nwrt[1] + N[2]*Nwrt[2];
+            bool concave = false;
+            if(dot > 0)
+            {
+                concave = true;
+            }
+            Array<OneD, NekDouble> tloc(3);
+            tloc[0] = loc[0] + ts * Nwrt[0];
+            tloc[1] = loc[1] + ts * Nwrt[1];
+            tloc[2] = loc[2] + ts * Nwrt[2];
+
+            NekDouble d = m_mesh->m_octree->Query(tloc);
+
+            if(concave)
+            {
+                dsti[0] = d * R / (R - ts);
+            }
+            else
+            {
+                dsti[0] = d * R / (R + ts);
+            }
         }
         else
         {

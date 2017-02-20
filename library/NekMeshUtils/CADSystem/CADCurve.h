@@ -177,6 +177,9 @@ public:
         return CADSystem::eUnknown;
     }
 
+    virtual Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf)=0;
+    virtual Array<OneD, NekDouble> N(NekDouble t)=0;
+
 
 protected:
 

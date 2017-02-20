@@ -134,7 +134,7 @@ void Generator2D::Process()
 
         m_facemeshes[i] =
             MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                m_curvemeshes, i);
+                m_curvemeshes, 99+i);
         m_facemeshes[i]->Mesh();
     }
 

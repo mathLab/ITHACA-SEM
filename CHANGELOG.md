@@ -50,6 +50,7 @@ v4.4.0
 - Fix linearised advection for full 3D cases (!708)
 - Added a weak pressure formulation following Guermond & Shen (!713)
 - Added a convective like outflow boundary condition from Dong (!713)
+- Added the ability to specifiy Womersley boundary conditions for pulsatile flow (!472)
 
 **FieldConvert:**
 - Allow equi-spaced output for 1D and 2DH1D fields (!613)

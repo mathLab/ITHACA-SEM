@@ -135,7 +135,7 @@ private:
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
     /// data structure containing the edges, their order and oreientation for
     /// the surface
-    std::vector<EdgeLoopSharedPtr> m_edgeloops;
+    std::vector<CADSystem::EdgeLoopSharedPtr> m_edgeloops;
     /// id of the surface mesh
     int m_id;
     /// list of boundary nodes in their order loops

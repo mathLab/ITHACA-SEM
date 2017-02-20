@@ -99,12 +99,6 @@ void Octree::Process()
     }
 }
 
-NekDouble Octree::QueryR(Array<OneD, NekDouble> loc)
-{
-    NekDouble d = Query(loc);
-    return d / 2.0 / (sqrt(m_eps * (2.0 - m_eps)));
-}
-
 NekDouble Octree::Query(Array<OneD, NekDouble> loc)
 {
     // starting at master octant 0 move through succsesive m_octants which
@@ -856,8 +850,9 @@ void Octree::CompileSourcePointList()
 
             Array<OneD, NekDouble> loc = curve->P(t);
 
-            vector<pair<CADSurfSharedPtr, Orientation> > ss = curve->GetAdjSurf();
-            Array<OneD, NekDouble> uv                = ss[0].first->locuv(loc);
+            vector<pair<CADSurfSharedPtr, CADSystem::Orientation> > ss =
+                curve->GetAdjSurf();
+            Array<OneD, NekDouble> uv = ss[0].first->locuv(loc);
 
             if (C != 0.0)
             {

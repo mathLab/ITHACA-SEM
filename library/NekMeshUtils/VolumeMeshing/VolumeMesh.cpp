@@ -145,7 +145,7 @@ void VolumeMesh::Process()
         for (int i = 0; i < symsurfs.size(); i++)
         {
             set<int> cIds;
-            vector<EdgeLoopSharedPtr> e =
+            vector<CADSystem::EdgeLoopSharedPtr> e =
                 m_mesh->m_cad->GetSurf(symsurfs[i])->GetEdges();
             for (int i = 0; i < e.size(); i++)
             {

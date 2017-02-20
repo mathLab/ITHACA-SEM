@@ -69,6 +69,12 @@ public:
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
     }
 
+    CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> ns)
+        : m_id(id), m_mesh(m), m_meshpoints(ns)
+    {
+        m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
+    }
+
     /**
      * @brief execute meshing
      */

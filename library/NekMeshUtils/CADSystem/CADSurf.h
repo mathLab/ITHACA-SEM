@@ -70,17 +70,17 @@ public:
     }
 
     static void OrientateEdges(
-        CADSurfSharedPtr surf, std::vector<EdgeLoopSharedPtr> &ein);
+        CADSurfSharedPtr surf, std::vector<CADSystem::EdgeLoopSharedPtr> &ein);
 
     /**
      * @brief Get the loop structures which bound the cad surface
      */
-    std::vector<EdgeLoopSharedPtr> GetEdges()
+    std::vector<CADSystem::EdgeLoopSharedPtr> GetEdges()
     {
         return m_edges;
     }
 
-    void SetEdges(std::vector<EdgeLoopSharedPtr> ein)
+    void SetEdges(std::vector<CADSystem::EdgeLoopSharedPtr> ein)
     {
         m_edges = ein;
     }
@@ -174,7 +174,7 @@ protected:
     /// normal
     bool m_correctNormal;
     /// List of bounding edges in loops with orientation.
-    std::vector<EdgeLoopSharedPtr> m_edges;
+    std::vector<CADSystem::EdgeLoopSharedPtr> m_edges;
 
     /// Function which tests the the value of uv used is within the surface
     virtual void Test(Array<OneD, NekDouble> uv) = 0;

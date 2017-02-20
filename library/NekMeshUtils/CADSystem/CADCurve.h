@@ -120,7 +120,7 @@ public:
     /**
      * @brief set the ids of the surfaces either side of the curve
      */
-    void SetAdjSurf(std::pair<CADSurfSharedPtr, Orientation> i)
+    void SetAdjSurf(std::pair<CADSurfSharedPtr, CADSystem::Orientation> i)
     {
         m_adjSurfs.push_back(i);
     }
@@ -128,7 +128,7 @@ public:
     /*
      * @brief returns the ids of neigbouring surfaces
      */
-    std::vector<std::pair<CADSurfSharedPtr, Orientation> > GetAdjSurf()
+    std::vector<std::pair<CADSurfSharedPtr, CADSystem::Orientation> > GetAdjSurf()
     {
         return m_adjSurfs;
     }
@@ -163,12 +163,27 @@ public:
      */
     virtual NekDouble loct(Array<OneD, NekDouble> xyz) = 0;
 
+    CADSystem::Orientation GetOrienationWRT(int surf)
+    {
+        for(int i = 0; i < m_adjSurfs.size(); i++)
+        {
+            if(m_adjSurfs[i].first->GetId() == surf)
+            {
+                return m_adjSurfs[i].second;
+            }
+        }
+
+        ASSERTL0(false,"surf not in adjecency list");
+        return CADSystem::eUnknown;
+    }
+
+
 protected:
 
     /// Length of edge
     NekDouble m_length;
     /// List of surfaces which this curve belongs to.
-    std::vector<std::pair<CADSurfSharedPtr, Orientation> > m_adjSurfs;
+    std::vector<std::pair<CADSurfSharedPtr, CADSystem::Orientation> > m_adjSurfs;
     /// list of end vertices
     std::vector<CADVertSharedPtr> m_mainVerts;
 };

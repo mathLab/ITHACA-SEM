@@ -58,25 +58,7 @@ typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
 class CADSurf;
 typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
 
-enum Orientation
-{
-    eForwards,
-    eBackwards
-};
 
-/**
- * @brief struct which descibes a collection of cad edges which are a
- *        loop on the cad surface
- */
-struct EdgeLoop
-{
-    std::vector<CADCurveSharedPtr> edges;
-    std::vector<Orientation> edgeo;
-    Array<OneD, NekDouble> center;
-    NekDouble area;
-};
-
-typedef boost::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
 
 /**
  * @brief Base class for CAD interface system.
@@ -88,6 +70,27 @@ class CADSystem
 {
 public:
     friend class MemoryManager<CADSystem>;
+
+    enum Orientation
+    {
+        eUnknown,
+        eForwards,
+        eBackwards
+    };
+
+    /**
+     * @brief struct which descibes a collection of cad edges which are a
+     *        loop on the cad surface
+     */
+    struct EdgeLoop
+    {
+        std::vector<CADCurveSharedPtr> edges;
+        std::vector<Orientation> edgeo;
+        Array<OneD, NekDouble> center;
+        NekDouble area;
+    };
+
+    typedef boost::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
 
     /**
      * @brief Default constructor.

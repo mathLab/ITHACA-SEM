@@ -1158,7 +1158,7 @@ void FaceMesh::OrientateCurves()
 
             int numPoints = m_curvemeshes[cid]->GetNumPoints();
 
-            if (m_edgeloops[i]->edgeo[j] == eForwards)
+            if (m_edgeloops[i]->edgeo[j] == CADSystem::eForwards)
             {
                 for (int k = 0; k < numPoints - 1; k++)
                 {

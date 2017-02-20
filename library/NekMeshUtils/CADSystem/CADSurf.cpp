@@ -44,7 +44,7 @@ namespace NekMeshUtils
 {
 
 void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
-                             vector<EdgeLoopSharedPtr> &ein)
+                             vector<CADSystem::EdgeLoopSharedPtr> &ein)
 {
     // this piece of code orientates the surface,
     // it used to be face mesh but its easier to have it here
@@ -56,7 +56,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
         {
             Array<OneD, NekDouble> bnds = ein[i]->edges[j]->GetBounds();
             NekDouble dt = (bnds[1] - bnds[0]) / (20 - 1);
-            if (ein[i]->edgeo[j] == eForwards)
+            if (ein[i]->edgeo[j] == CADSystem::eForwards)
             {
                 for (int k = 0; k < 20; k++)
                 {
@@ -238,13 +238,13 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
         // need to flip edgeo
         for (int i = 0; i < ein[0]->edgeo.size(); i++)
         {
-            if (ein[0]->edgeo[i] == eForwards)
+            if (ein[0]->edgeo[i] == CADSystem::eForwards)
             {
-                ein[0]->edgeo[i] = eBackwards;
+                ein[0]->edgeo[i] = CADSystem::eBackwards;
             }
             else
             {
-                ein[0]->edgeo[i] = eForwards;
+                ein[0]->edgeo[i] = CADSystem::eForwards;
             }
         }
     }
@@ -260,13 +260,13 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
             // need to flip edgeo
             for (int j = 0; j < ein[i]->edgeo.size(); j++)
             {
-                if (ein[i]->edgeo[j] == eForwards)
+                if (ein[i]->edgeo[j] == CADSystem::eForwards)
                 {
-                    ein[i]->edgeo[j] = eBackwards;
+                    ein[i]->edgeo[j] = CADSystem::eBackwards;
                 }
                 else
                 {
-                    ein[i]->edgeo[j] = eForwards;
+                    ein[i]->edgeo[j] = CADSystem::eForwards;
                 }
             }
         }

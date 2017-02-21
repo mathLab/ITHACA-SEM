@@ -1263,8 +1263,8 @@ void FaceMesh::OrientateCurves()
         N[1] = (n2info[0] - n1info[0]) / mag;
 
         Array<OneD, NekDouble> P(2);
-        P[0] = (n1info[0] + n2info[0]) / 2.0 + 1e-8 * N[0];
-        P[1] = (n1info[1] + n2info[1]) / 2.0 + 1e-8 * N[1];
+        P[0] = (n1info[0] + n2info[0]) / 2.0 + 1e-4 * N[0];
+        P[1] = (n1info[1] + n2info[1]) / 2.0 + 1e-4 * N[1];
 
         // now test to see if p is inside or outside the shape
         // vector to the right
@@ -1308,8 +1308,8 @@ void FaceMesh::OrientateCurves()
         }
         if (intercepts % 2 == 0)
         {
-            P[0]       = (n1info[0] + n2info[0]) / 2.0 - 1e-6 * N[0];
-            P[1]       = (n1info[1] + n2info[1]) / 2.0 - 1e-6 * N[1];
+            P[0]       = (n1info[0] + n2info[0]) / 2.0 - 1e-4 * N[0];
+            P[1]       = (n1info[1] + n2info[1]) / 2.0 - 1e-4 * N[1];
             intercepts = 0;
             for (int j = 0; j < orderedLoops[i].size() - 1; j++)
             {

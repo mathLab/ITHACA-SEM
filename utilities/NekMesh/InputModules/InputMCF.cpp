@@ -313,7 +313,7 @@ void InputMCF::Process()
             ModuleKey(eProcessModule, "surfacemesh"), m_mesh));
 
         ////**** VolumeMesh ****////
-        mods.push_back(GetModuleFactory().CreateInstance(
+        /*mods.push_back(GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "volumemesh"), m_mesh));
         if(m_makeBL)
         {
@@ -321,11 +321,11 @@ void InputMCF::Process()
             mods.back()->RegisterConfig("blthick",m_blthick);
             mods.back()->RegisterConfig("bllayers",m_bllayers);
             mods.back()->RegisterConfig("blprog",m_blprog);
-        }
+        }*/
     }
 
     ////**** HOSurface ****////
-    mods.push_back(GetModuleFactory().CreateInstance(
+    /*mods.push_back(GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh));
     if (m_surfopti)
     {
@@ -333,7 +333,7 @@ void InputMCF::Process()
     }
 
     ////*** VARIATIONAL OPTIMISATION ****////
-    if(m_varopti)
+    /*if(m_varopti)
     {
         unsigned int np = boost::thread::physical_concurrency();
         if(m_mesh->m_verbose)
@@ -348,7 +348,7 @@ void InputMCF::Process()
     }
 
     ////**** SPLIT BL ****////
-    if(m_splitBL)
+    /*if(m_splitBL)
     {
         mods.push_back(GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "bl"), m_mesh));
@@ -356,13 +356,15 @@ void InputMCF::Process()
         mods.back()->RegisterConfig("surf",m_blsurfs);
         mods.back()->RegisterConfig("nq",boost::lexical_cast<string>(m_mesh->m_nummode));
         mods.back()->RegisterConfig("r",m_blprog);
-    }
+    }*/
 
     for(int i = 0; i < mods.size(); i++)
     {
         mods[i]->SetDefaults();
         mods[i]->Process();
     }
+
+    m_mesh->m_expDim = 2;
 }
 }
 }

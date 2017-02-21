@@ -36,7 +36,6 @@
 #ifndef UTILITIES_NEKMESH_NODEOPTI_HESSIAN
 #define UTILITIES_NEKMESH_NODEOPTI_HESSIAN
 
-#define     PI   3.14159265358979323846
 
 namespace Nektar
 {
@@ -238,7 +237,7 @@ template <> void NodeOpti::MinEigen<3>(NekDouble &val)
         NekDouble phi;
         if (r <= -1)
         { 
-            phi = PI / 3.0;
+            phi = M_PI / 3.0;
         }
         else if (r >= 1)
         {
@@ -251,7 +250,7 @@ template <> void NodeOpti::MinEigen<3>(NekDouble &val)
 
         // the eigenvalues satisfy eval[2] <= eval[1] <= eval[0]
         //eval[0] = q + 2.0 * p * cos(phi);
-        val = q + 2.0 * p * cos(phi + (2.0*PI/3.0));
+        val = q + 2.0 * p * cos(phi + (2.0*M_PI/3.0));
         //eval[1] = 3.0 * q - eval[0] - eval[2];     // since trace(H) = eval[0] + eval[1] + eval[2]
     }
 }

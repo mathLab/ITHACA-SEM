@@ -168,6 +168,20 @@ map<LibUtilities::ShapeType, DerivUtilSharedPtr> ProcessVarOpti::BuildDerivUtil(
 
 
 
+struct NodeComparator
+{
+    const vector<int> & value_vector;
+
+    NodeComparator(const vector<int> & val_vec):
+        value_vector(val_vec) {}
+
+    bool operator()(int i1, int i2)
+    {
+        return value_vector[i1] > value_vector[i2];
+    }
+};
+
+
 
 vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
     vector<ElUtilSharedPtr> elLock)
@@ -371,29 +385,29 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
     vector<vector<NodeSharedPtr> > ret_part;
 
 // edge and vertex nodes
-    // create vector el of number of associated elements
-    vector<int> ele(remain_edge.size());
+    // create vector num_el of number of associated elements of each node
+    vector<int> num_el(remain_edge.size());
     for (int i = 0; i < remain_edge.size(); i++)
     {
         NodeElMap::iterator it = m_nodeElMap.find(remain_edge[i]->m_id); //try to find node within all elements       
         vector<ElUtilSharedPtr> &elUtils = it->second;       
-        ele[i] = elUtils.size();
+        num_el[i] = elUtils.size();
     }
-    // finding the permutation according to el
-    vector<int> pe(remain_edge.size());
+    // finding the permutation according to num_el
+    vector<int> perm_node(remain_edge.size());
     for (int i = 0; i < remain_edge.size(); ++i)
     {
-        pe[i] = i;
-    }
-    
-    std::sort(pe.begin(),pe.end(),[&] (int i, int j){return (ele[i] > ele[j]); }); // sort in descending order    
-    
+        perm_node[i] = i;
+    }    
+    //std::sort(perm_node.begin(),perm_node.end(),[&] (int j, int k){return (num_el[j] > num_el[k]); }); // sort in descending order
+    std::sort(perm_node.begin(), perm_node.end(), NodeComparator(num_el));
+        
     // applying the permutation to remain_edge
     vector<NodeSharedPtr> remain_edge_sort(remain_edge.size());    
-    //std::transform(pe.begin(), pe.end(), remain_edge_sort.begin(),[&](int i){ return remain_edge[i]; });    
+    //std::transform(perm_node.begin(), perm_node.end(), remain_edge_sort.begin(),[&](int i){ return remain_edge[i]; });    
     for (int i = 0; i < remain_edge.size(); ++i)
     {
-        int j = pe[i];
+        int j = perm_node[i];
         remain_edge_sort[i] = remain_edge[j];
     }
 

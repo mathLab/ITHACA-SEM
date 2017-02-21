@@ -56,6 +56,10 @@ Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "0", "Generate parallelograms on these curves");
     m_config["blthick"] =
         ConfigOption(false, "0.0", "Parallelogram layer thickness");
+    m_config["bltadjust"] =
+        ConfigOption(false, "2.0", "Boundary layer thickness adjustment");
+    m_config["adjustblteverywhere"] =
+        ConfigOption(true, "0", "Adjust thickness everywhere");
 }
 
 Generator2D::~Generator2D()
@@ -252,6 +256,10 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoopSharedPtr> e)
         }
     }
 
+    bool adjust           = m_config["bltadjust"].beenSet;
+    NekDouble divider     = m_config["bltadjust"].as<NekDouble>();
+    bool adjustEverywhere = m_config["adjustblteverywhere"].beenSet;
+
     map<NodeSharedPtr, NodeSharedPtr> nodeNormals;
     map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it;
     for (it = m_nodesToEdge.begin(); it != m_nodesToEdge.end(); it++)
@@ -271,17 +279,15 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoopSharedPtr> e)
         NekDouble t = m_thickness.Evaluate(m_thickness_ID, it->first->m_x,
                                            it->first->m_y, 0.0, 0.0);
 
-        bool adjustVertTOnly = false;
-
-        // Adjust thickness according to anlge between normals
-        if (!adjustVertTOnly || it->first->GetNumCadCurve() > 1)
+        // Adjust thickness according to angle between normals
+        if (adjust)
         {
-            NekDouble angle = acos(n1[0] * n2[0] + n1[1] * n2[1]);
-            angle           = (angle > M_PI) ? 2 * M_PI - angle : angle;
-            NekDouble divider =
-                2.0; // Exact solution with 2.0; Higher values will
-                     // smooth the thickness at sharp angles.
-            t /= cos(angle / divider);
+            if (adjustEverywhere || it->first->GetNumCadCurve() > 1)
+            {
+                NekDouble angle = acos(n1[0] * n2[0] + n1[1] * n2[1]);
+                angle           = (angle > M_PI) ? 2 * M_PI - angle : angle;
+                t /= cos(angle / divider);
+            }
         }
 
         n[0] = n[0] * t + it->first->m_x;

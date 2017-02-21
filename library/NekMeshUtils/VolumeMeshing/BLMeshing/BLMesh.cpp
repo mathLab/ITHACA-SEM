@@ -236,9 +236,9 @@ void BLMesh::GrowLayers()
     bgi::rtree<boxI, bgi::quadratic<16> > TopTree;
     map<int, bgi::rtree<boxI, bgi::quadratic<16> > > SubTrees;
 
-    ofstream file;
-    file.open("pts.3D");
-    file << "x y z value" << endl;
+    //ofstream file;
+    //file.open("pts.3D");
+    //file << "x y z value" << endl;
 
     for(int l = 1; l < m_layer; l++)
     {
@@ -340,7 +340,7 @@ void BLMesh::GrowLayers()
             bit->second->bl = l;
         }
     }
-    file.close();
+    //file.close();
 }
 
 inline bool sign(NekDouble a, NekDouble b)
@@ -775,7 +775,7 @@ void BLMesh::BuildElements()
         }
 
         vector<int> tags;
-        tags.push_back(m_mesh->m_cad->GetNumSurf() < 100 ? 101 : 1001);
+        tags.push_back(m_id);
         ElementSharedPtr E = GetElementFactory().
                     CreateInstance(LibUtilities::ePrism, pconf, pn, tags);
         E->SetId(i);
@@ -1008,7 +1008,7 @@ void BLMesh::Setup()
     for(int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
         //orientate the triangle
-        if(m_mesh->m_cad->GetSurf(m_mesh->m_element[2][i]->m_parentCAD->GetId())
+        if(!m_mesh->m_cad->GetSurf(m_mesh->m_element[2][i]->m_parentCAD->GetId())
                                                         ->IsReversedNormal())
         {
             m_mesh->m_element[2][i]->Flip();

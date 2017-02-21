@@ -76,15 +76,13 @@ void VolumeMesh::Process()
 
     if (m_config["blsurfs"].beenSet)
     {
-        makeBL            = true;
-        m_mesh->m_numcomp = 2;
+        makeBL = true;
         ParseUtils::GenerateSeqVector(m_config["blsurfs"].as<string>().c_str(),
                                       blSurfs);
     }
     else
     {
-        makeBL            = false;
-        m_mesh->m_numcomp = 1;
+        makeBL = false;
     }
 
     NekDouble prefix = 100;
@@ -98,16 +96,10 @@ void VolumeMesh::Process()
     {
         BLMeshSharedPtr blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(
             m_mesh, blSurfs, m_config["blthick"].as<NekDouble>(),
-            m_config["bllayers"].as<int>(), m_config["blprog"].as<NekDouble>());
+            m_config["bllayers"].as<int>(), m_config["blprog"].as<NekDouble>(),
+            prefix + 1);
 
         blmesh->Mesh();
-        /*ClearElementLinks();
-        ProcessVertices();
-        ProcessEdges();
-        ProcessFaces();
-        ProcessElements();
-        ProcessComposites();
-        return;*/
 
         // remesh the correct surfaces
         vector<unsigned int> symsurfs = blmesh->GetSymSurfs();
@@ -280,7 +272,8 @@ void VolumeMesh::Process()
             }
 
             FaceMeshSharedPtr f = MemoryManager<FaceMesh>::AllocateSharedPtr(
-                symsurfs[i], m_mesh, cm, prefix + symsurfs[i]);
+                symsurfs[i], m_mesh, cm, symsurfs[i]);
+            f->OrientateCurves();
             f->Mesh();
         }
 
@@ -306,11 +299,11 @@ void VolumeMesh::Process()
             }
         }
 
-        tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, tetsurface);
+        tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, prefix, tetsurface);
     }
     else
     {
-        tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh);
+        tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, prefix);
     }
 
     tet->Mesh();

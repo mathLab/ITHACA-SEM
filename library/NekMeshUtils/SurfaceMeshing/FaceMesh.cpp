@@ -430,8 +430,25 @@ void FaceMesh::Smoothing()
             u0[0] -= (dF[0] * F[0] + dF[2] * F[1]);
             u0[1] -= (dF[1] * F[0] + dF[3] * F[1]);
 
-            if (!(u0[0] < bounds[0] || u0[0] > bounds[1] || u0[1] < bounds[2] ||
-                  u0[1] > bounds[3]))
+            bool inbounds = true;
+            if (u0[0] < bounds[0])
+            {
+                inbounds = false;
+            }
+            else if (u0[0] > bounds[1])
+            {
+                inbounds = false;
+            }
+            else if (u0[1] < bounds[2])
+            {
+                inbounds = false;
+            }
+            else if (u0[1] > bounds[3])
+            {
+                inbounds = false;
+            }
+
+            if (!inbounds)
             {
                 continue;
             }
@@ -447,8 +464,7 @@ void FaceMesh::Smoothing()
                 NekDouble d   = (di + dj) / 2.0;
                 NekDouble wij = sqrt((rj[0] - pu0[0]) * (rj[0] - pu0[0]) +
                                      (rj[1] - pu0[1]) * (rj[1] - pu0[1]) +
-                                     (rj[2] - pu0[2]) * (rj[2] - pu0[2])) -
-                                d;
+                                     (rj[2] - pu0[2]) * (rj[2] - pu0[2])) - d;
 
                 NekDouble umag = sqrt((uj[0] - u0[0]) * (uj[0] - u0[0]) +
                                       (uj[1] - u0[1]) * (uj[1] - u0[1]));

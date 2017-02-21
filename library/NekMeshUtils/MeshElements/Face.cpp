@@ -56,7 +56,7 @@ void Face::GetCurvedNodes(
         int n2 = m_edgeList[1]->GetNodeCount();
         int n3 = m_edgeList[2]->GetNodeCount();
 
-        bool same = (n == n2 ? (n2==n3) : false);
+        bool same = (n == n2 ? (n2 == n3) : false);
         ASSERTL0(same, "Edges are not consistent");
 
         nodeList.insert(

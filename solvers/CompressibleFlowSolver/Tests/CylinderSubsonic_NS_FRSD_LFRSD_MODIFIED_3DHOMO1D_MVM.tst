@@ -15,10 +15,10 @@
             <value variable="E" tolerance="1e-12">4.43372e+06</value>
         </metric>
         <metric type="Linf" id="2">
-            <value variable="rho" tolerance="1e-12">0.281922</value>
+            <value variable="rho" tolerance="1e-12">0.281925</value>
             <value variable="rhou" tolerance="1e-12">85.4194</value>
             <value variable="rhov" tolerance="1e-8">12.2322</value>
-            <value variable="rhow" tolerance="1e-12">1.00005</value>
+            <value variable="rhow" tolerance="1e-12">1.00004</value>
             <value variable="E" tolerance="1e-12">272860</value>
         </metric>
     </metrics>

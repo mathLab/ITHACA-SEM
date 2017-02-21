@@ -34,11 +34,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
-#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
-#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
+#include <NekMeshUtils/CADSystem/CADSurf.h>
 #include <NekMeshUtils/CADSystem/OCE/CADCurveOCE.h>
 #include <NekMeshUtils/CADSystem/OCE/CADSurfOCE.h>
-#include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
+#include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
 
 using namespace std;
 
@@ -54,7 +54,7 @@ bool CADSystemOCE::LoadCAD()
 {
     if (m_naca.size() == 0)
     {
-        //not a naca profile behave normally
+        // not a naca profile behave normally
         // Takes step file and makes OpenCascade shape
         STEPControl_Reader reader;
         reader = STEPControl_Reader();
@@ -112,9 +112,6 @@ bool CADSystemOCE::LoadCAD()
         }
     }
 
-    // from id of curve to list of ids of surfs
-    map<int, vector<int> > adjsurfmap;
-
     // Adds edges to our type and map
     for (int i = 1; i <= mapOfEdges.Extent(); i++)
     {
@@ -146,78 +143,14 @@ bool CADSystemOCE::LoadCAD()
         TopTools_IndexedMapOfShape mapOfWires;
         TopExp::MapShapes(face, TopAbs_WIRE, mapOfWires);
 
-        // this pice of code does an idiot check on the loops to make sure
-        // they dont cross or touch
-        if (mapOfWires.Extent() > 1)
-        {
-            TopoDS_Wire ow = BRepTools::OuterWire(TopoDS::Face(face));
-
-            vector<TopoDS_Shape> wirefacecuts;
-            vector<gp_Pnt> centersofcutfaces;
-
-            for (int j = 1; j <= mapOfWires.Extent(); j++)
-            {
-                TopoDS_Shape wire = mapOfWires.FindKey(j);
-
-                if (wire != ow)
-                {
-                    BRepBuilderAPI_MakeFace build(
-                        BRep_Tool::Surface(TopoDS::Face(face)), 1e-7);
-                    build.Add(TopoDS::Wire(wire));
-                    TopoDS_Shape newface = build.Shape();
-                    wirefacecuts.push_back(newface);
-                    BRepAdaptor_Surface b =
-                        BRepAdaptor_Surface(TopoDS::Face(newface));
-                    NekDouble u, v;
-                    u = (b.LastUParameter() - b.FirstUParameter()) / 2.0;
-                    v = (b.LastVParameter() - b.FirstVParameter()) / 2.0;
-                    centersofcutfaces.push_back(b.Value(u, v));
-                }
-            }
-            for (int j = 0; j < wirefacecuts.size(); j++)
-            {
-                for (int k = 0; k < wirefacecuts.size(); k++)
-                {
-                    if (j == k)
-                        continue;
-
-                    /// TODO fix this test
-                    BRepClass_FaceClassifier fc(TopoDS::Face(wirefacecuts[j]),
-                                                centersofcutfaces[k], 1e-7);
-                    // ASSERTL0(fc.State() == 1, "Internal face loops make this
-                    // cad impossible to mesh");
-                }
-            }
-        }
-
         vector<EdgeLoopSharedPtr> edgeloops;
 
         // now we acutally analyse the loops for cad building
         for (int j = 1; j <= mapOfWires.Extent(); j++)
         {
-            EdgeLoopSharedPtr edgeloop = boost::shared_ptr<EdgeLoop>(new EdgeLoop);
+            EdgeLoopSharedPtr edgeloop = EdgeLoopSharedPtr(new EdgeLoop);
 
             TopoDS_Shape wire = mapOfWires.FindKey(j);
-
-            ShapeAnalysis_Wire wiretest(TopoDS::Wire(wire), TopoDS::Face(face),
-                                        1E-6);
-
-            // calculate the center of the wire
-            GProp_GProps massProps;
-            BRepGProp::SurfaceProperties(wire, massProps);
-            gp_Pnt gPt = massProps.CentreOfMass();
-            // alternative locuv methods
-            ShapeAnalysis_Surface sas(BRep_Tool::Surface(TopoDS::Face(face)));
-            sas.SetDomain(
-                BRepAdaptor_Surface(TopoDS::Face(face)).FirstUParameter(),
-                BRepAdaptor_Surface(TopoDS::Face(face)).LastUParameter(),
-                BRepAdaptor_Surface(TopoDS::Face(face)).FirstVParameter(),
-                BRepAdaptor_Surface(TopoDS::Face(face)).LastVParameter());
-            gp_Pnt2d p2 = sas.ValueOfUV(gPt, 1e-7);
-            Array<OneD, NekDouble> cen(2);
-            cen[0]          = p2.X();
-            cen[1]          = p2.Y();
-            edgeloop->center = cen;
 
             BRepTools_WireExplorer exp;
 
@@ -231,8 +164,8 @@ bool CADSystemOCE::LoadCAD()
                 {
                     int e = mapOfEdges.FindIndex(edge);
                     edgeloop->edges.push_back(m_curves[e]);
-                    edgeloop->edgeo.push_back(exp.Orientation());
-                    adjsurfmap[e].push_back(i);
+                    edgeloop->edgeo.push_back(
+                        exp.Orientation() == 0 ? eForwards : eBackwards);
                 }
 
                 exp.Next();
@@ -271,21 +204,16 @@ bool CADSystemOCE::LoadCAD()
     }
 
     // This checks that all edges are bound by two surfaces, sanity check.
-    for (map<int, vector<int> >::iterator it = adjsurfmap.begin();
-         it != adjsurfmap.end(); it++)
+    if (!m_2d)
     {
-        if(!m_2d)
+        map<int, CADCurveSharedPtr>::iterator it;
+        for (it = m_curves.begin(); it != m_curves.end(); it++)
         {
-            ASSERTL0(it->second.size() == 2, "no three curve surfaces");
+            ASSERTL0(it->second->GetAdjSurf().size() == 2,
+                     "curve is not joined to 2 surfaces");
         }
-
-        vector<CADSurfSharedPtr> sfs;
-        for (int i = 0; i < it->second.size(); i++)
-        {
-            sfs.push_back(m_surfs[it->second[i]]);
-        }
-        m_curves[it->first]->SetAdjSurf(sfs);
     }
+
     return true;
 }
 
@@ -314,16 +242,29 @@ void CADSystemOCE::AddSurf(int i, TopoDS_Shape in,
                            vector<EdgeLoopSharedPtr> ein)
 {
     CADSurfSharedPtr newSurf = GetCADSurfFactory().CreateInstance(key);
-    boost::static_pointer_cast<CADSurfOCE>(newSurf)->Initialise(i, in, ein);
-    m_surfs[i] = newSurf;
+    boost::static_pointer_cast<CADSurfOCE>(newSurf)->Initialise(i, in);
 
     int tote = 0;
-    for (int i = 0; i < ein.size(); i++)
+    for (int k = 0; k < ein.size(); k++)
     {
-        tote += ein[i]->edges.size();
+        tote += ein[k]->edges.size();
     }
 
     ASSERTL0(tote != 1, "cannot handle periodic curves");
+
+    CADSurf::OrientateEdges(newSurf, ein);
+    newSurf->SetEdges(ein);
+
+    // now the loops are orientated, tell the curves how they are
+    for (int k = 0; k < ein.size(); k++)
+    {
+        for (int j = 0; j < ein[k]->edges.size(); j++)
+        {
+            ein[k]->edges[j]->SetAdjSurf(make_pair(newSurf, ein[k]->edgeo[j]));
+        }
+    }
+
+    m_surfs[i] = newSurf;
 }
 
 Array<OneD, NekDouble> CADSystemOCE::GetBoundingBox()
@@ -338,7 +279,7 @@ Array<OneD, NekDouble> CADSystemOCE::GetBoundingBox()
 
     for (int i = 1; i <= m_curves.size(); i++)
     {
-        CADCurveSharedPtr c         = GetCurve(i);
+        CADCurveSharedPtr c = GetCurve(i);
         Array<OneD, NekDouble> ends = c->GetMinMax();
 
         bound[0] = min(bound[0], min(ends[0], ends[3]));
@@ -361,71 +302,69 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
     ParseUtils::GenerateUnOrderedVector(m_naca.c_str(), data);
     ASSERTL0(data.size() == 5, "not a vaild domain");
 
-    int n = boost::lexical_cast<int>(naca);
-    NekDouble T = (n%100) / 100.0;
-    n/=100;
-    NekDouble P = (n%10)/10.0;
-    n/=10;
-    NekDouble M = (n%10)/100.0;
+    int n       = boost::lexical_cast<int>(naca);
+    NekDouble T = (n % 100) / 100.0;
+    n /= 100;
+    NekDouble P = (n % 10) / 10.0;
+    n /= 10;
+    NekDouble M = (n % 10) / 100.0;
 
     int np = 25;
 
     Array<OneD, NekDouble> xc(np);
-    NekDouble dtheta = M_PI/(np-1);
-    for(int i = 0; i < np; i++)
+    NekDouble dtheta = M_PI / (np - 1);
+    for (int i = 0; i < np; i++)
     {
-        xc[i] = (1.0 - cos(i*dtheta)) / 2.0;
+        xc[i] = (1.0 - cos(i * dtheta)) / 2.0;
     }
 
     Array<OneD, NekDouble> yc(np), dyc(np);
-    for(int i = 0; i < np; i++)
+    for (int i = 0; i < np; i++)
     {
-        if(xc[i] < P)
+        if (xc[i] < P)
         {
-            yc[i] = M / P / P * (2.0 * P * xc[i] - xc[i] * xc[i]);
+            yc[i]  = M / P / P * (2.0 * P * xc[i] - xc[i] * xc[i]);
             dyc[i] = 2.0 * M / P / P * (P - xc[i]);
         }
         else
         {
-            yc[i]  = M / (1.0 - P) / (1.0 - P) * (
-                         1.0 - 2.0 * P + 2.0 * P * xc[i] - xc[i] * xc[i]);
+            yc[i] = M / (1.0 - P) / (1.0 - P) *
+                    (1.0 - 2.0 * P + 2.0 * P * xc[i] - xc[i] * xc[i]);
             dyc[i] = 2.0 * M / (1.0 - P) / (1.0 - P) * (P - xc[i]);
         }
     }
 
     Array<OneD, NekDouble> yt(np);
-    for(int i = 0; i < np; i++)
+    for (int i = 0; i < np; i++)
     {
-        yt[i] = T / 0.2 * ( 0.2969 * sqrt(xc[i])
-                           -0.1260 * xc[i]
-                           -0.3516 * xc[i] * xc[i]
-                           +0.2843 * xc[i] * xc[i] * xc[i]
-                           -0.1015 * xc[i] * xc[i] * xc[i] * xc[i]);
+        yt[i] =
+            T / 0.2 * (0.2969 * sqrt(xc[i]) - 0.1260 * xc[i] -
+                       0.3516 * xc[i] * xc[i] + 0.2843 * xc[i] * xc[i] * xc[i] -
+                       0.1015 * xc[i] * xc[i] * xc[i] * xc[i]);
     }
 
-    Array<OneD, NekDouble> x(2*np-1), y(2*np-1);
+    Array<OneD, NekDouble> x(2 * np - 1), y(2 * np - 1);
     int l = 0;
-    for(int i = np-1; i >= 0; i--, l++)
+    for (int i = np - 1; i >= 0; i--, l++)
     {
         NekDouble theta = atan(dyc[i]);
 
         x[l] = xc[i] - yt[i] * sin(theta);
         y[l] = yc[i] + yt[i] * cos(theta);
-
     }
-    for(int i = 1; i < np; i++)
+    for (int i = 1; i < np; i++)
     {
         NekDouble theta = atan(dyc[i]);
 
-        x[i+np-1] = xc[i] + yt[i] * sin(theta);
-        y[i+np-1] = yc[i] - yt[i] * cos(theta);
+        x[i + np - 1] = xc[i] + yt[i] * sin(theta);
+        y[i + np - 1] = yc[i] - yt[i] * cos(theta);
     }
 
-    TColgp_Array1OfPnt pointArray(0,2*np-2);
+    TColgp_Array1OfPnt pointArray(0, 2 * np - 2);
 
-    for(int i = 0; i < 2*np-1; i++)
+    for (int i = 0; i < 2 * np - 1; i++)
     {
-        pointArray.SetValue(i,gp_Pnt(x[i]*1000.0,y[i]*1000.0,0.0));
+        pointArray.SetValue(i, gp_Pnt(x[i] * 1000.0, y[i] * 1000.0, 0.0));
     }
 
     GeomAPI_PointsToBSpline spline(pointArray);
@@ -434,33 +373,37 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
     BRepBuilderAPI_MakeEdge areoEdgeBuilder(curve);
     TopoDS_Edge aeroEdge = areoEdgeBuilder.Edge();
     BRepBuilderAPI_MakeEdge aeroTEBuilder(
-        gp_Pnt(x[0]*1000.0, y[0]*1000.0, 0.0),
-        gp_Pnt(x[2*np-2]*1000.0, y[2*np-2]*1000.0, 0.0));
+        gp_Pnt(x[0] * 1000.0, y[0] * 1000.0, 0.0),
+        gp_Pnt(x[2 * np - 2] * 1000.0, y[2 * np - 2] * 1000.0, 0.0));
     TopoDS_Edge TeEdge = aeroTEBuilder.Edge();
 
     BRepBuilderAPI_MakeWire aeroWireBuilder(aeroEdge, TeEdge);
     TopoDS_Wire aeroWire = aeroWireBuilder.Wire();
 
     gp_Trsf transform;
-    gp_Ax1 rotAx(gp_Pnt(500.0,0.0,0.0),gp_Dir(gp_Vec(0.0,0.0,-1.0)));
-    transform.SetRotation(rotAx, data[4]/180.0*M_PI);
+    gp_Ax1 rotAx(gp_Pnt(500.0, 0.0, 0.0), gp_Dir(gp_Vec(0.0, 0.0, -1.0)));
+    transform.SetRotation(rotAx, data[4] / 180.0 * M_PI);
     TopLoc_Location mv(transform);
     aeroWire.Move(mv);
 
-    BRepBuilderAPI_MakeEdge domInlBuilder(gp_Pnt(data[0]*1000.0,data[1]*1000.0,0.0),
-                                          gp_Pnt(data[0]*1000.0,data[3]*1000.0,0.0));
+    BRepBuilderAPI_MakeEdge domInlBuilder(
+        gp_Pnt(data[0] * 1000.0, data[1] * 1000.0, 0.0),
+        gp_Pnt(data[0] * 1000.0, data[3] * 1000.0, 0.0));
     TopoDS_Edge inlEdge = domInlBuilder.Edge();
 
-    BRepBuilderAPI_MakeEdge domTopBuilder(gp_Pnt(data[0]*1000.0,data[3]*1000.0,0.0),
-                                          gp_Pnt(data[2]*1000.0,data[3]*1000.0,0.0));
+    BRepBuilderAPI_MakeEdge domTopBuilder(
+        gp_Pnt(data[0] * 1000.0, data[3] * 1000.0, 0.0),
+        gp_Pnt(data[2] * 1000.0, data[3] * 1000.0, 0.0));
     TopoDS_Edge topEdge = domTopBuilder.Edge();
 
-    BRepBuilderAPI_MakeEdge domOutBuilder(gp_Pnt(data[2]*1000.0,data[3]*1000.0,0.0),
-                                          gp_Pnt(data[2]*1000.0,data[1]*1000.0,0.0));
+    BRepBuilderAPI_MakeEdge domOutBuilder(
+        gp_Pnt(data[2] * 1000.0, data[3] * 1000.0, 0.0),
+        gp_Pnt(data[2] * 1000.0, data[1] * 1000.0, 0.0));
     TopoDS_Edge outEdge = domOutBuilder.Edge();
 
-    BRepBuilderAPI_MakeEdge domBotBuilder(gp_Pnt(data[2]*1000.0,data[1]*1000.0,0.0),
-                                          gp_Pnt(data[0]*1000.0,data[1]*1000.0,0.0));
+    BRepBuilderAPI_MakeEdge domBotBuilder(
+        gp_Pnt(data[2] * 1000.0, data[1] * 1000.0, 0.0),
+        gp_Pnt(data[0] * 1000.0, data[1] * 1000.0, 0.0));
     TopoDS_Edge botEdge = domBotBuilder.Edge();
 
     BRepBuilderAPI_MakeWire domWireBuilder(inlEdge, topEdge, outEdge, botEdge);
@@ -471,6 +414,5 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
 
     return face.Face();
 }
-
 }
 }

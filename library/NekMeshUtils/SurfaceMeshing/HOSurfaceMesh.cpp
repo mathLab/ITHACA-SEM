@@ -213,7 +213,7 @@ void HOSurfaceMesh::Process()
 
                     DNekMat J = opti->dF(xi);
 
-                    Array<OneD, NekDouble> bnds = c->Bounds();
+                    Array<OneD, NekDouble> bnds = c->GetBounds();
 
                     bool repeat = true;
                     int itct = 0;
@@ -257,8 +257,7 @@ void HOSurfaceMesh::Process()
                     // need to pull the solution out of opti
                     ti = opti->GetSolution();
                 }
-
-                vector<CADSurfSharedPtr> s = c->GetAdjSurf();
+                vector<pair<CADSurfSharedPtr, CADSystem::Orientation> > s = c->GetAdjSurf();
 
                 for (int k = 1; k < m_mesh->m_nummode - 1; k++)
                 {
@@ -269,8 +268,8 @@ void HOSurfaceMesh::Process()
                     nn->SetCADCurve(cid, c, ti[k]);
                     for(int m = 0; m < s.size(); m++)
                     {
-                        Array<OneD, NekDouble> uv = s[m]->locuv(loc);
-                        nn->SetCADSurf(s[m]->GetId(), s[m], uv);
+                        Array<OneD, NekDouble> uv = s[m].first->locuv(loc);
+                        nn->SetCADSurf(s[m].first->GetId(), s[m].first, uv);
                     }
 
                     honodes[k - 1] = nn;

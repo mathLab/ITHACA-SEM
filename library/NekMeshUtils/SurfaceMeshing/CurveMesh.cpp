@@ -46,10 +46,10 @@ void CurveMesh::Mesh()
 {
     // this algorithm is mostly based on the work in chapter 19
 
-    m_bounds      = m_cadcurve->Bounds();
+    m_bounds      = m_cadcurve->GetBounds();
     m_curvelength = m_cadcurve->GetTotLength();
     m_numSamplePoints =
-        int(m_curvelength / m_mesh->m_octree->GetMinDelta()) + 5;
+        int(m_curvelength / m_mesh->m_octree->GetMinDelta()) * 2;
     ds = m_curvelength / (m_numSamplePoints - 1);
 
     GetSampleFunction();
@@ -108,8 +108,7 @@ void CurveMesh::Mesh()
     Array<OneD, NekDouble> loc;
 
     vector<CADVertSharedPtr> verts = m_cadcurve->GetVertex();
-    vector<CADSurfSharedPtr> s     = m_cadcurve->GetAdjSurf();
-    ASSERTL0(s.size() == (m_mesh->m_cad->Is2D()) ? 1 : 2, "invalid curve");
+    vector<pair<CADSurfSharedPtr, CADSystem::Orientation> > s = m_cadcurve->GetAdjSurf();
 
     NodeSharedPtr n = verts[0]->GetNode();
     t               = m_bounds[0];
@@ -117,14 +116,15 @@ void CurveMesh::Mesh()
     loc = n->GetLoc();
     for (int j = 0; j < s.size(); j++)
     {
-        if (verts[0]->IsDegen() == s[j]->GetId()) // if the degen has been set
-                                                  // for this node the node
-                                                  // already knows its corrected
-                                                  // location
+        if (verts[0]->IsDegen() == s[j].first->GetId())
+        {
+            // if the degen has been set for this node the node
+            // already knows its corrected location
             continue;
+        }
 
-        Array<OneD, NekDouble> uv = s[j]->locuv(loc);
-        n->SetCADSurf(s[j]->GetId(), s[j], uv);
+        Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
+        n->SetCADSurf(s[j].first->GetId(), s[j].first, uv);
     }
     m_meshpoints.push_back(n);
 
@@ -137,8 +137,8 @@ void CurveMesh::Mesh()
         n2->SetCADCurve(m_id, m_cadcurve, t);
         for (int j = 0; j < s.size(); j++)
         {
-            Array<OneD, NekDouble> uv = s[j]->locuv(loc);
-            n2->SetCADSurf(s[j]->GetId(), s[j], uv);
+            Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
+            n2->SetCADSurf(s[j].first->GetId(), s[j].first, uv);
         }
         m_meshpoints.push_back(n2);
     }
@@ -149,14 +149,15 @@ void CurveMesh::Mesh()
     loc = n->GetLoc();
     for (int j = 0; j < s.size(); j++)
     {
-        if (verts[1]->IsDegen() == s[j]->GetId()) // if the degen has been set
-                                                  // for this node the node
-                                                  // already knows its corrected
-                                                  // location
+        if (verts[1]->IsDegen() == s[j].first->GetId())
+        {
+            // if the degen has been set for this node the node
+            // already knows its corrected location
             continue;
+        }
 
-        Array<OneD, NekDouble> uv = s[j]->locuv(loc);
-        n->SetCADSurf(s[j]->GetId(), s[j], uv);
+        Array<OneD, NekDouble> uv = s[j].first->locuv(loc);
+        n->SetCADSurf(s[j].first->GetId(), s[j].first, uv);
     }
     m_meshpoints.push_back(n);
 
@@ -213,6 +214,8 @@ NekDouble CurveMesh::EvaluateDS(NekDouble s)
     int a = 0;
     int b = 0;
 
+    ASSERTL1(!(s < 0) && !(s > m_curvelength),"s out of bounds");
+
     if (s == 0)
     {
         return m_dst[0][0];
@@ -249,6 +252,8 @@ NekDouble CurveMesh::EvaluatePS(NekDouble s)
 {
     int a = 0;
     int b = 0;
+
+    ASSERTL1(!(s < 0) && !(s > m_curvelength),"s out of bounds");
 
     if (s == 0)
     {
@@ -293,36 +298,55 @@ NekDouble CurveMesh::EvaluatePS(NekDouble s)
 void CurveMesh::GetSampleFunction()
 {
     m_dst.resize(m_numSamplePoints);
-    Array<OneD, NekDouble> loc = m_cadcurve->P(m_bounds[0]);
 
     vector<NekDouble> dsti;
     dsti.resize(3);
 
-    dsti[0] = m_mesh->m_octree->Query(loc);
-    dsti[1] = 0.0;
-    dsti[2] = m_bounds[0];
-
-    m_dst[0] = dsti;
-
-    for (int i = 1; i < m_numSamplePoints; i++)
+    for (int i = 0; i < m_numSamplePoints; i++)
     {
         dsti[1]     = i * ds;
         NekDouble t = m_cadcurve->tAtArcLength(dsti[1]);
 
-        loc = m_cadcurve->P(t);
+        Array<OneD, NekDouble> loc = m_cadcurve->P(t);
 
-        NekDouble ts =
+        /*NekDouble ts =
             m_bl.Evaluate(m_blID, loc[0], loc[1], loc[2], 0.0);
 
         if (ts > 0.0)
         {
-            NekDouble R = m_mesh->m_octree->QueryR(loc);
-            dsti[0]     = R / (R + ts) * m_mesh->m_octree->Query(loc);
+            Array<OneD, NekDouble> N = m_cadcurve->N(t);
+            Array<OneD, NekDouble> Nwrt = m_cadcurve->NormalWRT(t, 0);
+
+            if(N[0]*N[0] + N[1]*N[1] + N[2]*N[2] < 1e-6)
+            {
+                dsti[0] = m_mesh->m_octree->Query(loc);
+            }
+            else if ( N[0]*Nwrt[0] + N[1]*Nwrt[1] + N[2]*Nwrt[2] > 0)
+            {
+                //concave
+                dsti[0] = m_mesh->m_octree->Query(loc);
+            }
+            else
+            {
+                NekDouble R = 1.0 / m_cadcurve->Curvature(t);
+                if(R > 2.0*t)
+                {
+                    R = 2.0*t;
+                }
+                Array<OneD, NekDouble> tloc(3);
+                tloc[0] = loc[0] + ts * Nwrt[0];
+                tloc[1] = loc[1] + ts * Nwrt[1];
+                tloc[2] = loc[2] + ts * Nwrt[2];
+
+                NekDouble d = m_mesh->m_octree->Query(tloc);
+
+                dsti[0] = d * R / (R + ts);
+            }
         }
         else
-        {
+        {*/
             dsti[0] = m_mesh->m_octree->Query(loc);
-        }
+        //}
 
         dsti[2] = t;
 

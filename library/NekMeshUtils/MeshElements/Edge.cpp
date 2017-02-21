@@ -161,12 +161,12 @@ void Edge::MakeOrder(int                                order,
                 m_edgeNodes[i]->m_y = loc[1];
                 m_edgeNodes[i]->m_z = loc[2];
 
-                std::vector<CADSurfSharedPtr> s = c->GetAdjSurf();
+                std::vector<std::pair<CADSurfSharedPtr, CADSystem::Orientation> > s = c->GetAdjSurf();
                 for(int j = 0; j < s.size(); j++)
                 {
                     Array<OneD, NekDouble> uv(2);
-                    s[j]->ProjectTo(loc,uv);
-                    m_edgeNodes[i]->SetCADSurf(s[j]->GetId(),s[j],uv);
+                    s[j].first->ProjectTo(loc,uv);
+                    m_edgeNodes[i]->SetCADSurf(s[j].first->GetId(),s[j].first,uv);
                 }
             }
         }

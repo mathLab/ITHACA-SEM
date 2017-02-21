@@ -37,8 +37,8 @@
 #define NekMeshUtils_CADSYSTEM_CADSURF
 
 #include <NekMeshUtils/CADSystem/CADObject.h>
-#include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADSystem.h>
+#include <NekMeshUtils/CADSystem/CADVert.h>
 
 namespace Nektar
 {
@@ -69,12 +69,20 @@ public:
     {
     }
 
+    static void OrientateEdges(
+        CADSurfSharedPtr surf, std::vector<CADSystem::EdgeLoopSharedPtr> &ein);
+
     /**
      * @brief Get the loop structures which bound the cad surface
      */
-    std::vector<EdgeLoopSharedPtr> GetEdges()
+    std::vector<CADSystem::EdgeLoopSharedPtr> GetEdges()
     {
         return m_edges;
+    }
+
+    void SetEdges(std::vector<CADSystem::EdgeLoopSharedPtr> ein)
+    {
+        m_edges = ein;
     }
 
     /**
@@ -90,7 +98,7 @@ public:
      * @param uv Array of u and v parametric coords.
      * @return Array of xyz components of normal vector.
      */
-    virtual Array<OneD, NekDouble> N    (Array<OneD, NekDouble> uv) = 0;
+    virtual Array<OneD, NekDouble> N(Array<OneD, NekDouble> uv) = 0;
 
     /**
      * @brief Get the set of first derivatives at parametric point u,v
@@ -98,7 +106,7 @@ public:
      * @param uv Array of u and v parametric coords.
      * @return Array of xyz copmonents of first derivatives.
      */
-    virtual Array<OneD, NekDouble> D1   (Array<OneD, NekDouble> uv) = 0;
+    virtual Array<OneD, NekDouble> D1(Array<OneD, NekDouble> uv) = 0;
 
     /**
      * @brief Get the set of second derivatives at parametric point u,v
@@ -106,7 +114,7 @@ public:
      * @param uv array of u and v parametric coords
      * @return array of xyz copmonents of second derivatives
      */
-    virtual Array<OneD, NekDouble> D2   (Array<OneD, NekDouble> uv) = 0;
+    virtual Array<OneD, NekDouble> D2(Array<OneD, NekDouble> uv) = 0;
 
     /**
      * @brief Get the x,y,z at parametric point u,v.
@@ -114,7 +122,7 @@ public:
      * @param uv Array of u and v parametric coords.
      * @return Array of xyz location.
      */
-    virtual Array<OneD, NekDouble> P    (Array<OneD, NekDouble> uv) = 0;
+    virtual Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv) = 0;
 
     /**
      * @brief Performs a reverse look up to find u,v and x,y,z.
@@ -126,7 +134,8 @@ public:
 
     /**
      * @brief does unconstrained locuv to project point from anywhere
-     * and calculate the distance between the orthonormal projection to the surface
+     * and calculate the distance between the orthonormal projection to the
+     * surface
      * and the point
      */
     virtual NekDouble DistanceTo(Array<OneD, NekDouble> p) = 0;
@@ -135,7 +144,8 @@ public:
      * @brief takes a point from anywhere find the nearest surface point and its
      * uv
      */
-    virtual void ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv) = 0;
+    virtual void ProjectTo(Array<OneD, NekDouble> &tp,
+                           Array<OneD, NekDouble> &uv) = 0;
 
     /**
      * @brief returns curvature at point uv
@@ -151,7 +161,6 @@ public:
     }
 
 protected:
-
     /**
      * @brief sets the flag to reverse the normal for this suface,
      * this is determined in cadsystem and ensures all surface normals,
@@ -161,11 +170,11 @@ protected:
     {
         m_correctNormal = false;
     }
-    
+
     /// normal
     bool m_correctNormal;
     /// List of bounding edges in loops with orientation.
-    std::vector<EdgeLoopSharedPtr> m_edges;
+    std::vector<CADSystem::EdgeLoopSharedPtr> m_edges;
 
     /// Function which tests the the value of uv used is within the surface
     virtual void Test(Array<OneD, NekDouble> uv) = 0;
@@ -175,8 +184,7 @@ typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
 
 typedef LibUtilities::NekFactory<std::string, CADSurf> CADSurfFactory;
 
-CADSurfFactory& GetCADSurfFactory();
-
+CADSurfFactory &GetCADSurfFactory();
 }
 }
 

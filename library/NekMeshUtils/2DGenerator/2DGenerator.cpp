@@ -52,7 +52,7 @@ ModuleKey Generator2D::className = GetModuleFactory().RegisterCreatorFunction(
 Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
 {
     m_config["blcurves"] =
-        ConfigOption(false, "0", "Generate parallelograms on these curves");
+        ConfigOption(false, "", "Generate parallelograms on these curves");
     m_config["blthick"] =
         ConfigOption(false, "0.0", "Parallelogram layer thickness");
 }
@@ -73,6 +73,9 @@ void Generator2D::Process()
 
     m_thickness_ID =
         m_thickness.DefineFunction("x y z", m_config["blthick"].as<string>());
+
+    ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
+                                  m_blCurves);
 
     // linear mesh all curves
     for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
@@ -98,9 +101,43 @@ void Generator2D::Process()
         }
 
         m_curvemeshes[i]->Mesh();
+
     }
 
     ////////////////////////////////////////
+
+    if (m_config["blcurves"].beenSet)
+    {
+        // we need to do the boundary layer generation in a face by face basis
+        MakeBLPrep();
+
+        for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
+        {
+            //MakeBL(i);
+        }
+    }
+
+    if (m_mesh->m_verbose)
+    {
+        cout << endl << "\tFace meshing:" << endl << endl;
+    }
+
+    // linear mesh all surfaces
+    for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
+    {
+        if (m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumSurf(),
+                                           "Face progress");
+        }
+
+        m_facemeshes[i] =
+            MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
+                m_curvemeshes, 99+i);
+        m_facemeshes[i]->Mesh();
+    }
+
+    ////////////////////////////////////
 
     EdgeSet::iterator it;
     for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
@@ -124,60 +161,6 @@ void Generator2D::Process()
         m_mesh->m_element[1].push_back(E2);
     }
 
-    for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
-    {
-        m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
-            i, m_mesh, m_curvemeshes, 100);
-
-        m_facemeshes[i]->OrientateCurves();
-    }
-
-    if (m_config["blcurves"].beenSet)
-    {
-        // we need to do the boundary layer generation in a face by face basis
-        MakeBLPrep();
-
-        // Im going to do a horrendous trick to get the edge orientaion.
-        // Going to activate the first routine of facemeshing without actually
-        // face meshing, this will orientate the edgeloop objects (hopefully);
-        // which can be used by the makebl command to know the normal
-        // orienation
-        for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
-        {
-            MakeBL(i, m_facemeshes[i]->GetEdges());
-        }
-    }
-
-    // m_mesh->m_element[1].clear();
-
-    if (m_mesh->m_verbose)
-    {
-        cout << endl << "\tFace meshing:" << endl << endl;
-    }
-
-    // linear mesh all surfaces
-    map<int, FaceMeshSharedPtr>::iterator fit;
-    int i = 1;
-    for (fit = m_facemeshes.begin(); fit != m_facemeshes.end(); fit++)
-    {
-        if (m_mesh->m_verbose)
-        {
-            LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumSurf(),
-                                           "Face progress");
-        }
-
-        if (m_config["blcurves"].beenSet)
-        {
-            // for bl surfaces orientate curves needs to be run again to
-            // push nodes to the edges of the system
-            fit->second->ResetCurvemeshes(m_curvemeshes);
-            fit->second->OrientateCurves();
-        }
-
-        fit->second->Mesh();
-        i++;
-    }
-
     ProcessVertices();
     ProcessEdges();
     ProcessFaces();
@@ -195,8 +178,6 @@ void Generator2D::MakeBLPrep()
     }
 
     // identify the nodes which will become the boundary layer.
-    ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
-                                  m_blCurves);
 
     for (vector<unsigned>::iterator it = m_blCurves.begin();
          it != m_blCurves.end(); ++it)
@@ -210,17 +191,8 @@ void Generator2D::MakeBLPrep()
     }
 }
 
-void Generator2D::MakeBL(int faceid, vector<EdgeLoopSharedPtr> e)
+void Generator2D::MakeBL(int faceid)
 {
-    map<int, int> edgeToOrient;
-    for (int j = 0; j < e.size(); j++)
-    {
-        for (int i = 0; i < e[j]->edges.size(); ++i)
-        {
-            edgeToOrient[e[j]->edges[i]->GetId()] = e[j]->edgeo[i];
-        }
-    }
-
     map<int, Array<OneD, NekDouble> > edgeNormals;
 
     int eid = 0;
@@ -228,7 +200,7 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoopSharedPtr> e)
     for (vector<unsigned>::iterator it = m_blCurves.begin();
          it != m_blCurves.end(); ++it)
     {
-        int edgeo = edgeToOrient[*it];
+        CADSystem::Orientation edgeo = m_mesh->m_cad->GetCurve(*it)->GetOrienationWRT(faceid);
 
         vector<EdgeSharedPtr> es = m_curvemeshes[*it]->GetMeshEdges();
 
@@ -237,10 +209,13 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoopSharedPtr> e)
         for (int j = 0; j < es.size(); j++)
         {
             es[j]->m_id = eid++;
-            Array<OneD, NekDouble> p1 =
-                (edgeo == 0) ? es[j]->m_n1->GetLoc() : es[j]->m_n2->GetLoc();
-            Array<OneD, NekDouble> p2 =
-                (edgeo == 0) ? es[j]->m_n2->GetLoc() : es[j]->m_n1->GetLoc();
+            Array<OneD, NekDouble> p1, p2;
+            p1 = es[j]->m_n1->GetLoc();
+            p2 = es[j]->m_n2->GetLoc();
+            if(edgeo == CADSystem::eBackwards)
+            {
+                swap(p1, p2);
+            }
             Array<OneD, NekDouble> n(2);
             n[0]          = p1[1] - p2[1];
             n[1]          = p2[0] - p1[0];
@@ -285,7 +260,7 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoopSharedPtr> e)
     for (vector<unsigned>::iterator it = m_blCurves.begin();
          it != m_blCurves.end(); ++it)
     {
-        int edgeo = edgeToOrient[*it];
+        CADSystem::Orientation edgeo = m_mesh->m_cad->GetCurve(*it)->GetOrienationWRT(faceid);
 
         vector<NodeSharedPtr> ns = m_curvemeshes[*it]->GetMeshPoints();
         vector<NodeSharedPtr> newNs;
@@ -296,7 +271,7 @@ void Generator2D::MakeBL(int faceid, vector<EdgeLoopSharedPtr> e)
         m_curvemeshes[*it] =
             MemoryManager<CurveMesh>::AllocateSharedPtr(*it, m_mesh, newNs);
 
-        if (edgeo == 1)
+        if (edgeo == CADSystem::eBackwards)
         {
             reverse(ns.begin(), ns.end());
         }

@@ -127,8 +127,6 @@ public:
      */
     NekDouble Query(Array<OneD, NekDouble> loc);
 
-    NekDouble QueryR(Array<OneD, NekDouble> loc);
-
     /**
      * @brief returns the miminum spacing in the octree (for meshing purposes)
      *

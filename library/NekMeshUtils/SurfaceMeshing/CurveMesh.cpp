@@ -108,7 +108,7 @@ void CurveMesh::Mesh()
 
     if (m_bloffset[1] > 0.0)
     {
-        meshsvalue.push_back(m_bloffset[1]);
+        meshsvalue.push_back(m_curvelength - m_bloffset[1]);
     }
 
     meshsvalue.push_back(m_curvelength);

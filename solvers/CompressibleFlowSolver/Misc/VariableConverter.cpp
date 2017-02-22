@@ -335,7 +335,8 @@ namespace Nektar
         const MultiRegions::ExpListSharedPtr             &field,
         const Array<OneD, const Array<OneD, NekDouble> > &physarray,
               Array<OneD,                   NekDouble>   &Sensor,
-              Array<OneD,                   NekDouble>   &SensorKappa)
+              Array<OneD,                   NekDouble>   &SensorKappa,
+              int                                         offset)
     {
         int e, NumModesElement, nQuadPointsElement;
         int nTotQuadPoints  = field->GetTotPoints();
@@ -359,10 +360,7 @@ namespace Nektar
             NumModesElement        = ExpOrderElement[e];
             int nQuadPointsElement = field->GetExp(e)->GetTotPoints();
             int nCoeffsElement     = field->GetExp(e)->GetNcoeffs();
-            int numCutOff          = NumModesElement - 1;
-
-            // Set-up of the Orthogonal basis for a Quadrilateral element which
-            // is needed to obtain thesolution at P =  p - 1;
+            int numCutOff          = NumModesElement - offset;
 
             Array<OneD, NekDouble> SolPElementPhys  (nQuadPointsElement, 0.0);
             Array<OneD, NekDouble> SolPElementCoeffs(nCoeffsElement,     0.0);
@@ -371,7 +369,6 @@ namespace Nektar
             Array<OneD, NekDouble> SolPmOneElementCoeffs(nCoeffsElement, 0.0);
 
             // create vector the save the solution points per element at P = p;
-
             for (int i = 0; i < nQuadPointsElement; i++)
             {
                 SolPElementPhys[i] = SolP[CoeffsCount+i];

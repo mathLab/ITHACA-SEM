@@ -100,6 +100,7 @@ class ArtificialDiffusion
         NekDouble       m_mu0;
         NekDouble       m_Skappa;
         NekDouble       m_Kappa;
+        int             m_offset;
 
         /// Constructor
         ArtificialDiffusion(const LibUtilities::SessionReaderSharedPtr& pSession,

@@ -64,6 +64,7 @@ ArtificialDiffusion::ArtificialDiffusion(
     m_session->LoadParameter ("mu0",           m_mu0,           1.0);
     m_session->LoadParameter ("Skappa",        m_Skappa,        -2.048);
     m_session->LoadParameter ("Kappa",         m_Kappa,         0.0);
+    m_session->LoadParameter ("SensorOffset",  m_offset,         1);
 
     // Create auxiliary object to convert variables
     m_varConv = MemoryManager<VariableConverter>::AllocateSharedPtr(

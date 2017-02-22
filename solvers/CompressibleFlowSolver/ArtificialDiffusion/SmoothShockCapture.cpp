@@ -133,7 +133,7 @@ void SmoothShockCapture::v_GetArtificialViscosity(
     Array<OneD, NekDouble > SensorKappa(nPts, 0.0);
 
     // Calculate sensor
-    m_varConv->GetSensor(m_fields[0], physfield, sensor, SensorKappa);
+    m_varConv->GetSensor(m_fields[0], physfield, sensor, SensorKappa, m_offset);
 
     NekDouble ThetaH = m_FacH;
     NekDouble ThetaL = m_FacL;
@@ -182,7 +182,7 @@ void SmoothShockCapture::GetForcingTerm(
     m_varConv->GetPressure(inarray, pressure);
     m_varConv->GetSoundSpeed(inarray, pressure, soundspeed);
     m_varConv->GetAbsoluteVelocity(inarray, absVelocity);
-    m_varConv->GetSensor(m_fields[0], inarray, Sensor, SensorKappa);
+    m_varConv->GetSensor(m_fields[0], inarray, Sensor, SensorKappa, m_offset);
 
     // Determine the maximum wavespeed
     Vmath::Vadd(nPts, absVelocity, 1, soundspeed, 1, Lambda, 1);

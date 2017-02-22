@@ -64,7 +64,7 @@ void NonSmoothShockCapture::v_GetArtificialViscosity(
     Array<OneD, NekDouble> Sensor     (nTotQuadPoints, 0.0);
     Array<OneD, NekDouble> SensorKappa(nTotQuadPoints, 0.0);
 
-    m_varConv->GetSensor(m_fields[0], physfield, Sensor, SensorKappa);
+    m_varConv->GetSensor(m_fields[0], physfield, Sensor, SensorKappa, m_offset);
 
     for (int e = 0; e < nElements; e++)
     {

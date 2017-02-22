@@ -949,7 +949,11 @@ namespace Nektar
             m_varConv->GetPressure  (tmp, pressure);
             m_varConv->GetSoundSpeed(tmp, pressure, soundspeed);
             m_varConv->GetMach      (tmp, soundspeed, mach);
-            m_varConv->GetSensor    (m_fields[0], tmp, sensor, SensorKappa);
+
+            int sensorOffset;
+            m_session->LoadParameter ("SensorOffset", sensorOffset, 1);
+            m_varConv->GetSensor (m_fields[0], tmp, sensor, SensorKappa,
+                                    sensorOffset);
 
             Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs);
             Array<OneD, NekDouble> sensFwd(nCoeffs);

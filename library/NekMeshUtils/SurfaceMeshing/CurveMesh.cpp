@@ -196,7 +196,7 @@ void CurveMesh::GetPhiFunction()
     newPhi.resize(2);
 
     newPhi[0] = 0.0;
-    newPhi[1] = 0.0;
+    newPhi[1] = m_bloffset[0];
 
     m_ps[0] = newPhi;
 
@@ -253,11 +253,11 @@ NekDouble CurveMesh::EvaluatePS(NekDouble s)
     int a = 0;
     int b = 0;
 
-    if (s == 0)
+    if (s <= m_bloffset[0])
     {
         return m_ps[0][0];
     }
-    else if (s == m_curvelength)
+    else if (s >= m_curvelength - m_bloffset[1])
     {
         return m_ps[m_numSamplePoints - 1][0];
     }

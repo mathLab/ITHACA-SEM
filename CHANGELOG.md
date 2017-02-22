@@ -34,7 +34,11 @@ v4.4.0
 - Enabled MUMPS support in PETSc if a Fortran compiler was found and added 3D
   support to the Helmholtz smoother used e.g. in FieldConverts C0Projection
   module (!714)
+- Fix bug in `Vmath::FillWhiteNoise` which caused `ForcingNoise` to have
+  a repeated pattern (!718)
+- Fix bug in the calculation of the RHS magnitude in CG solver (!721)
 - Fix bug in CMake Homebrew and MacPorts detection for OS X (!729)
+- Fix bug in FieldUtils when using half mode expansions (!734)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)
@@ -51,6 +55,7 @@ v4.4.0
 - Fix linearised advection for full 3D cases (!708)
 - Added a weak pressure formulation following Guermond & Shen (!713)
 - Added a convective like outflow boundary condition from Dong (!713)
+- Added the ability to specifiy Womersley boundary conditions for pulsatile flow (!472)
 
 **FieldConvert:**
 - Allow equi-spaced output for 1D and 2DH1D fields (!613)
@@ -83,6 +88,11 @@ v4.4.0
   (!712)
 - 2D to 3D mesh extrusion module (!715)
 - Add new two-dimensional mesher from NACA code or step file (!720)
+- Fix inverted boundary layer in 2D (!736)
+- More sensible element sizing with boundary layers in 2D (!736)
+- Change variable names in mcf file to make more sense (!736)
+- Fix issues in varopti module so that in can be compiled without meshgen on
+  (!736)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing
@@ -118,6 +128,12 @@ v4.3.4
 
 **IncNavierStokesSolver:**
 - Fix 2nd order time-integration for VCSMapping (!687)
+
+v4.3.4
+------
+**Library:**
+- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of large
+  simulations (!672)
 
 v4.3.3
 ------

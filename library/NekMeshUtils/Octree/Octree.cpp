@@ -100,6 +100,12 @@ void Octree::Process()
     }
 }
 
+NekDouble Octree::QueryR(Array<OneD, NekDouble> loc)
+{
+    NekDouble d = Query(loc);
+    return d / 2.0 / (sqrt(m_eps * (2.0 - m_eps)));
+}
+
 NekDouble Octree::Query(Array<OneD, NekDouble> loc)
 {
     // starting at master octant 0 move through succsesive m_octants which
@@ -675,8 +681,10 @@ void Octree::PropagateDomain()
 
     for (int i = 0; i < m_octants.size(); i++)
     {
-        ASSERTL0(m_octants[i]->IsDeltaKnown(),
-                 "does not know delta after propergation");
+        if (!m_octants[i]->IsDeltaKnown())
+        {
+            m_octants[i]->SetDelta(m_maxDelta);
+        }
     }
 }
 

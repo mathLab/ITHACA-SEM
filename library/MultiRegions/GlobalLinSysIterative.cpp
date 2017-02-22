@@ -418,6 +418,8 @@ namespace Nektar
                 Set_Rhs_Magnitude(inGlob);
             }
 
+            m_totalIterations = 0;
+
             // If input residual is less than tolerance skip solve.
             if (eps < m_tolerance * m_tolerance * m_rhs_magnitude)
             {
@@ -432,7 +434,6 @@ namespace Nektar
                 return;
             }
 
-            m_totalIterations = 1;
             m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
 
             v_DoMatrixMultiply(w_A, s_A);
@@ -451,11 +452,12 @@ namespace Nektar
 
             vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
 
-            rho       = vExchange[0];
-            mu        = vExchange[1];
-            min_resid = m_rhs_magnitude;
-            beta      = 0.0;
-            alpha     = rho/mu;
+            rho               = vExchange[0];
+            mu                = vExchange[1];
+            min_resid         = m_rhs_magnitude;
+            beta              = 0.0;
+            alpha             = rho/mu;
+            m_totalIterations = 1;
 
             // Continue until convergence
             while (true)
@@ -541,8 +543,12 @@ namespace Nektar
         void GlobalLinSysIterative::Set_Rhs_Magnitude(
             const NekVector<NekDouble> &pIn)
         {
-            Array<OneD, NekDouble> vExchange(1);
-            vExchange[0] = Vmath::Dot(pIn.GetDimension(),&pIn[0],&pIn[0]);
+            Array<OneD, NekDouble> vExchange(1, 0.0);
+            if (m_map.num_elements() > 0)
+            {
+                vExchange[0] = Vmath::Dot2(pIn.GetDimension(),
+                                        &pIn[0],&pIn[0],&m_map[0]);
+            }
 
             m_expList.lock()->GetComm()->GetRowComm()->AllReduce(
                 vExchange, Nektar::LibUtilities::ReduceSum);

@@ -107,22 +107,22 @@ template <> inline void InvTrans<3>(NekDouble in[][3], NekDouble out[][3])
     out[2][2] =  (in[0][0] * in[1][1] - in[1][0] * in[0][1]) * invdet;
 }
 
-
+/**
+ * @brief Calculate Scalar product of input vectors.
+ */
 template<int DIM>
 inline NekDouble ScalarProd(NekDouble in1[DIM], NekDouble in2[DIM])
 {
     return 0.0;
 }
 
-template<>
-inline NekDouble ScalarProd<2>(NekDouble in1[2], NekDouble in2[2])
+template <> inline NekDouble ScalarProd<2>(NekDouble in1[2], NekDouble in2[2])
 {
     return    in1[0] * in2[0]
             + in1[1] * in2[1];
 }
 
-template<>
-inline NekDouble ScalarProd<3>(NekDouble in1[3], NekDouble in2[3])
+template <> inline NekDouble ScalarProd<3>(NekDouble in1[3], NekDouble in2[3])
 {
     return    in1[0] * in2[0]
             + in1[1] * in2[1]
@@ -177,14 +177,14 @@ template <> inline void EMatrix<3>(NekDouble in[][3], NekDouble out[][3])
  * @brief Calculate Frobenius inner product of input matrices.
  */
 template<int DIM>
-inline NekDouble FrobProd(NekDouble in1[DIM][DIM],
-                          NekDouble in2[DIM][DIM])
+inline NekDouble FrobProd(NekDouble in1[][DIM],
+                          NekDouble in2[][DIM])
 {
     return 0.0;
 }
 
 template<>
-inline NekDouble FrobProd<2>(NekDouble in1[2][2], NekDouble in2[2][2])
+inline NekDouble FrobProd<2>(NekDouble in1[][2], NekDouble in2[][2])
 {
     return    in1[0][0] * in2[0][0]
             + in1[0][1] * in2[0][1]
@@ -193,7 +193,7 @@ inline NekDouble FrobProd<2>(NekDouble in1[2][2], NekDouble in2[2][2])
 }
 
 template<>
-inline NekDouble FrobProd<3>(NekDouble in1[3][3], NekDouble in2[3][3])
+inline NekDouble FrobProd<3>(NekDouble in1[][3], NekDouble in2[][3])
 {
     return    in1[0][0] * in2[0][0]
             + in1[0][1] * in2[0][1]
@@ -210,18 +210,6 @@ inline NekDouble FrobProd<3>(NekDouble in1[3][3], NekDouble in2[3][3])
 // to functions easily
 typedef boost::multi_array<NekDouble, 4> DerivArray;
 
-/**
- * @brief Calculate Jacobian matrix \f$ \nabla\phi =
- * \nabla\phi_M\nabla\phi_I^{-1} \f$ for each evaluation point of each element.
- *
- * @param elmt       Element to process
- * @param point      Index of evaluation point
- * @param deriv      Derivative array containing \f$ \nabla\phi_M \f$
- * @param data       Data array containing \f$ \nabla\phi_I^{-1} \f$
- * @param jacIdeal   Output Jacobian matrix
- */
- 
-
 
 /**
  * @brief Calculate Frobenius norm \f$ \| A \|_f ^2 \f$ of a matrix \f$ A \f$.
@@ -229,13 +217,13 @@ typedef boost::multi_array<NekDouble, 4> DerivArray;
  * @param inarray   Input matrix \f$ A \f$
  */
 template<int DIM>
-inline NekDouble FrobeniusNorm(NekDouble inarray[DIM][DIM])
+inline NekDouble FrobeniusNorm(NekDouble inarray[][DIM])
 {
     return 0.0;
 }
 
 template<>
-inline NekDouble FrobeniusNorm<2>(NekDouble inarray[2][2])
+inline NekDouble FrobeniusNorm<2>(NekDouble inarray[][2])
 {
     return    inarray[0][0] * inarray[0][0]
             + inarray[0][1] * inarray[0][1]
@@ -244,7 +232,7 @@ inline NekDouble FrobeniusNorm<2>(NekDouble inarray[2][2])
 }
 
 template<>
-inline NekDouble FrobeniusNorm<3>(NekDouble inarray[3][3])
+inline NekDouble FrobeniusNorm<3>(NekDouble inarray[][3])
 {
     return    inarray[0][0] * inarray[0][0]
             + inarray[0][1] * inarray[0][1]

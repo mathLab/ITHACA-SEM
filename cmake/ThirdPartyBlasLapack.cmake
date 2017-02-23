@@ -15,7 +15,7 @@ ELSE()
     IF(CMAKE_Fortran_COMPILER)
         SET(BUILD_BLAS_LAPACK ON)
     ELSE()
-        MESSAGE(SEND_ERROR "no blas installation for fortran compiler found")
+        MESSAGE(SEND_ERROR "No blas installation or fortran compiler found")
     ENDIF()
 ENDIF()
 

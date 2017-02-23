@@ -55,6 +55,7 @@ v4.4.0
 - Fix linearised advection for full 3D cases (!708)
 - Added a weak pressure formulation following Guermond & Shen (!713)
 - Added a convective like outflow boundary condition from Dong (!713)
+- Added the ability to specifiy Womersley boundary conditions for pulsatile flow (!472)
 
 **FieldConvert:**
 - Allow equi-spaced output for 1D and 2DH1D fields (!613)
@@ -92,6 +93,12 @@ v4.4.0
 - Change variable names in mcf file to make more sense (!736)
 - Fix issues in varopti module so that in can be compiled without meshgen on
   (!736)
+- Replace LAPACK Eigenvalue calculation with handwritten function in 
+  varopti (!738)
+- Improved node-colouring algorithm for better load-balancing 
+  in varopti (!738)
+- Simplified calculation of the energy functional in varopti for improved
+  performance (!738)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing
@@ -127,6 +134,12 @@ v4.3.4
 
 **IncNavierStokesSolver:**
 - Fix 2nd order time-integration for VCSMapping (!687)
+
+v4.3.4
+------
+**Library:**
+- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of large
+  simulations (!672)
 
 v4.3.3
 ------

@@ -113,7 +113,7 @@ void Generator2D::Process()
 
         for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
         {
-            //MakeBL(i);
+            MakeBL(i);
         }
     }
 
@@ -217,8 +217,13 @@ void Generator2D::MakeBL(int faceid)
                 swap(p1, p2);
             }
             Array<OneD, NekDouble> n(2);
-            n[0]          = p1[1] - p2[1];
-            n[1]          = p2[0] - p1[0];
+            n[0]          = p2[1] - p1[1];
+            n[1]          = p1[0] - p2[0];
+            if(m_mesh->m_cad->GetSurf(faceid)->IsReversedNormal())
+            {
+                n[0] *= -1.0;
+                n[1] *= -1.0;
+            }
             NekDouble mag = sqrt(n[0] * n[0] + n[1] * n[1]);
             n[0] /= mag;
             n[1] /= mag;

@@ -48,7 +48,7 @@ std::string CADCurveOCE::key = GetCADCurveFactory().RegisterCreatorFunction(
 NekDouble CADCurveOCE::tAtArcLength(NekDouble s)
 {
     NekDouble dt =
-        (m_occCurve.LastParameter() - m_occCurve.FirstParameter()) / (5000);
+        (m_occCurve.LastParameter() - m_occCurve.FirstParameter()) / (1000);
     NekDouble t = m_occCurve.FirstParameter();
 
     NekDouble len = 0.0;

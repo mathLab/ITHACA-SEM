@@ -373,7 +373,7 @@ void FaceMesh::Smoothing()
                 u0[1] += uj[1] / nodesystem.size();
             }
 
-            Array<OneD, NekDouble> pu0 = m_cadsurf->P(u0);
+            /*Array<OneD, NekDouble> pu0 = m_cadsurf->P(u0);
             NekDouble di = m_mesh->m_octree->Query(pu0);
             Array<OneD, NekDouble> F(2, 0.0), dF(4, 0.0);
             for (int i = 0; i < nodesystem.size(); i++)
@@ -429,7 +429,7 @@ void FaceMesh::Smoothing()
             dF[2] *= -1.0 / det;
 
             u0[0] -= (dF[0] * F[0] + dF[2] * F[1]);
-            u0[1] -= (dF[1] * F[0] + dF[3] * F[1]);
+            u0[1] -= (dF[1] * F[0] + dF[3] * F[1]);*/
 
             bool inbounds = true;
             if (u0[0] < bounds[0])
@@ -454,7 +454,7 @@ void FaceMesh::Smoothing()
                 continue;
             }
 
-            Array<OneD, NekDouble> FN(2, 0.0);
+            /*Array<OneD, NekDouble> FN(2, 0.0);
             pu0 = m_cadsurf->P(u0);
             di  = m_mesh->m_octree->Query(pu0);
             for (int i = 0; i < nodesystem.size(); i++)
@@ -477,7 +477,7 @@ void FaceMesh::Smoothing()
             if (F[0] * F[0] + F[1] * F[1] < FN[0] * FN[0] + FN[1] * FN[1])
             {
                 continue;
-            }
+            }*/
 
             Array<OneD, NekDouble> l2 = m_cadsurf->P(u0);
             (*nit)->Move(l2, m_id, u0);

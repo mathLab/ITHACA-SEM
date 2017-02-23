@@ -165,7 +165,8 @@ bool CADSystemOCE::LoadCAD()
                     int e = mapOfEdges.FindIndex(edge);
                     edgeloop->edges.push_back(m_curves[e]);
                     edgeloop->edgeo.push_back(
-                        exp.Orientation() == 0 ? eForwards : eBackwards);
+                        exp.Orientation() == TopAbs_FORWARD ? eForwards
+                                                            : eBackwards);
                 }
 
                 exp.Next();

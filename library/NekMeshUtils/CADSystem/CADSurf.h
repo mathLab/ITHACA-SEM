@@ -60,7 +60,7 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADSurf()
+    CADSurf() : m_correctNormal(true)
     {
         m_type = CADType::eSurf;
     }
@@ -157,7 +157,7 @@ public:
      */
     bool IsReversedNormal()
     {
-        return !m_correctNormal;
+        return m_correctNormal;
     }
 
 protected:

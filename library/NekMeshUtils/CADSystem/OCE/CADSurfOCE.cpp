@@ -54,11 +54,6 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
     //reverse the face
     if(in.Orientation() == 0)
     {
-        BRepBuilderAPI_MakeFace nf;
-
-        m_s->VReverse();
-        nf.Init(m_s,true,1e-6);
-        in = nf.Face();
         SetReverseNomral();
     }
 
@@ -92,8 +87,7 @@ Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p)
 
     GeomAPI_ProjectPointOnSurf projection(
         loc, m_s, m_occSurface.FirstUParameter(), m_occSurface.LastUParameter(),
-        m_occSurface.FirstVParameter(), m_occSurface.LastVParameter(),
-        Extrema_ExtAlgo_Tree);
+        m_occSurface.FirstVParameter(), m_occSurface.LastVParameter());
 
     Array<OneD, NekDouble> uvr(2);
     if (projection.NbPoints() == 0)
@@ -104,7 +98,7 @@ Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p)
             m_occSurface.FirstUParameter(), m_occSurface.LastUParameter(),
             m_occSurface.FirstVParameter(), m_occSurface.LastVParameter());
 
-        gp_Pnt2d p2 = sas.ValueOfUV(loc, 1e-7);
+        gp_Pnt2d p2 = sas.ValueOfUV(loc, 1e-3);
         uvr[0]      = p2.X();
         uvr[1]      = p2.Y();
 

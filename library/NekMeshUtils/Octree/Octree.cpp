@@ -837,49 +837,52 @@ int Octree::CountElemt()
 void Octree::CompileSourcePointList()
 {
 
-    for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
+    if(m_mesh->m_cad->Is2D())
     {
-        CADCurveSharedPtr curve = m_mesh->m_cad->GetCurve(i);
-        Array<OneD, NekDouble> bds = curve->GetBounds();
-        int samples  = 100;
-        NekDouble dt = (bds[1] - bds[0]) / (samples + 1);
-        for (int j = 1; j < samples - 1; j++) // dont want first and last point
+        for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
         {
-            NekDouble t = bds[0] + dt * j;
-            NekDouble C = curve->Curvature(t);
-
-            Array<OneD, NekDouble> loc = curve->P(t);
-
-            vector<pair<CADSurfSharedPtr, CADSystem::Orientation> > ss =
-                curve->GetAdjSurf();
-            Array<OneD, NekDouble> uv = ss[0].first->locuv(loc);
-
-            if (C != 0.0)
+            CADCurveSharedPtr curve = m_mesh->m_cad->GetCurve(i);
+            Array<OneD, NekDouble> bds = curve->GetBounds();
+            int samples  = 100;
+            NekDouble dt = (bds[1] - bds[0]) / (samples + 1);
+            for (int j = 1; j < samples - 1; j++) // dont want first and last point
             {
-                NekDouble del = 2.0 * (1.0 / C) * sqrt(m_eps * (2.0 - m_eps));
+                NekDouble t = bds[0] + dt * j;
+                NekDouble C = curve->Curvature(t);
 
-                if (del > m_maxDelta)
+                Array<OneD, NekDouble> loc = curve->P(t);
+
+                vector<pair<CADSurfSharedPtr, CADSystem::Orientation> > ss =
+                    curve->GetAdjSurf();
+                Array<OneD, NekDouble> uv = ss[0].first->locuv(loc);
+
+                if (C != 0.0)
                 {
-                    del = m_maxDelta;
+                    NekDouble del = 2.0 * (1.0 / C) * sqrt(m_eps * (2.0 - m_eps));
+
+                    if (del > m_maxDelta)
+                    {
+                        del = m_maxDelta;
+                    }
+                    if (del < m_minDelta)
+                    {
+                        del = m_minDelta;
+                    }
+
+                    CPointSharedPtr newCPoint =
+                        MemoryManager<CPoint>::AllocateSharedPtr(
+                            ss[0].first->GetId(), uv, loc, del);
+
+                    m_SPList.push_back(newCPoint);
                 }
-                if (del < m_minDelta)
+                else
                 {
-                    del = m_minDelta;
+                    BPointSharedPtr newBPoint =
+                        MemoryManager<BPoint>::AllocateSharedPtr(
+                            ss[0].first->GetId(), uv, loc);
+
+                    m_SPList.push_back(newBPoint);
                 }
-
-                CPointSharedPtr newCPoint =
-                    MemoryManager<CPoint>::AllocateSharedPtr(
-                        ss[0].first->GetId(), uv, loc, del);
-
-                m_SPList.push_back(newCPoint);
-            }
-            else
-            {
-                BPointSharedPtr newBPoint =
-                    MemoryManager<BPoint>::AllocateSharedPtr(
-                        ss[0].first->GetId(), uv, loc);
-
-                m_SPList.push_back(newBPoint);
             }
         }
     }

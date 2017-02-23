@@ -56,7 +56,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
 {
     // this piece of code orientates the surface,
     // it used to be face mesh but its easier to have it here
-    int np = 40;
+    int np = 20;
     vector<vector<Array<OneD, NekDouble> > > loopt;
     for (int i = 0; i < ein.size(); i++)
     {
@@ -93,12 +93,14 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
     {
         NekDouble area = 0.0;
 
-        bg::model::polygon<point_xy> polygon;
+        bg::model::polygon<point_xy, false, true> polygon;
         vector<point_xy> points;
         for(int j = 0; j < loopt[i].size(); j++)
         {
             points.push_back(point_xy(loopt[i][j][0], loopt[i][j][1]));
         }
+        //boost requires for closed polygons (last point == first point)
+        points.push_back(point_xy(loopt[i][0][0], loopt[i][0][1]));
 
         bg::assign_points(polygon,points);
 
@@ -168,34 +170,33 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
         }
     }
 
-    for(int i = 0; i < ein.size(); i++)
+    //only need center points for inner loops
+    for(int i = 1; i < ein.size(); i++)
     {
         Array<OneD, NekDouble> n1 = loopt[i][0];
         Array<OneD, NekDouble> n2 = loopt[i][1];
-
-        if(ein[i]->edgeo[i] == CADSystem::eForwards)
-        {
-            swap(n1, n2);
-        }
 
         Array<OneD, NekDouble> N(2);
         NekDouble mag = sqrt((n1[0] - n2[0]) * (n1[0] - n2[0]) +
                              (n1[1] - n2[1]) * (n1[1] - n2[1]));
 
-        N[0] = -1.0 * (n2[1] - n1[1]) / mag;
-        N[1] = (n2[0] - n1[0]) / mag;
+        N[0] = (n2[1] - n1[1]) / mag;
+        N[1] = -1.0 * (n2[0] - n1[0]) / mag;
+
         Array<OneD, NekDouble> P(2);
-        P[0] = (n1[0] + n2[0]) / 2.0 + 1e-6 * N[0];
-        P[1] = (n1[1] + n2[1]) / 2.0 + 1e-6 * N[1];
+        P[0] = (n1[0] + n2[0]) / 2.0 + N[0];
+        P[1] = (n1[1] + n2[1]) / 2.0 + N[1];
 
         ein[i]->center = P;
 
-        bg::model::polygon<point_xy> polygon;
+        bg::model::polygon<point_xy, false, true> polygon;
         vector<point_xy> points;
         for(int j = 0; j < loopt[i].size(); j++)
         {
             points.push_back(point_xy(loopt[i][j][0], loopt[i][j][1]));
         }
+        //boost requires for closed polygons (last point == first point)
+        points.push_back(point_xy(loopt[i][0][0], loopt[i][0][1]));
 
         point_xy p(P[0],P[1]);
 

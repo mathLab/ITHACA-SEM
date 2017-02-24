@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_INPUTSTAR
 #define UTILITIES_NEKMESH_INPUTSTAR
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 #include "ccmio.h"
 
@@ -45,17 +45,17 @@ namespace Nektar
 namespace Utilities
 {
 /// Converter for VTK files.
-class InputStar : public InputModule
+class InputStar : public NekMeshUtils::InputModule
 {
 public:
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m)
+    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<InputStar>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    InputStar(MeshSharedPtr m);
+    InputStar(NekMeshUtils::MeshSharedPtr m);
     virtual ~InputStar();
 
     /// Populate and validate required data structures.
@@ -64,26 +64,28 @@ public:
     void ReadZone(int &nComposite);
 
 protected:
-    void GenElement3D(std::vector<NodeSharedPtr> &Nodes,
+    void GenElement3D(std::vector<NekMeshUtils::NodeSharedPtr> &Nodes,
                       int i,
                       std::vector<int> &ElementFaces,
                       std::map<int, std::vector<int> > &FaceNodes,
                       int ncomposite,
                       bool DoOrient);
 
-    void GenElement2D(std::vector<NodeSharedPtr> &Nodes,
+    void GenElement2D(std::vector<NekMeshUtils::NodeSharedPtr> &Nodes,
                       int i,
                       std::vector<int> &FaceNodes,
                       int ncomposite);
 
-    Array<OneD, int> SortEdgeNodes(std::vector<NodeSharedPtr> &Nodes,
-                                   std::vector<int> &FaceNodes);
+    Array<OneD, int> SortEdgeNodes(
+                    std::vector<NekMeshUtils::NodeSharedPtr> &Nodes,
+                    std::vector<int> &FaceNodes);
 
-    Array<OneD, int> SortFaceNodes(std::vector<NodeSharedPtr> &Nodes,
-                                   std::vector<int> &ElementFaces,
-                                   std::map<int, std::vector<int> > &FaceNodes);
+    Array<OneD, int> SortFaceNodes(
+                    std::vector<NekMeshUtils::NodeSharedPtr> &Nodes,
+                    std::vector<int> &ElementFaces,
+                    std::map<int, std::vector<int> > &FaceNodes);
 
-    void ResetNodes(std::vector<NodeSharedPtr> &Nodes,
+    void ResetNodes(std::vector<NekMeshUtils::NodeSharedPtr> &Nodes,
                     Array<OneD, std::vector<int> > &ElementFaces,
                     std::map<int, std::vector<int> > &FaceNodes);
 
@@ -95,7 +97,7 @@ private:
 
     void InitCCM(void);
 
-    void ReadNodes(std::vector<NodeSharedPtr> &Nodes);
+    void ReadNodes(std::vector<NekMeshUtils::NodeSharedPtr> &Nodes);
 
     void ReadInternalFaces(std::map<int, std::vector<int> > &FacesNodes,
                            Array<OneD, std::vector<int> > &ElementFaces);

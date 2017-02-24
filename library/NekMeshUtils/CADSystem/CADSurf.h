@@ -36,7 +36,7 @@
 #ifndef NekMeshUtils_CADSYSTEM_CADSURF
 #define NekMeshUtils_CADSYSTEM_CADSURF
 
-#include <NekMeshUtils/CADSystem/CADObj.h>
+#include <NekMeshUtils/CADSystem/CADObject.h>
 #include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADSystem.h>
 
@@ -52,7 +52,7 @@ typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
  * @brief base class for a cad surface
  */
 
-class CADSurf : public CADObj
+class CADSurf : public CADObject
 {
 public:
     friend class MemoryManager<CADSurf>;
@@ -62,6 +62,7 @@ public:
      */
     CADSurf()
     {
+        m_type = CADType::eSurf;
     }
 
     ~CADSurf()
@@ -71,7 +72,7 @@ public:
     /**
      * @brief Get the loop structures which bound the cad surface
      */
-    std::vector<EdgeLoop> GetEdges()
+    std::vector<EdgeLoopSharedPtr> GetEdges()
     {
         return m_edges;
     }
@@ -142,16 +143,6 @@ public:
     virtual NekDouble Curvature(Array<OneD, NekDouble> uv) = 0;
 
     /**
-     * @brief sets the flag to reverse the normal for this suface,
-     * this is determined in cadsystem and ensures all surface normals,
-     * point internaly
-     */
-    void SetReverseNomral()
-    {
-        m_correctNormal = false;
-    }
-
-    /**
      * @brief query reversed normal
      */
     bool IsReversedNormal()
@@ -160,10 +151,21 @@ public:
     }
 
 protected:
+
+    /**
+     * @brief sets the flag to reverse the normal for this suface,
+     * this is determined in cadsystem and ensures all surface normals,
+     * point internaly
+     */
+    void SetReverseNomral()
+    {
+        m_correctNormal = false;
+    }
+    
     /// normal
     bool m_correctNormal;
     /// List of bounding edges in loops with orientation.
-    std::vector<EdgeLoop> m_edges;
+    std::vector<EdgeLoopSharedPtr> m_edges;
 
     /// Function which tests the the value of uv used is within the surface
     virtual void Test(Array<OneD, NekDouble> uv) = 0;

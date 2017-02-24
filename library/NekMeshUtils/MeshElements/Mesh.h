@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -44,6 +44,10 @@ namespace Nektar
 {
 namespace NekMeshUtils
 {
+
+class Octree;
+typedef boost::shared_ptr<Octree> OctreeSharedPtr;
+
 /**
  * Enumeration of condition types (Dirichlet, Neumann, etc).
  */
@@ -123,6 +127,11 @@ public:
     std::set<std::pair<int, int> >  m_spherigonSurfs;
     /// List of face labels for composite annotation
     std::map<int, std::string>      m_faceLabels;
+    /// CAD system pointer, if there is no cad its empty
+    CADSystemSharedPtr              m_cad;
+    /// Octree system pointer, if there is no octree its empty
+    OctreeSharedPtr                 m_octree;
+
 
     /// Returns the total number of elements in the mesh with
     /// dimension expDim.

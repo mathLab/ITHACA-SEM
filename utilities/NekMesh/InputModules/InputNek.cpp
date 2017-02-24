@@ -896,7 +896,7 @@ void InputNek::Process()
         nSurfaces++;
     }
 
-    m_mshFile.close();
+    m_mshFile.reset();
 
     // -- Process rest of mesh.
     ProcessEdges();

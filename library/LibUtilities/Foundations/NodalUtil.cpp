@@ -828,6 +828,249 @@ NekVector<NekDouble> NodalUtilPrism::v_OrthoBasisDeriv(
     return ret;
 }
 
+/**
+ * @brief Construct the nodal utility class for a quadrilateral.
+ *
+ * The constructor of this class sets up the #m_ordering member variable used in
+ * the evaluation of the orthogonal basis.
+ *
+ * @param degree  Polynomial order of this nodal quad.
+ * @param r       \f$ \xi_1 \f$-coordinates of nodal points in the standard
+ *                element.
+ * @param s       \f$ \xi_2 \f$-coordinates of nodal points in the standard
+ *                element.
+ */
+NodalUtilQuad::NodalUtilQuad(int                    degree,
+                             Array<OneD, NekDouble> r,
+                             Array<OneD, NekDouble> s)
+    : NodalUtil(degree, 2)
+{
+    // Set up parent variables.
+    m_numPoints = r.num_elements();
+    m_xi[0] = r;
+    m_xi[1] = s;
+
+    // Construct a mapping (i,j) -> m from the tensor product space (i,j) to a
+    // single ordering m.
+    for (int j = 0; j <= m_degree; ++j)
+    {
+        for (int i = 0; i <= m_degree; ++i)
+        {
+            m_ordering.push_back(std::make_pair(i,j));
+        }
+    }
+}
+
+/**
+ * @brief Return the value of the modal functions for the quad element at
+ * the nodal points #m_xi for a given mode.
+ *
+ * In a quad, we use the orthogonal basis
+ *
+ * \f[
+ * \psi_{m(ij)} = P^{(0,0)}_i(\xi_1) P_j^{(0,0)}(\xi_2)
+ * \f]
+ *
+ *
+ * @param mode  The mode of the orthogonal basis to evaluate.
+ */
+NekVector<NekDouble> NodalUtilQuad::v_OrthoBasis(const int mode)
+{
+    std::vector<NekDouble> jacobi_i(m_numPoints), jacobi_j(m_numPoints);
+    std::pair<int, int> modes = m_ordering[mode];
+
+    // Calculate Jacobi polynomials
+    Polylib::jacobfd(
+        m_numPoints, &m_xi[0][0], &jacobi_i[0], NULL, modes.first, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_xi[1][0], &jacobi_j[0], NULL, modes.second, 0.0, 0.0);
+
+    NekVector<NekDouble> ret(m_numPoints);
+
+    for (int i = 0; i < m_numPoints; ++i)
+    {
+        ret[i] = jacobi_i[i] * jacobi_j[i];
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Return the value of the derivative of the modal functions for the
+ * quadrilateral element at the nodal points #m_xi for a given mode.
+ *
+ * @param mode  The mode of the orthogonal basis to evaluate.
+ */
+NekVector<NekDouble> NodalUtilQuad::v_OrthoBasisDeriv(
+    const int dir, const int mode)
+{
+    std::vector<NekDouble> jacobi_i(m_numPoints), jacobi_j(m_numPoints);
+    std::vector<NekDouble> jacobi_di(m_numPoints), jacobi_dj(m_numPoints);
+    std::pair<int, int> modes = m_ordering[mode];
+
+    // Calculate Jacobi polynomials and their derivatives. Note that we use both
+    // jacobfd and jacobd since jacobfd is only valid for derivatives in the
+    // open interval (-1,1).
+    Polylib::jacobfd(
+        m_numPoints, &m_xi[0][0], &jacobi_i[0], NULL, modes.first, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_xi[1][0], &jacobi_j[0], NULL, modes.second, 0.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_xi[0][0], &jacobi_di[0], modes.first, 0.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_xi[1][0], &jacobi_dj[0], modes.second, 0.0, 0.0);
+
+    NekVector<NekDouble> ret(m_numPoints);
+
+    if (dir == 0)
+    {
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] = jacobi_di[i] * jacobi_j[i];
+        }
+    }
+    else
+    {
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] = jacobi_i[i] * jacobi_dj[i];
+        }
+    }
+
+    return ret;
+}
+
+
+/**
+ * @brief Construct the nodal utility class for a hexahedron.
+ *
+ * The constructor of this class sets up the #m_ordering member variable used in
+ * the evaluation of the orthogonal basis.
+ *
+ * @param degree  Polynomial order of this nodal hexahedron.
+ * @param r       \f$ \xi_1 \f$-coordinates of nodal points in the standard
+ *                element.
+ * @param s       \f$ \xi_2 \f$-coordinates of nodal points in the standard
+ *                element.
+ */
+NodalUtilHex::NodalUtilHex(int degree,
+                           Array<OneD, NekDouble> r,
+                           Array<OneD, NekDouble> s,
+                           Array<OneD, NekDouble> t)
+    : NodalUtil(degree, 3)
+{
+    // Set up parent variables.
+    m_numPoints = r.num_elements();
+    m_xi[0] = r;
+    m_xi[1] = s;
+    m_xi[2] = t;
+
+    // Construct a mapping (i,j,k) -> m from the tensor product space (i,j,k) to
+    // a single ordering m.
+    for (int k = 0; k <= m_degree; ++k)
+    {
+        for (int j = 0; j <= m_degree; ++j)
+        {
+            for (int i = 0; i <= m_degree; ++i)
+            {
+                m_ordering.push_back(Mode(i, j, k));
+            }
+        }
+    }
+}
+
+/**
+ * @brief Return the value of the modal functions for the hex element at
+ * the nodal points #m_xi for a given mode.
+ *
+ * In a quad, we use the orthogonal basis
+ *
+ * \f[
+ * \psi_{m(ijk)} = P^{(0,0)}_i(\xi_1) P_j^{(0,0)}(\xi_2) P_k^{(0,0)}(\xi_3)
+ * \f]
+ *
+ * @param mode  The mode of the orthogonal basis to evaluate.
+ */
+NekVector<NekDouble> NodalUtilHex::v_OrthoBasis(const int mode)
+{
+    std::vector<NekDouble> jacobi_i(m_numPoints), jacobi_j(m_numPoints);
+    std::vector<NekDouble> jacobi_k(m_numPoints);
+    Mode modes = m_ordering[mode];
+
+    const int I = modes.get<0>(), J = modes.get<1>(), K = modes.get<2>();
+
+    // Calculate Jacobi polynomials
+    Polylib::jacobfd(
+        m_numPoints, &m_xi[0][0], &jacobi_i[0], NULL, I, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_xi[1][0], &jacobi_j[0], NULL, J, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_xi[2][0], &jacobi_k[0], NULL, K, 0.0, 0.0);
+
+    NekVector<NekDouble> ret(m_numPoints);
+
+    for (int i = 0; i < m_numPoints; ++i)
+    {
+        ret[i] = jacobi_i[i] * jacobi_j[i] * jacobi_k[i];
+    }
+
+    return ret;
+}
+
+NekVector<NekDouble> NodalUtilHex::v_OrthoBasisDeriv(
+    const int dir, const int mode)
+{
+    std::vector<NekDouble> jacobi_i(m_numPoints), jacobi_j(m_numPoints);
+    std::vector<NekDouble> jacobi_k(m_numPoints);
+    std::vector<NekDouble> jacobi_di(m_numPoints), jacobi_dj(m_numPoints);
+    std::vector<NekDouble> jacobi_dk(m_numPoints);
+    Mode modes = m_ordering[mode];
+
+    const int I = modes.get<0>(), J = modes.get<1>(), K = modes.get<2>();
+
+    // Calculate Jacobi polynomials and their derivatives. Note that we use both
+    // jacobfd and jacobd since jacobfd is only valid for derivatives in the
+    // open interval (-1,1).
+    Polylib::jacobfd(
+        m_numPoints, &m_xi[0][0], &jacobi_i[0], NULL, I, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_xi[1][0], &jacobi_j[0], NULL, J, 0.0, 0.0);
+    Polylib::jacobfd(
+        m_numPoints, &m_xi[2][0], &jacobi_k[0], NULL, K, 0.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_xi[0][0], &jacobi_di[0], I, 0.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_xi[1][0], &jacobi_dj[0], J, 0.0, 0.0);
+    Polylib::jacobd(
+        m_numPoints, &m_xi[2][0], &jacobi_dk[0], K, 0.0, 0.0);
+
+    NekVector<NekDouble> ret(m_numPoints);
+
+    if (dir == 0)
+    {
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] = jacobi_di[i] * jacobi_j[i] * jacobi_k[i];
+        }
+    }
+    else if (dir == 1)
+    {
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] = jacobi_dj[i] * jacobi_i[i] * jacobi_k[i];
+        }
+    }
+    else
+    {
+        for (int i = 0; i < m_numPoints; ++i)
+        {
+            ret[i] = jacobi_i[i] * jacobi_j[i] * jacobi_dk[i];
+        }
+    }
+
+    return ret;
+}
+
 }
 }
 

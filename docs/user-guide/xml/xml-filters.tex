@@ -95,6 +95,9 @@ available in that case. The following additional parameter is supported:
     \midrule
     \inltt{SampleFrequency} & \xmark   & 1 &
     Number of timesteps at which the average is calculated, $N$.\\
+    \inltt{RestartFile} & \xmark   &   &
+    Restart file used as initial average.
+    If no extension is provided, it is assumed as .fld\\
   \end{tabularx}
 \end{center}
 
@@ -103,6 +106,7 @@ As an example, consider:
 \begin{lstlisting}[style=XMLStyle,gobble=2]
   <FILTER TYPE="AverageFields">
       <PARAM NAME="OutputFile">MyAverageField</PARAM>
+      <PARAM NAME="RestartFile">MyRestartAvg.fld</PARAM>
       <PARAM NAME="OutputFrequency">100</PARAM>
       <PARAM NAME="SampleFrequency"> 10 </PARAM>		
   </FILTER>
@@ -159,6 +163,7 @@ for example:
 \begin{lstlisting}[style=XMLStyle,gobble=2]
   <FILTER TYPE="ReynoldsStresses">
       <PARAM NAME="OutputFile">MyAverageField</PARAM>
+      <PARAM NAME="RestartFile">MyAverageRst.fld</PARAM>
       <PARAM NAME="OutputFrequency">100</PARAM>
       <PARAM NAME="SampleFrequency"> 10 </PARAM>
   </FILTER>
@@ -185,7 +190,10 @@ state of the solution fields at at given timestep. This can subsequently be used
 for restarting the simulation or examining time-dependent behaviour. This
 produces a sequence of files, by default named \inltt{session\_*.chk}, where
 \inltt{*} is replaced by a counter. The initial condition is written to
-\inltt{session\_0.chk}.
+\inltt{session\_0.chk}. Existing files are not overwritten, but renamed to e.g.
+\inltt{session\_0.bak0.chk}. In case this file already exists, too, the \inltt{chk}-file
+is renamed to \inltt{session\_0.bak*.chk} and so on.
+
 
 \begin{notebox}
   This functionality is equivalent to setting the \inltt{IO\_CheckSteps}

@@ -72,6 +72,7 @@ protected:
     virtual void v_PrepareOutput(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
+    virtual NekDouble v_GetScale();
     virtual std::string v_GetFileSuffix()
     {
         return "_avg";

@@ -544,14 +544,16 @@ namespace Nektar
 
         void AssemblyMap::v_LocalToGlobal(
                 const Array<OneD, const NekDouble>& loc,
-                      Array<OneD,       NekDouble>& global) const
+                Array<OneD,       NekDouble>& global,
+                bool useComm) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
         }
 
         void AssemblyMap::v_LocalToGlobal(
                 const NekVector<NekDouble>& loc,
-                      NekVector<      NekDouble>& global) const
+                NekVector<      NekDouble>& global,
+                bool useComm) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
         }
@@ -721,16 +723,18 @@ namespace Nektar
 
         void AssemblyMap::LocalToGlobal(
                 const Array<OneD, const NekDouble>& loc,
-                      Array<OneD,       NekDouble>& global) const
+                Array<OneD,       NekDouble>& global,
+                bool useComm) const
         {
-            v_LocalToGlobal(loc,global);
+            v_LocalToGlobal(loc,global,useComm);
         }
 
         void AssemblyMap::LocalToGlobal(
                 const NekVector<NekDouble>& loc,
-                      NekVector<      NekDouble>& global) const
+                NekVector<      NekDouble>& global,
+                bool useComm) const
         {
-            v_LocalToGlobal(loc,global);
+            v_LocalToGlobal(loc,global,useComm);
         }
 
         void AssemblyMap::GlobalToLocal(

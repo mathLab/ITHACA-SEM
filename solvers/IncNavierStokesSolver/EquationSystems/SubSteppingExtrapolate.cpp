@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File: SubSteppingExtrapolate.cpp
-//a
+// 
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
@@ -179,7 +179,6 @@ namespace Nektar
         }
         
         Array<OneD, Array<OneD, NekDouble> > Velfields(m_velocity.num_elements());
-        Array<OneD, int> VelIds(m_velocity.num_elements());
         
         Velfields[0] = Array<OneD, NekDouble> (nQuadraturePts*m_velocity.num_elements());
         
@@ -241,24 +240,16 @@ namespace Nektar
         NekDouble kinvis)
     {
         int nConvectiveFields =m_fields.num_elements()-1;
-        Array<OneD, Array<OneD, NekDouble> > velfields(nConvectiveFields);
+        Array<OneD, Array<OneD, NekDouble> > nullvelfields;
         
-        for(int i = 0; i < nConvectiveFields; ++i)
-        {
-            velfields[i] = m_fields[m_velocity[i]]->GetPhys(); 
-        }
-
         m_pressureCalls++;
-
-        // Rotate HOPBCs storage
-        RollOver(m_pressureHBCs);
 
         // Calculate non-linear and viscous BCs at current level and
         // put in m_pressureHBCs[0]
-        CalcNeumannPressureBCs(inarray,velfields,kinvis);
+        CalcNeumannPressureBCs(inarray,nullvelfields,kinvis);
 
         // Extrapolate to m_pressureHBCs to n+1
-        ExtrapolatePressureHBCs();
+        ExtrapolateArray(m_pressureHBCs);
         
         // Add (phi,Du/Dt) term to m_presureHBC 
         AddDuDt();
@@ -269,6 +260,7 @@ namespace Nektar
         // Evaluate High order outflow conditiosn if required. 
         CalcOutflowBCs(inarray, kinvis);
     }
+
 
     /** 
      * 
@@ -332,13 +324,11 @@ namespace Nektar
         
         NekDouble dt; 
         
-        Array<OneD, Array<OneD, NekDouble> > fields, velfields;
+        Array<OneD, Array<OneD, NekDouble> > fields;
         
         static int ncalls = 1;
         int  nint         = min(ncalls++, m_intSteps);
-        
-        Array<OneD, NekDouble> CFL(m_fields[0]->GetExpSize(), 
-                                   m_cflSafetyFactor);
+
         //this needs to change
         m_comm = m_fields[0]->GetComm()->GetRowComm();
 
@@ -378,7 +368,7 @@ namespace Nektar
             }
             
             // set up HBC m_acceleration field for Pressure BCs
-            IProductNormVelocityOnHBC(fields,m_acceleration[m+1]);
+            IProductNormVelocityOnHBC(fields,m_iprodnormvel[m]);
 
             // Reset time integrated solution in m_integrationSoln 
             integrationSoln->SetSolVector(m,fields);
@@ -394,7 +384,6 @@ namespace Nektar
         int n_element      = m_fields[0]->GetExpSize(); 
 
         const Array<OneD, int> ExpOrder=m_fields[0]->EvalBasisNumModesMaxPerExp();
-        Array<OneD, int> ExpOrderList (n_element, ExpOrder);
         
         const NekDouble cLambda = 0.2; // Spencer book pag. 317
         
@@ -534,38 +523,6 @@ namespace Nektar
                                                Array<OneD, const NekDouble> &Advection)
     {
         Vmath::Smul(HBCdata,-kinvis,Q,1,Q,1);
-    }
-	
-    /** 
-     * 
-     */
-    void SubSteppingExtrapolate::AddDuDt(void)
-    {
-        int HBCPts = m_acceleration[0].num_elements();
-
-        Array<OneD, NekDouble> accelerationTerm(HBCPts, 0.0);
-
-        // Update velocity BF at n+1 (actually only needs doing if velocity is time dependent on HBCs)
-        IProductNormVelocityBCOnHBC(m_acceleration[0]);
-        
-        //Calculate acceleration term at level n based on previous steps
-        int acc_order = min(m_pressureCalls,m_intSteps);
-        Vmath::Smul(HBCPts, StifflyStable_Gamma0_Coeffs[acc_order-1]/m_timestep,
-                    m_acceleration[0], 1, accelerationTerm,  1);
-        
-        for(int i = 0; i < acc_order; i++)
-        {
-            Vmath::Svtvp(HBCPts, 
-                         -1*StifflyStable_Alpha_Coeffs[acc_order-1][i]/m_timestep,
-                         m_acceleration[i+1], 1,
-                         accelerationTerm,    1,
-                         accelerationTerm,    1);
-        }
-        
-        // Subtract accleration term off m_pressureHBCs[nlevels-1]
-        int  nlevels = m_pressureHBCs.num_elements();
-        Vmath::Vsub(HBCPts, m_pressureHBCs[nlevels-1],1,accelerationTerm, 1,
-                    m_pressureHBCs[nlevels-1],1);
     }
 
     LibUtilities::TimeIntegrationMethod SubSteppingExtrapolate::v_GetSubStepIntegrationMethod(void)

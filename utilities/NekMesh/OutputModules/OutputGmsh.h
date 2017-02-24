@@ -36,18 +36,18 @@
 #ifndef UTILITIES_NEKMESH_OUTPUTGMSH
 #define UTILITIES_NEKMESH_OUTPUTGMSH
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
 namespace Utilities
 {
 
-bool operator==(ElmtConfig const &p1, ElmtConfig const &p2);
+bool operator==(NekMeshUtils::ElmtConfig const &p1, NekMeshUtils::ElmtConfig const &p2);
 
-struct ElmtConfigHash : std::unary_function<ElmtConfig, std::size_t>
+struct ElmtConfigHash : std::unary_function<NekMeshUtils::ElmtConfig, std::size_t>
 {
-    std::size_t operator()(ElmtConfig const& el) const
+    std::size_t operator()(NekMeshUtils::ElmtConfig const& el) const
     {
         std::size_t seed = 0;
         boost::hash_combine(seed, (int)el.m_e        );
@@ -58,7 +58,7 @@ struct ElmtConfigHash : std::unary_function<ElmtConfig, std::size_t>
     }
 };
 
-bool operator==(ElmtConfig const &p1, ElmtConfig const &p2)
+bool operator==(NekMeshUtils::ElmtConfig const &p1, NekMeshUtils::ElmtConfig const &p2)
 {
     return p1.m_e           == p2.m_e           &&
            p1.m_faceNodes   == p2.m_faceNodes   &&
@@ -67,23 +67,23 @@ bool operator==(ElmtConfig const &p1, ElmtConfig const &p2)
 }
 
 /// Converter for Gmsh files.
-class OutputGmsh : public OutputModule
+class OutputGmsh : public NekMeshUtils::OutputModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m) {
         return MemoryManager<OutputGmsh>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    OutputGmsh(MeshSharedPtr m);
+    OutputGmsh(NekMeshUtils::MeshSharedPtr m);
     virtual ~OutputGmsh();
 
     /// Write mesh to output file.
     virtual void Process();
 
 private:
-    boost::unordered_map<ElmtConfig, unsigned int, ElmtConfigHash> elmMap;
+    boost::unordered_map<NekMeshUtils::ElmtConfig, unsigned int, ElmtConfigHash> elmMap;
 };
 
 }

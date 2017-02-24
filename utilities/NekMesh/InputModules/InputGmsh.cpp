@@ -868,7 +868,7 @@ void InputGmsh::Process()
             }
         }
     }
-    m_mshFile.close();
+    m_mshFile.reset();
 
     // Go through element and remap tags if necessary.
     map<int, map<LibUtilities::ShapeType, int> > compMap;
@@ -1039,6 +1039,8 @@ vector<int> InputGmsh::CreateReordering(unsigned int InputGmshEntity)
         case LibUtilities::eHexahedron:
             return HexReordering(it->second);
             break;
+        case LibUtilities::eSegment:
+            return LineReordering(it->second);
         default:
             break;
     }
@@ -1046,6 +1048,19 @@ vector<int> InputGmsh::CreateReordering(unsigned int InputGmshEntity)
     // Default: no reordering.
     vector<int> returnVal;
     return returnVal;
+}
+
+vector<int> InputGmsh::LineReordering(ElmtConfig conf)
+{
+    const int order = conf.m_order;
+
+    vector<int> mapping(order+1);
+    for(int i = 0; i < order+1; i++)
+    {
+        mapping[i] = i;
+    }
+
+    return mapping;
 }
 
 /**

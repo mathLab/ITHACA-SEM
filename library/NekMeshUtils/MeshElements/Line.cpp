@@ -29,11 +29,14 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh line object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/MeshElements/Line.h>
+
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 using namespace std;
 
 namespace Nektar
@@ -63,16 +66,14 @@ Line::Line(ElmtConfig pConf,
     {
         m_vertex.push_back(pNodeList[i]);
     }
-    vector<NodeSharedPtr> edgeNodes;
+
     if (m_conf.m_order > 1)
     {
         for (int j = 0; j < n; ++j)
         {
-            edgeNodes.push_back(pNodeList[2 + j]);
+            m_volumeNodes.push_back(pNodeList[2 + j]);
         }
     }
-    m_edge.push_back(boost::shared_ptr<Edge>(new Edge(
-        pNodeList[0], pNodeList[1], edgeNodes, m_conf.m_edgeCurveType)));
 }
 
 SpatialDomains::GeometrySharedPtr Line::GetGeom(int coordDim)
@@ -109,6 +110,16 @@ SpatialDomains::GeometrySharedPtr Line::GetGeom(int coordDim)
     return ret;
 }
 
+
+void Line::GetCurvedNodes(std::vector<NodeSharedPtr> &nodeList) const
+{
+    nodeList.push_back(m_vertex[0]);
+    for (int i = 0; i < m_volumeNodes.size(); ++i)
+    {
+        nodeList.push_back(m_volumeNodes[i]);
+    }
+    nodeList.push_back(m_vertex[1]);
+}
 void Line::MakeOrder(int                                order,
                      SpatialDomains::GeometrySharedPtr  geom,
                      LibUtilities::PointsType           pType,

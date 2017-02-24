@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_OUTPUTVTK
 #define UTILITIES_NEKMESH_OUTPUTVTK
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -44,17 +44,17 @@ namespace Utilities
 {
 
 /// Converter for Gmsh files.
-class OutputVtk : public OutputModule
+class OutputVtk : public NekMeshUtils::OutputModule
 {
 public:
     /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    static boost::shared_ptr<Module> create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<OutputVtk>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    OutputVtk(MeshSharedPtr m);
+    OutputVtk(NekMeshUtils::MeshSharedPtr m);
     virtual ~OutputVtk();
 
     /// Write mesh to output file.

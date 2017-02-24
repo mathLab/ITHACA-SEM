@@ -39,186 +39,197 @@
 #include "../Module.h"
 #include "ProcessEquiSpacedOutput.h"
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/index/rtree.hpp>
+
+namespace bg  = boost::geometry;
+namespace bgi = boost::geometry::index;
+
+
 namespace Nektar
 {
 namespace FieldUtils
 {
 
+const NekDouble SQ_PNT_TOL=1e-16;
+
 class Iso
 {
-public:
-    void condense(void);
-    void globalcondense(vector<boost::shared_ptr<Iso> > &iso, bool verbose);
-    void separate_regions(vector<boost::shared_ptr<Iso> > &iso,
-                          int minsize,
-                          bool verbose);
+    public:
+        void  Condense(void);
+        void  GlobalCondense(vector<boost::shared_ptr<Iso> > &iso, bool verbose);
+        void  SeparateRegions(vector<boost::shared_ptr<Iso> > &iso, int minsize, bool verbose);
 
-    void smooth(int n_iter, NekDouble lambda, NekDouble mu);
+        void  Smooth(int n_iter, NekDouble lambda, NekDouble mu);
 
-    int get_nvert(void)
-    {
-        return m_nvert;
-    }
-
-    void set_nvert(int n)
-    {
-        m_nvert = n;
-    }
-
-    int get_ntris(void)
-    {
-        return m_ntris;
-    }
-
-    void set_ntris(int n)
-    {
-        m_ntris = n;
-    }
-
-    void set_fields(const int loc,
-                    const Array<OneD, Array<OneD, NekDouble> > &intfields,
-                    const int j)
-    {
-        m_x[loc] = intfields[0][j];
-        m_y[loc] = intfields[1][j];
-        m_z[loc] = intfields[2][j];
-
-        for (int i = 0; i < intfields.num_elements() - 3; ++i)
+        int  GetNVert(void)
         {
-            m_fields[i][loc] = intfields[i + 3][j];
+            return m_nvert;
         }
-    }
 
-    NekDouble get_fields(const int i, const int j)
-    {
-        return m_fields[i][j];
-    }
-
-    void set_x(int loc, NekDouble val)
-    {
-        m_x[loc] = val;
-    }
-
-    void set_y(int loc, NekDouble val)
-    {
-        m_y[loc] = val;
-    }
-
-    void set_z(int loc, NekDouble val)
-    {
-        m_z[loc] = val;
-    }
-
-    NekDouble get_x(int loc)
-    {
-        return m_x[loc];
-    }
-
-    NekDouble get_y(int loc)
-    {
-        return m_y[loc];
-    }
-
-    NekDouble get_z(int loc)
-    {
-        return m_z[loc];
-    }
-
-    int get_vid(int i)
-    {
-        return m_vid[i];
-    }
-
-    void resize_vid(int nconn)
-    {
-        m_vid = Array<OneD, int>(nconn);
-    }
-
-    void set_vid(int i, int j)
-    {
-        m_vid[i] = j;
-    }
-
-    void resize_fields(int size)
-    {
-        if (size > m_x.size()) // add 1000 element to vectors
+        void SetNVert(int n)
         {
-            m_x.resize(size + 100);
-            m_y.resize(size + 100);
-            m_z.resize(size + 100);
-            ;
-            for (int i = 0; i < m_fields.size(); ++i)
+            m_nvert = n;
+        }
+
+        int  GetNTris(void)
+        {
+            return m_ntris;
+        }
+
+        void SetNTris(int n)
+        {
+            m_ntris = n;
+        }
+
+        void SetFields(const int loc,
+                        const Array<OneD,Array<OneD, NekDouble> > &intfields,
+                        const int j)
+        {
+            m_x[loc] = intfields[0][j];
+            m_y[loc] = intfields[1][j];
+            m_z[loc] = intfields[2][j];
+
+            for(int i = 0; i < intfields.num_elements()-3; ++i)
             {
-                m_fields[i].resize(size + 1000);
+                m_fields[i][loc] = intfields[i+3][j];
             }
         }
-        m_nvert = size;
-    }
 
-    Iso(int nfields)
-    {
-        m_condensed = false;
-        m_nvert     = 0;
-        m_fields.resize(nfields);
-        // set up initial vectors to be 10000 long
-        m_x.resize(10000);
-        m_y.resize(10000);
-        m_z.resize(10000);
-        for (int i = 0; i < m_fields.size(); ++i)
+        NekDouble GetFields(const int i, const int j)
         {
-            m_fields[i].resize(10000);
+            return m_fields[i][j];
         }
-    };
 
-    ~Iso(void)
-    {
-    }
+        void SetX(int loc, NekDouble val)
+        {
+            m_x[loc] = val;
+        }
 
-private:
-    bool m_condensed;
-    int m_nvert; // number of vertices
-    int m_ntris; // number of triangles introduced.
-    vector<NekDouble> m_x;
-    vector<NekDouble> m_y;
-    vector<NekDouble> m_z;
-    vector<vector<NekDouble> > m_fields;
-    Array<OneD, int> m_vid; // used when condensing field
+        void SetY(int loc, NekDouble val)
+        {
+            m_y[loc] = val;
+        }
+
+        void SetZ(int loc, NekDouble val)
+        {
+            m_z[loc] = val;
+        }
+
+        NekDouble GetX(int loc)
+        {
+            return m_x[loc];
+        }
+
+        NekDouble GetY(int loc)
+        {
+            return m_y[loc];
+        }
+
+        NekDouble GetZ(int loc)
+        {
+            return m_z[loc];
+        }
+
+        int  GetVId(int i)
+        {
+            return m_vid[i];
+        }
+
+        void ResizeVId(int nconn)
+        {
+            m_vid = Array<OneD, int>(nconn);
+        }
+
+        void SetVId(int i, int j)
+        {
+            m_vid[i] = j;
+        }
+
+        void ResizeFields(int size)
+        {
+            if(size > m_x.size()) // add 1000 element to vectors
+            {
+                m_x.resize(size+100);
+                m_y.resize(size+100);
+                m_z.resize(size+100);;
+                for(int i = 0; i < m_fields.size(); ++i)
+                {
+                    m_fields[i].resize(size+1000);
+                }
+
+            }
+            m_nvert = size;
+        }
+
+        Iso(int nfields)
+        {
+            m_condensed = false;
+            m_nvert     = 0;
+            m_fields.resize(nfields);
+            // set up initial vectors to be 10000 long
+            m_x.resize(10000);
+            m_y.resize(10000);
+            m_z.resize(10000);
+            for(int i = 0; i < m_fields.size(); ++i)
+            {
+                m_fields[i].resize(10000);
+            }
+        };
+
+        ~Iso(void)
+        {
+        }
+
+    private:
+        bool                       m_condensed;
+        int                        m_nvert;           // number of vertices
+        int                        m_ntris;           // number of triangles introduced.
+        vector<NekDouble>          m_x;
+        vector<NekDouble>          m_y;
+        vector<NekDouble>          m_z;
+        vector<vector<NekDouble> > m_fields;
+        Array<OneD, int>           m_vid; // used when condensing field
+
 };
 
 typedef boost::shared_ptr<Iso> IsoSharedPtr;
 
 class IsoVertex
 {
-public:
-    friend class Iso;
+    public:
+        friend class Iso;
 
-    IsoVertex(void)
-    {
-        m_id = -1;
-        m_x = m_y = m_z = -99999;
-    }
+        IsoVertex (void)
+        {
+            m_id = -1;
+            m_x = m_y = m_z = -99999;
+        }
 
-    ~IsoVertex(){};
+        ~IsoVertex(){};
 
-    int get_iso_id()
-    {
-        return m_iso_id;
-    }
+        int get_iso_id()
+        {
+            return m_iso_id;
+        }
 
-    int get_iso_vert_id()
-    {
-        return m_iso_vert_id;
-    }
+        int get_iso_vert_id()
+        {
+            return m_iso_vert_id;
+        }
 
-    friend bool operator==(const IsoVertex &x, const IsoVertex &y);
-    friend bool operator!=(const IsoVertex &x, const IsoVertex &y);
+        friend bool operator == (const IsoVertex& x, const IsoVertex& y);
+        friend bool operator != (const IsoVertex& x, const IsoVertex& y);
 
-private:
-    int m_id;
-    int m_iso_id;
-    int m_iso_vert_id;
-    NekDouble m_x, m_y, m_z;
-    vector<NekDouble> m_fields;
+    private:
+        int                 m_id;
+        int                 m_iso_id;
+        int                 m_iso_vert_id;
+        NekDouble           m_x, m_y, m_z;
+        vector<NekDouble >  m_fields;
+
 };
 
 /**
@@ -226,33 +237,32 @@ private:
  */
 class ProcessIsoContour : public ProcessEquiSpacedOutput
 {
-public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
-    {
-        return MemoryManager<ProcessIsoContour>::AllocateSharedPtr(f);
-    }
-    static ModuleKey className;
+    public:
+        /// Creates an instance of this class
+        static boost::shared_ptr<Module> create(FieldSharedPtr f)
+        {
+            return MemoryManager<ProcessIsoContour>::AllocateSharedPtr(f);
+        }
+        static ModuleKey className;
 
-    ProcessIsoContour(FieldSharedPtr f);
-    virtual ~ProcessIsoContour();
+        ProcessIsoContour(FieldSharedPtr f);
+        virtual ~ProcessIsoContour();
 
-    /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
+        /// Write mesh to output file.
+        virtual void Process(po::variables_map &vm);
 
-    virtual std::string GetModuleName()
-    {
-        return "ProcessIsoContour";
-    }
+    protected:
+        ProcessIsoContour(){};
+        void ResetFieldPts(vector<IsoSharedPtr> &iso);
+        void SetupIsoFromFieldPts(vector<IsoSharedPtr> &isovec);
 
-protected:
-    ProcessIsoContour(){};
-    void ResetFieldPts(vector<IsoSharedPtr> &iso);
-    void SetupIsoFromFieldPts(vector<IsoSharedPtr> &isovec);
+    private:
 
-private:
-    vector<IsoSharedPtr> ExtractContour(const int fieldid, const NekDouble val);
+        vector<IsoSharedPtr> ExtractContour(
+            const int fieldid,
+            const NekDouble val);
 };
+
 }
 }
 

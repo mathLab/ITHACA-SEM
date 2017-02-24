@@ -45,21 +45,34 @@ namespace NekMeshUtils
 std::string CADSurfOCE::key = GetCADSurfFactory().RegisterCreatorFunction(
     "oce", CADSurfOCE::create, "CADSurfOCE");
 
-void CADSurfOCE::Initialise(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
+void CADSurfOCE::Initialise(int i, TopoDS_Shape in,
+                            vector<EdgeLoopSharedPtr> ein)
 {
     // this bit of code changes the units of the cad from mm opencascade
     // defualt to m
+
+    m_s = BRep_Tool::Surface(TopoDS::Face(in));
+    //reverse the face
+    if(in.Orientation() == 0)
+    {
+        BRepBuilderAPI_MakeFace nf;
+
+        m_s->VReverse();
+        nf.Init(m_s,true,1e-6);
+        in = nf.Face();
+        SetReverseNomral();
+    }
+
     m_edges = ein;
     gp_Trsf transform;
     gp_Pnt ori(0.0, 0.0, 0.0);
     transform.SetScale(ori, 1.0 / 1000.0);
     TopLoc_Location mv(transform);
-    m_s = BRep_Tool::Surface(TopoDS::Face(in));
+
     in.Move(mv);
     m_occSurface    = BRepAdaptor_Surface(TopoDS::Face(in));
     m_correctNormal = true;
     m_id            = i;
-    m_type          = surf;
 }
 
 Array<OneD, NekDouble> CADSurfOCE::GetBounds()

@@ -241,7 +241,8 @@ namespace Nektar
             virtual void v_GetBoundaryToElmtMap(
                 Array<OneD,int> &ElmtID, Array<OneD,int> &VertID);
             virtual void v_GetBndElmtExpansion(int i,
-                            boost::shared_ptr<ExpList> &result);
+                            boost::shared_ptr<ExpList> &result,
+                            const bool DeclareCoeffPhysArrays);
             virtual void v_Reset();
 
             /// Evaluate all boundary conditions at a given time..
@@ -258,7 +259,8 @@ namespace Nektar
                     const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
-                    const Array<OneD, const NekDouble> &dirForcing);
+                    const Array<OneD, const NekDouble> &dirForcing,
+                    const bool PhysSpaceForcing);
 
         private:
             void SetUpDG(const std::string &variable);

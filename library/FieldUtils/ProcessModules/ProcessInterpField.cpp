@@ -90,7 +90,7 @@ void ProcessInterpField::Process(po::variables_map &vm)
     std::vector<std::string> files;
 
     // set up session file for from field
-    files.push_back(m_config["fromxml"].as<string>());
+    ParseUtils::GenerateOrderedStringVector(m_config["fromxml"].as<string>().c_str(), files);
     m_fromField->m_session =
         LibUtilities::SessionReader::CreateInstance(0, 0, files);
 

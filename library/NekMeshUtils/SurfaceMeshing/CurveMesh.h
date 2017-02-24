@@ -38,12 +38,12 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <NekMeshUtils/MeshElements/Mesh.h>
-#include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADCurve.h>
-#include <NekMeshUtils/Octree/Octree.h>
+#include <NekMeshUtils/CADSystem/CADVert.h>
+#include <NekMeshUtils/MeshElements/Mesh.h>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 /**
@@ -62,8 +62,31 @@ public:
     /**
      * @brief default constructor
      */
-    CurveMesh(int id, MeshSharedPtr m, CADCurveSharedPtr c, OctreeSharedPtr o)
-        : m_cadcurve(c), m_octree(o), m_id(id), m_mesh(m){};
+    CurveMesh(int id, MeshSharedPtr m) : m_id(id), m_mesh(m)
+    {
+        m_blID = m_bl.DefineFunction("x y z", "0.0");
+        m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
+    }
+
+    /**
+     * @brief alternative constructor with mesh points already created
+     */
+    CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> n)
+        : m_id(id), m_mesh(m), m_meshpoints(n)
+    {
+        m_blID = m_bl.DefineFunction("x y z", "0.0");
+        m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
+    }
+
+    /**
+     * @brief alternative constructor which use the octree in a different way
+     */
+    CurveMesh(int id, MeshSharedPtr m, std::string expr)
+        : m_id(id), m_mesh(m)
+    {
+        m_blID = m_bl.DefineFunction("x y z", expr);
+        m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
+    }
 
     /**
      * @brief execute meshing
@@ -92,6 +115,11 @@ public:
     std::vector<NodeSharedPtr> GetMeshPoints()
     {
         return m_meshpoints;
+    }
+
+    std::vector<EdgeSharedPtr> GetMeshEdges()
+    {
+        return m_meshedges;
     }
 
     /**
@@ -133,8 +161,6 @@ private:
 
     /// CAD curve
     CADCurveSharedPtr m_cadcurve;
-    /// Octree object
-    OctreeSharedPtr m_octree;
     /// length of the curve in real space
     NekDouble m_curvelength;
     /// number of sampling points used in algorithm
@@ -154,12 +180,16 @@ private:
     int Ne;
     /// paramteric coordiates of the mesh nodes
     std::vector<NekDouble> meshsvalue;
-    /// ids of the mesh nodes
-    std::vector<NodeSharedPtr> m_meshpoints;
+    /// list of mesh edges in the curvemesh
+    std::vector<EdgeSharedPtr> m_meshedges;
     /// id of the curvemesh
     int m_id;
     ///
     MeshSharedPtr m_mesh;
+    /// ids of the mesh nodes
+    std::vector<NodeSharedPtr> m_meshpoints;
+    LibUtilities::AnalyticExpressionEvaluator m_bl;
+    int m_blID;
 };
 
 typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;

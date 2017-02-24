@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh node object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,10 +38,10 @@
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
-#ifdef NEKTAR_USE_MESHGEN
-#include <SpatialDomains/PointGeom.h>
+#include <iomanip>
+
 #include <NekMeshUtils/CADSystem/CADSystem.h>
-#endif
+#include <SpatialDomains/PointGeom.h>
 
 namespace Nektar
 {
@@ -69,6 +69,7 @@ public:
     // Node(const Node& pSrc)
     //    : m_id(pSrc.m_id), m_x(pSrc.m_x), m_y(pSrc.m_y),
     //      m_z(pSrc.m_z), m_geom() {}
+    /// create an empty node
     NEKMESHUTILS_EXPORT Node() : m_id(0), m_x(0.0), m_y(0.0), m_z(0.0), m_geom()
     {
     }
@@ -147,7 +148,7 @@ public:
 
     NEKMESHUTILS_EXPORT NodeSharedPtr copy()
     {
-        return boost::shared_ptr<Node>(new Node(m_id,m_x,m_y,m_z));
+        return boost::shared_ptr<Node>(new Node(m_id, m_x, m_y, m_z));
     }
 
     NEKMESHUTILS_EXPORT NekDouble abs2() const
@@ -162,8 +163,7 @@ public:
 
     NEKMESHUTILS_EXPORT Node curl(const Node &pSrc) const
     {
-        return Node(m_id,
-                    m_y * pSrc.m_z - m_z * pSrc.m_y,
+        return Node(m_id, m_y * pSrc.m_z - m_z * pSrc.m_y,
                     m_z * pSrc.m_x - m_x * pSrc.m_z,
                     m_x * pSrc.m_y - m_y * pSrc.m_x);
     }
@@ -227,7 +227,7 @@ public:
         return an;
     }
 
-#ifdef NEKTAR_USE_MESHGEN // fucntions for cad information
+    // functions for cad information
 
     void SetCADCurve(int i, CADCurveSharedPtr c, NekDouble t)
     {
@@ -276,11 +276,23 @@ public:
         return search->second.second;
     }
 
+    std::vector<std::pair<int, CADCurveSharedPtr> > GetCADCurves()
+    {
+        std::vector<std::pair<int, CADCurveSharedPtr> > lst;
+        std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator c;
+        for (c = CADCurveList.begin(); c != CADCurveList.end(); c++)
+        {
+            lst.push_back(
+                std::pair<int, CADCurveSharedPtr>(c->first, c->second.first));
+        }
+        return lst;
+    }
+
     std::vector<std::pair<int, CADSurfSharedPtr> > GetCADSurfs()
     {
         std::vector<std::pair<int, CADSurfSharedPtr> > lst;
-        std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >::
-            iterator s;
+        std::map<int, std::pair<CADSurfSharedPtr,
+                                Array<OneD, NekDouble> > >::iterator s;
         for (s = CADSurfList.begin(); s != CADSurfList.end(); s++)
         {
             lst.push_back(
@@ -309,7 +321,77 @@ public:
             std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> >(su, uv);
     }
 
-#endif
+    void MoveCurve(Array<OneD, NekDouble> l, int s, NekDouble t)
+    {
+        m_x                  = l[0];
+        m_y                  = l[1];
+        m_z                  = l[2];
+        CADCurveSharedPtr cu = CADCurveList[s].first;
+        CADCurveList[s]      = std::pair<CADCurveSharedPtr, NekDouble>(cu, t);
+    }
+
+    std::vector<std::pair<int, std::string> > GetCADCurveInfoVector()
+    {
+        std::vector<std::pair<int, std::string> > ret;
+        std::map<int, std::pair<CADCurveSharedPtr, NekDouble> >::iterator c;
+        for (c = CADCurveList.begin(); c != CADCurveList.end(); c++)
+        {
+            std::stringstream ss;
+            ss << std::scientific << std::setprecision(8);
+            ss << c->second.second;
+            ret.push_back(std::pair<int, std::string>(c->first, ss.str()));
+        }
+        return ret;
+    }
+
+    std::vector<std::pair<int, std::string> > GetCADSurfInfoVector()
+    {
+        std::vector<std::pair<int, std::string> > ret;
+        std::map<int, std::pair<CADSurfSharedPtr,
+                                Array<OneD, NekDouble> > >::iterator s;
+        for (s = CADSurfList.begin(); s != CADSurfList.end(); s++)
+        {
+            std::stringstream ss;
+            ss << std::scientific << std::setprecision(8);
+            ss << s->second.second[0] << " " << s->second.second[1];
+            ret.push_back(std::pair<int, std::string>(s->first, ss.str()));
+        }
+        return ret;
+    }
+
+    NekDouble Angle(Array<OneD, NekDouble> locA, Array<OneD, NekDouble> locB,
+                    Array<OneD, NekDouble> N)
+    {
+        // calculates the angle between this node to a to this node to b
+        // Uses the CAD surface to orientate the angle
+        Array<OneD, NekDouble> A(3), B(3), CP(3);
+        A[0] = locA[0] - m_x;
+        A[1] = locA[1] - m_y;
+        A[2] = locA[2] - m_z;
+        B[0] = locB[0] - m_x;
+        B[1] = locB[1] - m_y;
+        B[2] = locB[2] - m_z;
+
+        CP[0] = A[1] * B[2] - A[2] * B[1];
+        CP[1] = -1.0 * (A[0] * B[2] - A[2] * B[0]);
+        CP[2] = A[0] * B[1] - A[1] * B[0];
+
+        NekDouble ang = sqrt(CP[0] * CP[0] + CP[1] * CP[1] + CP[2] * CP[2]);
+
+        ang /= sqrt(A[0] * A[0] + A[1] * A[1] + A[2] * A[2]);
+        ang /= sqrt(B[0] * B[0] + B[1] * B[1] + B[2] * B[2]);
+
+        NekDouble dot = N[0] * CP[0] + N[1] * CP[1] + N[2] * CP[2];
+
+        ang = asin(ang);
+
+        if (dot < 0.0)
+        {
+            ang = 2.0 * M_PI - ang;
+        }
+
+        return ang;
+    }
 
     /// ID of node.
     int m_id;
@@ -320,14 +402,11 @@ public:
     /// Z-coordinate.
     NekDouble m_z;
 
-#ifdef NEKTAR_USE_MESHGEN // tag to tell the meshelemnets to include cad
-                          // information
     /// list of cadcurves the node lies on
     std::map<int, std::pair<CADCurveSharedPtr, NekDouble> > CADCurveList;
     /// list of cadsurfs the node lies on
     std::map<int, std::pair<CADSurfSharedPtr, Array<OneD, NekDouble> > >
         CADSurfList;
-#endif
 
 private:
     SpatialDomains::PointGeomSharedPtr m_geom;

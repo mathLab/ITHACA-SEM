@@ -1,12 +1,12 @@
 SET(NekMeshHeaders
     InputModules/InputGmsh.h
     InputModules/InputNek.h
+    InputModules/InputNek5000.h
     InputModules/InputNekpp.h
     InputModules/InputPly.h
     InputModules/InputSem.h
     InputModules/InputSwan.h
     InputModules/InputStarTec.h
-    Module.h
     OutputModules/OutputGmsh.h
     OutputModules/OutputNekpp.h
     OutputModules/OutputSTL.h
@@ -25,18 +25,25 @@ SET(NekMeshHeaders
     ProcessModules/ProcessSpherigon.h
     ProcessModules/ProcessTetSplit.h
     ProcessModules/ProcessOptiExtract.h
+    ProcessModules/ProcessInsertSurface.h
+    ProcessModules/ProcessExtrude.h
+    ProcessModules/ProcessVarOpti/ProcessVarOpti.h
+    ProcessModules/ProcessVarOpti/NodeOpti.h
+    ProcessModules/ProcessVarOpti/ElUtil.h
+    ProcessModules/ProcessVarOpti/Evaluator.hxx
+    ProcessModules/ProcessVarOpti/Hessian.hxx
 )
 
 SET(NekMeshSources
     InputModules/InputGmsh.cpp
     InputModules/InputNek.cpp
+    InputModules/InputNek5000.cpp
     InputModules/InputNekpp.cpp
     InputModules/InputPly.cpp
     InputModules/InputSem.cpp
     InputModules/InputSwan.cpp
     InputModules/InputStarTec.cpp
     NekMesh.cpp
-    Module.cpp
     OutputModules/OutputGmsh.cpp
     OutputModules/OutputNekpp.cpp
     OutputModules/OutputSTL.cpp
@@ -55,6 +62,12 @@ SET(NekMeshSources
     ProcessModules/ProcessSpherigon.cpp
     ProcessModules/ProcessTetSplit.cpp
     ProcessModules/ProcessOptiExtract.cpp
+    ProcessModules/ProcessInsertSurface.cpp
+    ProcessModules/ProcessExtrude.cpp
+    ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
+    ProcessModules/ProcessVarOpti/PreProcessing.cpp
+    ProcessModules/ProcessVarOpti/NodeOpti.cpp
+    ProcessModules/ProcessVarOpti/ElUtil.cpp
 )
 
 IF (NEKTAR_USE_CCM)
@@ -68,14 +81,13 @@ IF (NEKTAR_USE_VTK)
 ENDIF (NEKTAR_USE_VTK)
 
 IF (NEKTAR_USE_MESHGEN)
-    SET(NekMeshHeaders ${NekMeshHeaders} InputModules/InputCAD.h)
-    SET(NekMeshSources ${NekMeshSources} InputModules/InputCAD.cpp)
+    SET(NekMeshHeaders ${NekMeshHeaders}
+            ProcessModules/ProcessVarOpti/NodeOptiCAD.h
+            InputModules/InputMCF.h)
+    SET(NekMeshSources ${NekMeshSources}
+            ProcessModules/ProcessVarOpti/NodeOptiCAD.cpp
+            InputModules/InputMCF.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
-
-IF (NEKTAR_USE_ANN)
-    SET(NekMeshHeaders ${NekMeshHeaders} ProcessModules/ProcessInsertSurface.h)
-    SET(NekMeshSources ${NekMeshSources} ProcessModules/ProcessInsertSurface.cpp)
-ENDIF (NEKTAR_USE_ANN)
 
 # Don't use macro -- this way we can just link against NekMeshUtils and
 # LocalRegions.
@@ -124,6 +136,9 @@ ADD_NEKTAR_TEST        (Gmsh/SquareTriLinear)
 # Nektar tests
 ADD_NEKTAR_TEST        (Nektar/HexLinear)
 ADD_NEKTAR_TEST        (Nektar/Tube45)
+# Nek5000 tests
+ADD_NEKTAR_TEST        (Nek5000/3da)
+ADD_NEKTAR_TEST        (Nek5000/r1854a)
 # StarCCM tests
 ADD_NEKTAR_TEST        (StarTec/CubePer)
 ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)
@@ -132,5 +147,9 @@ ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)
 IF(NEKTAR_USE_MESHGEN)
     ADD_NEKTAR_TEST        (MeshGen/cylinder)
     ADD_NEKTAR_TEST        (MeshGen/sphere)
-#    ADD_NEKTAR_TEST_LENGTHY(MeshGen/predator) disabled for now
+    ADD_NEKTAR_TEST        (MeshGen/2d-cad)
+    ADD_NEKTAR_TEST        (MeshGen/2d-naca)    
 ENDIF()
+
+# varopti tests
+ADD_NEKTAR_TEST_LENGTHY       (MeshGen/varopti_cubesphere)

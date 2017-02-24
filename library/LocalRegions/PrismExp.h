@@ -135,12 +135,17 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT virtual
                 StdRegions::StdExpansionSharedPtr v_GetStdExp(void) const;
+
+            LOCAL_REGIONS_EXPORT virtual
+                StdRegions::StdExpansionSharedPtr v_GetLinStdExp(void) const;
+
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
                 const NekDouble *data,
                 const std::vector<unsigned int > &nummodes,
                 const int mode_offset,
-                NekDouble * coeffs);
+                NekDouble * coeffs,
+                std::vector<LibUtilities::BasisType> &fromType);
 
             LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysMap( 
                  const int  face,

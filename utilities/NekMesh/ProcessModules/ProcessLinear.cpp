@@ -42,6 +42,9 @@ namespace Nektar
 {
 namespace Utilities
 {
+
+using namespace Nektar::NekMeshUtils;
+
 ModuleKey ProcessLinear::className = GetModuleFactory().RegisterCreatorFunction(
     ModuleKey(eProcessModule, "linearise"),
     ProcessLinear::create,
@@ -54,7 +57,9 @@ ProcessLinear::ProcessLinear(MeshSharedPtr m) : ProcessModule(m)
     m_config["invalid"] =
         ConfigOption(false, "0", "remove curve nodes if element is invalid.");
     m_config["prismonly"] =
-        ConfigOption(false, "", "only acts on prims");
+        ConfigOption(true, "0", "only acts on prims");
+    m_config["extract"] =
+        ConfigOption(false, "", "dump a mesh of the extracted elements");
 }
 
 ProcessLinear::~ProcessLinear()
@@ -138,6 +143,8 @@ void ProcessLinear::Process()
         vector<NodeSharedPtr> zeroNodes;
         boost::unordered_set<int> clearedEdges, clearedFaces, clearedElmts;
 
+        vector<ElementSharedPtr> dumpEls;
+
         // Iterate over list of elements of expansion dimension.
         while(el.size() > 0)
         {
@@ -153,6 +160,7 @@ void ProcessLinear::Process()
 
                 if (Invalid(el[i],thr))//(!gfac->IsValid())
                 {
+                    dumpEls.push_back(el[i]);
                     clearedElmts.insert(el[i]->GetId());;
                     el[i]->SetVolumeNodes(zeroNodes);
 
@@ -216,6 +224,26 @@ void ProcessLinear::Process()
                  << " elements (" << clearedEdges.size() << " edges, "
                  << clearedFaces.size() << " faces)" << endl;
         }
+
+        if(m_config["extract"].beenSet)
+        {
+            MeshSharedPtr dmp = boost::shared_ptr<Mesh>(new Mesh());
+            dmp->m_expDim     = 3;
+            dmp->m_spaceDim   = 3;
+            dmp->m_nummode    = 2;
+
+            dmp->m_element[3] = dumpEls;
+
+            ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
+                ModuleKey(eOutputModule, "xml"), dmp);
+            mod->RegisterConfig("outfile", m_config["extract"].as<string>().c_str());
+            mod->ProcessVertices();
+            mod->ProcessEdges();
+            mod->ProcessFaces();
+            mod->ProcessElements();
+            mod->ProcessComposites();
+            mod->Process();
+        }
     }
 }
 
@@ -234,36 +262,61 @@ bool ProcessLinear::Invalid(ElementSharedPtr el, NekDouble thr)
         return true;
     }
 
+    vector<NodeSharedPtr> ns = el->GetVertexList();
+    ElmtConfig c = el->GetConf();
+    c.m_order = 1;
+    c.m_faceNodes = false;
+    c.m_volumeNodes = false;
+    c.m_reorient = false;
+
+    ElementSharedPtr elL = GetElementFactory().CreateInstance(
+                c.m_e, c, ns, el->GetTagList());
+    SpatialDomains::GeometrySharedPtr geomL = elL->GetGeom(m_mesh->m_spaceDim);
+    SpatialDomains::GeomFactorsSharedPtr gfacL = geomL->GetGeomFactors();
+
     LibUtilities::PointsKeyVector p = geom->GetPointsKeys();
     SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
+    SpatialDomains::DerivStorage derivL = gfacL->GetDeriv(p);
     const int pts = deriv[0][0].num_elements();
     Array<OneD,NekDouble> jc(pts);
+    Array<OneD,NekDouble> jcL(pts);
     for (int k = 0; k < pts; ++k)
     {
         DNekMat jac(m_mesh->m_expDim, m_mesh->m_expDim, 0.0, eFULL);
+        DNekMat jacL(m_mesh->m_expDim, m_mesh->m_expDim, 0.0, eFULL);
 
         for (int l = 0; l < m_mesh->m_expDim; ++l)
         {
             for (int j = 0; j < m_mesh->m_expDim; ++j)
             {
                 jac(j,l) = deriv[l][j][k];
+                jacL(j,l) = derivL[l][j][k];
             }
         }
 
         if(m_mesh->m_expDim == 2)
         {
             jc[k] = jac(0,0) * jac(1,1) - jac(0,1)*jac(1,0);
+            jcL[k] = jacL(0,0) * jacL(1,1) - jacL(0,1)*jacL(1,0);
         }
         else if(m_mesh->m_expDim == 3)
         {
             jc[k] =  jac(0,0) * (jac(1,1)*jac(2,2) - jac(2,1)*jac(1,2)) -
                      jac(0,1) * (jac(1,0)*jac(2,2) - jac(2,0)*jac(1,2)) +
                      jac(0,2) * (jac(1,0)*jac(2,1) - jac(2,0)*jac(1,1));
+            jcL[k] =  jacL(0,0) * (jacL(1,1)*jacL(2,2) - jacL(2,1)*jacL(1,2)) -
+                      jacL(0,1) * (jacL(1,0)*jacL(2,2) - jacL(2,0)*jacL(1,2)) +
+                      jacL(0,2) * (jacL(1,0)*jacL(2,1) - jacL(2,0)*jacL(1,1));
         }
     }
 
-    NekDouble scaledJac = Vmath::Vmin(jc.num_elements(),jc,1) /
-                          Vmath::Vmax(jc.num_elements(),jc,1);
+    Array<OneD, NekDouble> j(pts);
+    Vmath::Vdiv(jc.num_elements(),jc,1,jcL,1,j,1);
+
+    NekDouble scaledJac = Vmath::Vmin(j.num_elements(),j,1) /
+                          Vmath::Vmax(j.num_elements(),j,1);
+
+    //cout << scaledJac << endl;
 
     if(scaledJac < thr)
     {

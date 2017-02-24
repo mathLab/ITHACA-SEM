@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_INPUTPLY
 #define UTILITIES_NEKMESH_INPUTPLY
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -44,23 +44,23 @@ namespace Utilities
 {
 
 /// Converter for Ply files.
-class InputPly : public InputModule
+class InputPly : public NekMeshUtils::InputModule
 {
 public:
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m)
+    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<InputPly>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    InputPly(MeshSharedPtr m);
+    InputPly(NekMeshUtils::MeshSharedPtr m);
     virtual ~InputPly();
 
     /// Populate and validate required data structures.
     virtual void Process();
 
-    void ReadPly(std::ifstream &mshFile, NekDouble scale = 1.0);
+    void ReadPly(io::filtering_istream &mshFile, NekDouble scale = 1.0);
 
 private:
 };

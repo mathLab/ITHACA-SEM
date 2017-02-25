@@ -106,7 +106,7 @@ bool CADSystemOCE::LoadCAD()
 
     for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
     {
-        TopoDS_Shape f = explr.Current().Oriented(TopAbs_FORWARD);
+        TopoDS_Shape f = explr.Current();
         ASSERTL0(!mapOfFaces.Contains(f), "duplicated faces");
         int i = mapOfFaces.Add(f);
 
@@ -116,7 +116,7 @@ bool CADSystemOCE::LoadCAD()
     // attempts to identify properties of the vertex on the degen edge
     for (int i = 1; i <= mapOfFaces.Extent(); i++)
     {
-        TopoDS_Shape face = mapOfFaces.FindKey(i);
+        TopoDS_Shape face = mapOfFaces.FindKey(i).Oriented(TopAbs_FORWARD);
 
         TopTools_IndexedMapOfShape localEdges;
         TopExp::MapShapes(face, TopAbs_EDGE, localEdges);
@@ -183,8 +183,10 @@ void CADSystemOCE::AddSurf(int i, TopoDS_Shape in)
     CADSurfSharedPtr newSurf = GetCADSurfFactory().CreateInstance(key);
     boost::static_pointer_cast<CADSurfOCE>(newSurf)->Initialise(i, in);
 
+    //do the exploration on forward oriented
+    TopoDS_Shape face = in.Oriented(TopAbs_FORWARD);
     TopTools_IndexedMapOfShape mapOfWires;
-    TopExp::MapShapes(in, TopAbs_WIRE, mapOfWires);
+    TopExp::MapShapes(face, TopAbs_WIRE, mapOfWires);
     vector<EdgeLoopSharedPtr> edgeloops;
     // now we acutally analyse the loops for cad building
     for (int j = 1; j <= mapOfWires.Extent(); j++)

@@ -52,11 +52,11 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
 
     m_s = BRep_Tool::Surface(TopoDS::Face(in));
     //reverse the face
-    
-    /*if(in.Orientation() == 0)
+
+    if(in.Orientation() == 1)
     {
         SetReverseNomral();
-    }*/
+    }
 
     gp_Trsf transform;
     gp_Pnt ori(0.0, 0.0, 0.0);
@@ -71,16 +71,6 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
     Array<OneD, NekDouble> uv(2);
     uv[0] = GetBounds()[0];
     uv[1] = GetBounds()[2];
-
-    BRepLProp_SLProps slp(m_occSurface, 2, 1e-6);
-    slp.SetParameters(uv[0],uv[1]);
-    gp_Dir d = slp.Normal();
-
-    cout << d.X() << " " << d.Y() << " " << d.Z() << endl;
-
-    Array<OneD, NekDouble> n = N(uv);
-    cout << n[0] << " " << n[1] << " " << n[2] << endl;
-    exit(-1);
 }
 
 Array<OneD, NekDouble> CADSurfOCE::GetBounds()
@@ -273,31 +263,26 @@ Array<OneD, NekDouble> CADSurfOCE::N(Array<OneD, NekDouble> uv)
     Test(uv);
 #endif
 
+    BRepLProp_SLProps slp(m_occSurface, 2, 1e-6);
+    slp.SetParameters(uv[0],uv[1]);
+
+    if(!slp.IsNormalDefined())
+    {
+        return Array<OneD, NekDouble>(3,0.0);
+    }
+
+    gp_Dir d = slp.Normal();
+
     Array<OneD, NekDouble> normal(3);
-    gp_Pnt Loc;
-    gp_Vec D1U, D1V;
-    m_occSurface.D1(uv[0], uv[1], Loc, D1U, D1V);
-    gp_Vec n = D1U.Crossed(D1V);
 
     if (!m_correctNormal)
     {
-        n.Reverse();
+        d.Reverse();
     }
 
-    if (n.X() == 0 && n.Y() == 0 && n.Z() == 0)
-    {
-        // Return bad normal
-        normal[0] = 0.0;
-        normal[1] = 0.0;
-        normal[2] = 0.0;
-    }
-    else
-    {
-        n.Normalize();
-        normal[0] = n.X();
-        normal[1] = n.Y();
-        normal[2] = n.Z();
-    }
+    normal[0] = d.X();
+    normal[1] = d.Y();
+    normal[2] = d.Z();
 
     return normal;
 }

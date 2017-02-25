@@ -215,10 +215,14 @@ int main(int argc, char *argv[])
 	    if (file.GetNProcesses() > 1)
 #endif
         {
-            system("echo 'localhost slots=12' > hostfile");
             command += "@MPIEXEC@ @MPIEXEC_NUMPROC_FLAG@ "
                     + boost::lexical_cast<string>(file.GetNProcesses())
-                    + " -hostfile hostfile ";
+                    + " ";
+            if ("@NEKTAR_TEST_USE_HOSTFILE@" == "ON")
+            {
+                command += " -hostfile hostfile ";
+                system("echo 'localhost slots=12' > hostfile");
+            }
         }
 
         fs::path execPath = startDir / file.GetExecutable();

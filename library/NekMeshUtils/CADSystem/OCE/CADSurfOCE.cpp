@@ -51,11 +51,10 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
     // defualt to m
 
     m_s = BRep_Tool::Surface(TopoDS::Face(in));
-    //reverse the face
 
     if(in.Orientation() == 1)
     {
-        SetReverseNomral();
+        m_orient = CADSystem::eBackwards;
     }
 
     gp_Trsf transform;
@@ -65,12 +64,7 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
 
     in.Move(mv);
     m_occSurface    = BRepAdaptor_Surface(TopoDS::Face(in));
-    m_correctNormal = true;
     m_id            = i;
-
-    Array<OneD, NekDouble> uv(2);
-    uv[0] = GetBounds()[0];
-    uv[1] = GetBounds()[2];
 }
 
 Array<OneD, NekDouble> CADSurfOCE::GetBounds()
@@ -275,7 +269,7 @@ Array<OneD, NekDouble> CADSurfOCE::N(Array<OneD, NekDouble> uv)
 
     Array<OneD, NekDouble> normal(3);
 
-    if (!m_correctNormal)
+    if (m_orient == CADSystem::eBackwards)
     {
         d.Reverse();
     }

@@ -78,7 +78,7 @@ bool CADSystemOCE::LoadCAD()
     for (explr.Init(shape, TopAbs_VERTEX); explr.More(); explr.Next())
     {
         TopoDS_Shape v = explr.Current();
-        if(mapOfVerts.Contains(v))
+        if (mapOfVerts.Contains(v))
         {
             continue;
         }
@@ -92,7 +92,7 @@ bool CADSystemOCE::LoadCAD()
     for (explr.Init(shape, TopAbs_EDGE); explr.More(); explr.Next())
     {
         TopoDS_Shape e = explr.Current().Oriented(TopAbs_FORWARD);
-        if(mapOfEdges.Contains(e))
+        if (mapOfEdges.Contains(e))
         {
             continue;
         }
@@ -100,7 +100,7 @@ bool CADSystemOCE::LoadCAD()
         if (curve.GetType() != 7)
         {
             int i = mapOfEdges.Add(e);
-            AddCurve(i,e);
+            AddCurve(i, e);
         }
     }
 
@@ -183,7 +183,7 @@ void CADSystemOCE::AddSurf(int i, TopoDS_Shape in)
     CADSurfSharedPtr newSurf = GetCADSurfFactory().CreateInstance(key);
     boost::static_pointer_cast<CADSurfOCE>(newSurf)->Initialise(i, in);
 
-    //do the exploration on forward oriented
+    // do the exploration on forward oriented
     TopoDS_Shape face = in.Oriented(TopAbs_FORWARD);
     TopTools_IndexedMapOfShape mapOfWires;
     TopExp::MapShapes(face, TopAbs_WIRE, mapOfWires);
@@ -207,9 +207,9 @@ void CADSystemOCE::AddSurf(int i, TopoDS_Shape in)
             {
                 int e = mapOfEdges.FindIndex(edge);
                 edgeloop->edges.push_back(m_curves[e]);
-                edgeloop->edgeo.push_back(
-                    exp.Orientation() == TopAbs_FORWARD ? eForwards
-                                                        : eBackwards);
+                edgeloop->edgeo.push_back(exp.Orientation() == TopAbs_FORWARD
+                                              ? eForwards
+                                              : eBackwards);
             }
             exp.Next();
         }
@@ -232,7 +232,8 @@ void CADSystemOCE::AddSurf(int i, TopoDS_Shape in)
     {
         for (int j = 0; j < edgeloops[k]->edges.size(); j++)
         {
-            edgeloops[k]->edges[j]->SetAdjSurf(make_pair(newSurf, edgeloops[k]->edgeo[j]));
+            edgeloops[k]->edges[j]->SetAdjSurf(
+                make_pair(newSurf, edgeloops[k]->edgeo[j]));
         }
     }
 
@@ -384,7 +385,11 @@ TopoDS_Shape CADSystemOCE::BuildNACA(string naca)
     BRepBuilderAPI_MakeFace face(domWire, true);
     face.Add(aeroWire);
 
-    return face.Face();
+    ShapeFix_Face sf(face.Face());
+    sf.FixOrientation();
+
+
+    return sf.Face();
 }
 }
 }

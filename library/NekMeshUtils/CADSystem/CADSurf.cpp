@@ -88,8 +88,6 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
         loopt.push_back(loop);
     }
 
-    cout << surf->GetId() << endl;
-
     for (int i = 0; i < loopt.size(); i++)
     {
         NekDouble area = 0.0;
@@ -108,8 +106,6 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
         area = bg::area(polygon);
 
         ein[i]->area = area;
-
-        cout << area << endl;
     }
 
     // order by absoulte area
@@ -129,49 +125,6 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
         }
 
     } while (ct > 0);
-
-    /*if (ein[0]->area < 0) // reverse the first uvLoop
-    {
-        ein[0]->area *= -1.0;
-        reverse(ein[0]->edgeo.begin(), ein[0]->edgeo.end());
-        reverse(ein[0]->edges.begin(), ein[0]->edges.end());
-        reverse(loopt[0].begin(), loopt[0].end());
-        // need to flip edgeo
-        for (int i = 0; i < ein[0]->edgeo.size(); i++)
-        {
-            if (ein[0]->edgeo[i] == CADSystem::eForwards)
-            {
-                ein[0]->edgeo[i] = CADSystem::eBackwards;
-            }
-            else
-            {
-                ein[0]->edgeo[i] = CADSystem::eForwards;
-            }
-        }
-    }
-
-    for (int i = 1; i < ein.size(); i++)
-    {
-        if (ein[i]->area > 0) // reverse the loop
-        {
-            ein[i]->area *= -1.0;
-            reverse(ein[i]->edgeo.begin(), ein[i]->edgeo.end());
-            reverse(ein[i]->edges.begin(), ein[i]->edges.end());
-            reverse(loopt[i].begin(), loopt[i].end());
-            // need to flip edgeo
-            for (int j = 0; j < ein[i]->edgeo.size(); j++)
-            {
-                if (ein[i]->edgeo[j] == CADSystem::eForwards)
-                {
-                    ein[i]->edgeo[j] = CADSystem::eBackwards;
-                }
-                else
-                {
-                    ein[i]->edgeo[j] = CADSystem::eForwards;
-                }
-            }
-        }
-    }*/
 
     //only need center points for inner loops
     for(int i = 1; i < ein.size(); i++)

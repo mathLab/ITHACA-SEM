@@ -1030,14 +1030,6 @@ void BLMesh::Setup()
     // but do not care about triangles which are not in the bl
     for (int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
-        // orientate the triangle
-        if (!m_mesh->m_cad
-                 ->GetSurf(m_mesh->m_element[2][i]->m_parentCAD->GetId())
-                 ->IsReversedNormal())
-        {
-            m_mesh->m_element[2][i]->Flip();
-        }
-
         vector<unsigned int>::iterator f =
             find(m_blsurfs.begin(), m_blsurfs.end(),
                  m_mesh->m_element[2][i]->m_parentCAD->GetId());

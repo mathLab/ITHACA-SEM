@@ -333,7 +333,7 @@ void InputMCF::Process()
     }
 
     ////*** VARIATIONAL OPTIMISATION ****////
-    /*if(m_varopti)
+    if(m_varopti)
     {
         unsigned int np = boost::thread::physical_concurrency();
         if(m_mesh->m_verbose)

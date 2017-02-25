@@ -891,11 +891,6 @@ void FaceMesh::BuildLocalMesh()
     {
         ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
 
-        if(!m_cadsurf->IsReversedNormal())
-        {
-            swap(m_connec[i][0],m_connec[i][1]);
-        }
-
         vector<int> tags;
         tags.push_back(m_compId);
         ElementSharedPtr E = GetElementFactory().CreateInstance(

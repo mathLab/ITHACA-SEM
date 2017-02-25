@@ -192,8 +192,6 @@ inline bool Infont(NodeSharedPtr n, ElementSharedPtr el)
     V[1] = n->m_y - ns1[0]->m_y;
     V[2] = n->m_z - ns1[0]->m_z;
 
-    exit(-1);
-
     NekDouble Nmag = sqrt(N1[0] * N1[0] + N1[1] * N1[1] + N1[2] * N1[2]);
     NekDouble Vmag = sqrt(V[0] * V[0] + V[1] * V[1] + V[2] * V[2]);
 
@@ -821,20 +819,9 @@ NekDouble BLMesh::Visability(vector<ElementSharedPtr> tris,
 
     for (int i = 0; i < tris.size(); i++)
     {
-        vector<NodeSharedPtr> ns = tris[i]->GetVertexList();
-        exit(-1);
-        Array<OneD, NekDouble> tmp(3, 0.0);
-        tmp[0] = (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
-                 (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y);
-        tmp[1] = (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x) -
-                 (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z);
-        tmp[2] = (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
-                 (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x);
-
-        NekDouble mt = tmp[0] * tmp[0] + tmp[1] * tmp[1] + tmp[2] * tmp[2];
-        mt           = sqrt(mt);
+        Array<OneD, NekDouble> tmp = tris[i]->Normal(true);
         NekDouble dt =
-            tmp[0] * N[0] / mt + tmp[1] * N[1] / mt + tmp[2] * N[2] / mt;
+            tmp[0] * N[0] + tmp[1] * N[1] + tmp[2] * N[2];
         mn = min(mn, dt);
     }
     return mn;
@@ -846,26 +833,7 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
     vector<Array<OneD, NekDouble> > N;
     for (int i = 0; i < tris.size(); i++)
     {
-        vector<NodeSharedPtr> ns = tris[i]->GetVertexList();
-
-        exit(-1);
-
-        Array<OneD, NekDouble> tmp(3, 0.0);
-        tmp[0] = (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
-                 (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y);
-        tmp[1] = (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x) -
-                 (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z);
-        tmp[2] = (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
-                 (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x);
-
-        NekDouble mt = tmp[0] * tmp[0] + tmp[1] * tmp[1] + tmp[2] * tmp[2];
-        mt           = sqrt(mt);
-
-        tmp[0] /= mt;
-        tmp[1] /= mt;
-        tmp[2] /= mt;
-
-        N.push_back(tmp);
+        N.push_back(tris[i]->Normal(true));
     }
 
     vector<NekDouble> w(N.size());
@@ -1082,7 +1050,7 @@ void BLMesh::Setup()
 
     // now need to enforce that all symmetry plane nodes have their normal
     // forced onto the symmetry surface
-    /*for (bit = m_blData.begin(); bit != m_blData.end(); bit++)
+    for (bit = m_blData.begin(); bit != m_blData.end(); bit++)
     {
         if (!bit->second->onSym)
         {
@@ -1173,9 +1141,9 @@ void BLMesh::Setup()
             bit->second->N = N;
             bit->second->AlignNode(m_layerT[0]);
         }
-    }*/
+    }
 
-    ofstream file;
+    /*ofstream file;
     file.open("bl.lines");
     for(bit = m_blData.begin(); bit != m_blData.end(); bit++)
     {
@@ -1187,7 +1155,7 @@ void BLMesh::Setup()
              << bit->first->m_z + bit->second->N[2]*l << endl;
         file << endl;
     }
-    file.close();
+    file.close();*/
 
     ASSERTL0(failed == 0, "some normals failed to generate");
 

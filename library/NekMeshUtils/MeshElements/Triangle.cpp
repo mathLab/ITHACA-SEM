@@ -286,8 +286,7 @@ Array<OneD, NekDouble> Triangle::Normal(bool inward)
 
     if(m_parentCAD)
     {
-        //has cad so can orientate
-        cout << "hit, partent switch" << endl;
+        //has cad so can orientate based on that
         if(m_parentCAD->Orientation() == CADOrientation::eBackwards)
         {
             ret[0] *= -1.0;

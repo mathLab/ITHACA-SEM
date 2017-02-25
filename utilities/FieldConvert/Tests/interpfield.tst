@@ -15,9 +15,9 @@
         </metric>
 
 <metric type="Linf" id="2">
-            <value variable="u" tolerance="1e-6">0.784991</value>
-            <value variable="v" tolerance="1e-6">0.390773</value>
-            <value variable="p" tolerance="1e-6">0.0871031</value>
+            <value variable="u" tolerance="4e-5">0.784991</value>
+            <value variable="v" tolerance="1e-5">0.390773</value>
+            <value variable="p" tolerance="1e-5">0.0871031</value>
         </metric>
     </metrics>
 </test>

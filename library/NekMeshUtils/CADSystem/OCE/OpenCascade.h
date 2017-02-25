@@ -46,7 +46,6 @@
 #include <TopTools_IndexedMapOfShape.hxx>
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepAdaptor_Surface.hxx>
-#include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
 #include <GeomAbs_SurfaceType.hxx>
 #include <BRepTools.hxx>
@@ -72,7 +71,6 @@
 #include <BRepLProp_SLProps.hxx>
 #include <Standard_Macro.hxx>
 #include <ShapeFix_Face.hxx>
-
 
 #include <GeomAPI_PointsToBSpline.hxx>
 #include <Geom_BSplineCurve.hxx>

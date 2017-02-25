@@ -69,6 +69,7 @@
 #include <TopoDS_Wire.hxx>
 #include <ShapeAnalysis_Surface.hxx>
 #include <ShapeAnalysis_Curve.hxx>
+#include <BRepLProp_SLProps.hxx>
 #include <Standard_Macro.hxx>
 
 #include <GeomAPI_PointsToBSpline.hxx>

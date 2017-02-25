@@ -32,7 +32,6 @@
 //  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
-
 #include "CADSurf.h"
 #include "CADCurve.h"
 
@@ -89,6 +88,8 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
         loopt.push_back(loop);
     }
 
+    cout << surf->GetId() << endl;
+
     for (int i = 0; i < loopt.size(); i++)
     {
         NekDouble area = 0.0;
@@ -107,6 +108,8 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
         area = bg::area(polygon);
 
         ein[i]->area = area;
+
+        cout << area << endl;
     }
 
     // order by absoulte area
@@ -127,7 +130,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
 
     } while (ct > 0);
 
-    if (ein[0]->area < 0) // reverse the first uvLoop
+    /*if (ein[0]->area < 0) // reverse the first uvLoop
     {
         ein[0]->area *= -1.0;
         reverse(ein[0]->edgeo.begin(), ein[0]->edgeo.end());
@@ -168,7 +171,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
                 }
             }
         }
-    }
+    }*/
 
     //only need center points for inner loops
     for(int i = 1; i < ein.size(); i++)

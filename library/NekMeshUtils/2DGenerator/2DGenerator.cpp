@@ -139,7 +139,7 @@ void Generator2D::Process()
 
     ////////////////////////////////////
 
-    EdgeSet::iterator it;
+    /*EdgeSet::iterator it;
     for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
     {
         vector<NodeSharedPtr> ns;
@@ -159,7 +159,7 @@ void Generator2D::Process()
             LibUtilities::eSegment, conf, ns, tags);
 
         m_mesh->m_element[1].push_back(E2);
-    }
+    }*/
 
     ProcessVertices();
     ProcessEdges();
@@ -219,11 +219,6 @@ void Generator2D::MakeBL(int faceid)
             Array<OneD, NekDouble> n(2);
             n[0]          = p2[1] - p1[1];
             n[1]          = p1[0] - p2[0];
-            if(m_mesh->m_cad->GetSurf(faceid)->IsReversedNormal())
-            {
-                n[0] *= -1.0;
-                n[1] *= -1.0;
-            }
             NekDouble mag = sqrt(n[0] * n[0] + n[1] * n[1]);
             n[0] /= mag;
             n[1] /= mag;

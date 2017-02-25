@@ -72,110 +72,45 @@ bool CADSystemOCE::LoadCAD()
         shape = BuildNACA(m_name);
     }
 
-    // faces and verts can be extracted straight from shape
-    TopTools_IndexedMapOfShape mapOfVerts, mapOfFaces;
-    TopExp::MapShapes(shape, TopAbs_VERTEX, mapOfVerts);
-    TopExp::MapShapes(shape, TopAbs_FACE, mapOfFaces);
-
-    // edges need to be built from loops around faces to elimiate degen and
-    // hanging edges
-    TopTools_IndexedMapOfShape mapOfEdges;
+    TopExp_Explorer explr;
 
     // build map of verticies
-    for (int i = 1; i <= mapOfVerts.Extent(); i++)
+    for (explr.Init(shape, TopAbs_VERTEX); explr.More(); explr.Next())
     {
-        TopoDS_Shape v = mapOfVerts.FindKey(i);
+        TopoDS_Shape v = explr.Current();
+        if(mapOfVerts.Contains(v))
+        {
+            continue;
+        }
+        int i = mapOfVerts.Add(v);
         AddVert(i, v);
     }
 
     // For each face of the geometry, get the local edges which bound it. If
     // they are valid (their type != 7), then add them to an edge map. This
     // filters out the dummy edges which OCC uses.
-    for (int i = 1; i <= mapOfFaces.Extent(); i++)
+    for (explr.Init(shape, TopAbs_EDGE); explr.More(); explr.Next())
     {
-        TopoDS_Shape face = mapOfFaces.FindKey(i);
-
-        TopTools_IndexedMapOfShape localEdges;
-        TopExp::MapShapes(face, TopAbs_EDGE, localEdges);
-
-        for (int j = 1; j <= localEdges.Extent(); j++)
+        TopoDS_Shape e = explr.Current().Oriented(TopAbs_FORWARD);
+        if(mapOfEdges.Contains(e))
         {
-            TopoDS_Shape edge       = localEdges.FindKey(j);
-            BRepAdaptor_Curve curve = BRepAdaptor_Curve(TopoDS::Edge(edge));
-            if (curve.GetType() != 7)
-            {
-                if (!(mapOfEdges.Contains(edge)))
-                {
-                    mapOfEdges.Add(edge);
-                }
-            }
+            continue;
+        }
+        BRepAdaptor_Curve curve = BRepAdaptor_Curve(TopoDS::Edge(e));
+        if (curve.GetType() != 7)
+        {
+            int i = mapOfEdges.Add(e);
+            AddCurve(i,e);
         }
     }
 
-    // Adds edges to our type and map
-    for (int i = 1; i <= mapOfEdges.Extent(); i++)
+    for (explr.Init(shape, TopAbs_FACE); explr.More(); explr.Next())
     {
-        TopoDS_Shape edge = mapOfEdges.FindKey(i);
-        TopoDS_Vertex fv =
-            TopExp::FirstVertex(TopoDS::Edge(edge), Standard_True);
-        TopoDS_Vertex lv =
-            TopExp::LastVertex(TopoDS::Edge(edge), Standard_True);
+        TopoDS_Shape f = explr.Current().Oriented(TopAbs_FORWARD);
+        ASSERTL0(!mapOfFaces.Contains(f), "duplicated faces");
+        int i = mapOfFaces.Add(f);
 
-        if (edge.Orientation() == 0)
-        {
-            AddCurve(i, edge, mapOfVerts.FindIndex(fv),
-                     mapOfVerts.FindIndex(lv));
-        }
-        else
-        {
-            AddCurve(i, edge, mapOfVerts.FindIndex(lv),
-                     mapOfVerts.FindIndex(fv));
-        }
-    }
-
-    // For each face, examine all the wires (i.e. bounding loops) and
-    // investigates the loop. Using this information, connectivity is determined
-    // and edges are associated with surfaces.
-    for (int i = 1; i <= mapOfFaces.Extent(); i++)
-    {
-        TopoDS_Shape face = mapOfFaces.FindKey(i);
-
-        TopTools_IndexedMapOfShape mapOfWires;
-        TopExp::MapShapes(face, TopAbs_WIRE, mapOfWires);
-
-        vector<EdgeLoopSharedPtr> edgeloops;
-
-        // now we acutally analyse the loops for cad building
-        for (int j = 1; j <= mapOfWires.Extent(); j++)
-        {
-            EdgeLoopSharedPtr edgeloop = EdgeLoopSharedPtr(new EdgeLoop);
-
-            TopoDS_Shape wire = mapOfWires.FindKey(j);
-
-            BRepTools_WireExplorer exp;
-
-            exp.Init(TopoDS::Wire(wire));
-
-            while (exp.More())
-            {
-                TopoDS_Shape edge = exp.Current();
-
-                if (mapOfEdges.Contains(edge))
-                {
-                    int e = mapOfEdges.FindIndex(edge);
-                    edgeloop->edges.push_back(m_curves[e]);
-                    edgeloop->edgeo.push_back(
-                        exp.Orientation() == TopAbs_FORWARD ? eForwards
-                                                            : eBackwards);
-                }
-
-                exp.Next();
-            }
-
-            edgeloops.push_back(edgeloop);
-        }
-
-        AddSurf(i, face, edgeloops);
+        AddSurf(i, f);
     }
 
     // attempts to identify properties of the vertex on the degen edge
@@ -227,41 +162,75 @@ void CADSystemOCE::AddVert(int i, TopoDS_Shape in)
     m_verts[i] = newVert;
 }
 
-void CADSystemOCE::AddCurve(int i, TopoDS_Shape in, int fv, int lv)
+void CADSystemOCE::AddCurve(int i, TopoDS_Shape in)
 {
     CADCurveSharedPtr newCurve = GetCADCurveFactory().CreateInstance(key);
     boost::static_pointer_cast<CADCurveOCE>(newCurve)->Initialise(i, in);
 
+    TopoDS_Vertex fv = TopExp::FirstVertex(TopoDS::Edge(in));
+    TopoDS_Vertex lv = TopExp::LastVertex(TopoDS::Edge(in));
+
     vector<CADVertSharedPtr> vs;
-    vs.push_back(m_verts[fv]);
-    vs.push_back(m_verts[lv]);
+    vs.push_back(m_verts[mapOfVerts.FindIndex(fv)]);
+    vs.push_back(m_verts[mapOfVerts.FindIndex(lv)]);
+    newCurve->SetVert(vs);
+
     m_curves[i] = newCurve;
-    m_curves[i]->SetVert(vs);
 }
 
-void CADSystemOCE::AddSurf(int i, TopoDS_Shape in,
-                           vector<EdgeLoopSharedPtr> ein)
+void CADSystemOCE::AddSurf(int i, TopoDS_Shape in)
 {
     CADSurfSharedPtr newSurf = GetCADSurfFactory().CreateInstance(key);
     boost::static_pointer_cast<CADSurfOCE>(newSurf)->Initialise(i, in);
 
-    int tote = 0;
-    for (int k = 0; k < ein.size(); k++)
+    TopTools_IndexedMapOfShape mapOfWires;
+    TopExp::MapShapes(in, TopAbs_WIRE, mapOfWires);
+    vector<EdgeLoopSharedPtr> edgeloops;
+    // now we acutally analyse the loops for cad building
+    for (int j = 1; j <= mapOfWires.Extent(); j++)
     {
-        tote += ein[k]->edges.size();
+        EdgeLoopSharedPtr edgeloop = EdgeLoopSharedPtr(new EdgeLoop);
+
+        TopoDS_Shape wire = mapOfWires.FindKey(j);
+
+        BRepTools_WireExplorer exp;
+
+        exp.Init(TopoDS::Wire(wire));
+
+        while (exp.More())
+        {
+            TopoDS_Shape edge = exp.Current();
+
+            if (mapOfEdges.Contains(edge))
+            {
+                int e = mapOfEdges.FindIndex(edge);
+                edgeloop->edges.push_back(m_curves[e]);
+                edgeloop->edgeo.push_back(
+                    exp.Orientation() == TopAbs_FORWARD ? eForwards
+                                                        : eBackwards);
+            }
+            exp.Next();
+        }
+        edgeloops.push_back(edgeloop);
+    }
+
+    int tote = 0;
+    for (int k = 0; k < edgeloops.size(); k++)
+    {
+        tote += edgeloops[k]->edges.size();
     }
 
     ASSERTL0(tote != 1, "cannot handle periodic curves");
 
-    CADSurf::OrientateEdges(newSurf, ein);
-    newSurf->SetEdges(ein);
+    CADSurf::OrientateEdges(newSurf, edgeloops);
+    newSurf->SetEdges(edgeloops);
 
     // now the loops are orientated, tell the curves how they are
-    for (int k = 0; k < ein.size(); k++)
+    for (int k = 0; k < edgeloops.size(); k++)
     {
-        for (int j = 0; j < ein[k]->edges.size(); j++)
+        for (int j = 0; j < edgeloops[k]->edges.size(); j++)
         {
-            ein[k]->edges[j]->SetAdjSurf(make_pair(newSurf, ein[k]->edgeo[j]));
+            edgeloops[k]->edges[j]->SetAdjSurf(make_pair(newSurf, edgeloops[k]->edgeo[j]));
         }
     }
 

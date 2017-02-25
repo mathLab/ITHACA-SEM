@@ -52,10 +52,11 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
 
     m_s = BRep_Tool::Surface(TopoDS::Face(in));
     //reverse the face
-    if(in.Orientation() == 0)
+    
+    /*if(in.Orientation() == 0)
     {
         SetReverseNomral();
-    }
+    }*/
 
     gp_Trsf transform;
     gp_Pnt ori(0.0, 0.0, 0.0);
@@ -66,6 +67,20 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
     m_occSurface    = BRepAdaptor_Surface(TopoDS::Face(in));
     m_correctNormal = true;
     m_id            = i;
+
+    Array<OneD, NekDouble> uv(2);
+    uv[0] = GetBounds()[0];
+    uv[1] = GetBounds()[2];
+
+    BRepLProp_SLProps slp(m_occSurface, 2, 1e-6);
+    slp.SetParameters(uv[0],uv[1]);
+    gp_Dir d = slp.Normal();
+
+    cout << d.X() << " " << d.Y() << " " << d.Z() << endl;
+
+    Array<OneD, NekDouble> n = N(uv);
+    cout << n[0] << " " << n[1] << " " << n[2] << endl;
+    exit(-1);
 }
 
 Array<OneD, NekDouble> CADSurfOCE::GetBounds()

@@ -54,7 +54,7 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
 
     if (in.Orientation() == 1)
     {
-        m_orient = CADSystem::eBackwards;
+        m_orientation = CADOrientation::eBackwards;
     }
 
     gp_Trsf transform;
@@ -238,7 +238,7 @@ Array<OneD, NekDouble> CADSurfOCE::N(Array<OneD, NekDouble> uv)
 
     Array<OneD, NekDouble> normal(3);
 
-    if (m_orient == CADSystem::eBackwards)
+    if (m_orientation == CADOrientation::eBackwards)
     {
         d.Reverse();
     }

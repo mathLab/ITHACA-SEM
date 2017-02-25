@@ -108,7 +108,7 @@ void CurveMesh::Mesh()
     Array<OneD, NekDouble> loc;
 
     vector<CADVertSharedPtr> verts = m_cadcurve->GetVertex();
-    vector<pair<CADSurfSharedPtr, CADSystem::Orientation> > s = m_cadcurve->GetAdjSurf();
+    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > s = m_cadcurve->GetAdjSurf();
 
     NodeSharedPtr n = verts[0]->GetNode();
     t               = m_bounds[0];

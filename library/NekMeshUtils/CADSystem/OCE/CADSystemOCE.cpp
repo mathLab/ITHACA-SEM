@@ -208,8 +208,8 @@ void CADSystemOCE::AddSurf(int i, TopoDS_Shape in)
                 int e = mapOfEdges.FindIndex(edge);
                 edgeloop->edges.push_back(m_curves[e]);
                 edgeloop->edgeo.push_back(exp.Orientation() == TopAbs_FORWARD
-                                              ? eForwards
-                                              : eBackwards);
+                                              ? CADOrientation::eForwards
+                                              : CADOrientation::eBackwards);
             }
             exp.Next();
         }

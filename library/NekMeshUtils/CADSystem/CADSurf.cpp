@@ -64,7 +64,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
         {
             Array<OneD, NekDouble> bnds = ein[i]->edges[j]->GetBounds();
             NekDouble dt = (bnds[1] - bnds[0]) / (np - 1);
-            if (ein[i]->edgeo[j] == CADSystem::eForwards)
+            if (ein[i]->edgeo[j] == CADOrientation::eForwards)
             {
                 for (int k = 0; k < np-1; k++)
                 {

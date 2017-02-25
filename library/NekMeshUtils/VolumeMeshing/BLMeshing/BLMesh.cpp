@@ -192,6 +192,8 @@ inline bool Infont(NodeSharedPtr n, ElementSharedPtr el)
     V[1] = n->m_y - ns1[0]->m_y;
     V[2] = n->m_z - ns1[0]->m_z;
 
+    exit(-1);
+
     NekDouble Nmag = sqrt(N1[0] * N1[0] + N1[1] * N1[1] + N1[2] * N1[2]);
     NekDouble Vmag = sqrt(V[0] * V[0] + V[1] * V[1] + V[2] * V[2]);
 
@@ -820,7 +822,7 @@ NekDouble BLMesh::Visability(vector<ElementSharedPtr> tris,
     for (int i = 0; i < tris.size(); i++)
     {
         vector<NodeSharedPtr> ns = tris[i]->GetVertexList();
-
+        exit(-1);
         Array<OneD, NekDouble> tmp(3, 0.0);
         tmp[0] = (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
                  (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y);
@@ -845,6 +847,8 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
     for (int i = 0; i < tris.size(); i++)
     {
         vector<NodeSharedPtr> ns = tris[i]->GetVertexList();
+
+        exit(-1);
 
         Array<OneD, NekDouble> tmp(3, 0.0);
         tmp[0] = (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -

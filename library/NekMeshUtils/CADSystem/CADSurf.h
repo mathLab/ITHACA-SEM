@@ -60,9 +60,10 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADSurf() : m_orient(CADSystem::eForwards)
+    CADSurf()
     {
         m_type = CADType::eSurf;
+        m_orientation = CADOrientation::eForwards;
     }
 
     ~CADSurf()
@@ -155,13 +156,12 @@ public:
     /**
      * @brief query reversed normal
      */
-    CADSystem::Orientation Orientation()
+    CADOrientation::Orientation Orientation()
     {
-        return m_orient;
+        return m_orientation;
     }
 
 protected:
-    CADSystem::Orientation m_orient;
     /// List of bounding edges in loops with orientation.
     std::vector<CADSystem::EdgeLoopSharedPtr> m_edges;
 

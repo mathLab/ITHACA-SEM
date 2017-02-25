@@ -71,13 +71,6 @@ class CADSystem
 public:
     friend class MemoryManager<CADSystem>;
 
-    enum Orientation
-    {
-        eUnknown,
-        eForwards,
-        eBackwards
-    };
-
     /**
      * @brief struct which descibes a collection of cad edges which are a
      *        loop on the cad surface
@@ -85,7 +78,7 @@ public:
     struct EdgeLoop
     {
         std::vector<CADCurveSharedPtr> edges;
-        std::vector<Orientation> edgeo;
+        std::vector<CADOrientation::Orientation> edgeo;
         Array<OneD, NekDouble> center;
         NekDouble area;
     };

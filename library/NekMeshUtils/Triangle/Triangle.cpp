@@ -4684,7 +4684,6 @@ enum insertvertexresult DelaunayTriangle::insertvertex(struct mesh *m,
     vertex leftvertex, rightvertex, botvertex, topvertex, farvertex;
     vertex segmentorg, segmentdest;
     double attrib;
-    //double area;
     enum insertvertexresult success;
     enum locateresult intersect;
     int doflip;
@@ -6585,7 +6584,6 @@ void DelaunayTriangle::segmentintersection(struct mesh *m,
     vertex leftvertex, rightvertex;
     vertex newvertex;
     enum insertvertexresult success;
-    //enum finddirectionresult collinear;
     double ex, ey;
     double tx, ty;
     double etx, ety;
@@ -7769,8 +7767,7 @@ void DelaunayTriangle::carveholes(struct mesh *m,
                 double *regionlist,
                 int regions)
 {
-    struct otri searchtri;
-    //struct otri triangleloop;
+    struct otri searchtri
     struct otri *regiontris;
     triangle **holetri;
     triangle **regiontri;
@@ -7940,7 +7937,6 @@ void DelaunayTriangle::carveholes(struct mesh *m,
 void DelaunayTriangle::tallyencs(struct mesh *m, struct behavior *b)
 {
     struct osub subsegloop;
-    //int dummy;
 
     traversalinit(&m->subsegs);
     subsegloop.ssorient = 0;
@@ -7998,7 +7994,6 @@ void DelaunayTriangle::splitencsegs(struct mesh *m, struct behavior *b, int trif
     double split;
     double multiplier, divisor;
     int acuteorg, acuteorg2, acutedest, acutedest2;
-    //int dummy;
     int i;
     triangle ptr; /* Temporary variable used by stpivot(). */
     subseg sptr;  /* Temporary variable used by snext(). */

@@ -92,15 +92,12 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
 
     Array<OneD, NekDouble> xci(xi.num_elements());
 
-    //bool hitbounded = false;
-
     for (int i = 0; i < xci.num_elements(); i++)
     {
         if (xi[i] + d(i, 0) < li[i])
         {
             xci[i] = li[i];
             Fset.erase(i);
-            //hitbounded = true;
             continue;
         }
         else
@@ -112,7 +109,6 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
         {
             xci[i] = ui[i];
             Fset.erase(i);
-            //hitbounded = true;
             continue;
         }
         else
@@ -172,22 +168,6 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
             xibar[i] = xci[i];
         }
     }
-
-    /*if(hitbounded)
-    {
-        cout << endl << endl << Z << endl << endl;
-        cout << rg << endl << endl;
-        cout << du << endl << endl;
-        cout << alpha << endl << endl;
-        cout << grad << endl << endl;
-
-        for(int i = 0; i < xi.num_elements(); i++)
-        {
-            cout << xci[i] << " " << xibar[i] << endl;
-        }
-
-        exit(-1);
-    }*/
 
     Vmath::Vsub(xci.num_elements(), &xibar[0], 1, &xi[0], 1, &dk[0], 1);
 

@@ -67,6 +67,14 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT Expansion2DSharedPtr GetFaceExp(const int face);            
             LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout);
             LOCAL_REGIONS_EXPORT void SetFaceToGeomOrientation(const int face, Array<OneD, NekDouble> &inout);
+            //Moving frame//
+            inline void AddHDGHelmholtzFaceTerms(
+                 const int  matrixID,
+                 const NekDouble                    tau,
+                 const int                          edge,
+                 Array<OneD, NekDouble>            &facePhys,
+                 const StdRegions::VarCoeffMap     &dirForcing,
+                 Array<OneD, NekDouble>            &outarray);
             
             inline void AddHDGHelmholtzFaceTerms(
                 const NekDouble                    tau,
@@ -139,6 +147,17 @@ namespace Nektar
                 const Array<OneD, const NekDouble>      &inarray,
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
+            
+            void GetPhysFaceVarCoeffsFromElement(const int face,
+                                                 ExpansionSharedPtr &FaceExp,
+                                                 const Array<OneD, const NekDouble>  &varcoeff,
+                                                 Array<OneD,NekDouble> &outarray);
+            
+            virtual     Array<OneD, NekDouble> v_GetnFacecdotMF(const int dir,
+                                                                const int face,
+                                                                ExpansionSharedPtr &FaceExp_f,
+                                                                const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                                                                const StdRegions::VarCoeffMap   &varcoeffs);
 
             //-----------------------------
             // Low Energy Basis functions

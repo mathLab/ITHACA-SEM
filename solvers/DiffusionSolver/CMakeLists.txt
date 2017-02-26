@@ -7,11 +7,15 @@ IF( NEKTAR_SOLVER_DIFFUSION )
         ./DiffusionSolver.cpp)
     SET(DiffusionSolverTimeIntSource
         ./DiffusionSolverTimeInt.cpp)
+    SET(MMFDiffusionSource 
+        ./MMFDiffusion.cpp)
         
     ADD_SOLVER_EXECUTABLE(DiffusionSolver solvers 
         ${DiffusionSolverSource})
     ADD_SOLVER_EXECUTABLE(DiffusionSolverTimeInt solvers 
         ${DiffusionSolverTimeIntSource})
+    ADD_SOLVER_EXECUTABLE(MMFDiffusion solvers 
+        ${MMFDiffusionSource})
 
     ADD_NEKTAR_TEST(ImDiffusion_m6)
     ADD_NEKTAR_TEST(ImDiffusion_m6_time_int)

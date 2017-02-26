@@ -108,6 +108,9 @@ v4.4.0
 - Add module to add composite ID of elements as a field (!674)
 - Add reader for Nek5000 field files (!680)
 
+**Tester:**
+- Fix output not displayed on segfault or system error (!745)
+
 v4.3.5
 ------
 **Library:**

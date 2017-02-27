@@ -39,6 +39,7 @@ v4.4.0
 - Fix bug in the calculation of the RHS magnitude in CG solver (!721)
 - Fix bug in CMake Homebrew and MacPorts detection for OS X (!729)
 - Fix bug in FieldUtils when using half mode expansions (!734)
+- Fix bug in CMake PETSc detection for Ubuntu 16.04/Debian 9 (!735)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)
@@ -55,6 +56,7 @@ v4.4.0
 - Fix linearised advection for full 3D cases (!708)
 - Added a weak pressure formulation following Guermond & Shen (!713)
 - Added a convective like outflow boundary condition from Dong (!713)
+- Added the ability to specifiy Womersley boundary conditions for pulsatile flow (!472)
 
 **FieldConvert:**
 - Allow equi-spaced output for 1D and 2DH1D fields (!613)
@@ -92,6 +94,12 @@ v4.4.0
 - Change variable names in mcf file to make more sense (!736)
 - Fix issues in varopti module so that in can be compiled without meshgen on
   (!736)
+- Replace LAPACK Eigenvalue calculation with handwritten function in 
+  varopti (!738)
+- Improved node-colouring algorithm for better load-balancing 
+  in varopti (!738)
+- Simplified calculation of the energy functional in varopti for improved
+  performance (!738)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing
@@ -99,6 +107,9 @@ v4.4.0
 - Add module to stretch homogeneous direction (!609)
 - Add module to add composite ID of elements as a field (!674)
 - Add reader for Nek5000 field files (!680)
+
+**Tester:**
+- Fix output not displayed on segfault or system error (!745)
 
 v4.3.5
 ------
@@ -127,6 +138,12 @@ v4.3.4
 
 **IncNavierStokesSolver:**
 - Fix 2nd order time-integration for VCSMapping (!687)
+
+v4.3.4
+------
+**Library:**
+- Fix performance issue with `v_ExtractDataToCoeffs` for post-processing of large
+  simulations (!672)
 
 v4.3.3
 ------

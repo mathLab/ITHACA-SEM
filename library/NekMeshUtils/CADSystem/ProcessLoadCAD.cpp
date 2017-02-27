@@ -53,6 +53,8 @@ ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "", "Generate prisms on these surfs");
     m_config["2D"] =
         ConfigOption(true, "", "allow 2d loading");
+    m_config["NACA"] =
+        ConfigOption(false, "", "naca domain");
 }
 
 ProcessLoadCAD::~ProcessLoadCAD()
@@ -61,23 +63,26 @@ ProcessLoadCAD::~ProcessLoadCAD()
 
 void ProcessLoadCAD::Process()
 {
-    m_mesh->m_CADId = m_config["filename"].as<string>();
+    string name = m_config["filename"].as<string>();
 
     if (m_mesh->m_verbose)
     {
-        cout << "Loading CAD for " << m_mesh->m_CADId << endl;
+        cout << "Loading CAD for " << name << endl;
     }
 
-    m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",m_mesh->m_CADId);
+    m_mesh->m_cad = GetEngineFactory().CreateInstance("oce",name);
 
     if(m_config["2D"].beenSet)
     {
         m_mesh->m_cad->Set2D();
     }
 
-    ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
+    if(m_config["NACA"].beenSet)
+    {
+        m_mesh->m_cad->SetNACA(m_config["NACA"].as<string>());
+    }
 
-    m_mesh->m_hasCAD = true;
+    ASSERTL0(m_mesh->m_cad->LoadCAD(), "Failed to load CAD");
 
     if (m_mesh->m_verbose)
     {

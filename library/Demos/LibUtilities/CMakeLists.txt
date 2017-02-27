@@ -1,16 +1,16 @@
 
-#SET(GraphSources 
+#SET(GraphSources
 #    GraphExample.cpp)
-    
-SET(MemoryManagerSources 
+
+SET(MemoryManagerSources
     MemoryManager.cpp)
-    
+
 SET(PartitionAnalyseSources
     PartitionAnalyse.cpp)
-    
+
 SET(FoundationSources
-    FoundationDemo.cpp)	
-	
+    FoundationDemo.cpp)
+
 SET(NodalDemoSources NodalDemo.cpp)
 
 SET(TimeIntegrationDemoSources

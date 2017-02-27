@@ -485,6 +485,7 @@ set(CPACK_SOURCE_IGNORE_FILES
     "/solvers/ImageWarpingSolver/"
     "/solvers/VortexWaveInteraction/"
     "/solvers/CardiacEPSolver/Utilities/CellMLToNektar/"
+    "/solvers/IncNavierStokesSolver/Utilities/HybridPerformanceModel/"
     "/utilities/Extras/"
 )
 

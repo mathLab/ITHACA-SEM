@@ -100,10 +100,28 @@ void Octree::Process()
     }
 }
 
+NekDouble Octree::QueryR(Array<OneD, NekDouble> loc)
+{
+    NekDouble d = Query(loc);
+    return d / 2.0 / (sqrt(m_eps * (2.0 - m_eps)));
+}
+
 NekDouble Octree::Query(Array<OneD, NekDouble> loc)
 {
     // starting at master octant 0 move through succsesive m_octants which
     // contain the point loc until a leaf is found
+    //first search through sourcepoints
+
+    NekDouble tmp = numeric_limits<double>::max();
+
+    for(int i = 0; i < m_lsources.size(); i++)
+    {
+        if(m_lsources[i].withinRange(loc))
+        {
+            tmp = min(m_lsources[i].delta,tmp);
+        }
+    }
+
     OctantSharedPtr n = m_masteroct;
     int quad;
 
@@ -173,7 +191,19 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
             found = true;
         }
     }
-    return n->GetDelta();
+
+    return min(n->GetDelta(),tmp);
+}
+
+NekDouble Octree::GetMinDelta()
+{
+    NekDouble tmp = numeric_limits<double>::max();
+
+    for(int i = 0; i < m_lsources.size(); i++)
+    {
+        tmp = min(m_lsources[i].delta,tmp);
+    }
+    return min(m_minDelta,tmp);
 }
 
 void Octree::WriteOctree(string nm)
@@ -468,7 +498,7 @@ void Octree::SmoothSurfaceOctants()
                     {
                         if (it->second[j]->IsDeltaKnown() &&
                             it->second[j]->GetDelta() < oct->GetDelta() &&
-                            ddx(oct, it->second[j]) > 0.1)
+                            ddx(oct, it->second[j]) > 0.2)
                         {
                             check.push_back(it->second[j]);
                         }
@@ -485,9 +515,9 @@ void Octree::SmoothSurfaceOctants()
                     {
                         NekDouble r = oct->Distance(check[j]);
 
-                        if (0.099 * r + check[j]->GetDelta() < deltaSM)
+                        if (0.199 * r + check[j]->GetDelta() < deltaSM)
                         {
-                            deltaSM = 0.099 * r + check[j]->GetDelta();
+                            deltaSM = 0.199 * r + check[j]->GetDelta();
                         }
                     }
                     oct->SetDelta(deltaSM);
@@ -538,9 +568,9 @@ void Octree::PropagateDomain()
                     {
                         NekDouble r = oct->Distance(known[j]);
 
-                        if (0.14 * r + known[j]->GetDelta() < m_maxDelta)
+                        if (0.199 * r + known[j]->GetDelta() < m_maxDelta)
                         {
-                            deltaPrime.push_back(0.14 * r +
+                            deltaPrime.push_back(0.199 * r +
                                                  known[j]->GetDelta());
                         }
                         else
@@ -651,8 +681,10 @@ void Octree::PropagateDomain()
 
     for (int i = 0; i < m_octants.size(); i++)
     {
-        ASSERTL0(m_octants[i]->IsDeltaKnown(),
-                 "does not know delta after propergation");
+        if (!m_octants[i]->IsDeltaKnown())
+        {
+            m_octants[i]->SetDelta(m_maxDelta);
+        }
     }
 }
 
@@ -817,59 +849,6 @@ int Octree::CountElemt()
     return int(total);
 }
 
-//struct to assist in the creation of linesources in the code
-struct linesource
-{
-    Array<OneD, NekDouble> x1, x2;
-    NekDouble R, delta;
-    linesource(Array<OneD, NekDouble> p1,
-               Array<OneD, NekDouble> p2,
-               NekDouble r,
-               NekDouble d)
-        : x1(p1), x2(p2), R(r), delta(d)
-    {
-    }
-
-    bool withinRange(Array<OneD, NekDouble> p)
-    {
-        Array<OneD, NekDouble> Le(3), Re(3), s(3);
-        for (int i = 0; i < 3; i++)
-        {
-            Le[i] = p[i] - x1[i];
-            Re[i] = p[i] - x2[i];
-            s[i]  = x2[i] - x1[i];
-        }
-        Array<OneD, NekDouble> dev(3);
-        dev[0] = Le[1] * Re[2] - Re[1] * Le[2];
-        dev[1] = Le[0] * Re[2] - Re[0] * Le[2];
-        dev[2] = Le[0] * Re[1] - Re[0] * Le[1];
-
-        NekDouble dist =
-            sqrt(dev[0] * dev[0] + dev[1] * dev[1] + dev[2] * dev[2]) /
-            sqrt(s[0] * s[0] + s[1] * s[1] + s[2] * s[2]);
-
-        NekDouble t = -1.0 * ((x1[0] - p[0]) * s[0] + (x1[1] - p[1]) * s[1] +
-                              (x1[1] - p[1]) * s[1]) /
-                      Length() / Length();
-
-        if (dist < R && !(t > 1) && !(t < 0))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    NekDouble Length()
-    {
-        return sqrt((x1[0] - x2[0]) * (x1[0] - x2[0]) +
-                    (x1[1] - x2[1]) * (x1[1] - x2[1]) +
-                    (x1[2] - x2[2]) * (x1[2] - x2[2]));
-    }
-};
-
 void Octree::CompileSourcePointList()
 {
 
@@ -991,8 +970,8 @@ void Octree::CompileSourcePointList()
 
         // these are the acutal number of sample points in each parametric
         // direction
-        int nu = ceil(DeltaU / m_minDelta) * 40;
-        int nv = ceil(DeltaV / m_minDelta) * 40;
+        int nu = ceil(DeltaU / m_minDelta) * 2;
+        int nv = ceil(DeltaV / m_minDelta) * 2;
 
         for (int j = 0; j < nu; j++)
         {
@@ -1057,7 +1036,6 @@ void Octree::CompileSourcePointList()
             cout << "\t\tModifying based on refinement lines" << endl;
         }
         // now deal with the user defined spacing
-        vector<linesource> lsources;
         vector<string> lines;
 
         boost::split(lines, m_refinement, boost::is_any_of(":"));
@@ -1076,16 +1054,16 @@ void Octree::CompileSourcePointList()
             x2[1] = data[4];
             x2[2] = data[5];
 
-            lsources.push_back(linesource(x1, x2, data[6], data[7]));
+            m_lsources.push_back(linesource(x1, x2, data[6], data[7]));
         }
 
         // this takes any existing sourcepoints within the influence range
         // and modifies them
-        for (int i = 0; i < m_SPList.size(); i++)
+        /*for (int i = 0; i < m_SPList.size(); i++)
         {
-            for (int j = 0; j < lsources.size(); j++)
+            for (int j = 0; j < m_lsources.size(); j++)
             {
-                if (lsources[j].withinRange(m_SPList[i]->GetLoc()))
+                if (m_lsources[j].withinRange(m_SPList[i]->GetLoc()))
                 {
                     if(m_SPList[i]->GetType() == ePBoundary)
                     {
@@ -1096,10 +1074,10 @@ void Octree::CompileSourcePointList()
                         m_SPList[i] = bp->ChangeType();
 
                     }
-                    m_SPList[i]->SetDelta(lsources[j].delta);
+                    m_SPList[i]->SetDelta(m_lsources[j].delta);
                 }
             }
-        }
+        }*/
         ///TODO add extra source points from the line souce to the octree
     }
 }

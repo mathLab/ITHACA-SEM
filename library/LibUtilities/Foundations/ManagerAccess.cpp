@@ -49,6 +49,8 @@
 #include <LibUtilities/Foundations/NodalPrismSPI.h>
 #include <LibUtilities/Foundations/NodalPrismEvenlySpaced.h>
 #include <LibUtilities/Foundations/NodalPrismElec.h>
+#include <LibUtilities/Foundations/NodalQuadElec.h>
+#include <LibUtilities/Foundations/NodalHexElec.h>
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -90,6 +92,8 @@ namespace Nektar
             const bool NodalTriInited3 = PointsManager().RegisterCreator(PointsKey(0, eNodalTriSPI),          NodalTriSPI::Create);
             const bool NodalTriInited4 = PointsManager().RegisterCreator(PointsKey(0, eNodalTriEvenlySpaced), NodalTriEvenlySpaced::Create);
 
+            const bool NodalQuadInited1 = PointsManager().RegisterCreator(PointsKey(0, eNodalQuadElec),         NodalQuadElec::Create);
+
             const bool NodalTetInited1 = PointsManager().RegisterCreator(PointsKey(0, eNodalTetElec),         NodalTetElec::Create);
             const bool NodalTetInited2 = PointsManager().RegisterCreator(PointsKey(0, eNodalTetSPI),          NodalTetSPI::Create);
             const bool NodalTetInited3 = PointsManager().RegisterCreator(PointsKey(0, eNodalTetEvenlySpaced), NodalTetEvenlySpaced::Create);
@@ -97,6 +101,8 @@ namespace Nektar
             const bool NodalPrismInited1 = PointsManager().RegisterCreator(PointsKey(0, eNodalPrismEvenlySpaced), NodalPrismEvenlySpaced::Create);
             const bool NodalPrismInited2 = PointsManager().RegisterCreator(PointsKey(0, eNodalPrismElec),         NodalPrismElec::Create);
             const bool NodalPrismInited3 = PointsManager().RegisterCreator(PointsKey(0, eNodalPrismSPI),          NodalPrismSPI::Create);
+
+            const bool NodalHexInited1 = PointsManager().RegisterCreator(PointsKey(0, eNodalHexElec),         NodalHexElec::Create);
 
             const bool Basis_Inited = BasisManager().RegisterGlobalCreator(Basis::Create);
         };

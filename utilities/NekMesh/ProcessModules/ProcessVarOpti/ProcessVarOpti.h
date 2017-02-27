@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputCAD.h
+//  File: ProcessJac.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,42 +29,93 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Create mesh from CAD.
+//  Description: Calculate jacobians of elements.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTCAD
-#define UTILITIES_NEKMESH_INPUTCAD
+#ifndef UTILITIES_NEKMESH_PROCESSVAROPTI
+#define UTILITIES_NEKMESH_PROCESSVAROPTI
 
 #include <NekMeshUtils/Module/Module.h>
+
+#include "ElUtil.h"
 
 namespace Nektar
 {
 namespace Utilities
 {
 
-class InputCAD : public NekMeshUtils::InputModule
+struct DerivUtil
+{
+    NekMatrix<NekDouble> VdmD[3];
+    NekMatrix<NekDouble> VdmDStd[3]; // deriv matrix without interp
+    NekVector<NekDouble> quadW;
+
+    Array<OneD, Array<OneD, NekDouble> > basisDeriv;
+
+    int pts;
+    int ptsStd;
+};
+typedef boost::shared_ptr<DerivUtil> DerivUtilSharedPtr;
+
+enum optiType
+{
+    eLinEl,
+    eWins,
+    eRoca,
+    eHypEl
+};
+
+struct Residual
+{
+    NekDouble val;
+    int n;
+    int nDoF;
+    int startInv;
+    int nReset[3];
+    NekDouble worstJac;
+    NekDouble func;
+    int alphaI;
+};
+
+typedef boost::shared_ptr<Residual> ResidualSharedPtr;
+
+class ProcessVarOpti : public ProcessModule
 {
 public:
-    InputCAD(NekMeshUtils::MeshSharedPtr m);
-    virtual ~InputCAD();
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(MeshSharedPtr m)
+    {
+        return MemoryManager<ProcessVarOpti>::AllocateSharedPtr(m);
+    }
+    static ModuleKey className;
+
+    ProcessVarOpti(MeshSharedPtr m);
+    virtual ~ProcessVarOpti();
+
     virtual void Process();
 
-    /// Creates an instance of this class
-    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
-    {
-        return MemoryManager<InputCAD>::AllocateSharedPtr(m);
-    }
-    /// %ModuleKey for class.
-    static NekMeshUtils::ModuleKey className;
-
-    void ParseFile(std::string nm);
-
 private:
-    std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order,
-                m_blsurfs, m_blthick, m_blprog, m_bllayers, m_refinement;
-    bool m_makeBL, m_surfopti, m_refine, m_woct, m_2D, m_splitBL;
+    void Analytics();
 
+    typedef std::map<int, std::vector<ElUtilSharedPtr> > NodeElMap;
+
+    std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> BuildDerivUtil(int o);
+    void GetElementMap(
+        int o, std::map<LibUtilities::ShapeType, DerivUtilSharedPtr> derMap);
+    std::vector<ElUtilSharedPtr> GetLockedElements(NekDouble thres);
+    std::vector<std::vector<NodeSharedPtr> > CreateColoursets(
+        std::vector<NodeSharedPtr> remain);
+    std::vector<std::vector<NodeSharedPtr> > GetColouredNodes(
+        std::vector<ElUtilSharedPtr> elLock);
+
+    void RemoveLinearCurvature();
+    
+    NodeElMap m_nodeElMap;
+    std::vector<ElUtilSharedPtr> m_dataSet;
+
+    ResidualSharedPtr m_res;
+    optiType m_opti;
 };
 }
 }

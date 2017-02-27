@@ -70,6 +70,8 @@ struct EdgeLoop
     NekDouble area;
 };
 
+typedef boost::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
+
 /**
  * @brief Base class for CAD interface system.
  *
@@ -109,6 +111,11 @@ public:
     bool Is2D()
     {
         return m_2d;
+    }
+
+    void SetNACA(std::string i)
+    {
+        m_naca = i;
     }
 
     /**
@@ -203,6 +210,7 @@ protected:
     std::map<int, CADVertSharedPtr> m_verts;
 
     bool m_2d;
+    std::string m_naca;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

@@ -179,23 +179,16 @@ map<NodeSharedPtr, NodeSharedPtr> BLMesh::GetSymNodes()
 inline bool Infont(NodeSharedPtr n, ElementSharedPtr el)
 {
     vector<NodeSharedPtr> ns1 = el->GetVertexList();
-    Array<OneD, NekDouble> N1(3);
-    N1[0] = (ns1[1]->m_y - ns1[0]->m_y) * (ns1[2]->m_z - ns1[0]->m_z) -
-            (ns1[2]->m_y - ns1[0]->m_y) * (ns1[1]->m_z - ns1[0]->m_z);
-    N1[1] = -1.0 * ((ns1[1]->m_x - ns1[0]->m_x) * (ns1[2]->m_z - ns1[0]->m_z) -
-                    (ns1[2]->m_x - ns1[0]->m_x) * (ns1[1]->m_z - ns1[0]->m_z));
-    N1[2] = (ns1[1]->m_x - ns1[0]->m_x) * (ns1[2]->m_y - ns1[0]->m_y) -
-            (ns1[2]->m_x - ns1[0]->m_x) * (ns1[1]->m_y - ns1[0]->m_y);
+    Array<OneD, NekDouble> N1 = el->Normal(true);
 
     Array<OneD, NekDouble> V(3);
     V[0] = n->m_x - ns1[0]->m_x;
     V[1] = n->m_y - ns1[0]->m_y;
     V[2] = n->m_z - ns1[0]->m_z;
 
-    NekDouble Nmag = sqrt(N1[0] * N1[0] + N1[1] * N1[1] + N1[2] * N1[2]);
     NekDouble Vmag = sqrt(V[0] * V[0] + V[1] * V[1] + V[2] * V[2]);
 
-    NekDouble ang = (N1[0] * V[0] + N1[1] * V[1] + N1[2] * V[2]) / Nmag / Vmag;
+    NekDouble ang = (N1[0] * V[0] + N1[1] * V[1] + N1[2] * V[2]) / Vmag;
 
     return ang > 0.17;
 }
@@ -759,13 +752,33 @@ bool BLMesh::IsPrismValid(ElementSharedPtr el)
 void BLMesh::BuildElements()
 {
     // make prisms
-    map<int, int> nm;
-    nm[0] = 0;
-    nm[1] = 3;
-    nm[2] = 4;
-    nm[3] = 5;
-    nm[4] = 1;
-    nm[5] = 2;
+    map<CADOrientation::Orientation, vector<int> > baseTri;
+    map<CADOrientation::Orientation, vector<int> > topTri;
+
+    vector<int> tmp;
+    // back-base
+    tmp.push_back(0);
+    tmp.push_back(4);
+    tmp.push_back(1);
+    baseTri[CADOrientation::eBackwards] = tmp;
+    tmp.clear();
+    // for-base
+    tmp.push_back(0);
+    tmp.push_back(1);
+    tmp.push_back(4);
+    baseTri[CADOrientation::eForwards] = tmp;
+    // back-top
+    tmp.clear();
+    tmp.push_back(3);
+    tmp.push_back(5);
+    tmp.push_back(2);
+    topTri[CADOrientation::eBackwards] = tmp;
+    // for-top
+    tmp.clear();
+    tmp.push_back(3);
+    tmp.push_back(2);
+    tmp.push_back(5);
+    topTri[CADOrientation::eForwards] = tmp;
 
     ElmtConfig pconf(LibUtilities::ePrism, 1, false, false);
     ElmtConfig tconf(LibUtilities::eTriangle, 1, false, false);
@@ -784,12 +797,13 @@ void BLMesh::BuildElements()
 
         vector<NodeSharedPtr> tn(3); // nodes for pseduo surface
         vector<NodeSharedPtr> pn(6); // all prism nodes
-        vector<NodeSharedPtr> n = el->GetVertexList();
+        vector<NodeSharedPtr> n       = el->GetVertexList();
+        CADOrientation::Orientation o = el->m_parentCAD->Orientation();
 
         for (int j = 0; j < 3; j++)
         {
-            pn[nm[j * 2 + 0]] = n[j];
-            pn[nm[j * 2 + 1]] = m_blData[n[j]]->pNode;
+            pn[baseTri[o][j]] = n[j];
+            pn[topTri[o][j]]  = m_blData[n[j]]->pNode;
             tn[j]             = m_blData[n[j]]->pNode;
         }
 
@@ -820,9 +834,8 @@ NekDouble BLMesh::Visability(vector<ElementSharedPtr> tris,
     for (int i = 0; i < tris.size(); i++)
     {
         Array<OneD, NekDouble> tmp = tris[i]->Normal(true);
-        NekDouble dt =
-            tmp[0] * N[0] + tmp[1] * N[1] + tmp[2] * N[2];
-        mn = min(mn, dt);
+        NekDouble dt = tmp[0] * N[0] + tmp[1] * N[1] + tmp[2] * N[2];
+        mn           = min(mn, dt);
     }
     return mn;
 }
@@ -940,7 +953,10 @@ void BLMesh::Setup()
         m_layerT[i] = m_layerT[i - 1] + a * pow(m_prog, i) * m_bl;
     }
 
-    cout << "First layer height " << m_layerT[0] << endl;
+    if(m_mesh->m_verbose)
+    {
+        cout << "First layer height " << m_layerT[0] << endl;
+    }
 
     // this sets up all the boundary layer normals data holder
     set<int> symSurfs;

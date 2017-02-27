@@ -53,7 +53,9 @@
             Fill(n,alpha,&x[0],incx);
         }
         
-        template<class T>  void FillWhiteNoise( int n, const T eps, Array<OneD, T> &x, const int incx, int outseed)
+        template<class T>  void FillWhiteNoise(
+                                    int n, const T eps, Array<OneD, T> &x,
+                                    const int incx, int outseed = 9999)
         {
             ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Out of bounds");
 

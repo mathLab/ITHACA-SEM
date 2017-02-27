@@ -63,6 +63,7 @@ v4.4.0
 - Update quality metric to include scaled Jacobian output (!695)
 - Allow multiple XML files to be specified in InterpField module (!705)
 - Fix issues with isocontour module (!719)
+- Fix issue with interpolator routine (!746)
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)

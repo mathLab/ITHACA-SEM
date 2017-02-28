@@ -212,12 +212,17 @@ int main(int argc, char *argv[])
 
 #ifdef NEKTAR_TEST_FORCEMPIEXEC
 #else
-	if (file.GetNProcesses() > 1)
+	    if (file.GetNProcesses() > 1)
 #endif
         {
             command += "@MPIEXEC@ @MPIEXEC_NUMPROC_FLAG@ "
                     + boost::lexical_cast<string>(file.GetNProcesses())
                     + " ";
+            if ("@NEKTAR_TEST_USE_HOSTFILE@" == "ON")
+            {
+                command += " -hostfile hostfile ";
+                system("echo 'localhost slots=12' > hostfile");
+            }
         }
 
         fs::path execPath = startDir / file.GetExecutable();
@@ -231,12 +236,15 @@ int main(int argc, char *argv[])
         command += file.GetParameters();
         command += " 1>output.out 2>output.err";
 
+        status = 0;
+        string line;
+
         // Run executable to perform test.
         if (system(command.c_str()))
         {
             cerr << "Error occurred running test:" << endl;
             cerr << "Command: " << command << endl;
-            throw 1;
+            status = 1;
         }
 
         // Check output files exist
@@ -256,17 +264,18 @@ int main(int argc, char *argv[])
         }
 
         // Test against all metrics
-        status = 0;
-        string line;
-        for (int i = 0; i < metrics.size(); ++i)
+        if (status == 0)
         {
-            vStdout.clear();
-            vStderr.clear();
-            vStdout.seekg(0, ios::beg);
-            vStderr.seekg(0, ios::beg);
-            if (!metrics[i]->Test(vStdout, vStderr))
+            for (int i = 0; i < metrics.size(); ++i)
             {
-                status = 1;
+                vStdout.clear();
+                vStderr.clear();
+                vStdout.seekg(0, ios::beg);
+                vStderr.seekg(0, ios::beg);
+                if (!metrics[i]->Test(vStdout, vStderr))
+                {
+                    status = 1;
+                }
             }
         }
 

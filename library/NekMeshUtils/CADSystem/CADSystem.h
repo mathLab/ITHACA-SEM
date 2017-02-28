@@ -70,6 +70,8 @@ struct EdgeLoop
     NekDouble area;
 };
 
+typedef boost::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
+
 /**
  * @brief Base class for CAD interface system.
  *

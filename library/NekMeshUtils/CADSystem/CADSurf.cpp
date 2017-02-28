@@ -36,9 +36,9 @@
 #include "CADCurve.h"
 
 #include <boost/geometry.hpp>
+#include <boost/geometry/algorithms/assign.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/algorithms/assign.hpp>
 
 namespace bg = boost::geometry;
 typedef bg::model::d2::point_xy<double> point_xy;
@@ -66,7 +66,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
             NekDouble dt = (bnds[1] - bnds[0]) / (np - 1);
             if (ein[i]->edgeo[j] == CADOrientation::eForwards)
             {
-                for (int k = 0; k < np-1; k++)
+                for (int k = 0; k < np - 1; k++)
                 {
                     NekDouble t = bnds[0] + dt * k;
                     Array<OneD, NekDouble> l  = ein[i]->edges[j]->P(t);
@@ -76,7 +76,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
             }
             else
             {
-                for (int k = np-1; k > 0; k--)
+                for (int k = np - 1; k > 0; k--)
                 {
                     NekDouble t = bnds[0] + dt * k;
                     Array<OneD, NekDouble> l  = ein[i]->edges[j]->P(t);
@@ -88,24 +88,33 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
         loopt.push_back(loop);
     }
 
+    vector<bg::model::polygon<point_xy, false, true> > polygons;
+
     for (int i = 0; i < loopt.size(); i++)
     {
-        NekDouble area = 0.0;
-
         bg::model::polygon<point_xy, false, true> polygon;
         vector<point_xy> points;
-        for(int j = 0; j < loopt[i].size(); j++)
+        for (int j = 0; j < loopt[i].size(); j++)
         {
             points.push_back(point_xy(loopt[i][j][0], loopt[i][j][1]));
         }
-        //boost requires for closed polygons (last point == first point)
+        // boost requires for closed polygons (last point == first point)
         points.push_back(point_xy(loopt[i][0][0], loopt[i][0][1]));
 
-        bg::assign_points(polygon,points);
+        bg::assign_points(polygon, points);
 
-        area = bg::area(polygon);
+        NekDouble area = bg::area(polygon);
 
         ein[i]->area = area;
+
+        point_xy cen;
+        bg::centroid(polygon, cen);
+
+        ein[i]->center    = Array<OneD, NekDouble>(2);
+        ein[i]->center[0] = cen.x();
+        ein[i]->center[1] = cen.y();
+
+        polygons.push_back(polygon);
     }
 
     // order by absoulte area
@@ -120,47 +129,41 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
                 // swap
                 swap(ein[i], ein[i + 1]);
                 swap(loopt[i], loopt[i + 1]);
+                swap(polygons[i], polygons[i + 1]);
                 ct += 1;
             }
         }
 
     } while (ct > 0);
 
-    //only need center points for inner loops
-    for(int i = 1; i < ein.size(); i++)
+    // only need center points for inner loops
+    for (int i = 1; i < ein.size(); i++)
     {
-        Array<OneD, NekDouble> n1 = loopt[i][0];
-        Array<OneD, NekDouble> n2 = loopt[i][1];
+        point_xy p(ein[i]->center[0], ein[i]->center[1]);
 
-        Array<OneD, NekDouble> N(2);
-        NekDouble mag = sqrt((n1[0] - n2[0]) * (n1[0] - n2[0]) +
-                             (n1[1] - n2[1]) * (n1[1] - n2[1]));
-
-        N[0] = (n2[1] - n1[1]) / mag;
-        N[1] = -1.0 * (n2[0] - n1[0]) / mag;
-
-        Array<OneD, NekDouble> P(2);
-        P[0] = (n1[0] + n2[0]) / 2.0 + N[0];
-        P[1] = (n1[1] + n2[1]) / 2.0 + N[1];
-
-        ein[i]->center = P;
-
-        bg::model::polygon<point_xy, false, true> polygon;
-        vector<point_xy> points;
-        for(int j = 0; j < loopt[i].size(); j++)
+        if (!bg::within(p, polygons[i]))
         {
-            points.push_back(point_xy(loopt[i][j][0], loopt[i][j][1]));
+            Array<OneD, NekDouble> n1 = loopt[i][0];
+            Array<OneD, NekDouble> n2 = loopt[i][1];
+
+            Array<OneD, NekDouble> N(2);
+            NekDouble mag = sqrt((n1[0] - n2[0]) * (n1[0] - n2[0]) +
+                                 (n1[1] - n2[1]) * (n1[1] - n2[1]));
+
+            N[0] = (n2[1] - n1[1]) / mag;
+            N[1] = -1.0 * (n2[0] - n1[0]) / mag;
+
+            Array<OneD, NekDouble> P(2);
+            P[0] = n1[0] + N[0];
+            P[1] = n1[1] + N[1];
+
+            ein[i]->center = P;
+
+            p = point_xy(P[0], P[1]);
+
+            ASSERTL0(boost::geometry::within(p, polygons[i]), "point is not side loop");
         }
-        //boost requires for closed polygons (last point == first point)
-        points.push_back(point_xy(loopt[i][0][0], loopt[i][0][1]));
-
-        point_xy p(P[0],P[1]);
-
-        bg::assign_points(polygon,points);
-
-        ASSERTL0(boost::geometry::within(p, polygon), "point is not side loop");
     }
 }
-
 }
 }

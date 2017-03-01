@@ -257,7 +257,7 @@ void HOSurfaceMesh::Process()
                     // need to pull the solution out of opti
                     ti = opti->GetSolution();
                 }
-                vector<pair<CADSurfSharedPtr, CADSystem::Orientation> > s = c->GetAdjSurf();
+                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > s = c->GetAdjSurf();
 
                 for (int k = 1; k < m_mesh->m_nummode - 1; k++)
                 {

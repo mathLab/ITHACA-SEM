@@ -131,8 +131,7 @@ void SurfaceMesh::Process()
     {
         if((*it)->m_elLink.size() != 2)
         {
-            cout << (*it)->m_elLink.size() << endl;
-            //ASSERTL0(false,"mesh connectivity error");
+            ASSERTL0(false,"surface mesh connectivity error");
         }
     }
 

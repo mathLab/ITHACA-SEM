@@ -101,7 +101,6 @@ void Generator2D::Process()
         }
 
         m_curvemeshes[i]->Mesh();
-
     }
 
     ////////////////////////////////////////
@@ -200,33 +199,45 @@ void Generator2D::MakeBL(int faceid)
     for (vector<unsigned>::iterator it = m_blCurves.begin();
          it != m_blCurves.end(); ++it)
     {
-        CADSystem::Orientation edgeo = m_mesh->m_cad->GetCurve(*it)->GetOrienationWRT(faceid);
+        CADOrientation::Orientation edgeo =
+            m_mesh->m_cad->GetCurve(*it)->GetOrienationWRT(faceid);
 
         vector<EdgeSharedPtr> es = m_curvemeshes[*it]->GetMeshEdges();
 
         // on each !!!EDGE!!! calculate a normal
         // always to the left unless edgeo is 1
+        // normal must be done in the parametric space (and then projected back)
+        // because of face orientation
         for (int j = 0; j < es.size(); j++)
         {
             es[j]->m_id = eid++;
             Array<OneD, NekDouble> p1, p2;
-            p1 = es[j]->m_n1->GetLoc();
-            p2 = es[j]->m_n2->GetLoc();
-            if(edgeo == CADSystem::eBackwards)
+            p1 = es[j]->m_n1->GetCADSurfInfo(faceid);
+            p2 = es[j]->m_n2->GetCADSurfInfo(faceid);
+            if (edgeo == CADOrientation::eBackwards)
             {
                 swap(p1, p2);
             }
             Array<OneD, NekDouble> n(2);
-            n[0]          = p2[1] - p1[1];
-            n[1]          = p1[0] - p2[0];
-            if(m_mesh->m_cad->GetSurf(faceid)->IsReversedNormal())
-            {
-                n[0] *= -1.0;
-                n[1] *= -1.0;
-            }
+            n[0]          = p1[1] - p2[1];
+            n[1]          = p2[0] - p1[0];
             NekDouble mag = sqrt(n[0] * n[0] + n[1] * n[1]);
             n[0] /= mag;
             n[1] /= mag;
+
+            Array<OneD, NekDouble> np = es[j]->m_n1->GetCADSurfInfo(faceid);
+            np[0] += n[0];
+            np[1] += n[1];
+
+            Array<OneD, NekDouble> loc  = es[j]->m_n1->GetLoc();
+            Array<OneD, NekDouble> locp = m_mesh->m_cad->GetSurf(faceid)->P(np);
+
+            n[0] = locp[0] - loc[0];
+            n[1] = locp[1] - loc[1];
+            mag  = sqrt(n[0] * n[0] + n[1] * n[1]);
+            n[0] /= mag;
+            n[1] /= mag;
+
             edgeNormals[es[j]->m_id] = n;
         }
     }
@@ -265,7 +276,8 @@ void Generator2D::MakeBL(int faceid)
     for (vector<unsigned>::iterator it = m_blCurves.begin();
          it != m_blCurves.end(); ++it)
     {
-        CADSystem::Orientation edgeo = m_mesh->m_cad->GetCurve(*it)->GetOrienationWRT(faceid);
+        CADOrientation::Orientation edgeo =
+            m_mesh->m_cad->GetCurve(*it)->GetOrienationWRT(faceid);
 
         vector<NodeSharedPtr> ns = m_curvemeshes[*it]->GetMeshPoints();
         vector<NodeSharedPtr> newNs;
@@ -276,7 +288,7 @@ void Generator2D::MakeBL(int faceid)
         m_curvemeshes[*it] =
             MemoryManager<CurveMesh>::AllocateSharedPtr(*it, m_mesh, newNs);
 
-        if (edgeo == CADSystem::eBackwards)
+        if (edgeo == CADOrientation::eBackwards)
         {
             reverse(ns.begin(), ns.end());
         }

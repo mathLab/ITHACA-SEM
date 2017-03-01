@@ -852,7 +852,7 @@ void Octree::CompileSourcePointList()
 
                 Array<OneD, NekDouble> loc = curve->P(t);
 
-                vector<pair<CADSurfSharedPtr, CADSystem::Orientation> > ss =
+                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > ss =
                     curve->GetAdjSurf();
                 Array<OneD, NekDouble> uv = ss[0].first->locuv(loc);
 

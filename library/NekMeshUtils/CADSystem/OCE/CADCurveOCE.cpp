@@ -131,7 +131,7 @@ Array<OneD, NekDouble> CADCurveOCE::D2(NekDouble t)
 Array<OneD, NekDouble> CADCurveOCE::NormalWRT(NekDouble t, int surf)
 {
     Array<OneD, NekDouble> p = P(t);
-    pair<CADSurfSharedPtr, CADSystem::Orientation> surface;
+    pair<CADSurfSharedPtr, CADOrientation::Orientation> surface;
     ASSERTL0(m_adjSurfs.size() == 1, "This will only work in 2D for one surface at the moment");
     surface = m_adjSurfs[0];
 
@@ -141,7 +141,7 @@ Array<OneD, NekDouble> CADCurveOCE::NormalWRT(NekDouble t, int surf)
     NekDouble t1 = t - 1e-8;
     NekDouble t2 = t + 1e-8;
 
-    if(surface.second == CADSystem::eBackwards)
+    if(surface.second == CADOrientation::eBackwards)
     {
         swap(t1, t2);
     }

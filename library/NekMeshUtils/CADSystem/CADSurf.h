@@ -60,9 +60,10 @@ public:
     /**
      * @brief Default constructor.
      */
-    CADSurf() : m_correctNormal(true)
+    CADSurf()
     {
         m_type = CADType::eSurf;
+        m_orientation = CADOrientation::eForwards;
     }
 
     ~CADSurf()
@@ -155,24 +156,12 @@ public:
     /**
      * @brief query reversed normal
      */
-    bool IsReversedNormal()
+    CADOrientation::Orientation Orientation()
     {
-        return m_correctNormal;
+        return m_orientation;
     }
 
 protected:
-    /**
-     * @brief sets the flag to reverse the normal for this suface,
-     * this is determined in cadsystem and ensures all surface normals,
-     * point internaly
-     */
-    void SetReverseNomral()
-    {
-        m_correctNormal = false;
-    }
-
-    /// normal
-    bool m_correctNormal;
     /// List of bounding edges in loops with orientation.
     std::vector<CADSystem::EdgeLoopSharedPtr> m_edges;
 

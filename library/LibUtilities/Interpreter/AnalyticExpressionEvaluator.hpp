@@ -45,6 +45,8 @@
 #include <boost/random/variate_generator.hpp>  // for variate_generator
 #include <boost/random/normal_distribution.hpp>
 
+#include <boost/math/special_functions/bessel.hpp>
+
 #define BOOST_SPIRIT_THREADSAFE
 #if( BOOST_VERSION / 100 % 1000 >= 36 )
 #include <boost/spirit/include/classic_core.hpp>
@@ -457,7 +459,6 @@ namespace Nektar
             std::map<int, OneArgFunc>  m_function;
             std::map<int, TwoArgFunc>  m_function2;
 
-
             // ======================================================
             //  Internal representation of evaluation step
             // ======================================================
@@ -480,7 +481,7 @@ namespace Nektar
                     E_ABS,    E_ASIN,  E_ACOS,  E_ATAN,  E_ATAN2, E_ANG,
                     E_CEIL,   E_COS,   E_COSH,  E_EXP,   E_FABS,  E_FLOOR,
                     E_LOG,    E_LOG10, E_POW,   E_RAD,   E_SIN,   E_SINH,
-                    E_SQRT,   E_TAN,   E_TANH,  E_SIGN,  E_AWGN
+                    E_SQRT,   E_TAN,   E_TANH,  E_SIGN,  E_AWGN, E_BESSEL
             };
 
 
@@ -642,6 +643,12 @@ namespace Nektar
                 EvalAng(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = ang( state[argIdx1*n+i], state[argIdx2*n+i] ); }
                 virtual void run_once() { state[storeIdx] = ang( state[argIdx1], state[argIdx2] ); }
+            };
+            struct EvalBessel: public EvaluationStep
+            {
+                EvalBessel(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = boost::math::cyl_bessel_j( state[argIdx1*n+i], state[argIdx2*n+i] ); }
+                virtual void run_once() { state[storeIdx] = boost::math::cyl_bessel_j( state[argIdx1], state[argIdx2] ); }
             };
             struct EvalCeil: public EvaluationStep
             {

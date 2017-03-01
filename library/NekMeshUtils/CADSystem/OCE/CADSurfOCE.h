@@ -83,6 +83,10 @@ private:
     BRepAdaptor_Surface m_occSurface;
     /// Alternate OpenCascade object for surface. Used by reverse lookup.
     Handle(Geom_Surface) m_s;
+    /// parametric bounds
+    Array<OneD, NekDouble> m_bounds;
+    /// locuv object (stored because it gets faster with stored information)
+    ShapeAnalysis_Surface *m_sas;
 };
 
 typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;

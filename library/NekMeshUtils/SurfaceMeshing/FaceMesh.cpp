@@ -891,11 +891,6 @@ void FaceMesh::BuildLocalMesh()
     {
         ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
 
-        if(!m_cadsurf->IsReversedNormal())
-        {
-            swap(m_connec[i][0],m_connec[i][1]);
-        }
-
         vector<int> tags;
         tags.push_back(m_compId);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
@@ -1174,7 +1169,7 @@ void FaceMesh::OrientateCurves()
 
             int numPoints = m_curvemeshes[cid]->GetNumPoints();
 
-            if (m_edgeloops[i]->edgeo[j] == CADSystem::eForwards)
+            if (m_edgeloops[i]->edgeo[j] == CADOrientation::eForwards)
             {
                 for (int k = 0; k < numPoints - 1; k++)
                 {

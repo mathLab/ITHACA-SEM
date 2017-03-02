@@ -152,21 +152,19 @@ void Edge::MakeOrder(int order, SpatialDomains::GeometrySharedPtr geom,
                 loc[1]      = m_edgeNodes[i]->m_y;
                 loc[2]      = m_edgeNodes[i]->m_z;
                 NekDouble t = c->loct(loc);
-                m_edgeNodes[i]->SetCADCurve(c->GetId(), c, t);
+                m_edgeNodes[i]->SetCADCurve(c, t);
                 loc                 = c->P(t);
                 m_edgeNodes[i]->m_x = loc[0];
                 m_edgeNodes[i]->m_y = loc[1];
                 m_edgeNodes[i]->m_z = loc[2];
 
-                std::vector<
-                    std::pair<CADSurfSharedPtr, CADOrientation::Orientation> >
-                    s = c->GetAdjSurf();
+                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > s =
+                    c->GetAdjSurf();
                 for (int j = 0; j < s.size(); j++)
                 {
                     Array<OneD, NekDouble> uv(2);
                     s[j].first->ProjectTo(loc, uv);
-                    m_edgeNodes[i]->SetCADSurf(s[j].first->GetId(), s[j].first,
-                                               uv);
+                    m_edgeNodes[i]->SetCADSurf(s[j].first, uv);
                 }
             }
         }
@@ -186,7 +184,7 @@ void Edge::MakeOrder(int order, SpatialDomains::GeometrySharedPtr geom,
                 m_edgeNodes[i]->m_x = loc[0];
                 m_edgeNodes[i]->m_y = loc[1];
                 m_edgeNodes[i]->m_z = loc[2];
-                m_edgeNodes[i]->SetCADSurf(s->GetId(), s, uv);
+                m_edgeNodes[i]->SetCADSurf(s, uv);
             }
         }
     }

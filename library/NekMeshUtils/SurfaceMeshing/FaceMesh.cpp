@@ -350,7 +350,7 @@ void FaceMesh::Smoothing()
                     Array<OneD, NekDouble> locd = m_cadsurf->P(ud);
                     NodeSharedPtr dn = boost::shared_ptr<Node>(
                         new Node(0, locd[0], locd[1], locd[2]));
-                    dn->SetCADSurf(m_id, m_cadsurf, ud);
+                    dn->SetCADSurf(m_cadsurf, ud);
 
                     nodesystem.push_back(dn);
                     lamp.push_back(lambda[0]);
@@ -1147,7 +1147,7 @@ void FaceMesh::AddNewPoint(Array<OneD, NekDouble> uv)
 
     if (add)
     {
-        n->SetCADSurf(m_id, m_cadsurf, uv);
+        n->SetCADSurf(m_cadsurf, uv);
         m_stienerpoints.push_back(n);
     }
 }

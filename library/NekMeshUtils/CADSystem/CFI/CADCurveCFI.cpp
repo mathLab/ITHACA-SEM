@@ -57,7 +57,7 @@ void CADCurveCFI::Initialise(int i, cfi::Line *in, NekDouble s)
 NekDouble CADCurveCFI::tAtArcLength(NekDouble s)
 {
     s /= m_scal;
-    Array<OneD, NekDouble> bds = Bounds();
+    Array<OneD, NekDouble> bds = GetBounds();
     NekDouble dt = (bds[1] - bds[0]) / 1000;
 
     NekDouble t   = bds[0];
@@ -96,7 +96,7 @@ NekDouble CADCurveCFI::loct(Array<OneD, NekDouble> xyz)
 
 NekDouble CADCurveCFI::Length(NekDouble ti, NekDouble tf)
 {
-    Array<OneD, NekDouble> bds = Bounds();
+    Array<OneD, NekDouble> bds = GetBounds();
     NekDouble dt = (bds[1] - bds[0]) / 1000;
 
     NekDouble t   = ti;
@@ -157,7 +157,7 @@ Array<OneD, NekDouble> CADCurveCFI::D2(NekDouble t)
     return out;
 }
 
-Array<OneD, NekDouble> CADCurveCFI::Bounds()
+Array<OneD, NekDouble> CADCurveCFI::GetBounds()
 {
     Array<OneD, NekDouble> t(2);
     t[0] = 0.0;
@@ -168,7 +168,7 @@ Array<OneD, NekDouble> CADCurveCFI::Bounds()
 
 Array<OneD, NekDouble> CADCurveCFI::GetMinMax()
 {
-    Array<OneD, NekDouble> bds = Bounds();
+    Array<OneD, NekDouble> bds = GetBounds();
 
     cfi::Position x1 = m_cfiEdge->calcXYZAtT(bds[0]);
     cfi::Position x2 = m_cfiEdge->calcXYZAtT(bds[1]);

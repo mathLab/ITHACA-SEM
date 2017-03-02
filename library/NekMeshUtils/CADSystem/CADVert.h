@@ -40,14 +40,20 @@
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
 
 #include <NekMeshUtils/CADSystem/CADObject.h>
-#include <NekMeshUtils/MeshElements/Node.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
+
+//forward decleration
+class Node;
+typedef boost::shared_ptr<Node> NodeSharedPtr;
+class CADSurf;
+typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
 
 /**
  * @brief base class for CAD verticies.
@@ -71,14 +77,7 @@ public:
     /**
      * @brief Get x,y,z location of the vertex
      */
-    Array<OneD, NekDouble> GetLoc()
-    {
-        Array<OneD, NekDouble> out(3);
-        out[0] = m_node->m_x;
-        out[1] = m_node->m_y;
-        out[2] = m_node->m_z;
-        return out;
-    }
+    Array<OneD, NekDouble> GetLoc();
 
     /**
      * @brief returns a node object of the cad vertex
@@ -91,15 +90,7 @@ public:
     /**
      * @brief if the vertex is degenerate manually set uv for that surface
      */
-    void SetDegen(int s, CADSurfSharedPtr su, NekDouble u, NekDouble v)
-    {
-        degen     = true;
-        degensurf = s;
-        Array<OneD, NekDouble> uv(2);
-        uv[0] = u;
-        uv[1] = v;
-        m_node->SetCADSurf(s, su, uv);
-    }
+    void SetDegen(int s, CADSurfSharedPtr su, NekDouble u, NekDouble v);
 
     /**
      * @brief query is degenerate

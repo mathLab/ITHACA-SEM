@@ -262,11 +262,11 @@ void HOSurfaceMesh::Process()
                     NodeSharedPtr nn = boost::shared_ptr<Node>(
                         new Node(0, loc[0], loc[1], loc[2]));
 
-                    nn->SetCADCurve(cid, c, ti[k]);
+                    nn->SetCADCurve(c, ti[k]);
                     for(int m = 0; m < s.size(); m++)
                     {
                         Array<OneD, NekDouble> uv = s[m].first->locuv(loc);
-                        nn->SetCADSurf(s[m].first->GetId(), s[m].first, uv);
+                        nn->SetCADSurf(s[m].first, uv);
                     }
 
                     honodes[k - 1] = nn;
@@ -397,7 +397,7 @@ void HOSurfaceMesh::Process()
                     loc              = s->P(uvi[k]);
                     NodeSharedPtr nn = boost::shared_ptr<Node>(
                         new Node(0, loc[0], loc[1], loc[2]));
-                    nn->SetCADSurf(s->GetId(), s, uvi[k]);
+                    nn->SetCADSurf(s, uvi[k]);
                     honodes[k - 1] = nn;
                 }
             }
@@ -453,7 +453,7 @@ void HOSurfaceMesh::Process()
                 loc = s->P(uvi[j]);
                 NodeSharedPtr nn = boost::shared_ptr<Node>(new
                                                 Node(0,loc[0],loc[1],loc[2]));
-                nn->SetCADSurf(surf, s, uvi[j]);
+                nn->SetCADSurf(s, uvi[j]);
                 honodes.push_back(nn);
             }
 
@@ -491,7 +491,7 @@ void HOSurfaceMesh::Process()
                 loc = s->P(uvi[j]);
                 NodeSharedPtr nn = boost::shared_ptr<Node>(new
                                                 Node(0,loc[0],loc[1],loc[2]));
-                nn->SetCADSurf(surf, s, uvi[j]);
+                nn->SetCADSurf(s, uvi[j]);
                 honodes.push_back(nn);
             }
 

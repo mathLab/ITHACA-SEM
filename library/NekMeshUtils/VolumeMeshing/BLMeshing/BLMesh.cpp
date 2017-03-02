@@ -170,7 +170,7 @@ map<NodeSharedPtr, NodeSharedPtr> BLMesh::GetSymNodes()
         Array<OneD, NekDouble> loc = bit->second->pNode->GetLoc();
         Array<OneD, NekDouble> uv(2);
         uv = s->locuv(loc);
-        bit->second->pNode->SetCADSurf(bit->second->symsurf, s, uv);
+        bit->second->pNode->SetCADSurf(s, uv);
         ret[bit->first] = bit->second->pNode;
     }
     return ret;
@@ -970,11 +970,11 @@ void BLMesh::Setup()
     for (it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end();
          it++, ct++)
     {
-        vector<pair<int, CADSurfSharedPtr> > ss = (*it)->GetCADSurfs();
+        vector<CADSurfSharedPtr> ss = (*it)->GetCADSurfs();
         vector<unsigned int> surfs;
         for (int i = 0; i < ss.size(); i++)
         {
-            surfs.push_back(ss[i].first);
+            surfs.push_back(ss[i]->GetId());
         }
         sort(surfs.begin(), surfs.end());
         vector<unsigned int> inter, diff;

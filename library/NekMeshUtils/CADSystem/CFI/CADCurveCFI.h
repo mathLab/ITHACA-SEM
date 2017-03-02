@@ -53,29 +53,36 @@ public:
 
     static std::string key;
 
-    CADCurveCFI(){};
+    CADCurveCFI()
+    {
+    }
 
-    ~CADCurveCFI(){};
+    ~CADCurveCFI()
+    {
+    }
 
-    Array<OneD, NekDouble> Bounds();
-
-    NekDouble Length(NekDouble ti, NekDouble tf);
-
-    Array<OneD, NekDouble> P(NekDouble t);
-
-    Array<OneD, NekDouble> D2(NekDouble t);
-
-    NekDouble Curvature(NekDouble t)
+    virtual Array<OneD, NekDouble> GetBounds();
+    virtual NekDouble Length(NekDouble ti, NekDouble tf);
+    virtual Array<OneD, NekDouble> P(NekDouble t);
+    virtual Array<OneD, NekDouble> D2(NekDouble t);
+    virtual NekDouble Curvature(NekDouble t)
     {
         ASSERTL0(false, "not implemented in CFI engine");
         return 0;
     }
-
-    NekDouble tAtArcLength(NekDouble s);
-
-    Array<OneD, NekDouble> GetMinMax();
-
-    NekDouble loct(Array<OneD, NekDouble> xyz);
+    virtual Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf)
+    {
+        ASSERTL0(false, "not implemented in CFI engine");
+        return Array<OneD, NekDouble>();
+    }
+    virtual Array<OneD, NekDouble> N(NekDouble t)
+    {
+        ASSERTL0(false, "not implemented in CFI engine");
+        return Array<OneD, NekDouble>();
+    }
+    virtual NekDouble tAtArcLength(NekDouble s);
+    virtual Array<OneD, NekDouble> GetMinMax();
+    virtual NekDouble loct(Array<OneD, NekDouble> xyz);
 
     void Initialise(int i, cfi::Line *in, NekDouble s);
 

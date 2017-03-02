@@ -82,8 +82,18 @@ bool CADSystemCFI::LoadCAD()
     model = cfiHandel.openModelFile(m_name.c_str());
 
     // make an assumption there are not multiple bodies in the solid
-    ASSERTL0(model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) == 1,
-             "cannot deal with multibodies");
+    if(model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) > 1)
+    {
+        cout << "NekMesh cannot deal with multiple CAD bodies"
+             << "it is going to assume the body you want is called W1" << endl;
+
+        body = static_cast<cfi::Body *>(model->getEntity("W1"));
+    }
+
+    if(model->getEntityTotal(cfi::TYPE_BODY, cfi::SUBTYPE_ALL) == 1)
+    {
+        body = model->getBodyEntity(1);
+    }
 
     // cfi doesnt mind stupid units so this scales everything back to meters
     // which is what nekmesh assumes its in
@@ -95,8 +105,6 @@ bool CADSystemCFI::LoadCAD()
         cout << "Model is in inches, scaling accordingly" << endl;
         m_scal = 0.0254;
     }
-
-    body = model->getBodyEntity(1);
 
     // CFI does everything by string identifers
     // currently nekmesh cad system uses integer ids.
@@ -138,7 +146,6 @@ bool CADSystemCFI::LoadCAD()
     }
 
     // make the vertices and build a map of name to id
-    map<string, int> nameToVertId;
     map<string, cfi::Point *>::iterator vit;
     int i = 1; // from one to be consistent with oce
     for (vit = mapOfVerts.begin(); vit != mapOfVerts.end(); vit++, i++)
@@ -174,93 +181,25 @@ bool CADSystemCFI::LoadCAD()
         cfi::Oriented<cfi::TopoEntity *> orientatedFace = *it;
         cfi::Face *face = static_cast<cfi::Face *>(orientatedFace.entity);
         nameToFaceId[face->getName()] = i;
-        vector<cfi::Oriented<cfi::TopoEntity *> > *edgeList =
-            face->getChildList();
 
-        vector<EdgeLoopSharedPtr> edgeloops;
-        vector<vector<cfi::Oriented<cfi::TopoEntity *> > > cfiloops;
-        int done = 0;
-        while (done != edgeList->size())
-        {
-            EdgeLoopSharedPtr edgeloop = EdgeLoopSharedPtr(new EdgeLoop);
-            vector<cfi::Oriented<cfi::TopoEntity *> > cfiloop;
-            string firstVert;
-            vector<cfi::Oriented<cfi::TopoEntity *> > *vertList =
-                edgeList->at(done).entity->getChildList();
-            if (edgeList->at(done).orientation == 1)
-            {
-                firstVert = vertList->at(0).entity->getName();
-            }
-            else
-            {
-                firstVert = vertList->at(1).entity->getName();
-            }
-
-            edgeloop->edges.push_back(
-                m_curves[nameToCurveId[edgeList->at(done).entity->getName()]]);
-            cfiloop.push_back(edgeList->at(done));
-            adjsurfmap[nameToCurveId[edgeList->at(done).entity->getName()]]
-                .push_back(i);
-            edgeList->at(done).orientation == 1 ? edgeloop->edgeo.push_back(0)
-                                                : edgeloop->edgeo.push_back(1);
-
-            for (done++; done < edgeList->size(); done++)
-            {
-                bool end = false;
-                vertList = edgeList->at(done).entity->getChildList();
-                if (edgeList->at(done).orientation == 1)
-                {
-                    if (vertList->at(1).entity->getName() == firstVert)
-                    {
-                        end = true;
-                    }
-                }
-                else
-                {
-                    if (vertList->at(0).entity->getName() == firstVert)
-                    {
-                        end = true;
-                    }
-                }
-
-                edgeloop->edges.push_back(
-                    m_curves
-                        [nameToCurveId[edgeList->at(done).entity->getName()]]);
-                cfiloop.push_back(edgeList->at(done));
-                adjsurfmap[nameToCurveId[edgeList->at(done).entity->getName()]]
-                    .push_back(i);
-                edgeList->at(done).orientation == 1
-                    ? edgeloop->edgeo.push_back(0)
-                    : edgeloop->edgeo.push_back(1);
-
-                if (end)
-                {
-                    done++;
-                    break;
-                }
-            }
-            cfiloops.push_back(cfiloop);
-            edgeloops.push_back(edgeloop);
-        }
-
-        AddSurf(i, face, edgeloops);
+        AddSurf(i, face);
     }
+
+    exit(-1);
 
     // TODO identify Degenerated faces and setdegen on vertices accordinaly
 
     ASSERTL0(adjsurfmap.size() == m_curves.size(), "incorrect curve info");
 
     // This checks that all edges are bound by two surfaces, sanity check.
-    for (map<int, vector<int> >::iterator it = adjsurfmap.begin();
-         it != adjsurfmap.end(); it++)
+    if (!m_2d)
     {
-        ASSERTL0(it->second.size() == 2, "no three curve surfaces");
-        vector<CADSurfSharedPtr> sfs;
-        for (int i = 0; i < it->second.size(); i++)
+        map<int, CADCurveSharedPtr>::iterator it;
+        for (it = m_curves.begin(); it != m_curves.end(); it++)
         {
-            sfs.push_back(m_surfs[it->second[i]]);
+            ASSERTL0(it->second->GetAdjSurf().size() == 2,
+                     "curve is not joined to 2 surfaces");
         }
-        m_curves[it->first]->SetAdjSurf(sfs);
     }
 
     return true;
@@ -297,29 +236,107 @@ void CADSystemCFI::AddCurve(int i, cfi::Line *in)
     ASSERTL0(t[0] < t[1], "weirdness");
 
     vector<CADVertSharedPtr> vs;
-    vs.push_back(m_verts[nameToVertId[in->at(0)->getName()]]);
-    vs.push_back(m_verts[nameToVertId[in->at(1)->getName()]]);
+    vs.push_back(m_verts[nameToVertId[vertList->at(0).entity->getName()]]);
+    vs.push_back(m_verts[nameToVertId[vertList->at(1).entity->getName()]]);
     m_curves[i] = newCurve;
     m_curves[i]->SetVert(vs);
 }
 
-void CADSystemCFI::AddSurf(int i, cfi::Face *in,
-                           std::vector<EdgeLoopSharedPtr> ein)
+void CADSystemCFI::AddSurf(int i, cfi::Face *in)
 {
     CADSurfSharedPtr newSurf = GetCADSurfFactory().CreateInstance(key);
-    static_pointer_cast<CADSurfCFI>(newSurf)->Initialise(i, in, ein);
-    static_pointer_cast<CADSurfCFI>(newSurf)->SetScaling(m_scal);
-    m_surfs[i] = newSurf;
+    static_pointer_cast<CADSurfCFI>(newSurf)->Initialise(i, in, m_scal);
+
+    vector<cfi::Oriented<cfi::TopoEntity *> > *edgeList = in->getChildList();
+
+    vector<cfi::Oriented<cfi::TopoEntity *> >::iterator it;
+    for(it = edgeList->begin(); it != edgeList->end(); it++)
+    {
+        if( (*it).orientation == cfi::ORIENT_POSITIVE)
+        {
+            cout << "positive" << endl;
+        }
+        else if( (*it).orientation == cfi::ORIENT_NEGATIVE)
+        {
+            cout << "negative" << endl;
+        }
+        else
+        {
+            cout << "unsure" << endl;
+        }
+    }
+
+    vector<EdgeLoopSharedPtr> edgeloops;
+    /*int done = 0;
+    while (done != edgeList->size())
+    {
+        EdgeLoopSharedPtr edgeloop = EdgeLoopSharedPtr(new EdgeLoop);
+        string firstVert;
+        vector<cfi::Oriented<cfi::TopoEntity *> > *vertList =
+            edgeList->at(done).entity->getChildList();
+        if (edgeList->at(done).orientation == 1)
+        {
+            firstVert = vertList->at(0).entity->getName();
+        }
+        else
+        {
+            firstVert = vertList->at(1).entity->getName();
+        }
+
+        edgeloop->edges.push_back(
+            m_curves[nameToCurveId[edgeList->at(done).entity->getName()]]);
+        adjsurfmap[nameToCurveId[edgeList->at(done).entity->getName()]]
+            .push_back(i);
+        edgeList->at(done).orientation == 1 ? edgeloop->edgeo.push_back(0)
+                                            : edgeloop->edgeo.push_back(1);
+
+        for (done++; done < edgeList->size(); done++)
+        {
+            bool end = false;
+            vertList = edgeList->at(done).entity->getChildList();
+            if (edgeList->at(done).orientation == 1)
+            {
+                if (vertList->at(1).entity->getName() == firstVert)
+                {
+                    end = true;
+                }
+            }
+            else
+            {
+                if (vertList->at(0).entity->getName() == firstVert)
+                {
+                    end = true;
+                }
+            }
+
+            edgeloop->edges.push_back(
+                m_curves
+                    [nameToCurveId[edgeList->at(done).entity->getName()]]);
+            edgeList->at(done).orientation == 1
+                ? edgeloop->edgeo.push_back(0)
+                : edgeloop->edgeo.push_back(1);
+
+            if (end)
+            {
+                done++;
+                break;
+            }
+        }
+        edgeloops.push_back(edgeloop);
+    }*/
 
     // TODO find if surface has reversed normal or not
 
-    int tote = 0;
+    /*int tote = 0;
     for (int i = 0; i < ein.size(); i++)
     {
         tote += ein[i]->edges.size();
     }
 
     ASSERTL0(tote != 1, "cannot handle periodic curves");
+
+
+    m_surfs[i] = newSurf;*/
 }
 
 Array<OneD, NekDouble> CADSystemCFI::GetBoundingBox()

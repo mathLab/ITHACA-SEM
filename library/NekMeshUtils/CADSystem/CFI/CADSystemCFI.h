@@ -95,6 +95,7 @@ private:
     cfi::Cfi cfiHandel;
     cfi::Model *model;
     cfi::Body *body;
+    std::map<std::string, int> nameToVertId;
     std::map<std::string, int> nameToCurveId;
     std::map<std::string, int> nameToFaceId;
     std::map<std::string, std::vector<std::string> > mapVertToListEdge;

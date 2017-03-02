@@ -153,14 +153,13 @@ void VolumeMesh::Process()
             for (it = m_mesh->m_vertexSet.begin();
                  it != m_mesh->m_vertexSet.end(); it++)
             {
-                vector<pair<int, CADCurveSharedPtr> > cc =
-                    (*it)->GetCADCurves();
+                vector<CADCurveSharedPtr> cc = (*it)->GetCADCurves();
                 for (int j = 0; j < cc.size(); j++)
                 {
-                    set<int>::iterator f = cIds.find(cc[j].first);
+                    set<int>::iterator f = cIds.find(cc[j]->GetId());
                     if (f != cIds.end())
                     {
-                        curveNodeMap[cc[j].first].push_back((*it));
+                        curveNodeMap[cc[j]->GetId()].push_back((*it));
                     }
                 }
             }

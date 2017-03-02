@@ -107,7 +107,7 @@ void CADSurf::OrientateEdges(CADSurfSharedPtr surf,
 
         ein[i]->area = area;
 
-        point_xy cen;
+        point_xy cen(0.0,0.0);
         bg::centroid(polygon, cen);
 
         ein[i]->center    = Array<OneD, NekDouble>(2);

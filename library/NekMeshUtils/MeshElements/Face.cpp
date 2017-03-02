@@ -274,7 +274,7 @@ void Face::MakeOrder(int                                order,
             m_faceNodes[i]->m_x = loc[0];
             m_faceNodes[i]->m_y = loc[1];
             m_faceNodes[i]->m_z = loc[2];
-            m_faceNodes[i]->SetCADSurf(s->GetId(),s,uv);
+            m_faceNodes[i]->SetCADSurf(s,uv);
         }
     }
 }

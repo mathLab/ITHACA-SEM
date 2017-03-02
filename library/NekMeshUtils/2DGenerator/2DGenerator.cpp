@@ -269,7 +269,7 @@ void Generator2D::MakeBL(int faceid)
             new Node(m_mesh->m_numNodes++, n[0], n[1], 0.0));
         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(faceid);
         Array<OneD, NekDouble> uv = s->locuv(n);
-        nn->SetCADSurf(faceid, s, uv);
+        nn->SetCADSurf(s, uv);
         nodeNormals[it->first] = nn;
     }
 

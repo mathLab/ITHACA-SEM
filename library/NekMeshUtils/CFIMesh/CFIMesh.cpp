@@ -67,7 +67,7 @@ void CFIMesh::Process()
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
 
-    CADSystemCFISharedPtr cad =
+    /*CADSystemCFISharedPtr cad =
         boost::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad);
     map<string, int> nameToCurveId                  = cad->GetCFICurveId();
     map<string, int> nameToFaceId                   = cad->GetCFIFaceId();
@@ -104,11 +104,12 @@ void CFIMesh::Process()
             CADCurveSharedPtr c = m_mesh->m_cad->GetCurve(cid);
             NekDouble t         = c->loct(xyz);
             n->SetCADCurve(cid, c, t);
-            vector<CADSurfSharedPtr> ss = c->GetAdjSurf();
+            vector<pair<CADSurfSharedPtr, CADSystem::Orientation> > ss =
+                c->GetAdjSurf();
             for (int j = 0; j < ss.size(); j++)
             {
                 Array<OneD, NekDouble> uv = ss[j]->locuv(xyz);
-                n->SetCADSurf(ss[j]->GetId(), ss[j], uv);
+                n->SetCADSurf(ss[j].first->GetId(), ss[j].first, uv);
             }
         }
         else if (p->type == cfi::TYPE_FACE)
@@ -127,11 +128,12 @@ void CFIMesh::Process()
                 CADCurveSharedPtr c = m_mesh->m_cad->GetCurve(cid);
                 NekDouble t         = c->loct(xyz);
                 n->SetCADCurve(cid, c, t);
-                vector<CADSurfSharedPtr> ss = c->GetAdjSurf();
+                vector<pair<CADSurfSharedPtr, CADSystem::Orientation> > ss =
+                    c->GetAdjSurf();
                 for (int j = 0; j < ss.size(); j++)
                 {
                     Array<OneD, NekDouble> uv = ss[j]->locuv(xyz);
-                    n->SetCADSurf(ss[j]->GetId(), ss[j], uv);
+                    n->SetCADSurf(ss[j].first->GetId(), ss[j].first, uv);
                 }
             }
         }
@@ -169,7 +171,7 @@ void CFIMesh::Process()
         m_mesh->m_element[3].push_back(E);
     }
 
-    //there must be a surface mesh as well or the high-order doesnt work
+    // there must be a surface mesh as well or the high-order doesnt work
 
     vector<cfi::ElementDefinition> *tris =
         model->getElements(cfi::SUBTYPE_TR3, 3);
@@ -258,7 +260,7 @@ void CFIMesh::Process()
     ProcessEdges();
     ProcessFaces();
     ProcessElements();
-    ProcessComposites();
+    ProcessComposites();*/
 }
 }
 }

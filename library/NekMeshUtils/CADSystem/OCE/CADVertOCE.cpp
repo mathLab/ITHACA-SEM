@@ -36,6 +36,8 @@
 #include <NekMeshUtils/CADSystem/OCE/CADSystemOCE.h>
 #include <NekMeshUtils/CADSystem/OCE/CADVertOCE.h>
 
+#include <NekMeshUtils/MeshElements/Node.h>
+
 using namespace std;
 
 namespace Nektar

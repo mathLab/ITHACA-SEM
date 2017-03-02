@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: CADVertCFI.cpp
+//  File: CADSystem.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -32,10 +32,8 @@
 //  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
-
-#include "CADSystemCFI.h"
-#include "CADVertCFI.h"
-
+#include "CADVert.h"
+#include "CADSurf.h"
 #include <NekMeshUtils/MeshElements/Node.h>
 
 using namespace std;
@@ -45,21 +43,23 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-std::string CADVertCFI::key = GetCADVertFactory().RegisterCreatorFunction(
-        "cfi", CADVertCFI::create, "CAD vert cfi");
-
-void CADVertCFI::Initialise(int i, cfi::Point* in, NekDouble s)
+void CADVert::SetDegen(int s, CADSurfSharedPtr su, NekDouble u, NekDouble v)
 {
-    m_id      = i;
-    m_cfipoint = in;
-    m_scal = s;
-
-    cfi::Position pos = m_cfipoint->getGeometry();
-
-    m_node = boost::shared_ptr<Node>(
-        new Node(i - 1, pos.x*m_scal, pos.y*m_scal, pos.z*m_scal));
-    degen = false;
+    degen     = true;
+    degensurf = s;
+    Array<OneD, NekDouble> uv(2);
+    uv[0] = u;
+    uv[1] = v;
+    m_node->SetCADSurf(su, uv);
 }
 
+Array<OneD, NekDouble> CADVert::GetLoc()
+{
+    Array<OneD, NekDouble> out(3);
+    out[0] = m_node->m_x;
+    out[1] = m_node->m_y;
+    out[2] = m_node->m_z;
+    return out;
+}
 }
 }

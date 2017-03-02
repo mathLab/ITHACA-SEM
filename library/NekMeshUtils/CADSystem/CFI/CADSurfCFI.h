@@ -58,7 +58,7 @@ public:
 
     ~CADSurfCFI(){};
 
-    void Initialise(int i, cfi::Face *in, std::vector<EdgeLoopSharedPtr> ein);
+    void Initialise(int i, cfi::Face *in, NekDouble s);
     void SetScaling(NekDouble i)
     {
         m_scal = i;

@@ -15,6 +15,7 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Hexahedron.cpp
     CADSystem/CADSystem.cpp
     CADSystem/CADSurf.cpp
+    CADSystem/CADVert.cpp
     CADSystem/ProcessLoadCAD.cpp
     )
 

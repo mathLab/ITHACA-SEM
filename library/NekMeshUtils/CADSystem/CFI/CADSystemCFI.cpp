@@ -294,10 +294,11 @@ void CADSystemCFI::AddCurve(int i, cfi::Line *in)
             in->calcTFromXYZ(vert->getGeometry(), -1);
         t.push_back(pj.value().parameters);
     }
+    ASSERTL0(t[0] < t[1], "weirdness");
 
     vector<CADVertSharedPtr> vs;
-    vs.push_back(m_verts[fv]);
-    vs.push_back(m_verts[lv]);
+    vs.push_back(m_verts[nameToVertId[in->at(0)->getName()]]);
+    vs.push_back(m_verts[nameToVertId[in->at(1)->getName()]]);
     m_curves[i] = newCurve;
     m_curves[i]->SetVert(vs);
 }

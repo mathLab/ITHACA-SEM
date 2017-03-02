@@ -147,11 +147,11 @@ void VolumeMesh::Process()
             set<int> cIds;
             vector<EdgeLoopSharedPtr> e =
                 m_mesh->m_cad->GetSurf(symsurfs[i])->GetEdges();
-            for (int i = 0; i < e.size(); i++)
+            for (int k = 0; k < e.size(); k++)
             {
-                for (int j = 0; j < e[i]->edges.size(); j++)
+                for (int j = 0; j < e[k]->edges.size(); j++)
                 {
-                    cIds.insert(e[i]->edges[j]->GetId());
+                    cIds.insert(e[k]->edges[j]->GetId());
                 }
             }
 

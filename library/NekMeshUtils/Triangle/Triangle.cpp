@@ -3719,7 +3719,7 @@ void DelaunayTriangle::testtriangle(struct mesh *m, struct behavior *b, struct o
     double dxod2, dyod2, dxda2, dyda2, dxao2, dyao2;
     double apexlen, orglen, destlen, minedge;
     double angle;
-    double area;
+    double area=0.0;
     double dist1, dist2;
     subseg sptr;  /* Temporary variable used by tspivot(). */
     triangle ptr; /* Temporary variable used by oprev() and dnext(). */
@@ -4684,7 +4684,6 @@ enum insertvertexresult DelaunayTriangle::insertvertex(struct mesh *m,
     vertex leftvertex, rightvertex, botvertex, topvertex, farvertex;
     vertex segmentorg, segmentdest;
     double attrib;
-    double area;
     enum insertvertexresult success;
     enum locateresult intersect;
     int doflip;
@@ -5570,7 +5569,7 @@ void DelaunayTriangle::undovertex(struct mesh *m, struct behavior *b)
 /*                                                                           */
 /*****************************************************************************/
 
-void DelaunayTriangle::vertexsort(vertex *sortarray, int arraysize)
+void DelaunayTriangle::vertexsort(vertex *sortarray, unsigned int arraysize)
 {
     int left, right;
     int pivot;
@@ -6585,7 +6584,6 @@ void DelaunayTriangle::segmentintersection(struct mesh *m,
     vertex leftvertex, rightvertex;
     vertex newvertex;
     enum insertvertexresult success;
-    enum finddirectionresult collinear;
     double ex, ey;
     double tx, ty;
     double etx, ety;
@@ -6657,7 +6655,7 @@ void DelaunayTriangle::segmentintersection(struct mesh *m,
     /* Inserting the vertex may have caused edge flips.  We wish to rediscover
      */
     /*   the edge connecting endpoint1 to the new intersection vertex. */
-    collinear = finddirection(m, b, splittri, endpoint1);
+    finddirection(m, b, splittri, endpoint1);
     dest(*splittri, rightvertex);
     apex(*splittri, leftvertex);
     if ((leftvertex[0] == endpoint1[0]) && (leftvertex[1] == endpoint1[1]))
@@ -7770,7 +7768,6 @@ void DelaunayTriangle::carveholes(struct mesh *m,
                 int regions)
 {
     struct otri searchtri;
-    struct otri triangleloop;
     struct otri *regiontris;
     triangle **holetri;
     triangle **regiontri;
@@ -7940,7 +7937,6 @@ void DelaunayTriangle::carveholes(struct mesh *m,
 void DelaunayTriangle::tallyencs(struct mesh *m, struct behavior *b)
 {
     struct osub subsegloop;
-    int dummy;
 
     traversalinit(&m->subsegs);
     subsegloop.ssorient = 0;
@@ -7948,7 +7944,7 @@ void DelaunayTriangle::tallyencs(struct mesh *m, struct behavior *b)
     while (subsegloop.ss != (subseg *)NULL)
     {
         /* If the segment is encroached, add it to the list. */
-        dummy         = checkseg4encroach(m, b, &subsegloop);
+        checkseg4encroach(m, b, &subsegloop);
         subsegloop.ss = subsegtraverse(m);
     }
 }
@@ -7998,7 +7994,6 @@ void DelaunayTriangle::splitencsegs(struct mesh *m, struct behavior *b, int trif
     double split;
     double multiplier, divisor;
     int acuteorg, acuteorg2, acutedest, acutedest2;
-    int dummy;
     int i;
     triangle ptr; /* Temporary variable used by stpivot(). */
     subseg sptr;  /* Temporary variable used by snext(). */
@@ -8199,9 +8194,9 @@ void DelaunayTriangle::splitencsegs(struct mesh *m, struct behavior *b, int trif
                 }
                 /* Check the two new subsegments to see if they're encroached.
                  */
-                dummy = checkseg4encroach(m, b, &currentenc);
+                checkseg4encroach(m, b, &currentenc);
                 snextself(currentenc);
-                dummy = checkseg4encroach(m, b, &currentenc);
+                checkseg4encroach(m, b, &currentenc);
             }
 
             badsubsegdealloc(m, encloop);
@@ -8565,7 +8560,7 @@ void DelaunayTriangle::writenodes(struct mesh *m,
             (int)(outvertices * m->nextras * sizeof(double)));
     }
     /* Allocate memory for output vertex markers if necessary. */
-    if ((*pointmarkerlist == (int *)NULL))
+    if (*pointmarkerlist == (int *)NULL)
     {
         *pointmarkerlist = (int *)trimalloc((int)(outvertices * sizeof(int)));
     }
@@ -8719,7 +8714,7 @@ void DelaunayTriangle::writepoly(struct mesh *m,
             (int *)trimalloc((int)(m->subsegs.items * 2 * sizeof(int)));
     }
     /* Allocate memory for output segment markers if necessary. */
-    if ((*segmentmarkerlist == (int *)NULL))
+    if (*segmentmarkerlist == (int *)NULL)
     {
         *segmentmarkerlist =
             (int *)trimalloc((int)(m->subsegs.items * sizeof(int)));
@@ -8911,4 +8906,3 @@ void DelaunayTriangle::triangulate(char *triswitches)
 
 }
 }
-

@@ -1016,7 +1016,7 @@ private:
     void triangulatepolygon(struct mesh *m, struct behavior *b, struct otri *firstedge, struct otri *lastedge, int edgecount, int doflip, int triflaws);
     void deletevertex(struct mesh *m, struct behavior *b, struct otri *deltri);
     void undovertex(struct mesh *m, struct behavior *b);
-    void vertexsort(vertex *sortarray, int arraysize);
+    void vertexsort(vertex *sortarray, unsigned int arraysize);
     void vertexmedian(vertex *sortarray, int arraysize, int median, int axis);
     void alternateaxes(vertex *sortarray, int arraysize, int axis);
     long removeghosts(struct mesh *m, struct behavior *b, struct otri *startghost);

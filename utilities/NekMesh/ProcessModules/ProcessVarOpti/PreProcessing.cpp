@@ -110,7 +110,7 @@ map<LibUtilities::ShapeType, DerivUtilSharedPtr> ProcessVarOpti::BuildDerivUtil(
         der->ptsStd = u1[0].num_elements();
         der->pts    = u2[0].num_elements();
 
-        LibUtilities::NodalUtil *nodalUtil;
+        LibUtilities::NodalUtil *nodalUtil = NULL;
 
         if (it->first == LibUtilities::eTriangle)
         {
@@ -160,7 +160,7 @@ map<LibUtilities::ShapeType, DerivUtilSharedPtr> ProcessVarOpti::BuildDerivUtil(
         der->quadW = quadWi;
 
         ret[it->first] = der;
-        delete nodalUtil;
+        //delete nodalUtil;
     }
 
     return ret;
@@ -186,7 +186,7 @@ struct NodeComparator
 vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
     vector<ElUtilSharedPtr> elLock)
 {
-    
+
     // create set of nodes to be ignored and hence not included in the coloursets
     NodeSet ignoredNodes;
     for (int i = 0; i < elLock.size(); i++)
@@ -273,9 +273,9 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
         }
         default:
             ASSERTL0(false,"space dim issue");
-    }    
+    }
 
-    
+
     //create vector of free nodes which "remain", hence will be included in the coloursets
     vector<NodeSharedPtr> remainEdgeVertex;
     vector<NodeSharedPtr> remainFace;
@@ -307,7 +307,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
         }
     }
 
-    // check if edge nodes are in boundary or ignored nodes, otherwise add to EDGE-VERTEX remain nodes    
+    // check if edge nodes are in boundary or ignored nodes, otherwise add to EDGE-VERTEX remain nodes
     EdgeSet::iterator eit;
     for (eit = m_mesh->m_edgeSet.begin(); eit != m_mesh->m_edgeSet.end(); eit++)
     {
@@ -335,7 +335,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
         }
     }
 
-    // check if face nodes are in boundary or ignored nodes, otherwise add to FACE remain nodes    
+    // check if face nodes are in boundary or ignored nodes, otherwise add to FACE remain nodes
     FaceSet::iterator fit;
     for (fit = m_mesh->m_faceSet.begin(); fit != m_mesh->m_faceSet.end(); fit++)
     {
@@ -389,9 +389,9 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
     vector<int> num_el(remainEdgeVertex.size());
     for (int i = 0; i < remainEdgeVertex.size(); i++)
     {
-        //try to find node within all elements       
-        NodeElMap::iterator it = m_nodeElMap.find(remainEdgeVertex[i]->m_id); 
-        vector<ElUtilSharedPtr> &elUtils = it->second;       
+        //try to find node within all elements
+        NodeElMap::iterator it = m_nodeElMap.find(remainEdgeVertex[i]->m_id);
+        vector<ElUtilSharedPtr> &elUtils = it->second;
         num_el[i] = elUtils.size();
     }
     // finding the permutation according to num_el
@@ -399,10 +399,10 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
     for (int i = 0; i < remainEdgeVertex.size(); ++i)
     {
         permNode[i] = i;
-    }    
-    std::sort(permNode.begin(), permNode.end(), NodeComparator(num_el));        
+    }
+    std::sort(permNode.begin(), permNode.end(), NodeComparator(num_el));
     // applying the permutation to remainEdgeVertex
-    vector<NodeSharedPtr> remainEdgeVertexSort(remainEdgeVertex.size());    
+    vector<NodeSharedPtr> remainEdgeVertexSort(remainEdgeVertex.size());
     for (int i = 0; i < remainEdgeVertex.size(); ++i)
     {
         int j = permNode[i];
@@ -412,19 +412,19 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
     retPart = CreateColoursets(remainEdgeVertexSort);
     if(m_mesh->m_verbose)
     {
-        printf("\nNumber of Edge/Vertex Coloursets: %i\n", retPart.size());
+        cout << "Number of Edge/Vertex Coloursets: " << retPart.size() << endl;
     }
     for (int i = 0; i < retPart.size(); i++)
     {
         ret.push_back(retPart[i]);
-    } 
+    }
 
 
     // face nodes
     retPart = CreateColoursets(remainFace);
     if(m_mesh->m_verbose)
     {
-        printf("\nNumber of Face Coloursets: %i\n" ,retPart.size());
+        cout << "Number of Face Coloursets: " << retPart.size() << endl;
     }
     for (int i = 0; i < retPart.size(); i++)
     {
@@ -436,11 +436,11 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
     retPart = CreateColoursets(remainVolume);
     if(m_mesh->m_verbose)
     {
-        printf("\nNumber of Volume Coloursets: %i\n", retPart.size());
+        cout << "Number of Volume Coloursets: " << retPart.size() << endl;
     }
     for (int i = 0; i < retPart.size(); i++)
     {
-        ret.push_back(retPart[i]);        
+        ret.push_back(retPart[i]);
     }
 
 
@@ -473,7 +473,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::CreateColoursets(
             bool islocked = false; // suppose node is not locked
             for (int j = 0; j < elUtils.size(); j++) // loop over all associated elements of the node
             {
-                set<int>::iterator sit = locked.find(elUtils[j]->GetId()); // check all nodes of the element 
+                set<int>::iterator sit = locked.find(elUtils[j]->GetId()); // check all nodes of the element
                 if (sit != locked.end())                          //if node is within the set of locked nodes
                 {
                     islocked = true; // if yes, flag node as locked
@@ -505,7 +505,7 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::CreateColoursets(
 
         // include layer or colourset into vector of coloursets
         retPart.push_back(layer);
-        
+
         // print out progress
         if(m_mesh->m_verbose)
         {

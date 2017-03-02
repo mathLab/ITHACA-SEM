@@ -99,7 +99,7 @@ void ProcessAddCompositeID::Process(po::variables_map &vm)
         m_f->m_graph->GetComposites();
 
     SpatialDomains::CompositeMapConstIter it;
-    NekDouble compid;
+    NekDouble compid=0;
 
     // loop over elements
     for (int n = 0; n < exp->GetNumElmts(); ++n)

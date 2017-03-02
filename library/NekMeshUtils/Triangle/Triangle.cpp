@@ -7767,7 +7767,7 @@ void DelaunayTriangle::carveholes(struct mesh *m,
                 double *regionlist,
                 int regions)
 {
-    struct otri searchtri
+    struct otri searchtri;
     struct otri *regiontris;
     triangle **holetri;
     triangle **regiontri;

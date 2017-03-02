@@ -80,6 +80,10 @@ APE_coupled::~APE_coupled()
  */
 bool APE_coupled::v_PreIntegrate(int step)
 {
+    Array<OneD, Array<OneD, NekDouble> > sendFields(1);
+    sendFields[0] = m_fields[0]->GetPhys();
+    m_coupling->Send(step, m_time, sendFields);
+
     receiveFields(step);
 
     Array<OneD, NekDouble> tmpC(GetNcoeffs());

@@ -163,7 +163,7 @@ bool CADSystemCFI::LoadCAD()
         }
         ASSERTL0(ids.size() == 2, "doesnt make sense");
         nameToCurveId[eit->second->getName()] = i;
-        AddCurve(i, eit->second, ids[0], ids[1]);
+        AddCurve(i, eit->second);
     }
 
     // build surfaces
@@ -243,31 +243,6 @@ bool CADSystemCFI::LoadCAD()
             edgeloops.push_back(edgeloop);
         }
 
-        // this will accuratly calculate centers of surfaces but isnt really
-        // needed because the facemesh routines do it on their own
-
-        /*cfi::FaceMassProperties *fmp = face->calcMassProperties(5.0, 5.0);
-        cfi::UVPosition uv           = face->calcUVFromXYZ(fmp->centreOfMass);
-        edgeloops[0].center          = Array<OneD, NekDouble>(2);
-        edgeloops[0].center[0]       = uv.u;
-        edgeloops[0].center[1]       = uv.v;
-        for (int i = 1; i < cfiloops.size(); i++)
-        {
-            for (int j = 0; j < cfiloops[i].size(); j++)
-            {
-                cfiloops[i][j].orientation == cfi::ORIENT_POSITIVE
-                    ? cfiloops[i][j].orientation = cfi::ORIENT_NEGATIVE
-                    : cfiloops[i][j].orientation = cfi::ORIENT_POSITIVE;
-            }
-            cfi::Face *tmpface = cfi::Face::createBasic(
-                model, cfiloops[i], face->getTopoEmbedding().value());
-            cfi::FaceMassProperties *fmp =
-                tmpface->calcMassProperties(5.0, 5.0);
-            cfi::UVPosition uv     = tmpface->calcUVFromXYZ(fmp->centreOfMass);
-            edgeloops[i].center    = Array<OneD, NekDouble>(2);
-            edgeloops[i].center[0] = uv.u;
-            edgeloops[i].center[1] = uv.v;
-        }*/
         AddSurf(i, face, edgeloops);
     }
 
@@ -300,10 +275,25 @@ void CADSystemCFI::AddVert(int i, cfi::Point *in)
     m_verts[i] = newVert;
 }
 
-void CADSystemCFI::AddCurve(int i, cfi::Line *in, int fv, int lv)
+void CADSystemCFI::AddCurve(int i, cfi::Line *in)
 {
     CADCurveSharedPtr newCurve = GetCADCurveFactory().CreateInstance(key);
     static_pointer_cast<CADCurveCFI>(newCurve)->Initialise(i, in, m_scal);
+
+    vector<cfi::Oriented<cfi::TopoEntity *> > *vertList = in->getChildList();
+
+    ASSERTL0(vertList->size() == 2, "should be two ends");
+
+    vector<cfi::Oriented<cfi::TopoEntity *> >::iterator it;
+    vector<NekDouble> t;
+    for (it = vertList->begin(); it != vertList->end(); it++)
+    {
+        cfi::Oriented<cfi::TopoEntity *> orientatedVert = *it;
+        cfi::Point *vert = static_cast<cfi::Point *>(orientatedVert.entity);
+        boost::optional<cfi::Projected<double> > pj =
+            in->calcTFromXYZ(vert->getGeometry(), -1);
+        t.push_back(pj.value().parameters);
+    }
 
     vector<CADVertSharedPtr> vs;
     vs.push_back(m_verts[fv]);

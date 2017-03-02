@@ -100,8 +100,6 @@ public:
     unsigned int                    m_spaceDim;
     /// a order tag to aid output, a bit of a hack
     unsigned int                    m_nummode;
-    ///
-    unsigned int                    m_numcomp;
     /// List of mesh nodes.
     std::vector<NodeSharedPtr>      m_node;
     /// Set of element vertices.

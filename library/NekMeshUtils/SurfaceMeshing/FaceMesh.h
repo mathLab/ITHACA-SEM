@@ -78,10 +78,7 @@ public:
      */
     bool ValidateCurves();
 
-    void ResetCurvemeshes(const std::map<int, CurveMeshSharedPtr> &cmeshes)
-    {
-        m_curvemeshes = cmeshes;
-    }
+private:
 
     /**
      * @brief Get the boundries of the surface and extracts the nodes from
@@ -89,12 +86,6 @@ public:
      */
     void OrientateCurves();
 
-    std::vector<EdgeLoopSharedPtr> GetEdges()
-    {
-        return m_edgeloops;
-    }
-
-private:
     /**
      * @brief Calculate the paramter plane streching factor
      */
@@ -144,7 +135,7 @@ private:
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
     /// data structure containing the edges, their order and oreientation for
     /// the surface
-    std::vector<EdgeLoopSharedPtr> m_edgeloops;
+    std::vector<CADSystem::EdgeLoopSharedPtr> m_edgeloops;
     /// id of the surface mesh
     int m_id;
     /// list of boundary nodes in their order loops

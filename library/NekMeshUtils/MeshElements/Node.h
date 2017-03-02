@@ -227,7 +227,7 @@ public:
         return an;
     }
 
-    // fucntions for cad information
+    // functions for cad information
 
     void SetCADCurve(int i, CADCurveSharedPtr c, NekDouble t)
     {

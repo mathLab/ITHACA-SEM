@@ -281,7 +281,9 @@ struct Field
                     // Define Homogeneous expansion
                     int nplanes;
                     NekDouble lz;
-                    LibUtilities::BasisType btype;
+                    LibUtilities::BasisType  btype;
+                    LibUtilities::PointsType ptype =
+                            LibUtilities::eFourierEvenlySpaced;
 
                     if (fldfilegiven)
                     {
@@ -299,6 +301,11 @@ struct Field
                                 nplanes = 4;
                             }
                         }
+                        else if (btype == LibUtilities::eFourierHalfModeRe &&
+                                 nplanes == 1)
+                        {
+                            ptype = LibUtilities::ePolyEvenlySpaced;
+                        }
                     }
                     else
                     {
@@ -310,7 +317,7 @@ struct Field
                     // Choose points to be at evenly spaced points at
                     // nplanes points
                     const LibUtilities::PointsKey Pkey(
-                        nplanes, LibUtilities::eFourierEvenlySpaced);
+                        nplanes, ptype);
 
                     const LibUtilities::BasisKey Bkey(btype, nplanes, Pkey);
 

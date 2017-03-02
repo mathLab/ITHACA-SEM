@@ -58,7 +58,7 @@ NekDouble CADCurveCFI::tAtArcLength(NekDouble s)
 {
     s /= m_scal;
     Array<OneD, NekDouble> bds = Bounds();
-    NekDouble dt = (bds[1] - bds[0]) / 5000;
+    NekDouble dt = (bds[1] - bds[0]) / 1000;
 
     NekDouble t   = bds[0];
     NekDouble len = 0.0;
@@ -97,7 +97,7 @@ NekDouble CADCurveCFI::loct(Array<OneD, NekDouble> xyz)
 NekDouble CADCurveCFI::Length(NekDouble ti, NekDouble tf)
 {
     Array<OneD, NekDouble> bds = Bounds();
-    NekDouble dt = (bds[1] - bds[0]) / 5000;
+    NekDouble dt = (bds[1] - bds[0]) / 1000;
 
     NekDouble t   = ti;
     NekDouble len = 0.0;

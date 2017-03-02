@@ -158,8 +158,6 @@ template <> void NodeOpti::MinEigen<2>(NekDouble &val)
     //H[0][1] = H[1][0];
     H[1][1] = m_grad[4];
 
-    //double eval[2]; // the eigenvalues
-
     NekDouble D = (H[0][0] - H[1][1]) * (H[0][0] - H[1][1]) + 4.0 * H[1][0] * H[1][0];
     NekDouble Dsqrt = sqrt(D);
 
@@ -184,13 +182,13 @@ template <> void NodeOpti::MinEigen<3>(NekDouble &val)
 
     NekDouble p1 = H[0][1] * H[0][1] + H[0][2] * H[0][2] + H[1][2] * H[1][2];
     if (p1 == 0.0) // H is diagonal
-    {  
+    {
         // find the minimum Eigenvalue
         if(H[0][0] < H[1][1])
         {
             if(H[0][0] < H[2][2])
             {
-                val = H[0][0];                
+                val = H[0][0];
             }
             else
             {
@@ -201,13 +199,13 @@ template <> void NodeOpti::MinEigen<3>(NekDouble &val)
         {
             if(H[1][1] < H[2][2])
             {
-                val = H[1][1];               
+                val = H[1][1];
             }
             else
             {
                 val = H[2][2];
             }
-        }    
+        }
     }
     else
     {
@@ -236,7 +234,7 @@ template <> void NodeOpti::MinEigen<3>(NekDouble &val)
         // but computation error can leave it slightly outside this range.
         NekDouble phi;
         if (r <= -1)
-        { 
+        {
             phi = M_PI / 3.0;
         }
         else if (r >= 1)
@@ -246,7 +244,7 @@ template <> void NodeOpti::MinEigen<3>(NekDouble &val)
         else
         {
             phi = acos(r) / 3.0;
-        }    
+        }
 
         // the eigenvalues satisfy eval[2] <= eval[1] <= eval[0]
         //eval[0] = q + 2.0 * p * cos(phi);

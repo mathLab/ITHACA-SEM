@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables);
          Array<OneD, int> GetReflectionIndex(Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,
          int Ireg);
-         
+
     if(argc != 3)
     {
         fprintf(stderr,"Usage: SplitFld  meshfile fieldfile\n");
@@ -39,10 +39,10 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     // Also read and store the boundary conditions
-    SpatialDomains::BoundaryConditionsSharedPtr boundaryConditions;        
+    SpatialDomains::BoundaryConditionsSharedPtr boundaryConditions;
     boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
                                         ::AllocateSharedPtr(vSession, graphShPt);
-    SpatialDomains::BoundaryConditions bcs(vSession, graphShPt);                                        
+    SpatialDomains::BoundaryConditions bcs(vSession, graphShPt);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -53,38 +53,38 @@ int main(int argc, char *argv[])
     LibUtilities::Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------
 
-    // Define Expansion    
-    int nfields; 
-    nfields = fielddef[0]->m_fields.size(); 
-    Array<OneD, MultiRegions::ExpListSharedPtr> Exp; 
-    Exp = Array<OneD, MultiRegions::ExpListSharedPtr>(nfields);    
+    // Define Expansion
+    int nfields;
+    nfields = fielddef[0]->m_fields.size();
+    Array<OneD, MultiRegions::ExpListSharedPtr> Exp;
+    Exp = Array<OneD, MultiRegions::ExpListSharedPtr>(nfields);
 
     std::string solvtype = vSession->GetSolverInfo("SOLVERTYPE");
     if(solvtype == "CoupledLinearisedNS" && vSession->DefinesSolverInfo("HOMOGENEOUS") )
     {
-      	    
+
          SetFields(graphShPt,boundaryConditions,vSession,Exp,nfields-1);
  	 //decomment
          //nfields = nfields-1;
 //start
          int lastfield = nfields-1;
-         cout<<"Set pressure: "<<lastfield<<endl;           
+         cout<<"Set pressure: "<<lastfield<<endl;
          int nplanes = fielddef[0]->m_numModes[2];
          const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::ePolyEvenlySpaced);
          const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
          NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
          MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
          Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,false,false,graphShPt,fielddef[0]->m_fields[0]);
-         Exp[lastfield] = Exp3DH1;        
-//end       
+         Exp[lastfield] = Exp3DH1;
+//end
     }
     else
     {
 
     	 SetFields(graphShPt,boundaryConditions,vSession,Exp,nfields);
     }
-    //----------------------------------------------    
-	
+    //----------------------------------------------
+
     //----------------------------------------------
     // Copy data from field file
     for(int j = 0; j < nfields; ++j)
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
         }
         Exp[j]->BwdTrans_IterPerExp(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
     }
- 
+
     //----------------------------------------------
 
 
@@ -110,44 +110,44 @@ int main(int argc, char *argv[])
 
     //Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(1);
 
-    string outfile; 
+    string outfile;
     string var;
 
 
     Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(Exp.num_elements());
-    //NB in case of homo fields you CANNOT use the BwdTrans 
+    //NB in case of homo fields you CANNOT use the BwdTrans
     //because the Im comp is set to 0
     for(int i = 0; i < Exp.num_elements(); ++i)
     {
         fieldcoeffs[i] = Exp[i]->UpdateCoeffs();
     }
 
-        
+
      // copy Data into FieldData and set variable
     /*
       for(int g=0; g<Exp[0]->GetPlane(1)->GetNcoeffs(); g++)
       {
       cout<<"g="<<g<<"  coeff f0="<<Exp[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1="<<Exp[lastfield]->GetPlane(1)->GetCoeff(g)<<endl;
-      }  
+      }
     */
-    
+
      for(int j =0; j<nfields; j++)
      {
           outfile = out;
           std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-              = Exp[j]->GetFieldDefinitions(); 
+              = Exp[j]->GetFieldDefinitions();
           std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-          //fieldcoeffs[j] = fields[j]->UpdateCoeffs();             	    
+          //fieldcoeffs[j] = fields[j]->UpdateCoeffs();
           for(int i = 0; i < FieldDef.size(); ++i)
           {
                var = fielddef[i]->m_fields[j];
                // Could do a search here to find correct variable
-               FieldDef[i]->m_fields.push_back(var);  	     
+               FieldDef[i]->m_fields.push_back(var);
                Exp[j]->AppendFieldData(FieldDef[i], FieldData[i],fieldcoeffs[j]);
 
           }
-          outfile += "_"+var+"_"+endfile;  
-          LibUtilities::Write(outfile,FieldDef,FieldData); 
+          outfile += "_"+var+"_"+endfile;
+          LibUtilities::Write(outfile,FieldDef,FieldData);
 
       }
 
@@ -159,24 +159,24 @@ int main(int argc, char *argv[])
 
 
 
-	// Define Expansion       		
+	// Define Expansion
         void SetFields(SpatialDomains::MeshGraphSharedPtr &mesh,
 	    SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
 		LibUtilities::SessionReaderSharedPtr &session,
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables)
-	{		
+	{
 		// Setting parameteres for homogenous problems
-		//NekDouble LhomX;           ///< physical length in X direction (if homogeneous) 
-		NekDouble LhomY;           ///< physical length in Y direction (if homogeneous)
-		NekDouble LhomZ;           ///< physical length in Z direction (if homogeneous)
-		
-		bool DeclareCoeffPhysArrays = true;		
+		//NekDouble LhomX;           ///< physical length in X direction (if homogeneous)
+		NekDouble LhomY=0.0;           ///< physical length in Y direction (if homogeneous)
+		NekDouble LhomZ=0.0;           ///< physical length in Z direction (if homogeneous)
+
+		bool DeclareCoeffPhysArrays = true;
 		//int npointsX;              ///< number of points in X direction (if homogeneous)
-		int npointsY;              ///< number of points in Y direction (if homogeneous)
-                int npointsZ;              ///< number of points in Z direction (if homogeneous)	
-		bool useFFT = false;	
-		bool deal = false;        
-		///Parameter for homogeneous expansions		
+		int npointsY=0;              ///< number of points in Y direction (if homogeneous)
+        int npointsZ=0;              ///< number of points in Z direction (if homogeneous)
+		bool useFFT = false;
+		bool deal = false;
+		///Parameter for homogeneous expansions
 		enum HomogeneousType
 		{
 			eHomogeneous1D,
@@ -188,10 +188,10 @@ int main(int argc, char *argv[])
 		enum HomogeneousType HomogeneousType = eNotHomogeneous;
 
 		if(session->DefinesSolverInfo("HOMOGENEOUS"))
-		{ 			
+		{
 			std::string HomoStr = session->GetSolverInfo("HOMOGENEOUS");
 			//m_spacedim          = 3;
-			
+
 			if((HomoStr == "HOMOGENEOUS1D")||(HomoStr == "Homogeneous1D")||
 			   (HomoStr == "1D")||(HomoStr == "Homo1D"))
 			{
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
 				npointsZ        = session->GetParameter("HomModesZ");
 				LhomZ           = session->GetParameter("LZ");
 			}
-			
+
 			if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
 			   (HomoStr == "2D")||(HomoStr == "Homo2D"))
 			{
@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
 				npointsZ        = session->GetParameter("HomModesZ");
 				LhomZ           = session->GetParameter("LZ");
 			}
-			
+
 			if((HomoStr == "HOMOGENEOUS3D")||(HomoStr == "Homogeneous3D")||
 			   (HomoStr == "3D")||(HomoStr == "Homo3D"))
 			{
@@ -221,16 +221,16 @@ int main(int argc, char *argv[])
 				npointsZ        = session->GetParameter("HomModesZ");
 				LhomZ           = session->GetParameter("LZ");
 			}
-			
+
 			if(session->DefinesSolverInfo("USEFFT"))
 			{
 				useFFT = true;
 			}
-		}		
-			
-	    int i;		
+		}
+
+	    int i;
 	    int expdim   = mesh->GetMeshDimension();
-	    //Exp= Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);    
+	    //Exp= Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
   	    // I can always have 3 variables in a 2D mesh (oech vel component i a function which can depend on 1-3 var)
         // Continuous Galerkin projection
 
@@ -263,19 +263,19 @@ int main(int argc, char *argv[])
                     break;
                 }
             case 2:
-                {   
+                {
                     if(HomogeneousType == eHomogeneous1D)
                     {
                         const LibUtilities::PointsKey PkeyZ(npointsZ,LibUtilities::eFourierEvenlySpaced);
                         const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,npointsZ,PkeyZ);
                         for(i = 0 ; i < nvariables; i++)
-                        {                        	
+                        {
                             Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(session,BkeyZ,LhomZ,useFFT,deal,mesh,session->GetVariable(i));                                    
+                                ::AllocateSharedPtr(session,BkeyZ,LhomZ,useFFT,deal,mesh,session->GetVariable(i));
                         }
                     }
                     else
-                    {                   	    
+                    {
                         i = 0;
                         MultiRegions::ContField2DSharedPtr firstfield;
                         firstfield = MemoryManager<MultiRegions::ContField2D>
@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
 
                         Exp[0] = firstfield;
                         for(i = 1 ; i < nvariables; i++)
-                        {                        	
+                        {
                             Exp[i] = MemoryManager<MultiRegions::ContField2D>
                                 ::AllocateSharedPtr(*firstfield,mesh,session->GetVariable(i),DeclareCoeffPhysArrays);
                         }
@@ -316,6 +316,6 @@ int main(int argc, char *argv[])
             default:
                 ASSERTL0(false,"Expansion dimension not recognised");
                 break;
-            }   
-        }   	   
+            }
+        }
 

@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        char *vars[3] = { "u", "v", "w" };
+        string vars = "uvw";
 
         for (int i = 0; i < dim; ++i)
         {

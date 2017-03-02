@@ -78,7 +78,7 @@ void NodeOpti1D3D::Optimise()
 
         sk[0] = m_grad[0] / m_grad[1] * -1.0;
 
-        Array<OneD, NekDouble> bd = curve->Bounds();
+        Array<OneD, NekDouble> bd = curve->GetBounds();
 
         bool found = false;
 

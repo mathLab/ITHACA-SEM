@@ -65,6 +65,7 @@ void APE_coupled::v_InitObject()
     m_extForcing = GetForcingFactory().CreateInstance(
         "Programmatic", m_session, m_fields, 1, 0);
     m_forcing.push_back(m_extForcing);
+    EvaluateFunction("p", m_extForcing->UpdateForces()[0], "CouplingSource", m_time);
 }
 
 /**

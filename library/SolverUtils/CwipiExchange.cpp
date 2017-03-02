@@ -151,6 +151,18 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
 
     m_sendTag = cwipi_get_distant_int_control_parameter(m_config["REMOTENAME"].c_str(), "receiveTag");
 
+    if (cwipi_has_int_parameter(m_config["REMOTENAME"].c_str(), "nRecvVars"))
+    {
+        int remoteNRecvVars = cwipi_get_distant_int_control_parameter(m_config["REMOTENAME"].c_str(), "nRecvVars");
+        ASSERTL0(remoteNRecvVars == m_nSendVars, "Number of local send vars different to remote received vars");
+    }
+
+    if (cwipi_has_int_parameter(m_config["REMOTENAME"].c_str(), "nSendVars"))
+    {
+        int remoteNSendVars = cwipi_get_distant_int_control_parameter(m_config["REMOTENAME"].c_str(), "nSendVars");
+        ASSERTL0(remoteNSendVars == m_nRecvVars, "Number of local receive vars different to remote sent vars");
+    }
+
     AnnounceMesh();
 
     if (m_nRecvVars > 0 and m_recvSteps > 0)

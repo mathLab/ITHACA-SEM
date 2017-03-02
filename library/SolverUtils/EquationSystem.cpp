@@ -899,10 +899,9 @@ namespace Nektar
                 ElementGIDs[i] = m_fields[0]->GetExp(i)->GetGeom()->GetGlobalID();
             }
 
-            // check if we already loaded this file.
-            // For transient files, funcFilename != filename so we can make sure we only
-            // keep
-            // the latest field per funcFilename.
+            // check if we already loaded this file. For transient files,
+            // funcFilename != filename so we can make sure we only keep the
+            // latest field per funcFilename.
             std::string funcFilename =
                 m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
             if (m_loadedFldFields.find(funcFilename) != m_loadedFldFields.end())
@@ -931,6 +930,9 @@ namespace Nektar
                                 LibUtilities::NullFieldMetaDataMap,
                                 ElementGIDs);
             }
+            // Now we overwrite the field we had in
+            // m_loadedFldFields[funcFilename] before, making sure we only keep
+            // one field per funcFilename in memory
             m_loadedFldFields[funcFilename].first            = filename;
             m_loadedFldFields[funcFilename].second.fieldDef  = FieldDef;
             m_loadedFldFields[funcFilename].second.fieldData = FieldData;
@@ -1021,10 +1023,9 @@ namespace Nektar
             }
 
             LibUtilities::PtsFieldSharedPtr outPts;
-            // check if we already loaded this file.
-            // For transient files, funcFilename != filename so we can make sure we only
-            // keep
-            // the latest pts field per funcFilename.
+            // check if we already loaded this file. For transient files,
+            // funcFilename != filename so we can make sure we only keep the
+            // latest pts field per funcFilename.
             std::string funcFilename =
                 m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
 
@@ -1045,6 +1046,9 @@ namespace Nektar
             {
                 LoadPts(funcFilename, filename, outPts);
             }
+            // Now we overwrite the field we had in
+            // m_loadedPtsFields[funcFilename] before, making sure we only keep
+            // one field per funcFilename in memory
             m_loadedPtsFields[funcFilename].first  = filename;
             m_loadedPtsFields[funcFilename].second = outPts;
 

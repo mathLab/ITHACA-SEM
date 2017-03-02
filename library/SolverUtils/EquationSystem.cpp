@@ -772,17 +772,6 @@ namespace Nektar
             else if (vType == LibUtilities::eFunctionTypeFile ||
                     vType == LibUtilities::eFunctionTypeTransientFile)
             {
-                // check if we already read this pFunctionName + pFieldName
-                // combination and stop processing if we are dealing with
-                // a non-timedependent file
-                std::string loadedKey = pFunctionName + pFieldName;
-                if (m_loadedFields.count(loadedKey) != 0 &&
-                    vType == LibUtilities::eFunctionTypeFile)
-                {
-                    return;
-                }
-                m_loadedFields.insert(loadedKey);
-
                 std::string filename =
                     m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
 

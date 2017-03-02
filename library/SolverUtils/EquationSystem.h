@@ -486,8 +486,6 @@ namespace Nektar
             NekDouble                                   m_timestep;
             /// Lambda constant in real system if one required.
             NekDouble                                   m_lambda;
-
-            std::set<std::string>                       m_loadedFields;
             /// Time between checkpoints.
             NekDouble                                   m_checktime;
             /// Number of checkpoints written so far

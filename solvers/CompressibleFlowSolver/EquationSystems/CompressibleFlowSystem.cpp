@@ -739,10 +739,10 @@ namespace Nektar
 
         InitializeSteadyState();
 
-        if (dumpInitialConditions)
+        if (dumpInitialConditions && m_checksteps)
         {
-            // Dump initial conditions to file
-            Checkpoint_Output(0);
+            Checkpoint_Output(m_nchk);
+            m_nchk++;
         }
     }
 

@@ -339,8 +339,7 @@ void Interpolator::Interpolate(
 
         if (elmtid >= 0)
         {
-            int offset = m_expInField[0]->GetPhys_Offset(
-                m_expInField[0]->GetOffset_Elmt_Id(elmtid));
+            int offset = m_expInField[0]->GetPhys_Offset(elmtid);
 
             for (int f = 0; f < m_expInField.size(); ++f)
             {
@@ -424,8 +423,7 @@ void Interpolator::Interpolate(
 
         if (elmtid >= 0)
         {
-            int offset = m_expInField[0]->GetPhys_Offset(
-                m_expInField[0]->GetOffset_Elmt_Id(elmtid));
+            int offset = m_expInField[0]->GetPhys_Offset(elmtid);
 
             for (int f = 0; f < m_expInField.size(); ++f)
             {

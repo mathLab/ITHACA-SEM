@@ -40,6 +40,7 @@ v4.4.0
 - Fix bug in CMake Homebrew and MacPorts detection for OS X (!729)
 - Fix bug in FieldUtils when using half mode expansions (!734)
 - Do not read the same fld/pts files again for every variable (!670)
+- Fix bug in CMake PETSc detection for Ubuntu 16.04/Debian 9 (!735)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)
@@ -58,11 +59,15 @@ v4.4.0
 - Added a convective like outflow boundary condition from Dong (!713)
 - Added the ability to specifiy Womersley boundary conditions for pulsatile flow (!472)
 
+**CardiacEPSolver:**
+- Added a Python translator utility to generate cell models from CellML (!723)
+
 **FieldConvert:**
 - Allow equi-spaced output for 1D and 2DH1D fields (!613)
 - Update quality metric to include scaled Jacobian output (!695)
 - Allow multiple XML files to be specified in InterpField module (!705)
 - Fix issues with isocontour module (!719)
+- Fix issue with interpolator routine (!746)
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)
@@ -107,6 +112,9 @@ v4.4.0
 - Add module to stretch homogeneous direction (!609)
 - Add module to add composite ID of elements as a field (!674)
 - Add reader for Nek5000 field files (!680)
+
+**Tester:**
+- Fix output not displayed on segfault or system error (!745)
 
 v4.3.5
 ------

@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_NEKMESH_INPUTCAD
-#define UTILITIES_NEKMESH_INPUTCAD
+#ifndef UTILITIES_NEKMESH_INPUTMCF
+#define UTILITIES_NEKMESH_INPUTMCF
 
 #include <NekMeshUtils/Module/Module.h>
 
@@ -43,17 +43,17 @@ namespace Nektar
 namespace Utilities
 {
 
-class InputCAD : public NekMeshUtils::InputModule
+class InputMCF : public NekMeshUtils::InputModule
 {
 public:
-    InputCAD(NekMeshUtils::MeshSharedPtr m);
-    virtual ~InputCAD();
+    InputMCF(NekMeshUtils::MeshSharedPtr m);
+    virtual ~InputMCF();
     virtual void Process();
 
     /// Creates an instance of this class
     static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
     {
-        return MemoryManager<InputCAD>::AllocateSharedPtr(m);
+        return MemoryManager<InputMCF>::AllocateSharedPtr(m);
     }
     /// %ModuleKey for class.
     static NekMeshUtils::ModuleKey className;

@@ -86,6 +86,10 @@ public:
         {
             CreateEdges();
         }
+
+        m_bloffset.resize(2);
+        m_bloffset[0] = 0.0;
+        m_bloffset[1] = 0.0;
     }
 
     /**

@@ -10,4 +10,6 @@ IF( NEKTAR_SOLVER_MMF )
     ADD_SOLVER_EXECUTABLE(MMFSolver solvers 
         ${MMFSolverSource})
 
+ADD_NEKTAR_TEST        (TestMaxwellSphereh07)
+
 ENDIF( NEKTAR_SOLVER_MMF )

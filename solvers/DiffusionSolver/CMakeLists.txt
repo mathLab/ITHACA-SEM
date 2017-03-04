@@ -17,6 +17,11 @@ IF( NEKTAR_SOLVER_DIFFUSION )
     ADD_SOLVER_EXECUTABLE(MMFDiffusion solvers 
         ${MMFDiffusionSource})
 
+    #MMF Diffusion
+    ADD_NEKTAR_TEST(TestMMFDiffPlane)
+    ADD_NEKTAR_TEST(TestMMFDiffSphere)
+    ADD_NEKTAR_TEST(TestMMFDiffCube)
+
     ADD_NEKTAR_TEST(ImDiffusion_m6)
     ADD_NEKTAR_TEST(ImDiffusion_m6_time_int)
 ENDIF( NEKTAR_SOLVER_DIFFUSION )

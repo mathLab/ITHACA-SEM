@@ -3018,7 +3018,7 @@ namespace Nektar
 	       indx = Vmath::Iamax(nq, exactsolution, 1);
 	       
 	       LinfError = fabs(LinfError/Letaint);
-	       Gs::cout << "LinfError of eta occurs at ( " << x[indx] << " , " << y[indx] << " , " << z[indx] << " ) " << Gs::endl;
+	      // Gs::cout << "LinfError of eta occurs at ( " << x[indx] << " , " << y[indx] << " , " << z[indx] << " ) " << Gs::endl;
 	     }
 	     break;
 	     
@@ -3056,7 +3056,7 @@ namespace Nektar
 	       LinfError = Vmath::Vamax(nq, Lerr, 1)/Vmath::Vamax(nq, uT, 1);
 	       indx = Vmath::Iamax(nq, Lerr, 1);
 	       
-	       Gs::cout << "LinfError of u occurs at ( " << x[indx] << " , " << y[indx] << " , " << z[indx] << " ) " << Gs::endl;
+	       //Gs::cout << "LinfError of u occurs at ( " << x[indx] << " , " << y[indx] << " , " << z[indx] << " ) " << Gs::endl;
 	     }
 	     break;
 	     

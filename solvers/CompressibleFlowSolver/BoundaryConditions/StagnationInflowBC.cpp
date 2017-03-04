@@ -84,48 +84,64 @@ void StagnationInflowBC::v_Apply(
         = m_fields[0]->GetTraceBndMap();
 
     NekDouble gammaInv = 1.0 / m_gamma;
+    NekDouble gammaMinusOne    = m_gamma - 1.0;
+    NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
 
-    // Get pressure
+    // Get stagnation pressure
+    Array<OneD, NekDouble > pStag      (numBCPts);
+    m_varConv->GetPressure(m_fieldStorage, pStag);
+
+    // Get Mach from Fwd
     Array<OneD, NekDouble > pressure  (nTracePts);
-    Array<OneD, NekDouble > pRef      (numBCPts);
-
+    Array<OneD, NekDouble > soundSpeed(nTracePts);
+    Array<OneD, NekDouble > Mach      (nTracePts);
     m_varConv->GetPressure(Fwd, pressure);
-    m_varConv->GetPressure(m_fieldStorage, pRef);
+    m_varConv->GetSoundSpeed(Fwd, pressure, soundSpeed);
+    m_varConv->GetMach(Fwd, soundSpeed, Mach);
 
     // Auxiliary variables
     int e, id1, id2, npts, pnt;
-    NekDouble rho;
+    NekDouble rho, p;
 
-    // Loop on the m_bcRegions
+    // Loop on the m_bcRegion
     for (e = 0; e < m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
          GetExpSize(); ++e)
     {
         npts = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
-        GetExp(e)->GetTotPoints();
+                GetExp(e)->GetTotPoints();
         id1 = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
-            GetPhys_Offset(e);
+                GetPhys_Offset(e);
         id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[m_offset+e]);
 
         // Loop on points of m_bcRegion 'e'
         for (i = 0; i < npts; i++)
         {
             pnt = id2 + i;
-            // Density from isentropic relation: rho = rhoRef *(p/pRef)^1/Gamma
+
+            // Pressure from stagnation pressure and Mach
+            p = pStag[id1+i] /
+                pow(1.0 + (gammaMinusOne)/2.0 * Mach[pnt]*Mach[pnt],
+                    m_gamma/(gammaMinusOne));
+
+            // rho from isentropic relation: rho = rhoStag *(p/pStag)^1/Gamma
             rho = m_fieldStorage[0][id1+i] * 
-                    pow(pressure[pnt]/pRef[id1+i],gammaInv);
+                    pow(p/pStag[id1+i],gammaInv);
             (m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
                 UpdatePhys())[id1+i] = rho;
 
-            // Extrapolation for velocity
+            // Extrapolation for velocity and Kinetic energy calculation
+            NekDouble Ek = 0.0;
             for (j = 1; j < nVariables-1; ++j)
             {
                 (m_fields[j]->GetBndCondExpansions()[m_bcRegion]->
-                 UpdatePhys())[id1+i] = Fwd[j][pnt];
+                     UpdatePhys())[id1+i] = Fwd[j][pnt];
+
+                Ek += 0.5 * (Fwd[j][pnt] * Fwd[j][pnt]) / Fwd[0][pnt];
             }
 
-            // Prescribed energy
+            // Energy
             (m_fields[nVariables-1]->GetBndCondExpansions()[m_bcRegion]->
-                UpdatePhys())[id1+i] = m_fieldStorage[nVariables-1][id1+i];
+                UpdatePhys())[id1+i] = p * gammaMinusOneInv + Ek;
         }
     }
 }

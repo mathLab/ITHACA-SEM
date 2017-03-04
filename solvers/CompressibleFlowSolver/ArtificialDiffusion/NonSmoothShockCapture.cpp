@@ -83,7 +83,11 @@ void NonSmoothShockCapture::v_GetArtificialViscosity(
         {
             NekDouble mu_0 = m_mu0;
 
-            if (Sensor[n+PointCount] < (m_Skappa-m_Kappa))
+            if (m_fields[0]->GetExp(e)->GetNcoeffs() <= m_offset)
+            {
+                mu[n+PointCount] = 0;
+            }
+            else if (Sensor[n+PointCount] < (m_Skappa-m_Kappa))
             {
                 mu[n+PointCount] = 0;
             }

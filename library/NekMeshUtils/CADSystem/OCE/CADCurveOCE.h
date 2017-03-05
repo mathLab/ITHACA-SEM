@@ -73,6 +73,11 @@ public:
     virtual NekDouble Curvature(NekDouble t);
     virtual Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf);
     virtual Array<OneD, NekDouble> N(NekDouble t);
+    virtual NekDouble DistanceTo(Array<OneD, NekDouble> xyz)
+    {
+        ASSERTL0(false,"not implemented yet");
+        return 0.0;
+    }
 
     void Initialise(int i, TopoDS_Shape in)
     {

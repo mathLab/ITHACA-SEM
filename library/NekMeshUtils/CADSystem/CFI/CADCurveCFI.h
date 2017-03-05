@@ -83,6 +83,7 @@ public:
     virtual NekDouble tAtArcLength(NekDouble s);
     virtual Array<OneD, NekDouble> GetMinMax();
     virtual NekDouble loct(Array<OneD, NekDouble> xyz);
+    virtual NekDouble DistanceTo(Array<OneD, NekDouble> xyz);
 
     void Initialise(int i, cfi::Line *in, NekDouble s);
 

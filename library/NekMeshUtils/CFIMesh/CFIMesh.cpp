@@ -67,11 +67,11 @@ void CFIMesh::Process()
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
 
-    /*CADSystemCFISharedPtr cad =
+    CADSystemCFISharedPtr cad =
         boost::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad);
-    map<string, int> nameToCurveId                  = cad->GetCFICurveId();
-    map<string, int> nameToFaceId                   = cad->GetCFIFaceId();
-    map<string, vector<string> > nameVertToListEdge = cad->GetVertId();
+    map<string, int> nameToCurveId = cad->GetCFICurveId();
+    map<string, int> nameToFaceId  = cad->GetCFIFaceId();
+    map<string, int> nameToVertId  = cad->GetCFIVertId();
     cfi::Model *model = cad->GetCFIModel();
     NekDouble scal    = cad->GetScaling();
 
@@ -97,43 +97,149 @@ void CFIMesh::Process()
 
         // point built now add cad if needed
 
+        map<string, int>::iterator f;
+
         cfi::MeshableEntity *p = (*it).parent;
         if (p->type == cfi::TYPE_LINE)
         {
-            int cid             = nameToCurveId[p->getName()];
-            CADCurveSharedPtr c = m_mesh->m_cad->GetCurve(cid);
-            NekDouble t         = c->loct(xyz);
-            n->SetCADCurve(cid, c, t);
-            vector<pair<CADSurfSharedPtr, CADSystem::Orientation> > ss =
-                c->GetAdjSurf();
-            for (int j = 0; j < ss.size(); j++)
+            vector<int> cvs;
+            f = nameToCurveId.find(p->getName());
+            if (f == nameToCurveId.end())
             {
-                Array<OneD, NekDouble> uv = ss[j]->locuv(xyz);
-                n->SetCADSurf(ss[j].first->GetId(), ss[j].first, uv);
+                // if the imediate parent is not in the main CAD body
+                // it is medial object, scan for better CAD entity
+                int na = p->getAssignmentTotal();
+                for (int i = 1; i <= na; i++)
+                {
+                    string nm         = p->getAssignmentName(i);
+                    cfi::Assignment a = p->getAssignment(nm);
+                    if (a.getType() == cfi::DATA_TYPE_ENTITY)
+                    {
+                        cfi::Entity *en = a.getEntityValue();
+                        f               = nameToCurveId.find(en->getName());
+                        if (f != nameToCurveId.end())
+                        {
+                            cvs.push_back(f->second);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                cvs.push_back(f->second);
+            }
+
+            for (int i = 0; i < cvs.size(); i++)
+            {
+                // found a number of possible cadidates
+                // in theory should only be 1 but just incase will loop
+                CADCurveSharedPtr c = m_mesh->m_cad->GetCurve(cvs[i]);
+
+                NekDouble dis = c->DistanceTo(xyz);
+                if (dis > 1e-6)
+                {
+                    // node is acutally not on curve but is only
+                    // notionally connected to it through medial object
+                    continue;
+                }
+
+                NekDouble t = c->loct(xyz);
+                n->SetCADCurve(c, t);
+                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> >
+                    ss = c->GetAdjSurf();
+                for (int j = 0; j < ss.size(); j++)
+                {
+                    Array<OneD, NekDouble> uv = ss[j].first->locuv(xyz);
+                    n->SetCADSurf(ss[j].first, uv);
+                }
             }
         }
         else if (p->type == cfi::TYPE_FACE)
         {
-            int sid            = nameToFaceId[p->getName()];
-            CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(sid);
-            Array<OneD, NekDouble> uv = s->locuv(xyz);
-            n->SetCADSurf(sid, s, uv);
+            vector<int> sfs;
+            f = nameToFaceId.find(p->getName());
+            if (f == nameToFaceId.end())
+            {
+                int na = p->getAssignmentTotal();
+                for (int i = 1; i <= na; i++)
+                {
+                    string nm         = p->getAssignmentName(i);
+                    cfi::Assignment a = p->getAssignment(nm);
+                    if (a.getType() == cfi::DATA_TYPE_ENTITY)
+                    {
+                        cfi::Entity *en = a.getEntityValue();
+                        f               = nameToFaceId.find(en->getName());
+                        if (f != nameToFaceId.end())
+                        {
+                            sfs.push_back(f->second);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                sfs.push_back(f->second);
+            }
+
+            for (int i = 0; i < sfs.size(); i++)
+            {
+                CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(sfs[i]);
+                NekDouble dis      = s->DistanceTo(xyz);
+                if (dis > 1e-6)
+                {
+                    continue;
+                }
+                Array<OneD, NekDouble> uv = s->locuv(xyz);
+                n->SetCADSurf(s, uv);
+            }
         }
         else if (p->type == cfi::TYPE_POINT)
         {
-            vector<string> cv = nameVertToListEdge[p->getName()];
-            for (int i = 0; i < cv.size(); i++)
+            vector<int> vts;
+            f = nameToVertId.find(p->getName());
+            if (f == nameToVertId.end())
             {
-                int cid             = nameToCurveId[cv[i]];
-                CADCurveSharedPtr c = m_mesh->m_cad->GetCurve(cid);
-                NekDouble t         = c->loct(xyz);
-                n->SetCADCurve(cid, c, t);
-                vector<pair<CADSurfSharedPtr, CADSystem::Orientation> > ss =
-                    c->GetAdjSurf();
-                for (int j = 0; j < ss.size(); j++)
+                int na = p->getAssignmentTotal();
+                for (int i = 1; i <= na; i++)
                 {
-                    Array<OneD, NekDouble> uv = ss[j]->locuv(xyz);
-                    n->SetCADSurf(ss[j].first->GetId(), ss[j].first, uv);
+                    string nm         = p->getAssignmentName(i);
+                    cfi::Assignment a = p->getAssignment(nm);
+                    if (a.getType() == cfi::DATA_TYPE_ENTITY)
+                    {
+                        cfi::Entity *en = a.getEntityValue();
+                        f               = nameToVertId.find(en->getName());
+                        if (f != nameToVertId.end())
+                        {
+                            vts.push_back(f->second);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                vts.push_back(f->second);
+            }
+
+            for (int i = 0; i < vts.size(); i++)
+            {
+                CADVertSharedPtr v = m_mesh->m_cad->GetVert(vts[i]);
+                NekDouble dis      = v->DistanceTo(xyz);
+                if (dis > 1e-6)
+                {
+                    continue;
+                }
+                vector<CADCurveSharedPtr> cs = v->GetAdjCurves();
+                for (int j = 0; j < cs.size(); j++)
+                {
+                    NekDouble t = cs[j]->loct(xyz);
+                    n->SetCADCurve(cs[j], t);
+                    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> >
+                        ss = cs[j]->GetAdjSurf();
+                    for (int k = 0; k < ss.size(); k++)
+                    {
+                        Array<OneD, NekDouble> uv = ss[k].first->locuv(xyz);
+                        n->SetCADSurf(ss[k].first, uv);
+                    }
                 }
             }
         }
@@ -171,96 +277,203 @@ void CFIMesh::Process()
         m_mesh->m_element[3].push_back(E);
     }
 
-    // there must be a surface mesh as well or the high-order doesnt work
-
-    vector<cfi::ElementDefinition> *tris =
-        model->getElements(cfi::SUBTYPE_TR3, 3);
-    ASSERTL0(tris->size() > 0, "no TR3 information found");
-    cout << "tris " << tris->size() << endl;
-    for (it = tris->begin(); it != tris->end(); it++)
+    vector<cfi::ElementDefinition> *prisms =
+        model->getElements(cfi::SUBTYPE_PE6, 6);
+    cout << "prisms " << prisms->size() << endl;
+    i         = 0;
+    int nm[6] = {3, 2, 5, 0, 1, 4};
+    for (it = prisms->begin(); it != prisms->end(); it++, i++)
     {
-        cfi::ElementDefinition el = *it;
+        vector<NodeSharedPtr> n(6);
+        vector<cfi::Node *> ns = (*it).nodes;
+
+        for (int j = 0; j < ns.size(); j++)
+        {
+            n[nm[j]] = nodes[ns[j]->number];
+        }
+
+        vector<int> tags;
+        tags.push_back(prefix + 1);
+        ElmtConfig conf(LibUtilities::ePrism, 1, false, false);
+        ElementSharedPtr E = GetElementFactory().CreateInstance(
+            LibUtilities::ePrism, conf, n, tags);
+
+        m_mesh->m_element[3].push_back(E);
+    }
+
+    vector<cfi::ElementDefinition> *hexs =
+        model->getElements(cfi::SUBTYPE_HE8, 8);
+    cout << "hexes " << hexs->size() << endl;
+    i = 0;
+    for (it = hexs->begin(); it != hexs->end(); it++, i++)
+    {
         vector<NodeSharedPtr> n;
-        vector<cfi::Node *> ns = el.nodes;
+        vector<cfi::Node *> ns = (*it).nodes;
+
         for (int j = 0; j < ns.size(); j++)
         {
             n.push_back(nodes[ns[j]->number]);
         }
 
         vector<int> tags;
-
-        cfi::MeshableEntity *p = el.parent;
-        tags.push_back(nameToFaceId[p->getName()]);
-
-        ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
+        tags.push_back(prefix + 2);
+        ElmtConfig conf(LibUtilities::eHexahedron, 1, false, false);
         ElementSharedPtr E = GetElementFactory().CreateInstance(
-            LibUtilities::eTriangle, conf, n, tags);
-        E->m_parentCAD = m_mesh->m_cad->GetSurf(nameToFaceId[p->getName()]);
-        m_mesh->m_element[2].push_back(E);
-    }
+            LibUtilities::eHexahedron, conf, n, tags);
 
-    // need to dumy process the surface edges
-    EdgeSet localEdges;
-    for (int i = 0; i < m_mesh->m_element[2].size(); ++i)
-    {
-        for (int j = 0; j < m_mesh->m_element[2][i]->GetEdgeCount(); ++j)
-        {
-            pair<EdgeSet::iterator, bool> testIns;
-            EdgeSharedPtr ed = m_mesh->m_element[2][i]->GetEdge(j);
-
-            testIns = localEdges.insert(ed);
-
-            if (!testIns.second)
-            {
-                EdgeSharedPtr e2 = *(testIns.first);
-                m_mesh->m_element[2][i]->SetEdge(j, e2);
-            }
-        }
-    }
-
-    // first look at the beams and add cad info, then if cad info is missing
-    // edge belongs to same surface as the host triangle
-    vector<cfi::ElementDefinition> *es =
-        model->getElements(cfi::SUBTYPE_BE2, 2);
-    ASSERTL0(es->size() > 0, "no BE2 information found");
-    cout << "beams " << es->size() << endl;
-    for (it = es->begin(); it != es->end(); it++)
-    {
-        cfi::ElementDefinition el = *it;
-        vector<NodeSharedPtr> n;
-        vector<cfi::Node *> ns = el.nodes;
-        for (int j = 0; j < ns.size(); j++)
-        {
-            n.push_back(nodes[ns[j]->number]);
-        }
-
-        EdgeSharedPtr e = boost::shared_ptr<Edge>(new Edge(n[0], n[1]));
-
-        EdgeSet::iterator f = localEdges.find(e);
-        ASSERTL0(f != localEdges.end(), "edge not found");
-        cfi::MeshableEntity *p = el.parent;
-        (*f)->m_parentCAD =
-            m_mesh->m_cad->GetCurve(nameToCurveId[p->getName()]);
-    }
-
-    for (int i = 0; i < m_mesh->m_element[2].size(); ++i)
-    {
-        for (int j = 0; j < m_mesh->m_element[2][i]->GetEdgeCount(); ++j)
-        {
-            EdgeSharedPtr ed = m_mesh->m_element[2][i]->GetEdge(j);
-
-            if (!ed->m_parentCAD)
-            {
-                ed->m_parentCAD = m_mesh->m_element[2][i]->m_parentCAD;
-            }
-        }
+        m_mesh->m_element[3].push_back(E);
     }
 
     ProcessVertices();
     ProcessEdges();
     ProcessFaces();
     ProcessElements();
-    ProcessComposites();*/
+    // ProcessComposites();
+
+    vector<cfi::ElementDefinition> *tris =
+        model->getElements(cfi::SUBTYPE_TR3, 3);
+    cout << "tris " << tris->size() << endl;
+    i = 0;
+    for (it = tris->begin(); it != tris->end(); it++, i++)
+    {
+        vector<NodeSharedPtr> n;
+        vector<cfi::Node *> ns = (*it).nodes;
+
+        for (int j = 0; j < ns.size(); j++)
+        {
+            n.push_back(nodes[ns[j]->number]);
+        }
+
+        vector<int> tags;
+        tags.push_back(0); // dummy for tempory
+        ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
+        ElementSharedPtr E = GetElementFactory().CreateInstance(
+            LibUtilities::eTriangle, conf, n, tags);
+
+        // going to create a face from the cfi element and find its counterpart
+        // in the m_mesh faceset
+        // if its a boundary element we can continue
+
+        FaceSharedPtr fc = FaceSharedPtr(
+            new Face(E->GetVertexList(), vector<NodeSharedPtr>(),
+                     E->GetEdgeList(), LibUtilities::ePolyEvenlySpaced));
+
+        FaceSet::iterator find = m_mesh->m_faceSet.find(fc);
+        ASSERTL0(find != m_mesh->m_faceSet.end(), "surface element not found in mesh");
+
+        FaceSharedPtr mf = *find;
+        if(mf->m_elLink.size() == 1)
+        {
+            //boundary element, we want to use it
+            map<string, int>::iterator f;
+            cfi::MeshableEntity* p = (*it).parent;
+            vector<int> sfs;
+            f = nameToFaceId.find(p->getName());
+            if (f == nameToFaceId.end())
+            {
+                int na = p->getAssignmentTotal();
+                for (int i = 1; i <= na; i++)
+                {
+                    string nm         = p->getAssignmentName(i);
+                    cfi::Assignment a = p->getAssignment(nm);
+                    if (a.getType() == cfi::DATA_TYPE_ENTITY)
+                    {
+                        cfi::Entity *en = a.getEntityValue();
+                        f               = nameToFaceId.find(en->getName());
+                        if (f != nameToFaceId.end())
+                        {
+                            sfs.push_back(f->second);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                sfs.push_back(f->second);
+            }
+
+            //this might work
+            ASSERTL0(sfs.size() == 1,"weirdness");
+            E->m_parentCAD = m_mesh->m_cad->GetSurf(sfs[0]);
+            tags.clear();
+            tags.push_back(sfs[0]);
+            E->SetTagList(tags);
+            m_mesh->m_element[2].push_back(E);
+        }
+    }
+
+    vector<cfi::ElementDefinition> *quads =
+        model->getElements(cfi::SUBTYPE_QU4, 3);
+    cout << "quads " << quads->size() << endl;
+    i = 0;
+    for (it = quads->begin(); it != quads->end(); it++, i++)
+    {
+        vector<NodeSharedPtr> n;
+        vector<cfi::Node *> ns = (*it).nodes;
+
+        for (int j = 0; j < ns.size(); j++)
+        {
+            n.push_back(nodes[ns[j]->number]);
+        }
+
+        vector<int> tags;
+        tags.push_back(0); // dummy for tempory
+        ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false, false);
+        ElementSharedPtr E = GetElementFactory().CreateInstance(
+            LibUtilities::eQuadrilateral, conf, n, tags);
+
+        // going to create a face from the cfi element and find its counterpart
+        // in the m_mesh faceset
+        // if its a boundary element we can continue
+
+        FaceSharedPtr fc = FaceSharedPtr(
+            new Face(E->GetVertexList(), vector<NodeSharedPtr>(),
+                     E->GetEdgeList(), LibUtilities::ePolyEvenlySpaced));
+
+        FaceSet::iterator find = m_mesh->m_faceSet.find(fc);
+        ASSERTL0(find != m_mesh->m_faceSet.end(), "surface element not found in mesh");
+
+        FaceSharedPtr mf = *find;
+        if(mf->m_elLink.size() == 1)
+        {
+            //boundary element, we want to use it
+            map<string, int>::iterator f;
+            cfi::MeshableEntity* p = (*it).parent;
+            vector<int> sfs;
+            f = nameToFaceId.find(p->getName());
+            if (f == nameToFaceId.end())
+            {
+                int na = p->getAssignmentTotal();
+                for (int i = 1; i <= na; i++)
+                {
+                    string nm         = p->getAssignmentName(i);
+                    cfi::Assignment a = p->getAssignment(nm);
+                    if (a.getType() == cfi::DATA_TYPE_ENTITY)
+                    {
+                        cfi::Entity *en = a.getEntityValue();
+                        f               = nameToFaceId.find(en->getName());
+                        if (f != nameToFaceId.end())
+                        {
+                            sfs.push_back(f->second);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                sfs.push_back(f->second);
+            }
+
+            //this might work
+            ASSERTL0(sfs.size() == 1,"weirdness");
+            E->m_parentCAD = m_mesh->m_cad->GetSurf(sfs[0]);
+            tags.clear();
+            tags.push_back(sfs[0]);
+            E->SetTagList(tags);
+            m_mesh->m_element[2].push_back(E);
+        }
+    }
+
 }
 }
 }

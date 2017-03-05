@@ -79,9 +79,9 @@ public:
     {
         return nameToFaceId;
     }
-    std::map<std::string, std::vector<std::string> > GetVertId()
+    std::map<std::string, int> GetCFIVertId()
     {
-        return mapVertToListEdge;
+        return nameToVertId;
     }
     NekDouble GetScaling()
     {

@@ -54,6 +54,8 @@ class Node;
 typedef boost::shared_ptr<Node> NodeSharedPtr;
 class CADSurf;
 typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
+class CADCurve;
+typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
 
 /**
  * @brief base class for CAD verticies.
@@ -107,6 +109,18 @@ public:
         }
     }
 
+    NekDouble DistanceTo(Array<OneD, NekDouble> xyz);
+
+    void AddAdjCurve(CADCurveSharedPtr c)
+    {
+        curves.push_back(c);
+    }
+
+    std::vector<CADCurveSharedPtr> GetAdjCurves()
+    {
+        return curves;
+    }
+
 protected:
     /// mesh convert object of vert
     NodeSharedPtr m_node;
@@ -114,6 +128,8 @@ protected:
     bool degen;
     /// degen surface
     int degensurf;
+    /// adjacent curves
+    std::vector<CADCurveSharedPtr> curves;
 };
 
 typedef boost::shared_ptr<CADVert> CADVertSharedPtr;

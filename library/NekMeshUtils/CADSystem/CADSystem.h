@@ -166,6 +166,17 @@ public:
     /**
      * @brief Gets a curve from the map.
      */
+    CADVertSharedPtr GetVert(int i)
+    {
+        std::map<int, CADVertSharedPtr>::iterator search = m_verts.find(i);
+        ASSERTL0(search != m_verts.end(), "vert does not exist");
+
+        return search->second;
+    }
+
+    /**
+     * @brief Gets a curve from the map.
+     */
     CADCurveSharedPtr GetCurve(int i)
     {
         std::map<int, CADCurveSharedPtr>::iterator search = m_curves.find(i);

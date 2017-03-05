@@ -37,8 +37,8 @@
 #define NEKMESHUTILS_CADSYSTEM_CADCURVE
 
 #include <NekMeshUtils/CADSystem/CADObject.h>
-#include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <NekMeshUtils/CADSystem/CADVert.h>
 
 namespace Nektar
 {
@@ -128,7 +128,8 @@ public:
     /*
      * @brief returns the ids of neigbouring surfaces
      */
-    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> > GetAdjSurf()
+    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> >
+    GetAdjSurf()
     {
         return m_adjSurfs;
     }
@@ -165,28 +166,28 @@ public:
 
     CADOrientation::Orientation GetOrienationWRT(int surf)
     {
-        for(int i = 0; i < m_adjSurfs.size(); i++)
+        for (int i = 0; i < m_adjSurfs.size(); i++)
         {
-            if(m_adjSurfs[i].first->GetId() == surf)
+            if (m_adjSurfs[i].first->GetId() == surf)
             {
                 return m_adjSurfs[i].second;
             }
         }
 
-        ASSERTL0(false,"surf not in adjecency list");
+        ASSERTL0(false, "surf not in adjecency list");
         return CADOrientation::eUnknown;
     }
 
-    virtual Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf)=0;
-    virtual Array<OneD, NekDouble> N(NekDouble t)=0;
-
+    virtual Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf) = 0;
+    virtual Array<OneD, NekDouble> N(NekDouble t) = 0;
+    virtual NekDouble DistanceTo(Array<OneD, NekDouble> xyz) = 0;
 
 protected:
-
     /// Length of edge
     NekDouble m_length;
     /// List of surfaces which this curve belongs to.
-    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> > m_adjSurfs;
+    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> >
+        m_adjSurfs;
     /// list of end vertices
     std::vector<CADVertSharedPtr> m_mainVerts;
 };
@@ -195,8 +196,7 @@ typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
 
 typedef LibUtilities::NekFactory<std::string, CADCurve> CADCurveFactory;
 
-CADCurveFactory& GetCADCurveFactory();
-
+CADCurveFactory &GetCADCurveFactory();
 }
 }
 

@@ -1069,7 +1069,8 @@ namespace Nektar
                             if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) != varcoeffs.end())
                             {
                                 Array<OneD, NekDouble> ncdotMF = v_GetnFacecdotMF(0, f, FaceExp[f], normals, varcoeffs);
-                                Vmath::Vvtvp(nquad_f, ncdotMF, 1, facePhys, 1, work, 1, work, 1);
+                                //Vmath::Vvtvp(nquad_f, ncdotMF, 1, facePhys, 1, work, 1, work, 1);
+                                Vmath::Vmul(nquad_f, ncdotMF, 1, facePhys, 1, work, 1);
                             }
                             
                             else

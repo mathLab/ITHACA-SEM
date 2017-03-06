@@ -1191,7 +1191,8 @@ namespace Nektar
                             if ((x = varcoeffs.find(StdRegions::eVarCoeffMF1x)) != varcoeffs.end())
                             {
                                 Array<OneD, NekDouble> ncdotMF = v_GetnEdgecdotMF(0, e, EdgeExp[e], normals, varcoeffs);
-                                Vmath::Vvtvp(nquad_e, ncdotMF, 1, edgePhys, 1, work, 1, work, 1);
+                                //Vmath::Vvtvp(nquad_e, ncdotMF, 1, edgePhys, 1, work, 1, work, 1);
+                                Vmath::Vmul(nquad_e, ncdotMF, 1, edgePhys, 1, work, 1);
                             }
                             
                             else

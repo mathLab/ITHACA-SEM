@@ -203,10 +203,12 @@ NekDouble TetGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         cp3010.Mult(e30, e10);
 
         // Barycentric coordinates (relative volume)
-        NekDouble V     = e30.dot(cp1020); // Tet Volume={(e30)dot(e10)x(e20)}/6
-        NekDouble beta  = er0.dot(cp2030) / V; // volume1={(er0)dot(e20)x(e30)}/6
-        NekDouble gamma = er0.dot(cp3010) / V; // volume1={(er0)dot(e30)x(e10)}/6
-        NekDouble delta = er0.dot(cp1020) / V; // volume1={(er0)dot(e10)x(e20)}/6
+        NekDouble V    = e30.dot(cp1020); // Tet Volume={(e30)dot(e10)x(e20)}/6
+        NekDouble beta = er0.dot(cp2030) / V; // volume1={(er0)dot(e20)x(e30)}/6
+        NekDouble gamma =
+            er0.dot(cp3010) / V; // volume1={(er0)dot(e30)x(e10)}/6
+        NekDouble delta =
+            er0.dot(cp1020) / V; // volume1={(er0)dot(e10)x(e20)}/6
 
         // Make tet bigger
         Lcoords[0] = 2.0 * beta - 1.0;
@@ -670,7 +672,8 @@ void TetGeom::SetUpFaceOrientation()
             dotproduct1 += elementAaxis[i] * faceAaxis[i];
         }
 
-        NekDouble norm = dotproduct1 / elementAaxis_length / faceAaxis_length;
+        NekDouble norm =
+            fabs(dotproduct1) / elementAaxis_length / faceAaxis_length;
 
         orientation = 0;
         // if the innerproduct is equal to the (absolute value of the ) products
@@ -691,7 +694,7 @@ void TetGeom::SetUpFaceOrientation()
                 dotproduct2 += elementBaxis[i] * faceBaxis[i];
             }
 
-            norm = dotproduct2 / elementBaxis_length / faceBaxis_length;
+            norm = fabs(dotproduct2) / elementBaxis_length / faceBaxis_length;
 
             // check that both these axis are indeed parallel
             ASSERTL1(fabs(norm - 1.0) < NekConstants::kNekZeroTol,
@@ -717,7 +720,7 @@ void TetGeom::SetUpFaceOrientation()
                 dotproduct1 += elementAaxis[i] * faceBaxis[i];
             }
 
-            norm = dotproduct1 / elementAaxis_length / faceBaxis_length;
+            norm = fabs(dotproduct1) / elementAaxis_length / faceBaxis_length;
 
             // check that both these axis are indeed parallel
             ASSERTL1(fabs(norm - 1.0) < NekConstants::kNekZeroTol,
@@ -737,7 +740,7 @@ void TetGeom::SetUpFaceOrientation()
                 dotproduct2 += elementBaxis[i] * faceAaxis[i];
             }
 
-            norm = dotproduct2 / elementBaxis_length / faceAaxis_length;
+            norm = fabs(dotproduct2) / elementBaxis_length / faceAaxis_length;
 
             // check that both these axis are indeed parallel
             ASSERTL1(fabs(norm - 1.0) < NekConstants::kNekZeroTol,

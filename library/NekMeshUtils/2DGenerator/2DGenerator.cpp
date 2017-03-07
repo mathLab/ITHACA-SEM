@@ -268,7 +268,7 @@ void Generator2D::Process()
                 m_curvemeshes[ip->first]->GetMeshPoints();
             vector<NodeSharedPtr> nnodes;
 
-            vector<CADSurfSharedPtr> surfs =
+            vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > surfs =
                 m_curvemeshes[ip->second]->GetCADCurve()->GetAdjSurf();
 
             nnodes.push_back(m_curvemeshes[ip->second]->GetFirstPoint());
@@ -280,11 +280,13 @@ void Generator2D::Process()
                 NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(
                     m_mesh->m_numNodes++, loc[0] + T1[0], loc[1] + T1[1], 0.0));
 
-                for (vector<CADSurfSharedPtr>::iterator is = surfs.begin();
+                for (vector<pair<CADSurfSharedPtr,
+                                 CADOrientation::Orientation> >::iterator is =
+                         surfs.begin();
                      is != surfs.end(); ++is)
                 {
-                    nn->SetCADSurf((*is)->GetId(), *is,
-                                   (*is)->locuv(nn->GetLoc()));
+                    nn->SetCADSurf(is->first->GetId(), is->first,
+                                   is->first->locuv(nn->GetLoc()));
                 }
 
                 nn->SetCADCurve(ip->second,
@@ -372,9 +374,8 @@ void Generator2D::Process()
                                            "Face progress");
         }
 
-        m_facemeshes[i] =
-            MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                m_curvemeshes, 99+i);
+        m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
+            i, m_mesh, m_curvemeshes, 99 + i);
         m_facemeshes[i]->Mesh();
     }
 

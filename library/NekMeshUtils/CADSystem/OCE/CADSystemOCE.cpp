@@ -493,8 +493,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     {
         vector<unsigned int> data;
         ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
-        BRepBuilderAPI_MakeEdge em(cPoints[data[0]],
-                                   cPoints[data[1]]);
+        BRepBuilderAPI_MakeEdge em(cPoints[data[0]], cPoints[data[1]]);
         cEdges[it->first] = em.Edge();
     }
     for (it = splines.begin(); it != splines.end(); it++)

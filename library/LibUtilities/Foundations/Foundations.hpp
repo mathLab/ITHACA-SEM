@@ -53,6 +53,8 @@ namespace Nektar
             "Modified_A",
             "Modified_B",
             "Modified_C",
+            "OrthoPyr_C",
+            "ModifiedPyr_C",
             "Fourier",
             "GLL_Lagrange",
             "Gauss_Lagrange",

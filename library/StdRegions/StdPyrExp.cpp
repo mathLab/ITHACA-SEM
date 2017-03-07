@@ -61,23 +61,20 @@ namespace Nektar
                                  Bc.GetNumModes()),
                              Ba, Bb, Bc)
         {
-            if (Ba.GetNumModes() > Bc.GetNumModes())
-            {
-                ASSERTL0(false, "order in 'a' direction is higher "
-                         "than order in 'c' direction");
-            }
-            if (Bb.GetNumModes() > Bc.GetNumModes())
-            {
-                ASSERTL0(false, "order in 'b' direction is higher "
-                         "than order in 'c' direction");
-            }
 
+            ASSERTL0(Ba.GetNumModes() <= Bc.GetNumModes(), "order in 'a' direction is higher "
+                     "than order in 'c' direction");
+            ASSERTL0(Bb.GetNumModes() <= Bc.GetNumModes(), "order in 'b' direction is higher "
+                     "than order in 'c' direction");
+
+#if 0 
             // Set up mode mapping which takes 0\leq i\leq N_coeffs -> (p,q,r)
             // of the 3D tensor product
             const int P = Ba.GetNumModes() - 1;
             const int Q = Bb.GetNumModes() - 1;
             const int R = Bc.GetNumModes() - 1;
             int cnt = 0;
+
 
             // Vertices
             m_map[Mode(0, 0, 0, 0)] = cnt++;
@@ -218,6 +215,7 @@ namespace Nektar
                     m_idxMap[p][q][r] = pair<int, int>(it->second, rp);
                 }
             }
+#endif
         }
 
         StdPyrExp::StdPyrExp(const StdPyrExp &T)
@@ -391,7 +389,14 @@ namespace Nektar
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
-            Array<OneD, NekDouble> wsp;
+            int  nquad1 = m_base[1]->GetNumPoints();
+            int  nquad2 = m_base[2]->GetNumPoints();
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+
+            Array<OneD, NekDouble> wsp(nquad2*order0*order1+
+                                       nquad2*nquad1*order0);
+
             v_BwdTrans_SumFacKernel(m_base[0]->GetBdata(),
                                     m_base[1]->GetBdata(),
                                     m_base[2]->GetBdata(),
@@ -410,6 +415,7 @@ namespace Nektar
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
         {
+#if 0 
             const int Qx = m_base[0]->GetNumPoints();
             const int Qy = m_base[1]->GetNumPoints();
             const int Qz = m_base[2]->GetNumPoints();
@@ -483,6 +489,80 @@ namespace Nektar
                     }
                 }
             }
+#else
+            int  nquad0 = m_base[0]->GetNumPoints();
+            int  nquad1 = m_base[1]->GetNumPoints();
+            int  nquad2 = m_base[2]->GetNumPoints();
+
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+            int  order2 = m_base[2]->GetNumModes();
+
+            Array<OneD, NekDouble > tmp  = wsp;
+            Array<OneD, NekDouble > tmp1 = tmp + nquad2*order0*order1;
+
+            int i, j, mode, mode1, cnt;
+
+            // Perform summation over '2' direction
+            mode = mode1 = cnt = 0;
+            for(i = 0; i < order0; ++i)
+            {
+                for(j = 0; j < order1; ++j, ++cnt)
+                {
+                    int ijmax = max(i,j);
+                    Blas::Dgemv('N', nquad2, order2-ijmax,
+                                1.0, base2.get()+mode*nquad2, nquad2,
+                                     inarray.get()+mode1,     1,
+                                0.0, tmp.get()+cnt*nquad2,    1);
+                    mode  += order2-ijmax;
+                    mode1 += order2-ijmax;
+                }
+                //increment mode in case order1!=order2
+                for(j = order1; j < order2-i; ++j)
+                {
+                    int ijmax = max(i,j);
+                    mode += order2-ijmax;
+                }
+            }
+
+            // fix for modified basis by adding split of top singular
+            // vertex mode - currently (1+c)/2 x (1-b)/2 x (1-a)/2
+            // component is evaluated
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+
+                // Not sure why we could not use basis as 1.0 
+                // top singular vertex - (1+c)/2 x (1+b)/2 x (1-a)/2 component
+                Blas::Daxpy(nquad2,inarray[1],base2.get()+nquad2,1,
+                            &tmp[0]+nquad2,1);
+
+                // top singular vertex - (1+c)/2 x (1-b)/2 x (1+a)/2 component
+                Blas::Daxpy(nquad2,inarray[1],base2.get()+nquad2,1,
+                            &tmp[0]+order1*nquad2,1);
+
+                // top singular vertex - (1+c)/2 x (1+b)/2 x (1+a)/2 component
+                Blas::Daxpy(nquad2,inarray[1],base2.get()+nquad2,1,
+                            &tmp[0]+order1*nquad2+nquad2,1);
+}
+
+            // Perform summation over '1' direction
+            mode = 0;
+            for(i = 0; i < order0; ++i)
+            {
+                Blas::Dgemm('N', 'T', nquad1, nquad2, order1,
+                            1.0, base1.get(),      nquad1,
+                            tmp.get()+mode*nquad2, nquad2,
+                            0.0, tmp1.get()+i*nquad1*nquad2, nquad1);
+                mode  += order1;
+            }
+
+            // Perform summation over '0' direction
+            Blas::Dgemm('N', 'T', nquad0, nquad1*nquad2, order0,
+                        1.0, base0.get(),    nquad0,
+                             tmp1.get(),     nquad1*nquad2,
+                        0.0, outarray.get(), nquad0);
+            
+#endif
         }
 
 	/** \brief Forward transform from physical quadrature space
@@ -504,14 +584,20 @@ namespace Nektar
             v_IProductWRTBase(inarray,outarray);
 
             // get Mass matrix inverse
-            StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
+            StdMatrixKey      masskey(eMass,DetShapeType(),*this);
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
+            cout << *matsys << endl;
 
+            // get Mass matrix inverse
+            StdMatrixKey      imasskey(eInvMass,DetShapeType(),*this);
+            DNekMatSharedPtr  imatsys = GetStdMatrix(imasskey);
+
+            
             // copy inarray in case inarray == outarray
             DNekVec in (m_ncoeffs, outarray);
             DNekVec out(m_ncoeffs, outarray, eWrapper);
 
-            out = (*matsys)*in;
+            out = (*imatsys)*in;
         }
 
 
@@ -554,7 +640,14 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray,
             bool                                multiplybyweights)
         {
-            Array<OneD, NekDouble> wsp;
+
+            int  nquad1 = m_base[1]->GetNumPoints();
+            int  nquad2 = m_base[2]->GetNumPoints();
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+
+            Array<OneD, NekDouble> wsp(nquad1*nquad2*order0 +
+                                       nquad2*order0*order1);
 
             if(multiplybyweights)
             {
@@ -589,6 +682,7 @@ namespace Nektar
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
         {
+#if 0 
             int i, j, k, s;
             int Qx = m_base[0]->GetNumPoints();
             int Qy = m_base[1]->GetNumPoints();
@@ -665,6 +759,78 @@ namespace Nektar
                     }
                 }
             }
+#else
+            int  nquad0 = m_base[0]->GetNumPoints();
+            int  nquad1 = m_base[1]->GetNumPoints();
+            int  nquad2 = m_base[2]->GetNumPoints();
+
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+            int  order2 = m_base[2]->GetNumModes();
+
+            Array<OneD, NekDouble > tmp1 = wsp;
+            Array<OneD, NekDouble > tmp2 = wsp + nquad1*nquad2*order0;
+
+            int i,j, mode,mode1, cnt;
+
+            // Inner product with respect to the '0' direction
+            Blas::Dgemm('T', 'N', nquad1*nquad2, order0, nquad0,
+                        1.0, inarray.get(), nquad0,
+                             base0.get(),   nquad0,
+                        0.0, tmp1.get(),    nquad1*nquad2);
+
+            // Inner product with respect to the '1' direction
+            for(mode=i=0; i < order0; ++i)
+            {
+                Blas::Dgemm('T', 'N', nquad2, order1, nquad1,
+                            1.0, tmp1.get()+i*nquad1*nquad2, nquad1,
+                                 base1.get(),    nquad1,
+                            0.0, tmp2.get()+mode*nquad2,     nquad2);
+                mode  += order1;
+            }
+
+
+            // Inner product with respect to the '2' direction
+            mode = mode1 = cnt = 0;
+            for(i = 0; i < order0; ++i)
+            {
+                for(j = 0; j < order1; ++j, ++cnt)
+                {
+                    int ijmax = max(i,j);
+
+                    Blas::Dgemv('T', nquad2, order2-ijmax,
+                                1.0, base2.get()+mode*nquad2, nquad2,
+                                     tmp2.get()+cnt*nquad2,   1,
+                                0.0, outarray.get()+mode1,    1);
+                    mode  += order2-ijmax;
+                    mode1 += order2-ijmax;
+                }
+                
+                //increment mode in case order1!=order2
+                for(j = order1; j < order2; ++j)
+                {
+                    int ijmax = max(i,j);
+                    mode += order2-ijmax;
+                }
+            }
+
+            // fix for modified basis for top singular vertex component
+            // Already have evaluated (1+c)/2 (1-b)/2 (1-a)/2
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                // add in (1+c)/2 (1+b)/2 (1-a)/2  component
+                outarray[1] += Blas::Ddot(nquad2,base2.get()+nquad2,1,
+                                          &tmp2[nquad2],1);
+
+                // add in (1+c)/2 (1-b)/2 (1+a)/2 component
+                outarray[1] += Blas::Ddot(nquad2,base2.get()+nquad2,1,
+                                          &tmp2[nquad2*order1],1);
+
+                // add in (1+c)/2 (1+b)/2 (1+a)/2 component
+                outarray[1] += Blas::Ddot(nquad2,base2.get()+nquad2,1,
+                                          &tmp2[nquad2*order1+nquad2],1);
+            }
+#endif
         }
 
         void StdPyrExp::v_IProductWRTDerivBase(
@@ -940,7 +1106,7 @@ namespace Nektar
             ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
                      GetBasisType(1) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModifiedPyr_C ||
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
 
@@ -1119,9 +1285,9 @@ namespace Nektar
                      "Method only implemented if BasisType is identical"
                      "in x and y directions");
             ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A &&
-                     GetEdgeBasisType(4) == LibUtilities::eModified_C,
+                     GetEdgeBasisType(4) == LibUtilities::eModifiedPyr_C,
                      "Method only implemented for Modified_A BasisType"
-                     "(x and y direction) and Modified_C BasisType (z "
+                     "(x and y direction) and ModifiedPyr_C BasisType (z "
                      "direction)");
 
             int i, j, k, p, q, r, nFaceCoeffs;

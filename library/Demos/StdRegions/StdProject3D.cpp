@@ -66,6 +66,9 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"\t Modified_A          =  4\n");
         fprintf(stderr,"\t Modified_B          =  5\n");
         fprintf(stderr,"\t Modified_C          =  6\n");
+        fprintf(stderr,"\t Ortho_C             =  7\n");
+        fprintf(stderr,"\t Modified_C          =  8\n");
+
         fprintf(stderr,"\t Fourier             =  7\n");
         fprintf(stderr,"\t Lagrange            =  8\n");
         fprintf(stderr,"\t Gauss Lagrange      =  9\n");
@@ -162,23 +165,23 @@ int main(int argc, char *argv[]){
             }
             break;
         case LibUtilities::ePyramid:
-            if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
-               || (btype1 == eModified_B) || (btype1 == eModified_C))
+            if((btype1 == eOrtho_B) || (btype1 == eOrtho_C) || (btype1 == eOrthoPyr_C)
+               || (btype1 == eModified_B) || (btype1 == eModified_C) || (btype1 == eModifiedPyr_C))
             {
                 NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B, "
                          "Ortho_C, Modified_B or Modified_C");
             }
-            if((btype2 == eOrtho_B) || (btype2 == eOrtho_C)
-               || (btype2 == eModified_B) || (btype2 == eModified_C))
+            if((btype2 == eOrtho_B) || (btype2 == eOrtho_C) || (btype1 == eOrthoPyr_C)
+               || (btype2 == eModified_B) || (btype2 == eModified_C) || (btype1 == eModifiedPyr_C))
             {
                 NEKERROR(ErrorUtil::efatal, "Basis 2 cannot be of type Ortho_B, "
                          "Ortho_C, Modified_B or Modified_C");
             }
-            if((btype3 == eOrtho_A) || (btype3 == eOrtho_B)
-               || (btype3 == eModified_A) || (btype3 == eModified_B))
+            if((btype3 == eOrtho_A) || (btype3 == eOrtho_B) || (btype3 == eOrtho_C)
+               || (btype3 == eModified_A) || (btype3 == eModified_B) || (btype3 == eModified_C))
             {
                 NEKERROR(ErrorUtil::efatal, "Basis 3 cannot be of type Ortho_A, "
-                         "Ortho_B, Modified_A or Modified_B");
+                         "Ortho_B, Ortho_C, Modified_A, Modified_B or Modified_C");
             }
             break;
         case LibUtilities::ePrism:

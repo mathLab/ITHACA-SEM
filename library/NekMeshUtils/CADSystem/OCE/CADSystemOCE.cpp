@@ -445,7 +445,6 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         boost::erase_all(tmp1[1], "{");
         boost::erase_all(tmp1[1], "}");
         boost::erase_all(tmp1[1], ";");
-        boost::erase_all(tmp1[1], "-");
 
         string var = tmp1[1];
 
@@ -492,22 +491,22 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     map<int, TopoDS_Edge> cEdges;
     for (it = lines.begin(); it != lines.end(); it++)
     {
-        vector<NekDouble> data;
+        vector<unsigned int> data;
         ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
-        BRepBuilderAPI_MakeEdge em(cPoints[(int)data[0]],
-                                   cPoints[(int)data[1]]);
+        BRepBuilderAPI_MakeEdge em(cPoints[data[0]],
+                                   cPoints[data[1]]);
         cEdges[it->first] = em.Edge();
     }
     for (it = splines.begin(); it != splines.end(); it++)
     {
-        vector<NekDouble> data;
+        vector<unsigned int> data;
         ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
 
         TColgp_Array1OfPnt pointArray(0, data.size() - 1);
 
         for (int i = 0; i < data.size(); i++)
         {
-            pointArray.SetValue(i, cPoints[(int)data[i]]);
+            pointArray.SetValue(i, cPoints[data[i]]);
         }
         GeomAPI_PointsToBSpline spline(pointArray);
         Handle(Geom_BSplineCurve) curve = spline.Curve();
@@ -520,12 +519,12 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     map<int, TopoDS_Wire> cWires;
     for (it = loops.begin(); it != loops.end(); it++)
     {
-        vector<NekDouble> data;
+        vector<unsigned int> data;
         ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
         BRepBuilderAPI_MakeWire wm;
         for (int i = 0; i < data.size(); i++)
         {
-            wm.Add(cEdges[(int)data[i]]);
+            wm.Add(cEdges[data[i]]);
         }
         cWires[it->first] = wm.Wire();
     }
@@ -534,12 +533,12 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     // also going to assume that the first loop in the list is the outer domain
     ASSERTL0(surfs.size() == 1, "more than 1 surf");
     it = surfs.begin();
-    vector<NekDouble> data;
+    vector<unsigned int> data;
     ParseUtils::GenerateUnOrderedVector(it->second.c_str(), data);
-    BRepBuilderAPI_MakeFace face(cWires[(int)data[0]], true);
+    BRepBuilderAPI_MakeFace face(cWires[data[0]], true);
     for (int i = 1; i < data.size(); i++)
     {
-        face.Add(cWires[(int)data[i]]);
+        face.Add(cWires[data[i]]);
     }
 
     ASSERTL0(face.Error() == BRepBuilderAPI_FaceDone, "build geo failed");

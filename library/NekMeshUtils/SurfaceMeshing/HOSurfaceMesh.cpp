@@ -124,11 +124,8 @@ void HOSurfaceMesh::Process()
 
         FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
 
-        bool d2 = false;
-
         if(!f)
         {
-            d2 = true;
             f = boost::shared_ptr<Face>(new Face(m_mesh->m_element[2][i]->GetVertexList(),
                                                  vector<NodeSharedPtr>(),
                                                  m_mesh->m_element[2][i]->GetEdgeList(),

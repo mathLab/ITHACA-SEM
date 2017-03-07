@@ -114,14 +114,19 @@ void TriangleInterface::Mesh(bool Quality)
         dt.in.holelist[(i - 1) * 2 + 1] = m_centers[i][1];
     }
 
+    string cmd;
     if (Quality)
     {
-        dt.triangulate("pqY");
+        cmd = "pqY";
     }
     else if (!Quality)
     {
-        dt.triangulate("pY");
+        cmd = "pY";
     }
+    char *cstr = new char[cmd.length() + 1];
+    strcpy(cstr, cmd.c_str());
+
+    dt.triangulate(cstr);
 }
 
 void TriangleInterface::SetUp()

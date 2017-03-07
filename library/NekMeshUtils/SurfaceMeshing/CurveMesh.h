@@ -62,9 +62,9 @@ public:
     /**
      * @brief default constructor
      */
-    CurveMesh(int id, MeshSharedPtr m) : m_id(id), m_mesh(m)
+    CurveMesh(int id, MeshSharedPtr m, std::string expr = "0.0") : m_id(id), m_mesh(m)
     {
-        m_blID = m_bl.DefineFunction("x y z", "0.0");
+        m_blID = m_bl.DefineFunction("x y z", expr);
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
 
         m_bloffset.resize(2);
@@ -86,20 +86,6 @@ public:
         {
             CreateEdges();
         }
-
-        m_bloffset.resize(2);
-        m_bloffset[0] = 0.0;
-        m_bloffset[1] = 0.0;
-    }
-
-    /**
-     * @brief alternative constructor which use the octree in a different way
-     */
-    CurveMesh(int id, MeshSharedPtr m, std::string expr)
-        : m_id(id), m_mesh(m)
-    {
-        m_blID = m_bl.DefineFunction("x y z", expr);
-        m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
 
         m_bloffset.resize(2);
         m_bloffset[0] = 0.0;

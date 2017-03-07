@@ -69,7 +69,7 @@ public:
 private:
     void MakeBLPrep();
 
-    void MakeBL(int faceid, std::vector<EdgeLoopSharedPtr> e);
+    void MakeBL(int faceid);
 
     void Report();
     /// map of individual surface meshes from parametric surfaces

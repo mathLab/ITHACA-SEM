@@ -462,6 +462,10 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         }
         else if (boost::iequals(type, "Line Loop"))
         {
+            //line loops sometimes have negative entries for gmsh
+            //orientaton purposes
+            //we dont care so remove it
+            boost::erase_all(var, "-");
             loops[id] = var;
         }
         else if (boost::iequals(type, "Plane Surface"))

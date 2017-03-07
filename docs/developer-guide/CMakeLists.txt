@@ -37,7 +37,9 @@ ADD_CUSTOM_TARGET(developer-guide-pdf
     ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developer-guide.tex
     COMMAND TEXMFOUTPUT=${DEVGUIDE} ${BIBTEX} ${DEVGUIDE}/developer-guide.aux
     COMMAND TEXMFOUTPUT=${DEVGUIDE} ${MAKEINDEX} ${DEVGUIDE}/developer-guide.idx
-    COMMAND export TEXINPUTS=${CMAKE_SOURCE_DIR}//: &&
+    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}//: 
+    ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developer-guide.tex
+    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}//: 
     ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developer-guide.tex
     WORKING_DIRECTORY ${DEVGUIDESRC}
 )

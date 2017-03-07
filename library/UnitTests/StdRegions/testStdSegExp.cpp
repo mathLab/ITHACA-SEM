@@ -48,38 +48,38 @@
 //#include <boost/progress.hpp>
 //
 //#include <sstream>
-//
-//#define CHECK_CLOSE_ABS_EXP(lhs, rhs, tol, BType, Nmodes, PType, Npoints) \
-//if(fabs(lhs-rhs)>tol) \
-//{ \
-//    std::ostringstream error_message; \
-//    error_message << "difference between " \
-//    << BOOST_TEST_STRINGIZE(lhs)<<"{"<<lhs<<"} and " \
-//    << BOOST_TEST_STRINGIZE(rhs)<<"{"<<rhs<<"} exceeds " \
-//    << tol << " for the case: " \
-//    << "BasisType = " << LibUtilities::BasisTypeMap[BType] << "; " \
-//    << "NumModes = " << Nmodes << "; " \
-//    << "PointsType = " << LibUtilities::PointsTypeMap[PType] << "; " \
-//    << "NumPoints = " << Npoints << "." ; \
-//    BOOST_ERROR(error_message.str());\
-//}
-//
-//#define CHECK_CLOSE_ARR_ABS_EXP(lhs, rhs, index, tol, BType, Nmodes, PType, Npoints) \
-//if(fabs(lhs-rhs)>tol) \
-//{ \
-//    std::ostringstream error_message; \
-//    error_message << "difference between " \
-//    << BOOST_TEST_STRINGIZE(lhs)<<"{"<<lhs<<"} and " \
-//    << BOOST_TEST_STRINGIZE(rhs)<<"{"<<rhs<<"} with " \
-//    << BOOST_TEST_STRINGIZE(index) << " = " << index \
-//    << ", exceeds " << tol <<" for the case: " \
-//    << "BasisType = " << LibUtilities::BasisTypeMap[BType] << "; " \
-//    << "NumModes = " << Nmodes << "; " \
-//    << "PointsType = " << LibUtilities::PointsTypeMap[PType] << "; " \
-//    << "NumPoints = " << Npoints << "." ; \
-//    BOOST_ERROR(error_message.str());\
-//}
-//
+
+/*#define CHECK_CLOSE_ABS_EXP(lhs, rhs, tol, BType, Nmodes, PType, Npoints) \
+if(fabs(lhs-rhs)>tol) \
+{ \
+    std::ostringstream error_message; \
+    error_message << "difference between " \
+    << BOOST_TEST_STRINGIZE(lhs)<<"{"<<lhs<<"} and " \
+    << BOOST_TEST_STRINGIZE(rhs)<<"{"<<rhs<<"} exceeds " \
+    << tol << " for the case: " \
+    << "BasisType = " << LibUtilities::BasisTypeMap[BType] << "; " \
+    << "NumModes = " << Nmodes << "; " \
+    << "PointsType = " << LibUtilities::PointsTypeMap[PType] << "; " \
+    << "NumPoints = " << Npoints << "." ; \
+    BOOST_ERROR(error_message.str());\
+}*/
+
+/*#define CHECK_CLOSE_ARR_ABS_EXP(lhs, rhs, index, tol, BType, Nmodes, PType, Npoints) \
+if(fabs(lhs-rhs)>tol) \
+{ \
+    std::ostringstream error_message; \
+    error_message << "difference between " \
+    << BOOST_TEST_STRINGIZE(lhs)<<"{"<<lhs<<"} and " \
+    << BOOST_TEST_STRINGIZE(rhs)<<"{"<<rhs<<"} with " \
+    << BOOST_TEST_STRINGIZE(index) << " = " << index \
+    << ", exceeds " << tol <<" for the case: " \
+    << "BasisType = " << LibUtilities::BasisTypeMap[BType] << "; " \
+    << "NumModes = " << Nmodes << "; " \
+    << "PointsType = " << LibUtilities::PointsTypeMap[PType] << "; " \
+    << "NumPoints = " << Npoints << "." ; \
+    BOOST_ERROR(error_message.str());\
+}*/
+
 //
 //namespace Nektar
 //{   // IS THIS THE CORRECT NAMESPACE (or should it be StdRegionsUnitTests)
@@ -127,7 +127,7 @@
 //            //LibUtilities::eGaussRadauMAlpha0Beta2,
 //            //LibUtilities::ePolyEvenlySpaced};
 //
-//		
+//
 //
 //        BOOST_AUTO_TEST_CASE(testMassMatrix)
 //        {
@@ -164,7 +164,7 @@
 //		            (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
 //		            (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
 //		            (int)(2.0*(nummodes-1.0)+1.0)};
-//            
+//
 //            for(int i = 0; i < num_BasisTypes; i++)
 //            {
 //	        LibUtilities::BasisType btype = TestedBasisTypes[i];
@@ -172,12 +172,12 @@
 //	        for(int j = 0; j < num_PointsTypes; j++)
 //	        {
 //	            LibUtilities::PointsType Qtype = TestedPointsTypes[j];
-//        	    
+//
 //	            for(int nq = nq_min[j] ; nq <= max_nq; nq++)
 //	            {
 //		        const LibUtilities::PointsKey Pkey(nq,Qtype);
 //		        const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-//		        StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
+//		        StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey);
 //
 //		        DNekMatSharedPtr matrix = E->GenMatrix(StdRegions::eMass);
 //		        NekDouble *result =  &((*matrix).GetPtr())[0];
@@ -185,12 +185,12 @@
 //
 //		        NekDouble epsilon = 1e-12;
 //		        for(int k = 0; k < 36; k++)
-//		        { 
+//		        {
 //		            CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
 //		        }
 //	            }
-//	        }	
-//            }    
+//	        }
+//            }
 //        }
 //
 //        BOOST_AUTO_TEST_CASE(testLapMatrix)
@@ -228,7 +228,7 @@
 //		            (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
 //		            (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
 //		            (int)(2.0*(nummodes-1.0)+1.0)};
-//            
+//
 //            for(int i = 0; i < num_BasisTypes; i++)
 //            {
 //	        LibUtilities::BasisType btype = TestedBasisTypes[i];
@@ -236,12 +236,12 @@
 //	        for(int j = 0; j < num_PointsTypes; j++)
 //	        {
 //	            LibUtilities::PointsType Qtype = TestedPointsTypes[j];
-//        	    
+//
 //	            for(int nq = nq_min[j] ; nq <= max_nq; nq++)
 //	            {
 //		        const LibUtilities::PointsKey Pkey(nq,Qtype);
 //		        const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-//		        StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
+//		        StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey);
 //
 //		        DNekMatSharedPtr matrix = E->GenMatrix(StdRegions::eLaplacian);
 //		        NekDouble *result =  &((*matrix).GetPtr())[0];
@@ -249,12 +249,12 @@
 //
 //		        NekDouble epsilon = 1e-122;
 //		        for(int k = 0; k < 36; k++)
-//		        { 
+//		        {
 //		            CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
 //		        }
 //	            }
-//	        }	
-//            }  	
+//	        }
+//            }
 //        }
 //
 //        BOOST_AUTO_TEST_CASE(testIntegration)
@@ -273,7 +273,7 @@
 //		          (int)ceil((order_f+2.0)/2.0),
 //		          (int)ceil((order_f+2.0)/2.0),
 //		          (int)(order_f+1.0)};
-//            
+//
 //            for(int i = 0; i < num_BasisTypes; i++)
 //            {
 //	        LibUtilities::BasisType btype = TestedBasisTypes[i];
@@ -284,12 +284,12 @@
 //
 //	            for(int nummodes = 2; nummodes <= max_nummodes; nummodes++)
 //	            {
-//        		
+//
 //		        for(int nq = nq_min[j] ; nq <= max_nq; nq++)
 //		        {
 //		            const LibUtilities::PointsKey Pkey(nq,Qtype);
 //		            const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-//		            StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
+//		            StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey);
 //
 //		            Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
 //		            Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
@@ -303,22 +303,22 @@
 //		            CHECK_CLOSE_ABS_EXP(result, expected_result, epsilon, btype, nummodes, Qtype, nq);
 //		        }
 //	            }
-//	        }	
-//            }    
+//	        }
+//            }
 //        }
 //
 //        BOOST_AUTO_TEST_CASE(testDifferentiation)
 //	    {
 //    // 	    NekDouble expected_result = -4.0;
-//    // 	    
+//    //
 //    // 	    for(int i = 0; i < num_BasisTypes; i++)
 //    // 	    {
 //    // 		    LibUtilities::BasisType btype = TestedBasisTypes[i];
-//    // 
+//    //
 //    // 		    for(int j = 0; j < num_PointsTypes; j++)
 //    // 		    {
 //    // 		        LibUtilities::PointsType Qtype = TestedPointsTypes[j];
-//    // 
+//    //
 //    // 			    Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
 //    // 			    Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
 //    // 			    Array<OneD, NekDouble> df = Array<OneD, NekDouble>(nq);
@@ -333,8 +333,8 @@
 //    // 			    CHECK_CLOSE_ABS_EXP(result, expected_result, epsilon, btype, nummodes, Qtype, nq);
 //    // 			}
 //    // 		    }
-//    // 		}	
-//    // 	    }    
+//    // 		}
+//    // 	    }
 //	    }
 //
 //        BOOST_AUTO_TEST_CASE(testIProductWRTBase)
@@ -357,7 +357,7 @@
 //		            (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
 //		            (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
 //		            (int)(2.0*(nummodes-1.0)+1.0)};
-//            
+//
 //            for(int i = 0; i < num_BasisTypes; i++)
 //            {
 //	        LibUtilities::BasisType btype = TestedBasisTypes[i];
@@ -365,7 +365,7 @@
 //	        for(int j = 0; j < num_PointsTypes; j++)
 //	        {
 //	            LibUtilities::PointsType Qtype = TestedPointsTypes[j];
-//        	    
+//
 //	            for(int nq = nq_min[j] ; nq <= max_nq; nq++)
 //	            {
 //		        const LibUtilities::PointsKey Pkey(nq,Qtype);
@@ -378,19 +378,19 @@
 //		        for(int r = 0; r < nq; r++)
 //		        {
 //		            f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
-//		        }		
+//		        }
 //		        Array<OneD, NekDouble> result = Array<OneD, NekDouble>(6);
 //		        E->IProductWRTBase(f,result);
 //		        NekDouble *expected_result = exactmatrices[i];
-//        		
-//		        NekDouble epsilon = 1e-12;	
+//
+//		        NekDouble epsilon = 1e-12;
 //		        for(int k = 0; k < 6; k++)
-//		        { 
+//		        {
 //		            CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
 //		        }
 //	            }
-//	        }	
-//            }    
+//	        }
+//            }
 //        }
 //
 //        BOOST_AUTO_TEST_CASE(testFwdTrans)
@@ -413,7 +413,7 @@
 //		            (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
 //		            (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
 //		            (int)(2.0*(nummodes-1.0)+1.0)};
-//            
+//
 //            for(int i = 0; i < num_BasisTypes; i++)
 //            {
 //	        LibUtilities::BasisType btype = TestedBasisTypes[i];
@@ -421,7 +421,7 @@
 //	        for(int j = 0; j < num_PointsTypes; j++)
 //	        {
 //	            LibUtilities::PointsType Qtype = TestedPointsTypes[j];
-//        	    
+//
 //	            for(int nq = nq_min[j] ; nq <= max_nq; nq++)
 //	            {
 //		        const LibUtilities::PointsKey Pkey(nq,Qtype);
@@ -434,23 +434,23 @@
 //		        for(int r = 0; r < nq; r++)
 //		        {
 //		            f[r] = 3*pow(z[r],5)-5*pow(z[r],3)+pow(z[r],2)-1;
-//		        }	
-//		        Array<OneD, NekDouble> result = Array<OneD, NekDouble>(nummodes);	
+//		        }
+//		        Array<OneD, NekDouble> result = Array<OneD, NekDouble>(nummodes);
 //		        E->FwdTrans(f,result);
 //		        NekDouble *expected_result = exactmatrices[i];
 //
-//		        NekDouble epsilon = 1e-12;	
+//		        NekDouble epsilon = 1e-12;
 //		        for(int k = 0; k < 6; k++)
-//		        { 
+//		        {
 //		            CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
 //		        }
 //	            }
-//	        }	
-//            }    
+//	        }
+//            }
 //        }
 //
 //        BOOST_AUTO_TEST_CASE(testBwdTrans)
-//        {	    
+//        {
 //            for(int i = 0; i < num_BasisTypes; i++)
 //            {
 //	        LibUtilities::BasisType btype = TestedBasisTypes[i];
@@ -472,12 +472,12 @@
 //				        (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
 //				        (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
 //				        (int)(2.0*(nummodes-1.0)+1.0)};
-//        		
+//
 //		        for(int nq = nq_min[j] ; nq <= max_nq; nq++)
 //		        {
 //		            const LibUtilities::PointsKey Pkey(nq,Qtype);
 //		            const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-//		            StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
+//		            StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey);
 //
 //		            Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
 //		            Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
@@ -492,21 +492,21 @@
 //		            E->BwdTrans(tmp,result);
 //		            NekDouble *expected_result = f.get();
 //
-//		            NekDouble epsilon = 1e-12;	
+//		            NekDouble epsilon = 1e-12;
 //		            for(int k = 0; k < nq; k++)
-//		            { 
+//		            {
 //			        CHECK_CLOSE_ARR_ABS_EXP(result[k], expected_result[k], k, epsilon, btype, nummodes, Qtype, nq);
 //		            }
 //		        }
 //	            }
-//	        }	
-//            }    
+//	        }
+//            }
 //        }
 //
 //        BOOST_AUTO_TEST_CASE(testPhysEvaluate)
 //        {
 //            NekDouble expected_result = -7.0/32.0;
-//            
+//
 //            for(int i = 0; i < num_BasisTypes; i++)
 //            {
 //	        LibUtilities::BasisType btype = TestedBasisTypes[i];
@@ -517,12 +517,12 @@
 //
 //	            for(int nummodes = 2; nummodes <= max_nummodes; nummodes++)
 //	            {
-//        		
+//
 //		        for(int nq = 6 ; nq <= max_nq; nq++)
 //		        {
 //		            const LibUtilities::PointsKey Pkey(nq,Qtype);
 //		            const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-//		            StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey); 
+//		            StdRegions::StdSegExp *E = new StdRegions::StdSegExp(Bkey);
 //
 //		            Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
 //		            Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
@@ -540,8 +540,8 @@
 //		            CHECK_CLOSE_ABS_EXP(result, expected_result, epsilon, btype, nummodes, Qtype, nq);
 //		        }
 //	            }
-//	        }	
-//            }    
+//	        }
+//            }
 //        }
 //
 //        BOOST_AUTO_TEST_CASE(testNorms)
@@ -549,7 +549,7 @@
 //            NekDouble expected_resultL2 = sqrt(1224.0/385.0);
 //            NekDouble expected_resultL2err = 0.0;
 //            NekDouble expected_resultLinferr = 0.0;
-//            
+//
 //            for(int i = 0; i < num_BasisTypes; i++)
 //            {
 //	        LibUtilities::BasisType btype = TestedBasisTypes[i];
@@ -571,12 +571,12 @@
 //				        (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
 //				        (int)ceil((2*(nummodes-1.0)+2.0)/2.0),
 //				        (int)(2.0*(nummodes-1.0)+1.0)};
-//        		
+//
 //		        for(int nq = nq_min[j]; nq <= max_nq; nq++)
 //		        {
 //		            const LibUtilities::PointsKey Pkey(nq,Qtype);
 //		            const LibUtilities::BasisKey Bkey(btype,nummodes,Pkey);
-//		            StdRegions::StdExpansion1D *E = new StdRegions::StdSegExp(Bkey); 
+//		            StdRegions::StdExpansion1D *E = new StdRegions::StdSegExp(Bkey);
 //
 //		            Array<OneD, NekDouble> z = Array<OneD, NekDouble>(nq);
 //		            Array<OneD, NekDouble> f = Array<OneD, NekDouble>(nq);
@@ -588,7 +588,7 @@
 //		            E->SetPhys(f);
 //		            E->FwdTrans(*E);
 //		            E->BwdTrans(*E);
-//               
+//
 //		            NekDouble resultL2 = E->L2();
 //		            NekDouble resultL2err = E->L2(f);
 //		            NekDouble resultLinferr = E->Linf(f);
@@ -599,8 +599,8 @@
 //		            CHECK_CLOSE_ABS_EXP(resultLinferr, expected_resultLinferr, epsilon, btype, nummodes, Qtype, nq);
 //		        }
 //	            }
-//	        }	
-//            }    
+//	        }
+//            }
 //        }
 //    }
 //}

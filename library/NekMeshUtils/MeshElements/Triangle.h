@@ -85,6 +85,7 @@ public:
         bool                               justConfig = false);
 
     NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
+    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> Normal(bool inward = false);
 };
 
 }

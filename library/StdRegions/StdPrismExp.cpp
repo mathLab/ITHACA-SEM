@@ -442,7 +442,7 @@ namespace Nektar
             int order1 = m_base[1]->GetNumModes();
 
             Array<OneD, NekDouble> wsp(order0*nquad2*(nquad1+order1));
-            
+
             if(multiplybyweights)
             {
                 Array<OneD, NekDouble> tmp(inarray.num_elements());
@@ -1056,7 +1056,7 @@ namespace Nektar
                      "direction)");
 
             int i, j, k, p, q, r, nFaceCoeffs, idx = 0;
-            int nummodesA, nummodesB;
+            int nummodesA=0, nummodesB=0;
 
             switch (fid)
             {
@@ -1075,7 +1075,7 @@ namespace Nektar
                 nummodesB = m_base[2]->GetNumModes();
                 break;
             }
-            
+
             bool CheckForZeroedModes = false;
 
             if (P == -1)
@@ -1212,7 +1212,7 @@ namespace Nektar
                 {
                     // zero signmap and set maparray to zero if elemental
                     // modes are not as large as face modesl
-                    idx = 0; 
+                    idx = 0;
                     for (j = 0; j < nummodesA; ++j)
                     {
                         idx += nummodesB-j;
@@ -1222,7 +1222,7 @@ namespace Nektar
                             maparray[idx++] = maparray[0];
                         }
                     }
-                    
+
                     for (j = nummodesA; j < P; ++j)
                     {
                         for (k = 0; k < Q-j; ++k)
@@ -1232,7 +1232,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
 
                 // Triangles only have one possible orientation (base
                 // direction reversed); swap edge modes.
@@ -1268,7 +1268,7 @@ namespace Nektar
                             signarray[arrayindx[j+k*P]] = 0.0;
                             maparray[arrayindx[j+k*P]]  = maparray[0];
                         }
-                    }                    
+                    }
                 }
 
                 // The code below is exactly the same as that taken from
@@ -1766,9 +1766,9 @@ namespace Nektar
             int Q   = m_base[1]->GetNumModes() - 1, q;
             int R   = m_base[2]->GetNumModes() - 1, r;
             int idx = 0;
-            
+
             int nBnd = NumBndryCoeffs();
-            
+
             if (maparray.num_elements() != nBnd)
             {
                 maparray = Array<OneD, unsigned int>(nBnd);
@@ -1832,7 +1832,7 @@ namespace Nektar
                     int nq2 = m_base[2]->GetNumPoints();
                     int nq;
 
-                    // take definition from key 
+                    // take definition from key
                     if(mkey.ConstFactorExists(eFactorConst))
                     {
                         nq = (int) mkey.GetConstFactor(eFactorConst);

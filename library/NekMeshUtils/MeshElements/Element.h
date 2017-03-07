@@ -359,10 +359,14 @@ public:
         }
     }
 
-    NEKMESHUTILS_EXPORT void Flip()
+    /**
+     * @brief returns the normal to the element
+     */
+    NEKMESHUTILS_EXPORT virtual Array<OneD, NekDouble> Normal(bool inward = false)
     {
-        ASSERTL0(m_face.size() == 0,"only works in 2D")
-        std::swap(m_vertex[0],m_vertex[1]);
+        ASSERTL0(false,
+                 "This function should be implemented at a shape level.");
+        return Array<OneD, NekDouble>();
     }
 
     CADObjectSharedPtr m_parentCAD;

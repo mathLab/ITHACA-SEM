@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: pyramadic routines built upon StdExpansion3D
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -43,13 +43,13 @@ namespace Nektar
 {
     namespace StdRegions
     {
-        StdPyrExp::StdPyrExp() // Deafult construct of standard expansion directly called. 
+        StdPyrExp::StdPyrExp() // Deafult construct of standard expansion directly called.
         {
         }
-        
+
         StdPyrExp::StdPyrExp(const LibUtilities::BasisKey &Ba,
                              const LibUtilities::BasisKey &Bb,
-                             const LibUtilities::BasisKey &Bc) 
+                             const LibUtilities::BasisKey &Bc)
             : StdExpansion  (LibUtilities::StdPyrData::getNumberOfCoefficients(
                                  Ba.GetNumModes(),
                                  Bb.GetNumModes(),
@@ -229,20 +229,20 @@ namespace Nektar
 
         // Destructor
         StdPyrExp::~StdPyrExp()
-        {   
-        } 
+        {
+        }
 
 
         //---------------------------------------
         // Differentiation/integration Methods
         //---------------------------------------
-        
+
         /**
-         * \brief Calculate the derivative of the physical points 
-         *  
+         * \brief Calculate the derivative of the physical points
+         *
          * The derivative is evaluated at the nodal physical points.
          * Derivatives with respect to the local Cartesian coordinates.
-         *  
+         *
          * \f$\begin{Bmatrix} \frac {\partial} {\partial \xi_1} \\ \frac
          * {\partial} {\partial \xi_2} \\ \frac {\partial} {\partial \xi_3}
          * \end{Bmatrix} = \begin{Bmatrix} \frac 2 {(1-\eta_3)} \frac \partial
@@ -286,7 +286,7 @@ namespace Nektar
                         if (out_dxi3.num_elements() > 0)
                             out_dxi3[n] = (1.0+eta_x[i])/(1.0-eta_z[k])*dEta_bar1[n] +
                                 (1.0+eta_y[j])/(1.0-eta_z[k])*dXi2[n] + dEta3[n];
-                    } 
+                    }
                 }
             }
         }
@@ -303,21 +303,21 @@ namespace Nektar
                                 NullNekDouble1DArray);
                     break;
                 }
-                
+
                 case 1:
                 {
                     v_PhysDeriv(inarray, NullNekDouble1DArray, outarray,
                                 NullNekDouble1DArray);
                     break;
                 }
-                
+
                 case 2:
                 {
                     v_PhysDeriv(inarray, NullNekDouble1DArray,
                                 NullNekDouble1DArray, outarray);
                     break;
                 }
-                
+
                 default:
                 {
                     ASSERTL1(false,"input dir is out of range");
@@ -326,7 +326,7 @@ namespace Nektar
             }
         }
 
-        void StdPyrExp::v_StdPhysDeriv(const Array<OneD, const NekDouble> &inarray, 
+        void StdPyrExp::v_StdPhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,       NekDouble> &out_d0,
                                              Array<OneD,       NekDouble> &out_d1,
                                              Array<OneD,       NekDouble> &out_d2)
@@ -340,18 +340,18 @@ namespace Nektar
         {
             StdPyrExp::v_PhysDeriv(dir, inarray, outarray);
         }
-        
+
         //---------------------------------------
         // Transforms
         //---------------------------------------
-        
-	/** 
+
+	/**
          * \brief Backward transformation is evaluated at the quadrature
          * points.
          *
          * \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{m(pqr)} \hat
          * u_{pqr} \phi_{pqr} (\xi_{1i}, \xi_{2j}, \xi_{3k})\f$
-         * 
+         *
          * Backward transformation is three dimensional tensorial expansion
          *
          * \f$ u (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x} \psi_p^a
@@ -369,7 +369,7 @@ namespace Nektar
         void StdPyrExp::v_BwdTrans(const Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,       NekDouble> &outarray)
         {
-            if (m_base[0]->Collocation() && 
+            if (m_base[0]->Collocation() &&
                 m_base[1]->Collocation() &&
                 m_base[2]->Collocation())
             {
@@ -488,16 +488,16 @@ namespace Nektar
 	/** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and
             store in \a outarray
-            
+
             Inputs:\n
-            
+
             - \a inarray: array of physical quadrature points to be transformed
-            
+
             Outputs:\n
-            
-            - \a outarray: updated array of expansion coefficients. 
-            
-        */    
+
+            - \a outarray: updated array of expansion coefficients.
+
+        */
         void StdPyrExp::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,       NekDouble> &outarray)
         {
@@ -513,28 +513,28 @@ namespace Nektar
 
             out = (*matsys)*in;
         }
-        
-        
+
+
         //---------------------------------------
         // Inner product functions
         //---------------------------------------
 
-        /** \brief  Inner product of \a inarray over region with respect to the 
-            expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray 
-            
+        /** \brief  Inner product of \a inarray over region with respect to the
+            expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray
+
             Wrapper call to StdPyrExp::IProductWRTBase
-            
+
             Input:\n
-            
+
             - \a inarray: array of function evaluated at the physical collocation points
-            
+
             Output:\n
-            
+
             - \a outarray: array of inner product with respect to each basis over region
-            
+
         */
         void StdPyrExp::v_IProductWRTBase(
-            const Array<OneD, const NekDouble> &inarray, 
+            const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
             if (m_base[0]->Collocation() &&
@@ -597,7 +597,7 @@ namespace Nektar
             const NekDouble *bx = base0.get();
             const NekDouble *by = base1.get();
             const NekDouble *bz = base2.get();
-            
+
             map<int, map<int, map<int, pair<int, int> > > >::iterator it_p;
             map<int, map<int,          pair<int, int> > >  ::iterator it_q;
             map<int,                   pair<int, int> >    ::iterator it_r;
@@ -659,8 +659,8 @@ namespace Nektar
                     for (i = 0; i < Qx; ++i, ++s)
                     {
                         outarray[4] += inarray[s] * bz[k+Qz]*(
-                            bx[i+Qx]*by[j+Qy] + 
-                            bx[i+Qx]*by[j   ] + 
+                            bx[i+Qx]*by[j+Qy] +
+                            bx[i+Qx]*by[j   ] +
                             bx[i   ]*by[j+Qy]);
                     }
                 }
@@ -812,7 +812,7 @@ namespace Nektar
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
-        
+
         void StdPyrExp::v_LocCoordToLocCollapsed(
             const Array<OneD, const NekDouble>& xi,
                   Array<OneD,       NekDouble>& eta)
@@ -824,16 +824,16 @@ namespace Nektar
                 eta[1] = -1.0;
                 eta[2] = xi[2];
             }
-            else  
+            else
             {
                 // Below the line-singularity -- Common case
                 eta[2] = xi[2]; // eta_z = xi_z
-                eta[1] = 2.0*(1.0 + xi[1])/(1.0 - xi[2]) - 1.0; 
+                eta[1] = 2.0*(1.0 + xi[1])/(1.0 - xi[2]) - 1.0;
                 eta[0] = 2.0*(1.0 + xi[0])/(1.0 - xi[2]) - 1.0;
-            } 
+            }
         }
 
-        void StdPyrExp::v_GetCoords(Array<OneD, NekDouble> &xi_x, 
+        void StdPyrExp::v_GetCoords(Array<OneD, NekDouble> &xi_x,
                                     Array<OneD, NekDouble> &xi_y,
                                     Array<OneD, NekDouble> &xi_z)
         {
@@ -847,9 +847,9 @@ namespace Nektar
             // Convert collapsed coordinates into cartesian coordinates: eta --> xi
             for (int k = 0; k < Qz; ++k )
             {
-                for (int j = 0; j < Qy; ++j) 
+                for (int j = 0; j < Qy; ++j)
                 {
-                    for (int i = 0; i < Qx; ++i) 
+                    for (int i = 0; i < Qx; ++i)
                     {
                         int s = i + Qx*(j + Qy*k);
 
@@ -926,7 +926,7 @@ namespace Nektar
         {
             return 5;
         }
-        
+
         LibUtilities::ShapeType StdPyrExp::v_DetShapeType() const
         {
             return LibUtilities::ePyramid;
@@ -943,11 +943,11 @@ namespace Nektar
             ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
-            
+
             int P = m_base[0]->GetNumModes();
             int Q = m_base[1]->GetNumModes();
             int R = m_base[2]->GetNumModes();
-            
+
             return LibUtilities::StdPyrData::
                                     getNumberOfBndCoefficients(P, Q, R);
         }
@@ -955,7 +955,7 @@ namespace Nektar
         int StdPyrExp::v_GetEdgeNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 7, "edge id is out of range");
-            
+
             if (i == 0 || i == 2)
             {
                 return GetBasisNumModes(0);
@@ -973,7 +973,7 @@ namespace Nektar
         int StdPyrExp::v_GetFaceNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
-            
+
             if (i == 0)
             {
                 return GetBasisNumModes(0)*GetBasisNumModes(1);
@@ -989,7 +989,7 @@ namespace Nektar
                 return Q+1 + (P*(1 + 2*Q - P))/2;
             }
         }
-        
+
         int StdPyrExp::v_GetFaceIntNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
@@ -1015,7 +1015,7 @@ namespace Nektar
         int StdPyrExp::v_GetFaceNumPoints(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
-            
+
             if (i == 0)
             {
                 return m_base[0]->GetNumPoints()*
@@ -1048,7 +1048,7 @@ namespace Nektar
                                                     m_base[k]->GetBasisType(),
                                                     m_base[k]->GetNumPoints(),
                                                     m_base[k]->GetNumModes());
-                    
+
                 }
                 case 1:
                 case 3:
@@ -1073,18 +1073,18 @@ namespace Nektar
         }
 
         int StdPyrExp::v_CalcNumberOfCoefficients(
-            const std::vector<unsigned int> &nummodes, 
+            const std::vector<unsigned int> &nummodes,
             int &modes_offset)
         {
             int nmodes = LibUtilities::StdPyrData::getNumberOfCoefficients(
                 nummodes[modes_offset],
                 nummodes[modes_offset+1],
                 nummodes[modes_offset+2]);
-            
+
             modes_offset += 3;
             return nmodes;
         }
-        
+
         LibUtilities::BasisType StdPyrExp::v_GetEdgeBasisType(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 7, "edge id is out of range");
@@ -1106,27 +1106,27 @@ namespace Nektar
         //---------------------------------------
         // Mappings
         //---------------------------------------
-        
+
         void StdPyrExp::v_GetFaceToElementMap(
-            const int                  fid, 
+            const int                  fid,
             const Orientation          faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
-            int                        P, 
+            int                        P,
             int                        Q)
         {
             ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1),
                      "Method only implemented if BasisType is identical"
                      "in x and y directions");
-            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A && 
+            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A &&
                      GetEdgeBasisType(4) == LibUtilities::eModified_C,
                      "Method only implemented for Modified_A BasisType"
                      "(x and y direction) and Modified_C BasisType (z "
                      "direction)");
 
             int i, j, k, p, q, r, nFaceCoeffs;
-            int nummodesA, nummodesB;
-            
+            int nummodesA=0, nummodesB=0;
+
             int order0 = m_base[0]->GetNumModes();
             int order1 = m_base[1]->GetNumModes();
             int order2 = m_base[2]->GetNumModes();
@@ -1148,7 +1148,7 @@ namespace Nektar
                 nummodesB = order2;
                 break;
             }
-            
+
             bool CheckForZeroedModes = false;
 
             if (P == -1)
@@ -1173,7 +1173,7 @@ namespace Nektar
             {
                 maparray = Array<OneD, unsigned int>(nFaceCoeffs);
             }
-            
+
             if (signarray.num_elements() != nFaceCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceCoeffs,1);
@@ -1208,7 +1208,7 @@ namespace Nektar
             // Set up ordering inside each 2D face. Also for triangular faces,
             // populate signarray.
             int cnt = 0, cnt2;
-            switch (fid) 
+            switch (fid)
             {
                 case 0: // Bottom quad
 
@@ -1287,7 +1287,7 @@ namespace Nektar
                             signarray[q] = q % 2 ? -1 : 1;
                         }
                     }
-                    
+
                     // Edge 2 (pyramid edge 4)
                     cnt = 5 + 2*(order0-2) + 2*(order1-2);
                     for (q = 2; q < Q; ++q)
@@ -1345,7 +1345,7 @@ namespace Nektar
                             signarray[q] = q % 2 ? -1 : 1;
                         }
                     }
-                    
+
                     // Edge 2 (pyramid edge 5)
                     cnt = 5 + 2*(order0-2) + 2*(order1-2) + (order2-2);
                     for (q = 2; q < Q; ++q)
@@ -1403,7 +1403,7 @@ namespace Nektar
                             signarray[q] = q % 2 ? -1 : 1;
                         }
                     }
-                    
+
                     // Edge 2 (pyramid edge 7)
                     cnt = 5 + 2*(order0-2) + 2*(order1-2) + 3*(order2-2);
                     for (q = 2; q < Q; ++q)
@@ -1462,7 +1462,7 @@ namespace Nektar
                             signarray[q] = q % 2 ? -1 : 1;
                         }
                     }
-                    
+
                     // Edge 2 (pyramid edge 4)
                     cnt = 5 + 2*(order0-2) + 2*(order1-2);
                     for (q = 2; q < Q; ++q)
@@ -1492,7 +1492,7 @@ namespace Nektar
                         cnt2++;
                     }
                     break;
-                    
+
                 default:
                     ASSERTL0(false, "Face to element map unavailable.");
             }
@@ -1504,7 +1504,7 @@ namespace Nektar
                 {
                     // zero signmap and set maparray to zero if elemental
                     // modes are not as large as face modesl
-                    int idx = 0; 
+                    int idx = 0;
                     for (j = 0; j < P; ++j)
                     {
                         idx += Q-j;
@@ -1514,7 +1514,7 @@ namespace Nektar
                             maparray[idx++] = maparray[0];
                         }
                     }
-                    
+
                     for (j = P; j < P; ++j)
                     {
                         for (k = 0; k < Q-j; ++k)
@@ -1524,7 +1524,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 // Triangles only have one possible orientation (base
                 // direction reversed); swap edge modes.
                 if ((int)faceOrient == 7)
@@ -1558,7 +1558,7 @@ namespace Nektar
                             signarray[arrayindx[j+k*P]] = 0.0;
                             maparray[arrayindx[j+k*P]]  = maparray[0];
                         }
-                    }                    
+                    }
                 }
 
                 // The code below is exactly the same as that taken from
@@ -1577,7 +1577,7 @@ namespace Nektar
                                 signarray[arrayindx[i*P+j]] *= -1;
                             }
                         }
-                        
+
                         for (i = 0; i < P; i++)
                         {
                             swap(maparray [i], maparray [i+P]);
@@ -1662,12 +1662,12 @@ namespace Nektar
             const int Q              = m_base[1]->GetNumModes() - 2;
             const int R              = m_base[2]->GetNumModes() - 2;
             const int nEdgeIntCoeffs = v_GetEdgeNcoeffs(eid) - 2;
-            
+
             if (maparray.num_elements() != nEdgeIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
             }
-            
+
             if(signarray.num_elements() != nEdgeIntCoeffs)
             {
                 signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
@@ -1676,13 +1676,13 @@ namespace Nektar
             {
                 fill(signarray.get(), signarray.get()+nEdgeIntCoeffs, 1);
             }
-            
+
             // If edge is oriented backwards, change sign of modes which have
             // degree 2n+1, n >= 1.
             signChange = edgeOrient == eBackwards;
 
             int offset = 5;
-            
+
             switch (eid)
             {
                 case 0:
@@ -1726,7 +1726,7 @@ namespace Nektar
                 }
             }
         }
-        
+
         void StdPyrExp::v_GetFaceInteriorMap(
             const int                  fid,
             const Orientation          faceOrient,
@@ -1746,7 +1746,7 @@ namespace Nektar
             {
                 maparray = Array<OneD, unsigned int>(nFaceIntCoeffs);
             }
-            
+
             if (signarray.num_elements() != nFaceIntCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceIntCoeffs, 1);
@@ -1759,7 +1759,7 @@ namespace Nektar
             // Set up an array indexing for quad faces, since the ordering may
             // need to be transposed depending on orientation.
             Array<OneD, int> arrayindx(nFaceIntCoeffs);
-            if (fid == 0) 
+            if (fid == 0)
             {
                 nummodesA = P-1;
                 nummodesB = Q-1;
@@ -1943,12 +1943,12 @@ namespace Nektar
         //---------------------------------------
         // Wrapper functions
         //---------------------------------------
-        
+
         DNekMatSharedPtr StdPyrExp::v_GenMatrix(const StdMatrixKey &mkey)
         {
             return CreateGeneralMatrix(mkey);
         }
-        
+
         DNekMatSharedPtr StdPyrExp::v_CreateStdMatrix(const StdMatrixKey &mkey)
         {
             return v_GenMatrix(mkey);
@@ -1983,24 +1983,24 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray)
         {
             int i, j;
-            
+
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
-            
+
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
             const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
             const Array<OneD, const NekDouble>& w2 = m_base[2]->GetW();
-            
+
             const Array<OneD, const NekDouble>& z2 = m_base[2]->GetZ();
-            
+
             // Multiply by integration constants in x-direction
             for(i = 0; i < nquad1*nquad2; ++i)
             {
                 Vmath::Vmul(nquad0, inarray.get()+i*nquad0, 1,
                             w0.get(), 1, outarray.get()+i*nquad0,1);
             }
-            
+
             // Multiply by integration constants in y-direction
             for(j = 0; j < nquad2; ++j)
             {
@@ -2010,7 +2010,7 @@ namespace Nektar
                                 j*nquad0*nquad1,1);
                 }
             }
-            
+
             // Multiply by integration constants in z-direction; need to
             // incorporate factor [(1-eta_3)/2]^2 into weights, but only if
             // using GLL quadrature points.
@@ -2024,7 +2024,7 @@ namespace Nektar
                                     &outarray[0]+i*nquad0*nquad1, 1);
                     }
                     break;
-                
+
                 default:
                     for(i = 0; i < nquad2; ++i)
                     {

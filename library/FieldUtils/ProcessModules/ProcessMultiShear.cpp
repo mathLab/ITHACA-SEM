@@ -83,7 +83,7 @@ void ProcessMultiShear::Process(po::variables_map &vm)
         }
     }
 
-    int nstart, i, j, nfields;
+    int nstart, i, j, nfields=0;
     bool wssg      = false;
     NekDouble nfld = m_config["N"].as<NekDouble>();
     string fromfld, basename, endname, nstartStr;

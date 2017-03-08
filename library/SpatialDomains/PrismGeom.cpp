@@ -685,12 +685,39 @@ void PrismGeom::SetUpFaceOrientation()
         // Compute the length of edges on a base-face
         if (f == 1 || f == 3)
         { // Face is a Triangle
-            for (i = 0; i < m_coordim; i++)
+            if (baseVertex == m_verts[faceVerts[f][0]]->GetVid())
             {
-                elementAaxis[i] = (*m_verts[faceVerts[f][1]])[i] -
-                                  (*m_verts[faceVerts[f][0]])[i];
-                elementBaxis[i] = (*m_verts[faceVerts[f][2]])[i] -
-                                  (*m_verts[faceVerts[f][0]])[i];
+                for (i = 0; i < m_coordim; i++)
+                {
+                    elementAaxis[i] = (*m_verts[faceVerts[f][1]])[i] -
+                                      (*m_verts[faceVerts[f][0]])[i];
+                    elementBaxis[i] = (*m_verts[faceVerts[f][2]])[i] -
+                                      (*m_verts[faceVerts[f][0]])[i];
+                }
+            }
+            else if (baseVertex == m_verts[faceVerts[f][1]]->GetVid())
+            {
+                for (i = 0; i < m_coordim; i++)
+                {
+                    elementAaxis[i] = (*m_verts[faceVerts[f][1]])[i] -
+                                      (*m_verts[faceVerts[f][0]])[i];
+                    elementBaxis[i] = (*m_verts[faceVerts[f][2]])[i] -
+                                      (*m_verts[faceVerts[f][1]])[i];
+                }
+            }
+            else if (baseVertex == m_verts[faceVerts[f][2]]->GetVid())
+            {
+                for (i = 0; i < m_coordim; i++)
+                {
+                    elementAaxis[i] = (*m_verts[faceVerts[f][1]])[i] -
+                                      (*m_verts[faceVerts[f][2]])[i];
+                    elementBaxis[i] = (*m_verts[faceVerts[f][2]])[i] -
+                                      (*m_verts[faceVerts[f][0]])[i];
+                }
+            }
+            else
+            {
+                ASSERTL0(false, "Could not find matching vertex for the face");
             }
         }
         else
@@ -768,12 +795,14 @@ void PrismGeom::SetUpFaceOrientation()
             dotproduct1 += elementAaxis[i] * faceAaxis[i];
         }
 
+        NekDouble norm =
+            fabs(dotproduct1) / elementAaxis_length / faceAaxis_length;
+
         orientation = 0;
         // if the innerproduct is equal to the (absolute value of the ) products
         // of the lengths
         // of both vectors, then, the coordinate systems will NOT be transposed
-        if (fabs(elementAaxis_length * faceAaxis_length - fabs(dotproduct1)) <
-            NekConstants::kNekZeroTol)
+        if (fabs(norm - 1.0) < NekConstants::kNekZeroTol)
         {
             // if the inner product is negative, both A-axis point
             // in reverse direction
@@ -788,12 +817,11 @@ void PrismGeom::SetUpFaceOrientation()
                 dotproduct2 += elementBaxis[i] * faceBaxis[i];
             }
 
-            //                     // check that both these axis are indeed
-            //                     parallel
-            //                     ASSERTL1(fabs(elementBaxis_length*faceBaxis_length
-            //                     - fabs(dotproduct2)) <
-            //                              StdRegions::NekConstants::kEvaluateTol,
-            //                              "These vectors should be parallel");
+            norm = fabs(dotproduct2) / elementBaxis_length / faceBaxis_length;
+
+            // check that both these axis are indeed parallel
+            ASSERTL1(fabs(norm - 1.0) < NekConstants::kNekZeroTol,
+                     "These vectors should be parallel");
 
             // if the inner product is negative, both B-axis point
             // in reverse direction
@@ -815,12 +843,11 @@ void PrismGeom::SetUpFaceOrientation()
                 dotproduct1 += elementAaxis[i] * faceBaxis[i];
             }
 
+            norm = fabs(dotproduct1) / elementAaxis_length / faceBaxis_length;
+
             // check that both these axis are indeed parallel
-            if (fabs(elementAaxis_length * faceBaxis_length -
-                     fabs(dotproduct1)) > NekConstants::kNekZeroTol)
-            {
-                cout << "Warning: Prism axes not parallel" << endl;
-            }
+            ASSERTL1(fabs(norm - 1.0) < NekConstants::kNekZeroTol,
+                     "These vectors should be parallel");
 
             // if the result is negative, both axis point in reverse
             // directions
@@ -836,12 +863,11 @@ void PrismGeom::SetUpFaceOrientation()
                 dotproduct2 += elementBaxis[i] * faceAaxis[i];
             }
 
+            norm = fabs(dotproduct2) / elementBaxis_length / faceAaxis_length;
+
             // check that both these axis are indeed parallel
-            if (fabs(elementBaxis_length * faceAaxis_length -
-                     fabs(dotproduct2)) > NekConstants::kNekZeroTol)
-            {
-                cout << "Warning: Prism axes not parallel" << endl;
-            }
+            ASSERTL1(fabs(norm - 1.0) < NekConstants::kNekZeroTol,
+                     "These vectors should be parallel");
 
             if (dotproduct2 < 0.0)
             {

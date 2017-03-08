@@ -612,7 +612,6 @@ namespace Nektar
                         mode   += N;
                         B_offset += N;
                     
-                        one_m_z_pow = m_bdata.data();
                         one_p_z     = m_bdata.data()+numPoints;
 
                         for(q = 2; q < numModes; ++q)
@@ -620,14 +619,14 @@ namespace Nektar
                             // face 0 
                             for(i = 0; i < numPoints; ++i)
                             {
-                                mode[i] = pow(one_m_z_pow[i],p+q); // [(1-z)/2]^{p+q}
+                                mode[i] = pow(m_bdata[i],p+q); // [(1-z)/2]^{p+q}
                             }
 
                             one_m_z_pow  = mode;
                             mode        += numPoints;
                             
                             // interior 
-                            for(int r = 1; r < numModes-max(p,q); ++r, mode+=numPoints)
+                            for(int r = 1; r < numModes-max(p,q); ++r)
                             {
                                 Polylib::jacobfd(numPoints,z.data(),mode,NULL,r-1,2*p+2*q-1,1.0);
                                 

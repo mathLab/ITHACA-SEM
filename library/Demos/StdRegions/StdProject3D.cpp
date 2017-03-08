@@ -21,6 +21,10 @@ using namespace Nektar::StdRegions;
 NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
                   int order1, int order2, int order3);
 
+/// Defines a solution which excites all modes in a StdPyr expansion.
+NekDouble Pyr_sol(NekDouble x, NekDouble y, NekDouble z,
+                  int order1, int order2, int order3);
+
 /// Defines a solution which excites all modes in a StdPrism expansion.
 NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
                     int order1, int order2, int order3);
@@ -69,16 +73,16 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"\t Ortho_C             =  7\n");
         fprintf(stderr,"\t Modified_C          =  8\n");
 
-        fprintf(stderr,"\t Fourier             =  7\n");
-        fprintf(stderr,"\t Lagrange            =  8\n");
-        fprintf(stderr,"\t Gauss Lagrange      =  9\n");
-        fprintf(stderr,"\t Legendre            = 10\n");
-        fprintf(stderr,"\t Chebyshev           = 11\n");
-        fprintf(stderr,"\t Nodal tri (Electro) = 12\n");
-        fprintf(stderr,"\t Nodal tri (Fekete)  = 13\n");
-        fprintf(stderr,"\t Nodal tet (Electro) = 14\n");
-        fprintf(stderr,"\t Nodal tet (Even)    = 15\n");
-        fprintf(stderr,"\t Nodal prism (Even)  = 16\n");
+        fprintf(stderr,"\t Fourier             =  8\n");
+        fprintf(stderr,"\t Lagrange            =  9\n");
+        fprintf(stderr,"\t Gauss Lagrange      =  10\n");
+        fprintf(stderr,"\t Legendre            = 11\n");
+        fprintf(stderr,"\t Chebyshev           = 12\n");
+        fprintf(stderr,"\t Nodal tri (Electro) = 13\n");
+        fprintf(stderr,"\t Nodal tri (Fekete)  = 14\n");
+        fprintf(stderr,"\t Nodal tet (Electro) = 15\n");
+        fprintf(stderr,"\t Nodal tet (Even)    = 16\n");
+        fprintf(stderr,"\t Nodal prism (Even)  = 17\n");
 
         exit(1);
     }
@@ -98,13 +102,13 @@ int main(int argc, char *argv[]){
     int btype2_val = atoi(argv[3]);
     int btype3_val = atoi(argv[4]);
     
-    if (btype1_val <= 11 && btype2_val <= 11)
+    if (btype1_val <= 13 && btype2_val <= 13)
     {
         btype1 =   (LibUtilities::BasisType) btype1_val;
         btype2 =   (LibUtilities::BasisType) btype2_val;
         btype3 =   (LibUtilities::BasisType) btype3_val;
     }
-    else if(btype1_val >=12 && btype2_val <= 16)
+    else if(btype1_val >=14 && btype2_val <= 18)
     {
         if (regionshape == LibUtilities::eTetrahedron)
         {
@@ -119,19 +123,19 @@ int main(int argc, char *argv[]){
             btype3 = LibUtilities::eOrtho_B;
         }
         
-        if(btype1_val == 12)
+        if(btype1_val == 14)
         {
             NodalType = LibUtilities::eNodalTriElec;
         }
-        else if (btype1_val == 13)
+        else if (btype1_val == 15)
         {
             NodalType = LibUtilities::eNodalTriFekete;
         }
-        else if (btype1_val == 14)
+        else if (btype1_val == 16)
         {
             NodalType = LibUtilities::eNodalTetElec;
         }
-        else if (btype1_val == 15)
+        else if (btype1_val == 17)
         {
             NodalType = LibUtilities::eNodalTetEvenlySpaced;
         }
@@ -335,7 +339,7 @@ int main(int argc, char *argv[]){
             // Define solution to be projected
             for(i = 0; i < nq1*nq2*nq3; ++i)
             {
-                sol[i]  = Tet_sol(x[i],y[i],z[i],order1,order2,order3);
+                sol[i]  = Pyr_sol(x[i],y[i],z[i],order1,order2,order3);
             }
             //----------------------------------------------
         }
@@ -425,10 +429,13 @@ int main(int argc, char *argv[]){
     t[1] = -0.25;
     t[2] = -0.3;
 
-    if(regionshape == LibUtilities::eTetrahedron ||
-       regionshape == LibUtilities::ePyramid)
+    if(regionshape == LibUtilities::eTetrahedron)
     {
         sol[0] = Tet_sol(t[0], t[1], t[2], order1, order2, order3);
+    }
+    else if (regionshape == LibUtilities::ePyramid)
+    {
+        sol[0] = Pyr_sol(t[0], t[1], t[2], order1, order2, order3);
     }
     else if (regionshape == LibUtilities::ePrism)
     {
@@ -468,6 +475,28 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
 
     return sol;
 }
+
+NekDouble Pyr_sol(NekDouble x, NekDouble y, NekDouble z,
+                  int order1, int order2, int order3)
+{
+    int    l,k,m;
+    NekDouble sol = 0.0;
+
+    for(k = 0; k < order1; ++k)
+    {
+        for(l = 0; l < order2-k; ++l)
+        {
+            for(m = 0; m < order3-k-l; ++m)
+            {
+                sol += pow(x,k)*pow(y,l)*pow(z,m);
+            }
+        }
+    }
+
+    return sol;
+}
+
+
 
 NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
                     int order1, int order2, int order3)

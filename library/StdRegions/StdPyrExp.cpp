@@ -584,11 +584,6 @@ namespace Nektar
             v_IProductWRTBase(inarray,outarray);
 
             // get Mass matrix inverse
-            StdMatrixKey      masskey(eMass,DetShapeType(),*this);
-            DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
-            cout << *matsys << endl;
-
-            // get Mass matrix inverse
             StdMatrixKey      imasskey(eInvMass,DetShapeType(),*this);
             DNekMatSharedPtr  imatsys = GetStdMatrix(imasskey);
 

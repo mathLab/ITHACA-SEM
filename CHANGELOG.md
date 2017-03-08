@@ -1,6 +1,13 @@
 Changelog
 =========
 
+v4.5.0
+------
+**Library**:
+- Fix element size vs floating point error bug in SpatialDomains (!737)
+- Tidy all 3D SpatialDomains element geoms to be consistent and fix small
+  corresponding bug in prisms and pyramids (!737)
+
 v4.4.0
 ------
 **Library**:
@@ -100,9 +107,9 @@ v4.4.0
 - Change variable names in mcf file to make more sense (!736)
 - Fix issues in varopti module so that in can be compiled without meshgen on
   (!736)
-- Replace LAPACK Eigenvalue calculation with handwritten function in 
+- Replace LAPACK Eigenvalue calculation with handwritten function in
   varopti (!738)
-- Improved node-colouring algorithm for better load-balancing 
+- Improved node-colouring algorithm for better load-balancing
   in varopti (!738)
 - Simplified calculation of the energy functional in varopti for improved
   performance (!738)

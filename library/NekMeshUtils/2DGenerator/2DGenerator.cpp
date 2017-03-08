@@ -135,9 +135,8 @@ void Generator2D::Process()
                                            "Face progress");
         }
 
-        m_facemeshes[i] =
-            MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                m_curvemeshes, 99+i);
+        m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
+            i, m_mesh, m_curvemeshes, 99 + i);
         m_facemeshes[i]->Mesh();
     }
 
@@ -250,6 +249,12 @@ void Generator2D::MakeBL(int faceid)
     bool adjust           = m_config["bltadjust"].beenSet;
     NekDouble divider     = m_config["bltadjust"].as<NekDouble>();
     bool adjustEverywhere = m_config["adjustblteverywhere"].beenSet;
+
+    if (divider < 2.0)
+    {
+        WARNINGL1(false, "BndLayerAdjustment too low, corrected to 2.0");
+        divider = 2.0;
+    }
 
     map<NodeSharedPtr, NodeSharedPtr> nodeNormals;
     map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it;

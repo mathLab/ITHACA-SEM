@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v4.5.0
+------
+**NekMesh**:
+- Adjust boundary layer thickness in corners in 2D (!739)
+
 v4.4.0
 ------
 **Library**:
@@ -106,7 +111,6 @@ v4.4.0
   in varopti (!738)
 - Simplified calculation of the energy functional in varopti for improved
   performance (!738)
-- Adjust boundary layer thickness in corners in 2D (!739)
 
 **FieldConvert:**
 - Move all modules to a new library, FieldUtils, to support post-processing

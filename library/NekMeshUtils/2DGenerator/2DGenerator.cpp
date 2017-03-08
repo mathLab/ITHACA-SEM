@@ -148,9 +148,6 @@ void Generator2D::Process()
         m_curvemeshes[m_blCurves[i]]->Mesh();
     }
 
-    LibUtilities::AnalyticExpressionEvaluator bl;
-    int blID = bl.DefineFunction("x y z", m_config["blthick"].as<string>());
-
     // check curves with adjacent BLs
     for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
     {
@@ -176,7 +173,8 @@ void Generator2D::Process()
             if (node->GetNumCadCurve())
             {
                 Array<OneD, NekDouble> loc = node->GetLoc();
-                offset[j] = bl.Evaluate(blID, loc[0], loc[1], loc[2], 0.0);
+                offset[j] = m_thickness.Evaluate(m_thickness_ID, loc[0], loc[1],
+                                                 loc[2], 0.0);
             }
         }
 
@@ -303,20 +301,7 @@ void Generator2D::Process()
 
             if (reverse)
             {
-                vector<NodeSharedPtr> tmp;
-
-                tmp.push_back(nnodes.front());
-
-                for (vector<NodeSharedPtr>::reverse_iterator rin =
-                         nnodes.rbegin() + 1;
-                     rin != nnodes.rend() - 1; ++rin)
-                {
-                    tmp.push_back(*rin);
-                }
-
-                tmp.push_back(nnodes.back());
-
-                nnodes.swap(tmp);
+                std::reverse(++nnodes.begin(), --nnodes.end());
             }
 
             // Clean m_edgeSet and build new CurveMesh
@@ -491,6 +476,10 @@ void Generator2D::MakeBL(int faceid)
     {
         ASSERTL0(it->second.size() > 0 && it->second.size() < 3,
                  "weirdness, most likely bl_surfs are incorrect");
+
+        // if node is at the end of a BL curve, the "normal" node is found on
+        // the adjacent non-BL curve rather than computed through
+        // perpendicularity
 
         if (it->second.size() < 2)
         {

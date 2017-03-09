@@ -129,6 +129,11 @@ void Generator2D::Process()
             "x y z", m_config["blthick"].as<string>());
     }
 
+    // The logic in the three loops below  relies on the assumption that
+    // node->GetNumCadCurve() only returns the number of CAD curves that have
+    // been meshed. This allows us to detect which curves have a BL and which do
+    // not. The logic will have to be reworked in the near future.
+
     // linear mesh all curves with a BL
     for (int i = 0; i < m_blCurves.size(); i++)
     {

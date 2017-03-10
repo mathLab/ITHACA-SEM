@@ -339,6 +339,28 @@ void Generator2D::Process()
 
     ////////////////////////////////////////
 
+    EdgeSet::iterator it;
+    for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+    {
+        vector<NodeSharedPtr> ns;
+        ns.push_back((*it)->m_n1);
+        ns.push_back((*it)->m_n2);
+
+        // for each iterator create a LibUtilities::eSegement
+        // push segment into m_mesh->m_element[1]
+        // tag for the elements shoudl be the CAD number of the curves
+
+        ElmtConfig conf(LibUtilities::eSegment, 1, false, false);
+
+        vector<int> tags;
+        tags.push_back((*it)->m_parentCAD->GetId());
+
+        ElementSharedPtr E2 = GetElementFactory().CreateInstance(
+            LibUtilities::eSegment, conf, ns, tags);
+
+        m_mesh->m_element[1].push_back(E2);
+    }
+
     if (m_config["blcurves"].beenSet)
     {
         // we need to do the boundary layer generation in a face by face basis
@@ -367,30 +389,6 @@ void Generator2D::Process()
         m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
             i, m_mesh, m_curvemeshes, 99 + i);
         m_facemeshes[i]->Mesh();
-    }
-
-    ////////////////////////////////////
-
-    EdgeSet::iterator it;
-    for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
-    {
-        vector<NodeSharedPtr> ns;
-        ns.push_back((*it)->m_n1);
-        ns.push_back((*it)->m_n2);
-
-        // for each iterator create a LibUtilities::eSegement
-        // push segment into m_mesh->m_element[1]
-        // tag for the elements shoudl be the CAD number of the curves
-
-        ElmtConfig conf(LibUtilities::eSegment, 1, false, false);
-
-        vector<int> tags;
-        tags.push_back((*it)->m_parentCAD->GetId());
-
-        ElementSharedPtr E2 = GetElementFactory().CreateInstance(
-            LibUtilities::eSegment, conf, ns, tags);
-
-        m_mesh->m_element[1].push_back(E2);
     }
 
     ProcessVertices();

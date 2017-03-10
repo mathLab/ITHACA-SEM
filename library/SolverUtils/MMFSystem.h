@@ -366,7 +366,7 @@ class MMFSystem: virtual public UnsteadySystem
 			      Array<OneD, Array<OneD, NekDouble> > &numfluxBwd,
 			      const NekDouble time);
   
-  Array<OneD, NekDouble> GetIncidentField(const int var, const NekDouble time);
+  SOLVER_UTILS_EXPORT Array<OneD, NekDouble> GetIncidentField(const int var, const NekDouble time);
   SOLVER_UTILS_EXPORT void Computedemdxicdote();
   
   SOLVER_UTILS_EXPORT NekDouble AvgInt(const Array<OneD, const NekDouble> &inarray);

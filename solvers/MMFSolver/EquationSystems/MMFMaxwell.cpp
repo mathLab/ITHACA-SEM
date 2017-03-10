@@ -2027,35 +2027,35 @@ namespace Nektar
 	// Slanted PML
       case 3:
 	{
-	  double relrad, rad1,rad2,rad3,rad4;
+	  NekDouble relrad, radon,radtw,radth,radfo;
 	  for (int i=0; i<nq; i++)
 	    {
-	      rad1 = -1.0*x[i] + y[i] - 7;
-	      rad2 = x[i] + y[i] - 7;
-	      rad3 = -x[i] - y[i] - 7;
-	      rad4 = x[i] - y[i] - 7;
+	      radon = -1.0*x[i] + y[i] - 7;
+	      radtw = x[i] + y[i] - 7;
+	      radth = -x[i] - y[i] - 7;
+	      radfo = x[i] - y[i] - 7;
 	      
-	      if( rad1>=0.0 )
+	      if( radon>=0.0 )
 		{
-		  relrad = rad1/PMLthickness;
+		  relrad = radon/PMLthickness;
 		  SigmaPML[1][i] = PMLRegion[i]*PMLmaxsigma*pow(relrad,m_PMLorder);
 		}
 	      
-	      if ( rad2>=0.0  )
+	      if ( radtw>=0.0  )
 		{
-		  relrad = rad2/PMLthickness;
+		  relrad = radtw/PMLthickness;
 		  SigmaPML[0][i] = PMLRegion[i]*PMLmaxsigma*pow(relrad,m_PMLorder);
 		}
 
-	      if (rad3>=0.0 )
+	      if (radth>=0.0 )
 		{
-		  relrad = rad3/PMLthickness;
+		  relrad = radth/PMLthickness;
 		  SigmaPML[0][i] = PMLRegion[i]*PMLmaxsigma*pow(relrad,m_PMLorder);
 		}
 
-	      if( rad4>=0.0 )
+	      if( radfo>=0.0 )
 		{
-		  relrad = rad4/PMLthickness;
+		  relrad = radfo/PMLthickness;
 		  SigmaPML[1][i] = PMLRegion[i]*PMLmaxsigma*pow(relrad,m_PMLorder);
 		}
 	    }

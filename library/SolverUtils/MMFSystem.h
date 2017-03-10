@@ -191,10 +191,10 @@ class MMFSystem: virtual public UnsteadySystem
     
   SOLVER_UTILS_EXPORT virtual void v_GenerateSummary(SummaryList& s);
 
-  void MMFInitObject(const Array<OneD, const Array<OneD, NekDouble> > &Anisotropy,
+  SOLVER_UTILS_EXPORT void MMFInitObject(const Array<OneD, const Array<OneD, NekDouble> > &Anisotropy,
 		     const int TangentXelem = -1);
   
-  void CopyBoundaryTrace(const Array<OneD, const NekDouble> &Fwd,
+  SOLVER_UTILS_EXPORT void CopyBoundaryTrace(const Array<OneD, const NekDouble> &Fwd,
 			 Array<OneD, NekDouble> &Bwd,
 			 const BoundaryCopyType BDCopyType,
 			 const int var = 0,
@@ -251,35 +251,35 @@ class MMFSystem: virtual public UnsteadySystem
 
   void CheckMovingFrames(const Array<OneD, const Array<OneD, NekDouble> > &movingframes);
 
-  void ComputencdotMF();
+  SOLVER_UTILS_EXPORT void ComputencdotMF();
   
-  void ComputeDivCurlMF();
+  SOLVER_UTILS_EXPORT void ComputeDivCurlMF();
   
-  void ComputeMFtrace ();
+  SOLVER_UTILS_EXPORT void ComputeMFtrace ();
   
-  void VectorDotProd(const Array<OneD, const Array<OneD, NekDouble> > &v1,
+  SOLVER_UTILS_EXPORT void VectorDotProd(const Array<OneD, const Array<OneD, NekDouble> > &v1,
 		     const Array<OneD, const Array<OneD, NekDouble> > &v2,
 		     Array<OneD, NekDouble> &v3);
   
-  void VectorCrossProd(const Array<OneD, const Array<OneD, NekDouble> > &v1,
+  SOLVER_UTILS_EXPORT void VectorCrossProd(const Array<OneD, const Array<OneD, NekDouble> > &v1,
 		       const Array<OneD, const Array<OneD, NekDouble> > &v2,
 		       Array<OneD, Array<OneD, NekDouble> > &v3);
 
-  void VectorCrossProd(const Array<OneD, NekDouble> &v1,
+  SOLVER_UTILS_EXPORT void VectorCrossProd(const Array<OneD, NekDouble> &v1,
 		       const Array<OneD, NekDouble> &v2,
 		       Array<OneD, NekDouble> &v3);
   
-  void ComputeCurl(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+  SOLVER_UTILS_EXPORT void ComputeCurl(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
 		   Array<OneD, Array<OneD, NekDouble> > &outarray);
 
   Array<OneD, NekDouble> CartesianToMovingframes(const Array<OneD, const Array<OneD, NekDouble> > &uvec,
 						 unsigned int field);
 
-  void DeriveCrossProductMF(Array<OneD, Array<OneD, NekDouble> > &CrossProductMF);
-  void ComputeNtimesMF();
+  SOLVER_UTILS_EXPORT void DeriveCrossProductMF(Array<OneD, Array<OneD, NekDouble> > &CrossProductMF);
+  SOLVER_UTILS_EXPORT void ComputeNtimesMF();
 
   
-  void ComputeNtimesFz(const int dir,
+  SOLVER_UTILS_EXPORT void ComputeNtimesFz(const int dir,
 		       const Array<OneD, Array<OneD, NekDouble> > &Fwd,
 		       const Array<OneD, Array<OneD, NekDouble> > &Bwd,
 		       const Array<OneD, const NekDouble> &imFwd,
@@ -287,7 +287,7 @@ class MMFSystem: virtual public UnsteadySystem
 		       Array<OneD, NekDouble> &outarrayFwd, 
 		       Array<OneD, NekDouble> &outarrayBwd);
 
-  void ComputeNtimesF12(const Array<OneD, Array<OneD, NekDouble> > &Fwd,
+  SOLVER_UTILS_EXPORT void ComputeNtimesF12(const Array<OneD, Array<OneD, NekDouble> > &Fwd,
 			const Array<OneD, Array<OneD, NekDouble> > &Bwd,
 			const Array<OneD, const NekDouble> &im1Fwd,
 			const Array<OneD, const NekDouble> &im1Bwd,
@@ -296,7 +296,7 @@ class MMFSystem: virtual public UnsteadySystem
 			Array<OneD, NekDouble> &outarrayFwd, 
 			Array<OneD, NekDouble> &outarrayBwd);
 
-  void ComputeNtimestimesdFz(const int dir,
+  SOLVER_UTILS_EXPORT void ComputeNtimestimesdFz(const int dir,
 			     const Array<OneD, Array<OneD, NekDouble> > &Fwd,
 			     const Array<OneD, Array<OneD, NekDouble> > &Bwd,
 			     const Array<OneD, const NekDouble> &imFwd,
@@ -304,7 +304,7 @@ class MMFSystem: virtual public UnsteadySystem
 			     Array<OneD, NekDouble> &outarrayFwd, 
 			     Array<OneD, NekDouble> &outarrayBwd);
   
-  void ComputeNtimestimesdF12(const Array<OneD, Array<OneD, NekDouble> > &Fwd,
+  SOLVER_UTILS_EXPORT void ComputeNtimestimesdF12(const Array<OneD, Array<OneD, NekDouble> > &Fwd,
 			      const Array<OneD, Array<OneD, NekDouble> > &Bwd,
 			      const Array<OneD, const NekDouble> &im1Fwd,
 			      const Array<OneD, const NekDouble> &im1Bwd,
@@ -313,7 +313,7 @@ class MMFSystem: virtual public UnsteadySystem
 			      Array<OneD, NekDouble> &outarrayFwd, 
 			      Array<OneD, NekDouble> &outarrayBwd);
   
-  void CartesianToSpherical(const NekDouble x0j,
+  SOLVER_UTILS_EXPORT void CartesianToSpherical(const NekDouble x0j,
 			    const NekDouble x1j,
 			    const NekDouble x2j, 
 			    NekDouble &sin_varphi,
@@ -321,53 +321,53 @@ class MMFSystem: virtual public UnsteadySystem
 			    NekDouble &sin_theta,
 			    NekDouble &cos_theta);
 
-  void ComputeZimYim(Array<OneD, Array<OneD, NekDouble> > &epsvec,
+  SOLVER_UTILS_EXPORT void ComputeZimYim(Array<OneD, Array<OneD, NekDouble> > &epsvec,
 		     Array<OneD, Array<OneD, NekDouble> > &muvec);
   
-  void AdddedtMaxwell(const Array<OneD, const Array<OneD, NekDouble> > &physarray,
+  SOLVER_UTILS_EXPORT void AdddedtMaxwell(const Array<OneD, const Array<OneD, NekDouble> > &physarray,
 		      Array<OneD, Array<OneD, NekDouble> > &outarray);
   
-  void GetMaxwellFluxVector(const int var, 
+  SOLVER_UTILS_EXPORT void GetMaxwellFluxVector(const int var, 
 			    const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
 			    Array<OneD, Array<OneD, NekDouble> > &flux);
   
-  void GetMaxwellFlux1D(const int var, 
+  SOLVER_UTILS_EXPORT void GetMaxwellFlux1D(const int var, 
 			const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
 			Array<OneD, Array<OneD, NekDouble> > &flux);
   
-  void GetMaxwellFlux2D(const int var,
+  SOLVER_UTILS_EXPORT void GetMaxwellFlux2D(const int var,
 			const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
 			Array<OneD, Array<OneD, NekDouble> > &flux);
   
-  void LaxFriedrichMaxwellFlux1D(Array<OneD, Array<OneD, NekDouble> > &physfield,
+  SOLVER_UTILS_EXPORT void LaxFriedrichMaxwellFlux1D(Array<OneD, Array<OneD, NekDouble> > &physfield,
 				 Array<OneD, Array<OneD, NekDouble> > &numfluxFwd,
 				 Array<OneD, Array<OneD, NekDouble> > &numfluxBwd);
   
-  void UpwindMaxwellFlux1D(Array<OneD, Array<OneD, NekDouble> > &physfield,
+  SOLVER_UTILS_EXPORT void UpwindMaxwellFlux1D(Array<OneD, Array<OneD, NekDouble> > &physfield,
 			   Array<OneD, Array<OneD, NekDouble> > &numfluxFwd,
 			   Array<OneD, Array<OneD, NekDouble> > &numfluxBwd);
   
-  void AverageMaxwellFlux1D(Array<OneD, Array<OneD, NekDouble> > &physfield,
+  SOLVER_UTILS_EXPORT void AverageMaxwellFlux1D(Array<OneD, Array<OneD, NekDouble> > &physfield,
 			    Array<OneD, Array<OneD, NekDouble> > &numfluxFwd,
 			    Array<OneD, Array<OneD, NekDouble> > &numfluxBwd);
   
-  void NumericalMaxwellFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+  SOLVER_UTILS_EXPORT void NumericalMaxwellFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
 			    Array<OneD, Array<OneD, NekDouble> > &numfluxFwd,
 			    Array<OneD, Array<OneD, NekDouble> > &numfluxBwd,
 			    const NekDouble time = 0.0);
   
-  void NumericalMaxwellFluxTM(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+  SOLVER_UTILS_EXPORT void NumericalMaxwellFluxTM(Array<OneD, Array<OneD, NekDouble> > &physfield, 
 			      Array<OneD, Array<OneD, NekDouble> > &numfluxFwd,
 			      Array<OneD, Array<OneD, NekDouble> > &numfluxBwd,
 			      const NekDouble time);
   
-  void NumericalMaxwellFluxTE(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+  SOLVER_UTILS_EXPORT void NumericalMaxwellFluxTE(Array<OneD, Array<OneD, NekDouble> > &physfield, 
 			      Array<OneD, Array<OneD, NekDouble> > &numfluxFwd,
 			      Array<OneD, Array<OneD, NekDouble> > &numfluxBwd,
 			      const NekDouble time);
   
   Array<OneD, NekDouble> GetIncidentField(const int var, const NekDouble time);
-  void Computedemdxicdote();
+  SOLVER_UTILS_EXPORT void Computedemdxicdote();
   
   NekDouble AvgInt(const Array<OneD, const NekDouble> &inarray);
   NekDouble AvgAbsInt(const Array<OneD, const NekDouble> &inarray);
@@ -375,12 +375,12 @@ class MMFSystem: virtual public UnsteadySystem
   NekDouble RootMeanSquare(const Array<OneD, const NekDouble> &inarray);
   NekDouble VectorAvgMagnitude(const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 
-  void GramSchumitz (const Array<OneD, const Array<OneD, NekDouble> > &v1,
+  SOLVER_UTILS_EXPORT void GramSchumitz (const Array<OneD, const Array<OneD, NekDouble> > &v1,
 		     const Array<OneD, const Array<OneD, NekDouble> > &v2,
 		     Array<OneD, Array<OneD, NekDouble> > &outarray,
 		     bool KeepTheMagnitude = true);
 
-  void BubbleSort(Array<OneD, NekDouble> &refarray,
+  SOLVER_UTILS_EXPORT void BubbleSort(Array<OneD, NekDouble> &refarray,
 		  Array<OneD, NekDouble> &sortarray);
 };
 

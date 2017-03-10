@@ -272,7 +272,7 @@ class MMFSystem: virtual public UnsteadySystem
   SOLVER_UTILS_EXPORT void ComputeCurl(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
 		   Array<OneD, Array<OneD, NekDouble> > &outarray);
 
-  Array<OneD, NekDouble> CartesianToMovingframes(const Array<OneD, const Array<OneD, NekDouble> > &uvec,
+   SOLVER_UTILS_EXPORT Array<OneD, NekDouble> CartesianToMovingframes(const Array<OneD, const Array<OneD, NekDouble> > &uvec,
 						 unsigned int field);
 
   SOLVER_UTILS_EXPORT void DeriveCrossProductMF(Array<OneD, Array<OneD, NekDouble> > &CrossProductMF);
@@ -369,11 +369,11 @@ class MMFSystem: virtual public UnsteadySystem
   Array<OneD, NekDouble> GetIncidentField(const int var, const NekDouble time);
   SOLVER_UTILS_EXPORT void Computedemdxicdote();
   
-  NekDouble AvgInt(const Array<OneD, const NekDouble> &inarray);
-  NekDouble AvgAbsInt(const Array<OneD, const NekDouble> &inarray);
-  NekDouble AbsIntegral(const Array<OneD, const NekDouble> &inarray);
-  NekDouble RootMeanSquare(const Array<OneD, const NekDouble> &inarray);
-  NekDouble VectorAvgMagnitude(const Array<OneD, const Array<OneD, NekDouble> > &inarray);
+  SOLVER_UTILS_EXPORT NekDouble AvgInt(const Array<OneD, const NekDouble> &inarray);
+  SOLVER_UTILS_EXPORT NekDouble AvgAbsInt(const Array<OneD, const NekDouble> &inarray);
+  SOLVER_UTILS_EXPORT NekDouble AbsIntegral(const Array<OneD, const NekDouble> &inarray);
+  SOLVER_UTILS_EXPORT NekDouble RootMeanSquare(const Array<OneD, const NekDouble> &inarray);
+  SOLVER_UTILS_EXPORT NekDouble VectorAvgMagnitude(const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 
   SOLVER_UTILS_EXPORT void GramSchumitz (const Array<OneD, const Array<OneD, NekDouble> > &v1,
 		     const Array<OneD, const Array<OneD, NekDouble> > &v2,

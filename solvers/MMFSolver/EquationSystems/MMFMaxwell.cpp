@@ -2030,10 +2030,10 @@ namespace Nektar
 	  NekDouble relrad, rad1,rad2,rad3,rad4;
 	  for (int i=0; i<nq; i++)
 	    {
-	      rad1 = -1.0*x[i] + y[i] - 7;
-	      rad2 = x[i] + y[i] - 7;
-	      rad3 = -x[i] - y[i] - 7;
-	      rad4 = x[i] - y[i] - 7;
+	      rad1 = NekDouble(-1.0*x[i] + y[i] - 7);
+	      rad2 = NekDouble(x[i] + y[i] - 7);
+	      rad3 = NekDouble(-x[i] - y[i] - 7);
+	      rad4 = NekDouble(x[i] - y[i] - 7);
 	      
 	      if( rad1>=0.0 )
 		{

@@ -33,6 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 #include <algorithm>
+#include <math.h>
 
 #include <NekMeshUtils/2DGenerator/2DGenerator.h>
 
@@ -55,6 +56,10 @@ Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "", "Generate parallelograms on these curves");
     m_config["blthick"] =
         ConfigOption(false, "0.0", "Parallelogram layer thickness");
+    m_config["bltadjust"] =
+        ConfigOption(false, "2.0", "Boundary layer thickness adjustment");
+    m_config["adjustblteverywhere"] =
+        ConfigOption(true, "0", "Adjust thickness everywhere");
 }
 
 Generator2D::~Generator2D()
@@ -130,9 +135,8 @@ void Generator2D::Process()
                                            "Face progress");
         }
 
-        m_facemeshes[i] =
-            MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                m_curvemeshes, 99+i);
+        m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
+            i, m_mesh, m_curvemeshes, 99 + i);
         m_facemeshes[i]->Mesh();
     }
 
@@ -242,6 +246,16 @@ void Generator2D::MakeBL(int faceid)
         }
     }
 
+    bool adjust           = m_config["bltadjust"].beenSet;
+    NekDouble divider     = m_config["bltadjust"].as<NekDouble>();
+    bool adjustEverywhere = m_config["adjustblteverywhere"].beenSet;
+
+    if (divider < 2.0)
+    {
+        WARNINGL1(false, "BndLayerAdjustment too low, corrected to 2.0");
+        divider = 2.0;
+    }
+
     map<NodeSharedPtr, NodeSharedPtr> nodeNormals;
     map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it;
     for (it = m_nodesToEdge.begin(); it != m_nodesToEdge.end(); it++)
@@ -260,6 +274,17 @@ void Generator2D::MakeBL(int faceid)
 
         NekDouble t = m_thickness.Evaluate(m_thickness_ID, it->first->m_x,
                                            it->first->m_y, 0.0, 0.0);
+
+        // Adjust thickness according to angle between normals
+        if (adjust)
+        {
+            if (adjustEverywhere || it->first->GetNumCadCurve() > 1)
+            {
+                NekDouble angle = acos(n1[0] * n2[0] + n1[1] * n2[1]);
+                angle           = (angle > M_PI) ? 2 * M_PI - angle : angle;
+                t /= cos(angle / divider);
+            }
+        }
 
         n[0] = n[0] * t + it->first->m_x;
         n[1] = n[1] * t + it->first->m_y;

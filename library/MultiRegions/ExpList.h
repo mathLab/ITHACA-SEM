@@ -931,7 +931,7 @@ namespace Nektar
                 std::string &field,
                 Array<OneD, NekDouble> &coeffs);
             
-            void GenerateElementVector(const int ElementID,
+            MULTI_REGIONS_EXPORT void GenerateElementVector(const int ElementID,
                                        const NekDouble scalar1,
                                        const NekDouble scalar2,
                                        Array<OneD, NekDouble> &outarray);
@@ -1314,7 +1314,7 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &Vel,
                 Array<OneD, Array<OneD, NekDouble> > &Q);
             
-            void v_PhysDirectionalDeriv(const Array<OneD, const NekDouble> &direction,
+            MULTI_REGIONS_EXPORT void v_PhysDirectionalDeriv(const Array<OneD, const NekDouble> &direction,
                                         const Array<OneD, const NekDouble> &inarray,
                                         Array<OneD, NekDouble> &outarray);
             

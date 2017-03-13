@@ -619,7 +619,11 @@ namespace Nektar
                             // face 0 
                             for(i = 0; i < numPoints; ++i)
                             {
-                                mode[i] = pow(m_bdata[i],p+q); // [(1-z)/2]^{p+q}
+                                // [(1-z)/2]^{p+q-2} Note in book it
+                                // seems to suggest p+q-1 but that
+                                // does not seem to give complete
+                                // polynomial space for pyramids
+                                mode[i] = pow(m_bdata[i],p+q-2);
                             }
 
                             one_m_z_pow  = mode;
@@ -628,7 +632,7 @@ namespace Nektar
                             // interior 
                             for(int r = 1; r < numModes-max(p,q); ++r)
                             {
-                                Polylib::jacobfd(numPoints,z.data(),mode,NULL,r-1,2*p+2*q-1,1.0);
+                                Polylib::jacobfd(numPoints,z.data(),mode,NULL,r-1,2*p+2*q-3,1.0);
                                 
                                 for(i = 0; i <  numPoints; ++i)
                                 {

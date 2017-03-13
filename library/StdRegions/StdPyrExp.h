@@ -98,8 +98,6 @@ namespace Nektar
 
             STD_REGIONS_EXPORT ~StdPyrExp();
 
-            STD_REGIONS_EXPORT int GetTetMode(int I, int J, int K);
-
         protected:
             //---------------------------------------
             // Differentiation/integration Methods
@@ -257,8 +255,7 @@ namespace Nektar
             //---------------------------------------
             // Private helper functions
             //---------------------------------------
-            std::map<Mode, unsigned int, cmpop> m_map;
-            std::map<int, std::map<int, std::map<int, std::pair<int, int> > > > m_idxMap;
+            STD_REGIONS_EXPORT int GetMode(int I, int J, int K);
         };    
         typedef boost::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
     } //end of namespace

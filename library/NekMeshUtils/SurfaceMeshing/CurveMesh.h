@@ -62,43 +62,16 @@ public:
     /**
      * @brief default constructor
      */
-    CurveMesh(int id, MeshSharedPtr m, std::string expr = "0.0") : m_id(id), m_mesh(m)
+    CurveMesh(int id, MeshSharedPtr m, std::string expr = "0.0")
+        : m_id(id), m_mesh(m)
     {
         m_blID = m_bl.DefineFunction("x y z", expr);
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
-
-        m_bloffset.resize(2);
-        m_bloffset[0] = 0.0;
-        m_bloffset[1] = 0.0;
     }
 
-    /**
-     * @brief alternative constructor with mesh points already created
-     */
-    CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> n,
-              bool createEdges = false)
-        : m_id(id), m_mesh(m), m_meshpoints(n)
+    CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> ns)
+        : m_id(id), m_mesh(m), m_meshpoints(ns)
     {
-        m_blID = m_bl.DefineFunction("x y z", "0.0");
-        m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
-        
-        if (createEdges)
-        {
-            CreateEdges();
-        }
-
-        m_bloffset.resize(2);
-        m_bloffset[0] = 0.0;
-        m_bloffset[1] = 0.0;
-    }
-
-    /**
-     * @brief alternative constructor with adjacent boundary layer curves
-     */
-    CurveMesh(int id, MeshSharedPtr m, std::vector<NekDouble> bloffset)
-        : m_id(id), m_mesh(m), m_bloffset(bloffset)
-    {
-        m_blID = m_bl.DefineFunction("x y z", "0.0");
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
     }
 
@@ -152,22 +125,6 @@ public:
         return m_curvelength;
     }
 
-    /**
-     * @brief get the CAD curve
-     */
-    CADCurveSharedPtr GetCADCurve()
-    {
-        return m_cadcurve;
-    }
-
-    /**
-     * @brief get the boundary layer offsets
-     */
-    std::vector<NekDouble> GetBLOffset()
-    {
-        return m_bloffset;
-    }
-
 private:
     /**
      * @brief get node spacing sampling function
@@ -188,11 +145,6 @@ private:
      * @brief evaluate paramter ps at curve location s
      */
     NekDouble EvaluatePS(NekDouble s);
-
-    /**
-     * @brief create edges using m_meshpoints and fill m_edgeSet
-     */
-    void CreateEdges();
 
     /// CAD curve
     CADCurveSharedPtr m_cadcurve;
@@ -225,8 +177,6 @@ private:
     std::vector<NodeSharedPtr> m_meshpoints;
     LibUtilities::AnalyticExpressionEvaluator m_bl;
     int m_blID;
-    /// boundary layer offset on vertices
-    std::vector<NekDouble> m_bloffset;
 };
 
 typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;

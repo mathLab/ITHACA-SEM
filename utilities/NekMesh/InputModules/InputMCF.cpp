@@ -225,6 +225,17 @@ void InputMCF::ParseFile(string nm)
             it = parameters.find("BndLayerProgression");
             m_blprog = it != parameters.end() ? it->second : "2.0";
         }
+        
+        it = parameters.find("BndLayerAdjustment");
+        if (it != parameters.end())
+        {
+            m_adjust = true;
+            m_adjustment = it->second;
+        }
+        else
+        {
+            m_adjust = false;
+        }
     }
 
     m_naca = false;
@@ -253,12 +264,14 @@ void InputMCF::ParseFile(string nm)
     }
 
     set<string>::iterator sit;
-    sit        = boolparameters.find("SurfaceOptimiser");
-    m_surfopti = sit != boolparameters.end();
-    sit        = boolparameters.find("WriteOctree");
-    m_woct     = sit != boolparameters.end();
-    sit        = boolparameters.find("VariationalOptimiser");
-    m_varopti  = sit != boolparameters.end();
+    sit         = boolparameters.find("SurfaceOptimiser");
+    m_surfopti  = sit != boolparameters.end();
+    sit         = boolparameters.find("WriteOctree");
+    m_woct      = sit != boolparameters.end();
+    sit         = boolparameters.find("VariationalOptimiser");
+    m_varopti   = sit != boolparameters.end();
+    sit         = boolparameters.find("BndLayerAdjustEverywhere");
+    m_adjustall = sit != boolparameters.end();
 
     m_refine = refinement.size() > 0;
     if(m_refine)
@@ -335,6 +348,16 @@ void InputMCF::Process()
         {
             mods.back()->RegisterConfig("blcurves", m_blsurfs);
             mods.back()->RegisterConfig("blthick", m_blthick);
+            
+            if (m_adjust)
+            {
+                mods.back()->RegisterConfig("bltadjust", m_adjustment);
+                
+                if (m_adjustall)
+                {
+                    mods.back()->RegisterConfig("adjustblteverywhere", "");
+                }
+            }
         }
         if (m_periodic.size())
         {

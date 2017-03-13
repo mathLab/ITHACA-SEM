@@ -33,6 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 #include <algorithm>
+#include <math.h>
 
 #include <NekMeshUtils/2DGenerator/2DGenerator.h>
 
@@ -58,7 +59,11 @@ Generator2D::Generator2D(MeshSharedPtr m) : ProcessModule(m)
     m_config["blthick"] =
         ConfigOption(false, "0.0", "Parallelogram layer thickness");
     m_config["periodic"] =
-        ConfigOption(false, "0", "Set of pairs of periodic curves");
+        ConfigOption(false, "", "Set of pairs of periodic curves");
+    m_config["bltadjust"] =
+        ConfigOption(false, "2.0", "Boundary layer thickness adjustment");
+    m_config["adjustblteverywhere"] =
+        ConfigOption(true, "0", "Adjust thickness everywhere");
 }
 
 Generator2D::~Generator2D()
@@ -317,6 +322,7 @@ void Generator2D::Process()
             LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumSurf(),
                                            "Face progress");
         }
+
         m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
             i, m_mesh, m_curvemeshes, 99 + i);
         m_facemeshes[i]->Mesh();
@@ -420,6 +426,7 @@ void Generator2D::MakeBL(int faceid)
     bool adjust           = m_config["bltadjust"].beenSet;
     NekDouble divider     = m_config["bltadjust"].as<NekDouble>();
     bool adjustEverywhere = m_config["adjustblteverywhere"].beenSet;
+
     if (divider < 2.0)
     {
         WARNINGL1(false, "BndLayerAdjustment too low, corrected to 2.0");
@@ -452,6 +459,7 @@ void Generator2D::MakeBL(int faceid)
                 t /= cos(angle / divider);
             }
         }
+
         n[0] = n[0] * t + it->first->m_x;
         n[1] = n[1] * t + it->first->m_y;
         n[2] = 0.0;

@@ -85,14 +85,14 @@ Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p)
 
     Array<OneD, NekDouble> uvr(2);
 
-    gp_Pnt2d p2 = m_sas->ValueOfUV(loc, 1e-3);
+    gp_Pnt2d p2 = m_sas->ValueOfUV(loc, 1e-8);
     uvr[0]      = p2.X();
     uvr[1]      = p2.Y();
 
     gp_Pnt p3 = m_sas->Value(p2);
-    if (p3.Distance(loc) > 1.0)
+    if (p3.Distance(loc) > 0.001)
     {
-        cout << "large locuv distance " << p3.Distance(loc) << " " << m_id
+        cout << "large locuv distance " << p3.Distance(loc)/1000.0 << " " << m_id
              << endl;
     }
 
@@ -193,7 +193,7 @@ void CADSurfOCE::ProjectTo(Array<OneD, NekDouble> &tp,
     ShapeAnalysis_Surface sas(m_s);
     sas.SetDomain(m_bounds[0], m_bounds[1], m_bounds[2], m_bounds[3]);
 
-    gp_Pnt2d p2 = sas.ValueOfUV(loc, 1e-7);
+    gp_Pnt2d p2 = sas.ValueOfUV(loc, 1e-8);
 
     gp_Pnt p3 = sas.Value(p2);
 
@@ -226,7 +226,7 @@ Array<OneD, NekDouble> CADSurfOCE::N(Array<OneD, NekDouble> uv)
     Test(uv);
 #endif
 
-    BRepLProp_SLProps slp(m_occSurface, 2, 1e-6);
+    BRepLProp_SLProps slp(m_occSurface, 2, 1e-8);
     slp.SetParameters(uv[0], uv[1]);
 
     if (!slp.IsNormalDefined())

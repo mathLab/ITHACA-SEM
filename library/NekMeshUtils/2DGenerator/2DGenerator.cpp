@@ -310,7 +310,7 @@ void Generator2D::Process()
     }
 
 
-    if (m_mesh->m_verbose)
+    /*if (m_mesh->m_verbose)
     {
         cout << endl << "\tFace meshing:" << endl << endl;
     }
@@ -326,12 +326,12 @@ void Generator2D::Process()
         m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
             i, m_mesh, m_curvemeshes, 99 + i);
         m_facemeshes[i]->Mesh();
-    }
+    }*/
 
 
     ////////////////////////////////////
 
-    EdgeSet::iterator it;
+    /*EdgeSet::iterator it;
     for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
     {
         vector<NodeSharedPtr> ns;
@@ -346,7 +346,7 @@ void Generator2D::Process()
         ElementSharedPtr E2 = GetElementFactory().CreateInstance(
             LibUtilities::eSegment, conf, ns, tags);
         m_mesh->m_element[1].push_back(E2);
-    }
+    }*/
 
 
     ProcessVertices();
@@ -409,7 +409,7 @@ void Generator2D::MakeBL(int faceid)
             NekDouble mag = sqrt(n[0] * n[0] + n[1] * n[1]);
             n[0] /= mag;
             n[1] /= mag;
-            Array<OneD, NekDouble> np = es[j]->m_n1->GetCADSurfInfo(faceid);
+            Array<OneD, NekDouble> np = p1;
             np[0] += n[0];
             np[1] += n[1];
             Array<OneD, NekDouble> loc  = es[j]->m_n1->GetLoc();
@@ -437,7 +437,7 @@ void Generator2D::MakeBL(int faceid)
     map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it;
     for (it = m_nodesToEdge.begin(); it != m_nodesToEdge.end(); it++)
     {
-        Array<OneD, NekDouble> n(3);
+        Array<OneD, NekDouble> n(3,0.0);
         ASSERTL0(it->second.size() == 2,
                  "wierdness, most likely bl_surfs are incorrect");
         Array<OneD, NekDouble> n1 = edgeNormals[it->second[0]->m_id];
@@ -462,7 +462,6 @@ void Generator2D::MakeBL(int faceid)
 
         n[0] = n[0] * t + it->first->m_x;
         n[1] = n[1] * t + it->first->m_y;
-        n[2] = 0.0;
         NodeSharedPtr nn = boost::shared_ptr<Node>(
             new Node(m_mesh->m_numNodes++, n[0], n[1], 0.0));
         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(faceid);

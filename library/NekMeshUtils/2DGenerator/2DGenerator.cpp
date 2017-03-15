@@ -348,6 +348,9 @@ void Generator2D::Process()
         m_mesh->m_element[1].push_back(E2);
     }*/
 
+    //m_mesh->m_expDim = 1;
+    //m_mesh->m_element[2].clear();
+
 
     ProcessVertices();
     ProcessEdges();
@@ -355,7 +358,6 @@ void Generator2D::Process()
     ProcessElements();
     ProcessComposites();
     Report();
-
 }
 
 void Generator2D::MakeBLPrep()
@@ -399,19 +401,20 @@ void Generator2D::MakeBL(int faceid)
             Array<OneD, NekDouble> p1, p2;
             p1 = es[j]->m_n1->GetCADSurfInfo(faceid);
             p2 = es[j]->m_n2->GetCADSurfInfo(faceid);
-            if (edgeo == CADOrientation::eBackwards)
-            {
-                swap(p1, p2);
-            }
             Array<OneD, NekDouble> n(2);
             n[0]          = p1[1] - p2[1];
             n[1]          = p2[0] - p1[0];
+            if (edgeo == CADOrientation::eBackwards)
+            {
+                n[0] *= -1.0;
+                n[1] *= -1.0;
+            }
             NekDouble mag = sqrt(n[0] * n[0] + n[1] * n[1]);
             n[0] /= mag;
             n[1] /= mag;
-            Array<OneD, NekDouble> np = p1;
-            np[0] += n[0];
-            np[1] += n[1];
+            Array<OneD, NekDouble> np(2);
+            np[0] = p1[0] + n[0];
+            np[1] = p1[1] + n[1];
             Array<OneD, NekDouble> loc  = es[j]->m_n1->GetLoc();
             Array<OneD, NekDouble> locp = m_mesh->m_cad->GetSurf(faceid)->P(np);
             n[0] = locp[0] - loc[0];

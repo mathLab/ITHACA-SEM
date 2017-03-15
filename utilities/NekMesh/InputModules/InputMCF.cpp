@@ -225,7 +225,7 @@ void InputMCF::ParseFile(string nm)
             it = parameters.find("BndLayerProgression");
             m_blprog = it != parameters.end() ? it->second : "2.0";
         }
-        
+
         it = parameters.find("BndLayerAdjustment");
         if (it != parameters.end())
         {
@@ -348,11 +348,11 @@ void InputMCF::Process()
         {
             mods.back()->RegisterConfig("blcurves", m_blsurfs);
             mods.back()->RegisterConfig("blthick", m_blthick);
-            
+
             if (m_adjust)
             {
                 mods.back()->RegisterConfig("bltadjust", m_adjustment);
-                
+
                 if (m_adjustall)
                 {
                     mods.back()->RegisterConfig("adjustblteverywhere", "");
@@ -423,11 +423,11 @@ void InputMCF::Process()
     }
 
     // Run peralign
-    
-    if (m_periodic.size())
+
+    /*if (m_periodic.size())
     {
         mods.clear();
-        
+
         vector<string> lines;
         boost::split(lines, m_periodic, boost::is_any_of(":"));
 
@@ -471,7 +471,7 @@ void InputMCF::Process()
             mods[i]->SetDefaults();
             mods[i]->Process();
         }
-    }
+    }*/
 }
 }
 }

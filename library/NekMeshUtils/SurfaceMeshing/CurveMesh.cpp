@@ -108,8 +108,7 @@ void CurveMesh::Mesh()
     Array<OneD, NekDouble> loc;
 
     vector<CADVertSharedPtr> verts = m_cadcurve->GetVertex();
-    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > s =
-        m_cadcurve->GetAdjSurf();
+    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > s = m_cadcurve->GetAdjSurf();
 
     NodeSharedPtr n = verts[0]->GetNode();
     t               = m_bounds[0];
@@ -165,7 +164,15 @@ void CurveMesh::Mesh()
     ASSERTL0(Ne + 1 == m_meshpoints.size(),
              "incorrect number of points in curve mesh");
 
-    MakeEdges();
+    // make edges and add them to the edgeset for the face mesher to use
+    for (int i = 0; i < m_meshpoints.size() - 1; i++)
+    {
+        EdgeSharedPtr e = boost::shared_ptr<Edge>(
+            new Edge(m_meshpoints[i], m_meshpoints[i + 1]));
+        e->m_parentCAD = m_cadcurve;
+        m_mesh->m_edgeSet.insert(e);
+        m_meshedges.push_back(e);
+    }
 
     if (m_mesh->m_verbose)
     {
@@ -177,19 +184,6 @@ void CurveMesh::Mesh()
              << "\t\t\tNodes: " << m_meshpoints.size() << endl
              << "\t\t\tSample points: " << m_numSamplePoints << endl
              << endl;
-    }
-}
-
-void CurveMesh::MakeEdges()
-{
-    // make edges and add them to the edgeset for the face mesher to use
-    for (int i = 0; i < m_meshpoints.size() - 1; i++)
-    {
-        EdgeSharedPtr e =
-            EdgeSharedPtr(new Edge(m_meshpoints[i], m_meshpoints[i + 1]));
-        e->m_parentCAD = m_cadcurve;
-        m_mesh->m_edgeSet.insert(e);
-        m_meshedges.push_back(e);
     }
 }
 
@@ -220,7 +214,7 @@ NekDouble CurveMesh::EvaluateDS(NekDouble s)
     int a = 0;
     int b = 0;
 
-    ASSERTL1(!(s < 0) && !(s > m_curvelength), "s out of bounds");
+    ASSERTL1(!(s < 0) && !(s > m_curvelength),"s out of bounds");
 
     if (s == 0)
     {
@@ -259,7 +253,7 @@ NekDouble CurveMesh::EvaluatePS(NekDouble s)
     int a = 0;
     int b = 0;
 
-    ASSERTL1(!(s < 0) && !(s > m_curvelength), "s out of bounds");
+    ASSERTL1(!(s < 0) && !(s > m_curvelength),"s out of bounds");
 
     if (s == 0)
     {
@@ -351,7 +345,7 @@ void CurveMesh::GetSampleFunction()
         }
         else
         {*/
-        dsti[0] = m_mesh->m_octree->Query(loc);
+            dsti[0] = m_mesh->m_octree->Query(loc);
         //}
 
         dsti[2] = t;
@@ -359,5 +353,71 @@ void CurveMesh::GetSampleFunction()
         m_dst[i] = dsti;
     }
 }
+
+void CurveMesh::PeriodicOverwrite(CurveMeshSharedPtr from)
+{
+    //clear current mesh points and remove edges from edgeset
+    m_meshpoints.clear();
+    for (int i = 0; i < m_meshedges.size(); i++)
+    {
+        m_mesh->m_edgeSet.erase(m_meshedges[i]);
+    }
+    m_meshedges.clear();
+
+    ///////
+
+    int tid = from->GetId();
+    Array<OneD, NekDouble> T =
+        m_mesh->m_cad->GetPeriodicTranslationVector(tid, m_id);
+
+    CADCurveSharedPtr c1 = m_mesh->m_cad->GetCurve(tid);
+
+    bool reversed = c1->GetOrienationWRT(1) == m_cadcurve->GetOrienationWRT(1);
+
+    vector<NodeSharedPtr> nodes = from->GetMeshPoints();
+
+    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > surfs =
+        m_cadcurve->GetAdjSurf();
+
+    for (int i = 1; i < nodes.size() - 1; i++)
+    {
+        Array<OneD, NekDouble> loc = nodes[i]->GetLoc();
+        NodeSharedPtr nn = NodeSharedPtr(new Node(
+            m_mesh->m_numNodes++, loc[0] + T[0], loc[1] + T[1], 0.0));
+
+        for (int j = 0; j < surfs.size(); j++)
+        {
+            nn->SetCADSurf(surfs[j].first->GetId(), surfs[j].first,
+                           surfs[j].first->locuv(nn->GetLoc()));
+        }
+
+        nn->SetCADCurve(m_id, m_cadcurve, m_cadcurve->loct(nn->GetLoc()));
+
+        m_meshpoints.push_back(nn);
+    }
+
+    // Reverse internal nodes of the vector if necessary
+    if (reversed)
+    {
+        reverse(m_meshpoints.begin(), m_meshpoints.end());
+    }
+
+    vector<CADVertSharedPtr> verts = m_cadcurve->GetVertex();
+
+    m_meshpoints.insert(m_meshpoints.begin(), verts[0]->GetNode());
+    m_meshpoints.push_back(verts[1]->GetNode());
+    //dont need to realign cad for vertices
+
+    // make edges and add them to the edgeset for the face mesher to use
+    for (int i = 0; i < m_meshpoints.size() - 1; i++)
+    {
+        EdgeSharedPtr e = boost::shared_ptr<Edge>(
+            new Edge(m_meshpoints[i], m_meshpoints[i + 1]));
+        e->m_parentCAD = m_cadcurve;
+        m_mesh->m_edgeSet.insert(e);
+        m_meshedges.push_back(e);
+    }
+}
+
 }
 }

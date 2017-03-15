@@ -54,6 +54,10 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+//forward
+class CurveMesh;
+typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
+
 class CurveMesh
 {
 public:
@@ -73,7 +77,6 @@ public:
         : m_id(id), m_mesh(m), m_meshpoints(ns)
     {
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
-        MakeEdges();
     }
 
     /**
@@ -126,6 +129,13 @@ public:
         return m_curvelength;
     }
 
+    void PeriodicOverwrite(CurveMeshSharedPtr from);
+
+    int GetId()
+    {
+        return m_id;
+    }
+
 private:
     /**
      * @brief get node spacing sampling function
@@ -146,8 +156,6 @@ private:
      * @brief evaluate paramter ps at curve location s
      */
     NekDouble EvaluatePS(NekDouble s);
-
-    void MakeEdges();
 
     /// CAD curve
     CADCurveSharedPtr m_cadcurve;
@@ -182,7 +190,6 @@ private:
     int m_blID;
 };
 
-typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
 }
 }
 

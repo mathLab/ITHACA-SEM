@@ -111,7 +111,6 @@ void Generator2D::Process()
 
     if (m_config["periodic"].beenSet)
     {
-        cout << "periodic" << endl;
         PeriodicPrep();
         MakePeriodic();
     }
@@ -374,56 +373,7 @@ void Generator2D::MakePeriodic()
     for (map<unsigned, unsigned>::iterator ip = m_periodicPairs.begin();
          ip != m_periodicPairs.end(); ++ip)
     {
-        Array<OneD, NekDouble> T =
-            m_mesh->m_cad->GetPeriodicTranslationVector(ip->first, ip->second);
-
-        CADCurveSharedPtr c1 = m_mesh->m_cad->GetCurve(ip->first);
-        CADCurveSharedPtr c2 = m_mesh->m_cad->GetCurve(ip->second);
-
-        bool reversed = c1->GetOrienationWRT(1) == c2->GetOrienationWRT(1);
-
-        vector<NodeSharedPtr> nodes = m_curvemeshes[ip->first]->GetMeshPoints();
-        vector<NodeSharedPtr> nnodes;
-
-        vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > surfs =
-            c2->GetAdjSurf();
-
-        for (int i = 1; i < nodes.size() - 1; i++)
-        {
-            Array<OneD, NekDouble> loc = nodes[i]->GetLoc();
-            NodeSharedPtr nn = NodeSharedPtr(new Node(
-                m_mesh->m_numNodes++, loc[0] + T[0], loc[1] + T[1], 0.0));
-
-            for (int j = 0; j < surfs.size(); j++)
-            {
-                nn->SetCADSurf(surfs[j].first->GetId(), surfs[j].first,
-                               surfs[j].first->locuv(nn->GetLoc()));
-            }
-
-            nn->SetCADCurve(ip->second, c2, c2->loct(nn->GetLoc()));
-
-            nnodes.push_back(nn);
-        }
-
-        // Reverse internal nodes of the vector if necessary
-        if (reversed)
-        {
-            reverse(nnodes.begin(), nnodes.end());
-        }
-
-        nnodes.insert(nnodes.begin(), m_curvemeshes[ip->second]->GetFirstPoint());
-        nnodes.push_back(m_curvemeshes[ip->second]->GetLastPoint());
-
-        // Clean m_edgeSet and build new CurveMesh
-        vector<EdgeSharedPtr> edges = m_curvemeshes[ip->second]->GetMeshEdges();
-        for (vector<EdgeSharedPtr>::iterator ie = edges.begin();
-             ie != edges.end(); ++ie)
-        {
-            m_mesh->m_edgeSet.erase(*ie);
-        }
-
-        m_curvemeshes[ip->second] = MemoryManager<CurveMesh>::AllocateSharedPtr(
-            ip->second, m_mesh, nnodes);
+        m_curvemeshes[ip->second]->PeriodicOverwrite(m_curvemeshes[ip->first]);
     }
 
     if (m_mesh->m_verbose)

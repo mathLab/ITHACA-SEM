@@ -108,7 +108,8 @@ void CurveMesh::Mesh()
     Array<OneD, NekDouble> loc;
 
     vector<CADVertSharedPtr> verts = m_cadcurve->GetVertex();
-    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > s = m_cadcurve->GetAdjSurf();
+    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > s =
+        m_cadcurve->GetAdjSurf();
 
     NodeSharedPtr n = verts[0]->GetNode();
     t               = m_bounds[0];
@@ -164,15 +165,7 @@ void CurveMesh::Mesh()
     ASSERTL0(Ne + 1 == m_meshpoints.size(),
              "incorrect number of points in curve mesh");
 
-    // make edges and add them to the edgeset for the face mesher to use
-    for (int i = 0; i < m_meshpoints.size() - 1; i++)
-    {
-        EdgeSharedPtr e = boost::shared_ptr<Edge>(
-            new Edge(m_meshpoints[i], m_meshpoints[i + 1]));
-        e->m_parentCAD = m_cadcurve;
-        m_mesh->m_edgeSet.insert(e);
-        m_meshedges.push_back(e);
-    }
+    MakeEdges();
 
     if (m_mesh->m_verbose)
     {
@@ -184,6 +177,19 @@ void CurveMesh::Mesh()
              << "\t\t\tNodes: " << m_meshpoints.size() << endl
              << "\t\t\tSample points: " << m_numSamplePoints << endl
              << endl;
+    }
+}
+
+void CurveMesh::MakeEdges()
+{
+    // make edges and add them to the edgeset for the face mesher to use
+    for (int i = 0; i < m_meshpoints.size() - 1; i++)
+    {
+        EdgeSharedPtr e =
+            EdgeSharedPtr(new Edge(m_meshpoints[i], m_meshpoints[i + 1]));
+        e->m_parentCAD = m_cadcurve;
+        m_mesh->m_edgeSet.insert(e);
+        m_meshedges.push_back(e);
     }
 }
 
@@ -214,7 +220,7 @@ NekDouble CurveMesh::EvaluateDS(NekDouble s)
     int a = 0;
     int b = 0;
 
-    ASSERTL1(!(s < 0) && !(s > m_curvelength),"s out of bounds");
+    ASSERTL1(!(s < 0) && !(s > m_curvelength), "s out of bounds");
 
     if (s == 0)
     {
@@ -253,7 +259,7 @@ NekDouble CurveMesh::EvaluatePS(NekDouble s)
     int a = 0;
     int b = 0;
 
-    ASSERTL1(!(s < 0) && !(s > m_curvelength),"s out of bounds");
+    ASSERTL1(!(s < 0) && !(s > m_curvelength), "s out of bounds");
 
     if (s == 0)
     {
@@ -345,7 +351,7 @@ void CurveMesh::GetSampleFunction()
         }
         else
         {*/
-            dsti[0] = m_mesh->m_octree->Query(loc);
+        dsti[0] = m_mesh->m_octree->Query(loc);
         //}
 
         dsti[2] = t;

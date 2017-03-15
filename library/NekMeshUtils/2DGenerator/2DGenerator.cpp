@@ -72,197 +72,6 @@ Generator2D::~Generator2D()
 
 void Generator2D::Process()
 {
-    /*if (m_mesh->m_verbose)
-    {
-        cout << endl << "2D meshing" << endl;
-        cout << endl << "\tCurve meshing:" << endl << endl;
-    }
-
-    m_mesh->m_numNodes = m_mesh->m_cad->GetNumVerts();
-
-    set<unsigned> periodic;
-
-    if (m_config["periodic"].beenSet)
-    {
-        m_periodicPairs.clear();
-
-        // Build periodic curve pairs
-
-        string s = m_config["periodic"].as<string>();
-        vector<string> lines;
-
-        boost::split(lines, s, boost::is_any_of(":"));
-
-        for (vector<string>::iterator il = lines.begin(); il != lines.end();
-             ++il)
-        {
-            vector<string> tmp;
-            boost::split(tmp, *il, boost::is_any_of(","));
-
-            ASSERTL0(tmp.size() == 2, "periodic pairs ill-defined");
-
-            vector<unsigned> data(2);
-            data[0] = boost::lexical_cast<unsigned>(tmp[0]);
-            data[1] = boost::lexical_cast<unsigned>(tmp[1]);
-
-            ASSERTL0(!periodic.count(data[0]), "curve already periodic");
-            ASSERTL0(!periodic.count(data[1]), "curve already periodic");
-
-            m_periodicPairs[data[0]] = data[1];
-            periodic.insert(data[0]);
-            periodic.insert(data[1]);
-        }
-
-        // Check compatibility
-
-        for (map<unsigned, unsigned>::iterator it = m_periodicPairs.begin();
-             it != m_periodicPairs.end(); ++it)
-        {
-            NekDouble L1 = m_mesh->m_cad->GetCurve(it->first)->GetTotLength();
-            NekDouble L2 = m_mesh->m_cad->GetCurve(it->second)->GetTotLength();
-
-            ASSERTL0(abs((L1 - L2) / L1) < 1.0e-3,
-                     "periodic curves of different length");
-        }
-    }
-
-    if (m_config["blcurves"].beenSet)
-    {
-        ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
-                                      m_blCurves);
-        m_thickness_ID = m_thickness.DefineFunction(
-            "x y z", m_config["blthick"].as<string>());
-    }*/
-
-    /*if (m_config["periodic"].beenSet)
-    {
-        // Override slave curves
-
-        for (map<unsigned, unsigned>::iterator ip = m_periodicPairs.begin();
-             ip != m_periodicPairs.end(); ++ip)
-        {
-            Array<OneD, NekDouble> A1 =
-                m_curvemeshes[ip->first]->GetFirstPoint()->GetLoc();
-            Array<OneD, NekDouble> A2 =
-                m_curvemeshes[ip->first]->GetLastPoint()->GetLoc();
-            Array<OneD, NekDouble> B1 =
-                m_curvemeshes[ip->second]->GetFirstPoint()->GetLoc();
-            Array<OneD, NekDouble> B2 =
-                m_curvemeshes[ip->second]->GetLastPoint()->GetLoc();
-
-            Array<OneD, NekDouble> T1(2);
-            Array<OneD, NekDouble> T2(2);
-            Array<OneD, NekDouble> dT(2);
-
-            // Compute translation vector
-
-            T1[0] = B1[0] - A1[0];
-            T1[1] = B1[1] - A1[1];
-
-            T2[0] = B2[0] - A2[0];
-            T2[1] = B2[1] - A2[1];
-
-            dT[0] = T2[0] - T1[0];
-            dT[1] = T2[1] - T1[1];
-
-            NekDouble dTmag = (dT[0] * dT[0] + dT[1] * dT[1]) /
-                              (T1[0] * T1[0] + T1[1] * T1[1]);
-
-            // Check if slave vector is reverse oriented
-
-            bool reverse = false;
-
-            if (dTmag > 1.0e-3)
-            {
-                reverse = true;
-
-                T1[0] = B1[0] - A2[0];
-                T1[1] = B1[1] - A2[1];
-
-                T2[0] = B2[0] - A1[0];
-                T2[1] = B2[1] - A1[1];
-
-                dT[0] = T2[0] - T1[0];
-                dT[1] = T2[1] - T1[1];
-
-                dTmag = (dT[0] * dT[0] + dT[1] * dT[1]) /
-                        (T1[0] * T1[0] + T1[1] * T1[1]);
-
-                ASSERTL0(dTmag < 1.0e-3, "curve cannot be translated");
-            }
-
-            // Build vector of translated nodes
-
-            vector<NodeSharedPtr> nodes =
-                m_curvemeshes[ip->first]->GetMeshPoints();
-            vector<NodeSharedPtr> nnodes;
-
-            vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > surfs =
-                m_curvemeshes[ip->second]->GetCADCurve()->GetAdjSurf();
-
-            nnodes.push_back(m_curvemeshes[ip->second]->GetFirstPoint());
-
-            for (vector<NodeSharedPtr>::iterator in = nodes.begin() + 1;
-                 in != nodes.end() - 1; ++in)
-            {
-                Array<OneD, NekDouble> loc = (*in)->GetLoc();
-                NodeSharedPtr nn = boost::shared_ptr<Node>(new Node(
-                    m_mesh->m_numNodes++, loc[0] + T1[0], loc[1] + T1[1], 0.0));
-
-                for (vector<pair<CADSurfSharedPtr,
-                                 CADOrientation::Orientation> >::iterator is =
-                         surfs.begin();
-                     is != surfs.end(); ++is)
-                {
-                    nn->SetCADSurf(is->first->GetId(), is->first,
-                                   is->first->locuv(nn->GetLoc()));
-                }
-
-                nn->SetCADCurve(ip->second,
-                                m_curvemeshes[ip->second]->GetCADCurve(),
-                                m_curvemeshes[ip->second]->GetCADCurve()->loct(
-                                    nn->GetLoc()));
-
-                nnodes.push_back(nn);
-            }
-
-            nnodes.push_back(m_curvemeshes[ip->second]->GetLastPoint());
-
-            // Reverse internal nodes of the vector if necessary
-
-            if (reverse)
-            {
-                std::reverse(++nnodes.begin(), --nnodes.end());
-            }
-
-            // Clean m_edgeSet and build new CurveMesh
-
-            vector<EdgeSharedPtr> edges =
-                m_curvemeshes[ip->second]->GetMeshEdges();
-            for (vector<EdgeSharedPtr>::iterator ie = edges.begin();
-                 ie != edges.end(); ++ie)
-            {
-                m_mesh->m_edgeSet.erase(*ie);
-            }
-
-            m_curvemeshes[ip->second] =
-                MemoryManager<CurveMesh>::AllocateSharedPtr(ip->second, m_mesh,
-                                                            nnodes, true);
-        }
-
-        if (m_mesh->m_verbose)
-        {
-            cout << "\t\tPeriodic boundary conditions" << endl;
-            for (map<unsigned, unsigned>::iterator it = m_periodicPairs.begin();
-                 it != m_periodicPairs.end(); ++it)
-            {
-                cout << "\t\t\tCurves " << it->first << " => " << it->second
-                     << endl;
-            }
-            cout << endl;
-        }
-    }*/
-
     if (m_mesh->m_verbose)
     {
         cout << endl << "2D meshing" << endl;
@@ -297,6 +106,16 @@ void Generator2D::Process()
         m_curvemeshes[i]->Mesh();
     }
 
+    ////////
+    // consider periodic curves
+
+    if (m_config["periodic"].beenSet)
+    {
+        cout << "periodic" << endl;
+        PeriodicPrep();
+        MakePeriodic();
+    }
+
     ////////////////////////////////////////
 
     if (m_config["blcurves"].beenSet)
@@ -309,8 +128,7 @@ void Generator2D::Process()
         }
     }
 
-
-    /*if (m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << endl << "\tFace meshing:" << endl << endl;
     }
@@ -326,12 +144,11 @@ void Generator2D::Process()
         m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
             i, m_mesh, m_curvemeshes, 99 + i);
         m_facemeshes[i]->Mesh();
-    }*/
-
+    }
 
     ////////////////////////////////////
 
-    /*EdgeSet::iterator it;
+    EdgeSet::iterator it;
     for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
     {
         vector<NodeSharedPtr> ns;
@@ -346,11 +163,10 @@ void Generator2D::Process()
         ElementSharedPtr E2 = GetElementFactory().CreateInstance(
             LibUtilities::eSegment, conf, ns, tags);
         m_mesh->m_element[1].push_back(E2);
-    }*/
+    }
 
-    //m_mesh->m_expDim = 1;
-    //m_mesh->m_element[2].clear();
-
+    // m_mesh->m_expDim = 1;
+    // m_mesh->m_element[2].clear();
 
     ProcessVertices();
     ProcessEdges();
@@ -402,8 +218,8 @@ void Generator2D::MakeBL(int faceid)
             p1 = es[j]->m_n1->GetCADSurfInfo(faceid);
             p2 = es[j]->m_n2->GetCADSurfInfo(faceid);
             Array<OneD, NekDouble> n(2);
-            n[0]          = p1[1] - p2[1];
-            n[1]          = p2[0] - p1[0];
+            n[0] = p1[1] - p2[1];
+            n[1] = p2[0] - p1[0];
             if (edgeo == CADOrientation::eBackwards)
             {
                 n[0] *= -1.0;
@@ -440,7 +256,7 @@ void Generator2D::MakeBL(int faceid)
     map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it;
     for (it = m_nodesToEdge.begin(); it != m_nodesToEdge.end(); it++)
     {
-        Array<OneD, NekDouble> n(3,0.0);
+        Array<OneD, NekDouble> n(3, 0.0);
         ASSERTL0(it->second.size() == 2,
                  "wierdness, most likely bl_surfs are incorrect");
         Array<OneD, NekDouble> n1 = edgeNormals[it->second[0]->m_id];
@@ -463,8 +279,8 @@ void Generator2D::MakeBL(int faceid)
             }
         }
 
-        n[0] = n[0] * t + it->first->m_x;
-        n[1] = n[1] * t + it->first->m_y;
+        n[0]             = n[0] * t + it->first->m_x;
+        n[1]             = n[1] * t + it->first->m_y;
         NodeSharedPtr nn = boost::shared_ptr<Node>(
             new Node(m_mesh->m_numNodes++, n[0], n[1], 0.0));
         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(faceid);
@@ -519,6 +335,110 @@ void Generator2D::MakeBL(int faceid)
         }
     }
 }
+
+void Generator2D::PeriodicPrep()
+{
+    m_periodicPairs.clear();
+    set<unsigned> periodic;
+
+    // Build periodic curve pairs
+    string s = m_config["periodic"].as<string>();
+    vector<string> lines;
+
+    boost::split(lines, s, boost::is_any_of(":"));
+
+    for (vector<string>::iterator il = lines.begin(); il != lines.end(); ++il)
+    {
+        vector<string> tmp;
+        boost::split(tmp, *il, boost::is_any_of(","));
+
+        ASSERTL0(tmp.size() == 2, "periodic pairs ill-defined");
+
+        vector<unsigned> data(2);
+        data[0] = boost::lexical_cast<unsigned>(tmp[0]);
+        data[1] = boost::lexical_cast<unsigned>(tmp[1]);
+
+        ASSERTL0(!periodic.count(data[0]), "curve already periodic");
+        ASSERTL0(!periodic.count(data[1]), "curve already periodic");
+
+        m_periodicPairs[data[0]] = data[1];
+        periodic.insert(data[0]);
+        periodic.insert(data[1]);
+    }
+}
+
+void Generator2D::MakePeriodic()
+{
+    // Override slave curves
+
+    for (map<unsigned, unsigned>::iterator ip = m_periodicPairs.begin();
+         ip != m_periodicPairs.end(); ++ip)
+    {
+        Array<OneD, NekDouble> T =
+            m_mesh->m_cad->GetPeriodicTranslationVector(ip->first, ip->second);
+
+        CADCurveSharedPtr c1 = m_mesh->m_cad->GetCurve(ip->first);
+        CADCurveSharedPtr c2 = m_mesh->m_cad->GetCurve(ip->second);
+
+        bool reversed = c1->GetOrienationWRT(1) == c2->GetOrienationWRT(1);
+
+        vector<NodeSharedPtr> nodes = m_curvemeshes[ip->first]->GetMeshPoints();
+        vector<NodeSharedPtr> nnodes;
+
+        vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > surfs =
+            c2->GetAdjSurf();
+
+        for (int i = 1; i < nodes.size() - 1; i++)
+        {
+            Array<OneD, NekDouble> loc = nodes[i]->GetLoc();
+            NodeSharedPtr nn = NodeSharedPtr(new Node(
+                m_mesh->m_numNodes++, loc[0] + T[0], loc[1] + T[1], 0.0));
+
+            for (int j = 0; j < surfs.size(); j++)
+            {
+                nn->SetCADSurf(surfs[j].first->GetId(), surfs[j].first,
+                               surfs[j].first->locuv(nn->GetLoc()));
+            }
+
+            nn->SetCADCurve(ip->second, c2, c2->loct(nn->GetLoc()));
+
+            nnodes.push_back(nn);
+        }
+
+        // Reverse internal nodes of the vector if necessary
+        if (reversed)
+        {
+            reverse(nnodes.begin(), nnodes.end());
+        }
+
+        nnodes.insert(nnodes.begin(), m_curvemeshes[ip->second]->GetFirstPoint());
+        nnodes.push_back(m_curvemeshes[ip->second]->GetLastPoint());
+
+        // Clean m_edgeSet and build new CurveMesh
+        vector<EdgeSharedPtr> edges = m_curvemeshes[ip->second]->GetMeshEdges();
+        for (vector<EdgeSharedPtr>::iterator ie = edges.begin();
+             ie != edges.end(); ++ie)
+        {
+            m_mesh->m_edgeSet.erase(*ie);
+        }
+
+        m_curvemeshes[ip->second] = MemoryManager<CurveMesh>::AllocateSharedPtr(
+            ip->second, m_mesh, nnodes);
+    }
+
+    if (m_mesh->m_verbose)
+    {
+        cout << "\t\tPeriodic boundary conditions" << endl;
+        for (map<unsigned, unsigned>::iterator it = m_periodicPairs.begin();
+             it != m_periodicPairs.end(); ++it)
+        {
+            cout << "\t\t\tCurves " << it->first << " => " << it->second
+                 << endl;
+        }
+        cout << endl;
+    }
+}
+
 void Generator2D::Report()
 {
     if (m_mesh->m_verbose)

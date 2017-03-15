@@ -61,13 +61,17 @@ public:
     static ModuleKey className;
 
     Generator2D(MeshSharedPtr m);
-    
+
     virtual ~Generator2D();
 
     virtual void Process();
 
 private:
     void MakeBLPrep();
+
+    void PeriodicPrep();
+
+    void MakePeriodic();
 
     void MakeBL(int faceid);
 

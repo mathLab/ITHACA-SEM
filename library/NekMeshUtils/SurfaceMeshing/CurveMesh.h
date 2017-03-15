@@ -73,6 +73,7 @@ public:
         : m_id(id), m_mesh(m), m_meshpoints(ns)
     {
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
+        MakeEdges();
     }
 
     /**
@@ -145,6 +146,8 @@ private:
      * @brief evaluate paramter ps at curve location s
      */
     NekDouble EvaluatePS(NekDouble s);
+
+    void MakeEdges();
 
     /// CAD curve
     CADCurveSharedPtr m_cadcurve;

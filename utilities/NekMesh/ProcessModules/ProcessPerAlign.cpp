@@ -113,16 +113,29 @@ void ProcessPerAlign::Process()
 
     if (tmp1.size() == 1)
     {
-        if (dir != "x" && dir != "y" && dir != "z")
+        if (!dir.size() && m_mesh->m_spaceDim == 2)
         {
-            cerr << "WARNING: dir must be set to either x, y or z. "
-                 << "Skipping periodic alignment." << endl;
-            return;
-        }
+            Array<OneD, NekDouble> T =
+                m_mesh->m_cad->GetPeriodicTranslationVector(surf1, surf2);
+            NekDouble mag = sqrt(T[0] * T[0] + T[1] * T[1]);
 
-        vec[0] = dir == "x" ? 1.0 : 0.0;
-        vec[1] = dir == "y" ? 1.0 : 0.0;
-        vec[2] = dir == "z" ? 1.0 : 0.0;
+            vec[0] = T[0] / mag;
+            vec[1] = T[1] / mag;
+            vec[2] = T[2] / mag;
+        }
+        else
+        {
+            if (dir != "x" && dir != "y" && dir != "z")
+            {
+                cerr << "WARNING: dir must be set to either x, y or z. "
+                    << "Skipping periodic alignment." << endl;
+                return;
+            }
+
+            vec[0] = dir == "x" ? 1.0 : 0.0;
+            vec[1] = dir == "y" ? 1.0 : 0.0;
+            vec[2] = dir == "z" ? 1.0 : 0.0;
+        }
     }
     else if (tmp1.size() == 3)
     {

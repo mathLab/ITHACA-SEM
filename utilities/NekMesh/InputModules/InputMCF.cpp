@@ -340,6 +340,7 @@ void InputMCF::Process()
 
     if(m_2D)
     {
+        ////**** 2DGenerator ****////
         m_mesh->m_expDim = 2;
         m_mesh->m_spaceDim = 2;
         mods.push_back(GetModuleFactory().CreateInstance(
@@ -416,62 +417,30 @@ void InputMCF::Process()
         mods.back()->RegisterConfig("r",m_blprog);
     }
 
-    for(int i = 0; i < mods.size(); i++)
+    ////**** Peralign ****////
+    if (m_2D && m_periodic.size())
     {
-        mods[i]->SetDefaults();
-        mods[i]->Process();
-    }
-
-    // Run peralign
-
-    /*if (m_periodic.size())
-    {
-        mods.clear();
-
         vector<string> lines;
         boost::split(lines, m_periodic, boost::is_any_of(":"));
 
         for (vector<string>::iterator il = lines.begin(); il != lines.end();
              ++il)
         {
-            vector<string> tmp(2);
-            vector<unsigned> data(2);
-            boost::split(tmp, *il, boost::is_any_of(","));
-            data[0] = boost::lexical_cast<unsigned>(tmp[0]);
-            data[1] = boost::lexical_cast<unsigned>(tmp[1]);
-
             mods.push_back(GetModuleFactory().CreateInstance(
                 ModuleKey(eProcessModule, "peralign"), m_mesh));
+            
+            vector<string> tmp(2);
+            boost::split(tmp, *il, boost::is_any_of(","));
             mods.back()->RegisterConfig("surf1", tmp[0]);
             mods.back()->RegisterConfig("surf2", tmp[1]);
-
-            Array<OneD, NekDouble> P11 =
-                m_mesh->m_cad->GetCurve(data[0])->GetVertex()[0]->GetLoc();
-            Array<OneD, NekDouble> P12 =
-                m_mesh->m_cad->GetCurve(data[0])->GetVertex()[1]->GetLoc();
-            Array<OneD, NekDouble> P21 =
-                m_mesh->m_cad->GetCurve(data[1])->GetVertex()[0]->GetLoc();
-            Array<OneD, NekDouble> P22 =
-                m_mesh->m_cad->GetCurve(data[1])->GetVertex()[1]->GetLoc();
-
-            Array<OneD, NekDouble> T(2);
-
-            T[0] = (P21[0] + P22[0] - P11[0] - P12[0]) / 2;
-            T[1] = (P21[1] + P22[1] - P11[1] - P12[1]) / 2;
-
-            NekDouble mag = sqrt(T[0] * T[0] + T[1] * T[1]);
-
-            stringstream ss;
-            ss << T[0] / mag << "," << T[1] / mag << "," << 0.0;
-            mods.back()->RegisterConfig("dir", ss.str());
         }
+    }
 
-        for(int i = 0; i < mods.size(); i++)
-        {
-            mods[i]->SetDefaults();
-            mods[i]->Process();
-        }
-    }*/
+    for(int i = 0; i < mods.size(); i++)
+    {
+        mods[i]->SetDefaults();
+        mods[i]->Process();
+    }
 }
 }
 }

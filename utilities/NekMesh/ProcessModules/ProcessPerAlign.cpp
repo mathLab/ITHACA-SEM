@@ -113,7 +113,9 @@ void ProcessPerAlign::Process()
 
     if (tmp1.size() == 1)
     {
-        if (!dir.size() && m_mesh->m_spaceDim == 2)
+        //if the direction is not specified and its a 2D mesh and there is CAD
+        //it can figure out the dir on its own
+        if (!dir.size() && m_mesh->m_spaceDim == 2 && m_mesh->m_cad)
         {
             Array<OneD, NekDouble> T =
                 m_mesh->m_cad->GetPeriodicTranslationVector(surf1, surf2);

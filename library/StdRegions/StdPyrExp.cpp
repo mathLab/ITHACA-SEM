@@ -420,8 +420,7 @@ namespace Nektar
             int  order0 = m_base[0]->GetNumModes();
             int  order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> wsp(nquad1*nquad2*order0 +
-                                       nquad2*order0*order1);
+            Array<OneD, NekDouble> wsp(order0*nquad1*(nquad2 + order1));
 
             if(multiplybyweights)
             {
@@ -1789,7 +1788,7 @@ namespace Nektar
             const int Q = m_base[1]->GetNumModes()-1;
             const int R = m_base[2]->GetNumModes()-1;
 
-            int i,j,l; 
+            int i,l; 
             int cnt = 0;
 
             // Traverse to q-r plane number I
@@ -1869,5 +1868,139 @@ namespace Nektar
                     break;
             }
         }
+
+
+        void StdPyrExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
+                                             const StdMatrixKey &mkey)
+        {
+            // Generate an orthonogal expansion
+            int qa = m_base[0]->GetNumPoints();
+            int qb = m_base[1]->GetNumPoints();
+            int qc = m_base[2]->GetNumPoints();
+            int nmodes_a = m_base[0]->GetNumModes();
+            int nmodes_b = m_base[1]->GetNumModes();
+            int nmodes_c = m_base[2]->GetNumModes();
+            // Declare orthogonal basis.
+            LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
+            LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
+            LibUtilities::PointsKey pc(qc,m_base[2]->GetPointsType());
+
+            LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
+            LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,nmodes_b,pb);
+            LibUtilities::BasisKey Bc(LibUtilities::eOrthoPyr_C,nmodes_c,pc);
+            StdPyrExp OrthoExp(Ba,Bb,Bc);
+
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
+            int i,j,k,cnt = 0;
+
+            //SVV filter paramaters (how much added diffusion relative to physical one
+            // and fraction of modes from which you start applying this added diffusion)
+            //
+            NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+            NekDouble  SVVCutOff    = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
+
+            //Defining the cut of mode
+            int cutoff_a = (int) (SVVCutOff*nmodes_a);
+            int cutoff_b = (int) (SVVCutOff*nmodes_b);
+            int cutoff_c = (int) (SVVCutOff*nmodes_c);
+            //To avoid the fac[j] from blowing up
+            NekDouble epsilon = 1;
+
+            // project onto modal  space.
+            OrthoExp.FwdTrans(array,orthocoeffs);
+            int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
+            NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
+
+            for(i = 0; i < nmodes_a; ++i)//P
+            {
+                for(j = 0; j < nmodes_b; ++j) //Q
+                {
+                    int maxij = max(i,j);
+                    for(k = 0; k < nmodes_c-maxij; ++k) //R
+                    {
+                        if(j + k >= cutoff ||  i + k >= cutoff)
+                        {
+                            orthocoeffs[cnt] *= (SvvDiffCoeff*exp(-(i+k-nmodes)*(i+k-nmodes)/((NekDouble)((i+k-cutoff+epsilon)*(i+k-cutoff+epsilon))))*exp(-(j-nmodes)*(j-nmodes)/((NekDouble)((j-cutoff+epsilon)*(j-cutoff+epsilon)))));
+                        }
+                        else
+                        {
+                            orthocoeffs[cnt] *= 0.0;
+                        }
+                        cnt++;
+                    }
+                }
+            }
+
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
+        }
+
+
+
+        void StdPyrExp::v_ReduceOrderCoeffs(
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int nquad0   = m_base[0]->GetNumPoints();
+            int nquad1   = m_base[1]->GetNumPoints();
+            int nquad2   = m_base[2]->GetNumPoints();
+            int nqtot    = nquad0*nquad1*nquad2;
+            int nmodes0  = m_base[0]->GetNumModes();
+            int nmodes1  = m_base[1]->GetNumModes();
+            int nmodes2  = m_base[2]->GetNumModes();
+            int numMax   = nmodes0;
+
+            Array<OneD, NekDouble> coeff     (m_ncoeffs);
+            Array<OneD, NekDouble> coeff_tmp1(m_ncoeffs, 0.0);
+            Array<OneD, NekDouble> phys_tmp  (nqtot,     0.0);
+            Array<OneD, NekDouble> tmp, tmp2, tmp3, tmp4;
+
+
+            const LibUtilities::PointsKey Pkey0 = m_base[0]->GetPointsKey();
+            const LibUtilities::PointsKey Pkey1 = m_base[1]->GetPointsKey();
+            const LibUtilities::PointsKey Pkey2 = m_base[2]->GetPointsKey();
+
+            LibUtilities::BasisKey bortho0(
+                LibUtilities::eOrtho_A,    nmodes0, Pkey0);
+            LibUtilities::BasisKey bortho1(
+                LibUtilities::eOrtho_A,    nmodes1, Pkey1);
+            LibUtilities::BasisKey bortho2(
+                LibUtilities::eOrthoPyr_C, nmodes2, Pkey2);
+
+            int cnt = 0;
+            int u   = 0;
+            int i   = 0;
+            StdRegions::StdPyrExpSharedPtr OrthoPyrExp;
+
+            OrthoPyrExp = MemoryManager<StdRegions::StdPyrExp>
+                ::AllocateSharedPtr(bortho0, bortho1, bortho2);
+
+            BwdTrans(inarray,phys_tmp);
+            OrthoPyrExp->FwdTrans(phys_tmp, coeff);
+
+            // filtering
+            for (u = 0; u < numMin; ++u)
+            {
+                 for (i = 0; i < numMin; ++i)
+                 {
+                     
+                     int maxui = max(u,i);
+                     Vmath::Vcopy(numMin - maxui, tmp  = coeff      + cnt, 1,
+                                  tmp2 = coeff_tmp1 + cnt, 1);
+                     cnt   += nmodes2 - maxui;
+                 }
+
+                 for (i = numMin; i < nmodes1; ++i)
+                 {
+                     int maxui = max(u,i);
+                     cnt += numMax - maxui;
+                 }
+            }
+
+            OrthoPyrExp->BwdTrans(coeff_tmp1, phys_tmp);
+            StdPyrExp::FwdTrans(phys_tmp, outarray);
+        }
+        
     }
 }

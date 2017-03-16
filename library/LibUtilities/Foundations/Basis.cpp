@@ -289,7 +289,7 @@ namespace Nektar
 
             /** \brief Orthogonal basis C
 
-            \f$\tilde \psi_{pqr}^c = \left ( {1 - \eta_3} \over 2 \right)^{p+q} P_r^{2p+2q+2, 0}(\eta_3)\f$ \\
+                \f$\tilde \psi_{pqr}^c = \left ( {1 - \eta_3} \over 2 \right)^{p+q} P_r^{2p+2q+2, 0}(\eta_3)\f$ \ \
 
            */
 
@@ -329,15 +329,13 @@ namespace Nektar
                 break;
 
                 /** \brief Orthogonal basis C for Pyramid expansion (which is richer than tets)
-
-            \f$\tilde \psi_{pqr}^c = \left ( {1 - \eta_3} \over 2 \right)^{p+q} P_r^{2p+2q+2, 0}(\eta_3)\f$ \\
-
-           */
-
-            // This is tilde psi_pqr in Spen's book, page 105
-            // The 4-dimensional array is laid out in memory such that
-            // 1) Eta_z values are the changing the fastest, then r, q, and finally p.
-            // 2) r index increases by the stride of numPoints.
+                    
+            \f$\tilde \psi_{pqr}^c = \left ( {1 - \eta_3} \over 2\right)^{pq} P_r^{2pq+2, 0}(\eta_3)\f$
+            \f$ \mbox{where }pq = max(p+q-1,0) \f$
+                    
+                */
+                // 1) Eta_z values are the changing the fastest, then r, q, and finally p.
+                // 2) r index increases by the stride of numPoints.
             case eOrthoPyr_C:
                 {
                     int P = numModes - 1, Q = numModes - 1, R = numModes - 1;
@@ -349,14 +347,23 @@ namespace Nektar
                         {
                             for( int r = 0; r <= R - max(p,q); ++r, mode += numPoints )
                             {
-                                Polylib::jacobfd(numPoints, z.data(), mode, NULL, r, 2*p + 2*q + 2.0, 0.0);
+                                // this offset allows for orthogonal
+                                // expansion to span linear FE space
+                                // of modified basis but means that
+                                // the cartesian polynomial space
+                                // spanned by the expansion is one
+                                // order lower.
+                                //int pq = max(p + q -1,0);
+                                int pq = max(p + q,0);
+                                
+                                Polylib::jacobfd(numPoints, z.data(), mode, NULL, r, 2*pq + 2.0, 0.0);
                                 for( int k = 0; k < numPoints; ++k )
                                 {
                                     // Note factor of 0.5 is part of normalisation
-                                    mode[k] *= pow(0.5*(1.0 - z[k]), p+q);
+                                    mode[k] *= pow(0.5*(1.0 - z[k]), pq);
 
                                     // finish normalisation
-                                    mode[k] *= sqrt(r+p+q+1.5);
+                                    mode[k] *= sqrt(r+pq+1.5);
                                 }
                             }
                         }

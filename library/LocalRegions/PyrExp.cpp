@@ -273,6 +273,51 @@ namespace Nektar
          * \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k}) = {\bf
          * B_1 G} \f$
          */
+
+        void PyrExp::v_IProductWRTBase(
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            v_IProductWRTBase_SumFac(inarray, outarray);
+        }
+
+        void PyrExp::v_IProductWRTBase_SumFac(
+            const Array<OneD, const NekDouble>& inarray,
+            Array<OneD,       NekDouble>& outarray,
+            bool multiplybyweights)
+        {
+            const int nquad0 = m_base[0]->GetNumPoints();
+            const int nquad1 = m_base[1]->GetNumPoints();
+            const int nquad2 = m_base[2]->GetNumPoints();
+            const int order0 = m_base[0]->GetNumModes();
+            const int order1 = m_base[1]->GetNumModes();
+
+            Array<OneD, NekDouble> wsp(order0*nquad2*(nquad1+order1));
+
+            if(multiplybyweights)
+            {
+                Array<OneD, NekDouble> tmp(nquad0*nquad1*nquad2);
+                
+                MultiplyByQuadratureMetric(inarray, tmp);
+                
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetBdata(),
+                                             m_base[2]->GetBdata(),
+                                             tmp,outarray,wsp,
+                                             true,true,true);
+            }
+            else
+            {
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetBdata(),
+                                             m_base[2]->GetBdata(),
+                                             inarray,outarray,wsp,
+                                             true,true,true);
+            }
+        }
+
+
+#if 0 
         void PyrExp::v_IProductWRTBase(
             const Array<OneD, const NekDouble> &inarray, 
                   Array<OneD,       NekDouble> &outarray)
@@ -295,8 +340,165 @@ namespace Nektar
             
             StdPyrExp::v_IProductWRTBase(tmp,outarray);
         }
-        
+#endif        
 
+
+
+        /**
+         * @brief Calculates the inner product \f$ I_{pqr} = (u,
+         * \partial_{x_i} \phi_{pqr}) \f$.
+         *
+         * The derivative of the basis functions is performed using the chain
+         * rule in order to incorporate the geometric factors. Assuming that
+         * the basis functions are a tensor product
+         * \f$\phi_{pqr}(\eta_1,\eta_2,\eta_3) =
+         * \phi_1(\eta_1)\phi_2(\eta_2)\phi_3(\eta_3)\f$, this yields the
+         * result
+         *
+         * \f[
+         * I_{pqr} = \sum_{j=1}^3 \left(u, \frac{\partial u}{\partial \eta_j}
+         * \frac{\partial \eta_j}{\partial x_i}\right)
+         * \f]
+         *
+         * In the pyramid element, we must also incorporate a second set
+         * of geometric factors which incorporate the collapsed co-ordinate
+         * system, so that
+         *
+         * \f[ \frac{\partial\eta_j}{\partial x_i} = \sum_{k=1}^3
+         * \frac{\partial\eta_j}{\partial\xi_k}\frac{\partial\xi_k}{\partial
+         * x_i} \f]
+         *
+         * These derivatives can be found on p152 of Sherwin & Karniadakis.
+         *
+         * @param dir       Direction in which to take the derivative.
+         * @param inarray   The function \f$ u \f$.
+         * @param outarray  Value of the inner product.
+         */
+        void PyrExp::v_IProductWRTDerivBase(
+            const int                           dir,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            v_IProductWRTDerivBase_SumFac(dir, inarray, outarray);
+        }
+
+        void PyrExp::v_IProductWRTDerivBase_SumFac(
+            const int                           dir,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            const int nquad0 = m_base[0]->GetNumPoints();
+            const int nquad1 = m_base[1]->GetNumPoints();
+            const int nquad2 = m_base[2]->GetNumPoints();
+            const int order0 = m_base[0]->GetNumModes ();
+            const int order1 = m_base[1]->GetNumModes ();
+            const int nqtot  = nquad0*nquad1*nquad2;
+            int i;
+
+            const Array<OneD, const NekDouble> &z0 = m_base[0]->GetZ();
+            const Array<OneD, const NekDouble> &z1 = m_base[1]->GetZ();
+            const Array<OneD, const NekDouble> &z2 = m_base[2]->GetZ();
+
+            Array<OneD, NekDouble> gfac0(nquad0   );
+            Array<OneD, NekDouble> gfac1(nquad1   );
+            Array<OneD, NekDouble> gfac2(nquad2   );
+            Array<OneD, NekDouble> tmp1 (nqtot    );
+            Array<OneD, NekDouble> tmp2 (nqtot    );
+            Array<OneD, NekDouble> tmp3 (nqtot    );
+            Array<OneD, NekDouble> tmp4 (nqtot    );
+            Array<OneD, NekDouble> tmp5 (nqtot    );
+            Array<OneD, NekDouble> tmp6 (m_ncoeffs);
+            Array<OneD, NekDouble> wsp  (std::max(nqtot,order0*nquad2*(nquad1+order1)));
+
+            const Array<TwoD, const NekDouble>& df =
+                            m_metricinfo->GetDerivFactors(GetPointsKeys());
+
+            MultiplyByQuadratureMetric(inarray, tmp1);
+
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vmul(nqtot,&df[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
+                Vmath::Vmul(nqtot,&df[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
+                Vmath::Vmul(nqtot,&df[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
+            }
+            else
+            {
+                Vmath::Smul(nqtot, df[3*dir][0],  tmp1.get(),1,tmp2.get(), 1);
+                Vmath::Smul(nqtot, df[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
+                Vmath::Smul(nqtot, df[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
+            }
+
+            // set up geometric factor: (1+z0)/2
+            for (i = 0; i < nquad0; ++i)
+            {
+                gfac0[i] = 0.5*(1+z0[i]);
+            }
+
+            // set up geometric factor: (1+z1)/2
+            for(i = 0; i < nquad1; ++i)
+            {
+                gfac1[i] = 0.5*(1+z1[i]);
+            }
+
+            // Set up geometric factor: 2/(1-z2)
+            for (i = 0; i < nquad2; ++i)
+            {
+            	gfac2[i] = 2.0/(1-z2[i]);
+            }
+
+            const int nq01 = nquad0*nquad1;
+
+            for (i = 0; i < nquad2; ++i)
+            {
+                Vmath::Smul(nq01,gfac2[i],&tmp2[0]+i*nq01,1,&tmp2[0]+i*nq01,1); // 2/(1-z2) for d/dxi_0
+                Vmath::Smul(nq01,gfac2[i],&tmp3[0]+i*nq01,1,&tmp3[0]+i*nq01,1); // 2/(1-z2) for d/dxi_1
+                Vmath::Smul(nq01,gfac2[i],&tmp4[0]+i*nq01,1,&tmp5[0]+i*nq01,1); // 2/(1-z2) for d/dxi_2
+            }
+
+            // (1+z0)/(1-z2) for d/d eta_0
+            for(i = 0; i < nquad1*nquad2; ++i)
+            {
+                Vmath::Vmul(nquad0,&gfac0[0],1,
+                            &tmp5[0]+i*nquad0,1,
+                             &wsp[0]+i*nquad0,1);
+            }
+
+            Vmath::Vadd(nqtot, &tmp2[0], 1, &wsp[0], 1, &tmp2[0], 1);
+            
+            // (1+z1)/(1-z2) for d/d eta_1
+            for(i = 0; i < nquad1*nquad2; ++i)
+            {
+                Vmath::Smul(nquad0,gfac1[i%nquad1],
+                            &tmp5[0]+i*nquad0,1,
+                            &tmp5[0]+i*nquad0,1);
+            }
+            Vmath::Vadd(nqtot, &tmp3[0], 1, &tmp5[0], 1, &tmp3[0], 1);
+
+            
+            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                         m_base[1]->GetBdata (),
+                                         m_base[2]->GetBdata (),
+                                         tmp2,outarray,wsp,
+                                         false,true,true);
+
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata (),
+                                         m_base[1]->GetDbdata(),
+                                         m_base[2]->GetBdata (),
+                                         tmp3,tmp6,wsp,
+                                         true,false,true);
+
+            Vmath::Vadd(m_ncoeffs, tmp6, 1, outarray, 1, outarray, 1);
+
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata (),
+                                         m_base[1]->GetBdata (),
+                                         m_base[2]->GetDbdata(),
+                                         tmp4,tmp6,wsp,
+                                         true,true,false);
+
+            Vmath::Vadd(m_ncoeffs, tmp6, 1, outarray, 1, outarray, 1);
+        }
+
+        
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
@@ -743,6 +945,36 @@ namespace Nektar
             }
         }
 
+        void PyrExp::v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdRegions::StdMatrixKey &mkey)
+        {
+            int nq = GetTotPoints();
+            
+            // Calculate sqrt of the Jacobian
+            Array<OneD, const NekDouble> jac = 
+                                    m_metricinfo->GetJac(GetPointsKeys());
+            Array<OneD, NekDouble> sqrt_jac(nq);
+            if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vsqrt(nq,jac,1,sqrt_jac,1);
+            }
+            else
+            {
+                Vmath::Fill(nq,sqrt(jac[0]),sqrt_jac,1);
+            }
+            
+            // Multiply array by sqrt(Jac)
+            Vmath::Vmul(nq,sqrt_jac,1,array,1,array,1);
+            
+            // Apply std region filter
+            StdPyrExp::v_SVVLaplacianFilter( array, mkey);
+            
+            // Divide by sqrt(Jac)
+            Vmath::Vdiv(nq,array,1,sqrt_jac,1,array,1);
+        }
+
+
         //---------------------------------------
         // Matrix creation functions
         //---------------------------------------
@@ -1027,7 +1259,6 @@ namespace Nektar
                     returnval->SetBlock(0,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,B));
                     returnval->SetBlock(1,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,C));
                     returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,D));
-
                 }
             }
             return returnval;

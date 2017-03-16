@@ -335,6 +335,21 @@ int main(int argc, char *argv[]){
             E = F;
             E->GetCoords(x,y,z);
 
+            const LibUtilities::BasisKey  OBkey1(eModified_A,order1,Pkey1);
+            const LibUtilities::BasisKey  OBkey2(eModified_A,order2,Pkey2);
+            const LibUtilities::BasisKey  OBkey3(eModifiedPyr_C,order3,Pkey3);
+            
+            StdRegions::StdPyrExp *F1 = new StdRegions::StdPyrExp(OBkey1,OBkey2,OBkey3);
+
+            Array<OneD, NekDouble> coeffs1(order1*order2*order3,0.0);
+            coeffs1[0] = 0.0;
+            coeffs1[4] = 1.0;
+            F1->BwdTrans(coeffs1,sol);
+
+            E->FwdTrans(sol,coeffs1);
+            E->BwdTrans(coeffs1,sol);
+                
+                
             //----------------------------------------------
             // Define solution to be projected
             for(i = 0; i < nq1*nq2*nq3; ++i)
@@ -486,7 +501,7 @@ NekDouble Pyr_sol(NekDouble x, NekDouble y, NekDouble z,
     {
         for(l = 0; l < order2-k; ++l)
         {
-            for(m = 0; m < order3-k-l; ++m)
+            for(m = 0; m < order3-k-l-1; ++m)
             {
                 sol += pow(x,k)*pow(y,l)*pow(z,m);
             }

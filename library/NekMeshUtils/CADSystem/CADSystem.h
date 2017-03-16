@@ -201,7 +201,8 @@ public:
         return m_verts.size();
     }
 
-    Array<OneD, NekDouble> GetPeriodicTranslationVector(int first, int second);
+    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetPeriodicTranslationVector(
+                int first, int second);
 
 protected:
     /// Name of cad file

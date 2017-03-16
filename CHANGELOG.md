@@ -6,6 +6,9 @@ v4.5.0
 **NekMesh**:
 - Adjust boundary layer thickness in corners in 2D (!739)
 
+**Library**
+- Added in sum factorisation version for pyramid expnasions and orthogonal expansion in pyramids (!750)
+
 v4.4.0
 ------
 **Library**:

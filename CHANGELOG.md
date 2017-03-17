@@ -6,6 +6,9 @@ v4.5.0
 **NekMesh**:
 - Adjust boundary layer thickness in corners in 2D (!739)
 
+**Documentation**:
+- Added the developer-guide repository as a submodule (!751)
+
 v4.4.0
 ------
 **Library**:

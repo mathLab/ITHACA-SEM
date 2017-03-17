@@ -100,6 +100,17 @@ public:
         return CADOrientation::eUnknown;
     }
 
+    void SetName(std::string i)
+    {
+        m_name = i;
+    }
+
+    std::string GetName()
+    {
+        WARNINGL1(m_name.size() > 0, "CAD object does not have a name");
+        return m_name;
+    }
+
 protected:
     /// ID of the vert.
     int m_id;
@@ -107,6 +118,8 @@ protected:
     CADType::cadType m_type;
     /// orientation of the CADObject
     CADOrientation::Orientation m_orientation;
+    /// string name of the cad
+    std::string m_name;
 };
 
 typedef boost::shared_ptr<CADObject> CADObjectSharedPtr;

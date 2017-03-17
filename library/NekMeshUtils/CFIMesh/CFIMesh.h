@@ -38,6 +38,8 @@
 
 #include <NekMeshUtils/Module/Module.h>
 
+#include <NekMeshUtils/CADSystem/CFI/CADSystemCFI.h>
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -49,7 +51,6 @@ namespace NekMeshUtils
 class CFIMesh : public ProcessModule
 {
 public:
-
     /// Creates an instance of this class
     static boost::shared_ptr<Module> create(MeshSharedPtr m)
     {
@@ -63,9 +64,15 @@ public:
     virtual void Process();
 
 private:
+    cfi::Entity *FigureOutCADParent(cfi::NodeDefinition node,
+                                            Array<OneD, NekDouble> xyz);
 
+    CADSystemCFISharedPtr m_cad;
+    cfi::Model *m_model;
+    std::map<std::string, int> m_nameToCurveId;
+    std::map<std::string, int> m_nameToFaceId;
+    std::map<std::string, int> m_nameToVertId;
 };
-
 }
 }
 

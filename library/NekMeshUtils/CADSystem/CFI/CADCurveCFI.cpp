@@ -104,7 +104,7 @@ NekDouble CADCurveCFI::DistanceTo(Array<OneD, NekDouble> xyz)
     boost::optional<cfi::Projected<double> > pj =
         m_cfiEdge->calcTFromXYZ(p, -1);
 
-    return pj.value().distance;
+    return pj.value().distance * m_scal;
 }
 
 NekDouble CADCurveCFI::Length(NekDouble ti, NekDouble tf)

@@ -197,6 +197,7 @@ void CADSystemCFI::AddVert(int i, cfi::Point *in)
     static_pointer_cast<CADVertCFI>(newVert)->Initialise(i, in, m_scal);
 
     m_verts[i] = newVert;
+    m_verts[i]->SetName(in->getName());
 }
 
 void CADSystemCFI::AddCurve(int i, cfi::Line *in)
@@ -225,6 +226,7 @@ void CADSystemCFI::AddCurve(int i, cfi::Line *in)
     vs.push_back(m_verts[nameToVertId[vertList->at(1).entity->getName()]]);
     m_curves[i] = newCurve;
     m_curves[i]->SetVert(vs);
+    m_curves[i]->SetName(in->getName());
     m_verts[nameToVertId[vertList->at(0).entity->getName()]]->AddAdjCurve(
         m_curves[i]);
     m_verts[nameToVertId[vertList->at(1).entity->getName()]]->AddAdjCurve(
@@ -317,6 +319,7 @@ void CADSystemCFI::AddSurf(int i, cfi::Face *in)
     }
 
     m_surfs[i] = newSurf;
+    m_surfs[i]->SetName(in->getName());
 }
 
 Array<OneD, NekDouble> CADSystemCFI::GetBoundingBox()

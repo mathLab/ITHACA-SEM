@@ -89,13 +89,15 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"\t Modified_C = 6\n");
         fprintf(stderr,"\t OrthoPyr_C    = 7\n");
         fprintf(stderr,"\t ModifiedPyr_C = 8\n");
-        fprintf(stderr,"\t Fourier    = 9\n");
-        fprintf(stderr,"\t Lagrange   = 10\n");
-        fprintf(stderr,"\t Gauss Lagrange = 11\n");
-        fprintf(stderr,"\t Legendre   = 12\n");
-        fprintf(stderr,"\t Chebyshev  = 13\n");
-        fprintf(stderr,"\t Nodal tri (Electro) = 14\n");
-        fprintf(stderr,"\t Nodal tri (Fekete)  = 15\n");
+        fprintf(stderr,"\t Fourier             =  9\n");
+        fprintf(stderr,"\t Lagrange            =  10\n");
+        fprintf(stderr,"\t Gauss Lagrange      =  11\n");
+        fprintf(stderr,"\t Legendre            = 12\n");
+        fprintf(stderr,"\t Chebyshev           = 13\n");
+        fprintf(stderr,"\t Monomial            = 14\n");
+        fprintf(stderr,"\t Nodal tet (Electro) = 15\n");
+        fprintf(stderr,"\t Nodal tet (Even)    = 16\n");
+        fprintf(stderr,"\t Nodal prism (Even)  = 17\n");
 
         exit(1);
     }
@@ -114,17 +116,26 @@ int main(int argc, char *argv[]){
     int btype1_val = atoi(argv[2]);
     int btype2_val = atoi(argv[3]);
     int btype3_val = atoi(argv[4]);
-    if(( btype1_val <= 13)&&( btype2_val <= 13))
+    if(( btype1_val <= 15)&&( btype2_val <= 15))
     {
         btype1 =   (LibUtilities::BasisType) btype1_val;
         btype2 =   (LibUtilities::BasisType) btype2_val;
         btype3 =   (LibUtilities::BasisType) btype3_val;
     }
-    else if(( btype1_val >=14)&&(btype2_val <= 15))
+    else if(( btype1_val >=15)&&(btype2_val <= 17))
     {
-        btype1 =   LibUtilities::eOrtho_A;
-        btype2 =   LibUtilities::eOrtho_B;
-        btype3 =   LibUtilities::eOrtho_C;
+        if (regionshape == LibUtilities::eTetrahedron)
+        {
+            btype1 = LibUtilities::eOrtho_A;
+            btype2 = LibUtilities::eOrtho_B;
+            btype3 = LibUtilities::eOrtho_C;
+        }
+        else if (regionshape == LibUtilities::ePrism)
+        {
+            btype1 = LibUtilities::eOrtho_A;
+            btype2 = LibUtilities::eOrtho_A;
+            btype3 = LibUtilities::eOrtho_B;
+        }
     }
 
     // Check to see that correct Expansions are used

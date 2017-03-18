@@ -70,16 +70,15 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"\t Modified_A          =  4\n");
         fprintf(stderr,"\t Modified_B          =  5\n");
         fprintf(stderr,"\t Modified_C          =  6\n");
-        fprintf(stderr,"\t Ortho_C             =  7\n");
-        fprintf(stderr,"\t Modified_C          =  8\n");
+        fprintf(stderr,"\t OrthoPyr_C          =  7\n");
+        fprintf(stderr,"\t ModifiedPyr_C       =  8\n");
 
-        fprintf(stderr,"\t Fourier             =  8\n");
-        fprintf(stderr,"\t Lagrange            =  9\n");
-        fprintf(stderr,"\t Gauss Lagrange      =  10\n");
-        fprintf(stderr,"\t Legendre            = 11\n");
-        fprintf(stderr,"\t Chebyshev           = 12\n");
-        fprintf(stderr,"\t Nodal tri (Electro) = 13\n");
-        fprintf(stderr,"\t Nodal tri (Fekete)  = 14\n");
+        fprintf(stderr,"\t Fourier             =  9\n");
+        fprintf(stderr,"\t Lagrange            =  10\n");
+        fprintf(stderr,"\t Gauss Lagrange      =  11\n");
+        fprintf(stderr,"\t Legendre            = 12\n");
+        fprintf(stderr,"\t Chebyshev           = 13\n");
+        fprintf(stderr,"\t Monomial            = 14\n");
         fprintf(stderr,"\t Nodal tet (Electro) = 15\n");
         fprintf(stderr,"\t Nodal tet (Even)    = 16\n");
         fprintf(stderr,"\t Nodal prism (Even)  = 17\n");
@@ -102,13 +101,13 @@ int main(int argc, char *argv[]){
     int btype2_val = atoi(argv[3]);
     int btype3_val = atoi(argv[4]);
     
-    if (btype1_val <= 13 && btype2_val <= 13)
+    if (btype1_val <= 14 && btype2_val <= 14)
     {
         btype1 =   (LibUtilities::BasisType) btype1_val;
         btype2 =   (LibUtilities::BasisType) btype2_val;
         btype3 =   (LibUtilities::BasisType) btype3_val;
     }
-    else if(btype1_val >=14 && btype2_val <= 18)
+    else if(btype1_val >=15 && btype2_val <= 17)
     {
         if (regionshape == LibUtilities::eTetrahedron)
         {
@@ -123,19 +122,11 @@ int main(int argc, char *argv[]){
             btype3 = LibUtilities::eOrtho_B;
         }
         
-        if(btype1_val == 14)
-        {
-            NodalType = LibUtilities::eNodalTriElec;
-        }
-        else if (btype1_val == 15)
-        {
-            NodalType = LibUtilities::eNodalTriFekete;
-        }
-        else if (btype1_val == 16)
+        if (btype1_val == 15)
         {
             NodalType = LibUtilities::eNodalTetElec;
         }
-        else if (btype1_val == 17)
+        else if (btype1_val == 16)
         {
             NodalType = LibUtilities::eNodalTetEvenlySpaced;
         }

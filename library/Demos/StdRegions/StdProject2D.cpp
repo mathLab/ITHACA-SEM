@@ -56,9 +56,10 @@ int main(int argc, char *argv[])
         fprintf(stderr,"\t Gauss Lagrange = 11\n");
         fprintf(stderr,"\t Legendre   = 12\n");
         fprintf(stderr,"\t Chebyshev  = 13\n");
-        fprintf(stderr,"\t FourierSingleMode  = 14\n");
-        fprintf(stderr,"\t Nodal tri (Electro) = 15\n");
-        fprintf(stderr,"\t Nodal tri (Fekete)  = 16\n");
+        fprintf(stderr,"\t Monomial   = 14\n");
+        fprintf(stderr,"\t FourierSingleMode  = 15\n");
+        fprintf(stderr,"\t Nodal tri (Electro) = 18\n");
+        fprintf(stderr,"\t Nodal tri (Fekete)  = 19\n");
 
 
         fprintf(stderr,"Note type = 3,6,7,8 are for three-dimensional basis\n");
@@ -77,17 +78,17 @@ int main(int argc, char *argv[])
     int btype1_val = atoi(argv[2]);
     int btype2_val = atoi(argv[3]);
 
-    if(( btype1_val <= 14)&&( btype2_val <= 14))
+    if(( btype1_val <= 15)&&( btype2_val <= 15))
     {
         btype1 =   (LibUtilities::BasisType) btype1_val;
         btype2 =   (LibUtilities::BasisType) btype2_val;
     }
-    else if(( btype1_val >=15)&&(btype2_val <= 16))
+    else if(( btype1_val >=18)&&(btype2_val <= 19))
     {
         btype1 =   LibUtilities::eOrtho_A;
         btype2 =   LibUtilities::eOrtho_B;
 
-        if(btype1_val == 15)
+        if(btype1_val == 18)
         {
             NodalType = LibUtilities::eNodalTriElec;
         }

@@ -26,6 +26,7 @@ IF( NEKTAR_SOLVER_ADR )
     #MMF advection 
     ADD_NEKTAR_TEST        (TestMMFAdvPlane)
     ADD_NEKTAR_TEST        (TestMMFAdvCube)
+    ADD_NEKTAR_TEST        (TestMMFAdvSphere)
 
     # 1D discontinuous advection (weak DG/flux reconstruction)
     ADD_NEKTAR_TEST_LENGTHY(Advection1D_FRDG_GLL_LAGRANGE_SEM)

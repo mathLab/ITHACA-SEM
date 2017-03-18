@@ -1983,7 +1983,7 @@
     
     <PARAMETERS>
         <P> TimeStep       = 0.001            </P>
-        <P> NumSteps       = 10000              </P>
+        <P> NumSteps       = 100              </P>
         <P> FinTime        = TimeStep*NumSteps </P>
         <P> IO_CheckSteps  = 2000              </P>
         <P> IO_InfoSteps   = 2000              </P>

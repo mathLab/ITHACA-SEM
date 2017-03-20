@@ -1,5 +1,8 @@
 include (CMakeCommon.cmake)
 
+SET(NEKTAR_PKG_VERSION 1 CACHE STRING "Packaging version (default=1)")
+MARK_AS_ADVANCED(NEKTAR_PKG_VERSION)
+
 # Package content lists
 
 # Libraries

@@ -124,20 +124,50 @@ namespace Nektar
             eta_z = m_base[2]->GetZ();
 
             int i, j, k, n;
-
-            for (k = 0, n = 0; k < Qz; ++k)
+            
+            if (out_dxi1.num_elements() > 0)
             {
-                for (j = 0; j < Qy; ++j)
+                for (k = 0, n = 0; k < Qz; ++k)
                 {
-                    for (i = 0; i < Qx; ++i, ++n)
+                    NekDouble fac = 2.0/(1.0 - eta_z[k]);
+                    for (j = 0; j < Qy; ++j)
                     {
-                        if (out_dxi1.num_elements() > 0)
-                            out_dxi1[n] = 2.0/(1.0 - eta_z[k]) * dEta_bar1[n];
-                        if (out_dxi2.num_elements() > 0)
-                            out_dxi2[n] = 2.0/(1.0 - eta_z[k]) * dXi2[n];
-                        if (out_dxi3.num_elements() > 0)
-                            out_dxi3[n] = (1.0+eta_x[i])/(1.0-eta_z[k])*dEta_bar1[n] +
-                                (1.0+eta_y[j])/(1.0-eta_z[k])*dXi2[n] + dEta3[n];
+                        for (i = 0; i < Qx; ++i, ++n)
+                        {
+                            out_dxi1[n] = fac * dEta_bar1[n];
+                        }
+                    }
+                }
+            }
+
+            if (out_dxi2.num_elements() > 0)
+            {
+                for (k = 0, n = 0; k < Qz; ++k)
+                {
+                    NekDouble fac = 2.0/(1.0 - eta_z[k]);
+                    for (j = 0; j < Qy; ++j)
+                    {
+                        for (i = 0; i < Qx; ++i, ++n)
+                        {
+                            out_dxi2[n] = fac * dXi2[n];
+                        }
+                    }
+                }
+            }
+
+            if (out_dxi3.num_elements() > 0)
+            {
+                for (k = 0, n = 0; k < Qz; ++k)
+                {
+                    NekDouble fac = 1.0/(1.0 - eta_z[k]);
+                    for (j = 0; j < Qy; ++j)
+                    {
+                        NekDouble fac1 = (1.0+eta_y[j]);
+                        for (i = 0; i < Qx; ++i, ++n)
+                        {
+                            out_dxi3[n] = (1.0+eta_x[i])*fac*dEta_bar1[n] +
+                                fac1*fac*dXi2[n] + dEta3[n];
+                        }
                     }
                 }
             }

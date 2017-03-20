@@ -91,7 +91,7 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     ASSERTL0(nFields > 0, "No field values provided in input");
 
     // assume one field is already defined from input file.
-    m_f->m_exp.resize(nFields + 1);
+    m_f->m_exp.resize(nFields);
     for (i = 1; i < nFields; ++i)
     {
         m_f->m_exp[i] = m_f->AppendExpList(0);

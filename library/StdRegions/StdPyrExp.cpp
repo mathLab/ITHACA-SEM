@@ -493,6 +493,10 @@ namespace Nektar
             int  order1 = m_base[1]->GetNumModes();
             int  order2 = m_base[2]->GetNumModes();
 
+            ASSERTL1(wsp.num_elements() >= nquad1*nquad2*order0 +
+                                           nquad2*order0*order1,
+                     "Insufficient workspace size");
+
             Array<OneD, NekDouble > tmp1 = wsp;
             Array<OneD, NekDouble > tmp2 = wsp + nquad1*nquad2*order0;
 

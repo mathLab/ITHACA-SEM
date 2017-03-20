@@ -935,7 +935,6 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
             }
         }        
-#if 0 
 
         BOOST_AUTO_TEST_CASE(TestPyrIProductWRTBase_IterPerExp_UniformP_MultiElmt)
         {
@@ -944,9 +943,8 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u,  1.0,  1.0, -1.0));
             SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0,  1.0, -1.0));
             SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0,  1.0));
-            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, -1.0,  1.0,  1.0));
             
-            SpatialDomains::PyrGeomSharedPtr pyrGeom = CreatePyr(v0, v1, v2, v3, v4, v5);
+            SpatialDomains::PyrGeomSharedPtr pyrGeom = CreatePyr(v0, v1, v2, v3, v4);
             
             Nektar::LibUtilities::PointsType     PointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey PointsKeyDir1(5, PointsTypeDir1);
@@ -958,7 +956,7 @@ namespace Nektar
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_A;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,PointsKeyDir2);
 
-            Nektar::LibUtilities::PointsType     PointsTypeDir3 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::PointsType      PointsTypeDir3 = Nektar::LibUtilities::eGaussRadauMAlpha2Beta0;
             const Nektar::LibUtilities::PointsKey PointsKeyDir3(4, PointsTypeDir3);
             Nektar::LibUtilities::BasisType       basisTypeDir3 = Nektar::LibUtilities::eModifiedPyr_C;
             const Nektar::LibUtilities::BasisKey  basisKeyDir3(basisTypeDir3,4,PointsKeyDir3);
@@ -1024,9 +1022,8 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u,  1.0,  1.0, -1.0));
             SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0,  1.0, -1.0));
             SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0,  1.0));
-            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, -1.0,  1.0,  1.0));
             
-            SpatialDomains::PyrGeomSharedPtr pyrGeom = CreatePyr(v0, v1, v2, v3, v4, v5);
+            SpatialDomains::PyrGeomSharedPtr pyrGeom = CreatePyr(v0, v1, v2, v3, v4);
             
             Nektar::LibUtilities::PointsType     PointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey PointsKeyDir1(5, PointsTypeDir1);
@@ -1038,7 +1035,7 @@ namespace Nektar
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_A;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,PointsKeyDir2);
 
-            Nektar::LibUtilities::PointsType     PointsTypeDir3 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::PointsType      PointsTypeDir3 = Nektar::LibUtilities::eGaussRadauMAlpha2Beta0;
             const Nektar::LibUtilities::PointsKey PointsKeyDir3(4, PointsTypeDir3);
             Nektar::LibUtilities::BasisType       basisTypeDir3 = Nektar::LibUtilities::eModifiedPyr_C;
             const Nektar::LibUtilities::BasisKey  basisKeyDir3(basisTypeDir3,4,PointsKeyDir3);
@@ -1105,9 +1102,8 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u,  1.0,  1.0, -1.0));
             SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0,  1.0, -1.0));
             SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0,  1.0));
-            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, -1.0,  1.0,  1.0));
             
-            SpatialDomains::PyrGeomSharedPtr pyrGeom = CreatePyr(v0, v1, v2, v3, v4, v5);
+            SpatialDomains::PyrGeomSharedPtr pyrGeom = CreatePyr(v0, v1, v2, v3, v4);
             
             Nektar::LibUtilities::PointsType     PointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey PointsKeyDir1(5, PointsTypeDir1);
@@ -1119,7 +1115,7 @@ namespace Nektar
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_A;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,PointsKeyDir2);
 
-            Nektar::LibUtilities::PointsType     PointsTypeDir3 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::PointsType      PointsTypeDir3 = Nektar::LibUtilities::eGaussRadauMAlpha2Beta0;
             const Nektar::LibUtilities::PointsKey PointsKeyDir3(4, PointsTypeDir3);
             Nektar::LibUtilities::BasisType       basisTypeDir3 = Nektar::LibUtilities::eModifiedPyr_C;
             const Nektar::LibUtilities::BasisKey  basisKeyDir3(basisTypeDir3,4,PointsKeyDir3);
@@ -1142,7 +1138,9 @@ namespace Nektar
                         
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            //Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::OperatorImpMap          impTypes;
+            impTypes[Collections::eIProductWRTBase] = Collections::eSumFac; 
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
@@ -1186,9 +1184,8 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u,  1.0,  1.0, -1.0));
             SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0,  1.0, -1.0));
             SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0,  1.0));
-            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, -1.0,  1.0,  1.0));
             
-            SpatialDomains::PyrGeomSharedPtr pyrGeom = CreatePyr(v0, v1, v2, v3, v4, v5);
+            SpatialDomains::PyrGeomSharedPtr pyrGeom = CreatePyr(v0, v1, v2, v3, v4);
             
             Nektar::LibUtilities::PointsType     PointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey PointsKeyDir1(5, PointsTypeDir1);
@@ -1200,7 +1197,7 @@ namespace Nektar
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_A;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,PointsKeyDir2);
 
-            Nektar::LibUtilities::PointsType     PointsTypeDir3 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::PointsType      PointsTypeDir3 = Nektar::LibUtilities::eGaussRadauMAlpha2Beta0;
             const Nektar::LibUtilities::PointsKey PointsKeyDir3(8, PointsTypeDir3);
             Nektar::LibUtilities::BasisType       basisTypeDir3 = Nektar::LibUtilities::eModifiedPyr_C;
             const Nektar::LibUtilities::BasisKey  basisKeyDir3(basisTypeDir3,8,PointsKeyDir3);
@@ -1267,9 +1264,8 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u,  1.0,  1.0, -1.0));
             SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0,  1.0, -1.0));
             SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0,  1.0));
-            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, -1.0,  1.0,  1.0));
             
-            SpatialDomains::PyrGeomSharedPtr pyrGeom = CreatePyr(v0, v1, v2, v3, v4, v5);
+            SpatialDomains::PyrGeomSharedPtr pyrGeom = CreatePyr(v0, v1, v2, v3, v4);
             
             Nektar::LibUtilities::PointsType     PointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey PointsKeyDir1(5, PointsTypeDir1);
@@ -1281,7 +1277,7 @@ namespace Nektar
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_A;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,PointsKeyDir2);
 
-            Nektar::LibUtilities::PointsType     PointsTypeDir3 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::PointsType      PointsTypeDir3 = Nektar::LibUtilities::eGaussRadauMAlpha2Beta0;
             const Nektar::LibUtilities::PointsKey PointsKeyDir3(8, PointsTypeDir3);
             Nektar::LibUtilities::BasisType       basisTypeDir3 = Nektar::LibUtilities::eModifiedPyr_C;
             const Nektar::LibUtilities::BasisKey  basisKeyDir3(basisTypeDir3,8,PointsKeyDir3);
@@ -1348,9 +1344,8 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u,  1.0,  1.0, -1.0));
             SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0,  1.0, -1.0));
             SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0,  1.0));
-            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, -1.0,  1.0,  1.0));
             
-            SpatialDomains::PyrGeomSharedPtr pyrGeom = CreatePyr(v0, v1, v2, v3, v4, v5);
+            SpatialDomains::PyrGeomSharedPtr pyrGeom = CreatePyr(v0, v1, v2, v3, v4);
             
             Nektar::LibUtilities::PointsType     PointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             const Nektar::LibUtilities::PointsKey PointsKeyDir1(5, PointsTypeDir1);
@@ -1362,7 +1357,7 @@ namespace Nektar
             Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_A;
             const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,PointsKeyDir2);
 
-            Nektar::LibUtilities::PointsType     PointsTypeDir3 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::PointsType      PointsTypeDir3 = Nektar::LibUtilities::eGaussRadauMAlpha2Beta0;
             const Nektar::LibUtilities::PointsKey PointsKeyDir3(8, PointsTypeDir3);
             Nektar::LibUtilities::BasisType       basisTypeDir3 = Nektar::LibUtilities::eModifiedPyr_C;
             const Nektar::LibUtilities::BasisKey  basisKeyDir3(basisTypeDir3,8,PointsKeyDir3);
@@ -1385,7 +1380,9 @@ namespace Nektar
                         
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            //Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::OperatorImpMap          impTypes;
+            impTypes[Collections::eIProductWRTBase] = Collections::eSumFac; 
             Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
@@ -1421,6 +1418,7 @@ namespace Nektar
             }
         }        
 
+#if 0 
 
         BOOST_AUTO_TEST_CASE(TestPyrIProductWRTDerivBase_IterPerExp_UniformP_MultiElmt)
         {

@@ -856,5 +856,99 @@ OperatorKey IProductWRTBase_SumFac_Prism::m_type = GetOperatorFactory().
         OperatorKey(ePrism, eIProductWRTBase, eSumFac,false),
         IProductWRTBase_SumFac_Prism::create, "IProductWRTBase_SumFac_Prism");
 
+
+/**
+ * @brief Backward transform operator using sum-factorisation (Pyr)
+ */
+class IProductWRTBase_SumFac_Pyr : public Operator
+{
+    public:
+        OPERATOR_CREATE(IProductWRTBase_SumFac_Pyr)
+
+        virtual ~IProductWRTBase_SumFac_Pyr()
+        {
+        }
+
+        virtual void operator()(
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD, NekDouble> &output,
+                      Array<OneD, NekDouble> &output1,
+                      Array<OneD, NekDouble> &output2,
+                      Array<OneD, NekDouble> &wsp)
+        {
+
+            ASSERTL1(wsp.num_elements() == m_wspSize,
+                    "Incorrect workspace size");
+
+            PyrIProduct(m_sortTopVertex, m_numElmt,
+                        m_nquad0,  m_nquad1,  m_nquad2,
+                        m_nmodes0, m_nmodes1, m_nmodes2,
+                        m_base0,   m_base1,   m_base2,
+                        m_jac,input,output,wsp);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
+    protected:
+        const int                       m_nquad0;
+        const int                       m_nquad1;
+        const int                       m_nquad2;
+        const int                       m_nmodes0;
+        const int                       m_nmodes1;
+        const int                       m_nmodes2;
+        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_base0;
+        Array<OneD, const NekDouble>    m_base1;
+        Array<OneD, const NekDouble>    m_base2;
+        bool                            m_sortTopVertex;
+
+    private:
+        IProductWRTBase_SumFac_Pyr(
+                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                CoalescedGeomDataSharedPtr                pGeomData)
+            : Operator  (pCollExp, pGeomData),
+              m_nquad0  (m_stdExp->GetNumPoints(0)),
+              m_nquad1  (m_stdExp->GetNumPoints(1)),
+              m_nquad2  (m_stdExp->GetNumPoints(2)),
+              m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+              m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+              m_nmodes2 (m_stdExp->GetBasisNumModes(2)),
+              m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+              m_base1   (m_stdExp->GetBasis(1)->GetBdata()),
+              m_base2   (m_stdExp->GetBasis(2)->GetBdata())
+
+        {
+            m_jac = pGeomData->GetJacWithStdWeights(pCollExp);
+
+            m_wspSize = m_numElmt * m_nquad2
+                                  *(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1))
+                      + m_nquad1*m_nquad2*m_numElmt*m_nmodes0;
+
+            if(m_stdExp->GetBasis(0)->GetBasisType()
+                    == LibUtilities::eModified_A)
+            {
+                m_sortTopVertex = true;
+            }
+            else
+            {
+                m_sortTopVertex = false;
+            }
+        }
+};
+
+/// Factory initialisation for the IProductWRTBase_SumFac_Pyr operator
+OperatorKey IProductWRTBase_SumFac_Pyr::m_type = GetOperatorFactory().
+    RegisterCreatorFunction(
+        OperatorKey(ePyramid, eIProductWRTBase, eSumFac,false),
+        IProductWRTBase_SumFac_Pyr::create, "IProductWRTBase_SumFac_Pyr");
+
+
 }
 }

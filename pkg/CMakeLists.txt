@@ -11,6 +11,7 @@ list(APPEND libnektar++-nekmeshutils_LIBS   NekMeshUtils)
 list(APPEND libnektar++-collections_LIBS    Collections)
 list(APPEND libnektar++-multiregions_LIBS   MultiRegions)
 list(APPEND libnektar++-globalmapping_LIBS  GlobalMapping)
+list(APPEND libnektar++-fieldutils_LIBS     FieldUtils)
 list(APPEND libnektar++-solverutils_LIBS    SolverUtils)
 
 # Solvers
@@ -39,7 +40,7 @@ list(APPEND nektar++-demos_BINS Helmholtz1D Helmholtz2D Helmholtz3D
 # Nektar++ binary archive
 list(APPEND nektar++_LIBS LibUtilities StdRegions SpatialDomains LocalRegions
                           NekMeshUtils Collections MultiRegions GlobalMapping
-                          SolverUtils)
+                          FieldUtils SolverUtils)
 list(APPEND nektar++_BINS ADRSolver IncNavierStokesSolver CardiacEPSolver
                           CompressibleFlowSolver DiffusionSolver
                           DiffusionSolverTimeInt ShallowWaterSolver
@@ -144,6 +145,16 @@ if (NEKTAR_BUILD_LIBRARY AND DPKG)
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-globalmapping_LIBS}")
     set(NEK_DEP "${NEK_DEP}, libnektar++-globalmapping (= ${NEKTAR_VERSION})")
+
+    add_nektar_package(
+        NAME libnektar++-fieldutils
+        TYPE deb
+        SUMMARY "Nektar++ FieldUtils library"
+        DESCRIPTION "
+ This library provides post-processing functionality for Nektar++ simulations."
+        DEPENDS "${NEK_DEP}"
+        INSTALL_LIBS "${libnektar++-fieldutils_LIBS}")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-fieldutils (= ${NEKTAR_VERSION})")
 
     if (NEKTAR_BUILD_DEMOS)
         add_nektar_package(
@@ -321,6 +332,14 @@ if (NEKTAR_BUILD_LIBRARY AND RPMBUILD)
         DESCRIPTION 
         "This library provides deformation routines for Nektar++ simulations."
         INSTALL_LIBS "${libnektar++-globalmapping_LIBS}")
+    add_nektar_package(
+        NAME libnektar++-fieldutils
+        TYPE rpm
+        SUMMARY "Nektar++ FieldUtils library"
+        DESCRIPTION
+        "This library provides post-processing functionality for Nektar++
+         simulations."
+        INSTALL_LIBS "${libnektar++-fieldutils_LIBS}")
     add_nektar_package(
         NAME libnektar++-solverutils
         TYPE rpm

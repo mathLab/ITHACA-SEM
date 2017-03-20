@@ -128,7 +128,7 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     {
         for (j = 0; j < nFields; ++j)
         {
-            m_f->m_exp[j]->SetPhys(i, outPts->GetPointVal(j, i));
+            m_f->m_exp[j]->SetPhys(i, outPts->GetPointVal(3 + j, i));
         }
     }
 

@@ -328,14 +328,25 @@ namespace Nektar
                 }
                 break;
 
-                /** \brief Orthogonal basis C for Pyramid expansion (which is richer than tets)
+                /** \brief Orthogonal basis C for Pyramid expansion
+                    (which is richer than tets)
                     
-            \f$\tilde \psi_{pqr}^c = \left ( {1 - \eta_3} \over 2\right)^{pq} P_r^{2pq+2, 0}(\eta_3)\f$
-            \f$ \mbox{where }pq = max(p+q-1,0) \f$
+                    \f$\tilde \psi_{pqr}^c = \left ( {1 - \eta_3} \over
+                    2\right)^{pq} P_r^{2pq+2, 0}(\eta_3)\f$ \f$ \mbox{where
+                    }pq = max(p+q,0) \f$
                     
+                    This orthogonal expansion has modes that are
+                    always in the Cartesian space, however the
+                    equivalent ModifiedPyr_C has vertex modes that do
+                    not lie in this space. If one chooses \f$pq =
+                    max(p+q-1,0)\f$ then the expansion will space the
+                    same space as the vertices but the order of the
+                    expanion in 'r' is reduced by one.
+
+                    1) Eta_z values are the changing the fastest, then
+                     r, q, and finally p.  2) r index increases by the
+                      stride of numPoints. 
                 */
-                // 1) Eta_z values are the changing the fastest, then r, q, and finally p.
-                // 2) r index increases by the stride of numPoints.
             case eOrthoPyr_C:
                 {
                     int P = numModes - 1, Q = numModes - 1, R = numModes - 1;

@@ -587,21 +587,22 @@ namespace Nektar
             for(int i = 0; i < GetExpSize(); ++i)
             {
                 // get new points key
-                int pt0 = (*m_exp)[i]->GetNumPoints(0);
-                int pt1 = (*m_exp)[i]->GetNumPoints(1);
-                int pt2 = (*m_exp)[i]->GetNumPoints(2);
+                int eid = GetOffset_Elmt_Id(i);
+                int pt0 = (*m_exp)[eid]->GetNumPoints(0);
+                int pt1 = (*m_exp)[eid]->GetNumPoints(1);
+                int pt2 = (*m_exp)[eid]->GetNumPoints(2);
                 int npt0 = (int) pt0*scale;
                 int npt1 = (int) pt1*scale;
                 int npt2 = (int) pt2*scale;
                 
-                LibUtilities::PointsKey newPointsKey0(npt0,(*m_exp)[i]->GetPointsType(0));
-                LibUtilities::PointsKey newPointsKey1(npt1,(*m_exp)[i]->GetPointsType(1));
-                LibUtilities::PointsKey newPointsKey2(npt2,(*m_exp)[i]->GetPointsType(2));
+                LibUtilities::PointsKey newPointsKey0(npt0,(*m_exp)[eid]->GetPointsType(0));
+                LibUtilities::PointsKey newPointsKey1(npt1,(*m_exp)[eid]->GetPointsType(1));
+                LibUtilities::PointsKey newPointsKey2(npt2,(*m_exp)[eid]->GetPointsType(2));
 
                 // Interpolate points; 
-                LibUtilities::Interp3D((*m_exp)[i]->GetBasis(0)->GetPointsKey(),
-                                       (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
-                                       (*m_exp)[i]->GetBasis(2)->GetPointsKey(),
+                LibUtilities::Interp3D((*m_exp)[eid]->GetBasis(0)->GetPointsKey(),
+                                       (*m_exp)[eid]->GetBasis(1)->GetPointsKey(),
+                                       (*m_exp)[eid]->GetBasis(2)->GetPointsKey(),
                                        &inarray[cnt], newPointsKey0,
                                        newPointsKey1, newPointsKey2,
                                        &outarray[cnt1]);
@@ -621,25 +622,26 @@ namespace Nektar
             for(int i = 0; i < GetExpSize(); ++i)
             {
                 // get new points key
-                int pt0 = (*m_exp)[i]->GetNumPoints(0);
-                int pt1 = (*m_exp)[i]->GetNumPoints(1);
-                int pt2 = (*m_exp)[i]->GetNumPoints(2);
+                int eid = GetOffset_Elmt_Id(i);
+                int pt0 = (*m_exp)[eid]->GetNumPoints(0);
+                int pt1 = (*m_exp)[eid]->GetNumPoints(1);
+                int pt2 = (*m_exp)[eid]->GetNumPoints(2);
                 int npt0 = (int) pt0*scale;
                 int npt1 = (int) pt1*scale;
                 int npt2 = (int) pt2*scale;
                 
-                LibUtilities::PointsKey newPointsKey0(npt0,(*m_exp)[i]->GetPointsType(0));
-                LibUtilities::PointsKey newPointsKey1(npt1,(*m_exp)[i]->GetPointsType(1));
-                LibUtilities::PointsKey newPointsKey2(npt2,(*m_exp)[i]->GetPointsType(2));
+                LibUtilities::PointsKey newPointsKey0(npt0,(*m_exp)[eid]->GetPointsType(0));
+                LibUtilities::PointsKey newPointsKey1(npt1,(*m_exp)[eid]->GetPointsType(1));
+                LibUtilities::PointsKey newPointsKey2(npt2,(*m_exp)[eid]->GetPointsType(2));
 
                 // Project points; 
                 LibUtilities::PhysGalerkinProject3D(newPointsKey0, 
                                                     newPointsKey1,
                                                     newPointsKey2,
                                                     &inarray[cnt],
-                                       (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
-                                       (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
-                                       (*m_exp)[i]->GetBasis(2)->GetPointsKey(),
+                                       (*m_exp)[eid]->GetBasis(0)->GetPointsKey(),
+                                       (*m_exp)[eid]->GetBasis(1)->GetPointsKey(),
+                                       (*m_exp)[eid]->GetBasis(2)->GetPointsKey(),
                                        &outarray[cnt1]);
                 
                 cnt  += npt0*npt1*npt2;

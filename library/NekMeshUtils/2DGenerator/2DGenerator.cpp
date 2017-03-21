@@ -175,6 +175,31 @@ void Generator2D::Process()
     Report();
 }
 
+void Generator2D::FindBLEnds()
+{
+    for (vector<unsigned>::iterator it = m_blCurves.begin();
+         it != m_blCurves.end(); ++it)
+    {
+        vector<CADVertSharedPtr> vertices =
+            m_mesh->m_cad->GetCurve(*it)->GetVertex();
+
+        for (vector<CADVertSharedPtr>::iterator iv = vertices.begin();
+             iv != vertices.end(); ++iv)
+        {
+            set<CADVertSharedPtr>::iterator is = m_blends.find(*iv);
+
+            if (is != m_blends.end())
+            {
+                m_blends.erase(is);
+            }
+            else
+            {
+                m_blends.insert(*iv);
+            }
+        }
+    }
+}
+
 void Generator2D::MakeBLPrep()
 {
     if (m_mesh->m_verbose)

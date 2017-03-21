@@ -67,6 +67,8 @@ public:
     virtual void Process();
 
 private:
+    void FindBLEnds();
+
     void MakeBLPrep();
 
     void PeriodicPrep();
@@ -84,6 +86,7 @@ private:
     std::map<unsigned, unsigned> m_periodicPairs;
 
     std::vector<unsigned int> m_blCurves;
+    std::set<CADVertSharedPtr> m_blends;
     LibUtilities::AnalyticExpressionEvaluator m_thickness;
     int m_thickness_ID;
     std::map<NodeSharedPtr, std::vector<EdgeSharedPtr> > m_nodesToEdge;

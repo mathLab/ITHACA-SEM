@@ -72,12 +72,22 @@ void CurveMesh::Mesh()
 
     Ne = round(Ae);
 
-    if (Ne + 1 < 2)
+    if (Ne + 1 < 2 + m_endoffset.size())
     {
-        meshsvalue.resize(2);
+        Ne = 1 + m_endoffset.size();
+
+        meshsvalue.resize(Ne + 1);
         meshsvalue[0] = 0.0;
         meshsvalue[1] = m_curvelength;
-        Ne            = 1;
+
+        if (m_endoffset.count(0))
+        {
+            meshsvalue[1] = m_endoffset[0];
+        }
+        if (m_endoffset.count(1))
+        {
+            meshsvalue[Ne - 1] = m_curvelength - m_endoffset[1];
+        }
     }
     else
     {
@@ -88,7 +98,17 @@ void CurveMesh::Mesh()
         meshsvalue[0]  = 0.0;
         meshsvalue[Ne] = m_curvelength;
 
-        for (int i = 1; i < Ne; i++)
+        if (m_endoffset.count(0))
+        {
+            meshsvalue[1] = m_endoffset[0];
+        }
+        if (m_endoffset.count(1))
+        {
+            meshsvalue[Ne - 1] = m_curvelength - m_endoffset[1];
+        }
+
+        for (int i = 1 + m_endoffset.count(0); i < Ne - m_endoffset.count(1);
+             i++)
         {
             int iterationcounter = 0;
             bool iterate         = true;
@@ -326,7 +346,7 @@ void CurveMesh::GetSampleFunction()
             if (dsti[1] < m_endoffset[0])
             {
                 dsti[0] = m_endoffset[0];
-                found = true;
+                found   = true;
             }
         }
         if (m_endoffset.count(1) && !found)
@@ -334,7 +354,7 @@ void CurveMesh::GetSampleFunction()
             if (dsti[1] > m_curvelength - m_endoffset[1])
             {
                 dsti[0] = m_endoffset[1];
-                found = true;
+                found   = true;
             }
         }
         if (!found)

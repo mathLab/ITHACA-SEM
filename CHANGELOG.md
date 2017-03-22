@@ -4,9 +4,9 @@ Changelog
 v4.5.0
 ------
 **NekMesh**:
-
 - Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
+- Add non-O BL meshing in 2D (!757)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)

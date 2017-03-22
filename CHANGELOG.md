@@ -1,6 +1,16 @@
 Changelog
 =========
 
+v4.5.0
+------
+**NekMesh**:
+
+- Add periodic boundary condition meshing in 2D (!733)
+- Adjust boundary layer thickness in corners in 2D (!739)
+
+**Documentation**:
+- Added the developer-guide repository as a submodule (!751)
+
 v4.4.0
 ------
 **Library**:
@@ -100,9 +110,9 @@ v4.4.0
 - Change variable names in mcf file to make more sense (!736)
 - Fix issues in varopti module so that in can be compiled without meshgen on
   (!736)
-- Replace LAPACK Eigenvalue calculation with handwritten function in 
+- Replace LAPACK Eigenvalue calculation with handwritten function in
   varopti (!738)
-- Improved node-colouring algorithm for better load-balancing 
+- Improved node-colouring algorithm for better load-balancing
   in varopti (!738)
 - Simplified calculation of the energy functional in varopti for improved
   performance (!738)

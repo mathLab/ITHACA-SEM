@@ -33,10 +33,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/CADSystem/CADSystem.h>
-#include <NekMeshUtils/CADSystem/CADVert.h>
 #include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
+#include <NekMeshUtils/CADSystem/CADSystem.h>
+#include <NekMeshUtils/CADSystem/CADVert.h>
 
 using namespace std;
 
@@ -45,7 +45,7 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-EngineFactory& GetEngineFactory()
+EngineFactory &GetEngineFactory()
 {
     typedef Loki::SingletonHolder<EngineFactory, Loki::CreateUsingNew,
                                   Loki::NoDestroy, Loki::SingleThreaded>
@@ -53,7 +53,7 @@ EngineFactory& GetEngineFactory()
     return Type::Instance();
 }
 
-CADVertFactory& GetCADVertFactory()
+CADVertFactory &GetCADVertFactory()
 {
     typedef Loki::SingletonHolder<CADVertFactory, Loki::CreateUsingNew,
                                   Loki::NoDestroy, Loki::SingleThreaded>
@@ -61,7 +61,7 @@ CADVertFactory& GetCADVertFactory()
     return Type::Instance();
 }
 
-CADCurveFactory& GetCADCurveFactory()
+CADCurveFactory &GetCADCurveFactory()
 {
     typedef Loki::SingletonHolder<CADCurveFactory, Loki::CreateUsingNew,
                                   Loki::NoDestroy, Loki::SingleThreaded>
@@ -69,7 +69,7 @@ CADCurveFactory& GetCADCurveFactory()
     return Type::Instance();
 }
 
-CADSurfFactory& GetCADSurfFactory()
+CADSurfFactory &GetCADSurfFactory()
 {
     typedef Loki::SingletonHolder<CADSurfFactory, Loki::CreateUsingNew,
                                   Loki::NoDestroy, Loki::SingleThreaded>
@@ -77,5 +77,37 @@ CADSurfFactory& GetCADSurfFactory()
     return Type::Instance();
 }
 
+Array<OneD, NekDouble> CADSystem::GetPeriodicTranslationVector(int first,
+                                                               int second)
+{
+    ASSERTL0(GetNumSurf() == 1, "wont work for multi surfaces yet");
+
+    CADCurveSharedPtr c1 = GetCurve(first);
+    CADCurveSharedPtr c2 = GetCurve(second);
+
+    NekDouble tst = c1->GetTotLength() - c2->GetTotLength();
+    ASSERTL0(fabs(tst) < 1e-6, "periodic curves not same length");
+
+    vector<CADVertSharedPtr> v1 = c1->GetVertex();
+    Array<OneD, NekDouble> p1 = v1[0]->GetLoc();
+
+    Array<OneD, NekDouble> p2;
+    vector<CADVertSharedPtr> v2 = c2->GetVertex();
+    if (c1->GetOrienationWRT(1) == c2->GetOrienationWRT(1))
+    {
+        p2 = v2[1]->GetLoc();
+    }
+    else
+    {
+        p2 = v2[0]->GetLoc();
+    }
+
+    Array<OneD, NekDouble> ret(3);
+    ret[0] = p2[0] - p1[0];
+    ret[1] = p2[1] - p1[1];
+    ret[2] = p2[2] - p1[2];
+
+    return ret;
+}
 }
 }

@@ -33,7 +33,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+
+
+#include <NekMeshUtils/CADSystem/CADCurve.h>
 
 #include <boost/thread.hpp>
 
@@ -151,7 +155,22 @@ void InputMCF::ParseFile(string nm)
         }
     }
 
-    map<string, string>::iterator it;
+    set<string> periodic;
+    if (pSession->DefinesElement("NEKTAR/MESHING/PERIODIC"))
+    {
+        TiXmlElement *per  = mcf->FirstChildElement("PERIODIC");
+        TiXmlElement *pair = per->FirstChildElement("P");
+
+        while (pair)
+        {
+            string tmp;
+            pair->QueryStringAttribute("PAIR", &tmp);
+            periodic.insert(tmp);
+            pair = pair->NextSiblingElement("P");
+        }
+    }
+
+    map<string,string>::iterator it;
 
     it = information.find("CADFile");
     ASSERTL0(it != information.end(), "no cadfile defined");
@@ -205,6 +224,17 @@ void InputMCF::ParseFile(string nm)
             it         = parameters.find("BndLayerProgression");
             m_blprog   = it != parameters.end() ? it->second : "2.0";
         }
+
+        it = parameters.find("BndLayerAdjustment");
+        if (it != parameters.end())
+        {
+            m_adjust = true;
+            m_adjustment = it->second;
+        }
+        else
+        {
+            m_adjust = false;
+        }
     }
 
     m_naca = false;
@@ -233,12 +263,14 @@ void InputMCF::ParseFile(string nm)
     }
 
     set<string>::iterator sit;
-    sit        = boolparameters.find("SurfaceOptimiser");
-    m_surfopti = sit != boolparameters.end();
-    sit        = boolparameters.find("WriteOctree");
-    m_woct     = sit != boolparameters.end();
-    sit        = boolparameters.find("VariationalOptimiser");
-    m_varopti  = sit != boolparameters.end();
+    sit         = boolparameters.find("SurfaceOptimiser");
+    m_surfopti  = sit != boolparameters.end();
+    sit         = boolparameters.find("WriteOctree");
+    m_woct      = sit != boolparameters.end();
+    sit         = boolparameters.find("VariationalOptimiser");
+    m_varopti   = sit != boolparameters.end();
+    sit         = boolparameters.find("BndLayerAdjustEverywhere");
+    m_adjustall = sit != boolparameters.end();
 
     m_refine = refinement.size() > 0;
     if (m_refine)
@@ -251,6 +283,18 @@ void InputMCF::ParseFile(string nm)
         }
         m_refinement = ss.str();
         m_refinement.erase(m_refinement.end() - 1);
+    }
+
+    if (periodic.size() > 0)
+    {
+        stringstream ss;
+        for (sit = periodic.begin(); sit != periodic.end(); ++sit)
+        {
+            ss << *sit;
+            ss << ":";
+        }
+        m_periodic = ss.str();
+        m_periodic.erase(m_periodic.end() - 1);
     }
 }
 
@@ -302,7 +346,8 @@ void InputMCF::Process()
     ////**** LINEAR MESHING ****////
     if (m_2D)
     {
-        m_mesh->m_expDim   = 2;
+        ////**** 2DGenerator ****////
+        m_mesh->m_expDim = 2;
         m_mesh->m_spaceDim = 2;
         module             = GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "2dgenerator"), m_mesh);
@@ -423,19 +468,19 @@ void InputMCF::Process()
         module->RegisterConfig("maxiter", "10");
         module->RegisterConfig("numthreads",
                                     boost::lexical_cast<string>(np));
-    }
 
-    try
-    {
-        module->SetDefaults();
-        module->Process();
-    }
-    catch (runtime_error &e)
-    {
-        cout << "Variational optimisation has failed with message:" << endl;
-        cout << e.what() << endl;
-        cout << "The mesh will be written as is, it may be invalid" << endl;
-        return;
+        try
+        {
+            module->SetDefaults();
+            module->Process();
+        }
+        catch (runtime_error &e)
+        {
+            cout << "Variational optimisation has failed with message:" << endl;
+            cout << e.what() << endl;
+            cout << "The mesh will be written as is, it may be invalid" << endl;
+            return;
+        }
     }
 
     ////**** SPLIT BL ****////
@@ -448,19 +493,40 @@ void InputMCF::Process()
         module->RegisterConfig(
             "nq", boost::lexical_cast<string>(m_mesh->m_nummode));
         module->RegisterConfig("r", m_blprog);
+
+        try
+        {
+            module->SetDefaults();
+            module->Process();
+        }
+        catch (runtime_error &e)
+        {
+            cout << "Boundary layer splitting has failed with message:" << endl;
+            cout << e.what() << endl;
+            cout << "The mesh will be written as is, it may be invalid" << endl;
+            return;
+        }
     }
 
-    try
+    ////**** Peralign ****////
+    if (m_2D && m_periodic.size())
     {
+        vector<string> lines;
+        boost::split(lines, m_periodic, boost::is_any_of(":"));
+
+        for (vector<string>::iterator il = lines.begin(); il != lines.end();
+             ++il)
+        {
+            module = GetModuleFactory().CreateInstance(
+                ModuleKey(eProcessModule, "peralign"), m_mesh));
+
+            vector<string> tmp(2);
+            boost::split(tmp, *il, boost::is_any_of(","));
+            module->RegisterConfig("surf1", tmp[0]);
+        }
+
         module->SetDefaults();
         module->Process();
-    }
-    catch (runtime_error &e)
-    {
-        cout << "Boundary layer splitting has failed with message:" << endl;
-        cout << e.what() << endl;
-        cout << "The mesh will be written as is, it may be invalid" << endl;
-        return;
     }
 }
 }

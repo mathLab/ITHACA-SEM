@@ -158,6 +158,26 @@ void Generator2D::Process()
         {
             MakeBL(i);
         }
+
+        for (map<unsigned, unsigned>::iterator ic = m_blends.begin();
+             ic != m_blends.end(); ++ic)
+        {
+            vector<NodeSharedPtr> nodes =
+                m_curvemeshes[ic->first]->GetMeshPoints();
+
+            if (ic->second == 0 || ic->second == 2)
+            {
+                nodes.erase(nodes.begin());
+            }
+            if (ic->second == 1 || ic->second == 2)
+            {
+                nodes.erase(nodes.end());
+            }
+
+            m_curvemeshes[ic->first] =
+                MemoryManager<CurveMesh>::AllocateSharedPtr(ic->first, m_mesh,
+                                                            nodes);
+        }
     }
 
     if (m_mesh->m_verbose)
@@ -343,9 +363,30 @@ void Generator2D::MakeBL(int faceid)
     map<NodeSharedPtr, vector<EdgeSharedPtr> >::iterator it;
     for (it = m_nodesToEdge.begin(); it != m_nodesToEdge.end(); it++)
     {
+        ASSERTL0(it->second.size() == 1 || it->second.size() == 2,
+                 "weirdness, most likely bl_surfs are incorrect");
+
+        if (it->second.size() == 1)
+        {
+            vector<pair<int, CADCurveSharedPtr> > curves =
+                it->first->GetCADCurves();
+
+            vector<EdgeSharedPtr> edges =
+                m_curvemeshes[curves[0].first]->GetMeshEdges();
+            vector<EdgeSharedPtr>::iterator ie =
+                find(edges.begin(), edges.end(), it->second[0]);
+            int rightCurve =
+                (ie == edges.end()) ? curves[0].first : curves[1].first;
+
+            vector<NodeSharedPtr> nodes =
+                m_curvemeshes[rightCurve]->GetMeshPoints();
+            nodeNormals[it->first] =
+                (nodes[0] == it->first) ? nodes[1] : nodes[nodes.size() - 2];
+
+            continue;
+        }
+
         Array<OneD, NekDouble> n(3, 0.0);
-        ASSERTL0(it->second.size() == 2,
-                 "wierdness, most likely bl_surfs are incorrect");
         Array<OneD, NekDouble> n1 = edgeNormals[it->second[0]->m_id];
         Array<OneD, NekDouble> n2 = edgeNormals[it->second[1]->m_id];
         n[0]          = (n1[0] + n2[0]) / 2.0;

@@ -152,7 +152,6 @@ IF(NEKTAR_USE_MESHGEN)
     ADD_NEKTAR_TEST        (MeshGen/geo)
     ADD_NEKTAR_TEST        (MeshGen/t106step)
     ADD_NEKTAR_TEST_LENGTHY       (MeshGen/rev)
-
 ENDIF()
 
 # varopti tests

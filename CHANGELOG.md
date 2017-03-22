@@ -4,12 +4,17 @@ Changelog
 v4.5.0
 ------
 **NekMesh**:
-
 - Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
+- Rework meshing control so that if possible viewable meshes will be dumped
+  when some part of the system fails (!756)
+- Add manifold meshing option (!756)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
+
+**Library**
+- Remove the duplicate output of errorutil (!756)
 
 v4.4.0
 ------

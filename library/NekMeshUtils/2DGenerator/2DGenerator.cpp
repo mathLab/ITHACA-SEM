@@ -102,6 +102,34 @@ void Generator2D::Process()
         {
             m_curvemeshes[i] =
                 MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
+
+            if (m_blends.count(i))
+            {
+                vector<CADVertSharedPtr> vertices =
+                    m_mesh->m_cad->GetCurve(i)->GetVertex();
+                Array<OneD, NekDouble> loc;
+                NekDouble t;
+
+                if (m_blends[i] == 2)
+                {
+                    loc = vertices[0]->GetLoc();
+                    t   = m_thickness.Evaluate(m_thickness_ID, loc[0], loc[1],
+                                             loc[2], 0.0);
+                    m_curvemeshes[i]->SetOffset(0, t);
+
+                    loc = vertices[1]->GetLoc();
+                    t   = m_thickness.Evaluate(m_thickness_ID, loc[0], loc[1],
+                                             loc[2], 0.0);
+                    m_curvemeshes[i]->SetOffset(1, t);
+                }
+                else
+                {
+                    loc = vertices[m_blends[i]]->GetLoc();
+                    t   = m_thickness.Evaluate(m_thickness_ID, loc[0], loc[1],
+                                             loc[2], 0.0);
+                    m_curvemeshes[i]->SetOffset(m_blends[i], t);
+                }
+            }
         }
         else
         {

@@ -45,7 +45,6 @@
 
 namespace Nektar
 {     
-
     enum EquationType
     {
         eNoEquationType,
@@ -96,6 +95,33 @@ namespace Nektar
         "SkewSymmetric"
         "NoAdvection"
     };
+
+
+    struct WomersleyParams
+    {
+        WomersleyParams(int dim)
+        {
+            m_axisnormal = Array<OneD, NekDouble>(dim,0.0);
+            m_axispoint  = Array<OneD, NekDouble>(dim,0.0);
+        };
+
+        virtual ~WomersleyParams()
+        {};
+        
+        /// Real and imaginary velocity comp. of wom
+        std::vector<NekDouble> m_wom_vel_r;
+        std::vector<NekDouble> m_wom_vel_i;
+
+        /// Womersley  BC constants
+        NekDouble m_radius;
+        NekDouble m_period;
+        Array<OneD, NekDouble> m_axisnormal;
+        // currently this needs to be the point in the middle of the
+        // axis but shoudl be generalised to be any point on the axis
+        Array<OneD, NekDouble> m_axispoint;
+
+    };
+    typedef boost::shared_ptr<WomersleyParams> WomersleyParamsSharedPtr;
 
     /**
      * \brief This class is the base class for Navier Stokes problems
@@ -207,8 +233,17 @@ namespace Nektar
         /// Set Normal Velocity Component to Zero
         void SetZeroNormalVelocity();
 
+        /// Set Womersley Profile if specified
+        void SetWomersleyBoundary(const int fldid, const int bndid);
+
+        /// Set Up Womersley details
+        void SetUpWomersley(const int bndid, std::string womstr);
+        
         /// evaluate steady state
         bool CalcSteadyState(void);
+
+        /// Womersley parameters if required 
+        std::map<int,WomersleyParamsSharedPtr> m_womersleyParams;
 
         virtual MultiRegions::ExpListSharedPtr v_GetPressure()
         {

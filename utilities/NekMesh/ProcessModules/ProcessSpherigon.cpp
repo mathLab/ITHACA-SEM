@@ -226,7 +226,7 @@ void ProcessSpherigon::FindNormalFromPlyFile(MeshSharedPtr &plymesh,
 {
     int      cnt = 0;
     int      j;
-    int      prog,cntmin;
+    int      prog=0,cntmin;
     NodeSet::iterator it;
     map<int, NodeSharedPtr>::iterator vIt;
 

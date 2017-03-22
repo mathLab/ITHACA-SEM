@@ -44,7 +44,9 @@ ADD_CUSTOM_TARGET(user-guide-pdf
     ${PDFLATEX} --output-directory ${USERGUIDE} ${USERGUIDESRC}/user-guide.tex
     COMMAND TEXMFOUTPUT=${USERGUIDE} ${BIBTEX} ${USERGUIDE}/user-guide.aux
     COMMAND TEXMFOUTPUT=${USERGUIDE} ${MAKEINDEX} ${USERGUIDE}/user-guide.idx
-    COMMAND export TEXINPUTS=${CMAKE_SOURCE_DIR}//: && 
+    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}//:  
+    ${PDFLATEX} --output-directory ${USERGUIDE} ${USERGUIDESRC}/user-guide.tex
+    COMMAND TEXINPUTS=${CMAKE_SOURCE_DIR}//:  
     ${PDFLATEX} --output-directory ${USERGUIDE} ${USERGUIDESRC}/user-guide.tex
     WORKING_DIRECTORY ${USERGUIDESRC}
 )

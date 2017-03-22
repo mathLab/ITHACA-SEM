@@ -61,9 +61,9 @@ public:
     /**
      * @brief default constructor
      */
-    TetMesh(MeshSharedPtr m,
+    TetMesh(MeshSharedPtr m, int id,
             std::vector<ElementSharedPtr> e = std::vector<ElementSharedPtr>())
-                : m_mesh(m), m_surface(e)
+                : m_mesh(m), m_surface(e), m_id(id)
     {
     };
 
@@ -78,6 +78,7 @@ private:
     std::vector<ElementSharedPtr> m_surface;
     /// number of tetrahedra
     int m_numtet;
+    int m_id;
     /// conncetivity of the tets from the interface
     std::vector<Array<OneD, int> > m_tetconnect;
 

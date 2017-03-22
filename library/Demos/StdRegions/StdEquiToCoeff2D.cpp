@@ -14,7 +14,7 @@ NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2);
 
 int main(int argc, char *argv[])
 {
-    int i, j;
+    int i;
     int order, nq1, nq2;
     LibUtilities::PointsType Qtype1, Qtype2;
     LibUtilities::BasisType btype1, btype2;

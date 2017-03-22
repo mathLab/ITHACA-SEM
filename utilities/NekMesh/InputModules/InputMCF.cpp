@@ -527,7 +527,7 @@ void InputMCF::Process()
              ++il)
         {
             module = GetModuleFactory().CreateInstance(
-                ModuleKey(eProcessModule, "peralign"), m_mesh));
+                ModuleKey(eProcessModule, "peralign"), m_mesh);
 
             vector<string> tmp(2);
             boost::split(tmp, *il, boost::is_any_of(","));

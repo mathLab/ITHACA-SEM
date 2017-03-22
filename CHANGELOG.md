@@ -3,10 +3,19 @@ Changelog
 
 v4.5.0
 ------
+
 **Library**:
 - Fix element size vs floating point error bug in SpatialDomains (!737)
 - Tidy all 3D SpatialDomains element geoms to be consistent and fix small
-  corresponding bug in prisms and pyramids (!737)
+  triangle face bug in prisms and pyramids (!737)
+
+**NekMesh**:
+
+- Add periodic boundary condition meshing in 2D (!733)
+- Adjust boundary layer thickness in corners in 2D (!739)
+
+**Documentation**:
+- Added the developer-guide repository as a submodule (!751)
 
 v4.4.0
 ------

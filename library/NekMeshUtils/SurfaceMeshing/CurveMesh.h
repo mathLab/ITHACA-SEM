@@ -54,6 +54,10 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+//forward
+class CurveMesh;
+typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
+
 class CurveMesh
 {
 public:
@@ -125,6 +129,13 @@ public:
         return m_curvelength;
     }
 
+    void PeriodicOverwrite(CurveMeshSharedPtr from);
+
+    int GetId()
+    {
+        return m_id;
+    }
+
 private:
     /**
      * @brief get node spacing sampling function
@@ -179,7 +190,6 @@ private:
     int m_blID;
 };
 
-typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
 }
 }
 

@@ -83,6 +83,11 @@ void Generator2D::Process()
     ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
                                   m_blCurves);
 
+    if (m_config["blcurves"].beenSet)
+    {
+        FindBLEnds();
+    }
+
     // linear mesh all curves
     for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
     {
@@ -177,6 +182,8 @@ void Generator2D::Process()
 
 void Generator2D::FindBLEnds()
 {
+    set<CADVertSharedPtr> cadverts;
+
     for (vector<unsigned>::iterator it = m_blCurves.begin();
          it != m_blCurves.end(); ++it)
     {
@@ -186,15 +193,43 @@ void Generator2D::FindBLEnds()
         for (vector<CADVertSharedPtr>::iterator iv = vertices.begin();
              iv != vertices.end(); ++iv)
         {
-            set<CADVertSharedPtr>::iterator is = m_blends.find(*iv);
+            set<CADVertSharedPtr>::iterator is = cadverts.find(*iv);
 
-            if (is != m_blends.end())
+            if (is != cadverts.end())
             {
-                m_blends.erase(is);
+                cadverts.erase(is);
             }
             else
             {
-                m_blends.insert(*iv);
+                cadverts.insert(*iv);
+            }
+        }
+    }
+
+    for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); ++i)
+    {
+        if (find(m_blCurves.begin(), m_blCurves.end(), i) != m_blCurves.end())
+        {
+            continue;
+        }
+
+        vector<CADVertSharedPtr> vertices =
+            m_mesh->m_cad->GetCurve(i)->GetVertex();
+
+        for (int j = 0; j < 2; ++j)
+        {
+            if (!cadverts.count(vertices[j]))
+            {
+                continue;
+            }
+
+            if (m_blends.count(i))
+            {
+                m_blends[i] = 2;
+            }
+            else
+            {
+                m_blends[i] = j;
             }
         }
     }

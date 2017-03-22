@@ -52,6 +52,15 @@ void CurveMesh::Mesh()
         int(m_curvelength / m_mesh->m_octree->GetMinDelta()) + 10;
     ds = m_curvelength / (m_numSamplePoints - 1);
 
+    NekDouble totalOffset = 0.0;
+    for (map<unsigned, NekDouble>::iterator ie = m_endoffset.begin();
+         ie != m_endoffset.end(); ++ie)
+    {
+        totalOffset += ie->second;
+    }
+    ASSERTL0(m_curvelength > totalOffset,
+             "Boundary layers too thick for adjacent curve");
+
     GetSampleFunction();
 
     Ae = 0.0;
@@ -108,7 +117,8 @@ void CurveMesh::Mesh()
     Array<OneD, NekDouble> loc;
 
     vector<CADVertSharedPtr> verts = m_cadcurve->GetVertex();
-    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > s = m_cadcurve->GetAdjSurf();
+    vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > s =
+        m_cadcurve->GetAdjSurf();
 
     NodeSharedPtr n = verts[0]->GetNode();
     t               = m_bounds[0];
@@ -214,7 +224,7 @@ NekDouble CurveMesh::EvaluateDS(NekDouble s)
     int a = 0;
     int b = 0;
 
-    ASSERTL1(!(s < 0) && !(s > m_curvelength),"s out of bounds");
+    ASSERTL1(!(s < 0) && !(s > m_curvelength), "s out of bounds");
 
     if (s == 0)
     {
@@ -253,7 +263,7 @@ NekDouble CurveMesh::EvaluatePS(NekDouble s)
     int a = 0;
     int b = 0;
 
-    ASSERTL1(!(s < 0) && !(s > m_curvelength),"s out of bounds");
+    ASSERTL1(!(s < 0) && !(s > m_curvelength), "s out of bounds");
 
     if (s == 0)
     {
@@ -309,44 +319,28 @@ void CurveMesh::GetSampleFunction()
 
         Array<OneD, NekDouble> loc = m_cadcurve->P(t);
 
-        /*NekDouble ts =
-            m_bl.Evaluate(m_blID, loc[0], loc[1], loc[2], 0.0);
+        bool found = false;
 
-        if (ts > 0.0)
+        if (m_endoffset.count(0))
         {
-            Array<OneD, NekDouble> N = m_cadcurve->N(t);
-            Array<OneD, NekDouble> Nwrt = m_cadcurve->NormalWRT(t, 0);
-
-            if(N[0]*N[0] + N[1]*N[1] + N[2]*N[2] < 1e-6)
+            if (dsti[1] < m_endoffset[0])
             {
-                dsti[0] = m_mesh->m_octree->Query(loc);
-            }
-            else if ( N[0]*Nwrt[0] + N[1]*Nwrt[1] + N[2]*Nwrt[2] > 0)
-            {
-                //concave
-                dsti[0] = m_mesh->m_octree->Query(loc);
-            }
-            else
-            {
-                NekDouble R = 1.0 / m_cadcurve->Curvature(t);
-                if(R > 2.0*t)
-                {
-                    R = 2.0*t;
-                }
-                Array<OneD, NekDouble> tloc(3);
-                tloc[0] = loc[0] + ts * Nwrt[0];
-                tloc[1] = loc[1] + ts * Nwrt[1];
-                tloc[2] = loc[2] + ts * Nwrt[2];
-
-                NekDouble d = m_mesh->m_octree->Query(tloc);
-
-                dsti[0] = d * R / (R + ts);
+                dsti[0] = m_endoffset[0];
+                found = true;
             }
         }
-        else
-        {*/
+        if (m_endoffset.count(1) && !found)
+        {
+            if (dsti[1] > m_curvelength - m_endoffset[1])
+            {
+                dsti[0] = m_endoffset[1];
+                found = true;
+            }
+        }
+        if (!found)
+        {
             dsti[0] = m_mesh->m_octree->Query(loc);
-        //}
+        }
 
         dsti[2] = t;
 
@@ -356,7 +350,7 @@ void CurveMesh::GetSampleFunction()
 
 void CurveMesh::PeriodicOverwrite(CurveMeshSharedPtr from)
 {
-    //clear current mesh points and remove edges from edgeset
+    // clear current mesh points and remove edges from edgeset
     m_meshpoints.clear();
     for (int i = 0; i < m_meshedges.size(); i++)
     {
@@ -382,8 +376,8 @@ void CurveMesh::PeriodicOverwrite(CurveMeshSharedPtr from)
     for (int i = 1; i < nodes.size() - 1; i++)
     {
         Array<OneD, NekDouble> loc = nodes[i]->GetLoc();
-        NodeSharedPtr nn = NodeSharedPtr(new Node(
-            m_mesh->m_numNodes++, loc[0] + T[0], loc[1] + T[1], 0.0));
+        NodeSharedPtr nn = NodeSharedPtr(
+            new Node(m_mesh->m_numNodes++, loc[0] + T[0], loc[1] + T[1], 0.0));
 
         for (int j = 0; j < surfs.size(); j++)
         {
@@ -406,7 +400,7 @@ void CurveMesh::PeriodicOverwrite(CurveMeshSharedPtr from)
 
     m_meshpoints.insert(m_meshpoints.begin(), verts[0]->GetNode());
     m_meshpoints.push_back(verts[1]->GetNode());
-    //dont need to realign cad for vertices
+    // dont need to realign cad for vertices
 
     // make edges and add them to the edgeset for the face mesher to use
     for (int i = 0; i < m_meshpoints.size() - 1; i++)
@@ -418,6 +412,5 @@ void CurveMesh::PeriodicOverwrite(CurveMeshSharedPtr from)
         m_meshedges.push_back(e);
     }
 }
-
 }
 }

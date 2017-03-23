@@ -52,6 +52,7 @@ v4.4.0
 - Fix bug in FieldUtils when using half mode expansions (!734)
 - Do not read the same fld/pts files again for every variable (!670)
 - Fix bug in CMake PETSc detection for Ubuntu 16.04/Debian 9 (!735)
+- Fix warnings with Intel compiler (!742)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)

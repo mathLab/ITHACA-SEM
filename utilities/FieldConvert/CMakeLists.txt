@@ -27,6 +27,7 @@ ADD_NEKTAR_TEST(cube_prismhex)
 ADD_NEKTAR_TEST(outflow_pointdatatofld)
 ADD_NEKTAR_TEST(chan3D_equispacedoutput)
 ADD_NEKTAR_TEST(chan3D_isocontour)
+ADD_NEKTAR_TEST(interpfield)
 ADD_NEKTAR_TEST(naca0012_bnd_equispacedoutput)
 ADD_NEKTAR_TEST(smallmesh_isocontour)
 

@@ -172,6 +172,7 @@ void ProcessVarOpti::Process()
     m_res      = boost::shared_ptr<Residual>(new Residual);
     m_res->val = 1.0;
 
+    
     m_mesh->MakeOrder(m_mesh->m_nummode - 1,
                       LibUtilities::eGaussLobattoLegendre);
 
@@ -183,6 +184,7 @@ void ProcessVarOpti::Process()
 
     map<LibUtilities::ShapeType, DerivUtilSharedPtr> derivUtils =
         BuildDerivUtil(intOrder);
+
     GetElementMap(intOrder, derivUtils);
 
     m_res->startInv = 0;
@@ -200,9 +202,10 @@ void ProcessVarOpti::Process()
         elLock = GetLockedElements(m_config["region"].as<NekDouble>());
     }
 
+    
     vector<vector<NodeSharedPtr> > freenodes = GetColouredNodes(elLock);
     vector<vector<NodeOptiSharedPtr> > optiNodes;
-
+    
     // turn the free nodes into optimisable objects with all required data
     set<int> check;
     for (int i = 0; i < freenodes.size(); i++)
@@ -382,6 +385,8 @@ void ProcessVarOpti::Process()
     }
 
     t.Stop();
+
+    RemoveLinearCurvature();
 
     if(m_mesh->m_verbose)
     {

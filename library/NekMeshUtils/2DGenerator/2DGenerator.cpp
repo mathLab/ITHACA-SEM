@@ -166,7 +166,7 @@ void Generator2D::Process()
             }
             if (ic->second == 1 || ic->second == 2)
             {
-                nodes.erase(nodes.end());
+                nodes.erase(nodes.end() - 1);
             }
 
             m_curvemeshes[ic->first] =

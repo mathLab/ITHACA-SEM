@@ -2081,9 +2081,9 @@ using namespace boost::assign;
             // Loop over all expansions in the domain
             for(cnt = cnt1 = n = 0; n < nexp; ++n)
             {
-                nbndry = (*m_exp)[m_offset_elmt_id[n]]->NumDGBndryCoeffs();
+                nbndry = (*m_exp)[n]->NumDGBndryCoeffs();
 
-                e_ncoeffs = (*m_exp)[m_offset_elmt_id[n]]->GetNcoeffs();
+                e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
                 e_f       = f + cnt;
                 e_l       = loc_lambda + cnt1;
 
@@ -2288,7 +2288,7 @@ using namespace boost::assign;
                 LocalRegions::Expansion3DSharedPtr exp =
                         (*m_exp)[i]->as<LocalRegions::Expansion3D>();
 
-                eid     = m_offset_elmt_id[i];
+                eid     = i;
                 nq_elmt = (*m_exp)[eid]->GetTotPoints();
                 nm_elmt = (*m_exp)[eid]->GetNcoeffs();
                 qrhs    = Array<OneD, NekDouble>(nq_elmt);

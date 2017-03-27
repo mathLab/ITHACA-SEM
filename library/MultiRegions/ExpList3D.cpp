@@ -73,7 +73,14 @@ namespace Nektar
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
-            SetCoeffPhys();
+            SetCoeffPhysOffsets();
+
+            if (DeclareCoeffPhysArrays)
+            {
+                // Set up m_coeffs, m_phys.
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+                m_phys   = Array<OneD, NekDouble>(m_npoints);
+             }
 
             ReadGlobalOptimizationParameters();
             CreateCollections();
@@ -169,7 +176,11 @@ namespace Nektar
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
-            SetCoeffPhys();
+            SetCoeffPhysOffsets();
+
+            // Set up m_coeffs, m_phys.
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters();
             CreateCollections();
@@ -297,7 +308,12 @@ namespace Nektar
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
-            SetCoeffPhys();
+            SetCoeffPhysOffsets();
+
+            // Set up m_coeffs, m_phys.
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
+
             ReadGlobalOptimizationParameters();
             CreateCollections();
         }
@@ -425,44 +441,13 @@ namespace Nektar
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
-            SetCoeffPhys();
-            CreateCollections();
-        }
+            SetCoeffPhysOffsets();
 
-        /**
-         * Set up the storage for the concatenated list of
-         * coefficients and physical evaluations at the quadrature
-         * points. Each expansion (local element) is processed in turn
-         * to determine the number of coefficients and physical data
-         * points it contributes to the domain. Three arrays,
-         * #m_coeff_offset, #m_phys_offset and #m_offset_elmt_id, are
-         * also initialised and updated to store the data offsets of
-         * each element in the #m_coeffs and #m_phys arrays, and the
-         * element id that each consecutive block is associated
-         * respectively.
-         */
-        void ExpList3D::SetCoeffPhys()
-        {
-            int i;
-
-            // Set up offset information and array sizes
-            m_coeff_offset   = Array<OneD,int>(m_exp->size());
-            m_phys_offset    = Array<OneD,int>(m_exp->size());
-            m_offset_elmt_id = Array<OneD,int>(m_exp->size());
-
-            m_ncoeffs = m_npoints = 0;
-
-            for(i = 0; i < m_exp->size(); ++i)
-            {
-                m_coeff_offset[i]   = m_ncoeffs;
-                m_phys_offset [i]   = m_npoints;
-                m_offset_elmt_id[i] = i;
-                m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
-                m_npoints += (*m_exp)[i]->GetTotPoints();
-            }
-
+            // Set up m_coeffs, m_phys.
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
+
+            CreateCollections();
         }
 
         void ExpList3D::v_ReadGlobalOptimizationParameters()
@@ -587,7 +572,7 @@ namespace Nektar
             for(int i = 0; i < GetExpSize(); ++i)
             {
                 // get new points key
-                int eid = GetOffset_Elmt_Id(i);
+                int eid = i;
                 int pt0 = (*m_exp)[eid]->GetNumPoints(0);
                 int pt1 = (*m_exp)[eid]->GetNumPoints(1);
                 int pt2 = (*m_exp)[eid]->GetNumPoints(2);
@@ -622,7 +607,7 @@ namespace Nektar
             for(int i = 0; i < GetExpSize(); ++i)
             {
                 // get new points key
-                int eid = GetOffset_Elmt_Id(i);
+                int eid = i;
                 int pt0 = (*m_exp)[eid]->GetNumPoints(0);
                 int pt1 = (*m_exp)[eid]->GetNumPoints(1);
                 int pt2 = (*m_exp)[eid]->GetNumPoints(2);

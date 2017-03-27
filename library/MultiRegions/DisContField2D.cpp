@@ -1824,7 +1824,7 @@ namespace Nektar
             // Calculate Q using standard DG formulation.
             for(i = cnt = 0; i < GetExpSize(); ++i)
             {
-                eid = m_offset_elmt_id[i];
+                eid = i;
 
                 // Probably a better way of setting up lambda than this.
                 // Note cannot use PutCoeffsInToElmts since lambda space
@@ -1923,9 +1923,9 @@ namespace Nektar
             // Loop over all expansions in the domain
             for(cnt = cnt1 = n = 0; n < nexp; ++n)
             {
-                nbndry = (*m_exp)[m_offset_elmt_id[n]]->NumDGBndryCoeffs();
+                nbndry = (*m_exp)[n]->NumDGBndryCoeffs();
 
-                e_ncoeffs = (*m_exp)[m_offset_elmt_id[n]]->GetNcoeffs();
+                e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
                 e_f       = f + cnt;
                 e_l       = loc_lambda + cnt1;
 
@@ -2134,7 +2134,7 @@ namespace Nektar
             // Calculate Q using standard DG formulation.
             for(i = cnt = 0; i < GetExpSize(); ++i)
             {
-                eid = m_offset_elmt_id[i];
+                eid = i;
 
                 nq_elmt = (*m_exp)[eid]->GetTotPoints();
                 nm_elmt = (*m_exp)[eid]->GetNcoeffs();

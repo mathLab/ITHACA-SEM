@@ -247,7 +247,7 @@ namespace Nektar
 
         for(i = 0; i < nel; ++i)
         {
-            eid = fields[0]->GetOffset_Elmt_Id(i);
+            eid = i;
             for(j = 0; j < locExpVector[eid]->GetNverts(); ++j)
             {
                 vertId = (locExpVector[eid]->as<LocalRegions::Expansion2D>()
@@ -318,7 +318,7 @@ namespace Nektar
         // pressure dof to a dirichlet edge
         for(i = 0; i < nel; ++i)
         {
-            eid = fields[0]->GetOffset_Elmt_Id(i);
+            eid = i;
             for(j = 0; j < locExpVector[eid]->GetNverts(); ++j)
             {
                 edgeId = (locExpVector[eid]->as<LocalRegions::Expansion2D>()
@@ -389,7 +389,7 @@ namespace Nektar
 
         for(i = 0; i < nel; ++i)
         {
-            eid = fields[0]->GetOffset_Elmt_Id(i);
+            eid = i;
             locExpansion = locExpVector[eid]->as<StdRegions::StdExpansion2D>();
 
             for(j = 0; j < locExpansion->GetNedges(); ++j)
@@ -573,7 +573,7 @@ namespace Nektar
 
         for(i = 0; i < nel; ++i)
         {
-            m_numLocalBndCoeffsPerPatch[i] = (unsigned int) nz_loc*(nvel*locExpVector[fields[0]->GetOffset_Elmt_Id(i)]->NumBndryCoeffs() + 1);
+            m_numLocalBndCoeffsPerPatch[i] = (unsigned int) nz_loc*(nvel*locExpVector[i]->NumBndryCoeffs() + 1);
             m_numLocalIntCoeffsPerPatch[i] = (unsigned int) nz_loc*(pressure->GetExp(i)->GetNcoeffs()-1);
         }
 
@@ -595,7 +595,7 @@ namespace Nektar
         // ordering (element type consistency)
         for(i = 0; i < nel; ++i)
         {
-            eid = fields[0]->GetOffset_Elmt_Id(i);
+            eid = i;
             locExpansion = locExpVector[eid]->as<StdRegions::StdExpansion2D>();
 
             velnbndry = locExpansion->NumBndryCoeffs();
@@ -753,7 +753,7 @@ namespace Nektar
                     Dofs[0].size()+Dofs[1].size()-firstNonDirGraphVertId);
                 for(i = 0; i < locExpVector.size(); ++i)
                 {
-                    eid = fields[0]->GetOffset_Elmt_Id(i);
+                    eid = i;
                     locExpansion = locExpVector[eid]
                                             ->as<StdRegions::StdExpansion2D>();
                     for(j = 0; j < locExpansion->GetNverts(); ++j)

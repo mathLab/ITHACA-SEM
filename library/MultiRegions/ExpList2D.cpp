@@ -1109,54 +1109,6 @@ namespace Nektar
         }
 
         /**
-         * Each expansion (local element) is processed in turn to
-         * determine the number of coefficients and physical data
-         * points it contributes to the domain. Three arrays,
-         * #m_coeff_offset, #m_phys_offset and #m_offset_elmt_id, are
-         * initialised and updated to store the data offsets of each
-         * element in the #m_coeffs and #m_phys arrays, and the
-         * element id that each consecutive block is associated
-         * respectively.
-         */
-        void ExpList2D::SetCoeffPhysOffsets()
-        {
-            int i;
-
-            // Set up offset information and array sizes
-            m_coeff_offset   = Array<OneD,int>(m_exp->size());
-            m_phys_offset    = Array<OneD,int>(m_exp->size());
-            m_offset_elmt_id = Array<OneD,int>(m_exp->size());
-
-            m_ncoeffs = m_npoints = 0;
-
-            int cnt = 0;
-            for(i = 0; i < m_exp->size(); ++i)
-            {
-                if((*m_exp)[i]->DetShapeType() == LibUtilities::eTriangle)
-                {
-                    m_coeff_offset[i]   = m_ncoeffs;
-                    m_phys_offset [i]   = m_npoints;
-                    m_offset_elmt_id[cnt++] = i;
-                    m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
-                    m_npoints += (*m_exp)[i]->GetTotPoints();
-                }
-            }
-
-            for(i = 0; i < m_exp->size(); ++i)
-            {
-                if((*m_exp)[i]->DetShapeType() == LibUtilities::eQuadrilateral)
-                {
-                    m_coeff_offset[i]   = m_ncoeffs;
-                    m_phys_offset [i]   = m_npoints;
-                    m_offset_elmt_id[cnt++] = i;
-                    m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
-                    m_npoints += (*m_exp)[i]->GetTotPoints();
-                }
-            }
-        }
-
-
-        /**
          *
          */
         void ExpList2D::v_SetUpPhysNormals()
@@ -1275,7 +1227,7 @@ namespace Nektar
             for(int i = 0; i < GetExpSize(); ++i)
             {
                 // get new points key
-                int eid = GetOffset_Elmt_Id(i);
+                int eid = i;
                 int pt0 = (*m_exp)[eid]->GetNumPoints(0);
                 int pt1 = (*m_exp)[eid]->GetNumPoints(1);
                 int npt0 = (int) pt0*scale;
@@ -1308,7 +1260,7 @@ namespace Nektar
             for(int i = 0; i < GetExpSize(); ++i)
             {
                 // get new points key
-                int eid = GetOffset_Elmt_Id(i);
+                int eid = i;
                 int pt0 = (*m_exp)[eid]->GetNumPoints(0);
                 int pt1 = (*m_exp)[eid]->GetNumPoints(1);
                 int npt0 = (int) pt0*scale;

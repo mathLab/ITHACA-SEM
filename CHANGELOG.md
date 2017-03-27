@@ -11,6 +11,12 @@ v4.5.0
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
+v4.4.1
+------
+**Library**
+- Remove m_offset_elmt_id and GetOffsetElmtId which fixed problems in 2D when 
+  quad elements are listed before tri elements (!758)
+
 v4.4.0
 ------
 **Library**:

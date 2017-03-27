@@ -71,6 +71,7 @@
 #include <BRepLProp_SLProps.hxx>
 #include <Standard_Macro.hxx>
 #include <ShapeFix_Face.hxx>
+#include <Precision.hxx>
 
 #include <GeomAPI_PointsToBSpline.hxx>
 #include <Geom_BSplineCurve.hxx>

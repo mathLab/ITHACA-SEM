@@ -423,19 +423,19 @@ void InputMCF::Process()
         module->RegisterConfig("maxiter", "10");
         module->RegisterConfig("numthreads",
                                     boost::lexical_cast<string>(np));
-    }
 
-    try
-    {
-        module->SetDefaults();
-        module->Process();
-    }
-    catch (runtime_error &e)
-    {
-        cout << "Variational optimisation has failed with message:" << endl;
-        cout << e.what() << endl;
-        cout << "The mesh will be written as is, it may be invalid" << endl;
-        return;
+        try
+        {
+            module->SetDefaults();
+            module->Process();
+        }
+        catch (runtime_error &e)
+        {
+            cout << "Variational optimisation has failed with message:" << endl;
+            cout << e.what() << endl;
+            cout << "The mesh will be written as is, it may be invalid" << endl;
+            return;
+        }
     }
 
     ////**** SPLIT BL ****////
@@ -448,20 +448,22 @@ void InputMCF::Process()
         module->RegisterConfig(
             "nq", boost::lexical_cast<string>(m_mesh->m_nummode));
         module->RegisterConfig("r", m_blprog);
+
+        try
+        {
+            module->SetDefaults();
+            module->Process();
+        }
+        catch (runtime_error &e)
+        {
+            cout << "Boundary layer splitting has failed with message:" << endl;
+            cout << e.what() << endl;
+            cout << "The mesh will be written as is, it may be invalid" << endl;
+            return;
+        }
     }
 
-    try
-    {
-        module->SetDefaults();
-        module->Process();
-    }
-    catch (runtime_error &e)
-    {
-        cout << "Boundary layer splitting has failed with message:" << endl;
-        cout << e.what() << endl;
-        cout << "The mesh will be written as is, it may be invalid" << endl;
-        return;
-    }
+
 }
 }
 }

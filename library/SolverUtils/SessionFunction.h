@@ -102,11 +102,10 @@ private:
     /// The expansion we want to evaluate this function for
     MultiRegions::ExpListSharedPtr m_field;
     // Name of this function
-    std::string m_functionName;
-    // type of this function
-    LibUtilities::FunctionType m_type;
-    /// interpolator for pts file input
-    FieldUtils::Interpolator m_interpolator;
+    std::string m_name;
+    /// interpolator for pts file input for a variable & domain combination
+    std::map<std::pair<std::string, int>, FieldUtils::Interpolator>
+        m_interpolators;
 
     // Populate an array with a function variable from session.
     SOLVER_UTILS_EXPORT void EvaluateExp(std::string pFieldName,
@@ -134,7 +133,6 @@ private:
 
 typedef boost::shared_ptr<SessionFunction> SessionFunctionSharedPtr;
 static SessionFunctionSharedPtr NullSessionFunction;
-
 }
 }
 

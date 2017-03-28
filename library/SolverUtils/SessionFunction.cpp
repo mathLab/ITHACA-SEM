@@ -46,16 +46,10 @@ namespace SolverUtils
 SessionFunction::SessionFunction(LibUtilities::SessionReaderSharedPtr session,
                                  MultiRegions::ExpListSharedPtr field,
                                  std::string functionName)
-    : m_session(session), m_field(field), m_functionName(functionName)
+    : m_session(session), m_field(field), m_name(functionName)
 {
-    ASSERTL0(m_session->DefinesFunction(m_functionName),
-             "Function '" + m_functionName + "' does not exist.");
-
-    // TODO: this is a hack because GetFunctionType wants a fieldname although
-    // it doesnt need one
-    std::string pFieldName = "*";
-
-    m_type = m_session->GetFunctionType(m_functionName, pFieldName);
+    ASSERTL0(m_session->DefinesFunction(m_name),
+             "Function '" + m_name + "' does not exist.");
 }
 
 /**
@@ -87,7 +81,7 @@ void SessionFunction::Evaluate(std::vector<std::string> pFieldNames,
                                const int domain)
 {
     ASSERTL1(pFieldNames.size() == pArray.num_elements(),
-             "Function '" + m_functionName +
+             "Function '" + m_name +
                  "' variable list size mismatch with array storage.");
 
     for (int i = 0; i < pFieldNames.size(); i++)
@@ -123,15 +117,17 @@ void SessionFunction::Evaluate(std::string pFieldName,
                                const NekDouble &pTime,
                                const int domain)
 {
-    if (m_type == LibUtilities::eFunctionTypeExpression)
+    LibUtilities::FunctionType vType =
+        m_session->GetFunctionType(m_name, pFieldName, domain);
+    if (vType == LibUtilities::eFunctionTypeExpression)
     {
         EvaluateExp(pFieldName, pArray, pTime, domain);
     }
-    else if (m_type == LibUtilities::eFunctionTypeFile ||
-             m_type == LibUtilities::eFunctionTypeTransientFile)
+    else if (vType == LibUtilities::eFunctionTypeFile ||
+             vType == LibUtilities::eFunctionTypeTransientFile)
     {
         std::string filename =
-            m_session->GetFunctionFilename(m_functionName, pFieldName, domain);
+            m_session->GetFunctionFilename(m_name, pFieldName, domain);
 
         if (boost::filesystem::path(filename).extension() == ".pts")
         {
@@ -150,21 +146,23 @@ void SessionFunction::Evaluate(std::string pFieldName,
          * @param pFieldName     Field name.
          * @param pFunctionName  Function name.
          */
-std::string SessionFunction::Describe(std::string pFieldName,
-                                              const int domain)
+std::string SessionFunction::Describe(std::string pFieldName, const int domain)
 {
     std::string retVal;
-    if (m_type == LibUtilities::eFunctionTypeExpression)
+
+    LibUtilities::FunctionType vType =
+        m_session->GetFunctionType(m_name, pFieldName, domain);
+    if (vType == LibUtilities::eFunctionTypeExpression)
     {
         LibUtilities::EquationSharedPtr ffunc =
-            m_session->GetFunction(m_functionName, pFieldName, domain);
+            m_session->GetFunction(m_name, pFieldName, domain);
         retVal = ffunc->GetExpression();
     }
-    else if (m_type == LibUtilities::eFunctionTypeFile ||
+    else if (vType == LibUtilities::eFunctionTypeFile ||
              LibUtilities::eFunctionTypeTransientFile)
     {
         std::string filename =
-            m_session->GetFunctionFilename(m_functionName, pFieldName, domain);
+            m_session->GetFunctionFilename(m_name, pFieldName, domain);
         retVal = "from file " + filename;
     }
 
@@ -190,7 +188,7 @@ void SessionFunction::EvaluateExp(string pFieldName,
     // discretisation)
     m_field->GetCoords(x0, x1, x2);
     LibUtilities::EquationSharedPtr ffunc =
-        m_session->GetFunction(m_functionName, pFieldName, domain);
+        m_session->GetFunction(m_name, pFieldName, domain);
 
     ffunc->Evaluate(x0, x1, x2, pTime, pArray);
 }
@@ -207,9 +205,9 @@ void SessionFunction::EvaluateFld(string pFieldName,
     }
 
     std::string filename =
-        m_session->GetFunctionFilename(m_functionName, pFieldName, domain);
-    std::string fileVar = m_session->GetFunctionFilenameVariable(
-        m_functionName, pFieldName, domain);
+        m_session->GetFunctionFilename(m_name, pFieldName, domain);
+    std::string fileVar =
+        m_session->GetFunctionFilenameVariable(m_name, pFieldName, domain);
 
     if (fileVar.length() == 0)
     {
@@ -218,7 +216,9 @@ void SessionFunction::EvaluateFld(string pFieldName,
 
     //  In case of eFunctionTypeTransientFile, generate filename from
     //  format string
-    if (m_type == LibUtilities::eFunctionTypeTransientFile)
+    LibUtilities::FunctionType vType =
+        m_session->GetFunctionType(m_name, pFieldName, domain);
+    if (vType == LibUtilities::eFunctionTypeTransientFile)
     {
         try
         {
@@ -236,7 +236,7 @@ void SessionFunction::EvaluateFld(string pFieldName,
         catch (...)
         {
             ASSERTL0(false,
-                     "Invalid Filename in function \"" + m_functionName +
+                     "Invalid Filename in function \"" + m_name +
                          "\", variable \"" + fileVar + "\"")
         }
     }
@@ -300,9 +300,9 @@ void SessionFunction::EvaluatePts(string pFieldName,
     }
 
     std::string filename =
-        m_session->GetFunctionFilename(m_functionName, pFieldName, domain);
-    std::string fileVar = m_session->GetFunctionFilenameVariable(
-        m_functionName, pFieldName, domain);
+        m_session->GetFunctionFilename(m_name, pFieldName, domain);
+    std::string fileVar =
+        m_session->GetFunctionFilenameVariable(m_name, pFieldName, domain);
 
     if (fileVar.length() == 0)
     {
@@ -311,7 +311,9 @@ void SessionFunction::EvaluatePts(string pFieldName,
 
     //  In case of eFunctionTypeTransientFile, generate filename from
     //  format string
-    if (m_type == LibUtilities::eFunctionTypeTransientFile)
+    LibUtilities::FunctionType vType =
+        m_session->GetFunctionType(m_name, pFieldName, domain);
+    if (vType == LibUtilities::eFunctionTypeTransientFile)
     {
         try
         {
@@ -329,7 +331,7 @@ void SessionFunction::EvaluatePts(string pFieldName,
         catch (...)
         {
             ASSERTL0(false,
-                     "Invalid Filename in function \"" + m_functionName +
+                     "Invalid Filename in function \"" + m_name +
                          "\", variable \"" + fileVar + "\"")
         }
     }
@@ -339,7 +341,7 @@ void SessionFunction::EvaluatePts(string pFieldName,
     // funcFilename != filename so we can make sure we only keep the
     // latest pts field per funcFilename.
     std::string funcFilename =
-        m_session->GetFunctionFilename(m_functionName, pFieldName, domain);
+        m_session->GetFunctionFilename(m_name, pFieldName, domain);
 
     LibUtilities::PtsFieldSharedPtr inPts;
     LibUtilities::PtsIO ptsIO(m_session->GetComm());
@@ -366,27 +368,32 @@ void SessionFunction::EvaluatePts(string pFieldName,
     outPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
         inPts->GetDim(), inPts->GetFieldNames(), pts);
 
-    if (!m_interpolator.HasWeights())
+    std::pair<std::string, int> key(pFieldName, domain);
+    std::map<std::pair<std::string, int>,
+             FieldUtils::Interpolator>::const_iterator it1;
+
+    if ((it1 = m_interpolators.find(key)) == m_interpolators.end())
     {
-        m_interpolator = FieldUtils::Interpolator(Nektar::FieldUtils::eShepard);
+        m_interpolators[key] =
+            FieldUtils::Interpolator(Nektar::FieldUtils::eShepard);
         if (m_session->GetComm()->GetRank() == 0)
         {
-            m_interpolator.SetProgressCallback(
+            m_interpolators[key].SetProgressCallback(
                 &SessionFunction::PrintProgressbar, this);
         }
-        m_interpolator.CalcWeights(inPts, outPts);
+        m_interpolators[key].CalcWeights(inPts, outPts);
         if (m_session->GetComm()->GetRank() == 0)
         {
             cout << endl;
             if (m_session->DefinesCmdLineArgument("verbose"))
             {
-                m_interpolator.PrintStatistics();
+                m_interpolators[key].PrintStatistics();
             }
         }
     }
 
     // TODO: only interpolate the field we actually want
-    m_interpolator.Interpolate(inPts, outPts);
+    m_interpolators[key].Interpolate(inPts, outPts);
 
     int fieldInd;
     vector<string> fieldNames = outPts->GetFieldNames();

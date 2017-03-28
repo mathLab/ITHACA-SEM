@@ -555,13 +555,6 @@ LibUtilities::PtsFieldSharedPtr Interpolator::GetOutField() const
     return m_ptsOutField;
 }
 
-bool Interpolator::HasWeights() const
-{
-    return (m_weights.num_elements() > 0);
-}
-
-
-
 void Interpolator::PrintStatistics()
 {
     int meanN = 0;

@@ -44,14 +44,15 @@ namespace Solverutils
 {
 
 SessionFunction::SessionFunction(LibUtilities::SessionReaderSharedPtr session,
-                MultiRegions::ExpListSharedPtr field,
-                std::string functionName)
+                                 MultiRegions::ExpListSharedPtr field,
+                                 std::string functionName)
     : m_session(session), m_field(field), m_functionName(functionName)
 {
     ASSERTL0(m_session->DefinesFunction(m_functionName),
              "Function '" + m_functionName + "' does not exist.");
 
-    // TODO: this is a hack because GetFunctionType wants a fieldname although it doesnt need one
+    // TODO: this is a hack because GetFunctionType wants a fieldname although
+    // it doesnt need one
     std::string pFieldName = "*";
 
     m_type = m_session->GetFunctionType(m_functionName, pFieldName);
@@ -63,17 +64,15 @@ SessionFunction::SessionFunction(LibUtilities::SessionReaderSharedPtr session,
  * @param   pArray          The array into which to write the values.
  * @param   pEqn            The equation to evaluate.
  */
-void SessionFunction::EvaluateFunction(
-    Array<OneD, Array<OneD, NekDouble> > &pArray,
-    const NekDouble pTime,
-    const int domain)
+void SessionFunction::Evaluate(Array<OneD, Array<OneD, NekDouble> > &pArray,
+                               const NekDouble pTime,
+                               const int domain)
 {
     std::vector<std::string> vFieldNames = m_session->GetVariables();
 
     for (int i = 0; i < vFieldNames.size(); i++)
     {
-        EvaluateFunction(
-            vFieldNames[i], pArray[i], pTime, domain);
+        Evaluate(vFieldNames[i], pArray[i], pTime, domain);
     }
 }
 
@@ -82,19 +81,18 @@ void SessionFunction::EvaluateFunction(
 * using the expression provided by the BoundaryConditions object.
 * @param   force           Array of fields to assign forcing.
 */
-void SessionFunction::EvaluateFunction(
-    std::vector<std::string> pFieldNames,
-    Array<OneD, Array<OneD, NekDouble> > &pFields,
-    const NekDouble &pTime,
-    const int domain)
+void SessionFunction::Evaluate(std::vector<std::string> pFieldNames,
+                               Array<OneD, Array<OneD, NekDouble> > &pArray,
+                               const NekDouble &pTime,
+                               const int domain)
 {
-    ASSERTL1(pFieldNames.size() == pFields.num_elements(),
+    ASSERTL1(pFieldNames.size() == pArray.num_elements(),
              "Function '" + m_functionName +
                  "' variable list size mismatch with array storage.");
 
     for (int i = 0; i < pFieldNames.size(); i++)
     {
-        EvaluateFunction(pFieldNames[i], pFields[i], pTime, domain);
+        Evaluate(pFieldNames[i], pArray[i], pTime, domain);
     }
 }
 
@@ -103,7 +101,7 @@ void SessionFunction::EvaluateFunction(
 * the expression or filenames provided by the SessionReader object.
 * @param   force           Array of fields to assign forcing.
 */
-void SessionFunction::EvaluateFunction(
+void SessionFunction::Evaluate(
     std::vector<std::string> pFieldNames,
     Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &pTime,
@@ -114,23 +112,20 @@ void SessionFunction::EvaluateFunction(
 
     for (int i = 0; i < pFieldNames.size(); i++)
     {
-        EvaluateFunction(pFieldNames[i],
-                         pFields[i]->UpdatePhys(),
-                         pTime,
-                         domain);
+        Evaluate(pFieldNames[i], pFields[i]->UpdatePhys(), pTime, domain);
         pFields[i]->FwdTrans_IterPerExp(pFields[i]->GetPhys(),
                                         pFields[i]->UpdateCoeffs());
     }
 }
 
-void SessionFunction::EvaluateFunction(std::string pFieldName,
-                                       Array<OneD, NekDouble> &pArray,
-                                       const NekDouble &pTime,
-                                       const int domain)
+void SessionFunction::Evaluate(std::string pFieldName,
+                               Array<OneD, NekDouble> &pArray,
+                               const NekDouble &pTime,
+                               const int domain)
 {
     if (m_type == LibUtilities::eFunctionTypeExpression)
     {
-        EvaluateFunctionExp(pFieldName, pArray, pTime, domain);
+        EvaluateExp(pFieldName, pArray, pTime, domain);
     }
     else if (m_type == LibUtilities::eFunctionTypeFile ||
              m_type == LibUtilities::eFunctionTypeTransientFile)
@@ -138,23 +133,48 @@ void SessionFunction::EvaluateFunction(std::string pFieldName,
         std::string filename =
             m_session->GetFunctionFilename(m_functionName, pFieldName, domain);
 
-        if (boost::filesystem::path(filename).extension() != ".pts")
+        if (boost::filesystem::path(filename).extension() == ".pts")
         {
-            EvaluateFunctionFld(
-                pFieldName, pArray, pTime, domain);
+            EvaluatePts(pFieldName, pArray, pTime, domain);
         }
         else
         {
-            EvaluateFunctionPts(
-                pFieldName, pArray, pTime, domain);
+            EvaluateFld(pFieldName, pArray, pTime, domain);
         }
     }
 }
 
-void SessionFunction::EvaluateFunctionExp(string pFieldName,
-                                          Array<OneD, NekDouble> &pArray,
-                                          const NekDouble &pTime,
-                                          const int domain)
+/**
+         * @brief Provide a description of a function for a given field name.
+         *
+         * @param pFieldName     Field name.
+         * @param pFunctionName  Function name.
+         */
+std::string SessionFunction::Describe(std::string pFieldName,
+                                              const int domain)
+{
+    std::string retVal;
+    if (m_type == LibUtilities::eFunctionTypeExpression)
+    {
+        LibUtilities::EquationSharedPtr ffunc =
+            m_session->GetFunction(m_functionName, pFieldName, domain);
+        retVal = ffunc->GetExpression();
+    }
+    else if (m_type == LibUtilities::eFunctionTypeFile ||
+             LibUtilities::eFunctionTypeTransientFile)
+    {
+        std::string filename =
+            m_session->GetFunctionFilename(m_functionName, pFieldName, domain);
+        retVal = "from file " + filename;
+    }
+
+    return retVal;
+}
+
+void SessionFunction::EvaluateExp(string pFieldName,
+                                  Array<OneD, NekDouble> &pArray,
+                                  const NekDouble &pTime,
+                                  const int domain)
 {
     unsigned int nq = m_field->GetNpoints();
     if (pArray.num_elements() < nq)
@@ -175,10 +195,10 @@ void SessionFunction::EvaluateFunctionExp(string pFieldName,
     ffunc->Evaluate(x0, x1, x2, pTime, pArray);
 }
 
-void SessionFunction::EvaluateFunctionFld(string pFieldName,
-                                          Array<OneD, NekDouble> &pArray,
-                                          const NekDouble &pTime,
-                                          const int domain)
+void SessionFunction::EvaluateFld(string pFieldName,
+                                  Array<OneD, NekDouble> &pArray,
+                                  const NekDouble &pTime,
+                                  const int domain)
 {
     unsigned int nq = m_field->GetNpoints();
     if (pArray.num_elements() < nq)
@@ -221,9 +241,6 @@ void SessionFunction::EvaluateFunctionFld(string pFieldName,
         }
     }
 
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
-    std::vector<std::vector<NekDouble> > FieldData;
-
     // Define list of global element ids
     int numexp = m_field->GetExpSize();
     Array<OneD, int> ElementGIDs(numexp);
@@ -232,47 +249,15 @@ void SessionFunction::EvaluateFunctionFld(string pFieldName,
         ElementGIDs[i] = m_field->GetExp(i)->GetGeom()->GetGlobalID();
     }
 
-    // check if we already loaded this file. For transient files,
-    // funcFilename != filename so we can make sure we only keep the
-    // latest field per funcFilename.
-    std::string funcFilename =
-        m_session->GetFunctionFilename(m_functionName, pFieldName, domain);
-    if (m_loadedFldFields.find(funcFilename) != m_loadedFldFields.end())
-    {
-        // found
-        if (m_loadedFldFields[funcFilename].first == filename)
-        {
-            // found
-            FieldDef  = m_loadedFldFields[funcFilename].second.fieldDef;
-            FieldData = m_loadedFldFields[funcFilename].second.fieldData;
-        }
-        else
-        {
-            LibUtilities::FieldIOSharedPtr pts_fld =
-                LibUtilities::FieldIO::CreateForFile(m_session, filename);
-            pts_fld->Import(filename,
-                            FieldDef,
-                            FieldData,
-                            LibUtilities::NullFieldMetaDataMap,
-                            ElementGIDs);
-        }
-    }
-    else
-    {
-        LibUtilities::FieldIOSharedPtr pts_fld =
-            LibUtilities::FieldIO::CreateForFile(m_session, filename);
-        pts_fld->Import(filename,
-                        FieldDef,
-                        FieldData,
-                        LibUtilities::NullFieldMetaDataMap,
-                        ElementGIDs);
-    }
-    // Now we overwrite the field we had in
-    // m_loadedFldFields[funcFilename] before, making sure we only keep
-    // one field per funcFilename in memory
-    m_loadedFldFields[funcFilename].first            = filename;
-    m_loadedFldFields[funcFilename].second.fieldDef  = FieldDef;
-    m_loadedFldFields[funcFilename].second.fieldData = FieldData;
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
+    std::vector<std::vector<NekDouble> > FieldData;
+    LibUtilities::FieldIOSharedPtr fldIO =
+        LibUtilities::FieldIO::CreateForFile(m_session, filename);
+    fldIO->Import(filename,
+                  FieldDef,
+                  FieldData,
+                  LibUtilities::NullFieldMetaDataMap,
+                  ElementGIDs);
 
     int idx = -1;
     Array<OneD, NekDouble> vCoeffs(m_field->GetNcoeffs(), 0.0);
@@ -303,20 +288,16 @@ void SessionFunction::EvaluateFunctionFld(string pFieldName,
     m_field->BwdTrans_IterPerExp(vCoeffs, pArray);
 }
 
-void SessionFunction::EvaluateFunctionPts(string pFieldName,
-                                          Array<OneD, NekDouble> &pArray,
-                                          const NekDouble &pTime,
-                                          const int domain)
+void SessionFunction::EvaluatePts(string pFieldName,
+                                  Array<OneD, NekDouble> &pArray,
+                                  const NekDouble &pTime,
+                                  const int domain)
 {
     unsigned int nq = m_field->GetNpoints();
     if (pArray.num_elements() < nq)
     {
         pArray = Array<OneD, NekDouble>(nq);
     }
-
-    ASSERTL0(m_type == LibUtilities::eFunctionTypeFile ||
-                 m_type == LibUtilities::eFunctionTypeTransientFile,
-             "m_type not eFunctionTypeFile or eFunctionTypeTransientFile");
 
     std::string filename =
         m_session->GetFunctionFilename(m_functionName, pFieldName, domain);
@@ -360,49 +341,6 @@ void SessionFunction::EvaluateFunctionPts(string pFieldName,
     std::string funcFilename =
         m_session->GetFunctionFilename(m_functionName, pFieldName, domain);
 
-    if (m_loadedPtsFields.find(funcFilename) != m_loadedPtsFields.end())
-    {
-        // found
-        if (m_loadedPtsFields[funcFilename].first == filename)
-        {
-            // found
-            outPts = m_loadedPtsFields[funcFilename].second;
-        }
-        else
-        {
-            LoadPts(funcFilename, filename, outPts);
-        }
-    }
-    else
-    {
-        LoadPts(funcFilename, filename, outPts);
-    }
-    // Now we overwrite the field we had in
-    // m_loadedPtsFields[funcFilename] before, making sure we only keep
-    // one field per funcFilename in memory
-    m_loadedPtsFields[funcFilename].first  = filename;
-    m_loadedPtsFields[funcFilename].second = outPts;
-
-    int fieldInd;
-    vector<string> fieldNames = outPts->GetFieldNames();
-    for (fieldInd = 0; fieldInd < fieldNames.size(); ++fieldInd)
-    {
-        if (outPts->GetFieldName(fieldInd) == pFieldName)
-        {
-            break;
-        }
-    }
-    ASSERTL0(fieldInd != fieldNames.size(), "field not found");
-
-    pArray = outPts->GetPts(fieldInd + outPts->GetDim());
-}
-
-void SessionFunction::LoadPts(std::string funcFilename,
-                              std::string filename,
-                              LibUtilities::PtsFieldSharedPtr &outPts)
-{
-    unsigned int nq = m_field->GetNpoints();
-
     LibUtilities::PtsFieldSharedPtr inPts;
     LibUtilities::PtsIO ptsIO(m_session->GetComm());
     ptsIO.Import(filename, inPts);
@@ -428,27 +366,40 @@ void SessionFunction::LoadPts(std::string funcFilename,
     outPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
         inPts->GetDim(), inPts->GetFieldNames(), pts);
 
-    //  check if we already have an interolator for this funcFilename
-    if (m_interpolators.find(funcFilename) == m_interpolators.end())
+    if (!m_interpolator.HasWeights())
     {
-        m_interpolators[funcFilename] =
-            FieldUtils::Interpolator(Nektar::FieldUtils::eShepard);
+        m_interpolator = FieldUtils::Interpolator(Nektar::FieldUtils::eShepard);
         if (m_session->GetComm()->GetRank() == 0)
         {
-            m_interpolators[funcFilename].SetProgressCallback(
+            m_interpolator.SetProgressCallback(
                 &SessionFunction::PrintProgressbar, this);
         }
-        m_interpolators[funcFilename].CalcWeights(inPts, outPts);
+        m_interpolator.CalcWeights(inPts, outPts);
         if (m_session->GetComm()->GetRank() == 0)
         {
             cout << endl;
             if (m_session->DefinesCmdLineArgument("verbose"))
             {
-                m_interpolators[funcFilename].PrintStatistics();
+                m_interpolator.PrintStatistics();
             }
         }
     }
-    m_interpolators[funcFilename].Interpolate(inPts, outPts);
+
+    // TODO: only interpolate the field we actually want
+    m_interpolator.Interpolate(inPts, outPts);
+
+    int fieldInd;
+    vector<string> fieldNames = outPts->GetFieldNames();
+    for (fieldInd = 0; fieldInd < fieldNames.size(); ++fieldInd)
+    {
+        if (outPts->GetFieldName(fieldInd) == pFieldName)
+        {
+            break;
+        }
+    }
+    ASSERTL0(fieldInd != fieldNames.size(), "field not found");
+
+    pArray = outPts->GetPts(fieldInd + outPts->GetDim());
 }
 
 // end of namespaces

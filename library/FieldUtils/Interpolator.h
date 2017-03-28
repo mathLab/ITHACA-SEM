@@ -150,6 +150,9 @@ public:
     /// Returns the output field
     FIELD_UTILS_EXPORT LibUtilities::PtsFieldSharedPtr GetOutField() const;
 
+    /// Returns if the weights have already been computed
+    FIELD_UTILS_EXPORT bool HasWeights() const;
+
     /// Print statics of the interpolation weights
     FIELD_UTILS_EXPORT void PrintStatistics();
 

@@ -68,74 +68,62 @@ public:
         std::string functionName);
 
     /// Evaluates a function as specified in the session file.
-    SOLVER_UTILS_EXPORT void EvaluateFunction(
+    SOLVER_UTILS_EXPORT void Evaluate(
         Array<OneD, Array<OneD, NekDouble> > &pArray,
         const NekDouble pTime = 0.0,
         const int domain      = 0);
 
     /// Populate given fields with the function from session.
-    SOLVER_UTILS_EXPORT void EvaluateFunction(
+    SOLVER_UTILS_EXPORT void Evaluate(
         std::vector<std::string> pFieldNames,
-        Array<OneD, Array<OneD, NekDouble> > &pFields,
+        Array<OneD, Array<OneD, NekDouble> > &pArray,
         const NekDouble &pTime = 0.0,
         const int domain       = 0);
 
     /// Populate given fields with the function from session.
-    SOLVER_UTILS_EXPORT void EvaluateFunction(
+    SOLVER_UTILS_EXPORT void Evaluate(
         std::vector<std::string> pFieldNames,
         Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &pTime = 0.0,
         const int domain       = 0);
 
     // Populate an array with a function variable from session.
-    SOLVER_UTILS_EXPORT void EvaluateFunction(std::string pFieldName,
-                                              Array<OneD, NekDouble> &pArray,
-                                              const NekDouble &pTime = 0.0,
-                                              const int domain       = 0);
+    SOLVER_UTILS_EXPORT void Evaluate(std::string pFieldName,
+                                      Array<OneD, NekDouble> &pArray,
+                                      const NekDouble &pTime = 0.0,
+                                      const int domain       = 0);
+
+    SOLVER_UTILS_EXPORT std::string Describe(std::string pFieldName,
+                                             const int domain = 0);
 
 private:
     /// The session reader
     LibUtilities::SessionReaderSharedPtr m_session;
-    /// Array holding all dependent variables.
+    /// The expansion we want to evaluate this function for
     MultiRegions::ExpListSharedPtr m_field;
+    // Name of this function
     std::string m_functionName;
+    // type of this function
     LibUtilities::FunctionType m_type;
-    /// Map of interpolator objects
-    std::map<std::string, FieldUtils::Interpolator> m_interpolators;
-    /// pts fields we already read from disk: {funcFilename: (filename,
-    /// ptsfield)}
-    std::map<std::string,
-             std::pair<std::string, LibUtilities::PtsFieldSharedPtr> >
-        m_loadedPtsFields;
-    // fld fiels already loaded from disk: {funcFilename: (filename,
-    // loadedFldField)}
-    std::map<std::string, std::pair<std::string, loadedFldField> >
-        m_loadedFldFields;
+    /// interpolator for pts file input
+    FieldUtils::Interpolator m_interpolator;
 
     // Populate an array with a function variable from session.
-    SOLVER_UTILS_EXPORT void EvaluateFunctionExp(
-        std::string pFieldName,
-        Array<OneD, NekDouble> &pArray,
-        const NekDouble &pTime = 0.0,
-        const int domain       = 0);
+    SOLVER_UTILS_EXPORT void EvaluateExp(std::string pFieldName,
+                                         Array<OneD, NekDouble> &pArray,
+                                         const NekDouble &pTime = 0.0,
+                                         const int domain       = 0);
 
     // Populate an array with a function variable from session.
-    SOLVER_UTILS_EXPORT void EvaluateFunctionFld(
-        std::string pFieldName,
-        Array<OneD, NekDouble> &pArray,
-        const NekDouble &pTime = 0.0,
-        const int domain       = 0);
+    SOLVER_UTILS_EXPORT void EvaluateFld(std::string pFieldName,
+                                         Array<OneD, NekDouble> &pArray,
+                                         const NekDouble &pTime = 0.0,
+                                         const int domain       = 0);
 
-    SOLVER_UTILS_EXPORT void EvaluateFunctionPts(
-        std::string pFieldName,
-        Array<OneD, NekDouble> &pArray,
-        const NekDouble &pTime = 0.0,
-        const int domain       = 0);
-
-    SOLVER_UTILS_EXPORT void LoadPts(
-        std::string funcFilename,
-        std::string filename,
-        Nektar::LibUtilities::PtsFieldSharedPtr &outPts);
+    SOLVER_UTILS_EXPORT void EvaluatePts(std::string pFieldName,
+                                         Array<OneD, NekDouble> &pArray,
+                                         const NekDouble &pTime = 0.0,
+                                         const int domain       = 0);
 
     SOLVER_UTILS_EXPORT void PrintProgressbar(const int position,
                                               const int goal) const

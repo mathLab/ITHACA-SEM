@@ -10,7 +10,7 @@
         <metric type="L2" id="1">
             <value variable="u" tolerance="1e-12">5.37124e-14</value>
             <value variable="v" tolerance="1e-12">2.48979e-14</value>
-	    <value variable="p" tolerance="1e-12">1.46992e-12</value>
+	    <value variable="p" tolerance="2e-12">1.46992e-12</value>
         </metric>
         <metric type="Linf" id="2">
             <value variable="u" tolerance="1e-12">1.47216e-13</value>

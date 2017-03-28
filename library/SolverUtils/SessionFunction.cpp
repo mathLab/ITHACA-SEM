@@ -40,7 +40,7 @@ using namespace std;
 
 namespace Nektar
 {
-namespace Solverutils
+namespace SolverUtils
 {
 
 SessionFunction::SessionFunction(LibUtilities::SessionReaderSharedPtr session,

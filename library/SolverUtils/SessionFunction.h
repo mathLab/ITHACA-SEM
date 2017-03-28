@@ -50,7 +50,7 @@
 
 namespace Nektar
 {
-namespace Solverutils
+namespace SolverUtils
 {
 
 struct loadedFldField
@@ -59,7 +59,7 @@ struct loadedFldField
     std::vector<std::vector<NekDouble> > fieldData;
 };
 
-class SessionFunction : public boost::enable_shared_from_this<SessionFunction>
+class SessionFunction
 {
 public:
     SOLVER_UTILS_EXPORT SessionFunction(
@@ -131,6 +131,10 @@ private:
         LibUtilities::PrintProgressbar(position, goal, "Interpolating");
     }
 };
+
+typedef boost::shared_ptr<SessionFunction> SessionFunctionSharedPtr;
+static SessionFunctionSharedPtr NullSessionFunction;
+
 }
 }
 

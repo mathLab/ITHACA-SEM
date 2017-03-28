@@ -139,7 +139,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT inline void SetLambda(NekDouble lambda);
 
             /// Get a SessionFunction by name
-            SOLVER_UTILS_EXPORT SessionFunctionSharedPtr GetFunction(std::string name);
+            SOLVER_UTILS_EXPORT SessionFunctionSharedPtr GetFunction(std::string name, bool cache = false);
             
             /// Perform initialisation of the base flow.
             SOLVER_UTILS_EXPORT void InitialiseBaseFlow(

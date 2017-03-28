@@ -65,7 +65,8 @@ public:
     SOLVER_UTILS_EXPORT SessionFunction(
         LibUtilities::SessionReaderSharedPtr session,
         MultiRegions::ExpListSharedPtr field,
-        std::string functionName);
+        std::string functionName,
+        bool cache = false);
 
     /// Evaluates a function as specified in the session file.
     SOLVER_UTILS_EXPORT void Evaluate(
@@ -103,9 +104,14 @@ private:
     MultiRegions::ExpListSharedPtr m_field;
     // Name of this function
     std::string m_name;
-    /// interpolator for pts file input for a variable & domain combination
-    std::map<std::pair<std::string, int>, FieldUtils::Interpolator>
-        m_interpolators;
+    /// Cache the resulting arrays
+    bool m_cache;
+    /// Last time the cache for this  variable & domain combo was updated
+    std::map<std::pair<std::string, int>, NekDouble> m_lastCached;
+    /// Interpolator for pts file input for a variable & domain combination
+    std::map<std::string, FieldUtils::Interpolator> m_interpolators;
+    /// Cached result arrays
+    std::map<std::pair<std::string, int>, Array<OneD, NekDouble> > m_arrays;
 
     // Populate an array with a function variable from session.
     SOLVER_UTILS_EXPORT void EvaluateExp(std::string pFieldName,

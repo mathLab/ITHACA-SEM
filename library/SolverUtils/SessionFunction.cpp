@@ -36,6 +36,8 @@
 
 #include <SolverUtils/SessionFunction.h>
 
+#include <LibUtilities/BasicUtils/VmathArray.hpp>
+
 using namespace std;
 
 namespace Nektar
@@ -45,8 +47,9 @@ namespace SolverUtils
 
 SessionFunction::SessionFunction(LibUtilities::SessionReaderSharedPtr session,
                                  MultiRegions::ExpListSharedPtr field,
-                                 std::string functionName)
-    : m_session(session), m_field(field), m_name(functionName)
+                                 std::string functionName,
+                                 bool cache)
+    : m_session(session), m_field(field), m_name(functionName), m_cache(cache)
 {
     ASSERTL0(m_session->DefinesFunction(m_name),
              "Function '" + m_name + "' does not exist.");
@@ -119,6 +122,26 @@ void SessionFunction::Evaluate(std::string pFieldName,
 {
     LibUtilities::FunctionType vType =
         m_session->GetFunctionType(m_name, pFieldName, domain);
+
+    unsigned int nq = m_field->GetNpoints();
+
+    std::pair<std::string, int> key(pFieldName, domain);
+    // sorry
+    if (m_cache && (m_arrays.find(key) != m_arrays.end()) &&
+        (vType == LibUtilities::eFunctionTypeFile ||
+         ((m_lastCached.find(key) != m_lastCached.end()) &&
+          (pTime - m_lastCached[key] < NekConstants::kNekZeroTol))))
+    {
+        // found cached field
+        if (pArray.num_elements() < nq)
+        {
+            pArray = Array<OneD, NekDouble>(nq);
+        }
+        Vmath::Vcopy(nq, m_arrays[key], 1, pArray, 1);
+
+        return;
+    }
+
     if (vType == LibUtilities::eFunctionTypeExpression)
     {
         EvaluateExp(pFieldName, pArray, pTime, domain);
@@ -137,6 +160,14 @@ void SessionFunction::Evaluate(std::string pFieldName,
         {
             EvaluateFld(pFieldName, pArray, pTime, domain);
         }
+    }
+
+    if (m_cache)
+    {
+        m_arrays[key] = Array<OneD, NekDouble>(nq);
+        Vmath::Vcopy(nq, pArray, 1, m_arrays[key], 1);
+
+        m_lastCached[key] = pTime;
     }
 }
 
@@ -368,32 +399,37 @@ void SessionFunction::EvaluatePts(string pFieldName,
     outPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
         inPts->GetDim(), inPts->GetFieldNames(), pts);
 
-    std::pair<std::string, int> key(pFieldName, domain);
-    std::map<std::pair<std::string, int>,
-             FieldUtils::Interpolator>::const_iterator it1;
-
-    if ((it1 = m_interpolators.find(key)) == m_interpolators.end())
+    FieldUtils::Interpolator interp;
+    if (m_cache && m_interpolators.find(funcFilename) != m_interpolators.end())
     {
-        m_interpolators[key] =
-            FieldUtils::Interpolator(Nektar::FieldUtils::eShepard);
+        interp = m_interpolators[funcFilename];
+    }
+    else
+    {
+        interp = FieldUtils::Interpolator(Nektar::FieldUtils::eShepard);
         if (m_session->GetComm()->GetRank() == 0)
         {
-            m_interpolators[key].SetProgressCallback(
-                &SessionFunction::PrintProgressbar, this);
+            interp.SetProgressCallback(&SessionFunction::PrintProgressbar,
+                                       this);
         }
-        m_interpolators[key].CalcWeights(inPts, outPts);
+        interp.CalcWeights(inPts, outPts);
         if (m_session->GetComm()->GetRank() == 0)
         {
             cout << endl;
             if (m_session->DefinesCmdLineArgument("verbose"))
             {
-                m_interpolators[key].PrintStatistics();
+                interp.PrintStatistics();
             }
         }
     }
 
+    if (m_cache)
+    {
+        m_interpolators[funcFilename] = interp;
+    }
+
     // TODO: only interpolate the field we actually want
-    m_interpolators[key].Interpolate(inPts, outPts);
+    interp.Interpolate(inPts, outPts);
 
     int fieldInd;
     vector<string> fieldNames = outPts->GetFieldNames();

@@ -34,6 +34,7 @@ SET(SOLVER_UTILS_SOURCES
   RiemannSolvers/RiemannSolver.cpp
   RiemannSolvers/UpwindSolver.cpp
   RiemannSolvers/UpwindLDGSolver.cpp
+  SessionFunction.cpp
   UnsteadySystem.cpp
   Forcing/Forcing.cpp
   Forcing/ForcingAbsorption.cpp
@@ -78,6 +79,7 @@ SET(SOLVER_UTILS_HEADERS
   RiemannSolvers/RiemannSolver.h
   RiemannSolvers/UpwindSolver.h
   RiemannSolvers/UpwindLDGSolver.h
+  SessionFunction.h
   SolverUtils.hpp
   SolverUtilsDeclspec.h
   UnsteadySystem.h

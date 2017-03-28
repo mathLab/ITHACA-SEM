@@ -4,7 +4,6 @@ Changelog
 v4.5.0
 ------
 **NekMesh**:
-
 - Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
 
@@ -13,8 +12,14 @@ v4.5.0
 
 v4.4.1
 ------
+**Library**
+- Remove the duplicate output of errorutil (!756)
+
 **NekMesh**:
 - Fix memory consumption issue with Gmsh output (!747)
+- Rework meshing control so that if possible viewable meshes will be dumped
+  when some part of the system fails (!756)
+- Add manifold meshing option (!756)
 
 v4.4.0
 ------

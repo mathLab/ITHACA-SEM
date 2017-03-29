@@ -53,7 +53,7 @@ public:
     {
         return MemoryManager<OutputPts>::AllocateSharedPtr(f);
     }
-    static ModuleKey m_className;
+    static ModuleKey m_className[];
 
     OutputPts(FieldSharedPtr f);
     virtual ~OutputPts();

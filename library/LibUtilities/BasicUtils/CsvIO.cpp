@@ -59,73 +59,8 @@ namespace LibUtilities
 
 
 CsvIO::CsvIO(CommSharedPtr pComm, bool sharedFilesystem)
-    : FieldIOXml(pComm, sharedFilesystem)
+    : PtsIO(pComm, sharedFilesystem)
 {
-}
-
-/**
- * @brief Import a pts field from file
- *
- * @param inFile    filename of the file to read
- * @param ptsField  the resulting pts field.
- */
-void CsvIO::Import(const string &inFile,
-                   PtsFieldSharedPtr &ptsField,
-                   FieldMetaDataMap &fieldmetadatamap)
-{
-    std::string infile = inFile;
-
-    fs::path pinfilename(infile);
-
-    // check to see that infile is a directory
-    if (fs::is_directory(pinfilename))
-    {
-        fs::path infofile("Info.xml");
-        fs::path fullpath = pinfilename / infofile;
-        infile = PortablePath(fullpath);
-
-        std::vector<std::string> filenames;
-        std::vector<std::vector<unsigned int> > elementIDs_OnPartitions;
-
-        ImportMultiFldFileIDs(
-            infile, filenames, elementIDs_OnPartitions, fieldmetadatamap);
-
-        // Load metadata
-        ImportFieldMetaData(infile, fieldmetadatamap);
-
-        if (filenames.size() == m_comm->GetSize())
-        {
-            // only load the file that matches this rank
-            filenames.clear();
-            boost::format pad("P%1$07d.%2$s");
-            pad % m_comm->GetRank() % GetFileEnding();
-            filenames.push_back(pad.str());
-        }
-
-        for (int i = 0; i < filenames.size(); ++i)
-        {
-            fs::path pfilename(filenames[i]);
-            fullpath = pinfilename / pfilename;
-            string fname = PortablePath(fullpath);
-
-            if (i == 0)
-            {
-                ImportFieldData(fname, ptsField);
-            }
-            else
-            {
-                LibUtilities::PtsFieldSharedPtr newPtsField;
-                ImportFieldData(fname, newPtsField);
-                Array<OneD, Array<OneD, NekDouble> > pts;
-                newPtsField->GetPts(pts);
-                ptsField->AddPoints(pts);
-            }
-        }
-    }
-    else
-    {
-        ImportFieldData(infile, ptsField);
-    }
 }
 
 /**
@@ -174,7 +109,8 @@ void CsvIO::Write(const string &outFile,
     ptsFile.close();
 }
 
-void CsvIO::ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsField)
+
+void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsField)
 {
     std::stringstream errstr;
     errstr << "Unable to load file: " << inFile << std::endl;
@@ -243,42 +179,5 @@ void CsvIO::ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFiel
     ptsField = MemoryManager<PtsField>::AllocateSharedPtr(dim, fieldNames, pts);
 }
 
-void CsvIO::SetUpFieldMetaData(const string outname)
-{
-    ASSERTL0(!outname.empty(), "Empty path given to SetUpFieldMetaData()");
-
-    int nprocs = m_comm->GetSize();
-    int rank = m_comm->GetRank();
-
-    fs::path specPath(outname);
-
-    // Collate per-process element lists on root process to generate
-    // the info file.
-    if (rank == 0)
-    {
-        // Set up output names
-        std::vector<std::string> filenames;
-        std::vector<std::vector<unsigned int> > ElementIDs;
-        for (int i = 0; i < nprocs; ++i)
-        {
-            boost::format pad("P%1$07d.%2$s");
-            pad % i % GetFileEnding();
-            filenames.push_back(pad.str());
-
-            std::vector<unsigned int> tmp;
-            tmp.push_back(0);
-            ElementIDs.push_back(tmp);
-        }
-
-        // Write the Info.xml file
-        string infofile =
-            LibUtilities::PortablePath(specPath / fs::path("Info.xml"));
-
-        cout << "Writing: " << specPath << endl;
-
-        const FieldMetaDataMap fieldmetadatamap;
-        WriteMultiFldFileIDs(infofile, filenames, ElementIDs, fieldmetadatamap);
-    }
-}
 }
 }

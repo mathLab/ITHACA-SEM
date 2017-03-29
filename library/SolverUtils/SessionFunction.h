@@ -91,6 +91,16 @@ public:
     SOLVER_UTILS_EXPORT std::string Describe(std::string pFieldName,
                                              const int domain = 0);
 
+    SOLVER_UTILS_EXPORT const LibUtilities::SessionReaderSharedPtr & GetSession()
+    {
+        return m_session;
+    }
+
+    SOLVER_UTILS_EXPORT const MultiRegions::ExpListSharedPtr & GetExpansion()
+    {
+        return m_field;
+    }
+
 private:
     /// The session reader
     LibUtilities::SessionReaderSharedPtr m_session;

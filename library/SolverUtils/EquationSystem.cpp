@@ -690,13 +690,22 @@ namespace Nektar
                 vField = m_fields[0];
             }
 
-            if ((m_sessionFunctions.find(name)) == m_sessionFunctions.end())
+            if (cache)
             {
-                SessionFunctionSharedPtr p(new SessionFunction(m_session, vField, name, cache));
-                m_sessionFunctions[name] = p;
-            }
+                if ((m_sessionFunctions.find(name) == m_sessionFunctions.end())
+                    || (m_sessionFunctions[name]->GetSession() != m_session)
+                    || (m_sessionFunctions[name]->GetExpansion() != vField)
+                )
+                {
+                    m_sessionFunctions[name] = SessionFunctionSharedPtr(new SessionFunction(m_session, vField, name, cache));
+                }
 
-            return m_sessionFunctions[name];
+                return m_sessionFunctions[name];
+            }
+            else
+            {
+                return SessionFunctionSharedPtr(new SessionFunction(m_session, vField, name, cache));
+            }
         }
         
         /**

@@ -162,13 +162,22 @@ namespace Nektar
                 std::string                                         pName,
                 bool                                                pCache)
         {
-            if ((m_sessionFunctions.find(pName)) == m_sessionFunctions.end())
+            if (pCache)
             {
-                SessionFunctionSharedPtr p(new SessionFunction(pSession, pFields[0], pName, pCache));
-                m_sessionFunctions[pName] = p;
-            }
+                if ((m_sessionFunctions.find(pName) == m_sessionFunctions.end())
+                    || (m_sessionFunctions[pName]->GetSession() != pSession)
+                    || (m_sessionFunctions[pName]->GetExpansion() != pFields[0])
+                )
+                {
+                    m_sessionFunctions[pName] = SessionFunctionSharedPtr(new SessionFunction(pSession, pFields[0], pName, pCache));
+                }
 
-            return m_sessionFunctions[pName];
+                return m_sessionFunctions[pName];
+            }
+            else
+            {
+                return SessionFunctionSharedPtr(new SessionFunction(pSession, pFields[0], pName, pCache));
+            }
         }
 
     }

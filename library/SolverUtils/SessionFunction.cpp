@@ -38,6 +38,9 @@
 
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
+#include <boost/format.hpp> 
+#include <boost/function.hpp>
+
 using namespace std;
 
 namespace Nektar

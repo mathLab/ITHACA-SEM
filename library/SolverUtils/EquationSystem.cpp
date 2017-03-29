@@ -679,13 +679,20 @@ namespace Nektar
                 DNekScalBlkMat, LocalRegions::MatrixKey::opLess>::ClearManager();
         }
 
-        SessionFunctionSharedPtr EquationSystem::GetFunction(std::string name, bool cache)
+        SessionFunctionSharedPtr EquationSystem::GetFunction(
+            std::string name,
+            const MultiRegions::ExpListSharedPtr &field,
+            bool cache)
         {
-            std::map<std::string, SolverUtils::SessionFunctionSharedPtr>::const_iterator it1;
-
-            if ((it1 = m_sessionFunctions.find(name)) == m_sessionFunctions.end())
+            MultiRegions::ExpListSharedPtr vField = field;
+            if (not field)
             {
-                SessionFunctionSharedPtr p(new SessionFunction(m_session, m_fields[0], name, cache));
+                vField = m_fields[0];
+            }
+
+            if ((m_sessionFunctions.find(name)) == m_sessionFunctions.end())
+            {
+                SessionFunctionSharedPtr p(new SessionFunction(m_session, vField, name, cache));
                 m_sessionFunctions[name] = p;
             }
 

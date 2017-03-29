@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File PtsField.h
+// File SessionFunction.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -52,12 +52,6 @@ namespace Nektar
 {
 namespace SolverUtils
 {
-
-struct loadedFldField
-{
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> fieldDef;
-    std::vector<std::vector<NekDouble> > fieldData;
-};
 
 class SessionFunction
 {

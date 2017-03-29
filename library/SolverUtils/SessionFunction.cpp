@@ -45,8 +45,8 @@ namespace Nektar
 namespace SolverUtils
 {
 
-SessionFunction::SessionFunction(LibUtilities::SessionReaderSharedPtr session,
-                                 MultiRegions::ExpListSharedPtr field,
+SessionFunction::SessionFunction(const LibUtilities::SessionReaderSharedPtr &session,
+                                 const MultiRegions::ExpListSharedPtr &field,
                                  std::string functionName,
                                  bool cache)
     : m_session(session), m_field(field), m_name(functionName), m_cache(cache)

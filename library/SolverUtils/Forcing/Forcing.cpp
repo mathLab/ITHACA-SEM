@@ -157,10 +157,10 @@ namespace Nektar
         }
         
         SessionFunctionSharedPtr Forcing::GetFunction(
-                Array<OneD, MultiRegions::ExpListSharedPtr>  pFields,
-                LibUtilities::SessionReaderSharedPtr         pSession,
-                std::string                                  pName,
-                bool                                         pCache)
+                const Array<OneD, MultiRegions::ExpListSharedPtr>  &pFields,
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                std::string                                         pName,
+                bool                                                pCache)
         {
             if ((m_sessionFunctions.find(pName)) == m_sessionFunctions.end())
             {

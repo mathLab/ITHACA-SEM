@@ -63,8 +63,8 @@ class SessionFunction
 {
 public:
     SOLVER_UTILS_EXPORT SessionFunction(
-        LibUtilities::SessionReaderSharedPtr session,
-        MultiRegions::ExpListSharedPtr field,
+        const LibUtilities::SessionReaderSharedPtr &session,
+        const MultiRegions::ExpListSharedPtr &field,
         std::string functionName,
         bool cache = false);
 

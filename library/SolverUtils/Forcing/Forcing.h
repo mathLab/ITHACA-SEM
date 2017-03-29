@@ -123,10 +123,10 @@ namespace SolverUtils
 
                 /// Get a SessionFunction by name
             SOLVER_UTILS_EXPORT SessionFunctionSharedPtr GetFunction(
-                Array<OneD, MultiRegions::ExpListSharedPtr>  pFields,
-                LibUtilities::SessionReaderSharedPtr         pSession,
-                std::string                                  pName,
-                bool                                         pCache = false);
+                const Array<OneD, MultiRegions::ExpListSharedPtr>  &pFields,
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                std::string                                         pName,
+                bool                                                pCache = false);
 
             SOLVER_UTILS_EXPORT void EvaluateTimeFunction(
                     LibUtilities::SessionReaderSharedPtr        pSession,

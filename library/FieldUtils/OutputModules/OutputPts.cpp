@@ -156,6 +156,48 @@ void OutputPts::Process(po::variables_map &vm)
             LibUtilities::PtsIO ptsIO(m_f->m_comm);
             ptsIO.Write(filename, fPts);
         }
+
+        // output error for regression checking.
+        if (vm.count("error"))
+        {
+            int rank = m_f->m_comm->GetRank();
+
+            for (int j = 0; j < fPts->GetNFields(); ++j)
+            {
+                Array<OneD, NekDouble> tmp(fPts->GetNpoints());
+                Vmath::Vmul(fPts->GetNpoints(),
+                            fPts->GetPts(fPts->GetDim() + j), 1,
+                            fPts->GetPts(fPts->GetDim() + j), 1,
+                            tmp, 1);
+                NekDouble l2err = Vmath::Vsum(fPts->GetNpoints(), tmp, 1);
+
+                // if val too small, sqrt returns nan.
+                if (fabs(l2err) < NekConstants::kNekSqrtTol*NekConstants::kNekSqrtTol)
+                {
+                    l2err =  0.0;
+                }
+                else
+                {
+                    l2err = sqrt(l2err);
+                }
+
+                NekDouble linferr = Vmath::Vamax(fPts->GetNpoints(),
+                                                 fPts->GetPts(fPts->GetDim() + j), 1);
+
+                if (rank == 0)
+                {
+                    cout << "L 2 error (variable "
+                         << fPts->GetFieldName(j) << ") : " << l2err
+                         << endl;
+
+                    cout << "L inf error (variable "
+                         << fPts->GetFieldName(j) << ") : " << linferr
+                         << endl;
+                }
+            }
+        }
+
+
     }
 }
 }

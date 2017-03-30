@@ -685,7 +685,7 @@ namespace Nektar
             bool cache)
         {
             MultiRegions::ExpListSharedPtr vField = field;
-            if (not field)
+            if (!field)
             {
                 vField = m_fields[0];
             }

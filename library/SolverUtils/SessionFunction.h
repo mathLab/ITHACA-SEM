@@ -60,7 +60,7 @@ public:
         const LibUtilities::SessionReaderSharedPtr &session,
         const MultiRegions::ExpListSharedPtr &field,
         std::string functionName,
-        bool cache = false);
+        bool toCache = false);
 
     /// Evaluates a function as specified in the session file.
     SOLVER_UTILS_EXPORT void Evaluate(
@@ -108,8 +108,8 @@ private:
     MultiRegions::ExpListSharedPtr m_field;
     // Name of this function
     std::string m_name;
-    /// Cache the resulting arrays
-    bool m_cache;
+    /// Store resulting arrays (and interpolators) in cache
+    bool m_toCache;
     /// Last time the cache for this  variable & domain combo was updated
     std::map<std::pair<std::string, int>, NekDouble> m_lastCached;
     /// Interpolator for pts file input for a variable & domain combination

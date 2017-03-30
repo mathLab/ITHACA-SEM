@@ -51,8 +51,8 @@ namespace SolverUtils
 SessionFunction::SessionFunction(const LibUtilities::SessionReaderSharedPtr &session,
                                  const MultiRegions::ExpListSharedPtr &field,
                                  std::string functionName,
-                                 bool cache)
-    : m_session(session), m_field(field), m_name(functionName), m_cache(cache)
+                                 bool toCache)
+    : m_session(session), m_field(field), m_name(functionName), m_toCache(toCache)
 {
     ASSERTL0(m_session->DefinesFunction(m_name),
              "Function '" + m_name + "' does not exist.");
@@ -130,7 +130,7 @@ void SessionFunction::Evaluate(std::string pFieldName,
 
     std::pair<std::string, int> key(pFieldName, domain);
     // sorry
-    if (m_cache && (m_arrays.find(key) != m_arrays.end()) &&
+    if ((m_arrays.find(key) != m_arrays.end()) &&
         (vType == LibUtilities::eFunctionTypeFile ||
          ((m_lastCached.find(key) != m_lastCached.end()) &&
           (pTime - m_lastCached[key] < NekConstants::kNekZeroTol))))
@@ -165,7 +165,7 @@ void SessionFunction::Evaluate(std::string pFieldName,
         }
     }
 
-    if (m_cache)
+    if (m_toCache)
     {
         m_arrays[key] = Array<OneD, NekDouble>(nq);
         Vmath::Vcopy(nq, pArray, 1, m_arrays[key], 1);
@@ -403,7 +403,7 @@ void SessionFunction::EvaluatePts(string pFieldName,
         inPts->GetDim(), inPts->GetFieldNames(), pts);
 
     FieldUtils::Interpolator interp;
-    if (m_cache && m_interpolators.find(funcFilename) != m_interpolators.end())
+    if (m_interpolators.find(funcFilename) != m_interpolators.end())
     {
         interp = m_interpolators[funcFilename];
     }
@@ -426,7 +426,7 @@ void SessionFunction::EvaluatePts(string pFieldName,
         }
     }
 
-    if (m_cache)
+    if (m_toCache)
     {
         m_interpolators[funcFilename] = interp;
     }

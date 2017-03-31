@@ -90,11 +90,9 @@ Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p)
     uvr[1]      = p2.Y();
 
     gp_Pnt p3 = m_sas->Value(p2);
-    if (p3.Distance(loc) > 1e-6)
-    {
-        cout << "large locuv distance " << p3.Distance(loc)/1000.0 << " " << m_id
-             << endl;
-    }
+    WARNINGL2(p3.Distance(loc) < 1e-3, "large locuv distance " +
+                boost::lexical_cast<string>(p3.Distance(loc)/1000.0) + " " +
+                boost::lexical_cast<string>(m_id));
 
     // if the uv returned is slightly off the surface
     //(which ShapeAnalysis_Surface can do sometimes)

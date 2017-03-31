@@ -21,6 +21,9 @@ v4.4.1
   when some part of the system fails (!756)
 - Add manifold meshing option (!756)
 
+**FieldConvert:**
+- Fix issue with field ordering in the interppointdatatofld module (!754)
+
 v4.4.0
 ------
 **Library**:
@@ -90,7 +93,6 @@ v4.4.0
 - Allow multiple XML files to be specified in InterpField module (!705)
 - Fix issues with isocontour module (!719)
 - Fix issue with interpolator routine (!746)
-- Fix issue with field ordering in the interppointdatatofld module (!754)
 
 **NekMesh:**
 - Modify curve module to allow for spline input (!628)

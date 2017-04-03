@@ -317,33 +317,6 @@ namespace Nektar
         }
 
 
-#if 0 
-        void PyrExp::v_IProductWRTBase(
-            const Array<OneD, const NekDouble> &inarray, 
-                  Array<OneD,       NekDouble> &outarray)
-        {
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-            int nquad2 = m_base[2]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac(GetPointsKeys());
-            Array<OneD,       NekDouble> tmp(nquad0*nquad1*nquad2);
-            
-            // multiply inarray with Jacobian
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                Vmath::Vmul(nquad0*nquad1*nquad2,&jac[0],1,(NekDouble*)&inarray[0],1,&tmp[0],1);
-            }
-            else
-            {
-                Vmath::Smul(nquad0*nquad1*nquad2,jac[0],(NekDouble*)&inarray[0],1,&tmp[0],1);
-            }
-            
-            StdPyrExp::v_IProductWRTBase(tmp,outarray);
-        }
-#endif        
-
-
-
         /**
          * @brief Calculates the inner product \f$ I_{pqr} = (u,
          * \partial_{x_i} \phi_{pqr}) \f$.

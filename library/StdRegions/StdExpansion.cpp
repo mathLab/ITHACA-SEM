@@ -671,13 +671,6 @@ namespace Nektar
             int nq = GetTotPoints();
             Array<OneD, NekDouble> tmp(nq);
 
-            static int cnt = 0;
-            cnt++;
-            if(cnt == 84)
-            {
-                std::cout << "Start" << std::endl;
-            }
-
             v_BwdTrans(inarray,tmp);
 
             if(mkey.HasVarCoeff(eVarCoeffMass))

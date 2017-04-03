@@ -24,6 +24,9 @@ v4.4.1
   when some part of the system fails (!756)
 - Add manifold meshing option (!756)
 
+**FieldConvert:**
+- Fix issue with field ordering in the interppointdatatofld module (!754)
+
 v4.4.0
 ------
 **Library**:

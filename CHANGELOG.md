@@ -19,7 +19,7 @@ v4.4.1
 - Fix issue with FieldConvert when range flag used (!761)
 
 **NekMesh**:
-- Fix memory consumption issue with Gmsh output (!747)
+- Fix memory consumption issue with Gmsh output (!747, !762)
 - Rework meshing control so that if possible viewable meshes will be dumped
   when some part of the system fails (!756)
 - Add manifold meshing option (!756)

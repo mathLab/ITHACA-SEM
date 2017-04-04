@@ -98,12 +98,10 @@ unsigned int Mesh::GetNumEntities()
  */
 void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
 {
-
-    // going to make a copy of the curavture information
-    // cheaper that geom objects
-    // currently the geometry objects which make up a 3D element
-    // dont use the volume nodes, they are just stored,
-    // so we can get away without copying them
+    // Going to make a copy of the curavture information, since this is cheaper
+    // than using Nektar's Geometry objects. Currently, the geometry objects
+    // which make up a 3D element dont use the volume nodes, they are just
+    // stored, so we can get away without copying them.
 
     int id = m_vertexSet.size();
 
@@ -141,19 +139,47 @@ void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
         ASSERTL1(false, "Mesh::MakeOrder does not support this points type.");
     }
 
-    // Begin by coping mesh objects for edges, faces
-    // so that we don't affect any neighbouring elements in the mesh as
-    // we process each element.
-    // at the same time we delete the curvature from the original edge
+    // Begin by copying mesh objects for edges and faces so that we don't affect
+    // any neighbouring elements in the mesh as we process each element. At the
+    // same time we delete the curvature from the original edge and face, which
+    // will be re-added with the MakeOrder routine.
+
+    // First, we fill in the volume-interior nodes. This preserves the original
+    // curvature of the mesh.
+    const int nElmt = m_element[m_expDim].size();
+    int tmpId = 0;
+    for (int i = 0; i < nElmt; ++i)
+    {
+        if (m_verbose)
+        {
+            LibUtilities::PrintProgressbar(i, nElmt, "MakeOrder: Elements: ");
+        }
+        ElementSharedPtr el                    = m_element[m_expDim][i];
+        SpatialDomains::GeometrySharedPtr geom = el->GetGeom(m_spaceDim);
+        geom->FillGeom();
+        el->MakeOrder(order, geom, pTypes[el->GetConf().m_e], m_spaceDim, tmpId);
+    }
+
+    // Now make copies of each of the edges.
     for (eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++)
     {
         edgeCopies[(*eit)->m_id] = EdgeSharedPtr(new Edge(*(*eit)));
         (*eit)->m_edgeNodes.clear();
     }
 
+    // Now copy faces. Make sure that this is a "deep copy", so that the face's
+    // edge list corresponds to the copied edges, otherwise we end up in a
+    // non-consistent state.
     for (fit = m_faceSet.begin(); fit != m_faceSet.end(); fit++)
     {
-        faceCopies[(*fit)->m_id] = FaceSharedPtr(new Face(*(*fit)));
+        FaceSharedPtr tmpFace = FaceSharedPtr(new Face(*(*fit)));
+
+        for (int i = 0; i < tmpFace->m_edgeList.size(); ++i)
+        {
+            tmpFace->m_edgeList[i] = edgeCopies[tmpFace->m_edgeList[i]->m_id];
+        }
+
+        faceCopies[(*fit)->m_id] = tmpFace;
         (*fit)->m_faceNodes.clear();
     }
 
@@ -249,18 +275,13 @@ void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
         el->SetVolumeNodes(face->m_faceNodes);
     }
 
-    // Finally, fill in volumes.
-    const int nElmt = m_element[m_expDim].size();
     for (int i = 0; i < nElmt; ++i)
     {
-        if (m_verbose)
+        vector<NodeSharedPtr> tmp = m_element[m_expDim][i]->GetVolumeNodes();
+        for (int j = 0; j < tmp.size(); ++j)
         {
-            LibUtilities::PrintProgressbar(i, nElmt, "MakeOrder: Elements: ");
+            tmp[j]->m_id = id++;
         }
-        ElementSharedPtr el                    = m_element[m_expDim][i];
-        SpatialDomains::GeometrySharedPtr geom = el->GetGeom(m_spaceDim);
-        geom->FillGeom();
-        el->MakeOrder(order, geom, pTypes[el->GetConf().m_e], m_spaceDim, id);
     }
 
     if (m_verbose)

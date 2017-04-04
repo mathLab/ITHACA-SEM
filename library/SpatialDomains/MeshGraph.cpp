@@ -3305,8 +3305,8 @@ namespace Nektar
                             returnval.push_back(bkey);
                             returnval.push_back(bkey);
 
-                            const LibUtilities::PointsKey pkey1(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha2Beta0);
-                            LibUtilities::BasisKey bkey1(LibUtilities::eModified_C, nummodes, pkey1);
+                            const LibUtilities::PointsKey pkey1(nummodes+quadoffset, LibUtilities::eGaussRadauMAlpha2Beta0);
+                            LibUtilities::BasisKey bkey1(LibUtilities::eModifiedPyr_C, nummodes, pkey1);
                             returnval.push_back(bkey1);
                         }
                         break;

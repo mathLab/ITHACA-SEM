@@ -10,6 +10,9 @@ v4.5.0
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
+**Library**
+- Added in sum factorisation version for pyramid expnasions and orthogonal expansion in pyramids (!750)
+
 v4.4.1
 ------
 **Library**

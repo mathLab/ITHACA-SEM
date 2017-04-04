@@ -96,6 +96,18 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase(
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& outarray);
+            LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD,       NekDouble>& outarray,
+                bool multiplybyweights = true);
+            LOCAL_REGIONS_EXPORT  void v_IProductWRTDerivBase(
+                const int                           dir,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray);
+            LOCAL_REGIONS_EXPORT  void v_IProductWRTDerivBase_SumFac(
+                const int                           dir,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray);
 
 
             //---------------------------------------
@@ -138,6 +150,12 @@ namespace Nektar
                 Array<OneD, int>        &outarray);
 
             LOCAL_REGIONS_EXPORT void v_ComputeFaceNormal(const int face);
+
+
+            LOCAL_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
+                    const StdRegions::StdMatrixKey &mkey);
+
             //---------------------------------------
             // Matrix creation functions
             //---------------------------------------

@@ -1359,8 +1359,9 @@ namespace Nektar
                         {
                             ASSERTL0( (exp->GetEdgeBasisType(j) == LibUtilities::eModified_A) ||
                                       (exp->GetEdgeBasisType(j) == LibUtilities::eModified_B) ||
-                                      (exp->GetEdgeBasisType(j) == LibUtilities::eModified_C),
-                                    "CG with variable order only available with modal expansion");
+                                      (exp->GetEdgeBasisType(j) == LibUtilities::eModified_C) ||
+                                      (exp->GetEdgeBasisType(j) == LibUtilities::eModifiedPyr_C),
+                                      "CG with variable order only available with modal expansion");
                         }
                         dofs[1][exp->GetGeom()->GetEid(j)] =
                                 min(dofs[1][exp->GetGeom()->GetEid(j)],

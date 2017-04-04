@@ -2022,7 +2022,7 @@ namespace Nektar
                                      PointsKey(nummodesmax+1, eGaussLobattoLegendre));
                 const BasisKey PyrBb(eModified_A, nummodesmax,
                                      PointsKey(nummodesmax+1, eGaussLobattoLegendre));
-                const BasisKey PyrBc(eModified_C, nummodesmax,
+                const BasisKey PyrBc(eModifiedPyr_C, nummodesmax,
                                      PointsKey(nummodesmax,  eGaussRadauMAlpha2Beta0));
                 
                 //Create reference pyramid expansion

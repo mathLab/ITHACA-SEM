@@ -1814,7 +1814,7 @@ namespace Nektar
 
             StdRegions::Orientation edgedir;
 
-            int     eid,cnt;
+            int     cnt;
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs), edge_lambda;
             m_traceMap->GlobalToLocalBnd(m_trace->GetCoeffs(),loc_lambda);
@@ -1824,8 +1824,6 @@ namespace Nektar
             // Calculate Q using standard DG formulation.
             for(i = cnt = 0; i < GetExpSize(); ++i)
             {
-                eid = i;
-
                 // Probably a better way of setting up lambda than this.
                 // Note cannot use PutCoeffsInToElmts since lambda space
                 // is mapped during the solve.
@@ -1834,21 +1832,21 @@ namespace Nektar
 
                 for(e = 0; e < nEdges; ++e)
                 {
-                    edgedir = (*m_exp)[eid]->GetEorient(e);
-                    ncoeff_edge = elmtToTrace[eid][e]->GetNcoeffs();
+                    edgedir = (*m_exp)[i]->GetEorient(e);
+                    ncoeff_edge = elmtToTrace[i][e]->GetNcoeffs();
                     edgeCoeffs[e] = Array<OneD, NekDouble>(ncoeff_edge);
                     Vmath::Vcopy(ncoeff_edge, edge_lambda, 1, edgeCoeffs[e], 1);
-                    elmtToTrace[eid][e]->SetCoeffsToOrientation(
+                    elmtToTrace[i][e]->SetCoeffsToOrientation(
                         edgedir, edgeCoeffs[e], edgeCoeffs[e]);
                     edge_lambda = edge_lambda + ncoeff_edge;
                 }
 
-                (*m_exp)[eid]->DGDeriv(dir,
-                                       tmp_coeffs=m_coeffs+m_coeff_offset[eid],
-                                       elmtToTrace[eid],
+                (*m_exp)[i]->DGDeriv(dir,
+                                       tmp_coeffs=m_coeffs+m_coeff_offset[i],
+                                       elmtToTrace[i],
                                        edgeCoeffs,
                                        out_tmp = out_d+cnt);
-                cnt  += (*m_exp)[eid]->GetNcoeffs();
+                cnt  += (*m_exp)[i]->GetNcoeffs();
             }
             
             BwdTrans(out_d,m_phys);
@@ -2123,7 +2121,7 @@ namespace Nektar
 
             StdRegions::Orientation edgedir;
 
-            int     eid,nq_elmt, nm_elmt;
+            int     nq_elmt, nm_elmt;
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs), edge_lambda;
             Array<OneD, NekDouble> tmp_coeffs;
@@ -2134,20 +2132,18 @@ namespace Nektar
             // Calculate Q using standard DG formulation.
             for(i = cnt = 0; i < GetExpSize(); ++i)
             {
-                eid = i;
-
-                nq_elmt = (*m_exp)[eid]->GetTotPoints();
-                nm_elmt = (*m_exp)[eid]->GetNcoeffs();
+                nq_elmt = (*m_exp)[i]->GetTotPoints();
+                nm_elmt = (*m_exp)[i]->GetNcoeffs();
                 qrhs  = Array<OneD, NekDouble>(nq_elmt);
                 qrhs1  = Array<OneD, NekDouble>(nq_elmt);
                 force = Array<OneD, NekDouble>(2*nm_elmt);
                 out_tmp = force + nm_elmt;
                 LocalRegions::ExpansionSharedPtr ppExp;
 
-                int num_points0 = (*m_exp)[eid]->GetBasis(0)->GetNumPoints();
-                int num_points1 = (*m_exp)[eid]->GetBasis(1)->GetNumPoints();
-                int num_modes0 = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
-                int num_modes1 = (*m_exp)[eid]->GetBasis(1)->GetNumModes();
+                int num_points0 = (*m_exp)[i]->GetBasis(0)->GetNumPoints();
+                int num_points1 = (*m_exp)[i]->GetBasis(1)->GetNumPoints();
+                int num_modes0 = (*m_exp)[i]->GetBasis(0)->GetNumModes();
+                int num_modes1 = (*m_exp)[i]->GetBasis(1)->GetNumModes();
 
                 // Probably a better way of setting up lambda than this.  Note
                 // cannot use PutCoeffsInToElmts since lambda space is mapped
@@ -2155,19 +2151,19 @@ namespace Nektar
                 int nEdges = (*m_exp)[i]->GetNedges();
                 Array<OneD, Array<OneD, NekDouble> > edgeCoeffs(nEdges);
 
-                for(e = 0; e < (*m_exp)[eid]->GetNedges(); ++e)
+                for(e = 0; e < (*m_exp)[i]->GetNedges(); ++e)
                 {
-                    edgedir = (*m_exp)[eid]->GetEorient(e);
-                    ncoeff_edge = elmtToTrace[eid][e]->GetNcoeffs();
+                    edgedir = (*m_exp)[i]->GetEorient(e);
+                    ncoeff_edge = elmtToTrace[i][e]->GetNcoeffs();
                     edgeCoeffs[e] = Array<OneD, NekDouble>(ncoeff_edge);
                     Vmath::Vcopy(ncoeff_edge, edge_lambda, 1, edgeCoeffs[e], 1);
-                    elmtToTrace[eid][e]->SetCoeffsToOrientation(
+                    elmtToTrace[i][e]->SetCoeffsToOrientation(
                         edgedir, edgeCoeffs[e], edgeCoeffs[e]);
                     edge_lambda = edge_lambda + ncoeff_edge;
                 }
 
                 //creating orthogonal expansion (checking if we have quads or triangles)
-                LibUtilities::ShapeType shape = (*m_exp)[eid]->DetShapeType();
+                LibUtilities::ShapeType shape = (*m_exp)[i]->DetShapeType();
                 switch(shape)
                 {
                     case LibUtilities::eQuadrilateral:
@@ -2176,7 +2172,7 @@ namespace Nektar
                         const LibUtilities::PointsKey PkeyQ2(num_points1,LibUtilities::eGaussLobattoLegendre);
                         LibUtilities::BasisKey  BkeyQ1(LibUtilities::eOrtho_A, num_modes0, PkeyQ1);
                         LibUtilities::BasisKey  BkeyQ2(LibUtilities::eOrtho_A, num_modes1, PkeyQ2);
-                        SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
+                        SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[i]->GetGeom());
                         ppExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
                     }
                     break;
@@ -2186,7 +2182,7 @@ namespace Nektar
                         const LibUtilities::PointsKey PkeyT2(num_points1,LibUtilities::eGaussRadauMAlpha1Beta0);
                         LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes0, PkeyT1);
                         LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes1, PkeyT2);
-                        SpatialDomains::TriGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>((*m_exp)[eid]->GetGeom());
+                        SpatialDomains::TriGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>((*m_exp)[i]->GetGeom());
                         ppExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(BkeyT1, BkeyT2, tGeom);
                     }
                     break;
@@ -2197,29 +2193,29 @@ namespace Nektar
                
                 //DGDeriv    
                 // (d/dx w, d/dx q_0)
-                (*m_exp)[eid]->DGDeriv(
-                    0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
-                    elmtToTrace[eid], edgeCoeffs, out_tmp);
-                (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
-                //(*m_exp)[eid]->IProductWRTDerivBase(0,qrhs,force);
+                (*m_exp)[i]->DGDeriv(
+                    0,tmp_coeffs = m_coeffs + m_coeff_offset[i],
+                    elmtToTrace[i], edgeCoeffs, out_tmp);
+                (*m_exp)[i]->BwdTrans(out_tmp,qrhs);
+                //(*m_exp)[i]->IProductWRTDerivBase(0,qrhs,force);
                 ppExp->IProductWRTDerivBase(0,qrhs,force);
 
 
                 // + (d/dy w, d/dy q_1)
-                (*m_exp)[eid]->DGDeriv(
-                    1,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
-                    elmtToTrace[eid], edgeCoeffs, out_tmp);
+                (*m_exp)[i]->DGDeriv(
+                    1,tmp_coeffs = m_coeffs + m_coeff_offset[i],
+                    elmtToTrace[i], edgeCoeffs, out_tmp);
 
-                (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
-                //(*m_exp)[eid]->IProductWRTDerivBase(1,qrhs,out_tmp);
+                (*m_exp)[i]->BwdTrans(out_tmp,qrhs);
+                //(*m_exp)[i]->IProductWRTDerivBase(1,qrhs,out_tmp);
                 ppExp->IProductWRTDerivBase(1,qrhs,out_tmp);
 
                 Vmath::Vadd(nm_elmt,force,1,out_tmp,1,force,1);
 
                 // determine force[0] = (1,u)
-                (*m_exp)[eid]->BwdTrans(
-                    tmp_coeffs = m_coeffs + m_coeff_offset[eid],qrhs);
-                force[0] = (*m_exp)[eid]->Integral(qrhs);
+                (*m_exp)[i]->BwdTrans(
+                    tmp_coeffs = m_coeffs + m_coeff_offset[i],qrhs);
+                force[0] = (*m_exp)[i]->Integral(qrhs);
 
                 // multiply by inverse Laplacian matrix
                 // get matrix inverse
@@ -2234,7 +2230,7 @@ namespace Nektar
                 // Transforming back to modified basis
                 Array<OneD, NekDouble> work(nq_elmt);
                 ppExp->BwdTrans(out.GetPtr(), work);
-                (*m_exp)[eid]->FwdTrans(work, tmp_coeffs = outarray + m_coeff_offset[eid]);
+                (*m_exp)[i]->FwdTrans(work, tmp_coeffs = outarray + m_coeff_offset[i]);
             }
         }
 

@@ -2359,18 +2359,17 @@ namespace Nektar
             {
                 std::vector<unsigned int> nummodes;
                 vector<LibUtilities::BasisType> basisTypes;
-                int eid = i;
-                for(int j= 0; j < fromExpList->GetExp(eid)->GetNumBases(); ++j)
+                for(int j= 0; j < fromExpList->GetExp(i)->GetNumBases(); ++j)
                 {
-                    nummodes.push_back(fromExpList->GetExp(eid)->GetBasisNumModes(j));
-                    basisTypes.push_back(fromExpList->GetExp(eid)->GetBasisType(j));
+                    nummodes.push_back(fromExpList->GetExp(i)->GetBasisNumModes(j));
+                    basisTypes.push_back(fromExpList->GetExp(i)->GetBasisType(j));
                 }
 
-                (*m_exp)[eid]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0,
-                                                   &toCoeffs[m_coeff_offset[eid]],
+                (*m_exp)[i]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0,
+                                                   &toCoeffs[m_coeff_offset[i]],
                                                    basisTypes);
 
-                offset += fromExpList->GetExp(eid)->GetNcoeffs();
+                offset += fromExpList->GetExp(i)->GetNcoeffs();
             }
         }
 

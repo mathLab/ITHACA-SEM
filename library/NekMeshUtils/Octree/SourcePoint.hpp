@@ -170,6 +170,7 @@ private:
     int sid;
     /// uv coord on surf
     Array<OneD, NekDouble> m_uv;
+    NekDouble m_ti;
     /// delta parameter
     NekDouble m_delta;
 };
@@ -226,6 +227,7 @@ private:
     int sid;
     /// uv coord on surf
     Array<OneD, NekDouble> m_uv;
+    NekDouble m_ti;
 };
 typedef boost::shared_ptr<BPoint> BPointSharedPtr;
 

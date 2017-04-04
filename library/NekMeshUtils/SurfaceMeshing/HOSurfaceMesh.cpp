@@ -124,6 +124,14 @@ void HOSurfaceMesh::Process()
 
         FaceSharedPtr f = m_mesh->m_element[2][i]->GetFaceLink();
 
+        if(!f)
+        {
+            f = boost::shared_ptr<Face>(new Face(m_mesh->m_element[2][i]->GetVertexList(),
+                                                 vector<NodeSharedPtr>(),
+                                                 m_mesh->m_element[2][i]->GetEdgeList(),
+                                                 LibUtilities::ePolyEvenlySpaced));
+        }
+
         f->m_parentCAD = s;
 
         vector<EdgeSharedPtr> edges = f->m_edgeList;
@@ -202,7 +210,7 @@ void HOSurfaceMesh::Process()
 
                     DNekMat J = opti->dF(xi);
 
-                    Array<OneD, NekDouble> bnds = c->Bounds();
+                    Array<OneD, NekDouble> bnds = c->GetBounds();
 
                     bool repeat = true;
                     int itct = 0;
@@ -246,10 +254,7 @@ void HOSurfaceMesh::Process()
                     // need to pull the solution out of opti
                     ti = opti->GetSolution();
                 }
-
-                vector<CADSurfSharedPtr> s = c->GetAdjSurf();
-
-                ASSERTL0(s.size() == 2, "Number of common surfs should be 2");
+                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > s = c->GetAdjSurf();
 
                 for (int k = 1; k < m_mesh->m_nummode - 1; k++)
                 {
@@ -258,10 +263,12 @@ void HOSurfaceMesh::Process()
                         new Node(0, loc[0], loc[1], loc[2]));
 
                     nn->SetCADCurve(cid, c, ti[k]);
-                    Array<OneD, NekDouble> uv = s[0]->locuv(loc);
-                    nn->SetCADSurf(s[0]->GetId(), s[0], uv);
-                    uv = s[1]->locuv(loc);
-                    nn->SetCADSurf(s[1]->GetId(), s[1], uv);
+                    for(int m = 0; m < s.size(); m++)
+                    {
+                        Array<OneD, NekDouble> uv = s[m].first->locuv(loc);
+                        nn->SetCADSurf(s[m].first->GetId(), s[m].first, uv);
+                    }
+
                     honodes[k - 1] = nn;
                 }
             }

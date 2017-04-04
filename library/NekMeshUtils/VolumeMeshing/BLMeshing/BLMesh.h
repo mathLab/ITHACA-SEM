@@ -54,12 +54,11 @@ public:
     /**
      *@brief default constructor
      */
-    BLMesh(MeshSharedPtr m, std::vector<unsigned int> bls,
-                            NekDouble b,
-                            int l,
-                            NekDouble p) :
-                    m_mesh(m), m_blsurfs(bls), m_bl(b), m_prog(p), m_layer(l) 
+    BLMesh(MeshSharedPtr m, std::vector<unsigned int> bls, NekDouble b, int l,
+           NekDouble p, int id)
+        : m_mesh(m), m_blsurfs(bls), m_bl(b), m_prog(p), m_layer(l), m_id(id)
     {
+        
     };
 
     /**
@@ -67,8 +66,14 @@ public:
      */
     void Mesh();
 
-    std::vector<unsigned int> GetSymSurfs(){ return m_symSurfs;}
-    std::vector<unsigned int> GetBLSurfs(){ return m_blsurfs;}
+    std::vector<unsigned int> GetSymSurfs()
+    {
+        return m_symSurfs;
+    }
+    std::vector<unsigned int> GetBLSurfs()
+    {
+        return m_blsurfs;
+    }
 
     std::map<NodeSharedPtr, NodeSharedPtr> GetSymNodes();
 
@@ -100,7 +105,6 @@ public:
     typedef boost::shared_ptr<blInfo> blInfoSharedPtr;
 
 private:
-
     void Setup();
     void GrowLayers();
     void Shrink();
@@ -109,7 +113,8 @@ private:
     bool IsPrismValid(ElementSharedPtr el);
     NekDouble Proximity(NodeSharedPtr n, ElementSharedPtr el);
 
-    NekDouble Visability(std::vector<ElementSharedPtr> tris, Array<OneD, NekDouble> N);
+    NekDouble Visability(std::vector<ElementSharedPtr> tris,
+                         Array<OneD, NekDouble> N);
     Array<OneD, NekDouble> GetNormal(std::vector<ElementSharedPtr> tris);
 
     /// mesh object containing surface mesh
@@ -120,17 +125,17 @@ private:
     NekDouble m_bl;
     NekDouble m_prog;
     int m_layer;
+    int m_id;
     Array<OneD, NekDouble> m_layerT;
     /// list of surfaces to be remeshed due to the boundary layer
     std::vector<unsigned int> m_symSurfs;
     /// data structure used to store and develop bl information
     std::map<NodeSharedPtr, blInfoSharedPtr> m_blData;
-    std::map<NodeSharedPtr, std::vector<blInfoSharedPtr> > m_nToNInfo; //node to neighbouring information
-    std::map<ElementSharedPtr,ElementSharedPtr> m_priToTri;
+    std::map<NodeSharedPtr, std::vector<blInfoSharedPtr> >
+        m_nToNInfo; // node to neighbouring information
+    std::map<ElementSharedPtr, ElementSharedPtr> m_priToTri;
     std::vector<ElementSharedPtr> m_psuedoSurface;
     NekMatrix<NekDouble> m_deriv[3];
-
-
 };
 
 typedef boost::shared_ptr<BLMesh> BLMeshSharedPtr;

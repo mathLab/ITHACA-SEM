@@ -53,6 +53,11 @@ void Face::GetCurvedNodes(
         m_curveType == LibUtilities::eNodalTriElec)
     {
         int n = m_edgeList[0]->GetNodeCount();
+        int n2 = m_edgeList[1]->GetNodeCount();
+        int n3 = m_edgeList[2]->GetNodeCount();
+
+        bool same = (n == n2 ? (n2 == n3) : false);
+        ASSERTL0(same, "Edges are not consistent");
 
         nodeList.insert(
             nodeList.end(), m_vertexList.begin(), m_vertexList.end());
@@ -263,7 +268,8 @@ void Face::MakeOrder(int                                order,
             loc[0] = m_faceNodes[i]->m_x;
             loc[1] = m_faceNodes[i]->m_y;
             loc[2] = m_faceNodes[i]->m_z;
-            Array<OneD, NekDouble> uv = s->locuv(loc);
+            Array<OneD, NekDouble> uv(2);
+            s->ProjectTo(loc,uv);
             loc = s->P(uv);
             m_faceNodes[i]->m_x = loc[0];
             m_faceNodes[i]->m_y = loc[1];

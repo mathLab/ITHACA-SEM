@@ -38,7 +38,7 @@
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 #include <NekMeshUtils/MeshElements/Element.h>
-#include <NekMeshUtils/MeshElements/Composite.h> 
+#include <NekMeshUtils/MeshElements/Composite.h>
 
 namespace Nektar
 {
@@ -100,8 +100,6 @@ public:
     unsigned int                    m_spaceDim;
     /// a order tag to aid output, a bit of a hack
     unsigned int                    m_nummode;
-    ///
-    unsigned int                    m_numcomp;
     /// List of mesh nodes.
     std::vector<NodeSharedPtr>      m_node;
     /// Set of element vertices.
@@ -127,12 +125,9 @@ public:
     std::set<std::pair<int, int> >  m_spherigonSurfs;
     /// List of face labels for composite annotation
     std::map<int, std::string>      m_faceLabels;
-    /// Whether the mesh has CAD
-    bool                            m_hasCAD;
-    /// CAD file ID
-    std::string                     m_CADId;
-
+    /// CAD system pointer, if there is no cad its empty
     CADSystemSharedPtr              m_cad;
+    /// Octree system pointer, if there is no octree its empty
     OctreeSharedPtr                 m_octree;
 
 

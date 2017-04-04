@@ -249,6 +249,7 @@ public:
                 return m_loc[2] - m_hd;
                 break;
         }
+        return 0.0;
     }
 
     /**

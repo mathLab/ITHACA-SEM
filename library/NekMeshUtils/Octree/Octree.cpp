@@ -34,10 +34,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "Octree.h"
+#include <NekMeshUtils/CADSystem/CADCurve.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 #include <NekMeshUtils/Module/Module.h>
 
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
+
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 namespace Nektar
@@ -71,8 +75,7 @@ void Octree::Process()
     m_masteroct = MemoryManager<Octant>::AllocateSharedPtr(
         0, m_centroid[0], m_centroid[1], m_centroid[2], m_dim, m_SPList);
 
-
-    //begin recersive subdivision
+    // begin recersive subdivision
     SubDivide();
 
     m_octants.clear();
@@ -100,6 +103,18 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
 {
     // starting at master octant 0 move through succsesive m_octants which
     // contain the point loc until a leaf is found
+    // first search through sourcepoints
+
+    NekDouble tmp = numeric_limits<double>::max();
+
+    for (int i = 0; i < m_lsources.size(); i++)
+    {
+        if (m_lsources[i].withinRange(loc))
+        {
+            tmp = min(m_lsources[i].delta, tmp);
+        }
+    }
+
     OctantSharedPtr n = m_masteroct;
     int quad;
 
@@ -111,49 +126,49 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
 
         if (!(loc[0] < octloc[0]) && // forward
             !(loc[1] < octloc[1]) && // forward
-            !(loc[2] < octloc[2])) // forward
+            !(loc[2] < octloc[2]))   // forward
         {
             quad = 0;
         }
         else if (!(loc[0] < octloc[0]) && // forward
                  !(loc[1] < octloc[1]) && // forward
-                 !(loc[2] > octloc[2])) // back
+                 !(loc[2] > octloc[2]))   // back
         {
             quad = 1;
         }
         else if (!(loc[0] < octloc[0]) && // forward
                  !(loc[1] > octloc[1]) && // back
-                 !(loc[2] < octloc[2])) // forward
+                 !(loc[2] < octloc[2]))   // forward
         {
             quad = 2;
         }
         else if (!(loc[0] < octloc[0]) && // forward
                  !(loc[1] > octloc[1]) && // back
-                 !(loc[2] > octloc[2])) // back
+                 !(loc[2] > octloc[2]))   // back
         {
             quad = 3;
         }
         else if (!(loc[0] > octloc[0]) && // back
                  !(loc[1] < octloc[1]) && // forward
-                 !(loc[2] < octloc[2])) // forward
+                 !(loc[2] < octloc[2]))   // forward
         {
             quad = 4;
         }
         else if (!(loc[0] > octloc[0]) && // back
                  !(loc[1] < octloc[1]) && // forward
-                 !(loc[2] > octloc[2])) // back
+                 !(loc[2] > octloc[2]))   // back
         {
             quad = 5;
         }
         else if (!(loc[0] > octloc[0]) && // back
                  !(loc[1] > octloc[1]) && // back
-                 !(loc[2] < octloc[2])) // forward
+                 !(loc[2] < octloc[2]))   // forward
         {
             quad = 6;
         }
         else if (!(loc[0] > octloc[0]) && // back
                  !(loc[1] > octloc[1]) && // back
-                 !(loc[2] > octloc[2])) // back
+                 !(loc[2] > octloc[2]))   // back
         {
             quad = 7;
         }
@@ -169,7 +184,19 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
             found = true;
         }
     }
-    return n->GetDelta();
+
+    return min(n->GetDelta(), tmp);
+}
+
+NekDouble Octree::GetMinDelta()
+{
+    NekDouble tmp = numeric_limits<double>::max();
+
+    for (int i = 0; i < m_lsources.size(); i++)
+    {
+        tmp = min(m_lsources[i].delta, tmp);
+    }
+    return min(m_minDelta, tmp);
 }
 
 void Octree::WriteOctree(string nm)
@@ -188,43 +215,35 @@ void Octree::WriteOctree(string nm)
 
         vector<NodeSharedPtr> ns(8);
 
-        ns[0] = boost::shared_ptr<Node>(new Node(0,
-                                                 m_octants[i]->FX(eBack),
+        ns[0] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
                                                  m_octants[i]->FX(eDown),
                                                  m_octants[i]->FX(eRight)));
 
-        ns[1] = boost::shared_ptr<Node>(new Node(0,
-                                                 m_octants[i]->FX(eForward),
+        ns[1] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
                                                  m_octants[i]->FX(eDown),
                                                  m_octants[i]->FX(eRight)));
 
-        ns[2] = boost::shared_ptr<Node>(new Node(0,
-                                                 m_octants[i]->FX(eForward),
+        ns[2] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
                                                  m_octants[i]->FX(eUp),
                                                  m_octants[i]->FX(eRight)));
 
-        ns[3] = boost::shared_ptr<Node>(new Node(0,
-                                                 m_octants[i]->FX(eBack),
+        ns[3] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
                                                  m_octants[i]->FX(eUp),
                                                  m_octants[i]->FX(eRight)));
 
-        ns[4] = boost::shared_ptr<Node>(new Node(0,
-                                                 m_octants[i]->FX(eBack),
+        ns[4] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
                                                  m_octants[i]->FX(eDown),
                                                  m_octants[i]->FX(eLeft)));
 
-        ns[5] = boost::shared_ptr<Node>(new Node(0,
-                                                 m_octants[i]->FX(eForward),
+        ns[5] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
                                                  m_octants[i]->FX(eDown),
                                                  m_octants[i]->FX(eLeft)));
 
-        ns[6] = boost::shared_ptr<Node>(new Node(0,
-                                                 m_octants[i]->FX(eForward),
+        ns[6] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eForward),
                                                  m_octants[i]->FX(eUp),
                                                  m_octants[i]->FX(eLeft)));
 
-        ns[7] = boost::shared_ptr<Node>(new Node(0,
-                                                 m_octants[i]->FX(eBack),
+        ns[7] = boost::shared_ptr<Node>(new Node(0, m_octants[i]->FX(eBack),
                                                  m_octants[i]->FX(eUp),
                                                  m_octants[i]->FX(eLeft)));
 
@@ -236,8 +255,8 @@ void Octree::WriteOctree(string nm)
         oct->m_element[3].push_back(E);
     }
 
-    ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
-        ModuleKey(eOutputModule, "xml"), oct);
+    ModuleSharedPtr mod =
+        GetModuleFactory().CreateInstance(ModuleKey(eOutputModule, "xml"), oct);
     mod->RegisterConfig("outfile", nm);
     mod->ProcessVertices();
     mod->ProcessEdges();
@@ -376,7 +395,7 @@ bool Octree::VerifyNeigbours()
         {
             if (it->second.size() == 0)
             {
-                NekDouble expectedfx;
+                NekDouble expectedfx = 0.0;
                 switch (it->first)
                 {
                     case eUp:
@@ -464,7 +483,7 @@ void Octree::SmoothSurfaceOctants()
                     {
                         if (it->second[j]->IsDeltaKnown() &&
                             it->second[j]->GetDelta() < oct->GetDelta() &&
-                            ddx(oct, it->second[j]) > 0.1)
+                            ddx(oct, it->second[j]) > 0.2)
                         {
                             check.push_back(it->second[j]);
                         }
@@ -481,9 +500,9 @@ void Octree::SmoothSurfaceOctants()
                     {
                         NekDouble r = oct->Distance(check[j]);
 
-                        if (0.099 * r + check[j]->GetDelta() < deltaSM)
+                        if (0.199 * r + check[j]->GetDelta() < deltaSM)
                         {
-                            deltaSM = 0.099 * r + check[j]->GetDelta();
+                            deltaSM = 0.199 * r + check[j]->GetDelta();
                         }
                     }
                     oct->SetDelta(deltaSM);
@@ -534,9 +553,9 @@ void Octree::PropagateDomain()
                     {
                         NekDouble r = oct->Distance(known[j]);
 
-                        if (0.14 * r + known[j]->GetDelta() < m_maxDelta)
+                        if (0.199 * r + known[j]->GetDelta() < m_maxDelta)
                         {
-                            deltaPrime.push_back(0.14 * r +
+                            deltaPrime.push_back(0.199 * r +
                                                  known[j]->GetDelta());
                         }
                         else
@@ -605,10 +624,10 @@ void Octree::PropagateDomain()
                             {
                                 closest = known[j];
                                 dist    = oct->Distance(known[j]);
-                                f = true;
+                                f       = true;
                             }
                         }
-                        ASSERTL0(f,"closest never set");
+                        ASSERTL0(f, "closest never set");
 
                         SPBaseSharedPtr sp = closest->GetABoundPoint();
 
@@ -647,8 +666,10 @@ void Octree::PropagateDomain()
 
     for (int i = 0; i < m_octants.size(); i++)
     {
-        ASSERTL0(m_octants[i]->IsDeltaKnown(),
-                 "does not know delta after propergation");
+        if (!m_octants[i]->IsDeltaKnown())
+        {
+            m_octants[i]->SetDelta(m_maxDelta);
+        }
     }
 }
 
@@ -813,71 +834,68 @@ int Octree::CountElemt()
     return int(total);
 }
 
-//struct to assist in the creation of linesources in the code
-struct linesource
-{
-    Array<OneD, NekDouble> x1, x2;
-    NekDouble R, delta;
-    linesource(Array<OneD, NekDouble> p1,
-               Array<OneD, NekDouble> p2,
-               NekDouble r,
-               NekDouble d)
-        : x1(p1), x2(p2), R(r), delta(d)
-    {
-    }
-
-    bool withinRange(Array<OneD, NekDouble> p)
-    {
-        Array<OneD, NekDouble> Le(3), Re(3), s(3);
-        for (int i = 0; i < 3; i++)
-        {
-            Le[i] = p[i] - x1[i];
-            Re[i] = p[i] - x2[i];
-            s[i]  = x2[i] - x1[i];
-        }
-        Array<OneD, NekDouble> dev(3);
-        dev[0] = Le[1] * Re[2] - Re[1] * Le[2];
-        dev[1] = Le[0] * Re[2] - Re[0] * Le[2];
-        dev[2] = Le[0] * Re[1] - Re[0] * Le[1];
-
-        NekDouble dist =
-            sqrt(dev[0] * dev[0] + dev[1] * dev[1] + dev[2] * dev[2]) /
-            sqrt(s[0] * s[0] + s[1] * s[1] + s[2] * s[2]);
-
-        NekDouble t = -1.0 * ((x1[0] - p[0]) * s[0] + (x1[1] - p[1]) * s[1] +
-                              (x1[1] - p[1]) * s[1]) /
-                      Length() / Length();
-
-        if (dist < R && !(t > 1) && !(t < 0))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    NekDouble Length()
-    {
-        return sqrt((x1[0] - x2[0]) * (x1[0] - x2[0]) +
-                    (x1[1] - x2[1]) * (x1[1] - x2[1]) +
-                    (x1[2] - x2[2]) * (x1[2] - x2[2]));
-    }
-};
-
 void Octree::CompileSourcePointList()
 {
-    //first sample surfaces
+
+    if(m_mesh->m_cad->Is2D())
+    {
+        for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
+        {
+            CADCurveSharedPtr curve = m_mesh->m_cad->GetCurve(i);
+            Array<OneD, NekDouble> bds = curve->GetBounds();
+            int samples  = 100;
+            NekDouble dt = (bds[1] - bds[0]) / (samples + 1);
+            for (int j = 1; j < samples - 1; j++) // dont want first and last point
+            {
+                NekDouble t = bds[0] + dt * j;
+                NekDouble C = curve->Curvature(t);
+
+                Array<OneD, NekDouble> loc = curve->P(t);
+
+                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > ss =
+                    curve->GetAdjSurf();
+                Array<OneD, NekDouble> uv = ss[0].first->locuv(loc);
+
+                if (C != 0.0)
+                {
+                    NekDouble del = 2.0 * (1.0 / C) * sqrt(m_eps * (2.0 - m_eps));
+
+                    if (del > m_maxDelta)
+                    {
+                        del = m_maxDelta;
+                    }
+                    if (del < m_minDelta)
+                    {
+                        del = m_minDelta;
+                    }
+
+                    CPointSharedPtr newCPoint =
+                        MemoryManager<CPoint>::AllocateSharedPtr(
+                            ss[0].first->GetId(), uv, loc, del);
+
+                    m_SPList.push_back(newCPoint);
+                }
+                else
+                {
+                    BPointSharedPtr newBPoint =
+                        MemoryManager<BPoint>::AllocateSharedPtr(
+                            ss[0].first->GetId(), uv, loc);
+
+                    m_SPList.push_back(newBPoint);
+                }
+            }
+        }
+    }
+
     for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {
-        if(m_mesh->m_verbose)
+        if (m_mesh->m_verbose)
         {
-            LibUtilities::PrintProgressbar(
-                i, m_mesh->m_cad->GetNumSurf(), "\tCompiling source points");
+            LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumSurf(),
+                                           "\tCompiling source points");
         }
 
-        CADSurfSharedPtr surf         = m_mesh->m_cad->GetSurf(i);
+        CADSurfSharedPtr surf = m_mesh->m_cad->GetSurf(i);
         Array<OneD, NekDouble> bounds = surf->GetBounds();
 
         // to figure out the amount of curvature sampling to be conducted on
@@ -941,8 +959,8 @@ void Octree::CompileSourcePointList()
 
         // these are the acutal number of sample points in each parametric
         // direction
-        int nu = ceil(DeltaU / m_minDelta) * 40;
-        int nv = ceil(DeltaV / m_minDelta) * 40;
+        int nu = ceil(DeltaU / m_minDelta) * 40 * 2;
+        int nv = ceil(DeltaV / m_minDelta) * 40 * 2;
 
         for (int j = 0; j < nu; j++)
         {
@@ -977,66 +995,63 @@ void Octree::CompileSourcePointList()
                         del = m_minDelta;
                     }
 
-
-                    CPointSharedPtr newCPoint = MemoryManager<CPoint>::
-                        AllocateSharedPtr(surf->GetId(), uv, surf->P(uv), del);
+                    CPointSharedPtr newCPoint =
+                        MemoryManager<CPoint>::AllocateSharedPtr(
+                            surf->GetId(), uv, surf->P(uv), del);
 
                     m_SPList.push_back(newCPoint);
-
                 }
                 else
                 {
-                    BPointSharedPtr newBPoint = MemoryManager<BPoint>::
-                            AllocateSharedPtr(surf->GetId(), uv, surf->P(uv));
+                    BPointSharedPtr newBPoint =
+                        MemoryManager<BPoint>::AllocateSharedPtr(
+                            surf->GetId(), uv, surf->P(uv));
 
                     m_SPList.push_back(newBPoint);
                 }
             }
         }
-
     }
-    if(m_mesh->m_verbose)
+    if (m_mesh->m_verbose)
     {
         cout << endl;
     }
 
-    if (m_udsfileset)
+    if (m_refinement.size() > 0)
     {
-        if(m_mesh->m_verbose)
+        if (m_mesh->m_verbose)
         {
-            cout << "\t\tModifying based on uds files" << endl;
+            cout << "\t\tModifying based on refinement lines" << endl;
         }
         // now deal with the user defined spacing
-        vector<linesource> lsources;
-        fstream fle;
-        fle.open(m_udsfile.c_str());
+        vector<string> lines;
 
-        string fileline;
+        boost::split(lines, m_refinement, boost::is_any_of(":"));
 
-        while (!fle.eof())
+        for (int i = 0; i < lines.size(); i++)
         {
-            getline(fle, fileline);
-            stringstream s(fileline);
-            string word;
-            s >> word;
-            if (word == "L")
-            {
-                Array<OneD, NekDouble> x1(3), x2(3);
-                NekDouble r, d;
-                s >> x1[0] >> x1[1] >> x1[2] >> x2[0] >> x2[1] >> x2[2]
-                  >> r >> d;
-                lsources.push_back(linesource(x1, x2, r, d));
-            }
+            vector<NekDouble> data;
+            ParseUtils::GenerateUnOrderedVector(lines[i].c_str(), data);
+
+            Array<OneD, NekDouble> x1(3), x2(3);
+
+            x1[0] = data[0];
+            x1[1] = data[1];
+            x1[2] = data[2];
+            x2[0] = data[3];
+            x2[1] = data[4];
+            x2[2] = data[5];
+
+            m_lsources.push_back(linesource(x1, x2, data[6], data[7]));
         }
-        fle.close();
 
         // this takes any existing sourcepoints within the influence range
         // and modifies them
-        for (int i = 0; i < m_SPList.size(); i++)
+        /*for (int i = 0; i < m_SPList.size(); i++)
         {
-            for (int j = 0; j < lsources.size(); j++)
+            for (int j = 0; j < m_lsources.size(); j++)
             {
-                if (lsources[j].withinRange(m_SPList[i]->GetLoc()))
+                if (m_lsources[j].withinRange(m_SPList[i]->GetLoc()))
                 {
                     if(m_SPList[i]->GetType() == ePBoundary)
                     {
@@ -1047,11 +1062,11 @@ void Octree::CompileSourcePointList()
                         m_SPList[i] = bp->ChangeType();
 
                     }
-                    m_SPList[i]->SetDelta(lsources[j].delta);
+                    m_SPList[i]->SetDelta(m_lsources[j].delta);
                 }
             }
-        }
-        ///TODO add extra source points from the line souce to the octree
+        }*/
+        /// TODO add extra source points from the line souce to the octree
     }
 }
 

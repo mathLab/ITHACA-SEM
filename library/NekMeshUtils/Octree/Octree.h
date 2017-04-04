@@ -40,10 +40,63 @@
 #include "Octant.h"
 #include <NekMeshUtils/MeshElements/Mesh.h>
 
+#include <string>
+
 namespace Nektar
 {
 namespace NekMeshUtils
 {
+
+//struct to assist in the creation of linesources in the code
+struct linesource
+{
+    Array<OneD, NekDouble> x1, x2;
+    NekDouble R, delta;
+    linesource(Array<OneD, NekDouble> p1,
+               Array<OneD, NekDouble> p2,
+               NekDouble r,
+               NekDouble d)
+        : x1(p1), x2(p2), R(r), delta(d)
+    {
+    }
+
+    bool withinRange(Array<OneD, NekDouble> p)
+    {
+        Array<OneD, NekDouble> Le(3), Re(3), s(3);
+        for (int i = 0; i < 3; i++)
+        {
+            Le[i] = p[i] - x1[i];
+            Re[i] = p[i] - x2[i];
+            s[i]  = x2[i] - x1[i];
+        }
+        Array<OneD, NekDouble> dev(3);
+        dev[0] = Le[1] * Re[2] - Re[1] * Le[2];
+        dev[1] = Le[2] * Re[0] - Re[2] * Le[0];
+        dev[2] = Le[0] * Re[1] - Re[0] * Le[1];
+
+        NekDouble dist =
+            sqrt(dev[0] * dev[0] + dev[1] * dev[1] + dev[2] * dev[2]) / Length();
+
+        NekDouble t = -1.0 * ((x1[0] - p[0]) * s[0] + (x1[1] - p[1]) * s[1] +
+                              (x1[2] - p[2]) * s[2]) / Length() / Length();
+
+        if (dist < R && !(t > 1) && !(t < 0))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    NekDouble Length()
+    {
+        return sqrt((x1[0] - x2[0]) * (x1[0] - x2[0]) +
+                    (x1[1] - x2[1]) * (x1[1] - x2[1]) +
+                    (x1[2] - x2[2]) * (x1[2] - x2[2]));
+    }
+};
 
 /**
  * @brief class for octree
@@ -56,11 +109,6 @@ class Octree
 public:
 
     Octree(MeshSharedPtr m) : m_mesh(m)
-    {
-
-    }
-
-    Octree()
     {
     }
 
@@ -84,10 +132,7 @@ public:
      *
      * @return miminum delta in octree
      */
-    NekDouble GetMinDelta()
-    {
-        return m_minDelta;
-    }
+    NekDouble GetMinDelta();
 
     /**
      * @brief sets the parameters used for curvature sampling
@@ -115,10 +160,9 @@ public:
      *
      * @param nm name of the user defined spacing file
      */
-    void UDS(std::string nm)
+    void Refinement(std::string nm)
     {
-        m_udsfile = nm;
-        m_udsfileset = true;
+        m_refinement = nm;
     }
 
 private:
@@ -190,10 +234,9 @@ private:
     int m_numoct;
     /// Mesh object
     MeshSharedPtr m_mesh;
-    /// user defined spacing has been set
-    bool m_udsfileset;
-    /// name of the user defined spacing file
-    std::string m_udsfile;
+
+    std::string m_refinement;
+    std::vector<linesource> m_lsources;
 };
 typedef boost::shared_ptr<Octree> OctreeSharedPtr;
 

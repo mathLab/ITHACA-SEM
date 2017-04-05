@@ -14,6 +14,7 @@ v4.4.1
 ------
 **Library**
 - Remove the duplicate output of errorutil (!756)
+- fix blas cmake dependencies (!763)
 
 **NekMesh**:
 - Fix memory consumption issue with Gmsh output (!747, !762)

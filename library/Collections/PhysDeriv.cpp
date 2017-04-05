@@ -938,7 +938,7 @@ class PhysDeriv_SumFac_Hex : public Operator
             Array<OneD, Array<OneD, NekDouble> > out(3);
             out[0] = output0;  out[1] = output1;    out[2] = output2;
 
-            for(int i = 0; i < m_dim; ++i)
+            for(int i = 0; i < 3; ++i)
             {
                 Diff[i] = wsp + i*ntot;
             }
@@ -967,10 +967,10 @@ class PhysDeriv_SumFac_Hex : public Operator
             // calculate full derivative
             for(int i = 0; i < m_coordim; ++i)
             {
-                Vmath::Vmul(ntot,m_derivFac[i*m_dim],1,Diff[0],1,out[i],1);
-                for(int j = 1; j < m_dim; ++j)
+                Vmath::Vmul(ntot,m_derivFac[i*3],1,Diff[0],1,out[i],1);
+                for(int j = 1; j < 3; ++j)
                 {
-                    Vmath::Vvtvp (ntot, m_derivFac[i*m_dim+j], 1,
+                    Vmath::Vvtvp (ntot, m_derivFac[i*3+j], 1,
                                         Diff[j],               1,
                                         out[i],                1,
                                         out[i],                1);
@@ -989,7 +989,7 @@ class PhysDeriv_SumFac_Hex : public Operator
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
             Array<OneD, Array<OneD, NekDouble> > Diff(3);
 
-            for(int i = 0; i < m_dim; ++i)
+            for(int i = 0; i < 3; ++i)
             {
                 Diff[i] = wsp + i*ntot;
             }
@@ -1016,10 +1016,10 @@ class PhysDeriv_SumFac_Hex : public Operator
             }
 
             // calculate full derivative
-            Vmath::Vmul(ntot,m_derivFac[dir*m_dim],1,Diff[0],1,output,1);
-            for(int j = 1; j < m_dim; ++j)
+            Vmath::Vmul(ntot,m_derivFac[dir*3],1,Diff[0],1,output,1);
+            for(int j = 1; j < 3; ++j)
             {
-                Vmath::Vvtvp (ntot, m_derivFac[dir*m_dim+j], 1,
+                Vmath::Vvtvp (ntot, m_derivFac[dir*3+j], 1,
                                     Diff[j],               1,
                                     output,                1,
                                     output,                1);
@@ -1028,7 +1028,6 @@ class PhysDeriv_SumFac_Hex : public Operator
 
     protected:
         Array<TwoD, const NekDouble>    m_derivFac;
-        int                             m_dim;
         int                             m_coordim;
         const int                       m_nquad0;
         const int                       m_nquad1;
@@ -1048,7 +1047,6 @@ class PhysDeriv_SumFac_Hex : public Operator
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
 
-            m_dim = PtsKey.size();
             m_coordim = m_stdExp->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
@@ -1096,7 +1094,7 @@ class PhysDeriv_SumFac_Tet : public Operator
             Array<OneD, Array<OneD, NekDouble> > out(3);
             out[0] = output0;  out[1] = output1;    out[2] = output2;
 
-            for(int i = 0; i < m_dim; ++i)
+            for(int i = 0; i < 3; ++i)
             {
                 Diff[i] = wsp + i*ntot;
             }
@@ -1161,10 +1159,10 @@ class PhysDeriv_SumFac_Tet : public Operator
             // calculate full derivative
             for(int i = 0; i < m_coordim; ++i)
             {
-                Vmath::Vmul(ntot,m_derivFac[i*m_dim],1,Diff[0],1,out[i],1);
-                for(int j = 1; j < m_dim; ++j)
+                Vmath::Vmul(ntot,m_derivFac[i*3],1,Diff[0],1,out[i],1);
+                for(int j = 1; j < 3; ++j)
                 {
-                    Vmath::Vvtvp (ntot, m_derivFac[i*m_dim+j], 1,
+                    Vmath::Vvtvp (ntot, m_derivFac[i*3+j], 1,
                                         Diff[j], 1, out[i], 1, out[i], 1);
                 }
             }
@@ -1181,7 +1179,7 @@ class PhysDeriv_SumFac_Tet : public Operator
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
             Array<OneD, Array<OneD, NekDouble> > Diff(3);
 
-            for(int i = 0; i < m_dim; ++i)
+            for(int i = 0; i < 3; ++i)
             {
                 Diff[i] = wsp + i*ntot;
             }
@@ -1244,17 +1242,16 @@ class PhysDeriv_SumFac_Tet : public Operator
             }
 
             // calculate full derivative
-            Vmath::Vmul(ntot,m_derivFac[dir*m_dim],1,Diff[0],1,output,1);
-            for(int j = 1; j < m_dim; ++j)
+            Vmath::Vmul(ntot,m_derivFac[dir*3],1,Diff[0],1,output,1);
+            for(int j = 1; j < 3; ++j)
             {
-                Vmath::Vvtvp (ntot, m_derivFac[dir*m_dim+j], 1,
+                Vmath::Vvtvp (ntot, m_derivFac[dir*3+j], 1,
                                     Diff[j], 1, output, 1, output, 1);
             }
         }
 
     protected:
         Array<TwoD, const NekDouble>    m_derivFac;
-        int                             m_dim;
         int                             m_coordim;
         const int                       m_nquad0;
         const int                       m_nquad1;
@@ -1278,7 +1275,6 @@ class PhysDeriv_SumFac_Tet : public Operator
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
 
-            m_dim = PtsKey.size();
             m_coordim = m_stdExp->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
@@ -1358,7 +1354,7 @@ class PhysDeriv_SumFac_Prism : public Operator
             Array<OneD, Array<OneD, NekDouble> > out(3);
             out[0] = output0; out[1] = output1; out[2] = output2;
 
-            for(int i = 0; i < m_dim; ++i)
+            for(int i = 0; i < 3; ++i)
             {
                 Diff[i] = wsp + i*ntot;
             }
@@ -1401,10 +1397,10 @@ class PhysDeriv_SumFac_Prism : public Operator
             // calculate full derivative
             for(int i = 0; i < m_coordim; ++i)
             {
-                Vmath::Vmul(ntot,m_derivFac[i*m_dim],1,Diff[0],1,out[i],1);
-                for(int j = 1; j < m_dim; ++j)
+                Vmath::Vmul(ntot,m_derivFac[i*3],1,Diff[0],1,out[i],1);
+                for(int j = 1; j < 3; ++j)
                 {
-                    Vmath::Vvtvp (ntot, m_derivFac[i*m_dim+j], 1,
+                    Vmath::Vvtvp (ntot, m_derivFac[i*3+j], 1,
                                         Diff[j], 1, out[i], 1, out[i], 1);
                 }
             }
@@ -1421,7 +1417,7 @@ class PhysDeriv_SumFac_Prism : public Operator
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
             Array<OneD, Array<OneD, NekDouble> > Diff(3);
 
-            for(int i = 0; i < m_dim; ++i)
+            for(int i = 0; i < 3; ++i)
             {
                 Diff[i] = wsp + i*ntot;
             }
@@ -1462,17 +1458,16 @@ class PhysDeriv_SumFac_Prism : public Operator
             }
 
             // calculate full derivative
-            Vmath::Vmul(ntot,m_derivFac[dir*m_dim],1,Diff[0],1,output,1);
-            for(int j = 1; j < m_dim; ++j)
+            Vmath::Vmul(ntot,m_derivFac[dir*3],1,Diff[0],1,output,1);
+            for(int j = 1; j < 3; ++j)
             {
-                Vmath::Vvtvp (ntot, m_derivFac[dir*m_dim+j], 1,
+                Vmath::Vvtvp (ntot, m_derivFac[dir*3+j], 1,
                                     Diff[j], 1, output, 1, output, 1);
             }
         }
 
     protected:
         Array<TwoD, const NekDouble>    m_derivFac;
-        int                             m_dim;
         int                             m_coordim;
         const int                       m_nquad0;
         const int                       m_nquad1;
@@ -1494,7 +1489,6 @@ class PhysDeriv_SumFac_Prism : public Operator
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
 
-            m_dim = PtsKey.size();
             m_coordim = m_stdExp->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
@@ -1563,7 +1557,7 @@ class PhysDeriv_SumFac_Pyr : public Operator
             Array<OneD, Array<OneD, NekDouble> > out(3);
             out[0] = output0; out[1] = output1; out[2] = output2;
 
-            for(int i = 0; i < m_dim; ++i)
+            for(int i = 0; i < 3; ++i)
             {
                 Diff[i] = wsp + i*ntot;
             }
@@ -1613,10 +1607,10 @@ class PhysDeriv_SumFac_Pyr : public Operator
             // calculate full derivative
             for(int i = 0; i < m_coordim; ++i)
             {
-                Vmath::Vmul(ntot,m_derivFac[i*m_dim],1,Diff[0],1,out[i],1);
-                for(int j = 1; j < m_dim; ++j)
+                Vmath::Vmul(ntot,m_derivFac[i*3],1,Diff[0],1,out[i],1);
+                for(int j = 1; j < 3; ++j)
                 {
-                    Vmath::Vvtvp (ntot, m_derivFac[i*m_dim+j], 1,
+                    Vmath::Vvtvp (ntot, m_derivFac[i*3+j], 1,
                                         Diff[j], 1, out[i], 1, out[i], 1);
                 }
             }
@@ -1633,7 +1627,7 @@ class PhysDeriv_SumFac_Pyr : public Operator
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
             Array<OneD, Array<OneD, NekDouble> > Diff(3);
 
-            for(int i = 0; i < m_dim; ++i)
+            for(int i = 0; i < 3; ++i)
             {
                 Diff[i] = wsp + i*ntot;
             }
@@ -1680,17 +1674,16 @@ class PhysDeriv_SumFac_Pyr : public Operator
             }
 
             // calculate full derivative
-            Vmath::Vmul(ntot,m_derivFac[dir*m_dim],1,Diff[0],1,output,1);
-            for(int j = 1; j < m_dim; ++j)
+            Vmath::Vmul(ntot,m_derivFac[dir*3],1,Diff[0],1,output,1);
+            for(int j = 1; j < 3; ++j)
             {
-                Vmath::Vvtvp (ntot, m_derivFac[dir*m_dim+j], 1,
+                Vmath::Vvtvp (ntot, m_derivFac[dir*3+j], 1,
                                     Diff[j], 1, output, 1, output, 1);
             }
         }
 
     protected:
         Array<TwoD, const NekDouble>    m_derivFac;
-        int                             m_dim;
         int                             m_coordim;
         const int                       m_nquad0;
         const int                       m_nquad1;
@@ -1713,7 +1706,6 @@ class PhysDeriv_SumFac_Pyr : public Operator
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
 
-            m_dim = PtsKey.size();
             m_coordim = m_stdExp->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
@@ -1728,17 +1720,19 @@ class PhysDeriv_SumFac_Pyr : public Operator
             m_fac1 = Array<OneD, NekDouble>(m_nquad0*m_nquad1*m_nquad2);
             m_fac2 = Array<OneD, NekDouble>(m_nquad0*m_nquad1*m_nquad2);
 
+            int nq0_nq1 = m_nquad0*m_nquad1;
             for (int i = 0; i < m_nquad0; ++i)
             {
                 for(int j = 0; j < m_nquad1; ++j)
                 {
+                    int ifac = i+j*m_nquad0;
                     for(int k = 0; k < m_nquad2; ++k)
                     {
-                        m_fac0[i+j*m_nquad0 + k*m_nquad0*m_nquad1] =
+                        m_fac0[ifac + k*nq0_nq1] =
                             2.0/(1-z2[k]);
-                        m_fac1[i+j*m_nquad0 + k*m_nquad0*m_nquad1] =
+                        m_fac1[ifac + k*nq0_nq1] =
                             0.5*(1+z0[i]);
-                        m_fac2[i+j*m_nquad0 + k*m_nquad0*m_nquad1] =
+                        m_fac2[ifac + k*nq0_nq1] =
                             0.5*(1+z1[j]);
                     }
                 }

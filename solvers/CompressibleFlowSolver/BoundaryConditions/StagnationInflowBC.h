@@ -87,6 +87,9 @@ class StagnationInflowBC : public CFSBndCond
 
         // Field storage for StagnationInflowBC
         Array<OneD, Array<OneD, NekDouble> > m_fieldStorage;
+
+        // Flag determining if we have an axi-symmetric case with swirl
+        bool                                 m_swirl;
 };
 
 }

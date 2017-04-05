@@ -54,6 +54,9 @@ StagnationInflowBC::StagnationInflowBC(const LibUtilities::SessionReaderSharedPt
     : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
     int nvariables = m_fields.num_elements();
+    int expdim     = pFields[0]->GetGraph()->GetMeshDimension();
+    int spacedim   = pFields[0]->GetGraph()->GetSpaceDimension();
+    m_swirl        = ((spacedim == 3) && (expdim == 2));
     // Loop over Boundary Regions for StagnationInflowBC
     m_fieldStorage = Array<OneD, Array<OneD, NekDouble> > (nvariables);
 
@@ -75,8 +78,8 @@ void StagnationInflowBC::v_Apply(
         const NekDouble                                    &time)
 {
     int i, j;
-    int nTracePts = m_fields[0]->GetTrace()->GetNpoints();
-    int numBCPts = m_fields[0]->
+    int nTracePts  = m_fields[0]->GetTrace()->GetNpoints();
+    int numBCPts   = m_fields[0]->
         GetBndCondExpansions()[m_bcRegion]->GetNpoints();
     int nVariables = physarray.num_elements();
 
@@ -87,9 +90,20 @@ void StagnationInflowBC::v_Apply(
     NekDouble gammaMinusOne    = m_gamma - 1.0;
     NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
 
-    // Get stagnation pressure
+    // Get stagnation pressure (with zero swirl)
     Array<OneD, NekDouble > pStag      (numBCPts);
-    m_varConv->GetPressure(m_fieldStorage, pStag);
+    if (m_swirl)
+    {
+        Array<OneD, NekDouble > tmp       (numBCPts);
+        Vmath::Vcopy(numBCPts, m_fieldStorage[3], 1, tmp, 1);
+        Vmath::Zero(numBCPts, m_fieldStorage[3], 1);
+        m_varConv->GetPressure(m_fieldStorage, pStag);
+        Vmath::Vcopy(numBCPts, tmp, 1, m_fieldStorage[3], 1);
+    }
+    else
+    {
+        m_varConv->GetPressure(m_fieldStorage, pStag);
+    }
 
     // Get Mach from Fwd
     Array<OneD, NekDouble > pressure  (nTracePts);
@@ -131,12 +145,21 @@ void StagnationInflowBC::v_Apply(
 
             // Extrapolation for velocity and Kinetic energy calculation
             NekDouble Ek = 0.0;
-            for (j = 1; j < nVariables-1; ++j)
+            for (j = 1; j < 3; ++j)
             {
                 (m_fields[j]->GetBndCondExpansions()[m_bcRegion]->
                      UpdatePhys())[id1+i] = Fwd[j][pnt];
 
                 Ek += 0.5 * (Fwd[j][pnt] * Fwd[j][pnt]) / Fwd[0][pnt];
+            }
+
+            if (m_swirl)
+            {
+                // Prescribed swirl
+                (m_fields[3]->GetBndCondExpansions()[m_bcRegion]->
+                    UpdatePhys())[id1+i] = m_fieldStorage[3][id1+i];
+                Ek += 0.5 * (m_fieldStorage[3][id1+i] *
+                             m_fieldStorage[3][id1+i]) / Fwd[0][pnt];
             }
 
             // Energy

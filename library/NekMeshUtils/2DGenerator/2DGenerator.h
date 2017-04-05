@@ -61,21 +61,27 @@ public:
     static ModuleKey className;
 
     Generator2D(MeshSharedPtr m);
+
     virtual ~Generator2D();
 
     virtual void Process();
 
 private:
-
     void MakeBLPrep();
 
-    void MakeBL(int faceid, std::vector<EdgeLoopSharedPtr> e);
+    void PeriodicPrep();
+
+    void MakePeriodic();
+
+    void MakeBL(int faceid);
 
     void Report();
     /// map of individual surface meshes from parametric surfaces
     std::map<int, FaceMeshSharedPtr> m_facemeshes;
     /// map of individual curve meshes of the curves in the domain
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
+    /// map of periodic curve pairs
+    std::map<unsigned, unsigned> m_periodicPairs;
 
     std::vector<unsigned int> m_blCurves;
     LibUtilities::AnalyticExpressionEvaluator m_thickness;

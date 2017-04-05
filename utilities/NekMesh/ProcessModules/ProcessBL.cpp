@@ -163,7 +163,7 @@ void ProcessBL::BoundaryLayer2D()
     int nl      = m_config["layers"].as<int>();
     int nq      = m_config["nq"].    as<int>();
 
-    // determine if geometric ratio is string or a constant. 
+    // determine if geometric ratio is string or a constant.
     LibUtilities::AnalyticExpressionEvaluator rEval;
     NekDouble r             =  1;
     int       rExprId       = -1;
@@ -292,7 +292,7 @@ void ProcessBL::BoundaryLayer2D()
             boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
                 el[i]->GetGeom(m_mesh->m_spaceDim));
 
-        // Determine whether to use reverse points. 
+        // Determine whether to use reverse points.
         // (if edges 1 or 2 are on the surface)
         LibUtilities::PointsType t = ( (splitEls[el[i]->GetId()]+1) %4) < 2 ?
             LibUtilities::eBoundaryLayerPoints :
@@ -372,7 +372,7 @@ void ProcessBL::BoundaryLayer2D()
                 {
                     NekDouble x0,y0;
                     NekDouble x1,y1;
-                    NekDouble xm,ym,zm;
+                    NekDouble xm,ym,zm=0.0;
 
                     // -> Find edge end and mid points
                     x0 = edgeNodes[j][0]->m_x;
@@ -388,7 +388,7 @@ void ProcessBL::BoundaryLayer2D()
                     NekDouble rnew;
                     rnew = rEval.Evaluate(rExprId,xm,ym,zm,0.0);
 
-                    // Get basis with new r; 
+                    // Get basis with new r;
                     t =  (j==0) ? LibUtilities::eBoundaryLayerPoints :
                                  LibUtilities::eBoundaryLayerPointsRev;
                     LibUtilities::PointsKey Pkey(nl+1, t, rnew);
@@ -540,7 +540,7 @@ void ProcessBL::BoundaryLayer2D()
                 HOedge->m_curveType = pt;
             }
 
-            // Change the elements on the boundary 
+            // Change the elements on the boundary
             // to match the layers
             map<int,int>::iterator it;
             for (it = bLink.begin(); it != bLink.end(); ++it)

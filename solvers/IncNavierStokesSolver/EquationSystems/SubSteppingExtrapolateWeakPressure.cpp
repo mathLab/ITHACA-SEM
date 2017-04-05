@@ -61,14 +61,14 @@ namespace Nektar
     SubSteppingExtrapolateWeakPressure::~SubSteppingExtrapolateWeakPressure()
     {
     }
-    
+
     void SubSteppingExtrapolateWeakPressure::v_SubStepSetPressureBCs(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
         const NekDouble Aii_Dt,
         NekDouble kinvis)
     {
         Array<OneD, Array<OneD, NekDouble> > nullvelfields;
-        
+
         m_pressureCalls++;
 
         // Calculate non-linear and viscous BCs at current level and
@@ -77,14 +77,14 @@ namespace Nektar
 
         // Extrapolate to m_pressureHBCs to n+1
         ExtrapolateArray(m_pressureHBCs);
-        
-        // Add (phi,gamma0 u^{n+1}/Dt) term to m_presureHBC 
+
+        // Add (phi,gamma0 u^{n+1}/Dt) term to m_presureHBC
         AddVelBC();
 
         // Copy m_pressureHBCs to m_PbndExp
-        CopyPressureHBCsToPbndExp();            
+        CopyPressureHBCsToPbndExp();
 
-        // Evaluate High order outflow conditiosn if required. 
+        // Evaluate High order outflow conditiosn if required.
         CalcOutflowBCs(inarray, kinvis);
     }
 
@@ -93,7 +93,7 @@ namespace Nektar
     void SubSteppingExtrapolateWeakPressure::v_AddNormVelOnOBC(const int cnt, const int nreg,
                                                                Array<OneD, Array<OneD, NekDouble> > &u)
     {
-        if(!m_houtflow.get()) // no outflow on partition so just return 
+        if(!m_houtflow.get()) // no outflow on partition so just return
         {
            return;
         }
@@ -108,17 +108,16 @@ namespace Nektar
         for(int i = 0; i < m_curl_dim; ++i)
         {
             EvaluateBDFArray(m_houtflow->m_outflowVelBnd[cnt][i]);
-            
+
             ubnd[i] = m_houtflow->m_outflowVelBnd[cnt][i][m_intSteps-1];
 
-            // point input u to the first part of the array for later uee. 
+            // point input u to the first part of the array for later uee.
             u[i] = m_houtflow->m_outflowVelBnd[cnt][i][0];
         }
-        
+
         m_PBndExp[nreg]->NormVectorIProductWRTBase(ubnd,IProdVnTmp);
 
         Vmath::Svtvp(nbcoeffs,-1.0/m_timestep,IProdVnTmp,1,m_PBndExp[nreg]->UpdateCoeffs(),1,
                      m_PBndExp[nreg]->UpdateCoeffs(),1);
     }
 }
-

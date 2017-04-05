@@ -60,7 +60,7 @@ namespace Nektar
     {
     }
 
-    /** 
+    /**
      * Function to extrapolate the new pressure boundary condition.
      * Based on the velocity field and on the advection term.
      * Acceleration term is also computed.  This routine is a general
@@ -80,19 +80,19 @@ namespace Nektar
             // Calculate just viscous BCs at current level and put in
             // m_pressureHBCs[nlevels-1]
             CalcNeumannPressureBCs(fields,N,kinvis);
-            
+
             // Extrapolate to m_pressureHBCs to n+1
             ExtrapolateArray(m_pressureHBCs);
 
             // \int_bnd q  n.u^{n} ds update current normal of field
-            // add m_pressureHBCs to gamma_0/Dt * m_acceleration[0] 
+            // add m_pressureHBCs to gamma_0/Dt * m_acceleration[0]
             AddVelBC();
-            
+
             // Copy m_pressureHBCs to m_PbndExp
-            CopyPressureHBCsToPbndExp();            
+            CopyPressureHBCsToPbndExp();
         }
 
-        // Evaluate High order outflow conditions if required. 
+        // Evaluate High order outflow conditions if required.
         CalcOutflowBCs(fields, kinvis);
     }
 
@@ -103,7 +103,7 @@ namespace Nektar
                                                Array<OneD,
                                                Array<OneD, NekDouble> > &u)
     {
-        if(!m_houtflow.get()) // no outflow on partition so just return 
+        if(!m_houtflow.get()) // no outflow on partition so just return
         {
            return;
         }
@@ -112,41 +112,40 @@ namespace Nektar
 
         Array<OneD, NekDouble> IProdVnTmp(nbcoeffs);
 
-#if 0 
+#if 0
         Array<OneD, Array<OneD, NekDouble> > ubnd(m_curl_dim);
 
         for(int i = 0; i < m_curl_dim; ++i)
         {
             EvaluateBDFArray(m_houtflow->m_outflowVelBnd[noutflow][i]);
-            
+
             ubnd[i] = m_houtflow->m_outflowVelBnd[noutflow][i][m_intSteps-1];
 
-            // point input u to the first part of the array for later uee. 
+            // point input u to the first part of the array for later uee.
             // u[i] = m_houtflow->m_outflowVelBnd[noutflow][i][0];
-            u[i] = ubnd[i]; 
+            u[i] = ubnd[i];
         }
-        
+
         m_PBndExp[nreg]->NormVectorIProductWRTBase(ubnd,IProdVnTmp);
 #endif
         m_PBndExp[nreg]->NormVectorIProductWRTBase(u,IProdVnTmp);
-        
+
         Vmath::Svtvp(nbcoeffs,-1.0/m_timestep,IProdVnTmp,1,
                      m_PBndExp[nreg]->UpdateCoeffs(),1,
                      m_PBndExp[nreg]->UpdateCoeffs(),1);
     }
 
-    
-    /** 
+
+    /**
      *  vritual function which only puts in the curl operator into the bcs
      */
-    void WeakPressureExtrapolate::v_MountHOPBCs(int HBCdata, 
-                                                NekDouble kinvis, 
-                                                Array<OneD, NekDouble> &Q, 
+    void WeakPressureExtrapolate::v_MountHOPBCs(int HBCdata,
+                                                NekDouble kinvis,
+                                                Array<OneD, NekDouble> &Q,
                                                 Array<OneD, const NekDouble> &Advection)
     {
         Vmath::Smul(HBCdata,-kinvis,Q,1,Q,1);
     }
-    
+
 
 }
-

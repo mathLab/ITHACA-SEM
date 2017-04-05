@@ -33,7 +33,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+
+
+#include <NekMeshUtils/CADSystem/CADCurve.h>
 
 #include <boost/thread.hpp>
 
@@ -120,10 +124,10 @@ void InputMCF::ParseFile(string nm)
     }
 
     set<string> refinement;
-    if(pSession->DefinesElement("NEKTAR/MESHING/REFINEMENT"))
+    if (pSession->DefinesElement("NEKTAR/MESHING/REFINEMENT"))
     {
         TiXmlElement *refine = mcf->FirstChildElement("REFINEMENT");
-        TiXmlElement *L     = refine->FirstChildElement("LINE");
+        TiXmlElement *L      = refine->FirstChildElement("LINE");
 
         while (L)
         {
@@ -151,6 +155,21 @@ void InputMCF::ParseFile(string nm)
         }
     }
 
+    set<string> periodic;
+    if (pSession->DefinesElement("NEKTAR/MESHING/PERIODIC"))
+    {
+        TiXmlElement *per  = mcf->FirstChildElement("PERIODIC");
+        TiXmlElement *pair = per->FirstChildElement("P");
+
+        while (pair)
+        {
+            string tmp;
+            pair->QueryStringAttribute("PAIR", &tmp);
+            periodic.insert(tmp);
+            pair = pair->NextSiblingElement("P");
+        }
+    }
+
     map<string,string>::iterator it;
 
     it = information.find("CADFile");
@@ -160,17 +179,17 @@ void InputMCF::ParseFile(string nm)
     it = information.find("MeshType");
     ASSERTL0(it != information.end(), "no meshtype defined");
     m_makeBL = it->second == "3DBndLayer";
-    m_2D = it->second == "2D";
+    m_2D     = it->second == "2D";
+    m_manifold = it->second == "Manifold";
     if (it->second == "2DBndLayer")
     {
         m_makeBL = true;
-        m_2D = true;
+        m_2D     = true;
     }
-    if(!m_makeBL && !m_2D)
+    if (!m_makeBL && !m_2D && !m_manifold)
     {
         ASSERTL0(it->second == "3D", "unsure on MeshType")
     }
-
 
     it = parameters.find("MinDelta");
     ASSERTL0(it != parameters.end(), "no mindelta defined");
@@ -198,18 +217,29 @@ void InputMCF::ParseFile(string nm)
         ASSERTL0(it != parameters.end(), "no BndLayerthick defined");
         m_blthick = it->second;
 
-        it = parameters.find("BndLayerLayers");
+        it        = parameters.find("BndLayerLayers");
         m_splitBL = it != parameters.end();
-        if(m_splitBL)
+        if (m_splitBL)
         {
             m_bllayers = it->second;
-            it = parameters.find("BndLayerProgression");
-            m_blprog = it != parameters.end() ? it->second : "2.0";
+            it         = parameters.find("BndLayerProgression");
+            m_blprog   = it != parameters.end() ? it->second : "2.0";
+        }
+
+        it = parameters.find("BndLayerAdjustment");
+        if (it != parameters.end())
+        {
+            m_adjust = true;
+            m_adjustment = it->second;
+        }
+        else
+        {
+            m_adjust = false;
         }
     }
 
     m_naca = false;
-    if(m_2D && m_cadfile.find('.') == std::string::npos)
+    if (m_2D && m_cadfile.find('.') == std::string::npos)
     {
         m_naca = true;
 
@@ -234,24 +264,38 @@ void InputMCF::ParseFile(string nm)
     }
 
     set<string>::iterator sit;
-    sit        = boolparameters.find("SurfaceOptimiser");
-    m_surfopti = sit != boolparameters.end();
-    sit        = boolparameters.find("WriteOctree");
-    m_woct     = sit != boolparameters.end();
-    sit        = boolparameters.find("VariationalOptimiser");
-    m_varopti  = sit != boolparameters.end();
+    sit         = boolparameters.find("SurfaceOptimiser");
+    m_surfopti  = sit != boolparameters.end();
+    sit         = boolparameters.find("WriteOctree");
+    m_woct      = sit != boolparameters.end();
+    sit         = boolparameters.find("VariationalOptimiser");
+    m_varopti   = sit != boolparameters.end();
+    sit         = boolparameters.find("BndLayerAdjustEverywhere");
+    m_adjustall = sit != boolparameters.end();
 
     m_refine = refinement.size() > 0;
-    if(m_refine)
+    if (m_refine)
     {
         stringstream ss;
-        for(sit = refinement.begin(); sit != refinement.end(); sit++)
+        for (sit = refinement.begin(); sit != refinement.end(); sit++)
         {
             ss << *sit;
             ss << ":";
         }
         m_refinement = ss.str();
-        m_refinement.erase(m_refinement.end()-1);
+        m_refinement.erase(m_refinement.end() - 1);
+    }
+
+    if (periodic.size() > 0)
+    {
+        stringstream ss;
+        for (sit = periodic.begin(); sit != periodic.end(); ++sit)
+        {
+            ss << *sit;
+            ss << ":";
+        }
+        m_periodic = ss.str();
+        m_periodic.erase(m_periodic.end() - 1);
     }
 }
 
@@ -263,105 +307,235 @@ void InputMCF::Process()
     m_mesh->m_spaceDim = 3;
     m_mesh->m_nummode  = boost::lexical_cast<int>(m_order) + 1;
 
-    vector<ModuleSharedPtr> mods;
+    ModuleSharedPtr module;
 
     ////**** CAD ****////
-    mods.push_back(GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "loadcad"), m_mesh));
-    mods.back()->RegisterConfig("filename", m_cadfile);
+    module = GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "loadcad"), m_mesh);
+    module->RegisterConfig("filename", m_cadfile);
 
-    if(m_2D)
+    if (m_2D)
     {
-        mods.back()->RegisterConfig("2D","");
+        module->RegisterConfig("2D", "");
     }
-    if(m_naca)
+    if (m_naca)
     {
-        mods.back()->RegisterConfig("NACA",m_nacadomain);
+        module->RegisterConfig("NACA", m_nacadomain);
     }
 
-    ////**** Octree ****////
-    mods.push_back(GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "loadoctree"), m_mesh));
-    mods.back()->RegisterConfig("mindel", m_minDelta);
-    mods.back()->RegisterConfig("maxdel", m_maxDelta);
-    mods.back()->RegisterConfig("eps", m_eps);
+    module->SetDefaults();
+    module->Process();
+
+    ////**** OCTREE ****////
+    module = GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "loadoctree"), m_mesh);
+    module->RegisterConfig("mindel", m_minDelta);
+    module->RegisterConfig("maxdel", m_maxDelta);
+    module->RegisterConfig("eps", m_eps);
     if (m_refine)
     {
-        mods.back()->RegisterConfig("refinement", m_refinement);
+        module->RegisterConfig("refinement", m_refinement);
     }
     if (m_woct)
     {
-        mods.back()->RegisterConfig("writeoctree", "");
+        module->RegisterConfig("writeoctree", "");
     }
 
-    if(m_2D)
+    module->SetDefaults();
+    module->Process();
+
+    ////**** LINEAR MESHING ****////
+    if (m_2D)
     {
+        ////**** 2DGenerator ****////
         m_mesh->m_expDim = 2;
         m_mesh->m_spaceDim = 2;
-        mods.push_back(GetModuleFactory().CreateInstance(
-            ModuleKey(eProcessModule, "2dgenerator"), m_mesh));
+        module             = GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "2dgenerator"), m_mesh);
         if (m_makeBL)
         {
-            mods.back()->RegisterConfig("blcurves", m_blsurfs);
-            mods.back()->RegisterConfig("blthick", m_blthick);
+            module->RegisterConfig("blcurves", m_blsurfs);
+            module->RegisterConfig("blthick", m_blthick);
+        }
+
+        try
+        {
+            module->SetDefaults();
+            module->Process();
+        }
+        catch (runtime_error &e)
+        {
+            cout << "2D linear mesh generator failed with message:" << endl;
+            cout << e.what() << endl;
+            cout << "No mesh file has been created" << endl;
+            abort();
         }
     }
     else
     {
         ////**** SurfaceMesh ****////
-        mods.push_back(GetModuleFactory().CreateInstance(
-            ModuleKey(eProcessModule, "surfacemesh"), m_mesh));
+        module = GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "surfacemesh"), m_mesh);
 
-        ////**** VolumeMesh ****////
-        mods.push_back(GetModuleFactory().CreateInstance(
-            ModuleKey(eProcessModule, "volumemesh"), m_mesh));
-        if(m_makeBL)
+        try
         {
-            mods.back()->RegisterConfig("blsurfs",m_blsurfs);
-            mods.back()->RegisterConfig("blthick",m_blthick);
-            mods.back()->RegisterConfig("bllayers",m_bllayers);
-            mods.back()->RegisterConfig("blprog",m_blprog);
+            module->SetDefaults();
+            module->Process();
+        }
+        catch (runtime_error &e)
+        {
+            cout << "Surface meshing has failed with message:" << endl;
+            cout << e.what() << endl;
+            cout << "Any surfaces which were succsessfully meshed will be "
+                    "dumped as a manifold mesh"
+                 << endl;
+            m_mesh->m_expDim = 2;
+            ProcessVertices();
+            ProcessEdges();
+            ProcessFaces();
+            ProcessElements();
+            ProcessComposites();
+            return;
+        }
+
+        if(m_manifold)
+        {
+            //dont want to volume mesh
+            m_mesh->m_expDim = 2;
+        }
+        else
+        {
+            ////**** VolumeMesh ****////
+            module = GetModuleFactory().CreateInstance(
+                ModuleKey(eProcessModule, "volumemesh"), m_mesh);
+            if (m_makeBL)
+            {
+                module->RegisterConfig("blsurfs", m_blsurfs);
+                module->RegisterConfig("blthick", m_blthick);
+                module->RegisterConfig("bllayers", m_bllayers);
+                module->RegisterConfig("blprog", m_blprog);
+            }
+
+            try
+            {
+                module->SetDefaults();
+                module->Process();
+            }
+            catch (runtime_error &e)
+            {
+                cout << "Volume meshing has failed with message:" << endl;
+                cout << e.what() << endl;
+                cout << "The linear surface mesh be dumped as a manifold mesh"
+                     << endl;
+                m_mesh->m_expDim = 2;
+                m_mesh->m_element[3].clear();
+                ProcessVertices();
+                ProcessEdges();
+                ProcessFaces();
+                ProcessElements();
+                ProcessComposites();
+                return;
+            }
         }
     }
 
     ////**** HOSurface ****////
-    mods.push_back(GetModuleFactory().CreateInstance(
-        ModuleKey(eProcessModule, "hosurface"), m_mesh));
+    module = GetModuleFactory().CreateInstance(
+        ModuleKey(eProcessModule, "hosurface"), m_mesh);
     if (m_surfopti)
     {
-        mods.back()->RegisterConfig("opti", "");
+        module->RegisterConfig("opti", "");
+    }
+
+    try
+    {
+        module->SetDefaults();
+        module->Process();
+    }
+    catch (runtime_error &e)
+    {
+        cout << "High-order surface meshing has failed with message:" << endl;
+        cout << e.what() << endl;
+        cout << "The mesh will be written as normal but the incomplete surface "
+                "will remain faceted"
+             << endl;
+        return;
     }
 
     ////*** VARIATIONAL OPTIMISATION ****////
-    if(m_varopti)
+    if (m_varopti)
     {
         unsigned int np = boost::thread::physical_concurrency();
-        if(m_mesh->m_verbose)
+        if (m_mesh->m_verbose)
         {
-            cout << "Detecting 4 cores, will attempt to run in parrallel" << endl;
+            cout << "Detecting 4 cores, will attempt to run in parrallel"
+                 << endl;
         }
-        mods.push_back(GetModuleFactory().CreateInstance(
-            ModuleKey(eProcessModule, "varopti"), m_mesh));
-        mods.back()->RegisterConfig("hyperelastic","");
-        mods.back()->RegisterConfig("maxiter","10");
-        mods.back()->RegisterConfig("numthreads",boost::lexical_cast<string>(np));
+        module = GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "varopti"), m_mesh);
+        module->RegisterConfig("hyperelastic", "");
+        module->RegisterConfig("maxiter", "10");
+        module->RegisterConfig("numthreads",
+                                    boost::lexical_cast<string>(np));
+
+        try
+        {
+            module->SetDefaults();
+            module->Process();
+        }
+        catch (runtime_error &e)
+        {
+            cout << "Variational optimisation has failed with message:" << endl;
+            cout << e.what() << endl;
+            cout << "The mesh will be written as is, it may be invalid" << endl;
+            return;
+        }
     }
 
     ////**** SPLIT BL ****////
-    if(m_splitBL)
+    if (m_splitBL)
     {
-        mods.push_back(GetModuleFactory().CreateInstance(
-            ModuleKey(eProcessModule, "bl"), m_mesh));
-        mods.back()->RegisterConfig("layers",m_bllayers);
-        mods.back()->RegisterConfig("surf",m_blsurfs);
-        mods.back()->RegisterConfig("nq",boost::lexical_cast<string>(m_mesh->m_nummode));
-        mods.back()->RegisterConfig("r",m_blprog);
+        module = GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "bl"), m_mesh);
+        module->RegisterConfig("layers", m_bllayers);
+        module->RegisterConfig("surf", m_blsurfs);
+        module->RegisterConfig(
+            "nq", boost::lexical_cast<string>(m_mesh->m_nummode));
+        module->RegisterConfig("r", m_blprog);
+
+        try
+        {
+            module->SetDefaults();
+            module->Process();
+        }
+        catch (runtime_error &e)
+        {
+            cout << "Boundary layer splitting has failed with message:" << endl;
+            cout << e.what() << endl;
+            cout << "The mesh will be written as is, it may be invalid" << endl;
+            return;
+        }
     }
 
-    for(int i = 0; i < mods.size(); i++)
+    ////**** Peralign ****////
+    if (m_2D && m_periodic.size())
     {
-        mods[i]->SetDefaults();
-        mods[i]->Process();
+        vector<string> lines;
+        boost::split(lines, m_periodic, boost::is_any_of(":"));
+
+        for (vector<string>::iterator il = lines.begin(); il != lines.end();
+             ++il)
+        {
+            module = GetModuleFactory().CreateInstance(
+                ModuleKey(eProcessModule, "peralign"), m_mesh);
+
+            vector<string> tmp(2);
+            boost::split(tmp, *il, boost::is_any_of(","));
+            module->RegisterConfig("surf1", tmp[0]);
+        }
+
+        module->SetDefaults();
+        module->Process();
     }
 }
 }

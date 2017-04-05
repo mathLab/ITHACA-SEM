@@ -54,6 +54,10 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
+//forward
+class CurveMesh;
+typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
+
 class CurveMesh
 {
 public:
@@ -62,29 +66,16 @@ public:
     /**
      * @brief default constructor
      */
-    CurveMesh(int id, MeshSharedPtr m) : m_id(id), m_mesh(m)
-    {
-        m_blID = m_bl.DefineFunction("x y z", "0.0");
-        m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
-    }
-
-    /**
-     * @brief alternative constructor with mesh points already created
-     */
-    CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> n)
-        : m_id(id), m_mesh(m), m_meshpoints(n)
-    {
-        m_blID = m_bl.DefineFunction("x y z", "0.0");
-        m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
-    }
-
-    /**
-     * @brief alternative constructor which use the octree in a different way
-     */
-    CurveMesh(int id, MeshSharedPtr m, std::string expr)
+    CurveMesh(int id, MeshSharedPtr m, std::string expr = "0.0")
         : m_id(id), m_mesh(m)
     {
         m_blID = m_bl.DefineFunction("x y z", expr);
+        m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
+    }
+
+    CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> ns)
+        : m_id(id), m_mesh(m), m_meshpoints(ns)
+    {
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
     }
 
@@ -136,6 +127,13 @@ public:
     NekDouble GetLength()
     {
         return m_curvelength;
+    }
+
+    void PeriodicOverwrite(CurveMeshSharedPtr from);
+
+    int GetId()
+    {
+        return m_id;
     }
 
 private:
@@ -192,7 +190,6 @@ private:
     int m_blID;
 };
 
-typedef boost::shared_ptr<CurveMesh> CurveMeshSharedPtr;
 }
 }
 

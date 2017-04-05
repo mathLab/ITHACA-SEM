@@ -107,7 +107,7 @@ Array<OneD, NekDouble> OptiEdge::Getli()
     {
         case CADType::eCurve:
             li   = Array<OneD, NekDouble>(all.num_elements() - 2);
-            bnds = boost::dynamic_pointer_cast<CADCurve>(o)->Bounds();
+            bnds = boost::dynamic_pointer_cast<CADCurve>(o)->GetBounds();
             for (int i = 1; i < all.num_elements() - 1; i++)
             {
                 li[i - 1] = bnds[0];
@@ -144,7 +144,7 @@ Array<OneD, NekDouble> OptiEdge::Getui()
     {
         case CADType::eCurve:
             ui   = Array<OneD, NekDouble>(all.num_elements() - 2);
-            bnds = boost::dynamic_pointer_cast<CADCurve>(o)->Bounds();
+            bnds = boost::dynamic_pointer_cast<CADCurve>(o)->GetBounds();
             for (int i = 1; i < all.num_elements() - 1; i++)
             {
                 ui[i - 1] = bnds[1];

@@ -73,8 +73,9 @@ public:
 
     /// Copies an existing edge.
     NEKMESHUTILS_EXPORT Edge(const Edge &pSrc)
-        : m_n1(pSrc.m_n1), m_n2(pSrc.m_n2), m_edgeNodes(pSrc.m_edgeNodes),
-          m_curveType(pSrc.m_curveType), m_geom(pSrc.m_geom)
+        : m_id(pSrc.m_id), m_n1(pSrc.m_n1), m_n2(pSrc.m_n2),
+          m_edgeNodes(pSrc.m_edgeNodes), m_curveType(pSrc.m_curveType),
+          m_elLink(pSrc.m_elLink), m_parentCAD(pSrc.m_parentCAD)
     {
     }
 

@@ -99,6 +99,7 @@ namespace Nektar
         }
 
         int nbcoeffs = m_PBndExp[nreg]->GetNcoeffs();
+        //int nqb      = m_PBndExp[nreg]->GetTotPoints();
 
         Array<OneD, NekDouble> IProdVnTmp(nbcoeffs);
 

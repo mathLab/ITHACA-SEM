@@ -239,6 +239,7 @@ namespace Nektar
         const NekDouble Aii_Dt,
         NekDouble kinvis)
     {
+        //int nConvectiveFields =m_fields.num_elements()-1;
         Array<OneD, Array<OneD, NekDouble> > nullvelfields;
 
         m_pressureCalls++;

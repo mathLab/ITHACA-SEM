@@ -131,8 +131,8 @@ void ForcingAxiSymmetric::v_Apply(
     // Swirl
     if (m_NumVariable == 5)
     {
-        // F-rhou_r -= (-1/r) * -rhou_r * u_theta
-        Vmath::Vmul(nPoints, inarray[1], 1,
+        // F-rhou_r -= (-1/r) * rho * u_theta * u_theta
+        Vmath::Vmul(nPoints, inarray[3], 1,
                              inarray[3], 1, tmp, 1);
         Vmath::Vdiv(nPoints, tmp, 1,
                              inarray[0], 1, tmp, 1);
@@ -141,7 +141,7 @@ void ForcingAxiSymmetric::v_Apply(
         Vmath::Vsub(nPoints, m_Forcing[1], 1,
                              tmp, 1, m_Forcing[1], 1);
 
-        // F-rhou_theta = 2 * (-1/r *rhou_y * u_r)
+        // F-rhou_theta = 2 * (-1/r *rhou_theta * u_r)
         Vmath::Vmul(nPoints, inarray[1], 1,
                              inarray[3], 1, m_Forcing[3], 1);
         Vmath::Vdiv(nPoints, m_Forcing[3], 1,

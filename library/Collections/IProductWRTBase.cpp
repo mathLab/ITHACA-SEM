@@ -586,7 +586,7 @@ OperatorKey IProductWRTBase_SumFac_Tri::m_type = GetOperatorFactory().
 
 
 /**
- * @brief Backward transform operator using sum-factorisation (Hex)
+ * @brief Inner Product operator using sum-factorisation (Hex)
  */
 class IProductWRTBase_SumFac_Hex : public Operator
 {
@@ -765,7 +765,7 @@ OperatorKey IProductWRTBase_SumFac_Tet::m_type = GetOperatorFactory().
 
 
 /**
- * @brief Backward transform operator using sum-factorisation (Prism)
+ * @brief Inner Product operator using sum-factorisation (Prism)
  */
 class IProductWRTBase_SumFac_Prism : public Operator
 {
@@ -858,7 +858,7 @@ OperatorKey IProductWRTBase_SumFac_Prism::m_type = GetOperatorFactory().
 
 
 /**
- * @brief Backward transform operator using sum-factorisation (Pyr)
+ * @brief Inner Product operator using sum-factorisation (Pyr)
  */
 class IProductWRTBase_SumFac_Pyr : public Operator
 {

@@ -34,7 +34,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/SessionFunction.h>
+#include <SolverUtils/Core/SessionFunction.h>
 
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 

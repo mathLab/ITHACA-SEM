@@ -49,7 +49,7 @@
 #include <FieldUtils/Interpolator.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
-#include <SolverUtils/SessionFunction.h>
+#include <SolverUtils/Core/SessionFunction.h>
 
 namespace Nektar
 {

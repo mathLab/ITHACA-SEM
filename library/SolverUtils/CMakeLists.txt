@@ -1,5 +1,6 @@
 SET(SOLVER_UTILS_SOURCES
   Core/Misc.cpp
+  Core/SessionFunction.cpp
   AdvectionSystem.cpp
   Advection/Advection.cpp
   Advection/Advection3DHomogeneous1D.cpp
@@ -34,7 +35,6 @@ SET(SOLVER_UTILS_SOURCES
   RiemannSolvers/RiemannSolver.cpp
   RiemannSolvers/UpwindSolver.cpp
   RiemannSolvers/UpwindLDGSolver.cpp
-  SessionFunction.cpp
   UnsteadySystem.cpp
   Forcing/Forcing.cpp
   Forcing/ForcingAbsorption.cpp
@@ -45,6 +45,7 @@ SET(SOLVER_UTILS_SOURCES
 
 SET(SOLVER_UTILS_HEADERS
   Core/Misc.h
+  Core/SessionFunction.h
   AdvectionSystem.h
   Advection/Advection.h
   Advection/AdvectionFR.h
@@ -79,7 +80,6 @@ SET(SOLVER_UTILS_HEADERS
   RiemannSolvers/RiemannSolver.h
   RiemannSolvers/UpwindSolver.h
   RiemannSolvers/UpwindLDGSolver.h
-  SessionFunction.h
   SolverUtils.hpp
   SolverUtilsDeclspec.h
   UnsteadySystem.h

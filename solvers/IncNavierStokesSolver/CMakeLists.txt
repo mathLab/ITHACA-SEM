@@ -4,7 +4,7 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_INCNAVIERSTOKES
 
 IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_SOLVER_EXECUTABLE(IncNavierStokesSolver
-        SOURCES IncNavierStokesSolver.cpp
+        SOURCES ./IncNavierStokesSolver.cpp
         LIBRARY_SOURCES
         ./EquationSystems/CoupledLinearNS.cpp
         ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
@@ -104,6 +104,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(ChannelSpongeLNSE)
     ADD_NEKTAR_TEST(ChanFlow_Standard_BodyForce)
     ADD_NEKTAR_TEST(Cyl_AdaptiveSFD)
+    ADD_NEKTAR_TEST(Womersley_PipeFlow)
     ADD_NEKTAR_TEST(CylFlow_Mov_mapping)
     ADD_NEKTAR_TEST(PPF_R10000_ModifiedArnoldi_Shift) 
     ADD_NEKTAR_TEST(PPF_R15000_ModifiedArnoldi_Shift) 

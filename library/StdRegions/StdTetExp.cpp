@@ -453,7 +453,7 @@ namespace Nektar
          */
         void StdTetExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray)
-        {
+        {            //int       numMax  = nmodes0;
             v_IProductWRTBase(inarray,outarray);
 
             // get Mass matrix inverse
@@ -1245,7 +1245,7 @@ namespace Nektar
             int                        P,
             int                        Q)
         {
-            int nummodesA,nummodesB, i, j, k, idx;
+            int nummodesA=0,nummodesB=0, i, j, k, idx;
 
             ASSERTL1(v_IsBoundaryInteriorExpansion(),
                      "Method only implemented for Modified_A BasisType (x "
@@ -1253,7 +1253,7 @@ namespace Nektar
                      "Modified_C BasisType(z direction)");
 
             int nFaceCoeffs = 0;
-            
+
             switch(fid)
             {
             case 0:
@@ -1270,7 +1270,7 @@ namespace Nektar
                 nummodesB = m_base[2]->GetNumModes();
                 break;
             }
-            
+
             bool CheckForZeroedModes = false;
             if(P == -1)
             {
@@ -1281,9 +1281,9 @@ namespace Nektar
             {
                 CheckForZeroedModes = true;
             }
-            
-            nFaceCoeffs = P*(2*Q-P+1)/2; 
-            
+
+            nFaceCoeffs = P*(2*Q-P+1)/2;
+
             // Allocate the map array and sign array; set sign array to ones (+)
             if(maparray.num_elements() != nFaceCoeffs)
             {
@@ -1341,13 +1341,13 @@ namespace Nektar
                         }
                         maparray[idx++] = GetMode(1,j,k);
                         // Incorporate modes from zeroth plane where needed.
-                        if (j == 0 && k == 0) 
+                        if (j == 0 && k == 0)
                         {
                             maparray[idx++] = GetMode(0,0,1);
                         }
-                        if (j == 0 && k == Q-2) 
+                        if (j == 0 && k == Q-2)
                         {
-                            for (int r = 0; r < Q-1; ++r) 
+                            for (int r = 0; r < Q-1; ++r)
                             {
                                 maparray[idx++] = GetMode(0,1,r);
                             }
@@ -1372,11 +1372,11 @@ namespace Nektar
             default:
                 ASSERTL0(false, "Element map not available.");
             }
-            
+
             if ((int)faceOrient == 7)
             {
                 swap(maparray[0], maparray[Q]);
-                
+
                 for (i = 1; i < Q-1; ++i)
                 {
                     swap(maparray[i+1], maparray[Q+i]);
@@ -1387,7 +1387,7 @@ namespace Nektar
             {
                 // zero signmap and set maparray to zero if elemental
                 // modes are not as large as face modesl
-                idx = 0; 
+                idx = 0;
                 for (j = 0; j < nummodesA; ++j)
                 {
                     idx += nummodesB-j;
@@ -1397,7 +1397,7 @@ namespace Nektar
                         maparray[idx++] = maparray[0];
                     }
                 }
-                
+
                 for (j = nummodesA; j < P; ++j)
                 {
                     for (k = 0; k < Q-j; ++k)
@@ -1812,7 +1812,7 @@ namespace Nektar
                     int nq2 = m_base[2]->GetNumPoints();
                     int nq;
 
-                    // take definition from key 
+                    // take definition from key
                     if(mkey.ConstFactorExists(eFactorConst))
                     {
                         nq = (int) mkey.GetConstFactor(eFactorConst);

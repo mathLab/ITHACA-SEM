@@ -27,6 +27,7 @@ IF( NEKTAR_USE_MPI )
     IF (NOT "${HAVE_MPI_H}" OR NOT "${HAVE_MPI_SEND}")
         # No in-built MPI: try to find it on the system instead.
         IF (NOT THIRDPARTY_BUILD_MPI)
+            FIND_PACKAGE(MPI)
             INCLUDE (FindMPI)
 
             IF (NOT MPI_CXX_FOUND)
@@ -105,8 +106,8 @@ IF( NEKTAR_USE_MPI )
 
     EXTERNALPROJECT_ADD(
         gsmpi-1.2.1
-        URL ${TPURL}/gsmpi-1.2.1.tar.bz2
-        URL_MD5 18dcb4cd1dcc7876173465c404b1142d
+        URL ${TPURL}/gsmpi-1.2.1_1.tar.bz2
+        URL_MD5 c247ed68134a65b8033c639277e46825
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/gsmpi-1.2.1
@@ -122,7 +123,6 @@ IF( NEKTAR_USE_MPI )
             -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
             ${TPSRC}/gsmpi-1.2.1
         )
-
 
     THIRDPARTY_LIBRARY(GSMPI_LIBRARY STATIC gsmpi
         DESCRIPTION "GSMPI library")

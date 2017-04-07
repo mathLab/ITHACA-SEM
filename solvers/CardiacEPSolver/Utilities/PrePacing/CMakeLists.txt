@@ -1,7 +1,5 @@
-SET(LinkLibraries MultiRegions)
-
-SET(PP_SOURCES ./Prepacing.cpp)
 ADD_SOLVER_UTILITY(PrePacing CardiacEPSolver SOURCES Prepacing.cpp USELIBRARY)
+TARGET_LINK_LIBRARIES(PrePacing MultiRegions)
 
 ADD_NEKTAR_TEST(Courtemanche)
 ADD_NEKTAR_TEST(CourtemancheAF)

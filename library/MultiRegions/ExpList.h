@@ -475,11 +475,11 @@ namespace Nektar
             /**
              * This operation is evaluated as:
              * \f{tabbing}
-             * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \      \
-             * \> \> Do \= $i=$  $0,N_m^e-1$ \                          \
+             * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+             * \> \> Do \= $i=$  $0,N_m^e-1$ \\
              * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
-             * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \      \
-             * \> \> continue \                                 \
+             * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
+             * \> \> continue \\
              * \> continue
              * \f}
              * where \a map\f$[e][i]\f$ is the mapping array and \a

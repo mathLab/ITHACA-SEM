@@ -28,8 +28,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: C functions to provide access to managers. 
+//
+// Description: C functions to provide access to managers.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +44,7 @@
 
 namespace Nektar
 {
-    namespace LibUtilities 
+    namespace LibUtilities
     {
 
         typedef NekManager<PointsKey, Points<NekDouble>, PointsKey::opLess> PointsManagerT;
@@ -56,4 +56,3 @@ namespace Nektar
     } // end of namespace LibUtilities
 } // end of namespace Nektar
 #endif //NEKTAR_LIB_UTILIITIES_FOUNDATIONS_MANAGER_ACCESS_H
-

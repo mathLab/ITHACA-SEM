@@ -14,6 +14,7 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Prism.cpp
     MeshElements/Hexahedron.cpp
     CADSystem/CADSystem.cpp
+    CADSystem/CADSurf.cpp
     CADSystem/ProcessLoadCAD.cpp
     )
 
@@ -102,13 +103,13 @@ ADD_DEFINITIONS(-DNEKMESHUTILS_EXPORTS)
 ADD_NEKTAR_LIBRARY(NekMeshUtils
     SOURCES ${NEKMESHUTILS_SOURCES}
     HEADERS ${NEKMESHUTILS_HEADERS}
-    DEPENDS LocalRegions
+    DEPENDS SpatialDomains
     SUMMARY "Nektar++ NekMeshUtils library"
     DESCRIPTION "This library provides mesh generation and routines for the NekMesh executable.")
 
 IF(NEKTAR_USE_MESHGEN)
     TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${TETGEN_LIBRARY})
-    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${OCC_LIBRARIES})
+    TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${OCC_LIBRARIES})
 
     ADD_DEPENDENCIES(NekMeshUtils oce-0.17 tetgen-1.5)
 ENDIF()

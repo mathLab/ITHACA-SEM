@@ -84,7 +84,7 @@ public:
     /**
      * @brief Execute meshing
      */
-    void Mesh(bool Quiet = true, bool Quality = false);
+    void Mesh(bool Quality = false);
 
     /**
      * @brief Extract mesh

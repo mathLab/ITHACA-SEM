@@ -27,16 +27,14 @@ execute_process(COMMAND rpm --eval %{_arch}
 MACRO(CONSTRUCT_DEBIAN_DEPS depends outvar)
     SET(${outvar} "")
 
-    #MESSAGE(STATUS ${NEKTAR_LIBS})
-
     FOREACH (pkg ${depends})
         STRING(TOLOWER ${pkg} pkg_lower)
 
         LIST(FIND NEKTAR_LIBS ${pkg_lower} islib)
         IF(islib EQUAL -1)
-            SET(${outvar} "${DEB_DEPS}, nektar++-${pkg_lower} (>= ${NEKTAR_VERSION})")
+            SET(${outvar} "${${outvar}}, nektar++-${pkg_lower} (>= ${NEKTAR_VERSION})")
         ELSE()
-            SET(${outvar} "${DEB_DEPS}, libnektar++-${pkg_lower} (>= ${NEKTAR_VERSION})")
+            SET(${outvar} "${${outvar}}, libnektar++-${pkg_lower} (>= ${NEKTAR_VERSION})")
         ENDIF()
     ENDFOREACH()
 
@@ -47,7 +45,7 @@ MACRO(CONSTRUCT_DEBIAN_DEPS depends outvar)
 ENDMACRO()
 
 #
-# FINALISE_CPACK_COMPONENT(name DESCRIPTION <description>)
+# FINALISE_CPACK_COMPONENT(name SUMMARY <summary> DESCRIPTION <description>)
 #
 # Finalises the variables needed for a component (and only really a component
 # containing executables) in order to be packaged by CPack. This should be
@@ -61,13 +59,13 @@ ENDMACRO()
 #
 # Arguments:
 #   - `name`: component name.
-#   - `DESCRIPTION`: a brief summary of the package, which is used to describe
-#     the package when it is generated
+#   - `SUMMARY`: a brief summary of the package
+#   - `DESCRIPTION`: a more detailed description of the package
 #
 MACRO(FINALISE_CPACK_COMPONENT name)
     # Don't both doing anything if we aren't building packages.
     IF (NEKTAR_BUILD_PACKAGES)
-        CMAKE_PARSE_ARGUMENTS(COMP "" "DESCRIPTION" "" ${ARGN})
+        CMAKE_PARSE_ARGUMENTS(COMP "" "DESCRIPTION;SUMMARY" "" ${ARGN})
 
         # Component names are stored as upper case in the CPack variable names.
         STRING(TOUPPER ${name} COMPVAR)
@@ -75,23 +73,27 @@ MACRO(FINALISE_CPACK_COMPONENT name)
         # Set the component name to `nektar++-<name>`
         SET(CPACK_COMPONENT_${COMPVAR}_DISPLAY_NAME nektar++-${name}
             CACHE INTERNAL "")
-        SET(CPACK_COMPONENT_${COMPVAR}_DESCRIPTION ${COMP_DESCRIPTION} CACHE INTERNAL "")
+        SET(CPACK_COMPONENT_${COMPVAR}_DESCRIPTION ${COMP_DESCRIPTION}
+            CACHE INTERNAL "")
+        SET(CPACK_COMPONENT_${COMPVAR}_DESCRIPTION_SUMMARY ${COMP_SUMMARY}
+            CACHE INTERNAL "")
 
         # Remove any duplicates from the existing CPack component dependencies
         # which are set by NEKTAR_ADD_EXECUTABLE and NEKTAR_ADD_LIBRARY
         SET(tmp ${CPACK_COMPONENT_${COMPVAR}_DEPENDS})
         LIST(REMOVE_DUPLICATES tmp)
-        SET(CPACK_COMPONENT_${COMPVAR}_DEPENDS ${tmp} CACHE INTERNAL "")
+        SET(CPACK_COMPONENT_${COMPVAR}_DEPENDS ${tmp}
+            CACHE INTERNAL "")
 
         # Construct list of Debian dependencies
-        CONSTRUCT_DEBIAN_DEPS(${CPACK_COMPONENT_${COMPVAR}_DEPENDS} "tmp")
-        SET(CPACK_DEBIAN_${COMPVAR}_PACKAGE_DEPENDS ${tmp} CACHE INTERNAL "")
+        CONSTRUCT_DEBIAN_DEPS("${CPACK_COMPONENT_${COMPVAR}_DEPENDS}" "tmp")
+        SET(CPACK_DEBIAN_${COMPVAR}_PACKAGE_DEPENDS ${tmp}
+            CACHE INTERNAL "")
 
         # Other Debian details
         SET(CPACK_DEBIAN_${COMPVAR}_FILE_NAME
             "nektar++-${name}-${NEKTAR_VERSION}-${DPKG_ARCHITECTURE}.deb"
             CACHE INTERNAL "")
-
     ENDIF()
 ENDMACRO()
 
@@ -262,12 +264,14 @@ MACRO(ADD_NEKTAR_EXECUTABLE name)
         LIST(APPEND tmp ${tmp2})
     ENDFOREACH()
     LIST(REMOVE_DUPLICATES tmp)
-    SET(CPACK_COMPONENT_${NEKEXE_COMPVAR}_DEPENDS ${tmp} CACHE INTERNAL "")
+    SET(CPACK_COMPONENT_${NEKEXE_COMPVAR}_DEPENDS ${tmp}
+        CACHE INTERNAL "")
 ENDMACRO()
 
 #
 # ADD_NEKTAR_LIBRARY(name
 #                    DESCRIPTION <description>
+#                    SUMMARY <summary>
 #                    DEPENDS dep1 dep2 ...
 #                    SOURCES src1 src2 ...
 #                    HEADERS head1 head2 ...)
@@ -279,14 +283,15 @@ ENDMACRO()
 #
 # Arguments:
 #   - `name`: target name to construct
-#   - `DESCRIPTION`: a description of the library
+#   - `SUMMARY`: a brief summary of the library
+#   - `DESCRIPTION`: a more detailed description of the library
 #   - `DEPENDS`: a list of components on which this target depends on
 #   - `SOURCES`: a list of source files for this target
 #   - `HEADERS`: a list of header files for this target. These will be
 #     automatically put into a `dev` package.
 #
 MACRO(ADD_NEKTAR_LIBRARY name)
-    CMAKE_PARSE_ARGUMENTS(NEKLIB "" "DESCRIPTION" "DEPENDS;SOURCES;HEADERS" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS(NEKLIB "" "DESCRIPTION;SUMMARY" "DEPENDS;SOURCES;HEADERS" ${ARGN})
 
     ADD_LIBRARY(${name} ${NEKTAR_LIBRARY_TYPE} ${NEKLIB_SOURCES} ${NEKLIB_HEADERS})
 
@@ -319,8 +324,11 @@ MACRO(ADD_NEKTAR_LIBRARY name)
     # Add CPack information
     SET(CPACK_COMPONENT_${NEKLIB_COMPVAR}_DISPLAY_NAME libnektar++-${NEKLIB_COMPONENT}
         CACHE INTERNAL "")
-    SET(CPACK_COMPONENT_${NEKLIB_COMPVAR}_DISPLAY_GROUP lib CACHE INTERNAL "")
+    SET(CPACK_COMPONENT_${NEKLIB_COMPVAR}_DISPLAY_GROUP lib
+        CACHE INTERNAL "")
     SET(CPACK_COMPONENT_${NEKLIB_COMPVAR}_DESCRIPTION ${NEKLIB_DESCRIPTION}
+        CACHE INTERNAL "")
+    SET(CPACK_COMPONENT_${NEKLIB_COMPVAR}_DESCRIPTION_SUMMARY ${NEKLIB_SUMMARY}
         CACHE INTERNAL "")
 
     # Debian specific information

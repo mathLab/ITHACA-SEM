@@ -27,4 +27,4 @@ ADD_NEKTAR_EXECUTABLE(UnitTests
 ADD_TEST(NAME UnitTests COMMAND UnitTests --detect_memory_leaks=0)
 SUBDIRS(LibUtilities LocalRegions Collections)
 
-FINALISE_CPACK_COMPONENT(unit-test DESCRIPTION "Nektar++ unit tests")
+FINALISE_CPACK_COMPONENT(unit-test DESCRIPTION "Nektar++ unit tests" SUMMARY "Nektar++ unit tests")

@@ -190,7 +190,10 @@ state of the solution fields at at given timestep. This can subsequently be used
 for restarting the simulation or examining time-dependent behaviour. This
 produces a sequence of files, by default named \inltt{session\_*.chk}, where
 \inltt{*} is replaced by a counter. The initial condition is written to
-\inltt{session\_0.chk}.
+\inltt{session\_0.chk}. Existing files are not overwritten, but renamed to e.g.
+\inltt{session\_0.bak0.chk}. In case this file already exists, too, the \inltt{chk}-file
+is renamed to \inltt{session\_0.bak*.chk} and so on.
+
 
 \begin{notebox}
   This functionality is equivalent to setting the \inltt{IO\_CheckSteps}

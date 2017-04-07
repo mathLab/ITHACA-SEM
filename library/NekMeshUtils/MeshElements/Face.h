@@ -69,21 +69,17 @@ public:
                 : m_vertexList(pVertexList), m_edgeList(pEdgeList),
                   m_faceNodes(pFaceNodes), m_curveType(pCurveType), m_geom()
     {
-#ifdef NEKTAR_USE_MESHGEN
-        onSurf = false;
-#endif
     }
 
     /// Copy an existing face.
     NEKMESHUTILS_EXPORT Face(const Face &pSrc)
-            : m_vertexList(pSrc.m_vertexList), m_edgeList(pSrc.m_edgeList),
-              m_faceNodes(pSrc.m_faceNodes), m_curveType(pSrc.m_curveType),
-              m_geom(pSrc.m_geom)
+        : m_id(pSrc.m_id), m_vertexList(pSrc.m_vertexList),
+          m_edgeList(pSrc.m_edgeList), m_faceNodes(pSrc.m_faceNodes),
+          m_curveType(pSrc.m_curveType), m_geom(pSrc.m_geom),
+          m_parentCAD(pSrc.m_parentCAD)
     {
-#ifdef NEKTAR_USE_MESHGEN
-        onSurf = false;
-#endif
     }
+
     NEKMESHUTILS_EXPORT ~Face()
     {
     }
@@ -151,12 +147,7 @@ public:
     /// Nektar++ representation of geometry
     SpatialDomains::Geometry2DSharedPtr  m_geom;
 
-#ifdef NEKTAR_USE_MESHGEN
-    bool onSurf;
-    int CADSurfId;
-    CADSurfSharedPtr CADSurf;
-#endif
-
+    CADObjectSharedPtr m_parentCAD;
 };
 
 typedef boost::shared_ptr<Face> FaceSharedPtr;

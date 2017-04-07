@@ -3,23 +3,25 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_ADR
     "NEKTAR_BUILD_SOLVERS" OFF)
 
 IF( NEKTAR_SOLVER_ADR )
-    SET(ADRSolverSource 
-       ./ADRSolver.cpp 
-       ./EquationSystems/Helmholtz.cpp
-       ./EquationSystems/Laplace.cpp
-       ./EquationSystems/Poisson.cpp
-       ./EquationSystems/Projection.cpp
-       ./EquationSystems/SteadyAdvectionDiffusion.cpp
-       ./EquationSystems/SteadyAdvectionDiffusionReaction.cpp
-       ./EquationSystems/UnsteadyAdvection.cpp
-       ./EquationSystems/UnsteadyDiffusion.cpp
-       ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
-       ./EquationSystems/UnsteadyInviscidBurger.cpp
-       ./EquationSystems/UnsteadyViscousBurgers.cpp
-       ./EquationSystems/EigenValuesAdvection.cpp)
+    SET(ADRSolverSource
+        ./ADRSolver.cpp 
+        ./EquationSystems/Helmholtz.cpp
+        ./EquationSystems/Laplace.cpp
+        ./EquationSystems/Poisson.cpp
+        ./EquationSystems/Projection.cpp
+        ./EquationSystems/SteadyAdvectionDiffusion.cpp
+        ./EquationSystems/SteadyAdvectionDiffusionReaction.cpp
+        ./EquationSystems/UnsteadyAdvection.cpp
+        ./EquationSystems/UnsteadyDiffusion.cpp
+        ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
+        ./EquationSystems/UnsteadyInviscidBurger.cpp
+        ./EquationSystems/UnsteadyViscousBurgers.cpp
+        ./EquationSystems/EigenValuesAdvection.cpp)
 
     ADD_SOLVER_EXECUTABLE(ADRSolver SOURCES ${ADRSolverSource})
-    FINALISE_CPACK_COMPONENT(adrsolver DESCRIPTION "Nektar++ ADRSolver")
+    FINALISE_CPACK_COMPONENT(adr-solver
+        SUMMARY "Nektar++ advection-diffusion-reaction solver"
+        DESCRIPTION "Solves a range of advection, diffusion, reaction PDE problems.")
 
     # 1D discontinuous advection (weak DG/flux reconstruction)
     ADD_NEKTAR_TEST(Advection1D_FRDG_GLL_LAGRANGE_SEM LENGTHY)
@@ -168,7 +170,7 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST(Helmholtz3D_nodal_HexDeformed)
     ADD_NEKTAR_TEST(Helmholtz_3DHomo1D_MVM)
     ADD_NEKTAR_TEST(Helmholtz_3DHomo2D_MVM)
-    ADD_NEKTAR_TEST(Helmholtz3D_modal LENGTHY)
+    ADD_NEKTAR_TEST(Helmholtz3D_modal)
     ADD_NEKTAR_TEST(Helmholtz3D_nodal LENGTHY)
     ADD_NEKTAR_TEST(Helmholtz3D_CubePeriodic)
     ADD_NEKTAR_TEST(Helmholtz3D_Cube_BndFile)

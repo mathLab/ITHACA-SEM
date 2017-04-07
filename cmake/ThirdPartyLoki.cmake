@@ -8,7 +8,7 @@
 
 # Try to find system Loki headers. Hint /opt/local/include for MacPorts
 # (although there is no Portfile for Loki currently).
-FIND_PATH(LOKI_INCLUDE_DIR loki/Typelist.h PATHS /opt/local/include)
+FIND_PATH(LOKI_INCLUDE_DIR loki/Singleton.h PATHS /opt/local/include)
 
 IF (LOKI_INCLUDE_DIR)
     SET(BUILD_LOKI OFF)

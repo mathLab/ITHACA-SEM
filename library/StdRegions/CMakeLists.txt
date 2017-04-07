@@ -49,10 +49,11 @@ IndexMapKey.h
 ADD_DEFINITIONS(-DSTD_REGIONS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(StdRegions
-    DESCRIPTION "Nektar++ StdRegions library"
     SOURCES ${STD_REGIONS_SOURCES}
     HEADERS ${STD_REGIONS_HEADERS}
-    DEPENDS LibUtilities)
+    DEPENDS LibUtilities
+    SUMMARY "Nektar++ StdRegions library"
+    DESCRIPTION "This library provides construction of the reference expansions for the various 1D, 2D and 3D regions.")
 
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/StdRegions COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
 

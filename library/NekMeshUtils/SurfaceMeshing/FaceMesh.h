@@ -38,7 +38,6 @@
 
 #include <NekMeshUtils/MeshElements/Mesh.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
-#include <NekMeshUtils/Octree/Octree.h>
 #include <NekMeshUtils/SurfaceMeshing/CurveMesh.h>
 
 namespace Nektar
@@ -60,25 +59,33 @@ public:
      */
     FaceMesh(const int                                id,
              MeshSharedPtr                            m,
-             CADSurfSharedPtr                         cad,
-             OctreeSharedPtr                          oct,
              const std::map<int, CurveMeshSharedPtr> &cmeshes,
-             bool ov)
-        : m_mesh(m), m_cadsurf(cad), m_octree(oct), m_curvemeshes(cmeshes),
-          m_id(id), over(ov)
+             const int                                comp)
+        : m_mesh(m), m_curvemeshes(cmeshes), m_id(id), m_compId(comp)
 
     {
+        m_cadsurf = m_mesh->m_cad->GetSurf(m_id);
         m_edgeloops = m_cadsurf->GetEdges();
     };
 
     /**
      * @brief mesh exectuation command
      */
-    void Mesh(bool remesh = false);
+    void Mesh();
 
-    void QuadRemesh(std::map<NodeSharedPtr, NodeSharedPtr> nmap);
+    /**
+     * @brief validate the curve meshes
+     */
+    bool ValidateCurves();
 
 private:
+
+    /**
+     * @brief Get the boundries of the surface and extracts the nodes from
+     * the curve meshes in the correct order
+     */
+    void OrientateCurves();
+
     /**
      * @brief Calculate the paramter plane streching factor
      */
@@ -111,12 +118,6 @@ private:
     bool Validate();
 
     /**
-     * @brief Get the boundries of the surface and extracts the nodes from
-     * the curve meshes in the correct order
-     */
-    void OrientateCurves();
-
-    /**
      * @brief adds a new stiener point to the triangulation for meshing
      */
     void AddNewPoint(Array<OneD, NekDouble> uv);
@@ -130,13 +131,11 @@ private:
     MeshSharedPtr m_mesh;
     /// CAD surface
     CADSurfSharedPtr m_cadsurf;
-    /// Octree object
-    OctreeSharedPtr m_octree;
     /// Map of the curve meshes which bound the surfaces
     std::map<int, CurveMeshSharedPtr> m_curvemeshes;
     /// data structure containing the edges, their order and oreientation for
     /// the surface
-    std::vector<EdgeLoop> m_edgeloops;
+    std::vector<CADSystem::EdgeLoopSharedPtr> m_edgeloops;
     /// id of the surface mesh
     int m_id;
     /// list of boundary nodes in their order loops
@@ -153,8 +152,10 @@ private:
     EdgeSet m_localEdges;
     /// local list of elements
     std::vector<ElementSharedPtr> m_localElements;
-
-    bool over;
+    /// set of nodes which are in the boundary (easier to identify conflicts with)
+    NodeSet m_inBoundary;
+    /// identity to put into element tags
+    int m_compId;
 };
 
 typedef boost::shared_ptr<FaceMesh> FaceMeshSharedPtr;

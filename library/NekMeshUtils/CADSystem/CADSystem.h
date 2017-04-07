@@ -43,6 +43,10 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+
+#include "CADObject.h"
+
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -56,17 +60,7 @@ typedef boost::shared_ptr<CADCurve> CADCurveSharedPtr;
 class CADSurf;
 typedef boost::shared_ptr<CADSurf> CADSurfSharedPtr;
 
-/**
- * @brief struct which descibes a collection of cad edges which are a
- *        loop on the cad surface
- */
-struct EdgeLoop
-{
-    std::vector<CADCurveSharedPtr> edges;
-    std::vector<int> edgeo; //0 is forward 1 is backward
-    Array<OneD, NekDouble> center;
-    NekDouble area;
-};
+
 
 /**
  * @brief Base class for CAD interface system.
@@ -80,10 +74,25 @@ public:
     friend class MemoryManager<CADSystem>;
 
     /**
+     * @brief struct which descibes a collection of cad edges which are a
+     *        loop on the cad surface
+     */
+    struct EdgeLoop
+    {
+        std::vector<CADCurveSharedPtr> edges;
+        std::vector<CADOrientation::Orientation> edgeo;
+        Array<OneD, NekDouble> center;
+        NekDouble area;
+    };
+
+    typedef boost::shared_ptr<EdgeLoop> EdgeLoopSharedPtr;
+
+    /**
      * @brief Default constructor.
      */
     CADSystem(std::string name) : m_name(name)
     {
+        m_2d = false;
     }
 
     ~CADSystem()
@@ -96,6 +105,21 @@ public:
     std::string GetName()
     {
         return m_name;
+    }
+
+    void Set2D()
+    {
+        m_2d = true;
+    }
+
+    bool Is2D()
+    {
+        return m_2d;
+    }
+
+    void SetNACA(std::string i)
+    {
+        m_naca = i;
     }
 
     /**
@@ -179,6 +203,9 @@ public:
         return m_verts.size();
     }
 
+    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetPeriodicTranslationVector(
+                int first, int second);
+
 protected:
     /// Name of cad file
     std::string m_name;
@@ -188,6 +215,9 @@ protected:
     std::map<int, CADSurfSharedPtr> m_surfs;
     /// Map of vertices
     std::map<int, CADVertSharedPtr> m_verts;
+
+    bool m_2d;
+    std::string m_naca;
 };
 
 typedef boost::shared_ptr<CADSystem> CADSystemSharedPtr;

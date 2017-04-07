@@ -43,7 +43,7 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-void TriangleInterface::Mesh(bool Quiet, bool Quality)
+void TriangleInterface::Mesh(bool Quality)
 {
     SetUp();
 
@@ -114,14 +114,19 @@ void TriangleInterface::Mesh(bool Quiet, bool Quality)
         dt.in.holelist[(i - 1) * 2 + 1] = m_centers[i][1];
     }
 
+    string cmd;
     if (Quality)
     {
-        dt.triangulate("pqYY");
+        cmd = "pqY";
     }
     else if (!Quality)
     {
-        dt.triangulate("pYY");
+        cmd = "pY";
     }
+    char *cstr = new char[cmd.length() + 1];
+    strcpy(cstr, cmd.c_str());
+
+    dt.triangulate(cstr);
 }
 
 void TriangleInterface::SetUp()

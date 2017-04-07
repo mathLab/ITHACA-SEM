@@ -3,7 +3,17 @@ SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build,
 options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release
 RelWithDebInfo MinSizeRel.")
 
-PROJECT(Nektar++)
+PROJECT(Nektar++ C CXX)
+
+
+INCLUDE(CheckLanguage)
+
+CHECK_LANGUAGE(Fortran)
+IF(CMAKE_Fortran_COMPILER)
+  ENABLE_LANGUAGE(Fortran)
+ELSE()
+  MESSAGE(STATUS "No Fortran support")
+ENDIF()
 
 # Helps organize projects in IDEs.
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -60,13 +70,20 @@ IF (APPLE)
         SET(CMAKE_LIBRARY_PATH ${MACPORTS_PREFIX}/lib ${CMAKE_LIBRARY_PATH})
         SET(CMAKE_INCLUDE_PATH ${MACPORTS_PREFIX}/include ${CMAKE_INCLUDE_PATH})
         MESSAGE(STATUS "Detected MacPorts installation: ${MACPORTS_PREFIX}")
+    ELSE()
+        UNSET(MACPORTS_PREFIX)
     ENDIF()
 
     IF (${DETECT_HOMEBREW} EQUAL 0)
         SET(CMAKE_LIBRARY_PATH ${HOMEBREW_PREFIX}/lib ${CMAKE_LIBRARY_PATH})
         SET(CMAKE_INCLUDE_PATH ${HOMEBREW_PREFIX}/include ${CMAKE_INCLUDE_PATH})
         MESSAGE(STATUS "Detected Homebrew installation: ${HOMEBREW_PREFIX}")
+    ELSE()
+        UNSET(HOMEBREW_PREFIX)
     ENDIF()
+
+    UNSET(DETECT_HOMEBREW)
+    UNSET(DETECT_MACPORTS)
 ENDIF()
 
 # Attempt to retrieve git branch and SHA1 hash of current changeset.
@@ -122,6 +139,8 @@ OPTION(NEKTAR_BUILD_PACKAGES   "Build Nektar++ binary packages" OFF)
 MARK_AS_ADVANCED(NEKTAR_BUILD_PACKAGES)
 
 OPTION(NEKTAR_TEST_ALL "Include full set of regression tests to this build." OFF)
+OPTION(NEKTAR_TEST_USE_HOSTFILE "Use a hostfile to explicitly specify number of
+slots." OFF)
 
 # Meshing utilities and library
 IF (NOT WIN32)
@@ -212,9 +231,7 @@ INCLUDE (ThirdPartyBoost)
 INCLUDE (ThirdPartyFFTW)
 INCLUDE (ThirdPartyArpack)
 INCLUDE (ThirdPartyMPI)
-INCLUDE (ThirdPartyPETSc)
 INCLUDE (ThirdPartyVTK)
-INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
 INCLUDE (ThirdPartyOCE)
 INCLUDE (ThirdPartyTetGen)
@@ -257,7 +274,7 @@ IF( NEKTAR_USE_WIN32_LAPACK )
 ENDIF( NEKTAR_USE_WIN32_LAPACK )
 
 IF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
-    INCLUDE(FindNativeBlasLapack)
+    INCLUDE(ThirdPartyBlasLapack)
     SET(NEKTAR_USING_BLAS TRUE)
     SET(NEKTAR_USING_LAPACK TRUE)
 ENDIF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
@@ -286,9 +303,7 @@ ELSE( NEKTAR_USE_MEMORY_POOLS )
     REMOVE_DEFINITIONS(-DNEKTAR_MEMORY_POOL_ENABLED)
 ENDIF( NEKTAR_USE_MEMORY_POOLS )
 
-IF (NEKTAR_USE_MESHGEN)
-    ADD_DEFINITIONS(-DNEKTAR_USE_MESHGEN)
-ENDIF()
+INCLUDE (ThirdPartyPETSc)
 
 SET(Boost_USE_STATIC_LIBS OFF)
 IF( WIN32 )
@@ -359,13 +374,14 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
 # Install ThirdParty headers to subdirectory of ${NEKTAR_INCLUDE_DIR}
 INSTALL(DIRECTORY ${TPDIST}/include/
     DESTINATION ${NEKTAR_INCLUDE_DIR}/ThirdParty
-    COMPONENT ThirdParty
+    COMPONENT dev
 )
 
-# Install ThirdParty libraries into ${NEKTAR_LIB_DIR}
+# Install ThirdParty libraries into ${NEKTAR_LIB_DIR}. These are shipped with
+# the LibUtilities library.
 INSTALL(DIRECTORY ${TPDIST}/lib/
     DESTINATION ${NEKTAR_LIB_DIR}
-    COMPONENT ThirdParty
+    COMPONENT libutilities
 )
 
 ADD_SUBDIRECTORY(docs)

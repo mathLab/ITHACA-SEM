@@ -45,33 +45,37 @@ namespace NekMeshUtils
 std::string CADSurfOCE::key = GetCADSurfFactory().RegisterCreatorFunction(
     "oce", CADSurfOCE::create, "CADSurfOCE");
 
-void CADSurfOCE::Initialise(int i, TopoDS_Shape in, vector<EdgeLoop> ein)
+void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
 {
     // this bit of code changes the units of the cad from mm opencascade
     // defualt to m
-    m_edges = ein;
+
+    m_s = BRep_Tool::Surface(TopoDS::Face(in));
+
+    if (in.Orientation() == 1)
+    {
+        m_orientation = CADOrientation::eBackwards;
+    }
+
     gp_Trsf transform;
     gp_Pnt ori(0.0, 0.0, 0.0);
     transform.SetScale(ori, 1.0 / 1000.0);
     TopLoc_Location mv(transform);
-    m_s = BRep_Tool::Surface(TopoDS::Face(in));
     in.Move(mv);
-    m_occSurface    = BRepAdaptor_Surface(TopoDS::Face(in));
-    m_correctNormal = true;
-    m_id            = i;
-    m_type          = surf;
+
+    m_occSurface = BRepAdaptor_Surface(TopoDS::Face(in));
+    m_id         = i;
+
+    m_bounds = Array<OneD, NekDouble>(4);
+    BRepTools::UVBounds(TopoDS::Face(in), m_bounds[0], m_bounds[1], m_bounds[2],
+                        m_bounds[3]);
+    m_sas = new ShapeAnalysis_Surface(m_s);
+    m_sas->SetDomain(m_bounds[0], m_bounds[1], m_bounds[2], m_bounds[3]);
 }
 
 Array<OneD, NekDouble> CADSurfOCE::GetBounds()
 {
-    Array<OneD,NekDouble> b(4);
-
-    b[0] = m_occSurface.FirstUParameter();
-    b[1] = m_occSurface.LastUParameter();
-    b[2] = m_occSurface.FirstVParameter();
-    b[3] = m_occSurface.LastVParameter();
-
-    return b;
+    return m_bounds;
 }
 
 Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p)
@@ -79,67 +83,37 @@ Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p)
     // has to transfer back to mm
     gp_Pnt loc(p[0] * 1000.0, p[1] * 1000.0, p[2] * 1000.0);
 
-    GeomAPI_ProjectPointOnSurf projection(
-        loc, m_s, m_occSurface.FirstUParameter(), m_occSurface.LastUParameter(),
-        m_occSurface.FirstVParameter(), m_occSurface.LastVParameter(),
-        Extrema_ExtAlgo_Tree);
-
     Array<OneD, NekDouble> uvr(2);
-    if (projection.NbPoints() == 0)
-    {
-        // alternative locuv methods
-        ShapeAnalysis_Surface sas(m_s);
-        sas.SetDomain(
-            m_occSurface.FirstUParameter(), m_occSurface.LastUParameter(),
-            m_occSurface.FirstVParameter(), m_occSurface.LastVParameter());
 
-        gp_Pnt2d p2 = sas.ValueOfUV(loc, 1e-7);
-        uvr[0]      = p2.X();
-        uvr[1]      = p2.Y();
+    gp_Pnt2d p2 = m_sas->ValueOfUV(loc, Precision::Confusion());
+    uvr[0]      = p2.X();
+    uvr[1]      = p2.Y();
 
-        gp_Pnt p3 = sas.Value(p2);
-        ASSERTL0(p3.Distance(loc) < 1e-3, "large locuv distance sas");
-    }
-    else
-    {
-        Quantity_Parameter ui;
-        Quantity_Parameter vi;
-
-        projection.Parameters(1, ui, vi);
-
-        uvr[0] = ui;
-        uvr[1] = vi;
-
-        if (projection.Distance(1) > 1.0)
-        {
-            stringstream ss;
-            cerr << "large locuv distance " << projection.Distance(1) / 1000.0
-                 << endl;
-        }
-    }
+    gp_Pnt p3 = m_sas->Value(p2);
+    WARNINGL2(p3.Distance(loc) < 1e-3, "large locuv distance " +
+                boost::lexical_cast<string>(p3.Distance(loc)/1000.0) + " " +
+                boost::lexical_cast<string>(m_id));
 
     // if the uv returned is slightly off the surface
     //(which ShapeAnalysis_Surface can do sometimes)
-    if (uvr[0] < m_occSurface.FirstUParameter() ||
-        uvr[0] > m_occSurface.LastUParameter() ||
-        uvr[1] < m_occSurface.FirstVParameter() ||
-        uvr[1] > m_occSurface.LastVParameter())
+    if (uvr[0] < m_bounds[0] || uvr[0] > m_bounds[1] || uvr[1] < m_bounds[2] ||
+        uvr[1] > m_bounds[3])
     {
-        if (uvr[0] < m_occSurface.FirstUParameter() )
+        if (uvr[0] < m_bounds[0])
         {
-            uvr[0] = m_occSurface.FirstUParameter();
+            uvr[0] = m_bounds[0];
         }
-        else if (uvr[0] > m_occSurface.LastUParameter() )
+        else if (uvr[0] > m_bounds[1])
         {
-            uvr[0] = m_occSurface.LastUParameter();
+            uvr[0] = m_bounds[1];
         }
-        else if (uvr[1] < m_occSurface.FirstVParameter())
+        else if (uvr[1] < m_bounds[2])
         {
-            uvr[1] = m_occSurface.FirstVParameter();
+            uvr[1] = m_bounds[2];
         }
-        else if (uvr[1] > m_occSurface.LastVParameter() )
+        else if (uvr[1] > m_bounds[3])
         {
-            uvr[1] = m_occSurface.LastVParameter();
+            uvr[1] = m_bounds[3];
         }
         else
         {
@@ -152,7 +126,9 @@ Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p)
 
 NekDouble CADSurfOCE::Curvature(Array<OneD, NekDouble> uv)
 {
+#if defined(NEKTAR_DEBUG)
     Test(uv);
+#endif
 
     Array<OneD, NekDouble> n = N(uv);
 
@@ -195,32 +171,21 @@ NekDouble CADSurfOCE::DistanceTo(Array<OneD, NekDouble> p)
 {
     gp_Pnt loc(p[0] * 1000.0, p[1] * 1000.0, p[2] * 1000.0);
 
-    // alternative locuv methods
-    ShapeAnalysis_Surface sas(m_s);
-    sas.SetDomain(m_occSurface.FirstUParameter(), m_occSurface.LastUParameter(),
-                  m_occSurface.FirstVParameter(),
-                  m_occSurface.LastVParameter());
+    gp_Pnt2d p2 = m_sas->ValueOfUV(loc, Precision::Confusion());
 
-    gp_Pnt2d p2 = sas.ValueOfUV(loc, 1e-7);
-
-    gp_Pnt p3 = sas.Value(p2);
+    gp_Pnt p3 = m_sas->Value(p2);
 
     return p3.Distance(loc);
 }
 
-void CADSurfOCE::ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &uv)
+void CADSurfOCE::ProjectTo(Array<OneD, NekDouble> &tp,
+                           Array<OneD, NekDouble> &uv)
 {
     gp_Pnt loc(tp[0] * 1000.0, tp[1] * 1000.0, tp[2] * 1000.0);
 
-    // alternative locuv methods
-    ShapeAnalysis_Surface sas(m_s);
-    sas.SetDomain(m_occSurface.FirstUParameter(), m_occSurface.LastUParameter(),
-                  m_occSurface.FirstVParameter(),
-                  m_occSurface.LastVParameter());
+    gp_Pnt2d p2 = m_sas->ValueOfUV(loc, Precision::Confusion());
 
-    gp_Pnt2d p2 = sas.ValueOfUV(loc, 1e-7);
-
-    gp_Pnt p3 = sas.Value(p2);
+    gp_Pnt p3 = m_sas->Value(p2);
 
     tp[0] = p3.X() / 1000.0;
     tp[1] = p3.Y() / 1000.0;
@@ -232,7 +197,9 @@ void CADSurfOCE::ProjectTo(Array<OneD, NekDouble> &tp, Array<OneD, NekDouble> &u
 
 Array<OneD, NekDouble> CADSurfOCE::P(Array<OneD, NekDouble> uv)
 {
+#if defined(NEKTAR_DEBUG)
     Test(uv);
+#endif
 
     Array<OneD, NekDouble> location(3);
     gp_Pnt loc;
@@ -245,40 +212,39 @@ Array<OneD, NekDouble> CADSurfOCE::P(Array<OneD, NekDouble> uv)
 
 Array<OneD, NekDouble> CADSurfOCE::N(Array<OneD, NekDouble> uv)
 {
+#if defined(NEKTAR_DEBUG)
     Test(uv);
+#endif
+
+    BRepLProp_SLProps slp(m_occSurface, 2, 1e-8);
+    slp.SetParameters(uv[0], uv[1]);
+
+    if (!slp.IsNormalDefined())
+    {
+        return Array<OneD, NekDouble>(3, 0.0);
+    }
+
+    gp_Dir d = slp.Normal();
 
     Array<OneD, NekDouble> normal(3);
-    gp_Pnt Loc;
-    gp_Vec D1U, D1V;
-    m_occSurface.D1(uv[0], uv[1], Loc, D1U, D1V);
-    gp_Vec n = D1U.Crossed(D1V);
 
-    if (!m_correctNormal)
+    if (m_orientation == CADOrientation::eBackwards)
     {
-        n.Reverse();
+        d.Reverse();
     }
 
-    if (n.X() == 0 && n.Y() == 0 && n.Z() == 0)
-    {
-        // Return bad normal
-        normal[0] = 0.0;
-        normal[1] = 0.0;
-        normal[2] = 0.0;
-    }
-    else
-    {
-        n.Normalize();
-        normal[0] = n.X();
-        normal[1] = n.Y();
-        normal[2] = n.Z();
-    }
+    normal[0] = d.X();
+    normal[1] = d.Y();
+    normal[2] = d.Z();
 
     return normal;
 }
 
 Array<OneD, NekDouble> CADSurfOCE::D1(Array<OneD, NekDouble> uv)
 {
+#if defined(NEKTAR_DEBUG)
     Test(uv);
+#endif
 
     Array<OneD, NekDouble> r(9);
     gp_Pnt Loc;
@@ -300,28 +266,30 @@ Array<OneD, NekDouble> CADSurfOCE::D1(Array<OneD, NekDouble> uv)
 
 Array<OneD, NekDouble> CADSurfOCE::D2(Array<OneD, NekDouble> uv)
 {
+#if defined(NEKTAR_DEBUG)
     Test(uv);
+#endif
 
     Array<OneD, NekDouble> r(18);
     gp_Pnt Loc;
     gp_Vec D1U, D1V, D2U, D2V, D2UV;
     m_occSurface.D2(uv[0], uv[1], Loc, D1U, D1V, D2U, D2V, D2UV);
 
-    r[0]  = Loc.X(); // x
-    r[1]  = Loc.Y(); // y
-    r[2]  = Loc.Z(); // z
-    r[3]  = D1U.X(); // dx/dx
-    r[4]  = D1U.Y(); // dy/dy
-    r[5]  = D1U.Z(); // dz/dz
-    r[6]  = D1V.X(); // dx/dx
-    r[7]  = D1V.Y(); // dy/dy
-    r[8]  = D1V.Z(); // dz/dz
-    r[9]  = D2U.X(); // d2x/du2
-    r[10] = D2U.Y(); // d2y/du2
-    r[11] = D2U.Z(); // d2z/du2
-    r[12] = D2V.X(); // d2x/dv2
-    r[13] = D2V.Y(); // d2y/dv2
-    r[14] = D2V.Z(); // d2z/dv2
+    r[0]  = Loc.X();  // x
+    r[1]  = Loc.Y();  // y
+    r[2]  = Loc.Z();  // z
+    r[3]  = D1U.X();  // dx/dx
+    r[4]  = D1U.Y();  // dy/dy
+    r[5]  = D1U.Z();  // dz/dz
+    r[6]  = D1V.X();  // dx/dx
+    r[7]  = D1V.Y();  // dy/dy
+    r[8]  = D1V.Z();  // dz/dz
+    r[9]  = D2U.X();  // d2x/du2
+    r[10] = D2U.Y();  // d2y/du2
+    r[11] = D2U.Z();  // d2z/du2
+    r[12] = D2V.X();  // d2x/dv2
+    r[13] = D2V.Y();  // d2y/dv2
+    r[14] = D2V.Z();  // d2z/dv2
     r[15] = D2UV.X(); // d2x/dudv
     r[16] = D2UV.Y(); // d2y/dudv
     r[17] = D2UV.Z(); // d2z/dudv
@@ -337,48 +305,45 @@ void CADSurfOCE::Test(Array<OneD, NekDouble> uv)
 
     bool passed = true;
 
-    if (uv[0] < m_occSurface.FirstUParameter())
+    if (uv[0] < m_bounds[0])
     {
-        if (fabs(uv[0] - m_occSurface.FirstUParameter()) > 1E-6)
+        if (fabs(uv[0] - m_bounds[0]) > 1E-6)
         {
-            error << "U(" << uv[0] << ") is less than Umin("
-                  << m_occSurface.FirstUParameter() << ")";
+            error << "U(" << uv[0] << ") is less than Umin(" << m_bounds[0]
+                  << ")";
             passed = false;
         }
     }
-    else if (uv[0] > m_occSurface.LastUParameter())
+    else if (uv[0] > m_bounds[1])
     {
-        if (fabs(uv[0] - m_occSurface.LastUParameter()) > 1E-6)
+        if (fabs(uv[0] - m_bounds[1]) > 1E-6)
         {
-            error << "U(" << uv[0] << ") is greater than Umax("
-                  << m_occSurface.LastUParameter() << ")";
+            error << "U(" << uv[0] << ") is greater than Umax(" << m_bounds[1]
+                  << ")";
             passed = false;
         }
     }
-    else if (uv[1] < m_occSurface.FirstVParameter())
+    else if (uv[1] < m_bounds[2])
     {
-        if (fabs(uv[1] - m_occSurface.FirstVParameter()) > 1E-6)
+        if (fabs(uv[1] - m_bounds[2]) > 1E-6)
         {
-            error << "V(" << uv[1] << ") is less than Vmin("
-                  << m_occSurface.FirstVParameter() << ")";
+            error << "V(" << uv[1] << ") is less than Vmin(" << m_bounds[2]
+                  << ")";
             passed = false;
         }
     }
-    else if (uv[1] > m_occSurface.LastVParameter())
+    else if (uv[1] > m_bounds[3])
     {
-        if (fabs(uv[1] - m_occSurface.LastVParameter()) > 1E-6)
+        if (fabs(uv[1] - m_bounds[3]) > 1E-6)
         {
-            error << "V(" << uv[1] << ") is greater than Vmax("
-                  << m_occSurface.LastVParameter() << ")";
+            error << "V(" << uv[1] << ") is greater than Vmax(" << m_bounds[3]
+                  << ")";
             passed = false;
         }
     }
 
     error << " On Surface: " << GetId();
-    if (!passed)
-    {
-        cout << "Warning: " << error.str() << endl;
-    }
+    ASSERTL1(passed, "Warning: " + error.str());
 }
 }
 }

@@ -89,7 +89,11 @@ void TetGenInterface::InitialMesh(map<int, NodeSharedPtr>  tgidton,
         surface.facetmarkerlist[i] = 0;
     }
 
-    tetrahedralize("pYzqQ", &surface, &output);
+    string cmd = "pYzqQ";
+    char *cstr = new char[cmd.length() + 1];
+    strcpy(cstr, cmd.c_str());
+
+    tetrahedralize(cstr, &surface, &output);
 }
 
 void TetGenInterface::GetNewPoints(int num,
@@ -118,7 +122,11 @@ void TetGenInterface::RefineMesh(std::map<int, NekDouble> delta)
         input.pointmtrlist[i] = delta[i];
     }
 
-    tetrahedralize("pYrmzqQO2/7o/120", &input, &output);
+    string cmd = "pYrmzq1.1/0QO2/7";
+    char *cstr = new char[cmd.length() + 1];
+    strcpy(cstr, cmd.c_str());
+
+    tetrahedralize(cstr, &input, &output);
 }
 
 vector<Array<OneD, int> > TetGenInterface::Extract()

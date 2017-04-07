@@ -24,6 +24,35 @@ set(CPACK_RPM_PACKAGE_LICENSE "MIT")
 set(CPACK_RPM_PACKAGE_DEBUG 0)
 set(CPACK_RPM_COMPONENT_INSTALL ON)
 
+# Source-specific options
+set(CPACK_SOURCE_TBZ2 "ON")
+set(CPACK_SOURCE_TGZ "ON")
+set(CPACK_SOURCE_TZ "OFF")
+set(CPACK_SOURCE_ZIP "ON")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "nektar++-${NEKTAR_VERSION}")
+set(CPACK_SOURCE_IGNORE_FILES
+    "/CVS/"
+    "/\\\\.svn/"
+    "/\\\\.bzr/"
+    "/\\\\.hg/"
+    "/\\\\.git/"
+    "/\\\\.clang-format"
+    "/\\\\.gitignore"
+    "/\\\\.gitmodules"
+    "/build/"
+    "/builds/"
+    "/docs/tutorial"
+    "/ThirdParty/"
+    "/Testing/"
+    "/library/Demos/MultiRegions/ExtraDemos/"
+    "/library/Demos/MultiRegions/XmlFiles/"
+    "/library/Demos/LocalRegions/XmlFiles/"
+    "/solvers/ImageWarpingSolver/"
+    "/solvers/VortexWaveInteraction/"
+    "/solvers/IncNavierStokesSolver/Utilities/HybridPerformanceModel/"
+    "/utilities/Extras/"
+)
+
 # Set up generator-specific logic (i.e. that may change the above depending on
 # generator) using additional CPack configuration file.
 configure_file(${CMAKE_SOURCE_DIR}/cmake/NektarCPackConfig.cmake.in

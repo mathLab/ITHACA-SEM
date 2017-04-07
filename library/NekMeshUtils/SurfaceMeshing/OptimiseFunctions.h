@@ -37,7 +37,7 @@
 #define NEKTAR_MESHUTILS_SURFACEMESH_OPTIMISEFUNCTIONS_H
 
 #include <LocalRegions/MatrixKey.h>
-#include <NekMeshUtils/CADSystem/CADObj.h>
+#include <NekMeshUtils/CADSystem/CADObject.h>
 #include <NekMeshUtils/CADSystem/CADSurf.h>
 #include <NekMeshUtils/Optimisation/OptimiseObj.h>
 
@@ -53,7 +53,7 @@ public:
 
     OptiEdge(Array<OneD, NekDouble> a,
              Array<OneD, NekDouble> dis,
-             CADObjSharedPtr ob)
+             CADObjectSharedPtr ob)
     {
         all = a;
         z   = dis;
@@ -75,53 +75,12 @@ public:
     };
 
 private:
-    CADObjSharedPtr o;
+    CADObjectSharedPtr o;
     Array<OneD, NekDouble> z;
     Array<OneD, NekDouble> all;
 };
 typedef boost::shared_ptr<OptiEdge> OptiEdgeSharedPtr;
 
-class OptiFace : public OptiObj
-{
-public:
-    friend class MemoryManager<OptiFace>;
-
-    OptiFace(Array<OneD, Array<OneD, NekDouble> > a,
-             std::map<std::pair<int, int>, NekDouble> w,
-             std::set<std::pair<int, int> > sp,
-             CADSurfSharedPtr su)
-    {
-        uv     = a;
-        z      = w;
-        spring = sp;
-        s      = su;
-        np     = uv.num_elements();
-        nq     = 0.5 * (-1 + sqrt(1 + 8 * np));
-        ni     = (nq - 3) * (nq - 2) / 2;
-    };
-
-    ~OptiFace(){};
-
-    NekDouble F(Array<OneD, NekDouble> xitst);
-    DNekMat dF(Array<OneD, NekDouble> xitst);
-    Array<OneD, NekDouble> Getxi();
-    Array<OneD, NekDouble> Getli();
-    Array<OneD, NekDouble> Getui();
-    void Update(Array<OneD, NekDouble> xinew);
-
-    Array<OneD, Array<OneD, NekDouble> > GetSolution()
-    {
-        return uv;
-    };
-
-private:
-    CADSurfSharedPtr s;
-    std::map<std::pair<int, int>, NekDouble> z;
-    std::set<std::pair<int, int> > spring;
-    Array<OneD, Array<OneD, NekDouble> > uv;
-    int ni, np, nq;
-};
-typedef boost::shared_ptr<OptiFace> OptiFaceSharedPtr;
 }
 }
 #endif

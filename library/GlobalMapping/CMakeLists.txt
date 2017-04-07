@@ -23,7 +23,8 @@ SET(GLOBAL_MAPPING_HEADERS
 ADD_DEFINITIONS(-DGLOBAL_MAPPING_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(GlobalMapping
-    DESCRIPTION "Nektar++ GlobalMapping library"
     SOURCES ${GLOBAL_MAPPING_SOURCES}
     HEADERS ${GLOBAL_MAPPING_HEADERS}
-    DEPENDS MultiRegions)
+    DEPENDS MultiRegions
+    SUMMARY "Nektar++ GlobalMapping library"
+    DESCRIPTION "This library provides deformation routines for Nektar++ simulations.")

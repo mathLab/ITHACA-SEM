@@ -44,27 +44,42 @@ namespace Nektar
 namespace NekMeshUtils
 {
 
-void SurfaceMesh::Mesh()
+ModuleKey SurfaceMesh::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eProcessModule, "surfacemesh"),
+    SurfaceMesh::create,
+    "Generates a surface mesh");
+
+SurfaceMesh::SurfaceMesh(MeshSharedPtr m) : ProcessModule(m)
 {
+
+}
+
+SurfaceMesh::~SurfaceMesh()
+{
+}
+
+void SurfaceMesh::Process()
+{
+    m_mesh->m_expDim--; //just to make it easier to surface mesh for now
+
     if (m_mesh->m_verbose)
         cout << endl << "Surface meshing" << endl;
 
     if (m_mesh->m_verbose)
         cout << endl << "\tCurve meshing:" << endl << endl;
 
-    m_mesh->m_numNodes = m_cad->GetNumVerts();
+    m_mesh->m_numNodes = m_mesh->m_cad->GetNumVerts();
 
     // linear mesh all curves
-    for (int i = 1; i <= m_cad->GetNumCurve(); i++)
+    for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
     {
         if (m_mesh->m_verbose)
         {
             LibUtilities::PrintProgressbar(
-                i, m_cad->GetNumCurve(), "Curve progress");
+                i, m_mesh->m_cad->GetNumCurve(), "Curve progress");
         }
 
-        m_curvemeshes[i] = MemoryManager<CurveMesh>::AllocateSharedPtr(
-            i, m_mesh, m_cad->GetCurve(i), m_octree);
+        m_curvemeshes[i] = MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
 
         m_curvemeshes[i]->Mesh();
     }
@@ -72,43 +87,55 @@ void SurfaceMesh::Mesh()
     if (m_mesh->m_verbose)
         cout << endl << "\tFace meshing:" << endl << endl;
 
-    // linear mesh all surfaces
-    for (int i = 1; i <= m_cad->GetNumSurf(); i++)
+    bool validError = false;
+    for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {
         if (m_mesh->m_verbose)
         {
             LibUtilities::PrintProgressbar(
-                i, m_cad->GetNumSurf(), "Face progress");
+                i, m_mesh->m_cad->GetNumSurf(), "Validating curve meshes");
         }
-
         m_facemeshes[i] =
             MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                m_cad->GetSurf(i), m_octree, m_curvemeshes, m_cad->GetNumSurf() > 100);
+                m_curvemeshes, i);
 
-        m_facemeshes[i]->Mesh();
+        validError = validError ? true : m_facemeshes[i]->ValidateCurves();
     }
-}
 
-// this mesh is valided that each egde is listed twice in the triangles
-void SurfaceMesh::Validate()
-{
-    if (m_mesh->m_verbose)
-        cout << endl << "\tVerifying surface mesh" << endl;
+    ASSERTL0(!validError,"valdity error in curve meshes");
+
+    // linear mesh all surfaces
+    map<int,FaceMeshSharedPtr>::iterator fit;
+    int i = 1;
+    for(fit = m_facemeshes.begin(); fit != m_facemeshes.end(); fit++)
+    {
+        if (m_mesh->m_verbose)
+        {
+            LibUtilities::PrintProgressbar(
+                i, m_mesh->m_cad->GetNumSurf(), "Face progress");
+        }
+        fit->second->Mesh();
+        i++;
+    }
+
+    ProcessVertices();
+    ProcessEdges();
+    ProcessFaces();
+    ProcessElements();
+    ProcessComposites();
+
+    Report();
 
     EdgeSet::iterator it;
-
-    for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
+    for(it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); it++)
     {
-        if ((*it)->m_elLink.size() != 2)
+        if((*it)->m_elLink.size() != 2)
         {
-            if (m_mesh->m_verbose)
-                cout << "\t\tFailed" << endl;
-            ASSERTL0(false, "edge not listed twice");
+            ASSERTL0(false,"surface mesh connectivity error");
         }
     }
 
-    if (m_mesh->m_verbose)
-        cout << "\t\tPassed" << endl;
+    m_mesh->m_expDim++; //revert dim
 }
 
 void SurfaceMesh::Report()
@@ -125,20 +152,6 @@ void SurfaceMesh::Report()
         cout << "\t\tTriangles " << ts << endl;
         cout << "\t\tEuler-Poincaré characteristic: " << ep << endl;
     }
-}
-
-void SurfaceMesh::Remesh(BLMeshSharedPtr blmesh)
-{
-    vector<int> surfs = blmesh->GetSymSurfs();
-    for(int i = 0; i < surfs.size(); i++)
-    {
-        map<NodeSharedPtr, NodeSharedPtr> nmap = blmesh->GetNodeMap(surfs[i]);
-        map<int, FaceMeshSharedPtr>::iterator f = m_facemeshes.find(surfs[i]);
-        ASSERTL0(f != m_facemeshes.end(), "surf not found");
-        f->second->QuadRemesh(nmap);
-    }
-
-
 }
 
 }

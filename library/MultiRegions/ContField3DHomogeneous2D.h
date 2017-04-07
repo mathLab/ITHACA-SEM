@@ -75,7 +75,7 @@ namespace Nektar
             virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
             /// Template method virtual forwarded for LocalToGlobal()
-            virtual void v_LocalToGlobal(void);
+            virtual void v_LocalToGlobal(bool useComm);
 
             /// Template method virtual forwarded for GlobalToLocal()
             virtual void v_GlobalToLocal(void);
@@ -88,7 +88,8 @@ namespace Nektar
                     const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
-                    const Array<OneD, const NekDouble> &dirForcing);
+                    const Array<OneD, const NekDouble> &dirForcing,
+                    const bool PhysSpaceForcing);
 
             virtual void v_ClearGlobalLinSysManager(void);
 

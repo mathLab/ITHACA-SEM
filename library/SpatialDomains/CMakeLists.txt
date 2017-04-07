@@ -54,9 +54,11 @@ SpatialDomains.hpp
 ADD_DEFINITIONS(-DSPATIAL_DOMAINS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(SpatialDomains
-    DESCRIPTION "Nektar++ SpatialDomains library"
     SOURCES ${SPATIAL_DOMAINS_SOURCES}
     HEADERS ${SPATIAL_DOMAINS_HEADERS}
-    DEPENDS StdRegions)
+    DEPENDS StdRegions
+    SUMMARY "Nektar++ SpatialDomains library"
+    DESCRIPTION "This library provides the mappings between reference regions and physical regions in the domain.")
 
-INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SpatialDomains COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SpatialDomains
+    COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

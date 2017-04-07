@@ -98,7 +98,8 @@ ENDIF (NEKTAR_USE_ARPACK)
 ADD_DEFINITIONS(-DSOLVER_UTILS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(SolverUtils
-    DESCRIPTION "Nektar++ SolverUtils library"
     SOURCES ${SOLVER_UTILS_SOURCES}
     HEADERS ${SOLVER_UTILS_HEADERS}
-    DEPENDS FieldUtils)
+    DEPENDS FieldUtils
+    SUMMARY "Nektar++ SolverUtils library"
+    DESCRIPTION "This library provides support classes and routines for constructing complete spectral/hp element solvers.")

@@ -2,119 +2,309 @@
 \label{IncNSsolver}
 
 \section{Synopsis}
-\subsection{Velocity Correction Scheme}
-\label{VCSscheme}
 A useful tool implemented in Nektar++ is the incompressible Navier
-Stokes solver that allows to solve the governing equation for viscid
-Newtonians fluid using two different algorithms.
+Stokes solver that allows one to solve the governing equation for
+viscous Newtonians fluids governed by:
 
 \begin{subequations}
 \begin{equation}
-   \frac{\partial \mathbf{V}}{\partial t} + \mathbf{V} \cdot \nabla \mathbf{V} = -\nabla p + \nu \nabla^2 \mathbf{V} +  \mathbf{f}
+   \frac{\partial \mathbf{u}}{\partial t} + \mathbf{u} \cdot \nabla \mathbf{u} = -\nabla p + \nu \nabla^2 \mathbf{u} +  \mathbf{f} \label{eqn.NSmom}
  \end{equation}
 
  \begin{equation}
-    \nabla \cdot \mathbf{V} = 0
+    \nabla \cdot \mathbf{u} = 0
     \end{equation}
  \end{subequations}
 
-where $V$ is the velocity, $p$ the pressure and $\nu$ the kinematic
-viscosity. The first approach uses a splitting/projection method where
-the velocity matrix system and the pressure are typically
-decoupled. Splitting schemes are typically favourite for their
-numerical efficiency since for a Newtonian fluid the velocity and
-pressure are handled independently, requiring the solution of three
-(in two dimensions) elliptic systems of rank N (opposed to a single
-system of rank 3N solved in the Stokes problem). However, a drawback
-of this approach is the splitting scheme error which is introduced
-when decoupling the pressure and the velocity system, although this
-can be made consistent with the overall temporal accuracy of the
-scheme by appropriate discretisation of the pressure boundary
-conditions. When the incompressible Navier-Stokes equations are solved
-using the velocity correction splitting scheme, a stiffly-stable time
-integration is applied (derived from the work of Karniadakis, Israeli
-and Orszag \cite{KaIsOr91}, see also Guermond and Shen \cite{GuSh03}).
-Briefly, the time integration scheme consists of the following
-steps:\\
+where $V$ is the velocity, $p$ is the specific pressure (including
+density) and $\nu$ the kinematic viscosity.
+
+\subsection{Velocity Correction Scheme}
+\label{VCSscheme}
+The first approach uses a splitting/projection method where the
+velocity system and the pressure are typically
+decoupled. Splitting schemes are typically favoured for their
+numerical efficiency since the velocity and pressure are handled
+independently, requiring the solution of three (in two dimensions)
+elliptic systems of rank N (opposed to a single system of rank 3N
+solved in the Stokes problem). However, a drawback of this approach is
+the splitting scheme error which is introduced when decoupling the
+pressure and the velocity system, although this can be made consistent
+with the overall temporal accuracy of the scheme by appropriate
+discretisation of the pressure boundary conditions.
+
+\subsubsection{High order splitting scheme}
+
+In the original approach a stiffly-stable time integration was
+proposed in the work of Karniadakis, Israeli and Orszag
+\cite{KaIsOr91}. This was then later fully analysed in the work of
+Guermond and Shen \cite{GuSh03}.
+
+Briefly, high order splitting scheme was originally proposed in three steps involving explicit advection of the non-linear terms, followed by the solution of the pressure Poisson system and finally solving a Helmholtz problem to enforce the viscous terms and velocity boundary conditions. In the following however we briefly formulate this scheme as a two steps using a formulation outline by Guermond and Shen. 
 
 \begin{enumerate}
-\item Calculate a first intermediate velocity field evaluating the advection term explicitly and combining it with the solution at previous time-steps:
-\begin{equation}
- \frac{\tilde{\mathbf{V}}-\sum_{q=0}^{J-1}\frac{\alpha_q}{\gamma_0}\mathbf{V}^{n-q}}{\Delta t}=\sum_{q=0}^{J-1}\frac{\beta_q}{\gamma_0}[-(\mathbf{V}\cdot\nabla)\mathbf{V}]^{n-q} +  \mathbf{f}^{n+1}\end{equation}
+\item In the first step we formulate a weak pressure Poisson problem
+  by taking the inner product over the solution domain $\Omega$ of
+  equation (\ref{eqn.NSmom}) with respect to the gradient of the test
+  basis, $\nabla q$, i.e.
 
- \item Solve a Poisson equation to obtain the pressure solution at the new time level:
+\begin{equation}
+ \int_{\Omega} \nabla q \cdot \frac{\partial \mathbf{u}}{\partial t}  + 
+ \int_{\Omega} \nabla q \cdot {\mathbf {N}}(\mathbf{u}) = -\int_{\Omega} \nabla q \cdot \nabla p  +  \int_{\Omega} \nabla q \cdot \nu \nabla^2 \mathbf{u}
+ \label{eqn.weakp}
+\end{equation}
+where $\mathbf \mathbf{N}(\mathbf{u}) = \mathbf{u } \cdot
+\nabla\mathbf{u}$. We recall that the term $ \int_{\Omega} \nabla q
+\cdot \nabla p$ is the weak approximation to the Laplacian operator
+for pressure. To decouple this term from the velocity system a few
+steps are necessary. Using the identity
+\[
+\nabla^2 \mathbf{u} = - \nabla \times \nabla \times \mathbf{u} + \nabla (\nabla \cdot \mathbf{u})
+\]
+we can enforce the divergence to be zero by setting the last term to
+zero. If we now integrate the 1st, 2nd and last term in equation
+(\ref{eqn.weakp}) by parts we can obtain the weak pressure equation
+\begin{align}
+  \int_{\Omega} \nabla q \cdot \nabla p^{n+1}  &=  \int_{\Omega} q\, \nabla \cdot \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{n+1} \right )  \nonumber \\
+  &-  \int_{\partial \Omega} q  \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{n+1} - \nu \nabla \times \nabla \times \mathbf{u}^{n+1} \right ) \cdot \mathbf{n}
+ \label{eqn.weakp1}
+\end{align}
+where $\partial \Omega$ is the boundary of the domain and we have used
+the factor that $\nabla \cdot (\nabla \times \nabla \times \mathbf{u})
+= 0$.  To get the final form of the weak pressure Poisson equation we
+can use a backward approximation of the time derivative to obtain
+\begin{equation}
+  \frac{\partial \mathbf{u}}{\partial t}^{n+1} \simeq \frac{\gamma_0 \tilde{\mathbf{u}}^{n+1} - \hat{\mathbf{u}}}{\Delta t}
+\end{equation}
+where $\tilde{\mathbf{u}}^{n+1}$ is an intermediate velocity upon
+which to decouple the system we impose that $\nabla \cdot
+\tilde{\mathbf{u}}^{n+1} = 0$ and
+\[
+  \gamma_0 = \left  \{ \begin{array}{ll} 1, & \mbox{if $J=1$} \\
+           \frac{3}{2}, & \mbox{if $J=2$} \end{array} \right . 
+\hspace{5mm} 
+\hat{\mathbf{u}} = \left  \{ \begin{array}{ll} u^n, & \mbox{if $J=1$} \\
+          2u^n - \frac{1}{2} u^{n-1}, & \mbox{if $J=2$.}, \end{array} \right . 
+  \]
+  Finally we introduce a consistent extrapolation for the non-linear
+  terms and the curl of vorticity terms of the form:
+  \[
+    \mathbf{N}^{*,n+1} = \left \{ \begin{array}{ll} \mathbf{N}^{n}, & \mbox{if $J=1$} \\
+      2 \mathbf{N}^n - \mathbf{N}^{n-1}, & \mbox{if $J=2$}. \end{array} \right .        
+  \]
+  A similar extrapolation can be used on the curl-curl term to end up
+  with the final weak pressure approximation
+\begin{align}
+  \int_{\Omega} \nabla q \cdot \nabla p^{n+1}  &=
+  \int_{\Omega} q \, \nabla \cdot \left (-\frac{\hat{\mathbf{u}}}{\Delta t}
+        + \mathbf{N}(\mathbf{u})^{*,n+1} \right ) \nonumber \\
+  &- \int_{\partial \Omega} q  \left ( \frac{\partial \mathbf{u}}{\partial t}^{n+1}  + \mathbf{N}(\mathbf{u})^{*.n+1} - \nu (\nabla \times \nabla  \times \mathbf{u})^{*,n+1} \right ) \cdot \mathbf{n}
+ \label{eqn.weakpfinal}
+  \end{align}
+  We note this can be recast into an equivalent strong form of the
+  pressure Poisson equation of the form
  \begin{equation}
-  \Delta p^{n+1}=\Bigl(\frac{\gamma_0}{\Delta t}\Bigr)\nabla\cdot\tilde{\mathbf{V}}
+   \nabla^2 p^{n+1}=\nabla\cdot \Bigl(
+   \frac{\hat{\mathbf{u}}}{\Delta t}  - \mathbf{N}^{*,n+1} \Bigr)
  \end{equation}
-
 with consistent Neumann boundary conditions prescribed as
-
 \begin{equation}
- \frac{\partial p}{\partial n}^{n+1}= - \Bigl[ \frac{\partial \mathbf{V}}{\partial t}^{n+1} + \nu \sum_{q=0}^{J-1}\beta_q(\nabla \times \nabla \times   \mathbf{V})^{n-q} + \sum_{q=0}^{J-1}\beta_q [(\mathbf{V} \cdot \nabla)\mathbf{V}]^{n-q}\Bigr]\cdot \mathbf{n}
+  \frac{\partial p}{\partial n}^{n+1}= - \Bigl[ \frac{\partial \mathbf{u}}{\partial t}^{n+1} - \nu (\nabla \times \nabla \times   \mathbf{u})^{*,n+1} + \mathbf{N}^{*,n+1}\Bigr]\cdot \mathbf{n}
+  \label{eqn.pressurebcs}
 \end{equation}
 
-and on the outflow boundary, either setting $ p^{n+1}=0$ or using high order Dirichlet boundary condition, which is given as\cite{DoKa14}
+
+\item The second step is discretise equation (\ref{eqn.NSmom}) at time
+  level $n+1$, use the pressure at $n+1$ from the first step and solve
+  for the velocity $\mathbf{u}^{n+1}$.
+  
+In this step now approximate the time derivative using
+\begin{equation}
+  \frac{\partial \mathbf{u}}{\partial t}^{n+1} \simeq \frac{\gamma_0 \mathbf{u}^{n+1} - \hat{\mathbf{u}}}{\Delta t}
+\end{equation}
+
+which leads us to the Helmholtz problem
 
 \begin{equation}
- p^{n+1}= \nu \sum_{q=0}^{J-1}\nabla\mathbf{V}^{n-q}\cdot \mathbf{n}-\frac{1}{2}
-\mid \sum_{q=0}^{J-1}\mathbf{V}^{n-q} \mid^2 S_o(\mathbf{n}\cdot \sum_{q=0}^{J-1}\mathbf{V}^{n-q})-\mathbf{f}_b^{n+1}\cdot \mathbf{n}
+  \Bigl(\Delta-\frac{\gamma_0}{\nu \Delta t}\Bigr)\mathbf{u}^{n+1}=-\Bigl(\frac{\gamma_0}{\nu \Delta t}\Bigr)\hat{\mathbf{u}} + \frac{1}{\nu} \nabla p^{n+1}
+ \end{equation}
+ \end{enumerate}
+
+This scheme is activated in the SolverInfo section with the
+\inltt{SolverType} specification:
+
+\begin{lstlisting}[style=XMLStyle]
+ <I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>
+\end{lstlisting}
+
+
+\subsubsection{Velocity Correction Scheme with a Weak Pressure formulation}
+
+As presented in the previous section in the work of Guermond and Shen
+\cite{SuSh03} and subsequent work they formulate the pressure in a
+weak rather than strong form to obtain the pressure Poisson
+system. Therefore if we take the inner product of equation
+(\ref{eqn.NSmom}) with respect to the gradient of the test space,
+$\nabla q$, we obtain equation (\ref{eqn.weakp})
+
+We again make the approximation 
+\begin{equation}
+  \frac{\partial \mathbf{u}}{\partial t}^{n+1} \simeq \frac{\gamma_0 \tilde{\mathbf{u}}^{n+1} - \hat{\mathbf{u}}}{\Delta t}.
+\end{equation}
+
+However this time we only integrate by parts the last term and do not
+integrate the non-linear term by parts. However we still need to
+enforce the condition that $\nabla \cdot \tilde{\mathbf{u}}^{n+1} = 0
+$ and so we also integrate just this part of the time derivate by
+parts to arrive at a weak pressure system of the form:
+
+\begin{align}
+  \int_{\Omega} \nabla q \cdot \nabla p^{n+1} +& \frac{\gamma_0}{\Delta t} \int_{\partial \Omega_0} q { \tilde{\mathbf{u}}}^{n+1} \cdot \mathbf{n}  = 
+  \int_{\Omega} \nabla q \cdot (\frac{\hat{u}}{\Delta t}
+   - {\mathbf{N}}^{\star,n+1})  \nonumber \\
+  & - \int_{\partial \Omega_d \bigcup \partial \Omega_0} q\, \nu (\nabla \times \nabla \times {\mathbf{u})}^{*,n+1} \cdot \mathbf{n} + \frac{\gamma_0}{\Delta t} \int_{\partial \Omega_d} q {\mathbf{w}}^{n+1} \cdot \mathbf{n}
+\end{align}
+where $\partial \Omega_d$ is the Dirichlet boundary conditions for the velocity and $\partial \Omega_0$ is the outflow boundary. 
+
+This scheme is activated in the SolverInfo section with the
+\inltt{SolverType} specification:
+
+\begin{lstlisting}[style=XMLStyle]
+<I PROPERTY="SolverType"  VALUE="VCSWeakPressure"/>
+\end{lstlisting}
+
+\subsubsection{Specifying pressure boundary conditions}
+
+In order to specify the pressure boundary conditions given by equation
+(\ref{eqn.pressurebcs}) or for the equivalent conditions in the VCSWeakPressure
+scheme the \inltt{USERDEFINEDTYPE} condition ``H'' can be
+used. Therefore a zero velocity wall boundary condition on boundary
+region 0 in two-dimensions can be specified as
+
+\begin{lstlisting}[style=XMLStyle]
+  <BOUNDARYCONDITIONS>
+    <REGION REF="0">
+      <D VAR="u" VALUE="0" />
+      <D VAR="v" VALUE="0" />
+      <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"  />
+    </REGION>
+  </BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+
+\subsubsection{Outflow boundary conditions}
+
+The most straightforward outflow condition is to specify fully
+developed conditions of $\nabla\mathbf{u}^{n+1}\cdot \mathbf{n}=0$ and
+$p=0$ which can be specified as 
+
+\begin{lstlisting}[style=XMLStyle]
+  <BOUNDARYCONDITIONS>
+    <REGION REF="0">
+      <N VAR="u" VALUE="0" />
+      <N VAR="v" VALUE="0" />
+      <D VAR="p" VALUE="0"  />
+    </REGION>
+  </BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+However when energetic vortices pass through an outflow region one can
+experience instabilities as identified by the work of Dong, Karnidakis
+and Chryssostomidis \cite{DoKa14}. In this paper they suggest to
+impose a pressure Dirichlet outflow condition of the form
+
+\begin{equation}
+ p^{n+1}= \nu \nabla\mathbf{u}^{*,n+1}\cdot \mathbf{n}-\frac{1}{2}
+ \mid \mathbf{u}^{*,n+1} \mid^2 S_o(\mathbf{n}\cdot
+ \mathbf{u}^{*,n+1})+\mathbf{f}_b^{n+1}\cdot \mathbf{n}
 \end{equation}
 
 with a step function defined by $S_o(n\cdot
-\mathbf{V})=\frac{1}{2}(1-\tanh\frac{n\cdot\mathbf{V}}{\mathbf{V_0}\delta})$,
-where $\mathbf{V_0}$ is the characteristic velocity scale and $\delta$
+\mathbf{u})=\frac{1}{2}(1-\tanh\frac{n\cdot\mathbf{u}}{\mathbf{u_0}\delta})$,
+where $\mathbf{u_0}$ is the characteristic velocity scale and $\delta$
 is a non-dimensional positive constant chosen to be sufficiently
 small. $\mathbf{f}_b$ is the forcing term in this case the analytical
 conditions can be given but if these are not known explicitly, it is
-set to zero, i.e. $\mathbf{f}_b=0$.
-
-\item  Calculate a second intermediate velocity field:
-
-\begin{equation}
- \tilde{\tilde{\mathbf{V}}}=\tilde{\mathbf{V}}-\Bigl(\frac{\Delta t}{\gamma_0}\Bigr)\nabla p^{n+1}
-\end{equation}
-
- \item Use the second intermediate velocity field as a forcing term in a Helmholtz problem to obtain the velocity field at the new time level:
-
- \begin{equation}
-  \Bigl(\Delta-\frac{\gamma_0}{\Delta t \nu}\Bigr)\mathbf{V}^{n+1}=-\Bigl(\frac{\gamma_0}{\Delta t \nu}\Bigr)\tilde{\tilde{\mathbf{V}}}
- \end{equation}
-
-with the outflow boundary conditions either set as $n\cdot\nabla\mathbf{V}^{n+1}=0$ or as high order Neumann boundary conditions prescribed by\cite{DoKa14}:
+set to zero, i.e. $\mathbf{f}_b=0$. (see the test
+KovaFlow\_m8\_short\_HOBC.xml for a non-zero example). Note that in
+the paper \cite{DoKa14} they define this term as the negative of what
+is shown here so that it could be use used to impose a default
+pressure values. This does however mean that the forcing term is
+imposed through the velocity components $u,v$ by specifying the entry
+\inltt{VALUE} (An example can be found in
+ChanFlow\_m3\_VCSWeakPress\_ConOBC.xml). For the velocity component
+one can specify
 
  \begin{equation}
- \mathbf{n}\cdot\nabla\mathbf{V}^{n+1}=\frac{1}{\nu}\Bigl[p^{n+1}\mathbf{n}+\frac{1}{2}
-   \mid\sum_{q=0}^{J-1} \mathbf{V}^{n-q} \mid^2 S_o(\mathbf{n}\cdot
-   \sum_{q=0}^{J-1}\mathbf{V}^{n-q})\mathbf{n}-\nu\sum_{q=0}^{J-1}(\nabla\cdot\mathbf{V}^{n-q})\mathbf{n}+\mathbf{f}_b^{n+1}\Bigr]
+ \nabla\mathbf{u}^{n+1}\cdot\mathbf{n}=\frac{1}{\nu}\Bigl[p^{n+1}\mathbf{n}+\frac{1}{2}
+   \mid \mathbf{u}^{*,n+1} \mid^2 S_o(\mathbf{n}\cdot
+   \mathbf{u}^{*,n+1})-\nu(\nabla\cdot\mathbf{u}^{*,n+1})\mathbf{n}-\mathbf{f}_b^{n+1}\Bigr]
  \end{equation}
 
- \end{enumerate}
+This condition can be enforced using the \inltt{USERDEFINEDTYPE} ``HOutflow'', i.e. 
+\begin{lstlisting}[style=XMLStyle]
+  <BOUNDARYCONDITIONS>
+    <REGION REF="0">
+      <N VAR="u" USERDEFINEDTYPE="HOutflow" VALUE="0" />
+      <N VAR="v" USERDEFINEDTYPE="HOutflow" VALUE="0" />
+      <D VAR="p" USERDEFINEDTYPE="HOutflow" VALUE="0" />
+    </REGION>
+  </BOUNDARYCONDITIONS>
+\end{lstlisting}
 
-Here, $J$ is the integration order and $\gamma_0$, $\alpha_q$, $\beta_q$
-are the stiffly stable time integration coefficients given in the table below.
+Note that in the moving body work of Bao et al. \cite{BaPlGrSh16}
+some care must be made to identify when the flow over the boundary is
+incoming or outgoing and so a modification of the term
+\[
+\frac{1}{2}
+   \mid \mathbf{u}^{*,n+1} \mid^2 S_o(\mathbf{n}\cdot
+   \mathbf{u}^{*,n+1})
+\]
+is replaced with
+\[
+   \frac{1}{2} \left ( (\theta + \alpha_2)
+   \mid \mathbf{u}^{*,n+1} \mid^2 + (1-\theta + \alpha_1) 
+( \mathbf{u}^{*,n+1} \cdot \mathbf{n})  \mathbf{u}^{*,n+1} \right )
+   S_o(\mathbf{n}\cdot
+   \mathbf{u}^{*,n+1})
+\]
+where the default values are given by $\theta = 1,\alpha_1 = 0,\alpha_2 = 0$ and these values can be set through the parameters \inltt{OutflowBC\_theta},
+\inltt{OutflowBC\_alpha1} and \inltt{OutflowBC\_alpha2}. 
+
+Dong has also suggested convective like outflow conditions in
+\cite{Dong15} which can be enforced through a Robin type specification
+of the form
 
 \begin{equation}
- \begin{array}{cccc}
-  & 1st\ order & 2nd\ order & 3rd\ order \\
- \gamma_0 & 1 & 3/2 & 11/6\\
- \alpha_0 & 1 & 2 & 3\\
- \alpha_1 & 0 & -1/2 & -3/2\\
- \alpha_2 & 0 & 0 & 1/3\\
- \beta_0 & 1 & 2 & 3\\
- \beta_1 & 0 & -1 & -3\\
- \beta_2 & 0 & 0 & 1\\
- \end{array}
+  \frac{\partial \mathbf{u}^{n+1}}{\partial n} + \frac{\gamma_0 D_0}{\Delta t} \mathbf{u}^{n+1} = \frac{1}{\nu}\Bigl[\mathbf{f}^{n+1} + \mathbf{E}(\mathbf{n},\mathbf{u}^{*,n+1}) + p^{n+1}\mathbf{n} -\nu(\nabla\cdot \mathbf{u}^{*,n+1}) \mathbf{n}
+    \bigr] + \frac{D_0}{\Delta t}\hat{\mathbf{u}}
  \end{equation}
 
- This multi-step implicit-explicit splitting scheme decouples the velocity field $\mathbf{V}$ from the pressure $p$, leading to an
-explicit treatment of the advection term and an implicit treatment of the pressure and the diffusion term.
+\begin{align}
+  \frac{\partial p^{n+1}}{\partial n} + \frac{1}{\nu D_0} p^{n+1} &=
+   - \Bigl( -\nu (\nabla \times \nabla \times   \mathbf{u})^{*,n+1} + \mathbf{N}^{*,n+1}\Bigr)\cdot \mathbf{n} \nonumber \\
+ & - \frac{1}{\nu D_0}\Bigl[\mathbf{f}^{n+1} + \mathbf{E}(\mathbf{n},\mathbf{u}^{*,n+1} + p^{n+1}\mathbf{n} -\nu(\nabla\cdot \mathbf{u}^{*,n+1}) \mathbf{n}
+   \bigr] 
+ \end{align}
 
-\subsection{Substepping the Velocity Correction Scheme}
+
+\begin{lstlisting}[style=XMLStyle]
+<BOUNDARYCONDITIONS>
+  <REGION REF="0">
+   <R VAR="u" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="D0/TimeStep"/>
+   <R VAR="v" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="D0/TimeStep"/>
+   <R VAR="p" USERDEFINEDTYPE="HOutflow" VALUE="0" PRIMCOEFF="1.0/(D0*Kinvis)"/>
+  </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+\subsubsection{Substepping/subcycling the Velocity Correction Scheme}
 
 It is possible to use difference time steps in the velocity correction
-scheme using a substepping \cite{Sh03} or auxiliary semi-Lagrangian
-approach \cite{XiShDoKa}. Originally the scheme was proposed by Maday,
-Patera and Ronquist who referred to as an operator-integration-factor splitting method \cite{MaPaRo}
+scheme using a substepping (also known as subcycling) \cite{Sh03} or
+auxiliary semi-Lagrangian approach \cite{XiShDoKa}. Originally the
+scheme was proposed by Maday, Patera and Ronquist who referred to as
+an operator-integration-factor splitting method \cite{MaPaRo}
 
 \begin{figure}[!htbp]
 \label{fig.substep}
@@ -150,6 +340,55 @@ exmaple the test cases \texttt{KovaFlow\_SubStep\_2order.xml},
 \texttt{Tet\_Kovasnay\_SubStep.xml}
 \end{notebox}
 
+\subsubsection{Approximation spaces for the velocity correction scheme}
+
+For well resolved simulations it appears that often using the same
+polynomial space for the pressure and velocity does give suitable
+answer but this does not satisfy the so-called LBB or inf-sup
+condition. Therefore it is potentially better to specify an equivalent
+of the Taylor Hood approximation and use one higher polynomial order
+for velocity than the pressure with a continuous expansion. To specify
+this type of expansion you can use an expansion section of the form:
+
+\begin{lstlisting}[style=XMLStyle]
+  <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="8" FIELDS="u,v" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="p"   TYPE="MODIFIEDQUADPLUS1" />
+  </EXPANSIONS>
+\end{lstlisting}
+
+In the above example the ``u,v'' fields are specified to have a
+polynomial order of 8 using a modified expansion. Implicitly this form
+of the expansion definition uses a quadrature order of 9. The above
+definition then also uses a modified expansion for pressure but of
+order 7. Since currently for this solver to run we need to use a
+consistent quadrature order for both the velocity and pressure fields
+we specify the \inltt{MODIFIEDQUADPLUS1} to tell the solver to use an
+addition quadrature point and therefore also use 9 quadrature points in
+each 1D direction for the pressure.
+
+In other cases it is sometimes useful to run with an even higher
+quadrature order, for example to handle highly deformed elements where
+the Jacobian is represented by a polynomial expansion. This can be done
+by using a more detailed definition of the expansion of the form:
+
+
+\begin{lstlisting}[style=XMLStyle]
+  <EXPANSIONS>
+      <E COMPOSITE="C[0]" BASISTYPE="Modified_A,Modified_B" NUMMODES="8,8" POINTSTYPE="GaussLobattoLegendre,GaussRadauMAlpha1Beta0" NUMPOINTS="9,8"  FIELDS="u,v" />
+      <E COMPOSITE="C[0]" BASISTYPE="Modified_A,Modified_B" NUMMODES="7,7" POINTSTYPE="GaussLobattoLegendre,GaussRadauMAlpha1Beta0" NUMPOINTS="9,8"  FIELDS="p" />
+  </EXPANSIONS>
+\end{lstlisting}
+
+In this example we have specified an 8th order expansion for ``u,v''
+and a 7th order expansion for ``p''. The BasisType is given as
+``Modified\_A, Modified\_B'' which is for a triangular expansion (note
+a quadrilateral expansion would have been ``Modified\_A,Modified\_A'')
+and so the number of quadrature points in this case is 9 in the first
+direction which uses Gauss Lobatto Legendre points but only 8 in the
+second direction since this uses a Gauss Radau formula with
+$\alpha=1,\beta=0$ weights (see \ref{KaSh05} for details on why).
+        
 \subsection{Direct solver (coupled approach)}
 \label{DirectSolv}
 The second approach consists of directly solving the matrix problem
@@ -458,7 +697,8 @@ Possible values are:
 \toprule
 {Algorithm} & {\texttt{SolverType}} &{Dimensions}&{Projections} \\
 \midrule
-Velocity Correction Scheme & \texttt{VelocityCorrectionScheme} & 2D, Quasi-3D, 3D & CG, CG-DG\\
+Velocity Correction Scheme (VCS) & \texttt{VelocityCorrectionScheme} & 2D, Quasi-3D, 3D & CG, CG-DG\\
+VCS with weak pressure & \texttt{VCSWeakPressure} & 2D, Quasi-3D, 3D & CG, CG-DG\\
 Direct solver & \texttt{CoupledLinearisedNS} & 2D, Quasi-3D, 3D &CG\\
 \bottomrule
 \end{tabular}
@@ -631,6 +871,83 @@ the session file:
 \item \inltt{SVVCutoffRatio}: sets the ratio of Fourier frequency not affected by the SVV technique (default value = 0.75, i.e. the first 75\% of frequency are not damped)
 \item \inltt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1)
 \end{itemize}
+
+\subsection{Womersley Boundary Condition}
+
+It is possible to define the time-dependent Womersley velocity profile
+for pulsatile flow in a pipe. The modulation of the velocity profile
+is based on the desired peak or centerline velocity which can be
+represented by a Fourier expansion $U_{max}=A(\omega_n)e^{i\omega_n
+  t}$ where $A$ are the Fourier modes and $\omega $ the frequency. The
+womersely solution is then defined as:
+
+$$ w(r,t) = A_0(1-(r/R)^2) + \sum_{n=1}^N
+\tilde{A_n}[1-\frac{J_0(i^{3/2}\alpha_n r/R)}{J_0(i^{3/2}
+    \alpha)}]e^{i\omega_n t} $$
+
+where the womersley number $\alpha$ is defined:
+$$ \alpha_n = R\sqrt{\frac{2\pi n}{T\nu}}$$
+
+and $\tilde{A_n}$ ($n=1:N$)are the Fourier coefficients scaled in the
+following way:
+
+$$ \tilde{A_n} = 2A_n/[1 - \frac{1}{J_0(i^{3/2}\alpha)}] $$
+
+The Womersley velocity profile is implemented in the following way:
+
+\begin{lstlisting}[style=XMLStyle]
+<REGION REF="0">
+                <D VAR="u" USERDEFINEDTYPE="Womersley:WomParams.xml" VALUE="0" />
+                <D VAR="v" USERDEFINEDTYPE="Womersley:WomParams.xml" VALUE="0" />
+                <D VAR="w" USERDEFINEDTYPE="Womersley:WomParams.xml" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+</REGION>
+\end{lstlisting}
+
+A file containing the Fourier coefficients, $\tilde{A}$, must be in
+the directory where the solver is called from. The name of the file is
+defined by the string given in the attribute \inltt{USERDEFINEDTYPE}
+after the ``:'' and contains the real and imaginary coefficients. This
+file has the format
+\begin{lstlisting}[style=XMLStyle]
+<NEKTAR>
+  <WOMERSLEYBC>
+    <WOMPARAMS>
+      <W PROPERTY="Radius" VALUE="0.5" />
+      <W PROPERTY="Period" VALUE="1.0" />
+      <W PROPERTY="axisnormal" VALUE="0.0,0.0,1.0" />
+      <W PROPERTY="axispoint" VALUE="0.0,0.0,0.0" />
+    </WOMPARAMS>
+
+    <FOURIERCOEFFS>
+      <F ID="0"> 0.600393641193,    0.0               </F>
+      <F ID="1"> -0.277707172935,   0.0767582715413   </F>
+      <F ID="2"> -0.0229953131146,  0.0760936232478   </F>
+      <F ID="3"> 0.00858135174058,  0.017089888642    </F>
+      <F ID="4"> 0.0140332527651,   0.0171575122496   </F>
+      <F ID="5"> 0.0156970122129,   -0.00547357750345 </F>
+      <F ID="6"> 0.00473626554238,  -0.00498786519876 </F>
+      <F ID="7"> 0.00204434981523,  -0.00614566561937 </F>
+      <F ID="8"> -0.000274697215201, 0.000153571881197 </F>
+      <F ID="9"> -0.000148037910774, 2.68919619581e-05 </F>
+    </FOURIERCOEFFS>
+  </WOMERSLEYBC>
+</NEKTAR>
+\end{lstlisting}
+
+Each value of $\tilde{A}$ is provided in the \inltt{FOURIERCOEFFS}
+section and provided as separate entries containing the real and
+imaginary components, i.e. the mean component provided above is
+$0.600393641193,0.0$.
+
+Similarly in the \inltt{WOMPARAMS} section the key parameters of the boundary condition are also provided as:
+\begin{itemize}
+\item \inltt{RADIUS} is the radius of the boundary.
+\item \inltt{PERIOD} is the cycle time period,
+\item \inltt{AXISNORMAL} defines the normal direction to the boundary,
+\item \inltt{AXISPOINT}  defines a coordinate in the boundary centre,
+\end{itemize}
+
 
 \subsection{Forcing}
 \subsubsection{MovingBody}

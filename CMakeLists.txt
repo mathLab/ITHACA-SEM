@@ -4,7 +4,7 @@ options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release
 RelWithDebInfo MinSizeRel.")
 
 PROJECT(Nektar++ C CXX)
-
+SET(CMAKE_CXX_STANDARD 11)
 
 INCLUDE(CheckLanguage)
 

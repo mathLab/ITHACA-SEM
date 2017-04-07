@@ -28,14 +28,14 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Routines within Standard Segment Expansions
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdSegExp.h>
 #include <LibUtilities/Foundations/InterpCoeff.h>
- 
+
 
 using namespace std;
 
@@ -51,10 +51,10 @@ namespace Nektar
         }
 
 
-        /** \brief Constructor using BasisKey class for quadrature points and 
+        /** \brief Constructor using BasisKey class for quadrature points and
          *  order definition
          *
-         *  \param Ba BasisKey class definition containing order and quadrature 
+         *  \param Ba BasisKey class definition containing order and quadrature
          *  points.
          */
 
@@ -111,11 +111,11 @@ namespace Nektar
         // Integration Methods
         //---------------------------------------------------------------------
 
-        /** \brief Integrate the physical point list \a inarray over region 
+        /** \brief Integrate the physical point list \a inarray over region
          *  and return the value
          *
-         *  \param inarray definition of function to be integrated evauluated at 
-         *  quadrature point of expansion. 
+         *  \param inarray definition of function to be integrated evauluated at
+         *  quadrature point of expansion.
          *  \return returns \f$\int^1_{-1} u(\xi_1)d \xi_1 \f$ where \f$inarray[i]
          *  = u(\xi_{1i}) \f$
          */
@@ -127,7 +127,7 @@ namespace Nektar
             Array<OneD, const NekDouble> z  = m_base[0]->GetZ();
             Array<OneD, const NekDouble> w0 = m_base[0]->GetW();
 
-            // multiply by integration constants 
+            // multiply by integration constants
             Vmath::Vmul(nquad0, inarray, 1, w0, 1, tmp, 1);
 
             Int = Vmath::Vsum(nquad0, tmp, 1);
@@ -143,13 +143,13 @@ namespace Nektar
         //---------------------------------------------------------------------
 
 
-        /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the physical 
+        /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the physical
          *  quadrature points given by \a inarray and return in \a outarray.
          *
          *  This is a wrapper around StdExpansion1D::Tensor_Deriv
          *  \param inarray array of a function evaluated at the quadrature points
          *  \param  outarray the resulting array of the derivative \f$
-         *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarra 
+         *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarra
          */
 
         void StdSegExp::v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
@@ -201,7 +201,7 @@ namespace Nektar
          *  points \a outarray
          *
          *  Operation can be evaluated as \f$ u(\xi_{1i}) =
-         *  \sum_{p=0}^{order-1} \hat{u}_p \phi_p(\xi_{1i}) \f$ or equivalently 
+         *  \sum_{p=0}^{order-1} \hat{u}_p \phi_p(\xi_{1i}) \f$ or equivalently
          *  \f$ {\bf u} = {\bf B}^T {\bf \hat{u}} \f$ where
          *  \f${\bf B}[i][j] = \phi_i(\xi_{1j}), \mbox{\_coeffs}[p] = {\bf
          *  \hat{u}}[p] \f$
@@ -209,9 +209,9 @@ namespace Nektar
          *  The function takes the coefficient array \a inarray as
          *  input for the transformation
          *
-         *  \param inarray: the coeffficients of the expansion 
+         *  \param inarray: the coeffficients of the expansion
          *
-         *  \param outarray: the resulting array of the values of the function at 
+         *  \param outarray: the resulting array of the values of the function at
          *  the physical quadrature points will be stored in the array \a outarray
          */
 
@@ -258,7 +258,6 @@ namespace Nektar
             Array<OneD, NekDouble> tmp2;
 
             int       nmodes0 = m_base[0]->GetNumModes();
-            int       numMax  = nmodes0;
 
             Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp,1);
 
@@ -359,7 +358,7 @@ namespace Nektar
                 }
 
                 fill(outarray.get(), outarray.get()+m_ncoeffs, 0.0 );
-                
+
                 if(m_base[0]->GetBasisType() != LibUtilities::eGauss_Lagrange)
                 {
                     outarray[GetVertexMap(0)] = inarray[0];
@@ -410,23 +409,23 @@ namespace Nektar
 
 
 
-        /** \brief  Inner product of \a inarray over region with respect to 
-         *  expansion basis \a base and return in \a outarray 
+        /** \brief  Inner product of \a inarray over region with respect to
+         *  expansion basis \a base and return in \a outarray
          *
          *  Calculate \f$ I[p] = \int^{1}_{-1} \phi_p(\xi_1) u(\xi_1) d\xi_1
          *  = \sum_{i=0}^{nq-1} \phi_p(\xi_{1i}) u(\xi_{1i}) w_i \f$ where
          *  \f$ outarray[p] = I[p], inarray[i] = u(\xi_{1i}), base[p*nq+i] =
          *  \phi_p(\xi_{1i}) \f$.
          *
-         *  \param  base an array defining the local basis for the inner product 
+         *  \param  base an array defining the local basis for the inner product
          *  usually passed from Basis->GetBdata() or Basis->GetDbdata()
          *  \param inarray: physical point array of function to be integrated
          *  \f$ u(\xi_1) \f$
-         *  \param coll_check flag to identify when a Basis->Collocation() call 
-         *  should be performed to see if this is a GLL_Lagrange basis with a 
-         *  collocation property. (should be set to 0 if taking the inner  
+         *  \param coll_check flag to identify when a Basis->Collocation() call
+         *  should be performed to see if this is a GLL_Lagrange basis with a
+         *  collocation property. (should be set to 0 if taking the inner
          *  product with respect to the derivative of basis)
-         *  \param outarray  the values of the inner product with respect to 
+         *  \param outarray  the values of the inner product with respect to
          *  each basis over region will be stored in the array \a outarray as
          *  output of the function
          */
@@ -442,7 +441,7 @@ namespace Nektar
             Array<OneD, const NekDouble> w =  m_base[0]->GetW();
 
             Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);
-            
+
             /* Comment below was a bug for collocated basis
             if(coll_check&&m_base[0]->Collocation())
             {
@@ -453,7 +452,7 @@ namespace Nektar
                 Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
                             &tmp[0],1,0.0,outarray.get(),1);
             }*/
-            
+
             // Correct implementation
             Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
                         &tmp[0],1,0.0,outarray.get(),1);
@@ -465,11 +464,11 @@ namespace Nektar
          *  Wrapper call to StdSegExp::IProductWRTBase
          *  \param inarray array of function values evaluated at the physical
          *  collocation points
-         *  \param outarray  the values of the inner product with respect to 
+         *  \param outarray  the values of the inner product with respect to
          *  each basis over region will be stored in the array \a outarray as
          *  output of the function
          */
-        void StdSegExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
+        void StdSegExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
         {
             v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
@@ -579,9 +578,9 @@ namespace Nektar
         void StdSegExp::v_MultiplyByStdQuadratureMetric(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
-        {         
+        {
             int nquad0 = m_base[0]->GetNumPoints();
-                
+
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
 
             Vmath::Vmul(nquad0, inarray.get(),1,
@@ -608,17 +607,17 @@ namespace Nektar
         int StdSegExp::v_GetNverts() const
         {
             return 2;
-        } 
+        }
 
         int StdSegExp::v_NumBndryCoeffs() const
         {
             return 2;
-        } 
+        }
 
         int StdSegExp::v_NumDGBndryCoeffs() const
         {
             return 2;
-        } 
+        }
 
         int StdSegExp::v_CalcNumberOfCoefficients(
                 const std::vector<unsigned int> &nummodes,
@@ -804,4 +803,3 @@ namespace Nektar
 
     }//end namespace
 }//end namespace
-

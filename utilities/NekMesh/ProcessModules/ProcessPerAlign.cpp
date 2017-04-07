@@ -44,6 +44,8 @@
 
 #include "ProcessPerAlign.h"
 
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 using namespace Nektar::NekMeshUtils;
 
@@ -70,7 +72,8 @@ ProcessPerAlign::ProcessPerAlign(MeshSharedPtr m) : ProcessModule(m)
     m_config["surf2"] =
         ConfigOption(false, "-1", "Tag identifying first surface.");
     m_config["dir"] = ConfigOption(
-        false, "", "Direction in which to align (either x, y, or z)");
+        false, "", "Direction in which to align (either x, y, or z; "
+                   "or vector with components separated by a comma)");
     m_config["orient"] =
         ConfigOption(true, "0", "Attempt to reorient tets and prisms");
 }
@@ -103,17 +106,49 @@ void ProcessPerAlign::Process()
         return;
     }
 
-    if (dir != "x" && dir != "y" && dir != "z")
-    {
-        cerr << "WARNING: dir must be set to either x, y or z. "
-             << "Skipping periodic alignment." << endl;
-        return;
-    }
+    vector<string> tmp1;
+    boost::split(tmp1, dir, boost::is_any_of(","));
 
     NekDouble vec[3];
-    vec[0] = dir == "x" ? 1.0 : 0.0;
-    vec[1] = dir == "y" ? 1.0 : 0.0;
-    vec[2] = dir == "z" ? 1.0 : 0.0;
+
+    if (tmp1.size() == 1)
+    {
+        //if the direction is not specified and its a 2D mesh and there is CAD
+        //it can figure out the dir on its own
+        if (!dir.size() && m_mesh->m_spaceDim == 2 && m_mesh->m_cad)
+        {
+            Array<OneD, NekDouble> T =
+                m_mesh->m_cad->GetPeriodicTranslationVector(surf1, surf2);
+            NekDouble mag = sqrt(T[0] * T[0] + T[1] * T[1]);
+
+            vec[0] = T[0] / mag;
+            vec[1] = T[1] / mag;
+            vec[2] = T[2] / mag;
+        }
+        else
+        {
+            if (dir != "x" && dir != "y" && dir != "z")
+            {
+                cerr << "WARNING: dir must be set to either x, y or z. "
+                    << "Skipping periodic alignment." << endl;
+                return;
+            }
+
+            vec[0] = dir == "x" ? 1.0 : 0.0;
+            vec[1] = dir == "y" ? 1.0 : 0.0;
+            vec[2] = dir == "z" ? 1.0 : 0.0;
+        }
+    }
+    else if (tmp1.size() == 3)
+    {
+        vec[0] = boost::lexical_cast<NekDouble>(tmp1[0]);
+        vec[1] = boost::lexical_cast<NekDouble>(tmp1[1]);
+        vec[2] = boost::lexical_cast<NekDouble>(tmp1[2]);
+    }
+    else
+    {
+        ASSERTL0(false,"expected three components or letter for direction");
+    }
 
     CompositeMap::iterator it1 = m_mesh->m_composite.find(surf1);
     CompositeMap::iterator it2 = m_mesh->m_composite.find(surf2);

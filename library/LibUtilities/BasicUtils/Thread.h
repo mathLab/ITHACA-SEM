@@ -100,19 +100,19 @@ class ThreadJob
 {
     public:
         /// Base constructor
-        ThreadJob();
+        LIB_UTILITIES_EXPORT ThreadJob();
         /// Base destructor.
-        virtual ~ThreadJob();
+        LIB_UTILITIES_EXPORT virtual ~ThreadJob();
 
         /**
          * This method will be called when the task is loaded
          * onto a worker thread and is ready to run.  When Run
          * has finished this instance will be destructed.
          */
-        virtual void Run() = 0;
+        LIB_UTILITIES_EXPORT virtual void Run() = 0;
 
         /// Set number of worker threads.
-        void SetWorkerNum(unsigned int num);
+        LIB_UTILITIES_EXPORT void SetWorkerNum(unsigned int num);
 
     protected:
         /**
@@ -168,7 +168,7 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
 {
     public:
         /// Destructor.
-        virtual ~ThreadManager();
+        LIB_UTILITIES_EXPORT virtual ~ThreadManager();
         /**
          * @brief Pass a list of tasklets to the master queue.
          * @param joblist Vector of ThreadJob pointers.
@@ -181,7 +181,7 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
          *
          * @see SchedType
          */
-        virtual void QueueJobs(std::vector<ThreadJob*>& joblist) = 0;
+        LIB_UTILITIES_EXPORT virtual void QueueJobs(std::vector<ThreadJob*>& joblist) = 0;
         /**
          * @brief Pass a single job to the master queue.
          * @param job A pointer to a ThreadJob subclass.
@@ -190,14 +190,14 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
          * issue then suspend the workers with SetNumWorkers(0) until the jobs
          * are queued.
          */
-        virtual void QueueJob(ThreadJob* job) = 0;
+        LIB_UTILITIES_EXPORT virtual void QueueJob(ThreadJob* job) = 0;
         /**
          * @brief Return the number of active workers.
          *
          * Active workers are threads that are either running jobs
          * or are waiting for jobs to be queued.
          */
-        virtual unsigned int GetNumWorkers() = 0;
+        LIB_UTILITIES_EXPORT virtual unsigned int GetNumWorkers() = 0;
         /**
          * @brief Returns the worker number of the executing thread.
          *
@@ -216,7 +216,7 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
          *
          * Returns 0 if called by non-thread.
          */
-        virtual unsigned int GetWorkerNum() = 0;
+        LIB_UTILITIES_EXPORT virtual unsigned int GetWorkerNum() = 0;
         /**
          * @brief Sets the number of active workers.
          * @param num The number of active workers.
@@ -227,18 +227,18 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
          * If num is greater than the maximum allowed number of active workers,
          * then the maximum value will be used instead.
          */
-        virtual void SetNumWorkers(const unsigned int num) = 0;
+        LIB_UTILITIES_EXPORT virtual void SetNumWorkers(const unsigned int num) = 0;
         /**
          * @brief Sets the number of active workers to the maximum.
          *
          * Sets the number of active workers to the maximum available.
          */
-        virtual void SetNumWorkers() = 0;
+        LIB_UTILITIES_EXPORT virtual void SetNumWorkers() = 0;
         /**
          * @brief Gets the maximum available number of threads.
          * @return The maximum number of workers.
          */
-        virtual unsigned int GetMaxNumWorkers() = 0;
+        LIB_UTILITIES_EXPORT virtual unsigned int GetMaxNumWorkers() = 0;
         /**
          * @brief Waits until all queued jobs are finished.
          *
@@ -261,7 +261,7 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
          * number of worker threads, implementations should increase the number
          * of active workers by 1 on entering Wait().
          */
-        virtual void Wait() = 0;
+        LIB_UTILITIES_EXPORT virtual void Wait() = 0;
         /**
          * @brief Controls how many jobs are sent to each worker at a time.
          *
@@ -271,17 +271,17 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
          * @see SchedType
          * @see SetSchedType()
          */
-        virtual void SetChunkSize(unsigned int chnk) = 0;
+        LIB_UTILITIES_EXPORT virtual void SetChunkSize(unsigned int chnk) = 0;
         /**
          * @brief Sets the current scheduling algorithm.
          * @see SetChunkSize()
          */
-        virtual void SetSchedType(SchedType s) = 0;
+        LIB_UTILITIES_EXPORT virtual void SetSchedType(SchedType s) = 0;
         /**
          * @brief Indicates whether the code is in a worker thread or not.
          * @return True if the caller is in a worker thread.
          */
-        virtual bool InThread() = 0;
+        LIB_UTILITIES_EXPORT virtual bool InThread() = 0;
         /**
          * @brief A calling threads holds until all active threads call this
          * method.
@@ -294,16 +294,16 @@ class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
          * is altered after a thread has called this method.  It is only safe to
          * call SetNumWorkers() when no threads are holding.
          */
-        virtual void Hold() = 0;
+        LIB_UTILITIES_EXPORT virtual void Hold() = 0;
         /**
          * @brief Returns a description of the type of threading.
          *
          * E.g. "Threading with Boost"
          */
-        virtual const std::string& GetType() const = 0;
+        LIB_UTILITIES_EXPORT virtual const std::string& GetType() const = 0;
 
         /// ThreadManager implementation.
-        virtual bool IsInitialised();
+        LIB_UTILITIES_EXPORT virtual bool IsInitialised();
 
         inline int GetThrFromPartition(int pPartition)
         {
@@ -354,17 +354,17 @@ class ThreadMaster
                                 THREADMANAGER_MAX
                                 };
         /// Constructor
-        ThreadMaster();
+        LIB_UTILITIES_EXPORT ThreadMaster();
         /// Destructor
-        ~ThreadMaster();
+        LIB_UTILITIES_EXPORT ~ThreadMaster();
         /// Sets what ThreadManagers will be created in CreateInstance.
-        void SetThreadingType(const std::string &p_type);
+        LIB_UTILITIES_EXPORT void SetThreadingType(const std::string &p_type);
         /// Gets the ThreadManager associated with string s.
-        ThreadManagerSharedPtr& GetInstance(const ThreadManagerName t);
+        LIB_UTILITIES_EXPORT ThreadManagerSharedPtr& GetInstance(const ThreadManagerName t);
         /// Creates an instance of a ThreadManager (which one is determined by
         /// a previous call to SetThreadingType) and associates it with
         /// the string s.
-        ThreadManagerSharedPtr CreateInstance(const ThreadManagerName t,
+        LIB_UTILITIES_EXPORT ThreadManagerSharedPtr CreateInstance(const ThreadManagerName t,
             unsigned int nThr);
 
 };

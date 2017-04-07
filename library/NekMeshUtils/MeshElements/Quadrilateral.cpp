@@ -105,6 +105,7 @@ Quadrilateral::Quadrilateral(ElmtConfig pConf,
         if (sum > 0.0)
         {
             reverse(m_edge.begin(), m_edge.end());
+            swap(m_vertex[1], m_vertex[3]);
         }
     }
 

@@ -28,6 +28,10 @@ SET(NekMeshSources
     ProcessModules/ProcessOptiExtract.cpp
     ProcessModules/ProcessInsertSurface.cpp
     ProcessModules/ProcessExtrude.cpp
+    ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
+    ProcessModules/ProcessVarOpti/PreProcessing.cpp
+    ProcessModules/ProcessVarOpti/NodeOpti.cpp
+    ProcessModules/ProcessVarOpti/ElUtil.cpp
 )
 
 IF (NEKTAR_USE_CCM)
@@ -41,11 +45,7 @@ ENDIF (NEKTAR_USE_VTK)
 IF (NEKTAR_USE_MESHGEN)
     SET(NekMeshSources ${NekMeshSources}
             ProcessModules/ProcessVarOpti/NodeOptiCAD.cpp
-            ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
-            ProcessModules/ProcessVarOpti/PreProcessing.cpp
-            ProcessModules/ProcessVarOpti/NodeOpti.cpp
-            ProcessModules/ProcessVarOpti/ElUtil.cpp
-            InputModules/InputCAD.cpp)
+            InputModules/InputMCF.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
 
 # Don't use macro -- this way we can just link against NekMeshUtils and
@@ -98,17 +98,13 @@ ADD_NEKTAR_TEST(StarTec/StraightRW LENGTHY)
 
 # MeshGen test
 IF(NEKTAR_USE_MESHGEN)
-    ADD_NEKTAR_TEST        (MeshGen/cylinder)
-    ADD_NEKTAR_TEST        (MeshGen/sphere)
-    ADD_NEKTAR_TEST        (MeshGen/2d-cad)
-    ADD_NEKTAR_TEST        (MeshGen/2d-naca)
-    # varopti tests
-    ADD_NEKTAR_TEST        (MeshGen/varopti_cubesphere)
+    ADD_NEKTAR_TEST(MeshGen/cylinder)
+    ADD_NEKTAR_TEST(MeshGen/sphere)
+    ADD_NEKTAR_TEST(MeshGen/2d-cad)
+    ADD_NEKTAR_TEST(MeshGen/2d-naca)
+    ADD_NEKTAR_TEST(MeshGen/t106step)
+    ADD_NEKTAR_TEST(MeshGen/rev LENGTHY)
 ENDIF()
 
-# This has some issues due to hashing
-IF (WIN32)
-    ADD_NEKTAR_TEST(Gmsh/Scalar_Windows)
-ELSE ()
-    ADD_NEKTAR_TEST(Gmsh/Scalar)
-ENDIF ()
+# varopti tests
+ADD_NEKTAR_TEST(MeshGen/varopti_cubesphere LENGTHY)

@@ -4,10 +4,31 @@ Changelog
 v4.5.0
 ------
 **NekMesh**:
+- Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
 
 **Library**
 - Added in sum factorisation version for pyramid expnasions and orthogonal expansion in pyramids (!750)
+
+**Documentation**:
+- Added the developer-guide repository as a submodule (!751)
+
+v4.4.1
+------
+**Library**
+- Remove the duplicate output of errorutil (!756)
+
+**FieldConvert**:
+- Fix issue with FieldConvert when range flag used (!761)
+
+**NekMesh**:
+- Fix memory consumption issue with Gmsh output (!747, !762)
+- Rework meshing control so that if possible viewable meshes will be dumped
+  when some part of the system fails (!756)
+- Add manifold meshing option (!756)
+
+**FieldConvert:**
+- Fix issue with field ordering in the interppointdatatofld module (!754)
 
 v4.4.0
 ------
@@ -50,6 +71,7 @@ v4.4.0
 - Fix bug in FieldUtils when using half mode expansions (!734)
 - Do not read the same fld/pts files again for every variable (!670)
 - Fix bug in CMake PETSc detection for Ubuntu 16.04/Debian 9 (!735)
+- Fix warnings with Intel compiler (!742)
 
 **ADRSolver:**
 - Add a projection equation system for C^0 projections (!675)
@@ -108,9 +130,9 @@ v4.4.0
 - Change variable names in mcf file to make more sense (!736)
 - Fix issues in varopti module so that in can be compiled without meshgen on
   (!736)
-- Replace LAPACK Eigenvalue calculation with handwritten function in 
+- Replace LAPACK Eigenvalue calculation with handwritten function in
   varopti (!738)
-- Improved node-colouring algorithm for better load-balancing 
+- Improved node-colouring algorithm for better load-balancing
   in varopti (!738)
 - Simplified calculation of the energy functional in varopti for improved
   performance (!738)

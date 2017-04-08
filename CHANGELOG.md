@@ -18,6 +18,9 @@ v4.4.1
 **Library**
 - Remove the duplicate output of errorutil (!756)
 
+**FieldConvert**:
+- Fix issue with FieldConvert when range flag used (!761)
+
 **NekMesh**:
 - Fix memory consumption issue with Gmsh output (!747, !762)
 - Rework meshing control so that if possible viewable meshes will be dumped

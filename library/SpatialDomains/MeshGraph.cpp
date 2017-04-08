@@ -1925,6 +1925,12 @@ namespace Nektar
             {
                 stringstream s;
                 TiXmlElement *c = new TiXmlElement("C");
+
+                if (cIt->second->size() == 0)
+                {
+                    continue;
+                }
+
                 GeometrySharedPtr firstGeom = cIt->second->at(0);
                 int shapeDim = firstGeom->GetShapeDim();
                 string tag = (shapeDim < m_meshDimension) ?

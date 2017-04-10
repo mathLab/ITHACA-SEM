@@ -59,36 +59,34 @@ typedef boost::shared_lock<boost::shared_mutex> ReadLock;
 
 /**
  * @class NekFactory
- \brief Provides a generic Factory class.
  *
- * Implements a generic object factory. Class-types which use a
- * potentially arbitrary number of parameters may be used with
- * specialised forms of the NekFactory. An upper
- * limit on the number of parameters is imposed by the MAX_PARAM
- * preprocessor definition in the NekFactory.hpp file. The
- * specialisations are generated at compile type using Boost
- * preprocessor by through repeated inclusion of the NekFactory.hpp
- * file.
+ * @brief Provides a generic Factory class.
  *
- * To allow a class to be instantiated by the factory, the
- * following are required in each class definition (in the case of
- * a single parameter):
+ * Implements a generic object factory. Class-types which use an arbitrary
+ * number of parameters may be used via C++ variadic templating.
+ *
+ * To allow a class to be instantiated by the factory, the following are
+ * required in each class definition (in the case of a single parameter):
+ *
  * \code
  *   static [baseclass]* create([paramtype1] &P) {
  *      return new [derivedclass](P);
  *   }
  *   static std::string className;
  * \endcode
+ *
  * and outside the class definition in the implementation:
+ *
  * \code
  *   std::string [derivedclass]::className
  *      = Factory<std::string,[baseclass],[paramtype1]>::
  *          RegisterCreatorFunction("[derivedclass]",
  *                              [derivedclass]::create,"Description");
  * \endcode
- * The assignment of the static variable className is done through the
- * call to RegisterCreatorFunction, which registers the class with the
- * factory prior to the start of the main() routine.
+ *
+ * The assignment of the static variable className is done through the call to
+ * RegisterCreatorFunction, which registers the class with the factory prior to
+ * the start of the main() routine.
  *
  * To create an instance of a derived class, for instance:
  * \code

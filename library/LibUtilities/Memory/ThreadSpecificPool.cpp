@@ -36,10 +36,7 @@ namespace Nektar
 {
     MemPool& GetMemoryPool()
     {
-        typedef Loki::SingletonHolder<MemPool ,
-                Loki::CreateUsingNew,
-                Loki::NoDestroy,
-                Loki::SingleThreaded> Type;
-        return Type::Instance();
+        static MemPool instance;
+        return instance;
     }
 }

@@ -46,12 +46,10 @@ namespace FieldUtils
 /**
  * Returns an instance of the module factory, held as a singleton.
  */
-ModuleFactory &GetModuleFactory()
+static ModuleFactory &GetModuleFactory()
 {
-    typedef Loki::SingletonHolder<ModuleFactory, Loki::CreateUsingNew,
-                                  Loki::NoDestroy, Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
+    static ModuleFactory instance;
+    return instance;
 }
 
 /**

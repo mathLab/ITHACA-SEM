@@ -222,7 +222,6 @@ ENDIF ()
 
 # Find ThirdParty libraries and headers.
 INCLUDE (ThirdPartyTinyxml)
-INCLUDE (ThirdPartyLoki)
 INCLUDE (ThirdPartyMetis)
 INCLUDE (ThirdPartyHDF5)
 INCLUDE (ThirdPartyScotch)

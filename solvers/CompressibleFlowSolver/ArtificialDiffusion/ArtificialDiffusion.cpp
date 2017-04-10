@@ -42,11 +42,8 @@ namespace Nektar
 {
 ArtificialDiffusionFactory& GetArtificialDiffusionFactory()
 {
-    typedef Loki::SingletonHolder<ArtificialDiffusionFactory,
-                                  Loki::CreateUsingNew,
-                                  Loki::NoDestroy,
-                                  Loki::SingleThreaded> Type;
-    return Type::Instance();
+    static ArtificialDiffusionFactory instance;
+    return instance;
 }
 
 ArtificialDiffusion::ArtificialDiffusion(

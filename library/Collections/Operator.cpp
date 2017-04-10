@@ -106,7 +106,7 @@ Operator::~Operator()
 /**
  *
  */
-static OperatorFactory& GetOperatorFactory()
+OperatorFactory& GetOperatorFactory()
 {
     static OperatorFactory instance;
     return instance;

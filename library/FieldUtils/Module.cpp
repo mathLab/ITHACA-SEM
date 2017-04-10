@@ -46,7 +46,7 @@ namespace FieldUtils
 /**
  * Returns an instance of the module factory, held as a singleton.
  */
-static ModuleFactory &GetModuleFactory()
+ModuleFactory &GetModuleFactory()
 {
     static ModuleFactory instance;
     return instance;

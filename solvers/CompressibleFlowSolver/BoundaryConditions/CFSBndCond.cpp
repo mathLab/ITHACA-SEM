@@ -41,7 +41,7 @@ namespace Nektar
 {
 CFSBndCondFactory& GetCFSBndCondFactory()
 {
-    static CFDBndCondFactory instance;
+    static CFSBndCondFactory instance;
     return instance;
 }
 

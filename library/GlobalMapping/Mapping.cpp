@@ -46,7 +46,7 @@ MappingSharedPtr Mapping::m_mappingPtr = MappingSharedPtr();
 bool             Mapping::m_init       = false;
 bool             Mapping::m_isDefined  = false;
 
-static MappingFactory& GetMappingFactory()
+MappingFactory& GetMappingFactory()
 {
     static MappingFactory instance;
     return instance;

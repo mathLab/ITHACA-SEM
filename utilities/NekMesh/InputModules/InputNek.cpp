@@ -805,7 +805,7 @@ void InputNek::Process()
                 surfEl->GetEdge(i)->m_curveType = f->m_edgeList[i]->m_curveType;
             }
         }
-        else
+        else if (faceId < elm->GetEdgeCount())
         {
             EdgeSharedPtr f = elm->GetEdge(faceId);
 
@@ -823,6 +823,11 @@ void InputNek::Process()
                             LibUtilities::eGaussLobattoLegendre);
             surfEl = GetElementFactory().CreateInstance(
                 LibUtilities::eSegment, conf, nodeList, tags);
+        }
+
+        if (!surfEl)
+        {
+            continue;
         }
 
         LibUtilities::ShapeType surfElType = surfEl->GetConf().m_e;

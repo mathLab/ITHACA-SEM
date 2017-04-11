@@ -775,7 +775,7 @@
       <V ID="2"> v </V>
     </VARIABLES>
     <BOUNDARYREGIONS>
-      <B ID="0"> C[1]  </B>
+      <B ID="0"> C[1,2]  </B>
       <B ID="1"> C[3]  </B>
     </BOUNDARYREGIONS>
     <BOUNDARYCONDITIONS>

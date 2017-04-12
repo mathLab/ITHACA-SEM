@@ -36,8 +36,4 @@ IF( NEKTAR_SOLVER_VORTEXWAVE )
 	${CalcL2ToLinfPressureSource})
     ADD_SOLVER_UTILITY(CalcVWIplusPressure VortexWaveInteractionSolver SOURCES
 	${CalcVWIplusPressureSource})
-
-    FINALISE_CPACK_COMPONENT(vortexwaveinteraction-solver
-        SUMMARY "Nektar++ vortex-wave interaction solver"
-        DESCRIPTION "Nektar++ vortex-wave interaction solver")
 ENDIF( NEKTAR_SOLVER_VORTEXWAVE )

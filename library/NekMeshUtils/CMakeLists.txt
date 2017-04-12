@@ -122,8 +122,3 @@ INSTALL(DIRECTORY ./
         DESTINATION ${NEKTAR_INCLUDE_DIR}/NekMeshUtils
         COMPONENT dev
         FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
-
-SET(CPACK_COMPONENT_DEV_DEPENDS ${NEKTAR_LIBS} CACHE INTERNAL "")
-FINALISE_CPACK_COMPONENT(dev
-    SUMMARY "Nektar++ development headers"
-    DESCRIPTION "Headers for Nektar++ spectral element framework")

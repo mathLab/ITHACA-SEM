@@ -4,104 +4,6 @@
 ## Frequently used Nektar++ CMake configuration macros and functions
 ##
 
-# Attempt to determine architecture for debian/RPM packages
-execute_process(COMMAND dpkg --print-architecture
-    OUTPUT_VARIABLE DPKG_ARCHITECTURE
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND rpm --eval %{_arch}
-    OUTPUT_VARIABLE RPM_ARCHITECTURE
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-#
-# CONSTRUCT_DEBIAN_DEPS(depends outvar)
-#
-# This macro converts a list of component names to a string containing the
-# Debian package dependencies for use by the CPack DEB generator, and stores
-# this in an output variable. It assumes that packages will be named
-# nektar++-<component>.
-#
-# Arguments:
-#   - `depends`: List of packages.
-#   - `outvar`: Name of output variable.
-#
-MACRO(CONSTRUCT_DEBIAN_DEPS depends outvar)
-    SET(${outvar} "")
-
-    FOREACH (pkg ${depends})
-        STRING(TOLOWER ${pkg} pkg_lower)
-
-        LIST(FIND NEKTAR_LIBS ${pkg_lower} islib)
-        IF(islib EQUAL -1)
-            SET(${outvar} "${${outvar}}, nektar++-${pkg_lower} (>= ${NEKTAR_VERSION})")
-        ELSE()
-            SET(${outvar} "${${outvar}}, libnektar++-${pkg_lower} (>= ${NEKTAR_VERSION})")
-        ENDIF()
-    ENDFOREACH()
-
-    # Remove starting ", "
-    STRING(SUBSTRING ${${outvar}} 2 -1 ${outvar})
-    UNSET(pkg)
-    UNSET(pkg_lower)
-ENDMACRO()
-
-#
-# FINALISE_CPACK_COMPONENT(name SUMMARY <summary> DESCRIPTION <description>)
-#
-# Finalises the variables needed for a component (and only really a component
-# containing executables) in order to be packaged by CPack. This should be
-# called once all executables and libraries have been added to the
-# component. This routine will:
-#
-# - setup the component's name and description
-# - compile a unique list of dependencies
-# - construct a Debian dependency string using CONSTRUCT_DEBIAN_DEPS to be used
-#   in the resulting `.deb` file.
-#
-# Arguments:
-#   - `name`: component name.
-#   - `SUMMARY`: a brief summary of the package
-#   - `DESCRIPTION`: a more detailed description of the package
-#
-MACRO(FINALISE_CPACK_COMPONENT name)
-    # Don't both doing anything if we aren't building packages.
-    IF (NEKTAR_BUILD_PACKAGES)
-        CMAKE_PARSE_ARGUMENTS(COMP "" "DESCRIPTION;SUMMARY" "" ${ARGN})
-
-        # Component names are stored as upper case in the CPack variable names.
-        STRING(TOUPPER ${name} COMPVAR)
-
-        # Set the component name to `nektar++-<name>`
-        SET(CPACK_COMPONENT_${COMPVAR}_DISPLAY_NAME nektar++-${name}
-            CACHE INTERNAL "")
-        SET(CPACK_COMPONENT_${COMPVAR}_DESCRIPTION ${COMP_DESCRIPTION}
-            CACHE INTERNAL "")
-        SET(CPACK_COMPONENT_${COMPVAR}_DESCRIPTION_SUMMARY ${COMP_SUMMARY}
-            CACHE INTERNAL "")
-        SET(CPACK_RPM_${COMPVAR}_PACKAGE_SUMMARY ${COMP_SUMMARY}
-            CACHE INTERNAL "")
-
-        # Remove any duplicates from the existing CPack component dependencies
-        # which are set by NEKTAR_ADD_EXECUTABLE and NEKTAR_ADD_LIBRARY
-        SET(tmp ${CPACK_COMPONENT_${COMPVAR}_DEPENDS})
-        LIST(REMOVE_DUPLICATES tmp)
-        SET(CPACK_COMPONENT_${COMPVAR}_DEPENDS ${tmp}
-            CACHE INTERNAL "")
-
-        # Construct list of Debian dependencies
-        CONSTRUCT_DEBIAN_DEPS("${CPACK_COMPONENT_${COMPVAR}_DEPENDS}" "tmp")
-        SET(CPACK_DEBIAN_${COMPVAR}_PACKAGE_DEPENDS ${tmp}
-            CACHE INTERNAL "")
-
-        # Other Debian details
-        SET(CPACK_DEBIAN_${COMPVAR}_FILE_NAME
-            "nektar++-${name}-${NEKTAR_VERSION}-${DPKG_ARCHITECTURE}.deb"
-            CACHE INTERNAL "")
-        SET(CPACK_RPM_${COMPVAR}_FILE_NAME
-            "nektar++-${name}-${NEKTAR_VERSION}-1.${RPM_ARCHITECTURE}.rpm"
-            CACHE INTERNAL "")
-    ENDIF()
-ENDMACRO()
-
 #
 # THIRDPARTY_LIBRARY(varname DESCRIPTION <description> [STATIC|SHARED])
 #
@@ -260,17 +162,8 @@ MACRO(ADD_NEKTAR_EXECUTABLE name)
         ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} COMPONENT ${NEKEXE_COMPONENT} OPTIONAL
         LIBRARY DESTINATION ${NEKTAR_LIB_DIR} COMPONENT ${NEKEXE_COMPONENT} OPTIONAL)
 
-    # Add dependencies for executable. We append the dependencies to the CPack
-    # component list so that we can resolve these later.
+    # Add dependencies for executable.
     TARGET_LINK_LIBRARIES(${name} LINK_PUBLIC ${NEKEXE_DEPENDS})
-    SET(tmp ${CPACK_COMPONENT_${NEKEXE_COMPVAR}_DEPENDS})
-    FOREACH(dep ${NEKEXE_DEPENDS})
-        STRING(TOLOWER ${dep} tmp2)
-        LIST(APPEND tmp ${tmp2})
-    ENDFOREACH()
-    LIST(REMOVE_DUPLICATES tmp)
-    SET(CPACK_COMPONENT_${NEKEXE_COMPVAR}_DEPENDS ${tmp}
-        CACHE INTERNAL "")
 ENDMACRO()
 
 #
@@ -326,41 +219,9 @@ MACRO(ADD_NEKTAR_LIBRARY name)
             COMPONENT dev)
     ENDFOREACH()
 
-    # Add CPack information
-    SET(CPACK_COMPONENT_${NEKLIB_COMPVAR}_DISPLAY_NAME libnektar++-${NEKLIB_COMPONENT}
-        CACHE INTERNAL "")
-    SET(CPACK_COMPONENT_${NEKLIB_COMPVAR}_DISPLAY_GROUP lib
-        CACHE INTERNAL "")
-    SET(CPACK_COMPONENT_${NEKLIB_COMPVAR}_DESCRIPTION ${NEKLIB_DESCRIPTION}
-        CACHE INTERNAL "")
-    SET(CPACK_COMPONENT_${NEKLIB_COMPVAR}_DESCRIPTION_SUMMARY ${NEKLIB_SUMMARY}
-        CACHE INTERNAL "")
-
-    # Debian specific information
-    SET(CPACK_DEBIAN_${NEKLIB_COMPVAR}_FILE_NAME
-        "libnektar++-${NEKLIB_COMPONENT}-${NEKTAR_VERSION}-${DPKG_ARCHITECTURE}.deb"
-        CACHE INTERNAL "")
-    SET(CPACK_DEBIAN_${NEKLIB_COMPVAR}_PACKAGE_NAME
-        "libnektar++-${NEKLIB_COMPONENT}" CACHE INTERNAL "")
-
-    # RPM specific information
-    SET(CPACK_RPM_${NEKLIB_COMPVAR}_FILE_NAME
-        "libnektar++-${NEKLIB_COMPONENT}-1.${RPM_ARCHITECTURE}.rpm"
-        CACHE INTERNAL "")
-    SET(CPACK_RPM_${NEKLIB_COMPVAR}_PACKAGE_NAME
-        "libnektar++-${NEKLIB_COMPONENT}" CACHE INTERNAL "")
-
-    # If we have dependencies then link against them, and also configure CPack
-    # Debian dependencies, which are a special case for some reason. Then set up
-    # standard CPack components.
+    # If we have dependencies then link against them.
     IF(NEKLIB_DEPENDS)
         TARGET_LINK_LIBRARIES(${name} LINK_PUBLIC ${NEKLIB_DEPENDS})
-        CONSTRUCT_DEBIAN_DEPS(${NEKLIB_DEPENDS} "tmp")
-        SET(CPACK_DEBIAN_${NEKLIB_COMPVAR}_PACKAGE_DEPENDS ${tmp}
-            CACHE INTERNAL "")
-        STRING(TOLOWER ${NEKLIB_DEPENDS} tmp)
-        SET(CPACK_COMPONENT_${NEKLIB_COMPVAR}_DEPENDS ${tmp}
-            CACHE INTERNAL "")
     ENDIF()
 ENDMACRO()
 

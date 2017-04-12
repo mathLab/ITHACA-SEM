@@ -19,9 +19,6 @@ IF( NEKTAR_SOLVER_ADR )
         ./EquationSystems/EigenValuesAdvection.cpp)
 
     ADD_SOLVER_EXECUTABLE(ADRSolver SOURCES ${ADRSolverSource})
-    FINALISE_CPACK_COMPONENT(adr-solver
-        SUMMARY "Nektar++ advection-diffusion-reaction solver"
-        DESCRIPTION "Solves a range of advection, diffusion, reaction PDE problems.")
 
     # 1D discontinuous advection (weak DG/flux reconstruction)
     ADD_NEKTAR_TEST(Advection1D_FRDG_GLL_LAGRANGE_SEM LENGTHY)

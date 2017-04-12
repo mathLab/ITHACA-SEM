@@ -11,9 +11,6 @@ IF( NEKTAR_SOLVER_APE )
         ./RiemannSolvers/LaxFriedrichsSolver.cpp)
 
     ADD_SOLVER_EXECUTABLE(APESolver SOURCES ${APESolverSource})
-    FINALISE_CPACK_COMPONENT(ape-solver
-        SUMMARY "Nektar++ acoustic perturbation equation solver"
-        DESCRIPTION "Solves the acoustic perturbation equations for acoustics modelling")
 
     # TODO: We have a bug somewhere in the 1D boundary conditions. Therefore 1D
     # problems are currently disabled. This should get fixed in the future. (See APE.cpp:64)

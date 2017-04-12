@@ -57,9 +57,6 @@ ENDIF (NEKTAR_USE_MESHGEN)
 ADD_UTILITIES_EXECUTABLE(NekMesh COMPONENT nekmesh
     SOURCES ${NekMeshSources}
     DEPENDS NekMeshUtils FieldUtils)
-FINALISE_CPACK_COMPONENT(nekmesh
-    SUMMARY "Nektar++ NekMesh utility"
-    DESCRIPTION "NekMesh is a high-order mesh generator, manipulator and converter utility for Nektar++ and other high-order mesh formats.")
 
 IF (NEKTAR_USE_CCM)
    TARGET_LINK_LIBRARIES(NekMesh ${CCMIO_LIBRARIES})

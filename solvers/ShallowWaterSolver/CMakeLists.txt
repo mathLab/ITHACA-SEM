@@ -21,9 +21,6 @@ IF( NEKTAR_SOLVER_SHALLOW_WATER )
 	)
 
     ADD_SOLVER_EXECUTABLE(ShallowWaterSolver SOURCES ${ShallowWaterSolverSource})
-    FINALISE_CPACK_COMPONENT(shallowwater-solver
-        SUMMARY "Nektar++ shallow water equations solver"
-        DESCRIPTION "Solves the shallow water equations.")
 
     ADD_NEKTAR_TEST(LinearSWE_StandingWave_WallBC_CG_P4)
     ADD_NEKTAR_TEST(LinearSWE_StandingWave_WallBC_CG_P8)

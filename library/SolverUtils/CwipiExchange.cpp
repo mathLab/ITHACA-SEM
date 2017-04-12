@@ -496,9 +496,13 @@ void CwipiCoupling::SetupSendInterpolation()
     LibUtilities::PtsFieldSharedPtr distPts =
         MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, dist);
 
+    FieldUtils::InterpMethod method = FieldUtils::eNearestNeighbour;
+    if (m_config["SENDMETHOD"] == "SHEPARD")
+    {
+        method = FieldUtils::eShepard;
+    }
     m_sendInterpolator =
-        MemoryManager<SolverUtils::Interpolator>::AllocateSharedPtr(
-            SolverUtils::eNearestNeighbour);
+        MemoryManager<FieldUtils::Interpolator>::AllocateSharedPtr(method);
     m_sendInterpolator->CalcWeights(locatPts, distPts);
     m_sendInterpolator->PrintStatistics();
 }
@@ -655,7 +659,9 @@ void CwipiCoupling::SendCallback(
         interpField[i] = Array<OneD, NekDouble>(distCoords.num_elements());
     }
 
-    if (m_config["SENDMETHOD"] == "NEARESTNEIGHBOUR")
+    if (m_config["SENDMETHOD"] == "NEARESTNEIGHBOUR" ||
+        m_config["SENDMETHOD"] == "SHEPARD"
+    )
     {
         if (not m_sendInterpolator)
         {

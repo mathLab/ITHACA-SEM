@@ -10,6 +10,8 @@ v4.5.0
 **Library**
 - Added in sum factorisation version for pyramid expansions and orthogonal
   expansion in pyramids (!750)
+- Added support for using the distance to a specific region (e.g. outlet) in the
+  function definitions for the Absorption Forcing (!769)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)

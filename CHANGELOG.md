@@ -14,6 +14,7 @@ v4.4.1
 ------
 **Library**
 - Remove the duplicate output of errorutil (!756)
+- Fix interpolation issue with Lagrange basis functions (!768)
 
 **NekMesh**:
 - Fix memory consumption issue with Gmsh output (!747, !762)

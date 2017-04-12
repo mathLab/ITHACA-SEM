@@ -80,7 +80,7 @@ namespace Nektar
             m_advObject); 
         m_extrapolation->SubSteppingTimeIntegration(
                             m_intScheme->GetIntegrationMethod(), m_intScheme);
-        m_extrapolation->GenerateHOPBCMap();        
+        m_extrapolation->GenerateHOPBCMap(m_session);        
 
        // Storage to extrapolate pressure forcing
         int physTot = m_fields[0]->GetTotPoints();
@@ -157,6 +157,7 @@ namespace Nektar
         // Correct Dirichlet boundary conditions to account for mapping
         m_mapping->UpdateBCs(0.0);
         //
+        m_F = Array<OneD, Array< OneD, NekDouble> > (m_nConvectiveFields);
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->LocalToGlobal();
@@ -164,6 +165,7 @@ namespace Nektar
             m_fields[i]->GlobalToLocal();
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
                                   m_fields[i]->UpdatePhys());
+            m_F[i] = Array< OneD, NekDouble> (m_fields[0]->GetTotPoints(), 0.0);
         }
 
         // Initialise m_gradP
@@ -190,18 +192,6 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray, 
         const NekDouble time)
     {       
-        // Update mapping and Deal with Dirichlet boundary conditions
-        if (m_mapping->IsTimeDependent())
-        {
-            if (m_mapping->IsFromFunction())
-            {
-                // If the transformation is explicitly defined, update it here 
-                // Otherwise, it will be done somewhere else (ForcingMovingBody)
-                m_mapping->UpdateMapping(time);
-            }
-            m_mapping->UpdateBCs(time);
-        }       
-        
         EvaluateAdvectionTerms(inarray, outarray);
 
         // Smooth advection
@@ -221,10 +211,22 @@ namespace Nektar
         }
         
         // Add mapping terms
-        ApplyIncNSMappingForcing( outarray );
-        
+        ApplyIncNSMappingForcing( inarray, outarray);
+
         // Calculate High-Order pressure boundary conditions
         m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis);
+
+        // Update mapping and deal with Dirichlet boundary conditions
+        if (m_mapping->IsTimeDependent())
+        {
+            if (m_mapping->IsFromFunction())
+            {
+                // If the transformation is explicitly defined, update it here
+                // Otherwise, it will be done somewhere else (ForcingMovingBody)
+                m_mapping->UpdateMapping(time+m_timestep);
+            }
+            m_mapping->UpdateBCs(time+m_timestep);
+        }
     }
     
         
@@ -327,17 +329,24 @@ namespace Nektar
                 // Add two parts
                 Vmath::Vadd(physTot, velocity[0], 1, wk, 1, wk, 1);
 
-                // Multiply by kinvis
-                Vmath::Smul(physTot, m_kinvis, wk, 1, wk, 1);
+                // Multiply by kinvis and prepare to extrapolate
+                int nlevels = m_presForcingCorrection.num_elements();
+                Vmath::Smul(physTot, m_kinvis, wk, 1,
+                                     m_presForcingCorrection[nlevels-1], 1);
 
                 // Extrapolate correction
-                m_extrapolation->ExtrapolateArray(m_presForcingCorrection, 
-                                                    wk, wk);
+                m_extrapolation->ExtrapolateArray(m_presForcingCorrection);
 
                 // Put in wavespace
                 if (wavespace)
                 {
-                    m_fields[0]->HomogeneousFwdTrans(wk,wk);
+                    m_fields[0]->HomogeneousFwdTrans(
+                                   m_presForcingCorrection[nlevels-1],wk);
+                }
+                else
+                {
+                    Vmath::Vcopy(physTot, m_presForcingCorrection[nlevels-1], 1,
+                                          wk, 1);
                 }
                 // Apply correction: Forcing = Forcing - correction
                 Vmath::Vsub(physTot, Forcing[0], 1, wk, 1, Forcing[0], 1);
@@ -739,7 +748,8 @@ namespace Nektar
      * Explicit terms of the mapping
      */
     void   VCSMapping::ApplyIncNSMappingForcing(
-        Array<OneD, Array<OneD, NekDouble> >          &outarray)
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+        Array<OneD, Array<OneD, NekDouble> >             &outarray)
     {
         int physTot = m_fields[0]->GetTotPoints();
         Array<OneD, Array<OneD, NekDouble> >       vel(m_nConvectiveFields);
@@ -758,7 +768,7 @@ namespace Nektar
         {
             for (int i = 0; i < m_nConvectiveFields; ++i)
             {
-                vel[i] = m_fields[i]->GetPhys();
+                vel[i] = inarray[i];
                 m_fields[0]->HomogeneousBwdTrans(vel[i],velPhys[i]);
             }
         }
@@ -766,8 +776,8 @@ namespace Nektar
         {
             for (int i = 0; i < m_nConvectiveFields; ++i)
             {
-                vel[i] = m_fields[i]->GetPhys();
-                Vmath::Vcopy(physTot, m_fields[i]->GetPhys(), 1, velPhys[i], 1);
+                vel[i] = inarray[i];
+                Vmath::Vcopy(physTot, inarray[i], 1, velPhys[i], 1);
             }
         }
 
@@ -821,7 +831,7 @@ namespace Nektar
     }
     
         void VCSMapping::MappingAdvectionCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &velPhys,
+            const Array<OneD, const Array<OneD, NekDouble> >  &velPhys,
             Array<OneD, Array<OneD, NekDouble> >              &outarray)
         {
             int physTot = m_fields[0]->GetTotPoints();
@@ -846,8 +856,8 @@ namespace Nektar
         }
         
         void VCSMapping::MappingAccelerationCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &vel,
-            const Array<OneD, Array<OneD, NekDouble> >        &velPhys,
+            const Array<OneD, const Array<OneD, NekDouble> >  &vel,
+            const Array<OneD, const Array<OneD, NekDouble> >  &velPhys,
             Array<OneD, Array<OneD, NekDouble> >              &outarray)
         {
             int physTot = m_fields[0]->GetTotPoints();
@@ -952,7 +962,7 @@ namespace Nektar
         }
 
         void VCSMapping::MappingViscousCorrection(
-            const Array<OneD, Array<OneD, NekDouble> >        &velPhys,
+            const Array<OneD, const Array<OneD, NekDouble> >  &velPhys,
             Array<OneD, Array<OneD, NekDouble> >              &outarray)
         {
             // L(U) - 1.0*d^2(u^i)/dx^jdx^j

@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     try
     {
         LibUtilities::FieldIOSharedPtr fld =
-            MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(vComm);
+            LibUtilities::FieldIO::CreateDefault(vSession);
 
         //----------------------------------------------
         // Read in mesh from input file

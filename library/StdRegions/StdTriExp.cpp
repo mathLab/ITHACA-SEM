@@ -136,16 +136,14 @@ namespace Nektar
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD, NekDouble> wsp(nquad0*nquad1);
+            Array<OneD, NekDouble> wsp(std::max(nquad0, nquad1));
 
             const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
             const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
 
             // set up geometric factor: 2/(1-z1)
-            for (i = 0; i < nquad1; ++i)
-            {
-                wsp[i] = 2.0/(1-z1[i]);
-            }
+            Vmath::Sadd(nquad1, -1.0, z1, 1, wsp, 1);
+            Vmath::Sdiv(nquad1, -2.0, wsp, 1, wsp, 1);
 
             if (out_d0.num_elements() > 0)
             {
@@ -160,10 +158,8 @@ namespace Nektar
                 if (out_d1.num_elements() > 0)
                 {
                     // set up geometric factor: (1_z0)/(1-z1)
-                    for (i = 0; i < nquad0; ++i)
-                    {
-                        wsp[i] = 0.5*(1+z0[i]);
-                    }
+                    Vmath::Sadd(nquad0, 1.0, z0, 1, wsp, 1);
+                    Vmath::Smul(nquad0, 0.5, wsp, 1, wsp, 1);
 
                     for (i = 0; i < nquad1; ++i)
                     {
@@ -183,10 +179,8 @@ namespace Nektar
                     Blas::Dscal(nquad0,wsp[i],&diff0[0]+i*nquad0,1);
                 }
 
-                for (i = 0; i < nquad0; ++i)
-                {
-                    wsp[i] = 0.5*(1+z0[i]);
-                }
+                Vmath::Sadd(nquad0, 1.0, z0, 1, wsp, 1);
+                Vmath::Smul(nquad0, 0.5, wsp, 1, wsp, 1);
 
                 for (i = 0; i < nquad1; ++i)
                 {
@@ -523,7 +517,7 @@ namespace Nektar
             int i;
             int mode;
             int nquad0  = m_base[0]->GetNumPoints();
-            int nquad1  = m_base[1]->GetNumPoints();   
+            int nquad1  = m_base[1]->GetNumPoints();
             int nmodes0 = m_base[0]->GetNumModes();
             int nmodes1 = m_base[1]->GetNumModes();
 
@@ -921,7 +915,7 @@ namespace Nektar
                      "Mapping not defined for this type of basis");
 
             int i;
-            int numModes;
+            int numModes=0;
             int order0 = m_base[0]->GetNumModes();
             int order1 = m_base[1]->GetNumModes();
 
@@ -1409,7 +1403,7 @@ namespace Nektar
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
 
 
-            if(mkey.HasVarCoeff(eVarCoeffLaplacian)) // Rodrigo's svv mapping 
+            if(mkey.HasVarCoeff(eVarCoeffLaplacian)) // Rodrigo's svv mapping
             {
                 Array<OneD, NekDouble> sqrt_varcoeff(qa*qb);
                 Array<OneD, NekDouble> tmp(qa*qb);

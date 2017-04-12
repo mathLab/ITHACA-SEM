@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_INPUTVTK
 #define UTILITIES_NEKMESH_INPUTVTK
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 namespace Nektar
 {
@@ -44,17 +44,17 @@ namespace Utilities
 {
 
 /// Converter for VTK files.
-class InputVtk : public InputModule
+class InputVtk : public NekMeshUtils::InputModule
 {
 public:
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m)
+    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<InputVtk>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    InputVtk(MeshSharedPtr m);
+    InputVtk(NekMeshUtils::MeshSharedPtr m);
     virtual ~InputVtk();
 
     /// Populate and validate required data structures.

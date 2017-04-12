@@ -459,9 +459,17 @@ namespace Nektar
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
          */
-        void ContField1D::v_LocalToGlobal(void)
+        void ContField1D::v_LocalToGlobal(
+            const Array<OneD, const NekDouble> &inarray,
+            Array<OneD,NekDouble> &outarray, bool useComm)
         {
-            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs);
+            m_locToGloMap->LocalToGlobal(inarray, outarray, useComm);
+        }
+
+
+        void ContField1D::v_LocalToGlobal(bool useComm)
+        {
+            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs, useComm);
         }
 
         /**
@@ -484,6 +492,13 @@ namespace Nektar
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
          */
+        void ContField1D::v_GlobalToLocal(
+            const Array<OneD, const NekDouble> &inarray,
+            Array<OneD,NekDouble> &outarray)
+        {
+            m_locToGloMap->GlobalToLocal(inarray, outarray);
+        }
+
         void ContField1D::v_GlobalToLocal(void)
         {
             m_locToGloMap->GlobalToLocal(m_coeffs,m_coeffs);
@@ -525,12 +540,20 @@ namespace Nektar
                 const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing)
+                const Array<OneD, const NekDouble> &dirForcing,
+                const bool PhysSpaceForcing)
         {
             // Inner product of forcing
             int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             Array<OneD,NekDouble> wsp(contNcoeffs);
-            IProductWRTBase(inarray,wsp,eGlobal);
+            if(PhysSpaceForcing)
+            {
+                IProductWRTBase(inarray,wsp,eGlobal);
+            }
+            else
+            {
+                Assemble(inarray,wsp);
+            }
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
             Vmath::Neg(contNcoeffs, wsp, 1);

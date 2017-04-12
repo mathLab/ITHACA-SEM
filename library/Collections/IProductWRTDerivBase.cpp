@@ -124,6 +124,15 @@ class IProductWRTDerivBase_StdMat : public Operator
             }
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         Array<OneD, DNekMatSharedPtr>   m_iProdWRTStdDBase;
         Array<TwoD, const NekDouble>    m_derivFac;
@@ -284,6 +293,15 @@ class IProductWRTDerivBase_IterPerExp : public Operator
             }
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         Array<TwoD, const NekDouble>    m_derivFac;
         Array<OneD, const NekDouble>    m_jac;
@@ -403,6 +421,15 @@ class IProductWRTDerivBase_NoCollection : public Operator
             }
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         int                                         m_dim;
         int                                         m_coordim;
@@ -498,6 +525,15 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
                         &output[0], m_nmodes0);
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         const int                       m_nquad0;
         const int                       m_nmodes0;
@@ -591,6 +627,15 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         const int                       m_nquad0;
         const int                       m_nquad1;
@@ -652,7 +697,38 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
         {
         }
 
-        virtual void operator()(
+    /** 
+     * This method calculates:
+     *
+     * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1])  \f]
+     *
+     * which can be represented in terms of local cartesian
+     * derivaties as:
+     * 
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dx +
+     *       d\phi/d\xi_1\, d\xi_1/dx),in[0]) + \f]
+     * 
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dy +
+     *       d\phi/d\xi_1\, d\xi_1/dy),in[1]) + \f]
+     *  
+     * where we note that
+     *
+     * \f[ d\phi/d\xi_0 =  d\phi/d\eta_0\, d\eta_0/d\xi_0 = 
+     *        d\phi/d\eta_0 2/(1-\eta_1) \f]
+     *
+     * \f[ d\phi/d\xi_1  = d\phi/d\eta_1\, d\eta_1/d\xi_1 + 
+     *   d\phi/d\eta_1\, d\eta_1/d\xi_1 = d\phi/d\eta_0 (1+\eta_0)/(1-\eta_1)
+     *   + d\phi/d\eta_1 \f]
+     *
+     *  and so the full inner products are
+     *     
+     * \f[ (d\phi/dx,in[0]) + (dphi/dy,in[1]) = 
+     *   (d\phi/d\eta_0, ((2/(1-\eta_1) (d\xi_0/dx in[0] + d\xi_0/dy in[1])
+     *    + (1-\eta_0)/(1-\eta_1) (d\xi_1/dx in[0]+d\xi_1/dy in[1]))
+     *    + (d\phi/d\eta_1, (d\xi_1/dx in[0] + d\xi_1/dy in[1])) \f]
+     *
+     */
+    virtual void operator()(
                 const Array<OneD, const NekDouble> &entry0,
                       Array<OneD, NekDouble>       &entry1,
                       Array<OneD, NekDouble>       &entry2,
@@ -673,26 +749,6 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
 
             tmp[0] = wsp; tmp[1] = wsp + nmax;
             wsp1   = wsp + 2*nmax;
-
-
-            // calculate (dphi/dx,in[0]) = ((dphi/dxi_0 dxi_0/dx +
-            //                               dphi/dxi_1 dxi_1/dx),in[0])
-            //     +     (dphi/dy,in[1]) = ((dphi/dxi_0 dxi_0/dy +
-            //                               dphi/dxi_1 dxi_1/dy),in[1])
-            //
-            // Note dphi/dxi_0  =
-            //             dphi/deta_0 deta_0/dxi_0 = dphi/deta_0 2/(1-eta_1)
-            //
-            //      dphi/dxi_1  =
-            //             dphi/deta_1 deta_1/dxi_1 + dphi/deta_1 deta_1/dxi_1 =
-            //             dphi/deta_0 (1+eta_0)/(1-eta_1) + dphi/deta_1
-            //
-            // and so the full inner products are
-            //
-            // (dphi/dx,in[0]) + (dphi/dy,in[1])
-            //    = (dphi/deta_0, ((2/(1-eta_1) (dxi_0/dx in[0]+dxi_0/dy in[1])
-            //            + (1_eta_0)/(1-eta_1) (dxi_1/dx in[0]+dxi_1/dy in[1]))
-            //    + (dphi/deta_1, (dxi_1/dx in[0] + dxi_1/dy in[1]))
 
             for(int i = 0; i < 2; ++i)
             {
@@ -728,6 +784,15 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
                         m_jac, tmp[1], tmp[0], wsp1);
 
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -890,6 +955,15 @@ class IProductWRTDerivBase_SumFac_Hex : public Operator
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
     protected:
         const int                       m_nquad0;
         const int                       m_nquad1;
@@ -954,6 +1028,60 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Tet)
 
+
+        /**
+         * This method calculates:
+         *
+         * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) \f]
+         *
+         * which can be represented in terms of local cartesian
+         * derivaties as:
+         * 
+         * \f[ ((d\phi/d\xi_0\, d\xi_0/dx +
+         *       d\phi/d\xi_1\, d\xi_1/dx + 
+         *       d\phi/d\xi_2\, d\xi_2/dx),in[0]) + \f]
+         * 
+         * \f[ ((d\phi/d\xi_0\, d\xi_0/dy +
+         *       d\phi/d\xi_1\, d\xi_1/dy + 
+         *       d\phi/d\xi_2\, d\xi_2/dy),in[1]) + \f]
+         *  
+         * \f[ ((d\phi/d\xi_0\, d\xi_0/dz +
+         *       d\phi/d\xi_1\, d\xi_1/dz + 
+         *       d\phi/d\xi_2\, d\xi_2/dz),in[2]) \, \f]
+         *
+         * where we note that
+         *
+         * \f[ d\phi/d\xi_0 = d\phi/d\eta_0 4/((1-\eta_1)(1-\eta_2)) /f]
+         * 
+         * \f[ d\phi/d\xi_1 =  d\phi/d\eta_0 2(1+\eta_0)/((1-\eta_1)(1-\eta_2))
+         *       +  d\phi/d\eta_1 2/(1-\eta_2) \f]
+         *
+         * \f[ d\phi/d\xi_2  = d\phi/d\eta_0 2(1+\eta_0)/((1-\eta_1)(1-\eta_2))
+         *      +   d\phi/d\eta_1 (1+\eta_1)/(1-\eta_2)  + d\phi/d\eta_2 \f]
+         *
+         *  and so the full inner products are
+         * 
+         * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) = \f]
+         * 
+         * \f[ (d\phi/d\eta_0, fac0 (tmp0 + fac1(tmp1 + tmp2)))
+         *      + (d\phi/d\eta_1, fac2 (tmp1 + fac3 tmp2))
+         *      + (d\phi/d\eta_2, tmp2) \f]
+         *
+         *  where 
+         * 
+         * \f[ \begin{array}{lcl} 
+         *    tmp0 &=& (d\xi_0/dx in[0] + d\xi_0/dy in[1] + d\xi_0/dz in[2]) \\
+         *    tmp1 &=& (d\xi_1/dx in[0] + d\xi_1/dy in[1] + d\xi_1/dz in[2]) \\
+         *    tmp2 &=& (d\xi_2/dx in[0] + d\xi_2/dy in[1] + d\xi_2/dz in[2])
+         *   \end{array} \f]
+         * 
+         * \f[  \begin{array}{lcl}
+         *    fac0 &= & 4/((1-\eta_1)(1-\eta_2)) \\
+         *    fac1 &= & (1+\eta_0)/2 \\
+         *    fac2 &= & 2/(1-\eta_2) \\
+         *    fac3 &= & (1+\eta_1)/2  \end{array} \f]
+         *
+         */
         virtual void operator()(
                 const Array<OneD, const NekDouble> &entry0,
                       Array<OneD, NekDouble>       &entry1,
@@ -978,44 +1106,6 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
             {
                 tmp[i] = wsp + i*nmax;
             }
-
-
-            // calculate (dphi/dx,in[0]) = ((dphi/dxi_0 dxi_0/dx +
-            //                               dphi/dxi_1 dxi_1/dx +
-            //                               dphi/dxi_2 dxi_2/dx),in[0])
-            //     +     (dphi/dy,in[1]) = ((dphi/dxi_0 dxi_0/dy +
-            //                               dphi/dxi_1 dxi_1/dy +
-            //                               dphi/dxi_2 dxi_2/dy),in[1])
-            //     +     (dphi/dz,in[2]) = ((dphi/dxi_0 dxi_0/dz +
-            //                               dphi/dxi_1 dxi_1/dz +
-            //                               dphi/dxi_2 dxi_2/dz),in[1])
-            //
-            // Note dphi/dxi_0  =
-            //             dphi/deta_0 4/((1-eta_1)(1-eta2))
-            //
-            //      dphi/dxi_1  =
-            //             dphi/deta_0 2(1+eta_0)/((1-eta_1)(1-eta_2)) +
-            //             dphi/deta_1 2/(1-eta_2)
-            //
-            //      dphi/dxi_2  =
-            //             dphi/deta_0 2(1+eta_0)/((1-eta_1)(1-eta_2)) +
-            //             dphi/deta_1 (1+eta_1)/(1-eta_2)  + dphi/deta_2
-            //
-            // and so the full inner products are
-            //
-            // (dphi/dx,in[0]) + (dphi/dy,in[1]) + (dphi/dz,in[2])
-            //    = (dphi/deta_0, fac0 (tmp0 + fac1(tmp1 + tmp2)))
-            //    + (dphi/deta_1, fac2 (tmp1 + fac3 tmp2))
-            //    + (dphi/deta_2, tmp2)
-            //
-            // tmp0 = (dxi_0/dx in[0] + dxi_0/dy in[1] + dxi_0/dz in[2])
-            // tmp1 = (dxi_1/dx in[0] + dxi_1/dy in[1] + dxi_1/dz in[2])
-            // tmp2 = (dxi_2/dx in[0] + dxi_2/dy in[1] + dxi_2/dz in[2])
-
-            // fac0 = 4/((1-eta_1)(1-eta2))
-            // fac1 = (1+eta_0)/2
-            // fac2 = 2/(1-eta_2)
-            // fac3 = (1+eta_1)/2
 
             for(int i = 0; i < 3; ++i)
             {
@@ -1075,6 +1165,15 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
                         m_base0,   m_base1,   m_derbase2,
                         m_jac,tmp[2],tmp[0],wsp1);
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
     protected:
@@ -1187,6 +1286,52 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
         {
         }
 
+    /**
+     * This method calculates:
+     *
+     * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) \f]
+     *
+     * which can be represented in terms of local cartesian
+     * derivaties as:
+     * 
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dx +
+     *       d\phi/d\xi_1\, d\xi_1/dx + 
+     *       d\phi/d\xi_2\, d\xi_2/dx),in[0]) + \f]
+     * 
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dy +
+     *       d\phi/d\xi_1\, d\xi_1/dy + 
+     *       d\phi/d\xi_2\, d\xi_2/dy),in[1]) + \f]
+     *  
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dz +
+     *       d\phi/d\xi_1\, d\xi_1/dz + 
+     *       d\phi/d\xi_2\, d\xi_2/dz),in[2]) \, \f]
+     *
+     * where we note that
+     *
+     *  \f[ d\phi/d\xi_0  =
+     *            d\phi/d\eta_0 d\eta_0/d\xi_0 = d\phi/d\eta_0 2/(1-\eta_2) \f]
+     *
+     *  \f[ d\phi/d\xi_2  =
+     *            d\phi/d\eta_0 d\eta_0/d\xi_2 + d\phi/d\eta_2 d\eta_2/d\xi_2 =
+     *            d\phi/d\eta_0 (1+\eta_0)/(1-\eta_2) + d\phi/d\eta_2 \f]
+     *
+     *
+     *  and so the full inner products are
+     * 
+     * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) = \f]
+     * 
+     * \f[ (d\phi/d\eta_0, ((2/(1-\eta_2) (d\xi_0/dx in[0] + d\xi_0/dy in[1]
+     *              + d\xi_0/dz in[2])
+     *              + (1-\eta_0)/(1-\eta_2) (d\xi_2/dx in[0] + d\xi_2/dy in[1]
+     *              + d\xi_2/dz in[2] )) +  \f]
+     *
+     * \f[ (d\phi/d\eta_1, (d\xi_1/dx in[0] + d\xi_1/dy in[1]
+     *                + d\xi_1/dz in[2])) +  \f]
+     *
+     * \f[ (d\phi/d\eta_2, (d\xi_2/dx in[0] + d\xi_2/dy in[1]
+     *               + d\xi_2/dz in[2])) \f]
+     *
+     */
         virtual void operator()(
                 const Array<OneD, const NekDouble> &entry0,
                       Array<OneD, NekDouble>       &entry1,
@@ -1211,32 +1356,6 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
             {
                 tmp[i] = wsp + i*nmax;
             }
-
-            // calculate (dphi/dx,in[0]) = ((dphi/dxi_0 dxi_0/dx +
-            //                               dphi/dxi_1 dxi_1/dx),in[0])
-            //     +     (dphi/dy,in[1]) = ((dphi/dxi_0 dxi_0/dy +
-            //                               dphi/dxi_1 dxi_1/dy),in[1])
-            //     +     (dphi/dz,in[2]) = ((dphi/dxi_0 dxi_0/dz +
-            //                               dphi/dxi_1 dxi_1/dz),in[2])
-            //
-            // Note dphi/dxi_0  =
-            //             dphi/deta_0 deta_0/dxi_0 = dphi/deta_0 2/(1-eta_2)
-            //
-            //      dphi/dxi_2  =
-            //             dphi/deta_0 deta_0/dxi_2 + dphi/deta_2 deta_2/dxi_2 =
-            //             dphi/deta_0 (1+eta_0)/(1-eta_2) + dphi/deta_2
-            //
-            // and so the full inner products are
-            //
-            // (dphi/dx,in[0]) + (dphi/dy,in[1]) + (dphi/dz,in[2])
-            //    = (dphi/deta_0, ((2/(1-eta_2) (dxi_0/dx in[0] + dxi_0/dy in[1]
-            //                                               + dxi_0/dz in[2])
-            //            + (1_eta_0)/(1-eta_2) (dxi_2/dx in[0] + dxi_2/dy in[1]
-            //                                               + dxi_2/dz in[2] ))
-            //    + (dphi/deta_1, (dxi_1/dx in[0] + dxi_1/dy in[1]
-            //                                    + dxi_1/dz in[2]))
-            //    + (dphi/deta_2, (dxi_2/dx in[0] + dxi_2/dy in[1]
-            //                                    + dxi_2/dz in[2]))
 
             for(int i = 0; i < 3; ++i)
             {
@@ -1282,6 +1401,15 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
                         m_base0,   m_base1,   m_derbase2,
                         m_jac,tmp[2],tmp[0],wsp1);
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
         }
 
 
@@ -1371,6 +1499,257 @@ OperatorKey IProductWRTDerivBase_SumFac_Prism::m_type = GetOperatorFactory().
         OperatorKey(ePrism, eIProductWRTDerivBase, eSumFac, false),
         IProductWRTDerivBase_SumFac_Prism::create,
         "IProductWRTDerivBase_SumFac_Prism");
+
+
+
+/**
+ * @brief Inner product WRT deriv base operator using sum-factorisation (Pyr)
+ */
+class IProductWRTDerivBase_SumFac_Pyr : public Operator
+{
+    public:
+        OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Pyr)
+
+        virtual ~IProductWRTDerivBase_SumFac_Pyr()
+        {
+        }
+
+
+    /**
+     * This method calculates:
+     *
+     * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) \f]
+     *
+     * which can be represented in terms of local cartesian
+     * derivaties as:
+     * 
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dx +
+     *       d\phi/d\xi_1\, d\xi_1/dx + 
+     *       d\phi/d\xi_2\, d\xi_2/dx),in[0]) + \f]
+     * 
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dy +
+     *       d\phi/d\xi_1\, d\xi_1/dy + 
+     *       d\phi/d\xi_2\, d\xi_2/dy),in[1]) + \f]
+     *  
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dz +
+     *       d\phi/d\xi_1\, d\xi_1/dz + 
+     *       d\phi/d\xi_2\, d\xi_2/dz),in[2]) \, \f]
+     *
+     * where we note that
+     *
+     * \f[ d\phi/d\xi_0  =
+     *            d\phi/d\eta_0\, d\eta_0/d\xi_0 = 
+     *            d\phi/d\eta_0\, 2/(1-\eta_2). \f]
+     *
+     *  \f[ d\phi/d\xi_1  =
+     *            d\phi/d\eta_1\, d\eta_1/d\xi_1 = 
+     *            d\phi/d\eta_1\, 2/(1-\eta_2) \f]
+     *
+     *  \f[ d\phi/d\xi_2  =
+     *          d\phi/d\eta_0\, d\eta_0/d\xi_2 + 
+     *          d\phi/d\eta_1\, d\eta_1/d\xi_2 +
+     *          d\phi/d\eta_2\, d\eta_2/d\xi_2 =
+     *          d\phi/d\eta_0 (1+\eta_0)/(1-\eta_2) +
+     *          d\phi/d\eta_1 (1+\eta_1)/(1-\eta_2) + d\phi/d\eta_2 \f]
+     *
+     *  and so the full inner products are
+     * 
+     * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) = \f]
+     * 
+     * \f[ (d\phi/d\eta_0, ((2/(1-\eta_2) (d\xi_0/dx in[0] + 
+     *      d\xi_0/dy in[1] + 
+     *     (1-\eta_0)/(1-\eta_2) (d\xi_2/dx in[0] + d\xi_2/dy in[1]
+     *                               + d\xi_2/dz in[2] )) + \f]
+     * \f[ (d\phi/d\eta_1, ((2/(1-\eta_2) (d\xi_1/dx in[0] +
+     *      d\xi_0/dy in[1] + d\xi_0/dz in[2]) + 
+     *      (1-\eta_1)/(1-\eta_2) (d\xi_2/dx in[0] + d\xi_2/dy in[1] + 
+     *      d\xi_2/dz in[2] )) \f]
+     * 
+     * \f[ (d\phi/d\eta_2, (d\xi_2/dx in[0] + d\xi_2/dy in[1] + 
+     *      d\xi_2/dz in[2])) \f]
+     */
+     virtual void operator()(
+                const Array<OneD, const NekDouble> &entry0,
+                      Array<OneD, NekDouble>       &entry1,
+                      Array<OneD, NekDouble>       &entry2,
+                      Array<OneD, NekDouble>       &entry3,
+                      Array<OneD, NekDouble>       &wsp)
+        {
+            unsigned int nPhys  = m_stdExp->GetTotPoints();
+            unsigned int ntot   = m_numElmt*nPhys;
+            unsigned int nmodes = m_stdExp->GetNcoeffs();
+            unsigned int nmax  = max(ntot,m_numElmt*nmodes);
+            Array<OneD, Array<OneD, const NekDouble> > in(3);
+            Array<OneD, NekDouble> output, wsp1;
+            Array<OneD, Array<OneD, NekDouble> > tmp(3);
+
+            in[0] = entry0; in[1] = entry1;
+            in[2] = entry2;
+
+            output =  entry3;
+
+            for(int i = 0; i < 3; ++i)
+            {
+                tmp[i] = wsp + i*nmax;
+            }
+            
+            for(int i = 0; i < 3; ++i)
+            {
+                Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1, tmp[i],1);
+                for(int j = 1; j < 3; ++j)
+                {
+                    Vmath::Vvtvp (ntot,m_derivFac[i+3*j],1,
+                                  in[j],1, tmp[i], 1, tmp[i],1);
+                }
+            }
+            wsp1   = wsp + 3*nmax;
+
+            // Sort into eta factors
+            for (int i = 0; i < m_numElmt; ++i)
+            {
+                // scale tmp[0] by fac0
+                Vmath::Vmul(nPhys,&m_fac0[0],1,tmp[0].get()+i*nPhys,1,
+                            tmp[0].get()+i*nPhys,1);
+
+                // scale tmp[2] by fac1 and add to tmp0
+                Vmath::Vvtvp(nPhys,&m_fac1[0],1,tmp[2].get()+i*nPhys,1,
+                             tmp[0].get()+i*nPhys,1,tmp[0].get()+i*nPhys,1);
+
+                // scale tmp[1] by fac0 
+                Vmath::Vmul(nPhys,&m_fac0[0],1,tmp[1].get()+i*nPhys,1,
+                            tmp[1].get()+i*nPhys,1);
+
+                // scale tmp[2] by fac2 and add to tmp1 
+                Vmath::Vvtvp(nPhys,&m_fac2[0],1,tmp[2].get()+i*nPhys,1,
+                             tmp[1].get()+i*nPhys,1,tmp[1].get()+i*nPhys,1);
+            }
+
+            // calculate Iproduct WRT Std Deriv
+            PyrIProduct(m_sortTopVertex, m_numElmt,
+                        m_nquad0,   m_nquad1,  m_nquad2,
+                        m_nmodes0,  m_nmodes1, m_nmodes2,
+                        m_derbase0, m_base1,   m_base2,
+                        m_jac,tmp[0],output,wsp1);
+
+            PyrIProduct(m_sortTopVertex, m_numElmt,
+                        m_nquad0,  m_nquad1,   m_nquad2,
+                        m_nmodes0, m_nmodes1,  m_nmodes2,
+                        m_base0,   m_derbase1, m_base2,
+                        m_jac,tmp[1],tmp[0],wsp1);
+            Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
+
+            PyrIProduct(m_sortTopVertex, m_numElmt,
+                        m_nquad0,  m_nquad1,  m_nquad2,
+                        m_nmodes0, m_nmodes1, m_nmodes2,
+                        m_base0,   m_base1,   m_derbase2,
+                        m_jac,tmp[2],tmp[0],wsp1);
+            Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not valid for this operator.");
+        }
+
+
+    protected:
+        const int                       m_nquad0;
+        const int                       m_nquad1;
+        const int                       m_nquad2;
+        const int                       m_nmodes0;
+        const int                       m_nmodes1;
+        const int                       m_nmodes2;
+        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_base0;
+        Array<OneD, const NekDouble>    m_base1;
+        Array<OneD, const NekDouble>    m_base2;
+        Array<OneD, const NekDouble>    m_derbase0;
+        Array<OneD, const NekDouble>    m_derbase1;
+        Array<OneD, const NekDouble>    m_derbase2;
+        Array<TwoD, const NekDouble>    m_derivFac;
+        Array<OneD, NekDouble>          m_fac0;
+        Array<OneD, NekDouble>          m_fac1;
+        Array<OneD, NekDouble>          m_fac2;
+        bool                            m_sortTopVertex;
+
+    private:
+        IProductWRTDerivBase_SumFac_Pyr(
+                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                CoalescedGeomDataSharedPtr                pGeomData)
+            : Operator  (pCollExp, pGeomData),
+              m_nquad0  (m_stdExp->GetNumPoints(0)),
+              m_nquad1  (m_stdExp->GetNumPoints(1)),
+              m_nquad2  (m_stdExp->GetNumPoints(2)),
+              m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+              m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+              m_nmodes2 (m_stdExp->GetBasisNumModes(2)),
+              m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+              m_base1   (m_stdExp->GetBasis(1)->GetBdata()),
+              m_base2   (m_stdExp->GetBasis(2)->GetBdata()),
+              m_derbase0(m_stdExp->GetBasis(0)->GetDbdata()),
+              m_derbase1(m_stdExp->GetBasis(1)->GetDbdata()),
+              m_derbase2(m_stdExp->GetBasis(2)->GetDbdata())
+
+        {
+            m_jac      = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_wspSize  = 6 * m_numElmt * (max(m_nquad0*m_nquad1*m_nquad2,
+                                              m_nmodes0*m_nmodes1*m_nmodes2));
+            m_derivFac = pGeomData->GetDerivFactors(pCollExp);
+
+            if(m_stdExp->GetBasis(0)->GetBasisType()
+                    == LibUtilities::eModified_A)
+            {
+                m_sortTopVertex = true;
+            }
+            else
+            {
+                m_sortTopVertex = false;
+            }
+
+            const Array<OneD, const NekDouble>& z0
+                                            = m_stdExp->GetBasis(0)->GetZ();
+            const Array<OneD, const NekDouble>& z1
+                                            = m_stdExp->GetBasis(1)->GetZ();
+            const Array<OneD, const NekDouble>& z2
+                                            = m_stdExp->GetBasis(2)->GetZ();
+
+            m_fac0 = Array<OneD, NekDouble>(m_nquad0*m_nquad1*m_nquad2);
+            m_fac1 = Array<OneD, NekDouble>(m_nquad0*m_nquad1*m_nquad2);
+            m_fac2 = Array<OneD, NekDouble>(m_nquad0*m_nquad1*m_nquad2);
+
+            for (int i = 0; i < m_nquad0; ++i)
+            {
+                for(int j = 0; j < m_nquad1; ++j)
+                {
+                    for(int k = 0; k < m_nquad2; ++k)
+                    {
+                        // set up geometric factor: 2/(1-z2)
+                        m_fac0[i + j*m_nquad0 + k*m_nquad0*m_nquad1]
+                               = 2.0/(1-z2[k]);
+                        // set up geometric factor: (1+z0)/(1-z2)
+                        m_fac1[i + j*m_nquad0 + k*m_nquad0*m_nquad1]
+                               = (1+z0[i])/(1-z2[k]);
+                        // set up geometric factor: (1+z1)/(1-z2)
+                        m_fac2[i + j*m_nquad0 + k*m_nquad0*m_nquad1]
+                               = (1+z1[j])/(1-z2[k]);
+
+                    }
+                }
+            }
+        }
+};
+
+/// Factory initialisation for the IProductWRTDerivBase_SumFac_Pyr operator
+OperatorKey IProductWRTDerivBase_SumFac_Pyr::m_type = GetOperatorFactory().
+    RegisterCreatorFunction(
+        OperatorKey(ePyramid, eIProductWRTDerivBase, eSumFac, false),
+        IProductWRTDerivBase_SumFac_Pyr::create,
+        "IProductWRTDerivBase_SumFac_Pyr");
+
 
 }
 }

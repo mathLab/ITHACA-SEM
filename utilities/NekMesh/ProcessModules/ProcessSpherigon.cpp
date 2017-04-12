@@ -35,6 +35,7 @@
 
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/QuadExp.h>
@@ -45,6 +46,14 @@
 
 #include "ProcessSpherigon.h"
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/index/rtree.hpp>
+
+namespace bg  = boost::geometry;
+namespace bgi = boost::geometry::index;
+
 using namespace std;
 using namespace Nektar::NekMeshUtils;
 
@@ -54,7 +63,6 @@ namespace Nektar
 {
 namespace Utilities
 {
-
 ModuleKey ProcessSpherigon::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "spherigon"), ProcessSpherigon::create);
@@ -213,6 +221,70 @@ void ProcessSpherigon::SuperBlend(vector<double> &r,
     }
 }
 
+void ProcessSpherigon::FindNormalFromPlyFile(MeshSharedPtr &plymesh,
+                                             map<int,NodeSharedPtr> &surfverts)
+{
+    int      cnt = 0;
+    int      j;
+    int      prog=0,cntmin;
+    NodeSet::iterator it;
+    map<int, NodeSharedPtr>::iterator vIt;
+
+    typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> Point;
+    typedef pair<Point, unsigned int> PointI;
+
+    int n_neighbs = 5;
+
+    map<int,int>  TreeidtoPlyid;
+
+    //Fill vertex array into tree format
+    vector<PointI> dataPts;
+    for (j = 0, it = plymesh->m_vertexSet.begin();
+         it != plymesh->m_vertexSet.end();
+         ++it, ++j)
+    {
+        dataPts.push_back(make_pair(Point( (*it)->m_x,
+                                           (*it)->m_y,
+                                           (*it)->m_z), j));
+        TreeidtoPlyid[j] = (*it)->m_id;
+    }
+
+    //Build tree
+    bgi::rtree<PointI, bgi::rstar<16> > rtree;
+    rtree.insert(dataPts.begin(), dataPts.end());
+
+    //Find neipghbours
+    for (cnt = 0, vIt = surfverts.begin(); vIt != surfverts.end();
+         ++vIt, ++cnt)
+    {
+        if(m_mesh->m_verbose)
+        {
+            prog = LibUtilities::PrintProgressbar(cnt,surfverts.size(),
+                                                  "Nearest ply verts",prog);
+        }
+
+
+        //I dont know why 5 nearest points are searched for when
+        //only the nearest point is used for the data
+        //was left like this in the ann->boost rewrite (MT 6/11/16)
+        Point queryPt(vIt->second->m_x, vIt->second->m_y, vIt->second->m_z);
+        n_neighbs  = 5;
+        vector<PointI> result;
+        rtree.query(bgi::nearest(queryPt, n_neighbs), std::back_inserter(result));
+
+        ASSERTL1(bg::distance(result[0].first,queryPt) < bg::distance(result[1].first,queryPt),
+            "Assumption that dist values are ordered from smallest to largest is not correct");
+
+        cntmin = TreeidtoPlyid[result[0].second];
+
+        ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),
+                 "cntmin is out of range");
+
+        m_mesh->m_vertexNormals[vIt->first] =
+            plymesh->m_vertexNormals[cntmin];
+    }
+}
+
 /**
  * @brief Generate a set of approximate vertex normals to a surface
  * represented by line segments in 2D and a hybrid
@@ -264,7 +336,8 @@ void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
         {
             // Calculate gradient vector and invert.
             Node dx = *(node[1]) - *(node[0]);
-            dx /= sqrt(dx.abs2());
+            NekDouble diff = dx.abs2();
+            dx /= sqrt(diff);
             n.m_x = -dx.m_y;
             n.m_y = dx.m_x;
             n.m_z = 0;
@@ -294,6 +367,7 @@ void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
         Node &n = mesh->m_vertexNormals[nIt->first];
         n /= sqrt(n.abs2());
     }
+
 }
 
 /**
@@ -474,24 +548,30 @@ void ProcessSpherigon::Process()
                  << " with scaling of " << scale << endl;
         }
 
-        ifstream inply;
+        ifstream inplyTmp;
+        io::filtering_istream inply;
         InputPlySharedPtr plyfile;
 
-        inply.open(normalfile.c_str());
-        ASSERTL0(inply, string("Could not open input ply file: ") + normalfile);
+        inplyTmp.open(normalfile.c_str());
+        ASSERTL0(inplyTmp,
+                 string("Could not open input ply file: ") + normalfile);
 
-        int j;
+        inply.push(inplyTmp);
+
         MeshSharedPtr m = boost::shared_ptr<Mesh>(new Mesh());
         plyfile = boost::shared_ptr<InputPly>(new InputPly(m));
         plyfile->ReadPly(inply, scale);
         plyfile->ProcessVertices();
 
         MeshSharedPtr plymesh = plyfile->GetMesh();
+        if (m_mesh->m_verbose)
+        {
+            cout << "\t Generating ply normals" << endl;
+        }
         GenerateNormals(plymesh->m_element[plymesh->m_expDim], plymesh);
 
         // finally find nearest vertex and set normal to mesh surface file
         // normal.  probably should have a hex tree search ?
-        Array<OneD, NekDouble> len2(plymesh->m_vertexSet.size());
         Node minx(0, 0.0, 0.0, 0.0), tmp, tmpsav;
         NodeSet::iterator it;
         map<int, NodeSharedPtr>::iterator vIt;
@@ -509,47 +589,16 @@ void ProcessSpherigon::Process()
             }
         }
 
-        // loop over all element in ply mesh and determine
-        // xmin,xmax,ymin,ymax as search criterion
-
-        NekDouble mindiff, diff;
-        int cntmin;
 
         if (m_mesh->m_verbose)
         {
             cout << "\t Processing surface normals " << endl;
         }
-        int cnt = 0;
-        map<int, int> locnorm;
-        for (vIt = surfverts.begin(); vIt != surfverts.end(); ++vIt, ++cnt)
-        {
-            mindiff = 1e12;
 
-            for (j = 0, it = plymesh->m_vertexSet.begin();
-                 it != plymesh->m_vertexSet.end();
-                 ++it, ++j)
-            {
-                tmp  = *(vIt->second) - *(*it);
-                diff = tmp.abs2();
+        // loop over all element in ply mesh and determine
+        // and set normal to nearest point in ply mesh
+        FindNormalFromPlyFile(plymesh,surfverts);
 
-                if (diff < mindiff)
-                {
-                    mindiff = diff;
-                    cntmin  = (*it)->m_id;
-                    tmpsav  = tmp;
-                }
-            }
-            locnorm[cntmin] = vIt->first;
-
-            ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),
-                     "cntmin is out of range");
-            m_mesh->m_vertexNormals[vIt->first] =
-                plymesh->m_vertexNormals[cntmin];
-        }
-        if (m_mesh->m_verbose)
-        {
-            cout << "\t end of processing surface normals " << endl;
-        }
         normalsGenerated = true;
     }
     else if (m_mesh->m_vertexNormals.size() == 0)
@@ -789,15 +838,15 @@ void ProcessSpherigon::Process()
         }
 
         vector<Node> tmp(nV);
-        vector<double> r(nV);
+        vector<NekDouble> r(nV);
         vector<Node> K(nV);
         vector<Node> Q(nV);
         vector<Node> Qp(nV);
-        vector<double> blend(nV);
+        vector<NekDouble> blend(nV);
         vector<Node> out(nquad);
 
         // Calculate segment length for 2D spherigon routine.
-        double segLength = sqrt((v[0] - v[1]).abs2());
+        NekDouble segLength = sqrt((v[0] - v[1]).abs2());
 
         // Perform Spherigon method to smooth manifold.
         for (int j = 0; j < nquad; ++j)
@@ -828,7 +877,7 @@ void ProcessSpherigon::Process()
 
                 // Calculate generalized barycentric coordinate system
                 // (see equation 6 of paper).
-                double weight = 0.0;
+                NekDouble weight = 0.0;
                 for (int k = 0; k < nV; ++k)
                 {
                     r[k] = 1.0;
@@ -855,7 +904,7 @@ void ProcessSpherigon::Process()
             {
                 // Perform steps denoted in equations 2, 3, 8 for C1
                 // smoothing.
-                double tmp1;
+                NekDouble tmp1;
                 K[k]  = P + N * ((v[k] - P).dot(N));
                 tmp1  = (v[k] - K[k]).dot(vN[k]) / (1.0 + N.dot(vN[k]));
                 Q[k]  = K[k] + N * tmp1;

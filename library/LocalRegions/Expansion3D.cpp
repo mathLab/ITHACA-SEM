@@ -1103,6 +1103,8 @@ namespace Nektar
                      "Not set up for non boundary-interior expansions");
             ASSERTL1(inoutmat->GetRows() == inoutmat->GetColumns(),
                      "Assuming that input matrix was square");
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A,
+                     "Method set up only for modified modal bases curretly");
             
             int i,j;
             int id1,id2;
@@ -1132,6 +1134,9 @@ namespace Nektar
             
             // - if inoutmat.m_rows() == v_NCoeffs() it is a full
             //   matrix system
+
+            // - if inoutmat.m_rows() == v_GetNverts() it is a vertex space
+            //  preconditioner. 
             
             // - if inoutmat.m_rows() == v_NumBndCoeffs() it is a
             //  boundary CG system
@@ -1143,6 +1148,32 @@ namespace Nektar
             if (rows == GetNcoeffs())
             {
                 GetFaceToElementMap(face,GetForient(face),map,sign);
+            }
+            else if (rows == GetNverts())
+            {
+                int nfvert = faceExp->GetNverts();
+
+                // Need to find where linear vertices are in facemat
+                Array<OneD, unsigned int> linmap;
+                Array<OneD,          int> linsign;
+                
+                // Use a linear expansion to get correct mapping
+                GetLinStdExp()->GetFaceToElementMap(face,GetForient(face),linmap, linsign);
+
+                // zero out sign map to remove all other modes
+                sign = Array<OneD, int> (order_f,0);
+                map  = Array<OneD, unsigned int>(order_f,(unsigned int)0);
+                
+                int fmap; 
+                // Reset sign map to only have contribution from vertices
+                for(i = 0; i < nfvert; ++i)
+                {
+                    fmap = faceExp->GetVertexMap(i,true);
+                    sign[fmap] = 1;
+
+                    // need to reset map 
+                    map[fmap] = linmap[i]; 
+                }
             }
             else if(rows == NumBndryCoeffs())
             {

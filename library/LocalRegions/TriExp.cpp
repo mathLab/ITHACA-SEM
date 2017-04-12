@@ -583,6 +583,17 @@ namespace Nektar
                                     m_base[1]->GetBasisKey());
         }
 
+        StdRegions::StdExpansionSharedPtr TriExp::v_GetLinStdExp(void) const
+        {
+            LibUtilities::BasisKey bkey0(m_base[0]->GetBasisType(),
+                           2, m_base[0]->GetPointsKey());
+            LibUtilities::BasisKey bkey1(m_base[1]->GetBasisType(),
+                           2, m_base[1]->GetPointsKey());
+
+            return MemoryManager<StdRegions::StdTriExp>
+                ::AllocateSharedPtr( bkey0, bkey1);
+        }
+
         void TriExp::v_GetCoord(const Array<OneD, const NekDouble> &Lcoords,
                               Array<OneD,NekDouble> &coords)
         {
@@ -971,8 +982,12 @@ namespace Nektar
         }
 
 
-        void TriExp::v_ExtractDataToCoeffs(const NekDouble *data,
-                                           const std::vector<unsigned int > &nummodes,  const int mode_offset,   NekDouble * coeffs)
+        void TriExp::v_ExtractDataToCoeffs(
+            const NekDouble *data,
+            const std::vector<unsigned int > &nummodes,
+            const int mode_offset,
+            NekDouble * coeffs,
+            std::vector<LibUtilities::BasisType> &fromType)
         {
             int data_order0 = nummodes[mode_offset];
             int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);

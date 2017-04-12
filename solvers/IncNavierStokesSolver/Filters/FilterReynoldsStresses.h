@@ -36,13 +36,13 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERREYNOLDSSTRESSES_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERREYNOLDSSTRESSES_H
 
-#include <SolverUtils/Filters/FilterSampler.h>
+#include <SolverUtils/Filters/FilterFieldConvert.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
-class FilterReynoldsStresses : public FilterSampler
+class FilterReynoldsStresses : public FilterFieldConvert
 {
 public:
     friend class MemoryManager<FilterReynoldsStresses>;
@@ -70,13 +70,15 @@ protected:
     virtual void v_Initialise(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
-    virtual bool v_IsTimeDependent();
+    virtual void v_FillVariablesName(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
     virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
     virtual void v_PrepareOutput(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
+    virtual NekDouble v_GetScale();
     virtual std::string v_GetFileSuffix()
     {
         return "_stress";

@@ -585,12 +585,11 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = locExpVector[i];
-                nDim = locExpansion->GetShapeDimension();
-
                 // Order list according to m_offset_elmt_id details in Exp
                 // so that triangules are listed first and then quads
                 eid = locExp.GetOffset_Elmt_Id(i);
+                locExpansion = locExpVector[eid];
+                nDim = locExpansion->GetShapeDimension();
 
                 // Populate mapping for each edge of the element.
                 if (nDim == 1)
@@ -615,14 +614,14 @@ namespace Nektar
                             m_elmtToTrace[eid][j]->as<LocalRegions::SegExp>();
 
                         id  = locSegExp->GetGeom1D()->GetEid();
-                        order_e = locExpVector[eid]->GetEdgeNcoeffs(j);
+                        order_e = locExpansion->GetEdgeNcoeffs(j);
 
                         map<int,int> orientMap;
                         Array<OneD, unsigned int> map1(order_e), map2(order_e);
                         Array<OneD, int> sign1(order_e), sign2(order_e);
 
-                        locExpVector[eid]->GetEdgeToElementMap(j, StdRegions::eForwards, map1, sign1);
-                        locExpVector[eid]->GetEdgeToElementMap(j, locExpVector[eid]->GetEorient(j), map2, sign2);
+                        locExpansion->GetEdgeToElementMap(j, StdRegions::eForwards, map1, sign1);
+                        locExpansion->GetEdgeToElementMap(j, locExpansion->GetEorient(j), map2, sign2);
 
                         for (k = 0; k < map1.num_elements(); ++k)
                         {
@@ -660,14 +659,14 @@ namespace Nektar
                                            ->as<LocalRegions::Expansion2D>();
 
                         id  = locFaceExp->GetGeom2D()->GetFid();
-                        order_e = locExpVector[eid]->GetFaceNcoeffs(j);
+                        order_e = locExpansion->GetFaceNcoeffs(j);
 
                         map<int,int> orientMap;
                         Array<OneD, unsigned int> map1(order_e), map2(order_e);
                         Array<OneD, int> sign1(order_e), sign2(order_e);
 
-                        locExpVector[eid]->GetFaceToElementMap(j, StdRegions::eDir1FwdDir1_Dir2FwdDir2, map1, sign1);
-                        locExpVector[eid]->GetFaceToElementMap(j, locExpVector[eid]->GetForient(j), map2, sign2);
+                        locExpansion->GetFaceToElementMap(j, StdRegions::eDir1FwdDir1_Dir2FwdDir2, map1, sign1);
+                        locExpansion->GetFaceToElementMap(j, locExpansion->GetForient(j), map2, sign2);
 
                         for (k = 0; k < map1.num_elements(); ++k)
                         {
@@ -961,14 +960,16 @@ namespace Nektar
 
         void AssemblyMapDG::v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
-                          Array<OneD,       NekDouble>& global) const
+                    Array<OneD,       NekDouble>& global,
+                    bool useComm ) const
         {
             AssembleBnd(loc,global);
         }
 
         void AssemblyMapDG::v_LocalToGlobal(
                     const NekVector<NekDouble>& loc,
-                          NekVector<      NekDouble>& global) const
+                    NekVector<      NekDouble>& global,
+                    bool useComm) const
         {
             AssembleBnd(loc,global);
         }

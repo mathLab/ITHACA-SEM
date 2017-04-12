@@ -89,6 +89,8 @@ namespace Nektar
             m_session->MatchSolverInfo("REACTIONADVANCEMENT", "Explicit",
                                        m_explicitReaction, true);
 
+            m_session->LoadParameter("CheckNanSteps", m_nanSteps, 1);
+
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
             {
@@ -194,7 +196,7 @@ namespace Nektar
             }
 
             // Integrate in wave-space if using homogeneous1D
-            if(m_HomogeneousType == eHomogeneous1D && m_homoInitialFwd)
+            if(m_HomogeneousType != eNotHomogeneous && m_homoInitialFwd)
             {
                 for(i = 0; i < nfields; ++i)
                 {
@@ -317,9 +319,12 @@ namespace Nektar
                 for (i = 0; i < nvariables; ++i)
                 {
                     m_fields[m_intVariables[i]]->SetPhys(fields[i]);
-                    m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(
-                        fields[i],
-                        m_fields[m_intVariables[i]]->UpdateCoeffs());
+                    if( v_RequireFwdTrans() )
+                    {
+                        m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(
+                            fields[i],
+                            m_fields[m_intVariables[i]]->UpdateCoeffs());
+                    }
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
 
@@ -330,19 +335,22 @@ namespace Nektar
                 }
 
                 // search for NaN and quit if found
-                int nanFound = 0;
-                for (i = 0; i < nvariables; ++i)
+                if (m_nanSteps && !((step+1) % m_nanSteps) )
                 {
-                    if (Vmath::Nnan(fields[i].num_elements(), fields[i], 1) > 0)
+                    int nanFound = 0;
+                    for (i = 0; i < nvariables; ++i)
                     {
-                        nanFound = 1;
+                        if (Vmath::Nnan(fields[i].num_elements(),
+                                fields[i], 1) > 0)
+                        {
+                            nanFound = 1;
+                        }
                     }
+                    m_session->GetComm()->AllReduce(nanFound,
+                                LibUtilities::ReduceMax);
+                    ASSERTL0 (!nanFound,
+                                "NaN found during time integration.");
                 }
-                m_session->GetComm()->AllReduce(nanFound,
-                            LibUtilities::ReduceMax);
-                ASSERTL0 (!nanFound,
-                            "NaN found during time integration.");
-
                 // Update filters
                 std::vector<FilterSharedPtr>::iterator x;
                 for (x = m_filters.begin(); x != m_filters.end(); ++x)
@@ -354,7 +362,7 @@ namespace Nektar
                 if ((m_checksteps && !((step + 1) % m_checksteps)) ||
                      doCheckTime)
                 {
-                    if(m_HomogeneousType == eHomogeneous1D)
+                    if(m_HomogeneousType != eNotHomogeneous)
                     {
                         vector<bool> transformed(nfields, false);
                         for(i = 0; i < nfields; i++)
@@ -368,7 +376,8 @@ namespace Nektar
                                 transformed[i] = true;
                             }
                         }
-                        Checkpoint_Output(m_nchk++);
+                        Checkpoint_Output(m_nchk);
+                        m_nchk++;
                         for(i = 0; i < nfields; i++)
                         {
                             if (transformed[i])
@@ -383,7 +392,8 @@ namespace Nektar
                     }
                     else
                     {
-                        Checkpoint_Output(m_nchk++);
+                        Checkpoint_Output(m_nchk);
+                        m_nchk++;
                     }
                     doCheckTime = false;
                 }
@@ -408,7 +418,7 @@ namespace Nektar
             }
             
             // If homogeneous, transform back into physical space if necessary.
-            if(m_HomogeneousType == eHomogeneous1D)
+            if(m_HomogeneousType != eNotHomogeneous)
             {
                 for(i = 0; i < nfields; i++)
                 {
@@ -448,7 +458,7 @@ namespace Nektar
          */
         void UnsteadySystem::v_DoInitialise()
         {
-            CheckForRestartTime(m_time);
+            CheckForRestartTime(m_time, m_nchk);
             SetBoundaryConditions(m_time);
             SetInitialConditions(m_time);
         }
@@ -687,7 +697,7 @@ namespace Nektar
             }
         }
 
-        void UnsteadySystem::CheckForRestartTime(NekDouble &time)
+        void UnsteadySystem::CheckForRestartTime(NekDouble &time, int &nchk)
         {
             if (m_session->DefinesFunction("InitialConditions"))
             {
@@ -713,7 +723,10 @@ namespace Nektar
                             fs::path fullpath = pfilename / metafile;
                             filename = LibUtilities::PortablePath(fullpath);
                         }
-                        m_fld->ImportFieldMetaData(filename, m_fieldMetaDataMap);
+                        LibUtilities::FieldIOSharedPtr fld =
+                            LibUtilities::FieldIO::CreateForFile(
+                                m_session, filename);
+                        fld->ImportFieldMetaData(filename, m_fieldMetaDataMap);
 
                         // check to see if time defined
                         if (m_fieldMetaDataMap !=
@@ -725,6 +738,13 @@ namespace Nektar
                             if (iter != m_fieldMetaDataMap.end())
                             {
                                 time = boost::lexical_cast<NekDouble>(
+                                    iter->second);
+                            }
+
+                            iter = m_fieldMetaDataMap.find("ChkFileNum");
+                            if (iter != m_fieldMetaDataMap.end())
+                            {
+                                nchk = boost::lexical_cast<NekDouble>(
                                     iter->second);
                             }
                         }

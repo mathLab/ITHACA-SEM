@@ -161,7 +161,10 @@ namespace Nektar
         // Find parameters tag.
         tmp = testElement->FirstChildElement("parameters");
         ASSERTL0(tmp, "Cannot find 'parameters' for test.");
-        m_parameters = string(tmp->GetText());
+        if (tmp->GetText())
+        {
+            m_parameters = string(tmp->GetText());
+        }
 
         // Find parallel processes tah.
         tmp = testElement->FirstChildElement("processes");

@@ -36,7 +36,7 @@
 #ifndef UTILITIES_NEKMESH_INPUTSTAR
 #define UTILITIES_NEKMESH_INPUTSTAR
 
-#include "../Module.h"
+#include <NekMeshUtils/Module/Module.h>
 
 #include "ccmio.h"
 
@@ -45,17 +45,17 @@ namespace Nektar
 namespace Utilities
 {
 /// Converter for VTK files.
-class InputStar : public InputModule
+class InputStar : public NekMeshUtils::InputModule
 {
 public:
     /// Creates an instance of this class
-    static ModuleSharedPtr create(MeshSharedPtr m)
+    static NekMeshUtils::ModuleSharedPtr create(NekMeshUtils::MeshSharedPtr m)
     {
         return MemoryManager<InputStar>::AllocateSharedPtr(m);
     }
-    static ModuleKey className;
+    static NekMeshUtils::ModuleKey className;
 
-    InputStar(MeshSharedPtr m);
+    InputStar(NekMeshUtils::MeshSharedPtr m);
     virtual ~InputStar();
 
     /// Populate and validate required data structures.
@@ -64,46 +64,48 @@ public:
     void ReadZone(int &nComposite);
 
 protected:
-    void GenElement3D(vector<NodeSharedPtr> &Nodes,
+    void GenElement3D(std::vector<NekMeshUtils::NodeSharedPtr> &Nodes,
                       int i,
-                      vector<int> &ElementFaces,
-                      map<int, vector<int> > &FaceNodes,
+                      std::vector<int> &ElementFaces,
+                      std::map<int, std::vector<int> > &FaceNodes,
                       int ncomposite,
                       bool DoOrient);
 
-    void GenElement2D(vector<NodeSharedPtr> &Nodes,
+    void GenElement2D(std::vector<NekMeshUtils::NodeSharedPtr> &Nodes,
                       int i,
-                      vector<int> &FaceNodes,
+                      std::vector<int> &FaceNodes,
                       int ncomposite);
 
-    Array<OneD, int> SortEdgeNodes(vector<NodeSharedPtr> &Nodes,
-                                   vector<int> &FaceNodes);
+    Array<OneD, int> SortEdgeNodes(
+                    std::vector<NekMeshUtils::NodeSharedPtr> &Nodes,
+                    std::vector<int> &FaceNodes);
 
-    Array<OneD, int> SortFaceNodes(vector<NodeSharedPtr> &Nodes,
-                                   vector<int> &ElementFaces,
-                                   map<int, vector<int> > &FaceNodes);
+    Array<OneD, int> SortFaceNodes(
+                    std::vector<NekMeshUtils::NodeSharedPtr> &Nodes,
+                    std::vector<int> &ElementFaces,
+                    std::map<int, std::vector<int> > &FaceNodes);
 
-    void ResetNodes(vector<NodeSharedPtr> &Nodes,
-                    Array<OneD, vector<int> > &ElementFaces,
-                    map<int, vector<int> > &FaceNodes);
+    void ResetNodes(std::vector<NekMeshUtils::NodeSharedPtr> &Nodes,
+                    Array<OneD, std::vector<int> > &ElementFaces,
+                    std::map<int, std::vector<int> > &FaceNodes);
 
 private:
     CCMIOError m_ccmErr; // Star CCM error flag
     CCMIOID m_ccmTopology; // Star CCM mesh topology
     CCMIOID m_ccmProcessor;
-    map<int, string> m_faceLabels; // label from CCM into composite
+    std::map<int, std::string> m_faceLabels; // label from CCM into composite
 
     void InitCCM(void);
 
-    void ReadNodes(std::vector<NodeSharedPtr> &Nodes);
+    void ReadNodes(std::vector<NekMeshUtils::NodeSharedPtr> &Nodes);
 
-    void ReadInternalFaces(map<int, vector<int> > &FacesNodes,
-                           Array<OneD, vector<int> > &ElementFaces);
+    void ReadInternalFaces(std::map<int, std::vector<int> > &FacesNodes,
+                           Array<OneD, std::vector<int> > &ElementFaces);
 
-    void ReadBoundaryFaces(vector<vector<int> > &BndElementFaces,
-                           map<int, vector<int> > &FacesNodes,
-                           Array<OneD, vector<int> > &ElementFaces,
-                           vector<string> &facelabels);
+    void ReadBoundaryFaces(std::vector<std::vector<int> > &BndElementFaces,
+                           std::map<int, std::vector<int> > &FacesNodes,
+                           Array<OneD, std::vector<int> > &ElementFaces,
+                           std::vector<std::string> &facelabels);
 
     void SetupElements(void);
 };

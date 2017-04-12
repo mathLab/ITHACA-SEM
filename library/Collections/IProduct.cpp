@@ -425,6 +425,101 @@ void PrismIProduct(bool sortTopVertex, int numElmt,
 /**
  *
  */
+void PyrIProduct(bool sortTopVertex, int numElmt,
+                 int nquad0,  int  nquad1,  int nquad2,
+                 int nmodes0, int  nmodes1, int nmodes2,
+                 const Array<OneD, const NekDouble> &base0,
+                 const Array<OneD, const NekDouble> &base1,
+                 const Array<OneD, const NekDouble> &base2,
+                 const Array<OneD, const NekDouble> &jac,
+                 const Array<OneD, const NekDouble> &input,
+                 Array<OneD, NekDouble> &output,
+                 Array<OneD, NekDouble> &wsp)
+{
+    int totmodes  = LibUtilities::StdPyrData::getNumberOfCoefficients(
+                                                    nmodes0,nmodes1,nmodes2);
+    int totpoints = nquad0*nquad1*nquad2;
+    int cnt;
+    int mode, mode1;
+
+    ASSERTL1(wsp.num_elements() >= numElmt*(nquad1*nquad2*nmodes0 +
+                                            nquad2*max(nquad0*nquad1,nmodes0*nmodes1)),
+             "Insufficient workspace size");
+    
+    Vmath::Vmul(numElmt*totpoints,jac,1,input,1,wsp,1);
+
+    Array<OneD, NekDouble> wsp1 = wsp + numElmt * nquad2
+                                                * (max(nquad0*nquad1, 
+                                                       nmodes0*nmodes1));
+
+    // Perform iproduct  with respect to the  '0' direction
+    Blas::Dgemm('T', 'N', nquad1*nquad2*numElmt, nmodes0, nquad0,
+                1.0, wsp.get(), nquad0, base0.get(),
+                nquad0, 0.0, wsp1.get(), nquad1*nquad2*numElmt);
+
+    // Inner product with respect to the '1' direction
+    mode = 0;
+    for(int i=0; i < nmodes0; ++i)
+    {
+        Blas::Dgemm('T', 'N', nquad2*numElmt, nmodes1, nquad1,
+                    1.0, wsp1.get()+ i*nquad1*nquad2*numElmt, nquad1,
+                    base1.get(),           nquad1,
+                    0.0, wsp.get() + mode*nquad2*numElmt,nquad2*numElmt);
+        mode  += nmodes1;
+    }
+
+    // Inner product with respect to the '2' direction
+    mode = mode1 = cnt = 0;
+    for(int i = 0; i < nmodes0; ++i)
+    {
+        for(int j = 0; j < nmodes1; ++j, ++cnt)
+        {
+            int ijmax = max(i,j);
+            Blas::Dgemm('T', 'N', nmodes2-ijmax, numElmt, nquad2,
+                        1.0, base2.get()+mode*nquad2, nquad2,
+                             wsp.get()+cnt*nquad2*numElmt,   nquad2,
+                        0.0, output.get()+mode1,    totmodes);
+            mode  += nmodes2-ijmax;
+            mode1 += nmodes2-ijmax;
+        }
+
+        //increment mode in case order1!=order2
+        for(int j = nmodes1; j < nmodes2; ++j)
+        {
+            int ijmax = max(i,j);
+            mode += nmodes2-ijmax;
+        }
+    }
+    
+    // fix for modified basis for top singular vertex component
+    // Already have evaluated (1+c)/2 (1-b)/2 (1-a)/2
+    if(sortTopVertex)
+    {
+        for(int n = 0; n < numElmt; ++n)
+        {
+            // add in (1+c)/2 (1+b)/2 component
+            output[1+n*totmodes] += Blas::Ddot(nquad2,
+                             base2.get()+nquad2,1,
+                             &wsp[nquad2*numElmt + n*nquad2],1);
+
+            // add in (1+c)/2 (1-b)/2 (1+a)/2 component
+            output[1+n*totmodes] += Blas::Ddot(nquad2,
+                             base2.get()+nquad2,1,
+                             &wsp[nquad2*nmodes1*numElmt+n*nquad2],1);
+
+            // add in (1+c)/2 (1+b)/2 (1+a)/2 component
+            output[1+n*totmodes] += Blas::Ddot(nquad2,
+                             base2.get()+nquad2,1,
+                             &wsp[nquad2*(nmodes1+1)*numElmt+n*nquad2],1);
+        }
+    }
+}
+
+
+
+/**
+ *
+ */
 void TetIProduct(bool sortTopEdge, int numElmt,
                  int nquad0,  int  nquad1,  int nquad2,
                  int nmodes0, int  nmodes1, int nmodes2,

@@ -1,5 +1,4 @@
 SET(SOLVER_UTILS_SOURCES
-  Core/Deform.cpp
   Core/Misc.cpp
   AdvectionSystem.cpp
   Advection/Advection.cpp
@@ -29,10 +28,9 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterHistoryPoints.cpp
   Filters/FilterModalEnergy.cpp
   Filters/FilterMovingAverage.cpp
-  Filters/FilterSampler.cpp
+  Filters/FilterFieldConvert.cpp
   Filters/FilterThresholdMax.cpp
   Filters/FilterThresholdMin.cpp
-  Interpolator.cpp
   RiemannSolvers/RiemannSolver.cpp
   RiemannSolvers/UpwindSolver.cpp
   RiemannSolvers/UpwindLDGSolver.cpp
@@ -45,7 +43,6 @@ SET(SOLVER_UTILS_SOURCES
 )
 
 SET(SOLVER_UTILS_HEADERS
-  Core/Deform.h
   Core/Misc.h
   AdvectionSystem.h
   Advection/Advection.h
@@ -75,10 +72,9 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterHistoryPoints.h
   Filters/FilterModalEnergy.h
   Filters/FilterMovingAverage.h
-  Filters/FilterSampler.h
+  Filters/FilterFieldConvert.h
   Filters/FilterThresholdMax.h
   Filters/FilterThresholdMin.h
-  Interpolator.h
   RiemannSolvers/RiemannSolver.h
   RiemannSolvers/UpwindSolver.h
   RiemannSolvers/UpwindLDGSolver.h
@@ -109,13 +105,8 @@ ENDIF (NEKTAR_USE_CWIPI)
 ADD_DEFINITIONS(-DSOLVER_UTILS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(SolverUtils lib ${NEKTAR_LIBRARY_TYPE} ${SOLVER_UTILS_SOURCES} ${SOLVER_UTILS_HEADERS})
-TARGET_LINK_LIBRARIES(SolverUtils GlobalMapping)
-TARGET_LINK_LIBRARIES(SolverUtils MultiRegions)
 
- # CWIPI
- IF ( NEKTAR_USE_CWIPI )
-    TARGET_LINK_LIBRARIES(SolverUtils ${CWIPI_LIBRARY} ${CWIPI_LIBRARY_FVMC} ${CWIPI_LIBRARY_BFTC})
-    ADD_DEPENDENCIES(SolverUtils cwipi-0.8.2)
- ENDIF ()
+TARGET_LINK_LIBRARIES(SolverUtils FieldUtils)
+TARGET_LINK_LIBRARIES(SolverUtils MultiRegions)
 
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SolverUtils COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

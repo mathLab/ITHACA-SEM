@@ -10,8 +10,8 @@
 
      <metrics>
         <metric type="L2" id="1">
-            <value variable="x" tolerance="1e-4">0.624386</value>
-            <value variable="y" tolerance="1e-4">0.623558</value>
+            <value variable="x" tolerance="1e-4">0.597226</value>
+            <value variable="y" tolerance="1e-4">0.595038</value>
             <value variable="z" tolerance="1e-4">0.666667</value>
             <value variable="u" tolerance="1e-4">0.5</value>
             <value variable="v" tolerance="1e-4">0</value>

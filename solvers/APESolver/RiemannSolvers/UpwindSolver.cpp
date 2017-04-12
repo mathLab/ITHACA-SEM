@@ -123,7 +123,7 @@ void UpwindSolver::v_PointSolve(
     NekDouble u = (W[0] - W[1])/(c*rho0);
 
     // assemble the fluxes
-    pF = rho0*u + u0*p/(c*c);
+    pF = gamma*p0*u + u0*p;
     uF = p/rho0 + u0*u + v0*vL + w0*wL;
     vF = 0.0;
     wF = 0.0;

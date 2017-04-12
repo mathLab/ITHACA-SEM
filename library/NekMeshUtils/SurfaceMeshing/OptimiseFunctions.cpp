@@ -77,7 +77,7 @@ Array<OneD, NekDouble> OptiEdge::Getxi()
 
     switch (o->GetType())
     {
-        case curve:
+        case CADType::eCurve:
             xi = Array<OneD, NekDouble>(all.num_elements() - 2);
             for (int i = 1; i < all.num_elements() - 1; i++)
             {
@@ -85,7 +85,7 @@ Array<OneD, NekDouble> OptiEdge::Getxi()
             }
             break;
 
-        case surf:
+        case CADType::eSurf:
             xi = Array<OneD, NekDouble>(all.num_elements() - 4);
             for (int i = 2; i < all.num_elements() - 2; i++)
             {
@@ -93,7 +93,7 @@ Array<OneD, NekDouble> OptiEdge::Getxi()
             }
             break;
 
-        case vert:
+        case CADType::eVert:
             ASSERTL0(false, "Should not be able to pass vert");
     }
     return xi;
@@ -105,16 +105,16 @@ Array<OneD, NekDouble> OptiEdge::Getli()
     Array<OneD, NekDouble> bnds;
     switch (o->GetType())
     {
-        case curve:
+        case CADType::eCurve:
             li   = Array<OneD, NekDouble>(all.num_elements() - 2);
-            bnds = boost::dynamic_pointer_cast<CADCurve>(o)->Bounds();
+            bnds = boost::dynamic_pointer_cast<CADCurve>(o)->GetBounds();
             for (int i = 1; i < all.num_elements() - 1; i++)
             {
                 li[i - 1] = bnds[0];
             }
             break;
 
-        case surf:
+        case CADType::eSurf:
             li   = Array<OneD, NekDouble>(all.num_elements() - 4);
             bnds = boost::dynamic_pointer_cast<CADSurf>(o)->GetBounds();
             for (int i = 2; i < all.num_elements() - 2; i++)
@@ -130,7 +130,7 @@ Array<OneD, NekDouble> OptiEdge::Getli()
             }
             break;
 
-        case vert:
+        case CADType::eVert:
             ASSERTL0(false, "Should not be able to pass vert");
     }
     return li;
@@ -142,16 +142,16 @@ Array<OneD, NekDouble> OptiEdge::Getui()
     Array<OneD, NekDouble> bnds;
     switch (o->GetType())
     {
-        case curve:
+        case CADType::eCurve:
             ui   = Array<OneD, NekDouble>(all.num_elements() - 2);
-            bnds = boost::dynamic_pointer_cast<CADCurve>(o)->Bounds();
+            bnds = boost::dynamic_pointer_cast<CADCurve>(o)->GetBounds();
             for (int i = 1; i < all.num_elements() - 1; i++)
             {
                 ui[i - 1] = bnds[1];
             }
             break;
 
-        case surf:
+        case CADType::eSurf:
             ui   = Array<OneD, NekDouble>(all.num_elements() - 4);
             bnds = boost::dynamic_pointer_cast<CADSurf>(o)->GetBounds();
             for (int i = 2; i < all.num_elements() - 2; i++)
@@ -167,7 +167,7 @@ Array<OneD, NekDouble> OptiEdge::Getui()
             }
             break;
 
-        case vert:
+        case CADType::eVert:
             ASSERTL0(false, "Should not be able to pass vert");
     }
     return ui;
@@ -177,7 +177,7 @@ NekDouble OptiEdge::F(Array<OneD, NekDouble> xitst)
 {
     Array<OneD, NekDouble> val(all.num_elements());
 
-    if (o->GetType() == curve)
+    if (o->GetType() == CADType::eCurve)
     {
         val[0] = all[0];
         for (int i = 0; i < xitst.num_elements(); i++)
@@ -186,7 +186,7 @@ NekDouble OptiEdge::F(Array<OneD, NekDouble> xitst)
         }
         val[all.num_elements() - 1] = all[all.num_elements() - 1];
     }
-    else if (o->GetType() == surf)
+    else if (o->GetType() == CADType::eSurf)
     {
         val[0] = all[0];
         val[1] = all[1];
@@ -199,7 +199,7 @@ NekDouble OptiEdge::F(Array<OneD, NekDouble> xitst)
     }
 
     NekDouble ret = 0.0;
-    if (o->GetType() == curve)
+    if (o->GetType() == CADType::eCurve)
     {
         CADCurveSharedPtr c = boost::dynamic_pointer_cast<CADCurve>(o);
 
@@ -211,7 +211,7 @@ NekDouble OptiEdge::F(Array<OneD, NekDouble> xitst)
             ret += norm / (z[i + 1] - z[i]);
         }
     }
-    else if (o->GetType() == surf)
+    else if (o->GetType() == CADType::eSurf)
     {
         CADSurfSharedPtr s = boost::dynamic_pointer_cast<CADSurf>(o);
         // need to organise the val array
@@ -237,7 +237,7 @@ DNekMat OptiEdge::dF(Array<OneD, NekDouble> xitst)
 {
     Array<OneD, NekDouble> val(all.num_elements());
 
-    if (o->GetType() == curve)
+    if (o->GetType() == CADType::eCurve)
     {
         val[0] = all[0];
         for (int i = 0; i < xitst.num_elements(); i++)
@@ -246,7 +246,7 @@ DNekMat OptiEdge::dF(Array<OneD, NekDouble> xitst)
         }
         val[all.num_elements() - 1] = all[all.num_elements() - 1];
     }
-    else if (o->GetType() == surf)
+    else if (o->GetType() == CADType::eSurf)
     {
         val[0] = all[0];
         val[1] = all[1];
@@ -260,7 +260,7 @@ DNekMat OptiEdge::dF(Array<OneD, NekDouble> xitst)
 
     DNekMat ret;
 
-    if (o->GetType() == curve)
+    if (o->GetType() == CADType::eCurve)
     {
         CADCurveSharedPtr c = boost::dynamic_pointer_cast<CADCurve>(o);
         vector<Array<OneD, NekDouble> > r;
@@ -290,7 +290,7 @@ DNekMat OptiEdge::dF(Array<OneD, NekDouble> xitst)
 
         ret = J;
     }
-    else if (o->GetType() == surf)
+    else if (o->GetType() == CADType::eSurf)
     {
         CADSurfSharedPtr s = boost::dynamic_pointer_cast<CADSurf>(o);
         // need to organise the all array
@@ -341,164 +341,19 @@ DNekMat OptiEdge::dF(Array<OneD, NekDouble> xitst)
 
 void OptiEdge::Update(Array<OneD, NekDouble> xinew)
 {
-    if (o->GetType() == curve)
+    if (o->GetType() == CADType::eCurve)
     {
         for (int i = 0; i < xinew.num_elements(); i++)
         {
             all[i + 1] = xinew[i];
         }
     }
-    else if (o->GetType() == surf)
+    else if (o->GetType() == CADType::eSurf)
     {
         for (int i = 0; i < xinew.num_elements(); i++)
         {
             all[i + 2] = xinew[i];
         }
-    }
-}
-
-Array<OneD, NekDouble> OptiFace::Getxi()
-{
-    Array<OneD, NekDouble> ret(ni * 2);
-    for (int i = np - ni; i < np; i++)
-    {
-        ret[2 * (i - np + ni) + 0] = uv[i][0];
-        ret[2 * (i - np + ni) + 1] = uv[i][1];
-    }
-    return ret;
-}
-
-Array<OneD, NekDouble> OptiFace::Getli()
-{
-    Array<OneD, NekDouble> li(ni * 2);
-    Array<OneD, NekDouble> bnds = s->GetBounds();
-    for (int i = np - ni; i < np; i++)
-    {
-        li[2 * (i - np + ni) + 0] = bnds[0];
-        li[2 * (i - np + ni) + 1] = bnds[2];
-    }
-    return li;
-}
-
-Array<OneD, NekDouble> OptiFace::Getui()
-{
-    Array<OneD, NekDouble> ui(ni * 2);
-    Array<OneD, NekDouble> bnds = s->GetBounds();
-    for (int i = np - ni; i < np; i++)
-    {
-        ui[2 * (i - np + ni) + 0] = bnds[1];
-        ui[2 * (i - np + ni) + 1] = bnds[3];
-    }
-    return ui;
-}
-
-NekDouble OptiFace::F(Array<OneD, NekDouble> xitst)
-{
-    Array<OneD, Array<OneD, NekDouble> > val = uv;
-    for (int i = np - ni; i < np; i++)
-    {
-        val[i][0] = xitst[(i - np + ni) * 2 + 0];
-        val[i][1] = xitst[(i - np + ni) * 2 + 1];
-    }
-
-    NekDouble ret = 0.0;
-    set<pair<int, int> >::iterator it;
-    for (it = spring.begin(); it != spring.end(); it++)
-    {
-        Array<OneD, NekDouble> dis =
-            Take(s->P(uv[(*it).first]), s->P(uv[(*it).second]));
-        NekDouble norm = dis[0] * dis[0] + dis[1] * dis[1] + dis[2] * dis[2];
-        ret += norm / z[(*it)];
-    }
-
-    return ret;
-}
-
-DNekMat OptiFace::dF(Array<OneD, NekDouble> xitst)
-{
-    Array<OneD, Array<OneD, NekDouble> > val = uv;
-    for (int i = np - ni; i < np; i++)
-    {
-        val[i][0] = xitst[(i - np + ni) * 2 + 0];
-        val[i][1] = xitst[(i - np + ni) * 2 + 1];
-    }
-
-    DNekMat ret(ni * 2, 1, 0.0);
-
-    vector<Array<OneD, NekDouble> > r, dru, drv;
-
-    for (int i = 0; i < val.num_elements(); i++)
-    {
-        Array<OneD, NekDouble> ri(3), du(3), dv(3);
-        Array<OneD, NekDouble> d1 = s->D1(val[i]);
-        for (int i = 0; i < 3; i++)
-        {
-            ri[i] = d1[i];
-            du[i] = d1[i + 3];
-            dv[i] = d1[i + 6];
-        }
-        r.push_back(ri);
-        dru.push_back(du);
-        drv.push_back(dv);
-    }
-
-    for (int i = 0; i < ni * 2; i++) // for each of the varibles
-    {
-        int var = floor(i / 2) + np - ni;
-        int tp  = i % 2; // 0 is a u 1 is a v
-
-        set<pair<int, int> >::iterator it;
-        for (it = spring.begin(); it != spring.end();
-             it++) // for each of the springs
-        {
-            Array<OneD, NekDouble> dr1, dr2;
-
-            if ((*it).first == var)
-            {
-                if (tp == 0)
-                {
-                    dr1 = dru[(*it).first];
-                }
-                else
-                {
-                    dr1 = drv[(*it).first];
-                }
-            }
-            else
-            {
-                dr1 = Array<OneD, NekDouble>(3, 0.0);
-            }
-
-            if ((*it).second == var)
-            {
-                if (tp == 0)
-                {
-                    dr2 = dru[(*it).second];
-                }
-                else
-                {
-                    dr2 = drv[(*it).second];
-                }
-            }
-            else
-            {
-                dr2 = Array<OneD, NekDouble>(3, 0.0);
-            }
-
-            ret(i, 0) +=
-                2.0 / z[(*it)] *
-                Dot(Take(r[(*it).first], r[(*it).second]), Take(dr1, dr2));
-        }
-    }
-    return ret;
-}
-
-void OptiFace::Update(Array<OneD, NekDouble> xinew)
-{
-    for (int i = np - ni; i < np; i++)
-    {
-        uv[i][0] = xinew[2 * (i - np + ni) + 0];
-        uv[i][1] = xinew[2 * (i - np + ni) + 1];
     }
 }
 }

@@ -1,106 +1,17 @@
-SET(FieldConvertHeaders
-    Module.h
-    Field.hpp
-    InputModules/InputDat.h
-    InputModules/InputFld.h
-    InputModules/InputXml.h
-    InputModules/InputPts.h
-    OutputModules/OutputInfo.h
-    OutputModules/OutputTecplot.h
-    OutputModules/OutputVtk.h
-    OutputModules/OutputFld.h
-    OutputModules/OutputStdOut.h
-    OutputModules/OutputPts.h
-    OutputModules/OutputXml.h
-    ProcessModules/ProcessAddFld.h
-    ProcessModules/ProcessBoundaryExtract.h
-    ProcessModules/ProcessCombineAvg.h
-    ProcessModules/ProcessConcatenateFld.h
-    ProcessModules/ProcessDeform.h
-    ProcessModules/ProcessDisplacement.h
-    ProcessModules/ProcessEquiSpacedOutput.h
-    ProcessModules/ProcessGrad.h
-    ProcessModules/ProcessHomogeneousPlane.h
-    ProcessModules/ProcessHomogeneousStretch.h
-    ProcessModules/ProcessInnerProduct.h
-    ProcessModules/ProcessInterpField.h
-    ProcessModules/ProcessInterpPoints.h
-    ProcessModules/ProcessInterpPointDataToFld.h
-    ProcessModules/ProcessIsoContour.h
-    ProcessModules/ProcessJacobianEnergy.h
-    ProcessModules/ProcessMapping.h
-    ProcessModules/ProcessNumModes.h
-    ProcessModules/ProcessMeanMode.h
-    ProcessModules/ProcessPointDataToFld.h
-    ProcessModules/ProcessPrintFldNorms.h
-    ProcessModules/ProcessScaleInFld.h
-    ProcessModules/ProcessSurfDistance.h
-    ProcessModules/ProcessVorticity.h
-    ProcessModules/ProcessScalGrad.h
-    ProcessModules/ProcessMultiShear.h
-    ProcessModules/ProcessWSS.h
-    ProcessModules/ProcessC0Projection.h
-    ProcessModules/ProcessQCriterion.h
-    ProcessModules/ProcessQualityMetric.h
-)
+SET(FieldConvertSources FieldConvert.cpp)
 
-SET(FieldConvertSources
-    Module.cpp
-    FieldConvert.cpp
-    InputModules/InputDat.cpp
-    InputModules/InputFld.cpp
-    InputModules/InputXml.cpp
-    InputModules/InputPts.cpp
-    OutputModules/OutputInfo.cpp
-    OutputModules/OutputTecplot.cpp
-    OutputModules/OutputVtk.cpp
-    OutputModules/OutputFld.cpp
-    OutputModules/OutputStdOut.cpp
-    OutputModules/OutputPts.cpp
-    OutputModules/OutputXml.cpp
-    ProcessModules/ProcessAddFld.cpp
-    ProcessModules/ProcessBoundaryExtract.cpp
-    ProcessModules/ProcessCombineAvg.cpp
-    ProcessModules/ProcessConcatenateFld.cpp
-    ProcessModules/ProcessDeform.cpp
-    ProcessModules/ProcessDisplacement.cpp
-    ProcessModules/ProcessEquiSpacedOutput.cpp
-    ProcessModules/ProcessGrad.cpp
-    ProcessModules/ProcessHomogeneousPlane.cpp
-    ProcessModules/ProcessHomogeneousStretch.cpp
-    ProcessModules/ProcessInnerProduct.cpp
-    ProcessModules/ProcessInterpField.cpp
-    ProcessModules/ProcessInterpPoints.cpp
-    ProcessModules/ProcessInterpPointDataToFld.cpp
-    ProcessModules/ProcessIsoContour.cpp
-    ProcessModules/ProcessJacobianEnergy.cpp
-    ProcessModules/ProcessMapping.cpp
-    ProcessModules/ProcessNumModes.cpp
-    ProcessModules/ProcessMeanMode.cpp
-    ProcessModules/ProcessPointDataToFld.cpp
-    ProcessModules/ProcessPrintFldNorms.cpp
-    ProcessModules/ProcessScaleInFld.cpp
-    ProcessModules/ProcessVorticity.cpp
-    ProcessModules/ProcessScalGrad.cpp
-    ProcessModules/ProcessSurfDistance.cpp
-    ProcessModules/ProcessMultiShear.cpp
-    ProcessModules/ProcessWSS.cpp
-    ProcessModules/ProcessC0Projection.cpp
-    ProcessModules/ProcessQCriterion.cpp
-    ProcessModules/ProcessQualityMetric.cpp
-)
-
-ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})
-TARGET_LINK_LIBRARIES(FieldConvert SolverUtils)
+ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources})
+TARGET_LINK_LIBRARIES(FieldConvert FieldUtils)
 
 #ADD_NEKTAR_TEST(chan3D_tec)  # This test is covered in bfs_tec
-#ADD_NEKTAR_TEST(chan3D_vtu)  # This does not currently work -- hash metric 
+#ADD_NEKTAR_TEST(chan3D_vtu)  # This does not currently work -- hash metric
 #ADD_NEKTAR_TEST(chan3D_vort) # This is covered by bfs_vort
-#ADD_NEKTAR_TEST(chan3D_pts)  # This does not currently work -- hash metric 
+#ADD_NEKTAR_TEST(chan3D_pts)  # This does not currently work -- hash metric
 
 ADD_NEKTAR_TEST(chan3D_tec_n10)
 ADD_NEKTAR_TEST(chan3D_interppointsplane)
 ADD_NEKTAR_TEST(chan3D_interppointsbox)
+ADD_NEKTAR_TEST(compositeid)
 ADD_NEKTAR_TEST(bfs_probe)
 ADD_NEKTAR_TEST(bfs_tec)
 ADD_NEKTAR_TEST(bfs_tec_rng)
@@ -113,9 +24,14 @@ ADD_NEKTAR_TEST(chan3DH1D_plane)
 ADD_NEKTAR_TEST(chan3DH1D_stretch)
 ADD_NEKTAR_TEST(chan3D_probe)
 ADD_NEKTAR_TEST(cube_prismhex)
+ADD_NEKTAR_TEST(cube_prismhex_range)
 ADD_NEKTAR_TEST(outflow_pointdatatofld)
 ADD_NEKTAR_TEST(chan3D_equispacedoutput)
 ADD_NEKTAR_TEST(chan3D_isocontour)
+ADD_NEKTAR_TEST(interpfield)
+ADD_NEKTAR_TEST(naca0012_bnd_equispacedoutput)
+ADD_NEKTAR_TEST(smallmesh_isocontour)
+ADD_NEKTAR_TEST(chan3D_interppointdatatofld)
 
 IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST(chan3D_tec_par)

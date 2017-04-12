@@ -1112,12 +1112,14 @@ namespace Nektar
                 int unique_edges = foundEdges.size();
                 int unique_faces = foundFaces.size();
 
+                bool verbose = m_session->DefinesCmdLineArgument("verbose");
+
                 // Now construct temporary GS objects. These will be used to
                 // populate the arrays tmp3 and tmp4 with the multiplicity of
                 // the vertices and edges respectively to identify those
                 // vertices and edges which are located on partition boundary.
                 Array<OneD, long> vertArray(unique_verts, &procVerts[0]);
-                Gs::gs_data *tmp1 = Gs::Init(vertArray, vComm);
+                Gs::gs_data *tmp1 = Gs::Init(vertArray, vComm, verbose);
                 Array<OneD, NekDouble> tmp4(unique_verts, 1.0);
                 Array<OneD, NekDouble> tmp5(unique_edges, 1.0);
                 Array<OneD, NekDouble> tmp6(unique_faces, 1.0);
@@ -1127,7 +1129,7 @@ namespace Nektar
                 if (unique_edges > 0)
                 {
                     Array<OneD, long> edgeArray(unique_edges, &procEdges[0]);
-                    Gs::gs_data *tmp2 = Gs::Init(edgeArray, vComm);
+                    Gs::gs_data *tmp2 = Gs::Init(edgeArray, vComm, verbose);
                     Gs::Gather(tmp5, Gs::gs_add, tmp2);
                     Gs::Finalise(tmp2);
                 }
@@ -1135,7 +1137,7 @@ namespace Nektar
                 if (unique_faces > 0)
                 {
                     Array<OneD, long> faceArray(unique_faces, &procFaces[0]);
-                    Gs::gs_data *tmp3 = Gs::Init(faceArray, vComm);
+                    Gs::gs_data *tmp3 = Gs::Init(faceArray, vComm, verbose);
                     Gs::Gather(tmp6, Gs::gs_add, tmp3);
                     Gs::Finalise(tmp3);
                 }
@@ -1252,8 +1254,10 @@ namespace Nektar
 
             // For parallel multi-level static condensation determine the lowest
             // static condensation level amongst processors.
-            if (m_solnType == eIterativeMultiLevelStaticCond ||
-                m_solnType == eXxtMultiLevelStaticCond)
+            if ((m_solnType == eDirectMultiLevelStaticCond ||
+                 m_solnType == ePETScMultiLevelStaticCond ||
+                 m_solnType == eIterativeMultiLevelStaticCond ||
+                 m_solnType == eXxtMultiLevelStaticCond) && bottomUpGraph)
             {
                 m_lowestStaticCondLevel = bottomUpGraph->GetNlevels()-1;
                 vComm->AllReduce(m_lowestStaticCondLevel,
@@ -1322,6 +1326,8 @@ namespace Nektar
 
             const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
 
+            bool verbose = m_session->DefinesCmdLineArgument("verbose");
+
             m_signChange = false;
 
             // Stores vertex, edge and face reordered vertices.
@@ -1353,8 +1359,9 @@ namespace Nektar
                         {
                             ASSERTL0( (exp->GetEdgeBasisType(j) == LibUtilities::eModified_A) ||
                                       (exp->GetEdgeBasisType(j) == LibUtilities::eModified_B) ||
-                                      (exp->GetEdgeBasisType(j) == LibUtilities::eModified_C),
-                                    "CG with variable order only available with modal expansion");
+                                      (exp->GetEdgeBasisType(j) == LibUtilities::eModified_C) ||
+                                      (exp->GetEdgeBasisType(j) == LibUtilities::eModifiedPyr_C),
+                                      "CG with variable order only available with modal expansion");
                         }
                         dofs[1][exp->GetGeom()->GetEid(j)] =
                                 min(dofs[1][exp->GetGeom()->GetEid(j)],
@@ -1429,15 +1436,15 @@ namespace Nektar
             Array<OneD, NekDouble> edgeDof (dofs[1].size());
             for(dofIt = dofs[1].begin(), i=0; dofIt != dofs[1].end(); dofIt++, i++)
             {
-                edgeId[i] = dofIt->first;
+                edgeId[i] = dofIt->first + 1;
                 edgeDof[i] = (NekDouble) dofIt->second;
             }
-            Gs::gs_data *tmp = Gs::Init(edgeId, vComm);
+            Gs::gs_data *tmp = Gs::Init(edgeId, vComm, verbose);
             Gs::Gather(edgeDof, Gs::gs_min, tmp);
             Gs::Finalise(tmp);
             for (i=0; i < dofs[1].size(); i++)
             {
-                dofs[1][edgeId[i]] = (int) (edgeDof[i]+0.5);
+                dofs[1][edgeId[i]-1] = (int) (edgeDof[i]+0.5);
             }
             // Periodic edges
             for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
@@ -1459,18 +1466,18 @@ namespace Nektar
             for(dofIt = faceModes[0].begin(), dofIt2 = faceModes[1].begin(),i=0;
                 dofIt != faceModes[0].end(); dofIt++, dofIt2++, i++)
             {
-                faceId[i] = dofIt->first;
+                faceId[i] = dofIt->first+1;
                 faceP[i] = (NekDouble) dofIt->second;
                 faceQ[i] = (NekDouble) dofIt2->second;
             }
-            Gs::gs_data *tmp2 = Gs::Init(faceId, vComm);
+            Gs::gs_data *tmp2 = Gs::Init(faceId, vComm, verbose);
             Gs::Gather(faceP, Gs::gs_min, tmp2);
             Gs::Gather(faceQ, Gs::gs_min, tmp2);
             Gs::Finalise(tmp2);
             for (i=0; i < faceModes[0].size(); i++)
             {
-                faceModes[0][faceId[i]] = (int) (faceP[i]+0.5);
-                faceModes[1][faceId[i]] = (int) (faceQ[i]+0.5);
+                faceModes[0][faceId[i]-1] = (int) (faceP[i]+0.5);
+                faceModes[1][faceId[i]-1] = (int) (faceQ[i]+0.5);
             }
             // Periodic faces
             for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
@@ -1493,19 +1500,19 @@ namespace Nektar
             int P, Q;
             for (i=0; i < faceModes[0].size(); i++)
             {
-                P = faceModes[0][faceId[i]];
-                Q = faceModes[1][faceId[i]];
-                if (faceType[faceId[i]] == LibUtilities::eQuadrilateral)
+                P = faceModes[0][faceId[i]-1];
+                Q = faceModes[1][faceId[i]-1];
+                if (faceType[faceId[i]-1] == LibUtilities::eQuadrilateral)
                 {
                     // Quad face
-                    dofs[2][faceId[i]] =
+                    dofs[2][faceId[i]-1] =
                       LibUtilities::StdQuadData::getNumberOfCoefficients(P,Q) -
                       LibUtilities::StdQuadData::getNumberOfBndCoefficients(P,Q);
                 }
                 else
                 {
                     // Tri face
-                    dofs[2][faceId[i]] =
+                    dofs[2][faceId[i]-1] =
                       LibUtilities::StdTriData::getNumberOfCoefficients(P,Q) -
                       LibUtilities::StdTriData::getNumberOfBndCoefficients(P,Q);
                 }
@@ -1517,12 +1524,15 @@ namespace Nektar
             // needs to be set so that the coupled solver in
             // IncNavierStokesSolver can work.
             int nExtraDirichlet;
+            int mdswitch;
+            m_session->LoadParameter(
+                "MDSwitch", mdswitch, 10);
             int nGraphVerts =
                 CreateGraph(locExp, bndCondExp, bndCondVec,
                             checkIfSystemSingular, periodicVerts, periodicEdges,
                             periodicFaces, graph, bottomUpGraph, extraDirVerts,
                             extraDirEdges, firstNonDirGraphVertId,
-                            nExtraDirichlet);
+                            nExtraDirichlet, mdswitch);
 
             /*
              * Set up an array which contains the offset information of the
@@ -2186,6 +2196,7 @@ namespace Nektar
 
             const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
             LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();
+            const bool verbose = locExp.GetSession()->DefinesCmdLineArgument("verbose");
 
             m_globalToUniversalMap = Nektar::Array<OneD, int>(m_numGlobalCoeffs, -1);
             m_globalToUniversalMapUnique = Nektar::Array<OneD, int>(m_numGlobalCoeffs, -1);
@@ -2353,8 +2364,8 @@ namespace Nektar
                 tmp[i] = m_globalToUniversalMap[i];
             }
 
-            m_gsh = Gs::Init(tmp, vCommRow);
-            m_bndGsh = Gs::Init(tmp2, vCommRow);
+            m_gsh = Gs::Init(tmp, vCommRow, verbose);
+            m_bndGsh = Gs::Init(tmp2, vCommRow, verbose);
             Gs::Unique(tmp, vCommRow);
             for (unsigned int i = 0; i < m_numGlobalCoeffs; ++i)
             {
@@ -2384,6 +2395,7 @@ namespace Nektar
             const boost::shared_ptr<LocalRegions::ExpansionVector> exp
                 = locexp.GetExp();
             int nelmts = exp->size();
+            const bool verbose = locexp.GetSession()->DefinesCmdLineArgument("verbose");
 
             // Get Default Map and turn off any searched values.
             returnval = MemoryManager<AssemblyMapCG>
@@ -2480,7 +2492,7 @@ namespace Nektar
                 {
                     tmp[i] = returnval->m_globalToUniversalMap[i];
                 }
-                returnval->m_gsh = Gs::Init(tmp, vCommRow);
+                returnval->m_gsh = Gs::Init(tmp, vCommRow, verbose);
                 Gs::Unique(tmp, vCommRow);
                 for (unsigned int i = 0; i < nglocoeffs; ++i)
                 {
@@ -2603,7 +2615,8 @@ namespace Nektar
 
         void AssemblyMapCG::v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
-                          Array<OneD,       NekDouble>& global) const
+                    Array<OneD,       NekDouble>& global,
+                    bool useComm) const
         {
             Array<OneD, const NekDouble> local;
             if(global.data() == loc.data())
@@ -2626,14 +2639,18 @@ namespace Nektar
             }
 
             // ensure all values are unique by calling a max
-            Gs::Gather(global, Gs::gs_max, m_gsh);
+            if(useComm)
+            {
+                Gs::Gather(global, Gs::gs_max, m_gsh);
+            }
         }
 
         void AssemblyMapCG::v_LocalToGlobal(
                     const NekVector<NekDouble>& loc,
-                          NekVector<      NekDouble>& global) const
+                    NekVector<      NekDouble>& global,
+                    bool useComm) const
         {
-            LocalToGlobal(loc.GetPtr(),global.GetPtr());
+            LocalToGlobal(loc.GetPtr(),global.GetPtr(),useComm);
         }
 
         void AssemblyMapCG::v_GlobalToLocal(

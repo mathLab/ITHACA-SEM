@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Mesh.h
+//  File: Triangle.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,156 +29,21 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh manipulation objects.
+//  Description: Mesh triangle object.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NekMeshUtils_MESHELEMENTS_TRIANGLE
-#define NekMeshUtils_MESHELEMENTS_TRIANGLE
+#ifndef NEKMESHUTILS_MESHELEMENTS_TRIANGLE
+#define NEKMESHUTILS_MESHELEMENTS_TRIANGLE
 
 #include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 #include <NekMeshUtils/MeshElements/Element.h>
+#include <NekMeshUtils/MeshElements/HOAlignment.h>
 
 namespace Nektar
 {
 namespace NekMeshUtils
 {
-/**
- * @brief A lightweight struct for dealing with high-order triangle
- * alignment.
- *
- * The logic underlying these routines is taken from the original Nektar
- * code.
- */
-template <typename T> struct HOTriangle
-{
-    HOTriangle(std::vector<int> pVertId, std::vector<T> pSurfVerts)
-        : vertId(pVertId), surfVerts(pSurfVerts)
-    {
-    }
-    HOTriangle(std::vector<int> pVertId) : vertId(pVertId)
-    {
-    }
-
-    /// The triangle vertex IDs
-    std::vector<int> vertId;
-
-    /// The triangle surface vertices -- templated so that this can
-    /// either be nodes or IDs.
-    std::vector<T> surfVerts;
-
-    /**
-     * @brief Rotates the triangle of data points inside #surfVerts
-     * counter-clockwise nrot times.
-     *
-     * @param nrot Number of times to rotate triangle.
-     */
-    void Rotate(int nrot)
-    {
-        int n, i, j, cnt;
-        int np = ((int)sqrt(8.0 * surfVerts.size() + 1.0) - 1) / 2;
-        std::vector<T> tmp(np * np);
-
-        for (n = 0; n < nrot; ++n)
-        {
-            for (cnt = i = 0; i < np; ++i)
-            {
-                for (j = 0; j < np - i; ++j, cnt++)
-                {
-                    tmp[i * np + j] = surfVerts[cnt];
-                }
-            }
-            for (cnt = i = 0; i < np; ++i)
-            {
-                for (j = 0; j < np - i; ++j, cnt++)
-                {
-                    surfVerts[cnt] = tmp[(np - 1 - i - j) * np + i];
-                }
-            }
-        }
-    }
-
-    /**
-     * @brief Reflect data points inside #surfVerts.
-     *
-     * This applies a mapping essentially doing the following
-     * reordering:
-     *
-     * 9          9
-     * 7 8    ->  8 7
-     * 4 5 6      6 5 4
-     * 0 1 2 3    3 2 1 0
-     */
-    void Reflect()
-    {
-        int i, j, cnt;
-        int np = ((int)sqrt(8.0 * surfVerts.size() + 1.0) - 1) / 2;
-        std::vector<T> tmp(np * np);
-
-        for (cnt = i = 0; i < np; ++i)
-        {
-            for (j = 0; j < np - i; ++j, cnt++)
-            {
-                tmp[i * np + np - i - 1 - j] = surfVerts[cnt];
-            }
-        }
-
-        for (cnt = i = 0; i < np; ++i)
-        {
-            for (j = 0; j < np - i; ++j, cnt++)
-            {
-                surfVerts[cnt] = tmp[i * np + j];
-            }
-        }
-    }
-
-    /**
-     * @brief Align this surface to a given vertex ID.
-     */
-    void Align(std::vector<int> vertId)
-    {
-        if (vertId[0] == this->vertId[0])
-        {
-            if (vertId[1] == this->vertId[1] || vertId[1] == this->vertId[2])
-            {
-                if (vertId[1] == this->vertId[2])
-                {
-                    Rotate(1);
-                    Reflect();
-                }
-            }
-        }
-        else if (vertId[0] == this->vertId[1])
-        {
-            if (vertId[1] == this->vertId[0] || vertId[1] == this->vertId[2])
-            {
-                if (vertId[1] == this->vertId[0])
-                {
-                    Reflect();
-                }
-                else
-                {
-                    Rotate(2);
-                }
-            }
-        }
-        else if (vertId[0] == this->vertId[2])
-        {
-            if (vertId[1] == this->vertId[0] || vertId[1] == this->vertId[1])
-            {
-                if (vertId[1] == this->vertId[1])
-                {
-                    Rotate(2);
-                    Reflect();
-                }
-                else
-                {
-                    Rotate(1);
-                }
-            }
-        }
-    }
-};
 
 /**
  * @brief A 2-dimensional three-sided element.
@@ -207,41 +72,22 @@ public:
 
     NEKMESHUTILS_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
         int coordDim);
-    NEKMESHUTILS_EXPORT virtual void Complete(int order);
+    NEKMESHUTILS_EXPORT virtual void GetCurvedNodes(
+        std::vector<NodeSharedPtr> &nodeList) const;
+    NEKMESHUTILS_EXPORT virtual StdRegions::Orientation GetEdgeOrient(
+        int edgeId, EdgeSharedPtr edge);
+    NEKMESHUTILS_EXPORT virtual void MakeOrder(
+        int                                order,
+        SpatialDomains::GeometrySharedPtr  geom,
+        LibUtilities::PointsType           pType,
+        int                                coordDim,
+        int                               &id,
+        bool                               justConfig = false);
 
     NEKMESHUTILS_EXPORT static unsigned int GetNumNodes(ElmtConfig pConf);
+    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> Normal(bool inward = false);
 };
 
-typedef HOTriangle<NodeSharedPtr> HOSurf;
-typedef boost::shared_ptr<HOSurf> HOSurfSharedPtr;
-
-/**
- * Hash class for high-order surfaces.
- */
-struct HOSurfHash : std::unary_function<HOSurfSharedPtr, std::size_t>
-{
-    /**
-     * Calculate hash of a given high-order surface p by taking
-     * successive hashes of the vertex IDs.
-     */
-    std::size_t operator()(HOSurfSharedPtr const &p) const
-    {
-        std::size_t seed     = 0;
-        std::vector<int> ids = p->vertId;
-
-        std::sort(ids.begin(), ids.end());
-        for (int i = 0; i < ids.size(); ++i)
-        {
-            boost::hash_combine(seed, ids[i]);
-        }
-        return seed;
-    }
-};
-
-NEKMESHUTILS_EXPORT bool operator==(HOSurfSharedPtr const &p1,
-                                    HOSurfSharedPtr const &p2);
-
-typedef boost::unordered_set<HOSurfSharedPtr, HOSurfHash> HOSurfSet;
 }
 }
 

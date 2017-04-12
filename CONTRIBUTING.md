@@ -51,6 +51,7 @@ project. It's a pretty simple process:
   new features?
 - Have you run your branch through buildbot and do all the tests pass?
 - Is there documentation in the user guide and/or developer guide?
+- Have you added a CHANGELOG entry, including the MR number?
 - Are there any massive files you might have added in the commit history? We try
   to keep test files as small as possible. If so you'll need to rebase or
   filter-branch to remove those from the commit history.

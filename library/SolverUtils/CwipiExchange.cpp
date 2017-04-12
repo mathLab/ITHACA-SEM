@@ -985,9 +985,6 @@ void CwipiCoupling::Receive(const int step,
 
 void CwipiCoupling::OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals)
 {
-    Timer timer1;
-    timer1.Start();
-
     if (m_evalField->GetSession()->GetSessionName() != "CESAM-HP-single")
     {
         return;

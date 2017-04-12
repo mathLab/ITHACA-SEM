@@ -34,7 +34,7 @@
 #ifndef NEKTAR_CWIPIEXCHANGE
 #define NEKTAR_CWIPIEXCHANGE
 
-#include <SolverUtils/Interpolator.h>
+#include <FieldUtils/Interpolator.h>
 #include <SolverUtils/EquationSystem.h>
 
 #include <cwipi.h>
@@ -137,7 +137,7 @@ protected:
 
     std::map<int, int> m_vertMap;
 
-    SolverUtils::InterpolatorSharedPtr m_sendInterpolator;
+    FieldUtils::InterpolatorSharedPtr m_sendInterpolator;
 
     virtual void v_FinalizeCoupling(void);
 

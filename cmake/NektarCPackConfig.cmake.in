@@ -11,7 +11,9 @@ elseif(CPACK_GENERATOR STREQUAL "RPM")
     set(ARCHITECTURE ${CPACK_RPM_PACKAGE_ARCHITECTURE})
 
     set(CPACK_PACKAGE_FILE_NAME
-        "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-1.${CPACK_RPM_PACKAGE_ARCHITECTURE}")
+        "nektar-${CPACK_PACKAGE_VERSION}-1.${CPACK_RPM_PACKAGE_ARCHITECTURE}")
+    set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST /usr /usr/bin /usr/lib64 /usr/lib64/openmpi
+        /usr/lib64/openmpi/lib /usr/lib64/openmpi/bin)
 elseif(CPACK_GENERATOR STREQUAL "PackageMaker")
     # OS X .pkg installer -- set install location
     set(CPACK_MONOLITHIC_INSTALL ON)

@@ -5,7 +5,7 @@
 ##
 
 # Attempt to determine architecture for debian/RPM packages
-execute_process(COMMAND dpkg --print-architecture 
+execute_process(COMMAND dpkg --print-architecture
     OUTPUT_VARIABLE DPKG_ARCHITECTURE
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process(COMMAND rpm --eval %{_arch}
@@ -77,6 +77,8 @@ MACRO(FINALISE_CPACK_COMPONENT name)
             CACHE INTERNAL "")
         SET(CPACK_COMPONENT_${COMPVAR}_DESCRIPTION_SUMMARY ${COMP_SUMMARY}
             CACHE INTERNAL "")
+        SET(CPACK_RPM_${COMPVAR}_PACKAGE_SUMMARY ${COMP_SUMMARY}
+            CACHE INTERNAL "")
 
         # Remove any duplicates from the existing CPack component dependencies
         # which are set by NEKTAR_ADD_EXECUTABLE and NEKTAR_ADD_LIBRARY
@@ -93,6 +95,9 @@ MACRO(FINALISE_CPACK_COMPONENT name)
         # Other Debian details
         SET(CPACK_DEBIAN_${COMPVAR}_FILE_NAME
             "nektar++-${name}-${NEKTAR_VERSION}-${DPKG_ARCHITECTURE}.deb"
+            CACHE INTERNAL "")
+        SET(CPACK_RPM_${COMPVAR}_FILE_NAME
+            "nektar++-${name}-${NEKTAR_VERSION}-1.${RPM_ARCHITECTURE}.rpm"
             CACHE INTERNAL "")
     ENDIF()
 ENDMACRO()
@@ -336,6 +341,13 @@ MACRO(ADD_NEKTAR_LIBRARY name)
         "libnektar++-${NEKLIB_COMPONENT}-${NEKTAR_VERSION}-${DPKG_ARCHITECTURE}.deb"
         CACHE INTERNAL "")
     SET(CPACK_DEBIAN_${NEKLIB_COMPVAR}_PACKAGE_NAME
+        "libnektar++-${NEKLIB_COMPONENT}" CACHE INTERNAL "")
+
+    # RPM specific information
+    SET(CPACK_RPM_${NEKLIB_COMPVAR}_FILE_NAME
+        "libnektar++-${NEKLIB_COMPONENT}-1.${RPM_ARCHITECTURE}.rpm"
+        CACHE INTERNAL "")
+    SET(CPACK_RPM_${NEKLIB_COMPVAR}_PACKAGE_NAME
         "libnektar++-${NEKLIB_COMPONENT}" CACHE INTERNAL "")
 
     # If we have dependencies then link against them, and also configure CPack

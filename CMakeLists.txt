@@ -7,7 +7,7 @@ PROJECT(Nektar++ C CXX)
 
 # Nektar++ requires C++11. Try to infer this for older CMake versions (less than
 # 3.1.0)
-IF ("${CMAKE_VERSION}" VERSION_LESS "3.1")
+IF ("${CMAKE_VERSION}" VERSION_LESS "3.1" AND NOT MSVC)
     INCLUDE(CheckCXXCompilerFlag)
     CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 

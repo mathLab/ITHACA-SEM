@@ -988,6 +988,11 @@ void CwipiCoupling::OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals)
     Timer timer1;
     timer1.Start();
 
+    if (m_evalField->GetSession()->GetSessionName() != "CESAM-HP-single")
+    {
+        return;
+    }
+
     // HACK
     Array<OneD, Array<OneD, NekDouble> > x(3);
     x[0] = Array<OneD, NekDouble>(m_recvField->GetTotPoints(), 0.0);

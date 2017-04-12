@@ -795,7 +795,8 @@ namespace Nektar
     {
         int nTotQuadPoints = GetTotPoints();
         int n_element      = m_fields[0]->GetExpSize();
-        int nBCEdgePts           = 0;
+        int offset;
+        Array<OneD, NekDouble> tmp;
 
         // Getting the velocity vector on the 2D normal space
         Array<OneD, Array<OneD, NekDouble> > velocity   (m_spacedim);
@@ -820,6 +821,8 @@ namespace Nektar
         for(int el = 0; el < n_element; ++el)
         {
             ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
+            offset  = m_fields[0]->GetPhys_Offset(el);
+            int nq = m_fields[0]->GetExp(el)->GetTotPoints();
 
             // Possible bug: not multiply by jacobian??
             const SpatialDomains::GeomFactorsSharedPtr metricInfo =
@@ -828,19 +831,20 @@ namespace Nektar
                 m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()
                                                   ->GetDerivFactors(ptsKeys);
 
-            int nq = m_fields[0]->GetExp(el)->GetTotPoints();
-
             if(metricInfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 // d xi/ dx = gmat = 1/J * d x/d xi
                 for (int i = 0; i < m_spacedim; ++i)
                 {
-                    Vmath::Vmul(nq, gmat[i], 1, velocity[0], 1,
-                                stdVelocity[i], 1);
+                    Vmath::Vmul(nq, gmat[i], 1,
+                                    velocity[0] + offset, 1,
+                                    tmp = stdVelocity[i] + offset, 1);
                     for (int j = 1; j < m_spacedim; ++j)
                     {
-                        Vmath::Vvtvp(nq, gmat[m_spacedim*j+i], 1, velocity[j],
-                                     1, stdVelocity[i], 1, stdVelocity[i], 1);
+                        Vmath::Vvtvp(nq, gmat[m_spacedim*j+i], 1,
+                                         velocity[j] + offset, 1,
+                                         stdVelocity[i] + offset, 1,
+                                         tmp = stdVelocity[i] + offset, 1);
                     }
                 }
             }
@@ -848,12 +852,15 @@ namespace Nektar
             {
                 for (int i = 0; i < m_spacedim; ++i)
                 {
-                    Vmath::Smul(nq, gmat[i][0], velocity[0], 1,
-                                stdVelocity[i], 1);
+                    Vmath::Smul(nq, gmat[i][0],
+                                    velocity[0] + offset, 1,
+                                    tmp = stdVelocity[i] + offset, 1);
                     for (int j = 1; j < m_spacedim; ++j)
                     {
-                        Vmath::Svtvp(nq, gmat[m_spacedim*j+i][0], velocity[j],
-                                     1, stdVelocity[i], 1, stdVelocity[i], 1);
+                        Vmath::Svtvp(nq, gmat[m_spacedim*j+i][0],
+                                         velocity[j] + offset, 1,
+                                         stdVelocity[i] + offset, 1,
+                                         tmp = stdVelocity[i] + offset, 1);
                     }
                 }
             }
@@ -863,14 +870,14 @@ namespace Nektar
                 NekDouble pntVelocity = 0.0;
                 for (int j = 0; j < m_spacedim; ++j)
                 {
-                    pntVelocity += stdVelocity[j][i]*stdVelocity[j][i];
+                    pntVelocity += stdVelocity[j][offset + i] *
+                                   stdVelocity[j][offset + i];
                 }
-                pntVelocity = sqrt(pntVelocity) + soundspeed[nBCEdgePts];
+                pntVelocity = sqrt(pntVelocity) + soundspeed[offset + i];
                 if (pntVelocity > stdV[el])
                 {
                     stdV[el] = pntVelocity;
                 }
-                nBCEdgePts++;
             }
         }
     }

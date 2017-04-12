@@ -218,6 +218,24 @@ void APE::GetFluxVector(
 
 
 /**
+ * @brief v_PreIntegrate
+ */
+bool APE::v_PreIntegrate(int step)
+{
+    return UnsteadySystem::v_PreIntegrate(step);
+}
+
+
+/**
+ * @brief v_PostIntegrate
+ */
+bool APE::v_PostIntegrate(int step)
+{
+    return UnsteadySystem::v_PostIntegrate(step);
+}
+
+
+/**
  * @brief Compute the right-hand side.
  */
 void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,

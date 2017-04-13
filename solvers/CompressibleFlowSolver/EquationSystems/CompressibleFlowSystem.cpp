@@ -841,6 +841,7 @@ namespace Nektar
     {
         int nTotQuadPoints = GetTotPoints();
         int n_element      = m_fields[0]->GetExpSize();
+        int expdim         = m_fields[0]->GetGraph()->GetMeshDimension();
         int offset;
         Array<OneD, NekDouble> tmp;
 
@@ -880,14 +881,14 @@ namespace Nektar
             if(metricInfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 // d xi/ dx = gmat = 1/J * d x/d xi
-                for (int i = 0; i < m_spacedim; ++i)
+                for (int i = 0; i < expdim; ++i)
                 {
                     Vmath::Vmul(nq, gmat[i], 1,
                                     velocity[0] + offset, 1,
                                     tmp = stdVelocity[i] + offset, 1);
-                    for (int j = 1; j < m_spacedim; ++j)
+                    for (int j = 1; j < expdim; ++j)
                     {
-                        Vmath::Vvtvp(nq, gmat[m_spacedim*j+i], 1,
+                        Vmath::Vvtvp(nq, gmat[expdim*j+i], 1,
                                          velocity[j] + offset, 1,
                                          stdVelocity[i] + offset, 1,
                                          tmp = stdVelocity[i] + offset, 1);
@@ -896,14 +897,14 @@ namespace Nektar
             }
             else
             {
-                for (int i = 0; i < m_spacedim; ++i)
+                for (int i = 0; i < expdim; ++i)
                 {
                     Vmath::Smul(nq, gmat[i][0],
                                     velocity[0] + offset, 1,
                                     tmp = stdVelocity[i] + offset, 1);
-                    for (int j = 1; j < m_spacedim; ++j)
+                    for (int j = 1; j < expdim; ++j)
                     {
-                        Vmath::Svtvp(nq, gmat[m_spacedim*j+i][0],
+                        Vmath::Svtvp(nq, gmat[expdim*j+i][0],
                                          velocity[j] + offset, 1,
                                          stdVelocity[i] + offset, 1,
                                          tmp = stdVelocity[i] + offset, 1);
@@ -914,7 +915,7 @@ namespace Nektar
             for (int i = 0; i < nq; ++i)
             {
                 NekDouble pntVelocity = 0.0;
-                for (int j = 0; j < m_spacedim; ++j)
+                for (int j = 0; j < expdim; ++j)
                 {
                     pntVelocity += stdVelocity[j][offset + i] *
                                    stdVelocity[j][offset + i];

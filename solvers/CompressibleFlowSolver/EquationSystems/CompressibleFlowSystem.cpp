@@ -208,6 +208,15 @@ namespace Nektar
             m_session->LoadParameter ("FilterExponent", m_filterExponent, 16);
             m_session->LoadParameter ("FilterCutoff", m_filterCutoff, 0);
         }
+
+        // Load CFL for local time-stepping (for steady state)
+        m_session->MatchSolverInfo("LocalTimeStep","True",
+                                   m_useLocalTimeStep, false);
+        if(m_useLocalTimeStep)
+        {
+            ASSERTL0(m_cflSafetyFactor != 0,
+                    "Local time stepping requires CFL parameter.");
+        }
     }
 
     /**
@@ -305,6 +314,30 @@ namespace Nektar
         for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
             (*x)->Apply(m_fields, inarray, outarray, time);
+        }
+
+        if (m_useLocalTimeStep)
+        {
+            int nElements = m_fields[0]->GetExpSize();
+            int nq, offset;
+            NekDouble fac;
+            Array<OneD, NekDouble> tmp;
+
+            Array<OneD, NekDouble> tstep (nElements, 0.0);
+            GetElmtTimeStep(inarray, tstep);
+
+            // Loop over elements
+            for(int n = 0; n < nElements; ++n)
+            {
+                nq     = m_fields[0]->GetExp(n)->GetTotPoints();
+                offset = m_fields[0]->GetPhys_Offset(n);
+                fac    = tstep[n] / m_timestep;
+                for(i = 0; i < nvariables; ++i)
+                {
+                    Vmath::Smul(nq, fac, outarray[i] + offset, 1,
+                                         tmp = outarray[i] + offset, 1);
+                }
+            }
         }
     }
 
@@ -660,16 +693,17 @@ namespace Nektar
     }
 
     /**
-     * @brief Calculate the maximum timestep subject to CFL restrictions.
+     * @brief Calculate the maximum timestep on each element
+     *        subject to CFL restrictions.
      */
-    NekDouble CompressibleFlowSystem::v_GetTimeStep(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray)
+    void CompressibleFlowSystem::GetElmtTimeStep(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD, NekDouble> &tstep)
     {
         int n;
         int nElements = m_fields[0]->GetExpSize();
         const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
 
-        Array<OneD, NekDouble> tstep      (nElements, 0.0);
         Array<OneD, NekDouble> stdVelocity(nElements);
 
         // Get standard velocity to compute the time-step limit
@@ -697,6 +731,18 @@ namespace Nektar
                      / (stdVelocity[n] * cLambda
                         * (ExpOrder[n] - 1) * (ExpOrder[n] - 1));
         }
+    }
+
+    /**
+     * @brief Calculate the maximum timestep subject to CFL restrictions.
+     */
+    NekDouble CompressibleFlowSystem::v_GetTimeStep(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray)
+    {
+        int nElements = m_fields[0]->GetExpSize();
+        Array<OneD, NekDouble> tstep (nElements, 0.0);
+
+        GetElmtTimeStep(inarray, tstep);
 
         // Get the minimum time-step limit and return the time-step
         NekDouble TimeStep = Vmath::Vmin(nElements, tstep, 1);

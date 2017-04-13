@@ -144,7 +144,7 @@ void StagnationInflowBC::v_Apply(
                 UpdatePhys())[id1+i] = rho;
 
             // Extrapolation for velocity and Kinetic energy calculation
-            int lim = m_swirl ? nvariables - 2 : nvariables - 1;
+            int lim = m_swirl ? nVariables - 2 : nVariables - 1;
             NekDouble Ek = 0.0;
             for (j = 1; j < lim; ++j)
             {

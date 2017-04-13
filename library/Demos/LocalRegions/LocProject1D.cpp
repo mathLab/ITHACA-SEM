@@ -31,15 +31,15 @@ int main(int argc, char *argv[])
             "dictates the basis as:\n");
         fprintf(stderr,"\t Ortho_A    = 1\n");
         fprintf(stderr,"\t Modified_A = 4\n");
-        fprintf(stderr,"\t Fourier    = 7\n");
-        fprintf(stderr,"\t Lagrange   = 8\n");
-        fprintf(stderr,"\t Gauss Lagrange = 9\n");
-        fprintf(stderr,"\t Legendre       = 10\n");
-        fprintf(stderr,"\t Chebyshev      = 11\n");
-        fprintf(stderr,"\t Monomial       = 12\n");
-        fprintf(stderr,"\t FourierSingleMode   = 13\n");
+        fprintf(stderr,"\t Fourier    = 9\n");
+        fprintf(stderr,"\t Lagrange   = 10\n");
+        fprintf(stderr,"\t Gauss Lagrange = 11\n");
+        fprintf(stderr,"\t Legendre       = 12\n");
+        fprintf(stderr,"\t Chebyshev      = 13\n");
+        fprintf(stderr,"\t Monomial       = 14\n");
+        fprintf(stderr,"\t FourierSingleMode   = 15\n");
         
-        fprintf(stderr,"Note type = 1,2,4,5 are for higher dimensional basis\n");
+        fprintf(stderr,"Note type = 1,2,4,5,7,8 are for higher dimensional basis\n");
 
         exit(1);
     }

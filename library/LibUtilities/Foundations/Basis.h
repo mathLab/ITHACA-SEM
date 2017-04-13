@@ -102,7 +102,10 @@ namespace Nektar
                 case eOrtho_C:
                     value = m_nummodes*(m_nummodes+1)*(m_nummodes+2)/6;
                     break;
-
+                case eModifiedPyr_C:
+                case eOrthoPyr_C:
+                    value = m_nummodes*(m_nummodes+1)*(2*m_nummodes+1)/6;
+                    break;
                 case eOrtho_A:
                 case eModified_A:
                 case eFourier:

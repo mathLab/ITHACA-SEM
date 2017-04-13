@@ -324,15 +324,13 @@ namespace Nektar
                         StdRegions::eHybridDGHelmBndLam)
                 {
                     DNekScalMatSharedPtr loc_mat
-                        = GlobalLinSys::v_GetBlock(
-                            m_expList.lock()->GetOffset_Elmt_Id(n));
+                        = GlobalLinSys::v_GetBlock(n);
                     m_schurCompl->SetBlock(n,n,loc_mat);
                 }
                 else
                 {
                     DNekScalBlkMatSharedPtr loc_schur
-                        = GlobalLinSys::v_GetStaticCondBlock(
-                            m_expList.lock()->GetOffset_Elmt_Id(n));
+                        = GlobalLinSys::v_GetStaticCondBlock(n);
                     DNekScalMatSharedPtr t;
                     m_schurCompl->SetBlock(n, n, t = loc_schur->GetBlock(0,0));
                     m_BinvD     ->SetBlock(n, n, t = loc_schur->GetBlock(0,1));

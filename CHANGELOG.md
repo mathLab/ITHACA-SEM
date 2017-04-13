@@ -17,6 +17,8 @@ v4.5.0
 v4.4.1
 ------
 **Library**
+- Remove m_offset_elmt_id and GetOffsetElmtId which fixed problems in 2D when 
+  quad elements are listed before tri elements (!758)
 - Remove the duplicate output of errorutil (!756)
 - Fix interpolation issue with Lagrange basis functions (!768)
 

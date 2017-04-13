@@ -4,9 +4,12 @@ Changelog
 v4.5.0
 ------
 **NekMesh**:
-
 - Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
+
+**Library**
+- Added in sum factorisation version for pyramid expansions and orthogonal
+  expansion in pyramids (!750)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
@@ -16,6 +19,20 @@ v4.4.1
 **Library**
 - Remove m_offset_elmt_id and GetOffsetElmtId which fixed problems in 2D when 
   quad elements are listed before tri elements (!758)
+- Remove the duplicate output of errorutil (!756)
+- Fix interpolation issue with Lagrange basis functions (!768)
+
+**FieldConvert**:
+- Fix issue with FieldConvert when range flag used (!761)
+
+**NekMesh**:
+- Fix memory consumption issue with Gmsh output (!747, !762)
+- Rework meshing control so that if possible viewable meshes will be dumped
+  when some part of the system fails (!756)
+- Add manifold meshing option (!756)
+
+**FieldConvert:**
+- Fix issue with field ordering in the interppointdatatofld module (!754)
 
 v4.4.0
 ------

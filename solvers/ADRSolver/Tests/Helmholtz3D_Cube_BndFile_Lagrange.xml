@@ -177,7 +177,7 @@
                 <D VAR="u" VALUE="cos(PI*x)*cos(PI*y)*cos(PI*z)" />
             </REGION>
             <REGION REF="1">
-                <D VAR="u" FILE="Helmholtz3D_Cube_BndFile.bc" />
+                <D VAR="u" FILE="Helmholtz3D_Cube_BndFile_Lagrange.bc" />
             </REGION>
             <REGION REF="2">
                 <D VAR="u" VALUE="cos(PI*x)*cos(PI*y)*cos(PI*z)" />

@@ -289,7 +289,7 @@ namespace Nektar
 
             /** \brief Orthogonal basis C
 
-            \f$\tilde \psi_{pqr}^c = \left ( {1 - \eta_3} \over 2 \right)^{p+q} P_r^{2p+2q+2, 0}(\eta_3)\f$ \\
+                \f$\tilde \psi_{pqr}^c = \left ( {1 - \eta_3} \over 2 \right)^{p+q} P_r^{2p+2q+2, 0}(\eta_3)\f$ \ \
 
            */
 
@@ -316,6 +316,65 @@ namespace Nektar
 
                                     // finish normalisation
                                     mode[k] *= sqrt(r+p+q+1.5);
+                                }
+                            }
+                        }
+                    }
+
+                    // Define derivative basis
+                    Blas::Dgemm('n','n',numPoints,numModes*(numModes+1)*
+                        (numModes+2)/6,numPoints,1.0, D, numPoints,
+                        m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
+                }
+                break;
+
+                /** \brief Orthogonal basis C for Pyramid expansion
+                    (which is richer than tets)
+                    
+                    \f$\tilde \psi_{pqr}^c = \left ( {1 - \eta_3} \over
+                    2\right)^{pq} P_r^{2pq+2, 0}(\eta_3)\f$ \f$ \mbox{where
+                    }pq = max(p+q,0) \f$
+                    
+                    This orthogonal expansion has modes that are
+                    always in the Cartesian space, however the
+                    equivalent ModifiedPyr_C has vertex modes that do
+                    not lie in this space. If one chooses \f$pq =
+                    max(p+q-1,0)\f$ then the expansion will space the
+                    same space as the vertices but the order of the
+                    expanion in 'r' is reduced by one.
+
+                    1) Eta_z values are the changing the fastest, then
+                     r, q, and finally p.  2) r index increases by the
+                      stride of numPoints. 
+                */
+            case eOrthoPyr_C:
+                {
+                    int P = numModes - 1, Q = numModes - 1, R = numModes - 1;
+                    NekDouble *mode = m_bdata.data();
+
+                    for( int p = 0; p <= P; ++p )
+                    {
+                        for( int q = 0; q <= Q; ++q )
+                        {
+                            for( int r = 0; r <= R - max(p,q); ++r, mode += numPoints )
+                            {
+                                // this offset allows for orthogonal
+                                // expansion to span linear FE space
+                                // of modified basis but means that
+                                // the cartesian polynomial space
+                                // spanned by the expansion is one
+                                // order lower.
+                                //int pq = max(p + q -1,0);
+                                int pq = max(p + q,0);
+                                
+                                Polylib::jacobfd(numPoints, z.data(), mode, NULL, r, 2*pq + 2.0, 0.0);
+                                for( int k = 0; k < numPoints; ++k )
+                                {
+                                    // Note factor of 0.5 is part of normalisation
+                                    mode[k] *= pow(0.5*(1.0 - z[k]), pq);
+
+                                    // finish normalisation
+                                    mode[k] *= sqrt(r+pq+1.5);
                                 }
                             }
                         }
@@ -452,13 +511,13 @@ namespace Nektar
             case eModified_C:
                 {
                     // Note the following packing deviates from the
-                    // definition in the Book by Karniadakis in two
-                    // ways. 1) We put the vertex degrees of freedom
-                    // at the lower index range to follow a more
-                    // hierarchic structure. 2) We do not duplicate
-                    // the singular vertex definition (or the
-                    // duplicated face information in the book ) so
-                    // that only a tetrahedral number
+                    // definition in the Book by Karniadakis &
+                    // Sherwin in two ways. 1) We put the vertex
+                    // degrees of freedom at the lower index range to
+                    // follow a more hierarchic structure. 2) We do
+                    // not duplicate the singular vertex definition
+                    // (or the duplicated face information in the book
+                    // ) so that only a tetrahedral number
                     // (i.e. (modes)*(modes+1)*(modes+2)/6) of modes
                     // are required consistent with the orthogonal
                     // basis.
@@ -505,6 +564,113 @@ namespace Nektar
                 }
                 break;
 
+            case eModifiedPyr_C:
+                {
+                    // Note the following packing deviates from the
+                    // definition in the Book by Karniadakis &
+                    // Sherwin in two ways. 1) We put the vertex
+                    // degrees of freedom at the lower index range to
+                    // follow a more hierarchic structure. 2) We do
+                    // not duplicate the singular vertex definition
+                    //  so that only a pyramidic  number
+                    // (i.e. (modes)*(modes+1)*(2*modes+1)/6) of modes
+                    // are required consistent with the orthogonal
+                    // basis.
+
+                    // In the current structure the r index runs
+                    // fastest rollowed by q and than the p index so
+                    // that the matrix has a more compact structure
+
+                    // Generate Modified_B basis;
+                    BasisKey ModBKey(eModified_B,m_basisKey.GetNumModes(),
+                                    m_basisKey.GetPointsKey());
+                    BasisSharedPtr  ModB = BasisManager()[ModBKey];
+
+                    Array<OneD, const NekDouble> ModB_data = ModB->GetBdata();
+
+                    // Copy Modified_B basis into first
+                    // (numModes*(numModes+1)/2)*numPoints entires of
+                    // bdata.
+
+
+                    int N;
+                    int B_offset = 0;
+                    int offset = 0;
+
+                    // Vertex 0,3,4, edges 3,4,7, face 4
+                    N = numPoints*(numModes)*(numModes+1)/2;
+                    Vmath::Vcopy(N, &ModB_data[0],1,&m_bdata[0],1);
+                    offset   += N;
+
+                    B_offset += numPoints*(numModes);
+                    // Vertex 1 edges 5
+                    N = numPoints*(numModes-1);
+                    Vmath::Vcopy(N, &ModB_data[0]+B_offset,1,&m_bdata[0]+offset,1);
+                    offset   += N;
+
+                    // Vertex 2 edges 1,6, face 2
+                    N = numPoints*(numModes-1)*(numModes)/2;
+                    Vmath::Vcopy(N, &ModB_data[0]+B_offset,1,&m_bdata[0]+offset,1);
+                    offset   += N;
+                                 
+                    B_offset += numPoints*(numModes-1);
+
+                    NekDouble *one_m_z_pow, *one_p_z;
+                    NekDouble *mode; 
+
+                    mode = m_bdata.data() + offset;
+
+                    for(p = 2; p < numModes; ++p)
+                    {
+                        // edges 0 2, faces 1 3
+                        N = numPoints*(numModes-p);
+                        Vmath::Vcopy(N, &ModB_data[0]+B_offset,1,mode,1);
+                        mode   += N;
+                        Vmath::Vcopy(N, &ModB_data[0]+B_offset,1,mode,1);
+                        mode   += N;
+                        B_offset += N;
+                    
+                        one_p_z     = m_bdata.data()+numPoints;
+
+                        for(q = 2; q < numModes; ++q)
+                        {
+                            // face 0 
+                            for(i = 0; i < numPoints; ++i)
+                            {
+                                // [(1-z)/2]^{p+q-2} Note in book it
+                                // seems to suggest p+q-1 but that
+                                // does not seem to give complete
+                                // polynomial space for pyramids
+                                mode[i] = pow(m_bdata[i],p+q-2);
+                            }
+
+                            one_m_z_pow  = mode;
+                            mode        += numPoints;
+                            
+                            // interior 
+                            for(int r = 1; r < numModes-max(p,q); ++r)
+                            {
+                                Polylib::jacobfd(numPoints,z.data(),mode,NULL,r-1,2*p+2*q-3,1.0);
+                                
+                                for(i = 0; i <  numPoints; ++i)
+                                {
+                                    mode[i] *= one_m_z_pow[i]*one_p_z[i];
+                                }
+                                mode   += numPoints;
+                            }
+                        }
+                    
+                    }
+
+                    // set up derivative of basis.
+                    Blas::Dgemm('n','n',numPoints,
+                                numModes*(numModes+1)*(2*numModes+1)/6,
+                                numPoints,1.0,D,numPoints,
+                                m_bdata.data(),numPoints,0.0,
+                                m_dbdata.data(),numPoints);
+                }
+                break;
+
             case eGLL_Lagrange:
                 {
                     mode = m_bdata.data();
@@ -523,7 +689,7 @@ namespace Nektar
                     Blas::Dgemm('n', 'n', numPoints, numModes, numPoints, 1.0,
                                 D, numPoints, m_bdata.data(), numPoints, 0.0,
                                 m_dbdata.data(), numPoints);
-
+                    
                 }//end scope
                 break;
             case eGauss_Lagrange:

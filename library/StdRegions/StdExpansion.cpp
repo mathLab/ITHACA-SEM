@@ -677,7 +677,7 @@ namespace Nektar
             {
                 Vmath::Vmul(nq, mkey.GetVarCoeff(eVarCoeffMass), 1, tmp, 1, tmp, 1);
             }
-
+            
             v_IProductWRTBase(tmp, outarray);
         }
 

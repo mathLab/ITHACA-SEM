@@ -7,6 +7,10 @@ v4.5.0
 - Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
 
+**Library**
+- Added in sum factorisation version for pyramid expansions and orthogonal
+  expansion in pyramids (!750)
+
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 
@@ -14,6 +18,7 @@ v4.4.1
 ------
 **Library**
 - Remove the duplicate output of errorutil (!756)
+- Fix interpolation issue with Lagrange basis functions (!768)
 
 **FieldConvert**:
 - Fix issue with FieldConvert when range flag used (!761)

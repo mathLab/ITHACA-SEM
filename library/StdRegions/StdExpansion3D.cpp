@@ -422,6 +422,7 @@ namespace Nektar
                 }
                 case LibUtilities::eModified_B:
                 case LibUtilities::eModified_C:
+                case LibUtilities::eModifiedPyr_C:
                 {
                     switch (facedir)
                     {
@@ -484,6 +485,7 @@ namespace Nektar
                 case LibUtilities::eOrtho_A:
                 case LibUtilities::eOrtho_B:
                 case LibUtilities::eOrtho_C:
+                case LibUtilities::eOrthoPyr_C:
                 {
                     switch (facedir)
                     {

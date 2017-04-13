@@ -20,6 +20,7 @@ v4.4.1
 - Remove m_offset_elmt_id and GetOffsetElmtId which fixed problems in 2D when 
   quad elements are listed before tri elements (!758)
 - Remove the duplicate output of errorutil (!756)
+- Fix BLAS CMake dependencies (!763)
 - Fix interpolation issue with Lagrange basis functions (!768)
 
 **FieldConvert**:

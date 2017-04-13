@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: ForcingNozzle.h
+// File: ForcingQuasi1D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_FORCINGNOZZLE
-#define NEKTAR_SOLVERUTILS_FORCINGNOZZLE
+#ifndef NEKTAR_SOLVERUTILS_FORCINGQUASI1D
+#define NEKTAR_SOLVERUTILS_FORCINGQUASI1D
 
 #include <SolverUtils/Forcing/Forcing.h>
 #include <CompressibleFlowSolver/Misc/VariableConverter.h>
@@ -42,11 +42,11 @@
 namespace Nektar
 {
 
-class ForcingNozzle : public SolverUtils::Forcing
+class ForcingQuasi1D : public SolverUtils::Forcing
 {
     public:
 
-        friend class MemoryManager<ForcingNozzle>;
+        friend class MemoryManager<ForcingQuasi1D>;
 
         /// Creates an instance of this class
         static SolverUtils::ForcingSharedPtr create(
@@ -56,7 +56,7 @@ class ForcingNozzle : public SolverUtils::Forcing
                 const TiXmlElement* pForce)
         {
             SolverUtils::ForcingSharedPtr p =
-                                    MemoryManager<ForcingNozzle>::
+                                    MemoryManager<ForcingQuasi1D>::
                                             AllocateSharedPtr(pSession);
             p->InitObject(pFields, pNumForcingFields, pForce);
             return p;
@@ -79,7 +79,7 @@ class ForcingNozzle : public SolverUtils::Forcing
 
     private:
 
-        ForcingNozzle(
+        ForcingQuasi1D(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
         Array<OneD, NekDouble>               m_geomFactor;

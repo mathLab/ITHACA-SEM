@@ -29,7 +29,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./EquationSystems/RinglebFlow.cpp
        ./Filters/FilterEnergy.cpp
        ./Forcing/ForcingAxiSymmetric.cpp
-       ./Forcing/ForcingNozzle.cpp
+       ./Forcing/ForcingQuasi1D.cpp
        ./Misc/VariableConverter.cpp
        ./RiemannSolvers/AverageSolver.cpp
        ./RiemannSolvers/AUSM0Solver.cpp

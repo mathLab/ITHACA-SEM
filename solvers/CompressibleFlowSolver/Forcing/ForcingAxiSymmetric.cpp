@@ -42,7 +42,7 @@ namespace Nektar
 std::string ForcingAxiSymmetric::className = SolverUtils::GetForcingFactory().
             RegisterCreatorFunction("AxiSymmetric",
                                 ForcingAxiSymmetric::create,
-                                "Forcing for axi-symmetric flow (around x=0");
+                                "Forcing for axi-symmetric flow (around x=0)");
 
 ForcingAxiSymmetric::ForcingAxiSymmetric(
         const LibUtilities::SessionReaderSharedPtr& pSession)

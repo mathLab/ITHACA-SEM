@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: ForcingNozzle.cpp
+// File: ForcingQuasi1D.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,24 +33,24 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <CompressibleFlowSolver/Forcing/ForcingNozzle.h>
+#include <CompressibleFlowSolver/Forcing/ForcingQuasi1D.h>
 
 using namespace std;
 
 namespace Nektar
 {
-std::string ForcingNozzle::className = SolverUtils::GetForcingFactory().
-            RegisterCreatorFunction("Nozzle",
-                                    ForcingNozzle::create,
+std::string ForcingQuasi1D::className = SolverUtils::GetForcingFactory().
+            RegisterCreatorFunction("Quasi1D",
+                                    ForcingQuasi1D::create,
                                     "Quasi-1D nozzle Forcing");
 
-ForcingNozzle::ForcingNozzle(
+ForcingQuasi1D::ForcingQuasi1D(
         const LibUtilities::SessionReaderSharedPtr& pSession)
     : Forcing(pSession)
 {
 }
 
-void ForcingNozzle::v_InitObject(
+void ForcingQuasi1D::v_InitObject(
         const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
         const unsigned int& pNumForcingFields,
         const TiXmlElement* pForce)
@@ -60,7 +60,7 @@ void ForcingNozzle::v_InitObject(
                     m_session, 1);
 
     ASSERTL0( pFields[0]->GetGraph()->GetSpaceDimension() == 1,
-              "NozzleForcing requires a 1D problem.");
+              "ForcingQuasi1D requires a 1D problem.");
 
     const TiXmlElement* funcNameElmt = pForce->FirstChildElement("AREAFCN");
     if(!funcNameElmt)
@@ -95,7 +95,7 @@ void ForcingNozzle::v_InitObject(
     }
 }
 
-void ForcingNozzle::v_Apply(
+void ForcingQuasi1D::v_Apply(
         const Array<OneD, MultiRegions::ExpListSharedPtr>&  pFields,
         const Array<OneD, Array<OneD, NekDouble> >&         inarray,
               Array<OneD, Array<OneD, NekDouble> >&         outarray,

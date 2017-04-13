@@ -59,6 +59,8 @@ ModuleKey InputNek::className = GetModuleFactory().RegisterCreatorFunction(
 
 InputNek::InputNek(MeshSharedPtr m) : InputModule(m)
 {
+    m_config["scalar"] = ConfigOption(
+        true, "0", "If defined then assume input rea is for scalar problem");
 }
 
 InputNek::~InputNek()
@@ -90,6 +92,8 @@ void InputNek::Process()
     map<LibUtilities::ShapeType, vector<int> > elIds;
     boost::unordered_map<int, int> elMap;
     vector<LibUtilities::ShapeType> elmOrder;
+
+    bool scalar = m_config["scalar"].as<bool>();
 
     // Set up vector of processing orders.
     elmOrder.push_back(LibUtilities::eSegment);
@@ -176,12 +180,16 @@ void InputNek::Process()
 
     // Set up field names.
     m_mesh->m_fields.push_back("u");
-    m_mesh->m_fields.push_back("v");
-    if (m_mesh->m_spaceDim > 2)
+
+    if (!scalar)
     {
-        m_mesh->m_fields.push_back("w");
+        m_mesh->m_fields.push_back("v");
+        if (m_mesh->m_spaceDim > 2)
+        {
+            m_mesh->m_fields.push_back("w");
+        }
+        m_mesh->m_fields.push_back("p");
     }
-    m_mesh->m_fields.push_back("p");
 
     // Loop over and create elements.
     for (i = 0; i < nElements; ++i)
@@ -663,6 +671,15 @@ void InputNek::Process()
         vector<ConditionType> type;
         ConditionSharedPtr c = MemoryManager<Condition>::AllocateSharedPtr();
 
+        ElementSharedPtr elm = m_mesh->m_element[m_mesh->m_spaceDim][elId];
+
+        // Ignore BCs for undefined edges/faces
+        if ((elm->GetDim() == 2 && faceId >= elm->GetEdgeCount()) ||
+            (elm->GetDim() == 3 && faceId >= elm->GetFaceCount()))
+        {
+            continue;
+        }
+
         // First character on each line describes type of BC. Currently
         // only support V, W, and O. In this switch statement we
         // construct the quantities needed to search for the condition.
@@ -671,14 +688,22 @@ void InputNek::Process()
             // Wall boundary.
             case 'W':
             {
-                for (i = 0; i < m_mesh->m_fields.size() - 1; ++i)
+                if (scalar)
                 {
                     vals.push_back("0");
                     type.push_back(eDirichlet);
                 }
-                // Set high-order boundary condition for wall.
-                vals.push_back("0");
-                type.push_back(eHOPCondition);
+                else
+                {
+                    for (i = 0; i < m_mesh->m_fields.size() - 1; ++i)
+                    {
+                        vals.push_back("0");
+                        type.push_back(eDirichlet);
+                    }
+                    // Set high-order boundary condition for wall.
+                    vals.push_back("0");
+                    type.push_back(eHOPCondition);
+                }
                 break;
             }
 
@@ -687,7 +712,7 @@ void InputNek::Process()
             case 'V':
             case 'v':
             {
-                for (i = 0; i < m_mesh->m_fields.size() - 1; ++i)
+                if (scalar)
                 {
                     getline(m_mshFile, line);
                     size_t p = line.find_first_of('=');
@@ -695,23 +720,42 @@ void InputNek::Process()
                         boost::algorithm::trim_copy(line.substr(p + 1)));
                     type.push_back(eDirichlet);
                 }
-                // Set high-order boundary condition for Dirichlet
-                // condition.
-                vals.push_back("0");
-                type.push_back(eHOPCondition);
+                else
+                {
+                    for (i = 0; i < m_mesh->m_fields.size() - 1; ++i)
+                    {
+                        getline(m_mshFile, line);
+                        size_t p = line.find_first_of('=');
+                        vals.push_back(
+                            boost::algorithm::trim_copy(line.substr(p + 1)));
+                        type.push_back(eDirichlet);
+                    }
+                    // Set high-order boundary condition for Dirichlet
+                    // condition.
+                    vals.push_back("0");
+                    type.push_back(eHOPCondition);
+                }
                 break;
             }
 
             // Natural outflow condition (default value = 0.0?)
             case 'O':
             {
-                for (i = 0; i < m_mesh->m_fields.size(); ++i)
+                if (scalar)
                 {
                     vals.push_back("0");
                     type.push_back(eNeumann);
                 }
-                // Set zero Dirichlet condition for outflow.
-                type[m_mesh->m_fields.size() - 1] = eDirichlet;
+                else
+                {
+                    for (i = 0; i < m_mesh->m_fields.size(); ++i)
+                    {
+                        vals.push_back("0");
+                        type.push_back(eNeumann);
+                    }
+                    // Set zero Dirichlet condition for outflow.
+                    type[m_mesh->m_fields.size() - 1] = eDirichlet;
+                }
                 break;
             }
 
@@ -750,7 +794,6 @@ void InputNek::Process()
         }
 
         int compTag, conditionId;
-        ElementSharedPtr elm = m_mesh->m_element[m_mesh->m_spaceDim][elId];
         ElementSharedPtr surfEl;
 
         // Create element for face (3D) or segment (2D). At the moment

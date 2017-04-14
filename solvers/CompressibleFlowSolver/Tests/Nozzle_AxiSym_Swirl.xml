@@ -56,7 +56,7 @@
             <P> rhoStagIn = rhoIn * (pStagIn/pIn)^(1/Gamma) </P>
             <!-- Reference state -->
             <P> rhoInf         = 1.225      </P>
-            <P> pInf           = pAtm       </P>
+            <P> pInf           = pIn       </P>
             <P> vInf           = 1      </P>
             <P> uInf           = 0      </P>
             <P> wInf           = 0      </P>

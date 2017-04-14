@@ -113,7 +113,7 @@
             <P> rhoStagIn = rhoIn * (pStagIn/pIn)^(1/Gamma) </P>
             <!-- Reference state -->
             <P> rhoInf         = 1.225      </P>
-            <P> pInf           = pAtm       </P>
+            <P> pInf           = pIn       </P>
             <P> uInf           = 1      </P>
 
             <!-- Parameters for artificial diffusion -->

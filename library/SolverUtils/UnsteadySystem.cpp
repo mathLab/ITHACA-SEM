@@ -265,14 +265,14 @@ namespace Nektar
                 if (m_cflSafetyFactor)
                 {
                     m_timestep = GetTimeStep(fields);
-                    
+        
                     // Ensure that the final timestep finishes at the final
                     // time, or at a prescribed IO_CheckTime.
                     if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
                     {
                         m_timestep = m_fintime - m_time;
                     }
-                    else if (m_checktime && 
+                    else if (m_checktime &&
                              m_time + m_timestep - lastCheckTime >= m_checktime)
                     {
                         lastCheckTime += m_checktime;
@@ -280,7 +280,7 @@ namespace Nektar
                         doCheckTime    = true;
                     }
                 }
-                
+        
                 // Perform any solver-specific pre-integration steps
                 timer.Start();
                 if (v_PreIntegrate(step))
@@ -405,7 +405,7 @@ namespace Nektar
                 // Step advance
                 ++step;
             }
-            
+        
             // Print out summary statistics
             if (m_session->GetComm()->GetRank() == 0)
             {
@@ -420,7 +420,7 @@ namespace Nektar
                     cout << "Time-integration  : " << intTime  << "s"   << endl;
                 }
             }
-            
+        
             // If homogeneous, transform back into physical space if necessary.
             if(m_HomogeneousType != eNotHomogeneous)
             {
@@ -449,11 +449,17 @@ namespace Nektar
             {
                 (*x)->Finalise(m_fields, m_time);
             }
-            
+        
             // Print for 1D problems
             if(m_spacedim == 1)
             {
                 v_AppendOutput1D(fields);   
+            }
+
+            // If we have aborted because of abort file, remove it.
+            if (boost::filesystem::exists("abort"))
+            {
+                boost::filesystem::remove("abort");
             }
         }
         

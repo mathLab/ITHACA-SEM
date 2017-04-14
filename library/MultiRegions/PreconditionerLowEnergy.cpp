@@ -236,7 +236,7 @@ namespace Nektar
             /// -  Count  edges, face and add up min edges and min face sizes
             for(n = 0; n < n_exp; ++n)
             {
-                eid = expList->GetOffset_Elmt_Id(n);
+                eid = n;
                 locExpansion = expList->GetExp(eid);
 
                 nEdges = locExpansion->GetNedges();
@@ -389,7 +389,7 @@ namespace Nektar
             
             for(cnt=n=0; n < n_exp; ++n)
             {
-                eid = expList->GetOffset_Elmt_Id(n);
+                eid = n;
                 locExpansion = expList->GetExp(eid);
 
                 for (j = 0; j < locExpansion->GetNedges(); ++j)
@@ -466,7 +466,7 @@ namespace Nektar
 
             for(cnt=n=0; n < n_exp; ++n)
             {
-                eid = expList->GetOffset_Elmt_Id(n);
+                eid = n;
                 
                 locExpansion = expList->GetExp(eid);
 
@@ -528,7 +528,12 @@ namespace Nektar
 
             for(n=0; n < n_exp; ++n)
             {
+<<<<<<< HEAD
                 eid = expList->GetOffset_Elmt_Id(n);
+=======
+                eid = n;
+                
+>>>>>>> master
                 locExpansion = expList->GetExp(eid);
                 
                 //loop over the edges of the expansion
@@ -626,7 +631,7 @@ namespace Nektar
             //matrices.
             for(cnt=n=0; n < n_exp; ++n)
             {
-                eid = expList->GetOffset_Elmt_Id(n);
+                eid = n;
                 
                 locExpansion = expList->GetExp(eid);
                 nCoeffs=locExpansion->NumBndryCoeffs();
@@ -998,6 +1003,7 @@ namespace Nektar
            
             DNekMatSharedPtr rmat, invrmat;
            
+<<<<<<< HEAD
             int offset = 0;
 
             // Set up transformation matrices whilst checking to see if
@@ -1075,6 +1081,38 @@ namespace Nektar
                 }
             }
         }
+=======
+           //Variants of R matrices required for low energy preconditioning
+           m_RBlk      = MemoryManager<DNekScalBlkMat>
+               ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+           m_RTBlk      = MemoryManager<DNekScalBlkMat>
+               ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+           m_InvRBlk      = MemoryManager<DNekScalBlkMat>
+               ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+           m_InvRTBlk      = MemoryManager<DNekScalBlkMat>
+               ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+
+           for(n=0; n < n_exp; ++n)
+           {
+               nel = n;
+               
+               locExpansion = expList->GetExp(nel);
+               LibUtilities::ShapeType eType=locExpansion->DetShapeType();
+
+               //Block R matrix
+               m_RBlk->SetBlock(n,n, transmatrixmap[eType]);
+
+               //Block RT matrix
+               m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
+
+               //Block inverse R matrix
+               m_InvRBlk->SetBlock(n,n, invtransmatrixmap[eType]);
+
+               //Block inverse RT matrix
+               m_InvRTBlk->SetBlock(n,n, invtransposedtransmatrixmap[eType]);
+           }
+       }
+>>>>>>> master
         
 
 

@@ -187,8 +187,12 @@ namespace Nektar
                         StdRegions::eHybridDGHelmBndLam)
                 {
                     DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
+<<<<<<< HEAD
                     DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
                                                 n, cnt, mat);
+=======
+                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(n, mat);
+>>>>>>> master
                     m_schurCompl->SetBlock(n, n, t);
                     cnt += mat->GetRows();
                 }
@@ -376,8 +380,7 @@ namespace Nektar
                                 }
                             }
                             ptr += blockSize;
-                            GlobalLinSys::v_DropStaticCondBlock(
-                                m_expList.lock()->GetOffset_Elmt_Id(n));
+                            GlobalLinSys::v_DropStaticCondBlock(n);
                         }
                         else
                         {
@@ -451,8 +454,7 @@ namespace Nektar
                                 loc_lda*loc_lda, loc_mat->GetRawPtr());
                             }
 
-                            GlobalLinSys::v_DropStaticCondBlock(
-                                m_expList.lock()->GetOffset_Elmt_Id(n));
+                            GlobalLinSys::v_DropStaticCondBlock(n);
                         }
 
                         sparseStorage[part] =

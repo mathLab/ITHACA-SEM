@@ -1055,7 +1055,7 @@ class BwdTrans_SumFac_Pyr : public Operator
             int mode  = 0;
             int mode1 = 0;
             int cnt   = 0;
-            for (i = mode = mode1 = 0; i < m_nmodes0; ++i)
+            for (i = 0; i < m_nmodes0; ++i)
             {
                 for (j = 0; j < m_nmodes1; ++j, ++cnt)
                 {

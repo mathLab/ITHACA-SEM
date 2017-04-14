@@ -16,7 +16,11 @@ v4.5.0
 v4.4.1
 ------
 **Library**
+- Remove m_offset_elmt_id and GetOffsetElmtId which fixed problems in 2D when 
+  quad elements are listed before tri elements (!758)
 - Remove the duplicate output of errorutil (!756)
+- Fix BLAS CMake dependencies (!763)
+- Fix interpolation issue with Lagrange basis functions (!768)
 
 **FieldConvert**:
 - Fix issue with FieldConvert when range flag used (!761)
@@ -26,6 +30,7 @@ v4.4.1
 - Rework meshing control so that if possible viewable meshes will be dumped
   when some part of the system fails (!756)
 - Add manifold meshing option (!756)
+- Fix issue with older rea input files (!765)
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)

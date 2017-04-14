@@ -219,7 +219,6 @@ void OutputTecplot::Process(po::variables_map &vm)
         MultiRegions::ExpansionType HomoExpType = m_f->m_exp[0]->GetExpType();
 
         m_coordim = m_f->m_exp[0]->GetExp(0)->GetCoordim();
-        var.insert(var.begin(), coordVars, coordVars + m_coordim);
 
         if (HomoExpType == MultiRegions::e3DH1D)
         {
@@ -241,6 +240,8 @@ void OutputTecplot::Process(po::variables_map &vm)
             nBases += 2;
             m_coordim += 2;
         }
+
+        var.insert(var.begin(), coordVars, coordVars + m_coordim);
 
         m_zoneType = (TecplotZoneType)(2*(nBases-1) + 1);
 

@@ -700,7 +700,38 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
         {
         }
 
-        virtual void operator()(
+    /** 
+     * This method calculates:
+     *
+     * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1])  \f]
+     *
+     * which can be represented in terms of local cartesian
+     * derivaties as:
+     * 
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dx +
+     *       d\phi/d\xi_1\, d\xi_1/dx),in[0]) + \f]
+     * 
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dy +
+     *       d\phi/d\xi_1\, d\xi_1/dy),in[1]) + \f]
+     *  
+     * where we note that
+     *
+     * \f[ d\phi/d\xi_0 =  d\phi/d\eta_0\, d\eta_0/d\xi_0 = 
+     *        d\phi/d\eta_0 2/(1-\eta_1) \f]
+     *
+     * \f[ d\phi/d\xi_1  = d\phi/d\eta_1\, d\eta_1/d\xi_1 + 
+     *   d\phi/d\eta_1\, d\eta_1/d\xi_1 = d\phi/d\eta_0 (1+\eta_0)/(1-\eta_1)
+     *   + d\phi/d\eta_1 \f]
+     *
+     *  and so the full inner products are
+     *     
+     * \f[ (d\phi/dx,in[0]) + (dphi/dy,in[1]) = 
+     *   (d\phi/d\eta_0, ((2/(1-\eta_1) (d\xi_0/dx in[0] + d\xi_0/dy in[1])
+     *    + (1-\eta_0)/(1-\eta_1) (d\xi_1/dx in[0]+d\xi_1/dy in[1]))
+     *    + (d\phi/d\eta_1, (d\xi_1/dx in[0] + d\xi_1/dy in[1])) \f]
+     *
+     */
+    virtual void operator()(
                 const Array<OneD, const NekDouble> &entry0,
                       Array<OneD, NekDouble>       &entry1,
                       Array<OneD, NekDouble>       &entry2,
@@ -721,26 +752,6 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
 
             tmp[0] = wsp; tmp[1] = wsp + nmax;
             wsp1   = wsp + 2*nmax;
-
-
-            // calculate (dphi/dx,in[0]) = ((dphi/dxi_0 dxi_0/dx +
-            //                               dphi/dxi_1 dxi_1/dx),in[0])
-            //     +     (dphi/dy,in[1]) = ((dphi/dxi_0 dxi_0/dy +
-            //                               dphi/dxi_1 dxi_1/dy),in[1])
-            //
-            // Note dphi/dxi_0  =
-            //             dphi/deta_0 deta_0/dxi_0 = dphi/deta_0 2/(1-eta_1)
-            //
-            //      dphi/dxi_1  =
-            //             dphi/deta_1 deta_1/dxi_1 + dphi/deta_1 deta_1/dxi_1 =
-            //             dphi/deta_0 (1+eta_0)/(1-eta_1) + dphi/deta_1
-            //
-            // and so the full inner products are
-            //
-            // (dphi/dx,in[0]) + (dphi/dy,in[1])
-            //    = (dphi/deta_0, ((2/(1-eta_1) (dxi_0/dx in[0]+dxi_0/dy in[1])
-            //            + (1_eta_0)/(1-eta_1) (dxi_1/dx in[0]+dxi_1/dy in[1]))
-            //    + (dphi/deta_1, (dxi_1/dx in[0] + dxi_1/dy in[1]))
 
             for(int i = 0; i < 2; ++i)
             {
@@ -1020,6 +1031,60 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Tet)
 
+
+        /**
+         * This method calculates:
+         *
+         * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) \f]
+         *
+         * which can be represented in terms of local cartesian
+         * derivaties as:
+         * 
+         * \f[ ((d\phi/d\xi_0\, d\xi_0/dx +
+         *       d\phi/d\xi_1\, d\xi_1/dx + 
+         *       d\phi/d\xi_2\, d\xi_2/dx),in[0]) + \f]
+         * 
+         * \f[ ((d\phi/d\xi_0\, d\xi_0/dy +
+         *       d\phi/d\xi_1\, d\xi_1/dy + 
+         *       d\phi/d\xi_2\, d\xi_2/dy),in[1]) + \f]
+         *  
+         * \f[ ((d\phi/d\xi_0\, d\xi_0/dz +
+         *       d\phi/d\xi_1\, d\xi_1/dz + 
+         *       d\phi/d\xi_2\, d\xi_2/dz),in[2]) \, \f]
+         *
+         * where we note that
+         *
+         * \f[ d\phi/d\xi_0 = d\phi/d\eta_0 4/((1-\eta_1)(1-\eta_2)) /f]
+         * 
+         * \f[ d\phi/d\xi_1 =  d\phi/d\eta_0 2(1+\eta_0)/((1-\eta_1)(1-\eta_2))
+         *       +  d\phi/d\eta_1 2/(1-\eta_2) \f]
+         *
+         * \f[ d\phi/d\xi_2  = d\phi/d\eta_0 2(1+\eta_0)/((1-\eta_1)(1-\eta_2))
+         *      +   d\phi/d\eta_1 (1+\eta_1)/(1-\eta_2)  + d\phi/d\eta_2 \f]
+         *
+         *  and so the full inner products are
+         * 
+         * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) = \f]
+         * 
+         * \f[ (d\phi/d\eta_0, fac0 (tmp0 + fac1(tmp1 + tmp2)))
+         *      + (d\phi/d\eta_1, fac2 (tmp1 + fac3 tmp2))
+         *      + (d\phi/d\eta_2, tmp2) \f]
+         *
+         *  where 
+         * 
+         * \f[ \begin{array}{lcl} 
+         *    tmp0 &=& (d\xi_0/dx in[0] + d\xi_0/dy in[1] + d\xi_0/dz in[2]) \\
+         *    tmp1 &=& (d\xi_1/dx in[0] + d\xi_1/dy in[1] + d\xi_1/dz in[2]) \\
+         *    tmp2 &=& (d\xi_2/dx in[0] + d\xi_2/dy in[1] + d\xi_2/dz in[2])
+         *   \end{array} \f]
+         * 
+         * \f[  \begin{array}{lcl}
+         *    fac0 &= & 4/((1-\eta_1)(1-\eta_2)) \\
+         *    fac1 &= & (1+\eta_0)/2 \\
+         *    fac2 &= & 2/(1-\eta_2) \\
+         *    fac3 &= & (1+\eta_1)/2  \end{array} \f]
+         *
+         */
         virtual void operator()(
                 const Array<OneD, const NekDouble> &entry0,
                       Array<OneD, NekDouble>       &entry1,
@@ -1044,44 +1109,6 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
             {
                 tmp[i] = wsp + i*nmax;
             }
-
-
-            // calculate (dphi/dx,in[0]) = ((dphi/dxi_0 dxi_0/dx +
-            //                               dphi/dxi_1 dxi_1/dx +
-            //                               dphi/dxi_2 dxi_2/dx),in[0])
-            //     +     (dphi/dy,in[1]) = ((dphi/dxi_0 dxi_0/dy +
-            //                               dphi/dxi_1 dxi_1/dy +
-            //                               dphi/dxi_2 dxi_2/dy),in[1])
-            //     +     (dphi/dz,in[2]) = ((dphi/dxi_0 dxi_0/dz +
-            //                               dphi/dxi_1 dxi_1/dz +
-            //                               dphi/dxi_2 dxi_2/dz),in[1])
-            //
-            // Note dphi/dxi_0  =
-            //             dphi/deta_0 4/((1-eta_1)(1-eta2))
-            //
-            //      dphi/dxi_1  =
-            //             dphi/deta_0 2(1+eta_0)/((1-eta_1)(1-eta_2)) +
-            //             dphi/deta_1 2/(1-eta_2)
-            //
-            //      dphi/dxi_2  =
-            //             dphi/deta_0 2(1+eta_0)/((1-eta_1)(1-eta_2)) +
-            //             dphi/deta_1 (1+eta_1)/(1-eta_2)  + dphi/deta_2
-            //
-            // and so the full inner products are
-            //
-            // (dphi/dx,in[0]) + (dphi/dy,in[1]) + (dphi/dz,in[2])
-            //    = (dphi/deta_0, fac0 (tmp0 + fac1(tmp1 + tmp2)))
-            //    + (dphi/deta_1, fac2 (tmp1 + fac3 tmp2))
-            //    + (dphi/deta_2, tmp2)
-            //
-            // tmp0 = (dxi_0/dx in[0] + dxi_0/dy in[1] + dxi_0/dz in[2])
-            // tmp1 = (dxi_1/dx in[0] + dxi_1/dy in[1] + dxi_1/dz in[2])
-            // tmp2 = (dxi_2/dx in[0] + dxi_2/dy in[1] + dxi_2/dz in[2])
-
-            // fac0 = 4/((1-eta_1)(1-eta2))
-            // fac1 = (1+eta_0)/2
-            // fac2 = 2/(1-eta_2)
-            // fac3 = (1+eta_1)/2
 
             for(int i = 0; i < 3; ++i)
             {
@@ -1262,6 +1289,52 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
         {
         }
 
+    /**
+     * This method calculates:
+     *
+     * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) \f]
+     *
+     * which can be represented in terms of local cartesian
+     * derivaties as:
+     * 
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dx +
+     *       d\phi/d\xi_1\, d\xi_1/dx + 
+     *       d\phi/d\xi_2\, d\xi_2/dx),in[0]) + \f]
+     * 
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dy +
+     *       d\phi/d\xi_1\, d\xi_1/dy + 
+     *       d\phi/d\xi_2\, d\xi_2/dy),in[1]) + \f]
+     *  
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dz +
+     *       d\phi/d\xi_1\, d\xi_1/dz + 
+     *       d\phi/d\xi_2\, d\xi_2/dz),in[2]) \, \f]
+     *
+     * where we note that
+     *
+     *  \f[ d\phi/d\xi_0  =
+     *            d\phi/d\eta_0 d\eta_0/d\xi_0 = d\phi/d\eta_0 2/(1-\eta_2) \f]
+     *
+     *  \f[ d\phi/d\xi_2  =
+     *            d\phi/d\eta_0 d\eta_0/d\xi_2 + d\phi/d\eta_2 d\eta_2/d\xi_2 =
+     *            d\phi/d\eta_0 (1+\eta_0)/(1-\eta_2) + d\phi/d\eta_2 \f]
+     *
+     *
+     *  and so the full inner products are
+     * 
+     * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) = \f]
+     * 
+     * \f[ (d\phi/d\eta_0, ((2/(1-\eta_2) (d\xi_0/dx in[0] + d\xi_0/dy in[1]
+     *              + d\xi_0/dz in[2])
+     *              + (1-\eta_0)/(1-\eta_2) (d\xi_2/dx in[0] + d\xi_2/dy in[1]
+     *              + d\xi_2/dz in[2] )) +  \f]
+     *
+     * \f[ (d\phi/d\eta_1, (d\xi_1/dx in[0] + d\xi_1/dy in[1]
+     *                + d\xi_1/dz in[2])) +  \f]
+     *
+     * \f[ (d\phi/d\eta_2, (d\xi_2/dx in[0] + d\xi_2/dy in[1]
+     *               + d\xi_2/dz in[2])) \f]
+     *
+     */
         virtual void operator()(
                 const Array<OneD, const NekDouble> &entry0,
                       Array<OneD, NekDouble>       &entry1,
@@ -1286,32 +1359,6 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
             {
                 tmp[i] = wsp + i*nmax;
             }
-
-            // calculate (dphi/dx,in[0]) = ((dphi/dxi_0 dxi_0/dx +
-            //                               dphi/dxi_1 dxi_1/dx),in[0])
-            //     +     (dphi/dy,in[1]) = ((dphi/dxi_0 dxi_0/dy +
-            //                               dphi/dxi_1 dxi_1/dy),in[1])
-            //     +     (dphi/dz,in[2]) = ((dphi/dxi_0 dxi_0/dz +
-            //                               dphi/dxi_1 dxi_1/dz),in[2])
-            //
-            // Note dphi/dxi_0  =
-            //             dphi/deta_0 deta_0/dxi_0 = dphi/deta_0 2/(1-eta_2)
-            //
-            //      dphi/dxi_2  =
-            //             dphi/deta_0 deta_0/dxi_2 + dphi/deta_2 deta_2/dxi_2 =
-            //             dphi/deta_0 (1+eta_0)/(1-eta_2) + dphi/deta_2
-            //
-            // and so the full inner products are
-            //
-            // (dphi/dx,in[0]) + (dphi/dy,in[1]) + (dphi/dz,in[2])
-            //    = (dphi/deta_0, ((2/(1-eta_2) (dxi_0/dx in[0] + dxi_0/dy in[1]
-            //                                               + dxi_0/dz in[2])
-            //            + (1_eta_0)/(1-eta_2) (dxi_2/dx in[0] + dxi_2/dy in[1]
-            //                                               + dxi_2/dz in[2] ))
-            //    + (dphi/deta_1, (dxi_1/dx in[0] + dxi_1/dy in[1]
-            //                                    + dxi_1/dz in[2]))
-            //    + (dphi/deta_2, (dxi_2/dx in[0] + dxi_2/dy in[1]
-            //                                    + dxi_2/dz in[2]))
 
             for(int i = 0; i < 3; ++i)
             {
@@ -1470,7 +1517,61 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
         {
         }
 
-        virtual void operator()(
+
+    /**
+     * This method calculates:
+     *
+     * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) \f]
+     *
+     * which can be represented in terms of local cartesian
+     * derivaties as:
+     * 
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dx +
+     *       d\phi/d\xi_1\, d\xi_1/dx + 
+     *       d\phi/d\xi_2\, d\xi_2/dx),in[0]) + \f]
+     * 
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dy +
+     *       d\phi/d\xi_1\, d\xi_1/dy + 
+     *       d\phi/d\xi_2\, d\xi_2/dy),in[1]) + \f]
+     *  
+     * \f[ ((d\phi/d\xi_0\, d\xi_0/dz +
+     *       d\phi/d\xi_1\, d\xi_1/dz + 
+     *       d\phi/d\xi_2\, d\xi_2/dz),in[2]) \, \f]
+     *
+     * where we note that
+     *
+     * \f[ d\phi/d\xi_0  =
+     *            d\phi/d\eta_0\, d\eta_0/d\xi_0 = 
+     *            d\phi/d\eta_0\, 2/(1-\eta_2). \f]
+     *
+     *  \f[ d\phi/d\xi_1  =
+     *            d\phi/d\eta_1\, d\eta_1/d\xi_1 = 
+     *            d\phi/d\eta_1\, 2/(1-\eta_2) \f]
+     *
+     *  \f[ d\phi/d\xi_2  =
+     *          d\phi/d\eta_0\, d\eta_0/d\xi_2 + 
+     *          d\phi/d\eta_1\, d\eta_1/d\xi_2 +
+     *          d\phi/d\eta_2\, d\eta_2/d\xi_2 =
+     *          d\phi/d\eta_0 (1+\eta_0)/(1-\eta_2) +
+     *          d\phi/d\eta_1 (1+\eta_1)/(1-\eta_2) + d\phi/d\eta_2 \f]
+     *
+     *  and so the full inner products are
+     * 
+     * \f[ (d\phi/dx,in[0]) + (d\phi/dy,in[1]) + (d\phi/dz,in[2]) = \f]
+     * 
+     * \f[ (d\phi/d\eta_0, ((2/(1-\eta_2) (d\xi_0/dx in[0] + 
+     *      d\xi_0/dy in[1] + 
+     *     (1-\eta_0)/(1-\eta_2) (d\xi_2/dx in[0] + d\xi_2/dy in[1]
+     *                               + d\xi_2/dz in[2] )) + \f]
+     * \f[ (d\phi/d\eta_1, ((2/(1-\eta_2) (d\xi_1/dx in[0] +
+     *      d\xi_0/dy in[1] + d\xi_0/dz in[2]) + 
+     *      (1-\eta_1)/(1-\eta_2) (d\xi_2/dx in[0] + d\xi_2/dy in[1] + 
+     *      d\xi_2/dz in[2] )) \f]
+     * 
+     * \f[ (d\phi/d\eta_2, (d\xi_2/dx in[0] + d\xi_2/dy in[1] + 
+     *      d\xi_2/dz in[2])) \f]
+     */
+     virtual void operator()(
                 const Array<OneD, const NekDouble> &entry0,
                       Array<OneD, NekDouble>       &entry1,
                       Array<OneD, NekDouble>       &entry2,
@@ -1494,40 +1595,6 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
             {
                 tmp[i] = wsp + i*nmax;
             }
-
-            // calculate (dphi/dx,in[0]) = ((dphi/dxi_0 dxi_0/dx +
-            //                               dphi/dxi_1 dxi_1/dx),in[0])
-            //     +     (dphi/dy,in[1]) = ((dphi/dxi_0 dxi_0/dy +
-            //                               dphi/dxi_1 dxi_1/dy),in[1])
-            //     +     (dphi/dz,in[2]) = ((dphi/dxi_0 dxi_0/dz +
-            //                               dphi/dxi_1 dxi_1/dz),in[2])
-            //
-            // Note dphi/dxi_0  =
-            //             dphi/deta_0 deta_0/dxi_0 = dphi/deta_0 2/(1-eta_2)
-            //
-            // Note dphi/dxi_1  =
-            //             dphi/deta_1 deta_1/dxi_1 = dphi/deta_1 2/(1-eta_2)
-            //
-            //      dphi/dxi_2  =
-            //             dphi/deta_0 deta_0/dxi_2 + dphi/deta_1 deta_1/dxi_2 +
-            //                                      + dphi/deta_2 deta_2/dxi_2 =
-            //             dphi/deta_0 (1+eta_0)/(1-eta_2) +
-            //             dphi/deta_1 (1+eta_1)/(1-eta_2) + dphi/deta_2
-            //
-            // and so the full inner products are
-            //
-            // (dphi/dx,in[0]) + (dphi/dy,in[1]) + (dphi/dz,in[2])
-            //    = (dphi/deta_0, ((2/(1-eta_2) (dxi_0/dx in[0] + dxi_0/dy in[1]
-            //                                                  + dxi_0/dz in[2])
-            //            + (1_eta_0)/(1-eta_2) (dxi_2/dx in[0] + dxi_2/dy in[1]
-            //                                                 + dxi_2/dz in[2] ))
-            //    + (dphi/deta_1, ((2/(1-eta_2) (dxi_1/dx in[0] + dxi_0/dy in[1]
-            //                                                  + dxi_0/dz in[2])
-            //            + (1_eta_1)/(1-eta_2) (dxi_2/dx in[0] + dxi_2/dy in[1]
-            //                                                 + dxi_2/dz in[2] ))
-            //    + (dphi/deta_2, (dxi_2/dx in[0] + dxi_2/dy in[1]
-            //                                    + dxi_2/dz in[2]))
-
             
             for(int i = 0; i < 3; ++i)
             {

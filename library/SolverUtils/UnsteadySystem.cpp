@@ -256,7 +256,13 @@ namespace Nektar
             NekDouble lastCheckTime = 0.0;
             NekDouble cpuTime       = 0.0;
             NekDouble elapsed       = 0.0;
+
             Array<OneD, int> abortFlags(2, 0);
+            string    abortFile     = "abort";
+            if (m_session->DefinesSolverInfo("CheckAbortFile"))
+            {
+                abortFile = m_session->GetSolverInfo("CheckAbortFile");
+            }
 
             while ((step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol) &&
@@ -348,7 +354,7 @@ namespace Nektar
                             abortFlags[0] = 1;
                         }
                     }
-                    abortFlags[1] = (bool)boost::filesystem::exists("abort");
+                    abortFlags[1] = (bool)boost::filesystem::exists(abortFile);
 
                     m_session->GetComm()->AllReduce(abortFlags,
                                 LibUtilities::ReduceMax);
@@ -457,9 +463,9 @@ namespace Nektar
             }
 
             // If we have aborted because of abort file, remove it.
-            if (boost::filesystem::exists("abort"))
+            if (boost::filesystem::exists(abortFile))
             {
-                boost::filesystem::remove("abort");
+                boost::filesystem::remove(abortFile);
             }
         }
         

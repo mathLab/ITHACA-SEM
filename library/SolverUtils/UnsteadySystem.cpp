@@ -364,7 +364,7 @@ namespace Nektar
 
                 // Write out checkpoint files
                 if ((m_checksteps && !((step + 1) % m_checksteps)) ||
-                     doCheckTime || abortFlags[1])
+                     doCheckTime)
                 {
                     if(m_HomogeneousType != eNotHomogeneous)
                     {

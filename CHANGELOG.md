@@ -10,6 +10,7 @@ v4.5.0
 **Library**
 - Added in sum factorisation version for pyramid expansions and orthogonal
   expansion in pyramids (!750)
+- Added detection of 'abort' file to cleanly terminate simulation early (!772)
 
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)

@@ -256,9 +256,11 @@ namespace Nektar
             NekDouble lastCheckTime = 0.0;
             NekDouble cpuTime       = 0.0;
             NekDouble elapsed       = 0.0;
+            Array<OneD, int> abortFlags(2, 0);
 
-            while (step   < m_steps ||
-                   m_time < m_fintime - NekConstants::kNekZeroTol)
+            while ((step   < m_steps ||
+                   m_time < m_fintime - NekConstants::kNekZeroTol) &&
+                   abortFlags[1] == 0)
             {
                 if (m_cflSafetyFactor)
                 {
@@ -334,21 +336,23 @@ namespace Nektar
                     break;
                 }
 
-                // search for NaN and quit if found
+                // test for abort conditions (nan, or abort file)
                 if (m_nanSteps && !((step+1) % m_nanSteps) )
                 {
-                    int nanFound = 0;
+                    abortFlags[0] = 0;
                     for (i = 0; i < nvariables; ++i)
                     {
                         if (Vmath::Nnan(fields[i].num_elements(),
                                 fields[i], 1) > 0)
                         {
-                            nanFound = 1;
+                            abortFlags[0] = 1;
                         }
                     }
-                    m_session->GetComm()->AllReduce(nanFound,
+                    abortFlags[1] = (bool)boost::filesystem::exists("abort");
+
+                    m_session->GetComm()->AllReduce(abortFlags,
                                 LibUtilities::ReduceMax);
-                    ASSERTL0 (!nanFound,
+                    ASSERTL0 (!abortFlags[0],
                                 "NaN found during time integration.");
                 }
                 // Update filters
@@ -360,7 +364,7 @@ namespace Nektar
 
                 // Write out checkpoint files
                 if ((m_checksteps && !((step + 1) % m_checksteps)) ||
-                     doCheckTime)
+                     doCheckTime || abortFlags[1])
                 {
                     if(m_HomogeneousType != eNotHomogeneous)
                     {

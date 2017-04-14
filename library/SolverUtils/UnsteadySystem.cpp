@@ -89,7 +89,7 @@ namespace Nektar
             m_session->MatchSolverInfo("REACTIONADVANCEMENT", "Explicit",
                                        m_explicitReaction, true);
 
-            m_session->LoadParameter("CheckNanSteps", m_nanSteps, 1);
+            m_session->LoadParameter("CheckAbortSteps", m_abortSteps, 1);
 
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
@@ -337,7 +337,7 @@ namespace Nektar
                 }
 
                 // test for abort conditions (nan, or abort file)
-                if (m_nanSteps && !((step+1) % m_nanSteps) )
+                if (m_abortSteps && !((step+1) % m_abortSteps) )
                 {
                     abortFlags[0] = 0;
                     for (i = 0; i < nvariables; ++i)

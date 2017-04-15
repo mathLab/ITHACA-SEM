@@ -227,16 +227,14 @@ void Generator2D::FindBLEnds()
 {
     set<CADVertSharedPtr> cadverts;
 
-    for (vector<unsigned>::iterator it = m_blCurves.begin();
-         it != m_blCurves.end(); ++it)
+    for (int it = 0; it < m_blCurves.size(); ++it)
     {
         vector<CADVertSharedPtr> vertices =
-            m_mesh->m_cad->GetCurve(*it)->GetVertex();
+            m_mesh->m_cad->GetCurve(m_blCurves[it])->GetVertex();
 
-        for (vector<CADVertSharedPtr>::iterator iv = vertices.begin();
-             iv != vertices.end(); ++iv)
+        for (int iv = 0; iv < vertices.size(); ++iv)
         {
-            set<CADVertSharedPtr>::iterator is = cadverts.find(*iv);
+            set<CADVertSharedPtr>::iterator is = cadverts.find(vertices[iv]);
 
             if (is != cadverts.end())
             {
@@ -244,7 +242,7 @@ void Generator2D::FindBLEnds()
             }
             else
             {
-                cadverts.insert(*iv);
+                cadverts.insert(vertices[iv]);
             }
         }
     }
@@ -287,10 +285,10 @@ void Generator2D::MakeBLPrep()
 
     // identify the nodes which will become the boundary layer.
 
-    for (vector<unsigned>::iterator it = m_blCurves.begin();
-         it != m_blCurves.end(); ++it)
+    for (int it = 0; it < m_blCurves.size(); ++it)
     {
-        vector<EdgeSharedPtr> localedges = m_curvemeshes[*it]->GetMeshEdges();
+        vector<EdgeSharedPtr> localedges =
+            m_curvemeshes[m_blCurves[it]]->GetMeshEdges();
         for (int i = 0; i < localedges.size(); i++)
         {
             m_nodesToEdge[localedges[i]->m_n1].push_back(localedges[i]);
@@ -303,12 +301,12 @@ void Generator2D::MakeBL(int faceid)
 {
     map<int, Array<OneD, NekDouble> > edgeNormals;
     int eid = 0;
-    for (vector<unsigned>::iterator it = m_blCurves.begin();
-         it != m_blCurves.end(); ++it)
+    for (int it = 0; it < m_blCurves.size(); ++it)
     {
         CADOrientation::Orientation edgeo =
-            m_mesh->m_cad->GetCurve(*it)->GetOrienationWRT(faceid);
-        vector<EdgeSharedPtr> es = m_curvemeshes[*it]->GetMeshEdges();
+            m_mesh->m_cad->GetCurve(m_blCurves[it])->GetOrienationWRT(faceid);
+        vector<EdgeSharedPtr> es =
+            m_curvemeshes[m_blCurves[it]]->GetMeshEdges();
         // on each !!!EDGE!!! calculate a normal
         // always to the left unless edgeo is 1
         // normal must be done in the parametric space (and then projected back)
@@ -412,19 +410,20 @@ void Generator2D::MakeBL(int faceid)
         nodeNormals[it->first] = nn;
     }
 
-    for (vector<unsigned>::iterator it = m_blCurves.begin();
-         it != m_blCurves.end(); ++it)
+    for (int it = 0; it < m_blCurves.size(); ++it)
     {
         CADOrientation::Orientation edgeo =
-            m_mesh->m_cad->GetCurve(*it)->GetOrienationWRT(faceid);
-        vector<NodeSharedPtr> ns = m_curvemeshes[*it]->GetMeshPoints();
+            m_mesh->m_cad->GetCurve(m_blCurves[it])->GetOrienationWRT(faceid);
+        vector<NodeSharedPtr> ns =
+            m_curvemeshes[m_blCurves[it]]->GetMeshPoints();
         vector<NodeSharedPtr> newNs;
         for (int i = 0; i < ns.size(); i++)
         {
             newNs.push_back(nodeNormals[ns[i]]);
         }
-        m_curvemeshes[*it] =
-            MemoryManager<CurveMesh>::AllocateSharedPtr(*it, m_mesh, newNs);
+        m_curvemeshes[m_blCurves[it]] =
+            MemoryManager<CurveMesh>::AllocateSharedPtr(m_blCurves[it], m_mesh,
+                                                        newNs);
         if (edgeo == CADOrientation::eBackwards)
         {
             reverse(ns.begin(), ns.end());
@@ -470,10 +469,10 @@ void Generator2D::PeriodicPrep()
 
     boost::split(lines, s, boost::is_any_of(":"));
 
-    for (vector<string>::iterator il = lines.begin(); il != lines.end(); ++il)
+    for (int il = 0; il < lines.size(); ++il)
     {
         vector<string> tmp;
-        boost::split(tmp, *il, boost::is_any_of(","));
+        boost::split(tmp, lines[il], boost::is_any_of(","));
 
         ASSERTL0(tmp.size() == 2, "periodic pairs ill-defined");
 

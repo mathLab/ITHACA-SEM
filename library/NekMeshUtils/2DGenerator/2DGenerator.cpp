@@ -83,6 +83,7 @@ void Generator2D::Process()
     ParseUtils::GenerateSeqVector(m_config["blcurves"].as<string>().c_str(),
                                   m_blCurves);
 
+    // find the ends of the BL curves
     if (m_config["blcurves"].beenSet)
     {
         FindBLEnds();
@@ -103,6 +104,9 @@ void Generator2D::Process()
             m_curvemeshes[i] =
                 MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
 
+            // Fheck if this curve is at an end of the BL
+            // If so, define an offset for the second node, corresponding to the
+            // BL thickness
             if (m_blends.count(i))
             {
                 vector<CADVertSharedPtr> vertices =
@@ -110,6 +114,7 @@ void Generator2D::Process()
                 Array<OneD, NekDouble> loc;
                 NekDouble t;
 
+                // offset needed at first node (or both)
                 if (m_blends[i] == 0 || m_blends[i] == 2)
                 {
                     loc = vertices[0]->GetLoc();
@@ -117,6 +122,7 @@ void Generator2D::Process()
                                              loc[2], 0.0);
                     m_curvemeshes[i]->SetOffset(0, t);
                 }
+                // offset needed at second node (or both)
                 if (m_blends[i] == 1 || m_blends[i] == 2)
                 {
                     loc = vertices[1]->GetLoc();
@@ -154,6 +160,8 @@ void Generator2D::Process()
             MakeBL(i);
         }
 
+        // If the BL doesn't form closed loops, we need to remove the outside
+        // nodes from the curve meshes
         for (map<unsigned, unsigned>::iterator ic = m_blends.begin();
              ic != m_blends.end(); ++ic)
         {
@@ -169,6 +177,8 @@ void Generator2D::Process()
                 nodes.erase(nodes.end() - 1);
             }
 
+            // Rebuild the curvemesh without the first node, the last node or
+            // both
             m_curvemeshes[ic->first] =
                 MemoryManager<CurveMesh>::AllocateSharedPtr(ic->first, m_mesh,
                                                             nodes);
@@ -225,6 +235,11 @@ void Generator2D::Process()
 
 void Generator2D::FindBLEnds()
 {
+    // Set of CAD vertices
+    // Vertices of each curve are added to the set if not found and removed from
+    // the set if found
+    // This leaves us with a set of vertices that are at the end of BL open
+    // loops
     set<CADVertSharedPtr> cadverts;
 
     for (int it = 0; it < m_blCurves.size(); ++it)
@@ -247,6 +262,9 @@ void Generator2D::FindBLEnds()
         }
     }
 
+    // Build m_blends based on the previously constructed set of vertices
+    // m_blends is a map of curve number (the curves right outside the BL open
+    // loops) to the offset node number: 0, 1 or 2 (for both)
     for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); ++i)
     {
         if (find(m_blCurves.begin(), m_blCurves.end(), i) != m_blCurves.end())
@@ -359,6 +377,8 @@ void Generator2D::MakeBL(int faceid)
         ASSERTL0(it->second.size() == 1 || it->second.size() == 2,
                  "weirdness, most likely bl_surfs are incorrect");
 
+        // If node at the end of the BL open loop, the "normal node" isn't
+        // constructed by computing a normal but found on the adjacent curve
         if (it->second.size() == 1)
         {
             vector<pair<int, CADCurveSharedPtr> > curves =

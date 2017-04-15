@@ -52,6 +52,7 @@ void CurveMesh::Mesh()
         int(m_curvelength / m_mesh->m_octree->GetMinDelta()) + 10;
     ds = m_curvelength / (m_numSamplePoints - 1);
 
+    // compute the offset due to adjacent BLs
     NekDouble totalOffset = 0.0;
     for (map<unsigned, NekDouble>::iterator ie = m_endoffset.begin();
          ie != m_endoffset.end(); ++ie)
@@ -98,6 +99,8 @@ void CurveMesh::Mesh()
         meshsvalue[0]  = 0.0;
         meshsvalue[Ne] = m_curvelength;
 
+        // force the second and/or the second to last point(s) if an offset is
+        // defined
         if (m_endoffset.count(0))
         {
             meshsvalue[1] = m_endoffset[0];
@@ -341,6 +344,7 @@ void CurveMesh::GetSampleFunction()
 
         bool found = false;
 
+        // if inside the BL, dsti[0] set to the BL thickness, i.e. the offset
         if (m_endoffset.count(0))
         {
             if (dsti[1] < m_endoffset[0])
@@ -357,6 +361,7 @@ void CurveMesh::GetSampleFunction()
                 found   = true;
             }
         }
+        // else, dsti[0] is found from the octree
         if (!found)
         {
             dsti[0] = m_mesh->m_octree->Query(loc);

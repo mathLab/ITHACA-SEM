@@ -730,6 +730,7 @@ void ProcessBL::BoundaryLayer3D()
     boost::unordered_map<int, vector<NodeSharedPtr> >::iterator eIt;
 
     string surf = m_config["surf"].as<string>();
+
     if (surf.size() > 0)
     {
         vector<unsigned int> surfs;
@@ -790,6 +791,16 @@ void ProcessBL::BoundaryLayer3D()
                              << "found in surface " << j << "; "
                              << "ignoring" << endl;
                         continue;
+                    }
+                    else if(el->GetConf().m_e == LibUtilities::eHexahedron)
+                    {
+                        if (splitEls.count(el->GetId()) > 0)
+                        {
+                            cerr << "WARNING: hex already found; "
+                                 << "ignoring" << endl;
+                        }
+
+                        splitEls[el->GetId()] = j;
                     }
                 }
             }

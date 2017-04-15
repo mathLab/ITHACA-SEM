@@ -56,6 +56,8 @@ CFIMesh::~CFIMesh()
 {
 }
 
+ofstream file;
+
 cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                                          Array<OneD, NekDouble> xyz)
 {
@@ -68,6 +70,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
         vector<string> cvs;
         vector<string> sfs;
         vector<string> cvs_possible;
+        vector<string> sfs_possible;
         f = m_nameToCurveId.find(p->getName());
         if (f == m_nameToCurveId.end())
         {
@@ -94,6 +97,17 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                         if (dis < 1e-6)
                         {
                             cvs.push_back(f->first);
+                        }
+                    }
+
+                    f = m_nameToFaceId.find(en->getName());
+                    if(f != m_nameToFaceId.end())
+                    {
+                        CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(f->second);
+                        NekDouble dis = s->DistanceTo(xyz);
+                        if (dis < 1e-3)
+                        {
+                            sfs_possible.push_back(s->GetName());
                         }
                     }
                 }
@@ -135,6 +149,11 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
         else if (cvs.size() == 0 && sfs.size() == 1)
         {
             return m_model->getEntity(sfs[0]);
+        }
+
+        if( sfs_possible.size() == 1)
+        {
+            return m_model->getEntity(sfs_possible[0]);
         }
     }
     else if (p->type == cfi::TYPE_FACE)
@@ -182,6 +201,8 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
     {
         vector<string> vts;
         vector<string> vts_possible;
+        vector<string> sfs_possible;
+        vector<string> cvs_possible;
         set<string> sfs; // need a set this time (duplicates)
         f = m_nameToVertId.find(p->getName());
         if (f == m_nameToVertId.end())
@@ -207,6 +228,28 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                         // it may be on a surface which is adjacent to this
                         // vert
                         vts_possible.push_back(f->first);
+                    }
+
+                    f = m_nameToFaceId.find(en->getName());
+                    if(f != m_nameToFaceId.end())
+                    {
+                        CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(f->second);
+                        NekDouble dis = s->DistanceTo(xyz);
+                        if (dis < 1e-6)
+                        {
+                            sfs_possible.push_back(s->GetName());
+                        }
+                    }
+
+                    f = m_nameToCurveId.find(en->getName());
+                    if(f != m_nameToCurveId.end())
+                    {
+                        CADCurveSharedPtr c = m_mesh->m_cad->GetCurve(f->second);
+                        NekDouble dis = c->DistanceTo(xyz);
+                        if (dis < 1e-6)
+                        {
+                            cvs_possible.push_back(c->GetName());
+                        }
                     }
                 }
             }
@@ -284,6 +327,15 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
         }
         else if (vts.size() == 0 && sfs.size() == 0)
         {
+            if(cvs_possible.size() == 1)
+            {
+                return m_model->getEntity(cvs_possible[0]);
+            }
+            else if(sfs_possible.size() == 1)
+            {
+                return m_model->getEntity(sfs_possible[0]);
+            }
+
             return NULL;
         }
         else
@@ -319,6 +371,9 @@ void CFIMesh::Process()
     vector<cfi::NodeDefinition> *cfinodes = m_model->getFenodes();
 
     cout << "Nodes " << cfinodes->size() << endl;
+
+    //file.open("pts.3D");
+    //file << "x y z value" << endl;
 
     // filter all mesh nodes into a indexed map and project to CAD
     for (vector<cfi::NodeDefinition>::iterator it = cfinodes->begin();
@@ -381,6 +436,8 @@ void CFIMesh::Process()
             }
         }
     }
+
+    //exit(-1);
 
     int prefix = m_mesh->m_cad->GetNumSurf() > 100 ? 1000 : 100;
 
@@ -486,11 +543,12 @@ void CFIMesh::Process()
             new Face(E->GetVertexList(), vector<NodeSharedPtr>(),
                      E->GetEdgeList(), LibUtilities::ePolyEvenlySpaced));
 
-        FaceSet::iterator find = m_mesh->m_faceSet.find(fc);
-        ASSERTL0(find != m_mesh->m_faceSet.end(),
+        FaceSet::iterator fnd = m_mesh->m_faceSet.find(fc);
+        ASSERTL0(fnd != m_mesh->m_faceSet.end(),
                  "surface element not found in mesh");
 
-        FaceSharedPtr mf = *find;
+        FaceSharedPtr mf = *fnd;
+
         if (mf->m_elLink.size() == 1)
         {
             // boundary element, we want to use it
@@ -524,22 +582,41 @@ void CFIMesh::Process()
             // this might work
             ASSERTL0(sfs.size() == 1, "weirdness");
 
+            int error = 0;
             // check each of the nodes know their on this surface
             for (int j = 0; j < n.size(); j++)
             {
-                try
+                vector<int> ids = n[j]->GetCADSurfsIds();
+                vector<int>::iterator a = find(ids.begin(), ids.end(), sfs[0]);
+                if(a == ids.end())
                 {
-                    n[j]->GetCADSurfInfo(sfs[0]);
-                }
-                catch (runtime_error &e)
-                {
-                    cout << "error" << endl;
+                    error++;
                 }
             }
 
+            if(error !=0)
+            {
+                cout << "sfs " << sfs[0] << endl;
+                for (int j = 0; j < n.size(); j++)
+                {
+                    vector<int> ids = n[j]->GetCADSurfsIds();
+                    cout << "node " << j << endl;
+                    for(int k = 0; k < ids.size(); k++)
+                    {
+                        cout << ids[k] << endl;
+                    }
+                }
+                cout << endl;
+            }
+
+            //if(!error)
+            //{
+            //    continue;
+            //}
+
             E->m_parentCAD = m_mesh->m_cad->GetSurf(sfs[0]);
             tags.clear();
-            tags.push_back(sfs[0]);
+            tags.push_back(sfs[0]); //
             E->SetTagList(tags);
             m_mesh->m_element[2].push_back(E);
         }
@@ -687,6 +764,7 @@ void CFIMesh::Process()
             me->m_parentCAD = m_mesh->m_cad->GetCurve(cvs[0]);
         }
     }
+
 }
 }
 }

@@ -284,6 +284,18 @@ public:
         return lst;
     }
 
+    std::vector<int> GetCADSurfsIds()
+    {
+        std::vector<int> lst;
+        std::map<int, std::pair<CADSurfSharedPtr,
+                                Array<OneD, NekDouble> > >::iterator s;
+        for (s = CADSurfList.begin(); s != CADSurfList.end(); s++)
+        {
+            lst.push_back(s->first);
+        }
+        return lst;
+    }
+
     int GetNumCadCurve()
     {
         return CADCurveList.size();

@@ -236,8 +236,7 @@ namespace Nektar
             /// -  Count  edges, face and add up min edges and min face sizes
             for(n = 0; n < n_exp; ++n)
             {
-                eid = n;
-                locExpansion = expList->GetExp(eid);
+                locExpansion = expList->GetExp(n);
 
                 nEdges = locExpansion->GetNedges();
                 for(j = 0; j < nEdges; ++j)
@@ -389,8 +388,7 @@ namespace Nektar
             
             for(cnt=n=0; n < n_exp; ++n)
             {
-                eid = n;
-                locExpansion = expList->GetExp(eid);
+                locExpansion = expList->GetExp(n);
 
                 for (j = 0; j < locExpansion->GetNedges(); ++j)
                 {
@@ -466,9 +464,7 @@ namespace Nektar
 
             for(cnt=n=0; n < n_exp; ++n)
             {
-                eid = n;
-                
-                locExpansion = expList->GetExp(eid);
+                locExpansion = expList->GetExp(n);
 
                 for (j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
@@ -528,13 +524,7 @@ namespace Nektar
 
             for(n=0; n < n_exp; ++n)
             {
-<<<<<<< HEAD
-                eid = expList->GetOffset_Elmt_Id(n);
-=======
-                eid = n;
-                
->>>>>>> master
-                locExpansion = expList->GetExp(eid);
+                locExpansion = expList->GetExp(n);
                 
                 //loop over the edges of the expansion
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
@@ -631,9 +621,7 @@ namespace Nektar
             //matrices.
             for(cnt=n=0; n < n_exp; ++n)
             {
-                eid = n;
-                
-                locExpansion = expList->GetExp(eid);
+                locExpansion = expList->GetExp(n);
                 nCoeffs=locExpansion->NumBndryCoeffs();
 
                 //Get correct transformation matrix for element type
@@ -1003,7 +991,6 @@ namespace Nektar
            
             DNekMatSharedPtr rmat, invrmat;
            
-<<<<<<< HEAD
             int offset = 0;
 
             // Set up transformation matrices whilst checking to see if
@@ -1012,8 +999,7 @@ namespace Nektar
             // are
             for(n=0; n < n_exp; ++n)
             {
-                int eid = expList->GetOffset_Elmt_Id(n);
-                locExp = expList->GetExp(eid);
+                locExp = expList->GetExp(n);
                 ShapeType eltype = locExp->DetShapeType();
                 
                 int nbndcoeffs = locExp->NumBndryCoeffs();
@@ -1081,40 +1067,6 @@ namespace Nektar
                 }
             }
         }
-=======
-           //Variants of R matrices required for low energy preconditioning
-           m_RBlk      = MemoryManager<DNekScalBlkMat>
-               ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
-           m_RTBlk      = MemoryManager<DNekScalBlkMat>
-               ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
-           m_InvRBlk      = MemoryManager<DNekScalBlkMat>
-               ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
-           m_InvRTBlk      = MemoryManager<DNekScalBlkMat>
-               ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
-
-           for(n=0; n < n_exp; ++n)
-           {
-               nel = n;
-               
-               locExpansion = expList->GetExp(nel);
-               LibUtilities::ShapeType eType=locExpansion->DetShapeType();
-
-               //Block R matrix
-               m_RBlk->SetBlock(n,n, transmatrixmap[eType]);
-
-               //Block RT matrix
-               m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
-
-               //Block inverse R matrix
-               m_InvRBlk->SetBlock(n,n, invtransmatrixmap[eType]);
-
-               //Block inverse RT matrix
-               m_InvRTBlk->SetBlock(n,n, invtransposedtransmatrixmap[eType]);
-           }
-       }
->>>>>>> master
-        
-
 
         /**
          * \brief Transform the solution vector vector to low energy.
@@ -1154,7 +1106,7 @@ namespace Nektar
             Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(),
                          tmp.get(), m_map.get(), pLocalIn.get());
 
-            //Multiply by the block transformation matrix
+	    //Multiply by the block transformation matrix
 	    int cnt = 0; 
 	    int cnt1 = 0;
 	    for(int i = 0; i < m_sameBlock.size(); ++i)
@@ -1429,8 +1381,7 @@ namespace Nektar
                 expList=((m_linsys.lock())->GetLocMat()).lock();
          
             StdRegions::StdExpansionSharedPtr locExpansion;                
-            int eid = expList->GetOffset_Elmt_Id(n);
-            locExpansion = expList->GetExp(eid);
+            locExpansion = expList->GetExp(n);
 
             int nbnd=locExpansion->NumBndryCoeffs();
             MatrixStorage storage = eFULL;
@@ -1940,7 +1891,7 @@ namespace Nektar
             
             /* Determine the maximum expansion order for all elements */
             int nummodesmax = 0; 
-            Array<OneD, int> Shapes(LibUtilities::SIZE_ShapeType);
+            Array<OneD, int> Shapes(LibUtilities::SIZE_ShapeType,0);
             for(int n = 0; n < expList->GetNumElmts(); ++n)
             {
                 locExp = expList->GetExp(n);
@@ -1957,7 +1908,7 @@ namespace Nektar
             m_comm->AllReduce(Shapes, ReduceMax);
             
             if(Shapes[ePyramid]) // if Pyramids used then need Tet and Hex expansion
-            {
+	    {
                 Shapes[eTetrahedron] = 1;
                 Shapes[eHexahedron]  = 1;
             }
@@ -2043,7 +1994,7 @@ namespace Nektar
                     (PreconR, eTetrahedron,
                      *TetExp, linSysKey.GetConstFactors());
                 maxRmat[eTetrahedron] = TetExp->GetLocMatrix(TetR);
-
+		
                 if((Shapes[ePyramid])||(Shapes[eHexahedron]))
                 {
                     ReSetTetMaxRMat(nummodesmax, TetExp, maxRmat,
@@ -2110,10 +2061,9 @@ namespace Nektar
                 
                 if((Shapes[ePyramid])||(Shapes[eHexahedron]))
                 {
-                    ReSetPrismMaxRMat(nummodesmax, PrismExp, maxRmat,
+		    ReSetPrismMaxRMat(nummodesmax, PrismExp, maxRmat,
                                       vertMapMaxR, edgeMapMaxR,
                                       faceMapMaxR, false);
-
                 }
                 else
                 {

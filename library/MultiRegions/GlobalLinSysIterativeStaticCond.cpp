@@ -187,12 +187,8 @@ namespace Nektar
                         StdRegions::eHybridDGHelmBndLam)
                 {
                     DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
-<<<<<<< HEAD
                     DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
                                                 n, cnt, mat);
-=======
-                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(n, mat);
->>>>>>> master
                     m_schurCompl->SetBlock(n, n, t);
                     cnt += mat->GetRows();
                 }
@@ -562,13 +558,13 @@ namespace Nektar
             Array<OneD, NekDouble>& pInOut,
             int                     offset)
         {
-            m_precon->DoTransformToLowEnergy(pInOut, offset);
+            m_precon->DoTransformToLowEnergy(pInOut, offset);            
         }
 
         void GlobalLinSysIterativeStaticCond::v_BasisBwdTransform(
             Array<OneD, NekDouble>& pInOut)
         {
-            m_precon->DoTransformFromLowEnergy(pInOut);
+	    m_precon->DoTransformFromLowEnergy(pInOut);
         }
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysIterativeStaticCond::v_Recurse(

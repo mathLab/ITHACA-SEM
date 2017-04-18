@@ -38,7 +38,7 @@
 
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
-#include <boost/format.hpp> 
+#include <boost/format.hpp>
 #include <boost/function.hpp>
 
 using namespace std;
@@ -48,6 +48,14 @@ namespace Nektar
 namespace SolverUtils
 {
 
+/**
+ * Representation of a FUNCTION defined in the session xml file.
+ *
+ * @param   session       The session where the function was defined.
+ * @param   field         The field the function is defined on.
+ * @param   functionName  The name of the function.
+ * @param   toCache       Store the evaluated function for later use.
+ */
 SessionFunction::SessionFunction(const LibUtilities::SessionReaderSharedPtr &session,
                                  const MultiRegions::ExpListSharedPtr &field,
                                  std::string functionName,
@@ -59,10 +67,11 @@ SessionFunction::SessionFunction(const LibUtilities::SessionReaderSharedPtr &ses
 }
 
 /**
- * Evaluates a physical function at each quadrature point in the domain.
+ * Evaluates a function defined in the xml session file at each quadrature point.
  *
- * @param   pArray          The array into which to write the values.
- * @param   pEqn            The equation to evaluate.
+ * @param   pArray       The array into which to write the values.
+ * @param   pTime        The time at which to evaluate the function.
+ * @param   domain       The domain to evaluate the function in.
  */
 void SessionFunction::Evaluate(Array<OneD, Array<OneD, NekDouble> > &pArray,
                                const NekDouble pTime,
@@ -77,10 +86,13 @@ void SessionFunction::Evaluate(Array<OneD, Array<OneD, NekDouble> > &pArray,
 }
 
 /**
-* Populates a forcing function for each of the dependent variables
-* using the expression provided by the BoundaryConditions object.
-* @param   force           Array of fields to assign forcing.
-*/
+ * Evaluates a function defined in the xml session file at each quadrature point.
+ *
+ * @param   pFieldNames  The names of the fields to evaluate the function for.
+ * @param   pArray       The array into which to write the values.
+ * @param   pTime        The time at which to evaluate the function.
+ * @param   domain       The domain to evaluate the function in.
+ */
 void SessionFunction::Evaluate(std::vector<std::string> pFieldNames,
                                Array<OneD, Array<OneD, NekDouble> > &pArray,
                                const NekDouble &pTime,
@@ -88,7 +100,7 @@ void SessionFunction::Evaluate(std::vector<std::string> pFieldNames,
 {
     ASSERTL1(pFieldNames.size() == pArray.num_elements(),
              "Function '" + m_name +
-                 "' variable list size mismatch with array storage.");
+             "' variable list size mismatch with array storage.");
 
     for (int i = 0; i < pFieldNames.size(); i++)
     {
@@ -97,10 +109,13 @@ void SessionFunction::Evaluate(std::vector<std::string> pFieldNames,
 }
 
 /**
-* Populates a function for each of the dependent variables using
-* the expression or filenames provided by the SessionReader object.
-* @param   force           Array of fields to assign forcing.
-*/
+ * Evaluates a function defined in the xml session file at each quadrature point.
+ *
+ * @param   pFieldNames  The names of the fields to evaluate the function for.
+ * @param   pFields      The fields into which to write the values.
+ * @param   pTime        The time at which to evaluate the function.
+ * @param   domain       The domain to evaluate the function in.
+ */
 void SessionFunction::Evaluate(
     std::vector<std::string> pFieldNames,
     Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
@@ -118,6 +133,14 @@ void SessionFunction::Evaluate(
     }
 }
 
+/**
+ * Evaluates a function defined in the xml session file at each quadrature point.
+ *
+ * @param   pFieldName   The name of the field to evaluate the function for.
+ * @param   pArray       The array into which to write the values.
+ * @param   pTime        The time at which to evaluate the function.
+ * @param   domain       The domain to evaluate the function in.
+ */
 void SessionFunction::Evaluate(std::string pFieldName,
                                Array<OneD, NekDouble> &pArray,
                                const NekDouble &pTime,
@@ -131,9 +154,9 @@ void SessionFunction::Evaluate(std::string pFieldName,
     std::pair<std::string, int> key(pFieldName, domain);
     // sorry
     if ((m_arrays.find(key) != m_arrays.end()) &&
-        (vType == LibUtilities::eFunctionTypeFile ||
-         ((m_lastCached.find(key) != m_lastCached.end()) &&
-          (pTime - m_lastCached[key] < NekConstants::kNekZeroTol))))
+            (vType == LibUtilities::eFunctionTypeFile ||
+             ((m_lastCached.find(key) != m_lastCached.end()) &&
+              (pTime - m_lastCached[key] < NekConstants::kNekZeroTol))))
     {
         // found cached field
         if (pArray.num_elements() < nq)
@@ -175,11 +198,11 @@ void SessionFunction::Evaluate(std::string pFieldName,
 }
 
 /**
-         * @brief Provide a description of a function for a given field name.
-         *
-         * @param pFieldName     Field name.
-         * @param pFunctionName  Function name.
-         */
+ * @brief Provide a description of a function for a given field name.
+ *
+ * @param pFieldName     Field name.
+ * @param domain         The domain to evaluate the function in.
+ */
 std::string SessionFunction::Describe(std::string pFieldName, const int domain)
 {
     std::string retVal;
@@ -203,6 +226,14 @@ std::string SessionFunction::Describe(std::string pFieldName, const int domain)
     return retVal;
 }
 
+/**
+ * Evaluates a function from expression
+ *
+ * @param   pFieldName   The name of the field to evaluate the function for.
+ * @param   pArray       The array into which to write the values.
+ * @param   pTime        The time at which to evaluate the function.
+ * @param   domain       The domain to evaluate the function in.
+ */
 void SessionFunction::EvaluateExp(string pFieldName,
                                   Array<OneD, NekDouble> &pArray,
                                   const NekDouble &pTime,
@@ -227,6 +258,14 @@ void SessionFunction::EvaluateExp(string pFieldName,
     ffunc->Evaluate(x0, x1, x2, pTime, pArray);
 }
 
+/**
+ * Evaluates a function from fld file
+ *
+ * @param   pFieldName   The name of the field to evaluate the function for.
+ * @param   pArray       The array into which to write the values.
+ * @param   pTime        The time at which to evaluate the function.
+ * @param   domain       The domain to evaluate the function in.
+ */
 void SessionFunction::EvaluateFld(string pFieldName,
                                   Array<OneD, NekDouble> &pArray,
                                   const NekDouble &pTime,
@@ -271,7 +310,7 @@ void SessionFunction::EvaluateFld(string pFieldName,
         {
             ASSERTL0(false,
                      "Invalid Filename in function \"" + m_name +
-                         "\", variable \"" + fileVar + "\"")
+                     "\", variable \"" + fileVar + "\"")
         }
     }
 
@@ -322,6 +361,14 @@ void SessionFunction::EvaluateFld(string pFieldName,
     m_field->BwdTrans_IterPerExp(vCoeffs, pArray);
 }
 
+/**
+ * Evaluates a function from pts file
+ *
+ * @param   pFieldName   The name of the field to evaluate the function for.
+ * @param   pArray       The array into which to write the values.
+ * @param   pTime        The time at which to evaluate the function.
+ * @param   domain       The domain to evaluate the function in.
+ */
 void SessionFunction::EvaluatePts(string pFieldName,
                                   Array<OneD, NekDouble> &pArray,
                                   const NekDouble &pTime,
@@ -366,7 +413,7 @@ void SessionFunction::EvaluatePts(string pFieldName,
         {
             ASSERTL0(false,
                      "Invalid Filename in function \"" + m_name +
-                         "\", variable \"" + fileVar + "\"")
+                     "\", variable \"" + fileVar + "\"")
         }
     }
 
@@ -382,7 +429,7 @@ void SessionFunction::EvaluatePts(string pFieldName,
     ptsIO.Import(filename, inPts);
 
     Array<OneD, Array<OneD, NekDouble> > pts(inPts->GetDim() +
-                                             inPts->GetNFields());
+            inPts->GetNFields());
     for (int i = 0; i < inPts->GetDim() + inPts->GetNFields(); ++i)
     {
         pts[i] = Array<OneD, NekDouble>(nq);
@@ -400,7 +447,7 @@ void SessionFunction::EvaluatePts(string pFieldName,
         m_field->GetCoords(pts[0], pts[1], pts[2]);
     }
     outPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
-        inPts->GetDim(), inPts->GetFieldNames(), pts);
+                 inPts->GetDim(), inPts->GetFieldNames(), pts);
 
     FieldUtils::Interpolator interp;
     if (m_interpolators.find(funcFilename) != m_interpolators.end())

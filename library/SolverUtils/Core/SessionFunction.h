@@ -56,38 +56,40 @@ namespace SolverUtils
 class SessionFunction
 {
 public:
+    /// Representation of a FUNCTION defined in the session xml file.
     SOLVER_UTILS_EXPORT SessionFunction(
         const LibUtilities::SessionReaderSharedPtr &session,
         const MultiRegions::ExpListSharedPtr &field,
         std::string functionName,
         bool toCache = false);
 
-    /// Evaluates a function as specified in the session file.
+    /// Evaluates a function defined in the xml session file at each quadrature point.
     SOLVER_UTILS_EXPORT void Evaluate(
         Array<OneD, Array<OneD, NekDouble> > &pArray,
         const NekDouble pTime = 0.0,
         const int domain      = 0);
 
-    /// Populate given fields with the function from session.
+    /// Evaluates a function defined in the xml session file at each quadrature point.
     SOLVER_UTILS_EXPORT void Evaluate(
         std::vector<std::string> pFieldNames,
         Array<OneD, Array<OneD, NekDouble> > &pArray,
         const NekDouble &pTime = 0.0,
         const int domain       = 0);
 
-    /// Populate given fields with the function from session.
+    /// Evaluates a function defined in the xml session file at each quadrature point.
     SOLVER_UTILS_EXPORT void Evaluate(
         std::vector<std::string> pFieldNames,
         Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &pTime = 0.0,
         const int domain       = 0);
 
-    // Populate an array with a function variable from session.
+    // Evaluates a function defined in the xml session file at each quadrature point.
     SOLVER_UTILS_EXPORT void Evaluate(std::string pFieldName,
                                       Array<OneD, NekDouble> &pArray,
                                       const NekDouble &pTime = 0.0,
                                       const int domain       = 0);
 
+    /// Provide a description of a function for a given field name.
     SOLVER_UTILS_EXPORT std::string Describe(std::string pFieldName,
                                              const int domain = 0);
 
@@ -108,27 +110,28 @@ private:
     MultiRegions::ExpListSharedPtr m_field;
     // Name of this function
     std::string m_name;
-    /// Store resulting arrays (and interpolators) in cache
+    /// Store resulting arrays (and interpolators)
     bool m_toCache;
-    /// Last time the cache for this  variable & domain combo was updated
+    /// Last time the cache for this variable & domain combo was updated
     std::map<std::pair<std::string, int>, NekDouble> m_lastCached;
     /// Interpolator for pts file input for a variable & domain combination
     std::map<std::string, FieldUtils::Interpolator> m_interpolators;
     /// Cached result arrays
     std::map<std::pair<std::string, int>, Array<OneD, NekDouble> > m_arrays;
 
-    // Populate an array with a function variable from session.
+    // Evaluates a function from expression
     SOLVER_UTILS_EXPORT void EvaluateExp(std::string pFieldName,
                                          Array<OneD, NekDouble> &pArray,
                                          const NekDouble &pTime = 0.0,
                                          const int domain       = 0);
 
-    // Populate an array with a function variable from session.
+    // Evaluates a function from fld file
     SOLVER_UTILS_EXPORT void EvaluateFld(std::string pFieldName,
                                          Array<OneD, NekDouble> &pArray,
                                          const NekDouble &pTime = 0.0,
                                          const int domain       = 0);
 
+    /// Evaluates a function from pts file
     SOLVER_UTILS_EXPORT void EvaluatePts(std::string pFieldName,
                                          Array<OneD, NekDouble> &pArray,
                                          const NekDouble &pTime = 0.0,

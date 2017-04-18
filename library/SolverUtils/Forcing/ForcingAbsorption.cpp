@@ -125,6 +125,22 @@ namespace SolverUtils
                     "Forcing: " +
                         std::string(funcNameElmt->GetText()));
 
+            // alter m_bRegions so that it contains the boundaryRegions of this rank
+            std::vector<unsigned int>  localBRegions;
+            SpatialDomains::BoundaryConditions bcs(m_session, pFields[0]->GetGraph());
+            SpatialDomains::BoundaryRegionCollection regions = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryRegionCollection::iterator it1;
+            int n = 0;
+            for (it1 = regions.begin(); it1 != regions.end(); ++it1)
+            {
+                if (std::find(m_bRegions.begin(), m_bRegions.end(), it1->first) != m_bRegions.end())
+                {
+                    localBRegions.push_back(n);
+                }
+                n++;
+            }
+            m_bRegions = localBRegions;
+
             std::vector<Array<OneD, const NekDouble> > points;
 
             Array<OneD, Array<OneD, NekDouble> > x(3);

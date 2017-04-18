@@ -105,7 +105,7 @@ FilterFieldConvert::FilterFieldConvert(
     else
     {
         LibUtilities::Equation equ(m_session, it->second);
-        m_sampleFrequency = floor(equ.Evaluate());
+        m_sampleFrequency = round(equ.Evaluate());
     }
 
     // OutputFrequency
@@ -117,7 +117,7 @@ FilterFieldConvert::FilterFieldConvert(
     else
     {
         LibUtilities::Equation equ(m_session, it->second);
-        m_outputFrequency = floor(equ.Evaluate());
+        m_outputFrequency = round(equ.Evaluate());
     }
 
     m_numSamples  = 0;

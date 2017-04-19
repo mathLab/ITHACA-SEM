@@ -416,6 +416,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     map<int, string> surfs;
 
     string fline;
+    string flinetmp;
 
     while (!f.eof())
     {
@@ -430,6 +431,15 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
         {
             continue;
         }
+
+        if (!boost::ends_with(fline, ";"))
+        {
+            flinetmp += fline;
+            continue;
+        }
+
+        fline = flinetmp + fline;
+        flinetmp.clear();
 
         vector<string> tmp1, tmp2;
         boost::split(tmp1, fline, boost::is_any_of("="));

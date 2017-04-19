@@ -35,6 +35,7 @@ v4.4.1
 
 **FieldConvert:**
 - Fix issue with field ordering in the interppointdatatofld module (!754)
+- Fix issue when using output-points combined with noequispaced (!775)
 
 v4.4.0
 ------

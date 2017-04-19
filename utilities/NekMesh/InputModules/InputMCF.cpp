@@ -347,7 +347,7 @@ void InputMCF::Process()
     ModuleSharedPtr module;
 
     ////**** HOSurface ****////
-    /*module = (GetModuleFactory().CreateInstance(
+    module = (GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh));
     if (m_surfopti)
     {
@@ -369,7 +369,7 @@ void InputMCF::Process()
     mods.clear();
 
     ////*** VARIATIONAL OPTIMISATION ****////
-    /*if (m_varopti)
+    if (m_varopti)
     {
         unsigned int np = boost::thread::physical_concurrency();
         if (m_mesh->m_verbose)
@@ -386,7 +386,7 @@ void InputMCF::Process()
     }
 
     ////**** SPLIT BL ****////
-    /*if (m_splitBL)
+    if (m_splitBL)
     {
         mods.push_back(GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "bl"), m_mesh));
@@ -401,7 +401,7 @@ void InputMCF::Process()
     {
         mods[i]->SetDefaults();
         mods[i]->Process();
-    }*/
+    }
 }
 }
 }

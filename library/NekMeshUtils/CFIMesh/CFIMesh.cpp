@@ -443,28 +443,6 @@ void CFIMesh::Process()
 
     vector<cfi::ElementDefinition>::iterator it;
 
-    vector<cfi::ElementDefinition> *tets =
-        m_model->getElements(cfi::SUBTYPE_TE4, 4);
-    cout << "tets " << tets->size() << endl;
-    for (it = tets->begin(); it != tets->end(); it++)
-    {
-        vector<NodeSharedPtr> n;
-        vector<cfi::Node *> ns = (*it).nodes;
-
-        for (int j = 0; j < ns.size(); j++)
-        {
-            n.push_back(nodes[ns[j]->number]);
-        }
-
-        vector<int> tags;
-        tags.push_back(prefix);
-        ElmtConfig conf(LibUtilities::eTetrahedron, 1, false, false);
-        ElementSharedPtr E = GetElementFactory().CreateInstance(
-            LibUtilities::eTetrahedron, conf, n, tags);
-
-        m_mesh->m_element[3].push_back(E);
-    }
-
     vector<cfi::ElementDefinition> *prisms =
         m_model->getElements(cfi::SUBTYPE_PE6, 6);
     cout << "prisms " << prisms->size() << endl;
@@ -510,11 +488,33 @@ void CFIMesh::Process()
         m_mesh->m_element[3].push_back(E);
     }
 
+    vector<cfi::ElementDefinition> *tets =
+        m_model->getElements(cfi::SUBTYPE_TE4, 4);
+    cout << "tets " << tets->size() << endl;
+    for (it = tets->begin(); it != tets->end(); it++)
+    {
+        vector<NodeSharedPtr> n;
+        vector<cfi::Node *> ns = (*it).nodes;
+
+        for (int j = 0; j < ns.size(); j++)
+        {
+            n.push_back(nodes[ns[j]->number]);
+        }
+
+        vector<int> tags;
+        tags.push_back(prefix);
+        ElmtConfig conf(LibUtilities::eTetrahedron, 1, false, false);
+        ElementSharedPtr E = GetElementFactory().CreateInstance(
+            LibUtilities::eTetrahedron, conf, n, tags);
+
+        m_mesh->m_element[3].push_back(E);
+    }
+
     ProcessVertices();
     ProcessEdges();
     ProcessFaces();
     ProcessElements();
-    // ProcessComposites();
+    ProcessComposites();
 
     vector<cfi::ElementDefinition> *tris =
         m_model->getElements(cfi::SUBTYPE_TR3, 3);
@@ -690,8 +690,8 @@ void CFIMesh::Process()
         }
     }
 
-    ProcessVertices();
-    ProcessEdges();
+    //ProcessVertices();
+    //ProcessEdges();
     ProcessFaces();
     ProcessElements();
     ProcessComposites();

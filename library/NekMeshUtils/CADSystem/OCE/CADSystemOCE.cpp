@@ -432,7 +432,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
             continue;
         }
 
-        if (!boost::ends_with(fline, ";"))
+        if (!boost::contains(fline, ";"))
         {
             flinetmp += fline;
             continue;

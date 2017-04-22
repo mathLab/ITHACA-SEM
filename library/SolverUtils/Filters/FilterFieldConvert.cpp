@@ -456,13 +456,21 @@ void FilterFieldConvert::CreateFields(
 
     m_f->m_exp.resize(m_variables.size());
     m_f->m_exp[0] = pFields[0];
+    int nfield;
     for (int n = 0; n < m_variables.size(); ++n)
     {
+        // if n >= pFields.num_elements() assum we have used n=0 field
+        nfield = (n < pFields.num_elements())? n: 0;
+        
         m_f->m_exp[n] = m_f->AppendExpList(
                             NumHomogeneousDir, m_variables[0]);
         m_f->m_exp[n]->SetWaveSpace(false);
 
-        m_f->m_exp[n]->ExtractCoeffsToCoeffs(pFields[n], m_outFields[n],
+        ASSERTL1(pFields[nfield]->GetNcoeffs() == m_outFields[n].num_elements(),
+                 "pFields[nfield] does not have the "
+                 "same number of coefficients as m_outFields[n]");
+        
+        m_f->m_exp[n]->ExtractCoeffsToCoeffs(pFields[nfield], m_outFields[n],
                                              m_f->m_exp[n]->UpdateCoeffs());
 
         m_f->m_exp[n]->BwdTrans( m_f->m_exp[n]->GetCoeffs(),

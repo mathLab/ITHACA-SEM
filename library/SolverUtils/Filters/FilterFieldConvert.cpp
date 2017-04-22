@@ -163,10 +163,14 @@ void FilterFieldConvert::v_Initialise(
 
     // m_variables need to be filled by a derived class
     m_outFields.resize(m_variables.size());
+    int nfield;
     
     for (int n = 0; n < m_variables.size(); ++n)
     {
-        m_outFields[n] = Array<OneD, NekDouble>(pFields[n]->GetNcoeffs(), 0.0);
+        // if n >= pFields.num_elements() assum we have used n=0 field
+        nfield = (n < pFields.num_elements())? n: 0;
+
+        m_outFields[n] = Array<OneD, NekDouble>(pFields[nfield]->GetNcoeffs(), 0.0);
     }
     
     m_fieldMetaData["InitialTime"] = boost::lexical_cast<std::string>(time);

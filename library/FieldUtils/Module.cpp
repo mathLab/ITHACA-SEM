@@ -158,6 +158,37 @@ void Module::SetDefaults()
 }
 
 /**
+ * @brief Tries to guess the format of the input file.
+ */
+string InputModule::GuessFormat(string filename)
+{
+    // Read first 64 bytes of data, assuming input is this long.
+    ifstream inFile(filename.c_str(), ios::binary);
+    vector<char> data(64, 0);
+    inFile.read(&data[0], 64);
+
+    string check1(&data[0], 64);
+
+    // Nek5000 format: first four characters are: #std
+    if (data[0] == '#' && data[1] == 's' && data[2] == 't' && data[3] == 'd')
+    {
+        inFile.close();
+        return "fld5000";
+    }
+
+    // Semtex format: first line should contain the string "Session"
+    if (check.find("Session") != string::npos)
+    {
+        inFile.close();
+        return "fldsem";
+    }
+
+    // Otherwise don't really know -- try to guess from file extension.
+    inFile.close();
+    return "";
+}
+
+/**
  * @brief Print a brief summary of information.
  */
 void InputModule::PrintSummary()

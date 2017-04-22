@@ -39,6 +39,7 @@
 #include <vector>
 using namespace std;
 
+#include <LibUtilities/BasicUtils/CompressData.h>
 #include <boost/algorithm/string.hpp>
 
 #include "InputSemtex.h"
@@ -53,28 +54,6 @@ ModuleKey InputSemtex::m_className[1] = {
         ModuleKey(eInputModule, "fldsem"), InputSemtex::create,
         "Reads Semtex field file.")
 };
-
-/**
- * @brief Swap endian ordering of the input variable.
- */
-template <typename T>
-void swap_endian(T &u)
-{
-    union
-    {
-        T u;
-        unsigned char u8[sizeof(T)];
-    } source, dest;
-
-    source.u = u;
-
-    for (size_t k = 0; k < sizeof(T); k++)
-    {
-        dest.u8[k] = source.u8[sizeof(T) - k - 1];
-    }
-
-    u = dest.u;
-}
 
 /**
  * @brief Set up InputSemtex object.
@@ -113,7 +92,7 @@ void InputSemtex::Process(po::variables_map &vm)
         }
     }
 
-    string sessionName, date, fields;
+    string sessionName, date, fields, endian;
     int nr, ns, nz, nelmt, step;
     NekDouble time, dt, kinvis, beta;
 
@@ -167,8 +146,24 @@ void InputSemtex::Process(po::variables_map &vm)
     getline(file, line);
 
     // TODO Endian-ness
+    LibUtilities::EndianType systemEndian =  LibUtilities::Endianness();
+    std::string endianSearch;
+    if (systemEndian == LibUtilities::eEndianBig)
+    {
+        endianSearch = "big";
+    }
+    else if (systemEndian == LibUtilities::eEndianLittle)
+    {
+        endianSearch = "little";
+    }
+    else
+    {
+        ASSERTL0(false, "Only little- or big-endian systems are supported");
+    }
+
     file.read(buf, 25);
-    bool byteSwap = false;
+    endian = string(buf, 25);
+    bool byteSwap = endian.find(endianSearch) == string::npos;
     getline(file, line);
 
     // Print some basic information for input if in verbose mode.
@@ -266,15 +261,22 @@ void InputSemtex::Process(po::variables_map &vm)
             size_t elSizeJ = j * elmtSize;
             file.read((char *)&tmp[0], planeSize * sizeof(NekDouble));
 
+            if (byteSwap)
+            {
+                swap_endian(tmp);
+            }
+
             for (int k = 0; k < nelmt; ++k)
             {
                 std::copy(&tmp[k * elmtSize], &tmp[(k+1) * elmtSize],
                           data + k * offset + elSizeJ);
+
             }
         }
     }
 
     m_f->m_fielddef.push_back(fielddef);
 }
+
 }
 }

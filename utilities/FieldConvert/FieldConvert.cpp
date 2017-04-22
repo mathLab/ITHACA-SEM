@@ -284,19 +284,43 @@ int main(int argc, char* argv[])
             // filename.xml:vtk:opt1=arg1:opt2=arg2
             if (tmp1.size() == 1)
             {
-                int    dot    = tmp1[0].find_last_of('.') + 1;
-                string ext    = tmp1[0].substr(dot, tmp1[0].length() - dot);
+                // First, let's try to guess the input format if we're dealing
+                // with input files.
+                string guess;
 
-                if(ext == "gz")
+                if (i < nInput)
                 {
-                    string tmp2 = tmp1[0].substr(0,dot-1);
-                    dot = tmp2.find_last_of('.') + 1;
-                    ext = tmp1[0].substr(dot,tmp1[0].length()-dot);
+                    guess = InputModule::GuessFormat(tmp1[0]);
                 }
 
-                module.second = ext;
-                tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")
-                               +tmp1[0]);
+                // Found file type.
+                if (guess != "")
+                {
+                    if (f->m_verbose)
+                    {
+                        cout << "Using input module " << guess << " for: "
+                             << tmp1[0] << endl;
+                    }
+
+                    module.second = guess;
+                    tmp1.push_back(string("infile="+tmp1[0]));
+                }
+                else
+                {
+                    int    dot    = tmp1[0].find_last_of('.') + 1;
+                    string ext    = tmp1[0].substr(dot, tmp1[0].length() - dot);
+
+                    if(ext == "gz")
+                    {
+                        string tmp2 = tmp1[0].substr(0,dot-1);
+                        dot = tmp2.find_last_of('.') + 1;
+                        ext = tmp1[0].substr(dot,tmp1[0].length()-dot);
+                    }
+
+                    module.second = ext;
+                    tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")
+                                   +tmp1[0]);
+                }
             }
             else
             {

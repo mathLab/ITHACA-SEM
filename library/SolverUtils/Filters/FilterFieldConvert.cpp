@@ -197,7 +197,7 @@ void FilterFieldConvert::v_Initialise(
         {
             // see if m_variables is part of pFields definition and if
             // so use that field for extract
-            for(k = 0; k < pFields.num_elements(); ++j)
+            for(k = 0; k < pFields.num_elements(); ++k)
             {
                 if(pFields[k]->GetSession()->GetVariable(k)
                    == m_variables[j])
@@ -231,6 +231,11 @@ void FilterFieldConvert::v_Initialise(
             m_numSamples = 1;
         }
 
+        if(fieldMetaData.count("InitialTime"))
+        {
+            m_fieldMetaData["InitialTime"] = fieldMetaData["InitialTime"];
+        }
+        
         // Divide by scale
         NekDouble scale = v_GetScale();
         for (int n = 0; n < m_outFields.size(); ++n)

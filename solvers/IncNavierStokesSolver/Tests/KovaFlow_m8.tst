@@ -6,6 +6,7 @@
     <files>
         <file description="Session File">KovaFlow_m8.xml</file>
 	<file description="Session File">KovaFlow_m8.rst</file>
+	<file description="Session File">KovaFlow_m8_avg.rst</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

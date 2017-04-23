@@ -192,12 +192,28 @@ void FilterFieldConvert::v_Initialise(
         fld->Import(m_restartFile, fieldDef, fieldData, fieldMetaData);
 
         // Extract fields to output
+        int nfield,k;
         for (int j = 0; j < m_variables.size(); ++j)
         {
-            ASSERTL1(j < pFields.num_elements(), "Number of variables is larger than the size of pFields");
+            // see if m_variables is part of pFields definition and if
+            // so use that field for extract
+            for(k = 0; k < pFields.num_elements(); ++j)
+            {
+                if(pFields[k]->GetSession()->GetVariable(k)
+                   == m_variables[j])
+                {
+                    nfield = k;
+                    break;
+                }
+            }
+            if(k == pFields.num_elements())
+            {
+                nfield = 0;
+            }
+            
             for (int i = 0; i < fieldData.size(); ++i)
             {
-                pFields[j]->ExtractDataToCoeffs(
+                pFields[nfield]->ExtractDataToCoeffs(
                     fieldDef[i],
                     fieldData[i],
                     m_variables[j],

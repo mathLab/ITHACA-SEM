@@ -194,9 +194,10 @@ void FilterFieldConvert::v_Initialise(
         // Extract fields to output
         for (int j = 0; j < m_variables.size(); ++j)
         {
+            ASSERTL1(j < pFields.num_elements(), "Number of variables is larger than the size of pFields");
             for (int i = 0; i < fieldData.size(); ++i)
             {
-                pFields[0]->ExtractDataToCoeffs(
+                pFields[j]->ExtractDataToCoeffs(
                     fieldDef[i],
                     fieldData[i],
                     m_variables[j],

@@ -167,7 +167,7 @@ string InputModule::GuessFormat(string filename)
     vector<char> data(64, 0);
     inFile.read(&data[0], 64);
 
-    string check1(&data[0], 64);
+    string check(&data[0], 64);
 
     // Nek5000 format: first four characters are: #std
     if (data[0] == '#' && data[1] == 's' && data[2] == 't' && data[3] == 'd')

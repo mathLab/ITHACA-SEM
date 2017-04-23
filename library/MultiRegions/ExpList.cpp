@@ -2305,8 +2305,8 @@ namespace Nektar
                     modes_offset = 0;
                 }
 
-                datalen = LibUtilities::GetNumberOfCoefficients(fielddef->m_shapeType,
-                                                                fielddef->m_numModes, modes_offset);
+                datalen = LibUtilities::GetNumberOfCoefficients(
+                    fielddef->m_shapeType, fielddef->m_numModes, modes_offset);
 
                 const int elmtId = fielddef->m_elementIDs[i];
                 eIt = m_elmtToExpId.find(elmtId);

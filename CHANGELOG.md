@@ -11,6 +11,9 @@ v4.5.0
 - Added in sum factorisation version for pyramid expansions and orthogonal
   expansion in pyramids (!750)
 
+**FieldConvert**:
+- Add input module for Semtex field files (!777)
+
 **Documentation**:
 - Added the developer-guide repository as a submodule (!751)
 

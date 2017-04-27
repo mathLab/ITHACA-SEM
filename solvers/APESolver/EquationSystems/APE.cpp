@@ -599,11 +599,14 @@ void APE::GetStdVelocity(Array<OneD, NekDouble> &stdV)
 
 void APE::v_AuxFields(
         std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+        std::vector<Array<OneD, NekDouble> > &fieldphys,
         std::vector<MultiRegions::ExpListSharedPtr> &expansions,
         std::vector<std::string> &variables)
 {
     for (int i = 0; i < m_spacedim + 2; i++)
     {
+        fieldphys.push_back(m_bf[i]);
+
         Array<OneD, NekDouble> tmpC(GetNcoeffs());
 
         // ensure the field is C0-continuous
@@ -624,6 +627,8 @@ void APE::v_AuxFields(
     {
         for (int i = 0; i < (*x)->GetForces().num_elements(); ++i)
         {
+            fieldphys.push_back((*x)->GetForces()[i]);
+
             Array<OneD, NekDouble> tmpC(GetNcoeffs());
 
             m_bfField->IProductWRTBase((*x)->GetForces()[i], tmpC);

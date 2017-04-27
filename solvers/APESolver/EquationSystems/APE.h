@@ -110,6 +110,7 @@ class APE : public UnsteadySystem
 
         virtual void v_AuxFields(
                 std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<Array<OneD, NekDouble> > &fieldphys,
                 std::vector<MultiRegions::ExpListSharedPtr> &expansions,
                 std::vector<std::string> &variables);
 

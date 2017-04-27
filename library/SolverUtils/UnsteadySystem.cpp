@@ -224,8 +224,9 @@ namespace Nektar
 
             // Initialise filters
             Array<OneD, Array<OneD, NekDouble> > coeffs;
+            Array<OneD, Array<OneD, NekDouble> > phys;
             Array<OneD, MultiRegions::ExpListSharedPtr> expansions;
-            GetAllFields(m_fieldMetaDataMap, coeffs, expansions);
+            GetAllFields(m_fieldMetaDataMap, coeffs, phys, expansions);
 
             std::vector<FilterSharedPtr>::iterator x;
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
@@ -356,7 +357,7 @@ namespace Nektar
                                 "NaN found during time integration.");
                 }
                 // Update filters
-                GetAllFields(m_fieldMetaDataMap, coeffs, expansions);
+                GetAllFields(m_fieldMetaDataMap, coeffs, phys, expansions);
                 std::vector<FilterSharedPtr>::iterator x;
                 for (x = m_filters.begin(); x != m_filters.end(); ++x)
                 {

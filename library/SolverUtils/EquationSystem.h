@@ -648,12 +648,14 @@ namespace Nektar
 
             SOLVER_UTILS_EXPORT virtual void v_AuxFields(
                 std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<Array<OneD, NekDouble> > &fieldphys,
                 std::vector<MultiRegions::ExpListSharedPtr>        &expansions,
                 std::vector<std::string>             &variables);
 
             SOLVER_UTILS_EXPORT void GetAllFields(
                 LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
                 Array<OneD, Array<OneD, NekDouble> > &coeffs,
+                Array<OneD, Array<OneD, NekDouble> > &phys,
                 Array<OneD, MultiRegions::ExpListSharedPtr> &expansions);
             
         private:

@@ -2189,8 +2189,9 @@ namespace Nektar
         void EquationSystem::WriteFld(const std::string &outname)
         {
             Array<OneD, Array<OneD, NekDouble> > coeffs;
+            Array<OneD, Array<OneD, NekDouble> > phys;
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields;
-            GetAllFields(m_fieldMetaDataMap, coeffs, pFields);
+            GetAllFields(m_fieldMetaDataMap, coeffs, phys, pFields);
 
             std::vector<std::string> variables;
             std::string allVars = m_fieldMetaDataMap["Variables"] + m_fieldMetaDataMap["AuxVariables"];
@@ -2639,6 +2640,7 @@ namespace Nektar
 
         void EquationSystem::v_AuxFields(
             std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+            std::vector<Array<OneD, NekDouble> > &fieldphys,
             std::vector<MultiRegions::ExpListSharedPtr>        &expansions,
             std::vector<std::string>             &variables)
         {
@@ -2648,23 +2650,28 @@ namespace Nektar
         void EquationSystem::GetAllFields(
             LibUtilities::FieldMetaDataMap &fieldMetaDataMap,
             Array<OneD, Array<OneD, NekDouble> > &coeffs,
+            Array<OneD, Array<OneD, NekDouble> > &phys,
             Array<OneD, MultiRegions::ExpListSharedPtr> &expansions)
         {
             std::vector<Array<OneD, NekDouble> > auxCoeffs;
+            std::vector<Array<OneD, NekDouble> > auxPhys;
             std::vector<MultiRegions::ExpListSharedPtr> auxExpansions;
             std::vector<std::string> auxVars;
-            v_AuxFields(auxCoeffs, auxExpansions, auxVars);
+            v_AuxFields(auxCoeffs, auxPhys, auxExpansions, auxVars);
 
             coeffs = Array<OneD, Array<OneD, NekDouble> >(m_fields.num_elements() + auxCoeffs.size());
+            phys = Array<OneD, Array<OneD, NekDouble> >(m_fields.num_elements() + auxPhys.size());
             expansions = Array<OneD, MultiRegions::ExpListSharedPtr> (m_fields.num_elements() + auxExpansions.size());
             for (int i = 0; i < m_session->GetVariables().size(); ++i)
             {
-                coeffs[i] = m_fields[i]->GetCoeffs();
+                coeffs[i] = m_fields[i]->UpdateCoeffs();
+                phys[i]   = m_fields[i]->UpdatePhys();
                 expansions[i] = m_fields[i];
             }
             for (int i = 0; i < auxVars.size(); ++i)
             {
                 coeffs[m_session->GetVariables().size() + i] = auxCoeffs[i];
+                phys[m_session->GetVariables().size() + i]   = auxPhys[i];
                 expansions[m_session->GetVariables().size() + i] = auxExpansions[i];
             }
 

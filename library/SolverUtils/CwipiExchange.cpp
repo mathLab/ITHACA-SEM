@@ -52,7 +52,7 @@ namespace SolverUtils
 
 using namespace std;
 
-static void InterpCallback(
+void CwipiCoupling::InterpCallback(
     const int entities_dim,
     const int n_local_vertex,
     const int n_local_element,
@@ -89,7 +89,7 @@ static void InterpCallback(
 
     std::stringstream sst;
     sst << entities_dim << "," << n_local_vertex << "," << stride;
-    SenderCouplings[sst.str()](interpField, distCoords);
+    SendCallbackMap[sst.str()](interpField, distCoords);
 
     ASSERTL0(interpField.num_elements() == stride, "size mismatch");
     ASSERTL0(interpField[0].num_elements() == n_distant_point, "size mismatch");
@@ -412,9 +412,8 @@ void CwipiCoupling::SetupSend()
     std::stringstream sst;
     sst << m_spacedim << "," << m_evalField->GetGraph()->GetNvertices() << ","
         << m_nSendVars;
-    SenderCouplings[sst.str()] =
-        boost::bind(&CwipiCoupling::SendCallback, this, _1, _2);
-    cwipi_set_interpolation_function(m_couplingName.c_str(), InterpCallback);
+    SendCallbackMap[sst.str()] = boost::bind(&CwipiCoupling::SendCallback, this, _1, _2);
+    cwipi_set_interpolation_function(m_couplingName.c_str(), CwipiCoupling::InterpCallback);
 }
 
 void CwipiCoupling::EvaluateFields(
@@ -650,7 +649,7 @@ void CwipiCoupling::PrintProgressbar(const int position, const int goal) const
 
 void CwipiCoupling::SendCallback(
     Array<OneD, Array<OneD, NekDouble> > &interpField,
-    Array<OneD, Array<OneD, NekDouble> > distCoords)
+    Array<OneD, Array<OneD, NekDouble> > &distCoords)
 {
     ASSERTL0(interpField.num_elements() == m_nSendVars, "size mismatch");
 

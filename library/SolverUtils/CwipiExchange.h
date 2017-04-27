@@ -91,9 +91,35 @@ public:
                        Array<OneD, Array<OneD, NekDouble> > &field);
 
     void SendCallback(Array<OneD, Array<OneD, NekDouble> > &interpField,
-                      Array<OneD, Array<OneD, NekDouble> > distCoords);
+                      Array<OneD, Array<OneD, NekDouble> > &distCoords);
 
     void PrintProgressbar(const int position, const int goal) const;
+
+
+    static void InterpCallback(
+        const int entities_dim,
+        const int n_local_vertex,
+        const int n_local_element,
+        const int n_local_polhyedra,
+        const int n_distant_point,
+        const double local_coordinates[],
+        const int local_connectivity_index[],
+        const int local_connectivity[],
+        const int local_polyhedra_face_index[],
+        const int local_polyhedra_cell_to_face_connectivity[],
+        const int local_polyhedra_face_connectivity_index[],
+        const int local_polyhedra_face_connectivity[],
+        const double distant_points_coordinates[],
+        const int distant_points_location[],
+        const float distant_points_distance[],
+        const int distant_points_barycentric_coordinates_index[],
+        const double distant_points_barycentric_coordinates[],
+        const int stride,
+        const cwipi_solver_type_t solver_type,
+        const void *local_field,
+        void *distant_field);
+
+static int foo;
 
 protected:
     std::string m_couplingName;
@@ -178,10 +204,12 @@ private:
 
 typedef boost::shared_ptr<CwipiCoupling> CwipiCouplingSharedPointer;
 
-typedef boost::function<void(Array<OneD, Array<OneD, NekDouble> > interpField,
-                             Array<OneD, Array<OneD, NekDouble> > distCoords)>
+typedef boost::function<void(Array<OneD, Array<OneD, NekDouble> > &interpField,
+                             Array<OneD, Array<OneD, NekDouble> > &distCoords)>
     SendCallbackType;
-std::map<std::string, SendCallbackType> SenderCouplings;
+
+static std::map<std::string, SendCallbackType> SendCallbackMap;
+
 }
 }
 

@@ -94,7 +94,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                         cvs_possible.push_back(f->first);
 
                         NekDouble dis = c->DistanceTo(xyz);
-                        if (dis < 1e-6)
+                        if (dis < 1e-4)
                         {
                             cvs.push_back(f->first);
                         }
@@ -105,7 +105,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                     {
                         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(f->second);
                         NekDouble dis = s->DistanceTo(xyz);
-                        if (dis < 1e-3)
+                        if (dis < 1e-4)
                         {
                             sfs_possible.push_back(s->GetName());
                         }
@@ -134,7 +134,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                 for (int j = 0; j < ss.size(); j++)
                 {
                     NekDouble dis = ss[j].first->DistanceTo(xyz);
-                    if (dis < 1e-6)
+                    if (dis < 1e-4)
                     {
                         sfs.push_back(ss[j].first->GetName());
                     }
@@ -155,6 +155,8 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
         {
             return m_model->getEntity(sfs_possible[0]);
         }
+
+        file << xyz[0] << " " << xyz[1] << " " << xyz[2] << " 1" << endl;
     }
     else if (p->type == cfi::TYPE_FACE)
     {
@@ -177,7 +179,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                     {
                         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(f->second);
                         NekDouble dis      = s->DistanceTo(xyz);
-                        if (dis < 1e-6)
+                        if (dis < 1e-4)
                         {
                             sfs.push_back(f->first);
                         }
@@ -220,7 +222,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                     {
                         CADVertSharedPtr v = m_mesh->m_cad->GetVert(f->second);
                         NekDouble dis      = v->DistanceTo(xyz);
-                        if (dis < 1e-6)
+                        if (dis < 1e-4)
                         {
                             vts.push_back(f->first);
                         }
@@ -235,7 +237,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                     {
                         CADSurfSharedPtr s = m_mesh->m_cad->GetSurf(f->second);
                         NekDouble dis = s->DistanceTo(xyz);
-                        if (dis < 1e-6)
+                        if (dis < 1e-4)
                         {
                             sfs_possible.push_back(s->GetName());
                         }
@@ -246,7 +248,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                     {
                         CADCurveSharedPtr c = m_mesh->m_cad->GetCurve(f->second);
                         NekDouble dis = c->DistanceTo(xyz);
-                        if (dis < 1e-6)
+                        if (dis < 1e-4)
                         {
                             cvs_possible.push_back(c->GetName());
                         }
@@ -274,7 +276,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
                     for (int k = 0; k < ss.size(); k++)
                     {
                         NekDouble dis = ss[k].first->DistanceTo(xyz);
-                        if (dis < 1e-6)
+                        if (dis < 1e-4)
                         {
                             sfs.insert(ss[k].first->GetName());
                         }
@@ -340,7 +342,7 @@ cfi::Entity *CFIMesh::FigureOutCADParent(cfi::NodeDefinition node,
         }
         else
         {
-            ASSERTL0(false, "not sure");
+            ASSERTL0(false, "not sure - point");
         }
     }
     else
@@ -372,8 +374,8 @@ void CFIMesh::Process()
 
     cout << "Nodes " << cfinodes->size() << endl;
 
-    //file.open("pts.3D");
-    //file << "x y z value" << endl;
+    file.open("pts.3D");
+    file << "x y z value" << endl;
 
     // filter all mesh nodes into a indexed map and project to CAD
     for (vector<cfi::NodeDefinition>::iterator it = cfinodes->begin();
@@ -616,7 +618,7 @@ void CFIMesh::Process()
 
             E->m_parentCAD = m_mesh->m_cad->GetSurf(sfs[0]);
             tags.clear();
-            tags.push_back(sfs[0]); //
+            tags.push_back(sfs[0]);
             E->SetTagList(tags);
             m_mesh->m_element[2].push_back(E);
         }
@@ -690,11 +692,16 @@ void CFIMesh::Process()
         }
     }
 
-    //ProcessVertices();
-    //ProcessEdges();
+    //m_mesh->m_element[3].clear();
+    //m_mesh->m_expDim=2;
+
+    ProcessVertices();
+    ProcessEdges();
     ProcessFaces();
     ProcessElements();
     ProcessComposites();
+
+    //return;
 
     // surface edges are different to mesh edges
     // first of all need to process them so they are unique

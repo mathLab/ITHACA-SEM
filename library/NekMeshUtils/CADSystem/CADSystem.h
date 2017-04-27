@@ -43,6 +43,8 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
+
 #include "CADObject.h"
 
 namespace Nektar
@@ -211,6 +213,9 @@ public:
     {
         return m_verts.size();
     }
+
+    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetPeriodicTranslationVector(
+                int first, int second);
 
 protected:
     /// Name of cad file

@@ -84,6 +84,8 @@ namespace Nektar
             std::vector<int>                                m_intVariables;
 
             std::vector<FilterSharedPtr>                    m_filters;
+            /// Interface for external solvers
+            SolverUtils::CwipiCouplingSharedPointer         m_coupling;
 
             /// Initialises UnsteadySystem class members.
             SOLVER_UTILS_EXPORT UnsteadySystem(

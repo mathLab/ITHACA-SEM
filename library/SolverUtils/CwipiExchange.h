@@ -79,15 +79,13 @@ public:
 
     void Send(const int step,
               const NekDouble time,
-              const Array<OneD, const Array<OneD, NekDouble> > &field);
-
-    void Receive(const int step,
-                 const NekDouble time,
-                 Array<OneD, Array<OneD, NekDouble> > &field);
+              const Array<OneD, const Array<OneD, NekDouble> > &field,
+              LibUtilities::FieldMetaDataMap &fieldMetaDataMap);
 
     void ReceiveInterp(const int step,
                        const NekDouble time,
-                       Array<OneD, Array<OneD, NekDouble> > &field);
+                       Array<OneD, Array<OneD, NekDouble> > &field,
+                       LibUtilities::FieldMetaDataMap &fieldMetaDataMap);
 
     void SendCallback(Array<OneD, Array<OneD, NekDouble> > &interpField,
                       Array<OneD, Array<OneD, NekDouble> > &distCoords);
@@ -174,6 +172,8 @@ protected:
 private:
     void ReadConfig(LibUtilities::SessionReaderSharedPtr session);
 
+    std::vector<int> GenerateVariableMapping(std::vector<std::string> &vars, std::vector<std::string> &transVars);
+
     void SetupReceive();
 
     void SetupSend();
@@ -181,6 +181,10 @@ private:
     void SendComplete();
 
     void ReceiveStart();
+
+    void Receive(const int step,
+                 const NekDouble time,
+                 Array<OneD, Array<OneD, NekDouble> > &field);
 
     void EvaluateFields(Array<OneD, Array<OneD, NekDouble> > interpField,
                         Array<OneD, Array<OneD, NekDouble> > distCoords);

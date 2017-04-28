@@ -304,6 +304,24 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
     }
 }
 
+
+vector<int> CwipiCoupling::GenerateVariableMapping(vector<string> &vars, vector<string> &transVars)
+{
+    vector<int> transToVars;
+    Array<OneD, Array<OneD, NekDouble> > sendField(transVars.size());
+    for (int i = 0; i < transVars.size(); ++i)
+    {
+        auto it2 = find(vars.begin(), vars.end(), transVars[i]);
+        ASSERTL0(it2 != vars.end(),
+                "send variable " + transVars[i] + " not found");
+        int id = distance(vars.begin(), it2);
+
+        transToVars.push_back(id);
+    }
+
+    return transToVars;
+}
+
 void CwipiCoupling::SetupReceive()
 {
     int oversamp = boost::lexical_cast<int>(m_config["OVERSAMPLE"]);
@@ -685,23 +703,29 @@ void CwipiCoupling::SendCallback(
 void CwipiCoupling::Send(
     const int step,
     const NekDouble time,
-    const Array<OneD, const Array<OneD, NekDouble> > &field)
+    const Array<OneD, const Array<OneD, NekDouble> > &field,
+    LibUtilities::FieldMetaDataMap &fieldMetaDataMap)
 {
     if (m_nSendVars < 1 or m_sendSteps < 1)
     {
         return;
     }
 
-    ASSERTL1(m_nSendVars == field.num_elements(), "field size mismatch");
-
     if (step >= m_lastSend + m_sendSteps)
     {
-
         SendComplete();
 
         m_lastSend = step;
 
-        m_sendField = field;
+        string tmp = fieldMetaDataMap["Variables"] + fieldMetaDataMap["AuxVariables"];
+        vector<string> vars;
+        ParseUtils::GenerateOrderedStringVector(tmp.c_str(), vars);
+        vector<int> sendVarsToVars = GenerateVariableMapping(vars, m_sendFieldNames);
+        m_sendField = Array<OneD, Array<OneD, NekDouble> > (m_nSendVars);
+        for (int i = 0; i < sendVarsToVars.size(); ++i)
+        {
+            m_sendField[i] = field[sendVarsToVars[i]];
+        }
 
         if (m_evalField->GetComm()->GetRank() == 0 &&
             m_evalField->GetSession()->DefinesCmdLineArgument("verbose"))
@@ -793,25 +817,35 @@ void CwipiCoupling::ReceiveStart()
 
 void CwipiCoupling::ReceiveInterp(const int step,
                                   const NekDouble time,
-                                  Array<OneD, Array<OneD, NekDouble> > &field)
+                                  Array<OneD, Array<OneD, NekDouble> > &field,
+                                  LibUtilities::FieldMetaDataMap &fieldMetaDataMap)
 {
     if (m_nRecvVars < 1 or m_recvSteps < 1)
     {
         return;
     }
 
-    ASSERTL1(m_nRecvVars == field.num_elements(), "field size mismatch");
+    Array<OneD, Array<OneD, NekDouble> > recvFields(m_nRecvVars);
+    string tmp = fieldMetaDataMap["Variables"] + fieldMetaDataMap["AuxVariables"];
+    vector<string> vars;
+    ParseUtils::GenerateOrderedStringVector(tmp.c_str(), vars);
+    vector<int> recvVarsToVars = GenerateVariableMapping(vars, m_recvFieldNames);
+    ASSERTL1(m_nRecvVars == recvVarsToVars.size(), "field size mismatch");
+    for (int i = 0; i < recvVarsToVars.size(); ++i)
+    {
+        recvFields[i] = field[recvVarsToVars[i]];
+    }
 
     int nq = m_evalField->GetTotPoints();
 
-    // make sure we have sensible data in old/new field the first time this
+    // make sure we have sensible data in old/new recvFields the first time this
     // method is called
     if (m_lastReceive < 0)
     {
         for (int i = 0; i < m_nRecvVars; ++i)
         {
-            Vmath::Vcopy(nq, field[i], 1, m_oldFields[i], 1);
-            Vmath::Vcopy(nq, field[i], 1, m_newFields[i], 1);
+            Vmath::Vcopy(nq, recvFields[i], 1, m_oldFields[i], 1);
+            Vmath::Vcopy(nq, recvFields[i], 1, m_newFields[i], 1);
         }
     }
 
@@ -836,7 +870,7 @@ void CwipiCoupling::ReceiveInterp(const int step,
                        (1 - fact),
                        m_oldFields[i],
                        1,
-                       field[i],
+                       recvFields[i],
                        1);
     }
 }

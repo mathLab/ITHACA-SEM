@@ -675,11 +675,6 @@ namespace Nektar
 
             // Zero all physical fields initially
             ZeroPhysFields();
-
-            if (m_session->DefinesElement("Nektar/Coupling"))
-            {
-                m_coupling = MemoryManager<SolverUtils::CwipiCoupling>::AllocateSharedPtr(m_fields[0], 0, 1.0);
-            }
         }
 
         /**
@@ -2248,72 +2243,6 @@ namespace Nektar
                 varNames << *it << ",";
             }
             fieldMetaDataMap["AuxVariables"] = varNames.str();
-        }
-
-
-        void EquationSystem::SendFields(int step)
-        {
-            if (! m_coupling)
-            {
-                return;
-            }
-
-            // find the couplings ReceiveVariables
-            Array<OneD, Array<OneD, NekDouble> > coeffs;
-            Array<OneD, Array<OneD, NekDouble> > phys;
-            Array<OneD, MultiRegions::ExpListSharedPtr> pFields;
-            GetAllFields(m_fieldMetaDataMap, coeffs, phys, pFields);
-            string tmp =
-                m_fieldMetaDataMap["Variables"] + m_fieldMetaDataMap["AuxVariables"];
-            vector<string> vars;
-            ParseUtils::GenerateOrderedStringVector(tmp.c_str(), vars);
-
-            vector<string> sendVars = m_coupling->GetSendFieldNames();
-            Array<OneD, Array<OneD, NekDouble> > sendField(sendVars.size());
-            for (int i = 0; i < sendVars.size(); ++i)
-            {
-                auto it2 = find(vars.begin(), vars.end(), sendVars[i]);
-                ASSERTL0(it2 != vars.end(),
-                        "send variable " + sendVars[i] + " not found");
-                int id = distance(vars.begin(), it2);
-
-                sendField[i] = phys[id];
-            }
-
-            m_coupling->Send(step, m_time, sendField);
-        }
-
-
-        void EquationSystem::ReceiveFields(int step)
-        {
-            if (! m_coupling)
-            {
-                return;
-            }
-
-            // find the couplings ReceiveVariables
-            Array<OneD, Array<OneD, NekDouble> > coeffs;
-            Array<OneD, Array<OneD, NekDouble> > phys;
-            Array<OneD, MultiRegions::ExpListSharedPtr> pFields;
-            GetAllFields(m_fieldMetaDataMap, coeffs, phys, pFields);
-            string tmp =
-                m_fieldMetaDataMap["Variables"] + m_fieldMetaDataMap["AuxVariables"];
-            vector<string> vars;
-            ParseUtils::GenerateOrderedStringVector(tmp.c_str(), vars);
-
-            vector<string> recvVars = m_coupling->GetRecvFieldNames();
-            Array<OneD, Array<OneD, NekDouble> > recField(recvVars.size());
-            for (int i = 0; i < recvVars.size(); ++i)
-            {
-                auto it2 = find(vars.begin(), vars.end(), recvVars[i]);
-                ASSERTL0(it2 != vars.end(),
-                        "receive variable " + recvVars[i] + " not found");
-                int id = distance(vars.begin(), it2);
-
-                recField[i] = phys[id];
-            }
-
-            m_coupling->ReceiveInterp(step, m_time, recField);
         }
 
     }

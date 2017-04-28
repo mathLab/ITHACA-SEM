@@ -110,6 +110,11 @@ namespace Nektar
             // By default attempt to forward transform initial condition.
             m_homoInitialFwd = true;
 
+            if (m_session->DefinesElement("Nektar/Coupling"))
+            {
+                m_coupling = MemoryManager<SolverUtils::CwipiCoupling>::AllocateSharedPtr(m_fields[0], 0, 1.0);
+            }
+
             // Set up filters
             LibUtilities::FilterMap::const_iterator x;
             LibUtilities::FilterMap f = m_session->GetFilters();
@@ -291,8 +296,11 @@ namespace Nektar
                     break;
                 }
 
-                SendFields(step);
-                ReceiveFields(step);
+                if (m_coupling)
+                {
+                    m_coupling->Send(step, m_time, phys, m_fieldMetaDataMap);
+                    m_coupling->ReceiveInterp(step, m_time, phys, m_fieldMetaDataMap);
+                }
 
                 fields = m_intScheme->TimeIntegrate(
                     step, m_timestep, m_intSoln, m_ode);
@@ -459,6 +467,8 @@ namespace Nektar
             {
                 (*x)->Finalise(m_fieldMetaDataMap, coeffs, expansions, m_time);
             }
+
+            m_coupling->FinalizeCoupling();
             
             // Print for 1D problems
             if(m_spacedim == 1)

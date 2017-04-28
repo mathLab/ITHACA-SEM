@@ -78,9 +78,6 @@ InputSemtex::~InputSemtex()
  * memory and populates the field definitions to match the data format. Semtex
  * is a classic nodal-Lagrangian spectral element code at a single polynomial
  * order, meaning that the field data are set up according to this structure.
- *
- * This module is adapted from the VisIt visualisation software, which supports
- * a number of Semtex inputs.
  */
 void InputSemtex::Process(po::variables_map &vm)
 {
@@ -92,12 +89,12 @@ void InputSemtex::Process(po::variables_map &vm)
         }
     }
 
+    // Variables to be read from session file
     string sessionName, date, fields, endian;
     int nr, ns, nz, nelmt, step;
     NekDouble time, dt, kinvis, beta;
 
-    string fldending = "fldsem";
-    ifstream file(m_f->m_inputfiles[fldending][0].c_str(), ios::binary);
+    ifstream file(m_f->m_inputfiles["fldsem"][0].c_str(), ios::binary);
 
     // -- Read header information.
     char buf[25];
@@ -108,6 +105,7 @@ void InputSemtex::Process(po::variables_map &vm)
     sessionName = string(buf, 25);
     boost::trim(sessionName);
     getline(file, line);
+    m_f->m_fieldMetaDataMap["SessionName0"] = sessionName;
 
     // Date
     file.read(buf, 25);
@@ -126,14 +124,17 @@ void InputSemtex::Process(po::variables_map &vm)
     // Time
     file >> time;
     getline(file, line);
+    m_f->m_fieldMetaDataMap["Time"] = boost::lexical_cast<string>(time);
 
     // Timestep
     file >> dt;
     getline(file, line);
+    m_f->m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<string>(dt);
 
     // Viscosity
     file >> kinvis;
     getline(file, line);
+    m_f->m_fieldMetaDataMap["Kinvis"] = boost::lexical_cast<string>(kinvis);
 
     // Beta
     file >> beta;
@@ -145,7 +146,7 @@ void InputSemtex::Process(po::variables_map &vm)
     boost::trim(fields);
     getline(file, line);
 
-    // TODO Endian-ness
+    // Endian-ness
     LibUtilities::EndianType systemEndian =  LibUtilities::Endianness();
     std::string endianSearch;
     if (systemEndian == LibUtilities::eEndianBig)

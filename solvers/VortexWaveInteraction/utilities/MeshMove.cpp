@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
     // determine the I regions (3 region expected)
     // hypothesys: the layes have the same number of points
 
-    int nIregions, lastIregion;
+    int nIregions, lastIregion=0;
     const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConditions  = streak->GetBndConditions();
     Array<OneD, int> Iregions =Array<OneD, int>(bndConditions.num_elements(),-1);
 
@@ -2034,7 +2034,7 @@ cout<<"Computestreakpositions"<<endl;
      Array<OneD, NekDouble> derstreak(nq);
      streak->PhysDeriv(MultiRegions::eY, streak->GetPhys(), derstreak);
      int elmtid, offset;
-     NekDouble U,dU;
+     NekDouble U=0.0,dU=0.0;
      NekDouble F=1000;
 
      if(verts==true)//only for verts makes sense to init the coord values..
@@ -2380,7 +2380,7 @@ cout<<"nlays="<<nlays<<endl;
       NekDouble normtmp = 0.0;
       NekDouble xbef = 0.0;
       NekDouble ybef=0.0;
-      NekDouble xtmp,ytmp,normnext,xnext,ynext,diff;
+      NekDouble xtmp,ytmp,normnext=0.0,xnext=0.0,ynext=0.0,diff;
       NekDouble Ubef = 0.0, Utmp = 0.0, Unext = 0.0;
       Array<OneD, NekDouble> coord(2);
       int elmtid,offset;
@@ -3292,7 +3292,7 @@ void MoveOutsidePointsfixedxpos(int npedge, SpatialDomains::MeshGraphSharedPtr m
           SpatialDomains::PointGeomSharedPtr vertex = mesh->GetVertex(n);
           NekDouble x,y,z;
           vertex->GetCoords(x,y,z);
-          int qp_closer;
+          int qp_closer=0;
           //determine the closer xold_up
           NekDouble tmp=1000;
 

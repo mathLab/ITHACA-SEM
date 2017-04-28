@@ -108,7 +108,7 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
 
     int i, j;
     bool setnantovalue = false;
-    NekDouble defvalue;
+    NekDouble defvalue=0.0;
 
     if (!boost::iequals(m_config["setnantovalue"].as<string>(), "NotSet"))
     {

@@ -219,7 +219,7 @@ namespace Nektar
                 // necessary
                 for (int n = 0; n < expList->GetNumElmts(); ++n)
                 {
-                    int nel = expList->GetOffset_Elmt_Id(n);
+                    int nel = n;
                     int offset = expList->GetCoeff_Offset(n);
                     int ncoeffs = expList->GetExp(nel)->GetNcoeffs();
 

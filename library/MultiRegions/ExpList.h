@@ -475,11 +475,11 @@ namespace Nektar
             /**
              * This operation is evaluated as:
              * \f{tabbing}
-             * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \      \
-             * \> \> Do \= $i=$  $0,N_m^e-1$ \                          \
+             * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+             * \> \> Do \= $i=$  $0,N_m^e-1$ \\
              * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
-             * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \      \
-             * \> \> continue \                                 \
+             * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
+             * \> \> continue \\
              * \> continue
              * \f}
              * where \a map\f$[e][i]\f$ is the mapping array and \a
@@ -669,10 +669,6 @@ namespace Nektar
             /// Get the start offset position for a global list of m_phys
             /// correspoinding to element n.
             inline int GetPhys_Offset(int n) const;
-
-            /// Get the element id associated with the n th
-            /// consecutive block of data in  #m_phys and #m_coeffs
-            inline int GetOffset_Elmt_Id(int n) const;
 
             /// This function returns (a reference to) the array
             /// \f$\boldsymbol{\hat{u}}_l\f$ (implemented as #m_coeffs)
@@ -963,6 +959,10 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void ClearGlobalLinSysManager(void);
 
         protected:
+            /// Definition of the total number of degrees of freedom and
+            /// quadrature points and offsets to access data
+            void SetCoeffPhysOffsets();
+
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
                 const GlobalLinSysKey &mkey,
                 const boost::shared_ptr<AssemblyMapCG> &locToGloMap);
@@ -1053,14 +1053,6 @@ namespace Nektar
 
             /// Offset of elemental data into the array #m_phys
             Array<OneD, int>  m_phys_offset;
-
-            /// Array containing the element id #m_offset_elmt_id[n]
-            /// that the n^th consecutive block of data in #m_coeffs
-            /// and #m_phys is associated, i.e. for an array of
-            /// constant expansion size and single shape elements
-            /// m_phys[n*m_npoints] is the data related to
-            /// m_exp[m_offset_elmt_id[n]];
-            Array<OneD, int>  m_offset_elmt_id;
 
             NekOptimize::GlobalOptParamSharedPtr m_globalOptParam;
 
@@ -2098,14 +2090,6 @@ namespace Nektar
         inline int ExpList::GetPhys_Offset(int n) const
         {
             return m_phys_offset[n];
-        }
-
-        /**
-         *
-         */
-        inline int ExpList::GetOffset_Elmt_Id(int n) const
-        {
-            return m_offset_elmt_id[n];
         }
 
         /**

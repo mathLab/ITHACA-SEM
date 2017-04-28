@@ -60,7 +60,7 @@ std::string TenTusscher06::lookupIds[4] = {
 
 std::string TenTusscher06::def =
         LibUtilities::SessionReader::RegisterDefaultSolverInfo(
-                "CellModelVariant", "eEpicardium");
+                "CellModelVariant", "Epicardium");
 
 /**
  *

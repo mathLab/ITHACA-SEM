@@ -135,10 +135,6 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &normals);
 
         private:
-            /// Definition of the total number of degrees of freedom and
-            /// quadrature points and offsets to access datax
-            void SetCoeffPhysOffsets(void);
-
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals();
 

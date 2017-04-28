@@ -33,9 +33,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <NekMeshUtils/MeshElements/Mesh.h>
-#include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
+#include <LibUtilities/Foundations/ManagerAccess.h>
+#include <NekMeshUtils/MeshElements/Mesh.h>
 
 using namespace std;
 
@@ -96,17 +96,20 @@ unsigned int Mesh::GetNumEntities()
  * - Finally, any boundary elements are updated so that they have the same
  *   interior degrees of freedom as their corresponding edge or face links.
  */
-void Mesh::MakeOrder(int                      order,
-                     LibUtilities::PointsType distType)
+void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
 {
+    // Going to make a copy of the curavture information, since this is cheaper
+    // than using Nektar's Geometry objects. Currently, the geometry objects
+    // which make up a 3D element dont use the volume nodes, they are just
+    // stored, so we can get away without copying them.
+
     int id = m_vertexSet.size();
 
     EdgeSet::iterator eit;
     FaceSet::iterator fit;
 
-    boost::unordered_map<int, SpatialDomains::Geometry1DSharedPtr> edgeGeoms;
-    boost::unordered_map<int, SpatialDomains::Geometry2DSharedPtr> faceGeoms;
-    boost::unordered_map<int, SpatialDomains::GeometrySharedPtr> volGeoms;
+    boost::unordered_map<int, EdgeSharedPtr> edgeCopies;
+    boost::unordered_map<int, FaceSharedPtr> faceCopies;
 
     // Decide on distribution of points to use for each shape type based on the
     // input we've been supplied.
@@ -127,7 +130,7 @@ void Mesh::MakeOrder(int                      order,
         pTypes[LibUtilities::eTriangle] = LibUtilities::eNodalTriElec;
         pTypes[LibUtilities::eQuadrilateral] =
             LibUtilities::eGaussLobattoLegendre;
-        pTypes[LibUtilities::ePrism] = LibUtilities::eNodalPrismElec;
+        pTypes[LibUtilities::ePrism]       = LibUtilities::eNodalPrismElec;
         pTypes[LibUtilities::eTetrahedron] = LibUtilities::eNodalTetElec;
         pTypes[LibUtilities::eHexahedron] = LibUtilities::eGaussLobattoLegendre;
     }
@@ -136,32 +139,48 @@ void Mesh::MakeOrder(int                      order,
         ASSERTL1(false, "Mesh::MakeOrder does not support this points type.");
     }
 
-    // Begin by generating Nektar++ geometry objects for edges, faces and
-    // elements so that we don't affect any neighbouring elements in the mesh as
-    // we process each element.
-    for(eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++)
+    // Begin by copying mesh objects for edges and faces so that we don't affect
+    // any neighbouring elements in the mesh as we process each element. At the
+    // same time we delete the curvature from the original edge and face, which
+    // will be re-added with the MakeOrder routine.
+
+    // First, we fill in the volume-interior nodes. This preserves the original
+    // curvature of the mesh.
+    const int nElmt = m_element[m_expDim].size();
+    int tmpId = 0;
+    for (int i = 0; i < nElmt; ++i)
     {
-        SpatialDomains::Geometry1DSharedPtr geom =
-            (*eit)->GetGeom(m_spaceDim);
+        if (m_verbose)
+        {
+            LibUtilities::PrintProgressbar(i, nElmt, "MakeOrder: Elements: ");
+        }
+        ElementSharedPtr el                    = m_element[m_expDim][i];
+        SpatialDomains::GeometrySharedPtr geom = el->GetGeom(m_spaceDim);
         geom->FillGeom();
-        edgeGeoms[(*eit)->m_id] = geom;
+        el->MakeOrder(order, geom, pTypes[el->GetConf().m_e], m_spaceDim, tmpId);
     }
 
-    for(fit = m_faceSet.begin(); fit != m_faceSet.end(); fit++)
+    // Now make copies of each of the edges.
+    for (eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++)
     {
-        SpatialDomains::Geometry2DSharedPtr geom =
-            (*fit)->GetGeom(m_spaceDim);
-        geom->FillGeom();
-        faceGeoms[(*fit)->m_id] = geom;
+        edgeCopies[(*eit)->m_id] = EdgeSharedPtr(new Edge(*(*eit)));
+        (*eit)->m_edgeNodes.clear();
     }
 
-    for(int i = 0; i < m_element[m_expDim].size(); i++)
+    // Now copy faces. Make sure that this is a "deep copy", so that the face's
+    // edge list corresponds to the copied edges, otherwise we end up in a
+    // non-consistent state.
+    for (fit = m_faceSet.begin(); fit != m_faceSet.end(); fit++)
     {
-        ElementSharedPtr el = m_element[m_expDim][i];
-        SpatialDomains::GeometrySharedPtr geom =
-            el->GetGeom(m_spaceDim);
-        geom->FillGeom();
-        volGeoms[el->GetId()] = geom;
+        FaceSharedPtr tmpFace = FaceSharedPtr(new Face(*(*fit)));
+
+        for (int i = 0; i < tmpFace->m_edgeList.size(); ++i)
+        {
+            tmpFace->m_edgeList[i] = edgeCopies[tmpFace->m_edgeList[i]->m_id];
+        }
+
+        faceCopies[(*fit)->m_id] = tmpFace;
+        (*fit)->m_faceNodes.clear();
     }
 
     boost::unordered_set<int> processedEdges, processedFaces, processedVolumes;
@@ -176,8 +195,8 @@ void Mesh::MakeOrder(int                      order,
     {
         if (m_verbose)
         {
-            LibUtilities::PrintProgressbar(
-                ct, m_edgeSet.size(), "MakeOrder: Edges: ");
+            LibUtilities::PrintProgressbar(ct, m_edgeSet.size(),
+                                           "MakeOrder: Edges: ");
         }
         int edgeId = (*eit)->m_id;
 
@@ -186,8 +205,12 @@ void Mesh::MakeOrder(int                      order,
             continue;
         }
 
-        (*eit)->MakeOrder(order, edgeGeoms[edgeId],
-                          pTypes[LibUtilities::eSegment], m_spaceDim, id);
+        EdgeSharedPtr cpEdge                   = edgeCopies[edgeId];
+        SpatialDomains::GeometrySharedPtr geom = cpEdge->GetGeom(m_spaceDim);
+        geom->FillGeom();
+
+        (*eit)->MakeOrder(order, geom, pTypes[LibUtilities::eSegment],
+                          m_spaceDim, id);
         processedEdges.insert(edgeId);
     }
 
@@ -198,8 +221,8 @@ void Mesh::MakeOrder(int                      order,
     {
         if (m_verbose)
         {
-            LibUtilities::PrintProgressbar(
-                ct, m_faceSet.size(), "MakeOrder: Faces: ");
+            LibUtilities::PrintProgressbar(ct, m_faceSet.size(),
+                                           "MakeOrder: Faces: ");
         }
         int faceId = (*fit)->m_id;
 
@@ -208,10 +231,14 @@ void Mesh::MakeOrder(int                      order,
             continue;
         }
 
-        LibUtilities::ShapeType type = (*fit)->m_vertexList.size() == 3 ?
-            LibUtilities::eTriangle : LibUtilities::eQuadrilateral;
-        (*fit)->MakeOrder(order, faceGeoms[faceId], pTypes[type], m_spaceDim,
-                          id);
+        FaceSharedPtr cpFace                   = faceCopies[faceId];
+        SpatialDomains::GeometrySharedPtr geom = cpFace->GetGeom(m_spaceDim);
+        geom->FillGeom();
+
+        LibUtilities::ShapeType type = (*fit)->m_vertexList.size() == 3
+                                           ? LibUtilities::eTriangle
+                                           : LibUtilities::eQuadrilateral;
+        (*fit)->MakeOrder(order, geom, pTypes[type], m_spaceDim, id);
         processedFaces.insert(faceId);
     }
 
@@ -219,7 +246,7 @@ void Mesh::MakeOrder(int                      order,
     for (int i = 0; i < m_element[1].size(); ++i)
     {
         ElementSharedPtr el = m_element[1][i];
-        EdgeSharedPtr edge = el->GetEdgeLink();
+        EdgeSharedPtr edge  = el->GetEdgeLink();
 
         if (!edge)
         {
@@ -235,7 +262,7 @@ void Mesh::MakeOrder(int                      order,
     for (int i = 0; i < m_element[2].size(); ++i)
     {
         ElementSharedPtr el = m_element[2][i];
-        FaceSharedPtr face = el->GetFaceLink();
+        FaceSharedPtr face  = el->GetFaceLink();
 
         if (!face)
         {
@@ -248,17 +275,13 @@ void Mesh::MakeOrder(int                      order,
         el->SetVolumeNodes(face->m_faceNodes);
     }
 
-    // Finally, fill in volumes.
-    const int nElmt = m_element[m_expDim].size();
     for (int i = 0; i < nElmt; ++i)
     {
-        if (m_verbose)
+        vector<NodeSharedPtr> tmp = m_element[m_expDim][i]->GetVolumeNodes();
+        for (int j = 0; j < tmp.size(); ++j)
         {
-            LibUtilities::PrintProgressbar(i, nElmt, "MakeOrder: Elements: ");
+            tmp[j]->m_id = id++;
         }
-        ElementSharedPtr el = m_element[m_expDim][i];
-        el->MakeOrder(order, volGeoms[el->GetId()], pTypes[el->GetConf().m_e],
-                      m_spaceDim, id);
     }
 
     if (m_verbose)
@@ -266,6 +289,5 @@ void Mesh::MakeOrder(int                      order,
         cout << endl;
     }
 }
-
 }
 }

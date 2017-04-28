@@ -27,6 +27,11 @@ SET(NekMeshHeaders
     ProcessModules/ProcessOptiExtract.h
     ProcessModules/ProcessInsertSurface.h
     ProcessModules/ProcessExtrude.h
+    ProcessModules/ProcessVarOpti/ProcessVarOpti.h
+    ProcessModules/ProcessVarOpti/NodeOpti.h
+    ProcessModules/ProcessVarOpti/ElUtil.h
+    ProcessModules/ProcessVarOpti/Evaluator.hxx
+    ProcessModules/ProcessVarOpti/Hessian.hxx
 )
 
 SET(NekMeshSources
@@ -59,6 +64,10 @@ SET(NekMeshSources
     ProcessModules/ProcessOptiExtract.cpp
     ProcessModules/ProcessInsertSurface.cpp
     ProcessModules/ProcessExtrude.cpp
+    ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
+    ProcessModules/ProcessVarOpti/PreProcessing.cpp
+    ProcessModules/ProcessVarOpti/NodeOpti.cpp
+    ProcessModules/ProcessVarOpti/ElUtil.cpp
 )
 
 IF (NEKTAR_USE_CCM)
@@ -74,19 +83,10 @@ ENDIF (NEKTAR_USE_VTK)
 IF (NEKTAR_USE_MESHGEN)
     SET(NekMeshHeaders ${NekMeshHeaders}
             ProcessModules/ProcessVarOpti/NodeOptiCAD.h
-            ProcessModules/ProcessVarOpti/ProcessVarOpti.h
-            ProcessModules/ProcessVarOpti/NodeOpti.h
-            ProcessModules/ProcessVarOpti/ElUtil.h
-            ProcessModules/ProcessVarOpti/Evaluator.hxx
-            ProcessModules/ProcessVarOpti/Hessian.hxx
-            InputModules/InputCAD.h)
+            InputModules/InputMCF.h)
     SET(NekMeshSources ${NekMeshSources}
             ProcessModules/ProcessVarOpti/NodeOptiCAD.cpp
-            ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
-            ProcessModules/ProcessVarOpti/PreProcessing.cpp
-            ProcessModules/ProcessVarOpti/NodeOpti.cpp
-            ProcessModules/ProcessVarOpti/ElUtil.cpp
-            InputModules/InputCAD.cpp)
+            InputModules/InputMCF.cpp)
 ENDIF (NEKTAR_USE_MESHGEN)
 
 # Don't use macro -- this way we can just link against NekMeshUtils and
@@ -136,6 +136,7 @@ ADD_NEKTAR_TEST        (Gmsh/SquareTriLinear)
 # Nektar tests
 ADD_NEKTAR_TEST        (Nektar/HexLinear)
 ADD_NEKTAR_TEST        (Nektar/Tube45)
+ADD_NEKTAR_TEST        (Nektar/UKMesh)
 # Nek5000 tests
 ADD_NEKTAR_TEST        (Nek5000/3da)
 ADD_NEKTAR_TEST        (Nek5000/r1854a)
@@ -149,6 +150,9 @@ IF(NEKTAR_USE_MESHGEN)
     ADD_NEKTAR_TEST        (MeshGen/sphere)
     ADD_NEKTAR_TEST        (MeshGen/2d-cad)
     ADD_NEKTAR_TEST        (MeshGen/2d-naca)
-    # varopti tests
-    ADD_NEKTAR_TEST        (MeshGen/varopti_cubesphere)
+    ADD_NEKTAR_TEST        (MeshGen/t106step)
+    ADD_NEKTAR_TEST_LENGTHY       (MeshGen/rev)
 ENDIF()
+
+# varopti tests
+ADD_NEKTAR_TEST_LENGTHY       (MeshGen/varopti_cubesphere)

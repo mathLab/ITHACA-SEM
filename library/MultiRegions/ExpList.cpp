@@ -105,7 +105,6 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
-            m_offset_elmt_id(),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
@@ -132,7 +131,6 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
-            m_offset_elmt_id(),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
@@ -160,7 +158,6 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
-            m_offset_elmt_id(),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
@@ -187,7 +184,6 @@ namespace Nektar
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
-            m_offset_elmt_id(),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
@@ -225,7 +221,6 @@ namespace Nektar
             m_coll_phys_offset(in.m_coll_phys_offset),
             m_coeff_offset(in.m_coeff_offset),
             m_phys_offset(in.m_phys_offset),
-            m_offset_elmt_id(in.m_offset_elmt_id),
             m_globalOptParam(in.m_globalOptParam),
             m_blockMat(in.m_blockMat),
             m_WaveSpace(false)
@@ -236,6 +231,35 @@ namespace Nektar
             {
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs, 0.0);
                 m_phys   = Array<OneD, NekDouble>(m_npoints, 0.0);
+            }
+        }
+
+
+        /**
+         * Each expansion (local element) is processed in turn to
+         * determine the number of coefficients and physical data
+         * points it contributes to the domain. Twoe arrays,
+         * #m_coeff_offset are #m_phys_offset are also initialised and
+         * updated to store the data offsets of each element in the
+         * #m_coeffs and #m_phys arrays, and the element id that each
+         * consecutive block is associated respectively.
+         */
+        void ExpList::SetCoeffPhysOffsets()
+        {
+            int i;
+
+            // Set up offset information and array sizes
+            m_coeff_offset   = Array<OneD,int>(m_exp->size());
+            m_phys_offset    = Array<OneD,int>(m_exp->size());
+
+            m_ncoeffs = m_npoints = 0;
+            
+            for(i = 0; i < m_exp->size(); ++i)
+            {
+                m_coeff_offset[i]   = m_ncoeffs;
+                m_phys_offset [i]   = m_npoints;
+                m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
+                m_npoints += (*m_exp)[i]->GetTotPoints();
             }
         }
 
@@ -765,10 +789,10 @@ namespace Nektar
             {
                 for(i = 0 ; i < (*m_exp).size(); ++i)
                 {
-                    if((*m_exp)[m_offset_elmt_id[i]]->DetShapeType()
+                    if((*m_exp)[i]->DetShapeType()
                        == ShapeType)
                     {
-                        elmt_id[n_exp++] = m_offset_elmt_id[i];
+                        elmt_id[n_exp++] = i;
                     }
                 }
             }
@@ -777,7 +801,7 @@ namespace Nektar
                 n_exp = (*m_exp).size();
                 for(i = 0; i < n_exp; ++i)
                 {
-                    elmt_id[i] = m_offset_elmt_id[i];
+                    elmt_id[i] = i;
                 }
             }
 
@@ -922,9 +946,9 @@ namespace Nektar
                     const LibUtilities::ShapeType vType
                                     = m_globalOptParam->GetShapeList()[n];
                     const MultiRegions::GlobalMatrixKey vKey(gkey, vType);
-                    if (cnt < m_offset_elmt_id.num_elements())
+                    if (cnt < m_coeff_offset.num_elements())
                     {
-                        eid = m_offset_elmt_id[cnt];
+                        eid = cnt; 
                         MultiplyByBlockMatrix(vKey,inarray + m_coeff_offset[eid],
                                               tmp_outarray = outarray + m_coeff_offset[eid]);
                         cnt += num_elmts[n];
@@ -940,7 +964,7 @@ namespace Nektar
                         // need to be initialised with zero size for non variable coefficient case
                         StdRegions::VarCoeffMap varcoeffs;
 
-                        eid = m_offset_elmt_id[cnt++];
+                        eid = cnt++;
                         if(nvarcoeffs>0)
                         {
                             StdRegions::VarCoeffMap::const_iterator x;
@@ -1038,7 +1062,7 @@ namespace Nektar
                 // need to be initialised with zero size for non variable coefficient case
                 StdRegions::VarCoeffMap varcoeffs;
 
-                eid = m_offset_elmt_id[n];
+                eid = n;
                 if(nvarcoeffs>0)
                 {
                     StdRegions::VarCoeffMap::const_iterator x;
@@ -1053,7 +1077,7 @@ namespace Nektar
                                               *((*m_exp)[eid]),
                                               mkey.GetConstFactors(),varcoeffs);
 
-                loc_mat = boost::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[m_offset_elmt_id[n]])->GetLocMatrix(matkey);
+                loc_mat = boost::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[n])->GetLocMatrix(matkey);
 
                 loc_rows = loc_mat->GetRows();
                 loc_cols = loc_mat->GetColumns();
@@ -1158,7 +1182,7 @@ namespace Nektar
                 // need to be initialised with zero size for non variable coefficient case
                 StdRegions::VarCoeffMap varcoeffs;
 
-                eid = m_offset_elmt_id[n];
+                eid = n;
                 if(nvarcoeffs>0)
                 {
                     StdRegions::VarCoeffMap::const_iterator x;
@@ -1919,7 +1943,7 @@ namespace Nektar
 
             for (i = 0; i < (*m_exp).size(); ++i)
             {
-                err += (*m_exp)[m_offset_elmt_id[i]]->Integral(inarray + m_phys_offset[i]);
+                err += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
             }
             m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
 
@@ -2354,18 +2378,17 @@ namespace Nektar
             {
                 std::vector<unsigned int> nummodes;
                 vector<LibUtilities::BasisType> basisTypes;
-                int eid = m_offset_elmt_id[i];
-                for(int j= 0; j < fromExpList->GetExp(eid)->GetNumBases(); ++j)
+                for(int j= 0; j < fromExpList->GetExp(i)->GetNumBases(); ++j)
                 {
-                    nummodes.push_back(fromExpList->GetExp(eid)->GetBasisNumModes(j));
-                    basisTypes.push_back(fromExpList->GetExp(eid)->GetBasisType(j));
+                    nummodes.push_back(fromExpList->GetExp(i)->GetBasisNumModes(j));
+                    basisTypes.push_back(fromExpList->GetExp(i)->GetBasisType(j));
                 }
 
-                (*m_exp)[eid]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0,
-                                                   &toCoeffs[m_coeff_offset[eid]],
+                (*m_exp)[i]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0,
+                                                   &toCoeffs[m_coeff_offset[i]],
                                                    basisTypes);
 
-                offset += fromExpList->GetExp(eid)->GetNcoeffs();
+                offset += fromExpList->GetExp(i)->GetNcoeffs();
             }
         }
 

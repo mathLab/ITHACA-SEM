@@ -1,0 +1,46 @@
+% Chapter 1
+
+\chapter{Introduction} % Main chapter title
+
+\label{Chapter1} % For referencing the chapter elsewhere, use \ref{Chapter1} 
+
+%----------------------------------------------------------------------------------------
+
+% Define some commands to keep the formatting separated from the content 
+\newcommand{\keyword}[1]{\textbf{#1}}
+\newcommand{\tabhead}[1]{\textbf{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\file}[1]{\texttt{\bfseries#1}}
+\newcommand{\option}[1]{\texttt{\itshape#1}}
+
+%----------------------------------------------------------------------------------------
+
+\section{Nektar++}
+Nektar++ is a spectral/hp element partial differential equation (PDE) solver capable of performing high performance computational fluid dynamics simulations on a diverse range of hardware. In this document we outline the background to a performance model that a Nektar++ user can use to predict the performance of their simulation on their given hardware. From this they will be able to gauge both how long their simulation will take and how to best allocate their available hardware resources to running their simulation. For a more complete background to Nektar++ please refer to the website, user guide and standard texts/papers.
+
+\section{Model}
+At the core of software lies models of the operation counts of Nektar++ for different numerical solvers. The details of each of the two models are outline in Chapter 2. The user will calibrate the model of their chosen scheme using a single brief run of a Nektar++ simulation in serial. The processor they run Nektar++ on in serial must match one of the processors that is part of their available parallel system. If this is on a cluster/supercomputer the user must use a complete node with a single MPI process initialised. From this they parse the length of time the first couple of 100 time steps take to solve and along with this they must parse the CG iterations for pressure and the three velocities for all the planes. In order to do this the user must add \code{cout} statements to the Nektar++ codes manually. These are as follows:
+
+In \code{solvers/IncNavierStokesSolver/EquationSystems/VelocityCorrectionScheme.cpp} we need to write in \code{cout << 'Solving Pressure' << endl;} and \code{cout << 'Solving Velocity' << endl;} so we know in the output file if we're parsing the pressure or velocity CG iterations. The first comment needs to go before \code{SolvePressure (F[0]);} in the function:
+
+\code{void VelocityCorrectionScheme::SolveUnsteadyStokesSystem} 
+
+While the second goes before:
+
+\code{SolveViscous( F, outarray, aii\_Dt);}.
+
+Now in \code{library/MultiRegions/ContField3DHomogeneous1D.cpp} we need to write in \code{cout << 'Solving Plane '<< i << endl;} inside the nested for loop of:
+
+\code{void ContField3DHomogeneous1D::v\_HelmSolve} 
+
+Just before:
+
+\code{m\_planes[n]->HelmSolve(.....)} 
+
+This will allow for the parsing of the plane number from which the CG iterations are coming. That concludes the modifications the user must make to their Nektar++ installation in order to make use of this performance library.
+
+
+
+
+
+

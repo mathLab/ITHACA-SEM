@@ -20,7 +20,7 @@
 
 /// Precision tolerance for two points to be similar 
 
-#define EPS   100*DBL_EPSILON
+#define EPS   1E6*DBL_EPSILON
 
 /// return the sign(b)*a
 
@@ -30,6 +30,28 @@
 
 namespace Polylib {
 
+	/// The following function is used to circumvent/reduce "Subtractive Cancellation"
+	/// The expression 1/dz  is replaced by optinvsub(.,.)
+	/// Added on 26 April 2017
+
+	double optinvsub(double xl, double xr)
+	{
+    	        double m_expn, m_xln, m_xrn;
+        	double m_digits = fabs(floor(log10(DBL_EPSILON)))-1;
+	        if (fabs(xl-xr)<1.e-4){
+
+	                m_expn = floor(log10(fabs(xl-xr)));
+                        // vacate space for implementing reciprocal operations of significant digits (difference)
+       		        m_xln  = xl*pow(10.0,-m_expn)-floor(xl*pow(10.0,-m_expn)); // substract the digits overlap part
+           		m_xrn  = xr*pow(10.0,-m_expn)-floor(xl*pow(10.0,-m_expn)); // substract the common digits overlap part
+               		m_xln  = round(m_xln*pow(10.0,m_digits+m_expn));           // git rid of rubbish
+	        	m_xrn  = round(m_xrn*pow(10.0,m_digits+m_expn));
+
+                	return pow(10.0,m_digits)/(m_xln-m_xrn);
+        	}else{  
+           	    	return 1.0/(xl-xr);
+        	}
+	}
 
 
     /// Define whether to use polynomial deflation (1)  or tridiagonal solver (0).
@@ -1366,7 +1388,7 @@ namespace Polylib {
 
         jacobfd(1, &z , &p, NULL , np, alpha, beta);
 
-        h = p/(pd*dz);
+        h = p/pd*optinvsub(z,zi);
 
 
 
@@ -1448,7 +1470,7 @@ namespace Polylib {
 
         jacobfd (1, &z, &p, NULL,  np-1, alpha, beta + 1);
 
-        h = (1.0 + z )*p/(h*dz);
+        h = (1.0 + z )*p/h*optinvsub(z,zi);
 
 
 
@@ -1532,7 +1554,7 @@ namespace Polylib {
 
         jacobfd (1, &z, &p, NULL,  np-1, alpha+1, beta);
 
-        h = (1.0 - z )*p/(h*dz);
+        h = (1.0 - z )*p/h*optinvsub(z,zi);
 
 
 
@@ -1616,7 +1638,7 @@ namespace Polylib {
 
         jacobfd(1, &z, &p, NULL, np-2, alpha + one, beta + one);
 
-        h = (one - z*z)*p/(h*dz);
+        h = (one - z*z)*p/h*optinvsub(z,zi);
 
 
 

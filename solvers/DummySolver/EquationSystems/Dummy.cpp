@@ -65,9 +65,6 @@ void Dummy::v_InitObject()
     ASSERTL0(m_session->DefinesCmdLineArgument("cwipi"),
              "This EquationSystem requires the --cwipi command line switch");
 
-    m_coupling = MemoryManager<CwipiCoupling>::AllocateSharedPtr(
-        m_fields[0], 0, 1.0);
-
     m_recFields = Array<OneD, Array<OneD, NekDouble> >(
         m_coupling->GetRecvFieldNames().size());
     for (int i = 0; i < m_recFields.num_elements(); ++i)
@@ -107,18 +104,6 @@ bool Dummy::v_PreIntegrate(int step)
         }
     }
 
-    m_coupling->Send(step, m_time, m_sendFields);
-
-    m_coupling->ReceiveInterp(step, m_time, m_recFields);
-
-    for (int i = 0; i < m_recFields.num_elements(); ++i)
-    {
-        NekDouble intVal = m_fields[0]->PhysIntegral(m_recFields[i]);
-        m_comm->AllReduce(intVal, LibUtilities::ReduceSum);
-        cout << "Integral of received field " << i;
-        cout << " = " << intVal << endl;
-    }
-
     return UnsteadySystem::v_PreIntegrate(step);
 }
 
@@ -145,12 +130,6 @@ void Dummy::DoOdeProjection(
     // do nothing
 }
 
-void Dummy::v_Output(void)
-{
-    Nektar::SolverUtils::EquationSystem::v_Output();
-
-    m_coupling->FinalizeCoupling();
-}
 
 void Dummy::v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                              std::vector<std::string> &variables)

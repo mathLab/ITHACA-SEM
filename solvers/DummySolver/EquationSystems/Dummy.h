@@ -67,7 +67,6 @@ public:
     virtual ~Dummy();
 
 protected:
-    SolverUtils::CwipiCouplingSharedPointer m_coupling;
 
     /// Initialises UnsteadySystem class members.
     Dummy(const LibUtilities::SessionReaderSharedPtr &pSession);
@@ -84,8 +83,6 @@ protected:
         const NekDouble time);
 
     virtual bool v_PreIntegrate(int step);
-
-    virtual void v_Output(void);
 
     virtual void v_ExtraFldOutput(
         std::vector<Array<OneD, NekDouble> > &fieldcoeffs,

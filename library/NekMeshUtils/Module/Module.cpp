@@ -34,7 +34,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <boost/iostreams/filter/gzip.hpp>
-#include <boost/iostreams/filter/counter.hpp>
 
 #include "Module.h"
 

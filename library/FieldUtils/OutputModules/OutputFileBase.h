@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: OutputVtk.h
+//  File: OutputFileBase.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,14 +29,14 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Vtk output module
+//  Description: Base class for outputting to a file
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_OUTPUTVTK
-#define FIELDUTILS_OUTPUTVTK
+#ifndef FIELDUTILS_OUTPUTFILEBASE
+#define FIELDUTILS_OUTPUTFILEBASE
 
-#include "OutputFileBase.h"
+#include "../Module.h"
 #include <tinyxml.h>
 
 namespace Nektar
@@ -45,39 +45,27 @@ namespace FieldUtils
 {
 
 /// Converter from fld to vtk.
-class OutputVtk : public OutputFileBase
+class OutputFileBase : public OutputModule
 {
 public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
-    {
-        return MemoryManager<OutputVtk>::AllocateSharedPtr(f);
-    }
-    static ModuleKey m_className;
+    OutputFileBase(FieldSharedPtr f);
+    virtual ~OutputFileBase();
 
-    OutputVtk(FieldSharedPtr f);
-    virtual ~OutputVtk();
+    /// Write fld to output file.
+    virtual void Process(po::variables_map &vm);
 
     /// Write from pts to output file.
-    virtual void OutputFromPts(po::variables_map &vm);
+    virtual void OutputFromPts(po::variables_map &vm) = 0;
 
     /// Write from m_exp to output file.
-    virtual void OutputFromExp(po::variables_map &vm);
+    virtual void OutputFromExp(po::variables_map &vm) = 0;
 
     /// Write from data to output file.
-    virtual void OutputFromData(po::variables_map &vm);
-
-    void WriteEmptyVtkPiece(std::ofstream &outfile);
-
-    void WritePVtu();
-
-    std::string GetFullOutName();
-
-    std::string GetPath();
+    virtual void OutputFromData(po::variables_map &vm) = 0;
 
     virtual std::string GetModuleName()
     {
-        return "OutputVtk";
+        return "OutputFileBase";
     }
 };
 }

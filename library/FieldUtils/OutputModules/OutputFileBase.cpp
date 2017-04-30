@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: OutputVtk.h
+//  File: OutputFileBase.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,58 +29,53 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Vtk output module
+//  Description: Base class for outputting to a file
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_OUTPUTVTK
-#define FIELDUTILS_OUTPUTVTK
+#include <set>
+#include <string>
+using namespace std;
 
 #include "OutputFileBase.h"
-#include <tinyxml.h>
+#include <LibUtilities/BasicUtils/FileSystem.h>
+#include <boost/format.hpp>
+#include <iomanip>
 
 namespace Nektar
 {
 namespace FieldUtils
 {
 
-/// Converter from fld to vtk.
-class OutputVtk : public OutputFileBase
+OutputFileBase::OutputFileBase(FieldSharedPtr f) : OutputModule(f)
 {
-public:
-    /// Creates an instance of this class
-    static boost::shared_ptr<Module> create(FieldSharedPtr f)
-    {
-        return MemoryManager<OutputVtk>::AllocateSharedPtr(f);
-    }
-    static ModuleKey m_className;
-
-    OutputVtk(FieldSharedPtr f);
-    virtual ~OutputVtk();
-
-    /// Write from pts to output file.
-    virtual void OutputFromPts(po::variables_map &vm);
-
-    /// Write from m_exp to output file.
-    virtual void OutputFromExp(po::variables_map &vm);
-
-    /// Write from data to output file.
-    virtual void OutputFromData(po::variables_map &vm);
-
-    void WriteEmptyVtkPiece(std::ofstream &outfile);
-
-    void WritePVtu();
-
-    std::string GetFullOutName();
-
-    std::string GetPath();
-
-    virtual std::string GetModuleName()
-    {
-        return "OutputVtk";
-    }
-};
-}
 }
 
-#endif
+OutputFileBase::~OutputFileBase()
+{
+}
+
+void OutputFileBase::Process(po::variables_map &vm)
+{
+    if (m_f->m_verbose)
+    {
+        if (m_f->m_comm->TreatAsRankZero())
+        {
+            cout << GetModuleName() <<": Writing file..." << endl;
+        }
+    }
+    if(m_f->m_fieldPts != LibUtilities::NullPtsField)
+    {
+        OutputFromPts(vm);
+    }
+    else if(m_f->m_exp.size())
+    {
+        OutputFromExp(vm);
+    }
+    else if(m_f->m_data.size())
+    {
+        OutputFromData(vm);
+    }
+}
+}
+}

@@ -7,6 +7,7 @@ SET(FieldUtilsHeaders
     InputModules/InputXml.h
     InputModules/InputPts.h
     InputModules/InputNek5000.h
+    OutputModules/OutputFileBase.h
     OutputModules/OutputInfo.h
     OutputModules/OutputTecplot.h
     OutputModules/OutputVtk.h
@@ -56,6 +57,7 @@ SET(FieldUtilsSources
     InputModules/InputXml.cpp
     InputModules/InputPts.cpp
     InputModules/InputNek5000.cpp
+    OutputModules/OutputFileBase.cpp
     OutputModules/OutputInfo.cpp
     OutputModules/OutputTecplot.cpp
     OutputModules/OutputVtk.cpp

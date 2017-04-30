@@ -22,8 +22,11 @@ v4.4.1
 - Remove the duplicate output of errorutil (!756)
 - Fix BLAS CMake dependencies (!763)
 - Fix interpolation issue with Lagrange basis functions (!768)
+- Fix issue with average fields not working with different polynomial order
+  fields (!776)
 
-**FieldConvert**:
+**FieldConvert:**
+- Fix issue with field ordering in the interppointdatatofld module (!754)
 - Fix issue with FieldConvert when range flag used (!761)
 
 **NekMesh**:
@@ -32,9 +35,6 @@ v4.4.1
   when some part of the system fails (!756)
 - Add manifold meshing option (!756)
 - Fix issue with older rea input files (!765)
-
-**FieldConvert:**
-- Fix issue with field ordering in the interppointdatatofld module (!754)
 
 v4.4.0
 ------

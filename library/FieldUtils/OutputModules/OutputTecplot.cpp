@@ -197,7 +197,6 @@ void OutputTecplot::Process(po::variables_map &vm)
         outfile.open(filename.c_str(), m_binary ? ios::binary : ios::out);
     }
 
-    std::vector<std::string> var;
     bool writeHeader = true;
 
     if (fPts == LibUtilities::NullPtsField)
@@ -205,11 +204,6 @@ void OutputTecplot::Process(po::variables_map &vm)
         // Standard tensor-product element setup.
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> fDef =
             m_f->m_fielddef;
-
-        if (fDef.size())
-        {
-            var = fDef[0]->m_fields;
-        }
 
         // Calculate number of FE blocks
         m_numBlocks = GetNumTecplotBlocks();
@@ -241,7 +235,8 @@ void OutputTecplot::Process(po::variables_map &vm)
             m_coordim += 2;
         }
 
-        var.insert(var.begin(), coordVars, coordVars + m_coordim);
+        m_f->m_variables.insert(m_f->m_variables.begin(),
+                                coordVars, coordVars + m_coordim);
 
         m_zoneType = (TecplotZoneType)(2*(nBases-1) + 1);
 
@@ -249,7 +244,7 @@ void OutputTecplot::Process(po::variables_map &vm)
         CalculateConnectivity();
 
         // Set up storage for output fields
-        m_fields = Array<OneD, Array<OneD, NekDouble> >(var.size());
+        m_fields = Array<OneD, Array<OneD, NekDouble> >(m_f->m_variables.size());
 
         // Get coordinates
         int totpoints = m_f->m_exp[0]->GetTotPoints();
@@ -272,7 +267,7 @@ void OutputTecplot::Process(po::variables_map &vm)
             m_f->m_exp[0]->GetCoords(m_fields[0], m_fields[1], m_fields[2]);
         }
 
-        if (var.size() > m_coordim)
+        if (m_f->m_variables.size() > m_coordim)
         {
             // Backward transform all data
             for (int i = 0; i < m_f->m_exp.size(); ++i)
@@ -299,7 +294,8 @@ void OutputTecplot::Process(po::variables_map &vm)
                 NekDouble l2err = m_f->m_exp[0]->L2(m_fields[i]);
                 if (rank == 0)
                 {
-                    cout << "L 2 error (variable " << var[i] << ") : "
+                    cout << "L 2 error (variable "
+                         << m_f->m_variables[i] << ") : "
                          << l2err << endl;
                 }
             }
@@ -318,8 +314,8 @@ void OutputTecplot::Process(po::variables_map &vm)
         fPts->GetConnectivity(m_conn);
 
         // Get field names
-        var = fPts->GetFieldNames();
-        var.insert(var.begin(), coordVars, coordVars + m_coordim);
+        m_f->m_variables.insert(m_f->m_variables.begin(),
+                                coordVars, coordVars + m_coordim);
 
         switch (fPts->GetPtsType())
         {
@@ -365,7 +361,7 @@ void OutputTecplot::Process(po::variables_map &vm)
         }
 
         // Get fields and coordinates
-        m_fields = Array<OneD, Array<OneD, NekDouble> >(var.size());
+        m_fields = Array<OneD, Array<OneD, NekDouble> >(m_f->m_variables.size());
 
         // We can just grab everything from points. This should be a
         // reference, not a copy.
@@ -397,7 +393,8 @@ void OutputTecplot::Process(po::variables_map &vm)
 
                 if (rank == 0)
                 {
-                    cout << "L 2 error (variable " << var[i] << ") : "
+                    cout << "L 2 error (variable "
+                         << m_f->m_variables[i] << ") : "
                          << l2err << endl;
                 }
             }
@@ -433,7 +430,7 @@ void OutputTecplot::Process(po::variables_map &vm)
 
     if (writeHeader)
     {
-        WriteTecplotHeader(outfile, var);
+        WriteTecplotHeader(outfile, m_f->m_variables);
     }
 
     // Write zone data.

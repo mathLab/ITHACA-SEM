@@ -563,6 +563,11 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     {
         calcCp0();
     }
+
+    for (int j = 0; j < m_f->m_fieldPts->GetNFields(); ++j)
+    {
+        m_f->m_variables.push_back(m_f->m_fieldPts->GetFieldName(j));
+    }
 }
 
 void ProcessInterpPoints::InterpolateFieldToPts(

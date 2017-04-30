@@ -163,6 +163,9 @@ void InputFld::Process(po::variables_map &vm)
             m_f->m_inputfiles[fldending][0], m_f->m_fielddef, m_f->m_data,
             m_f->m_fieldMetaDataMap);
     }
+
+    // save field names
+    m_f->m_variables = m_f->m_fielddef[0]->m_fields;
 }
 }
 }

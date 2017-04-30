@@ -144,7 +144,7 @@ void ProcessMapping::Process(po::variables_map &vm)
         m_f->m_exp[nfields + i]->UpdatePhys() = coords[i];
         m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(
             coords[i], m_f->m_exp[nfields + i]->UpdateCoeffs());
-        outname.push_back(fieldNames[i]);
+        m_f->m_variables.push_back(fieldNames[i]);
     }
 
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
@@ -155,15 +155,7 @@ void ProcessMapping::Process(po::variables_map &vm)
     {
         for (int i = 0; i < FieldDef.size(); ++i)
         {
-            if (j >= nfields)
-            {
-                FieldDef[i]->m_fields.push_back(outname[j - nfields]);
-            }
-            else
-            {
-                FieldDef[i]->m_fields.push_back(
-                    m_f->m_fielddef[0]->m_fields[j]);
-            }
+            FieldDef[i]->m_fields.push_back(m_f->m_variables[j]);
             m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
         }
     }

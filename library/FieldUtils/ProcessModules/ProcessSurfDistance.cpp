@@ -98,11 +98,13 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
     {
         m_f->m_fielddef = m_f->m_exp[0]->GetFieldDefinitions();
         m_f->m_fielddef[0]->m_fields.push_back("dist");
+        m_f->m_variables.push_back("dist");
     }
     else
     {
         // Override field variable
         m_f->m_fielddef[0]->m_fields[0] = "dist";
+        m_f->m_variables.push_back("dist");
     }
 
     ASSERTL0(!(m_f->m_fielddef[0]->m_numHomogeneousDir),

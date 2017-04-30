@@ -182,6 +182,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
             string fieldName = m_config["fieldname"].as<string>();
 
             m_f->m_fieldPts->AddField(pts, fieldName);
+            m_f->m_variables.push_back(fieldName);
         }
         else
         {

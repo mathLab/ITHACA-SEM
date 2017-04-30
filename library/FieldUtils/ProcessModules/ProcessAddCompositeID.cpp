@@ -149,6 +149,7 @@ void ProcessAddCompositeID::Process(po::variables_map &vm)
     for (int j = 0; j < FieldDef.size(); ++j)
     {
         FieldDef[j]->m_fields.push_back("compositeID");
+        m_f->m_variables.push_back("compositeID");
         m_f->m_exp[nfields]->AppendFieldData(FieldDef[j], FieldData[j]);
     }
 

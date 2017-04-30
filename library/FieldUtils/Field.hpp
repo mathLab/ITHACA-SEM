@@ -90,6 +90,7 @@ struct Field
     vector<LibUtilities::FieldDefinitionsSharedPtr> m_fielddef;
     vector<vector<double> > m_data;
     vector<MultiRegions::ExpListSharedPtr> m_exp;
+    vector<string> m_variables;
 
     bool m_declareExpansionAsContField;
     bool m_declareExpansionAsDisContField;

@@ -153,6 +153,9 @@ void InputDat::Process(po::variables_map &vm)
         dim, fieldNames, pts);
     m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTriBlock);
     m_f->m_fieldPts->SetConnectivity(ptsConn);
+
+    // save field names
+    m_f->m_variables = fieldNames;
 }
 
 /**

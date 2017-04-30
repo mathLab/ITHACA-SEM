@@ -303,6 +303,9 @@ void InputNek5000::Process(po::variables_map &vm)
     }
 
     m_f->m_fielddef.push_back(fielddef);
+
+    // save field names
+    m_f->m_variables = m_f->m_fielddef[0]->m_fields;
 }
 }
 }

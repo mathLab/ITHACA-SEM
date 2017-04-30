@@ -127,7 +127,6 @@ void OutputVtk::Process(po::variables_map &vm)
     int nfields = 0;
     int dim     = 0;
 
-    vector<string> fieldname;
     if (fPts ==
         LibUtilities::NullPtsField) // standard output in collapsed coordinates
     {
@@ -163,11 +162,6 @@ void OutputVtk::Process(po::variables_map &vm)
         if (m_f->m_exp[0]->GetNumElmts() == 0)
         {
             WriteEmptyVtkPiece(outfile);
-        }
-        // save field names for parallel output
-        for (i = 0; i < nfields; ++i)
-        {
-            fieldname.push_back(m_f->m_fielddef[0]->m_fields[i]);
         }
     }
     else // write out data stored in fPts (for example if equispaced output is
@@ -301,9 +295,8 @@ void OutputVtk::Process(po::variables_map &vm)
         // printing the fields
         for (j = 0; j < nfields; ++j)
         {
-            fieldname.push_back(fPts->GetFieldName(j));
             outfile << "        <DataArray type=\"Float64\" Name=\""
-                    << fPts->GetFieldName(j) << "\">" << endl;
+                    << m_f->m_variables[j] << "\">" << endl;
             outfile << "          ";
             for (i = 0; i < fPts->GetNpoints(); ++i)
             {
@@ -323,8 +316,6 @@ void OutputVtk::Process(po::variables_map &vm)
     // output parallel outline info if necessary
     if (m_f->m_comm->GetRank() == 0)
     {
-        ASSERTL1(fieldname.size() == nfields,
-                 "fieldname not the same size as nfields");
         int nprocs = m_f->m_comm->GetSize();
         if (nprocs != 1)
         {
@@ -358,7 +349,7 @@ void OutputVtk::Process(po::variables_map &vm)
             for (int i = 0; i < nfields; ++i)
             {
                 outfile << "<PDataArray type=\"Float64\" Name=\""
-                        << fieldname[i] << "\"/>" << endl;
+                        << m_f->m_variables[i] << "\"/>" << endl;
             }
             outfile << "</PPointData>" << endl;
 

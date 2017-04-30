@@ -100,6 +100,12 @@ void InputPts::Process(po::variables_map &vm)
     }
 
     m_f->m_ptsIO->Import(inFile, m_f->m_fieldPts);
+
+    // save field names
+    for (int j = 0; j < m_f->m_fieldPts->GetNFields(); ++j)
+    {
+        m_f->m_variables.push_back(m_f->m_fieldPts->GetFieldName(j));
+    }
 }
 }
 }

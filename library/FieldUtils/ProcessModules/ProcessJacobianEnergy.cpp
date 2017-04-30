@@ -121,6 +121,7 @@ void ProcessJacobianEnergy::Process(po::variables_map &vm)
     for (int i = 0; i < FieldDef.size(); ++i)
     {
         FieldDef[i]->m_fields.push_back("JacobianEnergy");
+        m_f->m_variables.push_back("JacobianEnergy");
         m_f->m_exp[0]->AppendFieldData(FieldDef[i], FieldData[i]);
     }
 

@@ -137,6 +137,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
         filename << var << "_scalar_gradient";
         filename >> var;
         m_f->m_fielddef[0]->m_fields[i] = var;
+        m_f->m_variables[i] = var;
 
         BndExp[i]   = m_f->m_exp[i]->GetBndCondExpansions();
         outfield[i] = Array<OneD, NekDouble>(npoints);

@@ -161,6 +161,7 @@ void ProcessWSS::Process(po::variables_map &vm)
         m_f->m_fielddef[0]->m_fields.push_back("Shear_z");
         m_f->m_fielddef[0]->m_fields.push_back("Shear_mag");
     }
+    m_f->m_variables = m_f->m_fielddef[0]->m_fields;
 
     // Create map of boundary ids for partitioned domains
     SpatialDomains::BoundaryConditions bcs(m_f->m_session,

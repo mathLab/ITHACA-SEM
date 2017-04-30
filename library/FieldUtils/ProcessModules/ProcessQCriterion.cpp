@@ -240,7 +240,7 @@ void ProcessQCriterion::Process(po::variables_map &vm)
     }
 
     vector<string> outname;
-    outname.push_back("Q");
+    m_f->m_variables.push_back("Q");
 
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
         m_f->m_exp[0]->GetFieldDefinitions();
@@ -254,15 +254,7 @@ void ProcessQCriterion::Process(po::variables_map &vm)
             {
                 int n = s * FieldDef.size() / nstrips + i;
 
-                if (j >= nfields)
-                {
-                    FieldDef[n]->m_fields.push_back(outname[j - nfields]);
-                }
-                else
-                {
-                    FieldDef[n]->m_fields.push_back(
-                        m_f->m_fielddef[0]->m_fields[j]);
-                }
+                FieldDef[n]->m_fields.push_back(m_f->m_variables[j]);
                 m_f->m_exp[s * (nfields + addfields) + j]->AppendFieldData(
                     FieldDef[n], FieldData[n]);
             }

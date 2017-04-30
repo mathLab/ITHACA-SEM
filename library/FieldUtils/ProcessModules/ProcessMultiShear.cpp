@@ -391,6 +391,8 @@ void ProcessMultiShear::Process(po::variables_map &vm)
         Vmath::Smul(npoints, 1.0 / nfld, outfield[5], 1, outfield[5], 1);
     }
 
+    m_f->m_variables = m_f->m_fielddef[0]->m_fields;
+
     for (i = 0; i < nout; ++i)
     {
         m_f->m_exp[i]->FwdTrans(outfield[i], m_f->m_exp[i]->UpdateCoeffs());

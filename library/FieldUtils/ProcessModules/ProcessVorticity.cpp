@@ -240,13 +240,13 @@ void ProcessVorticity::Process(po::variables_map &vm)
     vector<string> outname;
     if (addfields == 1)
     {
-        outname.push_back("W_z");
+        m_f->m_variables.push_back("W_z");
     }
     else
     {
-        outname.push_back("W_x");
-        outname.push_back("W_y");
-        outname.push_back("W_z");
+        m_f->m_variables.push_back("W_x");
+        m_f->m_variables.push_back("W_y");
+        m_f->m_variables.push_back("W_z");
     }
 
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
@@ -261,15 +261,7 @@ void ProcessVorticity::Process(po::variables_map &vm)
             {
                 int n = s * FieldDef.size() / nstrips + i;
 
-                if (j >= nfields)
-                {
-                    FieldDef[n]->m_fields.push_back(outname[j - nfields]);
-                }
-                else
-                {
-                    FieldDef[n]->m_fields.push_back(
-                        m_f->m_fielddef[0]->m_fields[j]);
-                }
+                FieldDef[n]->m_fields.push_back(m_f->m_variables[j]);
                 m_f->m_exp[s * (nfields + addfields) + j]->AppendFieldData(
                     FieldDef[n], FieldData[n]);
             }

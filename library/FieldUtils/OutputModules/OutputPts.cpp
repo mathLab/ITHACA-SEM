@@ -136,7 +136,7 @@ void OutputPts::Process(po::variables_map &vm)
             fPts =
                 MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
                     m_f->m_exp[0]->GetCoordim(0),
-                    m_f->m_fielddef[0]->m_fields,
+                    m_f->m_variables,
                     tmp);
         }
         ptsIO.Write(filename, fPts);

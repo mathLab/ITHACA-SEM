@@ -19,6 +19,7 @@ SET(FieldUtilsHeaders
     ProcessModules/ProcessBoundaryExtract.h
     ProcessModules/ProcessCombineAvg.h
     ProcessModules/ProcessConcatenateFld.h
+    ProcessModules/ProcessCreateExp.h
     ProcessModules/ProcessDeform.h
     ProcessModules/ProcessDisplacement.h
     ProcessModules/ProcessEquiSpacedOutput.h
@@ -67,6 +68,7 @@ SET(FieldUtilsSources
     ProcessModules/ProcessBoundaryExtract.cpp
     ProcessModules/ProcessCombineAvg.cpp
     ProcessModules/ProcessConcatenateFld.cpp
+    ProcessModules/ProcessCreateExp.cpp
     ProcessModules/ProcessDeform.cpp
     ProcessModules/ProcessDisplacement.cpp
     ProcessModules/ProcessEquiSpacedOutput.cpp

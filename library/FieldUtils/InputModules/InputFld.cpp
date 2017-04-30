@@ -95,7 +95,7 @@ void InputFld::Process(po::variables_map &vm)
         }
     }
 
-    int i, j;
+    int i;
     string fldending;
     // Determine appropriate field input
     if (m_f->m_inputfiles.count("fld") != 0)
@@ -162,94 +162,6 @@ void InputFld::Process(po::variables_map &vm)
         m_f->FieldIOForFile(m_f->m_inputfiles[fldending][0])->Import(
             m_f->m_inputfiles[fldending][0], m_f->m_fielddef, m_f->m_data,
             m_f->m_fieldMetaDataMap);
-    }
-
-    // if m_exp defined presume we want to load all field  into expansions
-    if (m_f->m_exp.size())
-    {
-        int nfields, nstrips;
-
-        m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
-
-        if (vm.count("useSessionVariables"))
-        {
-            nfields = m_f->m_session->GetVariables().size();
-        }
-        else
-        {
-            nfields = m_f->m_fielddef[0]->m_fields.size();
-        }
-
-        m_f->m_exp.resize(nfields * nstrips);
-
-        vector<string> vars = m_f->m_session->GetVariables();
-
-        // declare other fields;
-        for (int s = 0; s < nstrips; ++s) // homogeneous strip varient
-        {
-            for (i = 0; i < nfields; ++i)
-            {
-                if (i < vars.size())
-                {
-                    // check to see if field already defined
-                    if (!m_f->m_exp[s * nfields + i])
-                    {
-                        m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
-                            m_f->m_fielddef[0]->m_numHomogeneousDir, vars[i]);
-                    }
-                }
-                else
-                {
-                    if (vars.size())
-                    {
-                        m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
-                            m_f->m_fielddef[0]->m_numHomogeneousDir, vars[0]);
-                    }
-                    else
-                    {
-                        m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
-                            m_f->m_fielddef[0]->m_numHomogeneousDir);
-                    }
-                }
-            }
-        }
-
-        // Extract data to coeffs and bwd transform
-        for (int s = 0; s < nstrips; ++s) // homogeneous strip varient
-        {
-            for (j = 0; j < nfields; ++j)
-            {
-                for (i = 0; i < m_f->m_data.size() / nstrips; ++i)
-                {
-                    m_f->m_exp[s * nfields + j]->ExtractDataToCoeffs(
-                        m_f->m_fielddef[i * nstrips + s],
-                        m_f->m_data[i * nstrips + s],
-                        m_f->m_fielddef[i * nstrips + s]->m_fields[j],
-                        m_f->m_exp[s * nfields + j]->UpdateCoeffs());
-                }
-                m_f->m_exp[s * nfields + j]->BwdTrans(
-                    m_f->m_exp[s * nfields + j]->GetCoeffs(),
-                    m_f->m_exp[s * nfields + j]->UpdatePhys());
-            }
-        }
-
-        // reset output field in case Import loaded elements that are not
-        // in the expansion (because of range option of partitioning)
-        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-            m_f->m_exp[0]->GetFieldDefinitions();
-        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-        for (j = 0; j < nfields; ++j)
-        {
-            for (i = 0; i < FieldDef.size(); ++i)
-            {
-                FieldDef[i]->m_fields.push_back(
-                    m_f->m_fielddef[0]->m_fields[j]);
-                m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-            }
-        }
-        m_f->m_fielddef = FieldDef;
-        m_f->m_data     = FieldData;
     }
 }
 }

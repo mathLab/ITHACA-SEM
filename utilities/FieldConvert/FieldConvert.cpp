@@ -312,6 +312,17 @@ int main(int argc, char* argv[])
             module.second = tmp1[0];
         }
 
+        // Include dummy module for creating m_exp (after inputs)
+        if (i == nInput)
+        {
+            ModuleKey module2;
+            module2.first  = eProcessModule;
+            module2.second = string("createExp");
+            ModuleSharedPtr mod2;
+            mod2 = GetModuleFactory().CreateInstance(module2, f);
+            modules.push_back(mod2);
+        }
+
         // Create module.
         ModuleSharedPtr mod;
         mod = GetModuleFactory().CreateInstance(module, f);

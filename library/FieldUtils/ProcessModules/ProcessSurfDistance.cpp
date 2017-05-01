@@ -85,21 +85,17 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
     Array<OneD, int> BoundarytoElmtID, BoundarytoTraceID;
     m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID, BoundarytoTraceID);
 
-    if (m_f->m_fielddef.size() == 0)
+    if(m_f->m_variables.size())
     {
-        m_f->m_fielddef = m_f->m_exp[0]->GetFieldDefinitions();
-        m_f->m_fielddef[0]->m_fields.push_back("dist");
-        m_f->m_variables.push_back("dist");
+        m_f->m_variables[0] = "dist";
     }
     else
     {
-        // Override field variable
-        m_f->m_fielddef[0]->m_fields[0] = "dist";
         m_f->m_variables.push_back("dist");
     }
 
-    ASSERTL0(!(m_f->m_fielddef[0]->m_numHomogeneousDir),
-             "Homogeneous expansions not supported");
+    ASSERTL0(!(m_f->m_numHomogeneousDir),
+            "Homogeneous expansions not supported");
 
     for (i = cnt = 0; i < BndExp.num_elements(); ++i)
     {

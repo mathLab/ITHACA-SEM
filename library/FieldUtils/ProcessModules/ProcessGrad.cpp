@@ -66,8 +66,8 @@ void ProcessGrad::Process(po::variables_map &vm)
 {
     int i, j;
     int expdim    = m_f->m_graph->GetMeshDimension();
-    int spacedim  = m_f->m_fielddef[0]->m_numHomogeneousDir + expdim;
-    int nfields   = m_f->m_fielddef[0]->m_fields.size();
+    int spacedim  = m_f->m_numHomogeneousDir + expdim;
+    int nfields   = m_f->m_variables.size();
     int addfields = nfields * spacedim;
 
     int npoints = m_f->m_exp[0]->GetNpoints();
@@ -165,7 +165,7 @@ void ProcessGrad::Process(po::variables_map &vm)
     for (i = 0; i < addfields; ++i)
     {
         m_f->m_exp[nfields + i] =
-            m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
+            m_f->AppendExpList(m_f->m_numHomogeneousDir);
         Vmath::Vcopy(npoints, grad[i], 1, m_f->m_exp[nfields + i]->UpdatePhys(),
                      1);
         m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(
@@ -176,36 +176,20 @@ void ProcessGrad::Process(po::variables_map &vm)
     {
         if (spacedim == 1)
         {
-            m_f->m_variables.push_back(m_f->m_fielddef[0]->m_fields[i] + "_x");
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_x");
         }
         else if (spacedim == 2)
         {
-            m_f->m_variables.push_back(m_f->m_fielddef[0]->m_fields[i] + "_x");
-            m_f->m_variables.push_back(m_f->m_fielddef[0]->m_fields[i] + "_y");
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_x");
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_y");
         }
         else if (spacedim == 3)
         {
-            m_f->m_variables.push_back(m_f->m_fielddef[0]->m_fields[i] + "_x");
-            m_f->m_variables.push_back(m_f->m_fielddef[0]->m_fields[i] + "_y");
-            m_f->m_variables.push_back(m_f->m_fielddef[0]->m_fields[i] + "_z");
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_x");
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_y");
+            m_f->m_variables.push_back(m_f->m_variables[i] + "_z");
         }
     }
-
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (j = 0; j < nfields + addfields; ++j)
-    {
-        for (i = 0; i < FieldDef.size(); ++i)
-        {
-            FieldDef[i]->m_fields.push_back(m_f->m_variables[j]);
-            m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-        }
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

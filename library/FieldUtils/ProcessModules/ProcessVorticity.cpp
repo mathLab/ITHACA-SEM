@@ -68,12 +68,11 @@ void ProcessVorticity::Process(po::variables_map &vm)
     int i, j, s;
     int expdim   = m_f->m_graph->GetMeshDimension();
     int spacedim = expdim;
-    if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
-        (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
+    if ((m_f->m_numHomogeneousDir) == 1 || (m_f->m_numHomogeneousDir) == 2)
     {
         spacedim = 3;
     }
-    int nfields = m_f->m_fielddef[0]->m_fields.size();
+    int nfields = m_f->m_variables.size();
     if (spacedim == 1)
     {
         ASSERTL0(false, "Error: Vorticity for a 1D problem cannot "
@@ -213,7 +212,7 @@ void ProcessVorticity::Process(po::variables_map &vm)
         {
             int n = s * addfields + i;
             Exp[n] =
-                m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
+                m_f->AppendExpList(m_f->m_numHomogeneousDir);
             Vmath::Vcopy(npoints, outfield[i], 1, Exp[n]->UpdatePhys(), 1);
             Exp[n]->FwdTrans_IterPerExp(outfield[i], Exp[n]->UpdateCoeffs());
         }
@@ -229,7 +228,6 @@ void ProcessVorticity::Process(po::variables_map &vm)
         }
     }
 
-    vector<string> outname;
     if (addfields == 1)
     {
         m_f->m_variables.push_back("W_z");
@@ -240,28 +238,6 @@ void ProcessVorticity::Process(po::variables_map &vm)
         m_f->m_variables.push_back("W_y");
         m_f->m_variables.push_back("W_z");
     }
-
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (s = 0; s < nstrips; ++s) // homogeneous strip varient
-    {
-        for (j = 0; j < nfields + addfields; ++j)
-        {
-            for (i = 0; i < FieldDef.size() / nstrips; ++i)
-            {
-                int n = s * FieldDef.size() / nstrips + i;
-
-                FieldDef[n]->m_fields.push_back(m_f->m_variables[j]);
-                m_f->m_exp[s * (nfields + addfields) + j]->AppendFieldData(
-                    FieldDef[n], FieldData[n]);
-            }
-        }
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

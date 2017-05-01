@@ -66,12 +66,11 @@ void ProcessMapping::Process(po::variables_map &vm)
     int npoints  = m_f->m_exp[0]->GetNpoints();
     int expdim   = m_f->m_graph->GetMeshDimension();
     int spacedim = expdim;
-    if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
-        (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
+    if ((m_f->m_numHomogeneousDir) == 1 || (m_f->m_numHomogeneousDir) == 2)
     {
         spacedim = 3;
     }
-    int nfields   = m_f->m_fielddef[0]->m_fields.size();
+    int nfields   = m_f->m_variables.size();
     int addfields = expdim;
     m_f->m_exp.resize(nfields + addfields);
 
@@ -128,32 +127,16 @@ void ProcessMapping::Process(po::variables_map &vm)
 
     // Add new information to m_f
     string fieldNames[3] = {"xCoord", "yCoord", "zCoord"};
-    vector<string> outname;
+
     for (int i = 0; i < addfields; ++i)
     {
         m_f->m_exp[nfields + i] =
-            m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
+            m_f->AppendExpList(m_f->m_numHomogeneousDir);
         m_f->m_exp[nfields + i]->UpdatePhys() = coords[i];
         m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(
             coords[i], m_f->m_exp[nfields + i]->UpdateCoeffs());
         m_f->m_variables.push_back(fieldNames[i]);
     }
-
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (int j = 0; j < nfields + addfields; ++j)
-    {
-        for (int i = 0; i < FieldDef.size(); ++i)
-        {
-            FieldDef[i]->m_fields.push_back(m_f->m_variables[j]);
-            m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-        }
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 
 GlobalMapping::MappingSharedPtr ProcessMapping::GetMapping(FieldSharedPtr f)

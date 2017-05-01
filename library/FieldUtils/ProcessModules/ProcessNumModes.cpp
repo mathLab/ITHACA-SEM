@@ -64,9 +64,9 @@ ProcessNumModes::~ProcessNumModes()
 
 void ProcessNumModes::Process(po::variables_map &vm)
 {
-    int i, j, s;
+    int i, s;
     int expdim    = m_f->m_graph->GetMeshDimension();
-    int nfields   = m_f->m_fielddef[0]->m_fields.size();
+    int nfields   = m_f->m_variables.size();
     int addfields = expdim;
     int npoints   = m_f->m_exp[0]->GetNpoints();
     Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
@@ -106,7 +106,7 @@ void ProcessNumModes::Process(po::variables_map &vm)
         {
             int n = s * addfields + i;
             Exp[n] =
-                m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
+                m_f->AppendExpList(m_f->m_numHomogeneousDir);
             Vmath::Vcopy(npoints, outfield[i], 1, Exp[n]->UpdatePhys(), 1);
             Exp[n]->FwdTrans_IterPerExp(outfield[i], Exp[n]->UpdateCoeffs());
         }
@@ -122,7 +122,6 @@ void ProcessNumModes::Process(po::variables_map &vm)
         }
     }
 
-    vector<string> outname;
     m_f->m_variables.push_back("P1");
     if (addfields >= 2)
     {
@@ -134,29 +133,6 @@ void ProcessNumModes::Process(po::variables_map &vm)
         m_f->m_variables.push_back("P3");
     }
 
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    // homogeneous strip variant
-    for (s = 0; s < nstrips; ++s)
-    {
-        for (j = 0; j < nfields + addfields; ++j)
-        {
-            for (i = 0; i < FieldDef.size() / nstrips; ++i)
-            {
-                int n = s * FieldDef.size() / nstrips + i;
-
-                FieldDef[n]->m_fields.push_back(m_f->m_variables[j]);
-
-                m_f->m_exp[s * (nfields + addfields) + j]->AppendFieldData(
-                    FieldDef[n], FieldData[n]);
-            }
-        }
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

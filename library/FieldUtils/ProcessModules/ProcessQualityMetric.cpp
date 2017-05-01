@@ -88,20 +88,6 @@ void ProcessQualityMetric::Process(po::variables_map &vm)
     }
 
     m_f->m_exp[0]->FwdTrans_IterPerExp(phys, coeffs);
-
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (int i = 0; i < FieldDef.size(); ++i)
-    {
-        FieldDef[i]->m_fields.push_back("QualityMetric");
-        m_f->m_variables.push_back("QualityMetric");
-        m_f->m_exp[0]->AppendFieldData(FieldDef[i], FieldData[i]);
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 
 inline vector<DNekMat> MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom,

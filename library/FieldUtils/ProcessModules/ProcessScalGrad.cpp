@@ -91,13 +91,12 @@ void ProcessScalGrad::Process(po::variables_map &vm)
     }
 
     int spacedim = m_f->m_graph->GetSpaceDimension();
-    if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
-        (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
+    if ((m_f->m_numHomogeneousDir) == 1 || (m_f->m_numHomogeneousDir) == 2)
     {
         spacedim = 3;
     }
 
-    int nfields = m_f->m_fielddef[0]->m_fields.size();
+    int nfields = m_f->m_variables.size();
     // ASSERTL0(nfields == 1,"Implicit assumption that input is in ADR format of
     // (u)");
 
@@ -124,11 +123,11 @@ void ProcessScalGrad::Process(po::variables_map &vm)
 
     for (i = 0; i < nfields; i++)
     {
-        var = m_f->m_fielddef[0]->m_fields[i];
+        var = m_f->m_variables[i];
         stringstream filename;
         filename << var << "_scalar_gradient";
         filename >> var;
-        m_f->m_fielddef[0]->m_fields[i] = var;
+        m_f->m_variables[i] = var;
         m_f->m_variables[i] = var;
 
         BndExp[i]   = m_f->m_exp[i]->GetBndCondExpansions();

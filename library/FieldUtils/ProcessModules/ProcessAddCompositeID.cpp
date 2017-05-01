@@ -66,15 +66,12 @@ ProcessAddCompositeID::~ProcessAddCompositeID()
 
 void ProcessAddCompositeID::Process(po::variables_map &vm)
 {
-    int nfields           = 0;
-    int NumHomogeneousDir = 0;
+    int nfields           = m_f->m_variables.size();
+    int NumHomogeneousDir = m_f->m_numHomogeneousDir;
     MultiRegions::ExpListSharedPtr exp;
 
-    if (m_f->m_fielddef.size())
+    if (nfields)
     {
-        nfields           = m_f->m_fielddef[0]->m_fields.size();
-        NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
-
         m_f->m_exp.resize(nfields + 1);
         exp = m_f->AppendExpList(NumHomogeneousDir, "Composite ID");
 
@@ -122,30 +119,8 @@ void ProcessAddCompositeID::Process(po::variables_map &vm)
     // forward transform
     exp->FwdTrans_IterPerExp(exp->GetPhys(), exp->UpdateCoeffs());
 
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+    m_f->m_variables.push_back("compositeID");
 
-    // copy in previous fields if they exist.
-    for (int i = 0; i < nfields; ++i)
-    {
-        for (int j = 0; j < FieldDef.size(); ++j)
-        {
-            FieldDef[j]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[i]);
-            m_f->m_exp[i]->AppendFieldData(FieldDef[j], FieldData[j]);
-        }
-    }
-
-    // append composite id field
-    for (int j = 0; j < FieldDef.size(); ++j)
-    {
-        FieldDef[j]->m_fields.push_back("compositeID");
-        m_f->m_variables.push_back("compositeID");
-        m_f->m_exp[nfields]->AppendFieldData(FieldDef[j], FieldData[j]);
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

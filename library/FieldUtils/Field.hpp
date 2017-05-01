@@ -92,6 +92,8 @@ struct Field
     vector<MultiRegions::ExpListSharedPtr> m_exp;
     vector<string> m_variables;
 
+    int m_numHomogeneousDir;
+
     bool m_declareExpansionAsContField;
     bool m_declareExpansionAsDisContField;
 

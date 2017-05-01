@@ -85,22 +85,12 @@ void ProcessCreateExp::Process(po::variables_map &vm)
         const SpatialDomains::ExpansionMap &expansions =
             m_f->m_graph->GetExpansions();
 
-        // if Range has been specified it is possible to have a
-        // partition which is empty so check this and return if
-        // no elements present.
-        if (!expansions.size())
-        {
-            return;
-        }
-
-        m_f->m_exp.resize(1);
-
         // load fielddef header if fld file is defined. This gives
         // precedence to Homogeneous definition in fld file
-        int NumHomogeneousDir = 0;
+        m_f->m_numHomogeneousDir = 0;
         if (fldfilegiven)
         {
-            NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
+            m_f->m_numHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
 
             // Set up Expansion information to use mode order from field
             m_f->m_graph->SetExpansions(m_f->m_fielddef);
@@ -116,15 +106,31 @@ void ProcessCreateExp::Process(po::variables_map &vm)
                     (HomoStr == "Homogeneous1D") ||
                     (HomoStr == "1D") || (HomoStr == "Homo1D"))
                 {
-                    NumHomogeneousDir = 1;
+                    m_f->m_numHomogeneousDir = 1;
                 }
                 if ((HomoStr == "HOMOGENEOUS2D") ||
                     (HomoStr == "Homogeneous2D") ||
                     (HomoStr == "2D") || (HomoStr == "Homo2D"))
                 {
-                    NumHomogeneousDir = 2;
+                    m_f->m_numHomogeneousDir = 2;
                 }
             }
+        }
+
+        // if Range has been specified it is possible to have a
+        // partition which is empty so check this and return if
+        // no elements present.
+        if (!expansions.size())
+        {
+            return;
+        }
+
+        m_f->m_exp.resize(1);
+
+        if (fldfilegiven)
+        {
+            // Set up Expansion information to use mode order from field
+            m_f->m_graph->SetExpansions(m_f->m_fielddef);
         }
 
         // reset expansion defintion to use equispaced points if required.
@@ -165,14 +171,15 @@ void ProcessCreateExp::Process(po::variables_map &vm)
         }
 
         // Override number of planes with value from cmd line
-        if (NumHomogeneousDir == 1 && vm.count("output-points-hom-z"))
+        if (m_f->m_numHomogeneousDir == 1 && vm.count("output-points-hom-z"))
         {
             int expdim = m_f->m_graph->GetMeshDimension();
             m_f->m_fielddef[0]->m_numModes[expdim] =
                 vm["output-points-hom-z"].as<int>();
         }
 
-        m_f->m_exp[0] = m_f->SetUpFirstExpList(NumHomogeneousDir, fldfilegiven);
+        m_f->m_exp[0] = m_f->SetUpFirstExpList(m_f->m_numHomogeneousDir,
+                                                fldfilegiven);
 
         if (m_f->m_verbose)
         {
@@ -196,18 +203,19 @@ void ProcessCreateExp::Process(po::variables_map &vm)
 
             m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
 
+            vector<string> vars;
             if (vm.count("useSessionVariables"))
             {
                 nfields = m_f->m_session->GetVariables().size();
+                vars = m_f->m_session->GetVariables();
             }
             else
             {
-                nfields = m_f->m_fielddef[0]->m_fields.size();
+                nfields = m_f->m_variables.size();
+                vars    = m_f->m_variables;
             }
 
             m_f->m_exp.resize(nfields * nstrips);
-
-            vector<string> vars = m_f->m_session->GetVariables();
 
             // declare other fields;
             for (int s = 0; s < nstrips; ++s) // homogeneous strip varient
@@ -220,7 +228,7 @@ void ProcessCreateExp::Process(po::variables_map &vm)
                         if (!m_f->m_exp[s * nfields + i])
                         {
                             m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
-                              m_f->m_fielddef[0]->m_numHomogeneousDir, vars[i]);
+                              m_f->m_numHomogeneousDir, vars[i]);
                         }
                     }
                     else
@@ -228,12 +236,12 @@ void ProcessCreateExp::Process(po::variables_map &vm)
                         if (vars.size())
                         {
                             m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
-                              m_f->m_fielddef[0]->m_numHomogeneousDir, vars[0]);
+                              m_f->m_numHomogeneousDir, vars[0]);
                         }
                         else
                         {
                             m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
-                                m_f->m_fielddef[0]->m_numHomogeneousDir);
+                                m_f->m_numHomogeneousDir);
                         }
                     }
                 }
@@ -257,24 +265,6 @@ void ProcessCreateExp::Process(po::variables_map &vm)
                         m_f->m_exp[s * nfields + j]->UpdatePhys());
                 }
             }
-
-            // reset output field in case Import loaded elements that are not
-            // in the expansion (because of range option of partitioning)
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-                m_f->m_exp[0]->GetFieldDefinitions();
-            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-            for (j = 0; j < nfields; ++j)
-            {
-                for (i = 0; i < FieldDef.size(); ++i)
-                {
-                    FieldDef[i]->m_fields.push_back(
-                        m_f->m_fielddef[0]->m_fields[j]);
-                    m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-                }
-            }
-            m_f->m_fielddef = FieldDef;
-            m_f->m_data     = FieldData;
         }
     }
 

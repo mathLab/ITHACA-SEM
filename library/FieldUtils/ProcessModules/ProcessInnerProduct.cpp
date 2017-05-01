@@ -90,7 +90,7 @@ void ProcessInnerProduct::Process(po::variables_map &vm)
         ElementGIDs[i] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
     }
 
-    int nfields = m_f->m_fielddef[0]->m_fields.size();
+    int nfields = m_f->m_variables.size();
     int nphys   = m_f->m_exp[0]->GetTotPoints();
     NekDouble totiprod;
     string fields = m_config["fields"].as<string>();

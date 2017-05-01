@@ -158,17 +158,7 @@ void OutputFld::OutputFromExp(po::variables_map &vm)
                     {
                         BndExp[j][Border]->AppendFieldData(FieldDef[k],
                                                            FieldData[k]);
-
-                        if (m_f->m_fielddef.size() > 0)
-                        {
-                            FieldDef[k]->m_fields.push_back(
-                                m_f->m_fielddef[0]->m_fields[j]);
-                        }
-                        else
-                        {
-                            FieldDef[k]->m_fields.push_back(
-                                m_f->m_session->GetVariable(j));
-                        }
+                        FieldDef[k]->m_fields.push_back(m_f->m_variables[j]);
                     }
                 }
 
@@ -279,11 +269,11 @@ void OutputFld::OutputFromExp(po::variables_map &vm)
                 if (rank == 0)
                 {
                     cout << "L 2 error (variable "
-                         << m_f->m_fielddef[0]->m_fields[j] << ") : " << l2err
+                         << m_f->m_variables[j] << ") : " << l2err
                          << endl;
 
                     cout << "L inf error (variable "
-                         << m_f->m_fielddef[0]->m_fields[j] << ") : " << linferr
+                         << m_f->m_variables[j] << ") : " << linferr
                          << endl;
                 }
             }

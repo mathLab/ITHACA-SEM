@@ -127,7 +127,7 @@ void ProcessC0Projection::Process(po::variables_map &vm)
         m_f->m_declareExpansionAsContField = true;
         m_f->m_requireBoundaryExpansion    = false;
         C0ProjectExp[0]                    = m_f->AppendExpList(
-            m_f->m_fielddef[0]->m_numHomogeneousDir, "DefaultVar", true);
+            m_f->m_numHomogeneousDir, "DefaultVar", true);
         m_f->m_declareExpansionAsContField = savedef;
         m_f->m_requireBoundaryExpansion    = savedef2;
         for (int i = 1; i < nfields; ++i)
@@ -234,23 +234,6 @@ void ProcessC0Projection::Process(po::variables_map &vm)
         }
     }
 
-    // reset FieldDef in case of serial input and parallel output
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    // reset up FieldData with new values before projecting
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (int i = 0; i < nfields; ++i)
-    {
-        for (int j = 0; j < FieldDef.size(); ++j)
-        {
-            FieldDef[j]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[i]);
-            m_f->m_exp[i]->AppendFieldData(FieldDef[j], FieldData[j]);
-        }
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

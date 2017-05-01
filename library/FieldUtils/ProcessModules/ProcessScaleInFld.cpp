@@ -90,19 +90,28 @@ void ProcessScaleInFld::Process(po::variables_map &vm)
                     &(m_f->m_data[i][0]), 1);
     }
 
-    if (m_f->m_exp.size()) // expansiosn are defined reload field
+    if (m_f->m_exp.size()) // expansions are: defined reload field
     {
-        int nfields = m_f->m_fielddef[0]->m_fields.size();
+        int nfields = m_f->m_variables.size();
+        int nstrips;
+        m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
 
         // import basic field again in case of rescaling
-        for (int j = 0; j < nfields; ++j)
+        for (int s = 0; s < nstrips; ++s) // homogeneous strip varient
         {
-            for (int i = 0; i < m_f->m_data.size(); ++i)
+            for (int j = 0; j < nfields; ++j)
             {
-                m_f->m_exp[j]->ExtractDataToCoeffs(
-                    m_f->m_fielddef[i], m_f->m_data[i],
-                    m_f->m_fielddef[i]->m_fields[j],
-                    m_f->m_exp[j]->UpdateCoeffs());
+                for (int i = 0; i < m_f->m_data.size() / nstrips; ++i)
+                {
+                    m_f->m_exp[s * nfields + j]->ExtractDataToCoeffs(
+                        m_f->m_fielddef[i * nstrips + s],
+                        m_f->m_data[i * nstrips + s],
+                        m_f->m_fielddef[i * nstrips + s]->m_fields[j],
+                        m_f->m_exp[s * nfields + j]->UpdateCoeffs());
+                }
+                m_f->m_exp[s * nfields + j]->BwdTrans(
+                    m_f->m_exp[s * nfields + j]->GetCoeffs(),
+                    m_f->m_exp[s * nfields + j]->UpdatePhys());
             }
         }
     }

@@ -68,7 +68,7 @@ ProcessHomogeneousPlane::~ProcessHomogeneousPlane()
 
 void ProcessHomogeneousPlane::Process(po::variables_map &vm)
 {
-    if ((m_f->m_fielddef[0]->m_numHomogeneousDir) != 1)
+    if ((m_f->m_numHomogeneousDir) != 1)
     {
         ASSERTL0(false,
                  "ProcessHomogeneousPlane only works for Homogeneous1D.");
@@ -78,16 +78,16 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
              "Missing parameter planeid for ProcessHomogeneousPlane");
 
     int planeid = m_config["planeid"].as<int>();
-    int nfields = m_f->m_fielddef[0]->m_fields.size();
+    int nfields = m_f->m_variables.size();
 
     int nstrips;
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
 
     // Look for correct plane (because of parallel case)
     int plane = -1;
-    for (int i = 0; i < m_f->m_fielddef[0]->m_homogeneousZIDs.size(); ++i)
+    for (int i = 0; i < m_f->m_exp[0]->GetZIDs().num_elements(); ++i)
     {
-        if (m_f->m_fielddef[0]->m_homogeneousZIDs[i] == planeid)
+        if (m_f->m_exp[0]->GetZIDs()[i] == planeid)
         {
             plane = i;
         }
@@ -114,28 +114,6 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
                 }
             }
         }
-        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-            m_f->m_exp[0]->GetFieldDefinitions();
-        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-        for (int s = 0; s < nstrips; ++s)
-        {
-            for (int j = 0; j < nfields; ++j)
-            {
-                for (int i = 0; i < FieldDef.size() / nstrips; ++i)
-                {
-                    int n = s * FieldDef.size() / nstrips + i;
-
-                    FieldDef[n]->m_fields.push_back(
-                        m_f->m_fielddef[0]->m_fields[j]);
-                    m_f->m_exp[s * nfields + j]->AppendFieldData(FieldDef[n],
-                                                                 FieldData[n]);
-                }
-            }
-        }
-
-        m_f->m_fielddef = FieldDef;
-        m_f->m_data     = FieldData;
     }
     else
     {
@@ -148,10 +126,8 @@ void ProcessHomogeneousPlane::Process(po::variables_map &vm)
                     MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr();
             }
         }
-        m_f->m_fielddef =
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
-        m_f->m_data = std::vector<std::vector<NekDouble> >();
     }
+    m_f->m_numHomogeneousDir = 0;
 }
 }
 }

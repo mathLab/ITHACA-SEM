@@ -105,20 +105,6 @@ void ProcessJacobianEnergy::Process(po::variables_map &vm)
 
         Elmt->FwdTrans(phys, tmp = coeffs + coeffoffset);
     }
-
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (int i = 0; i < FieldDef.size(); ++i)
-    {
-        FieldDef[i]->m_fields.push_back("JacobianEnergy");
-        m_f->m_variables.push_back("JacobianEnergy");
-        m_f->m_exp[0]->AppendFieldData(FieldDef[i], FieldData[i]);
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

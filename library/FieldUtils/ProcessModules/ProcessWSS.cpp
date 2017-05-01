@@ -96,14 +96,13 @@ void ProcessWSS::Process(po::variables_map &vm)
 
     int i, j;
     int spacedim = m_f->m_graph->GetSpaceDimension();
-    if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
-        (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
+    if ((m_f->m_numHomogeneousDir) == 1 || (m_f->m_numHomogeneousDir) == 2)
     {
-        spacedim += m_f->m_fielddef[0]->m_numHomogeneousDir;
+        spacedim += m_f->m_numHomogeneousDir;
     }
 
-    int nfields = m_f->m_fielddef[0]->m_fields.size();
-    ASSERTL0(m_f->m_fielddef[0]->m_fields[0] == "u",
+    int nfields = m_f->m_variables.size();
+    ASSERTL0(m_f->m_variables[0] == "u",
              "Implicit assumption that input is in incompressible format of "
              "(u,v,p) or (u,v,w,p)");
 
@@ -137,23 +136,22 @@ void ProcessWSS::Process(po::variables_map &vm)
     for (i = 0; i < newfields; ++i)
     {
         m_f->m_exp[nfields + i] =
-            m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir, var);
+            m_f->AppendExpList(m_f->m_numHomogeneousDir, var);
     }
 
     if (spacedim == 2)
     {
-        m_f->m_fielddef[0]->m_fields.push_back("Shear_x");
-        m_f->m_fielddef[0]->m_fields.push_back("Shear_y");
-        m_f->m_fielddef[0]->m_fields.push_back("Shear_mag");
+        m_f->m_variables.push_back("Shear_x");
+        m_f->m_variables.push_back("Shear_y");
+        m_f->m_variables.push_back("Shear_mag");
     }
     else
     {
-        m_f->m_fielddef[0]->m_fields.push_back("Shear_x");
-        m_f->m_fielddef[0]->m_fields.push_back("Shear_y");
-        m_f->m_fielddef[0]->m_fields.push_back("Shear_z");
-        m_f->m_fielddef[0]->m_fields.push_back("Shear_mag");
+        m_f->m_variables.push_back("Shear_x");
+        m_f->m_variables.push_back("Shear_y");
+        m_f->m_variables.push_back("Shear_z");
+        m_f->m_variables.push_back("Shear_mag");
     }
-    m_f->m_variables = m_f->m_fielddef[0]->m_fields;
 
     // Create map of boundary ids for partitioned domains
     SpatialDomains::BoundaryConditions bcs(m_f->m_session,

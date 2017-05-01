@@ -222,23 +222,6 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
         }
     }
 
-    // set up output fld file.
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for (j = 0; j < nFields; ++j)
-    {
-        for (i = 0; i < FieldDef.size(); ++i)
-        {
-            FieldDef[i]->m_fields.push_back(m_f->m_fieldPts->GetFieldName(j));
-
-            m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-        }
-    }
-
-    m_f->m_fielddef = FieldDef;
-    m_f->m_data     = FieldData;
 }
 }
 }

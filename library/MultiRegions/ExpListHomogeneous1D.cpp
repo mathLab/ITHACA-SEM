@@ -1432,6 +1432,11 @@ namespace Nektar
             return m_lhom;
         }
 
+        void ExpListHomogeneous1D::v_SetHomoLen(const NekDouble lhom)
+        {
+            m_lhom = lhom;
+        }
+
         Array<OneD, const unsigned int> ExpListHomogeneous1D::v_GetZIDs(void)
         {
             return m_transposition->GetPlanesIDs();

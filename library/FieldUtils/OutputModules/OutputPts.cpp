@@ -62,116 +62,49 @@ void OutputPts::OutputFromPts(po::variables_map &vm)
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 
-    fs::path writefile(filename);
-    int writepts = 1;
-    if (fs::exists(writefile) && (vm.count("forceoutput") == 0))
-    {
-        LibUtilities::CommSharedPtr comm = m_f->m_comm;
-        int rank                         = comm->GetRank();
-        writepts = 0; // set to zero for reduce all to be correct.
-
-        if (rank == 0)
-        {
-            string answer;
-            cout << "Did you wish to overwrite " << filename << " (y/n)? ";
-            getline(cin, answer);
-            if (answer.compare("y") == 0)
-            {
-                writepts = 1;
-            }
-            else
-            {
-                cout << "Not writing file " << filename
-                     << " because it already exists" << endl;
-            }
-        }
-
-        comm->AllReduce(writepts, LibUtilities::ReduceSum);
-    }
-
-    if (writepts)
-    {
-        LibUtilities::PtsIO ptsIO(m_f->m_comm);
-        LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
-        ptsIO.Write(filename, fPts);
-    }
+    LibUtilities::PtsIO ptsIO(m_f->m_comm);
+    ptsIO.Write(filename, m_f->m_fieldPts);
 }
 
 void OutputPts::OutputFromExp(po::variables_map &vm)
 {
-    // Extract the output filename and extension
-    string filename = m_config["outfile"].as<string>();
+    Array<OneD, Array<OneD, NekDouble> > tmp(
+        m_f->m_exp[0]->GetCoordim(0) +
+        m_f->m_variables.size());
 
-    fs::path writefile(filename);
-    int writepts = 1;
-    if (fs::exists(writefile) && (vm.count("forceoutput") == 0))
+    switch (m_f->m_exp[0]->GetCoordim(0))
     {
-        LibUtilities::CommSharedPtr comm = m_f->m_comm;
-        int rank                         = comm->GetRank();
-        writepts = 0; // set to zero for reduce all to be correct.
+        case 1:
+            tmp[0] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
+            m_f->m_exp[0]->GetCoords(tmp[0]);
+            break;
 
-        if (rank == 0)
-        {
-            string answer;
-            cout << "Did you wish to overwrite " << filename << " (y/n)? ";
-            getline(cin, answer);
-            if (answer.compare("y") == 0)
-            {
-                writepts = 1;
-            }
-            else
-            {
-                cout << "Not writing file " << filename
-                     << " because it already exists" << endl;
-            }
-        }
+        case 2:
+            tmp[1] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
+            tmp[0] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
+            m_f->m_exp[0]->GetCoords(tmp[0], tmp[1]);
+            break;
 
-        comm->AllReduce(writepts, LibUtilities::ReduceSum);
+        case 3:
+            tmp[2] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
+            tmp[1] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
+            tmp[0] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
+            m_f->m_exp[0]->GetCoords(tmp[0], tmp[1], tmp[2]);
+            break;
     }
 
-    if (writepts)
+    for (int i = 0; i < m_f->m_variables.size(); ++i)
     {
-        LibUtilities::PtsIO ptsIO(m_f->m_comm);
-        LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
-
-        Array<OneD, Array<OneD, NekDouble> > tmp(
-            m_f->m_exp[0]->GetCoordim(0) +
-            m_f->m_fielddef[0]->m_fields.size());
-
-        switch (m_f->m_exp[0]->GetCoordim(0))
-        {
-            case 1:
-                tmp[0] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
-                m_f->m_exp[0]->GetCoords(tmp[0]);
-                break;
-
-            case 2:
-                tmp[1] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
-                tmp[0] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
-                m_f->m_exp[0]->GetCoords(tmp[0], tmp[1]);
-                break;
-
-            case 3:
-                tmp[2] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
-                tmp[1] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
-                tmp[0] = Array<OneD, NekDouble>(m_f->m_exp[0]->GetTotPoints());
-                m_f->m_exp[0]->GetCoords(tmp[0], tmp[1], tmp[2]);
-                break;
-        }
-
-        for (int i = 0; i < m_f->m_fielddef[0]->m_fields.size(); ++i)
-        {
-            tmp[i + m_f->m_exp[0]->GetCoordim(0)] =
-                m_f->m_exp[i]->GetPhys();
-        }
-        fPts =
-            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
-                m_f->m_exp[0]->GetCoordim(0),
-                m_f->m_variables,
-                tmp);
-
-        ptsIO.Write(filename, fPts);
+        tmp[i + m_f->m_exp[0]->GetCoordim(0)] =
+            m_f->m_exp[i]->GetPhys();
     }
+    m_f->m_fieldPts =
+        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+            m_f->m_exp[0]->GetCoordim(0),
+            m_f->m_variables,
+            tmp);
+
+    OutputFromPts(vm);
 }
 
 void OutputPts::OutputFromData(po::variables_map &vm)

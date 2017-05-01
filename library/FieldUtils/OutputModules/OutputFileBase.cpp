@@ -57,17 +57,47 @@ OutputFileBase::~OutputFileBase()
 
 void OutputFileBase::Process(po::variables_map &vm)
 {
-    if(m_f->m_fieldPts != LibUtilities::NullPtsField)
+    string filename = m_config["outfile"].as<string>();
+    fs::path outFile(filename);
+    int writeFile = 1;
+    if (fs::exists(outFile) && (vm.count("forceoutput") == 0))
     {
-        OutputFromPts(vm);
+        LibUtilities::CommSharedPtr comm = m_f->m_comm;
+        int rank                         = comm->GetRank();
+        writeFile = 0; // set to zero for reduce all to be correct.
+
+        if (rank == 0)
+        {
+            string answer;
+            cout << "Did you wish to overwrite " << filename << " (y/n)? ";
+            getline(cin, answer);
+            if (answer.compare("y") == 0)
+            {
+                writeFile = 1;
+            }
+            else
+            {
+                cout << "Not writing file " << filename
+                     << " because it already exists" << endl;
+            }
+        }
+
+        comm->AllReduce(writeFile, LibUtilities::ReduceSum);
     }
-    else if(m_f->m_exp.size())
+    if(writeFile)
     {
-        OutputFromExp(vm);
-    }
-    else if(m_f->m_data.size())
-    {
-        OutputFromData(vm);
+        if(m_f->m_fieldPts != LibUtilities::NullPtsField)
+        {
+            OutputFromPts(vm);
+        }
+        else if(m_f->m_exp.size())
+        {
+            OutputFromExp(vm);
+        }
+        else if(m_f->m_data.size())
+        {
+            OutputFromData(vm);
+        }
     }
 }
 }

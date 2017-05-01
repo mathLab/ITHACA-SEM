@@ -65,7 +65,7 @@ ProcessVorticity::~ProcessVorticity()
 
 void ProcessVorticity::Process(po::variables_map &vm)
 {
-    int i, j, s;
+    int i, s;
     int expdim   = m_f->m_graph->GetMeshDimension();
     int spacedim = expdim;
     if ((m_f->m_numHomogeneousDir) == 1 || (m_f->m_numHomogeneousDir) == 2)

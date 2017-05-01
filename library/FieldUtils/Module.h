@@ -137,7 +137,7 @@ class Module
 {
 public:
     FIELD_UTILS_EXPORT Module(FieldSharedPtr p_f)
-        : m_f(p_f), m_requireEquiSpaced(false)
+        : m_f(p_f)
     {
     }
     virtual void Process(po::variables_map &vm) = 0;
@@ -153,16 +153,6 @@ public:
     FIELD_UTILS_EXPORT void PrintConfig();
     FIELD_UTILS_EXPORT void SetDefaults();
 
-    FIELD_UTILS_EXPORT bool GetRequireEquiSpaced(void)
-    {
-        return m_requireEquiSpaced;
-    }
-
-    FIELD_UTILS_EXPORT void SetRequireEquiSpaced(bool pVal)
-    {
-        m_requireEquiSpaced = pVal;
-    }
-
     FIELD_UTILS_EXPORT void EvaluateTriFieldAtEquiSpacedPts(
         LocalRegions::ExpansionSharedPtr &exp,
         const Array<OneD, const NekDouble> &infield,
@@ -175,7 +165,6 @@ protected:
     FieldSharedPtr m_f;
     /// List of configuration values.
     map<string, ConfigOption> m_config;
-    bool m_requireEquiSpaced;
 };
 
 /**

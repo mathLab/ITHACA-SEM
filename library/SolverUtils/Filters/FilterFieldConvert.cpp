@@ -446,22 +446,6 @@ void FilterFieldConvert::CreateModules( vector<string> &modcmds)
         // Ensure configuration options have been set.
         mod->SetDefaults();
     }
-
-    bool RequiresEquiSpaced = false;
-    for (int i = 0; i < m_modules.size(); ++i)
-    {
-        if(m_modules[i]->GetRequireEquiSpaced())
-        {
-            RequiresEquiSpaced = true;
-        }
-    }
-    if (RequiresEquiSpaced)
-    {
-        for (int i = 0; i < m_modules.size(); ++i)
-        {
-            m_modules[i]->SetRequireEquiSpaced(true);
-        }
-    }
 }
 
 void FilterFieldConvert::CreateFields(

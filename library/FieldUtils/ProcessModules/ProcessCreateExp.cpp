@@ -133,25 +133,11 @@ void ProcessCreateExp::Process(po::variables_map &vm)
             m_f->m_graph->SetExpansions(m_f->m_fielddef);
         }
 
-        // reset expansion defintion to use equispaced points if required.
-        if (m_requireEquiSpaced || vm.count("output-points"))
+        // Adjust number of quadrature points
+        if (vm.count("output-points"))
         {
-            int nPointsNew = 0;
-
-            if (vm.count("output-points"))
-            {
-                nPointsNew = vm["output-points"].as<int>();
-            }
-
-            m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
-        }
-        else
-        {
-            if (vm.count("output-points"))
-            {
-                int nPointsNew = vm["output-points"].as<int>();
-                m_f->m_graph->SetExpansionsToPointOrder(nPointsNew);
-            }
+            int nPointsNew = vm["output-points"].as<int>();
+            m_f->m_graph->SetExpansionsToPointOrder(nPointsNew);
         }
 
         if (m_f->m_verbose)

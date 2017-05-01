@@ -360,33 +360,6 @@ int main(int argc, char* argv[])
         mod->SetDefaults();
     }
 
-    // If any output module has to reset points then set intput modules to match
-   if(vm.count("noequispaced"))
-    {
-        for (int i = 0; i < modules.size(); ++i)
-        {
-            modules[i]->SetRequireEquiSpaced(false);
-        }
-    }
-    else
-    {
-        bool RequiresEquiSpaced = false;
-        for (int i = 0; i < modules.size(); ++i)
-        {
-            if(modules[i]->GetRequireEquiSpaced())
-            {
-                RequiresEquiSpaced = true;
-            }
-        }
-        if (RequiresEquiSpaced)
-        {
-            for (int i = 0; i < modules.size(); ++i)
-            {
-                modules[i]->SetRequireEquiSpaced(true);
-            }
-        }
-    }
-    
     // Run field process.
     for (int i = 0; i < modules.size(); ++i)
     {

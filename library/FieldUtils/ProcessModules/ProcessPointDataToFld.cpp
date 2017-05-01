@@ -59,8 +59,6 @@ ModuleKey ProcessPointDataToFld::className =
 ProcessPointDataToFld::ProcessPointDataToFld(FieldSharedPtr f)
     : ProcessModule(f)
 {
-    m_requireEquiSpaced = true;
-
     m_config["setnantovalue"] = ConfigOption(
         false, "NotSet", "reset any nan value to prescribed value");
 

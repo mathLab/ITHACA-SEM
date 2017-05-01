@@ -120,7 +120,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
     LocalRegions::ExpansionSharedPtr e;
 
     // prepare PtsField
-    vector<std::string> fieldNames;
     vector<int> ppe;
     vector<Array<OneD, int> > ptsConn;
     int nfields;

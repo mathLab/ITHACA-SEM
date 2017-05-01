@@ -73,6 +73,9 @@ public:
         return "Writing file";
     }
 
+protected:
+    bool m_requireEquiSpaced;
+
 };
 }
 }

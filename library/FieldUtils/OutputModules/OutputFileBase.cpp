@@ -49,6 +49,7 @@ namespace FieldUtils
 
 OutputFileBase::OutputFileBase(FieldSharedPtr f) : OutputModule(f)
 {
+    m_requireEquiSpaced = false;
 }
 
 OutputFileBase::~OutputFileBase()
@@ -103,6 +104,44 @@ void OutputFileBase::Process(po::variables_map &vm)
         }
         else if(m_f->m_exp.size())
         {
+            // reset expansion definition to use equispaced points if required.
+            if (m_requireEquiSpaced && (vm.count("noequispaced") == 0 ) )
+            {
+                // Information to create new expansion
+                int numFields   = m_f->m_exp.size();
+                m_f->m_fielddef = m_f->m_exp[0]->GetFieldDefinitions();
+
+                // Set points to equispaced
+                int nPointsNew  = 0;
+                if (vm.count("output-points"))
+                {
+                    nPointsNew = vm["output-points"].as<int>();
+                }
+                m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
+
+                // Save original expansion
+                vector<MultiRegions::ExpListSharedPtr> expOld = m_f->m_exp;
+                // Create new expansion
+                m_f->m_exp[0] = m_f->SetUpFirstExpList(m_f->m_numHomogeneousDir,
+                                                true);
+                for(int i = 1; i < numFields; ++i)
+                {
+                    m_f->m_exp[i] =
+                            m_f->AppendExpList(m_f->m_numHomogeneousDir);
+                }
+                // Extract result to new expansion
+                for(int i = 0; i < numFields; ++i)
+                {
+                    m_f->m_exp[i]->ExtractCoeffsToCoeffs(
+                            expOld[i],
+                            expOld[i]->GetCoeffs(),
+                            m_f->m_exp[i]->UpdateCoeffs());
+                    m_f->m_exp[i]->BwdTrans(
+                            m_f->m_exp[i]->GetCoeffs(),
+                            m_f->m_exp[i]->UpdatePhys());
+                }
+            }
+
             OutputFromExp(vm);
         }
         else if(m_f->m_data.size())

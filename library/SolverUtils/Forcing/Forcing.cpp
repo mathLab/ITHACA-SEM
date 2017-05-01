@@ -169,7 +169,9 @@ namespace Nektar
                     || (m_sessionFunctions[pName]->GetExpansion() != pFields[0])
                 )
                 {
-                    m_sessionFunctions[pName] = SessionFunctionSharedPtr(new SessionFunction(pSession, pFields[0], pName, pCache));
+                    m_sessionFunctions[pName] =
+                        MemoryManager<SessionFunction>::AllocateSharedPtr(
+                            pSession, pFields[0], pName, pCache);
                 }
 
                 return m_sessionFunctions[pName];

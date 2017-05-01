@@ -77,9 +77,8 @@ InputDat::~InputDat()
  */
 void InputDat::Process(po::variables_map &vm)
 {
-    string line, word, tag;
+    string line;
     std::ifstream datFile;
-    stringstream s;
 
     // Open the file stream.
     string fname = m_f->m_inputfiles["dat"][0];
@@ -92,7 +91,7 @@ void InputDat::Process(po::variables_map &vm)
     }
 
     // read variables
-    // currently assum there are x y and z coordinates
+    // currently assume there are x y and z coordinates
     int dim = 3;
     vector<string> fieldNames;
     while (!datFile.eof())

@@ -86,15 +86,6 @@ InputFld::~InputFld()
  */
 void InputFld::Process(po::variables_map &vm)
 {
-
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "Processing input fld file" << endl;
-        }
-    }
-
     int i;
     string fldending;
     // Determine appropriate field input
@@ -137,8 +128,6 @@ void InputFld::Process(po::variables_map &vm)
             {
                 return;
             }
-
-            m_f->m_exp.resize(1);
 
             Array<OneD, int> ElementGIDs(expansions.size());
             SpatialDomains::ExpansionMap::const_iterator expIt;

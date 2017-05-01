@@ -112,7 +112,10 @@ namespace Nektar
 
             if (m_session->DefinesElement("Nektar/Coupling"))
             {
-                m_coupling = MemoryManager<SolverUtils::CwipiCoupling>::AllocateSharedPtr(m_fields[0], 0, 1.0);
+                TiXmlElement* vCoupling = m_session->GetElement("Nektar/Coupling");
+                string vType = vCoupling->Attribute("TYPE");
+
+                m_coupling = GetCouplingFactory().CreateInstance(vType, m_fields[0]);
             }
 
             // Set up filters

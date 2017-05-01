@@ -43,17 +43,37 @@ namespace Nektar
 namespace SolverUtils
 {
 
-typedef std::map<std::string, std::string> CouplingConfigMap;
+class CwipiCoupling;
+
+typedef boost::shared_ptr<CwipiCoupling> CwipiCouplingSharedPointer;
+
+/// Declaration of the Coupling factory
+typedef LibUtilities::NekFactory<std::string,
+                                 CwipiCoupling,
+                                 MultiRegions::ExpListSharedPtr>
+    CouplingFactory;
+
+/// Declaration of the Coupling factory singleton
+CouplingFactory &GetCouplingFactory();
 
 class CwipiCoupling
 {
 
 public:
-    CwipiCoupling(){};
+    typedef std::map<std::string, std::string> CouplingConfigMap;
 
-    CwipiCoupling(MultiRegions::ExpListSharedPtr field,
-                  int outputFreq,
-                  double geomTol);
+    static std::string className;
+
+    /// Creates an instance of this class
+    static CwipiCouplingSharedPointer create(
+        MultiRegions::ExpListSharedPtr field)
+    {
+        CwipiCouplingSharedPointer p =
+            MemoryManager<CwipiCoupling>::AllocateSharedPtr(field);
+        return p;
+    }
+
+    CwipiCoupling(MultiRegions::ExpListSharedPtr field);
 
     ~CwipiCoupling();
 
@@ -115,8 +135,6 @@ public:
         const cwipi_solver_type_t solver_type,
         const void *local_field,
         void *distant_field);
-
-static int foo;
 
 protected:
     std::string m_couplingName;
@@ -204,8 +222,6 @@ private:
                            int &connecPos,
                            int &conidxPos);
 };
-
-typedef boost::shared_ptr<CwipiCoupling> CwipiCouplingSharedPointer;
 
 typedef boost::function<void(Array<OneD, Array<OneD, NekDouble> > &interpField,
                              Array<OneD, Array<OneD, NekDouble> > &distCoords)>

@@ -46,12 +46,29 @@
 
 #include <boost/functional/hash.hpp>
 
+#define GEOM_TOL 1.0
+#define OUTPUT_FREQ 0
+
 namespace Nektar
 {
 namespace SolverUtils
 {
 
 using namespace std;
+
+CouplingFactory &GetCouplingFactory()
+{
+    typedef Loki::SingletonHolder<CouplingFactory,
+                                  Loki::CreateUsingNew,
+                                  Loki::NoDestroy,
+                                  Loki::SingleThreaded>
+        Type;
+    return Type::Instance();
+}
+
+std::string CwipiCoupling::className =
+    GetCouplingFactory().RegisterCreatorFunction(
+        "Cwipi", CwipiCoupling::create, "Cwipi Coupling");
 
 void CwipiCoupling::InterpCallback(
     const int entities_dim,
@@ -104,9 +121,7 @@ void CwipiCoupling::InterpCallback(
     }
 }
 
-CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
-                             int outputFreq,
-                             double geomTol)
+CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field)
     : m_evalField(field), m_sendHandle(-1), m_recvHandle(-1), m_lastSend(-1E6),
       m_lastReceive(-1E6), m_points(NULL), m_coords(NULL), m_connecIdx(NULL),
       m_connec(NULL), m_rValsInterl(NULL), m_sValsInterl(NULL)
@@ -136,10 +151,10 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field,
                           CWIPI_COUPLING_PARALLEL_WITH_PARTITIONING,
                           m_config["REMOTENAME"].c_str(),
                           m_spacedim,
-                          geomTol,
+                          GEOM_TOL,
                           CWIPI_STATIC_MESH,
                           solver_type,
-                          outputFreq,
+                          OUTPUT_FREQ,
                           "Ensight Gold",
                           "text");
     cwipi_synchronize_control_parameter(m_config["REMOTENAME"].c_str());

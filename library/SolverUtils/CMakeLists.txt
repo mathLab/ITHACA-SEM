@@ -1,5 +1,6 @@
 SET(SOLVER_UTILS_SOURCES
   Core/Coupling.cpp
+  Core/CouplingFile.cpp
   Core/Misc.cpp
   Core/SessionFunction.cpp
   AdvectionSystem.cpp
@@ -47,6 +48,7 @@ SET(SOLVER_UTILS_SOURCES
 
 SET(SOLVER_UTILS_HEADERS
   Core/Coupling.h
+  Core/CouplingFile.h
   Core/Misc.h
   Core/SessionFunction.h
   AdvectionSystem.h

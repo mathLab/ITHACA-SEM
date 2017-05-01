@@ -67,6 +67,12 @@ public:
     {
         return "ProcessGrad";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating gradients";
+    }
+
 };
 }
 }

@@ -105,14 +105,6 @@ InputNek5000::~InputNek5000()
  */
 void InputNek5000::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "Processing Nek5000 field file" << endl;
-        }
-    }
-
     string fldending = "fld5000";
     ifstream file(m_f->m_inputfiles[fldending][0].c_str(), ios::binary);
 

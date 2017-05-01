@@ -69,6 +69,11 @@ public:
         return "ProcessMapping";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Applying mapping to field";
+    }
+
     static GlobalMapping::MappingSharedPtr GetMapping(FieldSharedPtr f);
 
 private:

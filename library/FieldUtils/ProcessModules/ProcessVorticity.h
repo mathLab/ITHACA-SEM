@@ -66,6 +66,12 @@ public:
     {
         return "ProcessVorticity";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating vorticity";
+    }
+
 };
 }
 }

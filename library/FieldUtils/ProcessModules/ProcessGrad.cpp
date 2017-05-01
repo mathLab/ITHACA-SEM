@@ -64,14 +64,6 @@ ProcessGrad::~ProcessGrad()
 
 void ProcessGrad::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessGrad: Calculating gradients..." << endl;
-        }
-    }
-
     int i, j;
     int expdim    = m_f->m_graph->GetMeshDimension();
     int spacedim  = m_f->m_fielddef[0]->m_numHomogeneousDir + expdim;

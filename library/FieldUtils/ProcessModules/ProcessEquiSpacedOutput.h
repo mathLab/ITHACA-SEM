@@ -67,6 +67,11 @@ public:
         return "ProcessEquiSpacedOutput";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Interpolating fields to equispaced";
+    }
+
 protected:
     ProcessEquiSpacedOutput(){};
     void SetupEquiSpacedField(void);

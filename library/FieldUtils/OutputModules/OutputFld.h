@@ -65,6 +65,12 @@ public:
     {
         return "OutputFld";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Writing file";
+    }
+
 };
 }
 }

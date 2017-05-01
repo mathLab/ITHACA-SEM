@@ -70,14 +70,6 @@ ProcessAddFld::~ProcessAddFld()
 
 void ProcessAddFld::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessAddFld: Adding new fld to input fld..." << endl;
-        }
-    }
-
     ASSERTL0(m_f->m_data.size() != 0, "No input data defined");
 
     string scalestr = m_config["scale"].as<string>();

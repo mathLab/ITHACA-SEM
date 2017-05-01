@@ -64,14 +64,6 @@ ProcessNumModes::~ProcessNumModes()
 
 void ProcessNumModes::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessNumModes: Calculating number of modes..." << endl;
-        }
-    }
-
     int i, j, s;
     int expdim    = m_f->m_graph->GetMeshDimension();
     int nfields   = m_f->m_fielddef[0]->m_fields.size();

@@ -74,15 +74,6 @@ ProcessC0Projection::~ProcessC0Projection()
 
 void ProcessC0Projection::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessC0Projection: Projecting field into C0 space..."
-                 << endl;
-        }
-    }
-
     // ensure not using diagonal preconditioner since tends not to converge fo
     // mass matrix
     if (m_f->m_graph->GetMeshDimension() == 3)

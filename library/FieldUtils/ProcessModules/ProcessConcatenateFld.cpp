@@ -84,15 +84,6 @@ ProcessConcatenateFld::~ProcessConcatenateFld()
 
 void ProcessConcatenateFld::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessConcatenateFld: Concatenating field file..."
-                 << endl;
-        }
-    }
-
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
         m_f->m_exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());

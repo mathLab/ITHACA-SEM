@@ -63,14 +63,6 @@ ProcessPrintFldNorms::~ProcessPrintFldNorms()
 
 void ProcessPrintFldNorms::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessPrintFldNorms: Printing norms..." << endl;
-        }
-    }
-
     // Evaluate norms and print
     for (int j = 0; j < m_f->m_exp.size(); ++j)
     {

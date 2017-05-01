@@ -69,15 +69,6 @@ ProcessHomogeneousStretch::~ProcessHomogeneousStretch()
 
 void ProcessHomogeneousStretch::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->GetRank() == 0)
-        {
-            cout << "ProcessHomogeneousStretch: Stretching expansion..."
-                 << endl;
-        }
-    }
-
     if ((m_f->m_fielddef[0]->m_numHomogeneousDir) != 1)
     {
         ASSERTL0(false,

@@ -77,14 +77,6 @@ InputPts::~InputPts()
  */
 void InputPts::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "Processing input pts file" << endl;
-        }
-    }
-
     string inFile = (m_f->m_inputfiles["pts"][0]).c_str();
 
     if (m_f->m_session)

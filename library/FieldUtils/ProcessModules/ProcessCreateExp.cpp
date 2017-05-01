@@ -72,7 +72,6 @@ void ProcessCreateExp::Process(po::variables_map &vm)
         {
             if (m_f->m_comm->TreatAsRankZero())
             {
-                cout << "ProcessCreateExp: creating m_exp..." << endl;
                 timerpart.Start();
             }
         }

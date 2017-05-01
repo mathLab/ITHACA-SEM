@@ -69,6 +69,11 @@ public:
         return "ProcessPointDataToFld";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Projecting data to expansion";
+    }
+
 private:
 };
 }

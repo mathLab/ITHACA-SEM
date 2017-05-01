@@ -67,6 +67,12 @@ public:
     {
         return "ProcessSurfDistance";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating distance to surface";
+    }
+
 };
 }
 }

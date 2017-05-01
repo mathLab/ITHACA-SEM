@@ -65,6 +65,11 @@ public:
         return "ProcessJacobianEnergy";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Processing Jacobian";
+    }
+
 private:
 };
 }

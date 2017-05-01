@@ -68,14 +68,6 @@ ProcessHomogeneousPlane::~ProcessHomogeneousPlane()
 
 void ProcessHomogeneousPlane::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessHomogeneousPlane: Extracting plane..." << endl;
-        }
-    }
-
     if ((m_f->m_fielddef[0]->m_numHomogeneousDir) != 1)
     {
         ASSERTL0(false,

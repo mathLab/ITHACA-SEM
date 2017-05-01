@@ -64,6 +64,11 @@ public:
         return "InputDat";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Processing input dat file";
+    }
+
 private:
     void ReadTecplotFEBlockZone(std::ifstream &datFile,
                                 string &line,

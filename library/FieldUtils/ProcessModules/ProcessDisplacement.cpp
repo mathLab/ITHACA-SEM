@@ -124,14 +124,6 @@ ProcessDisplacement::~ProcessDisplacement()
 
 void ProcessDisplacement::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessDisplacement: Calculating displacement..." << endl;
-        }
-    }
-
     string toFile = m_config["to"].as<string>();
 
     if (toFile == "")

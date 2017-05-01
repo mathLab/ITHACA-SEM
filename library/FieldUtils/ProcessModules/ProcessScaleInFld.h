@@ -68,6 +68,11 @@ public:
         return "ProcessScaleInFld";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Rescaling input fld";
+    }
+
 private:
 };
 }

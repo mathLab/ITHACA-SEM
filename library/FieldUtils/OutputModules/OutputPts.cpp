@@ -62,14 +62,6 @@ void OutputPts::OutputFromPts(po::variables_map &vm)
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "OutputPts: Writing file..." << endl;
-        }
-    }
-
     fs::path writefile(filename);
     int writepts = 1;
     if (fs::exists(writefile) && (vm.count("forceoutput") == 0))
@@ -109,14 +101,6 @@ void OutputPts::OutputFromExp(po::variables_map &vm)
 {
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
-
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "OutputPts: Writing file..." << endl;
-        }
-    }
 
     fs::path writefile(filename);
     int writepts = 1;

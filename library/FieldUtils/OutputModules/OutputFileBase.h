@@ -67,6 +67,12 @@ public:
     {
         return "OutputFileBase";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Writing file";
+    }
+
 };
 }
 }

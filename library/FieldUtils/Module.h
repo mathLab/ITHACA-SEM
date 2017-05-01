@@ -144,6 +144,11 @@ public:
 
     virtual std::string GetModuleName() = 0;
 
+    virtual std::string GetModuleDescription()
+    {
+        return " ";
+    }
+
     FIELD_UTILS_EXPORT void RegisterConfig(string key, string value);
     FIELD_UTILS_EXPORT void PrintConfig();
     FIELD_UTILS_EXPORT void SetDefaults();

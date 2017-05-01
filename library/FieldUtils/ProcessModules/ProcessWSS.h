@@ -67,6 +67,12 @@ public:
     {
         return "ProcessWSS";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating wall shear stress";
+    }
+
 };
 }
 }

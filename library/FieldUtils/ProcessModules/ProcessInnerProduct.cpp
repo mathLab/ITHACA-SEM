@@ -73,14 +73,6 @@ ProcessInnerProduct::~ProcessInnerProduct()
 
 void ProcessInnerProduct::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessInnerProduct: Evaluating inner product..." << endl;
-        }
-    }
-
     ASSERTL0(m_f->m_exp.size() != 0, "input xml file needs to be specified");
     ASSERTL0(m_f->m_data.size() != 0, "No input data has been defined");
 

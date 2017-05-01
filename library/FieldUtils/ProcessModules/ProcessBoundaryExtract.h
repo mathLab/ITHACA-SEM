@@ -65,6 +65,12 @@ public:
     {
         return "ProcessBoundaryExtract";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Setting up boundary extraction";
+    }
+
 };
 }
 }

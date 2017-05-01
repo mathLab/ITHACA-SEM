@@ -65,14 +65,6 @@ ProcessVorticity::~ProcessVorticity()
 
 void ProcessVorticity::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessVorticity: Calculating vorticity..." << endl;
-        }
-    }
-
     int i, j, s;
     int expdim   = m_f->m_graph->GetMeshDimension();
     int spacedim = expdim;

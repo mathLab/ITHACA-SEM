@@ -61,14 +61,6 @@ ProcessDeform::~ProcessDeform()
 
 void ProcessDeform::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessDeform: Deforming grid..." << endl;
-        }
-    }
-
     Array<OneD, MultiRegions::ExpListSharedPtr> exp(m_f->m_exp.size());
 
     for (int i = 0; i < exp.num_elements(); ++i)

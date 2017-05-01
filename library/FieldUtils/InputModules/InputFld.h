@@ -66,6 +66,11 @@ public:
         return "InputFld";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Processing input fld file";
+    }
+
 private:
 };
 }

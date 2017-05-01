@@ -71,6 +71,11 @@ public:
         return "ProcessInterpPoints";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Interpolating to points";
+    }
+
 private:
     void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
                                LibUtilities::PtsFieldSharedPtr &pts,

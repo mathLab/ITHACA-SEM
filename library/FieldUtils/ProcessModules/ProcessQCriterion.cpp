@@ -63,14 +63,6 @@ ProcessQCriterion::~ProcessQCriterion()
 
 void ProcessQCriterion::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessQCriterion: Calculating Q Criterion..." << endl;
-        }
-    }
-
     int i, j, s;
     int expdim   = m_f->m_graph->GetMeshDimension();
     int spacedim = expdim;

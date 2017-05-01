@@ -68,6 +68,11 @@ public:
         return "ProcessAddFld";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Adding new fld to input fld";
+    }
+
 private:
 };
 }

@@ -77,14 +77,6 @@ ProcessInterpField::~ProcessInterpField()
 
 void ProcessInterpField::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessInterpField: Interpolating field..." << endl;
-        }
-    }
-
     m_fromField = boost::shared_ptr<Field>(new Field());
 
     std::vector<std::string> files;

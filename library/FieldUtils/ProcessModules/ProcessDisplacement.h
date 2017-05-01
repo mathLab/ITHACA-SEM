@@ -63,6 +63,12 @@ public:
     {
         return "ProcessDisplacement";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating displacement";
+    }
+
 };
 }
 }

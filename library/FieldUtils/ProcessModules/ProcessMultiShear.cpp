@@ -74,15 +74,6 @@ ProcessMultiShear::~ProcessMultiShear()
 
 void ProcessMultiShear::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessMultiShear: Calculating shear stress metrics..."
-                 << endl;
-        }
-    }
-
     int nstart, i, j, nfields=0;
     bool wssg      = false;
     NekDouble nfld = m_config["N"].as<NekDouble>();

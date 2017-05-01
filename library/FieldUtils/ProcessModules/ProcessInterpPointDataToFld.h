@@ -69,6 +69,11 @@ public:
         return "ProcessInterpPointDataToFld";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Interpolating data to field";
+    }
+
     void PrintProgressbar(const int position, const int goal) const
     {
         LibUtilities::PrintProgressbar(position, goal, "Interpolating");

@@ -68,14 +68,6 @@ ProcessScalGrad::~ProcessScalGrad()
 
 void ProcessScalGrad::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessScalGrad: Calculating scalar gradient..." << endl;
-        }
-    }
-
     int i, j, k;
 
     // Set up Field options to output boundary fld

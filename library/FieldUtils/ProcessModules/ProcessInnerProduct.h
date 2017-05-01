@@ -68,6 +68,11 @@ public:
         return "ProcessInnerProduct";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Evaluating inner product";
+    }
+
 private:
     NekDouble IProduct(vector<unsigned int> &processFields,
                        FieldSharedPtr &fromField,

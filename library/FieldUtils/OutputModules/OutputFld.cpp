@@ -82,7 +82,7 @@ void OutputFld::Process(po::variables_map &vm)
         {
             if (m_f->m_comm->TreatAsRankZero())
             {
-                cout << "OutputFld: Writing boundary file(s): ";
+                cout << "\t OutputFld: Writing boundary file(s): ";
                 for (int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
                 {
                     cout << m_f->m_bndRegionsToWrite[i];
@@ -232,14 +232,6 @@ void OutputFld::Process(po::variables_map &vm)
     }
     else
     {
-        if (m_f->m_verbose)
-        {
-            if (m_f->m_comm->TreatAsRankZero())
-            {
-                cout << "OutputFld: Writing file..." << endl;
-            }
-        }
-
         fs::path writefile(filename);
         int writefld = 1;
         if (fs::exists(writefile) && (vm.count("forceoutput") == 0))

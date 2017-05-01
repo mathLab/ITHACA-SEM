@@ -92,15 +92,6 @@ void InputXml::Process(po::variables_map &vm)
         return;
     }
 
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "Processing input xml file" << endl;
-            timerpart.Start();
-        }
-    }
-
     string xml_ending    = "xml";
     string xml_gz_ending = "xml.gz";
 

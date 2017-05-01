@@ -152,15 +152,6 @@ void OutputTecplot::Process(po::variables_map &vm)
         return;
     }
 
-
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "OutputTecplot: Writing file..." << endl;
-        }
-    }
-
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 

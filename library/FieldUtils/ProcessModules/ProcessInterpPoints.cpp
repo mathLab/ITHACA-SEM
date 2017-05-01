@@ -104,14 +104,6 @@ ProcessInterpPoints::~ProcessInterpPoints()
 
 void ProcessInterpPoints::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessInterpPoints: interpolating to points..." << endl;
-        }
-    }
-
     int rank   = m_f->m_comm->GetRank();
     int nprocs = m_f->m_comm->GetSize();
 

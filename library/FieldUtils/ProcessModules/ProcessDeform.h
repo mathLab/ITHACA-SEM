@@ -63,6 +63,11 @@ public:
     {
         return "ProcessDeform";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Deforming grid";
+    }
 };
 }
 }

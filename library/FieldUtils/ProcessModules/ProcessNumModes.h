@@ -66,6 +66,12 @@ public:
     {
         return "ProcessNumModes";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating number of modes";
+    }
+
 };
 }
 }

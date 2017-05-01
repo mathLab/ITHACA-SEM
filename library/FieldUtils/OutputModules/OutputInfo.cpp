@@ -67,11 +67,6 @@ void OutputInfo::Process(po::variables_map &vm)
     string filename = m_config["outfile"].as<string>();
     int i;
 
-    if (m_f->m_verbose)
-    {
-        cout << "OutputInfo: Writing Info file..." << endl;
-    }
-
     // partition mesh
     ASSERTL0(vm.count("nprocs") > 0,
              "--nprocs nust be specified with info output");

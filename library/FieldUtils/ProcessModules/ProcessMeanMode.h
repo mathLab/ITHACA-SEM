@@ -67,6 +67,12 @@ public:
     {
         return "ProcessMeanMode";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Extracting mean mode";
+    }
+
 };
 }
 }

@@ -393,6 +393,9 @@ int main(int argc, char* argv[])
         if(f->m_verbose && f->m_comm->TreatAsRankZero())
         {
             moduleTimer.Start();
+
+            cout << modules[i]->GetModuleName() << ": "
+                 << modules[i]->GetModuleDescription() << endl;
         }
         modules[i]->Process(vm);
         cout.flush();

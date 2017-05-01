@@ -68,6 +68,11 @@ public:
         return "ProcessCreateExp";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Creating m_exp if needed";
+    }
+
 private:
 };
 }

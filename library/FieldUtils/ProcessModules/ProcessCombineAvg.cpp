@@ -69,15 +69,6 @@ ProcessCombineAvg::~ProcessCombineAvg()
 
 void ProcessCombineAvg::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessCombineAvg: Combining new fld into input avg fld..."
-                 << endl;
-        }
-    }
-
     ASSERTL0(m_f->m_exp.size() != 0, "No input expansion defined");
 
     int nfields  = m_f->m_fielddef[0]->m_fields.size();

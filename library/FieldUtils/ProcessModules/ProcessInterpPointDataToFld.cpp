@@ -71,16 +71,6 @@ ProcessInterpPointDataToFld::~ProcessInterpPointDataToFld()
 
 void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout
-                << "ProcessInterpPointDataToFld: interpolating data to field..."
-                << endl;
-        }
-    }
-
     int i, j;
 
     // Check for command line point specification if no .pts file specified

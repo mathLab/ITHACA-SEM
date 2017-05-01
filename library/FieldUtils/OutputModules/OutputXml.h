@@ -64,6 +64,12 @@ public:
     {
         return "OutputXml";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Writing file";
+    }
+
 };
 }
 }

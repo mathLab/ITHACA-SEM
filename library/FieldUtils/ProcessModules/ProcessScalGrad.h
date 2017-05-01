@@ -67,6 +67,12 @@ public:
     {
         return "ProcessScalGrad";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating scalar gradient";
+    }
+
 };
 }
 }

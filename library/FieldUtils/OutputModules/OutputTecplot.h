@@ -110,6 +110,12 @@ protected:
     {
         return "OutputTecplot";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Writing file";
+    }
+
 };
 
 /**

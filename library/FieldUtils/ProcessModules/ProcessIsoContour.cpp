@@ -118,15 +118,6 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     Timer timer;
     int rank = m_f->m_comm->GetRank();
 
-    if(m_f->m_verbose)
-    {
-        if(rank == 0)
-        {
-            cout << "Process Contour extraction..." << endl;
-            timer.Start();
-        }
-    }
-
     vector<IsoSharedPtr> iso;
 
     if(m_f->m_fieldPts.get()) // assume we have read .dat file to directly input dat file.

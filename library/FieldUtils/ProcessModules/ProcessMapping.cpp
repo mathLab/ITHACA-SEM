@@ -62,14 +62,6 @@ ProcessMapping::~ProcessMapping()
 
 void ProcessMapping::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessMapping: Applying mapping to field..." << endl;
-        }
-    }
-
     // Determine dimensions of mesh, solution, etc...
     int npoints  = m_f->m_exp[0]->GetNpoints();
     int expdim   = m_f->m_graph->GetMeshDimension();

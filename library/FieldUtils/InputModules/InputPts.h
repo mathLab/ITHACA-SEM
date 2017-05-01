@@ -66,6 +66,11 @@ public:
         return "InputPts";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Processing input pts file";
+    }
+
 private:
 };
 }

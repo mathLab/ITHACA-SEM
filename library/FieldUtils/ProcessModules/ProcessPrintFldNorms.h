@@ -66,6 +66,12 @@ public:
     {
         return "ProcessPrintFldNorms";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Printing norms";
+    }
+
 };
 }
 }

@@ -71,15 +71,6 @@ ProcessQualityMetric::~ProcessQualityMetric()
 
 void ProcessQualityMetric::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessQualityMetric: Adding quality metric to field"
-                 << endl;
-        }
-    }
-
     Array<OneD, NekDouble> &phys   = m_f->m_exp[0]->UpdatePhys();
     Array<OneD, NekDouble> &coeffs = m_f->m_exp[0]->UpdateCoeffs();
 

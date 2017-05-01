@@ -64,6 +64,12 @@ public:
     {
         return "OutputStdOut";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Output written to StdOut";
+    }
+
 };
 }
 }

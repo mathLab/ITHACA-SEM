@@ -97,15 +97,6 @@ ProcessPointDataToFld::~ProcessPointDataToFld()
 
 void ProcessPointDataToFld::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessPointDataToFld: projecting data to expansion..."
-                 << endl;
-        }
-    }
-
     int i, j;
     bool setnantovalue = false;
     NekDouble defvalue=0.0;

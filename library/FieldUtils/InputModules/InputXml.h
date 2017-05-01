@@ -66,6 +66,11 @@ public:
         return "InputXml";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Processing input xml file";
+    }
+
 private:
 };
 }

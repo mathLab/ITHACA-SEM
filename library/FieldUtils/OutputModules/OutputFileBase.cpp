@@ -57,13 +57,6 @@ OutputFileBase::~OutputFileBase()
 
 void OutputFileBase::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << GetModuleName() <<": Writing file..." << endl;
-        }
-    }
     if(m_f->m_fieldPts != LibUtilities::NullPtsField)
     {
         OutputFromPts(vm);

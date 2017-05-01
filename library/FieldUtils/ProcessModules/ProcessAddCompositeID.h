@@ -68,6 +68,11 @@ public:
         return "ProcessAddCompositeID";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Adding composite ID as a new field";
+    }
+
 private:
 };
 }

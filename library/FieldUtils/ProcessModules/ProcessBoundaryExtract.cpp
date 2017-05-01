@@ -74,15 +74,6 @@ ProcessBoundaryExtract::~ProcessBoundaryExtract()
 
 void ProcessBoundaryExtract::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessBoundaryExtract: Setting up boundary extraction..."
-                 << endl;
-        }
-    }
-
     m_f->m_fldToBnd   = m_config["fldtoboundary"].m_beenSet;
     m_f->m_addNormals = m_config["addnormals"].m_beenSet;
 

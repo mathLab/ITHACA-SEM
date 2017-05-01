@@ -69,6 +69,11 @@ public:
         return "ProcessInterpField";
     }
 
+    virtual std::string GetModuleDescription()
+    {
+        return "Interpolating field";
+    }
+
 private:
     FieldSharedPtr m_fromField;
 };

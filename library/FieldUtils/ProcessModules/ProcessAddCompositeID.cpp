@@ -66,15 +66,6 @@ ProcessAddCompositeID::~ProcessAddCompositeID()
 
 void ProcessAddCompositeID::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->GetRank() == 0)
-        {
-            cout << "ProcessAddCompositeID: Adding composite ID as a new field"
-                 << endl;
-        }
-    }
-
     int nfields           = 0;
     int NumHomogeneousDir = 0;
     MultiRegions::ExpListSharedPtr exp;

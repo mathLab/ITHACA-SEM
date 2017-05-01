@@ -67,6 +67,12 @@ public:
     {
         return "ProcessHomogeneousStretch";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Stretching expansion";
+    }
+
 };
 }
 }

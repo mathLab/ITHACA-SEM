@@ -70,14 +70,6 @@ ProcessWSS::~ProcessWSS()
 
 void ProcessWSS::Process(po::variables_map &vm)
 {
-    if (m_f->m_verbose)
-    {
-        if (m_f->m_comm->TreatAsRankZero())
-        {
-            cout << "ProcessWSS: Calculating wall shear stress..." << endl;
-        }
-    }
-
     m_f->m_addNormals = m_config["addnormals"].m_beenSet;
 
     // Set up Field options to output boundary fld

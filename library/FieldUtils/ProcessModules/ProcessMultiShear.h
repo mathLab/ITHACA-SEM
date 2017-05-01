@@ -67,6 +67,12 @@ public:
     {
         return "ProcessMultiShear";
     }
+
+    virtual std::string GetModuleDescription()
+    {
+        return "Calculating shear stress metrics";
+    }
+
 };
 }
 }

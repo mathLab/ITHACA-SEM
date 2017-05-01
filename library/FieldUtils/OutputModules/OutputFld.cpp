@@ -54,7 +54,7 @@ ModuleKey OutputFld::m_className[2] = {
                                                "Writes a Fld file."),
 };
 
-OutputFld::OutputFld(FieldSharedPtr f) : OutputModule(f)
+OutputFld::OutputFld(FieldSharedPtr f) : OutputFileBase(f)
 {
     m_config["format"] = ConfigOption(
         false, "Xml", "Output format of field file");
@@ -64,7 +64,13 @@ OutputFld::~OutputFld()
 {
 }
 
-void OutputFld::Process(po::variables_map &vm)
+void OutputFld::OutputFromPts(po::variables_map &vm)
+{
+    //ASSERTL0(false, "OutputFld can't write using Pts information.");
+    OutputFromExp(vm);
+}
+
+void OutputFld::OutputFromExp(po::variables_map &vm)
 {
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
@@ -78,21 +84,18 @@ void OutputFld::Process(po::variables_map &vm)
 
     if (m_f->m_writeBndFld)
     {
-        if (m_f->m_verbose)
+        if (m_f->m_verbose && m_f->m_comm->TreatAsRankZero())
         {
-            if (m_f->m_comm->TreatAsRankZero())
+            cout << "\t OutputFld: Writing boundary file(s): ";
+            for (int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
             {
-                cout << "\t OutputFld: Writing boundary file(s): ";
-                for (int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
+                cout << m_f->m_bndRegionsToWrite[i];
+                if (i < m_f->m_bndRegionsToWrite.size() - 1)
                 {
-                    cout << m_f->m_bndRegionsToWrite[i];
-                    if (i < m_f->m_bndRegionsToWrite.size() - 1)
-                    {
-                        cout << ",";
-                    }
+                    cout << ", ";
                 }
-                cout << endl;
             }
+            cout << endl;
         }
 
         // Extract data to boundaryconditions
@@ -232,50 +235,29 @@ void OutputFld::Process(po::variables_map &vm)
     }
     else
     {
-        fs::path writefile(filename);
-        int writefld = 1;
-        if (fs::exists(writefile) && (vm.count("forceoutput") == 0))
+        int i, j, s;
+        int nfields = m_f->m_variables.size();
+        int nstrips;
+        m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
+
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
+            m_f->m_exp[0]->GetFieldDefinitions();
+        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+        for (s = 0; s < nstrips; ++s)
         {
-            int rank = 0;
-            LibUtilities::CommSharedPtr comm;
-
-            if (m_f->m_session)
+            for (j = 0; j < nfields; ++j)
             {
-                comm = m_f->m_session->GetComm();
-                rank = comm->GetRank();
-            }
-            else
-            {
-                comm = LibUtilities::GetCommFactory().CreateInstance(
-                    "Serial", 0, 0);
-            }
-
-            writefld = 0; // set to zero for reduce all to be correct.
-
-            if (rank == 0)
-            {
-                string answer;
-                cout << "Did you wish to overwrite " << filename << " (y/n)? ";
-                getline(cin, answer);
-                if (answer.compare("y") == 0)
+                for (i = 0; i < FieldDef.size() / nstrips; ++i)
                 {
-                    writefld = 1;
-                }
-                else
-                {
-                    cout << "Not writing file " << filename
-                         << " because it already exists" << endl;
+                    int n = s * FieldDef.size() / nstrips + i;
+
+                    FieldDef[n]->m_fields.push_back(m_f->m_variables[j]);
+                    m_f->m_exp[s * nfields + j]->AppendFieldData(
+                        FieldDef[n], FieldData[n]);
                 }
             }
-
-            comm->AllReduce(writefld, LibUtilities::ReduceSum);
         }
-
-        if (writefld)
-        {
-            fld->Write(filename, m_f->m_fielddef, m_f->m_data,
-                       m_f->m_fieldMetaDataMap);
-        }
+        fld->Write(filename, FieldDef, FieldData, m_f->m_fieldMetaDataMap);
 
         // output error for regression checking.
         if (vm.count("error"))
@@ -308,5 +290,21 @@ void OutputFld::Process(po::variables_map &vm)
         }
     }
 }
+
+void OutputFld::OutputFromData(po::variables_map &vm)
+{
+    // Extract the output filename and extension
+    string filename = m_config["outfile"].as<string>();
+    // Set up communicator and FieldIO object.
+    LibUtilities::CommSharedPtr c = m_f->m_session ? m_f->m_session->GetComm() :
+        LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
+    LibUtilities::FieldIOSharedPtr fld =
+        LibUtilities::GetFieldIOFactory().CreateInstance(
+            m_config["format"].as<string>(), c, true);
+
+    fld->Write(filename, m_f->m_fielddef, m_f->m_data,
+                   m_f->m_fieldMetaDataMap);
+}
+
 }
 }

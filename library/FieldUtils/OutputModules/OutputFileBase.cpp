@@ -62,8 +62,19 @@ void OutputFileBase::Process(po::variables_map &vm)
     int writeFile = 1;
     if (fs::exists(outFile) && (vm.count("forceoutput") == 0))
     {
-        LibUtilities::CommSharedPtr comm = m_f->m_comm;
-        int rank                         = comm->GetRank();
+        LibUtilities::CommSharedPtr comm;
+        int rank = 0;
+        if (m_f->m_session)
+        {
+            comm = m_f->m_session->GetComm();
+            rank = comm->GetRank();
+        }
+        else
+        {
+            comm = LibUtilities::GetCommFactory().CreateInstance(
+                "Serial", 0, 0);
+        }
+
         writeFile = 0; // set to zero for reduce all to be correct.
 
         if (rank == 0)

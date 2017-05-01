@@ -132,7 +132,8 @@ void ProcessMapping::Process(po::variables_map &vm)
     {
         m_f->m_exp[nfields + i] =
             m_f->AppendExpList(m_f->m_numHomogeneousDir);
-        m_f->m_exp[nfields + i]->UpdatePhys() = coords[i];
+        Vmath::Vcopy(npoints, coords[i], 1,
+                     m_f->m_exp[nfields + i]->UpdatePhys(), 1);
         m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(
             coords[i], m_f->m_exp[nfields + i]->UpdateCoeffs());
         m_f->m_variables.push_back(fieldNames[i]);

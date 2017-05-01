@@ -214,7 +214,8 @@ void ProcessQCriterion::Process(po::variables_map &vm)
             int n = s * addfields + i;
             Exp[n] =
                 m_f->AppendExpList(m_f->m_numHomogeneousDir);
-            Exp[n]->UpdatePhys() = outfield[i];
+            Vmath::Vcopy(npoints, outfield[i], 1,
+                     m_f->m_exp[nfields + i]->UpdatePhys(), 1);
             Exp[n]->FwdTrans(outfield[i], Exp[n]->UpdateCoeffs());
         }
     }

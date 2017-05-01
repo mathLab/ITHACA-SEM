@@ -78,13 +78,27 @@ void ProcessAddFld::Process(po::variables_map &vm)
     string fromfld           = m_config["fromfld"].as<string>();
     FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
 
-    if (m_f->m_exp.size())
+    if (m_f->m_graph)
     {
-        // Set up ElementGIDs in case of parallel processing
-        Array<OneD, int> ElementGIDs(m_f->m_exp[0]->GetExpSize());
-        for (int i = 0; i < m_f->m_exp[0]->GetExpSize(); ++i)
+        const SpatialDomains::ExpansionMap &expansions =
+            m_f->m_graph->GetExpansions();
+
+        // if Range has been speficied it is possible to have a
+        // partition which is empty so check this and return if
+        // no elements present.
+
+        if (!expansions.size())
         {
-            ElementGIDs[i] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
+            return;
+        }
+
+        Array<OneD, int> ElementGIDs(expansions.size());
+        SpatialDomains::ExpansionMap::const_iterator expIt;
+
+        i = 0;
+        for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+        {
+            ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
         }
         m_f->FieldIOForFile(fromfld)->Import(
             fromfld, fromField->m_fielddef, fromField->m_data,
@@ -172,24 +186,10 @@ void ProcessAddFld::Process(po::variables_map &vm)
 
             Vmath::Vadd(ncoeffs, m_f->m_exp[j]->GetCoeffs(), 1, SaveFld, 1,
                         m_f->m_exp[j]->UpdateCoeffs(), 1);
+            m_f->m_exp[j]->->BwdTrans(
+                        m_f->m_exp[j]->->GetCoeffs(),
+                        m_f->m_exp[j]->->UpdatePhys());
         }
-
-        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-            m_f->m_exp[0]->GetFieldDefinitions();
-        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-        for (int i = 0; i < nfields; ++i)
-        {
-            for (int j = 0; j < FieldDef.size(); ++j)
-            {
-                FieldDef[j]->m_fields.push_back(
-                    m_f->m_fielddef[0]->m_fields[i]);
-                m_f->m_exp[i]->AppendFieldData(FieldDef[j], FieldData[j]);
-            }
-        }
-
-        m_f->m_fielddef = FieldDef;
-        m_f->m_data     = FieldData;
     }
 }
 }

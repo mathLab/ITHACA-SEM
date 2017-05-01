@@ -203,10 +203,6 @@ void ProcessC0Projection::Process(po::variables_map &vm)
                     Velocity[j] = Array<OneD, NekDouble>(npoints, 0.0);
                 }
 
-                C0ProjectExp[processFields[i]]->BwdTrans(
-                    m_f->m_exp[processFields[i]]->GetCoeffs(),
-                    m_f->m_exp[processFields[i]]->UpdatePhys());
-
                 Vmath::Smul(npoints, -lambda,
                             m_f->m_exp[processFields[i]]->GetPhys(), 1, forcing,
                             1);
@@ -224,14 +220,14 @@ void ProcessC0Projection::Process(po::variables_map &vm)
             }
             else
             {
-                C0ProjectExp[processFields[i]]->BwdTrans(
-                    m_f->m_exp[processFields[i]]->GetCoeffs(),
-                    m_f->m_exp[processFields[i]]->UpdatePhys());
                 C0ProjectExp[processFields[i]]->FwdTrans(
                     m_f->m_exp[processFields[i]]->GetPhys(),
                     m_f->m_exp[processFields[i]]->UpdateCoeffs());
             }
         }
+        C0ProjectExp[processFields[i]]->BwdTrans(
+                    m_f->m_exp[processFields[i]]->GetCoeffs(),
+                    m_f->m_exp[processFields[i]]->UpdatePhys());
     }
 
 }

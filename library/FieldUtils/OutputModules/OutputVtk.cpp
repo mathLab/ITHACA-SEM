@@ -272,7 +272,7 @@ void OutputVtk::OutputFromExp(po::variables_map &vm)
 
 void OutputVtk::OutputFromData(po::variables_map &vm)
 {
-    ASSERTL0(false, "OutputVtk requires xml input.");
+    ASSERTL0(false, "OutputVtk can't write using only FieldData.");
 }
 
 void OutputVtk::WriteEmptyVtkPiece(std::ofstream &outfile)

@@ -36,7 +36,7 @@
 #ifndef FIELDUTILS_OUTPUTPTS
 #define FIELDUTILS_OUTPUTPTS
 
-#include "../Module.h"
+#include "OutputFileBase.h"
 #include <tinyxml.h>
 
 namespace Nektar
@@ -45,7 +45,7 @@ namespace FieldUtils
 {
 
 /// Converter from fld to pts.
-class OutputPts : public OutputModule
+class OutputPts : public OutputFileBase
 {
 public:
     /// Creates an instance of this class
@@ -58,8 +58,14 @@ public:
     OutputPts(FieldSharedPtr f);
     virtual ~OutputPts();
 
-    /// Write fld to output file.
-    virtual void Process(po::variables_map &vm);
+    /// Write from pts to output file.
+    virtual void OutputFromPts(po::variables_map &vm);
+
+    /// Write from m_exp to output file.
+    virtual void OutputFromExp(po::variables_map &vm);
+
+    /// Write from data to output file.
+    virtual void OutputFromData(po::variables_map &vm);
 
     virtual std::string GetModuleName()
     {

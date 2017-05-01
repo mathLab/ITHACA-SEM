@@ -50,7 +50,7 @@
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
 #include <SolverUtils/Core/SessionFunction.h>
-#include <SolverUtils/CwipiExchange.h>
+#include <SolverUtils/Core/Coupling.h>
 
 namespace Nektar
 {

@@ -302,7 +302,7 @@ namespace Nektar
                 if (m_coupling)
                 {
                     m_coupling->Send(step, m_time, phys, m_fieldMetaDataMap);
-                    m_coupling->ReceiveInterp(step, m_time, phys, m_fieldMetaDataMap);
+                    m_coupling->Receive(step, m_time, phys, m_fieldMetaDataMap);
                 }
 
                 fields = m_intScheme->TimeIntegrate(
@@ -471,7 +471,10 @@ namespace Nektar
                 (*x)->Finalise(m_fieldMetaDataMap, coeffs, expansions, m_time);
             }
 
-            m_coupling->FinalizeCoupling();
+            if (m_coupling)
+            {
+                m_coupling->Finalize();
+            }
             
             // Print for 1D problems
             if(m_spacedim == 1)

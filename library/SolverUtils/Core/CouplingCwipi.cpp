@@ -1,12 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-// File: CwipiExchange.cpp
+// File: CouplingCwipi.cpp
 //
 // For more information, please see: http://www.nektar.info/
 //
 // The MIT License
 //
-// Copyright (c) 2015 Kilian Lackhove
+// Copyright (c) 2017 Kilian Lackhove
 //
 // License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -31,7 +31,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "CwipiExchange.h"
+#include "CouplingCwipi.h"
 
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
@@ -56,21 +56,11 @@ namespace SolverUtils
 
 using namespace std;
 
-CouplingFactory &GetCouplingFactory()
-{
-    typedef Loki::SingletonHolder<CouplingFactory,
-                                  Loki::CreateUsingNew,
-                                  Loki::NoDestroy,
-                                  Loki::SingleThreaded>
-        Type;
-    return Type::Instance();
-}
-
-std::string CwipiCoupling::className =
+std::string CouplingCwipi::className =
     GetCouplingFactory().RegisterCreatorFunction(
-        "Cwipi", CwipiCoupling::create, "Cwipi Coupling");
+        "Cwipi", CouplingCwipi::create, "Cwipi Coupling");
 
-void CwipiCoupling::InterpCallback(
+void CouplingCwipi::InterpCallback(
     const int entities_dim,
     const int n_local_vertex,
     const int n_local_element,
@@ -121,8 +111,8 @@ void CwipiCoupling::InterpCallback(
     }
 }
 
-CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field)
-    : m_evalField(field), m_sendHandle(-1), m_recvHandle(-1), m_lastSend(-1E6),
+CouplingCwipi::CouplingCwipi(MultiRegions::ExpListSharedPtr field)
+    : Coupling(field), m_sendHandle(-1), m_recvHandle(-1), m_lastSend(-1E6),
       m_lastReceive(-1E6), m_points(NULL), m_coords(NULL), m_connecIdx(NULL),
       m_connec(NULL), m_rValsInterl(NULL), m_sValsInterl(NULL)
 {
@@ -201,7 +191,7 @@ CwipiCoupling::CwipiCoupling(MultiRegions::ExpListSharedPtr field)
     ReceiveStart();
 }
 
-CwipiCoupling::~CwipiCoupling()
+CouplingCwipi::~CouplingCwipi()
 {
     free(m_coords);
     free(m_points);
@@ -211,7 +201,7 @@ CwipiCoupling::~CwipiCoupling()
     free(m_sValsInterl);
 }
 
-void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
+void CouplingCwipi::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
 {
     // defaults
     m_config["LOCALNAME"]        = "nektar";
@@ -320,7 +310,7 @@ void CwipiCoupling::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
 }
 
 
-vector<int> CwipiCoupling::GenerateVariableMapping(vector<string> &vars, vector<string> &transVars)
+vector<int> CouplingCwipi::GenerateVariableMapping(vector<string> &vars, vector<string> &transVars)
 {
     vector<int> transToVars;
     Array<OneD, Array<OneD, NekDouble> > sendField(transVars.size());
@@ -337,7 +327,7 @@ vector<int> CwipiCoupling::GenerateVariableMapping(vector<string> &vars, vector<
     return transToVars;
 }
 
-void CwipiCoupling::SetupReceive()
+void CouplingCwipi::SetupReceive()
 {
     int oversamp = boost::lexical_cast<int>(m_config["OVERSAMPLE"]);
 
@@ -430,7 +420,7 @@ void CwipiCoupling::SetupReceive()
     ASSERTL1(m_rValsInterl != NULL, "malloc failed for m_rValsInterl");
 }
 
-void CwipiCoupling::SetupSend()
+void CouplingCwipi::SetupSend()
 {
     // this array is never used because of our send callback method
     m_sValsInterl = (double *)malloc(
@@ -446,11 +436,11 @@ void CwipiCoupling::SetupSend()
     std::stringstream sst;
     sst << m_spacedim << "," << m_evalField->GetGraph()->GetNvertices() << ","
         << m_nSendVars;
-    SendCallbackMap[sst.str()] = boost::bind(&CwipiCoupling::SendCallback, this, _1, _2);
-    cwipi_set_interpolation_function(m_couplingName.c_str(), CwipiCoupling::InterpCallback);
+    SendCallbackMap[sst.str()] = boost::bind(&CouplingCwipi::SendCallback, this, _1, _2);
+    cwipi_set_interpolation_function(m_couplingName.c_str(), CouplingCwipi::InterpCallback);
 }
 
-void CwipiCoupling::EvaluateFields(
+void CouplingCwipi::EvaluateFields(
     Array<OneD, Array<OneD, NekDouble> > interpField,
     Array<OneD, Array<OneD, NekDouble> > distCoords)
 {
@@ -502,7 +492,7 @@ void CwipiCoupling::EvaluateFields(
     }
 }
 
-void CwipiCoupling::SetupSendInterpolation()
+void CouplingCwipi::SetupSendInterpolation()
 {
     const double *distCoords =
         cwipi_get_distant_coordinates(m_couplingName.c_str());
@@ -540,7 +530,7 @@ void CwipiCoupling::SetupSendInterpolation()
     m_sendInterpolator->PrintStatistics();
 }
 
-void CwipiCoupling::AnnounceMesh()
+void CouplingCwipi::AnnounceMesh()
 {
     SpatialDomains::MeshGraphSharedPtr graph = m_evalField->GetGraph();
 
@@ -620,13 +610,13 @@ void CwipiCoupling::AnnounceMesh()
         m_couplingName.c_str(), nVerts, nElts, m_coords, m_connecIdx, m_connec);
 }
 
-void CwipiCoupling::v_FinalizeCoupling(void)
+void CouplingCwipi::v_Finalize(void)
 {
     cwipi_delete_coupling(m_couplingName.c_str());
 }
 
 template <typename T>
-void CwipiCoupling::AddElementsToMesh(T geom,
+void CouplingCwipi::AddElementsToMesh(T geom,
                                       int &coordsPos,
                                       int &connecPos,
                                       int &conidxPos)
@@ -673,7 +663,7 @@ void CwipiCoupling::AddElementsToMesh(T geom,
 }
 
 
-void CwipiCoupling::SendCallback(
+void CouplingCwipi::SendCallback(
     Array<OneD, Array<OneD, NekDouble> > &interpField,
     Array<OneD, Array<OneD, NekDouble> > &distCoords)
 {
@@ -707,7 +697,7 @@ void CwipiCoupling::SendCallback(
     }
 }
 
-void CwipiCoupling::Send(
+void CouplingCwipi::v_Send(
     const int step,
     const NekDouble time,
     const Array<OneD, const Array<OneD, NekDouble> > &field,
@@ -767,7 +757,7 @@ void CwipiCoupling::Send(
 }
 
 
-void CwipiCoupling::SendComplete()
+void CouplingCwipi::SendComplete()
 {
     if (m_sendHandle < 0)
     {
@@ -790,7 +780,7 @@ void CwipiCoupling::SendComplete()
 }
 
 
-void CwipiCoupling::ReceiveStart()
+void CouplingCwipi::ReceiveStart()
 {
     if (m_recvHandle >= 0)
     {
@@ -822,7 +812,7 @@ void CwipiCoupling::ReceiveStart()
     }
 }
 
-void CwipiCoupling::ReceiveInterp(const int step,
+void CouplingCwipi::v_Receive(const int step,
                                   const NekDouble time,
                                   Array<OneD, Array<OneD, NekDouble> > &field,
                                   LibUtilities::FieldMetaDataMap &fieldMetaDataMap)
@@ -863,7 +853,7 @@ void CwipiCoupling::ReceiveInterp(const int step,
             Vmath::Vcopy(nq, m_newFields[i], 1, m_oldFields[i], 1);
         }
 
-        Receive(step, time, m_newFields);
+        ReceiveCwipi(step, time, m_newFields);
     }
 
     NekDouble fact =
@@ -882,7 +872,7 @@ void CwipiCoupling::ReceiveInterp(const int step,
     }
 }
 
-void CwipiCoupling::Receive(const int step,
+void CouplingCwipi::ReceiveCwipi(const int step,
                             const NekDouble time,
                             Array<OneD, Array<OneD, NekDouble> > &field)
 {
@@ -1024,7 +1014,7 @@ void CwipiCoupling::Receive(const int step,
     }
 }
 
-void CwipiCoupling::OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals)
+void CouplingCwipi::OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals)
 {
     if (m_evalField->GetSession()->GetSessionName() != "CESAM-HP-single")
     {
@@ -1087,7 +1077,7 @@ void CwipiCoupling::OverrrideFields(Array<OneD, Array<OneD, NekDouble> > &rVals)
     }
 }
 
-void CwipiCoupling::DumpRawFields(const NekDouble time,
+void CouplingCwipi::DumpRawFields(const NekDouble time,
                                   Array<OneD, Array<OneD, NekDouble> > rVals)
 {
     Timer timer1;

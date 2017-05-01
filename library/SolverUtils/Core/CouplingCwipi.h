@@ -1,12 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CwipiExchange.h
+// File CouplingCwipi.h
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
-// Copyright (c) 2015 Kilian Lackhove
+// Copyright (c) 2017 Kilian Lackhove
 //
 // License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27,12 +27,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: CWIPI Exchange class
+// Description: CWIPI Coupling class
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_CWIPIEXCHANGE
-#define NEKTAR_CWIPIEXCHANGE
+#ifndef NEKTAR_COUPLINGCWIPI
+#define NEKTAR_COUPLINGCWIPI
+
+#include <SolverUtils/Core/Coupling.h>
 
 #include <FieldUtils/Interpolator.h>
 
@@ -43,69 +45,30 @@ namespace Nektar
 namespace SolverUtils
 {
 
-class CwipiCoupling;
+class CouplingCwipi;
 
-typedef boost::shared_ptr<CwipiCoupling> CwipiCouplingSharedPointer;
+typedef boost::shared_ptr<CouplingCwipi> CouplingCwipiSharedPointer;
 
-/// Declaration of the Coupling factory
-typedef LibUtilities::NekFactory<std::string,
-                                 CwipiCoupling,
-                                 MultiRegions::ExpListSharedPtr>
-    CouplingFactory;
 
-/// Declaration of the Coupling factory singleton
-CouplingFactory &GetCouplingFactory();
-
-class CwipiCoupling
+class CouplingCwipi : public Coupling
 {
 
 public:
-    typedef std::map<std::string, std::string> CouplingConfigMap;
 
     static std::string className;
 
     /// Creates an instance of this class
-    static CwipiCouplingSharedPointer create(
+    static CouplingSharedPointer create(
         MultiRegions::ExpListSharedPtr field)
     {
-        CwipiCouplingSharedPointer p =
-            MemoryManager<CwipiCoupling>::AllocateSharedPtr(field);
+        CouplingSharedPointer p =
+            MemoryManager<CouplingCwipi>::AllocateSharedPtr(field);
         return p;
     }
 
-    CwipiCoupling(MultiRegions::ExpListSharedPtr field);
+    CouplingCwipi(MultiRegions::ExpListSharedPtr field);
 
-    ~CwipiCoupling();
-
-    const std::map<std::string, std::string> GetConfig()
-    {
-        return m_config;
-    }
-
-    std::vector<std::string> GetSendFieldNames()
-    {
-        return m_sendFieldNames;
-    }
-
-    std::vector<std::string> GetRecvFieldNames()
-    {
-        return m_recvFieldNames;
-    }
-
-    inline void FinalizeCoupling()
-    {
-        v_FinalizeCoupling();
-    }
-
-    void Send(const int step,
-              const NekDouble time,
-              const Array<OneD, const Array<OneD, NekDouble> > &field,
-              LibUtilities::FieldMetaDataMap &fieldMetaDataMap);
-
-    void ReceiveInterp(const int step,
-                       const NekDouble time,
-                       Array<OneD, Array<OneD, NekDouble> > &field,
-                       LibUtilities::FieldMetaDataMap &fieldMetaDataMap);
+    ~CouplingCwipi();
 
     void SendCallback(Array<OneD, Array<OneD, NekDouble> > &interpField,
                       Array<OneD, Array<OneD, NekDouble> > &distCoords);
@@ -134,25 +97,20 @@ public:
         void *distant_field);
 
 protected:
-    std::string m_couplingName;
 
-    CouplingConfigMap m_config;
     NekDouble m_filtWidth;
 
     Array<OneD, Array<OneD, NekDouble> > m_sendField;
 
-    MultiRegions::ExpListSharedPtr m_evalField;
     MultiRegions::ExpListSharedPtr m_recvField;
 
     Array<OneD, Array<OneD, NekDouble> > m_oldFields;
     Array<OneD, Array<OneD, NekDouble> > m_newFields;
 
     int m_nSendVars;
-    std::vector<std::string> m_sendFieldNames;
     int m_sendSteps;
 
     int m_nRecvVars;
-    std::vector<std::string> m_recvFieldNames;
     int m_recvSteps;
 
     int m_sendHandle;
@@ -177,7 +135,17 @@ protected:
 
     FieldUtils::InterpolatorSharedPtr m_sendInterpolator;
 
-    virtual void v_FinalizeCoupling(void);
+    virtual void v_Send(const int step,
+              const NekDouble time,
+              const Array<OneD, const Array<OneD, NekDouble> > &field,
+              LibUtilities::FieldMetaDataMap &fieldMetaDataMap);
+
+    virtual void v_Receive(const int step,
+                       const NekDouble time,
+                       Array<OneD, Array<OneD, NekDouble> > &field,
+                       LibUtilities::FieldMetaDataMap &fieldMetaDataMap);
+
+    virtual void v_Finalize(void);
 
     const NekDouble GetSendField(const int i, const int j) const
     {
@@ -197,7 +165,7 @@ private:
 
     void ReceiveStart();
 
-    void Receive(const int step,
+    void ReceiveCwipi(const int step,
                  const NekDouble time,
                  Array<OneD, Array<OneD, NekDouble> > &field);
 

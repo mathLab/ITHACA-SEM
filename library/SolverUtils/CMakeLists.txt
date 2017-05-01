@@ -1,4 +1,5 @@
 SET(SOLVER_UTILS_SOURCES
+  Core/Coupling.cpp
   Core/Misc.cpp
   Core/SessionFunction.cpp
   AdvectionSystem.cpp
@@ -45,6 +46,7 @@ SET(SOLVER_UTILS_SOURCES
 )
 
 SET(SOLVER_UTILS_HEADERS
+  Core/Coupling.h
   Core/Misc.h
   Core/SessionFunction.h
   AdvectionSystem.h
@@ -101,9 +103,9 @@ ENDIF (NEKTAR_USE_ARPACK)
 
 IF (NEKTAR_USE_CWIPI)
   SET(SOLVER_UTILS_SOURCES ${SOLVER_UTILS_SOURCES}
-    CwipiExchange.cpp)
+    Core/CouplingCwipi.cpp)
   SET(SOLVER_UTILS_HEADERS ${SOLVER_UTILS_HEADERS}
-    CwipiExchange.h)
+    Core/CouplingCwipi.h)
 ENDIF (NEKTAR_USE_CWIPI)
 
 ADD_DEFINITIONS(-DSOLVER_UTILS_EXPORTS)

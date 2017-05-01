@@ -39,7 +39,6 @@
 
 #include <SolverUtils/UnsteadySystem.h>
 
-#include <SolverUtils/CwipiExchange.h>
 
 using namespace Nektar::SolverUtils;
 

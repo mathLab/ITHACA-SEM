@@ -63,6 +63,11 @@ public:
 
     virtual ~Coupling(){};
 
+    inline void Init()
+    {
+        v_Init();
+    };
+
     inline const std::map<std::string, std::string> GetConfig()
     {
         return m_config;
@@ -106,12 +111,17 @@ protected:
 
     MultiRegions::ExpListSharedPtr m_evalField;
 
+    int m_nSendVars;
     std::vector<std::string> m_sendFieldNames;
+    int m_sendSteps;
 
+    int m_nRecvVars;
     std::vector<std::string> m_recvFieldNames;
+    int m_recvSteps;
 
-    Coupling(MultiRegions::ExpListSharedPtr field): m_evalField(field)
-    {};
+    Coupling(MultiRegions::ExpListSharedPtr field);
+
+    virtual void v_Init();
 
     virtual void v_Send(const int step,
                         const NekDouble time,
@@ -124,7 +134,12 @@ protected:
         Array<OneD, Array<OneD, NekDouble> > &field,
         LibUtilities::FieldMetaDataMap &fieldMetaDataMap) = 0;
 
-    virtual void v_Finalize(void) = 0;
+    virtual void v_Finalize()
+    {
+    };
+
+    std::vector<int> GenerateVariableMapping(std::vector<std::string> &vars, std::vector<std::string> &transVars);
+
 };
 }
 }

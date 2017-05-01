@@ -111,11 +111,22 @@ void CouplingCwipi::InterpCallback(
     }
 }
 
-CouplingCwipi::CouplingCwipi(MultiRegions::ExpListSharedPtr field)
-    : Coupling(field), m_sendHandle(-1), m_recvHandle(-1), m_lastSend(-1E6),
-      m_lastReceive(-1E6), m_points(NULL), m_coords(NULL), m_connecIdx(NULL),
+CouplingCwipi::CouplingCwipi(MultiRegions::ExpListSharedPtr field): Coupling(field), m_sendHandle(-1), m_recvHandle(-1), m_lastSend(-1E6),m_lastReceive(-1E6), m_points(NULL), m_coords(NULL), m_connecIdx(NULL),
       m_connec(NULL), m_rValsInterl(NULL), m_sValsInterl(NULL)
 {
+    // defaults
+    m_config["LOCALNAME"]        = "nektar";
+    m_config["REMOTENAME"]       = "precise";
+    m_config["OVERSAMPLE"]       = "0";
+    m_config["FILTERWIDTH"]      = "-1";
+    m_config["DUMPRAW"]          = "0";
+    m_config["SENDMETHOD"]       = "NEARESTNEIGHBOUR";
+}
+
+void CouplingCwipi::v_Init()
+{
+    Coupling::v_Init();
+
     ReadConfig(m_evalField->GetSession());
 
     cwipi_add_local_int_control_parameter("nSendVars", m_nSendVars);
@@ -203,18 +214,6 @@ CouplingCwipi::~CouplingCwipi()
 
 void CouplingCwipi::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
 {
-    // defaults
-    m_config["LOCALNAME"]        = "nektar";
-    m_config["REMOTENAME"]       = "precise";
-    m_config["OVERSAMPLE"]       = "0";
-    m_config["FILTERWIDTH"]      = "-1";
-    m_config["RECEIVESTEPS"]     = "0";
-    m_config["RECEIVEVARIABLES"] = "";
-    m_config["SENDSTEPS"]        = "0";
-    m_config["SENDVARIABLES"]    = "";
-    m_config["DUMPRAW"]          = "0";
-    m_config["SENDMETHOD"]       = "NEARESTNEIGHBOUR";
-
     ASSERTL0(session->DefinesElement("Nektar/Coupling"),
              "No Coupling config found");
 
@@ -223,108 +222,7 @@ void CouplingCwipi::ReadConfig(LibUtilities::SessionReaderSharedPtr session)
     TiXmlElement *vCoupling = session->GetElement("Nektar/Coupling");
     ASSERTL0(vCoupling, "Invalid Coupling config");
 
-    vCoupling->QueryStringAttribute("NAME", &m_couplingName);
-    ASSERTL0(m_couplingName.size(), "No Coupling NAME attribute set");
-
-    TiXmlElement *element = vCoupling->FirstChildElement("I");
-    while (element)
-    {
-        std::stringstream tagcontent;
-        tagcontent << *element;
-        // read the property name
-        ASSERTL0(element->Attribute("PROPERTY"),
-                 "Missing PROPERTY attribute in Coupling section "
-                 "XML element: \n\t'" +
-                     tagcontent.str() + "'");
-        std::string property = element->Attribute("PROPERTY");
-        ASSERTL0(!property.empty(),
-                 "PROPERTY attribute must be non-empty in XML "
-                 "element: \n\t'" +
-                     tagcontent.str() + "'");
-
-        // make sure that solver property is capitalised
-        std::string propertyUpper = boost::to_upper_copy(property);
-
-        CouplingConfigMap::const_iterator x = m_config.find(propertyUpper);
-        ASSERTL0(x != m_config.end(),
-                 "Invalid PROPERTY attribute in Coupling section "
-                 "XML element: \n\t'" +
-                     tagcontent.str() + "'");
-
-        // read the value
-        ASSERTL0(element->Attribute("VALUE"),
-                 "Missing VALUE attribute in Coupling section "
-                 "XML element: \n\t'" +
-                     tagcontent.str() + "'");
-        std::string value = element->Attribute("VALUE");
-        ASSERTL0(!value.empty(),
-                 "VALUE attribute must be non-empty in XML "
-                 "element: \n\t'" +
-                     tagcontent.str() + "'");
-
-        // Set Variable
-        m_config[propertyUpper] = value;
-
-        element = element->NextSiblingElement("I");
-    }
-
-    // mangle config into variables. This is ugly
-    ParseUtils::GenerateOrderedStringVector(
-        m_config["RECEIVEVARIABLES"].c_str(), m_recvFieldNames);
-    m_nRecvVars = m_recvFieldNames.size();
-
-    ParseUtils::GenerateOrderedStringVector(m_config["SENDVARIABLES"].c_str(),
-                                            m_sendFieldNames);
-    m_nSendVars = m_sendFieldNames.size();
-
-    m_recvSteps = boost::lexical_cast<int>(m_config["RECEIVESTEPS"]);
-    m_sendSteps = boost::lexical_cast<int>(m_config["SENDSTEPS"]);
-
     m_filtWidth = boost::lexical_cast<NekDouble>(m_config["FILTERWIDTH"]);
-
-    if (session->GetComm()->GetRank() == 0 &&
-        session->DefinesCmdLineArgument("verbose") && m_config.size() > 0)
-    {
-        cout << "Coupling Config:" << endl;
-        CouplingConfigMap::iterator x;
-        for (x = m_config.begin(); x != m_config.end(); ++x)
-        {
-            cout << "\t" << x->first << " = " << x->second << endl;
-        }
-
-        cout << "\tRECEIVEVARIABLES (parsed) = [";
-        std::vector<string>::const_iterator i;
-        for (i = m_recvFieldNames.begin(); i != m_recvFieldNames.end(); ++i)
-        {
-            cout << *i << ", ";
-        }
-        cout << "]" << endl;
-
-        cout << "\tSENDVARIABLES (parsed) = [";
-        for (i = m_sendFieldNames.begin(); i != m_sendFieldNames.end(); ++i)
-        {
-            cout << *i << ", ";
-        }
-        cout << "]" << endl;
-    }
-}
-
-
-vector<int> CouplingCwipi::GenerateVariableMapping(vector<string> &vars, vector<string> &transVars)
-{
-    vector<int> transToVars;
-    Array<OneD, Array<OneD, NekDouble> > sendField(transVars.size());
-    for (int i = 0; i < transVars.size(); ++i)
-    {
-        auto it2 = find(vars.begin(), vars.end(), transVars[i]);
-        ASSERTL0(it2 != vars.end(),
-                "send variable " + transVars[i] + " not found");
-        int id = distance(vars.begin(), it2);
-
-        transToVars.push_back(id);
-    }
-
-    return transToVars;
 }
 
 void CouplingCwipi::SetupReceive()

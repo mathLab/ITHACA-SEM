@@ -63,6 +63,7 @@ public:
     {
         CouplingSharedPointer p =
             MemoryManager<CouplingCwipi>::AllocateSharedPtr(field);
+        p->Init();
         return p;
     }
 
@@ -107,12 +108,6 @@ protected:
     Array<OneD, Array<OneD, NekDouble> > m_oldFields;
     Array<OneD, Array<OneD, NekDouble> > m_newFields;
 
-    int m_nSendVars;
-    int m_sendSteps;
-
-    int m_nRecvVars;
-    int m_recvSteps;
-
     int m_sendHandle;
     int m_recvHandle;
 
@@ -135,6 +130,8 @@ protected:
 
     FieldUtils::InterpolatorSharedPtr m_sendInterpolator;
 
+    virtual void v_Init();
+
     virtual void v_Send(const int step,
               const NekDouble time,
               const Array<OneD, const Array<OneD, NekDouble> > &field,
@@ -145,7 +142,7 @@ protected:
                        Array<OneD, Array<OneD, NekDouble> > &field,
                        LibUtilities::FieldMetaDataMap &fieldMetaDataMap);
 
-    virtual void v_Finalize(void);
+    virtual void v_Finalize();
 
     const NekDouble GetSendField(const int i, const int j) const
     {
@@ -154,8 +151,6 @@ protected:
 
 private:
     void ReadConfig(LibUtilities::SessionReaderSharedPtr session);
-
-    std::vector<int> GenerateVariableMapping(std::vector<std::string> &vars, std::vector<std::string> &transVars);
 
     void SetupReceive();
 

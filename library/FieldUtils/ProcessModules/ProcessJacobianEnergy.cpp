@@ -68,17 +68,15 @@ void ProcessJacobianEnergy::Process(po::variables_map &vm)
 {
     Array<OneD, NekDouble> phys   = m_f->m_exp[0]->UpdatePhys();
     Array<OneD, NekDouble> coeffs = m_f->m_exp[0]->UpdateCoeffs();
-    Array<OneD, NekDouble> tmp, tmp1;
+    Array<OneD, NekDouble> tmp;
 
     for (int i = 0; i < m_f->m_exp[0]->GetExpSize(); ++i)
     {
         // copy Jacobian into field
         StdRegions::StdExpansionSharedPtr Elmt = m_f->m_exp[0]->GetExp(i);
 
-        int ncoeffs     = Elmt->GetNcoeffs();
         int nquad       = Elmt->GetTotPoints();
         int coeffoffset = m_f->m_exp[0]->GetCoeff_Offset(i);
-        Array<OneD, NekDouble> coeffs1(ncoeffs);
         Array<OneD, const NekDouble> Jac =
             Elmt->GetMetricInfo()->GetJac(Elmt->GetPointsKeys());
         if (Elmt->GetMetricInfo()->GetGtype() == SpatialDomains::eRegular)
@@ -105,6 +103,7 @@ void ProcessJacobianEnergy::Process(po::variables_map &vm)
 
         Elmt->FwdTrans(phys, tmp = coeffs + coeffoffset);
     }
+    m_f->m_exp[0]->BwdTrans(coeffs, phys);
 }
 }
 }

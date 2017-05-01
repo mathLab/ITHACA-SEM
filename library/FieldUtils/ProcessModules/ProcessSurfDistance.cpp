@@ -76,6 +76,8 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
 
     // Remove existing fields.
     m_f->m_exp.resize(1);
+    m_f->m_variables.resize(1);
+    m_f->m_variables[0] = "dist";
 
     // Grab boundary expansions.
     Array<OneD, MultiRegions::ExpListSharedPtr> BndExp =
@@ -84,15 +86,6 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
     // Get map that takes us from boundary element to element.
     Array<OneD, int> BoundarytoElmtID, BoundarytoTraceID;
     m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID, BoundarytoTraceID);
-
-    if(m_f->m_variables.size())
-    {
-        m_f->m_variables[0] = "dist";
-    }
-    else
-    {
-        m_f->m_variables.push_back("dist");
-    }
 
     ASSERTL0(!(m_f->m_numHomogeneousDir),
             "Homogeneous expansions not supported");

@@ -127,7 +127,6 @@ void ProcessNumModes::Process(po::variables_map &vm)
     {
         m_f->m_variables.push_back("P2");
     }
-
     if (addfields == 3)
     {
         m_f->m_variables.push_back("P3");

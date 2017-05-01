@@ -55,17 +55,6 @@ ModuleKey ProcessScaleInFld::className =
 
 ProcessScaleInFld::ProcessScaleInFld(FieldSharedPtr f) : ProcessModule(f)
 {
-    if ((f->m_inputfiles.count("fld") == 0) &&
-        (f->m_inputfiles.count("rst") == 0) &&
-        (f->m_inputfiles.count("chk") == 0) &&
-        (f->m_inputfiles.count("bse") == 0))
-    {
-        cout << "A fld, chk or rst input file must be specified for the "
-                "scaleinputfld module"
-             << endl;
-        exit(3);
-    }
-
     m_config["scale"] = ConfigOption(false, "NotSet", "scale factor");
     ASSERTL0(m_config["scale"].as<string>().compare("NotSet") != 0,
              "scaleinputfld: Need to specify a sacle factor");

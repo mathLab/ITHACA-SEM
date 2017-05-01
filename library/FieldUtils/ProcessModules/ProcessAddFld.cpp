@@ -95,7 +95,7 @@ void ProcessAddFld::Process(po::variables_map &vm)
         Array<OneD, int> ElementGIDs(expansions.size());
         SpatialDomains::ExpansionMap::const_iterator expIt;
 
-        i = 0;
+        int i = 0;
         for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
         {
             ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
@@ -186,9 +186,9 @@ void ProcessAddFld::Process(po::variables_map &vm)
 
             Vmath::Vadd(ncoeffs, m_f->m_exp[j]->GetCoeffs(), 1, SaveFld, 1,
                         m_f->m_exp[j]->UpdateCoeffs(), 1);
-            m_f->m_exp[j]->->BwdTrans(
-                        m_f->m_exp[j]->->GetCoeffs(),
-                        m_f->m_exp[j]->->UpdatePhys());
+            m_f->m_exp[j]->BwdTrans(
+                        m_f->m_exp[j]->GetCoeffs(),
+                        m_f->m_exp[j]->UpdatePhys());
         }
     }
 }

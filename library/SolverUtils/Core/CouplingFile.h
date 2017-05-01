@@ -27,7 +27,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: File based Coupling class
+// Description: File based Coupling class. Rather pointless, only for demonstration.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -57,6 +57,7 @@ public:
     {
         CouplingSharedPointer p =
             MemoryManager<CouplingFile>::AllocateSharedPtr(field);
+        p->Init();
         return p;
     }
 
@@ -65,6 +66,8 @@ public:
     ~CouplingFile();
 
 protected:
+    virtual void v_Init();
+
     virtual void v_Send(const int step,
                         const NekDouble time,
                         const Array<OneD, const Array<OneD, NekDouble> > &field,
@@ -75,10 +78,9 @@ protected:
                            Array<OneD, Array<OneD, NekDouble> > &field,
                            LibUtilities::FieldMetaDataMap &fieldMetaDataMap);
 
-    virtual void v_Finalize(void)
-    {};
-
 private:
+    int m_lastSend;
+    int m_lastReceive;
 
     SessionFunctionSharedPtr m_inputFunction;
 };

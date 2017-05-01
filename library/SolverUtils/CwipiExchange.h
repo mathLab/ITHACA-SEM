@@ -110,9 +110,6 @@ public:
     void SendCallback(Array<OneD, Array<OneD, NekDouble> > &interpField,
                       Array<OneD, Array<OneD, NekDouble> > &distCoords);
 
-    void PrintProgressbar(const int position, const int goal) const;
-
-
     static void InterpCallback(
         const int entities_dim,
         const int n_local_vertex,

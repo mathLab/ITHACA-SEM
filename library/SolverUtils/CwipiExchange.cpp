@@ -672,14 +672,6 @@ void CwipiCoupling::AddElementsToMesh(T geom,
     }
 }
 
-void CwipiCoupling::PrintProgressbar(const int position, const int goal) const
-{
-    // print only every 2 percent
-    if (int(100 * position / goal) % 2 == 0)
-    {
-        cout << "." << flush;
-    }
-}
 
 void CwipiCoupling::SendCallback(
     Array<OneD, Array<OneD, NekDouble> > &interpField,

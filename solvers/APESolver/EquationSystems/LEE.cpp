@@ -72,10 +72,6 @@ void LEE::v_InitObject()
 {
     UnsteadySystem::v_InitObject();
 
-    // TODO: We have a bug somewhere in the 1D boundary conditions. Therefore 1D
-    // problems are currently disabled. This should get fixed in the future.
-//     ASSERTL0(m_spacedim > 1, "1D problems currently not supported by the LEE class.");
-
     ASSERTL0(m_projectionType == MultiRegions::eDiscontinuous,
              "Only Projection=DisContinuous supported by the LEE class.");
 
@@ -577,72 +573,77 @@ void LEE::RiemannInvariantBC(int bcRegion,
         id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt + e]);
 
         // Calculate (v.n)
-        Array<OneD, NekDouble> Vn(nBCEdgePts, 0.0);
+        Array<OneD, NekDouble> RVn(nBCEdgePts, 0.0);
         for (int i = 0; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(nBCEdgePts,
-                         &Fwd[1 + i][id2], 1,
+                         &Fwd[2 + i][id2], 1,
                          &m_traceNormals[i][id2], 1,
-                         &Vn[0], 1,
-                         &Vn[0], 1);
+                         &RVn[0], 1,
+                         &RVn[0], 1);
         }
 
         // Calculate (v0.n)
-        Array<OneD, NekDouble> Vn0(nBCEdgePts, 0.0);
+        Array<OneD, NekDouble> RVn0(nBCEdgePts, 0.0);
         for (int i = 0; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(nBCEdgePts,
                          &BfFwd[2 + i][id2], 1,
                          &m_traceNormals[i][id2], 1,
-                         &Vn0[0], 1,
-                         &Vn0[0], 1);
+                         &RVn0[0], 1,
+                         &RVn0[0], 1);
         }
 
         for (int i = 0; i < nBCEdgePts; ++i)
         {
             NekDouble c = sqrt(m_gamma * BfFwd[0][id2 + i] / BfFwd[1][id2 + i]);
 
-            NekDouble l0 = Vn0[i] + c;
-            NekDouble l1 = Vn0[i] - c;
+            NekDouble h0, h1, h2;
 
-            NekDouble h0, h1;
-
-            // outgoing
-            if (l0 > 0)
+            if (RVn0[i] > 0)
             {
-                // p/2 + u*c*rho0/2
-                h0 = Fwd[0][id2 + i] / 2 + Vn[i] * c * BfFwd[1][id2 + i] / 2;
+                // rho - p / c^2
+                h0 = Fwd[1][id2 + i] - Fwd[0][id2 + i] / (c*c);
             }
-            // incoming
             else
             {
                 h0 = 0.0;
             }
 
-            // outgoing
-            if (l1 > 0)
+            if (RVn0[i] - c > 0)
             {
-                // p/2 - u*c*rho0/2
-                h1 = Fwd[0][id2 + i] / 2 - Vn[i] * c * BfFwd[1][id2 + i] / 2;
+                // ru / 2 - p / (2*c)
+                h1 = RVn[i] / 2 - Fwd[0][id2 + i] / (2* c);
             }
-            // incoming
             else
             {
                 h1 = 0.0;
             }
 
-            // compute primitive variables
-            // p = h0 + h1
-            // u = ( h0 - h1) / (c*rho0)
-            Fwd[0][id2 + i] = h0 + h1;
-            NekDouble VnNew = (h0 - h1) / (c * BfFwd[1][id2 + i]);
+            if (RVn0[i] + c > 0)
+            {
+                // ru / 2 + p / (2*c)
+                h2 = RVn[i] / 2 + Fwd[0][id2 + i] / (2* c);
+            }
+            else
+            {
+                h2 = 0.0;
+            }
+
+            // compute conservative variables
+            // p = c0*(h2-h1)
+            // rho = h0 + c0*(h2-h1)
+            // ru = h1+h2
+            Fwd[0][id2 + i] = c * (h2 - h1);
+            Fwd[1][id2 + i] = h0 + c * (h2 - h1);
+            NekDouble RVnNew = h1 + h2;
 
             // adjust velocity pert. according to new value
             for (int j = 0; j < m_spacedim; ++j)
             {
-                Fwd[1 + j][id2 + i] =
-                    Fwd[1 + j][id2 + i] +
-                    (VnNew - Vn[i]) * m_traceNormals[j][id2 + i];
+                Fwd[2 + j][id2 + i] =
+                    Fwd[2 + j][id2 + i] +
+                    (RVnNew - RVn[i]) * m_traceNormals[j][id2 + i];
             }
         }
 
@@ -720,6 +721,9 @@ void LEE::WhiteNoiseBC(int bcRegion,
         // pressure perturbation
         Vmath::Fill(nBCEdgePts, m_whiteNoiseBC_p, &tmp[0][0], 1);
 
+        // TODO: density perturbation
+        ASSERTL0(false, "not implemented yet");
+
         // velocity perturbation
         for (int i = 0; i < nBCEdgePts; ++i)
         {
@@ -727,9 +731,11 @@ void LEE::WhiteNoiseBC(int bcRegion,
                           sqrt(m_gamma * BfFwd[0][id2 + i] * BfFwd[1][id2 + i]);
             for (int j = 0; j < m_spacedim; ++j)
             {
-                tmp[1 + j][i] = -1.0 * u * m_traceNormals[j][id2 + i];
+                tmp[2 + j][i] = -1.0 * u * m_traceNormals[j][id2 + i];
             }
         }
+
+
 
         // Copy boundary adjusted values into the boundary expansion
         for (int i = 0; i < nVariables; ++i)

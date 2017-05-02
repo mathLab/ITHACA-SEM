@@ -519,7 +519,7 @@ void LEE::WallBC(int bcRegion, int cnt,
         for (int i = 0; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(nBCEdgePts,
-                         &Fwd[1+i][id2], 1,
+                         &Fwd[2+i][id2], 1,
                          &m_traceNormals[i][id2], 1,
                          &tmp[0], 1,
                          &tmp[0], 1);
@@ -534,8 +534,8 @@ void LEE::WallBC(int bcRegion, int cnt,
             Vmath::Vvtvp(nBCEdgePts,
                          &tmp[0], 1,
                          &m_traceNormals[i][id2], 1,
-                         &Fwd[1+i][id2], 1,
-                         &Fwd[1+i][id2], 1);
+                         &Fwd[2+i][id2], 1,
+                         &Fwd[2+i][id2], 1);
         }
 
         // Copy boundary adjusted values into the boundary expansion

@@ -74,7 +74,7 @@ void Generator2D::Process()
 {
     // Check that cad is 2D
     Array<OneD, NekDouble> bndBox = m_mesh->m_cad->GetBoundingBox();
-    ASSERTL0(bndBox[4] == bndBox[5], "CAD isn't 2D");
+    ASSERTL0(bndBox[5] - bndBox[4] < 1.0e-10, "CAD isn't 2D");
     
     if (m_mesh->m_verbose)
     {

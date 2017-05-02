@@ -12,8 +12,10 @@ IF( NEKTAR_SOLVER_APE )
        ./EquationSystems/APE.cpp
        ./EquationSystems/LEE.cpp
        ./RiemannSolvers/APESolver.cpp
+       ./RiemannSolvers/LEESolver.cpp
        ./RiemannSolvers/UpwindSolver.cpp
-       ./RiemannSolvers/LaxFriedrichsSolver.cpp)
+       ./RiemannSolvers/LaxFriedrichsSolver.cpp
+       ./RiemannSolvers/LEELaxFriedrichsSolver.cpp)
 
     ADD_SOLVER_EXECUTABLE(APESolver SOURCES ${APESolverSource})
 

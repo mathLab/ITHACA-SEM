@@ -6,6 +6,7 @@ v4.5.0
 **NekMesh**:
 - Add periodic boundary condition meshing in 2D (!733)
 - Adjust boundary layer thickness in corners in 2D (!739)
+- Check the dimensionality of the CAD system before running the 2D generator (!780)
 
 **Library**
 - Added in sum factorisation version for pyramid expansions and orthogonal

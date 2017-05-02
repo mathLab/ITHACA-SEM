@@ -196,6 +196,8 @@ namespace Nektar
                 const int edge) const;
             const StdRegions::NormalVector &v_GetSurfaceNormal(
                 const int id) const;
+            virtual NekDouble v_VectorFlux(
+                const Array<OneD, Array<OneD, NekDouble > > &vec);
         };
 
         inline Expansion1DSharedPtr Expansion2D::GetEdgeExp(

@@ -623,7 +623,7 @@ namespace Nektar
 
                                         m_session->SubstituteExpressions(attrData1);
                                         userDefined = attrData1;
-                                        isTimeDependent = boost::iequals(attrData,"TimeDependent");
+                                        isTimeDependent = boost::iequals(attrData1,"TimeDependent");
                                     }
                                     else if(attrName1 == "VALUE"){
 
@@ -713,7 +713,7 @@ namespace Nektar
 
                                         m_session->SubstituteExpressions(attrData1);
                                         userDefined = attrData1;
-                                        isTimeDependent = boost::iequals(attrData,"TimeDependent");
+                                        isTimeDependent = boost::iequals(attrData1,"TimeDependent");
                                     }
                                     else if (attrName1 == "VALUE")
                                     {

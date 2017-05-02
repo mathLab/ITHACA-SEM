@@ -110,7 +110,9 @@ namespace Nektar
                     const int                            vert,
                     const Array<OneD, const NekDouble > &primCoeffs,
                           Array<OneD, NekDouble>        &coeffs);
-			
+                virtual NekDouble v_VectorFlux(
+                    const Array<OneD, Array<OneD, NekDouble > > &vec);
+
             private:
                 Expansion2DWeakPtr m_elementLeft;
                 Expansion2DWeakPtr m_elementRight;

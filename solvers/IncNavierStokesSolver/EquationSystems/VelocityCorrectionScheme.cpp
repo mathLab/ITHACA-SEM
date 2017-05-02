@@ -331,7 +331,7 @@ namespace Nektar
         m_greenFlux = MeasureFlowrate(m_flowrateStokes);
 
         // Open field
-        if (m_comm->GetRank() == 0)
+        if (m_comm->GetRank() == 0 && m_flowrateSteps)
         {
             std::string filename = m_session->GetSessionName();
             filename += ".prs";
@@ -397,7 +397,7 @@ namespace Nektar
 
     bool VelocityCorrectionScheme::v_PostIntegrate(int step)
     {
-        if (m_comm->GetRank() == 0)
+        if (m_comm->GetRank() == 0 && (step + 1) % m_flowrateSteps == 0)
         {
             m_flowrateStream << setw(8) << step << setw(16) << m_time
                              << setw(16) << m_alpha << endl;

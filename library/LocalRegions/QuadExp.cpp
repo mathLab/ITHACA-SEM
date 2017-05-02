@@ -106,22 +106,6 @@ namespace Nektar
             return  ival;
         }
 
-        NekDouble QuadExp::v_VectorFlux(
-            const Array<OneD, Array<OneD, NekDouble> > &vec)
-        {
-            const Array<OneD, const Array<OneD, NekDouble> >
-                &normals = GetLeftAdjacentElementExp()->
-                GetFaceNormal(GetLeftAdjacentElementFace());
-
-            int nq = m_base[0]->GetNumPoints() * m_base[1]->GetNumPoints();
-            Array<OneD, NekDouble > Fn(nq);
-            Vmath::Vmul (nq, &vec[0][0], 1, &normals[0][0], 1, &Fn[0], 1);
-            Vmath::Vvtvp(nq, &vec[1][0], 1, &normals[1][0], 1, &Fn[0], 1, &Fn[0], 1);
-            Vmath::Vvtvp(nq, &vec[2][0], 1, &normals[2][0], 1, &Fn[0], 1, &Fn[0], 1);
-
-            return v_Integral(Fn);
-        }
-
         void QuadExp::v_PhysDeriv(
             const Array<OneD, const NekDouble> & inarray,
                   Array<OneD,NekDouble> &out_d0,

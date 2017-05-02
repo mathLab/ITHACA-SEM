@@ -1512,6 +1512,14 @@ is kept constant. This is supported for both standard two- and three-dimensional
 examples, as well as three-dimensional homogeneous simulations, where the
 forcing can either be in the homogeneous direction or perpendicular to it.
 
+The flowrate correction works by taking each timestep's velocity field
+$\mathbf{u}^{n}$, and computing a scalar $\alpha$ so that the corrected flow
+%
+\[
+  \tilde{\mathbf{u}}^n = \mathbf{u}^n + \alpha\mathbf{u}_s
+\]
+has the desired flowrate. Here, $\mathbf{u}_s$ is a linear Stokes solution.
+
 To enable this flowrate correction, the \inltt{Flowrate} parameter must first be
 defined, which dictates the value of $Q$ that will be imposed through the
 reference area $R$. If a homogeneous simulation is used and forcing is in the
@@ -1542,14 +1550,15 @@ example, to impose a force in the $x$-direction we specify:
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="FlowrateForce">
   <E VAR="ForceX" VALUE="1.0" />
-  <E VAR="ForceY" VALUE="1.0" />
-  <E VAR="ForceZ" VALUE="1.0" />
+  <E VAR="ForceY" VALUE="0.0" />
+  <E VAR="ForceZ" VALUE="0.0" />
 </FUNCTION>
 \end{lstlisting}
 
-Optionally, the \inltt{IO\_FlowSteps} parameter can be defined, which produces a
-file \inltt{session.prs} which records the value of $\alpha$ every
-\inltt{IO\_FlowSteps} steps.
+Optionally, the \inltt{IO\_FlowSteps} parameter can be defined. If set to a
+non-zero integer, this produces a file \inltt{session.prs} which records the
+value of $\alpha$ used in the flowrate correction, every \inltt{IO\_FlowSteps}
+steps.
 
 \section{Examples}
 

@@ -1963,7 +1963,7 @@ namespace Nektar
                 {
                     tmp[j] = Array<OneD, NekDouble>(inarray[j] + m_phys_offset[i]);
                 }
-                flux += (*m_exp)[m_offset_elmt_id[i]]->VectorFlux(tmp);
+                flux += (*m_exp)[i]->VectorFlux(tmp);
             }
 
             return flux;

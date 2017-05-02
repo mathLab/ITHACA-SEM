@@ -646,14 +646,24 @@ namespace Nektar
         int nvel = m_velocity.num_elements();
         if(nvel == 2)
         {
-            m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[0], Forcing[1]);
+            m_pressure->PhysDeriv(m_pressure->GetPhys(),
+                                  Forcing[m_velocity[0]],
+                                  Forcing[m_velocity[1]]);
         }
         else
         {
-            m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[0], 
-                                  Forcing[1], Forcing[2]);
+            m_pressure->PhysDeriv(m_pressure->GetPhys(),
+                                  Forcing[m_velocity[0]], 
+                                  Forcing[m_velocity[1]],
+                                  Forcing[m_velocity[2]]);
         }
 
+        // zero convective fields. 
+        for(int i = nvel; i < m_nConvectiveFields; ++i)
+        {
+            Vmath::Zero(phystot,Forcing[i],1);
+        }
+        
         // Subtract inarray/(aii_dt) and divide by kinvis. Kinvis will
         // need to be updated for the convected fields.
         for(int i = 0; i < m_nConvectiveFields; ++i)

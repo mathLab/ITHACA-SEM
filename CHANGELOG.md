@@ -36,6 +36,9 @@ v4.4.1
 - Add manifold meshing option (!756)
 - Fix issue with older rea input files (!765)
 
+**IncNavierStokesSolver**
+- Fix an initialisation issue when using an additional advective field (!779)
+
 v4.4.0
 ------
 **Library**:

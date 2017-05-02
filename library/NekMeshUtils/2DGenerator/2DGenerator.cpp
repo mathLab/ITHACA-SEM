@@ -72,6 +72,10 @@ Generator2D::~Generator2D()
 
 void Generator2D::Process()
 {
+    // Check that cad is 2D
+    Array<OneD, NekDouble> bndBox = m_mesh->m_cad->GetBoundingBox();
+    ASSERTL0(bndBox[4] == bndBox[5], "CAD isn't 2D");
+    
     if (m_mesh->m_verbose)
     {
         cout << endl << "2D meshing" << endl;

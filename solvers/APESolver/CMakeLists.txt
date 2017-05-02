@@ -8,11 +8,12 @@ ENDIF()
 
 IF( NEKTAR_SOLVER_APE )
     SET(APESolverSource 
-        ./APESolver.cpp
-        ./EquationSystems/APE.cpp
-        ./RiemannSolvers/APESolver.cpp
-        ./RiemannSolvers/UpwindSolver.cpp
-        ./RiemannSolvers/LaxFriedrichsSolver.cpp)
+       ./APESolver.cpp
+       ./EquationSystems/APE.cpp
+       ./EquationSystems/LEE.cpp
+       ./RiemannSolvers/APESolver.cpp
+       ./RiemannSolvers/UpwindSolver.cpp
+       ./RiemannSolvers/LaxFriedrichsSolver.cpp)
 
     ADD_SOLVER_EXECUTABLE(APESolver SOURCES ${APESolverSource})
 

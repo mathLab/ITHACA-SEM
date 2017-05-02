@@ -1438,7 +1438,7 @@ namespace Nektar
                 &normals = GetLeftAdjacentElementExp()->
                 GetFaceNormal(GetLeftAdjacentElementFace());
 
-            int nq = m_base[0]->GetTotPoints();
+            int nq = GetTotPoints();
             Array<OneD, NekDouble > Fn(nq);
             Vmath::Vmul (nq, &vec[0][0], 1, &normals[0][0], 1, &Fn[0], 1);
             Vmath::Vvtvp(nq, &vec[1][0], 1, &normals[1][0], 1, &Fn[0], 1, &Fn[0], 1);

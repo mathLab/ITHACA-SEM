@@ -76,8 +76,6 @@ public:
 
     static GlobalMapping::MappingSharedPtr GetMapping(FieldSharedPtr f);
 
-private:
-    FieldSharedPtr m_fromField;
 };
 }
 }

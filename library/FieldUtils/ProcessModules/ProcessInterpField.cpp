@@ -77,14 +77,14 @@ ProcessInterpField::~ProcessInterpField()
 
 void ProcessInterpField::Process(po::variables_map &vm)
 {
-    m_fromField = boost::shared_ptr<Field>(new Field());
+    FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
 
     std::vector<std::string> files;
 
     // set up session file for from field
     ParseUtils::GenerateOrderedStringVector(
         m_config["fromxml"].as<string>().c_str(), files);
-    m_fromField->m_session =
+    fromField->m_session =
         LibUtilities::SessionReader::CreateInstance(0, 0, files);
 
     // Set up range based on min and max of local parallel partition
@@ -128,12 +128,12 @@ void ProcessInterpField::Process(po::variables_map &vm)
     }
 
     // setup rng parameters.
-    m_fromField->m_graph =
-        SpatialDomains::MeshGraph::Read(m_fromField->m_session, rng);
+    fromField->m_graph =
+        SpatialDomains::MeshGraph::Read(fromField->m_session, rng);
 
     // Read in local from field partitions
     const SpatialDomains::ExpansionMap &expansions =
-        m_fromField->m_graph->GetExpansions();
+        fromField->m_graph->GetExpansions();
 
     // check for case where no elements are specified on this
     // parallel partition
@@ -153,20 +153,20 @@ void ProcessInterpField::Process(po::variables_map &vm)
 
     string fromfld = m_config["fromfld"].as<string>();
     m_f->FieldIOForFile(fromfld)->Import(
-        fromfld, m_fromField->m_fielddef, m_fromField->m_data,
+        fromfld, fromField->m_fielddef, fromField->m_data,
         LibUtilities::NullFieldMetaDataMap, ElementGIDs);
 
-    int NumHomogeneousDir = m_fromField->m_fielddef[0]->m_numHomogeneousDir;
+    int NumHomogeneousDir = fromField->m_fielddef[0]->m_numHomogeneousDir;
 
     //----------------------------------------------
     // Set up Expansion information to use mode order from field
-    m_fromField->m_graph->SetExpansions(m_fromField->m_fielddef);
+    fromField->m_graph->SetExpansions(fromField->m_fielddef);
 
-    int nfields = m_fromField->m_fielddef[0]->m_fields.size();
+    int nfields = fromField->m_fielddef[0]->m_fields.size();
 
-    m_fromField->m_exp.resize(nfields);
-    m_fromField->m_exp[0] =
-        m_fromField->SetUpFirstExpList(NumHomogeneousDir, true);
+    fromField->m_exp.resize(nfields);
+    fromField->m_exp[0] =
+        fromField->SetUpFirstExpList(NumHomogeneousDir, true);
 
     m_f->m_exp.resize(nfields);
 
@@ -174,21 +174,21 @@ void ProcessInterpField::Process(po::variables_map &vm)
     for (i = 1; i < nfields; ++i)
     {
         m_f->m_exp[i]         = m_f->AppendExpList(NumHomogeneousDir);
-        m_fromField->m_exp[i] = m_fromField->AppendExpList(NumHomogeneousDir);
+        fromField->m_exp[i] = fromField->AppendExpList(NumHomogeneousDir);
     }
 
     // load field into expansion in fromfield.
     for (int j = 0; j < nfields; ++j)
     {
-        for (i = 0; i < m_fromField->m_fielddef.size(); i++)
+        for (i = 0; i < fromField->m_fielddef.size(); i++)
         {
-            m_fromField->m_exp[j]->ExtractDataToCoeffs(
-                m_fromField->m_fielddef[i], m_fromField->m_data[i],
-                m_fromField->m_fielddef[0]->m_fields[j],
-                m_fromField->m_exp[j]->UpdateCoeffs());
+            fromField->m_exp[j]->ExtractDataToCoeffs(
+                fromField->m_fielddef[i], fromField->m_data[i],
+                fromField->m_fielddef[0]->m_fields[j],
+                fromField->m_exp[j]->UpdateCoeffs());
         }
-        m_fromField->m_exp[j]->BwdTrans(m_fromField->m_exp[j]->GetCoeffs(),
-                                        m_fromField->m_exp[j]->UpdatePhys());
+        fromField->m_exp[j]->BwdTrans(fromField->m_exp[j]->GetCoeffs(),
+                                        fromField->m_exp[j]->UpdatePhys());
     }
 
     int nq1 = m_f->m_exp[0]->GetTotPoints();
@@ -223,7 +223,7 @@ void ProcessInterpField::Process(po::variables_map &vm)
     {
         interp.SetProgressCallback(&ProcessInterpField::PrintProgressbar, this);
     }
-    interp.Interpolate(m_fromField->m_exp, m_f->m_exp);
+    interp.Interpolate(fromField->m_exp, m_f->m_exp);
     if (m_f->m_verbose && m_f->m_comm->TreatAsRankZero())
     {
         cout << endl;
@@ -246,7 +246,7 @@ void ProcessInterpField::Process(po::variables_map &vm)
                     m_f->m_exp[i]->GetPhys(), m_f->m_exp[i]->UpdateCoeffs());
     }
     // save field names
-    m_f->m_variables = m_fromField->m_fielddef[0]->m_fields;
+    m_f->m_variables = fromField->m_fielddef[0]->m_fields;
 }
 
 void ProcessInterpField::PrintProgressbar(const int position,

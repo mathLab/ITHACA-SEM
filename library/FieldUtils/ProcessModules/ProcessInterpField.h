@@ -74,8 +74,6 @@ public:
         return "Interpolating field";
     }
 
-private:
-    FieldSharedPtr m_fromField;
 };
 }
 }

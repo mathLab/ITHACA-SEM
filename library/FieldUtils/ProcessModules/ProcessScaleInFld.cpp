@@ -57,7 +57,7 @@ ProcessScaleInFld::ProcessScaleInFld(FieldSharedPtr f) : ProcessModule(f)
 {
     m_config["scale"] = ConfigOption(false, "NotSet", "scale factor");
     ASSERTL0(m_config["scale"].as<string>().compare("NotSet") != 0,
-             "scaleinputfld: Need to specify a sacle factor");
+             "scaleinputfld: Need to specify a scale factor");
 }
 
 ProcessScaleInFld::~ProcessScaleInFld()

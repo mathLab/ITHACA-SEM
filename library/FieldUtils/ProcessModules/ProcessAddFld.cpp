@@ -79,8 +79,6 @@ ProcessAddFld::~ProcessAddFld()
 
 void ProcessAddFld::Process(po::variables_map &vm)
 {
-    ASSERTL0(m_f->m_data.size() != 0, "No input data defined");
-
     string scalestr = m_config["scale"].as<string>();
     NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
 
@@ -159,7 +157,7 @@ void ProcessAddFld::Process(po::variables_map &vm)
     }
     else
     {
-        int nfields = m_f->m_fielddef[0]->m_fields.size();
+        int nfields = m_f->m_variables.size();
         int ncoeffs = m_f->m_exp[0]->GetNcoeffs();
         Array<OneD, NekDouble> SaveFld(ncoeffs);
 
@@ -174,14 +172,14 @@ void ProcessAddFld::Process(po::variables_map &vm)
                  ++nfield)
             {
                 if (fromField->m_fielddef[0]->m_fields[nfield] ==
-                    m_f->m_fielddef[0]->m_fields[j])
+                    m_f->m_variables[j])
                 {
                     break;
                 }
             }
 
             ASSERTL0(nfield != fromField->m_fielddef[0]->m_fields.size(),
-                     "Could not find field " + m_f->m_fielddef[0]->m_fields[j] +
+                     "Could not find field " + m_f->m_variables[j] +
                          " in from field");
 
             // load new field

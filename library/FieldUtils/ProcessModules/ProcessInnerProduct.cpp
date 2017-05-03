@@ -73,9 +73,6 @@ ProcessInnerProduct::~ProcessInnerProduct()
 
 void ProcessInnerProduct::Process(po::variables_map &vm)
 {
-    ASSERTL0(m_f->m_exp.size() != 0, "input xml file needs to be specified");
-    ASSERTL0(m_f->m_data.size() != 0, "No input data has been defined");
-
     string fromfld           = m_config["fromfld"].as<string>();
     FieldSharedPtr fromField = boost::shared_ptr<Field>(new Field());
 

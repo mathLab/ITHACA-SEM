@@ -42,6 +42,8 @@ using namespace std;
 using namespace Nektar;
 using namespace Nektar::FieldUtils;
 
+void CheckModules(vector<ModuleSharedPtr> &modules);
+
 void RunModule(ModuleSharedPtr module, po::variables_map &vm, bool verbose);
 
 int main(int argc, char* argv[])
@@ -314,17 +316,6 @@ int main(int argc, char* argv[])
             module.second = tmp1[0];
         }
 
-        // Include dummy module for creating m_exp (after inputs)
-        if (i == nInput)
-        {
-            ModuleKey module2;
-            module2.first  = eProcessModule;
-            module2.second = string("createExp");
-            ModuleSharedPtr mod2;
-            mod2 = GetModuleFactory().CreateInstance(module2, f);
-            modules.push_back(mod2);
-        }
-
         // Create module.
         ModuleSharedPtr mod;
         mod = GetModuleFactory().CreateInstance(module, f);
@@ -362,6 +353,17 @@ int main(int argc, char* argv[])
         mod->SetDefaults();
     }
 
+    // Include dummy module to create m_exp
+    ModuleKey module;
+    module.first  = eProcessModule;
+    module.second = string("createExp");
+    ModuleSharedPtr mod;
+    mod = GetModuleFactory().CreateInstance(module, f);
+    modules.push_back(mod);
+
+    // Check if modules provided are compatible
+    CheckModules(modules);
+
     // Run field process.
     bool verbose = (f->m_verbose && f->m_comm->TreatAsRankZero());
     for (int n = 0; n < SIZE_ModulePriority; ++n)
@@ -387,6 +389,75 @@ int main(int argc, char* argv[])
              << ss.str() << endl;
     }
     return 0;
+}
+
+// This function checks validity conditions for the list of modules provided
+void CheckModules(vector<ModuleSharedPtr> &modules)
+{
+    // Count number of modules by priority
+    Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
+    for (int i = 0; i < modules.size(); ++i)
+    {
+        ++modulesCount[modules[i]->GetModulePriority()];
+    }
+
+    // Modules of type eModifyFieldData require a eCreateFieldData module
+    if( modulesCount[eModifyFieldData] != 0 &&
+        modulesCount[eCreateFieldData] == 0)
+    {
+        stringstream ss;
+        ss << "Module(s): ";
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == eModifyFieldData)
+            {
+                ss << modules[i]->GetModuleName()<<" ";
+            }
+        }
+        ss << "require fld input.";
+        ASSERTL0(false, ss.str());
+    }
+
+    // Modules of type eFillExp require eCreateGraph without eCreateFieldData
+    if( modulesCount[eFillExp] != 0)
+    {
+        if( modulesCount[eCreateGraph]       == 0 ||
+            modulesCount[eCreateFieldData]   != 0)
+        {
+            stringstream ss;
+            ss << "Module(s): ";
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                if(modules[i]->GetModulePriority() == eFillExp)
+                {
+                    ss << modules[i]->GetModuleName()<<" ";
+                }
+            }
+            ss << "require xml input without fld input.";
+            ASSERTL0(false, ss.str());
+        }
+    }
+
+    // Modules using m_exp require a eCreateGraph module
+    if( modulesCount[eCreateGraph] == 0)
+    {
+        if( modulesCount[eModifyExp]     != 0 ||
+            modulesCount[eBndExtraction] != 0)
+        {
+            stringstream ss;
+            ss << "Module(s): ";
+            for (int i = 0; i < modules.size(); ++i)
+            {
+                if(modules[i]->GetModulePriority() == eModifyExp ||
+                   modules[i]->GetModulePriority() == eBndExtraction)
+                {
+                    ss << modules[i]->GetModuleName()<<" ";
+                }
+            }
+            ss << "require xml input.";
+            ASSERTL0(false, ss.str());
+        }
+    }
 }
 
 void RunModule(ModuleSharedPtr module, po::variables_map &vm, bool verbose)

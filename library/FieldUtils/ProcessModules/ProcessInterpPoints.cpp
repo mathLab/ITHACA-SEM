@@ -477,7 +477,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             rng->m_xmax     = Vmath::Vmax(npts, pts[0], 1);
             break;
         default:
-            ASSERTL0(false, "too many values specfied in range");
+            ASSERTL0(false, "too many values specified in range");
     }
 
     // setup rng parameters.

@@ -42,6 +42,8 @@ using namespace std;
 using namespace Nektar;
 using namespace Nektar::FieldUtils;
 
+void RunModule(ModuleSharedPtr module, po::variables_map &vm, bool verbose);
+
 int main(int argc, char* argv[])
 {
     Timer     timer;
@@ -361,42 +363,46 @@ int main(int argc, char* argv[])
     }
 
     // Run field process.
+    bool verbose = (f->m_verbose && f->m_comm->TreatAsRankZero());
     for (int i = 0; i < modules.size(); ++i)
     {
-        if(f->m_verbose && f->m_comm->TreatAsRankZero())
-        {
-            moduleTimer.Start();
-
-            cout << modules[i]->GetModuleName() << ": "
-                 << modules[i]->GetModuleDescription() << endl;
-        }
-        modules[i]->Process(vm);
-        cout.flush();
-        if(f->m_verbose && f->m_comm->TreatAsRankZero())
-        {
-            moduleTimer.Stop();
-            NekDouble cpuTime = moduleTimer.TimePerTest(1);
-
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << modules[i]->GetModuleName()
-                 << " CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-        }
+        RunModule(modules[i], vm, verbose);
     }
 
-    if(f->m_verbose)
+    if(verbose)
     {
-        if(f->m_comm->TreatAsRankZero())
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
+        timer.Stop();
+        NekDouble cpuTime = timer.TimePerTest(1);
 
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "Total CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-        }
+        stringstream ss;
+        ss << cpuTime << "s";
+        cout << "Total CPU Time: " << setw(8) << left
+             << ss.str() << endl;
     }
     return 0;
+}
+
+void RunModule(ModuleSharedPtr module, po::variables_map &vm, bool verbose)
+{
+    Timer moduleTimer;
+    if(verbose)
+    {
+        moduleTimer.Start();
+
+        cout << module->GetModuleName() << ": "
+             << module->GetModuleDescription() << endl;
+    }
+    module->Process(vm);
+    cout.flush();
+    if(verbose)
+    {
+        moduleTimer.Stop();
+        NekDouble cpuTime = moduleTimer.TimePerTest(1);
+
+        stringstream ss;
+        ss << cpuTime << "s";
+        cout << module->GetModuleName()
+             << " CPU Time: " << setw(8) << left
+             << ss.str() << endl;
+    }
 }

@@ -248,7 +248,7 @@ void OutputVtk::OutputFromExp(po::variables_map &vm)
             for (j = 0; j < nfields; ++j)
             {
                 m_f->m_exp[s * nfields + j]->WriteVtkPieceData(
-                    outfile, i, m_f->m_fielddef[0]->m_fields[j]);
+                    outfile, i, m_f->m_variables[j]);
             }
             m_f->m_exp[0]->WriteVtkPieceFooter(outfile, i);
         }

@@ -75,7 +75,7 @@ public:
 
     virtual ModulePriority GetModulePriority()
     {
-        return eModifyExp;
+        return eBndExtraction;
     }
 
 };

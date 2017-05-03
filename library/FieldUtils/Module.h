@@ -83,6 +83,7 @@ enum ModulePriority
     eCreateExp,
     eFillExp,
     eModifyExp,
+    eBndExtraction,
     eCreatePts,
     eModifyPts,
     eOutput,

@@ -2,7 +2,7 @@
 <test>
     <description> take a list of points at quadrature points and produce a fld file </description>
     <executable>FieldConvert</executable>
-    <parameters>-m pointdatatofld -n 5  -e ceiling_velocity.pts ceiling.xml out.fld </parameters>
+    <parameters>-m pointdatatofld:frompts=ceiling_velocity.pts -n 5 -e ceiling.xml out.fld </parameters>
     <files>
         <file description="Session File">ceiling_velocity.pts</file>
         <file description="Session File">ceiling.xml</file>

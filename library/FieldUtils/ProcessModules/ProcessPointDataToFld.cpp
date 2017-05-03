@@ -62,6 +62,9 @@ ProcessPointDataToFld::ProcessPointDataToFld(FieldSharedPtr f)
     m_config["setnantovalue"] = ConfigOption(
         false, "NotSet", "reset any nan value to prescribed value");
 
+    m_config["frompts"] = ConfigOption(
+        false, "NotSet", "Pts file from which to interpolate field");
+
     if ((f->m_inputfiles.count("xml") == 0) &&
         (f->m_inputfiles.count("xml.gz") == 0))
     {

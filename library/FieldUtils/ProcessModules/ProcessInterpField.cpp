@@ -82,7 +82,8 @@ void ProcessInterpField::Process(po::variables_map &vm)
     std::vector<std::string> files;
 
     // set up session file for from field
-    ParseUtils::GenerateOrderedStringVector(m_config["fromxml"].as<string>().c_str(), files);
+    ParseUtils::GenerateOrderedStringVector(
+        m_config["fromxml"].as<string>().c_str(), files);
     m_fromField->m_session =
         LibUtilities::SessionReader::CreateInstance(0, 0, files);
 
@@ -123,7 +124,7 @@ void ProcessInterpField::Process(po::variables_map &vm)
             rng->m_xmax     = Vmath::Vmax(npts, coords[0], 1);
             break;
         default:
-            ASSERTL0(false, "too many values specfied in range");
+            ASSERTL0(false, "coordim should be <= 3");
     }
 
     // setup rng parameters.
@@ -218,12 +219,12 @@ void ProcessInterpField::Process(po::variables_map &vm)
     }
 
     Interpolator interp;
-    if (m_f->m_comm->GetRank() == 0)
+    if (m_f->m_verbose && m_f->m_comm->TreatAsRankZero())
     {
         interp.SetProgressCallback(&ProcessInterpField::PrintProgressbar, this);
     }
     interp.Interpolate(m_fromField->m_exp, m_f->m_exp);
-    if (m_f->m_comm->GetRank() == 0)
+    if (m_f->m_verbose && m_f->m_comm->TreatAsRankZero())
     {
         cout << endl;
     }
@@ -241,6 +242,8 @@ void ProcessInterpField::Process(po::variables_map &vm)
                 m_f->m_exp[i]->UpdatePhys()[j] = clamp_low;
             }
         }
+        m_f->m_exp[i]->FwdTrans_IterPerExp(
+                    m_f->m_exp[i]->GetPhys(), m_f->m_exp[i]->UpdateCoeffs());
     }
 }
 

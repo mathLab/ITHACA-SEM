@@ -73,6 +73,11 @@ public:
         return "Calculating shear stress metrics";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

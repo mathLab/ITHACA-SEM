@@ -70,6 +70,11 @@ public:
         return "Writing file";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eOutput;
+    }
+
 };
 }
 }

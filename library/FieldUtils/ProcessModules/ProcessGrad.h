@@ -73,6 +73,11 @@ public:
         return "Calculating gradients";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

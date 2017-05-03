@@ -71,6 +71,11 @@ public:
         return "Processing input pts file";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eCreatePts;
+    }
+
 private:
 };
 }

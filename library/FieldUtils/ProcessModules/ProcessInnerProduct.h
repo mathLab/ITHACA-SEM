@@ -73,6 +73,11 @@ public:
         return "Evaluating inner product";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 private:
     NekDouble IProduct(vector<unsigned int> &processFields,
                        FieldSharedPtr &fromField,

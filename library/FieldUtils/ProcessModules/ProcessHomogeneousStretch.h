@@ -73,6 +73,11 @@ public:
         return "Stretching expansion";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

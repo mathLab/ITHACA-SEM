@@ -74,6 +74,11 @@ public:
         return "Projecting data to expansion";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eFillExp;
+    }
+
 private:
 };
 }

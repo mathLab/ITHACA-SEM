@@ -70,6 +70,11 @@ public:
         return "Output written to StdOut";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eOutput;
+    }
+
 };
 }
 }

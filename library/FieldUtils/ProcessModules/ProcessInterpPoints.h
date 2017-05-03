@@ -76,6 +76,11 @@ public:
         return "Interpolating to points";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyPts;
+    }
+
 private:
     void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
                                LibUtilities::PtsFieldSharedPtr &pts,

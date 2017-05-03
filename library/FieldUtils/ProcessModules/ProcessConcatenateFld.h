@@ -71,6 +71,11 @@ public:
         return "Concatenating field file";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyFieldData;
+    }
+
 };
 }
 }

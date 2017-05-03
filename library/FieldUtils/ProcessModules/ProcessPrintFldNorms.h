@@ -72,6 +72,11 @@ public:
         return "Printing norms";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

@@ -73,6 +73,11 @@ public:
         return "Extracting plane";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

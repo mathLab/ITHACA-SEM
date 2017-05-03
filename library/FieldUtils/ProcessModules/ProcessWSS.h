@@ -73,6 +73,11 @@ public:
         return "Calculating wall shear stress";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

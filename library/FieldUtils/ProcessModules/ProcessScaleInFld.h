@@ -73,6 +73,11 @@ public:
         return "Rescaling input fld";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyFieldData;
+    }
+
 private:
 };
 }

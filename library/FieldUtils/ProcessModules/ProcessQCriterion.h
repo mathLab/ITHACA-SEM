@@ -73,6 +73,11 @@ public:
         return "Calculating Q Criterion";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

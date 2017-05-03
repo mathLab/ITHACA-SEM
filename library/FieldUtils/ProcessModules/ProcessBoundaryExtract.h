@@ -71,6 +71,11 @@ public:
         return "Setting up boundary extraction";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

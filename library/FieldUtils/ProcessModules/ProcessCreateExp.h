@@ -73,6 +73,11 @@ public:
         return "Creating m_exp if needed";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eCreateExp;
+    }
+
 private:
 };
 }

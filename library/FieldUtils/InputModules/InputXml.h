@@ -71,6 +71,11 @@ public:
         return "Processing input xml file";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eCreateGraph;
+    }
+
 private:
 };
 }

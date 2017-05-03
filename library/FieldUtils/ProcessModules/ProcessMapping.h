@@ -74,6 +74,11 @@ public:
         return "Applying mapping to field";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
     static GlobalMapping::MappingSharedPtr GetMapping(FieldSharedPtr f);
 
 };

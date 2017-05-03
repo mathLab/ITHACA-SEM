@@ -73,6 +73,11 @@ public:
         return "Adding composite ID as a new field";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 private:
 };
 }

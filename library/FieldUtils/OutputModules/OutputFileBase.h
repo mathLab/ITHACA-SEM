@@ -73,6 +73,11 @@ public:
         return "Writing file";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eOutput;
+    }
+
 protected:
     bool m_requireEquiSpaced;
 

@@ -74,6 +74,11 @@ public:
         return "Interpolating data to field";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eFillExp;
+    }
+
     void PrintProgressbar(const int position, const int goal) const
     {
         LibUtilities::PrintProgressbar(position, goal, "Interpolating");

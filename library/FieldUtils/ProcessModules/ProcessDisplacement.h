@@ -69,6 +69,11 @@ public:
         return "Calculating displacement";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

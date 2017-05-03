@@ -73,6 +73,11 @@ public:
         return "Extracting mean mode";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

@@ -73,6 +73,11 @@ public:
         return "Calculating scalar gradient";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

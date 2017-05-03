@@ -62,6 +62,15 @@ ProcessAddFld::ProcessAddFld(FieldSharedPtr f) : ProcessModule(f)
 
     ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
              "Need to specify fromfld=file.fld ");
+
+    if(f->m_inputfiles.count("xml"))
+    {
+        m_priority = eModifyExp;
+    }
+    else
+    {
+        m_priority = eModifyFieldData;
+    }
 }
 
 ProcessAddFld::~ProcessAddFld()
@@ -134,8 +143,11 @@ void ProcessAddFld::Process(po::variables_map &vm)
         }
     }
 
-    if (samelength == true)
+    if (m_priority == eModifyFieldData)
     {
+        ASSERTL0(samelength == true,
+                "Input fields have partitions of different length and so xml "
+                 "file needs to be specified");
         for (int i = 0; i < m_f->m_data.size(); ++i)
         {
             int datalen = m_f->m_data[i].size();
@@ -143,13 +155,10 @@ void ProcessAddFld::Process(po::variables_map &vm)
             Vmath::Vadd(datalen, &(m_f->m_data[i][0]), 1,
                         &(fromField->m_data[i][0]), 1, &(m_f->m_data[i][0]), 1);
         }
+        
     }
     else
     {
-        ASSERTL0(m_f->m_exp.size() != 0,
-                 "Input fields have partitions of different length and so xml "
-                 "file needs to be specified");
-
         int nfields = m_f->m_fielddef[0]->m_fields.size();
         int ncoeffs = m_f->m_exp[0]->GetNcoeffs();
         Array<OneD, NekDouble> SaveFld(ncoeffs);

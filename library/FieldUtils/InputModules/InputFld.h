@@ -71,6 +71,11 @@ public:
         return "Processing input fld file";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eCreateFieldData;
+    }
+
 private:
 };
 }

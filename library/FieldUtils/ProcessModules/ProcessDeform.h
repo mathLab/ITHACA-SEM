@@ -68,6 +68,12 @@ public:
     {
         return "Deforming grid";
     }
+
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

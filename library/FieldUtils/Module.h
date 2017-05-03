@@ -75,6 +75,20 @@ enum ModuleType
 
 const char *const ModuleTypeMap[] = {"Input", "Process", "Output"};
 
+enum ModulePriority
+{
+    eCreateGraph,
+    eCreateFieldData,
+    eModifyFieldData,
+    eCreateExp,
+    eFillExp,
+    eModifyExp,
+    eCreatePts,
+    eModifyPts,
+    eOutput,
+    SIZE_ModulePriority
+};
+
 /**
  * @brief Represents a command-line configuration option.
  */
@@ -148,6 +162,8 @@ public:
     {
         return " ";
     }
+
+    virtual ModulePriority GetModulePriority() = 0;
 
     FIELD_UTILS_EXPORT void RegisterConfig(string key, string value);
     FIELD_UTILS_EXPORT void PrintConfig();

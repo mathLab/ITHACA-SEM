@@ -71,6 +71,11 @@ public:
         return "Processing Nek5000 field file";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eCreateFieldData;
+    }
+
 private:
 };
 }

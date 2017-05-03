@@ -70,6 +70,11 @@ public:
         return "Processing Jacobian";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 private:
 };
 }

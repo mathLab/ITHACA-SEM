@@ -74,6 +74,11 @@ public:
         return "Interpolating field";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eFillExp;
+    }
+
 };
 }
 }

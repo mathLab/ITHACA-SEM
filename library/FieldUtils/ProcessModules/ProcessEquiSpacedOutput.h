@@ -72,6 +72,11 @@ public:
         return "Interpolating fields to equispaced";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eCreatePts;
+    }
+
 protected:
     ProcessEquiSpacedOutput(){};
     void SetupEquiSpacedField(void);

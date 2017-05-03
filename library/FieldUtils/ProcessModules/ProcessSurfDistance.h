@@ -73,6 +73,11 @@ public:
         return "Calculating distance to surface";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

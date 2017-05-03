@@ -72,6 +72,11 @@ public:
         return "Calculating number of modes";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

@@ -72,6 +72,11 @@ public:
         return "Calculating vorticity";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 };
 }
 }

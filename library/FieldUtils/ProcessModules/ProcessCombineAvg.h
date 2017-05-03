@@ -74,6 +74,11 @@ public:
         return "Combining new fld into input avg fld";
     }
 
+    virtual ModulePriority GetModulePriority()
+    {
+        return eModifyExp;
+    }
+
 private:
 };
 }

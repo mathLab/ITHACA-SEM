@@ -53,15 +53,8 @@ ModuleKey ProcessWSS::className = GetModuleFactory().RegisterCreatorFunction(
     ProcessWSS::create,
     "Computes wall shear stress field.");
 
-ProcessWSS::ProcessWSS(FieldSharedPtr f) : ProcessModule(f)
+ProcessWSS::ProcessWSS(FieldSharedPtr f) : ProcessBoundaryExtract(f)
 {
-    m_config["bnd"] = ConfigOption(false, "All", "Boundary to be extracted");
-    m_config["addnormals"] =
-        ConfigOption(true, "NotSet", "Add normals to output");
-    f->m_writeBndFld                 = true;
-    f->m_declareExpansionAsContField = true;
-    f->m_requireBoundaryExpansion    = true;
-    m_f->m_fldToBnd                  = false;
 }
 
 ProcessWSS::~ProcessWSS()
@@ -70,46 +63,7 @@ ProcessWSS::~ProcessWSS()
 
 void ProcessWSS::Process(po::variables_map &vm)
 {
-    m_f->m_addNormals = m_config["addnormals"].m_beenSet;
-
-    // Set up Field options to output boundary fld
-    string bvalues = m_config["bnd"].as<string>();
-
-    if (boost::iequals(bvalues, "All"))
-    {
-        int numBndExp = 0;
-
-        SpatialDomains::BoundaryConditions bcs(m_f->m_session,
-                                               m_f->m_exp[0]->GetGraph());
-        const SpatialDomains::BoundaryRegionCollection bregions =
-            bcs.GetBoundaryRegions();
-
-        SpatialDomains::BoundaryRegionCollection::const_iterator breg_it;
-        for (breg_it = bregions.begin(); breg_it != bregions.end(); ++breg_it)
-        {
-            numBndExp = max(numBndExp, breg_it->first);
-        }
-        // assuming all boundary regions are consecutive number if
-        // regions is one more tham maximum id
-        numBndExp++;
-
-        // not all partitions in parallel touch all boundaries so
-        // find maximum number of boundaries
-        m_f->m_session->GetComm()->AllReduce(numBndExp,
-                                             LibUtilities::ReduceMax);
-
-        // THis presumes boundary regions are numbered consecutively
-        for (int i = 0; i < numBndExp; ++i)
-        {
-            m_f->m_bndRegionsToWrite.push_back(i);
-        }
-    }
-    else
-    {
-        ASSERTL0(ParseUtils::GenerateOrderedVector(bvalues.c_str(),
-                                                   m_f->m_bndRegionsToWrite),
-                 "Failed to interpret bnd values string");
-    }
+    ProcessBoundaryExtract::Process(vm);
 
     NekDouble kinvis = m_f->m_session->GetParameter("Kinvis");
 

@@ -54,12 +54,8 @@ ModuleKey ProcessScalGrad::className =
         ProcessScalGrad::create,
         "Computes scalar gradient field.");
 
-ProcessScalGrad::ProcessScalGrad(FieldSharedPtr f) : ProcessModule(f)
+ProcessScalGrad::ProcessScalGrad(FieldSharedPtr f) : ProcessBoundaryExtract(f)
 {
-    m_config["bnd"]  = ConfigOption(false, "All", "Boundary to be extracted");
-    f->m_writeBndFld = true;
-    f->m_declareExpansionAsContField = true;
-    m_f->m_fldToBnd                  = false;
 }
 
 ProcessScalGrad::~ProcessScalGrad()
@@ -68,27 +64,9 @@ ProcessScalGrad::~ProcessScalGrad()
 
 void ProcessScalGrad::Process(po::variables_map &vm)
 {
+    ProcessBoundaryExtract::Process(vm);
+
     int i, j, k;
-
-    // Set up Field options to output boundary fld
-    string bvalues = m_config["bnd"].as<string>();
-
-    if (bvalues.compare("All") == 0)
-    {
-        Array<OneD, const MultiRegions::ExpListSharedPtr> BndExp =
-            m_f->m_exp[0]->GetBndCondExpansions();
-
-        for (i = 0; i < BndExp.num_elements(); ++i)
-        {
-            m_f->m_bndRegionsToWrite.push_back(i);
-        }
-    }
-    else
-    {
-        ASSERTL0(ParseUtils::GenerateOrderedVector(bvalues.c_str(),
-                                                   m_f->m_bndRegionsToWrite),
-                 "Failed to interpret range string");
-    }
 
     int spacedim = m_f->m_graph->GetSpaceDimension();
     if ((m_f->m_numHomogeneousDir) == 1 || (m_f->m_numHomogeneousDir) == 2)

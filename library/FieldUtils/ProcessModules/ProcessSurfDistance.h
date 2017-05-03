@@ -36,7 +36,7 @@
 #ifndef FIELDUTILS_PROCESSSURFDISTANCE
 #define FIELDUTILS_PROCESSSURFDISTANCE
 
-#include "../Module.h"
+#include "ProcessBoundaryExtract.h"
 
 namespace Nektar
 {
@@ -47,7 +47,7 @@ namespace FieldUtils
  * @brief This processing module calculates the height of an element connected
  * to a surface and adds it as an extra-field to the output file.
  */
-class ProcessSurfDistance : public ProcessModule
+class ProcessSurfDistance : public ProcessBoundaryExtract
 {
 public:
     /// Creates an instance of this class
@@ -73,9 +73,10 @@ public:
         return "Calculating distance to surface";
     }
 
-    virtual ModulePriority GetModulePriority()
+protected:
+    virtual bool FldToBoundary()
     {
-        return eBndExtraction;
+        return false;
     }
 
 };

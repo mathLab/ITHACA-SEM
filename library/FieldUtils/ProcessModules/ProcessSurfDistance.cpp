@@ -50,13 +50,9 @@ ModuleKey ProcessSurfDistance::className =
         ProcessSurfDistance::create,
         "Computes height of element connected to a surface.");
 
-ProcessSurfDistance::ProcessSurfDistance(FieldSharedPtr f) : ProcessModule(f)
+ProcessSurfDistance::ProcessSurfDistance(FieldSharedPtr f)
+    : ProcessBoundaryExtract(f)
 {
-    m_config["bnd"] =
-        ConfigOption(false, "-1", "Boundary region to calculate height");
-    f->m_writeBndFld                 = true;
-    f->m_declareExpansionAsContField = true;
-    m_f->m_fldToBnd                  = false;
 }
 
 ProcessSurfDistance::~ProcessSurfDistance()
@@ -65,6 +61,10 @@ ProcessSurfDistance::~ProcessSurfDistance()
 
 void ProcessSurfDistance::Process(po::variables_map &vm)
 {
+    ProcessBoundaryExtract::Process(vm);
+    ASSERTL0( !boost::iequals(m_config["bnd"].as<string>(), "All"),
+        "ProcessSurfDistance needs bnd parameter with a single id.");
+
     int i, j, k, cnt;
     int surf   = m_config["bnd"].as<int>();
     int expdim = m_f->m_graph->GetMeshDimension();

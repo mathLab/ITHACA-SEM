@@ -57,9 +57,7 @@ ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f)
     : ProcessModule(f)
 {
     // set up dafault values.
-    m_config["bnd"] = ConfigOption(false, "All", "Boundary to be extracted");
-    m_config["fldtoboundary"] =
-        ConfigOption(true, "NotSet", "Extract fld values to boundary");
+    m_config["bnd"] = ConfigOption(false, "All", "Boundary to be processed");
     m_config["addnormals"] =
         ConfigOption(true, "NotSet", "Add normals to output");
 
@@ -74,22 +72,13 @@ ProcessBoundaryExtract::~ProcessBoundaryExtract()
 
 void ProcessBoundaryExtract::Process(po::variables_map &vm)
 {
-    m_f->m_fldToBnd   = m_config["fldtoboundary"].m_beenSet;
+    m_f->m_fldToBnd   = FldToBoundary();
     m_f->m_addNormals = m_config["addnormals"].m_beenSet;
-
-    // check for correct input files
-    if ((m_f->m_inputfiles.count("xml") == 0) &&
-        (m_f->m_inputfiles.count("xml.gz") == 0))
-    {
-        cout << "An xml or xml.gz input file must be specified for the "
-                "boundary extraction module"
-             << endl;
-        exit(3);
-    }
 
     // Set up Field options to output boundary fld
     string bvalues = m_config["bnd"].as<string>();
 
+    vector<unsigned int> bndRegions;
     if (boost::iequals(bvalues, "All"))
     {
         int numBndExp = 0;
@@ -116,15 +105,22 @@ void ProcessBoundaryExtract::Process(po::variables_map &vm)
         // THis presumes boundary regions are numbered consecutively
         for (int i = 0; i < numBndExp; ++i)
         {
-            m_f->m_bndRegionsToWrite.push_back(i);
+            bndRegions.push_back(i);
         }
     }
     else
     {
         ASSERTL0(ParseUtils::GenerateOrderedVector(bvalues.c_str(),
-                                                   m_f->m_bndRegionsToWrite),
+                                                   bndRegions),
                  "Failed to interpret bnd values string");
     }
+
+    if(m_f->m_bndRegionsToWrite.size())
+    {
+        ASSERTL0(m_f->m_bndRegionsToWrite == bndRegions,
+                "Incompatible bnd parameters.");
+    }
+    m_f->m_bndRegionsToWrite = bndRegions;
 }
 }
 }

@@ -36,7 +36,7 @@
 #ifndef FIELDUTILS_PROCESSSCALGRAD
 #define FIELDUTILS_PROCESSSCALGRAD
 
-#include "../Module.h"
+#include "ProcessBoundaryExtract.h"
 
 namespace Nektar
 {
@@ -47,7 +47,7 @@ namespace FieldUtils
  * @brief This processing module calculates the scalar gradient field and
  * writes it to a surface output file.
  */
-class ProcessScalGrad : public ProcessModule
+class ProcessScalGrad : public ProcessBoundaryExtract
 {
 public:
     /// Creates an instance of this class
@@ -73,9 +73,10 @@ public:
         return "Calculating scalar gradient";
     }
 
-    virtual ModulePriority GetModulePriority()
+protected:
+    virtual bool FldToBoundary()
     {
-        return eBndExtraction;
+        return false;
     }
 
 };

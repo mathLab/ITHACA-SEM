@@ -100,8 +100,10 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
     ASSERTL0( m_config["frompts"].as<string>().compare("NotSet") != 0,
             "ProcessInterpPointDataToFld requires frompts parameter");
     string inFile = m_config["frompts"].as<string>().c_str();
+    LibUtilities::CommSharedPtr  c     =
+            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0);
     LibUtilities::PtsIOSharedPtr ptsIO =
-            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
+            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(c);
     ptsIO->Import(inFile, m_f->m_fieldPts);
 
     int nFields = m_f->m_fieldPts->GetNFields();

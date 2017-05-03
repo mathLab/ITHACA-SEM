@@ -54,26 +54,13 @@ ModuleKey ProcessPointDataToFld::className =
         ProcessPointDataToFld::create,
         "Given discrete data at quadrature points project them onto an "
         "expansion"
-        "basis and output fld file. Requires .pts .xml and .fld files.");
+        "basis and output fld file. Requires frompts and .xml and .fld files.");
 
 ProcessPointDataToFld::ProcessPointDataToFld(FieldSharedPtr f)
     : ProcessModule(f)
 {
     m_config["setnantovalue"] = ConfigOption(
         false, "NotSet", "reset any nan value to prescribed value");
-
-    if ((f->m_inputfiles.count("pts") == 0))
-    {
-        cout << endl
-             << "A pts input file must be specified for the boundary "
-                "extraction module"
-             << endl;
-
-        cout
-            << "Usage: Fieldconvert -m pointdatatofld file.pts file.xml out.fld"
-            << endl;
-        exit(3);
-    }
 
     if ((f->m_inputfiles.count("xml") == 0) &&
         (f->m_inputfiles.count("xml.gz") == 0))
@@ -83,7 +70,7 @@ ProcessPointDataToFld::ProcessPointDataToFld(FieldSharedPtr f)
                 "boundary extraction module"
              << endl;
         cout
-            << "Usage: Fieldconvert -m pointdatatofld file.pts file.xml out.fld"
+            << "Usage: Fieldconvert -m pointdatatofld:frompts=file.pts file.xml out.fld"
             << endl;
         exit(3);
     }
@@ -106,8 +93,13 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
     }
 
     // Check for command line point specification if no .pts file specified
-    ASSERTL0(m_f->m_fieldPts != LibUtilities::NullPtsField,
-             "No input points found");
+    // Load pts file
+    ASSERTL0( m_config["frompts"].as<string>().compare("NotSet") != 0,
+            "ProcessInterpPointDataToFld requires frompts parameter");
+    string inFile = m_config["frompts"].as<string>().c_str();
+    LibUtilities::PtsIOSharedPtr ptsIO =
+            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
+    ptsIO->Import(inFile, m_f->m_fieldPts);
 
     int nFields = m_f->m_fieldPts->GetNFields();
     ASSERTL0(nFields > 0, "No field values provided in input");
@@ -115,12 +107,15 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
     int dim = m_f->m_fieldPts->GetDim();
 
     // assume one field is already defined from input file.
+    ASSERTL0(m_f->m_numHomogeneousDir == 0,
+        "ProcessInterpPointDataToFld does not support homogeneous expansion");
+    ASSERTL0(m_f->m_exp.size() == 1,
+        "ProcessInterpPointDataToFld requires xml input without fld.");
     m_f->m_exp.resize(nFields);
     for (i = 1; i < nFields; ++i)
     {
-        m_f->m_exp[i] = m_f->AppendExpList(0);
+        m_f->m_exp[i] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
     }
-
     Array<OneD, Array<OneD, NekDouble> > pts;
     m_f->m_fieldPts->GetPts(pts);
 
@@ -162,6 +157,8 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
                     coeffs + offset, tmp = coeffs + offset);
                 cnt += ncoeffs;
             }
+            m_f->m_exp[i]->BwdTrans(m_f->m_exp[i]->GetCoeffs(),
+                                    m_f->m_exp[i]->UpdatePhys());
         }
     }
     else
@@ -220,6 +217,14 @@ void ProcessPointDataToFld::Process(po::variables_map &vm)
         }
     }
 
+    // save field names
+    for (int j = 0; j < m_f->m_fieldPts->GetNFields(); ++j)
+    {
+        m_f->m_variables.push_back(m_f->m_fieldPts->GetFieldName(j));
+    }
+
+    // Remove m_fieldPts to avoid confusion
+    m_f->m_fieldPts = LibUtilities::NullPtsField;
 }
 }
 }

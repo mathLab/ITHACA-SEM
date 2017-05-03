@@ -87,14 +87,14 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     ASSERTL0(nFields > 0, "No field values provided in input");
 
     // Define new expansions.
-    ASSERTL0(NumHomogeneousDir == 0,
+    ASSERTL0(m_f->m_numHomogeneousDir == 0,
         "ProcessInterpPointDataToFld does not support homogeneous expansion");
     ASSERTL0(m_f->m_exp.size() == 1,
         "ProcessInterpPointDataToFld requires xml input without fld.");
     m_f->m_exp.resize(nFields);
     for (i = 1; i < nFields; ++i)
     {
-        m_f->m_exp[i] = m_f->AppendExpList(NumHomogeneousDir);
+        m_f->m_exp[i] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
     }
 
     int totpoints = m_f->m_exp[0]->GetTotPoints();

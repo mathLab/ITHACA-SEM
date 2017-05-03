@@ -69,8 +69,6 @@ ProcessCombineAvg::~ProcessCombineAvg()
 
 void ProcessCombineAvg::Process(po::variables_map &vm)
 {
-    ASSERTL0(m_f->m_exp.size() != 0, "No input expansion defined");
-
     int nfields  = m_f->m_variables.size();
     int nq       = m_f->m_exp[0]->GetTotPoints();
     int expdim   = m_f->m_graph->GetMeshDimension();

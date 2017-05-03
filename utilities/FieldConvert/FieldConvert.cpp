@@ -364,9 +364,16 @@ int main(int argc, char* argv[])
 
     // Run field process.
     bool verbose = (f->m_verbose && f->m_comm->TreatAsRankZero());
-    for (int i = 0; i < modules.size(); ++i)
+    for (int n = 0; n < SIZE_ModulePriority; ++n)
     {
-        RunModule(modules[i], vm, verbose);
+        ModulePriority priority = static_cast<ModulePriority>(n);
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == priority)
+            {
+                RunModule(modules[i], vm, verbose);
+            }
+        }
     }
 
     if(verbose)

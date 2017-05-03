@@ -79,6 +79,8 @@ public:
     }
 
 protected:
+    bool WriteFile(std::string &filename, po::variables_map &vm);
+
     bool m_requireEquiSpaced;
 
 };

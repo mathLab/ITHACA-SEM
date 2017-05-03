@@ -75,12 +75,31 @@ void ProcessWSS::Process(po::variables_map &vm)
     // Set up Field options to output boundary fld
     string bvalues = m_config["bnd"].as<string>();
 
-    if (bvalues.compare("All") == 0)
+    if (boost::iequals(bvalues, "All"))
     {
-        Array<OneD, const MultiRegions::ExpListSharedPtr> BndExp =
-            m_f->m_exp[0]->GetBndCondExpansions();
+        int numBndExp = 0;
 
-        for (int i = 0; i < BndExp.num_elements(); ++i)
+        SpatialDomains::BoundaryConditions bcs(m_f->m_session,
+                                               m_f->m_exp[0]->GetGraph());
+        const SpatialDomains::BoundaryRegionCollection bregions =
+            bcs.GetBoundaryRegions();
+
+        SpatialDomains::BoundaryRegionCollection::const_iterator breg_it;
+        for (breg_it = bregions.begin(); breg_it != bregions.end(); ++breg_it)
+        {
+            numBndExp = max(numBndExp, breg_it->first);
+        }
+        // assuming all boundary regions are consecutive number if
+        // regions is one more tham maximum id
+        numBndExp++;
+
+        // not all partitions in parallel touch all boundaries so
+        // find maximum number of boundaries
+        m_f->m_session->GetComm()->AllReduce(numBndExp,
+                                             LibUtilities::ReduceMax);
+
+        // THis presumes boundary regions are numbered consecutively
+        for (int i = 0; i < numBndExp; ++i)
         {
             m_f->m_bndRegionsToWrite.push_back(i);
         }
@@ -89,7 +108,7 @@ void ProcessWSS::Process(po::variables_map &vm)
     {
         ASSERTL0(ParseUtils::GenerateOrderedVector(bvalues.c_str(),
                                                    m_f->m_bndRegionsToWrite),
-                 "Failed to interpret range string");
+                 "Failed to interpret bnd values string");
     }
 
     NekDouble kinvis = m_f->m_session->GetParameter("Kinvis");
@@ -132,11 +151,10 @@ void ProcessWSS::Process(po::variables_map &vm)
     }
 
     m_f->m_exp.resize(nfields + newfields);
-    string var = "u";
     for (i = 0; i < newfields; ++i)
     {
         m_f->m_exp[nfields + i] =
-            m_f->AppendExpList(m_f->m_numHomogeneousDir, var);
+            m_f->AppendExpList(m_f->m_numHomogeneousDir);
     }
 
     if (spacedim == 2)

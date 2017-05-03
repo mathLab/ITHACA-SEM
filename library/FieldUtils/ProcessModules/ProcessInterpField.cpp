@@ -59,9 +59,9 @@ ProcessInterpField::ProcessInterpField(FieldSharedPtr f) : ProcessModule(f)
 {
 
     m_config["fromxml"] = ConfigOption(
-        false, "NotSet", "Xml file form which to interpolate field");
+        false, "NotSet", "Xml file from which to interpolate field");
     m_config["fromfld"] = ConfigOption(
-        false, "NotSet", "Fld file form which to interpolate field");
+        false, "NotSet", "Fld file from which to interpolate field");
 
     m_config["clamptolowervalue"] =
         ConfigOption(false, "-10000000", "Lower bound for interpolation value");
@@ -245,6 +245,8 @@ void ProcessInterpField::Process(po::variables_map &vm)
         m_f->m_exp[i]->FwdTrans_IterPerExp(
                     m_f->m_exp[i]->GetPhys(), m_f->m_exp[i]->UpdateCoeffs());
     }
+    // save field names
+    m_f->m_variables = m_fromField->m_fielddef[0]->m_fields;
 }
 
 void ProcessInterpField::PrintProgressbar(const int position,

@@ -104,7 +104,6 @@ struct Field
     LibUtilities::CommSharedPtr m_comm;
     LibUtilities::SessionReaderSharedPtr m_session;
     SpatialDomains::MeshGraphSharedPtr m_graph;
-    LibUtilities::PtsIOSharedPtr m_ptsIO;
     map<string, vector<string> > m_inputfiles;
 
     bool m_writeBndFld;

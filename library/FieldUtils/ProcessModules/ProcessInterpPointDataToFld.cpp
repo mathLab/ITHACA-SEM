@@ -60,6 +60,8 @@ ModuleKey ProcessInterpPointDataToFld::className =
 ProcessInterpPointDataToFld::ProcessInterpPointDataToFld(FieldSharedPtr f)
     : ProcessModule(f)
 {
+    m_config["frompts"] = ConfigOption(
+        false, "NotSet", "Pts file from which to interpolate field");
 
     m_config["interpcoord"] =
         ConfigOption(false, "-1", "coordinate id to use for interpolation");
@@ -73,18 +75,26 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 {
     int i, j;
 
-    // Check for command line point specification if no .pts file specified
-    ASSERTL0(m_f->m_fieldPts != LibUtilities::NullPtsField,
-             "No input points found");
+    // Load pts file
+    ASSERTL0( m_config["frompts"].as<string>().compare("NotSet") != 0,
+            "ProcessInterpPointDataToFld requires frompts parameter");
+    string inFile = m_config["frompts"].as<string>().c_str();
+    LibUtilities::PtsIOSharedPtr ptsIO =
+            MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
+    ptsIO->Import(inFile, m_f->m_fieldPts);
 
     int nFields = m_f->m_fieldPts->GetNFields();
     ASSERTL0(nFields > 0, "No field values provided in input");
 
-    // assume one field is already defined from input file.
+    // Define new expansions.
+    ASSERTL0(NumHomogeneousDir == 0,
+        "ProcessInterpPointDataToFld does not support homogeneous expansion");
+    ASSERTL0(m_f->m_exp.size() == 1,
+        "ProcessInterpPointDataToFld requires xml input without fld.");
     m_f->m_exp.resize(nFields);
     for (i = 1; i < nFields; ++i)
     {
-        m_f->m_exp[i] = m_f->AppendExpList(0);
+        m_f->m_exp[i] = m_f->AppendExpList(NumHomogeneousDir);
     }
 
     int totpoints = m_f->m_exp[0]->GetTotPoints();
@@ -103,13 +113,13 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 
     Interpolator interp(eNoMethod, coord_id);
 
-    if (m_f->m_comm->GetRank() == 0)
+    if (m_f->m_verbose && m_f->m_comm->TreatAsRankZero())
     {
         interp.SetProgressCallback(
             &ProcessInterpPointDataToFld::PrintProgressbar, this);
     }
     interp.Interpolate(m_f->m_fieldPts, outPts);
-    if (m_f->m_comm->GetRank() == 0)
+    if (m_f->m_verbose && m_f->m_comm->TreatAsRankZero())
     {
         cout << endl;
     }
@@ -128,6 +138,15 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         m_f->m_exp[i]->FwdTrans_IterPerExp(m_f->m_exp[i]->GetPhys(),
                                            m_f->m_exp[i]->UpdateCoeffs());
     }
+
+    // save field names
+    for (int j = 0; j < m_f->m_fieldPts->GetNFields(); ++j)
+    {
+        m_f->m_variables.push_back(m_f->m_fieldPts->GetFieldName(j));
+    }
+
+    // Remove m_fieldPts to avoid confusion
+    m_f->m_fieldPts = LibUtilities::NullPtsField;
 }
 }
 }

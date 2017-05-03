@@ -87,24 +87,35 @@ void OutputFld::OutputFromExp(po::variables_map &vm)
     int nstrips;
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
 
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
-        m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-    for (s = 0; s < nstrips; ++s)
+    if(m_f->m_exp[0]->GetNumElmts() != 0)
     {
-        for (j = 0; j < nfields; ++j)
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
+            m_f->m_exp[0]->GetFieldDefinitions();
+        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+        for (s = 0; s < nstrips; ++s)
         {
-            for (i = 0; i < FieldDef.size() / nstrips; ++i)
+            for (j = 0; j < nfields; ++j)
             {
-                int n = s * FieldDef.size() / nstrips + i;
+                for (i = 0; i < FieldDef.size() / nstrips; ++i)
+                {
+                    int n = s * FieldDef.size() / nstrips + i;
 
-                FieldDef[n]->m_fields.push_back(m_f->m_variables[j]);
-                m_f->m_exp[s * nfields + j]->AppendFieldData(
-                    FieldDef[n], FieldData[n]);
+                    FieldDef[n]->m_fields.push_back(m_f->m_variables[j]);
+                    m_f->m_exp[s * nfields + j]->AppendFieldData(
+                        FieldDef[n], FieldData[n]);
+                }
             }
         }
+        fld->Write(filename, FieldDef, FieldData, m_f->m_fieldMetaDataMap);
     }
-    fld->Write(filename, FieldDef, FieldData, m_f->m_fieldMetaDataMap);
+    else
+    {
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
+        std::vector<std::vector<NekDouble> > FieldData =
+            std::vector<std::vector<NekDouble> >();
+        fld->Write(filename, FieldDef, FieldData, m_f->m_fieldMetaDataMap);
+    }
 
     // output error for regression checking.
     if (vm.count("error"))

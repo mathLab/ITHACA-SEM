@@ -72,7 +72,8 @@ void OutputFileBase::Process(po::variables_map &vm)
     else if(m_f->m_exp.size())
     {
         // reset expansion definition to use equispaced points if required.
-        if (m_requireEquiSpaced && (vm.count("noequispaced") == 0 ) )
+        if (m_requireEquiSpaced && (vm.count("noequispaced") == 0 ) &&
+            m_f->m_exp[0]->GetNumElmts() != 0)
         {
             // Information to create new expansion
             int numFields   = m_f->m_exp.size();
@@ -144,7 +145,9 @@ void OutputFileBase::Process(po::variables_map &vm)
                 }
                 cout << endl;
             }
-
+        }
+        if (m_f->m_writeBndFld && m_f->m_exp[0]->GetNumElmts() != 0)
+        {
             int nfields = m_f->m_exp.size();
             int normdim = m_f->m_graph->GetMeshDimension();
 

@@ -44,6 +44,8 @@ using namespace Nektar::FieldUtils;
 
 void CheckModules(vector<ModuleSharedPtr> &modules);
 
+void PrintExecutionSequence(vector<ModuleSharedPtr> &modules);
+
 void RunModule(ModuleSharedPtr module, po::variables_map &vm, bool verbose);
 
 int main(int argc, char* argv[])
@@ -364,8 +366,13 @@ int main(int argc, char* argv[])
     // Check if modules provided are compatible
     CheckModules(modules);
 
-    // Run field process.
     bool verbose = (f->m_verbose && f->m_comm->TreatAsRankZero());
+    if(verbose)
+    {
+        PrintExecutionSequence(modules);
+    }
+
+    // Run field process.
     for (int n = 0; n < SIZE_ModulePriority; ++n)
     {
         ModulePriority priority = static_cast<ModulePriority>(n);
@@ -458,6 +465,32 @@ void CheckModules(vector<ModuleSharedPtr> &modules)
             ASSERTL0(false, ss.str());
         }
     }
+}
+
+void PrintExecutionSequence(vector<ModuleSharedPtr> &modules)
+{
+    bool first = true;
+    cout << "Execution sequence:" << endl;
+    for (int n = 0; n < SIZE_ModulePriority; ++n)
+    {
+        ModulePriority priority = static_cast<ModulePriority>(n);
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            if(modules[i]->GetModulePriority() == priority)
+            {
+                if(first)
+                {
+                    cout << "\t"  << modules[i]->GetModuleName();
+                    first = false;
+                }
+                else
+                {
+                    cout << " -> " << modules[i]->GetModuleName();
+                }
+            }
+        }
+    }
+    cout << endl;
 }
 
 void RunModule(ModuleSharedPtr module, po::variables_map &vm, bool verbose)

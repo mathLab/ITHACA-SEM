@@ -117,15 +117,17 @@ void ProcessCreateExp::Process(po::variables_map &vm)
             }
         }
 
+        m_f->m_exp.resize(1);
+
         // if Range has been specified it is possible to have a
-        // partition which is empty so check this and return if
-        // no elements present.
+        // partition which is empty so check this and return with empty
+        // expansion if no elements present.
         if (!expansions.size())
         {
+            m_f->m_exp[0] = MemoryManager<MultiRegions::ExpList>::
+                            AllocateSharedPtr();
             return;
         }
-
-        m_f->m_exp.resize(1);
 
         if (fldfilegiven)
         {

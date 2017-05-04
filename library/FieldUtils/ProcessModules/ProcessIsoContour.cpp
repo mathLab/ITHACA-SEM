@@ -115,14 +115,13 @@ ProcessIsoContour::~ProcessIsoContour(void)
 
 void ProcessIsoContour::Process(po::variables_map &vm)
 {
-    Timer timer;
-    int rank = m_f->m_comm->GetRank();
+    bool verbose = (m_f->m_verbose && m_f->m_comm->TreatAsRankZero());
 
     vector<IsoSharedPtr> iso;
 
     if(m_f->m_fieldPts.get()) // assume we have read .dat file to directly input dat file.
     {
-        if(rank == 0)
+        if(verbose)
         {
             cout << "Process read iso from Field Pts" << endl;
         }
@@ -193,14 +192,14 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     bool globalcondense = m_config["globalcondense"].m_beenSet;
     if(globalcondense)
     {
-        if(rank == 0)
+        if(verbose)
         {
             cout << "Process global condense ..." << endl;
         }
         int nfields = m_f->m_fieldPts->GetNFields() + m_f->m_fieldPts->GetDim();
         IsoSharedPtr g_iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
 
-        g_iso->GlobalCondense(iso,m_f->m_verbose);
+        g_iso->GlobalCondense(iso,verbose);
 
 
         iso.clear();
@@ -211,13 +210,10 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     {
         Timer timersm;
 
-        if(m_f->m_verbose)
+        if(verbose)
         {
-            if(rank == 0)
-            {
-                cout << "Process Contour smoothing ..." << endl;
-                timersm.Start();
-            }
+            cout << "Process Contour smoothing ..." << endl;
+            timersm.Start();
         }
 
         int  niter = m_config["smoothiter"].as<int>();
@@ -228,19 +224,16 @@ void ProcessIsoContour::Process(po::variables_map &vm)
             iso[i]->Smooth(niter,lambda,-mu);
         }
 
-        if(m_f->m_verbose)
+        if(verbose)
         {
-            if(rank == 0)
-            {
-                timersm.Stop();
-                NekDouble cpuTime = timersm.TimePerTest(1);
+            timersm.Stop();
+            NekDouble cpuTime = timersm.TimePerTest(1);
 
-                stringstream ss;
-                ss << cpuTime << "s";
-                cout << "Process smooth CPU Time: " << setw(8) << left
-                     << ss.str() << endl;
-                cpuTime = 0.0;
-            }
+            stringstream ss;
+            ss << cpuTime << "s";
+            cout << "Process smooth CPU Time: " << setw(8) << left
+                 << ss.str() << endl;
+            cpuTime = 0.0;
         }
     }
 
@@ -249,7 +242,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     {
         vector<IsoSharedPtr> new_iso;
 
-        if(rank == 0)
+        if(verbose)
         {
             cout << "Identifying separate regions [." << flush ;
         }
@@ -258,7 +251,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
             iso[i]->SeparateRegions(new_iso,mincontour,m_f->m_verbose);
         }
 
-        if(rank == 0)
+        if(verbose)
         {
             cout << "]" << endl <<  flush ;
         }
@@ -268,22 +261,6 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     }
 
     ResetFieldPts(iso);
-
-
-    if(m_f->m_verbose)
-    {
-        if(rank == 0)
-        {
-            timer.Stop();
-            NekDouble cpuTime = timer.TimePerTest(1);
-
-            stringstream ss;
-            ss << cpuTime << "s";
-            cout << "Process Isocontour CPU Time: " << setw(8) << left
-                 << ss.str() << endl;
-            cpuTime = 0.0;
-        }
-    }
 }
 
 

@@ -83,7 +83,22 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
     int nel = m_f->m_exp[0]->GetExpSize();
     if (!nel)
     {
-        m_f->m_fieldPts = LibUtilities::NullPtsField;
+        // Create empty PtsField
+        int nfields = m_f->m_variables.size();
+        int coordim = 3;
+
+        Array<OneD, Array<OneD, NekDouble> > pts(nfields + coordim);
+        for (int i = 0; i < nfields + coordim; ++i)
+        {
+            pts[i] = Array<OneD, NekDouble>(0);
+        }
+        vector<Array<OneD, int> > ptsConn;
+
+        m_f->m_fieldPts =
+            MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+                3, m_f->m_variables, pts);
+        m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTetBlock);
+        m_f->m_fieldPts->SetConnectivity(ptsConn);
         return;
     }
 
@@ -337,14 +352,6 @@ void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
     }
 
     m_f->m_exp[0]->GetCoords(coords[0], coords[1], coords[2]);
-
-    int nq1 = m_f->m_exp[0]->GetTotPoints();
-
-    Array<OneD, NekDouble> x1(nq1);
-    Array<OneD, NekDouble> y1(nq1);
-    Array<OneD, NekDouble> z1(nq1);
-
-    m_f->m_exp[0]->GetCoords(x1, y1, z1);
 
     Array<OneD, NekDouble> tmp;
 

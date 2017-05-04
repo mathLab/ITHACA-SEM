@@ -130,13 +130,13 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     }
     else // extract isocontour from field
     {
-        if(m_f->m_exp.size() == 0)
+        // extract all fields to equi-spaced
+        SetupEquiSpacedField();
+
+        if(m_f->m_fieldPts->GetNpoints() == 0)
         {
             return;
         }
-
-        // extract all fields to equi-spaced
-        SetupEquiSpacedField();
 
         int     fieldid;
         NekDouble value;

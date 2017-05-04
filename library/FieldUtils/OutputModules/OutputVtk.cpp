@@ -69,7 +69,7 @@ void OutputVtk::OutputFromPts(po::variables_map &vm)
 
     // Write solution.
     ofstream outfile(filename.c_str());
-    m_f->m_exp[0]->WriteVtkHeader(outfile);
+    WriteVtkHeader(outfile);
     int nfields = 0;
     int dim     = fPts->GetDim();
 
@@ -85,12 +85,12 @@ void OutputVtk::OutputFromPts(po::variables_map &vm)
         }
         case LibUtilities::ePtsPlane:
         {
-            ASSERTL0(false, "VTK output needs settig up for PtsPlane");
+            ASSERTL0(false, "VTK output needs setting up for PtsPlane");
             break;
         }
         case LibUtilities::ePtsBox:
         {
-            ASSERTL0(false,"VTK output needs settig up for PtsBox");
+            ASSERTL0(false,"VTK output needs setting up for PtsBox");
             break;
         }
         case LibUtilities::ePtsSegBlock:
@@ -141,9 +141,9 @@ void OutputVtk::OutputFromPts(po::variables_map &vm)
             outfile << "          " << setprecision(8) << scientific
                     << fPts->GetPointVal(j, i) << " ";
         }
-        for (j = dim; j < 3;
-             ++j) // pack to 3D since paraview does not seem to handle 2D
+        for (j = dim; j < 3; ++j)
         {
+            // pack to 3D since paraview does not seem to handle 2D
             outfile << "          0.000000";
         }
         outfile << endl;
@@ -210,7 +210,7 @@ void OutputVtk::OutputFromPts(po::variables_map &vm)
     outfile << "      </PointData>" << endl;
     outfile << "    </Piece>" << endl;
 
-    m_f->m_exp[0]->WriteVtkFooter(outfile);
+    WriteVtkFooter(outfile);
     cout << "Written file: " << filename << endl;
 
     // output parallel outline info if necessary
@@ -230,7 +230,7 @@ void OutputVtk::OutputFromExp(po::variables_map &vm)
 
     // Write solution.
     ofstream outfile(filename.c_str());
-    m_f->m_exp[0]->WriteVtkHeader(outfile);
+    WriteVtkHeader(outfile);
     int nfields = m_f->m_variables.size();
 
     int nstrips;
@@ -259,7 +259,7 @@ void OutputVtk::OutputFromExp(po::variables_map &vm)
         WriteEmptyVtkPiece(outfile);
     }
 
-    m_f->m_exp[0]->WriteVtkFooter(outfile);
+    WriteVtkFooter(outfile);
     cout << "Written file: " << filename << endl;
 
     // output parallel outline info if necessary
@@ -273,6 +273,20 @@ void OutputVtk::OutputFromExp(po::variables_map &vm)
 void OutputVtk::OutputFromData(po::variables_map &vm)
 {
     ASSERTL0(false, "OutputVtk can't write using only FieldData.");
+}
+
+void OutputVtk::WriteVtkHeader(std::ostream &outfile)
+{
+    outfile << "<?xml version=\"1.0\"?>" << endl;
+    outfile << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" "
+            << "byte_order=\"LittleEndian\">" << endl;
+    outfile << "  <UnstructuredGrid>" << endl;
+}
+
+void OutputVtk::WriteVtkFooter(std::ostream &outfile)
+{
+    outfile << "  </UnstructuredGrid>" << endl;
+    outfile << "</VTKFile>" << endl;
 }
 
 void OutputVtk::WriteEmptyVtkPiece(std::ofstream &outfile)

@@ -67,6 +67,16 @@ public:
     /// Write from data to output file.
     virtual void OutputFromData(po::variables_map &vm);
 
+    virtual std::string GetModuleName()
+    {
+        return "OutputVtk";
+    }
+
+private:
+    void WriteVtkHeader(std::ostream &outfile);
+
+    void WriteVtkFooter(std::ostream &outfile);
+
     void WriteEmptyVtkPiece(std::ofstream &outfile);
 
     void WritePVtu();
@@ -74,11 +84,6 @@ public:
     std::string GetFullOutName();
 
     std::string GetPath();
-
-    virtual std::string GetModuleName()
-    {
-        return "OutputVtk";
-    }
 };
 }
 }
